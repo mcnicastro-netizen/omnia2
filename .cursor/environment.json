@@ -1,0 +1,12 @@
+{
+  "ports": [
+    {
+      "name": "omnia-api",
+      "port": 43121
+    },
+    {
+      "name": "omnia-frontend",
+      "port": 43122
+    }
+  ]
+}
