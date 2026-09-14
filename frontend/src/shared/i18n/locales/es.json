@@ -1030,7 +1030,8 @@
     "thinking": "Consultando tu CRM...",
     "err_generic": "Error. Reinténtalo en un momento.",
     "err_rate_limit": "Demasiados mensajes en poco tiempo. Reinténtalo en unos minutos.",
-    "err_budget": "Servicio de IA no disponible temporalmente (presupuesto agotado). Contacta con el administrador."
+    "err_unavailable": "HAL no responde ahora. Reinténtalo en un momento.",
+    "err_budget": "HAL no responde ahora. Reinténtalo en un momento."
   },
   "al_improve": {
     "button": "Mejorar con HAL",

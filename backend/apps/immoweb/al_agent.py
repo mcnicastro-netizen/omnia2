@@ -36,8 +36,19 @@ load_dotenv()
 logger = logging.getLogger("omnia.al_agent")
 router = APIRouter(prefix="/al", tags=["al-agent"])
 
-EMERGENT_LLM_KEY = os.environ.get("EMERGENT_LLM_KEY")
-MODEL = "gemini-3-flash-preview"
+
+def _llm_key() -> Optional[str]:
+    """Chiave piattaforma OMNIA — HAL/AL in-app è incluso (D-075), senza crediti agenzia."""
+    return (
+        os.environ.get("GEMINI_API_KEY")
+        or os.environ.get("GOOGLE_API_KEY")
+        or os.environ.get("EMERGENT_LLM_KEY")
+        or ""
+    ).strip() or None
+
+
+EMERGENT_LLM_KEY = _llm_key()  # nome legacy; valore risolto da Gemini
+MODEL = os.environ.get("GEMINI_MODEL", "gemini-3.6-flash")
 TEMPERATURE = 0.2  # deterministic for CRM queries
 MAX_TURNS = 30     # cap conversation history per session
 SOFT_RATE_LIMIT = 60  # max messages per user per hour
@@ -336,7 +347,7 @@ async def improve_text(req: ImproveRequest, user: dict = Depends(get_current_use
     Used inline in PropertyForm (agents) and SellPage (B2C private owners).
     No agency_id needed — operation is on form data only.
     """
-    if not EMERGENT_LLM_KEY:
+    if not _llm_key():
         raise HTTPException(status_code=503, detail="llm_key_not_configured")
 
     db = Database.get()
@@ -346,7 +357,7 @@ async def improve_text(req: ImproveRequest, user: dict = Depends(get_current_use
 
     from emergentintegrations.llm.chat import LlmChat, UserMessage
     chat_client = LlmChat(
-        api_key=EMERGENT_LLM_KEY,
+        api_key=_llm_key(),
         session_id=f"improve-{user['id']}-{uuid4().hex[:8]}",
         system_message="Sei HAL, copywriter immobiliare di OMNIA. Rispondi sempre e solo con il testo finale richiesto, senza prefissi né spiegazioni.",
     ).with_model("gemini", MODEL)
@@ -354,10 +365,8 @@ async def improve_text(req: ImproveRequest, user: dict = Depends(get_current_use
     try:
         text = await chat_client.send_message(UserMessage(text=prompt))
     except Exception as e:
-        msg = str(e).lower()
         logger.warning("Improve LLM call failed: %s", e)
-        if any(k in msg for k in ("budget", "quota", "credit", "402")):
-            raise HTTPException(status_code=503, detail="llm_budget_exceeded")
+        # Nessun addebito crediti: errore generico (D-075 AI in-app inclusa)
         raise HTTPException(status_code=503, detail="llm_unavailable")
 
     cleaned = _sanitize_improve_output(text)
@@ -389,7 +398,7 @@ async def improve_text(req: ImproveRequest, user: dict = Depends(get_current_use
 
 @router.post("/chat")
 async def chat(req: ChatRequest, user: dict = Depends(get_current_user)):
-    if not EMERGENT_LLM_KEY:
+    if not _llm_key():
         raise HTTPException(status_code=503, detail="llm_key_not_configured")
 
     db = Database.get()
@@ -409,10 +418,10 @@ async def chat(req: ChatRequest, user: dict = Depends(get_current_user)):
     history = sess.get("messages", [])[-MAX_TURNS * 2:]
     history.append({"role": "user", "content": req.message})
 
-    # Init LLM
+    # Init LLM — chiave piattaforma, senza addebito crediti agenzia (D-075)
     from emergentintegrations.llm.chat import LlmChat, UserMessage
     chat_client = LlmChat(
-        api_key=EMERGENT_LLM_KEY,
+        api_key=_llm_key(),
         session_id=sid,
         system_message=SYSTEM_PROMPT,
     ).with_model("gemini", MODEL)
@@ -426,10 +435,7 @@ async def chat(req: ChatRequest, user: dict = Depends(get_current_user)):
     try:
         raw_reply = await chat_client.send_message(UserMessage(text=req.message))
     except Exception as e:
-        msg = str(e).lower()
         logger.warning("LLM call failed: %s", e)
-        if "budget" in msg or "quota" in msg or "credit" in msg or "402" in msg:
-            raise HTTPException(status_code=503, detail="llm_budget_exceeded")
         raise HTTPException(status_code=503, detail="llm_unavailable")
 
     # Detect JSON tool call (manual pattern — no native function calling in lib)
@@ -452,10 +458,7 @@ async def chat(req: ChatRequest, user: dict = Depends(get_current_user)):
                 try:
                     final_reply = await chat_client.send_message(UserMessage(text=follow_up))
                 except Exception as e:
-                    msg = str(e).lower()
                     logger.warning("LLM follow-up failed: %s", e)
-                    if "budget" in msg or "quota" in msg or "credit" in msg or "402" in msg:
-                        raise HTTPException(status_code=503, detail="llm_budget_exceeded")
                     raise HTTPException(status_code=503, detail="llm_unavailable")
             except Exception as e:
                 logger.warning("tool %s failed: %s", tool_name, e)
@@ -531,7 +534,7 @@ async def chat_stream(req: ChatRequest, user: dict = Depends(get_current_user)):
       - {"type":"done","tool_used":"...|null"}     — terminator
       - {"type":"error","detail":"..."}            — terminator on error
     """
-    if not EMERGENT_LLM_KEY:
+    if not _llm_key():
         raise HTTPException(status_code=503, detail="llm_key_not_configured")
 
     db = Database.get()
@@ -551,7 +554,7 @@ async def chat_stream(req: ChatRequest, user: dict = Depends(get_current_user)):
 
     from emergentintegrations.llm.chat import LlmChat, UserMessage, TextDelta
     chat_client = LlmChat(
-        api_key=EMERGENT_LLM_KEY,
+        api_key=_llm_key(),
         session_id=sid,
         system_message=SYSTEM_PROMPT,
     ).with_model("gemini", MODEL)
@@ -567,6 +570,9 @@ async def chat_stream(req: ChatRequest, user: dict = Depends(get_current_user)):
     def _sse(data: dict) -> str:
         return f"data: {json.dumps(data, ensure_ascii=False)}\n\n"
 
+    def _delta_text(delta) -> str:
+        return getattr(delta, "content", None) or getattr(delta, "text", None) or ""
+
     async def event_gen():
         yield _sse({"type": "session", "session_id": sid})
 
@@ -580,7 +586,10 @@ async def chat_stream(req: ChatRequest, user: dict = Depends(get_current_user)):
             async for delta in chat_client.stream_message(UserMessage(text=req.message)):
                 if not isinstance(delta, TextDelta):
                     continue
-                text_buf.append(delta.content)
+                piece = _delta_text(delta)
+                if not piece:
+                    continue
+                text_buf.append(piece)
                 buf_str = "".join(text_buf)
 
                 if looks_like_tool is None and len(buf_str) >= SNIFF_CHARS:
@@ -596,12 +605,10 @@ async def chat_stream(req: ChatRequest, user: dict = Depends(get_current_user)):
                         continue
 
                 if looks_like_tool is False:
-                    yield _sse({"type": "token", "content": delta.content})
+                    yield _sse({"type": "token", "content": piece})
         except Exception as e:
-            msg = str(e).lower()
             logger.warning("Stream phase-1 failed: %s", e)
-            detail = "llm_budget_exceeded" if any(k in msg for k in ("budget", "quota", "credit", "402")) else "llm_unavailable"
-            yield _sse({"type": "error", "detail": detail})
+            yield _sse({"type": "error", "detail": "llm_unavailable"})
             return
 
         raw_reply = "".join(text_buf)
@@ -634,17 +641,16 @@ async def chat_stream(req: ChatRequest, user: dict = Depends(get_current_user)):
                     async for delta in chat_client.stream_message(UserMessage(text=follow_up)):
                         if not isinstance(delta, TextDelta):
                             continue
-                        final_buf.append(delta.content)
-                        yield _sse({"type": "token", "content": delta.content})
+                        piece = _delta_text(delta)
+                        if not piece:
+                            continue
+                        final_buf.append(piece)
+                        yield _sse({"type": "token", "content": piece})
                     final_reply = "".join(final_buf)
                 except HTTPException:
                     raise
                 except Exception as e:
-                    msg = str(e).lower()
                     logger.warning("Tool/follow-up failed: %s", e)
-                    if any(k in msg for k in ("budget", "quota", "credit", "402")):
-                        yield _sse({"type": "error", "detail": "llm_budget_exceeded"})
-                        return
                     err_msg = f"Ho provato a consultare {tool_name} ma ho avuto un problema. Riprova."
                     for ch in err_msg:
                         yield _sse({"type": "token", "content": ch})

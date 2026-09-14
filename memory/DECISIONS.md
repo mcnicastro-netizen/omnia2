@@ -1268,3 +1268,11 @@ Registro di tutte le decisioni di business e tecniche prese durante il progetto.
 - Frontend React (CRA/build) pubblicato su Vercel (`vercel.json` in `/frontend` o root monorepo).
 - Backend FastAPI: processo ASGI dedicato (stesso progetto git), env su host API; FE punta all'API pubblica.
 - Preview sessione Cursor resta per sviluppo; produzione/staging = Vercel FE + API deployata.
+
+## D-075 — AI in-app (HAL / Guida / Legal chat) inclusa, senza crediti · 2026-09-14
+**Status**: ✅ ATTIVA
+
+- **Founder**: HAL, Guida HAL e chat AI dentro ImmoWeb devono essere **gratuiti per l’agenzia** (inclusi nel prodotto), non scalati da wallet crediti.
+- Chiave LLM = piattaforma OMNIA (`GEMINI_API_KEY`), non budget Emergent né crediti agenzia.
+- I **crediti** restano solo per consumi a pagamento esterni (API Gateway Track B, video premium, top-up, ecc.).
+- Messaggi UI: mai «budget esaurito» per questi servizi; in caso di guasto: «HAL non risponde adesso».

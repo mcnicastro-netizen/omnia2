@@ -33,8 +33,18 @@ from .validator import (
 logger = logging.getLogger("omnia.legal")
 router = APIRouter(prefix="/legal", tags=["al-legal"])
 
-EMERGENT_LLM_KEY = os.environ.get("EMERGENT_LLM_KEY")
-MODEL = "gemini-3-flash-preview"
+
+def _llm_key() -> Optional[str]:
+    return (
+        os.environ.get("GEMINI_API_KEY")
+        or os.environ.get("GOOGLE_API_KEY")
+        or os.environ.get("EMERGENT_LLM_KEY")
+        or ""
+    ).strip() or None
+
+
+EMERGENT_LLM_KEY = _llm_key()
+MODEL = os.environ.get("GEMINI_MODEL", "gemini-3.6-flash")
 TEMPERATURE = 0.2          # D-029: low temp for legal accuracy
 SOFT_RATE_LIMIT = 30       # per-user / per-hour (lower than CRM chat — costlier)
 MAX_TURNS = 6
@@ -83,12 +93,12 @@ def _build_user_prompt(sub_agent_key: str, user_message: str, sources_block: str
 
 
 async def _call_llm(system_prompt: str, user_msg: str, session_id: str) -> str:
-    if not EMERGENT_LLM_KEY:
+    if not _llm_key():
         raise HTTPException(status_code=503, detail="llm_key_not_configured")
     try:
         from emergentintegrations.llm.chat import LlmChat, UserMessage
         client = LlmChat(
-            api_key=EMERGENT_LLM_KEY,
+            api_key=_llm_key(),
             session_id=session_id,
             system_message=system_prompt,
         ).with_model("gemini", MODEL)
@@ -96,10 +106,7 @@ async def _call_llm(system_prompt: str, user_msg: str, session_id: str) -> str:
     except HTTPException:
         raise
     except Exception as e:
-        msg = str(e).lower()
         logger.warning("Legal LLM call failed: %s", e)
-        if any(k in msg for k in ("budget", "quota", "credit", "402")):
-            raise HTTPException(status_code=503, detail="llm_budget_exceeded")
         raise HTTPException(status_code=503, detail="llm_unavailable")
 
 

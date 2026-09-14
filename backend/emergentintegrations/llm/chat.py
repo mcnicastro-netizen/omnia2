@@ -14,8 +14,12 @@ class UserMessage:
 
 
 class TextDelta:
-    def __init__(self, text: str = ""):
-        self.text = text
+    def __init__(self, text: str = "", content: Optional[str] = None, **kwargs: Any):
+        # Emergent used `.content`; our stream yields `.text` — expose both.
+        payload = content if content is not None else text
+        self.text = payload or ""
+        self.content = self.text
+        self.kwargs = kwargs
 
 
 def _message_text(message: Any) -> str:
@@ -72,3 +76,10 @@ class LlmChat:
             api_key=key,
         ):
             yield TextDelta(text=chunk)
+
+    # Alias usato da al_agent / HAL Legal (superficie Emergent storica)
+    async def stream_message(
+        self, message: Any = None, **kwargs: Any
+    ) -> AsyncIterator[TextDelta]:
+        async for delta in self.send_message_stream(message, **kwargs):
+            yield delta

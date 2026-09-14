@@ -893,7 +893,8 @@
     "thinking": "Consulting your CRM...",
     "err_generic": "Error. Please try again in a moment.",
     "err_rate_limit": "Too many messages. Please try again in a few minutes.",
-    "err_budget": "AI service temporarily unavailable (budget exhausted). Contact your administrator."
+    "err_unavailable": "HAL is unavailable right now. Please try again in a moment.",
+    "err_budget": "HAL is unavailable right now. Please try again in a moment."
   },
   "al_improve": {
     "button": "Improve with HAL",

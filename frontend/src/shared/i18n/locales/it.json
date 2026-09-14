@@ -1036,7 +1036,8 @@
     "thinking": "Sto consultando il tuo CRM...",
     "err_generic": "Errore. Riprova tra un momento.",
     "err_rate_limit": "Troppi messaggi in poco tempo. Riprova tra qualche minuto.",
-    "err_budget": "Servizio AI temporaneamente non disponibile (budget esaurito). Contatta l'amministratore."
+    "err_unavailable": "HAL non risponde adesso. Riprova tra un momento.",
+    "err_budget": "HAL non risponde adesso. Riprova tra un momento."
   },
   "al_improve": {
     "button": "Migliora con HAL",
