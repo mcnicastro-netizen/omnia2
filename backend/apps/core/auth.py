@@ -34,8 +34,12 @@ from shared.models.user import (
 )
 from shared.email import send_email
 
+# Google Sign-In (optional — enabled when GOOGLE_CLIENT_ID is set)
+from apps.core.google_auth import router as google_auth_router
+
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/auth", tags=["auth"])
+router.include_router(google_auth_router)
 
 ACCESS_COOKIE_MAX_AGE = ACCESS_TOKEN_MINUTES * 60
 REFRESH_COOKIE_MAX_AGE = REFRESH_TOKEN_DAYS * 24 * 3600
@@ -154,7 +158,15 @@ async def login(req: LoginRequest, request: Request, response: Response,
 
     db = Database.get()
     user = await db.users.find_one({"email": email})
-    if not user or not verify_password(req.password, user["password_hash"]):
+    if not user:
+        await register_failed_attempt(email, ip)
+        raise HTTPException(status_code=401, detail=t("auth.invalid_credentials", lang=lang))
+
+    pw_hash = user.get("password_hash") or ""
+    if pw_hash.startswith("!oauth:google"):
+        raise HTTPException(status_code=401, detail="use_google_sign_in")
+
+    if not verify_password(req.password, pw_hash):
         await register_failed_attempt(email, ip)
         raise HTTPException(status_code=401, detail=t("auth.invalid_credentials", lang=lang))
 

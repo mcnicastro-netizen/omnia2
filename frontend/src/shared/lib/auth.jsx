@@ -60,6 +60,12 @@ export function AuthProvider({ children }) {
     return data;
   };
 
+  const loginWithGoogle = async (credential) => {
+    const { data } = await api.post("/auth/google", { credential });
+    setUser(data);
+    return data;
+  };
+
   const register = async (payload) => {
     const { data } = await api.post("/auth/register", payload);
     setUser(data);
@@ -75,7 +81,7 @@ export function AuthProvider({ children }) {
     setUser(false);
   };
 
-  const value = { user, login, register, logout, refresh };
+  const value = { user, login, loginWithGoogle, register, logout, refresh };
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 

@@ -6,11 +6,12 @@ import { sanitizeNextParam } from "../../shared/lib/navigation";
 import LanguageSwitcher from "../../shared/components/LanguageSwitcher";
 import Brand from "../../shared/components/Brand";
 import OmniaLogo from "../../shared/components/OmniaLogo";
+import GoogleSignInButton from "../../shared/components/GoogleSignInButton";
 
 export default function LoginPage() {
   const { t, i18n } = useTranslation();
   const lang = (i18n.language || "it").slice(0, 2);
-  const { login } = useAuth();
+  const { login, loginWithGoogle } = useAuth();
   const nav = useNavigate();
   const location = useLocation();
   // C3 — anti open-redirect (logica pura testata in shared/lib/navigation.ts)
@@ -32,10 +33,21 @@ export default function LoginPage() {
       await login(email, password);
       nav(next, { replace: true });
     } catch (err) {
-      setError(formatApiErrorDetail(err.response?.data?.detail) || err.message);
+      const detail = err.response?.data?.detail;
+      setError(
+        detail === "use_google_sign_in"
+          ? t("auth.use_google")
+          : formatApiErrorDetail(detail) || err.message
+      );
     } finally {
       setLoading(false);
     }
+  };
+
+  const onGoogle = async (credential) => {
+    setError("");
+    await loginWithGoogle(credential);
+    nav(next, { replace: true });
   };
 
   return (
@@ -118,6 +130,13 @@ export default function LoginPage() {
           >
             {loading ? t("common.loading") : t("auth.login_cta")} →
           </button>
+
+          <GoogleSignInButton
+            onSuccess={onGoogle}
+            onError={(msg) => setError(msg)}
+            disabled={loading}
+            label={t("auth.continue_google")}
+          />
 
           <p className="mt-8 pt-6 border-t border-stone-200 text-sm font-sans text-stone-600">
             {t("auth.no_account")}{" "}

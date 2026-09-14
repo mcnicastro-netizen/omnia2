@@ -1293,3 +1293,12 @@ Registro di tutte le decisioni di business e tecniche prese durante il progetto.
 - Copre: HAL CRM, Migliora testo, Guida HAL, HAL Legal, Virtual Staging, Micro-tour, API Track B, wallet crediti.
 - `/app/ops/legal` resta il dettaglio Legal.
 - Mostra COGS stimato vs valore listino crediti; canale (incluso / crediti / B2C).
+
+## D-078 — Login con Google (Sign-In) · 2026-09-14
+**Status**: ✅ ATTIVA (opt-in via env)
+
+- Login/registrazione con **Continua con Google** (Google Identity Services + verifica ID token).
+- Abilitato solo se `GOOGLE_CLIENT_ID` è in `backend/.env`.
+- Nuovi utenti Google = ruolo `client` (come register); agenzia via onboarding.
+- Account esistenti: linking automatico su stessa email verificata.
+- Guida: `memory/GOOGLE_AUTH.md`.

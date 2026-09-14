@@ -5,11 +5,12 @@ import { useAuth, formatApiErrorDetail } from "../../shared/lib/auth";
 import LanguageSwitcher from "../../shared/components/LanguageSwitcher";
 import Brand from "../../shared/components/Brand";
 import OmniaLogo from "../../shared/components/OmniaLogo";
+import GoogleSignInButton from "../../shared/components/GoogleSignInButton";
 
 export default function RegisterPage() {
   const { t, i18n } = useTranslation();
   const lang = (i18n.language || "it").slice(0, 2);
-  const { register } = useAuth();
+  const { register, loginWithGoogle } = useAuth();
   const nav = useNavigate();
 
   const [form, setForm] = useState({
@@ -63,6 +64,20 @@ export default function RegisterPage() {
       setError(formatApiErrorDetail(err.response?.data?.detail) || err.message);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const onGoogle = async (credential) => {
+    setError("");
+    if (isAgencyRole && !policyAccepted) {
+      setError(t("domain_vault.policy_required_error"));
+      throw new Error("policy");
+    }
+    const user = await loginWithGoogle(credential);
+    if (!(user?.agency_ids || []).length) {
+      nav(`/${lang}/app/onboarding`, { replace: true });
+    } else {
+      nav(`/${lang}/app/dashboard`, { replace: true });
     }
   };
 
@@ -225,6 +240,13 @@ export default function RegisterPage() {
           >
             {loading ? t("common.loading") : t("auth.register_cta")} →
           </button>
+
+          <GoogleSignInButton
+            onSuccess={onGoogle}
+            onError={(msg) => setError(msg)}
+            disabled={loading}
+            label={t("auth.continue_google")}
+          />
 
           <p className="mt-8 pt-6 border-t border-stone-200 text-sm font-sans text-stone-600">
             {t("auth.have_account")}{" "}

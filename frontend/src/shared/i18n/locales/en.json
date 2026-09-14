@@ -86,7 +86,9 @@
     "acct_agency": "Agency / Real estate professional",
     "acct_private": "Private (buying/selling a home)",
     "acct_student": "Academy student",
-    "acct_agency_hint": "After signing up you'll complete your agency onboarding: only then will you get admin permissions."
+    "acct_agency_hint": "After signing up you'll complete your agency onboarding: only then will you get admin permissions.",
+    "continue_google": "Continue with Google",
+    "use_google": "This account uses Google. Click «Continue with Google»."
   },
   "domain_vault": {
     "badge": "Your domain stays yours",

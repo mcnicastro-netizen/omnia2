@@ -86,7 +86,9 @@
     "acct_agency": "Agenzia / Professionista immobiliare",
     "acct_private": "Privato (cerco/vendo casa)",
     "acct_student": "Studente Academy",
-    "acct_agency_hint": "Dopo la registrazione completerai l'onboarding della tua agenzia: solo allora otterrai i permessi da amministratore."
+    "acct_agency_hint": "Dopo la registrazione completerai l'onboarding della tua agenzia: solo allora otterrai i permessi da amministratore.",
+    "continue_google": "Continua con Google",
+    "use_google": "Questo account usa Google. Clicca «Continua con Google»."
   },
   "domain_vault": {
     "badge": "Il tuo dominio resta tuo",
