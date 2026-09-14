@@ -1,0 +1,12 @@
+OMNIA — come attivare HAL (Gemini)
+=================================
+
+Non riesci a vedere .env? Normale: Cursor lo nasconde perché è un file segreto.
+
+COSA FARE ADESSO (il modo più semplice):
+1) Crea la chiave su https://aistudio.google.com/apikey
+2) Nella chat di Cursor scrivi SOLO:
+   chiave: AIza.........
+3) Io la metto io nel file giusto e riavvio il backend.
+
+Non pubblicare la chiave su GitHub o WhatsApp.

@@ -13,7 +13,7 @@ from typing import Any, AsyncIterator, Optional
 
 logger = logging.getLogger("omnia.llm")
 
-DEFAULT_MODEL = os.environ.get("GEMINI_MODEL", "gemini-2.0-flash")
+DEFAULT_MODEL = os.environ.get("GEMINI_MODEL", "gemini-3.6-flash")
 
 
 class LlmNotConfigured(RuntimeError):
