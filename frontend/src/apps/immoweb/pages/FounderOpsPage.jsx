@@ -102,12 +102,22 @@ export default function FounderOpsPage() {
 
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
               <Kpi label="Eventi periodo" value={t.events ?? 0} />
-              <Kpi label="Costo nostro (stima)" value={`€ ${(t.cogs_eur ?? 0).toFixed(2)}`} hint="COGS provider" />
-              <Kpi label="Valore listino" value={`€ ${(t.list_value_eur ?? 0).toFixed(2)}`} hint="se tutto a crediti" />
-              <Kpi label="Margine teorico" value={`€ ${(t.margin_if_listed_eur ?? 0).toFixed(2)}`} />
+              <Kpi label="Costi (stima)" value={`€ ${(t.cogs_eur ?? 0).toFixed(2)}`} hint="COGS provider" />
+              <Kpi label="Incassi" value={`€ ${(t.revenue_eur ?? 0).toFixed(2)}`} hint="crediti + Stripe + B2C" />
+              <Kpi
+                label="Margine"
+                value={`€ ${(t.margin_eur ?? 0).toFixed(2)}`}
+                hint="Incassi − Costi"
+                tone={(t.margin_eur ?? 0) >= 0 ? "good" : "bad"}
+              />
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+              <Kpi
+                label="Se tutto a listino"
+                value={`€ ${(t.list_value_eur ?? 0).toFixed(2)}`}
+                hint={`margine teorico € ${(t.margin_if_listed_eur ?? 0).toFixed(2)}`}
+              />
               <Kpi
                 label="Tavily free rimasti"
                 value={`${data.tavily?.free_left ?? 0} / ${data.tavily?.free_credits_month ?? 1000}`}
@@ -117,11 +127,6 @@ export default function FounderOpsPage() {
                 label="Wallet crediti agenzie"
                 value={data.wallets?.agency_credits_balance ?? 0}
                 hint={`≈ € ${(data.wallets?.list_value_of_balance_eur ?? 0).toFixed(0)} listino`}
-              />
-              <Kpi
-                label="Provider"
-                value={data.providers?.llm_configured ? "Gemini OK" : "LLM off"}
-                hint={data.providers?.gemini_model}
               />
             </div>
 
@@ -143,8 +148,10 @@ export default function FounderOpsPage() {
                       <th className="text-left px-4 py-2 font-medium">Servizio</th>
                       <th className="text-left px-4 py-2 font-medium">Canale</th>
                       <th className="text-right px-4 py-2 font-medium">Eventi</th>
-                      <th className="text-right px-4 py-2 font-medium">COGS €</th>
-                      <th className="text-right px-4 py-2 font-medium">Listino €</th>
+                      <th className="text-right px-4 py-2 font-medium">Costi €</th>
+                      <th className="text-right px-4 py-2 font-medium">Incassi €</th>
+                      <th className="text-right px-4 py-2 font-medium">Margine €</th>
+                      <th className="text-right px-4 py-2 font-medium">A listino €</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-stone-100">
@@ -159,13 +166,34 @@ export default function FounderOpsPage() {
                         </td>
                         <td className="px-4 py-3 text-right tabular-nums">{s.events}</td>
                         <td className="px-4 py-3 text-right tabular-nums">
-                          {s.cogs_eur == null ? "—" : `€ ${Number(s.cogs_eur).toFixed(2)}`}
+                          {s.cogs_eur == null ? "—" : eur(s.cogs_eur)}
                         </td>
-                        <td className="px-4 py-3 text-right tabular-nums text-stone-600">
-                          € {Number(s.list_eur || 0).toFixed(2)}
+                        <td className="px-4 py-3 text-right tabular-nums">
+                          {eur(s.revenue_eur)}
+                        </td>
+                        <td className={`px-4 py-3 text-right tabular-nums font-medium ${
+                          (s.margin_eur ?? 0) >= 0 ? "text-emerald-700" : "text-rose-700"
+                        }`}>
+                          {s.margin_eur == null ? "—" : eur(s.margin_eur)}
+                        </td>
+                        <td className="px-4 py-3 text-right tabular-nums text-stone-500">
+                          {eur(s.list_eur)}
+                          {s.margin_if_listed_eur != null ? (
+                            <div className="text-[10px]">Δ {eur(s.margin_if_listed_eur)}</div>
+                          ) : null}
                         </td>
                       </tr>
                     ))}
+                    <tr className="bg-stone-50 font-medium">
+                      <td className="px-4 py-3" colSpan={2}>Totale</td>
+                      <td className="px-4 py-3 text-right tabular-nums">{t.events ?? 0}</td>
+                      <td className="px-4 py-3 text-right tabular-nums">{eur(t.cogs_eur)}</td>
+                      <td className="px-4 py-3 text-right tabular-nums">{eur(t.revenue_eur)}</td>
+                      <td className={`px-4 py-3 text-right tabular-nums ${
+                        (t.margin_eur ?? 0) >= 0 ? "text-emerald-700" : "text-rose-700"
+                      }`}>{eur(t.margin_eur)}</td>
+                      <td className="px-4 py-3 text-right tabular-nums text-stone-500">{eur(t.list_value_eur)}</td>
+                    </tr>
                   </tbody>
                 </table>
               </div>
@@ -218,11 +246,17 @@ export default function FounderOpsPage() {
   );
 }
 
-function Kpi({ label, value, hint }) {
+function eur(n) {
+  return `€ ${Number(n || 0).toFixed(2)}`;
+}
+
+function Kpi({ label, value, hint, tone }) {
+  const toneCls =
+    tone === "good" ? "text-emerald-800" : tone === "bad" ? "text-rose-800" : "text-[#0B1E3F]";
   return (
     <div className="rounded-lg border border-stone-200 bg-white p-4">
       <p className="text-[10px] uppercase tracking-widest text-stone-500">{label}</p>
-      <p className="text-2xl mt-1 text-[#0B1E3F]" style={{ fontFamily: "'Fraunces', Georgia, serif" }}>
+      <p className={`text-2xl mt-1 ${toneCls}`} style={{ fontFamily: "'Fraunces', Georgia, serif" }}>
         {value}
       </p>
       {hint ? <p className="text-[11px] text-stone-500 mt-1">{hint}</p> : null}
@@ -235,6 +269,8 @@ function ChannelBadge({ channel }) {
     in_app_incluso: { label: "Incluso", cls: "bg-emerald-100 text-emerald-800" },
     crediti: { label: "Crediti", cls: "bg-amber-100 text-amber-900" },
     b2c: { label: "B2C", cls: "bg-sky-100 text-sky-900" },
+    misto: { label: "Misto", cls: "bg-violet-100 text-violet-900" },
+    abbonamento: { label: "Abbonamento", cls: "bg-stone-200 text-stone-800" },
   };
   const m = map[channel] || { label: channel, cls: "bg-stone-100 text-stone-700" };
   return (

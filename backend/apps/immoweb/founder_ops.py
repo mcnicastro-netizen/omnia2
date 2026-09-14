@@ -53,6 +53,42 @@ async def _count(db, coll: str, match: dict) -> int:
         return 0
 
 
+def _money_row(
+    *,
+    key: str,
+    label: str,
+    channel: str,
+    events: int,
+    unit_cogs_eur: Optional[float],
+    cogs_eur: Optional[float],
+    list_credits_unit: int,
+    revenue_eur: float,
+    revenue_source: str,
+    note: str,
+) -> Dict[str, Any]:
+    """Una riga P&L: costi, incassi, margine (attuale e a listino)."""
+    list_eur = round(events * list_credits_unit * EUR_PER_CREDIT_LIST, 2) if list_credits_unit else 0.0
+    cogs = None if cogs_eur is None else round(float(cogs_eur), 2)
+    rev = round(float(revenue_eur or 0), 2)
+    margin = None if cogs is None else round(rev - cogs, 2)
+    margin_listed = None if cogs is None else round(list_eur - cogs, 2)
+    return {
+        "key": key,
+        "label": label,
+        "channel": channel,
+        "events": events,
+        "unit_cogs_eur": unit_cogs_eur,
+        "cogs_eur": cogs,
+        "list_credits": list_credits_unit,
+        "list_eur": list_eur,
+        "revenue_eur": rev,
+        "revenue_source": revenue_source,
+        "margin_eur": margin,
+        "margin_if_listed_eur": margin_listed,
+        "note": note,
+    }
+
+
 @router.get("/overview")
 async def ops_overview(
     days: int = 30,
@@ -154,105 +190,190 @@ async def ops_overview(
     except Exception:
         pass
 
-    # --- COGS stime -----------------------------------------------------
-    legal_tavily_credits = legal * (TAVILY_CREDITS_PER_LEGAL if tavily_on else 0)
+    # B2C purchases (carta) — se presenti
+    b2c_revenue = 0.0
+    b2c_by_product: Dict[str, float] = {}
+    try:
+        brows = await db.b2c_purchases.aggregate([
+            {"$match": {"created_at": {"$gte": since}, "status": {"$in": ["paid", "complete", "completed", "succeeded"]}}},
+            {"$group": {
+                "_id": "$product_key",
+                "eur": {"$sum": {"$ifNull": ["$amount_eur", {"$ifNull": ["$price_eur", 0]}]}},
+                "n": {"$sum": 1},
+            }},
+        ]).to_list(50)
+        for r in brows:
+            pk = r.get("_id") or "other"
+            eur = float(r.get("eur") or 0)
+            b2c_by_product[pk] = eur
+            b2c_revenue += eur
+    except Exception:
+        pass
+
+    # Payment transactions (subscription / credits topup) — ricavi piattaforma
+    payments_revenue = 0.0
+    try:
+        prows = await db.payment_transactions.aggregate([
+            {"$match": {
+                "created_at": {"$gte": since},
+                "payment_status": {"$in": ["paid", "complete", "completed", "succeeded"]},
+            }},
+            {"$group": {"_id": "$kind", "eur": {"$sum": {"$ifNull": ["$amount_eur", {"$ifNull": ["$amount", 0]}]}}}},
+        ]).to_list(20)
+        for r in prows:
+            payments_revenue += float(r.get("eur") or 0)
+    except Exception:
+        pass
+
+    # API legal credits separately for legal revenue attribution
+    api_legal_credits = 0
+    for e in api_by_endpoint:
+        ep = (e.get("endpoint") or "").lower()
+        if "legal" in ep:
+            api_legal_credits += int(e.get("credits") or 0)
+
+    legal_cogs = round(
+        legal * EUR_HAL_LEGAL_GEMINI
+        + legal * (TAVILY_CREDITS_PER_LEGAL * EUR_TAVILY_PER_CREDIT if tavily_on else 0),
+        2,
+    )
+    legal_revenue = round(
+        api_legal_credits * EUR_PER_CREDIT_LIST
+        + float(b2c_by_product.get("b2c_hal_legal_query") or 0),
+        2,
+    )
+    staging_revenue = round(
+        float(b2c_by_product.get("b2c_staging_render") or 0),
+        2,
+    )
+    # Se in futuro staging scala crediti agenzia, somma qui da ledger
+    video_revenue = round(video_credits * EUR_PER_CREDIT_LIST, 2)
+    # Evita doppio conteggio: i crediti legal restano sulla riga HAL Legal
+    api_revenue = round(max(0, api_credits - api_legal_credits) * EUR_PER_CREDIT_LIST, 2)
+
+    services = [
+        _money_row(
+            key="hal_agents",
+            label="HAL Assistente CRM",
+            channel="in_app_incluso",
+            events=al_chat,
+            unit_cogs_eur=EUR_HAL_AGENTS,
+            cogs_eur=al_chat * EUR_HAL_AGENTS,
+            list_credits_unit=4,
+            revenue_eur=0.0,
+            revenue_source="incluso_abbonamento",
+            note="Costo operativo; ricavo nel piano, non a consumo",
+        ),
+        _money_row(
+            key="hal_improve",
+            label="HAL Migliora testo",
+            channel="in_app_incluso",
+            events=al_improve,
+            unit_cogs_eur=EUR_HAL_IMPROVE,
+            cogs_eur=al_improve * EUR_HAL_IMPROVE,
+            list_credits_unit=0,
+            revenue_eur=0.0,
+            revenue_source="incluso_abbonamento",
+            note="Costo operativo; ricavo nel piano",
+        ),
+        _money_row(
+            key="hal_knowledge",
+            label="Guida HAL",
+            channel="in_app_incluso",
+            events=knowledge,
+            unit_cogs_eur=EUR_HAL_KNOWLEDGE,
+            cogs_eur=knowledge * EUR_HAL_KNOWLEDGE,
+            list_credits_unit=0,
+            revenue_eur=0.0,
+            revenue_source="incluso_abbonamento",
+            note="Costo operativo; ricavo nel piano",
+        ),
+        _money_row(
+            key="hal_legal",
+            label="HAL Legal",
+            channel="misto",
+            events=legal,
+            unit_cogs_eur=round(
+                EUR_HAL_LEGAL_GEMINI + (TAVILY_CREDITS_PER_LEGAL * EUR_TAVILY_PER_CREDIT if tavily_on else 0),
+                4,
+            ),
+            cogs_eur=legal_cogs,
+            list_credits_unit=12,
+            revenue_eur=legal_revenue,
+            revenue_source="api_crediti+b2c",
+            note="In-app incluso; incassi = API legal + B2C legal",
+        ),
+        _money_row(
+            key="virtual_staging",
+            label="Virtual Staging",
+            channel="crediti",
+            events=staging,
+            unit_cogs_eur=EUR_STAGING_JOB,
+            cogs_eur=staging * EUR_STAGING_JOB,
+            list_credits_unit=18,
+            revenue_eur=staging_revenue,
+            revenue_source="crediti+b2c",
+            note="Incassi quando scalati crediti / B2C staging",
+        ),
+        _money_row(
+            key="micro_tour",
+            label="Micro-tour video",
+            channel="crediti",
+            events=videos,
+            unit_cogs_eur=EUR_MICRO_TOUR,
+            cogs_eur=videos * EUR_MICRO_TOUR,
+            list_credits_unit=10,
+            revenue_eur=video_revenue,
+            revenue_source="crediti_scalati",
+            note="Incassi = crediti addebitati × €0,05",
+        ),
+        _money_row(
+            key="api_gateway",
+            label="API Track B",
+            channel="crediti",
+            events=api_calls,
+            unit_cogs_eur=None,
+            cogs_eur=0.0,  # COGS già nelle voci prodotto; qui solo ricavo crediti
+            list_credits_unit=0,
+            revenue_eur=api_revenue,
+            revenue_source="crediti_scalati",
+            note="Incassi crediti API (COGS nei servizi sottostanti)",
+        ),
+        _money_row(
+            key="subscriptions_topups",
+            label="Abbonamenti & ricariche",
+            channel="abbonamento",
+            events=0,
+            unit_cogs_eur=0.0,
+            cogs_eur=0.0,
+            list_credits_unit=0,
+            revenue_eur=round(payments_revenue, 2),
+            revenue_source="stripe",
+            note="Incassi Stripe piano + pacchetti crediti",
+        ),
+    ]
+    # Override list_eur for api_gateway to show credit list value
+    for s in services:
+        if s["key"] == "api_gateway":
+            s["list_eur"] = round(api_credits * EUR_PER_CREDIT_LIST, 2)
+            s["list_credits"] = api_credits
+            s["margin_if_listed_eur"] = round(s["list_eur"] - (s["cogs_eur"] or 0), 2)
+        if s["key"] == "subscriptions_topups":
+            s["list_eur"] = s["revenue_eur"]
+            s["margin_if_listed_eur"] = s["revenue_eur"]
+            s["margin_eur"] = s["revenue_eur"]
+
+    total_cogs = round(sum(s["cogs_eur"] or 0 for s in services), 2)
+    total_list = round(sum(s["list_eur"] or 0 for s in services), 2)
+    total_revenue = round(sum(s["revenue_eur"] or 0 for s in services), 2)
+    total_margin = round(total_revenue - total_cogs, 2)
+    total_events = sum(int(s["events"] or 0) for s in services)
+
     legal_month_tavily = legal_month * (TAVILY_CREDITS_PER_LEGAL if tavily_on else 0)
     tavily_free_left = max(0, TAVILY_FREE_MONTH - legal_month_tavily)
     tavily_paid_eur = 0.0
     if legal_month_tavily > TAVILY_FREE_MONTH:
         tavily_paid_eur = (legal_month_tavily - TAVILY_FREE_MONTH) * EUR_TAVILY_PER_CREDIT
-
-    # Periodo: Tavily free è mensile — per gross periodo contiamo unitario; effective mese separato
-    services = [
-        {
-            "key": "hal_agents",
-            "label": "HAL Assistente CRM",
-            "channel": "in_app_incluso",
-            "events": al_chat,
-            "unit_cogs_eur": EUR_HAL_AGENTS,
-            "cogs_eur": round(al_chat * EUR_HAL_AGENTS, 2),
-            "list_credits": 4,
-            "list_eur": round(al_chat * 4 * EUR_PER_CREDIT_LIST, 2),
-            "note": "Chat CRM — incluso in-app",
-        },
-        {
-            "key": "hal_improve",
-            "label": "HAL Migliora testo",
-            "channel": "in_app_incluso",
-            "events": al_improve,
-            "unit_cogs_eur": EUR_HAL_IMPROVE,
-            "cogs_eur": round(al_improve * EUR_HAL_IMPROVE, 2),
-            "list_credits": 0,
-            "list_eur": 0.0,
-            "note": "Copy annunci — incluso in-app",
-        },
-        {
-            "key": "hal_knowledge",
-            "label": "Guida HAL",
-            "channel": "in_app_incluso",
-            "events": knowledge,
-            "unit_cogs_eur": EUR_HAL_KNOWLEDGE,
-            "cogs_eur": round(knowledge * EUR_HAL_KNOWLEDGE, 2),
-            "list_credits": 0,
-            "list_eur": 0.0,
-            "note": "How-to OMNIA — incluso in-app",
-        },
-        {
-            "key": "hal_legal",
-            "label": "HAL Legal",
-            "channel": "in_app_incluso",
-            "events": legal,
-            "unit_cogs_eur": round(
-                EUR_HAL_LEGAL_GEMINI + (TAVILY_CREDITS_PER_LEGAL * EUR_TAVILY_PER_CREDIT if tavily_on else 0),
-                4,
-            ),
-            "cogs_eur": round(
-                legal * EUR_HAL_LEGAL_GEMINI
-                + legal * (TAVILY_CREDITS_PER_LEGAL * EUR_TAVILY_PER_CREDIT if tavily_on else 0),
-                2,
-            ),
-            "list_credits": 12,
-            "list_eur": round(legal * 12 * EUR_PER_CREDIT_LIST, 2),
-            "note": "In-app incluso; listino = API/overage/B2C",
-        },
-        {
-            "key": "virtual_staging",
-            "label": "Virtual Staging",
-            "channel": "crediti",
-            "events": staging,
-            "unit_cogs_eur": EUR_STAGING_JOB,
-            "cogs_eur": round(staging * EUR_STAGING_JOB, 2),
-            "list_credits": 18,
-            "list_eur": round(staging * 18 * EUR_PER_CREDIT_LIST, 2),
-            "note": "Pipeline fal.ai ~€0,056/render",
-        },
-        {
-            "key": "micro_tour",
-            "label": "Micro-tour video",
-            "channel": "crediti",
-            "events": videos,
-            "unit_cogs_eur": EUR_MICRO_TOUR,
-            "cogs_eur": round(videos * EUR_MICRO_TOUR, 2),
-            "list_credits": 10,
-            "list_eur": round((video_credits or videos * 10) * EUR_PER_CREDIT_LIST, 2),
-            "note": "Kling Pro ~€0,88/clip",
-        },
-        {
-            "key": "api_gateway",
-            "label": "API Track B",
-            "channel": "crediti",
-            "events": api_calls,
-            "unit_cogs_eur": None,
-            "cogs_eur": None,  # dipende dall'endpoint
-            "list_credits": api_credits,
-            "list_eur": round(api_credits * EUR_PER_CREDIT_LIST, 2),
-            "note": "Crediti scalati su API key partner",
-        },
-    ]
-
-    total_cogs = round(sum(s["cogs_eur"] or 0 for s in services), 2)
-    total_list = round(sum(s["list_eur"] or 0 for s in services), 2)
-    total_events = sum(int(s["events"] or 0) for s in services)
 
     # Serie giornaliera aggregata (legal + al + knowledge) per sparkline
     by_day_map: Dict[str, int] = {}
@@ -292,8 +413,11 @@ async def ops_overview(
         "totals": {
             "events": total_events,
             "cogs_eur": total_cogs,
+            "revenue_eur": total_revenue,
+            "margin_eur": total_margin,
             "list_value_eur": total_list,
             "margin_if_listed_eur": round(total_list - total_cogs, 2),
+            "b2c_revenue_eur": round(b2c_revenue, 2),
         },
         "services": services,
         "tavily": {
@@ -312,7 +436,11 @@ async def ops_overview(
         "by_day": by_day,
         "assumptions": {
             "eur_per_credit_list": EUR_PER_CREDIT_LIST,
-            "note": "COGS = stime. Fatture reali: Google AI, Tavily, fal.ai. Listino = valore se scalato a crediti.",
+            "note": (
+                "Incassi = crediti scalati / Stripe / B2C quando presenti. "
+                "Costi = stime COGS. Margine = Incassi − Costi. "
+                "«A listino» = se tutto il volume fosse fatturato a listino crediti."
+            ),
         },
         "links": {
             "legal_detail": "/app/ops/legal",
