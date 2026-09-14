@@ -77,8 +77,32 @@ TOP_K = 5                  # numero di chunk recuperati per query
 CONFIDENCE_MIN = 0.08      # sotto questa soglia → insufficient_context (TF-IDF scale)
 CONFIDENCE_HIGH = 0.20     # sopra questa soglia → high-confidence answer
 
+# Corpus tecnico: resta indicizzato per ops, ma NON va in risposta agli agenti.
+AGENT_HIDDEN_FILES = {
+    "00-api-codice.yaml",
+    "AUDIT_M2.md",
+    "ASPETTI_DA_APPROFONDIRE.md",
+}
+
 MODEL_PROVIDER = "gemini"
 MODEL_NAME = os.environ.get("GEMINI_MODEL", "gemini-3.6-flash")
+
+
+def _friendly_source_label(file_name: Optional[str], section: Optional[str] = None) -> str:
+    """Etichetta leggibile per agenti (niente path/YAML)."""
+    name = (file_name or "").strip()
+    sec = (section or "").strip()
+    if name.endswith(".yaml"):
+        base = name[:-5]
+        # es. 27-mls-network → MLS network
+        parts = base.split("-", 1)
+        pretty = (parts[1] if len(parts) == 2 and parts[0].isdigit() else base)
+        pretty = pretty.replace("-", " ").strip().title()
+        return f"Guida OMNIA · {sec or pretty}"
+    if name.endswith(".md"):
+        pretty = name[:-3].replace("_", " ").replace("-", " ").strip()
+        return f"Documentazione OMNIA · {sec or pretty}"
+    return sec or "Guida OMNIA"
 
 
 # ---------------------------------------------------------------------------
@@ -460,14 +484,20 @@ async def _load_index() -> Optional[Dict[str, Any]]:
 # ---------------------------------------------------------------------------
 
 async def retrieve_chunks(query: str, k: int = TOP_K) -> List[Dict[str, Any]]:
+    """Recupera i chunk più simili, preferendo le guide operative YAML.
+
+    Esclude i file in AGENT_HIDDEN_FILES dalle risposte agenti (API/audit).
+    """
     idx = await _load_index()
     if idx is None:
         return []
     counts = idx["cv"].transform([query])
     q_vec = counts.multiply(idx["idf"]).tocsr()
     sims = cosine_similarity(q_vec, idx["matrix"])[0]
-    top_indices = np.argsort(sims)[::-1][:k]
-    top = []
+    # Prendi un pool più ampio per poter filtrare i file tecnici
+    pool = max(k * 8, 40)
+    top_indices = np.argsort(sims)[::-1][:pool]
+    top: List[Dict[str, Any]] = []
     db = Database.get()
     for pos in top_indices:
         sim = float(sims[pos])
@@ -477,9 +507,20 @@ async def retrieve_chunks(query: str, k: int = TOP_K) -> List[Dict[str, Any]]:
         doc = await db.hal_knowledge_chunks.find_one(
             {"id": chunk_id}, {"_id": 0, "file": 1, "section": 1, "text": 1, "chunk_id": 1}
         )
-        if doc:
-            top.append({**doc, "similarity": round(sim, 4)})
-    return top
+        if not doc:
+            continue
+        fname = doc.get("file") or ""
+        if fname in AGENT_HIDDEN_FILES:
+            continue
+        # Boost leggero alle guide HAL YAML operative (passi UI)
+        score = sim
+        if fname.endswith(".yaml") and not fname.startswith("00-"):
+            score = min(1.0, sim + 0.04)
+        top.append({**doc, "similarity": round(score, 4)})
+        if len(top) >= k:
+            break
+    top.sort(key=lambda c: c["similarity"], reverse=True)
+    return top[:k]
 
 
 def _build_prompt(question: str, chunks: List[Dict[str, Any]]) -> str:
@@ -487,32 +528,52 @@ def _build_prompt(question: str, chunks: List[Dict[str, Any]]) -> str:
         return question
     ctx_lines = []
     for i, c in enumerate(chunks, 1):
-        ctx_lines.append(f"[FONTE {i} · {c['file']} · sezione: {c.get('section') or 'n/a'}]\n{c['text']}\n")
+        # Nascondi path tecnici all'LLM come "etichette fonte" leggibili
+        label = c.get("section") or c.get("chunk_id") or f"guida-{i}"
+        if isinstance(label, str) and label.endswith(".yaml"):
+            label = label.replace(".yaml", "").replace("-", " ")
+        ctx_lines.append(f"[NOTA {i} · {label}]\n{c['text']}\n")
     context = "\n---\n".join(ctx_lines)
-    return f"""Rispondi alla domanda dell'utente basandoti ESCLUSIVAMENTE sulle fonti qui sotto.
-Se le fonti non contengono la risposta, di' onestamente "Non ho abbastanza contesto nel corpus OMNIA per rispondere". NON inventare informazioni.
-Quando citi una fonte, usa il formato [FONTE N] alla fine della frase.
-Rispondi in italiano, tono professionale e conciso, massimo 300 parole.
+    return f"""Sei HAL, l'assistente di OMNIA per agenti immobiliari.
 
-FONTI:
+Il tuo interlocutore è un agente o titolare di agenzia: NON è un programmatore.
+Deve capire subito cosa fare sullo schermo, come in una telefonata di supporto.
+
+REGOLE DI LINGUAGGIO (obbligatorie):
+- Italiano semplice, frasi corte, tono cordiale da collega di agenzia.
+- Spiega i passi come menu e bottoni: es. «Nel menu a sinistra apri MLS, poi clicca Entra nel network».
+- Scrivi come spiegheresti a qualcuno che usa solo mouse e schermo: niente informatica.
+- VIETATO usare: API, endpoint, JSON, YAML, Mongo, JWT, cookie, server, route, /api/, status code, TF-IDF, chunk, corpus, webhook, SDK, HTTP, POST, GET, database, codice, repository.
+- VIETATO citare nomi file (.py, .yaml, .md), path (/app/...), ruoli tecnici (agency_admin, super_admin).
+- Se serve un permesso, di' «serve l'account del titolare» o «chiedi al titolare».
+- Massimo 160 parole. Usa elenchi numerati per i passi (1. 2. 3.).
+- Usa SOLO le note sotto. Se non basta, di' onestamente che non sei sicuro e suggerisci di riprovare con altre parole o di chiedere al supporto OMNIA.
+- Non inventare funzioni che non sono nelle note.
+- Non mostrare percentuali, «confidence», «similarity» o dettagli interni.
+
+NOTE DAL MANUALE OMNIA:
 {context}
 
-DOMANDA UTENTE:
+DOMANDA DELL'AGENTE:
 {question}
 
-RISPOSTA:"""
+RISPOSTA (semplice, operativa):"""
 
 
 async def generate_answer(prompt: str, session_id: str) -> Dict[str, Any]:
-    """Non-streaming generation via Emergent LLM Key + Gemini 3 Flash Preview."""
+    """Non-streaming generation via Gemini (shared.llm bridge)."""
     from emergentintegrations.llm.chat import LlmChat, UserMessage
-    api_key = os.environ.get("EMERGENT_LLM_KEY")
+    api_key = os.environ.get("EMERGENT_LLM_KEY") or os.environ.get("GEMINI_API_KEY")
     if not api_key:
         raise HTTPException(status_code=500, detail="emergent_llm_key_not_configured")
     chat = LlmChat(
         api_key=api_key,
         session_id=session_id,
-        system_message="Sei HAL Knowledge, l'assistente informativo di OMNIA Real Estate Lab. Rispondi solo con informazioni presenti nelle fonti fornite.",
+        system_message=(
+            "Sei HAL di OMNIA. Parli solo con agenti e titolari di agenzia. "
+            "Linguaggio da collega: menu, bottoni, passi pratici. "
+            "Mai gergo informatico. Rispondi solo dalle note del manuale."
+        ),
     ).with_model(MODEL_PROVIDER, MODEL_NAME)
     response = await chat.send_message(UserMessage(text=prompt))
     text = getattr(response, "text", None) or str(response)
@@ -579,7 +640,11 @@ async def hal_ask(
             "created_at": utcnow_iso(),
         })
         return {
-            "answer": "Non ho abbastanza contesto nel corpus OMNIA per rispondere a questa domanda. Puoi riformularla o contattare il team OMNIA.",
+            "answer": (
+                "Non ho trovato una guida chiara su questo punto. "
+                "Prova a riformulare con altre parole (es. «Come entro in MLS?») "
+                "oppure chiedi al supporto OMNIA."
+            ),
             "sources": [],
             "confidence": round(best_sim, 4),
             "status": "insufficient_context",
@@ -596,7 +661,8 @@ async def hal_ask(
 
     sources = [
         {
-            "file": c["file"],
+            "label": _friendly_source_label(c.get("file"), c.get("section")),
+            "file": c["file"],  # interno / audit; la UI mostra `label`
             "section": c.get("section"),
             "chunk_id": c.get("chunk_id"),
             "similarity": c["similarity"],

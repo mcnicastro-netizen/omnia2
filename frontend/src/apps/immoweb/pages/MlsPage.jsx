@@ -93,7 +93,7 @@ export default function MlsPage() {
             <div>
               <h2 className="text-lg font-medium text-slate-900">Attiva OMNIA MLS</h2>
               <p className="text-sm text-slate-600 mt-1">
-                Entri nel network multi-agenzia. Puoi condividere immobili <code>public</code> / <code>mls_only</code>.
+                Entri nel network multi-agenzia. Potrai condividere gli immobili impostati come pubblici o «solo MLS».
               </p>
             </div>
             <button

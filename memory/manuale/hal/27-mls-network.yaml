@@ -1,5 +1,5 @@
 # HAL — Capitolo 27 · MLS Network
-# Generato 2026-09-14 · D-051
+# Linguaggio per agenti immobiliari (niente gergo tecnico)
 
 voci:
 
@@ -10,22 +10,26 @@ voci:
     pubblico: [titolare, agente, segreteria]
     livello: base
     tags: [network, collaborazioni, mls, cap27]
-    correlati: []
+    correlati: [mls.dove-trovarlo, mls.join]
     domanda_naturale: "Cos'è OMNIA MLS?"
     contenuto:
       a_cosa_serve: >
-        Network multi-agenzia per condividere immobili e collaborare.
+        È la rete tra agenzie OMNIA: puoi vedere immobili condivisi da altre
+        agenzie, collaborare con partner e ricevere o fare proposte di affare.
       quando_si_usa: >
-        Quando l'utente lavora sul modulo MLS in ImmoWeb/ImmobilCloud.
+        Quando vuoi collaborare con colleghi di altre agenzie invece di
+        lavorare solo sul tuo inventario.
       passi:
-        - "Apri il modulo indicato nel capitolo 27."
-        - "Segui il flusso descritto nel manuale operativo."
-        - "In caso di errore leggi la sezione limitazioni/errori."
+        - "Nel menu a sinistra apri MLS."
+        - "Se non sei ancora nel network, clicca «Entra nel network» (serve l'account del titolare)."
+        - "Poi usa le schede Il mio MLS, rete locale e MLS Italia per sfogliare gli immobili."
       errori_comuni:
-        - problema: "Funzione non trovata o 403"
-          soluzione: "Verifica ruolo (agency_admin/agent/super_admin) e piano."
+        - problema: "Non vedo immobili di altre agenzie"
+          soluzione: >
+            Controlla di essere entrato nel network e che le altre agenzie
+            abbiano condiviso immobili (non privati).
       permessi:
-        - "Dipende dal modulo — vedi capitolo 27"
+        - "Tutti possono consultare; entrare nel network lo fa il titolare."
       screenshot: []
 
   - id: mls.dove-trovarlo
@@ -35,22 +39,24 @@ voci:
     pubblico: [titolare, agente, segreteria]
     livello: base
     tags: [ui, menu, mls, cap27]
-    correlati: []
+    correlati: [mls.cos-e, mls.join]
     domanda_naturale: "Dove trovo MLS?"
     contenuto:
       a_cosa_serve: >
-        Menu MLS → /app/mls; box network su ImmobilCloud.
+        Ti indica dove aprire la rete multi-agenzia dentro OMNIA.
       quando_si_usa: >
-        Quando l'utente lavora sul modulo MLS in ImmoWeb/ImmobilCloud.
+        Quando cerchi il menu o il riquadro del network.
       passi:
-        - "Apri il modulo indicato nel capitolo 27."
-        - "Segui il flusso descritto nel manuale operativo."
-        - "In caso di errore leggi la sezione limitazioni/errori."
+        - "Nel menu a sinistra clicca MLS."
+        - "Oppure da ImmobilCloud (Cloud) usa il riquadro della rete / MLS."
+        - "Dentro trovi Il mio MLS, rete locale, MLS Italia, Partner e Offerte."
       errori_comuni:
-        - problema: "Funzione non trovata o 403"
-          soluzione: "Verifica ruolo (agency_admin/agent/super_admin) e piano."
+        - problema: "Non trovo la voce MLS"
+          soluzione: >
+            Controlla di essere nell'area agenzia (ImmoWeb). Se non appare,
+            chiedi al titolare di verificare il piano o i permessi.
       permessi:
-        - "Dipende dal modulo — vedi capitolo 27"
+        - "Visibile a titolare, agente e segreteria."
       screenshot: []
 
   - id: mls.join
@@ -60,47 +66,81 @@ voci:
     pubblico: [titolare, agente, segreteria]
     livello: base
     tags: [join, onboarding, mls, cap27]
-    correlati: []
+    correlati: [mls.cos-e, mls.inventory]
     domanda_naturale: "Come entro nel network?"
     contenuto:
       a_cosa_serve: >
-        POST /api/app/mls/join (agency_admin) con accept_terms.
+        Attiva la tua agenzia nella rete OMNIA così potete condividere e
+        collaborare con altre agenzie.
       quando_si_usa: >
-        Quando l'utente lavora sul modulo MLS in ImmoWeb/ImmobilCloud.
+        La prima volta che usate MLS, oppure se l'agenzia non risulta ancora iscritta.
       passi:
-        - "Apri il modulo indicato nel capitolo 27."
-        - "Segui il flusso descritto nel manuale operativo."
-        - "In caso di errore leggi la sezione limitazioni/errori."
+        - "Accedi con l'account del titolare (non basta l'agente)."
+        - "Apri MLS dal menu a sinistra."
+        - "Leggi il breve messaggio di adesione e clicca «Entra nel network»."
+        - "Quando è attivo vedi le schede Il mio MLS, rete locale e MLS Italia."
       errori_comuni:
-        - problema: "Funzione non trovata o 403"
-          soluzione: "Verifica ruolo (agency_admin/agent/super_admin) e piano."
+        - problema: "Il pulsante non funziona o dice che non ho permesso"
+          soluzione: >
+            Serve l'account del titolare. Se sei agente, chiedi al titolare
+            di entrare nel network per tutta l'agenzia.
       permessi:
-        - "Dipende dal modulo — vedi capitolo 27"
+        - "Solo il titolare può iscrivere l'agenzia al network."
       screenshot: []
 
   - id: mls.inventory
-    titolo: Il mio MLS vs locale vs Italia
+    titolo: Il mio MLS, rete locale e MLS Italia
     modulo: MLS
     widget: null
     pubblico: [titolare, agente, segreteria]
     livello: base
     tags: [inventory, scope, mls, cap27]
-    correlati: []
-    domanda_naturale: "Il mio MLS vs locale vs Italia"
+    correlati: [mls.join, mls.privacy-visibilita]
+    domanda_naturale: "Che differenza c'è tra Il mio MLS, locale e Italia?"
     contenuto:
       a_cosa_serve: >
-        GET /api/app/mls/inventory?scope=mine|local|national.
+        Tre viste sullo stesso network: i tuoi immobili condivisi, quelli
+        della zona e quelli di tutta Italia.
       quando_si_usa: >
-        Quando l'utente lavora sul modulo MLS in ImmoWeb/ImmobilCloud.
+        Quando cerchi immobili da collaborare o controlli cosa hai messo in rete.
       passi:
-        - "Apri il modulo indicato nel capitolo 27."
-        - "Segui il flusso descritto nel manuale operativo."
-        - "In caso di errore leggi la sezione limitazioni/errori."
+        - "Apri MLS."
+        - "Scheda «Il mio MLS»: immobili della tua agenzia condivisi in rete."
+        - "Scheda rete locale (es. provincia): immobili condivisi vicino a te."
+        - "Scheda «MLS Italia»: immobili condivisi in tutta Italia."
       errori_comuni:
-        - problema: "Funzione non trovata o 403"
-          soluzione: "Verifica ruolo (agency_admin/agent/super_admin) e piano."
+        - problema: "Il mio MLS è vuoto"
+          soluzione: >
+            Condividi immobili dall'anagrafica Immobili scegliendo una
+            privacy «pubblica» o «solo MLS» (non «privato»).
       permessi:
-        - "Dipende dal modulo — vedi capitolo 27"
+        - "Consultazione per tutti; modifica immobili secondo i ruoli Immobili."
+      screenshot: []
+
+  - id: mls.privacy-visibilita
+    titolo: Quali immobili finiscono in MLS?
+    modulo: MLS
+    widget: null
+    pubblico: [titolare, agente, segreteria]
+    livello: base
+    tags: [privacy, visibility, mls, cap27]
+    correlati: [mls.inventory]
+    domanda_naturale: "Quali immobili si vedono in MLS?"
+    contenuto:
+      a_cosa_serve: >
+        Solo gli immobili che scegli di condividere entrano nel network.
+      quando_si_usa: >
+        Quando carichi o modifichi un immobile e decidi se collaborare o no.
+      passi:
+        - "Apri Immobili e seleziona l'annuncio."
+        - "Nella privacy/visibilità scegli «pubblico» o «solo MLS» per condividerlo."
+        - "Se metti «privato», resta solo nella tua agenzia e non appare nelle offerte MLS."
+      errori_comuni:
+        - problema: "Ho messo l'immobile ma non lo vedo in MLS"
+          soluzione: >
+            Controlla che non sia privato e che l'agenzia sia già entrata nel network.
+      permessi:
+        - "Chi può modificare immobili nella tua agenzia."
       screenshot: []
 
   - id: mls.partner
@@ -110,22 +150,26 @@ voci:
     pubblico: [titolare, agente, segreteria]
     livello: base
     tags: [partner, inviti, mls, cap27]
-    correlati: []
+    correlati: [mls.offerte]
     domanda_naturale: "Come gestisco i partner?"
     contenuto:
       a_cosa_serve: >
-        Invite + respond su /api/app/mls/partners*.
+        I partner sono agenzie con cui collabori in modo più stretto
+        (inviti da accettare o rifiutare).
       quando_si_usa: >
-        Quando l'utente lavora sul modulo MLS in ImmoWeb/ImmobilCloud.
+        Quando un'altra agenzia ti invita, o quando vuoi vedere con chi collabori.
       passi:
-        - "Apri il modulo indicato nel capitolo 27."
-        - "Segui il flusso descritto nel manuale operativo."
-        - "In caso di errore leggi la sezione limitazioni/errori."
+        - "Apri MLS."
+        - "Nella sezione Partner vedi gli inviti in attesa."
+        - "Clicca Accetta o Rifiuta sull'invito."
+        - "I partner già attivi restano elencati nella stessa area."
       errori_comuni:
-        - problema: "Funzione non trovata o 403"
-          soluzione: "Verifica ruolo (agency_admin/agent/super_admin) e piano."
+        - problema: "Non posso accettare l'invito"
+          soluzione: >
+            Prova con l'account del titolare. Se l'invito è scaduto, chiedi
+            all'altra agenzia di reinviarlo.
       permessi:
-        - "Dipende dal modulo — vedi capitolo 27"
+        - "Gestione inviti: di solito il titolare; consultazione anche agenti."
       screenshot: []
 
   - id: mls.offerte
@@ -135,120 +179,107 @@ voci:
     pubblico: [titolare, agente, segreteria]
     livello: base
     tags: [offerte, mls, cap27]
-    correlati: []
-    domanda_naturale: "Come funzionano le offerte?"
+    correlati: [mls.partner, mls.inventory]
+    domanda_naturale: "Come funzionano le offerte MLS?"
     contenuto:
       a_cosa_serve: >
-        POST /offers su immobile shared; accept/reject dal destinatario.
+        Un'offerta è una proposta di collaborazione su un immobile condiviso
+        verso un'altra agenzia della rete.
       quando_si_usa: >
-        Quando l'utente lavora sul modulo MLS in ImmoWeb/ImmobilCloud.
+        Quando hai un cliente per un immobile di un collega, o ricevi una proposta.
       passi:
-        - "Apri il modulo indicato nel capitolo 27."
-        - "Segui il flusso descritto nel manuale operativo."
-        - "In caso di errore leggi la sezione limitazioni/errori."
+        - "Apri MLS e trova l'immobile nelle schede rete locale o MLS Italia."
+        - "Invia un'offerta / proposta di collaborazione sull'immobile."
+        - "L'agenzia destinataria la vede in Offerte e può accettare o rifiutare."
+        - "Nella tua area Offerte segui lo stato (in attesa, accettata, rifiutata)."
       errori_comuni:
-        - problema: "Funzione non trovata o 403"
-          soluzione: "Verifica ruolo (agency_admin/agent/super_admin) e piano."
+        - problema: "Non posso fare offerte su un immobile"
+          soluzione: >
+            L'immobile deve essere condiviso (non privato) e la tua agenzia
+            deve essere nel network.
       permessi:
-        - "Dipende dal modulo — vedi capitolo 27"
+        - "Agenti e titolare possono lavorare sulle offerte secondo i ruoli agenzia."
       screenshot: []
 
   - id: mls.pubblico
-    titolo: Ricerca pubblica network
+    titolo: Cosa vede il pubblico sul network?
     modulo: MLS
     widget: null
     pubblico: [titolare, agente, segreteria]
     livello: base
     tags: [b2c, search, mls, cap27]
-    correlati: []
-    domanda_naturale: "Ricerca pubblica network"
+    correlati: [mls.cos-e]
+    domanda_naturale: "I clienti vedono il network MLS?"
     contenuto:
       a_cosa_serve: >
-        GET /api/app/mls/search/public con filtri provincia/prezzo.
+        Sul lato pubblico (ImmobilCloud) c'è una ricerca semplificata degli
+        immobili condivisi in rete, con filtri tipo zona e prezzo.
       quando_si_usa: >
-        Quando l'utente lavora sul modulo MLS in ImmoWeb/ImmobilCloud.
+        Quando spieghi a un cliente cosa trova sulla vetrina, o controlli
+        la presenza della rete all'esterno.
       passi:
-        - "Apri il modulo indicato nel capitolo 27."
-        - "Segui il flusso descritto nel manuale operativo."
-        - "In caso di errore leggi la sezione limitazioni/errori."
+        - "Apri ImmobilCloud / Cloud."
+        - "Usa il riquadro della rete o la ricerca pubblica collegata al MLS."
+        - "Filtra per zona o prezzo se disponibili."
       errori_comuni:
-        - problema: "Funzione non trovata o 403"
-          soluzione: "Verifica ruolo (agency_admin/agent/super_admin) e piano."
+        - problema: "I numeri sembrano alti ma non ho clienti reali"
+          soluzione: >
+            In questa fase possono esserci dati di dimostrazione finché
+            non arrivano molte agenzie reali.
       permessi:
-        - "Dipende dal modulo — vedi capitolo 27"
-      screenshot: []
-
-  - id: mls.seed-scala
-    titolo: Come testo 50/500/1000 agenzie?
-    modulo: MLS
-    widget: null
-    pubblico: [titolare, agente, segreteria]
-    livello: base
-    tags: [seed, scala, 10k, mls, cap27]
-    correlati: []
-    domanda_naturale: "Come testo 50/500/1000 agenzie?"
-    contenuto:
-      a_cosa_serve: >
-        POST /api/app/mls/seed (super_admin) con agencies=N.
-      quando_si_usa: >
-        Quando l'utente lavora sul modulo MLS in ImmoWeb/ImmobilCloud.
-      passi:
-        - "Apri il modulo indicato nel capitolo 27."
-        - "Segui il flusso descritto nel manuale operativo."
-        - "In caso di errore leggi la sezione limitazioni/errori."
-      errori_comuni:
-        - problema: "Funzione non trovata o 403"
-          soluzione: "Verifica ruolo (agency_admin/agent/super_admin) e piano."
-      permessi:
-        - "Dipende dal modulo — vedi capitolo 27"
+        - "La ricerca pubblica è aperta; la gestione resta in area agenzia."
       screenshot: []
 
   - id: mls.limitazioni-v1
-    titolo: Limiti MLS v1
+    titolo: Limiti attuali di MLS
     modulo: MLS
     widget: null
     pubblico: [titolare, agente, segreteria]
     livello: base
-    tags: [limiti, d-051, mls, cap27]
-    correlati: []
-    domanda_naturale: "Limiti MLS v1"
+    tags: [limiti, mls, cap27]
+    correlati: [mls.cos-e]
+    domanda_naturale: "Quali limiti ha MLS oggi?"
     contenuto:
       a_cosa_serve: >
-        Seed demo; no Academy; visibility private esclusa.
+        Ti dice cosa è già disponibile e cosa ancora no, così non aspetti funzioni mancanti.
       quando_si_usa: >
-        Quando l'utente lavora sul modulo MLS in ImmoWeb/ImmobilCloud.
+        Quando qualcosa non compare o i contatori sembrano di prova.
       passi:
-        - "Apri il modulo indicato nel capitolo 27."
-        - "Segui il flusso descritto nel manuale operativo."
-        - "In caso di errore leggi la sezione limitazioni/errori."
+        - "MLS v1: entra nel network, inventario, partner e offerte."
+        - "Gli immobili privati non entrano nelle collaborazioni."
+        - "Academy non è collegata a MLS in questa versione."
+        - "Alcuni numeri pubblici possono essere di dimostrazione finché il network non è pieno di agenzie reali."
       errori_comuni:
-        - problema: "Funzione non trovata o 403"
-          soluzione: "Verifica ruolo (agency_admin/agent/super_admin) e piano."
+        - problema: "Cerco una funzione Academy dentro MLS"
+          soluzione: "Non è inclusa in questa versione: resta sul flusso MLS descritto sopra."
       permessi:
-        - "Dipende dal modulo — vedi capitolo 27"
+        - "Tutti possono leggere questi limiti."
       screenshot: []
 
   - id: mls.collegamenti
-    titolo: Collegamenti privacy e match
+    titolo: Collegamenti con Immobili, privacy e Match
     modulo: MLS
     widget: null
     pubblico: [titolare, agente, segreteria]
     livello: base
-    tags: [privacy, match, mls, cap27]
-    correlati: []
-    domanda_naturale: "Collegamenti privacy e match"
+    tags: [privacy, match, immobili, mls, cap27]
+    correlati: [mls.privacy-visibilita]
+    domanda_naturale: "MLS come si collega a Immobili e Match?"
     contenuto:
       a_cosa_serve: >
-        Cap.25 Privacy; Cap.5 Match; Cap.3 Immobili.
+        MLS usa gli immobili che gestisci già in OMNIA e rispetta la privacy
+        che scegli; Match resta lo strumento per accoppiare clienti e case.
       quando_si_usa: >
-        Quando l'utente lavora sul modulo MLS in ImmoWeb/ImmobilCloud.
+        Quando ti chiedi se cambiare privacy o usare Match insieme al network.
       passi:
-        - "Apri il modulo indicato nel capitolo 27."
-        - "Segui il flusso descritto nel manuale operativo."
-        - "In caso di errore leggi la sezione limitazioni/errori."
+        - "Carica e aggiorna gli immobili da Immobili."
+        - "Imposta la privacy: solo ciò che condividi entra in MLS."
+        - "Per i tuoi clienti usa Match come di consueto; MLS serve per collaborare con altre agenzie."
       errori_comuni:
-        - problema: "Funzione non trovata o 403"
-          soluzione: "Verifica ruolo (agency_admin/agent/super_admin) e piano."
+        - problema: "Confondo Match e MLS"
+          soluzione: >
+            Match = clienti e immobili della tua agenzia. MLS = collaborazioni
+            con altre agenzie sul network.
       permessi:
-        - "Dipende dal modulo — vedi capitolo 27"
+        - "Come da moduli Immobili e Match."
       screenshot: []
