@@ -60,10 +60,10 @@ Opzioni future: Stripe Managed Payments · Stripe Tax · DIY.
 
 | Prodotto | Lookup Key | Prezzo |
 |---|---|---|
-| Starter | `starter_monthly` / `starter_yearly` | €49/mese · €490/anno |
-| Pro | `pro_monthly` / `pro_yearly` | €99/mese · €990/anno |
-| Agency | `agency_monthly` / `agency_yearly` | €249/mese · €2490/anno |
-| Enterprise | `enterprise_monthly` / `enterprise_yearly` | €299/mese · €2990/anno |
+| Starter | `starter_monthly` / `starter_yearly` | €49/mese · €539/anno (−1 mese) |
+| Pro | `pro_monthly` / `pro_yearly` | €99/mese · €1.089/anno |
+| Agency | `agency_monthly` / `agency_yearly` | €249/mese · €2.739/anno |
+| Enterprise | `enterprise_monthly` / `enterprise_yearly` | €299/mese · €3.289/anno |
 | Crediti 400 | `pkg_400` | €20 |
 | Crediti 1000 | `pkg_1000` | €50 |
 | Crediti 2000 | `pkg_2000` | €100 |

@@ -1302,3 +1302,9 @@ Registro di tutte le decisioni di business e tecniche prese durante il progetto.
 - Nuovi utenti Google = ruolo `client` (come register); agenzia via onboarding.
 - Account esistenti: linking automatico su stessa email verificata.
 - Guida: `memory/GOOGLE_AUTH.md`.
+
+### D-079 — Sconto annuale = 1 mese gratis
+- **Data**: 14 Settembre 2026
+- **Contesto**: UI Billing mostrava «−2 mesi»; Founder: annuale solo 1 mese gratis.
+- **Decisione**: `price_yearly = price_monthly × 11` (Founders e Standard). Badge UI «−1 mese».
+- **Stato**: ✅ Confermata

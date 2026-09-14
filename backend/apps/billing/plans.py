@@ -43,12 +43,13 @@ class Plan(BaseModel):
 
 # --- FASE FOUNDERS (primi 12 mesi dall'ingresso) -----------------------
 # Listino ufficiale Founder — 5 Agosto 2026
+# Annuale = 11 × mensile (−1 mese). Decisione Founder 14-Sep-2026.
 LAUNCH_PLANS: Dict[PlanTier, Plan] = {
     "starter": Plan(
         tier="starter",
         name="Starter",
         price_monthly=49.0,
-        price_yearly=490.0,
+        price_yearly=539.0,
         max_agents=3,
         max_properties=30,
         credits_included_monthly=120,
@@ -57,7 +58,7 @@ LAUNCH_PLANS: Dict[PlanTier, Plan] = {
         tier="pro",
         name="Pro",
         price_monthly=99.0,
-        price_yearly=990.0,
+        price_yearly=1089.0,
         max_agents=10,
         max_properties=200,
         credits_included_monthly=1200,
@@ -66,7 +67,7 @@ LAUNCH_PLANS: Dict[PlanTier, Plan] = {
         tier="agency",
         name="Agency",
         price_monthly=249.0,
-        price_yearly=2490.0,
+        price_yearly=2739.0,
         max_agents=-1,
         max_properties=-1,
         credits_included_monthly=3600,
@@ -77,7 +78,7 @@ LAUNCH_PLANS: Dict[PlanTier, Plan] = {
         tier="enterprise",
         name="Enterprise",
         price_monthly=299.0,
-        price_yearly=2990.0,
+        price_yearly=3289.0,
         max_agents=-1,
         max_properties=-1,
         credits_included_monthly=3600,
@@ -88,25 +89,25 @@ LAUNCH_PLANS: Dict[PlanTier, Plan] = {
 POST_TRACTION_PLANS: Dict[PlanTier, Plan] = {
     "starter": Plan(
         tier="starter", name="Starter",
-        price_monthly=79.0, price_yearly=790.0,
+        price_monthly=79.0, price_yearly=869.0,
         max_agents=3, max_properties=30,
         credits_included_monthly=120,
     ),
     "pro": Plan(
         tier="pro", name="Pro",
-        price_monthly=179.0, price_yearly=1790.0,
+        price_monthly=179.0, price_yearly=1969.0,
         max_agents=10, max_properties=200,
         credits_included_monthly=1200,
     ),
     "agency": Plan(
         tier="agency", name="Agency",
-        price_monthly=349.0, price_yearly=3490.0,
+        price_monthly=349.0, price_yearly=3839.0,
         max_agents=-1, max_properties=-1,
         credits_included_monthly=3600,
     ),
     "enterprise": Plan(
         tier="enterprise", name="Enterprise",
-        price_monthly=499.0, price_yearly=4990.0,
+        price_monthly=499.0, price_yearly=5489.0,
         max_agents=-1, max_properties=-1,
         credits_included_monthly=3600,
     ),

@@ -27,23 +27,23 @@
 
 | Piano | Mensile | Annuale | Utenti max | Immobili max | Crediti/mese inclusi |
 |-------|:-:|:-:|:-:|:-:|:-:|
-| **Starter** | **€49** | **€490** (2 mesi gratis) | 3 | 30 | **120** |
-| **Pro** | **€99** | **€990** | 10 | 200 | **1.200** |
-| **Agency** | **€249** | **€2.490** | illimitati | illimitati | **3.600** |
+| **Starter** | **€49** | **€539** (−1 mese) | 3 | 30 | **120** |
+| **Pro** | **€99** | **€1.089** | 10 | 200 | **1.200** |
+| **Agency** | **€249** | **€2.739** | illimitati | illimitati | **3.600** |
 
 ### Fase Standard (dopo 12 mesi Founders)
 
 | Piano | Mensile | Annuale |
 |-------|:-:|:-:|
-| Starter | €79 | €790 |
-| Pro | €179 | €1.790 |
-| Agency | €349 | €3.490 |
+| Starter | €79 | €869 |
+| Pro | €179 | €1.969 |
+| Agency | €349 | €3.839 |
 
-**Sconto annuale**: 2 mesi gratis (paghi 10, ricevi 12)
+**Sconto annuale**: 1 mese gratis (paghi 11, ricevi 12) — Founder 14-Sep-2026
 **Trial**: 14 giorni su tutti i piani
 **Carta Stripe** obbligatoria all'onboarding
 
-**Enterprise**: 🟡 TBD — posizionamento e Custom API pricing rivisti in sessione dedicata
+**Enterprise**: 🟡 TBD — oggi in UI è quasi identico ad Agency (€299 vs €249, stessi limiti). Posizionamento previsto: multi-sede/franchising, Custom API, success manager. Da definire in sessione dedicata (nascondere o differenziare).
 
 ---
 

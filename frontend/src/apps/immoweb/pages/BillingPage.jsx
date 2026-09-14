@@ -177,7 +177,7 @@ export default function BillingPage() {
               className={`px-3 py-1 border ${billingCycle === "yearly" ? "bg-[#0B1E3F] text-white" : "bg-white text-stone-600"}`}
               onClick={() => setBillingCycle("yearly")}
               data-testid="cycle-yearly-btn"
-            >Annuale <span className="text-[#C69F4C] text-xs ml-1">−2 mesi</span></button>
+            >Annuale <span className="text-[#C69F4C] text-xs ml-1">−1 mese</span></button>
           </div>
         </div>
         <div className="grid md:grid-cols-4 gap-4 mb-12">
