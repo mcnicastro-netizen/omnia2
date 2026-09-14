@@ -66,7 +66,8 @@ async def list_plans():
         "plans": [p.model_dump() for p in catalog.values()],
         "credit_packages": [pkg.model_dump() for pkg in CREDIT_PACKAGES],
         "credit_costs": CREDIT_COSTS,
-        "trial_days": 14,
+        "trial_days": 0,
+        "onboarding": "guided_demo",
         "currency": "eur",
         "enabled": _is_enabled(),
         "mode": os.environ.get("STRIPE_MODE", "test"),
@@ -117,13 +118,12 @@ async def create_checkout(
     agency_id = user["agency_ids"][0] if user.get("agency_ids") else None
 
     try:
-        session = stripe.checkout.Session.create(
+        session_kwargs = dict(
             line_items=[{"price": price.id, "quantity": 1}],
             mode="subscription",
             success_url=_build_success_url(origin),
             cancel_url=payload.cancel_url or _build_cancel_url(origin),
             customer_email=user["email"],
-            subscription_data={"trial_period_days": plan.trial_days},
             metadata={
                 "agency_id": agency_id or "",
                 "user_id": user["id"],
@@ -132,6 +132,10 @@ async def create_checkout(
                 "kind": "subscription",
             },
         )
+        # D-080: no self-serve trial — demo guidata prima dell'abbonamento
+        if plan.trial_days and plan.trial_days > 0:
+            session_kwargs["subscription_data"] = {"trial_period_days": plan.trial_days}
+        session = stripe.checkout.Session.create(**session_kwargs)
     except stripe.error.StripeError as e:
         logger.exception("stripe checkout error: %s", e)
         raise HTTPException(status_code=502, detail={"stripe_error": str(e)})

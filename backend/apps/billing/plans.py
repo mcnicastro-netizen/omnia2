@@ -1,15 +1,16 @@
 """OMNIA — Subscription plan catalog (M4.S3).
 
 Listino ufficiale approvato Founder — 5 Agosto 2026.
+Aggiornamenti:
+  - D-079 (14-Sep-2026): annuale = 11× mensile (−1 mese)
+  - D-080 (14-Sep-2026): Agency €299 · no Enterprise · no trial self-serve
+    (demo guidata → poi abbonamento)
 
-- Fase Founders (12 mesi dall'ingresso agenzia): Starter €49 · Pro €99 · Agency €249
-- Fase Standard (post 12 mesi Founders): €79 · €179 · €349
+- Fase Founders (12 mesi dall'ingresso agenzia): Starter €49 · Pro €99 · Agency €299
+- Fase Standard (post 12 mesi Founders): €79 · €179 · €399
 - Crediti inclusi/mese: Starter 120 · Pro 1200 · Agency 3600
 - Valore credito: €0,05 (1 credito = 5 centesimi)
 - Multiposting: incluso in tutti i piani, custom portal wizard su tutti
-
-Enterprise resta nel catalogo (backward compat) con prezzi legacy —
-posizionamento e API custom saranno rivisti in sessione dedicata.
 
 Checkout usa stable Stripe `lookup_key` = f"{tier}_{cycle}" (es.
 `pro_monthly`, `agency_yearly`). Annuale = 11× mensile (−1 mese, D-079).
@@ -18,7 +19,7 @@ Vedi apps/billing/setup_stripe.py.
 from typing import Dict, List, Literal, Optional
 from pydantic import BaseModel, Field
 
-PlanTier = Literal["starter", "pro", "agency", "enterprise"]
+PlanTier = Literal["starter", "pro", "agency"]
 
 
 class PlanFeature(BaseModel):
@@ -33,18 +34,17 @@ class Plan(BaseModel):
     tier: PlanTier
     name: str
     price_monthly: float  # € canone mensile
-    price_yearly: float   # € canone annuale (2 mesi in omaggio)
+    price_yearly: float   # € canone annuale (−1 mese)
     max_agents: int       # -1 = illimitato
     max_properties: int   # -1 = illimitato
     credits_included_monthly: int = 0  # crediti gratuiti inclusi ogni mese
     features: List[PlanFeature] = Field(default_factory=list)
-    trial_days: int = 14
+    trial_days: int = 0  # D-080: no self-serve trial — demo guidata prima
     launch_discount_months: int = 0  # 0 = pricing pieno
 
 
 # --- FASE FOUNDERS (primi 12 mesi dall'ingresso) -----------------------
-# Listino ufficiale Founder — 5 Agosto 2026
-# Annuale = 11 × mensile (−1 mese). Decisione Founder 14-Sep-2026.
+# Listino ufficiale Founder — 5 Agosto 2026 · Agency €299 (D-080)
 LAUNCH_PLANS: Dict[PlanTier, Plan] = {
     "starter": Plan(
         tier="starter",
@@ -67,17 +67,6 @@ LAUNCH_PLANS: Dict[PlanTier, Plan] = {
     "agency": Plan(
         tier="agency",
         name="Agency",
-        price_monthly=249.0,
-        price_yearly=2739.0,
-        max_agents=-1,
-        max_properties=-1,
-        credits_included_monthly=3600,
-    ),
-    # Enterprise: TBD in sessione dedicata (posizionamento + Custom API).
-    # Mantenuto con prezzi legacy per non rompere il modello dati esistente.
-    "enterprise": Plan(
-        tier="enterprise",
-        name="Enterprise",
         price_monthly=299.0,
         price_yearly=3289.0,
         max_agents=-1,
@@ -102,13 +91,7 @@ POST_TRACTION_PLANS: Dict[PlanTier, Plan] = {
     ),
     "agency": Plan(
         tier="agency", name="Agency",
-        price_monthly=349.0, price_yearly=3839.0,
-        max_agents=-1, max_properties=-1,
-        credits_included_monthly=3600,
-    ),
-    "enterprise": Plan(
-        tier="enterprise", name="Enterprise",
-        price_monthly=499.0, price_yearly=5489.0,
+        price_monthly=399.0, price_yearly=4389.0,
         max_agents=-1, max_properties=-1,
         credits_included_monthly=3600,
     ),

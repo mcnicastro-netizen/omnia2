@@ -29,7 +29,7 @@
 |-------|:-:|:-:|:-:|:-:|:-:|
 | **Starter** | **€49** | **€539** (−1 mese) | 3 | 30 | **120** |
 | **Pro** | **€99** | **€1.089** | 10 | 200 | **1.200** |
-| **Agency** | **€249** | **€2.739** | illimitati | illimitati | **3.600** |
+| **Agency** | **€299** | **€3.289** | illimitati | illimitati | **3.600** |
 
 ### Fase Standard (dopo 12 mesi Founders)
 
@@ -37,13 +37,13 @@
 |-------|:-:|:-:|
 | Starter | €79 | €869 |
 | Pro | €179 | €1.969 |
-| Agency | €349 | €3.839 |
+| Agency | €399 | €4.389 |
 
-**Sconto annuale**: 1 mese gratis (paghi 11, ricevi 12) — Founder 14-Sep-2026
-**Trial**: 14 giorni su tutti i piani
-**Carta Stripe** obbligatoria all'onboarding
+**Sconto annuale**: 1 mese gratis (paghi 11, ricevi 12) — D-079
+**Onboarding**: **demo guidata → poi abbonamento** (D-080). Niente trial self-serve da 14 giorni.
+**Carta Stripe** al momento dell'abbonamento (dopo la demo)
 
-**Enterprise**: 🟡 TBD — oggi in UI è quasi identico ad Agency (€299 vs €249, stessi limiti). Posizionamento previsto: multi-sede/franchising, Custom API, success manager. Da definire in sessione dedicata (nascondere o differenziare).
+**Enterprise**: ❌ rimosso dal catalogo (D-080). Esigenze network/franchising = piano Agency + trattativa custom fuori listino.
 
 ---
 
@@ -155,7 +155,7 @@ Formato lookup key Stripe: `{tier}_{cycle}` per abbonamenti (es. `pro_monthly`) 
 | Referral program | ❌ NO (valutare post-15 Founders) |
 | APE come servizio nostro | ❌ Rimosso v1 (solo binario link-out a partner esterno) |
 | Pricing lock-in a vita | ❌ NO (solo 12 mesi Founders) |
-| Enterprise tier + Custom API | 🟡 RIMANDATO — sessione dedicata |
+| Enterprise tier + Custom API | ❌ Rimosso dal listino (D-080) — custom fuori catalogo |
 | Algoritmo boost granulare | 🟡 Fase 2 (post 30 clienti) |
 | Sconto volume sui pacchetti crediti | ❌ NO — ratio fisso 20 cr/€ |
 | Planimetria/Ipoteca come servizio v1 | ❌ Rimossi (margini) |

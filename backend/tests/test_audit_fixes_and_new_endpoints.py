@@ -72,10 +72,12 @@ class TestBillingPlans:
         r = http.get(f"{API}/billing/plans")
         assert r.status_code == 200, r.text
         data = r.json()
-        # 4 tiers
+        # 3 tiers (D-080: no Enterprise)
         plans = data.get("plans") or []
         tiers = {p["tier"] for p in plans}
-        assert {"starter", "pro", "agency", "enterprise"}.issubset(tiers), f"got tiers={tiers}"
+        assert tiers == {"starter", "pro", "agency"}, f"got tiers={tiers}"
+        assert data.get("trial_days") == 0
+        assert data.get("onboarding") == "guided_demo"
         # 6 credit packages (listino Founder 5-Ago-2026)
         pkgs = data.get("credit_packages") or []
         pkg_keys = {p["key"] for p in pkgs}
@@ -88,12 +90,14 @@ class TestBillingPlans:
     def test_plan_prices(self, http):
         r = http.get(f"{API}/billing/plans")
         plans = {p["tier"]: p for p in r.json()["plans"]}
-        # Founder catalog 5-Ago-2026: Starter 49, Pro 99, Agency 249, Enterprise 299
-        expected = {"starter": 49, "pro": 99, "agency": 249, "enterprise": 299}
+        # Founder catalog D-080: Starter 49, Pro 99, Agency 299 — no Enterprise
+        expected = {"starter": 49, "pro": 99, "agency": 299}
+        assert set(plans.keys()) == set(expected.keys())
         for tier, price in expected.items():
             p = plans.get(tier, {})
             monthly = p.get("price_monthly_eur") or p.get("monthly_price_eur") or p.get("price_monthly") or p.get("prices", {}).get("monthly")
             assert monthly == price, f"tier {tier}: expected {price}, got {monthly} (plan={p})"
+            assert (p.get("trial_days") or 0) == 0
 
     def test_credit_package_prices(self, http):
         r = http.get(f"{API}/billing/plans")

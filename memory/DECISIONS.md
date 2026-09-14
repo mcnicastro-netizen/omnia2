@@ -1308,3 +1308,12 @@ Registro di tutte le decisioni di business e tecniche prese durante il progetto.
 - **Contesto**: UI Billing mostrava «−2 mesi»; Founder: annuale solo 1 mese gratis.
 - **Decisione**: `price_yearly = price_monthly × 11` (Founders e Standard). Badge UI «−1 mese».
 - **Stato**: ✅ Confermata
+
+### D-080 — Demo guidata, Agency €299, no Enterprise
+- **Data**: 14 Settembre 2026
+- **Contesto**: Trial self-serve rischia costi AI imprevisti; Agency/Enterprise identici in UI.
+- **Decisione**:
+  1. Onboarding = **demo guidata**, poi abbonamento (niente 14 giorni free self-serve).
+  2. Catalogo a **3 piani**: Starter €49 · Pro €99 · **Agency €299** (Founders). Standard Agency €399.
+  3. **Enterprise eliminato** dal listino pubblico; esigenze custom fuori catalogo.
+- **Stato**: ✅ Confermata

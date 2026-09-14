@@ -126,6 +126,7 @@ export default function BillingPage() {
         <h1 className="font-serif text-4xl text-[#0B1E3F] mb-1">Piano & Crediti</h1>
         <p className="text-stone-500 mb-8 text-sm">
           Gestisci l'abbonamento della tua agenzia e ricarica il portafoglio crediti per servizi a consumo.
+          L'attivazione avviene dopo una <strong className="font-medium text-stone-600">demo guidata</strong> — niente prova automatica, niente sorprese.
           {data?.mode === "test" && (
             <span className="ml-2 inline-block px-2 py-0.5 text-xs bg-amber-100 text-amber-800">MODALITÀ TEST</span>
           )}
@@ -195,7 +196,11 @@ export default function BillingPage() {
               <ul className="text-sm text-stone-600 mt-4 space-y-1 flex-1">
                 <li>{p.max_agents === -1 ? "Agenti illimitati" : `${p.max_agents} agenti`}</li>
                 <li>{p.max_properties === -1 ? "Immobili illimitati" : `${p.max_properties} immobili`}</li>
-                <li>{p.trial_days} giorni prova gratuita</li>
+                <li>
+                  {p.credits_included_monthly
+                    ? `${p.credits_included_monthly.toLocaleString("it-IT")} crediti/mese inclusi`
+                    : "Crediti a consumo"}
+                </li>
               </ul>
               <Button
                 className="mt-5 bg-[#0F6B5B] hover:bg-[#0B4F42] text-white"
