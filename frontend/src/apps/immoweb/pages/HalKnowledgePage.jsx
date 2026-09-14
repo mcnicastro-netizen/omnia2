@@ -190,26 +190,10 @@ export default function HalKnowledgePage() {
                   <div className="mt-1">{answer.answer}</div>
                 </div>
               ) : (
-                <>
-                  <div
-                    className="text-sm text-stone-800 leading-relaxed whitespace-pre-wrap"
-                    dangerouslySetInnerHTML={{ __html: renderMarkdownLite(answer.answer || "") }}
-                  />
-                  {answer.sources && answer.sources.length > 0 && (
-                    <div className="mt-5 pt-4 border-t border-stone-200">
-                      <h3 className="text-[10px] uppercase tracking-widest text-stone-500 mb-2">
-                        Basato su
-                      </h3>
-                      <div className="space-y-1.5" data-testid="hal-sources">
-                        {answer.sources.slice(0, 3).map((s, i) => (
-                          <div key={i} className="text-xs text-stone-600">
-                            {s.label || s.section || "Guida OMNIA"}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </>
+                <div
+                  className="text-sm text-stone-800 leading-relaxed whitespace-pre-wrap"
+                  dangerouslySetInnerHTML={{ __html: renderMarkdownLite(answer.answer || "") }}
+                />
               )}
             </div>
           </div>
