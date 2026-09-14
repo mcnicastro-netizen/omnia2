@@ -96,7 +96,7 @@ export default function HalKnowledgePage() {
               className="text-3xl md:text-4xl tracking-tight"
               style={{ fontFamily: "'Fraunces', Georgia, serif" }}
             >
-              Chiedi ad HAL
+              Guida OMNIA
             </h1>
             {status && (
               <div
@@ -108,8 +108,9 @@ export default function HalKnowledgePage() {
             )}
           </div>
           <p className="text-sm text-stone-600 mt-2 max-w-3xl">
-            HAL ti spiega come usare OMNIA passo per passo — menu, bottoni e flussi di lavoro —
-            con linguaggio semplice. Se non sa rispondere, te lo dice senza inventare.
+            Qui HAL ti spiega <strong>come usare OMNIA</strong> (menu, passi, MLS, immobili…).
+            Per domande sul tuo lavoro quotidiano — immobili, clienti, lead — usa il pulsante HAL
+            in basso a destra nelle altre pagine.
           </p>
         </div>
 
@@ -144,7 +145,7 @@ export default function HalKnowledgePage() {
               disabled={busy || !question.trim()}
               className="text-xs uppercase tracking-widest bg-[#1F6B5C] text-white px-5 py-2 rounded hover:bg-[#0B1E3F] transition disabled:opacity-40 disabled:cursor-not-allowed"
             >
-              {busy ? "Attendi…" : "Chiedi ad HAL"}
+              {busy ? "Attendi…" : "Chiedi sulla guida"}
             </button>
           </div>
         </form>

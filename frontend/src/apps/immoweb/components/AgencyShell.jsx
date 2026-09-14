@@ -261,7 +261,8 @@ export default function AgencyShell({ children, current = "dashboard" }) {
           {children}
         </main>
       </div>
-      <AlChatWidget />
+      {/* Widget HAL (CRM): nascosto su Guida HAL — lì c’è già la chat della guida */}
+      {current !== "hal-knowledge" && current !== "legal" ? <AlChatWidget /> : null}
     </div>
   );
 }
