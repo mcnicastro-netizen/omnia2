@@ -44,7 +44,7 @@ def _llm_key() -> Optional[str]:
 
 
 EMERGENT_LLM_KEY = _llm_key()
-MODEL = os.environ.get("GEMINI_MODEL", "gemini-3.6-flash")
+MODEL = os.environ.get("GEMINI_MODEL", "gemini-flash-latest")
 TEMPERATURE = 0.2          # D-029: low temp for legal accuracy
 SOFT_RATE_LIMIT = 30       # per-user / per-hour (lower than CRM chat — costlier)
 MAX_TURNS = 6

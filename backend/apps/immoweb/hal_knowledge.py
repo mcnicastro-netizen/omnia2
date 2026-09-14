@@ -85,7 +85,7 @@ AGENT_HIDDEN_FILES = {
 }
 
 MODEL_PROVIDER = "gemini"
-MODEL_NAME = os.environ.get("GEMINI_MODEL", "gemini-3.6-flash")
+MODEL_NAME = os.environ.get("GEMINI_MODEL", "gemini-flash-latest")
 
 
 def _friendly_source_label(file_name: Optional[str], section: Optional[str] = None) -> str:

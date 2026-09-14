@@ -19,7 +19,8 @@ from dotenv import load_dotenv
 # Make backend/ importable as root for `shared` and `apps`
 ROOT_DIR = Path(__file__).resolve().parent
 sys.path.insert(0, str(ROOT_DIR))
-load_dotenv(ROOT_DIR / ".env")
+# override=True: .env is source of truth (avoids stale exported vars in long-lived shells)
+load_dotenv(ROOT_DIR / ".env", override=True)
 
 # M1 bridge: legacy checks look for EMERGENT_LLM_KEY — mirror Gemini key if present
 if not os.environ.get("EMERGENT_LLM_KEY"):

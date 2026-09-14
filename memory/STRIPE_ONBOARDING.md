@@ -1,92 +1,99 @@
 # 💳 Stripe — Onboarding & Test Mode
 
-**Stato**: ✅ Configurato in **test mode** con sandbox Emergent claimable.
-**Scadenza sandbox**: 2026-09-27 (rinnovabile).
+**Stato**: ✅ Account Stripe **test** OMNIA collegato (chiavi in `backend/.env`, gitignored).
 **Modalità**: `test` — pagamenti simulati, nessun addebito reale.
+**Catalogo**: creato via `python -m apps.billing.setup_stripe` (idempotente).
+
+---
+
+## Variabili `.env` (non committare)
+
+```
+STRIPE_ENABLED=true
+STRIPE_MODE=test
+STRIPE_PUBLISHABLE_KEY=pk_test_…
+STRIPE_SECRET_KEY=sk_test_…
+STRIPE_WEBHOOK_SECRET=whsec_…
+```
+
+Webhook attuale (dev tunnel):  
+`https://icons-rid-pontiac-messages.trycloudflare.com/api/billing/webhook`  
+Se il tunnel Cloudflare cambia URL, ricrea l’endpoint in Stripe Dashboard (o via API) e aggiorna `STRIPE_WEBHOOK_SECRET`.
+
+Senza webhook, il frontend può comunque attivare il pagamento via polling `GET /api/billing/status/{session_id}` (fallback Stripe retrieve).
 
 ---
 
 ## Come attivare il **live mode** (quando pronto)
 
-1. Vai al link di onboarding ricevuto dalla piattaforma:
-
-   👉 **https://dashboard.stripe.com/onboard_sandbox/YWNjdF8xVHlYbEg1ZlRlVlZXZERmLDE3ODU5NDAxNzMv100yvn5ZYge**
-
-2. Completa il modulo KYC di Stripe (dati personali, IBAN, documento d'identità).
-
-3. Al termine, Stripe attiverà il tuo account.
-
-4. Al primo re-deploy della piattaforma le chiavi TEST verranno **automaticamente** sostituite con le chiavi LIVE. Nessuna modifica di codice richiesta.
+1. Completa KYC / onboarding Stripe (dati, IBAN, documento).
+2. In Dashboard passa a **Live** e copia le chiavi live.
+3. Sostituisci in `.env`: `pk_live_…`, `sk_live_…`, webhook live `whsec_…`, `STRIPE_MODE=live`.
+4. Rilancia `python -m apps.billing.setup_stripe` sul catalogo live.
+5. Punta il webhook live all’URL pubblico di produzione `/api/billing/webhook`.
 
 ---
 
-## Modalità fiscale selezionata
+## Modalità fiscale
 
-Al momento il checkout è in modalità **DIY (Stripe processa solo il pagamento, no gestione IVA)**.
+Checkout attuale: **DIY** (Stripe processa il pagamento, IVA gestita da OMNIA).
 
-Modalità disponibili quando andrai in live:
-- **Stripe Managed Payments** (in ~80 paesi Italia inclusa): Stripe gestisce IVA, dichiarazioni, frodi, dispute — commissione ~3.5% invece del 1.9%. Ti raccomando questa modalità per lanciare senza pensieri.
-- **Stripe Tax calculates only**: Stripe calcola IVA al checkout, tu presenti dichiarazioni. Commissione +0.5%.
-- **DIY** (attuale): tu ti occupi di IVA e dichiarazioni. Solo pagamento.
-
-Per switchare basta chiedermi "attiva Stripe Managed Payments" quando pronto.
+Opzioni future: Stripe Managed Payments · Stripe Tax · DIY.
 
 ---
 
-## Test dei checkout (subito)
+## Test dei checkout
 
-Con **modalità test attiva ora**, puoi testare l'intero flusso:
-
-1. Login CRM come `mcnicastro@gmail.com`
-2. Vai a **Settings → Billing** (quando la UI è pronta) oppure chiama direttamente:
+1. Login come admin di agenzia (es. `demo.admin@omniaecosystem.it`)
+2. **Impostazioni → Piano & Crediti**, oppure:
    ```bash
-   curl -X POST https://<preview>/api/billing/checkout \
-     -H "Content-Type: application/json" \
-     -H "Cookie: <auth-cookie>" \
-     -d '{"plan_tier":"pro","billing_cycle":"monthly"}'
+   curl -X POST http://127.0.0.1:43121/api/billing/checkout \
+     -H "Content-Type: application/json" -b cookies.txt \
+     -d '{"plan_tier":"starter","billing_cycle":"monthly"}'
    ```
-3. Vai all'URL restituito → carta di test:
-   - **Numero**: `4242 4242 4242 4242`
-   - **Scadenza**: qualsiasi futura
-   - **CVC**: qualsiasi 3 cifre
-4. Al completamento il webhook aggiorna il DB e attiva l'abbonamento
+3. Carta test: `4242 4242 4242 4242` · scadenza futura · CVC qualsiasi
+4. Webhook o polling status aggiornano abbonamento / crediti
 
 ---
 
-## Catalogo Stripe creato (idempotente)
+## Catalogo Stripe (listino Founders — 5 Ago 2026)
 
 | Prodotto | Lookup Key | Prezzo |
 |---|---|---|
-| Starter | `starter_monthly` / `starter_yearly` | €19/mese · €190/anno |
-| Pro | `pro_monthly` / `pro_yearly` | €29/mese · €290/anno |
-| Agency | `agency_monthly` / `agency_yearly` | €79/mese · €790/anno |
+| Starter | `starter_monthly` / `starter_yearly` | €49/mese · €490/anno |
+| Pro | `pro_monthly` / `pro_yearly` | €99/mese · €990/anno |
+| Agency | `agency_monthly` / `agency_yearly` | €249/mese · €2490/anno |
 | Enterprise | `enterprise_monthly` / `enterprise_yearly` | €299/mese · €2990/anno |
-| Pacchetto crediti 50 | `pkg_50` | €9 one-off |
-| Pacchetto crediti 200 | `pkg_200` | €29 one-off |
-| Pacchetto crediti 1000 | `pkg_1000` | €119 one-off |
+| Crediti 400 | `pkg_400` | €20 |
+| Crediti 1000 | `pkg_1000` | €50 |
+| Crediti 2000 | `pkg_2000` | €100 |
+| Crediti 5000 | `pkg_5000` | €250 |
+| Crediti 10000 | `pkg_10000` | €500 |
+| Crediti 20000 | `pkg_20000` | €1000 |
 
-Per aggiungere/modificare piani: modifica `apps/billing/plans.py` e rilancia `python -m apps.billing.setup_stripe`.
+Ratio crediti: **€0,05 / credito** (20 crediti / €).
+
+Per modificare piani: `apps/billing/plans.py` → `python -m apps.billing.setup_stripe`.
 
 ---
 
-## Endpoint disponibili
+## Endpoint
 
 | Metodo | Path | Descrizione |
 |---|---|---|
-| GET | `/api/billing/plans` | Catalog pubblico |
-| GET | `/api/billing/subscription` | Sub attuale dell'agenzia (auth) |
-| POST | `/api/billing/checkout` | Crea Checkout Session subscription (auth) |
-| POST | `/api/billing/credits/purchase` | Crea Checkout Session one-off crediti (auth) |
-| POST | `/api/billing/portal` | Customer Portal self-service (auth) |
-| GET | `/api/billing/status/{session_id}` | Polling stato sessione (pubblico, safe) |
+| GET | `/api/billing/plans` | Catalog pubblico (+ `publishable_key`) |
+| GET | `/api/billing/subscription` | Sub attuale agenzia |
+| POST | `/api/billing/checkout` | Checkout subscription |
+| POST | `/api/billing/credits/purchase` | Checkout one-off crediti |
+| POST | `/api/billing/portal` | Customer Portal |
+| GET | `/api/billing/status/{session_id}` | Polling stato (auth) |
 | POST | `/api/billing/webhook` | Webhook Stripe (signature-verified) |
 
 ---
 
 ## Sicurezza
 
-- ✅ Signature verification su webhook con `STRIPE_WEBHOOK_SECRET`
-- ✅ Session insert PRIMA del redirect (`payment_transactions` collection)
-- ✅ Webhook idempotente (guard `payment_status != paid`)
-- ✅ Side-effect (grant crediti / attiva sub) sono re-applicabili senza duplicati
-- ✅ Amounts server-side only (frontend invia solo `lookup_key`)
+- Signature verification webhook con `STRIPE_WEBHOOK_SECRET`
+- Session insert PRIMA del redirect (`payment_transactions`)
+- Webhook idempotente (`payment_status != paid`)
+- Importi solo server-side (FE manda `plan_tier` / `package_key`)

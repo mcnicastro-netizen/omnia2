@@ -83,7 +83,7 @@ def main():
         prod = _get_or_create_product(f"credit_{pkg.key}", f"OMNIA Crediti {pkg.credits}")
         _ensure_price(prod.id, pkg.key, pkg.price_eur, "eur")
 
-    logger.info("Stripe catalog setup complete. Use lookup_key at checkout, e.g. 'starter_monthly', 'pkg_200'.")
+    logger.info("Stripe catalog setup complete. Use lookup_key at checkout, e.g. 'starter_monthly', 'pkg_400'.")
 
 
 if __name__ == "__main__":

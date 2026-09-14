@@ -13,7 +13,16 @@ from typing import Any, AsyncIterator, Optional
 
 logger = logging.getLogger("omnia.llm")
 
-DEFAULT_MODEL = os.environ.get("GEMINI_MODEL", "gemini-3.6-flash")
+DEFAULT_MODEL = os.environ.get("GEMINI_MODEL", "gemini-3.5-flash")
+
+# Tried in order on 404/503 (high demand / retired model ids).
+_MODEL_FALLBACKS = (
+    "gemini-3.5-flash",
+    "gemini-flash-latest",
+    "gemini-3.5-flash-lite",
+    "gemini-flash-lite-latest",
+    "gemini-3.1-flash-lite",
+)
 
 
 class LlmNotConfigured(RuntimeError):
@@ -38,14 +47,59 @@ def resolve_api_key(explicit: Optional[str] = None) -> str:
 def _normalize_model(provider: Optional[str], model: Optional[str]) -> str:
     """Map legacy Emergent model names to Google API model ids."""
     name = (model or DEFAULT_MODEL).strip()
-    # Emergent used gemini-3-flash-preview — map to a current Flash id
+    # Prefer alias pin that stays available when numbered Flash ids churn.
     aliases = {
-        "gemini-3-flash-preview": DEFAULT_MODEL,
-        "gemini-3-flash": DEFAULT_MODEL,
-        "gemini-1.5-flash": "gemini-1.5-flash",
-        "gemini-2.0-flash": "gemini-2.0-flash",
+        "gemini-3.6-flash": "gemini-3.5-flash",
+        "gemini-3.7-flash": "gemini-3.5-flash",
+        "gemini-3.8-flash": "gemini-3.5-flash",
+        "gemini-3-flash-preview": "gemini-3.5-flash",
+        "gemini-3-flash": "gemini-3.5-flash",
+        "gemini-2.5-flash": "gemini-3.5-flash",
+        "gemini-2.0-flash": "gemini-3.5-flash",
+        "gemini-2.0-flash-001": "gemini-3.5-flash",
+        "gemini-1.5-flash": "gemini-3.5-flash",
+        "gemini-2.5-flash-lite": "gemini-3.5-flash-lite",
+        "gemini-2.0-flash-lite": "gemini-3.5-flash-lite",
     }
     return aliases.get(name, name)
+
+
+def _model_candidates(preferred: Optional[str] = None) -> list[str]:
+    first = _normalize_model(None, preferred)
+    out: list[str] = []
+    for m in (first, *_MODEL_FALLBACKS):
+        if m and m not in out:
+            out.append(m)
+    return out
+
+
+def _is_retryable_model_error(exc: BaseException) -> bool:
+    msg = str(exc).lower()
+    code = getattr(exc, "code", None) or getattr(exc, "status_code", None)
+    if code in (404, 503):
+        return True
+    return any(
+        s in msg
+        for s in (
+            "404",
+            "503",
+            "not_found",
+            "unavailable",
+            "high demand",
+            "no longer available",
+            "is not found",
+        )
+    )
+
+
+def _extract_text(resp: Any) -> str:
+    text = getattr(resp, "text", None) or ""
+    if not text and getattr(resp, "candidates", None):
+        try:
+            text = resp.candidates[0].content.parts[0].text
+        except Exception:
+            text = str(resp)
+    return (text or "").strip()
 
 
 async def generate_text(
@@ -59,33 +113,44 @@ async def generate_text(
     from google import genai
 
     key = resolve_api_key(api_key)
-    model_id = _normalize_model(None, model)
     client = genai.Client(api_key=key)
     contents = prompt
     config: dict[str, Any] = {"temperature": temperature}
     if system:
         config["system_instruction"] = system
-    try:
-        resp = await client.aio.models.generate_content(
-            model=model_id,
-            contents=contents,
-            config=config,
-        )
-    except Exception:
-        # Fallback sync if aio path fails on older builds
-        logger.exception("aio generate_content failed; trying sync")
-        resp = client.models.generate_content(
-            model=model_id,
-            contents=contents,
-            config=config,
-        )
-    text = getattr(resp, "text", None) or ""
-    if not text and getattr(resp, "candidates", None):
+
+    last_err: Optional[BaseException] = None
+    for model_id in _model_candidates(model):
         try:
-            text = resp.candidates[0].content.parts[0].text
-        except Exception:
-            text = str(resp)
-    return (text or "").strip()
+            try:
+                resp = await client.aio.models.generate_content(
+                    model=model_id,
+                    contents=contents,
+                    config=config,
+                )
+            except Exception as aio_err:
+                if _is_retryable_model_error(aio_err):
+                    raise aio_err
+                # Fallback sync if aio path fails on older builds
+                logger.warning(
+                    "aio generate_content failed on %s (%s); trying sync",
+                    model_id,
+                    aio_err,
+                )
+                resp = client.models.generate_content(
+                    model=model_id,
+                    contents=contents,
+                    config=config,
+                )
+            return _extract_text(resp)
+        except Exception as e:
+            last_err = e
+            if _is_retryable_model_error(e):
+                logger.warning("LLM model %s unavailable (%s); trying fallback", model_id, e)
+                continue
+            raise
+    assert last_err is not None
+    raise last_err
 
 
 async def generate_text_stream(
@@ -99,26 +164,39 @@ async def generate_text_stream(
     from google import genai
 
     key = resolve_api_key(api_key)
-    model_id = _normalize_model(None, model)
     client = genai.Client(api_key=key)
     config: dict[str, Any] = {"temperature": temperature}
     if system:
         config["system_instruction"] = system
-    try:
-        stream = await client.aio.models.generate_content_stream(
-            model=model_id,
-            contents=prompt,
-            config=config,
-        )
-        async for chunk in stream:
-            t = getattr(chunk, "text", None)
-            if t:
-                yield t
-    except Exception:
-        # Fallback: single-shot then yield once
-        logger.warning("stream unavailable; falling back to single response")
-        text = await generate_text(
-            prompt=prompt, system=system, model=model, api_key=api_key, temperature=temperature
-        )
-        if text:
-            yield text
+
+    last_err: Optional[BaseException] = None
+    for model_id in _model_candidates(model):
+        try:
+            stream = await client.aio.models.generate_content_stream(
+                model=model_id,
+                contents=prompt,
+                config=config,
+            )
+            async for chunk in stream:
+                t = getattr(chunk, "text", None)
+                if t:
+                    yield t
+            return
+        except Exception as e:
+            last_err = e
+            if _is_retryable_model_error(e):
+                logger.warning(
+                    "LLM stream model %s unavailable (%s); trying fallback",
+                    model_id,
+                    e,
+                )
+                continue
+            break
+
+    # Fallback: single-shot then yield once
+    logger.warning("stream unavailable (%s); falling back to single response", last_err)
+    text = await generate_text(
+        prompt=prompt, system=system, model=model, api_key=api_key, temperature=temperature
+    )
+    if text:
+        yield text

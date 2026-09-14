@@ -48,7 +48,7 @@ def _llm_key() -> Optional[str]:
 
 
 EMERGENT_LLM_KEY = _llm_key()  # nome legacy; valore risolto da Gemini
-MODEL = os.environ.get("GEMINI_MODEL", "gemini-3.6-flash")
+MODEL = os.environ.get("GEMINI_MODEL", "gemini-flash-latest")
 TEMPERATURE = 0.2  # deterministic for CRM queries
 MAX_TURNS = 30     # cap conversation history per session
 SOFT_RATE_LIMIT = 60  # max messages per user per hour

@@ -403,7 +403,7 @@ async def ops_overview(
         "providers": {
             "llm_configured": llm_on,
             "tavily_configured": tavily_on,
-            "gemini_model": os.environ.get("GEMINI_MODEL", "gemini-3.6-flash"),
+            "gemini_model": os.environ.get("GEMINI_MODEL", "gemini-flash-latest"),
         },
         "policy": {
             "in_app_ai": "incluso (HAL CRM, Guida, Legal in agenzia)",

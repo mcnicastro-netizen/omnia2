@@ -75,10 +75,14 @@ async def web_search(
         return []
 
     out: List[Dict[str, Any]] = []
+    allowed = include_domains or LEGAL_DOMAINS
     for r in data.get("results", []) or []:
         url = r.get("url") or ""
         snippet = (r.get("content") or "").strip()
         if not url or not snippet:
+            continue
+        host = url.lower().split("//", 1)[-1].split("/", 1)[0]
+        if not any(host == d or host.endswith("." + d) for d in allowed):
             continue
         out.append({
             "title": (r.get("title") or url)[:200],
