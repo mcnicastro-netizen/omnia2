@@ -1276,3 +1276,12 @@ Registro di tutte le decisioni di business e tecniche prese durante il progetto.
 - Chiave LLM = piattaforma OMNIA (`GEMINI_API_KEY`), non budget Emergent né crediti agenzia.
 - I **crediti** restano solo per consumi a pagamento esterni (API Gateway Track B, video premium, top-up, ecc.).
 - Messaggi UI: mai «budget esaurito» per questi servizi; in caso di guasto: «HAL non risponde adesso».
+
+## D-076 — Cruscotto Founder Ops Legal (super_admin) · 2026-09-14
+**Status**: ✅ ATTIVA
+
+- Ruolo founder = `super_admin` (seed da `ADMIN_EMAIL` / `ADMIN_PASSWORD`).
+- Pagina `/app/ops/legal` + API `GET /api/app/legal/ops/overview` solo super_admin.
+- Mostra: volume Legal, serie giornaliera, top utenti/agenzie, stato Gemini/Tavily, stima €, free Tavily residui.
+- Politica pricing ricordata in UI: in-app incluso · API a crediti · B2C a pagamento.
+- Stime costi operative (non sostituiscono fatture provider).

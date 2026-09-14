@@ -18,7 +18,7 @@ from uuid import uuid4
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
 from pydantic import BaseModel, Field
 
-from shared.auth.dependencies import get_current_user
+from shared.auth.dependencies import get_current_user, require_roles
 from shared.db.connection import Database
 
 from .pdf_parser import extract_text_from_pdf
@@ -49,11 +49,39 @@ TEMPERATURE = 0.2          # D-029: low temp for legal accuracy
 SOFT_RATE_LIMIT = 30       # per-user / per-hour (lower than CRM chat — costlier)
 MAX_TURNS = 6
 
+# Stima costi operativi (D-076) — ordini di grandezza, non fattura provider
+TAVILY_CREDITS_PER_QUERY = 2          # search_depth=advanced
+TAVILY_FREE_CREDITS_MONTH = 1000
+TAVILY_EUR_PER_CREDIT = 0.0074        # ~$0.008 PAYG → EUR
+GEMINI_EUR_PER_QUERY = 0.01           # 2 chiamate Flash (risposta + validatore)
+LIST_PRICE_CREDITS = 12               # listino B2B PRICING_OMNIA
+LIST_PRICE_EUR = 0.60
+
 DISCLAIMER_HEADER = (
     "Le informazioni fornite da HAL Legal hanno carattere orientativo e divulgativo. "
     "HAL Legal NON è un avvocato e NON sostituisce un parere legale ai sensi dell'art. 2 L. 247/2012. "
     "Per il tuo caso specifico, rivolgiti sempre a un notaio o avvocato di fiducia."
 )
+
+
+def _agency_id_of(user: dict) -> Optional[str]:
+    ids = user.get("agency_ids") or []
+    return user.get("active_agency_id") or (ids[0] if ids else None)
+
+
+def _estimate_query_cost(*, had_citations: bool = True) -> Dict[str, Any]:
+    """Stima € per query Legal (Tavily advanced + 2× Gemini)."""
+    tavily_on = bool(os.environ.get("TAVILY_API_KEY"))
+    tavily_credits = TAVILY_CREDITS_PER_QUERY if tavily_on else 0
+    tavily_eur = round(tavily_credits * TAVILY_EUR_PER_CREDIT, 4)
+    gemini_eur = GEMINI_EUR_PER_QUERY
+    return {
+        "tavily_credits": tavily_credits,
+        "tavily_eur": tavily_eur,
+        "gemini_eur": gemini_eur,
+        "total_eur": round(tavily_eur + gemini_eur, 4),
+        "had_citations": had_citations,
+    }
 
 
 # ─── Schemas ─────────────────────────────────────────────────────
@@ -164,6 +192,7 @@ async def legal_chat(req: LegalChatRequest, user: dict = Depends(get_current_use
     await db.al_legal_audit.insert_one({
         "id": str(uuid4()),
         "user_id": user["id"],
+        "agency_id": _agency_id_of(user),
         "session_id": sid,
         "kind": "chat",
         "sub_agent": sub_agent_key,
@@ -175,6 +204,8 @@ async def legal_chat(req: LegalChatRequest, user: dict = Depends(get_current_use
         "unsupported_claims": verdict.get("unsupported_claims", []),
         "fabricated_refs": verdict.get("fabricated_refs", []),
         "validator_rationale": verdict.get("rationale", "")[:300],
+        "cost_estimate": _estimate_query_cost(had_citations=bool(citations)),
+        "channel": "in_app",
     })
 
     return {
@@ -236,6 +267,7 @@ async def analyze_pdf(
     await db.al_legal_audit.insert_one({
         "id": str(uuid4()),
         "user_id": user["id"],
+        "agency_id": _agency_id_of(user),
         "kind": "pdf_analysis",
         "filename": file.filename[:200],
         "page_count": total_pages,
@@ -245,6 +277,8 @@ async def analyze_pdf(
         "citation_count": len(citations),
         "confidence": confidence,
         "unsupported_claims": verdict.get("unsupported_claims", []),
+        "cost_estimate": _estimate_query_cost(had_citations=bool(citations)),
+        "channel": "in_app",
     })
 
     return {
@@ -309,5 +343,201 @@ async def legal_health() -> Dict[str, Any]:
         "confidence_threshold": CONFIDENCE_THRESHOLD,
         "sub_agents": list(SUB_AGENTS.keys()),
         "tavily_configured": bool(os.environ.get("TAVILY_API_KEY")),
-        "llm_configured": bool(EMERGENT_LLM_KEY),
+        "llm_configured": bool(_llm_key()),
+    }
+
+
+@router.get("/ops/overview")
+async def legal_ops_overview(
+    days: int = 30,
+    user: dict = Depends(require_roles("super_admin")),
+) -> Dict[str, Any]:
+    """Cruscotto Founder: volume Legal, stima costi, stato provider (D-076)."""
+    days = max(1, min(int(days or 30), 90))
+    db = Database.get()
+    since = (datetime.now(timezone.utc) - timedelta(days=days)).isoformat()
+    month_start = datetime.now(timezone.utc).replace(day=1, hour=0, minute=0, second=0, microsecond=0).isoformat()
+
+    match = {"ts": {"$gte": since}}
+    total = await db.al_legal_audit.count_documents(match)
+    chats = await db.al_legal_audit.count_documents({**match, "kind": "chat"})
+    pdfs = await db.al_legal_audit.count_documents({**match, "kind": "pdf_analysis"})
+    month_total = await db.al_legal_audit.count_documents({"ts": {"$gte": month_start}})
+
+    # Confidence media
+    conf_pipe = [
+        {"$match": match},
+        {"$group": {"_id": None, "avg_conf": {"$avg": "$confidence"}, "with_citations": {
+            "$sum": {"$cond": [{"$gt": ["$citation_count", 0]}, 1, 0]}
+        }}},
+    ]
+    conf_rows = await db.al_legal_audit.aggregate(conf_pipe).to_list(1)
+    avg_conf = round(float((conf_rows[0] or {}).get("avg_conf") or 0), 3) if conf_rows else 0.0
+    with_citations = int((conf_rows[0] or {}).get("with_citations") or 0) if conf_rows else 0
+
+    # Serie giornaliera
+    day_pipe = [
+        {"$match": match},
+        {"$group": {
+            "_id": {"$substr": ["$ts", 0, 10]},
+            "queries": {"$sum": 1},
+            "avg_confidence": {"$avg": "$confidence"},
+        }},
+        {"$sort": {"_id": 1}},
+    ]
+    by_day = [
+        {
+            "day": r["_id"],
+            "queries": r["queries"],
+            "avg_confidence": round(float(r.get("avg_confidence") or 0), 3),
+        }
+        for r in await db.al_legal_audit.aggregate(day_pipe).to_list(120)
+    ]
+
+    # Top utenti
+    user_pipe = [
+        {"$match": match},
+        {"$group": {"_id": "$user_id", "queries": {"$sum": 1}, "agency_id": {"$last": "$agency_id"}}},
+        {"$sort": {"queries": -1}},
+        {"$limit": 10},
+    ]
+    top_user_rows = await db.al_legal_audit.aggregate(user_pipe).to_list(10)
+    user_ids = [r["_id"] for r in top_user_rows if r.get("_id")]
+    users_map = {}
+    if user_ids:
+        async for u in db.users.find({"id": {"$in": user_ids}}, {"_id": 0, "id": 1, "email": 1, "name": 1, "role": 1}):
+            users_map[u["id"]] = u
+    top_users = [
+        {
+            "user_id": r["_id"],
+            "email": (users_map.get(r["_id"]) or {}).get("email"),
+            "name": (users_map.get(r["_id"]) or {}).get("name"),
+            "role": (users_map.get(r["_id"]) or {}).get("role"),
+            "agency_id": r.get("agency_id"),
+            "queries": r["queries"],
+        }
+        for r in top_user_rows
+    ]
+
+    # Top agenzie
+    ag_pipe = [
+        {"$match": {**match, "agency_id": {"$nin": [None, ""]}}},
+        {"$group": {"_id": "$agency_id", "queries": {"$sum": 1}}},
+        {"$sort": {"queries": -1}},
+        {"$limit": 10},
+    ]
+    top_ag_rows = await db.al_legal_audit.aggregate(ag_pipe).to_list(10)
+    ag_ids = [r["_id"] for r in top_ag_rows if r.get("_id")]
+    ag_map = {}
+    if ag_ids:
+        async for a in db.agencies.find({"id": {"$in": ag_ids}}, {"_id": 0, "id": 1, "display_name": 1, "name": 1}):
+            ag_map[a["id"]] = a
+    top_agencies = [
+        {
+            "agency_id": r["_id"],
+            "name": (ag_map.get(r["_id"]) or {}).get("display_name") or (ag_map.get(r["_id"]) or {}).get("name") or r["_id"],
+            "queries": r["queries"],
+        }
+        for r in top_ag_rows
+    ]
+
+    # API Track B legal usage (crediti)
+    api_legal = 0
+    api_credits = 0
+    try:
+        api_pipe = [
+            {"$match": {"created_at": {"$gte": since}}},
+            {"$match": {"endpoint": {"$regex": "legal", "$options": "i"}}},
+            {"$group": {
+                "_id": None,
+                "calls": {"$sum": 1},
+                "credits": {"$sum": {"$ifNull": ["$credits_charged", 0]}},
+            }},
+        ]
+        api_rows = await db.api_usage_log.aggregate(api_pipe).to_list(1)
+        if api_rows:
+            api_legal = int(api_rows[0].get("calls") or 0)
+            api_credits = int(api_rows[0].get("credits") or 0)
+    except Exception:
+        logger.exception("api_usage_log aggregate failed")
+
+    tavily_on = bool(os.environ.get("TAVILY_API_KEY"))
+    tavily_credits_used = month_total * (TAVILY_CREDITS_PER_QUERY if tavily_on else 0)
+    tavily_free_left = max(0, TAVILY_FREE_CREDITS_MONTH - tavily_credits_used)
+    tavily_eur_month = 0.0
+    if tavily_credits_used > TAVILY_FREE_CREDITS_MONTH:
+        tavily_eur_month = round(
+            (tavily_credits_used - TAVILY_FREE_CREDITS_MONTH) * TAVILY_EUR_PER_CREDIT, 2
+        )
+
+    unit = _estimate_query_cost()
+    gross_period = round(total * unit["total_eur"], 2)
+    month_effective = round(month_total * GEMINI_EUR_PER_QUERY + tavily_eur_month, 2)
+
+    recent = []
+    async for row in db.al_legal_audit.find(
+        match,
+        {
+            "_id": 0, "ts": 1, "kind": 1, "user_id": 1, "agency_id": 1,
+            "confidence": 1, "citation_count": 1, "user_msg": 1, "cost_estimate": 1,
+        },
+    ).sort("ts", -1).limit(15):
+        recent.append({
+            "ts": row.get("ts"),
+            "kind": row.get("kind"),
+            "user_id": row.get("user_id"),
+            "agency_id": row.get("agency_id"),
+            "confidence": row.get("confidence"),
+            "citation_count": row.get("citation_count"),
+            "preview": (row.get("user_msg") or "")[:120],
+            "cost_estimate": row.get("cost_estimate"),
+        })
+
+    return {
+        "period_days": days,
+        "generated_at": datetime.now(timezone.utc).isoformat(),
+        "volume": {
+            "total_queries": total,
+            "chats": chats,
+            "pdf_analyses": pdfs,
+            "month_to_date": month_total,
+            "with_citations": with_citations,
+            "avg_confidence": avg_conf,
+        },
+        "by_day": by_day,
+        "top_users": top_users,
+        "top_agencies": top_agencies,
+        "api_track_b": {
+            "calls": api_legal,
+            "credits_charged": api_credits,
+        },
+        "providers": {
+            "tavily_configured": tavily_on,
+            "llm_configured": bool(_llm_key()),
+            "model": MODEL,
+        },
+        "costs": {
+            "assumptions": {
+                "tavily_credits_per_query": TAVILY_CREDITS_PER_QUERY,
+                "tavily_free_credits_month": TAVILY_FREE_CREDITS_MONTH,
+                "tavily_eur_per_credit": TAVILY_EUR_PER_CREDIT,
+                "gemini_eur_per_query": GEMINI_EUR_PER_QUERY,
+                "list_price_credits": LIST_PRICE_CREDITS,
+                "list_price_eur": LIST_PRICE_EUR,
+                "note": "Stime operative. Fatture reali = dashboard Tavily + Google AI.",
+            },
+            "per_query_eur": unit["total_eur"],
+            "period_gross_eur": gross_period,
+            "month_tavily_credits_used": tavily_credits_used,
+            "month_tavily_free_credits_left": tavily_free_left,
+            "month_tavily_paid_eur": tavily_eur_month,
+            "month_effective_eur": month_effective,
+            "period_list_price_value_eur": round(total * LIST_PRICE_EUR, 2),
+        },
+        "policy": {
+            "in_app": "incluso (gratuito per agenzia)",
+            "api_b2b": "a crediti",
+            "b2c": "a pagamento carta",
+        },
+        "recent": recent,
     }
