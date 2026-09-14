@@ -1,0 +1,572 @@
+# HAL — Voci esportate per RAG
+# Capitolo 13 · Team & Ruoli (Collaboratori)
+
+voci:
+
+  - id: team.cos-e
+    titolo: Cos'è il modulo Collaboratori (team & ruoli agenzia)
+    modulo: Collaboratori
+    widget: null
+    pubblico: [titolare, agente, segreteria]
+    livello: base
+    tags: [collaboratori, team, membri, ruoli, panoramica, primi-passi, agenzia]
+    correlati: [team.dove-trovarlo, team.ruoli-disponibili, team.invitare-membro]
+    domanda_naturale: "Cos'è il modulo Collaboratori? A cosa serve?"
+    contenuto:
+      a_cosa_serve: >
+        Pannello di gestione team dell'agenzia. Consente al titolare
+        di invitare nuovi membri (agenti o co-titolari) tramite magic
+        link via email con scadenza 7 giorni e di monitorare lo stato
+        degli inviti pendenti/accettati/revocati/scaduti. Agli agenti
+        mostra l'elenco membri in sola lettura.
+      quando_si_usa: >
+        Quando devi aggiungere un collega alla tua agenzia in OMNIA,
+        rivedere chi fa parte del team, controllare lo stato di un
+        invito che hai mandato o revocarne uno pendente.
+      passi:
+        - "Due esperienze: titolare (agency_admin) vede bottone
+          Invita membro + tab Inviti; agente (agent) vede solo la
+          lista membri."
+        - "Motivo: eliminare la condivisione password (rischio GDPR)
+          e avere credenziali individuali per ogni membro."
+        - "Ogni utente e' collegato a una o piu' agenzie via il
+          campo agency_ids nel DB users."
+      errori_comuni:
+        - problema: "Non vedo la voce Collaboratori"
+          soluzione: >
+            Verifica di essere loggato come utente agenzia (ruolo
+            agent, agency_admin o super_admin). Se sei client B2C
+            (ImmobilCloud) la voce non compare.
+      permessi:
+        - Vista membri: tutti i ruoli agenzia autenticati
+        - Invita/tab Inviti/revoca: solo agency_admin e super_admin
+    screenshot: ["[SCREEN: team-members-list]"]
+
+  - id: team.dove-trovarlo
+    titolo: Dove trovare Collaboratori in ImmoWeb
+    modulo: Collaboratori
+    widget: null
+    pubblico: [titolare, agente, segreteria]
+    livello: base
+    tags: [collaboratori, dove-si-trova, sidebar, navigazione, accesso, route]
+    correlati: [team.cos-e, team.chi-puo-invitare]
+    domanda_naturale: "Dove trovo Collaboratori? Come ci accedo?"
+    contenuto:
+      a_cosa_serve: >
+        Sapere dove cliccare per aprire la pagina Collaboratori
+        dentro ImmoWeb.
+      quando_si_usa: >
+        Ogni volta che devi vedere l'elenco membri o invitare qualcuno.
+      passi:
+        - "Fai login a ImmoWeb come utente agenzia."
+        - "Nella barra a sinistra clicca la voce Collaboratori."
+        - "Rotta: /it/app/members (o /en/app/members, /es/app/members)."
+        - "La pagina apre di default sulla tab Membri; la tab Inviti
+          e' visibile solo al titolare."
+      errori_comuni:
+        - problema: "La label in sidebar dice 'Collaboratori' ma il codice usa 'members'"
+          soluzione: >
+            E' voluto: 'members' e' la chiave interna, 'Collaboratori'
+            e' la label localizzata italiana in UI. Il manuale segue
+            la label UI.
+      permessi:
+        - Tutti i ruoli agenzia autenticati
+    screenshot: []
+
+  - id: team.ruoli-disponibili
+    titolo: Quali ruoli posso assegnare a un collaboratore (agency_admin vs agent)
+    modulo: Collaboratori
+    widget: null
+    pubblico: [titolare, super_admin]
+    livello: base
+    tags: [collaboratori, ruoli, agency-admin, agent, segreteria, permessi, agenzia, d-051]
+    correlati: [team.invitare-membro, team.chi-puo-invitare, team.limitazioni-v1]
+    domanda_naturale: "Quali ruoli posso assegnare a un collaboratore quando lo invito?"
+    contenuto:
+      a_cosa_serve: >
+        Sapere quali sono i due ruoli assegnabili dal modal Invito
+        e cosa cambia fra loro operativamente.
+      quando_si_usa: >
+        Prima di invitare qualcuno, per decidere se dargli permessi
+        da titolare o da agente.
+      passi:
+        - "Ruolo 'agent' (Agente): non vede il bottone Invita membro,
+          non vede la tab Inviti, vede l'elenco degli altri membri,
+          gestisce il suo portafoglio immobili/clienti/match."
+        - "Ruolo 'agency_admin' (Titolare/Amministratore): puo'
+          invitare altri membri, modificare i dati dell'agenzia,
+          vedere/revocare inviti pendenti, accedere a Impostazioni
+          avanzate (Domain Vault, Billing)."
+        - "Segreteria NON e' un ruolo backend distinto. Nel manuale
+          la trattiamo come mansione operativa. Chi svolge segreteria
+          viene invitato come 'agent'."
+        - "Il modal Invito espone solo questi 2 valori nel select:
+          Agent o Agency admin. Non ci sono altre opzioni v1."
+        - "Ruoli NON invitabili: super_admin (riservato team OMNIA),
+          client (profilo B2C), group_admin/branch_admin/branch_agent
+          (flusso franchising separato, non attivo v1)."
+      errori_comuni:
+        - problema: "Voglio dare permessi da segreteria (visualizza clienti ma non modifica)"
+          soluzione: >
+            Non esiste ruolo segreteria backend in v1. Assegna 'agent'
+            per la mansione operativa. Permessi granulari fine
+            (vede/non vede singoli oggetti) non disponibili v1.
+      permessi:
+        - Scelta ruolo: solo agency_admin e super_admin
+    screenshot: []
+
+  - id: team.invitare-membro
+    titolo: Invitare un collega nella mia agenzia (magic link email 7 giorni)
+    modulo: Collaboratori
+    widget: null
+    pubblico: [titolare, super_admin]
+    livello: base
+    tags: [collaboratori, invito, magic-link, email, invitare-collega, aggiungere-membro, agente, titolare]
+    correlati: [team.tab-inviti, team.accettare-invito, team.errori-comuni, team.ruoli-disponibili]
+    domanda_naturale: "Come invito un collega nella mia agenzia?"
+    contenuto:
+      a_cosa_serve: >
+        Aggiungere un collega al team senza mai condividere password:
+        OMNIA manda un'email personale con un link unico che vale
+        una sola volta.
+      quando_si_usa: >
+        Quando devi far entrare un nuovo agente o co-titolare
+        nell'agenzia.
+      passi:
+        - "Vai in sidebar > Collaboratori."
+        - "Clicca il bottone '+ Invita membro' in alto a destra
+          (visibile solo se sei agency_admin o super_admin)."
+        - "Compila il modal: Email (obbligatorio), Nome suggerito
+          (opzionale), Ruolo (Agent o Agency admin)."
+        - "Clicca 'Invia invito'."
+        - "Il collega riceve email con link tipo
+          https://.../{lang}/accept-invite#token=... (token nel
+          fragment, non nella query string, per non finire nei log
+          server - sicurezza L5 D-051)."
+        - "Il link vale 7 giorni (INVITE_EXPIRY_DAYS=7)."
+        - "L'invito appare nella tab Inviti con status 'pending'."
+        - "Se lo stesso indirizzo aveva gia' un invito pending per
+          la tua agenzia, OMNIA aggiorna token+scadenza invece di
+          duplicare il record."
+      errori_comuni:
+        - problema: "Errore 'user_already_member' (400)"
+          soluzione: >
+            L'email che hai inserito e' gia' membro della tua agenzia.
+            Vai in tab Membri e verifica: la persona e' gia' dentro.
+        - problema: "Email invito non arriva al collega"
+          soluzione: >
+            Chiedi di controllare spam/promozioni. Verifica in tab
+            Inviti che lo stato sia 'pending'. Se il record esiste
+            e' un problema di deliverability email.
+      permessi:
+        - Solo agency_admin e super_admin (require_roles esplicito
+          su POST /agencies/me/invites)
+    screenshot: ["[SCREEN: team-invite-modal]"]
+
+  - id: team.tab-inviti
+    titolo: Tab Inviti - stati pending/accepted/revoked/expired e revoca
+    modulo: Collaboratori
+    widget: null
+    pubblico: [titolare, super_admin]
+    livello: base
+    tags: [collaboratori, tab-inviti, stati, pending, accepted, revoked, expired, revocare, magic-link]
+    correlati: [team.invitare-membro, team.accettare-invito, team.errori-comuni]
+    domanda_naturale: "Come vedo gli inviti che ho mandato? Come li revoco?"
+    contenuto:
+      a_cosa_serve: >
+        Dashboard di controllo per il titolare: chi ha ricevuto un
+        invito e come e' finito. Consente di revocare inviti ancora
+        pendenti.
+      quando_si_usa: >
+        Quando vuoi verificare lo stato di un invito, capire perche'
+        un collega non e' ancora entrato, o annullare un invito
+        prima che venga accettato.
+      passi:
+        - "Vai in Collaboratori > tab Inviti (visibile solo a
+          agency_admin/super_admin)."
+        - "Colonne: Email, Ruolo (badge AGENT o AGENCY_ADMIN),
+          Status, Azioni."
+        - "Status pending (ambra): invito attivo, in attesa di
+          accettazione. Il link e' cliccabile per il collega."
+        - "Status accepted (verde): il collega ha completato
+          l'accettazione. E' dentro l'agenzia."
+        - "Status revoked (grigio): il titolare ha annullato
+          manualmente prima dell'accettazione."
+        - "Status expired (rosso): passati 7 giorni senza accettare.
+          Il link non funziona piu'."
+        - "Revoca: solo su invite pending, clic su 'Revoca' a destra
+          della riga. Il link inviato per email non funzionera' piu'."
+        - "La revoca NON e' retroattiva: se l'invito era gia' accepted,
+          il collega e' dentro e la revoca non lo rimuove
+          (v1 limitation, vedi team.limitazioni-v1)."
+      errori_comuni:
+        - problema: "Non vedo la tab Inviti"
+          soluzione: >
+            La tab e' visibile solo al titolare (agency_admin) o
+            super_admin. Se sei agent non compare.
+        - problema: "Ho revocato ma il collega e' entrato lo stesso"
+          soluzione: >
+            Se aveva gia' cliccato il link e completato l'accept prima
+            della revoca, e' membro. La revoca non e' retroattiva.
+            Per rimuoverlo contatta il team OMNIA (no UI v1).
+      permessi:
+        - Visualizzazione: agency_admin, super_admin
+        - Revoca: agency_admin, super_admin
+    screenshot: []
+
+  - id: team.accettare-invito
+    titolo: Come si accetta un invito (verify token + set password + auto-login)
+    modulo: Collaboratori
+    widget: null
+    pubblico: [agente, segreteria, titolare]
+    livello: base
+    tags: [collaboratori, accettare-invito, magic-link, password, auto-login, verify, token]
+    correlati: [team.invitare-membro, team.utente-gia-registrato, team.errori-comuni]
+    domanda_naturale: "Ho ricevuto un invito email, come lo accetto?"
+    contenuto:
+      a_cosa_serve: >
+        Sapere cosa fare quando ti arriva l'email di invito per
+        entrare in un'agenzia OMNIA.
+      quando_si_usa: >
+        Quando un titolare ti ha invitato e devi entrare per la prima
+        volta o collegare il tuo utente esistente all'agenzia.
+      passi:
+        - "Ricevi email OMNIA con oggetto tipo 'Sei stato invitato
+          in <nome agenzia>'."
+        - "Clicca il link (tipo https://.../{lang}/accept-invite#token=...).
+          NON copiare/incollare il link a mano - clicca."
+        - "Si apre la pagina di accettazione. OMNIA verifica il
+          token via GET /invites/verify e mostra: nome agenzia,
+          ruolo assegnato, email invitata."
+        - "Compila il form: Nome completo (obbligatorio), Password
+          (obbligatoria, minimo 8 caratteri)."
+        - "Clic su 'Accetta invito'."
+        - "Auto-login: cookies access+refresh vengono impostati
+          server-side, dopo 1.5 sec vieni reindirizzato a
+          /{lang}/app/dashboard."
+      errori_comuni:
+        - problema: "'Invito non valido' sulla pagina di accept"
+          soluzione: >
+            Il link e' corrotto o il record non esiste (404 verify).
+            Chiedi al titolare di rilanciare l'invito.
+        - problema: "'Invito gia' usato o revocato' (400 verify)"
+          soluzione: >
+            Hai gia' accettato in passato, oppure il titolare ha
+            revocato prima che tu cliccassi. Se serve, chiedi un
+            nuovo invito.
+        - problema: "'Invito scaduto' (400 verify)"
+          soluzione: >
+            Sono passati piu' di 7 giorni dall'invio. Chiedi al
+            titolare di rilanciare l'invito (nuovo token, nuovi
+            7 giorni).
+      permessi:
+        - "Pubblico (endpoint POST /invites/accept e GET /invites/verify non richiedono autenticazione: la validita' e' garantita dal token nel link)"
+    screenshot: ["[SCREEN: team-accept-invite]"]
+
+  - id: team.lista-membri
+    titolo: Elenco membri agenzia - cosa vedo e chi
+    modulo: Collaboratori
+    widget: null
+    pubblico: [titolare, agente, segreteria]
+    livello: base
+    tags: [collaboratori, membri, lista, elenco, chi-e-in-agenzia, tabella-membri]
+    correlati: [team.cos-e, team.ruoli-disponibili]
+    domanda_naturale: "Come vedo l'elenco dei membri della mia agenzia?"
+    contenuto:
+      a_cosa_serve: >
+        Sapere chi lavora con te dentro OMNIA e con quale ruolo.
+      quando_si_usa: >
+        Quando vuoi orientarti su chi e' chi in squadra, o verificare
+        che un invito appena accettato abbia creato l'utente giusto.
+      passi:
+        - "Vai in Collaboratori > tab Membri (default all'apertura)."
+        - "Vedi una tabella con colonne: Nome, Email, Ruolo (badge),
+          Stato (Attivo/-)."
+        - "Endpoint: GET /agencies/me/members restituisce fino a
+          200 membri filtrati per agency_id."
+        - "Chi vede: qualsiasi utente agenzia autenticato
+          (get_current_user senza require_roles). Anche gli agent
+          vedono l'elenco degli altri membri."
+        - "Ordinamento: non esplicito nel codice. Su agenzie piccole
+          l'impatto e' trascurabile."
+      errori_comuni:
+        - problema: "Non vedo un collega che ha appena accettato"
+          soluzione: >
+            Ricarica la pagina (l'accept non broadcasta in tempo
+            reale). Se dopo il reload non compare, verifica in tab
+            Inviti che il suo status sia effettivamente 'accepted'.
+        - problema: "Vedo dei campi mancanti (ultimo login, foto profilo)"
+          soluzione: >
+            Non sono esposti in v1: la tabella ha solo Nome/Email/
+            Ruolo/Stato. Nessun avatar, nessun timestamp attivita'.
+      permessi:
+        - Vista: tutti i ruoli agenzia autenticati (agent inclusi)
+    screenshot: []
+
+  - id: team.chi-puo-invitare
+    titolo: Chi puo' invitare nuovi membri (permessi effettivi)
+    modulo: Collaboratori
+    widget: null
+    pubblico: [titolare, agente, super_admin]
+    livello: base
+    tags: [collaboratori, permessi, chi-puo-invitare, agency-admin, agent, ruoli, "403", sicurezza]
+    correlati: [team.ruoli-disponibili, team.invitare-membro]
+    domanda_naturale: "Chi puo' invitare nuovi membri? Un agente puo' farlo?"
+    contenuto:
+      a_cosa_serve: >
+        Sapere se hai i permessi per invitare qualcuno, o a chi
+        rivolgerti se non li hai.
+      quando_si_usa: >
+        Prima di chiedere di aggiungere qualcuno al team.
+      passi:
+        - "Solo agency_admin e super_admin possono invitare (verifica
+          server-side: Depends(require_roles('agency_admin',
+          'super_admin')) su POST/GET/DELETE /agencies/me/invites)."
+        - "In UI: il bottone '+ Invita membro' e' condizionato a
+          canInvite = user.role === 'agency_admin' || 'super_admin'."
+        - "La tab Inviti e' nascosta agli agenti."
+        - "Un agente che tenta la chiamata API via devtools riceve
+          403 Forbidden."
+        - "Il super_admin (team OMNIA) puo' invitare in qualsiasi
+          agenzia di cui sia membro. Ruolo di manutenzione, non
+          e' un cliente."
+      errori_comuni:
+        - problema: "Sono agente, come faccio a invitare un collega?"
+          soluzione: >
+            Chiedi al titolare (agency_admin) di fare l'invito.
+            L'agent non ha permessi di invito in v1.
+      permessi:
+        - Invito: agency_admin, super_admin
+        - Agent: nessun permesso di invito
+    screenshot: []
+
+  - id: team.onboarding-vs-invito
+    titolo: Onboarding titolare vs invito agente - due percorsi diversi
+    modulo: Collaboratori
+    widget: null
+    pubblico: [titolare, super_admin]
+    livello: intermedio
+    tags: [collaboratori, onboarding, agency-admin, promozione, register, signup, S2, one-owner]
+    correlati: [team.ruoli-disponibili, team.utente-gia-registrato]
+    domanda_naturale: "Come diventa titolare il primo utente di un'agenzia?"
+    contenuto:
+      a_cosa_serve: >
+        Capire perche' il primo utente di un'agenzia (il titolare)
+        non passa da un invito, ma da un percorso diverso.
+      quando_si_usa: >
+        Se stai registrando la tua prima agenzia in OMNIA, o se un
+        collaboratore ti chiede come funziona.
+      passi:
+        - "Percorso A - Titolare registra nuova agenzia: signup
+          pubblico POST /auth/register (nessun ruolo privilegiato
+          - sicurezza S2). L'utente completa onboarding 4-step
+          (Cap. 1 §1.5), l'ultimo passo chiama POST /agencies."
+        - "Il backend crea l'agenzia con owner_id=user.id e promuove
+          server-side l'utente da 'client' a 'agency_admin'
+          (agencies.py:94-99). Da quel momento vede sidebar
+          Collaboratori."
+        - "Percorso B - Agente entra per invito: il titolare compila
+          modal Invito con email + ruolo. Il collega riceve email,
+          clicca magic-link, sceglie password, accetta. Al momento
+          dell'accept viene creato UserInDB con role dell'invito."
+        - "Vincolo one-owner: un agency_admin puo' possedere al
+          massimo 1 agenzia (agency_already_exists = 400). Per una
+          seconda agenzia serve un altro account."
+        - "Ruoli franchising (group_admin/branch_admin/branch_agent):
+          POST /agencies blocca con 403
+          franchising_roles_use_group_flow. Non copertura Cap. 13."
+      errori_comuni:
+        - problema: "Ho gia' una agenzia e non riesco a crearne una seconda"
+          soluzione: >
+            Vincolo one-owner v1. Usa un secondo account con email
+            diversa per la seconda agenzia. Franchising in arrivo
+            (flusso separato).
+      permessi:
+        - Signup pubblico: chiunque abbia email valida
+        - Promozione a agency_admin: automatica solo via POST /agencies
+    screenshot: []
+
+  - id: team.utente-gia-registrato
+    titolo: Utente gia' registrato che accetta un invito - link agenzia + upgrade role
+    modulo: Collaboratori
+    widget: null
+    pubblico: [titolare, agente, segreteria, super_admin]
+    livello: intermedio
+    tags: [collaboratori, utente-esistente, client, upgrade-role, link-agenzia, accept, agency-ids]
+    correlati: [team.accettare-invito, team.onboarding-vs-invito]
+    domanda_naturale: "Cosa succede se accetto un invito ma sono gia' registrato in OMNIA?"
+    contenuto:
+      a_cosa_serve: >
+        Sapere come funziona l'accept per un utente che ha gia' un
+        account (es. cliente B2C ImmobilCloud invitato in agenzia).
+      quando_si_usa: >
+        Se tu (o un collega) hai gia' usato OMNIA in un altro modo
+        (valutatore B2C, comparatore mutui) e adesso vieni invitato
+        in agenzia.
+      passi:
+        - "Al momento dell'accept (POST /invites/accept), il backend
+          cerca l'utente per email. Se esiste, invece di creare un
+          nuovo record: aggiunge l'agency_id a agency_ids (addToSet
+          idempotente), aggiorna il nome se cambiato, sostituisce
+          password_hash con quello nuovo."
+        - "Regola di upgrade role: il ruolo viene aggiornato SOLO se
+          l'utente era 'client'. Se era gia' 'agent', resta 'agent'.
+          Se era gia' 'agency_admin', resta 'agency_admin'.
+          Nessun downgrade e nessun upgrade laterale (agent ->
+          agency_admin) via invito."
+        - "Casi tipici: client + invito agent = promosso a agent.
+          client + invito agency_admin = promosso a agency_admin.
+          agent + invito agency_admin = resta agent (no upgrade)."
+        - "Se e' gia' membro dell'agenzia -> 400 user_already_member
+          gia' al momento del POST create_invite."
+      errori_comuni:
+        - problema: "Ho fatto agent ma dovevo essere titolare"
+          soluzione: >
+            Se eri gia' registrato come agent in un'altra agenzia e
+            hai accettato un invito da agency_admin nella nuova,
+            resti agent (regola upgrade solo da client). Contatta il
+            team OMNIA per cambio ruolo (no UI v1).
+      permessi:
+        - Endpoint accept: pubblico (validita' garantita dal token)
+    screenshot: []
+
+  - id: team.errori-comuni
+    titolo: Errori comuni del modulo Collaboratori
+    modulo: Collaboratori
+    widget: null
+    pubblico: [titolare, agente, segreteria]
+    livello: base
+    tags: [collaboratori, errori, troubleshooting, user-already-member, invite-expired, invite-invalid, invite-used, "403", "400", "404"]
+    correlati: [team.invitare-membro, team.accettare-invito, team.tab-inviti]
+    domanda_naturale: "Perche' l'invito non funziona? Errori comuni sui Collaboratori"
+    contenuto:
+      a_cosa_serve: >
+        Riconoscere i codici errore piu' frequenti e sapere cosa
+        fare.
+      quando_si_usa: >
+        Quando un invito si comporta in modo strano.
+      passi:
+        - "user_already_member (400 sul POST invite): l'email
+          inserita e' gia' membro della tua agenzia. Verifica in
+          tab Membri."
+        - "invite_invalid (404 sul verify/accept): token non trovato
+          nel DB. Link corrotto o record eliminato. Rilancia
+          l'invito."
+        - "invite_used_or_revoked (400 sul verify/accept): l'invito
+          e' gia' stato accettato o revocato. Se serve, ne fai uno
+          nuovo."
+        - "invite_expired (400 sul verify/accept): passati 7 giorni.
+          Rilancia l'invito (nuovo token+scadenza)."
+        - "403 Forbidden sul POST invite: sei agent, non
+          agency_admin. Chiedi al titolare."
+        - "agency_already_exists (400 sul POST /agencies durante
+          onboarding): un agency_admin puo' avere una sola
+          agenzia v1."
+        - "franchising_roles_use_group_flow (403 su POST /agencies):
+          hai un ruolo franchising (group_admin, branch_admin,
+          branch_agent). Non puoi creare agenzia con questo
+          endpoint; usa il flusso franchising (non attivo v1)."
+      errori_comuni:
+        - problema: "Email invito non arriva ma non ho errore in UI"
+          soluzione: >
+            Il record e' stato creato correttamente (nessun 400/500).
+            E' un problema di deliverability email. Controlla spam
+            del destinatario. Se non arriva entro 15 minuti, revoca
+            e rifai con email verificata.
+      permessi:
+        - Descrizione per tutti gli utenti
+    screenshot: []
+
+  - id: team.limitazioni-v1
+    titolo: Limiti v1 del modulo Collaboratori (D-051 onesto)
+    modulo: Collaboratori
+    widget: null
+    pubblico: [titolare, agente, segreteria, super_admin]
+    livello: intermedio
+    tags: [collaboratori, limiti, cosa-non-fa, rimozione-membro, cambio-ruolo, segreteria, franchising, audit, onestà, d-051]
+    correlati: [team.ruoli-disponibili, team.cos-e]
+    domanda_naturale: "Posso rimuovere un membro dal team? Posso rimuovere un collaboratore? Posso cambiare ruolo a un membro? Come rimuovo un ex-collaboratore? Cosa NON fa il modulo Collaboratori v1? La segreteria è un ruolo backend? Esiste transfer ownership agenzia, disattivazione temporanea, audit UI, permessi granulari per membro o notifiche real-time?"
+    contenuto:
+      a_cosa_serve: >
+        Aspettative chiare su cosa il modulo Collaboratori NON fa in v1:
+        rimuovere un membro dal team (no UI DELETE), cambiare ruolo a
+        un membro esistente (no promozione agent → agency_admin da UI),
+        disattivare temporaneamente, audit log UI, permessi granulari
+        per membro, franchising/gruppo/branch attivi, transfer ownership.
+      quando_si_usa: >
+        Prima di provare a rimuovere un membro dal team o cambiare
+        ruolo a un membro esistente e restare deluso.
+      passi:
+        - "NO rimozione membro in UI. Il backend non espone
+          DELETE /agencies/me/members/{user_id}. Se un collaboratore
+          lascia, in v1 contatta il team OMNIA per rimozione manuale."
+        - "NO cambio ruolo post-accept. Un agent non puo' essere
+          promosso a agency_admin (o viceversa) via UI. Workaround
+          v1: cancellare l'utente e rifare invito (op super_admin)."
+        - "NO ruolo segreteria backend. E' un concetto operativo.
+          Chi svolge segreteria e' invitato come 'agent'."
+        - "NO disattivazione temporanea membro (is_active esiste in
+          colonna, nessuna UI per commutarlo)."
+        - "NO audit log visibile UI (invited_by, timestamp esistono
+          server-side ma non ci sono schermate dedicate)."
+        - "NO permessi granulari per membro (chi vede quali
+          immobili/clienti). Tutti i membri agenzia autenticati
+          vedono l'intero portafoglio. Privacy L1-L4 resta
+          sull'immobile singolo (Cap. 3 §3.4)."
+        - "NO franchising/gruppo/branch (ruoli esistono DB ma il
+          flusso e' separato, non attivo v1)."
+        - "NO notifica in tempo reale al titolare quando invito
+          accepted (serve ricaricare pagina)."
+        - "NO trasferimento ownership agenzia (transfer owner)."
+      errori_comuni:
+        - problema: "Devo rimuovere urgentemente un ex-collaboratore"
+          soluzione: >
+            Contatta il team OMNIA per rimozione manuale. In parallelo
+            revoca inviti pending suoi (se ce ne sono) e cambia
+            password degli account condivisi (se ce ne sono, cosa
+            che non dovrebbe accadere in prima battuta).
+      permessi:
+        - Rimozione manuale: solo super_admin OMNIA
+    screenshot: []
+
+  - id: team.collegamenti
+    titolo: Collegamenti fra Collaboratori e altri moduli
+    modulo: Collaboratori
+    widget: null
+    pubblico: [titolare, agente, segreteria]
+    livello: base
+    tags: [collaboratori, cross-ref, primo-accesso, hal-knowledge, impostazioni, immobili, privacy]
+    correlati: [team.cos-e, team.ruoli-disponibili]
+    domanda_naturale: "Che rapporto c'e' fra Collaboratori e gli altri moduli OMNIA?"
+    contenuto:
+      a_cosa_serve: >
+        Capire come il modulo team si intreccia con Primo Accesso,
+        Immobili (privacy L1-L4), HAL Knowledge, Impostazioni.
+      quando_si_usa: >
+        Per orientarti nella navigazione complessiva.
+      passi:
+        - "Cap. 1 Primo accesso: signup pubblico + onboarding 4-step
+          che crea agenzia e promuove a agency_admin. Punto di
+          partenza per il primo utente."
+        - "Cap. 3 Immobili § privacy: L4 = solo team dell'agenzia
+          (utenti in agency_ids). Il modulo Collaboratori determina
+          implicitamente chi vede immobili L4."
+        - "Cap. 12 HAL Knowledge: puoi chiedere a HAL Knowledge
+          domande sui Collaboratori (es. 'Come invito un collega?')
+          e le voci di questo capitolo (team.*) vengono usate come
+          fonti."
+        - "Cap. 24 Impostazioni (futuro): Billing, Domain Vault, dati
+          fiscali agenzia - spazi riservati al agency_admin. Il
+          ruolo che assegni qui determina l'accesso li'."
+        - "Cap. 10 HAL Agent CRM: multi-tenant safe by design tramite
+          agency_id auto-injected. Un agente della tua agenzia vede
+          solo dati della tua agenzia, non di altre."
+      errori_comuni:
+        - problema: "Un agente vede immobili di altre agenzie"
+          soluzione: >
+            Non dovrebbe. Tutti gli endpoint filtrano per agency_id.
+            Se succede, e' un bug: segnala al team OMNIA con
+            screenshot.
+      permessi:
+        - Descrizione per tutti gli utenti
+    screenshot: []

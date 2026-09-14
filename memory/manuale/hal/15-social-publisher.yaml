@@ -1,0 +1,624 @@
+# HAL — Voci esportate per RAG
+# Capitolo 15 · Social Publisher (Pubblicazione su Facebook, Instagram, Telegram)
+
+voci:
+
+  - id: social.cos-e
+    titolo: Cos'è il Social Publisher (pubblicazione su FB, IG, Telegram)
+    modulo: Social Publisher
+    widget: null
+    pubblico: [titolare, super_admin]
+    livello: base
+    tags: [social, publisher, facebook, instagram, telegram, panoramica, primi-passi, marketing, white-label, d-041]
+    correlati: [social.dove-trovarlo, social.canali-supportati, social.pubblicare-immobile]
+    domanda_naturale: "Cos'è il Social Publisher? A cosa serve?"
+    contenuto:
+      a_cosa_serve: >
+        Strumento a push on-demand che invia un annuncio immobiliare
+        (foto + didascalia + link) sulla tua Pagina Facebook, sul
+        tuo account Instagram Business o sul tuo canale Telegram
+        sotto la TUA identita' di brand (white label D-041). OMNIA
+        e' invisibile per il pubblico finale.
+      quando_si_usa: >
+        Ogni volta che vuoi pubblicare un immobile sui social
+        aziendali con un click, senza copiare/incollare a mano.
+      passi:
+        - "3 canali supportati v1: Facebook Page, Instagram Business,
+          Telegram Channel."
+        - "White label D-041: ogni post parte con la TUA Pagina/Bot,
+          non con quella OMNIA. OMNIA non ha profili social pubblici
+          per pubblicare per conto delle agenzie."
+        - "On-demand: apri immobile > clic Pubblica > il post parte
+          subito. Nessuno scheduling, nessuna coda."
+        - "1 immagine per post + caption testuale. Nessun carosello,
+          video, reel, story in v1."
+        - "Credenziali cifrate AES-256-GCM lato backend, mai in
+          chiaro alla UI (D-051 sicurezza)."
+      errori_comuni:
+        - problema: "Voglio programmare un post per domani alle 10"
+          soluzione: >
+            Non disponibile v1. Il modulo e' solo on-demand. Nessun
+            calendario editoriale, nessun cron, nessuna programmazione.
+      permessi:
+        - agency_admin, super_admin, branch_admin, group_admin
+        - Agent semplice NON ha accesso (403)
+    screenshot: ["[SCREEN: cap15-social-panoramica]"]
+
+  - id: social.dove-trovarlo
+    titolo: Dove trovare Social Publisher in ImmoWeb
+    modulo: Social Publisher
+    widget: null
+    pubblico: [titolare, super_admin]
+    livello: base
+    tags: [social, publisher, dove-si-trova, sidebar, navigazione, route]
+    correlati: [social.cos-e, social.canali-supportati]
+    domanda_naturale: "Dove trovo Social Publisher? Come ci accedo?"
+    contenuto:
+      a_cosa_serve: >
+        Sapere dove cliccare per aprire la pagina di configurazione
+        canali social e vedere lo storico post.
+      quando_si_usa: >
+        La prima volta per configurare i canali; poi per verificare
+        i post recenti o per aggiungere/disconnettere un canale.
+      passi:
+        - "Fai login a ImmoWeb come titolare (agency_admin),
+          super_admin, branch_admin o group_admin."
+        - "Nella barra a sinistra sezione Publishing o Marketing
+          clicca 'Social Publisher'."
+        - "Rotta: /it/app/social."
+        - "In pagina vedi 3 card canali (FB/IG/Telegram) + elenco
+          post recenti (fino a 20)."
+      errori_comuni:
+        - problema: "Non vedo la voce Social Publisher"
+          soluzione: >
+            Il tuo ruolo e' agent semplice: non hai accesso al
+            modulo. Chiedi al titolare (agency_admin) o al manager
+            di rete (branch_admin/group_admin) di pubblicare per te.
+      permessi:
+        - agency_admin, super_admin, branch_admin, group_admin
+    screenshot: []
+
+  - id: social.canali-supportati
+    titolo: Quali canali social sono supportati (FB Page, IG Business, Telegram)
+    modulo: Social Publisher
+    widget: null
+    pubblico: [titolare, super_admin]
+    livello: base
+    tags: [social, canali, facebook-page, instagram-business, telegram, meta-graph, bot-api, twitter, tiktok, linkedin, limitazioni]
+    correlati: [social.cos-e, social.credenziali-facebook, social.credenziali-instagram, social.credenziali-telegram]
+    domanda_naturale: "Su quali social posso pubblicare? Ci sono X/Twitter, TikTok o LinkedIn?"
+    contenuto:
+      a_cosa_serve: >
+        Sapere quali sono i 3 canali v1 e quali NON sono ancora
+        supportati.
+      quando_si_usa: >
+        Prima di aspettarsi di pubblicare su X, TikTok, LinkedIn.
+      passi:
+        - "Facebook Page: pubblica sulla tua Pagina aziendale (non
+          profilo personale). API Meta Graph v20.0. Richiede
+          page_id + access_token con permesso pages_manage_posts."
+        - "Instagram Business: pubblica sul tuo account IG Business
+          collegato a una Pagina FB. API Meta Graph v20.0.
+          Flusso 2-step (crea container > pubblica). RICHIEDE
+          image_url HTTPS pubblica."
+        - "Telegram Channel: manda messaggio nel tuo canale via il
+          tuo bot. API Bot Telegram. Richiede bot_token da
+          @BotFather + chat_id (@nomecanale o numerico negativo)."
+        - "NO in v1: X/Twitter, LinkedIn, TikTok, YouTube Shorts,
+          WhatsApp Business, Threads."
+        - "1 canale per tipo per agenzia: non puoi avere 2 Pagine
+          FB collegate contemporaneamente (409 channel_already_
+          configured al secondo tentativo)."
+      errori_comuni:
+        - problema: "Voglio pubblicare su X (ex Twitter)"
+          soluzione: >
+            Non disponibile v1. Solo FB Page, IG Business, Telegram.
+      permessi:
+        - Info descrittiva per titolari
+    screenshot: []
+
+  - id: social.credenziali-facebook
+    titolo: Come ottengo le credenziali Facebook Page
+    modulo: Social Publisher
+    widget: null
+    pubblico: [titolare, super_admin]
+    livello: intermedio
+    tags: [social, facebook, credenziali, page-id, access-token, meta-business, graph-explorer, long-lived]
+    correlati: [social.configurare-canale, social.errori]
+    domanda_naturale: "Come ottengo il page_id e l'access_token di Facebook?"
+    contenuto:
+      a_cosa_serve: >
+        Recuperare le due credenziali necessarie per collegare la
+        tua Pagina Facebook a OMNIA.
+      quando_si_usa: >
+        In fase di prima configurazione o di rinnovo token scaduto.
+      passi:
+        - "Il tuo account personale deve essere admin della Pagina
+          FB aziendale."
+        - "page_id: apri Meta Business Suite > seleziona la tua
+          Pagina > Impostazioni Pagina > Informazioni sulla Pagina
+          > ID Pagina. Oppure lo vedi nell'URL della tua Pagina."
+        - "access_token: vai su developers.facebook.com > Tools >
+          Graph API Explorer > seleziona la tua App e la tua Pagina
+          > richiedi permessi pages_manage_posts e
+          pages_read_engagement > clicca 'Generate Access Token'."
+        - "Per un token long-lived (60 giorni invece di 1-2h),
+          scambia il token via debug_token. Guida ufficiale Meta:
+          developers.facebook.com/docs/facebook-login/guides/
+          access-tokens/get-long-lived."
+        - "In OMNIA: Social Publisher > card Facebook Page >
+          Configura > incolla page_id + access_token > Salva."
+      errori_comuni:
+        - problema: "meta_error:190 sul validate FB"
+          soluzione: >
+            Token scaduto o revocato. Rigenera dal Graph API Explorer
+            e aggiorna (PATCH) il canale.
+        - problema: "422 page_id_mismatch"
+          soluzione: >
+            Il token appartiene a una Pagina diversa da quella
+            dichiarata. Verifica di aver preso l'access_token della
+            Pagina corretta.
+      permessi:
+        - Titolari e super_admin
+    screenshot: []
+
+  - id: social.credenziali-instagram
+    titolo: Come ottengo le credenziali Instagram Business
+    modulo: Social Publisher
+    widget: null
+    pubblico: [titolare, super_admin]
+    livello: intermedio
+    tags: [social, instagram, credenziali, ig-user-id, access-token, business, collegato-pagina, https]
+    correlati: [social.credenziali-facebook, social.configurare-canale, social.errori]
+    domanda_naturale: "Come ottengo l'ig_user_id di Instagram Business?"
+    contenuto:
+      a_cosa_serve: >
+        Recuperare le due credenziali necessarie per collegare il
+        tuo account Instagram Business a OMNIA.
+      quando_si_usa: >
+        Fase di prima configurazione. Ha come prerequisito il
+        collegamento del profilo IG a una Pagina FB (v. Meta docs).
+      passi:
+        - "Prerequisito: il tuo account IG deve essere BUSINESS
+          (non personale) e collegato a una Pagina Facebook."
+        - "ig_user_id: dal Graph API Explorer chiama
+          GET /me/accounts?fields=instagram_business_account con il
+          Page Access Token della Pagina collegata. Il campo
+          instagram_business_account.id nella risposta e' il tuo
+          ig_user_id."
+        - "access_token: e' lo STESSO Page Access Token della Pagina
+          Facebook collegata. Non e' un token separato di IG.
+          Riusa quello del canale Facebook Page."
+        - "In OMNIA: Social Publisher > card Instagram Business >
+          Configura > incolla ig_user_id + access_token > Salva."
+        - "Vincolo Meta: le foto pubblicate su IG devono essere URL
+          HTTPS pubbliche. Se sono behind auth, IG rifiuta con
+          instagram_container_missing_id."
+      errori_comuni:
+        - problema: "instagram_requires_image al publish"
+          soluzione: >
+            IG non accetta post senza immagine. Aggiungi almeno una
+            foto principale all'immobile prima di pubblicare.
+        - problema: "instagram_container_missing_id"
+          soluzione: >
+            La foto non e' accessibile pubblicamente HTTPS. Verifica
+            che il tuo storage/CDN restituisca l'immagine in HTTPS
+            senza autenticazione richiesta.
+      permessi:
+        - Titolari e super_admin
+    screenshot: []
+
+  - id: social.credenziali-telegram
+    titolo: Come ottengo le credenziali Telegram (bot_token + chat_id)
+    modulo: Social Publisher
+    widget: null
+    pubblico: [titolare, super_admin]
+    livello: intermedio
+    tags: [social, telegram, credenziali, bot-token, chat-id, botfather, canale, admin, userinfobot]
+    correlati: [social.configurare-canale, social.errori]
+    domanda_naturale: "Come creo il bot Telegram? Come trovo il chat_id del canale?"
+    contenuto:
+      a_cosa_serve: >
+        Creare un bot Telegram e collegarlo al tuo canale.
+      quando_si_usa: >
+        Fase di prima configurazione del canale Telegram.
+      passi:
+        - "Su Telegram apri chat con @BotFather > digita /newbot >
+          scegli nome (visibile) + username (unique, deve finire in
+          'bot' es. nicastro_immo_bot)."
+        - "@BotFather ti da' il bot_token (stringa del tipo
+          123456789:ABCdef...). Copialo, e' segreto."
+        - "Crea un canale Telegram (o apri uno esistente)."
+        - "Aggiungi il bot come ADMIN del canale: Impostazioni
+          canale > Amministratori > Aggiungi Admin > cerca il nome
+          del tuo bot > conferma. Senza permessi admin il bot NON
+          puo' postare."
+        - "chat_id: se il canale e' PUBBLICO usa @nomecanale.
+          Se PRIVATO usa l'ID numerico negativo (tipo
+          -1001234567890) che ottieni inoltrando un messaggio del
+          canale a @userinfobot."
+        - "In OMNIA: Social Publisher > card Telegram Channel >
+          Configura > incolla bot_token + chat_id > Salva."
+      errori_comuni:
+        - problema: "telegram_error:chat not found"
+          soluzione: >
+            chat_id sbagliato oppure il bot NON e' admin del canale.
+            Verifica entrambi.
+        - problema: "telegram_error:bot was blocked"
+          soluzione: >
+            Il bot e' stato rimosso o bloccato. Riaggiungilo come
+            admin del canale.
+      permessi:
+        - Titolari e super_admin
+    screenshot: []
+
+  - id: social.configurare-canale
+    titolo: Configurare un canale social (self-service, 3 step)
+    modulo: Social Publisher
+    widget: null
+    pubblico: [titolare, super_admin]
+    livello: base
+    tags: [social, configurare, self-service, canale, modale, credenziali, cifrate, aes-gcm, sicurezza]
+    correlati: [social.credenziali-facebook, social.credenziali-instagram, social.credenziali-telegram, social.validare-canale]
+    domanda_naturale: "Come configuro un canale social su OMNIA?"
+    contenuto:
+      a_cosa_serve: >
+        Salvare le credenziali API del tuo canale su OMNIA cosi'
+        il modulo puo' pubblicare a tuo nome.
+      quando_si_usa: >
+        Prima configurazione o cambio credenziali.
+      passi:
+        - "Vai in Social Publisher. Sezione 'Canali disponibili'."
+        - "Identifica il canale (FB/IG/Telegram) e clicca Configura."
+        - "Compila i campi credenziale (vedi voci dedicate per FB,
+          IG, Telegram)."
+        - "Clicca 'Salva credenziali'."
+        - "Backend cifra AES-256-GCM le credenziali via
+          encrypt_dict() prima di salvare (mai in chiaro nel DB)."
+        - "Il canale diventa attivo (status='active') subito, ma
+          non e' ancora verificato con una chiamata reale."
+        - "Clicca 'Valida connessione' per fare un test live con
+          Meta/Telegram."
+      errori_comuni:
+        - problema: "409 channel_already_configured"
+          soluzione: >
+            Hai gia' un canale attivo di quel tipo. Aggiornalo
+            (PATCH) o disconnettilo (DELETE) prima di riconfigurare.
+        - problema: "422 missing_credentials"
+          soluzione: >
+            Uno o piu' campi obbligatori sono vuoti. Compila tutto.
+      permessi:
+        - Info per titolari - la creazione di canali richiede
+          agency_admin, super_admin, branch_admin, group_admin
+    screenshot: ["[SCREEN: cap15-config-modal]"]
+
+  - id: social.validare-canale
+    titolo: Validare un canale (test di connessione live)
+    modulo: Social Publisher
+    widget: null
+    pubblico: [titolare, super_admin]
+    livello: base
+    tags: [social, validare, validation, test-connessione, live, display-name, status, error, meta, telegram]
+    correlati: [social.configurare-canale, social.errori, social.canali-supportati]
+    domanda_naturale: "Come verifico che le credenziali social funzionano davvero?"
+    contenuto:
+      a_cosa_serve: >
+        Testare le credenziali salvate PRIMA di provare a pubblicare
+        un immobile, cosi' non scopri il token scaduto solo al
+        primo post.
+      quando_si_usa: >
+        Dopo aver configurato o aggiornato un canale, e periodicamente
+        per verificare che i token siano ancora validi.
+      passi:
+        - "Nella card del canale attivo clicca 'Valida connessione'."
+        - "Il backend chiama:
+          - FB Page: GET /me?fields=id,name su Graph API.
+            Confronta id restituito con il tuo page_id (se non
+            matchano > 422 page_id_mismatch).
+          - IG Business: GET /{ig_user_id}?fields=id,username.
+          - Telegram: POST /getMe sul bot token."
+        - "Se OK: status='active', display_name aggiornato al
+          nome della Pagina/username IG/username bot."
+        - "Se KO: status='error', last_error contiene stringa
+          errore da Meta/Telegram, badge rosso sulla card."
+        - "Cosa NON viene verificato: che il bot Telegram sia
+          effettivamente admin del canale (Telegram non lo espone);
+          che le foto degli immobili siano HTTPS pubbliche (lo
+          scopri al primo publish IG)."
+      errori_comuni:
+        - problema: "Valida OK ma poi publish fallisce"
+          soluzione: >
+            Il validate non testa tutto: potrebbe mancare un permesso
+            specifico (pages_manage_posts per FB) o il bot Telegram
+            non essere admin. Il primo publish e' il vero test finale.
+      permessi:
+        - agency_admin, super_admin, branch_admin, group_admin
+    screenshot: []
+
+  - id: social.pubblicare-immobile
+    titolo: Pubblicare un immobile sui social (on-demand multi-canale)
+    modulo: Social Publisher
+    widget: null
+    pubblico: [titolare, super_admin]
+    livello: base
+    tags: [social, pubblicare, publish, immobile, on-demand, multi-canale, caption, image-url, external-id]
+    correlati: [social.caption-default, social.audit-log, social.errori]
+    domanda_naturale: "Come pubblico un immobile su Facebook e Instagram con un click?"
+    contenuto:
+      a_cosa_serve: >
+        Mandare un annuncio immobile sui tuoi canali social attivi
+        in un colpo solo.
+      quando_si_usa: >
+        Ogni volta che vuoi diffondere un immobile sui tuoi social
+        aziendali.
+      passi:
+        - "Apri l'immobile che vuoi pubblicare (da Immobili, Cap. 3)."
+        - "Nella toolbar della scheda clicca 'Pubblica sui social'."
+        - "Seleziona su quali canali pubblicare (multiselezione).
+          Devi averli attivi prima."
+        - "Rivedi la caption default (auto-generata dai dati
+          immobile) o modificala."
+        - "Clicca 'Pubblica adesso'."
+        - "Backend chiama POST /api/app/publishing/social/publish
+          con property_id + channels + caption + image_url +
+          listing_url."
+        - "Il backend itera i canali in serie, produce un risultato
+          per canale."
+        - "Response: {property_id, results: {canale: {ok, external_id
+          o error}}, ok: bool}."
+        - "ok top-level e' true solo se TUTTI i canali sono andati
+          a segno. Se anche uno solo fallisce, ok=false ma i canali
+          riusciti restano pubblicati (no rollback multi-canale)."
+        - "image_url: se non passato, il backend usa la foto
+          principale (photos[0].url) dell'immobile."
+      errori_comuni:
+        - problema: "Un canale ok, un altro fallito"
+          soluzione: >
+            Il post riuscito resta pubblicato (no rollback). Vedi
+            l'errore del canale fallito in results[canale].error
+            e correggi (validate canale, rinnova token, ecc.).
+        - problema: "channel_not_configured in risposta"
+          soluzione: >
+            Hai selezionato un canale che non hai attivo. Vai a
+            Social Publisher > Configura il canale.
+      permessi:
+        - agency_admin, super_admin, branch_admin, group_admin
+    screenshot: ["[SCREEN: cap15-publish-multichannel]"]
+
+  - id: social.caption-default
+    titolo: La caption automatica di default (dai dati immobile)
+    modulo: Social Publisher
+    widget: null
+    pubblico: [titolare, super_admin]
+    livello: base
+    tags: [social, caption, didascalia, default, auto-generata, emoji, titolo, prezzo, citta, mq, descrizione]
+    correlati: [social.pubblicare-immobile, social.limitazioni-v1]
+    domanda_naturale: "Come viene creata la caption automatica del post?"
+    contenuto:
+      a_cosa_serve: >
+        Comporre in automatico una didascalia leggibile partendo dai
+        dati canonici dell'immobile, senza copiare/incollare.
+      quando_si_usa: >
+        Quando pubblichi senza scrivere una caption custom.
+      passi:
+        - "Riga 1: Titolo dell'immobile (se presente)."
+        - "Riga 2: 📍 Citta', Provincia (se almeno uno presente)."
+        - "Riga 3: 💶 Prezzo formattato con separatore migliaia
+          italiano (es. 250.000 €). Suffisso €/mese se e' un
+          affitto (rent_monthly presente ma price no)."
+        - "Riga 4: 📐 <mq> mq · <rooms> locali (se almeno uno)."
+        - "Righe successive: descrizione dell'immobile, tagliata ai
+          primi 800 caratteri."
+        - "Nessuna riga con dato mancante viene stampata (D-051
+          niente placeholder tipo 'Prezzo: N/D')."
+        - "Limiti caption per canale (troncatura automatica con …):
+          FB 4900 char, IG 2100 char, Telegram con foto 1024 char,
+          Telegram testo 4096 char."
+        - "Emoji fisse hardcoded (📍 💶 📐). Non personalizzabili v1."
+      errori_comuni:
+        - problema: "La caption e' troppo lunga per Telegram"
+          soluzione: >
+            Viene troncata automaticamente con '…' a fine testo.
+            Nessun errore bloccante.
+      permessi:
+        - Info descrittiva
+    screenshot: []
+
+  - id: social.audit-log
+    titolo: Audit log dei post social (collezione social_posts)
+    modulo: Social Publisher
+    widget: null
+    pubblico: [titolare, super_admin]
+    livello: intermedio
+    tags: [social, audit, log, social-posts, storico, external-id, tracciabilita, counter]
+    correlati: [social.pubblicare-immobile, social.errori]
+    domanda_naturale: "Dove vedo lo storico dei post pubblicati? Come traccio i fallimenti?"
+    contenuto:
+      a_cosa_serve: >
+        Sapere cosa hai pubblicato, quando, su quale canale, con
+        quale risultato. Utile per dispute o audit.
+      quando_si_usa: >
+        Per verificare data di pubblicazione, per capire perche' un
+        post e' fallito, per monitorare i counter di canale.
+      passi:
+        - "Ogni tentativo (success o fail) genera un record in
+          social_posts."
+        - "Campi salvati: id (uuid), agency_id, channel (fb/ig/tg),
+          property_id, caption (troncata a 2000 char), image_url,
+          listing_url, status (success|failed), external_id (ID
+          Meta/Telegram del post se success), error (stringa se
+          failed), created_at, updated_at."
+        - "Anche i failed vengono loggati - cosi' sai quando hai
+          avuto problemi di deliverability."
+        - "Endpoint: GET /api/app/publishing/social/posts?limit=50
+          &channel=<opz>. In UI Social Publisher mostra gli ultimi
+          20 post di tutti i canali."
+        - "Counter live: ogni canale ha posts_ok e posts_failed che
+          si incrementano ad ogni tentativo. Compaiono come badge
+          sulla card canale."
+      errori_comuni:
+        - problema: "Ho pubblicato ieri ma non vedo il post nell'elenco"
+          soluzione: >
+            L'UI mostra max 20 post recenti. Se hai pubblicato molto,
+            usa GET /posts?limit=100 direttamente. Per audit
+            profondo, super_admin accede a social_posts via DB.
+      permessi:
+        - agency_admin, super_admin, branch_admin, group_admin
+    screenshot: []
+
+  - id: social.errori
+    titolo: Errori comuni Social Publisher e come risolverli
+    modulo: Social Publisher
+    widget: null
+    pubblico: [titolare, super_admin]
+    livello: intermedio
+    tags: [social, errori, troubleshooting, meta-error, telegram-error, "422", "409", "502", "404", page-id-mismatch, instagram-requires-image]
+    correlati: [social.validare-canale, social.credenziali-facebook, social.credenziali-instagram, social.credenziali-telegram]
+    domanda_naturale: "Perche' il post non parte? Codici errore comuni"
+    contenuto:
+      a_cosa_serve: >
+        Riconoscere i codici errore piu' frequenti e sapere cosa
+        fare.
+      quando_si_usa: >
+        Quando la configurazione o il publish falliscono.
+      passi:
+        - "422 channels_required: al publish non hai selezionato
+          nessun canale. Selezionane almeno uno."
+        - "422 unsupported_channel: canale non fra facebook_page/
+          instagram_business/telegram. Solitamente bug UI."
+        - "422 missing_credentials:page_id,access_token: uno o piu'
+          campi vuoti nella modale. Compila tutto."
+        - "409 channel_already_configured: hai gia' un canale attivo
+          di quel tipo. Aggiornalo (PATCH) o disconnettilo prima."
+        - "404 channel_not_found: canale non tuo o cancellato.
+          Refresh pagina."
+        - "422 page_id_mismatch (validate FB): il token appartiene
+          a una Pagina diversa. Verifica page_id."
+        - "422 instagram_requires_image (publish IG): stai
+          pubblicando su IG senza immagine. IG non accetta post
+          testuali. Aggiungi foto principale."
+        - "502 meta_error:190: token FB scaduto/revocato. Rigenera
+          dal Graph API Explorer + PATCH canale."
+        - "502 meta_error:100: parametro mancante o non valido
+          (spesso page_id errato o permessi token insufficienti)."
+        - "502 instagram_container_missing_id: la foto non e' HTTPS
+          pubblica. Verifica CDN/storage."
+        - "502 telegram_error:chat not found: chat_id sbagliato o
+          bot NON admin del canale. Verifica entrambi."
+        - "502 telegram_error:bot was blocked: bot rimosso o
+          bloccato. Riaggiungilo admin."
+        - "channel_not_configured (in publish results): canale non
+          attivo in configurazione. Configuralo prima."
+        - "404 property_not_found: property_id inesistente nella
+          tua agenzia."
+      errori_comuni:
+        - problema: "Publish restituisce ok=false ma qualche canale e' ok"
+          soluzione: >
+            Voluto: ok e' true solo se TUTTI i canali sono andati.
+            I canali riusciti restano pubblicati (no rollback).
+            Guarda results[canale].error per il fallito.
+      permessi:
+        - Info descrittiva
+    screenshot: []
+
+  - id: social.limitazioni-v1
+    titolo: Limiti v1 di Social Publisher (D-051 onesto)
+    modulo: Social Publisher
+    widget: null
+    pubblico: [titolare, super_admin]
+    livello: intermedio
+    tags: [social, limiti, cosa-non-fa, scheduling, carosello, video, reel, analytics, engagement, twitter, tiktok, linkedin, bulk, template, moderazione, d-051]
+    correlati: [social.cos-e, social.canali-supportati]
+    domanda_naturale: "Cosa NON fa il Social Publisher v1? Il Social Publisher supporta scheduling, analytics, LinkedIn, TikTok o X/Twitter? Il modulo Social Publisher ha calendario editoriale / programmazione futura, LinkedIn, TikTok, X/Twitter, WhatsApp Business, YouTube Shorts, Threads, carosello multi-immagine, video, reel, story, GIF, analytics engagement (like, commenti, share, reach, impressioni), bulk publish, template caption personalizzati, preview live, moderazione pre-pubblicazione, rollback multi-canale?"
+    contenuto:
+      a_cosa_serve: >
+        Aspettative chiare su cosa il Social Publisher NON fa in v1:
+        no scheduling / calendario editoriale / programmazione futura,
+        no LinkedIn, no TikTok, no X/Twitter, no analytics engagement,
+        no carosello, no video/reel, no bulk publish, no template
+        caption personalizzati, no moderazione pre-pubblicazione.
+      quando_si_usa: >
+        Prima di provare a schedulare un post, pubblicare su LinkedIn
+        o TikTok o X/Twitter, o cercare metriche di engagement.
+      passi:
+        - "NO scheduling: solo on-demand. Nessun calendario
+          editoriale, nessuna coda, nessuna programmazione futura."
+        - "NO X/Twitter, LinkedIn, TikTok, YouTube Shorts,
+          WhatsApp Business, Threads. Solo 3 canali (FB Page,
+          IG Business, Telegram)."
+        - "NO carosello: 1 sola immagine per post (Meta e Telegram
+          supportano piu' immagini, ma noi non le usiamo v1)."
+        - "NO video, reel, story, GIF, collage. Solo foto + testo."
+        - "NO editor caption con preview live per canale (nessuna
+          mock che simula come appare su FB/IG/TG)."
+        - "NO template caption personalizzati per agenzia. La
+          caption default e' la stessa per tutti (righe standard
+          con emoji fisse 📍 💶 📐)."
+        - "NO analytics engagement (like, commenti, share, reach,
+          impressioni). Sappiamo solo 'pubblicato con successo' o
+          'fallito' + external_id."
+        - "NO auto-refresh token FB long-lived. Quando scade, lo
+          rinnovi a mano dalle Impostazioni canale."
+        - "NO bulk publish: 1 immobile per operazione (ma su piu'
+          canali insieme). Se vuoi pubblicare 50 immobili, apri 50
+          volte."
+        - "NO rollback multi-canale: se pubblichi su 3 canali e
+          uno fallisce, gli altri restano pubblicati."
+        - "NO preview finale prima di pubblicare (nessuna mock
+          preview)."
+        - "NO moderazione pre-pubblicazione: qualsiasi utente con
+          ruolo abilitato pubblica direttamente senza approvazione."
+      errori_comuni:
+        - problema: "Voglio pubblicare su LinkedIn"
+          soluzione: >
+            Non disponibile v1. Segnala l'interesse al team OMNIA
+            se e' un canale prioritario per te.
+        - problema: "Voglio vedere quanti like ha preso il post"
+          soluzione: >
+            OMNIA non lo espone. Vai direttamente su FB/IG/Telegram
+            e cerca il post usando l'external_id salvato in
+            social_posts.
+      permessi:
+        - Info descrittiva
+    screenshot: []
+
+  - id: social.collegamenti
+    titolo: Collegamenti fra Social Publisher e altri moduli
+    modulo: Social Publisher
+    widget: null
+    pubblico: [titolare, super_admin]
+    livello: base
+    tags: [social, cross-ref, immobili, portali, publishing, sito-web, hal-knowledge, team, distinzione]
+    correlati: [social.cos-e, social.canali-supportati]
+    domanda_naturale: "Che rapporto c'e' fra Social Publisher, Portali e Sito web?"
+    contenuto:
+      a_cosa_serve: >
+        Distinguere il modulo Social Publisher dagli altri publishing
+        di OMNIA.
+      quando_si_usa: >
+        Per capire quando usare uno o l'altro.
+      passi:
+        - "Cap. 3 Immobili: il bottone 'Pubblica sui social' parte
+          dalla scheda immobile. La foto usata e' photos[0].url."
+        - "Cap. 6 Portali & Publishing: Sync engine portali usa
+          feed pull (i portali scaricano da noi). Social Publisher
+          usa PUSH ESPLICITO on-demand. Sono due mondi distinti:
+          portali=sempre in vetrina, social=singolo post spot."
+        - "Cap. 8 Sito web agenzia: il listing_url che passi al
+          social publisher e' l'URL dell'immobile sul tuo sito
+          (embed / dominio custom)."
+        - "Cap. 12 HAL Knowledge: puoi chiedere 'Come pubblico su
+          Instagram?' e ricevere risposta con fonti da
+          15-social-publisher.yaml."
+        - "Cap. 13 Team & Ruoli: ruoli abilitati sono agency_admin,
+          super_admin, branch_admin, group_admin. Agent semplice
+          NON ha accesso."
+      errori_comuni:
+        - problema: "Ho pubblicato sui social ma non appare sui portali"
+          soluzione: >
+            Sono flussi diversi. Il Social Publisher e' spot, i
+            portali seguono il feed continuo del Sync Engine
+            (Cap. 6). Sono complementari, non alternativi.
+      permessi:
+        - Info descrittiva
+    screenshot: []

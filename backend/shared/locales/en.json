@@ -1,0 +1,22 @@
+{
+  "health.ok": "Service operational",
+  "app.immocloud": "ImmobilCloud — Real estate portal",
+  "app.immoweb": "ImmoWeb — Agency management",
+  "app.academy": "Omnia Academy — Agent training",
+  "app.landing": "OMNIA — Real estate ecosystem",
+  "error.unauthorized": "Unauthorized access",
+  "error.not_found": "Resource not found",
+  "error.server": "Internal server error",
+  "welcome.greeting": "Welcome to OMNIA",
+  "auth.email_taken": "This email is already registered",
+  "auth.invalid_credentials": "Invalid email or password",
+  "auth.too_many_attempts": "Too many failed attempts. Try again in 15 minutes.",
+  "auth.account_disabled": "Account disabled. Contact the administrator.",
+  "auth.no_refresh_token": "No refresh token provided",
+  "auth.invalid_token": "Invalid or expired token",
+  "auth.user_not_found": "User not found",
+  "auth.reset_link_sent": "If the email exists, you will receive a reset link.",
+  "auth.invalid_or_used_token": "Invalid or already used token",
+  "auth.token_expired": "Token expired. Request a new password reset.",
+  "auth.password_updated": "Password updated successfully"
+}

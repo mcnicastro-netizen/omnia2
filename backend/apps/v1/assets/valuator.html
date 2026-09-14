@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="__LANG__">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>OMNIA · Valutatore immobili</title>
+<style>
+  :root {
+    --primary: __PRIMARY_COLOR__;
+    --bg: #ffffff;
+    --fg: #1c1917;
+    --muted: #78716c;
+    --border: #e7e5e4;
+    --radius: 10px;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: var(--bg); color: var(--fg);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    font-size: 14px; line-height: 1.5; }
+  .omnia-widget { padding: 20px; max-width: 640px; margin: 0 auto; }
+  .omnia-widget h2 { margin: 0 0 4px; font-size: 20px; letter-spacing: -0.01em; }
+  .omnia-widget p.hint { margin: 0 0 20px; color: var(--muted); font-size: 13px; }
+  .omnia-form { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .omnia-form label { display: block; font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); margin-bottom: 4px; }
+  .omnia-form .full { grid-column: 1 / -1; }
+  .omnia-form input, .omnia-form select {
+    width: 100%; padding: 10px 12px; font-size: 14px;
+    border: 1px solid var(--border); border-radius: var(--radius); background: #fff; color: var(--fg);
+    transition: border-color 0.15s;
+  }
+  .omnia-form input:focus, .omnia-form select:focus { outline: none; border-color: var(--primary); }
+  .omnia-cta { grid-column: 1 / -1; display: flex; justify-content: flex-end; margin-top: 8px; }
+  .omnia-btn {
+    background: var(--primary); color: #fff; border: 0; padding: 12px 24px;
+    border-radius: var(--radius); font-size: 13px; font-weight: 500;
+    letter-spacing: 0.05em; text-transform: uppercase; cursor: pointer;
+    transition: opacity 0.15s;
+  }
+  .omnia-btn:hover:not(:disabled) { opacity: 0.85; }
+  .omnia-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .omnia-result { margin-top: 20px; padding: 20px; background: #fafaf9; border-radius: var(--radius); border: 1px solid var(--border); }
+  .omnia-range { font-size: 28px; font-weight: 600; color: var(--primary); letter-spacing: -0.01em; }
+  .omnia-range small { display: block; font-size: 12px; color: var(--muted); font-weight: 400; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px; }
+  .omnia-lead { margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border); }
+  .omnia-lead h3 { margin: 0 0 8px; font-size: 14px; }
+  .omnia-error { color: #b91c1c; font-size: 13px; margin-top: 8px; }
+  .omnia-success { color: #047857; font-size: 13px; margin-top: 8px; }
+  .omnia-footer { margin-top: 16px; font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; text-align: right; }
+  .omnia-footer a { color: var(--muted); text-decoration: none; border-bottom: 1px dotted var(--muted); }
+  .omnia-checkbox { display: flex; align-items: flex-start; gap: 8px; font-size: 12px; color: var(--muted); }
+  .omnia-checkbox input { margin-top: 2px; }
+</style>
+</head>
+<body>
+<div class="omnia-widget" id="omnia-app">
+  <h2 id="w-title">Stima gratuita del tuo immobile</h2>
+  <p class="hint" id="w-hint">Compila i campi principali e ottieni una stima orientativa in pochi secondi.</p>
+
+  <form id="omnia-form" class="omnia-form" novalidate>
+    <div>
+      <label for="city">Città *</label>
+      <input id="city" name="city" required maxlength="80" placeholder="Milano" />
+    </div>
+    <div>
+      <label for="surface">Superficie (m²) *</label>
+      <input id="surface" name="surface_sqm" type="number" min="10" max="2000" required placeholder="80" />
+    </div>
+    <div>
+      <label for="type">Tipologia</label>
+      <select id="type" name="property_type">
+        <option value="appartamento">Appartamento</option>
+        <option value="villa">Villa / Indipendente</option>
+        <option value="attico">Attico</option>
+        <option value="loft">Loft</option>
+        <option value="rustico">Rustico</option>
+      </select>
+    </div>
+    <div>
+      <label for="condition">Stato</label>
+      <select id="condition" name="condition">
+        <option value="nuovo">Nuovo / Ristrutturato</option>
+        <option value="buono" selected>Buono</option>
+        <option value="da_ristrutturare">Da ristrutturare</option>
+      </select>
+    </div>
+    <div>
+      <label for="energy">Classe energetica</label>
+      <select id="energy" name="energy_class">
+        <option value="">— non so —</option>
+        <option value="A4">A4</option><option value="A3">A3</option>
+        <option value="A2">A2</option><option value="A1">A1</option>
+        <option value="A">A</option><option value="B">B</option>
+        <option value="C">C</option><option value="D">D</option>
+        <option value="E">E</option><option value="F">F</option>
+        <option value="G">G</option>
+      </select>
+    </div>
+    <div>
+      <label for="floor">Piano</label>
+      <input id="floor" name="floor" type="number" min="-2" max="30" placeholder="3" />
+    </div>
+    <div class="omnia-cta">
+      <button type="submit" class="omnia-btn" id="w-submit" data-testid="widget-valuator-submit">
+        Stima gratis
+      </button>
+    </div>
+  </form>
+
+  <div id="w-result" class="omnia-result" style="display:none;" data-testid="widget-valuator-result">
+    <div class="omnia-range">
+      <small>Stima orientativa</small>
+      <span id="w-range">—</span>
+    </div>
+    <div id="w-details" style="font-size:12px;color:var(--muted);margin-top:8px;"></div>
+
+    <div class="omnia-lead">
+      <h3>Vuoi una valutazione professionale gratuita?</h3>
+      <p style="font-size:12px;color:var(--muted);margin:0 0 12px;">
+        Un nostro agente ti ricontatterà entro 24h.
+      </p>
+      <form id="omnia-lead-form" novalidate style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+        <input id="lead-name" placeholder="Nome" maxlength="120" required style="padding:8px 10px;font-size:13px;border:1px solid var(--border);border-radius:8px;" />
+        <input id="lead-email" placeholder="Email" type="email" maxlength="200" required style="padding:8px 10px;font-size:13px;border:1px solid var(--border);border-radius:8px;" />
+        <input id="lead-phone" placeholder="Telefono (opz.)" type="tel" maxlength="40" style="padding:8px 10px;font-size:13px;border:1px solid var(--border);border-radius:8px;grid-column:1/-1;" />
+        <label class="omnia-checkbox" style="grid-column:1/-1;">
+          <input type="checkbox" id="lead-consent" />
+          <span>Acconsento al trattamento dei dati per essere ricontattato (Privacy Policy).</span>
+        </label>
+        <button type="submit" class="omnia-btn" id="w-lead-submit" data-testid="widget-valuator-lead-submit" style="grid-column:1/-1;">
+          Richiedi valutazione professionale
+        </button>
+      </form>
+      <div id="w-lead-msg"></div>
+    </div>
+  </div>
+
+  <div id="w-error" class="omnia-error" style="display:none;" data-testid="widget-valuator-error"></div>
+
+  <p class="omnia-footer">
+    <img src="__BACKEND_BASE__/omnia-mark.png" alt="OMNIA" style="height:14px;width:auto;vertical-align:middle;margin-right:4px;opacity:.6" />Powered by <a href="https://omnia.re" target="_blank" rel="noopener noreferrer">OMNIA</a>
+  </p>
+</div>
+
+<script>
+  var BACKEND = "__BACKEND_BASE__";
+  var API_KEY = "__API_KEY__";
+  var LAST_ESTIMATE = null;
+  var LAST_PAYLOAD = null;
+
+  function emitSize() {
+    var h = document.getElementById("omnia-app").getBoundingClientRect().height + 20;
+    try { window.parent.postMessage({ omnia: "valuator", type: "resize", height: h }, "*"); } catch (_) {}
+  }
+  new ResizeObserver(emitSize).observe(document.getElementById("omnia-app"));
+  window.addEventListener("load", emitSize);
+
+  function fmt(n) {
+    if (n == null) return "—";
+    return "€ " + Math.round(n).toLocaleString("it-IT");
+  }
+
+  document.getElementById("omnia-form").addEventListener("submit", async function (e) {
+    e.preventDefault();
+    var btn = document.getElementById("w-submit");
+    var errBox = document.getElementById("w-error");
+    var resBox = document.getElementById("w-result");
+    errBox.style.display = "none";
+    btn.disabled = true;
+    btn.textContent = "…";
+
+    var payload = {
+      city: document.getElementById("city").value.trim(),
+      surface_sqm: parseFloat(document.getElementById("surface").value),
+      property_type: document.getElementById("type").value,
+      condition: document.getElementById("condition").value,
+      energy_class: document.getElementById("energy").value || null,
+      floor: document.getElementById("floor").value ? parseInt(document.getElementById("floor").value, 10) : null,
+    };
+    LAST_PAYLOAD = payload;
+
+    try {
+      var r = await fetch(BACKEND + "/api/v1/valuator", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer " + API_KEY,
+        },
+        body: JSON.stringify(payload),
+      });
+      if (!r.ok) {
+        var msg = "Errore (HTTP " + r.status + ")";
+        try { var j = await r.json(); if (j.detail) msg = j.detail; } catch (_) {}
+        throw new Error(msg);
+      }
+      var data = (await r.json()).data;
+      LAST_ESTIMATE = data;
+      var ev = data.estimated_value || {};
+      document.getElementById("w-range").textContent = fmt(ev.min) + " – " + fmt(ev.max);
+      var pm = ev.avg && payload.surface_sqm ? (ev.avg / payload.surface_sqm) : null;
+      document.getElementById("w-details").textContent =
+        "Media " + fmt(ev.avg) + (pm ? " · circa " + fmt(pm) + "/m²" : "");
+      resBox.style.display = "block";
+      resBox.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      emitSize();
+    } catch (err) {
+      errBox.textContent = err.message || "Errore inatteso";
+      errBox.style.display = "block";
+      emitSize();
+    } finally {
+      btn.disabled = false;
+      btn.textContent = "Stima gratis";
+    }
+  });
+
+  document.getElementById("omnia-lead-form").addEventListener("submit", async function (e) {
+    e.preventDefault();
+    var btn = document.getElementById("w-lead-submit");
+    var msg = document.getElementById("w-lead-msg");
+    msg.textContent = "";
+    msg.className = "";
+
+    var name = document.getElementById("lead-name").value.trim();
+    var email = document.getElementById("lead-email").value.trim();
+    var phone = document.getElementById("lead-phone").value.trim();
+    var consent = document.getElementById("lead-consent").checked;
+
+    if (!name || !email || !consent) {
+      msg.className = "omnia-error"; msg.textContent = "Nome, email e consenso richiesti.";
+      return;
+    }
+    btn.disabled = true; btn.textContent = "…";
+
+    try {
+      var r = await fetch(BACKEND + "/api/v1/widgets/lead", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer " + API_KEY,
+        },
+        body: JSON.stringify({
+          widget: "valuator",
+          name: name, email: email, phone: phone || null,
+          consent: true,
+          context: { estimate: LAST_ESTIMATE, input: LAST_PAYLOAD },
+          source_url: document.referrer || null,
+        }),
+      });
+      if (!r.ok) {
+        var text = "Errore invio";
+        try { var j = await r.json(); if (j.detail) text = j.detail; } catch (_) {}
+        throw new Error(text);
+      }
+      msg.className = "omnia-success";
+      msg.textContent = "Richiesta inviata! Ti ricontatteremo entro 24h.";
+      document.getElementById("omnia-lead-form").reset();
+    } catch (err) {
+      msg.className = "omnia-error"; msg.textContent = err.message || "Errore invio";
+    } finally {
+      btn.disabled = false; btn.textContent = "Richiedi valutazione professionale";
+      emitSize();
+    }
+  });
+</script>
+</body>
+</html>

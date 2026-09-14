@@ -1,0 +1,548 @@
+# HAL — Voci esportate per RAG
+# Capitolo 8 · Sito web agenzia
+# Schema: id, titolo, modulo, widget, pubblico, livello, tags, correlati,
+#         domanda_naturale, contenuto{a_cosa_serve, quando_si_usa, passi,
+#         errori_comuni[{problema,soluzione}], permessi}, screenshot[]
+
+voci:
+
+  - id: sito.a-cosa-serve
+    titolo: A cosa serve il modulo Sito web di ImmoWeb
+    modulo: Sito web
+    widget: null
+    pubblico: [titolare]
+    livello: base
+    tags: [sito-web, publishing, panoramica, primi-passi]
+    correlati:
+      - sito.brand-extractor
+      - sito.temi-disponibili
+      - sito.custom-domain
+    domanda_naturale: "A cosa serve il modulo Sito web?"
+    contenuto:
+      a_cosa_serve: >
+        Pubblicare un sito web autonomo dell'agenzia con vetrina immobili,
+        SEO, share sociale, brandato coi tuoi colori. Il sito e' servito
+        da OMNIA su /api/p/{slug}/ e puo' essere mappato su un tuo
+        dominio custom (www.tuoagenzia.it).
+      quando_si_usa: >
+        Una-tantum: estrai il brand dal tuo sito attuale, scegli un tema,
+        richiedi il custom domain. Poi il sito si aggiorna automatico
+        ogni volta che modifichi un immobile in status attivo.
+      passi:
+        - "Vai in Sito web dalla barra a sinistra (solo titolare)."
+        - "Sezione 1 - Brand Extractor: incolla URL del tuo sito attuale,
+          HAL estrae colori/font/logo."
+        - "Sezione 2 - Theme Picker: scegli tra 4 temi (Minimal, Classic,
+          Bold, Luxury)."
+        - "Sezione 3 - Live Preview: iframe con anteprima del sito
+          pubblico corrente."
+        - "Sezione 4 - Dominio personalizzato: richiedi il tuo
+          www.tuoagenzia.it con 2 record DNS."
+      errori_comuni:
+        - problema: "Non vedo la voce Sito web nella sidebar"
+          soluzione: >
+            E' visibile solo al titolare (agency_admin). Agente e
+            segreteria non hanno accesso a questo modulo.
+      permessi:
+        - Titolare (agency_admin) - accesso completo
+        - Super_admin - come titolare + gestione richieste dominio pendenti
+        - Agente / segreteria - nessun accesso
+    screenshot:
+      - "[SCREEN: cap8-website-panoramica]"
+
+  - id: sito.brand-extractor
+    titolo: Come funziona il Brand Extractor
+    modulo: Sito web
+    widget: null
+    pubblico: [titolare]
+    livello: base
+    tags: [sito-web, brand, extractor, ai, gemini, palette]
+    correlati:
+      - sito.auto-configura
+      - sito.temi-disponibili
+    domanda_naturale: "Come estraggo il brand dal mio sito esistente?"
+    contenuto:
+      a_cosa_serve: >
+        Analizzare la home del tuo sito attuale e dedurre palette, tipografia,
+        logo, tono editoriale. HAL usa Gemini 3 Flash con schema JSON
+        strutturato e restituisce un brand_profile con confidence 0-100.
+      quando_si_usa: >
+        Al primo setup del sito OMNIA se hai gia' un sito esistente e vuoi
+        che il sito OMNIA rispetti la tua identita' visiva.
+      passi:
+        - "Vai in Sito web dalla barra a sinistra."
+        - "Nella sezione Brand Extractor incolla l'URL della tua home
+          (es. https://www.tuoagenzia.it)."
+        - "Clicca Estrai brand e attendi qualche secondo (HAL scarica
+          l'HTML, invia a Gemini, riceve JSON)."
+        - "Vedi il pannello risultato con: confidence (0-100), 4 chip
+          colore, voce/header/card style, logo trovato."
+        - "Se confidence >=70 puoi cliccare direttamente Applica
+          automaticamente; se 40-69 rivedi prima; se <40 scegli tema
+          manualmente."
+      errori_comuni:
+        - problema: "emergent_llm_key_missing (503)"
+          soluzione: >
+            Il credito Emergent LLM e' esaurito o non configurato. Vai in
+            Piano & Crediti per ricaricare, poi ritenta.
+        - problema: "ai_response_invalid (502)"
+          soluzione: >
+            Gemini ha restituito un JSON non parseabile. Rilancia; se
+            persiste, scegli il tema manualmente dalla sezione Tema.
+        - problema: "extraction_failed o fetch_failed (502)"
+          soluzione: >
+            Il tuo sito non e' raggiungibile o e' bloccato da un WAF
+            (Cloudflare, ecc). Verifica che il sito risponda con
+            User-Agent generico oppure scegli il tema manualmente.
+      permessi:
+        - Titolare (agency_admin), super_admin
+    screenshot:
+      - "[SCREEN: cap8-brand-extractor]"
+
+  - id: sito.temi-disponibili
+    titolo: I 4 temi disponibili (Minimal, Classic, Bold, Luxury)
+    modulo: Sito web
+    widget: null
+    pubblico: [titolare]
+    livello: base
+    tags: [sito-web, temi, design, minimal, classic, bold, luxury]
+    correlati:
+      - sito.applicare-tema
+      - sito.auto-configura
+      - sito.brand-extractor
+    domanda_naturale: "Quali temi posso scegliere per il sito?"
+    contenuto:
+      a_cosa_serve: >
+        Sapere quale tema si adatta meglio alla tua agenzia. OMNIA
+        offre 4 layout gia' pronti, ognuno con palette + tipografia +
+        struttura specifiche.
+      quando_si_usa: >
+        Alla prima configurazione del sito, o ogni volta che vuoi
+        rinnovare l'immagine dell'agenzia (l'operazione e' reversibile).
+      passi:
+        - "MINIMAL - agenzie boutique, tono familiare/professionale.
+          Palette default nero+verde bosco, tipografia Fraunces serif.
+          Layout con spazio bianco, header trasparente."
+        - "CLASSIC - agenzie generaliste, tono istituzionale. Blu notte
+          + ottone. Playfair Display serif. Header colorato con logo
+          invertito, cards con ombra."
+        - "BOLD - agenzie moderne ad alto volume. Arancio + nero.
+          Inter 700-800. Typo maiuscola enorme, card a piena immagine."
+        - "LUXURY - immobili di pregio. Nero puro + oro rosato.
+          Playfair Display + Inter. Header centrato con tagline
+          spaziata, foto grandi, features come pill outline."
+      errori_comuni:
+        - problema: "Nessuno dei 4 temi mi piace, voglio custom CSS"
+          soluzione: >
+            In v1 non e' supportato custom CSS. Puoi comunque sovrascrivere
+            palette (4 hex), tipografia (font-family CSS), logo URL e
+            tagline entro il framework dei 4 temi.
+      permessi:
+        - Titolare (agency_admin), super_admin
+    screenshot:
+      - "[SCREEN: cap8-theme-picker]"
+
+  - id: sito.applicare-tema
+    titolo: Come applico un tema al sito
+    modulo: Sito web
+    widget: null
+    pubblico: [titolare]
+    livello: base
+    tags: [sito-web, temi, applicare, palette, override]
+    correlati:
+      - sito.temi-disponibili
+      - sito.live-preview
+    domanda_naturale: "Come applico un tema al mio sito?"
+    contenuto:
+      a_cosa_serve: >
+        Impostare il tema attivo del sito pubblico. L'operazione e'
+        immediata e reversibile.
+      quando_si_usa: >
+        Alla prima configurazione, o quando vuoi cambiare identita'
+        visiva.
+      passi:
+        - "Vai in Sito web -> sezione Tema."
+        - "Clicca sulla card del tema desiderato (Minimal/Classic/Bold/
+          Luxury)."
+        - "OMNIA salva subito (POST /website/theme/apply) con palette
+          default del tema. Timestamp applied_at aggiornato."
+        - "Il badge Attivo compare sulla card scelta."
+        - "La Live Preview iframe si aggiorna automaticamente."
+        - "Puoi sovrascrivere palette (4 colori hex #RRGGBB), tipografia
+          (font-family CSS), logo URL e tagline salvando via API - non
+          c'e' UI dedicata all'override in v1, chiedi all'assistenza."
+      errori_comuni:
+        - problema: "invalid_theme_id (400)"
+          soluzione: >
+            Il theme_id inviato non e' tra minimal/classic/bold/luxury.
+            Non capita da UI, se accade contatta assistenza.
+        - problema: "Ho cambiato tema ma il pubblico vede quello vecchio"
+          soluzione: >
+            Il tema e' applicato subito lato server. Se un utente vede la
+            versione vecchia, ha cache browser: hard-refresh (Ctrl+F5).
+      permessi:
+        - Titolare (agency_admin), super_admin
+    screenshot: []
+
+  - id: sito.auto-configura
+    titolo: Auto-configurazione del sito dal brand estratto
+    modulo: Sito web
+    widget: null
+    pubblico: [titolare]
+    livello: base
+    tags: [sito-web, auto-configure, brand, extractor, ai]
+    correlati:
+      - sito.brand-extractor
+      - sito.applicare-tema
+    domanda_naturale: "Come applico automaticamente il brand estratto al sito?"
+    contenuto:
+      a_cosa_serve: >
+        Con un click applicare tema + palette + logo + tagline dedotti
+        dal brand estratto. Utile se hai gia' un sito riconoscibile.
+      quando_si_usa: >
+        Dopo aver estratto il brand con almeno confidence >=40.
+      passi:
+        - "Fai prima l'estrazione del brand (voce sito.brand-extractor)."
+        - "Nel pannello risultato clicca il bottone verde Applica
+          automaticamente."
+        - "OMNIA scelglie il tema con heuristic mapping: voice=lusso ->
+          Luxury; header=bold o card=image_dominant -> Bold; voice=
+          familiare/amichevole -> Classic; voice=tecnico -> Bold;
+          altrimenti Minimal."
+        - "La palette applicata = quella estratta (solo hex validi
+          #RRGGBB), altrimenti default del tema."
+        - "Il logo e la tagline provengono dal brand estratto o dal
+          fallback agency.branding."
+        - "Salva theme_config con source: auto_from_extracted e
+          timestamp applied_at."
+      errori_comuni:
+        - problema: "no_extracted_profile (400)"
+          soluzione: >
+            Non hai ancora fatto l'estrazione. Torna in Brand Extractor,
+            estrai, poi rilancia auto-configura.
+      permessi:
+        - Titolare (agency_admin), super_admin
+    screenshot: []
+
+  - id: sito.live-preview
+    titolo: Anteprima live del sito nel CRM
+    modulo: Sito web
+    widget: null
+    pubblico: [titolare]
+    livello: base
+    tags: [sito-web, preview, iframe, verifica]
+    correlati:
+      - sito.applicare-tema
+      - sito.vetrina-pubblica
+    domanda_naturale: "Come vedo l'anteprima del sito prima di pubblicarlo?"
+    contenuto:
+      a_cosa_serve: >
+        Vedere in tempo reale come apparira' il sito pubblico dopo un
+        cambio tema, senza aprire una tab nuova. L'iframe punta al sito
+        pubblico corrente con timestamp anti-cache.
+      quando_si_usa: >
+        Ogni volta che cambi tema, palette, logo, tagline; oppure per
+        verificare come vengono renderizzati nuovi immobili.
+      passi:
+        - "Vai in Sito web -> sezione Anteprima."
+        - "L'iframe carica automaticamente il sito pubblico con
+          timestamp ?t={now}."
+        - "Se hai appena modificato qualcosa, clicca il bottone
+          ricarica per forzare refresh dell'iframe."
+        - "Bottone Apri sito pubblico -> apre in nuova tab lo stesso URL."
+        - "L'iframe e' sandboxato (allow-same-origin allow-scripts),
+          nessun rischio script terzi."
+      errori_comuni:
+        - problema: "Iframe vuoto o Impossibile connettersi"
+          soluzione: >
+            La tua agenzia deve avere is_active=true e uno slug valido.
+            Se il pannello dice attiva ma il sito da' 404, contatta
+            assistenza.
+        - problema: "Preview mostra Nessun immobile pubblicato"
+          soluzione: >
+            Nessun immobile con status=active. Vai in Immobili, verifica
+            gli stati (vedi Cap. 3.5).
+      permessi:
+        - Titolare (agency_admin), super_admin
+    screenshot: []
+
+  - id: sito.vetrina-pubblica
+    titolo: Cosa mostra la vetrina pubblica del sito
+    modulo: Sito web
+    widget: null
+    pubblico: [titolare, agente]
+    livello: base
+    tags: [sito-web, vetrina, home, immobili, seo]
+    correlati:
+      - sito.a-cosa-serve
+      - sito.scheda-pubblica
+      - immobili.stato-ciclo-vita
+    domanda_naturale: "Cosa vede un visitatore sulla home del mio sito OMNIA?"
+    contenuto:
+      a_cosa_serve: >
+        Capire cosa il pubblico vede: griglia annunci attivi, header con
+        logo/nome agenzia, ordinamento aggiornati per primi, sitemap SEO.
+      quando_si_usa: >
+        Sempre - il sito e' pubblico e sempre online se la tua agenzia
+        e' attiva.
+      passi:
+        - "Header con logo + nome agenzia (tagline solo nel tema Luxury)."
+        - "H1 = nome agenzia + counter 'N immobili attivi'."
+        - "Griglia listings: card per ogni immobile con cover photo +
+          titolo + citta' + tipologia + m2 + locali + prezzo (o
+          EUR/mese per affitti)."
+        - "Solo immobili con status=active. Bozze/prenotati/venduti/
+          affittati/ritirati NON compaiono."
+        - "Ordinati per updated_at decrescente, max 200 immobili in home."
+        - "Sitemap.xml automatica su /api/p/{slug}/sitemap.xml con
+          fino a 5000 URL."
+        - "Se nessun annuncio -> 'Nessun immobile pubblicato al momento.'"
+      errori_comuni:
+        - problema: "Un immobile che ho creato non compare"
+          soluzione: >
+            Verifica che lo stato sia Pubblicato (active). Le bozze non
+            appaiono. Vedi Cap. 3.5 per il ciclo di vita.
+        - problema: "L'ordinamento non e' quello che voglio"
+          soluzione: >
+            E' fisso su updated_at decrescente. Per far salire un
+            immobile, aprilo e salva (updated_at si aggiorna).
+      permessi:
+        - Titolare, agente (per capire cosa vede il pubblico)
+    screenshot: []
+
+  - id: sito.scheda-pubblica
+    titolo: Cosa contiene la scheda pubblica di un immobile
+    modulo: Sito web
+    widget: null
+    pubblico: [titolare, agente]
+    livello: base
+    tags: [sito-web, scheda, immobile, seo, schema-org, condivisione]
+    correlati:
+      - sito.vetrina-pubblica
+      - sito.share-sociale
+      - immobili.foto-ordinamento
+    domanda_naturale: "Cosa vede un visitatore sulla scheda pubblica di un immobile?"
+    contenuto:
+      a_cosa_serve: >
+        Capire quali dati arrivano al pubblico e come sono formattati.
+      quando_si_usa: >
+        Sempre quando qualcuno clicca su una card della vetrina.
+      passi:
+        - "Header agenzia (come home) + breadcrumb informale citta' +
+          zona + RIF."
+        - "Prezzo in evidenza (tipografia del tema attivo)."
+        - "Griglia foto (tutte, lazy loading), cover in alto."
+        - "Griglia caratteristiche principali: tipologia, operazione,
+          citta', zona, superficie, locali, camere, bagni, piano,
+          classe energetica, anno, riferimento."
+        - "Descrizione (preserva a-capo)."
+        - "Chip per ogni feature attiva (auto snake_case -> spazi)."
+        - "Share block: WhatsApp, Facebook, Email, Copia link (SVG
+          inline, no script terzi)."
+        - "Box CTA 'Contatta [Nome Agenzia]' senza form nativo (il
+          lead form appartiene al portale B2C /cloud)."
+        - "JSON-LD schema.org Product + RealEstateListing + Offer per
+          rich snippets Google."
+      errori_comuni:
+        - problema: "Le foto non caricano nella scheda pubblica"
+          soluzione: >
+            Puo' essere che le foto legacy in base64 siano troppo grosse.
+            Ri-carica le foto dell'immobile (Cap. 3.3) - andranno su
+            Object Storage con cache 24h.
+        - problema: "L'anteprima link su WhatsApp non mostra la foto"
+          soluzione: >
+            OMNIA genera og:image assoluta con la cover photo. Se manca,
+            imposta una foto come 'copertina' nel form immobile.
+      permessi:
+        - Titolare, agente (per capire cosa vede il pubblico)
+    screenshot:
+      - "[SCREEN: cap8-scheda-pubblica]"
+
+  - id: sito.share-sociale
+    titolo: Come si condivide un immobile sui social
+    modulo: Sito web
+    widget: null
+    pubblico: [titolare, agente]
+    livello: base
+    tags: [sito-web, share, whatsapp, facebook, email, condivisione]
+    correlati:
+      - sito.scheda-pubblica
+    domanda_naturale: "Come si condivide un immobile su WhatsApp o Facebook?"
+    contenuto:
+      a_cosa_serve: >
+        Permettere a chiunque legga la scheda pubblica di condividerla
+        in 1 click su WhatsApp, Facebook, email o copiare il link.
+      quando_si_usa: >
+        Sempre disponibile su ogni scheda pubblica. Ottimo per inoltrare
+        a clienti che ti chiedono un immobile via chat.
+      passi:
+        - "Sulla scheda pubblica scendi al blocco 'Condividi questo
+          immobile'."
+        - "WhatsApp: apre wa.me con testo precompilato titolo + agenzia
+          + prezzo + URL. Ideale per inoltro a chat cliente."
+        - "Facebook: apre il dialog nativo sharer.php con URL della
+          scheda."
+        - "Email: apre client mail default con subject + body."
+        - "Copia link: usa navigator.clipboard, feedback 'Copiato' per
+          1.8s. Fallback textarea nei browser vecchi."
+        - "Meta og:title, og:description, og:image sono generati
+          automaticamente per anteprime link belle su WhatsApp/FB/
+          LinkedIn."
+      errori_comuni:
+        - problema: "Il click su Copia link non fa nulla"
+          soluzione: >
+            Alcuni browser richiedono HTTPS per clipboard API. Se sei su
+            preview HTTP, usa il pulsante WhatsApp o Email invece.
+        - problema: "Il testo pre-compilato di WhatsApp e' troppo lungo"
+          soluzione: >
+            E' testo generato dinamicamente. Puoi editarlo prima di
+            inviare direttamente in WhatsApp Web/mobile.
+      permessi:
+        - Non richiede permessi (pubblico)
+    screenshot: []
+
+  - id: sito.custom-domain
+    titolo: Come collego il mio dominio custom (www.tuoagenzia.it)
+    modulo: Sito web
+    widget: null
+    pubblico: [titolare]
+    livello: intermedio
+    tags: [sito-web, dominio, dns, cname, txt, custom-domain]
+    correlati:
+      - sito.custom-domain-verifica
+      - sito.custom-domain-ssl
+    domanda_naturale: "Come collego il mio dominio al sito OMNIA?"
+    contenuto:
+      a_cosa_serve: >
+        Servire il sito OMNIA sul tuo dominio commerciale (es.
+        www.tuoagenzia.it) invece che sull'URL /api/p/{slug}/ di OMNIA.
+        Migliora branding, memorabilita' e SEO.
+      quando_si_usa: >
+        Dopo aver scelto il tema e verificato il sito in preview. Il
+        processo prende ~24-72 ore totali per DNS + attivazione SSL.
+      passi:
+        - "Vai in Sito web -> sezione Dominio personalizzato."
+        - "Inserisci il dominio (es. www.tuoagenzia.it), solo minuscole,
+          no https://, no percorsi."
+        - "Clicca Richiedi dominio. OMNIA genera un token casuale e
+          mostra 2 record DNS da configurare."
+        - "Nel pannello del tuo registrar (Aruba/Cloudflare/GoDaddy/...)
+          aggiungi record TXT: host _omnia-challenge.tuoagenzia.it,
+          valore 'omnia-verify={token}'."
+        - "Aggiungi record CNAME: host www.tuoagenzia.it, valore
+          agencies.omniarealestateecosystem.it."
+        - "Se il dominio e' apex (senza www): alcuni registrar non
+          permettono CNAME apex, usa ALIAS/ANAME o configura solo su
+          www + redirect apex->www."
+        - "Attendi propagazione DNS: tipicamente 5-60 min, fino a
+          24-48h in casi lenti."
+      errori_comuni:
+        - problema: "invalid_domain (400)"
+          soluzione: >
+            Formato non valido. Solo minuscole, no protocolli, no path.
+            Es. www.tuoagenzia.it (non https://www.tuoagenzia.it/).
+        - problema: "reserved_domain (400)"
+          soluzione: >
+            Il dominio termina con omniarealestateecosystem.it o suffissi
+            emergent.*. Usa il tuo dominio commerciale.
+        - problema: "domain_already_claimed (409)"
+          soluzione: >
+            Un'altra agenzia ha gia' richiesto lo stesso dominio.
+            Contatta l'assistenza.
+      permessi:
+        - Titolare (agency_admin), super_admin
+    screenshot:
+      - "[SCREEN: cap8-custom-domain-flow]"
+
+  - id: sito.custom-domain-verifica
+    titolo: Verifica DNS del dominio custom
+    modulo: Sito web
+    widget: null
+    pubblico: [titolare]
+    livello: intermedio
+    tags: [sito-web, dominio, dns, verifica, txt, cname]
+    correlati:
+      - sito.custom-domain
+      - sito.custom-domain-ssl
+    domanda_naturale: "Come verifico che i DNS del mio dominio siano configurati?"
+    contenuto:
+      a_cosa_serve: >
+        Controllare che i 2 record DNS (TXT + CNAME) siano propagati e
+        corretti, in modo che OMNIA autorizzi l'uso del dominio.
+      quando_si_usa: >
+        Dopo aver aggiunto i record al registrar. Attendi almeno 10-15
+        minuti di propagazione prima del primo tentativo.
+      passi:
+        - "Torna in Sito web -> Dominio personalizzato."
+        - "Clicca Verifica DNS."
+        - "OMNIA risolve TXT e CNAME contro DNS pubblici (1.1.1.1
+          Cloudflare + 8.8.8.8 Google) e confronta."
+        - "TXT deve contenere esattamente 'omnia-verify={token}'."
+        - "CNAME deve risolvere a agencies.omniarealestateecosystem.it
+          (o a un IP che coincide con quello risolto dal target)."
+        - "Se OK: badge verde 'verified', verified_at aggiornato."
+        - "Se KO: badge rosso 'error' con dettaglio (txt_record_not_
+          found_or_mismatch, cname_record_not_pointing_to_target...)."
+      errori_comuni:
+        - problema: "txt_record_not_found_or_mismatch"
+          soluzione: >
+            Il TXT non e' ancora nei DNS pubblici o il valore differisce.
+            Verifica sul registrar; attendi altri 15-60 min di
+            propagazione; rilancia.
+        - problema: "cname_record_not_pointing_to_target"
+          soluzione: >
+            Il CNAME punta ad altro. Correggi sul registrar con valore
+            agencies.omniarealestateecosystem.it (senza trailing dot).
+        - problema: "txt_lookup_failed o cname_lookup_failed"
+          soluzione: >
+            I DNS pubblici non rispondono per il tuo dominio. Verifica
+            che il dominio sia effettivamente attivo (whois) e che il
+            registrar abbia salvato le modifiche.
+      permessi:
+        - Titolare (agency_admin), super_admin
+    screenshot: []
+
+  - id: sito.custom-domain-ssl
+    titolo: Attivazione SSL sul dominio custom (step super_admin)
+    modulo: Sito web
+    widget: null
+    pubblico: [titolare]
+    livello: intermedio
+    tags: [sito-web, dominio, ssl, https, letsencrypt, super-admin]
+    correlati:
+      - sito.custom-domain
+      - sito.custom-domain-verifica
+    domanda_naturale: "Perche' il mio dominio verificato non risponde in HTTPS?"
+    contenuto:
+      a_cosa_serve: >
+        Sapere che dopo la verifica DNS c'e' UNO step manuale del
+        super_admin OMNIA: aggiungere il dominio nel pannello di
+        hosting per attivare l'SSL Let's Encrypt automatico.
+      quando_si_usa: >
+        Il super_admin viene notificato via email quando il tuo dominio
+        passa a 'verified'. Esegue lo step in 24-48 ore lavorative.
+      passi:
+        - "Dopo che i tuoi DNS sono verified, non serve altro da parte
+          tua."
+        - "Il super_admin riceve email di notifica con nome agenzia +
+          slug + dominio."
+        - "Il super_admin aggiunge il dominio nel pannello Emergent
+          (Settings -> Custom Domains) per il rilascio SSL Let's
+          Encrypt automatico."
+        - "Tempo tipico: 24-48 ore lavorative dopo la verifica DNS."
+        - "Solo dopo questo step il dominio e' raggiungibile in HTTPS."
+      errori_comuni:
+        - problema: "Il dominio e' 'verified' da 2 giorni ma non risponde in HTTPS"
+          soluzione: >
+            L'attivazione SSL richiede lo step manuale del super_admin.
+            Se sono passate piu' di 48h lavorative, contatta assistenza:
+            probabilmente la notifica email al super_admin e' andata in
+            spam o la coda e' arretrata.
+        - problema: "Il dominio risponde in HTTPS ma da' errore certificato"
+          soluzione: >
+            Let's Encrypt sta ancora rilasciando il certificato. Riprova
+            tra 15-30 minuti; se persiste dopo 1h, contatta assistenza.
+      permessi:
+        - Titolare (visualizza stato)
+        - Super_admin (unico ad attivare SSL sul pannello hosting)
+    screenshot: []

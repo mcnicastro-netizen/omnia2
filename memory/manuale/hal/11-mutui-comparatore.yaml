@@ -1,0 +1,516 @@
+# HAL — Voci esportate per RAG
+# Capitolo 11 · Mutui comparatore ipotecario
+
+voci:
+
+  - id: mutui.cos-e
+    titolo: Cos'è il Comparatore Mutui di OMNIA
+    modulo: Mutui
+    widget: null
+    pubblico: [titolare, agente, segreteria]
+    livello: base
+    tags: [mutui, comparatore, mutuo, prestito, casa, panoramica, banche]
+    correlati: [mutui.dove-lo-trovi, mutui.motore, mutui.disclaimer-tub]
+    domanda_naturale: "Cos'è il Comparatore Mutui di OMNIA? A cosa serve?"
+    contenuto:
+      a_cosa_serve: >
+        Motore matematico + tabella curata di 14 offerte di 8 banche
+        italiane. Da prezzo immobile + anticipo + durata + tipo tasso
+        calcola rata mensile, TAEG, costo totale, anticipo minimo,
+        sostenibilita' vs reddito. Ordinato per miglior TAEG.
+      quando_si_usa: >
+        Proprietario in vendita per capire "quanto rende mensilmente"
+        un immobile a un acquirente; acquirente/lead per orientarsi
+        prima del colloquio bancario; agente in trattativa per mostrare
+        la rata al cliente in tempo reale.
+      passi:
+        - "Motore in 4 stage: LTV check, TAN=benchmark+spread, rata
+          ammortamento francese, TAEG via IRR, controllo soglia usura
+          TEGM Banca d'Italia."
+        - "14 offerte curate manualmente su 8 banche italiane (Intesa,
+          UniCredit, BPER, Credit Agricole, MPS, BNL, ING, Webank)."
+        - "Dati aggiornati trimestralmente (ultimo aggiornamento
+          Giugno 2026, campo data_updated_at)."
+        - "Disclaimer obbligatorio in output: 'simulazione orientativa,
+          non offerta al pubblico ne' mediazione creditizia art.
+          128-sexies TUB'."
+      errori_comuni:
+        - problema: "E' un preventivo bancario ufficiale?"
+          soluzione: >
+            No, e' orientativo. La banca al colloquio decide condizioni
+            effettive, che possono differire. La simulazione da' prima
+            indicazione.
+      permessi:
+        - Pubblico (portale B2C ImmobilCloud senza auth)
+        - Titolare, agente, segreteria (tool CRM ImmoWeb)
+    screenshot: ["[SCREEN: cap11-mutui-panoramica]"]
+
+  - id: mutui.dove-lo-trovi
+    titolo: Dove trovi il Comparatore Mutui (B2C, B2B, widget)
+    modulo: Mutui
+    widget: null
+    pubblico: [titolare, agente, segreteria]
+    livello: base
+    tags: [mutui, dove-si-trova, b2c, b2b, widget, immobilcloud, immoweb]
+    correlati: [mutui.cos-e, mutui.lead-capture]
+    domanda_naturale: "Dove trovo il Comparatore Mutui? Come si accede?"
+    contenuto:
+      a_cosa_serve: >
+        Sapere i 3 punti di contatto: portale pubblico B2C, tool
+        interno CRM, widget embeddabile su siti partner.
+      quando_si_usa: >
+        A seconda del target: privato -> B2C, agente in trattativa ->
+        B2B tool CRM, web agency partner -> widget su sito cliente.
+      passi:
+        - "B2C ImmobilCloud: URL pubblico /it/cloud/mutui. Senza auth.
+          Include lead capture con GDPR consent."
+        - "B2B ImmoWeb tool CRM: /it/app/tools/mutui. Auth agenzia.
+          Nessuna raccolta lead (agente gia' in contatto)."
+        - "Widget embeddabile: snippet script per partner web agency
+          (Track B). Rate limit + credit balance su API key partner."
+      errori_comuni:
+        - problema: "Non vedo il comparatore nel CRM"
+          soluzione: >
+            Verifica di essere loggato come utente agenzia. Il tool
+            e' sotto Strumenti > Comparatore Mutui in sidebar.
+      permessi:
+        - B2C = pubblico anonimo
+        - B2B = titolare, agente, segreteria (utenti agenzia)
+    screenshot: []
+
+  - id: mutui.motore
+    titolo: Come funziona il motore matematico (ammortamento francese + TAEG)
+    modulo: Mutui
+    widget: null
+    pubblico: [titolare, agente]
+    livello: intermedio
+    tags: [mutui, motore, matematica, ammortamento-francese, taeg, irr, tan]
+    correlati: [mutui.tegm-soglia-usura, mutui.piano-ammortamento]
+    domanda_naturale: "Come viene calcolato il TAEG del mutuo?"
+    contenuto:
+      a_cosa_serve: >
+        Capire come e' composto il numero finale (TAN, TAEG, rata).
+      quando_si_usa: >
+        Se un TAEG sembra strano, per verificare la logica; quando
+        un cliente chiede spiegazioni sui costi.
+      passi:
+        - "STAGE 1: LTV = (prezzo - anticipo) / prezzo * 100. Max 80%
+          standard, 95% under-36 prima casa Consap."
+        - "STAGE 2: TAN = benchmark + spread_banca. Benchmark fisso =
+          Eurirs per durata (10a 2.94%, 15a 3.05%, 20a 3.17%, 25a
+          3.15%, 30a 3.12%). Benchmark variabile = Euribor 3M
+          (2.05%), floor 0."
+        - "Rata = ammortamento francese: rata = C*i/(1-(1+i)^-n), rata
+          costante, prime rate maggior parte interessi."
+        - "Spese upfront: istruttoria (% o flat con minimo), perizia,
+          imposta sostitutiva (0.25% prima casa, 2% seconda). Incasso
+          rata 0-3.75 EUR/mese."
+        - "STAGE 3: TAEG = IRR mensile del flusso (erogato - spese) vs
+          (rate + oneri) risolto con bisezione 80 iterazioni,
+          annualizzato composto. TAEG sempre > TAN."
+        - "STAGE 4: Controllo soglia usura TEGM Banca d'Italia. Se
+          TAEG > soglia, la banca non puo' applicarlo legalmente."
+      errori_comuni:
+        - problema: "Il TAEG e' molto piu' alto del TAN"
+          soluzione: >
+            Normale: TAEG include tutte le spese, TAN solo tasso puro.
+            Piu' un mutuo e' corto, piu' TAEG e TAN divergono (spese
+            pesano su meno anni).
+      permessi:
+        - Titolare, agente (info per formazione staff/cliente)
+    screenshot: []
+
+  - id: mutui.ltv-consap-under36
+    titolo: Vincolo LTV e Fondo Consap under-36 prima casa
+    modulo: Mutui
+    widget: null
+    pubblico: [titolare, agente]
+    livello: intermedio
+    tags: [mutui, ltv, consap, under-36, prima-casa, fondo-garanzia]
+    correlati: [mutui.motore, mutui.disclaimer-tub]
+    domanda_naturale: "Cos'è il Fondo Consap per gli under-36? Fino a quanto posso finanziare?"
+    contenuto:
+      a_cosa_serve: >
+        Sapere fino a quanto puoi finanziare l'immobile in base a
+        eta' e prima casa (max 80% standard, 95% under-36).
+      quando_si_usa: >
+        Cliente giovane (< 36 anni) che compra prima casa. Attiva
+        opzione Consap nel form.
+      passi:
+        - "LTV max STANDARD = 80% (regola prudenziale banche italiane)."
+        - "LTV max UNDER-36 PRIMA CASA = 95% (Fondo Consap, garanzia
+          statale)."
+        - "Attiva flag 'Prima casa' + 'Under 36' nel form."
+        - "Comparatore filtra solo offerte con consap:true (9 su 14
+          in v1: Intesa Fisso+Var, UniCredit Fisso+Var, BPER Fisso+Var,
+          Credit Agricole Fisso+Var, MPS Fisso). Escluse (5 su 14):
+          BNL Fisso, ING Fisso, ING Variabile, Webank Fisso, Webank
+          Variabile."
+      errori_comuni:
+        - problema: "Ho i requisiti Consap ma la banca me lo nega"
+          soluzione: >
+            Il Fondo Consap ha plafond annuale Ministero. Se esaurito
+            in corso d'anno, la banca puo' rifiutare anche se hai i
+            requisiti sulla carta. Verifica direttamente in banca.
+        - problema: "Ho ISEE > 40k, posso comunque avere Consap?"
+          soluzione: >
+            Il comparatore non verifica ISEE. La banca chiede ISEE ≤
+            40.000 EUR per Consap under-36. Se sei sopra, il Consap
+            decade e passi al 80% LTV standard.
+        - problema: "Compio 36 anni tra 2 mesi, faccio ancora in tempo?"
+          soluzione: >
+            L'eta' conta al momento della firma del contratto, non del
+            preventivo. Se firmi dopo il compleanno 36, decade il
+            beneficio Consap.
+      permessi:
+        - Titolare, agente
+    screenshot: []
+
+  - id: mutui.sostenibilita-rata-reddito
+    titolo: Sostenibilita' rata/reddito (max 35%)
+    modulo: Mutui
+    widget: null
+    pubblico: [titolare, agente]
+    livello: base
+    tags: [mutui, sostenibilita, reddito, rata, 35-percento, budget]
+    correlati: [mutui.motore, mutui.ltv-consap-under36]
+    domanda_naturale: "La rata del mutuo e' sostenibile? Quanto posso permettermi?"
+    contenuto:
+      a_cosa_serve: >
+        Capire se la rata mensile e' compatibile col reddito netto,
+        secondo la regola prudenziale universale banche (30-35%).
+      quando_si_usa: >
+        Se compili il reddito mensile netto nel form, il comparatore
+        calcola in automatico il ratio e mostra badge verde/ambra.
+      passi:
+        - "Compila 'Reddito mensile netto' (opzionale) nel form."
+        - "Comparatore calcola: ratio = best_rata / reddito_mensile."
+        - "Se ratio <= 35% (MAX_RATA_REDDITO=0.35) -> badge verde
+          'Sostenibile'."
+        - "Se ratio > 35% -> badge ambra 'Rata > 35% del reddito'."
+        - "Mostra max_sustainable_rata = reddito * 0.35 (quanto puoi
+          spendere al massimo)."
+      errori_comuni:
+        - problema: "La rata risulta sostenibile ma la banca mi ha negato"
+          soluzione: >
+            Il comparatore vede solo reddito. La banca vede anche:
+            altri prestiti/rate, spese fisse mensili, coobbligati.
+            Regola d'oro: se ratio > 30% (non 35%), avvisa il cliente
+            che sara' borderline. Proponi durata maggiore o anticipo
+            maggiore.
+        - problema: "Il campo reddito e' obbligatorio?"
+          soluzione: >
+            No, e' opzionale. Se non lo compili, la simulazione
+            funziona lo stesso ma senza check sostenibilita'.
+      permessi:
+        - Titolare, agente
+    screenshot: ["[SCREEN: cap11-mutui-sostenibilita]"]
+
+  - id: mutui.offerte-14-banche-8
+    titolo: Le 14 offerte curate di 8 banche italiane
+    modulo: Mutui
+    widget: null
+    pubblico: [titolare, agente]
+    livello: base
+    tags: [mutui, banche, offerte, spread, intesa, unicredit, ing, webank]
+    correlati: [mutui.dati-aggiornamento, mutui.motore]
+    domanda_naturale: "Quali banche compaiono nel comparatore? Perche' proprio queste?"
+    contenuto:
+      a_cosa_serve: >
+        Conoscere il perimetro banche e capire perche' NON e' un
+        elenco esaustivo di tutte le banche italiane.
+      quando_si_usa: >
+        Se il cliente chiede una banca specifica non presente, se
+        l'agente vuole capire il ventaglio di scelta.
+      passi:
+        - "8 banche in v1 (Giugno 2026): Intesa Sanpaolo (Domus), UniCredit,
+          BPER Banca, Credit Agricole, Banca MPS, BNL BNP Paribas, ING
+          (Arancio), Webank (BPM). Endpoint GET /mutui/config restituisce
+          banks_count=8."
+        - "14 offerte totali: 7 fisso + 7 variabile. MPS solo fisso.
+          BNL solo fisso in v1."
+        - "Spread fisso range: 0.40% (Webank piu' aggressivo) - 0.80%
+          (BNL). ING/Webank canale digitale spesso piu' economici."
+        - "Spread variabile range: 0.80% (Webank) - 1.25% (BPER)."
+        - "Consap under-36 eligible: 9 offerte su 14 (Intesa Fisso+Var,
+          UniCredit Fisso+Var, BPER Fisso+Var, Credit Agricole Fisso+
+          Var, MPS Fisso). NON Consap: BNL Fisso, ING Fisso, ING
+          Variabile, Webank Fisso, Webank Variabile (5 su 14)."
+        - "IMPORTANTE: ING NON ha offerte Consap in v1 (ne' fisso ne'
+          variabile). Correzione onestà D-051 H-bis rispetto v1.0."
+        - "Manca in v1: Deutsche Bank, BPM Fideuram, Findomestic, Kiron,
+          Facile.it, banche cooperative/popolari locali, fintech."
+        - "D-037: nessuna convenzione commerciale con banche.
+          Selezione nell'interesse utente."
+      errori_comuni:
+        - problema: "Perche' manca la mia banca preferita?"
+          soluzione: >
+            v1 coprea i profili tipici (grande banca tradizionale,
+            popolare, digitale) non l'universo. Se manca, il cliente
+            va comunque in quella banca a chiedere preventivo
+            ufficiale.
+        - problema: "ING/Webank hanno TAEG piu' basso ma non hanno filiale"
+          soluzione: >
+            Sono banche digitali. Il cliente sceglie in base a: sconto
+            economico (digitale) vs supporto locale (sportello vicino).
+            Il comparatore ordina per TAEG, poi il cliente decide.
+        - problema: "Ho attivato Consap under-36 ma non vedo offerta ING"
+          soluzione: >
+            Corretto: ING (sia Fisso sia Variabile) NON e' Consap-
+            eligible in v1. Attivando Under-36 prima casa filtri solo
+            le 9 offerte Consap (Intesa, UniCredit, BPER, CA, MPS
+            Fisso).
+      permessi:
+        - Titolare, agente
+    screenshot: []
+
+  - id: mutui.tegm-soglia-usura
+    titolo: TEGM Banca d'Italia e soglia usura
+    modulo: Mutui
+    widget: null
+    pubblico: [titolare, agente]
+    livello: intermedio
+    tags: [mutui, tegm, soglia-usura, banca-italia, compliance, legale]
+    correlati: [mutui.motore, mutui.dati-aggiornamento]
+    domanda_naturale: "Cos'è la soglia usura del mutuo?"
+    contenuto:
+      a_cosa_serve: >
+        Sapere che ogni offerta viene controllata contro la soglia
+        usura ufficiale Banca d'Italia. TAEG sotto soglia = legale.
+      quando_si_usa: >
+        Verifica automatica su ogni offerta calcolata. Se una banca
+        applicasse TAEG > soglia, sarebbe usura penale.
+      passi:
+        - "TEGM (Tasso Effettivo Globale Medio) rilevato trimestralmente
+          da Banca d'Italia (Q1 gen, Q2 apr, Q3 lug, Q4 ott)."
+        - "Soglia usura = TEGM * 1.25 + 4 (formula ex L. 108/1996)."
+        - "Q2 2026 (in codice): fisso TEGM 4.05% -> soglia 9.0625%;
+          variabile TEGM 4.08% -> soglia 9.10%."
+        - "Ogni offerta ha flag usury_ok=true se TAEG < soglia,
+          altrimenti filtrata."
+        - "Aggiornamento manuale trimestrale allineato al TEGM."
+      errori_comuni:
+        - problema: "Un'offerta ha usury_ok=false, cosa succede?"
+          soluzione: >
+            La banca non puo' legalmente applicare quel TAEG. In
+            pratica non accade per mutui standard (usura scatta solo
+            per prodotti finanziari aggressivi tipo consumer credit).
+      permessi:
+        - Titolare, agente
+    screenshot: []
+
+  - id: mutui.piano-ammortamento
+    titolo: Piano ammortamento mensile e per anno
+    modulo: Mutui
+    widget: null
+    pubblico: [titolare, agente, segreteria]
+    livello: base
+    tags: [mutui, piano-ammortamento, mensile, capitale, interessi]
+    correlati: [mutui.motore]
+    domanda_naturale: "Come vedo il piano di ammortamento del mutuo?"
+    contenuto:
+      a_cosa_serve: >
+        Vedere mese per mese quanta parte della rata e' interessi e
+        quanta e' capitale rimborsato. Utile per capire i primi anni
+        (prevalgono interessi) e valutare rivendita anticipata.
+      quando_si_usa: >
+        Cliente chiede dettaglio della rata, agente vuole mostrare
+        composizione, valutazione rivendita immobile dopo N anni.
+      passi:
+        - "Endpoint POST /mutui/plan con loan_amount, tan_pct,
+          duration_years."
+        - "Output: rata fissa, months_first_year (primi 12 mesi
+          dettaglio), years (aggregato per anno con interest +
+          principal + balance)."
+        - "Ammortamento francese: rata costante, ma nei primi anni ~50%
+          e' interessi. Dopo 10 anni su 30 hai rimborsato ~15-20%
+          capitale."
+      errori_comuni:
+        - problema: "Voglio simulare tasso misto (10 anni fisso poi variabile)"
+          soluzione: >
+            Non supportato in v1. Fai due simulazioni separate e
+            sommale manualmente.
+        - problema: "Voglio simulare estinzione anticipata"
+          soluzione: >
+            Non supportato in v1. Il piano mostra ammortamento standard
+            fino alla scadenza.
+      permessi:
+        - Titolare, agente, segreteria
+    screenshot: ["[SCREEN: cap11-mutui-piano-ammortamento]"]
+
+  - id: mutui.lanciare-simulazione
+    titolo: Come lancio una simulazione (passi B2C)
+    modulo: Mutui
+    widget: null
+    pubblico: [titolare, agente, segreteria]
+    livello: base
+    tags: [mutui, come-fare, simulazione, passi, form]
+    correlati: [mutui.dove-lo-trovi, mutui.motore]
+    domanda_naturale: "Come faccio una simulazione mutuo?"
+    contenuto:
+      a_cosa_serve: >
+        Sequenza operativa per completare una simulazione da inizio a
+        fine.
+      quando_si_usa: >
+        Ogni volta che serve confrontare rate mutuo per un cliente.
+      passi:
+        - Apri /it/cloud/mutui (pubblico) o /it/app/tools/mutui
+          (agente).
+        - "Compila Prezzo immobile (min 10.000 EUR, max 10 milioni EUR)."
+        - Compila Anticipo (non puo' essere ≥ prezzo).
+        - "Durata: 10, 15, 20, 25 o 30 anni (whitelist)."
+        - "Tipo tasso: fisso, variabile o entrambi (default)."
+        - "Opzionale: Reddito mensile netto per check sostenibilita'."
+        - "Spunta Prima casa + (se sotto 36) Under 36 per attivare
+          Consap."
+        - Clicca Confronta offerte.
+        - "Ordinato per miglior TAEG. Per ogni offerta: banca, TAN,
+          TAEG, rata, costi upfront, costo totale, sostenibilita'."
+        - "Opzionale: clicca Vedi piano ammortamento su un'offerta."
+      errori_comuni:
+        - problema: "400 Durata non supportata"
+          soluzione: >
+            Hai messo durata fuori whitelist. Scegli 10/15/20/25/30.
+        - problema: "400 L'anticipo non puo' essere ≥ del prezzo"
+          soluzione: >
+            Errore battitura. Correggi l'anticipo (deve essere <
+            prezzo).
+        - problema: "eligible: false, reason: ltv"
+          soluzione: >
+            LTV richiesto sopra il max. La risposta contiene
+            min_down_payment (anticipo minimo). Aumenta l'anticipo o
+            attiva Consap under-36 se hai i requisiti.
+      permessi:
+        - Pubblico (B2C) + agenzia (B2B)
+    screenshot: []
+
+  - id: mutui.lead-capture
+    titolo: Lead capture B2C e GDPR
+    modulo: Mutui
+    widget: null
+    pubblico: [titolare]
+    livello: intermedio
+    tags: [mutui, lead, gdpr, privacy, b2c, mortgage-leads]
+    correlati: [mutui.dove-lo-trovi]
+    domanda_naturale: "I lead del comparatore mutui dove finiscono?"
+    contenuto:
+      a_cosa_serve: >
+        Sapere che il B2C ImmobilCloud raccoglie lead mutui (con
+        GDPR consent), dove finiscono, chi li vede e come si gestiscono
+        in v1.
+      quando_si_usa: >
+        Utile a titolare/super_admin per capire ciclo di vita lead.
+      passi:
+        - "Endpoint POST /mutui/lead. Obbligatori: name (2-100 char),
+          email valida."
+        - "Opzionali: phone (max 30), property_price, loan_amount,
+          duration_years, rate_type, best_rata, gdpr_consent."
+        - "IMPORTANTE v1: gdpr_consent NON e' bloccante. Se manca, lead
+          salvato con gdpr_consent=false. Roadmap: hard-gate consenso."
+        - "Salvato in MongoDB collection 'mortgage_leads' con
+          source='ImmobilCloud-Mutui', created_at ISO UTC."
+        - "Chi vede: super_admin OMNIA (query manuale). Nessuna
+          dashboard dedicata in v1."
+        - "Nessun invio automatico a banche/agenzie. Lead = repository
+          di interesse, non funnel commerciale attivo."
+        - "GDPR retention: nessun TTL automatico v1. Right to be
+          forgotten via richiesta scritta a privacy@omniarealestateecosystem.it."
+      errori_comuni:
+        - problema: "Ho lasciato lead ma nessuno mi ha chiamato"
+          soluzione: >
+            v1: lead sono repository, no funnel automatico. Roadmap:
+            assegnamento manuale in dashboard super_admin + nurturing.
+        - problema: "Voglio cancellare i miei dati (GDPR)"
+          soluzione: >
+            Scrivi a privacy@omniarealestateecosystem.it con nome +
+            email + richiesta cancellazione (right to be forgotten).
+      permessi:
+        - Titolare (visibilita' concettuale)
+        - Super_admin (accesso operativo lead)
+    screenshot: []
+
+  - id: mutui.dati-aggiornamento
+    titolo: Aggiornamento dati (cadenza trimestrale, no scraping)
+    modulo: Mutui
+    widget: null
+    pubblico: [titolare]
+    livello: intermedio
+    tags: [mutui, aggiornamento, dati, trimestrale, tegm, eurirs, no-scraping]
+    correlati: [mutui.tegm-soglia-usura, mutui.offerte-14-banche-8]
+    domanda_naturale: "Con quale frequenza si aggiornano i dati del comparatore mutui?"
+    contenuto:
+      a_cosa_serve: >
+        Capire quando i dati vengono rinfrescati e perche' NON c'e'
+        scraping automatico.
+      quando_si_usa: >
+        Se un cliente chiede perche' un dato sembra vecchio, se
+        pianifichi aggiornamento trimestrale.
+      passi:
+        - "Cadenza consigliata: TRIMESTRALE allineata al TEGM Banca
+          d'Italia (Q1 gen, Q2 apr, Q3 lug, Q4 ott)."
+        - "Da aggiornare: EURIRS (Sole 24 Ore/Bloomberg), Euribor 3M
+          (Emmi), TEGM (Banca d'Italia), soglie usura calcolate,
+          spread offerte banche (fogli informativi ufficiali)."
+        - "Procedura: modificare /app/backend/apps/immocloud/data/
+          mortgage_data.py (EURIRS, EURIBOR_3M, TEGM, BANK_OFFERS,
+          DATA_UPDATED_AT). Deploy backend."
+        - "NESSUN SCRAPING (D-037): siti banche instabili + termini
+          d'uso vietano scraping. Dati curati piu' affidabili."
+        - "NESSUNA API pubblica banche italiane per spread mutui in v1."
+        - "Errore massimo tipico: ±0.20% sul TAEG se ritardo > 3 mesi."
+      errori_comuni:
+        - problema: "Il TAEG mostrato differisce da preventivo banca"
+          soluzione: >
+            La banca puo' aver cambiato spread a meta' trimestre. La
+            simulazione e' orientativa (disclaimer). Il preventivo
+            ufficiale della banca prevale.
+      permessi:
+        - Titolare (info operativa)
+        - Super_admin (esegue aggiornamento)
+    screenshot: []
+
+  - id: mutui.disclaimer-tub
+    titolo: Disclaimer legale art. 128-sexies TUB (obbligatorio)
+    modulo: Mutui
+    widget: null
+    pubblico: [titolare, agente, segreteria]
+    livello: base
+    tags: [mutui, disclaimer, legale, tub, mediazione-creditizia, compliance]
+    correlati: [mutui.cos-e, mutui.lead-capture]
+    domanda_naturale: "Il comparatore e' una offerta di mutuo? OMNIA e' mediatore creditizio?"
+    contenuto:
+      a_cosa_serve: >
+        Chiarezza legale: OMNIA NON e' mediatore creditizio. Il tool
+        e' informativo. Il disclaimer e' obbligatorio.
+      quando_si_usa: >
+        Sempre. Ogni response API contiene il campo disclaimer. La UI
+        deve mostrarlo in fondo alla lista offerte non nascosto.
+      passi:
+        - "Disclaimer testo integrale: 'Simulazione orientativa basata
+          su dati pubblici e fogli informativi. Non costituisce offerta
+          al pubblico ne' attivita' di mediazione creditizia ai sensi
+          dell'art. 128-sexies TUB. Condizioni effettive soggette a
+          valutazione della banca.'"
+        - "Motivo: art. 128-sexies TUB (Testo Unico Bancario) - la
+          mediazione creditizia e' attivita' RISERVATA (iscrizione OAM,
+          capitale sociale minimo, ecc.)."
+        - "OMNIA non e' iscritta OAM e non percepisce compensi da
+          banche per lead qualificati. Il tool e' solo informativo."
+        - "La trattativa avviene direttamente tra cliente e banca."
+        - "Disclaimer NON e' rimovibile lato client. Deve restare
+          visibile in fondo alla lista offerte."
+      errori_comuni:
+        - problema: "Un agente OMNIA promette il mutuo al cliente"
+          soluzione: >
+            NON e' consentito. OMNIA e agente OMNIA non possono
+            promettere condizioni di mutuo (rischio configurabilita'
+            come mediazione creditizia abusiva). L'agente puo' solo
+            MOSTRARE la simulazione + rimandare a banca.
+        - problema: "Posso rimuovere il disclaimer dal widget partner?"
+          soluzione: >
+            No. Il disclaimer e' parte del response API e deve essere
+            visibile in fondo alla lista offerte in font leggibile.
+            Rimuoverlo espone OMNIA + partner al rischio 128-sexies.
+      permessi:
+        - Titolare, agente, segreteria (regola vale per tutti)
+    screenshot: []

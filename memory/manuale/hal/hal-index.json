@@ -1,0 +1,4382 @@
+{
+  "generated_at": "2026-08-16T10:22:09.879345+00:00",
+  "version": "v0.16-cap20",
+  "source_files": [
+    {
+      "file": "01-primo-accesso.yaml",
+      "md5": "98337d35d9efff301f3f59ef37ee50d1",
+      "voci_count": 10
+    },
+    {
+      "file": "02-dashboard.yaml",
+      "md5": "4d2ebe2a34d34791826205c824ecd089",
+      "voci_count": 8
+    },
+    {
+      "file": "03-immobili.yaml",
+      "md5": "19b9ce7fb73087225a3f95cda7f47ca2",
+      "voci_count": 15
+    },
+    {
+      "file": "04-clienti.yaml",
+      "md5": "a3ecb03c3fe8f5a2a617050a8580432e",
+      "voci_count": 12
+    },
+    {
+      "file": "05-match.yaml",
+      "md5": "c26d5030132b083025f681ad728a01bc",
+      "voci_count": 11
+    },
+    {
+      "file": "06-portali-publishing.yaml",
+      "md5": "c052042a52ff70d97d34cf99d14337e6",
+      "voci_count": 12
+    },
+    {
+      "file": "07-fascicolo-immobile.yaml",
+      "md5": "ab350f525bfd22b74a72250d8b95bb66",
+      "voci_count": 12
+    },
+    {
+      "file": "08-sito-web.yaml",
+      "md5": "8a75af77933c6cf241c5325d166dd189",
+      "voci_count": 12
+    },
+    {
+      "file": "09-virtual-staging.yaml",
+      "md5": "ed996184e07398cfc6a54cc8f629c893",
+      "voci_count": 12
+    },
+    {
+      "file": "10-hal-agent-crm.yaml",
+      "md5": "833b420239ddb8cd3c2a995e83efd181",
+      "voci_count": 13
+    },
+    {
+      "file": "11-mutui-comparatore.yaml",
+      "md5": "3fbf172bc80b5486aaf25f7229510125",
+      "voci_count": 12
+    },
+    {
+      "file": "12-hal-knowledge.yaml",
+      "md5": "203cd148a6989aa5cbf3e6071c720c6f",
+      "voci_count": 13
+    },
+    {
+      "file": "13-team-ruoli.yaml",
+      "md5": "548c7acd4a3a26d2739a29590f504a3f",
+      "voci_count": 13
+    },
+    {
+      "file": "14-import-xml.yaml",
+      "md5": "06635af601bbbaf1f584647e9fef9270",
+      "voci_count": 13
+    },
+    {
+      "file": "15-social-publisher.yaml",
+      "md5": "c1d14181ef1c62a4184f75c7b1edb7b4",
+      "voci_count": 14
+    },
+    {
+      "file": "16-compliance-portali.yaml",
+      "md5": "5d066f2fdc18cce9dab031a05d1ebcf2",
+      "voci_count": 14
+    },
+    {
+      "file": "17-domain-vault.yaml",
+      "md5": "c85caa2830a0e0bd24f5dff3685b86b0",
+      "voci_count": 15
+    },
+    {
+      "file": "18-notifiche-attivita.yaml",
+      "md5": "e9b094b5fce65e983ba4957463e55716",
+      "voci_count": 16
+    },
+    {
+      "file": "19-impostazioni-agenzia.yaml",
+      "md5": "5c2d44823b6eb9061622a88a87c31564",
+      "voci_count": 14
+    },
+    {
+      "file": "20-api-keys-integrazioni.yaml",
+      "md5": "9fed60baf766a6442a1a62845d1d998d",
+      "voci_count": 14
+    }
+  ],
+  "voci": [
+    {
+      "id": "primo-accesso.cosa-e-omnia",
+      "file": "01-primo-accesso.yaml",
+      "titolo": "Cos'è OMNIA in tre minuti",
+      "modulo": "Primo accesso",
+      "livello": "base",
+      "tags": [
+        "orientamento",
+        "primi-passi",
+        "panoramica"
+      ],
+      "domanda_naturale": "Cos'è OMNIA e cosa ci posso fare?"
+    },
+    {
+      "id": "primo-accesso.login-primo-ingresso",
+      "file": "01-primo-accesso.yaml",
+      "titolo": "Accedere per la prima volta a ImmoWeb",
+      "modulo": "Primo accesso",
+      "livello": "base",
+      "tags": [
+        "login",
+        "credenziali",
+        "primi-passi"
+      ],
+      "domanda_naturale": "Come entro in OMNIA la prima volta?"
+    },
+    {
+      "id": "primo-accesso.password-dimenticata",
+      "file": "01-primo-accesso.yaml",
+      "titolo": "Recuperare la password dimenticata",
+      "modulo": "Primo accesso",
+      "livello": "base",
+      "tags": [
+        "password",
+        "recupero",
+        "sicurezza"
+      ],
+      "domanda_naturale": "Ho dimenticato la password, come faccio?"
+    },
+    {
+      "id": "primo-accesso.cambiare-password",
+      "file": "01-primo-accesso.yaml",
+      "titolo": "Cambiare la password in un secondo momento",
+      "modulo": "Primo accesso",
+      "livello": "base",
+      "tags": [
+        "password",
+        "profilo",
+        "sicurezza"
+      ],
+      "domanda_naturale": "Come cambio la password mentre sono loggato?"
+    },
+    {
+      "id": "primo-accesso.onboarding-agenzia",
+      "file": "01-primo-accesso.yaml",
+      "titolo": "Configurare l'agenzia al primo accesso (wizard 4 passi)",
+      "modulo": "Primo accesso",
+      "livello": "base",
+      "tags": [
+        "onboarding",
+        "configurazione",
+        "agenzia",
+        "primi-passi"
+      ],
+      "domanda_naturale": "Come configuro la mia agenzia la prima volta?"
+    },
+    {
+      "id": "primo-accesso.tour-barra-sinistra",
+      "file": "01-primo-accesso.yaml",
+      "titolo": "Cosa contiene la barra a sinistra",
+      "modulo": "Primo accesso",
+      "livello": "base",
+      "tags": [
+        "navigazione",
+        "sidebar",
+        "orientamento"
+      ],
+      "domanda_naturale": "Cosa c'è nel menu di sinistra di ImmoWeb?"
+    },
+    {
+      "id": "primo-accesso.cambio-lingua",
+      "file": "01-primo-accesso.yaml",
+      "titolo": "Cambiare la lingua dell'interfaccia",
+      "modulo": "Primo accesso",
+      "livello": "base",
+      "tags": [
+        "lingua",
+        "interfaccia",
+        "i18n"
+      ],
+      "domanda_naturale": "Come cambio la lingua di ImmoWeb?"
+    },
+    {
+      "id": "primo-accesso.profilo-utente",
+      "file": "01-primo-accesso.yaml",
+      "titolo": "Aggiornare il proprio profilo utente",
+      "modulo": "Primo accesso",
+      "livello": "base",
+      "tags": [
+        "profilo",
+        "account",
+        "personale"
+      ],
+      "domanda_naturale": "Come modifico il mio profilo e la mia foto?"
+    },
+    {
+      "id": "primo-accesso.selettore-agenzia",
+      "file": "01-primo-accesso.yaml",
+      "titolo": "Cambiare agenzia attiva (se sei in più agenzie)",
+      "modulo": "Primo accesso",
+      "livello": "intermedio",
+      "tags": [
+        "multi-agenzia",
+        "franchising",
+        "selettore"
+      ],
+      "domanda_naturale": "Sono in due agenzie diverse, come faccio a passare dall'una all'altra?"
+    },
+    {
+      "id": "primo-accesso.uscire",
+      "file": "01-primo-accesso.yaml",
+      "titolo": "Uscire da ImmoWeb (logout)",
+      "modulo": "Primo accesso",
+      "livello": "base",
+      "tags": [
+        "logout",
+        "sicurezza"
+      ],
+      "domanda_naturale": "Come esco dal mio account?"
+    },
+    {
+      "id": "dashboard.panoramica-iniziale",
+      "file": "02-dashboard.yaml",
+      "titolo": "A cosa serve la Dashboard",
+      "modulo": "Dashboard",
+      "livello": "base",
+      "tags": [
+        "dashboard",
+        "orientamento",
+        "primi-passi"
+      ],
+      "domanda_naturale": "A cosa serve la Dashboard di ImmoWeb?"
+    },
+    {
+      "id": "dashboard.6-contatori",
+      "file": "02-dashboard.yaml",
+      "titolo": "I sei contatori della Dashboard",
+      "modulo": "Dashboard",
+      "livello": "base",
+      "tags": [
+        "dashboard",
+        "kpi",
+        "contatori",
+        "panoramica"
+      ],
+      "domanda_naturale": "Cosa significano i sei numeri della Dashboard?"
+    },
+    {
+      "id": "dashboard.immobili-attivi",
+      "file": "02-dashboard.yaml",
+      "titolo": "Come leggere \"Immobili attivi\"",
+      "modulo": "Dashboard",
+      "livello": "base",
+      "tags": [
+        "dashboard",
+        "immobili",
+        "kpi"
+      ],
+      "domanda_naturale": "Perché sono importanti gli 'Immobili attivi' e cosa faccio se salgono o scendono?"
+    },
+    {
+      "id": "dashboard.lead-aperti",
+      "file": "02-dashboard.yaml",
+      "titolo": "Come leggere \"Lead aperti\"",
+      "modulo": "Dashboard",
+      "livello": "base",
+      "tags": [
+        "dashboard",
+        "lead",
+        "clienti",
+        "kpi"
+      ],
+      "domanda_naturale": "Cosa faccio quando i 'Lead aperti' aumentano?"
+    },
+    {
+      "id": "dashboard.nuovi-match",
+      "file": "02-dashboard.yaml",
+      "titolo": "Come leggere \"Nuovi match (7gg)\"",
+      "modulo": "Dashboard",
+      "livello": "base",
+      "tags": [
+        "dashboard",
+        "match",
+        "matching",
+        "lead-scoring",
+        "kpi"
+      ],
+      "domanda_naturale": "Perché ho pochi 'Nuovi match' questa settimana?"
+    },
+    {
+      "id": "dashboard.visite-settimana",
+      "file": "02-dashboard.yaml",
+      "titolo": "Come leggere \"Visite (7gg)\"",
+      "modulo": "Dashboard",
+      "livello": "base",
+      "tags": [
+        "dashboard",
+        "visite",
+        "agenda",
+        "kpi"
+      ],
+      "domanda_naturale": "Perché non vedo visite in agenda per questa settimana?"
+    },
+    {
+      "id": "dashboard.collaboratori-inviti",
+      "file": "02-dashboard.yaml",
+      "titolo": "Come leggere \"Collaboratori\" e \"Inviti pendenti\"",
+      "modulo": "Dashboard",
+      "livello": "base",
+      "tags": [
+        "dashboard",
+        "collaboratori",
+        "inviti",
+        "kpi"
+      ],
+      "domanda_naturale": "Cosa mi dicono i numeri di 'Collaboratori' e 'Inviti pendenti'?"
+    },
+    {
+      "id": "dashboard.dove-vado-dopo",
+      "file": "02-dashboard.yaml",
+      "titolo": "Dopo la Dashboard, dove vado?",
+      "modulo": "Dashboard",
+      "livello": "base",
+      "tags": [
+        "dashboard",
+        "orientamento",
+        "routing"
+      ],
+      "domanda_naturale": "Cosa devo fare dopo aver visto la Dashboard?"
+    },
+    {
+      "id": "immobili.creazione-manuale",
+      "file": "03-immobili.yaml",
+      "titolo": "Creare un nuovo immobile a mano",
+      "modulo": "Immobili",
+      "livello": "base",
+      "tags": [
+        "immobili",
+        "inserimento",
+        "primi-passi"
+      ],
+      "domanda_naturale": "Come inserisco un nuovo immobile?"
+    },
+    {
+      "id": "immobili.importare-csv",
+      "file": "03-immobili.yaml",
+      "titolo": "Importare immobili da file CSV",
+      "modulo": "Immobili",
+      "livello": "intermedio",
+      "tags": [
+        "immobili",
+        "import",
+        "csv",
+        "migrazione"
+      ],
+      "domanda_naturale": "Come importo un elenco di immobili da CSV?"
+    },
+    {
+      "id": "immobili.importare-xml",
+      "file": "03-immobili.yaml",
+      "titolo": "Import XML rapido (deprecato, vedi Cap. 14)",
+      "modulo": "Immobili",
+      "livello": "intermedio",
+      "tags": [
+        "immobili",
+        "deprecato-cap14",
+        "redirect"
+      ],
+      "domanda_naturale": "Riferimento storico: puntatore a Cap. 14 Import XML."
+    },
+    {
+      "id": "immobili.importare-xml-universale",
+      "file": "03-immobili.yaml",
+      "titolo": "Import XML universale (deprecato, vedi Cap. 14)",
+      "modulo": "Immobili",
+      "livello": "intermedio",
+      "tags": [
+        "immobili",
+        "deprecato-cap14",
+        "redirect"
+      ],
+      "domanda_naturale": "Riferimento storico: puntatore a Cap. 14 Import XML universale."
+    },
+    {
+      "id": "immobili.caricare-foto",
+      "file": "03-immobili.yaml",
+      "titolo": "Caricare fotografie di un immobile",
+      "modulo": "Immobili",
+      "livello": "base",
+      "tags": [
+        "immobili",
+        "foto",
+        "media",
+        "upload"
+      ],
+      "domanda_naturale": "Come aggiungo le foto a un immobile?"
+    },
+    {
+      "id": "immobili.impostare-copertina",
+      "file": "03-immobili.yaml",
+      "titolo": "Impostare la foto di copertina",
+      "modulo": "Immobili",
+      "livello": "base",
+      "tags": [
+        "immobili",
+        "foto",
+        "copertina"
+      ],
+      "domanda_naturale": "Come cambio la foto principale (di copertina)?"
+    },
+    {
+      "id": "immobili.privacy-4-livelli-cosa-sono",
+      "file": "03-immobili.yaml",
+      "titolo": "Cosa sono i 4 livelli di privacy",
+      "modulo": "Immobili",
+      "livello": "base",
+      "tags": [
+        "immobili",
+        "privacy",
+        "gdpr",
+        "visibilita"
+      ],
+      "domanda_naturale": "Cosa significano L1, L2, L3, L4 sulla privacy di un immobile?"
+    },
+    {
+      "id": "immobili.privacy-scegliere-livello",
+      "file": "03-immobili.yaml",
+      "titolo": "Scegliere il livello di privacy di un immobile",
+      "modulo": "Immobili",
+      "livello": "intermedio",
+      "tags": [
+        "immobili",
+        "privacy",
+        "esclusiva",
+        "riservatezza"
+      ],
+      "domanda_naturale": "Che livello di privacy metto per un immobile esclusivo?"
+    },
+    {
+      "id": "immobili.nascondere-indirizzo",
+      "file": "03-immobili.yaml",
+      "titolo": "Nascondere solo l'indirizzo esatto (senza cambiare privacy)",
+      "modulo": "Immobili",
+      "livello": "base",
+      "tags": [
+        "immobili",
+        "privacy",
+        "indirizzo"
+      ],
+      "domanda_naturale": "Voglio pubblicare pubblicamente ma senza mostrare la via, si può?"
+    },
+    {
+      "id": "immobili.pubblicare-bozza",
+      "file": "03-immobili.yaml",
+      "titolo": "Passare un immobile da Bozza a Pubblicato",
+      "modulo": "Immobili",
+      "livello": "base",
+      "tags": [
+        "immobili",
+        "stato",
+        "pubblicazione"
+      ],
+      "domanda_naturale": "Ho creato un immobile ma non compare nei contatori, perché?"
+    },
+    {
+      "id": "immobili.cambiare-stato",
+      "file": "03-immobili.yaml",
+      "titolo": "Cambiare stato durante il ciclo di vita (Prenotato, Venduto, Affittato, Ritirato)",
+      "modulo": "Immobili",
+      "livello": "base",
+      "tags": [
+        "immobili",
+        "stato",
+        "ciclo-vita",
+        "archivio"
+      ],
+      "domanda_naturale": "Ho venduto un immobile, come lo tolgo dai portali?"
+    },
+    {
+      "id": "immobili.eliminare-definitivo",
+      "file": "03-immobili.yaml",
+      "titolo": "Eliminare definitivamente un immobile",
+      "modulo": "Immobili",
+      "livello": "base",
+      "tags": [
+        "immobili",
+        "eliminazione",
+        "archivio",
+        "definitivo"
+      ],
+      "domanda_naturale": "Posso cancellare un immobile per sempre?"
+    },
+    {
+      "id": "immobili.fascicolo-panoramica",
+      "file": "03-immobili.yaml",
+      "titolo": "Cos'è il Fascicolo Immobile e come funziona la checklist",
+      "modulo": "Immobili",
+      "livello": "intermedio",
+      "tags": [
+        "immobili",
+        "fascicolo",
+        "documenti",
+        "rogito"
+      ],
+      "domanda_naturale": "A cosa serve il Fascicolo Immobile?"
+    },
+    {
+      "id": "immobili.fascicolo-caricare-documento",
+      "file": "03-immobili.yaml",
+      "titolo": "Caricare un documento nel Fascicolo",
+      "modulo": "Immobili",
+      "livello": "intermedio",
+      "tags": [
+        "immobili",
+        "fascicolo",
+        "documenti",
+        "upload"
+      ],
+      "domanda_naturale": "Come carico la visura catastale nel Fascicolo?"
+    },
+    {
+      "id": "immobili.fascicolo-ape",
+      "file": "03-immobili.yaml",
+      "titolo": "APE (Attestato Prestazione Energetica) — come gestirlo",
+      "modulo": "Immobili",
+      "livello": "intermedio",
+      "tags": [
+        "immobili",
+        "fascicolo",
+        "ape",
+        "energia",
+        "tecnico"
+      ],
+      "domanda_naturale": "Come faccio l'APE dell'immobile?"
+    },
+    {
+      "id": "clienti.creare-nuovo",
+      "file": "04-clienti.yaml",
+      "titolo": "Creare un nuovo cliente in anagrafica",
+      "modulo": "Clienti",
+      "livello": "base",
+      "tags": [
+        "clienti",
+        "anagrafica",
+        "inserimento",
+        "primi-passi"
+      ],
+      "domanda_naturale": "Come inserisco un nuovo cliente?"
+    },
+    {
+      "id": "clienti.tipi-cliente",
+      "file": "04-clienti.yaml",
+      "titolo": "I cinque tipi di cliente",
+      "modulo": "Clienti",
+      "livello": "base",
+      "tags": [
+        "clienti",
+        "tipologia",
+        "funnel"
+      ],
+      "domanda_naturale": "Che differenza c'è tra Acquirente, Venditore, Affittuario, Proprietario e Investitore?"
+    },
+    {
+      "id": "clienti.stato-crm",
+      "file": "04-clienti.yaml",
+      "titolo": "Gli stati del funnel commerciale (workflow CRM)",
+      "modulo": "Clienti",
+      "livello": "base",
+      "tags": [
+        "clienti",
+        "funnel",
+        "stato",
+        "workflow",
+        "crm"
+      ],
+      "domanda_naturale": "Cosa significano gli stati Nuovo, Contattato, Qualificato, Trattativa?"
+    },
+    {
+      "id": "clienti.preferenze-ricerca",
+      "file": "04-clienti.yaml",
+      "titolo": "Compilare le preferenze di ricerca di un acquirente",
+      "modulo": "Clienti",
+      "livello": "base",
+      "tags": [
+        "clienti",
+        "preferenze",
+        "match",
+        "ricerca",
+        "acquirenti"
+      ],
+      "domanda_naturale": "Come inserisco cosa cerca il cliente?"
+    },
+    {
+      "id": "clienti.gdpr-consenso",
+      "file": "04-clienti.yaml",
+      "titolo": "Consenso GDPR e privacy",
+      "modulo": "Clienti",
+      "livello": "base",
+      "tags": [
+        "clienti",
+        "gdpr",
+        "privacy",
+        "compliance"
+      ],
+      "domanda_naturale": "Cosa faccio con il consenso GDPR del cliente?"
+    },
+    {
+      "id": "clienti.import-csv-template",
+      "file": "04-clienti.yaml",
+      "titolo": "Importare clienti da CSV con template",
+      "modulo": "Clienti",
+      "livello": "intermedio",
+      "tags": [
+        "clienti",
+        "import",
+        "csv",
+        "migrazione"
+      ],
+      "domanda_naturale": "Come importo tutti i miei clienti dal vecchio Excel?"
+    },
+    {
+      "id": "clienti.smart-import-ai",
+      "file": "04-clienti.yaml",
+      "titolo": "Smart Import AI (qualsiasi file — Excel, vCard, testo)",
+      "modulo": "Clienti",
+      "livello": "intermedio",
+      "tags": [
+        "clienti",
+        "import",
+        "ai",
+        "smart-import",
+        "vcard",
+        "xlsx",
+        "migrazione"
+      ],
+      "domanda_naturale": "Ho un file Excel disordinato del vecchio CRM, come lo importo?"
+    },
+    {
+      "id": "clienti.collegare-immobile-venditore",
+      "file": "04-clienti.yaml",
+      "titolo": "Collegare un cliente venditore/proprietario a un immobile",
+      "modulo": "Clienti",
+      "livello": "intermedio",
+      "tags": [
+        "clienti",
+        "immobili",
+        "venditore",
+        "proprietario",
+        "mandato",
+        "link"
+      ],
+      "domanda_naturale": "Come collego il proprietario alla scheda dell'immobile?"
+    },
+    {
+      "id": "clienti.smart-sorting-buckets",
+      "file": "04-clienti.yaml",
+      "titolo": "Smart Sorting — i bucket per priorità (Roventi, Caldi, Tiepidi, Freddi)",
+      "modulo": "Clienti",
+      "livello": "base",
+      "tags": [
+        "clienti",
+        "smart-sorting",
+        "buckets",
+        "priorita",
+        "lead-scoring"
+      ],
+      "domanda_naturale": "Cosa sono i bucket 'Roventi', 'Caldi', 'Tiepidi' sopra la lista clienti?"
+    },
+    {
+      "id": "clienti.temperatura-lead-scoring",
+      "file": "04-clienti.yaml",
+      "titolo": "La temperatura (Lead Scoring AI) — introduzione",
+      "modulo": "Clienti",
+      "livello": "base",
+      "tags": [
+        "clienti",
+        "lead-scoring",
+        "ai",
+        "temperatura",
+        "priorita"
+      ],
+      "domanda_naturale": "Perché un cliente è marcato 'Rovente' e un altro 'Freddo'?"
+    },
+    {
+      "id": "clienti.azioni-rapide",
+      "file": "04-clienti.yaml",
+      "titolo": "Azioni rapide su un cliente (Chiama, WhatsApp)",
+      "modulo": "Clienti",
+      "livello": "base",
+      "tags": [
+        "clienti",
+        "azioni-rapide",
+        "chiamata",
+        "whatsapp",
+        "quick-actions"
+      ],
+      "domanda_naturale": "Come chiamo o mando un WhatsApp a un cliente dalla lista?"
+    },
+    {
+      "id": "clienti.archiviare-eliminare",
+      "file": "04-clienti.yaml",
+      "titolo": "Archiviare o eliminare un cliente",
+      "modulo": "Clienti",
+      "livello": "base",
+      "tags": [
+        "clienti",
+        "archivio",
+        "eliminazione",
+        "chiusura"
+      ],
+      "domanda_naturale": "Come archivio o elimino un cliente che non è più attivo?"
+    },
+    {
+      "id": "match.come-funziona",
+      "file": "05-match.yaml",
+      "titolo": "Come funziona il motore Match",
+      "modulo": "Match",
+      "livello": "base",
+      "tags": [
+        "match",
+        "matching",
+        "motore",
+        "primi-passi"
+      ],
+      "domanda_naturale": "Come funziona il matching in ImmoWeb?"
+    },
+    {
+      "id": "match.scala-temperature",
+      "file": "05-match.yaml",
+      "titolo": "La scala ROVENTE / CALDO / TIEPIDO / FREDDO",
+      "modulo": "Match",
+      "livello": "base",
+      "tags": [
+        "match",
+        "temperatura",
+        "priorita",
+        "rovente",
+        "caldo",
+        "tiepido",
+        "freddo"
+      ],
+      "domanda_naturale": "Cosa significano ROVENTE, CALDO, TIEPIDO, FREDDO?"
+    },
+    {
+      "id": "match.14-criteri",
+      "file": "05-match.yaml",
+      "titolo": "I 14 criteri di scoring e i loro pesi",
+      "modulo": "Match",
+      "livello": "intermedio",
+      "tags": [
+        "match",
+        "scoring",
+        "criteri",
+        "pesi",
+        "algoritmo"
+      ],
+      "domanda_naturale": "Come è calcolato il punteggio 0-100 di un match?"
+    },
+    {
+      "id": "match.lista-e-filtro",
+      "file": "05-match.yaml",
+      "titolo": "La pagina Match e il filtro Score minimo",
+      "modulo": "Match",
+      "livello": "base",
+      "tags": [
+        "match",
+        "lista",
+        "filtri",
+        "score",
+        "priorita"
+      ],
+      "domanda_naturale": "Come uso la pagina Match e il filtro Score minimo?"
+    },
+    {
+      "id": "match.breakdown-dettaglio",
+      "file": "05-match.yaml",
+      "titolo": "Il breakdown del punteggio (dettaglio match)",
+      "modulo": "Match",
+      "livello": "intermedio",
+      "tags": [
+        "match",
+        "dettaglio",
+        "breakdown",
+        "missing"
+      ],
+      "domanda_naturale": "Come vedo perché un match ha un certo punteggio?"
+    },
+    {
+      "id": "match.match-per-immobile",
+      "file": "05-match.yaml",
+      "titolo": "Vedere i match di un singolo immobile (\"chi vuole questo?\")",
+      "modulo": "Match",
+      "livello": "base",
+      "tags": [
+        "match",
+        "immobili",
+        "mandato",
+        "chi-vuole"
+      ],
+      "domanda_naturale": "Ho un nuovo mandato, a chi lo propongo?"
+    },
+    {
+      "id": "match.match-per-cliente",
+      "file": "05-match.yaml",
+      "titolo": "Vedere i match di un singolo cliente (\"cosa gli consiglio?\")",
+      "modulo": "Match",
+      "livello": "base",
+      "tags": [
+        "match",
+        "clienti",
+        "proposta",
+        "consulenza"
+      ],
+      "domanda_naturale": "Che immobili posso proporre a questo cliente?"
+    },
+    {
+      "id": "match.lead-scoring-ai",
+      "file": "05-match.yaml",
+      "titolo": "Lead Scoring AI — cos'è e quando aggiornarlo",
+      "modulo": "Match",
+      "livello": "intermedio",
+      "tags": [
+        "match",
+        "ai",
+        "lead-scoring",
+        "gemini",
+        "crediti"
+      ],
+      "domanda_naturale": "Cosa aggiunge il Lead Scoring AI oltre al punteggio automatico?"
+    },
+    {
+      "id": "match.workflow-giornata",
+      "file": "05-match.yaml",
+      "titolo": "Workflow operativo — la giornata tipo sul modulo Match",
+      "modulo": "Match",
+      "livello": "base",
+      "tags": [
+        "match",
+        "workflow",
+        "power-hour",
+        "giornata-tipo",
+        "produttivita"
+      ],
+      "domanda_naturale": "Come organizzo la mattinata usando Match?"
+    },
+    {
+      "id": "match.zero-match",
+      "file": "05-match.yaml",
+      "titolo": "Zero match — cosa fare quando la pagina è vuota",
+      "modulo": "Match",
+      "livello": "base",
+      "tags": [
+        "match",
+        "troubleshooting",
+        "zero-match",
+        "checklist"
+      ],
+      "domanda_naturale": "Perché la pagina Match è vuota?"
+    },
+    {
+      "id": "match.ricalcolo-manuale",
+      "file": "05-match.yaml",
+      "titolo": "Aggiornare manualmente i punteggi AI (bottone \"⚡ Aggiorna AI\")",
+      "modulo": "Match",
+      "livello": "intermedio",
+      "tags": [
+        "match",
+        "ricalcolo",
+        "ai",
+        "aggiornamento",
+        "crediti"
+      ],
+      "domanda_naturale": "Quando devo cliccare '⚡ Aggiorna AI'?"
+    },
+    {
+      "id": "portali.a-cosa-serve",
+      "file": "06-portali-publishing.yaml",
+      "titolo": "A cosa serve il Publishing Center",
+      "modulo": "Portali",
+      "livello": "base",
+      "tags": [
+        "portali",
+        "publishing",
+        "primi-passi",
+        "panoramica"
+      ],
+      "domanda_naturale": "A cosa serve il modulo Portali di ImmoWeb?"
+    },
+    {
+      "id": "portali.catalogo-portali",
+      "file": "06-portali-publishing.yaml",
+      "titolo": "I portali disponibili nel catalogo v1 (chi c'è, chi manca)",
+      "modulo": "Portali",
+      "livello": "base",
+      "tags": [
+        "portali",
+        "catalogo",
+        "subito",
+        "bakeca",
+        "wikicasa",
+        "facebook",
+        "google-business",
+        "portali-disponibili"
+      ],
+      "domanda_naturale": "Quali portali posso attivare da OMNIA?"
+    },
+    {
+      "id": "portali.attivare-portale",
+      "file": "06-portali-publishing.yaml",
+      "titolo": "Attivare un portale (procedura standard)",
+      "modulo": "Portali",
+      "livello": "base",
+      "tags": [
+        "portali",
+        "attivazione",
+        "credenziali",
+        "primi-passi"
+      ],
+      "domanda_naturale": "Come attivo un portale, per esempio Subito?"
+    },
+    {
+      "id": "portali.disattivare-portale",
+      "file": "06-portali-publishing.yaml",
+      "titolo": "Disattivare o rimuovere un portale attivo",
+      "modulo": "Portali",
+      "livello": "base",
+      "tags": [
+        "portali",
+        "disattivare",
+        "rimuovere",
+        "disabled"
+      ],
+      "domanda_naturale": "Come disattivo temporaneamente un portale?"
+    },
+    {
+      "id": "portali.sync-manuale",
+      "file": "06-portali-publishing.yaml",
+      "titolo": "Forzare un sync manuale su un portale attivo",
+      "modulo": "Portali",
+      "livello": "base",
+      "tags": [
+        "portali",
+        "sync",
+        "manuale",
+        "aggiornamento"
+      ],
+      "domanda_naturale": "Come forzo la sincronizzazione di un portale?"
+    },
+    {
+      "id": "portali.sync-automatico",
+      "file": "06-portali-publishing.yaml",
+      "titolo": "Il sync automatico giornaliero (06:00 UTC)",
+      "modulo": "Portali",
+      "livello": "base",
+      "tags": [
+        "portali",
+        "sync",
+        "automatico",
+        "scheduler",
+        "notte"
+      ],
+      "domanda_naturale": "Quando si aggiornano automaticamente i portali?"
+    },
+    {
+      "id": "portali.compliance-hard",
+      "file": "06-portali-publishing.yaml",
+      "titolo": "Compliance HARD — perché un annuncio è escluso dal feed",
+      "modulo": "Portali",
+      "livello": "base",
+      "tags": [
+        "portali",
+        "compliance",
+        "ape",
+        "foto",
+        "prezzo",
+        "blocco",
+        "hard"
+      ],
+      "domanda_naturale": "Perché un mio annuncio è bloccato dalla compliance?"
+    },
+    {
+      "id": "portali.compliance-soft",
+      "file": "06-portali-publishing.yaml",
+      "titolo": "Warning Compliance SOFT — l'annuncio è pubblicato lo stesso",
+      "modulo": "Portali",
+      "livello": "intermedio",
+      "tags": [
+        "portali",
+        "compliance",
+        "warning",
+        "soft",
+        "ipe",
+        "titolo",
+        "descrizione"
+      ],
+      "domanda_naturale": "Cosa sono i warning arancioni nella modale Compliance?"
+    },
+    {
+      "id": "portali.aprire-compliance",
+      "file": "06-portali-publishing.yaml",
+      "titolo": "Aprire la Compliance di un portale (modale)",
+      "modulo": "Portali",
+      "livello": "base",
+      "tags": [
+        "portali",
+        "compliance",
+        "modale",
+        "bloccati",
+        "dashboard"
+      ],
+      "domanda_naturale": "Come vedo quali annunci sono bloccati e perché?"
+    },
+    {
+      "id": "portali.wizard-custom-portal",
+      "file": "06-portali-publishing.yaml",
+      "titolo": "Aggiungere un portale personalizzato (Universal Portal Wizard)",
+      "modulo": "Portali",
+      "livello": "intermedio",
+      "tags": [
+        "portali",
+        "wizard",
+        "custom",
+        "personalizzato",
+        "feed_pull",
+        "regionale"
+      ],
+      "domanda_naturale": "Come aggiungo un portale regionale non presente nel catalogo?"
+    },
+    {
+      "id": "portali.feed-pubblico",
+      "file": "06-portali-publishing.yaml",
+      "titolo": "L'URL pubblico del feed XML della tua agenzia",
+      "modulo": "Portali",
+      "livello": "intermedio",
+      "tags": [
+        "portali",
+        "feed",
+        "xml",
+        "url",
+        "pubblico",
+        "osf_federata",
+        "generic_rss"
+      ],
+      "domanda_naturale": "Qual è l'URL del feed XML della mia agenzia?"
+    },
+    {
+      "id": "portali.log-sync",
+      "file": "06-portali-publishing.yaml",
+      "titolo": "Cosa contengono i log di sync (audit trail)",
+      "modulo": "Portali",
+      "livello": "intermedio",
+      "tags": [
+        "portali",
+        "log",
+        "audit",
+        "sync",
+        "trigger",
+        "retry"
+      ],
+      "domanda_naturale": "Come vedo lo storico dei sync di un portale?"
+    },
+    {
+      "id": "fascicolo.cos-e",
+      "file": "07-fascicolo-immobile.yaml",
+      "titolo": "Cos'è il Fascicolo Immobile e a cosa serve",
+      "modulo": "Fascicolo",
+      "livello": "base",
+      "tags": [
+        "fascicolo",
+        "panoramica",
+        "primi-passi",
+        "rogito"
+      ],
+      "domanda_naturale": "Cos'è il Fascicolo Immobile in OMNIA?"
+    },
+    {
+      "id": "fascicolo.aprire",
+      "file": "07-fascicolo-immobile.yaml",
+      "titolo": "Come apro il Fascicolo di un immobile",
+      "modulo": "Fascicolo",
+      "livello": "base",
+      "tags": [
+        "fascicolo",
+        "navigazione",
+        "come-fare"
+      ],
+      "domanda_naturale": "Come apro il Fascicolo di un immobile?"
+    },
+    {
+      "id": "fascicolo.stima-ai",
+      "file": "07-fascicolo-immobile.yaml",
+      "titolo": "La stima AI dell'immobile nel Fascicolo",
+      "modulo": "Fascicolo",
+      "livello": "base",
+      "tags": [
+        "fascicolo",
+        "valutazione",
+        "stima",
+        "uni-10750",
+        "prezzo"
+      ],
+      "domanda_naturale": "Come funziona la stima AI mostrata nel Fascicolo?"
+    },
+    {
+      "id": "fascicolo.badge-prezzo",
+      "file": "07-fascicolo-immobile.yaml",
+      "titolo": "Cosa significano i badge Sotto/In linea/Sopra la stima AI",
+      "modulo": "Fascicolo",
+      "livello": "base",
+      "tags": [
+        "fascicolo",
+        "badge",
+        "prezzo",
+        "stima",
+        "coerenza"
+      ],
+      "domanda_naturale": "Cosa vuol dire il badge Sopra/Sotto/In linea alla stima?"
+    },
+    {
+      "id": "fascicolo.checklist-rogito",
+      "file": "07-fascicolo-immobile.yaml",
+      "titolo": "La checklist documentale rogito (5+5 righe)",
+      "modulo": "Fascicolo",
+      "livello": "base",
+      "tags": [
+        "fascicolo",
+        "checklist",
+        "rogito",
+        "documenti"
+      ],
+      "domanda_naturale": "Quali documenti servono per portare un immobile a rogito?"
+    },
+    {
+      "id": "fascicolo.caricare-documento",
+      "file": "07-fascicolo-immobile.yaml",
+      "titolo": "Caricare un documento nel Fascicolo",
+      "modulo": "Fascicolo",
+      "livello": "base",
+      "tags": [
+        "fascicolo",
+        "upload",
+        "documenti",
+        "storage"
+      ],
+      "domanda_naturale": "Come carico un documento nel Fascicolo dell'immobile?"
+    },
+    {
+      "id": "fascicolo.scaricare-documento",
+      "file": "07-fascicolo-immobile.yaml",
+      "titolo": "Scaricare un documento dal Fascicolo",
+      "modulo": "Fascicolo",
+      "livello": "base",
+      "tags": [
+        "fascicolo",
+        "download",
+        "documenti"
+      ],
+      "domanda_naturale": "Come scarico un documento dal Fascicolo?"
+    },
+    {
+      "id": "fascicolo.eliminare-documento",
+      "file": "07-fascicolo-immobile.yaml",
+      "titolo": "Eliminare un documento dal Fascicolo",
+      "modulo": "Fascicolo",
+      "livello": "base",
+      "tags": [
+        "fascicolo",
+        "elimina",
+        "documenti"
+      ],
+      "domanda_naturale": "Come elimino un documento sbagliato dal Fascicolo?"
+    },
+    {
+      "id": "fascicolo.analisi-hal",
+      "file": "07-fascicolo-immobile.yaml",
+      "titolo": "L'analisi HAL - prontezza al rogito",
+      "modulo": "Fascicolo",
+      "livello": "base",
+      "tags": [
+        "fascicolo",
+        "hal",
+        "ai",
+        "analisi",
+        "rogito",
+        "gemini"
+      ],
+      "domanda_naturale": "Cosa fa il bottone 'Analizza con HAL' nel Fascicolo?"
+    },
+    {
+      "id": "fascicolo.ape-partner",
+      "file": "07-fascicolo-immobile.yaml",
+      "titolo": "APE - cosa fa e non fa il Fascicolo",
+      "modulo": "Fascicolo",
+      "livello": "base",
+      "tags": [
+        "fascicolo",
+        "ape",
+        "energetica",
+        "rogito",
+        "onesta-documentale"
+      ],
+      "domanda_naturale": "Il Fascicolo mi ordina l'APE se non ce l'ho?"
+    },
+    {
+      "id": "fascicolo.condominio-documenti",
+      "file": "07-fascicolo-immobile.yaml",
+      "titolo": "Documenti condominio (regolamento e spese) - quando servono",
+      "modulo": "Fascicolo",
+      "livello": "intermedio",
+      "tags": [
+        "fascicolo",
+        "condominio",
+        "regolamento",
+        "spese",
+        "amministratore",
+        "rogito"
+      ],
+      "domanda_naturale": "Quando servono i documenti di condominio nel Fascicolo?"
+    },
+    {
+      "id": "fascicolo.staging-nel-fascicolo",
+      "file": "07-fascicolo-immobile.yaml",
+      "titolo": "I render Virtual Staging visibili nel Fascicolo",
+      "modulo": "Fascicolo",
+      "livello": "intermedio",
+      "tags": [
+        "fascicolo",
+        "staging",
+        "virtual-staging",
+        "render"
+      ],
+      "domanda_naturale": "Perche' nel Fascicolo vedo i render Virtual Staging?"
+    },
+    {
+      "id": "sito.a-cosa-serve",
+      "file": "08-sito-web.yaml",
+      "titolo": "A cosa serve il modulo Sito web di ImmoWeb",
+      "modulo": "Sito web",
+      "livello": "base",
+      "tags": [
+        "sito-web",
+        "publishing",
+        "panoramica",
+        "primi-passi"
+      ],
+      "domanda_naturale": "A cosa serve il modulo Sito web?"
+    },
+    {
+      "id": "sito.brand-extractor",
+      "file": "08-sito-web.yaml",
+      "titolo": "Come funziona il Brand Extractor",
+      "modulo": "Sito web",
+      "livello": "base",
+      "tags": [
+        "sito-web",
+        "brand",
+        "extractor",
+        "ai",
+        "gemini",
+        "palette"
+      ],
+      "domanda_naturale": "Come estraggo il brand dal mio sito esistente?"
+    },
+    {
+      "id": "sito.temi-disponibili",
+      "file": "08-sito-web.yaml",
+      "titolo": "I 4 temi disponibili (Minimal, Classic, Bold, Luxury)",
+      "modulo": "Sito web",
+      "livello": "base",
+      "tags": [
+        "sito-web",
+        "temi",
+        "design",
+        "minimal",
+        "classic",
+        "bold",
+        "luxury"
+      ],
+      "domanda_naturale": "Quali temi posso scegliere per il sito?"
+    },
+    {
+      "id": "sito.applicare-tema",
+      "file": "08-sito-web.yaml",
+      "titolo": "Come applico un tema al sito",
+      "modulo": "Sito web",
+      "livello": "base",
+      "tags": [
+        "sito-web",
+        "temi",
+        "applicare",
+        "palette",
+        "override"
+      ],
+      "domanda_naturale": "Come applico un tema al mio sito?"
+    },
+    {
+      "id": "sito.auto-configura",
+      "file": "08-sito-web.yaml",
+      "titolo": "Auto-configurazione del sito dal brand estratto",
+      "modulo": "Sito web",
+      "livello": "base",
+      "tags": [
+        "sito-web",
+        "auto-configure",
+        "brand",
+        "extractor",
+        "ai"
+      ],
+      "domanda_naturale": "Come applico automaticamente il brand estratto al sito?"
+    },
+    {
+      "id": "sito.live-preview",
+      "file": "08-sito-web.yaml",
+      "titolo": "Anteprima live del sito nel CRM",
+      "modulo": "Sito web",
+      "livello": "base",
+      "tags": [
+        "sito-web",
+        "preview",
+        "iframe",
+        "verifica"
+      ],
+      "domanda_naturale": "Come vedo l'anteprima del sito prima di pubblicarlo?"
+    },
+    {
+      "id": "sito.vetrina-pubblica",
+      "file": "08-sito-web.yaml",
+      "titolo": "Cosa mostra la vetrina pubblica del sito",
+      "modulo": "Sito web",
+      "livello": "base",
+      "tags": [
+        "sito-web",
+        "vetrina",
+        "home",
+        "immobili",
+        "seo"
+      ],
+      "domanda_naturale": "Cosa vede un visitatore sulla home del mio sito OMNIA?"
+    },
+    {
+      "id": "sito.scheda-pubblica",
+      "file": "08-sito-web.yaml",
+      "titolo": "Cosa contiene la scheda pubblica di un immobile",
+      "modulo": "Sito web",
+      "livello": "base",
+      "tags": [
+        "sito-web",
+        "scheda",
+        "immobile",
+        "seo",
+        "schema-org",
+        "condivisione"
+      ],
+      "domanda_naturale": "Cosa vede un visitatore sulla scheda pubblica di un immobile?"
+    },
+    {
+      "id": "sito.share-sociale",
+      "file": "08-sito-web.yaml",
+      "titolo": "Come si condivide un immobile sui social",
+      "modulo": "Sito web",
+      "livello": "base",
+      "tags": [
+        "sito-web",
+        "share",
+        "whatsapp",
+        "facebook",
+        "email",
+        "condivisione"
+      ],
+      "domanda_naturale": "Come si condivide un immobile su WhatsApp o Facebook?"
+    },
+    {
+      "id": "sito.custom-domain",
+      "file": "08-sito-web.yaml",
+      "titolo": "Come collego il mio dominio custom (www.tuoagenzia.it)",
+      "modulo": "Sito web",
+      "livello": "intermedio",
+      "tags": [
+        "sito-web",
+        "dominio",
+        "dns",
+        "cname",
+        "txt",
+        "custom-domain"
+      ],
+      "domanda_naturale": "Come collego il mio dominio al sito OMNIA?"
+    },
+    {
+      "id": "sito.custom-domain-verifica",
+      "file": "08-sito-web.yaml",
+      "titolo": "Verifica DNS del dominio custom",
+      "modulo": "Sito web",
+      "livello": "intermedio",
+      "tags": [
+        "sito-web",
+        "dominio",
+        "dns",
+        "verifica",
+        "txt",
+        "cname"
+      ],
+      "domanda_naturale": "Come verifico che i DNS del mio dominio siano configurati?"
+    },
+    {
+      "id": "sito.custom-domain-ssl",
+      "file": "08-sito-web.yaml",
+      "titolo": "Attivazione SSL sul dominio custom (step super_admin)",
+      "modulo": "Sito web",
+      "livello": "intermedio",
+      "tags": [
+        "sito-web",
+        "dominio",
+        "ssl",
+        "https",
+        "letsencrypt",
+        "super-admin"
+      ],
+      "domanda_naturale": "Perche' il mio dominio verificato non risponde in HTTPS?"
+    },
+    {
+      "id": "staging.cos-e",
+      "file": "09-virtual-staging.yaml",
+      "titolo": "Cos'è il Virtual Staging in OMNIA",
+      "modulo": "Virtual Staging",
+      "livello": "base",
+      "tags": [
+        "staging",
+        "virtual-staging",
+        "ai",
+        "panoramica",
+        "primi-passi"
+      ],
+      "domanda_naturale": "Cos'è il Virtual Staging in OMNIA?"
+    },
+    {
+      "id": "staging.pipeline",
+      "file": "09-virtual-staging.yaml",
+      "titolo": "Come funziona la pipeline AI in 3 stage",
+      "modulo": "Virtual Staging",
+      "livello": "intermedio",
+      "tags": [
+        "staging",
+        "pipeline",
+        "sam2",
+        "flux",
+        "upscale",
+        "ai",
+        "fal-ai"
+      ],
+      "domanda_naturale": "Come funziona la pipeline di Virtual Staging sotto il cofano?"
+    },
+    {
+      "id": "staging.stili",
+      "file": "09-virtual-staging.yaml",
+      "titolo": "I 5 stili disponibili (Modern, Classic, Scandi, Industrial, Luxury)",
+      "modulo": "Virtual Staging",
+      "livello": "base",
+      "tags": [
+        "staging",
+        "stili",
+        "design",
+        "modern",
+        "classic",
+        "scandi",
+        "industrial",
+        "luxury"
+      ],
+      "domanda_naturale": "Quali stili di arredamento posso scegliere per un render?"
+    },
+    {
+      "id": "staging.tipi-stanza",
+      "file": "09-virtual-staging.yaml",
+      "titolo": "I 6 tipi stanza disponibili",
+      "modulo": "Virtual Staging",
+      "livello": "base",
+      "tags": [
+        "staging",
+        "room-type",
+        "living",
+        "bedroom",
+        "kitchen",
+        "dining",
+        "bathroom",
+        "office"
+      ],
+      "domanda_naturale": "Quali tipi di stanza posso arredare in Virtual Staging?"
+    },
+    {
+      "id": "staging.modalita",
+      "file": "09-virtual-staging.yaml",
+      "titolo": "Modalita' Standard vs Reverse (stanza vuota vs ri-arredare)",
+      "modulo": "Virtual Staging",
+      "livello": "intermedio",
+      "tags": [
+        "staging",
+        "modalita",
+        "standard",
+        "reverse",
+        "svuotamento"
+      ],
+      "domanda_naturale": "Qual e' la differenza tra Standard e Reverse Staging?"
+    },
+    {
+      "id": "staging.varianti-parallele",
+      "file": "09-virtual-staging.yaml",
+      "titolo": "Generare 1-4 varianti in parallelo (same_style vs multi_style)",
+      "modulo": "Virtual Staging",
+      "livello": "intermedio",
+      "tags": [
+        "staging",
+        "varianti",
+        "multi-style",
+        "same-style",
+        "parallelo"
+      ],
+      "domanda_naturale": "Posso generare piu' varianti di render in un colpo?"
+    },
+    {
+      "id": "staging.lanciare-render",
+      "file": "09-virtual-staging.yaml",
+      "titolo": "Come lancio un render Virtual Staging (passi)",
+      "modulo": "Virtual Staging",
+      "livello": "base",
+      "tags": [
+        "staging",
+        "come-fare",
+        "upload",
+        "generate",
+        "passi"
+      ],
+      "domanda_naturale": "Come lancio un render Virtual Staging?"
+    },
+    {
+      "id": "staging.crediti-costo",
+      "file": "09-virtual-staging.yaml",
+      "titolo": "Crediti e costo per render (18 crediti = 0.90 euro)",
+      "modulo": "Virtual Staging",
+      "livello": "intermedio",
+      "tags": [
+        "staging",
+        "crediti",
+        "costo",
+        "prezzo",
+        "fal-ai",
+        "pricing",
+        "prezzo-render",
+        "quanto-costa",
+        "costo-render",
+        "18-crediti",
+        "0-90-euro",
+        "euro",
+        "listino",
+        "virtual-staging-costo"
+      ],
+      "domanda_naturale": "Quanto costa un render Virtual Staging? Quanto spendo in crediti per lo staging?"
+    },
+    {
+      "id": "staging.watermark",
+      "file": "09-virtual-staging.yaml",
+      "titolo": "Il watermark 'Render virtuale OMNIA' e' obbligatorio",
+      "modulo": "Virtual Staging",
+      "livello": "base",
+      "tags": [
+        "staging",
+        "watermark",
+        "compliance",
+        "agcm",
+        "codice-consumo",
+        "onesta-documentale"
+      ],
+      "domanda_naturale": "Posso rimuovere il watermark 'Render virtuale OMNIA'?"
+    },
+    {
+      "id": "staging.rate-limit",
+      "file": "09-virtual-staging.yaml",
+      "titolo": "Limiti orari - 20 render utente, 80 render agenzia",
+      "modulo": "Virtual Staging",
+      "livello": "intermedio",
+      "tags": [
+        "staging",
+        "rate-limit",
+        "quota",
+        "anti-abuso",
+        "limiti"
+      ],
+      "domanda_naturale": "Quanti render posso lanciare per ora?"
+    },
+    {
+      "id": "staging.salva-foto-immobile",
+      "file": "09-virtual-staging.yaml",
+      "titolo": "Salvare un render come foto dell'immobile",
+      "modulo": "Virtual Staging",
+      "livello": "base",
+      "tags": [
+        "staging",
+        "salva",
+        "immobile",
+        "foto",
+        "save-to-property",
+        "cover"
+      ],
+      "domanda_naturale": "Come uso un render come foto dell'immobile?"
+    },
+    {
+      "id": "staging.storia-cancella",
+      "file": "09-virtual-staging.yaml",
+      "titolo": "Storia render e cancellazione job",
+      "modulo": "Virtual Staging",
+      "livello": "base",
+      "tags": [
+        "staging",
+        "history",
+        "cronologia",
+        "elimina",
+        "ttl"
+      ],
+      "domanda_naturale": "Come vedo lo storico dei render e come li elimino?"
+    },
+    {
+      "id": "hal.cos-e",
+      "file": "10-hal-agent-crm.yaml",
+      "titolo": "Cos'è HAL Agent e dove lo trovi nel CRM",
+      "modulo": "HAL Agent",
+      "livello": "base",
+      "tags": [
+        "hal",
+        "hal-agent",
+        "chat",
+        "ai",
+        "panoramica",
+        "primi-passi"
+      ],
+      "domanda_naturale": "Cos'è HAL Agent in OMNIA?"
+    },
+    {
+      "id": "hal.chat-aprire",
+      "file": "10-hal-agent-crm.yaml",
+      "titolo": "Come apro la chat con HAL",
+      "modulo": "HAL Agent",
+      "livello": "base",
+      "tags": [
+        "hal",
+        "chat",
+        "come-fare",
+        "streaming",
+        "sessione"
+      ],
+      "domanda_naturale": "Come apro e uso la chat HAL?"
+    },
+    {
+      "id": "hal.tool-crm",
+      "file": "10-hal-agent-crm.yaml",
+      "titolo": "I 5 tool CRM whitelist di HAL (query only)",
+      "modulo": "HAL Agent",
+      "livello": "intermedio",
+      "tags": [
+        "hal",
+        "tool",
+        "crm",
+        "query",
+        "whitelist",
+        "sola-lettura"
+      ],
+      "domanda_naturale": "Cosa sa cercare HAL nel mio CRM?"
+    },
+    {
+      "id": "hal.pipeline-tool-call",
+      "file": "10-hal-agent-crm.yaml",
+      "titolo": "Come HAL decide di usare un tool CRM (pipeline)",
+      "modulo": "HAL Agent",
+      "livello": "intermedio",
+      "tags": [
+        "hal",
+        "pipeline",
+        "tool-use",
+        "gemini",
+        "json",
+        "streaming",
+        "sse"
+      ],
+      "domanda_naturale": "Come fa HAL a capire quando deve consultare il CRM?"
+    },
+    {
+      "id": "hal.rate-limit-chat",
+      "file": "10-hal-agent-crm.yaml",
+      "titolo": "Limite orario chat HAL (60 messaggi/ora)",
+      "modulo": "HAL Agent",
+      "livello": "base",
+      "tags": [
+        "hal",
+        "rate-limit",
+        "quota",
+        "anti-abuso",
+        "chat"
+      ],
+      "domanda_naturale": "Quanti messaggi HAL posso mandare all'ora?"
+    },
+    {
+      "id": "hal.improve-titolo-descrizione",
+      "file": "10-hal-agent-crm.yaml",
+      "titolo": "Pulsante 'Migliora con HAL' - titolo e descrizione",
+      "modulo": "HAL Agent",
+      "livello": "base",
+      "tags": [
+        "hal",
+        "improve",
+        "migliora",
+        "titolo",
+        "descrizione",
+        "copywriting",
+        "form"
+      ],
+      "domanda_naturale": "A cosa serve il pulsante 'Migliora con HAL' nei form?"
+    },
+    {
+      "id": "hal.improve-lingue-toni",
+      "file": "10-hal-agent-crm.yaml",
+      "titolo": "Lingue e toni del pulsante Migliora con HAL",
+      "modulo": "HAL Agent",
+      "livello": "base",
+      "tags": [
+        "hal",
+        "improve",
+        "lingue",
+        "toni",
+        "italiano",
+        "inglese",
+        "spagnolo",
+        "lusso",
+        "giovane"
+      ],
+      "domanda_naturale": "Quali lingue e toni supporta 'Migliora con HAL'?"
+    },
+    {
+      "id": "hal.rate-limit-improve",
+      "file": "10-hal-agent-crm.yaml",
+      "titolo": "Limite orario Migliora con HAL (60 chiamate/ora)",
+      "modulo": "HAL Agent",
+      "livello": "intermedio",
+      "tags": [
+        "hal",
+        "improve",
+        "rate-limit",
+        "quota"
+      ],
+      "domanda_naturale": "Quante volte all'ora posso usare 'Migliora con HAL'?"
+    },
+    {
+      "id": "hal.limiti-cosa-non-fa",
+      "file": "10-hal-agent-crm.yaml",
+      "titolo": "Cosa HAL Agent NON fa (limiti operativi e legali)",
+      "modulo": "HAL Agent",
+      "livello": "base",
+      "tags": [
+        "hal",
+        "limiti",
+        "onesta-documentale",
+        "sola-lettura",
+        "legale",
+        "hal-legal"
+      ],
+      "domanda_naturale": "Cosa NON puo' fare HAL Agent?"
+    },
+    {
+      "id": "hal.sessioni-lista",
+      "file": "10-hal-agent-crm.yaml",
+      "titolo": "Elenco, ripresa ed eliminazione sessioni HAL",
+      "modulo": "HAL Agent",
+      "livello": "intermedio",
+      "tags": [
+        "hal",
+        "sessioni",
+        "cronologia",
+        "elimina",
+        "persistenza"
+      ],
+      "domanda_naturale": "Come vedo, riapro o elimino una sessione HAL?"
+    },
+    {
+      "id": "hal.privacy-audit",
+      "file": "10-hal-agent-crm.yaml",
+      "titolo": "Cosa viene loggato da HAL e privacy dei dati",
+      "modulo": "HAL Agent",
+      "livello": "intermedio",
+      "tags": [
+        "hal",
+        "audit",
+        "privacy",
+        "gdpr",
+        "log",
+        "tracciabilita"
+      ],
+      "domanda_naturale": "Cosa viene registrato da HAL e come e' gestita la privacy?"
+    },
+    {
+      "id": "hal.prompt-tips",
+      "file": "10-hal-agent-crm.yaml",
+      "titolo": "Prompt-tips per ottenere risposte utili da HAL",
+      "modulo": "HAL Agent",
+      "livello": "base",
+      "tags": [
+        "hal",
+        "prompt",
+        "tips",
+        "best-practice",
+        "come-fare"
+      ],
+      "domanda_naturale": "Come formulo domande utili a HAL?"
+    },
+    {
+      "id": "hal.errori-comuni",
+      "file": "10-hal-agent-crm.yaml",
+      "titolo": "Errori comuni chat HAL - raccolta",
+      "modulo": "HAL Agent",
+      "livello": "base",
+      "tags": [
+        "hal",
+        "errori",
+        "troubleshooting",
+        "503",
+        "429"
+      ],
+      "domanda_naturale": "Perche' HAL da' errore? Come risolvo?"
+    },
+    {
+      "id": "mutui.cos-e",
+      "file": "11-mutui-comparatore.yaml",
+      "titolo": "Cos'è il Comparatore Mutui di OMNIA",
+      "modulo": "Mutui",
+      "livello": "base",
+      "tags": [
+        "mutui",
+        "comparatore",
+        "mutuo",
+        "prestito",
+        "casa",
+        "panoramica",
+        "banche"
+      ],
+      "domanda_naturale": "Cos'è il Comparatore Mutui di OMNIA? A cosa serve?"
+    },
+    {
+      "id": "mutui.dove-lo-trovi",
+      "file": "11-mutui-comparatore.yaml",
+      "titolo": "Dove trovi il Comparatore Mutui (B2C, B2B, widget)",
+      "modulo": "Mutui",
+      "livello": "base",
+      "tags": [
+        "mutui",
+        "dove-si-trova",
+        "b2c",
+        "b2b",
+        "widget",
+        "immobilcloud",
+        "immoweb"
+      ],
+      "domanda_naturale": "Dove trovo il Comparatore Mutui? Come si accede?"
+    },
+    {
+      "id": "mutui.motore",
+      "file": "11-mutui-comparatore.yaml",
+      "titolo": "Come funziona il motore matematico (ammortamento francese + TAEG)",
+      "modulo": "Mutui",
+      "livello": "intermedio",
+      "tags": [
+        "mutui",
+        "motore",
+        "matematica",
+        "ammortamento-francese",
+        "taeg",
+        "irr",
+        "tan"
+      ],
+      "domanda_naturale": "Come viene calcolato il TAEG del mutuo?"
+    },
+    {
+      "id": "mutui.ltv-consap-under36",
+      "file": "11-mutui-comparatore.yaml",
+      "titolo": "Vincolo LTV e Fondo Consap under-36 prima casa",
+      "modulo": "Mutui",
+      "livello": "intermedio",
+      "tags": [
+        "mutui",
+        "ltv",
+        "consap",
+        "under-36",
+        "prima-casa",
+        "fondo-garanzia"
+      ],
+      "domanda_naturale": "Cos'è il Fondo Consap per gli under-36? Fino a quanto posso finanziare?"
+    },
+    {
+      "id": "mutui.sostenibilita-rata-reddito",
+      "file": "11-mutui-comparatore.yaml",
+      "titolo": "Sostenibilita' rata/reddito (max 35%)",
+      "modulo": "Mutui",
+      "livello": "base",
+      "tags": [
+        "mutui",
+        "sostenibilita",
+        "reddito",
+        "rata",
+        "35-percento",
+        "budget"
+      ],
+      "domanda_naturale": "La rata del mutuo e' sostenibile? Quanto posso permettermi?"
+    },
+    {
+      "id": "mutui.offerte-14-banche-8",
+      "file": "11-mutui-comparatore.yaml",
+      "titolo": "Le 14 offerte curate di 8 banche italiane",
+      "modulo": "Mutui",
+      "livello": "base",
+      "tags": [
+        "mutui",
+        "banche",
+        "offerte",
+        "spread",
+        "intesa",
+        "unicredit",
+        "ing",
+        "webank"
+      ],
+      "domanda_naturale": "Quali banche compaiono nel comparatore? Perche' proprio queste?"
+    },
+    {
+      "id": "mutui.tegm-soglia-usura",
+      "file": "11-mutui-comparatore.yaml",
+      "titolo": "TEGM Banca d'Italia e soglia usura",
+      "modulo": "Mutui",
+      "livello": "intermedio",
+      "tags": [
+        "mutui",
+        "tegm",
+        "soglia-usura",
+        "banca-italia",
+        "compliance",
+        "legale"
+      ],
+      "domanda_naturale": "Cos'è la soglia usura del mutuo?"
+    },
+    {
+      "id": "mutui.piano-ammortamento",
+      "file": "11-mutui-comparatore.yaml",
+      "titolo": "Piano ammortamento mensile e per anno",
+      "modulo": "Mutui",
+      "livello": "base",
+      "tags": [
+        "mutui",
+        "piano-ammortamento",
+        "mensile",
+        "capitale",
+        "interessi"
+      ],
+      "domanda_naturale": "Come vedo il piano di ammortamento del mutuo?"
+    },
+    {
+      "id": "mutui.lanciare-simulazione",
+      "file": "11-mutui-comparatore.yaml",
+      "titolo": "Come lancio una simulazione (passi B2C)",
+      "modulo": "Mutui",
+      "livello": "base",
+      "tags": [
+        "mutui",
+        "come-fare",
+        "simulazione",
+        "passi",
+        "form"
+      ],
+      "domanda_naturale": "Come faccio una simulazione mutuo?"
+    },
+    {
+      "id": "mutui.lead-capture",
+      "file": "11-mutui-comparatore.yaml",
+      "titolo": "Lead capture B2C e GDPR",
+      "modulo": "Mutui",
+      "livello": "intermedio",
+      "tags": [
+        "mutui",
+        "lead",
+        "gdpr",
+        "privacy",
+        "b2c",
+        "mortgage-leads"
+      ],
+      "domanda_naturale": "I lead del comparatore mutui dove finiscono?"
+    },
+    {
+      "id": "mutui.dati-aggiornamento",
+      "file": "11-mutui-comparatore.yaml",
+      "titolo": "Aggiornamento dati (cadenza trimestrale, no scraping)",
+      "modulo": "Mutui",
+      "livello": "intermedio",
+      "tags": [
+        "mutui",
+        "aggiornamento",
+        "dati",
+        "trimestrale",
+        "tegm",
+        "eurirs",
+        "no-scraping"
+      ],
+      "domanda_naturale": "Con quale frequenza si aggiornano i dati del comparatore mutui?"
+    },
+    {
+      "id": "mutui.disclaimer-tub",
+      "file": "11-mutui-comparatore.yaml",
+      "titolo": "Disclaimer legale art. 128-sexies TUB (obbligatorio)",
+      "modulo": "Mutui",
+      "livello": "base",
+      "tags": [
+        "mutui",
+        "disclaimer",
+        "legale",
+        "tub",
+        "mediazione-creditizia",
+        "compliance"
+      ],
+      "domanda_naturale": "Il comparatore e' una offerta di mutuo? OMNIA e' mediatore creditizio?"
+    },
+    {
+      "id": "halk.cos-e",
+      "file": "12-hal-knowledge.yaml",
+      "titolo": "Cos'è HAL Knowledge in OMNIA",
+      "modulo": "HAL Knowledge",
+      "livello": "base",
+      "tags": [
+        "hal-knowledge",
+        "rag",
+        "panoramica",
+        "primi-passi",
+        "assistente",
+        "ai",
+        "manuale"
+      ],
+      "domanda_naturale": "Cos'è HAL Knowledge e a cosa serve?"
+    },
+    {
+      "id": "halk.dove-lo-trovi",
+      "file": "12-hal-knowledge.yaml",
+      "titolo": "Dove trovi HAL Knowledge in ImmoWeb",
+      "modulo": "HAL Knowledge",
+      "livello": "base",
+      "tags": [
+        "hal-knowledge",
+        "dove-si-trova",
+        "sidebar",
+        "navigazione",
+        "accesso",
+        "primi-passi"
+      ],
+      "domanda_naturale": "Dove trovo HAL Knowledge? Come ci accedo?"
+    },
+    {
+      "id": "halk.come-porre-domanda",
+      "file": "12-hal-knowledge.yaml",
+      "titolo": "Come porre una domanda a HAL Knowledge",
+      "modulo": "HAL Knowledge",
+      "livello": "base",
+      "tags": [
+        "hal-knowledge",
+        "domanda",
+        "chiedere",
+        "prompt",
+        "textarea",
+        "formulazione"
+      ],
+      "domanda_naturale": "Come faccio una domanda a HAL Knowledge? Come devo scriverla?"
+    },
+    {
+      "id": "halk.badge-confidence",
+      "file": "12-hal-knowledge.yaml",
+      "titolo": "Come leggere il badge di confidence (alta, media, insufficiente)",
+      "modulo": "HAL Knowledge",
+      "livello": "base",
+      "tags": [
+        "hal-knowledge",
+        "confidence",
+        "badge",
+        "similarity",
+        "tf-idf",
+        "soglia",
+        "alta-media-bassa"
+      ],
+      "domanda_naturale": "Cosa significano i badge 'alta confidence', 'media', 'insufficiente' sulla risposta?"
+    },
+    {
+      "id": "halk.fonti-citate",
+      "file": "12-hal-knowledge.yaml",
+      "titolo": "Come sono strutturate le fonti citate nella risposta",
+      "modulo": "HAL Knowledge",
+      "livello": "base",
+      "tags": [
+        "hal-knowledge",
+        "fonti",
+        "citazioni",
+        "sources",
+        "similarity",
+        "top-k"
+      ],
+      "domanda_naturale": "Cosa contiene il blocco 'Fonti citate' sotto la risposta?"
+    },
+    {
+      "id": "halk.corpus",
+      "file": "12-hal-knowledge.yaml",
+      "titolo": "Cosa c'e' nel corpus indicizzato da HAL Knowledge",
+      "modulo": "HAL Knowledge",
+      "livello": "intermedio",
+      "tags": [
+        "hal-knowledge",
+        "corpus",
+        "documenti",
+        "manuale",
+        "prd",
+        "roadmap",
+        "decisions",
+        "changelog",
+        "esclusioni"
+      ],
+      "domanda_naturale": "Quali documenti legge HAL Knowledge? Su cosa risponde e su cosa no?"
+    },
+    {
+      "id": "halk.motore",
+      "file": "12-hal-knowledge.yaml",
+      "titolo": "Come funziona il motore RAG (TF-IDF + Gemini 3 Flash)",
+      "modulo": "HAL Knowledge",
+      "livello": "intermedio",
+      "tags": [
+        "hal-knowledge",
+        "motore",
+        "tf-idf",
+        "gemini",
+        "rag",
+        "retrieval",
+        "generation",
+        "embeddings",
+        "d-061"
+      ],
+      "domanda_naturale": "Come funziona HAL Knowledge sotto il cofano? Usa embeddings o cosa?"
+    },
+    {
+      "id": "halk.insufficient-context",
+      "file": "12-hal-knowledge.yaml",
+      "titolo": "Quando HAL rifiuta di rispondere (insufficient_context)",
+      "modulo": "HAL Knowledge",
+      "livello": "base",
+      "tags": [
+        "hal-knowledge",
+        "insufficient-context",
+        "rifiuto",
+        "onestà",
+        "d-051",
+        "fallback",
+        "no-hallucination"
+      ],
+      "domanda_naturale": "Perche' HAL mi ha detto 'Non ho abbastanza contesto'? E' un bug?"
+    },
+    {
+      "id": "halk.storico",
+      "file": "12-hal-knowledge.yaml",
+      "titolo": "Storico delle tue domande su HAL Knowledge",
+      "modulo": "HAL Knowledge",
+      "livello": "base",
+      "tags": [
+        "hal-knowledge",
+        "storico",
+        "history",
+        "sessioni",
+        "privacy",
+        "ripescare",
+        "cache-utente"
+      ],
+      "domanda_naturale": "Posso rivedere le domande che ho gia' fatto a HAL Knowledge?"
+    },
+    {
+      "id": "halk.reindex",
+      "file": "12-hal-knowledge.yaml",
+      "titolo": "Reindex del corpus (solo super_admin)",
+      "modulo": "HAL Knowledge",
+      "livello": "intermedio",
+      "tags": [
+        "hal-knowledge",
+        "reindex",
+        "super-admin",
+        "corpus",
+        "force",
+        "idempotente",
+        "md5",
+        "aggiornamento"
+      ],
+      "domanda_naturale": "Come si aggiorna l'indice quando cambia il manuale? Come faccio reindex?"
+    },
+    {
+      "id": "halk.status-badge",
+      "file": "12-hal-knowledge.yaml",
+      "titolo": "Badge di stato HAL Knowledge (chunks, termini, modello)",
+      "modulo": "HAL Knowledge",
+      "livello": "base",
+      "tags": [
+        "hal-knowledge",
+        "status",
+        "badge",
+        "chunks-indexed",
+        "vocab-size",
+        "modello",
+        "gemini"
+      ],
+      "domanda_naturale": "A cosa serve il badge in alto a destra della pagina HAL Knowledge?"
+    },
+    {
+      "id": "halk.distinzione-tre-hal",
+      "file": "12-hal-knowledge.yaml",
+      "titolo": "Distinzione tra HAL Knowledge, HAL Agent CRM e HAL Legal",
+      "modulo": "HAL Knowledge",
+      "livello": "base",
+      "tags": [
+        "hal-knowledge",
+        "hal-agent-crm",
+        "hal-legal",
+        "distinzione",
+        "d-040",
+        "tre-bot",
+        "quale-usare"
+      ],
+      "domanda_naturale": "Qual e' la differenza fra HAL Knowledge, HAL Agent CRM e HAL Legal?"
+    },
+    {
+      "id": "halk.limiti",
+      "file": "12-hal-knowledge.yaml",
+      "titolo": "Cosa NON puo' fare HAL Knowledge (limiti v1)",
+      "modulo": "HAL Knowledge",
+      "livello": "intermedio",
+      "tags": [
+        "hal-knowledge",
+        "limiti",
+        "cosa-non-fa",
+        "onestà",
+        "d-051",
+        "no-embeddings",
+        "no-memoria",
+        "no-feedback",
+        "no-multilingua"
+      ],
+      "domanda_naturale": "Cosa NON puo' fare HAL Knowledge? Quali sono i limiti attuali?"
+    },
+    {
+      "id": "team.cos-e",
+      "file": "13-team-ruoli.yaml",
+      "titolo": "Cos'è il modulo Collaboratori (team & ruoli agenzia)",
+      "modulo": "Collaboratori",
+      "livello": "base",
+      "tags": [
+        "collaboratori",
+        "team",
+        "membri",
+        "ruoli",
+        "panoramica",
+        "primi-passi",
+        "agenzia"
+      ],
+      "domanda_naturale": "Cos'è il modulo Collaboratori? A cosa serve?"
+    },
+    {
+      "id": "team.dove-trovarlo",
+      "file": "13-team-ruoli.yaml",
+      "titolo": "Dove trovare Collaboratori in ImmoWeb",
+      "modulo": "Collaboratori",
+      "livello": "base",
+      "tags": [
+        "collaboratori",
+        "dove-si-trova",
+        "sidebar",
+        "navigazione",
+        "accesso",
+        "route"
+      ],
+      "domanda_naturale": "Dove trovo Collaboratori? Come ci accedo?"
+    },
+    {
+      "id": "team.ruoli-disponibili",
+      "file": "13-team-ruoli.yaml",
+      "titolo": "Quali ruoli posso assegnare a un collaboratore (agency_admin vs agent)",
+      "modulo": "Collaboratori",
+      "livello": "base",
+      "tags": [
+        "collaboratori",
+        "ruoli",
+        "agency-admin",
+        "agent",
+        "segreteria",
+        "permessi",
+        "agenzia",
+        "d-051"
+      ],
+      "domanda_naturale": "Quali ruoli posso assegnare a un collaboratore quando lo invito?"
+    },
+    {
+      "id": "team.invitare-membro",
+      "file": "13-team-ruoli.yaml",
+      "titolo": "Invitare un collega nella mia agenzia (magic link email 7 giorni)",
+      "modulo": "Collaboratori",
+      "livello": "base",
+      "tags": [
+        "collaboratori",
+        "invito",
+        "magic-link",
+        "email",
+        "invitare-collega",
+        "aggiungere-membro",
+        "agente",
+        "titolare"
+      ],
+      "domanda_naturale": "Come invito un collega nella mia agenzia?"
+    },
+    {
+      "id": "team.tab-inviti",
+      "file": "13-team-ruoli.yaml",
+      "titolo": "Tab Inviti - stati pending/accepted/revoked/expired e revoca",
+      "modulo": "Collaboratori",
+      "livello": "base",
+      "tags": [
+        "collaboratori",
+        "tab-inviti",
+        "stati",
+        "pending",
+        "accepted",
+        "revoked",
+        "expired",
+        "revocare",
+        "magic-link"
+      ],
+      "domanda_naturale": "Come vedo gli inviti che ho mandato? Come li revoco?"
+    },
+    {
+      "id": "team.accettare-invito",
+      "file": "13-team-ruoli.yaml",
+      "titolo": "Come si accetta un invito (verify token + set password + auto-login)",
+      "modulo": "Collaboratori",
+      "livello": "base",
+      "tags": [
+        "collaboratori",
+        "accettare-invito",
+        "magic-link",
+        "password",
+        "auto-login",
+        "verify",
+        "token"
+      ],
+      "domanda_naturale": "Ho ricevuto un invito email, come lo accetto?"
+    },
+    {
+      "id": "team.lista-membri",
+      "file": "13-team-ruoli.yaml",
+      "titolo": "Elenco membri agenzia - cosa vedo e chi",
+      "modulo": "Collaboratori",
+      "livello": "base",
+      "tags": [
+        "collaboratori",
+        "membri",
+        "lista",
+        "elenco",
+        "chi-e-in-agenzia",
+        "tabella-membri"
+      ],
+      "domanda_naturale": "Come vedo l'elenco dei membri della mia agenzia?"
+    },
+    {
+      "id": "team.chi-puo-invitare",
+      "file": "13-team-ruoli.yaml",
+      "titolo": "Chi puo' invitare nuovi membri (permessi effettivi)",
+      "modulo": "Collaboratori",
+      "livello": "base",
+      "tags": [
+        "collaboratori",
+        "permessi",
+        "chi-puo-invitare",
+        "agency-admin",
+        "agent",
+        "ruoli",
+        "403",
+        "sicurezza"
+      ],
+      "domanda_naturale": "Chi puo' invitare nuovi membri? Un agente puo' farlo?"
+    },
+    {
+      "id": "team.onboarding-vs-invito",
+      "file": "13-team-ruoli.yaml",
+      "titolo": "Onboarding titolare vs invito agente - due percorsi diversi",
+      "modulo": "Collaboratori",
+      "livello": "intermedio",
+      "tags": [
+        "collaboratori",
+        "onboarding",
+        "agency-admin",
+        "promozione",
+        "register",
+        "signup",
+        "S2",
+        "one-owner"
+      ],
+      "domanda_naturale": "Come diventa titolare il primo utente di un'agenzia?"
+    },
+    {
+      "id": "team.utente-gia-registrato",
+      "file": "13-team-ruoli.yaml",
+      "titolo": "Utente gia' registrato che accetta un invito - link agenzia + upgrade role",
+      "modulo": "Collaboratori",
+      "livello": "intermedio",
+      "tags": [
+        "collaboratori",
+        "utente-esistente",
+        "client",
+        "upgrade-role",
+        "link-agenzia",
+        "accept",
+        "agency-ids"
+      ],
+      "domanda_naturale": "Cosa succede se accetto un invito ma sono gia' registrato in OMNIA?"
+    },
+    {
+      "id": "team.errori-comuni",
+      "file": "13-team-ruoli.yaml",
+      "titolo": "Errori comuni del modulo Collaboratori",
+      "modulo": "Collaboratori",
+      "livello": "base",
+      "tags": [
+        "collaboratori",
+        "errori",
+        "troubleshooting",
+        "user-already-member",
+        "invite-expired",
+        "invite-invalid",
+        "invite-used",
+        "403",
+        "400",
+        "404"
+      ],
+      "domanda_naturale": "Perche' l'invito non funziona? Errori comuni sui Collaboratori"
+    },
+    {
+      "id": "team.limitazioni-v1",
+      "file": "13-team-ruoli.yaml",
+      "titolo": "Limiti v1 del modulo Collaboratori (D-051 onesto)",
+      "modulo": "Collaboratori",
+      "livello": "intermedio",
+      "tags": [
+        "collaboratori",
+        "limiti",
+        "cosa-non-fa",
+        "rimozione-membro",
+        "cambio-ruolo",
+        "segreteria",
+        "franchising",
+        "audit",
+        "onestà",
+        "d-051"
+      ],
+      "domanda_naturale": "Posso rimuovere un membro dal team? Posso rimuovere un collaboratore? Posso cambiare ruolo a un membro? Come rimuovo un ex-collaboratore? Cosa NON fa il modulo Collaboratori v1? La segreteria è un ruolo backend? Esiste transfer ownership agenzia, disattivazione temporanea, audit UI, permessi granulari per membro o notifiche real-time?"
+    },
+    {
+      "id": "team.collegamenti",
+      "file": "13-team-ruoli.yaml",
+      "titolo": "Collegamenti fra Collaboratori e altri moduli",
+      "modulo": "Collaboratori",
+      "livello": "base",
+      "tags": [
+        "collaboratori",
+        "cross-ref",
+        "primo-accesso",
+        "hal-knowledge",
+        "impostazioni",
+        "immobili",
+        "privacy"
+      ],
+      "domanda_naturale": "Che rapporto c'e' fra Collaboratori e gli altri moduli OMNIA?"
+    },
+    {
+      "id": "import.cos-e",
+      "file": "14-import-xml.yaml",
+      "titolo": "Cos'è il modulo Import XML (migrazione da altro gestionale)",
+      "modulo": "Import XML",
+      "livello": "base",
+      "tags": [
+        "import",
+        "xml",
+        "migrazione",
+        "gestionale",
+        "universal-xml-importer",
+        "primi-passi",
+        "one-shot",
+        "agenzia"
+      ],
+      "domanda_naturale": "Cos'è Import XML? A cosa serve?"
+    },
+    {
+      "id": "import.dove-trovarlo",
+      "file": "14-import-xml.yaml",
+      "titolo": "Dove trovare Import XML in ImmoWeb",
+      "modulo": "Import XML",
+      "livello": "base",
+      "tags": [
+        "import",
+        "xml",
+        "dove-si-trova",
+        "sidebar",
+        "navigazione",
+        "migrazione",
+        "route"
+      ],
+      "domanda_naturale": "Dove trovo Import XML? Come ci accedo?"
+    },
+    {
+      "id": "import.flusso-preview-commit",
+      "file": "14-import-xml.yaml",
+      "titolo": "Il flusso a 2 fasi Preview → Commit",
+      "modulo": "Import XML",
+      "livello": "base",
+      "tags": [
+        "import",
+        "xml",
+        "flusso",
+        "preview",
+        "commit",
+        "due-fasi",
+        "dry-run",
+        "sicurezza",
+        "no-sorprese"
+      ],
+      "domanda_naturale": "Come funziona il flusso di import? Cosa succede prima e dopo il click?"
+    },
+    {
+      "id": "import.file-xml-requisiti",
+      "file": "14-import-xml.yaml",
+      "titolo": "Cosa deve contenere il file XML per essere letto correttamente",
+      "modulo": "Import XML",
+      "livello": "intermedio",
+      "tags": [
+        "import",
+        "xml",
+        "file",
+        "requisiti",
+        "struttura",
+        "tag",
+        "riferimento",
+        "citta",
+        "titolo",
+        "encoding"
+      ],
+      "domanda_naturale": "Che formato deve avere il file XML? Quali tag servono?"
+    },
+    {
+      "id": "import.mapping-tabelle",
+      "file": "14-import-xml.yaml",
+      "titolo": "Tabelle di mapping - codici tipologia, energia, contratto",
+      "modulo": "Import XML",
+      "livello": "intermedio",
+      "tags": [
+        "import",
+        "xml",
+        "mapping",
+        "tipologia",
+        "codice-tipologia",
+        "energia",
+        "classe-energetica",
+        "contratto",
+        "operation",
+        "features",
+        "keyword"
+      ],
+      "domanda_naturale": "Come vengono tradotti i codici numerici del vecchio gestionale in tipi OMNIA?"
+    },
+    {
+      "id": "import.dedupe",
+      "file": "14-import-xml.yaml",
+      "titolo": "Dedupe per reference_code - evitare doppioni",
+      "modulo": "Import XML",
+      "livello": "base",
+      "tags": [
+        "import",
+        "xml",
+        "dedupe",
+        "deduplica",
+        "doppioni",
+        "reference-code",
+        "riferimento",
+        "skip-duplicates"
+      ],
+      "domanda_naturale": "Come evito di importare due volte lo stesso immobile?"
+    },
+    {
+      "id": "import.simulazione-dry-run",
+      "file": "14-import-xml.yaml",
+      "titolo": "Simulazione dry-run - contare senza scrivere",
+      "modulo": "Import XML",
+      "livello": "base",
+      "tags": [
+        "import",
+        "xml",
+        "simulazione",
+        "dry-run",
+        "prova",
+        "nessuna-scrittura",
+        "count"
+      ],
+      "domanda_naturale": "Posso vedere quanti immobili sarebbero inseriti senza fare l'import vero?"
+    },
+    {
+      "id": "import.divergenze",
+      "file": "14-import-xml.yaml",
+      "titolo": "Cosa sono le divergenze e come leggerle",
+      "modulo": "Import XML",
+      "livello": "intermedio",
+      "tags": [
+        "import",
+        "xml",
+        "divergenze",
+        "divergences",
+        "scartati",
+        "warning",
+        "campanelli-allarme",
+        "audit"
+      ],
+      "domanda_naturale": "Che sono le 'divergenze rilevate' nella preview?"
+    },
+    {
+      "id": "import.risultato-commit",
+      "file": "14-import-xml.yaml",
+      "titolo": "Cosa succede dopo il commit - stato immobili importati",
+      "modulo": "Import XML",
+      "livello": "base",
+      "tags": [
+        "import",
+        "xml",
+        "commit",
+        "risultato",
+        "immobili-importati",
+        "moderation",
+        "visibility",
+        "agent-id"
+      ],
+      "domanda_naturale": "Cosa succede agli immobili appena importati? Sono subito visibili?"
+    },
+    {
+      "id": "import.errori",
+      "file": "14-import-xml.yaml",
+      "titolo": "Errori comuni Import XML",
+      "modulo": "Import XML",
+      "livello": "base",
+      "tags": [
+        "import",
+        "xml",
+        "errori",
+        "troubleshooting",
+        "file-must-be-xml",
+        "file-too-large",
+        "session-not-found",
+        "no-property-records",
+        "400",
+        "413",
+        "422",
+        "404",
+        "403"
+      ],
+      "domanda_naturale": "Perche' l'import non funziona? Codici errore comuni"
+    },
+    {
+      "id": "import.limitazioni-v1",
+      "file": "14-import-xml.yaml",
+      "titolo": "Limiti v1 di Import XML (D-051 onesto)",
+      "modulo": "Import XML",
+      "livello": "intermedio",
+      "tags": [
+        "import",
+        "xml",
+        "limiti",
+        "cosa-non-fa",
+        "csv",
+        "json",
+        "sync",
+        "wizard",
+        "rollback",
+        "session-in-memory",
+        "agent-id",
+        "storico",
+        "d-051"
+      ],
+      "domanda_naturale": "Cosa NON fa Import XML? Posso usarlo per CSV o sync automatica?"
+    },
+    {
+      "id": "import.checklist-migrazione",
+      "file": "14-import-xml.yaml",
+      "titolo": "Checklist migrazione da altro gestionale",
+      "modulo": "Import XML",
+      "livello": "base",
+      "tags": [
+        "import",
+        "xml",
+        "checklist",
+        "migrazione",
+        "procedura",
+        "step-by-step",
+        "best-practice"
+      ],
+      "domanda_naturale": "Come faccio una migrazione completa? Procedura passo-passo"
+    },
+    {
+      "id": "import.collegamenti",
+      "file": "14-import-xml.yaml",
+      "titolo": "Collegamenti fra Import XML e altri moduli",
+      "modulo": "Import XML",
+      "livello": "base",
+      "tags": [
+        "import",
+        "xml",
+        "cross-ref",
+        "immobili",
+        "clienti",
+        "portali",
+        "hal-knowledge",
+        "team"
+      ],
+      "domanda_naturale": "Che rapporto c'e' fra Import XML e gli altri moduli OMNIA?"
+    },
+    {
+      "id": "social.cos-e",
+      "file": "15-social-publisher.yaml",
+      "titolo": "Cos'è il Social Publisher (pubblicazione su FB, IG, Telegram)",
+      "modulo": "Social Publisher",
+      "livello": "base",
+      "tags": [
+        "social",
+        "publisher",
+        "facebook",
+        "instagram",
+        "telegram",
+        "panoramica",
+        "primi-passi",
+        "marketing",
+        "white-label",
+        "d-041"
+      ],
+      "domanda_naturale": "Cos'è il Social Publisher? A cosa serve?"
+    },
+    {
+      "id": "social.dove-trovarlo",
+      "file": "15-social-publisher.yaml",
+      "titolo": "Dove trovare Social Publisher in ImmoWeb",
+      "modulo": "Social Publisher",
+      "livello": "base",
+      "tags": [
+        "social",
+        "publisher",
+        "dove-si-trova",
+        "sidebar",
+        "navigazione",
+        "route"
+      ],
+      "domanda_naturale": "Dove trovo Social Publisher? Come ci accedo?"
+    },
+    {
+      "id": "social.canali-supportati",
+      "file": "15-social-publisher.yaml",
+      "titolo": "Quali canali social sono supportati (FB Page, IG Business, Telegram)",
+      "modulo": "Social Publisher",
+      "livello": "base",
+      "tags": [
+        "social",
+        "canali",
+        "facebook-page",
+        "instagram-business",
+        "telegram",
+        "meta-graph",
+        "bot-api",
+        "twitter",
+        "tiktok",
+        "linkedin",
+        "limitazioni"
+      ],
+      "domanda_naturale": "Su quali social posso pubblicare? Ci sono X/Twitter, TikTok o LinkedIn?"
+    },
+    {
+      "id": "social.credenziali-facebook",
+      "file": "15-social-publisher.yaml",
+      "titolo": "Come ottengo le credenziali Facebook Page",
+      "modulo": "Social Publisher",
+      "livello": "intermedio",
+      "tags": [
+        "social",
+        "facebook",
+        "credenziali",
+        "page-id",
+        "access-token",
+        "meta-business",
+        "graph-explorer",
+        "long-lived"
+      ],
+      "domanda_naturale": "Come ottengo il page_id e l'access_token di Facebook?"
+    },
+    {
+      "id": "social.credenziali-instagram",
+      "file": "15-social-publisher.yaml",
+      "titolo": "Come ottengo le credenziali Instagram Business",
+      "modulo": "Social Publisher",
+      "livello": "intermedio",
+      "tags": [
+        "social",
+        "instagram",
+        "credenziali",
+        "ig-user-id",
+        "access-token",
+        "business",
+        "collegato-pagina",
+        "https"
+      ],
+      "domanda_naturale": "Come ottengo l'ig_user_id di Instagram Business?"
+    },
+    {
+      "id": "social.credenziali-telegram",
+      "file": "15-social-publisher.yaml",
+      "titolo": "Come ottengo le credenziali Telegram (bot_token + chat_id)",
+      "modulo": "Social Publisher",
+      "livello": "intermedio",
+      "tags": [
+        "social",
+        "telegram",
+        "credenziali",
+        "bot-token",
+        "chat-id",
+        "botfather",
+        "canale",
+        "admin",
+        "userinfobot"
+      ],
+      "domanda_naturale": "Come creo il bot Telegram? Come trovo il chat_id del canale?"
+    },
+    {
+      "id": "social.configurare-canale",
+      "file": "15-social-publisher.yaml",
+      "titolo": "Configurare un canale social (self-service, 3 step)",
+      "modulo": "Social Publisher",
+      "livello": "base",
+      "tags": [
+        "social",
+        "configurare",
+        "self-service",
+        "canale",
+        "modale",
+        "credenziali",
+        "cifrate",
+        "aes-gcm",
+        "sicurezza"
+      ],
+      "domanda_naturale": "Come configuro un canale social su OMNIA?"
+    },
+    {
+      "id": "social.validare-canale",
+      "file": "15-social-publisher.yaml",
+      "titolo": "Validare un canale (test di connessione live)",
+      "modulo": "Social Publisher",
+      "livello": "base",
+      "tags": [
+        "social",
+        "validare",
+        "validation",
+        "test-connessione",
+        "live",
+        "display-name",
+        "status",
+        "error",
+        "meta",
+        "telegram"
+      ],
+      "domanda_naturale": "Come verifico che le credenziali social funzionano davvero?"
+    },
+    {
+      "id": "social.pubblicare-immobile",
+      "file": "15-social-publisher.yaml",
+      "titolo": "Pubblicare un immobile sui social (on-demand multi-canale)",
+      "modulo": "Social Publisher",
+      "livello": "base",
+      "tags": [
+        "social",
+        "pubblicare",
+        "publish",
+        "immobile",
+        "on-demand",
+        "multi-canale",
+        "caption",
+        "image-url",
+        "external-id"
+      ],
+      "domanda_naturale": "Come pubblico un immobile su Facebook e Instagram con un click?"
+    },
+    {
+      "id": "social.caption-default",
+      "file": "15-social-publisher.yaml",
+      "titolo": "La caption automatica di default (dai dati immobile)",
+      "modulo": "Social Publisher",
+      "livello": "base",
+      "tags": [
+        "social",
+        "caption",
+        "didascalia",
+        "default",
+        "auto-generata",
+        "emoji",
+        "titolo",
+        "prezzo",
+        "citta",
+        "mq",
+        "descrizione"
+      ],
+      "domanda_naturale": "Come viene creata la caption automatica del post?"
+    },
+    {
+      "id": "social.audit-log",
+      "file": "15-social-publisher.yaml",
+      "titolo": "Audit log dei post social (collezione social_posts)",
+      "modulo": "Social Publisher",
+      "livello": "intermedio",
+      "tags": [
+        "social",
+        "audit",
+        "log",
+        "social-posts",
+        "storico",
+        "external-id",
+        "tracciabilita",
+        "counter"
+      ],
+      "domanda_naturale": "Dove vedo lo storico dei post pubblicati? Come traccio i fallimenti?"
+    },
+    {
+      "id": "social.errori",
+      "file": "15-social-publisher.yaml",
+      "titolo": "Errori comuni Social Publisher e come risolverli",
+      "modulo": "Social Publisher",
+      "livello": "intermedio",
+      "tags": [
+        "social",
+        "errori",
+        "troubleshooting",
+        "meta-error",
+        "telegram-error",
+        "422",
+        "409",
+        "502",
+        "404",
+        "page-id-mismatch",
+        "instagram-requires-image"
+      ],
+      "domanda_naturale": "Perche' il post non parte? Codici errore comuni"
+    },
+    {
+      "id": "social.limitazioni-v1",
+      "file": "15-social-publisher.yaml",
+      "titolo": "Limiti v1 di Social Publisher (D-051 onesto)",
+      "modulo": "Social Publisher",
+      "livello": "intermedio",
+      "tags": [
+        "social",
+        "limiti",
+        "cosa-non-fa",
+        "scheduling",
+        "carosello",
+        "video",
+        "reel",
+        "analytics",
+        "engagement",
+        "twitter",
+        "tiktok",
+        "linkedin",
+        "bulk",
+        "template",
+        "moderazione",
+        "d-051"
+      ],
+      "domanda_naturale": "Cosa NON fa il Social Publisher v1? Il Social Publisher supporta scheduling, analytics, LinkedIn, TikTok o X/Twitter? Il modulo Social Publisher ha calendario editoriale / programmazione futura, LinkedIn, TikTok, X/Twitter, WhatsApp Business, YouTube Shorts, Threads, carosello multi-immagine, video, reel, story, GIF, analytics engagement (like, commenti, share, reach, impressioni), bulk publish, template caption personalizzati, preview live, moderazione pre-pubblicazione, rollback multi-canale?"
+    },
+    {
+      "id": "social.collegamenti",
+      "file": "15-social-publisher.yaml",
+      "titolo": "Collegamenti fra Social Publisher e altri moduli",
+      "modulo": "Social Publisher",
+      "livello": "base",
+      "tags": [
+        "social",
+        "cross-ref",
+        "immobili",
+        "portali",
+        "publishing",
+        "sito-web",
+        "hal-knowledge",
+        "team",
+        "distinzione"
+      ],
+      "domanda_naturale": "Che rapporto c'e' fra Social Publisher, Portali e Sito web?"
+    },
+    {
+      "id": "compliance.panoramica-validatore",
+      "file": "16-compliance-portali.yaml",
+      "titolo": "Cos'è il Compliance Validator (HARD e SOFT)",
+      "modulo": "Compliance Portali",
+      "livello": "base",
+      "tags": [
+        "compliance",
+        "validatore",
+        "hard",
+        "soft",
+        "portali",
+        "normativa",
+        "ape",
+        "agcm",
+        "publishable",
+        "panoramica"
+      ],
+      "domanda_naturale": "Cos'è il Compliance Validator? A cosa serve?"
+    },
+    {
+      "id": "compliance.hard-prezzo-canone",
+      "file": "16-compliance-portali.yaml",
+      "titolo": "HARD prezzo/canone - sale vs rent vs prezzo su richiesta",
+      "modulo": "Compliance Portali",
+      "livello": "intermedio",
+      "tags": [
+        "compliance",
+        "hard",
+        "prezzo",
+        "canone",
+        "missing-price",
+        "missing-rent",
+        "sale",
+        "rent",
+        "auction",
+        "price-on-request",
+        "affitto",
+        "vendita",
+        "agcm"
+      ],
+      "domanda_naturale": "Perché il mio immobile in affitto risulta 'prezzo mancante'?"
+    },
+    {
+      "id": "compliance.hard-superficie",
+      "file": "16-compliance-portali.yaml",
+      "titolo": "HARD superficie - missing_surface",
+      "modulo": "Compliance Portali",
+      "livello": "base",
+      "tags": [
+        "compliance",
+        "hard",
+        "superficie",
+        "mq",
+        "surface-sqm",
+        "missing-surface"
+      ],
+      "domanda_naturale": "Come indico la superficie in mq per la compliance?"
+    },
+    {
+      "id": "compliance.hard-ape-classi-ammesse",
+      "file": "16-compliance-portali.yaml",
+      "titolo": "HARD APE - le 14 classi energetiche ammesse",
+      "modulo": "Compliance Portali",
+      "livello": "intermedio",
+      "tags": [
+        "compliance",
+        "hard",
+        "ape",
+        "energy",
+        "classe-energetica",
+        "missing-energy-class",
+        "invalid-energy-class",
+        "d-lgs-192-2005",
+        "esente",
+        "exempt"
+      ],
+      "domanda_naturale": "Quali classi energetiche APE sono accettate?"
+    },
+    {
+      "id": "compliance.hard-foto-minimo",
+      "file": "16-compliance-portali.yaml",
+      "titolo": "HARD foto - less_than_3_photos e no_valid_photo_url",
+      "modulo": "Compliance Portali",
+      "livello": "base",
+      "tags": [
+        "compliance",
+        "hard",
+        "foto",
+        "photos",
+        "less-than-3-photos",
+        "no-valid-photo-url",
+        "min-photos",
+        "standard-portali"
+      ],
+      "domanda_naturale": "Perché serve un minimo di 3 foto? Cosa differenzia i due codici foto?"
+    },
+    {
+      "id": "compliance.hard-indirizzo",
+      "file": "16-compliance-portali.yaml",
+      "titolo": "HARD indirizzo - missing_address (city + province)",
+      "modulo": "Compliance Portali",
+      "livello": "base",
+      "tags": [
+        "compliance",
+        "hard",
+        "indirizzo",
+        "address",
+        "city",
+        "province",
+        "missing-address"
+      ],
+      "domanda_naturale": "Quali dati indirizzo sono obbligatori per pubblicare?"
+    },
+    {
+      "id": "compliance.soft-warning-qualita",
+      "file": "16-compliance-portali.yaml",
+      "titolo": "Le 4 regole SOFT (warning di qualità, non bloccano)",
+      "modulo": "Compliance Portali",
+      "livello": "base",
+      "tags": [
+        "compliance",
+        "soft",
+        "warning",
+        "title-too-short",
+        "description-too-short",
+        "rooms-not-specified",
+        "ipe-missing",
+        "qualita"
+      ],
+      "domanda_naturale": "Differenza fra violazione HARD e warning SOFT?"
+    },
+    {
+      "id": "compliance.mapping-campi-immobile",
+      "file": "16-compliance-portali.yaml",
+      "titolo": "Mapping campi immobile → regola compliance (dove correggere)",
+      "modulo": "Compliance Portali",
+      "livello": "intermedio",
+      "tags": [
+        "compliance",
+        "mapping",
+        "campi",
+        "immobile",
+        "correggere",
+        "scheda-immobile",
+        "cross-ref-cap-3"
+      ],
+      "domanda_naturale": "Quali campi devo compilare per passare compliance HARD?"
+    },
+    {
+      "id": "compliance.feed-vs-sync",
+      "file": "16-compliance-portali.yaml",
+      "titolo": "Dove interviene il validatore - feed pubblico vs sync portale",
+      "modulo": "Compliance Portali",
+      "livello": "intermedio",
+      "tags": [
+        "compliance",
+        "feed",
+        "sync",
+        "publishing",
+        "sync-engine",
+        "pull",
+        "push",
+        "api-push",
+        "blocked-by-compliance",
+        "simulated-push"
+      ],
+      "domanda_naturale": "Il validatore filtra sul feed pubblico o sul sync ai portali?"
+    },
+    {
+      "id": "compliance.privacy-non-in-feed",
+      "file": "16-compliance-portali.yaml",
+      "titolo": "Privacy L3/L4 esclusi dal feed pubblico (indipendentemente da compliance)",
+      "modulo": "Compliance Portali",
+      "livello": "base",
+      "tags": [
+        "compliance",
+        "privacy",
+        "l3",
+        "l4",
+        "riservato",
+        "off-market",
+        "is-private-listing",
+        "visibility",
+        "esclusione",
+        "cross-ref-cap-3"
+      ],
+      "domanda_naturale": "Un immobile compliance-clean può comunque non finire sui portali?"
+    },
+    {
+      "id": "compliance.affitto-vs-vendita",
+      "file": "16-compliance-portali.yaml",
+      "titolo": "Perché un affitto risulta \"prezzo mancante\" (missing_price ghost label)",
+      "modulo": "Compliance Portali",
+      "livello": "intermedio",
+      "tags": [
+        "compliance",
+        "affitto",
+        "rent",
+        "vendita",
+        "sale",
+        "missing-price",
+        "missing-rent",
+        "ghost-label",
+        "onestà",
+        "d-051"
+      ],
+      "domanda_naturale": "Ho un affitto senza canone e vedo 'Prezzo mancante' invece di 'Canone mensile mancante'"
+    },
+    {
+      "id": "compliance.codici-violazione",
+      "file": "16-compliance-portali.yaml",
+      "titolo": "Elenco completo dei 7 codici HARD + 4 SOFT",
+      "modulo": "Compliance Portali",
+      "livello": "intermedio",
+      "tags": [
+        "compliance",
+        "codici",
+        "violazione",
+        "elenco",
+        "riferimento",
+        "hard",
+        "soft",
+        "cheatsheet"
+      ],
+      "domanda_naturale": "Quali sono tutti i codici di violazione compliance possibili?"
+    },
+    {
+      "id": "compliance.correggere-da-modale",
+      "file": "16-compliance-portali.yaml",
+      "titolo": "Come si legge e usa la modale compliance",
+      "modulo": "Compliance Portali",
+      "livello": "base",
+      "tags": [
+        "compliance",
+        "modale",
+        "ui",
+        "publishing-page",
+        "portal-compliance-modal",
+        "immobili-bloccati",
+        "metrics"
+      ],
+      "domanda_naturale": "Come apro e leggo la modale compliance in UI?"
+    },
+    {
+      "id": "compliance.limitazioni-v1",
+      "file": "16-compliance-portali.yaml",
+      "titolo": "Limiti v1 del Compliance Validator (D-051 onesto)",
+      "modulo": "Compliance Portali",
+      "livello": "intermedio",
+      "tags": [
+        "compliance",
+        "limiti",
+        "cosa-non-fa",
+        "ghost-label",
+        "sync-log",
+        "api-push",
+        "simulated",
+        "missing-rent",
+        "correggi",
+        "hardcoded",
+        "audit-trail",
+        "d-051"
+      ],
+      "domanda_naturale": "Cosa NON fa il Compliance Validator in v1?"
+    },
+    {
+      "id": "domain.cos-e",
+      "file": "17-domain-vault.yaml",
+      "titolo": "Cos'è il Domain Vault (sovranità digitale)",
+      "modulo": "Domain Vault",
+      "livello": "base",
+      "tags": [
+        "domain",
+        "vault",
+        "sovranita",
+        "d-054",
+        "panoramica",
+        "promise",
+        "dominio",
+        "registrar"
+      ],
+      "domanda_naturale": "Cos'è il Domain Vault? A cosa serve?"
+    },
+    {
+      "id": "domain.d-054-promise",
+      "file": "17-domain-vault.yaml",
+      "titolo": "La promessa D-054 · OMNIA non registra mai domini a nome suo",
+      "modulo": "Domain Vault",
+      "livello": "base",
+      "tags": [
+        "domain",
+        "d-054",
+        "promise",
+        "sovranita",
+        "contrattuale",
+        "lock-in",
+        "portabilita",
+        "gdpr",
+        "icann"
+      ],
+      "domanda_naturale": "OMNIA registra il mio dominio? Chi ne è proprietario?"
+    },
+    {
+      "id": "domain.componenti",
+      "file": "17-domain-vault.yaml",
+      "titolo": "I 3 componenti del Domain Vault (Confirm, Custom Domain, Checker)",
+      "modulo": "Domain Vault",
+      "livello": "intermedio",
+      "tags": [
+        "domain",
+        "componenti",
+        "architettura",
+        "domain-vault",
+        "custom-domain",
+        "domain-check",
+        "rdap",
+        "dns"
+      ],
+      "domanda_naturale": "Da cosa è composto il Domain Vault backend?"
+    },
+    {
+      "id": "domain.dove-trovarlo",
+      "file": "17-domain-vault.yaml",
+      "titolo": "Dove trovare il Domain Vault in ImmoWeb",
+      "modulo": "Domain Vault",
+      "livello": "base",
+      "tags": [
+        "domain",
+        "dove-si-trova",
+        "sidebar",
+        "impostazioni",
+        "navigazione"
+      ],
+      "domanda_naturale": "Dove trovo il Domain Vault? Come ci accedo?"
+    },
+    {
+      "id": "domain.sovereignty-confirm",
+      "file": "17-domain-vault.yaml",
+      "titolo": "Confermare la Domain Sovereignty (POST /me/domain-sovereignty)",
+      "modulo": "Domain Vault",
+      "livello": "base",
+      "tags": [
+        "domain",
+        "sovereignty",
+        "confirm",
+        "idempotente",
+        "existing-domain",
+        "audit",
+        "timestamp"
+      ],
+      "domanda_naturale": "Come confermo la Domain Sovereignty Policy?"
+    },
+    {
+      "id": "domain.help-to-connect",
+      "file": "17-domain-vault.yaml",
+      "titolo": "Help-to-connect è NON è un transfer di ownership",
+      "modulo": "Domain Vault",
+      "livello": "intermedio",
+      "tags": [
+        "domain",
+        "help-to-connect",
+        "transfer",
+        "ownership",
+        "registrar",
+        "credenziali",
+        "lock-in",
+        "d-054",
+        "onestà"
+      ],
+      "domanda_naturale": "Se dichiaro il mio dominio, OMNIA ne diventa proprietaria?"
+    },
+    {
+      "id": "domain.custom-domain-flow",
+      "file": "17-domain-vault.yaml",
+      "titolo": "Custom Domain · flusso DNS verification (TXT + CNAME)",
+      "modulo": "Domain Vault",
+      "livello": "intermedio",
+      "tags": [
+        "domain",
+        "custom-domain",
+        "dns",
+        "txt",
+        "cname",
+        "verification",
+        "pending",
+        "verified",
+        "apex",
+        "alias",
+        "aname"
+      ],
+      "domanda_naturale": "Come collego il mio dominio al sito OMNIA?"
+    },
+    {
+      "id": "domain.txt-record-anti-takeover",
+      "file": "17-domain-vault.yaml",
+      "titolo": "Perché il record TXT (_omnia-challenge) previene i takeover",
+      "modulo": "Domain Vault",
+      "livello": "intermedio",
+      "tags": [
+        "domain",
+        "txt",
+        "anti-takeover",
+        "ownership",
+        "challenge",
+        "dns",
+        "sicurezza"
+      ],
+      "domanda_naturale": "A cosa serve il record TXT _omnia-challenge?"
+    },
+    {
+      "id": "domain.cname-target",
+      "file": "17-domain-vault.yaml",
+      "titolo": "CNAME target OMNIA · dove punto il mio dominio",
+      "modulo": "Domain Vault",
+      "livello": "base",
+      "tags": [
+        "domain",
+        "cname",
+        "target",
+        "env",
+        "edge",
+        "alias",
+        "aname",
+        "apex",
+        "www"
+      ],
+      "domanda_naturale": "Qual è il CNAME target di OMNIA a cui devo puntare?"
+    },
+    {
+      "id": "domain.domain-checker-pubblico",
+      "file": "17-domain-vault.yaml",
+      "titolo": "Domain Checker pubblico (RDAP pre-signup)",
+      "modulo": "Domain Vault",
+      "livello": "base",
+      "tags": [
+        "domain",
+        "checker",
+        "rdap",
+        "pubblico",
+        "pre-signup",
+        "verifica-dominio",
+        "no-login",
+        "lead"
+      ],
+      "domanda_naturale": "Come verifico chi possiede un dominio prima di iscrivermi a OMNIA?"
+    },
+    {
+      "id": "domain.rdap-vs-whois",
+      "file": "17-domain-vault.yaml",
+      "titolo": "RDAP vs WHOIS · perché OMNIA usa RDAP",
+      "modulo": "Domain Vault",
+      "livello": "intermedio",
+      "tags": [
+        "domain",
+        "rdap",
+        "whois",
+        "gdpr",
+        "redacted",
+        "privacy-proxy",
+        "registrant",
+        "protocol"
+      ],
+      "domanda_naturale": "Che differenza c'è fra RDAP e WHOIS?"
+    },
+    {
+      "id": "domain.audit-trail",
+      "file": "17-domain-vault.yaml",
+      "titolo": "Audit trail append-only (domain_vault_events)",
+      "modulo": "Domain Vault",
+      "livello": "intermedio",
+      "tags": [
+        "domain",
+        "audit",
+        "trail",
+        "append-only",
+        "domain-vault-events",
+        "sicurezza",
+        "dispute",
+        "gdpr"
+      ],
+      "domanda_naturale": "Dove sono registrate le conferme Domain Vault?"
+    },
+    {
+      "id": "domain.errori-comuni",
+      "file": "17-domain-vault.yaml",
+      "titolo": "Errori comuni Domain Vault",
+      "modulo": "Domain Vault",
+      "livello": "base",
+      "tags": [
+        "domain",
+        "errori",
+        "troubleshooting",
+        "invalid-domain",
+        "no-agency",
+        "dns",
+        "rate-limit",
+        "txt",
+        "cname"
+      ],
+      "domanda_naturale": "Perché il collegamento del dominio non funziona?"
+    },
+    {
+      "id": "domain.limitazioni-v1",
+      "file": "17-domain-vault.yaml",
+      "titolo": "Limiti v1 Domain Vault (D-051 onesto)",
+      "modulo": "Domain Vault",
+      "livello": "intermedio",
+      "tags": [
+        "domain",
+        "limiti",
+        "cosa-non-fa",
+        "registrar",
+        "whois",
+        "multi-dominio",
+        "ssl",
+        "notifiche",
+        "cname-target",
+        "d-051"
+      ],
+      "domanda_naturale": "Cosa NON fa il Domain Vault in v1?"
+    },
+    {
+      "id": "domain.collegamenti",
+      "file": "17-domain-vault.yaml",
+      "titolo": "Collegamenti fra Domain Vault e altri moduli",
+      "modulo": "Domain Vault",
+      "livello": "base",
+      "tags": [
+        "domain",
+        "cross-ref",
+        "portali",
+        "sito",
+        "team",
+        "hal-knowledge",
+        "social"
+      ],
+      "domanda_naturale": "Come si intreccia il Domain Vault con gli altri moduli?"
+    },
+    {
+      "id": "notifiche.cos-e",
+      "file": "18-notifiche-attivita.yaml",
+      "titolo": "Cos'è \"Notifiche e attività\" in OMNIA v1",
+      "modulo": "Notifiche",
+      "livello": "base",
+      "tags": [
+        "notifiche",
+        "attivita",
+        "panoramica",
+        "d-051",
+        "onesta-documentale",
+        "cosa-non-fa"
+      ],
+      "domanda_naturale": "Cos'è il modulo Notifiche di OMNIA? C'è un centro notifiche in-app? Esiste una campanella? OMNIA ha un feed attività recenti?"
+    },
+    {
+      "id": "notifiche.dove-trovarlo",
+      "file": "18-notifiche-attivita.yaml",
+      "titolo": "Dove trovo le notifiche in OMNIA",
+      "modulo": "Notifiche",
+      "livello": "base",
+      "tags": [
+        "notifiche",
+        "dove-trovarlo",
+        "ui-ux",
+        "nessuna-pagina",
+        "casella-email"
+      ],
+      "domanda_naturale": "Dove trovo la pagina Notifiche in OMNIA? Come vedo le notifiche non lette?"
+    },
+    {
+      "id": "notifiche.canali-attivi",
+      "file": "18-notifiche-attivita.yaml",
+      "titolo": "Canali di notifica attivi v1 (email + toast · NO push/SMS/WhatsApp)",
+      "modulo": "Notifiche",
+      "livello": "base",
+      "tags": [
+        "notifiche",
+        "canali",
+        "email",
+        "toast",
+        "push",
+        "sms",
+        "whatsapp",
+        "dead-code",
+        "d-051"
+      ],
+      "domanda_naturale": "Su quali canali OMNIA invia notifiche? Esiste push mobile, SMS o WhatsApp?"
+    },
+    {
+      "id": "notifiche.email-panoramica",
+      "file": "18-notifiche-attivita.yaml",
+      "titolo": "Email transazionali · 7 template Resend (welcome, password_reset, agency_invite, lead_notification, saved_search_alert, founders_welcome, founders_admin_notification)",
+      "modulo": "Notifiche",
+      "livello": "intermedio",
+      "tags": [
+        "notifiche",
+        "email",
+        "resend",
+        "template",
+        "transazionali",
+        "multilingua",
+        "mock-mode",
+        "d-051"
+      ],
+      "domanda_naturale": "Quali email invia OMNIA automaticamente? Che template esistono? Come funziona il mock mode?"
+    },
+    {
+      "id": "notifiche.template-welcome-password",
+      "file": "18-notifiche-attivita.yaml",
+      "titolo": "Template welcome + password_reset (Cap. 1 auth)",
+      "modulo": "Notifiche",
+      "livello": "intermedio",
+      "tags": [
+        "notifiche",
+        "email",
+        "welcome",
+        "password-reset",
+        "registrazione",
+        "auth",
+        "cap1"
+      ],
+      "domanda_naturale": "Quando arriva l'email di benvenuto? Come funziona il reset password via email?"
+    },
+    {
+      "id": "notifiche.template-agency-invite",
+      "file": "18-notifiche-attivita.yaml",
+      "titolo": "Template agency_invite (Cap. 13 team · magic-link 7 giorni)",
+      "modulo": "Notifiche",
+      "livello": "intermedio",
+      "tags": [
+        "notifiche",
+        "email",
+        "agency-invite",
+        "team",
+        "collaboratori",
+        "magic-link",
+        "cap13"
+      ],
+      "domanda_naturale": "Come arriva l'invito email quando aggiungo un collaboratore in agenzia?"
+    },
+    {
+      "id": "notifiche.template-lead-notification",
+      "file": "18-notifiche-attivita.yaml",
+      "titolo": "Template lead_notification (portale pubblico → agente)",
+      "modulo": "Notifiche",
+      "livello": "intermedio",
+      "tags": [
+        "notifiche",
+        "email",
+        "lead-notification",
+        "portale-pubblico",
+        "contatti",
+        "b2c",
+        "immobilcloud"
+      ],
+      "domanda_naturale": "Come mi arriva la notifica quando un visitatore lascia un contatto su un mio immobile?"
+    },
+    {
+      "id": "notifiche.template-saved-search-alert",
+      "file": "18-notifiche-attivita.yaml",
+      "titolo": "Template saved_search_alert (B2C ImmobilCloud · digest HTML max 6 righe)",
+      "modulo": "Notifiche",
+      "livello": "intermedio",
+      "tags": [
+        "notifiche",
+        "email",
+        "saved-search",
+        "digest",
+        "b2c",
+        "immobilcloud",
+        "cron",
+        "frequenza"
+      ],
+      "domanda_naturale": "Come funziona l'email di alert per le ricerche salvate su ImmobilCloud?"
+    },
+    {
+      "id": "notifiche.toast-in-app",
+      "file": "18-notifiche-attivita.yaml",
+      "titolo": "Toast in-app (feedback immediato azione utente via sonner)",
+      "modulo": "Notifiche",
+      "livello": "base",
+      "tags": [
+        "notifiche",
+        "toast",
+        "sonner",
+        "in-app",
+        "feedback",
+        "ui",
+        "ephemera"
+      ],
+      "domanda_naturale": "Cosa sono i toast in OMNIA? Perche' spariscono cosi' velocemente?"
+    },
+    {
+      "id": "notifiche.cron-saved-searches",
+      "file": "18-notifiche-attivita.yaml",
+      "titolo": "Cron saved-searches (super_admin trigger manuale · no scheduler interno)",
+      "modulo": "Notifiche",
+      "livello": "avanzato",
+      "tags": [
+        "notifiche",
+        "cron",
+        "saved-search",
+        "super-admin",
+        "scheduler",
+        "apscheduler",
+        "digest",
+        "b2c"
+      ],
+      "domanda_naturale": "Come lancio il cron delle ricerche salvate B2C? Parte da solo?"
+    },
+    {
+      "id": "notifiche.preferenze-utente",
+      "file": "18-notifiche-attivita.yaml",
+      "titolo": "Preferenze utente notifiche (schema email/push vs realta' v1 · push dead code)",
+      "modulo": "Notifiche",
+      "livello": "intermedio",
+      "tags": [
+        "notifiche",
+        "preferenze",
+        "notification-channels",
+        "opt-in",
+        "opt-out",
+        "push",
+        "dead-code",
+        "d-051"
+      ],
+      "domanda_naturale": "Come cambio le preferenze notifiche? Posso disattivare specifici tipi di email?"
+    },
+    {
+      "id": "notifiche.audit-trail-interno",
+      "file": "18-notifiche-attivita.yaml",
+      "titolo": "Audit trail interno · ~10 collezioni Mongo append-only (non-UI)",
+      "modulo": "Notifiche",
+      "livello": "avanzato",
+      "tags": [
+        "attivita",
+        "audit",
+        "mongo",
+        "collezioni",
+        "log",
+        "compliance",
+        "gdpr",
+        "retention",
+        "super-admin"
+      ],
+      "domanda_naturale": "Dove si vedono gli storici delle azioni in OMNIA? C'e' un log attivita' consultabile?"
+    },
+    {
+      "id": "notifiche.dashboard-vs-activity-feed",
+      "file": "18-notifiche-attivita.yaml",
+      "titolo": "Dashboard KPI counters vs Activity feed (chiarimento D-051)",
+      "modulo": "Notifiche",
+      "livello": "base",
+      "tags": [
+        "attivita",
+        "dashboard",
+        "kpi",
+        "counters",
+        "activity-feed",
+        "onesta",
+        "d-051",
+        "no-timeline"
+      ],
+      "domanda_naturale": "La Dashboard mostra le attivita' recenti? C'e' una timeline di quello che succede?"
+    },
+    {
+      "id": "notifiche.errori-comuni",
+      "file": "18-notifiche-attivita.yaml",
+      "titolo": "Errori comuni notifiche (email mock, template variabili, cron non lanciato)",
+      "modulo": "Notifiche",
+      "livello": "intermedio",
+      "tags": [
+        "notifiche",
+        "errori",
+        "debug",
+        "email-mock",
+        "resend",
+        "template",
+        "cron",
+        "troubleshooting"
+      ],
+      "domanda_naturale": "Perche' non ricevo le email di OMNIA? Come debuggo problemi con le notifiche?"
+    },
+    {
+      "id": "notifiche.limitazioni-v1",
+      "file": "18-notifiche-attivita.yaml",
+      "titolo": "Limiti v1 Notifiche e attivita' (D-051 onesto · elenco esaustivo)",
+      "modulo": "Notifiche",
+      "livello": "intermedio",
+      "tags": [
+        "notifiche",
+        "attivita",
+        "limiti",
+        "cosa-non-fa",
+        "no-bell",
+        "no-activity-feed",
+        "no-push",
+        "no-sms",
+        "no-whatsapp",
+        "no-preferenze-ui",
+        "no-retry",
+        "no-webhook",
+        "onesta",
+        "d-051"
+      ],
+      "domanda_naturale": "Cosa NON fa il modulo Notifiche v1? OMNIA ha campanella, unread badge, push mobile, SMS, WhatsApp, digest quotidiana, preferenze granulari, moderazione, retry queue, tracking delivery, opt-in per tipo email?"
+    },
+    {
+      "id": "notifiche.collegamenti",
+      "file": "18-notifiche-attivita.yaml",
+      "titolo": "Collegamenti Notifiche → altri moduli (Cap. 1/13/6/10/12/15/17)",
+      "modulo": "Notifiche",
+      "livello": "base",
+      "tags": [
+        "notifiche",
+        "collegamenti",
+        "cross-ref",
+        "cap1",
+        "cap5",
+        "cap6",
+        "cap10",
+        "cap12",
+        "cap13",
+        "cap15",
+        "cap17"
+      ],
+      "domanda_naturale": "Come si integrano le notifiche con gli altri moduli di OMNIA?"
+    },
+    {
+      "id": "settings.cos-e",
+      "file": "19-impostazioni-agenzia.yaml",
+      "titolo": "Cos'è \"Impostazioni agenzia\" in OMNIA v1",
+      "modulo": "Impostazioni",
+      "livello": "base",
+      "tags": [
+        "impostazioni",
+        "settings",
+        "anagrafica",
+        "agenzia",
+        "panoramica",
+        "d-051"
+      ],
+      "domanda_naturale": "Cos'è il modulo Impostazioni di OMNIA? Cosa posso modificare della mia agenzia?"
+    },
+    {
+      "id": "settings.dove-trovarlo",
+      "file": "19-impostazioni-agenzia.yaml",
+      "titolo": "Dove trovo la Settings in OMNIA",
+      "modulo": "Impostazioni",
+      "livello": "base",
+      "tags": [
+        "impostazioni",
+        "settings",
+        "dove-trovarlo",
+        "ui",
+        "sidebar",
+        "route"
+      ],
+      "domanda_naturale": "Dove trovo la pagina Impostazioni? Come ci accedo?"
+    },
+    {
+      "id": "settings.sezione-identita",
+      "file": "19-impostazioni-agenzia.yaml",
+      "titolo": "Sezione 1 · Identità agenzia (display_name + tagline)",
+      "modulo": "Impostazioni",
+      "livello": "base",
+      "tags": [
+        "impostazioni",
+        "identita",
+        "display-name",
+        "tagline",
+        "branding",
+        "logo-mancante"
+      ],
+      "domanda_naturale": "Come cambio il nome della mia agenzia? Dove metto lo slogan?"
+    },
+    {
+      "id": "settings.sezione-fiscali",
+      "file": "19-impostazioni-agenzia.yaml",
+      "titolo": "Sezione 2 · Dati fiscali (legal_name + VAT + CF · REA/FIAIP schema-only)",
+      "modulo": "Impostazioni",
+      "livello": "intermedio",
+      "tags": [
+        "impostazioni",
+        "fiscali",
+        "partita-iva",
+        "codice-fiscale",
+        "rea",
+        "fiaip",
+        "validazione"
+      ],
+      "domanda_naturale": "Come inserisco la Partita IVA della mia agenzia? Dove va il Codice Fiscale?"
+    },
+    {
+      "id": "settings.sezione-indirizzo",
+      "file": "19-impostazioni-agenzia.yaml",
+      "titolo": "Sezione 3 · Indirizzo agenzia (street/city/province/CAP · country IT default)",
+      "modulo": "Impostazioni",
+      "livello": "base",
+      "tags": [
+        "impostazioni",
+        "indirizzo",
+        "address",
+        "cap",
+        "provincia",
+        "portale-pubblico",
+        "geocoding-no"
+      ],
+      "domanda_naturale": "Come metto l'indirizzo della mia agenzia? La provincia va in due lettere?"
+    },
+    {
+      "id": "settings.sezione-contatti",
+      "file": "19-impostazioni-agenzia.yaml",
+      "titolo": "Sezione 4 · Contatti pubblici (email + telefono agenzia)",
+      "modulo": "Impostazioni",
+      "livello": "base",
+      "tags": [
+        "impostazioni",
+        "contatti",
+        "email",
+        "telefono",
+        "portale-pubblico",
+        "contact-website-schema-only"
+      ],
+      "domanda_naturale": "Dove metto l'email di contatto della mia agenzia visibile ai clienti?"
+    },
+    {
+      "id": "settings.sezione-sito-web",
+      "file": "19-impostazioni-agenzia.yaml",
+      "titolo": "Sezione 5 · Sito web · external URL vs omnia_template (3 stub inattivi v1)",
+      "modulo": "Impostazioni",
+      "livello": "intermedio",
+      "tags": [
+        "impostazioni",
+        "sito-web",
+        "website-mode",
+        "external",
+        "omnia-template",
+        "template-stub",
+        "feed-xml",
+        "presto-disponibile"
+      ],
+      "domanda_naturale": "Come scelgo se usare il mio sito esistente o farmi un template OMNIA?"
+    },
+    {
+      "id": "settings.permessi-ownership",
+      "file": "19-impostazioni-agenzia.yaml",
+      "titolo": "Permessi Settings · solo owner puo' salvare (agency_admin invitato NO)",
+      "modulo": "Impostazioni",
+      "livello": "intermedio",
+      "tags": [
+        "impostazioni",
+        "permessi",
+        "ownership",
+        "owner-id",
+        "403-not-owner",
+        "agency-admin",
+        "invitato",
+        "transfer-ownership-no"
+      ],
+      "domanda_naturale": "Perché non riesco a salvare le impostazioni? Chi puo' modificarle?"
+    },
+    {
+      "id": "settings.endpoint-patch",
+      "file": "19-impostazioni-agenzia.yaml",
+      "titolo": "Endpoint PATCH /api/app/agencies/me · save unico + toast embedded",
+      "modulo": "Impostazioni",
+      "livello": "avanzato",
+      "tags": [
+        "impostazioni",
+        "api",
+        "patch",
+        "agencies-me",
+        "agency-update",
+        "cleanGroup",
+        "model-dump",
+        "toast-embedded"
+      ],
+      "domanda_naturale": "Come funziona tecnicamente il salvataggio delle Impostazioni? Che endpoint chiama?"
+    },
+    {
+      "id": "settings.billing-pagina-separata",
+      "file": "19-impostazioni-agenzia.yaml",
+      "titolo": "Billing · pagina separata (/app/settings/billing) piani Founders + credit packages + Stripe",
+      "modulo": "Impostazioni",
+      "livello": "intermedio",
+      "tags": [
+        "impostazioni",
+        "billing",
+        "stripe",
+        "piani",
+        "founders",
+        "credit-packages",
+        "checkout",
+        "customer-portal",
+        "stripe-enabled",
+        "503"
+      ],
+      "domanda_naturale": "Dove attivo un piano OMNIA? Come compro crediti? Come funzionano i Founders €49/€99/€249?"
+    },
+    {
+      "id": "settings.chi-non-e-coperto",
+      "file": "19-impostazioni-agenzia.yaml",
+      "titolo": "Cosa NON è in Settings v1 (Team/Domini/Notifiche/API Keys stanno in pagine separate)",
+      "modulo": "Impostazioni",
+      "livello": "base",
+      "tags": [
+        "impostazioni",
+        "cosa-non-copre",
+        "pagine-separate",
+        "team",
+        "api-keys",
+        "domain",
+        "notifiche",
+        "membri",
+        "custom-domain"
+      ],
+      "domanda_naturale": "Perché nella Settings non trovo la gestione team, il dominio custom, le notifiche o le API keys?"
+    },
+    {
+      "id": "settings.errori-comuni",
+      "file": "19-impostazioni-agenzia.yaml",
+      "titolo": "Errori comuni Settings (403 not_owner, 404 no_agency, template stub, logo mancante)",
+      "modulo": "Impostazioni",
+      "livello": "intermedio",
+      "tags": [
+        "impostazioni",
+        "errori",
+        "403",
+        "404",
+        "not-owner",
+        "no-agency",
+        "template-stub",
+        "logo-mancante",
+        "validazione"
+      ],
+      "domanda_naturale": "Perché non riesco a salvare le Settings? Perche' i template non funzionano? Come faccio il logo?"
+    },
+    {
+      "id": "settings.limitazioni-v1",
+      "file": "19-impostazioni-agenzia.yaml",
+      "titolo": "Limiti v1 Impostazioni agenzia (D-051 onesto · elenco esaustivo)",
+      "modulo": "Impostazioni",
+      "livello": "intermedio",
+      "tags": [
+        "impostazioni",
+        "limiti",
+        "cosa-non-fa",
+        "no-uploader-logo",
+        "no-color-picker",
+        "no-rea",
+        "no-fiaip",
+        "no-country-selector",
+        "no-geocoding",
+        "no-validazione-vat",
+        "no-transfer-ownership",
+        "no-audit-settings",
+        "template-stub",
+        "d-051"
+      ],
+      "domanda_naturale": "Cosa NON fa la Settings v1? Ha uploader logo, color picker, validazione VAT, transfer ownership, geocoding indirizzo, audit trail modifiche, rollback?"
+    },
+    {
+      "id": "settings.collegamenti",
+      "file": "19-impostazioni-agenzia.yaml",
+      "titolo": "Collegamenti Settings → altri capitoli (Cap. 1/6/8/13/17/18)",
+      "modulo": "Impostazioni",
+      "livello": "base",
+      "tags": [
+        "impostazioni",
+        "collegamenti",
+        "cross-ref",
+        "cap1",
+        "cap6",
+        "cap8",
+        "cap13",
+        "cap17",
+        "cap18"
+      ],
+      "domanda_naturale": "Come si integra la Settings con gli altri moduli di OMNIA?"
+    },
+    {
+      "id": "api-keys.cos-e",
+      "file": "20-api-keys-integrazioni.yaml",
+      "titolo": "Cos'è API Keys / Track B / API Gateway",
+      "modulo": "API Keys",
+      "livello": "intermedio",
+      "tags": [
+        "api-keys",
+        "track-b",
+        "api-gateway",
+        "partner",
+        "integrazione",
+        "d-041",
+        "d-046"
+      ],
+      "domanda_naturale": "Cos'è Track B / API Gateway di OMNIA? A cosa servono le chiavi API?"
+    },
+    {
+      "id": "api-keys.dove-trovarlo",
+      "file": "20-api-keys-integrazioni.yaml",
+      "titolo": "Dove trovo ApiKeysPage (/app/api-keys)",
+      "modulo": "API Keys",
+      "livello": "base",
+      "tags": [
+        "api-keys",
+        "dove-trovarlo",
+        "route",
+        "sidebar",
+        "permessi",
+        "agency-admin",
+        "group-admin"
+      ],
+      "domanda_naturale": "Dove trovo la pagina per gestire le API Keys?"
+    },
+    {
+      "id": "api-keys.emissione-show-once",
+      "file": "20-api-keys-integrazioni.yaml",
+      "titolo": "Emissione chiave · formato omk_live_ + plaintext show-once + hash SHA-256",
+      "modulo": "API Keys",
+      "livello": "avanzato",
+      "tags": [
+        "api-keys",
+        "emissione",
+        "plaintext",
+        "show-once",
+        "hash",
+        "sha-256",
+        "prefix",
+        "formato",
+        "omk-live"
+      ],
+      "domanda_naturale": "Come emetto una nuova API key? La chiave si può recuperare dopo?"
+    },
+    {
+      "id": "api-keys.credit-wallet",
+      "file": "20-api-keys-integrazioni.yaml",
+      "titolo": "Credit wallet Track B · top-up manuale + api_credit_ledger",
+      "modulo": "API Keys",
+      "livello": "avanzato",
+      "tags": [
+        "api-keys",
+        "crediti",
+        "wallet",
+        "top-up",
+        "ledger",
+        "api-credit-ledger",
+        "manuale",
+        "stripe-no"
+      ],
+      "domanda_naturale": "Come carico crediti su una chiave API? Posso fare auto-ricarica Stripe?"
+    },
+    {
+      "id": "api-keys.allowed-origins",
+      "file": "20-api-keys-integrazioni.yaml",
+      "titolo": "Allowed origins · CORS whitelist widget (M2.5.3)",
+      "modulo": "API Keys",
+      "livello": "avanzato",
+      "tags": [
+        "api-keys",
+        "allowed-origins",
+        "cors",
+        "widget-security",
+        "origin",
+        "referer",
+        "wildcard",
+        "m2-5-3"
+      ],
+      "domanda_naturale": "Come limito una API key ai widget su un dominio specifico?"
+    },
+    {
+      "id": "api-keys.revoca-key",
+      "file": "20-api-keys-integrazioni.yaml",
+      "titolo": "Revoca chiave · no undo · emetti nuova invece",
+      "modulo": "API Keys",
+      "livello": "intermedio",
+      "tags": [
+        "api-keys",
+        "revoca",
+        "is-active",
+        "revoked-at",
+        "no-undo",
+        "security"
+      ],
+      "domanda_naturale": "Come revoco una API key compromessa? Posso riattivarla?"
+    },
+    {
+      "id": "api-keys.usage-log",
+      "file": "20-api-keys-integrazioni.yaml",
+      "titolo": "Usage log audit · endpoint /usage · NO UI detail v1",
+      "modulo": "API Keys",
+      "livello": "intermedio",
+      "tags": [
+        "api-keys",
+        "usage-log",
+        "audit",
+        "api-usage-log",
+        "billing",
+        "credits-spent",
+        "no-ui"
+      ],
+      "domanda_naturale": "Come vedo l'utilizzo dettagliato di una API key? Storico endpoint chiamati?"
+    },
+    {
+      "id": "api-keys.api-v1-endpoints",
+      "file": "20-api-keys-integrazioni.yaml",
+      "titolo": "API Gateway /api/v1/* · 6 endpoint consumer Bearer",
+      "modulo": "API Keys",
+      "livello": "avanzato",
+      "tags": [
+        "api-keys",
+        "api-v1",
+        "gateway",
+        "endpoints",
+        "valuator",
+        "mortgages",
+        "legal",
+        "feed",
+        "health",
+        "me",
+        "widgets-lead",
+        "staging",
+        "bearer"
+      ],
+      "domanda_naturale": "Quali endpoint /api/v1 esistono? Quanto costa ogni chiamata? Come autentico?"
+    },
+    {
+      "id": "api-keys.pricing-track-b",
+      "file": "20-api-keys-integrazioni.yaml",
+      "titolo": "Pricing Track B · 1 credito = €0,03 (vs Track A €0,05 · wallet separati)",
+      "modulo": "API Keys",
+      "livello": "intermedio",
+      "tags": [
+        "api-keys",
+        "pricing",
+        "crediti",
+        "0-03-euro",
+        "track-a",
+        "track-b",
+        "wallet-separati",
+        "differenza",
+        "cap19-billing"
+      ],
+      "domanda_naturale": "Quanto costa un credito Track B? È diverso da quello dei piani B2B?"
+    },
+    {
+      "id": "api-keys.widget-embed-loader",
+      "file": "20-api-keys-integrazioni.yaml",
+      "titolo": "Widget embed · loader script /api/widgets/v1/loader.js",
+      "modulo": "API Keys",
+      "livello": "avanzato",
+      "tags": [
+        "api-keys",
+        "widget",
+        "embed",
+        "loader",
+        "script",
+        "valuator",
+        "mortgages",
+        "lead-capture",
+        "showcase",
+        "iframe"
+      ],
+      "domanda_naturale": "Come embed di un widget OMNIA sul sito del cliente?"
+    },
+    {
+      "id": "api-keys.partner-id",
+      "file": "20-api-keys-integrazioni.yaml",
+      "titolo": "Partner ID (D-046) · white-label attribuzione multi-partner",
+      "modulo": "API Keys",
+      "livello": "intermedio",
+      "tags": [
+        "api-keys",
+        "partner-id",
+        "d-046",
+        "white-label",
+        "attribuzione",
+        "multi-partner",
+        "reportistica-no"
+      ],
+      "domanda_naturale": "Cos'è il campo Partner ID? Come traccio più partner tech per la mia agenzia?"
+    },
+    {
+      "id": "api-keys.errori-comuni",
+      "file": "20-api-keys-integrazioni.yaml",
+      "titolo": "Errori comuni API Keys (401/402/403/404 + plaintext perso)",
+      "modulo": "API Keys",
+      "livello": "intermedio",
+      "tags": [
+        "api-keys",
+        "errori",
+        "401",
+        "402",
+        "403",
+        "404",
+        "troubleshooting",
+        "plaintext-perso",
+        "insufficient-credits",
+        "origin-not-allowed"
+      ],
+      "domanda_naturale": "Perché la mia chiave API non funziona? Errori comuni?"
+    },
+    {
+      "id": "api-keys.limitazioni-v1",
+      "file": "20-api-keys-integrazioni.yaml",
+      "titolo": "Limiti v1 API Keys / Track B (D-051 · elenco esaustivo)",
+      "modulo": "API Keys",
+      "livello": "intermedio",
+      "tags": [
+        "api-keys",
+        "limiti",
+        "cosa-non-fa",
+        "auto-ricarica-no",
+        "usage-ui-no",
+        "rate-limit-no",
+        "scoping-no",
+        "ip-whitelist-no",
+        "webhook-no",
+        "rotazione-no",
+        "d-051"
+      ],
+      "domanda_naturale": "Cosa NON fa API Keys v1? Ha auto-ricarica, rate limit, scoping endpoint, IP whitelist, webhook, rotazione automatica?"
+    },
+    {
+      "id": "api-keys.collegamenti",
+      "file": "20-api-keys-integrazioni.yaml",
+      "titolo": "Collegamenti API Keys → altri capitoli (Cap. 6/10/11/13/18/19)",
+      "modulo": "API Keys",
+      "livello": "base",
+      "tags": [
+        "api-keys",
+        "collegamenti",
+        "cross-ref",
+        "cap6",
+        "cap10",
+        "cap11",
+        "cap13",
+        "cap18",
+        "cap19"
+      ],
+      "domanda_naturale": "Come si integra Track B con gli altri moduli di OMNIA?"
+    }
+  ],
+  "stats": {
+    "totale_voci": 211,
+    "per_capitolo": {
+      "01": 10,
+      "02": 8,
+      "03": 15,
+      "04": 12,
+      "05": 11,
+      "06": 12,
+      "07": 12,
+      "08": 12,
+      "09": 12,
+      "10": 13,
+      "11": 12,
+      "12": 13,
+      "13": 13,
+      "14": 13,
+      "15": 14,
+      "16": 14,
+      "17": 15
+    }
+  },
+  "total_voci": 255
+}

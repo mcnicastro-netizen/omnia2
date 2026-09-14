@@ -1,0 +1,598 @@
+# HAL — Voci esportate per RAG
+# Capitolo 6 · Portali / Publishing
+# Schema: id, titolo, modulo, widget, pubblico, livello, tags, correlati,
+#         domanda_naturale, contenuto{a_cosa_serve, quando_si_usa, passi,
+#         errori_comuni[{problema,soluzione}], permessi}, screenshot[]
+
+voci:
+
+  - id: portali.a-cosa-serve
+    titolo: A cosa serve il Publishing Center
+    modulo: Portali
+    widget: null
+    pubblico: [titolare, agente, segreteria]
+    livello: base
+    tags: [portali, publishing, primi-passi, panoramica]
+    correlati:
+      - portali.catalogo-portali
+      - portali.attivare-portale
+      - portali.compliance-hard
+    domanda_naturale: "A cosa serve il modulo Portali di ImmoWeb?"
+    contenuto:
+      a_cosa_serve: >
+        Pubblicare i tuoi immobili sui portali immobiliari esterni
+        senza dover caricare gli annunci a mano su ognuno. OMNIA
+        genera un feed XML sempre aggiornato e i portali attivi lo
+        scaricano automaticamente ogni notte.
+      quando_si_usa: >
+        Una-tantum: attivi i portali su cui vuoi essere presente.
+        Poi il sync automatico gira ogni notte alle 06:00 UTC senza
+        che tu debba fare nulla.
+      passi:
+        - Compili l'immobile una sola volta nel modulo Immobili
+          (Cap. 3), inclusi prezzo, superficie, indirizzo, classe
+          APE e almeno 3 foto.
+        - "Vai in Portali dalla barra a sinistra: vedi 2 schede,
+          Attivi (i portali che stai usando) e Disponibili (il
+          catalogo)."
+        - Attivi un portale dalla scheda Disponibili con il
+          bottone Attiva.
+        - Da quel momento l'immobile finisce nel feed XML della
+          tua agenzia, che i portali attivi scaricano ogni notte.
+        - Un validatore Compliance esclude gli annunci che non
+          rispettano prezzo, APE, indirizzo, superficie o 3+ foto.
+      errori_comuni:
+        - problema: "Il Publishing Center pubblica su Idealista e
+            Immobiliare.it?"
+          soluzione: >
+            No, non ancora. In v1 il catalogo contiene 8 portali
+            generalisti (Subito, Bakeca, Wikicasa, Facebook
+            Marketplace, Google Business, Attico, Case24, Kijiji).
+            Idealista, Immobiliare.it e Casa.it richiedono accordi
+            commerciali diretti: continua a usarli come oggi.
+      permessi:
+        - Titolare
+        - Agente (pieno controllo)
+        - Segreteria (concetto operativo, sconsigliato per
+          attivazioni con credenziali)
+    screenshot:
+      - "[SCREEN: cap6-portali-panoramica]"
+
+  - id: portali.catalogo-portali
+    titolo: I portali disponibili nel catalogo v1 (chi c'è, chi manca)
+    modulo: Portali
+    widget: null
+    pubblico: [titolare, agente, segreteria]
+    livello: base
+    tags: [portali, catalogo, subito, bakeca, wikicasa, facebook,
+      google-business, portali-disponibili]
+    correlati:
+      - portali.a-cosa-serve
+      - portali.attivare-portale
+      - portali.wizard-custom-portal
+    domanda_naturale: "Quali portali posso attivare da OMNIA?"
+    contenuto:
+      a_cosa_serve: >
+        Conoscere quali portali sono nel catalogo e come si comportano.
+      quando_si_usa: >
+        Prima di attivare un portale, per capire cosa serve.
+      passi:
+        - "Subito.it — freemium, feed_pull, traffico ★★★★★.
+          Richiede username."
+        - "Wikicasa.it — freemium, feed_pull, traffico ★★★★☆.
+          Richiede API Key."
+        - "Facebook Marketplace — gratuito, api_push (simulato in
+          v1), traffico ★★★★☆. Richiede Page ID + Access Token
+          Meta."
+        - "Google Business Profile — gratuito, api_push (simulato
+          in v1), traffico ★★★★☆. Richiede Google Business
+          Account ID."
+        - "Bakeca.it, Kijiji.it, Attico.it, Case24.it — categoria
+          e traffico minori, tutti feed_pull con email account."
+        - "Idealista, Immobiliare.it, Casa.it NON sono nel catalogo
+          v1 — accordi commerciali diretti agenzia ↔ portale."
+      errori_comuni:
+        - problema: "Cosa vuol dire feed_pull vs api_push?"
+          soluzione: >
+            feed_pull = il portale scarica autonomamente il tuo
+            feed XML pubblico. Non serve che OMNIA spinga nulla.
+            api_push = OMNIA dovrebbe chiamare le API del portale.
+            In v1 api_push è SIMULATO (il pulsante Sync gira, il
+            log dice simulated_push, ma non c'è ancora una chiamata
+            reale). Le integrazioni Meta/Google arriveranno in uno
+            sprint dedicato.
+        - problema: "Non trovo il mio portale regionale nella lista"
+          soluzione: >
+            Puoi aggiungerlo tu con l'Universal Portal Wizard
+            (Cap. 6.7). Il portale personalizzato sarà visibile
+            solo alla tua agenzia.
+      permessi:
+        - Tutti (in lettura)
+    screenshot:
+      - "[SCREEN: cap6-catalog-disponibili]"
+
+  - id: portali.attivare-portale
+    titolo: Attivare un portale (procedura standard)
+    modulo: Portali
+    widget: null
+    pubblico: [titolare, agente]
+    livello: base
+    tags: [portali, attivazione, credenziali, primi-passi]
+    correlati:
+      - portali.catalogo-portali
+      - portali.disattivare-portale
+      - portali.sync-manuale
+      - portali.compliance-hard
+    domanda_naturale: "Come attivo un portale, per esempio Subito?"
+    contenuto:
+      a_cosa_serve: >
+        Collegare la tua agenzia a un portale del catalogo, così
+        che il feed OMNIA inizi ad alimentare quel portale.
+      quando_si_usa: >
+        Una-tantum, appena sai su quale portale vuoi essere
+        presente. Poi il sync gira automaticamente ogni notte.
+      passi:
+        - "Prerequisito: almeno un immobile deve essere in stato
+          Pubblicato e passare la Compliance HARD (Cap. 6.5),
+          altrimenti il feed sarà vuoto."
+        - Vai su Portali (barra a sinistra) e seleziona la scheda
+          Disponibili.
+        - Trova il portale nella tabella e clicca Attiva (a
+          destra della riga).
+        - "Si apre una finestra di attivazione: leggi la
+          descrizione e i campi credenziali richiesti (variano da
+          portale a portale: email, username, API key, ecc.)."
+        - "Compila i campi: le credenziali vengono cifrate
+          localmente con AES-256-GCM prima del salvataggio,
+          OMNIA non le legge mai in chiaro dopo."
+        - Clicca il bottone verde Attiva portale. Se il portale
+          non richiede credenziali → attivazione immediata.
+        - Il portale sparisce da Disponibili e appare in Attivi
+          con badge di stato active (verde).
+      errori_comuni:
+        - problema: "Errore 'already_connected'"
+          soluzione: >
+            Il portale è già attivo per la tua agenzia. Vai nella
+            scheda Attivi per gestirlo.
+        - problema: "Attivazione ok ma feed sempre vuoto"
+          soluzione: >
+            Nessun immobile supera la Compliance HARD. Apri
+            Compliance sul portale (Cap. 6.5) e correggi i motivi
+            di blocco.
+      permessi:
+        - Titolare
+        - Agente
+    screenshot:
+      - "[SCREEN: cap6-modale-attivazione]"
+
+  - id: portali.disattivare-portale
+    titolo: Disattivare o rimuovere un portale attivo
+    modulo: Portali
+    widget: null
+    pubblico: [titolare, agente]
+    livello: base
+    tags: [portali, disattivare, rimuovere, disabled]
+    correlati:
+      - portali.attivare-portale
+      - portali.sync-manuale
+    domanda_naturale: "Come disattivo temporaneamente un portale?"
+    contenuto:
+      a_cosa_serve: >
+        Sospendere la pubblicazione su un portale senza perdere
+        credenziali e configurazione, oppure rimuovere del tutto
+        una connessione.
+      quando_si_usa: >
+        Sospensione: quando vuoi pausare un portale in test.
+        Rimozione: quando cambi provider o smetti di pubblicare
+        lì definitivamente.
+      passi:
+        - "Sospensione: attualmente si esegue via PATCH endpoint
+          con status=disabled; il portale resta nella lista Attivi
+          come 'disabled' e non viene syncato."
+        - "Rimozione: nella scheda Attivi, riga del portale,
+          clicca il link rosso Disattiva a destra."
+        - Compare una conferma. Rispondi OK.
+        - La connessione viene cancellata definitivamente. Le
+          credenziali cifrate vengono perse. I log storici
+          restano per audit.
+        - Se vuoi ripubblicare in futuro, dovrai riattivare da
+          zero (Disponibili → Attiva).
+      errori_comuni:
+        - problema: "Ho cliccato Disattiva ma il portale non
+            sparisce"
+          soluzione: >
+            Aggiorna la pagina (F5). Se resiste, potrebbe essere
+            un errore di rete. Riprova.
+      permessi:
+        - Titolare
+        - Agente
+    screenshot: []
+
+  - id: portali.sync-manuale
+    titolo: Forzare un sync manuale su un portale attivo
+    modulo: Portali
+    widget: null
+    pubblico: [titolare, agente]
+    livello: base
+    tags: [portali, sync, manuale, aggiornamento]
+    correlati:
+      - portali.sync-automatico
+      - portali.compliance-hard
+      - portali.log-sync
+    domanda_naturale: "Come forzo la sincronizzazione di un portale?"
+    contenuto:
+      a_cosa_serve: >
+        Aggiornare subito lo stato di un portale senza attendere
+        il ciclo automatico giornaliero delle 06:00 UTC.
+      quando_si_usa: >
+        Dopo aver caricato un immobile importante, dopo aver
+        corretto un errore di compliance, o quando vuoi vedere
+        subito quanti annunci sono pubblicabili.
+      passi:
+        - Vai su Portali → scheda Attivi.
+        - Trova il portale nella tabella.
+        - Clicca il pulsante nero piccolo Sync sulla riga.
+        - "Nella riga compare '…' per qualche secondo."
+        - "Sopra la tabella compare un banner colorato con
+          l'esito: verde=OK, ambra=partial (blocchi compliance),
+          rosso=failed."
+        - "Il banner riporta: N immobili pubblicabili, M bloccati
+          dal validatore compliance."
+        - Se il portale è api_push il banner aggiunge una nota
+          chiara che ricorda che l'integrazione live arriverà.
+        - "La colonna Ultimo sync sotto il nome del portale si
+          aggiorna con la data/ora corrente."
+      errori_comuni:
+        - problema: "Errore 'connection_disabled'"
+          soluzione: >
+            Il portale è stato disabilitato prima. Riattivalo o
+            rimuovilo definitivamente e riparti.
+        - problema: "Sync gira ma dice '0 pubblicabili'"
+          soluzione: >
+            Nessun immobile supera la Compliance HARD. Apri
+            Compliance sul portale (Cap. 6.5) per vedere i motivi
+            di blocco.
+      permessi:
+        - Titolare
+        - Agente
+    screenshot:
+      - "[SCREEN: cap6-sync-manuale-esito]"
+
+  - id: portali.sync-automatico
+    titolo: Il sync automatico giornaliero (06:00 UTC)
+    modulo: Portali
+    widget: null
+    pubblico: [titolare, agente, segreteria]
+    livello: base
+    tags: [portali, sync, automatico, scheduler, notte]
+    correlati:
+      - portali.sync-manuale
+      - portali.log-sync
+    domanda_naturale: "Quando si aggiornano automaticamente i portali?"
+    contenuto:
+      a_cosa_serve: >
+        Sapere quando OMNIA sincronizza da solo i tuoi portali
+        senza che tu debba fare nulla.
+      quando_si_usa: >
+        Sempre: gira in background ogni giorno.
+      passi:
+        - "Il job schedulato di OMNIA gira ogni notte alle 06:00
+          UTC (~07:00 in inverno / 08:00 in estate ora italiana)."
+        - Il job elenca tutte le connessioni attive e per ognuna
+          carica gli immobili in stato active.
+        - Applica il validatore Compliance HARD (Cap. 6.5).
+        - "Per i portali feed_pull: aggiorna il timestamp e
+          ricalcola quanti immobili sono pubblicabili."
+        - "Per i portali api_push: simulazione (integrazione reale
+          arriverà in uno sprint successivo)."
+        - Scrive una riga di log per ogni sync in tabella
+          publishing_sync_logs.
+        - "Se un sync fallisce: riprova fino a 3 volte con attese
+          progressive (1 min, 5 min, 30 min)."
+      errori_comuni:
+        - problema: "Ultimo sync ieri, ma sono le 15:00 e ho
+            appena aggiornato un annuncio"
+          soluzione: >
+            Il sync automatico gira solo alle 06:00 UTC. Se vuoi
+            aggiornamento immediato usa il Sync manuale (Cap.
+            6.4). Ricorda che il portale ha comunque i suoi
+            tempi di refresh sul suo lato.
+      permessi:
+        - Tutti (in lettura)
+    screenshot: []
+
+  - id: portali.compliance-hard
+    titolo: Compliance HARD — perché un annuncio è escluso dal feed
+    modulo: Portali
+    widget: null
+    pubblico: [titolare, agente, segreteria]
+    livello: base
+    tags: [portali, compliance, ape, foto, prezzo, blocco, hard]
+    correlati:
+      - portali.compliance-soft
+      - portali.sync-manuale
+      - immobili.creazione-manuale
+      - immobili.fascicolo-ape
+    domanda_naturale: "Perché un mio annuncio è bloccato dalla
+      compliance?"
+    contenuto:
+      a_cosa_serve: >
+        Rispettare gli obblighi di legge (D.Lgs 192/2005 sull'APE,
+        AGCM sulla trasparenza del prezzo) e gli standard tecnici
+        dei portali (minimo 3 foto). Un annuncio che viola una
+        regola HARD viene ESCLUSO dal feed pubblico.
+      quando_si_usa: >
+        Sempre, prima di ogni sync. È automatico.
+      passi:
+        - "Regola 1 - Prezzo/canone: sale → serve price > 0.
+          Affitto → serve rent_monthly > 0. Ammesso il flag
+          'Prezzo su richiesta'."
+        - "Regola 2 - Superficie: surface_sqm > 0."
+        - "Regola 3 - APE: energy_class deve essere una tra A4,
+          A3, A2, A1, A, B, C, D, E, F, G, EXEMPT_IN_PROGRESS o
+          EXEMPT_NOT_APPLICABLE."
+        - "Regola 4 - Foto: almeno 3 foto con URL valido."
+        - "Regola 5 - Indirizzo: city e province compilati."
+        - Se anche una sola regola HARD fallisce → l'immobile
+          non entra nel feed pubblico e non viene syncato ai
+          portali.
+        - Nel log del sync compare 'blocked_by_compliance:N'
+          dove N è il numero di immobili bloccati.
+      errori_comuni:
+        - problema: "10 immobili bloccati per less_than_3_photos"
+          soluzione: >
+            Vai in Immobili, apri gli immobili con meno di 3 foto
+            e caricane altre (Cap. 3.5). Ricorda che le foto
+            devono avere URL valido (non solo miniatura).
+        - problema: "Ho compilato la classe APE ma dice
+            invalid_energy_class"
+          soluzione: >
+            Il campo accetta solo A4, A3, A2, A1, A, B, C, D, E,
+            F, G o le due sigle EXEMPT_IN_PROGRESS /
+            EXEMPT_NOT_APPLICABLE. Valori come 'E2' o
+            'in_calcolo' non sono validi.
+      permessi:
+        - Tutti (in lettura)
+    screenshot: []
+
+  - id: portali.compliance-soft
+    titolo: Warning Compliance SOFT — l'annuncio è pubblicato lo stesso
+    modulo: Portali
+    widget: null
+    pubblico: [titolare, agente]
+    livello: intermedio
+    tags: [portali, compliance, warning, soft, ipe, titolo,
+      descrizione]
+    correlati:
+      - portali.compliance-hard
+    domanda_naturale: "Cosa sono i warning arancioni nella modale
+      Compliance?"
+    contenuto:
+      a_cosa_serve: >
+        Segnalare problemi di qualità che riducono la visibilità
+        sul portale ma non bloccano la pubblicazione.
+      quando_si_usa: >
+        Ogni volta che apri la modale Compliance su un portale
+        attivo.
+      passi:
+        - "title_too_short: titolo sotto i 10 caratteri. I
+          portali penalizzano annunci con titoli poveri."
+        - "description_too_short: descrizione sotto i 50
+          caratteri. Meno visibilità nelle liste."
+        - "rooms_not_specified: numero locali non indicato. Il
+          portale non mostrerà l'annuncio nei filtri per numero
+          locali."
+        - "ipe_missing: indice IPE (kWh/m²) non compilato.
+          Alcuni portali lo richiedono (la classe APE da sola
+          non basta)."
+        - Correggi i warning nel form immobile (Cap. 3) per
+          migliorare la visibilità dell'annuncio.
+      errori_comuni:
+        - problema: "Ho warning ma l'annuncio è pubblicato lo
+            stesso?"
+          soluzione: >
+            Sì. I warning SOFT non bloccano il feed, solo la
+            qualità dell'annuncio.
+      permessi:
+        - Titolare
+        - Agente
+    screenshot: []
+
+  - id: portali.aprire-compliance
+    titolo: Aprire la Compliance di un portale (modale)
+    modulo: Portali
+    widget: null
+    pubblico: [titolare, agente]
+    livello: base
+    tags: [portali, compliance, modale, bloccati, dashboard]
+    correlati:
+      - portali.compliance-hard
+      - portali.sync-manuale
+    domanda_naturale: "Come vedo quali annunci sono bloccati e
+      perché?"
+    contenuto:
+      a_cosa_serve: >
+        Ottenere un riepilogo aggregato di quanti immobili sono
+        pubblicabili, quanti sono bloccati e per quali motivi.
+      quando_si_usa: >
+        Quando un sync riporta N immobili bloccati o quando
+        vuoi capire lo stato di salute del portafoglio.
+      passi:
+        - Vai su Portali → scheda Attivi.
+        - Trova il portale e clicca il bottone bianco Compliance
+          sulla riga.
+        - "Si apre una finestra con 4 riquadri: Totale,
+          Pubblicabili, Bloccati, Con warning."
+        - "Sotto: sezione 'Motivi blocco più frequenti' con le
+          top 5 cause (es. 'Meno di 3 foto: 9 immobili')."
+        - "Ancora sotto: lista 'Immobili bloccati (primi 20)'
+          con titolo, motivi tradotti in italiano e link
+          'Correggi →' che porta alla scheda dell'immobile."
+        - "Se tutti gli immobili sono conformi: appare un
+          banner verde ✅ 'Tutti gli immobili attivi sono
+          conformi e pubblicabili'."
+      errori_comuni:
+        - problema: "La modale è vuota"
+          soluzione: >
+            La tua agenzia non ha immobili in stato active.
+            Vai in Immobili e pubblica almeno una bozza.
+      permessi:
+        - Titolare
+        - Agente
+    screenshot:
+      - "[SCREEN: cap6-modale-compliance]"
+
+  - id: portali.wizard-custom-portal
+    titolo: Aggiungere un portale personalizzato (Universal Portal Wizard)
+    modulo: Portali
+    widget: null
+    pubblico: [titolare, agente]
+    livello: intermedio
+    tags: [portali, wizard, custom, personalizzato, feed_pull,
+      regionale]
+    correlati:
+      - portali.a-cosa-serve
+      - portali.catalogo-portali
+      - portali.feed-pubblico
+    domanda_naturale: "Come aggiungo un portale regionale non
+      presente nel catalogo?"
+    contenuto:
+      a_cosa_serve: >
+        Registrare un portale personalizzato (regionale, di
+        franchising, di nicchia) senza attendere OMNIA. Visibile
+        solo alla tua agenzia.
+      quando_si_usa: >
+        Quando lavori con un portale non presente nel catalogo v1
+        che accetta feed XML.
+      passi:
+        - Dalla pagina Portali clicca il bottone blu scuro
+          '+ Aggiungi portale personalizzato' in alto a destra.
+        - "Step 1 Identità: nome, slug (auto-compilato dal nome),
+          sito ufficiale (opzionale), categoria (gratuito /
+          freemium / premium), scope (locale / regionale /
+          nazionale)."
+        - "Step 2 Formato: dialetto XML (osf_federata
+          consigliato, oppure generic_rss per aggregatori).
+          Integrazione fissa a feed_pull in v1."
+        - "Step 3 Endpoint: URL informativo del portale
+          (opzionale, non chiamato da OMNIA)."
+        - "Step 4 Conferma: appare l'URL del feed OMNIA della
+          tua agenzia; bottone Copia per gli appunti."
+        - Clicca Conferma. Il portale personalizzato viene creato
+          e la connessione attivata immediatamente (feed_pull
+          non richiede credenziali).
+        - Torni alla pagina Portali e trovi il tuo portale nella
+          scheda Attivi.
+      errori_comuni:
+        - problema: "Errore 'unsupported_dialect' o
+            'unsupported_integration_type'"
+          soluzione: >
+            In v1 supportiamo solo dialetti osf_federata e
+            generic_rss, e solo integrazione feed_pull. Push URL
+            e api_push per custom portal arriveranno in uno
+            sprint successivo.
+        - problema: "Errore 'slug_already_used'"
+          soluzione: >
+            Hai già un portale custom con quello slug. Rinomina
+            leggermente per evitare la collisione.
+      permessi:
+        - Titolare
+        - Agente
+    screenshot:
+      - "[SCREEN: cap6-wizard-step4-conferma]"
+
+  - id: portali.feed-pubblico
+    titolo: L'URL pubblico del feed XML della tua agenzia
+    modulo: Portali
+    widget: null
+    pubblico: [titolare, agente]
+    livello: intermedio
+    tags: [portali, feed, xml, url, pubblico, osf_federata,
+      generic_rss]
+    correlati:
+      - portali.wizard-custom-portal
+      - portali.compliance-hard
+    domanda_naturale: "Qual è l'URL del feed XML della mia agenzia?"
+    contenuto:
+      a_cosa_serve: >
+        Comunicare al portale l'URL da cui scaricare i tuoi
+        annunci in formato XML.
+      quando_si_usa: >
+        Durante l'onboarding con un portale feed_pull (Subito,
+        Wikicasa, ecc.) o per un portale custom (Cap. 6.7).
+      passi:
+        - "Il pattern URL è: .../api/publishing/feed/<slug-agenzia>.xml?dialect=osf_federata"
+        - "Lo trovi visualizzato al passo 4 del Wizard Custom
+          Portal (Cap. 6.7) con bottone Copia."
+        - "È pubblico (nessuna autenticazione): pensato per
+          essere scaricato da bot."
+        - "Contiene SOLO immobili in stato 'active' che
+          superano la Compliance HARD. Le bozze non ci finiscono
+          mai."
+        - "Cache di 30 minuti: il portale può leggerlo senza
+          sovraccaricare OMNIA."
+        - "Due dialetti disponibili: osf_federata (default,
+          ricco) e generic_rss (basico)."
+      errori_comuni:
+        - problema: "Un immobile è scomparso dal feed"
+          soluzione: >
+            Tre possibilità: 1) è passato a Prenotato/Venduto/
+            Ritirato → uscita voluta; 2) hai eliminato una foto
+            e ora ne ha meno di 3 → violazione HARD; 3) hai
+            svuotato il prezzo o l'APE → violazione HARD. Apri
+            Compliance (Cap. 6.5) per il motivo esatto.
+        - problema: "L4/L3 privacy compare nel feed pubblico?"
+          soluzione: >
+            No. Il feed contiene solo immobili pubblici. Gli
+            immobili L3/L4 restano interni all'agenzia.
+      permessi:
+        - Titolare
+        - Agente
+    screenshot: []
+
+  - id: portali.log-sync
+    titolo: Cosa contengono i log di sync (audit trail)
+    modulo: Portali
+    widget: null
+    pubblico: [titolare, agente]
+    livello: intermedio
+    tags: [portali, log, audit, sync, trigger, retry]
+    correlati:
+      - portali.sync-automatico
+      - portali.sync-manuale
+    domanda_naturale: "Come vedo lo storico dei sync di un portale?"
+    contenuto:
+      a_cosa_serve: >
+        Capire cosa è successo la notte scorsa (o dopo un sync
+        manuale) su un portale attivo.
+      quando_si_usa: >
+        Quando qualcosa non torna sui contatori, o quando devi
+        motivare un blocco al titolare.
+      passi:
+        - "Trigger: scheduled (job automatico), manual
+          (bottone), admin_manual (bypass super_admin)."
+        - "Stato: success, partial (con blocchi compliance),
+          failed, simulated_push (per api_push in v1)."
+        - "Items OK: numero immobili pubblicati/pubblicabili."
+        - "Items Failed: numero immobili bloccati dalla
+          compliance."
+        - "Retry count: 0 (prima volta) fino a 3 (max retries)."
+        - "Error message: testo tecnico, es.
+          'blocked_by_compliance:5'."
+        - "Started/Ended: timestamp UTC."
+        - "In v1 in dashboard vedi solo: ultimo sync sotto il
+          nome del portale + contatore 'N pubblicati · M
+          bloccati' + badge errore rosso se ultimo sync
+          fallito."
+        - "Un pannello per la visualizzazione log-per-riga in UI
+          è in arrivo in uno sprint successivo."
+      errori_comuni:
+        - problema: "Vedo simulated_push nei log"
+          soluzione: >
+            È normale per Facebook Marketplace e Google Business
+            Profile in v1. L'integrazione live arriverà; per ora
+            gli annunci non finiscono davvero su quei portali.
+      permessi:
+        - Titolare
+        - Agente
+    screenshot: []

@@ -1,0 +1,376 @@
+# HAL — Voci esportate per RAG
+# Capitolo 21 · Valutatore immobiliare (dual-tier B2C-VAL-01)
+# D-051: base 1×/12m login+email verify, UNI €2,99 Stripe, PDF paywall,
+# agent pass-through senza debito crediti auto v1, fascicolo bypass gate.
+
+voci:
+
+  - id: valutatore.cos-e
+    titolo: Cos'è il Valutatore immobiliare OMNIA
+    modulo: Valutatore
+    widget: null
+    pubblico: [privato, titolare, agente, segreteria]
+    livello: base
+    tags: [valutatore, stima, immobile, uni-10750, panoramica, immobilcloud, dual-tier]
+    correlati: [valutatore.tier-base-gratis, valutatore.tier-uni-pdf, valutatore.differenza-base-uni]
+    domanda_naturale: "Cos'è il Valutatore immobiliare di OMNIA? A cosa serve?"
+    contenuto:
+      a_cosa_serve: >
+        Stima orientativa del valore di mercato di un immobile residenziale
+        in Italia. Due livelli: Stima rapida (base) gratuita 1×/12 mesi
+        e Valutazione UNI 10750 + PDF a €2,99 carta.
+      quando_si_usa: >
+        Privato che vende/compra e vuole capire quanto vale un immobile;
+        agente che mostra stima al cliente; visitatore da scheda annuncio.
+      passi:
+        - "Pagina dedicata /it/cloud/valutatore con due tier card."
+        - "CTA su scheda annuncio (Stima gratuita + Report UNI €2,99)."
+        - "ActionCard Valutatore immobiliare su home ImmobilCloud."
+        - "Motore: OMI/Borsino 2025 + UNI 10750 + merito + comparables."
+        - "Login ImmobilCloud obbligatorio (no stima anonima illimitata v1)."
+      errori_comuni:
+        - problema: "E' una perizia bancaria ufficiale?"
+          soluzione: >
+            No. Stima orientativa algoritmica. Per valutazione
+            vincolante serve perito iscritto all'Albo o perizia banca.
+      permessi:
+        - "B2C: account ImmobilCloud loggato"
+        - "Agente: pass-through su /cloud (copy crediti agenzia)"
+      screenshot: ["[SCREEN: valutatore-tier-scelta]"]
+
+  - id: valutatore.tier-base-gratis
+    titolo: Stima rapida gratuita (tier base · 1× ogni 12 mesi)
+    modulo: Valutatore
+    widget: null
+    pubblico: [privato]
+    livello: base
+    tags: [valutatore, base, gratis, lead-magnet, rate-limit, 12-mesi, email-verificata]
+    correlati: [valutatore.passi-stima-base, valutatore.differenza-base-uni, valutatore.errori-comuni]
+    domanda_naturale: "Come funziona la stima gratuita del valutatore? Quante volte posso usarla?"
+    contenuto:
+      a_cosa_serve: >
+        Lead magnet B2C: stima rapida orientativa senza pagare,
+        limitata a 1 valutazione ogni 12 mesi per account con email
+        verificata.
+      quando_si_usa: >
+        Primo orientamento sul valore prima di decidere se acquistare
+        il report UNI a pagamento.
+      passi:
+        - "Seleziona card Stima rapida GRATIS su /it/cloud/valutatore."
+        - "Campi: citta', tipologia, mq calpestabili (min 10), zona,
+        indirizzo, stato, energia, piano."
+        - "Superficie usata = calpestabile (NO UNI, NO merito, NO PDF)."
+        - "Server traccia uso in b2c_valuation_usage → 429 se limite."
+        - "Footer form: '1 valutazione ogni 12 mesi · nessun PDF'."
+      errori_comuni:
+        - problema: "Ho esaurito la stima gratis"
+          soluzione: >
+            Attendi reset_at (12 mesi dall'ultima base) o passa al
+            tier UNI 10750 + PDF a €2,99.
+        - problema: "Verifica l'email per usare la stima gratuita"
+          soluzione: >
+            Conferma email dall'account ImmobilCloud (Cap. 19).
+      permessi:
+        - "Privato B2C loggato + email_verified"
+      screenshot: ["[SCREEN: valutatore-base-risultato-upsell]"]
+
+  - id: valutatore.tier-uni-pdf
+    titolo: Valutazione UNI 10750 + PDF (€2,99 Stripe)
+    modulo: Valutatore
+    widget: null
+    pubblico: [privato, titolare, agente]
+    livello: intermedio
+    tags: [valutatore, uni-10750, pdf, stripe, 2-99-euro, merito, superficie-commerciale, b2c]
+    correlati: [valutatore.passi-report-uni, valutatore.differenza-base-uni, valutatore.limitazioni]
+    domanda_naturale: "Quanto costa il report UNI 10750? Cosa include il PDF?"
+    contenuto:
+      a_cosa_serve: >
+        Valutazione professionale con superficie commerciale UNI 10750,
+        coefficienti di merito e report PDF brandizzato scaricabile.
+        Prezzo B2C: €2,99 one-shot Stripe.
+      quando_si_usa: >
+        Quando serve documento piu' strutturato per negoziazione,
+        presentazione a banca o archivio personale.
+      passi:
+        - "Seleziona card UNI 10750 + PDF (€2,99)."
+        - "Compila campi base + 11 superfici accessorie + merito."
+        - "Checkout Stripe hosted → webhook marca b2c_purchases paid."
+        - "Entitlement 24h legato a payload_hash (SHA-256 immobile)."
+        - "Max 5 acquisti UNI/giorno per utente B2C."
+        - "PDF: valore, range, breakdown UNI, merito, comparables,
+        metodologia, disclaimer. Branding agenzia se agente loggato."
+      errori_comuni:
+        - problema: "402 payment_required sul tier UNI"
+          soluzione: >
+            Completa pagamento €2,99 via Stripe Checkout prima del
+            calcolo Pro o download PDF.
+        - problema: "Il pagamento e' in preparazione (503)"
+          soluzione: >
+            Stripe non abilitato in ambiente (STRIPE_ENABLED).
+            In produzione va configurato Stripe test/live.
+      permessi:
+        - "B2C: login + pagamento Stripe confermato"
+        - "Agente: pass-through gate (copy 12 crediti, debito non auto v1)"
+      screenshot: ["[SCREEN: valutatore-pdf-download]"]
+
+  - id: valutatore.differenza-base-uni
+    titolo: Differenza stima base vs UNI 10750 + PDF
+    modulo: Valutatore
+    widget: null
+    pubblico: [privato, titolare, agente]
+    livello: base
+    tags: [valutatore, confronto, base, uni, differenza, tier, prezzo]
+    correlati: [valutatore.tier-base-gratis, valutatore.tier-uni-pdf]
+    domanda_naturale: "Qual e' la differenza tra stima base e valutazione UNI?"
+    contenuto:
+      a_cosa_serve: >
+        Tabella comparativa per scegliere il tier giusto.
+      quando_si_usa: >
+        Prima di compilare il form o decidere se pagare €2,99.
+      passi:
+        - "BASE: gratis, 1×/12 mesi, mq calpestabili, no merito, no PDF."
+        - "UNI: €2,99, superficie commerciale ponderata UNI 10750,
+        coefficienti merito (piano, esposizione, vista...), PDF."
+        - "Entrambi: login obbligatorio, stesso motore prezzi OMI 2025."
+        - "Upsell: dopo stima base banner 'Passa a UNI · €2,99'."
+      errori_comuni:
+        - problema: "Perche' la stima base e' diversa dalla UNI?"
+          soluzione: >
+            UNI usa superficie commerciale ponderata (balconi, box...)
+            e merito. Base usa solo mq calpestabili.
+      permessi:
+        - "Informativo"
+      screenshot: []
+
+  - id: valutatore.passi-stima-base
+    titolo: Passi per ottenere una stima base gratuita
+    modulo: Valutatore
+    widget: null
+    pubblico: [privato]
+    livello: base
+    tags: [valutatore, passi, stima-base, tutorial, login, form]
+    correlati: [valutatore.tier-base-gratis, valutatore.errori-comuni]
+    domanda_naturale: "Come faccio una stima gratuita passo passo?"
+    contenuto:
+      a_cosa_serve: >
+        Guida operativa UI per tier base.
+      quando_si_usa: >
+        Primo utilizzo del valutatore da privato.
+      passi:
+        - "1. Vai su /it/cloud/valutatore (o CTA Stima gratuita da annuncio)."
+        - "2. Accedi/Registrati se non loggato (banner ambra)."
+        - "3. Seleziona card Stima rapida GRATIS."
+        - "4. Compila citta' + tipologia + mq (obbligatori)."
+        - "5. Click Ottieni la stima gratuita."
+        - "6. Leggi valore, range, €/m², affidabilita'."
+        - "7. Opzionale: upsell Passa a UNI · €2,99."
+        - "Pre-fill query: ?tier=base&city=&property_type=&surface_sqm="
+      errori_comuni:
+        - problema: "401 login_required"
+          soluzione: >
+            Devi essere registrato. Nessuna stima base anonima v1.
+      permessi:
+        - "Privato loggato + email verificata"
+      screenshot: ["[SCREEN: valutatore-base-risultato-upsell]"]
+
+  - id: valutatore.passi-report-uni
+    titolo: Passi per ottenere report UNI + PDF (pagamento Stripe)
+    modulo: Valutatore
+    widget: null
+    pubblico: [privato]
+    livello: intermedio
+    tags: [valutatore, passi, uni, pdf, stripe, checkout, pagamento]
+    correlati: [valutatore.tier-uni-pdf, valutatore.errori-comuni]
+    domanda_naturale: "Come pago e scarico il report PDF UNI 10750?"
+    contenuto:
+      a_cosa_serve: >
+        Flusso completo tier UNI: form Pro → checkout → PDF.
+      quando_si_usa: >
+        Quando serve report professionale a pagamento.
+      passi:
+        - "1. Card UNI 10750 + PDF o upsell da risultato base."
+        - "2. Compila superfici UNI + coefficienti merito."
+        - "3. Click Calcola UNI · €2,99."
+        - "4. Redirect Stripe Checkout (success/cancel pages)."
+        - "5. Post-pagamento: entitlement 24h per stesso immobile."
+        - "6. Click Scarica report PDF."
+        - "7. Polling /checkout/success su session_id se necessario."
+        - "Pre-fill: ?tier=uni&city=&property_type=&surface_sqm="
+      errori_comuni:
+        - problema: "PDF 402 senza entitlement"
+          soluzione: >
+            Pagamento non confermato o payload cambiato (hash diverso).
+            Ripeti checkout o verifica session_id su success page.
+      permessi:
+        - "Privato loggato + Stripe pagato"
+      screenshot: ["[SCREEN: valutatore-uni-pro-form]", "[SCREEN: valutatore-pdf-download]"]
+
+  - id: valutatore.agenzie-crediti
+    titolo: Valutatore per agenzie (B2B · crediti · fascicolo · API)
+    modulo: Valutatore
+    widget: null
+    pubblico: [titolare, agente, segreteria]
+    livello: intermedio
+    tags: [valutatore, agenzia, b2b, crediti, fascicolo, api-v1, track-b, 6-crediti, 12-crediti]
+    correlati: [valutatore.limitazioni, valutatore.collegamenti]
+    domanda_naturale: "Come usano il valutatore le agenzie? Quanto costa in crediti?"
+    contenuto:
+      a_cosa_serve: >
+        Stesso motore, rail crediti B2B invece di carta B2C.
+      quando_si_usa: >
+        Agente su /cloud, fascicolo immobile, integrazione partner API.
+      passi:
+        - "Piani B2B (plans.py): valuator_base=6 cr (€0,30),
+        valuator_uni_pdf=12 cr (€0,60)."
+        - "Agente su /cloud/valutatore: pass-through gate, copy
+        '12 crediti agenzia' al posto di €2,99."
+        - "⚠️ Debito crediti NON automatico su /cloud v1 (backlog)."
+        - "Fascicolo (Cap. 7): stima base via _estimate_value_core
+        interno, bypass gate B2C, no limite 12 mesi."
+        - "API Track B: POST /api/v1/valuator = 5 crediti Track B
+        (€0,15). Widget embed Cap. 20."
+      errori_comuni:
+        - problema: "Agente usa UNI gratis ma crediti non scalati"
+          soluzione: >
+            Comportamento atteso v1. Pass-through senza debito auto.
+            Backlog prodotto debito wallet.
+      permessi:
+        - "Agente/titolare/segreteria con agency_id"
+      screenshot: []
+
+  - id: valutatore.affidabilita-dati
+    titolo: Affidabilita' stima · dataset OMI 2025 · comparables
+    modulo: Valutatore
+    widget: null
+    pubblico: [privato, titolare, agente]
+    livello: intermedio
+    tags: [valutatore, affidabilita, omi, borsino, comparables, fallback, provincia, confidence]
+    correlati: [valutatore.limitazioni, valutatore.cos-e]
+    domanda_naturale: "Quanto e' affidabile la stima? Da dove vengono i dati?"
+    contenuto:
+      a_cosa_serve: >
+        Capire fonte dati, fallback e livelli confidence.
+      quando_si_usa: >
+        Quando il valore sembra alto/basso o per comuni piccoli.
+      passi:
+        - "Dataset: OMI/Borsino 2025, citta' curate + province + regioni."
+        - "Fallback: citta' → provincia (Nominatim/ANNCSU) → regione."
+        - "Comuni piccoli: sconto 8-12% vs capoluogo provinciale."
+        - "Confidence: alta / media / orientativa (score 0-110)."
+        - "Comparables: annunci attivi pubblici stessa citta'+tipologia."
+        - "Notice fallback provincia in UI se city non in dataset."
+      errori_comuni:
+        - problema: "Valore strano per paese piccolo"
+          soluzione: >
+            Normale con fallback provinciale. Affidabilita' orientativa.
+            Considera tier UNI con piu' dettagli o perizia ufficiale.
+      permessi:
+        - "Informativo"
+      screenshot: []
+
+  - id: valutatore.limitazioni
+    titolo: Limiti v1 Valutatore (D-051 · elenco esaustivo)
+    modulo: Valutatore
+    widget: null
+    pubblico: [privato, titolare, agente]
+    livello: intermedio
+    tags: [valutatore, limiti, d-051, cosa-non-fa, stripe, agente-crediti-no, anonimo-no]
+    correlati: [valutatore.tier-base-gratis, valutatore.agenzie-crediti]
+    domanda_naturale: "Cosa NON fa il valutatore v1? Limiti e onestà?"
+    contenuto:
+      a_cosa_serve: >
+        Elenco esaustivo limitazioni v1 post B2C-VAL-01.
+      quando_si_usa: >
+        Prima di aspettarsi perizia bancaria o stima anonima.
+      passi:
+        - "NON perizia vincolante / CTU / documento mutuo."
+        - "NON stima anonima illimitata (login obbligatorio)."
+        - "Base: NO PDF, NO merito, NO commercial_surfaces."
+        - "UNI B2C: pagamento €2,99 obbligatorio (402 senza entitlement)."
+        - "Entitlement UNI: 24h, stesso payload_hash."
+        - "Stripe 503 se STRIPE_ENABLED=false in ambiente."
+        - "Agente /cloud: pass-through, debito 6/12 cr NON automatico."
+        - "Form UI v1: NO campi lead name/email (backend li supporta)."
+        - "Widget Track B: rail crediti partner, non tier €2,99 B2C."
+      errori_comuni: []
+      permessi:
+        - "Documentazione informativa"
+      screenshot: []
+
+  - id: valutatore.errori-comuni
+    titolo: Errori comuni Valutatore (401/402/403/429 + PDF + Stripe)
+    modulo: Valutatore
+    widget: null
+    pubblico: [privato, titolare, agente]
+    livello: base
+    tags: [valutatore, errori, troubleshooting, "401", "402", "403", "429", pdf, stripe, login]
+    correlati: [valutatore.passi-stima-base, valutatore.passi-report-uni]
+    domanda_naturale: "Perche' il valutatore non funziona? Errori comuni?"
+    contenuto:
+      a_cosa_serve: >
+        Troubleshooting errori gate B2C e UX dual-tier.
+      quando_si_usa: >
+        Debug blocco stima o download PDF.
+      passi:
+        - "401 login_required: accedi ImmobilCloud."
+        - "403 email_verification_required: verifica email account."
+        - "429 base_limit_reached: quota 12 mesi esaurita, vedi reset_at."
+        - "402 payment_required: tier UNI senza pagamento €2,99."
+        - "PDF 402: entitlement UNI mancante o payload base-only."
+        - "503 stripe_not_configured: Stripe non abilitato in env."
+        - "Pro non visibile: sei su tier base, passa a card UNI."
+      errori_comuni: []
+      permessi:
+        - "Troubleshooting"
+      screenshot: []
+
+  - id: valutatore.privacy-lead
+    titolo: Privacy valutatore · usage tracking · acquisti B2C
+    modulo: Valutatore
+    widget: null
+    pubblico: [privato]
+    livello: base
+    tags: [valutatore, privacy, gdpr, b2c-valuation-usage, b2c-purchases, lead]
+    correlati: [valutatore.limitazioni]
+    domanda_naturale: "Come vengono trattati i miei dati nel valutatore?"
+    contenuto:
+      a_cosa_serve: >
+        Trasparenza su collection MongoDB e lead capture.
+      quando_si_usa: >
+        Domande privacy post-stima o post-acquisto UNI.
+      passi:
+        - "b2c_valuation_usage: user_id, tier, timestamp (rate limit)."
+        - "b2c_purchases: storico Stripe, payload_hash, scadenza 24h."
+        - "valuation_leads: solo se API invia name+email (non form UI v1)."
+        - "Dati immobile inseriti non pubblicati su portale."
+        - "Cross-ref Cap. 19 Impostazioni per profilo account."
+      errori_comuni: []
+      permessi:
+        - "Informativo"
+      screenshot: []
+
+  - id: valutatore.collegamenti
+    titolo: Collegamenti Valutatore → Cap. 7/11/19/20
+    modulo: Valutatore
+    widget: null
+    pubblico: [privato, titolare, agente]
+    livello: base
+    tags: [valutatore, collegamenti, cross-ref, cap7, cap11, cap19, cap20, fascicolo, mutui, api]
+    correlati: [valutatore.agenzie-crediti, valutatore.cos-e]
+    domanda_naturale: "Come si collega il valutatore agli altri moduli OMNIA?"
+    contenuto:
+      a_cosa_serve: >
+        Mappa cross-ref ecosistema valutatore.
+      quando_si_usa: >
+        Capire integrazioni fascicolo, mutui, API partner.
+      passi:
+        - "Cap. 7 Fascicolo: stima base integrata load pagina (bypass gate)."
+        - "Cap. 11 Mutui: box rata su scheda annuncio accanto a valutatore."
+        - "Cap. 19 Impostazioni: verifica email per tier base gratis."
+        - "Cap. 20 API Keys: POST /api/v1/valuator widget partner 5cr."
+        - "PRICING_B2C.md: €2,99 UNI + regole anti-abuso."
+        - "PropertyDetailPage: dual CTA pre-fill da annuncio."
+      errori_comuni: []
+      permessi:
+        - "Documentativo"
+      screenshot: ["[SCREEN: valutatore-cta-scheda-annuncio]"]

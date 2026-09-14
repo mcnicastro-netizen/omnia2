@@ -1,0 +1,307 @@
+# HAL — Voci esportate per RAG
+# Capitolo 2 · Dashboard
+# Schema: id, titolo, modulo, widget, pubblico, livello, tags, correlati,
+#         domanda_naturale, contenuto{a_cosa_serve, quando_si_usa, passi,
+#         errori_comuni[{problema,soluzione}], permessi}, screenshot[]
+
+voci:
+
+  # ---------- 2.1 · Cosa mi dice il pannello iniziale ----------
+
+  - id: dashboard.panoramica-iniziale
+    titolo: A cosa serve la Dashboard
+    modulo: Dashboard
+    widget: null
+    pubblico: [titolare, agente, segreteria]
+    livello: base
+    tags: [dashboard, orientamento, primi-passi]
+    correlati:
+      - dashboard.6-contatori
+      - dashboard.dove-vado-dopo
+      - primo-accesso.tour-barra-sinistra
+    domanda_naturale: "A cosa serve la Dashboard di ImmoWeb?"
+    contenuto:
+      a_cosa_serve: >
+        Vedere in un colpo d'occhio lo stato dell'agenzia oggi:
+        immobili in vetrina, lead da chiamare, match nuovi, visite in
+        agenda, collaboratori e inviti pendenti.
+      quando_si_usa: >
+        Ogni mattina, all'apertura, per capire dove concentrare la
+        giornata. La Dashboard è un cruscotto di stato, non un feed
+        di eventi.
+      passi:
+        - Fai login (vedi primo-accesso.login-primo-ingresso).
+        - Vieni portato direttamente sulla Dashboard.
+        - In alto vedi il saluto "Bentornato, {tuo nome}".
+        - Sotto vedi sei riquadri (KPI card) con i numeri chiave.
+        - In fondo trovi una nota che ricorda cosa rappresentano.
+      errori_comuni: []
+      permessi:
+        - Tutti i ruoli
+    screenshot:
+      - "[SCREEN: cap2-dashboard-panoramica]"
+
+  # ---------- 2.2 · I sei contatori ----------
+
+  - id: dashboard.6-contatori
+    titolo: I sei contatori della Dashboard
+    modulo: Dashboard
+    widget: null
+    pubblico: [titolare, agente, segreteria]
+    livello: base
+    tags: [dashboard, kpi, contatori, panoramica]
+    correlati:
+      - dashboard.immobili-attivi
+      - dashboard.lead-aperti
+      - dashboard.nuovi-match
+      - dashboard.visite-settimana
+      - dashboard.dove-vado-dopo
+    domanda_naturale: "Cosa significano i sei numeri della Dashboard?"
+    contenuto:
+      a_cosa_serve: >
+        Capire cosa conta ogni riquadro (KPI card) della Dashboard.
+      quando_si_usa: >
+        La prima volta, per orientarti. Poi diventano il linguaggio
+        naturale con cui pensare all'agenzia.
+      passi:
+        - "Immobili attivi: numero di immobili in stato Pubblicato."
+        - "Lead aperti: contatti in stato Nuovo o Contattato (non
+          ancora chiusi)."
+        - "Nuovi match (7gg): abbinamenti cliente↔immobile generati
+          negli ultimi 7 giorni."
+        - "Visite (7gg): visite in agenda nei prossimi 7 giorni."
+        - "Collaboratori: membri dell'agenzia con account attivo."
+        - "Inviti pendenti: inviti spediti ma non ancora accettati."
+      errori_comuni:
+        - problema: "I numeri sono tutti 0"
+          soluzione: >
+            Se l'agenzia è nuova è normale. Se hai dati ma vedi 0,
+            verifica in alto a sinistra di aver selezionato l'agenzia
+            giusta.
+      permessi:
+        - Tutti (i numeri possono differire per ruolo se il titolare
+          ha ristretto i permessi della segreteria)
+    screenshot:
+      - "[SCREEN: cap2-dashboard-kpi-6cards]"
+
+  # ---------- 2.3 · Come leggerli in pratica ----------
+
+  - id: dashboard.immobili-attivi
+    titolo: Come leggere "Immobili attivi"
+    modulo: Dashboard
+    widget: null
+    pubblico: [titolare, agente, segreteria]
+    livello: base
+    tags: [dashboard, immobili, kpi]
+    correlati:
+      - immobili.creazione-manuale
+      - immobili.pubblicare-bozza
+      - dashboard.6-contatori
+    domanda_naturale: "Perché sono importanti gli 'Immobili attivi' e
+      cosa faccio se salgono o scendono?"
+    contenuto:
+      a_cosa_serve: >
+        Sapere quanti immobili sono realmente in vetrina e come
+        reagire quando il numero cambia.
+      quando_si_usa: >
+        Ogni giorno, per capire se il portafoglio si sta muovendo.
+      passi:
+        - Se il numero sale hai nuovi mandati o annunci riattivati.
+        - Se sale, controlla che i portali stiano ricevendo l'update
+          (vedi cap. 8 · Portali).
+        - Se scende, qualcuno ha venduto, affittato o archiviato un
+          immobile. Verifica dal modulo Immobili.
+        - Un immobile in bozza NON è contato, deve essere Pubblicato
+          per apparire nel numero.
+      errori_comuni:
+        - problema: "Ho aggiunto un immobile ma il contatore non è
+            aumentato"
+          soluzione: >
+            L'immobile è probabilmente in Bozza. Aprilo e clicca
+            Pubblica.
+      permessi:
+        - Tutti (contatore visibile in base ai permessi)
+    screenshot: []
+
+  - id: dashboard.lead-aperti
+    titolo: Come leggere "Lead aperti"
+    modulo: Dashboard
+    widget: null
+    pubblico: [titolare, agente, segreteria]
+    livello: base
+    tags: [dashboard, lead, clienti, kpi]
+    correlati:
+      - clienti.anagrafica-nuovo-cliente
+      - clienti.filtro-per-stato
+      - dashboard.6-contatori
+    domanda_naturale: "Cosa faccio quando i 'Lead aperti' aumentano?"
+    contenuto:
+      a_cosa_serve: >
+        Capire quanti contatti stanno aspettando una risposta e agire
+        prima che si raffreddino.
+      quando_si_usa: >
+        Ogni mattina. Se il numero cresce senza che diminuisca a fine
+        giornata, i contatti si stanno accumulando.
+      passi:
+        - Il conteggio include contatti in stato Nuovo (mai chiamati)
+          e Contattato (chiamati ma non ancora chiusi).
+        - Se cresce rapido, di solito hai lanciato un annuncio molto
+          interessante o una campagna.
+        - Se resta alto per giorni, hai accumulo. Vai in Clienti,
+          filtra per stato Nuovo e chiama in ordine di temperatura
+          (i ROVENTI in rosso per primi).
+      errori_comuni:
+        - problema: "Il numero non scende mai"
+          soluzione: >
+            I lead restano aperti finché qualcuno non li chiude o li
+            porta a proposta. Aggiornare lo stato dei clienti dopo
+            ogni contatto è fondamentale.
+      permessi:
+        - Tutti
+    screenshot: []
+
+  - id: dashboard.nuovi-match
+    titolo: Come leggere "Nuovi match (7gg)"
+    modulo: Dashboard
+    widget: null
+    pubblico: [titolare, agente, segreteria]
+    livello: base
+    tags: [dashboard, match, matching, lead-scoring, kpi]
+    correlati:
+      - match.come-funziona
+      - match.lead-scoring
+      - dashboard.6-contatori
+    domanda_naturale: "Perché ho pochi 'Nuovi match' questa settimana?"
+    contenuto:
+      a_cosa_serve: >
+        Capire se il motore di abbinamento sta lavorando bene o se
+        il portafoglio (immobili o clienti) va integrato.
+      quando_si_usa: >
+        Ogni settimana. Se il numero resta basso, c'è qualcosa da
+        correggere in Clienti (preferenze) o in Immobili (dati
+        incompleti).
+      passi:
+        - Se il numero è alto, apri Match e guarda per primi i
+          ROVENTI (rosso), poi CALDI (arancione).
+        - Se è basso, i clienti registrati potrebbero avere preferenze
+          troppo strette, o essere pochi.
+        - Un match richiede almeno un cliente con preferenze di ricerca
+          e almeno un immobile compatibile (prezzo, tipologia, zona).
+      errori_comuni:
+        - problema: "Ho tanti clienti ma zero match"
+          soluzione: >
+            Verifica che i clienti abbiano compilato le Preferenze di
+            ricerca (Cap. 4). Un cliente senza preferenze non produce
+            match automatici.
+      permessi:
+        - Tutti
+    screenshot: []
+
+  - id: dashboard.visite-settimana
+    titolo: Come leggere "Visite (7gg)"
+    modulo: Dashboard
+    widget: null
+    pubblico: [titolare, agente, segreteria]
+    livello: base
+    tags: [dashboard, visite, agenda, kpi]
+    correlati:
+      - dashboard.6-contatori
+      - clienti.filtro-per-stato
+    domanda_naturale: "Perché non vedo visite in agenda per questa
+      settimana?"
+    contenuto:
+      a_cosa_serve: >
+        Anticipare la settimana: sapere quante visite sono già
+        pianificate nei prossimi 7 giorni.
+      quando_si_usa: >
+        La domenica sera o il lunedì mattina, per capire quanto tempo
+        dedicare al recall dei clienti caldi.
+      passi:
+        - Zero visite in agenda è un campanello. Vai in Clienti e
+          richiama i CALDI di questa settimana.
+        - Se ci sono molte visite, verifica che siano assegnate al
+          collaboratore giusto (specialmente in agenzie con più agenti).
+      errori_comuni:
+        - problema: "Ho pianificato una visita ma il contatore non è
+            cambiato"
+          soluzione: >
+            L'evento deve essere di tipo Visita e non generico. Se
+            hai usato Nota o Chiamata, non conta.
+      permessi:
+        - Tutti
+    screenshot: []
+
+  - id: dashboard.collaboratori-inviti
+    titolo: Come leggere "Collaboratori" e "Inviti pendenti"
+    modulo: Dashboard
+    widget: null
+    pubblico: [titolare]
+    livello: base
+    tags: [dashboard, collaboratori, inviti, kpi]
+    correlati:
+      - collaboratori.invita-collaboratore
+      - collaboratori.revoca-collaboratore
+      - dashboard.6-contatori
+    domanda_naturale: "Cosa mi dicono i numeri di 'Collaboratori' e
+      'Inviti pendenti'?"
+    contenuto:
+      a_cosa_serve: >
+        Tenere allineato il team: ogni account inattivo che risulta
+        collaboratore è un potenziale accesso non voluto; ogni invito
+        pendente da giorni è un onboarding che non è mai partito.
+      quando_si_usa: >
+        Una volta a settimana o quando cambia il team.
+      passi:
+        - Se "Collaboratori" non corrisponde alle persone che lavorano
+          davvero con te, apri Collaboratori e disattiva chi è uscito.
+        - Se "Inviti pendenti" è maggiore di 0 c'è qualcuno che non
+          ha aperto l'email. Da Collaboratori puoi re-inviare.
+      errori_comuni:
+        - problema: "L'invito è stato reinviato ma il contatore non
+            scende"
+          soluzione: >
+            Il contatore scende quando l'invitato apre il link e crea
+            l'account. Se non lo fa entro 24 ore, l'invito scade e va
+            rigenerato.
+      permessi:
+        - Solo titolare vede il numero completo. Gli altri ruoli
+          possono vedere il conteggio ma non gestire.
+    screenshot: []
+
+  # ---------- 2.4 · Dopo la dashboard, dove vado ----------
+
+  - id: dashboard.dove-vado-dopo
+    titolo: Dopo la Dashboard, dove vado?
+    modulo: Dashboard
+    widget: null
+    pubblico: [titolare, agente, segreteria]
+    livello: base
+    tags: [dashboard, orientamento, routing]
+    correlati:
+      - dashboard.6-contatori
+      - clienti.filtro-per-stato
+      - match.lead-scoring
+      - immobili.creazione-manuale
+    domanda_naturale: "Cosa devo fare dopo aver visto la Dashboard?"
+    contenuto:
+      a_cosa_serve: >
+        Trasformare i numeri della Dashboard in azione, aprendo il
+        modulo giusto in base a quello che vedi.
+      quando_si_usa: >
+        Ogni volta che ti fermi sulla Dashboard e ti chiedi "e adesso?"
+      passi:
+        - "Se i Lead aperti sono in aumento → Clienti → filtro Nuovo →
+          chiama in ordine di temperatura."
+        - "Se i Nuovi match sono alti → Match → apri per primi i
+          ROVENTI (rosso)."
+        - "Se gli Immobili attivi sono calati → Immobili → riattiva
+          le bozze."
+        - "Se le Visite (7gg) sono a zero → Clienti → richiama i CALDI
+          della settimana."
+        - "Se gli Inviti pendenti sono > 0 → Collaboratori → re-invita."
+        - "Se sei una nuova agenzia con tutto a zero → prima Immobili
+          (almeno 10) poi Clienti (almeno 20 con preferenze compilate)."
+      errori_comuni: []
+      permessi:
+        - Tutti
+    screenshot: []

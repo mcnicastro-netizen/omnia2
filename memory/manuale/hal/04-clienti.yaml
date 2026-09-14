@@ -1,0 +1,561 @@
+# HAL — Voci esportate per RAG
+# Capitolo 4 · Clienti
+# Schema: id, titolo, modulo, widget, pubblico, livello, tags, correlati,
+#         domanda_naturale, contenuto{a_cosa_serve, quando_si_usa, passi,
+#         errori_comuni[{problema,soluzione}], permessi}, screenshot[]
+
+voci:
+
+  # ---------- 4.1 · Anagrafica ----------
+
+  - id: clienti.creare-nuovo
+    titolo: Creare un nuovo cliente in anagrafica
+    modulo: Clienti
+    widget: null
+    pubblico: [titolare, agente, segreteria]
+    livello: base
+    tags: [clienti, anagrafica, inserimento, primi-passi]
+    correlati:
+      - clienti.tipi-cliente
+      - clienti.stato-crm
+      - clienti.preferenze-ricerca
+      - clienti.import-csv-template
+    domanda_naturale: "Come inserisco un nuovo cliente?"
+    contenuto:
+      a_cosa_serve: >
+        Registrare in ImmoWeb una persona (compratore, venditore,
+        affittuario, proprietario, investitore) con dati di contatto
+        e stato commerciale, in modo da poter proporre immobili e
+        tracciare la relazione nel tempo.
+      quando_si_usa: >
+        A ogni nuovo lead (telefono, walk-in, portale, widget). A ogni
+        proprietario che affida un mandato. A ogni investitore.
+      passi:
+        - Dalla barra a sinistra clicca "Clienti".
+        - In alto a destra clicca "+ Nuovo cliente".
+        - Compila Nome e Cognome (obbligatori).
+        - Aggiungi email (consigliata), telefono, WhatsApp, codice
+          fiscale se disponibili.
+        - Scegli il "Tipo cliente" (Acquirente, Venditore, Affittuario,
+          Proprietario, Investitore).
+        - Scegli lo "Stato CRM" (di solito "Nuovo" al primo contatto).
+        - Compila "Origine" (es. Idealista, Passaparola, Walk-in).
+        - Attiva la spunta "Il cliente ha rilasciato consenso GDPR".
+        - Aggiungi note interne se vuoi (promemoria, contesto).
+        - Clicca "Salva cliente".
+      errori_comuni:
+        - problema: "Email duplicata"
+          soluzione: >
+            Il cliente esiste già in agenzia. Aggiorna la scheda esistente
+            invece di crearne una nuova. Cerca dal filtro in alto.
+        - problema: "Il cliente non risponde al telefono"
+          soluzione: >
+            Aggiorna lo Stato CRM a "Contattato" comunque, se hai fatto
+            il tentativo. Serve per non riconteggiarlo tra i "Da chiamare
+            oggi".
+      permessi:
+        - Titolare, agente, segreteria (come agente)
+    screenshot:
+      - "[SCREEN: cap4-client-form-nuovo]"
+
+  - id: clienti.tipi-cliente
+    titolo: I cinque tipi di cliente
+    modulo: Clienti
+    widget: null
+    pubblico: [titolare, agente, segreteria]
+    livello: base
+    tags: [clienti, tipologia, funnel]
+    correlati:
+      - clienti.creare-nuovo
+      - clienti.preferenze-ricerca
+      - clienti.collegare-immobile-venditore
+    domanda_naturale: "Che differenza c'è tra Acquirente, Venditore,
+      Affittuario, Proprietario e Investitore?"
+    contenuto:
+      a_cosa_serve: >
+        Classificare il cliente in modo che il matching, i filtri e
+        i bucket funzionino correttamente.
+      quando_si_usa: >
+        Alla creazione del cliente e ogni volta che la relazione cambia
+        (es. un venditore diventa acquirente dopo l'incasso).
+      passi:
+        - "Acquirente: vuole comprare casa. Compila anche le preferenze
+          di ricerca per attivare i match automatici."
+        - "Venditore: ha una casa da vendere. Va collegato a un
+          immobile del portafoglio (vedi clienti.collegare-immobile-venditore)."
+        - "Affittuario: cerca casa in affitto. Come acquirente, con
+          preferenza operazione = Affitto."
+        - "Proprietario (affitta): ha un immobile da mettere in
+          affitto. Come venditore, ma per contratti di locazione."
+        - "Investitore: cerca opportunità (valore, rendita,
+          riqualificazione). Preferenze più ampie e flessibili."
+      errori_comuni:
+        - problema: "Ho messo il tipo sbagliato"
+          soluzione: >
+            Il tipo si cambia in qualsiasi momento aprendo la scheda
+            e modificando "Tipo cliente".
+      permessi:
+        - Titolare, agente, segreteria (come agente)
+    screenshot: []
+
+  - id: clienti.stato-crm
+    titolo: Gli stati del funnel commerciale (workflow CRM)
+    modulo: Clienti
+    widget: null
+    pubblico: [titolare, agente, segreteria]
+    livello: base
+    tags: [clienti, funnel, stato, workflow, crm]
+    correlati:
+      - clienti.creare-nuovo
+      - dashboard.lead-aperti
+    domanda_naturale: "Cosa significano gli stati Nuovo, Contattato,
+      Qualificato, Trattativa?"
+    contenuto:
+      a_cosa_serve: >
+        Tracciare a che punto sei con ogni cliente. Lo stato alimenta
+        la Dashboard (Lead aperti) e i bucket Smart Sorting.
+      quando_si_usa: >
+        Dopo ogni interazione significativa (chiamata, mail, visita,
+        proposta).
+      passi:
+        - "Nuovo: appena arrivato, non ancora chiamato."
+        - "Contattato: lo hai sentito almeno una volta, ma nessuna
+          azione concreta."
+        - "Qualificato: ha budget reale, esigenze chiare, tempi
+          definiti."
+        - "Trattativa: c'è una proposta scritta, visita concordata o
+          due diligence."
+        - "Chiuso (vinto): rogito o contratto firmato con te."
+        - "Chiuso (perso): ha comprato o affittato altrove, o si è
+          ritirato."
+        - "Archiviato: contatto vecchio, non attivo. Resta nello
+          storico ma non compare nei bucket."
+      errori_comuni:
+        - problema: "Il cliente non è più attivo ma resta in Lead aperti"
+          soluzione: >
+            Aggiorna lo stato a "Archiviato" o "Chiuso (perso)". La
+            Dashboard conta solo Nuovo e Contattato come Lead aperti.
+      permessi:
+        - Titolare, agente, segreteria (come agente)
+    screenshot: []
+
+  # ---------- 4.2 · Preferenze ----------
+
+  - id: clienti.preferenze-ricerca
+    titolo: Compilare le preferenze di ricerca di un acquirente
+    modulo: Clienti
+    widget: null
+    pubblico: [titolare, agente, segreteria]
+    livello: base
+    tags: [clienti, preferenze, match, ricerca, acquirenti]
+    correlati:
+      - clienti.creare-nuovo
+      - clienti.tipi-cliente
+      - dashboard.nuovi-match
+    domanda_naturale: "Come inserisco cosa cerca il cliente?"
+    contenuto:
+      a_cosa_serve: >
+        Comunicare al sistema le preferenze del cliente (dove, quanto,
+        che tipo di casa) per attivare i match automatici con gli
+        immobili in portafoglio. Un cliente Acquirente senza preferenze
+        NON genera match.
+      quando_si_usa: >
+        Al primo colloquio con il cliente. Per Acquirenti, Affittuari
+        e Investitori.
+      passi:
+        - Apri la scheda cliente (crealo se non esiste — vedi
+          clienti.creare-nuovo).
+        - Scorri fino a "Preferenze di ricerca".
+        - Scegli l'Operazione cercata (Vendita, Affitto, Riscatto,
+          Asta o Indifferente).
+        - Aggiungi Tipologie d'immobile (multipla — es. Appartamento
+          + Attico).
+        - Compila Città (una o più, separate da virgola).
+        - Compila Zone/Quartieri (es. Centro Storico, Trastevere).
+        - Metti un range Prezzo min/max e Superficie min/max.
+        - Compila Locali, Camere, Bagni se il cliente ha idee precise.
+        - Compila Piano preferito, Classe energetica minima,
+          Caratteristiche imprescindibili solo se davvero rilevanti.
+        - Aggiungi Note di ricerca per dettagli extra (es.
+          "ascensore obbligatorio se al 3° piano").
+        - Clicca "Salva cliente".
+      errori_comuni:
+        - problema: "Il cliente non ha match"
+          soluzione: >
+            Le preferenze sono troppo strette. Allarga il range prezzo
+            o superficie. Un match richiede compatibilità su prezzo,
+            operazione e tipologia; se sono strettissimi zero match.
+        - problema: "Devo compilare tutti i campi?"
+          soluzione: >
+            No. Campi vuoti = "indifferente". Meglio 3 criteri chiari
+            che 10 mediamente vaghi.
+      permessi:
+        - Titolare, agente, segreteria (come agente)
+    screenshot:
+      - "[SCREEN: cap4-preferences-form]"
+
+  - id: clienti.gdpr-consenso
+    titolo: Consenso GDPR e privacy
+    modulo: Clienti
+    widget: null
+    pubblico: [titolare, agente, segreteria]
+    livello: base
+    tags: [clienti, gdpr, privacy, compliance]
+    correlati:
+      - clienti.creare-nuovo
+    domanda_naturale: "Cosa faccio con il consenso GDPR del cliente?"
+    contenuto:
+      a_cosa_serve: >
+        Attestare che il cliente ti ha autorizzato al trattamento dei
+        dati personali e ai contatti commerciali. Senza consenso non
+        puoi ricontattarlo per proposte, newsletter, SMS massivi.
+      quando_si_usa: >
+        Alla prima presa contatto (idealmente per scritto o via
+        modulo firmato).
+      passi:
+        - Apri la scheda cliente.
+        - Attiva la spunta "Il cliente ha rilasciato consenso GDPR".
+        - Salva.
+      errori_comuni:
+        - problema: "Il cliente ha revocato il consenso"
+          soluzione: >
+            Togli la spunta e non ricontattarlo commercialmente. Nel
+            dubbio, non contattare. Puoi comunque conservare i dati
+            per obblighi legali/fiscali (es. contratti passati).
+      permessi:
+        - Titolare, agente, segreteria (come agente)
+    screenshot: []
+
+  # ---------- 4.3 · Import CSV ----------
+
+  - id: clienti.import-csv-template
+    titolo: Importare clienti da CSV con template
+    modulo: Clienti
+    widget: null
+    pubblico: [titolare, agente, segreteria]
+    livello: intermedio
+    tags: [clienti, import, csv, migrazione]
+    correlati:
+      - clienti.smart-import-ai
+      - clienti.creare-nuovo
+    domanda_naturale: "Come importo tutti i miei clienti dal vecchio
+      Excel?"
+    contenuto:
+      a_cosa_serve: >
+        Caricare in blocco molti clienti da un file CSV pulito e
+        strutturato (Excel, Google Sheets).
+      quando_si_usa: >
+        Prima migrazione dal vecchio gestionale. Import di lead da
+        campagne (Google Ads, LinkedIn, ecc.). Ogni volta che hai una
+        lista strutturata.
+      passi:
+        - Dalla lista Clienti in alto a destra clicca "⬆ Importa CSV".
+        - Vai sulla scheda "📋 Template CSV".
+        - Clicca "⬇ Scarica template CSV" e apri il file con Excel o
+          Google Sheets.
+        - Compila una riga per cliente. Il separatore è ";" (punto e
+          virgola), compatibile con Excel/Numbers in italiano.
+        - Salva il file come CSV UTF-8.
+        - Torna in ImmoWeb e trascina il file, o cliccalo per
+          sceglierlo.
+        - Verifica la preview delle prime 5 righe.
+        - Clicca "Importa N clienti".
+        - Al termine controlla il messaggio "N clienti su M importati"
+          ed eventuali errori nell'accordion.
+      errori_comuni:
+        - problema: "File CSV non valido"
+          soluzione: >
+            Il file non è UTF-8 o non usi punto e virgola. Riesporta
+            da Excel scegliendo "CSV UTF-8" con separatore ";".
+        - problema: "Riga scartata"
+          soluzione: >
+            Mancano campi obbligatori (nome, cognome). Apri l'accordion
+            errori per vedere il dettaglio riga per riga.
+        - problema: "Email duplicata"
+          soluzione: >
+            Il cliente esiste già. Aggiorna la scheda esistente invece
+            di crearne una nuova.
+      permessi:
+        - Titolare, agente, segreteria (come agente)
+    screenshot:
+      - "[SCREEN: cap4-import-csv-flow]"
+
+  # ---------- 4.4 · Smart Import AI ----------
+
+  - id: clienti.smart-import-ai
+    titolo: Smart Import AI (qualsiasi file — Excel, vCard, testo)
+    modulo: Clienti
+    widget: null
+    pubblico: [titolare, agente, segreteria]
+    livello: intermedio
+    tags: [clienti, import, ai, smart-import, vcard, xlsx, migrazione]
+    correlati:
+      - clienti.import-csv-template
+      - clienti.creare-nuovo
+    domanda_naturale: "Ho un file Excel disordinato del vecchio CRM,
+      come lo importo?"
+    contenuto:
+      a_cosa_serve: >
+        Importare clienti da un file "brutto" (Excel con colonne
+        strane, export contatti vCard, testo libero) lasciando che
+        HAL estragga i dati al posto tuo, senza doverli riordinare.
+      quando_si_usa: >
+        Prima migrazione da un CRM con dati messi male. Import da
+        Gmail o Outlook (vCard). Import da un file di appunti liberi.
+      passi:
+        - Dalla lista Clienti clicca "⬆ Importa CSV".
+        - Vai sulla scheda "⚡ Import AI".
+        - Trascina il file nel riquadro (o clicca per sceglierlo).
+        - "Formati supportati: .csv, .xlsx, .vcf (vCard), .txt.
+          Dimensione max 5 MB, fino a 500 righe."
+        - HAL legge il file (5-15 secondi).
+        - Vedi l'anteprima dei clienti estratti con confidenza per
+          riga.
+        - Rivedi e correggi i campi direttamente, o rimuovi le righe
+          sotto soglia.
+        - Clicca "Importa".
+        - Al termine controlla "N importati / X saltati".
+      errori_comuni:
+        - problema: "File troppo grande (max 5 MB)"
+          soluzione: >
+            Dividilo in più file da 500 righe l'uno.
+        - problema: "Righe sotto soglia confidenza"
+          soluzione: >
+            L'IA non ha trovato dati abbastanza chiari. Correggile
+            manualmente nell'anteprima prima di confermare, oppure
+            saltale e reinseriscile a mano.
+      permessi:
+        - Titolare, agente, segreteria (come agente)
+    screenshot:
+      - "[SCREEN: cap4-smart-import-ai-preview]"
+
+  # ---------- 4.5 · Property-seller link ----------
+
+  - id: clienti.collegare-immobile-venditore
+    titolo: Collegare un cliente venditore/proprietario a un immobile
+    modulo: Clienti
+    widget: null
+    pubblico: [titolare, agente, segreteria]
+    livello: intermedio
+    tags: [clienti, immobili, venditore, proprietario, mandato, link]
+    correlati:
+      - clienti.tipi-cliente
+      - immobili.creazione-manuale
+    domanda_naturale: "Come collego il proprietario alla scheda
+      dell'immobile?"
+    contenuto:
+      a_cosa_serve: >
+        Sapere chi è il proprietario di un immobile in portafoglio.
+        Il collegamento attiva nome/telefono del proprietario visibili
+        al team (privacy L4), scheda cliente arricchita con tutti gli
+        immobili collegati, coerenza fra CRM e portale.
+      quando_si_usa: >
+        Ogni volta che acquisisci un mandato di vendita o locazione,
+        subito dopo aver caricato l'immobile.
+      passi:
+        - Vai in Immobili e apri l'immobile (o crealo).
+        - Trova il campo "Cliente venditore / proprietario (collega
+          anagrafica)".
+        - Scrivi il nome del cliente nel riquadro di ricerca.
+        - Se esiste, cliccalo per collegarlo.
+        - Se non esiste, vedi il messaggio "Nessun cliente venditore
+          trovato. Crealo prima nella sezione Clienti." — apri Clienti
+          in un'altra scheda, crea un cliente di tipo Venditore
+          (o Proprietario), torna qui e ripeti la ricerca.
+        - Salva l'immobile.
+        - "Per vedere gli immobili collegati a un cliente venditore
+          apri la sua scheda in Clienti."
+      errori_comuni:
+        - problema: "Non trovo il cliente nella ricerca"
+          soluzione: >
+            Il cliente potrebbe essere di tipo Acquirente. Cambialo
+            in Venditore o Proprietario dalla sua scheda, poi ripeti.
+        - problema: "Ho collegato la persona sbagliata"
+          soluzione: >
+            Nel form immobile clicca "Cambia" per selezionare un altro
+            cliente, o "Rimuovi" per disfare il collegamento.
+      permessi:
+        - Titolare, agente, segreteria (come agente)
+    screenshot:
+      - "[SCREEN: cap4-property-seller-link]"
+
+  # ---------- 4.6 · Smart Sorting + Lead Scoring intro ----------
+
+  - id: clienti.smart-sorting-buckets
+    titolo: Smart Sorting — i bucket per priorità (Roventi, Caldi,
+      Tiepidi, Freddi)
+    modulo: Clienti
+    widget: null
+    pubblico: [titolare, agente, segreteria]
+    livello: base
+    tags: [clienti, smart-sorting, buckets, priorita, lead-scoring]
+    correlati:
+      - clienti.temperatura-lead-scoring
+      - clienti.azioni-rapide
+      - dashboard.lead-aperti
+    domanda_naturale: "Cosa sono i bucket 'Roventi', 'Caldi', 'Tiepidi'
+      sopra la lista clienti?"
+    contenuto:
+      a_cosa_serve: >
+        Ordinare i clienti per priorità d'azione. In alto trovi
+        sempre chi merita una chiamata subito.
+      quando_si_usa: >
+        Ogni mattina, per decidere l'ordine delle chiamate.
+      passi:
+        - Apri la lista Clienti.
+        - Sopra la tabella vedi le linguette dei bucket.
+        - "Tutti: tutti i clienti attivi."
+        - "Da chiamare oggi: score alto + non contattati di recente."
+        - "Roventi 🔥, Caldi 🌶️, Tiepidi ☀️, Freddi ❄️: filtro per
+          temperatura Lead Scoring AI."
+        - "Acquirenti: solo tipi Acquirente/Investitore/Affittuario
+          con preferenze."
+        - "Venditori: solo clienti di tipo Venditore, Proprietario o
+          Investitore (indipendentemente da eventuali immobili
+          collegati)."
+        - Clicca il bucket che ti interessa per filtrare la lista.
+      errori_comuni:
+        - problema: "Il bucket 'Da chiamare oggi' è vuoto"
+          soluzione: >
+            Vuol dire che oggi non ci sono priorità evidenti. Guarda i
+            Roventi o Caldi. Se sono tutti vuoti, l'agenzia è nuova o
+            senza attività recente — è il momento di alimentare
+            Clienti e preferenze.
+      permessi:
+        - Titolare, agente, segreteria (come agente)
+    screenshot:
+      - "[SCREEN: cap4-smart-sorting-buckets]"
+
+  - id: clienti.temperatura-lead-scoring
+    titolo: La temperatura (Lead Scoring AI) — introduzione
+    modulo: Clienti
+    widget: null
+    pubblico: [titolare, agente, segreteria]
+    livello: base
+    tags: [clienti, lead-scoring, ai, temperatura, priorita]
+    correlati:
+      - clienti.smart-sorting-buckets
+      - match.lead-scoring
+      - dashboard.nuovi-match
+    domanda_naturale: "Perché un cliente è marcato 'Rovente' e un altro
+      'Freddo'?"
+    contenuto:
+      a_cosa_serve: >
+        Sapere quali clienti valgono più tempo. Il Lead Scoring AI
+        combina quanti match ha in portafoglio, quanto sono forti, la
+        qualità delle sue preferenze e la sua storia di contatto.
+      quando_si_usa: >
+        Come indicatore quotidiano di priorità. Il dettaglio del calcolo
+        e cosa fare match per match è nel cap. 5 (Match).
+      passi:
+        - "Il badge accanto al nome del cliente indica la temperatura:
+          Rovente 🔥 = massima priorità, Caldo 🌶️ = alta, Tiepido ☀️ =
+          media, Freddo ❄️ = bassa."
+        - Il numero di match accanto al badge dice a quanti immobili
+          del tuo portafoglio è compatibile.
+        - Il badge "⚡ Aggiorna AI (N)" in alto indica quanti clienti
+          sono ancora senza punteggio. Cliccalo per ricalcolarli tutti.
+        - "Il ricalcolo dura 5-15 secondi per qualche decina di clienti."
+      errori_comuni:
+        - problema: "Tutti i clienti sono Freddi"
+          soluzione: >
+            Agenzia probabilmente giovane o portafoglio immobili
+            piccolo. La temperatura sale con più immobili + più
+            preferenze accurate.
+        - problema: "Un cliente è Rovente ma non risponde mai"
+          soluzione: >
+            Aggiorna lo stato CRM a "Contattato" o "Chiuso (perso)"
+            dopo diversi tentativi falliti. Un cliente inattivo occupa
+            ranking senza produrre risultati.
+      permessi:
+        - Titolare, agente, segreteria (come agente).
+        - Dettaglio completo del funzionamento nel cap. 5 (Match).
+    screenshot: []
+
+  - id: clienti.azioni-rapide
+    titolo: Azioni rapide su un cliente (Chiama, WhatsApp)
+    modulo: Clienti
+    widget: null
+    pubblico: [titolare, agente, segreteria]
+    livello: base
+    tags: [clienti, azioni-rapide, chiamata, whatsapp, quick-actions]
+    correlati:
+      - clienti.smart-sorting-buckets
+    domanda_naturale: "Come chiamo o mando un WhatsApp a un cliente
+      dalla lista?"
+    contenuto:
+      a_cosa_serve: >
+        Contattare rapidamente un cliente senza aprire la sua scheda,
+        direttamente dalla lista.
+      quando_si_usa: >
+        Nella sessione mattutina di richiamo dei Roventi/Caldi.
+      passi:
+        - Passa il mouse sulla riga del cliente nella lista.
+        - Compaiono due bottoni sulla destra.
+        - "📞 Chiama: apre l'app telefono del tuo dispositivo (o
+          Skype/WhatsApp desktop) con il numero già impostato."
+        - "💬 WhatsApp: apre WhatsApp Web con un messaggio precompilato
+          (puoi modificarlo prima di inviare)."
+        - Se il cliente non ha telefono o WhatsApp, il bottone
+          corrispondente è disabilitato.
+      errori_comuni:
+        - problema: "WhatsApp non si apre"
+          soluzione: >
+            Devi avere WhatsApp Web attivo nel browser almeno una volta,
+            oppure WhatsApp Desktop installato. Se stai usando un
+            browser incognito, WhatsApp Web non si ricorda della
+            sessione.
+      permessi:
+        - Titolare, agente, segreteria (come agente)
+    screenshot: []
+
+  # ---------- 4.7 · Modifica / archivia / elimina ----------
+
+  - id: clienti.archiviare-eliminare
+    titolo: Archiviare o eliminare un cliente
+    modulo: Clienti
+    widget: null
+    pubblico: [titolare]
+    livello: base
+    tags: [clienti, archivio, eliminazione, chiusura]
+    correlati:
+      - clienti.stato-crm
+    domanda_naturale: "Come archivio o elimino un cliente che non è
+      più attivo?"
+    contenuto:
+      a_cosa_serve: >
+        Ripulire la lista da contatti vecchi mantenendo lo storico
+        (archivio) o eliminando definitivamente (rischioso).
+      quando_si_usa: >
+        Archivio: cliente che ha già comprato/venduto con te tempo fa,
+        o ha smesso di cercare. Eliminazione: caso raro (dato inserito
+        per errore).
+      passi:
+        - "Per archiviare apri il cliente, cambia Stato CRM in
+          'Archiviato', salva. Il cliente scompare dai bucket ma resta
+          nello storico e nelle statistiche."
+        - "Per eliminare definitivamente apri il cliente, scorri in
+          fondo, clicca 'Elimina', conferma. Perdi anche le note e
+          la storia dei contatti."
+        - "Se il cliente ha immobili collegati (proprietario/venditore)
+          il sistema blocca l'eliminazione con il messaggio
+          'Impossibile eliminare: questo cliente ha N immobile/i in
+          carico'. Prima riassegna o rimuovi il collegamento
+          dagli immobili, poi ritenta."
+      errori_comuni:
+        - problema: "Ho eliminato per sbaglio"
+          soluzione: >
+            L'operazione non è reversibile. In futuro preferisci
+            'Archiviato': stesso effetto visivo, storico salvo.
+        - problema: "Non riesco a eliminare, mi dice 'immobili in carico'"
+          soluzione: >
+            Il sistema protegge gli immobili con proprietario. Vai su
+            Immobili, apri gli immobili collegati a questo cliente,
+            e per ciascuno riassegna il cliente venditore a un'altra
+            anagrafica oppure rimuovi il collegamento. Poi ritenta
+            l'eliminazione.
+      permessi:
+        - "Archiviare (cambio stato): titolare, agente, segreteria."
+        - "Eliminare: solo titolare (agency_admin). L'agente e la
+          segreteria non possono eliminare."
+    screenshot: []

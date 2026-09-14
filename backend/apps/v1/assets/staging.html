@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="__LANG__">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>OMNIA · Virtual Staging demo</title>
+<style>
+  :root {
+    --primary: __PRIMARY_COLOR__;
+    --bg: #ffffff;
+    --fg: #1c1917;
+    --muted: #78716c;
+    --border: #e7e5e4;
+    --radius: 10px;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: var(--bg); color: var(--fg);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    font-size: 14px; line-height: 1.5; }
+  .omnia-widget { padding: 20px; max-width: 640px; margin: 0 auto; }
+  .omnia-widget h2 { margin: 0 0 4px; font-size: 20px; letter-spacing: -0.01em; }
+  .omnia-widget p.hint { margin: 0 0 20px; color: var(--muted); font-size: 13px; }
+  .omnia-preview { background: #fafaf9; border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; text-align: center; }
+  .omnia-preview img { max-width: 100%; height: auto; border-radius: 6px; margin: 12px 0; }
+  .omnia-badge { display: inline-block; padding: 4px 10px; font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em; background: var(--primary); color: #fff; border-radius: 4px; margin-bottom: 12px; }
+  .omnia-cta { margin-top: 16px; }
+  .omnia-btn {
+    background: var(--primary); color: #fff; border: 0; padding: 12px 24px;
+    border-radius: var(--radius); font-size: 13px; font-weight: 500;
+    letter-spacing: 0.05em; text-transform: uppercase; cursor: pointer;
+    text-decoration: none; display: inline-block;
+    transition: opacity 0.15s;
+  }
+  .omnia-btn:hover { opacity: 0.85; }
+  .omnia-features { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-top: 20px; }
+  .omnia-feature { background: #fafaf9; border: 1px solid var(--border); border-radius: var(--radius); padding: 12px; font-size: 12px; color: var(--fg); }
+  .omnia-feature strong { display: block; font-size: 13px; margin-bottom: 4px; color: var(--primary); }
+  .omnia-form { display: flex; gap: 8px; margin-top: 16px; align-items: stretch; }
+  .omnia-form input {
+    flex: 1; padding: 10px 12px; font-size: 14px;
+    border: 1px solid var(--border); border-radius: var(--radius); background: #fff; color: var(--fg);
+  }
+  .omnia-form input:focus { outline: none; border-color: var(--primary); }
+  .omnia-checkbox { display: flex; align-items: flex-start; gap: 8px; font-size: 12px; color: var(--muted); margin-top: 12px; }
+  .omnia-footer { margin-top: 16px; font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; text-align: right; }
+  .omnia-error { color: #b91c1c; font-size: 13px; margin-top: 8px; }
+  .omnia-success { color: #047857; font-size: 13px; margin-top: 8px; }
+</style>
+</head>
+<body>
+<section class="omnia-widget" data-testid="widget-staging">
+  <h2>Virtual Staging</h2>
+  <p class="hint">Trasforma foto vuote di immobili in ambienti arredati fotorealistici. Watermark obbligatorio (conformità AGCM).</p>
+
+  <div class="omnia-preview">
+    <span class="omnia-badge">Demo pipeline premium 3-stage</span>
+    <div style="font-size: 42px; margin: 12px 0;">🏠 ✨</div>
+    <p style="margin: 4px 0; color: var(--muted);">SAM 2 · Flux.1 [dev] · Real-ESRGAN 4x</p>
+    <p style="margin: 12px 0 0; font-size: 12px;">Costo: <strong>~€0.056/render</strong> — competitor: €15-29/img</p>
+  </div>
+
+  <div class="omnia-features">
+    <div class="omnia-feature"><strong>🎨 4 stili</strong>Moderno · Classico · Scandi · Luxury</div>
+    <div class="omnia-feature"><strong>⚡ 3-stage</strong>Segmentation → Inpainting → Upscale</div>
+    <div class="omnia-feature"><strong>💧 Watermark</strong>"Render virtuale OMNIA" obbligatorio</div>
+    <div class="omnia-feature"><strong>🔄 Reverse</strong>Rimuove arredo esistente + ri-arreda</div>
+  </div>
+
+  <form id="omnia-lead" class="omnia-form" novalidate>
+    <input type="email" name="email" placeholder="La tua email" required />
+    <button type="submit" class="omnia-btn" data-testid="staging-cta">Provalo</button>
+  </form>
+  <label class="omnia-checkbox">
+    <input type="checkbox" id="omnia-consent" required />
+    <span>Acconsento al contatto commerciale (GDPR art. 6).</span>
+  </label>
+  <p id="omnia-msg" class="omnia-error" style="display:none;"></p>
+
+  <p class="omnia-footer">
+    <img src="__BACKEND_BASE__/omnia-mark.png" alt="OMNIA" style="height:14px;width:auto;vertical-align:middle;margin-right:4px;opacity:.6" />
+    Powered by <a href="https://omniarealestateecosystem.it" target="_blank" rel="noopener">OMNIA</a>
+  </p>
+</section>
+
+<script>
+  var BACKEND = "__BACKEND_BASE__";
+  var KEY = "__API_KEY__";
+  var form = document.getElementById("omnia-lead");
+  var msg = document.getElementById("omnia-msg");
+  var consent = document.getElementById("omnia-consent");
+
+  form.addEventListener("submit", async function (e) {
+    e.preventDefault();
+    msg.style.display = "none";
+    var email = form.email.value.trim();
+    if (!email) { showErr("Inserisci un'email valida."); return; }
+    if (!consent.checked) { showErr("Serve il consenso GDPR."); return; }
+
+    try {
+      var res = await fetch(BACKEND + "/api/v1/widgets/lead", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer " + KEY,
+        },
+        body: JSON.stringify({
+          widget: "staging",
+          email: email,
+          consent: true,
+          source_url: document.referrer || null,
+          context: { widget_variant: "demo" },
+        }),
+      });
+      if (!res.ok) throw new Error("Errore invio");
+      msg.className = "omnia-success";
+      msg.textContent = "✓ Grazie! Ti contatteremo per la demo.";
+      msg.style.display = "block";
+      form.reset();
+      consent.checked = false;
+    } catch (err) {
+      showErr("Errore invio. Riprova.");
+    }
+    postSize();
+  });
+
+  function showErr(txt) {
+    msg.className = "omnia-error";
+    msg.textContent = txt;
+    msg.style.display = "block";
+  }
+
+  function postSize() {
+    try {
+      window.parent.postMessage(
+        { type: "omnia-widget-resize", height: document.body.scrollHeight },
+        "*"
+      );
+    } catch (e) {}
+  }
+  window.addEventListener("load", postSize);
+  new ResizeObserver(postSize).observe(document.body);
+</script>
+</body>
+</html>

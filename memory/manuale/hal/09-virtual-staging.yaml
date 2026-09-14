@@ -1,0 +1,565 @@
+# HAL — Voci esportate per RAG
+# Capitolo 9 · Virtual Staging
+# Schema: id, titolo, modulo, widget, pubblico, livello, tags, correlati,
+#         domanda_naturale, contenuto{a_cosa_serve, quando_si_usa, passi,
+#         errori_comuni[{problema,soluzione}], permessi}, screenshot[]
+
+voci:
+
+  - id: staging.cos-e
+    titolo: Cos'è il Virtual Staging in OMNIA
+    modulo: Virtual Staging
+    widget: null
+    pubblico: [titolare, agente, segreteria]
+    livello: base
+    tags: [staging, virtual-staging, ai, panoramica, primi-passi]
+    correlati:
+      - staging.pipeline
+      - staging.stili
+      - staging.crediti-costo
+    domanda_naturale: "Cos'è il Virtual Staging in OMNIA?"
+    contenuto:
+      a_cosa_serve: >
+        Trasformare la foto di una stanza vuota in una versione arredata,
+        oppure svuotare una stanza gia' arredata e ri-arredarla con un
+        altro stile. Serve per acquisizione mandato e per rendere
+        vendibili immobili in svuotamento o da ristrutturare.
+      quando_si_usa: >
+        Casa da ristrutturare da mostrare al lead, immobile appena
+        svuotato, A/B su stili diversi per capire il target buyer.
+      passi:
+        - Vai in Virtual Staging dalla barra a sinistra.
+        - Carica la foto sorgente (JPEG/PNG/WebP, max 12 MB).
+        - Scegli stile e tipo stanza.
+        - Scegli modalita' (standard o reverse) e numero varianti (1-4).
+        - Clicca Genera render.
+        - Attendi 15-25 secondi per 1 variante standard (fino a 45s per
+          reverse + 4 varianti).
+        - Scarica con watermark o salva come foto immobile.
+      errori_comuni:
+        - problema: "Posso rimuovere il watermark 'Render virtuale OMNIA'?"
+          soluzione: >
+            No, il watermark e' impresso server-side in ogni download per
+            conformita' AGCM 2024 e Art. 21 Codice del Consumo. Non
+            rimovibile in v1.
+      permessi:
+        - Titolare, agente, segreteria (tutti gli utenti dell'agenzia)
+    screenshot:
+      - "[SCREEN: cap9-staging-panoramica]"
+
+  - id: staging.pipeline
+    titolo: Come funziona la pipeline AI in 3 stage
+    modulo: Virtual Staging
+    widget: null
+    pubblico: [titolare, agente]
+    livello: intermedio
+    tags: [staging, pipeline, sam2, flux, upscale, ai, fal-ai]
+    correlati:
+      - staging.cos-e
+      - staging.modalita
+      - staging.errori-comuni
+    domanda_naturale: "Come funziona la pipeline di Virtual Staging sotto il cofano?"
+    contenuto:
+      a_cosa_serve: >
+        Capire cosa succede in background quando lanci un render, cosi'
+        se qualcosa fallisce sai in quale stage e come reagire.
+      quando_si_usa: >
+        Quando un render fallisce, quando il tempo di attesa e' insolito,
+        o quando vuoi capire il costo per stage.
+      passi:
+        - "Stage 1 - SAM 2 (fal-ai/sam2/auto-segment): genera maschera
+          della stanza. Durata 5-8s. Costo 0.001 USD."
+        - "Stage 1b solo modalita' reverse - Flux 'empty room': svuota
+          la stanza rimuovendo l'arredo esistente. Durata 4-6s. Costo
+          0.05 USD."
+        - "Stage 2 - Flux Inpainting (fal-ai/flux-lora/inpainting):
+          arreda usando prompt combinato (stile + tipo stanza +
+          eventuale frammento CRM-aware). Durata 4-8s per variante.
+          Costo 0.05 USD per variante."
+        - "Stage 3 - Real-ESRGAN 4x upscale (fal-ai/esrgan): porta il
+          render a ~4K. Durata 4-6s per variante. Costo 0.005 USD per
+          variante. NON-fatal: se fallisce, la variante viene conservata
+          non-upscalata."
+        - "Prompt CRM-aware best-effort: se il job e' collegato a un
+          immobile, Gemini 3 Flash aggiunge una frase (max 25 parole
+          inglese) mirata sul target buyer. Timeout 15s. Se fallisce
+          si usa il prompt base."
+      errori_comuni:
+        - problema: "SAM2 returned no mask"
+          soluzione: >
+            La foto sorgente e' troppo scura/sfocata o non riconoscibile
+            come stanza. Migliora la foto sorgente e rilancia.
+        - problema: "Flux returned no images"
+          soluzione: >
+            Il safety checker ha bloccato il contenuto (raro su
+            interni). Riprova con foto diversa.
+        - problema: "Upscale failed but no crash"
+          soluzione: >
+            Comportamento atteso: la variante viene conservata
+            non-upscalata (badge upscaled=false). Nessuna azione.
+      permessi:
+        - Titolare, agente (info tecnica utile a chi opera)
+    screenshot:
+      - "[SCREEN: cap9-staging-pipeline]"
+
+  - id: staging.stili
+    titolo: I 5 stili disponibili (Modern, Classic, Scandi, Industrial, Luxury)
+    modulo: Virtual Staging
+    widget: null
+    pubblico: [titolare, agente, segreteria]
+    livello: base
+    tags: [staging, stili, design, modern, classic, scandi, industrial, luxury]
+    correlati:
+      - staging.tipi-stanza
+      - staging.varianti-parallele
+    domanda_naturale: "Quali stili di arredamento posso scegliere per un render?"
+    contenuto:
+      a_cosa_serve: >
+        Scegliere lo stile che parla al target buyer dell'immobile.
+      quando_si_usa: >
+        Ad ogni render, in base al tipo di immobile e al segmento
+        di clientela target.
+      passi:
+        - "MODERN (Moderno) - minimalista, colori neutri, luci naturali,
+          mobili contemporanei fascia alta, parquet. Target: giovane
+          professional, famiglia contemporanea."
+        - "CLASSIC (Classico) - eleganza italiana tradizionale, colori
+          caldi, mobili in legno, tende, lampadari, parquet. Target:
+          famiglia italiana media, appartamenti storici."
+        - "SCANDI (Scandinavo) - pareti bianche, legno chiaro, mobili
+          minimal, tessili cozy, atmosfera hygge. Target: single, coppia
+          giovane, monolocali/mini appartamenti."
+        - "INDUSTRIAL - mattoni a vista, metalli, cemento, divano pelle,
+          Edison bulbs, urban chic. Target: creativi, remote worker,
+          loft e ex uffici convertiti."
+        - "LUXURY - marmo, mobili design, dettagli oro, soffitti alti,
+          finiture premium. Target: alto spendente, ville/attici sopra
+          500k euro."
+      errori_comuni:
+        - problema: "Non c'e' uno stile che mi convince, voglio custom"
+          soluzione: >
+            Custom style non supportato in v1. Puoi variare tipo stanza
+            o usare multi_style per generare 4 varianti su stili
+            diversi in parallelo.
+      permessi:
+        - Titolare, agente, segreteria
+    screenshot: []
+
+  - id: staging.tipi-stanza
+    titolo: I 6 tipi stanza disponibili
+    modulo: Virtual Staging
+    widget: null
+    pubblico: [titolare, agente, segreteria]
+    livello: base
+    tags: [staging, room-type, living, bedroom, kitchen, dining, bathroom, office]
+    correlati:
+      - staging.stili
+      - staging.lanciare-render
+    domanda_naturale: "Quali tipi di stanza posso arredare in Virtual Staging?"
+    contenuto:
+      a_cosa_serve: >
+        Dire alla pipeline che tipo di ambiente vuole vedere il modello,
+        cosi' inserisce i mobili giusti per quella stanza.
+      quando_si_usa: >
+        Ad ogni render. Il tipo deve corrispondere alla foto sorgente.
+      passi:
+        - "LIVING (Soggiorno) - divano, tavolino, area TV, piante."
+        - "BEDROOM (Camera da letto) - letto matrimoniale, comodini,
+          armadio, luci soft."
+        - "KITCHEN (Cucina) - isola, elettrodomestici, area pranzo,
+          lampadari a sospensione."
+        - "DINING (Sala da pranzo) - tavolo per 6, sedie, credenza,
+          illuminazione elegante."
+        - "BATHROOM (Bagno) - sanitari moderni, doccia, mobile lavabo,
+          asciugamani, piante."
+        - "OFFICE (Studio) - scrivania, sedia ergonomica, libreria,
+          luce naturale."
+      errori_comuni:
+        - problema: "Ho lanciato 'living' su foto di camera da letto"
+          soluzione: >
+            Il modello prova a piazzare divano+tavolino comunque. Il
+            risultato e' strano. Rilancia con il tipo giusto.
+        - problema: "Voglio staging su terrazzo/cantina/box/giardino"
+          soluzione: >
+            Il modello Flux e' calibrato solo per interni abitativi
+            (6 tipi whitelist). Non supportati altri ambienti in v1.
+      permessi:
+        - Titolare, agente, segreteria
+    screenshot: []
+
+  - id: staging.modalita
+    titolo: Modalita' Standard vs Reverse (stanza vuota vs ri-arredare)
+    modulo: Virtual Staging
+    widget: null
+    pubblico: [titolare, agente]
+    livello: intermedio
+    tags: [staging, modalita, standard, reverse, svuotamento]
+    correlati:
+      - staging.pipeline
+      - staging.crediti-costo
+    domanda_naturale: "Qual e' la differenza tra Standard e Reverse Staging?"
+    contenuto:
+      a_cosa_serve: >
+        Decidere se lavorare su una foto di stanza gia' vuota
+        (Standard) o su una foto di stanza arredata che vuoi vedere
+        con arredo diverso (Reverse).
+      quando_si_usa: >
+        Standard per immobili appena consegnati o senza arredo.
+        Reverse per immobili dove il proprietario ancora abita ma vuoi
+        proporre uno stile diverso al lead.
+      passi:
+        - "STANDARD - input foto stanza vuota, pipeline SAM 2 -> Flux
+          -> Upscale. Costo tipico 0.056 USD per variante fal.ai."
+        - "REVERSE - input foto stanza arredata, pipeline SAM 2 -> Flux
+          'empty room' (svuota) -> Flux (arreda) -> Upscale. Costo
+          tipico 0.106 USD per variante fal.ai."
+        - "Reverse costa quasi il doppio (2x Flux) e impiega 8-10 secondi
+          in piu' per lo stage svuotamento."
+        - "Quando NON usare reverse: stanza piccola stracarica di roba,
+          persone/animali in foto, marchi visibili (schermi con loghi,
+          quadri identificabili) - il modello prova a mantenerli e crea
+          artefatti."
+      errori_comuni:
+        - problema: "In modalita' Reverse la stanza svuotata ha ancora tracce di mobili"
+          soluzione: >
+            Il modello Flux ha limiti su stanze molto piene. Prova a
+            fotografare la stanza da un angolo che mostra meno oggetti,
+            oppure aspetta che sia parzialmente svuotata prima di
+            fotografarla.
+      permessi:
+        - Titolare, agente
+    screenshot: []
+
+  - id: staging.varianti-parallele
+    titolo: Generare 1-4 varianti in parallelo (same_style vs multi_style)
+    modulo: Virtual Staging
+    widget: null
+    pubblico: [titolare, agente]
+    livello: intermedio
+    tags: [staging, varianti, multi-style, same-style, parallelo]
+    correlati:
+      - staging.stili
+      - staging.crediti-costo
+    domanda_naturale: "Posso generare piu' varianti di render in un colpo?"
+    contenuto:
+      a_cosa_serve: >
+        Vedere piu' risultati in un solo job (max 4) e scegliere il
+        migliore, o mostrare al cliente piu' opzioni.
+      quando_si_usa: >
+        Quando non sei sicuro del risultato singolo, o quando vuoi
+        proporre al lead 3-4 stili diversi.
+      passi:
+        - "SAME_STYLE - 1-4 render con lo stesso stile. Utile per vedere
+          seed diversi. Costo N x (Flux + upscale)."
+        - "MULTI_STYLE - 1-4 render con stili diversi. Puoi scegliere
+          quali (fino a 4 tra modern/classic/scandi/industrial/luxury)
+          oppure accettare i default (modern/classic/scandi/luxury)."
+        - "num_variants validato ge=1 le=4 in Pydantic. Ogni variante
+          conta separatamente per crediti + rate limit."
+        - "Fallimento parziale in multi_style: se una variante fallisce
+          il job procede con le riuscite (log warning)."
+        - "Se TUTTE le varianti falliscono: job passa a failed con
+          messaggio 'Tutte le varianti multi-style sono fallite'."
+      errori_comuni:
+        - problema: "Ho ottenuto solo 3 varianti su 4 richieste"
+          soluzione: >
+            Comportamento atteso: una variante e' fallita ma il job
+            e' comunque proseguito con le altre 3. Rilancia se ti serve
+            la quarta.
+        - problema: "Ho selezionato multi_style con 6 stili e ne accetta solo 4"
+          soluzione: >
+            Max num_variants=4. Rilancia scegliendo i 4 stili prioritari.
+      permessi:
+        - Titolare, agente
+    screenshot: []
+
+  - id: staging.lanciare-render
+    titolo: Come lancio un render Virtual Staging (passi)
+    modulo: Virtual Staging
+    widget: null
+    pubblico: [titolare, agente, segreteria]
+    livello: base
+    tags: [staging, come-fare, upload, generate, passi]
+    correlati:
+      - staging.stili
+      - staging.tipi-stanza
+      - staging.modalita
+    domanda_naturale: "Come lancio un render Virtual Staging?"
+    contenuto:
+      a_cosa_serve: >
+        Sequenza operativa completa per portare un render a completamento.
+      quando_si_usa: >
+        Ogni volta che vuoi arredare/svuotare una stanza.
+      passi:
+        - Vai in Virtual Staging dalla barra a sinistra.
+        - "Carica foto sorgente (dropzone drag&drop). MIME whitelist:
+          JPEG/PNG/WebP. Max 12 MB. L'upload va su fal.ai storage."
+        - Scegli stile tra le 5 pillole (modern/classic/scandi/
+          industrial/luxury).
+        - Scegli tipo stanza tra le 6 pillole (living/bedroom/kitchen/
+          dining/bathroom/office).
+        - "Opzionale: modalita' (standard/reverse), num_variants (1-4),
+          variant_mode (same_style/multi_style)."
+        - Opzionale collega a un immobile del CRM per prompt CRM-aware.
+        - Clicca Genera render.
+        - Vedi progress bar 3 stage (o 4 se reverse) con status live,
+          durata, costo per stage.
+        - Al completamento appare Before/After side-by-side con bottone
+          'Scarica con watermark'.
+      errori_comuni:
+        - problema: "MIME non supportato (400)"
+          soluzione: >
+            Converti in JPEG/PNG/WebP. HEIC iPhone non e' supportato,
+            converti in JPG prima.
+        - problema: "File troppo grande (413)"
+          soluzione: >
+            Comprimi con iLovePDF/TinyPNG/Squoosh. Max 12 MB.
+        - problema: "image_url mancante o SSRF blocked"
+          soluzione: >
+            Devi caricare la foto tramite l'endpoint upload. Non puoi
+            passare URL localhost/127.0.0.1/IP privati.
+      permessi:
+        - Titolare, agente, segreteria
+    screenshot: []
+
+  - id: staging.crediti-costo
+    titolo: Crediti e costo per render (18 crediti = 0.90 euro)
+    modulo: Virtual Staging
+    widget: null
+    pubblico: [titolare, agente]
+    livello: intermedio
+    tags: [staging, crediti, costo, prezzo, fal-ai, pricing, prezzo-render, quanto-costa, costo-render, 18-crediti, "0-90-euro", euro, listino, virtual-staging-costo]
+    correlati:
+      - staging.modalita
+      - staging.varianti-parallele
+      - staging.cos-e
+    domanda_naturale: "Quanto costa un render Virtual Staging? Quanto spendo in crediti per lo staging?"
+    contenuto:
+      a_cosa_serve: >
+        Prezzo render Virtual Staging. Sapere quanto costa un render in
+        crediti B2B (18 crediti = 0,90 euro lordi), capire il margine
+        per definire il posizionamento. Voce di riferimento per tutte
+        le domande su "quanto costa lo staging", "costo staging",
+        "prezzo render virtuale", "listino Virtual Staging".
+      quando_si_usa: >
+        Quando lanci un job (per pianificare il consumo crediti),
+        quando confronti prezzi listino, o per formazione staff.
+      passi:
+        - "Consumo crediti B2B: 1 render Virtual Staging = 18 crediti
+          (vedi plans.py CREDIT_COSTS)."
+        - "Con 1 credito = 0.05 euro: 18 crediti = 0.90 euro lordi per
+          render."
+        - "1 job = N varianti = N x 18 crediti. Multi_style 4 varianti
+          costa 72 crediti (~3.60 euro)."
+        - "Costo vivo fal.ai standard: ~0.056 USD (0.051 EUR) per variante
+          (SAM2 0.001 + Flux 0.05 + Upscale 0.005). Reverse ~0.106 USD
+          per variante (+0.05 svuotamento). Margine agenzia ~94%."
+        - "In v1 NON c'e' pre-check crediti prima del lancio (arriva
+          hard-gate in versione futura). Se il tuo saldo e' a zero puoi
+          tecnicamente lanciare, ma l'addebito viene comunque calcolato."
+        - "Costo B2C ImmobilCloud (privati): 0.90 EUR/foto max 3 per
+          annuncio UGC. NON attivo in checkout v1."
+      errori_comuni:
+        - problema: "Ho lanciato ma non vedo scalarsi i crediti"
+          soluzione: >
+            L'addebito e' posticipato in v1 (no hard-gate). Riceverai
+            movimento crediti nella prossima finestra di ledger. Verra'
+            attivato hard-gate in versione futura.
+        - problema: "Job fallito a meta' pipeline: mi vengono scalati crediti?"
+          soluzione: >
+            Il costo fal.ai delle chiamate gia' avvenute e' stato
+            comunque speso lato piattaforma. In v1 non c'e' rollback.
+            Segnala all'assistenza se necessario.
+      permessi:
+        - Titolare, agente (info operativa/finanziaria)
+    screenshot: []
+
+  - id: staging.watermark
+    titolo: Il watermark 'Render virtuale OMNIA' e' obbligatorio
+    modulo: Virtual Staging
+    widget: null
+    pubblico: [titolare, agente, segreteria]
+    livello: base
+    tags: [staging, watermark, compliance, agcm, codice-consumo, onesta-documentale]
+    correlati:
+      - staging.cos-e
+      - staging.salva-foto-immobile
+    domanda_naturale: "Posso rimuovere il watermark 'Render virtuale OMNIA'?"
+    contenuto:
+      a_cosa_serve: >
+        Assicurare la conformita' legale sulle immagini AI mostrate
+        al pubblico (annunci portali, sito, WhatsApp).
+      quando_si_usa: >
+        Ogni download di render passa dal watermark server-side. Non
+        c'e' modo di scaricare la versione senza watermark in v1.
+      passi:
+        - "Il watermark 'Render virtuale OMNIA' viene impresso in ogni
+          download JPEG (endpoint /download e /dataurl)."
+        - "Testo in DejaVu Sans Bold, font size proporzionale
+          (max(20, larghezza/40)), riquadro nero semi-trasparente
+          (alpha 160) per leggibilita' su sfondi chiari e scuri."
+        - "Posizionato in basso a destra con padding uniforme. Output
+          JPEG qualita' 90."
+        - "MOTIVO OBBLIGATORIETA': AGCM 2024 (identificazione immagini
+          AI in contesti commerciali) + Art. 21 Codice del Consumo
+          (pratiche commerciali ingannevoli vietate) + autoregolamentazione
+          FIAIP."
+        - "Endpoint /dataurl (salva come foto immobile) applica watermark
+          + rescale a max 1600px larghezza."
+        - "Endpoint /download scarica alla risoluzione originale post-
+          upscale (~4K)."
+      errori_comuni:
+        - problema: "Il cliente mi chiede la versione senza watermark"
+          soluzione: >
+            Non e' possibile in v1. Spiega al cliente che il watermark
+            e' obbligatorio per legge (AGCM 2024, Art. 21 Codice
+            Consumo). Le foto reali dell'immobile sono un'altra cosa
+            e vanno scattate a parte da un fotografo.
+        - problema: "Il watermark copre un dettaglio importante"
+          soluzione: >
+            Il watermark e' fisso in basso a destra. Se ti serve
+            valorizzare quel dettaglio, ri-lancia il render con
+            un'inquadratura diversa della foto sorgente.
+      permessi:
+        - Titolare, agente, segreteria (regola vale per tutti)
+    screenshot: []
+
+  - id: staging.rate-limit
+    titolo: Limiti orari - 20 render utente, 80 render agenzia
+    modulo: Virtual Staging
+    widget: null
+    pubblico: [titolare, agente]
+    livello: intermedio
+    tags: [staging, rate-limit, quota, anti-abuso, limiti]
+    correlati:
+      - staging.crediti-costo
+      - staging.varianti-parallele
+    domanda_naturale: "Quanti render posso lanciare per ora?"
+    contenuto:
+      a_cosa_serve: >
+        Sapere i limiti anti-abuso, evitare 429 e pianificare sessioni
+        di lavoro batch.
+      quando_si_usa: >
+        Quando pianifichi molti render nella stessa giornata (es. sessione
+        di preparazione annunci nuovi).
+      passi:
+        - "20 render/ora per utente (SOFT_RATE_LIMIT_USER_HOUR)."
+        - "80 render/ora per agenzia (SOFT_RATE_LIMIT_AGENCY_HOUR)."
+        - "Multi_style con 4 varianti conta come 4 render (aggregato
+          via num_variants nel contatore MongoDB)."
+        - "Finestra rolling 1 ora basata su created_at. Non e' reset
+          all'ora piena."
+        - "Superato il limite -> HTTP 429 'Limite orario raggiunto'."
+        - "Storage jobs: TTL 30 giorni. Stale reaper: job in pending/
+          running oltre 10 minuti vengono marcati failed al prossimo
+          startup."
+      errori_comuni:
+        - problema: "Limite orario utente raggiunto (429)"
+          soluzione: >
+            Aspetta 1 ora rolling window oppure passa il testimone a un
+            collega dell'agenzia (limite e' per utente + per agenzia).
+        - problema: "Limite orario agenzia raggiunto (429)"
+          soluzione: >
+            Tutta l'agenzia ha sforato. Aspetta la finestra rolling.
+            Se serve capacita' superiore in modo permanente, contatta
+            OMNIA per valutare tier custom.
+      permessi:
+        - Titolare, agente (info operativa)
+    screenshot: []
+
+  - id: staging.salva-foto-immobile
+    titolo: Salvare un render come foto dell'immobile
+    modulo: Virtual Staging
+    widget: null
+    pubblico: [titolare, agente, segreteria]
+    livello: base
+    tags: [staging, salva, immobile, foto, save-to-property, cover]
+    correlati:
+      - staging.watermark
+      - staging.lanciare-render
+      - immobili.foto-ordinamento
+    domanda_naturale: "Come uso un render come foto dell'immobile?"
+    contenuto:
+      a_cosa_serve: >
+        Portare il render direttamente nel photos[] dell'immobile
+        senza download + re-upload manuale.
+      quando_si_usa: >
+        Dopo aver generato un render che ti piace e vuoi usare
+        nell'annuncio, sito pubblico e portali.
+      passi:
+        - Sulla pagina dettaglio del job, individua la variante
+          che vuoi salvare.
+        - "Clicca il bottone 'Salva come foto immobile' (endpoint
+          POST /jobs/{id}/save-to-property con variant_index 0-3)."
+        - "Il backend scarica la variante, applica watermark + rescale
+          a 1600px, converte in base64 e la aggiunge a photos[]."
+        - "Caption automatica: 'Render virtuale OMNIA · {Tipo Stanza}
+          {Stile}' (es. 'Render virtuale OMNIA · Soggiorno Moderno')."
+        - Se e' la prima foto dell'immobile -> viene impostata anche
+          come cover (is_cover=true).
+        - "Il job viene marcato saved_to_property_id per traccia."
+      errori_comuni:
+        - problema: "Nessun immobile collegato al job (400)"
+          soluzione: >
+            Il job non ha property_id. Passa esplicitamente
+            'property_id' nel body della richiesta save-to-property.
+        - problema: "Ho salvato ma non vedo la foto nel Fascicolo"
+          soluzione: >
+            Ricarica la pagina Fascicolo (Cap. 7 §7.9). La miniatura
+            appare tra i render con status=done.
+        - problema: "La foto salvata non e' cover, ma volevo lo fosse"
+          soluzione: >
+            save-to-property mette in cover solo se il photos[] era
+            vuoto. Per cambiare la cover successivamente, apri l'immobile
+            in Immobili e trascina la miniatura in prima posizione
+            (Cap. 3.3).
+      permessi:
+        - Titolare, agente, segreteria (tutti possono salvare)
+    screenshot: []
+
+  - id: staging.storia-cancella
+    titolo: Storia render e cancellazione job
+    modulo: Virtual Staging
+    widget: null
+    pubblico: [titolare, agente, segreteria]
+    livello: base
+    tags: [staging, history, cronologia, elimina, ttl]
+    correlati:
+      - staging.cos-e
+      - staging.rate-limit
+    domanda_naturale: "Come vedo lo storico dei render e come li elimino?"
+    contenuto:
+      a_cosa_serve: >
+        Ritrovare render precedenti e liberare spazio eliminando quelli
+        superati o falliti.
+      quando_si_usa: >
+        Per riprendere un render fatto ieri, per confrontare varianti,
+        o per pulire la cronologia.
+      passi:
+        - "Endpoint GET /history?limit=50 (max 100) mostra i tuoi job
+          ordinati per created_at decrescente."
+        - "Vedi: id, status, source_url, style, room_type, mode,
+          num_variants, stages, variants, cost_total_usd, timestamps."
+        - "Solo TUOI job (user_id=tu). Non vedi quelli degli altri
+          colleghi dell'agenzia."
+        - "TTL storage 30 giorni (JOB_TTL_DAYS): dopo 30 giorni i job
+          possono essere puliti dal sistema."
+        - "Per eliminare un job specifico: DELETE /jobs/{id}. Permanente,
+          senza cestino. Solo l'owner (creator) puo' eliminare."
+        - "IMPORTANTE: eliminare il job NON rimuove le foto gia' salvate
+          su immobili con save-to-property. Se vuoi rimuovere la foto,
+          apri l'immobile e cancella la foto singolarmente."
+      errori_comuni:
+        - problema: "Job non trovato (404) su download o download watermark"
+          soluzione: >
+            Il job e' stato eliminato o e' di un altro utente. Per il
+            secondo caso non puoi accedere per policy (solo l'owner
+            vede i propri job).
+        - problema: "Ho eliminato per errore"
+          soluzione: >
+            Non c'e' undo. Se il render era gia' salvato come foto
+            immobile, la foto sopravvive. Altrimenti lancia un nuovo
+            render (costa 18 crediti).
+      permessi:
+        - Titolare, agente, segreteria (solo sui propri job)
+    screenshot: []

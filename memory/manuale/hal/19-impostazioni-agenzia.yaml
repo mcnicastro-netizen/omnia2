@@ -1,0 +1,637 @@
+# HAL — Voci esportate per RAG
+# Capitolo 19 · Impostazioni agenzia
+# Onestà documentale D-051: v1 SettingsPage copre solo 5 sezioni anagrafica
+# (identita', fiscale, indirizzo, contatti, sito web mode) + Billing separato.
+# Team/API Keys/Domain/Notifiche stanno in pagine separate.
+# Molti campi schema-only (logo, colori, REA, FIAIP, plan_type) NO UI v1.
+
+voci:
+
+  # ---------- 19.1 · Cos'e' ----------
+
+  - id: settings.cos-e
+    titolo: Cos'è "Impostazioni agenzia" in OMNIA v1
+    modulo: Impostazioni
+    widget: null
+    pubblico: [titolare, super_admin]
+    livello: base
+    tags: [impostazioni, settings, anagrafica, agenzia, panoramica, d-051]
+    correlati: [settings.dove-trovarlo, settings.sezioni-panoramica, settings.limitazioni-v1]
+    domanda_naturale: "Cos'è il modulo Impostazioni di OMNIA? Cosa posso modificare della mia agenzia?"
+    contenuto:
+      a_cosa_serve: >
+        Pannello anagrafica agenzia con 5 sezioni compilabili
+        (identita', dati fiscali, indirizzo, contatti pubblici, modalita'
+        sito web) + save via PATCH /api/app/agencies/me. Non e' un
+        centro impostazioni completo: Team/API Keys/Domain/Notifiche/
+        Billing sono pagine separate.
+      quando_si_usa: >
+        Quando devi correggere nome commerciale, dati fiscali, indirizzo
+        agenzia, contatti pubblici, o scegliere se hai gia' un sito o
+        vuoi usare un template OMNIA.
+      passi:
+        - "5 sezioni: Identita', Fiscali, Indirizzo, Contatti, Sito web."
+        - "Solo l'owner (titolare che ha creato l'agency) puo' modificare
+          (agency_admin invitato NON puo')."
+        - "Save unico: pulsante in fondo lancia PATCH /me con tutti i
+          campi cleaned (stringhe vuote rimosse)."
+        - "Toast successo: banner emerald embedded per 2500ms (NON usa
+          sonner - Cap. 18)."
+      errori_comuni:
+        - problema: "Cerco Team / Billing / Domini / Notifiche nella Settings"
+          soluzione: >
+            Sono pagine separate v1:
+            /app/settings/members (Cap. 13), /app/settings/billing (§19.10),
+            /app/settings/domain-verify (Cap. 17). Notifiche NO UI (Cap. 18).
+      permessi:
+        - "Solo agency_admin owner o super_admin possono modificare"
+    screenshot:
+      - "[SCREEN: cap19-settings-identity]"
+
+  # ---------- 19.2 · Dove trovarlo ----------
+
+  - id: settings.dove-trovarlo
+    titolo: Dove trovo la Settings in OMNIA
+    modulo: Impostazioni
+    widget: null
+    pubblico: [titolare, super_admin]
+    livello: base
+    tags: [impostazioni, settings, dove-trovarlo, ui, sidebar, route]
+    correlati: [settings.cos-e, settings.permessi-ownership]
+    domanda_naturale: "Dove trovo la pagina Impostazioni? Come ci accedo?"
+    contenuto:
+      a_cosa_serve: >
+        Localizzare la SettingsPage nel menu laterale ImmoWeb.
+      quando_si_usa: >
+        Al primo accesso o quando devi cambiare i dati anagrafici.
+      passi:
+        - "In ImmoWeb: menu laterale (AgencyShell) → voce 'Impostazioni'."
+        - "Route frontend: /app/settings/agency."
+        - "Solo titolare (agency_admin owner) e super_admin possono
+          usarla effettivamente (400/403 altrimenti su save)."
+      errori_comuni:
+        - problema: "Sono agent e non vedo la voce Impostazioni"
+          soluzione: >
+            Corretto: solo agency_admin owner puo' modificare. Se sei
+            agent, la voce puo' comparire nel menu ma il backend restituisce
+            403 not_owner sul save.
+      permessi:
+        - "Read: agency_admin, super_admin"
+        - "Write PATCH: solo owner_id == user.id oppure super_admin"
+    screenshot: []
+
+  # ---------- 19.3 · Sezione Identita' ----------
+
+  - id: settings.sezione-identita
+    titolo: Sezione 1 · Identità agenzia (display_name + tagline)
+    modulo: Impostazioni
+    widget: null
+    pubblico: [titolare, super_admin]
+    livello: base
+    tags: [impostazioni, identita, display-name, tagline, branding, logo-mancante]
+    correlati: [settings.cos-e, settings.limitazioni-v1]
+    domanda_naturale: "Come cambio il nome della mia agenzia? Dove metto lo slogan?"
+    contenuto:
+      a_cosa_serve: >
+        Impostare il nome commerciale visibile ovunque nell'app e sul
+        portale pubblico, piu' uno slogan opzionale.
+      quando_si_usa: >
+        Quando rinomini l'agenzia o vuoi aggiungere/modificare un motto.
+      passi:
+        - "display_name (obbligatorio, 2-120 char): nome commerciale
+          visualizzato ovunque nell'app + portale pubblico."
+        - "branding.tagline (opzionale, max 200 char): slogan/motto
+          visualizzato nell'header del portale pubblico."
+        - "⚠️ NO uploader logo v1. branding.logo_url esiste in schema
+          ma nessun campo UI per caricarlo. Logo viene inferito da
+          brand extractor (Cap. 8) o non e' visualizzato."
+        - "⚠️ NO color picker v1. branding.primary_color (#0B1E3F)
+          e accent_color (#1F6B5C) sono default hard-coded schema-only."
+      errori_comuni:
+        - problema: "display_name troppo corto"
+          soluzione: >
+            Minimo 2 caratteri. Se hai nome molto corto usa un formato
+            esteso (es. 'AB Immobiliare' invece di 'AB').
+        - problema: "Non trovo dove caricare il logo"
+          soluzione: >
+            Corretto: v1 NO uploader logo in Settings. Usa Cap. 8 brand
+            extractor per estrarlo dal sito esistente.
+      permessi:
+        - "Solo owner puo' salvare"
+    screenshot:
+      - "[SCREEN: cap19-settings-identity]"
+
+  # ---------- 19.4 · Sezione Fiscali ----------
+
+  - id: settings.sezione-fiscali
+    titolo: Sezione 2 · Dati fiscali (legal_name + VAT + CF · REA/FIAIP schema-only)
+    modulo: Impostazioni
+    widget: null
+    pubblico: [titolare, super_admin]
+    livello: intermedio
+    tags: [impostazioni, fiscali, partita-iva, codice-fiscale, rea, fiaip, validazione]
+    correlati: [settings.cos-e, settings.limitazioni-v1]
+    domanda_naturale: "Come inserisco la Partita IVA della mia agenzia? Dove va il Codice Fiscale?"
+    contenuto:
+      a_cosa_serve: >
+        Impostare la ragione sociale legale + P.IVA + Codice Fiscale
+        italiani. Nessuna validazione formato v1.
+      quando_si_usa: >
+        Configurazione iniziale post-onboarding o correzione dati fiscali.
+      passi:
+        - "fiscal.legal_name (obbligatorio, 2-200 char): ragione sociale
+          (es. 'Immobiliare Rossi S.r.l.')."
+        - "fiscal.vat_number (opzionale, max 20 char): Partita IVA IT.
+          Nessuna validazione formato 11 cifre v1."
+        - "fiscal.fiscal_code (opzionale, max 20 char): Codice Fiscale
+          IT. Nessuna validazione formato 16 char v1."
+        - "⚠️ Schema-only NO UI v1: fiscal.rea (Repertorio Economico
+          Amministrativo, max 30 char), fiscal.fiaip_code (codice
+          agente FIAIP, max 30 char). Presenti in AgencyFiscal ma
+          nessun campo UI per inserirli."
+        - "⚠️ NO controllo unicita' VAT: due agenzie possono avere
+          la stessa P.IVA in Mongo (bug potenziale, documentato)."
+      errori_comuni:
+        - problema: "Ho inserito una P.IVA sbagliata ma non mi da errore"
+          soluzione: >
+            Corretto: v1 nessuna validazione formato P.IVA. Ricontrolla
+            manualmente contro il tuo certificato di attribuzione.
+        - problema: "Dove metto il numero REA?"
+          soluzione: >
+            v1 NO campo UI per REA. Serve un aggiornamento futuro
+            (backlog).
+      permessi:
+        - "Solo owner puo' salvare"
+    screenshot:
+      - "[SCREEN: cap19-settings-fiscal]"
+
+  # ---------- 19.5 · Sezione Indirizzo ----------
+
+  - id: settings.sezione-indirizzo
+    titolo: Sezione 3 · Indirizzo agenzia (street/city/province/CAP · country IT default)
+    modulo: Impostazioni
+    widget: null
+    pubblico: [titolare, super_admin]
+    livello: base
+    tags: [impostazioni, indirizzo, address, cap, provincia, portale-pubblico, geocoding-no]
+    correlati: [settings.cos-e, settings.limitazioni-v1]
+    domanda_naturale: "Come metto l'indirizzo della mia agenzia? La provincia va in due lettere?"
+    contenuto:
+      a_cosa_serve: >
+        Impostare l'indirizzo fisico dell'agenzia visibile su portale
+        pubblico e footer sito.
+      quando_si_usa: >
+        Configurazione iniziale o quando cambi sede fisica.
+      passi:
+        - "address.street (opzionale, max 200 char): via + civico."
+        - "address.city (opzionale, max 100 char)."
+        - "address.province (max 2 char + uppercase automatico): es.
+          'RM', 'MI', 'CT'."
+        - "address.postal_code (max 10 char): CAP."
+        - "⚠️ address.country default 'IT' hard-coded. NO country
+          selector v1."
+        - "⚠️ NO geocoding lat/lng, NO autocomplete Google Places,
+          NO validazione CAP contro database CAP italiani."
+      errori_comuni:
+        - problema: "La provincia non accetta il testo esteso"
+          soluzione: >
+            E' un campo max 2 char con uppercase automatico. Inserisci
+            'RM' non 'Roma'.
+        - problema: "Voglio inserire un'agenzia in Svizzera / Francia"
+          soluzione: >
+            v1 country e' hard-coded 'IT'. Solo agenzie italiane
+            supportate. Backlog: multi-country selector.
+      permessi:
+        - "Solo owner puo' salvare"
+    screenshot:
+      - "[SCREEN: cap19-settings-address]"
+
+  # ---------- 19.6 · Sezione Contatti ----------
+
+  - id: settings.sezione-contatti
+    titolo: Sezione 4 · Contatti pubblici (email + telefono agenzia)
+    modulo: Impostazioni
+    widget: null
+    pubblico: [titolare, super_admin]
+    livello: base
+    tags: [impostazioni, contatti, email, telefono, portale-pubblico, contact-website-schema-only]
+    correlati: [settings.cos-e, settings.limitazioni-v1]
+    domanda_naturale: "Dove metto l'email di contatto della mia agenzia visibile ai clienti?"
+    contenuto:
+      a_cosa_serve: >
+        Impostare email e telefono pubblici dell'agenzia visualizzati
+        sul portale pubblico (/agenzia/{slug}) e usati per lead
+        notification (Cap. 6).
+      quando_si_usa: >
+        Configurazione iniziale o cambio email/telefono agenzia.
+      passi:
+        - "contact.email (opzionale, tipo email): visibile sul portale
+          pubblico."
+        - "contact.phone (opzionale, max 30 char): visibile sul portale
+          pubblico."
+        - "⚠️ contact.email DIVERSA da user.email (login titolare).
+          user.email e' privata, contact.email e' pubblica."
+        - "⚠️ Schema-only NO UI v1: contact.website (max 200 char).
+          Duplicato di website.external_url — presente in schema per
+          storico ma non usato v1."
+        - "⚠️ NO validazione formato telefono (IT/internazionale)."
+      errori_comuni:
+        - problema: "Ho aggiornato l'email di contatto ma non ricevo lead"
+          soluzione: >
+            Il template lead_notification (Cap. 18) va all'AGENTE owner
+            dell'immobile, non alla contact.email agenzia. contact.email
+            e' solo visualizzata al pubblico.
+      permessi:
+        - "Solo owner puo' salvare"
+    screenshot:
+      - "[SCREEN: cap19-settings-contact]"
+
+  # ---------- 19.7 · Sezione Sito web ----------
+
+  - id: settings.sezione-sito-web
+    titolo: Sezione 5 · Sito web · external URL vs omnia_template (3 stub inattivi v1)
+    modulo: Impostazioni
+    widget: null
+    pubblico: [titolare, super_admin]
+    livello: intermedio
+    tags: [impostazioni, sito-web, website-mode, external, omnia-template, template-stub, feed-xml, presto-disponibile]
+    correlati: [settings.cos-e, settings.limitazioni-v1]
+    domanda_naturale: "Come scelgo se usare il mio sito esistente o farmi un template OMNIA?"
+    contenuto:
+      a_cosa_serve: >
+        Selezionare la modalita' sito web: se hai gia' un sito (external
+        URL) o vuoi un template OMNIA (stub v1 non attivi).
+      quando_si_usa: >
+        Configurazione iniziale o quando decidi di cambiare strategia sito.
+      passi:
+        - "2 bottoni cliccabili mutually exclusive. Click su stesso
+          bottone → deseleziona (mode = null)."
+        - "Modalita' A · 'external': hai gia' un sito. Compili
+          website.external_url (input URL). OMNIA espone feed XML a
+          /api/app/publishing/feed/{slug}.xml che il tuo sito consuma."
+        - "Modalita' B · 'omnia_template': non hai un sito. 3 preview
+          UI: minimal, elegant, bold. ⚠️ TUTTI marcati 'presto
+          disponibile' v1 (settings.website_template_soon). Nessun
+          click handler funzionante. NO template_id selezionabile."
+        - "Salva: mode='external' + external_url oppure mode=
+          'omnia_template' (senza template_id v1). mode=null se
+          deselezioni."
+        - "Cross-ref Cap. 8 Sito web: il rendering reale del sito
+          (brand extractor + themes + custom_domain) sta in Cap. 8,
+          NON in Settings v1."
+      errori_comuni:
+        - problema: "Ho selezionato Elegant ma non succede nulla"
+          soluzione: >
+            Corretto: v1 i 3 template omnia sono stub UI 'presto
+            disponibile'. Nessun click handler attivo. Aspetta v1.1."
+        - problema: "Come collego il mio dominio custom al template?"
+          soluzione: >
+            Custom domain sta in Cap. 17 Domain Vault /app/settings/
+            domain-verify. Settings NO custom_domain UI.
+      permessi:
+        - "Solo owner puo' salvare"
+    screenshot:
+      - "[SCREEN: cap19-settings-website-external]"
+      - "[SCREEN: cap19-settings-website-template]"
+
+  # ---------- 19.8 · Permessi ----------
+
+  - id: settings.permessi-ownership
+    titolo: Permessi Settings · solo owner puo' salvare (agency_admin invitato NO)
+    modulo: Impostazioni
+    widget: null
+    pubblico: [titolare, agente, super_admin]
+    livello: intermedio
+    tags: [impostazioni, permessi, ownership, owner-id, "403-not-owner", agency-admin, invitato, transfer-ownership-no]
+    correlati: [settings.dove-trovarlo, settings.errori-comuni]
+    domanda_naturale: "Perché non riesco a salvare le impostazioni? Chi puo' modificarle?"
+    contenuto:
+      a_cosa_serve: >
+        Chiarire chi puo' effettivamente modificare le Settings dell'agency.
+      quando_si_usa: >
+        Prima di aspettarti che un agency_admin invitato modifichi le
+        Settings.
+      passi:
+        - "Endpoint PATCH /api/app/agencies/me ha 3 guardie:"
+        - "1. require_roles('agency_admin', 'super_admin') decorator:
+          solo questi 2 ruoli entrano."
+        - "2. agency_ids presente nell'user: se vuoto → 404 no_agency."
+        - "3. existing.owner_id == user.id OPPURE role='super_admin':
+          altrimenti 403 not_owner."
+        - "⚠️ Un collaboratore agency_admin INVITATO via magic-link
+          (Cap. 13) puo' leggere GET /me MA NON puo' fare PATCH: non
+          e' il fondatore (owner_id != user.id)."
+        - "Solo il titolare che ha CREATO l'agency in onboarding
+          (POST /api/app/agencies) e' owner_id."
+        - "⚠️ NO trasferimento ownership v1 (owner_id immutabile).
+          Documentato in Cap. 13 limitazioni v1."
+      errori_comuni:
+        - problema: "403 not_owner: sono agency_admin invitato"
+          soluzione: >
+            Corretto: solo il titolare fondatore puo' modificare. Non
+            e' un bug. Backlog: transfer ownership agenzia (v1.1+).
+      permessi:
+        - "Write: solo owner_id == user.id OPPURE super_admin"
+        - "Read: agency_admin, super_admin"
+    screenshot: []
+
+  # ---------- 19.9 · Endpoint PATCH ----------
+
+  - id: settings.endpoint-patch
+    titolo: Endpoint PATCH /api/app/agencies/me · save unico + toast embedded
+    modulo: Impostazioni
+    widget: null
+    pubblico: [titolare, super_admin]
+    livello: avanzato
+    tags: [impostazioni, api, patch, agencies-me, agency-update, cleanGroup, model-dump, toast-embedded]
+    correlati: [settings.cos-e, settings.permessi-ownership]
+    domanda_naturale: "Come funziona tecnicamente il salvataggio delle Impostazioni? Che endpoint chiama?"
+    contenuto:
+      a_cosa_serve: >
+        Documentare il flusso tecnico del save.
+      quando_si_usa: >
+        Debug problemi salvataggio o integrazione API terze parti.
+      passi:
+        - "Endpoint: PATCH /api/app/agencies/me."
+        - "Body: JSON conforme al modello Pydantic AgencyUpdate. Tutti
+          i campi opzionali. Sotto-schemi: fiscal, address, contact,
+          branding, website."
+        - "Frontend cleanGroup(obj) rimuove chiavi con stringa vuota
+          o null (permette upsert parziale)."
+        - "Backend applica payload.model_dump(exclude_unset=True) e
+          fa $set in Mongo su agencies.{agency_id}."
+        - "mode=null viene preservato esplicitamente per permettere
+          deselezione modalita' sito."
+        - "Response: agenzia aggiornata (schema AgencyPublic)."
+        - "Toast UI: banner emerald embedded per 2500ms. NON usa
+          libreria sonner (Cap. 18) — e' un toast locale al form."
+        - "Errori: banner rosso persistente finche' non si tenta un
+          nuovo save."
+      errori_comuni:
+        - problema: "Il save silenziosamente non aggiorna un campo"
+          soluzione: >
+            Verifica che il campo non sia in cleanGroup filter (empty
+            string). Se vuoi cancellare un campo esistente devi passare
+            esplicitamente null (non stringa vuota).
+      permessi:
+        - "Vedi settings.permessi-ownership"
+    screenshot: []
+
+  # ---------- 19.10 · Billing ----------
+
+  - id: settings.billing-pagina-separata
+    titolo: Billing · pagina separata (/app/settings/billing) piani Founders + credit packages + Stripe
+    modulo: Impostazioni
+    widget: null
+    pubblico: [titolare, super_admin]
+    livello: intermedio
+    tags: [impostazioni, billing, stripe, piani, founders, credit-packages, checkout, customer-portal, stripe-enabled, "503"]
+    correlati: [settings.cos-e, settings.limitazioni-v1]
+    domanda_naturale: "Dove attivo un piano OMNIA? Come compro crediti? Come funzionano i Founders €49/€99/€249?"
+    contenuto:
+      a_cosa_serve: >
+        Attivazione piano B2B (Starter/Pro/Agency/Enterprise) tramite
+        Stripe hosted checkout + acquisto credit packages top-up
+        (ratio 1 credito = €0,05).
+      quando_si_usa: >
+        Prima volta che attivi un piano o quando ricarichi crediti.
+      passi:
+        - "Route: /app/settings/billing (BillingPage.jsx, 235 righe)."
+        - "Feature flag env: STRIPE_ENABLED=true + STRIPE_SECRET_KEY.
+          Se disabilitato → HTTP 503 stripe_not_configured con
+          messaggio 'Billing e' in preparazione'."
+        - "Sezione piano corrente: GET /billing/subscription. Se
+          nessun piano → 'Nessuno'."
+        - "Wallet crediti: sub.wallet.balance (integer). Se nessun
+          subscription → 0."
+        - "Piani Founders (PRICING_PHASE=launch, default):
+          Starter €49/€490 (3 agenti, 30 immobili, 120 cr/mese),
+          Pro €99/€990 (10 agenti, 200 immobili, 1200 cr/mese),
+          Agency €249/€2490 (unlimited, 3600 cr/mese),
+          Enterprise €299/€2990 (unlimited, 3600 cr/mese TBD)."
+        - "Fase POST_TRACTION (PRICING_PHASE=post_traction):
+          €79/€179/€349/€499."
+        - "Credit packages (ratio €0,05/cred, 20 cred/€, NO sconto
+          volume): pkg_400=€20, pkg_1000=€50, pkg_2000=€100,
+          pkg_5000=€250, pkg_10000=€500, pkg_20000=€1000."
+        - "Checkout: POST /billing/checkout {plan_tier, billing_cycle}
+          → redirect Stripe hosted checkout."
+        - "Purchase credits: POST /billing/credits/purchase
+          {package_key} → redirect Stripe."
+        - "Customer portal: POST /billing/portal → redirect Stripe
+          customer portal (fatture, cambio piano, cancel, aggiorna PM)."
+        - "Polling post-checkout: GET /billing/status/{session_id}
+          finche' complete → toast success sonner + reload sub."
+      errori_comuni:
+        - problema: "HTTP 503 Billing e' in preparazione"
+          soluzione: >
+            STRIPE_ENABLED non e' 'true' in .env backend. Configura
+            la chiave Stripe e riavvia.
+        - problema: "Voglio cambiare piano ma non trovo il bottone"
+          soluzione: >
+            Cambio piano post-attivazione va fatto dal customer portal
+            Stripe (POST /billing/portal), non da BillingPage.
+      permessi:
+        - "GET /billing/plans: pubblico"
+        - "GET /billing/subscription, POST /billing/checkout, POST
+          /billing/portal, ecc.: auth richiesta"
+    screenshot:
+      - "[SCREEN: cap19-billing-plans]"
+      - "[SCREEN: cap19-billing-credits]"
+
+  # ---------- 19.11 · Chi NON e' coperto ----------
+
+  - id: settings.chi-non-e-coperto
+    titolo: Cosa NON è in Settings v1 (Team/Domini/Notifiche/API Keys stanno in pagine separate)
+    modulo: Impostazioni
+    widget: null
+    pubblico: [titolare, super_admin]
+    livello: base
+    tags: [impostazioni, cosa-non-copre, pagine-separate, team, api-keys, domain, notifiche, membri, custom-domain]
+    correlati: [settings.cos-e, settings.limitazioni-v1]
+    domanda_naturale: "Perché nella Settings non trovo la gestione team, il dominio custom, le notifiche o le API keys?"
+    contenuto:
+      a_cosa_serve: >
+        Chiarire l'architettura frammentata delle Settings v1: molte
+        aree sono pagine separate, non tab nel form Settings.
+      quando_si_usa: >
+        Quando cerchi una funzione ma non e' nella SettingsPage.
+      passi:
+        - "Team & Ruoli / invito collaboratori → /app/settings/members
+          (MembersPage.jsx, Cap. 13)."
+        - "Cambio piano / crediti / fatture → /app/settings/billing
+          (BillingPage.jsx, §19.10). Fatture via Stripe portal."
+        - "Custom domain / DNS TXT+CNAME → /app/settings/domain-verify
+          (DomainVerifyPage.jsx, Cap. 17)."
+        - "Domain sovereignty policy → /app/domain-sovereignty-policy
+          (page pubblica, Cap. 17)."
+        - "API Keys / Webhook Track B → /app/api-keys (ApiKeysPage,
+          non ancora documentata come capitolo)."
+        - "Notifiche / preferenze email → ❌ NO UI v1 (Cap. 18 §18.10)."
+        - "Sito web rendering (template + brand extractor + themes)
+          → Cap. 8 (Settings gestisce SOLO il flag mode)."
+        - "Virtual Staging crediti guardrail → backlog A-013."
+        - "Cambio password / MFA / sessioni attive → pagina auth
+          separata (non documentata come capitolo Settings)."
+      errori_comuni:
+        - problema: "Voglio disattivare le email di notifica in Settings"
+          soluzione: >
+            v1 NO UI preferenze notifiche (Cap. 18 §18.10). Backlog A-021.
+        - problema: "Voglio caricare un membro dalla Settings"
+          soluzione: >
+            Vai in /app/settings/members (Cap. 13). Settings gestisce
+            solo l'anagrafica agenzia, non i membri.
+      permessi:
+        - "N/A · documentativo"
+    screenshot: []
+
+  # ---------- 19.12 · Errori comuni ----------
+
+  - id: settings.errori-comuni
+    titolo: Errori comuni Settings (403 not_owner, 404 no_agency, template stub, logo mancante)
+    modulo: Impostazioni
+    widget: null
+    pubblico: [titolare, agente, super_admin]
+    livello: intermedio
+    tags: [impostazioni, errori, "403", "404", not-owner, no-agency, template-stub, logo-mancante, validazione]
+    correlati: [settings.permessi-ownership, settings.sezione-sito-web, settings.limitazioni-v1]
+    domanda_naturale: "Perché non riesco a salvare le Settings? Perche' i template non funzionano? Come faccio il logo?"
+    contenuto:
+      a_cosa_serve: >
+        Checklist troubleshooting per problemi comuni sulle Settings.
+      quando_si_usa: >
+        Quando l'utente segnala un errore o comportamento inatteso.
+      passi:
+        - "E1 HTTP 403 not_owner: sei un agency_admin invitato via
+          magic-link (Cap. 13), non il fondatore. Solo l'owner_id
+          originale puo' modificare. Fix v1: nessuno. Contatta OMNIA
+          per super_admin override."
+        - "E2 HTTP 404 no_agency: l'utente autenticato non ha
+          agency_ids popolato. Fix: completa l'onboarding (crea agency
+          da /app/onboarding)."
+        - "E3 Toast 'Errore durante il salvataggio': validazione
+          Pydantic fallita (display_name < 2 char, VAT > 20 char,
+          primary_color non hex, ecc.). Fix: guarda banner rosso
+          inline con messaggio dettagliato."
+        - "E4 'Ho cliccato template Elegant ma non succede nulla':
+          corretto, i 3 template omnia (minimal/elegant/bold) sono
+          stub UI marcati 'presto disponibile' v1. Nessun click handler
+          attivo. Backlog A-024 (v1.1)."
+        - "E5 'Non trovo un uploader logo': corretto, v1 NO uploader
+          logo in Settings. Il logo viene inferito da brand extractor
+          (Cap. 8 POST /api/app/website/extract-from-url). Backlog
+          A-025 uploader manuale (v1.1)."
+      errori_comuni:
+        - problema: "Toast successo scompare troppo velocemente"
+          soluzione: >
+            Il toast e' banner emerald embedded auto-clear dopo 2500ms.
+            NON e' toast sonner (Cap. 18). Non configurabile v1.
+      permessi:
+        - "N/A · troubleshooting"
+    screenshot: []
+
+  # ---------- 19.13 · Limitazioni v1 ----------
+
+  - id: settings.limitazioni-v1
+    titolo: Limiti v1 Impostazioni agenzia (D-051 onesto · elenco esaustivo)
+    modulo: Impostazioni
+    widget: null
+    pubblico: [titolare, agente, super_admin]
+    livello: intermedio
+    tags: [impostazioni, limiti, cosa-non-fa, no-uploader-logo, no-color-picker, no-rea, no-fiaip, no-country-selector, no-geocoding, no-validazione-vat, no-transfer-ownership, no-audit-settings, template-stub, d-051]
+    correlati: [settings.cos-e, settings.chi-non-e-coperto]
+    domanda_naturale: "Cosa NON fa la Settings v1? Ha uploader logo, color picker, validazione VAT, transfer ownership, geocoding indirizzo, audit trail modifiche, rollback?"
+    contenuto:
+      a_cosa_serve: >
+        Elenco esaustivo di cosa la Settings v1 NON fa, rispettando
+        Onesta' Documentale D-051.
+      quando_si_usa: >
+        Prima di aspettarti uploader logo, color picker, o audit trail
+        delle modifiche.
+      passi:
+        - "CAMPI SCHEMA-ONLY (nessuna UI di modifica): branding.logo_url
+          (no uploader), branding.primary_color (default #0B1E3F),
+          branding.accent_color (default #1F6B5C), fiscal.rea,
+          fiscal.fiaip_code, contact.website (duplicato di
+          website.external_url), address.country (default IT hard-
+          coded), plan_type (turnkey/whitelabel/hybrid — decisione
+          backend), group_id / branch_code (franchising M2.5.1)."
+        - "TEMPLATE OMNIA STUB: preview minimal/elegant/bold marcati
+          'presto disponibile'. Nessun template_id selezionabile via
+          UI v1. Nessun rendering template attivo (Cap. 8 usa sito
+          esterno o brand extracted)."
+        - "VALIDAZIONI MANCANTI: no formato Partita IVA IT (11 cifre),
+          no formato Codice Fiscale IT (16 char), no unicita' VAT tra
+          agenzie, no autocomplete Google Places indirizzo, no
+          geocoding lat/lng, no validazione CAP contro database CAP,
+          no validazione telefono formato IT/internazionale."
+        - "SEZIONI NON PRESENTI (pagine separate): Team (Cap. 13),
+          Billing (§19.10), Domain Vault (Cap. 17), API Keys (Track B
+          futuro), Notifiche preferenze (Cap. 18 no UI v1), Log audit
+          settings, cambio password/MFA/sessioni."
+        - "OPERAZIONI NON SUPPORTATE: no trasferimento ownership
+          agenzia (owner_id immutabile), no rinomina slug pubblico
+          (slug creato all'onboarding), no import/export JSON
+          impostazioni, no storico modifiche settings (no audit trail),
+          no rollback modifica errata (no undo), no anteprima 'come
+          apparira' prima di salvare (no preview render)."
+        - "TOAST/UX: il toast successo NON usa libreria sonner (Cap.
+          18) — usa banner emerald embedded locale al form. Autoazzera
+          dopo 2500ms (non configurabile). No undo dopo save (Ctrl+Z
+          non funziona). Errori mostrati come banner rosso persistente."
+      errori_comuni:
+        - problema: "Voglio un uploader logo con drag&drop"
+          soluzione: >
+            v1 NO uploader. Backlog A-025 (v1.1). Usa Cap. 8 brand
+            extractor per popolare logo automaticamente dal sito
+            esistente.
+        - problema: "Voglio validare la Partita IVA prima di salvare"
+          soluzione: >
+            v1 NO validazione formato/checksum P.IVA. Backlog v1.1.
+      permessi:
+        - "N/A · limitazioni informative"
+    screenshot: []
+
+  # ---------- 19.14 · Collegamenti ----------
+
+  - id: settings.collegamenti
+    titolo: Collegamenti Settings → altri capitoli (Cap. 1/6/8/13/17/18)
+    modulo: Impostazioni
+    widget: null
+    pubblico: [titolare, super_admin]
+    livello: base
+    tags: [impostazioni, collegamenti, cross-ref, cap1, cap6, cap8, cap13, cap17, cap18]
+    correlati: [settings.cos-e, settings.chi-non-e-coperto]
+    domanda_naturale: "Come si integra la Settings con gli altri moduli di OMNIA?"
+    contenuto:
+      a_cosa_serve: >
+        Mappa dei collegamenti Settings → altri moduli documentati.
+      quando_si_usa: >
+        Quando devi risalire da un campo Settings al modulo che lo
+        consuma.
+      passi:
+        - "Cap. 1 Primo accesso: onboarding crea l'agency con
+          display_name + fiscal.legal_name. La Settings poi permette
+          di modificarli."
+        - "Cap. 3 Immobili: le proprieta' pubblicate ereditano
+          agency.address per il portale pubblico."
+        - "Cap. 6 Portali / Publishing: il feed XML espone
+          contact.email e contact.phone ai portali."
+        - "Cap. 8 Sito web agenzia: website.mode='external' →
+          Cap. 8 espone feed XML. website.mode='omnia_template' →
+          v1 stub inattivi, Cap. 8 gestisce brand extractor + themes
+          + custom_domain."
+        - "Cap. 13 Team & Ruoli: Settings NON gestisce membri.
+          MembersPage separata (/app/settings/members)."
+        - "Cap. 17 Domain Vault: Settings NON gestisce custom_domain.
+          DomainVerifyPage separata (/app/settings/domain-verify).
+          existing_domain in agency impostato in signup, non da
+          Settings v1."
+        - "Cap. 18 Notifiche: Settings NO toggle preferenze notifiche
+          v1 (backlog A-021)."
+        - "§19.10 Billing: BillingPage separata
+          (/app/settings/billing). Piani Founders + crediti + Stripe."
+      errori_comuni: []
+      permessi:
+        - "N/A · documentativo"
+    screenshot: []

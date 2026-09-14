@@ -1,0 +1,576 @@
+# HAL — Voci esportate per RAG
+# Capitolo 14 · Import XML (Migrazione da altro gestionale)
+
+voci:
+
+  - id: import.cos-e
+    titolo: Cos'è il modulo Import XML (migrazione da altro gestionale)
+    modulo: Import XML
+    widget: null
+    pubblico: [titolare, super_admin]
+    livello: base
+    tags: [import, xml, migrazione, gestionale, universal-xml-importer, primi-passi, one-shot, agenzia]
+    correlati: [import.dove-trovarlo, import.flusso-preview-commit, import.limitazioni-v1]
+    domanda_naturale: "Cos'è Import XML? A cosa serve?"
+    contenuto:
+      a_cosa_serve: >
+        Strumento di migrazione a due fasi (Preview → Commit) che
+        legge un file XML esportato dal tuo attuale gestionale
+        immobiliare e inserisce gli immobili nel tuo portafoglio
+        OMNIA. Zero reinserimento manuale.
+      quando_si_usa: >
+        Quando arrivi in OMNIA da un altro gestionale e vuoi migrare
+        il portafoglio esistente (50-500 immobili) in un colpo solo,
+        oppure quando ricevi un export una-tantum dal franchising o
+        network.
+      passi:
+        - "Importatore schema-agnostic: accetta qualsiasi XML 'in
+          stile italiano' (feed CRM immobiliari)."
+        - "Zero riferimenti a competitor: label sempre 'il tuo
+          attuale gestionale' - nessun vendor specifico in UI o
+          codice."
+        - "One-shot: tu esporti dal vecchio strumento, tu carichi in
+          OMNIA. Nessuna sync automatica, nessun pull API."
+        - "Solo per immobili (properties). Clienti hanno un flusso
+          separato (/clients/csv-import, Cap. 4)."
+        - "Riservato al titolare (agency_admin) e super_admin.
+          Gli agent non hanno accesso."
+      errori_comuni:
+        - problema: "Sono agente e non vedo la voce Import XML"
+          soluzione: >
+            E' voluto: l'import scrive sull'intera collezione immobili
+            dell'agenzia, e' un'operazione delicata riservata al
+            titolare. Chiedi al titolare di importare per te.
+      permessi:
+        - Solo agency_admin e super_admin (require_roles esplicito)
+    screenshot: ["[SCREEN: import-xml-upload]"]
+
+  - id: import.dove-trovarlo
+    titolo: Dove trovare Import XML in ImmoWeb
+    modulo: Import XML
+    widget: null
+    pubblico: [titolare, super_admin]
+    livello: base
+    tags: [import, xml, dove-si-trova, sidebar, navigazione, migrazione, route]
+    correlati: [import.cos-e, import.flusso-preview-commit]
+    domanda_naturale: "Dove trovo Import XML? Come ci accedo?"
+    contenuto:
+      a_cosa_serve: >
+        Sapere dove cliccare per aprire la pagina di migrazione
+        dentro ImmoWeb.
+      quando_si_usa: >
+        Quando devi migrare il tuo portafoglio da un altro gestionale.
+      passi:
+        - "Fai login a ImmoWeb come titolare (agency_admin) o
+          super_admin."
+        - "Nella barra a sinistra, sezione Migrazione o Impostazioni,
+          clicca 'Import da altro gestionale'."
+        - "Rotta finale: /it/app/import (o /en/app/import,
+          /es/app/import)."
+      errori_comuni:
+        - problema: "Non vedo la voce Import"
+          soluzione: >
+            La voce e' visibile solo a agency_admin/super_admin.
+            Se sei agent, chiedi al titolare.
+      permessi:
+        - Solo agency_admin e super_admin
+    screenshot: []
+
+  - id: import.flusso-preview-commit
+    titolo: Il flusso a 2 fasi Preview → Commit
+    modulo: Import XML
+    widget: null
+    pubblico: [titolare, super_admin]
+    livello: base
+    tags: [import, xml, flusso, preview, commit, due-fasi, dry-run, sicurezza, no-sorprese]
+    correlati: [import.cos-e, import.simulazione-dry-run, import.dedupe]
+    domanda_naturale: "Come funziona il flusso di import? Cosa succede prima e dopo il click?"
+    contenuto:
+      a_cosa_serve: >
+        Capire che l'import e' progettato per non sorprenderti: prima
+        preview di cosa contiene il file, poi conferma per scrivere
+        sul DB.
+      quando_si_usa: >
+        Ogni volta che carichi un XML.
+      passi:
+        - "FASE 1 Upload: trascini/selezioni un .xml (max 50MB),
+          clicchi 'Analizza contenuto'. Chiama
+          POST /api/app/import/xml/preview (multipart file).
+          Il backend parsa e restituisce session_id + report.
+          NESSUNA scrittura sul DB in questa fase."
+        - "FASE 2 Preview report: vedi in schermata 'X/Y immobili
+          leggibili', 3 cards (per tipologia/contratto/citta'),
+          warning (senza foto, senza prezzo), anteprima 5 immobili,
+          divergenze (max 50), toggle dedupe."
+        - "FASE 3 Commit: clicchi 'Simulazione' (dry_run=true)
+          oppure 'Importa in OMNIA' (dry_run=false). Chiama
+          POST /api/app/import/xml/commit con session_id."
+        - "Session TTL: 10 minuti dalla preview. Formato session_id:
+          prv_{millis}_{user_id[:8]} - legata all'utente uploader."
+        - "Endpoint aggiuntivo: GET /api/app/import/xml/session/{id}
+          per rileggere il report se ricarichi la pagina prima del
+          commit."
+      errori_comuni:
+        - problema: "Passa piu' di 10 minuti fra preview e commit"
+          soluzione: >
+            La session e' scaduta (in-memory, TTL 10 min). Ricarica
+            il file e ripeti preview → commit.
+      permessi:
+        - Solo agency_admin e super_admin su tutti gli endpoint
+          /import/xml/*
+    screenshot: ["[SCREEN: import-xml-preview]"]
+
+  - id: import.file-xml-requisiti
+    titolo: Cosa deve contenere il file XML per essere letto correttamente
+    modulo: Import XML
+    widget: null
+    pubblico: [titolare, super_admin]
+    livello: intermedio
+    tags: [import, xml, file, requisiti, struttura, tag, riferimento, citta, titolo, encoding]
+    correlati: [import.cos-e, import.mapping-tabelle, import.errori]
+    domanda_naturale: "Che formato deve avere il file XML? Quali tag servono?"
+    contenuto:
+      a_cosa_serve: >
+        Sapere che struttura deve avere il tuo export per essere
+        letto senza errori.
+      quando_si_usa: >
+        Prima di caricare, per verificare il file esportato dal
+        vecchio gestionale.
+      passi:
+        - "Encoding: UTF-8 preferibile (BOM strip automatico). Il
+          parser tenta UTF-8 con fallback errors=replace."
+        - "Estensione: .xml (frontend filtra .xml, backend accetta
+          anche .txt come workaround)."
+        - "Dimensione: min 40 byte, max 50 MB (413 se supera)."
+        - "Regola euristica di rilevamento immobile (looks_like_property):
+          ogni record deve avere almeno 3 tag fra questi indicatori:
+          prezzo, canone, mq, citta/città, tipologia,
+          codice_tipologia, indirizzo, titolo, riferimento, surface,
+          city, price, o qualsiasi tag che inizi con 'url' (es.
+          url_foto_1)."
+        - "Guard obbligatorio dopo il parse: se manca citta O titolo
+          il record viene SCARTATO (finisce in divergences come
+          missing_city_or_title)."
+        - "Struttura accettata: <root><item>...</item></root> oppure
+          <root>...</root> (il parser tratta root come singolo item
+          se non ha figli)."
+        - "Nomi tag: italiani (prezzo/mq/citta) o inglesi (price/
+          surface/city) - parser schema-agnostic."
+      errori_comuni:
+        - problema: "422 no_property_records_detected"
+          soluzione: >
+            Il parser non ha trovato record con almeno 3 tag
+            indicatori. Verifica la struttura: aggiungi al menu i tag
+            che stai esportando. Chiedi al vecchio gestionale un
+            export standard 'per portali'.
+        - problema: "xml_parse_error nelle divergences"
+          soluzione: >
+            Il file non e' XML ben formato (tag non chiusi, caratteri
+            speciali non escape). Aprilo con un editor XML per
+            capire dove si rompe.
+      permessi:
+        - Info descrittiva per titolari
+    screenshot: []
+
+  - id: import.mapping-tabelle
+    titolo: Tabelle di mapping - codici tipologia, energia, contratto
+    modulo: Import XML
+    widget: null
+    pubblico: [titolare, super_admin]
+    livello: intermedio
+    tags: [import, xml, mapping, tipologia, codice-tipologia, energia, classe-energetica, contratto, operation, features, keyword]
+    correlati: [import.file-xml-requisiti, import.divergenze]
+    domanda_naturale: "Come vengono tradotti i codici numerici del vecchio gestionale in tipi OMNIA?"
+    contenuto:
+      a_cosa_serve: >
+        Capire quali codici il parser sa tradurre automaticamente e
+        quali no.
+      quando_si_usa: >
+        Se in preview vedi molte divergenze o tipologie inaspettate.
+      passi:
+        - "TIPOLOGIA (TYPE_CODE_MAP, 18 codici → 12 tipi OMNIA):
+          3=appartamento, 10/33=villa, 31=attico, 32/34=villetta_a_schiera,
+          4/54=negozio, 20=magazzino, 40=ufficio, 50=loft,
+          51=monolocale, 60=terreno_edificabile, 61=terreno_agricolo,
+          70=garage_box, 80=capannone, 90=palazzo_stabile,
+          11=rustico_casale."
+        - "OPERAZIONE/CONTRATTO (OPERATION_CODE_MAP, 6 codici):
+          V=sale, A=rent, S=rent (sfitto/stagionale), R=rent,
+          RB=rent_to_buy, ASTA=auction."
+        - "CLASSE ENERGETICA (ENERGY_CODE_MAP, 19 codici):
+          accetta sia stringa esplicita (A/A1/A2/A3/A4/B/C/D/E/F/G)
+          sia numeri legacy 1-8, 10-19, 99 (=exempt)."
+        - "CATEGORIA (CATEGORY_MAP, 3 lettere): R=residenziale,
+          U=ufficio, C=commerciale."
+        - "FEATURES (FEATURE_KEYWORDS, 25 keyword → boolean):
+          il parser scansiona descrizioni cercando partial match
+          case-insensitive: balcon, terraz, giardin, piscin, ascensor,
+          aria_cond/climatiz, cantin, posto_auto, box, blindat,
+          parquet, panoram/vista_mar, solar, disabili, e altri."
+        - "CONDIZIONE (5 keyword): nuov→nuovo, ristruttura→
+          ristrutturato, da_ristruttura→da_ristrutturare, ottim→
+          ottime, buon→buone."
+        - "Codici FUORI tabella: il valore grezzo viene salvato ma
+          il campo potrebbe finire in divergences se il parser lo
+          giudica non normalizzabile."
+      errori_comuni:
+        - problema: "Un immobile 'villa bifamiliare' finisce come 'villa'"
+          soluzione: >
+            E' voluto: il codice 33 (bifamiliare) e' mappato a
+            'villa'. La distinzione fine bifamiliare/villa in v1
+            non e' preservata. Puoi correggerlo manualmente dopo
+            l'import dalla scheda immobile.
+      permessi:
+        - Info descrittiva per titolari
+    screenshot: []
+
+  - id: import.dedupe
+    titolo: Dedupe per reference_code - evitare doppioni
+    modulo: Import XML
+    widget: null
+    pubblico: [titolare, super_admin]
+    livello: base
+    tags: [import, xml, dedupe, deduplica, doppioni, reference-code, riferimento, skip-duplicates]
+    correlati: [import.flusso-preview-commit, import.simulazione-dry-run]
+    domanda_naturale: "Come evito di importare due volte lo stesso immobile?"
+    contenuto:
+      a_cosa_serve: >
+        Non ritrovarti con 200 duplicati se rilanci lo stesso XML.
+      quando_si_usa: >
+        Ogni volta che importi, di default attivo.
+      passi:
+        - "Toggle 'Salta immobili gia' presenti (dedupe per codice
+          riferimento)' e' ON di default nella preview."
+        - "Al commit, il backend estrae la lista di reference_code
+          dagli immobili da inserire, cerca in db.properties con
+          filtro {agency_id: tua, reference_code: {$in: [...]}},
+          salta quelli gia' presenti."
+        - "Scope agenzia: il match e' scoped al tuo agency_id.
+          Ref uguali in un'altra agenzia OMNIA non impattano."
+        - "Report finale: 'X inseriti, Y saltati per duplicato' +
+          fino a 50 codici saltati (skipped_references) per audit."
+        - "Se togli la spunta: il backend INSERISCE TUTTO senza
+          controllo. Usalo con cautela."
+        - "Tracciabilita' post-import: ogni documento MongoDB
+          salvato ha _import_source='universal_xml_importer_v1' e
+          _import_reference=<valore riferimento o attributo id>."
+      errori_comuni:
+        - problema: "Il mio XML non ha reference_code stabili"
+          soluzione: >
+            Il dedupe e' inefficace: rischi doppioni. In v1 non c'e'
+            fuzzy match su titolo/indirizzo. Prima di importare,
+            fatti generare ref stabili dal vecchio gestionale.
+      permessi:
+        - Titolari e super_admin (endpoint commit)
+    screenshot: []
+
+  - id: import.simulazione-dry-run
+    titolo: Simulazione dry-run - contare senza scrivere
+    modulo: Import XML
+    widget: null
+    pubblico: [titolare, super_admin]
+    livello: base
+    tags: [import, xml, simulazione, dry-run, prova, nessuna-scrittura, count]
+    correlati: [import.dedupe, import.flusso-preview-commit]
+    domanda_naturale: "Posso vedere quanti immobili sarebbero inseriti senza fare l'import vero?"
+    contenuto:
+      a_cosa_serve: >
+        Sapere in anticipo quanti immobili sono davvero nuovi (dopo
+        dedupe) prima di premere 'Importa in OMNIA'.
+      quando_si_usa: >
+        Quando hai il dubbio di aver gia' importato una parte del
+        portafoglio in passato e non vuoi rischiare doppioni.
+      passi:
+        - "Dalla preview clicca 'Simulazione (nessuna scrittura)'
+          invece di 'Importa in OMNIA'."
+        - "Chiama POST /commit con dry_run=true."
+        - "Il backend fa TUTTI i controlli di dedupe come nell'import
+          reale ma NON inserisce nulla."
+        - "Risposta contiene inserted (quanti sarebbero stati
+          inseriti), skipped_by_reference (quanti saltati),
+          dry_run=true."
+        - "La session RIMANE VALIDA dopo la simulazione: puoi
+          rilanciarla o passare al commit reale (session non
+          consumata)."
+        - "Il commit reale (dry_run=false) invece CONSUMA la session
+          - se serve rifarlo devi ricaricare il file."
+      errori_comuni:
+        - problema: "Ho fatto simulazione e poi la session e' scaduta"
+          soluzione: >
+            La simulazione non consuma la session ma il TTL resta
+            10 minuti dalla preview iniziale. Se ti distrai troppo,
+            ricarica il file.
+      permessi:
+        - Solo agency_admin e super_admin
+    screenshot: []
+
+  - id: import.divergenze
+    titolo: Cosa sono le divergenze e come leggerle
+    modulo: Import XML
+    widget: null
+    pubblico: [titolare, super_admin]
+    livello: intermedio
+    tags: [import, xml, divergenze, divergences, scartati, warning, campanelli-allarme, audit]
+    correlati: [import.file-xml-requisiti, import.mapping-tabelle]
+    domanda_naturale: "Che sono le 'divergenze rilevate' nella preview?"
+    contenuto:
+      a_cosa_serve: >
+        Segnalare i record borderline o problematici che il parser
+        ha visto durante la lettura.
+      quando_si_usa: >
+        Prima del commit, per decidere se procedere o migliorare
+        il file di export.
+      passi:
+        - "Sotto la preview c'e' un blocco espandibile 'Divergenze
+          rilevate (N)' - se N > 0 clicca per aprirlo."
+        - "Tipi tipici: xml_parse_error (file non ben formato,
+          parsing interrotto), map_error ref=XYZ (mapping fallito
+          su singolo record, viene scartato),
+          missing_city_or_title ref=XYZ (record senza citta o
+          titolo, viene scartato)."
+        - "Tetto: massimo 50 righe mostrate in UI (cap
+          divergences[:50] in ParseReport.to_dict). Se ce ne sono
+          di piu', i log server hanno il dettaglio completo
+          (super_admin)."
+        - "I record in divergences NON finiscono nel DB. Solo
+          parsed_ok viene inserito."
+      errori_comuni:
+        - problema: "Ho 100 divergenze e non riesco a leggerle tutte"
+          soluzione: >
+            UI cappata a 50. Se ti serve il dettaglio completo,
+            chiedi al super_admin di consultare i log backend
+            (logger 'xml_import_preview')."
+      permessi:
+        - Info descrittiva per titolari
+    screenshot: []
+
+  - id: import.risultato-commit
+    titolo: Cosa succede dopo il commit - stato immobili importati
+    modulo: Import XML
+    widget: null
+    pubblico: [titolare, super_admin]
+    livello: base
+    tags: [import, xml, commit, risultato, immobili-importati, moderation, visibility, agent-id]
+    correlati: [import.flusso-preview-commit, import.limitazioni-v1]
+    domanda_naturale: "Cosa succede agli immobili appena importati? Sono subito visibili?"
+    contenuto:
+      a_cosa_serve: >
+        Sapere in che stato entrano i nuovi immobili e cosa devi
+        fare dopo.
+      quando_si_usa: >
+        Subito dopo aver cliccato 'Importa in OMNIA'.
+      passi:
+        - "Insert in batch da 100 (ordered=False) su
+          db.properties.insert_many."
+        - "Ogni immobile importato ha di default:
+          moderation_status='approved',
+          is_listed_on_immobilcloud=true, is_private_listing=false,
+          visibility='public', view_count=0, lead_count=0."
+        - "NON ha agent_id: appare come immobile 'dell'agenzia'
+          senza responsabile finche' il titolare non assegna
+          manualmente (bulk edit o singolo, Cap. 3)."
+        - "Ha _import_source='universal_xml_importer_v1' e
+          _import_reference=<valore riferimento> per audit."
+        - "Response commit: {inserted, skipped_by_reference,
+          skipped_references[:50], committed_at (ISO 8601),
+          dry_run}."
+        - "Session viene rimossa dallo store dopo commit reale
+          (non dopo dry_run)."
+      errori_comuni:
+        - problema: "Ho importato 200 immobili ma nessuno ha un agente assegnato"
+          soluzione: >
+            Voluto: l'importatore non tenta di indovinare l'agent_id
+            (non sa a chi assegnarli). Usa il bulk edit in Immobili
+            per selezionare tutti gli immobili appena creati (filtra
+            per data) e assegnarli in blocco.
+      permessi:
+        - Solo agency_admin e super_admin
+    screenshot: []
+
+  - id: import.errori
+    titolo: Errori comuni Import XML
+    modulo: Import XML
+    widget: null
+    pubblico: [titolare, super_admin]
+    livello: base
+    tags: [import, xml, errori, troubleshooting, file-must-be-xml, file-too-large, session-not-found, no-property-records, "400", "413", "422", "404", "403"]
+    correlati: [import.file-xml-requisiti, import.flusso-preview-commit]
+    domanda_naturale: "Perche' l'import non funziona? Codici errore comuni"
+    contenuto:
+      a_cosa_serve: >
+        Riconoscere gli errori piu' frequenti e sapere cosa fare.
+      quando_si_usa: >
+        Quando l'upload o il commit falliscono.
+      passi:
+        - "400 file_must_be_xml: estensione non .xml (ne' .txt
+          backend). Rinomina o riesporta."
+        - "400 file_empty_or_too_small: file sotto i 40 byte. Sicuro
+          e' corrotto - riesporta dal gestionale."
+        - "413 file_too_large: file > 50 MB. Splitta l'export in
+          blocchi piu' piccoli."
+        - "422 no_property_records_detected: parser non ha trovato
+          record con almeno 3 tag indicatori. Verifica struttura XML
+          (prezzo/mq/citta/riferimento). Chiedi export 'standard
+          portali' al vecchio gestionale."
+        - "404 preview_session_not_found_or_expired: > 10 minuti
+          dalla preview, oppure ID sbagliato, oppure backend
+          riavviato. Ricarica il file."
+        - "403 session_owner_mismatch: stai committando una session
+          di un altro utente. Ogni utente ha le proprie session."
+        - "403 session_agency_mismatch: session creata sotto un
+          agency_id diverso dal tuo attuale. Rifai preview."
+        - "403 require_roles (senza detail): sei agent invece che
+          agency_admin. Chiedi al titolare."
+      errori_comuni:
+        - problema: "Ho fatto tutto giusto ma vedo 500"
+          soluzione: >
+            Errore server. Controlla i log super_admin. Solitamente
+            e' un XML con struttura totalmente inattesa. Prova con
+            un blocco piccolo (es. i primi 10 immobili) per
+            isolare il record problematico."
+      permessi:
+        - Info descrittiva per titolari
+    screenshot: []
+
+  - id: import.limitazioni-v1
+    titolo: Limiti v1 di Import XML (D-051 onesto)
+    modulo: Import XML
+    widget: null
+    pubblico: [titolare, super_admin]
+    livello: intermedio
+    tags: [import, xml, limiti, cosa-non-fa, csv, json, sync, wizard, rollback, session-in-memory, agent-id, storico, d-051]
+    correlati: [import.cos-e, import.flusso-preview-commit]
+    domanda_naturale: "Cosa NON fa Import XML? Posso usarlo per CSV o sync automatica?"
+    contenuto:
+      a_cosa_serve: >
+        Aspettative chiare su cosa il modulo NON fa in v1.
+      quando_si_usa: >
+        Prima di provare cose che non sono supportate.
+      passi:
+        - "NO CSV/JSON/Excel v1: solo XML. Backend accetta .txt come
+          workaround per feed rinominati, ma la UI filtra .xml."
+        - "NO sync automatica: nessun pull API, nessun webhook,
+          nessun cron. Solo one-shot manuale."
+        - "NO wizard di mappatura personalizzabile: le tabelle
+          (TYPE_CODE_MAP, ENERGY_CODE_MAP, OPERATION_CODE_MAP,
+          FEATURE_KEYWORDS) sono euristiche interne hardcoded.
+          Codici mai visti finiscono in divergences."
+        - "NO rollback batch: una volta committato, gli immobili
+          sono nel DB. Vanno cancellati uno alla volta o via bulk
+          dalla pagina Immobili (Cap. 3)."
+        - "Session in-memory (dict Python), NON persistita: se il
+          backend riavvia (deploy, restart), tutte le preview
+          scompaiono."
+        - "TTL session 10 minuti dalla preview. Poi scade
+          (404 preview_session_not_found_or_expired)."
+        - "NO preview foto: samples mostrano solo photos_count
+          (conteggio), non thumbnail. Le foto arrivano poi dai URL
+          nel feed."
+        - "NO import clienti/lead/trattative via XML. Solo
+          properties. Per clienti c'e' /clients/csv-import (Cap. 4)."
+        - "Dedupe solo per reference_code: nessun fuzzy match su
+          titolo/indirizzo/coordinate. Ref instabili = rischio
+          doppioni."
+        - "NO assegnazione automatica agente: immobili importati non
+          hanno agent_id. Vanno assegnati manualmente."
+        - "NO storico import UI: non c'e' un pannello 'ecco tutti
+          gli import fatti in passato'. Solo _import_source e
+          _import_reference in DB (accesso super_admin per audit)."
+      errori_comuni:
+        - problema: "Voglio migrare anche i miei clienti CRM"
+          soluzione: >
+            Import XML non li tocca. Usa /clients/csv-import (Cap. 4
+            §clienti-import) per il CSV dei clienti B2B."
+        - problema: "Voglio sync automatica ogni notte dal vecchio gestionale"
+          soluzione: >
+            Non disponibile v1. L'import e' one-shot manuale."
+      permessi:
+        - Info descrittiva
+    screenshot: []
+
+  - id: import.checklist-migrazione
+    titolo: Checklist migrazione da altro gestionale
+    modulo: Import XML
+    widget: null
+    pubblico: [titolare, super_admin]
+    livello: base
+    tags: [import, xml, checklist, migrazione, procedura, step-by-step, best-practice]
+    correlati: [import.flusso-preview-commit, import.risultato-commit]
+    domanda_naturale: "Come faccio una migrazione completa? Procedura passo-passo"
+    contenuto:
+      a_cosa_serve: >
+        Avere una lista ordinata di passi per non dimenticare nulla
+        durante una migrazione.
+      quando_si_usa: >
+        Prima del primo import massivo dal vecchio gestionale.
+      passi:
+        - "Passo 1: Esporta dal vecchio gestionale come XML (opzione
+          tipica 'Export feed portali' o 'Esporta annunci')."
+        - "Passo 2: Verifica il file - aprilo con editor testuale,
+          controlla la presenza di tag come <prezzo>, <citta>,
+          <mq>, <riferimento>."
+        - "Passo 3: Vai in OMNIA sidebar > Import da altro gestionale
+          > carica il file > clicca 'Analizza contenuto'."
+        - "Passo 4: Leggi la preview: verifica che leggibili/trovati
+          sia una % accettabile (ideale > 90%)."
+        - "Passo 5: Guarda le 5 righe di anteprima - i prezzi, le
+          citta', le tipologie sono corretti?"
+        - "Passo 6: Espandi le Divergenze (se ci sono) - quali
+          record vengono scartati?"
+        - "Passo 7 (opzionale): Clicca Simulazione per contare gli
+          effettivi nuovi dopo dedupe."
+        - "Passo 8: Se tutto torna, clicca 'Importa in OMNIA'."
+        - "Passo 9: Vai in Immobili e verifica il conteggio: ci sono
+          gli appena importati?"
+        - "Passo 10: Assegna un agente ai nuovi immobili (bulk edit
+          se sono tanti, Cap. 3)."
+      errori_comuni:
+        - problema: "Ho importato per errore un XML sbagliato"
+          soluzione: >
+            Vai in Immobili, filtra per data creazione (oggi) o
+            chiedi al super_admin di filtrare per _import_source.
+            Elimina in bulk o singolarmente. Poi rilancia con
+            l'XML giusto."
+      permessi:
+        - Solo agency_admin e super_admin (accesso al modulo)
+    screenshot: []
+
+  - id: import.collegamenti
+    titolo: Collegamenti fra Import XML e altri moduli
+    modulo: Import XML
+    widget: null
+    pubblico: [titolare, super_admin]
+    livello: base
+    tags: [import, xml, cross-ref, immobili, clienti, portali, hal-knowledge, team]
+    correlati: [import.cos-e, import.risultato-commit]
+    domanda_naturale: "Che rapporto c'e' fra Import XML e gli altri moduli OMNIA?"
+    contenuto:
+      a_cosa_serve: >
+        Capire come l'import si intreccia con Immobili, Clienti,
+        Portali/Publishing, Team.
+      quando_si_usa: >
+        Per orientarti dopo l'import.
+      passi:
+        - "Cap. 3 Immobili: dopo import ogni scheda immobile e'
+          editabile normalmente (foto, planimetrie, publishing).
+          Privacy L1-L4 governa cosa vedono gli agenti degli immobili
+          importati."
+        - "Cap. 4 Clienti: per importare clienti da CSV c'e' un
+          flusso separato /clients/csv-import (non copre XML)."
+        - "Cap. 6 Portali & Publishing: gli immobili importati con
+          is_listed_on_immobilcloud=true sono candidati immediati
+          al publishing dopo compliance HARD/SOFT."
+        - "Cap. 12 HAL Knowledge: puoi chiedere 'Come importo da un
+          vecchio gestionale?' e ricevere fonti da
+          14-import-xml.yaml."
+        - "Cap. 13 Team & Ruoli: endpoint richiede agency_admin,
+          gli agent non hanno accesso all'import."
+      errori_comuni:
+        - problema: "Ho importato ma gli immobili non compaiono su ImmobilCloud"
+          soluzione: >
+            Verifica che moderation_status sia 'approved' (dovrebbe
+            essere di default). Se e' 'pending', il super_admin deve
+            approvarli. Poi il publishing avviene tramite il Cap. 6."
+      permessi:
+        - Info descrittiva
+    screenshot: []

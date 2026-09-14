@@ -1,0 +1,484 @@
+# HAL — Voci esportate per RAG
+# Capitolo 20 · API Keys e integrazioni (Track B / API Gateway)
+# D-051: doppia economia crediti (Track A €0,05 vs Track B €0,03), pricing separato,
+# top-up manuale, plaintext show-once, hash SHA-256, allowed_origins CORS widget.
+
+voci:
+
+  - id: api-keys.cos-e
+    titolo: Cos'è API Keys / Track B / API Gateway
+    modulo: API Keys
+    widget: null
+    pubblico: [titolare, super_admin]
+    livello: intermedio
+    tags: [api-keys, track-b, api-gateway, partner, integrazione, d-041, d-046]
+    correlati: [api-keys.dove-trovarlo, api-keys.api-v1-endpoints, api-keys.pricing-track-b]
+    domanda_naturale: "Cos'è Track B / API Gateway di OMNIA? A cosa servono le chiavi API?"
+    contenuto:
+      a_cosa_serve: >
+        Pilastro Track B (D-041/D-046) per partner esterni (web agency,
+        portali, gestionali) che integrano feature OMNIA (Valutatore
+        UNI 10750, Comparatore Mutui, HAL Legal, Feed immobili) nei
+        loro widget/CRM tramite chiavi API `omk_live_...` + Bearer auth.
+      quando_si_usa: >
+        Quando vuoi esporre feature OMNIA a un widget di terza parte
+        o un gestionale esterno.
+      passi:
+        - "Emetti chiave da /app/api-keys (ApiKeysPage)."
+        - "Assegna crediti iniziali (top-up successivi consentiti)."
+        - "Copia plaintext SHOW-ONCE (poi hash SHA-256 in DB)."
+        - "Partner usa `Authorization: Bearer omk_live_...` su /api/v1/*."
+      errori_comuni:
+        - problema: "Chiedo la mia API key vecchia per rileggerla"
+          soluzione: >
+            Non recuperabile. Solo plaintext show-once. Emetti nuova
+            chiave + trasferisci crediti + revoca vecchia.
+      permessi:
+        - "Emissione/gestione: agency_admin owner, super_admin, group_admin"
+    screenshot: []
+
+  - id: api-keys.dove-trovarlo
+    titolo: Dove trovo ApiKeysPage (/app/api-keys)
+    modulo: API Keys
+    widget: null
+    pubblico: [titolare, super_admin]
+    livello: base
+    tags: [api-keys, dove-trovarlo, route, sidebar, permessi, agency-admin, group-admin]
+    correlati: [api-keys.cos-e, api-keys.emissione-show-once]
+    domanda_naturale: "Dove trovo la pagina per gestire le API Keys?"
+    contenuto:
+      a_cosa_serve: >
+        Localizzare la ApiKeysPage nel menu laterale ImmoWeb.
+      quando_si_usa: >
+        Quando vuoi emettere/gestire chiavi Track B.
+      passi:
+        - "Sidebar: voce Chiavi API (current='api-keys')."
+        - "Route frontend: /app/api-keys."
+        - "Permessi: agency_admin, super_admin, group_admin. Il
+          group_admin con group_id popolato vede TUTTE le chiavi
+          delle branch del gruppo."
+      errori_comuni: []
+      permessi:
+        - "agency_admin, super_admin, group_admin"
+    screenshot: []
+
+  - id: api-keys.emissione-show-once
+    titolo: Emissione chiave · formato omk_live_ + plaintext show-once + hash SHA-256
+    modulo: API Keys
+    widget: null
+    pubblico: [titolare, super_admin]
+    livello: avanzato
+    tags: [api-keys, emissione, plaintext, show-once, hash, sha-256, prefix, formato, omk-live]
+    correlati: [api-keys.cos-e, api-keys.revoca-key, api-keys.credit-wallet]
+    domanda_naturale: "Come emetto una nuova API key? La chiave si può recuperare dopo?"
+    contenuto:
+      a_cosa_serve: >
+        Emettere una API key con formato omk_live_<28chars>, mostrando
+        il plaintext UNA sola volta (poi solo hash SHA-256 in DB).
+      quando_si_usa: >
+        Prima integrazione di un partner tech.
+      passi:
+        - "Endpoint: POST /api/app/api-keys."
+        - "Body: {name (obbligatorio 1-120), initial_credits (0-1M),
+          partner_id (opz 60ch), allowed_origins (opz list)}."
+        - "Formato plaintext: omk_live_<28 base32 chars>
+          (api_key.py:22)."
+        - "Hash storato: SHA-256 hex digest (nessun plaintext
+          persistito)."
+        - "Prefix visibile: primi 12 char per search/UI (key_prefix)."
+        - "UI box show-once: banner emerald con font monospace +
+          bottone Copia (navigator.clipboard.writeText) + × chiudi."
+        - "Onestà: se perdi il plaintext senza copiarlo, devi emettere
+          nuova chiave (nessun recovery)."
+      errori_comuni:
+        - problema: "Ho chiuso il box senza copiare la chiave"
+          soluzione: >
+            Plaintext perso definitivamente. Emetti nuova chiave con
+            POST /api-keys, trasferisci crediti con /credits, revoca
+            la vecchia con /revoke.
+      permessi:
+        - "agency_admin, super_admin"
+    screenshot:
+      - "[SCREEN: cap20-apikeys-issued-box]"
+
+  - id: api-keys.credit-wallet
+    titolo: Credit wallet Track B · top-up manuale + api_credit_ledger
+    modulo: API Keys
+    widget: null
+    pubblico: [titolare, super_admin]
+    livello: avanzato
+    tags: [api-keys, crediti, wallet, top-up, ledger, api-credit-ledger, manuale, stripe-no]
+    correlati: [api-keys.pricing-track-b, api-keys.usage-log]
+    domanda_naturale: "Come carico crediti su una chiave API? Posso fare auto-ricarica Stripe?"
+    contenuto:
+      a_cosa_serve: >
+        Aggiungere/scalare crediti manualmente sulla chiave API +
+        audit trail append-only in api_credit_ledger.
+      quando_si_usa: >
+        Ricarica ordinaria o correzione saldo.
+      passi:
+        - "Endpoint: POST /api/app/api-keys/{id}/credits."
+        - "Body: {delta (int -1M/+1M), reason (obbligatorio 1-200)}."
+        - "delta > 0 → top-up. delta < 0 → deduct (rimborsi/correzioni)."
+        - "Guard new_balance < 0 → HTTP 400 balance_would_go_negative."
+        - "Ogni movimento in api_credit_ledger: {api_key_id,
+          agency_id, delta, new_balance, reason, actor_user_id,
+          created_at}."
+        - "⚠️ Manuale v1: no auto-ricarica Stripe. Documentato
+          in api_keys.py:154 'Manual until M4/Stripe'."
+        - "UI top-up: prompt() browser nativo (NO modale custom v1)."
+      errori_comuni:
+        - problema: "HTTP 400 balance_would_go_negative"
+          soluzione: >
+            delta negativo maggiore del saldo attuale. Riduci delta.
+      permessi:
+        - "agency_admin owner della chiave"
+    screenshot: []
+
+  - id: api-keys.allowed-origins
+    titolo: Allowed origins · CORS whitelist widget (M2.5.3)
+    modulo: API Keys
+    widget: null
+    pubblico: [titolare, super_admin]
+    livello: avanzato
+    tags: [api-keys, allowed-origins, cors, widget-security, origin, referer, wildcard, m2-5-3]
+    correlati: [api-keys.widget-embed-loader, api-keys.errori-comuni]
+    domanda_naturale: "Come limito una API key ai widget su un dominio specifico?"
+    contenuto:
+      a_cosa_serve: >
+        Restringere una chiave API a un elenco di origini web (per
+        widget embed sicuro).
+      quando_si_usa: >
+        Quando emetti una chiave per un widget su un dominio partner.
+      passi:
+        - "Endpoint: PATCH /api/app/api-keys/{id}/origins."
+        - "Body: {allowed_origins: List[str]}."
+        - "Lista vuota → nessuna restrizione (uso server-side)."
+        - "Lista popolata → solo widget su quei domini possono
+          usare la chiave (check Origin/Referer)."
+        - "Wildcard supportato: https://*.agenziarossi.it matcha
+          subdomain."
+        - "Pulizia input: str(o).strip().rstrip('/') per ogni entry."
+      errori_comuni:
+        - problema: "HTTP 403 origin_not_allowed dal widget"
+          soluzione: >
+            Il dominio caller non è nella whitelist. Aggiorna origins
+            via PATCH o svuota la lista per uso server-side.
+      permessi:
+        - "agency_admin owner della chiave"
+    screenshot: []
+
+  - id: api-keys.revoca-key
+    titolo: Revoca chiave · no undo · emetti nuova invece
+    modulo: API Keys
+    widget: null
+    pubblico: [titolare, super_admin]
+    livello: intermedio
+    tags: [api-keys, revoca, is-active, revoked-at, no-undo, security]
+    correlati: [api-keys.emissione-show-once]
+    domanda_naturale: "Come revoco una API key compromessa? Posso riattivarla?"
+    contenuto:
+      a_cosa_serve: >
+        Deattivare immediatamente una chiave API (non reversibile).
+      quando_si_usa: >
+        Chiave compromessa/perdita partner/fine progetto.
+      passi:
+        - "Endpoint: POST /api/app/api-keys/{id}/revoke."
+        - "Effetto: is_active=false, revoked_at=now."
+        - "NON reversibile. Per 'riattivare' → emetti nuova chiave
+          + trasferisci crediti + revoca la vecchia."
+        - "UI: bottone rosso 'revoca' + confirm() browser (NO modale
+          custom)."
+      errori_comuni:
+        - problema: "Ho revocato per errore"
+          soluzione: >
+            Non recuperabile. Emetti nuova chiave con POST /api-keys +
+            top-up crediti + comunica nuova chiave al partner.
+      permessi:
+        - "agency_admin owner della chiave"
+    screenshot: []
+
+  - id: api-keys.usage-log
+    titolo: Usage log audit · endpoint /usage · NO UI detail v1
+    modulo: API Keys
+    widget: null
+    pubblico: [titolare, super_admin]
+    livello: intermedio
+    tags: [api-keys, usage-log, audit, api-usage-log, billing, credits-spent, no-ui]
+    correlati: [api-keys.credit-wallet, api-keys.limitazioni-v1]
+    domanda_naturale: "Come vedo l'utilizzo dettagliato di una API key? Storico endpoint chiamati?"
+    contenuto:
+      a_cosa_serve: >
+        Consultare storico chiamate per una chiave (billing audit) via
+        endpoint dedicato — NO UI dettaglio v1.
+      quando_si_usa: >
+        Debug consumo crediti anomalo o audit periodico.
+      passi:
+        - "Endpoint: GET /api/app/api-keys/{id}/usage?limit=50
+          (max 500)."
+        - "Collezione: api_usage_log {api_key_id, endpoint,
+          credits_charged, status_code, error_code, created_at}."
+        - "⚠️ NO UI dettaglio v1: la ApiKeysPage tabella mostra solo
+          credits_balance + credits_spent cumulativi. Nessun pulsante
+          'Vedi utilizzi'."
+        - "Backlog A-026 (UI usage detail per chiave)."
+      errori_comuni:
+        - problema: "Voglio vedere quali endpoint hanno consumato crediti"
+          soluzione: >
+            v1 solo tramite curl GET /usage o query Mongo diretta.
+            Nessun drilldown UI.
+      permessi:
+        - "agency_admin owner della chiave"
+    screenshot: []
+
+  - id: api-keys.api-v1-endpoints
+    titolo: API Gateway /api/v1/* · 6 endpoint consumer Bearer
+    modulo: API Keys
+    widget: null
+    pubblico: [titolare, super_admin, partner]
+    livello: avanzato
+    tags: [api-keys, api-v1, gateway, endpoints, valuator, mortgages, legal, feed, health, me, widgets-lead, staging, bearer]
+    correlati: [api-keys.pricing-track-b, api-keys.widget-embed-loader]
+    domanda_naturale: "Quali endpoint /api/v1 esistono? Quanto costa ogni chiamata? Come autentico?"
+    contenuto:
+      a_cosa_serve: >
+        Documentare i 6+ endpoint consumer del Gateway `/api/v1/*`
+        con relativo costo in crediti Track B.
+      quando_si_usa: >
+        Documentazione integrazione partner.
+      passi:
+        - "Auth: Authorization: Bearer omk_live_... (header
+          obbligatorio, no cookie)."
+        - "Router: apps/v1/gateway.py prefix /v1."
+        - "GET /api/v1/health → 0 crediti (no auth) · ping."
+        - "GET /api/v1/me → 0 · ispezione chiave + saldo."
+        - "POST /api/v1/valuator → 5 crediti · Valutazione UNI 10750."
+        - "POST /api/v1/mortgages/compare → 1 credito · Comparatore
+          mutui."
+        - "POST /api/v1/legal/ask → 3 crediti · HAL Legal one-shot Q&A."
+        - "GET /api/v1/feed/properties → 0 · export inventory agency."
+        - "POST /api/v1/widgets/lead → 0 · cattura lead da widget."
+        - "POST /api/v1/staging/* → ~15 crediti (async pipeline)."
+        - "Charge/log: dopo ogni request charge_and_log() scala
+          crediti, aggiorna credits_spent, scrive api_usage_log."
+      errori_comuni:
+        - problema: "401 unauthorized su /api/v1"
+          soluzione: >
+            Header Authorization mancante o formato errato. Verifica
+            prefix omk_live_.
+        - problema: "402 insufficient_credits"
+          soluzione: >
+            Saldo chiave < costo endpoint. Top-up via POST /credits.
+      permessi:
+        - "Solo caller con Bearer omk_live_ valido + saldo sufficiente"
+    screenshot: []
+
+  - id: api-keys.pricing-track-b
+    titolo: Pricing Track B · 1 credito = €0,03 (vs Track A €0,05 · wallet separati)
+    modulo: API Keys
+    widget: null
+    pubblico: [titolare, super_admin]
+    livello: intermedio
+    tags: [api-keys, pricing, crediti, "0-03-euro", track-a, track-b, wallet-separati, differenza, cap19-billing]
+    correlati: [api-keys.credit-wallet, api-keys.api-v1-endpoints]
+    domanda_naturale: "Quanto costa un credito Track B? È diverso da quello dei piani B2B?"
+    contenuto:
+      a_cosa_serve: >
+        Chiarire la doppia economia crediti OMNIA: Track A (piani B2B
+        + credit packages BillingPage) a €0,05/cred vs Track B
+        (API Gateway ApiKeysPage) a €0,03/cred.
+      quando_si_usa: >
+        Prima di preventivare i costi di integrazione partner.
+      passi:
+        - "Track A (Cap. 19 §19.10 BillingPage): 1 credito = €0,05
+          (ratio 20 cred/€, no volume discount)."
+        - "Track B (ApiKeysPage subtitle): 1 credito = €0,03."
+        - "Onestà D-051: le due economie sono CONTABILMENTE SEPARATE
+          v1. La chiave API ha il proprio credits_balance
+          indipendente dal wallet della subscription B2B
+          (sub.wallet.balance)."
+        - "Un titolare Pro con 1200 cr/mese NON vede quei crediti
+          sulla chiave API: deve fare POST /credits top-up separato."
+        - "Costi tipici Track B: valuator 5cr=€0,15, mortgages 1cr=
+          €0,03, legal 3cr=€0,09, feed+lead 0cr (freebie)."
+        - "⚠️ Pricing Track B (€0,03) NON esposto in BillingPage
+          (solo menzionato subtitle ApiKeysPage e test_credentials.md)."
+      errori_comuni:
+        - problema: "Ho un piano Pro ma la chiave API dice saldo 0"
+          soluzione: >
+            Wallet Track A e Track B sono separati. Fai top-up sulla
+            chiave con POST /api-keys/{id}/credits.
+      permessi:
+        - "Documentazione informativa"
+    screenshot: []
+
+  - id: api-keys.widget-embed-loader
+    titolo: Widget embed · loader script /api/widgets/v1/loader.js
+    modulo: API Keys
+    widget: null
+    pubblico: [titolare, super_admin, partner]
+    livello: avanzato
+    tags: [api-keys, widget, embed, loader, script, valuator, mortgages, lead-capture, showcase, iframe]
+    correlati: [api-keys.api-v1-endpoints, api-keys.allowed-origins]
+    domanda_naturale: "Come embed di un widget OMNIA sul sito del cliente?"
+    contenuto:
+      a_cosa_serve: >
+        Snippet HTML per embed widget OMNIA sul sito partner con
+        data-attributes per configurazione.
+      quando_si_usa: >
+        Integrazione widget Valutatore/Mutui/Lead sul sito partner.
+      passi:
+        - 'Snippet mostrato in ApiKeysPage docs box:'
+        - '<script src="https://{host}/api/widgets/v1/loader.js"'
+        - '  data-key="omk_live_..."'
+        - '  data-widget="valuator"'
+        - '  data-primary="#0b1e3f"'
+        - '  data-lang="it"></script>'
+        - "Widget disponibili v1: valuator, mortgages, lead-capture.
+          Altri TBD."
+        - "Anteprima demo pubblica: /it/widgets (WidgetsShowcasePage)."
+        - "Prerequisito: allowed_origins della chiave deve includere
+          il dominio del sito partner."
+      errori_comuni:
+        - problema: "Il widget non appare o rende errore CORS"
+          soluzione: >
+            Verifica allowed_origins della chiave. Se lista vuota →
+            no restriction. Se popolata → aggiungi dominio.
+      permessi:
+        - "Chiunque ha la chiave + Origin autorizzato"
+    screenshot: []
+
+  - id: api-keys.partner-id
+    titolo: Partner ID (D-046) · white-label attribuzione multi-partner
+    modulo: API Keys
+    widget: null
+    pubblico: [titolare, super_admin]
+    livello: intermedio
+    tags: [api-keys, partner-id, d-046, white-label, attribuzione, multi-partner, reportistica-no]
+    correlati: [api-keys.emissione-show-once, api-keys.limitazioni-v1]
+    domanda_naturale: "Cos'è il campo Partner ID? Come traccio più partner tech per la mia agenzia?"
+    contenuto:
+      a_cosa_serve: >
+        Etichetta libera opzionale per identificare il partner tech
+        emittente della chiave (D-046 white-label multi-partner).
+      quando_si_usa: >
+        Titolare emette N chiavi per N partner (web agency A,
+        gestionale B, portale C) e vuole tracciare attribuzione.
+      passi:
+        - "Campo api_key.partner_id (max 60 char, opzionale)."
+        - "Esempio: webagency_test_001 (Widget Demo Web Agency di
+          test, cfr. test_credentials.md)."
+        - "D-046: OMNIA supporta multi-partner white-label. Ogni
+          chiave puo' avere il proprio partner_id."
+        - "⚠️ NO reportistica per-partner v1 (nessun rollup UI
+          per contare crediti spesi per partner_id). Backlog A-027."
+      errori_comuni: []
+      permessi:
+        - "Solo emittente della chiave"
+    screenshot: []
+
+  - id: api-keys.errori-comuni
+    titolo: Errori comuni API Keys (401/402/403/404 + plaintext perso)
+    modulo: API Keys
+    widget: null
+    pubblico: [titolare, super_admin, partner]
+    livello: intermedio
+    tags: [api-keys, errori, "401", "402", "403", "404", troubleshooting, plaintext-perso, insufficient-credits, origin-not-allowed]
+    correlati: [api-keys.emissione-show-once, api-keys.allowed-origins, api-keys.credit-wallet]
+    domanda_naturale: "Perché la mia chiave API non funziona? Errori comuni?"
+    contenuto:
+      a_cosa_serve: >
+        Checklist troubleshooting per errori comuni sulle chiavi API.
+      quando_si_usa: >
+        Debug integrazione partner.
+      passi:
+        - "E1 · 401 unauthorized: header Authorization: Bearer
+          omk_live_... mancante o formato errato. Fix: verifica
+          prefix omk_live_."
+        - "E2 · 402 insufficient_credits: saldo chiave < costo
+          endpoint (5cr valuator, 3cr legal, 1cr mortgages). Fix:
+          POST /credits con delta positivo."
+        - "E3 · 403 origin_not_allowed: chiave con allowed_origins
+          popolato + widget in dominio non whitelisted. Fix: PATCH
+          /origins o svuota lista."
+        - "E4 · 404 api_key_not_found: chiave non appartiene alla
+          tua agency. Fix: verifica ownership."
+        - "E5 · Persa la plaintext dopo emissione: nessun recovery.
+          Emetti nuova chiave + POST /credits con delta = saldo
+          vecchia + revoca vecchia con POST /revoke."
+      errori_comuni: []
+      permessi:
+        - "Troubleshooting"
+    screenshot: []
+
+  - id: api-keys.limitazioni-v1
+    titolo: Limiti v1 API Keys / Track B (D-051 · elenco esaustivo)
+    modulo: API Keys
+    widget: null
+    pubblico: [titolare, super_admin]
+    livello: intermedio
+    tags: [api-keys, limiti, cosa-non-fa, auto-ricarica-no, usage-ui-no, rate-limit-no, scoping-no, ip-whitelist-no, webhook-no, rotazione-no, d-051]
+    correlati: [api-keys.cos-e, api-keys.pricing-track-b]
+    domanda_naturale: "Cosa NON fa API Keys v1? Ha auto-ricarica, rate limit, scoping endpoint, IP whitelist, webhook, rotazione automatica?"
+    contenuto:
+      a_cosa_serve: >
+        Elenco esaustivo di cosa Track B v1 NON fa (D-051).
+      quando_si_usa: >
+        Prima di aspettarti auto-ricarica Stripe o rate limit.
+      passi:
+        - "NO auto-ricarica Stripe (top-up manuale via POST /credits)."
+        - "NO UI usage detail per chiave (endpoint /usage esiste,
+          no button v1). Backlog A-026."
+        - "NO reportistica per-partner (partner_id tracciato ma
+          nessun rollup UI). Backlog A-027."
+        - "NO rotazione automatica chiavi (nessun cron scadenza)."
+        - "NO scoping per endpoint (chiave con crediti puo' chiamare
+          TUTTI gli endpoint /api/v1/*, no restrizione feature)."
+        - "NO rate limit per-chiave (solo controllo saldo)."
+        - "NO IP whitelist (solo Origin/Referer per widget)."
+        - "NO webhook eventi (issued/revoked/depleted)."
+        - "NO modale custom top-up/revoca (usa prompt()/confirm()
+          browser nativi)."
+        - "Pricing Track B (€0,03) NON esposto in BillingPage
+          (solo subtitle ApiKeysPage)."
+        - "Wallet Track B contabilmente separato dal wallet piani
+          B2B (Cap. 19 §19.10)."
+        - "Widget disponibili v1: solo valuator/mortgages/lead-
+          capture. Altri TBD."
+      errori_comuni: []
+      permessi:
+        - "Documentazione informativa"
+    screenshot: []
+
+  - id: api-keys.collegamenti
+    titolo: Collegamenti API Keys → altri capitoli (Cap. 6/10/11/13/18/19)
+    modulo: API Keys
+    widget: null
+    pubblico: [titolare, super_admin]
+    livello: base
+    tags: [api-keys, collegamenti, cross-ref, cap6, cap10, cap11, cap13, cap18, cap19]
+    correlati: [api-keys.cos-e, api-keys.api-v1-endpoints]
+    domanda_naturale: "Come si integra Track B con gli altri moduli di OMNIA?"
+    contenuto:
+      a_cosa_serve: >
+        Mappa dei collegamenti Track B → altri capitoli.
+      quando_si_usa: >
+        Comprendere l'ecosistema Track B nell'app.
+      passi:
+        - "Cap. 6 Publishing: /api/v1/feed/properties (0cr) espone
+          inventory analogo al feed portale pubblico."
+        - "Cap. 10 HAL Agent CRM: distinzione D-040 fra HAL Agent
+          CRM (in-app, JWT) e HAL Legal esposto su /api/v1/legal/ask
+          (Track B, 3cr)."
+        - "Cap. 11 Mutui: /api/v1/mortgages/compare (1cr) espone
+          la feature Cap. 11 a partner."
+        - "Cap. 13 Team & Ruoli: solo agency_admin owner o
+          super_admin emette chiavi (require_roles)."
+        - "Cap. 18 Notifiche: /api/v1/widgets/lead (0cr) triggera
+          email lead_notification (Cap. 18)."
+        - "Cap. 19 Impostazioni: ApiKeysPage e' pagina SEPARATA da
+          Settings (/app/api-keys vs /app/settings/agency)."
+      errori_comuni: []
+      permessi:
+        - "Documentativo"
+    screenshot: []

@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="__LANG__">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>OMNIA · Comparatore Mutui</title>
+<style>
+  :root {
+    --primary: __PRIMARY_COLOR__;
+    --bg: #ffffff;
+    --fg: #1c1917;
+    --muted: #78716c;
+    --border: #e7e5e4;
+    --radius: 10px;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: var(--bg); color: var(--fg);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    font-size: 14px; line-height: 1.5; }
+  .omnia-widget { padding: 20px; max-width: 700px; margin: 0 auto; }
+  h2 { margin: 0 0 4px; font-size: 20px; letter-spacing: -0.01em; }
+  p.hint { margin: 0 0 20px; color: var(--muted); font-size: 13px; }
+  form { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+  label { display: block; font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); margin-bottom: 4px; }
+  .full { grid-column: 1 / -1; }
+  input, select {
+    width: 100%; padding: 10px 12px; font-size: 14px;
+    border: 1px solid var(--border); border-radius: var(--radius); background: #fff; color: var(--fg);
+  }
+  input:focus, select:focus { outline: none; border-color: var(--primary); }
+  .omnia-cta { grid-column: 1 / -1; display: flex; justify-content: flex-end; margin-top: 8px; }
+  .omnia-btn {
+    background: var(--primary); color: #fff; border: 0; padding: 12px 24px;
+    border-radius: var(--radius); font-size: 13px; font-weight: 500;
+    letter-spacing: 0.05em; text-transform: uppercase; cursor: pointer;
+  }
+  .omnia-btn:hover:not(:disabled) { opacity: 0.85; }
+  .omnia-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .offer { border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 16px; margin-top: 10px; display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: center; }
+  .offer .name { font-weight: 600; font-size: 15px; }
+  .offer .bank { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; margin-top: 2px; }
+  .offer .rate { color: var(--primary); font-weight: 600; font-size: 20px; text-align: right; }
+  .offer .rate small { display: block; color: var(--muted); font-weight: 400; font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; }
+  .offer .row2 { grid-column: 1 / -1; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; font-size: 12px; color: var(--muted); border-top: 1px solid var(--border); padding-top: 8px; }
+  .offer .row2 b { color: var(--fg); }
+  .omnia-error { color: #b91c1c; font-size: 13px; margin-top: 8px; }
+  .omnia-success { color: #047857; font-size: 13px; margin-top: 8px; }
+  .omnia-footer { margin-top: 16px; font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; text-align: right; }
+  .omnia-footer a { color: var(--muted); text-decoration: none; border-bottom: 1px dotted var(--muted); }
+  .omnia-lead { margin-top: 16px; padding: 14px; background: #fafaf9; border-radius: var(--radius); border: 1px solid var(--border); }
+  .omnia-lead h3 { margin: 0 0 8px; font-size: 14px; }
+  .omnia-checkbox { display: flex; align-items: flex-start; gap: 8px; font-size: 12px; color: var(--muted); }
+  .omnia-checkbox input { margin-top: 2px; }
+  @media (max-width: 500px) {
+    form, .offer .row2 { grid-template-columns: 1fr 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="omnia-widget" id="omnia-app">
+  <h2>Confronta mutui in tempo reale</h2>
+  <p class="hint">Inserisci i parametri del tuo mutuo e ricevi le migliori offerte disponibili.</p>
+
+  <form id="omnia-form" novalidate>
+    <div>
+      <label for="price">Prezzo immobile (€) *</label>
+      <input id="price" type="number" min="20000" step="1000" required value="250000" />
+    </div>
+    <div>
+      <label for="down">Anticipo (€) *</label>
+      <input id="down" type="number" min="0" step="1000" required value="50000" />
+    </div>
+    <div>
+      <label for="duration">Durata (anni)</label>
+      <select id="duration">
+        <option>10</option><option>15</option><option>20</option>
+        <option selected>25</option><option>30</option>
+      </select>
+    </div>
+    <div>
+      <label for="rate_type">Tipo tasso</label>
+      <select id="rate_type">
+        <option value="fisso" selected>Fisso</option>
+        <option value="variabile">Variabile</option>
+      </select>
+    </div>
+    <div>
+      <label for="first_home">Prima casa</label>
+      <select id="first_home"><option value="true" selected>Sì</option><option value="false">No</option></select>
+    </div>
+    <div>
+      <label for="under_36">Under 36</label>
+      <select id="under_36"><option value="false" selected>No</option><option value="true">Sì</option></select>
+    </div>
+    <div class="full">
+      <label for="income">Reddito mensile netto (€)</label>
+      <input id="income" type="number" min="500" step="100" value="3000" />
+    </div>
+    <div class="omnia-cta">
+      <button type="submit" class="omnia-btn" id="w-submit" data-testid="widget-mortgages-submit">
+        Confronta offerte
+      </button>
+    </div>
+  </form>
+
+  <div id="w-offers" data-testid="widget-mortgages-offers"></div>
+
+  <div id="w-lead" class="omnia-lead" style="display:none;">
+    <h3>Vuoi supporto da un consulente?</h3>
+    <p style="font-size:12px;color:var(--muted);margin:0 0 12px;">Un mediatore creditizio ti ricontatterà entro 24h con la miglior soluzione.</p>
+    <form id="omnia-lead-form" novalidate style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+      <input id="lead-name" placeholder="Nome" maxlength="120" required />
+      <input id="lead-email" placeholder="Email" type="email" maxlength="200" required />
+      <input id="lead-phone" placeholder="Telefono (opz.)" type="tel" maxlength="40" style="grid-column:1/-1;" />
+      <label class="omnia-checkbox" style="grid-column:1/-1;">
+        <input type="checkbox" id="lead-consent" />
+        <span>Acconsento al trattamento dei dati per essere ricontattato (Privacy Policy).</span>
+      </label>
+      <button type="submit" class="omnia-btn" id="w-lead-submit" data-testid="widget-mortgages-lead-submit" style="grid-column:1/-1;">
+        Richiedi consulenza
+      </button>
+    </form>
+    <div id="w-lead-msg"></div>
+  </div>
+
+  <div id="w-error" class="omnia-error" style="display:none;" data-testid="widget-mortgages-error"></div>
+
+  <p class="omnia-footer"><img src="__BACKEND_BASE__/omnia-mark.png" alt="OMNIA" style="height:14px;width:auto;vertical-align:middle;margin-right:4px;opacity:.6" />Powered by <a href="https://omnia.re" target="_blank" rel="noopener noreferrer">OMNIA</a></p>
+</div>
+
+<script>
+  var BACKEND = "__BACKEND_BASE__";
+  var API_KEY = "__API_KEY__";
+  var LAST_OFFERS = null;
+  var LAST_PAYLOAD = null;
+
+  function emitSize() {
+    var h = document.getElementById("omnia-app").getBoundingClientRect().height + 20;
+    try { window.parent.postMessage({ omnia: "mortgages", type: "resize", height: h }, "*"); } catch (_) {}
+  }
+  new ResizeObserver(emitSize).observe(document.getElementById("omnia-app"));
+  window.addEventListener("load", emitSize);
+
+  function fmt(n) { if (n == null) return "—"; return "€ " + Math.round(n).toLocaleString("it-IT"); }
+  function pct(n) { if (n == null) return "—"; return (n * 100).toFixed(2).replace(".", ",") + "%"; }
+
+  document.getElementById("omnia-form").addEventListener("submit", async function (e) {
+    e.preventDefault();
+    var btn = document.getElementById("w-submit");
+    var errBox = document.getElementById("w-error");
+    var offersBox = document.getElementById("w-offers");
+    errBox.style.display = "none"; offersBox.innerHTML = ""; btn.disabled = true; btn.textContent = "…";
+
+    var payload = {
+      property_price: parseFloat(document.getElementById("price").value),
+      down_payment: parseFloat(document.getElementById("down").value),
+      duration_years: parseInt(document.getElementById("duration").value, 10),
+      rate_type: document.getElementById("rate_type").value,
+      first_home: document.getElementById("first_home").value === "true",
+      under_36: document.getElementById("under_36").value === "true",
+      monthly_income: parseFloat(document.getElementById("income").value) || 3000,
+    };
+    LAST_PAYLOAD = payload;
+
+    try {
+      var r = await fetch(BACKEND + "/api/v1/mortgages/compare", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Authorization": "Bearer " + API_KEY },
+        body: JSON.stringify(payload),
+      });
+      if (!r.ok) {
+        var msg = "Errore (HTTP " + r.status + ")";
+        try { var j = await r.json(); if (j.detail) msg = j.detail; } catch (_) {}
+        throw new Error(msg);
+      }
+      var data = (await r.json()).data;
+      var offers = (data.offers || []).slice(0, 3);
+      LAST_OFFERS = offers;
+      if (offers.length === 0) {
+        offersBox.innerHTML = '<p class="hint">Nessuna offerta compatibile con i parametri inseriti.</p>';
+      } else {
+        offers.forEach(function (o) {
+          var el = document.createElement("div");
+          el.className = "offer";
+          el.setAttribute("data-testid", "widget-offer");
+          el.innerHTML =
+            '<div><div class="name">' + (o.product_name || o.name || "Offerta") + '</div>' +
+            '<div class="bank">' + (o.bank || "") + '</div></div>' +
+            '<div class="rate">' + pct(o.taeg) + '<small>TAEG</small></div>' +
+            '<div class="row2">' +
+              '<div>Rata: <b>' + fmt(o.monthly_payment) + '</b></div>' +
+              '<div>TAN: <b>' + pct(o.tan) + '</b></div>' +
+              '<div>Totale: <b>' + fmt(o.total_cost) + '</b></div>' +
+            '</div>';
+          offersBox.appendChild(el);
+        });
+        document.getElementById("w-lead").style.display = "block";
+      }
+      emitSize();
+    } catch (err) {
+      errBox.textContent = err.message || "Errore inatteso";
+      errBox.style.display = "block";
+      emitSize();
+    } finally {
+      btn.disabled = false; btn.textContent = "Confronta offerte";
+    }
+  });
+
+  document.getElementById("omnia-lead-form").addEventListener("submit", async function (e) {
+    e.preventDefault();
+    var btn = document.getElementById("w-lead-submit");
+    var msg = document.getElementById("w-lead-msg");
+    msg.textContent = ""; msg.className = "";
+    var name = document.getElementById("lead-name").value.trim();
+    var email = document.getElementById("lead-email").value.trim();
+    var phone = document.getElementById("lead-phone").value.trim();
+    var consent = document.getElementById("lead-consent").checked;
+    if (!name || !email || !consent) { msg.className = "omnia-error"; msg.textContent = "Nome, email e consenso richiesti."; return; }
+    btn.disabled = true; btn.textContent = "…";
+
+    try {
+      var r = await fetch(BACKEND + "/api/v1/widgets/lead", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Authorization": "Bearer " + API_KEY },
+        body: JSON.stringify({
+          widget: "mortgages",
+          name: name, email: email, phone: phone || null,
+          consent: true,
+          context: { offers: LAST_OFFERS, input: LAST_PAYLOAD },
+          source_url: document.referrer || null,
+        }),
+      });
+      if (!r.ok) {
+        var text = "Errore invio";
+        try { var j = await r.json(); if (j.detail) text = j.detail; } catch (_) {}
+        throw new Error(text);
+      }
+      msg.className = "omnia-success"; msg.textContent = "Richiesta inviata! Ti ricontatteremo entro 24h.";
+      document.getElementById("omnia-lead-form").reset();
+    } catch (err) {
+      msg.className = "omnia-error"; msg.textContent = err.message || "Errore invio";
+    } finally {
+      btn.disabled = false; btn.textContent = "Richiedi consulenza"; emitSize();
+    }
+  });
+</script>
+</body>
+</html>

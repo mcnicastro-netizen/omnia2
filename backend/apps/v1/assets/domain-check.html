@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="__LANG__">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>OMNIA · Verifica dominio</title>
+<style>
+  :root {
+    --primary: __PRIMARY_COLOR__;
+    --bg: #ffffff;
+    --fg: #1c1917;
+    --muted: #78716c;
+    --border: #e7e5e4;
+    --radius: 10px;
+    --good: #047857;
+    --warn: #b45309;
+    --critical: #b91c1c;
+    --info: #075985;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: var(--bg); color: var(--fg);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    font-size: 14px; line-height: 1.5; }
+  .omnia-widget { padding: 20px; max-width: 640px; margin: 0 auto; }
+  .omnia-widget h2 { margin: 0 0 4px; font-size: 20px; letter-spacing: -0.01em; }
+  .omnia-widget p.hint { margin: 0 0 20px; color: var(--muted); font-size: 13px; }
+  .omnia-form { display: grid; grid-template-columns: 1fr auto; gap: 8px; }
+  .omnia-form input {
+    width: 100%; padding: 12px 14px; font-size: 15px;
+    border: 1px solid var(--border); border-radius: var(--radius); background: #fff; color: var(--fg);
+    transition: border-color 0.15s;
+  }
+  .omnia-form input:focus { outline: none; border-color: var(--primary); }
+  .omnia-btn {
+    background: var(--primary); color: #fff; border: 0; padding: 12px 20px;
+    border-radius: var(--radius); font-size: 12px; font-weight: 500;
+    letter-spacing: 0.05em; text-transform: uppercase; cursor: pointer;
+    transition: opacity 0.15s; white-space: nowrap;
+  }
+  .omnia-btn:hover:not(:disabled) { opacity: 0.85; }
+  .omnia-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  .omnia-result { margin-top: 20px; padding: 18px; border-radius: var(--radius); border: 1px solid var(--border); background: #fafaf9; }
+  .omnia-verdict-badge {
+    display: inline-block; padding: 4px 10px; border-radius: 999px;
+    font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em;
+    margin-bottom: 12px;
+  }
+  .sev-good { background: #d1fae5; color: var(--good); }
+  .sev-warning { background: #fef3c7; color: var(--warn); }
+  .sev-critical { background: #fee2e2; color: var(--critical); }
+  .sev-info { background: #dbeafe; color: var(--info); }
+  .omnia-verdict-headline { font-size: 17px; font-weight: 600; margin: 0 0 8px; letter-spacing: -0.01em; }
+  .omnia-verdict-body { font-size: 13px; color: #44403c; margin: 0 0 14px; line-height: 1.6; }
+  .omnia-detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 12px; padding: 12px; background: #fff; border: 1px solid var(--border); border-radius: 8px; }
+  .omnia-detail-grid .row { display: flex; justify-content: space-between; gap: 8px; }
+  .omnia-detail-grid .row strong { font-weight: 500; color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; }
+  .omnia-detail-grid .row span { color: var(--fg); word-break: break-word; text-align: right; }
+
+  .omnia-lead { margin-top: 14px; padding: 14px; background: #fff; border-radius: 8px; border: 1px dashed var(--primary); }
+  .omnia-lead h3 { margin: 0 0 4px; font-size: 14px; }
+  .omnia-lead p { margin: 0 0 12px; font-size: 12px; color: var(--muted); }
+  .omnia-lead-form { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .omnia-lead-form input { padding: 9px 11px; font-size: 13px; border: 1px solid var(--border); border-radius: 8px; }
+  .omnia-lead-form label.omnia-checkbox { grid-column: 1/-1; display: flex; align-items: flex-start; gap: 8px; font-size: 11px; color: var(--muted); }
+  .omnia-lead-form label.omnia-checkbox input { margin-top: 2px; }
+  .omnia-lead-form button { grid-column: 1/-1; }
+  .omnia-error { color: var(--critical); font-size: 13px; margin-top: 10px; }
+  .omnia-success { color: var(--good); font-size: 13px; margin-top: 10px; }
+  .omnia-footer { margin-top: 16px; font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; text-align: right; }
+  .omnia-footer a { color: var(--muted); text-decoration: none; border-bottom: 1px dotted var(--muted); }
+</style>
+</head>
+<body>
+<div class="omnia-widget" id="omnia-app">
+  <h2 id="w-title">Il tuo dominio è veramente tuo?</h2>
+  <p class="hint" id="w-hint">Inserisci il tuo dominio (es. agenziarossi.it) e ti diciamo se risulta a tuo nome o al fornitore che ti gestisce il sito.</p>
+
+  <form id="omnia-form" class="omnia-form" novalidate>
+    <input id="domain" name="domain" required maxlength="253" placeholder="agenziarossi.it" data-testid="domain-check-input" autocomplete="off" />
+    <button type="submit" class="omnia-btn" id="w-submit" data-testid="domain-check-submit">Verifica</button>
+  </form>
+
+  <div id="w-result" style="display:none;" data-testid="domain-check-result"></div>
+  <div id="w-error" class="omnia-error" style="display:none;" data-testid="domain-check-error"></div>
+
+  <p class="omnia-footer">
+    Powered by <a href="https://omnia.re" target="_blank" rel="noopener noreferrer">OMNIA</a>
+  </p>
+</div>
+
+<script>
+  var BACKEND = "__BACKEND_BASE__";
+  var API_KEY = "__API_KEY__";
+  var LAST_CHECK_ID = null;
+
+  function emitSize() {
+    var h = document.getElementById("omnia-app").getBoundingClientRect().height + 20;
+    try { window.parent.postMessage({ omnia: "domain-check", type: "resize", height: h }, "*"); } catch (_) {}
+  }
+  new ResizeObserver(emitSize).observe(document.getElementById("omnia-app"));
+  window.addEventListener("load", emitSize);
+
+  function escapeHtml(s) {
+    return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+    });
+  }
+
+  function fmtDate(iso) {
+    if (!iso) return "—";
+    try { return new Date(iso).toLocaleDateString("it-IT"); } catch (_) { return iso; }
+  }
+
+  function renderVerdict(data) {
+    LAST_CHECK_ID = data.id;
+    var v = data.verdict || {};
+    var r = data.rdap || {};
+    var sev = "sev-" + (v.severity || "info");
+
+    var registrantLine = r.registrant
+      ? '<div class="row"><strong>Registrante</strong><span>' + escapeHtml(r.registrant) + '</span></div>'
+      : '<div class="row"><strong>Registrante</strong><span>Nascosto / non disponibile</span></div>';
+    var registrarLine = r.registrar
+      ? '<div class="row"><strong>Registrar</strong><span>' + escapeHtml(r.registrar) + '</span></div>'
+      : '';
+    var createdLine = '<div class="row"><strong>Registrato il</strong><span>' + escapeHtml(fmtDate(r.created_at)) + '</span></div>';
+    var expiresLine = '<div class="row"><strong>Scade il</strong><span>' + escapeHtml(fmtDate(r.expires_at)) + '</span></div>';
+
+    var showLead = v.severity === "critical" || v.severity === "warning" || v.status === "not_registered";
+
+    var html =
+      '<div class="omnia-result">' +
+      '  <span class="omnia-verdict-badge ' + sev + '">' + escapeHtml(v.status || "").replace(/_/g, " ") + '</span>' +
+      '  <p class="omnia-verdict-headline">' + escapeHtml(v.headline || "") + '</p>' +
+      '  <p class="omnia-verdict-body">' + escapeHtml(v.explanation || "") + '</p>' +
+      '  <div class="omnia-detail-grid">' +
+      registrantLine + registrarLine + createdLine + expiresLine +
+      '  </div>' +
+      (showLead
+        ? '<div class="omnia-lead">' +
+          '  <h3>Vuoi che ti aiutiamo a metterti al sicuro?</h3>' +
+          '  <p>Ti mandiamo via email il kit legale (PEC + template GDPR) e ti richiamiamo entro 24h. Zero costi.</p>' +
+          '  <form id="omnia-lead-form" class="omnia-lead-form" novalidate>' +
+          '    <input id="lead-name" placeholder="Nome" maxlength="120" required data-testid="domain-lead-name" />' +
+          '    <input id="lead-email" placeholder="Email" type="email" maxlength="200" required data-testid="domain-lead-email" />' +
+          '    <input id="lead-agency" placeholder="Nome agenzia (opz.)" maxlength="200" data-testid="domain-lead-agency" style="grid-column:1/-1;" />' +
+          '    <label class="omnia-checkbox"><input type="checkbox" id="lead-consent" data-testid="domain-lead-consent" /> <span>Acconsento al trattamento dei dati per essere ricontattato (GDPR).</span></label>' +
+          '    <button type="submit" class="omnia-btn" id="lead-submit" data-testid="domain-lead-submit">Voglio il kit legale</button>' +
+          '  </form>' +
+          '  <div id="lead-msg"></div>' +
+          '</div>'
+        : "") +
+      '</div>';
+
+    var box = document.getElementById("w-result");
+    box.innerHTML = html;
+    box.style.display = "block";
+
+    var lf = document.getElementById("omnia-lead-form");
+    if (lf) lf.addEventListener("submit", submitLead);
+    emitSize();
+  }
+
+  async function submitLead(e) {
+    e.preventDefault();
+    var msg = document.getElementById("lead-msg");
+    msg.textContent = "";
+    msg.className = "";
+    var name = document.getElementById("lead-name").value.trim();
+    var email = document.getElementById("lead-email").value.trim();
+    var agency = document.getElementById("lead-agency").value.trim();
+    var consent = document.getElementById("lead-consent").checked;
+    if (!name || !email || !consent) {
+      msg.className = "omnia-error"; msg.textContent = "Nome, email e consenso obbligatori.";
+      return;
+    }
+    var btn = document.getElementById("lead-submit");
+    btn.disabled = true; btn.textContent = "…";
+    try {
+      var r = await fetch(BACKEND + "/api/domain/lead", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          check_id: LAST_CHECK_ID, email: email, name: name,
+          agency: agency || null, consent: true, source: "widget",
+        }),
+      });
+      if (!r.ok) {
+        var text = "Errore invio";
+        try { var j = await r.json(); if (j.detail) text = j.detail; } catch (_) {}
+        throw new Error(text);
+      }
+      msg.className = "omnia-success"; msg.textContent = "Richiesta ricevuta! Ti scriviamo entro 24h.";
+      document.getElementById("omnia-lead-form").reset();
+    } catch (err) {
+      msg.className = "omnia-error"; msg.textContent = err.message || "Errore invio";
+    } finally {
+      btn.disabled = false; btn.textContent = "Voglio il kit legale";
+      emitSize();
+    }
+  }
+
+  document.getElementById("omnia-form").addEventListener("submit", async function (e) {
+    e.preventDefault();
+    var btn = document.getElementById("w-submit");
+    var errBox = document.getElementById("w-error");
+    errBox.style.display = "none";
+    btn.disabled = true; btn.textContent = "…";
+
+    var domain = document.getElementById("domain").value.trim();
+    try {
+      // If API_KEY is empty, hit the public endpoint (landing usage);
+      // otherwise hit v1 for billed usage (partner widget).
+      var url, headers;
+      if (API_KEY && API_KEY.indexOf("omk_") === 0) {
+        url = BACKEND + "/api/v1/domain/check";
+        headers = { "Content-Type": "application/json", "Authorization": "Bearer " + API_KEY };
+      } else {
+        url = BACKEND + "/api/domain/check";
+        headers = { "Content-Type": "application/json" };
+      }
+      var r = await fetch(url, { method: "POST", headers: headers,
+        body: JSON.stringify({ domain: domain }) });
+      if (!r.ok) {
+        var msg = "Errore (HTTP " + r.status + ")";
+        try { var j = await r.json(); if (j.detail) msg = j.detail; } catch (_) {}
+        throw new Error(msg);
+      }
+      var body = await r.json();
+      var payload = body.data || body;  // v1 wraps in {data:...}
+      renderVerdict(payload);
+    } catch (err) {
+      errBox.textContent = err.message || "Errore inatteso";
+      errBox.style.display = "block";
+      emitSize();
+    } finally {
+      btn.disabled = false; btn.textContent = "Verifica";
+    }
+  });
+</script>
+</body>
+</html>

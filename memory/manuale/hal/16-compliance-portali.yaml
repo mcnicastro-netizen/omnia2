@@ -1,0 +1,599 @@
+# HAL — Voci esportate per RAG
+# Capitolo 16 · Compliance Portali (validatore HARD/SOFT)
+
+voci:
+
+  - id: compliance.panoramica-validatore
+    titolo: Cos'è il Compliance Validator (HARD e SOFT)
+    modulo: Compliance Portali
+    widget: null
+    pubblico: [titolare, agente, super_admin]
+    livello: base
+    tags: [compliance, validatore, hard, soft, portali, normativa, ape, agcm, publishable, panoramica]
+    correlati: [compliance.hard-prezzo-canone, compliance.soft-warning-qualita, compliance.mapping-campi-immobile]
+    domanda_naturale: "Cos'è il Compliance Validator? A cosa serve?"
+    contenuto:
+      a_cosa_serve: >
+        Verifica che un immobile abbia tutti i campi richiesti dalla
+        normativa italiana (D.Lgs 192/2005 APE, AGCM trasparenza
+        prezzi) e dagli standard dei portali IT prima di pubblicare
+        sul feed pubblico o sui portali connessi.
+      quando_si_usa: >
+        Automaticamente ogni volta che il feed viene generato o il
+        sync partili viene lanciato. Manualmente cliccando 'Vedi
+        compliance' su una card portale.
+      passi:
+        - "2 livelli di regole: HARD (blocca la pubblicazione),
+          SOFT (segnala qualità, non blocca)."
+        - "5 regole HARD business che generano 7 codici possibili:
+          missing_price, missing_surface, missing_energy_class,
+          invalid_energy_class, less_than_3_photos,
+          no_valid_photo_url, missing_address."
+        - "4 regole SOFT: title_too_short, description_too_short,
+          rooms_not_specified, ipe_missing."
+        - "Architettura: funzioni pure in
+          backend/shared/validators/compliance.py (~170 righe),
+          nessun DB, ricalcolo on-the-fly ad ogni chiamata."
+        - "Nessuna pagina UI dedicata: la modale compliance e'
+          inline in PublishingPage.jsx (bottone 'Vedi compliance')."
+      errori_comuni:
+        - problema: "Ho aggiornato l'immobile ma la modale mostra ancora bloccato"
+          soluzione: >
+            Chiudi e riapri la modale. Il validatore ricalcola
+            on-the-fly, non c'e' cache. Se persiste, refresh pagina.
+      permessi:
+        - Titolari + agenti + super_admin (visualizzazione)
+    screenshot: ["[SCREEN: compliance-modale-hard]"]
+
+  - id: compliance.hard-prezzo-canone
+    titolo: HARD prezzo/canone - sale vs rent vs prezzo su richiesta
+    modulo: Compliance Portali
+    widget: null
+    pubblico: [titolare, agente, super_admin]
+    livello: intermedio
+    tags: [compliance, hard, prezzo, canone, missing-price, missing-rent, sale, rent, auction, price-on-request, affitto, vendita, agcm]
+    correlati: [compliance.affitto-vs-vendita, compliance.codici-violazione, compliance.mapping-campi-immobile]
+    domanda_naturale: "Perché il mio immobile in affitto risulta 'prezzo mancante'?"
+    contenuto:
+      a_cosa_serve: >
+        Garantire trasparenza dei prezzi come richiesto da AGCM per
+        ogni annuncio immobiliare commerciale.
+      quando_si_usa: >
+        Automaticamente. Se manca, immobile NON entra nel feed
+        pubblico e NON viene sincronizzato con i portali.
+      passi:
+        - "Logica esatta (compliance.py:_has_price): se operation=
+          'rent' cerca rent_monthly > 0. Se operation='sale' o
+          'auction' cerca price > 0 OPPURE price_on_request=true."
+        - "Vendita con prezzo: ok se price > 0 numerico."
+        - "Vendita prezzo su richiesta: ok se price_on_request=true
+          (usato per lusso, aste, casi particolari)."
+        - "Affitto: RICHIEDE rent_monthly > 0. price non basta."
+        - "IMPORTANTE onestà D-051: il backend emette SEMPRE il
+          codice missing_price, anche per gli affitti senza
+          rent_monthly. Non emette mai missing_rent."
+        - "In UI PublishingPage.jsx c'e' REASON_LABELS.missing_rent
+          = 'Canone mensile mancante' ma e' una GHOST LABEL non
+          usata. Per gli affitti senza canone vedi 'Prezzo mancante'
+          (imprecisione UX documentata v1)."
+        - "Prezzo/canone deve essere numerico: stringhe tipo
+          '€250.000' vengono trattate come mancanti (attenzione
+          post-import XML - Cap. 14)."
+      errori_comuni:
+        - problema: "Ho messo 250000 come stringa e viene marcato missing_price"
+          soluzione: >
+            isinstance((int, float)) filtra: il valore deve essere
+            numerico. Controlla il campo dalla scheda immobile o
+            verifica il post-import.
+      permessi:
+        - Info descrittiva - correzione via scheda immobile Cap. 3
+    screenshot: []
+
+  - id: compliance.hard-superficie
+    titolo: HARD superficie - missing_surface
+    modulo: Compliance Portali
+    widget: null
+    pubblico: [titolare, agente, super_admin]
+    livello: base
+    tags: [compliance, hard, superficie, mq, surface-sqm, missing-surface]
+    correlati: [compliance.codici-violazione, compliance.mapping-campi-immobile]
+    domanda_naturale: "Come indico la superficie in mq per la compliance?"
+    contenuto:
+      a_cosa_serve: >
+        La superficie in mq e' un requisito bloccante dei portali
+        italiani.
+      quando_si_usa: >
+        In fase di caricamento immobile.
+      passi:
+        - "Campo controllato: property.surface_sqm."
+        - "Regola: isinstance(s, (int, float)) and s > 0."
+        - "Se manca o e' <= 0 -> codice missing_surface, immobile
+          bloccato."
+        - "V1 non distingue superficie commerciale vs utile: si
+          guarda solo surface_sqm. Se hai surface_utile ma non
+          surface_sqm, immobile risulta non pubblicabile."
+        - "Correzione: apri scheda immobile > sezione
+          Caratteristiche > Superficie (mq) > inserisci numero."
+      errori_comuni:
+        - problema: "Ho compilato surface_utile ma non surface_sqm"
+          soluzione: >
+            V1 non fa fallback su surface_utile. Compila surface_sqm.
+      permessi:
+        - Info descrittiva
+    screenshot: []
+
+  - id: compliance.hard-ape-classi-ammesse
+    titolo: HARD APE - le 14 classi energetiche ammesse
+    modulo: Compliance Portali
+    widget: null
+    pubblico: [titolare, agente, super_admin]
+    livello: intermedio
+    tags: [compliance, hard, ape, energy, classe-energetica, missing-energy-class, invalid-energy-class, d-lgs-192-2005, esente, exempt]
+    correlati: [compliance.codici-violazione, compliance.mapping-campi-immobile]
+    domanda_naturale: "Quali classi energetiche APE sono accettate?"
+    contenuto:
+      a_cosa_serve: >
+        Rispettare l'obbligo D.Lgs 192/2005 di dichiarare la classe
+        APE in ogni annuncio commerciale immobiliare.
+      quando_si_usa: >
+        Automaticamente. Emette 2 codici distinti (missing vs
+        invalid).
+      passi:
+        - "Le 14 classi ammesse (VALID_ENERGY_CLASSES in
+          compliance.py:20-24): A4, A3, A2, A1, A, B, C, D, E, F, G
+          (11 classi standard) + EXEMPT_IN_PROGRESS (attestato in
+          preparazione) + EXEMPT_NOT_APPLICABLE (esente
+          normativamente, es. rudere agricolo)."
+        - "Campo controllato: property.energy.energy_class
+          (uppercase dopo strip)."
+        - "missing_energy_class: campo vuoto, null o non presente."
+        - "invalid_energy_class: c'e' un valore ma non e' in
+          VALID_ENERGY_CLASSES (es. H, A5, valore da import XML
+          non normalizzato)."
+        - "Compilazione: scheda immobile > Efficienza energetica >
+          dropdown con le 14 opzioni."
+        - "Casi limite v1 (D-051 onesto): se metti
+          EXEMPT_IN_PROGRESS e non aggiorni quando l'APE arriva,
+          l'immobile resta pubblicato ma stai violando la legge.
+          OMNIA NON manda promemoria."
+      errori_comuni:
+        - problema: "Ho un rustico senza APE, quale scelgo?"
+          soluzione: >
+            EXEMPT_NOT_APPLICABLE se il tuo consulente conferma che
+            l'immobile e' fuori dall'obbligo APE (es. rudere non
+            abitabile). In dubbio consulta il tuo geometra/certificatore.
+      permessi:
+        - Info descrittiva - correzione via scheda immobile
+    screenshot: []
+
+  - id: compliance.hard-foto-minimo
+    titolo: HARD foto - less_than_3_photos e no_valid_photo_url
+    modulo: Compliance Portali
+    widget: null
+    pubblico: [titolare, agente, super_admin]
+    livello: base
+    tags: [compliance, hard, foto, photos, less-than-3-photos, no-valid-photo-url, min-photos, standard-portali]
+    correlati: [compliance.codici-violazione, compliance.mapping-campi-immobile]
+    domanda_naturale: "Perché serve un minimo di 3 foto? Cosa differenzia i due codici foto?"
+    contenuto:
+      a_cosa_serve: >
+        Rispettare lo standard de-facto dei portali IT (minimo 3
+        foto). Sotto le 3 foto i portali retrocedono la posizione
+        o rifiutano l'ingest.
+      quando_si_usa: >
+        Automaticamente.
+      passi:
+        - "MIN_PHOTOS = 3 hardcoded (compliance.py:27). Non
+          configurabile per agenzia v1."
+        - "Regola conteggio: le foto valide sono quelle con
+          isinstance(p, dict) and p.get('url') truthy."
+        - "less_than_3_photos: meno di 3 foto valide (o array vuoto,
+          o entry senza URL)."
+        - "no_valid_photo_url: array esiste con entry ma NESSUNA ha
+          URL valido (caso raro post-import rotto)."
+        - "3 scenari possibili: 0 foto -> entrambi i codici; 2 foto
+          ok -> solo less_than_3_photos; 3+ senza URL -> entrambi;
+          3+ tutte con URL -> pass."
+        - "Correzione: scheda immobile > Foto > upload/drag-and-drop
+          almeno 3 foto."
+      errori_comuni:
+        - problema: "Ho 5 foto ma la modale dice less_than_3_photos"
+          soluzione: >
+            Alcune foto potrebbero non avere URL risolto (raro post
+            import rotto). Elimina e ricarica quelle problematiche.
+      permessi:
+        - Info descrittiva
+    screenshot: []
+
+  - id: compliance.hard-indirizzo
+    titolo: HARD indirizzo - missing_address (city + province)
+    modulo: Compliance Portali
+    widget: null
+    pubblico: [titolare, agente, super_admin]
+    livello: base
+    tags: [compliance, hard, indirizzo, address, city, province, missing-address]
+    correlati: [compliance.codici-violazione, compliance.mapping-campi-immobile]
+    domanda_naturale: "Quali dati indirizzo sono obbligatori per pubblicare?"
+    contenuto:
+      a_cosa_serve: >
+        Garantire che i portali possano geo-localizzare l'annuncio
+        almeno a livello di comune.
+      quando_si_usa: >
+        Automaticamente.
+      passi:
+        - "Campi controllati: property.city AND property.province,
+          entrambi non-vuoti dopo strip()."
+        - "Regola: bool(city.strip() and province.strip())."
+        - "Se anche uno solo manca -> codice missing_address."
+        - "NON controllati: via, civico, CAP, coordinate GPS,
+          quartiere. Standard portali richiede minimo
+          citta'+provincia."
+        - "Correzione: scheda immobile > Localizzazione > compila
+          Citta' e Provincia."
+      errori_comuni:
+        - problema: "Ho la citta' ma non la provincia"
+          soluzione: >
+            Entrambi sono obbligatori. Provincia = sigla 2 lettere
+            (MI, RM, TO...). Se sei in Aosta, sigla AO.
+      permessi:
+        - Info descrittiva
+    screenshot: []
+
+  - id: compliance.soft-warning-qualita
+    titolo: Le 4 regole SOFT (warning di qualità, non bloccano)
+    modulo: Compliance Portali
+    widget: null
+    pubblico: [titolare, agente, super_admin]
+    livello: base
+    tags: [compliance, soft, warning, title-too-short, description-too-short, rooms-not-specified, ipe-missing, qualita]
+    correlati: [compliance.hard-prezzo-canone, compliance.mapping-campi-immobile]
+    domanda_naturale: "Differenza fra violazione HARD e warning SOFT?"
+    contenuto:
+      a_cosa_serve: >
+        Le SOFT non bloccano la pubblicazione: sono suggerimenti di
+        qualita' che migliorano posizionamento SEO e conversione sui
+        portali.
+      quando_si_usa: >
+        Sempre visualizzate nella modale compliance come card 'Con
+        warning'.
+      passi:
+        - "title_too_short: title.strip() < 10 caratteri
+          (MIN_TITLE_CHARS=10 hardcoded)."
+        - "description_too_short: description.strip() < 50 caratteri
+          (MIN_DESCRIPTION_CHARS=50 hardcoded)."
+        - "rooms_not_specified: rooms e' None o 0."
+        - "ipe_missing: energy.ipe non presente (indice numerico
+          kWh/m² anno, distinto dalla classe)."
+        - "Le SOFT NON bloccano il feed: pubblishable resta true
+          anche con SOFT presenti."
+        - "In UI compaiono come badge ambra 'con warning'."
+        - "Perche' proprio queste 4: titolo/descrizione minano SEO
+          e i portali retrocedono; rooms e' filtro utente frequente
+          sui portali; IPE e' raccomandato dagli aggiornamenti al
+          D.Lgs 192/2005 come complemento della classe APE."
+      errori_comuni:
+        - problema: "Un titolo di 10 caratteri 'aaaaaaaaaa' passa il SOFT"
+          soluzione: >
+            V1 non fa controllo semantico. Se serve validazione
+            qualita' testuale, usa HAL Agent (Cap. 10) per
+            migliorare descrizioni.
+      permessi:
+        - Info descrittiva
+    screenshot: ["[SCREEN: compliance-soft-warnings]"]
+
+  - id: compliance.mapping-campi-immobile
+    titolo: Mapping campi immobile → regola compliance (dove correggere)
+    modulo: Compliance Portali
+    widget: null
+    pubblico: [titolare, agente, super_admin]
+    livello: intermedio
+    tags: [compliance, mapping, campi, immobile, correggere, scheda-immobile, cross-ref-cap-3]
+    correlati: [compliance.codici-violazione, compliance.hard-prezzo-canone, compliance.correggere-da-modale]
+    domanda_naturale: "Quali campi devo compilare per passare compliance HARD?"
+    contenuto:
+      a_cosa_serve: >
+        Sapere esattamente quale campo della scheda immobile
+        corrisponde a ogni codice di violazione, per correggere in
+        modo mirato.
+      quando_si_usa: >
+        Quando la modale compliance mostra codici bloccanti.
+      passi:
+        - "HARD missing_price: sezione Prezzo -> Prezzo di vendita
+          (price) o Canone mensile (rent_monthly) o toggle 'prezzo
+          su richiesta' (price_on_request)."
+        - "HARD missing_surface: sezione Caratteristiche ->
+          Superficie mq (surface_sqm), numero > 0."
+        - "HARD missing_energy_class / invalid_energy_class:
+          sezione Efficienza energetica -> Classe energetica
+          (energy.energy_class), scegli dal dropdown fra le 14
+          classi ammesse."
+        - "HARD less_than_3_photos / no_valid_photo_url:
+          sezione Foto -> carica minimo 3 foto con URL valido."
+        - "HARD missing_address: sezione Localizzazione ->
+          Citta' (city) + Provincia (province), entrambi
+          obbligatori."
+        - "SOFT title_too_short: header scheda -> Titolo annuncio
+          (title), minimo 10 caratteri."
+        - "SOFT description_too_short: sezione Descrizione
+          (description), minimo 50 caratteri. Puoi usare HAL Agent
+          'Migliora descrizione' (Cap. 10)."
+        - "SOFT rooms_not_specified: sezione Caratteristiche ->
+          Locali (rooms), numero > 0."
+        - "SOFT ipe_missing: sezione Efficienza -> IPE numerico
+          (energy.ipe) in kWh/m² anno, dall'attestato APE."
+      errori_comuni:
+        - problema: "Non trovo il campo IPE nella scheda"
+          soluzione: >
+            Sezione Efficienza energetica, sotto 'Classe energetica'
+            c'e' campo 'IPE (kWh/m² anno)'. Se non compare, verifica
+            di aver espanso la sezione (accordion).
+      permessi:
+        - Info descrittiva
+    screenshot: ["[SCREEN: compliance-mapping-campi]"]
+
+  - id: compliance.feed-vs-sync
+    titolo: Dove interviene il validatore - feed pubblico vs sync portale
+    modulo: Compliance Portali
+    widget: null
+    pubblico: [titolare, super_admin]
+    livello: intermedio
+    tags: [compliance, feed, sync, publishing, sync-engine, pull, push, api-push, blocked-by-compliance, simulated-push]
+    correlati: [compliance.panoramica-validatore, compliance.privacy-non-in-feed]
+    domanda_naturale: "Il validatore filtra sul feed pubblico o sul sync ai portali?"
+    contenuto:
+      a_cosa_serve: >
+        Capire dove il validatore agisce e cosa succede quando un
+        immobile e' bloccato in ognuno dei due flussi.
+      quando_si_usa: >
+        Sempre - il validatore e' invocato in entrambi.
+      passi:
+        - "Feed pubblico (PULL, portali tipo Subito, Bakeca):
+          endpoint GET /publishing/feed/{portal_slug}. Il feed
+          generator itera le properties e filtra con
+          is_publishable(p)[0]. Immobili bloccati SPARISCONO dal
+          XML - nessun log per-immobile-escluso in v1."
+        - "Sync portale (PUSH, M2.6c/d wizard): endpoint POST
+          /publishing/connections/{id}/sync. Il sync_engine filtra
+          la lista prima delle chiamate al portale. Se ci sono
+          bloccati, error_message del sync_log diventa
+          blocked_by_compliance:{count} (es. blocked_by_compliance:12)."
+        - "Sync PROSEGUE sugli immobili pubblicabili - non e' fail
+          globale."
+        - "Portali api_push v1: action_status='simulated_push',
+          nessuna vera chiamata (M2.6d wizard non ancora attivo).
+          Il compliance filter agisce comunque prima."
+        - "Modale compliance UI: endpoint GET /publishing/
+          connections/{conn_id}/compliance. NON filtra - solo
+          mostra lo stato. Ricalcolo on-the-fly."
+        - "Nessuna sync-log UI dedicata v1: sync_log collection
+          esiste ma non c'e' pannello UI che lo mostra. Accesso via
+          API o super_admin DB."
+      errori_comuni:
+        - problema: "Mi aspetto 50 immobili sul portale ma ne vedo 40"
+          soluzione: >
+            Probabilmente 10 sono bloccati dal validatore. Apri la
+            modale compliance del portale per capire quali.
+      permessi:
+        - Info descrittiva
+    screenshot: []
+
+  - id: compliance.privacy-non-in-feed
+    titolo: Privacy L3/L4 esclusi dal feed pubblico (indipendentemente da compliance)
+    modulo: Compliance Portali
+    widget: null
+    pubblico: [titolare, agente, super_admin]
+    livello: base
+    tags: [compliance, privacy, l3, l4, riservato, off-market, is-private-listing, visibility, esclusione, cross-ref-cap-3]
+    correlati: [compliance.feed-vs-sync, compliance.panoramica-validatore]
+    domanda_naturale: "Un immobile compliance-clean può comunque non finire sui portali?"
+    contenuto:
+      a_cosa_serve: >
+        Chiarire che compliance NON e' l'unico filtro tra scheda
+        immobile e portali - la privacy L3/L4 esclude a monte.
+      quando_si_usa: >
+        Se un immobile non appare sui portali dopo essere passato
+        compliance.
+      passi:
+        - "Recap privacy immobile (dettaglio Cap. 3):
+          L1 = Pubblico completo,
+          L2 = Pubblico anonimo,
+          L3 = Riservato agenzia (mai a portali/utenti B2C),
+          L4 = Off-market (solo team ristretto)."
+        - "Il feed generator applica DUE filtri in cascata:
+          1) Filtro privacy: escludi is_private_listing=true o
+             visibility='internal' (L3/L4).
+          2) Filtro compliance: escludi hard_violations non vuote."
+        - "Un immobile in L4 non arriva neanche al secondo filtro
+          - e' gia' escluso dal primo."
+        - "Se un immobile non appare sui portali, controlla:
+          1) E' L3/L4? (scheda immobile > toggle Visibilita' pubblica)
+          2) E' bloccato compliance? (modale compliance)
+          3) Il portale e' attivo? (Cap. 6 sezione attivazione)."
+      errori_comuni:
+        - problema: "Immobile compliance ok ma non sui portali"
+          soluzione: >
+            Verifica privacy: probabilmente e' L3 (riservato agenzia)
+            o L4 (off-market). Cambia visibility a L1/L2 dalla scheda.
+      permessi:
+        - Info descrittiva
+    screenshot: []
+
+  - id: compliance.affitto-vs-vendita
+    titolo: Perché un affitto risulta "prezzo mancante" (missing_price ghost label)
+    modulo: Compliance Portali
+    widget: null
+    pubblico: [titolare, agente, super_admin]
+    livello: intermedio
+    tags: [compliance, affitto, rent, vendita, sale, missing-price, missing-rent, ghost-label, onestà, d-051]
+    correlati: [compliance.hard-prezzo-canone, compliance.limitazioni-v1]
+    domanda_naturale: "Ho un affitto senza canone e vedo 'Prezzo mancante' invece di 'Canone mensile mancante'"
+    contenuto:
+      a_cosa_serve: >
+        Spiegare onestamente (D-051) un'imprecisione UX v1: il
+        backend emette sempre missing_price, anche per gli affitti.
+      quando_si_usa: >
+        Quando l'utente vede 'Prezzo mancante' su un immobile
+        chiaramente marcato come affitto.
+      passi:
+        - "Backend (compliance.py:99-100): hard.append('missing_price')
+          SEMPRE - non c'e' logica che emetta missing_rent."
+        - "Frontend (PublishingPage.jsx:410): REASON_LABELS.missing_rent
+          = 'Canone mensile mancante' esiste come label, ma il
+          codice missing_rent non viene mai emesso dal backend."
+        - "GHOST LABEL: e' una label UI 'orfana' che non appare mai
+          perche' il codice sorgente non esiste."
+        - "In UI vedrai 'Prezzo mancante' anche per un affitto senza
+          rent_monthly. Imprecisione UX documentata v1."
+        - "Correzione utente: compila il canone mensile (sezione
+          Prezzo > Canone), l'errore sparira'."
+        - "Fix futuro (da valutare): emettere missing_rent dal
+          backend quando operation='rent' - piccolo intervento in
+          compliance.py, allineerebbe label."
+      errori_comuni:
+        - problema: "Ho compilato il canone ma vedo ancora missing_price"
+          soluzione: >
+            Refresh pagina. rent_monthly deve essere numerico > 0.
+            Se hai messo 800 come stringa '800' non funziona.
+      permessi:
+        - Info descrittiva
+    screenshot: []
+
+  - id: compliance.codici-violazione
+    titolo: Elenco completo dei 7 codici HARD + 4 SOFT
+    modulo: Compliance Portali
+    widget: null
+    pubblico: [titolare, agente, super_admin]
+    livello: intermedio
+    tags: [compliance, codici, violazione, elenco, riferimento, hard, soft, cheatsheet]
+    correlati: [compliance.mapping-campi-immobile, compliance.panoramica-validatore]
+    domanda_naturale: "Quali sono tutti i codici di violazione compliance possibili?"
+    contenuto:
+      a_cosa_serve: >
+        Cheatsheet dei codici di violazione emessi dal validatore,
+        per debug rapido.
+      quando_si_usa: >
+        Quando cerchi il significato di un codice specifico
+        (missing_price, ipe_missing, ecc.).
+      passi:
+        - "HARD (7 codici) - bloccano publish:
+          - missing_price: prezzo/canone mancante o <=0
+          - missing_surface: surface_sqm mancante o <=0
+          - missing_energy_class: classe APE mancante
+          - invalid_energy_class: classe APE fuori dalle 14 ammesse
+          - less_than_3_photos: meno di 3 foto valide
+          - no_valid_photo_url: foto senza URL risolvibili
+          - missing_address: citta O provincia mancanti."
+        - "SOFT (4 codici) - warning qualita', NON bloccano:
+          - title_too_short: titolo < 10 caratteri
+          - description_too_short: descrizione < 50 caratteri
+          - rooms_not_specified: rooms=None o 0
+          - ipe_missing: energy.ipe non presente."
+        - "Costanti hardcoded (compliance.py:27-29):
+          MIN_PHOTOS=3, MIN_TITLE_CHARS=10, MIN_DESCRIPTION_CHARS=50."
+        - "Le 14 classi energetiche ammesse: A4/A3/A2/A1/A/B/C/D/E/F/G/
+          EXEMPT_IN_PROGRESS/EXEMPT_NOT_APPLICABLE."
+      errori_comuni:
+        - problema: "Vedo un codice che non riconosco"
+          soluzione: >
+            Se non e' in questa lista, probabile bug o codice legacy.
+            Segnala al team OMNIA con lo screenshot.
+      permessi:
+        - Info descrittiva
+    screenshot: []
+
+  - id: compliance.correggere-da-modale
+    titolo: Come si legge e usa la modale compliance
+    modulo: Compliance Portali
+    widget: null
+    pubblico: [titolare, agente, super_admin]
+    livello: base
+    tags: [compliance, modale, ui, publishing-page, portal-compliance-modal, immobili-bloccati, metrics]
+    correlati: [compliance.feed-vs-sync, compliance.mapping-campi-immobile]
+    domanda_naturale: "Come apro e leggo la modale compliance in UI?"
+    contenuto:
+      a_cosa_serve: >
+        Vedere colpo d'occhio quanti immobili sono bloccati, quali
+        sono i motivi piu' frequenti, e chi sono i primi 20 bloccati.
+      quando_si_usa: >
+        Prima di attivare un portale nuovo; dopo un import massivo;
+        durante audit qualita' del portafoglio.
+      passi:
+        - "Vai in Publishing (sidebar > Portali & Publishing)."
+        - "Trova la card del portale attivo (Subito, Bakeca, etc.)."
+        - "Clic 'Vedi compliance' (data-testid=portal-compliance-
+          {portal_slug})."
+        - "La modale mostra:
+          - Header con nome portale + close button
+          - 4 box metriche (Totale, Pubblicabili, Bloccati, Con warning)
+          - Elenco top-5 motivi HARD con conteggio (tradotti in
+            italiano via REASON_LABELS)
+          - Elenco primi 20 immobili bloccati con titolo + motivi
+            separati da ' · '."
+        - "Cosa MANCA nella modale v1 (D-051): bottone 'Correggi
+          tutto' - non esiste. Link diretto 'Vai alla scheda
+          immobile' dalla riga bloccata - non c'e'. Export CSV -
+          non c'e'. Filtro per tipo violazione - non c'e'."
+        - "Workflow correzione manuale: copia titolo immobile ->
+          vai in Immobili -> cerca -> apri scheda -> correggi ->
+          riapri modale per verifica."
+      errori_comuni:
+        - problema: "La modale non si apre"
+          soluzione: >
+            Controlla che il portale sia attivo (status='active').
+            Endpoint /compliance funziona solo su portali collegati.
+      permessi:
+        - agency_admin, super_admin, branch_admin, group_admin
+    screenshot: ["[SCREEN: compliance-modale-hard]"]
+
+  - id: compliance.limitazioni-v1
+    titolo: Limiti v1 del Compliance Validator (D-051 onesto)
+    modulo: Compliance Portali
+    widget: null
+    pubblico: [titolare, agente, super_admin]
+    livello: intermedio
+    tags: [compliance, limiti, cosa-non-fa, ghost-label, sync-log, api-push, simulated, missing-rent, correggi, hardcoded, audit-trail, d-051]
+    correlati: [compliance.panoramica-validatore, compliance.affitto-vs-vendita]
+    domanda_naturale: "Cosa NON fa il Compliance Validator in v1?"
+    contenuto:
+      a_cosa_serve: >
+        Aspettative chiare su cosa il modulo NON copre.
+      quando_si_usa: >
+        Prima di aspettarsi funzionalita' non implementate.
+      passi:
+        - "NO pagina UI dedicata: compliance e' inline in
+          PublishingPage.jsx come modale. Nessuna /it/app/compliance."
+        - "api_push = simulated_push v1: portali M2.6c/d wizard
+          restituiscono action_status='simulated_push', nessuna
+          vera chiamata al portale. Compliance filter comunque
+          attivo."
+        - "NO sync-log UI dedicata: sync_log collection esiste ma
+          nessun pannello UI. Solo API e super_admin DB."
+        - "Ghost label missing_rent in UI: REASON_LABELS.missing_rent
+          esiste ma il backend non emette mai missing_rent (usa
+          sempre missing_price anche per affitti). Vedrai 'Prezzo
+          mancante' per affitti senza canone."
+        - "NO bottone 'Sospendi sync' in UI: endpoint PATCH
+          /connections/{id} esiste (status -> paused) ma nessun
+          bottone frontend. Solo 'Attiva sync' e 'Disconnetti'."
+        - "Legacy PORTAL_CATALOG vs CATALOG_SEED in publishing.py:
+          convivenza M2.6a/M2.6d. Idealista NON in v1 (Cap. 6)."
+        - "NO trend storico: validatore stateless, no dashboard
+          'andamento compliance'."
+        - "NO promemoria APE in scadenza: se metti EXEMPT_IN_PROGRESS
+          non c'e' notifica quando aggiornare."
+        - "NO bottone Correggi dalla modale: nessun deep-link alla
+          scheda immobile."
+        - "Soglie hardcoded (MIN_PHOTOS=3, MIN_TITLE_CHARS=10,
+          MIN_DESCRIPTION_CHARS=50): non configurabili per agenzia."
+        - "NO controllo semantico: 'aaaaaaaaaa' passa il SOFT
+          title. Nessuna valutazione qualita' testo."
+        - "NO audit trail correzioni: nessun log 'utente X ha
+          risolto Y violazioni per immobile Z'."
+      errori_comuni:
+        - problema: "Voglio aumentare MIN_PHOTOS a 5 per la mia agenzia"
+          soluzione: >
+            Non disponibile v1. Le soglie sono hardcoded. Segnala
+            al team OMNIA se e' priorita' per te.
+      permessi:
+        - Info descrittiva
+    screenshot: []

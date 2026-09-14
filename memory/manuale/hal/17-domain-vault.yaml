@@ -1,0 +1,485 @@
+# HAL — Voci esportate per RAG
+# Capitolo 17 · Domain Vault (Sovranità digitale)
+
+voci:
+
+  - id: domain.cos-e
+    titolo: Cos'è il Domain Vault (sovranità digitale)
+    modulo: Domain Vault
+    widget: null
+    pubblico: [titolare, super_admin]
+    livello: base
+    tags: [domain, vault, sovranita, d-054, panoramica, promise, dominio, registrar]
+    correlati: [domain.d-054-promise, domain.componenti, domain.dove-trovarlo]
+    domanda_naturale: "Cos'è il Domain Vault? A cosa serve?"
+    contenuto:
+      a_cosa_serve: >
+        Concetto ombrello che copre la promessa D-054 (OMNIA non
+        registra domini a nome suo), il workflow di help-to-connect
+        via DNS TXT+CNAME, e il checker RDAP pubblico pre-signup.
+      quando_si_usa: >
+        Quando vuoi collegare il tuo dominio agenzia (esempio.it)
+        al sito OMNIA, o verificare pre-signup che il tuo dominio
+        sia intestato a te.
+      passi:
+        - "3 componenti backend distinti: domain_vault.py (confirm
+          sovereignty), custom_domain.py (DNS verification workflow),
+          domain_check.py (RDAP checker pubblico)."
+        - "Nessun transfer di ownership: il dominio resta tuo al tuo
+          registrar."
+        - "OMNIA fornisce solo target CNAME/ALIAS + istruzioni DNS."
+      errori_comuni:
+        - problema: "Vorrei che OMNIA registrasse il dominio per me"
+          soluzione: >
+            E' la promessa D-054: OMNIA non registra domini a nome
+            suo. Compra tu al tuo registrar e usa il help-to-connect.
+      permessi:
+        - Titolari, super_admin, branch_admin, group_admin (per confirm)
+    screenshot: []
+
+  - id: domain.d-054-promise
+    titolo: La promessa D-054 · OMNIA non registra mai domini a nome suo
+    modulo: Domain Vault
+    widget: null
+    pubblico: [titolare, super_admin]
+    livello: base
+    tags: [domain, d-054, promise, sovranita, contrattuale, lock-in, portabilita, gdpr, icann]
+    correlati: [domain.cos-e, domain.help-to-connect]
+    domanda_naturale: "OMNIA registra il mio dominio? Chi ne è proprietario?"
+    contenuto:
+      a_cosa_serve: >
+        Garantire che il dominio del tuo brand resti sempre tuo:
+        nessun lock-in, nessuna dipendenza da OMNIA per la portabilita'.
+      quando_si_usa: >
+        Sempre. E' la regola cardine.
+      passi:
+        - "Testo esatto (domain_vault.py:3-9): 'OMNIA never registers
+          a domain on its own name. Every agency owns its domain'."
+        - "Il registrant del dominio sei tu (persona fisica o
+          agenzia)."
+        - "OMNIA non paga il rinnovo, non gestisce il pannello DNS,
+          non trattiene il dominio se lasci OMNIA."
+        - "Portabilita' garantita: se cambi piattaforma, ripunti il
+          CNAME altrove e il dominio ti segue."
+        - "Documento pubblico: /it/domain-sovereignty-policy."
+      errori_comuni: []
+      permessi: []
+    screenshot: ["[SCREEN: domain-sovereignty-policy]"]
+
+  - id: domain.componenti
+    titolo: I 3 componenti del Domain Vault (Confirm, Custom Domain, Checker)
+    modulo: Domain Vault
+    widget: null
+    pubblico: [titolare, super_admin]
+    livello: intermedio
+    tags: [domain, componenti, architettura, domain-vault, custom-domain, domain-check, rdap, dns]
+    correlati: [domain.sovereignty-confirm, domain.custom-domain-flow, domain.domain-checker-pubblico]
+    domanda_naturale: "Da cosa è composto il Domain Vault backend?"
+    contenuto:
+      a_cosa_serve: >
+        Mappare i 3 pezzi di codice reali del Domain Vault.
+      quando_si_usa: >
+        Per orientarsi quando qualcosa non funziona.
+      passi:
+        - "1. domain_vault.py (155 righe, prefix /agencies sotto
+          /api/app): registra la conferma sovereignty + existing_domain
+          opzionale."
+        - "2. custom_domain.py (454 righe, prefix /website sotto
+          /api/app): workflow DNS verification TXT + CNAME."
+        - "3. domain_check.py (359 righe, prefix /domain sotto
+          /api/marketing): checker RDAP pubblico pre-signup."
+      errori_comuni: []
+      permessi: []
+    screenshot: []
+
+  - id: domain.dove-trovarlo
+    titolo: Dove trovare il Domain Vault in ImmoWeb
+    modulo: Domain Vault
+    widget: null
+    pubblico: [titolare, super_admin]
+    livello: base
+    tags: [domain, dove-si-trova, sidebar, impostazioni, navigazione]
+    correlati: [domain.sovereignty-confirm, domain.custom-domain-flow]
+    domanda_naturale: "Dove trovo il Domain Vault? Come ci accedo?"
+    contenuto:
+      a_cosa_serve: >
+        Sapere dove cliccare in UI.
+      quando_si_usa: >
+        Prima volta configurazione o modifica dominio.
+      passi:
+        - "Login ImmoWeb come titolare (agency_admin), super_admin,
+          branch_admin o group_admin."
+        - "Impostazioni agenzia > sezione Domain Vault (o Sovranita'
+          digitale)."
+        - "Rotta principale: /it/app/settings."
+        - "Pagine collegate pubbliche: /it/domain-sovereignty-policy
+          (policy statica), /it/verifica-dominio (checker RDAP)."
+      errori_comuni:
+        - problema: "Non vedo la voce Domain Vault"
+          soluzione: >
+            Ruolo agent semplice non ha accesso. Chiedi al titolare
+            di configurare.
+      permessi:
+        - agency_admin, super_admin, branch_admin, group_admin
+    screenshot: []
+
+  - id: domain.sovereignty-confirm
+    titolo: Confermare la Domain Sovereignty (POST /me/domain-sovereignty)
+    modulo: Domain Vault
+    widget: null
+    pubblico: [titolare, super_admin]
+    livello: base
+    tags: [domain, sovereignty, confirm, idempotente, existing-domain, audit, timestamp]
+    correlati: [domain.help-to-connect, domain.audit-trail]
+    domanda_naturale: "Come confermo la Domain Sovereignty Policy?"
+    contenuto:
+      a_cosa_serve: >
+        Registrare formalmente che hai letto e accettato la promessa
+        D-054. Volontario ma consigliato per audit.
+      quando_si_usa: >
+        Prima volta all'onboarding, oppure quando cambi dominio
+        dichiarato.
+      passi:
+        - "Impostazioni > Domain Vault > leggi il testo > spunta il
+          checkbox > opzionale scrivi existing_domain."
+        - "Clic Conferma > POST /api/app/agencies/me/domain-sovereignty
+          con {confirmed: true, existing_domain: 'esempio.it'}."
+        - "Backend salva su agencies: domain_sovereignty_confirmed=true,
+          domain_sovereignty_confirmed_at (ISO 8601 UTC, PRESERVATO
+          se riconfermi), existing_domain normalizzato."
+        - "Idempotenza (domain_vault.py:119-127): confirmed=true la
+          prima volta salva timestamp; riconfermi non lo sovrascrive."
+        - "Validazione dominio via _DOMAIN_RE: max 253 char totali,
+          label max 63, TLD 2-63. Errore invalid_domain_format (400)
+          se non matcha."
+      errori_comuni:
+        - problema: "invalid_domain_format su 'esempio' senza TLD"
+          soluzione: >
+            Il dominio deve avere TLD (es. .it, .com). 'esempio' da
+            solo non e' valido.
+      permessi:
+        - agency_admin, super_admin, branch_admin, group_admin (POST)
+    screenshot: ["[SCREEN: domain-vault-confirm]"]
+
+  - id: domain.help-to-connect
+    titolo: Help-to-connect è NON è un transfer di ownership
+    modulo: Domain Vault
+    widget: null
+    pubblico: [titolare, super_admin]
+    livello: intermedio
+    tags: [domain, help-to-connect, transfer, ownership, registrar, credenziali, lock-in, d-054, onestà]
+    correlati: [domain.d-054-promise, domain.custom-domain-flow]
+    domanda_naturale: "Se dichiaro il mio dominio, OMNIA ne diventa proprietaria?"
+    contenuto:
+      a_cosa_serve: >
+        Chiarire onestamente che dichiarare existing_domain NON e' un
+        transfer.
+      quando_si_usa: >
+        Prima di temere lock-in.
+      passi:
+        - "Dichiarare existing_domain salva solo una stringa sul
+          documento agencies. Nessuna chiamata al registrar."
+        - "Il dominio resta nel tuo pannello registrar, con i tuoi
+          contatti registrant, la tua carta per il rinnovo."
+        - "OMNIA NON chiede mai le credenziali del tuo registrar."
+        - "OMNIA fornisce solo istruzioni DNS (TXT + CNAME) che TU
+          applichi nel tuo pannello."
+        - "OMNIA verifica via DNS query che il tuo dominio punti al
+          target OMNIA."
+        - "Cosa OMNIA NON fa: non compra il dominio, non paga il
+          rinnovo, non intesta il registrant a se stessa, non blocca
+          se lasci."
+      errori_comuni: []
+      permezi: []
+    screenshot: []
+
+  - id: domain.custom-domain-flow
+    titolo: Custom Domain · flusso DNS verification (TXT + CNAME)
+    modulo: Domain Vault
+    widget: null
+    pubblico: [titolare, super_admin]
+    livello: intermedio
+    tags: [domain, custom-domain, dns, txt, cname, verification, pending, verified, apex, alias, aname]
+    correlati: [domain.txt-record-anti-takeover, domain.cname-target, domain.errori-comuni]
+    domanda_naturale: "Come collego il mio dominio al sito OMNIA?"
+    contenuto:
+      a_cosa_serve: >
+        Collegare il tuo dominio (agenziaesempio.it) al sito OMNIA
+        della tua agenzia.
+      quando_si_usa: >
+        Dopo aver comprato il dominio al tuo registrar.
+      passi:
+        - "Fase 1 - Richiesta: Impostazioni > Sito > Dominio
+          personalizzato > scrivi dominio > Richiedi collegamento.
+          Backend POST /api/app/website/domain/request genera un
+          token TXT random univoco + salva agencies in status
+          'pending' + notifica super_admin OMNIA via email."
+        - "Fase 2 - Tu configuri DNS nel tuo pannello registrar.
+          2 record: TXT (host: _omnia-challenge.<domain>, value:
+          <token>) + CNAME (host: www.<domain>, value: CNAME_TARGET
+          OMNIA da env OMNIA_CUSTOM_DOMAIN_CNAME_TARGET)."
+        - "Apex domain workaround: alcuni registrar non supportano
+          CNAME su apex - usa ALIAS/ANAME oppure appoggia solo www."
+        - "Fase 3 - Verifica: torna in OMNIA > Verifica DNS. Backend
+          POST /verify risolve TXT + CNAME. Se entrambi OK -> status
+          verified, dominio attivo. Se KO -> pannello mostra cosa
+          manca."
+      errori_comuni:
+        - problema: "Ho aggiunto il TXT ma verify fallisce"
+          soluzione: >
+            Attendi 5-30 minuti la propagazione DNS. Verifica che
+            l'host sia esattamente _omnia-challenge.<domain>.
+      permessi:
+        - agency_admin, super_admin, branch_admin, group_admin
+    screenshot: ["[SCREEN: domain-dns-instructions]"]
+
+  - id: domain.txt-record-anti-takeover
+    titolo: Perché il record TXT (_omnia-challenge) previene i takeover
+    modulo: Domain Vault
+    widget: null
+    pubblico: [titolare, super_admin]
+    livello: intermedio
+    tags: [domain, txt, anti-takeover, ownership, challenge, dns, sicurezza]
+    correlati: [domain.custom-domain-flow, domain.cname-target]
+    domanda_naturale: "A cosa serve il record TXT _omnia-challenge?"
+    contenuto:
+      a_cosa_serve: >
+        Prevenire che qualcuno rivendichi un dominio non suo.
+      quando_si_usa: >
+        Ogni volta che colleghi un dominio custom.
+      passi:
+        - "Solo chi ha accesso al DNS del dominio puo' aggiungere
+          record TXT."
+        - "Il TXT_RECORD_PREFIX '_omnia-challenge' + il token
+          random generato da OMNIA garantisce che chi verifica sia
+          l'effettivo controllore del dominio."
+        - "E' il pattern standard usato da Google Search Console,
+          Meta Business Verification, Let's Encrypt DNS-01."
+        - "Il token viene salvato lato OMNIA e confrontato al
+          verify."
+      errori_comuni: []
+      permessi: []
+    screenshot: []
+
+  - id: domain.cname-target
+    titolo: CNAME target OMNIA · dove punto il mio dominio
+    modulo: Domain Vault
+    widget: null
+    pubblico: [titolare, super_admin]
+    livello: base
+    tags: [domain, cname, target, env, edge, alias, aname, apex, www]
+    correlati: [domain.custom-domain-flow]
+    domanda_naturale: "Qual è il CNAME target di OMNIA a cui devo puntare?"
+    contenuto:
+      a_cosa_serve: >
+        Sapere dove far puntare il tuo dominio.
+      quando_si_usa: >
+        Configurazione DNS al tuo registrar.
+      passi:
+        - "Il CNAME_TARGET e' definito lato server (env
+          OMNIA_CUSTOM_DOMAIN_CNAME_TARGET), non modificabile lato
+          UI."
+        - "Le istruzioni compaiono nella pagina Custom Domain post
+          request - il payload della response mostra host + type +
+          value."
+        - "Per il www.<domain>: CNAME diretto al target."
+        - "Per apex (domain senza www): ALIAS/ANAME se il registrar
+          li supporta (Cloudflare, Route53) oppure appoggia solo
+          www e fai un redirect apex > www."
+      errori_comuni: []
+      permessi: []
+    screenshot: []
+
+  - id: domain.domain-checker-pubblico
+    titolo: Domain Checker pubblico (RDAP pre-signup)
+    modulo: Domain Vault
+    widget: null
+    pubblico: [titolare, super_admin, prospect]
+    livello: base
+    tags: [domain, checker, rdap, pubblico, pre-signup, verifica-dominio, no-login, lead]
+    correlati: [domain.rdap-vs-whois, domain.d-054-promise]
+    domanda_naturale: "Come verifico chi possiede un dominio prima di iscrivermi a OMNIA?"
+    contenuto:
+      a_cosa_serve: >
+        Verifica pubblica pre-signup che il dominio della tua
+        agenzia sia intestato a te.
+      quando_si_usa: >
+        Prima di iscriverti a OMNIA, o per verificare periodicamente.
+      passi:
+        - "URL pubblico (no login): /it/verifica-dominio."
+        - "API: POST /api/marketing/domain/check con
+          {domain, agency_name (opzionale)}."
+        - "Backend fa RDAP query, analizza registrant, ritorna
+          report interpretato: corrisponde/redatto/e' il provider/
+          scade fra <90 giorni."
+        - "Rate limit per IP: se superi la soglia -> 429 Too Many
+          Requests. Aspetta qualche minuto."
+        - "Se TLD non supporta RDAP -> messaggio 'contattaci per
+          check manuale'."
+        - "Lead opzionale: dopo il check clic 'Richiedi consulenza'
+          > POST /api/marketing/domain/lead > crea lead marketing."
+      errori_comuni: []
+      permessi:
+        - Pubblico (no login) con rate limit per IP
+    screenshot: ["[SCREEN: domain-checker-pubblico]"]
+
+  - id: domain.rdap-vs-whois
+    titolo: RDAP vs WHOIS · perché OMNIA usa RDAP
+    modulo: Domain Vault
+    widget: null
+    pubblico: [titolare, super_admin]
+    livello: intermedio
+    tags: [domain, rdap, whois, gdpr, redacted, privacy-proxy, registrant, protocol]
+    correlati: [domain.domain-checker-pubblico]
+    domanda_naturale: "Che differenza c'è fra RDAP e WHOIS?"
+    contenuto:
+      a_cosa_serve: >
+        Capire il protocollo usato per interrogare i dati di
+        registrazione dominio.
+      quando_si_usa: >
+        Per interpretare i risultati del checker.
+      passi:
+        - "WHOIS: protocollo storico (RFC 3912, 2004). Testo libero,
+          parsing fragile."
+        - "RDAP: successore standardizzato (RFC 7480-7484). JSON
+          strutturato, GDPR ready, controllo accessi granulare."
+        - "OMNIA usa RDAP per: parsing affidabile, redacted
+          nativo, standard aperto (tutti i TLD europei in
+          migrazione)."
+        - "Redacted registrant = normale post-GDPR: molti registrar
+          redigono automaticamente i dati registrant delle persone
+          fisiche. Campi tipo 'REDACTED FOR PRIVACY'. Non e' un
+          problema."
+        - "Se registrant = 'Aruba S.p.A.' o 'OVH Hosting' -> il
+          dominio e' intestato al provider IT, non a te. Va
+          corretto con transfer registrant al tuo registrar."
+      errori_comuni: []
+      permessi: []
+    screenshot: []
+
+  - id: domain.audit-trail
+    titolo: Audit trail append-only (domain_vault_events)
+    modulo: Domain Vault
+    widget: null
+    pubblico: [titolare, super_admin]
+    livello: intermedio
+    tags: [domain, audit, trail, append-only, domain-vault-events, sicurezza, dispute, gdpr]
+    correlati: [domain.sovereignty-confirm]
+    domanda_naturale: "Dove sono registrate le conferme Domain Vault?"
+    contenuto:
+      a_cosa_serve: >
+        Traccia storica delle conferme/revoche, non cancellabile.
+      quando_si_usa: >
+        Per dispute o audit legali.
+      passi:
+        - "Ogni POST /agencies/me/domain-sovereignty inserisce un
+          documento nella collezione domain_vault_events
+          (domain_vault.py:135-143)."
+        - "Campi: agency_id, user_id, user_email, confirmed,
+          existing_domain (normalizzato), at (ISO 8601 UTC)."
+        - "Append-only: mai cancellato, mai aggiornato. Se cambi
+          existing_domain resta la riga precedente + nuova."
+        - "NO UI dedicata v1: accesso via API o super_admin DB."
+      errori_comuni: []
+      permessi:
+        - Accesso audit: solo super_admin
+    screenshot: []
+
+  - id: domain.errori-comuni
+    titolo: Errori comuni Domain Vault
+    modulo: Domain Vault
+    widget: null
+    pubblico: [titolare, super_admin]
+    livello: base
+    tags: [domain, errori, troubleshooting, invalid-domain, no-agency, dns, rate-limit, txt, cname]
+    correlati: [domain.sovereignty-confirm, domain.custom-domain-flow]
+    domanda_naturale: "Perché il collegamento del dominio non funziona?"
+    contenuto:
+      a_cosa_serve: >
+        Riconoscere gli errori piu' frequenti.
+      quando_si_usa: >
+        Quando qualcosa fallisce.
+      passi:
+        - "400 invalid_domain_format: dominio malformato. Controlla
+          TLD (.it, .com), no spazi."
+        - "404 no_agency: utente non collegato ad alcuna agenzia."
+        - "TXT non trovato al verify: propagazione DNS incompleta
+          (attendi 5-30 min). Host esatto = _omnia-challenge.<domain>."
+        - "CNAME sbagliato al verify: punta al CNAME_TARGET OMNIA
+          esatto dalle istruzioni."
+        - "CNAME su apex fallito: usa ALIAS/ANAME oppure solo www."
+        - "429 rate limit checker RDAP: troppi check dallo stesso
+          IP. Aspetta qualche minuto."
+        - "TLD non supporta RDAP: contatta OMNIA per check manuale."
+        - "Registrant redacted: normale GDPR privacy, non e' un
+          problema."
+        - "Registrant = provider: transfer registrant al tuo nome
+          dal tuo registrar."
+      errori_comuni: []
+      permessi: []
+    screenshot: []
+
+  - id: domain.limitazioni-v1
+    titolo: Limiti v1 Domain Vault (D-051 onesto)
+    modulo: Domain Vault
+    widget: null
+    pubblico: [titolare, super_admin]
+    livello: intermedio
+    tags: [domain, limiti, cosa-non-fa, registrar, whois, multi-dominio, ssl, notifiche, cname-target, d-051]
+    correlati: [domain.cos-e, domain.d-054-promise]
+    domanda_naturale: "Cosa NON fa il Domain Vault in v1?"
+    contenuto:
+      a_cosa_serve: >
+        Aspettative chiare.
+      quando_si_usa: >
+        Prima di aspettarsi funzionalita' non implementate.
+      passi:
+        - "NO registrazione domini (promessa D-054, non limite
+          tecnico)."
+        - "NO rinnovo automatico. Il rinnovo e' tua responsabilita'."
+        - "NO DNS panel in OMNIA - gestisci al tuo registrar."
+        - "NO WHOIS fallback: se RDAP non funziona, no legacy whois."
+        - "NO UI storico eventi (domain_vault_events accesso solo
+          DB super_admin)."
+        - "NO notifica scadenza dominio automatica (cron non attivo
+          v1). Il checker pubblico avvisa solo se lo lanci."
+        - "NO multi-dominio per agenzia (existing_domain e'
+          singolare)."
+        - "NO deep-link fra i 3 componenti (naviga a mano)."
+        - "CNAME_TARGET fisso via env (tutte le agenzie stesso edge)."
+        - "NO upload cert SSL custom (Let's Encrypt automatico OMNIA)."
+        - "Rate limit checker non configurabile per partner con
+          volumi alti."
+      errori_comuni: []
+      permessi: []
+    screenshot: []
+
+  - id: domain.collegamenti
+    titolo: Collegamenti fra Domain Vault e altri moduli
+    modulo: Domain Vault
+    widget: null
+    pubblico: [titolare, super_admin]
+    livello: base
+    tags: [domain, cross-ref, portali, sito, team, hal-knowledge, social]
+    correlati: [domain.cos-e]
+    domanda_naturale: "Come si intreccia il Domain Vault con gli altri moduli?"
+    contenuto:
+      a_cosa_serve: >
+        Capire il contesto.
+      quando_si_usa: >
+        Per orientarsi.
+      passi:
+        - "Cap. 6 Portali & Publishing: il listing_url usa il tuo
+          dominio custom se collegato. Fallback: sottodominio OMNIA."
+        - "Cap. 8 Sito web agenzia: il sito risponde sul tuo
+          dominio via Custom Domain. Cap. 8 = UI/tema, Cap. 17 =
+          DNS."
+        - "Cap. 13 Team & Ruoli: POST domain-sovereignty richiede
+          agency_admin+."
+        - "Cap. 15 Social Publisher: listing_url allegato ai post
+          social viene dal dominio custom."
+        - "Cap. 12 HAL Knowledge: puoi chiedere 'OMNIA registra il
+          mio dominio?' - risposta da domain.d-054-promise."
+      errori_comuni: []
+      permessi: []
+    screenshot: []

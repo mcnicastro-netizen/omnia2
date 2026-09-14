@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8" />
+<title>Nuovi immobili per te — OMNIA</title>
+</head>
+<body style="font-family: -apple-system, BlinkMacSystemFont, 'Inter', Arial, sans-serif; background:#FAF7F2; margin:0; padding:0; color:#0E1419;">
+  <table align="center" cellpadding="0" cellspacing="0" width="600" style="max-width:600px; background:#ffffff; margin:40px auto; border:1px solid #E5E2DC;">
+    <tr>
+      <td style="padding:32px 40px 16px 40px; border-bottom:1px solid #E5E2DC;">
+        <p style="margin:0; font-size:11px; letter-spacing:3px; text-transform:uppercase; color:#5C6470;">OMNIA · ImmobilCloud</p>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding:32px 40px 8px 40px;">
+        <p style="margin:0; font-size:11px; letter-spacing:2px; text-transform:uppercase; color:#C19A6B; font-weight:600;">🔔 Nuovi immobili per te</p>
+        <h1 style="margin:8px 0 16px 0; font-size:24px; line-height:1.3; color:#0B1E3F; font-weight:600;">
+          Ciao {{user_name}}, abbiamo trovato {{match_count}} immobili
+        </h1>
+        <p style="margin:0 0 6px 0; font-size:14px; line-height:1.6; color:#5C6470;">
+          Nuovi annunci che corrispondono alla tua ricerca salvata:
+        </p>
+        <p style="margin:0 0 24px 0; font-size:15px; color:#0B1E3F; font-weight:600;">
+          "{{search_name}}"
+        </p>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding:0 40px 24px 40px;">
+        {{matches_html}}
+      </td>
+    </tr>
+    <tr>
+      <td style="padding:0 40px 32px 40px;">
+        <table cellpadding="0" cellspacing="0">
+          <tr>
+            <td style="background:#0B1E3F; padding:14px 28px;">
+              <a href="{{search_url}}" style="color:#FAF7F2; text-decoration:none; font-size:12px; letter-spacing:2px; text-transform:uppercase; font-weight:600;">
+                Vedi tutti i risultati →
+              </a>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding:20px 40px; background:#FAF7F2; border-top:1px solid #E5E2DC;">
+        <p style="margin:0; font-size:11px; line-height:1.5; color:#5C6470;">
+          Ricevi questa email perché hai salvato una ricerca su ImmobilCloud.
+          <br/>Gestisci le tue ricerche salvate dalla <a href="{{search_url}}" style="color:#0B1E3F;">tua area riservata</a>.
+        </p>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>

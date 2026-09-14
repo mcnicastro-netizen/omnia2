@@ -1,0 +1,35 @@
+{
+  "completed_at": "2026-06-26 16:29:31",
+  "results": [
+    {
+      "id": 4,
+      "name": "family_smart_keys_future",
+      "status": "fail",
+      "error": "no_bytes"
+    },
+    {
+      "id": 1,
+      "name": "future_skyline_omnia",
+      "status": "ok",
+      "path": "/app/demo_videos/scene_1_future_skyline_omnia.mp4",
+      "elapsed": 108,
+      "size_mb": 7.29
+    },
+    {
+      "id": 3,
+      "name": "agent_ai_assistant",
+      "status": "ok",
+      "path": "/app/demo_videos/scene_3_agent_ai_assistant.mp4",
+      "elapsed": 109,
+      "size_mb": 3.37
+    },
+    {
+      "id": 2,
+      "name": "holographic_property_map",
+      "status": "ok",
+      "path": "/app/demo_videos/scene_2_holographic_property_map.mp4",
+      "elapsed": 130,
+      "size_mb": 7.24
+    }
+  ]
+}

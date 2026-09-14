@@ -1,0 +1,536 @@
+# HAL — Voci esportate per RAG
+# Capitolo 7 · Fascicolo Immobile
+# Schema: id, titolo, modulo, widget, pubblico, livello, tags, correlati,
+#         domanda_naturale, contenuto{a_cosa_serve, quando_si_usa, passi,
+#         errori_comuni[{problema,soluzione}], permessi}, screenshot[]
+
+voci:
+
+  - id: fascicolo.cos-e
+    titolo: Cos'è il Fascicolo Immobile e a cosa serve
+    modulo: Fascicolo
+    widget: null
+    pubblico: [titolare, agente, segreteria]
+    livello: base
+    tags: [fascicolo, panoramica, primi-passi, rogito]
+    correlati:
+      - fascicolo.aprire
+      - fascicolo.checklist-rogito
+      - immobili.creazione-manuale
+    domanda_naturale: "Cos'è il Fascicolo Immobile in OMNIA?"
+    contenuto:
+      a_cosa_serve: >
+        Vista unica di ogni immobile in vendita che riunisce dati
+        sintetici, stima AI, checklist dei documenti per il rogito,
+        analisi HAL sulla prontezza documentale e i render Virtual
+        Staging prodotti. Aiuta a capire cosa hai, cosa manca e
+        cosa vale l'immobile.
+      quando_si_usa: >
+        Ogni volta che devi capire lo stato del mandato: prima di un
+        appuntamento notarile, quando il cliente ti chiede un punto
+        della situazione, o quando prendi in carico un immobile
+        nuovo e devi far partire la raccolta documentale.
+      passi:
+        - Apri l'immobile dalla lista Immobili.
+        - Clicca il link Fascicolo in alto sulla scheda.
+        - Nella pagina Fascicolo vedi hero + prezzo + stima AI +
+          checklist + analisi HAL + render Staging.
+        - Da qui carichi/scarichi documenti, lanci l'analisi HAL,
+          leggi la stima. Nessuna scrittura sull'annuncio pubblico.
+      errori_comuni:
+        - problema: "Il Fascicolo è visibile ai clienti?"
+          soluzione: >
+            No. Il Fascicolo è area interna: mai visibile a lead
+            pubblici o utenti non autenticati dell'agenzia.
+      permessi:
+        - Titolare (sempre)
+        - Agente (sempre, con vista coerente al livello privacy immobile)
+        - Segreteria (come agente)
+    screenshot:
+      - "[SCREEN: cap7-fascicolo-panoramica]"
+
+  - id: fascicolo.aprire
+    titolo: Come apro il Fascicolo di un immobile
+    modulo: Fascicolo
+    widget: null
+    pubblico: [titolare, agente, segreteria]
+    livello: base
+    tags: [fascicolo, navigazione, come-fare]
+    correlati:
+      - fascicolo.cos-e
+      - immobili.creazione-manuale
+    domanda_naturale: "Come apro il Fascicolo di un immobile?"
+    contenuto:
+      a_cosa_serve: >
+        Accedere alla vista unica del singolo immobile.
+      quando_si_usa: >
+        Quando vuoi lavorare sulla documentazione, verificare la
+        stima o lanciare l'analisi HAL su uno specifico immobile.
+      passi:
+        - Vai in Immobili dalla barra a sinistra.
+        - Apri la scheda immobile che ti interessa.
+        - Clicca il link Fascicolo in alto.
+        - "In alternativa, apri direttamente l'URL
+          /it/app/properties/{id}/fascicolo."
+      errori_comuni:
+        - problema: "Ricevo 'Immobile non trovato'"
+          soluzione: >
+            L'immobile appartiene a un'altra agenzia o è stato
+            eliminato. Verifica di essere loggato con l'agenzia
+            proprietaria dell'immobile.
+      permessi:
+        - Titolare, agente, segreteria (tutti gli utenti dell'agenzia)
+    screenshot: []
+
+  - id: fascicolo.stima-ai
+    titolo: La stima AI dell'immobile nel Fascicolo
+    modulo: Fascicolo
+    widget: null
+    pubblico: [titolare, agente]
+    livello: base
+    tags: [fascicolo, valutazione, stima, uni-10750, prezzo]
+    correlati:
+      - fascicolo.cos-e
+      - fascicolo.badge-prezzo
+    domanda_naturale: "Come funziona la stima AI mostrata nel Fascicolo?"
+    contenuto:
+      a_cosa_serve: >
+        Ottenere un range di valore di mercato indicativo dell'immobile
+        basato su UNI 10750, calcolato al volo dal motore Valutatore
+        ImmobilCloud. Non è una perizia, è un benchmark per capire se
+        il prezzo di annuncio è coerente col mercato locale.
+      quando_si_usa: >
+        Sempre: la stima è calcolata automaticamente al caricamento
+        della pagina Fascicolo, non serve lanciarla.
+      passi:
+        - Assicurati che nella scheda immobile ci siano almeno città
+          e superficie in metri quadrati (altrimenti la stima non
+          può essere calcolata).
+        - Apri il Fascicolo.
+        - La card centrale "Stima AI (UNI 10750)" mostra il valore
+          medio + banda min-max.
+        - "Il motore usa: città, zona, indirizzo, tipologia,
+          superficie, condizione, classe energetica e piano."
+      errori_comuni:
+        - problema: "La card mostra 'Servono città e superficie'"
+          soluzione: >
+            La scheda immobile non ha uno dei due dati minimi.
+            Torna in Immobili, compila i campi mancanti, salva e
+            ricarica la pagina Fascicolo.
+        - problema: "La stima sembra troppo alta o troppo bassa"
+          soluzione: >
+            E' indicativa (banda ~+/-10-15% sul valore medio). Per
+            immobili di pregio o da ristrutturare pesantemente la
+            banda può essere ampia. Non sostituisce una perizia
+            estimativa firmata o una valutazione bancaria.
+      permessi:
+        - Titolare, agente (segreteria: come agente)
+    screenshot:
+      - "[SCREEN: cap7-fascicolo-stima-badge]"
+
+  - id: fascicolo.badge-prezzo
+    titolo: Cosa significano i badge Sotto/In linea/Sopra la stima AI
+    modulo: Fascicolo
+    widget: null
+    pubblico: [titolare, agente]
+    livello: base
+    tags: [fascicolo, badge, prezzo, stima, coerenza]
+    correlati:
+      - fascicolo.stima-ai
+    domanda_naturale: "Cosa vuol dire il badge Sopra/Sotto/In linea alla stima?"
+    contenuto:
+      a_cosa_serve: >
+        Capire in un colpo d'occhio se il prezzo pubblicato è
+        coerente con la stima AI di mercato locale.
+      quando_si_usa: >
+        Quando prendi il mandato per allineare aspettative col
+        proprietario, o quando rivedi un immobile che non produce
+        contatti da tempo.
+      passi:
+        - "Verde: prezzo annuncio sotto il min della banda stima."
+        - "Celeste: prezzo dentro banda min-max (in linea)."
+        - "Ambra: prezzo sopra il max della banda."
+        - "Il badge è puramente informativo, non blocca la
+          pubblicazione né la Compliance dei portali."
+      errori_comuni:
+        - problema: "Il badge è ambra ma il prezzo è concordato col cliente"
+          soluzione: >
+            E' normale, il badge non blocca nulla. Usalo come
+            promemoria per proporre al proprietario un'analisi di
+            mercato piu' precisa, magari con un valutatore Pro.
+      permessi:
+        - Titolare, agente
+    screenshot: []
+
+  - id: fascicolo.checklist-rogito
+    titolo: La checklist documentale rogito (5+5 righe)
+    modulo: Fascicolo
+    widget: null
+    pubblico: [titolare, agente, segreteria]
+    livello: base
+    tags: [fascicolo, checklist, rogito, documenti]
+    correlati:
+      - fascicolo.caricare-documento
+      - fascicolo.condominio-documenti
+      - fascicolo.ape-partner
+    domanda_naturale: "Quali documenti servono per portare un immobile a rogito?"
+    contenuto:
+      a_cosa_serve: >
+        Sapere sempre cosa hai e cosa manca per andare a rogito.
+        Il Fascicolo mostra 10 righe: 5 obbligatorie + 5 consigliate,
+        piu' 2 righe condominio quando la tipologia lo richiede.
+      quando_si_usa: >
+        Ad ogni fase del mandato: alla presa incarico (per capire
+        cosa serve), a trattativa aperta (per non rincorrere il
+        giorno prima), alla firma del compromesso (per verifica
+        finale).
+      passi:
+        - "Documenti OBBLIGATORI: APE, Planimetria catastale, Visura
+          catastale, Atto di provenienza (rogito/successione/donazione),
+          Documento identità venditore."
+        - "Documenti CONSIGLIATI: Conformità urbanistica/titoli edilizi,
+          Certificato di agibilità, Visura ipotecaria."
+        - "Solo per condominio (appartamento/attico/loft/monolocale):
+          Regolamento di condominio, Attestazione spese condominiali."
+        - "Sempre disponibile: Altro documento (libero)."
+        - "Colori riga: verde = presente, rosso = obbligatorio
+          mancante, grigio = facoltativo mancante."
+        - "In alto barra 'N/M obbligatori': verde a 100%, ambra
+          finché incompleto."
+      errori_comuni:
+        - problema: "Non vedo la riga Regolamento condominio"
+          soluzione: >
+            Compare solo se la tipologia dell'immobile è
+            appartamento, attico, loft o monolocale. Per ville o
+            unità indipendenti la sezione condominio non si attiva.
+        - problema: "La riga APE dice 'classe X dichiarata ma APE non caricato'"
+          soluzione: >
+            Hai indicato la classe energetica nella scheda immobile
+            ma non hai ancora caricato il PDF firmato dal tecnico.
+            Per pubblicare va bene, per il rogito serve il PDF.
+      permessi:
+        - Titolare (sempre)
+        - Agente (sempre)
+        - Segreteria (visualizzazione ed upload; niente eliminazione)
+    screenshot:
+      - "[SCREEN: cap7-checklist-vista]"
+
+  - id: fascicolo.caricare-documento
+    titolo: Caricare un documento nel Fascicolo
+    modulo: Fascicolo
+    widget: null
+    pubblico: [titolare, agente, segreteria]
+    livello: base
+    tags: [fascicolo, upload, documenti, storage]
+    correlati:
+      - fascicolo.checklist-rogito
+      - fascicolo.scaricare-documento
+      - fascicolo.eliminare-documento
+    domanda_naturale: "Come carico un documento nel Fascicolo dell'immobile?"
+    contenuto:
+      a_cosa_serve: >
+        Salvare in modo cifrato un documento (PDF, JPEG, PNG) sul
+        Fascicolo dell'immobile. I file finiscono su Object Storage
+        (non nel database), path omnia/fascicolo/{property_id}/{doc_id}.
+      quando_si_usa: >
+        Quando ricevi un documento dal proprietario, dal tecnico o
+        dall'amministratore condominiale.
+      passi:
+        - Apri il Fascicolo dell'immobile.
+        - Nella riga della checklist del documento (o "Altro"), clicca
+          il bottone ⬆ Carica.
+        - Scegli il file dal filesystem del PC.
+        - Attendi qualche secondo (indicatore "..." mentre carica).
+        - La riga passa a ✅ e il documento compare col nome sotto.
+      errori_comuni:
+        - problema: "Errore 'Max 8 MB'"
+          soluzione: >
+            Il file supera il limite. Riduci il PDF (scansione 200 dpi
+            invece che 600, o comprimi con iLovePDF/Smallpdf) e
+            ricarica.
+        - problema: "storage_upload_failed"
+          soluzione: >
+            L'Object Storage non ha risposto. Riprova dopo qualche
+            secondo. Se persiste segnala all'assistenza.
+        - problema: "Il documento non compare dopo l'upload"
+          soluzione: >
+            Ricarica la pagina Fascicolo (F5). Se persiste, torna
+            alla scheda immobile e riapri il Fascicolo dal link.
+      permessi:
+        - Titolare, agente, segreteria (tutti possono caricare)
+    screenshot:
+      - "[SCREEN: cap7-upload-flow]"
+
+  - id: fascicolo.scaricare-documento
+    titolo: Scaricare un documento dal Fascicolo
+    modulo: Fascicolo
+    widget: null
+    pubblico: [titolare, agente, segreteria]
+    livello: base
+    tags: [fascicolo, download, documenti]
+    correlati:
+      - fascicolo.caricare-documento
+      - fascicolo.eliminare-documento
+    domanda_naturale: "Come scarico un documento dal Fascicolo?"
+    contenuto:
+      a_cosa_serve: >
+        Recuperare la copia del documento originale caricato, per
+        inoltrarlo al notaio, al cliente o al proprio archivio.
+      quando_si_usa: >
+        Prima di un appuntamento notarile, quando serve mandare
+        una copia via email, o per un backup locale.
+      passi:
+        - Apri il Fascicolo dell'immobile.
+        - Individua nella checklist il documento da scaricare (📎
+          nome-file.pdf sotto la riga).
+        - Clicca sul nome del documento.
+        - Il file viene scaricato nel browser col nome originale.
+      errori_comuni:
+        - problema: "Errore 'Documento non trovato'"
+          soluzione: >
+            Il documento è stato eliminato o l'ID URL è vecchio.
+            Ricarica la pagina Fascicolo.
+        - problema: "Errore 'Documento non più disponibile' (410)"
+          soluzione: >
+            Il riferimento nel database esiste ma il blob su storage
+            è stato purgato. Elimina il riferimento (✕) e ri-carica
+            il PDF originale.
+      permessi:
+        - Titolare, agente, segreteria (tutti possono scaricare)
+    screenshot: []
+
+  - id: fascicolo.eliminare-documento
+    titolo: Eliminare un documento dal Fascicolo
+    modulo: Fascicolo
+    widget: null
+    pubblico: [titolare, agente]
+    livello: base
+    tags: [fascicolo, elimina, documenti]
+    correlati:
+      - fascicolo.caricare-documento
+    domanda_naturale: "Come elimino un documento sbagliato dal Fascicolo?"
+    contenuto:
+      a_cosa_serve: >
+        Rimuovere un documento caricato per errore (versione
+        superata, file sbagliato, doc scaduto).
+      quando_si_usa: >
+        Quando hai caricato la versione errata di un PDF, o quando
+        un documento è stato aggiornato (nuovo APE, nuova visura).
+      passi:
+        - Apri il Fascicolo dell'immobile.
+        - Individua nella checklist il documento da rimuovere.
+        - Clicca la ✕ rossa accanto al nome del documento.
+        - Il documento viene rimosso subito, senza conferma. Non c'è
+          cestino ne' undo, va poi ri-caricato se serviva.
+      errori_comuni:
+        - problema: "Ho eliminato per errore, come recupero?"
+          soluzione: >
+            Non è possibile recuperare in autonomia. Ri-carica il
+            file dalla sua sorgente (email del tecnico, hard disk).
+        - problema: "'Documento non trovato' (404)"
+          soluzione: >
+            Il documento era già stato eliminato o l'ID è vecchio.
+            Ricarica la pagina.
+      permessi:
+        - "Titolare, agente (segreteria: per policy operativa evita
+          l'eliminazione, ma tecnicamente il bottone c'è, da usare
+          con cura)"
+    screenshot: []
+
+  - id: fascicolo.analisi-hal
+    titolo: L'analisi HAL - prontezza al rogito
+    modulo: Fascicolo
+    widget: null
+    pubblico: [titolare, agente]
+    livello: base
+    tags: [fascicolo, hal, ai, analisi, rogito, gemini]
+    correlati:
+      - fascicolo.checklist-rogito
+      - fascicolo.cos-e
+    domanda_naturale: "Cosa fa il bottone 'Analizza con HAL' nel Fascicolo?"
+    contenuto:
+      a_cosa_serve: >
+        Generare in 5-10 secondi un report scritto in italiano che
+        riassume lo stato di prontezza al rogito, i documenti
+        mancanti in ordine di priorità con dove/come ottenerli, e i
+        rischi da segnalare. Usa Gemini 3 Flash col contesto
+        immobile + checklist, con fallback rule-based se il LLM
+        non risponde.
+      quando_si_usa: >
+        Dopo ogni caricamento di documento obbligatorio (per un
+        quadro aggiornato), alla vigilia di un appuntamento
+        notarile, o su richiesta del cliente venditore.
+      passi:
+        - Apri il Fascicolo dell'immobile.
+        - Scendi alla sezione 'Analisi HAL — prontezza al rogito'.
+        - Clicca il bottone 🤖 Analizza con HAL.
+        - Il bottone diventa 'HAL sta analizzando...' per qualche
+          secondo.
+        - Al termine appare il report (max ~180 parole) con bullet,
+          emoji e timestamp.
+        - "In fondo al report la sorgente: 'Analisi HAL (Gemini)'
+          oppure 'Analisi automatica' (fallback rule-based)."
+      errori_comuni:
+        - problema: "Analisi HAL non riuscita, riprova"
+          soluzione: >
+            Il LLM non ha risposto o il budget Emergent è a zero.
+            Riprova dopo qualche secondo. In seconda battuta viene
+            comunque salvata la versione rule-based basata sulla
+            checklist.
+        - problema: "L'analisi mi consiglia documenti già presenti"
+          soluzione: >
+            Ricarica la pagina prima di rilanciare: HAL legge lo
+            snapshot al momento del click, se hai caricato subito
+            dopo può darsi la lista fosse ancora la vecchia.
+        - problema: "HAL mi da consigli legali specifici"
+          soluzione: >
+            HAL non da consulenza legale vincolante. Per successioni
+            complesse, servitù o contenziosi consulta sempre notaio
+            o avvocato di fiducia.
+      permessi:
+        - "Titolare, agente (segreteria: visualizza l'analisi
+          precedente ma non e' il caso operativo tipico che la
+          lanci lei)"
+    screenshot:
+      - "[SCREEN: cap7-analisi-hal]"
+
+  - id: fascicolo.ape-partner
+    titolo: APE - cosa fa e non fa il Fascicolo
+    modulo: Fascicolo
+    widget: null
+    pubblico: [titolare, agente]
+    livello: base
+    tags: [fascicolo, ape, energetica, rogito, onesta-documentale]
+    correlati:
+      - fascicolo.checklist-rogito
+      - immobili.classe-energetica
+    domanda_naturale: "Il Fascicolo mi ordina l'APE se non ce l'ho?"
+    contenuto:
+      a_cosa_serve: >
+        Chiarire cosa il Fascicolo fa oggi con l'APE: ospita il PDF
+        firmato dal tecnico abilitato ENEA, mostra la classe
+        dichiarata se APE ancora mancante, alimenta la stima AI e
+        la Compliance portali con la classe energetica della
+        scheda immobile.
+      quando_si_usa: >
+        Alla presa mandato quando devi capire se puoi partire subito
+        con la pubblicazione o se prima serve richiedere l'APE al
+        tecnico.
+      passi:
+        - "OMNIA NON calcola l'APE: serve un tecnico abilitato
+          ENEA (geometra, architetto, ingegnere certificatore)."
+        - "L'ordine APE via partner integrato e' in valutazione:
+          nessun bottone in UI oggi."
+        - Se hai gia' il PDF firmato → caricalo come 'APE' dalla
+          checklist (vedi fascicolo.caricare-documento).
+        - "Se manca → indica al proprietario un tecnico certificatore
+          o consulta albo ENEA/ordini professionali locali. Costo
+          tipico appartamento standard: €130-180."
+        - Nell'attesa, dichiara comunque la classe (anche stimata)
+          nei dati dell'immobile per la pubblicazione portali.
+      errori_comuni:
+        - problema: "Ho caricato l'APE ma la Compliance dei portali blocca"
+          soluzione: >
+            La Compliance HARD controlla il campo energy_class della
+            scheda immobile, non legge il PDF. Verifica che la
+            classe dichiarata nella scheda coincida con quella
+            scritta sull'APE firmato.
+        - problema: "Il PDF dell'APE che ho ricevuto e' enorme"
+          soluzione: >
+            E' normale se il tecnico l'ha esportato ad alta
+            risoluzione. Comprimi (iLovePDF/Smallpdf) o chiedi al
+            tecnico il PDF ottimizzato per rientrare nel limite di
+            8 MB.
+      permessi:
+        - Titolare, agente
+    screenshot: []
+
+  - id: fascicolo.condominio-documenti
+    titolo: Documenti condominio (regolamento e spese) - quando servono
+    modulo: Fascicolo
+    widget: null
+    pubblico: [titolare, agente]
+    livello: intermedio
+    tags: [fascicolo, condominio, regolamento, spese, amministratore, rogito]
+    correlati:
+      - fascicolo.checklist-rogito
+      - fascicolo.caricare-documento
+    domanda_naturale: "Quando servono i documenti di condominio nel Fascicolo?"
+    contenuto:
+      a_cosa_serve: >
+        Sapere che le righe 'Regolamento di condominio' e
+        'Attestazione spese condominiali' compaiono nel Fascicolo
+        solo se la tipologia dell'immobile e' appartamento, attico,
+        loft o monolocale. Sono documenti consigliati ma spesso
+        richiesti dal notaio a rogito.
+      quando_si_usa: >
+        Alla presa mandato di un immobile in condominio: fai partire
+        subito la richiesta all'amministratore, perche' alcuni
+        rispondono in 24h ma altri impiegano 2-3 settimane.
+      passi:
+        - Verifica la tipologia dell'immobile nella scheda Immobili.
+        - Se e' condominio (appartamento/attico/loft/monolocale) le
+          due righe compaiono automaticamente nella checklist.
+        - Chiedi al proprietario il contatto dell'amministratore
+          condominiale.
+        - "Regolamento condominio: chiedilo all'amministratore o
+          verifica se e' depositato presso il notaio del rogito
+          originario."
+        - "Attestazione spese: chiedi all'amministratore una
+          liberatoria sui pagamenti degli ultimi 2 anni + gli
+          importi correnti."
+        - Carica entrambi come tipi documento dedicati dalla
+          checklist.
+      errori_comuni:
+        - problema: "Non vedo le righe condominio, ma l'immobile e' in condominio"
+          soluzione: >
+            La tipologia della scheda immobile non e' condominio.
+            Correggi la tipologia in appartamento (o simile) e
+            ricarica il Fascicolo. In alternativa carica come
+            'Altro documento'.
+        - problema: "Il condominio e' minimo (2-4 unita' senza amministratore)"
+          soluzione: >
+            Documenta la mancanza con dichiarazione sostitutiva del
+            proprietario e allega gli ultimi ripartizioni firmati
+            dai condomini come 'Altro documento'.
+      permessi:
+        - Titolare, agente (segreteria: puo' caricare, non elimina)
+    screenshot: []
+
+  - id: fascicolo.staging-nel-fascicolo
+    titolo: I render Virtual Staging visibili nel Fascicolo
+    modulo: Fascicolo
+    widget: null
+    pubblico: [titolare, agente]
+    livello: intermedio
+    tags: [fascicolo, staging, virtual-staging, render]
+    correlati:
+      - fascicolo.cos-e
+    domanda_naturale: "Perche' nel Fascicolo vedo i render Virtual Staging?"
+    contenuto:
+      a_cosa_serve: >
+        Ritrovare in un colpo d'occhio se questo immobile ha gia'
+        render Virtual Staging pronti (max 12 con status done),
+        senza dover andare nel modulo Staging.
+      quando_si_usa: >
+        Prima di un open-house, per allegare visuals a una proposta,
+        o per capire quali stanze sono gia' state ri-arredate
+        virtualmente.
+      passi:
+        - Apri il Fascicolo dell'immobile.
+        - Scorri in fondo alla pagina fino alla sezione 'Render
+          Virtual Staging' (compare solo se ci sono render done).
+        - Vedi fino a 12 miniature con stile + tipo stanza (es.
+          modern · living) e simbolo 🔄 se render reverse.
+        - "Per lanciare NUOVI render, vai al modulo Virtual Staging
+          dalla barra a sinistra: il Fascicolo non lancia render."
+        - Per scaricare il render watermarkato, clicca la miniatura
+          e vai alla pagina Staging.
+      errori_comuni:
+        - problema: "Non vedo la sezione Render nel Fascicolo"
+          soluzione: >
+            Non ci sono ancora render con status done per questo
+            immobile. Lancia i render dal modulo Virtual Staging.
+      permessi:
+        - Titolare, agente
+    screenshot: []

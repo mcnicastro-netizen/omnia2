@@ -1,0 +1,582 @@
+# HAL — Voci esportate per RAG
+# Capitolo 3 · Immobili
+# Schema: id, titolo, modulo, widget, pubblico, livello, tags, correlati,
+#         domanda_naturale, contenuto{a_cosa_serve, quando_si_usa, passi,
+#         errori_comuni[{problema,soluzione}], permessi}, screenshot[]
+
+voci:
+
+  # ---------- 3.1 · Creare a mano ----------
+
+  - id: immobili.creazione-manuale
+    titolo: Creare un nuovo immobile a mano
+    modulo: Immobili
+    widget: null
+    pubblico: [titolare, agente, segreteria]
+    livello: base
+    tags: [immobili, inserimento, primi-passi]
+    correlati:
+      - immobili.caricare-foto
+      - immobili.privacy-scegliere-livello
+      - immobili.pubblicare-bozza
+      - immobili.importare-csv
+    domanda_naturale: "Come inserisco un nuovo immobile?"
+    contenuto:
+      a_cosa_serve: >
+        Aggiungere un immobile in ImmoWeb per poi pubblicarlo su sito,
+        portali e proporlo a clienti compatibili.
+      quando_si_usa: >
+        A ogni nuovo mandato o quando devi caricare un immobile appena
+        affidato. Se hai molti immobili da un altro gestionale, usa
+        invece l'import (vedi immobili.importare-csv o
+        immobili.importare-xml).
+      passi:
+        - Dalla barra a sinistra clicca "Immobili".
+        - In alto a destra clicca "+ Nuovo immobile".
+        - Compila i campi principali (obbligatori) titolo, tipologia,
+          operazione (Vendita, Affitto, Affitto con riscatto, Asta),
+          indirizzo, città, provincia, CAP, prezzo o canone, superficie.
+        - Aggiungi descrizione, codice riferimento, vani, camere, bagni,
+          piano, anno, condizione, classe energetica, arredamento,
+          riscaldamento quando li conosci.
+        - Collega il cliente venditore dall'anagrafica Clienti se il
+          proprietario è già registrato.
+        - Aggiungi almeno 3 fotografie (vedi immobili.caricare-foto).
+        - Scegli il livello di privacy (di default L2).
+        - Clicca "Salva immobile".
+      errori_comuni:
+        - problema: "Indirizzo non riconosciuto"
+          soluzione: >
+            Scrivi via + numero civico completo, o aggiungi la sigla
+            provincia dopo il comune (es. "Belpasso (CT)").
+        - problema: "Prezzo obbligatorio"
+          soluzione: >
+            Almeno uno tra prezzo (Vendita) e canone (Affitto) va
+            valorizzato. Per trattative riservate metti un prezzo
+            indicativo e alza la privacy a L2 o L3.
+      permessi:
+        - Titolare, agente, segreteria (come agente)
+    screenshot:
+      - "[SCREEN: cap3-property-form-nuovo]"
+
+  # ---------- 3.2 · Import CSV / XML ----------
+
+  - id: immobili.importare-csv
+    titolo: Importare immobili da file CSV
+    modulo: Immobili
+    widget: null
+    pubblico: [titolare, agente, segreteria]
+    livello: intermedio
+    tags: [immobili, import, csv, migrazione]
+    correlati:
+      - immobili.importare-xml
+      - immobili.importare-xml-universale
+      - immobili.creazione-manuale
+    domanda_naturale: "Come importo un elenco di immobili da CSV?"
+    contenuto:
+      a_cosa_serve: >
+        Caricare in blocco più immobili da un file CSV (utile se li
+        hai in Excel, Google Sheets o esportati da un gestionale).
+      quando_si_usa: >
+        Quando devi caricare più di 5-10 immobili tutti insieme.
+      passi:
+        - Clicca "Immobili → ↓ Importa" in alto a destra.
+        - Nella scheda "Template CSV" clicca "Scarica template" e aprilo
+          con Excel o Google Sheets.
+        - Compila una riga per immobile (le colonne obbligatorie sono
+          già evidenziate).
+        - Salva il file come CSV in formato UTF-8.
+        - Torna in ImmoWeb e trascina il file nel riquadro, oppure
+          clicca per sceglierlo.
+        - Verifica la preview delle prime 5 righe e il totale.
+        - Clicca "Importa".
+        - A fine importazione controlla il messaggio "Importati N
+          immobili" ed eventuali errori nell'accordion dedicato.
+      errori_comuni:
+        - problema: "File CSV non valido"
+          soluzione: >
+            Il file non è UTF-8 o contiene caratteri strani. Riesporta
+            da Excel scegliendo "CSV UTF-8 (separatore virgola)".
+        - problema: "Riga scartata"
+          soluzione: >
+            Mancano campi obbligatori. Apri l'accordion "N errori" per
+            vedere la riga e la causa.
+      permessi:
+        - Titolare, agente, segreteria (come agente)
+    screenshot:
+      - "[SCREEN: cap3-import-csv-flow]"
+
+  - id: immobili.importare-xml
+    titolo: Import XML rapido (deprecato, vedi Cap. 14)
+    modulo: Immobili
+    widget: null
+    pubblico: [titolare, agente, segreteria]
+    livello: intermedio
+    tags: [immobili, deprecato-cap14, redirect]
+    correlati:
+      - immobili.importare-csv
+    domanda_naturale: "Riferimento storico: puntatore a Cap. 14 Import XML."
+    contenuto:
+      a_cosa_serve: >
+        Voce di puntamento. Il flusso operativo Import XML è descritto
+        in dettaglio nel Cap. 14 Import XML (Migrazione): vedi
+        import.cos-e, import.dove-trovarlo, import.flusso-preview-commit,
+        import.file-xml-requisiti.
+      quando_si_usa: >
+        Per chi cerca "import xml rapido" nella documentazione storica:
+        seguire i puntatori Cap. 14 sopra.
+      passi:
+        - Vedi Cap. 14 Import XML per il flusso Preview → Commit
+          completo (session TTL 10 minuti, dedupe per reference_code,
+          dry-run, tabelle mapping).
+      errori_comuni: []
+      permessi:
+        - Rimando Cap. 14 (permessi definiti in import.dove-trovarlo)
+    screenshot: []
+
+  - id: immobili.importare-xml-universale
+    titolo: Import XML universale (deprecato, vedi Cap. 14)
+    modulo: Immobili
+    widget: null
+    pubblico: [titolare]
+    livello: intermedio
+    tags: [immobili, deprecato-cap14, redirect]
+    correlati:
+      - immobili.importare-csv
+    domanda_naturale: "Riferimento storico: puntatore a Cap. 14 Import XML universale."
+    contenuto:
+      a_cosa_serve: >
+        Voce di puntamento. Il flusso Import XML universale (analisi
+        Preview + Commit, dedupe, tabelle mapping) è documentato nel
+        Cap. 14 Import XML (Migrazione).
+      quando_si_usa: >
+        Per chi cerca la voce storica: seguire import.cos-e (Cap. 14)
+        e correlati.
+      passi:
+        - Vedi Cap. 14 Import XML per il flusso completo.
+      errori_comuni: []
+      permessi:
+        - Rimando Cap. 14 (permessi definiti in import.dove-trovarlo)
+    screenshot: []
+
+  # ---------- 3.3 · Foto ----------
+
+  - id: immobili.caricare-foto
+    titolo: Caricare fotografie di un immobile
+    modulo: Immobili
+    widget: null
+    pubblico: [titolare, agente, segreteria]
+    livello: base
+    tags: [immobili, foto, media, upload]
+    correlati:
+      - immobili.impostare-copertina
+      - immobili.pubblicare-bozza
+    domanda_naturale: "Come aggiungo le foto a un immobile?"
+    contenuto:
+      a_cosa_serve: >
+        Le foto sono la prima cosa che guarda un potenziale cliente.
+        La prima foto è la copertina che compare su tutti i portali.
+      quando_si_usa: >
+        Subito dopo aver creato l'immobile e ogni volta che aggiorni
+        la casa (ristrutturazioni, staging, stagione diversa).
+      passi:
+        - Apri l'immobile (Immobili → clicca sulla riga).
+        - Scorri fino alla sezione Fotografie.
+        - Trascina le foto nel riquadro oppure clicca per sceglierle.
+        - Aspetta il caricamento (barra di avanzamento).
+        - Le foto appaiono in ordine di caricamento.
+        - Trascina le miniature per riordinarle.
+      errori_comuni:
+        - problema: "Formato non supportato"
+          soluzione: >
+            Sono accettati JPEG, PNG e WEBP. Le foto HEIC di iPhone
+            vanno esportate come JPEG con l'app Foto.
+        - problema: "File troppo grande (max 8 MB)"
+          soluzione: >
+            Riduci con Foto (Mac/Windows) o servizi come TinyPNG.
+            Per foto di annuncio, 1-2 MB per foto è già ottimo.
+        - problema: "Caricamento lento"
+          soluzione: >
+            Foto pesanti + connessione lenta. Preferisci JPEG 1-2 MB.
+      permessi:
+        - Titolare, agente, segreteria (come agente)
+    screenshot:
+      - "[SCREEN: cap3-photos-dropzone-cover]"
+
+  - id: immobili.impostare-copertina
+    titolo: Impostare la foto di copertina
+    modulo: Immobili
+    widget: null
+    pubblico: [titolare, agente, segreteria]
+    livello: base
+    tags: [immobili, foto, copertina]
+    correlati:
+      - immobili.caricare-foto
+    domanda_naturale: "Come cambio la foto principale (di copertina)?"
+    contenuto:
+      a_cosa_serve: >
+        Scegliere quale foto compare come principale nella lista
+        immobili, sul sito agenzia, sui portali e su ImmobilCloud.
+      quando_si_usa: >
+        Ogni volta che vuoi mettere in evidenza una foto specifica.
+      passi:
+        - Apri l'immobile.
+        - Vai alla sezione Fotografie.
+        - Passa il mouse sulla foto scelta.
+        - Clicca l'icona/pulsante "Copertina" (⭐).
+        - La foto va in prima posizione automaticamente.
+      errori_comuni: []
+      permessi:
+        - Titolare, agente, segreteria (come agente)
+    screenshot: []
+
+  # ---------- 3.4 · Privacy ----------
+
+  - id: immobili.privacy-4-livelli-cosa-sono
+    titolo: Cosa sono i 4 livelli di privacy
+    modulo: Immobili
+    widget: null
+    pubblico: [titolare, agente, segreteria]
+    livello: base
+    tags: [immobili, privacy, gdpr, visibilita]
+    correlati:
+      - immobili.privacy-scegliere-livello
+      - immobili.nascondere-indirizzo
+    domanda_naturale: "Cosa significano L1, L2, L3, L4 sulla privacy
+      di un immobile?"
+    contenuto:
+      a_cosa_serve: >
+        Sapere chi vede cosa di un immobile in base a quanto è
+        qualificato il visitatore e a che livello hai messo l'immobile.
+      quando_si_usa: >
+        Ogni volta che devi pubblicare un immobile con richieste di
+        riservatezza dal proprietario, o gestire un'esclusiva.
+      passi:
+        - "L1 · Anonimo pubblico: chiunque visiti il portale senza
+          login. Vede titolo, foto, città e quartiere, prezzo
+          arrotondato. Non vede indirizzo esatto né mappa esatta."
+        - "L2 · Registrato: chi ha creato un account su ImmobilCloud.
+          Vede tutto quello di L1 più CAP, prezzo esatto, virtual tour."
+        - "L3 · Lead qualificato: chi ha lasciato un lead + confermato
+          email (GDPR ok). Vede indirizzo esatto, coordinate mappa
+          reali, planimetria, dettagli energetici."
+        - "L4 · Agenzia interna: solo tu e il tuo team di agenzia.
+          Vede tutto, compresi nome/telefono del proprietario, note
+          interne, commissioni."
+      errori_comuni:
+        - problema: "Non capisco la differenza fra privacy dell'immobile
+            e privacy del visitatore"
+          soluzione: >
+            La privacy dell'immobile è la soglia minima "per essere
+            visibile serve almeno questa qualifica". Un immobile L3
+            non è mai visibile ad anonimi anche se il tuo portale ha
+            visitatori L1.
+      permessi:
+        - Tutti (concetto informativo)
+    screenshot: []
+
+  - id: immobili.privacy-scegliere-livello
+    titolo: Scegliere il livello di privacy di un immobile
+    modulo: Immobili
+    widget: null
+    pubblico: [titolare, agente, segreteria]
+    livello: intermedio
+    tags: [immobili, privacy, esclusiva, riservatezza]
+    correlati:
+      - immobili.privacy-4-livelli-cosa-sono
+      - immobili.nascondere-indirizzo
+    domanda_naturale: "Che livello di privacy metto per un immobile
+      esclusivo?"
+    contenuto:
+      a_cosa_serve: >
+        Decidere quanto è aperta la visibilità di un immobile
+        specifico, in base a quanto è sensibile la trattativa.
+      quando_si_usa: >
+        Alla pubblicazione e ogni volta che il proprietario cambia
+        idea sulla riservatezza.
+      passi:
+        - Apri l'immobile.
+        - Scorri fino a "Privacy".
+        - Scegli L1 (pubblico), L2 (registrati), L3 (lead qualificati)
+          o L4 (solo agenzia).
+        - Aggiungi una motivazione se vuoi (utile per il registro
+          modifiche).
+        - Clicca "Salva".
+      errori_comuni:
+        - problema: "L'immobile L4 non compare sui portali"
+          soluzione: >
+            È corretto. L4 significa "solo agenzia interna". Se
+            l'obiettivo è la visibilità sui portali, riporta a L1 o L2.
+      permessi:
+        - Titolare, agente, segreteria (come agente).
+        - Ogni modifica viene registrata in un log (chi, quando,
+          motivo).
+    screenshot:
+      - "[SCREEN: cap3-privacy-selector]"
+
+  - id: immobili.nascondere-indirizzo
+    titolo: Nascondere solo l'indirizzo esatto (senza cambiare privacy)
+    modulo: Immobili
+    widget: null
+    pubblico: [titolare, agente, segreteria]
+    livello: base
+    tags: [immobili, privacy, indirizzo]
+    correlati:
+      - immobili.privacy-scegliere-livello
+    domanda_naturale: "Voglio pubblicare pubblicamente ma senza mostrare
+      la via, si può?"
+    contenuto:
+      a_cosa_serve: >
+        Mantenere l'immobile pubblico (L1 o L2) ma mostrare solo la
+        zona/quartiere, non la via esatta.
+      quando_si_usa: >
+        Quando il proprietario non vuole rivelare l'indirizzo per
+        motivi di riservatezza o sicurezza, ma è d'accordo con la
+        visibilità pubblica.
+      passi:
+        - Apri l'immobile.
+        - Attiva l'interruttore "Nascondi indirizzo esatto
+          pubblicamente".
+        - Clicca "Salva".
+      errori_comuni: []
+      permessi:
+        - Titolare, agente, segreteria (come agente)
+    screenshot: []
+
+  # ---------- 3.5 · Stato / archivio ----------
+
+  - id: immobili.pubblicare-bozza
+    titolo: Passare un immobile da Bozza a Pubblicato
+    modulo: Immobili
+    widget: null
+    pubblico: [titolare, agente, segreteria]
+    livello: base
+    tags: [immobili, stato, pubblicazione]
+    correlati:
+      - immobili.cambiare-stato
+      - immobili.creazione-manuale
+    domanda_naturale: "Ho creato un immobile ma non compare nei
+      contatori, perché?"
+    contenuto:
+      a_cosa_serve: >
+        Rendere visibile un immobile sui portali e sul portale
+        ImmobilCloud. Solo lo stato "Pubblicato" attiva la vetrina.
+      quando_si_usa: >
+        Ogni volta che l'immobile è pronto (foto, prezzo, indirizzo
+        completi) e vuoi metterlo online.
+      passi:
+        - Apri l'immobile.
+        - Verifica che i campi obbligatori siano compilati (titolo,
+          tipologia, indirizzo, prezzo, foto).
+        - Cambia "Stato" da "Bozza" a "Pubblicato".
+        - Verifica il flag "Pubblica su ImmobilCloud" (attivo di
+          default; disattivalo per tenerlo solo sul tuo sito).
+        - Clicca "Salva".
+      errori_comuni:
+        - problema: "Ho pubblicato ma non compare in 'Immobili attivi'
+            sulla Dashboard"
+          soluzione: >
+            Ricarica la Dashboard: i contatori si aggiornano
+            all'apertura pagina. Se resta a 0, verifica che lo stato
+            sia davvero "Pubblicato" e non "Bozza".
+      permessi:
+        - Titolare, agente, segreteria (come agente)
+    screenshot:
+      - "[SCREEN: cap3-state-select]"
+
+  - id: immobili.cambiare-stato
+    titolo: Cambiare stato durante il ciclo di vita (Prenotato,
+      Venduto, Affittato, Ritirato)
+    modulo: Immobili
+    widget: null
+    pubblico: [titolare, agente, segreteria]
+    livello: base
+    tags: [immobili, stato, ciclo-vita, archivio]
+    correlati:
+      - immobili.pubblicare-bozza
+      - immobili.eliminare-definitivo
+    domanda_naturale: "Ho venduto un immobile, come lo tolgo dai
+      portali?"
+    contenuto:
+      a_cosa_serve: >
+        Aggiornare lo stato dell'immobile in base a cosa succede
+        (proposta, rogito, revoca mandato) e togliere automaticamente
+        dai portali quando serve.
+      quando_si_usa: >
+        Ogni volta che c'è un cambiamento nel ciclo di vita.
+      passi:
+        - Apri l'immobile.
+        - Cambia "Stato" in base a cosa è successo (Prenotato,
+          Venduto, Affittato, Ritirato).
+        - Salva.
+        - "Prenotato: resta visibile con badge Prenotato."
+        - "Venduto, Affittato, Ritirato: viene rimosso dai portali
+          automaticamente al prossimo sync."
+      errori_comuni:
+        - problema: "Ho messo Venduto ma è ancora online su Immobiliare"
+          soluzione: >
+            Il sync richiede fino a 15 minuti. Se dopo 30 min è ancora
+            online, vedi cap. 8 Portali.
+      permessi:
+        - Titolare, agente, segreteria (come agente)
+    screenshot: []
+
+  - id: immobili.eliminare-definitivo
+    titolo: Eliminare definitivamente un immobile
+    modulo: Immobili
+    widget: null
+    pubblico: [titolare]
+    livello: base
+    tags: [immobili, eliminazione, archivio, definitivo]
+    correlati:
+      - immobili.cambiare-stato
+    domanda_naturale: "Posso cancellare un immobile per sempre?"
+    contenuto:
+      a_cosa_serve: >
+        Rimuovere per sempre un immobile da ImmoWeb, inclusi foto,
+        documenti e storia.
+      quando_si_usa: >
+        Solo in casi particolari (immobile inserito per errore,
+        richiesta esplicita del proprietario). Nella normalità
+        preferisci cambiare stato a Ritirato per mantenere lo storico.
+      passi:
+        - Apri l'immobile.
+        - Scorri in fondo e clicca "Elimina".
+        - Conferma il messaggio "Sei sicuro? L'operazione è definitiva".
+      errori_comuni:
+        - problema: "L'operazione è reversibile?"
+          soluzione: >
+            No. Perdi foto, documenti e storia. Se hai dubbi, usa lo
+            stato "Ritirato" invece di eliminare.
+      permessi:
+        - Solo titolare (agency_admin). L'agente non può eliminare per
+          evitare cancellazioni accidentali.
+    screenshot: []
+
+  # ---------- 3.6 · Fascicolo ----------
+
+  - id: immobili.fascicolo-panoramica
+    titolo: Cos'è il Fascicolo Immobile e come funziona la checklist
+    modulo: Immobili
+    widget: null
+    pubblico: [titolare, agente, segreteria]
+    livello: intermedio
+    tags: [immobili, fascicolo, documenti, rogito]
+    correlati:
+      - immobili.fascicolo-caricare-documento
+      - immobili.fascicolo-ape
+    domanda_naturale: "A cosa serve il Fascicolo Immobile?"
+    contenuto:
+      a_cosa_serve: >
+        Raccogliere in un unico posto tutti i documenti necessari al
+        rogito o al contratto di locazione, con una checklist che ti
+        dice cosa hai e cosa manca.
+      quando_si_usa: >
+        Appena parte una trattativa reale, per preparare la
+        documentazione prima del rogito o del contratto.
+      passi:
+        - Apri l'immobile (Immobili → clicca sulla riga).
+        - Clicca "Fascicolo" in alto.
+        - Vedi la checklist di 10 documenti tipici.
+        - Ogni riga è ✅ se il documento c'è, ⚠️ se manca ed è
+          obbligatorio, ⬜ se è facoltativo.
+        - "Documenti obbligatori standard: APE, Planimetria catastale,
+          Visura catastale, Atto di provenienza, Documento d'identità
+          del venditore."
+        - "Documenti facoltativi standard: Conformità urbanistica,
+          Certificato di agibilità, Visura ipotecaria."
+        - "Per condomini (Appartamento, Attico, Loft, Monolocale)
+          compaiono anche Regolamento di condominio e Attestazione
+          spese condominiali."
+      errori_comuni: []
+      permessi:
+        - Titolare, agente responsabile, segreteria (come agente)
+        - Altri agenti dell'agenzia dipendono dalla privacy
+          dell'immobile
+        - Nessun utente esterno vede mai il Fascicolo
+    screenshot:
+      - "[SCREEN: cap3-fascicolo-checklist]"
+
+  - id: immobili.fascicolo-caricare-documento
+    titolo: Caricare un documento nel Fascicolo
+    modulo: Immobili
+    widget: null
+    pubblico: [titolare, agente, segreteria]
+    livello: intermedio
+    tags: [immobili, fascicolo, documenti, upload]
+    correlati:
+      - immobili.fascicolo-panoramica
+      - immobili.fascicolo-ape
+    domanda_naturale: "Come carico la visura catastale nel Fascicolo?"
+    contenuto:
+      a_cosa_serve: >
+        Aggiungere un documento (visura, planimetria, atto, APE, ecc.)
+        al Fascicolo di un immobile per non perderlo e averlo
+        immediatamente a portata quando serve.
+      quando_si_usa: >
+        Ogni volta che ricevi un documento dal proprietario, dal
+        tecnico o dall'Agenzia delle Entrate.
+      passi:
+        - Apri il Fascicolo (Immobili → apri immobile → Fascicolo).
+        - Trova il documento nella checklist (o scegli "Altro
+          documento").
+        - Clicca "Carica".
+        - Scegli il file (max 8 MB, formati PDF, JPEG, PNG).
+        - La riga passa a ✅ dopo il caricamento.
+      errori_comuni:
+        - problema: "File troppo grande"
+          soluzione: >
+            Riduci le pagine del PDF (spesso è scansionato a 600 dpi;
+            200 dpi bastano). Usa Anteprima su Mac, Adobe Acrobat
+            Reader su Windows, o servizi come iLovePDF o Smallpdf.
+        - problema: "Formato non supportato"
+          soluzione: >
+            Converti in PDF, JPEG o PNG. Da Word/Pages usa "Salva
+            come PDF".
+      permessi:
+        - Titolare, agente responsabile, segreteria (come agente)
+    screenshot: []
+
+  - id: immobili.fascicolo-ape
+    titolo: APE (Attestato Prestazione Energetica) — come gestirlo
+    modulo: Immobili
+    widget: null
+    pubblico: [titolare, agente, segreteria]
+    livello: intermedio
+    tags: [immobili, fascicolo, ape, energia, tecnico]
+    correlati:
+      - immobili.fascicolo-caricare-documento
+      - immobili.creazione-manuale
+    domanda_naturale: "Come faccio l'APE dell'immobile?"
+    contenuto:
+      a_cosa_serve: >
+        Avere il documento APE nel Fascicolo. L'APE è obbligatorio per
+        legge sia in vendita sia in locazione.
+      quando_si_usa: >
+        Appena prendi il mandato. Se il proprietario non ce l'ha,
+        va richiesto a un tecnico abilitato (geometra, architetto,
+        ingegnere certificatore).
+      passi:
+        - "OMNIA NON calcola l'APE ufficiale (serve un tecnico
+          abilitato ENEA). Puoi dichiarare la classe energetica (A4→G)
+          nei dati dell'immobile, ma il documento firmato dal tecnico
+          va comunque prodotto e caricato."
+        - Se hai già il PDF firmato dal tecnico → caricalo come "APE"
+          (vedi immobili.fascicolo-caricare-documento).
+        - Se manca ancora → nell'attesa dichiara la classe energetica
+          nei dati dell'immobile per l'annuncio; procurati il
+          documento firmato prima del rogito o del contratto.
+        - "L'ordine APE via partner integrato è **in valutazione**:
+          nessun bottone in UI oggi. Rivolgiti al tecnico abilitato
+          di fiducia e carica il PDF firmato nel Fascicolo appena
+          pronto."
+      errori_comuni:
+        - problema: "Posso pubblicare senza APE?"
+          soluzione: >
+            Legalmente serve indicare almeno la classe energetica.
+            Alcuni portali rifiutano annunci senza. Per pubblicare in
+            regola, indica la classe (anche stimata) e completa con
+            il documento firmato appena disponibile.
+      permessi:
+        - Titolare, agente, segreteria (come agente)
+    screenshot: []

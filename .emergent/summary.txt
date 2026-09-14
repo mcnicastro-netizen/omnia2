@@ -1,0 +1,146 @@
+<analysis>**original_problem_statement**: 
+Il Founder sta costruendo OMNIA, un ecosistema Real Estate B2C, B2B e LMS. Il focus attuale è la redazione del Manuale Operativo del CRM, l'integrazione di questo manuale nel motore RAG di intelligenza artificiale HAL Knowledge, e l'allineamento dei cataloghi di Pricing Stripe (B2B e B2C). L'obiettivo primario è mantenere l'Onestà documentale (documentare nel manuale solo le feature effettivamente presenti a codice).
+
+**User's preferred language**: 🇮🇹 **Italian (Italiano)**.
+*(INSTRUCT NEXT AGENT: You MUST automatically detect the user's primary language from their messages inside the <trajectory> tag and INSTRUCT next agent to respond in the user's preferred language only. IL PROSSIMO AGENTE DEVE PARLARE ESCLUSIVAMENTE IN ITALIANO).*
+
+**what currently exists?** 
+Un ecosistema CRM (ImmoWeb) e portale (ImmobilCloud) con RAG Engine (HAL Knowledge) funzionante. Sono stati redatti i Capitoli da 1 a 6 del Manuale Operativo (sia in Markdown testuale che in YAML per l'ingestione nel RAG). Il sistema HAL indicizza con successo 68 voci. Il pricing B2B è aggiornato con i pacchetti Founders, e il listino B2C è configurato con stub backend. Un file di handoff definitivo () è stato appena generato.
+
+**Last working item**: 
+    - Last item agent was working: Completamento TASK C (Manuale Cap. 6 Portali/Publishing), aggiornamento indice HAL a 68 voci e redazione del documento di handoff riassuntivo  con le direttive del Founder.
+    - Status: USER VERIFICATION PENDING (In attesa del test manuale e reindex live da parte del Founder e successiva prosecuzione)
+    - Agent Testing Done: Y
+    - Which testing method agent to use? python -c / bash (validazione parser chunker YAML su HAL RAG backend script riuscita: 12 chunk generati).
+    - User Testing Done: N
+
+**All Pending/In progress Issue list**: 
+  - Issue 1: Micro-fix: Cap. 1 §1.4 Portali contiene informazioni obsolete rispetto al Cap. 6 (P0)
+  - Issue 2: Micro-fix: CHANGELOG.md ha un typo nel TASK C (P0)
+  - Issue 3: Billing UI ImmoWeb non mostra il listino Founder corretto (P2)
+  - Issue 4: B2C Checkout Stripe (P2)
+  
+  Issues Detail:
+  - Issue 1: 
+     - Attempted fixes: Nessuno (appena segnalato dal Founder nel file di status)
+     - Next debug checklist: Aprire  o , cercare Idealista integrato o riferimenti errati sui portali, e allineare il testo a quanto stabilito nel Cap. 6 (ci sono 8 portali base, non Idealista).
+     - Why fix this issue and what will be achieved with the fix? Mantenere l'Onestà Documentale (D-051).
+     - Status: NOT STARTED
+     - Is recurring issue? N
+     - Should Test frontend/backend/both after fix? NA (solo doc)
+     - Blocked on other issue: Nessuno
+  - Issue 2: 
+     - Attempted fixes: Nessuno
+     - Next debug checklist: Aprire  e correggere il typo Cap. 7 Match in Cap. 5 Match.
+     - Why fix this issue and what will be achieved with the fix? Accuratezza cronologica.
+     - Status: NOT STARTED
+     - Is recurring issue? N
+     - Should Test frontend/backend/both after fix? NA
+     - Blocked on other issue: Nessuno
+  - Issue 3:
+     - Attempted fixes: Stub backend implementati, ma manca frontend.
+     - Next debug checklist: Verificare la UI React Billing e allinearla per mostrare pacchetti Founder €49/€99/€249.
+     - Why fix this issue and what will be achieved with the fix? L'utente finale deve vedere i prezzi aggiornati.
+     - Status: NOT STARTED
+     - Is recurring issue? N
+     - Should Test frontend/backend/both after fix? frontend
+     - Blocked on other issue: Nessuno
+
+**In progress Task List**: 
+Nessuno. L'agente si è fermato per handoff, come richiesto dal Founder.
+
+**Upcoming and Future Tasks**
+  - Task 1: **Reindex HAL + smoke test Cap. 6** — (Da fare tramite endpoint . Solitamente lo fa il Founder, chiedi conferma se devi farlo tu). (P0)
+  - Task 2: **Redazione Cap. 7 Manuale** — Scrivere il capitolo 7 (escluso Match che è già il 5) rispettando Onestà Documentale. (P1)
+  - Task 3: **Billing UI listino Founder** — Mostrare i prezzi Founders 50 in app. (P2)
+  - Task 4: **B2C Stripe checkout** — Implementare il flusso di pagamento one-shot. (P2)
+  - Task 5: **Screenshot kit (TASK D)** — Sostituire i 34 placeholder  con immagini reali. (P3)
+
+**Completed work in this session**
+- TASK C: Creato  e  (12 voci) per il manuale. (DONE)
+- Indice  rigenerato (totale 6 capitoli, 68 voci). (DONE)
+- Micro-fix testuale: rimosso status in arrivo per HAL Knowledge nel Cap 1. (DONE)
+- Aggiornati , ,  e . (DONE)
+- Creato  per l'handoff della sessione. (DONE)
+
+**Earlier issues found/mentioned but not fixed**
+Nessuno (Tutto categorizzato e tracciato nei documenti di roadmap e gap).
+
+**Known issue recurrence from previous fork**
+- Nessuna.
+- Recurrence count: 0
+- Status: RESOLVED
+
+**Code Architecture**
+-  contiene la logica RAG () e publishing (, ).
+-  e  contengono i file testuali (MD) e i chunk RAG strutturati (YAML).
+- Frontend React in .
+
+**Key Technical Concepts**
+FastAPI, React, Stripe Billing, RAG (Retrieval-Augmented Generation) tramite algoritmi TF-IDF locali interfacciati con LLM Google Gemini.
+
+**key DB schema**
+- Il RAG di HAL non ha un DB SQL classico; indicizza i file YAML parsando id, titolo, domanda, contenuto testuale. Lo stato è persistito in memoria e riassunto in .
+
+**changes in tech stack**
+- Nessuno in questa sessione.
+
+**All files of reference** 
+-  (Creato in questa sessione. Documento PRINCIPALE per capire lo stato attuale del sistema, LEGGILO SUBITO).
+-  &  (Creati).
+-  (Da modificare per Micro-fix).
+-  (Da modificare per Micro-fix).
+-  (Credenziali di test).
+
+**Areas that need refactoring**: 
+Nessuna urgente.
+
+**key api endpoints**
+-  (Query param )
+-  (HAL Chat SSE)
+
+**Critical Info for New Agent** 
+1. **LINGUA:** DEVI parlare ESCLUSIVAMENTE in Italiano.
+2. **REGOLA REPO (Save to GitHub):** Il Founder salva manualmente il codice. Tu devi SOLO modificare i file reali, suggerire un Commit Message, e fare STOP in attesa di autorizzazione (vai). NON tentare comandi git push.
+3. **ONESTÀ DOCUMENTALE (D-051):** Non inventare funzionalità nel Manuale che non esistono nel codice. Esempio per il Cap. 6: ci sono SOLO 8 portali attivi (Subito, Bakeca, etc. NON Idealista), le sync push sono simulate.
+4. MLS = 0% (solo placeholder). Academy = Congelata.
+5. Inizia applicando i due Micro-fix aperti specificati in  e poi chiedi il vai per il reindex/Cap 7.
+
+**documents and test reports created in this job** 
+- 
+- 
+- 
+- 
+
+**Last 10 User Messages and any pending HUMAN messages** 
+- *User:* Fornisce regole stringenti per il TASK C (Onestà documentale, Deliverable richiesti, Commit Message).
+- *Assistant:* Esegue i task di recon, creazione MD/YAML, aggiornamento index e sanity checks su python.
+- *Assistant:* Finisce il task usando il tool finish con sommario.
+- *User:* Passa il testo per creare il documento di handoff definitivo , intimando Poi STOP — nessun altro task. Io faccio Save to GitHub e fork.
+- *Assistant:* Crea il file  esattamente come richiesto e si ferma (STOP).
+- **PENDING HUMAN MESSAGES:** Il founder aprirà la sessione per eseguire l'effettivo Save to GitHub e poi ti chiederà di proseguire. Inizia verificando di aver risolto i due *Micro-fix aperti* elencati in fondo al file SPRINT_STATUS.md.
+
+**Project Health Check:**
+Healthy. I chunk RAG parsati correttamente (12 chunk nuovi creati senza errori).
+
+**3rd Party Integrations** 
+- Stripe (Payments) — requires User API Key.
+- Emergent LLM Key (Gemini text-embedding/generation per HAL RAG) — uses Emergent LLM Key.
+
+**Testing status**
+- Testing agent used after significant changes: NO (usato bash scripting integrato per test base)
+- Troubleshoot agent used after agent stuck in loop: NO
+- Test files created: NA
+- Known regressions: Nessuna
+
+**Credentials to test flow:**
+
+
+**What agent forgot to execute**
+Nessun errore di esecuzione sui task assegnati, ma i 2 Micro-fix aperti sono stati segnalati come coda finale dal Founder e vanno gestiti immediatamente al riavvio del nuovo fork.
+
+**Debugging checklist for current issue**
+    Issue: Micro-fixes pendenti da 
+    Document files to check: 
+      -  (Linea con: Idealista integrato)
+      -  (Linea con: Cap. 7 Match)</analysis>

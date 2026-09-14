@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>New listings for you — OMNIA</title>
+</head>
+<body style="font-family: -apple-system, BlinkMacSystemFont, 'Inter', Arial, sans-serif; background:#FAF7F2; margin:0; padding:0; color:#0E1419;">
+  <table align="center" cellpadding="0" cellspacing="0" width="600" style="max-width:600px; background:#ffffff; margin:40px auto; border:1px solid #E5E2DC;">
+    <tr>
+      <td style="padding:32px 40px 16px 40px; border-bottom:1px solid #E5E2DC;">
+        <p style="margin:0; font-size:11px; letter-spacing:3px; text-transform:uppercase; color:#5C6470;">OMNIA · ImmobilCloud</p>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding:32px 40px 8px 40px;">
+        <p style="margin:0; font-size:11px; letter-spacing:2px; text-transform:uppercase; color:#C19A6B; font-weight:600;">🔔 New listings for you</p>
+        <h1 style="margin:8px 0 16px 0; font-size:24px; line-height:1.3; color:#0B1E3F; font-weight:600;">
+          Hi {{user_name}}, we found {{match_count}} listings
+        </h1>
+        <p style="margin:0 0 6px 0; font-size:14px; line-height:1.6; color:#5C6470;">
+          New listings matching your saved search:
+        </p>
+        <p style="margin:0 0 24px 0; font-size:15px; color:#0B1E3F; font-weight:600;">
+          "{{search_name}}"
+        </p>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding:0 40px 24px 40px;">
+        {{matches_html}}
+      </td>
+    </tr>
+    <tr>
+      <td style="padding:0 40px 32px 40px;">
+        <table cellpadding="0" cellspacing="0">
+          <tr>
+            <td style="background:#0B1E3F; padding:14px 28px;">
+              <a href="{{search_url}}" style="color:#FAF7F2; text-decoration:none; font-size:12px; letter-spacing:2px; text-transform:uppercase; font-weight:600;">
+                See all results →
+              </a>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding:20px 40px; background:#FAF7F2; border-top:1px solid #E5E2DC;">
+        <p style="margin:0; font-size:11px; line-height:1.5; color:#5C6470;">
+          You received this email because you saved a search on ImmobilCloud.
+          <br/>Manage your saved searches from your <a href="{{search_url}}" style="color:#0B1E3F;">account</a>.
+        </p>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>

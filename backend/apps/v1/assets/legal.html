@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="__LANG__">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>OMNIA · HAL Legal (assistente informativo)</title>
+<style>
+  :root {
+    --primary: __PRIMARY_COLOR__;
+    --bg: #ffffff;
+    --fg: #1c1917;
+    --muted: #78716c;
+    --border: #e7e5e4;
+    --radius: 10px;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: var(--bg); color: var(--fg);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    font-size: 14px; line-height: 1.5; }
+  .omnia-widget { padding: 20px; max-width: 640px; margin: 0 auto; }
+  .omnia-widget h2 { margin: 0 0 4px; font-size: 20px; letter-spacing: -0.01em; }
+  .omnia-widget p.hint { margin: 0 0 8px; color: var(--muted); font-size: 13px; }
+  .omnia-disclaimer { background: #fef3c7; border: 1px solid #fcd34d; color: #92400e; padding: 10px 12px; border-radius: 8px; font-size: 12px; margin-bottom: 16px; }
+  .omnia-form { display: flex; flex-direction: column; gap: 12px; }
+  .omnia-form label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); }
+  .omnia-form textarea {
+    width: 100%; padding: 10px 12px; font-size: 14px;
+    border: 1px solid var(--border); border-radius: var(--radius); background: #fff; color: var(--fg);
+    min-height: 100px; resize: vertical; font-family: inherit;
+  }
+  .omnia-form textarea:focus { outline: none; border-color: var(--primary); }
+  .omnia-btn {
+    background: var(--primary); color: #fff; border: 0; padding: 12px 24px;
+    border-radius: var(--radius); font-size: 13px; font-weight: 500;
+    letter-spacing: 0.05em; text-transform: uppercase; cursor: pointer;
+    align-self: flex-end; transition: opacity 0.15s;
+  }
+  .omnia-btn:hover:not(:disabled) { opacity: 0.85; }
+  .omnia-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .omnia-answer { margin-top: 16px; padding: 16px; background: #fafaf9; border: 1px solid var(--border); border-radius: var(--radius); font-size: 13px; white-space: pre-wrap; }
+  .omnia-answer h3 { margin: 0 0 8px; font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--primary); }
+  .omnia-confidence { font-size: 11px; color: var(--muted); margin-top: 8px; }
+  .omnia-cta-notary { margin-top: 12px; padding: 10px 12px; background: #fee2e2; border: 1px solid #fca5a5; border-radius: 8px; font-size: 12px; color: #991b1b; }
+  .omnia-cta-notary a { color: #991b1b; font-weight: 600; }
+  .omnia-error { color: #b91c1c; font-size: 13px; margin-top: 8px; }
+  .omnia-footer { margin-top: 16px; font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; text-align: right; }
+  .omnia-checkbox { display: flex; align-items: flex-start; gap: 8px; font-size: 12px; color: var(--muted); }
+</style>
+</head>
+<body>
+<section class="omnia-widget" data-testid="widget-legal">
+  <h2>HAL Legal · Assistente informativo</h2>
+  <p class="hint">Risponde su compravendita, locazioni, catasto e urbanistica con citazioni normative tracciabili.</p>
+
+  <div class="omnia-disclaimer">
+    ⚖️ <strong>Informazioni orientative, non parere legale</strong> (L. 247/2012). Le risposte sono basate su fonti normative pubbliche (Normattiva, Gazzetta Ufficiale, Agenzia Entrate, Cassazione).
+  </div>
+
+  <form id="omnia-ask" class="omnia-form" novalidate>
+    <div>
+      <label for="omnia-q">La tua domanda</label>
+      <textarea id="omnia-q" name="question" placeholder="Es. Quali sono le imposte sulla prima casa in 2026?" required maxlength="1000"></textarea>
+    </div>
+    <label class="omnia-checkbox">
+      <input type="checkbox" id="omnia-consent" required />
+      <span>Accetto i termini d'uso (informazioni orientative, no parere legale).</span>
+    </label>
+    <button type="submit" class="omnia-btn" data-testid="legal-ask-cta">Chiedi ad HAL</button>
+  </form>
+
+  <div id="omnia-answer" style="display:none;"></div>
+  <p id="omnia-err" class="omnia-error" style="display:none;"></p>
+
+  <p class="omnia-footer">
+    <img src="__BACKEND_BASE__/omnia-mark.png" alt="OMNIA" style="height:14px;width:auto;vertical-align:middle;margin-right:4px;opacity:.6" />
+    Powered by <a href="https://omniarealestateecosystem.it" target="_blank" rel="noopener">OMNIA · HAL Legal</a>
+  </p>
+</section>
+
+<script>
+  var BACKEND = "__BACKEND_BASE__";
+  var KEY = "__API_KEY__";
+  var form = document.getElementById("omnia-ask");
+  var btn = form.querySelector("button");
+  var answer = document.getElementById("omnia-answer");
+  var errEl = document.getElementById("omnia-err");
+  var consent = document.getElementById("omnia-consent");
+
+  form.addEventListener("submit", async function (e) {
+    e.preventDefault();
+    errEl.style.display = "none";
+    answer.style.display = "none";
+    var q = document.getElementById("omnia-q").value.trim();
+    if (!q) { showErr("Scrivi una domanda."); return; }
+    if (!consent.checked) { showErr("Devi accettare i termini d'uso."); return; }
+    btn.disabled = true;
+    btn.textContent = "Attendi…";
+    try {
+      var res = await fetch(BACKEND + "/api/v1/legal/ask", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer " + KEY,
+        },
+        body: JSON.stringify({ question: q }),
+      });
+      if (!res.ok) {
+        var errBody = await res.json().catch(function() { return {}; });
+        throw new Error(errBody.detail || "Errore HAL Legal");
+      }
+      var data = await res.json();
+      var payload = data.data || data;
+      renderAnswer(payload);
+    } catch (err) {
+      showErr(String(err.message || err));
+    }
+    btn.disabled = false;
+    btn.textContent = "Chiedi ad HAL";
+    postSize();
+  });
+
+  function renderAnswer(p) {
+    var text = p.answer || p.text || "(nessuna risposta)";
+    var conf = p.confidence;
+    var below = (typeof conf === "number" && conf < 0.85);
+    var html = "<h3>Risposta HAL</h3><div>" + escapeHtml(text) + "</div>";
+    if (typeof conf === "number") {
+      html += '<div class="omnia-confidence">Confidence: ' + Math.round(conf * 100) + "%</div>";
+    }
+    if (below) {
+      html += '<div class="omnia-cta-notary">⚠️ Confidence bassa. Consulta un professionista: <a href="https://www.notariato.it/it/trova-notaio" target="_blank" rel="noopener">notariato.it/trova-notaio</a></div>';
+    }
+    answer.className = "omnia-answer";
+    answer.innerHTML = html;
+    answer.style.display = "block";
+  }
+
+  function escapeHtml(s) {
+    return String(s)
+      .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+  }
+
+  function showErr(txt) {
+    errEl.textContent = txt;
+    errEl.style.display = "block";
+  }
+
+  function postSize() {
+    try {
+      window.parent.postMessage(
+        { type: "omnia-widget-resize", height: document.body.scrollHeight },
+        "*"
+      );
+    } catch (e) {}
+  }
+  window.addEventListener("load", postSize);
+  new ResizeObserver(postSize).observe(document.body);
+</script>
+</body>
+</html>

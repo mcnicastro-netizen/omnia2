@@ -1,0 +1,407 @@
+# HAL — Voci esportate per RAG
+# Capitolo 1 · Primo accesso
+# Schema:
+#   id, titolo, modulo, widget, pubblico, livello, tags, correlati,
+#   domanda_naturale, contenuto{ a_cosa_serve, quando_si_usa, passi,
+#                                errori_comuni[{problema,soluzione}], permessi },
+#   screenshot[]
+
+voci:
+
+  # ---------- 1.1 · Cos'è OMNIA in 3 minuti ----------
+
+  - id: primo-accesso.cosa-e-omnia
+    titolo: Cos'è OMNIA in tre minuti
+    modulo: Primo accesso
+    widget: null
+    pubblico: [titolare, agente, segreteria]
+    livello: base
+    tags: [orientamento, primi-passi, panoramica]
+    correlati:
+      - primo-accesso.tour-barra-sinistra
+      - hal-agents.introduzione
+      - dashboard.panoramica-iniziale
+    domanda_naturale: "Cos'è OMNIA e cosa ci posso fare?"
+    contenuto:
+      a_cosa_serve: >
+        OMNIA è l'ecosistema che unisce il tuo gestionale ImmoWeb,
+        l'assistente intelligente HAL e il portale pubblico ImmobilCloud.
+        Da un unico posto gestisci immobili, clienti, portali e sito
+        dell'agenzia.
+      quando_si_usa: >
+        Ogni giorno per il lavoro operativo. Il primo giorno per
+        orientarti. Il manuale ti guida modulo per modulo.
+      passi:
+        - Al primo login entri automaticamente in ImmoWeb, il gestionale.
+        - Nella barra a sinistra trovi tutti i moduli (Dashboard, Immobili,
+          Clienti, Match, Portali, Sito web, Impostazioni…).
+        - In alto trovi HAL, l'assistente che risponde a domande operative
+          e legali.
+        - ImmobilCloud è il portale pubblico dove finiscono in vetrina
+          gli annunci della tua agenzia; ci arrivano i clienti finali.
+      errori_comuni: []
+      permessi:
+        - Tutti i ruoli
+    screenshot:
+      - "[SCREEN: cap1-orientamento-generale]"
+
+  # ---------- 1.2 · Login e cambio password ----------
+
+  - id: primo-accesso.login-primo-ingresso
+    titolo: Accedere per la prima volta a ImmoWeb
+    modulo: Primo accesso
+    widget: null
+    pubblico: [titolare, agente, segreteria]
+    livello: base
+    tags: [login, credenziali, primi-passi]
+    correlati:
+      - primo-accesso.password-dimenticata
+      - primo-accesso.cambiare-password
+      - collaboratori.invita-collaboratore
+    domanda_naturale: "Come entro in OMNIA la prima volta?"
+    contenuto:
+      a_cosa_serve: >
+        Entrare in ImmoWeb con le credenziali ricevute per email
+        (dal titolare o dal servizio OMNIA se hai registrato tu la
+        tua agenzia).
+      quando_si_usa: >
+        Al primo login, appena ricevi l'email di benvenuto o l'invito.
+      passi:
+        - Apri il link che hai ricevuto per email (indirizzo del tipo
+          "https://tua-agenzia.omniarealestateecosystem.it").
+        - Se sei stato invitato da un titolare, usa direttamente il link
+          nell'email di invito e salta il wizard di onboarding
+          (riguarda solo chi apre l'agenzia).
+        - Clicca "Accedi" in alto a destra.
+        - Scrivi la tua email.
+        - Scrivi la password provvisoria.
+        - Clicca "Entra".
+        - Se è il primo accesso, ti viene chiesto di cambiare la password.
+      errori_comuni:
+        - problema: "Email o password sbagliata"
+          soluzione: >
+            Verifica di aver copiato la password senza spazi iniziali o
+            finali. Molto spesso, il copia-incolla dalla mail porta uno
+            spazio in più.
+        - problema: "Il link di invito è scaduto"
+          soluzione: >
+            Gli inviti scadono dopo 24 ore. Chiedi al titolare di
+            re-inviarti l'invito dalla sezione Collaboratori.
+      permessi:
+        - Tutti gli utenti che hanno ricevuto un invito o un account
+    screenshot:
+      - "[SCREEN: cap1-login-form]"
+
+  - id: primo-accesso.password-dimenticata
+    titolo: Recuperare la password dimenticata
+    modulo: Primo accesso
+    widget: null
+    pubblico: [titolare, agente, segreteria]
+    livello: base
+    tags: [password, recupero, sicurezza]
+    correlati:
+      - primo-accesso.login-primo-ingresso
+      - primo-accesso.cambiare-password
+    domanda_naturale: "Ho dimenticato la password, come faccio?"
+    contenuto:
+      a_cosa_serve: >
+        Rientrare in ImmoWeb quando non ricordi la password.
+      quando_si_usa: >
+        Ogni volta che il login fallisce e non ricordi la password
+        corretta.
+      passi:
+        - Dalla schermata di accesso clicca "Password dimenticata".
+        - Scrivi la tua email.
+        - Clicca "Invia link di recupero".
+        - Controlla la posta (arriva entro un paio di minuti, guarda
+          anche in Spam).
+        - Apri la mail e clicca il link.
+        - Imposta una nuova password (almeno 8 caratteri, con una
+          maiuscola e un numero).
+        - Torna alla schermata di accesso ed entra con la nuova password.
+      errori_comuni:
+        - problema: "Non arriva la mail di recupero"
+          soluzione: >
+            Controlla Spam e Promozioni. Se non arriva dopo 5 minuti, la
+            tua email potrebbe essere diversa da quella registrata.
+            Chiedi al titolare di verificarla nella sezione Collaboratori.
+        - problema: "Il link nella mail non funziona"
+          soluzione: >
+            I link di recupero scadono dopo un'ora. Rifai la procedura
+            dall'inizio e apri subito il nuovo link.
+      permessi:
+        - Chiunque abbia un account
+    screenshot:
+      - "[SCREEN: cap1-forgot-password]"
+
+  - id: primo-accesso.cambiare-password
+    titolo: Cambiare la password in un secondo momento
+    modulo: Primo accesso
+    widget: null
+    pubblico: [titolare, agente, segreteria]
+    livello: base
+    tags: [password, profilo, sicurezza]
+    correlati:
+      - primo-accesso.password-dimenticata
+      - primo-accesso.profilo-utente
+    domanda_naturale: "Come cambio la password mentre sono loggato?"
+    contenuto:
+      a_cosa_serve: >
+        Aggiornare la password per sicurezza (buona norma ogni 3-6 mesi).
+      quando_si_usa: >
+        Quando la password è vecchia, se sospetti che qualcuno la conosca,
+        o quando la usi anche su altri siti (mai una buona idea).
+      passi:
+        - Clicca sul tuo nome in alto a destra.
+        - Scegli "Profilo".
+        - Scorri fino alla sezione "Sicurezza".
+        - Clicca "Cambia password".
+        - Inserisci la password attuale.
+        - Inserisci la nuova password (almeno 8 caratteri, una maiuscola,
+          un numero).
+        - Clicca "Salva".
+      errori_comuni:
+        - problema: "La nuova password è rifiutata"
+          soluzione: >
+            Assicurati che abbia almeno 8 caratteri, una lettera maiuscola
+            e un numero. Evita spazi.
+      permessi:
+        - Tutti gli utenti autenticati
+    screenshot: []
+
+  # ---------- 1.3 · Onboarding agenzia ----------
+
+  - id: primo-accesso.onboarding-agenzia
+    titolo: Configurare l'agenzia al primo accesso (wizard 4 passi)
+    modulo: Primo accesso
+    widget: null
+    pubblico: [titolare]
+    livello: base
+    tags: [onboarding, configurazione, agenzia, primi-passi]
+    correlati:
+      - impostazioni.dati-fiscali
+      - sito-web.brand-studio
+      - primo-accesso.tour-barra-sinistra
+    domanda_naturale: "Come configuro la mia agenzia la prima volta?"
+    contenuto:
+      a_cosa_serve: >
+        Impostare i dati di base dell'agenzia: nome pubblico, dati fiscali
+        per le fatture, logo e colori del sito. Serve una volta sola.
+      quando_si_usa: >
+        Al primo login del titolare, subito dopo aver creato l'account.
+        Tutti i dati sono modificabili in seguito dalle Impostazioni.
+      passi:
+        - "Passo 1 · Identità: inserisci il nome commerciale (es.
+          'Immobiliare Rossi'). È il nome che compare sui portali."
+        - "Passo 2 · Dati fiscali: ragione sociale, Partita IVA, codice
+          fiscale, REA (facoltativo), FIAIP (facoltativo), indirizzo,
+          email pubblica, telefono."
+        - "Passo 3 · Branding: URL o file del logo, colore primario,
+          colore d'accento, tagline."
+        - "Passo 4 · Conferma: vedi l'anteprima dei colori e clicca
+          'Crea agenzia'."
+      errori_comuni:
+        - problema: "Partita IVA non valida"
+          soluzione: >
+            Deve essere 11 cifre senza spazi né trattini.
+        - problema: "Non ho ancora una P.IVA"
+          soluzione: >
+            Puoi comunque procedere con la registrazione come "cliente" e
+            configurare l'agenzia dopo. Contatta il supporto se hai dubbi.
+        - problema: "Ho sbagliato la ragione sociale"
+          soluzione: >
+            Correggibile in qualsiasi momento da Impostazioni → Dati
+            fiscali.
+      permessi:
+        - Solo titolare (agency_admin)
+    screenshot:
+      - "[SCREEN: cap1-onboarding-step4-conferma]"
+
+  # ---------- 1.4 · Tour della barra a sinistra ----------
+
+  - id: primo-accesso.tour-barra-sinistra
+    titolo: Cosa contiene la barra a sinistra
+    modulo: Primo accesso
+    widget: null
+    pubblico: [titolare, agente, segreteria]
+    livello: base
+    tags: [navigazione, sidebar, orientamento]
+    correlati:
+      - dashboard.panoramica-iniziale
+      - immobili.creazione-manuale
+      - clienti.anagrafica-nuovo-cliente
+    domanda_naturale: "Cosa c'è nel menu di sinistra di ImmoWeb?"
+    contenuto:
+      a_cosa_serve: >
+        Sapere dove trovare ogni modulo. La barra a sinistra è l'indice
+        del gestionale: da qui apri Dashboard, Immobili, Clienti, Match,
+        Portali, Sito web, Virtual Staging, Mutui, HAL Legal, HAL
+        Knowledge, Collaboratori, Piano & Crediti e Impostazioni.
+      quando_si_usa: >
+        Ogni volta che devi cambiare modulo di lavoro.
+      passi:
+        - "Dashboard: pannello iniziale con sei numeri chiave
+          (immobili attivi, lead aperti, match, visite, collaboratori,
+          inviti pendenti) — tutti."
+        - "Gruppo: gestione filiali per reti multi-sede (solo tier
+          Agency, solo titolare/capogruppo)."
+        - "API Keys, Importa, Portali, Sito web: strumenti di gestione
+          avanzata, visibili solo al titolare."
+        - "Immobili, Clienti, Match: uso quotidiano operativo (tutti)."
+        - "Virtual Staging, Mutui, HAL Legal, HAL Knowledge:
+          strumenti AI e servizi (tutti). HAL Knowledge risponde
+          alle domande su come usare la piattaforma (corpus manuale
+          già indicizzato)."
+        - "Collaboratori: gestione dei membri (visibile a tutti, solo
+          il titolare può invitare o revocare)."
+        - "Piano & Crediti, Impostazioni: amministrazione (solo
+          titolare)."
+      errori_comuni:
+        - problema: "Non vedo alcune voci"
+          soluzione: >
+            Le voci non accessibili al tuo ruolo semplicemente non
+            compaiono. Non è un bug. Se pensi di dover vedere una voce
+            in più, chiedi al titolare di rivedere i tuoi permessi.
+        - problema: "Sono su cellulare e non vedo la barra"
+          soluzione: >
+            Su schermi piccoli la barra diventa un menu con l'icona ☰
+            in alto a sinistra.
+      permessi:
+        - Tutti (contenuto visibile in base al ruolo)
+    screenshot:
+      - "[SCREEN: cap1-sidebar-completa]"
+
+  # ---------- 1.5 · Cambio lingua e profilo utente ----------
+
+  - id: primo-accesso.cambio-lingua
+    titolo: Cambiare la lingua dell'interfaccia
+    modulo: Primo accesso
+    widget: null
+    pubblico: [titolare, agente, segreteria]
+    livello: base
+    tags: [lingua, interfaccia, i18n]
+    correlati:
+      - primo-accesso.profilo-utente
+    domanda_naturale: "Come cambio la lingua di ImmoWeb?"
+    contenuto:
+      a_cosa_serve: >
+        Usare OMNIA in italiano, inglese o spagnolo, ad esempio quando
+        gestisci clienti stranieri o hai un collaboratore che preferisce
+        un'altra lingua.
+      quando_si_usa: >
+        In qualsiasi momento. Il cambio lingua è personale, non modifica
+        la lingua di altri utenti né dei clienti sul portale pubblico.
+      passi:
+        - In alto a destra clicca la sigla della lingua attuale (IT, EN
+          o ES).
+        - Nel menu a tendina scegli la lingua che ti serve.
+        - La pagina si ricarica nella nuova lingua.
+      errori_comuni:
+        - problema: "Alcune scritte non sono tradotte"
+          soluzione: >
+            Se noti una scritta rimasta in un'altra lingua, segnalalo:
+            aggiorniamo continuamente i testi. In genere sono termini
+            tecnici o messaggi rari.
+      permessi:
+        - Tutti
+    screenshot:
+      - "[SCREEN: cap1-language-switcher]"
+
+  - id: primo-accesso.profilo-utente
+    titolo: Aggiornare il proprio profilo utente
+    modulo: Primo accesso
+    widget: null
+    pubblico: [titolare, agente, segreteria]
+    livello: base
+    tags: [profilo, account, personale]
+    correlati:
+      - primo-accesso.cambiare-password
+      - primo-accesso.selettore-agenzia
+    domanda_naturale: "Come modifico il mio profilo e la mia foto?"
+    contenuto:
+      a_cosa_serve: >
+        Aggiornare i tuoi dati personali: nome, cognome, foto, telefono.
+        La foto e il nome compaiono nella barra in alto e nelle attività
+        recenti dashboard.
+      quando_si_usa: >
+        Al primo accesso per personalizzare il profilo, oppure quando
+        cambi numero di telefono o vuoi aggiornare la foto.
+      passi:
+        - Clicca sul tuo nome in alto a destra.
+        - Scegli "Profilo".
+        - Modifica nome, cognome, telefono.
+        - Per la foto clicca sull'immagine attuale e carica un file.
+        - Clicca "Salva".
+      errori_comuni:
+        - problema: "La foto è troppo grande"
+          soluzione: >
+            Le foto profilo possono pesare fino a 5 MB. Se è più grande,
+            riducila con l'app Foto del tuo computer o del telefono.
+      permessi:
+        - Tutti
+    screenshot: []
+
+  - id: primo-accesso.selettore-agenzia
+    titolo: Cambiare agenzia attiva (se sei in più agenzie)
+    modulo: Primo accesso
+    widget: null
+    pubblico: [agente, titolare]
+    livello: intermedio
+    tags: [multi-agenzia, franchising, selettore]
+    correlati:
+      - primo-accesso.profilo-utente
+      - collaboratori.invita-collaboratore
+    domanda_naturale: "Sono in due agenzie diverse, come faccio a passare
+      dall'una all'altra?"
+    contenuto:
+      a_cosa_serve: >
+        Passare rapidamente da un'agenzia all'altra quando sei membro
+        di più agenzie (es. rete franchising, doppio incarico su più
+        sedi).
+      quando_si_usa: >
+        Solo se sei attivo in due o più agenzie. Se sei in una sola
+        agenzia, il selettore non compare: è normale.
+      passi:
+        - Il selettore agenzia compare in alto a sinistra sotto il logo
+          OMNIA, ma solo quando sei membro di due o più agenzie.
+        - Clicca il selettore.
+        - Scegli l'agenzia su cui vuoi lavorare.
+        - Da quel momento tutti i dati mostrati (immobili, clienti,
+          match) si riferiscono solo all'agenzia attiva. Cambiare
+          agenzia non ti fa uscire dall'account.
+      errori_comuni:
+        - problema: "Non vedo il selettore"
+          soluzione: >
+            Il selettore appare solo se sei membro di almeno due
+            agenzie. Se pensi di doverlo vedere, verifica con il
+            titolare dell'altra agenzia che l'invito sia stato
+            accettato.
+      permessi:
+        - Utente presente in due o più agenzie
+    screenshot: []
+
+  - id: primo-accesso.uscire
+    titolo: Uscire da ImmoWeb (logout)
+    modulo: Primo accesso
+    widget: null
+    pubblico: [titolare, agente, segreteria]
+    livello: base
+    tags: [logout, sicurezza]
+    correlati:
+      - primo-accesso.login-primo-ingresso
+    domanda_naturale: "Come esco dal mio account?"
+    contenuto:
+      a_cosa_serve: >
+        Chiudere la sessione, ad esempio se stai usando un computer
+        condiviso o hai finito la giornata.
+      quando_si_usa: >
+        Sempre, alla fine della giornata su computer non personali.
+        In ufficio, sul tuo computer personale, puoi restare loggato.
+      passi:
+        - Clicca sul tuo nome in alto a destra.
+        - Scegli "Esci".
+        - Vieni riportato alla schermata di accesso.
+      errori_comuni: []
+      permessi:
+        - Tutti
+    screenshot: []

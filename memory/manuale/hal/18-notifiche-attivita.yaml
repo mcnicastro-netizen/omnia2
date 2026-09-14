@@ -1,0 +1,786 @@
+# HAL — Voci esportate per RAG
+# Capitolo 18 · Notifiche e attività
+# Onestà documentale D-051: v1 NON ha un modulo Notifiche dedicato né un feed Attività.
+# Il capitolo documenta email transazionali (Resend, 7 template) + toast in-app (sonner) +
+# cron saved-searches (super_admin only) + audit trail interno (Mongo, no UI) +
+# lista esaustiva di cosa NON esiste v1.
+
+voci:
+
+  # ---------- 18.1 · Cos'è ----------
+
+  - id: notifiche.cos-e
+    titolo: Cos'è "Notifiche e attività" in OMNIA v1
+    modulo: Notifiche
+    widget: null
+    pubblico: [titolare, agente, segreteria, super_admin, b2c_client]
+    livello: base
+    tags: [notifiche, attivita, panoramica, d-051, onesta-documentale, cosa-non-fa]
+    correlati: [notifiche.canali-attivi, notifiche.limitazioni-v1, notifiche.dashboard-vs-activity-feed]
+    domanda_naturale: "Cos'è il modulo Notifiche di OMNIA? C'è un centro notifiche in-app? Esiste una campanella? OMNIA ha un feed attività recenti?"
+    contenuto:
+      a_cosa_serve: >
+        Definire onestamente cosa OMNIA v1 offre come "notifiche e attività":
+        (1) email transazionali Resend (7 template · welcome, password_reset,
+        agency_invite, lead_notification, saved_search_alert, founders_welcome,
+        founders_admin_notification), (2) toast in-app sonner (feedback azione),
+        (3) cron saved-searches super_admin (digest B2C instant/daily/weekly),
+        (4) audit trail interno Mongo (~10 collezioni, non esposte in UI).
+      quando_si_usa: >
+        Quando vuoi capire dove aspettarti notifiche in OMNIA e cosa NON
+        troverai (Bell icon, pagina Notifiche, feed attività dashboard,
+        push mobile, SMS, WhatsApp, preferenze granulari, digest quotidiana
+        per titolare).
+      passi:
+        - "OMNIA v1 NON ha una pagina Notifiche né una Bell icon."
+        - "OMNIA v1 NON ha un feed Attività recenti nella Dashboard
+          (solo KPI counters immobili/lead/match/visite/collaboratori/inviti)."
+        - "Le uniche notifiche esterne v1 sono email transazionali Resend
+          triggerate da eventi specifici (registrazione, password, invito,
+          lead, saved-search)."
+        - "Le uniche notifiche in-app v1 sono toast sonner (feedback
+          immediato, 4-5s, non persistenti)."
+        - "L'audit trail interno esiste in Mongo (al_audit, match_audit,
+          publishing_events, ecc.) ma NON è consultabile da UI: solo
+          super_admin via query Mongo diretta."
+      errori_comuni:
+        - problema: "Cerco una campanella / centro notifiche in UI"
+          soluzione: >
+            Non esiste v1. Le uniche notifiche sono email nella tua casella
+            e toast temporanei. Backlog A-017 (Notification center in-app)
+            proposto per v1.1.
+      permessi:
+        - Tutti gli utenti autenticati vedono i toast in-app
+        - I titolari ricevono email transazionali (welcome, invite, lead)
+        - I B2C ricevono saved-search alert se `notification_channels` include "email"
+        - Solo super_admin puo' lanciare il cron saved-searches
+    screenshot:
+      - "[SCREEN: cap18-dashboard-kpi]"
+
+  # ---------- 18.2 · Dove trovarlo ----------
+
+  - id: notifiche.dove-trovarlo
+    titolo: Dove trovo le notifiche in OMNIA
+    modulo: Notifiche
+    widget: null
+    pubblico: [titolare, agente, segreteria, super_admin, b2c_client]
+    livello: base
+    tags: [notifiche, dove-trovarlo, ui-ux, nessuna-pagina, casella-email]
+    correlati: [notifiche.cos-e, notifiche.toast-in-app, notifiche.email-panoramica]
+    domanda_naturale: "Dove trovo la pagina Notifiche in OMNIA? Come vedo le notifiche non lette?"
+    contenuto:
+      a_cosa_serve: >
+        Chiarire la posizione delle notifiche in OMNIA v1: nessuna pagina
+        dedicata, tutte le esperienze notification-like sono distribuite
+        (casella email personale + toast immediato + email di benvenuto).
+      quando_si_usa: >
+        Quando cerchi una pagina Notifiche e non la trovi in menu.
+      passi:
+        - "Le email arrivano nella tua casella di posta personale
+          (Gmail/Outlook/etc.), NON in una inbox OMNIA."
+        - "I toast in-app appaiono in basso a destra dello schermo per
+          4-5 secondi dopo un'azione, poi spariscono."
+        - "Il cron saved-searches puo' essere lanciato solo da super_admin
+          via POST /api/app/cron/saved-searches/run-all."
+        - "In ImmoWeb la Dashboard mostra 6 KPI counter (Immobili attivi,
+          Lead aperti, Nuovi match 7gg, Visite 7gg, Collaboratori,
+          Inviti pendenti) MA NON un feed attività."
+        - "In ImmobilCloud non c'e' una voce di menu Notifiche: solo email
+          nella casella se hai saved-searches attive."
+      errori_comuni:
+        - problema: "Non trovo la voce Notifiche nel menu laterale"
+          soluzione: >
+            Corretto: non esiste v1. Cerca eventuali email nella tua
+            casella o attiva una saved-search in ImmobilCloud per
+            ricevere alert per email.
+      permessi:
+        - Nessuna pagina Notifiche accessibile v1 (non esiste)
+    screenshot: []
+
+  # ---------- 18.3 · Canali attivi ----------
+
+  - id: notifiche.canali-attivi
+    titolo: Canali di notifica attivi v1 (email + toast · NO push/SMS/WhatsApp)
+    modulo: Notifiche
+    widget: null
+    pubblico: [titolare, agente, super_admin]
+    livello: base
+    tags: [notifiche, canali, email, toast, push, sms, whatsapp, dead-code, d-051]
+    correlati: [notifiche.email-panoramica, notifiche.toast-in-app, notifiche.limitazioni-v1]
+    domanda_naturale: "Su quali canali OMNIA invia notifiche? Esiste push mobile, SMS o WhatsApp?"
+    contenuto:
+      a_cosa_serve: >
+        Elencare in modo esaustivo i canali di notifica supportati e NON
+        supportati v1, con nota sul dead code `push` nello schema utente.
+      quando_si_usa: >
+        Prima di aspettarti un SMS di conferma appuntamento o un push
+        mobile su nuovo lead.
+      passi:
+        - "ATTIVO · Email transazionali via Resend (7 template · fallback
+          mock mode se RESEND_API_KEY non configurata)."
+        - "ATTIVO · Toast in-app via libreria sonner (React), durata
+          4-5 secondi, non persistenti."
+        - "NON ATTIVO · Push web/mobile. Lo schema `notification_channels`
+          accetta il valore 'push' ma NESSUN sender push e' implementato
+          v1. E' dead code documentato per trasparenza."
+        - "NON ATTIVO · SMS (nessuna integrazione Twilio o simili)."
+        - "NON ATTIVO · WhatsApp Business (nessuna integrazione Meta)."
+        - "NON ATTIVO · Slack/Teams/Discord webhook per alert admin."
+        - "NON ATTIVO · Voice call (Twilio Voice non configurato)."
+      errori_comuni:
+        - problema: "Ho attivato push in registrazione ma non ricevo nulla"
+          soluzione: >
+            Lo schema accetta 'push' come valore ma nessun sender push
+            e' implementato v1 (dead code). Usa email come unico canale
+            realmente attivo.
+      permessi:
+        - Ogni utente puo' vedere i toast in-app
+        - Solo email e' realmente consegnato
+    screenshot: []
+
+  # ---------- 18.4 · Email panoramica ----------
+
+  - id: notifiche.email-panoramica
+    titolo: Email transazionali · 7 template Resend (welcome, password_reset, agency_invite, lead_notification, saved_search_alert, founders_welcome, founders_admin_notification)
+    modulo: Notifiche
+    widget: null
+    pubblico: [titolare, super_admin]
+    livello: intermedio
+    tags: [notifiche, email, resend, template, transazionali, multilingua, mock-mode, d-051]
+    correlati: [notifiche.template-welcome-password, notifiche.template-agency-invite, notifiche.template-lead-notification, notifiche.template-saved-search-alert, notifiche.errori-comuni]
+    domanda_naturale: "Quali email invia OMNIA automaticamente? Che template esistono? Come funziona il mock mode?"
+    contenuto:
+      a_cosa_serve: >
+        Panoramica dei 7 template email transazionali gestiti da
+        shared/email/client.py via Resend API con fallback mock mode.
+      quando_si_usa: >
+        Quando devi capire quali email OMNIA spedisce automaticamente,
+        con che subject/lingua/trigger, e come debuggare in dev.
+      passi:
+        - "welcome (it/en/es): triggerato da POST /api/auth/register
+          B2B in apps/core/auth.py:131. Subject 'Benvenuto in OMNIA'."
+        - "password_reset (it/en/es): triggerato da POST
+          /api/auth/forgot-password in apps/core/auth.py:273.
+          Token TTL 1h. Idempotente (risposta identica se email non esiste)."
+        - "agency_invite (it/en/es): titolare invita collaboratore in
+          apps/immoweb/invites.py:102. Magic-link TTL 7gg nel fragment URL.
+          Cross-ref Cap. 13."
+        - "lead_notification (it/en/es): form contatto portale pubblico
+          in apps/immocloud/public_portal.py:750. Va all'agente owner."
+        - "saved_search_alert (it/en/es): cron admin lancia
+          run_all_active_saved_searches() in
+          apps/immocloud/saved_searches.py:245. Digest HTML max 6 righe."
+        - "founders_welcome (solo it): signup Founders in
+          apps/marketing/founders.py:103."
+        - "founders_admin_notification (solo it): notifica admin OMNIA
+          post-signup Founders in apps/marketing/founders.py:120."
+        - "Lingua fallback: se il template richiesto non ha la lingua,
+          fallback su 'it'."
+        - "Mock mode: se RESEND_API_KEY non configurata, l'email NON
+          viene spedita, solo loggata con prefix `[EMAIL MOCK]`."
+        - "Assets iniettati automaticamente: logo_url (env
+          OMNIA_LOGO_URL) e public_base (env OMNIA_PUBLIC_URL)."
+      errori_comuni:
+        - problema: "Vedo `[EMAIL MOCK]` nei log e nessuna email arriva"
+          soluzione: >
+            Configura RESEND_API_KEY nel backend .env. Riavvia il
+            backend. Le email successive andranno realmente spedite.
+      permessi:
+        - "Fire-and-forget (fallimenti solo loggati, no retry queue)"
+    screenshot:
+      - "[SCREEN: cap18-email-welcome]"
+
+  # ---------- 18.5 · welcome + password_reset ----------
+
+  - id: notifiche.template-welcome-password
+    titolo: Template welcome + password_reset (Cap. 1 auth)
+    modulo: Notifiche
+    widget: null
+    pubblico: [titolare, agente, super_admin]
+    livello: intermedio
+    tags: [notifiche, email, welcome, password-reset, registrazione, auth, cap1]
+    correlati: [notifiche.email-panoramica, notifiche.errori-comuni]
+    domanda_naturale: "Quando arriva l'email di benvenuto? Come funziona il reset password via email?"
+    contenuto:
+      a_cosa_serve: >
+        Documentare i due template piu' fondamentali del flusso di
+        registrazione B2B ImmoWeb: benvenuto e recupero password.
+      quando_si_usa: >
+        Dopo la registrazione (welcome) o quando l'utente clicca su
+        "Password dimenticata" (password_reset).
+      passi:
+        - "welcome trigger: subito dopo POST /api/auth/register (B2B).
+          Fire-and-forget: l'errore email NON blocca la registrazione."
+        - "welcome variabili: {{user_name}}."
+        - "welcome subject: 'Benvenuto in OMNIA' (it) · 'Welcome to
+          OMNIA' (en) · 'Bienvenido a OMNIA' (es)."
+        - "password_reset trigger: POST /api/auth/forgot-password con
+          email valida. Idempotente: la risposta e' identica anche
+          se l'email non esiste (protezione anti-enumeration)."
+        - "password_reset variabili: {{user_name}}, {{reset_url}}
+          (link con token TTL 1h)."
+        - "password_reset TTL token: 1h (index Mongo TTL su
+          collezione password_reset_tokens)."
+        - "password_reset subject: 'Reimposta la tua password OMNIA'."
+      errori_comuni:
+        - problema: "Ho fatto reset password ma il link non funziona piu'"
+          soluzione: >
+            Il token dura 1h. Se sono passate piu' di 60 minuti, rifai
+            la richiesta di reset da /forgot-password. Il vecchio token
+            e' invalidato.
+        - problema: "Non ricevo l'email di benvenuto"
+          soluzione: >
+            Verifica cartella spam. Se in dev, controlla log backend per
+            `[EMAIL MOCK]` (Resend non configurata). Se in prod, controlla
+            log per `[EMAIL ERROR]` (rate limit / dominio non verificato).
+      permessi:
+        - "Chiunque puo' registrarsi (B2B) → welcome"
+        - "Chiunque puo' richiedere password_reset (idempotente)"
+    screenshot:
+      - "[SCREEN: cap18-email-welcome]"
+
+  # ---------- 18.6 · agency_invite ----------
+
+  - id: notifiche.template-agency-invite
+    titolo: Template agency_invite (Cap. 13 team · magic-link 7 giorni)
+    modulo: Notifiche
+    widget: null
+    pubblico: [titolare, super_admin]
+    livello: intermedio
+    tags: [notifiche, email, agency-invite, team, collaboratori, magic-link, cap13]
+    correlati: [notifiche.email-panoramica, notifiche.errori-comuni]
+    domanda_naturale: "Come arriva l'invito email quando aggiungo un collaboratore in agenzia?"
+    contenuto:
+      a_cosa_serve: >
+        Documentare il template email agency_invite triggerato dagli
+        inviti team (Cap. 13).
+      quando_si_usa: >
+        Quando il titolare (o super_admin) invita un nuovo membro da
+        POST /api/agencies/me/invites.
+      passi:
+        - "Trigger: apps/immoweb/invites.py:102 dopo creazione invito."
+        - "A chi: email del collaboratore invitato (email specificata
+          nel form invito)."
+        - "Variabili: {{agency_name}}, {{inviter_name}}, {{role_label}},
+          {{invite_url}}."
+        - "Subject: 'Sei stato invitato a unirti a {{agency_name}} su
+          OMNIA' (it) · analoghi en/es."
+        - "Magic-link: token nel FRAGMENT URL (#token=...), NON nella
+          query string, per best practice OWASP (nessun leak nel
+          Referer HTTP header)."
+        - "TTL: 7 giorni (documentato Cap. 13)."
+        - "Lingua: dedotta dalla lingua dell'invitatore (o fallback 'it')."
+      errori_comuni:
+        - problema: "L'invito email non arriva al collaboratore"
+          soluzione: >
+            Vedi Cap. 13 §13.11. Controlla log `[EMAIL OK]` o
+            `[EMAIL MOCK]`. Se mock, configura Resend.
+      permessi:
+        - "Solo titolare o super_admin puo' invitare"
+    screenshot:
+      - "[SCREEN: cap18-email-agency-invite]"
+
+  # ---------- 18.7 · lead_notification ----------
+
+  - id: notifiche.template-lead-notification
+    titolo: Template lead_notification (portale pubblico → agente)
+    modulo: Notifiche
+    widget: null
+    pubblico: [titolare, agente]
+    livello: intermedio
+    tags: [notifiche, email, lead-notification, portale-pubblico, contatti, b2c, immobilcloud]
+    correlati: [notifiche.email-panoramica, notifiche.errori-comuni]
+    domanda_naturale: "Come mi arriva la notifica quando un visitatore lascia un contatto su un mio immobile?"
+    contenuto:
+      a_cosa_serve: >
+        Documentare la mail che notifica l'agente proprietario di un
+        immobile quando un visitatore del portale pubblico compila il
+        form contatto.
+      quando_si_usa: >
+        Quando un visitatore di ImmobilCloud (portale pubblico agenzia
+        /agenzia/{slug}) apre una scheda immobile e invia il form
+        "Contatta l'agente".
+      passi:
+        - "Trigger: apps/immocloud/public_portal.py:750 dopo submit
+          form contatti."
+        - "A chi: email dell'agente owner dell'immobile. Se l'agent
+          non ha email registrata → fallback al titolare."
+        - "Variabili: {{property_title}}, {{lead_name}}, {{lead_email}},
+          {{lead_phone}}, {{lead_message}}, {{property_url}}."
+        - "Subject: '🔔 Nuovo lead da ImmobilCloud —
+          {{property_title}}'."
+        - "Se manca to_email (agent orfano di email): log come
+          [LEAD ORPHAN], nessun retry, nessuna coda."
+      errori_comuni:
+        - problema: "Ho ricevuto il lead ma non vedo il numero di telefono"
+          soluzione: >
+            Il visitatore puo' aver lasciato solo email. Il template
+            mostra {{lead_phone}} vuoto se non compilato.
+        - problema: "Il lead e' arrivato al titolare invece che all'agente"
+          soluzione: >
+            L'agente owner dell'immobile probabilmente non ha email
+            configurata in agenzia. Aggiungila da MembersPage.jsx.
+      permessi:
+        - "Agent owner dell'immobile (o titolare fallback) riceve email"
+    screenshot:
+      - "[SCREEN: cap18-email-lead-notification]"
+
+  # ---------- 18.8 · saved_search_alert ----------
+
+  - id: notifiche.template-saved-search-alert
+    titolo: Template saved_search_alert (B2C ImmobilCloud · digest HTML max 6 righe)
+    modulo: Notifiche
+    widget: null
+    pubblico: [b2c_client, super_admin]
+    livello: intermedio
+    tags: [notifiche, email, saved-search, digest, b2c, immobilcloud, cron, frequenza]
+    correlati: [notifiche.cron-saved-searches, notifiche.email-panoramica, notifiche.preferenze-utente]
+    domanda_naturale: "Come funziona l'email di alert per le ricerche salvate su ImmobilCloud?"
+    contenuto:
+      a_cosa_serve: >
+        Documentare il template digest email inviato agli utenti B2C
+        ImmobilCloud quando le loro ricerche salvate producono nuovi
+        match.
+      quando_si_usa: >
+        Quando il cron admin (super_admin only) lancia
+        run_all_active_saved_searches() e trova >= 1 match nuovo
+        rispetto al last_run_at della ricerca.
+      passi:
+        - "Trigger indiretto: cron super_admin lancia
+          POST /api/app/cron/saved-searches/run-all."
+        - "A chi: utente B2C con account_type='b2c' E 'email' in
+          notification_channels E saved_search is_active=true E almeno
+          1 match nuovo da last_run_at."
+        - "Variabili: {{user_name}}, {{search_name}}, {{match_count}},
+          {{matches_html}} (tabella HTML fino a 6 righe), {{search_url}}."
+        - "Subject: '🔔 {{match_count}} nuovi immobili per la tua
+          ricerca \"{{search_name}}\"'."
+        - "matches_html: tabella HTML con max 6 righe visibili. Il
+          match_count reale puo' essere maggiore (indicato nel subject
+          e nel corpo)."
+        - "Frequenza scelta dall'utente: instant/daily/weekly. ⚠️ v1
+          il cron IGNORA la frequenza e processa TUTTE le active
+          saved_searches ad ogni chiamata. Documentato onestamente.
+          Backlog A-019 (Frequency-aware cron) per v1.1."
+      errori_comuni:
+        - problema: "La saved-search non mi manda mai email"
+          soluzione: >
+            Verifica (1) is_active=true, (2) account_type='b2c',
+            (3) 'email' in notification_channels, (4) cron
+            super_admin lanciato almeno una volta.
+        - problema: "Ricevo email anche per ricerche disattivate"
+          soluzione: >
+            Bug non riproducibile v1 (query filtra is_active=true).
+            Verifica su Mongo il valore reale.
+      permessi:
+        - "Utenti B2C (account_type='b2c') con email in
+          notification_channels"
+    screenshot:
+      - "[SCREEN: cap18-email-saved-search]"
+
+  # ---------- 18.9 · toast in-app ----------
+
+  - id: notifiche.toast-in-app
+    titolo: Toast in-app (feedback immediato azione utente via sonner)
+    modulo: Notifiche
+    widget: null
+    pubblico: [titolare, agente, segreteria, super_admin, b2c_client]
+    livello: base
+    tags: [notifiche, toast, sonner, in-app, feedback, ui, ephemera]
+    correlati: [notifiche.canali-attivi, notifiche.limitazioni-v1]
+    domanda_naturale: "Cosa sono i toast in OMNIA? Perche' spariscono cosi' velocemente?"
+    contenuto:
+      a_cosa_serve: >
+        Feedback immediato non-persistente per ogni azione utente
+        (successo/errore/info) via libreria sonner integrata in
+        components/ui/sonner.jsx.
+      quando_si_usa: >
+        Dopo ogni submit form (creazione immobile, salvataggio cliente,
+        pagamento Stripe, invio invito, ecc.).
+      passi:
+        - "Uso in codice: `import { toast } from 'sonner';
+          toast.success('...'); toast.error('...');`."
+        - "Provider Toaster montato in App.js root."
+        - "Durata di default: ~4-5 secondi (default sonner)."
+        - "Posizione: in basso a destra dello schermo (default sonner)."
+        - "Colori: verde per .success, rosso per .error, neutro per
+          toast() generico."
+      errori_comuni:
+        - problema: "I toast spariscono troppo velocemente"
+          soluzione: >
+            Comportamento di default sonner (~4-5s). v1 non consente
+            configurazione per toast singolo. Backlog A-023 (Toast
+            duration tuning) proposto.
+        - problema: "Ricarico la pagina e i toast pending scompaiono"
+          soluzione: >
+            I toast sonner sono ephemera in-memory: non persistono
+            attraverso reload. E' un limite noto v1.
+      permessi:
+        - "Tutti gli utenti autenticati vedono i toast della propria
+          sessione"
+    screenshot:
+      - "[SCREEN: cap18-toast-success]"
+      - "[SCREEN: cap18-toast-error]"
+
+  # ---------- 18.10 · cron saved-searches ----------
+
+  - id: notifiche.cron-saved-searches
+    titolo: Cron saved-searches (super_admin trigger manuale · no scheduler interno)
+    modulo: Notifiche
+    widget: null
+    pubblico: [super_admin]
+    livello: avanzato
+    tags: [notifiche, cron, saved-search, super-admin, scheduler, apscheduler, digest, b2c]
+    correlati: [notifiche.template-saved-search-alert, notifiche.preferenze-utente]
+    domanda_naturale: "Come lancio il cron delle ricerche salvate B2C? Parte da solo?"
+    contenuto:
+      a_cosa_serve: >
+        Endpoint admin per triggerare manualmente il job di scansione
+        saved-searches attive e invio email digest. NON parte da solo
+        v1 (nessuno scheduler interno per questo job).
+      quando_si_usa: >
+        Quando super_admin vuole processare tutte le saved-searches
+        B2C attive per inviare le digest via email.
+      passi:
+        - "Endpoint: POST /api/app/cron/saved-searches/run-all (super_admin only)."
+        - "Cosa fa: itera tutte le saved_searches con is_active=true."
+        - "Per ogni ricerca: recupera user, verifica account_type='b2c'
+          e 'email' in notification_channels; se NO, salta email ma
+          aggiorna comunque last_run_at."
+        - "Costruisce filtro Mongo sui filters salvati + created_at
+          > last_run_at."
+        - "Recupera max 20 match, ordina desc, se >= 1 chiama
+          _send_alert_email() con digest HTML (max 6 righe visibili)."
+        - "SEMPRE avanza last_run_at = now, anche in caso di skip email.
+          Motivazione: se l'utente attiva 'email' post-hoc, evita
+          replay di match vecchi."
+        - "Response: {ok: true, searches_checked, emails_sent,
+          total_matches}."
+        - "⚠️ v1 NON c'e' uno scheduler interno per questo cron: deve
+          essere lanciato manualmente o da uno scheduler esterno
+          (k8s CronJob, GitHub Actions). Backlog A-020 (Internal
+          APScheduler saved-searches) proposto."
+        - "Nota conflitto planning: c'e' un APScheduler gia' attivo
+          alle 06:00 UTC per publishing sync (isolato da questo cron
+          per separazione di responsabilita')."
+      errori_comuni:
+        - problema: "cron_forbidden 403"
+          soluzione: >
+            Solo super_admin puo' chiamare questo endpoint. Utenti B2B
+            e B2C ottengono 403.
+        - problema: "emails_sent=0 anche se ho saved-searches attive"
+          soluzione: >
+            Verifica su ogni saved-search: is_active, account_type user
+            b2c, notification_channels ha email, esistono match nuovi
+            da last_run_at. Se tutto ok, verifica log backend per
+            [EMAIL OK] o [EMAIL MOCK].
+      permessi:
+        - "Solo super_admin"
+    screenshot: []
+
+  # ---------- 18.11 · preferenze utente (schema vs realta') ----------
+
+  - id: notifiche.preferenze-utente
+    titolo: Preferenze utente notifiche (schema email/push vs realta' v1 · push dead code)
+    modulo: Notifiche
+    widget: null
+    pubblico: [b2c_client, super_admin]
+    livello: intermedio
+    tags: [notifiche, preferenze, notification-channels, opt-in, opt-out, push, dead-code, d-051]
+    correlati: [notifiche.canali-attivi, notifiche.limitazioni-v1]
+    domanda_naturale: "Come cambio le preferenze notifiche? Posso disattivare specifici tipi di email?"
+    contenuto:
+      a_cosa_serve: >
+        Documentare onestamente cosa lo schema User accetta come
+        `notification_channels` e cosa effettivamente viene consumato.
+      quando_si_usa: >
+        Quando un utente cerca dove modificare le preferenze notifiche
+        (spoiler: non c'e' UI).
+      passi:
+        - "Schema: User.notification_channels: List[Literal['email',
+          'push']] in shared/models/user.py:50. Default ['email']."
+        - "Realta' v1: solo 'email' viene realmente letto dal cron
+          saved-searches. Il valore 'push' e' dead code documentato."
+        - "Nessuna UI per modificare notification_channels
+          post-registrazione. Ne' in ImmoWeb SettingsPage.jsx ne' in
+          ImmobilCloud AccountDashboard.jsx c'e' un toggle."
+        - "Nessuna granularita' per tipo: non puoi optare-in solo per
+          saved_search_alert e opt-out da password_reset. Le email
+          transazionali (welcome, password_reset, agency_invite,
+          lead_notification, founders_*) sono SEMPRE inviate
+          indipendentemente da notification_channels perche' sono
+          fondamentali per usare il prodotto."
+        - "Nessuna preferenza digest frequency in UI oltre a
+          saved-searches (instant/daily/weekly)."
+        - "Backlog A-021 (UI notification preferences) proposto per
+          v1.1."
+      errori_comuni:
+        - problema: "Ho messo 'push' invece di 'email' in registrazione B2C"
+          soluzione: >
+            Il valore 'push' viene accettato ma nessun sender push e'
+            implementato v1 (dead code). Aggiorna Mongo direttamente
+            (nessuna UI): db.users.updateOne({email:...}, {$set:
+            {notification_channels: ['email']}}).
+      permessi:
+        - "Modifica preferenze v1 solo via Mongo direct (super_admin)"
+    screenshot: []
+
+  # ---------- 18.12 · audit trail interno ----------
+
+  - id: notifiche.audit-trail-interno
+    titolo: Audit trail interno · ~10 collezioni Mongo append-only (non-UI)
+    modulo: Notifiche
+    widget: null
+    pubblico: [super_admin]
+    livello: avanzato
+    tags: [attivita, audit, mongo, collezioni, log, compliance, gdpr, retention, super-admin]
+    correlati: [notifiche.dashboard-vs-activity-feed, notifiche.limitazioni-v1]
+    domanda_naturale: "Dove si vedono gli storici delle azioni in OMNIA? C'e' un log attivita' consultabile?"
+    contenuto:
+      a_cosa_serve: >
+        Elenco delle collezioni Mongo append-only che tracciano eventi
+        tecnici. Usate per debug/GDPR/rate-limit/sync-history. NESSUNA
+        UI centralizzata v1: query Mongo diretta solo per super_admin.
+      quando_si_usa: >
+        Quando super_admin deve fare post-mortem di un bug, GDPR
+        request, verificare uso HAL, log sync publishing.
+      passi:
+        - "al_audit (Cap. 10 HAL Agent CRM): ogni chat + improve
+          (session_id, tokens, cost)."
+        - "al_legal_audit (HAL Legal): domande legali (crediti, sources)."
+        - "match_audit (Cap. 5 Match): proposte match generate."
+        - "calendar_events (Visite): visite programmate/completate."
+        - "domain_vault_events (Cap. 17 Domain Vault): sovereignty
+          confirm + DNS verify + connect."
+        - "privacy_audit_events (Cap. 3 Immobili): cambio livello privacy."
+        - "legal_kit_events: download PDF template legale."
+        - "social_posts (Cap. 15 Social Publisher): push canale
+          success/failed."
+        - "hal_knowledge_sessions (Cap. 12 HAL Knowledge): domande
+          RAG con confidence/sources/tokens."
+        - "publishing_events (Cap. 6 Publishing): attivazione portale,
+          sync run, errori."
+        - "Retention: v1 nessuna policy configurata (i log crescono
+          indefinitamente). Backlog A-022 (Retention policy)."
+        - "Consultazione: solo super_admin via query Mongo diretta,
+          es. db.al_audit.find({user_id:'...'}).sort({created_at:-1})
+          .limit(50)."
+      errori_comuni:
+        - problema: "Voglio vedere lo storico attivita' della mia agenzia in UI"
+          soluzione: >
+            Non esiste UI v1. Backlog A-018 (Activity feed dashboard)
+            proposto per v1.1 (aggrega al_audit + match_audit +
+            publishing_events + social_posts + calendar_events).
+      permessi:
+        - "Solo super_admin ha accesso diretto Mongo"
+    screenshot: []
+
+  # ---------- 18.13 · dashboard vs activity feed ----------
+
+  - id: notifiche.dashboard-vs-activity-feed
+    titolo: Dashboard KPI counters vs Activity feed (chiarimento D-051)
+    modulo: Notifiche
+    widget: null
+    pubblico: [titolare, agente, super_admin]
+    livello: base
+    tags: [attivita, dashboard, kpi, counters, activity-feed, onesta, d-051, no-timeline]
+    correlati: [notifiche.audit-trail-interno, notifiche.cos-e, notifiche.limitazioni-v1]
+    domanda_naturale: "La Dashboard mostra le attivita' recenti? C'e' una timeline di quello che succede?"
+    contenuto:
+      a_cosa_serve: >
+        Chiarire in modo onesto (D-051) la differenza fra la Dashboard
+        KPI attuale e un vero activity feed (che NON esiste v1).
+      quando_si_usa: >
+        Quando un utente cerca una timeline "chi ha fatto cosa quando"
+        nella Dashboard.
+      passi:
+        - "La Dashboard ImmoWeb ha 6 KPI counters aggiornati on-read
+          (nessuna cache)."
+        - "1) Immobili attivi: count status IN ('published',
+          'reserved')."
+        - "2) Lead aperti: count clients_leads status='open'."
+        - "3) Nuovi match (7gg): count match_audit created_at >=
+          now - 7d."
+        - "4) Visite (7gg): count calendar_events event_type='visit'
+          event_at BETWEEN now AND now+7d."
+        - "5) Collaboratori: count membri accepted dell'agency."
+        - "6) Inviti pendenti: count invites status='pending'."
+        - "COSA NON E': NON e' una timeline 'Ultime 20 attivita'',
+          NON e' una lista eventi cliccabili con drill-down, NON
+          mostra chi ha creato ultimo immobile / risposto ultimo
+          lead / lanciato ultima sync."
+        - "Backlog A-018 (Activity feed dashboard) proposto per v1.1
+          per aggregare gli audit trail in timeline."
+      errori_comuni:
+        - problema: "Voglio vedere le ultime azioni dei collaboratori"
+          soluzione: >
+            Non esiste v1. Solo query Mongo diretta agli audit
+            (super_admin) puo' mostrare storico per-utente.
+      permessi:
+        - "Tutti i membri agenzia vedono i KPI counters dell'agency"
+    screenshot:
+      - "[SCREEN: cap18-dashboard-kpi]"
+
+  # ---------- 18.14 · errori comuni ----------
+
+  - id: notifiche.errori-comuni
+    titolo: Errori comuni notifiche (email mock, template variabili, cron non lanciato)
+    modulo: Notifiche
+    widget: null
+    pubblico: [titolare, super_admin]
+    livello: intermedio
+    tags: [notifiche, errori, debug, email-mock, resend, template, cron, troubleshooting]
+    correlati: [notifiche.email-panoramica, notifiche.cron-saved-searches, notifiche.template-welcome-password]
+    domanda_naturale: "Perche' non ricevo le email di OMNIA? Come debuggo problemi con le notifiche?"
+    contenuto:
+      a_cosa_serve: >
+        Checklist troubleshooting per problemi comuni sulle notifiche
+        (email non ricevute, template con placeholder letterali, cron
+        non lanciato).
+      quando_si_usa: >
+        Quando un utente segnala "non mi arriva l'email".
+      passi:
+        - "E1 Non ricevo welcome/password_reset. Causa 1: RESEND_API_KEY
+          non configurata → mock mode. Fix dev: guarda log per
+          `[EMAIL MOCK]`. Fix prod: configura RESEND_API_KEY."
+        - "E1 Causa 2: email in spam. Fix: whitelist EMAIL_FROM."
+        - "E1 Causa 3: Resend rifiuta (rate limit / dominio non
+          verificato). Fix: log backend cerca `[EMAIL ERROR]`."
+        - "E2 Ho invitato un collega ma non riceve email. Vedi Cap. 13
+          §13.11 + verifica `[EMAIL OK]` nei log."
+        - "E3 Saved-search non invia mai email. Causa 1: nessun
+          super_admin ha lanciato il cron. Fix: POST
+          /api/app/cron/saved-searches/run-all. Causa 2: nessun match
+          nuovo. Causa 3: notification_channels non contiene 'email'.
+          Causa 4: is_active=false."
+        - "E4 Toast in-app spariscono troppo veloci. Comportamento
+          default sonner ~4-5s. Backlog A-023."
+        - "E5 Email arriva ma variabili sono letterali `{{user_name}}`.
+          Causa: chiamata send_email senza passare la variabile.
+          Fix: super_admin apre template HTML in shared/email/
+          templates/ e verifica placeholder passati nel variables dict."
+      errori_comuni:
+        - problema: "Log backend mostra `[EMAIL MOCK]`"
+          soluzione: >
+            RESEND_API_KEY manca. In dev e' comportamento atteso
+            (nessuna email reale). In prod, configura la chiave.
+      permessi:
+        - "Debug richiede accesso a log backend (dev o super_admin prod)"
+    screenshot: []
+
+  # ---------- 18.15 · limitazioni v1 ----------
+
+  - id: notifiche.limitazioni-v1
+    titolo: Limiti v1 Notifiche e attivita' (D-051 onesto · elenco esaustivo)
+    modulo: Notifiche
+    widget: null
+    pubblico: [titolare, agente, super_admin, b2c_client]
+    livello: intermedio
+    tags: [notifiche, attivita, limiti, cosa-non-fa, no-bell, no-activity-feed, no-push, no-sms, no-whatsapp, no-preferenze-ui, no-retry, no-webhook, onesta, d-051]
+    correlati: [notifiche.cos-e, notifiche.canali-attivi, notifiche.preferenze-utente]
+    domanda_naturale: "Cosa NON fa il modulo Notifiche v1? OMNIA ha campanella, unread badge, push mobile, SMS, WhatsApp, digest quotidiana, preferenze granulari, moderazione, retry queue, tracking delivery, opt-in per tipo email?"
+    contenuto:
+      a_cosa_serve: >
+        Elenco esaustivo di cosa il modulo Notifiche v1 NON fa,
+        rispettando l'Onesta' Documentale D-051.
+      quando_si_usa: >
+        Prima di aspettarti una Bell icon, una pagina Notifiche o un
+        SMS di conferma appuntamento.
+      passi:
+        - "BACKEND · NO router /notifications (nessun GET
+          /me/notifications, PATCH read, DELETE)."
+        - "BACKEND · NO router /activity o /activity-feed."
+        - "BACKEND · NO collezione Mongo notifications o activity_feed."
+        - "BACKEND · NO servizio push sender (schema
+          notification_channels accetta 'push' ma dead code)."
+        - "BACKEND · NO coda retry per email fallite (fire-and-forget)."
+        - "BACKEND · NO tracking delivery status Resend (no webhook
+          delivered/bounced/opened v1)."
+        - "BACKEND · NO digest email quotidiana per titolare (con
+          riepilogo lead/match/sync)."
+        - "BACKEND · NO scheduler interno per saved-search cron
+          (deve essere triggerato super_admin manualmente)."
+        - "BACKEND · NO rate limit su send_email (rischio abuso
+          password_reset)."
+        - "FRONTEND · NO Bell icon nella navbar."
+        - "FRONTEND · NO contatore unread."
+        - "FRONTEND · NO pagina Notifiche o Attivita'."
+        - "FRONTEND · NO preferenza UI per canale (email/push toggle)."
+        - "FRONTEND · NO preferenza UI per tipo (opt-in/opt-out per
+          welcome/agency_invite/lead_notification/saved_search_alert)."
+        - "FRONTEND · NO preferenza UI per digest frequency oltre a
+          saved-search (instant/daily/weekly)."
+        - "FRONTEND · NO mute/snooze temporaneo delle notifiche."
+        - "FRONTEND · NO moderazione (super_admin non puo' bloccare
+          invii per abuso)."
+        - "CHANNELS · NO SMS (nessuna integrazione Twilio)."
+        - "CHANNELS · NO WhatsApp Business (nessuna integrazione Meta)."
+        - "CHANNELS · NO Push web (Service Worker + VAPID keys non
+          configurati)."
+        - "CHANNELS · NO Push mobile (nessuna app iOS/Android)."
+        - "CHANNELS · NO Slack/Teams/Discord webhook."
+        - "CHANNELS · NO Voice call (Twilio Voice non configurato)."
+        - "ANALYTICS · NO tracking open rate / click-through rate."
+        - "ANALYTICS · NO A/B test template."
+        - "ANALYTICS · NO rendering preview UI per super_admin."
+        - "LOCALIZZAZIONE · founders_welcome + founders_admin_notification
+          disponibili solo in italiano (D-051)."
+        - "SAVED-SEARCH · frequency (instant/daily/weekly) e' un flag
+          salvato MA il cron IGNORA la frequenza (bug funzionale
+          documentato, backlog A-019)."
+      errori_comuni:
+        - problema: "Voglio ricevere notifiche mobile push"
+          soluzione: >
+            Non disponibile v1. Il valore 'push' nello schema utente
+            e' dead code. Backlog v1.1.
+        - problema: "Voglio disattivare le email di password_reset"
+          soluzione: >
+            Non consentito. Le email transazionali fondamentali sono
+            SEMPRE inviate (welcome, password_reset, agency_invite,
+            lead_notification, founders_*) indipendentemente da
+            notification_channels.
+      permessi:
+        - "N/A · limitazioni informative"
+    screenshot: []
+
+  # ---------- 18.16 · collegamenti ----------
+
+  - id: notifiche.collegamenti
+    titolo: Collegamenti Notifiche → altri moduli (Cap. 1/13/6/10/12/15/17)
+    modulo: Notifiche
+    widget: null
+    pubblico: [titolare, super_admin]
+    livello: base
+    tags: [notifiche, collegamenti, cross-ref, cap1, cap5, cap6, cap10, cap12, cap13, cap15, cap17]
+    correlati: [notifiche.cos-e, notifiche.email-panoramica, notifiche.audit-trail-interno]
+    domanda_naturale: "Come si integrano le notifiche con gli altri moduli di OMNIA?"
+    contenuto:
+      a_cosa_serve: >
+        Mappa dei trigger notifica/audit dagli altri moduli.
+      quando_si_usa: >
+        Quando devi risalire da un evento (invito, lead, sync) al
+        modulo che lo ha originato.
+      passi:
+        - "Cap. 1 Primo accesso → trigger welcome (registrazione B2B)
+          + password_reset (recupero password)."
+        - "Cap. 3 Immobili → trigger audit privacy_audit_events al
+          cambio livello privacy (L1-L4)."
+        - "Cap. 5 Match → trigger audit match_audit ad ogni proposta
+          match generata + KPI counter Dashboard."
+        - "Cap. 6 Publishing → trigger audit publishing_events al
+          run sync portale."
+        - "Cap. 10 HAL Agent CRM → trigger audit al_audit ad ogni chat
+          + improve (rate limit + cost tracking)."
+        - "Cap. 12 HAL Knowledge → trigger audit hal_knowledge_sessions
+          per ogni domanda RAG."
+        - "Cap. 13 Team & Ruoli → trigger email agency_invite
+          (magic-link 7gg)."
+        - "Cap. 15 Social Publisher → trigger audit social_posts ad
+          ogni push canale (success/failed). NO email v1."
+        - "Cap. 17 Domain Vault → trigger audit domain_vault_events
+          per sovereignty/DNS/connect."
+        - "Cap. 27 MLS Network placeholder → nessun trigger v1."
+      errori_comuni: []
+      permessi:
+        - "N/A · documentativo"
+    screenshot: []

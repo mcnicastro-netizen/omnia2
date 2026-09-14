@@ -1,0 +1,448 @@
+# HAL — Voci esportate per RAG
+# Capitolo 5 · Match
+# Schema: id, titolo, modulo, widget, pubblico, livello, tags, correlati,
+#         domanda_naturale, contenuto{a_cosa_serve, quando_si_usa, passi,
+#         errori_comuni[{problema,soluzione}], permessi}, screenshot[]
+
+voci:
+
+  - id: match.come-funziona
+    titolo: Come funziona il motore Match
+    modulo: Match
+    widget: null
+    pubblico: [titolare, agente, segreteria]
+    livello: base
+    tags: [match, matching, motore, primi-passi]
+    correlati:
+      - match.scala-temperature
+      - match.14-criteri
+      - match.zero-match
+    domanda_naturale: "Come funziona il matching in ImmoWeb?"
+    contenuto:
+      a_cosa_serve: >
+        Confrontare ogni immobile del portafoglio con ogni cliente
+        Acquirente/Affittuario/Investitore e generare un punteggio
+        0-100 di compatibilità.
+      quando_si_usa: >
+        Automaticamente in continuo. Si guarda ogni mattina per
+        ordinare le chiamate della giornata.
+      passi:
+        - Il motore calcola score 0-100 confrontando l'immobile con
+          le preferenze del cliente.
+        - Il punteggio alimenta la lista Match, la temperatura del
+          cliente (Rovente/Caldo/Tiepido/Freddo) e il bucket "Da
+          chiamare oggi".
+        - Il ricalcolo è automatico quando modifichi immobili o
+          clienti.
+        - "Clienti di tipo Venditore/Proprietario NON generano match:
+          il matching è solo per chi cerca."
+      errori_comuni:
+        - problema: "Il match dice compatibilità 90, quindi comprerà?"
+          soluzione: >
+            No. Il match è compatibilità, non previsione d'acquisto.
+            Serve a decidere l'ordine di chiamata, non a garantire
+            una vendita.
+      permessi:
+        - Titolare, agente, segreteria (come agente). Tutti vedono
+          la lista globale dei match dell'agenzia.
+    screenshot:
+      - "[SCREEN: cap5-matches-lista]"
+
+  - id: match.scala-temperature
+    titolo: La scala ROVENTE / CALDO / TIEPIDO / FREDDO
+    modulo: Match
+    widget: null
+    pubblico: [titolare, agente, segreteria]
+    livello: base
+    tags: [match, temperatura, priorita, rovente, caldo, tiepido, freddo]
+    correlati:
+      - match.14-criteri
+      - match.workflow-giornata
+      - clienti.temperatura-lead-scoring
+    domanda_naturale: "Cosa significano ROVENTE, CALDO, TIEPIDO,
+      FREDDO?"
+    contenuto:
+      a_cosa_serve: >
+        Tradurre il punteggio 0-100 in una priorità d'azione
+        immediata: chi chiamare subito, chi questa settimana, chi
+        menzionare quando capita, chi saltare.
+      quando_si_usa: >
+        Ogni mattina, per ordinare le chiamate.
+      passi:
+        - "ROVENTE 🔥 (85-100 punti, rosso): chiama entro 24 ore.
+          Compatibilità altissima."
+        - "CALDO 🌶️ (65-84 punti, arancione): chiama questa settimana.
+          Buona compatibilità con qualche disallineamento leggero."
+        - "TIEPIDO ☀️ (40-64 punti, ambra): menziona quando ne hai
+          occasione. Compatibilità parziale, vendita più consulenziale."
+        - "FREDDO ❄️ (< 40 punti, grigio): salta, se non hai idee
+          migliori. Non è visualizzato di default (il filtro parte da
+          50+)."
+      errori_comuni:
+        - problema: "Un match Rovente non converte in 30 giorni"
+          soluzione: >
+            Aggiorna lo Stato CRM del cliente (Contattato, Qualificato,
+            Chiuso perso). Un lead che non risponde non è rovente.
+      permessi:
+        - Tutti
+    screenshot:
+      - "[SCREEN: cap5-temperature-legenda]"
+
+  - id: match.14-criteri
+    titolo: I 14 criteri di scoring e i loro pesi
+    modulo: Match
+    widget: null
+    pubblico: [titolare, agente]
+    livello: intermedio
+    tags: [match, scoring, criteri, pesi, algoritmo]
+    correlati:
+      - match.scala-temperature
+      - match.breakdown-dettaglio
+      - immobili.creazione-manuale
+      - clienti.preferenze-ricerca
+    domanda_naturale: "Come è calcolato il punteggio 0-100 di un
+      match?"
+    contenuto:
+      a_cosa_serve: >
+        Capire come è composto lo score, per correggere i dati che
+        pesano di più quando serve.
+      quando_si_usa: >
+        Quando un match sembra strano (troppo alto o troppo basso)
+        e vuoi vedere perché.
+      passi:
+        - "Il totale fa esattamente 100 punti, ripartiti su 14
+          criteri."
+        - "Prezzo: 17 punti (il più importante)."
+        - "Operazione (Vendita/Affitto/Riscatto/Asta): 14 punti.
+          Incompatibilità hard: se non combacia lo score complessivo
+          cade a 0."
+        - "Città: 12 punti."
+        - "Tipologia: 11 punti."
+        - "Superficie: 7 punti."
+        - "Caratteristiche imprescindibili: 6 punti."
+        - "Zona/Quartiere: 5 punti."
+        - "Locali (vani): 5 punti."
+        - "Camere: 4 · Bagni: 4 · Condizione: 4 · Classe energetica:
+          4 · Multimedia (foto+vtour): 4 punti ciascuno."
+        - "Piano preferito: 3 punti."
+        - "Un criterio non compilato nelle preferenze conta come
+          indifferente e assegna piena scoring su quel criterio."
+      errori_comuni:
+        - problema: "Punteggio 0 secco"
+          soluzione: >
+            Operazione incompatibile (immobile in vendita, cliente
+            cerca affitto). Controlla il campo Operazione su entrambi
+            i lati.
+        - problema: "Score basso ma il cliente sembra perfetto"
+          soluzione: >
+            Prezzo e Operazione insieme fanno il 31% del punteggio.
+            Se il prezzo è fuori range, il match cala molto. Guarda
+            il Breakdown dal dettaglio match.
+      permessi:
+        - Tutti
+    screenshot:
+      - "[SCREEN: cap5-scoring-breakdown]"
+
+  - id: match.lista-e-filtro
+    titolo: La pagina Match e il filtro Score minimo
+    modulo: Match
+    widget: null
+    pubblico: [titolare, agente, segreteria]
+    livello: base
+    tags: [match, lista, filtri, score, priorita]
+    correlati:
+      - match.match-per-immobile
+      - match.match-per-cliente
+      - match.workflow-giornata
+    domanda_naturale: "Come uso la pagina Match e il filtro Score
+      minimo?"
+    contenuto:
+      a_cosa_serve: >
+        Vedere tutti i match dell'agenzia in ordine di forza e
+        decidere il ritmo di lavoro con il filtro Score minimo.
+      quando_si_usa: >
+        Ogni mattina, come punto di partenza.
+      passi:
+        - Dalla barra a sinistra clicca "Match".
+        - In alto a destra scegli il filtro "Score minimo".
+        - "40+ tiepidi = mostra quasi tutto."
+        - "50+ buoni = default consigliato."
+        - "65+ caldi = giornate produttive."
+        - "85+ roventi = power hour del mattino."
+        - La lista è sempre ordinata per score decrescente.
+        - Clicca una riga per aprire il dettaglio con breakdown e
+          cosa manca.
+      errori_comuni:
+        - problema: "La pagina è vuota"
+          soluzione: >
+            Vedi match.zero-match per la checklist completa.
+      permessi:
+        - Tutti
+    screenshot:
+      - "[SCREEN: cap5-lista-filtri]"
+
+  - id: match.breakdown-dettaglio
+    titolo: Il breakdown del punteggio (dettaglio match)
+    modulo: Match
+    widget: null
+    pubblico: [titolare, agente]
+    livello: intermedio
+    tags: [match, dettaglio, breakdown, missing]
+    correlati:
+      - match.14-criteri
+      - match.lista-e-filtro
+    domanda_naturale: "Come vedo perché un match ha un certo
+      punteggio?"
+    contenuto:
+      a_cosa_serve: >
+        Aprire il singolo match e capire punto per punto come è
+        composto lo score e cosa non combacia.
+      quando_si_usa: >
+        Quando un match sembra troppo alto o troppo basso, o prima
+        di chiamare un cliente per prepararsi la telefonata.
+      passi:
+        - Clicca una riga nella lista Match.
+        - Si apre il dettaglio Match con anagrafica cliente + scheda
+          immobile.
+        - Nella sezione "Breakdown" vedi quanti punti su ciascuno
+          dei 14 criteri.
+        - Nella sezione "Cosa manca" leggi in italiano i mismatch
+          (es. "Prezzo sopra budget di €25.000", "Zona non tra le
+          preferite").
+      errori_comuni: []
+      permessi:
+        - Tutti
+    screenshot: []
+
+  - id: match.match-per-immobile
+    titolo: Vedere i match di un singolo immobile ("chi vuole questo?")
+    modulo: Match
+    widget: null
+    pubblico: [titolare, agente, segreteria]
+    livello: base
+    tags: [match, immobili, mandato, chi-vuole]
+    correlati:
+      - match.match-per-cliente
+      - match.lista-e-filtro
+    domanda_naturale: "Ho un nuovo mandato, a chi lo propongo?"
+    contenuto:
+      a_cosa_serve: >
+        Rispondere alla domanda "a chi propongo questo immobile" e
+        muoversi prima che l'annuncio finisca sui portali.
+      quando_si_usa: >
+        Appena acquisisci un mandato, prima di pubblicare l'annuncio
+        pubblicamente.
+      passi:
+        - Vai in Immobili e apri l'immobile.
+        - Trova la sezione Match (o il pulsante "Chi vuole questo
+          immobile").
+        - Vedi la lista dei clienti compatibili ordinati per score.
+        - Chiama i primi 3-5 ROVENTI che escono.
+        - Spesso l'annuncio non ha bisogno di uscire sui portali.
+      errori_comuni:
+        - problema: "Zero clienti compatibili"
+          soluzione: >
+            Le preferenze dei tuoi clienti non collimano. Aggiungi
+            clienti con quel profilo, o spingi l'annuncio sui portali
+            per attrarre lead nuovi.
+      permessi:
+        - Tutti
+    screenshot: []
+
+  - id: match.match-per-cliente
+    titolo: Vedere i match di un singolo cliente ("cosa gli consiglio?")
+    modulo: Match
+    widget: null
+    pubblico: [titolare, agente, segreteria]
+    livello: base
+    tags: [match, clienti, proposta, consulenza]
+    correlati:
+      - match.match-per-immobile
+      - clienti.preferenze-ricerca
+    domanda_naturale: "Che immobili posso proporre a questo cliente?"
+    contenuto:
+      a_cosa_serve: >
+        Preparare una proposta di 3-5 immobili adatti al cliente,
+        prima di chiamarlo.
+      quando_si_usa: >
+        Prima di ogni telefonata al cliente. Prima di ogni
+        appuntamento.
+      passi:
+        - Vai in Clienti e apri il cliente Acquirente/Affittuario/
+          Investitore.
+        - Trova la sezione Match / Immobili suggeriti.
+        - Vedi gli immobili compatibili in ordine di score.
+        - Clicca un immobile per aprire la scheda completa.
+      errori_comuni:
+        - problema: "Il cliente non ha match"
+          soluzione: >
+            Preferenze troppo strette (allarga range prezzo/superficie),
+            portafoglio troppo piccolo, oppure il cliente è
+            Venditore/Proprietario (non genera match).
+      permessi:
+        - Tutti
+    screenshot: []
+
+  - id: match.lead-scoring-ai
+    titolo: Lead Scoring AI — cos'è e quando aggiornarlo
+    modulo: Match
+    widget: null
+    pubblico: [titolare, agente]
+    livello: intermedio
+    tags: [match, ai, lead-scoring, gemini, crediti]
+    correlati:
+      - clienti.temperatura-lead-scoring
+      - match.scala-temperature
+      - clienti.smart-sorting-buckets
+    domanda_naturale: "Cosa aggiunge il Lead Scoring AI oltre al
+      punteggio automatico?"
+    contenuto:
+      a_cosa_serve: >
+        Aggiungere un secondo strato di lettura al punteggio
+        deterministico dei 14 criteri, valutando coerenza fra
+        preferenze e biografia, qualità della compilazione e storia
+        dei contatti.
+      quando_si_usa: >
+        Dopo aver aggiunto molti immobili nuovi, dopo aver corretto
+        le preferenze di un cliente, o quando vuoi ricalibrare le
+        priorità della lista Clienti.
+      passi:
+        - Il Lead Scoring AI produce un punteggio e una temperatura
+          sulla scheda cliente, non sul singolo match.
+        - Vedi Rovente/Caldo/Tiepido/Freddo accanto al cliente in
+          Clienti anche prima di aprire un match.
+        - Si aggiorna automaticamente ogni 24 ore per i clienti con
+          match esistenti.
+        - Puoi forzare l'aggiornamento col bottone "⚡ Aggiorna AI
+          (N)" in alto alla lista Clienti (Cap. 4.6).
+        - "Costo: consuma crediti Emergent LLM. Un ricalcolo di 50
+          clienti costa qualche centesimo."
+      errori_comuni:
+        - problema: "Ho aggiornato AI ma la temperatura non cambia"
+          soluzione: >
+            Il ricalcolo è coerente. Se il deterministic score
+            (punteggio 14 criteri) è basso, l'AI non lo alza
+            artificialmente.
+        - problema: "Un cliente Rovente non compra da mesi"
+          soluzione: >
+            Aggiorna lo stato CRM. Il Lead Scoring AI legge lo stato:
+            un cliente che dice ripetutamente no scende gradualmente.
+      permessi:
+        - Tutti (agente e segreteria possono aggiornare)
+    screenshot:
+      - "[SCREEN: cap5-lead-scoring-ai]"
+
+  - id: match.workflow-giornata
+    titolo: Workflow operativo — la giornata tipo sul modulo Match
+    modulo: Match
+    widget: null
+    pubblico: [titolare, agente]
+    livello: base
+    tags: [match, workflow, power-hour, giornata-tipo, produttivita]
+    correlati:
+      - match.scala-temperature
+      - match.lista-e-filtro
+      - clienti.azioni-rapide
+    domanda_naturale: "Come organizzo la mattinata usando Match?"
+    contenuto:
+      a_cosa_serve: >
+        Trasformare Match in un ritmo di lavoro quotidiano che
+        massimizza le chiamate utili.
+      quando_si_usa: >
+        Ogni mattina, per 2 ore ben investite.
+      passi:
+        - "08:30-09:00: caffè, apri Dashboard, guarda i numeri della
+          giornata."
+        - "09:00-09:30: Power Hour ROVENTI. Apri Match con filtro
+          85+, chiama i primi 5. Aggiorna lo Stato CRM del cliente
+          dopo ogni chiamata."
+        - "09:30-10:15: Sessione CALDI. Filtro 65+, 6-8
+          telefonate/WhatsApp."
+        - "10:15-10:30: rispondi ai lead nuovi (bucket 'Nuovi' in
+          Clienti)."
+        - "10:30-11:00: se hai un nuovo mandato, apri l'immobile,
+          vai in Match dell'immobile, chiama i primi 3 clienti."
+        - "Regola 80/20: 80% del tuo tempo sui ROVENTI e CALDI, 20%
+          sull'igiene CRM. I FREDDI non li chiami quasi mai."
+      errori_comuni:
+        - problema: "Chiamo tutto il giorno e non concludo"
+          soluzione: >
+            Probabilmente stai chiamando anche tiepidi/freddi. Alza
+            il filtro a 65+ e vedi la differenza. Meglio 5 chiamate
+            di qualità che 20 dispersive.
+      permessi:
+        - Titolare, agente. La segreteria di solito non fa power hour
+          telefoniche.
+    screenshot: []
+
+  - id: match.zero-match
+    titolo: Zero match — cosa fare quando la pagina è vuota
+    modulo: Match
+    widget: null
+    pubblico: [titolare, agente, segreteria]
+    livello: base
+    tags: [match, troubleshooting, zero-match, checklist]
+    correlati:
+      - immobili.pubblicare-bozza
+      - clienti.preferenze-ricerca
+      - clienti.tipi-cliente
+    domanda_naturale: "Perché la pagina Match è vuota?"
+    contenuto:
+      a_cosa_serve: >
+        Diagnosticare la causa più comune di "Nessun match al momento"
+        e sbloccarla in pochi minuti.
+      quando_si_usa: >
+        Ogni volta che apri Match e non vedi nulla. Tipico delle
+        agenzie nuove.
+      passi:
+        - Verifica che gli immobili siano in stato Pubblicato (Cap.
+          3.5). Le bozze non entrano nel matching.
+        - Verifica che i clienti abbiano almeno le preferenze base
+          (operazione + città + budget). Senza queste, zero match.
+        - Prova a scendere col filtro Score minimo da 85+ a 40+.
+        - Se hai solo Venditori/Proprietari, aggiungi Acquirenti o
+          Affittuari con preferenze compilate.
+        - Se il portafoglio non collima con la domanda (ville
+          €500k+ vs clienti che cercano bilocali €150k) il match
+          sotto 40 è normale.
+      errori_comuni: []
+      permessi:
+        - Tutti
+    screenshot: []
+
+  - id: match.ricalcolo-manuale
+    titolo: Aggiornare manualmente i punteggi AI (bottone "⚡ Aggiorna
+      AI")
+    modulo: Match
+    widget: null
+    pubblico: [titolare, agente]
+    livello: intermedio
+    tags: [match, ricalcolo, ai, aggiornamento, crediti]
+    correlati:
+      - match.lead-scoring-ai
+      - clienti.temperatura-lead-scoring
+    domanda_naturale: "Quando devo cliccare '⚡ Aggiorna AI'?"
+    contenuto:
+      a_cosa_serve: >
+        Forzare il ricalcolo del Lead Scoring AI senza aspettare il
+        ciclo automatico di 24 ore.
+      quando_si_usa: >
+        Dopo aver caricato molti immobili nuovi, dopo aver corretto
+        le preferenze di parecchi clienti, o quando la temperatura
+        di un cliente sembra vecchia.
+      passi:
+        - Vai in Clienti.
+        - In alto trovi il badge "⚡ Aggiorna AI (N)" dove N è il
+          numero di clienti senza punteggio recente.
+        - Cliccalo.
+        - Attendi 5-15 secondi per qualche decina di clienti.
+        - Alla fine vedi "AI Lead Score aggiornato per N clienti".
+      errori_comuni:
+        - problema: "Il ricalcolo consuma sempre crediti?"
+          soluzione: >
+            Sì, ogni chiamata AI ha un costo. Aggiorna solo quando ne
+            vale la pena (portafoglio o preferenze cambiati). Il
+            ricalcolo automatico ogni 24h è già incluso.
+      permessi:
+        - Titolare, agente, segreteria (come agente)
+    screenshot: []

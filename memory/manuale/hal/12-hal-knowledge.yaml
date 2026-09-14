@@ -1,0 +1,532 @@
+# HAL — Voci esportate per RAG
+# Capitolo 12 · HAL Knowledge (il RAG che risponde sul manuale OMNIA)
+
+voci:
+
+  - id: halk.cos-e
+    titolo: Cos'è HAL Knowledge in OMNIA
+    modulo: HAL Knowledge
+    widget: null
+    pubblico: [titolare, agente, segreteria]
+    livello: base
+    tags: [hal-knowledge, rag, panoramica, primi-passi, assistente, ai, manuale]
+    correlati: [halk.dove-lo-trovi, halk.motore, halk.distinzione-tre-hal]
+    domanda_naturale: "Cos'è HAL Knowledge e a cosa serve?"
+    contenuto:
+      a_cosa_serve: >
+        Motore Q&A basato su RAG (Retrieval-Augmented Generation) che
+        risponde a domande in linguaggio naturale sul funzionamento di
+        OMNIA usando come base la documentazione ufficiale interna
+        (PRD, ROADMAP, DECISIONS, Business Model) e il Manuale
+        Operativo Cap. 1-11 (129 voci HAL atomiche indicizzate).
+      quando_si_usa: >
+        Quando non sai come funziona un pezzo di OMNIA e non hai voglia
+        di aprire il manuale intero. Al posto di cercare fra 300 pagine
+        di documentazione, fai una domanda naturale e HAL ti risponde
+        con le fonti citate.
+      passi:
+        - "Terzo assistente HAL: HAL Agent CRM (Cap. 10) legge il tuo
+          database CRM; HAL Knowledge (questo) legge la documentazione;
+          HAL Legal (in arrivo) risponde a domande giuridiche."
+        - "Motore: TF-IDF + cosine similarity per retrieval + Gemini 3
+          Flash Preview per generation. Zero costo retrieval, solo
+          generation LLM."
+        - "Sola lettura sulla documentazione: non modifica dati, non
+          esegue azioni, non fa web search, non ha memoria fra domande."
+        - "Ogni risposta cita le fonti utilizzate: se HAL non ha
+          abbastanza contesto, te lo dice invece di inventare (D-051)."
+      errori_comuni:
+        - problema: "Chiedo qualcosa sui miei immobili e HAL non risponde"
+          soluzione: >
+            HAL Knowledge non legge il tuo DB CRM. Usa HAL Agent CRM
+            (Cap. 10, chat widget flottante in ImmoWeb) per query sui
+            tuoi dati agenzia.
+      permessi:
+        - Titolare, agente, segreteria, branch_admin, group_admin, super_admin
+        - Non accessibile lato B2C /cloud
+    screenshot: ["[SCREEN: cap12-halk-panoramica]"]
+
+  - id: halk.dove-lo-trovi
+    titolo: Dove trovi HAL Knowledge in ImmoWeb
+    modulo: HAL Knowledge
+    widget: null
+    pubblico: [titolare, agente, segreteria]
+    livello: base
+    tags: [hal-knowledge, dove-si-trova, sidebar, navigazione, accesso, primi-passi]
+    correlati: [halk.cos-e, halk.come-porre-domanda]
+    domanda_naturale: "Dove trovo HAL Knowledge? Come ci accedo?"
+    contenuto:
+      a_cosa_serve: >
+        Sapere dove cliccare per aprire la pagina HAL Knowledge dentro
+        ImmoWeb.
+      quando_si_usa: >
+        Ogni volta che vuoi fare una domanda sul manuale OMNIA senza
+        cercarla a mano.
+      passi:
+        - "Fai login in ImmoWeb con il tuo utente agenzia."
+        - "Nella barra a sinistra clicca la voce HAL (accordion)."
+        - "Seleziona la sotto-voce Knowledge Base."
+        - "La rotta finale e' /it/app/hal/knowledge."
+      errori_comuni:
+        - problema: "Non vedo la voce HAL nella sidebar"
+          soluzione: >
+            Verifica di essere loggato come utente agenzia (titolare,
+            agente, segreteria). L'endpoint HAL Knowledge non e'
+            esposto sul portale pubblico /cloud.
+      permessi:
+        - Tutti i ruoli agenzia autenticati
+    screenshot: []
+
+  - id: halk.come-porre-domanda
+    titolo: Come porre una domanda a HAL Knowledge
+    modulo: HAL Knowledge
+    widget: null
+    pubblico: [titolare, agente, segreteria]
+    livello: base
+    tags: [hal-knowledge, domanda, chiedere, prompt, textarea, formulazione]
+    correlati: [halk.badge-confidence, halk.fonti-citate, halk.insufficient-context]
+    domanda_naturale: "Come faccio una domanda a HAL Knowledge? Come devo scriverla?"
+    contenuto:
+      a_cosa_serve: >
+        Formulare la domanda in modo che HAL trovi i chunk piu'
+        pertinenti nel corpus. Domande piu' mirate = risposte piu'
+        precise.
+      quando_si_usa: >
+        Ogni volta che apri la pagina HAL Knowledge.
+      passi:
+        - "Apri la pagina HAL Knowledge (sidebar HAL > Knowledge Base)."
+        - "Scrivi la domanda nel campo di testo (max 1000 caratteri,
+          min 3 caratteri)."
+        - "Preferisci frasi naturali ('Come attivo Subito.it?') invece
+          di keyword secche ('attivazione subito')."
+        - "Premi il bottone 'Chiedi ad HAL' (o Enter senza Shift)."
+        - "In 2-5 secondi arriva la risposta con badge di confidence
+          e blocco Fonti citate."
+        - "In alternativa, clicca una delle 5 domande di esempio in
+          pagina per provare subito."
+      errori_comuni:
+        - problema: "422 sulla submit"
+          soluzione: >
+            La domanda deve essere lunga fra 3 e 1000 caratteri
+            (Pydantic KnowledgeAskRequest). Controlla di non aver
+            copiato solo uno spazio o un testo troppo lungo.
+        - problema: "Ricevo sempre 'insufficient_context'"
+          soluzione: >
+            La domanda usa keyword non presenti nel corpus. Prova con
+            termini del manuale (es. Fascicolo, Match, Compliance HARD,
+            Consap under-36, Watermark).
+      permessi:
+        - Tutti i ruoli agenzia autenticati
+    screenshot: []
+
+  - id: halk.badge-confidence
+    titolo: Come leggere il badge di confidence (alta, media, insufficiente)
+    modulo: HAL Knowledge
+    widget: null
+    pubblico: [titolare, agente, segreteria]
+    livello: base
+    tags: [hal-knowledge, confidence, badge, similarity, tf-idf, soglia, alta-media-bassa]
+    correlati: [halk.come-porre-domanda, halk.insufficient-context, halk.motore]
+    domanda_naturale: "Cosa significano i badge 'alta confidence', 'media', 'insufficiente' sulla risposta?"
+    contenuto:
+      a_cosa_serve: >
+        Capire quanto HAL si fida della sua risposta. Il badge riporta
+        la similarita' coseno TF-IDF fra la domanda e il chunk piu'
+        rilevante trovato nel corpus.
+      quando_si_usa: >
+        Ogni volta che ricevi una risposta, per decidere se fidarti,
+        verificare le fonti o riformulare la domanda.
+      passi:
+        - "Alta confidence (badge verde): similarita' >= 0.20 (20%).
+          HAL ha trovato chunk molto pertinenti, risposta affidabile."
+        - "Media confidence (badge ambra): similarita' fra 0.08 e 0.20.
+          Chunk parzialmente pertinenti; verifica le fonti prima di
+          fidarti al 100%."
+        - "Insufficiente (badge rosso): similarita' < 0.08. HAL rifiuta
+          di rispondere e ritorna il messaggio 'Non ho abbastanza
+          contesto nel corpus OMNIA per rispondere'."
+        - "Le soglie sono definite in hal_knowledge.py:
+          CONFIDENCE_MIN=0.08, CONFIDENCE_HIGH=0.20."
+      errori_comuni:
+        - problema: "La risposta e' media e non capisco se e' giusta"
+          soluzione: >
+            Guarda le fonti citate: se coincidono con il capitolo di
+            manuale atteso, la risposta e' probabilmente corretta.
+            Altrimenti riformula usando parole-chiave piu' specifiche.
+      permessi:
+        - Tutti i ruoli agenzia autenticati
+    screenshot: ["[SCREEN: cap12-halk-risposta-fonti]"]
+
+  - id: halk.fonti-citate
+    titolo: Come sono strutturate le fonti citate nella risposta
+    modulo: HAL Knowledge
+    widget: null
+    pubblico: [titolare, agente, segreteria]
+    livello: base
+    tags: [hal-knowledge, fonti, citazioni, sources, similarity, top-k]
+    correlati: [halk.badge-confidence, halk.corpus]
+    domanda_naturale: "Cosa contiene il blocco 'Fonti citate' sotto la risposta?"
+    contenuto:
+      a_cosa_serve: >
+        Verificare da dove HAL ha preso le informazioni per costruire
+        la risposta.
+      quando_si_usa: >
+        Ogni volta che vuoi audit della risposta o vuoi approfondire
+        un tema andando a leggere il capitolo di manuale corrispondente.
+      passi:
+        - "Sotto la prosa della risposta HAL trova sempre il blocco
+          'Fonti citate' (data-testid=hal-sources)."
+        - "Per ogni fonte vedi: nome file (es. 07-fascicolo-immobile.yaml),
+          sezione (modulo per YAML, titolo H1/H2 per MD) e percentuale
+          di similarity."
+        - "Nella prosa della risposta HAL cita le fonti con marker
+          [FONTE N] alla fine delle frasi rilevanti."
+        - "Il retrieval restituisce al massimo 5 fonti (TOP_K=5 in
+          hal_knowledge.py)."
+        - "Percentuale simililarity: > 20% = ottima, 8-20% = media,
+          < 8% = scartata (nessuna fonte mostrata)."
+      errori_comuni:
+        - problema: "Vedo solo file .yaml, non i .md dei capitoli"
+          soluzione: >
+            E' voluto: le voci YAML sono chunk atomici gia' ottimizzati
+            per Q&A. I .md dei capitoli sono lunga prosa che il TF-IDF
+            spezza in chunk piu' larghi e meno mirati.
+      permessi:
+        - Tutti i ruoli agenzia autenticati
+    screenshot: []
+
+  - id: halk.corpus
+    titolo: Cosa c'e' nel corpus indicizzato da HAL Knowledge
+    modulo: HAL Knowledge
+    widget: null
+    pubblico: [titolare, agente, segreteria, super_admin]
+    livello: intermedio
+    tags: [hal-knowledge, corpus, documenti, manuale, prd, roadmap, decisions, changelog, esclusioni]
+    correlati: [halk.motore, halk.reindex, halk.limiti]
+    domanda_naturale: "Quali documenti legge HAL Knowledge? Su cosa risponde e su cosa no?"
+    contenuto:
+      a_cosa_serve: >
+        Sapere su cosa aspettarti risposte precise (documenti dentro il
+        corpus) e su cosa no (fuori scope).
+      quando_si_usa: >
+        Prima di chiedere qualcosa e restare deluso, per capire se
+        HAL Knowledge e' lo strumento giusto.
+      passi:
+        - "Documenti fondamentali OMNIA (elenco esatto in
+          hal_knowledge.py:CORPUS_FILES): PRD.md, ROADMAP.md,
+          DECISIONS.md, AUDIT_M2.md, PROGRAMMA_OMNIA.md,
+          ASPETTI_DA_APPROFONDIRE.md, BUSINESS_MODEL.md."
+        - "Manuale Operativo Cap. 1-11: i file .md (chunkati per
+          sezione con finestra 500 parole) e i .yaml (chunkati
+          1 voce = 1 chunk atomico). Totale 129 voci HAL a Feb 2026."
+        - "CHANGELOG.md e' ESCLUSO dal corpus (TASK B-ter, Feb 2026).
+          Motivo: conteneva query test come esempi, creava feedback
+          loop TF-IDF (top-1 sempre sul changelog invece del manuale)."
+        - "NON e' nel corpus: il tuo DB CRM (immobili, clienti, lead),
+          siti web esterni, Wikipedia, normativa in tempo reale, email
+          interne, ticket supporto, note operative."
+        - "Ogni file ha un MD5 salvato: il reindex idempotente salta i
+          file invariati (a meno che force=true)."
+      errori_comuni:
+        - problema: "Vorrei che HAL leggesse il PDF di normativa X"
+          soluzione: >
+            Il corpus e' curato manualmente. Nuove fonti richiedono un
+            passaggio di approvazione dal team OMNIA (aggiunta a
+            CORPUS_FILES o come .md/.yaml nel manuale).
+      permessi:
+        - Tutti gli utenti agenzia leggono lo stesso corpus (non
+          multitenant per corpus)
+    screenshot: []
+
+  - id: halk.motore
+    titolo: Come funziona il motore RAG (TF-IDF + Gemini 3 Flash)
+    modulo: HAL Knowledge
+    widget: null
+    pubblico: [titolare, agente, super_admin]
+    livello: intermedio
+    tags: [hal-knowledge, motore, tf-idf, gemini, rag, retrieval, generation, embeddings, d-061]
+    correlati: [halk.corpus, halk.badge-confidence, halk.reindex]
+    domanda_naturale: "Come funziona HAL Knowledge sotto il cofano? Usa embeddings o cosa?"
+    contenuto:
+      a_cosa_serve: >
+        Capire perche' certe risposte sono precise e altre meno,
+        conoscendo il funzionamento tecnico.
+      quando_si_usa: >
+        Quando devi spiegare a qualcuno perche' HAL costa poco e
+        risponde in fretta.
+      passi:
+        - "Chunking: documenti spezzati in pezzi. Per gli .md finestra
+          di 500 parole con 50 di overlap. Per gli .yaml del manuale
+          1 voce = 1 chunk atomico con serializzazione strutturata
+          ([TITOLO][MODULO][DOMANDA][A COSA SERVE]...[TAGS])."
+        - "Indicizzazione TF-IDF (sklearn TfidfVectorizer):
+          unigrammi + bigrammi, stopword italiane (~90 parole),
+          strip_accents=unicode, vocabolario 3000-6000 termini."
+        - "Retrieval per query: la domanda viene vettorializzata,
+          calcolata cosine similarity con tutti i chunk, tenuti i
+          top-5 (TOP_K=5). Se il migliore ha sim < 0.08 -> rifiuta."
+        - "Generation: se ci sono chunk sufficienti, prompt strutturato
+          con le fonti + istruzione a citare come [FONTE N] +
+          Gemini 3 Flash Preview via Emergent LLM Key, max 300 parole
+          in risposta."
+        - "Persistenza indice: matrice TF-IDF serializzata in JSON
+          (non pickle, per sicurezza H9 D-051) in Mongo
+          hal_knowledge_meta singleton. Cache in-memory al primo uso."
+        - "Costo per query: ~0 sul retrieval (in-memory), frazione di
+          centesimo su generation (30 token in + 300 out ca)."
+      errori_comuni:
+        - problema: "Perche' non usate embeddings neurali (SBERT/OpenAI)?"
+          soluzione: >
+            Decisione D-061 in DECISIONS.md. Corpus piccolo (~130 voci)
+            + domande italiane su testi tecnici -> TF-IDF batte
+            embeddings in latenza senza degradare qualita'.
+            Rivalutabile quando il corpus supera le 500 voci.
+      permessi:
+        - Descritto per developer/super_admin ma leggibile a tutti
+    screenshot: []
+
+  - id: halk.insufficient-context
+    titolo: Quando HAL rifiuta di rispondere (insufficient_context)
+    modulo: HAL Knowledge
+    widget: null
+    pubblico: [titolare, agente, segreteria]
+    livello: base
+    tags: [hal-knowledge, insufficient-context, rifiuto, onestà, d-051, fallback, no-hallucination]
+    correlati: [halk.badge-confidence, halk.come-porre-domanda, halk.limiti]
+    domanda_naturale: "Perche' HAL mi ha detto 'Non ho abbastanza contesto'? E' un bug?"
+    contenuto:
+      a_cosa_serve: >
+        Capire quando HAL rifiuta di rispondere e come reagire.
+      quando_si_usa: >
+        Ogni volta che la similarity del chunk migliore e' sotto la
+        soglia 0.08. E' un comportamento voluto (D-051 onestà, zero
+        invenzioni).
+      passi:
+        - "Se il best chunk ha similarity < 0.08 -> HAL torna
+          {status: 'insufficient_context', answer: 'Non ho abbastanza
+          contesto nel corpus OMNIA per rispondere...', sources: []}."
+        - "In UI vedi un riquadro ambra con l'avviso e la similarity
+          in percentuale."
+        - "Situazioni tipiche: domanda fuori scope (meteo, gossip,
+          normativa esterna), keyword troppo generiche, tema non
+          ancora nel manuale (Cap. 13-26 in scrittura), refusi
+          ortografici gravi."
+        - "Rimedio 1: riformula con parole-chiave del manuale
+          (es. Fascicolo, Match, Compliance HARD, Consap under-36,
+          Watermark, Publisher, Domain Vault)."
+        - "Rimedio 2: se il tema e' coperto ma HAL non trova ->
+          segnala al team OMNIA con la stringa esatta della domanda."
+        - "Rimedio 3: se il tema e' su dati CRM -> usa HAL Agent CRM
+          (Cap. 10) invece di HAL Knowledge."
+      errori_comuni:
+        - problema: "Chiedo cose specifiche sul CRM e ricevo insufficient"
+          soluzione: >
+            HAL Knowledge legge documentazione, non dati CRM. Passa a
+            HAL Agent CRM (Cap. 10) per query sui tuoi immobili/clienti.
+      permessi:
+        - Tutti i ruoli agenzia autenticati
+    screenshot: []
+
+  - id: halk.storico
+    titolo: Storico delle tue domande su HAL Knowledge
+    modulo: HAL Knowledge
+    widget: null
+    pubblico: [titolare, agente, segreteria]
+    livello: base
+    tags: [hal-knowledge, storico, history, sessioni, privacy, ripescare, cache-utente]
+    correlati: [halk.come-porre-domanda, halk.privacy]
+    domanda_naturale: "Posso rivedere le domande che ho gia' fatto a HAL Knowledge?"
+    contenuto:
+      a_cosa_serve: >
+        Ripescare rapidamente una risposta gia' ottenuta, senza
+        rifarla (nessun costo LLM aggiuntivo).
+      quando_si_usa: >
+        Quando ricordi che HAL aveva gia' risposto a una domanda
+        simile e vuoi rileggere quella risposta.
+      passi:
+        - "Sotto il form di domanda, sezione 'Domande recenti'."
+        - "Vengono mostrate le ultime 8 tue domande (fetch server
+          fino a 15, GET /api/app/hal/knowledge/history?limit=15)."
+        - "Ogni riga mostra: domanda, badge confidence piccolo,
+          data/ora, numero fonti citate."
+        - "Clic su una riga -> la domanda torna nel campo di testo
+          e la risposta viene riproposta dallo storage (no rigenerazione)."
+        - "Nessuna cancellazione utente-side in UI v1 (non c'e'
+          bottone Elimina lato pagina)."
+      errori_comuni:
+        - problema: "Non vedo lo storico"
+          soluzione: >
+            Compare solo dopo che hai fatto almeno una domanda in
+            passato con quella utenza.
+      permessi:
+        - Ogni utente vede solo le proprie domande
+        - Il super_admin vede lo storico di tutti (audit e debug corpus)
+    screenshot: []
+
+  - id: halk.reindex
+    titolo: Reindex del corpus (solo super_admin)
+    modulo: HAL Knowledge
+    widget: null
+    pubblico: [super_admin]
+    livello: intermedio
+    tags: [hal-knowledge, reindex, super-admin, corpus, force, idempotente, md5, aggiornamento]
+    correlati: [halk.corpus, halk.motore, halk.status-badge]
+    domanda_naturale: "Come si aggiorna l'indice quando cambia il manuale? Come faccio reindex?"
+    contenuto:
+      a_cosa_serve: >
+        Rigenerare l'indice TF-IDF quando viene aggiunto un capitolo
+        del manuale o modificato un documento fondamentale.
+      quando_si_usa: >
+        Dopo ogni push su GitHub che tocchi PRD/ROADMAP/DECISIONS o
+        aggiunga/modifichi capitoli del manuale (.md e/o .yaml HAL).
+      passi:
+        - "Endpoint: POST /api/app/hal/knowledge/reindex?force=false
+          (default) oppure ?force=true (reingest completo)."
+        - "Ruolo richiesto: super_admin. Un titolare/agente riceve
+          403 Forbidden."
+        - "force=false: reindex idempotente, salta i file con MD5
+          invariato. force=true: reingest completo di tutti i file."
+        - "Risposta JSON: {scanned, reingested:[{file,chunks}],
+          skipped:[], total_chunks}."
+        - "Costo: zero (nessuna LLM). Tempo tipico < 5 secondi per
+          il corpus attuale."
+        - "Verifica esito con GET /api/app/hal/knowledge/status:
+          chunks_indexed cresciuto, manual_hal_indexed >= 129."
+      errori_comuni:
+        - problema: "Ho fatto reindex ma i chunk non sono aumentati"
+          soluzione: >
+            Idempotente: i file con MD5 invariato vengono saltati.
+            Usa force=true per forzare il reingest completo o
+            controlla di aver salvato le modifiche.
+        - problema: "403 sul reindex"
+          soluzione: >
+            L'endpoint richiede ruolo super_admin. Un titolare non
+            puo' fare reindex prod.
+      permessi:
+        - super_admin only
+    screenshot: []
+
+  - id: halk.status-badge
+    titolo: Badge di stato HAL Knowledge (chunks, termini, modello)
+    modulo: HAL Knowledge
+    widget: null
+    pubblico: [titolare, agente, segreteria, super_admin]
+    livello: base
+    tags: [hal-knowledge, status, badge, chunks-indexed, vocab-size, modello, gemini]
+    correlati: [halk.reindex, halk.motore]
+    domanda_naturale: "A cosa serve il badge in alto a destra della pagina HAL Knowledge?"
+    contenuto:
+      a_cosa_serve: >
+        Colpo d'occhio sullo stato dell'indice: quanti chunk sono
+        indicizzati, dimensione vocabolario TF-IDF, modello LLM in uso.
+      quando_si_usa: >
+        Verifica veloce di stato dopo un reindex o quando sospetti
+        che il corpus non sia aggiornato.
+      passi:
+        - "Nel titolo pagina in alto a destra vedi un badge con
+          data-testid=hal-status-badge."
+        - "Contenuto: 'chunks_indexed chunk · vocab_size termini |
+          model.name' (es. '📚 617 chunk · 4200 termini |
+          🤖 gemini-3-flash-preview')."
+        - "I dati arrivano dall'endpoint GET
+          /api/app/hal/knowledge/status."
+        - "chunks_indexed = totale chunk (md + yaml del manuale +
+          documenti fondamentali OMNIA)."
+        - "vocab_size = numero di termini unici nel vocabolario TF-IDF."
+      errori_comuni:
+        - problema: "Il badge non appare"
+          soluzione: >
+            La chiamata a /status potrebbe essere fallita (403 se non
+            autenticato). Ricarica la pagina dopo il login.
+      permessi:
+        - Tutti i ruoli agenzia autenticati
+    screenshot: ["[SCREEN: cap12-halk-status-badge]"]
+
+  - id: halk.distinzione-tre-hal
+    titolo: Distinzione tra HAL Knowledge, HAL Agent CRM e HAL Legal
+    modulo: HAL Knowledge
+    widget: null
+    pubblico: [titolare, agente, segreteria]
+    livello: base
+    tags: [hal-knowledge, hal-agent-crm, hal-legal, distinzione, d-040, tre-bot, quale-usare]
+    correlati: [halk.cos-e, halk.limiti]
+    domanda_naturale: "Qual e' la differenza fra HAL Knowledge, HAL Agent CRM e HAL Legal?"
+    contenuto:
+      a_cosa_serve: >
+        Sapere quale dei tre HAL usare a seconda della domanda.
+      quando_si_usa: >
+        Sempre, prima di scrivere una domanda: verifica se la stai
+        facendo al bot giusto.
+      passi:
+        - "HAL Agent CRM (Cap. 10, endpoint /api/app/al/chat): consulenza
+          operativa sul tuo CRM. Legge il tuo DB (immobili, clienti,
+          lead), 5 tool whitelist (query_properties, query_clients,
+          query_leads, monthly_performance, write_description).
+          Sola lettura CRM. Streaming SSE. Rate limit 60/h."
+        - "HAL Knowledge (Cap. 12, endpoint /api/app/hal/knowledge/ask):
+          Q&A sulla documentazione OMNIA (statica, curata). Legge
+          PRD/ROADMAP/DECISIONS/manuale. Non ha memoria, one-shot."
+        - "HAL Legal (Cap. futuro, NON attivo in v1): domande
+          giuridiche su compravendite. Non attivo, HAL rimanda al
+          notaio/avvocato."
+        - "D-040: 3 bottoni fisici distinti, no LLM router che smista.
+          Motivo: chiarezza responsabilita', no confusione utente."
+        - "Regola pratica: domande sui tuoi dati -> HAL Agent CRM;
+          domande su come funziona OMNIA -> HAL Knowledge; domande
+          legali -> HAL Legal (non attivo v1, oggi vai dal notaio)."
+      errori_comuni:
+        - problema: "Chiedo a HAL Knowledge dei miei immobili"
+          soluzione: >
+            HAL Knowledge non legge il tuo DB. Usa HAL Agent CRM
+            (chat widget flottante in ImmoWeb) o vai in /it/app/hal/chat.
+      permessi:
+        - Tutti i ruoli agenzia autenticati
+    screenshot: []
+
+  - id: halk.limiti
+    titolo: Cosa NON puo' fare HAL Knowledge (limiti v1)
+    modulo: HAL Knowledge
+    widget: null
+    pubblico: [titolare, agente, segreteria, super_admin]
+    livello: intermedio
+    tags: [hal-knowledge, limiti, cosa-non-fa, onestà, d-051, no-embeddings, no-memoria, no-feedback, no-multilingua]
+    correlati: [halk.motore, halk.insufficient-context, halk.distinzione-tre-hal]
+    domanda_naturale: "Cosa NON puo' fare HAL Knowledge? Quali sono i limiti attuali?"
+    contenuto:
+      a_cosa_serve: >
+        Aspettative chiare su cosa HAL Knowledge non fa, per non
+        chiedere cose che non puo' dare.
+      quando_si_usa: >
+        Prima di stimare quanto HAL Knowledge puo' sostituirsi al
+        supporto o al team OMNIA.
+      passi:
+        - "Non e' multilingua: risponde bene solo in italiano (corpus
+          quasi tutto in italiano). Inglese funziona con qualita'
+          minore."
+        - "Non usa embeddings neurali (SBERT, OpenAI ada): usa TF-IDF
+          classico. Ok per corpus piccolo, rivedibile > 500 voci."
+        - "Non ha memoria fra domande consecutive: ogni domanda e'
+          one-shot. Per affinare, riformula la domanda intera."
+        - "Non ha feedback loop utente inline (nessun bottone
+          'utile/non utile' in v1)."
+        - "Non ha rate limit dedicato in v1 (le domande sono
+          economiche, pattern rate limit disponibile in
+          al_agent.py se in futuro serve)."
+        - "Non fa web search, no scraping siti esterni, no aggiornamento
+          normativa in tempo reale."
+        - "Non genera codice, non modifica dati, non esegue azioni
+          nel CRM. Sola lettura sulla documentazione."
+        - "Non e' multitenant a corpus: tutti gli utenti agenzia
+          leggono lo stesso corpus OMNIA (i tuoi dati agenzia non
+          sono indicizzati)."
+        - "Non ha TTL automatico sulle sessioni salvate (storico
+          resta indefinitamente v1)."
+      errori_comuni:
+        - problema: "Chiedo 2 volte e HAL fa follow-up"
+          soluzione: >
+            Non e' cosi'. Ogni domanda e' isolata. Per affinare la
+            risposta, riformula la domanda intera includendo il
+            contesto che ti serve.
+      permessi:
+        - Descritto per tutti gli utenti
+    screenshot: []
