@@ -21,6 +21,12 @@ ROOT_DIR = Path(__file__).resolve().parent
 sys.path.insert(0, str(ROOT_DIR))
 load_dotenv(ROOT_DIR / ".env")
 
+# M1 bridge: legacy checks look for EMERGENT_LLM_KEY — mirror Gemini key if present
+if not os.environ.get("EMERGENT_LLM_KEY"):
+    _gemini = (os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY") or "").strip()
+    if _gemini:
+        os.environ["EMERGENT_LLM_KEY"] = _gemini
+
 from shared.db.connection import Database, ensure_indexes, set_current_lang  # noqa: E402
 from shared.utils.i18n import normalize_lang, _load_locales, t  # noqa: E402
 from shared.models.base import HealthResponse  # noqa: E402

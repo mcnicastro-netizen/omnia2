@@ -1,8 +1,10 @@
-"""Minimal LlmChat stub — replaced in M1 by shared.llm Gemini adapter."""
+"""Drop-in LlmChat compatible with Emergent surface — backed by shared.llm (Gemini)."""
 
 from __future__ import annotations
 
 from typing import Any, AsyncIterator, Optional
+
+from shared.llm import generate_text, generate_text_stream, resolve_api_key, LlmNotConfigured
 
 
 class UserMessage:
@@ -16,9 +18,15 @@ class TextDelta:
         self.text = text
 
 
-class LlmChat:
-    """Drop-in stub matching emergentintegrations.llm.chat.LlmChat surface."""
+def _message_text(message: Any) -> str:
+    if message is None:
+        return ""
+    if isinstance(message, str):
+        return message
+    return getattr(message, "text", None) or str(message)
 
+
+class LlmChat:
     def __init__(
         self,
         api_key: Optional[str] = None,
@@ -29,7 +37,7 @@ class LlmChat:
         self.api_key = api_key
         self.session_id = session_id
         self.system_message = system_message
-        self.provider = None
+        self.provider = "gemini"
         self.model = None
         self.kwargs = kwargs
 
@@ -39,16 +47,28 @@ class LlmChat:
         return self
 
     async def send_message(self, message: Any = None, **kwargs: Any) -> str:
-        raise RuntimeError(
-            "LLM bridge not configured. Complete M1: set GEMINI_API_KEY "
-            "and migrate to shared.llm (Emergent LlmChat removed)."
+        try:
+            key = resolve_api_key(self.api_key)
+        except LlmNotConfigured as e:
+            raise RuntimeError(str(e)) from e
+        return await generate_text(
+            prompt=_message_text(message),
+            system=self.system_message,
+            model=self.model,
+            api_key=key,
         )
 
     async def send_message_stream(
         self, message: Any = None, **kwargs: Any
     ) -> AsyncIterator[TextDelta]:
-        raise RuntimeError(
-            "LLM bridge not configured. Complete M1: set GEMINI_API_KEY "
-            "and migrate to shared.llm (Emergent LlmChat removed)."
-        )
-        yield TextDelta("")  # pragma: no cover — makes this an async generator
+        try:
+            key = resolve_api_key(self.api_key)
+        except LlmNotConfigured as e:
+            raise RuntimeError(str(e)) from e
+        async for chunk in generate_text_stream(
+            prompt=_message_text(message),
+            system=self.system_message,
+            model=self.model,
+            api_key=key,
+        ):
+            yield TextDelta(text=chunk)

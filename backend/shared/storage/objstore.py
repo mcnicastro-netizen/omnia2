@@ -1,17 +1,15 @@
-"""OMNIA · Emergent Object Storage client wrapper.
+"""OMNIA object storage — local filesystem (default) or Emergent (legacy).
 
-Sprint 4 · GAP #1 — Migrazione foto immobili da Base64 in MongoDB
-a Object Storage. Il DB conserva SOLO il path canonical (`omnia/...`),
-il backend serve i bytes via `GET /api/media/{path:path}` (pubblico, foto
-immobili sono pubbliche sul portale B2C).
-
-Client one-shot init (session-scoped key). Idempotente e thread-safe.
+STORAGE_BACKEND=local|emergent (default: local)
+LOCAL_STORAGE_ROOT=backend/.media (default)
 """
 from __future__ import annotations
 
 import logging
+import mimetypes
 import os
 import threading
+from pathlib import Path
 from typing import Optional
 
 import requests
@@ -29,15 +27,33 @@ class ObjStoreError(RuntimeError):
     """Raised on object-storage failures."""
 
 
+def _backend() -> str:
+    return (os.environ.get("STORAGE_BACKEND") or "local").strip().lower()
+
+
+def _local_root() -> Path:
+    raw = os.environ.get("LOCAL_STORAGE_ROOT")
+    if raw:
+        root = Path(raw)
+    else:
+        root = Path(__file__).resolve().parents[2] / ".media"
+    root.mkdir(parents=True, exist_ok=True)
+    return root
+
+
 def _emergent_key() -> str:
     key = os.environ.get("EMERGENT_LLM_KEY")
     if not key:
-        raise ObjStoreError("EMERGENT_LLM_KEY not configured")
+        raise ObjStoreError("EMERGENT_LLM_KEY not configured (emergent storage backend)")
     return key
 
 
 def init_storage(force: bool = False) -> str:
-    """Init the storage session. Idempotent. Returns the storage key."""
+    """Init storage session. Local backend returns 'local'."""
+    if _backend() == "local":
+        _local_root()
+        return "local"
+
     global _storage_key
     with _lock:
         if _storage_key and not force:
@@ -61,10 +77,13 @@ def _headers(ct: Optional[str] = None) -> dict:
 
 
 def put_object(path: str, data: bytes, content_type: str) -> dict:
-    """Upload `data` at `path` (no leading slash). Returns {path,size,etag}.
+    path = path.lstrip("/")
+    if _backend() == "local":
+        dest = _local_root() / path
+        dest.parent.mkdir(parents=True, exist_ok=True)
+        dest.write_bytes(data)
+        return {"path": path, "size": len(data), "etag": f"local-{len(data)}"}
 
-    Retries once with fresh key on 403 (expired session).
-    """
     for attempt in range(2):
         try:
             resp = requests.put(
@@ -84,7 +103,16 @@ def put_object(path: str, data: bytes, content_type: str) -> dict:
 
 
 def get_object(path: str) -> tuple[bytes, str]:
-    """Fetch `path`. Returns (bytes, content-type). Raises ObjStoreError on miss/error."""
+    path = path.lstrip("/")
+    if _backend() == "local":
+        dest = _local_root() / path
+        if not dest.is_file():
+            raise ObjStoreError(f"get_object miss path={path}")
+        ct = mimetypes.guess_type(str(dest))[0] or "application/octet-type"
+        if ct == "application/octet-type":
+            ct = "application/octet-stream"
+        return dest.read_bytes(), ct
+
     for attempt in range(2):
         try:
             resp = requests.get(
@@ -99,15 +127,15 @@ def get_object(path: str) -> tuple[bytes, str]:
             continue
         if resp.status_code == 200:
             return resp.content, resp.headers.get("Content-Type", "application/octet-stream")
-        # Any other status → treat as miss/failure (upstream returns 500 for
-        # unknown paths). The caller (media router) maps this to 404.
         raise ObjStoreError(f"get_object status={resp.status_code} path={path}")
     raise ObjStoreError("get_object: exhausted retries")
 
 
 def delete_object(path: str) -> None:
-    """Emergent storage has no delete API — this is a no-op.
-
-    Callers should soft-delete in MongoDB (mark `is_deleted=True`).
-    """
-    logger.info("delete_object no-op for path=%s (soft-delete in DB only)", path)
+    path = path.lstrip("/")
+    if _backend() == "local":
+        dest = _local_root() / path
+        if dest.is_file():
+            dest.unlink()
+        return
+    logger.info("delete_object no-op for emergent path=%s", path)
