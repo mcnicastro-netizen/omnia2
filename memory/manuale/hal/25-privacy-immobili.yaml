@@ -1,0 +1,204 @@
+# HAL — Capitolo 25 · Privacy immobili L1–L4
+# Generato 2026-09-14 · D-051
+
+voci:
+
+  - id: privacy.cos-e
+    titolo: Cosa sono i livelli privacy L1–L4?
+    modulo: Privacy
+    widget: null
+    pubblico: [titolare, agente, segreteria]
+    livello: base
+    tags: [l1, l2, l3, l4, privacy, cap25]
+    correlati: []
+    domanda_naturale: "Cosa sono i livelli privacy L1–L4?"
+    contenuto:
+      a_cosa_serve: >
+        Scala di visibilità annuncio da pubblico anonimo a solo agenzia.
+      quando_si_usa: >
+        Quando l'utente lavora sul modulo Privacy in ImmoWeb/ImmobilCloud.
+      passi:
+        - "Apri il modulo indicato nel capitolo 25."
+        - "Segui il flusso descritto nel manuale operativo."
+        - "In caso di errore leggi la sezione limitazioni/errori."
+      errori_comuni:
+        - problema: "Funzione non trovata o 403"
+          soluzione: "Verifica ruolo (agency_admin/agent/super_admin) e piano."
+      permessi:
+        - "Dipende dal modulo — vedi capitolo 25"
+      screenshot: []
+
+  - id: privacy.dove-impostare
+    titolo: Come cambio la privacy di un immobile?
+    modulo: Privacy
+    widget: null
+    pubblico: [titolare, agente, segreteria]
+    livello: base
+    tags: [patch, audit, privacy, cap25]
+    correlati: []
+    domanda_naturale: "Come cambio la privacy di un immobile?"
+    contenuto:
+      a_cosa_serve: >
+        PATCH /api/app/properties/{id}/privacy con reason; audit trail.
+      quando_si_usa: >
+        Quando l'utente lavora sul modulo Privacy in ImmoWeb/ImmobilCloud.
+      passi:
+        - "Apri il modulo indicato nel capitolo 25."
+        - "Segui il flusso descritto nel manuale operativo."
+        - "In caso di errore leggi la sezione limitazioni/errori."
+      errori_comuni:
+        - problema: "Funzione non trovata o 403"
+          soluzione: "Verifica ruolo (agency_admin/agent/super_admin) e piano."
+      permessi:
+        - "Dipende dal modulo — vedi capitolo 25"
+      screenshot: []
+
+  - id: privacy.l1-l2
+    titolo: Differenza L1 e L2
+    modulo: Privacy
+    widget: null
+    pubblico: [titolare, agente, segreteria]
+    livello: base
+    tags: [mascheramento, privacy, cap25]
+    correlati: []
+    domanda_naturale: "Differenza L1 e L2"
+    contenuto:
+      a_cosa_serve: >
+        Entrambi visibili in vetrina; L1 maschera di più (prezzo bucket).
+      quando_si_usa: >
+        Quando l'utente lavora sul modulo Privacy in ImmoWeb/ImmobilCloud.
+      passi:
+        - "Apri il modulo indicato nel capitolo 25."
+        - "Segui il flusso descritto nel manuale operativo."
+        - "In caso di errore leggi la sezione limitazioni/errori."
+      errori_comuni:
+        - problema: "Funzione non trovata o 403"
+          soluzione: "Verifica ruolo (agency_admin/agent/super_admin) e piano."
+      permessi:
+        - "Dipende dal modulo — vedi capitolo 25"
+      screenshot: []
+
+  - id: privacy.l3-l4
+    titolo: Cosa sono L3 e L4?
+    modulo: Privacy
+    widget: null
+    pubblico: [titolare, agente, segreteria]
+    livello: base
+    tags: [feed, interno, privacy, cap25]
+    correlati: []
+    domanda_naturale: "Cosa sono L3 e L4?"
+    contenuto:
+      a_cosa_serve: >
+        L3 lead qualificati; L4 solo team agenzia. Fuori feed pubblico.
+      quando_si_usa: >
+        Quando l'utente lavora sul modulo Privacy in ImmoWeb/ImmobilCloud.
+      passi:
+        - "Apri il modulo indicato nel capitolo 25."
+        - "Segui il flusso descritto nel manuale operativo."
+        - "In caso di errore leggi la sezione limitazioni/errori."
+      errori_comuni:
+        - problema: "Funzione non trovata o 403"
+          soluzione: "Verifica ruolo (agency_admin/agent/super_admin) e piano."
+      permessi:
+        - "Dipende dal modulo — vedi capitolo 25"
+      screenshot: []
+
+  - id: privacy.feed
+    titolo: Privacy e portali
+    modulo: Privacy
+    widget: null
+    pubblico: [titolare, agente, segreteria]
+    livello: base
+    tags: [portali, sync, privacy, cap25]
+    correlati: []
+    domanda_naturale: "Privacy e portali"
+    contenuto:
+      a_cosa_serve: >
+        L3/L4 esclusi dal feed sync prima della compliance.
+      quando_si_usa: >
+        Quando l'utente lavora sul modulo Privacy in ImmoWeb/ImmobilCloud.
+      passi:
+        - "Apri il modulo indicato nel capitolo 25."
+        - "Segui il flusso descritto nel manuale operativo."
+        - "In caso di errore leggi la sezione limitazioni/errori."
+      errori_comuni:
+        - problema: "Funzione non trovata o 403"
+          soluzione: "Verifica ruolo (agency_admin/agent/super_admin) e piano."
+      permessi:
+        - "Dipende dal modulo — vedi capitolo 25"
+      screenshot: []
+
+  - id: privacy.limitazioni-v1
+    titolo: Limiti privacy v1
+    modulo: Privacy
+    widget: null
+    pubblico: [titolare, agente, segreteria]
+    livello: base
+    tags: [limiti, privacy, cap25]
+    correlati: []
+    domanda_naturale: "Limiti privacy v1"
+    contenuto:
+      a_cosa_serve: >
+        UI storico audit essenziale; masking server-side.
+      quando_si_usa: >
+        Quando l'utente lavora sul modulo Privacy in ImmoWeb/ImmobilCloud.
+      passi:
+        - "Apri il modulo indicato nel capitolo 25."
+        - "Segui il flusso descritto nel manuale operativo."
+        - "In caso di errore leggi la sezione limitazioni/errori."
+      errori_comuni:
+        - problema: "Funzione non trovata o 403"
+          soluzione: "Verifica ruolo (agency_admin/agent/super_admin) e piano."
+      permessi:
+        - "Dipende dal modulo — vedi capitolo 25"
+      screenshot: []
+
+  - id: privacy.errori-comuni
+    titolo: Perché non vedo un annuncio?
+    modulo: Privacy
+    widget: null
+    pubblico: [titolare, agente, segreteria]
+    livello: base
+    tags: [errori, visibilita, privacy, cap25]
+    correlati: []
+    domanda_naturale: "Perché non vedo un annuncio?"
+    contenuto:
+      a_cosa_serve: >
+        Controlla privacy_level vs tuo ruolo/login.
+      quando_si_usa: >
+        Quando l'utente lavora sul modulo Privacy in ImmoWeb/ImmobilCloud.
+      passi:
+        - "Apri il modulo indicato nel capitolo 25."
+        - "Segui il flusso descritto nel manuale operativo."
+        - "In caso di errore leggi la sezione limitazioni/errori."
+      errori_comuni:
+        - problema: "Funzione non trovata o 403"
+          soluzione: "Verifica ruolo (agency_admin/agent/super_admin) e piano."
+      permessi:
+        - "Dipende dal modulo — vedi capitolo 25"
+      screenshot: []
+
+  - id: privacy.collegamenti
+    titolo: Collegamenti immobili e MLS
+    modulo: Privacy
+    widget: null
+    pubblico: [titolare, agente, segreteria]
+    livello: base
+    tags: [immobili, mls, privacy, cap25]
+    correlati: []
+    domanda_naturale: "Collegamenti immobili e MLS"
+    contenuto:
+      a_cosa_serve: >
+        Cap.3 Immobili; Cap.27 MLS (visibility mls_only).
+      quando_si_usa: >
+        Quando l'utente lavora sul modulo Privacy in ImmoWeb/ImmobilCloud.
+      passi:
+        - "Apri il modulo indicato nel capitolo 25."
+        - "Segui il flusso descritto nel manuale operativo."
+        - "In caso di errore leggi la sezione limitazioni/errori."
+      errori_comuni:
+        - problema: "Funzione non trovata o 403"
+          soluzione: "Verifica ruolo (agency_admin/agent/super_admin) e piano."
+      permessi:
+        - "Dipende dal modulo — vedi capitolo 25"
+      screenshot: []

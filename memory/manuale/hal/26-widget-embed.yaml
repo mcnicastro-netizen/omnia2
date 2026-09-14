@@ -1,0 +1,204 @@
+# HAL — Capitolo 26 · Widget embeddabili
+# Generato 2026-09-14 · D-051
+
+voci:
+
+  - id: widget.cos-e
+    titolo: Cosa sono i widget OMNIA?
+    modulo: Widget
+    widget: null
+    pubblico: [titolare, agente, segreteria]
+    livello: base
+    tags: [embed, track-b, widget, cap26]
+    correlati: []
+    domanda_naturale: "Cosa sono i widget OMNIA?"
+    contenuto:
+      a_cosa_serve: >
+        Embed Track B per siti partner/agenzia via loader.js.
+      quando_si_usa: >
+        Quando l'utente lavora sul modulo Widget in ImmoWeb/ImmobilCloud.
+      passi:
+        - "Apri il modulo indicato nel capitolo 26."
+        - "Segui il flusso descritto nel manuale operativo."
+        - "In caso di errore leggi la sezione limitazioni/errori."
+      errori_comuni:
+        - problema: "Funzione non trovata o 403"
+          soluzione: "Verifica ruolo (agency_admin/agent/super_admin) e piano."
+      permessi:
+        - "Dipende dal modulo — vedi capitolo 26"
+      screenshot: []
+
+  - id: widget.loader
+    titolo: Come integro il loader?
+    modulo: Widget
+    widget: null
+    pubblico: [titolare, agente, segreteria]
+    livello: base
+    tags: [loader, snippet, widget, cap26]
+    correlati: []
+    domanda_naturale: "Come integro il loader?"
+    contenuto:
+      a_cosa_serve: >
+        Script /api/widgets/v1/loader.js con data-key e data-widget.
+      quando_si_usa: >
+        Quando l'utente lavora sul modulo Widget in ImmoWeb/ImmobilCloud.
+      passi:
+        - "Apri il modulo indicato nel capitolo 26."
+        - "Segui il flusso descritto nel manuale operativo."
+        - "In caso di errore leggi la sezione limitazioni/errori."
+      errori_comuni:
+        - problema: "Funzione non trovata o 403"
+          soluzione: "Verifica ruolo (agency_admin/agent/super_admin) e piano."
+      permessi:
+        - "Dipende dal modulo — vedi capitolo 26"
+      screenshot: []
+
+  - id: widget.elenco
+    titolo: Quali widget esistono?
+    modulo: Widget
+    widget: null
+    pubblico: [titolare, agente, segreteria]
+    livello: base
+    tags: [catalogo, widget, cap26]
+    correlati: []
+    domanda_naturale: "Quali widget esistono?"
+    contenuto:
+      a_cosa_serve: >
+        valuator, mortgages, staging, legal, domain-check.
+      quando_si_usa: >
+        Quando l'utente lavora sul modulo Widget in ImmoWeb/ImmobilCloud.
+      passi:
+        - "Apri il modulo indicato nel capitolo 26."
+        - "Segui il flusso descritto nel manuale operativo."
+        - "In caso di errore leggi la sezione limitazioni/errori."
+      errori_comuni:
+        - problema: "Funzione non trovata o 403"
+          soluzione: "Verifica ruolo (agency_admin/agent/super_admin) e piano."
+      permessi:
+        - "Dipende dal modulo — vedi capitolo 26"
+      screenshot: []
+
+  - id: widget.api-key
+    titolo: Serve una API key?
+    modulo: Widget
+    widget: null
+    pubblico: [titolare, agente, segreteria]
+    livello: base
+    tags: [api-key, crediti, widget, cap26]
+    correlati: []
+    domanda_naturale: "Serve una API key?"
+    contenuto:
+      a_cosa_serve: >
+        Sì omk_live_… da Cap.20; crediti Track B sui servizi a pagamento.
+      quando_si_usa: >
+        Quando l'utente lavora sul modulo Widget in ImmoWeb/ImmobilCloud.
+      passi:
+        - "Apri il modulo indicato nel capitolo 26."
+        - "Segui il flusso descritto nel manuale operativo."
+        - "In caso di errore leggi la sezione limitazioni/errori."
+      errori_comuni:
+        - problema: "Funzione non trovata o 403"
+          soluzione: "Verifica ruolo (agency_admin/agent/super_admin) e piano."
+      permessi:
+        - "Dipende dal modulo — vedi capitolo 26"
+      screenshot: []
+
+  - id: widget.showcase
+    titolo: C'è una demo interna?
+    modulo: Widget
+    widget: null
+    pubblico: [titolare, agente, segreteria]
+    livello: base
+    tags: [demo, showcase, widget, cap26]
+    correlati: []
+    domanda_naturale: "C'è una demo interna?"
+    contenuto:
+      a_cosa_serve: >
+        Sì: /:lang/widgets WidgetsShowcasePage.
+      quando_si_usa: >
+        Quando l'utente lavora sul modulo Widget in ImmoWeb/ImmobilCloud.
+      passi:
+        - "Apri il modulo indicato nel capitolo 26."
+        - "Segui il flusso descritto nel manuale operativo."
+        - "In caso di errore leggi la sezione limitazioni/errori."
+      errori_comuni:
+        - problema: "Funzione non trovata o 403"
+          soluzione: "Verifica ruolo (agency_admin/agent/super_admin) e piano."
+      permessi:
+        - "Dipende dal modulo — vedi capitolo 26"
+      screenshot: []
+
+  - id: widget.limitazioni-v1
+    titolo: Limiti widget v1
+    modulo: Widget
+    widget: null
+    pubblico: [titolare, agente, segreteria]
+    livello: base
+    tags: [limiti, widget, cap26]
+    correlati: []
+    domanda_naturale: "Limiti widget v1"
+    contenuto:
+      a_cosa_serve: >
+        No auto top-up; wallet Track B separato; branding base.
+      quando_si_usa: >
+        Quando l'utente lavora sul modulo Widget in ImmoWeb/ImmobilCloud.
+      passi:
+        - "Apri il modulo indicato nel capitolo 26."
+        - "Segui il flusso descritto nel manuale operativo."
+        - "In caso di errore leggi la sezione limitazioni/errori."
+      errori_comuni:
+        - problema: "Funzione non trovata o 403"
+          soluzione: "Verifica ruolo (agency_admin/agent/super_admin) e piano."
+      permessi:
+        - "Dipende dal modulo — vedi capitolo 26"
+      screenshot: []
+
+  - id: widget.errori-comuni
+    titolo: Widget non carica
+    modulo: Widget
+    widget: null
+    pubblico: [titolare, agente, segreteria]
+    livello: base
+    tags: [errori, widget, cap26]
+    correlati: []
+    domanda_naturale: "Widget non carica"
+    contenuto:
+      a_cosa_serve: >
+        Controlla key, allowed origins, CORS e path /api/widgets/v1.
+      quando_si_usa: >
+        Quando l'utente lavora sul modulo Widget in ImmoWeb/ImmobilCloud.
+      passi:
+        - "Apri il modulo indicato nel capitolo 26."
+        - "Segui il flusso descritto nel manuale operativo."
+        - "In caso di errore leggi la sezione limitazioni/errori."
+      errori_comuni:
+        - problema: "Funzione non trovata o 403"
+          soluzione: "Verifica ruolo (agency_admin/agent/super_admin) e piano."
+      permessi:
+        - "Dipende dal modulo — vedi capitolo 26"
+      screenshot: []
+
+  - id: widget.collegamenti
+    titolo: Collegamenti API Keys e tool
+    modulo: Widget
+    widget: null
+    pubblico: [titolare, agente, segreteria]
+    livello: base
+    tags: [api-keys, widget, cap26]
+    correlati: []
+    domanda_naturale: "Collegamenti API Keys e tool"
+    contenuto:
+      a_cosa_serve: >
+        Cap.20 API Keys; Cap.21 Valutatore; Cap.11 Mutui.
+      quando_si_usa: >
+        Quando l'utente lavora sul modulo Widget in ImmoWeb/ImmobilCloud.
+      passi:
+        - "Apri il modulo indicato nel capitolo 26."
+        - "Segui il flusso descritto nel manuale operativo."
+        - "In caso di errore leggi la sezione limitazioni/errori."
+      errori_comuni:
+        - problema: "Funzione non trovata o 403"
+          soluzione: "Verifica ruolo (agency_admin/agent/super_admin) e piano."
+      permessi:
+        - "Dipende dal modulo — vedi capitolo 26"
+      screenshot: []

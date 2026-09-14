@@ -1,0 +1,204 @@
+# HAL — Capitolo 24 · Gruppi e sedi (multi-branch)
+# Generato 2026-09-14 · D-051
+
+voci:
+
+  - id: gruppi.cos-e
+    titolo: Cosa sono Gruppi e sedi?
+    modulo: Gruppi
+    widget: null
+    pubblico: [titolare, agente, segreteria]
+    livello: base
+    tags: [franchising, branch, gruppi, cap24]
+    correlati: []
+    domanda_naturale: "Cosa sono Gruppi e sedi?"
+    contenuto:
+      a_cosa_serve: >
+        Layer multi-branch: group + branch + ruoli franchising.
+      quando_si_usa: >
+        Quando l'utente lavora sul modulo Gruppi in ImmoWeb/ImmobilCloud.
+      passi:
+        - "Apri il modulo indicato nel capitolo 24."
+        - "Segui il flusso descritto nel manuale operativo."
+        - "In caso di errore leggi la sezione limitazioni/errori."
+      errori_comuni:
+        - problema: "Funzione non trovata o 403"
+          soluzione: "Verifica ruolo (agency_admin/agent/super_admin) e piano."
+      permessi:
+        - "Dipende dal modulo — vedi capitolo 24"
+      screenshot: []
+
+  - id: gruppi.dove-trovarlo
+    titolo: Dove gestisco il gruppo?
+    modulo: Gruppi
+    widget: null
+    pubblico: [titolare, agente, segreteria]
+    livello: base
+    tags: [ui, navigazione, gruppi, cap24]
+    correlati: []
+    domanda_naturale: "Dove gestisco il gruppo?"
+    contenuto:
+      a_cosa_serve: >
+        Menu Gruppo → /app/group (group_admin).
+      quando_si_usa: >
+        Quando l'utente lavora sul modulo Gruppi in ImmoWeb/ImmobilCloud.
+      passi:
+        - "Apri il modulo indicato nel capitolo 24."
+        - "Segui il flusso descritto nel manuale operativo."
+        - "In caso di errore leggi la sezione limitazioni/errori."
+      errori_comuni:
+        - problema: "Funzione non trovata o 403"
+          soluzione: "Verifica ruolo (agency_admin/agent/super_admin) e piano."
+      permessi:
+        - "Dipende dal modulo — vedi capitolo 24"
+      screenshot: []
+
+  - id: gruppi.creare
+    titolo: Come creo un gruppo?
+    modulo: Gruppi
+    widget: null
+    pubblico: [titolare, agente, segreteria]
+    livello: base
+    tags: [api, create, gruppi, cap24]
+    correlati: []
+    domanda_naturale: "Come creo un gruppo?"
+    contenuto:
+      a_cosa_serve: >
+        POST /api/app/groups poi aggiungi branch.
+      quando_si_usa: >
+        Quando l'utente lavora sul modulo Gruppi in ImmoWeb/ImmobilCloud.
+      passi:
+        - "Apri il modulo indicato nel capitolo 24."
+        - "Segui il flusso descritto nel manuale operativo."
+        - "In caso di errore leggi la sezione limitazioni/errori."
+      errori_comuni:
+        - problema: "Funzione non trovata o 403"
+          soluzione: "Verifica ruolo (agency_admin/agent/super_admin) e piano."
+      permessi:
+        - "Dipende dal modulo — vedi capitolo 24"
+      screenshot: []
+
+  - id: gruppi.branch
+    titolo: Come aggiungo una sede?
+    modulo: Gruppi
+    widget: null
+    pubblico: [titolare, agente, segreteria]
+    livello: base
+    tags: [branch, sede, gruppi, cap24]
+    correlati: []
+    domanda_naturale: "Come aggiungo una sede?"
+    contenuto:
+      a_cosa_serve: >
+        POST /api/app/groups/{id}/branches.
+      quando_si_usa: >
+        Quando l'utente lavora sul modulo Gruppi in ImmoWeb/ImmobilCloud.
+      passi:
+        - "Apri il modulo indicato nel capitolo 24."
+        - "Segui il flusso descritto nel manuale operativo."
+        - "In caso di errore leggi la sezione limitazioni/errori."
+      errori_comuni:
+        - problema: "Funzione non trovata o 403"
+          soluzione: "Verifica ruolo (agency_admin/agent/super_admin) e piano."
+      permessi:
+        - "Dipende dal modulo — vedi capitolo 24"
+      screenshot: []
+
+  - id: gruppi.kpi
+    titolo: Dove vedo i KPI consolidati?
+    modulo: Gruppi
+    widget: null
+    pubblico: [titolare, agente, segreteria]
+    livello: base
+    tags: [kpi, consolidated, gruppi, cap24]
+    correlati: []
+    domanda_naturale: "Dove vedo i KPI consolidati?"
+    contenuto:
+      a_cosa_serve: >
+        GET /api/app/groups/{id}/consolidated.
+      quando_si_usa: >
+        Quando l'utente lavora sul modulo Gruppi in ImmoWeb/ImmobilCloud.
+      passi:
+        - "Apri il modulo indicato nel capitolo 24."
+        - "Segui il flusso descritto nel manuale operativo."
+        - "In caso di errore leggi la sezione limitazioni/errori."
+      errori_comuni:
+        - problema: "Funzione non trovata o 403"
+          soluzione: "Verifica ruolo (agency_admin/agent/super_admin) e piano."
+      permessi:
+        - "Dipende dal modulo — vedi capitolo 24"
+      screenshot: []
+
+  - id: gruppi.ruoli
+    titolo: Quali ruoli franchising esistono?
+    modulo: Gruppi
+    widget: null
+    pubblico: [titolare, agente, segreteria]
+    livello: base
+    tags: [ruoli, rbac, gruppi, cap24]
+    correlati: []
+    domanda_naturale: "Quali ruoli franchising esistono?"
+    contenuto:
+      a_cosa_serve: >
+        group_admin, branch_admin, branch_agent (+ alias RBAC).
+      quando_si_usa: >
+        Quando l'utente lavora sul modulo Gruppi in ImmoWeb/ImmobilCloud.
+      passi:
+        - "Apri il modulo indicato nel capitolo 24."
+        - "Segui il flusso descritto nel manuale operativo."
+        - "In caso di errore leggi la sezione limitazioni/errori."
+      errori_comuni:
+        - problema: "Funzione non trovata o 403"
+          soluzione: "Verifica ruolo (agency_admin/agent/super_admin) e piano."
+      permessi:
+        - "Dipende dal modulo — vedi capitolo 24"
+      screenshot: []
+
+  - id: gruppi.limitazioni-v1
+    titolo: Limiti gruppi v1
+    modulo: Gruppi
+    widget: null
+    pubblico: [titolare, agente, segreteria]
+    livello: base
+    tags: [limiti, gruppi, cap24]
+    correlati: []
+    domanda_naturale: "Limiti gruppi v1"
+    contenuto:
+      a_cosa_serve: >
+        UI/billing group parziali; MLS per agenzia.
+      quando_si_usa: >
+        Quando l'utente lavora sul modulo Gruppi in ImmoWeb/ImmobilCloud.
+      passi:
+        - "Apri il modulo indicato nel capitolo 24."
+        - "Segui il flusso descritto nel manuale operativo."
+        - "In caso di errore leggi la sezione limitazioni/errori."
+      errori_comuni:
+        - problema: "Funzione non trovata o 403"
+          soluzione: "Verifica ruolo (agency_admin/agent/super_admin) e piano."
+      permessi:
+        - "Dipende dal modulo — vedi capitolo 24"
+      screenshot: []
+
+  - id: gruppi.collegamenti
+    titolo: Collegamenti team e billing
+    modulo: Gruppi
+    widget: null
+    pubblico: [titolare, agente, segreteria]
+    livello: base
+    tags: [team, billing, gruppi, cap24]
+    correlati: []
+    domanda_naturale: "Collegamenti team e billing"
+    contenuto:
+      a_cosa_serve: >
+        Team Cap.13; Billing Cap.19.
+      quando_si_usa: >
+        Quando l'utente lavora sul modulo Gruppi in ImmoWeb/ImmobilCloud.
+      passi:
+        - "Apri il modulo indicato nel capitolo 24."
+        - "Segui il flusso descritto nel manuale operativo."
+        - "In caso di errore leggi la sezione limitazioni/errori."
+      errori_comuni:
+        - problema: "Funzione non trovata o 403"
+          soluzione: "Verifica ruolo (agency_admin/agent/super_admin) e piano."
+      permessi:
+        - "Dipende dal modulo — vedi capitolo 24"
+      screenshot: []

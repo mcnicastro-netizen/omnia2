@@ -78,7 +78,7 @@ CONFIDENCE_MIN = 0.08      # sotto questa soglia → insufficient_context (TF-ID
 CONFIDENCE_HIGH = 0.20     # sopra questa soglia → high-confidence answer
 
 MODEL_PROVIDER = "gemini"
-MODEL_NAME = "gemini-3-flash-preview"
+MODEL_NAME = os.environ.get("GEMINI_MODEL", "gemini-3.6-flash")
 
 
 # ---------------------------------------------------------------------------
@@ -199,7 +199,7 @@ def _render_voce_hal(v: Dict[str, Any]) -> str:
             lines.append(f"- {perm}")
     tags = v.get("tags") or []
     if tags:
-        lines.append(f"[TAGS] {', '.join(tags)}")
+        lines.append(f"[TAGS] {', '.join(str(t) for t in tags)}")
     return "\n".join(lines)
 
 

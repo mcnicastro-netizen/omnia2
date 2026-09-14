@@ -1,0 +1,204 @@
+# HAL — Capitolo 22 · HAL Legal
+# Generato 2026-09-14 · D-051
+
+voci:
+
+  - id: legal.cos-e
+    titolo: Cos'è HAL Legal?
+    modulo: HAL Legal
+    widget: null
+    pubblico: [titolare, agente, segreteria]
+    livello: base
+    tags: [hal-legal, chat, citazioni, legal, cap22]
+    correlati: []
+    domanda_naturale: "Cos'è HAL Legal?"
+    contenuto:
+      a_cosa_serve: >
+        Assistente legale immobiliare con chat e PDF.
+      quando_si_usa: >
+        Quando l'utente lavora sul modulo HAL Legal in ImmoWeb/ImmobilCloud.
+      passi:
+        - "Apri il modulo indicato nel capitolo 22."
+        - "Segui il flusso descritto nel manuale operativo."
+        - "In caso di errore leggi la sezione limitazioni/errori."
+      errori_comuni:
+        - problema: "Funzione non trovata o 403"
+          soluzione: "Verifica ruolo (agency_admin/agent/super_admin) e piano."
+      permessi:
+        - "Dipende dal modulo — vedi capitolo 22"
+      screenshot: []
+
+  - id: legal.dove-trovarlo
+    titolo: Dove trovo HAL Legal?
+    modulo: HAL Legal
+    widget: null
+    pubblico: [titolare, agente, segreteria]
+    livello: base
+    tags: [navigazione, menu, legal, cap22]
+    correlati: []
+    domanda_naturale: "Dove trovo HAL Legal?"
+    contenuto:
+      a_cosa_serve: >
+        Menu ImmoWeb → HAL Legal (`/:lang/legal`).
+      quando_si_usa: >
+        Quando l'utente lavora sul modulo HAL Legal in ImmoWeb/ImmobilCloud.
+      passi:
+        - "Apri il modulo indicato nel capitolo 22."
+        - "Segui il flusso descritto nel manuale operativo."
+        - "In caso di errore leggi la sezione limitazioni/errori."
+      errori_comuni:
+        - problema: "Funzione non trovata o 403"
+          soluzione: "Verifica ruolo (agency_admin/agent/super_admin) e piano."
+      permessi:
+        - "Dipende dal modulo — vedi capitolo 22"
+      screenshot: []
+
+  - id: legal.chat
+    titolo: Come funziona la chat legale?
+    modulo: HAL Legal
+    widget: null
+    pubblico: [titolare, agente, segreteria]
+    livello: base
+    tags: [chat, tavily, legal, cap22]
+    correlati: []
+    domanda_naturale: "Come funziona la chat legale?"
+    contenuto:
+      a_cosa_serve: >
+        POST /api/app/legal/chat con domanda; risposta + fonti se Tavily ok.
+      quando_si_usa: >
+        Quando l'utente lavora sul modulo HAL Legal in ImmoWeb/ImmobilCloud.
+      passi:
+        - "Apri il modulo indicato nel capitolo 22."
+        - "Segui il flusso descritto nel manuale operativo."
+        - "In caso di errore leggi la sezione limitazioni/errori."
+      errori_comuni:
+        - problema: "Funzione non trovata o 403"
+          soluzione: "Verifica ruolo (agency_admin/agent/super_admin) e piano."
+      permessi:
+        - "Dipende dal modulo — vedi capitolo 22"
+      screenshot: []
+
+  - id: legal.pdf
+    titolo: Posso analizzare un PDF?
+    modulo: HAL Legal
+    widget: null
+    pubblico: [titolare, agente, segreteria]
+    livello: base
+    tags: [pdf, analisi, legal, cap22]
+    correlati: []
+    domanda_naturale: "Posso analizzare un PDF?"
+    contenuto:
+      a_cosa_serve: >
+        Sì: POST /api/app/legal/analyze-pdf. Non è firma digitale.
+      quando_si_usa: >
+        Quando l'utente lavora sul modulo HAL Legal in ImmoWeb/ImmobilCloud.
+      passi:
+        - "Apri il modulo indicato nel capitolo 22."
+        - "Segui il flusso descritto nel manuale operativo."
+        - "In caso di errore leggi la sezione limitazioni/errori."
+      errori_comuni:
+        - problema: "Funzione non trovata o 403"
+          soluzione: "Verifica ruolo (agency_admin/agent/super_admin) e piano."
+      permessi:
+        - "Dipende dal modulo — vedi capitolo 22"
+      screenshot: []
+
+  - id: legal.sessioni
+    titolo: Dove vedo lo storico?
+    modulo: HAL Legal
+    widget: null
+    pubblico: [titolare, agente, segreteria]
+    livello: base
+    tags: [sessioni, storico, legal, cap22]
+    correlati: []
+    domanda_naturale: "Dove vedo lo storico?"
+    contenuto:
+      a_cosa_serve: >
+        GET /api/app/legal/sessions e dettaglio per id.
+      quando_si_usa: >
+        Quando l'utente lavora sul modulo HAL Legal in ImmoWeb/ImmobilCloud.
+      passi:
+        - "Apri il modulo indicato nel capitolo 22."
+        - "Segui il flusso descritto nel manuale operativo."
+        - "In caso di errore leggi la sezione limitazioni/errori."
+      errori_comuni:
+        - problema: "Funzione non trovata o 403"
+          soluzione: "Verifica ruolo (agency_admin/agent/super_admin) e piano."
+      permessi:
+        - "Dipende dal modulo — vedi capitolo 22"
+      screenshot: []
+
+  - id: legal.limitazioni-v1
+    titolo: Quali limiti ha HAL Legal?
+    modulo: HAL Legal
+    widget: null
+    pubblico: [titolare, agente, segreteria]
+    livello: base
+    tags: [limiti, d-051, legal, cap22]
+    correlati: []
+    domanda_naturale: "Quali limiti ha HAL Legal?"
+    contenuto:
+      a_cosa_serve: >
+        No parere vincolante; dipende da Gemini/Tavily; no Academy.
+      quando_si_usa: >
+        Quando l'utente lavora sul modulo HAL Legal in ImmoWeb/ImmobilCloud.
+      passi:
+        - "Apri il modulo indicato nel capitolo 22."
+        - "Segui il flusso descritto nel manuale operativo."
+        - "In caso di errore leggi la sezione limitazioni/errori."
+      errori_comuni:
+        - problema: "Funzione non trovata o 403"
+          soluzione: "Verifica ruolo (agency_admin/agent/super_admin) e piano."
+      permessi:
+        - "Dipende dal modulo — vedi capitolo 22"
+      screenshot: []
+
+  - id: legal.errori-comuni
+    titolo: HAL Legal non risponde / 503
+    modulo: HAL Legal
+    widget: null
+    pubblico: [titolare, agente, segreteria]
+    livello: base
+    tags: [errori, 503, legal, cap22]
+    correlati: []
+    domanda_naturale: "HAL Legal non risponde / 503"
+    contenuto:
+      a_cosa_serve: >
+        Verifica GEMINI_API_KEY e budget LLM; riprova.
+      quando_si_usa: >
+        Quando l'utente lavora sul modulo HAL Legal in ImmoWeb/ImmobilCloud.
+      passi:
+        - "Apri il modulo indicato nel capitolo 22."
+        - "Segui il flusso descritto nel manuale operativo."
+        - "In caso di errore leggi la sezione limitazioni/errori."
+      errori_comuni:
+        - problema: "Funzione non trovata o 403"
+          soluzione: "Verifica ruolo (agency_admin/agent/super_admin) e piano."
+      permessi:
+        - "Dipende dal modulo — vedi capitolo 22"
+      screenshot: []
+
+  - id: legal.collegamenti
+    titolo: Rapporto con gli altri HAL
+    modulo: HAL Legal
+    widget: null
+    pubblico: [titolare, agente, segreteria]
+    livello: base
+    tags: [hal, d-040, legal, cap22]
+    correlati: []
+    domanda_naturale: "Rapporto con gli altri HAL"
+    contenuto:
+      a_cosa_serve: >
+        Agent=CRM operativo; Knowledge=how-to piattaforma; Legal=norme.
+      quando_si_usa: >
+        Quando l'utente lavora sul modulo HAL Legal in ImmoWeb/ImmobilCloud.
+      passi:
+        - "Apri il modulo indicato nel capitolo 22."
+        - "Segui il flusso descritto nel manuale operativo."
+        - "In caso di errore leggi la sezione limitazioni/errori."
+      errori_comuni:
+        - problema: "Funzione non trovata o 403"
+          soluzione: "Verifica ruolo (agency_admin/agent/super_admin) e piano."
+      permessi:
+        - "Dipende dal modulo — vedi capitolo 22"
+      screenshot: []

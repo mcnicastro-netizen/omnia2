@@ -1,0 +1,204 @@
+# HAL — Capitolo 23 · Micro-tour video e A/B testing
+# Generato 2026-09-14 · D-051
+
+voci:
+
+  - id: video.cos-e
+    titolo: Cos'è il micro-tour video?
+    modulo: Video & Analytics
+    widget: null
+    pubblico: [titolare, agente, segreteria]
+    livello: base
+    tags: [kling, fal, video, video, cap23]
+    correlati: []
+    domanda_naturale: "Cos'è il micro-tour video?"
+    contenuto:
+      a_cosa_serve: >
+        Video breve immobile via Kling/fal.ai, endpoint /videos/kling.
+      quando_si_usa: >
+        Quando l'utente lavora sul modulo Video & Analytics in ImmoWeb/ImmobilCloud.
+      passi:
+        - "Apri il modulo indicato nel capitolo 23."
+        - "Segui il flusso descritto nel manuale operativo."
+        - "In caso di errore leggi la sezione limitazioni/errori."
+      errori_comuni:
+        - problema: "Funzione non trovata o 403"
+          soluzione: "Verifica ruolo (agency_admin/agent/super_admin) e piano."
+      permessi:
+        - "Dipende dal modulo — vedi capitolo 23"
+      screenshot: []
+
+  - id: video.come-generare
+    titolo: Come genero un video immobile?
+    modulo: Video & Analytics
+    widget: null
+    pubblico: [titolare, agente, segreteria]
+    livello: base
+    tags: [generazione, async, video, cap23]
+    correlati: []
+    domanda_naturale: "Come genero un video immobile?"
+    contenuto:
+      a_cosa_serve: >
+        POST /api/app/videos/kling/property/{id} → job 202, poi GET status/download.
+      quando_si_usa: >
+        Quando l'utente lavora sul modulo Video & Analytics in ImmoWeb/ImmobilCloud.
+      passi:
+        - "Apri il modulo indicato nel capitolo 23."
+        - "Segui il flusso descritto nel manuale operativo."
+        - "In caso di errore leggi la sezione limitazioni/errori."
+      errori_comuni:
+        - problema: "Funzione non trovata o 403"
+          soluzione: "Verifica ruolo (agency_admin/agent/super_admin) e piano."
+      permessi:
+        - "Dipende dal modulo — vedi capitolo 23"
+      screenshot: []
+
+  - id: video.kenburns
+    titolo: Esiste Ken Burns?
+    modulo: Video & Analytics
+    widget: null
+    pubblico: [titolare, agente, segreteria]
+    livello: base
+    tags: [501, limiti, video, cap23]
+    correlati: []
+    domanda_naturale: "Esiste Ken Burns?"
+    contenuto:
+      a_cosa_serve: >
+        Endpoint presente ma 501 in v1. Usare Kling.
+      quando_si_usa: >
+        Quando l'utente lavora sul modulo Video & Analytics in ImmoWeb/ImmobilCloud.
+      passi:
+        - "Apri il modulo indicato nel capitolo 23."
+        - "Segui il flusso descritto nel manuale operativo."
+        - "In caso di errore leggi la sezione limitazioni/errori."
+      errori_comuni:
+        - problema: "Funzione non trovata o 403"
+          soluzione: "Verifica ruolo (agency_admin/agent/super_admin) e piano."
+      permessi:
+        - "Dipende dal modulo — vedi capitolo 23"
+      screenshot: []
+
+  - id: video.crediti
+    titolo: Quanto costa un video?
+    modulo: Video & Analytics
+    widget: null
+    pubblico: [titolare, agente, segreteria]
+    livello: base
+    tags: [crediti, costi, video, cap23]
+    correlati: []
+    domanda_naturale: "Quanto costa un video?"
+    contenuto:
+      a_cosa_serve: >
+        Listino crediti (es. micro-tour ~60 cr) + FAL_KEY operativa.
+      quando_si_usa: >
+        Quando l'utente lavora sul modulo Video & Analytics in ImmoWeb/ImmobilCloud.
+      passi:
+        - "Apri il modulo indicato nel capitolo 23."
+        - "Segui il flusso descritto nel manuale operativo."
+        - "In caso di errore leggi la sezione limitazioni/errori."
+      errori_comuni:
+        - problema: "Funzione non trovata o 403"
+          soluzione: "Verifica ruolo (agency_admin/agent/super_admin) e piano."
+      permessi:
+        - "Dipende dal modulo — vedi capitolo 23"
+      screenshot: []
+
+  - id: ab.cos-e
+    titolo: Cos'è l'A/B testing portale?
+    modulo: Video & Analytics
+    widget: null
+    pubblico: [titolare, agente, segreteria]
+    livello: base
+    tags: [ab, analytics, video, cap23]
+    correlati: []
+    domanda_naturale: "Cos'è l'A/B testing portale?"
+    contenuto:
+      a_cosa_serve: >
+        Modulo analytics per varianti annuncio/creatività agenzia.
+      quando_si_usa: >
+        Quando l'utente lavora sul modulo Video & Analytics in ImmoWeb/ImmobilCloud.
+      passi:
+        - "Apri il modulo indicato nel capitolo 23."
+        - "Segui il flusso descritto nel manuale operativo."
+        - "In caso di errore leggi la sezione limitazioni/errori."
+      errori_comuni:
+        - problema: "Funzione non trovata o 403"
+          soluzione: "Verifica ruolo (agency_admin/agent/super_admin) e piano."
+      permessi:
+        - "Dipende dal modulo — vedi capitolo 23"
+      screenshot: []
+
+  - id: ab.overview
+    titolo: Dove vedo i risultati A/B?
+    modulo: Video & Analytics
+    widget: null
+    pubblico: [titolare, agente, segreteria]
+    livello: base
+    tags: [overview, kpi, video, cap23]
+    correlati: []
+    domanda_naturale: "Dove vedo i risultati A/B?"
+    contenuto:
+      a_cosa_serve: >
+        GET /api/app/analytics/agency/overview.
+      quando_si_usa: >
+        Quando l'utente lavora sul modulo Video & Analytics in ImmoWeb/ImmobilCloud.
+      passi:
+        - "Apri il modulo indicato nel capitolo 23."
+        - "Segui il flusso descritto nel manuale operativo."
+        - "In caso di errore leggi la sezione limitazioni/errori."
+      errori_comuni:
+        - problema: "Funzione non trovata o 403"
+          soluzione: "Verifica ruolo (agency_admin/agent/super_admin) e piano."
+      permessi:
+        - "Dipende dal modulo — vedi capitolo 23"
+      screenshot: []
+
+  - id: video.limitazioni-v1
+    titolo: Limiti video/A/B v1
+    modulo: Video & Analytics
+    widget: null
+    pubblico: [titolare, agente, segreteria]
+    livello: base
+    tags: [limiti, video, cap23]
+    correlati: []
+    domanda_naturale: "Limiti video/A/B v1"
+    contenuto:
+      a_cosa_serve: >
+        No Ken Burns live; analytics non BI; dipende fal.ai.
+      quando_si_usa: >
+        Quando l'utente lavora sul modulo Video & Analytics in ImmoWeb/ImmobilCloud.
+      passi:
+        - "Apri il modulo indicato nel capitolo 23."
+        - "Segui il flusso descritto nel manuale operativo."
+        - "In caso di errore leggi la sezione limitazioni/errori."
+      errori_comuni:
+        - problema: "Funzione non trovata o 403"
+          soluzione: "Verifica ruolo (agency_admin/agent/super_admin) e piano."
+      permessi:
+        - "Dipende dal modulo — vedi capitolo 23"
+      screenshot: []
+
+  - id: video.collegamenti
+    titolo: Collegamenti staging e social
+    modulo: Video & Analytics
+    widget: null
+    pubblico: [titolare, agente, segreteria]
+    livello: base
+    tags: [staging, social, video, cap23]
+    correlati: []
+    domanda_naturale: "Collegamenti staging e social"
+    contenuto:
+      a_cosa_serve: >
+        Staging Cap.9; pubblicazione social Cap.15.
+      quando_si_usa: >
+        Quando l'utente lavora sul modulo Video & Analytics in ImmoWeb/ImmobilCloud.
+      passi:
+        - "Apri il modulo indicato nel capitolo 23."
+        - "Segui il flusso descritto nel manuale operativo."
+        - "In caso di errore leggi la sezione limitazioni/errori."
+      errori_comuni:
+        - problema: "Funzione non trovata o 403"
+          soluzione: "Verifica ruolo (agency_admin/agent/super_admin) e piano."
+      permessi:
+        - "Dipende dal modulo — vedi capitolo 23"
+      screenshot: []

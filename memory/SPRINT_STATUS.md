@@ -10,7 +10,7 @@
 2. **Push GitHub**: l'agente modifica file locali; il **Founder** esegue **Save to GitHub**. Non assumere push automatico.
 3. **STOP dopo ogni task**: report + commit message suggerito → attendere **"vai"** esplicito del Founder.
 4. **Academy (M6)**: congelata.
-5. **MLS network**: 0% — solo placeholder Cap. 27.
+5. **MLS network**: v1 attiva (API+UI+seed) — Cap. 27 documentato.
 6. **Immobili Segreti**: rimosso dal prodotto.
 7. **Entità legale**: ditta individuale esistente (no nuova SRL).
 8. **Naming**: ImmoWeb (B2B CRM) · ImmobilCloud (B2C) · HAL · segreteria = concetto operativo, non ruolo backend.
@@ -66,10 +66,14 @@
 | 19 | Impostazioni agenzia (v1 onesta) | 14 | ✅ v1.0 (SettingsPage 5 sezioni identità/fiscale/indirizzo/contatti/sito mode · owner-only PATCH · 3 template omnia stub inattivi · NO logo/color/REA/FIAIP UI · billing separato Founders €49/€99/€249 + crediti €0,05 + Stripe) |
 | 20 | API Keys e integrazioni (Track B / API Gateway) | 14 | ✅ v1.0 (dual-track pricing €0,03 vs €0,05 · plaintext omk_live_ show-once · endpoint `/api/v1/*` valuator 5cr/mortgages 1cr/legal 3cr/feed 0 · widget embed script · NO auto-ricarica/UI usage detail/rate limit/webhook/rotazione) |
 | 21 | Valutatore immobiliare (dual-tier B2C · post B2C-VAL-01) | 12 | ✅ v1.0 (BASE 1×/12mo gratis + UNI €2,99 Stripe + PDF · paywall server-side · upsell CTA · agent pass-through crediti agenzia · fascicolo bypass) |
-| 22–26 | — | — | ⏳ |
-| 27 | MLS Network | — | 🔒 placeholder |
+| 22 | HAL Legal | 8 | ✅ v1.0 |
+| 23 | Video micro-tour + A/B | 8 | ✅ v1.0 |
+| 24 | Gruppi e sedi | 8 | ✅ v1.0 |
+| 25 | Privacy L1–L4 | 8 | ✅ v1.0 |
+| 26 | Widget embed | 8 | ✅ v1.0 |
+| 27 | MLS Network | 10 | ✅ v1.0 |
 | 28 | Academy | — | 🔒 frozen |
-**Totale**: **21/26 capitoli (81%)** · **267 voci HAL** · **100 screenshot placeholder** in `screenshots-index.md`
+**Totale**: **27/27 capitoli (+ corpus API)** · **~801 chunk HAL** · **100 screenshot placeholder** in `screenshots-index.md`
 **Task recenti chiusi**:
 - ✅ **B2C-VAL-01** (16-Ago-2026): gate valutatore dual-tier + Stripe checkout €2,99 + paywall PDF + pytest 10/10 verdi
 - ✅ **Cap. 21 Manuale** (16-Ago-2026): 12 voci `valutatore.*` post-merge B2C-VAL-01

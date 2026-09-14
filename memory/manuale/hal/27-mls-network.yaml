@@ -1,0 +1,254 @@
+# HAL — Capitolo 27 · MLS Network
+# Generato 2026-09-14 · D-051
+
+voci:
+
+  - id: mls.cos-e
+    titolo: Cos'è OMNIA MLS?
+    modulo: MLS
+    widget: null
+    pubblico: [titolare, agente, segreteria]
+    livello: base
+    tags: [network, collaborazioni, mls, cap27]
+    correlati: []
+    domanda_naturale: "Cos'è OMNIA MLS?"
+    contenuto:
+      a_cosa_serve: >
+        Network multi-agenzia per condividere immobili e collaborare.
+      quando_si_usa: >
+        Quando l'utente lavora sul modulo MLS in ImmoWeb/ImmobilCloud.
+      passi:
+        - "Apri il modulo indicato nel capitolo 27."
+        - "Segui il flusso descritto nel manuale operativo."
+        - "In caso di errore leggi la sezione limitazioni/errori."
+      errori_comuni:
+        - problema: "Funzione non trovata o 403"
+          soluzione: "Verifica ruolo (agency_admin/agent/super_admin) e piano."
+      permessi:
+        - "Dipende dal modulo — vedi capitolo 27"
+      screenshot: []
+
+  - id: mls.dove-trovarlo
+    titolo: Dove trovo MLS?
+    modulo: MLS
+    widget: null
+    pubblico: [titolare, agente, segreteria]
+    livello: base
+    tags: [ui, menu, mls, cap27]
+    correlati: []
+    domanda_naturale: "Dove trovo MLS?"
+    contenuto:
+      a_cosa_serve: >
+        Menu MLS → /app/mls; box network su ImmobilCloud.
+      quando_si_usa: >
+        Quando l'utente lavora sul modulo MLS in ImmoWeb/ImmobilCloud.
+      passi:
+        - "Apri il modulo indicato nel capitolo 27."
+        - "Segui il flusso descritto nel manuale operativo."
+        - "In caso di errore leggi la sezione limitazioni/errori."
+      errori_comuni:
+        - problema: "Funzione non trovata o 403"
+          soluzione: "Verifica ruolo (agency_admin/agent/super_admin) e piano."
+      permessi:
+        - "Dipende dal modulo — vedi capitolo 27"
+      screenshot: []
+
+  - id: mls.join
+    titolo: Come entro nel network?
+    modulo: MLS
+    widget: null
+    pubblico: [titolare, agente, segreteria]
+    livello: base
+    tags: [join, onboarding, mls, cap27]
+    correlati: []
+    domanda_naturale: "Come entro nel network?"
+    contenuto:
+      a_cosa_serve: >
+        POST /api/app/mls/join (agency_admin) con accept_terms.
+      quando_si_usa: >
+        Quando l'utente lavora sul modulo MLS in ImmoWeb/ImmobilCloud.
+      passi:
+        - "Apri il modulo indicato nel capitolo 27."
+        - "Segui il flusso descritto nel manuale operativo."
+        - "In caso di errore leggi la sezione limitazioni/errori."
+      errori_comuni:
+        - problema: "Funzione non trovata o 403"
+          soluzione: "Verifica ruolo (agency_admin/agent/super_admin) e piano."
+      permessi:
+        - "Dipende dal modulo — vedi capitolo 27"
+      screenshot: []
+
+  - id: mls.inventory
+    titolo: Il mio MLS vs locale vs Italia
+    modulo: MLS
+    widget: null
+    pubblico: [titolare, agente, segreteria]
+    livello: base
+    tags: [inventory, scope, mls, cap27]
+    correlati: []
+    domanda_naturale: "Il mio MLS vs locale vs Italia"
+    contenuto:
+      a_cosa_serve: >
+        GET /api/app/mls/inventory?scope=mine|local|national.
+      quando_si_usa: >
+        Quando l'utente lavora sul modulo MLS in ImmoWeb/ImmobilCloud.
+      passi:
+        - "Apri il modulo indicato nel capitolo 27."
+        - "Segui il flusso descritto nel manuale operativo."
+        - "In caso di errore leggi la sezione limitazioni/errori."
+      errori_comuni:
+        - problema: "Funzione non trovata o 403"
+          soluzione: "Verifica ruolo (agency_admin/agent/super_admin) e piano."
+      permessi:
+        - "Dipende dal modulo — vedi capitolo 27"
+      screenshot: []
+
+  - id: mls.partner
+    titolo: Come gestisco i partner?
+    modulo: MLS
+    widget: null
+    pubblico: [titolare, agente, segreteria]
+    livello: base
+    tags: [partner, inviti, mls, cap27]
+    correlati: []
+    domanda_naturale: "Come gestisco i partner?"
+    contenuto:
+      a_cosa_serve: >
+        Invite + respond su /api/app/mls/partners*.
+      quando_si_usa: >
+        Quando l'utente lavora sul modulo MLS in ImmoWeb/ImmobilCloud.
+      passi:
+        - "Apri il modulo indicato nel capitolo 27."
+        - "Segui il flusso descritto nel manuale operativo."
+        - "In caso di errore leggi la sezione limitazioni/errori."
+      errori_comuni:
+        - problema: "Funzione non trovata o 403"
+          soluzione: "Verifica ruolo (agency_admin/agent/super_admin) e piano."
+      permessi:
+        - "Dipende dal modulo — vedi capitolo 27"
+      screenshot: []
+
+  - id: mls.offerte
+    titolo: Come funzionano le offerte?
+    modulo: MLS
+    widget: null
+    pubblico: [titolare, agente, segreteria]
+    livello: base
+    tags: [offerte, mls, cap27]
+    correlati: []
+    domanda_naturale: "Come funzionano le offerte?"
+    contenuto:
+      a_cosa_serve: >
+        POST /offers su immobile shared; accept/reject dal destinatario.
+      quando_si_usa: >
+        Quando l'utente lavora sul modulo MLS in ImmoWeb/ImmobilCloud.
+      passi:
+        - "Apri il modulo indicato nel capitolo 27."
+        - "Segui il flusso descritto nel manuale operativo."
+        - "In caso di errore leggi la sezione limitazioni/errori."
+      errori_comuni:
+        - problema: "Funzione non trovata o 403"
+          soluzione: "Verifica ruolo (agency_admin/agent/super_admin) e piano."
+      permessi:
+        - "Dipende dal modulo — vedi capitolo 27"
+      screenshot: []
+
+  - id: mls.pubblico
+    titolo: Ricerca pubblica network
+    modulo: MLS
+    widget: null
+    pubblico: [titolare, agente, segreteria]
+    livello: base
+    tags: [b2c, search, mls, cap27]
+    correlati: []
+    domanda_naturale: "Ricerca pubblica network"
+    contenuto:
+      a_cosa_serve: >
+        GET /api/app/mls/search/public con filtri provincia/prezzo.
+      quando_si_usa: >
+        Quando l'utente lavora sul modulo MLS in ImmoWeb/ImmobilCloud.
+      passi:
+        - "Apri il modulo indicato nel capitolo 27."
+        - "Segui il flusso descritto nel manuale operativo."
+        - "In caso di errore leggi la sezione limitazioni/errori."
+      errori_comuni:
+        - problema: "Funzione non trovata o 403"
+          soluzione: "Verifica ruolo (agency_admin/agent/super_admin) e piano."
+      permessi:
+        - "Dipende dal modulo — vedi capitolo 27"
+      screenshot: []
+
+  - id: mls.seed-scala
+    titolo: Come testo 50/500/1000 agenzie?
+    modulo: MLS
+    widget: null
+    pubblico: [titolare, agente, segreteria]
+    livello: base
+    tags: [seed, scala, 10k, mls, cap27]
+    correlati: []
+    domanda_naturale: "Come testo 50/500/1000 agenzie?"
+    contenuto:
+      a_cosa_serve: >
+        POST /api/app/mls/seed (super_admin) con agencies=N.
+      quando_si_usa: >
+        Quando l'utente lavora sul modulo MLS in ImmoWeb/ImmobilCloud.
+      passi:
+        - "Apri il modulo indicato nel capitolo 27."
+        - "Segui il flusso descritto nel manuale operativo."
+        - "In caso di errore leggi la sezione limitazioni/errori."
+      errori_comuni:
+        - problema: "Funzione non trovata o 403"
+          soluzione: "Verifica ruolo (agency_admin/agent/super_admin) e piano."
+      permessi:
+        - "Dipende dal modulo — vedi capitolo 27"
+      screenshot: []
+
+  - id: mls.limitazioni-v1
+    titolo: Limiti MLS v1
+    modulo: MLS
+    widget: null
+    pubblico: [titolare, agente, segreteria]
+    livello: base
+    tags: [limiti, d-051, mls, cap27]
+    correlati: []
+    domanda_naturale: "Limiti MLS v1"
+    contenuto:
+      a_cosa_serve: >
+        Seed demo; no Academy; visibility private esclusa.
+      quando_si_usa: >
+        Quando l'utente lavora sul modulo MLS in ImmoWeb/ImmobilCloud.
+      passi:
+        - "Apri il modulo indicato nel capitolo 27."
+        - "Segui il flusso descritto nel manuale operativo."
+        - "In caso di errore leggi la sezione limitazioni/errori."
+      errori_comuni:
+        - problema: "Funzione non trovata o 403"
+          soluzione: "Verifica ruolo (agency_admin/agent/super_admin) e piano."
+      permessi:
+        - "Dipende dal modulo — vedi capitolo 27"
+      screenshot: []
+
+  - id: mls.collegamenti
+    titolo: Collegamenti privacy e match
+    modulo: MLS
+    widget: null
+    pubblico: [titolare, agente, segreteria]
+    livello: base
+    tags: [privacy, match, mls, cap27]
+    correlati: []
+    domanda_naturale: "Collegamenti privacy e match"
+    contenuto:
+      a_cosa_serve: >
+        Cap.25 Privacy; Cap.5 Match; Cap.3 Immobili.
+      quando_si_usa: >
+        Quando l'utente lavora sul modulo MLS in ImmoWeb/ImmobilCloud.
+      passi:
+        - "Apri il modulo indicato nel capitolo 27."
+        - "Segui il flusso descritto nel manuale operativo."
+        - "In caso di errore leggi la sezione limitazioni/errori."
+      errori_comuni:
+        - problema: "Funzione non trovata o 403"
+          soluzione: "Verifica ruolo (agency_admin/agent/super_admin) e piano."
+      permessi:
+        - "Dipende dal modulo — vedi capitolo 27"
+      screenshot: []

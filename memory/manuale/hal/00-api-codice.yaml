@@ -1,0 +1,404 @@
+# HAL — Corpus codice/API (D-073)
+# 2026-09-14
+
+voci:
+
+  - id: api.auth
+    titolo: Dove sono login e JWT?
+    modulo: Codice API
+    widget: null
+    pubblico: [titolare, agente, super_admin]
+    livello: avanzato
+    tags: [codice, api, architettura, d-073]
+    correlati: []
+    domanda_naturale: "Dove sono login e JWT?"
+    contenuto:
+      a_cosa_serve: >
+        Backend apps/core/auth.py — cookie httpOnly JWT, /api/auth/*.
+      quando_si_usa: >
+        Quando HAL deve assistere su come è fatto il codice o quale endpoint usare.
+      passi:
+        - "Identifica il modulo nel path indicato."
+        - "Verifica prefix /api e auth (JWT cookie o API key)."
+        - "Non inventare endpoint non presenti nel repo."
+      errori_comuni:
+        - problema: "Endpoint inventato"
+          soluzione: "Citare solo route reali dal corpus codice."
+      permessi:
+        - "Dipende dall'endpoint"
+      screenshot: []
+
+  - id: api.properties
+    titolo: API immobili
+    modulo: Codice API
+    widget: null
+    pubblico: [titolare, agente, super_admin]
+    livello: avanzato
+    tags: [codice, api, architettura, d-073]
+    correlati: []
+    domanda_naturale: "API immobili"
+    contenuto:
+      a_cosa_serve: >
+        apps/immoweb/properties.py sotto /api/app/properties — multi-tenant agency_id.
+      quando_si_usa: >
+        Quando HAL deve assistere su come è fatto il codice o quale endpoint usare.
+      passi:
+        - "Identifica il modulo nel path indicato."
+        - "Verifica prefix /api e auth (JWT cookie o API key)."
+        - "Non inventare endpoint non presenti nel repo."
+      errori_comuni:
+        - problema: "Endpoint inventato"
+          soluzione: "Citare solo route reali dal corpus codice."
+      permessi:
+        - "Dipende dall'endpoint"
+      screenshot: []
+
+  - id: api.clients
+    titolo: API clienti CRM
+    modulo: Codice API
+    widget: null
+    pubblico: [titolare, agente, super_admin]
+    livello: avanzato
+    tags: [codice, api, architettura, d-073]
+    correlati: []
+    domanda_naturale: "API clienti CRM"
+    contenuto:
+      a_cosa_serve: >
+        apps/immoweb/clients.py + smart/ai import.
+      quando_si_usa: >
+        Quando HAL deve assistere su come è fatto il codice o quale endpoint usare.
+      passi:
+        - "Identifica il modulo nel path indicato."
+        - "Verifica prefix /api e auth (JWT cookie o API key)."
+        - "Non inventare endpoint non presenti nel repo."
+      errori_comuni:
+        - problema: "Endpoint inventato"
+          soluzione: "Citare solo route reali dal corpus codice."
+      permessi:
+        - "Dipende dall'endpoint"
+      screenshot: []
+
+  - id: api.mls
+    titolo: API MLS
+    modulo: Codice API
+    widget: null
+    pubblico: [titolare, agente, super_admin]
+    livello: avanzato
+    tags: [codice, api, architettura, d-073]
+    correlati: []
+    domanda_naturale: "API MLS"
+    contenuto:
+      a_cosa_serve: >
+        apps/immoweb/mls.py — dashboard, inventory, partners, offers, search/public, seed.
+      quando_si_usa: >
+        Quando HAL deve assistere su come è fatto il codice o quale endpoint usare.
+      passi:
+        - "Identifica il modulo nel path indicato."
+        - "Verifica prefix /api e auth (JWT cookie o API key)."
+        - "Non inventare endpoint non presenti nel repo."
+      errori_comuni:
+        - problema: "Endpoint inventato"
+          soluzione: "Citare solo route reali dal corpus codice."
+      permessi:
+        - "Dipende dall'endpoint"
+      screenshot: []
+
+  - id: api.hal-knowledge
+    titolo: API HAL Knowledge
+    modulo: Codice API
+    widget: null
+    pubblico: [titolare, agente, super_admin]
+    livello: avanzato
+    tags: [codice, api, architettura, d-073]
+    correlati: []
+    domanda_naturale: "API HAL Knowledge"
+    contenuto:
+      a_cosa_serve: >
+        apps/immoweb/hal_knowledge.py — ask/reindex/status; corpus memory/manuale/hal/*.yaml.
+      quando_si_usa: >
+        Quando HAL deve assistere su come è fatto il codice o quale endpoint usare.
+      passi:
+        - "Identifica il modulo nel path indicato."
+        - "Verifica prefix /api e auth (JWT cookie o API key)."
+        - "Non inventare endpoint non presenti nel repo."
+      errori_comuni:
+        - problema: "Endpoint inventato"
+          soluzione: "Citare solo route reali dal corpus codice."
+      permessi:
+        - "Dipende dall'endpoint"
+      screenshot: []
+
+  - id: api.hal-agent
+    titolo: API HAL Agent CRM
+    modulo: Codice API
+    widget: null
+    pubblico: [titolare, agente, super_admin]
+    livello: avanzato
+    tags: [codice, api, architettura, d-073]
+    correlati: []
+    domanda_naturale: "API HAL Agent CRM"
+    contenuto:
+      a_cosa_serve: >
+        apps/immoweb/al_agent.py — /api/app/al/* chat SSE e improve.
+      quando_si_usa: >
+        Quando HAL deve assistere su come è fatto il codice o quale endpoint usare.
+      passi:
+        - "Identifica il modulo nel path indicato."
+        - "Verifica prefix /api e auth (JWT cookie o API key)."
+        - "Non inventare endpoint non presenti nel repo."
+      errori_comuni:
+        - problema: "Endpoint inventato"
+          soluzione: "Citare solo route reali dal corpus codice."
+      permessi:
+        - "Dipende dall'endpoint"
+      screenshot: []
+
+  - id: api.hal-legal
+    titolo: API HAL Legal
+    modulo: Codice API
+    widget: null
+    pubblico: [titolare, agente, super_admin]
+    livello: avanzato
+    tags: [codice, api, architettura, d-073]
+    correlati: []
+    domanda_naturale: "API HAL Legal"
+    contenuto:
+      a_cosa_serve: >
+        apps/immoweb/al_legal/* — /api/app/legal/*.
+      quando_si_usa: >
+        Quando HAL deve assistere su come è fatto il codice o quale endpoint usare.
+      passi:
+        - "Identifica il modulo nel path indicato."
+        - "Verifica prefix /api e auth (JWT cookie o API key)."
+        - "Non inventare endpoint non presenti nel repo."
+      errori_comuni:
+        - problema: "Endpoint inventato"
+          soluzione: "Citare solo route reali dal corpus codice."
+      permessi:
+        - "Dipende dall'endpoint"
+      screenshot: []
+
+  - id: api.billing
+    titolo: API billing Stripe
+    modulo: Codice API
+    widget: null
+    pubblico: [titolare, agente, super_admin]
+    livello: avanzato
+    tags: [codice, api, architettura, d-073]
+    correlati: []
+    domanda_naturale: "API billing Stripe"
+    contenuto:
+      a_cosa_serve: >
+        apps/billing/* — flag STRIPE_ENABLED; piani Founders + B2C checkout.
+      quando_si_usa: >
+        Quando HAL deve assistere su come è fatto il codice o quale endpoint usare.
+      passi:
+        - "Identifica il modulo nel path indicato."
+        - "Verifica prefix /api e auth (JWT cookie o API key)."
+        - "Non inventare endpoint non presenti nel repo."
+      errori_comuni:
+        - problema: "Endpoint inventato"
+          soluzione: "Citare solo route reali dal corpus codice."
+      permessi:
+        - "Dipende dall'endpoint"
+      screenshot: []
+
+  - id: api.v1-gateway
+    titolo: API Gateway Track B
+    modulo: Codice API
+    widget: null
+    pubblico: [titolare, agente, super_admin]
+    livello: avanzato
+    tags: [codice, api, architettura, d-073]
+    correlati: []
+    domanda_naturale: "API Gateway Track B"
+    contenuto:
+      a_cosa_serve: >
+        apps/v1/gateway.py + api_keys — omk_live_ keys, crediti €0,03.
+      quando_si_usa: >
+        Quando HAL deve assistere su come è fatto il codice o quale endpoint usare.
+      passi:
+        - "Identifica il modulo nel path indicato."
+        - "Verifica prefix /api e auth (JWT cookie o API key)."
+        - "Non inventare endpoint non presenti nel repo."
+      errori_comuni:
+        - problema: "Endpoint inventato"
+          soluzione: "Citare solo route reali dal corpus codice."
+      permessi:
+        - "Dipende dall'endpoint"
+      screenshot: []
+
+  - id: api.widgets
+    titolo: API widget embed
+    modulo: Codice API
+    widget: null
+    pubblico: [titolare, agente, super_admin]
+    livello: avanzato
+    tags: [codice, api, architettura, d-073]
+    correlati: []
+    domanda_naturale: "API widget embed"
+    contenuto:
+      a_cosa_serve: >
+        apps/v1/widgets.py — /api/widgets/v1/loader.js e *.html.
+      quando_si_usa: >
+        Quando HAL deve assistere su come è fatto il codice o quale endpoint usare.
+      passi:
+        - "Identifica il modulo nel path indicato."
+        - "Verifica prefix /api e auth (JWT cookie o API key)."
+        - "Non inventare endpoint non presenti nel repo."
+      errori_comuni:
+        - problema: "Endpoint inventato"
+          soluzione: "Citare solo route reali dal corpus codice."
+      permessi:
+        - "Dipende dall'endpoint"
+      screenshot: []
+
+  - id: api.storage
+    titolo: Dove finiscono le foto?
+    modulo: Codice API
+    widget: null
+    pubblico: [titolare, agente, super_admin]
+    livello: avanzato
+    tags: [codice, api, architettura, d-073]
+    correlati: []
+    domanda_naturale: "Dove finiscono le foto?"
+    contenuto:
+      a_cosa_serve: >
+        shared/storage/objstore.py — STORAGE_BACKEND=local|.media o emergent legacy.
+      quando_si_usa: >
+        Quando HAL deve assistere su come è fatto il codice o quale endpoint usare.
+      passi:
+        - "Identifica il modulo nel path indicato."
+        - "Verifica prefix /api e auth (JWT cookie o API key)."
+        - "Non inventare endpoint non presenti nel repo."
+      errori_comuni:
+        - problema: "Endpoint inventato"
+          soluzione: "Citare solo route reali dal corpus codice."
+      permessi:
+        - "Dipende dall'endpoint"
+      screenshot: []
+
+  - id: api.llm
+    titolo: Come chiama Gemini il backend?
+    modulo: Codice API
+    widget: null
+    pubblico: [titolare, agente, super_admin]
+    livello: avanzato
+    tags: [codice, api, architettura, d-073]
+    correlati: []
+    domanda_naturale: "Come chiama Gemini il backend?"
+    contenuto:
+      a_cosa_serve: >
+        shared/llm + bridge emergentintegrations.llm.chat → GEMINI_API_KEY / gemini-3.6-flash.
+      quando_si_usa: >
+        Quando HAL deve assistere su come è fatto il codice o quale endpoint usare.
+      passi:
+        - "Identifica il modulo nel path indicato."
+        - "Verifica prefix /api e auth (JWT cookie o API key)."
+        - "Non inventare endpoint non presenti nel repo."
+      errori_comuni:
+        - problema: "Endpoint inventato"
+          soluzione: "Citare solo route reali dal corpus codice."
+      permessi:
+        - "Dipende dall'endpoint"
+      screenshot: []
+
+  - id: api.privacy
+    titolo: Codice privacy L1-L4
+    modulo: Codice API
+    widget: null
+    pubblico: [titolare, agente, super_admin]
+    livello: avanzato
+    tags: [codice, api, architettura, d-073]
+    correlati: []
+    domanda_naturale: "Codice privacy L1-L4"
+    contenuto:
+      a_cosa_serve: >
+        shared/utils/privacy_gate.py + property_privacy.py.
+      quando_si_usa: >
+        Quando HAL deve assistere su come è fatto il codice o quale endpoint usare.
+      passi:
+        - "Identifica il modulo nel path indicato."
+        - "Verifica prefix /api e auth (JWT cookie o API key)."
+        - "Non inventare endpoint non presenti nel repo."
+      errori_comuni:
+        - problema: "Endpoint inventato"
+          soluzione: "Citare solo route reali dal corpus codice."
+      permessi:
+        - "Dipende dall'endpoint"
+      screenshot: []
+
+  - id: api.publishing
+    titolo: Publishing/sync portali
+    modulo: Codice API
+    widget: null
+    pubblico: [titolare, agente, super_admin]
+    livello: avanzato
+    tags: [codice, api, architettura, d-073]
+    correlati: []
+    domanda_naturale: "Publishing/sync portali"
+    contenuto:
+      a_cosa_serve: >
+        publishing.py + sync_engine.py + compliance validator.
+      quando_si_usa: >
+        Quando HAL deve assistere su come è fatto il codice o quale endpoint usare.
+      passi:
+        - "Identifica il modulo nel path indicato."
+        - "Verifica prefix /api e auth (JWT cookie o API key)."
+        - "Non inventare endpoint non presenti nel repo."
+      errori_comuni:
+        - problema: "Endpoint inventato"
+          soluzione: "Citare solo route reali dal corpus codice."
+      permessi:
+        - "Dipende dall'endpoint"
+      screenshot: []
+
+  - id: api.immocloud
+    titolo: Portale B2C
+    modulo: Codice API
+    widget: null
+    pubblico: [titolare, agente, super_admin]
+    livello: avanzato
+    tags: [codice, api, architettura, d-073]
+    correlati: []
+    domanda_naturale: "Portale B2C"
+    contenuto:
+      a_cosa_serve: >
+        apps/immocloud/* — search, valuator, saved searches, public portal.
+      quando_si_usa: >
+        Quando HAL deve assistere su come è fatto il codice o quale endpoint usare.
+      passi:
+        - "Identifica il modulo nel path indicato."
+        - "Verifica prefix /api e auth (JWT cookie o API key)."
+        - "Non inventare endpoint non presenti nel repo."
+      errori_comuni:
+        - problema: "Endpoint inventato"
+          soluzione: "Citare solo route reali dal corpus codice."
+      permessi:
+        - "Dipende dall'endpoint"
+      screenshot: []
+
+  - id: api.scala-10k
+    titolo: Come è pensata la scala 10k agenzie?
+    modulo: Codice API
+    widget: null
+    pubblico: [titolare, agente, super_admin]
+    livello: avanzato
+    tags: [codice, api, architettura, d-073]
+    correlati: []
+    domanda_naturale: "Come è pensata la scala 10k agenzie?"
+    contenuto:
+      a_cosa_serve: >
+        Sempre filtrare agency_id; indici compound; list paginate; seed MLS ladder; load test 10→50→500→1000→10k.
+      quando_si_usa: >
+        Quando HAL deve assistere su come è fatto il codice o quale endpoint usare.
+      passi:
+        - "Identifica il modulo nel path indicato."
+        - "Verifica prefix /api e auth (JWT cookie o API key)."
+        - "Non inventare endpoint non presenti nel repo."
+      errori_comuni:
+        - problema: "Endpoint inventato"
+          soluzione: "Citare solo route reali dal corpus codice."
+      permessi:
+        - "Dipende dall'endpoint"
+      screenshot: []
