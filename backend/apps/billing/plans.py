@@ -12,7 +12,8 @@ Enterprise resta nel catalogo (backward compat) con prezzi legacy —
 posizionamento e API custom saranno rivisti in sessione dedicata.
 
 Checkout usa stable Stripe `lookup_key` = f"{tier}_{cycle}" (es.
-`pro_monthly`, `agency_yearly`). Vedi apps/billing/setup_stripe.py.
+`pro_monthly`, `agency_yearly`). Annuale = 11× mensile (−1 mese, D-079).
+Vedi apps/billing/setup_stripe.py.
 """
 from typing import Dict, List, Literal, Optional
 from pydantic import BaseModel, Field

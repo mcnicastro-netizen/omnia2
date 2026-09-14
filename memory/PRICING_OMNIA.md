@@ -166,6 +166,7 @@ Formato lookup key Stripe: `{tier}_{cycle}` per abbonamenti (es. `pro_monthly`) 
 
 | Data | Versione | Note |
 |------|----------|------|
+| 14-Sep-2026 | **v3.1** | Annuale −1 mese (D-079); Enterprise ancora TBD |
 | 05-Ago-2026 | **v3.0** | LISTINO UFFICIALE approvato Founder. Founders 12m €49/99/249, Standard €79/179/349, pacchetti ratio 20 cr/€, planimetria/ipoteca rimossi |
 | 26-Giu-2026 | v2.0 (bozza superata) | Founders 50 24m €39/99/249 + sconto 50% a vita — non approvato |
 | — | v1.x | Versioni preliminari, superate |
