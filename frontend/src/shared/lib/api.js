@@ -7,14 +7,9 @@
 import axios from "axios";
 import i18n from "../i18n/config";
 
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
-if (!BACKEND_URL) {
-  // H11 — fail fast: without the backend URL every API call would hit "undefined/api/..."
-  throw new Error(
-    "REACT_APP_BACKEND_URL non configurata: aggiungila a frontend/.env e riavvia il dev server."
-  );
-}
-export const API_BASE = `${BACKEND_URL}/api`;
+const BACKEND_URL = (process.env.REACT_APP_BACKEND_URL || "").replace(/\/$/, "");
+// Empty BACKEND_URL → same-origin /api (dev proxy or reverse proxy / tunnel)
+export const API_BASE = BACKEND_URL ? `${BACKEND_URL}/api` : "/api";
 
 export const api = axios.create({
   baseURL: API_BASE,
