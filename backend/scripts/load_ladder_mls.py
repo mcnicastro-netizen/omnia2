@@ -13,12 +13,16 @@ from __future__ import annotations
 import argparse
 import asyncio
 import os
+import sys
 import time
 from pathlib import Path
 
+ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT))
+
 from dotenv import load_dotenv
 
-load_dotenv(Path(__file__).resolve().parents[1] / ".env")
+load_dotenv(ROOT / ".env")
 
 TIERS = [10, 50, 500, 1000, 5000, 10000]
 
