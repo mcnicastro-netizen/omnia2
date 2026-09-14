@@ -109,9 +109,9 @@ export default function AgencyShell({ children, current = "dashboard" }) {
     ...(user?.role === "super_admin"
       ? [{ key: "brand-lab", to: `/${lang}/app/brand-lab`, label: "Brand Lab", icon: "◈" }]
       : []),
-    // Cruscotto Founder — HAL Legal ops (super_admin only)
+    // Cruscotto Founder — costi/consumi (super_admin only)
     ...(user?.role === "super_admin"
-      ? [{ key: "ops-legal", to: `/${lang}/app/ops/legal`, label: "Ops Legal", icon: "◎" }]
+      ? [{ key: "ops", to: `/${lang}/app/ops`, label: "Ops Costi", icon: "◎" }]
       : []),
   ];
 

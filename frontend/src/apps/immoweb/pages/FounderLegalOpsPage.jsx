@@ -1,4 +1,6 @@
 import React, { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { api } from "../../../shared/lib/api";
 import AgencyShell from "../components/AgencyShell";
 import Brand from "../../../shared/components/Brand";
@@ -8,6 +10,8 @@ import Brand from "../../../shared/components/Brand";
  * Route: /:lang/app/ops/legal
  */
 export default function FounderLegalOpsPage() {
+  const { i18n } = useTranslation();
+  const lang = (i18n.language || "it").slice(0, 2);
   const [days, setDays] = useState(30);
   const [data, setData] = useState(null);
   const [error, setError] = useState(null);
@@ -43,12 +47,12 @@ export default function FounderLegalOpsPage() {
   const maxDay = Math.max(1, ...(data?.by_day || []).map((d) => d.queries));
 
   return (
-    <AgencyShell current="ops-legal">
+    <AgencyShell current="ops">
       <section data-testid="founder-legal-ops" className="space-y-8">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
             <p className="text-[10px] uppercase tracking-[0.3em] text-stone-500 mb-2">
-              <Brand>Founder · Ops</Brand>
+              <Brand>Founder · Ops · Legal</Brand>
             </p>
             <h1
               className="text-3xl md:text-4xl tracking-tight text-[#0B1E3F]"
@@ -57,7 +61,10 @@ export default function FounderLegalOpsPage() {
               Cruscotto HAL Legal
             </h1>
             <p className="text-sm text-stone-600 mt-2 max-w-2xl">
-              Volume domande, stima costi e stato provider. Solo tu (super admin) vedi questa pagina.
+              Dettaglio HAL Legal.{" "}
+              <Link to={`/${lang}/app/ops`} className="text-[#1F6B5C] underline">
+                ← Torna a tutti i costi
+              </Link>
             </p>
           </div>
           <div className="flex items-center gap-2">

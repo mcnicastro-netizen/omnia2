@@ -53,6 +53,7 @@ const SocialPublisherPage = lazy(() => import("@/apps/immoweb/pages/SocialPublis
 const HalKnowledgePage = lazy(() => import("@/apps/immoweb/pages/HalKnowledgePage"));
 const MlsPage = lazy(() => import("@/apps/immoweb/pages/MlsPage"));
 const BrandLabPage = lazy(() => import("@/apps/immoweb/pages/BrandLabPage"));
+const FounderOpsPage = lazy(() => import("@/apps/immoweb/pages/FounderOpsPage"));
 const FounderLegalOpsPage = lazy(() => import("@/apps/immoweb/pages/FounderLegalOpsPage"));
 const AcademyApp = lazy(() => import("@/apps/academy/AcademyApp"));
 const LegalApp = lazy(() => import("@/apps/legal/LegalApp"));
@@ -257,7 +258,15 @@ function App() {
                       </ProtectedRoute>
                     }
                   />
-                  {/* Founder Ops — HAL Legal monitoring (super_admin only) */}
+                  {/* Founder Ops — costi/consumi (super_admin only) */}
+                  <Route
+                    path="app/ops"
+                    element={
+                      <ProtectedRoute allowedRoles={["super_admin"]}>
+                        <FounderOpsPage />
+                      </ProtectedRoute>
+                    }
+                  />
                   <Route
                     path="app/ops/legal"
                     element={

@@ -1285,3 +1285,11 @@ Registro di tutte le decisioni di business e tecniche prese durante il progetto.
 - Mostra: volume Legal, serie giornaliera, top utenti/agenzie, stato Gemini/Tavily, stima €, free Tavily residui.
 - Politica pricing ricordata in UI: in-app incluso · API a crediti · B2C a pagamento.
 - Stime costi operative (non sostituiscono fatture provider).
+
+## D-077 — Cruscotto Founder Ops Costi (tutti i consumi) · 2026-09-14
+**Status**: ✅ ATTIVA
+
+- Hub `/app/ops` + API `GET /api/app/ops/overview` (super_admin).
+- Copre: HAL CRM, Migliora testo, Guida HAL, HAL Legal, Virtual Staging, Micro-tour, API Track B, wallet crediti.
+- `/app/ops/legal` resta il dettaglio Legal.
+- Mostra COGS stimato vs valore listino crediti; canale (incluso / crediti / B2C).
