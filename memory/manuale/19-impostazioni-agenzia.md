@@ -197,17 +197,16 @@ Il titolare **non ha un sito** e vuole che OMNIA gli generi un portale con templ
 
 **Fase attiva** (via env `PRICING_PHASE`):
 - `launch` (default) → `LAUNCH_PLANS`: Starter €49/mese, Pro €99/mese, Agency €249/mese, Enterprise €299/mese
-- `post_traction` → `POST_TRACTION_PLANS`: Starter €79/mese, Pro €179/mese, Agency €349/mese, Enterprise €499/mese
+- `post_traction` → `POST_TRACTION_PLANS`: Starter €79/mese, Pro €179/mese, Agency €399/mese
 
-**Piano Founders (LAUNCH)**:
-| Tier | Prezzo mese | Prezzo anno | Max agenti | Max immobili | Crediti/mese |
+**Piano Founders (LAUNCH)** — D-080:
+| Tier | Prezzo mese | Prezzo anno (−1 mese) | Max agenti | Max immobili | Crediti/mese |
 |------|:-----------:|:-----------:|:----------:|:------------:|:------------:|
-| starter | €49 | €490 | 3 | 30 | 120 |
-| pro | €99 | €990 | 10 | 200 | 1200 |
-| agency | €249 | €2490 | ∞ | ∞ | 3600 |
-| enterprise | €299 | €2990 | ∞ | ∞ | 3600 |
+| starter | €49 | €539 | 3 | 30 | 120 |
+| pro | €99 | €1.089 | 10 | 200 | 1200 |
+| agency | €299 | €3.289 | ∞ | ∞ | 3600 |
 
-**Nota Enterprise**: "TBD in sessione dedicata (posizionamento + Custom API). Mantenuto con prezzi legacy per non rompere il modello dati esistente." (commento nel codice, `plans.py:74-84`).
+**Onboarding**: demo guidata → abbonamento (niente trial self-serve). Enterprise fuori catalogo.
 
 **Bottone "Attiva"** → `POST /billing/checkout` con `{plan_tier, billing_cycle: monthly|yearly}` → redirect a `data.checkout_url` (Stripe hosted checkout).
 
