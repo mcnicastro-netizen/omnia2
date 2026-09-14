@@ -7,6 +7,60 @@ import PropertyCard from "../components/PropertyCard";
 // Unsplash hero image: warm italian villa interior, free license
 const HERO_IMG = "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=1200&q=70&auto=format&fit=crop";
 
+function MlsNetworkBox({ lang }) {
+  const [claim, setClaim] = useState("Network OMNIA MLS");
+  const [province, setProvince] = useState("CT");
+  const [operation, setOp] = useState("sale");
+  const nav = useNavigate();
+
+  useEffect(() => {
+    api
+      .get("/app/mls/search/public?limit=1")
+      .then((r) => setClaim(r.data.claim || claim))
+      .catch(() => {});
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const go = (e) => {
+    e.preventDefault();
+    const q = new URLSearchParams({ operation, province });
+    nav(`/${lang}/cloud/search?${q.toString()}&mls=1`);
+  };
+
+  return (
+    <div className="rounded-2xl border border-emerald-800/20 bg-emerald-900 text-white p-5 flex flex-col justify-between min-h-[200px]">
+      <div>
+        <p className="text-[10px] uppercase tracking-[0.25em] text-emerald-100/70 mb-2">OMNIA MLS</p>
+        <h2 className="text-xl font-light" style={{ fontFamily: "'Fraunces', Georgia, serif" }}>
+          {claim}
+        </h2>
+        <p className="text-sm text-emerald-50/80 mt-2">Cerca nel network multi-agenzia.</p>
+      </div>
+      <form onSubmit={go} className="mt-4 grid grid-cols-2 gap-2">
+        <select
+          className="rounded-lg bg-emerald-950/40 border border-white/20 px-3 py-2 text-sm"
+          value={operation}
+          onChange={(e) => setOp(e.target.value)}
+        >
+          <option value="sale">Vendita</option>
+          <option value="rent">Affitto</option>
+        </select>
+        <input
+          className="rounded-lg bg-emerald-950/40 border border-white/20 px-3 py-2 text-sm"
+          value={province}
+          onChange={(e) => setProvince(e.target.value.toUpperCase().slice(0, 2))}
+          placeholder="Provincia"
+          maxLength={2}
+        />
+        <button type="submit" className="col-span-2 bg-white text-emerald-950 rounded-lg py-2.5 text-sm font-medium hover:bg-emerald-100">
+          Avvia la ricerca network
+        </button>
+      </form>
+      <p className="text-[10px] tracking-wide text-emerald-100/50 mt-3">POWERED BY OMNIA</p>
+    </div>
+  );
+}
+
 export default function CloudHomePage() {
   const { t, i18n } = useTranslation();
   const lang = (i18n.language || "it").slice(0, 2);
@@ -72,6 +126,28 @@ export default function CloudHomePage() {
             <div className="aspect-[4/5] rounded-2xl overflow-hidden shadow-2xl">
               <img src={HERO_IMG} alt="Interno di una casa italiana" loading="lazy" className="w-full h-full object-cover" />
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Dual-box: Network MLS + ricerca ImmobilCloud */}
+      <section className="px-5 sm:px-8 md:px-16 pb-10" data-testid="cloud-mls-dual">
+        <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-4">
+          <MlsNetworkBox lang={lang} />
+          <div className="rounded-2xl border border-stone-200 bg-[#0B1E3F] text-white p-5 flex flex-col justify-between min-h-[200px]">
+            <div>
+              <p className="text-[10px] uppercase tracking-[0.25em] text-white/60 mb-2">ImmobilCloud</p>
+              <h2 className="text-xl font-light" style={{ fontFamily: "'Fraunces', Georgia, serif" }}>
+                Cerca nella vetrina
+              </h2>
+              <p className="text-sm text-white/70 mt-2">Inventory pubblico aggregato — vendita e affitto.</p>
+            </div>
+            <Link
+              to={`/${lang}/cloud/search`}
+              className="mt-4 inline-flex justify-center bg-white text-[#0B1E3F] px-4 py-2.5 rounded-lg text-sm font-medium hover:bg-[#C19A6B] hover:text-white transition-colors"
+            >
+              Avvia la ricerca
+            </Link>
           </div>
         </div>
       </section>

@@ -51,6 +51,7 @@ const PublishingPage = lazy(() => import("@/apps/immoweb/pages/PublishingPage"))
 const PortalWizardPage = lazy(() => import("@/apps/immoweb/pages/PortalWizardPage"));
 const SocialPublisherPage = lazy(() => import("@/apps/immoweb/pages/SocialPublisherPage"));
 const HalKnowledgePage = lazy(() => import("@/apps/immoweb/pages/HalKnowledgePage"));
+const MlsPage = lazy(() => import("@/apps/immoweb/pages/MlsPage"));
 const BrandLabPage = lazy(() => import("@/apps/immoweb/pages/BrandLabPage"));
 const AcademyApp = lazy(() => import("@/apps/academy/AcademyApp"));
 const LegalApp = lazy(() => import("@/apps/legal/LegalApp"));
@@ -235,6 +236,14 @@ function App() {
                     element={
                       <ProtectedRoute>
                         <HalKnowledgePage />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="app/mls"
+                    element={
+                      <ProtectedRoute allowedRoles={["super_admin", "agency_admin", "agent", "group_admin", "branch_admin", "branch_agent"]}>
+                        <MlsPage />
                       </ProtectedRoute>
                     }
                   />
