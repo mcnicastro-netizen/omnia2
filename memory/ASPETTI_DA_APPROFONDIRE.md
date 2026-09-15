@@ -1000,7 +1000,7 @@ Implementazione: TTL index Mongo dove semantica lo consente + job archivio S3 me
 
 ---
 
-# 📊 Tabella riepilogo Backlog qualità (A-006 → A-023)
+# 📊 Tabella riepilogo Backlog qualità (A-006 → A-025)
 
 | ID | Titolo | P | Effort | Origine | Timing |
 |----|--------|:-:|:-:|---------|:-:|
