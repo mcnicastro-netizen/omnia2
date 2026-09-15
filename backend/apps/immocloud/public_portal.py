@@ -664,11 +664,14 @@ async def public_property_contact(pid: str, payload: PropertyContactPayload):
     if prop_full and prop_full.get("listing_agent_id"):
         agent = await db.users.find_one(
             {"id": prop_full["listing_agent_id"]},
-            {"_id": 0, "email": 1, "lang": 1},
+            {"_id": 0, "email": 1, "lang": 1,
+             "notification_channels": 1, "notification_email_types": 1},
         )
         if agent and agent.get("email"):
-            notify_email = agent["email"]
-            notify_lang = agent.get("lang") or "it"
+            from shared.notifications.prefs import user_allows_email
+            if user_allows_email(agent, "lead_notification"):
+                notify_email = agent["email"]
+                notify_lang = agent.get("lang") or "it"
     if not notify_email:
         agency_doc = await db.agencies.find_one(
             {"id": agency_id},

@@ -273,14 +273,32 @@ async def run_all_active_saved_searches() -> Dict[str, Any]:
         total_searches += 1
         user = await db.users.find_one({"id": s["user_id"]},
                                        {"_id": 0, "email": 1, "name": 1, "lang": 1,
-                                        "notification_channels": 1, "account_type": 1})
+                                        "notification_channels": 1,
+                                        "notification_email_types": 1,
+                                        "account_type": 1})
         # Always update last_run_at (even on skip) to avoid stale digests
         # when user later enables email channel.
+        from shared.notifications.prefs import user_allows_email
         should_email = (
             user
             and user.get("account_type") == "b2c"
-            and "email" in (user.get("notification_channels") or [])
+            and user_allows_email(user, "saved_search_alert")
         )
+
+        # Respect per-search frequency (instant/daily/weekly)
+        if should_email:
+            freq = s.get("frequency") or "instant"
+            last = s.get("last_run_at")
+            if freq != "instant" and last:
+                try:
+                    last_dt = datetime.fromisoformat(str(last).replace("Z", "+00:00"))
+                    age_h = (datetime.now(timezone.utc) - last_dt).total_seconds() / 3600
+                    if freq == "daily" and age_h < 20:
+                        should_email = False
+                    elif freq == "weekly" and age_h < 24 * 6:
+                        should_email = False
+                except Exception:
+                    pass
 
         flt = _build_mongo_filter(s["filters"], since=s.get("last_run_at"))
         matches: List[dict] = []

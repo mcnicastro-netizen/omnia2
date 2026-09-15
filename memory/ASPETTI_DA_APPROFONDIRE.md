@@ -957,7 +957,7 @@ Nessuna — decisione tecnica autonoma se conveniente.
 **Effort stimato**: M (~4h) · backend PATCH `/api/me/notification-preferences` + UI form + tests.
 
 ### Stato
-🟡 **P1** — GDPR-friendly (utente controlla i propri canali) + requisito per Notification Directive UE
+✅ **FATTO** — 15-Sep-2026 (PATCH /auth/me/notification-preferences + UI Settings/Account)
 
 ---
 
@@ -1019,7 +1019,7 @@ Implementazione: TTL index Mongo dove semantica lo consente + job archivio S3 me
 | A-018 | Activity feed dashboard | P2 | M-L (8-15h) | Spark Cap.18 | Post-A-017 |
 | A-019 | Frequency-aware saved-search cron | P2 | XS (~30min) | Bug D-051 Cap.18 | Raggruppare micro-fix |
 | A-020 | Internal APScheduler saved-search | P2 | S (~2h) | Spark Cap.18 | Post-A-019 |
-| A-021 | UI notification preferences | **P1** | M (~4h) | Spark Cap.18 | Prossimo sprint |
+| A-021 | UI notification preferences | ✅ | M | Spark Cap.18 | Fatto 15-Sep-2026 |
 | A-022 | Retention policy audit collections | P3 | M (~4h) | Spark Cap.18 | Post-primi clienti |
 | A-023 | Toast duration tuning | P3 | XS (~15min) | Spark Cap.18 | Raggruppare micro-fix |
 | A-024 | CTA Richiedi demo via email (D-080) | ✅ | S | Founder 15-Sep-2026 | Chiuso — niente Calendly |

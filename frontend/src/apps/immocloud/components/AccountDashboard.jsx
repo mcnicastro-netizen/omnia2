@@ -11,6 +11,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { api } from "../../../shared/lib/api";
 import { useAuth, formatApiErrorDetail } from "../../../shared/lib/auth";
+import NotificationPreferencesPanel from "../../../shared/components/NotificationPreferencesPanel";
 
 const FREQ_OPTIONS = [
   { v: "instant", k: "cloud.account.freq_instant" },
@@ -165,6 +166,16 @@ export default function AccountDashboard() {
             ))}
           </ul>
         )}
+      </section>
+
+      <section data-testid="account-notifications" className="mt-10 border border-stone-200 bg-white rounded-lg p-6 space-y-3">
+        <h2 className="text-xl font-light tracking-tight" style={{ fontFamily: "'Fraunces', Georgia, serif" }}>
+          Notifiche
+        </h2>
+        <p className="text-sm text-stone-600">
+          Scegli come e quando ricevere aggiornamenti su ImmobilCloud.
+        </p>
+        <NotificationPreferencesPanel showSavedSearchFreq />
       </section>
     </div>
   );

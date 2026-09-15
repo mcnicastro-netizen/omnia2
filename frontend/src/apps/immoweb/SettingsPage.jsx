@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import AgencyShell from "./components/AgencyShell";
 import { api } from "../../shared/lib/api";
 import { formatApiErrorDetail } from "../../shared/lib/auth";
+import NotificationPreferencesPanel from "../../shared/components/NotificationPreferencesPanel";
 
 export default function SettingsPage() {
   const { t } = useTranslation();
@@ -316,6 +317,14 @@ export default function SettingsPage() {
             </button>
           </div>
         </form>
+
+        <section data-testid="settings-notifications" className="border border-stone-200 bg-white rounded-lg p-6 space-y-3">
+          <h2 className="text-xs uppercase tracking-widest text-stone-500">Notifiche</h2>
+          <p className="text-sm text-stone-600">
+            Controlla canali e tipi di email per il tuo account agente.
+          </p>
+          <NotificationPreferencesPanel showSavedSearchFreq={false} />
+        </section>
       </section>
 
       <style>{`

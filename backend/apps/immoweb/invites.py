@@ -95,22 +95,30 @@ async def create_invite(
         await db.agency_invites.insert_one(doc)
         invite_id = invite.id
 
-    # Send magic-link email
+    # Send magic-link email (skip if existing user opted out of agency_invite)
     frontend = os.environ.get("FRONTEND_URL", "").rstrip("/")
     accept_url = f"{frontend}/{lang}/accept-invite#token={token}"
     try:
-        await send_email(
-            to=email,
-            template="agency_invite",
-            lang=lang,
-            variables={
-                "agency_name": agency.get("display_name", "OMNIA"),
-                "inviter_name": user.get("name", "OMNIA"),
-                "role_label": payload.role,
-                "accept_url": accept_url,
-                "expires_days": INVITE_EXPIRY_DAYS,
-            },
+        from shared.notifications.prefs import user_allows_email
+        existing_user = await db.users.find_one(
+            {"email": email},
+            {"_id": 0, "notification_channels": 1, "notification_email_types": 1},
         )
+        if existing_user and not user_allows_email(existing_user, "agency_invite"):
+            logger.info("Invite email skipped (prefs): %s", email)
+        else:
+            await send_email(
+                to=email,
+                template="agency_invite",
+                lang=lang,
+                variables={
+                    "agency_name": agency.get("display_name", "OMNIA"),
+                    "inviter_name": user.get("name", "OMNIA"),
+                    "role_label": payload.role,
+                    "accept_url": accept_url,
+                    "expires_days": INVITE_EXPIRY_DAYS,
+                },
+            )
     except Exception as e:
         logger.warning("Invite email failed: %s", e)
 

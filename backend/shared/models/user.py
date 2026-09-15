@@ -48,6 +48,10 @@ class UserInDB(TimestampedModel):
     account_type: Literal["b2b", "b2c"] = "b2b"
     intents: List[Literal["sell", "rent_out", "get_alerts"]] = Field(default_factory=list)
     notification_channels: List[Literal["email", "push"]] = Field(default_factory=lambda: ["email"])
+    notification_email_types: Optional[List[Literal[
+        "welcome", "agency_invite", "lead_notification", "saved_search_alert"
+    ]]] = None  # None = all enabled (legacy default)
+    saved_search_frequency_default: Literal["instant", "daily", "weekly"] = "instant"
     email_verified: bool = False
     # M2.5.1 — Franchising layer (D-041) — populated for group_admin users
     group_id: Optional[str] = None

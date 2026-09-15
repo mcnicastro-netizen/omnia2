@@ -69,6 +69,8 @@ def _clear_auth_cookies(response: Response) -> None:
 
 
 def _public(user: dict) -> dict:
+    from shared.notifications.prefs import prefs_from_user
+    prefs = prefs_from_user(user)
     return {
         "id": user["id"],
         "email": user["email"],
@@ -80,7 +82,10 @@ def _public(user: dict) -> dict:
         "is_active": user.get("is_active", True),
         "account_type": user.get("account_type", "agent"),
         "intents": user.get("intents", []),
-        "notification_channels": user.get("notification_channels", []),
+        "notification_channels": prefs["notification_channels"],
+        "notification_email_types": prefs["notification_email_types"],
+        "saved_search_frequency_default": prefs["saved_search_frequency_default"],
+        "email_verified": bool(user.get("email_verified")),
         "phone": user.get("phone"),
         "group_id": user.get("group_id"),
         "created_at": user["created_at"],
@@ -184,6 +189,49 @@ async def login(req: LoginRequest, request: Request, response: Response,
 @router.get("/me")
 async def me(user: dict = Depends(get_current_user)):
     return _public(user)
+
+
+@router.get("/me/notification-preferences")
+async def get_notification_preferences(user: dict = Depends(get_current_user)):
+    from shared.notifications.prefs import prefs_from_user
+    return prefs_from_user(user)
+
+
+@router.patch("/me/notification-preferences")
+async def patch_notification_preferences(
+    request: Request,
+    user: dict = Depends(get_current_user),
+):
+    """A-021 — update channels + email type toggles (+ B2C default digest freq)."""
+    from shared.notifications.prefs import (
+        normalize_channels,
+        normalize_email_types,
+        normalize_frequency,
+        prefs_from_user,
+    )
+    body = await request.json()
+    if not isinstance(body, dict):
+        raise HTTPException(400, detail="invalid_body")
+
+    updates: dict = {"updated_at": datetime.now(timezone.utc).isoformat()}
+    if "notification_channels" in body:
+        updates["notification_channels"] = normalize_channels(body.get("notification_channels"))
+    if "notification_email_types" in body:
+        updates["notification_email_types"] = normalize_email_types(
+            body.get("notification_email_types")
+        )
+    if "saved_search_frequency_default" in body:
+        updates["saved_search_frequency_default"] = normalize_frequency(
+            body.get("saved_search_frequency_default")
+        )
+
+    if len(updates) == 1:
+        return prefs_from_user(user)
+
+    db = Database.get()
+    await db.users.update_one({"id": user["id"]}, {"$set": updates})
+    fresh = await db.users.find_one({"id": user["id"]})
+    return prefs_from_user(fresh or {**user, **updates})
 
 
 # ---------------- REFRESH ----------------
