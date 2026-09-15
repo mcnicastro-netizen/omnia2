@@ -2,7 +2,7 @@
 
 > File di appoggio per **temi strategici/tecnici** che il Founder ha esplicitamente segnalato come "da rivedere più avanti", **senza essere ancora decisioni**. Ogni voce va promossa in `DECISIONS.md` o `ROADMAP.md` quando si decide di procedere.
 
-**Ultimo aggiornamento**: 15-Sep-2026 (+A-024 CTA demo guidata / Calendly · D-080)
+**Ultimo aggiornamento**: 15-Sep-2026 (+A-024 CTA demo guidata via email · D-080)
 
 > **Backlog qualità prodotto (A-006+)**: voci tracciate durante lo sprint manuale Cap. 1-18. Priorità assegnata da Cursor (P1=alto ROI/costo basso, P3=futuro). Decisione Founder post-manuale — **NON implementare senza "vai" esplicito**.
 
@@ -1022,39 +1022,30 @@ Implementazione: TTL index Mongo dove semantica lo consente + job archivio S3 me
 | A-021 | UI notification preferences | **P1** | M (~4h) | Spark Cap.18 | Prossimo sprint |
 | A-022 | Retention policy audit collections | P3 | M (~4h) | Spark Cap.18 | Post-primi clienti |
 | A-023 | Toast duration tuning | P3 | XS (~15min) | Spark Cap.18 | Raggruppare micro-fix |
-| A-024 | CTA Richiedi demo → Calendly (post D-080) | P2 | S | Founder 14-Sep-2026 | Pre-launch commerciale |
+| A-024 | CTA Richiedi demo via email (D-080) | ✅ | S | Founder 15-Sep-2026 | Chiuso — niente Calendly |
 
 **Legenda priorità**: **P1** alta (ROI alto/effort basso o revenue-critical) · P2 media · P3 futuro (validation-gated)
 **Legenda effort**: XS <30min · S 30min-2h · M 2-6h · L 6-20h · XL >20h
 
 ---
 
-## 🟠 A-024 — CTA «Richiedi demo» → Calendly (onboarding commerciale D-080)
+## ✅ A-024 — CTA «Richiedi demo» via email (onboarding commerciale D-080)
 
 **Data inserimento**: 15-Sep-2026  
-**Segnalato da**: Founder (Marco Nicastro) — sessione listino D-079/D-080  
-**Contesto**: Con D-080 abbiamo scelto **demo guidata → poi abbonamento** (niente trial self-serve 14gg; catalogo Starter/Pro/Agency €299; no Enterprise). Resta da definire *come* il lead prenota la demo in prodotto.
+**Chiusura**: 15-Sep-2026  
+**Segnalato da**: Founder (Marco Nicastro)
 
-### Idea
-Sulla Billing / landing agenzie: bottone **Richiedi demo guidata** che apre Calendly (o Google Appointment) invece del checkout Stripe diretto. Opzionale: form email se non prenotano subito; post-demo sblocco checkout.
+### Decisione
+**Niente Calendly** (Founder: non esiste un link Calendly). La richiesta demo è **solo via email** (`mailto:` a `DEMO_CONTACT_EMAIL`, default `mcnicastro@gmail.com`).
 
-### Perché ha senso
-- Allinea UX al modello commerciale già deciso (D-080)
-- Filtra tire-kickers, riduce COGS AI “a caso”
-- Effort basso una volta che c’è l’URL calendario Founder
-
-### Contro / da approfondire
-- Serve URL Calendly/Appointment stabile (env `REACT_APP_DEMO_CALENDAR_URL`)
-- Decidere: nascondere del tutto «Attiva» pre-demo vs lasciarlo solo a chi ha già fatto onboarding
-- Tracking conversione demo → paid
+### Consegna
+- Billing: CTA primaria **Richiedi demo** → apre mail precompilata
+- Checkout piano dopo conferma demo (o piano già attivo)
+- Env: `DEMO_CONTACT_EMAIL` (no `DEMO_CALENDAR_URL`)
 
 ### Stato
-🟡 **PARZIALE (15-Sep-2026)** — CTA «Richiedi demo» live su Billing (mailto fallback). Resta da collegare URL Calendly reale (`DEMO_CALENDAR_URL`) quando Founder lo fornisce.
+✅ **CHIUSO** — non riprendere con integrazioni calendario esterne salvo richiesta esplicita Founder.
 
-### Trigger di ripresa
-- URL calendario pronto
-- Push pre-launch commerciale / landing agenzie
-- Richiesta esplicita Founder
 
 ---
 

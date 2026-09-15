@@ -6,7 +6,7 @@
 Scope Sprint 1→4 **CONCLUSO** — vedi `memory/PROGRAMMA_CONCLUSIONE.md`.
 
 ## Cosa resta (fuori programma)
-- A-xxx in `ASPETTI_DA_APPROFONDIRE.md` (es. A-024 demo Calendly) — solo con «vai»
+- A-xxx in `ASPETTI_DA_APPROFONDIRE.md` (es. A-024 demo via email (chiuso)) — solo con «vai»
 - M6 Academy / M4 MLS commerciale — bloccati
 - Stripe live post-KYC · repo GitHub privato (consigliato)
 

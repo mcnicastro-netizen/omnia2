@@ -70,17 +70,12 @@ export default function BillingPage() {
   }, [location.search]);
 
   const openDemo = () => {
-    const cal = (state.data?.demo_calendar_url || "").trim();
     const email = (state.data?.demo_contact_email || "mcnicastro@gmail.com").trim();
-    if (cal) {
-      window.open(cal, "_blank", "noopener,noreferrer");
-    } else {
-      const subject = encodeURIComponent("Richiesta demo guidata OMNIA");
-      const body = encodeURIComponent(
-        "Ciao Marco,\n\nvorrei prenotare una demo guidata di OMNIA per la mia agenzia.\n\nAgenzia:\nCittà:\nTelefono:\n"
-      );
-      window.location.href = `mailto:${email}?subject=${subject}&body=${body}`;
-    }
+    const subject = encodeURIComponent("Richiesta demo guidata OMNIA");
+    const body = encodeURIComponent(
+      "Ciao Marco,\n\nvorrei prenotare una demo guidata di OMNIA per la mia agenzia.\n\nAgenzia:\nCittà:\nTelefono:\n"
+    );
+    window.location.href = `mailto:${email}?subject=${subject}&body=${body}`;
     try {
       localStorage.setItem("omnia_demo_done", "1");
     } catch { /* noop */ }

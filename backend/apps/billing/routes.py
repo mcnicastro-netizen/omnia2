@@ -68,7 +68,6 @@ async def list_plans():
         "credit_costs": CREDIT_COSTS,
         "trial_days": 0,
         "onboarding": "guided_demo",
-        "demo_calendar_url": (os.environ.get("DEMO_CALENDAR_URL") or "").strip(),
         "demo_contact_email": (os.environ.get("DEMO_CONTACT_EMAIL") or "mcnicastro@gmail.com").strip(),
         "currency": "eur",
         "enabled": _is_enabled(),

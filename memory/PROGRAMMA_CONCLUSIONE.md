@@ -58,8 +58,9 @@ Ciò che rimane è **post-programma**: decisioni commerciali, società, Academy,
 ## Prossimo passo (fuori programma, a scelta Founder)
 
 1. Creare repo GitHub privato “OMNIA” (backup fuori Cursor)  
-2. Quando pronto: «vai» su **A-024** (CTA demo Calendly)  
-3. Passaggio Stripe live post-KYC  
-4. Solo dopo decisione societaria: M4/M6  
+2. Passaggio Stripe live post-KYC  
+3. Solo dopo decisione societaria: M4/M6  
+
+*(A-024 chiuso: demo via email, niente Calendly — non riprendere.)*  
 
 *Fine conclusione formale scope Sprint 1–4.*

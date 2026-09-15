@@ -51,7 +51,7 @@ Decisioni necessarie PRIMA di scrivere codice:
 ### Target CTA
 - A. Landing nuova `/it/agenzie` con form completo registrazione interesse
 - B. Modal sulla stessa pagina con form email + 2 campi (agenzia + città)
-- C. Calendly diretto per demo call 30 min
+- C. ~~Calendly~~ — **NO**: non esiste link Calendly (Founder 15-Sep-2026). Demo = email (`mailto:` / `DEMO_CONTACT_EMAIL`)
 
 ---
 
