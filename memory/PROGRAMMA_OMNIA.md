@@ -84,8 +84,8 @@ Sessione 24 Febbraio: chiuso Sprint 1 M2.5/M2.6 al 3/3 (M2.5.5 Domain Vault + M2
 | **M5.S4.4 A/B testing portale** | 🔴 | 0% | — | Sprint 3 |
 | **M5.S5 Comparatore Mutui** | ✅ | 100% | 12 pytest | Motore in-house + 14 offerte curate + 3 superfici (B2C/CRM/inline listing) |
 | **M5.S6 APE** | ❌ | Rimosso (D-039) | — | Solo binario partner esterno (D-038, ⏳ risposta APEFACILE/EnUp) |
-| **M5.S7 Modulistica AI** | 🛑 | — | — | Post-società |
-| **M5.S8 Firma elettronica + Visure** | 🛑 | — | — | Post-società |
+| **M5.S7 Modulistica AI** | ✅ | 15-Sep-2026 | D-082 | CRM + PDF white-label + API v1 |
+| **M5.S8 Firma elettronica + Visure** | 🟡 | 15-Sep-2026 | D-082 | Firma adapter Yousign/DocuSign/mock; visure post-SISTER |
 | **M6 Omnia Academy** | 🛑 | 0% | — | Prossimo grande blocco dopo Sprint 4 |
 | **M4 MLS + Stripe + Crediti** | 🛑 | 0% | — | Post-società, post-M6 (D-035) |
 
@@ -701,18 +701,19 @@ Dopo M6   → ecosistema completo OMNIA come da schema PDF
 - **Rimane attivo il binario partner esterno** (D-038): in attesa di risposta da APEFACILE e Certificato-Energetico.it/EnUp. Se un partner risponde positivamente, si integrerà **solo** un bottone "Ordina APE ufficiale" nel Fascicolo Immobile + scheda CRM — nessun calcolo lato OMNIA.
 - **Effetto sulla sequenza**: M5.S5 ✅ → **M5.S2-pre Manuale Operativo** (prossimo step) → M5.S2 HAL Knowledge → M5.S7/S8 (post-società).
 
-### M5.S7 — 📑 Modulistica AI (post-società)
-- Template contratti italiani (proposta acquisto, mandato vendita/locazione, preliminare, lettera ai condòmini, disdetta)
+### M5.S7 — 📑 Modulistica AI ✅ (15-Sep-2026, D-082)
+- Template contratti italiani (proposta acquisto, mandato vendita/locazione, preliminare, lettera condòmini, privacy, AML)
 - Auto-compilazione con dati CRM (cliente, immobile, prezzo)
-- Generazione PDF brandizzati
-- Storage documenti per agenzia
-- **Tuo compito**: 5 template legali iniziali (può aiutare un legale)
+- Generazione PDF brandizzati white-label (colori/nome agenzia; footer OMNIA omesso se `plan_type=whitelabel`)
+- Storage documenti per agenzia (`modulistica_documents` + object storage)
+- UI CRM `/app/modulistica` + link da Fascicolo + API v1 `/api/v1/modulistica/*`
 
-### M5.S8 — ✍️ Firma elettronica + Visure (post-società)
-- Integrazione DocuSign / Yousign per firma a distanza (richiede account paid)
-- VisureItalia API per visure catastali/ipotecarie (richiede account paid)
-- Storage documenti firmati nel cloud
-- **Tuo compito**: account DocuSign + VisureItalia (a carico nuova società)
+### M5.S8 — ✍️ Firma elettronica (+ Visure post-account) 🟡 partial (15-Sep-2026, D-082)
+- **Provider**: DocuSign / Yousign (D-042) — adapter in `shared/modulistica/esign.py`
+- Default `ESIGN_PROVIDER=mock` per demo senza account paid
+- VisureItalia / `zornade/visura-api` restano post-account SISTER
+- Storage documenti firmati nel cloud (stesso store modulistica)
+- **Tuo compito**: account Yousign o DocuSign quando pronto (sandbox → live)
 
 ### ✅ Definition of Done M5
 - [ ] Al for Agents risponde correttamente a 90%+ query CRM

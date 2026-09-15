@@ -511,3 +511,77 @@ async def v1_legal_render(
         await charge_and_log(request, status_code=500, error_code=type(e).__name__)
         logger.exception("v1_legal_render failed")
         raise HTTPException(status_code=500, detail="internal_error")
+
+
+# ---------------- MODULISTICA (M5.S7 white-label) ----------------
+
+class ModulisticaRenderBody(BaseModel):
+    slug: str = Field(min_length=2, max_length=60)
+    context: Optional[Dict[str, Any]] = None
+    primary_color: Optional[str] = Field(default=None, max_length=7)
+    accent_color: Optional[str] = Field(default=None, max_length=7)
+    agency_display_name: Optional[str] = Field(default=None, max_length=200)
+    tagline: Optional[str] = Field(default=None, max_length=200)
+    # whitelabel = strip OMNIA footer
+    plan_type: Optional[str] = Field(default="whitelabel", max_length=20)
+
+
+@router.get("/modulistica/templates")
+async def v1_modulistica_templates(
+    request: Request,
+    key=Depends(make_key_dep("modulistica_templates")),
+):
+    """List agency modulistica templates (free)."""
+    try:
+        from shared.modulistica.catalog import list_templates
+        items = list_templates()
+        await charge_and_log(request, status_code=200)
+        return {"items": items, "total": len(items), "credits_charged": 0}
+    except Exception as e:
+        await charge_and_log(request, status_code=500, error_code=type(e).__name__)
+        logger.exception("v1_modulistica_templates failed")
+        raise HTTPException(status_code=500, detail="internal_error")
+
+
+@router.post("/modulistica/render")
+async def v1_modulistica_render(
+    body: ModulisticaRenderBody,
+    request: Request,
+    key=Depends(make_key_dep("modulistica_render")),
+):
+    """Render white-label modulistica PDF (2 credits)."""
+    try:
+        from shared.modulistica.catalog import TEMPLATES
+        from shared.modulistica.pdf import render_modulistica_pdf
+        if body.slug not in TEMPLATES:
+            raise HTTPException(status_code=404, detail="template_not_found")
+        ctx = dict(body.context or {})
+        branding = {
+            "primary_color": body.primary_color or "#0B1E3F",
+            "accent_color": body.accent_color or "#1F6B5C",
+            "display_name": body.agency_display_name or ctx.get("agency_name") or "Agenzia",
+            "tagline": body.tagline or "",
+        }
+        pdf_bytes = render_modulistica_pdf(
+            body.slug,
+            ctx,
+            branding=branding,
+            plan_type=body.plan_type or "whitelabel",
+        )
+        await charge_and_log(request, status_code=200)
+        from fastapi.responses import Response as _Response
+        return _Response(
+            content=pdf_bytes,
+            media_type="application/pdf",
+            headers={
+                "Content-Disposition": f'attachment; filename="modulistica_{body.slug}.pdf"',
+                "X-Credits-Charged": str(request.state.api_cost),
+            },
+        )
+    except HTTPException as e:
+        await charge_and_log(request, status_code=e.status_code, error_code=str(e.detail)[:60])
+        raise
+    except Exception as e:
+        await charge_and_log(request, status_code=500, error_code=type(e).__name__)
+        logger.exception("v1_modulistica_render failed")
+        raise HTTPException(status_code=500, detail="internal_error")

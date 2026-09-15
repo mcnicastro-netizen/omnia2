@@ -282,6 +282,20 @@ export default function FascicoloPage() {
             </div>
           </div>
         )}
+
+        <div className="bg-white border border-stone-200 p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div>
+            <h2 className="text-sm font-semibold uppercase tracking-widest text-stone-700">Modulistica</h2>
+            <p className="text-xs text-stone-500 mt-1">Genera mandati, proposte e preliminari brandizzati dall&apos;agenzia.</p>
+          </div>
+          <Link
+            to={`/${lang}/app/modulistica?property_id=${id}`}
+            data-testid="fascicolo-modulistica-link"
+            className="text-xs uppercase tracking-widest bg-[#0B1E3F] text-white px-4 py-2 text-center"
+          >
+            Apri modulistica
+          </Link>
+        </div>
       </section>
     </AgencyShell>
   );

@@ -96,6 +96,7 @@ export default function AgencyShell({ children, current = "dashboard" }) {
       : []),
     { key: "staging", to: `/${lang}/app/staging`, label: "Virtual Staging", icon: "✨" },
     { key: "mutui", to: `/${lang}/app/mutui`, label: t("mutui.nav") || "Mutui", icon: "💰" },
+    { key: "modulistica", to: `/${lang}/app/modulistica`, label: "Modulistica", icon: "📑" },
     { key: "legal", to: `/${lang}/legal`, label: "HAL Legal", icon: "⚖" },
     { key: "hal-knowledge", to: `/${lang}/app/hal-knowledge`, label: "Guida HAL", icon: "📚" },
     { key: "members", to: `/${lang}/app/members`, label: t("immoweb_app.nav_members"), icon: "✉" },

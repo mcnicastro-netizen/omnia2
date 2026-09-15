@@ -1323,3 +1323,17 @@ Registro di tutte le decisioni di business e tecniche prese durante il progetto.
 - **Contesto**: Founder: seguire il programma e portarlo a conclusione (niente nuove idee).
 - **Decisione**: Scope `PIANO_ESECUZIONE.md` Sprint 1–4 dichiarato **CONCLUSO**. Documento ufficiale: `PROGRAMMA_CONCLUSIONE.md`. M6/M4/A-xxx restano fuori scope.
 - **Stato**: ✅ Confermata
+
+### D-082 — Modulistica CRM + firma DocuSign/Yousign (sblocco M5.S7/S8 parziale)
+- **Data**: 15 Settembre 2026
+- **Contesto**: Founder chiede di completare modulistica OMNIA + white label; ripresa della soluzione firma già decisa nel repo.
+- **Soluzione firma già in repo** (confermata, non reinventata):
+  1. **D-042**: NON costruire firma qualificata proprietaria → usare **DocuSign / Yousign** (M5.S8).
+  2. **D-035 / D-054 No Paper**: delivery digitale (PDF + email + firma SPID/OTP/PEC lato provider) — mai carta.
+  3. Namirial/Aruba restano **backlog** (ROADMAP), non il path primario.
+- **Decisione implementativa**:
+  - Sbloccare **M5.S7 Modulistica** subito (non attendere società): catalogo template, PDF white-label da branding agenzia, storage CRM, UI `/app/modulistica`, API v1.
+  - **M5.S8 firma**: adapter `ESIGN_PROVIDER=mock|yousign|docusign` con mock default; account paid Yousign/DocuSign quando Founder li fornisce.
+  - Visure restano post-account SISTER (invariato).
+  - Template = bozze operative con disclaimer; revisione legale Founder prima di uso production.
+- **Stato**: ✅ APPLICATA (codice 15-Sep-2026)

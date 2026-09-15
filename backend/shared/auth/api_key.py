@@ -35,6 +35,8 @@ CREDIT_COSTS: Dict[str, int] = {
     "widget_lead": 0,       # widget lead capture — free (funds monetized separately)
     "domain_check": 1,      # RDAP domain ownership check (M2.5.4b, D-054)
     "legal_render": 2,      # PDF template render (M2.5.4c, D-055) — compute cost
+    "modulistica_render": 2,  # Agency modulistica PDF (M5.S7) — white-label
+    "modulistica_templates": 0,  # Catalog listing — free
 }
 
 
