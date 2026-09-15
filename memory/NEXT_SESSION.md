@@ -1,7 +1,18 @@
 # Prossima sessione — programma passi
 
-**Aggiornato**: 15 Settembre 2026 (A-017 shipped)  
-**Stato base**: Sprint 1→4 **CONCLUSO** (`PROGRAMMA_CONCLUSIONE.md`). Lavoro post-programma già in `main`.
+**Aggiornato**: 15 Settembre 2026 (sera) — pausa Founder · ripresa domani  
+**Stato base**: Sprint 1→4 **CONCLUSO**. Post-programma su `main` (ultimo ship: **A-017** Notification center).
+
+---
+
+## Ripresa domani (checklist 60 secondi)
+
+1. `bash scripts/omnia-stack.sh ensure` (o `status`)
+2. Ports Cursor → **omnia-preview :43123**
+3. Smoke: login Founder · campanella Notifiche in topbar CRM
+4. Questo file → Founder dice **«vai»** sull’ID
+
+**Non ripartire da** Stripe live / webhook / Emergent / Vercel.
 
 ---
 
@@ -10,48 +21,56 @@
 | Area | Stato |
 |------|:-----:|
 | Sprint 1→4 + conclusione formale | ✅ |
-| Modulistica + Yousign (M5.S7/S8 parziale) | ✅ |
-| OpenAPI.it visure sandbox (CRM Fascicolo) | ✅ |
-| Visura B2C carta Stripe €4,90 (`/cloud/visura`) | ✅ D-083 |
-| Preview stabile `omnia-stack` :43123 | ✅ |
+| Modulistica + Yousign (parziale) | ✅ |
+| OpenAPI.it visure sandbox (Fascicolo) | ✅ |
+| Visura B2C carta Stripe €4,90 | ✅ D-083 (test) |
+| Preview `omnia-stack` :43123 | ✅ |
 | P1 A-006 / A-007 / A-013 / A-017 / A-021 | ✅ |
-| Demo prodotto self-serve | ❌ A-025 (rinviata) |
-| Stripe **live** + KYC Founder | ⏸️ |
+| Demo prodotto self-serve | ❌ **A-025** |
+| Stripe **live** + webhook + deploy | ⏸️ **DOPO Vercel** (decisione 15-Sep) |
+| Emergent come host produzione | ❌ Founder non vuole più usarlo |
+| Deploy target | **Vercel** (fine percorso, non ora) |
 | M6 Academy / M4 MLS commerciale | ⏸️ bloccati |
+
+---
+
+## Decisione Stripe (15-Sep · Founder)
+
+- KYC / 2FA Stripe affrontati; Founder ha (o sta ottenendo) chiavi **live** da tenere in password manager — **non in chat**.
+- **Webhook `whsec` e config live**: rimandati a **dopo deploy Vercel**.
+- Dominio target webhook a regime: `https://api.omniarealestateecosystem.it/api/billing/webhook` (oggi `api.` non up).
+- Ambiente attuale resta **`STRIPE_MODE=test`** in `.env` — corretto.
+- **A-014** non è il prossimo task operativo finché non c’è URL pubblico Vercel.
+
+Dettaglio: `memory/STRIPE_ONBOARDING.md`.
 
 ---
 
 ## Ordine consigliato alla ripresa
 
-### 1) Operativo / accesso (prima di qualsiasi feature)
-1. `bash scripts/omnia-stack.sh ensure` (o `status`)
-2. Aprire area riservata via **Cursor Ports → omnia-preview (43123)** — non tunnel flaky
-3. Smoke: login Founder + campanella Notifiche in topbar CRM
-
-### 2) Backlog P1 rimasti (con «vai»)
+### Backlog con «vai» (prodotto — non deploy)
 | Priorità | ID | Cosa | Note |
 |:-:|---|---|---|
-| 1 | **A-014** | Billing UI + Stripe **live** | Serve KYC + chiavi live Founder |
-| — | A-008 | Cambio ruolo membro | P2, naturale dopo A-007 |
-| — | A-018 | Activity feed dashboard | P2, riusa eventi A-017 |
+| 1 | **A-025** | Architettura **demo prodotto** | P0 GTM · sessione dedicata |
+| 2 | A-008 | Cambio ruolo membro | P2 · dopo A-007 |
+| 3 | A-018 | Activity feed dashboard | P2 · riusa A-017 |
+| — | A-004 | Landing `/it/agenzie` + widget | dopo/con demo |
 
-### 3 | P0 GTM (sessione dedicata, non mescolare)
-| ID | Cosa |
-|---|---|
-| **A-025** | Architettura **demo prodotto** (cavallo di Troia) — video / `/it/demo` / guest — **prima** di cold outreach |
-| A-004 | Landing `/it/agenzie` + widget (dopo o insieme alla demo) |
+### Solo a fine percorso (non mescolare con feature)
+1. Deploy **Vercel** (+ DNS `api.` / `app.` / `cloud.`)
+2. **A-014** Stripe live: env `pk_live`/`sk_live`/`whsec` + `setup_stripe` + webhook
+3. OpenAPI.it prod · conferma listino visura €4,90 · Yousign key
 
-### 4) Integrazioni già avviate — chiusura “production ready”
-1. **OpenAPI.it** — passare da sandbox a prod quando wallet/abbonamento live; ruotare API key
-2. **Yousign** — verificare scadenza key; campo firma bottom-right già ok
-3. **Visura B2C €4,90** — Founder conferma listino o aggiusta in `b2c_products.py` / `PRICING_B2C.md`
-4. Webhook Stripe B2C in ambiente deploy (non solo test locale)
-5. A-017 residuale: emitter match/import/social/compliance/DNS + SSE (oggi polling 45s)
-
-### 5) Blocchi strategici (solo dopo decisione Founder)
-- Repo GitHub privato OMNIA (backup fuori Cursor)
-- Società → M4 MLS commerciale / account SISTER / QTSP ISV firma a scala
+### Blocchi strategici
+- Repo GitHub privato OMNIA
+- Società → M4 MLS / SISTER / QTSP
 - M6 Academy
+
+---
+
+## Ultimo ship (ieri / oggi)
+
+- **A-017** Notification center: `/api/notifications`, Bell CRM + Cloud, emitters lead/invite/saved-search, test ok, smoke UI ok.
 
 ---
 
@@ -59,14 +78,14 @@
 
 ```bash
 bash scripts/omnia-stack.sh ensure|watch|status|rebuild
-# Preview: http://127.0.0.1:43123  (+ Ports Cursor)
+# Preview: http://127.0.0.1:43123
 # Health:  http://127.0.0.1:43123/healthz
 ```
 
-Credenziali test: `memory/test_credentials.env` (gitignored).
+Credenziali: `memory/test_credentials.env` (gitignored).
 
 ---
 
 ## Regola di ripresa
-Non ripartire da «Sprint 2 NEXT».  
-Alla ripresa: **questo file** → poi `ASPETTI_DA_APPROFONDIRE.md` → Founder dice «vai» sull’ID scelto.
+Questo file → `ASPETTI_DA_APPROFONDIRE.md` → Founder: **«vai»** sull’ID.  
+**Stripe / Vercel / webhook = capitolo a parte, a fine.**

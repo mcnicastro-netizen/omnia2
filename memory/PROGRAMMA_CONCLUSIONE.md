@@ -58,10 +58,11 @@ Ciò che rimane è **post-programma**: decisioni commerciali, società, Academy,
 ## Prossimo passo (fuori programma, a scelta Founder)
 
 1. Creare repo GitHub privato “OMNIA” (backup fuori Cursor)  
-2. Passaggio Stripe live post-KYC  
-3. Solo dopo decisione societaria: M4/M6  
-4. **A-025 Demo prodotto** (fondamentale GTM) — architettare in sessione dedicata; oggi solo CTA email (A-024)
+2. Feature / GTM con «vai» (es. **A-025** demo) — **non** Stripe live ora  
+3. **Fine percorso**: deploy **Vercel** → poi Stripe live + webhook (`STRIPE_ONBOARDING.md`) · A-014  
+4. Solo dopo decisione societaria: M4/M6  
 
+*(Emergent non più target di produzione — decisione Founder 15-Sep-2026.)*  
 *(A-024 chiuso: demo via email, niente Calendly — non riprendere.)*  
 *(A-025 aperto: architettura demo self-serve / video / guest — non implementare senza «vai».)*
 

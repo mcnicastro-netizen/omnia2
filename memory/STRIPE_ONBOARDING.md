@@ -1,8 +1,17 @@
 # 💳 Stripe — Onboarding & Test Mode
 
-**Stato**: ✅ Account Stripe **test** OMNIA collegato (chiavi in `backend/.env`, gitignored).
-**Modalità**: `test` — pagamenti simulati, nessun addebito reale.
+**Stato**: ✅ Account Stripe **test** OMNIA collegato (chiavi in `backend/.env`, gitignored).  
+**Modalità attiva OMNIA**: `test` — pagamenti simulati, nessun addebito reale.  
 **Catalogo**: creato via `python -m apps.billing.setup_stripe` (idempotente).
+
+### Decisione Founder 15-Sep-2026
+- **Live + webhook**: configurare **solo dopo deploy su Vercel** (fine percorso).
+- **Non** usare più Emergent come URL webhook / host produzione.
+- Chiavi `pk_live` / `sk_live` (se già generate): restano dal Founder in password manager — **mai in chat / mai in git**.
+- `whsec` live: si crea in Dashboard → Webhooks → endpoint pubblico post-Vercel  
+  Target a regime: `https://api.omniarealestateecosystem.it/api/billing/webhook`  
+  (oggi `api.` non up — non creare endpoint “a vuoto”).
+- Fino ad allora: lasciare `STRIPE_MODE=test` e chiavi `*_test_*` in `.env` di sviluppo.
 
 ---
 
@@ -13,24 +22,27 @@ STRIPE_ENABLED=true
 STRIPE_MODE=test
 STRIPE_PUBLISHABLE_KEY=pk_test_…
 STRIPE_SECRET_KEY=sk_test_…
-STRIPE_WEBHOOK_SECRET=whsec_…
+STRIPE_WEBHOOK_SECRET=whsec_…   # test / tunnel locale se serve
 ```
 
-Webhook attuale (dev tunnel):  
-`https://icons-rid-pontiac-messages.trycloudflare.com/api/billing/webhook`  
-Se il tunnel Cloudflare cambia URL, ricrea l’endpoint in Stripe Dashboard (o via API) e aggiorna `STRIPE_WEBHOOK_SECRET`.
+Webhook storico (dev tunnel Cloudflare — **obsoleto**, non riusare Emergent):  
+documentato solo come riferimento; ricrea endpoint se serve di nuovo un tunnel di sviluppo.
 
 Senza webhook, il frontend può comunque attivare il pagamento via polling `GET /api/billing/status/{session_id}` (fallback Stripe retrieve).
 
 ---
 
-## Come attivare il **live mode** (quando pronto)
+## Come attivare il **live mode** (DOPO Vercel — non ora)
 
-1. Completa KYC / onboarding Stripe (dati, IBAN, documento).
+1. Completa KYC / onboarding Stripe (dati, IBAN, documento) se non già fatto.
 2. In Dashboard passa a **Live** e copia le chiavi live.
-3. Sostituisci in `.env`: `pk_live_…`, `sk_live_…`, webhook live `whsec_…`, `STRIPE_MODE=live`.
-4. Rilancia `python -m apps.billing.setup_stripe` sul catalogo live.
-5. Punta il webhook live all’URL pubblico di produzione `/api/billing/webhook`.
+3. Deploy API su Vercel (+ DNS `api.` se previsto).
+4. Crea Webhook endpoint → URL  
+   `https://api.omniarealestateecosystem.it/api/billing/webhook`  
+   (o URL Vercel API equivalente) → copia `whsec_…`.
+5. Env produzione: `pk_live_…`, `sk_live_…`, `whsec_…`, `STRIPE_MODE=live`.
+6. Rilancia `python -m apps.billing.setup_stripe` sul catalogo live.
+7. Solo allora «vai» su **A-014** se serve UI/listino residuo.
 
 ---
 

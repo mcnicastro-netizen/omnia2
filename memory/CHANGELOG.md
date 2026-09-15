@@ -1,5 +1,16 @@
 # OMNIA — Changelog
 
+## 2026-09-15 (sera) — Pausa Founder · Stripe live post-Vercel
+
+**Tipo**: Decisioni / docs — ripresa domani.
+
+- **Stripe live + webhook**: rimandati a **dopo deploy Vercel**; niente Emergent come host produzione.
+- Ambiente OMNIA resta **test mode**. Chiavi live (se generate) solo password manager Founder.
+- Aggiornati: `NEXT_SESSION.md`, `STRIPE_ONBOARDING.md`, A-014 ⏸️ in `ASPETTI_DA_APPROFONDIRE.md`, `PROGRAMMA_CONCLUSIONE.md`.
+- Ultimo feature ship della giornata: **A-017** Notification center (già su `main`).
+
+---
+
 ## 2026-09-15 — ✅ A-017 Notification center in-app
 
 **Tipo**: Feature prodotto — campanella + inbox + badge non letti (Cap. 18 backlog).

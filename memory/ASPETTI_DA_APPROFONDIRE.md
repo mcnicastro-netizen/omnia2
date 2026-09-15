@@ -2,7 +2,7 @@
 
 > File di appoggio per **temi strategici/tecnici** che il Founder ha esplicitamente segnalato come "da rivedere più avanti", **senza essere ancora decisioni**. Ogni voce va promossa in `DECISIONS.md` o `ROADMAP.md` quando si decide di procedere.
 
-**Ultimo aggiornamento**: 15-Sep-2026 (A-017 Notification center ✅ · +A-025 Demo prodotto da architettare · A-024 chiuso)
+**Ultimo aggiornamento**: 15-Sep-2026 (sera · Stripe live rimandato post-Vercel · A-017 ✅ · A-025 aperto)
 
 > **Backlog qualità prodotto (A-006+)**: voci tracciate durante lo sprint manuale Cap. 1-18. Priorità assegnata da Cursor (P1=alto ROI/costo basso, P3=futuro). Decisione Founder post-manuale — **NON implementare senza "vai" esplicito**.
 
@@ -779,7 +779,11 @@ Prossimo sprint tecnico (post-manuale)
 2. Rollout graduale (prima Founder 50, poi Agency generale)?
 
 ### Stato
-🟢 **DA APPROFONDIRE** — pronto, revenue-blocker
+⏸️ **RIMANDATO (15-Sep-2026 · Founder)** — non implementare ora.
+- Deploy produzione sarà su **Vercel** (fine percorso); **niente più Emergent** come host.
+- Chiavi live: Founder le tiene da parte; **webhook `whsec` + `STRIPE_MODE=live` solo post-deploy**.
+- Ambiente corrente: **test mode** ok. Dettaglio in `STRIPE_ONBOARDING.md`.
+- Ripresa A-014 solo con «vai» **dopo** URL pubblico API su Vercel.
 
 ---
 
@@ -1017,7 +1021,7 @@ Implementazione: TTL index Mongo dove semantica lo consente + job archivio S3 me
 | A-011 | Social scheduling minimal | P3 | L (10-20h) | Spark Cap.15 | Post ≥5 utenti Social |
 | A-012 | Social metrics/insights | P3 | L (15-25h) | Spark Cap.15 | Post-A-011 |
 | A-013 | Hard-gate crediti Staging | ✅ | S | SPRINT + Cursor | Fatto 15-Sep-2026 |
-| A-014 | Billing UI + B2C Stripe live | **P1** | L | SPRINT (revenue) | Prossimo sprint |
+| A-014 | Billing UI + B2C Stripe live | **P1** ⏸️ post-Vercel | L | SPRINT (revenue) | Dopo deploy · non ora |
 | A-015 | Sito Web v2 (Hero, Chi Siamo, ...) | P2 | XL | SPRINT + Founder | Da decidere con Founder |
 | A-016 | Boost tag mutui "banche" | P3 | XS | Cursor gap iter.35 | Raggruppare micro-fix |
 | A-017 | Notification center in-app | **P1** ✅ shipped 15-Sep | L | Spark Cap.18 | Bell + API + emitters core |
