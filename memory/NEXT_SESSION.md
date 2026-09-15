@@ -2,10 +2,12 @@
 
 **Aggiornato**: 15 Settembre 2026
 
-## Chiarimento
-«Mettila in calendario» = **`memory/ASPETTI_DA_APPROFONDIRE.md`**, non Calendly come task immediato.
+## Stato programma
+Scope Sprint 1→4 **CONCLUSO** — vedi `memory/PROGRAMMA_CONCLUSIONE.md`.
 
-La CTA demo guidata è tracciata come **A-024** (da approfondire, non implementare senza «vai»).
+## Cosa resta (fuori programma)
+- A-xxx in `ASPETTI_DA_APPROFONDIRE.md` (es. A-024 demo Calendly) — solo con «vai»
+- M6 Academy / M4 MLS commerciale — bloccati
+- Stripe live post-KYC · repo GitHub privato (consigliato)
 
-## Ripresa consigliata (da concordare con Marco)
-Aprire la sessione chiedendo priorità: A-024 solo se ha già il link calendario e vuole il «vai»; altrimenti continuare da roadmap / altro tema Founder.
+Non ripartire da «Sprint 2 NEXT»: i documenti storici erano stantii; allineati il 15-Sep-2026.

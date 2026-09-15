@@ -1,8 +1,9 @@
 # 🎯 PIANO DI ESECUZIONE — Completamento Progetto OMNIA
 
-**Data**: 23-Feb-2026
-**Status**: 🔴 **ORDINE TASSATIVO — approvato dal Founder**
-**Ambito**: chiusura al 100% di M1, M2 (incl. M2.5 + M2.6), M3, M5 (S1/S2/S3/S4/S5). M4 e M6 fuori scope (M4 post-società, M6 in coda).
+**Data**: 23-Feb-2026  
+**Chiusura formale Sprint 1→4**: **15-Set-2026** → `PROGRAMMA_CONCLUSIONE.md`  
+**Status**: ✅ **SPRINT 1–4 COMPLETATI**  
+**Ambito chiuso**: M1, M2 (incl. M2.5 + M2.6), M3, M5 (S1/S2/S3/S4/S5). M4 e M6 fuori scope.
 
 ---
 
@@ -37,40 +38,40 @@
 ### 🟡 SPRINT 2 — M5.S2 HAL Knowledge
 **Obiettivo**: chatbot "how-to" della piattaforma OMNIA che risponde su come usare le funzionalità.
 
-| # | Item | Effort | Bloccanti |
+| # | Item | Effort | Stato |
 |:-:|---|:-:|---|
-| 4 | **M5.S2 HAL Knowledge** — RAG su corpus `PRD.md` + `ROADMAP.md` + `DECISIONS.md` + eventuale doc utente esistente. Embedding via `nv-embed-v2` (NVIDIA free tier) o Emergent LLM Key. Retrieval + generazione risposta con Gemini via Emergent LLM Key. UI: 3° bottone HAL nel CRM. | ~2-3g | Nessuno (usiamo doc già scritti come corpus RAG) |
+| 4 | **M5.S2 HAL Knowledge** — RAG + Manuale | — | ✅ **DONE** (manuale 27/27 + motore live) |
 
-**Definition of Done Sprint 2**: HAL Knowledge risponde a 10 domande how-to di test con confidence ≥0.85 e citazione fonte. 15+ pytest. UI accessibile dal CRM.
+**Definition of Done Sprint 2**: ✅ raggiunto.
 
 ---
 
 ### 🟢 SPRINT 3 — Chiusura backlog M3 + M5.S4
 **Obiettivo**: chiudere gli item DoD di M3 e M5 mai completati.
 
-| # | Item | Effort | Bloccanti |
+| # | Item | Effort | Stato |
 |:-:|---|:-:|---|
-| 5 | **M3.S8 Ricerca avanzata B2C** (multi-zone selection + disegna su mappa + cerca vicino a te + confronta prezzi) | ~2g | Nessuno |
-| 6 | **M3.S9 Privacy audit 4 livelli** (implementazione + doc) | ~1g | Nessuno |
-| 7 | **M5.S4.2 Reverse Staging + 4 varianti + prompt CRM-aware** | ~1-2g | fal.ai credits OK |
-| 8 | **M5.S4.3 Micro-tour video 5s + export Reels 9:16** | ~2g | Kling AI o Sora 2 credits |
-| 9 | **M5.S4.4 A/B testing portale + dashboard analytics** | ~1g | Nessuno |
+| 5 | **M3.S8 Ricerca avanzata B2C** | — | ✅ DONE |
+| 6 | **M3.S9 Privacy audit 4 livelli** | — | ✅ DONE |
+| 7 | **M5.S4.2 Reverse Staging + varianti + CRM-aware** | — | ✅ DONE |
+| 8 | **M5.S4.3 Micro-tour video** | — | ✅ DONE |
+| 9 | **M5.S4.4 A/B testing portale** | — | ✅ DONE |
 
-**Definition of Done Sprint 3**: M3 al 100% DoD. M5.S4 sub-sprint 2/3/4 completati.
+**Definition of Done Sprint 3**: ✅ raggiunto.
 
 ---
 
 ### 🔵 SPRINT 4 — Perf hardening + Deploy readiness
 **Obiettivo**: preparare OMNIA a scalare oltre le 20 agenzie senza degradazione.
 
-| # | Item | Effort | Bloccanti |
+| # | Item | Effort | Stato |
 |:-:|---|:-:|---|
-| 10 | **Async geocoding via background task Motor** (POST /properties da 3.6s → <0.5s) | ~½g | Nessuno |
-| 11 | **Projection esplicito su list properties endpoint** (GET /properties p95 da 2.6s → <200ms) | ~½g | Nessuno |
-| 12 | **Regressione stress test finale** (rilancio `test_m2_stress_5_agents.py` per validare miglioramenti) | ~½g | Nessuno |
-| 13 | **Deploy readiness check** (deployment_agent per verifica pre-produzione) | ~½g | Nessuno |
+| 10 | Async geocoding (opzione B: saltato — scelta Founder) | — | ⏭️ skipped |
+| 11 | **Projection list properties** | — | ✅ DONE |
+| 12 | **Stress test 5 agenti** | — | ✅ DONE (11/11) |
+| 13 | **Deploy readiness + objstore foto** | — | ✅ DONE (D-067/068/069) |
 
-**Definition of Done Sprint 4**: metriche perf sotto target (create <500ms, read p95 <200ms). Deployment agent = pass. OMNIA pronto per pre-launch tecnico.
+**Definition of Done Sprint 4**: ✅ raggiunto (26-Feb-2026). Chiusura formale documenti: 15-Sep-2026.
 
 ---
 

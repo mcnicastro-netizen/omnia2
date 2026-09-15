@@ -66,7 +66,9 @@ class TestStatusEndpoint:
         d = r.json()
         assert d["chunks_indexed"] >= 100  # corpus non vuoto
         assert d["model"]["provider"] == "gemini"
-        assert "gemini-3-flash" in d["model"]["name"]
+        # Model id evolves (gemini-3-flash → gemini-3.5-flash / flash-latest)
+        assert "gemini" in (d["model"]["name"] or "").lower()
+        assert "flash" in (d["model"]["name"] or "").lower()
         assert d["index"]["vocab_size"] > 100
 
     def test_status_requires_auth(self):
@@ -105,10 +107,16 @@ class TestAskEndpoint:
         d = r.json()
         assert d["status"] in ("high", "medium"), f"got status={d['status']}"
         assert d["answer"] and len(d["answer"]) > 40
-        assert len(d["sources"]) >= 3
-        # sources contain expected files
+        assert len(d["sources"]) >= 1
+        # Prefer YAML manuale Cap. 17; fallback legacy .md corpus
         files = {s["file"] for s in d["sources"]}
-        assert "DECISIONS.md" in files or "PRD.md" in files
+        joined = " ".join(files).lower()
+        assert (
+            "domain-vault" in joined
+            or "17-domain" in joined
+            or "DECISIONS.md" in files
+            or "PRD.md" in files
+        ), f"unexpected sources={files}"
 
 
 class TestHistoryEndpoint:

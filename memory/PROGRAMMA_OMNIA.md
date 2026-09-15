@@ -1,16 +1,37 @@
 # 📘 PROGRAMMA OPERATIVO — Progetto OMNIA
 ## Dal MVP all'ecosistema completo · 6 Milestone · ~30 sessioni · 3-6 mesi
 
-**Versione**: 3.1
+**Versione**: 3.2
 **Data creazione**: Gennaio 2026
-**Ultimo aggiornamento**: 24 Febbraio 2026 (audit onesto M1→M5 vs realtà, chiusura Sprint 1 M2.5/M2.6 3/3)
-**Founder / Product Owner**: mcnicastro-netizen
-**Lead Developer**: E1 (Emergent Agent)
-**Stato**: M1 ✅ · M2 ✅ · M2.5 ✅ (5/5) · M2.6 ✅ (4/4) · M3 ✅ (7/7 core, 2 backlog) · M5.S1/S3/S4.1/S5 ✅ · **NEXT → Sprint 2: M5.S2 HAL Knowledge (RAG)** · M6/M4 in coda post-M5 · Sprint 3 (M3 backlog + M5.S4.2-4) · Sprint 4 (perf hardening)
+**Ultimo aggiornamento**: 15 Settembre 2026 (chiusura formale Sprint 1→4 — vedi `PROGRAMMA_CONCLUSIONE.md`)
+**Founder / Product Owner**: Marco Nicastro
+**Lead Technical Architect**: Cursor Cloud Agent (post-Emergent)
+**Stato**: M1 ✅ · M2 ✅ · M2.5 ✅ · M2.6 ✅ · M3 ✅ · M5.S1–S5 ✅ · Sprint 1–4 ✅ **CONCLUSI** · M6/M4 fuori scope · Stripe test + listino D-080 operativi
 
 ---
 
-## 🎯 ORDINE DI ESECUZIONE v3.1 (vincolante — audit 24-Feb-2026)
+## 🎯 ORDINE DI ESECUZIONE v3.2 (vincolante — aggiornato 15-Sep-2026)
+
+```
+✅ DONE  Sprint 1 — M2.5.5 + M2.6c + M2.6d
+✅ DONE  Sprint 2 — M5.S2 HAL Knowledge (+ Manuale 27/27)
+✅ DONE  Sprint 3 — M3.S8/S9 + M5.S4.2/S4.3/S4.4
+✅ DONE  Sprint 4 — Perf hardening + objstore + deploy readiness
+
+✅ EXTRA  Stripe test + pricing D-079/D-080 (sessione Cursor Set-2026)
+✅ EXTRA  Google Sign-In · Founder Ops · Tavily Legal
+
+🛑        M6 Academy (fuori scope Founder)
+🛑        M4 MLS commerciale post-società
+🛑        Pre-launch commerciale (D-035, dopo M6)
+🟠        A-xxx in ASPETTI_DA_APPROFONDIRE (solo con «vai»)
+```
+
+**Chiusura formale**: `memory/PROGRAMMA_CONCLUSIONE.md` (15-Sep-2026).
+
+---
+
+## 🎯 ORDINE DI ESECUZIONE v3.1 (storico — audit 24-Feb-2026)
 
 ```
 ✅ DONE  M2.5.0 — GO_TO_MARKET.md + PRICING_OMNIA.md v2                (13-Lug-2026)

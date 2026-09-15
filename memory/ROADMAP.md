@@ -295,17 +295,16 @@ Prossima azione: **M2.S3 — CRM clienti + matching engine**
 
 ### M5 — AI Suite (8 sprint, sequenza definita D-028 del 23 Giu)
 - [x] 🤖 **M5.S1 — AL for Agents** ✅ (24 Giu) — chatbot CRM con function-calling JSON, streaming SSE token-by-token, **inline ✨ "Migliora con AL" su titolo+descrizione (IT/EN/ES)** in ImmoWeb + ImmobilCloud. Test 100% (iteration_17/18/19).
-- [ ] 📖 **M5.S2-pre — MANUALE OPERATIVO OMNIA** (prerequisito vincolante di M5.S2, richiesto Founder 03-Lug-2026)
-- [ ] 📚 **M5.S2 — HAL Knowledge** (chatbot how-to piattaforma, RAG sul manuale)
+- [x] 📖 **M5.S2-pre — MANUALE OPERATIVO OMNIA** ✅ (27/27 capitoli)
+- [x] 📚 **M5.S2 — HAL Knowledge** ✅ (RAG TF-IDF + Gemini)
 - [x] ⚖️ **M5.S3 — AL Legal** ✅ (24 Giu) — 5 sub-agenti specializzati + Tavily web search (7 fonti normative IT) + anti-hallucination validator (confidence 0.85) + Chain of Thought + temperature 0.2 + upload PDF + disclaimer L.247/2012. Pagina `/it/legal`. Test 16/16 backend + 100% frontend (iteration_20).
-- [ ] 🎨 **M5.S4 — Virtual Staging** (Nano Banana arreda foto vuote)
+- [x] 🎨 **M5.S4 — Virtual Staging** ✅
   - [x] **S4.1** — Pipeline 3-stage + endpoint + frontend dropzone + watermark ✅ 03-Lug-2026
-  - [ ] S4.2 — Reverse Staging + 4-varianti parallele + prompt CRM-aware
-    - [ ] Sub-task: **Inline "Arreda questa foto"** — bottone accanto a ogni foto nel form immobili → apre modale Virtual Staging pre-caricato con URL foto listing → risultato salvato come nuova foto dell'annuncio (senza uscire dal flusso di caricamento). Trasforma il tool da "usato occasionalmente" a "usato ogni giorno".
-  - [ ] S4.3 — Micro-tour video 5s (Kling) + embed listing B2C + export Reels 9:16
-  - [ ] S4.4 — A/B testing portale + dashboard analytics
-- [ ] 💰 **M5.S5 — Comparatore mutui** (scraping banche IT)
-- [ ] 🌡️ **M5.S6 — Certificazione APE** (calcolo orientativo)
+  - [x] S4.2 — Reverse Staging + 4-varianti parallele + prompt CRM-aware + inline «Arreda questa foto» ✅
+  - [x] S4.3 — Micro-tour video (Kling) + embed listing B2C ✅
+  - [x] S4.4 — A/B testing portale + dashboard analytics ✅
+- [x] 💰 **M5.S5 — Comparatore mutui** ✅
+- [ ] 🌡️ **M5.S6 — Certificazione APE** ❌ rimosso (D-039) — solo partner esterno
 - [ ] 📑 **M5.S7 — Modulistica AI** (post-società)
 - [ ] ✍️ **M5.S8 — Firma elettronica + Visure** (post-società, account paid)
 

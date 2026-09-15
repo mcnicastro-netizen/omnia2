@@ -1,5 +1,8 @@
 # 🚨 HANDOFF AL NUOVO AGENTE — LEGGI PRIMA DI FARE QUALSIASI COSA
 
+**Aggiornamento 15-Sep-2026**: scope Sprint 1→4 **chiuso formalmente** (`PROGRAMMA_CONCLUSIONE.md`).  
+Non ripartire da «NEXT = Sprint 2». Item aperti = solo fuori scope / A-xxx / post-società.
+
 **Fork da**: sessione E1 chiusa il **26-Feb-2026 (evening — Sprint 4 chiuso + privacy gate fix)**
 **Motivo fork**: passaggio pulito post Sprint 4 completo. Codebase pronto al deploy.
 **Founder**: Marco Nicastro (mcnicastro-netizen · mcnicastro@gmail.com)
