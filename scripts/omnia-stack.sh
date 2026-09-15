@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # OMNIA durable stack — API + production preview (same-origin /api).
-# Keeps processes alive across agent edits; auto-restarts on crash.
-# Founder access: Cursor Ports → omnia-preview (:43123). Do NOT rely on localtunnel.
+# Adopts already-healthy listeners; never kills a working port.
+# Access: Cursor Ports → omnia-preview (:43123). Avoid localtunnel.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
@@ -18,16 +18,17 @@ pid_preview="$LOG_DIR/preview.pid"
 write_status() {
   local api_ok="$1" preview_ok="$2" msg="${3:-}"
   cat >"$status_file" <<EOF
-{"ts":"$(date -u +%Y-%m-%dT%H:%M:%SZ)","api_port":$API_PORT,"preview_port":$PREVIEW_PORT,"api_ok":$api_ok,"preview_ok":$preview_ok,"message":$(python3 -c 'import json,sys; print(json.dumps(sys.argv[1]))' "$msg"),"preview_url":"http://127.0.0.1:${PREVIEW_PORT}","note":"Use Cursor Ports forward on ${PREVIEW_PORT} — avoid localtunnel/cloudflare quick tunnels"}
+{"ts":"$(date -u +%Y-%m-%dT%H:%M:%SZ)","api_port":$API_PORT,"preview_port":$PREVIEW_PORT,"api_ok":$api_ok,"preview_ok":$preview_ok,"message":$(python3 -c 'import json,sys; print(json.dumps(sys.argv[1]))' "$msg"),"preview_url":"http://127.0.0.1:${PREVIEW_PORT}","note":"Cursor Ports → omnia-preview. If ERR_EMPTY_RESPONSE/REFUSED: re-forward 43123 in Ports panel (server is usually fine)."}
 EOF
 }
 
-alive() {
-  local pidfile="$1"
-  [[ -f "$pidfile" ]] || return 1
-  local pid
-  pid="$(cat "$pidfile" 2>/dev/null || true)"
-  [[ -n "${pid:-}" ]] && kill -0 "$pid" 2>/dev/null
+port_pids() {
+  local port="$1"
+  if command -v lsof >/dev/null 2>&1; then
+    lsof -t -iTCP:"$port" -sTCP:LISTEN 2>/dev/null || true
+  else
+    fuser "${port}/tcp" 2>/dev/null | tr -s ' ' '\n' | grep -E '^[0-9]+$' || true
+  fi
 }
 
 health_http() {
@@ -35,25 +36,27 @@ health_http() {
   curl -sf --max-time 3 "$url" >/dev/null 2>&1
 }
 
-start_api() {
-  if alive "$pid_api" && health_http "${API_ORIGIN}/api/"; then
+adopt_or_start_api() {
+  if health_http "${API_ORIGIN}/api/"; then
+    local p
+    p="$(port_pids "$API_PORT" | head -n1 || true)"
+    [[ -n "${p:-}" ]] && echo "$p" >"$pid_api"
     return 0
   fi
-  if alive "$pid_api"; then
-    kill "$(cat "$pid_api")" 2>/dev/null || true
+  # Only free port if unhealthy
+  local pids
+  pids="$(port_pids "$API_PORT" || true)"
+  if [[ -n "${pids:-}" ]]; then
+    echo "[omnia-stack] api unhealthy — restarting pids: $pids"
+    # shellcheck disable=SC2086
+    kill $pids 2>/dev/null || true
     sleep 1
   fi
-  # free port if orphaned
-  fuser -k "${API_PORT}/tcp" 2>/dev/null || true
-  sleep 0.5
   cd "$ROOT/backend"
-  if [[ -x .venv/bin/uvicorn ]]; then
-    UV=".venv/bin/uvicorn"
-  else
-    UV="uvicorn"
-  fi
+  local UV
+  if [[ -x .venv/bin/uvicorn ]]; then UV=".venv/bin/uvicorn"; else UV="uvicorn"; fi
   nohup "$UV" server:app --host 0.0.0.0 --port "$API_PORT" --reload \
-    >"$LOG_DIR/api.log" 2>&1 &
+    >>"$LOG_DIR/api.log" 2>&1 &
   echo $! >"$pid_api"
   for _ in $(seq 1 40); do
     health_http "${API_ORIGIN}/api/" && return 0
@@ -69,20 +72,30 @@ ensure_build() {
   fi
 }
 
-start_preview() {
+adopt_or_start_preview() {
   ensure_build
-  if alive "$pid_preview" && health_http "http://127.0.0.1:${PREVIEW_PORT}/healthz"; then
+  if health_http "http://127.0.0.1:${PREVIEW_PORT}/healthz" \
+    || health_http "http://127.0.0.1:${PREVIEW_PORT}/"; then
+    # Prefer healthz; accept bare / for older preview processes
+    if ! health_http "http://127.0.0.1:${PREVIEW_PORT}/healthz"; then
+      : # old process without /healthz still serves SPA — keep it
+    fi
+    local p
+    p="$(port_pids "$PREVIEW_PORT" | head -n1 || true)"
+    [[ -n "${p:-}" ]] && echo "$p" >"$pid_preview"
     return 0
   fi
-  if alive "$pid_preview"; then
-    kill "$(cat "$pid_preview")" 2>/dev/null || true
+  local pids
+  pids="$(port_pids "$PREVIEW_PORT" || true)"
+  if [[ -n "${pids:-}" ]]; then
+    echo "[omnia-stack] preview unhealthy — restarting pids: $pids"
+    # shellcheck disable=SC2086
+    kill $pids 2>/dev/null || true
     sleep 1
   fi
-  fuser -k "${PREVIEW_PORT}/tcp" 2>/dev/null || true
-  sleep 0.5
   cd "$ROOT/frontend"
   nohup env PREVIEW_PORT="$PREVIEW_PORT" API_ORIGIN="$API_ORIGIN" \
-    node preview-server.js >"$LOG_DIR/preview.log" 2>&1 &
+    node preview-server.js >>"$LOG_DIR/preview.log" 2>&1 &
   echo $! >"$pid_preview"
   for _ in $(seq 1 30); do
     health_http "http://127.0.0.1:${PREVIEW_PORT}/healthz" && return 0
@@ -98,18 +111,17 @@ case "$cmd" in
     api_ok=false
     preview_ok=false
     msg=""
-    if start_api; then api_ok=true; else msg="api_start_failed"; fi
-    if start_preview; then preview_ok=true; else msg="${msg:+$msg;}preview_start_failed"; fi
+    if adopt_or_start_api; then api_ok=true; else msg="api_start_failed"; fi
+    if adopt_or_start_preview; then preview_ok=true; else msg="${msg:+$msg;}preview_start_failed"; fi
     write_status "$api_ok" "$preview_ok" "${msg:-ok}"
     echo "[omnia-stack] api_ok=$api_ok preview_ok=$preview_ok → http://127.0.0.1:${PREVIEW_PORT}"
-    cat "$status_file"
     [[ "$api_ok" == true && "$preview_ok" == true ]]
     ;;
   watch)
-    echo "[omnia-stack] watchdog every 8s (logs: $LOG_DIR)"
+    echo "[omnia-stack] watchdog every 15s (logs: $LOG_DIR) — adopts healthy listeners"
     while true; do
-      "$0" ensure || true
-      sleep 8
+      "$0" ensure >/dev/null || "$0" ensure || true
+      sleep 15
     done
     ;;
   status)
@@ -117,19 +129,24 @@ case "$cmd" in
     echo
     echo -n "live api: "; curl -sf -o /dev/null -w '%{http_code}\n' --max-time 3 "${API_ORIGIN}/api/" || echo down
     echo -n "live preview: "; curl -sf -o /dev/null -w '%{http_code}\n' --max-time 3 "http://127.0.0.1:${PREVIEW_PORT}/healthz" || echo down
+    echo -n "listeners 43123: "; port_pids 43123 | tr '\n' ' '; echo
     ;;
   rebuild)
     echo "[omnia-stack] rebuilding frontend..."
     (cd "$ROOT/frontend" && REACT_APP_BACKEND_URL= yarn build) | tee -a "$LOG_DIR/build.log"
-    # static files — no restart required; bounce preview for safety
-    if alive "$pid_preview"; then kill "$(cat "$pid_preview")" 2>/dev/null || true; fi
+    # static build — no restart required; only bounce if healthz missing
+    if ! health_http "http://127.0.0.1:${PREVIEW_PORT}/healthz"; then
+      pids="$(port_pids "$PREVIEW_PORT" || true)"
+      [[ -n "${pids:-}" ]] && kill $pids 2>/dev/null || true
+    fi
     "$0" ensure
     ;;
   stop)
-    alive "$pid_preview" && kill "$(cat "$pid_preview")" 2>/dev/null || true
-    alive "$pid_api" && kill "$(cat "$pid_api")" 2>/dev/null || true
+    # stop only processes we started (pid files); do not fuser-kill foreign servers
+    [[ -f "$pid_preview" ]] && kill "$(cat "$pid_preview")" 2>/dev/null || true
+    [[ -f "$pid_api" ]] && kill "$(cat "$pid_api")" 2>/dev/null || true
     write_status false false stopped
-    echo "[omnia-stack] stopped"
+    echo "[omnia-stack] stopped (owned pids only)"
     ;;
   *)
     echo "Usage: $0 {ensure|watch|status|rebuild|stop}"
