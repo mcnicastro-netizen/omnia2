@@ -112,6 +112,17 @@ class YousignProvider(BaseESignProvider):
         if not self.api_key:
             raise RuntimeError("YOUSIGN_API_KEY missing")
 
+    @staticmethod
+    def _clean_person_name(value: str, fallback: str) -> str:
+        """Yousign rejects punctuation like '.' in first/last name."""
+        import re
+        raw = (value or "").strip()
+        # Keep letters (incl. accents), spaces, hyphen, apostrophe
+        cleaned = re.sub(r"[^\w\s\-']+", "", raw, flags=re.UNICODE)
+        cleaned = re.sub(r"_+", "", cleaned)  # \w keeps underscore — strip it
+        cleaned = re.sub(r"\s+", " ", cleaned).strip()
+        return (cleaned[:50] if cleaned else fallback)
+
     async def create_signature_request(
         self,
         *,
@@ -174,12 +185,15 @@ class YousignProvider(BaseESignProvider):
                 # 3) Add signers + required signature field per signer
                 for idx, s in enumerate(signers):
                     name = (s.get("name") or "").strip()
-                    first = (s.get("first_name") or (name.split()[0] if name else "Firmatario"))[:50]
-                    last = (s.get("last_name") or (" ".join(name.split()[1:]) if name and " " in name else "."))[:50]
+                    parts = [p for p in name.split() if p]
+                    raw_first = s.get("first_name") or (parts[0] if parts else "Firmatario")
+                    raw_last = s.get("last_name") or (" ".join(parts[1:]) if len(parts) > 1 else "Firmatario")
+                    first = self._clean_person_name(str(raw_first), "Firmatario")
+                    last = self._clean_person_name(str(raw_last), "Firmatario")
                     signer_body = {
                         "info": {
                             "first_name": first,
-                            "last_name": last or ".",
+                            "last_name": last,
                             "email": s.get("email") or "",
                             "locale": "it",
                         },

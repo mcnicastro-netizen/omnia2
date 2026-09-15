@@ -115,6 +115,9 @@ export default function ModulisticaPage() {
         signers: [
           {
             name: signName || "Firmatario",
+            first_name: (signName || "Firmatario").trim().split(/\s+/)[0],
+            last_name:
+              (signName || "").trim().split(/\s+/).slice(1).join(" ") || "Firmatario",
             email: signEmail.trim(),
             role: "client",
           },
