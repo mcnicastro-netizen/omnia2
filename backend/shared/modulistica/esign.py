@@ -166,18 +166,36 @@ class YousignProvider(BaseESignProvider):
                         status="failed",
                         message=f"Yousign upload failed: {r2.status_code} {r2.text[:300]}",
                     )
+                doc = r2.json() if r2.content else {}
+                doc_id = doc.get("id") or ""
+                # Prefer last page for signature block (modulistica PDFs are usually 1 page)
+                page_count = int(doc.get("total_pages") or doc.get("pages") or 1)
 
-                # 3) Add signers
-                for s in signers:
+                # 3) Add signers + required signature field per signer
+                for idx, s in enumerate(signers):
+                    name = (s.get("name") or "").strip()
+                    first = (s.get("first_name") or (name.split()[0] if name else "Firmatario"))[:50]
+                    last = (s.get("last_name") or (" ".join(name.split()[1:]) if name and " " in name else "."))[:50]
                     signer_body = {
                         "info": {
-                            "first_name": (s.get("first_name") or s.get("name") or "Firmatario")[:50],
-                            "last_name": (s.get("last_name") or ".")[:50],
+                            "first_name": first,
+                            "last_name": last or ".",
                             "email": s.get("email") or "",
                             "locale": "it",
                         },
                         "signature_level": "electronic_signature",
                         "signature_authentication_mode": "otp_email",
+                        "fields": [
+                            {
+                                "document_id": doc_id,
+                                "type": "signature",
+                                "page": max(1, page_count),
+                                "x": 60,
+                                "y": 80 + (idx * 70),
+                                "width": 180,
+                                "height": 48,
+                            }
+                        ],
                     }
                     r3 = await client.post(
                         f"{self.base}/signature_requests/{sr_id}/signers",
