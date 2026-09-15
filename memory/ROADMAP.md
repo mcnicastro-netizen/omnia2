@@ -95,8 +95,7 @@ POST-SOCIETÀ: M4 (Stripe) · M5.S7/S8 · Pre-launch 🛑 (congelato, D-035)
 
 ### 🔴 Prossima sessione — Sequenza v3.0 (PROGRAMMA_OMNIA.md v3.0)
 
-> **14-Sep-2026 — primo item in calendario**: CTA **Richiedi demo → Calendly** (D-080).  
-> Dettaglio in `memory/NEXT_SESSION.md`. Poi riprendere la sequenza sotto.
+> **15-Sep-2026**: CTA demo guidata → **A-024** in `ASPETTI_DA_APPROFONDIRE.md` (non in sprint finché Founder non dice «vai»).
 
 1. 🔴 **P0 — M2.5.0**: scrivere `GO_TO_MARKET.md` + `PRICING_OMNIA.md` v2 (unit economics Track A/B, cap free tier, crediti API group/branch) → revisione Founder
 2. 🟠 **P1 — M2.5.1 Multi-branch/Franchising** (primo sprint di codice: `agency_group`, `branch`, ruoli `group_admin`/`branch_admin`/`branch_agent`, `plan_type`)
