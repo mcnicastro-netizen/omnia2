@@ -1,12 +1,18 @@
 {
   "ports": [
     {
-      "name": "omnia-api",
-      "port": 43121
+      "name": "omnia-preview",
+      "port": 43123
     },
     {
-      "name": "omnia-frontend",
-      "port": 43122
+      "name": "omnia-api",
+      "port": 43121
+    }
+  ],
+  "terminals": [
+    {
+      "name": "omnia-stack-watch",
+      "command": "bash /workspace/scripts/omnia-stack.sh watch"
     }
   ]
 }
