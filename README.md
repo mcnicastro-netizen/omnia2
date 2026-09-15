@@ -27,6 +27,11 @@ Piattaforma full-stack per il mercato immobiliare italiano: CRM B2B (**ImmoWeb**
 
 Credenziali di test: `memory/test_credentials.env` (gitignored).
 
+## Modulistica + firma (M5.S7 / M5.S8 · D-082)
+- CRM: `/it/app/modulistica` — template italiani, PDF white-label (branding agenzia), archivio documenti
+- Firma: `ESIGN_PROVIDER=mock|yousign|docusign` (default mock; niente QES proprietaria — D-042)
+- API Track B: `GET /api/v1/modulistica/templates`, `POST /api/v1/modulistica/render` (2 crediti)
+
 ## Porte di sviluppo (sessione corrente)
 - API: `http://127.0.0.1:43121`
 - FE: `http://127.0.0.1:43122`
