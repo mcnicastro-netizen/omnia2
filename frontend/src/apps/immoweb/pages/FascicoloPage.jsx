@@ -118,6 +118,215 @@ function ChecklistItem({ item, propertyId, onChanged }) {
   );
 }
 
+function VisuraOpenApiPanel({ propertyId, onAttached }) {
+  const [enabled, setEnabled] = useState(false);
+  const [form, setForm] = useState({
+    provincia: "RM",
+    comune: "",
+    foglio: "",
+    particella: "",
+    subalterno: "",
+    tipo_catasto: "F",
+  });
+  const [jobs, setJobs] = useState([]);
+  const [busy, setBusy] = useState(false);
+  const [msg, setMsg] = useState("");
+  const [err, setErr] = useState("");
+
+  const refresh = useCallback(async () => {
+    try {
+      const [st, list] = await Promise.all([
+        api.get("/docs/status"),
+        api.get(`/docs/visura?property_id=${encodeURIComponent(propertyId)}`),
+      ]);
+      setEnabled(Boolean(st.data?.openapi_visure_enabled));
+      setJobs(list.data?.items || []);
+    } catch {
+      /* panel stays quiet if status fails */
+    }
+  }, [propertyId]);
+
+  useEffect(() => { refresh(); }, [refresh]);
+
+  const setField = (k, v) => setForm((f) => ({ ...f, [k]: v }));
+
+  const requestVisura = async (e) => {
+    e.preventDefault();
+    setErr("");
+    setMsg("");
+    if (!form.comune.trim() || !form.foglio.trim() || !form.particella.trim()) {
+      setErr("Compila comune, foglio e particella");
+      return;
+    }
+    setBusy(true);
+    try {
+      const r = await api.post("/docs/visura/request", {
+        property_id: propertyId,
+        provincia: form.provincia.trim().toUpperCase().slice(0, 2),
+        comune: form.comune.trim(),
+        foglio: form.foglio.trim(),
+        particella: form.particella.trim(),
+        subalterno: form.subalterno.trim() || null,
+        tipo_catasto: form.tipo_catasto,
+        tipo_visura: "ordinaria",
+      });
+      setMsg(`Richiesta inviata · stato ${r.data.status}${r.data.external_id ? ` · id ${r.data.external_id.slice(0, 8)}` : ""}`);
+      await refresh();
+    } catch (ex) {
+      const d = ex.response?.data?.detail;
+      setErr(typeof d === "string" ? d : d?.message || "Richiesta visura fallita");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const pollJob = async (jobId) => {
+    setErr("");
+    setBusy(true);
+    try {
+      const r = await api.get(`/docs/visura/${jobId}`);
+      setMsg(`Stato aggiornato: ${r.data.status}`);
+      await refresh();
+    } catch (ex) {
+      setErr(ex.response?.data?.detail || "Aggiornamento stato fallito");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const attachJob = async (jobId) => {
+    setErr("");
+    setBusy(true);
+    try {
+      await api.post(`/docs/visura/${jobId}/attach`);
+      setMsg("PDF allegato al Fascicolo come visura catastale");
+      await refresh();
+      onAttached?.();
+    } catch (ex) {
+      setErr(ex.response?.data?.detail || "Allegato fallito");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  if (!enabled) {
+    return (
+      <div className="bg-white border border-stone-200 p-6" data-testid="fascicolo-visura-disabled">
+        <h2 className="text-sm font-semibold uppercase tracking-widest text-stone-700">Visura catastale (OpenAPI.it)</h2>
+        <p className="text-xs text-stone-500 mt-2">
+          Integrazione non attiva su questo ambiente. Contatta il Founder per abilitare sandbox/produzione.
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="bg-white border border-stone-200 p-6 space-y-4" data-testid="fascicolo-visura-panel">
+      <div>
+        <h2 className="text-sm font-semibold uppercase tracking-widest text-stone-700">Visura catastale (OpenAPI.it)</h2>
+        <p className="text-xs text-stone-500 mt-1">
+          Richiedi la visura ufficiale da foglio/particella e allegala al checklist del Fascicolo.
+        </p>
+      </div>
+      <form onSubmit={requestVisura} className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+        <label className="text-xs text-stone-600 space-y-1">
+          <span>Provincia</span>
+          <input
+            data-testid="visura-provincia"
+            className="w-full border border-stone-200 px-2 py-1.5 text-sm"
+            value={form.provincia}
+            onChange={(e) => setField("provincia", e.target.value)}
+            maxLength={2}
+          />
+        </label>
+        <label className="text-xs text-stone-600 space-y-1 col-span-2 sm:col-span-1">
+          <span>Comune</span>
+          <input
+            data-testid="visura-comune"
+            className="w-full border border-stone-200 px-2 py-1.5 text-sm"
+            value={form.comune}
+            onChange={(e) => setField("comune", e.target.value)}
+            placeholder="Roma"
+          />
+        </label>
+        <label className="text-xs text-stone-600 space-y-1">
+          <span>Foglio</span>
+          <input
+            data-testid="visura-foglio"
+            className="w-full border border-stone-200 px-2 py-1.5 text-sm"
+            value={form.foglio}
+            onChange={(e) => setField("foglio", e.target.value)}
+          />
+        </label>
+        <label className="text-xs text-stone-600 space-y-1">
+          <span>Particella</span>
+          <input
+            data-testid="visura-particella"
+            className="w-full border border-stone-200 px-2 py-1.5 text-sm"
+            value={form.particella}
+            onChange={(e) => setField("particella", e.target.value)}
+          />
+        </label>
+        <label className="text-xs text-stone-600 space-y-1">
+          <span>Subalterno</span>
+          <input
+            data-testid="visura-subalterno"
+            className="w-full border border-stone-200 px-2 py-1.5 text-sm"
+            value={form.subalterno}
+            onChange={(e) => setField("subalterno", e.target.value)}
+          />
+        </label>
+        <label className="text-xs text-stone-600 space-y-1">
+          <span>Catasto</span>
+          <select
+            data-testid="visura-tipo"
+            className="w-full border border-stone-200 px-2 py-1.5 text-sm bg-white"
+            value={form.tipo_catasto}
+            onChange={(e) => setField("tipo_catasto", e.target.value)}
+          >
+            <option value="F">Fabbricati</option>
+            <option value="T">Terreni</option>
+          </select>
+        </label>
+        <div className="col-span-2 sm:col-span-3">
+          <button
+            type="submit"
+            disabled={busy}
+            data-testid="visura-request-btn"
+            className="bg-[#0B1E3F] hover:bg-[#16305a] disabled:bg-stone-300 text-white text-xs uppercase tracking-widest px-4 py-2"
+          >
+            {busy ? "Invio..." : "Richiedi visura"}
+          </button>
+        </div>
+      </form>
+      {msg && <p className="text-xs text-emerald-700" data-testid="visura-msg">{msg}</p>}
+      {err && <p className="text-xs text-red-700" data-testid="visura-err">{err}</p>}
+      {jobs.length > 0 && (
+        <ul className="space-y-2 border-t border-stone-100 pt-3">
+          {jobs.map((j) => (
+            <li key={j.id} className="flex flex-wrap items-center justify-between gap-2 text-xs text-stone-700" data-testid={`visura-job-${j.id}`}>
+              <span>
+                {j.status} · {j.request?.comune} fg.{j.request?.foglio}/{j.request?.particella}
+                {j.external_id ? ` · ${j.external_id.slice(0, 8)}` : ""}
+              </span>
+              <span className="flex gap-2">
+                <button type="button" disabled={busy} onClick={() => pollJob(j.id)} className="underline">
+                  Aggiorna
+                </button>
+                {(j.status === "ready" || j.status === "processing") && (
+                  <button type="button" disabled={busy} onClick={() => attachJob(j.id)} className="underline font-medium">
+                    Allega PDF
+                  </button>
+                )}
+              </span>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
+
 export default function FascicoloPage() {
   const { id } = useParams();
   const { i18n } = useTranslation();
@@ -240,6 +449,8 @@ export default function FascicoloPage() {
             ))}
           </div>
         </div>
+
+        <VisuraOpenApiPanel propertyId={id} onAttached={load} />
 
         {/* HAL analysis */}
         <div className="bg-white border border-stone-200 p-6">

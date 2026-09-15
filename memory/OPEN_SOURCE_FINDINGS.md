@@ -146,8 +146,21 @@ Seguendo il `PROGRAMMA_OMNIA.md` originale (D-035) e la sequenza D-032:
 
 ---
 
+## 🟢 UPDATE 15-Sep-2026 — OpenAPI.it Catasto (path sandbox ufficiale)
+
+- **Perché**: sandbox ufficiale `test.catasto.openapi.it` (zornade/SISTER non ha sandbox).
+- **Auth corretta**: la stringa in console è **API Key**, non Bearer.
+  1. `POST https://test.oauth.openapi.com/tokens` con Basic `email:API_KEY` e body JSON `{"grant_type":"client_credentials","scopes":"*:test.catasto.openapi.it/*"}`
+  2. Usare `data.token` come `Authorization: Bearer …` su Catasto
+- **Smoke OMNIA**: create visura → `stato: evasa` + PDF `sandbox.pdf` (~58KB) → attach Fascicolo OK
+- **Env**: `OPENAPI_ENABLED` + `OPENAPI_EMAIL` + `OPENAPI_API_KEY` (+ basi test). Opzionale `OPENAPI_TOKEN` statico.
+- **Caveat**: a scala valutare costi OpenAPI vs ISV QTSP / zornade+SISTER post-SRL.
+
+---
+
 ## ⚠️ ACTION ITEM PER FOUNDER
 
 - [ ] **Revisione legale visura-api** (insieme a T&C AL Legal, ~€200 una tantum avvocato): valutare grey-area Playwright headless su SISTER prima di integrare in produzione
 - [ ] **Account SISTER ufficiale** (Agenzia delle Entrate): apertura post-SRL, necessario per `visura-api`
 - [ ] **Decisione fork Zornade in-house**: valutare se dipendere da loro API o forkare il codice e ospitarlo internamente (controllo SLA)
+- [ ] **OpenAPI produzione**: abbonamento/wallet live + ruotare API key (quella di chat è già in `.env` locale, non in git)

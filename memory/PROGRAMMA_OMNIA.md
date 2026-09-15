@@ -708,12 +708,12 @@ Dopo M6   → ecosistema completo OMNIA come da schema PDF
 - Storage documenti per agenzia (`modulistica_documents` + object storage)
 - UI CRM `/app/modulistica` + link da Fascicolo + API v1 `/api/v1/modulistica/*`
 
-### M5.S8 — ✍️ Firma elettronica (+ Visure post-account) 🟡 partial (15-Sep-2026, D-082)
-- **Provider**: DocuSign / Yousign (D-042) — adapter in `shared/modulistica/esign.py`
-- Default `ESIGN_PROVIDER=mock` per demo senza account paid
-- VisureItalia / `zornade/visura-api` restano post-account SISTER
-- Storage documenti firmati nel cloud (stesso store modulistica)
-- **Tuo compito**: account Yousign o DocuSign quando pronto (sandbox → live)
+### M5.S8 — ✍️ Firma elettronica (+ Visure) 🟡 partial (15-Sep-2026, D-082)
+- **Provider firma**: DocuSign / Yousign (D-042) — adapter in `shared/modulistica/esign.py`
+- Default `ESIGN_PROVIDER=mock` per demo senza account paid; sandbox Yousign attivo con Founder key
+- **Visure**: OpenAPI.it Catasto sandbox attivo (OAuth email+API key → Bearer). Client `shared/openapi_catasto.py`, API `/api/docs/visura/*`, UI Fascicolo. zornade/SISTER resta path low-cost post-SRL
+- Storage documenti firmati / PDF visura nello store Fascicolo
+- **Tuo compito**: passare OpenAPI a dominio produzione quando wallet/abbonamento live; QTSP ISV per firma a scala
 
 ### ✅ Definition of Done M5
 - [ ] Al for Agents risponde correttamente a 90%+ query CRM

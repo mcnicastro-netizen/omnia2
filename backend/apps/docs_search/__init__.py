@@ -1,7 +1,8 @@
 """OMNIA — Fascicolo Digitale: APE scaffold + OpenAPI.it visure (D-082).
 
 OpenAPI.it Catasto replaces SISTER scraping for production visure.
-Endpoints return 503 until OPENAPI_ENABLED=true + OPENAPI_TOKEN set.
+Endpoints return 503 until OPENAPI_ENABLED=true and
+(OPENAPI_TOKEN or OPENAPI_EMAIL+OPENAPI_API_KEY) are set.
 """
 import logging
 import os
@@ -95,7 +96,7 @@ async def request_visura(
             status_code=503,
             detail={
                 "error": "openapi_not_configured",
-                "message": "Imposta OPENAPI_ENABLED=true e OPENAPI_TOKEN in backend/.env",
+                "message": "Imposta OPENAPI_ENABLED=true e OPENAPI_EMAIL+OPENAPI_API_KEY (o OPENAPI_TOKEN) in backend/.env",
             },
         )
     agency_id = await arequire_agency(user)
@@ -129,7 +130,13 @@ async def request_visura(
         logger.exception("OpenAPI visura request failed")
         raise HTTPException(502, detail=str(e)[:400]) from e
 
-    ext_id = str(raw.get("id") or raw.get("_id") or raw.get("data", {}).get("id") or "")
+    ext_id = str(raw.get("id") or raw.get("_id") or "")
+    remote_stato = str(raw.get("stato") or "").lower()
+    initial_status = "pending"
+    if "evas" in remote_stato:
+        initial_status = "ready"
+    elif "error" in remote_stato or "fail" in remote_stato:
+        initial_status = "failed"
     now = datetime.now(timezone.utc).isoformat()
     job = {
         "id": str(uuid4()),
@@ -137,7 +144,7 @@ async def request_visura(
         "property_id": payload.property_id,
         "provider": "openapi",
         "external_id": ext_id,
-        "status": "pending",
+        "status": initial_status,
         "request": payload.model_dump(),
         "raw_create": raw,
         "created_by": user.get("id"),
@@ -146,6 +153,25 @@ async def request_visura(
     }
     await db.visura_jobs.insert_one(job)
     return {k: v for k, v in job.items() if k != "_id"}
+
+
+@router.get("/visura")
+async def list_visura_jobs(
+    property_id: Optional[str] = None,
+    user: dict = Depends(get_current_user),
+):
+    agency_id = await arequire_agency(user)
+    db = Database.get()
+    q: Dict[str, Any] = {"agency_id": agency_id}
+    if property_id:
+        q["property_id"] = property_id
+    jobs = await (
+        db.visura_jobs.find(q, {"_id": 0, "raw_create": 0, "raw_status": 0})
+        .sort("created_at", -1)
+        .limit(50)
+        .to_list(50)
+    )
+    return {"items": jobs, "total": len(jobs), "openapi_enabled": openapi_enabled()}
 
 
 @router.get("/visura/{job_id}")
