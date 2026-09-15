@@ -14,8 +14,11 @@ export default function MembersPage() {
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
   const [toast, setToast] = useState("");
+  const [removingId, setRemovingId] = useState(null);
+  const [confirmRemove, setConfirmRemove] = useState(null); // member object
 
   const canInvite = user?.role === "agency_admin" || user?.role === "super_admin";
+  const canManage = canInvite;
 
   const load = async () => {
     setLoading(true);
@@ -50,6 +53,30 @@ export default function MembersPage() {
       load();
     } catch {
       // ignore
+    }
+  };
+
+  const removeMember = async (member) => {
+    if (!member?.id || removingId) return;
+    setRemovingId(member.id);
+    try {
+      await api.delete(`/app/agencies/me/members/${member.id}`);
+      setToast(`Rimosso ${member.email || member.name} dall'agenzia`);
+      setConfirmRemove(null);
+      await load();
+      setTimeout(() => setToast(""), 3500);
+    } catch (e) {
+      const d = e.response?.data?.detail;
+      const map = {
+        self_remove_forbidden: "Non puoi rimuovere te stesso",
+        last_owner_forbidden: "Non puoi rimuovere l'ultimo amministratore",
+        owner_remove_forbidden: "Non puoi rimuovere il titolare dell'agenzia",
+        member_not_found: "Membro non trovato",
+      };
+      setToast(map[d] || (typeof d === "string" ? d : "Rimozione non riuscita"));
+      setTimeout(() => setToast(""), 4000);
+    } finally {
+      setRemovingId(null);
     }
   };
 
@@ -111,6 +138,9 @@ export default function MembersPage() {
                     <th className="px-4 py-3 font-medium">{t("members.table_email")}</th>
                     <th className="px-4 py-3 font-medium">{t("members.table_role")}</th>
                     <th className="px-4 py-3 font-medium">{t("members.table_status")}</th>
+                    {canManage && (
+                      <th className="px-4 py-3 font-medium text-right">{t("members.table_actions")}</th>
+                    )}
                   </tr>
                 </thead>
                 <tbody>
@@ -134,6 +164,20 @@ export default function MembersPage() {
                           {m.is_active ? t("members.status_active") : "—"}
                         </span>
                       </td>
+                      {canManage && (
+                        <td className="px-4 py-3 text-right">
+                          {m.id !== user?.id && (
+                            <button
+                              type="button"
+                              data-testid={`remove-member-${m.id}`}
+                              onClick={() => setConfirmRemove(m)}
+                              className="text-xs uppercase tracking-widest text-red-700 hover:text-red-900"
+                            >
+                              Rimuovi
+                            </button>
+                          )}
+                        </td>
+                      )}
                     </tr>
                   ))}
                 </tbody>
@@ -188,6 +232,43 @@ export default function MembersPage() {
       </section>
 
       <InviteMemberModal open={modalOpen} onClose={() => setModalOpen(false)} onInvited={onInvited} />
+
+      {confirmRemove && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
+          data-testid="remove-member-dialog"
+          role="dialog"
+          aria-modal="true"
+        >
+          <div className="max-w-md w-full bg-white border border-stone-200 p-6 space-y-4">
+            <h2 className="text-lg text-stone-900" style={{ fontFamily: "'Fraunces', Georgia, serif" }}>
+              Rimuovere dal team?
+            </h2>
+            <p className="text-sm text-stone-600">
+              <strong>{confirmRemove.name || confirmRemove.email}</strong> perderà l&apos;accesso
+              all&apos;agenzia. L&apos;account utente non viene eliminato.
+            </p>
+            <div className="flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setConfirmRemove(null)}
+                className="px-4 py-2 text-xs uppercase tracking-widest border border-stone-300"
+              >
+                Annulla
+              </button>
+              <button
+                type="button"
+                data-testid="confirm-remove-member"
+                disabled={!!removingId}
+                onClick={() => removeMember(confirmRemove)}
+                className="px-4 py-2 text-xs uppercase tracking-widest bg-red-700 text-white disabled:bg-stone-300"
+              >
+                {removingId ? "…" : "Conferma rimozione"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </AgencyShell>
   );
 }

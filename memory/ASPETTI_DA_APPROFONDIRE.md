@@ -428,7 +428,7 @@ Post-manuale (dopo primi 5-10 utenti che hanno chiesto info sui colori)
 Nessuna — decisione autonoma implementazione se il Founder dice "vai".
 
 ### Stato
-🟢 **DA APPROFONDIRE** — attende OK Founder
+✅ **FATTO** — 15-Sep-2026 (tooltip confidence badge)
 
 ---
 
@@ -475,7 +475,7 @@ Post-manuale (Founder ha detto che discuterà tutto a fine manuale)
 2. Cosa vede il membro rimosso al login successivo — pagina *"Nessuna agenzia collegata"* o auto-logout?
 
 ### Stato
-🟢 **DA APPROFONDIRE** — attende OK Founder
+✅ **FATTO** — 15-Sep-2026 (DELETE members + UI conferma)
 
 ---
 
@@ -737,7 +737,7 @@ Post-manuale (parte del batch task tecnici backlog)
 Nessuna — implementazione autonoma se dà "vai".
 
 ### Stato
-🟢 **DA APPROFONDIRE** — pronto per implementazione post-manuale
+✅ **FATTO** — 15-Sep-2026 (pre-check + debit on success)
 
 ---
 
@@ -1004,14 +1004,14 @@ Implementazione: TTL index Mongo dove semantica lo consente + job archivio S3 me
 
 | ID | Titolo | P | Effort | Origine | Timing |
 |----|--------|:-:|:-:|---------|:-:|
-| A-006 | Tooltip badge confidence HAL | **P1** | XS (~15min) | Spark Cap.12 | Post-manuale |
-| A-007 | Rimozione membro agenzia | **P1** | M (2-3h) | Spark Cap.13 | Post-manuale |
+| A-006 | Tooltip badge confidence HAL | ✅ | XS | Spark Cap.12 | Fatto 15-Sep-2026 |
+| A-007 | Rimozione membro agenzia | ✅ | M | Spark Cap.13 | Fatto 15-Sep-2026 |
 | A-008 | Cambio ruolo membro post-join | P2 | M-L | Cursor gap Cap.13 | Post-A-007 |
 | A-009 | Bulk-assign agente post-import | P2 | M-L | Spark Cap.14 | Post-A-007 |
 | A-010 | Storico import XML UI | P2 | M | Cursor gap Cap.14 | Post-primi clienti |
 | A-011 | Social scheduling minimal | P3 | L (10-20h) | Spark Cap.15 | Post ≥5 utenti Social |
 | A-012 | Social metrics/insights | P3 | L (15-25h) | Spark Cap.15 | Post-A-011 |
-| A-013 | Hard-gate crediti Staging | **P1** | S | SPRINT + Cursor | Post-manuale |
+| A-013 | Hard-gate crediti Staging | ✅ | S | SPRINT + Cursor | Fatto 15-Sep-2026 |
 | A-014 | Billing UI + B2C Stripe live | **P1** | L | SPRINT (revenue) | Prossimo sprint |
 | A-015 | Sito Web v2 (Hero, Chi Siamo, ...) | P2 | XL | SPRINT + Founder | Da decidere con Founder |
 | A-016 | Boost tag mutui "banche" | P3 | XS | Cursor gap iter.35 | Raggruppare micro-fix |

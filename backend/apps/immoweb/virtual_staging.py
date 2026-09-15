@@ -39,9 +39,13 @@ from pydantic import BaseModel, Field
 from shared.auth.dependencies import get_current_user
 from shared.db.connection import Database
 from shared.utils.net_guard import assert_public_url
+from apps.billing.plans import CREDIT_COSTS
+from apps.billing.routes import debit_credits
 
 logger = logging.getLogger("omnia.staging")
 router = APIRouter(prefix="/staging", tags=["virtual-staging"])
+
+STAGING_CREDIT_COST = int(CREDIT_COSTS.get("virtual_staging_render") or 18)
 
 MODEL_SAM2 = "fal-ai/sam2/auto-segment"
 MODEL_FLUX_INPAINT = "fal-ai/flux-lora/inpainting"
@@ -462,6 +466,32 @@ async def _run_pipeline(job_id: str, db) -> None:
         "completed_at": datetime.now(timezone.utc).isoformat(),
     })
 
+    # Debit only after successful pipeline (no charge on mid-fail)
+    try:
+        doc_paid = await db.virtual_staging_jobs.find_one({"id": job_id}, {"agency_id": 1, "num_variants": 1})
+        aid = (doc_paid or {}).get("agency_id")
+        n = max(1, int((doc_paid or {}).get("num_variants") or 1))
+        if aid and variants:
+            bal = await debit_credits(
+                aid,
+                STAGING_CREDIT_COST * n,
+                reason="virtual_staging_render",
+                ref_id=job_id,
+                ref_type="virtual_staging_job",
+            )
+            await db.virtual_staging_jobs.update_one(
+                {"id": job_id},
+                {"$set": {"credits_charged": STAGING_CREDIT_COST * n, "credits_balance_after": bal}},
+            )
+    except HTTPException as e:
+        logger.warning("staging debit failed job=%s detail=%s", job_id, e.detail)
+        await db.virtual_staging_jobs.update_one(
+            {"id": job_id},
+            {"$set": {"credits_debit_error": str(e.detail)[:300]}},
+        )
+    except Exception:
+        logger.exception("staging debit unexpected job=%s", job_id)
+
 
 # ─── Stale-job reaper (called at server startup) ─────────────────
 async def reap_stale_jobs() -> int:
@@ -541,6 +571,31 @@ async def list_styles() -> Dict[str, Any]:
             {"key": "standard", "label": "Stanza vuota"},
             {"key": "reverse", "label": "Svuota e ri-arreda (Reverse)"},
         ],
+        "credit_cost_per_variant": STAGING_CREDIT_COST,
+    }
+
+
+@router.get("/credits-check")
+async def staging_credits_check(
+    num_variants: int = 1,
+    user=Depends(get_current_user),
+) -> Dict[str, Any]:
+    """A-013 — pre-check saldo before starting an expensive AI render."""
+    n = max(1, min(int(num_variants or 1), 4))
+    required = STAGING_CREDIT_COST * n
+    agency_id = user.get("agency_id") or (user.get("agency_ids") or [None])[0]
+    balance = 0
+    if agency_id:
+        db = Database.get()
+        wallet = await db.credit_wallets.find_one({"agency_id": agency_id}, {"_id": 0, "balance": 1})
+        balance = int((wallet or {}).get("balance") or 0)
+    return {
+        "agency_id": agency_id,
+        "balance": balance,
+        "required": required,
+        "credit_cost_per_variant": STAGING_CREDIT_COST,
+        "num_variants": n,
+        "ok": balance >= required if agency_id else False,
     }
 
 
@@ -608,6 +663,26 @@ async def generate_staging(
 
     agency_id = user.get("agency_id") or (user.get("agency_ids") or [None])[0]
     await _rate_limit(db, user["id"], agency_id, body.num_variants)
+
+    # A-013 — hard-gate crediti PRIMA di avviare SAM2/Flux
+    n_var = max(1, min(int(body.num_variants or 1), 4))
+    required = STAGING_CREDIT_COST * n_var
+    if not agency_id:
+        raise HTTPException(status_code=402, detail={
+            "error": "insufficient_credits",
+            "message": "Serve un'agenzia con wallet crediti per generare render.",
+            "required": required,
+            "balance": 0,
+        })
+    wallet = await db.credit_wallets.find_one({"agency_id": agency_id}, {"_id": 0, "balance": 1})
+    balance = int((wallet or {}).get("balance") or 0)
+    if balance < required:
+        raise HTTPException(status_code=402, detail={
+            "error": "insufficient_credits",
+            "message": f"Crediti insufficienti: servono {required}, saldo {balance}. Ricarica da Impostazioni → Billing.",
+            "required": required,
+            "balance": balance,
+        })
 
     if body.property_id:
         q: Dict[str, Any] = {"id": body.property_id}

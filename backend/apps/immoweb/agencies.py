@@ -177,3 +177,62 @@ async def list_members(user: dict = Depends(get_current_user)):
     )
     members = await cursor.to_list(length=200)
     return members
+
+
+@router.delete("/me/members/{member_id}")
+async def remove_member(
+    member_id: str,
+    user: dict = Depends(require_roles("agency_admin", "super_admin")),
+):
+    """Unlink a member from the current agency (does NOT delete the user).
+
+    Guards (A-007):
+    - no self-remove
+    - no remove of agency owner_id
+    - no remove of the last agency_admin in the agency
+    """
+    db = Database.get()
+    agency_ids = user.get("agency_ids") or []
+    if not agency_ids:
+        raise HTTPException(400, detail="no_agency")
+    agency_id = agency_ids[0]
+
+    if member_id == user.get("id"):
+        raise HTTPException(403, detail="self_remove_forbidden")
+
+    agency = await db.agencies.find_one({"id": agency_id}, {"_id": 0, "owner_id": 1})
+    if agency and agency.get("owner_id") and agency["owner_id"] == member_id:
+        raise HTTPException(400, detail="owner_remove_forbidden")
+
+    target = await db.users.find_one(
+        {"id": member_id, "agency_ids": agency_id},
+        {"_id": 0, "id": 1, "role": 1, "email": 1},
+    )
+    if not target:
+        raise HTTPException(404, detail="member_not_found")
+
+    if target.get("role") in ("agency_admin", "super_admin", "group_admin"):
+        admin_count = await db.users.count_documents({
+            "agency_ids": agency_id,
+            "role": {"$in": ["agency_admin", "super_admin", "group_admin"]},
+        })
+        if admin_count <= 1:
+            raise HTTPException(400, detail="last_owner_forbidden")
+
+    res = await db.users.update_one(
+        {"id": member_id},
+        {
+            "$pull": {"agency_ids": agency_id},
+            "$set": {"updated_at": datetime.now(timezone.utc).isoformat()},
+        },
+    )
+    if res.modified_count == 0 and res.matched_count == 0:
+        raise HTTPException(404, detail="member_not_found")
+
+    # Clear active_agency if it pointed at this agency
+    await db.users.update_one(
+        {"id": member_id, "active_agency_id": agency_id},
+        {"$set": {"active_agency_id": None}},
+    )
+
+    return {"ok": True, "removed_user_id": member_id, "agency_id": agency_id}

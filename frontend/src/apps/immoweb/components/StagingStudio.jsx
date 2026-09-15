@@ -48,11 +48,23 @@ export default function StagingStudio({ propertyId = null, initialImage = null, 
   const [generating, setGenerating] = useState(false);
   const [currentJob, setCurrentJob] = useState(null);
   const [error, setError] = useState("");
+  const [credits, setCredits] = useState(null); // {balance, required, ok, credit_cost_per_variant}
   const [savedVariants, setSavedVariants] = useState({});
   const [savingVariant, setSavingVariant] = useState(null);
   const pollRef = useRef(null);
   const fileInputRef = useRef(null);
   const [dragOver, setDragOver] = useState(false);
+
+  const numVariants = variantChoice === "single" ? 1 : variantChoice === "same4" ? 4 : multiStyles.length;
+
+  const refreshCredits = useCallback(async (n) => {
+    try {
+      const r = await api.get(`/app/staging/credits-check?num_variants=${n || 1}`);
+      setCredits(r.data);
+    } catch {
+      setCredits(null);
+    }
+  }, []);
 
   useEffect(() => {
     (async () => {
@@ -67,6 +79,10 @@ export default function StagingStudio({ propertyId = null, initialImage = null, 
       if (pollRef.current) clearInterval(pollRef.current);
     };
   }, []);
+
+  useEffect(() => {
+    refreshCredits(numVariants);
+  }, [numVariants, refreshCredits]);
 
   // Preload the source image (dataURL → upload to fal; http URL → use directly)
   useEffect(() => {
@@ -153,6 +169,15 @@ export default function StagingStudio({ propertyId = null, initialImage = null, 
   const handleGenerate = async () => {
     if (!sourceUrl || generating) return;
     setError("");
+    // A-013 FE hard-gate
+    const check = await api.get(`/app/staging/credits-check?num_variants=${numVariants}`).then((r) => r.data).catch(() => null);
+    if (check) setCredits(check);
+    if (check && !check.ok) {
+      setError(
+        `Crediti insufficienti: servono ${check.required}, saldo ${check.balance}. Ricarica da Impostazioni → Billing.`
+      );
+      return;
+    }
     setGenerating(true);
     setCurrentJob(null);
     setSavedVariants({});
@@ -162,7 +187,7 @@ export default function StagingStudio({ propertyId = null, initialImage = null, 
       mode,
       property_id: propertyId || undefined,
       style: variantChoice === "multi4" ? multiStyles[0] : selectedStyle,
-      num_variants: variantChoice === "single" ? 1 : variantChoice === "same4" ? 4 : multiStyles.length,
+      num_variants: numVariants,
       variant_mode: variantChoice === "multi4" ? "multi_style" : "same_style",
       styles: variantChoice === "multi4" ? multiStyles : undefined,
     };
@@ -171,7 +196,15 @@ export default function StagingStudio({ propertyId = null, initialImage = null, 
       setCurrentJob(r.data);
       startPolling(r.data.id);
     } catch (e) {
-      setError("Generazione fallita: " + (e.response?.data?.detail || e.message));
+      const d = e.response?.data?.detail;
+      if (e.response?.status === 402 || d?.error === "insufficient_credits") {
+        setError(
+          d?.message ||
+            `Crediti insufficienti: servono ${d?.required ?? "?"}, saldo ${d?.balance ?? "?"}.`
+        );
+      } else {
+        setError("Generazione fallita: " + (typeof d === "string" ? d : d?.message || e.message));
+      }
       setGenerating(false);
     }
   };
@@ -230,8 +263,6 @@ export default function StagingStudio({ propertyId = null, initialImage = null, 
   };
 
   const styleLabel = (key) => styles.styles.find((s) => s.key === key)?.label || key;
-  const estRenders = variantChoice === "single" ? 1 : variantChoice === "same4" ? 4 : multiStyles.length;
-  const estCost = ((mode === "reverse" ? 0.05 : 0) + 0.001 + estRenders * 0.055).toFixed(2);
   const canSave = Boolean(onAddPhoto || propertyId);
 
   return (
@@ -399,12 +430,21 @@ export default function StagingStudio({ propertyId = null, initialImage = null, 
           )}
 
           <div className="mt-6 pt-5 border-t border-stone-100 flex items-center justify-between flex-wrap gap-3">
-            <p className="text-xs text-stone-500">
-              Tempo stimato: {estRenders > 1 ? "90-180" : "60-120"} secondi · Costo: ~${estCost}
-            </p>
+            <div className="text-xs text-stone-500 space-y-1">
+              <p>Tempo stimato: {numVariants > 1 ? "90-180" : "60-120"} secondi</p>
+              {credits && (
+                <p data-testid="staging-credits-line">
+                  Crediti: <strong>{credits.required}</strong> richiesti
+                  {" · "}saldo <strong>{credits.balance}</strong>
+                  {!credits.ok && (
+                    <span className="text-red-700"> — insufficienti</span>
+                  )}
+                </p>
+              )}
+            </div>
             <button
               onClick={handleGenerate}
-              disabled={!sourceUrl || generating || uploading}
+              disabled={!sourceUrl || generating || uploading || (credits && !credits.ok)}
               data-testid="staging-generate-btn"
               className="bg-amber-700 hover:bg-amber-800 disabled:bg-stone-300 text-white text-sm uppercase tracking-widest px-6 py-3 transition"
             >

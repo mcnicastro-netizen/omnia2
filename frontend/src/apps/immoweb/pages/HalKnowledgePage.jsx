@@ -240,10 +240,28 @@ function ConfidenceBadge({ status, small = false }) {
     medium: "Utile",
     insufficient_context: "Incompleta",
   };
+  const tips = {
+    high: "Risposta chiara: HAL ha trovato indicazioni solide nella guida (confidence alta).",
+    medium: "Risposta utile: indicazioni trovate, ma potresti riformulare per più precisione.",
+    insufficient_context: "Risposta incompleta: nella guida non c’è abbastanza contesto. Prova a essere più specifico.",
+  };
   const size = small ? "text-[9px] px-1.5 py-0.5" : "text-[10px] px-2 py-1";
+  const tip = tips[status] || "Livello di affidabilità della risposta HAL rispetto alla guida OMNIA.";
   return (
-    <span className={`${styles[status] || styles.medium} ${size} uppercase tracking-widest rounded whitespace-nowrap`}>
+    <span
+      title={tip}
+      aria-label={tip}
+      data-testid="hal-confidence-badge"
+      data-confidence={status || "medium"}
+      className={`group relative inline-flex items-center ${styles[status] || styles.medium} ${size} uppercase tracking-widest rounded whitespace-nowrap cursor-help`}
+    >
       {labels[status] || "Risposta"}
+      <span
+        role="tooltip"
+        className="pointer-events-none absolute right-0 top-full z-20 mt-1 hidden w-56 rounded bg-stone-900 px-2 py-1.5 text-[10px] normal-case tracking-normal font-normal leading-snug text-white shadow-lg group-hover:block group-focus-visible:block"
+      >
+        {tip}
+      </span>
     </span>
   );
 }
