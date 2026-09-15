@@ -185,15 +185,17 @@ class YousignProvider(BaseESignProvider):
                         },
                         "signature_level": "electronic_signature",
                         "signature_authentication_mode": "otp_email",
+                        # Yousign v3: origin = top-left of page (A4 ≈ 595×842 pt).
+                        # Place signature block near the bottom, not under the header.
                         "fields": [
                             {
                                 "document_id": doc_id,
                                 "type": "signature",
                                 "page": max(1, page_count),
-                                "x": 60,
-                                "y": 80 + (idx * 70),
-                                "width": 180,
-                                "height": 48,
+                                "x": 72,
+                                "y": 720 + (idx * 56),
+                                "width": 200,
+                                "height": 50,
                             }
                         ],
                     }
