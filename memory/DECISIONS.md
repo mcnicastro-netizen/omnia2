@@ -1337,3 +1337,12 @@ Registro di tutte le decisioni di business e tecniche prese durante il progetto.
   - Visure restano post-account SISTER (invariato).
   - Template = bozze operative con disclaimer; revisione legale Founder prima di uso production.
 - **Stato**: ✅ APPLICATA (codice 15-Sep-2026)
+
+### D-083 — Visura catastale B2C: carta Stripe (mai crediti)
+- **Data**: 15 Settembre 2026
+- **Contesto**: Founder vuole la visura sul portale privati (ImmobilCloud), **pagamento con carta Stripe**, non a crediti.
+- **Decisione**:
+  - Prodotto `b2c_visura_catastale` a **€4,90** (one-shot) in `b2c_products.py` / `PRICING_B2C.md`
+  - UI `/it/cloud/visura` → Checkout Stripe → webhook → OpenAPI.it → PDF
+  - Rail separato dai crediti B2B; stesso pattern del Valuator UNI
+- **Stato**: ✅ APPLICATA (codice 15-Sep-2026)

@@ -25,6 +25,9 @@ export default function CloudTopNav() {
           <Link to={`/${lang}/cloud/mutui`} data-testid="cloud-nav-mutui" className="text-stone-600 hover:text-stone-900">
             {t("cloud.nav_mutui")}
           </Link>
+          <Link to={`/${lang}/cloud/visura`} data-testid="cloud-nav-visura" className="text-stone-600 hover:text-stone-900">
+            Visura
+          </Link>
           <Link to={`/${lang}/cloud/register?intent=sell`} data-testid="cloud-nav-sell" className="text-stone-600 hover:text-stone-900">
             {t("cloud.nav_sell")}
           </Link>

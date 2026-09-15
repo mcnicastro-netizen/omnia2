@@ -12,6 +12,7 @@ import ValuatorPage from "./components/ValuatorPage";
 import CheckoutSuccessPage from "./components/CheckoutSuccessPage";
 import CheckoutCancelPage from "./components/CheckoutCancelPage";
 import MutuiPage from "./components/MutuiPage";
+import VisuraPage from "./components/VisuraPage";
 import AccountDashboard from "./components/AccountDashboard";
 
 /* M17 — ImmocloudApp è ora solo il router B2C: le pagine vivono in pages/ e components/. */
@@ -27,6 +28,7 @@ export default function ImmocloudApp() {
         <Route path="account/sell" element={<SellPage />} />
         <Route path="account" element={<AccountDashboard />} />
         <Route path="valutatore" element={<ValuatorPage />} />
+        <Route path="visura" element={<VisuraPage />} />
         <Route path="checkout/success" element={<CheckoutSuccessPage />} />
         <Route path="checkout/cancel" element={<CheckoutCancelPage />} />
         <Route path="mutui" element={<MutuiPage />} />

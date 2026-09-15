@@ -67,6 +67,19 @@ B2C_ONE_SHOT_PRODUCTS: Dict[str, B2CProduct] = {
             "Disclaimer obbligatorio prima della risposta."
         ),
     },
+    "b2c_visura_catastale": {
+        "key": "b2c_visura_catastale",
+        "label_it": "Visura catastale (PDF ufficiale)",
+        "price_eur": 4.90,
+        "stripe_lookup_key": "b2c_visura_catastale",
+        "unit": "per_document",
+        "daily_limit_per_user": 10,
+        "notes": (
+            "Pagamento carta Stripe one-shot (mai crediti). "
+            "Fulfillment via OpenAPI.it Catasto → PDF. "
+            "Costo vivo sandbox/listino partner ~€0,40 — retail Founder 15-Sep-2026."
+        ),
+    },
 }
 
 
@@ -97,12 +110,6 @@ B2C_FREE_LEAD_MAGNETS: Dict[str, dict] = {
 # Documentati qui per traccia; il checkout NON deve mostrarli finché
 # margini e partner esterni non sono validati.
 B2C_COMING_SOON: Dict[str, dict] = {
-    "b2c_visura_catastale": {
-        "label_it": "Visura catastale",
-        "planned_price_eur": None,   # da definire in fase 2
-        "cost_ref_eur": 0.40,        # costo vivo indicativo
-        "notes": "Attendere validazione partner catasto + policy antiabuso.",
-    },
     "b2c_planimetria_catastale": {
         "label_it": "Planimetria catastale",
         "planned_price_eur": None,   # da definire in fase 2

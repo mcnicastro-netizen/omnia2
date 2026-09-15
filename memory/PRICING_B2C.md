@@ -61,7 +61,7 @@ Servizi che un privato può usare senza agenzia, pagando con carta al momento (o
 | **Comparatore mutui** | **GRATIS** | illimitato | ~€0,01 | Lead → agenzia partner / mediatore |
 | **Virtual Staging** | **€0,90 / foto** | max 3 foto per annuncio UGC | ~€0,056 | Stesso € agenzia, rail carta. Anti-abuso: legato all'annuncio |
 | **HAL Legal — 1 domanda** | **€1,00 / query** | per query | ~€0,04 | Portale B2C. Disclaimer obbligatorio prima della risposta |
-| 🔒 **Visura catastale** | **in arrivo** | — | ~€0,40 | Checkout NON implementato. Sezione placeholder — fase 2 |
+| **Visura catastale** | **€4,90** carta | per documento | ~€0,40 | Stripe Checkout → OpenAPI.it PDF. Mai crediti. Cap 10/giorno. Founder 15-Sep-2026 |
 | 🔒 **Planimetria catastale** | **in arrivo** | — | ~€6,90 | Checkout NON implementato. Margine da validare fase 2 |
 
 **Regola operativa**

@@ -211,14 +211,16 @@ async def apply_b2c_purchase_side_effects(session: dict) -> None:
     product_key = md.get("b2c_product_key")
     if not session_id or not product_key:
         return
-    if product_key != "b2c_valuator_uni_pdf":
-        # Future B2C products (staging, legal) — not in scope for B2C-VAL-01
+    if product_key not in ("b2c_valuator_uni_pdf", "b2c_visura_catastale"):
         logger.info("b2c webhook: unsupported product_key=%s (skipping)", product_key)
         return
     from apps.billing.b2c_entitlements import mark_uni_purchase_paid
     updated = await mark_uni_purchase_paid(session_id)
     if updated:
-        logger.info("b2c_purchase paid: session=%s user=%s", session_id, updated.get("user_id"))
+        logger.info("b2c_purchase paid: session=%s product=%s user=%s",
+                    session_id, product_key, updated.get("user_id"))
+        if product_key == "b2c_visura_catastale":
+            from apps.immocloud.visura_b2c import fulfill_paid_visura_order
+            await fulfill_paid_visura_order(session_id)
     else:
-        # Session not tracked locally — create the record now for resilience
         logger.warning("b2c_purchase webhook: no local record for session=%s", session_id)
