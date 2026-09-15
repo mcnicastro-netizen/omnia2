@@ -1317,3 +1317,9 @@ Registro di tutte le decisioni di business e tecniche prese durante il progetto.
   2. Catalogo a **3 piani**: Starter €49 · Pro €99 · **Agency €299** (Founders). Standard Agency €399.
   3. **Enterprise eliminato** dal listino pubblico; esigenze custom fuori catalogo.
 - **Stato**: ✅ Confermata
+
+### D-081 — Chiusura formale programma Sprint 1→4
+- **Data**: 15 Settembre 2026
+- **Contesto**: Founder: seguire il programma e portarlo a conclusione (niente nuove idee).
+- **Decisione**: Scope `PIANO_ESECUZIONE.md` Sprint 1–4 dichiarato **CONCLUSO**. Documento ufficiale: `PROGRAMMA_CONCLUSIONE.md`. M6/M4/A-xxx restano fuori scope.
+- **Stato**: ✅ Confermata
