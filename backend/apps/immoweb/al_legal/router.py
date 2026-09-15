@@ -125,6 +125,7 @@ async def _call_llm(system_prompt: str, user_msg: str, session_id: str) -> str:
         raise HTTPException(status_code=503, detail="llm_key_not_configured")
     try:
         from emergentintegrations.llm.chat import LlmChat, UserMessage
+        from shared.llm import LlmBusy
         client = LlmChat(
             api_key=_llm_key(),
             session_id=session_id,
@@ -134,8 +135,18 @@ async def _call_llm(system_prompt: str, user_msg: str, session_id: str) -> str:
     except HTTPException:
         raise
     except Exception as e:
-        logger.warning("Legal LLM call failed: %s", e)
-        raise HTTPException(status_code=503, detail="llm_unavailable")
+        from shared.llm import LlmBusy
+        from shared.ops_alerts import record_alert
+        busy = isinstance(e, LlmBusy) or "503" in str(e) or "high demand" in str(e).lower()
+        detail = "llm_busy" if busy else "llm_unavailable"
+        logger.warning("Legal LLM call failed (%s): %s", detail, e)
+        await record_alert(
+            kind="llm_legal",
+            severity="warning" if busy else "error",
+            message=f"HAL Legal: {detail}",
+            meta={"error": str(e)[:300]},
+        )
+        raise HTTPException(status_code=503, detail=detail)
 
 
 # ─── Endpoints ───────────────────────────────────────────────────

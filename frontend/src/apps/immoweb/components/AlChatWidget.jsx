@@ -77,7 +77,7 @@ export default function AlChatWidget() {
         try { detail = (await resp.json())?.detail; } catch { /* noop */ }
         const msg =
           detail === "rate_limit_exceeded" ? t("al.err_rate_limit")
-            : (detail === "llm_budget_exceeded" || detail === "llm_unavailable") ? t("al.err_unavailable")
+            : (detail === "llm_budget_exceeded" || detail === "llm_unavailable" || detail === "llm_busy") ? t("al.err_unavailable")
             : t("al.err_generic");
         updateLast({ content: msg });
         return;
@@ -118,7 +118,7 @@ export default function AlChatWidget() {
               break;
             case "error": {
               const m =
-                evt.detail === "llm_budget_exceeded" || evt.detail === "llm_unavailable"
+                evt.detail === "llm_budget_exceeded" || evt.detail === "llm_unavailable" || evt.detail === "llm_busy"
                   ? t("al.err_unavailable")
                   : t("al.err_generic");
               updateLast({ content: m, thinking: false });

@@ -365,9 +365,18 @@ async def improve_text(req: ImproveRequest, user: dict = Depends(get_current_use
     try:
         text = await chat_client.send_message(UserMessage(text=prompt))
     except Exception as e:
-        logger.warning("Improve LLM call failed: %s", e)
-        # Nessun addebito crediti: errore generico (D-075 AI in-app inclusa)
-        raise HTTPException(status_code=503, detail="llm_unavailable")
+        from shared.llm import LlmBusy
+        from shared.ops_alerts import record_alert
+        busy = isinstance(e, LlmBusy) or "503" in str(e) or "high demand" in str(e).lower()
+        detail = "llm_busy" if busy else "llm_unavailable"
+        logger.warning("Improve LLM call failed (%s): %s", detail, e)
+        await record_alert(
+            kind="llm_improve",
+            severity="warning" if busy else "error",
+            message=f"HAL Improve: {detail}",
+            meta={"error": str(e)[:300]},
+        )
+        raise HTTPException(status_code=503, detail=detail)
 
     cleaned = _sanitize_improve_output(text)
 
@@ -435,8 +444,18 @@ async def chat(req: ChatRequest, user: dict = Depends(get_current_user)):
     try:
         raw_reply = await chat_client.send_message(UserMessage(text=req.message))
     except Exception as e:
-        logger.warning("LLM call failed: %s", e)
-        raise HTTPException(status_code=503, detail="llm_unavailable")
+        from shared.llm import LlmBusy
+        from shared.ops_alerts import record_alert
+        busy = isinstance(e, LlmBusy) or "503" in str(e) or "high demand" in str(e).lower()
+        detail = "llm_busy" if busy else "llm_unavailable"
+        logger.warning("LLM call failed (%s): %s", detail, e)
+        await record_alert(
+            kind="llm_agents",
+            severity="warning" if busy else "error",
+            message=f"HAL Agents: {detail}",
+            meta={"error": str(e)[:300]},
+        )
+        raise HTTPException(status_code=503, detail=detail)
 
     # Detect JSON tool call (manual pattern — no native function calling in lib)
     final_reply = raw_reply
@@ -458,8 +477,13 @@ async def chat(req: ChatRequest, user: dict = Depends(get_current_user)):
                 try:
                     final_reply = await chat_client.send_message(UserMessage(text=follow_up))
                 except Exception as e:
-                    logger.warning("LLM follow-up failed: %s", e)
-                    raise HTTPException(status_code=503, detail="llm_unavailable")
+                    from shared.llm import LlmBusy
+                    from shared.ops_alerts import record_alert
+                    busy = isinstance(e, LlmBusy) or "503" in str(e)
+                    detail = "llm_busy" if busy else "llm_unavailable"
+                    logger.warning("LLM follow-up failed (%s): %s", detail, e)
+                    await record_alert(kind="llm_agents", severity="warning", message=f"HAL Agents follow-up: {detail}")
+                    raise HTTPException(status_code=503, detail=detail)
             except Exception as e:
                 logger.warning("tool %s failed: %s", tool_name, e)
                 final_reply = f"Ho provato a consultare {tool_name} ma ho avuto un problema. Riprova."
@@ -607,8 +631,18 @@ async def chat_stream(req: ChatRequest, user: dict = Depends(get_current_user)):
                 if looks_like_tool is False:
                     yield _sse({"type": "token", "content": piece})
         except Exception as e:
-            logger.warning("Stream phase-1 failed: %s", e)
-            yield _sse({"type": "error", "detail": "llm_unavailable"})
+            from shared.llm import LlmBusy
+            from shared.ops_alerts import record_alert
+            busy = isinstance(e, LlmBusy) or "503" in str(e) or "high demand" in str(e).lower()
+            detail = "llm_busy" if busy else "llm_unavailable"
+            logger.warning("Stream phase-1 failed (%s): %s", detail, e)
+            await record_alert(
+                kind="llm_agents_stream",
+                severity="warning" if busy else "error",
+                message=f"HAL Agents stream: {detail}",
+                meta={"error": str(e)[:300]},
+            )
+            yield _sse({"type": "error", "detail": detail})
             return
 
         raw_reply = "".join(text_buf)

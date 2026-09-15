@@ -397,6 +397,18 @@ async def ops_overview(
             logger.exception("by_day failed %s", coll)
     by_day = [{"day": d, "events": by_day_map[d]} for d in sorted(by_day_map.keys())]
 
+    # Recent operational alerts (AI / Stripe)
+    recent_alerts: List[Dict[str, Any]] = []
+    try:
+        recent_alerts = await db.ops_alerts.find(
+            {},
+            {"_id": 0, "id": 1, "kind": 1, "severity": 1, "message": 1, "created_at": 1, "acked": 1},
+        ).sort("created_at", -1).to_list(20)
+    except Exception:
+        logger.exception("ops_alerts list failed")
+
+    unacked = sum(1 for a in recent_alerts if not a.get("acked"))
+
     return {
         "period_days": days,
         "generated_at": datetime.now(timezone.utc).isoformat(),
@@ -409,6 +421,10 @@ async def ops_overview(
             "in_app_ai": "incluso (HAL CRM, Guida, Legal in agenzia)",
             "credits": "staging, video, API partner, overage, promozioni",
             "b2c": "carta one-shot (valuator UNI, legal portale, …)",
+        },
+        "alerts": {
+            "unacked": unacked,
+            "recent": recent_alerts,
         },
         "totals": {
             "events": total_events,

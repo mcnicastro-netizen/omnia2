@@ -1049,7 +1049,7 @@ Sulla Billing / landing agenzie: bottone **Richiedi demo guidata** che apre Cale
 - Tracking conversione demo → paid
 
 ### Stato
-🟠 **DA APPROFONDIRE** — memorizzato su richiesta Founder («mettila in aspetti da approfondire»). **NON implementare** finché non dice «vai».
+🟡 **PARZIALE (15-Sep-2026)** — CTA «Richiedi demo» live su Billing (mailto fallback). Resta da collegare URL Calendly reale (`DEMO_CALENDAR_URL`) quando Founder lo fornisce.
 
 ### Trigger di ripresa
 - URL calendario pronto

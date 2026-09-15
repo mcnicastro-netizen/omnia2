@@ -1038,8 +1038,9 @@
     "thinking": "Sto consultando il tuo CRM...",
     "err_generic": "Errore. Riprova tra un momento.",
     "err_rate_limit": "Troppi messaggi in poco tempo. Riprova tra qualche minuto.",
-    "err_unavailable": "HAL non risponde adesso. Riprova tra un momento.",
-    "err_budget": "HAL non risponde adesso. Riprova tra un momento."
+    "err_unavailable": "Il servizio AI è momentaneamente saturo. Riprova tra un minuto.",
+    "err_busy": "Il servizio AI è momentaneamente saturo. Riprova tra un minuto.",
+    "err_budget": "Il servizio AI è momentaneamente saturo. Riprova tra un minuto."
   },
   "al_improve": {
     "button": "Migliora con HAL",
@@ -1108,6 +1109,8 @@
     "pdf_scanned": "Il PDF sembra essere scansionato (no testo selezionabile). HAL non può leggerlo senza OCR.",
     "err_generic": "Errore. Riprova tra un momento.",
     "err_rate_limit": "Hai raggiunto il limite di domande all'ora (30). Riprova più tardi.",
+    "err_unavailable": "Il servizio AI è momentaneamente saturo. Riprova tra un minuto.",
+    "err_busy": "Il servizio AI è momentaneamente saturo. Riprova tra un minuto.",
     "cta_notary": "Parla con un notaio",
     "nav_back": "Torna alla dashboard",
     "history_title": "Le tue conversazioni",

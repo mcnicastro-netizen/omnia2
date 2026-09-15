@@ -92,6 +92,39 @@ export default function FounderOpsPage() {
           <div className="text-sm text-red-800 bg-red-50 border border-red-200 rounded p-3">{error}</div>
         ) : null}
 
+        {data?.alerts?.recent?.length ? (
+          <div
+            className={`rounded-lg border px-4 py-3 text-sm ${
+              (data.alerts.unacked || 0) > 0
+                ? "border-amber-300 bg-amber-50 text-amber-950"
+                : "border-stone-200 bg-stone-50 text-stone-700"
+            }`}
+            data-testid="ops-alerts"
+          >
+            <div className="flex items-center justify-between gap-2 mb-2">
+              <p className="font-medium">
+                Allarmi operativi
+                {(data.alerts.unacked || 0) > 0
+                  ? ` · ${data.alerts.unacked} da vedere`
+                  : ""}
+              </p>
+            </div>
+            <ul className="space-y-1.5 text-xs">
+              {data.alerts.recent.slice(0, 8).map((a) => (
+                <li key={a.id} className="flex gap-2">
+                  <span className="uppercase tracking-wider text-[10px] shrink-0 w-14">
+                    {a.severity}
+                  </span>
+                  <span className="flex-1">{a.message}</span>
+                  <span className="text-stone-400 shrink-0">
+                    {(a.created_at || "").slice(0, 16).replace("T", " ")}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ) : null}
+
         {data ? (
           <>
             <div className="rounded-lg border border-emerald-200 bg-emerald-50/60 px-4 py-3 text-sm text-emerald-950 space-y-1">

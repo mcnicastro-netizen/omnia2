@@ -143,7 +143,9 @@ function ChatTab() {
       const d = err?.response?.data?.detail;
       const msg = d === "rate_limit_exceeded"
         ? t("legal.err_rate_limit")
-        : t("legal.err_generic");
+        : (d === "llm_unavailable" || d === "llm_busy")
+          ? t("legal.err_unavailable")
+          : t("legal.err_generic");
       setMessages((m) => [...m, { role: "assistant", content: msg, error: true }]);
     } finally {
       setBusy(false);

@@ -8,13 +8,20 @@ import { toast } from "sonner";
 /**
  * OMNIA — Settings ▸ Billing (M4.S3/S4)
  *
- * Mostra piano attuale + saldo crediti + selettore piano/pacchetto.
- * Se STRIPE_ENABLED=true crea Checkout Session e reindirizza.
+ * D-080: demo guidata prima dell'abbonamento.
+ * CTA primaria = Richiedi demo; checkout solo dopo conferma demo (o piano già attivo).
  */
 export default function BillingPage() {
   const [state, setState] = useState({ loading: true, data: null, sub: null });
   const [billingCycle, setBillingCycle] = useState("monthly");
   const [busy, setBusy] = useState(false);
+  const [demoDone, setDemoDone] = useState(() => {
+    try {
+      return localStorage.getItem("omnia_demo_done") === "1";
+    } catch {
+      return false;
+    }
+  });
   const location = useLocation();
 
   useEffect(() => {
@@ -32,7 +39,6 @@ export default function BillingPage() {
     })();
   }, []);
 
-  // On return from Stripe with session_id — poll status
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     const sessionId = params.get("session_id");
@@ -51,7 +57,7 @@ export default function BillingPage() {
           ]);
           setState((s) => ({ ...s, sub }));
         } else if (data.payment_status === "failed") {
-          toast.error("Pagamento fallito");
+          toast.error("Pagamento fallito — controlla la carta o contattaci.");
         } else {
           setTimeout(poll, 2000);
         }
@@ -63,7 +69,39 @@ export default function BillingPage() {
     return () => { cancel = true; };
   }, [location.search]);
 
+  const openDemo = () => {
+    const cal = (state.data?.demo_calendar_url || "").trim();
+    const email = (state.data?.demo_contact_email || "mcnicastro@gmail.com").trim();
+    if (cal) {
+      window.open(cal, "_blank", "noopener,noreferrer");
+    } else {
+      const subject = encodeURIComponent("Richiesta demo guidata OMNIA");
+      const body = encodeURIComponent(
+        "Ciao Marco,\n\nvorrei prenotare una demo guidata di OMNIA per la mia agenzia.\n\nAgenzia:\nCittà:\nTelefono:\n"
+      );
+      window.location.href = `mailto:${email}?subject=${subject}&body=${body}`;
+    }
+    try {
+      localStorage.setItem("omnia_demo_done", "1");
+    } catch { /* noop */ }
+    setDemoDone(true);
+    toast.success("Perfetto — dopo la demo potrai attivare il piano qui.");
+  };
+
   const checkoutSubscription = async (tier) => {
+    if (!demoDone && !state.sub?.subscription) {
+      const ok = window.confirm(
+        "L'abbonamento si attiva dopo la demo guidata.\n\nHai già fatto la demo con OMNIA?"
+      );
+      if (!ok) {
+        openDemo();
+        return;
+      }
+      try {
+        localStorage.setItem("omnia_demo_done", "1");
+      } catch { /* noop */ }
+      setDemoDone(true);
+    }
     setBusy(true);
     try {
       const { data } = await api.post("/billing/checkout", {
@@ -119,20 +157,39 @@ export default function BillingPage() {
   const wallet = sub?.wallet || { balance: 0 };
   const plans = data?.plans || [];
   const packages = data?.credit_packages || [];
+  const canCheckoutDirect = Boolean(activeSub) || demoDone;
 
   return (
     <AgencyShell current="settings">
       <div className="p-6 md:p-10 max-w-6xl" data-testid="billing-page">
         <h1 className="font-serif text-4xl text-[#0B1E3F] mb-1">Piano & Crediti</h1>
-        <p className="text-stone-500 mb-8 text-sm">
-          Gestisci l'abbonamento della tua agenzia e ricarica il portafoglio crediti per servizi a consumo.
-          L'attivazione avviene dopo una <strong className="font-medium text-stone-600">demo guidata</strong> — niente prova automatica, niente sorprese.
+        <p className="text-stone-500 mb-6 text-sm">
+          Attivazione dopo <strong className="font-medium text-stone-600">demo guidata</strong> —
+          niente prova automatica, niente sorprese.
           {data?.mode === "test" && (
             <span className="ml-2 inline-block px-2 py-0.5 text-xs bg-amber-100 text-amber-800">MODALITÀ TEST</span>
           )}
         </p>
 
-        {/* Current state */}
+        {!activeSub && (
+          <div className="mb-8 border border-[#0F6B5B]/30 bg-[#0F6B5B]/5 p-5 flex flex-col md:flex-row md:items-center gap-4">
+            <div className="flex-1">
+              <div className="text-xs uppercase tracking-widest text-[#0F6B5B] mb-1">Passo 1</div>
+              <div className="font-serif text-xl text-[#0B1E3F]">Richiedi una demo guidata</div>
+              <p className="text-sm text-stone-600 mt-1">
+                Ti mostriamo OMNIA sulla tua agenzia. Poi, se ti convince, attivi il piano da qui.
+              </p>
+            </div>
+            <Button
+              className="bg-[#0F6B5B] hover:bg-[#0B4F42] text-white shrink-0"
+              onClick={openDemo}
+              data-testid="request-demo-btn"
+            >
+              Richiedi demo
+            </Button>
+          </div>
+        )}
+
         <div className="grid md:grid-cols-2 gap-4 mb-10">
           <div className="border border-stone-200 bg-white p-6">
             <div className="text-xs uppercase tracking-widest text-stone-500 mb-1">Piano attuale</div>
@@ -140,7 +197,7 @@ export default function BillingPage() {
               {activeSub ? activeSub.tier?.toUpperCase() : "Nessuno"}
             </div>
             <div className="text-sm text-stone-500 mt-1">
-              {activeSub ? `Status: ${activeSub.status}` : "Attiva un piano per iniziare"}
+              {activeSub ? `Status: ${activeSub.status}` : "Dopo la demo puoi attivare un piano"}
             </div>
             {activeSub && (
               <Button
@@ -160,12 +217,11 @@ export default function BillingPage() {
               {wallet.balance || 0} crediti
             </div>
             <div className="text-sm text-stone-500 mt-1">
-              Consumati per valutatore, HAL, ricerca APE, video, ecc.
+              Consumati per valutatore, staging, video, ecc.
             </div>
           </div>
         </div>
 
-        {/* Plans */}
         <div className="mb-4 flex items-center gap-3">
           <h2 className="font-serif text-2xl text-[#0B1E3F]">Piani abbonamento</h2>
           <div className="ml-auto flex items-center gap-2 text-sm">
@@ -181,7 +237,7 @@ export default function BillingPage() {
             >Annuale <span className="text-[#C69F4C] text-xs ml-1">−1 mese</span></button>
           </div>
         </div>
-        <div className="grid md:grid-cols-4 gap-4 mb-12">
+        <div className="grid md:grid-cols-3 gap-4 mb-12">
           {plans.map((p) => (
             <div key={p.tier} className="border border-stone-200 bg-white p-5 flex flex-col" data-testid={`plan-card-${p.tier}`}>
               <div className="text-xs uppercase tracking-widest text-stone-500">{p.tier}</div>
@@ -202,19 +258,32 @@ export default function BillingPage() {
                     : "Crediti a consumo"}
                 </li>
               </ul>
-              <Button
-                className="mt-5 bg-[#0F6B5B] hover:bg-[#0B4F42] text-white"
-                onClick={() => checkoutSubscription(p.tier)}
-                disabled={busy || activeSub?.tier === p.tier}
-                data-testid={`checkout-${p.tier}-btn`}
-              >
-                {activeSub?.tier === p.tier ? "Piano attivo" : "Attiva"}
-              </Button>
+              {activeSub?.tier === p.tier ? (
+                <Button className="mt-5" disabled data-testid={`checkout-${p.tier}-btn`}>
+                  Piano attivo
+                </Button>
+              ) : canCheckoutDirect ? (
+                <Button
+                  className="mt-5 bg-[#0F6B5B] hover:bg-[#0B4F42] text-white"
+                  onClick={() => checkoutSubscription(p.tier)}
+                  disabled={busy}
+                  data-testid={`checkout-${p.tier}-btn`}
+                >
+                  Attiva
+                </Button>
+              ) : (
+                <Button
+                  className="mt-5 bg-[#0B1E3F] hover:bg-[#16305a] text-white"
+                  onClick={openDemo}
+                  data-testid={`checkout-${p.tier}-btn`}
+                >
+                  Prima la demo
+                </Button>
+              )}
             </div>
           ))}
         </div>
 
-        {/* Credit packages */}
         <h2 className="font-serif text-2xl text-[#0B1E3F] mb-4">Ricarica crediti</h2>
         <div className="grid md:grid-cols-3 gap-4">
           {packages.map((pkg) => (

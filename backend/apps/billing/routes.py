@@ -68,6 +68,8 @@ async def list_plans():
         "credit_costs": CREDIT_COSTS,
         "trial_days": 0,
         "onboarding": "guided_demo",
+        "demo_calendar_url": (os.environ.get("DEMO_CALENDAR_URL") or "").strip(),
+        "demo_contact_email": (os.environ.get("DEMO_CONTACT_EMAIL") or "mcnicastro@gmail.com").strip(),
         "currency": "eur",
         "enabled": _is_enabled(),
         "mode": os.environ.get("STRIPE_MODE", "test"),
@@ -373,6 +375,16 @@ async def stripe_webhook(request: Request):
         event = stripe.Webhook.construct_event(payload, sig, STRIPE_WEBHOOK_SECRET)
     except (ValueError, stripe.error.SignatureVerificationError) as e:
         logger.warning("webhook invalid sig: %s", e)
+        try:
+            from shared.ops_alerts import record_alert
+            await record_alert(
+                kind="stripe_webhook",
+                severity="error",
+                message="Webhook Stripe: firma non valida",
+                meta={"error": str(e)[:200]},
+            )
+        except Exception:
+            pass
         raise HTTPException(status_code=400, detail="invalid_signature")
 
     db = Database.get()
@@ -432,6 +444,16 @@ async def stripe_webhook(request: Request):
                 {"stripe_subscription_id": stripe_sub_id},
                 {"$set": {"status": "past_due", "updated_at": now}},
             )
+        try:
+            from shared.ops_alerts import record_alert
+            await record_alert(
+                kind="stripe_payment",
+                severity="error",
+                message="Pagamento Stripe fallito (invoice.payment_failed)",
+                meta={"subscription": stripe_sub_id or "", "invoice": obj.get("id")},
+            )
+        except Exception:
+            pass
 
     elif etype in ("checkout.session.expired", "checkout.session.async_payment_failed"):
         session_id = obj["id"]

@@ -7,6 +7,7 @@ Default model: gemini-2.0-flash (override via GEMINI_MODEL).
 """
 from __future__ import annotations
 
+import asyncio
 import logging
 import os
 from typing import Any, AsyncIterator, Optional
@@ -24,9 +25,16 @@ _MODEL_FALLBACKS = (
     "gemini-3.1-flash-lite",
 )
 
+# Brief pause before trying the next model on transient overload.
+_RETRY_PAUSE_SEC = 0.9
+
 
 class LlmNotConfigured(RuntimeError):
     pass
+
+
+class LlmBusy(RuntimeError):
+    """All models exhausted due to transient overload (503 / high demand)."""
 
 
 def resolve_api_key(explicit: Optional[str] = None) -> str:
@@ -47,7 +55,6 @@ def resolve_api_key(explicit: Optional[str] = None) -> str:
 def _normalize_model(provider: Optional[str], model: Optional[str]) -> str:
     """Map legacy Emergent model names to Google API model ids."""
     name = (model or DEFAULT_MODEL).strip()
-    # Prefer alias pin that stays available when numbered Flash ids churn.
     aliases = {
         "gemini-3.6-flash": "gemini-3.5-flash",
         "gemini-3.7-flash": "gemini-3.5-flash",
@@ -76,19 +83,32 @@ def _model_candidates(preferred: Optional[str] = None) -> list[str]:
 def _is_retryable_model_error(exc: BaseException) -> bool:
     msg = str(exc).lower()
     code = getattr(exc, "code", None) or getattr(exc, "status_code", None)
-    if code in (404, 503):
+    if code in (404, 429, 503):
         return True
     return any(
         s in msg
         for s in (
             "404",
             "503",
+            "429",
             "not_found",
             "unavailable",
             "high demand",
             "no longer available",
             "is not found",
+            "resource_exhausted",
         )
+    )
+
+
+def _is_busy_error(exc: BaseException) -> bool:
+    msg = str(exc).lower()
+    code = getattr(exc, "code", None) or getattr(exc, "status_code", None)
+    if code in (429, 503):
+        return True
+    return any(
+        s in msg
+        for s in ("503", "429", "high demand", "unavailable", "resource_exhausted")
     )
 
 
@@ -120,7 +140,8 @@ async def generate_text(
         config["system_instruction"] = system
 
     last_err: Optional[BaseException] = None
-    for model_id in _model_candidates(model):
+    candidates = _model_candidates(model)
+    for i, model_id in enumerate(candidates):
         try:
             try:
                 resp = await client.aio.models.generate_content(
@@ -131,7 +152,6 @@ async def generate_text(
             except Exception as aio_err:
                 if _is_retryable_model_error(aio_err):
                     raise aio_err
-                # Fallback sync if aio path fails on older builds
                 logger.warning(
                     "aio generate_content failed on %s (%s); trying sync",
                     model_id,
@@ -146,10 +166,16 @@ async def generate_text(
         except Exception as e:
             last_err = e
             if _is_retryable_model_error(e):
-                logger.warning("LLM model %s unavailable (%s); trying fallback", model_id, e)
+                logger.warning(
+                    "LLM model %s unavailable (%s); trying fallback", model_id, e
+                )
+                if _is_busy_error(e) and i < len(candidates) - 1:
+                    await asyncio.sleep(_RETRY_PAUSE_SEC)
                 continue
             raise
     assert last_err is not None
+    if _is_busy_error(last_err):
+        raise LlmBusy(str(last_err)) from last_err
     raise last_err
 
 
@@ -170,7 +196,8 @@ async def generate_text_stream(
         config["system_instruction"] = system
 
     last_err: Optional[BaseException] = None
-    for model_id in _model_candidates(model):
+    candidates = _model_candidates(model)
+    for i, model_id in enumerate(candidates):
         try:
             stream = await client.aio.models.generate_content_stream(
                 model=model_id,
@@ -190,13 +217,25 @@ async def generate_text_stream(
                     model_id,
                     e,
                 )
+                if _is_busy_error(e) and i < len(candidates) - 1:
+                    await asyncio.sleep(_RETRY_PAUSE_SEC)
                 continue
             break
 
-    # Fallback: single-shot then yield once
     logger.warning("stream unavailable (%s); falling back to single response", last_err)
-    text = await generate_text(
-        prompt=prompt, system=system, model=model, api_key=api_key, temperature=temperature
-    )
+    try:
+        text = await generate_text(
+            prompt=prompt,
+            system=system,
+            model=model,
+            api_key=api_key,
+            temperature=temperature,
+        )
+    except LlmBusy:
+        raise
+    except Exception:
+        if last_err and _is_busy_error(last_err):
+            raise LlmBusy(str(last_err)) from last_err
+        raise
     if text:
         yield text

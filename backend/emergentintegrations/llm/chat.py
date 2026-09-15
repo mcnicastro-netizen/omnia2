@@ -4,7 +4,13 @@ from __future__ import annotations
 
 from typing import Any, AsyncIterator, Optional
 
-from shared.llm import generate_text, generate_text_stream, resolve_api_key, LlmNotConfigured
+from shared.llm import (
+    generate_text,
+    generate_text_stream,
+    resolve_api_key,
+    LlmNotConfigured,
+    LlmBusy,
+)
 
 
 class UserMessage:

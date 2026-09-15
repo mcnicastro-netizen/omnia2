@@ -50,7 +50,7 @@ export default function AlImproveButton({
     } catch (e) {
       const d = e?.response?.data?.detail;
       setError(
-        d === "llm_budget_exceeded" || d === "llm_unavailable"
+        d === "llm_budget_exceeded" || d === "llm_unavailable" || d === "llm_busy"
           ? t("al.err_unavailable")
           : d === "rate_limit_exceeded"
           ? t("al.err_rate_limit")
