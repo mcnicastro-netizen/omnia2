@@ -117,11 +117,25 @@ class YousignProvider(BaseESignProvider):
         """Yousign rejects punctuation like '.' in first/last name."""
         import re
         raw = (value or "").strip()
-        # Keep letters (incl. accents), spaces, hyphen, apostrophe
-        cleaned = re.sub(r"[^\w\s\-']+", "", raw, flags=re.UNICODE)
-        cleaned = re.sub(r"_+", "", cleaned)  # \w keeps underscore — strip it
+        cleaned = "".join(
+            ch for ch in raw
+            if ch.isalpha() or ch in {" ", "-", "'", "’"}
+        )
         cleaned = re.sub(r"\s+", " ", cleaned).strip()
         return (cleaned[:50] if cleaned else fallback)
+
+    @staticmethod
+    def _split_signer_names(signer: Dict[str, str]) -> tuple:
+        first = (signer.get("first_name") or "").strip()
+        last = (signer.get("last_name") or "").strip()
+        full = (signer.get("name") or "").strip()
+        if (not first or not last) and full:
+            parts = [p for p in full.split() if p]
+            if not first and parts:
+                first = parts[0]
+            if not last and len(parts) > 1:
+                last = " ".join(parts[1:])
+        return first, last
 
     async def create_signature_request(
         self,
@@ -184,12 +198,9 @@ class YousignProvider(BaseESignProvider):
 
                 # 3) Add signers + required signature field per signer
                 for idx, s in enumerate(signers):
-                    name = (s.get("name") or "").strip()
-                    parts = [p for p in name.split() if p]
-                    raw_first = s.get("first_name") or (parts[0] if parts else "Firmatario")
-                    raw_last = s.get("last_name") or (" ".join(parts[1:]) if len(parts) > 1 else "Firmatario")
-                    first = self._clean_person_name(str(raw_first), "Firmatario")
-                    last = self._clean_person_name(str(raw_last), "Firmatario")
+                    raw_first, raw_last = self._split_signer_names(s)
+                    first = self._clean_person_name(str(raw_first), "Nome")
+                    last = self._clean_person_name(str(raw_last), "Cognome")
                     signer_body = {
                         "info": {
                             "first_name": first,
@@ -200,14 +211,14 @@ class YousignProvider(BaseESignProvider):
                         "signature_level": "electronic_signature",
                         "signature_authentication_mode": "otp_email",
                         # Yousign v3: origin = top-left of page (A4 ≈ 595×842 pt).
-                        # Place signature block near the bottom, not under the header.
+                        # Signature block bottom-right (margin ~36pt from edges).
                         "fields": [
                             {
                                 "document_id": doc_id,
                                 "type": "signature",
                                 "page": max(1, page_count),
-                                "x": 72,
-                                "y": 720 + (idx * 56),
+                                "x": 360,
+                                "y": 760 + (idx * 56),
                                 "width": 200,
                                 "height": 50,
                             }

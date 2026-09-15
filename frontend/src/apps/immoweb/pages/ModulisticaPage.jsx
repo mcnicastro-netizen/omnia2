@@ -30,7 +30,8 @@ export default function ModulisticaPage() {
   const [propertyId, setPropertyId] = useState(preProperty);
   const [clientId, setClientId] = useState(preClient);
   const [signEmail, setSignEmail] = useState("");
-  const [signName, setSignName] = useState("");
+  const [signFirstName, setSignFirstName] = useState("");
+  const [signLastName, setSignLastName] = useState("");
   const [selectedDoc, setSelectedDoc] = useState(null);
   const [category, setCategory] = useState("all");
 
@@ -109,15 +110,20 @@ export default function ModulisticaPage() {
       toast.error("Inserisci l'email del firmatario");
       return;
     }
+    const first = signFirstName.trim();
+    const last = signLastName.trim();
+    if (!first || !last) {
+      toast.error("Inserisci nome e cognome del firmatario");
+      return;
+    }
     setBusy(true);
     try {
       const { data } = await api.post(`/app/modulistica/documents/${id}/send-sign`, {
         signers: [
           {
-            name: signName || "Firmatario",
-            first_name: (signName || "Firmatario").trim().split(/\s+/)[0],
-            last_name:
-              (signName || "").trim().split(/\s+/).slice(1).join(" ") || "Firmatario",
+            name: `${first} ${last}`,
+            first_name: first,
+            last_name: last,
             email: signEmail.trim(),
             role: "client",
           },
@@ -259,10 +265,21 @@ export default function ModulisticaPage() {
                 <label className="block text-sm space-y-1">
                   <span className="text-stone-600">Nome firmatario</span>
                   <input
-                    data-testid="modulistica-signer-name"
+                    data-testid="modulistica-signer-first"
                     className="w-full border border-stone-300 px-3 py-2 text-sm"
-                    value={signName}
-                    onChange={(e) => setSignName(e.target.value)}
+                    value={signFirstName}
+                    onChange={(e) => setSignFirstName(e.target.value)}
+                    placeholder="Marco"
+                  />
+                </label>
+                <label className="block text-sm space-y-1">
+                  <span className="text-stone-600">Cognome firmatario</span>
+                  <input
+                    data-testid="modulistica-signer-last"
+                    className="w-full border border-stone-300 px-3 py-2 text-sm"
+                    value={signLastName}
+                    onChange={(e) => setSignLastName(e.target.value)}
+                    placeholder="Nicastro"
                   />
                 </label>
                 <label className="block text-sm space-y-1">
