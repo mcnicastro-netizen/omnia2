@@ -720,6 +720,31 @@ async def public_property_contact(pid: str, payload: PropertyContactPayload):
             property_id=pid,
         )
 
+    # 6) A-017 — in-app inbox for listing agent + agency admins
+    try:
+        from shared.notifications.center import (
+            TYPE_LEAD_NEW,
+            notify_users,
+            resolve_lead_recipients,
+        )
+        lead_name = f"{payload.name} {payload.surname or ''}".strip()
+        prop_title = prop.get("title") or "Immobile"
+        recipients = await resolve_lead_recipients(
+            agency_id,
+            (prop_full or {}).get("listing_agent_id"),
+        )
+        await notify_users(
+            recipients,
+            type=TYPE_LEAD_NEW,
+            title=f"Nuovo lead · {prop_title}",
+            body=f"{lead_name} ha contattato l'agenzia da ImmobilCloud.",
+            link="/app/clients",
+            agency_id=agency_id,
+            meta={"lead_id": lead_id, "property_id": pid, "client_id": client_id},
+        )
+    except Exception as e:  # noqa: BLE001
+        logger.warning("in-app lead notification failed: %s", e)
+
     logger.info("B2C contact: lead=%s client=%s property=%s agency=%s notify=%s",
                 lead_id, client_id, pid, agency_id, notify_email or "—")
     return {"ok": True, "lead_id": lead_id, "client_id": client_id}

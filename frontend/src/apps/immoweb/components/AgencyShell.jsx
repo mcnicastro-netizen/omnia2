@@ -7,6 +7,7 @@ import Brand from "../../../shared/components/Brand";
 import OmniaLogo from "../../../shared/components/OmniaLogo";
 import LanguageSwitcher from "../../../shared/components/LanguageSwitcher";
 import AlChatWidget from "./AlChatWidget";
+import NotificationBell from "../../../shared/components/NotificationBell";
 
 /**
  * AgencyShell — shared sidebar+topbar layout for all authenticated ImmoWeb pages.
@@ -258,7 +259,10 @@ export default function AgencyShell({ children, current = "dashboard" }) {
               {agency?.display_name || "—"}
             </p>
           </div>
-          <LanguageSwitcher />
+          <div className="flex items-center gap-2 shrink-0">
+            <NotificationBell />
+            <LanguageSwitcher />
+          </div>
         </header>
 
         {/* Content */}

@@ -410,6 +410,26 @@ async def v1_widget_lead(
             "updated_at": now_iso,
         }
         await db.leads.insert_one(lead_doc)
+        # A-017 — in-app notify agency owner/admins
+        try:
+            from shared.notifications.center import (
+                TYPE_LEAD_NEW,
+                notify_users,
+                resolve_agency_owner_and_admins,
+            )
+            who = body.name or body.email or body.phone or "Contatto widget"
+            recipients = await resolve_agency_owner_and_admins(key["agency_id"])
+            await notify_users(
+                recipients,
+                type=TYPE_LEAD_NEW,
+                title=f"Nuovo lead widget · {body.widget}",
+                body=f"{who} ha inviato un contatto dal widget.",
+                link="/app/clients",
+                agency_id=key["agency_id"],
+                meta={"lead_id": lead_id, "source": lead_doc["source"]},
+            )
+        except Exception as e:  # noqa: BLE001
+            logger.warning("in-app widget lead notification failed: %s", e)
         await charge_and_log(request, status_code=201)
         return {"data": {"id": lead_id, "status": "new"}, "credits_charged": 0}
     except HTTPException as e:

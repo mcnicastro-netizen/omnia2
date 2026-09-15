@@ -2,11 +2,15 @@ import React from "react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import LanguageSwitcher from "../../../shared/components/LanguageSwitcher";
+import NotificationBell from "../../../shared/components/NotificationBell";
+import { useAuth } from "../../../shared/lib/auth";
 
 /* CloudTopNav — B2C-specific nav: Cerca casa · Valutatore · Mutui · Vendi · Area riservata */
 export default function CloudTopNav() {
   const { t, i18n } = useTranslation();
   const lang = (i18n.language || "it").slice(0, 2);
+  const { user } = useAuth();
+  const loggedIn = Boolean(user && user.id);
   return (
     <header className="sticky top-0 z-40 backdrop-blur bg-[#fbf9f5]/95 border-b border-stone-200">
       <div className="flex items-center justify-between px-5 sm:px-8 md:px-12 lg:px-16 py-4 max-w-screen-2xl mx-auto gap-4">
@@ -33,9 +37,10 @@ export default function CloudTopNav() {
           </Link>
         </nav>
         <div className="flex items-center gap-3">
-          <Link to={`/${lang}/cloud/register`} data-testid="cloud-nav-area"
+          {loggedIn && <NotificationBell />}
+          <Link to={loggedIn ? `/${lang}/cloud/account` : `/${lang}/cloud/register`} data-testid="cloud-nav-area"
             className="px-4 py-2 text-xs uppercase tracking-widest bg-[#0B1E3F] text-white rounded hover:bg-[#C19A6B] transition">
-            {t("cloud.nav_area")}
+            {loggedIn ? (t("cloud.nav_account") || "Account") : t("cloud.nav_area")}
           </Link>
           <LanguageSwitcher />
         </div>

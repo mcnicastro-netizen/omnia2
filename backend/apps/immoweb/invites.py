@@ -283,6 +283,34 @@ async def accept_invite(
         },
     )
 
+    # A-017 — notify inviter (and owner fallback) that invite was accepted
+    try:
+        from shared.notifications.center import (
+            TYPE_INVITE_ACCEPTED,
+            create_notification,
+            resolve_agency_owner_and_admins,
+        )
+        accept_name = (payload.name or email or "Nuovo membro").strip()
+        notify_ids = []
+        if invite.get("invited_by"):
+            notify_ids.append(invite["invited_by"])
+        else:
+            notify_ids.extend(await resolve_agency_owner_and_admins(agency_id))
+        for nid in dict.fromkeys(notify_ids):  # unique, preserve order
+            if nid == user_id:
+                continue
+            await create_notification(
+                user_id=nid,
+                type=TYPE_INVITE_ACCEPTED,
+                title="Invito accettato",
+                body=f"{accept_name} ha accettato l'invito ({role}).",
+                link="/app/members",
+                agency_id=agency_id,
+                meta={"invite_id": invite["id"], "accepted_user_id": user_id, "role": role},
+            )
+    except Exception as e:  # noqa: BLE001
+        logger.warning("in-app invite-accepted notification failed: %s", e)
+
     # Auto-login: set auth cookies
     access = create_access_token(user_id, email, user_role)
     refresh = create_refresh_token(user_id)

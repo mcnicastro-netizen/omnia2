@@ -279,14 +279,13 @@ async def run_all_active_saved_searches() -> Dict[str, Any]:
         # Always update last_run_at (even on skip) to avoid stale digests
         # when user later enables email channel.
         from shared.notifications.prefs import user_allows_email
-        should_email = (
-            user
-            and user.get("account_type") == "b2c"
-            and user_allows_email(user, "saved_search_alert")
-        )
+        is_b2c = bool(user and user.get("account_type") == "b2c")
+        should_email = is_b2c and user_allows_email(user, "saved_search_alert")
+        # In-app inbox for B2C even when email channel is off (A-017)
+        should_alert = is_b2c
 
-        # Respect per-search frequency (instant/daily/weekly)
-        if should_email:
+        # Respect per-search frequency (instant/daily/weekly) for both channels
+        if should_alert:
             freq = s.get("frequency") or "instant"
             last = s.get("last_run_at")
             if freq != "instant" and last:
@@ -294,15 +293,17 @@ async def run_all_active_saved_searches() -> Dict[str, Any]:
                     last_dt = datetime.fromisoformat(str(last).replace("Z", "+00:00"))
                     age_h = (datetime.now(timezone.utc) - last_dt).total_seconds() / 3600
                     if freq == "daily" and age_h < 20:
+                        should_alert = False
                         should_email = False
                     elif freq == "weekly" and age_h < 24 * 6:
+                        should_alert = False
                         should_email = False
                 except Exception:
                     pass
 
         flt = _build_mongo_filter(s["filters"], since=s.get("last_run_at"))
         matches: List[dict] = []
-        if should_email:
+        if should_alert:
             matches_cursor = db.properties.find(flt, {
                 "_id": 0, "id": 1, "title": 1, "city": 1, "zone": 1, "price": 1,
                 "rent_monthly": 1, "surface_sqm": 1, "rooms": 1, "operation": 1,
@@ -311,16 +312,33 @@ async def run_all_active_saved_searches() -> Dict[str, Any]:
             matches = await matches_cursor.to_list(length=20)
 
             if matches:
-                await _send_alert_email(
-                    to_email=user["email"],
-                    user_name=user.get("name") or "",
-                    lang=user.get("lang") or "it",
-                    search_name=s["name"],
-                    matches=matches,
-                    frontend_base=frontend_base,
-                )
-                total_emails += 1
                 total_matches += len(matches)
+                if should_email:
+                    await _send_alert_email(
+                        to_email=user["email"],
+                        user_name=user.get("name") or "",
+                        lang=user.get("lang") or "it",
+                        search_name=s["name"],
+                        matches=matches,
+                        frontend_base=frontend_base,
+                    )
+                    total_emails += 1
+                try:
+                    from shared.notifications.center import (
+                        TYPE_SAVED_SEARCH,
+                        create_notification,
+                    )
+                    n = len(matches)
+                    await create_notification(
+                        user_id=s["user_id"],
+                        type=TYPE_SAVED_SEARCH,
+                        title=f"{n} nuovi immobili · {s['name']}",
+                        body="La tua ricerca salvata ha trovato nuovi annunci.",
+                        link="/cloud/account",
+                        meta={"saved_search_id": s["id"], "match_count": n},
+                    )
+                except Exception as e:  # noqa: BLE001
+                    logger.warning("in-app saved-search notification failed: %s", e)
 
         # Always advance last_run_at — guarantees no replay of old matches
         # when user toggles notification channels later.

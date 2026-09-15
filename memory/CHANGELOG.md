@@ -1,5 +1,23 @@
 # OMNIA — Changelog
 
+## 2026-09-15 — ✅ A-017 Notification center in-app
+
+**Tipo**: Feature prodotto — campanella + inbox + badge non letti (Cap. 18 backlog).
+
+### Cosa è cambiato
+- **Backend** `shared/notifications/center.py` + `apps/core/notifications_inbox.py`
+  - `GET /api/notifications`, `GET /unread-count`, `POST /{id}/read`, `POST /read-all`
+  - Collezione Mongo `notifications` + indici `(user_id, created_at)` / `(user_id, read, created_at)`
+- **Emitter**: lead ImmobilCloud contact, lead widget v1, invite accepted, saved-search match (in-app anche senza email)
+- **Frontend** `NotificationBell.jsx` in AgencyShell topbar + CloudTopNav (se autenticato); polling 45s
+- **Test** `tests/test_a017_notifications.py`
+- Docs: `ASPETTI_DA_APPROFONDIRE.md` A-017 ✅ · `NEXT_SESSION.md` aggiornato
+
+### Non in scope v1 (residuale)
+Match on-read, import XML, social, compliance, DNS verify, SSE/WebSocket (resta polling).
+
+---
+
 ## 2026-08-16 — 📖 Cap. 21 · Valutatore immobiliare (Manuale + HAL YAML · post B2C-VAL-01)
 
 **Tipo**: Feature docs — ventunesimo capitolo del manuale operativo, redazione post-merge del codice B2C-VAL-01.

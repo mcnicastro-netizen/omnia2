@@ -120,6 +120,13 @@ async def ensure_indexes() -> None:
     except Exception as e:
         logger.warning(f"lead_score_cache indexes skipped: {e}")
 
+    # A-017 — in-app notification inbox (per-user, newest first)
+    try:
+        await db["notifications"].create_index([("user_id", 1), ("created_at", -1)])
+        await db["notifications"].create_index([("user_id", 1), ("read", 1), ("created_at", -1)])
+    except Exception as e:
+        logger.warning(f"notifications indexes skipped: {e}")
+
     # Cross-tenant collections (no agency_id filter, but indexed by lookup field)
     try:
         await db["users"].create_index([("email", 1)], unique=True)

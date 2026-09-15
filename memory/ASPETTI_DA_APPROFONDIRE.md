@@ -2,7 +2,7 @@
 
 > File di appoggio per **temi strategici/tecnici** che il Founder ha esplicitamente segnalato come "da rivedere più avanti", **senza essere ancora decisioni**. Ogni voce va promossa in `DECISIONS.md` o `ROADMAP.md` quando si decide di procedere.
 
-**Ultimo aggiornamento**: 15-Sep-2026 (+A-025 Demo prodotto da architettare · A-024 chiuso)
+**Ultimo aggiornamento**: 15-Sep-2026 (A-017 Notification center ✅ · +A-025 Demo prodotto da architettare · A-024 chiuso)
 
 > **Backlog qualità prodotto (A-006+)**: voci tracciate durante lo sprint manuale Cap. 1-18. Priorità assegnata da Cursor (P1=alto ROI/costo basso, P3=futuro). Decisione Founder post-manuale — **NON implementare senza "vai" esplicito**.
 
@@ -881,7 +881,12 @@ Nessuna — decisione tecnica autonoma se conveniente.
 **Effort stimato**: L (15-25h) · nuovo router + collezione + UI navbar Bell + polling/SSE per real-time.
 
 ### Stato
-🟡 **P1** — alto valore percepito, elemento cardine di completezza CRM
+✅ **SHIPPED 15-Sep-2026** — slice v1:
+- API `/api/notifications` (list, unread-count, mark-one, mark-all)
+- Collezione Mongo `notifications` + indici
+- Bell UI in AgencyShell (CRM) + CloudTopNav (se loggato)
+- Emitter: lead ImmobilCloud, lead widget v1, invite accepted, saved-search match (B2C in-app anche senza email)
+- Polling 45s (no SSE v1). Match on-read / import XML / social / compliance / DNS → backlog residuale post-A-017
 
 ---
 
@@ -1015,7 +1020,7 @@ Implementazione: TTL index Mongo dove semantica lo consente + job archivio S3 me
 | A-014 | Billing UI + B2C Stripe live | **P1** | L | SPRINT (revenue) | Prossimo sprint |
 | A-015 | Sito Web v2 (Hero, Chi Siamo, ...) | P2 | XL | SPRINT + Founder | Da decidere con Founder |
 | A-016 | Boost tag mutui "banche" | P3 | XS | Cursor gap iter.35 | Raggruppare micro-fix |
-| A-017 | Notification center in-app | **P1** | L (15-25h) | Spark Cap.18 | Post v1.0 lancio |
+| A-017 | Notification center in-app | **P1** ✅ shipped 15-Sep | L | Spark Cap.18 | Bell + API + emitters core |
 | A-018 | Activity feed dashboard | P2 | M-L (8-15h) | Spark Cap.18 | Post-A-017 |
 | A-019 | Frequency-aware saved-search cron | P2 | XS (~30min) | Bug D-051 Cap.18 | Raggruppare micro-fix |
 | A-020 | Internal APScheduler saved-search | P2 | S (~2h) | Spark Cap.18 | Post-A-019 |

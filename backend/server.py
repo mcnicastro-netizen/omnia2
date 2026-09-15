@@ -175,6 +175,9 @@ async def global_health(accept_language: str = Header(None)):
 # Mount sub-apps
 api_router.include_router(auth_router)
 api_router.include_router(core_router)
+# A-017 — in-app notification center (shared B2B + B2C)
+from apps.core.notifications_inbox import router as notifications_inbox_router  # noqa: E402
+api_router.include_router(notifications_inbox_router)
 api_router.include_router(immocloud_router)
 api_router.include_router(immoweb_router)
 api_router.include_router(academy_router)
