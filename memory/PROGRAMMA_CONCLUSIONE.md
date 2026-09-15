@@ -60,7 +60,9 @@ Ciò che rimane è **post-programma**: decisioni commerciali, società, Academy,
 1. Creare repo GitHub privato “OMNIA” (backup fuori Cursor)  
 2. Passaggio Stripe live post-KYC  
 3. Solo dopo decisione societaria: M4/M6  
+4. **A-025 Demo prodotto** (fondamentale GTM) — architettare in sessione dedicata; oggi solo CTA email (A-024)
 
 *(A-024 chiuso: demo via email, niente Calendly — non riprendere.)*  
+*(A-025 aperto: architettura demo self-serve / video / guest — non implementare senza «vai».)*
 
 *Fine conclusione formale scope Sprint 1–4.*

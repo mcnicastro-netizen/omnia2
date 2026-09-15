@@ -265,6 +265,8 @@ Ordine di lettura raccomandato per il prossimo agente:
 **MAI prima di**: avere Resend verificato + banner CTA + landing dedicata `/it/agenzie` + Founding pricing definito.
 **MAI dopo di**: aver bruciato 5.000 cold mail con demo mediocre. La demo è il **prerequisito**, non un asset secondario.
 
+> **Tracking (15-Sep-2026)**: voce dedicata **A-025** in `ASPETTI_DA_APPROFONDIRE.md` (P0, da architettare — Founder ha rinviato esplicitamente). A-024 = solo CTA email, non sostituisce questa demo.
+
 ---
 
 ## 📝 Founder ha richiesto pausa per consulto esterno (25-Giu-2026 notte)

@@ -2,7 +2,7 @@
 
 > File di appoggio per **temi strategici/tecnici** che il Founder ha esplicitamente segnalato come "da rivedere più avanti", **senza essere ancora decisioni**. Ogni voce va promossa in `DECISIONS.md` o `ROADMAP.md` quando si decide di procedere.
 
-**Ultimo aggiornamento**: 15-Sep-2026 (+A-024 CTA demo guidata via email · D-080)
+**Ultimo aggiornamento**: 15-Sep-2026 (+A-025 Demo prodotto da architettare · A-024 chiuso)
 
 > **Backlog qualità prodotto (A-006+)**: voci tracciate durante lo sprint manuale Cap. 1-18. Priorità assegnata da Cursor (P1=alto ROI/costo basso, P3=futuro). Decisione Founder post-manuale — **NON implementare senza "vai" esplicito**.
 
@@ -1023,9 +1023,42 @@ Implementazione: TTL index Mongo dove semantica lo consente + job archivio S3 me
 | A-022 | Retention policy audit collections | P3 | M (~4h) | Spark Cap.18 | Post-primi clienti |
 | A-023 | Toast duration tuning | P3 | XS (~15min) | Spark Cap.18 | Raggruppare micro-fix |
 | A-024 | CTA Richiedi demo via email (D-080) | ✅ | S | Founder 15-Sep-2026 | Chiuso — niente Calendly |
+| A-025 | **Demo prodotto** (cavallo di Troia) | **P0** | XL | Founder 15-Sep-2026 | Architettare in seguito — non self-serve oggi |
 
-**Legenda priorità**: **P1** alta (ROI alto/effort basso o revenue-critical) · P2 media · P3 futuro (validation-gated)
+**Legenda priorità**: **P0** fondamentale pre-acquisition · **P1** alta (ROI alto/effort basso o revenue-critical) · P2 media · P3 futuro (validation-gated)
 **Legenda effort**: XS <30min · S 30min-2h · M 2-6h · L 6-20h · XL >20h
+
+---
+
+## 🔴 A-025 — Demo prodotto OMNIA (cavallo di Troia) — da architettare
+
+**Data inserimento**: 15-Sep-2026  
+**Segnalato da**: Founder (Marco Nicastro)  
+**Priorità**: **P0 / fondamentale** per acquisition — **NON implementare ora**; solo tracciare e approfondire quando si riapre il filone commerciale.
+
+### Contesto
+Confermato in sessione: **non esiste ancora una demo self-serve** per il cliente intenzionato. Oggi c’è solo:
+- CTA **Richiedi demo** via email (A-024 ✅ / D-080)
+- Account seed interno `demo.admin@…` (smoke Founder, non percorso cliente)
+- Policy: demo guidata → poi abbonamento (niente trial self-serve)
+
+### Collegamenti già in repo
+- `DECISIONS.md` → **D-FUTURE-06** Demo Flow Guidato pubblico `/it/demo` (⏳ dormiente)
+- `NEXT_SESSION_TIPS.md` → sezione **«Demo come cavallo di Troia»** (25-Giu-2026): video 3′, wow-moment, KPI, sequenza conversione + scraping legacy
+- `GO_TO_MARKET.md` / `ASPETTI` A-004 landing `/it/agenzie` con widget live
+
+### Cosa andrà deciso in architettura (più avanti)
+1. **Formato**: video 3′ vs `/it/demo` interattivo 60s vs guest credentials time-boxed vs call guidata Founder (o mix)
+2. **Percorso post-wow**: CTA → email (A-024) → onboarding / Stripe
+3. **Dati**: seed realistici, rate-limit, niente dati produzione
+4. **Dipendenze**: landing `/it/agenzie`, Resend warm-up, pricing Founders — allineare a GTM, non bruciare outreach prima
+
+### Stato
+🔴 **DA APPROFONDIRE / DA FARE** — essenziale per go-to-market, **rinviato esplicitamente** dal Founder (15-Sep-2026). Architettare in sessione dedicata.
+
+### Trigger di ripresa
+- Founder dice «architettiamo la demo» / riapre filone commerciale post-M6 o pre-outreach
+- Prima di qualsiasi cold email / 1.000 mail demo
 
 ---
 
