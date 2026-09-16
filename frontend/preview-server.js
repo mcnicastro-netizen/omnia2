@@ -195,6 +195,64 @@ function rewriteSpaHtml(html, req) {
   return out;
 }
 
+function extractSpaAssets(indexHtml) {
+  const assets = [];
+  const re =
+    /<link[^>]+href="(\/static\/[^"]+\.css)"[^>]*>|<script[^>]+src="(\/static\/[^"]+\.js)"[^>]*><\/script>/gi;
+  let m;
+  while ((m = re.exec(indexHtml))) {
+    if (m[1]) assets.push(`<link rel="stylesheet" href="${m[1]}">`);
+    if (m[2]) assets.push(`<script defer src="${m[2]}"></script>`);
+  }
+  return assets.join("\n  ");
+}
+
+/**
+ * Always-on SSR document for ImmobilCloud routes.
+ * Markup is in the first byte of the response — curl/bots see "casa giusta"
+ * without executing JS. SPA bundles still load and React replaces #root.
+ */
+function cloudSsrDocument(req, indexHtml) {
+  const origin = publicOrigin(req);
+  const title = "ImmobilCloud — La casa giusta, senza farsi raccontare storie";
+  const description =
+    "Cerca immobili in Italia. Scout ti dice se l'annuncio è completo, se il prezzo ha senso e cosa chiedere — prima della visita.";
+  const image = `${origin}/cloud/hero.jpg`;
+  const url = `${origin}${req.originalUrl || req.path || "/it/cloud"}`;
+  const assets = extractSpaAssets(indexHtml || "");
+  const inner = cloudRootInnerHtml(origin);
+
+  return `<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>${escapeHtml(title)}</title>
+  <meta name="description" content="${escapeHtml(description)}" />
+  <meta name="robots" content="index, follow" />
+  <link rel="canonical" href="${escapeHtml(url)}" />
+  <link rel="icon" type="image/png" href="/favicon.png" />
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="ImmobilCloud" />
+  <meta property="og:title" content="${escapeHtml(title)}" />
+  <meta property="og:description" content="${escapeHtml(description)}" />
+  <meta property="og:url" content="${escapeHtml(url)}" />
+  <meta property="og:image" content="${escapeHtml(image)}" />
+  <meta property="og:locale" content="it_IT" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="${escapeHtml(title)}" />
+  <meta name="twitter:description" content="${escapeHtml(description)}" />
+  <meta name="twitter:image" content="${escapeHtml(image)}" />
+  <meta name="theme-color" content="#0B1E3F" />
+  ${assets}
+</head>
+<body>
+  <!-- SSR_MARKER casa giusta ImmobilCloud -->
+  <div id="root">${inner}</div>
+</body>
+</html>`;
+}
+
 function apiReachable(cb) {
   const url = new URL(API);
   const req = http.request(
@@ -265,6 +323,45 @@ app.use(
   })
 );
 
+app.get("/ssr-check", (req, res) => {
+  res.setHeader("Cache-Control", "no-store");
+  res.setHeader("Content-Type", "text/plain; charset=utf-8");
+  res.status(200).send("SSR_OK casa giusta ImmobilCloud\n");
+});
+
+function sendCloudSsr(req, res) {
+  res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate");
+  res.setHeader("Connection", "close");
+  res.setHeader("Pragma", "no-cache");
+  const indexPath = path.join(BUILD, "index.html");
+  fs.readFile(indexPath, "utf8", (err, html) => {
+    const doc = cloudSsrDocument(req, err ? "" : html);
+    res.setHeader("Content-Type", "text/html; charset=utf-8");
+    res.setHeader("X-Omnia-Prerender", "ssr-always");
+    res.status(200).send(doc);
+  });
+}
+
+// Register SSR BEFORE static so /it/cloud never falls through to an empty shell.
+[
+  "/",
+  "/it",
+  "/it/",
+  "/en",
+  "/en/",
+  "/es",
+  "/es/",
+  "/it/cloud",
+  "/it/cloud/",
+  "/en/cloud",
+  "/en/cloud/",
+  "/es/cloud",
+  "/es/cloud/",
+  "/cloud",
+  "/cloud/",
+].forEach((p) => app.get(p, sendCloudSsr));
+app.get(/^\/(it|en|es)\/cloud(\/.*)?$/, sendCloudSsr);
+
 app.use(
   express.static(BUILD, {
     index: false,
@@ -273,25 +370,19 @@ app.use(
     setHeaders(res, filePath) {
       res.setHeader("Connection", "close");
       if (filePath.endsWith("index.html")) {
-        res.setHeader("Cache-Control", "no-cache");
+        res.setHeader("Cache-Control", "no-store");
       }
     },
   })
 );
 
 app.get("*", (req, res) => {
-  res.setHeader("Cache-Control", "no-cache");
+  res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate");
   res.setHeader("Connection", "close");
+  res.setHeader("Pragma", "no-cache");
 
-  const wantSnapshot =
-    shouldServeCloudSnapshot(req) &&
-    (isBot(req) || req.query.prerender === "1" || req.query.ssr === "1");
-
-  // Dedicated prerender document for bots / explicit ?prerender=1
-  if (wantSnapshot) {
-    res.setHeader("Content-Type", "text/html; charset=utf-8");
-    res.setHeader("X-Omnia-Prerender", "cloud-snapshot");
-    return res.status(200).send(cloudSnapshotHtml(req));
+  if (shouldServeCloudSnapshot(req)) {
+    return sendCloudSsr(req, res);
   }
 
   const indexPath = path.join(BUILD, "index.html");
@@ -302,13 +393,8 @@ app.get("*", (req, res) => {
         message: "Esegui: cd frontend && REACT_APP_BACKEND_URL= yarn build",
       });
     }
-    // Cloud routes: SPA + pre-filled #root (readable without executing JS)
-    const out = shouldServeCloudSnapshot(req) ? rewriteSpaHtml(html, req) : html;
     res.setHeader("Content-Type", "text/html; charset=utf-8");
-    if (shouldServeCloudSnapshot(req)) {
-      res.setHeader("X-Omnia-Prerender", "root-shell");
-    }
-    res.status(200).send(out);
+    res.status(200).send(html);
   });
 });
 
