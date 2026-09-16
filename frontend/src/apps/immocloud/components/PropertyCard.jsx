@@ -56,7 +56,7 @@ export default function PropertyCard({ p }) {
           <span
             data-testid="scout-hint-badge"
             className="absolute bottom-3 right-3 text-[10px] uppercase tracking-widest bg-white/95 text-[#0B1E3F] px-2 py-1 rounded border border-stone-200"
-            title="Scout HAL — completezza annuncio"
+            title="Scout — quanto è chiaro l'annuncio"
           >
             Scout {p.scout_hint.grade}
           </span>

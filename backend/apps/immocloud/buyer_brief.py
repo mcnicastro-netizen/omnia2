@@ -325,8 +325,8 @@ def build_brief(p: Dict[str, Any], *, insight: Optional[str] = None) -> Dict[str
         "next_steps": next_steps(p),
         "insight": insight or deterministic_insight(p, vs, comp["score"]),
         "disclaimer_it": (
-            "Scout HAL è uno strumento informativo basato sui dati dell'annuncio e sui "
-            "benchmark di zona ImmobilCloud. Non è una perizia né consulenza legale."
+            "Scout legge i dati dell'annuncio e i prezzi di zona ImmobilCloud. "
+            "Non sostituisce una perizia né un parere legale."
         ),
     }
 

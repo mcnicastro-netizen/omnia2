@@ -35,7 +35,7 @@
   },
   "immocloud": {
     "title": "ImmobilCloud",
-    "tagline": "Trova la casa dei tuoi sogni"
+    "tagline": "La casa giusta, senza farsi raccontare storie."
   },
   "immoweb": {
     "title": "ImmoWeb",
@@ -749,7 +749,7 @@
     "ai_excerpt": "Originale"
   },
   "cloud": {
-    "hero_subtitle": "Migliaia di immobili in vendita e affitto in Italia. Cerca, confronta, contatta — gratis, senza barriere.",
+    "hero_subtitle": "Cerca. Guarda. Lascia che Scout ti sussurri cosa chiedere — prima della visita.",
     "search_placeholder": "Città (es. Roma, Milano, Firenze...)",
     "search_btn": "Cerca",
     "op_sale": "In vendita",
