@@ -1,7 +1,7 @@
 # Prossima sessione — programma passi
 
-**Aggiornato**: 16 Settembre 2026 — `/clients/smart` OK @10k post-fix  
-**Stato base**: Sprint 1→4 **CONCLUSO**. Stress: `memory/STRESS_REPORT.md`.
+**Aggiornato**: 16 Settembre 2026 — gap ImmobilCloud chiusi + platform stress  
+**Stato base**: Sprint 1→4 **CONCLUSO**. Stress: `PLATFORM_STRESS_REPORT.md` + `STRESS_REPORT.md`.
 
 ---
 
@@ -19,9 +19,9 @@
 | Area | Stato |
 |------|:-----:|
 | Sprint 1→4 | ✅ |
-| D-084 sync manuale | ✅ |
-| Stress CRM clienti → 10k | ✅ |
-| Bottleneck `/clients/smart` | ✅ fix + ri-misura (~360ms / p95 ~84ms) |
+| `/clients/smart` @10k | ✅ |
+| Gap ImmobilCloud (ricerca/MLS/preferiti/privacy/A-B/video/alert) | ✅ |
+| Platform stress (portal+CRM+security+payments+API) | ✅ report |
 | Demo A-025 | ❌ |
 | Stripe live | ⏸️ post-Vercel |
 
@@ -32,7 +32,7 @@
 | # | Cosa | Note |
 |:-:|------|------|
 | 1 | **A-025** demo prodotto | GTM |
-| 2 | Ladder agenzie MLS 5k/10k | `load_ladder_mls.py` |
+| 2 | Ladder agenzie MLS 5k/10k | opzionale |
 | — | A-014 Stripe live | solo post-Vercel |
 
-Report: `memory/STRESS_REPORT.md` · JSON: `memory/reports/stress_clients_latest.json`
+Report: `memory/PLATFORM_STRESS_REPORT.md` · `memory/STRESS_REPORT.md`

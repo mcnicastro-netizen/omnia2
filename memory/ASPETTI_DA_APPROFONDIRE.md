@@ -919,11 +919,10 @@ Nessuna — decisione tecnica autonoma se conveniente.
 
 ---
 
-## 🟡 A-019 — Frequency-aware saved-search cron (rispetta instant/daily/weekly)
+## ✅ A-019 — Frequency-aware saved-search cron (rispetta instant/daily/weekly)
 
-**Data inserimento**: Feb 2026 (bug D-051 documentato Cap. 18 § 18.8)
-**Segnalato da**: Cursor (bug funzionale trovato in `saved_searches.py:271`)
-**Contesto**: la collezione `saved_searches` salva `frequency: instant|daily|weekly` MA il cron `run_all_active_saved_searches()` IGNORA il valore e processa TUTTE le active ricerche ad ogni chiamata. Documentato onestamente in Cap. 18.
+**Data inserimento**: Feb 2026 (bug D-051 documentato Cap. 18 § 18.8)  
+**Chiuso**: 16-Sep-2026 — `run_all_active_saved_searches` rispetta frequency e **non** avanza `last_run_at` sullo skip.
 
 **Idea**: filtrare il cron per rispettare la frequenza:
 - `instant`: processa sempre
@@ -937,11 +936,10 @@ Nessuna — decisione tecnica autonoma se conveniente.
 
 ---
 
-## 🟡 A-020 — Internal APScheduler per saved-search cron (no dipendenza esterna)
+## ✅ A-020 — Internal APScheduler per saved-search cron (no dipendenza esterna)
 
-**Data inserimento**: Feb 2026 (Spark Cap. 18 § 18.9)
-**Segnalato da**: Cursor (redazione Cap. 18)
-**Contesto**: `apps/immoweb/cron.py` espone `POST /api/app/cron/saved-searches/run-all` (super_admin only) ma nessuno scheduler interno lo chiama. C'è già un APScheduler attivo per publishing sync (06:00 UTC) — si può estendere.
+**Data inserimento**: Feb 2026 (Spark Cap. 18 § 18.9)  
+**Chiuso**: 16-Sep-2026 — job orario `:15 UTC` in `sync_engine.start_scheduler` → `run_all_active_saved_searches`.
 
 **Idea**: aggiungere un job APScheduler dedicato a saved-search che parte 3× al giorno (es. 08:00, 14:00, 20:00 UTC) e chiama `run_all_active_saved_searches()`. Prerequisito: implementare A-019 (frequency-aware) per non spammare i daily/weekly.
 
@@ -1026,8 +1024,8 @@ Implementazione: TTL index Mongo dove semantica lo consente + job archivio S3 me
 | A-016 | Boost tag mutui "banche" | P3 | XS | Cursor gap iter.35 | Raggruppare micro-fix |
 | A-017 | Notification center in-app | **P1** ✅ shipped 15-Sep | L | Spark Cap.18 | Bell + API + emitters core |
 | A-018 | Activity feed dashboard | P2 | M-L (8-15h) | Spark Cap.18 | Post-A-017 |
-| A-019 | Frequency-aware saved-search cron | P2 | XS (~30min) | Bug D-051 Cap.18 | Raggruppare micro-fix |
-| A-020 | Internal APScheduler saved-search | P2 | S (~2h) | Spark Cap.18 | Post-A-019 |
+| A-019 | Frequency-aware saved-search cron | ✅ | XS | Bug D-051 Cap.18 | Chiuso 16-Sep-2026 |
+| A-020 | Internal APScheduler saved-search | ✅ | S | Spark Cap.18 | Chiuso 16-Sep-2026 |
 | A-021 | UI notification preferences | ✅ | M | Spark Cap.18 | Fatto 15-Sep-2026 |
 | A-022 | Retention policy audit collections | P3 | M (~4h) | Spark Cap.18 | Post-primi clienti |
 | A-023 | Toast duration tuning | P3 | XS (~15min) | Spark Cap.18 | Raggruppare micro-fix |
