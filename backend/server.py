@@ -87,6 +87,12 @@ async def lifespan(app: FastAPI):
         logger.info("Object Storage initialized")
     except Exception as e:
         logger.warning("Object Storage init failed (uploads will retry lazily): %s", e)
+    # Error monitoring (Sentry / webhook) — fail-soft
+    try:
+        from shared.monitoring.alerts import init_monitoring
+        init_monitoring()
+    except Exception as e:
+        logger.warning("monitoring init failed: %s", e)
     logger.info("OMNIA backend ready.")
     yield
     # Shutdown
@@ -253,6 +259,16 @@ app.include_router(api_router)
 async def global_error_handler(request: Request, exc: Exception):
     lang = normalize_lang(request.headers.get("accept-language"))
     logger.exception("Unhandled exception")
+    try:
+        from shared.monitoring.alerts import notify_error
+        await notify_error(
+            title="unhandled_exception",
+            detail=str(exc)[:500],
+            path=str(request.url.path),
+            exc=exc,
+        )
+    except Exception:
+        pass
     return JSONResponse(
         status_code=500,
         content={"detail": t("error.server", lang=lang)},

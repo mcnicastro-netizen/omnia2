@@ -143,3 +143,7 @@ watchfiles==1.2.0
 websockets==16.0
 yarl==1.24.2
 zipp==4.1.0
+
+sentry-sdk==2.22.0
+pyotp==2.9.0
+qrcode==8.2

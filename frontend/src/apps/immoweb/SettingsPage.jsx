@@ -4,6 +4,7 @@ import AgencyShell from "./components/AgencyShell";
 import { api } from "../../shared/lib/api";
 import { formatApiErrorDetail } from "../../shared/lib/auth";
 import NotificationPreferencesPanel from "../../shared/components/NotificationPreferencesPanel";
+import SecuritySettingsPanel from "../../shared/components/SecuritySettingsPanel";
 
 export default function SettingsPage() {
   const { t } = useTranslation();
@@ -325,6 +326,8 @@ export default function SettingsPage() {
           </p>
           <NotificationPreferencesPanel showSavedSearchFreq={false} />
         </section>
+
+        <SecuritySettingsPanel variant="crm" />
       </section>
 
       <style>{`

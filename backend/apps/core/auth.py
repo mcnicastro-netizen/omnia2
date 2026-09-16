@@ -32,14 +32,18 @@ from shared.models.user import (
     ForgotPasswordRequest,
     ResetPasswordRequest,
 )
+from shared.models.base import OmniaBaseModel
 from shared.email import send_email
+from pydantic import Field
 
 # Google Sign-In (optional — enabled when GOOGLE_CLIENT_ID is set)
 from apps.core.google_auth import router as google_auth_router
+from apps.core.mfa_routes import router as mfa_router
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/auth", tags=["auth"])
 router.include_router(google_auth_router)
+router.include_router(mfa_router)
 
 ACCESS_COOKIE_MAX_AGE = ACCESS_TOKEN_MINUTES * 60
 REFRESH_COOKIE_MAX_AGE = REFRESH_TOKEN_DAYS * 24 * 3600
@@ -88,6 +92,7 @@ def _public(user: dict) -> dict:
         "email_verified": bool(user.get("email_verified")),
         "phone": user.get("phone"),
         "group_id": user.get("group_id"),
+        "mfa_enabled": bool(user.get("mfa_enabled")),
         "created_at": user["created_at"],
         "updated_at": user["updated_at"],
     }
@@ -179,6 +184,16 @@ async def login(req: LoginRequest, request: Request, response: Response,
         raise HTTPException(status_code=403, detail=t("auth.account_disabled", lang=lang))
 
     await clear_attempts(email, ip)
+
+    # MFA gate — do not set session cookies until TOTP verified
+    if user.get("mfa_enabled"):
+        from apps.core.mfa_routes import create_mfa_challenge_token
+        return {
+            "mfa_required": True,
+            "mfa_token": create_mfa_challenge_token(user["id"], email),
+            "email": email,
+        }
+
     _refresh_tok = _set_auth_cookies(response, user["id"], email, user["role"])
     await store_refresh(_refresh_tok)
     return _public(user)
@@ -189,6 +204,37 @@ async def login(req: LoginRequest, request: Request, response: Response,
 @router.get("/me")
 async def me(user: dict = Depends(get_current_user)):
     return _public(user)
+
+
+class EraseAccountBody(OmniaBaseModel):
+    password: Optional[str] = None
+    confirm: str = Field(min_length=6, max_length=32)
+
+
+@router.post("/me/erase")
+async def erase_my_account(
+    body: EraseAccountBody,
+    request: Request,
+    response: Response,
+    user: dict = Depends(get_current_user),
+):
+    """GDPR art. 17 — cancel my account and personal data."""
+    if (body.confirm or "").strip().upper() != "DELETE":
+        raise HTTPException(status_code=400, detail="confirm_must_be_DELETE")
+
+    db = Database.get()
+    full = await db.users.find_one({"id": user["id"]}) or user
+    pw_hash = full.get("password_hash") or ""
+    is_oauth = pw_hash.startswith("!oauth:") or pw_hash.startswith("!erased:")
+    if not is_oauth:
+        if not body.password or not verify_password(body.password, pw_hash):
+            raise HTTPException(status_code=401, detail="invalid_password")
+
+    from shared.privacy.erasure import erase_user_data
+    report = await erase_user_data(full)
+    await revoke_refresh(request.cookies.get("refresh_token"))
+    _clear_auth_cookies(response)
+    return {"status": "erased", "report": report}
 
 
 @router.get("/me/notification-preferences")

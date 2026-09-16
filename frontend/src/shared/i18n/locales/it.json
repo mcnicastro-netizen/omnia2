@@ -88,7 +88,14 @@
     "acct_student": "Studente Academy",
     "acct_agency_hint": "Dopo la registrazione completerai l'onboarding della tua agenzia: solo allora otterrai i permessi da amministratore.",
     "continue_google": "Continua con Google",
-    "use_google": "Questo account usa Google. Clicca «Continua con Google»."
+    "use_google": "Questo account usa Google. Clicca «Continua con Google».",
+    "mfa_eyebrow": "Sicurezza",
+    "mfa_title": "Codice di verifica",
+    "mfa_hint": "Apri l'app Authenticator e inserisci il codice a 6 cifre (oppure un codice di recupero).",
+    "mfa_code": "Codice MFA",
+    "mfa_cta": "Verifica e accedi",
+    "mfa_back": "Torna al login",
+    "mfa_invalid": "Codice non valido o scaduto."
   },
   "domain_vault": {
     "badge": "Il tuo dominio resta tuo",

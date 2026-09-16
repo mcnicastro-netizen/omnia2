@@ -1,5 +1,16 @@
 # OMNIA — Changelog
 
+## 2026-09-16 — MFA + cancellazione dati + allarmi errori
+
+**Tipo**: Security go-live.
+
+- **MFA TOTP**: setup QR, enable/disable, backup codes; gate su login password e Google
+- **GDPR erase**: `POST /auth/me/erase` (conferma `DELETE` + password) — wipe preferiti/ricerche/sessioni, anonimizza user
+- **UI**: pannello Sicurezza in CRM Settings + Account ImmobilCloud; step MFA in Login
+- **Allarmi**: Sentry opzionale (`SENTRY_DSN`) + webhook Slack/Discord + email Founder; hook su exception 500
+- Checklist A5/E4/I7 → ✅
+
+---
 ## 2026-09-16 — Hardening sicurezza + anti-crash + anti-scrape
 
 **Tipo**: Security / resilience.

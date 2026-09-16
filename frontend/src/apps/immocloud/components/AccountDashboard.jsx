@@ -12,6 +12,7 @@ import { useTranslation } from "react-i18next";
 import { api } from "../../../shared/lib/api";
 import { useAuth, formatApiErrorDetail } from "../../../shared/lib/auth";
 import NotificationPreferencesPanel from "../../../shared/components/NotificationPreferencesPanel";
+import SecuritySettingsPanel from "../../../shared/components/SecuritySettingsPanel";
 
 const FREQ_OPTIONS = [
   { v: "instant", k: "cloud.account.freq_instant" },
@@ -210,6 +211,10 @@ export default function AccountDashboard() {
         </p>
         <NotificationPreferencesPanel showSavedSearchFreq />
       </section>
+
+      <div className="mt-10">
+        <SecuritySettingsPanel variant="cloud" />
+      </div>
     </div>
   );
 }

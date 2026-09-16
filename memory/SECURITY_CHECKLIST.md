@@ -15,7 +15,7 @@ Legenda stato: ✅ fatto · 🟡 parziale · ❌ da fare · ⏸️ deferred (pos
 | A2 | Brute-force login (5/15min) | ✅ | `brute_force.py` |
 | A3 | Password bcrypt, min 8 | ✅ | |
 | A4 | Ruoli + no self-promote admin | ✅ | |
-| A5 | MFA / 2FA | ❌ | backlog pre-live enterprise |
+| A5 | MFA / 2FA | ✅ | TOTP + backup codes; login/Google gate |
 | A6 | CSRF esplicito se SameSite=none | 🟡 | SameSite + CORS; token CSRF deferred |
 | A7 | Logout invalida refresh | ✅ | |
 
@@ -61,7 +61,7 @@ Legenda stato: ✅ fatto · 🟡 parziale · ❌ da fare · ⏸️ deferred (pos
 | E1 | Privacy L1–L4 listings | ✅ | |
 | E2 | GDPR hard su contact / register | ✅ | |
 | E3 | GDPR hard su lead mutui | ✅ | |
-| E4 | DSAR / erasure self-service | ❌ | processo email |
+| E4 | DSAR / erasure self-service | ✅ | `POST /auth/me/erase` + UI Settings/Account |
 | E5 | Consent log audit | 🟡 | flag su lead |
 
 ## F · Pagamenti
@@ -104,7 +104,7 @@ Legenda stato: ✅ fatto · 🟡 parziale · ❌ da fare · ⏸️ deferred (pos
 | I4 | `JWT_SECRET` forte e unico | ⏸️ |
 | I5 | Mongo Atlas network allowlist | ⏸️ |
 | I6 | Backup Mongo schedulati | ⏸️ |
-| I7 | Monitoraggio 5xx / 429 (Sentry o equiv.) | ❌ |
+| I7 | Monitoraggio 5xx / 429 (Sentry o equiv.) | ✅ | Sentry DSN + webhook/email fallback |
 | I8 | Rotate API keys procedure | 🟡 | manuale |
 
 ---
@@ -122,8 +122,7 @@ OMNIA_ENV=production  # docs/openapi disabilitati
 
 ## Priorità residua pre-live
 
-1. MFA (A5)  
-2. DSAR/erasure API (E4)  
-3. Monitoraggio errori (I7)  
-4. CSRF token se cookie SameSite=none in prod (A6)  
-5. Mongo tenant middleware (B2) — difesa in profondità  
+1. CSRF token se cookie SameSite=none in prod (A6)  
+2. Mongo tenant middleware (B2) — difesa in profondità  
+3. Config Founder: `SENTRY_DSN` / `ERROR_ALERT_WEBHOOK` / `ERROR_ALERT_EMAIL` in prod  
+4. Stripe live post-Vercel 

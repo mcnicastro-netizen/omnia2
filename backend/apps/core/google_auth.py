@@ -161,6 +161,17 @@ async def google_login(
             await db.users.update_one({"id": user["id"]}, {"$set": patch})
             user = {**user, **patch}
 
+    # MFA gate for Google sign-in (existing users with MFA)
+    if user.get("mfa_enabled"):
+        from apps.core.mfa_routes import create_mfa_challenge_token
+        return {
+            "mfa_required": True,
+            "mfa_token": create_mfa_challenge_token(user["id"], email),
+            "email": email,
+            "google_linked": True,
+            "created": created,
+        }
+
     refresh = _set_auth_cookies(response, user["id"], email, user["role"])
     await store_refresh(refresh)
     out = _public(user)

@@ -88,7 +88,14 @@
     "acct_student": "Academy student",
     "acct_agency_hint": "After signing up you'll complete your agency onboarding: only then will you get admin permissions.",
     "continue_google": "Continue with Google",
-    "use_google": "This account uses Google. Click «Continue with Google»."
+    "use_google": "This account uses Google. Click «Continue with Google».",
+    "mfa_eyebrow": "Security",
+    "mfa_title": "Verification code",
+    "mfa_hint": "Open your Authenticator app and enter the 6-digit code (or a recovery code).",
+    "mfa_code": "MFA code",
+    "mfa_cta": "Verify and sign in",
+    "mfa_back": "Back to login",
+    "mfa_invalid": "Invalid or expired code."
   },
   "domain_vault": {
     "badge": "Your domain stays yours",
