@@ -68,6 +68,7 @@ Se una feature non rafforza questa frase, non è priorità B2C.
 |:----:|-------------|------------------|
 | **A** | Scout depth + fiducia | Fascia prezzo + perché + confidenza/limiti; lacune; domande; UI leggibile |
 | **B** | Home B2C allineata al nord | Hero/claim = decisione pre-visita; moduli secondari non competono col messaggio |
+| **B′** | Roll-out layout/grafica altre pagine | **Domani**: ricerca, scheda, account, valuta, mutui, vendi — stesso linguaggio della home |
 | **C** | Scout “visita” (thin) | 5–10 check visita + 4–6 documenti *nello stesso pannello* |
 | **D** | Intake annuncio esterno (opz.) | Solo se A–C ok e Founder conferma scope legale |
 
