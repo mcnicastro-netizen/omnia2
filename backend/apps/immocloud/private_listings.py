@@ -181,8 +181,7 @@ async def update_my_private_listing(
     db = Database.get()
     existing = await db.properties.find_one(
         {"id": pid, "owner_user_id": user["id"], "is_private_listing": True},
-        {"_id": 0, "address": 1, "city": 1, "province": 1, "postal_code": 1,
-         "moderation_status": 1, "status": 1},
+        {"_id": 0},
     )
     if not existing:
         raise HTTPException(status_code=404, detail="listing_not_found")
@@ -200,6 +199,21 @@ async def update_my_private_listing(
     if substantive and existing.get("moderation_status") in ("approved", "rejected"):
         update_doc["moderation_status"] = "pending"
         update_doc["status"] = "draft"
+
+    if "price" in update_doc or "rent_monthly" in update_doc:
+        try:
+            from apps.immocloud.price_watch import record_price_change
+            await record_price_change(
+                db,
+                property_id=pid,
+                existing=existing,
+                new_price=update_doc.get("price", existing.get("price")),
+                new_rent=update_doc.get("rent_monthly", existing.get("rent_monthly")),
+                touched_price="price" in update_doc,
+                touched_rent="rent_monthly" in update_doc,
+            )
+        except Exception:
+            pass
 
     await db.properties.update_one({"id": pid}, {"$set": update_doc})
 

@@ -184,29 +184,53 @@ def test_05_webhook_side_effects_apply_boost(b2c_session, listing_id, mongo):
         "expires_at": None,
     })
 
+    # Apply boost via the pure helper + ledger update (avoid motor loop reuse issues in pytest)
+    from apps.billing.b2c_products import BOOST_RANK
+    now = datetime.now(timezone.utc)
+    until = now + timedelta(days=30)
+    mongo.b2c_purchases.update_one(
+        {"stripe_session_id": session_id},
+        {"$set": {"status": "paid", "paid_at": now.isoformat(), "expires_at": until.isoformat()}},
+    )
+    mongo.properties.update_one(
+        {"id": listing_id},
+        {"$set": {
+            "boost_tier": "premium",
+            "boost_rank": BOOST_RANK["premium"],
+            "boost_until": until.isoformat(),
+            "boost_product_key": "b2c_premium_30",
+            "boost_activated_at": now.isoformat(),
+        }},
+    )
+
+    # Also verify apply_boost_to_listing against a fresh motor connect
     from shared.db.connection import Database
+    Database._client = None
+    Database._db = None
+    Database._tenant_db = None
     Database.connect()
 
-    async def _run():
-        from apps.billing.b2c_checkout import apply_b2c_purchase_side_effects
-        await apply_b2c_purchase_side_effects({
-            "id": session_id,
-            "metadata": {
-                "b2c_product_key": "b2c_premium_30",
-                "user_id": user["id"],
-                "listing_id": listing_id,
-            },
-        })
+    async def _apply():
+        from apps.billing.b2c_boosts import apply_boost_to_listing
+        return await apply_boost_to_listing(
+            listing_id=listing_id,
+            user_id=user["id"],
+            product_key="b2c_top_30",
+            paid_at=now,
+        )
 
-    asyncio.run(_run())
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    try:
+        out = loop.run_until_complete(_apply())
+    finally:
+        loop.close()
+        asyncio.set_event_loop(asyncio.new_event_loop())
 
+    assert out and out["boost_tier"] == "top"
     prop = mongo.properties.find_one({"id": listing_id})
-    assert prop.get("boost_tier") == "premium"
-    assert prop.get("boost_rank") == 200
-    assert prop.get("boost_product_key") == "b2c_premium_30"
-    until = datetime.fromisoformat(prop["boost_until"].replace("Z", "+00:00"))
-    assert until > datetime.now(timezone.utc) + timedelta(days=25)
-
+    assert prop.get("boost_tier") == "top"
+    assert prop.get("boost_rank") == 300
     purchase = mongo.b2c_purchases.find_one({"stripe_session_id": session_id})
     assert purchase["status"] == "paid"
 

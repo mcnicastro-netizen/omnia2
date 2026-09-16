@@ -553,7 +553,6 @@ async def public_facets(
 # ============================================================
 
 @router.get("/property/{pid}")
-@router.get("/property/{pid}")
 async def public_property_detail(pid: str, request: Request):
     db = Database.get()
     p = await db.properties.find_one(

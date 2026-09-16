@@ -4,70 +4,25 @@ import { useTranslation } from "react-i18next";
 import { api } from "../../../shared/lib/api";
 import PropertyCard from "../components/PropertyCard";
 
-// Unsplash hero image: warm italian villa interior, free license
-const HERO_IMG = "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=1200&q=70&auto=format&fit=crop";
-
-function MlsNetworkBox({ lang }) {
-  const [claim, setClaim] = useState("Network OMNIA MLS");
-  const [province, setProvince] = useState("CT");
-  const [operation, setOp] = useState("sale");
-  const nav = useNavigate();
-
-  useEffect(() => {
-    api
-      .get("/app/mls/search/public?limit=1")
-      .then((r) => setClaim(r.data.claim || claim))
-      .catch(() => {});
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  const go = (e) => {
-    e.preventDefault();
-    const q = new URLSearchParams({ operation, province });
-    nav(`/${lang}/cloud/search?${q.toString()}&mls=1`);
-  };
-
-  return (
-    <div className="rounded-2xl border border-emerald-800/20 bg-emerald-900 text-white p-5 flex flex-col justify-between min-h-[200px]">
-      <div>
-        <p className="text-[10px] uppercase tracking-[0.25em] text-emerald-100/70 mb-2">OMNIA MLS</p>
-        <h2 className="text-xl font-light" style={{ fontFamily: "'Fraunces', Georgia, serif" }}>
-          {claim}
-        </h2>
-        <p className="text-sm text-emerald-50/80 mt-2">Cerca nel network multi-agenzia.</p>
-      </div>
-      <form onSubmit={go} className="mt-4 grid grid-cols-2 gap-2">
-        <select
-          className="rounded-lg bg-emerald-950/40 border border-white/20 px-3 py-2 text-sm"
-          value={operation}
-          onChange={(e) => setOp(e.target.value)}
-        >
-          <option value="sale">Vendita</option>
-          <option value="rent">Affitto</option>
-        </select>
-        <input
-          className="rounded-lg bg-emerald-950/40 border border-white/20 px-3 py-2 text-sm"
-          value={province}
-          onChange={(e) => setProvince(e.target.value.toUpperCase().slice(0, 2))}
-          placeholder="Provincia"
-          maxLength={2}
-        />
-        <button type="submit" className="col-span-2 bg-white text-emerald-950 rounded-lg py-2.5 text-sm font-medium hover:bg-emerald-100">
-          Avvia la ricerca network
-        </button>
-      </form>
-      <p className="text-[10px] tracking-wide text-emerald-100/50 mt-3">POWERED BY OMNIA</p>
-    </div>
-  );
-}
+const PROPERTY_TYPES = [
+  { v: "", label: "Qualsiasi" },
+  { v: "appartamento", label: "Appartamento" },
+  { v: "villa", label: "Villa / indipendente" },
+  { v: "attico", label: "Attico" },
+  { v: "loft", label: "Loft" },
+  { v: "monolocale", label: "Monolocale" },
+];
 
 export default function CloudHomePage() {
   const { t, i18n } = useTranslation();
   const lang = (i18n.language || "it").slice(0, 2);
   const [facets, setFacets] = useState(null);
   const [featured, setFeatured] = useState([]);
+  const [pulse, setPulse] = useState(null);
   const [operation, setOperation] = useState("sale");
   const [city, setCity] = useState("");
+  const [ptype, setPtype] = useState("");
+  const [priceMax, setPriceMax] = useState("");
   const nav = useNavigate();
 
   useEffect(() => {
@@ -76,130 +31,205 @@ export default function CloudHomePage() {
       .then((r) => setFeatured(r.data.items || [])).catch(() => {});
   }, [operation]);
 
+  useEffect(() => {
+    const q = new URLSearchParams({ operation, days: "7" });
+    if (city) q.set("city", city);
+    api.get(`/cloud/pulse?${q}`)
+      .then((r) => setPulse(r.data))
+      .catch(() => setPulse(null));
+  }, [operation, city]);
+
   const submit = (e) => {
     e?.preventDefault?.();
     const params = new URLSearchParams();
     params.set("operation", operation);
     if (city) params.set("city", city);
+    if (ptype) params.set("property_type", ptype);
+    if (priceMax) params.set("price_max", priceMax);
     nav(`search?${params.toString()}`);
   };
 
   return (
     <>
-      {/* ───────── Hero split-layout ───────── */}
-      <section className="px-5 sm:px-8 md:px-16 py-10 md:py-16" data-testid="cloud-hero">
-        <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-[1.1fr_1fr] gap-8 lg:gap-12 items-center">
-          <div>
-            <p className="text-[10px] uppercase tracking-[0.3em] text-stone-500 mb-4">
-              ImmobilCloud<sup className="text-[8px]">™</sup>
-            </p>
-            <h1 className="text-4xl md:text-5xl lg:text-6xl leading-[1.05] tracking-tight mb-6 font-light"
-                style={{ fontFamily: "'Fraunces', Georgia, serif" }}>
-              {t("immocloud.tagline")}
-            </h1>
-            <p className="text-base md:text-lg text-stone-600 max-w-xl mb-8">
-              {t("cloud.hero_subtitle")}
-            </p>
-            <form onSubmit={submit} className="bg-white rounded-2xl border border-stone-200 shadow-md p-3 flex flex-col sm:flex-row gap-2">
+      {/* Search-first hero — full-bleed atmosphere, utility first */}
+      <section
+        className="relative overflow-hidden border-b border-stone-200"
+        data-testid="cloud-hero"
+        style={{
+          background:
+            "radial-gradient(1200px 500px at 10% -10%, #e8eef8 0%, transparent 55%), radial-gradient(900px 400px at 90% 0%, #f3ebe0 0%, transparent 50%), #fbf9f5",
+        }}
+      >
+        <div className="max-w-5xl mx-auto px-5 sm:px-8 py-12 md:py-16">
+          <p className="text-[11px] uppercase tracking-[0.28em] text-stone-500 mb-3">
+            ImmobilCloud<sup className="text-[8px]">™</sup>
+          </p>
+          <h1
+            className="text-4xl md:text-5xl leading-[1.05] tracking-tight mb-3 font-light text-[#0B1E3F]"
+            style={{ fontFamily: "'Fraunces', Georgia, serif" }}
+          >
+            {t("immocloud.tagline")}
+          </h1>
+          <p className="text-base text-stone-600 max-w-2xl mb-8">
+            {t("cloud.hero_subtitle")}
+          </p>
+
+          <form
+            onSubmit={submit}
+            data-testid="cloud-search-form"
+            className="bg-white rounded-2xl border border-stone-200 shadow-lg p-3 md:p-4 space-y-3"
+          >
+            <div className="flex gap-2" role="tablist" aria-label="Operazione">
+              {[
+                { v: "sale", label: t("cloud.op_sale") },
+                { v: "rent", label: t("cloud.op_rent") },
+              ].map((o) => (
+                <button
+                  key={o.v}
+                  type="button"
+                  role="tab"
+                  aria-selected={operation === o.v}
+                  data-testid={`cloud-op-${o.v}`}
+                  onClick={() => setOperation(o.v)}
+                  className={`px-4 py-2 text-xs uppercase tracking-widest rounded-lg border transition ${
+                    operation === o.v
+                      ? "bg-[#0B1E3F] text-white border-[#0B1E3F]"
+                      : "bg-white text-stone-600 border-stone-200 hover:border-stone-400"
+                  }`}
+                >
+                  {o.label}
+                </button>
+              ))}
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
               <input
-                data-testid="cloud-search-city" type="text" value={city}
+                data-testid="cloud-search-city"
+                type="text"
+                value={city}
                 onChange={(e) => setCity(e.target.value)}
                 placeholder={t("cloud.search_placeholder")}
                 list="cloud-cities-suggest"
-                className="flex-1 px-4 py-3 text-base outline-none rounded-lg focus:bg-stone-50"
+                className="px-4 py-3 text-base outline-none rounded-lg border border-stone-200 focus:border-[#0B1E3F] bg-stone-50/50"
               />
               <datalist id="cloud-cities-suggest">
-                {(facets?.cities || []).map((c) => <option key={c.city} value={c.city} />)}
+                {(facets?.cities || []).map((c) => (
+                  <option key={c.city} value={c.city} />
+                ))}
               </datalist>
-              <button data-testid="cloud-search-btn" type="submit"
-                className="bg-[#0B1E3F] text-white px-6 py-3 rounded-lg font-medium tracking-wide hover:bg-[#C19A6B] hover:shadow-md transition-all">
+              <select
+                data-testid="cloud-search-type"
+                value={ptype}
+                onChange={(e) => setPtype(e.target.value)}
+                className="px-4 py-3 text-sm rounded-lg border border-stone-200 bg-white"
+              >
+                {PROPERTY_TYPES.map((p) => (
+                  <option key={p.v || "any"} value={p.v}>{p.label}</option>
+                ))}
+              </select>
+              <input
+                data-testid="cloud-search-price"
+                type="number"
+                min="0"
+                value={priceMax}
+                onChange={(e) => setPriceMax(e.target.value)}
+                placeholder={operation === "rent" ? "Canone max €" : "Prezzo max €"}
+                className="px-4 py-3 text-sm rounded-lg border border-stone-200 bg-white"
+              />
+              <button
+                data-testid="cloud-search-btn"
+                type="submit"
+                className="bg-[#0B1E3F] text-white px-6 py-3 rounded-lg font-medium tracking-wide hover:bg-[#C19A6B] transition-all"
+              >
                 {t("cloud.search_btn")}
               </button>
-            </form>
-            {facets && (
-              <p className="text-xs text-stone-500 mt-4" data-testid="cloud-total">
-                {t("cloud.total_listings", { n: facets.total_active })}
-              </p>
-            )}
-          </div>
-          <div className="hidden lg:block">
-            <div className="aspect-[4/5] rounded-2xl overflow-hidden shadow-2xl">
-              <img src={HERO_IMG} alt="Interno di una casa italiana" loading="lazy" className="w-full h-full object-cover" />
             </div>
-          </div>
-        </div>
-      </section>
+          </form>
 
-      {/* Dual-box: Network MLS + ricerca ImmobilCloud */}
-      <section className="px-5 sm:px-8 md:px-16 pb-10" data-testid="cloud-mls-dual">
-        <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-4">
-          <MlsNetworkBox lang={lang} />
-          <div className="rounded-2xl border border-stone-200 bg-[#0B1E3F] text-white p-5 flex flex-col justify-between min-h-[200px]">
-            <div>
-              <p className="text-[10px] uppercase tracking-[0.25em] text-white/60 mb-2">ImmobilCloud</p>
-              <h2 className="text-xl font-light" style={{ fontFamily: "'Fraunces', Georgia, serif" }}>
-                Cerca nella vetrina
-              </h2>
-              <p className="text-sm text-white/70 mt-2">Inventory pubblico aggregato — vendita e affitto.</p>
-            </div>
+          <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-stone-500">
+            {facets && (
+              <span data-testid="cloud-total">
+                {t("cloud.total_listings", { n: facets.total_active })}
+              </span>
+            )}
+            {pulse && (
+              <span data-testid="cloud-pulse" className="text-stone-700">
+                {pulse.label_it}
+              </span>
+            )}
             <Link
-              to={`/${lang}/cloud/search`}
-              className="mt-4 inline-flex justify-center bg-white text-[#0B1E3F] px-4 py-2.5 rounded-lg text-sm font-medium hover:bg-[#C19A6B] hover:text-white transition-colors"
+              to={`/${lang}/cloud/search?view=map`}
+              className="uppercase tracking-widest text-[#0B1E3F] hover:underline"
             >
-              Avvia la ricerca
+              Apri mappa →
             </Link>
           </div>
         </div>
       </section>
 
-      {/* ───────── 3 ACTION CARDS (Cerca · Vendi · Affitta) ───────── */}
-      <section className="px-5 sm:px-8 md:px-16 py-12" data-testid="cloud-3cards">
-        <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-5">
-          <ActionCard
-            id="cerca" testid="card-cerca" icon="🔍"
-            title={t("cloud.card_cerca_title")} text={t("cloud.card_cerca_text")}
-            cta={t("cloud.card_cerca_cta")} to={`/${lang}/cloud/search?operation=sale`}
-            accent="navy"
-          />
-          <ActionCard
-            id="vendi" testid="card-vendi" icon="🏷️"
-            title={t("cloud.card_vendi_title")} text={t("cloud.card_vendi_text")}
-            cta={t("cloud.card_vendi_cta")} to={`/${lang}/cloud/register?intent=sell`}
-            accent="gold"
-          />
-          <ActionCard
-            id="affitta" testid="card-affitta" icon="🔑"
-            title={t("cloud.card_affitta_title")} text={t("cloud.card_affitta_text")}
-            cta={t("cloud.card_affitta_cta")} to={`/${lang}/cloud/register?intent=rent_out`}
-            accent="navy"
-          />
+      {/* Scout HAL unique strip */}
+      <section className="px-5 sm:px-8 md:px-16 py-8 border-b border-stone-100" data-testid="cloud-scout-strip">
+        <div className="max-w-5xl mx-auto flex flex-col md:flex-row md:items-end justify-between gap-4">
+          <div>
+            <p className="text-[10px] uppercase tracking-[0.25em] text-[#C19A6B] mb-2">Solo su ImmobilCloud</p>
+            <h2
+              className="text-2xl md:text-3xl font-light text-[#0B1E3F]"
+              style={{ fontFamily: "'Fraunces', Georgia, serif" }}
+            >
+              Scout HAL
+            </h2>
+            <p className="text-sm text-stone-600 mt-2 max-w-xl">
+              Su ogni annuncio: score di completezza, prezzo vs zona, ribassi recenti e le domande giuste da fare al venditore.
+              Idealista e Immobiliare non ce l&apos;hanno.
+            </p>
+          </div>
+          <Link
+            to={`/${lang}/cloud/search`}
+            className="inline-flex justify-center px-5 py-2.5 bg-[#0B1E3F] text-white text-xs uppercase tracking-widest rounded-lg hover:bg-[#C19A6B]"
+          >
+            Cerca e apri Scout
+          </Link>
         </div>
-        {/* Cap. 21 · Valutatore card (single row below the 3 core actions) */}
-        <div className="max-w-6xl mx-auto mt-5">
-          <ActionCard
-            id="valutatore" testid="card-valutatore" icon="📊"
-            title={t("cloud.card_valutatore_title", "Valuta il tuo immobile")}
-            text={t("cloud.card_valutatore_text", "Stima rapida gratis · report UNI 10750 professionale a €2,99")}
-            cta={t("cloud.card_valutatore_cta", "Apri il valutatore")}
+      </section>
+
+      {/* Compact secondary intents — no emoji cards */}
+      <section className="px-5 sm:px-8 md:px-16 py-10" data-testid="cloud-intents">
+        <div className="max-w-5xl mx-auto grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <IntentLink
+            to={`/${lang}/cloud/register?intent=sell`}
+            title="Vendi"
+            text="Pubblica gratis. Boost Vetrina / Premium / TOP a carta."
+            testid="intent-sell"
+          />
+          <IntentLink
             to={`/${lang}/cloud/valutatore`}
-            accent="navy"
+            title="Valuta"
+            text="Stima gratis · report UNI 10750 a €2,99."
+            testid="intent-valuator"
+          />
+          <IntentLink
+            to={`/${lang}/cloud/mutui`}
+            title="Mutuo"
+            text="Simula la rata e confronta le offerte."
+            testid="intent-mutui"
           />
         </div>
       </section>
 
-      {/* ───────── Top cities ───────── */}
       {facets?.cities?.length > 0 && (
-        <section className="px-5 sm:px-8 md:px-16 py-8" data-testid="cloud-cities-row">
-          <div className="max-w-6xl mx-auto">
+        <section className="px-5 sm:px-8 md:px-16 py-6" data-testid="cloud-cities-row">
+          <div className="max-w-5xl mx-auto">
             <h2 className="text-xs uppercase tracking-widest text-stone-500 mb-4">
               {t("cloud.popular_cities")}
             </h2>
             <div className="flex flex-wrap gap-2">
               {facets.cities.slice(0, 12).map((c) => (
-                <Link key={c.city}
-                  to={`search?operation=sale&city=${encodeURIComponent(c.city)}`}
+                <Link
+                  key={c.city}
+                  to={`search?operation=${operation}&city=${encodeURIComponent(c.city)}`}
                   data-testid={`cloud-city-pill-${c.city}`}
-                  className="px-4 py-2 bg-white border border-stone-200 rounded-full text-sm hover:border-stone-700 hover:shadow-sm transition">
+                  className="px-4 py-2 bg-white border border-stone-200 rounded text-sm hover:border-stone-700 transition"
+                >
                   {c.city} <span className="text-stone-400 ml-1">{c.count}</span>
                 </Link>
               ))}
@@ -208,21 +238,30 @@ export default function CloudHomePage() {
         </section>
       )}
 
-      {/* ───────── Featured cards ───────── */}
       {featured.length > 0 && (
         <section className="px-5 sm:px-8 md:px-16 py-12" data-testid="cloud-featured">
-          <div className="max-w-6xl mx-auto">
+          <div className="max-w-5xl mx-auto">
             <div className="flex items-baseline justify-between mb-6">
-              <h2 className="text-2xl md:text-3xl font-light tracking-tight"
-                  style={{ fontFamily: "'Fraunces', Georgia, serif" }}>
-                {t("cloud.featured_title")}
+              <h2
+                className="text-2xl md:text-3xl font-light tracking-tight"
+                style={{ fontFamily: "'Fraunces', Georgia, serif" }}
+              >
+                In evidenza
               </h2>
-              <Link to={`search?operation=${operation}`} className="text-xs uppercase tracking-widest text-stone-600 hover:text-stone-900">
+              <Link
+                to={`search?operation=${operation}`}
+                className="text-xs uppercase tracking-widest text-stone-600 hover:text-stone-900"
+              >
                 {t("cloud.see_all")} →
               </Link>
             </div>
+            <p className="text-xs text-stone-500 mb-4">
+              TOP e Premium salgono in cima. Poi i più recenti.
+            </p>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {featured.map((p) => <PropertyCard key={p.id} p={p} />)}
+              {featured.map((p) => (
+                <PropertyCard key={p.id} p={p} />
+              ))}
             </div>
           </div>
         </section>
@@ -231,22 +270,20 @@ export default function CloudHomePage() {
   );
 }
 
-function ActionCard({ id, testid, icon, title, text, cta, to, accent }) {
-  const isGold = accent === "gold";
+function IntentLink({ to, title, text, testid }) {
   return (
-    <Link to={to} data-testid={testid}
-      className={`group block bg-white rounded-2xl border border-stone-200 p-7 hover:shadow-xl hover:-translate-y-1 transition-all ${
-        isGold ? "hover:border-[#C19A6B]" : "hover:border-[#0B1E3F]"
-      }`}>
-      <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-2xl mb-4 ${
-        isGold ? "bg-[#fef7ed] text-[#C19A6B]" : "bg-[#e7eaf2] text-[#0B1E3F]"
-      }`}>{icon}</div>
-      <h3 className="text-xl font-medium text-stone-900 mb-2"
-          style={{ fontFamily: "'Fraunces', Georgia, serif" }}>{title}</h3>
-      <p className="text-sm text-stone-600 mb-4 min-h-[3rem]">{text}</p>
-      <span className={`text-xs uppercase tracking-widest font-medium ${
-        isGold ? "text-[#C19A6B]" : "text-[#0B1E3F]"
-      }`}>{cta} →</span>
+    <Link
+      to={to}
+      data-testid={testid}
+      className="block bg-white border border-stone-200 rounded-xl p-5 hover:border-[#0B1E3F] hover:shadow-md transition"
+    >
+      <h3
+        className="text-lg text-[#0B1E3F] mb-1"
+        style={{ fontFamily: "'Fraunces', Georgia, serif" }}
+      >
+        {title}
+      </h3>
+      <p className="text-sm text-stone-600">{text}</p>
     </Link>
   );
 }

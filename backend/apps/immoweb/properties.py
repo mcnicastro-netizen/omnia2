@@ -239,6 +239,23 @@ async def update_property(
             update_doc[k] = v
 
     await db.properties.update_one({"id": prop_id, "agency_id": agency_id}, {"$set": update_doc})
+
+    # Price-drop watch (ImmobilCloud alerts)
+    if "price" in data or "rent_monthly" in data:
+        try:
+            from apps.immocloud.price_watch import record_price_change
+            await record_price_change(
+                db,
+                property_id=prop_id,
+                existing=existing,
+                new_price=update_doc.get("price", existing.get("price")),
+                new_rent=update_doc.get("rent_monthly", existing.get("rent_monthly")),
+                touched_price="price" in data,
+                touched_rent="rent_monthly" in data,
+            )
+        except Exception:
+            pass
+
     updated = await db.properties.find_one({"id": prop_id})
     # M3.S3 — re-geocode if any address field changed (best-effort)
     address_changed = any(k in update_doc for k in ("address", "city", "province", "postal_code"))

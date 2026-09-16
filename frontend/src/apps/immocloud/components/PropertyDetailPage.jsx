@@ -53,8 +53,25 @@ export default function PropertyDetailPage() {
   const [fav, setFav] = useState(false);
   const [videoUrl, setVideoUrl] = useState(null);
   const [videoBusy, setVideoBusy] = useState(false);
+  const [scout, setScout] = useState(null);
+  const [scoutBusy, setScoutBusy] = useState(false);
+  const [scoutErr, setScoutErr] = useState("");
   const { user } = useAuth();
   const isB2c = Boolean(user && user.account_type === "b2c");
+
+  const runScout = async () => {
+    if (!pid || scoutBusy) return;
+    setScoutBusy(true);
+    setScoutErr("");
+    try {
+      const { data } = await api.post(`/cloud/property/${pid}/scout`, { lang });
+      setScout(data);
+    } catch (e) {
+      setScoutErr(e?.response?.data?.detail || "Scout non disponibile. Riprova.");
+    } finally {
+      setScoutBusy(false);
+    }
+  };
 
   useEffect(() => {
     setLoading(true);
@@ -237,6 +254,104 @@ export default function PropertyDetailPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* LEFT COLUMN — gallery + info + map */}
         <div className="lg:col-span-2 space-y-8">
+          {/* Scout HAL — unique buyer brief */}
+          <section
+            data-testid="scout-hal-panel"
+            className="border border-stone-200 rounded-xl p-5 bg-gradient-to-br from-[#f7f5f0] to-white"
+          >
+            <div className="flex flex-wrap items-start justify-between gap-3 mb-3">
+              <div>
+                <p className="text-[10px] uppercase tracking-[0.25em] text-[#C19A6B]">Scout HAL</p>
+                <h2
+                  className="text-xl font-light text-[#0B1E3F]"
+                  style={{ fontFamily: "'Fraunces', Georgia, serif" }}
+                >
+                  Brief acquirente
+                </h2>
+                <p className="text-xs text-stone-500 mt-1">
+                  Completezza, prezzo vs zona, ribassi e domande da fare al venditore.
+                </p>
+              </div>
+              {!scout && (
+                <button
+                  type="button"
+                  data-testid="scout-hal-run"
+                  onClick={runScout}
+                  disabled={scoutBusy}
+                  className="px-4 py-2 text-xs uppercase tracking-widest bg-[#0B1E3F] text-white rounded hover:bg-[#C19A6B] disabled:opacity-50"
+                >
+                  {scoutBusy ? "Analisi…" : "Avvia Scout"}
+                </button>
+              )}
+            </div>
+            {scoutErr && (
+              <p className="text-xs text-rose-700" data-testid="scout-hal-error">{String(scoutErr)}</p>
+            )}
+            {scout && (
+              <div className="space-y-4" data-testid="scout-hal-result">
+                {scout.insight && (
+                  <p className="text-sm text-stone-800 border-l-2 border-[#C19A6B] pl-3">{scout.insight}</p>
+                )}
+                <div className="flex flex-wrap gap-3 items-center">
+                  <div
+                    className="px-3 py-2 rounded-lg bg-white border border-stone-200"
+                    data-testid="scout-completeness"
+                  >
+                    <span className="text-[10px] uppercase tracking-widest text-stone-500">Completezza</span>
+                    <div className="text-lg font-medium text-[#0B1E3F]">
+                      {scout.completeness?.score}/100 · {scout.completeness?.grade}
+                    </div>
+                  </div>
+                  {scout.price_vs_zone?.available && (
+                    <div
+                      className="px-3 py-2 rounded-lg bg-white border border-stone-200"
+                      data-testid="scout-price-zone"
+                    >
+                      <span className="text-[10px] uppercase tracking-widest text-stone-500">Prezzo vs zona</span>
+                      <div className="text-sm font-medium text-[#0B1E3F]">
+                        {scout.price_vs_zone.label_it}
+                        <span className="text-stone-500 font-normal">
+                          {" "}· €{scout.price_vs_zone.asking_eur_mq}/m²
+                          {" "}(zona €{scout.price_vs_zone.zone_eur_mq_min}–{scout.price_vs_zone.zone_eur_mq_max})
+                        </span>
+                      </div>
+                    </div>
+                  )}
+                  {prop.last_price_drop?.drop_pct && (
+                    <div className="px-3 py-2 rounded-lg bg-rose-50 border border-rose-200 text-rose-800 text-sm">
+                      Ribasso recente −{prop.last_price_drop.drop_pct}%
+                    </div>
+                  )}
+                </div>
+                {scout.red_flags?.length > 0 && (
+                  <div>
+                    <p className="text-[10px] uppercase tracking-widest text-rose-700 mb-1">Attenzioni</p>
+                    <ul className="text-sm text-stone-700 space-y-1 list-disc pl-4">
+                      {scout.red_flags.map((f, i) => <li key={i}>{f}</li>)}
+                    </ul>
+                  </div>
+                )}
+                {scout.questions_for_seller?.length > 0 && (
+                  <div>
+                    <p className="text-[10px] uppercase tracking-widest text-stone-500 mb-1">Domande al venditore</p>
+                    <ol className="text-sm text-stone-700 space-y-1 list-decimal pl-4">
+                      {scout.questions_for_seller.map((q, i) => <li key={i}>{q}</li>)}
+                    </ol>
+                  </div>
+                )}
+                <p className="text-[11px] text-stone-400">{scout.disclaimer_it}</p>
+                <button
+                  type="button"
+                  onClick={runScout}
+                  disabled={scoutBusy}
+                  className="text-[11px] uppercase tracking-widest text-stone-500 hover:text-[#0B1E3F]"
+                >
+                  Aggiorna Scout
+                </button>
+              </div>
+            )}
+          </section>
+
           {/* Photo gallery */}
           {photos.length > 0 ? (
             <div data-testid="detail-gallery">

@@ -1,18 +1,23 @@
 import React from "react";
+import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { formatEUR } from "../cloudTheme";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 
 export default function PropertyCard({ p }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const lang = (i18n.language || "it").slice(0, 2);
   const cover = p.cover_url ? `${BACKEND_URL}${p.cover_url}` : null;
   const price = p.operation === "rent"
     ? `${formatEUR(p.rent_monthly)}/mese`
     : formatEUR(p.price);
   return (
-    <article data-testid={`cloud-card-${p.id}`}
-      className="bg-white rounded-xl overflow-hidden border border-stone-200 hover:shadow-lg hover:-translate-y-0.5 transition-all">
+    <Link
+      to={`/${lang}/cloud/property/${p.id}`}
+      data-testid={`cloud-card-${p.id}`}
+      className="block bg-white rounded-xl overflow-hidden border border-stone-200 hover:shadow-lg hover:-translate-y-0.5 transition-all"
+    >
       <div className="aspect-[4/3] bg-stone-100 relative">
         {cover ? (
           <img src={cover} alt={p.title} className="w-full h-full object-cover" loading="lazy" />
@@ -67,6 +72,6 @@ export default function PropertyCard({ p }) {
           </p>
         )}
       </div>
-    </article>
+    </Link>
   );
 }

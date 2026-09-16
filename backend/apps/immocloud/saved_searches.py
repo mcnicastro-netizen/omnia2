@@ -220,8 +220,9 @@ async def run_saved_search(sid: str, user: dict = Depends(get_current_user)):
 # ============================================================
 
 async def _send_alert_email(*, to_email: str, user_name: str, lang: str,
-                            search_name: str, matches: list, frontend_base: str) -> None:
-    """Fire-and-forget Resend email with the digest of new matches."""
+                            search_name: str, matches: list, frontend_base: str,
+                            drops: Optional[list] = None) -> None:
+    """Fire-and-forget Resend email with the digest of new matches + price drops."""
     from shared.email.client import send_email
 
     rows_html = []
@@ -241,6 +242,33 @@ async def _send_alert_email(*, to_email: str, user_name: str, lang: str,
         )
     matches_html = "<table cellpadding='0' cellspacing='0' width='100%'>" + "".join(rows_html) + "</table>"
 
+    drops = drops or []
+    drops_html = ""
+    if drops:
+        drows = []
+        for m in drops[:6]:
+            drop = m.get("last_price_drop") or {}
+            price = m.get("rent_monthly") if m.get("operation") == "rent" else m.get("price")
+            price_str = f"€ {int(price):,}".replace(",", ".") if price else "—"
+            pct = drop.get("drop_pct")
+            badge = f" −{pct}%" if pct else " ribasso"
+            drows.append(
+                f'<tr><td style="padding:12px 0;border-bottom:1px solid #E5E2DC;">'
+                f'<a href="{frontend_base}/{lang}/cloud/property/{m["id"]}" '
+                f'style="color:#0B1E3F;text-decoration:none;">'
+                f'<strong style="font-size:15px;">{m.get("title") or "Immobile"}</strong> '
+                f'<span style="color:#b91c1c;font-size:12px;font-weight:700;">{badge}</span><br/>'
+                f'<span style="font-size:12px;color:#5C6470;">{m.get("city","")}</span><br/>'
+                f'<span style="font-size:14px;color:#C19A6B;font-weight:600;">{price_str}</span>'
+                f'</a></td></tr>'
+            )
+        drops_html = (
+            "<p style='margin:24px 0 8px;font-size:13px;letter-spacing:.12em;text-transform:uppercase;color:#b91c1c;'>"
+            "Allerta ribasso</p>"
+            "<table cellpadding='0' cellspacing='0' width='100%'>" + "".join(drows) + "</table>"
+        )
+        matches_html = matches_html + drops_html
+
     try:
         await send_email(
             to=to_email,
@@ -249,7 +277,7 @@ async def _send_alert_email(*, to_email: str, user_name: str, lang: str,
             variables={
                 "user_name": user_name or "",
                 "search_name": search_name,
-                "match_count": str(len(matches)),
+                "match_count": str(len(matches) + len(drops)),
                 "matches_html": matches_html,
                 "search_url": f"{frontend_base}/{lang}/cloud/account",
             },
@@ -306,6 +334,7 @@ async def run_all_active_saved_searches() -> Dict[str, Any]:
 
         flt = _build_mongo_filter(s["filters"], since=s.get("last_run_at"))
         matches: List[dict] = []
+        drops: List[dict] = []
         if should_alert:
             matches_cursor = db.properties.find(flt, {
                 "_id": 0, "id": 1, "title": 1, "city": 1, "zone": 1, "price": 1,
@@ -314,8 +343,21 @@ async def run_all_active_saved_searches() -> Dict[str, Any]:
             }).sort("created_at", -1).limit(20)
             matches = await matches_cursor.to_list(length=20)
 
-            if matches:
-                total_matches += len(matches)
+            try:
+                from apps.immocloud.price_watch import find_price_drops
+                base_flt = _build_mongo_filter(s["filters"], since=None)
+                drops = await find_price_drops(
+                    db, mongo_filter=base_flt, since_iso=s.get("last_run_at"), limit=20,
+                )
+                # Avoid duplicating brand-new listings that also somehow have drops
+                match_ids = {m["id"] for m in matches}
+                drops = [d for d in drops if d.get("id") not in match_ids]
+            except Exception as e:
+                logger.warning("price-drop scan failed: %s", e)
+                drops = []
+
+            if matches or drops:
+                total_matches += len(matches) + len(drops)
                 if should_email:
                     await _send_alert_email(
                         to_email=user["email"],
@@ -323,6 +365,7 @@ async def run_all_active_saved_searches() -> Dict[str, Any]:
                         lang=user.get("lang") or "it",
                         search_name=s["name"],
                         matches=matches,
+                        drops=drops,
                         frontend_base=frontend_base,
                     )
                     total_emails += 1
@@ -332,13 +375,24 @@ async def run_all_active_saved_searches() -> Dict[str, Any]:
                         create_notification,
                     )
                     n = len(matches)
+                    d = len(drops)
+                    parts = []
+                    if n:
+                        parts.append(f"{n} nuovi")
+                    if d:
+                        parts.append(f"{d} ribassi")
+                    title = f"{' · '.join(parts)} · {s['name']}"
                     await create_notification(
                         user_id=s["user_id"],
                         type=TYPE_SAVED_SEARCH,
-                        title=f"{n} nuovi immobili · {s['name']}",
-                        body="La tua ricerca salvata ha trovato nuovi annunci.",
+                        title=title,
+                        body="La tua ricerca salvata ha aggiornamenti.",
                         link="/cloud/account",
-                        meta={"saved_search_id": s["id"], "match_count": n},
+                        meta={
+                            "saved_search_id": s["id"],
+                            "match_count": n,
+                            "drop_count": d,
+                        },
                     )
                 except Exception as e:  # noqa: BLE001
                     logger.warning("in-app saved-search notification failed: %s", e)
@@ -347,15 +401,82 @@ async def run_all_active_saved_searches() -> Dict[str, Any]:
         # when user toggles notification channels later.
         await db.saved_searches.update_one(
             {"id": s["id"]},
-            {"$set": {"last_run_at": now, "last_match_count": len(matches),
+            {"$set": {"last_run_at": now,
+                      "last_match_count": len(matches),
+                      "last_drop_count": len(drops),
                       "updated_at": now}},
         )
 
     logger.info("saved_searches cron: %d searches, %d emails sent, %d total matches",
                 total_searches, total_emails, total_matches)
+
+    fav_drop_notices = 0
+    try:
+        async for row in db.favorites.aggregate([
+            {"$group": {"_id": "$user_id", "pids": {"$addToSet": "$property_id"}}},
+        ]):
+            uid = row["_id"]
+            pids = row.get("pids") or []
+            if not uid or not pids:
+                continue
+            user = await db.users.find_one(
+                {"id": uid, "account_type": "b2c"},
+                {"_id": 0, "email": 1, "name": 1, "lang": 1,
+                 "notification_channels": 1, "notification_email_types": 1,
+                 "favorites_watch_at": 1},
+            )
+            if not user:
+                continue
+            since = user.get("favorites_watch_at")
+            drop_q: Dict[str, Any] = {
+                "id": {"$in": pids},
+                "status": "active",
+            }
+            if since:
+                drop_q["price_dropped_at"] = {"$gt": since}
+            else:
+                drop_q["price_dropped_at"] = {"$exists": True}
+            dropped = await db.properties.find(
+                drop_q,
+                {"_id": 0, "id": 1, "title": 1, "city": 1, "price": 1,
+                 "rent_monthly": 1, "operation": 1, "last_price_drop": 1},
+            ).to_list(length=20)
+            await db.users.update_one({"id": uid}, {"$set": {"favorites_watch_at": now}})
+            if not dropped:
+                continue
+            fav_drop_notices += len(dropped)
+            try:
+                from shared.notifications.center import create_notification
+                titles = ", ".join((d.get("title") or d["id"])[:40] for d in dropped[:3])
+                await create_notification(
+                    user_id=uid,
+                    type="favorite_price_drop",
+                    title=f"Ribasso sui preferiti ({len(dropped)})",
+                    body=titles,
+                    link="/cloud/account",
+                    meta={"property_ids": [d["id"] for d in dropped]},
+                )
+            except Exception as e:
+                logger.warning("fav drop notify failed: %s", e)
+            from shared.notifications.prefs import user_allows_email
+            if user_allows_email(user, "saved_search_alert"):
+                await _send_alert_email(
+                    to_email=user["email"],
+                    user_name=user.get("name") or "",
+                    lang=user.get("lang") or "it",
+                    search_name="I tuoi preferiti",
+                    matches=[],
+                    drops=dropped,
+                    frontend_base=frontend_base,
+                )
+                total_emails += 1
+    except Exception as e:
+        logger.warning("favorites price-drop pass failed: %s", e)
+
     return {
         "searches_checked": total_searches,
         "emails_sent": total_emails,
         "total_matches": total_matches,
+        "favorite_drop_notices": fav_drop_notices,
         "run_at": now,
     }

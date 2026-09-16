@@ -19,12 +19,14 @@ TYPE_LEAD_NEW = "lead_new"
 TYPE_INVITE_ACCEPTED = "invite_accepted"
 TYPE_SAVED_SEARCH = "saved_search_match"
 TYPE_MATCH_NEW = "match_new"  # reserved (matches are on-read; no emitter v1)
+TYPE_FAVORITE_DROP = "favorite_price_drop"
 
 KNOWN_TYPES = (
     TYPE_LEAD_NEW,
     TYPE_INVITE_ACCEPTED,
     TYPE_SAVED_SEARCH,
     TYPE_MATCH_NEW,
+    TYPE_FAVORITE_DROP,
 )
 
 
