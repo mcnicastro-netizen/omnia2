@@ -1,16 +1,18 @@
 # Prossima sessione — programma passi
 
-**Aggiornato**: 16 Settembre 2026 — gap ImmobilCloud chiusi + platform stress  
-**Stato base**: Sprint 1→4 **CONCLUSO**. Stress: `PLATFORM_STRESS_REPORT.md` + `STRESS_REPORT.md`.
+**Aggiornato**: 16 Settembre 2026 — nord B2C Scout adottato  
+**Stato base**: Sprint 1→4 **CONCLUSO**. Stress: `PLATFORM_STRESS_REPORT.md` + `STRESS_REPORT.md`.  
+**Nord prodotto B2C**: `memory/PRODUCT_NORTHSTAR_B2C.md` (**obbligatorio** prima di ship `/cloud`).
 
 ---
 
 ## Ripresa (checklist)
 
 1. `bash scripts/omnia-stack.sh ensure`
-2. Ports → **omnia-preview :43123**
-3. Founder: **«vai»** sull’ID
-4. **D-084**: ogni ship aggiorna manuale+YAML
+2. Ports → **omnia-preview :43123** (o tunnel CF verso 43123)
+3. Rileggere `PRODUCT_NORTHSTAR_B2C.md`
+4. Founder: **«vai»** sull’ID se fuori programma
+5. **D-084**: ogni ship aggiorna manuale+YAML
 
 ---
 
@@ -19,20 +21,25 @@
 | Area | Stato |
 |------|:-----:|
 | Sprint 1→4 | ✅ |
-| `/clients/smart` @10k | ✅ |
-| Gap ImmobilCloud (ricerca/MLS/preferiti/privacy/A-B/video/alert) | ✅ |
-| Platform stress (portal+CRM+security+payments+API) | ✅ report |
+| Gap ImmobilCloud + stress | ✅ |
+| Home B2C visual + SSR preview | ✅ (16-Set) |
+| Scout v1 (completezza / zona / domande) | ✅ base |
+| Scout fiducia (fascia + perché + confidenza) | ❌ **next** |
 | Demo A-025 | ❌ |
 | Stripe live | ⏸️ post-Vercel |
 
 ---
 
-## Ordine consigliato
+## Ordine consigliato (filtrato — solo utile al portale)
 
 | # | Cosa | Note |
 |:-:|------|------|
-| 1 | **A-025** demo prodotto | GTM |
-| 2 | Ladder agenzie MLS 5k/10k | opzionale |
+| 1 | **Scout depth + fiducia** | Fascia prezzo, perché, limiti/confidenza; lacune; domande; UI leggibile. Vedi northstar P0–P1 |
+| 2 | **Home B2C allineata al nord** | Claim = pre-visita / “cosa sapere prima”; Valuta/Mutui/Vendi secondari |
+| 3 | **Scout thin “visita + documenti”** | Stesso pannello, non nuovo prodotto |
+| 4 | A-025 demo prodotto | GTM |
+| — | Intake “annuncio da altri portali” | Solo dopo 1–3 + ok Founder |
 | — | A-014 Stripe live | solo post-Vercel |
+| — | Ladder MLS / reti locali | Binario **B2B**, non copy home privati |
 
-Report: `memory/PLATFORM_STRESS_REPORT.md` · `memory/STRESS_REPORT.md`
+Report: `memory/PLATFORM_STRESS_REPORT.md` · `memory/STRESS_REPORT.md` · `memory/PRODUCT_NORTHSTAR_B2C.md`
