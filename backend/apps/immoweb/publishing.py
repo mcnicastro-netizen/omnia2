@@ -23,7 +23,7 @@ from typing import List, Optional
 from uuid import uuid4
 from xml.sax.saxutils import escape as xml_escape
 
-from fastapi import APIRouter, HTTPException, Depends, Response
+from fastapi import APIRouter, HTTPException, Depends, Request, Response
 from pydantic import Field, HttpUrl
 
 from shared.db.connection import Database
@@ -37,6 +37,7 @@ from shared.utils.crypto import encrypt_dict
 from shared.validators.compliance import (
     validate_property, summarize_agency_compliance, is_publishable as _validator_is_publishable,
 )
+from shared.security.rate_limit import enforce_ip_rate_limit
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/publishing", tags=["publishing"])
@@ -542,7 +543,12 @@ feed_router = APIRouter(prefix="/publishing/feed", tags=["publishing-feed"])
 
 
 @feed_router.get("/{agency_slug}.xml")
-async def portals_feed(agency_slug: str, dialect: str = "osf_federata") -> Response:
+async def portals_feed(
+    agency_slug: str, request: Request, dialect: str = "osf_federata"
+) -> Response:
+    await enforce_ip_rate_limit(
+        request, bucket="publishing_feed", max_requests=60, window_seconds=3600
+    )
     db = Database.get()
     agency = await db.agencies.find_one({"slug": agency_slug, "is_active": True})
     if not agency:

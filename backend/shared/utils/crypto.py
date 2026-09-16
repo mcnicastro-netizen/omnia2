@@ -16,13 +16,23 @@ from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 
 def _master_key() -> bytes:
     raw = os.environ.get("CREDENTIALS_MASTER_KEY")
+    env = (os.environ.get("OMNIA_ENV") or "").strip().lower()
     if raw:
         try:
-            return base64.b64decode(raw)
-        except Exception:
-            pass
+            key = base64.b64decode(raw)
+            if len(key) < 32:
+                raise ValueError("CREDENTIALS_MASTER_KEY too short")
+            return key[:32] if len(key) >= 32 else key
+        except Exception as e:
+            if env in ("production", "prod"):
+                raise RuntimeError(
+                    "CREDENTIALS_MASTER_KEY invalid in production"
+                ) from e
+    if env in ("production", "prod"):
+        raise RuntimeError(
+            "CREDENTIALS_MASTER_KEY is required when OMNIA_ENV=production"
+        )
     # dev fallback — deterministic 32-byte key from MONGO_URL
-    # R2: accettabile SOLO in preview/dev. In produzione impostare CREDENTIALS_MASTER_KEY.
     logging.getLogger("omnia.crypto").warning(
         "CREDENTIALS_MASTER_KEY non impostata — chiave derivata da MONGO_URL (solo dev/preview; configurarla in produzione)"
     )

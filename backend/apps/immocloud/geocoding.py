@@ -35,7 +35,13 @@ async def geocode_address(
         return None
     query = ", ".join(parts)
 
-    try:
+    from shared.security.circuit import call_with_circuit, circuit_open
+
+    if circuit_open("geocode"):
+        logger.info("geocode circuit open — skip '%s'", query)
+        return None
+
+    async def _lookup() -> Optional[Tuple[float, float]]:
         async with httpx.AsyncClient(timeout=HTTP_TIMEOUT) as client:
             r = await client.get(
                 NOMINATIM_BASE,
@@ -61,9 +67,15 @@ async def geocode_address(
                     data = r2.json()
                     if data:
                         return (float(data[0]["lat"]), float(data[0]["lon"]))
+        return None
+
+    try:
+        return await call_with_circuit(
+            "geocode", _lookup, fallback=None, threshold=5, recovery_seconds=120.0
+        )
     except Exception as e:
         logger.warning("geocoding failed for '%s': %s", query, e)
-    return None
+        return None
 
 
 def schedule_geocode(db, property_id: str, address_dict: dict) -> None:

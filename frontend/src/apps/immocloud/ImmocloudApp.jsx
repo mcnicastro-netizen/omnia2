@@ -14,26 +14,29 @@ import CheckoutCancelPage from "./components/CheckoutCancelPage";
 import MutuiPage from "./components/MutuiPage";
 import VisuraPage from "./components/VisuraPage";
 import AccountDashboard from "./components/AccountDashboard";
+import ErrorBoundary from "@/shared/components/ErrorBoundary";
 
 /* M17 — ImmocloudApp è ora solo il router B2C: le pagine vivono in pages/ e components/. */
 export default function ImmocloudApp() {
   return (
-    <div className={`min-h-screen ${THEME.bg} ${THEME.text}`} data-testid="immocloud-app">
-      <CloudTopNav />
-      <Routes>
-        <Route index element={<CloudHomePage />} />
-        <Route path="search" element={<CloudSearchPage />} />
-        <Route path="register" element={<CloudRegisterPage />} />
-        <Route path="property/:pid" element={<PropertyDetailPage />} />
-        <Route path="account/sell" element={<SellPage />} />
-        <Route path="account" element={<AccountDashboard />} />
-        <Route path="valutatore" element={<ValuatorPage />} />
-        <Route path="visura" element={<VisuraPage />} />
-        <Route path="checkout/success" element={<CheckoutSuccessPage />} />
-        <Route path="checkout/cancel" element={<CheckoutCancelPage />} />
-        <Route path="mutui" element={<MutuiPage />} />
-      </Routes>
-      <FooterB2C />
-    </div>
+    <ErrorBoundary name="cloud">
+      <div className={`min-h-screen ${THEME.bg} ${THEME.text}`} data-testid="immocloud-app">
+        <CloudTopNav />
+        <Routes>
+          <Route index element={<CloudHomePage />} />
+          <Route path="search" element={<CloudSearchPage />} />
+          <Route path="register" element={<CloudRegisterPage />} />
+          <Route path="property/:pid" element={<PropertyDetailPage />} />
+          <Route path="account/sell" element={<SellPage />} />
+          <Route path="account" element={<AccountDashboard />} />
+          <Route path="valutatore" element={<ValuatorPage />} />
+          <Route path="visura" element={<VisuraPage />} />
+          <Route path="checkout/success" element={<CheckoutSuccessPage />} />
+          <Route path="checkout/cancel" element={<CheckoutCancelPage />} />
+          <Route path="mutui" element={<MutuiPage />} />
+        </Routes>
+        <FooterB2C />
+      </div>
+    </ErrorBoundary>
   );
 }

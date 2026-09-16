@@ -59,6 +59,29 @@ class LeadBody(BaseModel):
     gdpr_consent: bool = False
 
 
+@router.post("/lead")
+async def mortgage_lead(body: LeadBody) -> Dict[str, Any]:
+    if not body.gdpr_consent:
+        raise HTTPException(status_code=400, detail="gdpr_consent_required")
+    db = Database.get()
+    lead_id = str(uuid4())
+    await db.mortgage_leads.insert_one({
+        "id": lead_id,
+        "name": body.name,
+        "email": body.email.lower(),
+        "phone": body.phone,
+        "property_price": body.property_price,
+        "loan_amount": body.loan_amount,
+        "duration_years": body.duration_years,
+        "rate_type": body.rate_type,
+        "best_rata": body.best_rata,
+        "gdpr_consent": True,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "source": "ImmobilCloud-Mutui",
+    })
+    return {"ok": True, "lead_id": lead_id}
+
+
 class PlanBody(BaseModel):
     loan_amount: float = Field(..., gt=1000, le=10_000_000)
     tan_pct: float = Field(..., gt=0, le=15)
@@ -255,24 +278,3 @@ async def amortization_plan(body: PlanBody) -> Dict[str, Any]:
             "balance": chunk[-1]["balance"],
         })
     return {"rata": round(rata, 2), "months_first_year": months[:12], "years": years}
-
-
-@router.post("/lead")
-async def mortgage_lead(body: LeadBody) -> Dict[str, Any]:
-    db = Database.get()
-    lead_id = str(uuid4())
-    await db.mortgage_leads.insert_one({
-        "id": lead_id,
-        "name": body.name,
-        "email": body.email.lower(),
-        "phone": body.phone,
-        "property_price": body.property_price,
-        "loan_amount": body.loan_amount,
-        "duration_years": body.duration_years,
-        "rate_type": body.rate_type,
-        "best_rata": body.best_rata,
-        "gdpr_consent": body.gdpr_consent,
-        "created_at": datetime.now(timezone.utc).isoformat(),
-        "source": "ImmobilCloud-Mutui",
-    })
-    return {"ok": True, "lead_id": lead_id}

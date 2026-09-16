@@ -1,5 +1,18 @@
 # OMNIA — Changelog
 
+## 2026-09-16 — Hardening sicurezza + anti-crash + anti-scrape
+
+**Tipo**: Security / resilience.
+
+- Checklist completa: `memory/SECURITY_CHECKLIST.md` (auth, tenant, GDPR, scrape, crash, go-live)
+- Middleware: security headers + budget IP globale path pubblici (300/h); OpenAPI/docs off in `OMNIA_ENV=production`
+- Rate limit feed OSF + publishing feed (60/h/IP)
+- Circuit breaker: Resend email, LLM Gemini, Nominatim geocode (fail-soft)
+- Gate prod `CREDENTIALS_MASTER_KEY`; GDPR hard lead mutui; email RL per-destinatario/globale
+- FE ErrorBoundary nested: cloud / CRM / academy / legal (crash isolato per area)
+- Health espone snapshot circuit breaker
+
+---
 ## 2026-09-16 — Gap ImmobilCloud chiusi + platform stress suite
 
 **Tipo**: Feature + resilience.

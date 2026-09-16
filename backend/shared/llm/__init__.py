@@ -131,6 +131,10 @@ async def generate_text(
     temperature: float = 0.4,
 ) -> str:
     from google import genai
+    from shared.security.circuit import call_with_circuit, circuit_open
+
+    if circuit_open("llm"):
+        raise LlmBusy("circuit_open:llm")
 
     key = resolve_api_key(api_key)
     client = genai.Client(api_key=key)
@@ -139,44 +143,54 @@ async def generate_text(
     if system:
         config["system_instruction"] = system
 
-    last_err: Optional[BaseException] = None
-    candidates = _model_candidates(model)
-    for i, model_id in enumerate(candidates):
-        try:
+    async def _run() -> str:
+        last_err: Optional[BaseException] = None
+        candidates = _model_candidates(model)
+        for i, model_id in enumerate(candidates):
             try:
-                resp = await client.aio.models.generate_content(
-                    model=model_id,
-                    contents=contents,
-                    config=config,
-                )
-            except Exception as aio_err:
-                if _is_retryable_model_error(aio_err):
-                    raise aio_err
-                logger.warning(
-                    "aio generate_content failed on %s (%s); trying sync",
-                    model_id,
-                    aio_err,
-                )
-                resp = client.models.generate_content(
-                    model=model_id,
-                    contents=contents,
-                    config=config,
-                )
-            return _extract_text(resp)
-        except Exception as e:
-            last_err = e
-            if _is_retryable_model_error(e):
-                logger.warning(
-                    "LLM model %s unavailable (%s); trying fallback", model_id, e
-                )
-                if _is_busy_error(e) and i < len(candidates) - 1:
-                    await asyncio.sleep(_RETRY_PAUSE_SEC)
-                continue
-            raise
-    assert last_err is not None
-    if _is_busy_error(last_err):
-        raise LlmBusy(str(last_err)) from last_err
-    raise last_err
+                try:
+                    resp = await client.aio.models.generate_content(
+                        model=model_id,
+                        contents=contents,
+                        config=config,
+                    )
+                except Exception as aio_err:
+                    if _is_retryable_model_error(aio_err):
+                        raise aio_err
+                    logger.warning(
+                        "aio generate_content failed on %s (%s); trying sync",
+                        model_id,
+                        aio_err,
+                    )
+                    resp = client.models.generate_content(
+                        model=model_id,
+                        contents=contents,
+                        config=config,
+                    )
+                return _extract_text(resp)
+            except Exception as e:
+                last_err = e
+                if _is_retryable_model_error(e):
+                    logger.warning(
+                        "LLM model %s unavailable (%s); trying fallback", model_id, e
+                    )
+                    if _is_busy_error(e) and i < len(candidates) - 1:
+                        await asyncio.sleep(_RETRY_PAUSE_SEC)
+                    continue
+                raise
+        assert last_err is not None
+        if _is_busy_error(last_err):
+            raise LlmBusy(str(last_err)) from last_err
+        raise last_err
+
+    try:
+        return await call_with_circuit("llm", _run, threshold=5, recovery_seconds=90.0)
+    except LlmBusy:
+        raise
+    except RuntimeError as e:
+        if str(e).startswith("circuit_open:"):
+            raise LlmBusy(str(e)) from e
+        raise
 
 
 async def generate_text_stream(
@@ -188,6 +202,10 @@ async def generate_text_stream(
     temperature: float = 0.4,
 ) -> AsyncIterator[str]:
     from google import genai
+    from shared.security.circuit import circuit_open, record_failure, record_success
+
+    if circuit_open("llm"):
+        raise LlmBusy("circuit_open:llm")
 
     key = resolve_api_key(api_key)
     client = genai.Client(api_key=key)
@@ -208,6 +226,7 @@ async def generate_text_stream(
                 t = getattr(chunk, "text", None)
                 if t:
                     yield t
+            record_success("llm")
             return
         except Exception as e:
             last_err = e
@@ -222,6 +241,7 @@ async def generate_text_stream(
                 continue
             break
 
+    record_failure("llm", str(last_err or "stream_failed"))
     logger.warning("stream unavailable (%s); falling back to single response", last_err)
     try:
         text = await generate_text(

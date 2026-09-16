@@ -99,11 +99,16 @@ async def lifespan(app: FastAPI):
     logger.info("OMNIA backend stopped.")
 
 
+_IS_PROD = (os.environ.get("OMNIA_ENV") or "").strip().lower() in ("production", "prod")
+
 app = FastAPI(
     title="OMNIA Real Estate Ecosystem API",
     version="0.1.0",
     description="Backend per ImmobilCloud + ImmoWeb + Omnia Academy",
     lifespan=lifespan,
+    docs_url=None if _IS_PROD else "/docs",
+    redoc_url=None if _IS_PROD else "/redoc",
+    openapi_url=None if _IS_PROD else "/openapi.json",
 )
 
 # CORS (allow Emergent preview + production subdomains)
@@ -124,6 +129,14 @@ app.add_middleware(
 # Host-based routing for verified custom domains (M2.S6)
 from apps.immoweb.host_routing import HostRoutingMiddleware
 app.add_middleware(HostRoutingMiddleware)
+
+# Security headers + global public scrape budget (innermost = runs first on request)
+from shared.security.middleware import (  # noqa: E402
+    SecurityHeadersMiddleware,
+    PublicAbuseGuardMiddleware,
+)
+app.add_middleware(SecurityHeadersMiddleware)
+app.add_middleware(PublicAbuseGuardMiddleware, max_public_per_hour=300)
 
 
 @app.middleware("http")
@@ -165,10 +178,16 @@ async def global_health(accept_language: str = Header(None)):
     except Exception as e:
         logger.error("health db ping failed: %s", e)
         db_status = "error"
+    circuits = {}
+    try:
+        from shared.security.circuit import snapshot
+        circuits = snapshot()
+    except Exception:
+        pass
     return HealthResponse(
         app="omnia",
         lang=lang,
-        message={"text": t("health.ok", lang=lang), "db": db_status},
+        message={"text": t("health.ok", lang=lang), "db": db_status, "circuits": circuits},
     )
 
 

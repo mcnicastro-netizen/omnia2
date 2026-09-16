@@ -1,8 +1,9 @@
 import React from "react";
 
 /**
- * Global error boundary — prevents white-screen-of-death in production.
- * Logs the error to console and offers a graceful "reload / report" UI.
+ * Error boundary — prevents white-screen-of-death.
+ * Nest per area (cloud / CRM) so a crash in one surface does not take down the other.
+ * Props: name (area label), compact (scoped height for nested use).
  */
 export default class ErrorBoundary extends React.Component {
   constructor(props) {
@@ -15,9 +16,8 @@ export default class ErrorBoundary extends React.Component {
   }
 
   componentDidCatch(error, errorInfo) {
-    // Keep a structured log so DevTools shows it cleanly
     // eslint-disable-next-line no-console
-    console.error("[OMNIA ErrorBoundary]", error, errorInfo);
+    console.error(`[OMNIA ErrorBoundary${this.props.name ? `:${this.props.name}` : ""}]`, error, errorInfo);
     this.setState({ errorInfo });
   }
 
@@ -32,13 +32,13 @@ export default class ErrorBoundary extends React.Component {
   render() {
     if (!this.state.error) return this.props.children;
     const stack = (this.state.error?.stack || String(this.state.error || "")).slice(0, 600);
+    const compact = Boolean(this.props.compact || this.props.name);
     return (
       <div
-        data-testid="error-boundary"
-        className="min-h-screen flex items-center justify-center px-6 bg-stone-50"
+        data-testid={this.props.name ? `error-boundary-${this.props.name}` : "error-boundary"}
+        className={`${compact ? "min-h-[50vh]" : "min-h-screen"} flex items-center justify-center px-6 bg-stone-50`}
       >
         <div className="max-w-lg w-full bg-white border border-stone-200 rounded-lg p-8 shadow-sm">
-          <div className="text-5xl mb-4">⚠️</div>
           <h1
             className="text-2xl font-semibold text-stone-900 mb-2"
             style={{ fontFamily: "'Fraunces', Georgia, serif" }}
@@ -46,7 +46,9 @@ export default class ErrorBoundary extends React.Component {
             Qualcosa è andato storto
           </h1>
           <p className="text-sm text-stone-600 mb-5">
-            Abbiamo registrato l'errore. Prova a ricaricare la pagina — se il problema persiste, contattaci.
+            {this.props.name
+              ? `L'area ${this.props.name} ha avuto un problema. Il resto dell'ecosistema resta attivo.`
+              : "Abbiamo registrato l'errore. Prova a ricaricare la pagina — se il problema persiste, contattaci."}
           </p>
           {process.env.NODE_ENV !== "production" && (
             <details className="bg-stone-50 border border-stone-200 rounded-md text-xs text-stone-700 mb-5">

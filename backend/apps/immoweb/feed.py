@@ -17,11 +17,15 @@ import xml.etree.ElementTree as ET
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 
-from fastapi import APIRouter, HTTPException, Response
+from fastapi import APIRouter, HTTPException, Request, Response
 
 from shared.db.connection import Database
+from shared.security.rate_limit import enforce_ip_rate_limit
 
 router = APIRouter(prefix="/feed", tags=["feed"])
+
+# Portals poll legitimately; still cap abusive scrapers (per-IP, fail-closed via HTTPException).
+_FEED_MAX_PER_HOUR = 60
 
 OSF_VERSION = "1.0"
 OSF_NS = "https://omniarealestateecosystem.it/schema/osf-v1"
@@ -131,7 +135,10 @@ def _property_to_dict(p: Dict[str, Any]) -> Dict[str, Any]:
 # ---------------- JSON endpoint ----------------
 
 @router.get("/{slug}.json")
-async def feed_json(slug: str):
+async def feed_json(slug: str, request: Request):
+    await enforce_ip_rate_limit(
+        request, bucket="feed_export", max_requests=_FEED_MAX_PER_HOUR, window_seconds=3600
+    )
     agency = await _resolve_agency(slug)
     properties = await _list_active_properties(agency["id"])
     body = {
@@ -248,7 +255,10 @@ def _build_xml(agency: Dict[str, Any], properties: List[Dict[str, Any]]) -> byte
 
 
 @router.get("/{slug}.xml")
-async def feed_xml(slug: str):
+async def feed_xml(slug: str, request: Request):
+    await enforce_ip_rate_limit(
+        request, bucket="feed_export", max_requests=_FEED_MAX_PER_HOUR, window_seconds=3600
+    )
     agency = await _resolve_agency(slug)
     properties = await _list_active_properties(agency["id"])
     xml_bytes = _build_xml(agency, properties)

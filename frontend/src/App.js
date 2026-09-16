@@ -5,6 +5,7 @@ import {
   Routes,
   Route,
   Navigate,
+  Outlet,
   useParams,
   useLocation,
 } from "react-router-dom";
@@ -163,10 +164,17 @@ function App() {
                   <Route path="reset-password" element={<ResetPasswordPage />} />
                   <Route path="accept-invite" element={<AcceptInvitePage />} />
 
-                  {/* B2C portal */}
+                  {/* B2C portal — nested boundary isolates portal crashes from CRM */}
                   <Route path="cloud/*" element={<ImmocloudApp />} />
 
-                  {/* B2B agency app */}
+                  {/* B2B agency CRM — one boundary for all /app/* surfaces */}
+                  <Route
+                    element={
+                      <ErrorBoundary name="crm">
+                        <Outlet />
+                      </ErrorBoundary>
+                    }
+                  >
                   <Route path="app" element={<ImmowebApp />} />
                   <Route
                     path="app/onboarding"
@@ -447,16 +455,26 @@ function App() {
                       </ProtectedRoute>
                     }
                   />
+                  </Route>
 
                   {/* Academy */}
-                  <Route path="learn/*" element={<AcademyApp />} />
+                  <Route
+                    path="learn/*"
+                    element={
+                      <ErrorBoundary name="academy">
+                        <AcademyApp />
+                      </ErrorBoundary>
+                    }
+                  />
 
                   {/* AL Legal (M5.S3) — accessible to all authenticated users (agents + B2C) */}
                   <Route
                     path="legal"
                     element={
                       <ProtectedRoute>
-                        <LegalApp />
+                        <ErrorBoundary name="legal">
+                          <LegalApp />
+                        </ErrorBoundary>
                       </ProtectedRoute>
                     }
                   />

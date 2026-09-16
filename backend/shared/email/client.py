@@ -77,6 +77,33 @@ async def send_email(
     variables: Optional[dict] = None,
 ) -> dict:
     """Send a localized transactional email via Resend."""
+    # Anti-abuse: per-recipient + global soft limits (fail-open on DB errors)
+    try:
+        from shared.security.rate_limit import enforce_rate_limit
+        await enforce_rate_limit(
+            bucket="email_to",
+            key=(to or "").lower()[:120],
+            max_requests=30,
+            window_seconds=3600,
+        )
+        await enforce_rate_limit(
+            bucket="email_global",
+            key="all",
+            max_requests=500,
+            window_seconds=3600,
+        )
+    except Exception as e:
+        from fastapi import HTTPException
+        if isinstance(e, HTTPException) and e.status_code == 429:
+            logger.warning("[EMAIL RATE] to=%s template=%s", to, template)
+            return {"id": None, "status": "rate_limited"}
+        logger.warning("email rate_limit fail-open: %s", e)
+
+    from shared.security.circuit import call_with_circuit, circuit_open
+    if circuit_open("resend"):
+        logger.warning("[EMAIL CIRCUIT OPEN] to=%s template=%s", to, template)
+        return {"id": None, "status": "circuit_open"}
+
     variables = dict(variables or {})
     # Inject default assets for branded emails (D-060, logo asset in FE public/)
     variables.setdefault(
@@ -104,8 +131,12 @@ async def send_email(
         "subject": subject,
         "html": html,
     }
+
+    async def _send():
+        return await asyncio.to_thread(resend.Emails.send, params)
+
     try:
-        result = await asyncio.to_thread(resend.Emails.send, params)
+        result = await call_with_circuit("resend", _send, threshold=5, recovery_seconds=120.0)
         logger.info(
             "[EMAIL OK] to=%s template=%s lang=%s id=%s",
             to, template, lang, result.get("id"),
