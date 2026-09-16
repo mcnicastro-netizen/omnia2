@@ -1,9 +1,8 @@
 # 💳 OMNIA — Pricing B2C (ImmobilCloud privati)
 
-**Versione**: 1.0
-**Ultima revisione**: 6 Agosto 2026 — approvato dal Founder
-**Stato**: 🟢 ATTIVO in documentazione · backend stub in `backend/apps/billing/b2c_products.py` · checkout Stripe one-shot = **sprint successivo**
-**Sovrascrive**: la sezione ImmobilCloud B2C di `PRICING_OMNIA.md` v2.0 (ripristinata qui)
+**Stato**: 🟢 ATTIVO · backend in `backend/apps/billing/b2c_products.py` · checkout Stripe one-shot operativo (`POST /api/billing/b2c/checkout`) · boost Vetrina/Premium/TOP B2C dal 16-Set-2026
+**Ultima revisione**: 16 Settembre 2026 — boost privati + confronto concorrenti
+**Versione**: 1.2**Sovrascrive**: la sezione ImmobilCloud B2C di `PRICING_OMNIA.md` v2.0 (ripristinata qui)
 
 > 📌 **Rail separato**: questo listino è **solo B2C** su portale `/cloud`.
 > Rail = **Stripe one-shot con carta**. Nessun credito, nessun pacchetto minimo €20, nessun abbonamento.
@@ -35,19 +34,32 @@ Ripristinati dalla sezione ImmobilCloud B2C di `PRICING_OMNIA.md` v2.0.
 | **Nascondi indirizzo esatto** | **€5,90** | -40% vs Idealista (€9,90). Add-on per annuncio |
 | **Foto extra** (pacchetto 10 foto oltre il base) | **€3,90** | Bundle unico |
 
-### Boost visibilità (Premium / TOP)
+### Boost visibilità (Vetrina / Premium / TOP)
 
-| Boost | Durata | Prezzo B2C | vs Idealista | vs Immobiliare.it |
-|---|:-:|:-:|:-:|:-:|
-| **Premium** | 30 gg | **€19,90** | -33% (€29,90) | -41% (€34 medio) |
-| **Premium** | 90 gg | **€49,90** | n/a | -38% (€79 medio) |
-| **Premium** | 180 gg | **€89,90** | n/a | -35% (€139 medio) |
-| **TOP** | 30 gg | **€29,90** | -19% (€36,90) | -45% (€54 medio) |
-| **TOP** | 90 gg | **€79,90** | n/a | -27% (€109 medio) |
-| **TOP** | 180 gg | **€149,90** | n/a | -22% (€189 medio) |
+| Boost | Durata | Prezzo B2C | vs Idealista | vs Immobiliare.it | vs Subito |
+|---|:-:|:-:|:-:|:-:|:-:|
+| **Vetrina** | 30 gg | **€14,90** | n/a (no SKU omonimo) | Extravisibilità agenzia (non listino privati) | ~€9–13/mese “in vetrina” |
+| **Premium** | 30 gg | **€19,90** | -33% (~€29,90) | -41% (~€34 medio) | sopra Subito evidenza |
+| **Premium** | 90 gg | **€49,90** | n/a | vs ~€24,95–€79 | — |
+| **Premium** | 180 gg | **€89,90** | n/a | vs ~€44,95–€139 | — |
+| **TOP** | 30 gg | **€29,90** | -19% (~€36,90) | -45% (~€54 medio) | — |
+| **TOP** | 90 gg | **€79,90** | n/a | vs ~€99,95 | — |
+| **TOP** | 180 gg | **€149,90** | n/a | vs ~€179,95 | — |
+
+**SKU Stripe** (`b2c_products.py`): `b2c_vetrina_30`, `b2c_premium_{30,90,180}`, `b2c_top_{30,90,180}`.
+Checkout: `POST /api/billing/b2c/checkout` con `listing_id` obbligatorio.
 
 **Strategia**: sconto aggressivo 25-45% sotto Idealista in **Fase 1 acquisition**. Da Fase 2 (12+ mesi) allinearsi a -15%.
 
+#### Confronto concorrenti (settembre 2026 — fonti pubbliche / listini citati)
+
+| Portale | Pubblicazione base | Boost privati noti | Note |
+|---|---|---|---|
+| **Idealista** | Primi 2 annunci gratis; nascondi indirizzo **€9,90** | Top / Premium / Sprint24 / Evidenza — prezzi **dinamici** in area riservata (non listino fisso pubblico). Rif. storici usati nel pricing OMNIA: Premium ~€29,90 · TOP ~€36,90 (30gg) | Prezzo esatto al checkout Idealista |
+| **Immobiliare.it** | Fino a 2 annunci gratis (3 o 6 mesi) | **Premium** ~€24,95/90gg · ~€44,95/180gg; **TOP** ~€99,95/90gg · ~€179,95/180gg. Opzioni 30gg con rinnovo automatico. Vetrina/Star/Sky = **extravisibilità agenzie** | Fonti: pagina pubblica + guide terze (Pedra, Lucascialo) |
+| **Subito.it** | Annuncio immobiliare tipicamente gratis | **In vetrina** da ~€0,60/giorno · ~€3,20/7gg · ~€9,40/mese · ~€12,90/2 mesi; **In evidenza** da ~€3,99/7gg; prezzi algoritmici | Marketplace generalista, non peer diretto Idealista |
+
+> I listini concorrenti cambiano spesso e per Idealista sono spesso **personalizzati**. I numeri OMNIA in tabella restano quelli approvati Founder; i confronti sono indicativi per posizionamento.
 ---
 
 ## 2️⃣ Strumenti self-service (portale `/cloud`)
@@ -168,12 +180,14 @@ Molti servizi esistono **sia lato agenzia (a crediti)** sia **lato privato (a ca
 | CTA Valutatore su `PropertyDetailPage.jsx` (base + UNI) | ✅ (16-Ago-2026) | Attuale |
 | ActionCard "Valutatore immobiliare" su `CloudHomePage.jsx` | ✅ (16-Ago-2026) | Attuale |
 | Pytest `test_b2c_valuator_gates.py` (10/10 verdi) | ✅ (16-Ago-2026) | Attuale |
-| Checkout staging €0,90 (B2C-CHECKOUT-02) | ❌ | Prossimo |
-| Checkout HAL Legal €1,00 (B2C-CHECKOUT-02) | ❌ | Prossimo |
+| Checkout staging €0,90 (B2C-CHECKOUT-02) | ✅ (catalog + Stripe lazy price) | Attuale |
+| Checkout HAL Legal €1,00 (B2C-CHECKOUT-02) | ✅ (catalog + Stripe lazy price) | Attuale |
+| Boost Vetrina / Premium / TOP B2C (carta + badge + sort) | ✅ (16-Set-2026) | Attuale |
 | Cap. 21 manuale HAL YAML | ❌ (post-merge · Cursor) | Prossimo |
 
 **Task B2C-VAL-01 chiuso il 16-Ago-2026**: dual-tier valuator con gate €2,99 Stripe, rate limit 1×/12mo, paywall PDF, refactor UX, CTA su scheda annuncio, pytest 10/10.
 
+**Task B2C-BOOST-01 chiuso il 16-Set-2026**: SKU `b2c_vetrina_30` + `b2c_premium_*` + `b2c_top_*` nel catalogo Stripe; checkout con `listing_id`; webhook applica `boost_tier`/`boost_rank`/`boost_until`; ricerca pubblica promuove i boost attivi; UI SellPage.
 ---
 
 ## 🗓️ Storico versioni
@@ -182,3 +196,4 @@ Molti servizi esistono **sia lato agenzia (a crediti)** sia **lato privato (a ca
 |------|:-:|------|
 | 06-Ago-2026 | **v1.0** | Prima stesura ufficiale. Numeri annunci privati ripristinati da PRICING_OMNIA v2.0. Tabella strumenti self-service con margini validati. Stub backend in `b2c_products.py`. |
 | 16-Ago-2026 | **v1.1** | Task B2C-VAL-01 completato. §7 aggiornato: gate valutatore dual-tier + Stripe checkout €2,99 + paywall PDF + rate limit 1×/12mo + refactor UX + CTA scheda annuncio + pytest 10/10. |
+| 16-Set-2026 | **v1.2** | Boost Vetrina/Premium/TOP acquistabili da privato via Stripe. Tabella confronto Idealista / Immobiliare.it / Subito. SKU + webhook + SellPage. |

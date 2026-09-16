@@ -53,6 +53,9 @@ export default function SellPage() {
   const [error, setError] = useState("");
   const [showForm, setShowForm] = useState(false);
 
+  const [boostCatalog, setBoostCatalog] = useState([]);
+  const [boostBusy, setBoostBusy] = useState(null); // product_key being purchased
+
   // Redirect if not logged in or not a B2C user
   useEffect(() => {
     if (user === null) return; // still loading
@@ -61,14 +64,47 @@ export default function SellPage() {
     }
   }, [user, lang, nav]);
 
-  // Load listings
+  // Load listings + boost catalog
   useEffect(() => {
     if (user && user.account_type === "b2c") {
       api.get("/cloud/me/properties")
         .then((r) => setListings(r.data.items || []))
         .catch(() => {});
+      api.get("/billing/b2c/boosts")
+        .then((r) => setBoostCatalog(r.data.products || []))
+        .catch(() => {});
     }
   }, [user]);
+
+  const buyBoost = async (listingId, productKey) => {
+    setBoostBusy(productKey);
+    setError("");
+    try {
+      const origin = window.location.origin;
+      const { data } = await api.post("/billing/b2c/checkout", {
+        product_key: productKey,
+        listing_id: listingId,
+        success_url: `${origin}/${lang}/cloud/account/sell?boost=ok`,
+        cancel_url: `${origin}/${lang}/cloud/account/sell?boost=cancel`,
+      });
+      if (data?.checkout_url) {
+        window.location.href = data.checkout_url;
+        return;
+      }
+      setError(t("cloud.sell.boost_checkout_error"));
+    } catch (e) {
+      setError(formatApiErrorDetail(e?.response?.data?.detail) || t("cloud.sell.boost_checkout_error"));
+    } finally {
+      setBoostBusy(null);
+    }
+  };
+
+  const boostActive = (l) => {
+    if (!l?.boost_tier || !l?.boost_until) return null;
+    const until = Date.parse(l.boost_until);
+    if (Number.isNaN(until) || until <= Date.now()) return null;
+    return l.boost_tier;
+  };
 
   const startNew = () => {
     setEditing(null);
@@ -201,6 +237,14 @@ export default function SellPage() {
                     </p>
                   )}
                   <StatusBadge status={l.moderation_status} listingStatus={l.status} notes={l.moderation_notes} />
+                  {boostActive(l) && (
+                    <p className="text-[11px] text-emerald-800 mt-1" data-testid={`boost-active-${l.id}`}>
+                      {t("cloud.sell.boost_active", {
+                        tier: String(boostActive(l)).toUpperCase(),
+                        until: new Date(l.boost_until).toLocaleDateString(lang),
+                      })}
+                    </p>
+                  )}
                 </div>
                 <div className="flex gap-2 flex-wrap">
                   <button
@@ -229,6 +273,34 @@ export default function SellPage() {
                   </button>
                 </div>
               </div>
+              {boostCatalog.length > 0 && (
+                <div className="mt-4 pt-4 border-t border-stone-100" data-testid={`boost-panel-${l.id}`}>
+                  <p className="text-[11px] uppercase tracking-widest text-stone-500 mb-2">
+                    {t("cloud.sell.boost_title")}
+                  </p>
+                  <p className="text-xs text-stone-600 mb-3">{t("cloud.sell.boost_subtitle")}</p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+                    {boostCatalog.map((p) => (
+                      <button
+                        key={p.key}
+                        type="button"
+                        data-testid={`boost-buy-${p.key}`}
+                        disabled={!!boostBusy}
+                        onClick={() => buyBoost(l.id, p.key)}
+                        className="text-left px-3 py-2.5 border border-stone-200 rounded hover:border-[#0B1E3F] hover:bg-stone-50 disabled:opacity-50 transition"
+                      >
+                        <div className="text-xs font-medium text-stone-900">{p.label_it}</div>
+                        <div className="text-sm text-[#0B1E3F] mt-0.5">
+                          € {Number(p.price_eur).toLocaleString("it-IT", { minimumFractionDigits: 2 })}
+                        </div>
+                        <div className="text-[10px] uppercase tracking-widest text-stone-500 mt-1">
+                          {boostBusy === p.key ? t("common.saving") : t("cloud.sell.boost_cta")}
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
             </article>
           ))}
         </section>

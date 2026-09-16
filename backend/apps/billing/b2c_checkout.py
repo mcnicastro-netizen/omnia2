@@ -1,15 +1,17 @@
-"""OMNIA — B2C one-shot Stripe checkout (Cap. 21 · task B2C-VAL-01).
+"""OMNIA — B2C one-shot Stripe checkout (Cap. 21 · B2C-VAL-01 + boosts).
 
 Endpoint namespace: `/api/billing/b2c/*`
 
 Endpoints:
-- `POST /checkout`               → create Stripe hosted checkout session for a b2c product
+- `GET  /catalog`                → listino prodotti one-shot (strumenti + boost)
+- `GET  /boosts`                 → solo Vetrina / Premium / TOP
+- `POST /checkout`               → create Stripe hosted checkout session
 - `GET  /valuator-status`        → UI status (base remaining, entitlement, price)
 - `GET  /status/{session_id}`    → post-checkout polling (session state)
 
 The webhook `checkout.session.completed` is handled in `apps/billing/routes.py`
-via `_apply_b2c_purchase_side_effects(session_id)` (kept in one place for
-signature verification consistency).
+via `apply_b2c_purchase_side_effects` (kept in one place for signature
+verification consistency).
 
 Environment:
 - `STRIPE_ENABLED=true` (bool)
@@ -20,22 +22,31 @@ from __future__ import annotations
 
 import logging
 import os
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from typing import Optional
 
 import stripe
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field, HttpUrl
 
 from shared.auth.dependencies import get_current_user
 from shared.db.connection import Database
 
-from apps.billing.b2c_products import B2C_ONE_SHOT_PRODUCTS
+from apps.billing.b2c_products import (
+    B2C_ONE_SHOT_PRODUCTS,
+    is_b2c_boost_product,
+    list_b2c_catalog,
+    list_boost_products,
+)
 from apps.billing.b2c_entitlements import (
     check_base_valuation_allowed,
-    check_uni_entitlement,
     count_uni_purchases_today,
     record_uni_purchase,
+)
+from apps.billing.b2c_boosts import (
+    apply_boost_to_listing,
+    boost_duration_days,
+    effective_boost,
 )
 
 logger = logging.getLogger("omnia.billing.b2c")
@@ -62,6 +73,7 @@ class B2CCheckoutRequest(BaseModel):
     success_url: HttpUrl
     cancel_url: HttpUrl
     payload_hash: Optional[str] = Field(default=None, max_length=128)
+    listing_id: Optional[str] = Field(default=None, max_length=80)
 
 
 def _get_or_create_stripe_price(product_key: str) -> str:
@@ -77,7 +89,6 @@ def _get_or_create_stripe_price(product_key: str) -> str:
     if prices:
         return prices[0].id
 
-    # Create Product + Price (test-mode friendly)
     product = stripe.Product.create(
         name=catalog["label_it"],
         metadata={"b2c_product_key": product_key},
@@ -93,6 +104,58 @@ def _get_or_create_stripe_price(product_key: str) -> str:
     return price.id
 
 
+async def _assert_listing_owned(user_id: str, listing_id: str) -> dict:
+    db = Database.get()
+    listing = await db.properties.find_one(
+        {
+            "id": listing_id,
+            "owner_user_id": user_id,
+            "is_private_listing": True,
+        },
+        {"_id": 0, "id": 1, "title": 1, "status": 1, "moderation_status": 1,
+         "boost_tier": 1, "boost_until": 1, "boost_rank": 1, "boost_product_key": 1},
+    )
+    if not listing:
+        raise HTTPException(status_code=404, detail="listing_not_found")
+    return listing
+
+
+@router.get("/catalog")
+async def b2c_catalog():
+    """Public listino B2C (strumenti + boost). No auth required."""
+    return {
+        "currency": "eur",
+        "rail": "stripe_one_shot",
+        "products": list_b2c_catalog(include_boosts=True),
+        "boosts": list_boost_products(),
+        "stripe_enabled": _is_enabled(),
+    }
+
+
+@router.get("/boosts")
+async def b2c_boost_catalog():
+    """Boost SKUs only (Vetrina / Premium / TOP)."""
+    return {
+        "currency": "eur",
+        "products": list_boost_products(),
+        "stripe_enabled": _is_enabled(),
+    }
+
+
+@router.get("/boosts/listing/{listing_id}")
+async def b2c_listing_boost_status(
+    listing_id: str,
+    user: dict = Depends(get_current_user),
+):
+    """Current boost status for one of the caller's private listings."""
+    listing = await _assert_listing_owned(user["id"], listing_id)
+    return {
+        "listing_id": listing_id,
+        "boost": effective_boost(listing),
+        "products": list_boost_products(),
+    }
+
+
 @router.post("/checkout")
 async def b2c_checkout(
     payload: B2CCheckoutRequest,
@@ -105,10 +168,15 @@ async def b2c_checkout(
     if not catalog:
         raise HTTPException(status_code=400, detail=f"unknown_product:{payload.product_key}")
 
-    # Daily cap check for UNI (defensive; UI already blocks)
+    listing_id: Optional[str] = None
+    if is_b2c_boost_product(payload.product_key):
+        if not payload.listing_id:
+            raise HTTPException(status_code=400, detail="listing_id_required")
+        await _assert_listing_owned(user["id"], payload.listing_id)
+        listing_id = payload.listing_id
+
     daily_cap = catalog.get("daily_limit_per_user")
     if daily_cap:
-        # Only track "paid" against cap; pending sessions do not count
         db = Database.get()
         start = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
         used = await db.b2c_purchases.count_documents({
@@ -123,6 +191,16 @@ async def b2c_checkout(
                 "message": f"Hai raggiunto il limite giornaliero di {daily_cap} acquisti.",
             })
 
+    meta = {
+        "b2c_product_key": payload.product_key,
+        "user_id": user["id"],
+        "payload_hash": payload.payload_hash or "",
+        "listing_id": listing_id or "",
+    }
+    if is_b2c_boost_product(payload.product_key):
+        meta["boost_tier"] = str(catalog.get("boost_tier") or "")
+        meta["duration_days"] = str(catalog.get("duration_days") or "")
+
     try:
         price_id = _get_or_create_stripe_price(payload.product_key)
         session = stripe.checkout.Session.create(
@@ -131,35 +209,27 @@ async def b2c_checkout(
             success_url=f"{str(payload.success_url)}?session_id={{CHECKOUT_SESSION_ID}}",
             cancel_url=str(payload.cancel_url),
             customer_email=user.get("email"),
-            metadata={
-                "b2c_product_key": payload.product_key,
-                "user_id": user["id"],
-                "payload_hash": payload.payload_hash or "",
-            },
-            payment_intent_data={
-                "metadata": {
-                    "b2c_product_key": payload.product_key,
-                    "user_id": user["id"],
-                    "payload_hash": payload.payload_hash or "",
-                },
-            },
+            metadata=meta,
+            payment_intent_data={"metadata": meta},
         )
     except stripe.error.StripeError as e:
         logger.error("b2c_checkout stripe error: %s", e)
         raise HTTPException(status_code=502, detail={"code": "stripe_error", "message": str(e)})
 
-    # Persist pending purchase (webhook will mark it paid + set expires_at)
     await record_uni_purchase(
         user_id=user["id"],
         stripe_session_id=session["id"],
         payload_hash=payload.payload_hash,
         product_key=payload.product_key,
         status="pending",
+        listing_id=listing_id,
     )
 
     return {
         "checkout_url": session["url"],
         "session_id": session["id"],
+        "product_key": payload.product_key,
+        "listing_id": listing_id,
     }
 
 
@@ -198,6 +268,7 @@ async def b2c_status(session_id: str, user: dict = Depends(get_current_user)):
         "status": doc.get("status"),
         "product_key": doc.get("product_key"),
         "payload_hash": doc.get("payload_hash"),
+        "listing_id": doc.get("listing_id"),
         "expires_at": doc.get("expires_at"),
         "paid_at": doc.get("paid_at"),
     }
@@ -211,16 +282,62 @@ async def apply_b2c_purchase_side_effects(session: dict) -> None:
     product_key = md.get("b2c_product_key")
     if not session_id or not product_key:
         return
-    if product_key not in ("b2c_valuator_uni_pdf", "b2c_visura_catastale"):
-        logger.info("b2c webhook: unsupported product_key=%s (skipping)", product_key)
-        return
+
     from apps.billing.b2c_entitlements import mark_uni_purchase_paid
-    updated = await mark_uni_purchase_paid(session_id)
-    if updated:
-        logger.info("b2c_purchase paid: session=%s product=%s user=%s",
-                    session_id, product_key, updated.get("user_id"))
-        if product_key == "b2c_visura_catastale":
-            from apps.immocloud.visura_b2c import fulfill_paid_visura_order
-            await fulfill_paid_visura_order(session_id)
-    else:
-        logger.warning("b2c_purchase webhook: no local record for session=%s", session_id)
+
+    if is_b2c_boost_product(product_key):
+        days = boost_duration_days(product_key) or 30
+        now = datetime.now(timezone.utc)
+        expires = now + timedelta(days=days)
+        updated = await mark_uni_purchase_paid(session_id, expires_at=expires)
+        if not updated:
+            logger.warning("b2c_purchase webhook: no local record for session=%s", session_id)
+            return
+        listing_id = md.get("listing_id") or updated.get("listing_id")
+        user_id = md.get("user_id") or updated.get("user_id")
+        if listing_id and user_id:
+            await apply_boost_to_listing(
+                listing_id=listing_id,
+                user_id=user_id,
+                product_key=product_key,
+                paid_at=now,
+            )
+        else:
+            logger.error(
+                "b2c boost paid but missing listing/user session=%s md=%s",
+                session_id, md,
+            )
+        logger.info(
+            "b2c_purchase paid (boost): session=%s product=%s user=%s listing=%s",
+            session_id, product_key, user_id, listing_id,
+        )
+        return
+
+    if product_key in ("b2c_valuator_uni_pdf", "b2c_visura_catastale"):
+        updated = await mark_uni_purchase_paid(session_id)
+        if updated:
+            logger.info(
+                "b2c_purchase paid: session=%s product=%s user=%s",
+                session_id, product_key, updated.get("user_id"),
+            )
+            if product_key == "b2c_visura_catastale":
+                from apps.immocloud.visura_b2c import fulfill_paid_visura_order
+                await fulfill_paid_visura_order(session_id)
+        else:
+            logger.warning("b2c_purchase webhook: no local record for session=%s", session_id)
+        return
+
+    # Other catalog products (staging, HAL legal): mark paid with 24h ledger window;
+    # fulfillment is consumed at feature call-time via b2c_purchases.
+    if product_key in B2C_ONE_SHOT_PRODUCTS:
+        updated = await mark_uni_purchase_paid(session_id)
+        if updated:
+            logger.info(
+                "b2c_purchase paid: session=%s product=%s user=%s",
+                session_id, product_key, updated.get("user_id"),
+            )
+        else:
+            logger.warning("b2c_purchase webhook: no local record for session=%s", session_id)
+        return
+
+    logger.info("b2c webhook: unsupported product_key=%s (skipping)", product_key)

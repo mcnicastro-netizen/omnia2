@@ -29,6 +29,24 @@ export default function PropertyCard({ p }) {
             {t("cloud.op_rent")}
           </span>
         )}
+        {p.boost_tier && (
+          <span
+            data-testid={`boost-badge-${p.boost_tier}`}
+            className={`absolute bottom-3 left-3 text-[10px] uppercase tracking-widest text-white px-2 py-1 rounded ${
+              p.boost_tier === "top"
+                ? "bg-[#0B1E3F]"
+                : p.boost_tier === "premium"
+                  ? "bg-amber-700"
+                  : "bg-stone-700"
+            }`}
+          >
+            {p.boost_tier === "top"
+              ? t("cloud.boost_badge_top")
+              : p.boost_tier === "premium"
+                ? t("cloud.boost_badge_premium")
+                : t("cloud.boost_badge_vetrina")}
+          </span>
+        )}
       </div>
       <div className="p-4">
         <p className="text-xl font-semibold text-[#0B1E3F]" style={{ fontFamily: "'Fraunces', Georgia, serif" }}>

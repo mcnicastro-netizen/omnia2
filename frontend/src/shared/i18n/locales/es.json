@@ -632,6 +632,9 @@
     "page_of": "Página {{page}} de {{total}}",
     "by_agency": "Publicado por",
     "energy": "Clase",
+    "boost_badge_vetrina": "Vitrina",
+    "boost_badge_premium": "Premium",
+    "boost_badge_top": "TOP",
     "rooms_short": "hab.",
     "baths_short": "baños",
     "footer_tagline": "Portal OMNIA · Privados y agencias · Italia",
@@ -756,7 +759,12 @@
       "status_pending": "En revisión",
       "status_approved": "Aprobado",
       "status_rejected": "Rechazado",
-      "status_live": "Publicado en ImmobilCloud"
+      "status_live": "Publicado en ImmobilCloud",
+      "boost_title": "Aumenta la visibilidad",
+      "boost_subtitle": "Vitrina, Premium o TOP — pago único con tarjeta. Tu anuncio sube en el ranking durante el periodo elegido.",
+      "boost_cta": "Pagar con Stripe",
+      "boost_active": "Boost {{tier}} activo hasta el {{until}}",
+      "boost_checkout_error": "No se pudo iniciar el pago. Inténtalo de nuevo."
     },
     "save_search": {
       "cta": "Guardar esta búsqueda",

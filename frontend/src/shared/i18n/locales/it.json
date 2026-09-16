@@ -830,6 +830,9 @@
     "page_of": "Pagina {{page}} di {{total}}",
     "by_agency": "Pubblicato da",
     "energy": "Classe",
+    "boost_badge_vetrina": "Vetrina",
+    "boost_badge_premium": "Premium",
+    "boost_badge_top": "TOP",
     "rooms_short": "loc.",
     "baths_short": "bagni",
     "footer_tagline": "Portale OMNIA · Privati e Agenzie · Italia",
@@ -905,7 +908,12 @@
       "status_pending": "In revisione",
       "status_approved": "Approvato",
       "status_rejected": "Respinto",
-      "status_live": "Pubblicato su ImmobilCloud"
+      "status_live": "Pubblicato su ImmobilCloud",
+      "boost_title": "Aumenta la visibilità",
+      "boost_subtitle": "Vetrina, Premium o TOP — pagamento una tantum con carta. L'annuncio sale in classifica per la durata scelta.",
+      "boost_cta": "Paga con Stripe",
+      "boost_active": "Boost {{tier}} attivo fino al {{until}}",
+      "boost_checkout_error": "Impossibile avviare il pagamento. Riprova."
     },
     "save_search": {
       "cta": "Salva questa ricerca",

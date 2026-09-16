@@ -121,30 +121,40 @@ async def record_uni_purchase(
     payload_hash: Optional[str],
     product_key: str = "b2c_valuator_uni_pdf",
     status: str = "pending",
+    listing_id: Optional[str] = None,
 ) -> str:
     """Create a b2c_purchases record. Returns internal id."""
     db = Database.get()
     now = datetime.now(timezone.utc)
     doc_id = uuid4().hex
-    await db.b2c_purchases.insert_one({
+    doc = {
         "id": doc_id,
         "user_id": user_id,
         "product_key": product_key,
         "stripe_session_id": stripe_session_id,
         "payload_hash": payload_hash,
+        "listing_id": listing_id,
         "status": status,
         "created_at": now.isoformat(),
         "expires_at": None,  # populated only when status transitions to paid
-    })
+    }
+    await db.b2c_purchases.insert_one(doc)
     return doc_id
 
 
-async def mark_uni_purchase_paid(stripe_session_id: str) -> Optional[dict]:
+async def mark_uni_purchase_paid(
+    stripe_session_id: str,
+    *,
+    expires_at: Optional[datetime] = None,
+) -> Optional[dict]:
     """Idempotent: called from the Stripe webhook (checkout.session.completed).
-    Marks the purchase paid and sets `expires_at = now + 24h`."""
+
+    Marks the purchase paid. Default entitlement window is 24h (UNI/PDF);
+    boost products pass an explicit `expires_at` (now + duration_days).
+    """
     db = Database.get()
     now = datetime.now(timezone.utc)
-    expires = now + timedelta(hours=UNI_ENTITLEMENT_TTL_HOURS)
+    expires = expires_at or (now + timedelta(hours=UNI_ENTITLEMENT_TTL_HOURS))
     doc = await db.b2c_purchases.find_one_and_update(
         {"stripe_session_id": stripe_session_id},
         {"$set": {

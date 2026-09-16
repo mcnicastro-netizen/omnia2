@@ -632,6 +632,9 @@
     "page_of": "Page {{page}} of {{total}}",
     "by_agency": "Listed by",
     "energy": "Class",
+    "boost_badge_vetrina": "Showcase",
+    "boost_badge_premium": "Premium",
+    "boost_badge_top": "TOP",
     "rooms_short": "rms",
     "baths_short": "baths",
     "footer_tagline": "OMNIA portal · Private sellers & agencies · Italy",
@@ -756,7 +759,12 @@
       "status_pending": "Under review",
       "status_approved": "Approved",
       "status_rejected": "Rejected",
-      "status_live": "Live on ImmobilCloud"
+      "status_live": "Live on ImmobilCloud",
+      "boost_title": "Boost visibility",
+      "boost_subtitle": "Showcase, Premium or TOP — one-shot card payment. Your listing ranks higher for the selected duration.",
+      "boost_cta": "Pay with Stripe",
+      "boost_active": "{{tier}} boost active until {{until}}",
+      "boost_checkout_error": "Could not start checkout. Please try again."
     },
     "save_search": {
       "cta": "Save this search",

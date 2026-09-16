@@ -61,6 +61,7 @@ LIST_FIELDS = {
     "photos": 1, "features": 1,
     "updated_at": 1, "created_at": 1,
     "reference_code": 1,
+    "boost_tier": 1, "boost_rank": 1, "boost_until": 1,
 }
 
 
@@ -79,6 +80,23 @@ def _cover_photo(photos: Optional[List[dict]]) -> Optional[str]:
         return None
     idx = next((i for i, p in enumerate(photos) if p.get("is_cover")), 0)
     return f"/api/public/property/{photos[idx].get('property_id') or ''}/photo/{idx}".replace("//photo/", "/photo/")
+
+
+def _active_boost_tier(p: Dict[str, Any]) -> Optional[str]:
+    """Return boost_tier only while boost_until is in the future."""
+    tier = p.get("boost_tier")
+    until_raw = p.get("boost_until")
+    if not tier or not until_raw:
+        return None
+    try:
+        until = datetime.fromisoformat(str(until_raw).replace("Z", "+00:00"))
+    except (ValueError, TypeError):
+        return None
+    if until.tzinfo is None:
+        until = until.replace(tzinfo=timezone.utc)
+    if until <= datetime.now(timezone.utc):
+        return None
+    return tier
 
 
 def _to_card(p: Dict[str, Any], agency: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
@@ -105,6 +123,7 @@ def _to_card(p: Dict[str, Any], agency: Optional[Dict[str, Any]] = None) -> Dict
         "photo_count": len(photos),
         "reference_code": p.get("reference_code"),
         "updated_at": p.get("updated_at"),
+        "boost_tier": _active_boost_tier(p),
         "agency": {
             "id": agency.get("id") if agency else None,
             "name": agency.get("display_name") if agency else None,
@@ -182,7 +201,7 @@ async def public_search(
             {"zone": {"$regex": q, "$options": "i"}},
         ]
 
-    # Sort
+    # Sort — default "recent" promotes active Vetrina/Premium/TOP first
     sort_map = {
         "recent": [("updated_at", -1)],
         "price_asc": [("price", 1), ("rent_monthly", 1)],
@@ -193,8 +212,31 @@ async def public_search(
 
     total = await db.properties.count_documents(flt)
     skip = (page - 1) * page_size
-    cursor = db.properties.find(flt, LIST_FIELDS).sort(sort_spec).skip(skip).limit(page_size)
-    props = await cursor.to_list(length=page_size)
+    if sort == "recent":
+        now_iso = datetime.now(timezone.utc).isoformat()
+        pipeline = [
+            {"$match": flt},
+            {"$addFields": {
+                "_eff_boost": {
+                    "$cond": [
+                        {"$and": [
+                            {"$gt": [{"$ifNull": ["$boost_until", ""]}, now_iso]},
+                            {"$gt": [{"$ifNull": ["$boost_rank", 0]}, 0]},
+                        ]},
+                        "$boost_rank",
+                        0,
+                    ]
+                }
+            }},
+            {"$sort": {"_eff_boost": -1, "updated_at": -1}},
+            {"$skip": skip},
+            {"$limit": page_size},
+            {"$project": {**{k: v for k, v in LIST_FIELDS.items() if k != "_id"}, "_id": 0}},
+        ]
+        props = await db.properties.aggregate(pipeline).to_list(length=page_size)
+    else:
+        cursor = db.properties.find(flt, LIST_FIELDS).sort(sort_spec).skip(skip).limit(page_size)
+        props = await cursor.to_list(length=page_size)
 
     # Batch-resolve agencies
     agency_ids = list({p.get("agency_id") for p in props if p.get("agency_id")})
