@@ -1,0 +1,609 @@
+{
+  "kind": "crm_clients_ladder",
+  "run_id": "c1ea364f",
+  "api": "http://127.0.0.1:43121/api",
+  "agency_id": "demo-agency-001",
+  "tiers": [
+    {
+      "tier_clients": 10,
+      "clients_in_db": 10,
+      "properties_in_db": 20,
+      "seed_seconds": 0.016,
+      "endpoints": {
+        "/app/agencies/me": {
+          "status": 200,
+          "ms": 44.2,
+          "bytes": 386
+        },
+        "/app/dashboard/kpis": {
+          "status": 200,
+          "ms": 51.9,
+          "bytes": 796
+        },
+        "/app/clients?page=1&page_size=50": {
+          "status": 200,
+          "ms": 47.8,
+          "bytes": 2910
+        },
+        "/app/clients/smart?limit=50": {
+          "status": 200,
+          "ms": 48.0,
+          "bytes": 6913
+        },
+        "/app/properties?page=1&page_size=50": {
+          "status": 200,
+          "ms": 48.1,
+          "bytes": 8274
+        },
+        "/app/matches?min_score=40&limit=20": {
+          "status": 200,
+          "ms": 48.0,
+          "bytes": 17568
+        },
+        "/notifications?limit=20": {
+          "status": 200,
+          "ms": 47.9,
+          "bytes": 642
+        },
+        "/notifications/unread-count": {
+          "status": 200,
+          "ms": 44.1,
+          "bytes": 18
+        },
+        "/auth/me": {
+          "status": 200,
+          "ms": 44.0,
+          "bytes": 591
+        }
+      },
+      "concurrency": {
+        "clients_list": {
+          "path": "/app/clients?page=1&page_size=50",
+          "n": 40,
+          "workers": 20,
+          "errors": 0,
+          "wall_s": 0.102,
+          "p50_ms": 43.9,
+          "p95_ms": 48.9,
+          "avg_ms": 43.8,
+          "max_ms": 51.8
+        },
+        "dashboard": {
+          "path": "/app/dashboard/kpis",
+          "n": 40,
+          "workers": 20,
+          "errors": 0,
+          "wall_s": 0.164,
+          "p50_ms": 75.5,
+          "p95_ms": 108.0,
+          "avg_ms": 73.2,
+          "max_ms": 110.4
+        },
+        "properties": {
+          "path": "/app/properties?page=1&page_size=50",
+          "n": 40,
+          "workers": 20,
+          "errors": 0,
+          "wall_s": 0.095,
+          "p50_ms": 38.8,
+          "p95_ms": 46.3,
+          "avg_ms": 39.0,
+          "max_ms": 48.6
+        },
+        "clients_smart": {
+          "path": "/app/clients/smart?limit=50",
+          "n": 20,
+          "workers": 10,
+          "errors": 0,
+          "wall_s": 0.076,
+          "p50_ms": 32.9,
+          "p95_ms": 39.4,
+          "avg_ms": 32.0,
+          "max_ms": 40.3
+        }
+      },
+      "ts": "2026-09-16T08:25:25.235854+00:00"
+    },
+    {
+      "tier_clients": 50,
+      "clients_in_db": 50,
+      "properties_in_db": 20,
+      "seed_seconds": 0.002,
+      "endpoints": {
+        "/app/agencies/me": {
+          "status": 200,
+          "ms": 44.0,
+          "bytes": 386
+        },
+        "/app/dashboard/kpis": {
+          "status": 200,
+          "ms": 48.2,
+          "bytes": 796
+        },
+        "/app/clients?page=1&page_size=50": {
+          "status": 200,
+          "ms": 48.0,
+          "bytes": 14483
+        },
+        "/app/clients/smart?limit=50": {
+          "status": 200,
+          "ms": 52.0,
+          "bytes": 34172
+        },
+        "/app/properties?page=1&page_size=50": {
+          "status": 200,
+          "ms": 47.8,
+          "bytes": 8274
+        },
+        "/app/matches?min_score=40&limit=20": {
+          "status": 200,
+          "ms": 52.1,
+          "bytes": 17632
+        },
+        "/notifications?limit=20": {
+          "status": 200,
+          "ms": 48.0,
+          "bytes": 642
+        },
+        "/notifications/unread-count": {
+          "status": 200,
+          "ms": 44.1,
+          "bytes": 18
+        },
+        "/auth/me": {
+          "status": 200,
+          "ms": 43.9,
+          "bytes": 591
+        }
+      },
+      "concurrency": {
+        "clients_list": {
+          "path": "/app/clients?page=1&page_size=50",
+          "n": 40,
+          "workers": 20,
+          "errors": 0,
+          "wall_s": 0.104,
+          "p50_ms": 43.7,
+          "p95_ms": 55.6,
+          "avg_ms": 42.8,
+          "max_ms": 56.1
+        },
+        "dashboard": {
+          "path": "/app/dashboard/kpis",
+          "n": 40,
+          "workers": 20,
+          "errors": 0,
+          "wall_s": 0.127,
+          "p50_ms": 51.2,
+          "p95_ms": 68.5,
+          "avg_ms": 53.3,
+          "max_ms": 71.6
+        },
+        "properties": {
+          "path": "/app/properties?page=1&page_size=50",
+          "n": 40,
+          "workers": 20,
+          "errors": 0,
+          "wall_s": 0.098,
+          "p50_ms": 41.1,
+          "p95_ms": 47.2,
+          "avg_ms": 40.4,
+          "max_ms": 50.5
+        },
+        "clients_smart": {
+          "path": "/app/clients/smart?limit=50",
+          "n": 20,
+          "workers": 10,
+          "errors": 0,
+          "wall_s": 0.155,
+          "p50_ms": 73.1,
+          "p95_ms": 76.6,
+          "avg_ms": 64.4,
+          "max_ms": 76.7
+        }
+      },
+      "ts": "2026-09-16T08:25:27.475322+00:00"
+    },
+    {
+      "tier_clients": 500,
+      "clients_in_db": 500,
+      "properties_in_db": 20,
+      "seed_seconds": 0.02,
+      "endpoints": {
+        "/app/agencies/me": {
+          "status": 200,
+          "ms": 43.7,
+          "bytes": 386
+        },
+        "/app/dashboard/kpis": {
+          "status": 200,
+          "ms": 48.2,
+          "bytes": 796
+        },
+        "/app/clients?page=1&page_size=50": {
+          "status": 200,
+          "ms": 47.9,
+          "bytes": 14664
+        },
+        "/app/clients/smart?limit=50": {
+          "status": 200,
+          "ms": 56.1,
+          "bytes": 341605
+        },
+        "/app/properties?page=1&page_size=50": {
+          "status": 200,
+          "ms": 4.5,
+          "bytes": 8274
+        },
+        "/app/matches?min_score=40&limit=20": {
+          "status": 200,
+          "ms": 115.4,
+          "bytes": 17693
+        },
+        "/notifications?limit=20": {
+          "status": 200,
+          "ms": 48.0,
+          "bytes": 642
+        },
+        "/notifications/unread-count": {
+          "status": 200,
+          "ms": 44.0,
+          "bytes": 18
+        },
+        "/auth/me": {
+          "status": 200,
+          "ms": 44.0,
+          "bytes": 591
+        }
+      },
+      "concurrency": {
+        "clients_list": {
+          "path": "/app/clients?page=1&page_size=50",
+          "n": 40,
+          "workers": 20,
+          "errors": 0,
+          "wall_s": 0.104,
+          "p50_ms": 43.8,
+          "p95_ms": 50.7,
+          "avg_ms": 43.6,
+          "max_ms": 51.8
+        },
+        "dashboard": {
+          "path": "/app/dashboard/kpis",
+          "n": 40,
+          "workers": 20,
+          "errors": 0,
+          "wall_s": 0.173,
+          "p50_ms": 77.3,
+          "p95_ms": 117.0,
+          "avg_ms": 77.3,
+          "max_ms": 120.5
+        },
+        "properties": {
+          "path": "/app/properties?page=1&page_size=50",
+          "n": 40,
+          "workers": 20,
+          "errors": 0,
+          "wall_s": 0.108,
+          "p50_ms": 44.9,
+          "p95_ms": 58.1,
+          "avg_ms": 45.3,
+          "max_ms": 59.2
+        },
+        "clients_smart": {
+          "path": "/app/clients/smart?limit=50",
+          "n": 20,
+          "workers": 10,
+          "errors": 0,
+          "wall_s": 1.055,
+          "p50_ms": 517.1,
+          "p95_ms": 536.4,
+          "avg_ms": 471.5,
+          "max_ms": 536.5
+        }
+      },
+      "ts": "2026-09-16T08:25:30.711124+00:00"
+    },
+    {
+      "tier_clients": 1000,
+      "clients_in_db": 1000,
+      "properties_in_db": 20,
+      "seed_seconds": 0.02,
+      "endpoints": {
+        "/app/agencies/me": {
+          "status": 200,
+          "ms": 43.9,
+          "bytes": 386
+        },
+        "/app/dashboard/kpis": {
+          "status": 200,
+          "ms": 47.8,
+          "bytes": 796
+        },
+        "/app/clients?page=1&page_size=50": {
+          "status": 200,
+          "ms": 48.0,
+          "bytes": 14659
+        },
+        "/app/clients/smart?limit=50": {
+          "status": 200,
+          "ms": 106.7,
+          "bytes": 683318
+        },
+        "/app/properties?page=1&page_size=50": {
+          "status": 200,
+          "ms": 45.3,
+          "bytes": 8274
+        },
+        "/app/matches?min_score=40&limit=20": {
+          "status": 200,
+          "ms": 236.1,
+          "bytes": 17694
+        },
+        "/notifications?limit=20": {
+          "status": 200,
+          "ms": 47.9,
+          "bytes": 642
+        },
+        "/notifications/unread-count": {
+          "status": 200,
+          "ms": 44.1,
+          "bytes": 18
+        },
+        "/auth/me": {
+          "status": 200,
+          "ms": 48.0,
+          "bytes": 591
+        }
+      },
+      "concurrency": {
+        "clients_list": {
+          "path": "/app/clients?page=1&page_size=50",
+          "n": 40,
+          "workers": 20,
+          "errors": 0,
+          "wall_s": 0.109,
+          "p50_ms": 47.0,
+          "p95_ms": 55.1,
+          "avg_ms": 45.1,
+          "max_ms": 57.2
+        },
+        "dashboard": {
+          "path": "/app/dashboard/kpis",
+          "n": 40,
+          "workers": 20,
+          "errors": 0,
+          "wall_s": 0.121,
+          "p50_ms": 48.2,
+          "p95_ms": 63.2,
+          "avg_ms": 50.3,
+          "max_ms": 66.8
+        },
+        "properties": {
+          "path": "/app/properties?page=1&page_size=50",
+          "n": 40,
+          "workers": 20,
+          "errors": 0,
+          "wall_s": 0.096,
+          "p50_ms": 41.2,
+          "p95_ms": 48.6,
+          "avg_ms": 40.0,
+          "max_ms": 49.9
+        },
+        "clients_smart": {
+          "path": "/app/clients/smart?limit=50",
+          "n": 20,
+          "workers": 10,
+          "errors": 0,
+          "wall_s": 2.136,
+          "p50_ms": 1041.8,
+          "p95_ms": 1088.3,
+          "avg_ms": 921.4,
+          "max_ms": 1230.1
+        }
+      },
+      "ts": "2026-09-16T08:25:35.191747+00:00"
+    },
+    {
+      "tier_clients": 5000,
+      "clients_in_db": 5000,
+      "properties_in_db": 100,
+      "seed_seconds": 0.079,
+      "endpoints": {
+        "/app/agencies/me": {
+          "status": 200,
+          "ms": 44.1,
+          "bytes": 386
+        },
+        "/app/dashboard/kpis": {
+          "status": 200,
+          "ms": 47.7,
+          "bytes": 797
+        },
+        "/app/clients?page=1&page_size=50": {
+          "status": 200,
+          "ms": 48.1,
+          "bytes": 14740
+        },
+        "/app/clients/smart?limit=50": {
+          "status": 200,
+          "ms": 852.5,
+          "bytes": 1373178
+        },
+        "/app/properties?page=1&page_size=50": {
+          "status": 200,
+          "ms": 47.5,
+          "bytes": 19447
+        },
+        "/app/matches?min_score=40&limit=20": {
+          "status": 200,
+          "ms": 2764.0,
+          "bytes": 17740
+        },
+        "/notifications?limit=20": {
+          "status": 200,
+          "ms": 47.9,
+          "bytes": 642
+        },
+        "/notifications/unread-count": {
+          "status": 200,
+          "ms": 44.1,
+          "bytes": 18
+        },
+        "/auth/me": {
+          "status": 200,
+          "ms": 43.9,
+          "bytes": 591
+        }
+      },
+      "concurrency": {
+        "clients_list": {
+          "path": "/app/clients?page=1&page_size=50",
+          "n": 40,
+          "workers": 20,
+          "errors": 0,
+          "wall_s": 0.111,
+          "p50_ms": 48.7,
+          "p95_ms": 57.7,
+          "avg_ms": 47.4,
+          "max_ms": 60.5
+        },
+        "dashboard": {
+          "path": "/app/dashboard/kpis",
+          "n": 40,
+          "workers": 20,
+          "errors": 0,
+          "wall_s": 0.113,
+          "p50_ms": 48.0,
+          "p95_ms": 56.0,
+          "avg_ms": 47.4,
+          "max_ms": 59.6
+        },
+        "properties": {
+          "path": "/app/properties?page=1&page_size=50",
+          "n": 40,
+          "workers": 20,
+          "errors": 0,
+          "wall_s": 0.107,
+          "p50_ms": 43.8,
+          "p95_ms": 53.6,
+          "avg_ms": 42.8,
+          "max_ms": 55.6
+        },
+        "clients_smart": {
+          "path": "/app/clients/smart?limit=50",
+          "n": 20,
+          "workers": 10,
+          "errors": 0,
+          "wall_s": 15.936,
+          "p50_ms": 7931.5,
+          "p95_ms": 8008.0,
+          "avg_ms": 6884.3,
+          "max_ms": 8008.8
+        }
+      },
+      "ts": "2026-09-16T08:25:56.808423+00:00"
+    },
+    {
+      "tier_clients": 10000,
+      "clients_in_db": 10000,
+      "properties_in_db": 200,
+      "seed_seconds": 0.186,
+      "endpoints": {
+        "/app/agencies/me": {
+          "status": 200,
+          "ms": 44.1,
+          "bytes": 386
+        },
+        "/app/dashboard/kpis": {
+          "status": 200,
+          "ms": 51.9,
+          "bytes": 797
+        },
+        "/app/clients?page=1&page_size=50": {
+          "status": 200,
+          "ms": 52.0,
+          "bytes": 14726
+        },
+        "/app/clients/smart?limit=50": {
+          "status": 200,
+          "ms": 1640.6,
+          "bytes": 1374323
+        },
+        "/app/properties?page=1&page_size=50": {
+          "status": 200,
+          "ms": 47.2,
+          "bytes": 19497
+        },
+        "/app/matches?min_score=40&limit=20": {
+          "status": 200,
+          "ms": 6120.0,
+          "bytes": 17770
+        },
+        "/notifications?limit=20": {
+          "status": 200,
+          "ms": 47.8,
+          "bytes": 642
+        },
+        "/notifications/unread-count": {
+          "status": 200,
+          "ms": 44.0,
+          "bytes": 18
+        },
+        "/auth/me": {
+          "status": 200,
+          "ms": 44.1,
+          "bytes": 591
+        }
+      },
+      "concurrency": {
+        "clients_list": {
+          "path": "/app/clients?page=1&page_size=50",
+          "n": 40,
+          "workers": 20,
+          "errors": 0,
+          "wall_s": 0.123,
+          "p50_ms": 53.1,
+          "p95_ms": 62.1,
+          "avg_ms": 51.5,
+          "max_ms": 62.7
+        },
+        "dashboard": {
+          "path": "/app/dashboard/kpis",
+          "n": 40,
+          "workers": 20,
+          "errors": 0,
+          "wall_s": 0.116,
+          "p50_ms": 50.0,
+          "p95_ms": 55.5,
+          "avg_ms": 49.3,
+          "max_ms": 56.8
+        },
+        "properties": {
+          "path": "/app/properties?page=1&page_size=50",
+          "n": 40,
+          "workers": 20,
+          "errors": 0,
+          "wall_s": 0.112,
+          "p50_ms": 47.3,
+          "p95_ms": 56.4,
+          "avg_ms": 47.4,
+          "max_ms": 58.6
+        },
+        "clients_smart": {
+          "path": "/app/clients/smart?limit=50",
+          "n": 20,
+          "workers": 10,
+          "errors": 0,
+          "wall_s": 31.209,
+          "p50_ms": 14134.8,
+          "p95_ms": 17104.1,
+          "avg_ms": 14925.1,
+          "max_ms": 17104.6
+        }
+      },
+      "ts": "2026-09-16T08:26:37.977516+00:00"
+    }
+  ],
+  "finished_at": "2026-09-16T08:26:37.977699+00:00"
+}

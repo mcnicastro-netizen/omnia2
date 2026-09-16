@@ -1,5 +1,16 @@
 # OMNIA — Changelog
 
+## 2026-09-16 — Stress ladder CRM clienti → 10.000 (D-072)
+
+**Tipo**: Load test + tooling.
+
+- Script `backend/scripts/stress_scale_ladder.py` (seed bulk + bench HTTP + concurrency)
+- Report `memory/STRESS_REPORT.md` + JSON `memory/reports/stress_clients_*.json`
+- Hall finding: `/app/clients` paginato OK @10k (~50ms); **`/clients/smart` degrada a ~1,6s / ~17s p95 concorrente**
+- Seed stress lasciato su `demo-agency-001` (cleanup: `--cleanup-only`)
+
+---
+
 ## 2026-09-16 — D-084 sync manuale obbligatorio + Cap. 18/9/12/13 allineati
 
 **Tipo**: Docs / decision — Founder: aggiornare il manuale ad ogni modifica.
