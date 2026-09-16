@@ -1,7 +1,7 @@
 # Prossima sessione — programma passi
 
-**Aggiornato**: 16 Settembre 2026 — D-084 sync manuale attivo · Cap. 18 allineato  
-**Stato base**: Sprint 1→4 **CONCLUSO**. Ultimo feature ship: **A-017**. Ultimo docs: **D-084**.
+**Aggiornato**: 16 Settembre 2026 — stress CRM 10k clienti eseguito  
+**Stato base**: Sprint 1→4 **CONCLUSO**. Stress: `memory/STRESS_REPORT.md`.
 
 ---
 
@@ -9,10 +9,8 @@
 
 1. `bash scripts/omnia-stack.sh ensure`
 2. Ports → **omnia-preview :43123**
-3. Founder: **«vai»** sull’ID
-4. **Obbligo D-084**: ogni ship aggiorna `manuale/` + `hal/*.yaml` nello stesso giro (`MANUAL_SYNC.md`)
-
-**Non ripartire da** Stripe live / webhook / Emergent / Vercel.
+3. Founder: **«vai»** sull’ID (o su fix stress)
+4. **D-084**: ogni ship aggiorna manuale+YAML
 
 ---
 
@@ -21,24 +19,21 @@
 | Area | Stato |
 |------|:-----:|
 | Sprint 1→4 | ✅ |
-| Manuale 27/27 redazione | ✅ |
-| Sync manuale automatico (D-084) | ✅ regola attiva |
-| Cap. 18 post A-017/A-021 | ✅ v1.1 |
-| Drift Cap. 9/12/13 (A-013/A-006/A-007) | ✅ |
-| Demo prodotto | ❌ **A-025** |
+| D-084 sync manuale | ✅ |
+| Stress CRM clienti → 10k | ✅ report |
+| Bottleneck `/clients/smart` | 🔴 da fix |
+| Demo A-025 | ❌ |
 | Stripe live | ⏸️ post-Vercel |
-| M4 / M6 | ⏸️ |
 
 ---
 
-## Ordine con «vai»
+## Ordine consigliato
 
-| # | ID | Cosa |
-|:-:|---|---|
-| 1 | **A-025** | Architettura demo prodotto (GTM) |
-| 2 | A-008 | Cambio ruolo membro |
-| 3 | A-018 | Activity feed (post A-017) |
+| # | Cosa | Note |
+|:-:|------|------|
+| 1 | **Fix `/app/clients/smart` scale** | Stress: 17s p95 @ 10k |
+| 2 | **A-025** demo prodotto | GTM |
+| 3 | Ladder agenzie MLS 5k/10k | `load_ladder_mls.py` |
+| — | A-014 Stripe live | solo post-Vercel |
 
-Fine percorso: Vercel → A-014 Stripe live.
-
-Credenziali: `memory/test_credentials.env`.
+Report: `memory/STRESS_REPORT.md` · JSON: `memory/reports/stress_clients_latest.json`
