@@ -5,10 +5,11 @@
 **Tipo**: Performance — risposta a bottleneck stress D-072 @10k.
 
 - `GET /app/clients/smart`: `page` / `page_size` (default 50, max 100); alias `limit`
-- Matching lista via `compute_match_score_fast` (no breakdown); cap 200 immobili + scan 2.000 clienti
-- Conteggio all/searchers/sellers via Mongo; path page-first per nome/data
+- Matching lista via `compute_match_score_fast` (no breakdown); cap 1.000 clienti + 150 immobili
+- Cache ranking TTL 45s + singleflight; page-first per nome/data e Venditori
 - FE: paginazione Precedente/Successiva; i18n IT/EN/ES
 - Manuale Cap. 4.6 + YAML HAL (D-084); stress script allineato a `page_size`
+- **Ri-misura @10k**: singola ~360 ms / ~37 KB; conc. p95 **~84 ms** (prima ~1,6 s / ~17 s)
 
 ---
 

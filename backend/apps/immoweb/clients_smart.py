@@ -16,6 +16,7 @@ Scale notes (D-072 stress @10k):
 import asyncio
 import logging
 import re
+import time
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional, Tuple
 
@@ -36,8 +37,9 @@ MATCH_COUNT_THRESHOLD = 50   # property is considered a "real" match for the cou
 
 PAGE_SIZE_DEFAULT = 50
 PAGE_SIZE_MAX = 100
-CLIENT_SCAN_CAP = 2000       # max clients scored for score/temp ranking
-PROPERTY_MATCH_CAP = 200     # max active properties used for list matching
+CLIENT_SCAN_CAP = 1000      # ranking window (score/temp); page-first sorts use Mongo
+PROPERTY_MATCH_CAP = 150    # max active properties used for list matching
+RANK_CACHE_TTL_S = 45.0     # in-process cache for scored scans (cuts concurrent pile-up)
 
 # Projection: only fields needed for matching + row display
 _PROP_PROJ = {
@@ -81,6 +83,18 @@ _CLIENT_PROJ = {
     "created_at": 1,
     "updated_at": 1,
 }
+
+# agency_id|q|scan_mode → {ts, enriched, properties_n}
+_rank_cache: Dict[str, Dict[str, Any]] = {}
+_rank_locks: Dict[str, asyncio.Lock] = {}
+
+
+def _lock_for(key: str) -> asyncio.Lock:
+    lock = _rank_locks.get(key)
+    if lock is None:
+        lock = asyncio.Lock()
+        _rank_locks[key] = lock
+    return lock
 
 
 # ============================================================
@@ -297,11 +311,36 @@ async def _mongo_type_counts(db, agency_id: str, base_q: Dict[str, Any]) -> Tupl
 
 def _needs_score_scan(sort: str, bucket: Optional[str]) -> bool:
     """True when we must enrich a scan window before paging."""
+    if bucket == "sellers":
+        # Sellers never get match scores — always page-first via Mongo.
+        return False
     if sort in ("score_desc", "score_asc"):
         return True
     if bucket in ("rovente", "caldo", "tiepido", "freddo", "to_call_today"):
         return True
     return False
+
+
+def _cache_get(key: str) -> Optional[Dict[str, Any]]:
+    hit = _rank_cache.get(key)
+    if not hit:
+        return None
+    if (time.monotonic() - hit["ts"]) > RANK_CACHE_TTL_S:
+        _rank_cache.pop(key, None)
+        return None
+    return hit
+
+
+def _cache_set(key: str, enriched: List[Dict[str, Any]], properties_n: int) -> None:
+    # Bound memory: drop oldest if too many agencies cached
+    if len(_rank_cache) > 64:
+        oldest = min(_rank_cache.items(), key=lambda kv: kv[1]["ts"])[0]
+        _rank_cache.pop(oldest, None)
+    _rank_cache[key] = {
+        "ts": time.monotonic(),
+        "enriched": enriched,
+        "properties_n": properties_n,
+    }
 
 
 # ============================================================
@@ -391,38 +430,62 @@ async def smart_clients(
         }
 
     # ---- Score / temperature path: scan → enrich → filter → sort → page ----
-    scan_q = dict(base_q)
-    # Temp buckets + score ranking: prefer searchers (sellers have no score).
+    # Cache key: same scan inputs (agency + q + who we load). Bucket/sort applied after.
     if bkt in ("rovente", "caldo", "tiepido", "freddo", "to_call_today", "searchers"):
-        scan_q["client_type"] = {"$in": list(SEARCHER_TYPES)}
-        clients = await db.clients.find(scan_q, _CLIENT_PROJ).to_list(length=CLIENT_SCAN_CAP)
-    elif bkt == "sellers":
-        scan_q["client_type"] = {"$nin": list(SEARCHER_TYPES)}
-        clients = await db.clients.find(scan_q, _CLIENT_PROJ).to_list(length=CLIENT_SCAN_CAP)
+        scan_mode = "searchers"
     elif sort in ("score_desc", "score_asc"):
-        # Score ranking: fill scan with searchers first (they dominate the top).
-        searchers = await db.clients.find(
-            {**base_q, "client_type": {"$in": list(SEARCHER_TYPES)}},
-            _CLIENT_PROJ,
-        ).to_list(length=CLIENT_SCAN_CAP)
-        remaining = max(0, CLIENT_SCAN_CAP - len(searchers))
-        sellers = []
-        if remaining:
-            sellers = await db.clients.find(
-                {**base_q, "client_type": {"$nin": list(SEARCHER_TYPES)}},
-                _CLIENT_PROJ,
-            ).to_list(length=remaining)
-        clients = searchers + sellers
+        scan_mode = "score_prefer_searchers"
     else:
-        clients = await db.clients.find(scan_q, _CLIENT_PROJ).to_list(length=CLIENT_SCAN_CAP)
+        scan_mode = "all"
+    cache_key = f"{agency_id}|{q or ''}|{scan_mode}"
+    cached_rank = _cache_get(cache_key)
 
-    full_enriched = [_enrich_client(c, properties, cache_index) for c in clients]
+    if cached_rank:
+        full_enriched = cached_rank["enriched"]
+        properties_n = cached_rank["properties_n"]
+        clients_n = len(full_enriched)
+    else:
+        async with _lock_for(cache_key):
+            # Re-check after acquiring lock (singleflight)
+            cached_rank = _cache_get(cache_key)
+            if cached_rank:
+                full_enriched = cached_rank["enriched"]
+                properties_n = cached_rank["properties_n"]
+                clients_n = len(full_enriched)
+            else:
+                scan_q = dict(base_q)
+                if scan_mode == "searchers":
+                    scan_q["client_type"] = {"$in": list(SEARCHER_TYPES)}
+                    clients = await db.clients.find(scan_q, _CLIENT_PROJ).to_list(length=CLIENT_SCAN_CAP)
+                elif scan_mode == "score_prefer_searchers":
+                    searchers = await db.clients.find(
+                        {**base_q, "client_type": {"$in": list(SEARCHER_TYPES)}},
+                        _CLIENT_PROJ,
+                    ).to_list(length=CLIENT_SCAN_CAP)
+                    remaining = max(0, CLIENT_SCAN_CAP - len(searchers))
+                    sellers = []
+                    if remaining:
+                        sellers = await db.clients.find(
+                            {**base_q, "client_type": {"$nin": list(SEARCHER_TYPES)}},
+                            _CLIENT_PROJ,
+                        ).to_list(length=remaining)
+                    clients = searchers + sellers
+                else:
+                    clients = await db.clients.find(scan_q, _CLIENT_PROJ).to_list(length=CLIENT_SCAN_CAP)
+
+                def _run_enrich():
+                    return [_enrich_client(c, properties, cache_index) for c in clients]
+
+                full_enriched = await asyncio.to_thread(_run_enrich)
+                properties_n = len(properties)
+                clients_n = len(clients)
+                _cache_set(cache_key, full_enriched, properties_n)
+                cached_rank = None  # freshly computed
 
     # Counts: merge Mongo type totals with temp from scan when scan is unfiltered-ish
     all_n, searchers_n, sellers_n = await _mongo_type_counts(db, agency_id, base_q)
     scanned_counts = _counts_from_enriched(full_enriched)
     if bkt in ("rovente", "caldo", "tiepido", "freddo", "to_call_today", "searchers"):
-        # full_enriched is searchers-only — keep temp from scan; types from mongo
         counts = {
             "all": all_n,
             "searchers": searchers_n,
@@ -435,21 +498,7 @@ async def smart_clients(
             "ai_cached": scanned_counts["ai_cached"],
             "ai_uncached_searchers": scanned_counts["ai_uncached_searchers"],
         }
-    elif bkt == "sellers":
-        counts = {
-            "all": all_n,
-            "searchers": searchers_n,
-            "sellers": sellers_n,
-            "to_call_today": 0,
-            "rovente": 0,
-            "caldo": 0,
-            "tiepido": 0,
-            "freddo": 0,
-            "ai_cached": 0,
-            "ai_uncached_searchers": 0,
-        }
     else:
-        # scanned mixed set — use scanned temp; prefer mongo for type totals
         counts = {
             **scanned_counts,
             "all": all_n,
@@ -469,10 +518,11 @@ async def smart_clients(
         "page_size": page_size,
         "counts": counts,
         "counts_scope": "scanned",
-        "scanned": len(clients),
-        "properties_matched": len(properties),
+        "scanned": clients_n,
+        "properties_matched": properties_n,
         "sort": sort,
         "bucket": bucket or "all",
+        "rank_cached": bool(cached_rank),
     }
 
 
@@ -566,6 +616,10 @@ async def refresh_smart_scores(
 
     results = await asyncio.gather(*(_score_one(it) for it in pending))
     refreshed = sum(1 for r in results if "error" not in r)
+    # Invalidate ranking cache for this agency after AI refresh
+    dead = [k for k in _rank_cache if k.startswith(f"{agency_id}|")]
+    for k in dead:
+        _rank_cache.pop(k, None)
     return {
         "refreshed": refreshed,
         "skipped": len(pending) - refreshed,

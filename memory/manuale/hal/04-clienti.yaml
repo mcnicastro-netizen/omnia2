@@ -415,8 +415,9 @@ voci:
           collegati)."
         - Clicca il bucket che ti interessa per filtrare la lista.
         - "La lista è paginata (50 per pagina). Il ranking per score
-          valuta fino a circa 2.000 clienti e 200 immobili attivi
-          recenti; oltre usa ricerca o i bucket Acquirenti/Venditori."
+          valuta fino a circa 1.000 clienti e 150 immobili attivi
+          recenti (cache breve ~45s); oltre usa ricerca o i bucket
+          Acquirenti/Venditori."
       errori_comuni:
         - problema: "Il bucket 'Da chiamare oggi' è vuoto"
           soluzione: >
