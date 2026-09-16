@@ -285,6 +285,7 @@ async def run_all_active_saved_searches() -> Dict[str, Any]:
         should_alert = is_b2c
 
         # Respect per-search frequency (instant/daily/weekly) for both channels
+        freq_skip = False
         if should_alert:
             freq = s.get("frequency") or "instant"
             last = s.get("last_run_at")
@@ -293,13 +294,15 @@ async def run_all_active_saved_searches() -> Dict[str, Any]:
                     last_dt = datetime.fromisoformat(str(last).replace("Z", "+00:00"))
                     age_h = (datetime.now(timezone.utc) - last_dt).total_seconds() / 3600
                     if freq == "daily" and age_h < 20:
-                        should_alert = False
-                        should_email = False
+                        freq_skip = True
                     elif freq == "weekly" and age_h < 24 * 6:
-                        should_alert = False
-                        should_email = False
+                        freq_skip = True
                 except Exception:
                     pass
+
+        if freq_skip:
+            # Do NOT advance last_run_at — otherwise daily/weekly never fire.
+            continue
 
         flt = _build_mongo_filter(s["filters"], since=s.get("last_run_at"))
         matches: List[dict] = []

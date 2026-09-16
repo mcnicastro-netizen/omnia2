@@ -1,0 +1,109 @@
+{
+  "kind": "crm_clients_ladder",
+  "run_id": "fb44b724",
+  "api": "http://127.0.0.1:43121/api",
+  "agency_id": "demo-agency-001",
+  "tiers": [
+    {
+      "tier_clients": 10000,
+      "clients_in_db": 10000,
+      "properties_in_db": 200,
+      "seed_seconds": 0.233,
+      "endpoints": {
+        "/app/agencies/me": {
+          "status": 200,
+          "ms": 43.9,
+          "bytes": 386
+        },
+        "/app/dashboard/kpis": {
+          "status": 200,
+          "ms": 48.1,
+          "bytes": 797
+        },
+        "/app/clients?page=1&page_size=50": {
+          "status": 200,
+          "ms": 52.0,
+          "bytes": 14726
+        },
+        "/app/clients/smart?page=1&page_size=50": {
+          "status": 200,
+          "ms": 800.0,
+          "bytes": 36873
+        },
+        "/app/properties?page=1&page_size=50": {
+          "status": 200,
+          "ms": 48.0,
+          "bytes": 19497
+        },
+        "/app/matches?min_score=40&limit=20": {
+          "status": 200,
+          "ms": 6067.8,
+          "bytes": 17770
+        },
+        "/notifications?limit=20": {
+          "status": 200,
+          "ms": 52.0,
+          "bytes": 642
+        },
+        "/notifications/unread-count": {
+          "status": 200,
+          "ms": 43.9,
+          "bytes": 18
+        },
+        "/auth/me": {
+          "status": 200,
+          "ms": 44.0,
+          "bytes": 591
+        }
+      },
+      "concurrency": {
+        "clients_list": {
+          "path": "/app/clients?page=1&page_size=50",
+          "n": 40,
+          "workers": 20,
+          "errors": 0,
+          "wall_s": 0.138,
+          "p50_ms": 56.0,
+          "p95_ms": 70.6,
+          "avg_ms": 56.2,
+          "max_ms": 72.8
+        },
+        "dashboard": {
+          "path": "/app/dashboard/kpis",
+          "n": 40,
+          "workers": 20,
+          "errors": 0,
+          "wall_s": 0.122,
+          "p50_ms": 53.0,
+          "p95_ms": 59.6,
+          "avg_ms": 52.6,
+          "max_ms": 62.5
+        },
+        "properties": {
+          "path": "/app/properties?page=1&page_size=50",
+          "n": 40,
+          "workers": 20,
+          "errors": 0,
+          "wall_s": 0.105,
+          "p50_ms": 41.6,
+          "p95_ms": 53.6,
+          "avg_ms": 42.0,
+          "max_ms": 57.6
+        },
+        "clients_smart": {
+          "path": "/app/clients/smart?page=1&page_size=50",
+          "n": 20,
+          "workers": 10,
+          "errors": 0,
+          "wall_s": 14.578,
+          "p50_ms": 7284.1,
+          "p95_ms": 7318.7,
+          "avg_ms": 7282.3,
+          "max_ms": 7323.6
+        }
+      },
+      "ts": "2026-09-16T08:40:17.225970+00:00"
+    }
+  ],
+  "finished_at": "2026-09-16T08:40:17.226128+00:00"
+}

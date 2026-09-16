@@ -276,10 +276,28 @@ def start_scheduler() -> None:
         max_instances=1,
         coalesce=True,
     )
+    # A-020 — saved-search alerts every hour (respects per-search frequency)
+    async def _saved_searches_tick():
+        from apps.immocloud.saved_searches import run_all_active_saved_searches
+        try:
+            await run_all_active_saved_searches()
+        except Exception as e:  # noqa: BLE001
+            logger.warning("saved_searches scheduled run failed: %s", e)
+
+    sched.add_job(
+        _saved_searches_tick,
+        CronTrigger(minute=15),  # hourly at :15 UTC
+        id="saved_searches_hourly",
+        replace_existing=True,
+        max_instances=1,
+        coalesce=True,
+    )
     sched.start()
     _scheduler = sched
-    logger.info("Publishing scheduler started (daily at %02d:%02d UTC)",
-                DAILY_SYNC_HOUR_UTC, DAILY_SYNC_MINUTE_UTC)
+    logger.info(
+        "Publishing scheduler started (daily sync %02d:%02d UTC + saved-searches hourly :15)",
+        DAILY_SYNC_HOUR_UTC, DAILY_SYNC_MINUTE_UTC,
+    )
 
 
 def stop_scheduler() -> None:

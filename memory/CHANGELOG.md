@@ -1,5 +1,17 @@
 # OMNIA — Changelog
 
+## 2026-09-16 — Gap ImmobilCloud chiusi + platform stress suite
+
+**Tipo**: Feature + resilience.
+
+- FE ricerca avanzata (multi-città, near-me) + MLS `mls=1` end-to-end
+- Preferiti B2C (`/cloud/me/favorites`) + UI scheda/account
+- Micro-tour Ken Burns su scheda portale; privacy L1–L4 UI form immobile
+- Analytics A/B page CRM; saved-search scheduler orario + fix frequency
+- Rate limit IP su search/map/contact + per API key (120/h)
+- Script `stress_platform_full.py` + report `PLATFORM_STRESS_REPORT.md`
+
+---
 ## 2026-09-16 — Fix scale `/clients/smart` (paginazione + match fast)
 
 **Tipo**: Performance — risposta a bottleneck stress D-072 @10k.

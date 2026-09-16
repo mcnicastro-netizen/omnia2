@@ -1,0 +1,237 @@
+{
+  "kind": "platform_full_stress",
+  "run_id": "8a83a360",
+  "api": "http://127.0.0.1:43121/api",
+  "agency_id": "demo-agency-001",
+  "seed_portal": 2000,
+  "seed_seconds": 0.043,
+  "indexes": [
+    "agency_id_1_status_1_visibility_1",
+    "is_listed_on_immobilcloud_1_status_1",
+    "city_1_operation_1",
+    "identifier_1_created_at_-1"
+  ],
+  "crm": {
+    "clients": {
+      "path": "/app/clients?page=1&page_size=50",
+      "method": "GET",
+      "status": 200,
+      "ms": 52.1,
+      "bytes": 14726
+    },
+    "clients_smart": {
+      "path": "/app/clients/smart?page=1&page_size=50",
+      "method": "GET",
+      "status": 200,
+      "ms": 408.0,
+      "bytes": 36076
+    },
+    "properties": {
+      "path": "/app/properties?page=1&page_size=50",
+      "method": "GET",
+      "status": 200,
+      "ms": 56.0,
+      "bytes": 19473
+    },
+    "kpis": {
+      "path": "/app/dashboard/kpis",
+      "method": "GET",
+      "status": 200,
+      "ms": 52.0,
+      "bytes": 798
+    },
+    "analytics_overview": {
+      "path": "/app/analytics/agency/overview?days_lookback=30",
+      "method": "GET",
+      "status": 200,
+      "ms": 60.0,
+      "bytes": 737
+    }
+  },
+  "portal": {
+    "search": {
+      "path": "/cloud/search?operation=sale&page_size=20",
+      "method": "GET",
+      "status": 200,
+      "ms": 17.3,
+      "bytes": 8126
+    },
+    "facets": {
+      "path": "/cloud/facets?operation=sale",
+      "method": "GET",
+      "status": 200,
+      "ms": 62.8,
+      "bytes": 151
+    },
+    "map": {
+      "path": "/cloud/map?operation=sale&limit=200",
+      "method": "GET",
+      "status": 200,
+      "ms": 51.9,
+      "bytes": 35255
+    },
+    "advanced": {
+      "path": "/cloud/search/advanced",
+      "method": "POST",
+      "status": 200,
+      "ms": 59.9,
+      "bytes": 8251
+    },
+    "mls_public": {
+      "path": "/app/mls/search/public?province=CT&limit=24",
+      "method": "GET",
+      "status": 200,
+      "ms": 52.0,
+      "bytes": 4926
+    },
+    "valuator_coverage": {
+      "path": "/cloud/valuator/coverage",
+      "method": "GET",
+      "status": 200,
+      "ms": 43.9,
+      "bytes": 576
+    },
+    "mutui_config": {
+      "path": "/cloud/mutui/config",
+      "method": "GET",
+      "status": 200,
+      "ms": 44.2,
+      "bytes": 347
+    }
+  },
+  "concurrency": {
+    "crm_clients": {
+      "path": "/app/clients?page=1&page_size=50",
+      "n": 40,
+      "errors": 0,
+      "wall_s": 0.132,
+      "statuses": [
+        200
+      ],
+      "p50_ms": 55.2,
+      "p95_ms": 63.0,
+      "avg_ms": 55.8,
+      "max_ms": 64.4
+    },
+    "portal_search": {
+      "path": "/cloud/search?operation=sale&page_size=20",
+      "n": 40,
+      "errors": 0,
+      "wall_s": 0.238,
+      "statuses": [
+        200
+      ],
+      "p50_ms": 99.5,
+      "p95_ms": 161.7,
+      "avg_ms": 108.2,
+      "max_ms": 166.0
+    },
+    "portal_map": {
+      "path": "/cloud/map?operation=sale&limit=100",
+      "n": 20,
+      "errors": 0,
+      "wall_s": 0.066,
+      "statuses": [
+        200
+      ],
+      "p50_ms": 29.0,
+      "p95_ms": 34.2,
+      "avg_ms": 28.2,
+      "max_ms": 35.9
+    },
+    "clients_smart": {
+      "path": "/app/clients/smart?page=1&page_size=50",
+      "n": 20,
+      "errors": 0,
+      "wall_s": 0.207,
+      "statuses": [
+        200
+      ],
+      "p50_ms": 92.1,
+      "p95_ms": 113.9,
+      "avg_ms": 95.4,
+      "max_ms": 120.5
+    }
+  },
+  "security": {
+    "unauth_/app/clients": {
+      "status": 401,
+      "ok": true
+    },
+    "unauth_/app/properties": {
+      "status": 401,
+      "ok": true
+    },
+    "unauth_/app/api-keys": {
+      "status": 401,
+      "ok": true
+    },
+    "unauth_/cloud/me/favorites": {
+      "status": 401,
+      "ok": true
+    },
+    "unauth_/cloud/me/saved-searches": {
+      "status": 401,
+      "ok": true
+    },
+    "brute_force_attempts": {
+      "locked_or_rejected": true
+    },
+    "rate_limit_endpoint_alive": {
+      "sample_status": 200,
+      "tripped_in_5": false,
+      "ok": true
+    }
+  },
+  "payments": {
+    "/app/billing/plans": {
+      "path": "/app/billing/plans",
+      "method": "GET",
+      "status": 404,
+      "ms": 2.3,
+      "bytes": 22
+    },
+    "/cloud/visura/catalog": {
+      "path": "/cloud/visura/catalog",
+      "method": "GET",
+      "status": 200,
+      "ms": 45.6,
+      "bytes": 162
+    },
+    "/cloud/mutui/config": {
+      "path": "/cloud/mutui/config",
+      "method": "GET",
+      "status": 200,
+      "ms": 44.1,
+      "bytes": 347
+    },
+    "stripe_env": {
+      "STRIPE_ENABLED": "true",
+      "has_secret": true,
+      "mode_hint": "test"
+    }
+  },
+  "api_keys": {
+    "v1_health": {
+      "path": "/v1/health",
+      "method": "GET",
+      "status": 200,
+      "ms": 2.1,
+      "bytes": 359
+    },
+    "api_keys_list": {
+      "path": "/app/api-keys",
+      "method": "GET",
+      "status": 200,
+      "ms": 45.8,
+      "bytes": 22
+    }
+  },
+  "db": {
+    "properties": 2901,
+    "clients": 10000,
+    "users": 3,
+    "rate_limit_events": 69
+  },
+  "finished_at": "2026-09-16T09:06:23.694241+00:00"
+}

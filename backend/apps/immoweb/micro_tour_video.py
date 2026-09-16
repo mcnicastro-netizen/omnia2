@@ -318,11 +318,28 @@ async def video_status(
     return doc
 
 
+@public_router.get("/by-property/{pid}")
+async def video_by_property_public(pid: str):
+    """Latest ready Ken Burns video for a public listing (if any)."""
+    db = Database.get()
+    doc = await db.videos.find_one(
+        {"property_id": pid, "status": "ready", "mode": "ken_burns"},
+        {"_id": 0},
+        sort=[("created_at", -1)],
+    )
+    if not doc:
+        raise HTTPException(status_code=404, detail="video_not_found")
+    return doc
+
+
 @public_router.get("/{video_id}")
 async def video_status_public(video_id: str):
     """Public poll for UGC/private listings videos."""
     db = Database.get()
     doc = await db.videos.find_one({"id": video_id, "agency_id": None}, {"_id": 0})
+    if not doc:
+        # Also allow ready videos linked to listed properties (agency Ken Burns stored with agency_id)
+        doc = await db.videos.find_one({"id": video_id, "status": "ready"}, {"_id": 0})
     if not doc:
         raise HTTPException(status_code=404, detail="video_not_found")
     return doc

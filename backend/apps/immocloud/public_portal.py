@@ -119,6 +119,7 @@ def _to_card(p: Dict[str, Any], agency: Optional[Dict[str, Any]] = None) -> Dict
 
 @router.get("/search")
 async def public_search(
+    request: Request,
     q: Optional[str] = None,
     city: Optional[str] = None,
     property_type: Optional[str] = None,
@@ -136,6 +137,8 @@ async def public_search(
     page_size: int = Query(20, ge=1, le=60),
 ):
     """Public paginated listing filtered by common B2C criteria."""
+    from shared.security.rate_limit import enforce_ip_rate_limit
+    await enforce_ip_rate_limit(request, bucket="cloud_search", max_requests=120, window_seconds=3600)
     db = Database.get()
     flt: Dict[str, Any] = _base_filter()
 
@@ -263,9 +266,11 @@ def _point_in_polygon(lat: float, lng: float, poly: List[List[float]]) -> bool:
 
 
 @router.post("/search/advanced")
-async def public_search_advanced(body: AdvancedSearchBody):
+async def public_search_advanced(body: AdvancedSearchBody, request: Request):
     """M3.S8 — Advanced search: multi-city, draw-on-map polygon, near-me
     haversine radius, cross-zone price comparison."""
+    from shared.security.rate_limit import enforce_ip_rate_limit
+    await enforce_ip_rate_limit(request, bucket="cloud_search_advanced", max_requests=60, window_seconds=3600)
     db = Database.get()
     flt: Dict[str, Any] = _base_filter()
 
@@ -402,6 +407,7 @@ async def public_search_advanced(body: AdvancedSearchBody):
 
 @router.get("/map")
 async def public_map_markers(
+    request: Request,
     city: Optional[str] = None,
     property_type: Optional[str] = None,
     operation: Optional[str] = Query(None, pattern="^(sale|rent)$"),
@@ -416,6 +422,8 @@ async def public_map_markers(
     """M3.S3 — Lightweight markers for map view. Returns only id/lat/lng/price/type
     of properties with coordinates. Optional bbox filter (south,west,north,east).
     """
+    from shared.security.rate_limit import enforce_ip_rate_limit
+    await enforce_ip_rate_limit(request, bucket="cloud_map", max_requests=120, window_seconds=3600)
     db = Database.get()
     flt: Dict[str, Any] = _base_filter()
     # Required: must have coordinates
@@ -599,10 +607,12 @@ class PropertyContactPayload(BaseModel):
 
 
 @router.post("/property/{pid}/contact")
-async def public_property_contact(pid: str, payload: PropertyContactPayload):
+async def public_property_contact(pid: str, payload: PropertyContactPayload, request: Request):
     """B2C contact form. Creates (or reuses) a client in the agency CRM and
     a Lead linking it to this property. Source = 'ImmobilCloud'.
     """
+    from shared.security.rate_limit import enforce_ip_rate_limit
+    await enforce_ip_rate_limit(request, bucket="cloud_contact", max_requests=20, window_seconds=3600)
     if not payload.gdpr_consent:
         raise HTTPException(status_code=400, detail="gdpr_consent_required")
 

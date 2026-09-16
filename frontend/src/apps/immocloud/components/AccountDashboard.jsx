@@ -25,6 +25,7 @@ export default function AccountDashboard() {
   const nav = useNavigate();
   const { user } = useAuth();
   const [searches, setSearches] = useState([]);
+  const [favorites, setFavorites] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -34,8 +35,10 @@ export default function AccountDashboard() {
       nav(`/${lang}/cloud/register`, { replace: true });
       return;
     }
-    api.get("/cloud/me/saved-searches")
-      .then((r) => setSearches(r.data.items || []))
+    Promise.all([
+      api.get("/cloud/me/saved-searches").then((r) => setSearches(r.data.items || [])),
+      api.get("/cloud/me/favorites").then((r) => setFavorites(r.data.items || [])).catch(() => setFavorites([])),
+    ])
       .catch((e) => setError(formatApiErrorDetail(e?.response?.data?.detail)))
       .finally(() => setLoading(false));
   }, [user, lang, nav]);
@@ -162,6 +165,36 @@ export default function AccountDashboard() {
                     {t("common.delete")}
                   </button>
                 </div>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+
+      <section data-testid="favorites-section" className="mt-10">
+        <h2 className="text-xl font-light tracking-tight mb-4" style={{ fontFamily: "'Fraunces', Georgia, serif" }}>
+          Preferiti
+        </h2>
+        {favorites.length === 0 ? (
+          <p className="text-sm text-stone-500">Nessun immobile nei preferiti. Aprine uno e clicca ★ Salva.</p>
+        ) : (
+          <ul className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {favorites.map((p) => (
+              <li key={p.id} className="border border-stone-200 rounded-lg p-4 bg-white">
+                <Link to={`/${lang}/cloud/property/${p.id}`} className="font-medium text-stone-900 hover:underline">
+                  {p.title || p.property_type}
+                </Link>
+                <p className="text-xs text-stone-500 mt-1">{p.city}{p.price ? ` · € ${Number(p.price).toLocaleString("it-IT")}` : ""}</p>
+                <button
+                  type="button"
+                  className="mt-2 text-[11px] uppercase tracking-widest text-rose-700"
+                  onClick={async () => {
+                    await api.delete(`/cloud/me/favorites/${p.id}`);
+                    setFavorites((arr) => arr.filter((x) => x.id !== p.id));
+                  }}
+                >
+                  Rimuovi
+                </button>
               </li>
             ))}
           </ul>

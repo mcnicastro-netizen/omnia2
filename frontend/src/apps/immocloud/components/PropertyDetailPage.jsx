@@ -19,6 +19,8 @@ import { Link, useParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { MapContainer, TileLayer, Marker } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
+import { api } from "../../../shared/lib/api";
+import { useAuth } from "../../../shared/lib/auth";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api/cloud`;
@@ -48,6 +50,11 @@ export default function PropertyDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [activePhoto, setActivePhoto] = useState(0);
+  const [fav, setFav] = useState(false);
+  const [videoUrl, setVideoUrl] = useState(null);
+  const [videoBusy, setVideoBusy] = useState(false);
+  const { user } = useAuth();
+  const isB2c = Boolean(user && user.account_type === "b2c");
 
   useEffect(() => {
     setLoading(true);
@@ -60,6 +67,60 @@ export default function PropertyDetailPage() {
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false));
   }, [pid]);
+
+  useEffect(() => {
+    if (!pid) return;
+    api.get(`/cloud/videos/by-property/${pid}`)
+      .then((r) => {
+        if (r.data?.id) {
+          setVideoUrl(`${BACKEND_URL}/api/app/videos/${r.data.id}/download`);
+        }
+      })
+      .catch(() => {});
+    if (isB2c) {
+      api.get("/cloud/me/favorites/ids")
+        .then((r) => setFav((r.data.ids || []).includes(pid)))
+        .catch(() => {});
+    }
+  }, [pid, isB2c]);
+
+  const toggleFav = async () => {
+    if (!isB2c) return;
+    try {
+      if (fav) {
+        await api.delete(`/cloud/me/favorites/${pid}`);
+        setFav(false);
+      } else {
+        await api.post(`/cloud/me/favorites/${pid}`);
+        setFav(true);
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const generateVideo = async () => {
+    setVideoBusy(true);
+    try {
+      const { data } = await api.post(`/cloud/videos/kenburns/property/${pid}`, { duration_s: 15 });
+      const poll = async (n = 0) => {
+        if (n > 40) return;
+        const st = await api.get(`/cloud/videos/${data.video_id}`);
+        if (st.data.status === "ready") {
+          setVideoUrl(`${BACKEND_URL}/api/app/videos/${data.video_id}/download`);
+          return;
+        }
+        if (st.data.status === "failed") return;
+        await new Promise((r) => setTimeout(r, 1500));
+        return poll(n + 1);
+      };
+      await poll();
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setVideoBusy(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -117,6 +178,18 @@ export default function PropertyDetailPage() {
           <div data-testid="detail-price" className="text-2xl md:text-3xl font-semibold text-[#0B1E3F]">
             {formatPrice(prop) || t("cloud.price_on_request")}
           </div>
+          {isB2c && (
+            <button
+              type="button"
+              data-testid="detail-favorite-btn"
+              onClick={toggleFav}
+              className={`mt-2 text-xs uppercase tracking-widest px-3 py-1.5 border rounded ${
+                fav ? "bg-[#0B1E3F] text-white border-[#0B1E3F]" : "border-stone-300 text-stone-700"
+              }`}
+            >
+              {fav ? "★ Nei preferiti" : "☆ Salva nei preferiti"}
+            </button>
+          )}
           {prop.operation && (
             <span className="text-xs uppercase tracking-widest text-stone-500">
               {prop.operation === "rent" ? t("cloud.op_rent") : t("cloud.op_sale")}
@@ -196,6 +269,34 @@ export default function PropertyDetailPage() {
               {t("cloud.no_photos")}
             </div>
           )}
+
+          {/* Micro-tour Ken Burns */}
+          <div data-testid="detail-micro-tour" className="border border-stone-200 rounded-lg p-4">
+            <div className="flex items-center justify-between gap-3 mb-3">
+              <h2 className="text-sm uppercase tracking-widest text-stone-500">Micro-tour</h2>
+              {!videoUrl && photos.length > 0 && (
+                <button
+                  type="button"
+                  data-testid="detail-generate-video"
+                  disabled={videoBusy}
+                  onClick={generateVideo}
+                  className="text-xs uppercase tracking-widest px-3 py-1.5 border border-stone-300 rounded hover:border-stone-700 disabled:opacity-50"
+                >
+                  {videoBusy ? "Generazione…" : "Genera video 15s"}
+                </button>
+              )}
+            </div>
+            {videoUrl ? (
+              <video
+                data-testid="detail-video-player"
+                src={videoUrl}
+                controls
+                className="w-full rounded-lg aspect-video bg-stone-900"
+              />
+            ) : (
+              <p className="text-sm text-stone-500">Nessun video ancora. Generane uno dalle foto dell&apos;annuncio.</p>
+            )}
+          </div>
 
           {/* Key info grid */}
           <div data-testid="detail-key-info" className="grid grid-cols-2 md:grid-cols-4 gap-4 bg-white border border-stone-200 rounded-lg p-5">

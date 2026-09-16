@@ -355,6 +355,13 @@ export default function PropertyFormPage() {
             />
           </Section>
 
+          {/* Privacy L1–L4 (M3.S9) */}
+          {isEdit && id && (
+            <Section label="Privacy annuncio">
+              <PrivacyLevelEditor propertyId={id} />
+            </Section>
+          )}
+
           {/* AI Match preview — only in edit mode */}
           {isEdit && id && (
             <Section label={t("matches.section_title") || "✨ Lead caldi per questo immobile"}>
@@ -644,6 +651,56 @@ function SellerPicker({ value, onChange, t, lang }) {
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+function PrivacyLevelEditor({ propertyId }) {
+  const [level, setLevel] = useState("L2");
+  const [busy, setBusy] = useState(false);
+  const [msg, setMsg] = useState("");
+
+  useEffect(() => {
+    api.get(`/app/properties/${propertyId}/privacy`)
+      .then((r) => setLevel(r.data.privacy_level || "L2"))
+      .catch(() => {});
+  }, [propertyId]);
+
+  const save = async (next) => {
+    setBusy(true);
+    setMsg("");
+    try {
+      await api.patch(`/app/properties/${propertyId}/privacy`, {
+        privacy_level: next,
+        reason: "Aggiornato da scheda immobile",
+      });
+      setLevel(next);
+      setMsg("Privacy aggiornata");
+    } catch (e) {
+      setMsg(e?.response?.data?.detail || "Errore");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div data-testid="privacy-level-editor" className="space-y-2">
+      <p className="text-sm text-stone-600">
+        Controlla cosa vedono visitatori anonimi vs utenti registrati sul portale.
+      </p>
+      <select
+        data-testid="privacy-level-select"
+        disabled={busy}
+        value={level}
+        onChange={(e) => save(e.target.value)}
+        className="form-input max-w-xs"
+      >
+        <option value="L1">L1 — pubblico pieno</option>
+        <option value="L2">L2 — indirizzo parziale (default)</option>
+        <option value="L3">L3 — prezzo/posizione riservati</option>
+        <option value="L4">L4 — solo lead qualificati</option>
+      </select>
+      {msg && <p className="text-xs text-stone-500">{msg}</p>}
     </div>
   );
 }

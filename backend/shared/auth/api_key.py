@@ -119,6 +119,15 @@ async def require_api_key(request: Request, endpoint_key: str) -> dict:
     if cost > 0 and key.get("credits_balance", 0) < cost:
         raise HTTPException(status_code=402, detail="insufficient_credits")
 
+    # Per-key rate limit (anti-scraping / abuse) — 120 req/hour
+    from shared.security.rate_limit import enforce_rate_limit
+    await enforce_rate_limit(
+        bucket="api_key",
+        key=key["id"],
+        max_requests=120,
+        window_seconds=3600,
+    )
+
     # attach transient context (used by charge/log after handler)
     request.state.api_key = key
     request.state.api_cost = cost

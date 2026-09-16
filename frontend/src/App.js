@@ -56,6 +56,7 @@ const MlsPage = lazy(() => import("@/apps/immoweb/pages/MlsPage"));
 const BrandLabPage = lazy(() => import("@/apps/immoweb/pages/BrandLabPage"));
 const FounderOpsPage = lazy(() => import("@/apps/immoweb/pages/FounderOpsPage"));
 const FounderLegalOpsPage = lazy(() => import("@/apps/immoweb/pages/FounderLegalOpsPage"));
+const AnalyticsPage = lazy(() => import("@/apps/immoweb/pages/AnalyticsPage"));
 const AcademyApp = lazy(() => import("@/apps/academy/AcademyApp"));
 const LegalApp = lazy(() => import("@/apps/legal/LegalApp"));
 const LoginPage = lazy(() => import("@/apps/auth/LoginPage"));
@@ -397,6 +398,14 @@ function App() {
                     element={
                       <ProtectedRoute allowedRoles={["super_admin", "agency_admin", "agent"]}>
                         <MatchesPage />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="app/analytics"
+                    element={
+                      <ProtectedRoute allowedRoles={["super_admin", "agency_admin", "agent"]}>
+                        <AnalyticsPage />
                       </ProtectedRoute>
                     }
                   />

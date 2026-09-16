@@ -23,6 +23,8 @@ export default function CloudSearchPage() {
   const filters = useMemo(() => ({
     operation: params.get("operation") || "sale",
     city: params.get("city") || "",
+    cities: params.get("cities") || "",
+    province: params.get("province") || "",
     property_type: params.get("property_type") || "",
     price_min: params.get("price_min") || "",
     price_max: params.get("price_max") || "",
@@ -32,15 +34,112 @@ export default function CloudSearchPage() {
     energy_class: params.get("energy_class") || "",
     sort: params.get("sort") || "recent",
     page: parseInt(params.get("page") || "1"),
+    mls: params.get("mls") === "1",
+    near_me: params.get("near_me") === "1",
+    radius_km: params.get("radius_km") || "5",
   }), [params]);
+
+  const [advOpen, setAdvOpen] = useState(Boolean(filters.cities || filters.near_me));
+  const [geoErr, setGeoErr] = useState("");
 
   useEffect(() => {
     setLoading(true);
+    const page = filters.page || 1;
+
+    // MLS network path (home dual-box)
+    if (filters.mls) {
+      const qs = new URLSearchParams();
+      if (filters.operation) qs.set("operation", filters.operation);
+      if (filters.province) qs.set("province", filters.province);
+      if (filters.city) qs.set("city", filters.city);
+      if (filters.price_min) qs.set("price_min", filters.price_min);
+      if (filters.price_max) qs.set("price_max", filters.price_max);
+      qs.set("limit", "20");
+      qs.set("skip", String((page - 1) * 20));
+      api.get(`/app/mls/search/public?${qs.toString()}`)
+        .then((r) => {
+          const items = (r.data.items || []).map((p) => ({
+            ...p,
+            surface_sqm: p.sqm || p.surface_sqm,
+            cover_photo_url: p.cover_url,
+          }));
+          const total = r.data.total || items.length;
+          setData({
+            items,
+            total,
+            page,
+            has_next: page * 20 < total,
+            source: "mls",
+            claim: r.data.claim,
+          });
+        })
+        .catch(() => setData({ items: [], total: 0, has_next: false, page: 1 }))
+        .finally(() => setLoading(false));
+      return;
+    }
+
+    // Advanced: multi-city / near-me
+    const cityList = (filters.cities || "")
+      .split(",")
+      .map((c) => c.trim())
+      .filter(Boolean);
+    const useAdvanced = cityList.length > 1 || filters.near_me;
+
+    if (useAdvanced) {
+      const body = {
+        operation: filters.operation || "sale",
+        property_types: filters.property_type ? [filters.property_type] : undefined,
+        price_min: filters.price_min ? Number(filters.price_min) : undefined,
+        price_max: filters.price_max ? Number(filters.price_max) : undefined,
+        surface_min: filters.surface_min ? Number(filters.surface_min) : undefined,
+        rooms_min: filters.rooms_min ? Number(filters.rooms_min) : undefined,
+        bedrooms_min: filters.bedrooms_min ? Number(filters.bedrooms_min) : undefined,
+        energy_class: filters.energy_class || undefined,
+        sort: filters.sort || "recent",
+        page,
+        page_size: 20,
+        cities: cityList.length ? cityList : (filters.city ? [filters.city] : undefined),
+        compare_prices: true,
+      };
+      const run = (near) => {
+        if (near) body.near_me = near;
+        api.post("/cloud/search/advanced", body)
+          .then((r) => setData({ ...r.data, source: "advanced" }))
+          .catch(() => setData({ items: [], total: 0, has_next: false, page: 1 }))
+          .finally(() => setLoading(false));
+      };
+      if (filters.near_me) {
+        if (!navigator.geolocation) {
+          setGeoErr("Geolocalizzazione non disponibile");
+          setLoading(false);
+          return;
+        }
+        navigator.geolocation.getCurrentPosition(
+          (pos) => run({
+            lat: pos.coords.latitude,
+            lng: pos.coords.longitude,
+            radius_km: Number(filters.radius_km) || 5,
+          }),
+          () => {
+            setGeoErr("Permesso posizione negato");
+            setLoading(false);
+          },
+          { timeout: 8000 },
+        );
+      } else {
+        run(null);
+      }
+      return;
+    }
+
     const qs = new URLSearchParams();
-    Object.entries(filters).forEach(([k, v]) => v && qs.set(k, v));
+    Object.entries(filters).forEach(([k, v]) => {
+      if (["mls", "near_me", "radius_km", "cities", "province"].includes(k)) return;
+      if (v) qs.set(k, v);
+    });
     qs.set("page_size", "20");
     api.get(`/cloud/search?${qs.toString()}`)
-      .then((r) => setData(r.data))
+      .then((r) => setData({ ...r.data, source: "cloud" }))
       .catch(() => {})
       .finally(() => setLoading(false));
   }, [filters]);
@@ -98,6 +197,54 @@ export default function CloudSearchPage() {
               className="w-full px-3 py-2 bg-white border border-stone-300 rounded text-sm"
             />
           </FilterBlock>
+
+          <button
+            type="button"
+            data-testid="toggle-advanced-search"
+            onClick={() => setAdvOpen((v) => !v)}
+            className="text-[10px] uppercase tracking-widest text-stone-600 underline"
+          >
+            {advOpen ? "Nascondi avanzata" : "Ricerca avanzata"}
+          </button>
+
+          {advOpen && (
+            <div className="space-y-4 border border-stone-200 rounded-lg p-3 bg-stone-50" data-testid="advanced-search-panel">
+              <FilterBlock label="Multi-città (virgola)">
+                <input
+                  data-testid="filter-cities"
+                  value={filters.cities}
+                  onChange={(e) => updateFilter("cities", e.target.value)}
+                  placeholder="Catania, Milano, Roma"
+                  className="w-full px-3 py-2 bg-white border border-stone-300 rounded text-sm"
+                />
+              </FilterBlock>
+              <label className="flex items-center gap-2 text-sm text-stone-700">
+                <input
+                  type="checkbox"
+                  data-testid="filter-near-me"
+                  checked={filters.near_me}
+                  onChange={(e) => updateFilter("near_me", e.target.checked ? "1" : "")}
+                />
+                Vicino a me
+              </label>
+              {filters.near_me && (
+                <FilterBlock label="Raggio km">
+                  <input
+                    type="number"
+                    min={1}
+                    max={50}
+                    value={filters.radius_km}
+                    onChange={(e) => updateFilter("radius_km", e.target.value)}
+                    className="w-full px-3 py-2 bg-white border border-stone-300 rounded text-sm"
+                  />
+                </FilterBlock>
+              )}
+              {filters.mls && (
+                <p className="text-xs text-emerald-800">Modalità MLS network attiva</p>
+              )}
+              {geoErr && <p className="text-xs text-red-600">{geoErr}</p>}
+            </div>
+          )}
 
           <FilterBlock label={t("cloud.f_type")}>
             <select

@@ -14,6 +14,7 @@ from apps.immocloud.mutui import router as mutui_router
 from apps.immocloud.anncsu import router as anncsu_router
 from apps.immocloud.saved_searches import router as saved_searches_router
 from apps.immocloud.visura_b2c import router as visura_b2c_router
+from apps.immocloud.favorites import router as favorites_router
 from apps.immoweb.micro_tour_video import public_router as micro_tour_public_router
 
 router = APIRouter(prefix="/cloud", tags=["immocloud"])
@@ -38,5 +39,6 @@ router.include_router(valuation_pdf_router)
 router.include_router(mutui_router)
 router.include_router(anncsu_router)
 router.include_router(saved_searches_router)
+router.include_router(favorites_router)
 router.include_router(visura_b2c_router)
 router.include_router(micro_tour_public_router)
