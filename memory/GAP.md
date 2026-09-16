@@ -345,7 +345,9 @@ Elementi che ESISTONO ma per decisione del Founder o per regola redazionale NON 
   - NO retry queue email fallite (fire-and-forget)
   - NO tracking delivery Resend (no webhook delivered/bounced/opened)
   - NO digest quotidiana per titolare
-  - NO scheduler interno saved-search (deve essere triggerato super_admin)
+  - Cron saved-search: scheduler interno orario + gate frequenza (A-019/A-020 ✅ 16-Sep-2026).
+  - `saved_search.frequency` rispettata dal cron (skip senza avanzare `last_run_at`).
+- **Backlog qualità prodotto Cap. 18**: A-018, A-022, A-023 (vedi ASPETTI_DA_APPROFONDIRE.md). A-017/A-019/A-020/A-021 chiusi.
   - NO rate limit su `send_email`
   - NO UI preferenze utente (canale + tipo email + digest frequency)
   - NO moderazione admin

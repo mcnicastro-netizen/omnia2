@@ -182,32 +182,29 @@ PATCH /api/auth/me/notification-preferences
 - **Variabili**: `user_name`, `search_name`, `match_count`, `matches_html` (tabella HTML con max 6 righe di immobili), `search_url` (link a `/{lang}/cloud/account`).
 - **Subject**: "🔔 {{match_count}} nuovi immobili per la tua ricerca "{{search_name}}"".
 - **Limitazione HTML**: `matches_html` mostra solo i primi 6 match; il totale è indicato nel subject.
-- **Frequenza**: opzione utente `instant | daily | weekly` (default `daily`). ⚠️ v1 **il cron admin ignora la frequenza** e processa TUTTE le active saved_searches ad ogni chiamata. La "frequenza" è solo un flag salvato, non un filtro tempo. Documentato onestamente. Backlog **A-019 Frequency-aware cron** proposto per v1.1.
+- **Frequenza**: opzione utente `instant | daily | weekly` (default `daily`). Il cron **rispetta** la frequenza: `instant` ad ogni giro; `daily` solo se sono passate ≥20h da `last_run_at`; `weekly` solo se ≥6 giorni. Se la finestra non è scaduta, **non** avanza `last_run_at` (fix A-019, 16-Sep-2026).
+- **Errore comune**: "Ricevo troppe email" → imposta frequency `daily` o `weekly` in Account → Ricerche salvate.
 
 ---
 
-## 18.9 · Cron saved-searches (super_admin trigger)
+## 18.9 · Cron saved-searches (scheduler interno + trigger manuale)
 
-**Endpoint**: `POST /api/app/cron/saved-searches/run-all` (super_admin only).
+**Endpoint manuale**: `POST /api/app/cron/saved-searches/run-all` (super_admin only).
 
-**Cosa fa**:
+**Scheduler interno (A-020, 16-Sep-2026)**: APScheduler in `sync_engine.start_scheduler` esegue `run_all_active_saved_searches` **ogni ora al minuto :15 UTC**, oltre al sync publishing giornaliero.
+
+**Cosa fa il giro**:
 1. Itera ogni `saved_searches` con `is_active=true`.
-2. Recupera l'utente proprietario. Se `account_type != "b2c"` o `"email"` non in `notification_channels`, salta l'email (aggiorna comunque `last_run_at`).
-3. Costruisce filtro Mongo su `properties` (dai `filters` salvati) con `created_at > last_run_at`.
-4. Recupera fino a 20 match, ordina per `created_at desc`.
-5. Se >= 1 match, chiama `_send_alert_email()` con la digest HTML (max 6 righe visibili).
-6. **Sempre** avanza `last_run_at = now` (anche in caso di skip email) per evitare replay di vecchi match quando l'utente riattiva il canale.
+2. Applica il gate frequenza (A-019): skip senza avanzare `last_run_at` se daily/weekly non scaduti.
+3. Recupera l'utente: email solo se B2C + canale email + tipo `saved_search_alert` abilitato; in-app anche senza email.
+4. Filtro Mongo su `properties` dai `filters` salvati con `created_at > last_run_at` (max 20).
+5. Se ≥1 match → digest HTML (max 6 righe) + notifica in-app.
+6. Avanza `last_run_at` solo se il giro non è in skip frequenza.
 
-**Response body**: `{ok: true, searches_checked: N, emails_sent: N, total_matches: N}`.
+**Response body**: `{searches_checked, emails_sent, total_matches, run_at}`.
 
-**Come lanciarlo**:
-- Manuale: `curl -X POST -H "Cookie: ..." /api/app/cron/saved-searches/run-all`
-- Kubernetes CronJob esterno (non deployato v1)
-- GitHub Actions (non configurato v1)
-
-**⚠️ v1 non ha uno scheduler interno**: il cron NON parte da solo. Deve essere chiamato manualmente o da uno scheduler esterno. Backlog **A-020 Internal APScheduler saved-searches** proposto.
-
-**Nota conflitto planning**: c'è un APScheduler già attivo (`publishing_scheduler` alle 06:00 UTC) per il publishing sync. È isolato dal cron saved-searches per separazione di responsabilità.
+**Trigger manuale** (smoke / ops):
+- `curl -X POST -H "Cookie: ..." /api/app/cron/saved-searches/run-all`
 
 ---
 
@@ -328,10 +325,11 @@ db.al_audit.find({user_id: "..."}).sort({created_at: -1}).limit(50)
 - Se `[EMAIL MOCK]` → configura Resend.
 
 ### E3 · "La saved-search non mi invia mai email"
-- **Causa 1**: nessun super_admin ha lanciato il cron. Fix: manualmente `POST /api/app/cron/saved-searches/run-all`.
+- **Causa 1**: frequency `daily`/`weekly` non ancora scaduta (A-019). Attendi la finestra o imposta `instant`.
 - **Causa 2**: non ci sono nuovi match da `last_run_at`. Verifica su Mongo `saved_searches.find({id: sid}, {last_run_at, last_match_count})`.
 - **Causa 3**: utente ha disattivato il canale email o il tipo `saved_search_alert` nelle preferenze (Impostazioni / Account). Fix: riattiva da UI. L’inbox in-app può comunque ricevere la riga `saved_search_match`.
 - **Causa 4**: la `saved_search.is_active = false`. Fix: `PATCH /api/cloud/me/saved-searches/{sid}` con `is_active=true`.
+- **Nota**: lo scheduler interno gira ogni ora (:15 UTC). Il trigger manuale super_admin resta disponibile per smoke.
 
 ### E4 · "I toast in-app spariscono troppo velocemente"
 - Comportamento di default di `sonner` (~4-5s). v1 non consente configurazione per toast singolo. Backlog **A-023 Toast duration tuning**.
@@ -356,7 +354,7 @@ db.al_audit.find({user_id: "..."}).sort({created_at: -1}).limit(50)
 - ❌ Nessun push sender (schema `push` = dead code)
 - ❌ Nessuna coda retry email / webhook Resend delivery
 - ❌ Nessuna digest quotidiana titolare (oltre saved_search)
-- ❌ Cron saved-search senza scheduler interno (trigger super_admin) — **A-020**
+- ✅ Cron saved-search con scheduler interno orario (A-020) + gate frequenza (A-019)
 - ❌ Emitter residui: match on-read, import XML, social, compliance, DNS
 - ❌ SSE/WebSocket (solo polling)
 
@@ -396,12 +394,12 @@ db.al_audit.find({user_id: "..."}).sort({created_at: -1}).limit(50)
 - **A-017 e A-021 shippati** (15-Sep-2026): campanella + preferenze UI — capitolo allineato 16-Sep (D-084).
 - **A-018 activity feed** ancora assente: dashboard = KPI, non timeline.
 - **`push` schema / non implementato**.
-- Cron saved-searches: frequenza ora rispettata in parte (daily/weekly gate ore); **scheduler interno assente** (A-020).
+- Cron saved-searches: frequenza rispettata (A-019) + **scheduler interno orario :15 UTC** (A-020).
 - Email fire-and-forget; no webhook Resend.
 - Audit Mongo non esposto in UI.
 - Sync manuale obbligatorio ad ogni ship successivo: `MANUAL_SYNC.md` · **D-084**.
 
-Backlog residuo Cap. 18: **A-018**, **A-019** (refine freq), **A-020**, **A-022**, **A-023** + emitter residuali A-017.
+Backlog residuo Cap. 18: **A-018**, **A-022**, **A-023** + emitter residuali A-017.
 
 ---
 

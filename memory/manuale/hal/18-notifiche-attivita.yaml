@@ -328,16 +328,15 @@ voci:
         - "matches_html: tabella HTML con max 6 righe visibili. Il
           match_count reale puo' essere maggiore (indicato nel subject
           e nel corpo)."
-        - "Frequenza scelta dall'utente: instant/daily/weekly. ⚠️ v1
-          il cron IGNORA la frequenza e processa TUTTE le active
-          saved_searches ad ogni chiamata. Documentato onestamente.
-          Backlog A-019 (Frequency-aware cron) per v1.1."
+        - "Frequenza instant|daily|weekly: il cron RISPETTA il gate
+          (daily ≥20h, weekly ≥6g) e non avanza last_run_at sullo skip
+          (A-019 chiuso 16-Sep-2026)."
       errori_comuni:
         - problema: "La saved-search non mi manda mai email"
           soluzione: >
             Verifica (1) is_active=true, (2) account_type='b2c',
-            (3) 'email' in notification_channels, (4) cron
-            super_admin lanciato almeno una volta.
+            (3) 'email' in notification_channels, (4) frequency non
+            ancora scaduta, (5) scheduler orario o trigger manuale.
         - problema: "Ricevo email anche per ricerche disattivate"
           soluzione: >
             Bug non riproducibile v1 (query filtra is_active=true).
@@ -395,57 +394,38 @@ voci:
   # ---------- 18.10 · cron saved-searches ----------
 
   - id: notifiche.cron-saved-searches
-    titolo: Cron saved-searches (super_admin trigger manuale · no scheduler interno)
+    titolo: Cron saved-searches (scheduler interno orario + trigger
+      super_admin)
     modulo: Notifiche
     widget: null
-    pubblico: [super_admin]
+    pubblico: [titolare, agente, segreteria]
     livello: avanzato
     tags: [notifiche, cron, saved-search, super-admin, scheduler, apscheduler, digest, b2c]
     correlati: [notifiche.template-saved-search-alert, notifiche.preferenze-utente]
-    domanda_naturale: "Come lancio il cron delle ricerche salvate B2C? Parte da solo?"
+    domanda_naturale: "Le ricerche salvate partono da sole o serve un cron manuale?"
     contenuto:
       a_cosa_serve: >
-        Endpoint admin per triggerare manualmente il job di scansione
-        saved-searches attive e invio email digest. NON parte da solo
-        v1 (nessuno scheduler interno per questo job).
+        Processare le saved-searches attive e inviare digest/email +
+        notifiche in-app. Dal 16-Sep-2026 gira anche da solo ogni ora.
       quando_si_usa: >
-        Quando super_admin vuole processare tutte le saved-searches
-        B2C attive per inviare le digest via email.
+        Automatico ogni ora (:15 UTC). Il trigger super_admin resta
+        per smoke/ops.
       passi:
-        - "Endpoint: POST /api/app/cron/saved-searches/run-all (super_admin only)."
-        - "Cosa fa: itera tutte le saved_searches con is_active=true."
-        - "Per ogni ricerca: recupera user, verifica account_type='b2c'
-          e 'email' in notification_channels; se NO, salta email ma
-          aggiorna comunque last_run_at."
-        - "Costruisce filtro Mongo sui filters salvati + created_at
-          > last_run_at."
-        - "Recupera max 20 match, ordina desc, se >= 1 chiama
-          _send_alert_email() con digest HTML (max 6 righe visibili)."
-        - "SEMPRE avanza last_run_at = now, anche in caso di skip email.
-          Motivazione: se l'utente attiva 'email' post-hoc, evita
-          replay di match vecchi."
-        - "Response: {ok: true, searches_checked, emails_sent,
-          total_matches}."
-        - "⚠️ v1 NON c'e' uno scheduler interno per questo cron: deve
-          essere lanciato manualmente o da uno scheduler esterno
-          (k8s CronJob, GitHub Actions). Backlog A-020 (Internal
-          APScheduler saved-searches) proposto."
-        - "Nota conflitto planning: c'e' un APScheduler gia' attivo
-          alle 06:00 UTC per publishing sync (isolato da questo cron
-          per separazione di responsabilita')."
+        - "Scheduler: APScheduler job saved_searches_hourly in
+          sync_engine.start_scheduler (ogni ora :15 UTC) — A-020."
+        - "Endpoint manuale: POST /api/app/cron/saved-searches/run-all
+          (super_admin only)."
+        - "Gate frequenza A-019: instant sempre; daily ≥20h; weekly ≥6g.
+          Skip senza avanzare last_run_at."
       errori_comuni:
-        - problema: "cron_forbidden 403"
-          soluzione: >
-            Solo super_admin puo' chiamare questo endpoint. Utenti B2B
-            e B2C ottengono 403.
         - problema: "emails_sent=0 anche se ho saved-searches attive"
           soluzione: >
             Verifica su ogni saved-search: is_active, account_type user
-            b2c, notification_channels ha email, esistono match nuovi
-            da last_run_at. Se tutto ok, verifica log backend per
-            [EMAIL OK] o [EMAIL MOCK].
+            B2C, canale email, tipo saved_search_alert, frequency non
+            ancora scaduta, match nuovi da last_run_at.
       permessi:
-        - "Solo super_admin"
+        - Trigger manuale: solo super_admin
+        - Scheduler: processo backend
     screenshot: []
 
   # ---------- 18.11 · preferenze utente (A-021) ----------
@@ -651,7 +631,7 @@ voci:
         - "BACKEND · NO router /activity o activity feed (A-018)."
         - "BACKEND · NO servizio push sender (schema 'push' dead code)."
         - "BACKEND · NO coda retry email / webhook Resend delivery."
-        - "BACKEND · NO scheduler interno saved-search (A-020)."
+        - "BACKEND · Scheduler interno saved-search orario (A-020 ✅)."
         - "BACKEND · Emitter residuali: match on-read, import, social,
           compliance, DNS non ancora in campanella."
         - "FRONTEND · NO pagina full-screen Notifiche (solo dropdown)."
