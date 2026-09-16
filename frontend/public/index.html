@@ -63,15 +63,28 @@
     </head>
     <body class="notranslate">
         <noscript>
-          <div style="max-width:640px;margin:40px auto;padding:24px;font-family:system-ui,sans-serif;color:#0B1E3F">
-            <p style="letter-spacing:.2em;text-transform:uppercase;font-size:11px;color:#C19A6B">ImmobilCloud™</p>
-            <h1 style="font-family:Georgia,serif;font-weight:400">La casa giusta, senza farsi raccontare storie.</h1>
-            <p>Cerca immobili in Italia. Scout ti dice se l'annuncio è completo, se il prezzo ha senso e cosa chiedere — prima della visita.</p>
-            <p><a href="/it/cloud">Apri ImmobilCloud</a> · <a href="/it/cloud/search">Cerca</a> · <a href="/it/cloud/valutatore">Valuta</a></p>
-            <p style="color:#78716c;font-size:13px">Per usare l'app completa abilita JavaScript.</p>
+          <div id="omnia-ssr-shell" style="min-height:70vh;background:#0B1E3F;color:#fff;font-family:Georgia,serif;padding:48px 24px;max-width:720px;margin:0 auto">
+            <p style="letter-spacing:.28em;text-transform:uppercase;font-size:11px;color:#C19A6B;font-family:system-ui,sans-serif">ImmobilCloud™</p>
+            <h1 style="font-weight:400;font-size:2.2rem;line-height:1.15">La casa giusta, senza farsi raccontare storie.</h1>
+            <p style="font-family:system-ui,sans-serif;color:rgba(255,255,255,.82)">Cerca immobili in Italia. Scout ti dice se l'annuncio è completo, se il prezzo ha senso e cosa chiedere — prima della visita.</p>
+            <p style="font-family:system-ui,sans-serif"><a href="/it/cloud" style="color:#E8D5B5">Apri ImmobilCloud</a> · <a href="/it/cloud/search" style="color:#E8D5B5">Cerca</a> · <a href="/it/cloud/valutatore" style="color:#E8D5B5">Valuta</a></p>
           </div>
         </noscript>
-        <div id="root"></div>
+        <div id="root">
+          <div id="omnia-ssr-shell" data-omnia-ssr="1" style="min-height:70vh;background:#0B1E3F;color:#fff;font-family:Georgia,serif">
+            <div style="max-width:720px;margin:0 auto;padding:48px 24px">
+              <p style="letter-spacing:.28em;text-transform:uppercase;font-size:11px;color:#C19A6B;font-family:system-ui,sans-serif">ImmobilCloud™</p>
+              <h1 style="font-weight:400;font-size:2.2rem;line-height:1.15;margin:12px 0 16px">La casa giusta, senza farsi raccontare storie.</h1>
+              <p style="font-family:system-ui,sans-serif;color:rgba(255,255,255,.82);line-height:1.5">Cerca immobili in Italia. Scout ti dice se l'annuncio è completo, se il prezzo ha senso e cosa chiedere — prima della visita.</p>
+              <p style="font-family:system-ui,sans-serif">
+                <a href="/it/cloud" style="color:#E8D5B5">Apri ImmobilCloud</a> ·
+                <a href="/it/cloud/search" style="color:#E8D5B5">Cerca</a> ·
+                <a href="/it/cloud/valutatore" style="color:#E8D5B5">Valuta</a> ·
+                <a href="/it/cloud/register?intent=sell" style="color:#E8D5B5">Vendi</a>
+              </p>
+            </div>
+          </div>
+        </div>
         <!--
       This HTML file is a template.
       If you open it directly in the browser, you will see an empty page.

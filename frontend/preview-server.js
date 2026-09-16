@@ -132,6 +132,27 @@ function shouldServeCloudSnapshot(req) {
   return false;
 }
 
+function cloudRootInnerHtml(origin) {
+  const description =
+    "Cerca immobili in Italia. Scout ti dice se l'annuncio è completo, se il prezzo ha senso e cosa chiedere — prima della visita.";
+  return `
+  <div id="omnia-ssr-shell" data-omnia-ssr="1" style="min-height:70vh;background:#0B1E3F;color:#fff;font-family:Georgia,'Fraunces',serif">
+    <div style="max-width:720px;margin:0 auto;padding:48px 24px">
+      <p style="letter-spacing:.28em;text-transform:uppercase;font-size:11px;color:#C19A6B;font-family:system-ui,sans-serif">ImmobilCloud™</p>
+      <h1 style="font-weight:400;font-size:2.2rem;line-height:1.15;margin:12px 0 16px">La casa giusta, senza farsi raccontare storie.</h1>
+      <p style="font-family:system-ui,sans-serif;color:rgba(255,255,255,.82);line-height:1.5">${escapeHtml(description)}</p>
+      <img src="${escapeHtml(origin)}/cloud/hero.jpg" alt="ImmobilCloud" width="1200" height="630" style="width:100%;max-height:280px;object-fit:cover;border-radius:12px;margin:24px 0" />
+      <p style="font-family:system-ui,sans-serif">
+        <a href="${escapeHtml(origin)}/it/cloud" style="color:#E8D5B5">Apri ImmobilCloud</a> ·
+        <a href="${escapeHtml(origin)}/it/cloud/search" style="color:#E8D5B5">Cerca</a> ·
+        <a href="${escapeHtml(origin)}/it/cloud/valutatore" style="color:#E8D5B5">Valuta</a> ·
+        <a href="${escapeHtml(origin)}/it/cloud/register?intent=sell" style="color:#E8D5B5">Vendi</a>
+      </p>
+      <p style="margin-top:20px;font-family:system-ui,sans-serif;font-size:13px;color:rgba(255,255,255,.5)">Scout · Valutatore · Mutui · Annunci in Italia</p>
+    </div>
+  </div>`;
+}
+
 function rewriteSpaHtml(html, req) {
   const origin = publicOrigin(req);
   const url = `${origin}${req.originalUrl || req.path || "/"}`;
@@ -141,7 +162,6 @@ function rewriteSpaHtml(html, req) {
   const image = `${origin}/cloud/hero.jpg`;
 
   let out = html;
-  // Prefer ImmobilCloud share cards on tunnel / preview hosts
   const replacements = [
     [/<title>[^<]*<\/title>/i, `<title>${escapeHtml(title)}</title>`],
     [/<meta name="description" content="[^"]*"\s*\/?>/i, `<meta name="description" content="${escapeHtml(description)}" />`],
@@ -158,20 +178,19 @@ function rewriteSpaHtml(html, req) {
   for (const [re, rep] of replacements) {
     if (re.test(out)) out = out.replace(re, rep);
   }
-  // Visible noscript for humans who disable JS / some fetchers
+
+  // Critical: populate #root in the static HTML so non-JS fetchers never see an empty body.
+  // React replaces this on client mount.
+  const rootFilled = `<div id="root">${cloudRootInnerHtml(origin)}</div>`;
+  if (/<div id="root"><\/div>/i.test(out)) {
+    out = out.replace(/<div id="root"><\/div>/i, rootFilled);
+  } else if (/<div id="root">\s*<\/div>/i.test(out)) {
+    out = out.replace(/<div id="root">\s*<\/div>/i, rootFilled);
+  }
+
   out = out.replace(
-    /<noscript>[^<]*<\/noscript>/i,
-    `<noscript>
-  <div style="max-width:640px;margin:40px auto;padding:24px;font-family:system-ui,sans-serif;color:#0B1E3F">
-    <p style="letter-spacing:.2em;text-transform:uppercase;font-size:11px;color:#C19A6B">ImmobilCloud™</p>
-    <h1 style="font-family:Georgia,serif;font-weight:400">La casa giusta, senza farsi raccontare storie.</h1>
-    <p>${escapeHtml(description)}</p>
-    <p><a href="${escapeHtml(origin)}/it/cloud">Apri ImmobilCloud</a> ·
-       <a href="${escapeHtml(origin)}/it/cloud/search">Cerca</a> ·
-       <a href="${escapeHtml(origin)}/it/cloud/valutatore">Valuta</a></p>
-    <p style="color:#78716c;font-size:13px">Questa app richiede JavaScript per l’esperienza completa.</p>
-  </div>
-</noscript>`
+    /<noscript>[\s\S]*?<\/noscript>/i,
+    `<noscript>${cloudRootInnerHtml(origin)}</noscript>`
   );
   return out;
 }
@@ -264,8 +283,12 @@ app.get("*", (req, res) => {
   res.setHeader("Cache-Control", "no-cache");
   res.setHeader("Connection", "close");
 
-  // Crawlers / link-preview bots: real HTML body (not empty #root)
-  if (isBot(req) && shouldServeCloudSnapshot(req)) {
+  const wantSnapshot =
+    shouldServeCloudSnapshot(req) &&
+    (isBot(req) || req.query.prerender === "1" || req.query.ssr === "1");
+
+  // Dedicated prerender document for bots / explicit ?prerender=1
+  if (wantSnapshot) {
     res.setHeader("Content-Type", "text/html; charset=utf-8");
     res.setHeader("X-Omnia-Prerender", "cloud-snapshot");
     return res.status(200).send(cloudSnapshotHtml(req));
@@ -279,9 +302,12 @@ app.get("*", (req, res) => {
         message: "Esegui: cd frontend && REACT_APP_BACKEND_URL= yarn build",
       });
     }
-    // Humans still get SPA; rewrite OG to current host so shares unfurl on tunnel URLs
+    // Cloud routes: SPA + pre-filled #root (readable without executing JS)
     const out = shouldServeCloudSnapshot(req) ? rewriteSpaHtml(html, req) : html;
     res.setHeader("Content-Type", "text/html; charset=utf-8");
+    if (shouldServeCloudSnapshot(req)) {
+      res.setHeader("X-Omnia-Prerender", "root-shell");
+    }
     res.status(200).send(out);
   });
 });
