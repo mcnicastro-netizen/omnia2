@@ -254,123 +254,126 @@ export default function PropertyDetailPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* LEFT COLUMN — gallery + info + map */}
         <div className="lg:col-span-2 space-y-8">
-          {/* Scout HAL — unique buyer brief */}
+          {/* Scout — solid readable panel (no photo behind text) */}
           <section
             data-testid="scout-hal-panel"
-            className="relative overflow-hidden border border-stone-200 rounded-2xl"
+            className="overflow-hidden rounded-2xl border border-stone-200 bg-[#f7f4ef] shadow-sm"
           >
-            <div
-              className="absolute inset-0 opacity-30"
-              style={{
-                backgroundImage: "url(/cloud/living.jpg)",
-                backgroundSize: "cover",
-                backgroundPosition: "center",
-              }}
-            />
-            <div className="relative p-5 sm:p-6 bg-gradient-to-br from-[#0B1E3F]/92 to-[#0B1E3F]/80 text-white">
-            <div className="flex flex-wrap items-start justify-between gap-3 mb-3">
-              <div>
-                <p className="text-[10px] uppercase tracking-[0.25em] text-[#C19A6B]">Scout</p>
-                <h2
-                  className="text-xl font-light"
-                  style={{ fontFamily: "'Fraunces', Georgia, serif" }}
-                >
-                  Un&apos;occhiata furba, prima della visita
-                </h2>
-                <p className="text-xs text-white/70 mt-1">
-                  Ti dice se l&apos;annuncio è completo, se il prezzo ha senso e cosa chiedere.
-                </p>
+            <div className="grid grid-cols-1 sm:grid-cols-[140px_1fr]">
+              <div className="hidden sm:block relative min-h-[140px]">
+                <img
+                  src="/cloud/living.jpg"
+                  alt=""
+                  className="absolute inset-0 w-full h-full object-cover"
+                />
               </div>
-              {!scout && (
-                <button
-                  type="button"
-                  data-testid="scout-hal-run"
-                  onClick={runScout}
-                  disabled={scoutBusy}
-                  className="px-4 py-2 text-xs uppercase tracking-widest bg-[#C19A6B] text-white rounded-lg hover:bg-white hover:text-[#0B1E3F] disabled:opacity-50 transition"
-                >
-                  {scoutBusy ? "Un attimo…" : "Chiedi a Scout"}
-                </button>
-              )}
-            </div>
-            {scoutErr && (
-              <p className="text-xs text-rose-200" data-testid="scout-hal-error">{String(scoutErr)}</p>
-            )}
-            {scout && (
-              <div className="space-y-4" data-testid="scout-hal-result">
-                {scout.insight && (
-                  <p className="text-sm text-white border-l-2 border-[#C19A6B] pl-3">{scout.insight}</p>
-                )}
-                <div className="flex flex-wrap gap-3 items-center">
-                  <div
-                    className="px-3 py-2 rounded-lg bg-white/10 border border-white/20"
-                    data-testid="scout-completeness"
-                  >
-                    <span className="text-[10px] uppercase tracking-widest text-white/60">Quanto è completo</span>
-                    <div className="text-lg font-medium text-white">
-                      {scout.completeness?.score}/100 · {scout.completeness?.grade}
-                    </div>
-                  </div>
-                  {scout.price_vs_zone?.available && (
-                    <div
-                      className="px-3 py-2 rounded-lg bg-white/10 border border-white/20"
-                      data-testid="scout-price-zone"
+              <div className="p-5 sm:p-6 bg-[#f7f4ef] text-[#0B1E3F]">
+                <div className="flex flex-wrap items-start justify-between gap-3 mb-3">
+                  <div>
+                    <p className="text-[10px] uppercase tracking-[0.25em] text-[#C19A6B]">Scout</p>
+                    <h2
+                      className="text-xl font-light text-[#0B1E3F]"
+                      style={{ fontFamily: "'Fraunces', Georgia, serif" }}
                     >
-                      <span className="text-[10px] uppercase tracking-widest text-white/60">Il prezzo in zona</span>
-                      <div className="text-sm font-medium text-white">
-                        {scout.price_vs_zone.label_it}
-                        <span className="text-white/60 font-normal">
-                          {" "}· €{scout.price_vs_zone.asking_eur_mq}/m²
-                          {" "}(zona €{scout.price_vs_zone.zone_eur_mq_min}–{scout.price_vs_zone.zone_eur_mq_max})
-                        </span>
-                      </div>
-                    </div>
-                  )}
-                  {prop.last_price_drop?.drop_pct && (
-                    <div className="px-3 py-2 rounded-lg bg-rose-500/20 border border-rose-300/30 text-rose-100 text-sm">
-                      Ribasso recente −{prop.last_price_drop.drop_pct}%
-                    </div>
+                      Un&apos;occhiata furba, prima della visita
+                    </h2>
+                    <p className="text-sm text-stone-600 mt-1">
+                      Ti dice se l&apos;annuncio è completo, se il prezzo ha senso e cosa chiedere.
+                    </p>
+                  </div>
+                  {!scout && (
+                    <button
+                      type="button"
+                      data-testid="scout-hal-run"
+                      onClick={runScout}
+                      disabled={scoutBusy}
+                      className="px-4 py-2 text-xs uppercase tracking-widest bg-[#0B1E3F] text-white rounded-lg hover:bg-[#C19A6B] disabled:opacity-50 transition"
+                    >
+                      {scoutBusy ? "Un attimo…" : "Chiedi a Scout"}
+                    </button>
                   )}
                 </div>
-                {scout.red_flags?.length > 0 && (
-                  <div>
-                    <p className="text-[10px] uppercase tracking-widest text-[#E8D5B5] mb-1">Occhio a</p>
-                    <ul className="text-sm text-white/85 space-y-1 list-disc pl-4">
-                      {scout.red_flags.map((f, i) => <li key={i}>{f}</li>)}
-                    </ul>
+                {scoutErr && (
+                  <p className="text-sm text-rose-700" data-testid="scout-hal-error">{String(scoutErr)}</p>
+                )}
+                {scout && (
+                  <div className="space-y-4" data-testid="scout-hal-result">
+                    {scout.insight && (
+                      <p className="text-sm text-stone-800 border-l-2 border-[#C19A6B] pl-3 leading-relaxed">
+                        {scout.insight}
+                      </p>
+                    )}
+                    <div className="flex flex-wrap gap-3 items-center">
+                      <div
+                        className="px-3 py-2 rounded-lg bg-white border border-stone-200"
+                        data-testid="scout-completeness"
+                      >
+                        <span className="text-[10px] uppercase tracking-widest text-stone-500">Quanto è completo</span>
+                        <div className="text-lg font-medium text-[#0B1E3F]">
+                          {scout.completeness?.score}/100 · {scout.completeness?.grade}
+                        </div>
+                      </div>
+                      {scout.price_vs_zone?.available && (
+                        <div
+                          className="px-3 py-2 rounded-lg bg-white border border-stone-200"
+                          data-testid="scout-price-zone"
+                        >
+                          <span className="text-[10px] uppercase tracking-widest text-stone-500">Il prezzo in zona</span>
+                          <div className="text-sm font-medium text-[#0B1E3F]">
+                            {scout.price_vs_zone.label_it}
+                            <span className="text-stone-500 font-normal">
+                              {" "}· €{scout.price_vs_zone.asking_eur_mq}/m²
+                              {" "}(zona €{scout.price_vs_zone.zone_eur_mq_min}–{scout.price_vs_zone.zone_eur_mq_max})
+                            </span>
+                          </div>
+                        </div>
+                      )}
+                      {prop.last_price_drop?.drop_pct && (
+                        <div className="px-3 py-2 rounded-lg bg-rose-50 border border-rose-200 text-rose-800 text-sm">
+                          Ribasso recente −{prop.last_price_drop.drop_pct}%
+                        </div>
+                      )}
+                    </div>
+                    {scout.red_flags?.length > 0 && (
+                      <div>
+                        <p className="text-[10px] uppercase tracking-widest text-rose-700 mb-1">Occhio a</p>
+                        <ul className="text-sm text-stone-800 space-y-1 list-disc pl-4 leading-relaxed">
+                          {scout.red_flags.map((f, i) => <li key={i}>{f}</li>)}
+                        </ul>
+                      </div>
+                    )}
+                    {scout.questions_for_seller?.length > 0 && (
+                      <div>
+                        <p className="text-[10px] uppercase tracking-widest text-stone-500 mb-1">Da chiedere al telefono</p>
+                        <ol className="text-sm text-stone-800 space-y-1 list-decimal pl-4 leading-relaxed">
+                          {scout.questions_for_seller.map((q, i) => <li key={i}>{q}</li>)}
+                        </ol>
+                      </div>
+                    )}
+                    {scout.seller_gaps?.length > 0 && (
+                      <div data-testid="scout-seller-gaps">
+                        <p className="text-[10px] uppercase tracking-widest text-amber-800 mb-1">
+                          All&apos;annuncio manca ancora
+                        </p>
+                        <ul className="text-sm text-stone-800 space-y-1 list-disc pl-4 leading-relaxed">
+                          {scout.seller_gaps.map((g, i) => (
+                            <li key={g.key || i}>{g.label_it}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                    <p className="text-[11px] text-stone-500 leading-relaxed">{scout.disclaimer_it}</p>
+                    <button
+                      type="button"
+                      onClick={runScout}
+                      disabled={scoutBusy}
+                      className="text-[11px] uppercase tracking-widest text-stone-500 hover:text-[#0B1E3F]"
+                    >
+                      Aggiorna Scout
+                    </button>
                   </div>
                 )}
-                {scout.questions_for_seller?.length > 0 && (
-                  <div>
-                    <p className="text-[10px] uppercase tracking-widest text-[#E8D5B5] mb-1">Da chiedere al telefono</p>
-                    <ol className="text-sm text-white/85 space-y-1 list-decimal pl-4">
-                      {scout.questions_for_seller.map((q, i) => <li key={i}>{q}</li>)}
-                    </ol>
-                  </div>
-                )}
-                {scout.seller_gaps?.length > 0 && (
-                  <div data-testid="scout-seller-gaps">
-                    <p className="text-[10px] uppercase tracking-widest text-[#E8D5B5] mb-1">
-                      All&apos;annuncio manca ancora
-                    </p>
-                    <ul className="text-sm text-white/85 space-y-1 list-disc pl-4">
-                      {scout.seller_gaps.map((g, i) => (
-                        <li key={g.key || i}>{g.label_it}</li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-                <p className="text-[11px] text-white/45">{scout.disclaimer_it}</p>
-                <button
-                  type="button"
-                  onClick={runScout}
-                  disabled={scoutBusy}
-                  className="text-[11px] uppercase tracking-widest text-white/50 hover:text-[#C19A6B]"
-                >
-                  Aggiorna Scout
-                </button>
               </div>
-            )}
             </div>
           </section>
 
