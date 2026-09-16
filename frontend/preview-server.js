@@ -125,10 +125,10 @@ function cloudSnapshotHtml(req) {
 
 function shouldServeCloudSnapshot(req) {
   const p = (req.path || "").toLowerCase();
-  if (p === "/" || p === "") return true;
+  if (p === "/" || p === "" || p === "/index.html") return true;
   if (/^\/(it|en|es)\/?$/.test(p)) return true;
   if (/^\/(it|en|es)\/cloud(\/|$)/.test(p)) return true;
-  if (p.startsWith("/cloud")) return true;
+  if (p === "/cloud" || p === "/cloud/") return true;
   return false;
 }
 
@@ -345,6 +345,7 @@ function sendCloudSsr(req, res) {
 // Register SSR BEFORE static so /it/cloud never falls through to an empty shell.
 [
   "/",
+  "/index.html",
   "/it",
   "/it/",
   "/en",
@@ -367,11 +368,8 @@ app.use(
     index: false,
     maxAge: "5m",
     etag: true,
-    setHeaders(res, filePath) {
+    setHeaders(res) {
       res.setHeader("Connection", "close");
-      if (filePath.endsWith("index.html")) {
-        res.setHeader("Cache-Control", "no-store");
-      }
     },
   })
 );
