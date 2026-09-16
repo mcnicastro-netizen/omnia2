@@ -72,6 +72,8 @@ Domande più mirate = risposte più precise. Il motore TF-IDF premia le parole-c
 **A cosa serve capirlo**
 Il badge di confidence in alto a destra sulla risposta ti dice **quanto HAL si fida** della sua risposta. Non è una percentuale di accuratezza semantica — è la **similarità coseno TF-IDF** tra la tua domanda e i chunk più rilevanti nel corpus.
 
+**Tooltip (A-006)**: passando il mouse (o focus) sul badge compare una spiegazione in italiano del livello (alta / media / bassa). `data-testid="hal-confidence-badge"`.
+
 **I 3 stati del badge**
 
 | Stato | Range similarity | Cosa significa | Colore |

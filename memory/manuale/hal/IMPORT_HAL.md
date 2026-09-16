@@ -1,9 +1,9 @@
-# 📚 HAL Knowledge — Import & Cold Start (v0.17)
+# 📚 HAL Knowledge — Import & Cold Start (v0.18)
 
-**Ultimo aggiornamento**: 16-Ago-2026 (post-Cap. 21 · Valutatore immobiliare · post B2C-VAL-01)
-**Corpus attuale**: **267 voci HAL YAML** su **21 capitoli** (Cap. 1-21)
-**Motore**: `hal_knowledge.py` con loader YAML **attivo** (Opzione A applicata in TASK B-bis · 6 Ago 2026) · **Fix Feb 2026**: `memory/manuale/*.md` **escluso** dal RAG ingest (chunk atomici YAML = sola sorgente retrieval per il manuale).
-**Prossimo passo**: reindex HAL **batch** a fine manuale (regola Founder — NON rigenerare `hal-index.json` per singoli capitoli). Attendere completamento Cap. 22-26 prima del reindex live.
+**Ultimo aggiornamento**: 16-Sep-2026 (D-084 sync manuale · Cap. 18 v1.1 A-017/A-021 + drift 9/12/13)
+**Corpus**: YAML in `memory/manuale/hal/*.yaml` (Cap. 1–27) · MD esclusi dal RAG ingest
+**Motore**: `hal_knowledge.py` · reindex: `POST /api/app/hal/knowledge/reindex?force=true` (super_admin)
+**Regola Founder D-084**: ogni ship aggiorna MD+YAML nello stesso giro — vedi `memory/MANUAL_SYNC.md`.
 
 ---
 

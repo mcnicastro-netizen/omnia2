@@ -1,5 +1,16 @@
 # OMNIA — Changelog
 
+## 2026-09-16 — D-084 sync manuale obbligatorio + Cap. 18/9/12/13 allineati
+
+**Tipo**: Docs / decision — Founder: aggiornare il manuale ad ogni modifica.
+
+- **D-084** in `DECISIONS.md` + checklist `memory/MANUAL_SYNC.md`
+- **Cap. 18** v1.1 + YAML: A-017 campanella / A-021 preferenze (non più “assenti”)
+- Drift chiuso: Cap. **13** A-007 rimozione membro · Cap. **9** A-013 hard-gate crediti · Cap. **12** A-006 tooltip confidence
+- Reindex HAL dopo YAML (`POST /api/app/hal/knowledge/reindex`)
+
+---
+
 ## 2026-09-15 (sera) — Pausa Founder · Stripe live post-Vercel
 
 **Tipo**: Decisioni / docs — ripresa domani.

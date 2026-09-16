@@ -1,73 +1,105 @@
 # Capitolo 18 · Notifiche e attività
 
-> **Versione**: v1.0 · Feb 2026 · Onestà documentale D-051
+> **Versione**: v1.1 · 16-Sep-2026 · Onestà documentale D-051 · sync D-084  
 > **Codice coperto**:
-> - `backend/shared/email/client.py` (117 righe · Resend + 5 SUBJECTS + mock mode)
-> - `backend/shared/email/templates/*.html` (7 template × 3 lingue = fino a 17 file HTML)
-> - `backend/apps/core/auth.py` (welcome + password_reset triggers)
-> - `backend/apps/immoweb/invites.py` (agency_invite trigger)
-> - `backend/apps/immocloud/public_portal.py` (lead_notification trigger)
-> - `backend/apps/immocloud/saved_searches.py` (saved_search_alert + cron)
-> - `backend/apps/immoweb/cron.py` (super_admin trigger)
+> - `backend/shared/email/client.py` (Resend + SUBJECTS + mock mode)
+> - `backend/shared/email/templates/*.html` (7 template × lingue)
+> - `backend/shared/notifications/prefs.py` + `center.py` (**A-021** preferenze · **A-017** inbox)
+> - `backend/apps/core/notifications_inbox.py` — `GET/POST /api/notifications*`
+> - `backend/apps/core/auth.py` (welcome + password_reset + `GET/PATCH /auth/me/notification-preferences`)
+> - `backend/apps/immoweb/invites.py` (agency_invite + in-app invite_accepted)
+> - `backend/apps/immocloud/public_portal.py` (lead_notification email + in-app `lead_new`)
+> - `backend/apps/immocloud/saved_searches.py` (saved_search_alert + in-app `saved_search_match`)
+> - `backend/apps/v1/gateway.py` (widget lead → in-app)
+> - `backend/apps/immoweb/cron.py` (super_admin trigger saved-searches)
 > - `backend/apps/marketing/founders.py` (founders_welcome + founders_admin_notification)
-> - `backend/shared/models/user.py` (`notification_channels: [email, push]` schema)
-> - `frontend/src/components/ui/sonner.jsx` (toast provider)
+> - `frontend/src/shared/components/NotificationBell.jsx` · `NotificationPreferencesPanel.jsx`
+> - `frontend/src/apps/immoweb/components/AgencyShell.jsx` · `immocloud/.../CloudTopNav.jsx`
+> - `frontend/src/components/ui/sonner.jsx` (toast)
 
-> ⚠️ **Nota D-051 chiave**: OMNIA v1 **NON ha un modulo "Notifiche" dedicato** né un **feed "Attività recenti"**. Questo capitolo documenta onestamente:
-> 1. Cosa ESISTE (email transazionali + toast + cron saved-search + audit trail interno)
-> 2. Cosa NON esiste (Bell icon, unread badge, notification center, push, SMS, digest quotidiana, preferenze utente per canale, moderazione, retry queue)
+> ⚠️ **Nota D-051 (v1.1)**: OMNIA **ha** campanella + inbox in-app (**A-017**) e UI preferenze email (**A-021**).  
+> **Ancora NON esiste**: activity feed dashboard (**A-018**), push/SMS/WhatsApp, SSE real-time (polling 45s), digest titolare, retry queue email, webhook Resend delivery.
 
 ---
 
-## 18.1 · Cos'è "Notifiche e attività" in OMNIA v1
+## 18.1 · Cos'è "Notifiche e attività" in OMNIA v1.1
 
-**Definizione operativa**: in OMNIA v1 "notifiche" = **email transazionali Resend + toast in-app sonner**. "Attività" = **audit trail interno Mongo** (non esposto in UI centralizzata).
-
-**Non è**:
-- una pagina "Notifiche" con lista campanella e badge non-lette
-- un feed "Ultime attività della mia agenzia" nella dashboard
-- un notification center con preferenze granulari per canale
+**Definizione operativa**: "notifiche" = **email Resend** + **inbox in-app** (campanella) + **toast sonner**. "Attività" = **audit trail Mongo** (ancora senza UI timeline centralizzata).
 
 **È**:
-- ~7 tipi di email transazionali multi-lingua triggerate da eventi specifici (registrazione, password reset, invito team, nuovo lead, saved-search alert, founders signup, founders admin ping)
-- toast temporanei via `sonner` come feedback delle azioni utente (successo/errore)
-- job cron admin-triggered per digest saved-searches (instant/daily/weekly)
-- collezioni Mongo con append di eventi tecnici (`al_audit`, `match_audit`, `calendar_events`, `domain_vault_events`, `privacy_audit_events`, `legal_kit_events`, `social_posts`, `hal_knowledge_sessions`, `publishing_events`, `al_legal_audit`) — usate per debug / traceability, **non per timeline utente**
+- Campanella in topbar ImmoWeb (sempre) e ImmobilCloud (se loggato) con badge non-lette, dropdown, mark-as-read / mark-all
+- API `/api/notifications` + collezione Mongo `notifications`
+- UI preferenze: canale email on/off, tipi email toggleabili, frequenza default saved-search (B2C)
+- ~7 template email multi-lingua + cron saved-searches (super_admin)
+- Audit collections per debug (non timeline utente)
 
-**Perché non esiste una campanella o un feed attività v1**: scelta di prodotto — priorità Founder sui moduli core (immobili, clienti, match, publishing, staging, mutui, HAL). Backlog **A-017 Notification center in-app** e **A-018 Activity feed dashboard** proposti per v1.1.
-
----
-
-## 18.2 · Dove trovarlo (spoiler: nessuna pagina dedicata)
-
-**In ImmoWeb (B2B)**: nessuna voce di menu "Notifiche" o "Attività". Le uniche esperienze notification-like sono:
-- Toast in-app immediato ad ogni azione (`toast.success`, `toast.error`)
-- Sidebar KPI counters della Dashboard (Immobili attivi, Lead aperti, Nuovi match 7gg, Visite 7gg, Collaboratori, Inviti pendenti)
-- Email che ti arriva nella casella personale
-
-**In ImmobilCloud (B2C)**: nessuna voce "Notifiche". L'unica esperienza notification-like è:
-- Email `saved_search_alert` quando la tua ricerca salvata produce nuovi match (frequenza scelta dall'utente: instant/daily/weekly)
-
-**Nel router backend**: nessun `APIRouter(prefix="/notifications")` né `/activity` esiste in `/app/backend/apps/`. Cerca conferma:
-```
-$ grep "prefix=\"/notif" /app/backend/apps/**/*.py     # zero risultati
-$ grep "prefix=\"/activity" /app/backend/apps/**/*.py  # zero risultati
-```
+**Non è (ancora)**:
+- una pagina dedicata "Attività" / activity feed (**A-018**)
+- push web/mobile, SMS, WhatsApp
+- SSE/WebSocket (la campanella fa **polling ogni 45s**)
 
 ---
 
-## 18.3 · Canali di notifica attivi v1
+## 18.2 · Dove trovarlo
 
-| Canale | Stato v1 | Sorgente | Delivery |
-|--------|:--------:|----------|----------|
-| **Email transazionali** | ✅ attivo | Resend API (o mock se `RESEND_API_KEY` non configurata) | on-event + saved-search cron |
-| **Toast in-app** | ✅ attivo | libreria `sonner` (React) | feedback immediato azione utente |
-| **Push (web/mobile)** | ❌ NON attivo | schema `notification_channels` in `user.py` accetta `"push"` ma **nessun sender push implementato** | dead code v1 |
-| **SMS** | ❌ NON attivo | Nessuna integrazione Twilio | mai chiamato |
-| **WhatsApp Business** | ❌ NON attivo | Nessuna integrazione | mai chiamato |
-| **In-app notification center** | ❌ NON attivo | Nessuna Bell icon, unread badge | mai reso |
+**In ImmoWeb (B2B)**:
+- **Campanella** in topbar AgencyShell (accanto al language switcher) — `data-testid="notification-bell"`
+- **Preferenze**: Impostazioni → pannello «Preferenze notifiche» (`NotificationPreferencesPanel`)
+- Toast sonner sulle azioni
+- KPI Dashboard (non sono un feed attività)
 
-**Nota `push` schema-ma-non-implementato**: il modello `User` accetta `notification_channels: ["email", "push"]` (`shared/models/user.py:50`). Un utente B2C può iscriversi con `["email", "push"]` e non ricevere errore, MA nessun servizio backend legge il valore `"push"` e lo consegna. È dead code v1 documentato per trasparenza (D-051).
+**In ImmobilCloud (B2C)**:
+- **Campanella** in CloudTopNav se autenticato
+- **Preferenze** in Area account (`/cloud/account`)
+- Email + inbox in-app su match ricerca salvata
+
+**API**:
+```
+GET  /api/notifications?limit=30&unread_only=false
+GET  /api/notifications/unread-count
+POST /api/notifications/{id}/read
+POST /api/notifications/read-all
+GET  /api/auth/me/notification-preferences
+PATCH /api/auth/me/notification-preferences
+```
+
+---
+
+## 18.3 · Canali di notifica attivi v1.1
+
+| Canale | Stato | Sorgente | Delivery |
+|--------|:-----:|----------|----------|
+| **Email transazionali** | ✅ | Resend (o mock) | on-event + cron saved-search |
+| **Inbox in-app (Bell)** | ✅ A-017 | Mongo `notifications` | polling 45s + open dropdown |
+| **Toast in-app** | ✅ | `sonner` | feedback immediato azione |
+| **Preferenze email UI** | ✅ A-021 | Settings / Account | patch preferenze |
+| **Push (web/mobile)** | ❌ | schema accetta `"push"` | dead code — nessun sender |
+| **SMS / WhatsApp** | ❌ | — | non integrati |
+| **Activity feed** | ❌ | A-018 backlog | — |
+
+**Nota `push`**: ancora accettato in schema ma non consegnato (D-051).
+
+---
+
+## 18.3b · Notification center in-app (A-017)
+
+**UI**: `NotificationBell.jsx` — icona SVG, badge (max «99+»), dropdown «Notifiche», «Segna tutte lette», click riga → mark read + navigate a `link` (`/app/...` o `/cloud/...` con prefisso lingua).
+
+**Document schema** (`notifications`):
+`id`, `user_id`, `agency_id?`, `type`, `title`, `body`, `link`, `meta`, `read`, `created_at`, `read_at`
+
+**Tipi emitter v1.1**:
+| `type` | Quando | Destinatari tipici |
+|--------|--------|-------------------|
+| `lead_new` | Contatto ImmobilCloud o widget v1 | listing agent + owner/admin agenzia |
+| `invite_accepted` | Accept invite | inviter (`invited_by`) |
+| `saved_search_match` | Cron trova match | utente B2C (anche se email off) |
+
+**Residuale (non ancora emitter)**: match on-read CRM, import XML, social, compliance HARD, DNS verify — backlog post-A-017.
+
+**Indipendenza da email**: l’inbox si scrive anche se l’utente ha disattivato quel tipo email (prefs A-021). Email restano gated da `user_allows_email()`.
+
+[SCREEN: cap18-bell-dropdown]
 
 ---
 
@@ -179,16 +211,23 @@ $ grep "prefix=\"/activity" /app/backend/apps/**/*.py  # zero risultati
 
 ---
 
-## 18.10 · Preferenze utente (schema vs realtà)
+## 18.10 · Preferenze utente (A-021 · UI reale)
 
-**Schema**: `User.notification_channels: List[Literal["email", "push"]]` (`shared/models/user.py:50`, default `["email"]`).
+**Schema** (`User`):
+- `notification_channels`: `email` | `push` (push non consegnato)
+- `notification_email_types`: sottoinsieme di `welcome`, `agency_invite`, `lead_notification`, `saved_search_alert`
+- `saved_search_frequency_default`: `instant` | `daily` | `weekly` (default ricerche nuove B2C)
 
-**Realtà v1**:
-- Solo il valore `"email"` viene letto e usato (dal cron saved-searches, §18.9).
-- Il valore `"push"` è accettato in registrazione ma **non consumato** da nessun sender → dead code trasparente.
-- **Nessuna UI** per modificare `notification_channels` post-registrazione (né in ImmoWeb `SettingsPage.jsx` né in ImmobilCloud `AccountDashboard.jsx`).
-- **Nessuna granularità per tipo di email**: non puoi optare-in solo per `saved_search_alert` e opt-out da `password_reset`. Le email transazionali (welcome, password_reset, agency_invite, lead_notification, founders_*) sono **sempre inviate** indipendentemente dal `notification_channels` (sono fondamentali per l'uso del prodotto).
-- Backlog **A-021 UI notification preferences** proposto per v1.1 (toggle per canale + granularità per tipo).
+**Sempre on (non disattivabili)**: `password_reset` (e sicurezza account).
+
+**UI**:
+- ImmoWeb → **Impostazioni** → pannello preferenze (senza freq. saved-search di default B2B)
+- ImmobilCloud → **Account** → stesso pannello + frequenza digest ricerche
+
+**API**: `GET/PATCH /api/auth/me/notification-preferences`  
+Helper: `shared/notifications/prefs.py` → `user_allows_email(user, type)` usato da invite, lead email, cron saved-search.
+
+**Inbox vs email**: disattivare `lead_notification` ferma l’**email**, non necessariamente la riga in campanella (gli emitter in-app non rileggono i tipi email).
 
 ---
 
@@ -291,7 +330,7 @@ db.al_audit.find({user_id: "..."}).sort({created_at: -1}).limit(50)
 ### E3 · "La saved-search non mi invia mai email"
 - **Causa 1**: nessun super_admin ha lanciato il cron. Fix: manualmente `POST /api/app/cron/saved-searches/run-all`.
 - **Causa 2**: non ci sono nuovi match da `last_run_at`. Verifica su Mongo `saved_searches.find({id: sid}, {last_run_at, last_match_count})`.
-- **Causa 3**: utente ha `notification_channels: ["push"]` invece di `["email"]` (default è `["email"]`, ma se in registrazione B2C ha deselezionato). Fix: aggiorna Mongo direttamente (nessuna UI).
+- **Causa 3**: utente ha disattivato il canale email o il tipo `saved_search_alert` nelle preferenze (Impostazioni / Account). Fix: riattiva da UI. L’inbox in-app può comunque ricevere la riga `saved_search_match`.
 - **Causa 4**: la `saved_search.is_active = false`. Fix: `PATCH /api/cloud/me/saved-searches/{sid}` con `is_active=true`.
 
 ### E4 · "I toast in-app spariscono troppo velocemente"
@@ -301,48 +340,37 @@ db.al_audit.find({user_id: "..."}).sort({created_at: -1}).limit(50)
 - **Causa**: chiamata `send_email` senza passare la variabile richiesta dal template.
 - Fix: super_admin apri il template HTML in `backend/shared/email/templates/`, individua le `{{var}}` e verifica che vengano passate nel `variables={}` dict del caller.
 
+### E6 · "La campanella non mostra nulla / badge non aggiorna"
+- **Causa 1**: sessione scaduta (401) — riloggia.
+- **Causa 2**: polling 45s — apri il dropdown per refresh immediato.
+- **Causa 3**: evento non ancora cablato come emitter (es. import XML) — vedi §18.3b residuale.
+
 ---
 
-## 18.15 · Limitazioni v1 (elenco esaustivo · D-051)
+## 18.15 · Limitazioni v1.1 (D-051)
 
-### Cosa NON esiste v1
+### Cosa NON esiste ancora
 
 **Backend**:
-- ❌ Nessun router `/notifications` (nessun endpoint tipo `GET /me/notifications`, `PATCH /notifications/{id}/read`, `DELETE /notifications/{id}`)
-- ❌ Nessun router `/activity` o `/activity-feed`
-- ❌ Nessuna collezione `notifications` o `activity_feed` in Mongo
-- ❌ Nessun servizio "push sender" (nonostante `notification_channels` accetti `"push"`)
-- ❌ Nessuna coda retry per email fallite (fire-and-forget)
-- ❌ Nessun tracking delivery status (Resend restituisce `id`, ma nessun webhook `delivered`/`bounced`/`opened` configurato v1)
-- ❌ Nessuna digest email diversa da saved_search_alert (no digest quotidiana per titolare agenzia con riepilogo lead/match/sync)
-- ❌ Nessun scheduler interno per saved-search (deve essere triggerato super_admin manualmente)
-- ❌ Nessun rate limit su send_email (a differenza di HAL Agent 60/h). Un client malizioso potrebbe forzare massa di password_reset.
+- ❌ Nessun router `/activity` o activity feed aggregato (**A-018**)
+- ❌ Nessun push sender (schema `push` = dead code)
+- ❌ Nessuna coda retry email / webhook Resend delivery
+- ❌ Nessuna digest quotidiana titolare (oltre saved_search)
+- ❌ Cron saved-search senza scheduler interno (trigger super_admin) — **A-020**
+- ❌ Emitter residui: match on-read, import XML, social, compliance, DNS
+- ❌ SSE/WebSocket (solo polling)
 
 **Frontend**:
-- ❌ Nessuna Bell icon nella navbar
-- ❌ Nessun contatore unread
-- ❌ Nessuna pagina "Notifiche" o "Attività"
-- ❌ Nessuna preferenza UI per canale (email/push toggle)
-- ❌ Nessuna preferenza UI per tipo (opt-in/opt-out per welcome/agency_invite/lead_notification/saved_search_alert)
-- ❌ Nessuna preferenza UI per digest frequency oltre a saved-search (instant/daily/weekly)
-- ❌ Nessun mute/snooze temporaneo delle notifiche
-- ❌ Nessuna moderazione (super_admin non può bloccare invii per abuso)
+- ❌ Nessuna pagina full-screen «Notifiche» (solo dropdown)
+- ❌ Mute/snooze, moderazione admin
 
-**Delivery channels non supportati**:
-- ❌ SMS (nessuna integrazione Twilio o simili)
-- ❌ WhatsApp Business (nessuna integrazione Meta Business)
-- ❌ Push web (Service Worker + VAPID keys non configurati)
-- ❌ Push mobile (nessuna app iOS/Android)
-- ❌ Slack / Teams / Discord webhook (super_admin non può ricevere alert su Slack)
-- ❌ Voice call (Twilio Voice non configurato)
+**Canali**: SMS, WhatsApp, Slack/Teams — no
 
-**Analytics notifiche**:
-- ❌ Nessun tracking open rate / click-through rate
-- ❌ Nessun A/B test template
-- ❌ Nessun rendering preview UI per super_admin ("come apparirà questa email prima di inviarla")
-
-**Localizzazione**:
-- ❌ `founders_welcome` + `founders_admin_notification` disponibili solo in italiano (D-051: non contano per multilingua completo)
+### Cosa ESISTE (non più «limitazione»)
+- ✅ Router `/api/notifications` + collezione Mongo
+- ✅ Bell + unread badge (ImmoWeb + Cloud loggato)
+- ✅ Preferenze UI canale/tipo (**A-021**)
+- ✅ `password_reset` sempre on
 
 ---
 
@@ -351,44 +379,39 @@ db.al_audit.find({user_id: "..."}).sort({created_at: -1}).limit(50)
 | Cap. | Modulo | Perché correlato |
 |:----:|--------|------------------|
 | 1 | Primo accesso | Trigger `welcome` + `password_reset` |
-| 3 | Immobili | Trigger `privacy_audit_events` audit interno (Privacy L1-L4) |
-| 4 | Clienti | Nessun trigger email diretto v1 (i lead sono B2C portale, non gestione clienti B2B) |
-| 5 | Match | Trigger `match_audit` interno + KPI counter Dashboard |
-| 6 | Publishing | Trigger `publishing_events` interno |
-| 10 | HAL Agent CRM | Trigger `al_audit` interno (usage/cost tracking) |
-| 12 | HAL Knowledge | Trigger `hal_knowledge_sessions` (audit domande/risposte) |
-| 13 | Team & Ruoli | Trigger `agency_invite` email (magic-link) |
-| 15 | Social Publisher | Trigger `social_posts` audit interno (no email v1) |
-| 17 | Domain Vault | Trigger `domain_vault_events` audit interno |
-| 27 | MLS Network (placeholder) | Non implementato v1 — nessun trigger email |
+| 3 | Immobili | `privacy_audit_events` |
+| 5 | Match | `match_audit` + KPI (emitter in-app match ancora residuale) |
+| 6 | Publishing | `publishing_events` |
+| 10 | HAL Agent CRM | `al_audit` |
+| 12 | HAL Knowledge | `hal_knowledge_sessions` |
+| 13 | Team & Ruoli | `agency_invite` + in-app `invite_accepted` |
+| 15 | Social | `social_posts` (no email / no bell v1.1) |
+| 17 | Domain Vault | `domain_vault_events` |
+| 19 | Impostazioni | pannello preferenze notifiche |
 
 ---
 
-## 18.17 · Onestà documentale (D-051) · sintesi Cap. 18
+## 18.17 · Onestà documentale (D-051) · sintesi Cap. 18 v1.1
 
-- **Nessun modulo Notifiche** dedicato v1. Documentato apertamente.
-- **Nessun activity feed** v1. La dashboard è **KPI counters**, non timeline.
-- **`push` in schema, non implementato**: dead code trasparente.
-- **`frequency` in saved_searches, non filtro tempo**: il cron ignora la frequenza e processa TUTTE le active ricerche ad ogni chiamata (bug funzionale v1, documentato).
-- **Cron saved-searches NON auto-scheduled**: deve essere manualmente triggerato super_admin.
-- **Email fire-and-forget**: fallimenti solo loggati, nessuna coda retry.
-- **Nessun rate limit** su send_email (rischio abuso password_reset).
-- **Nessun webhook Resend** per delivery status: si sa solo se la chiamata Resend ha risposto OK (`id`), non se l'email è stata realmente consegnata o aperta.
-- **Audit collections** presenti ma **NON esposte in UI**: query Mongo diretta solo per super_admin.
-- **`founders_*` template solo it**: non conta per copertura multilingua.
+- **A-017 e A-021 shippati** (15-Sep-2026): campanella + preferenze UI — capitolo allineato 16-Sep (D-084).
+- **A-018 activity feed** ancora assente: dashboard = KPI, non timeline.
+- **`push` schema / non implementato**.
+- Cron saved-searches: frequenza ora rispettata in parte (daily/weekly gate ore); **scheduler interno assente** (A-020).
+- Email fire-and-forget; no webhook Resend.
+- Audit Mongo non esposto in UI.
+- Sync manuale obbligatorio ad ogni ship successivo: `MANUAL_SYNC.md` · **D-084**.
 
-Backlog qualità prodotto proposto Cap. 18: **A-017**, **A-018**, **A-019**, **A-020**, **A-021**, **A-022**, **A-023** (vedi `ASPETTI_DA_APPROFONDIRE.md` sezione aggiornamento post-Cap. 18).
+Backlog residuo Cap. 18: **A-018**, **A-019** (refine freq), **A-020**, **A-022**, **A-023** + emitter residuali A-017.
 
 ---
 
-## 18.18 · Screenshot da produrre (placeholder)
+## 18.18 · Screenshot attesi
 
-- `[SCREEN: cap18-email-welcome]` — email welcome renderizzata (client email)
-- `[SCREEN: cap18-email-agency-invite]` — email agency_invite con magic-link
-- `[SCREEN: cap18-email-lead-notification]` — email lead_notification con dettagli contatto
-- `[SCREEN: cap18-email-saved-search]` — email saved_search_alert con digest HTML 6 righe
-- `[SCREEN: cap18-toast-success]` — esempio toast success in ImmoWeb (creato immobile)
-- `[SCREEN: cap18-toast-error]` — esempio toast error in ImmoWeb (payment fallito)
-- `[SCREEN: cap18-dashboard-kpi]` — dashboard KPI counters (per dimostrare che NON è activity feed)
-
-Totale: **7 screenshot Cap. 18** da aggiungere a `screenshots-index.md`.
+- `[SCREEN: cap18-bell-dropdown]` — topbar con badge + dropdown Notifiche
+- `[SCREEN: cap18-prefs-settings]` — pannello preferenze in Impostazioni
+- `[SCREEN: cap18-email-welcome]` — email welcome
+- `[SCREEN: cap18-email-agency-invite]` — email agency_invite
+- `[SCREEN: cap18-email-lead-notification]` — email lead
+- `[SCREEN: cap18-email-saved-search]` — email saved search
+- `[SCREEN: cap18-toast-success]` — toast success
+- `[SCREEN: cap18-dashboard-kpi]` — dashboard KPI (non activity feed)

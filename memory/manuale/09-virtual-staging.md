@@ -216,13 +216,13 @@ Vedere in un solo job più risultati e scegliere il migliore, o mostrare al clie
 - Modulo Virtual Staging pubblico non implementato in v1 (previsto **€0,90/foto max 3 per annuncio UGC** — vedi `PRICING_B2C.md`, non attivo in checkout).
 
 **Quando parte l'addebito crediti**
-- Al momento della `POST /generate` la richiesta è validata e il job entra in `pending`.
-- **Non c'è pre-check crediti in v1** (`generate_staging` non chiama il credit ledger): l'addebito è **posticipato** in altra sessione. Se il tuo saldo è a zero puoi comunque tecnicamente lanciare. **In arrivo: hard-gate a saldo insufficiente.**
-- Se il job fallisce a metà pipeline, **il costo fal.ai è stato comunque speso** e comunque va scalato dai crediti (il modello non ha rollback su chiamate fal.ai avvenute).
+- Al `POST /generate` viene fatto **hard-gate** sul saldo (**A-013**): se i crediti non bastano → **402** e il job non parte.
+- A successo pipeline → **addebito** sul ledger crediti agenzia.
+- Se il job fallisce a metà dopo avvio fal.ai, il costo provider può essere già speso; il modello v1 addebita al successo del job (gate previene solo i lanci a saldo zero/insufficiente).
 
 **Cosa NON succede al momento**
-- ❌ Non c'è ancora ricevuta/movimento crediti visibile in real-time (arriva con hard-gate).
-- ❌ Non c'è avviso *"stai per spendere 72 crediti"* prima del click Genera.
+- ❌ Non c'è avviso *"stai per spendere 72 crediti"* prima del click Genera (solo hard-gate al submit).
+- ❌ Nessuna ricevuta PDF; il movimento resta sul ledger crediti Billing.
 
 ---
 

@@ -2,7 +2,7 @@
 
 > File di appoggio per **temi strategici/tecnici** che il Founder ha esplicitamente segnalato come "da rivedere più avanti", **senza essere ancora decisioni**. Ogni voce va promossa in `DECISIONS.md` o `ROADMAP.md` quando si decide di procedere.
 
-**Ultimo aggiornamento**: 15-Sep-2026 (sera · Stripe live rimandato post-Vercel · A-017 ✅ · A-025 aperto)
+**Ultimo aggiornamento**: 16-Sep-2026 (D-084 sync manuale · Cap.18/9/12/13 allineati · Stripe live post-Vercel)
 
 > **Backlog qualità prodotto (A-006+)**: voci tracciate durante lo sprint manuale Cap. 1-18. Priorità assegnata da Cursor (P1=alto ROI/costo basso, P3=futuro). Decisione Founder post-manuale — **NON implementare senza "vai" esplicito**.
 

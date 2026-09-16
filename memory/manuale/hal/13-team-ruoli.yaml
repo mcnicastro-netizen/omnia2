@@ -488,45 +488,27 @@ voci:
     domanda_naturale: "Posso rimuovere un membro dal team? Posso rimuovere un collaboratore? Posso cambiare ruolo a un membro? Come rimuovo un ex-collaboratore? Cosa NON fa il modulo Collaboratori v1? La segreteria è un ruolo backend? Esiste transfer ownership agenzia, disattivazione temporanea, audit UI, permessi granulari per membro o notifiche real-time?"
     contenuto:
       a_cosa_serve: >
-        Aspettative chiare su cosa il modulo Collaboratori NON fa in v1:
-        rimuovere un membro dal team (no UI DELETE), cambiare ruolo a
-        un membro esistente (no promozione agent → agency_admin da UI),
-        disattivare temporaneamente, audit log UI, permessi granulari
-        per membro, franchising/gruppo/branch attivi, transfer ownership.
+        Aspettative chiare su Collaboratori dopo A-007: rimozione membro
+        OK con garde; cambio ruolo ancora assente (A-008).
       quando_si_usa: >
-        Prima di provare a rimuovere un membro dal team o cambiare
-        ruolo a un membro esistente e restare deluso.
+        Prima di rimuovere un collaboratore o cambiare ruolo.
       passi:
-        - "NO rimozione membro in UI. Il backend non espone
-          DELETE /agencies/me/members/{user_id}. Se un collaboratore
-          lascia, in v1 contatta il team OMNIA per rimozione manuale."
-        - "NO cambio ruolo post-accept. Un agent non puo' essere
-          promosso a agency_admin (o viceversa) via UI. Workaround
-          v1: cancellare l'utente e rifare invito (op super_admin)."
-        - "NO ruolo segreteria backend. E' un concetto operativo.
-          Chi svolge segreteria e' invitato come 'agent'."
-        - "NO disattivazione temporanea membro (is_active esiste in
-          colonna, nessuna UI per commutarlo)."
-        - "NO audit log visibile UI (invited_by, timestamp esistono
-          server-side ma non ci sono schermate dedicate)."
-        - "NO permessi granulari per membro (chi vede quali
-          immobili/clienti). Tutti i membri agenzia autenticati
-          vedono l'intero portafoglio. Privacy L1-L4 resta
-          sull'immobile singolo (Cap. 3 §3.4)."
-        - "NO franchising/gruppo/branch (ruoli esistono DB ma il
-          flusso e' separato, non attivo v1)."
-        - "NO notifica in tempo reale al titolare quando invito
-          accepted (serve ricaricare pagina)."
-        - "NO trasferimento ownership agenzia (transfer owner)."
+        - "SI rimozione membro (A-007): DELETE
+          /api/app/agencies/me/members/{id} + bottone UI. Blocca:
+          self-remove, owner, ultimo agency_admin."
+        - "NO cambio ruolo post-accept (A-008). Workaround: re-invito
+          con supporto super_admin se serve."
+        - "NO ruolo segreteria backend (concetto operativo = agent)."
+        - "NO disattivazione temporanea membro in UI."
+        - "NO audit log UI / permessi granulari per membro."
+        - "SI notifica in-app al inviter quando invito accepted (A-017)."
       errori_comuni:
         - problema: "Devo rimuovere urgentemente un ex-collaboratore"
           soluzione: >
-            Contatta il team OMNIA per rimozione manuale. In parallelo
-            revoca inviti pending suoi (se ce ne sono) e cambia
-            password degli account condivisi (se ce ne sono, cosa
-            che non dovrebbe accadere in prima battuta).
+            Collaboratori → Rimuovi sul membro (titolare). Se e' owner
+            o ultimo admin, l'API rifiuta — contatta supporto OMNIA.
       permessi:
-        - Rimozione manuale: solo super_admin OMNIA
+        - Rimozione: agency_admin / super_admin sull'agenzia
     screenshot: []
 
   - id: team.collegamenti

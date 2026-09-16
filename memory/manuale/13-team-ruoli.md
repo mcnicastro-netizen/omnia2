@@ -5,7 +5,8 @@
 
 **Cosa NON è (D-051 onestà — regola cardine)**
 - Non c'è un ruolo backend **"segreteria"**. Nel manuale usiamo "segreteria" come **concetto operativo** (mansione), ma nel database e nel modal di invito i ruoli assegnabili sono **solo due**: `agent` e `agency_admin`. Chi svolge segreteria oggi viene invitato come `agent`.
-- Non c'è (in v1) un bottone per **rimuovere un membro** dall'agenzia. Non c'è nemmeno un modo per **cambiare il ruolo** di un membro dopo l'accettazione dell'invito.
+- ✅ **Rimozione membro** disponibile per titolare (**A-007**): `DELETE /api/app/agencies/me/members/{id}` + bottone in UI Collaboratori. **Non** puoi rimuovere te stesso, l’owner, né l’ultimo admin.
+- ❌ **Cambio ruolo** post-accettazione ancora assente (**A-008** backlog).
 - Non c'è una funzione **"disattiva temporaneamente"** un membro. Il campo `is_active` compare in lista, ma non esiste UI per farlo commutare.
 - Non c'è **franchising / gruppo / branch** in questo capitolo. Quei ruoli (`group_admin`, `branch_admin`, `branch_agent`) sono gestiti da un flusso separato ed esplicitamente **bloccati** dal `POST /agencies` (dettagli in Cap. futuro).
 - Non c'è **multi-agenzia switcher** dentro Collaboratori: se sei in più agenzie, cambi agenzia dal profilo (Cap. 1 §1.4). Qui vedi solo l'agenzia attualmente attiva.
@@ -26,6 +27,7 @@ Un pannello di gestione team dove **il titolare** invita nuovi membri (agenti o 
 | Bottone *"+ Invita membro"* | ✅ | ❌ (nascosto) |
 | Tab *"Inviti"* (pending/accepted/revoked/expired) | ✅ | ❌ (nascosto) |
 | Revoca di un invito pending | ✅ | ❌ |
+| Rimuovi membro (A-007) | ✅ (con garde) | ❌ |
 
 **Perché esiste**
 Un CRM condiviso senza un modo controllato per **allargare la squadra** è ingestibile: o si scambiano credenziali (rischio GDPR e sicurezza), o non si scala. Il modulo Collaboratori risolve entrambi i problemi: **credenziali individuali** per ogni membro + **audit implicito** via `invited_by`.
@@ -285,8 +287,8 @@ La regola *"upgrade role solo se era client"* è **onesta e stretta**: non c'è 
 
 **Cosa il modulo Collaboratori NON fa oggi**
 
-- ❌ **Nessun bottone "Rimuovi membro" in UI**. Il backend non espone un endpoint `DELETE /agencies/me/members/{user_id}`. Se un collaboratore lascia l'agenzia, in v1 va contattato il team OMNIA per la rimozione manuale.
-- ❌ **Nessun cambio di ruolo post-accettazione**. Un `agent` non può essere promosso a `agency_admin` (o viceversa) tramite UI. Workaround v1: cancellare l'utente da DB e reinvitare con il ruolo giusto (operazione super_admin).
+- ❌ **Nessun cambio ruolo post-invito in UI** (**A-008**). Per promuovere un agente a titolare serve flusso fuori v1 / supporto.
+- ✅ **Bottone "Rimuovi membro"** (**A-007**): `DELETE /api/app/agencies/me/members/{member_id}`. Blocca: self-remove, owner_id, ultimo agency_admin.- ❌ **Nessun cambio di ruolo post-accettazione**. Un `agent` non può essere promosso a `agency_admin` (o viceversa) tramite UI. Workaround v1: cancellare l'utente da DB e reinvitare con il ruolo giusto (operazione super_admin).
 - ❌ **Nessun ruolo "segreteria" backend**. È solo un concetto operativo — chi svolge segreteria oggi viene invitato come `agent`.
 - ❌ **Nessuna disattivazione temporanea** di un membro. Il campo `is_active` esiste in colonna ma non c'è UI per farlo commutare.
 - ❌ **Nessun audit log visibile in UI**. Server-side sappiamo chi ha invitato chi (`invited_by`), quando (`created_at`, `updated_at`), ma non c'è schermata dedicata al log operazioni team.

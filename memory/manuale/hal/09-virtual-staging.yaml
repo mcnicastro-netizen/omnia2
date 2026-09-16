@@ -354,22 +354,21 @@ voci:
         - "Costo vivo fal.ai standard: ~0.056 USD (0.051 EUR) per variante
           (SAM2 0.001 + Flux 0.05 + Upscale 0.005). Reverse ~0.106 USD
           per variante (+0.05 svuotamento). Margine agenzia ~94%."
-        - "In v1 NON c'e' pre-check crediti prima del lancio (arriva
-          hard-gate in versione futura). Se il tuo saldo e' a zero puoi
-          tecnicamente lanciare, ma l'addebito viene comunque calcolato."
+        - "In v1 c'e' HARD-GATE crediti (A-013) prima del lancio:
+          saldo insufficiente → 402, job non parte. Addebito a
+          successo sul ledger."
         - "Costo B2C ImmobilCloud (privati): 0.90 EUR/foto max 3 per
           annuncio UGC. NON attivo in checkout v1."
       errori_comuni:
-        - problema: "Ho lanciato ma non vedo scalarsi i crediti"
+        - problema: "Ottengo 402 quando genero lo staging"
           soluzione: >
-            L'addebito e' posticipato in v1 (no hard-gate). Riceverai
-            movimento crediti nella prossima finestra di ledger. Verra'
-            attivato hard-gate in versione futura.
+            Crediti insufficienti. Ricarica da Piano e Crediti, poi
+            riprova.
         - problema: "Job fallito a meta' pipeline: mi vengono scalati crediti?"
           soluzione: >
-            Il costo fal.ai delle chiamate gia' avvenute e' stato
-            comunque speso lato piattaforma. In v1 non c'e' rollback.
-            Segnala all'assistenza se necessario.
+            L'addebito v1 e' al successo del job; costi fal.ai gia'
+            avviati restano costo piattaforma. Segnala assistenza se
+            necessario.
       permessi:
         - Titolare, agente (info operativa/finanziaria)
     screenshot: []

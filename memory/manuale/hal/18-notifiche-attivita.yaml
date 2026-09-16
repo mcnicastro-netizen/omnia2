@@ -1,61 +1,48 @@
 # HAL — Voci esportate per RAG
-# Capitolo 18 · Notifiche e attività
-# Onestà documentale D-051: v1 NON ha un modulo Notifiche dedicato né un feed Attività.
-# Il capitolo documenta email transazionali (Resend, 7 template) + toast in-app (sonner) +
-# cron saved-searches (super_admin only) + audit trail interno (Mongo, no UI) +
-# lista esaustiva di cosa NON esiste v1.
+# Capitolo 18 · Notifiche e attività · v1.1 (16-Sep-2026 · D-084)
+# A-017 Notification center + A-021 preferenze UI shippati.
+# Ancora assenti: A-018 activity feed, push/SMS, SSE.
 
 voci:
 
   # ---------- 18.1 · Cos'è ----------
 
   - id: notifiche.cos-e
-    titolo: Cos'è "Notifiche e attività" in OMNIA v1
+    titolo: Cos'è "Notifiche e attività" in OMNIA v1.1
     modulo: Notifiche
     widget: null
     pubblico: [titolare, agente, segreteria, super_admin, b2c_client]
     livello: base
-    tags: [notifiche, attivita, panoramica, d-051, onesta-documentale, cosa-non-fa]
-    correlati: [notifiche.canali-attivi, notifiche.limitazioni-v1, notifiche.dashboard-vs-activity-feed]
+    tags: [notifiche, attivita, panoramica, d-051, campanella, a-017, a-021]
+    correlati: [notifiche.canali-attivi, notifiche.limitazioni-v1, notifiche.dashboard-vs-activity-feed, notifiche.preferenze-utente]
     domanda_naturale: "Cos'è il modulo Notifiche di OMNIA? C'è un centro notifiche in-app? Esiste una campanella? OMNIA ha un feed attività recenti?"
     contenuto:
       a_cosa_serve: >
-        Definire onestamente cosa OMNIA v1 offre come "notifiche e attività":
-        (1) email transazionali Resend (7 template · welcome, password_reset,
-        agency_invite, lead_notification, saved_search_alert, founders_welcome,
-        founders_admin_notification), (2) toast in-app sonner (feedback azione),
-        (3) cron saved-searches super_admin (digest B2C instant/daily/weekly),
-        (4) audit trail interno Mongo (~10 collezioni, non esposte in UI).
+        Definire cosa OMNIA offre come notifiche: (1) email Resend,
+        (2) inbox in-app con campanella e badge (A-017), (3) preferenze
+        email UI (A-021), (4) toast sonner, (5) cron saved-searches,
+        (6) audit Mongo senza timeline UI (A-018 ancora assente).
       quando_si_usa: >
-        Quando vuoi capire dove aspettarti notifiche in OMNIA e cosa NON
-        troverai (Bell icon, pagina Notifiche, feed attività dashboard,
-        push mobile, SMS, WhatsApp, preferenze granulari, digest quotidiana
-        per titolare).
+        Quando cerchi la campanella, le preferenze, o ti chiedi se
+        esiste un feed attività in dashboard.
       passi:
-        - "OMNIA v1 NON ha una pagina Notifiche né una Bell icon."
-        - "OMNIA v1 NON ha un feed Attività recenti nella Dashboard
-          (solo KPI counters immobili/lead/match/visite/collaboratori/inviti)."
-        - "Le uniche notifiche esterne v1 sono email transazionali Resend
-          triggerate da eventi specifici (registrazione, password, invito,
-          lead, saved-search)."
-        - "Le uniche notifiche in-app v1 sono toast sonner (feedback
-          immediato, 4-5s, non persistenti)."
-        - "L'audit trail interno esiste in Mongo (al_audit, match_audit,
-          publishing_events, ecc.) ma NON è consultabile da UI: solo
-          super_admin via query Mongo diretta."
+        - "Campanella in topbar ImmoWeb (sempre) e ImmobilCloud se loggato."
+        - "Dropdown Ultime notifiche + badge non-lette + segna lette."
+        - "API /api/notifications e collezione Mongo notifications."
+        - "Preferenze in Impostazioni (B2B) e Account (B2C)."
+        - "NON c'è ancora activity feed dashboard (A-018)."
+        - "Push/SMS/WhatsApp non attivi; push in schema = dead code."
       errori_comuni:
-        - problema: "Cerco una campanella / centro notifiche in UI"
+        - problema: "Non vedo la campanella"
           soluzione: >
-            Non esiste v1. Le uniche notifiche sono email nella tua casella
-            e toast temporanei. Backlog A-017 (Notification center in-app)
-            proposto per v1.1.
+            ImmoWeb: topbar destra. Cloud: solo se autenticato.
+            Ricarica dopo login.
       permessi:
-        - Tutti gli utenti autenticati vedono i toast in-app
-        - I titolari ricevono email transazionali (welcome, invite, lead)
-        - I B2C ricevono saved-search alert se `notification_channels` include "email"
-        - Solo super_admin puo' lanciare il cron saved-searches
+        - Inbox per utente autenticato (proprie notifiche)
+        - Preferenze: ogni utente sul proprio account
+        - Cron saved-searches: solo super_admin
     screenshot:
-      - "[SCREEN: cap18-dashboard-kpi]"
+      - "[SCREEN: cap18-bell-dropdown]"
 
   # ---------- 18.2 · Dove trovarlo ----------
 
@@ -70,72 +57,55 @@ voci:
     domanda_naturale: "Dove trovo la pagina Notifiche in OMNIA? Come vedo le notifiche non lette?"
     contenuto:
       a_cosa_serve: >
-        Chiarire la posizione delle notifiche in OMNIA v1: nessuna pagina
-        dedicata, tutte le esperienze notification-like sono distribuite
-        (casella email personale + toast immediato + email di benvenuto).
+        Dove trovare campanella, preferenze e email in OMNIA v1.1.
       quando_si_usa: >
-        Quando cerchi una pagina Notifiche e non la trovi in menu.
+        Quando cerchi la campanella o le preferenze.
       passi:
-        - "Le email arrivano nella tua casella di posta personale
-          (Gmail/Outlook/etc.), NON in una inbox OMNIA."
-        - "I toast in-app appaiono in basso a destra dello schermo per
-          4-5 secondi dopo un'azione, poi spariscono."
-        - "Il cron saved-searches puo' essere lanciato solo da super_admin
-          via POST /api/app/cron/saved-searches/run-all."
-        - "In ImmoWeb la Dashboard mostra 6 KPI counter (Immobili attivi,
-          Lead aperti, Nuovi match 7gg, Visite 7gg, Collaboratori,
-          Inviti pendenti) MA NON un feed attività."
-        - "In ImmobilCloud non c'e' una voce di menu Notifiche: solo email
-          nella casella se hai saved-searches attive."
+        - "ImmoWeb: campanella in topbar AgencyShell (badge non-lette)."
+        - "ImmobilCloud: campanella in CloudTopNav se autenticato."
+        - "Preferenze: Impostazioni (B2B) o Account cloud (B2C)."
+        - "API GET /api/notifications e POST .../read / read-all."
+        - "Email ancora nella casella personale (Resend)."
+        - "NON c'e' pagina full-screen Attivita' (A-018)."
       errori_comuni:
-        - problema: "Non trovo la voce Notifiche nel menu laterale"
+        - problema: "Non trovo Notifiche nel menu laterale"
           soluzione: >
-            Corretto: non esiste v1. Cerca eventuali email nella tua
-            casella o attiva una saved-search in ImmobilCloud per
-            ricevere alert per email.
+            Corretto: non e' una voce sidebar. Usa la campanella in topbar.
       permessi:
-        - Nessuna pagina Notifiche accessibile v1 (non esiste)
-    screenshot: []
+        - Ogni utente vede solo le proprie notifiche inbox
+    screenshot:
+      - "[SCREEN: cap18-bell-dropdown]"
 
   # ---------- 18.3 · Canali attivi ----------
 
   - id: notifiche.canali-attivi
-    titolo: Canali di notifica attivi v1 (email + toast · NO push/SMS/WhatsApp)
+    titolo: Canali di notifica attivi v1.1 (email + inbox Bell + toast · NO push/SMS)
     modulo: Notifiche
     widget: null
     pubblico: [titolare, agente, super_admin]
     livello: base
-    tags: [notifiche, canali, email, toast, push, sms, whatsapp, dead-code, d-051]
+    tags: [notifiche, canali, email, toast, campanella, push, sms, a-017, d-051]
     correlati: [notifiche.email-panoramica, notifiche.toast-in-app, notifiche.limitazioni-v1]
-    domanda_naturale: "Su quali canali OMNIA invia notifiche? Esiste push mobile, SMS o WhatsApp?"
+    domanda_naturale: "Su quali canali OMNIA invia notifiche? Esiste push mobile, SMS o WhatsApp? C'è la campanella?"
     contenuto:
       a_cosa_serve: >
-        Elencare in modo esaustivo i canali di notifica supportati e NON
-        supportati v1, con nota sul dead code `push` nello schema utente.
+        Elencare canali supportati e non supportati dopo A-017/A-021.
       quando_si_usa: >
-        Prima di aspettarti un SMS di conferma appuntamento o un push
-        mobile su nuovo lead.
+        Prima di aspettarti SMS/push o per capire la campanella.
       passi:
-        - "ATTIVO · Email transazionali via Resend (7 template · fallback
-          mock mode se RESEND_API_KEY non configurata)."
-        - "ATTIVO · Toast in-app via libreria sonner (React), durata
-          4-5 secondi, non persistenti."
-        - "NON ATTIVO · Push web/mobile. Lo schema `notification_channels`
-          accetta il valore 'push' ma NESSUN sender push e' implementato
-          v1. E' dead code documentato per trasparenza."
-        - "NON ATTIVO · SMS (nessuna integrazione Twilio o simili)."
-        - "NON ATTIVO · WhatsApp Business (nessuna integrazione Meta)."
-        - "NON ATTIVO · Slack/Teams/Discord webhook per alert admin."
-        - "NON ATTIVO · Voice call (Twilio Voice non configurato)."
+        - "ATTIVO · Email Resend (7 template, mock se no API key)."
+        - "ATTIVO · Inbox in-app campanella + badge (A-017), polling 45s."
+        - "ATTIVO · Toast sonner 4-5s."
+        - "ATTIVO · Preferenze email UI (A-021)."
+        - "NON ATTIVO · Push (schema 'push' = dead code)."
+        - "NON ATTIVO · SMS / WhatsApp / Slack."
       errori_comuni:
-        - problema: "Ho attivato push in registrazione ma non ricevo nulla"
+        - problema: "Ho attivato push ma non ricevo nulla"
           soluzione: >
-            Lo schema accetta 'push' come valore ma nessun sender push
-            e' implementato v1 (dead code). Usa email come unico canale
-            realmente attivo.
+            Push non implementato. Usa email + campanella.
       permessi:
-        - Ogni utente puo' vedere i toast in-app
-        - Solo email e' realmente consegnato
+        - Inbox e toast per utenti autenticati
+        - Email gated da preferenze (password_reset sempre on)
     screenshot: []
 
   # ---------- 18.4 · Email panoramica ----------
@@ -478,52 +448,40 @@ voci:
         - "Solo super_admin"
     screenshot: []
 
-  # ---------- 18.11 · preferenze utente (schema vs realta') ----------
+  # ---------- 18.11 · preferenze utente (A-021) ----------
 
   - id: notifiche.preferenze-utente
-    titolo: Preferenze utente notifiche (schema email/push vs realta' v1 · push dead code)
+    titolo: Preferenze notifiche UI (A-021) · canali e tipi email
     modulo: Notifiche
     widget: null
-    pubblico: [b2c_client, super_admin]
+    pubblico: [titolare, agente, segreteria, super_admin, b2c_client]
     livello: intermedio
-    tags: [notifiche, preferenze, notification-channels, opt-in, opt-out, push, dead-code, d-051]
-    correlati: [notifiche.canali-attivi, notifiche.limitazioni-v1]
+    tags: [notifiche, preferenze, a-021, notification-channels, opt-in, opt-out, d-051]
+    correlati: [notifiche.canali-attivi, notifiche.cos-e]
     domanda_naturale: "Come cambio le preferenze notifiche? Posso disattivare specifici tipi di email?"
     contenuto:
       a_cosa_serve: >
-        Documentare onestamente cosa lo schema User accetta come
-        `notification_channels` e cosa effettivamente viene consumato.
+        Spiegare la UI e le API di preferenze dopo A-021.
       quando_si_usa: >
-        Quando un utente cerca dove modificare le preferenze notifiche
-        (spoiler: non c'e' UI).
+        Quando vuoi spegnere email lead o alert ricerche salvate.
       passi:
-        - "Schema: User.notification_channels: List[Literal['email',
-          'push']] in shared/models/user.py:50. Default ['email']."
-        - "Realta' v1: solo 'email' viene realmente letto dal cron
-          saved-searches. Il valore 'push' e' dead code documentato."
-        - "Nessuna UI per modificare notification_channels
-          post-registrazione. Ne' in ImmoWeb SettingsPage.jsx ne' in
-          ImmobilCloud AccountDashboard.jsx c'e' un toggle."
-        - "Nessuna granularita' per tipo: non puoi optare-in solo per
-          saved_search_alert e opt-out da password_reset. Le email
-          transazionali (welcome, password_reset, agency_invite,
-          lead_notification, founders_*) sono SEMPRE inviate
-          indipendentemente da notification_channels perche' sono
-          fondamentali per usare il prodotto."
-        - "Nessuna preferenza digest frequency in UI oltre a
-          saved-searches (instant/daily/weekly)."
-        - "Backlog A-021 (UI notification preferences) proposto per
-          v1.1."
+        - "UI B2B: Impostazioni → Preferenze notifiche."
+        - "UI B2C: Account cloud → stesso pannello + frequenza digest."
+        - "API GET/PATCH /api/auth/me/notification-preferences."
+        - "Tipi toggleabili: welcome, agency_invite, lead_notification,
+          saved_search_alert."
+        - "password_reset sempre on (non disattivabile)."
+        - "Canale push in UI disabilitato (non disponibile v1)."
+        - "Inbox campanella indipendente dalle preferenze email."
       errori_comuni:
-        - problema: "Ho messo 'push' invece di 'email' in registrazione B2C"
+        - problema: "Ho disattivato lead_notification ma vedo ancora la campanella"
           soluzione: >
-            Il valore 'push' viene accettato ma nessun sender push e'
-            implementato v1 (dead code). Aggiorna Mongo direttamente
-            (nessuna UI): db.users.updateOne({email:...}, {$set:
-            {notification_channels: ['email']}}).
+            Corretto: A-017 scrive inbox anche senza email. Solo la
+            mail e' gated da user_allows_email.
       permessi:
-        - "Modifica preferenze v1 solo via Mongo direct (super_admin)"
-    screenshot: []
+        - Ogni utente modifica solo le proprie preferenze
+    screenshot:
+      - "[SCREEN: cap18-prefs-settings]"
 
   # ---------- 18.12 · audit trail interno ----------
 
@@ -687,58 +645,26 @@ voci:
         Prima di aspettarti una Bell icon, una pagina Notifiche o un
         SMS di conferma appuntamento.
       passi:
-        - "BACKEND · NO router /notifications (nessun GET
-          /me/notifications, PATCH read, DELETE)."
-        - "BACKEND · NO router /activity o /activity-feed."
-        - "BACKEND · NO collezione Mongo notifications o activity_feed."
-        - "BACKEND · NO servizio push sender (schema
-          notification_channels accetta 'push' ma dead code)."
-        - "BACKEND · NO coda retry per email fallite (fire-and-forget)."
-        - "BACKEND · NO tracking delivery status Resend (no webhook
-          delivered/bounced/opened v1)."
-        - "BACKEND · NO digest email quotidiana per titolare (con
-          riepilogo lead/match/sync)."
-        - "BACKEND · NO scheduler interno per saved-search cron
-          (deve essere triggerato super_admin manualmente)."
-        - "BACKEND · NO rate limit su send_email (rischio abuso
-          password_reset)."
-        - "FRONTEND · NO Bell icon nella navbar."
-        - "FRONTEND · NO contatore unread."
-        - "FRONTEND · NO pagina Notifiche o Attivita'."
-        - "FRONTEND · NO preferenza UI per canale (email/push toggle)."
-        - "FRONTEND · NO preferenza UI per tipo (opt-in/opt-out per
-          welcome/agency_invite/lead_notification/saved_search_alert)."
-        - "FRONTEND · NO preferenza UI per digest frequency oltre a
-          saved-search (instant/daily/weekly)."
-        - "FRONTEND · NO mute/snooze temporaneo delle notifiche."
-        - "FRONTEND · NO moderazione (super_admin non puo' bloccare
-          invii per abuso)."
-        - "CHANNELS · NO SMS (nessuna integrazione Twilio)."
-        - "CHANNELS · NO WhatsApp Business (nessuna integrazione Meta)."
-        - "CHANNELS · NO Push web (Service Worker + VAPID keys non
-          configurati)."
-        - "CHANNELS · NO Push mobile (nessuna app iOS/Android)."
-        - "CHANNELS · NO Slack/Teams/Discord webhook."
-        - "CHANNELS · NO Voice call (Twilio Voice non configurato)."
-        - "ANALYTICS · NO tracking open rate / click-through rate."
-        - "ANALYTICS · NO A/B test template."
-        - "ANALYTICS · NO rendering preview UI per super_admin."
-        - "LOCALIZZAZIONE · founders_welcome + founders_admin_notification
-          disponibili solo in italiano (D-051)."
-        - "SAVED-SEARCH · frequency (instant/daily/weekly) e' un flag
-          salvato MA il cron IGNORA la frequenza (bug funzionale
-          documentato, backlog A-019)."
+        - "ESISTE · Router /api/notifications + collezione Mongo (A-017)."
+        - "ESISTE · Bell icon + badge unread + mark read (A-017)."
+        - "ESISTE · Preferenze UI canale/tipo (A-021)."
+        - "BACKEND · NO router /activity o activity feed (A-018)."
+        - "BACKEND · NO servizio push sender (schema 'push' dead code)."
+        - "BACKEND · NO coda retry email / webhook Resend delivery."
+        - "BACKEND · NO scheduler interno saved-search (A-020)."
+        - "BACKEND · Emitter residuali: match on-read, import, social,
+          compliance, DNS non ancora in campanella."
+        - "FRONTEND · NO pagina full-screen Notifiche (solo dropdown)."
+        - "FRONTEND · NO mute/snooze / moderazione admin."
+        - "CHANNELS · NO SMS / WhatsApp / Push web-mobile / Slack."
+        - "password_reset sempre inviata (non disattivabile)."
       errori_comuni:
         - problema: "Voglio ricevere notifiche mobile push"
           soluzione: >
-            Non disponibile v1. Il valore 'push' nello schema utente
-            e' dead code. Backlog v1.1.
+            Non disponibile. Usa email + campanella.
         - problema: "Voglio disattivare le email di password_reset"
           soluzione: >
-            Non consentito. Le email transazionali fondamentali sono
-            SEMPRE inviate (welcome, password_reset, agency_invite,
-            lead_notification, founders_*) indipendentemente da
-            notification_channels.
+            Non consentito (sempre on).
       permessi:
         - "N/A · limitazioni informative"
     screenshot: []

@@ -1346,3 +1346,17 @@ Registro di tutte le decisioni di business e tecniche prese durante il progetto.
   - UI `/it/cloud/visura` → Checkout Stripe → webhook → OpenAPI.it → PDF
   - Rail separato dai crediti B2B; stesso pattern del Valuator UNI
 - **Stato**: ✅ APPLICATA (codice 15-Sep-2026)
+
+### D-084 — Sync manuale obbligatorio ad ogni modifica prodotto
+- **Data**: 16 Settembre 2026
+- **Contesto**: Founder: *«ad ogni modifica il manuale si deve aggiornare automaticamente»*.
+- **Decisione**:
+  1. Ogni ship che cambia UX, API o comportamento documentato **deve** aggiornare nello stesso giro:
+     - capitolo MD in `memory/manuale/`
+     - voci YAML HAL correlate in `memory/manuale/hal/`
+     - `CHANGELOG.md` (+ `ASPETTI` se A-xxx)
+  2. Non esiste più il pattern “codice ora, manuale dopo”.
+  3. Checklist operativa: `memory/MANUAL_SYNC.md`.
+  4. Dopo YAML: reindex / ingest HAL (startup o endpoint super_admin) prima di chiudere.
+  5. Eccezioni solo esplicite Founder (es. Cap. Billing live post Stripe — D-051).
+- **Stato**: ✅ CONFERMATA — applicata da subito (primo sync: Cap. 18 A-017/A-021 + drift Cap. 9/12/13)

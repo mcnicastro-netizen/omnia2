@@ -147,12 +147,17 @@ voci:
           contesto nel corpus OMNIA per rispondere'."
         - "Le soglie sono definite in hal_knowledge.py:
           CONFIDENCE_MIN=0.08, CONFIDENCE_HIGH=0.20."
+        - "Tooltip (A-006): hover/focus sul badge mostra spiegazione
+          del livello in italiano."
       errori_comuni:
         - problema: "La risposta e' media e non capisco se e' giusta"
           soluzione: >
             Guarda le fonti citate: se coincidono con il capitolo di
             manuale atteso, la risposta e' probabilmente corretta.
             Altrimenti riformula usando parole-chiave piu' specifiche.
+        - problema: "Non capisco cosa significa il colore del badge"
+          soluzione: >
+            Passa il mouse sul badge: compare il tooltip (A-006).
       permessi:
         - Tutti i ruoli agenzia autenticati
     screenshot: ["[SCREEN: cap12-halk-risposta-fonti]"]
