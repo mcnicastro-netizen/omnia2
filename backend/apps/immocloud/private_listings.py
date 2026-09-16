@@ -21,7 +21,7 @@ A free B2C user can keep at most 1 *active* private listing (limit_count below).
 """
 import logging
 from datetime import datetime, timezone
-from typing import Literal, Optional
+from typing import Literal
 from uuid import uuid4
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
