@@ -531,7 +531,10 @@
     "action_wa_title": "Abrir WhatsApp con mensaje prellenado",
     "action_wa_aria": "Abrir WhatsApp",
     "action_no_wa": "Sin número WhatsApp",
-    "import_csv_btn": "⬆ Importar CSV"
+    "import_csv_btn": "⬆ Importar CSV",
+    "prev": "← Anterior",
+    "next": "Siguiente →",
+    "page_status": "Página {{page}} de {{pages}} · {{total}} clientes"
   },
   "client_import": {
     "title": "Importar clientes",

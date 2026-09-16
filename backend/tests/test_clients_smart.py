@@ -25,13 +25,16 @@ def admin_session():
 
 class TestSmartList:
     def test_smart_returns_enriched_payload(self, admin_session):
-        r = admin_session.get(f"{BASE_URL}/api/app/clients/smart")
+        r = admin_session.get(f"{BASE_URL}/api/app/clients/smart?page=1&page_size=50")
         assert r.status_code == 200, r.text
         d = r.json()
         assert "items" in d
         assert "counts" in d
         assert "total" in d
         assert d["sort"] == "score_desc"
+        assert d.get("page") == 1
+        assert d.get("page_size") == 50
+        assert len(d["items"]) <= 50
         # Each item must have the enrichment fields
         for c in d["items"]:
             assert "lead_score" in c
@@ -42,7 +45,7 @@ class TestSmartList:
             assert "action_hint" in c
 
     def test_smart_sorted_score_desc(self, admin_session):
-        r = admin_session.get(f"{BASE_URL}/api/app/clients/smart?sort=score_desc")
+        r = admin_session.get(f"{BASE_URL}/api/app/clients/smart?sort=score_desc&page_size=50")
         d = r.json()
         scores = [c.get("lead_score") if c.get("lead_score") is not None else -1 for c in d["items"]]
         assert scores == sorted(scores, reverse=True)
@@ -56,14 +59,14 @@ class TestSmartList:
 
     def test_smart_bucket_filter(self, admin_session):
         # Filter to sellers only
-        r = admin_session.get(f"{BASE_URL}/api/app/clients/smart?bucket=sellers")
+        r = admin_session.get(f"{BASE_URL}/api/app/clients/smart?bucket=sellers&page_size=50")
         d = r.json()
         for c in d["items"]:
             assert c["client_type"] not in ("buyer", "tenant", "investor")
             assert c["lead_score"] is None  # sellers don't get scored
 
     def test_smart_bucket_to_call_today(self, admin_session):
-        r = admin_session.get(f"{BASE_URL}/api/app/clients/smart?bucket=to_call_today")
+        r = admin_session.get(f"{BASE_URL}/api/app/clients/smart?bucket=to_call_today&page_size=50")
         d = r.json()
         for c in d["items"]:
             assert c["temperature"] in ("rovente", "caldo")
@@ -71,10 +74,24 @@ class TestSmartList:
 
     def test_smart_search(self, admin_session):
         # search by partial name — must filter & still return enriched payload
-        r = admin_session.get(f"{BASE_URL}/api/app/clients/smart?q=Andrea")
+        r = admin_session.get(f"{BASE_URL}/api/app/clients/smart?q=Andrea&page_size=50")
         d = r.json()
         assert d["total"] >= 1
         assert any("Andrea" in (c.get("name") or "") for c in d["items"])
+
+    def test_smart_pagination(self, admin_session):
+        r = admin_session.get(f"{BASE_URL}/api/app/clients/smart?page=1&page_size=5")
+        assert r.status_code == 200, r.text
+        d = r.json()
+        assert len(d["items"]) <= 5
+        assert d["page_size"] == 5
+        if d["total"] > 5:
+            r2 = admin_session.get(f"{BASE_URL}/api/app/clients/smart?page=2&page_size=5")
+            d2 = r2.json()
+            assert r2.status_code == 200
+            ids1 = {c["id"] for c in d["items"]}
+            ids2 = {c["id"] for c in d2["items"]}
+            assert ids1.isdisjoint(ids2)
 
     def test_smart_route_not_treated_as_id(self, admin_session):
         # Regression: ensure /clients/smart isn't intercepted by /clients/{cid}

@@ -94,19 +94,23 @@ export default function ClientsPage() {
   const lang = (i18n.language || "it").slice(0, 2);
   const nav = useNavigate();
 
-  const [data, setData] = useState({ items: [], counts: {}, total: 0 });
+  const [data, setData] = useState({ items: [], counts: {}, total: 0, page: 1, page_size: 50 });
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [bucket, setBucket] = useState("all");
   const [sort, setSort] = useState("score_desc");
   const [q, setQ] = useState("");
+  const [page, setPage] = useState(1);
   const [toast, setToast] = useState("");
+  const pageSize = 50;
 
-  const load = async (signal) => {
+  const load = async (signal, pageOverride) => {
     setLoading(true);
     try {
       const params = new URLSearchParams();
       params.set("sort", sort);
+      params.set("page", String(pageOverride ?? page));
+      params.set("page_size", String(pageSize));
       if (bucket && bucket !== "all") params.set("bucket", bucket);
       if (q) params.set("q", q);
       const { data } = await api.get(`/app/clients/smart?${params.toString()}`, { signal });
@@ -124,11 +128,22 @@ export default function ClientsPage() {
     const ac = new AbortController();
     load(ac.signal);
     return () => ac.abort();
-  }, [bucket, sort]);
+  }, [bucket, sort, page]);
 
   const onSearch = (e) => {
     e.preventDefault();
-    load();
+    if (page !== 1) setPage(1);
+    else load();
+  };
+
+  const onBucket = (id) => {
+    setPage(1);
+    setBucket(id);
+  };
+
+  const onSort = (value) => {
+    setPage(1);
+    setSort(value);
   };
 
   const showToast = (msg) => {
@@ -232,7 +247,7 @@ export default function ClientsPage() {
           <select
             data-testid="clients-sort"
             value={sort}
-            onChange={(e) => setSort(e.target.value)}
+            onChange={(e) => onSort(e.target.value)}
             className="px-3 py-2 bg-white border border-stone-300 rounded-md text-sm"
           >
             <option value="score_desc">{t("clients_smart.sort_score_desc")}</option>
@@ -250,7 +265,7 @@ export default function ClientsPage() {
               active={bucket === p.id}
               label={p.label}
               count={p.count}
-              onClick={() => setBucket(p.id)}
+              onClick={() => onBucket(p.id)}
             />
           ))}
         </div>
@@ -271,11 +286,49 @@ export default function ClientsPage() {
             </Link>
           </div>
         ) : (
-          <div className="space-y-2" data-testid="clients-smart-list">
-            {data.items.map((c) => (
-              <ClientRow key={c.id} c={c} lang={lang} t={t} onOpen={() => nav(`/${lang}/app/clients/${c.id}`)} />
-            ))}
-          </div>
+          <>
+            <div className="space-y-2" data-testid="clients-smart-list">
+              {data.items.map((c) => (
+                <ClientRow key={c.id} c={c} lang={lang} t={t} onOpen={() => nav(`/${lang}/app/clients/${c.id}`)} />
+              ))}
+            </div>
+            {(() => {
+              const total = data.total || 0;
+              const totalPages = Math.max(1, Math.ceil(total / pageSize));
+              if (totalPages <= 1) return null;
+              return (
+                <div className="flex flex-wrap items-center justify-between gap-3 pt-2" data-testid="clients-smart-pagination">
+                  <p className="text-sm text-stone-500">
+                    {t("clients_smart.page_status", {
+                      page: data.page || page,
+                      pages: totalPages,
+                      total,
+                    })}
+                  </p>
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      data-testid="clients-smart-prev"
+                      disabled={page <= 1}
+                      onClick={() => setPage((p) => Math.max(1, p - 1))}
+                      className="px-3 py-1.5 text-xs uppercase tracking-widest border border-stone-300 rounded-md disabled:opacity-40 hover:border-stone-700"
+                    >
+                      {t("clients_smart.prev")}
+                    </button>
+                    <button
+                      type="button"
+                      data-testid="clients-smart-next"
+                      disabled={page >= totalPages}
+                      onClick={() => setPage((p) => p + 1)}
+                      className="px-3 py-1.5 text-xs uppercase tracking-widest border border-stone-300 rounded-md disabled:opacity-40 hover:border-stone-700"
+                    >
+                      {t("clients_smart.next")}
+                    </button>
+                  </div>
+                </div>
+              );
+            })()}
+          </>
         )}
       </section>
     </AgencyShell>

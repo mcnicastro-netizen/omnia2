@@ -1,5 +1,17 @@
 # OMNIA — Changelog
 
+## 2026-09-16 — Fix scale `/clients/smart` (paginazione + match fast)
+
+**Tipo**: Performance — risposta a bottleneck stress D-072 @10k.
+
+- `GET /app/clients/smart`: `page` / `page_size` (default 50, max 100); alias `limit`
+- Matching lista via `compute_match_score_fast` (no breakdown); cap 200 immobili + scan 2.000 clienti
+- Conteggio all/searchers/sellers via Mongo; path page-first per nome/data
+- FE: paginazione Precedente/Successiva; i18n IT/EN/ES
+- Manuale Cap. 4.6 + YAML HAL (D-084); stress script allineato a `page_size`
+
+---
+
 ## 2026-09-16 — Stress ladder CRM clienti → 10.000 (D-072)
 
 **Tipo**: Load test + tooling.

@@ -196,7 +196,7 @@ def bench_endpoints(session: requests.Session) -> Dict[str, Any]:
         "/app/agencies/me",
         "/app/dashboard/kpis",
         "/app/clients?page=1&page_size=50",
-        "/app/clients/smart?limit=50",
+        "/app/clients/smart?page=1&page_size=50",
         "/app/properties?page=1&page_size=50",
         "/app/matches?min_score=40&limit=20",
         "/notifications?limit=20",
@@ -285,7 +285,7 @@ def run_tier(n: int, run_id: str, do_concurrency: bool) -> Dict[str, Any]:
             "clients_list": concurrent_reads(login_session, "/app/clients?page=1&page_size=50", n=40, workers=20),
             "dashboard": concurrent_reads(login_session, "/app/dashboard/kpis", n=40, workers=20),
             "properties": concurrent_reads(login_session, "/app/properties?page=1&page_size=50", n=40, workers=20),
-            "clients_smart": concurrent_reads(login_session, "/app/clients/smart?limit=50", n=20, workers=10),
+            "clients_smart": concurrent_reads(login_session, "/app/clients/smart?page=1&page_size=50", n=20, workers=10),
         }
 
     return {

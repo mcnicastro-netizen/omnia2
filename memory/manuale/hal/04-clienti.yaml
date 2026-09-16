@@ -414,6 +414,9 @@ voci:
           Investitore (indipendentemente da eventuali immobili
           collegati)."
         - Clicca il bucket che ti interessa per filtrare la lista.
+        - "La lista è paginata (50 per pagina). Il ranking per score
+          valuta fino a circa 2.000 clienti e 200 immobili attivi
+          recenti; oltre usa ricerca o i bucket Acquirenti/Venditori."
       errori_comuni:
         - problema: "Il bucket 'Da chiamare oggi' è vuoto"
           soluzione: >
@@ -421,6 +424,12 @@ voci:
             Roventi o Caldi. Se sono tutti vuoti, l'agenzia è nuova o
             senza attività recente — è il momento di alimentare
             Clienti e preferenze.
+        - problema: "Non vedo tutti i 5.000+ clienti nella prima pagina"
+          soluzione: >
+            È normale: Smart Clients mostra 50 righe per pagina e
+            calcola lo score sulla finestra di ranking. Usa
+            Precedente/Successiva, la ricerca per nome, o i bucket
+            Acquirenti/Venditori.
       permessi:
         - Titolare, agente, segreteria (come agente)
     screenshot:

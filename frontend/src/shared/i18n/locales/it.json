@@ -680,7 +680,10 @@
     "action_wa_title": "Apri WhatsApp con messaggio precompilato",
     "action_wa_aria": "Apri WhatsApp",
     "action_no_wa": "Nessun numero WhatsApp",
-    "import_csv_btn": "⬆ Importa CSV"
+    "import_csv_btn": "⬆ Importa CSV",
+    "prev": "← Precedente",
+    "next": "Successiva →",
+    "page_status": "Pagina {{page}} di {{pages}} · {{total}} clienti"
   },
   "client_import": {
     "title": "Importa clienti",

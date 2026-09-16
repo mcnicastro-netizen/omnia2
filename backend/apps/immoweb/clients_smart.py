@@ -6,18 +6,25 @@ hints, sort by score desc, and let the agent see *who to call first*.
 Endpoints (mounted under /app/clients):
   GET  /smart            → enriched list (deterministic match + cached AI)
   POST /smart/refresh    → batch-refresh AI lead score for top N uncached
+
+Scale notes (D-072 stress @10k):
+  - page / page_size required for payload (default 50)
+  - property match capped; score uses compute_match_score_fast
+  - cheap Mongo counts for all / searchers / sellers
+  - page-first path when score ranking is not needed
 """
 import asyncio
 import logging
+import re
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel, Field
 
 from shared.auth.dependencies import get_current_user, require_roles
 from shared.db.connection import Database
-from apps.immoweb.matching import compute_match, is_searcher
+from apps.immoweb.matching import compute_match, compute_match_score_fast, is_searcher
 from apps.immoweb.lead_scoring import score_lead, _classify
 
 logger = logging.getLogger("omnia.clients_smart")
@@ -26,6 +33,54 @@ router = APIRouter(prefix="/clients", tags=["clients-smart"])
 
 SEARCHER_TYPES = {"buyer", "tenant", "investor"}
 MATCH_COUNT_THRESHOLD = 50   # property is considered a "real" match for the counter
+
+PAGE_SIZE_DEFAULT = 50
+PAGE_SIZE_MAX = 100
+CLIENT_SCAN_CAP = 2000       # max clients scored for score/temp ranking
+PROPERTY_MATCH_CAP = 200     # max active properties used for list matching
+
+# Projection: only fields needed for matching + row display
+_PROP_PROJ = {
+    "_id": 0,
+    "id": 1,
+    "title": 1,
+    "reference_code": 1,
+    "city": 1,
+    "zone": 1,
+    "operation": 1,
+    "property_type": 1,
+    "price": 1,
+    "rent_monthly": 1,
+    "surface_sqm": 1,
+    "rooms": 1,
+    "bedrooms": 1,
+    "bathrooms": 1,
+    "condition": 1,
+    "floor": 1,
+    "total_floors": 1,
+    "energy": 1,
+    "features": 1,
+    "photos": 1,
+    "virtual_tour_url": 1,
+    "updated_at": 1,
+}
+
+_CLIENT_PROJ = {
+    "_id": 0,
+    "id": 1,
+    "name": 1,
+    "surname": 1,
+    "email": 1,
+    "phone": 1,
+    "whatsapp": 1,
+    "client_type": 1,
+    "status": 1,
+    "source": 1,
+    "preferences": 1,
+    "gdpr_consent": 1,
+    "created_at": 1,
+    "updated_at": 1,
+}
 
 
 # ============================================================
@@ -50,6 +105,28 @@ def _action_hint_fallback(temperature: str, matches_count: int, is_seller: bool)
     return "Riqualifica via mail breve, poi decidi se archiviare."
 
 
+def _escape_q(q: Optional[str]) -> Optional[str]:
+    if not q:
+        return None
+    q = q.strip()[:100]
+    if not q:
+        return None
+    return re.escape(q)
+
+
+def _client_base_query(agency_id: str, q: Optional[str]) -> Dict[str, Any]:
+    cl_query: Dict[str, Any] = {"agency_id": agency_id}
+    eq = _escape_q(q)
+    if eq:
+        cl_query["$or"] = [
+            {"name": {"$regex": eq, "$options": "i"}},
+            {"surname": {"$regex": eq, "$options": "i"}},
+            {"email": {"$regex": eq, "$options": "i"}},
+            {"phone": {"$regex": eq, "$options": "i"}},
+        ]
+    return cl_query
+
+
 def _enrich_client(
     c: Dict[str, Any],
     properties: List[Dict[str, Any]],
@@ -57,7 +134,7 @@ def _enrich_client(
 ) -> Dict[str, Any]:
     """Compute deterministic best match + matches_count for a client,
     overlaying any cached AI lead_score for the top property."""
-    is_seller = not is_searcher(c)
+    seller = not is_searcher(c)
     base = {
         "id": c["id"],
         "name": c.get("name"),
@@ -74,7 +151,7 @@ def _enrich_client(
         "updated_at": c.get("updated_at"),
     }
 
-    if is_seller or not properties:
+    if seller or not properties:
         return {
             **base,
             "matches_count": 0,
@@ -82,21 +159,26 @@ def _enrich_client(
             "lead_score": None,
             "temperature": None,
             "top_property": None,
-            "action_hint": _action_hint_fallback("freddo", 0, is_seller),
+            "action_hint": _action_hint_fallback("freddo", 0, seller),
             "ai_engine": None,
             "ai_cached": False,
         }
 
-    # deterministic match vs every property
-    scored: List[tuple] = []
+    prefs = c.get("preferences") if isinstance(c.get("preferences"), dict) else {}
+    best_score = 0
+    best_prop: Optional[Dict[str, Any]] = None
+    matches_count = 0
     for p in properties:
-        m = compute_match(p, c)
-        if m["score"] > 0:
-            scored.append((m["score"], p, m))
-    scored.sort(key=lambda x: x[0], reverse=True)
-    matches_count = sum(1 for s, *_ in scored if s >= MATCH_COUNT_THRESHOLD)
+        s = compute_match_score_fast(p, prefs)
+        if s <= 0:
+            continue
+        if s >= MATCH_COUNT_THRESHOLD:
+            matches_count += 1
+        if s > best_score:
+            best_score = s
+            best_prop = p
 
-    if not scored:
+    if not best_prop:
         return {
             **base,
             "matches_count": 0,
@@ -109,7 +191,6 @@ def _enrich_client(
             "ai_cached": False,
         }
 
-    best_score, best_prop, best_match = scored[0]
     cache_key = (best_prop["id"], c["id"])
     cached = cache_index.get(cache_key)
 
@@ -136,13 +217,12 @@ def _enrich_client(
             "ai_cached": True,
         }
 
-    # no AI cache yet — use deterministic only for the score
     derived_temp = _classify(best_score)
     return {
         **base,
         "matches_count": matches_count,
         "best_match_score": best_score,
-        "lead_score": best_score,   # deterministic acts as placeholder
+        "lead_score": best_score,
         "temperature": derived_temp,
         "top_property": {
             "id": best_prop["id"],
@@ -156,52 +236,39 @@ def _enrich_client(
     }
 
 
-# ============================================================
-# GET /clients/smart
-# ============================================================
-
-@router.get("/smart")
-async def smart_clients(
-    sort: str = Query("score_desc", pattern="^(score_desc|score_asc|created_desc|name_asc)$"),
-    bucket: Optional[str] = Query(None, pattern="^(rovente|caldo|tiepido|freddo|to_call_today|searchers|sellers|all)$"),
-    q: Optional[str] = None,
-    user: dict = Depends(get_current_user),
-):
-    """Enriched clients list with deterministic match + cached AI lead score."""
-    agency_id = await _agency_id(user)
-    db = Database.get()
-
-    # 1. Pull clients (basic search filter)
-    cl_query: Dict[str, Any] = {"agency_id": agency_id}
-    if q:
-        cl_query["$or"] = [
-            {"name": {"$regex": q, "$options": "i"}},
-            {"surname": {"$regex": q, "$options": "i"}},
-            {"email": {"$regex": q, "$options": "i"}},
-            {"phone": {"$regex": q, "$options": "i"}},
+def _apply_bucket(enriched: List[Dict[str, Any]], bucket: Optional[str]) -> List[Dict[str, Any]]:
+    if bucket == "to_call_today":
+        return [
+            e for e in enriched
+            if (e.get("temperature") in ("rovente", "caldo")) and (e.get("matches_count") or 0) > 0
         ]
-    clients = await db.clients.find(cl_query, {"_id": 0}).to_list(length=2000)
+    if bucket in ("rovente", "caldo", "tiepido", "freddo"):
+        return [e for e in enriched if e.get("temperature") == bucket]
+    if bucket == "searchers":
+        return [e for e in enriched if e.get("client_type") in SEARCHER_TYPES]
+    if bucket == "sellers":
+        return [e for e in enriched if e.get("client_type") not in SEARCHER_TYPES]
+    return enriched
 
-    # 2. Pull all active+draft properties of the agency
-    properties = await db.properties.find(
-        {"agency_id": agency_id, "status": "active"}, {"_id": 0},
-    ).to_list(length=2000)
 
-    # 3. Pull lead_score_cache for this agency once → index by (property_id, client_id)
-    cache_docs = await db.lead_score_cache.find(
-        {"agency_id": agency_id}, {"_id": 0},
-    ).to_list(length=20000)
-    cache_index: Dict[tuple, Dict[str, Any]] = {
-        (d["property_id"], d["client_id"]): d for d in cache_docs
-    }
+def _sort_enriched(enriched: List[Dict[str, Any]], sort: str) -> None:
+    if sort == "score_desc":
+        enriched.sort(key=lambda e: (e.get("lead_score") or -1, e.get("matches_count") or 0), reverse=True)
+    elif sort == "score_asc":
+        enriched.sort(key=lambda e: (e.get("lead_score") or 9999, e.get("matches_count") or 0))
+    elif sort == "created_desc":
+        enriched.sort(key=lambda e: e.get("created_at") or "", reverse=True)
+    elif sort == "name_asc":
+        enriched.sort(key=lambda e: ((e.get("name") or "").lower(), (e.get("surname") or "").lower()))
 
-    # 4. Enrich once (used for both counts and filtered output)
-    full_enriched = [_enrich_client(c, properties, cache_index) for c in clients]
 
-    # 5. Counts for the UI pills (computed on the full set, pre-bucket)
-    counts = {
+def _counts_from_enriched(full_enriched: List[Dict[str, Any]]) -> Dict[str, int]:
+    return {
         "all": len(full_enriched),
-        "to_call_today": sum(1 for e in full_enriched if e.get("temperature") in ("rovente", "caldo") and (e.get("matches_count") or 0) > 0),
+        "to_call_today": sum(
+            1 for e in full_enriched
+            if e.get("temperature") in ("rovente", "caldo") and (e.get("matches_count") or 0) > 0
+        ),
         "rovente": sum(1 for e in full_enriched if e.get("temperature") == "rovente"),
         "caldo": sum(1 for e in full_enriched if e.get("temperature") == "caldo"),
         "tiepido": sum(1 for e in full_enriched if e.get("temperature") == "tiepido"),
@@ -217,32 +284,193 @@ async def smart_clients(
         ),
     }
 
-    # 6. Bucket filter (applied to a copy so counts remain global)
-    enriched = list(full_enriched)
-    if bucket == "to_call_today":
-        enriched = [e for e in enriched if (e.get("temperature") in ("rovente", "caldo")) and (e.get("matches_count") or 0) > 0]
-    elif bucket in ("rovente", "caldo", "tiepido", "freddo"):
-        enriched = [e for e in enriched if e.get("temperature") == bucket]
-    elif bucket == "searchers":
-        enriched = [e for e in enriched if e.get("client_type") in SEARCHER_TYPES]
-    elif bucket == "sellers":
-        enriched = [e for e in enriched if e.get("client_type") not in SEARCHER_TYPES]
-    # else "all" or None → no filter
 
-    # 7. Sort
-    if sort == "score_desc":
-        enriched.sort(key=lambda e: (e.get("lead_score") or -1, e.get("matches_count") or 0), reverse=True)
-    elif sort == "score_asc":
-        enriched.sort(key=lambda e: (e.get("lead_score") or 9999, e.get("matches_count") or 0))
-    elif sort == "created_desc":
-        enriched.sort(key=lambda e: e.get("created_at") or "", reverse=True)
-    elif sort == "name_asc":
-        enriched.sort(key=lambda e: ((e.get("name") or "").lower(), (e.get("surname") or "").lower()))
+async def _mongo_type_counts(db, agency_id: str, base_q: Dict[str, Any]) -> Tuple[int, int, int]:
+    """Exact all / searchers / sellers via Mongo (no enrich)."""
+    all_n = await db.clients.count_documents(base_q)
+    searchers_q = {**base_q, "client_type": {"$in": list(SEARCHER_TYPES)}}
+    # If base_q already has client_type from bucket prefilter, count_documents still works
+    searchers_n = await db.clients.count_documents(searchers_q)
+    sellers_n = max(0, all_n - searchers_n)
+    return all_n, searchers_n, sellers_n
+
+
+def _needs_score_scan(sort: str, bucket: Optional[str]) -> bool:
+    """True when we must enrich a scan window before paging."""
+    if sort in ("score_desc", "score_asc"):
+        return True
+    if bucket in ("rovente", "caldo", "tiepido", "freddo", "to_call_today"):
+        return True
+    return False
+
+
+# ============================================================
+# GET /clients/smart
+# ============================================================
+
+@router.get("/smart")
+async def smart_clients(
+    sort: str = Query("score_desc", pattern="^(score_desc|score_asc|created_desc|name_asc)$"),
+    bucket: Optional[str] = Query(None, pattern="^(rovente|caldo|tiepido|freddo|to_call_today|searchers|sellers|all)$"),
+    q: Optional[str] = None,
+    page: int = Query(1, ge=1),
+    page_size: int = Query(PAGE_SIZE_DEFAULT, ge=1, le=PAGE_SIZE_MAX),
+    # legacy alias used by stress script / older clients
+    limit: Optional[int] = Query(None, ge=1, le=PAGE_SIZE_MAX),
+    user: dict = Depends(get_current_user),
+):
+    """Enriched clients list with deterministic match + cached AI lead score.
+
+    Paginated: `items` is one page; `total` is the filtered set size.
+    Temperature bucket counts are computed on the scored scan window
+    (capped at CLIENT_SCAN_CAP); all/searchers/sellers are exact Mongo counts
+    when the query is not already narrowed to a temp bucket.
+    """
+    if limit is not None:
+        page_size = limit
+
+    agency_id = await _agency_id(user)
+    db = Database.get()
+    base_q = _client_base_query(agency_id, q)
+
+    # Properties once (capped, projected, newest first)
+    properties = await db.properties.find(
+        {"agency_id": agency_id, "status": "active"},
+        _PROP_PROJ,
+    ).sort("updated_at", -1).to_list(length=PROPERTY_MATCH_CAP)
+
+    # Lead score cache (agency-scoped)
+    cache_docs = await db.lead_score_cache.find(
+        {"agency_id": agency_id}, {"_id": 0},
+    ).to_list(length=20000)
+    cache_index: Dict[tuple, Dict[str, Any]] = {
+        (d["property_id"], d["client_id"]): d for d in cache_docs
+    }
+
+    bkt = bucket if bucket and bucket != "all" else None
+    skip = (page - 1) * page_size
+
+    # ---- Page-first path (no score ranking needed) ----
+    if not _needs_score_scan(sort, bkt):
+        mongo_q = dict(base_q)
+        if bkt == "searchers":
+            mongo_q["client_type"] = {"$in": list(SEARCHER_TYPES)}
+        elif bkt == "sellers":
+            mongo_q["client_type"] = {"$nin": list(SEARCHER_TYPES)}
+
+        total = await db.clients.count_documents(mongo_q)
+        mongo_sort = [("created_at", -1)] if sort == "created_desc" else [("name", 1), ("surname", 1)]
+        page_clients = await (
+            db.clients.find(mongo_q, _CLIENT_PROJ)
+            .sort(mongo_sort)
+            .skip(skip)
+            .limit(page_size)
+            .to_list(length=page_size)
+        )
+        items = [_enrich_client(c, properties, cache_index) for c in page_clients]
+
+        all_n, searchers_n, sellers_n = await _mongo_type_counts(db, agency_id, base_q)
+        # Temp / AI counts need a score scan — omit numbers here (FE hides non-numbers).
+        # Switching to score sort or a temperature bucket triggers the scored path.
+        counts = {
+            "all": all_n,
+            "searchers": searchers_n,
+            "sellers": sellers_n,
+        }
+        return {
+            "items": items,
+            "total": total,
+            "page": page,
+            "page_size": page_size,
+            "counts": counts,
+            "counts_scope": "mongo_types",
+            "scanned": len(page_clients),
+            "properties_matched": len(properties),
+            "sort": sort,
+            "bucket": bucket or "all",
+        }
+
+    # ---- Score / temperature path: scan → enrich → filter → sort → page ----
+    scan_q = dict(base_q)
+    # Temp buckets + score ranking: prefer searchers (sellers have no score).
+    if bkt in ("rovente", "caldo", "tiepido", "freddo", "to_call_today", "searchers"):
+        scan_q["client_type"] = {"$in": list(SEARCHER_TYPES)}
+        clients = await db.clients.find(scan_q, _CLIENT_PROJ).to_list(length=CLIENT_SCAN_CAP)
+    elif bkt == "sellers":
+        scan_q["client_type"] = {"$nin": list(SEARCHER_TYPES)}
+        clients = await db.clients.find(scan_q, _CLIENT_PROJ).to_list(length=CLIENT_SCAN_CAP)
+    elif sort in ("score_desc", "score_asc"):
+        # Score ranking: fill scan with searchers first (they dominate the top).
+        searchers = await db.clients.find(
+            {**base_q, "client_type": {"$in": list(SEARCHER_TYPES)}},
+            _CLIENT_PROJ,
+        ).to_list(length=CLIENT_SCAN_CAP)
+        remaining = max(0, CLIENT_SCAN_CAP - len(searchers))
+        sellers = []
+        if remaining:
+            sellers = await db.clients.find(
+                {**base_q, "client_type": {"$nin": list(SEARCHER_TYPES)}},
+                _CLIENT_PROJ,
+            ).to_list(length=remaining)
+        clients = searchers + sellers
+    else:
+        clients = await db.clients.find(scan_q, _CLIENT_PROJ).to_list(length=CLIENT_SCAN_CAP)
+
+    full_enriched = [_enrich_client(c, properties, cache_index) for c in clients]
+
+    # Counts: merge Mongo type totals with temp from scan when scan is unfiltered-ish
+    all_n, searchers_n, sellers_n = await _mongo_type_counts(db, agency_id, base_q)
+    scanned_counts = _counts_from_enriched(full_enriched)
+    if bkt in ("rovente", "caldo", "tiepido", "freddo", "to_call_today", "searchers"):
+        # full_enriched is searchers-only — keep temp from scan; types from mongo
+        counts = {
+            "all": all_n,
+            "searchers": searchers_n,
+            "sellers": sellers_n,
+            "to_call_today": scanned_counts["to_call_today"],
+            "rovente": scanned_counts["rovente"],
+            "caldo": scanned_counts["caldo"],
+            "tiepido": scanned_counts["tiepido"],
+            "freddo": scanned_counts["freddo"],
+            "ai_cached": scanned_counts["ai_cached"],
+            "ai_uncached_searchers": scanned_counts["ai_uncached_searchers"],
+        }
+    elif bkt == "sellers":
+        counts = {
+            "all": all_n,
+            "searchers": searchers_n,
+            "sellers": sellers_n,
+            "to_call_today": 0,
+            "rovente": 0,
+            "caldo": 0,
+            "tiepido": 0,
+            "freddo": 0,
+            "ai_cached": 0,
+            "ai_uncached_searchers": 0,
+        }
+    else:
+        # scanned mixed set — use scanned temp; prefer mongo for type totals
+        counts = {
+            **scanned_counts,
+            "all": all_n,
+            "searchers": searchers_n,
+            "sellers": sellers_n,
+        }
+
+    enriched = _apply_bucket(full_enriched, bkt)
+    _sort_enriched(enriched, sort)
+    total = len(enriched)
+    items = enriched[skip: skip + page_size]
 
     return {
-        "items": enriched,
-        "total": len(enriched),
+        "items": items,
+        "total": total,
+        "page": page,
+        "page_size": page_size,
         "counts": counts,
+        "counts_scope": "scanned",
+        "scanned": len(clients),
+        "properties_matched": len(properties),
         "sort": sort,
         "bucket": bucket or "all",
     }
@@ -268,11 +496,13 @@ async def refresh_smart_scores(
     db = Database.get()
 
     clients = await db.clients.find(
-        {"agency_id": agency_id, "client_type": {"$in": list(SEARCHER_TYPES)}}, {"_id": 0},
-    ).to_list(length=2000)
+        {"agency_id": agency_id, "client_type": {"$in": list(SEARCHER_TYPES)}},
+        _CLIENT_PROJ,
+    ).to_list(length=CLIENT_SCAN_CAP)
     properties = await db.properties.find(
-        {"agency_id": agency_id, "status": "active"}, {"_id": 0},
-    ).to_list(length=2000)
+        {"agency_id": agency_id, "status": "active"},
+        _PROP_PROJ,
+    ).sort("updated_at", -1).to_list(length=PROPERTY_MATCH_CAP)
     if not clients or not properties:
         return {"refreshed": 0, "skipped": 0, "items": []}
 
@@ -281,20 +511,25 @@ async def refresh_smart_scores(
     ).to_list(length=20000)
     cached_pairs = {(d["property_id"], d["client_id"]) for d in cache_docs}
 
-    # Build pipeline: for each client → best match → if uncached, queue for AI
     pending: List[Dict[str, Any]] = []
     for c in clients:
-        scored = []
+        prefs = c.get("preferences") if isinstance(c.get("preferences"), dict) else {}
+        best_score = 0
+        best_prop = None
+        best_match = None
         for p in properties:
-            m = compute_match(p, c)
-            if m["score"] > 0:
-                scored.append((m["score"], p, m))
-        if not scored:
+            s = compute_match_score_fast(p, prefs)
+            if s <= 0:
+                continue
+            if s > best_score:
+                best_score = s
+                best_prop = p
+        if not best_prop:
             continue
-        scored.sort(key=lambda x: x[0], reverse=True)
-        best_score, best_prop, best_match = scored[0]
         if (best_prop["id"], c["id"]) in cached_pairs:
             continue
+        # Full match only for the winner (AI needs breakdown)
+        best_match = compute_match(best_prop, c)
         pending.append({"client": c, "property": best_prop, "match": best_match, "score": best_score})
         if len(pending) >= limit:
             break
@@ -302,7 +537,6 @@ async def refresh_smart_scores(
     if not pending:
         return {"refreshed": 0, "skipped": 0, "items": []}
 
-    # Run AI in parallel (gemini-3-flash; ~1-2s each, capped by limit)
     async def _score_one(item: Dict[str, Any]) -> Dict[str, Any]:
         try:
             ai = await score_lead(item["client"], item["property"], item["match"])

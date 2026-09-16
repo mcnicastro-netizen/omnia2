@@ -309,3 +309,156 @@ def is_searcher(client: Dict[str, Any]) -> bool:
     """Only buyer/tenant/investor clients actively search; sellers/landlords don't."""
     ct = (client.get("client_type") or "").lower()
     return ct in ("buyer", "tenant", "investor")
+
+
+def compute_match_score_fast(prop: Dict[str, Any], prefs: Dict[str, Any]) -> int:
+    """Score-only path for list/bulk ranking — no breakdown/missing allocations.
+
+    `prefs` must be the client preferences dict (possibly empty). Same scoring
+    rules as compute_match; hard operation mismatch → 0.
+    """
+    if not isinstance(prefs, dict):
+        prefs = {}
+
+    op_pref = prefs.get("operation")
+    op_prop = prop.get("operation")
+    if op_pref and op_pref != op_prop:
+        return 0
+
+    total = float(W["operation"])
+
+    # Property type
+    if _in_or_empty(prop.get("property_type"), prefs.get("property_types") or []):
+        total += W["property_type"]
+
+    # City
+    if _in_or_empty(prop.get("city"), prefs.get("cities") or []):
+        total += W["city"]
+
+    # Zone
+    z_allowed = prefs.get("zones") or []
+    if not z_allowed or _in_or_empty(prop.get("zone"), z_allowed):
+        total += W["zone"]
+
+    # Price
+    price_field = "rent_monthly" if op_prop == "rent" else "price"
+    pv = prop.get(price_field)
+    pmin = prefs.get("price_min")
+    pmax = prefs.get("price_max")
+    if pv is None:
+        total += W["price"] * 0.5
+    else:
+        lo = float(pmin) if pmin not in (None, "") else None
+        hi = float(pmax) if pmax not in (None, "") else None
+        if lo is not None and float(pv) < lo:
+            total += W["price"]
+        elif hi is not None and float(pv) > hi:
+            overshoot = (float(pv) - hi) / max(hi, 1.0)
+            if overshoot <= 0.10:
+                total += W["price"] * (1.0 - overshoot * 5)
+            elif overshoot <= 0.30:
+                total += W["price"] * 0.25
+            # else 0
+        else:
+            total += W["price"]
+
+    # Surface
+    sv = prop.get("surface_sqm")
+    smin = prefs.get("surface_min")
+    smax = prefs.get("surface_max")
+    if sv is None:
+        total += W["surface"] * 0.5
+    else:
+        lo = float(smin) if smin not in (None, "") else None
+        hi = float(smax) if smax not in (None, "") else None
+        if (lo is not None and float(sv) < lo) or (hi is not None and float(sv) > hi):
+            total += W["surface"] * 0.4
+        else:
+            total += W["surface"]
+
+    # Rooms
+    rv = prop.get("rooms")
+    rmin = prefs.get("rooms_min")
+    rmax = prefs.get("rooms_max")
+    if rv is None:
+        total += W["rooms"] * 0.5
+    else:
+        ok_min = rmin in (None, "") or int(rv) >= int(rmin)
+        ok_max = rmax in (None, "") or int(rv) <= int(rmax)
+        if ok_min and ok_max:
+            total += W["rooms"]
+
+    # Bedrooms
+    bv = prop.get("bedrooms")
+    bmin = prefs.get("bedrooms_min")
+    if bv is None or bmin in (None, ""):
+        total += W["bedrooms"]
+    elif int(bv) >= int(bmin):
+        total += W["bedrooms"]
+
+    # Bathrooms
+    bav = prop.get("bathrooms")
+    bamin = prefs.get("bathrooms_min")
+    if bav is None or bamin in (None, ""):
+        total += W["bathrooms"]
+    elif int(bav) >= int(bamin):
+        total += W["bathrooms"]
+
+    # Conditions
+    c_allowed = prefs.get("conditions") or []
+    if not c_allowed or _in_or_empty(prop.get("condition"), c_allowed):
+        total += W["conditions"]
+
+    # Floor
+    f_allowed = prefs.get("floor_preferences") or []
+    if not f_allowed:
+        total += W["floor"]
+    else:
+        bucket = _floor_bucket(prop.get("floor"))
+        if _floor_is_top(prop.get("floor"), prop.get("total_floors")):
+            bucket = "ultimo"
+        if bucket and bucket in [_norm_str(x) for x in f_allowed]:
+            total += W["floor"]
+
+    # Energy
+    energy_block = prop.get("energy") or {}
+    cls = energy_block.get("energy_class") if isinstance(energy_block, dict) else None
+    needed = prefs.get("energy_min_class")
+    if not needed:
+        total += W["energy"]
+    else:
+        p_idx = _energy_idx(cls)
+        n_idx = _energy_idx(needed)
+        if p_idx is None or n_idx is None:
+            total += W["energy"] * 0.5
+        elif p_idx <= n_idx:
+            total += W["energy"]
+
+    # Features
+    needed_feats: List[str] = prefs.get("must_have_features") or []
+    if not needed_feats:
+        total += W["features"]
+    else:
+        p_feats = prop.get("features") or {}
+        if isinstance(p_feats, dict):
+            have = {k for k, v in p_feats.items() if v}
+        elif isinstance(p_feats, list):
+            have = set(p_feats)
+        else:
+            have = set()
+        matched = sum(1 for f in needed_feats if f in have)
+        total += W["features"] * (matched / len(needed_feats))
+
+    # Multimedia
+    photos = prop.get("photos") or []
+    has_photos = len(photos) > 0
+    vtour = prop.get("virtual_tour_url")
+    mm = W["multimedia"]
+    score_mm = mm
+    if prefs.get("needs_photos") and not has_photos:
+        score_mm -= mm * 0.6
+    if prefs.get("needs_virtual_tour") and not vtour:
+        score_mm -= mm * 0.6
+    total += max(score_mm, 0)
+
+    return int(round(total))

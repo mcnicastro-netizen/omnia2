@@ -531,7 +531,10 @@
     "action_wa_title": "Open WhatsApp with prefilled message",
     "action_wa_aria": "Open WhatsApp",
     "action_no_wa": "No WhatsApp number",
-    "import_csv_btn": "⬆ Import CSV"
+    "import_csv_btn": "⬆ Import CSV",
+    "prev": "← Previous",
+    "next": "Next →",
+    "page_status": "Page {{page}} of {{pages}} · {{total}} clients"
   },
   "client_import": {
     "title": "Import clients",

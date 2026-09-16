@@ -235,6 +235,7 @@ Dopo aver popolato Clienti e Immobili, ImmoWeb inizia a proporti chi chiamare **
 | **Acquirenti** | Solo clienti di tipo *Acquirente/Investitore/Affittuario* con preferenze |
 | **Venditori** | Solo clienti di tipo *Venditore/Proprietario/Investitore* — utile per gestire proprietari e chi affida mandati (indipendentemente da eventuali immobili collegati) |
 
+- La lista è **paginata** (50 clienti per pagina): in fondo trovi Precedente / Successiva. Il ranking per score valuta fino a ~2.000 clienti e fino a ~200 immobili attivi più recenti (oltre quella soglia usa i bucket Acquirenti/Venditori o la ricerca per nome).
 - Ogni riga cliente mostra un **badge temperatura** (Rovente / Caldo / Tiepido / Freddo) e — se calcolato — il **numero di match** con immobili in portafoglio.
 
 **Aggiornare il punteggio AI**
