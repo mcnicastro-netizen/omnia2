@@ -114,6 +114,43 @@ async def revoke_api_key(
     return {"status": "ok", "id": key_id, "revoked_at": now}
 
 
+@router.post("/{key_id}/rotate", status_code=201)
+async def rotate_api_key(
+    key_id: str,
+    user: dict = Depends(require_roles("agency_admin", "super_admin")),
+):
+    """Revoke the old key and issue a replacement (plaintext shown once)."""
+    db = Database.get()
+    aid = _agency_id_of(user)
+    old = await db.api_keys.find_one({"id": key_id, "agency_id": aid})
+    if not old:
+        raise HTTPException(status_code=404, detail="api_key_not_found")
+    if not old.get("is_active", True):
+        raise HTTPException(status_code=400, detail="api_key_already_revoked")
+
+    now = datetime.now(timezone.utc).isoformat()
+    await db.api_keys.update_one(
+        {"id": key_id},
+        {"$set": {"is_active": False, "revoked_at": now, "updated_at": now, "rotated": True}},
+    )
+
+    plaintext = generate_plaintext_key()
+    doc = ApiKeyInDB(
+        agency_id=aid,
+        group_id=old.get("group_id") or user.get("group_id"),
+        name=f"{old.get('name') or 'key'} (rotated)",
+        key_hash=hash_key(plaintext),
+        key_prefix=prefix_of(plaintext),
+        credits_balance=int(old.get("credits_balance") or 0),
+        partner_id=old.get("partner_id"),
+        allowed_origins=list(old.get("allowed_origins") or []),
+    ).model_dump()
+    doc["rotated_from"] = key_id
+    await db.api_keys.insert_one(doc)
+    logger.info("API key rotated: old=%s new=%s by=%s", key_id, doc["id"], user["email"])
+    return {"key": plaintext, "api_key": _to_public(doc)}
+
+
 # ---------------- ORIGINS (M2.5.3 widget security) ----------------
 
 from pydantic import BaseModel as _PydanticBase

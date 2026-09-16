@@ -70,15 +70,29 @@ async def cloud_register(payload: CloudRegisterRequest, response: Response):
     }
     await db.users.insert_one(doc)
 
+    try:
+        from shared.privacy.consent_log import log_consent
+        await log_consent(
+            action="b2c_register_consent",
+            email=doc["email"],
+            user_id=user_id,
+            source="cloud.auth.register",
+            meta={"intents": list(payload.intents)},
+        )
+    except Exception:
+        pass
+
     # Auto-login via cookie (same flow as standard /auth/login)
     try:
         from apps.core.auth import _cookie_kwargs, ACCESS_COOKIE_MAX_AGE, REFRESH_COOKIE_MAX_AGE
         from shared.auth.session_store import store_refresh
+        from shared.security.csrf import set_csrf_cookie
         access = create_access_token(user_id, doc["email"], "client")
         refresh = create_refresh_token(user_id)
         kw = _cookie_kwargs()
         response.set_cookie("access_token", access, max_age=ACCESS_COOKIE_MAX_AGE, **kw)
         response.set_cookie("refresh_token", refresh, max_age=REFRESH_COOKIE_MAX_AGE, **kw)
+        set_csrf_cookie(response)
         await store_refresh(refresh)
     except Exception as e:
         logger.warning("cookie set failed (non-fatal): %s", e)

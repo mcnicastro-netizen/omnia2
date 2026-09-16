@@ -144,6 +144,12 @@ from shared.security.middleware import (  # noqa: E402
 app.add_middleware(SecurityHeadersMiddleware)
 app.add_middleware(PublicAbuseGuardMiddleware, max_public_per_hour=300)
 
+# CSRF when SameSite=None + early tenant context from JWT
+from shared.security.csrf import CsrfMiddleware  # noqa: E402
+from shared.db.tenant_middleware import TenantContextMiddleware  # noqa: E402
+app.add_middleware(CsrfMiddleware)
+app.add_middleware(TenantContextMiddleware)
+
 
 @app.middleware("http")
 async def language_middleware(request: Request, call_next):
@@ -179,7 +185,7 @@ async def global_health(accept_language: str = Header(None)):
     lang = normalize_lang(accept_language)
     db_status = "ok"
     try:
-        db = Database.get()
+        db = Database.get_raw()
         await db.command("ping")
     except Exception as e:
         logger.error("health db ping failed: %s", e)
@@ -195,6 +201,46 @@ async def global_health(accept_language: str = Header(None)):
         lang=lang,
         message={"text": t("health.ok", lang=lang), "db": db_status, "circuits": circuits},
     )
+
+
+@api_router.get("/health/readiness")
+async def readiness():
+    """Go-live readiness (no secrets leaked). Stripe/APE excluded by design."""
+    import os
+
+    def _set(name: str) -> bool:
+        return bool((os.environ.get(name) or "").strip())
+
+    cors = (os.environ.get("CORS_ORIGINS") or "").strip()
+    cookie_secure = os.environ.get("COOKIE_SECURE", "true").lower() != "false"
+    env = (os.environ.get("OMNIA_ENV") or "").strip().lower()
+    checks = {
+        "omnia_env_production": env in ("production", "prod"),
+        "jwt_secret_set": _set("JWT_SECRET") and os.environ.get("JWT_SECRET") != "change-me-to-a-long-random-string",
+        "credentials_master_key": _set("CREDENTIALS_MASTER_KEY"),
+        "cors_explicit": bool(cors) and cors != "*",
+        "cookie_secure": cookie_secure,
+        "monitoring_configured": _set("SENTRY_DSN") or _set("ERROR_ALERT_WEBHOOK") or _set("ERROR_ALERT_EMAIL"),
+        "mongo_url": _set("MONGO_URL"),
+        "csrf_will_enforce": cookie_secure,
+    }
+    # Stripe / APE intentionally not required here
+    required = [
+        "jwt_secret_set",
+        "mongo_url",
+        "cors_explicit",
+        "cookie_secure",
+        "credentials_master_key",
+        "monitoring_configured",
+        "omnia_env_production",
+    ]
+    missing = [k for k in required if not checks.get(k)]
+    return {
+        "ready": len(missing) == 0,
+        "missing": missing,
+        "checks": checks,
+        "excluded": ["stripe_live", "ape_siape"],
+    }
 
 
 # Mount sub-apps

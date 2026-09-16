@@ -1,5 +1,17 @@
 # OMNIA — Changelog
 
+## 2026-09-16 — CSRF + tenant Mongo + consent audit + rotate keys
+
+**Tipo**: Security go-live (Stripe/APE esclusi).
+
+- CSRF double-submit quando `COOKIE_SECURE=true` (SameSite=None)
+- Tenant guard Mongo: auto `agency_id` su `/api/app/*` se il filtro lo omette
+- Consent audit log (`consent_events`) su register / contact / mutui / erase
+- API key rotate (`POST /app/api-keys/{id}/rotate` + bottone UI)
+- `/api/health/readiness` checklist env (senza Stripe/APE)
+- `robots.txt` anti-scrape commerciale
+
+---
 ## 2026-09-16 — MFA + cancellazione dati + allarmi errori
 
 **Tipo**: Security go-live.

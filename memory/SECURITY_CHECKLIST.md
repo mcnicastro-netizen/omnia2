@@ -3,7 +3,7 @@
 **Aggiornato**: 16-Sep-2026 · Owner: Founder + agente  
 **Obiettivo**: nessun singolo guasto abbatte l’ecosistema; scraping/clonazione massiva resa costosa e rilevabile.
 
-Legenda stato: ✅ fatto · 🟡 parziale · ❌ da fare · ⏸️ deferred (post-Vercel / decision)
+Legenda stato: ✅ fatto · 🟡 parziale · ❌ da fare · ⏸️ deferred (Stripe / APE / Founder infra)
 
 ---
 
@@ -16,7 +16,7 @@ Legenda stato: ✅ fatto · 🟡 parziale · ❌ da fare · ⏸️ deferred (pos
 | A3 | Password bcrypt, min 8 | ✅ | |
 | A4 | Ruoli + no self-promote admin | ✅ | |
 | A5 | MFA / 2FA | ✅ | TOTP + backup codes; login/Google gate |
-| A6 | CSRF esplicito se SameSite=none | 🟡 | SameSite + CORS; token CSRF deferred |
+| A6 | CSRF esplicito se SameSite=none | ✅ | double-submit `omnia_csrf` + `X-CSRF-Token` |
 | A7 | Logout invalida refresh | ✅ | |
 
 ## B · Multi-tenant & isolamento
@@ -24,7 +24,7 @@ Legenda stato: ✅ fatto · 🟡 parziale · ❌ da fare · ⏸️ deferred (pos
 | # | Controllo | Stato | Note |
 |---|-----------|:-----:|------|
 | B1 | Filtro `agency_id` sugli endpoint | ✅ | disciplina per-route |
-| B2 | Middleware Mongo auto-tenant | ❌ | rischio: endpoint nuovi senza filtro |
+| B2 | Middleware Mongo auto-tenant | ✅ | inject su `/api/app/*` se filtro omette agency_id |
 | B3 | HAL Agent injecta agency_id server-side | ✅ | |
 | B4 | Isolation fault: errore in un modulo non ferma gli altri | ✅ | lifespan try/except + circuit breaker |
 
@@ -51,7 +51,7 @@ Legenda stato: ✅ fatto · 🟡 parziale · ❌ da fare · ⏸️ deferred (pos
 | D7 | OpenAPI/docs disabilitati in production | ✅ | |
 | D8 | Cap page_size / scan window | ✅ | cloud + smart clients |
 | D9 | Watermark / branding su media generati | ✅ | staging + video |
-| D10 | Legal: ToS + divieto scraping commercial | 🟡 | pagine; enforcement legale offline |
+| D10 | Legal: ToS + divieto scraping commercial | ✅ | `robots.txt` + policy dominio; enforcement legale offline |
 | D11 | Obfuscation FE / DRM codice | ⏸️ | inutile vs reverse; focus API |
 
 ## E · Privacy & GDPR
@@ -62,7 +62,7 @@ Legenda stato: ✅ fatto · 🟡 parziale · ❌ da fare · ⏸️ deferred (pos
 | E2 | GDPR hard su contact / register | ✅ | |
 | E3 | GDPR hard su lead mutui | ✅ | |
 | E4 | DSAR / erasure self-service | ✅ | `POST /auth/me/erase` + UI Settings/Account |
-| E5 | Consent log audit | 🟡 | flag su lead |
+| E5 | Consent log audit | ✅ | collection `consent_events` |
 
 ## F · Pagamenti
 
@@ -70,7 +70,7 @@ Legenda stato: ✅ fatto · 🟡 parziale · ❌ da fare · ⏸️ deferred (pos
 |---|-----------|:-----:|------|
 | F1 | Stripe webhook signature | ✅ | |
 | F2 | Feature flag STRIPE_ENABLED | ✅ | |
-| F3 | Live keys solo post-Vercel | ⏸️ | Founder |
+| F3 | Live keys solo post-Vercel | ⏸️ | **escluso** da questo ciclo (Founder) |
 
 ## G · Input & injection
 
@@ -96,33 +96,32 @@ Legenda stato: ✅ fatto · 🟡 parziale · ❌ da fare · ⏸️ deferred (pos
 
 ## I · Operativo go-live (Founder)
 
-| # | Controllo | Stato |
-|---|-----------|:-----:|
-| I1 | `OMNIA_ENV=production` | ⏸️ |
-| I2 | `CREDENTIALS_MASTER_KEY` 32 byte b64 | ⏸️ |
-| I3 | `CORS_ORIGINS` espliciti (no `*`) | ⏸️ |
-| I4 | `JWT_SECRET` forte e unico | ⏸️ |
-| I5 | Mongo Atlas network allowlist | ⏸️ |
-| I6 | Backup Mongo schedulati | ⏸️ |
-| I7 | Monitoraggio 5xx / 429 (Sentry o equiv.) | ✅ | Sentry DSN + webhook/email fallback |
-| I8 | Rotate API keys procedure | 🟡 | manuale |
+| # | Controllo | Stato | Note |
+|---|-----------|:-----:|------|
+| I1 | `OMNIA_ENV=production` | 🟡 | verificabile via `/api/health/readiness` |
+| I2 | `CREDENTIALS_MASTER_KEY` 32 byte b64 | 🟡 | readiness check |
+| I3 | `CORS_ORIGINS` espliciti (no `*`) | 🟡 | readiness check |
+| I4 | `JWT_SECRET` forte e unico | 🟡 | readiness check |
+| I5 | Mongo Atlas network allowlist | ⏸️ | infra Founder |
+| I6 | Backup Mongo schedulati | ⏸️ | infra Founder |
+| I7 | Monitoraggio 5xx / 429 (Sentry o equiv.) | ✅ | Sentry DSN + webhook/email |
+| I8 | Rotate API keys procedure | ✅ | `POST /app/api-keys/{id}/rotate` + UI |
+
+**Esclusi da questo ciclo**: Stripe live (F3), APE/SIAPE, Atlas allowlist/backup (I5–I6).
 
 ---
 
 ## Come verificare
 
 ```bash
-cd backend && source .venv/bin/activate
-python scripts/stress_platform_full.py
-# Security headers:
+curl -s http://127.0.0.1:43121/api/health/readiness | python3 -m json.tool
 curl -sI http://127.0.0.1:43121/api/health | grep -iE 'x-content|x-frame|referrer|permissions'
-# Docs nascosti in prod (simula):
-OMNIA_ENV=production  # docs/openapi disabilitati
+# CSRF attivo solo con COOKIE_SECURE=true (prod)
 ```
 
-## Priorità residua pre-live
+## Priorità residua (solo Founder / deferred)
 
-1. CSRF token se cookie SameSite=none in prod (A6)  
-2. Mongo tenant middleware (B2) — difesa in profondità  
-3. Config Founder: `SENTRY_DSN` / `ERROR_ALERT_WEBHOOK` / `ERROR_ALERT_EMAIL` in prod  
-4. Stripe live post-Vercel 
+1. Valorizzare env prod (readiness → `ready: true`)  
+2. Stripe live post-Vercel  
+3. APE/SIAPE quando si attiva Docs Search  
+4. Atlas allowlist + backup schedulati  

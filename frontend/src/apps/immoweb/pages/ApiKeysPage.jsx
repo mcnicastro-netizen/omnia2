@@ -67,6 +67,17 @@ export default function ApiKeysPage() {
     }
   };
 
+  const rotate = async (id) => {
+    if (!confirm(t("api_keys.confirm_rotate") || "Ruotare la chiave? La vecchia smette di funzionare subito.")) return;
+    try {
+      const r = await api.post(`/app/api-keys/${id}/rotate`);
+      setIssued(r.data);
+      load();
+    } catch (e) {
+      setError(e?.response?.data?.detail || "rotate_error");
+    }
+  };
+
   const topUp = async (id) => {
     const raw = prompt(t("api_keys.topup_prompt") || "Crediti da aggiungere (positivo=carica, negativo=scala):", "100");
     if (raw === null) return;
@@ -303,6 +314,13 @@ export default function ApiKeysPage() {
                               className="text-xs uppercase tracking-widest text-stone-600 hover:text-stone-900"
                             >
                               +€
+                            </button>
+                            <button
+                              onClick={() => rotate(k.id)}
+                              data-testid={`api-key-rotate-${k.id}`}
+                              className="text-xs uppercase tracking-widest text-amber-800 hover:text-amber-950"
+                            >
+                              Ruota
                             </button>
                             <button
                               onClick={() => revoke(k.id)}

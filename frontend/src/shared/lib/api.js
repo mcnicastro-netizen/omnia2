@@ -20,6 +20,18 @@ api.interceptors.request.use((config) => {
   config.headers["Accept-Language"] = i18n.language || "it";
   // Always send cookies (for httpOnly auth cookies)
   config.withCredentials = true;
+  // CSRF double-submit when SameSite=None (prod): mirror omnia_csrf cookie → header
+  try {
+    const method = (config.method || "get").toUpperCase();
+    if (["POST", "PUT", "PATCH", "DELETE"].includes(method) && typeof document !== "undefined") {
+      const m = document.cookie.match(/(?:^|;\s*)omnia_csrf=([^;]+)/);
+      if (m && m[1]) {
+        config.headers["X-CSRF-Token"] = decodeURIComponent(m[1]);
+      }
+    }
+  } catch {
+    /* ignore */
+  }
   return config;
 });
 

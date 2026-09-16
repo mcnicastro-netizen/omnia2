@@ -31,6 +31,8 @@ async def get_current_user(request: Request) -> dict:
 
     # M5 — tenant filtering usa l'agenzia attiva (active_agency_id se legittima, altrimenti la prima)
     from shared.auth.tenant import optional_agency_id
+    from shared.db.tenant_guard import set_current_role
+    set_current_role(user.get("role"))
     aid = optional_agency_id(user)
     if aid:
         set_current_agency_id(aid)

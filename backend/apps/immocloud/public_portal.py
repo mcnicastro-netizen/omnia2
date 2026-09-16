@@ -616,6 +616,22 @@ async def public_property_contact(pid: str, payload: PropertyContactPayload, req
     if not payload.gdpr_consent:
         raise HTTPException(status_code=400, detail="gdpr_consent_required")
 
+    try:
+        from shared.privacy.consent_log import log_consent
+        fwd = request.headers.get("x-forwarded-for") or ""
+        ip = (fwd.split(",")[0].strip() if fwd else None) or (
+            request.client.host if request.client else None
+        )
+        await log_consent(
+            action="property_contact_consent",
+            email=str(payload.email),
+            source="cloud.property.contact",
+            ip=ip,
+            meta={"property_id": pid, "visit_requested": bool(payload.visit_requested)},
+        )
+    except Exception:
+        pass
+
     db = Database.get()
     prop = await db.properties.find_one(
         {"id": pid, **_base_filter()},

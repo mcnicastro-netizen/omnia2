@@ -44,6 +44,7 @@ class Database:
 
     _client: Optional[AsyncIOMotorClient] = None
     _db: Optional[AsyncIOMotorDatabase] = None
+    _tenant_db = None
 
     @classmethod
     def connect(cls) -> AsyncIOMotorDatabase:
@@ -52,14 +53,24 @@ class Database:
             db_name = os.environ["DB_NAME"]
             cls._client = AsyncIOMotorClient(mongo_url)
             cls._db = cls._client[db_name]
+            from shared.db.tenant_guard import TenantAwareDatabase
+            cls._tenant_db = TenantAwareDatabase(cls._db)
             logger.info(f"Connected to MongoDB: {db_name}")
         return cls._db
 
     @classmethod
-    def get(cls) -> AsyncIOMotorDatabase:
+    def get_raw(cls) -> AsyncIOMotorDatabase:
+        """Underlying Motor DB without tenant injection (jobs, cross-tenant, auth)."""
         if cls._db is None:
-            return cls.connect()
-        return cls._db
+            cls.connect()
+        return cls._db  # type: ignore[return-value]
+
+    @classmethod
+    def get(cls):
+        """Tenant-aware DB proxy (auto agency_id on tenant collections when context set)."""
+        if cls._db is None:
+            cls.connect()
+        return cls._tenant_db if cls._tenant_db is not None else cls._db
 
     @classmethod
     async def close(cls) -> None:
@@ -67,6 +78,7 @@ class Database:
             cls._client.close()
             cls._client = None
             cls._db = None
+            cls._tenant_db = None
 
     @classmethod
     def tenant_filter(cls, extra: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
@@ -126,6 +138,14 @@ async def ensure_indexes() -> None:
         await db["notifications"].create_index([("user_id", 1), ("read", 1), ("created_at", -1)])
     except Exception as e:
         logger.warning(f"notifications indexes skipped: {e}")
+
+    # GDPR consent audit
+    try:
+        await db["consent_events"].create_index([("email", 1), ("created_at", -1)])
+        await db["consent_events"].create_index([("user_id", 1), ("created_at", -1)])
+        await db["consent_events"].create_index([("action", 1), ("created_at", -1)])
+    except Exception as e:
+        logger.warning(f"consent_events indexes skipped: {e}")
 
     # Cross-tenant collections (no agency_id filter, but indexed by lookup field)
     try:

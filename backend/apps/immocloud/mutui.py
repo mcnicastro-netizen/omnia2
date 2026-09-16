@@ -12,7 +12,7 @@ from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 from uuid import uuid4
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel, EmailStr, Field
 
 from shared.db.connection import Database
@@ -60,7 +60,7 @@ class LeadBody(BaseModel):
 
 
 @router.post("/lead")
-async def mortgage_lead(body: LeadBody) -> Dict[str, Any]:
+async def mortgage_lead(body: LeadBody, request: Request) -> Dict[str, Any]:
     if not body.gdpr_consent:
         raise HTTPException(status_code=400, detail="gdpr_consent_required")
     db = Database.get()
@@ -79,6 +79,21 @@ async def mortgage_lead(body: LeadBody) -> Dict[str, Any]:
         "created_at": datetime.now(timezone.utc).isoformat(),
         "source": "ImmobilCloud-Mutui",
     })
+    try:
+        from shared.privacy.consent_log import log_consent
+        fwd = request.headers.get("x-forwarded-for") or ""
+        ip = (fwd.split(",")[0].strip() if fwd else None) or (
+            request.client.host if request.client else None
+        )
+        await log_consent(
+            action="mortgage_lead_consent",
+            email=str(body.email),
+            source="cloud.mutui.lead",
+            ip=ip,
+            meta={"lead_id": lead_id},
+        )
+    except Exception:
+        pass
     return {"ok": True, "lead_id": lead_id}
 
 

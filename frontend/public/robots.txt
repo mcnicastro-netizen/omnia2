@@ -1,0 +1,7 @@
+User-agent: *
+Disallow: /api/
+Allow: /
+
+# Commercial scraping / bulk harvesting of listings or personal data
+# without written authorization is prohibited. See Domain Sovereignty Policy
+# and Terms of Service. Automated access to /api/* is rate-limited.

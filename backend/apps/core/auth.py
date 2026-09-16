@@ -64,12 +64,18 @@ def _set_auth_cookies(response: Response, user_id: str, email: str, role: str) -
     kw = _cookie_kwargs()
     response.set_cookie("access_token", access, max_age=ACCESS_COOKIE_MAX_AGE, **kw)
     response.set_cookie("refresh_token", refresh, max_age=REFRESH_COOKIE_MAX_AGE, **kw)
+    try:
+        from shared.security.csrf import set_csrf_cookie
+        set_csrf_cookie(response)
+    except Exception:
+        pass
     return refresh
 
 
 def _clear_auth_cookies(response: Response) -> None:
     response.delete_cookie("access_token", path="/")
     response.delete_cookie("refresh_token", path="/")
+    response.delete_cookie("omnia_csrf", path="/")
 
 
 def _public(user: dict) -> dict:
@@ -138,6 +144,19 @@ async def register(req: RegisterRequest, request: Request, response: Response,
 
     _refresh_tok = _set_auth_cookies(response, user.id, email, user.role)
     await store_refresh(_refresh_tok)
+
+    try:
+        from shared.privacy.consent_log import log_consent
+        await log_consent(
+            action="register_consent",
+            email=email,
+            user_id=user.id,
+            source="auth.register",
+            ip=_client_ip(request),
+            meta={"role": user.role, "domain_sovereignty": bool(req.domain_sovereignty_confirmed)},
+        )
+    except Exception:
+        pass
 
     # Send welcome email (non-blocking; ignore failures)
     frontend = os.environ.get("FRONTEND_URL", "")
@@ -231,6 +250,18 @@ async def erase_my_account(
             raise HTTPException(status_code=401, detail="invalid_password")
 
     from shared.privacy.erasure import erase_user_data
+    try:
+        from shared.privacy.consent_log import log_consent
+        await log_consent(
+            action="account_erasure",
+            email=full.get("email"),
+            user_id=full.get("id"),
+            source="auth.erase",
+            ip=_client_ip(request),
+            meta={"confirm": "DELETE"},
+        )
+    except Exception:
+        pass
     report = await erase_user_data(full)
     await revoke_refresh(request.cookies.get("refresh_token"))
     _clear_auth_cookies(response)
