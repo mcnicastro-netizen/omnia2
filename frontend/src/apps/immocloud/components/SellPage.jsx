@@ -3,13 +3,19 @@
  * Authenticated B2C users (account_type='b2c') can create/edit/submit one free
  * private property listing. If not logged in, redirects to registration with
  * intent=sell prefilled. Shows current listing status and any rejection notes.
+ *
+ * Media: up to 30 photos + optional floor plan (planimetria) via B2C upload-tmp.
  */
-import React, { useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import React, { useEffect, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { api } from "../../../shared/lib/api";
 import { useAuth, formatApiErrorDetail } from "../../../shared/lib/auth";
 import AlImproveButton from "../../../shared/components/AlImproveButton";
+import PhotoUploader from "../../immoweb/components/PhotoUploader";
+
+const B2C_MEDIA_UPLOAD = "/cloud/me/properties/media/upload-tmp";
+const B2C_MAX_PHOTOS = 30;
 
 const empty = {
   title: "",
@@ -25,6 +31,8 @@ const empty = {
   rooms: "",
   bedrooms: "",
   bathrooms: "",
+  photos: [],
+  floor_plan_url: "",
 };
 
 const PROPERTY_TYPES = [
@@ -85,6 +93,8 @@ export default function SellPage() {
       rooms: listing.rooms || "",
       bedrooms: listing.bedrooms || "",
       bathrooms: listing.bathrooms || "",
+      photos: Array.isArray(listing.photos) ? listing.photos : [],
+      floor_plan_url: listing.floor_plan_url || "",
     });
     setShowForm(true);
     setError("");
@@ -99,6 +109,13 @@ export default function SellPage() {
         if (payload[k] === "" || payload[k] == null) delete payload[k];
         else payload[k] = Number(payload[k]);
       });
+      if (!payload.floor_plan_url) payload.floor_plan_url = null;
+      if (!Array.isArray(payload.photos)) payload.photos = [];
+      if (payload.photos.length > B2C_MAX_PHOTOS) {
+        setError(t("cloud.sell.err_photos_limit"));
+        setBusy(false);
+        return;
+      }
       if (editing) {
         await api.patch(`/cloud/me/properties/${editing.id}`, payload);
       } else {
@@ -176,6 +193,13 @@ export default function SellPage() {
                     {l.operation === "rent" && l.rent_monthly ? ` · € ${l.rent_monthly.toLocaleString("it-IT")}/mese` :
                      l.price ? ` · € ${l.price.toLocaleString("it-IT")}` : ""}
                   </p>
+                  {(l.photos?.length > 0 || l.floor_plan_url) && (
+                    <p className="text-[11px] text-stone-500 mt-1" data-testid={`listing-media-${l.id}`}>
+                      {l.photos?.length > 0 ? `${l.photos.length} ${t("cloud.sell.photos_count")}` : null}
+                      {l.photos?.length > 0 && l.floor_plan_url ? " · " : null}
+                      {l.floor_plan_url ? t("cloud.sell.has_floor_plan") : null}
+                    </p>
+                  )}
                   <StatusBadge status={l.moderation_status} listingStatus={l.status} notes={l.moderation_notes} />
                 </div>
                 <div className="flex gap-2 flex-wrap">
@@ -318,6 +342,25 @@ export default function SellPage() {
             </div>
           </Field>
 
+          <Field label={t("cloud.sell.f_photos")}>
+            <p className="text-xs text-stone-500 mb-2">{t("cloud.sell.f_photos_hint")}</p>
+            <PhotoUploader
+              photos={form.photos || []}
+              onChange={(photos) => setForm({ ...form, photos })}
+              max={B2C_MAX_PHOTOS}
+              uploadUrl={B2C_MEDIA_UPLOAD}
+              uploadExtraFields={{ kind: "photo" }}
+            />
+          </Field>
+
+          <Field label={t("cloud.sell.f_floor_plan")}>
+            <p className="text-xs text-stone-500 mb-2">{t("cloud.sell.f_floor_plan_hint")}</p>
+            <FloorPlanUploader
+              url={form.floor_plan_url}
+              onChange={(url) => setForm({ ...form, floor_plan_url: url || "" })}
+            />
+          </Field>
+
           <div className="flex gap-3 pt-2">
             <button type="submit" disabled={busy} data-testid="sell-save-btn"
               className="px-6 py-2.5 bg-[#0B1E3F] text-white text-sm uppercase tracking-widest rounded hover:bg-[#C19A6B] transition disabled:opacity-50">
@@ -343,6 +386,108 @@ function Field({ label, children, required }) {
         {label}{required && " *"}
       </label>
       {children}
+    </div>
+  );
+}
+
+function FloorPlanUploader({ url, onChange }) {
+  const { t } = useTranslation();
+  const inputRef = useRef(null);
+  const [uploading, setUploading] = useState(false);
+  const [err, setErr] = useState("");
+
+  const resizeToBlob = (file) => new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        const maxW = 2000;
+        let { width, height } = img;
+        if (width > maxW) {
+          height = Math.round((height * maxW) / width);
+          width = maxW;
+        }
+        const canvas = document.createElement("canvas");
+        canvas.width = width;
+        canvas.height = height;
+        canvas.getContext("2d").drawImage(img, 0, 0, width, height);
+        canvas.toBlob((blob) => (blob ? resolve(blob) : reject(new Error("toBlob failed"))), "image/jpeg", 0.88);
+      };
+      img.onerror = reject;
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+
+  const handleFile = async (file) => {
+    if (!file || !file.type.startsWith("image/")) return;
+    setUploading(true);
+    setErr("");
+    try {
+      const blob = await resizeToBlob(file);
+      const fd = new FormData();
+      fd.append("file", blob, (file.name || "planimetria").replace(/\.[^.]+$/, "") + ".jpg");
+      fd.append("kind", "floor_plan");
+      const { data } = await api.post(B2C_MEDIA_UPLOAD, fd, {
+        headers: { "Content-Type": "multipart/form-data" },
+        timeout: 45000,
+      });
+      onChange(data.url);
+    } catch (e) {
+      setErr(formatApiErrorDetail(e?.response?.data?.detail) || t("cloud.sell.err_floor_plan_upload"));
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  return (
+    <div data-testid="floor-plan-uploader" className="space-y-3">
+      {!url ? (
+        <div
+          role="button"
+          tabIndex={0}
+          data-testid="floor-plan-dropzone"
+          onClick={() => inputRef.current?.click()}
+          onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); inputRef.current?.click(); } }}
+          onDragOver={(e) => e.preventDefault()}
+          onDrop={(e) => {
+            e.preventDefault();
+            if (e.dataTransfer.files?.[0]) handleFile(e.dataTransfer.files[0]);
+          }}
+          className="border-2 border-dashed border-stone-300 rounded-lg p-5 text-center cursor-pointer hover:border-stone-500 hover:bg-stone-50 transition"
+        >
+          <p className="text-sm text-stone-700 font-medium">
+            {uploading ? t("common.saving") : t("cloud.sell.floor_plan_drop")}
+          </p>
+          <p className="text-xs text-stone-500 mt-1">{t("cloud.sell.floor_plan_formats")}</p>
+        </div>
+      ) : (
+        <div className="relative border border-stone-200 rounded-lg overflow-hidden bg-stone-50 max-w-md">
+          <img
+            src={url}
+            alt={t("cloud.sell.f_floor_plan")}
+            data-testid="floor-plan-preview"
+            className="w-full max-h-64 object-contain bg-white"
+          />
+          <button
+            type="button"
+            data-testid="floor-plan-remove"
+            onClick={() => onChange("")}
+            className="absolute top-2 right-2 bg-red-600 text-white text-xs px-2 py-1 rounded hover:bg-red-700"
+          >
+            {t("common.delete")}
+          </button>
+        </div>
+      )}
+      <input
+        ref={inputRef}
+        type="file"
+        accept="image/jpeg,image/png,image/webp"
+        data-testid="floor-plan-file-input"
+        className="hidden"
+        onChange={(e) => e.target.files?.[0] && handleFile(e.target.files[0])}
+      />
+      {err && <p className="text-xs text-rose-700" data-testid="floor-plan-error">{err}</p>}
     </div>
   );
 }

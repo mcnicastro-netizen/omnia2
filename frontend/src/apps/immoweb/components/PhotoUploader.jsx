@@ -13,8 +13,18 @@ import { api } from "../../../shared/lib/api";
  *   photos: [{ id, url, caption?, order, is_cover }]
  *   onChange: (newPhotos) => void
  *   max: max number of photos (default 15)
+ *   uploadUrl: override upload endpoint (default CRM agency upload-tmp)
+ *   uploadExtraFields: optional FormData fields (e.g. { kind: "photo" })
+ *   onStage: optional virtual-staging callback
  */
-export default function PhotoUploader({ photos = [], onChange, max = 15, onStage = null }) {
+export default function PhotoUploader({
+  photos = [],
+  onChange,
+  max = 15,
+  onStage = null,
+  uploadUrl = "/app/properties/photos/upload-tmp",
+  uploadExtraFields = null,
+}) {
   const { t } = useTranslation();
   const fileInput = useRef(null);
 
@@ -37,7 +47,6 @@ export default function PhotoUploader({ photos = [], onChange, max = 15, onStage
         canvas.toBlob((blob) => (blob ? resolve(blob) : reject(new Error("toBlob failed"))), "image/jpeg", 0.82);
       };
       img.onerror = reject;
-      img.src = e.target.result;
     };
     reader.onerror = reject;
     reader.readAsDataURL(file);
@@ -53,7 +62,12 @@ export default function PhotoUploader({ photos = [], onChange, max = 15, onStage
   const uploadBlob = async (blob, name) => {
     const fd = new FormData();
     fd.append("file", blob, name.replace(/\.[^.]+$/, "") + ".jpg");
-    const { data } = await api.post("/app/properties/photos/upload-tmp", fd, {
+    if (uploadExtraFields) {
+      Object.entries(uploadExtraFields).forEach(([k, v]) => {
+        if (v != null) fd.append(k, String(v));
+      });
+    }
+    const { data } = await api.post(uploadUrl, fd, {
       headers: { "Content-Type": "multipart/form-data" },
       timeout: 45000,
     });
@@ -131,7 +145,7 @@ export default function PhotoUploader({ photos = [], onChange, max = 15, onStage
         className="border-2 border-dashed border-stone-300 rounded-lg p-6 text-center cursor-pointer hover:border-stone-500 hover:bg-stone-50 transition focus:outline-none focus:border-stone-700"
       >
         <p className="text-sm text-stone-700 font-medium">
-          📷 Trascina qui le foto JPEG / PNG
+          Trascina qui le foto JPEG / PNG
         </p>
         <p className="text-xs text-stone-500 mt-1">
           oppure clicca per selezionarle (max {max} foto, ridotte automaticamente a 1600px)

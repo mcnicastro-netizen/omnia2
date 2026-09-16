@@ -200,6 +200,7 @@ class PropertyCreate(OmniaBaseModel):
     min_price_negotiable: Optional[float] = None
     seller_notes: Optional[str] = None
     virtual_tour_url: Optional[str] = None
+    floor_plan_url: Optional[str] = Field(default=None, max_length=500)
     photos: Optional[List[PropertyPhoto]] = None
     is_listed_on_immobilcloud: bool = True  # M3.S2 Publishing Center
 
@@ -233,6 +234,7 @@ class PropertyUpdate(OmniaBaseModel):
     energy: Optional[PropertyEnergy] = None
     photos: Optional[List[PropertyPhoto]] = None
     virtual_tour_url: Optional[str] = None
+    floor_plan_url: Optional[str] = Field(default=None, max_length=500)
     owner: Optional[PropertyOwner] = None
     seller_client_id: Optional[str] = None
     is_exclusive: Optional[bool] = None

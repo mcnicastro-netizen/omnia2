@@ -15,19 +15,21 @@ Endpoints (B2C auth required):
   PATCH  /api/cloud/me/properties/{pid}  — edit my own ad (resets to pending on substantive change)
   POST   /api/cloud/me/properties/{pid}/submit — submit for moderation
   DELETE /api/cloud/me/properties/{pid}  — delete
+  POST   /api/cloud/me/properties/media/upload-tmp — upload photo or floor plan (max 30 photos)
 
 A free B2C user can keep at most 1 *active* private listing (limit_count below).
 """
 import logging
 from datetime import datetime, timezone
-from typing import Optional
+from typing import Literal, Optional
 from uuid import uuid4
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
 
 from shared.auth.dependencies import get_current_user
 from shared.db.connection import Database
 from shared.models.property import PropertyCreate, PropertyUpdate
+from shared.storage import put_object, ObjStoreError
 from apps.immocloud.geocoding import schedule_geocode
 
 logger = logging.getLogger("omnia.private_listings")
@@ -35,6 +37,9 @@ router = APIRouter(prefix="/me/properties", tags=["cloud-private-listings"])
 
 PRIVATE_AGENCY_SENTINEL = "_private_listings"
 FREE_TIER_MAX_ACTIVE = 1  # one free ad per user
+B2C_MAX_PHOTOS = 30
+_ALLOWED_PHOTO_MIME = {"image/jpeg", "image/png", "image/webp"}
+_MAX_PHOTO_BYTES = 8 * 1024 * 1024  # 8MB
 
 
 async def _ensure_b2c(user: dict) -> None:
@@ -47,6 +52,45 @@ async def _ensure_b2c(user: dict) -> None:
 def _strip(doc: dict) -> dict:
     doc.pop("_id", None)
     return doc
+
+
+def _validate_photos_limit(photos) -> None:
+    if photos is not None and len(photos) > B2C_MAX_PHOTOS:
+        raise HTTPException(status_code=400, detail="photos_limit_exceeded")
+
+
+@router.post("/media/upload-tmp")
+async def upload_private_media_tmp(
+    file: UploadFile = File(...),
+    kind: Literal["photo", "floor_plan"] = Form("photo"),
+    user: dict = Depends(get_current_user),
+):
+    """Upload a photo or floor-plan binary before/while editing a private listing.
+
+    Stores under the private-listings namespace and returns the media URL to
+    embed in `photos` or `floor_plan_url` on save. Max 30 photos per listing
+    is enforced on create/patch; this endpoint only validates file type/size.
+    """
+    await _ensure_b2c(user)
+    ct = (file.content_type or "").lower()
+    if ct not in _ALLOWED_PHOTO_MIME:
+        raise HTTPException(status_code=415, detail="unsupported_media_type")
+    data = await file.read()
+    if len(data) > _MAX_PHOTO_BYTES:
+        raise HTTPException(status_code=413, detail="file_too_large")
+    if not data:
+        raise HTTPException(status_code=400, detail="empty_file")
+
+    ext = {"image/jpeg": "jpg", "image/png": "png", "image/webp": "webp"}[ct]
+    media_id = str(uuid4())
+    folder = "floor_plans" if kind == "floor_plan" else "photos"
+    storage_path = f"omnia/private/{user['id']}/{folder}/{media_id}.{ext}"
+    try:
+        put_object(storage_path, data, ct)
+    except ObjStoreError as e:
+        logger.exception("b2c media upload failed user=%s kind=%s: %s", user["id"], kind, e)
+        raise HTTPException(status_code=502, detail="storage_upload_failed") from e
+    return {"id": media_id, "url": f"/api/media/{storage_path}", "kind": kind}
 
 
 @router.post("", status_code=201)
@@ -65,6 +109,8 @@ async def create_private_listing(
     })
     if active_count >= FREE_TIER_MAX_ACTIVE:
         raise HTTPException(status_code=409, detail="free_tier_listing_limit_reached")
+
+    _validate_photos_limit(payload.photos)
 
     now = datetime.now(timezone.utc).isoformat()
     data = payload.model_dump()
@@ -145,11 +191,12 @@ async def update_my_private_listing(
     if "status" in update_doc:
         # Users can only set status to draft (we expose /submit for active)
         update_doc.pop("status", None)
+    _validate_photos_limit(update_doc.get("photos"))
     update_doc["updated_at"] = datetime.now(timezone.utc).isoformat()
     # If previously rejected/approved and substantive edit → back to pending
     substantive = any(k in update_doc for k in
                       ("title", "description", "price", "rent_monthly", "address",
-                       "city", "surface_sqm", "rooms", "photos"))
+                       "city", "surface_sqm", "rooms", "photos", "floor_plan_url"))
     if substantive and existing.get("moderation_status") in ("approved", "rejected"):
         update_doc["moderation_status"] = "pending"
         update_doc["status"] = "draft"
