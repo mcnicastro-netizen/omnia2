@@ -23,6 +23,7 @@ export default function CloudHomePage() {
   const [city, setCity] = useState("");
   const [ptype, setPtype] = useState("");
   const [priceMax, setPriceMax] = useState("");
+  const [roomsMin, setRoomsMin] = useState("");
   const nav = useNavigate();
 
   useEffect(() => {
@@ -46,6 +47,7 @@ export default function CloudHomePage() {
     if (city) params.set("city", city);
     if (ptype) params.set("property_type", ptype);
     if (priceMax) params.set("price_max", priceMax);
+    if (roomsMin) params.set("rooms_min", roomsMin);
     nav(`search?${params.toString()}`);
   };
 
@@ -102,7 +104,7 @@ export default function CloudHomePage() {
               ))}
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2">
               <input
                 data-testid="cloud-search-city"
                 type="text"
@@ -125,6 +127,17 @@ export default function CloudHomePage() {
               >
                 {PROPERTY_TYPES.map((p) => (
                   <option key={p.v || "any"} value={p.v}>{p.label}</option>
+                ))}
+              </select>
+              <select
+                data-testid="cloud-search-rooms"
+                value={roomsMin}
+                onChange={(e) => setRoomsMin(e.target.value)}
+                className="px-4 py-3 text-sm rounded-lg border border-stone-200 bg-white"
+              >
+                <option value="">Locali</option>
+                {[1, 2, 3, 4, 5].map((n) => (
+                  <option key={n} value={n}>{n}+ locali</option>
                 ))}
               </select>
               <input
@@ -237,6 +250,60 @@ export default function CloudHomePage() {
           </div>
         </section>
       )}
+
+      {/* SEO densità: città × operazione — crawlable without cluttering the hero */}
+      <section className="px-5 sm:px-8 md:px-16 py-10 border-t border-stone-100" data-testid="cloud-seo-density">
+        <div className="max-w-5xl mx-auto">
+          <h2
+            className="text-2xl font-light text-[#0B1E3F] mb-2"
+            style={{ fontFamily: "'Fraunces', Georgia, serif" }}
+          >
+            Case in vendita e affitto
+          </h2>
+          <p className="text-sm text-stone-600 mb-6 max-w-2xl">
+            Entra dalla città e dall&apos;operazione: ricerca diretta, mappa e Scout HAL su ogni annuncio.
+          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-4">
+            {(facets?.cities?.length
+              ? facets.cities.slice(0, 9)
+              : [
+                  { city: "Milano" },
+                  { city: "Roma" },
+                  { city: "Torino" },
+                  { city: "Napoli" },
+                  { city: "Bologna" },
+                  { city: "Firenze" },
+                ]
+            ).map((c) => (
+              <div key={c.city} className="border-b border-stone-100 pb-3">
+                <p className="text-sm font-medium text-stone-900 mb-1">{c.city}</p>
+                <div className="flex gap-4 text-xs uppercase tracking-widest">
+                  <Link
+                    to={`search?operation=sale&city=${encodeURIComponent(c.city)}`}
+                    className="text-[#0B1E3F] hover:underline"
+                    data-testid={`seo-sale-${c.city}`}
+                  >
+                    Vendita
+                  </Link>
+                  <Link
+                    to={`search?operation=rent&city=${encodeURIComponent(c.city)}`}
+                    className="text-stone-600 hover:underline"
+                    data-testid={`seo-rent-${c.city}`}
+                  >
+                    Affitto
+                  </Link>
+                  <Link
+                    to={`/${lang}/cloud/search?view=map&city=${encodeURIComponent(c.city)}`}
+                    className="text-stone-500 hover:underline"
+                  >
+                    Mappa
+                  </Link>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
 
       {featured.length > 0 && (
         <section className="px-5 sm:px-8 md:px-16 py-12" data-testid="cloud-featured">

@@ -339,6 +339,18 @@ export default function PropertyDetailPage() {
                     </ol>
                   </div>
                 )}
+                {scout.seller_gaps?.length > 0 && (
+                  <div data-testid="scout-seller-gaps">
+                    <p className="text-[10px] uppercase tracking-widest text-amber-800 mb-1">
+                      Annuncio sottile — cosa manca
+                    </p>
+                    <ul className="text-sm text-stone-700 space-y-1 list-disc pl-4">
+                      {scout.seller_gaps.map((g, i) => (
+                        <li key={g.key || i}>{g.label_it}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
                 <p className="text-[11px] text-stone-400">{scout.disclaimer_it}</p>
                 <button
                   type="button"

@@ -17,6 +17,7 @@ from apps.immocloud.visura_b2c import router as visura_b2c_router
 from apps.immocloud.favorites import router as favorites_router
 from apps.immocloud.buyer_brief import router as scout_router
 from apps.immocloud.market_pulse import router as pulse_router
+from apps.immocloud.push_subscriptions import router as push_router
 from apps.immoweb.micro_tour_video import public_router as micro_tour_public_router
 
 router = APIRouter(prefix="/cloud", tags=["immocloud"])
@@ -45,4 +46,5 @@ router.include_router(favorites_router)
 router.include_router(visura_b2c_router)
 router.include_router(scout_router)
 router.include_router(pulse_router)
+router.include_router(push_router)
 router.include_router(micro_tour_public_router)

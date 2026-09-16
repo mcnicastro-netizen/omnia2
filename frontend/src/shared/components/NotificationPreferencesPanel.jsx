@@ -1,9 +1,10 @@
 /**
- * A-021 — Notification preferences panel (shared B2B Settings + B2C Account).
- * Channels: email / push (push disabled v1). Email types toggles. B2C digest default.
+ * Notification preferences (shared B2B Settings + B2C Account).
+ * Channels: email / push. B2C can enable browser Web Push for saved-search alerts.
  */
 import React, { useEffect, useState } from "react";
 import { api } from "../lib/api";
+import PushEnableButton from "./PushEnableButton";
 
 const EMAIL_TYPES = [
   { key: "welcome", label: "Email di benvenuto" },
@@ -31,7 +32,6 @@ export default function NotificationPreferencesPanel({ showSavedSearchFreq = fal
   }, []);
 
   const toggleChannel = (ch) => {
-    if (ch === "push") return; // v1 disabled
     setPrefs((p) => {
       const set = new Set(p.notification_channels || []);
       if (set.has(ch)) set.delete(ch);
@@ -81,6 +81,7 @@ export default function NotificationPreferencesPanel({ showSavedSearchFreq = fal
   }
 
   const emailOn = (prefs.notification_channels || []).includes("email");
+  const pushOn = (prefs.notification_channels || []).includes("push");
 
   return (
     <div data-testid="notification-prefs-panel" className="space-y-5">
@@ -96,15 +97,27 @@ export default function NotificationPreferencesPanel({ showSavedSearchFreq = fal
             />
             Email
           </label>
-          <label
-            className="inline-flex items-center gap-2 text-sm text-stone-400 cursor-not-allowed"
-            title="Push in arrivo in v1.1"
-          >
-            <input type="checkbox" disabled checked={false} data-testid="pref-channel-push" />
-            Push <span className="text-[10px] uppercase tracking-widest">(in arrivo v1.1)</span>
+          <label className="inline-flex items-center gap-2 text-sm text-stone-800 cursor-pointer">
+            <input
+              type="checkbox"
+              data-testid="pref-channel-push"
+              checked={pushOn}
+              onChange={() => toggleChannel("push")}
+            />
+            Push browser
           </label>
         </div>
       </div>
+
+      {showSavedSearchFreq && (
+        <div className="rounded-lg border border-stone-200 bg-stone-50/80 p-4 space-y-2">
+          <p className="text-xs uppercase tracking-widest text-stone-500">Alert sul browser</p>
+          <p className="text-sm text-stone-600">
+            Attiva le notifiche push per nuovi match e ribassi senza attendere l&apos;email.
+          </p>
+          <PushEnableButton />
+        </div>
+      )}
 
       <div className={!emailOn ? "opacity-50 pointer-events-none" : ""}>
         <p className="text-xs uppercase tracking-widest text-stone-500 mb-2">Tipi di email</p>

@@ -62,6 +62,7 @@ LIST_FIELDS = {
     "updated_at": 1, "created_at": 1,
     "reference_code": 1,
     "boost_tier": 1, "boost_rank": 1, "boost_until": 1,
+    "floor_plan_url": 1, "address": 1,
 }
 
 
@@ -124,12 +125,23 @@ def _to_card(p: Dict[str, Any], agency: Optional[Dict[str, Any]] = None) -> Dict
         "reference_code": p.get("reference_code"),
         "updated_at": p.get("updated_at"),
         "boost_tier": _active_boost_tier(p),
+        "scout_hint": _scout_hint(p),
         "agency": {
             "id": agency.get("id") if agency else None,
             "name": agency.get("display_name") if agency else None,
             "slug": agency.get("slug") if agency else None,
         } if agency else None,
     }
+
+
+def _scout_hint(p: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    """Lightweight completeness for list cards (no LLM)."""
+    try:
+        from apps.immocloud.buyer_brief import completeness_score
+        c = completeness_score(p)
+        return {"score": c["score"], "grade": c["grade"]}
+    except Exception:
+        return None
 
 
 # ============================================================

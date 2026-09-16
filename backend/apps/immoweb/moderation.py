@@ -89,6 +89,11 @@ async def approve_listing(pid: str, user: dict = Depends(get_current_user)):
         }},
     )
     logger.info("listing approved: id=%s by=%s", pid, user["id"])
+    try:
+        from apps.immocloud.alert_fanout import fanout_listing_event
+        await fanout_listing_event(pid, event="new")
+    except Exception as e:
+        logger.warning("fanout after approve failed: %s", e)
     return {"ok": True, "moderation_status": "approved", "status": "active"}
 
 

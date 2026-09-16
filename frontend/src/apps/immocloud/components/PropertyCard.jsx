@@ -52,6 +52,15 @@ export default function PropertyCard({ p }) {
                 : t("cloud.boost_badge_vetrina")}
           </span>
         )}
+        {p.scout_hint && (
+          <span
+            data-testid="scout-hint-badge"
+            className="absolute bottom-3 right-3 text-[10px] uppercase tracking-widest bg-white/95 text-[#0B1E3F] px-2 py-1 rounded border border-stone-200"
+            title="Scout HAL — completezza annuncio"
+          >
+            Scout {p.scout_hint.grade}
+          </span>
+        )}
       </div>
       <div className="p-4">
         <p className="text-xl font-semibold text-[#0B1E3F]" style={{ fontFamily: "'Fraunces', Georgia, serif" }}>

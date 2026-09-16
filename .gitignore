@@ -112,3 +112,4 @@ frontend/node_modules/.cache/default-development/7.pack
 backend/.venv/
 agent-tools/
 backend/.media/
+.vapid_local.json

@@ -55,6 +55,7 @@ export default function SellPage() {
 
   const [boostCatalog, setBoostCatalog] = useState([]);
   const [boostBusy, setBoostBusy] = useState(null); // product_key being purchased
+  const [stagingBusy, setStagingBusy] = useState(false);
 
   // Redirect if not logged in or not a B2C user
   useEffect(() => {
@@ -96,6 +97,29 @@ export default function SellPage() {
       setError(formatApiErrorDetail(e?.response?.data?.detail) || t("cloud.sell.boost_checkout_error"));
     } finally {
       setBoostBusy(null);
+    }
+  };
+
+  const buyStaging = async (listingId) => {
+    setStagingBusy(true);
+    setError("");
+    try {
+      const origin = window.location.origin;
+      const { data } = await api.post("/billing/b2c/checkout", {
+        product_key: "b2c_staging_render",
+        listing_id: listingId || undefined,
+        success_url: `${origin}/${lang}/cloud/account/sell?staging=ok`,
+        cancel_url: `${origin}/${lang}/cloud/account/sell?staging=cancel`,
+      });
+      if (data?.checkout_url) {
+        window.location.href = data.checkout_url;
+        return;
+      }
+      setError(t("cloud.sell.staging_checkout_error"));
+    } catch (e) {
+      setError(formatApiErrorDetail(e?.response?.data?.detail) || t("cloud.sell.staging_checkout_error"));
+    } finally {
+      setStagingBusy(false);
     }
   };
 
@@ -301,6 +325,24 @@ export default function SellPage() {
                   </div>
                 </div>
               )}
+              <div className="mt-4 pt-4 border-t border-stone-100" data-testid={`staging-panel-${l.id}`}>
+                <p className="text-[11px] uppercase tracking-widest text-stone-500 mb-2">
+                  {t("cloud.sell.staging_title")}
+                </p>
+                <p className="text-xs text-stone-600 mb-3">{t("cloud.sell.staging_subtitle")}</p>
+                <button
+                  type="button"
+                  data-testid={`staging-buy-${l.id}`}
+                  disabled={stagingBusy || !(l.photos?.length > 0)}
+                  onClick={() => buyStaging(l.id)}
+                  className="px-4 py-2 text-xs uppercase tracking-widest border border-[#0B1E3F] text-[#0B1E3F] rounded hover:bg-[#0B1E3F] hover:text-white disabled:opacity-40 transition"
+                >
+                  {stagingBusy ? t("common.saving") : t("cloud.sell.staging_cta")}
+                </button>
+                {!(l.photos?.length > 0) && (
+                  <p className="text-[11px] text-stone-500 mt-2">Carica almeno una foto per attivare lo staging.</p>
+                )}
+              </div>
             </article>
           ))}
         </section>
@@ -423,6 +465,23 @@ export default function SellPage() {
               uploadUrl={B2C_MEDIA_UPLOAD}
               uploadExtraFields={{ kind: "photo" }}
             />
+            {(form.photos || []).length > 0 && (
+              <div className="mt-3 p-3 border border-stone-200 rounded bg-stone-50" data-testid="sell-staging-hint">
+                <p className="text-xs text-stone-700 mb-2">{t("cloud.sell.staging_subtitle")}</p>
+                <button
+                  type="button"
+                  data-testid="sell-staging-cta"
+                  disabled={stagingBusy || !editing?.id}
+                  onClick={() => buyStaging(editing?.id)}
+                  className="px-3 py-1.5 text-[11px] uppercase tracking-widest bg-[#0B1E3F] text-white rounded hover:bg-[#C19A6B] disabled:opacity-40"
+                >
+                  {stagingBusy ? t("common.saving") : t("cloud.sell.staging_cta")}
+                </button>
+                {!editing?.id && (
+                  <p className="text-[11px] text-stone-500 mt-2">Salva l&apos;annuncio, poi attiva lo staging dal pannello.</p>
+                )}
+              </div>
+            )}
           </Field>
 
           <Field label={t("cloud.sell.f_floor_plan")}>

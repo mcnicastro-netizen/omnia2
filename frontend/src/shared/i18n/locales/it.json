@@ -913,7 +913,11 @@
       "boost_subtitle": "Vetrina, Premium o TOP — pagamento una tantum con carta. L'annuncio sale in classifica per la durata scelta.",
       "boost_cta": "Paga con Stripe",
       "boost_active": "Boost {{tier}} attivo fino al {{until}}",
-      "boost_checkout_error": "Impossibile avviare il pagamento. Riprova."
+      "boost_checkout_error": "Impossibile avviare il pagamento. Riprova.",
+      "staging_title": "Virtual Staging",
+      "staging_subtitle": "Arreda una foto vuota in pochi secondi — €0,90 a immagine (max 3/giorno).",
+      "staging_cta": "Paga staging €0,90",
+      "staging_checkout_error": "Impossibile avviare lo staging. Riprova."
     },
     "save_search": {
       "cta": "Salva questa ricerca",

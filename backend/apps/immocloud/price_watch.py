@@ -102,6 +102,12 @@ async def record_price_change(
         "price_watch prop=%s drop=%s price %s→%s rent %s→%s",
         property_id, drop, old_price, price, old_rent, rent,
     )
+    if drop:
+        try:
+            from apps.immocloud.alert_fanout import fanout_listing_event
+            await fanout_listing_event(property_id, event="price_drop")
+        except Exception as e:
+            logger.warning("fanout after price drop failed: %s", e)
     return entry
 
 

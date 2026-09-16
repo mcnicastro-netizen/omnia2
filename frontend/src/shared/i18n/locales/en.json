@@ -764,7 +764,11 @@
       "boost_subtitle": "Showcase, Premium or TOP — one-shot card payment. Your listing ranks higher for the selected duration.",
       "boost_cta": "Pay with Stripe",
       "boost_active": "{{tier}} boost active until {{until}}",
-      "boost_checkout_error": "Could not start checkout. Please try again."
+      "boost_checkout_error": "Could not start checkout. Please try again.",
+      "staging_title": "Virtual Staging",
+      "staging_subtitle": "Furnish an empty photo in seconds — €0.90 per image (max 3/day).",
+      "staging_cta": "Pay staging €0.90",
+      "staging_checkout_error": "Could not start staging checkout. Please try again."
     },
     "save_search": {
       "cta": "Save this search",

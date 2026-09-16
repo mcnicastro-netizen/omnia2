@@ -93,6 +93,13 @@ async def lifespan(app: FastAPI):
         init_monitoring()
     except Exception as e:
         logger.warning("monitoring init failed: %s", e)
+    # Web Push VAPID keys (B2C browser alerts) — fail-soft / auto-generate in non-prod
+    try:
+        from shared.notifications.web_push import ensure_vapid_keys
+        vapid = ensure_vapid_keys()
+        logger.info("Web Push VAPID configured=%s", bool(vapid.get("configured")))
+    except Exception as e:
+        logger.warning("Web Push VAPID init failed: %s", e)
     logger.info("OMNIA backend ready.")
     yield
     # Shutdown

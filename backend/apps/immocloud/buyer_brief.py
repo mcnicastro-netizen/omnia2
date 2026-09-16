@@ -216,6 +216,65 @@ def next_steps(p: Dict[str, Any]) -> List[Dict[str, str]]:
     return steps
 
 
+def seller_gaps(completeness: Dict[str, Any]) -> List[Dict[str, str]]:
+    """Actionable gaps for thin listings (grade C/D) — unique vs Idealista/Immobiliare."""
+    tips: List[Dict[str, str]] = []
+    for c in completeness.get("checks") or []:
+        if c.get("points", 0) >= c.get("max", 0):
+            continue
+        key = c.get("key")
+        if key == "foto":
+            tips.append({
+                "key": "foto",
+                "label_it": "Aggiungi almeno 8–10 foto (ogni stanza + esterni + dettagli).",
+            })
+        elif key == "descrizione":
+            tips.append({
+                "key": "descrizione",
+                "label_it": "Allunga la descrizione: stato, impianti, esposizione, spese, contesto.",
+            })
+        elif key == "ape":
+            tips.append({"key": "ape", "label_it": "Carica la classe energetica APE — obbligatoria in vendita."})
+        elif key == "planimetria":
+            tips.append({"key": "planimetria", "label_it": "Allega la planimetria: riduce richieste inutili e aumenta fiducia."})
+        elif key == "geolocalizzazione":
+            tips.append({"key": "geo", "label_it": "Imposta la posizione sulla mappa per comparire nelle ricerche locali."})
+        elif key == "indirizzo":
+            tips.append({"key": "indirizzo", "label_it": "Indica indirizzo e piano (anche zona se preferisci riservatezza)."})
+        elif key == "superficie":
+            tips.append({"key": "superficie", "label_it": "Inserisci i mq commerciali/calpestabili."})
+        elif key == "locali":
+            tips.append({"key": "locali", "label_it": "Specifica locali e camere da letto."})
+        elif key == "prezzo":
+            tips.append({"key": "prezzo", "label_it": "Pubblica un prezzo chiaro: gli annunci senza cifra filtrano male."})
+        elif key == "visibilità":
+            tips.append({
+                "key": "boost",
+                "label_it": "Con Vetrina / Premium / TOP sali in cima alle ricerche (pagamento carta).",
+            })
+    return tips[:6]
+
+
+def deterministic_insight(p: Dict[str, Any], vs_zone: Dict[str, Any], score: int) -> str:
+    """Fallback one-liner when LLM is off — still useful on poor listings."""
+    city = p.get("city") or "questa zona"
+    if score < 40:
+        return (
+            f"Annuncio molto incompleto su {city}: poche prove documentali. "
+            "Usa le domande Scout prima di fissare una visita."
+        )
+    if score < 60:
+        return (
+            f"Dati parziali su {city}. Completa le lacune (APE, foto, planimetria) "
+            "prima di fidarti del prezzo richiesto."
+        )
+    if vs_zone.get("available") and vs_zone.get("signal") == "sopra_mercato":
+        return f"Completezza ok, ma il prezzo è sopra la fascia di {city}: chiedi margine o motivazione."
+    if vs_zone.get("available") and vs_zone.get("signal") == "sotto_mercato":
+        return f"Prezzo sotto zona a {city}: verifica motivazione e documentazione prima di accelerare."
+    return f"Annuncio solido su {city}: usa Scout per le domande mirate in visita."
+
+
 async def _llm_one_liner(p: Dict[str, Any], vs_zone: Dict[str, Any], score: int) -> Optional[str]:
     try:
         import asyncio
@@ -254,6 +313,7 @@ async def _llm_one_liner(p: Dict[str, Any], vs_zone: Dict[str, Any], score: int)
 def build_brief(p: Dict[str, Any], *, insight: Optional[str] = None) -> Dict[str, Any]:
     comp = completeness_score(p)
     vs = price_vs_zone(p)
+    gaps = seller_gaps(comp) if comp["score"] < 70 else []
     return {
         "product": "scout_hal",
         "listing_id": p.get("id"),
@@ -261,8 +321,9 @@ def build_brief(p: Dict[str, Any], *, insight: Optional[str] = None) -> Dict[str
         "price_vs_zone": vs,
         "red_flags": red_flags(p, vs, comp),
         "questions_for_seller": seller_questions(p, comp),
+        "seller_gaps": gaps,
         "next_steps": next_steps(p),
-        "insight": insight,
+        "insight": insight or deterministic_insight(p, vs, comp["score"]),
         "disclaimer_it": (
             "Scout HAL è uno strumento informativo basato sui dati dell'annuncio e sui "
             "benchmark di zona ImmobilCloud. Non è una perizia né consulenza legale."
