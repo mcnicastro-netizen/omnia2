@@ -349,13 +349,11 @@ Elementi che ESISTONO ma per decisione del Founder o per regola redazionale NON 
   - `saved_search.frequency` rispettata dal cron (skip senza avanzare `last_run_at`).
 - **Backlog qualità prodotto Cap. 18**: A-018, A-022, A-023 (vedi ASPETTI_DA_APPROFONDIRE.md). A-017/A-019/A-020/A-021 chiusi.
   - NO rate limit su `send_email`
-  - NO UI preferenze utente (canale + tipo email + digest frequency)
-  - NO moderazione admin
-  - NO analytics open/click/A-B test/preview UI
+  - NO push / SMS / WhatsApp outbound
+  - NO analytics open/click email
 - **Dead code documentato**:
   - `User.notification_channels: List[Literal["email", "push"]]` (`shared/models/user.py:50`): il valore `"push"` è accettato in registrazione MA nessun sender push implementato v1.
-  - `saved_search.frequency: instant|daily|weekly` salvato MA il cron IGNORA il valore e processa tutte le active ricerche ad ogni chiamata. Bug funzionale v1 documentato (backlog A-019).
-- **Backlog qualità prodotto Cap. 18**: A-017, A-018, A-019, A-020, A-021, A-022, A-023 (vedi ASPETTI_DA_APPROFONDIRE.md sezione Cap. 18).
+- **Backlog qualità prodotto Cap. 18**: A-018, A-022, A-023 (vedi ASPETTI). A-017/A-019/A-020/A-021 chiusi.
 
 ### Cap. 19 · Impostazioni agenzia (v1 onesta) — Feb 2026
 - **Copertura codice** 1:1:
