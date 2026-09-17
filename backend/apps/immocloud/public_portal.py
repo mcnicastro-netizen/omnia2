@@ -48,7 +48,56 @@ PUBLIC_FIELDS = {
     "listing_agent_id": 0,
     "lead_count": 0,
     "view_count": 0,
+    "contact_public": 0,       # never raw; exposed via publisher.channels
 }
+
+
+def _digits_phone(raw: Optional[str]) -> str:
+    if not raw:
+        return ""
+    return "".join(ch for ch in str(raw) if ch.isdigit() or ch == "+")
+
+
+def _public_publisher(
+    *,
+    is_private: bool,
+    contact_public: Optional[Dict[str, Any]],
+    owner_email: Optional[str],
+    agency: Optional[Dict[str, Any]],
+) -> Dict[str, Any]:
+    """Safe publisher card for the detail sidebar (agency vs private seller)."""
+    if is_private:
+        cp = contact_public or {}
+        channels: Dict[str, Optional[str]] = {
+            "email": None,
+            "phone": None,
+            "whatsapp": None,
+        }
+        if cp.get("show_email") and owner_email:
+            channels["email"] = owner_email
+        phone = (cp.get("phone") or "").strip() or None
+        wa = (cp.get("whatsapp") or "").strip() or None
+        if cp.get("show_phone") and phone:
+            channels["phone"] = phone
+        if cp.get("show_whatsapp") and wa:
+            channels["whatsapp"] = wa
+        return {
+            "kind": "private",
+            "display_name": (cp.get("display_name") or "Privato").strip() or "Privato",
+            "channels": channels,
+            # Form always allowed when we can notify the account email
+            "accepts_messages": bool(owner_email),
+        }
+    return {
+        "kind": "agency",
+        "display_name": (agency or {}).get("display_name"),
+        "channels": {
+            "email": (agency or {}).get("email"),
+            "phone": (agency or {}).get("phone"),
+            "whatsapp": None,
+        },
+        "accepts_messages": True,
+    }
 
 LIST_FIELDS = {
     "_id": 0,
@@ -586,12 +635,11 @@ def _viewer_is_lister(user: Optional[Dict[str, Any]], p: Dict[str, Any]) -> bool
 @router.get("/property/{pid}")
 async def public_property_detail(pid: str, request: Request):
     db = Database.get()
-    # Need owner_user_id for lister check — fetch without PUBLIC_FIELDS exclusion, then strip
+    # Need owner_user_id / contact for publisher — fetch then strip
     p = await db.properties.find_one(
         {"id": pid, **_base_filter()},
         {
             "_id": 0,
-            "owner": 0,
             "seller_client_id": 0,
             "commission_pct": 0,
             "listing_agent_id": 0,
@@ -620,13 +668,31 @@ async def public_property_detail(pid: str, request: Request):
 
     viewer_is_lister = _viewer_is_lister(user, p)
 
+    is_private = bool(p.get("is_private_listing")) or p.get("agency_id") == "_private_listings"
+    owner_doc = p.pop("owner", None) or {}
+    contact_public = p.pop("contact_public", None) or {}
+    owner_email = owner_doc.get("email")
+    if is_private and not owner_email and p.get("owner_user_id"):
+        u = await db.users.find_one(
+            {"id": p["owner_user_id"]},
+            {"_id": 0, "email": 1},
+        )
+        owner_email = (u or {}).get("email")
+
     agency = None
-    if p.get("agency_id") and p.get("agency_id") != "_private_listings":
+    if not is_private and p.get("agency_id"):
         agency = await db.agencies.find_one(
             {"id": p["agency_id"], "is_active": True},
             {"_id": 0, "id": 1, "slug": 1, "display_name": 1, "logo_url": 1,
              "phone": 1, "email": 1, "city": 1},
         )
+
+    publisher = _public_publisher(
+        is_private=is_private,
+        contact_public=contact_public,
+        owner_email=owner_email,
+        agency=agency,
+    )
 
     # Bump view counter (best-effort)
     try:
@@ -648,9 +714,15 @@ async def public_property_detail(pid: str, request: Request):
             for i, ph in enumerate(photos)
         ],
         "agency": agency,
+        "is_private_listing": is_private,
     }
+    viewed = apply_privacy_view(enriched, viewer_level)
+    viewed.pop("contact_public", None)
+    viewed.pop("owner", None)
+    viewed.pop("owner_user_id", None)
     return {
-        **apply_privacy_view(enriched, viewer_level),
+        **viewed,
+        "publisher": publisher,
         "_viewer_level": viewer_level,  # useful for frontend badge
         "viewer_is_lister": viewer_is_lister,
     }
@@ -693,8 +765,10 @@ class PropertyContactPayload(BaseModel):
 
 @router.post("/property/{pid}/contact")
 async def public_property_contact(pid: str, payload: PropertyContactPayload, request: Request):
-    """B2C contact form. Creates (or reuses) a client in the agency CRM and
-    a Lead linking it to this property. Source = 'ImmobilCloud'.
+    """B2C contact form.
+
+    Agency listings → CRM client + lead + agent/agency notify.
+    Private listings → listing_inquiries + notify owner (no agency CRM).
     """
     from shared.security.rate_limit import enforce_ip_rate_limit
     await enforce_ip_rate_limit(request, bucket="cloud_contact", max_requests=20, window_seconds=3600)
@@ -720,10 +794,17 @@ async def public_property_contact(pid: str, payload: PropertyContactPayload, req
     db = Database.get()
     prop = await db.properties.find_one(
         {"id": pid, **_base_filter()},
-        {"_id": 0, "id": 1, "agency_id": 1, "title": 1},
+        {
+            "_id": 0, "id": 1, "agency_id": 1, "title": 1,
+            "is_private_listing": 1, "owner_user_id": 1, "owner": 1,
+        },
     )
     if not prop:
         raise HTTPException(status_code=404, detail="property_not_found")
+
+    is_private = bool(prop.get("is_private_listing")) or prop.get("agency_id") == "_private_listings"
+    if is_private:
+        return await _private_listing_contact(db, prop, payload)
 
     agency_id = prop.get("agency_id")
     if not agency_id:
@@ -859,6 +940,84 @@ async def public_property_contact(pid: str, payload: PropertyContactPayload, req
     logger.info("B2C contact: lead=%s client=%s property=%s agency=%s notify=%s",
                 lead_id, client_id, pid, agency_id, notify_email or "—")
     return {"ok": True, "lead_id": lead_id, "client_id": client_id}
+
+
+async def _private_listing_contact(db, prop: Dict[str, Any], payload: PropertyContactPayload) -> Dict[str, Any]:
+    """Inquiry to a private seller — no agency CRM client/lead."""
+    owner_user_id = prop.get("owner_user_id")
+    if not owner_user_id:
+        raise HTTPException(status_code=409, detail="private_listing_has_no_owner")
+
+    owner_email = (prop.get("owner") or {}).get("email")
+    owner_user = await db.users.find_one(
+        {"id": owner_user_id},
+        {"_id": 0, "email": 1, "lang": 1, "name": 1},
+    )
+    if not owner_email:
+        owner_email = (owner_user or {}).get("email")
+    if not owner_email:
+        raise HTTPException(status_code=409, detail="private_seller_unreachable")
+
+    now = datetime.now(timezone.utc).isoformat()
+    inquiry_id = str(uuid4())
+    note_lines = [payload.message.strip()]
+    if payload.visit_requested:
+        note_lines.append("[richiesta visita immobile]")
+    doc = {
+        "id": inquiry_id,
+        "property_id": prop["id"],
+        "owner_user_id": owner_user_id,
+        "name": payload.name,
+        "surname": payload.surname,
+        "email": payload.email.lower(),
+        "phone": payload.phone,
+        "message": "\n".join(note_lines),
+        "visit_requested": bool(payload.visit_requested),
+        "gdpr_consent": True,
+        "source": "ImmobilCloud",
+        "created_at": now,
+    }
+    await db.listing_inquiries.insert_one(doc)
+
+    try:
+        await db.properties.update_one({"id": prop["id"]}, {"$inc": {"lead_count": 1}})
+    except Exception:
+        pass
+
+    notify_lang = (owner_user or {}).get("lang") or "it"
+    _schedule_lead_email(
+        to=owner_email,
+        lang=notify_lang,
+        property_title=prop.get("title") or "Immobile",
+        lead_name=f"{payload.name} {payload.surname or ''}".strip(),
+        lead_email=payload.email,
+        lead_phone=payload.phone,
+        lead_message="\n".join(note_lines),
+        agency_id="_private_listings",
+        property_id=prop["id"],
+    )
+
+    try:
+        from shared.notifications.center import TYPE_LISTING_INQUIRY, notify_users
+        lead_name = f"{payload.name} {payload.surname or ''}".strip()
+        prop_title = prop.get("title") or "Immobile"
+        await notify_users(
+            [owner_user_id],
+            type=TYPE_LISTING_INQUIRY,
+            title=f"Nuovo messaggio · {prop_title}",
+            body=f"{lead_name} ti ha contattato da ImmobilCloud.",
+            link="/cloud/account/sell",
+            agency_id=None,
+            meta={"inquiry_id": inquiry_id, "property_id": prop["id"]},
+        )
+    except Exception as e:  # noqa: BLE001
+        logger.warning("in-app private inquiry notification failed: %s", e)
+
+    logger.info(
+        "B2C private inquiry: id=%s property=%s owner=%s notify=%s",
+        inquiry_id, prop["id"], owner_user_id, owner_email,
+    )
+    return {"ok": True, "inquiry_id": inquiry_id, "kind": "private"}
 
 
 def _schedule_lead_email(*, to: str, lang: str, property_title: str,

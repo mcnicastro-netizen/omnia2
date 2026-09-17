@@ -66,6 +66,20 @@ class PropertyOwner(OmniaBaseModel):
     notes: Optional[str] = Field(default=None, max_length=2000)
 
 
+class PrivateContactPublic(OmniaBaseModel):
+    """How a private seller is reachable on the public ad (opt-in channels).
+
+    Message form always notifies the account email. Public mailto/tel/WhatsApp
+    only when the corresponding show_* flag is on and a value is present.
+    """
+    display_name: Optional[str] = Field(default=None, max_length=80)
+    show_email: bool = True
+    show_phone: bool = False
+    show_whatsapp: bool = False
+    phone: Optional[str] = Field(default=None, max_length=30)
+    whatsapp: Optional[str] = Field(default=None, max_length=30)
+
+
 class PropertyEnergy(OmniaBaseModel):
     energy_class: Optional[EnergyClass] = None
     energy_value: Optional[float] = None  # kWh/m²·anno
@@ -151,6 +165,7 @@ class PropertyInDB(TenantModel):
     # M3.S5 — Private listing (B2C user publishing without agency)
     is_private_listing: bool = False
     owner_user_id: Optional[str] = None  # link to users.id (B2C account)
+    contact_public: Optional[PrivateContactPublic] = None  # private seller reachability
     moderation_status: Literal["approved", "pending", "rejected"] = "approved"
     moderation_notes: Optional[str] = Field(default=None, max_length=2000)
     moderation_reviewed_at: Optional[str] = None
@@ -203,6 +218,7 @@ class PropertyCreate(OmniaBaseModel):
     floor_plan_url: Optional[str] = Field(default=None, max_length=500)
     photos: Optional[List[PropertyPhoto]] = None
     is_listed_on_immobilcloud: bool = True  # M3.S2 Publishing Center
+    contact_public: Optional[PrivateContactPublic] = None
 
 
 class PropertyUpdate(OmniaBaseModel):
@@ -245,6 +261,7 @@ class PropertyUpdate(OmniaBaseModel):
     seller_notes: Optional[str] = None
     reference_code: Optional[str] = None
     is_listed_on_immobilcloud: Optional[bool] = None  # M3.S2 Publishing Center
+    contact_public: Optional[PrivateContactPublic] = None
 
 
 class PropertyListItem(OmniaBaseModel):

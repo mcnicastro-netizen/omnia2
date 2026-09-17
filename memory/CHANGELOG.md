@@ -1,5 +1,15 @@
 # OMNIA — Changelog
 
+## 2026-09-17 — Contatto annuncio privato (email / tel / WhatsApp)
+
+**Tipo**: Feature B2C.
+
+- Split publisher sul dettaglio: **agenzia** vs **privato** (`publisher.kind` + canali opt-in)
+- Form «Contatta il venditore» → `listing_inquiries` + email/inbox owner (niente CRM agenzia)
+- Sell page: toggle mostra email / telefono / WhatsApp + nome pubblico
+- Ken Burns / A-026 tracking invariato
+
+---
 ## 2026-09-17 — A-026 micro-tour agenzia (tracking)
 
 **Tipo**: Docs / backlog.

@@ -28,7 +28,7 @@ from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
 
 from shared.auth.dependencies import get_current_user
 from shared.db.connection import Database
-from shared.models.property import PropertyCreate, PropertyUpdate
+from shared.models.property import PropertyCreate, PropertyUpdate, PrivateContactPublic
 from shared.storage import put_object, ObjStoreError
 from apps.immocloud.geocoding import schedule_geocode
 
@@ -40,6 +40,48 @@ FREE_TIER_MAX_ACTIVE = 1  # one free ad per user
 B2C_MAX_PHOTOS = 30
 _ALLOWED_PHOTO_MIME = {"image/jpeg", "image/png", "image/webp"}
 _MAX_PHOTO_BYTES = 8 * 1024 * 1024  # 8MB
+
+
+def _default_contact_public(user: dict, override: dict | None = None) -> dict:
+    """Build contact_public for a private listing from user profile + optional payload."""
+    name = (user.get("name") or "").strip()
+    display = name.split()[0] if name else "Privato"
+    base = {
+        "display_name": display,
+        "show_email": True,
+        "show_phone": bool(user.get("phone")),
+        "show_whatsapp": False,
+        "phone": user.get("phone"),
+        "whatsapp": None,
+    }
+    if override:
+        # Accept dict or PrivateContactPublic
+        if hasattr(override, "model_dump"):
+            ov = override.model_dump(exclude_unset=True)
+        else:
+            ov = {k: v for k, v in dict(override).items() if v is not None or k.startswith("show_")}
+        for k, v in ov.items():
+            if k in base or k in ("display_name", "show_email", "show_phone", "show_whatsapp", "phone", "whatsapp"):
+                base[k] = v
+    # Normalize empty strings → None
+    for k in ("phone", "whatsapp", "display_name"):
+        if isinstance(base.get(k), str) and not base[k].strip():
+            base[k] = None if k != "display_name" else display
+    return PrivateContactPublic(**base).model_dump()
+
+
+def _assert_contact_reachable(contact: dict, owner_email: str | None) -> None:
+    """At least one usable channel: form (account email) and/or public phone/WA."""
+    has_form = bool(owner_email)
+    has_phone = bool(contact.get("show_phone") and (contact.get("phone") or "").strip())
+    has_wa = bool(contact.get("show_whatsapp") and (contact.get("whatsapp") or "").strip())
+    has_public_email = bool(contact.get("show_email") and owner_email)
+    if not (has_form or has_phone or has_wa or has_public_email):
+        raise HTTPException(status_code=400, detail="contact_channel_required")
+    if contact.get("show_phone") and not (contact.get("phone") or "").strip():
+        raise HTTPException(status_code=400, detail="contact_phone_required")
+    if contact.get("show_whatsapp") and not (contact.get("whatsapp") or "").strip():
+        raise HTTPException(status_code=400, detail="contact_whatsapp_required")
 
 
 async def _ensure_b2c(user: dict) -> None:
@@ -114,6 +156,15 @@ async def create_private_listing(
 
     now = datetime.now(timezone.utc).isoformat()
     data = payload.model_dump()
+    contact_override = data.pop("contact_public", None)
+    contact_public = _default_contact_public(user, contact_override)
+    # Soft-validate on create (hard on submit)
+    owner_email = user.get("email")
+    if contact_public.get("show_phone") and not (contact_public.get("phone") or "").strip():
+        contact_public["show_phone"] = False
+    if contact_public.get("show_whatsapp") and not (contact_public.get("whatsapp") or "").strip():
+        contact_public["show_whatsapp"] = False
+
     data.update({
         "id": str(uuid4()),
         "agency_id": PRIVATE_AGENCY_SENTINEL,
@@ -128,12 +179,13 @@ async def create_private_listing(
         "lead_count": 0,
         "created_at": now,
         "updated_at": now,
+        "contact_public": contact_public,
     })
     # Owner contact pre-populated from user profile (private/internal field)
     data["owner"] = {
         "name": user.get("name"),
-        "phone": user.get("phone"),
-        "email": user.get("email"),
+        "phone": contact_public.get("phone") or user.get("phone"),
+        "email": owner_email,
         "notes": None,
     }
     await db.properties.insert_one(data)
@@ -191,11 +243,27 @@ async def update_my_private_listing(
         # Users can only set status to draft (we expose /submit for active)
         update_doc.pop("status", None)
     _validate_photos_limit(update_doc.get("photos"))
+
+    if "contact_public" in update_doc:
+        merged = _default_contact_public(
+            user,
+            {**(existing.get("contact_public") or {}), **(update_doc.get("contact_public") or {})},
+        )
+        update_doc["contact_public"] = merged
+        # Keep internal owner phone in sync when public phone changes
+        owner = dict(existing.get("owner") or {})
+        if merged.get("phone"):
+            owner["phone"] = merged["phone"]
+        if user.get("email"):
+            owner["email"] = user.get("email")
+        update_doc["owner"] = owner
+
     update_doc["updated_at"] = datetime.now(timezone.utc).isoformat()
     # If previously rejected/approved and substantive edit → back to pending
     substantive = any(k in update_doc for k in
                       ("title", "description", "price", "rent_monthly", "address",
-                       "city", "surface_sqm", "rooms", "photos", "floor_plan_url"))
+                       "city", "surface_sqm", "rooms", "photos", "floor_plan_url",
+                       "contact_public"))
     if substantive and existing.get("moderation_status") in ("approved", "rejected"):
         update_doc["moderation_status"] = "pending"
         update_doc["status"] = "draft"
@@ -237,7 +305,7 @@ async def submit_for_moderation(pid: str, user: dict = Depends(get_current_user)
     p = await db.properties.find_one(
         {"id": pid, "owner_user_id": user["id"], "is_private_listing": True},
         {"_id": 0, "id": 1, "title": 1, "city": 1, "price": 1, "rent_monthly": 1,
-         "moderation_status": 1, "status": 1},
+         "moderation_status": 1, "status": 1, "contact_public": 1, "owner": 1},
     )
     if not p:
         raise HTTPException(status_code=404, detail="listing_not_found")
@@ -247,6 +315,13 @@ async def submit_for_moderation(pid: str, user: dict = Depends(get_current_user)
     # Minimum viable ad: title, city, AT LEAST one of price/rent_monthly
     if not (p.get("title") and p.get("city") and (p.get("price") or p.get("rent_monthly"))):
         raise HTTPException(status_code=400, detail="missing_required_fields")
+
+    contact = p.get("contact_public") or _default_contact_public(user)
+    owner_email = (p.get("owner") or {}).get("email") or user.get("email")
+    _assert_contact_reachable(contact, owner_email)
+    # Persist defaults if listing was created before contact_public existed
+    if not p.get("contact_public"):
+        await db.properties.update_one({"id": pid}, {"$set": {"contact_public": contact}})
 
     await db.properties.update_one(
         {"id": pid},

@@ -26,6 +26,7 @@
 | Layout altre pagine B2C | ✅ (17-Set) |
 | Scout v1 + fiducia + voce lister | ✅ |
 | Scout thin visita + documenti | ✅ (17-Set) |
+| Contatto privato email/tel/WA | ✅ (17-Set) |
 | Home claim allineato nord (ritocco) | ⬜ opzionale |
 | Demo A-025 | ❌ **next** |
 | A-026 micro-tour agenzia (501→Kling) | 🔬 da approfondire |

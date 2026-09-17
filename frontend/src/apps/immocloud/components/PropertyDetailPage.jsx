@@ -686,8 +686,25 @@ export default function PropertyDetailPage() {
 
           {/* RIGHT COLUMN */}
           <aside className="lg:col-span-1 space-y-6 lg:sticky lg:top-24 lg:self-start">
-            {prop.agency && <AgencyCard agency={prop.agency} />}
-            <ContactForm pid={pid} propertyTitle={prop.title} />
+            {isLister ? (
+              <div
+                data-testid="contact-own-listing"
+                className="bg-[#f7f4ef] border border-stone-200 rounded-2xl p-5 text-sm text-stone-600"
+              >
+                {t("cloud.contact_own_listing")}
+              </div>
+            ) : (
+              <>
+                <PublisherCard publisher={prop.publisher} agency={prop.agency} />
+                {(prop.publisher?.accepts_messages !== false) && (
+                  <ContactForm
+                    pid={pid}
+                    propertyTitle={prop.title}
+                    publisherKind={prop.publisher?.kind || (prop.agency ? "agency" : "private")}
+                  />
+                )}
+              </>
+            )}
           </aside>
         </div>
       </div>
@@ -789,34 +806,89 @@ function InfoCell({ label, value, testid }) {
   );
 }
 
-function AgencyCard({ agency }) {
+function waHref(raw) {
+  const digits = String(raw || "").replace(/[^\d]/g, "");
+  return digits ? `https://wa.me/${digits}` : null;
+}
+
+function PublisherCard({ publisher, agency }) {
   const { t } = useTranslation();
-  return (
-    <div data-testid="detail-agency-card" className="bg-white border border-stone-200 rounded-2xl p-5">
-      <div className="text-[11px] uppercase tracking-[0.28em] text-[#C19A6B] mb-2">{t("cloud.detail_agency_label")}</div>
-      <div className="flex items-center gap-3 mb-3">
-        {agency.logo_url ? (
-          <img src={agency.logo_url} alt={agency.display_name} className="w-12 h-12 rounded object-contain bg-stone-50 border border-stone-200" />
-        ) : (
-          <div className="w-12 h-12 rounded bg-[#0B1E3F] text-white flex items-center justify-center text-lg font-light">
-            {agency.display_name?.[0] || "A"}
+  const kind = publisher?.kind || (agency ? "agency" : "private");
+  const channels = publisher?.channels || {};
+  const name =
+    publisher?.display_name ||
+    agency?.display_name ||
+    (kind === "private" ? t("cloud.publisher_private") : t("cloud.publisher_agency"));
+
+  if (kind === "agency" && agency) {
+    return (
+      <div data-testid="detail-agency-card" className="bg-white border border-stone-200 rounded-2xl p-5">
+        <div className="text-[11px] uppercase tracking-[0.28em] text-[#C19A6B] mb-2">{t("cloud.detail_agency_label")}</div>
+        <div className="flex items-center gap-3 mb-3">
+          {agency.logo_url ? (
+            <img src={agency.logo_url} alt={agency.display_name} className="w-12 h-12 rounded object-contain bg-stone-50 border border-stone-200" />
+          ) : (
+            <div className="w-12 h-12 rounded bg-[#0B1E3F] text-white flex items-center justify-center text-lg font-light">
+              {agency.display_name?.[0] || "A"}
+            </div>
+          )}
+          <div className="min-w-0">
+            <div className="text-sm font-medium text-stone-900 truncate">{agency.display_name}</div>
+            {agency.city && <div className="text-xs text-stone-500 truncate">{agency.city}</div>}
           </div>
-        )}
-        <div className="min-w-0">
-          <div className="text-sm font-medium text-stone-900 truncate">{agency.display_name}</div>
-          {agency.city && <div className="text-xs text-stone-500 truncate">{agency.city}</div>}
+        </div>
+        <div className="space-y-1 text-xs text-stone-600">
+          {agency.phone && <div data-testid="agency-phone"><a href={`tel:${agency.phone}`} className="hover:text-[#0B1E3F]">{agency.phone}</a></div>}
+          {agency.email && <div data-testid="agency-email"><a href={`mailto:${agency.email}`} className="hover:text-[#0B1E3F]">{agency.email}</a></div>}
         </div>
       </div>
-      <div className="space-y-1 text-xs text-stone-600">
-        {agency.phone && <div data-testid="agency-phone">📞 <a href={`tel:${agency.phone}`} className="hover:text-[#0B1E3F]">{agency.phone}</a></div>}
-        {agency.email && <div data-testid="agency-email">✉ <a href={`mailto:${agency.email}`} className="hover:text-[#0B1E3F]">{agency.email}</a></div>}
+    );
+  }
+
+  const hasChannel = channels.email || channels.phone || channels.whatsapp;
+  return (
+    <div data-testid="private-publisher-card" className="bg-white border border-stone-200 rounded-2xl p-5 space-y-3">
+      <div className="text-[11px] uppercase tracking-[0.28em] text-[#C19A6B] mb-1">{t("cloud.publisher_private")}</div>
+      <div className="flex items-center gap-3">
+        <div className="w-12 h-12 rounded bg-[#0B1E3F] text-white flex items-center justify-center text-lg font-light">
+          {(name || "P")[0]}
+        </div>
+        <div className="min-w-0">
+          <div className="text-sm font-medium text-stone-900 truncate">{name}</div>
+        </div>
       </div>
+      {hasChannel && (
+        <div className="flex flex-col gap-2 pt-1">
+          {channels.email && (
+            <a data-testid="publisher-email" href={`mailto:${channels.email}`} className="text-xs text-[#0B1E3F] hover:text-[#C19A6B] truncate">
+              {channels.email}
+            </a>
+          )}
+          {channels.phone && (
+            <a data-testid="publisher-phone" href={`tel:${channels.phone}`} className="text-xs text-[#0B1E3F] hover:text-[#C19A6B]">
+              {channels.phone}
+            </a>
+          )}
+          {channels.whatsapp && waHref(channels.whatsapp) && (
+            <a
+              data-testid="publisher-whatsapp"
+              href={waHref(channels.whatsapp)}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center justify-center text-xs uppercase tracking-widest px-3 py-2 border border-stone-300 rounded-lg text-stone-800 hover:border-[#0B1E3F] hover:text-[#0B1E3F]"
+            >
+              WhatsApp
+            </a>
+          )}
+        </div>
+      )}
     </div>
   );
 }
 
-function ContactForm({ pid, propertyTitle }) {
+function ContactForm({ pid, propertyTitle, publisherKind = "agency" }) {
   const { t } = useTranslation();
+  const isPrivate = publisherKind === "private";
   const [form, setForm] = useState({
     name: "", surname: "", email: "", phone: "",
     message: t("cloud.contact_default_message", { title: propertyTitle || "" }),
@@ -859,15 +931,21 @@ function ContactForm({ pid, propertyTitle }) {
       <div data-testid="contact-done" className="bg-[#f7f4ef] border border-stone-200 rounded-2xl p-5 text-center">
         <p className="text-[11px] uppercase tracking-[0.28em] text-[#C19A6B] mb-2">ImmobilCloud</p>
         <h3 className="text-base font-medium text-[#0B1E3F] mb-1">{t("cloud.contact_done_title")}</h3>
-        <p className="text-xs text-stone-600">{t("cloud.contact_done_desc")}</p>
+        <p className="text-xs text-stone-600">
+          {isPrivate ? t("cloud.contact_done_desc_private") : t("cloud.contact_done_desc")}
+        </p>
       </div>
     );
   }
 
   return (
     <form data-testid="contact-form" onSubmit={onSubmit} className="bg-white border border-stone-200 rounded-2xl p-5 space-y-3">
-      <h3 className="text-sm font-medium text-[#0B1E3F] mb-1">{t("cloud.contact_title")}</h3>
-      <p className="text-xs text-stone-500 -mt-2 mb-2">{t("cloud.contact_desc")}</p>
+      <h3 className="text-sm font-medium text-[#0B1E3F] mb-1">
+        {isPrivate ? t("cloud.contact_title_private") : t("cloud.contact_title")}
+      </h3>
+      <p className="text-xs text-stone-500 -mt-2 mb-2">
+        {isPrivate ? t("cloud.contact_desc_private") : t("cloud.contact_desc")}
+      </p>
 
       <Input testid="contact-name" placeholder={t("cloud.contact_name")} required
         value={form.name} onChange={(v) => setForm({ ...form, name: v })} />

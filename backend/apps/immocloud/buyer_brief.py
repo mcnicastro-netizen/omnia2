@@ -157,7 +157,7 @@ def price_vs_zone(p: Dict[str, Any], *, completeness_score_val: Optional[int] = 
         conf_pts += 40
     else:
         conf_pts += 10
-        limits.append("Città non nel benchmark locale: usiamo una media regionale, meno precisa.")
+        limits.append("Città non nel catalogo locale: usiamo una media regionale, meno precisa.")
     if source != "regional_fallback":
         conf_pts += 15
     if 30 <= surface <= 250:
@@ -192,9 +192,9 @@ def price_vs_zone(p: Dict[str, Any], *, completeness_score_val: Optional[int] = 
         conf_level = "bassa"
         conf_label = "Confidenza bassa — trattala come indizio"
 
-        limits.append(
-            "Fascia da €/m² di zona (zona semicentro), non da comparabili puntuali di questo civico."
-        )
+    limits.append(
+        "Fascia da €/m² di zona (zona semicentro), non da comparabili puntuali di questo civico."
+    )
     limits.append("Non è una perizia né un valore OMI ufficiale per questo immobile.")
 
     why: List[Dict[str, str]] = [

@@ -34,6 +34,12 @@ const empty = {
   bathrooms: "",
   photos: [],
   floor_plan_url: "",
+  contact_display_name: "",
+  contact_show_email: true,
+  contact_show_phone: false,
+  contact_show_whatsapp: false,
+  contact_phone: "",
+  contact_whatsapp: "",
 };
 
 const PROPERTY_TYPES = [
@@ -133,13 +139,19 @@ export default function SellPage() {
 
   const startNew = () => {
     setEditing(null);
-    setForm(empty);
+    setForm({
+      ...empty,
+      contact_display_name: user?.name?.split?.(" ")?.[0] || "",
+      contact_phone: user?.phone || "",
+      contact_show_email: true,
+    });
     setShowForm(true);
     setError("");
   };
 
   const startEdit = (listing) => {
     setEditing(listing);
+    const cp = listing.contact_public || {};
     setForm({
       title: listing.title || "",
       description: listing.description || "",
@@ -156,6 +168,12 @@ export default function SellPage() {
       bathrooms: listing.bathrooms || "",
       photos: Array.isArray(listing.photos) ? listing.photos : [],
       floor_plan_url: listing.floor_plan_url || "",
+      contact_display_name: cp.display_name || user?.name?.split?.(" ")?.[0] || "",
+      contact_show_email: cp.show_email !== false,
+      contact_show_phone: Boolean(cp.show_phone),
+      contact_show_whatsapp: Boolean(cp.show_whatsapp),
+      contact_phone: cp.phone || "",
+      contact_whatsapp: cp.whatsapp || "",
     });
     setShowForm(true);
     setError("");
@@ -177,6 +195,21 @@ export default function SellPage() {
         setBusy(false);
         return;
       }
+      payload.contact_public = {
+        display_name: payload.contact_display_name || undefined,
+        show_email: Boolean(payload.contact_show_email),
+        show_phone: Boolean(payload.contact_show_phone),
+        show_whatsapp: Boolean(payload.contact_show_whatsapp),
+        phone: payload.contact_phone || null,
+        whatsapp: payload.contact_whatsapp || null,
+      };
+      delete payload.contact_display_name;
+      delete payload.contact_show_email;
+      delete payload.contact_show_phone;
+      delete payload.contact_show_whatsapp;
+      delete payload.contact_phone;
+      delete payload.contact_whatsapp;
+
       if (editing) {
         await api.patch(`/cloud/me/properties/${editing.id}`, payload);
       } else {
@@ -457,6 +490,71 @@ export default function SellPage() {
               </div>
             </div>
           </Field>
+
+          <fieldset data-testid="sell-contact-channels" className="border border-stone-200 rounded-lg p-4 space-y-3">
+            <legend className="text-xs uppercase tracking-widest text-stone-500 px-1">
+              {t("cloud.sell.f_contact_legend")}
+            </legend>
+            <p className="text-xs text-stone-500">{t("cloud.sell.f_contact_hint")}</p>
+            <Field label={t("cloud.sell.f_contact_name")}>
+              <input
+                data-testid="sell-f-contact-name"
+                value={form.contact_display_name}
+                onChange={(e) => setForm({ ...form, contact_display_name: e.target.value })}
+                className={inputCls}
+                placeholder={user?.name?.split?.(" ")?.[0] || ""}
+              />
+            </Field>
+            <label className="flex items-center gap-2 text-sm text-stone-700 cursor-pointer">
+              <input
+                type="checkbox"
+                data-testid="sell-f-show-email"
+                checked={form.contact_show_email}
+                onChange={(e) => setForm({ ...form, contact_show_email: e.target.checked })}
+              />
+              {t("cloud.sell.f_show_email")}
+            </label>
+            <label className="flex items-center gap-2 text-sm text-stone-700 cursor-pointer">
+              <input
+                type="checkbox"
+                data-testid="sell-f-show-phone"
+                checked={form.contact_show_phone}
+                onChange={(e) => setForm({ ...form, contact_show_phone: e.target.checked })}
+              />
+              {t("cloud.sell.f_show_phone")}
+            </label>
+            {form.contact_show_phone && (
+              <Field label={t("cloud.sell.f_phone")}>
+                <input
+                  data-testid="sell-f-phone"
+                  value={form.contact_phone}
+                  onChange={(e) => setForm({ ...form, contact_phone: e.target.value })}
+                  className={inputCls}
+                  placeholder="+39…"
+                />
+              </Field>
+            )}
+            <label className="flex items-center gap-2 text-sm text-stone-700 cursor-pointer">
+              <input
+                type="checkbox"
+                data-testid="sell-f-show-whatsapp"
+                checked={form.contact_show_whatsapp}
+                onChange={(e) => setForm({ ...form, contact_show_whatsapp: e.target.checked })}
+              />
+              {t("cloud.sell.f_show_whatsapp")}
+            </label>
+            {form.contact_show_whatsapp && (
+              <Field label={t("cloud.sell.f_whatsapp")}>
+                <input
+                  data-testid="sell-f-whatsapp"
+                  value={form.contact_whatsapp}
+                  onChange={(e) => setForm({ ...form, contact_whatsapp: e.target.value })}
+                  className={inputCls}
+                  placeholder="+39…"
+                />
+              </Field>
+            )}
+          </fieldset>
 
           <Field label={t("cloud.sell.f_photos")}>
             <p className="text-xs text-stone-500 mb-2">{t("cloud.sell.f_photos_hint")}</p>
