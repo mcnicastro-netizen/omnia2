@@ -179,6 +179,7 @@ adopt_or_start_preview() {
   fi
   cd "$ROOT/frontend"
   nohup env PREVIEW_PORT="$PREVIEW_PORT" API_ORIGIN="$API_ORIGIN" \
+    CRM_PUBLIC_PREVIEW="${CRM_PUBLIC_PREVIEW:-1}" \
     node preview-server.js >>"$LOG_DIR/preview.log" 2>&1 &
   echo $! >"$pid_preview"
   for _ in $(seq 1 30); do
@@ -293,6 +294,8 @@ print_share() {
   if [[ -n "$url" ]]; then
     echo "  Portale / app:  $url"
     echo "  CRM login:      $url/it/login"
+    echo "  QC dashboard:   $url/it/app/dashboard   (CRM_PUBLIC_PREVIEW auto-session)"
+    echo "  QC screenshot:  $url/_qc/"
     echo "  (salvato in $share_file)"
   else
     echo "  Tunnel non attivo — usa ENABLE_TUNNEL=1 $0 ensure"

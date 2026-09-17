@@ -14,6 +14,14 @@ const { createProxyMiddleware } = require("http-proxy-middleware");
 const PORT = Number(process.env.PREVIEW_PORT || 43123);
 const API = process.env.API_ORIGIN || "http://127.0.0.1:43121";
 const BUILD = path.join(__dirname, "build");
+// Temporary QC gate: auto-session on /app/* so reviewers can open gestionale without login.
+// Disable with CRM_PUBLIC_PREVIEW=0 after the review.
+const CRM_PUBLIC_PREVIEW = String(process.env.CRM_PUBLIC_PREVIEW || "0") === "1";
+const QC_SHOTS_DIRS = [
+  path.join(BUILD, "_qc", "screenshots"),
+  "/opt/cursor/artifacts/screenshots",
+  "/tmp/omnia-stack/qc-screenshots",
+].filter((d) => fs.existsSync(d));
 
 const BOT_UA =
   /bot|crawler|spider|slurp|facebookexternalhit|facebot|twitterbot|linkedinbot|whatsapp|telegram|discordbot|slackbot|pinterest|embedly|quora link preview|outbrain|vkshare|w3c_validator|google-inspectiontool|bingpreview|preview|semrush|ahrefs|mj12|dotbot|bytespider|ia_archiver|curl\/|wget\/|python-requests|httpclient|scrapy/i;
@@ -126,6 +134,119 @@ function cloudSnapshotHtml(req) {
 function isAppRoute(req) {
   const p = (req.path || "").toLowerCase();
   return /^\/(it|en|es)\/(app|login)(\/|$)/.test(p) || p === "/app" || p === "/login";
+}
+
+function hasAccessCookie(req) {
+  const raw = req.headers.cookie || "";
+  return /(?:^|;\s*)access_token=/.test(raw);
+}
+
+function loadPreviewCreds() {
+  const email =
+    process.env.CRM_PREVIEW_EMAIL ||
+    process.env.ADMIN_EMAIL ||
+    process.env.OMNIA_ADMIN_EMAIL ||
+    "";
+  const password =
+    process.env.CRM_PREVIEW_PASSWORD ||
+    process.env.ADMIN_PASSWORD ||
+    process.env.OMNIA_ADMIN_PASSWORD ||
+    "";
+  if (email && password) return { email, password };
+  // Fall back to local env file (server-side only — never exposed to browser)
+  try {
+    const envPath = path.join(__dirname, "..", "backend", ".env");
+    const text = fs.readFileSync(envPath, "utf8");
+    const get = (k) => {
+      const m = text.match(new RegExp(`^${k}=(.*)$`, "m"));
+      return m ? m[1].trim() : "";
+    };
+    return { email: get("ADMIN_EMAIL"), password: get("ADMIN_PASSWORD") };
+  } catch {
+    return { email: "", password: "" };
+  }
+}
+
+function apiLoginForPreview() {
+  return new Promise((resolve) => {
+    const creds = loadPreviewCreds();
+    if (!creds.email || !creds.password) {
+      return resolve({ ok: false, cookies: [], error: "missing_preview_creds" });
+    }
+    const body = JSON.stringify({ email: creds.email, password: creds.password });
+    const url = new URL(API);
+    const req = http.request(
+      {
+        hostname: url.hostname,
+        port: url.port || 80,
+        path: "/api/auth/login",
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Content-Length": Buffer.byteLength(body),
+          Connection: "close",
+        },
+        timeout: 8000,
+      },
+      (res) => {
+        const setCookies = [].concat(res.headers["set-cookie"] || []);
+        res.resume();
+        resolve({
+          ok: res.statusCode >= 200 && res.statusCode < 300 && setCookies.length > 0,
+          cookies: setCookies,
+          status: res.statusCode,
+        });
+      }
+    );
+    req.on("error", (err) => resolve({ ok: false, cookies: [], error: String(err.message || err) }));
+    req.on("timeout", () => {
+      req.destroy();
+      resolve({ ok: false, cookies: [], error: "timeout" });
+    });
+    req.write(body);
+    req.end();
+  });
+}
+
+/** Rewrite Set-Cookie for the public host (tunnel) — drop Domain, keep Path/SameSite. */
+function forwardAuthCookies(res, setCookieHeaders) {
+  for (const raw of setCookieHeaders || []) {
+    const cleaned = String(raw)
+      .split(";")
+      .map((p) => p.trim())
+      .filter((p) => p && !/^domain=/i.test(p))
+      .join("; ");
+    res.append("Set-Cookie", cleaned);
+  }
+}
+
+function injectQcBanner(html) {
+  if (!CRM_PUBLIC_PREVIEW) return html;
+  const banner = `
+<style id="omnia-qc-style">
+  #omnia-qc-banner{position:fixed;z-index:99999;left:0;right:0;top:0;background:#92400e;color:#fff;font:12px/1.4 system-ui,sans-serif;padding:8px 14px;text-align:center}
+  body.omnia-qc-preview{padding-top:36px !important}
+</style>
+<script>window.__OMNIA_QC_PREVIEW__=true;document.documentElement.classList.add('omnia-qc-preview');</script>
+<div id="omnia-qc-banner">QC PREVIEW · ImmoWeb gestionale aperto senza login (temporaneo) · non usare in produzione</div>`;
+  if (/<body[^>]*>/i.test(html)) {
+    return html.replace(/<body([^>]*)>/i, `<body$1 class="omnia-qc-preview">${banner}`);
+  }
+  return banner + html;
+}
+
+async function ensureQcSession(req, res) {
+  if (!CRM_PUBLIC_PREVIEW) return false;
+  if (!isAppRoute(req)) return false;
+  if (hasAccessCookie(req)) return false;
+  const result = await apiLoginForPreview();
+  if (result.ok) {
+    forwardAuthCookies(res, result.cookies);
+    res.setHeader("X-Omnia-Qc-Session", "auto");
+    return true;
+  }
+  res.setHeader("X-Omnia-Qc-Session", `fail:${result.error || result.status || "unknown"}`);
+  return false;
 }
 
 function appRootInnerHtml(origin) {
@@ -371,6 +492,7 @@ app.get("/healthz", (_req, res) => {
         api_origin: API,
         api_ok: apiOk,
         api_status: code || null,
+        crm_public_preview: CRM_PUBLIC_PREVIEW,
         error: err ? String(err.message || err) : null,
       });
     } catch (sendErr) {
@@ -452,6 +574,68 @@ function sendCloudSsr(req, res) {
 ].forEach((p) => app.get(p, sendCloudSsr));
 app.get(/^\/(it|en|es)\/cloud(\/.*)?$/, sendCloudSsr);
 
+// —— QC artifacts (public screenshots for external review) ——
+function resolveQcShot(name) {
+  const safe = path.basename(String(name || ""));
+  if (!safe || safe !== name || !/\.png$/i.test(safe)) return null;
+  for (const dir of QC_SHOTS_DIRS) {
+    const full = path.join(dir, safe);
+    if (fs.existsSync(full)) return full;
+  }
+  return null;
+}
+
+app.get("/_qc", (_req, res) => {
+  res.redirect(302, "/_qc/");
+});
+
+app.get("/_qc/", (req, res) => {
+  const origin = publicOrigin(req);
+  const shots = [
+    ["01-gestionale-dashboard.png", "Dashboard gestionale"],
+    ["02-gestionale-immobili.png", "Lista immobili"],
+    ["03-gestionale-scheda-immobile.png", "Scheda immobile"],
+    ["04-gestionale-clienti.png", "Clienti / CRM"],
+    ["05-gestionale-hal.png", "HAL Knowledge"],
+  ];
+  const cards = shots
+    .map(
+      ([file, label]) => `
+    <section style="margin:0 0 48px">
+      <h2 style="font:600 18px system-ui;margin:0 0 12px">${escapeHtml(label)}</h2>
+      <p style="font:13px system-ui;color:#57534e;margin:0 0 12px"><a href="${escapeHtml(origin)}/_qc/screenshots/${escapeHtml(file)}">${escapeHtml(file)}</a></p>
+      <img src="/_qc/screenshots/${escapeHtml(file)}" alt="${escapeHtml(label)}" style="width:100%;max-width:1100px;border:1px solid #d6d3d1;border-radius:8px" />
+    </section>`
+    )
+    .join("\n");
+  res.setHeader("Cache-Control", "no-store");
+  res.setHeader("Content-Type", "text/html; charset=utf-8");
+  res.status(200).send(`<!doctype html>
+<html lang="it"><head>
+<meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>ImmoWeb QC — screenshot gestionale</title>
+<meta name="robots" content="noindex,nofollow"/>
+</head>
+<body style="margin:0;background:#fafaf9;color:#1c1917;font-family:system-ui,sans-serif">
+  <header style="padding:28px 24px;border-bottom:1px solid #e7e5e4;background:#fff">
+    <p style="margin:0;letter-spacing:.2em;text-transform:uppercase;font-size:11px;color:#a8a29e">ImmoWeb · QC review</p>
+    <h1 style="margin:8px 0 0;font:400 28px Georgia,serif">Screenshot gestionale (senza login)</h1>
+    <p style="margin:12px 0 0;max-width:720px;color:#57534e;line-height:1.5">
+      Live dashboard (auto-session QC):
+      <a href="${escapeHtml(origin)}/it/app/dashboard">${escapeHtml(origin)}/it/app/dashboard</a>
+    </p>
+  </header>
+  <main style="padding:32px 24px;max-width:1140px;margin:0 auto">${cards}</main>
+</body></html>`);
+});
+
+app.get("/_qc/screenshots/:file", (req, res) => {
+  const full = resolveQcShot(req.params.file);
+  if (!full) return res.status(404).send("not found");
+  res.setHeader("Cache-Control", "public, max-age=300");
+  res.sendFile(full);
+});
+
 app.use(
   express.static(BUILD, {
     index: false,
@@ -463,13 +647,19 @@ app.use(
   })
 );
 
-app.get("*", (req, res) => {
+app.get("*", async (req, res) => {
   res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate");
   res.setHeader("Connection", "close");
   res.setHeader("Pragma", "no-cache");
 
   if (shouldServeCloudSnapshot(req)) {
     return sendCloudSsr(req, res);
+  }
+
+  try {
+    await ensureQcSession(req, res);
+  } catch (e) {
+    console.error("[qc-session]", e && e.message);
   }
 
   const indexPath = path.join(BUILD, "index.html");
@@ -480,9 +670,11 @@ app.get("*", (req, res) => {
         message: "Esegui: cd frontend && REACT_APP_BACKEND_URL= yarn build",
       });
     }
-    const body = isAppRoute(req) ? rewriteAppSpaHtml(html, req) : html;
+    let body = isAppRoute(req) ? rewriteAppSpaHtml(html, req) : html;
+    if (isAppRoute(req) && CRM_PUBLIC_PREVIEW) body = injectQcBanner(body);
     res.setHeader("Content-Type", "text/html; charset=utf-8");
     if (isAppRoute(req)) res.setHeader("X-Omnia-Surface", "immoweb");
+    if (CRM_PUBLIC_PREVIEW) res.setHeader("X-Omnia-Qc-Preview", "1");
     res.status(200).send(body);
   });
 });
@@ -496,6 +688,9 @@ server.maxConnections = 100;
 server.listen(PORT, "0.0.0.0", () => {
   console.log(`OMNIA preview listening on http://0.0.0.0:${PORT} → API ${API}`);
   console.log(`Health: http://127.0.0.1:${PORT}/healthz`);
+  if (CRM_PUBLIC_PREVIEW) {
+    console.log(`QC PREVIEW ON — /it/app/dashboard auto-session · screenshots /_qc/`);
+  }
 });
 
 process.on("SIGTERM", () => server.close(() => process.exit(0)));
