@@ -1,0 +1,570 @@
+{
+  "kind": "gestionale_stress_s0_s6",
+  "run_id": "7e1d21fd",
+  "api": "http://127.0.0.1:43121/api",
+  "agency_id": "demo-agency-001",
+  "started_at": "2026-09-17T13:38:06.786680+00:00",
+  "sections": {
+    "s1_seed": {
+      "clients": {
+        "requested": 2000,
+        "written": 2000,
+        "write_ms": 29.3,
+        "ok": true
+      },
+      "properties": {
+        "requested": 2000,
+        "written": 2000,
+        "active": 40,
+        "active_cap": 40,
+        "write_ms": 36.6,
+        "ok": true
+      },
+      "ok": true
+    },
+    "s0_s4_inventory_smoke": {
+      "tools": [
+        {
+          "module": "dashboard",
+          "ui": "/app/dashboard",
+          "probes": [
+            {
+              "path": "/app/dashboard/kpis",
+              "method": "GET",
+              "status": 200,
+              "ms": 52.2,
+              "bytes": 798,
+              "ok": true
+            }
+          ],
+          "ok": true,
+          "warn": false
+        },
+        {
+          "module": "properties",
+          "ui": "/app/properties",
+          "probes": [
+            {
+              "path": "/app/properties?page=1&page_size=50",
+              "method": "GET",
+              "status": 200,
+              "ms": 11.1,
+              "bytes": 20103,
+              "ok": true
+            }
+          ],
+          "ok": true,
+          "warn": false
+        },
+        {
+          "module": "clients",
+          "ui": "/app/clients",
+          "probes": [
+            {
+              "path": "/app/clients?page=1&page_size=50",
+              "method": "GET",
+              "status": 200,
+              "ms": 58.9,
+              "bytes": 14713,
+              "ok": true
+            },
+            {
+              "path": "/app/clients/smart?page=1&page_size=50",
+              "method": "GET",
+              "status": 200,
+              "ms": 336.0,
+              "bytes": 33655,
+              "ok": true
+            },
+            {
+              "path": "/app/clients/sellers",
+              "method": "GET",
+              "status": 200,
+              "ms": 59.9,
+              "bytes": 3171,
+              "ok": true
+            }
+          ],
+          "ok": true,
+          "warn": false
+        },
+        {
+          "module": "matches",
+          "ui": "/app/matches",
+          "probes": [
+            {
+              "path": "/app/matches?min_score=80&limit=20",
+              "method": "GET",
+              "status": 200,
+              "ms": 53653.3,
+              "bytes": 18127,
+              "ok": true
+            }
+          ],
+          "ok": true,
+          "warn": false
+        },
+        {
+          "module": "analytics",
+          "ui": "/app/analytics",
+          "probes": [
+            {
+              "path": "/app/analytics/agency/overview?days_lookback=30",
+              "method": "GET",
+              "status": 200,
+              "ms": 17.0,
+              "bytes": 740,
+              "ok": true
+            }
+          ],
+          "ok": true,
+          "warn": false
+        },
+        {
+          "module": "publishing",
+          "ui": "/app/publishing",
+          "probes": [
+            {
+              "path": "/app/publishing/connections",
+              "method": "GET",
+              "status": 200,
+              "ms": 46.2,
+              "bytes": 22,
+              "ok": true
+            },
+            {
+              "path": "/app/publishing/catalog",
+              "method": "GET",
+              "status": 200,
+              "ms": 47.7,
+              "bytes": 3517,
+              "ok": true
+            }
+          ],
+          "ok": true,
+          "warn": false
+        },
+        {
+          "module": "hal_knowledge",
+          "ui": "/app/hal-knowledge",
+          "probes": [
+            {
+              "path": "/app/hal/knowledge/status",
+              "method": "GET",
+              "status": 200,
+              "ms": 59.7,
+              "bytes": 7015540,
+              "ok": true
+            }
+          ],
+          "ok": true,
+          "warn": false
+        },
+        {
+          "module": "mls",
+          "ui": "/app/mls",
+          "probes": [
+            {
+              "path": "/app/mls/dashboard",
+              "method": "GET",
+              "status": 200,
+              "ms": 84.3,
+              "bytes": 375,
+              "ok": true
+            },
+            {
+              "path": "/app/mls/inventory",
+              "method": "GET",
+              "status": 200,
+              "ms": 64.2,
+              "bytes": 7703,
+              "ok": true
+            }
+          ],
+          "ok": true,
+          "warn": false
+        },
+        {
+          "module": "modulistica",
+          "ui": "/app/modulistica",
+          "probes": [
+            {
+              "path": "/app/modulistica/templates",
+              "method": "GET",
+              "status": 200,
+              "ms": 48.1,
+              "bytes": 2994,
+              "ok": true
+            }
+          ],
+          "ok": true,
+          "warn": false
+        },
+        {
+          "module": "members",
+          "ui": "/app/members",
+          "probes": [
+            {
+              "path": "/app/agencies/me/members",
+              "method": "GET",
+              "status": 200,
+              "ms": 48.4,
+              "bytes": 1745,
+              "ok": true
+            }
+          ],
+          "ok": true,
+          "warn": false
+        },
+        {
+          "module": "api_keys",
+          "ui": "/app/api-keys",
+          "probes": [
+            {
+              "path": "/app/api-keys",
+              "method": "GET",
+              "status": 200,
+              "ms": 116.0,
+              "bytes": 22,
+              "ok": true
+            }
+          ],
+          "ok": true,
+          "warn": false
+        },
+        {
+          "module": "settings",
+          "ui": "/app/settings",
+          "probes": [
+            {
+              "path": "/app/agencies/me",
+              "method": "GET",
+              "status": 200,
+              "ms": 48.0,
+              "bytes": 386,
+              "ok": true
+            }
+          ],
+          "ok": true,
+          "warn": false
+        },
+        {
+          "module": "billing",
+          "ui": "/app/settings/billing",
+          "probes": [
+            {
+              "path": "/billing/plans",
+              "method": "GET",
+              "status": 200,
+              "ms": 44.2,
+              "bytes": 1482,
+              "ok": true
+            }
+          ],
+          "ok": true,
+          "warn": false
+        },
+        {
+          "module": "staging",
+          "ui": "/app/staging",
+          "probes": [
+            {
+              "path": "/app/staging/styles",
+              "method": "GET",
+              "status": 200,
+              "ms": 44.2,
+              "bytes": 579,
+              "ok": true
+            },
+            {
+              "path": "/app/staging/history",
+              "method": "GET",
+              "status": 200,
+              "ms": 47.7,
+              "bytes": 22,
+              "ok": true
+            }
+          ],
+          "ok": true,
+          "warn": false
+        },
+        {
+          "module": "founder_ops",
+          "ui": "/app/ops",
+          "probes": [
+            {
+              "path": "/app/ops/overview",
+              "method": "GET",
+              "status": 200,
+              "ms": 56.5,
+              "bytes": 3820,
+              "ok": true
+            }
+          ],
+          "ok": true,
+          "warn": false
+        },
+        {
+          "module": "moderation",
+          "ui": "/app/moderation",
+          "probes": [
+            {
+              "path": "/app/moderation/queue",
+              "method": "GET",
+              "status": 200,
+              "ms": 10.6,
+              "bytes": 92716,
+              "ok": true
+            }
+          ],
+          "ok": true,
+          "warn": false
+        },
+        {
+          "module": "hal_assist",
+          "ui": "HAL Assist",
+          "probes": [
+            {
+              "path": "/app/al/sessions",
+              "method": "GET",
+              "status": 200,
+              "ms": 46.0,
+              "bytes": 12,
+              "ok": true
+            }
+          ],
+          "ok": true,
+          "warn": false
+        },
+        {
+          "module": "hal_legal",
+          "ui": "HAL Legal",
+          "probes": [
+            {
+              "path": "/app/legal/sessions",
+              "method": "GET",
+              "status": 200,
+              "ms": 52.6,
+              "bytes": 428,
+              "ok": true
+            }
+          ],
+          "ok": true,
+          "warn": false
+        }
+      ],
+      "create_client_smoke": {
+        "path": "/app/clients",
+        "method": "POST",
+        "status": 201,
+        "ms": 47.8,
+        "bytes": 817,
+        "ok": true,
+        "id": "c0439a04-98a1-481e-9736-4b7f27173769"
+      },
+      "hard_failures": [],
+      "ok": true
+    },
+    "s1_http_fanout": {
+      "paths": {
+        "/app/dashboard/kpis": {
+          "path": "/app/dashboard/kpis",
+          "n": 40,
+          "errors": 0,
+          "wall_s": 0.252,
+          "statuses": [
+            200
+          ],
+          "ok": true,
+          "p50_ms": 71.5,
+          "p95_ms": 87.3,
+          "max_ms": 94.1
+        },
+        "/app/clients?page=1&page_size=50": {
+          "path": "/app/clients?page=1&page_size=50",
+          "n": 40,
+          "errors": 0,
+          "wall_s": 0.203,
+          "statuses": [
+            200
+          ],
+          "ok": true,
+          "p50_ms": 57.9,
+          "p95_ms": 65.1,
+          "max_ms": 76.5
+        },
+        "/app/clients/smart?page=1&page_size=50": {
+          "path": "/app/clients/smart?page=1&page_size=50",
+          "n": 40,
+          "errors": 0,
+          "wall_s": 0.767,
+          "statuses": [
+            200
+          ],
+          "ok": true,
+          "p50_ms": 141.2,
+          "p95_ms": 436.0,
+          "max_ms": 438.6
+        },
+        "/app/properties?page=1&page_size=50": {
+          "path": "/app/properties?page=1&page_size=50",
+          "n": 40,
+          "errors": 0,
+          "wall_s": 0.212,
+          "statuses": [
+            200
+          ],
+          "ok": true,
+          "p50_ms": 61.8,
+          "p95_ms": 70.2,
+          "max_ms": 79.1
+        },
+        "/app/analytics/agency/overview?days_lookback=30": {
+          "path": "/app/analytics/agency/overview?days_lookback=30",
+          "n": 40,
+          "errors": 0,
+          "wall_s": 0.322,
+          "statuses": [
+            200
+          ],
+          "ok": true,
+          "p50_ms": 74.3,
+          "p95_ms": 148.5,
+          "max_ms": 150.2
+        },
+        "/app/publishing/connections": {
+          "path": "/app/publishing/connections",
+          "n": 40,
+          "errors": 0,
+          "wall_s": 0.148,
+          "statuses": [
+            200
+          ],
+          "ok": true,
+          "p50_ms": 39.2,
+          "p95_ms": 49.3,
+          "max_ms": 52.7
+        },
+        "/app/api-keys": {
+          "path": "/app/api-keys",
+          "n": 40,
+          "errors": 0,
+          "wall_s": 0.16,
+          "statuses": [
+            200
+          ],
+          "ok": true,
+          "p50_ms": 43.0,
+          "p95_ms": 50.7,
+          "max_ms": 55.7
+        },
+        "/app/agencies/me/members": {
+          "path": "/app/agencies/me/members",
+          "n": 40,
+          "errors": 0,
+          "wall_s": 0.209,
+          "statuses": [
+            200
+          ],
+          "ok": true,
+          "p50_ms": 46.4,
+          "p95_ms": 106.6,
+          "max_ms": 108.6
+        }
+      },
+      "ok": true
+    },
+    "s2_mongo": {
+      "sample": 400,
+      "misses": 0,
+      "p50_ms": 8.15,
+      "p95_ms": 16.77,
+      "ok": true
+    },
+    "s3_security": {
+      "unauth_/app/clients": {
+        "status": 401,
+        "ok": true
+      },
+      "unauth_/app/properties": {
+        "status": 401,
+        "ok": true
+      },
+      "unauth_/app/dashboard/kpis": {
+        "status": 401,
+        "ok": true
+      },
+      "unauth_/app/api-keys": {
+        "status": 401,
+        "ok": true
+      },
+      "unauth_/app/agencies/me/members": {
+        "status": 401,
+        "ok": true
+      },
+      "unauth_/app/publishing/connections": {
+        "status": 401,
+        "ok": true
+      },
+      "brute_force": {
+        "statuses": [
+          401,
+          401,
+          401,
+          401,
+          401,
+          429
+        ],
+        "locked_or_rejected": true,
+        "ok": true
+      },
+      "ok": true
+    },
+    "s5_soft_externals": {
+      "resend": {
+        "action": "SKIP_SEND",
+        "ok": true
+      },
+      "stripe_checkout": {
+        "action": "SKIP",
+        "catalog": {
+          "path": "/app/billing/plans",
+          "method": "GET",
+          "status": 404,
+          "ms": 48.0,
+          "bytes": 22,
+          "ok": false
+        },
+        "ok": true
+      },
+      "fal_kling": {
+        "action": "SKIP",
+        "ok": true
+      },
+      "portal_live_publish": {
+        "action": "SKIP",
+        "ok": true
+      },
+      "nominatim": {
+        "action": "SKIP",
+        "ok": true
+      },
+      "ok": true,
+      "note": "vendors soft-probed / skipped \u2014 no spend no ban"
+    }
+  },
+  "clients_seeded": 2000,
+  "properties_seeded": 2000,
+  "required_ok": true,
+  "finished_at": "2026-09-17T13:39:16.230749+00:00",
+  "db_counts": {
+    "clients_agency": 12000,
+    "properties_agency": 4201,
+    "stress_clients": 2000,
+    "stress_properties": 2000
+  },
+  "cleanup": {
+    "clients": 2000,
+    "properties": 2000
+  }
+}
