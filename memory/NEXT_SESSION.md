@@ -1,8 +1,9 @@
 # Prossima sessione — programma passi
 
-**Aggiornato**: 17 Settembre 2026 — preprod confidence gate  
+**Aggiornato**: 17 Settembre 2026 — repo ufficiale GitHub `omnia2` popolato  
 **Stato base**: Sprint 1→4 **CONCLUSO**. Stress: `PLATFORM_STRESS_REPORT.md` + `STRESS_REPORT.md`.  
 **Preprod gate**: `memory/PREPROD_GATE_REPORT.md` (PASS required — no vendor burn).  
+**Repo ufficiale**: https://github.com/mcnicastro-netizen/omnia2 ✅ (Emergent `OMNIA` = backup, non cancellare)  
 **Nord prodotto B2C**: `memory/PRODUCT_NORTHSTAR_B2C.md` (**obbligatorio** prima di ship `/cloud`).
 
 ---

@@ -1,24 +1,25 @@
-# Creazione repo Cursor `omnia2`
+# Repo ufficiale Cursor/GitHub: `omnia2`
 
-**Stato**: nome scelto dal Founder · **bloccato sulla creazione** (token agente senza scope `repo create`) · Emergent intatto.
+**Stato**: ✅ **POPOLATO** · push completato 2026-09-17
 
-## Cosa è già verificato
-- Inventario: Cursor = superinsieme completo di `mcnicastro-netizen/OMNIA` (0 file solo-Emergent).
-- Report: `memory/REPO_MIGRATION_INVENTORY.md`
+## URL
+https://github.com/mcnicastro-netizen/omnia2
 
-## Cosa deve fare il Founder (1 volta)
-1. In Cursor: crea un nuovo repository Origin chiamato **`omnia2`** (namespace `marco-nicastro`).
-   - Oppure: pill **Create repo** / Dashboard Origin → New repository → nome `omnia2`.
-2. Non cancellare Emergent né il GitHub `OMNIA`.
-3. Scrivi in chat: **«omnia2 creato»** (o incolla l’URL).
+## Cosa contiene
+- Mirror completo di questo workspace Cursor (`main`, 100+ commit)
+- Superinsieme del vecchio Emergent `mcnicastro-netizen/OMNIA` (inventario: 0 file mancanti)
+- Scout, gate preprod, security go-live, docs, ecc.
 
-## Cosa farà l’agente subito dopo
-1. Aggiungere remote `omnia2` → `https://origin.cursor.com/git/marco-nicastro/omnia2`
-2. `git push` di **tutto** `main` (storia Cursor inclusa)
-3. Clone fresco + re-check inventario (0 mancanze)
-4. Aggiornare README / NEXT_SESSION con l’URL ufficiale
-5. Emergent e il tmp attuale restano intatti
+## Cosa NON toccare
+- Emergent / GitHub **`OMNIA`** resta backup intatto (ultimo push 16-ago-2026)
+- Non cancellare `OMNIA` finché non sei sicuro al 100%
 
-## URL atteso
-`https://origin.cursor.com/marco-nicastro/omnia2`  
-(o equivalente mostrato da Cursor dopo la creazione)
+## Come lavorare da ora
+1. Apri Cloud Agent / progetto su **`omnia2`** (non sul vecchio `tmp-…`)
+2. Branch di lavoro: `main` (o `cursor/…-15e8` se serve isolamento)
+3. Secret `GITHUB_TOKEN` già in Environment (per agent futuri)
+
+## Verifica post-push (agente)
+- Tree GitHub: **628** path
+- Spot-check 200: `backend/server.py`, `frontend/package.json`, `preprod_confidence_gate.py`, `omnia-stack.sh`, inventario
+- Emergent `OMNIA` `pushed_at` invariato
