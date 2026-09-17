@@ -1,5 +1,15 @@
 # OMNIA — Changelog
 
+## 2026-09-17 — Gestionale: ingresso CRM + dashboard demo-ready
+
+**Tipo**: UX ImmoWeb (gestionale-first).
+
+- `/app` non mostra più «Coming soon: M2»: utenti CRM → redirect a dashboard; guest → CTA login
+- Dashboard: azioni rapide (immobile, cliente, match, portali, HAL) + KPI cliccabili
+- Copy IT/EN aggiornata (niente hint M2 bloccanti)
+- Remote ufficiale push: GitHub `mcnicastro-netizen/omnia2`
+
+---
 ## 2026-09-17 — Preprod confidence gate (no vendor burn)
 
 **Tipo**: QA / go-live safety.

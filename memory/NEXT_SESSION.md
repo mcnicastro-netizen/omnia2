@@ -26,6 +26,8 @@
 | Sprint 1→4 | ✅ |
 | Gap ImmobilCloud + stress | ✅ |
 | Preprod confidence gate (no € / no ban) | ✅ (17-Set) |
+| Repo ufficiale GitHub `omnia2` | ✅ (17-Set) |
+| Gestionale ingresso CRM + dashboard quick actions | ✅ (17-Set) |
 | Home B2C visual + SSR preview | ✅ (16-Set) |
 | Layout altre pagine B2C | ✅ (17-Set) |
 | Scout v1 + fiducia + voce lister | ✅ |
