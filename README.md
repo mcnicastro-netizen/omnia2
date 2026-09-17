@@ -13,12 +13,12 @@ Piattaforma full-stack per il mercato immobiliare italiano: CRM B2B (**ImmoWeb**
 ## Setup locale (Cursor)
 1. MongoDB in ascolto su `127.0.0.1:27017`
 2. `cp backend/.env.example backend/.env` e `cp frontend/.env.example frontend/.env` — valorizza `JWT_SECRET`
-3. **Stack stabile (consigliato)** — API + preview same-origin, auto-restart:
+3. **Stack stabile (consigliato)** — API + preview same-origin + tunnel pubblico:
    ```bash
    bash scripts/omnia-stack.sh ensure   # oppure: watch
+   bash scripts/omnia-stack.sh share    # stampa URL pubblico CRM
    ```
-4. Apri l’area riservata tramite **Cursor → Ports → `omnia-preview` (43123)**  
-   Non usare localtunnel / Cloudflare quick tunnel (sono la causa dei Bad Gateway).
+4. **Condivisione (come il portale)**: lo stack avvia `cloudflared` e scrive l’URL in `/tmp/omnia-stack/SHARE_URL.txt` e `CRM_LOGIN_URL.txt`. Niente Port Forward. Locale: `http://127.0.0.1:43123`.
 5. Alternativa manuale:
    ```bash
    cd backend && python3 -m venv .venv && source .venv/bin/activate
@@ -37,13 +37,15 @@ Credenziali di test: `memory/test_credentials.env` (gitignored).
 - API Track B: `GET /api/v1/modulistica/templates`, `POST /api/v1/modulistica/render` (2 crediti)
 
 ## Porte di sviluppo
-- **Preview area riservata (stabile)**: `http://127.0.0.1:43123` ← usa questa
+- **Preview locale**: `http://127.0.0.1:43123`
+- **CRM login locale**: `http://127.0.0.1:43123/it/login`
+- **URL pubblico**: `bash scripts/omnia-stack.sh share` (trycloudflare, stesso pattern del portale)
 - API diretta: `http://127.0.0.1:43121`
 - Health: `http://127.0.0.1:43123/healthz`
 - Health stack: `bash scripts/omnia-stack.sh status`
 - Dopo modifiche FE: `bash scripts/omnia-stack.sh rebuild`
 
-> **Bad Gateway**: quasi sempre tunnel esterni (localtunnel / trycloudflare). Lo stack ufficiale non li usa. In Cursor: pannello **Ports → omnia-preview**.
+> **ERR_EMPTY_RESPONSE su Port Forward**: di solito preview crashato o forward stale. Fix: `bash scripts/omnia-stack.sh restart-preview` poi usa l’URL da `share` (niente trafila Ports).
 
 ## Roadmap operativa (vincolante)
 `M0 travaso → M1 LLM/storage → M2 MLS → M3 Manuale+HAL codice → M4 Vercel/harden`  

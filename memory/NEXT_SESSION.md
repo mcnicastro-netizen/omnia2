@@ -10,8 +10,8 @@
 
 ## Ripresa (checklist)
 
-1. `bash scripts/omnia-stack.sh ensure`
-2. Ports → **omnia-preview :43123** (o tunnel CF verso 43123)
+1. `bash scripts/omnia-stack.sh ensure`  → avvia API + preview + **tunnel pubblico**
+2. `bash scripts/omnia-stack.sh share` → URL CRM condivisibile (`/tmp/omnia-stack/CRM_LOGIN_URL.txt`) — **niente Port Forward**
 3. Rileggere `PRODUCT_NORTHSTAR_B2C.md`
 4. Founder: **«vai»** sull’ID se fuori programma
 5. **D-084**: ogni ship aggiorna manuale+YAML ✅ (17-Set: Cap.18 inquiry privato + Cap.23 Ken Burns)

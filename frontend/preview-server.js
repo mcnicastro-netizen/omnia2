@@ -254,6 +254,14 @@ function cloudSsrDocument(req, indexHtml) {
 }
 
 function apiReachable(cb) {
+  // timeout → destroy → often also fires "error"; guard so healthz never double-responds
+  // (double res.json crashed the process → ERR_EMPTY_RESPONSE / connection reset).
+  let settled = false;
+  const finish = (err, code) => {
+    if (settled) return;
+    settled = true;
+    cb(err, code);
+  };
   const url = new URL(API);
   const req = http.request(
     {
@@ -265,28 +273,33 @@ function apiReachable(cb) {
     },
     (res) => {
       res.resume();
-      cb(null, res.statusCode);
+      finish(null, res.statusCode);
     }
   );
-  req.on("error", (err) => cb(err));
+  req.on("error", (err) => finish(err));
   req.on("timeout", () => {
     req.destroy();
-    cb(new Error("timeout"));
+    finish(new Error("timeout"));
   });
   req.end();
 }
 
 app.get("/healthz", (_req, res) => {
   apiReachable((err, code) => {
+    if (res.headersSent || res.writableEnded) return;
     const apiOk = !err && code && code < 500;
-    res.status(apiOk ? 200 : 503).json({
-      ok: apiOk,
-      preview: true,
-      api_origin: API,
-      api_ok: apiOk,
-      api_status: code || null,
-      error: err ? String(err.message || err) : null,
-    });
+    try {
+      res.status(apiOk ? 200 : 503).json({
+        ok: apiOk,
+        preview: true,
+        api_origin: API,
+        api_ok: apiOk,
+        api_status: code || null,
+        error: err ? String(err.message || err) : null,
+      });
+    } catch (sendErr) {
+      console.error("[healthz] send failed:", sendErr && sendErr.message);
+    }
   });
 });
 
