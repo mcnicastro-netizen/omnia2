@@ -192,16 +192,16 @@ def price_vs_zone(p: Dict[str, Any], *, completeness_score_val: Optional[int] = 
         conf_level = "bassa"
         conf_label = "Confidenza bassa — trattala come indizio"
 
-    limits.append(
-        "Fascia da €/m² di zona (benchmark semicentro), non da comparabili puntuali di questo civico."
-    )
+        limits.append(
+            "Fascia da €/m² di zona (zona semicentro), non da comparabili puntuali di questo civico."
+        )
     limits.append("Non è una perizia né un valore OMI ufficiale per questo immobile.")
 
     why: List[Dict[str, str]] = [
         {
             "key": "asking",
             "label_it": (
-                f"Il prezzo chiesto è circa € {int(round(e_mq))}/m² "
+                f"La richiesta è circa € {int(round(e_mq))}/m² "
                 f"({int(round(trying)):,} € su {int(surface)} m²).".replace(",", ".")
             ),
         },
@@ -218,7 +218,7 @@ def price_vs_zone(p: Dict[str, Any], *, completeness_score_val: Optional[int] = 
         why.append({
             "key": "signal",
             "label_it": (
-                "Il chiesto sta sopra quella fascia: chiedi motivazione (vista, ristrutturazione, "
+                "La richiesta sta sopra quella fascia: chiedi motivazione (vista, ristrutturazione, "
                 "piano) o margine di trattativa — non è automaticamente ‘caro’."
             ),
         })
@@ -226,18 +226,18 @@ def price_vs_zone(p: Dict[str, Any], *, completeness_score_val: Optional[int] = 
         why.append({
             "key": "signal",
             "label_it": (
-                "Il chiesto sta sotto quella fascia: verifica urgenza, stato, vincoli o successione "
+                "La richiesta sta sotto quella fascia: verifica urgenza, stato, vincoli o successione "
                 "prima di entusiasmarti."
             ),
         })
     else:
         why.append({
             "key": "signal",
-            "label_it": "Il chiesto cade dentro la fascia stimata: buon punto di partenza, non una garanzia.",
+            "label_it": "La richiesta cade dentro la fascia stimata: buon punto di partenza, non una garanzia.",
         })
     why.append({
         "key": "source",
-        "label_it": f"Fonte benchmark: {source}.",
+        "label_it": f"Fonte zona: {source}.",
     })
 
     return {
@@ -284,6 +284,7 @@ def seller_questions(p: Dict[str, Any], completeness: Dict[str, Any]) -> List[st
     qs.append("Quali sono le spese condominiali mensili e ci sono lavori deliberati o fondi speciali?")
     if (p.get("operation") or "sale") == "sale":
         qs.append("L'immobile è libero subito? Ci sono ipoteche, usufrutto o diritti di terzi?")
+        qs.append("L'immobile è mutuabile?")
     else:
         qs.append("Deposito cauzionale, garanzia reddito e contratti precedenti: quali condizioni?")
     # Deduplicate while preserving order
@@ -291,7 +292,7 @@ def seller_questions(p: Dict[str, Any], completeness: Dict[str, Any]) -> List[st
     for q in qs:
         if q not in out:
             out.append(q)
-    return out[:5]
+    return out[:6]
 
 
 def red_flags(p: Dict[str, Any], vs_zone: Dict[str, Any], completeness: Dict[str, Any]) -> List[str]:
@@ -305,11 +306,11 @@ def red_flags(p: Dict[str, Any], vs_zone: Dict[str, Any], completeness: Dict[str
         band = vs_zone.get("estimated_band_eur") or {}
         if band.get("max"):
             flags.append(
-                f"Chiesto sopra la fascia stimata (fino a circa € {int(band['max']):,}). "
+                f"Richiesta sopra la fascia stimata (fino a circa € {int(band['max']):,}). "
                 "Chiedi giustificazione o margine di trattativa.".replace(",", ".")
             )
         else:
-            flags.append("Chiesto sopra la fascia stimata di zona — chiedi giustificazione o margine.")
+            flags.append("Richiesta sopra la fascia stimata di zona — chiedi giustificazione o margine.")
     if vs_zone.get("signal") == "sotto_mercato" and (vs_zone.get("delta_pct_vs_mid") or 0) < -20:
         flags.append(
             "Prezzo sotto la fascia stimata: verifica motivazione (urgenza, difetti, successione) prima di entusiasmarti."
@@ -391,14 +392,6 @@ def visit_checklist(p: Dict[str, Any]) -> List[Dict[str, str]]:
             "label_it": "Controlla umidità, muffa, odori di chiuso — angoli, sottotetto, cantina se c’è.",
         },
         {
-            "key": "systems",
-            "label_it": "Prova acqua calda, termosifoni/condizionamento, prese e citofono.",
-        },
-        {
-            "key": "noise_light",
-            "label_it": "Ascolta rumori (strada, vicini, ascensore) e valuta esposizione reale vs annuncio.",
-        },
-        {
             "key": "commons",
             "label_it": "Guarda le parti comuni: scale, androne, tetto/lastrico se accessibili.",
         },
@@ -413,11 +406,6 @@ def visit_checklist(p: Dict[str, Any]) -> List[Dict[str, str]]:
             "key": "energy_reality",
             "label_it": "Chiedi spese di riscaldamento reali e eventuali lavori di efficientamento già deliberati.",
         })
-    if p.get("floor") is not None or p.get("elevator") is False:
-        items.append({
-            "key": "access",
-            "label_it": "Verifica piano, ascensore e accessibilità (anche per trasloco).",
-        })
     if (p.get("operation") or "sale") == "rent":
         items.append({
             "key": "rent_condition",
@@ -425,14 +413,9 @@ def visit_checklist(p: Dict[str, Any]) -> List[Dict[str, str]]:
         })
     else:
         items.append({
-            "key": "inclusions",
-            "label_it": "Chiarisci cosa resta in vendita (cucina, armadi, box, cantina, posto auto).",
-        })
-        items.append({
             "key": "sqm_feel",
             "label_it": "I mq “si sentono”? Confronta planimetria (se ce l’hai) con gli spazi reali.",
         })
-    # Dedupe by key, cap 10
     out: List[Dict[str, str]] = []
     seen = set()
     for it in items:
@@ -478,7 +461,22 @@ def documents_before_offer(p: Dict[str, Any]) -> List[Dict[str, str]]:
             {
                 "key": "spese",
                 "label_it": "Spese condominiali e ultime delibere (lavori, fondi).",
-                "why_it": "Costi futuri che non vedi nel prezzo chiesto.",
+                "why_it": "Costi futuri che non vedi nella richiesta di prezzo.",
+            },
+            {
+                "key": "concessione",
+                "label_it": "Concessione edilizia (se esistente / lavori fatti).",
+                "why_it": "Verifica che le opere siano legittime rispetto al titolo.",
+            },
+            {
+                "key": "abitabilita",
+                "label_it": "Certificato di abitabilità / agibilità (se esistente).",
+                "why_it": "Serve per abitare e spesso per il mutuo.",
+            },
+            {
+                "key": "impianti",
+                "label_it": "Certificazioni impianto idrico ed elettrico (se esistenti).",
+                "why_it": "Sicurezza e conformità — chiedi se ci sono e se sono aggiornate.",
             },
         ])
     else:
@@ -499,7 +497,7 @@ def documents_before_offer(p: Dict[str, Any]) -> List[Dict[str, str]]:
                 "why_it": "Evita sorprese a verbale.",
             },
         ])
-    return docs[:6]
+    return docs[:9]
 
 
 def deterministic_insight(p: Dict[str, Any], vs_zone: Dict[str, Any], score: int) -> str:
@@ -516,9 +514,9 @@ def deterministic_insight(p: Dict[str, Any], vs_zone: Dict[str, Any], score: int
             "prima di fidarti del prezzo richiesto."
         )
     if vs_zone.get("available") and vs_zone.get("signal") == "sopra_mercato":
-        return f"Completezza ok, ma il chiesto è sopra la fascia stimata a {city}: chiedi margine o motivazione."
+        return f"Completezza ok, ma la richiesta è sopra la fascia stimata a {city}: chiedi margine o motivazione."
     if vs_zone.get("available") and vs_zone.get("signal") == "sotto_mercato":
-        return f"Chiesto sotto la fascia stimata a {city}: verifica motivazione e documentazione prima di accelerare."
+        return f"Richiesta sotto la fascia stimata a {city}: verifica motivazione e documentazione prima di accelerare."
     return f"Annuncio solido su {city}: usa Scout per le domande mirate in visita."
 
 

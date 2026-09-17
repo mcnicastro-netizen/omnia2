@@ -102,16 +102,19 @@ def test_visit_checklist_and_documents_sale():
     }
     visit = visit_checklist(p)
     docs = documents_before_offer(p)
-    assert 5 <= len(visit) <= 10
+    assert 4 <= len(visit) <= 10
     assert any(i["key"] == "moisture" for i in visit)
     assert any(i["key"] == "energy_reality" for i in visit)
-    assert 4 <= len(docs) <= 6
+    assert not any(i["key"] in ("systems", "noise_light", "inclusions", "access") for i in visit)
+    assert 4 <= len(docs) <= 9
     keys = {d["key"] for d in docs}
     assert "ape" in keys and "visura" in keys
+    assert "concessione" in keys and "abitabilita" in keys and "impianti" in keys
     brief = build_brief(p)
     assert brief["visit_checklist"]
     assert brief["documents_before_offer"]
     assert all("why_it" in d for d in brief["documents_before_offer"])
+    assert any("mutuabile" in q.lower() for q in brief["questions_for_seller"])
 
 
 def test_documents_rent_differs_from_sale():

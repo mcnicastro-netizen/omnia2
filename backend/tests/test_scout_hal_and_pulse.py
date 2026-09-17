@@ -90,9 +90,15 @@ def test_02_scout_hal(listing):
     assert len(d["price_vs_zone"]["why"]) >= 2
     assert d["price_vs_zone"]["confidence"]["level"] in ("alta", "media", "bassa")
     assert len(d["questions_for_seller"]) >= 2
-    assert 5 <= len(d["visit_checklist"]) <= 10
-    assert 4 <= len(d["documents_before_offer"]) <= 6
+    assert 4 <= len(d["visit_checklist"]) <= 10
+    assert 4 <= len(d["documents_before_offer"]) <= 9
     assert all("why_it" in x for x in d["documents_before_offer"])
+    assert any("mutuabile" in q.lower() for q in d["questions_for_seller"])
+    limits = " ".join((d["price_vs_zone"].get("confidence") or {}).get("limits_it") or [])
+    assert "zona semicentro" in limits
+    assert "benchmark semicentro" not in limits
+    why = " ".join(w.get("label_it", "") for w in d["price_vs_zone"].get("why") or [])
+    assert "La richiesta" in why or "richiesta" in why.lower()
 
 
 def test_03_price_drop_recording(mongo, listing):

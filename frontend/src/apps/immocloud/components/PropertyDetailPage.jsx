@@ -404,7 +404,7 @@ export default function PropertyDetailPage() {
                                 </p>
                               )}
                               <p className="text-xs text-stone-500 mt-1">
-                                Chiesto ~€{scout.price_vs_zone.asking_eur_mq}/m²
+                                Richiesta ~€{scout.price_vs_zone.asking_eur_mq}/m²
                                 {scout.price_vs_zone.asking_eur
                                   ? ` · € ${Number(scout.price_vs_zone.asking_eur).toLocaleString("it-IT")}`
                                   : ""}
