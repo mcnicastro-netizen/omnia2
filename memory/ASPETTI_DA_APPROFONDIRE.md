@@ -2,7 +2,7 @@
 
 > File di appoggio per **temi strategici/tecnici** che il Founder ha esplicitamente segnalato come "da rivedere più avanti", **senza essere ancora decisioni**. Ogni voce va promossa in `DECISIONS.md` o `ROADMAP.md` quando si decide di procedere.
 
-**Ultimo aggiornamento**: 17-Sep-2026 (A-026 Ken Burns agenzia 501 → Kling/Sora crediti)
+**Ultimo aggiornamento**: 17-Sep-2026 (A-028 ImmoWeb QC esterna — gerarchia + loop mattina agente)
 
 > **Backlog qualità prodotto (A-006+)**: voci tracciate durante lo sprint manuale Cap. 1-18. Priorità assegnata da Cursor (P1=alto ROI/costo basso, P3=futuro). Decisione Founder post-manuale — **NON implementare senza "vai" esplicito**.
 
@@ -1093,6 +1093,66 @@ Confermato in sessione: **non esiste ancora una demo self-serve** per il cliente
 ### Trigger di ripresa
 - Founder vuole rifinire video nel gestionale o demo agenzia con wow video
 - Prima di pitch commerciale che mostri «genera video» lato OMNIA app
+
+---
+
+## 🟠 A-028 — ImmoWeb post-QC esterna · gerarchia UI + loop «mattina dell’agente»
+
+**Data inserimento**: 17-Sep-2026  
+**Segnalato da**: Founder (Marco) — allegata review esterna sulle 5 schermate gestionale (Dashboard, Immobili, Scheda, Clienti, HAL)  
+**Contesto**: Reviewer ha visto ImmoWeb reale (galleria QC). Giudizio: **non è un CRUD** — idea di prodotto chiara (immobili ↔ clienti ↔ match ↔ portali ↔ HAL). Rischio principale = **gerarchia / information architecture**, non mancanza di funzioni. Posizionamento suggerito: verso **«sistema operativo agenzia»**, non «gestionale + AI».  
+**Piano collegato**: `memory/GESTIONALE_TOOLS_QC_PLAN.md` (prova tool domani) → poi prioritizzare queste voci solo con «vai».
+
+### Sintesi review (da tenere)
+- Dashboard buona ma risponde a «stato account», non a **«cosa fare oggi?»**
+- Immobili solidi; a 2k+ serve anche **vista tabella** + filtri intelligenti (incompleti, senza foto, senza match)
+- Scheda immobile: **Fascicolo AI / Migliora con HAL** = direzione giusta → copilota contestuale (mancanti + genera descrizione)
+- Clienti: **Smart Sorting / lead score** = differenziante; lo **83** va spiegato (tooltip breakdown)
+- HAL Knowledge: ottimo come guida software; evoluzione Knowledge → contestuale → **esegui con conferma**
+- Sidebar piatta: troppe voci allo stesso livello (Operativo vs Pubblicazione vs Strumenti vs Intelligenza vs Admin)
+- UI sobria B2B: **tenere**
+
+### Giudizio Cursor (responsabile progetto) — allineato
+Concordo sul nucleo. Temperatura: «OS agenzia» è **nord**, non claim immediato; prima chiudere affidabilità del loop operativo (post tools QC). Vista tabella **affianca** le card, non le sostituisce. Non rifare tutta la sidebar prima del loop mattina su 4 passi.
+
+### Cose da approfondire / candidati implementazione (solo con «vai»)
+
+| ID interno | Tema | Priorità proposta | Note |
+|------------|------|:-----------------:|------|
+| A-028a | **Cockpit Dashboard «Oggi»** — attività da fare (follow-up, immobili incompleti, match da inviare, visite) + attività recenti | **P1** | Trasforma KPI in cockpit; collega idealmente ad A-018 activity feed |
+| A-028b | **Explainability Match Score** — tooltip 83/100 con breakdown criteri | **P1** | Fiducia agente; basso effort UI se score già calcolato server-side |
+| A-028c | **IA sidebar a cluster** (Operativo / Pubblicazione / Strumenti / Intelligenza / Amministrazione) | **P1** | Solo IA nav; niente cambio route/backend |
+| A-028d | **HAL contestuale in scheda immobile** — «cosa manca» + genera descrizione da dati noti | **P1** | Oltre bottone «Migliora»; allinea A-005 direzione copilota |
+| A-028e | **Vista tabella immobili** + toggle card; sort aggiornamento/prezzo/superficie/agente | **P2** | Necessaria a scala 2k+ |
+| A-028f | **Filtri intelligenti** — senza foto, incompleti, senza cliente compatibile, variazione prezzo | **P2** | «Azioni intelligenti» non solo filtri |
+| A-028g | **HAL operativo «esegui con conferma»** — genera + proponi apply su campo | **P2** | Dopo contestuale stabile; D-051 onestà |
+| A-028h | Modulo **Attività / follow-up** dedicato (se assente post tools QC = GAP) | **P2** | Reviewer assume «trattative»; verificare esistenza in QC tools |
+| A-028i | Claim commerciale «OS agenzia» vs «gestionale AI» — copy landing/pitch | **P3** | Solo messaging dopo loop mattina dimostrabile |
+
+### Ordine di attacco proposto (post `GESTIONALE_TOOLS_QC_REPORT`)
+1. A-028a cockpit «Oggi»  
+2. A-028b tooltip Match Score  
+3. A-028c cluster sidebar  
+4. A-028d HAL contestuale scheda  
+5. A-028e/f tabella + filtri intelligenti  
+
+### Fuori scope finché tools QC non è chiuso
+- Implementare redesign senza report PASS/FAIL per tool
+- Aggiungere altre 30 feature verticali
+- Burn vendor per demo
+
+### Domande aperte Founder
+1. Il primo ship post-QC è **cockpit Oggi** o **sidebar cluster** (entrambi IA, impatto diverso sulla demo)?
+2. Match Score: breakdown sempre visibile o solo tooltip/hover?
+3. HAL «esegui con conferma» richiede audit log obbligatorio (D-051 / compliance) — ok come prerequisito?
+
+### Stato
+🟠 **DA APPROFONDIRE** — review esterna acquisita 17-Sep-2026. **NON implementare senza «vai»**. Prima eseguire piano tools QC domani.
+
+### Trigger di ripresa
+- Completato `GESTIONALE_TOOLS_QC_REPORT.md`
+- Founder dice «vai» su una sotto-voce A-028a…i
+- Demo commerciale che mostri il loop mattina agente
 
 ---
 

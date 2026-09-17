@@ -15,7 +15,7 @@
 - UI sobria B2B: tenere.
 - Posizionamento target: **sistema operativo agenzia**, non «gestionale + AI».
 
-**Non fare domani** (salvo «vai»): riscrivere sidebar, cockpit «Oggi», tooltip score 83, vista tabella immobili. Prima: **prova tool → report gap → poi priorità prodotto**.
+**Non fare domani** (salvo «vai»): riscrivere sidebar, cockpit «Oggi», tooltip score 83, vista tabella immobili. Prima: **prova tool → report gap → poi priorità prodotto** (`ASPETTI` **A-028**).
 
 ---
 
