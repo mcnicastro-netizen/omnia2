@@ -12,7 +12,7 @@
 
 1. `bash scripts/omnia-stack.sh ensure`
 2. **Domani**: eseguire `memory/GESTIONALE_TOOLS_QC_PLAN.md` (prova tutti i tool ImmoWeb, no vendor burn) → report `GESTIONALE_TOOLS_QC_REPORT.md`
-3. Review QC esterna (17-Set): prodotto solido; rischio = gerarchia sidebar + dashboard non «cosa fare oggi»; Clienti/HAL differenziante — **no implementazione redesign senza «vai»**
+3. Review QC esterna (17-Set) → backlog **A-028** (`ASPETTI_DA_APPROFONDIRE.md`): gerarchia sidebar, cockpit «Oggi», Match Score explainability, HAL contestuale — **no implementazione senza «vai»**
 4. Spegnere `CRM_PUBLIC_PREVIEW` dopo review esterna (`=0` + restart-preview)
 5. Founder: **«vai»** sull’ID se fuori programma
 6. **D-084**: ogni ship aggiorna manuale+YAML
