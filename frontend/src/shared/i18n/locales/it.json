@@ -166,14 +166,20 @@
     "add_custom_portal_cta": "+ Aggiungi portale personalizzato"
   },
   "dashboard": {
-    "placeholder": "Da qui gestirai il tuo portafoglio immobili, clienti, lead e collaborazioni MLS. Le funzionalità complete arrivano in M2.",
+    "placeholder": "Da qui gestisci portafoglio immobili, clienti, lead e collaborazioni MLS.",
     "your_role": "Il tuo ruolo",
     "agencies": "Agenzie collegate",
     "system": "Sistema",
     "title": "Dashboard",
     "welcome": "Bentornato",
+    "subtitle": "Portafoglio, clienti, match e portali — tutto da qui.",
     "kpi_coming_soon": "In arrivo",
-    "kpis_locked_hint": "I dati reali si attiveranno con M2.S3 (clienti) e M2.S4 (match)."
+    "kpis_locked_hint": "Clicca un KPI per aprire la sezione collegata. Le azioni rapide sotto il saluto aprono i flussi demo.",
+    "qa_new_property": "Nuovo immobile",
+    "qa_new_client": "Nuovo cliente",
+    "qa_matches": "Match",
+    "qa_publishing": "Portali",
+    "qa_hal": "HAL Knowledge"
   },
   "properties": {
     "title": "Immobili",

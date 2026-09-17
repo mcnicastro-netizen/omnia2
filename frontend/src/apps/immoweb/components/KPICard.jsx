@@ -1,23 +1,30 @@
 import React from "react";
+import { Link, useParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+
+const KPI_HREF = {
+  properties_active: "properties",
+  leads_open: "clients",
+  matches_week: "matches",
+  visits_week: "clients",
+  members_active: "members",
+  invites_pending: "members",
+};
 
 /**
  * KPICard — single metric tile for the dashboard.
- * Shows label, value, optional icon, and a "coming soon" hint if locked.
+ * Unlocked KPIs link into the matching CRM section for demo walkthroughs.
  */
 export default function KPICard({ kpi }) {
   const { t } = useTranslation();
+  const { lang } = useParams();
+  const l = (lang || "it").slice(0, 2);
   const { key, label, value, locked, icon } = kpi;
+  const hrefKey = KPI_HREF[key];
+  const to = !locked && hrefKey ? `/${l}/app/${hrefKey}` : null;
 
-  return (
-    <div
-      data-testid={`kpi-${key}`}
-      className={`relative p-5 md:p-6 rounded-xl border transition ${
-        locked
-          ? "bg-stone-100 border-stone-200 text-stone-400"
-          : "bg-white border-stone-200 text-stone-900 hover:border-stone-300"
-      }`}
-    >
+  const body = (
+    <>
       <div className="flex items-start justify-between mb-3">
         <p className={`text-[11px] uppercase tracking-widest font-medium ${locked ? "text-stone-400" : "text-stone-500"}`}>
           {label}
@@ -45,6 +52,26 @@ export default function KPICard({ kpi }) {
           {t("dashboard.kpi_coming_soon")}
         </span>
       )}
+    </>
+  );
+
+  const className = `relative block p-5 md:p-6 rounded-xl border transition ${
+    locked
+      ? "bg-stone-100 border-stone-200 text-stone-400"
+      : "bg-white border-stone-200 text-stone-900 hover:border-stone-400 hover:shadow-sm"
+  }`;
+
+  if (to) {
+    return (
+      <Link data-testid={`kpi-${key}`} to={to} className={className}>
+        {body}
+      </Link>
+    );
+  }
+
+  return (
+    <div data-testid={`kpi-${key}`} className={className}>
+      {body}
     </div>
   );
 }

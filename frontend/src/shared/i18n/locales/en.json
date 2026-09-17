@@ -166,14 +166,20 @@
     "add_custom_portal_cta": "+ Add custom portal"
   },
   "dashboard": {
-    "placeholder": "From here you'll manage your properties, clients, leads and MLS collaborations. Full features coming in M2.",
+    "placeholder": "From here you manage properties, clients, leads and MLS collaborations.",
     "your_role": "Your role",
     "agencies": "Connected agencies",
     "system": "System",
     "title": "Dashboard",
     "welcome": "Welcome back",
+    "subtitle": "Portfolio, clients, matches and portals — all from here.",
     "kpi_coming_soon": "Coming soon",
-    "kpis_locked_hint": "Real data unlocks with M2.S2 (properties) and M2.S3 (clients)."
+    "kpis_locked_hint": "Click a KPI to open the linked section. Quick actions under the greeting start the demo flows.",
+    "qa_new_property": "New property",
+    "qa_new_client": "New client",
+    "qa_matches": "Matches",
+    "qa_publishing": "Portals",
+    "qa_hal": "HAL Knowledge"
   },
   "immoweb_app": {
     "nav_dashboard": "Dashboard",
