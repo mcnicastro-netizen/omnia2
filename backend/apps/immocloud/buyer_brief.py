@@ -625,13 +625,13 @@ async def scout_listing(pid: str, request: Request, payload: ScoutRequest = Scou
     if vs.get("available") and nearby is not None and vs.get("confidence"):
         vs["confidence"]["comparables_n"] = nearby
         if nearby >= 8:
-            # mild bump when we have peer listings in-city (still not street comps)
-            vs["confidence"]["limits_it"] = list(vs["confidence"].get("limits_it") or [])
-            vs["confidence"]["limits_it"].insert(
-                0,
-                f"Ci sono {nearby} altri annunci in vendita a {p.get('city')} su ImmobilCloud — utili come contesto, non come perizia.",
+            # Peer listings as context — keep core fascia/honesty limits
+            core = list(vs["confidence"].get("limits_it") or [])
+            peer = (
+                f"Ci sono {nearby} altri annunci in vendita a {p.get('city')} su ImmobilCloud "
+                "— utili come contesto, non come perizia."
             )
-            vs["confidence"]["limits_it"] = vs["confidence"]["limits_it"][:4]
+            vs["confidence"]["limits_it"] = ([peer] + [x for x in core if x != peer])[:4]
 
     insight = await _llm_one_liner(p, vs, comp["score"])
     brief = build_brief(p, insight=insight)
