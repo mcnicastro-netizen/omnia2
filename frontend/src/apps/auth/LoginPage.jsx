@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth, formatApiErrorDetail } from "../../shared/lib/auth";
@@ -25,6 +25,24 @@ export default function LoginPage() {
   const [mfaCode, setMfaCode] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const passwordRef = useRef(null);
+  const mfaCodeRef = useRef(null);
+  const clearPasswordOnError = useRef(false);
+  const clearMfaOnError = useRef(false);
+
+  useEffect(() => {
+    if (clearPasswordOnError.current) {
+      clearPasswordOnError.current = false;
+      passwordRef.current?.focus();
+    }
+  }, [password, error]);
+
+  useEffect(() => {
+    if (clearMfaOnError.current) {
+      clearMfaOnError.current = false;
+      mfaCodeRef.current?.focus();
+    }
+  }, [mfaCode, error]);
 
   const submit = async (e) => {
     e.preventDefault();
@@ -39,6 +57,8 @@ export default function LoginPage() {
       nav(next, { replace: true });
     } catch (err) {
       const detail = err.response?.data?.detail;
+      clearPasswordOnError.current = true;
+      setPassword("");
       setError(
         detail === "use_google_sign_in"
           ? t("auth.use_google")
@@ -57,6 +77,8 @@ export default function LoginPage() {
       await verifyMfa(mfaToken, mfaCode);
       nav(next, { replace: true });
     } catch (err) {
+      clearMfaOnError.current = true;
+      setMfaCode("");
       setError(formatApiErrorDetail(err.response?.data?.detail) || t("auth.mfa_invalid"));
     } finally {
       setLoading(false);
@@ -116,6 +138,7 @@ export default function LoginPage() {
                 required
                 value={mfaCode}
                 onChange={(e) => setMfaCode(e.target.value)}
+                ref={mfaCodeRef}
                 className="w-full px-4 py-3 border border-stone-300 bg-stone-50 font-sans text-base focus:outline-none focus:border-stone-900"
               />
             </label>
@@ -177,6 +200,7 @@ export default function LoginPage() {
                 autoComplete="current-password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                ref={passwordRef}
                 className="w-full px-4 py-3 border border-stone-300 bg-stone-50 font-sans text-base focus:outline-none focus:border-stone-900"
               />
             </label>
