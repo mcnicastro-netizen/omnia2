@@ -26,6 +26,7 @@
 | Layout altre pagine B2C | ✅ (17-Set) |
 | Scout v1 (completezza / zona / domande) | ✅ |
 | Scout fiducia (fascia + perché + confidenza) | ✅ (17-Set) |
+| Scout voce lister (no inquisitorio) | ✅ (17-Set) |
 | Scout thin “visita + documenti” | ❌ **next** |
 | Demo A-025 | ❌ |
 | Stripe live | ⏸️ post-Vercel |
