@@ -123,8 +123,84 @@ function cloudSnapshotHtml(req) {
 </html>`;
 }
 
+function isAppRoute(req) {
+  const p = (req.path || "").toLowerCase();
+  return /^\/(it|en|es)\/(app|login)(\/|$)/.test(p) || p === "/app" || p === "/login";
+}
+
+function appRootInnerHtml(origin) {
+  return `
+  <div id="omnia-ssr-shell" data-omnia-ssr="1" data-omnia-surface="immoweb" style="min-height:70vh;background:#fafaf9;color:#1c1917;font-family:system-ui,sans-serif">
+    <div style="max-width:720px;margin:0 auto;padding:48px 24px">
+      <p style="letter-spacing:.24em;text-transform:uppercase;font-size:11px;color:#78716c">ImmoWeb · Gestionale OMNIA</p>
+      <h1 style="font-family:Georgia,'Fraunces',serif;font-weight:400;font-size:2rem;line-height:1.2;margin:12px 0 16px">Area riservata agenzie</h1>
+      <p style="color:#57534e;line-height:1.5">CRM, portafoglio, clienti, match e portali. Accedi per aprire la dashboard.</p>
+      <p style="margin-top:24px">
+        <a href="${escapeHtml(origin)}/it/login?next=%2Fit%2Fapp%2Fdashboard" style="display:inline-block;padding:12px 20px;background:#0B1E3F;color:#fff;text-decoration:none;border-radius:8px;font-size:14px">Accedi al gestionale</a>
+      </p>
+      <p style="margin-top:20px;font-size:13px;color:#a8a29e">
+        Portale B2C: <a href="${escapeHtml(origin)}/it/cloud" style="color:#0B1E3F">ImmobilCloud</a>
+      </p>
+    </div>
+  </div>`;
+}
+
+function rewriteAppSpaHtml(html, req) {
+  const origin = publicOrigin(req);
+  const url = `${origin}${req.originalUrl || req.path || "/"}`;
+  const title = "ImmoWeb — Gestionale OMNIA";
+  const description =
+    "Area riservata agenzie: CRM, immobili, clienti, match e publishing portali.";
+  let out = html;
+  const replacements = [
+    [/<title>[^<]*<\/title>/i, `<title>${escapeHtml(title)}</title>`],
+    [/<meta name="description" content="[^"]*"\s*\/?>/i, `<meta name="description" content="${escapeHtml(description)}" />`],
+    [/<meta property="og:title" content="[^"]*"\s*\/?>/i, `<meta property="og:title" content="${escapeHtml(title)}" />`],
+    [/<meta property="og:description" content="[^"]*"\s*\/?>/i, `<meta property="og:description" content="${escapeHtml(description)}" />`],
+    [/<meta property="og:url" content="[^"]*"\s*\/?>/i, `<meta property="og:url" content="${escapeHtml(url)}" />`],
+    [/<meta property="og:site_name" content="[^"]*"\s*\/?>/i, `<meta property="og:site_name" content="ImmoWeb" />`],
+    [/<meta name="twitter:title" content="[^"]*"\s*\/?>/i, `<meta name="twitter:title" content="${escapeHtml(title)}" />`],
+    [/<meta name="twitter:description" content="[^"]*"\s*\/?>/i, `<meta name="twitter:description" content="${escapeHtml(description)}" />`],
+    [/<link rel="canonical" href="[^"]*"\s*\/?>/i, `<link rel="canonical" href="${escapeHtml(url)}" />`],
+    [/<meta name="robots" content="[^"]*"\s*\/?>/i, `<meta name="robots" content="noindex, nofollow" />`],
+  ];
+  for (const [re, rep] of replacements) {
+    if (re.test(out)) out = out.replace(re, rep);
+  }
+  const inner = appRootInnerHtml(origin);
+  // Replace #root by matching nested div depth (ImmobilCloud shell is baked into public/index.html)
+  const start = out.search(/<div id="root"[^>]*>/i);
+  if (start >= 0) {
+    const openMatch = out.slice(start).match(/^<div id="root"[^>]*>/i);
+    let i = start + openMatch[0].length;
+    let depth = 1;
+    while (i < out.length && depth > 0) {
+      const nextOpen = out.indexOf("<div", i);
+      const nextClose = out.indexOf("</div>", i);
+      if (nextClose < 0) break;
+      if (nextOpen >= 0 && nextOpen < nextClose) {
+        depth += 1;
+        i = nextOpen + 4;
+      } else {
+        depth -= 1;
+        if (depth === 0) {
+          out = `${out.slice(0, start)}<div id="root">${inner}</div>${out.slice(nextClose + 6)}`;
+          break;
+        }
+        i = nextClose + 6;
+      }
+    }
+  }
+  out = out.replace(
+    /<noscript>[\s\S]*?<\/noscript>/i,
+    `<noscript>${inner}</noscript>`
+  );
+  return out;
+}
+
 function shouldServeCloudSnapshot(req) {
   const p = (req.path || "").toLowerCase();
+  if (isAppRoute(req)) return false;
   if (p === "/" || p === "" || p === "/index.html") return true;
   if (/^\/(it|en|es)\/?$/.test(p)) return true;
   if (/^\/(it|en|es)\/cloud(\/|$)/.test(p)) return true;
@@ -404,8 +480,10 @@ app.get("*", (req, res) => {
         message: "Esegui: cd frontend && REACT_APP_BACKEND_URL= yarn build",
       });
     }
+    const body = isAppRoute(req) ? rewriteAppSpaHtml(html, req) : html;
     res.setHeader("Content-Type", "text/html; charset=utf-8");
-    res.status(200).send(html);
+    if (isAppRoute(req)) res.setHeader("X-Omnia-Surface", "immoweb");
+    res.status(200).send(body);
   });
 });
 
