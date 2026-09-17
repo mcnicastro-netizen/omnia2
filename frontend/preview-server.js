@@ -213,15 +213,20 @@ function apiLoginForPreview() {
   });
 }
 
-/** Rewrite Set-Cookie for the public host (tunnel) — drop Domain, keep Path/SameSite. */
-function forwardAuthCookies(res, setCookieHeaders) {
+/** Rewrite Set-Cookie for the public host (tunnel) — drop Domain; add Secure on HTTPS. */
+function forwardAuthCookies(res, setCookieHeaders, req) {
+  const https =
+    String((req.headers["x-forwarded-proto"] || "").split(",")[0]).trim() === "https" ||
+    !!req.secure;
   for (const raw of setCookieHeaders || []) {
-    const cleaned = String(raw)
+    let parts = String(raw)
       .split(";")
       .map((p) => p.trim())
-      .filter((p) => p && !/^domain=/i.test(p))
-      .join("; ");
-    res.append("Set-Cookie", cleaned);
+      .filter((p) => p && !/^domain=/i.test(p));
+    const hasSecure = parts.some((p) => /^secure$/i.test(p));
+    if (https && !hasSecure) parts.push("Secure");
+    // SameSite=None required by some browsers when Secure is set cross-site; keep Lax for first-party tunnel
+    res.append("Set-Cookie", parts.join("; "));
   }
 }
 
@@ -246,7 +251,7 @@ async function ensureQcSession(req, res) {
   if (hasAccessCookie(req)) return false;
   const result = await apiLoginForPreview();
   if (result.ok) {
-    forwardAuthCookies(res, result.cookies);
+    forwardAuthCookies(res, result.cookies, req);
     res.setHeader("X-Omnia-Qc-Session", "auto");
     return true;
   }
@@ -601,6 +606,19 @@ function resolveQcShot(name) {
 }
 
 function sendQcGallery(req, res) {
+  // Prefer fully inline gallery (base64) so external reviewers never depend on cookie/JS/app.
+  const inlineCandidates = [
+    "/opt/cursor/artifacts/screenshots/gallery-inline.html",
+    "/tmp/omnia-stack/qc-screenshots/gallery-inline.html",
+  ];
+  for (const full of inlineCandidates) {
+    if (fs.existsSync(full)) {
+      res.setHeader("Cache-Control", "no-store");
+      res.setHeader("Content-Type", "text/html; charset=utf-8");
+      res.setHeader("X-Omnia-Qc-Gallery", "inline-base64");
+      return res.status(200).send(fs.readFileSync(full, "utf8"));
+    }
+  }
   const origin = publicOrigin(req);
   const shots = [
     ["01-gestionale-dashboard.png", "Dashboard gestionale"],
@@ -615,7 +633,7 @@ function sendQcGallery(req, res) {
     <section style="margin:0 0 48px">
       <h2 style="font:600 18px system-ui;margin:0 0 12px">${escapeHtml(label)}</h2>
       <p style="font:13px system-ui;color:#57534e;margin:0 0 12px"><a href="${escapeHtml(origin)}/_qc/screenshots/${escapeHtml(file)}">${escapeHtml(file)}</a></p>
-      <img src="/_qc/screenshots/${escapeHtml(file)}" alt="${escapeHtml(label)}" style="width:100%;max-width:1100px;border:1px solid #d6d3d1;border-radius:8px" />
+      <img src="${escapeHtml(origin)}/_qc/screenshots/${escapeHtml(file)}" alt="${escapeHtml(label)}" style="width:100%;max-width:1100px;border:1px solid #d6d3d1;border-radius:8px" />
     </section>`
     )
     .join("\n");
@@ -630,11 +648,7 @@ function sendQcGallery(req, res) {
 <body style="margin:0;background:#fafaf9;color:#1c1917;font-family:system-ui,sans-serif">
   <header style="padding:28px 24px;border-bottom:1px solid #e7e5e4;background:#fff">
     <p style="margin:0;letter-spacing:.2em;text-transform:uppercase;font-size:11px;color:#a8a29e">ImmoWeb · QC review</p>
-    <h1 style="margin:8px 0 0;font:400 28px Georgia,serif">Screenshot gestionale (senza login)</h1>
-    <p style="margin:12px 0 0;max-width:720px;color:#57534e;line-height:1.5">
-      Live dashboard (auto-session QC):
-      <a href="${escapeHtml(origin)}/it/app/dashboard">${escapeHtml(origin)}/it/app/dashboard</a>
-    </p>
+    <h1 style="margin:8px 0 0;font:400 28px Georgia,serif">Screenshot gestionale</h1>
   </header>
   <main style="padding:32px 24px;max-width:1140px;margin:0 auto">${cards}</main>
 </body></html>`);
