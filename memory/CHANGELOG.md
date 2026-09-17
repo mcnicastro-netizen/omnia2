@@ -1,5 +1,13 @@
 # OMNIA — Changelog
 
+## 2026-09-17 — A-026 micro-tour agenzia (tracking)
+
+**Tipo**: Docs / backlog.
+
+- `ASPETTI_DA_APPROFONDIRE.md`: **A-026** — Ken Burns disabilitato sul canale agenzia (501 → Kling/Sora a crediti); da approfondire UX/path crediti senza riaprire Ken Burns gestionale (D-064/D-065/D-066)
+- `NEXT_SESSION.md`: riga stato A-026
+
+---
 ## 2026-09-16 — CSRF + tenant Mongo + consent audit + rotate keys
 
 **Tipo**: Security go-live (Stripe/APE esclusi).
