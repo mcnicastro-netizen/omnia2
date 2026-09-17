@@ -1,0 +1,17 @@
+{
+  "emergent": "https://github.com/mcnicastro-netizen/OMNIA",
+  "emergent_head": "790d9fb",
+  "emergent_pushed_at": "2026-08-16T12:22:15Z",
+  "cursor_head": "dc270867743e2735b72a070d7371d5ad469728b2",
+  "source_counts": {
+    "emergent": 422,
+    "cursor": 549,
+    "identical": 305,
+    "modified": 117,
+    "only_cursor": 124,
+    "only_emergent": 0
+  },
+  "only_emergent_paths": [],
+  "verdict": "cursor_is_superset_of_emergent_github_mirror",
+  "caveat": "No access to Emergent UI unpublished state or private mcnicastro/OMNIA"
+}
