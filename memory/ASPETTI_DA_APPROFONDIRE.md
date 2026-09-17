@@ -1031,7 +1031,7 @@ Implementazione: TTL index Mongo dove semantica lo consente + job archivio S3 me
 | A-023 | Toast duration tuning | P3 | XS (~15min) | Spark Cap.18 | Raggruppare micro-fix |
 | A-024 | CTA Richiedi demo via email (D-080) | ✅ | S | Founder 15-Sep-2026 | Chiuso — niente Calendly |
 | A-025 | **Demo prodotto** (cavallo di Troia) | **P0** | XL | Founder 15-Sep-2026 | Architettare in seguito — non self-serve oggi |
-| A-026 | **Micro-tour agenzia** (Ken Burns 501 → Kling/Sora crediti) | **P2** | M-L | Founder 17-Sep-2026 | UX/pricing path gestionale — non sbloccare Ken Burns agenzia |
+| A-026 | **Micro-tour agenzia** (Ken Burns 501 → Kling/Sora crediti) | **P2** | M-L | Founder 17-Sep-2026 | Docs Cap.23 ✅ · resta UX/path Kling da approfondire |
 
 **Legenda priorità**: **P0** fondamentale pre-acquisition · **P1** alta (ROI alto/effort basso o revenue-critical) · P2 media · P3 futuro (validation-gated)
 **Legenda effort**: XS <30min · S 30min-2h · M 2-6h · L 6-20h · XL >20h

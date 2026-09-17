@@ -29,6 +29,8 @@ OMNIA pubblica per ogni agenzia un sito pubblico **autonomo, indicizzabile da Go
 **Cosa contiene il sito pubblico**
 - **Home / vetrina** con la griglia dei tuoi annunci attivi (`status: active`), ordinati per data di aggiornamento decrescente. Fino a 200 in una pagina.
 - **Scheda singolo immobile** con foto, prezzo, caratteristiche in griglia, descrizione, features, share block sociale, contatto agenzia.
+
+> **Nota ImmobilCloud (`/cloud`)**: il form contatto del portale B2C è distinto dal sito white-label. Su annuncio **agenzia** crea lead CRM (Cap. 18 §18.7); su annuncio **privato** crea inquiry al venditore (Cap. 18 §18.7b).
 - **`sitemap.xml`** automatica su `/api/p/{slug}/sitemap.xml` (per Google/Bing).
 - **JSON-LD schema.org** (`RealEstateAgent` sulla home, `Product`/`RealEstateListing` sulla scheda) per rich snippets nei motori.
 - **Meta OG** (Open Graph) per anteprima nei link condivisi (WhatsApp, Facebook, LinkedIn).

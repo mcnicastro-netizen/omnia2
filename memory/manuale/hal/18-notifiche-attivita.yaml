@@ -1,6 +1,7 @@
 # HAL — Voci esportate per RAG
-# Capitolo 18 · Notifiche e attività · v1.1 (16-Sep-2026 · D-084)
+# Capitolo 18 · Notifiche e attività · v1.2 (17-Sep-2026 · D-084)
 # A-017 Notification center + A-021 preferenze UI shippati.
+# 17-Sep: contatto annuncio privato (listing_inquiry) ≠ lead CRM agenzia.
 # Ancora assenti: A-018 activity feed, push/SMS, SSE.
 
 voci:
@@ -250,50 +251,86 @@ voci:
     screenshot:
       - "[SCREEN: cap18-email-agency-invite]"
 
-  # ---------- 18.7 · lead_notification ----------
+  # ---------- 18.7 · lead_notification (agenzia) ----------
 
   - id: notifiche.template-lead-notification
-    titolo: Template lead_notification (portale pubblico → agente)
+    titolo: Template lead_notification (annuncio agenzia → CRM + agente)
     modulo: Notifiche
     widget: null
     pubblico: [titolare, agente]
     livello: intermedio
-    tags: [notifiche, email, lead-notification, portale-pubblico, contatti, b2c, immobilcloud]
-    correlati: [notifiche.email-panoramica, notifiche.errori-comuni]
-    domanda_naturale: "Come mi arriva la notifica quando un visitatore lascia un contatto su un mio immobile?"
+    tags: [notifiche, email, lead-notification, portale-pubblico, contatti, b2c, immobilcloud, agenzia]
+    correlati: [notifiche.email-panoramica, notifiche.errori-comuni, notifiche.inquiry-annuncio-privato]
+    domanda_naturale: "Come mi arriva la notifica quando un visitatore lascia un contatto su un mio immobile di agenzia?"
     contenuto:
       a_cosa_serve: >
-        Documentare la mail che notifica l'agente proprietario di un
-        immobile quando un visitatore del portale pubblico compila il
-        form contatto.
+        Documentare la mail e l'inbox in-app quando un visitatore
+        contatta un annuncio PUBBLICATO DA AGENZIA su ImmobilCloud.
+        Nascono client + lead CRM (source ImmobilCloud).
       quando_si_usa: >
-        Quando un visitatore di ImmobilCloud (portale pubblico agenzia
-        /agenzia/{slug}) apre una scheda immobile e invia il form
-        "Contatta l'agente".
+        Scheda immobile con agency_id reale (non _private_listings):
+        form «Contatta l'agenzia».
       passi:
-        - "Trigger: apps/immocloud/public_portal.py:750 dopo submit
-          form contatti."
-        - "A chi: email dell'agente owner dell'immobile. Se l'agent
-          non ha email registrata → fallback al titolare."
-        - "Variabili: {{property_title}}, {{lead_name}}, {{lead_email}},
-          {{lead_phone}}, {{lead_message}}, {{property_url}}."
-        - "Subject: '🔔 Nuovo lead da ImmobilCloud —
-          {{property_title}}'."
-        - "Se manca to_email (agent orfano di email): log come
-          [LEAD ORPHAN], nessun retry, nessuna coda."
+        - "Trigger: POST /api/cloud/property/{pid}/contact su annuncio agenzia."
+        - "Crea/riusa client CRM + lead; incrementa lead_count."
+        - "Email: listing agent (se lead_notification consentito) oppure email agenzia."
+        - "In-app: tipo lead_new a listing agent + owner/admin."
+        - "NON vale per annunci privati B2C → vedi notifiche.inquiry-annuncio-privato."
       errori_comuni:
         - problema: "Ho ricevuto il lead ma non vedo il numero di telefono"
           soluzione: >
-            Il visitatore puo' aver lasciato solo email. Il template
-            mostra {{lead_phone}} vuoto se non compilato.
+            Il visitatore puo' aver lasciato solo email.
         - problema: "Il lead e' arrivato al titolare invece che all'agente"
           soluzione: >
-            L'agente owner dell'immobile probabilmente non ha email
-            configurata in agenzia. Aggiungila da MembersPage.jsx.
+            L'agente owner probabilmente non ha email o ha disattivato
+            il tipo lead_notification nelle preferenze.
       permessi:
-        - "Agent owner dell'immobile (o titolare fallback) riceve email"
+        - "Agent owner dell'immobile (o titolare/agenzia fallback) riceve email"
     screenshot:
       - "[SCREEN: cap18-email-lead-notification]"
+
+  # ---------- 18.7b · listing_inquiry (privato) ----------
+
+  - id: notifiche.inquiry-annuncio-privato
+    titolo: Contatto su annuncio privato B2C (inquiry, non lead CRM)
+    modulo: Notifiche
+    widget: null
+    pubblico: [b2c_client, titolare, agente, super_admin]
+    livello: intermedio
+    tags: [notifiche, inquiry, annuncio-privato, immobilcloud, whatsapp, email, telefono, b2c, listing-inquiry]
+    correlati: [notifiche.template-lead-notification, notifiche.email-panoramica]
+    domanda_naturale: "Cosa succede se qualcuno contatta un annuncio privato su ImmobilCloud? Arriva nel CRM? Come attivo telefono e WhatsApp sull'annuncio?"
+    contenuto:
+      a_cosa_serve: >
+        Spiegare il flusso distinto dagli annunci agenzia: il messaggio
+        va al venditore privato (email + campanella listing_inquiry),
+        salvato in listing_inquiries, SENZA creare client/lead nel CRM
+        agenzia (_private_listings).
+      quando_si_usa: >
+        Annuncio is_private_listing=true pubblicato da account B2C
+        (Vendi). Visitatore usa Contatta il venditore o i canali opt-in.
+      passi:
+        - "In Vendi il privato sceglie canali pubblici: show_email,
+          show_phone, show_whatsapp (+ numeri). Il form messaggio resta
+          attivo se ha email account."
+        - "Sul dettaglio: publisher.kind=private, canali visibili solo
+          se opt-in; form → POST /property/{pid}/contact."
+        - "Backend: insert listing_inquiries; email con template
+          lead_notification; in-app type=listing_inquiry al owner_user_id."
+        - "Risposta API: { ok, inquiry_id, kind: 'private' }."
+        - "Se stai guardando il tuo annuncio (viewer_is_lister): niente form."
+      errori_comuni:
+        - problema: "Mi aspettavo di vedere il contatto nei Clienti CRM"
+          soluzione: >
+            Gli annunci privati non creano lead agenzia. Cerca nella
+            campanella (listing_inquiry) o nell'email del venditore.
+        - problema: "Telefono/WhatsApp non compaiono sull'annuncio"
+          soluzione: >
+            Devono essere attivati in Vendi (toggle + numero valorizzato)
+            e l'annuncio ripubblicato/salvato.
+      permessi:
+        - "Solo il owner_user_id dell'annuncio privato riceve inquiry"
+    screenshot: []
 
   # ---------- 18.8 · saved_search_alert ----------
 

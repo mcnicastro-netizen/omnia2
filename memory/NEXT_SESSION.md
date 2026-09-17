@@ -12,7 +12,7 @@
 2. Ports → **omnia-preview :43123** (o tunnel CF verso 43123)
 3. Rileggere `PRODUCT_NORTHSTAR_B2C.md`
 4. Founder: **«vai»** sull’ID se fuori programma
-5. **D-084**: ogni ship aggiorna manuale+YAML *(gap: contatto privato / inquiry non ancora in Cap. notifiche/portale)*
+5. **D-084**: ogni ship aggiorna manuale+YAML ✅ (17-Set: Cap.18 inquiry privato + Cap.23 Ken Burns)
 
 ---
 
@@ -42,10 +42,9 @@
 | # | Cosa | Note |
 |:-:|------|------|
 | 1 | **A-025 demo prodotto** | GTM / walkthrough Scout end-to-end — richiede «vai» |
-| 2 | **D-084 sync manuale** contatto privato | Cap. notifiche / portale: inquiry ≠ lead CRM |
-| 3 | Home claim micro-ritocco | Solo se Founder vuole ancora più “pre-visita” |
+| 2 | Home claim micro-ritocco | Solo se Founder vuole ancora più “pre-visita” |
 | — | Intake annuncio esterno (Nord D) | Solo dopo ok Founder + scope legale |
-| — | A-026 path Kling agenzia | Approfondire, non riaprire Ken Burns CRM |
+| — | A-026 path Kling agenzia | Approfondire UX (docs Cap.23 già allineati) |
 | — | A-014 Stripe live | post-Vercel |
 
 Report: `memory/PLATFORM_STRESS_REPORT.md` · `memory/STRESS_REPORT.md` · `memory/PRODUCT_NORTHSTAR_B2C.md`

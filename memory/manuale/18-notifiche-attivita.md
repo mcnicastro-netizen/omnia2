@@ -1,20 +1,23 @@
 # Capitolo 18 · Notifiche e attività
 
-> **Versione**: v1.1 · 16-Sep-2026 · Onestà documentale D-051 · sync D-084  
+> **Versione**: v1.2 · 17-Sep-2026 · Onestà documentale D-051 · sync D-084  
 > **Codice coperto**:
 > - `backend/shared/email/client.py` (Resend + SUBJECTS + mock mode)
 > - `backend/shared/email/templates/*.html` (7 template × lingue)
-> - `backend/shared/notifications/prefs.py` + `center.py` (**A-021** preferenze · **A-017** inbox)
+> - `backend/shared/notifications/prefs.py` + `center.py` (**A-021** preferenze · **A-017** inbox · tipo `listing_inquiry`)
 > - `backend/apps/core/notifications_inbox.py` — `GET/POST /api/notifications*`
 > - `backend/apps/core/auth.py` (welcome + password_reset + `GET/PATCH /auth/me/notification-preferences`)
 > - `backend/apps/immoweb/invites.py` (agency_invite + in-app invite_accepted)
-> - `backend/apps/immocloud/public_portal.py` (lead_notification email + in-app `lead_new`)
+> - `backend/apps/immocloud/public_portal.py` (contatto **agenzia** → CRM lead + `lead_new`; contatto **privato** → `listing_inquiries` + `listing_inquiry`)
+> - `backend/apps/immocloud/private_listings.py` (`contact_public` canali opt-in email/tel/WhatsApp)
 > - `backend/apps/immocloud/saved_searches.py` (saved_search_alert + in-app `saved_search_match`)
 > - `backend/apps/v1/gateway.py` (widget lead → in-app)
 > - `backend/apps/immoweb/cron.py` (super_admin trigger saved-searches)
 > - `backend/apps/marketing/founders.py` (founders_welcome + founders_admin_notification)
 > - `frontend/src/shared/components/NotificationBell.jsx` · `NotificationPreferencesPanel.jsx`
 > - `frontend/src/apps/immoweb/components/AgencyShell.jsx` · `immocloud/.../CloudTopNav.jsx`
+> - `frontend/src/apps/immocloud/components/PropertyDetailPage.jsx` (ContactPanel agenzia/privato)
+> - `frontend/src/apps/immocloud/components/SellPage.jsx` (toggle canali contatto)
 > - `frontend/src/components/ui/sonner.jsx` (toast)
 
 > ⚠️ **Nota D-051 (v1.1)**: OMNIA **ha** campanella + inbox in-app (**A-017**) e UI preferenze email (**A-021**).  
@@ -88,10 +91,11 @@ PATCH /api/auth/me/notification-preferences
 **Document schema** (`notifications`):
 `id`, `user_id`, `agency_id?`, `type`, `title`, `body`, `link`, `meta`, `read`, `created_at`, `read_at`
 
-**Tipi emitter v1.1**:
+**Tipi emitter v1.2**:
 | `type` | Quando | Destinatari tipici |
 |--------|--------|-------------------|
-| `lead_new` | Contatto ImmobilCloud o widget v1 | listing agent + owner/admin agenzia |
+| `lead_new` | Contatto ImmobilCloud su **annuncio agenzia** (o widget v1) | listing agent + owner/admin agenzia |
+| `listing_inquiry` | Contatto ImmobilCloud su **annuncio privato** B2C | `owner_user_id` del venditore privato |
 | `invite_accepted` | Accept invite | inviter (`invited_by`) |
 | `saved_search_match` | Cron trova match | utente B2C (anche se email off) |
 
@@ -116,7 +120,7 @@ PATCH /api/auth/me/notification-preferences
 | `welcome` | Registrazione B2B ImmoWeb | it, en, es | `apps/core/auth.py:131` |
 | `password_reset` | POST `/api/auth/forgot-password` | it, en, es | `apps/core/auth.py:273` |
 | `agency_invite` | Titolare invita collaboratore | it, en, es | `apps/immoweb/invites.py:102` (Cap. 13) |
-| `lead_notification` | Compilazione form contatti su portale pubblico agenzia | it, en, es | `apps/immocloud/public_portal.py:750` |
+| `lead_notification` | Form contatto su annuncio **agenzia** *oppure* messaggio su annuncio **privato** (stesso template email; backend diverso) | it, en, es | `apps/immocloud/public_portal.py` |
 | `saved_search_alert` | Cron saved-searches trova nuovi match | it, en, es | `apps/immocloud/saved_searches.py:245` |
 | `founders_welcome` | Signup Founders (marketing page) | it | `apps/marketing/founders.py:103` |
 | `founders_admin_notification` | Signup Founders → notifica admin OMNIA | it | `apps/marketing/founders.py:120` |
@@ -161,15 +165,36 @@ PATCH /api/auth/me/notification-preferences
 
 ---
 
-## 18.7 · Template dettaglio · lead_notification (portale pubblico → agente)
+## 18.7 · Template dettaglio · lead_notification (portale → agenzia)
 
-**`lead_notification`** [SCREEN: cap18-email-lead-notification]
+**`lead_notification`** [SCREEN: cap18-email-lead-notification] — **solo annunci agenzia**
 
-- **Quando**: un visitatore del portale pubblico agenzia (`immobilcloud.it/agenzia/{slug}`) compila il form contatto su una scheda immobile.
-- **A chi**: email dell'agente owner dell'immobile (o titolare se agent non ha email registrata).
-- **Variabili**: `property_title`, `lead_name`, `lead_email`, `lead_phone`, `lead_message`, `property_url`.
-- **Subject**: "🔔 Nuovo lead da ImmobilCloud — {{property_title}}".
-- **Fallback**: se manca `to_email` (agent senza email), notifica in log come `[LEAD ORPHAN]` — nessun retry, nessuna coda.
+- **Quando**: un visitatore su ImmobilCloud apre una scheda immobile **di agenzia** (`agency_id` reale, non `_private_listings`) e invia il form «Contatta l'agenzia».
+- **Backend**: crea (o riusa) un **client CRM** + **lead** (`source=ImmobilCloud`) nell'agenzia; incrementa `lead_count`.
+- **A chi (email)**: listing agent se ha email e `lead_notification` consentito; altrimenti email agenzia.
+- **A chi (in-app)**: tipo `lead_new` → listing agent + owner/admin agenzia (`resolve_lead_recipients`).
+- **Variabili email**: `property_title`, `lead_name`, `lead_email`, `lead_phone_block`, `lead_message`, `crm_url`.
+- **Subject**: tipicamente «Nuovo lead» / ImmobilCloud + titolo immobile.
+- **Non confondere** con gli annunci privati (§18.7b): lì **non** nasce un client/lead CRM.
+
+---
+
+## 18.7b · Contatto annuncio privato B2C (inquiry → venditore)
+
+**Flusso distinto dal lead agenzia** (ship 17-Sep-2026 · D-084).
+
+- **Quando**: visitatore su scheda `is_private_listing=true` (sentinel `agency_id=_private_listings`) invia «Contatta il venditore».
+- **Backend**: documento in Mongo `listing_inquiries` (`inquiry_id`, `owner_user_id`, messaggio, GDPR). **Nessun** `clients` / `leads` agenzia.
+- **Canali pubblici sul dettaglio** (`publisher` + `contact_public`):
+  - Form messaggio: sempre se l'account seller ha email (`accepts_messages`).
+  - Email / telefono / WhatsApp **in chiaro** solo se il venditore li ha attivati in **Vendi** (`show_email` / `show_phone` / `show_whatsapp` + valori).
+- **Notifiche al venditore**:
+  - Email: riusa template `lead_notification` verso `owner.email` / account B2C.
+  - In-app: tipo **`listing_inquiry`** → solo `owner_user_id` (link tipico `/cloud/account/sell`).
+- **UI**: `ContactPanel` unificato (header navy Privato/Agenzia + canali + form). Se `viewer_is_lister`, niente form: messaggio «questo è il tuo annuncio».
+- **API**: stesso `POST /api/cloud/property/{pid}/contact`; risposta privata `{ ok, inquiry_id, kind: "private" }`.
+
+**Onestà D-051**: non c'è ancora una UI inbox dedicata alle inquiry lato venditore (solo campanella + email). WhatsApp sul dettaglio è link `wa.me`, non un canale OMNIA outbound.
 
 ---
 
@@ -389,9 +414,10 @@ db.al_audit.find({user_id: "..."}).sort({created_at: -1}).limit(50)
 
 ---
 
-## 18.17 · Onestà documentale (D-051) · sintesi Cap. 18 v1.1
+## 18.17 · Onestà documentale (D-051) · sintesi Cap. 18 v1.2
 
 - **A-017 e A-021 shippati** (15-Sep-2026): campanella + preferenze UI — capitolo allineato 16-Sep (D-084).
+- **17-Sep-2026**: contatto annuncio **privato** documentato (§18.7b): `listing_inquiries` + `listing_inquiry` ≠ CRM lead agenzia.
 - **A-018 activity feed** ancora assente: dashboard = KPI, non timeline.
 - **`push` schema / non implementato**.
 - Cron saved-searches: frequenza rispettata (A-019) + **scheduler interno orario :15 UTC** (A-020).

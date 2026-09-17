@@ -197,6 +197,9 @@ L'endpoint `/api/app/al/chat/stream` emette 6 tipi di evento SSE:
 - **PropertyForm** (Immobili → Nuovo/Modifica): accanto ai campi *Titolo annuncio* e *Descrizione annuncio*.
 - **SellPage** (Portale B2C `/cloud/sell`): accanto ai campi *Titolo* e *Descrizione* dell'annuncio privato.
 
+**Canali contatto annuncio privato (SellPage · 17-Sep-2026)**  
+Nella stessa pagina Vendi il privato configura `contact_public`: nome pubblico + toggle «mostra email / telefono / WhatsApp». Il form messaggio sul dettaglio ImmobilCloud notifica il venditore (inquiry, non CRM) — vedi **Cap. 18 §18.7b**.
+
 **Come si usa**
 1. Compila **prima possibile** i dati dell'immobile (tipologia, città, superficie, locali, features): più dati ci sono, migliore è l'output.
 2. Clicca il pulsante ✨ *"Migliora con HAL"* accanto al campo (test-id: `al-improve-title-trigger` o `al-improve-description-trigger`).

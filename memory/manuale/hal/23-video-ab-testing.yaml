@@ -54,29 +54,40 @@ voci:
       screenshot: []
 
   - id: video.kenburns
-    titolo: Esiste Ken Burns?
+    titolo: Esiste Ken Burns? Funziona in agenzia?
     modulo: Video & Analytics
     widget: null
-    pubblico: [titolare, agente, segreteria]
+    pubblico: [titolare, agente, segreteria, b2c_client]
     livello: base
-    tags: [501, limiti, video, cap23]
-    correlati: []
-    domanda_naturale: "Esiste Ken Burns?"
+    tags: [501, limiti, video, cap23, ken-burns, b2c, kling, d-064, a-026]
+    correlati: [video.cos-e, video.crediti, video.limitazioni-v1]
+    domanda_naturale: "Esiste Ken Burns? Perché in agenzia dà 501? Dove è gratis?"
     contenuto:
       a_cosa_serve: >
-        Endpoint presente ma 501 in v1. Usare Kling.
+        Chiarire lo split D-064: Ken Burns ffmpeg gratis SOLO sul
+        portale B2C (/api/cloud/videos/kenburns/...). Nel gestionale
+        agenzia l'endpoint kenburns torna 501 e si usa Kling Pro a
+        crediti (D-065/D-066).
       quando_si_usa: >
-        Quando l'utente lavora sul modulo Video & Analytics in ImmoWeb/ImmobilCloud.
+        Quando un agente chiede il video gratis nel CRM, o un privato
+        genera micro-tour sulla scheda ImmobilCloud.
       passi:
-        - "Apri il modulo indicato nel capitolo 23."
-        - "Segui il flusso descritto nel manuale operativo."
-        - "In caso di errore leggi la sezione limitazioni/errori."
+        - "Agenzia ImmoWeb: POST /api/app/videos/kling/property/{pid}
+          (crediti + FAL_KEY). Ken Burns app → 501."
+        - "Portale B2C ImmobilCloud: Ken Burns cloud gratuito dalle foto."
+        - "Non riaprire Ken Burns free in agenzia senza decisione Founder
+          (A-026)."
       errori_comuni:
-        - problema: "Funzione non trovata o 403"
-          soluzione: "Verifica ruolo (agency_admin/agent/super_admin) e piano."
+        - problema: "kenburns_disabled_in_agency / 501"
+          soluzione: >
+            Atteso. Usa Kling a crediti oppure genera video dal portale
+            cloud se l'annuncio è sul B2C.
+        - problema: "402 crediti insufficienti su Kling"
+          soluzione: "Ricarica crediti / verifica piano (Cap. 19)."
       permessi:
-        - "Dipende dal modulo — vedi capitolo 23"
-      screenshot: []
+        - "Kling: utenti agenzia autenticati con crediti"
+        - "Ken Burns cloud: flusso portale B2C"
+    screenshot: []
 
   - id: video.crediti
     titolo: Quanto costa un video?
@@ -164,7 +175,8 @@ voci:
     domanda_naturale: "Limiti video/A/B v1"
     contenuto:
       a_cosa_serve: >
-        No Ken Burns live; analytics non BI; dipende fal.ai.
+        No Ken Burns live nel gestionale (501 → Kling); Ken Burns gratis
+        solo B2C cloud. Analytics non BI; dipende fal.ai. UX 501 grezza = A-026.
       quando_si_usa: >
         Quando l'utente lavora sul modulo Video & Analytics in ImmoWeb/ImmobilCloud.
       passi:

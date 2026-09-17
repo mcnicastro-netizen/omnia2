@@ -1,5 +1,15 @@
 # OMNIA — Changelog
 
+## 2026-09-17 — D-084 sync manuale (inquiry privato + Ken Burns)
+
+**Tipo**: Docs / HAL.
+
+- Cap. **18** v1.2: contatto annuncio **privato** (`listing_inquiries` + `listing_inquiry`) distinto dal lead CRM agenzia; YAML `notifiche.inquiry-annuncio-privato`
+- Cap. **23** v1.1: Ken Burns gratis solo B2C; gestionale 501 → Kling crediti (A-026 / D-064)
+- Cap. **8** + **10**: cross-ref contatto portale / canali SellPage
+- `IMPORT_HAL.md` changelog · debito D-084 chiuso
+
+---
 ## 2026-09-17 — Contatto annuncio privato (email / tel / WhatsApp)
 
 **Tipo**: Feature B2C.
