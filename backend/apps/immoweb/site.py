@@ -22,6 +22,7 @@ from fastapi import APIRouter, HTTPException, Response
 from fastapi.responses import RedirectResponse
 
 from shared.db.connection import Database
+from shared.storage import get_object, ObjStoreError
 from apps.immoweb.themes import render_index, render_property
 
 router = APIRouter(tags=["public-site"])
