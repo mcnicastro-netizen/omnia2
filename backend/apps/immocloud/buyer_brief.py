@@ -460,7 +460,7 @@ async def _llm_one_liner(p: Dict[str, Any], vs_zone: Dict[str, Any], score: int)
 def build_brief(p: Dict[str, Any], *, insight: Optional[str] = None) -> Dict[str, Any]:
     comp = completeness_score(p)
     vs = price_vs_zone(p, completeness_score_val=comp["score"])
-    gaps = seller_gaps(comp) if comp["score"] < 70 else []
+    gaps = seller_gaps(comp)  # always: buyers see lacune; sellers get actionable tips
     return {
         "product": "scout_hal",
         "listing_id": p.get("id"),

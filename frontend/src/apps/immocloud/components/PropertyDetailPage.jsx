@@ -58,6 +58,7 @@ export default function PropertyDetailPage() {
   const [scoutErr, setScoutErr] = useState("");
   const { user } = useAuth();
   const isB2c = Boolean(user && user.account_type === "b2c");
+  const isLister = Boolean(prop?.viewer_is_lister);
 
   const runScout = async () => {
     if (!pid || scoutBusy) return;
@@ -75,13 +76,11 @@ export default function PropertyDetailPage() {
 
   useEffect(() => {
     setLoading(true);
-    fetch(`${API}/property/${pid}`)
-      .then((r) => {
-        if (!r.ok) throw new Error(r.status === 404 ? "not_found" : "fetch_error");
-        return r.json();
-      })
-      .then((d) => setProp(d))
-      .catch((e) => setError(e.message))
+    setScout(null);
+    setScoutErr("");
+    api.get(`/cloud/property/${pid}`)
+      .then((r) => setProp(r.data))
+      .catch((e) => setError(e?.response?.status === 404 ? "not_found" : "fetch_error"))
       .finally(() => setLoading(false));
   }, [pid]);
 
@@ -310,9 +309,10 @@ export default function PropertyDetailPage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* LEFT COLUMN */}
           <div className="lg:col-span-2 space-y-8">
-            {/* Scout */}
+            {/* Scout — buyer trust voice OR constructive lister mirror */}
             <section
               data-testid="scout-hal-panel"
+              data-scout-voice={isLister ? "lister" : "buyer"}
               className="overflow-hidden rounded-2xl border border-stone-200 bg-[#f7f4ef] shadow-sm"
             >
               <div className="grid grid-cols-1 sm:grid-cols-[140px_1fr]">
@@ -331,10 +331,14 @@ export default function PropertyDetailPage() {
                         className="text-xl font-light text-[#0B1E3F]"
                         style={{ fontFamily: "'Fraunces', Georgia, serif" }}
                       >
-                        Un&apos;occhiata furba, prima della visita
+                        {isLister
+                          ? "Come ti vede chi valuta casa"
+                          : "Un'occhiata furba, prima della visita"}
                       </h2>
                       <p className="text-sm text-stone-600 mt-1">
-                        Ti dice se l&apos;annuncio è completo, se il prezzo ha senso e cosa chiedere.
+                        {isLister
+                          ? "Stesso sguardo di un acquirente — ma qui ti dice cosa rafforzare, non quanto dubitare di te."
+                          : "Ti dice se l'annuncio è completo, se il prezzo ha senso e cosa chiedere."}
                       </p>
                     </div>
                     {!scout && (
@@ -345,7 +349,11 @@ export default function PropertyDetailPage() {
                         disabled={scoutBusy}
                         className="px-4 py-2 text-xs uppercase tracking-widest bg-[#0B1E3F] text-white rounded-lg hover:bg-[#C19A6B] disabled:opacity-50 transition"
                       >
-                        {scoutBusy ? "Un attimo…" : "Chiedi a Scout"}
+                        {scoutBusy
+                          ? "Un attimo…"
+                          : isLister
+                            ? "Guarda con gli occhi di Scout"
+                            : "Chiedi a Scout"}
                       </button>
                     )}
                   </div>
@@ -354,26 +362,27 @@ export default function PropertyDetailPage() {
                   )}
                   {scout && (
                     <div className="space-y-4" data-testid="scout-hal-result">
-                      {scout.insight && (
-                        <p className="text-sm text-stone-800 border-l-2 border-[#C19A6B] pl-3 leading-relaxed">
-                          {scout.insight}
-                        </p>
-                      )}
+                      <p className="text-sm text-stone-800 border-l-2 border-[#C19A6B] pl-3 leading-relaxed">
+                        {isLister
+                          ? (scout.completeness?.score < 60
+                              ? "Con i dati attuali Scout ha poco da raccontare a chi valuta casa. Qui sotto c'è cosa aggiungere — non è un voto sul tuo lavoro."
+                              : "Ecco come un acquirente legge il tuo annuncio oggi. La fascia prezzo è un indizio di zona, non un giudizio sul tuo chiesto.")
+                          : scout.insight}
+                      </p>
                       <div className="space-y-3">
                         <div
                           className="inline-block px-3 py-2 rounded-lg bg-white border border-stone-200"
                           data-testid="scout-completeness"
                         >
-                          <span className="text-[10px] uppercase tracking-widest text-stone-500">Quanto è completo</span>
+                          <span className="text-[10px] uppercase tracking-widest text-stone-500">
+                            {isLister ? "Completezza vista dall'acquirente" : "Quanto è completo"}
+                          </span>
                           <div className="text-lg font-medium text-[#0B1E3F]">
                             {scout.completeness?.score}/100 · {scout.completeness?.grade}
                           </div>
                         </div>
                         {scout.price_vs_zone?.available && (
-                          <div
-                            className="space-y-3"
-                            data-testid="scout-price-zone"
-                          >
+                          <div className="space-y-3" data-testid="scout-price-zone">
                             <div className="px-3 py-3 rounded-lg bg-white border border-stone-200">
                               <span className="text-[10px] uppercase tracking-widest text-stone-500">
                                 Fascia di prezzo stimata
@@ -402,39 +411,65 @@ export default function PropertyDetailPage() {
                               </p>
                             </div>
 
-                            {scout.price_vs_zone.confidence && (
+                            {/* Buyer: confidence + limits. Lister: constructive “what Scout can use” — no inquisitorial grade */}
+                            {isLister ? (
                               <div
                                 className="px-3 py-3 rounded-lg bg-white border border-stone-200"
-                                data-testid="scout-confidence"
+                                data-testid="scout-lister-signal"
                               >
                                 <span className="text-[10px] uppercase tracking-widest text-stone-500">
-                                  Quanto ci fidiamo
+                                  Cosa Scout può usare oggi
                                 </span>
-                                <div className="flex flex-wrap items-baseline gap-2 mt-0.5">
-                                  <span className="text-sm font-medium text-[#0B1E3F]">
-                                    {scout.price_vs_zone.confidence.label_it}
-                                  </span>
-                                  <span className="text-[10px] uppercase tracking-widest text-[#C19A6B]">
-                                    {scout.price_vs_zone.confidence.level}
-                                    {scout.price_vs_zone.confidence.comparables_n != null
-                                      ? ` · ${scout.price_vs_zone.confidence.comparables_n} annunci in città`
-                                      : ""}
-                                  </span>
-                                </div>
-                                {scout.price_vs_zone.confidence.limits_it?.length > 0 && (
-                                  <ul className="mt-2 text-xs text-stone-600 space-y-1 list-disc pl-4" data-testid="scout-confidence-limits">
-                                    {scout.price_vs_zone.confidence.limits_it.map((lim, i) => (
-                                      <li key={i}>{lim}</li>
-                                    ))}
-                                  </ul>
+                                <p className="text-sm text-[#0B1E3F] mt-1 leading-relaxed">
+                                  {scout.completeness?.score >= 70
+                                    ? "Hai già abbastanza campi perché Scout dia un primo sguardo utile. Continua a curare foto e documenti."
+                                    : "Mancano ancora pezzi che un acquirente si aspetta: completa quelli sotto e il segnale prezzo diventa più chiaro per tutti."}
+                                </p>
+                                {isB2c && (
+                                  <Link
+                                    to={`/${lang}/cloud/account/sell`}
+                                    className="inline-block mt-3 text-xs uppercase tracking-widest text-[#C19A6B] hover:text-[#0B1E3F]"
+                                    data-testid="scout-lister-edit-cta"
+                                  >
+                                    Modifica il tuo annuncio →
+                                  </Link>
                                 )}
                               </div>
+                            ) : (
+                              scout.price_vs_zone.confidence && (
+                                <div
+                                  className="px-3 py-3 rounded-lg bg-white border border-stone-200"
+                                  data-testid="scout-confidence"
+                                >
+                                  <span className="text-[10px] uppercase tracking-widest text-stone-500">
+                                    Quanto ci fidiamo
+                                  </span>
+                                  <div className="flex flex-wrap items-baseline gap-2 mt-0.5">
+                                    <span className="text-sm font-medium text-[#0B1E3F]">
+                                      {scout.price_vs_zone.confidence.label_it}
+                                    </span>
+                                    <span className="text-[10px] uppercase tracking-widest text-[#C19A6B]">
+                                      {scout.price_vs_zone.confidence.level}
+                                      {scout.price_vs_zone.confidence.comparables_n != null
+                                        ? ` · ${scout.price_vs_zone.confidence.comparables_n} annunci in città`
+                                        : ""}
+                                    </span>
+                                  </div>
+                                  {scout.price_vs_zone.confidence.limits_it?.length > 0 && (
+                                    <ul className="mt-2 text-xs text-stone-600 space-y-1 list-disc pl-4" data-testid="scout-confidence-limits">
+                                      {scout.price_vs_zone.confidence.limits_it.map((lim, i) => (
+                                        <li key={i}>{lim}</li>
+                                      ))}
+                                    </ul>
+                                  )}
+                                </div>
+                              )
                             )}
 
                             {scout.price_vs_zone.why?.length > 0 && (
                               <div data-testid="scout-price-why">
                                 <p className="text-[10px] uppercase tracking-widest text-stone-500 mb-1">
-                                  Perché lo diciamo
+                                  {isLister ? "Come si colloca il chiesto" : "Perché lo diciamo"}
                                 </p>
                                 <ul className="text-sm text-stone-800 space-y-1.5 list-disc pl-4 leading-relaxed">
                                   {scout.price_vs_zone.why.map((w) => (
@@ -451,7 +486,7 @@ export default function PropertyDetailPage() {
                           </div>
                         )}
                       </div>
-                      {scout.red_flags?.length > 0 && (
+                      {!isLister && scout.red_flags?.length > 0 && (
                         <div>
                           <p className="text-[10px] uppercase tracking-widest text-rose-700 mb-1">Occhio a</p>
                           <ul className="text-sm text-stone-800 space-y-1 list-disc pl-4 leading-relaxed">
@@ -459,9 +494,21 @@ export default function PropertyDetailPage() {
                           </ul>
                         </div>
                       )}
+                      {isLister && scout.red_flags?.length > 0 && (
+                        <div data-testid="scout-lister-friction">
+                          <p className="text-[10px] uppercase tracking-widest text-amber-800 mb-1">
+                            Dove un acquirente potrebbe frenare
+                          </p>
+                          <ul className="text-sm text-stone-800 space-y-1 list-disc pl-4 leading-relaxed">
+                            {scout.red_flags.map((f, i) => <li key={i}>{f}</li>)}
+                          </ul>
+                        </div>
+                      )}
                       {scout.questions_for_seller?.length > 0 && (
                         <div>
-                          <p className="text-[10px] uppercase tracking-widest text-stone-500 mb-1">Da chiedere al telefono</p>
+                          <p className="text-[10px] uppercase tracking-widest text-stone-500 mb-1">
+                            {isLister ? "Domande che ti faranno" : "Da chiedere al telefono"}
+                          </p>
                           <ol className="text-sm text-stone-800 space-y-1 list-decimal pl-4 leading-relaxed">
                             {scout.questions_for_seller.map((q, i) => <li key={i}>{q}</li>)}
                           </ol>
@@ -470,7 +517,7 @@ export default function PropertyDetailPage() {
                       {scout.seller_gaps?.length > 0 && (
                         <div data-testid="scout-seller-gaps">
                           <p className="text-[10px] uppercase tracking-widest text-amber-800 mb-1">
-                            All&apos;annuncio manca ancora
+                            {isLister ? "Cosa aggiungere all'annuncio" : "All'annuncio manca ancora"}
                           </p>
                           <ul className="text-sm text-stone-800 space-y-1 list-disc pl-4 leading-relaxed">
                             {scout.seller_gaps.map((g, i) => (
@@ -479,7 +526,11 @@ export default function PropertyDetailPage() {
                           </ul>
                         </div>
                       )}
-                      <p className="text-[11px] text-stone-500 leading-relaxed">{scout.disclaimer_it}</p>
+                      <p className="text-[11px] text-stone-500 leading-relaxed">
+                        {isLister
+                          ? "Scout ti mostra lo stesso segnale che vede chi sta cercando casa. Usalo per migliorare l'annuncio — non come voto."
+                          : scout.disclaimer_it}
+                      </p>
                       <button
                         type="button"
                         onClick={runScout}

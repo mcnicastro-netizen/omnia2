@@ -42,6 +42,7 @@ router = APIRouter(tags=["immobilcloud"])
 PUBLIC_FIELDS = {
     "_id": 0,
     "owner": 0,                # internal-only
+    "owner_user_id": 0,        # never expose; use viewer_is_lister instead
     "seller_client_id": 0,     # internal-only
     "commission_pct": 0,
     "listing_agent_id": 0,
@@ -560,6 +561,24 @@ async def public_facets(
     }
 
 
+def _viewer_is_lister(user: Optional[Dict[str, Any]], p: Dict[str, Any]) -> bool:
+    """True when the authenticated viewer owns/lists this property (B2C owner or agency)."""
+    if not user or not user.get("id"):
+        return False
+    uid = user["id"]
+    if p.get("owner_user_id") and p["owner_user_id"] == uid:
+        return True
+    if p.get("is_private_listing") and p.get("owner_user_id") == uid:
+        return True
+    agency_id = p.get("agency_id")
+    if not agency_id or agency_id == "_private_listings":
+        return False
+    agencies = set(user.get("agency_ids") or [])
+    if user.get("agency_id"):
+        agencies.add(user["agency_id"])
+    return agency_id in agencies
+
+
 # ============================================================
 # 3) Detail — single property
 # ============================================================
@@ -567,9 +586,18 @@ async def public_facets(
 @router.get("/property/{pid}")
 async def public_property_detail(pid: str, request: Request):
     db = Database.get()
+    # Need owner_user_id for lister check — fetch without PUBLIC_FIELDS exclusion, then strip
     p = await db.properties.find_one(
         {"id": pid, **_base_filter()},
-        PUBLIC_FIELDS,
+        {
+            "_id": 0,
+            "owner": 0,
+            "seller_client_id": 0,
+            "commission_pct": 0,
+            "listing_agent_id": 0,
+            "lead_count": 0,
+            "view_count": 0,
+        },
     )
     if not p:
         raise HTTPException(status_code=404, detail="property_not_found")
@@ -590,8 +618,10 @@ async def public_property_detail(pid: str, request: Request):
     if not can_view_property(viewer_level, property_privacy):
         raise HTTPException(status_code=404, detail="property_not_found")
 
+    viewer_is_lister = _viewer_is_lister(user, p)
+
     agency = None
-    if p.get("agency_id"):
+    if p.get("agency_id") and p.get("agency_id") != "_private_listings":
         agency = await db.agencies.find_one(
             {"id": p["agency_id"], "is_active": True},
             {"_id": 0, "id": 1, "slug": 1, "display_name": 1, "logo_url": 1,
@@ -605,7 +635,8 @@ async def public_property_detail(pid: str, request: Request):
         pass
 
     photos = p.get("photos") or []
-    # Build the enriched dict then apply the privacy gate
+    # Strip sensitive ownership fields before public response
+    p.pop("owner_user_id", None)
     enriched = {
         **p,
         "photos": [
@@ -621,6 +652,7 @@ async def public_property_detail(pid: str, request: Request):
     return {
         **apply_privacy_view(enriched, viewer_level),
         "_viewer_level": viewer_level,  # useful for frontend badge
+        "viewer_is_lister": viewer_is_lister,
     }
 
 
