@@ -491,11 +491,19 @@ export default function SellPage() {
             </div>
           </Field>
 
-          <fieldset data-testid="sell-contact-channels" className="border border-stone-200 rounded-lg p-4 space-y-3">
-            <legend className="text-xs uppercase tracking-widest text-stone-500 px-1">
-              {t("cloud.sell.f_contact_legend")}
-            </legend>
-            <p className="text-xs text-stone-500">{t("cloud.sell.f_contact_hint")}</p>
+          <fieldset
+            data-testid="sell-contact-channels"
+            className="relative overflow-hidden rounded-2xl border border-stone-200/80 bg-gradient-to-br from-[#fbf8f3] to-white p-5 space-y-4"
+          >
+            <div className="pointer-events-none absolute -right-10 -top-10 h-32 w-32 rounded-full bg-[#C19A6B]/10" aria-hidden />
+            <div>
+              <p className="text-[10px] uppercase tracking-[0.28em] text-[#C19A6B] mb-1">
+                {t("cloud.sell.f_contact_legend")}
+              </p>
+              <p className="text-sm text-[#0B1E3F] leading-relaxed" style={{ fontFamily: "'Fraunces', Georgia, serif" }}>
+                {t("cloud.sell.f_contact_hint")}
+              </p>
+            </div>
             <Field label={t("cloud.sell.f_contact_name")}>
               <input
                 data-testid="sell-f-contact-name"
@@ -505,24 +513,31 @@ export default function SellPage() {
                 placeholder={user?.name?.split?.(" ")?.[0] || ""}
               />
             </Field>
-            <label className="flex items-center gap-2 text-sm text-stone-700 cursor-pointer">
-              <input
-                type="checkbox"
-                data-testid="sell-f-show-email"
-                checked={form.contact_show_email}
-                onChange={(e) => setForm({ ...form, contact_show_email: e.target.checked })}
-              />
-              {t("cloud.sell.f_show_email")}
-            </label>
-            <label className="flex items-center gap-2 text-sm text-stone-700 cursor-pointer">
-              <input
-                type="checkbox"
-                data-testid="sell-f-show-phone"
-                checked={form.contact_show_phone}
-                onChange={(e) => setForm({ ...form, contact_show_phone: e.target.checked })}
-              />
-              {t("cloud.sell.f_show_phone")}
-            </label>
+            <div className="grid gap-2">
+              {[
+                { key: "contact_show_email", testid: "sell-f-show-email", label: t("cloud.sell.f_show_email") },
+                { key: "contact_show_phone", testid: "sell-f-show-phone", label: t("cloud.sell.f_show_phone") },
+                { key: "contact_show_whatsapp", testid: "sell-f-show-whatsapp", label: t("cloud.sell.f_show_whatsapp") },
+              ].map((opt) => (
+                <label
+                  key={opt.key}
+                  className={`flex items-center gap-3 rounded-xl border px-3 py-2.5 text-sm cursor-pointer transition ${
+                    form[opt.key]
+                      ? "border-[#C19A6B]/50 bg-[#C19A6B]/10 text-[#0B1E3F]"
+                      : "border-stone-200 bg-white/70 text-stone-700 hover:border-stone-300"
+                  }`}
+                >
+                  <input
+                    type="checkbox"
+                    data-testid={opt.testid}
+                    checked={form[opt.key]}
+                    onChange={(e) => setForm({ ...form, [opt.key]: e.target.checked })}
+                    className="h-4 w-4 rounded border-stone-300 text-[#0B1E3F] focus:ring-[#C19A6B]"
+                  />
+                  {opt.label}
+                </label>
+              ))}
+            </div>
             {form.contact_show_phone && (
               <Field label={t("cloud.sell.f_phone")}>
                 <input
@@ -534,15 +549,6 @@ export default function SellPage() {
                 />
               </Field>
             )}
-            <label className="flex items-center gap-2 text-sm text-stone-700 cursor-pointer">
-              <input
-                type="checkbox"
-                data-testid="sell-f-show-whatsapp"
-                checked={form.contact_show_whatsapp}
-                onChange={(e) => setForm({ ...form, contact_show_whatsapp: e.target.checked })}
-              />
-              {t("cloud.sell.f_show_whatsapp")}
-            </label>
             {form.contact_show_whatsapp && (
               <Field label={t("cloud.sell.f_whatsapp")}>
                 <input
