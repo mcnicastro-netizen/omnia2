@@ -1,6 +1,6 @@
 # Prossima sessione — programma passi
 
-**Aggiornato**: 17 Settembre 2026 — layout roll-out B2C  
+**Aggiornato**: 17 Settembre 2026 — Scout depth + fiducia  
 **Stato base**: Sprint 1→4 **CONCLUSO**. Stress: `PLATFORM_STRESS_REPORT.md` + `STRESS_REPORT.md`.  
 **Nord prodotto B2C**: `memory/PRODUCT_NORTHSTAR_B2C.md` (**obbligatorio** prima di ship `/cloud`).
 
@@ -23,9 +23,10 @@
 | Sprint 1→4 | ✅ |
 | Gap ImmobilCloud + stress | ✅ |
 | Home B2C visual + SSR preview | ✅ (16-Set) |
-| Layout altre pagine B2C | ✅ (17-Set) — search, scheda, account, valuta, mutui, vendi, register, visura |
-| Scout v1 (completezza / zona / domande) | ✅ base |
-| Scout fiducia (fascia + perché + confidenza) | ❌ **next** |
+| Layout altre pagine B2C | ✅ (17-Set) |
+| Scout v1 (completezza / zona / domande) | ✅ |
+| Scout fiducia (fascia + perché + confidenza) | ✅ (17-Set) |
+| Scout thin “visita + documenti” | ❌ **next** |
 | Demo A-025 | ❌ |
 | Stripe live | ⏸️ post-Vercel |
 
@@ -35,14 +36,11 @@
 
 | # | Cosa | Note |
 |:-:|------|------|
-| 1 | **Scout depth + fiducia** | Fascia prezzo, perché, limiti/confidenza; lacune; domande; UI leggibile. Vedi northstar P0–P1 |
-| 2 | **Home B2C allineata al nord** | Claim = pre-visita / “cosa sapere prima”; Valuta/Mutui/Vendi secondari (già avviato in home) |
-| 3 | **Scout thin “visita + documenti”** | Stesso pannello, non nuovo prodotto |
-| 4 | A-025 demo prodotto | GTM |
-| — | Intake “annuncio da altri portali” | Solo dopo 1–3 + ok Founder |
+| 1 | **Scout thin “visita + documenti”** | 5–10 check visita + 4–6 documenti *nello stesso pannello* (northstar step C) |
+| 2 | **Home B2C allineata al nord** | Claim = pre-visita; Valuta/Mutui/Vendi secondari |
+| 3 | A-025 demo prodotto | GTM |
+| — | Intake “annuncio da altri portali” | Solo dopo Scout visita + ok Founder |
 | — | A-014 Stripe live | solo post-Vercel |
 | — | Ladder MLS / reti locali | Binario **B2B**, non copy home privati |
-
-**Chiusura 17-Set (mattina):** layout/grafica allineata su superfici cloud via `CloudPageHero` + navy/brass/Fraunces/foto. Next = Scout depth.
 
 Report: `memory/PLATFORM_STRESS_REPORT.md` · `memory/STRESS_REPORT.md` · `memory/PRODUCT_NORTHSTAR_B2C.md`

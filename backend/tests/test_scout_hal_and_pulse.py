@@ -86,6 +86,9 @@ def test_02_scout_hal(listing):
     assert d["completeness"]["score"] >= 50
     assert d["price_vs_zone"]["available"] is True
     assert d["price_vs_zone"]["signal"] in ("sotto_mercato", "in_linea", "sopra_mercato")
+    assert d["price_vs_zone"]["estimated_band_eur"]["min"] > 0
+    assert len(d["price_vs_zone"]["why"]) >= 2
+    assert d["price_vs_zone"]["confidence"]["level"] in ("alta", "media", "bassa")
     assert len(d["questions_for_seller"]) >= 2
 
 

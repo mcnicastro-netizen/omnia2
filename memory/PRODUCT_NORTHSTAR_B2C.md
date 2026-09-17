@@ -66,10 +66,10 @@ Se una feature non rafforza questa frase, non è priorità B2C.
 
 | Step | Deliverable | Criterio “fatto” |
 |:----:|-------------|------------------|
-| **A** | Scout depth + fiducia | Fascia prezzo + perché + confidenza/limiti; lacune; domande; UI leggibile |
+| **A** | Scout depth + fiducia | ✅ 17-Set: fascia € + perché + confidenza/limiti; lacune; domande; UI scheda |
 | **B** | Home B2C allineata al nord | Hero/claim = decisione pre-visita; moduli secondari non competono col messaggio |
-| **B′** | Roll-out layout/grafica altre pagine | **Domani**: ricerca, scheda, account, valuta, mutui, vendi — stesso linguaggio della home |
-| **C** | Scout “visita” (thin) | 5–10 check visita + 4–6 documenti *nello stesso pannello* |
+| **B′** | Roll-out layout/grafica altre pagine | ✅ 17-Set |
+| **C** | Scout “visita” (thin) | 5–10 check visita + 4–6 documenti *nello stesso pannello* — **next** |
 | **D** | Intake annuncio esterno (opz.) | Solo se A–C ok e Founder conferma scope legale |
 
 **B2B parallelo (non confondere col nord B2C):** report acquisizione OMI “da lasciare al proprietario” + pitch hub efficienza — quando si lavora ImmoWeb/GTM agenzie.

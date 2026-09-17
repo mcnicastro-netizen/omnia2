@@ -1,13 +1,13 @@
-"""OMNIA — Scout HAL: Buyer Brief for ImmobilCloud listings.
+"""OMNIA — Scout: Buyer Brief for ImmobilCloud listings.
 
-Unique vs Idealista / Immobiliare.it:
-- Transparent *completezza annuncio* score (0–100) from hard fields
-- Price vs zone €/mq benchmark (CITY_PRICES) → sotto / in linea / sopra
-- Domande concrete da fare al venditore (APE, spese, vincoli, stato)
-- Optional LLM polish (falls back to deterministic brief if LLM down)
+Pre-visita intelligence (nord B2C):
+- Completezza annuncio (0–100)
+- Prezzo: segnale + fascia stimata (€) + perché + confidenza/limiti
+- Domande concrete da fare al venditore
+- Optional LLM polish (falls back to deterministic brief)
 
 Endpoint: POST /api/cloud/property/{pid}/scout
-Public + IP rate-limited. No payment. Lead-magnet toward valuator/visura.
+Public + IP rate-limited. No payment.
 """
 from __future__ import annotations
 
@@ -98,8 +98,12 @@ def completeness_score(p: Dict[str, Any]) -> Dict[str, Any]:
     }
 
 
-def price_vs_zone(p: Dict[str, Any]) -> Dict[str, Any]:
-    """Compare asking €/mq to curated CITY_PRICES semicentro band."""
+def price_vs_zone(p: Dict[str, Any], *, completeness_score_val: Optional[int] = None) -> Dict[str, Any]:
+    """Compare asking €/mq to curated CITY_PRICES — fascia + perché + confidenza.
+
+    North star: prezzo come segnale + fascia stimata + perché + limiti,
+    mai come verità assoluta di mercato.
+    """
     from apps.immocloud.data.italy_real_estate_prices_2025 import CITY_PRICES, REGIONAL_DEFAULTS
 
     surface = float(p.get("surface_sqm") or 0)
@@ -115,12 +119,17 @@ def price_vs_zone(p: Dict[str, Any]) -> Dict[str, Any]:
     e_mq = trying / surface
     city_key = _norm_city(p.get("city"))
     city = CITY_PRICES.get(city_key)
+    city_known = bool(city)
     if city:
+        band_key = "semicentro"
         lo, hi = city.get("semicentro") or city.get("centro") or (0, 0)
         source = city.get("source") or "CITY_PRICES"
+        zone_tier = "semicentro"
     else:
         lo, hi = REGIONAL_DEFAULTS["center"]
         source = "regional_fallback"
+        zone_tier = "media_regionale"
+        band_key = "regional"
 
     mid = (lo + hi) / 2 if lo and hi else 0
     if not mid:
@@ -129,23 +138,133 @@ def price_vs_zone(p: Dict[str, Any]) -> Dict[str, Any]:
     delta_pct = round(100.0 * (e_mq - mid) / mid, 1)
     if e_mq < lo * 0.95:
         signal = "sotto_mercato"
-        label = "Sotto la fascia di zona"
+        label = "Sotto la fascia stimata di zona"
     elif e_mq > hi * 1.05:
         signal = "sopra_mercato"
-        label = "Sopra la fascia di zona"
+        label = "Sopra la fascia stimata di zona"
     else:
         signal = "in_linea"
-        label = "In linea con la zona"
+        label = "In linea con la fascia stimata"
+
+    band_min = int(round(lo * surface))
+    band_max = int(round(hi * surface))
+    band_mid = int(round(mid * surface))
+
+    # Confidence — honest without pretending we have street-level comps
+    conf_pts = 0
+    limits: List[str] = []
+    if city_known:
+        conf_pts += 40
+    else:
+        conf_pts += 10
+        limits.append("Città non nel benchmark locale: usiamo una media regionale, meno precisa.")
+    if source != "regional_fallback":
+        conf_pts += 15
+    if 30 <= surface <= 250:
+        conf_pts += 15
+    else:
+        limits.append("Superficie fuori dalla fascia tipica (30–250 m²): il confronto €/m² è più debole.")
+    cscore = completeness_score_val
+    if cscore is None:
+        cscore = completeness_score(p)["score"]
+    if cscore >= 60:
+        conf_pts += 15
+    elif cscore < 45:
+        conf_pts += 0
+        limits.append("Annuncio incompleto: con pochi dati il segnale prezzo è meno affidabile.")
+    else:
+        conf_pts += 8
+    if p.get("lat") and p.get("lng"):
+        conf_pts += 5
+    if p.get("address") and len(str(p.get("address"))) > 4:
+        conf_pts += 5
+    conf_pts = max(0, min(100, conf_pts))
+    # Cap: thin listings never claim "alta" — honesty over optimism
+    if cscore < 45:
+        conf_pts = min(conf_pts, 55)
+    if conf_pts >= 70:
+        conf_level = "alta"
+        conf_label = "Confidenza alta per un primo sguardo"
+    elif conf_pts >= 45:
+        conf_level = "media"
+        conf_label = "Confidenza media — verifica in visita"
+    else:
+        conf_level = "bassa"
+        conf_label = "Confidenza bassa — trattala come indizio"
+
+    limits.append(
+        "Fascia da €/m² di zona (benchmark semicentro), non da comparabili puntuali di questo civico."
+    )
+    limits.append("Non è una perizia né un valore OMI ufficiale per questo immobile.")
+
+    why: List[Dict[str, str]] = [
+        {
+            "key": "asking",
+            "label_it": (
+                f"Il prezzo chiesto è circa € {int(round(e_mq))}/m² "
+                f"({int(round(trying)):,} € su {int(surface)} m²).".replace(",", ".")
+            ),
+        },
+        {
+            "key": "band",
+            "label_it": (
+                f"In {p.get('city') or 'zona'}, la fascia stimata {zone_tier.replace('_', ' ')} "
+                f"è € {lo}–{hi}/m² → per questi mq circa "
+                f"€ {band_min:,}–{band_max:,}.".replace(",", ".")
+            ),
+        },
+    ]
+    if signal == "sopra_mercato":
+        why.append({
+            "key": "signal",
+            "label_it": (
+                "Il chiesto sta sopra quella fascia: chiedi motivazione (vista, ristrutturazione, "
+                "piano) o margine di trattativa — non è automaticamente ‘caro’."
+            ),
+        })
+    elif signal == "sotto_mercato":
+        why.append({
+            "key": "signal",
+            "label_it": (
+                "Il chiesto sta sotto quella fascia: verifica urgenza, stato, vincoli o successione "
+                "prima di entusiasmarti."
+            ),
+        })
+    else:
+        why.append({
+            "key": "signal",
+            "label_it": "Il chiesto cade dentro la fascia stimata: buon punto di partenza, non una garanzia.",
+        })
+    why.append({
+        "key": "source",
+        "label_it": f"Fonte benchmark: {source}.",
+    })
 
     return {
         "available": True,
         "signal": signal,
         "label_it": label,
         "asking_eur_mq": round(e_mq),
+        "asking_eur": int(round(trying)),
         "zone_eur_mq_min": lo,
         "zone_eur_mq_max": hi,
         "zone_eur_mq_mid": round(mid),
+        "zone_tier": zone_tier,
         "delta_pct_vs_mid": delta_pct,
+        "estimated_band_eur": {
+            "min": band_min,
+            "max": band_max,
+            "mid": band_mid,
+        },
+        "why": why,
+        "confidence": {
+            "level": conf_level,
+            "score": conf_pts,
+            "label_it": conf_label,
+            "limits_it": limits[:4],
+            "comparables_n": None,  # filled by endpoint when nearby listings exist
+            "band_key": band_key,
+        },
         "benchmark_source": source,
         "city_key": city_key or None,
     }
@@ -183,12 +302,17 @@ def red_flags(p: Dict[str, Any], vs_zone: Dict[str, Any], completeness: Dict[str
     if len(photos) < 3:
         flags.append("Poche foto: rischio che dettagli critici (umidità, stato impianti) non siano visibili.")
     if vs_zone.get("signal") == "sopra_mercato" and (vs_zone.get("delta_pct_vs_mid") or 0) > 15:
-        flags.append(
-            f"Prezzo richiesto circa {vs_zone['delta_pct_vs_mid']}% sopra il mid di zona — chiedi giustificazione o margine di trattativa."
-        )
+        band = vs_zone.get("estimated_band_eur") or {}
+        if band.get("max"):
+            flags.append(
+                f"Chiesto sopra la fascia stimata (fino a circa € {int(band['max']):,}). "
+                "Chiedi giustificazione o margine di trattativa.".replace(",", ".")
+            )
+        else:
+            flags.append("Chiesto sopra la fascia stimata di zona — chiedi giustificazione o margine.")
     if vs_zone.get("signal") == "sotto_mercato" and (vs_zone.get("delta_pct_vs_mid") or 0) < -20:
         flags.append(
-            "Prezzo molto sotto zona: verifica motivazione (urgenza, difetti, successione) prima di entusiasmarti."
+            "Prezzo sotto la fascia stimata: verifica motivazione (urgenza, difetti, successione) prima di entusiasmarti."
         )
     energy = (p.get("energy") or {}).get("energy_class") if isinstance(p.get("energy"), dict) else None
     if energy in ("F", "G"):
@@ -269,10 +393,33 @@ def deterministic_insight(p: Dict[str, Any], vs_zone: Dict[str, Any], score: int
             "prima di fidarti del prezzo richiesto."
         )
     if vs_zone.get("available") and vs_zone.get("signal") == "sopra_mercato":
-        return f"Completezza ok, ma il prezzo è sopra la fascia di {city}: chiedi margine o motivazione."
+        return f"Completezza ok, ma il chiesto è sopra la fascia stimata a {city}: chiedi margine o motivazione."
     if vs_zone.get("available") and vs_zone.get("signal") == "sotto_mercato":
-        return f"Prezzo sotto zona a {city}: verifica motivazione e documentazione prima di accelerare."
+        return f"Chiesto sotto la fascia stimata a {city}: verifica motivazione e documentazione prima di accelerare."
     return f"Annuncio solido su {city}: usa Scout per le domande mirate in visita."
+
+
+async def _count_nearby_sale(db, p: Dict[str, Any]) -> Optional[int]:
+    """Soft ‘comparabili’ count: other public sales in same city (not street-level comps)."""
+    city = (p.get("city") or "").strip()
+    if not city or (p.get("operation") or "sale") == "rent":
+        return None
+    try:
+        n = await db.properties.count_documents({
+            "status": "active",
+            "visibility": "public",
+            "is_listed_on_immobilcloud": {"$ne": False},
+            "moderation_status": {"$nin": ["pending", "rejected"]},
+            "operation": "sale",
+            "city": {"$regex": f"^{re.escape(city)}$", "$options": "i"},
+            "id": {"$ne": p.get("id")},
+            "price": {"$gt": 0},
+            "surface_sqm": {"$gt": 0},
+        })
+        return int(n)
+    except Exception as e:
+        logger.info("scout nearby count skip: %s", e)
+        return None
 
 
 async def _llm_one_liner(p: Dict[str, Any], vs_zone: Dict[str, Any], score: int) -> Optional[str]:
@@ -293,7 +440,7 @@ async def _llm_one_liner(p: Dict[str, Any], vs_zone: Dict[str, Any], score: int)
         text = await asyncio.wait_for(
             generate_text(
                 prompt=prompt,
-                system="Sei Scout HAL di ImmobilCloud. Solo fatti utili all'acquirente.",
+                system="Sei Scout di ImmobilCloud. Solo fatti utili all'acquirente, senza promettere verità di mercato.",
                 temperature=0.3,
             ),
             timeout=6.0,
@@ -312,7 +459,7 @@ async def _llm_one_liner(p: Dict[str, Any], vs_zone: Dict[str, Any], score: int)
 
 def build_brief(p: Dict[str, Any], *, insight: Optional[str] = None) -> Dict[str, Any]:
     comp = completeness_score(p)
-    vs = price_vs_zone(p)
+    vs = price_vs_zone(p, completeness_score_val=comp["score"])
     gaps = seller_gaps(comp) if comp["score"] < 70 else []
     return {
         "product": "scout_hal",
@@ -326,14 +473,14 @@ def build_brief(p: Dict[str, Any], *, insight: Optional[str] = None) -> Dict[str
         "insight": insight or deterministic_insight(p, vs, comp["score"]),
         "disclaimer_it": (
             "Scout legge i dati dell'annuncio e i prezzi di zona ImmobilCloud. "
-            "Non sostituisce una perizia né un parere legale."
+            "È un aiuto pre-visita, non una perizia né un parere legale."
         ),
     }
 
 
 @router.post("/property/{pid}/scout")
 async def scout_listing(pid: str, request: Request, payload: ScoutRequest = ScoutRequest()):
-    """Generate Scout HAL buyer brief for a public listing."""
+    """Generate Scout buyer brief for a public listing."""
     await enforce_ip_rate_limit(request, bucket="cloud_scout", max_requests=40, window_seconds=3600)
     db = Database.get()
     p = await db.properties.find_one(
@@ -349,7 +496,24 @@ async def scout_listing(pid: str, request: Request, payload: ScoutRequest = Scou
     if not p:
         raise HTTPException(status_code=404, detail="property_not_found")
 
-    insight = await _llm_one_liner(p, price_vs_zone(p), completeness_score(p)["score"])
+    comp = completeness_score(p)
+    vs = price_vs_zone(p, completeness_score_val=comp["score"])
+    nearby = await _count_nearby_sale(db, p)
+    if vs.get("available") and nearby is not None and vs.get("confidence"):
+        vs["confidence"]["comparables_n"] = nearby
+        if nearby >= 8:
+            # mild bump when we have peer listings in-city (still not street comps)
+            vs["confidence"]["limits_it"] = list(vs["confidence"].get("limits_it") or [])
+            vs["confidence"]["limits_it"].insert(
+                0,
+                f"Ci sono {nearby} altri annunci in vendita a {p.get('city')} su ImmobilCloud — utili come contesto, non come perizia.",
+            )
+            vs["confidence"]["limits_it"] = vs["confidence"]["limits_it"][:4]
+
+    insight = await _llm_one_liner(p, vs, comp["score"])
     brief = build_brief(p, insight=insight)
+    # Prefer the enriched vs (with comparables_n) over the rebuild inside build_brief
+    brief["price_vs_zone"] = vs
+    brief["red_flags"] = red_flags(p, vs, comp)
     brief["lang"] = (payload.lang or "it")[:2]
     return brief

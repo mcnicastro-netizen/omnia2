@@ -359,9 +359,9 @@ export default function PropertyDetailPage() {
                           {scout.insight}
                         </p>
                       )}
-                      <div className="flex flex-wrap gap-3 items-center">
+                      <div className="space-y-3">
                         <div
-                          className="px-3 py-2 rounded-lg bg-white border border-stone-200"
+                          className="inline-block px-3 py-2 rounded-lg bg-white border border-stone-200"
                           data-testid="scout-completeness"
                         >
                           <span className="text-[10px] uppercase tracking-widest text-stone-500">Quanto è completo</span>
@@ -371,17 +371,78 @@ export default function PropertyDetailPage() {
                         </div>
                         {scout.price_vs_zone?.available && (
                           <div
-                            className="px-3 py-2 rounded-lg bg-white border border-stone-200"
+                            className="space-y-3"
                             data-testid="scout-price-zone"
                           >
-                            <span className="text-[10px] uppercase tracking-widest text-stone-500">Il prezzo in zona</span>
-                            <div className="text-sm font-medium text-[#0B1E3F]">
-                              {scout.price_vs_zone.label_it}
-                              <span className="text-stone-500 font-normal">
-                                {" "}· €{scout.price_vs_zone.asking_eur_mq}/m²
-                                {" "}(zona €{scout.price_vs_zone.zone_eur_mq_min}–{scout.price_vs_zone.zone_eur_mq_max})
+                            <div className="px-3 py-3 rounded-lg bg-white border border-stone-200">
+                              <span className="text-[10px] uppercase tracking-widest text-stone-500">
+                                Fascia di prezzo stimata
                               </span>
+                              <div className="text-lg font-medium text-[#0B1E3F] mt-0.5">
+                                {scout.price_vs_zone.label_it}
+                              </div>
+                              {scout.price_vs_zone.estimated_band_eur && (
+                                <p className="text-sm text-stone-700 mt-1" data-testid="scout-price-band">
+                                  Per questi mq: circa{" "}
+                                  <strong>
+                                    € {Number(scout.price_vs_zone.estimated_band_eur.min).toLocaleString("it-IT")}
+                                    {" – "}
+                                    {Number(scout.price_vs_zone.estimated_band_eur.max).toLocaleString("it-IT")}
+                                  </strong>
+                                  <span className="text-stone-500">
+                                    {" "}(€{scout.price_vs_zone.zone_eur_mq_min}–{scout.price_vs_zone.zone_eur_mq_max}/m²)
+                                  </span>
+                                </p>
+                              )}
+                              <p className="text-xs text-stone-500 mt-1">
+                                Chiesto ~€{scout.price_vs_zone.asking_eur_mq}/m²
+                                {scout.price_vs_zone.asking_eur
+                                  ? ` · € ${Number(scout.price_vs_zone.asking_eur).toLocaleString("it-IT")}`
+                                  : ""}
+                              </p>
                             </div>
+
+                            {scout.price_vs_zone.confidence && (
+                              <div
+                                className="px-3 py-3 rounded-lg bg-white border border-stone-200"
+                                data-testid="scout-confidence"
+                              >
+                                <span className="text-[10px] uppercase tracking-widest text-stone-500">
+                                  Quanto ci fidiamo
+                                </span>
+                                <div className="flex flex-wrap items-baseline gap-2 mt-0.5">
+                                  <span className="text-sm font-medium text-[#0B1E3F]">
+                                    {scout.price_vs_zone.confidence.label_it}
+                                  </span>
+                                  <span className="text-[10px] uppercase tracking-widest text-[#C19A6B]">
+                                    {scout.price_vs_zone.confidence.level}
+                                    {scout.price_vs_zone.confidence.comparables_n != null
+                                      ? ` · ${scout.price_vs_zone.confidence.comparables_n} annunci in città`
+                                      : ""}
+                                  </span>
+                                </div>
+                                {scout.price_vs_zone.confidence.limits_it?.length > 0 && (
+                                  <ul className="mt-2 text-xs text-stone-600 space-y-1 list-disc pl-4" data-testid="scout-confidence-limits">
+                                    {scout.price_vs_zone.confidence.limits_it.map((lim, i) => (
+                                      <li key={i}>{lim}</li>
+                                    ))}
+                                  </ul>
+                                )}
+                              </div>
+                            )}
+
+                            {scout.price_vs_zone.why?.length > 0 && (
+                              <div data-testid="scout-price-why">
+                                <p className="text-[10px] uppercase tracking-widest text-stone-500 mb-1">
+                                  Perché lo diciamo
+                                </p>
+                                <ul className="text-sm text-stone-800 space-y-1.5 list-disc pl-4 leading-relaxed">
+                                  {scout.price_vs_zone.why.map((w) => (
+                                    <li key={w.key || w.label_it}>{w.label_it}</li>
+                                  ))}
+                                </ul>
+                              </div>
+                            )}
                           </div>
                         )}
                         {prop.last_price_drop?.drop_pct && (
