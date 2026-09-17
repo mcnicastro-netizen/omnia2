@@ -1,4 +1,12 @@
 {
+  "install": "mkdir -p /workspace/.mongo-data\ncd /workspace/backend && python3 -m venv .venv\ngrep -v '^emergentintegrations==' /workspace/backend/requirements.txt > /tmp/omnia-requirements.txt\n/workspace/backend/.venv/bin/pip install -q -r /tmp/omnia-requirements.txt\ncd /workspace/frontend && yarn install --frozen-lockfile\ncd /workspace/frontend && REACT_APP_BACKEND_URL= yarn build",
+  "start": "if ! pgrep -x mongod >/dev/null 2>&1; then mongod --dbpath /workspace/.mongo-data --bind_ip 127.0.0.1 --port 27017 --logpath /tmp/mongod.log --fork; fi\nbash /workspace/scripts/omnia-stack.sh ensure",
+  "terminals": [
+    {
+      "name": "omnia-stack-watch",
+      "command": "bash /workspace/scripts/omnia-stack.sh watch"
+    }
+  ],
   "ports": [
     {
       "name": "omnia-preview",
@@ -7,12 +15,6 @@
     {
       "name": "omnia-api",
       "port": 43121
-    }
-  ],
-  "terminals": [
-    {
-      "name": "omnia-stack-watch",
-      "command": "bash /workspace/scripts/omnia-stack.sh watch"
     }
   ]
 }
