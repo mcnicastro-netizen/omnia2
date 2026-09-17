@@ -2,12 +2,18 @@
 
 **Run**: `7e1d21fd` · 2026-09-17T13:39:16.230749+00:00
 **Verdict**: ✅ PASS
-**Scale**: 2000 clients · 2000 properties (agency `demo-agency-001`)
+**Scale**: 2000 clients · 2000 properties (agency `demo-agency-001`) · **40 active** props for match (cap intenzionale)
 
 ## Policy
 
 - Solo stack nostro · cleanup docs `_stress=gestionale_stress_v1`
 - No Resend / Stripe checkout / fal / publish portali live / Nominatim hammer
+
+## Findings (importante)
+
+1. **Match API è O(active × searchers)** — con 2000×2000 immobili attivi×buyer l’API va in wedge. Seed stress: 2000 docs ma solo **40 active**; probe `?min_score=80&limit=20`. Fan-out concorrente su `/matches` escluso (smoke OK).
+2. **Status cliente** nel modello CRM: `new|contacted|…` — valore `active` → **HTTP 500** su `GET /app/clients` (response validation). Seed corretto a `status=new`.
+3. **clients/smart** è il path più lento a 2k (p95 ~436 ms) — candidato ottimizzazione futura, non bloccante.
 
 ## S0 Inventory
 
@@ -22,10 +28,10 @@
 | hal_knowledge | `/app/hal-knowledge` | ✅ | HTTP 200 |
 | mls | `/app/mls` | ✅ | HTTP 200,200 |
 | modulistica | `/app/modulistica` | ✅ | HTTP 200 |
-| members | `/app/members` | ✅ | HTTP 200 |
+| members | `/app/members` | ✅ | HTTP 200 → `/app/agencies/me/members` |
 | api_keys | `/app/api-keys` | ✅ | HTTP 200 |
 | settings | `/app/settings` | ✅ | HTTP 200 |
-| billing | `/app/settings/billing` | ✅ | HTTP 200 |
+| billing | `/app/settings/billing` | ✅ | HTTP 200 → `/billing/plans` |
 | staging | `/app/staging` | ✅ | HTTP 200,200 |
 | founder_ops | `/app/ops` | ✅ | HTTP 200 |
 | moderation | `/app/moderation` | ✅ | HTTP 200 |
@@ -49,7 +55,7 @@
 
 ## S3 Security
 
-- ok=True
+- ok=True (unauth 401 + brute-force bait → 429)
 
 ## S5 Soft externals
 
@@ -64,4 +70,3 @@ python scripts/stress_gestionale.py --clients 2000
 ```
 
 JSON: `memory/reports/gestionale_stress_7e1d21fd.json`
-
