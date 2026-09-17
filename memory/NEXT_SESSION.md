@@ -10,12 +10,13 @@
 
 ## Ripresa (checklist)
 
-1. `bash scripts/omnia-stack.sh ensure`  → avvia API + preview + **tunnel pubblico**
-2. `bash scripts/omnia-stack.sh share` → URL CRM condivisibile (`/tmp/omnia-stack/CRM_LOGIN_URL.txt`) — **niente Port Forward**
-3. Rileggere `PRODUCT_NORTHSTAR_B2C.md`
-4. Founder: **«vai»** sull’ID se fuori programma
-5. **D-084**: ogni ship aggiorna manuale+YAML ✅ (17-Set: Cap.18 inquiry privato + Cap.23 Ken Burns)
-6. Preprod: `python scripts/preprod_confidence_gate.py` prima di go-live / ship rischiosi
+1. `bash scripts/omnia-stack.sh ensure`
+2. **Domani**: eseguire `memory/GESTIONALE_TOOLS_QC_PLAN.md` (prova tutti i tool ImmoWeb, no vendor burn) → report `GESTIONALE_TOOLS_QC_REPORT.md`
+3. Review QC esterna (17-Set): prodotto solido; rischio = gerarchia sidebar + dashboard non «cosa fare oggi»; Clienti/HAL differenziante — **no implementazione redesign senza «vai»**
+4. Spegnere `CRM_PUBLIC_PREVIEW` dopo review esterna (`=0` + restart-preview)
+5. Founder: **«vai»** sull’ID se fuori programma
+6. **D-084**: ogni ship aggiorna manuale+YAML
+7. Preprod: `python scripts/preprod_confidence_gate.py` prima di go-live / ship rischiosi
 
 ---
 
