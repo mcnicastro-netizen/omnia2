@@ -379,6 +379,129 @@ def seller_gaps(completeness: Dict[str, Any]) -> List[Dict[str, str]]:
     return tips[:6]
 
 
+def visit_checklist(p: Dict[str, Any]) -> List[Dict[str, str]]:
+    """Thin in-visit checks — same Scout panel, not a new product."""
+    items: List[Dict[str, str]] = [
+        {
+            "key": "photo_vs_reality",
+            "label_it": "Confronta ogni stanza con le foto: finiture, luce, eventuali difetti nascosti.",
+        },
+        {
+            "key": "moisture",
+            "label_it": "Controlla umidità, muffa, odori di chiuso — angoli, sottotetto, cantina se c’è.",
+        },
+        {
+            "key": "systems",
+            "label_it": "Prova acqua calda, termosifoni/condizionamento, prese e citofono.",
+        },
+        {
+            "key": "noise_light",
+            "label_it": "Ascolta rumori (strada, vicini, ascensore) e valuta esposizione reale vs annuncio.",
+        },
+        {
+            "key": "commons",
+            "label_it": "Guarda le parti comuni: scale, androne, tetto/lastrico se accessibili.",
+        },
+    ]
+    energy = None
+    if isinstance(p.get("energy"), dict):
+        energy = p["energy"].get("energy_class")
+    else:
+        energy = p.get("energy_class")
+    if energy in ("E", "F", "G") or not energy:
+        items.append({
+            "key": "energy_reality",
+            "label_it": "Chiedi spese di riscaldamento reali e eventuali lavori di efficientamento già deliberati.",
+        })
+    if p.get("floor") is not None or p.get("elevator") is False:
+        items.append({
+            "key": "access",
+            "label_it": "Verifica piano, ascensore e accessibilità (anche per trasloco).",
+        })
+    if (p.get("operation") or "sale") == "rent":
+        items.append({
+            "key": "rent_condition",
+            "label_it": "Annota stato di consegna e cosa è incluso (arredi, box, cantina).",
+        })
+    else:
+        items.append({
+            "key": "inclusions",
+            "label_it": "Chiarisci cosa resta in vendita (cucina, armadi, box, cantina, posto auto).",
+        })
+        items.append({
+            "key": "sqm_feel",
+            "label_it": "I mq “si sentono”? Confronta planimetria (se ce l’hai) con gli spazi reali.",
+        })
+    # Dedupe by key, cap 10
+    out: List[Dict[str, str]] = []
+    seen = set()
+    for it in items:
+        if it["key"] in seen:
+            continue
+        seen.add(it["key"])
+        out.append(it)
+    return out[:10]
+
+
+def documents_before_offer(p: Dict[str, Any]) -> List[Dict[str, str]]:
+    """Thin doc list before offer — points to what to ask, not a vault."""
+    sale = (p.get("operation") or "sale") != "rent"
+    docs: List[Dict[str, str]] = [
+        {
+            "key": "ape",
+            "label_it": "APE aggiornato (classe e data del certificato).",
+            "why_it": "Obbligatorio in vendita; utile anche in affitto per costi reali.",
+        },
+        {
+            "key": "planimetria",
+            "label_it": "Planimetria catastale coerente con lo stato di fatto.",
+            "why_it": "Scostamenti = rischi in atto o sanatorie.",
+        },
+    ]
+    if sale:
+        docs.extend([
+            {
+                "key": "visura",
+                "label_it": "Visura catastale aggiornata.",
+                "why_it": "Intestatari, categoria, consistenza — prima di impegnarti.",
+            },
+            {
+                "key": "provenienza",
+                "label_it": "Atto di provenienza / titolo di proprietà.",
+                "why_it": "Capisci chi vende e se ci sono quote o comunioni.",
+            },
+            {
+                "key": "ipoteche",
+                "label_it": "Esistenza di ipoteche, pignoramenti o diritti di terzi.",
+                "why_it": "Vanno estinti o gestiti prima del rogito.",
+            },
+            {
+                "key": "spese",
+                "label_it": "Spese condominiali e ultime delibere (lavori, fondi).",
+                "why_it": "Costi futuri che non vedi nel prezzo chiesto.",
+            },
+        ])
+    else:
+        docs.extend([
+            {
+                "key": "contratto",
+                "label_it": "Bozza di contratto e regolamento condominiale.",
+                "why_it": "Cauzione, recesso, divieti (animali, subaffitto).",
+            },
+            {
+                "key": "spese_rent",
+                "label_it": "Spese accessorie mensili e cosa è incluso nel canone.",
+                "why_it": "Il canone non è tutto il costo.",
+            },
+            {
+                "key": "idoneita",
+                "label_it": "Documenti richiesti al conduttore (reddito, garanzia).",
+                "why_it": "Evita sorprese a verbale.",
+            },
+        ])
+    return docs[:6]
+
+
 def deterministic_insight(p: Dict[str, Any], vs_zone: Dict[str, Any], score: int) -> str:
     """Fallback one-liner when LLM is off — still useful on poor listings."""
     city = p.get("city") or "questa zona"
@@ -469,6 +592,8 @@ def build_brief(p: Dict[str, Any], *, insight: Optional[str] = None) -> Dict[str
         "red_flags": red_flags(p, vs, comp),
         "questions_for_seller": seller_questions(p, comp),
         "seller_gaps": gaps,
+        "visit_checklist": visit_checklist(p),
+        "documents_before_offer": documents_before_offer(p),
         "next_steps": next_steps(p),
         "insight": insight or deterministic_insight(p, vs, comp["score"]),
         "disclaimer_it": (

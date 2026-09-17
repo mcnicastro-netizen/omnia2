@@ -3,7 +3,14 @@ from __future__ import annotations
 
 import os
 
-from apps.immocloud.buyer_brief import build_brief, completeness_score, price_vs_zone, seller_gaps
+from apps.immocloud.buyer_brief import (
+    build_brief,
+    completeness_score,
+    documents_before_offer,
+    price_vs_zone,
+    seller_gaps,
+    visit_checklist,
+)
 from shared.notifications.web_push import ensure_vapid_keys, is_push_configured, vapid_public_key
 
 
@@ -82,6 +89,37 @@ def test_price_confidence_lower_on_unknown_city():
     assert vs["benchmark_source"] == "regional_fallback"
     assert vs["confidence"]["level"] in ("bassa", "media")
     assert any("regionale" in lim.lower() for lim in vs["confidence"]["limits_it"])
+
+
+def test_visit_checklist_and_documents_sale():
+    p = {
+        "city": "Milano",
+        "operation": "sale",
+        "price": 400000,
+        "surface_sqm": 80,
+        "energy": {"energy_class": "G"},
+        "floor": 3,
+    }
+    visit = visit_checklist(p)
+    docs = documents_before_offer(p)
+    assert 5 <= len(visit) <= 10
+    assert any(i["key"] == "moisture" for i in visit)
+    assert any(i["key"] == "energy_reality" for i in visit)
+    assert 4 <= len(docs) <= 6
+    keys = {d["key"] for d in docs}
+    assert "ape" in keys and "visura" in keys
+    brief = build_brief(p)
+    assert brief["visit_checklist"]
+    assert brief["documents_before_offer"]
+    assert all("why_it" in d for d in brief["documents_before_offer"])
+
+
+def test_documents_rent_differs_from_sale():
+    rent_docs = {d["key"] for d in documents_before_offer({"operation": "rent"})}
+    sale_docs = {d["key"] for d in documents_before_offer({"operation": "sale"})}
+    assert "contratto" in rent_docs
+    assert "visura" in sale_docs
+    assert "contratto" not in sale_docs
 
 
 def test_vapid_ensure_keys(tmp_path, monkeypatch):

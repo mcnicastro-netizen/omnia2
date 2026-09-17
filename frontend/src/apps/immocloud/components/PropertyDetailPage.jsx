@@ -514,6 +514,58 @@ export default function PropertyDetailPage() {
                           </ol>
                         </div>
                       )}
+
+                      {scout.visit_checklist?.length > 0 && (
+                        <div data-testid="scout-visit-checklist">
+                          <p className="text-[10px] uppercase tracking-widest text-[#C19A6B] mb-1">
+                            {isLister ? "Cosa controlleranno in visita" : "In visita — porta questa lista"}
+                          </p>
+                          <ol className="text-sm text-stone-800 space-y-1.5 list-decimal pl-4 leading-relaxed">
+                            {scout.visit_checklist.map((it) => (
+                              <li key={it.key}>{it.label_it}</li>
+                            ))}
+                          </ol>
+                        </div>
+                      )}
+
+                      {scout.documents_before_offer?.length > 0 && (
+                        <div data-testid="scout-documents">
+                          <p className="text-[10px] uppercase tracking-widest text-[#C19A6B] mb-1">
+                            {isLister
+                              ? "Documenti che ti chiederanno prima dell'offerta"
+                              : "Prima di un'offerta — documenti da avere"}
+                          </p>
+                          <ul className="text-sm text-stone-800 space-y-2 list-disc pl-4 leading-relaxed">
+                            {scout.documents_before_offer.map((d) => (
+                              <li key={d.key}>
+                                <span className="font-medium text-[#0B1E3F]">{d.label_it}</span>
+                                {d.why_it && (
+                                  <span className="block text-xs text-stone-500 mt-0.5">{d.why_it}</span>
+                                )}
+                              </li>
+                            ))}
+                          </ul>
+                          {!isLister && prop.operation !== "rent" && (
+                            <div className="mt-3 flex flex-wrap gap-3 text-xs uppercase tracking-widest">
+                              <Link
+                                to={`/${lang}/cloud/visura`}
+                                className="text-[#0B1E3F] hover:text-[#C19A6B]"
+                                data-testid="scout-doc-visura-cta"
+                              >
+                                Visura sul portale →
+                              </Link>
+                              <Link
+                                to={`/${lang}/cloud/valutatore?tier=base&city=${encodeURIComponent(prop.city || "")}&property_type=${encodeURIComponent(prop.property_type || "appartamento")}&surface_sqm=${prop.surface_sqm || ""}`}
+                                className="text-stone-500 hover:text-[#C19A6B]"
+                                data-testid="scout-doc-valuator-cta"
+                              >
+                                Stima ImmobilCloud →
+                              </Link>
+                            </div>
+                          )}
+                        </div>
+                      )}
+
                       {isLister && scout.seller_gaps?.length > 0 && (
                         <div data-testid="scout-seller-gaps">
                           <p className="text-[10px] uppercase tracking-widest text-amber-800 mb-1">

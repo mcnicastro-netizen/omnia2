@@ -90,6 +90,9 @@ def test_02_scout_hal(listing):
     assert len(d["price_vs_zone"]["why"]) >= 2
     assert d["price_vs_zone"]["confidence"]["level"] in ("alta", "media", "bassa")
     assert len(d["questions_for_seller"]) >= 2
+    assert 5 <= len(d["visit_checklist"]) <= 10
+    assert 4 <= len(d["documents_before_offer"]) <= 6
+    assert all("why_it" in x for x in d["documents_before_offer"])
 
 
 def test_03_price_drop_recording(mongo, listing):
