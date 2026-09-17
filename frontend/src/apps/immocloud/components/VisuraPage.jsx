@@ -6,6 +6,7 @@ import React, { useCallback, useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { api } from "../../../shared/lib/api";
+import CloudPageHero from "./CloudPageHero";
 
 const empty = {
   provincia: "",
@@ -120,32 +121,30 @@ export default function VisuraPage() {
   const price = catalog?.price_eur ?? 4.9;
 
   return (
-    <div className="min-h-screen bg-[#fbf9f5]" data-testid="cloud-visura-page">
-      <div className="max-w-2xl mx-auto px-4 py-10">
-        <Link to={`/${lang}/cloud`} className="text-xs uppercase tracking-widest text-stone-500 hover:text-stone-900">
+    <div data-testid="cloud-visura-page">
+      <CloudPageHero
+        eyebrow="ImmobilCloud · Visura"
+        title="Visura catastale"
+        subtitle="Richiedi il PDF ufficiale e paga con carta. Nessun credito — solo Stripe."
+        image="/cloud/intent-value.jpg"
+        compact
+      />
+      <div className="max-w-2xl mx-auto px-5 sm:px-8 py-10">
+        <h1 className="sr-only" data-testid="cloud-visura-title">Visura catastale</h1>
+        <Link to={`/${lang}/cloud`} className="text-xs uppercase tracking-widest text-stone-500 hover:text-[#0B1E3F]">
           ← Torna al portale
         </Link>
-        <h1
-          className="mt-3 text-3xl md:text-4xl text-stone-900 tracking-tight"
-          style={{ fontFamily: "'Fraunces', Georgia, serif" }}
-          data-testid="cloud-visura-title"
-        >
-          Visura catastale
-        </h1>
-        <p className="mt-2 text-sm text-stone-600">
-          Richiedi il PDF ufficiale e paga con carta. Nessun credito — solo Stripe.
-        </p>
 
         {!user && (
-          <div className="mt-6 p-4 border border-amber-200 bg-amber-50 text-sm text-amber-900" data-testid="cloud-visura-anon">
+          <div className="mt-6 p-4 rounded-2xl border border-amber-200 bg-amber-50 text-sm text-amber-900" data-testid="cloud-visura-anon">
             Accedi o registrati su ImmobilCloud per acquistare la visura.
             <Link to={`/${lang}/cloud/register`} className="ml-2 underline font-medium">Registrati</Link>
           </div>
         )}
 
         {sessionId && (
-          <div className="mt-6 border border-stone-200 bg-white p-5 space-y-3" data-testid="cloud-visura-order">
-            <p className="text-[10px] uppercase tracking-widest text-stone-500">Il tuo ordine</p>
+          <div className="mt-6 border border-stone-200 bg-white rounded-2xl p-5 space-y-3" data-testid="cloud-visura-order">
+            <p className="text-[10px] uppercase tracking-widest text-[#C19A6B]">Il tuo ordine</p>
             <p className="text-sm text-stone-800">
               Pagamento: <strong>{order?.payment_status || "…"}</strong>
               {" · "}
@@ -157,7 +156,7 @@ export default function VisuraPage() {
                 onClick={downloadPdf}
                 disabled={busy}
                 data-testid="cloud-visura-download"
-                className="bg-[#0B1E3F] text-white text-xs uppercase tracking-widest px-4 py-2 disabled:bg-stone-300"
+                className="bg-[#0B1E3F] text-white text-xs uppercase tracking-widest px-4 py-2 rounded-lg disabled:bg-stone-300 hover:bg-[#C19A6B]"
               >
                 Scarica PDF
               </button>
@@ -169,7 +168,7 @@ export default function VisuraPage() {
         )}
 
         {!sessionId && (
-          <form onSubmit={pay} className="mt-8 border border-stone-200 bg-white p-6 space-y-4" data-testid="cloud-visura-form">
+          <form onSubmit={pay} className="mt-8 border border-stone-200 bg-white rounded-2xl p-6 space-y-4" data-testid="cloud-visura-form">
             <div className="flex items-baseline justify-between gap-3">
               <p className="text-sm font-medium text-stone-800">Dati catastali</p>
               <p className="text-lg text-[#0B1E3F]" data-testid="cloud-visura-price">

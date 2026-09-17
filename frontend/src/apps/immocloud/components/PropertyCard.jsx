@@ -16,7 +16,7 @@ export default function PropertyCard({ p }) {
     <Link
       to={`/${lang}/cloud/property/${p.id}`}
       data-testid={`cloud-card-${p.id}`}
-      className="block bg-white rounded-xl overflow-hidden border border-stone-200 hover:shadow-lg hover:-translate-y-0.5 transition-all"
+      className="group block bg-white rounded-2xl overflow-hidden border border-stone-200/80 hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300"
     >
       <div className="aspect-[4/3] bg-stone-100 relative">
         {cover ? (

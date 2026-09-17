@@ -141,19 +141,25 @@ export default function PropertyDetailPage() {
 
   if (loading) {
     return (
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 py-12" data-testid="property-detail-loading">
-        <p className="text-stone-500 text-sm">{t("common.loading")}</p>
+      <div className="max-w-5xl mx-auto px-5 sm:px-8 py-20" data-testid="property-detail-loading">
+        <div className="rounded-2xl bg-[#f7f4ef] border border-stone-200 px-6 py-16 text-center">
+          <p className="text-stone-500 text-sm">{t("common.loading")}</p>
+        </div>
       </div>
     );
   }
   if (error === "not_found" || !prop) {
     return (
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 py-20 text-center" data-testid="property-detail-notfound">
-        <h1 className="text-3xl font-light mb-3" style={{ fontFamily: "'Fraunces', Georgia, serif" }}>
+      <div className="max-w-5xl mx-auto px-5 sm:px-8 py-20 text-center" data-testid="property-detail-notfound">
+        <p className="text-[11px] uppercase tracking-[0.28em] text-[#C19A6B] mb-3">ImmobilCloud</p>
+        <h1 className="text-3xl md:text-4xl font-light mb-3 text-[#0B1E3F]" style={{ fontFamily: "'Fraunces', Georgia, serif" }}>
           {t("cloud.detail_not_found_title")}
         </h1>
-        <p className="text-stone-600 mb-6">{t("cloud.detail_not_found_desc")}</p>
-        <Link to={`/${lang}/cloud/search`} className="text-sm uppercase tracking-widest text-[#0B1E3F] hover:underline">
+        <p className="text-stone-600 mb-8 max-w-md mx-auto">{t("cloud.detail_not_found_desc")}</p>
+        <Link
+          to={`/${lang}/cloud/search`}
+          className="inline-flex px-5 py-2.5 text-xs uppercase tracking-widest bg-[#0B1E3F] text-white rounded-lg hover:bg-[#C19A6B] transition"
+        >
           ← {t("cloud.back_to_search")}
         </Link>
       </div>
@@ -168,340 +174,358 @@ export default function PropertyDetailPage() {
   const features = Object.entries(prop.features || {}).filter(([_, v]) => v).map(([k]) => k);
 
   return (
-    <div data-testid="property-detail-page" className="max-w-6xl mx-auto px-4 sm:px-6 py-8">
+    <div data-testid="property-detail-page">
       <SchemaOrgJsonLd prop={prop} publicUrl={publicUrl} />
 
-      {/* Breadcrumb */}
-      <nav className="text-xs text-stone-500 mb-4">
-        <Link to={`/${lang}/cloud`} className="hover:text-[#0B1E3F]">{t("cloud.b2c_home_short")}</Link>
-        <span className="mx-2">·</span>
-        <Link to={`/${lang}/cloud/search`} className="hover:text-[#0B1E3F]">{t("cloud.search_label")}</Link>
-        <span className="mx-2">·</span>
-        <span className="text-stone-800">{prop.city}</span>
-      </nav>
-
-      {/* Hero: title + price */}
-      <div className="flex flex-wrap items-end justify-between gap-3 mb-6">
-        <div>
-          <h1 data-testid="detail-title" className="text-3xl md:text-4xl font-light tracking-tight" style={{ fontFamily: "'Fraunces', Georgia, serif" }}>
-            {prop.title || prop.property_type}
-          </h1>
-          <p className="text-stone-600 text-sm mt-1">
-            {prop.city}{prop.zone ? ` · ${prop.zone}` : ""}{prop.property_type ? ` · ${prop.property_type}` : ""}
-          </p>
-          <ShareBar title={prop.title || prop.property_type} publicUrl={publicUrl} />
-        </div>
-        <div className="text-right">
-          <div data-testid="detail-price" className="text-2xl md:text-3xl font-semibold text-[#0B1E3F]">
-            {formatPrice(prop) || t("cloud.price_on_request")}
-          </div>
-          {isB2c && (
-            <button
-              type="button"
-              data-testid="detail-favorite-btn"
-              onClick={toggleFav}
-              className={`mt-2 text-xs uppercase tracking-widest px-3 py-1.5 border rounded ${
-                fav ? "bg-[#0B1E3F] text-white border-[#0B1E3F]" : "border-stone-300 text-stone-700"
-              }`}
-            >
-              {fav ? "★ Nei preferiti" : "☆ Salva nei preferiti"}
-            </button>
-          )}
-          {prop.operation && (
-            <span className="text-xs uppercase tracking-widest text-stone-500">
-              {prop.operation === "rent" ? t("cloud.op_rent") : t("cloud.op_sale")}
-            </span>
-          )}
-          {prop.operation !== "rent" && prop.price > 20000 && (
-            <Link
-              to={`/${lang}/cloud/mutui?price=${prop.price}`}
-              data-testid="detail-mortgage-box"
-              className="mt-2 flex items-center gap-2 justify-end text-sm text-stone-600 hover:text-[#0B1E3F] group"
-              title={t("mutui.detail_box_note")}
-            >
-              <span>
-                {t("mutui.detail_box_title")} {t("mutui.detail_box_from")}{" "}
-                <strong className="text-[#0B1E3F]">
-                  € {Math.round(estimateInstallment(prop.price)).toLocaleString("it-IT")}/{t("mutui.month")}
-                </strong>
-              </span>
-              <span className="text-[11px] uppercase tracking-widest text-[#C19A6B] group-hover:underline">
-                {t("mutui.detail_box_cta")} →
-              </span>
-            </Link>
-          )}
-          {/* Cap. 21 · Valutatore CTA speculare al box mutui */}
-          <div className="mt-3 flex flex-col md:flex-row gap-2 justify-end items-end text-sm" data-testid="detail-valuator-box">
-            <span className="text-stone-600">{t("valuator.detail_box_title", "Quanto vale questo immobile?")}</span>
-            <Link
-              to={`/${lang}/cloud/valutatore?tier=base&city=${encodeURIComponent(prop.city || "")}&property_type=${encodeURIComponent(prop.property_type || "appartamento")}&surface_sqm=${prop.surface_sqm || ""}`}
-              data-testid="detail-valuator-base-cta"
-              className="px-3 py-1.5 border border-stone-300 rounded text-stone-700 hover:bg-stone-100"
-            >
-              {t("valuator.detail_box_base_cta", "Stima gratuita")}
-            </Link>
-            <Link
-              to={`/${lang}/cloud/valutatore?tier=uni&city=${encodeURIComponent(prop.city || "")}&property_type=${encodeURIComponent(prop.property_type || "appartamento")}&surface_sqm=${prop.surface_sqm || ""}`}
-              data-testid="detail-valuator-uni-cta"
-              className="px-3 py-1.5 bg-emerald-700 text-white rounded hover:bg-emerald-800"
-            >
-              {t("valuator.detail_box_uni_cta", "Report UNI · €2,99")}
-            </Link>
-          </div>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* LEFT COLUMN — gallery + info + map */}
-        <div className="lg:col-span-2 space-y-8">
-          {/* Scout — solid readable panel (no photo behind text) */}
-          <section
-            data-testid="scout-hal-panel"
-            className="overflow-hidden rounded-2xl border border-stone-200 bg-[#f7f4ef] shadow-sm"
-          >
-            <div className="grid grid-cols-1 sm:grid-cols-[140px_1fr]">
-              <div className="hidden sm:block relative min-h-[140px]">
-                <img
-                  src="/cloud/living.jpg"
-                  alt=""
-                  className="absolute inset-0 w-full h-full object-cover"
-                />
-              </div>
-              <div className="p-5 sm:p-6 bg-[#f7f4ef] text-[#0B1E3F]">
-                <div className="flex flex-wrap items-start justify-between gap-3 mb-3">
-                  <div>
-                    <p className="text-[10px] uppercase tracking-[0.25em] text-[#C19A6B]">Scout</p>
-                    <h2
-                      className="text-xl font-light text-[#0B1E3F]"
-                      style={{ fontFamily: "'Fraunces', Georgia, serif" }}
-                    >
-                      Un&apos;occhiata furba, prima della visita
-                    </h2>
-                    <p className="text-sm text-stone-600 mt-1">
-                      Ti dice se l&apos;annuncio è completo, se il prezzo ha senso e cosa chiedere.
-                    </p>
-                  </div>
-                  {!scout && (
-                    <button
-                      type="button"
-                      data-testid="scout-hal-run"
-                      onClick={runScout}
-                      disabled={scoutBusy}
-                      className="px-4 py-2 text-xs uppercase tracking-widest bg-[#0B1E3F] text-white rounded-lg hover:bg-[#C19A6B] disabled:opacity-50 transition"
-                    >
-                      {scoutBusy ? "Un attimo…" : "Chiedi a Scout"}
-                    </button>
-                  )}
-                </div>
-                {scoutErr && (
-                  <p className="text-sm text-rose-700" data-testid="scout-hal-error">{String(scoutErr)}</p>
-                )}
-                {scout && (
-                  <div className="space-y-4" data-testid="scout-hal-result">
-                    {scout.insight && (
-                      <p className="text-sm text-stone-800 border-l-2 border-[#C19A6B] pl-3 leading-relaxed">
-                        {scout.insight}
-                      </p>
-                    )}
-                    <div className="flex flex-wrap gap-3 items-center">
-                      <div
-                        className="px-3 py-2 rounded-lg bg-white border border-stone-200"
-                        data-testid="scout-completeness"
-                      >
-                        <span className="text-[10px] uppercase tracking-widest text-stone-500">Quanto è completo</span>
-                        <div className="text-lg font-medium text-[#0B1E3F]">
-                          {scout.completeness?.score}/100 · {scout.completeness?.grade}
-                        </div>
-                      </div>
-                      {scout.price_vs_zone?.available && (
-                        <div
-                          className="px-3 py-2 rounded-lg bg-white border border-stone-200"
-                          data-testid="scout-price-zone"
-                        >
-                          <span className="text-[10px] uppercase tracking-widest text-stone-500">Il prezzo in zona</span>
-                          <div className="text-sm font-medium text-[#0B1E3F]">
-                            {scout.price_vs_zone.label_it}
-                            <span className="text-stone-500 font-normal">
-                              {" "}· €{scout.price_vs_zone.asking_eur_mq}/m²
-                              {" "}(zona €{scout.price_vs_zone.zone_eur_mq_min}–{scout.price_vs_zone.zone_eur_mq_max})
-                            </span>
-                          </div>
-                        </div>
-                      )}
-                      {prop.last_price_drop?.drop_pct && (
-                        <div className="px-3 py-2 rounded-lg bg-rose-50 border border-rose-200 text-rose-800 text-sm">
-                          Ribasso recente −{prop.last_price_drop.drop_pct}%
-                        </div>
-                      )}
-                    </div>
-                    {scout.red_flags?.length > 0 && (
-                      <div>
-                        <p className="text-[10px] uppercase tracking-widest text-rose-700 mb-1">Occhio a</p>
-                        <ul className="text-sm text-stone-800 space-y-1 list-disc pl-4 leading-relaxed">
-                          {scout.red_flags.map((f, i) => <li key={i}>{f}</li>)}
-                        </ul>
-                      </div>
-                    )}
-                    {scout.questions_for_seller?.length > 0 && (
-                      <div>
-                        <p className="text-[10px] uppercase tracking-widest text-stone-500 mb-1">Da chiedere al telefono</p>
-                        <ol className="text-sm text-stone-800 space-y-1 list-decimal pl-4 leading-relaxed">
-                          {scout.questions_for_seller.map((q, i) => <li key={i}>{q}</li>)}
-                        </ol>
-                      </div>
-                    )}
-                    {scout.seller_gaps?.length > 0 && (
-                      <div data-testid="scout-seller-gaps">
-                        <p className="text-[10px] uppercase tracking-widest text-amber-800 mb-1">
-                          All&apos;annuncio manca ancora
-                        </p>
-                        <ul className="text-sm text-stone-800 space-y-1 list-disc pl-4 leading-relaxed">
-                          {scout.seller_gaps.map((g, i) => (
-                            <li key={g.key || i}>{g.label_it}</li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
-                    <p className="text-[11px] text-stone-500 leading-relaxed">{scout.disclaimer_it}</p>
-                    <button
-                      type="button"
-                      onClick={runScout}
-                      disabled={scoutBusy}
-                      className="text-[11px] uppercase tracking-widest text-stone-500 hover:text-[#0B1E3F]"
-                    >
-                      Aggiorna Scout
-                    </button>
-                  </div>
-                )}
-              </div>
+      {/* Dominant gallery plane */}
+      <section className="relative bg-[#0B1E3F]">
+        {photos.length > 0 ? (
+          <div data-testid="detail-gallery" className="relative">
+            <div className="aspect-[16/10] md:aspect-[21/9] max-h-[70vh] overflow-hidden bg-stone-900">
+              <img
+                src={`${BACKEND_URL}${cover.url}`}
+                alt={cover.caption || prop.title}
+                className="w-full h-full object-cover"
+              />
+              <div
+                className="absolute inset-0 pointer-events-none"
+                style={{
+                  background:
+                    "linear-gradient(180deg, rgba(11,30,63,0.15) 0%, rgba(11,30,63,0.05) 40%, rgba(11,30,63,0.75) 100%)",
+                }}
+              />
             </div>
-          </section>
-
-          {/* Photo gallery */}
-          {photos.length > 0 ? (
-            <div data-testid="detail-gallery">
-              <div className="aspect-video bg-stone-100 rounded-lg overflow-hidden mb-2">
-                <img
-                  src={`${BACKEND_URL}${cover.url}`}
-                  alt={cover.caption || prop.title}
-                  className="w-full h-full object-cover"
-                />
-              </div>
-              {photos.length > 1 && (
-                <div className="flex gap-2 overflow-x-auto pb-2">
+            {photos.length > 1 && (
+              <div className="absolute bottom-4 left-0 right-0 px-5 sm:px-8 md:px-16">
+                <div className="max-w-6xl mx-auto flex gap-2 overflow-x-auto pb-1">
                   {photos.map((ph, i) => (
                     <button
                       key={i}
                       data-testid={`detail-thumb-${i}`}
                       onClick={() => setActivePhoto(i)}
-                      className={`shrink-0 w-20 h-20 rounded overflow-hidden border-2 transition ${
-                        i === activePhoto ? "border-[#0B1E3F]" : "border-transparent opacity-70 hover:opacity-100"
+                      className={`shrink-0 w-16 h-16 md:w-20 md:h-20 rounded-lg overflow-hidden border-2 transition ${
+                        i === activePhoto ? "border-white" : "border-white/30 opacity-80 hover:opacity-100"
                       }`}
                     >
                       <img src={`${BACKEND_URL}${ph.url}`} alt="" className="w-full h-full object-cover" />
                     </button>
                   ))}
                 </div>
-              )}
-            </div>
-          ) : (
-            <div className="aspect-video bg-stone-100 rounded-lg flex items-center justify-center text-stone-400 text-sm">
-              {t("cloud.no_photos")}
-            </div>
-          )}
+              </div>
+            )}
+          </div>
+        ) : (
+          <div className="aspect-[21/9] max-h-[40vh] flex items-center justify-center text-white/50 text-sm bg-[#0B1E3F]">
+            {t("cloud.no_photos")}
+          </div>
+        )}
+      </section>
 
-          {/* Micro-tour Ken Burns */}
-          <div data-testid="detail-micro-tour" className="border border-stone-200 rounded-lg p-4">
-            <div className="flex items-center justify-between gap-3 mb-3">
-              <h2 className="text-sm uppercase tracking-widest text-stone-500">Micro-tour</h2>
-              {!videoUrl && photos.length > 0 && (
-                <button
-                  type="button"
-                  data-testid="detail-generate-video"
-                  disabled={videoBusy}
-                  onClick={generateVideo}
-                  className="text-xs uppercase tracking-widest px-3 py-1.5 border border-stone-300 rounded hover:border-stone-700 disabled:opacity-50"
-                >
-                  {videoBusy ? "Generazione…" : "Genera video 15s"}
-                </button>
+      <div className="max-w-6xl mx-auto px-5 sm:px-8 md:px-16 py-8">
+        {/* Breadcrumb */}
+        <nav className="text-xs text-stone-500 mb-5">
+          <Link to={`/${lang}/cloud`} className="hover:text-[#0B1E3F]">{t("cloud.b2c_home_short")}</Link>
+          <span className="mx-2">·</span>
+          <Link to={`/${lang}/cloud/search`} className="hover:text-[#0B1E3F]">{t("cloud.search_label")}</Link>
+          <span className="mx-2">·</span>
+          <span className="text-stone-800">{prop.city}</span>
+        </nav>
+
+        {/* Title + price */}
+        <div className="flex flex-wrap items-end justify-between gap-4 mb-8 pb-8 border-b border-stone-200">
+          <div className="min-w-0 flex-1">
+            {prop.operation && (
+              <p className="text-[11px] uppercase tracking-[0.28em] text-[#C19A6B] mb-2">
+                {prop.operation === "rent" ? t("cloud.op_rent") : t("cloud.op_sale")}
+              </p>
+            )}
+            <h1
+              data-testid="detail-title"
+              className="text-3xl md:text-4xl lg:text-5xl font-light tracking-tight text-[#0B1E3F] leading-[1.05]"
+              style={{ fontFamily: "'Fraunces', Georgia, serif" }}
+            >
+              {prop.title || prop.property_type}
+            </h1>
+            <p className="text-stone-600 text-sm mt-2">
+              {prop.city}{prop.zone ? ` · ${prop.zone}` : ""}{prop.property_type ? ` · ${prop.property_type}` : ""}
+            </p>
+            <ShareBar title={prop.title || prop.property_type} publicUrl={publicUrl} />
+          </div>
+          <div className="text-left sm:text-right shrink-0">
+            <div data-testid="detail-price" className="text-2xl md:text-3xl font-semibold text-[#0B1E3F]" style={{ fontFamily: "'Fraunces', Georgia, serif" }}>
+              {formatPrice(prop) || t("cloud.price_on_request")}
+            </div>
+            {isB2c && (
+              <button
+                type="button"
+                data-testid="detail-favorite-btn"
+                onClick={toggleFav}
+                className={`mt-3 text-xs uppercase tracking-widest px-4 py-2 border rounded-lg transition ${
+                  fav
+                    ? "bg-[#0B1E3F] text-white border-[#0B1E3F]"
+                    : "border-stone-300 text-stone-700 hover:border-[#0B1E3F]"
+                }`}
+              >
+                {fav ? "★ Nei preferiti" : "☆ Salva nei preferiti"}
+              </button>
+            )}
+            {prop.operation !== "rent" && prop.price > 20000 && (
+              <Link
+                to={`/${lang}/cloud/mutui?price=${prop.price}`}
+                data-testid="detail-mortgage-box"
+                className="mt-3 flex items-center gap-2 sm:justify-end text-sm text-stone-600 hover:text-[#0B1E3F] group"
+                title={t("mutui.detail_box_note")}
+              >
+                <span>
+                  {t("mutui.detail_box_title")} {t("mutui.detail_box_from")}{" "}
+                  <strong className="text-[#0B1E3F]">
+                    € {Math.round(estimateInstallment(prop.price)).toLocaleString("it-IT")}/{t("mutui.month")}
+                  </strong>
+                </span>
+                <span className="text-[11px] uppercase tracking-widest text-[#C19A6B] group-hover:underline">
+                  {t("mutui.detail_box_cta")} →
+                </span>
+              </Link>
+            )}
+            <div className="mt-3 flex flex-col sm:flex-row gap-2 sm:justify-end items-stretch sm:items-center text-sm" data-testid="detail-valuator-box">
+              <span className="text-stone-600">{t("valuator.detail_box_title", "Quanto vale questo immobile?")}</span>
+              <Link
+                to={`/${lang}/cloud/valutatore?tier=base&city=${encodeURIComponent(prop.city || "")}&property_type=${encodeURIComponent(prop.property_type || "appartamento")}&surface_sqm=${prop.surface_sqm || ""}`}
+                data-testid="detail-valuator-base-cta"
+                className="px-3 py-1.5 border border-stone-300 rounded-lg text-stone-700 hover:bg-[#f7f4ef] text-center"
+              >
+                {t("valuator.detail_box_base_cta", "Stima gratuita")}
+              </Link>
+              <Link
+                to={`/${lang}/cloud/valutatore?tier=uni&city=${encodeURIComponent(prop.city || "")}&property_type=${encodeURIComponent(prop.property_type || "appartamento")}&surface_sqm=${prop.surface_sqm || ""}`}
+                data-testid="detail-valuator-uni-cta"
+                className="px-3 py-1.5 bg-[#0B1E3F] text-white rounded-lg hover:bg-[#C19A6B] text-center transition"
+              >
+                {t("valuator.detail_box_uni_cta", "Report UNI · €2,99")}
+              </Link>
+            </div>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* LEFT COLUMN */}
+          <div className="lg:col-span-2 space-y-8">
+            {/* Scout */}
+            <section
+              data-testid="scout-hal-panel"
+              className="overflow-hidden rounded-2xl border border-stone-200 bg-[#f7f4ef] shadow-sm"
+            >
+              <div className="grid grid-cols-1 sm:grid-cols-[140px_1fr]">
+                <div className="hidden sm:block relative min-h-[140px]">
+                  <img
+                    src="/cloud/living.jpg"
+                    alt=""
+                    className="absolute inset-0 w-full h-full object-cover"
+                  />
+                </div>
+                <div className="p-5 sm:p-6 bg-[#f7f4ef] text-[#0B1E3F]">
+                  <div className="flex flex-wrap items-start justify-between gap-3 mb-3">
+                    <div>
+                      <p className="text-[10px] uppercase tracking-[0.25em] text-[#C19A6B]">Scout</p>
+                      <h2
+                        className="text-xl font-light text-[#0B1E3F]"
+                        style={{ fontFamily: "'Fraunces', Georgia, serif" }}
+                      >
+                        Un&apos;occhiata furba, prima della visita
+                      </h2>
+                      <p className="text-sm text-stone-600 mt-1">
+                        Ti dice se l&apos;annuncio è completo, se il prezzo ha senso e cosa chiedere.
+                      </p>
+                    </div>
+                    {!scout && (
+                      <button
+                        type="button"
+                        data-testid="scout-hal-run"
+                        onClick={runScout}
+                        disabled={scoutBusy}
+                        className="px-4 py-2 text-xs uppercase tracking-widest bg-[#0B1E3F] text-white rounded-lg hover:bg-[#C19A6B] disabled:opacity-50 transition"
+                      >
+                        {scoutBusy ? "Un attimo…" : "Chiedi a Scout"}
+                      </button>
+                    )}
+                  </div>
+                  {scoutErr && (
+                    <p className="text-sm text-rose-700" data-testid="scout-hal-error">{String(scoutErr)}</p>
+                  )}
+                  {scout && (
+                    <div className="space-y-4" data-testid="scout-hal-result">
+                      {scout.insight && (
+                        <p className="text-sm text-stone-800 border-l-2 border-[#C19A6B] pl-3 leading-relaxed">
+                          {scout.insight}
+                        </p>
+                      )}
+                      <div className="flex flex-wrap gap-3 items-center">
+                        <div
+                          className="px-3 py-2 rounded-lg bg-white border border-stone-200"
+                          data-testid="scout-completeness"
+                        >
+                          <span className="text-[10px] uppercase tracking-widest text-stone-500">Quanto è completo</span>
+                          <div className="text-lg font-medium text-[#0B1E3F]">
+                            {scout.completeness?.score}/100 · {scout.completeness?.grade}
+                          </div>
+                        </div>
+                        {scout.price_vs_zone?.available && (
+                          <div
+                            className="px-3 py-2 rounded-lg bg-white border border-stone-200"
+                            data-testid="scout-price-zone"
+                          >
+                            <span className="text-[10px] uppercase tracking-widest text-stone-500">Il prezzo in zona</span>
+                            <div className="text-sm font-medium text-[#0B1E3F]">
+                              {scout.price_vs_zone.label_it}
+                              <span className="text-stone-500 font-normal">
+                                {" "}· €{scout.price_vs_zone.asking_eur_mq}/m²
+                                {" "}(zona €{scout.price_vs_zone.zone_eur_mq_min}–{scout.price_vs_zone.zone_eur_mq_max})
+                              </span>
+                            </div>
+                          </div>
+                        )}
+                        {prop.last_price_drop?.drop_pct && (
+                          <div className="px-3 py-2 rounded-lg bg-rose-50 border border-rose-200 text-rose-800 text-sm">
+                            Ribasso recente −{prop.last_price_drop.drop_pct}%
+                          </div>
+                        )}
+                      </div>
+                      {scout.red_flags?.length > 0 && (
+                        <div>
+                          <p className="text-[10px] uppercase tracking-widest text-rose-700 mb-1">Occhio a</p>
+                          <ul className="text-sm text-stone-800 space-y-1 list-disc pl-4 leading-relaxed">
+                            {scout.red_flags.map((f, i) => <li key={i}>{f}</li>)}
+                          </ul>
+                        </div>
+                      )}
+                      {scout.questions_for_seller?.length > 0 && (
+                        <div>
+                          <p className="text-[10px] uppercase tracking-widest text-stone-500 mb-1">Da chiedere al telefono</p>
+                          <ol className="text-sm text-stone-800 space-y-1 list-decimal pl-4 leading-relaxed">
+                            {scout.questions_for_seller.map((q, i) => <li key={i}>{q}</li>)}
+                          </ol>
+                        </div>
+                      )}
+                      {scout.seller_gaps?.length > 0 && (
+                        <div data-testid="scout-seller-gaps">
+                          <p className="text-[10px] uppercase tracking-widest text-amber-800 mb-1">
+                            All&apos;annuncio manca ancora
+                          </p>
+                          <ul className="text-sm text-stone-800 space-y-1 list-disc pl-4 leading-relaxed">
+                            {scout.seller_gaps.map((g, i) => (
+                              <li key={g.key || i}>{g.label_it}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                      <p className="text-[11px] text-stone-500 leading-relaxed">{scout.disclaimer_it}</p>
+                      <button
+                        type="button"
+                        onClick={runScout}
+                        disabled={scoutBusy}
+                        className="text-[11px] uppercase tracking-widest text-stone-500 hover:text-[#0B1E3F]"
+                      >
+                        Aggiorna Scout
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </section>
+
+            {/* Micro-tour Ken Burns */}
+            <div data-testid="detail-micro-tour" className="border border-stone-200 rounded-2xl p-5 bg-white">
+              <div className="flex items-center justify-between gap-3 mb-3">
+                <h2 className="text-[11px] uppercase tracking-[0.28em] text-[#C19A6B]">Micro-tour</h2>
+                {!videoUrl && photos.length > 0 && (
+                  <button
+                    type="button"
+                    data-testid="detail-generate-video"
+                    disabled={videoBusy}
+                    onClick={generateVideo}
+                    className="text-xs uppercase tracking-widest px-3 py-1.5 border border-stone-300 rounded-lg hover:border-[#0B1E3F] disabled:opacity-50"
+                  >
+                    {videoBusy ? "Generazione…" : "Genera video 15s"}
+                  </button>
+                )}
+              </div>
+              {videoUrl ? (
+                <video
+                  data-testid="detail-video-player"
+                  src={videoUrl}
+                  controls
+                  className="w-full rounded-xl aspect-video bg-stone-900"
+                />
+              ) : (
+                <p className="text-sm text-stone-500">Nessun video ancora. Generane uno dalle foto dell&apos;annuncio.</p>
               )}
             </div>
-            {videoUrl ? (
-              <video
-                data-testid="detail-video-player"
-                src={videoUrl}
-                controls
-                className="w-full rounded-lg aspect-video bg-stone-900"
-              />
-            ) : (
-              <p className="text-sm text-stone-500">Nessun video ancora. Generane uno dalle foto dell&apos;annuncio.</p>
+
+            {/* Key info grid */}
+            <div data-testid="detail-key-info" className="grid grid-cols-2 md:grid-cols-4 gap-4 bg-[#f7f4ef] border border-stone-200 rounded-2xl p-5">
+              <InfoCell label={t("cloud.info_surface")} value={prop.surface_sqm ? `${prop.surface_sqm} m²` : "—"} testid="info-surface" />
+              <InfoCell label={t("cloud.info_rooms")} value={prop.rooms || "—"} testid="info-rooms" />
+              <InfoCell label={t("cloud.info_bedrooms")} value={prop.bedrooms || "—"} testid="info-bedrooms" />
+              <InfoCell label={t("cloud.info_bathrooms")} value={prop.bathrooms || "—"} testid="info-bathrooms" />
+              <InfoCell label={t("cloud.info_floor")} value={prop.floor != null ? `${prop.floor}/${prop.total_floors || "—"}` : "—"} testid="info-floor" />
+              <InfoCell label={t("cloud.info_year")} value={prop.year_built || "—"} testid="info-year" />
+              <InfoCell label={t("cloud.info_energy")} value={energy} testid="info-energy" />
+              <InfoCell label={t("cloud.info_ref")} value={prop.reference_code || "—"} testid="info-ref" />
+            </div>
+
+            {/* Description */}
+            {prop.description && (
+              <section data-testid="detail-description">
+                <h2 className="text-2xl font-light mb-3 text-[#0B1E3F]" style={{ fontFamily: "'Fraunces', Georgia, serif" }}>
+                  {t("cloud.detail_description")}
+                </h2>
+                <p className="text-stone-700 text-sm leading-relaxed whitespace-pre-line">
+                  {prop.description}
+                </p>
+              </section>
+            )}
+
+            {/* Features */}
+            {features.length > 0 && (
+              <section data-testid="detail-features">
+                <h2 className="text-2xl font-light mb-3 text-[#0B1E3F]" style={{ fontFamily: "'Fraunces', Georgia, serif" }}>
+                  {t("cloud.detail_features")}
+                </h2>
+                <ul className="grid grid-cols-2 md:grid-cols-3 gap-2 text-sm text-stone-700">
+                  {features.map((f) => (
+                    <li key={f} className="flex items-center gap-2 before:content-['✓'] before:text-[#C19A6B] before:font-bold">
+                      <span>{t(`features.${f}`, { defaultValue: f.replace(/_/g, " ") })}</span>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            )}
+
+            {/* Mini map */}
+            {prop.lat && prop.lng && (
+              <section data-testid="detail-map">
+                <h2 className="text-2xl font-light mb-3 text-[#0B1E3F]" style={{ fontFamily: "'Fraunces', Georgia, serif" }}>
+                  {t("cloud.detail_location")}
+                </h2>
+                <div className="h-72 rounded-2xl overflow-hidden border border-stone-200">
+                  <MapContainer center={[prop.lat, prop.lng]} zoom={14} scrollWheelZoom={false} className="h-full w-full">
+                    <TileLayer
+                      attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+                      url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                    />
+                    <Marker position={[prop.lat, prop.lng]} />
+                  </MapContainer>
+                </div>
+              </section>
             )}
           </div>
 
-          {/* Key info grid */}
-          <div data-testid="detail-key-info" className="grid grid-cols-2 md:grid-cols-4 gap-4 bg-white border border-stone-200 rounded-lg p-5">
-            <InfoCell label={t("cloud.info_surface")} value={prop.surface_sqm ? `${prop.surface_sqm} m²` : "—"} testid="info-surface" />
-            <InfoCell label={t("cloud.info_rooms")} value={prop.rooms || "—"} testid="info-rooms" />
-            <InfoCell label={t("cloud.info_bedrooms")} value={prop.bedrooms || "—"} testid="info-bedrooms" />
-            <InfoCell label={t("cloud.info_bathrooms")} value={prop.bathrooms || "—"} testid="info-bathrooms" />
-            <InfoCell label={t("cloud.info_floor")} value={prop.floor != null ? `${prop.floor}/${prop.total_floors || "—"}` : "—"} testid="info-floor" />
-            <InfoCell label={t("cloud.info_year")} value={prop.year_built || "—"} testid="info-year" />
-            <InfoCell label={t("cloud.info_energy")} value={energy} testid="info-energy" />
-            <InfoCell label={t("cloud.info_ref")} value={prop.reference_code || "—"} testid="info-ref" />
-          </div>
-
-          {/* Description */}
-          {prop.description && (
-            <section data-testid="detail-description">
-              <h2 className="text-xl font-light mb-3" style={{ fontFamily: "'Fraunces', Georgia, serif" }}>
-                {t("cloud.detail_description")}
-              </h2>
-              <p className="text-stone-700 text-sm leading-relaxed whitespace-pre-line">
-                {prop.description}
-              </p>
-            </section>
-          )}
-
-          {/* Features */}
-          {features.length > 0 && (
-            <section data-testid="detail-features">
-              <h2 className="text-xl font-light mb-3" style={{ fontFamily: "'Fraunces', Georgia, serif" }}>
-                {t("cloud.detail_features")}
-              </h2>
-              <ul className="grid grid-cols-2 md:grid-cols-3 gap-2 text-sm text-stone-700">
-                {features.map((f) => (
-                  <li key={f} className="flex items-center gap-2 before:content-['✓'] before:text-emerald-600 before:font-bold">
-                    <span>{t(`features.${f}`, { defaultValue: f.replace(/_/g, " ") })}</span>
-                  </li>
-                ))}
-              </ul>
-            </section>
-          )}
-
-          {/* Mini map */}
-          {prop.lat && prop.lng && (
-            <section data-testid="detail-map">
-              <h2 className="text-xl font-light mb-3" style={{ fontFamily: "'Fraunces', Georgia, serif" }}>
-                {t("cloud.detail_location")}
-              </h2>
-              <div className="h-72 rounded-lg overflow-hidden border border-stone-200">
-                <MapContainer center={[prop.lat, prop.lng]} zoom={14} scrollWheelZoom={false} className="h-full w-full">
-                  <TileLayer
-                    attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-                    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                  />
-                  <Marker position={[prop.lat, prop.lng]} />
-                </MapContainer>
-              </div>
-            </section>
-          )}
+          {/* RIGHT COLUMN */}
+          <aside className="lg:col-span-1 space-y-6 lg:sticky lg:top-24 lg:self-start">
+            {prop.agency && <AgencyCard agency={prop.agency} />}
+            <ContactForm pid={pid} propertyTitle={prop.title} />
+          </aside>
         </div>
-
-        {/* RIGHT COLUMN — agency card + contact form */}
-        <aside className="lg:col-span-1 space-y-6 lg:sticky lg:top-6 lg:self-start">
-          {prop.agency && <AgencyCard agency={prop.agency} />}
-          <ContactForm pid={pid} propertyTitle={prop.title} />
-        </aside>
       </div>
     </div>
   );
@@ -604,8 +628,8 @@ function InfoCell({ label, value, testid }) {
 function AgencyCard({ agency }) {
   const { t } = useTranslation();
   return (
-    <div data-testid="detail-agency-card" className="bg-white border border-stone-200 rounded-lg p-5">
-      <div className="text-xs uppercase tracking-widest text-stone-500 mb-2">{t("cloud.detail_agency_label")}</div>
+    <div data-testid="detail-agency-card" className="bg-white border border-stone-200 rounded-2xl p-5">
+      <div className="text-[11px] uppercase tracking-[0.28em] text-[#C19A6B] mb-2">{t("cloud.detail_agency_label")}</div>
       <div className="flex items-center gap-3 mb-3">
         {agency.logo_url ? (
           <img src={agency.logo_url} alt={agency.display_name} className="w-12 h-12 rounded object-contain bg-stone-50 border border-stone-200" />
@@ -668,17 +692,17 @@ function ContactForm({ pid, propertyTitle }) {
 
   if (done) {
     return (
-      <div data-testid="contact-done" className="bg-emerald-50 border border-emerald-200 rounded-lg p-5 text-center">
-        <div className="text-3xl mb-2">✓</div>
-        <h3 className="text-base font-medium text-emerald-900 mb-1">{t("cloud.contact_done_title")}</h3>
-        <p className="text-xs text-emerald-700">{t("cloud.contact_done_desc")}</p>
+      <div data-testid="contact-done" className="bg-[#f7f4ef] border border-stone-200 rounded-2xl p-5 text-center">
+        <p className="text-[11px] uppercase tracking-[0.28em] text-[#C19A6B] mb-2">ImmobilCloud</p>
+        <h3 className="text-base font-medium text-[#0B1E3F] mb-1">{t("cloud.contact_done_title")}</h3>
+        <p className="text-xs text-stone-600">{t("cloud.contact_done_desc")}</p>
       </div>
     );
   }
 
   return (
-    <form data-testid="contact-form" onSubmit={onSubmit} className="bg-white border border-stone-200 rounded-lg p-5 space-y-3">
-      <h3 className="text-sm font-medium text-stone-900 mb-1">{t("cloud.contact_title")}</h3>
+    <form data-testid="contact-form" onSubmit={onSubmit} className="bg-white border border-stone-200 rounded-2xl p-5 space-y-3">
+      <h3 className="text-sm font-medium text-[#0B1E3F] mb-1">{t("cloud.contact_title")}</h3>
       <p className="text-xs text-stone-500 -mt-2 mb-2">{t("cloud.contact_desc")}</p>
 
       <Input testid="contact-name" placeholder={t("cloud.contact_name")} required
@@ -691,7 +715,7 @@ function ContactForm({ pid, propertyTitle }) {
         data-testid="contact-message" rows={4} required minLength={10}
         placeholder={t("cloud.contact_message")}
         value={form.message} onChange={(e) => setForm({ ...form, message: e.target.value })}
-        className="w-full px-3 py-2 border border-stone-300 rounded text-sm focus:outline-none focus:border-[#0B1E3F]"
+        className="w-full px-3 py-2 border border-stone-200 rounded-lg text-sm focus:outline-none focus:border-[#0B1E3F]"
       />
 
       <label className="flex items-center gap-2 text-xs text-stone-700 cursor-pointer">
@@ -708,13 +732,13 @@ function ContactForm({ pid, propertyTitle }) {
         <span>{t("cloud.contact_gdpr")}</span>
       </label>
 
-      {error && <p data-testid="contact-error" className="text-xs text-rose-700 bg-rose-50 border border-rose-200 rounded px-3 py-2">{error}</p>}
+      {error && <p data-testid="contact-error" className="text-xs text-rose-700 bg-rose-50 border border-rose-200 rounded-lg px-3 py-2">{error}</p>}
 
       <button
         type="submit"
         data-testid="contact-submit"
         disabled={busy}
-        className="w-full bg-[#0B1E3F] text-white py-2.5 rounded text-sm uppercase tracking-widest font-medium hover:bg-[#C19A6B] transition disabled:opacity-50"
+        className="w-full bg-[#0B1E3F] text-white py-2.5 rounded-lg text-sm uppercase tracking-widest font-medium hover:bg-[#C19A6B] transition disabled:opacity-50"
       >
         {busy ? t("cloud.contact_submitting") : t("cloud.contact_submit")}
       </button>
@@ -728,7 +752,7 @@ function Input({ testid, value, onChange, ...rest }) {
       data-testid={testid}
       value={value}
       onChange={(e) => onChange(e.target.value)}
-      className="w-full px-3 py-2 border border-stone-300 rounded text-sm focus:outline-none focus:border-[#0B1E3F]"
+      className="w-full px-3 py-2 border border-stone-200 rounded-lg text-sm focus:outline-none focus:border-[#0B1E3F]"
       {...rest}
     />
   );

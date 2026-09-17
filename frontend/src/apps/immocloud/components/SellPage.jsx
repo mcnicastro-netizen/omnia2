@@ -13,6 +13,7 @@ import { api } from "../../../shared/lib/api";
 import { useAuth, formatApiErrorDetail } from "../../../shared/lib/auth";
 import AlImproveButton from "../../../shared/components/AlImproveButton";
 import PhotoUploader from "../../immoweb/components/PhotoUploader";
+import CloudPageHero from "./CloudPageHero";
 
 const B2C_MEDIA_UPLOAD = "/cloud/me/properties/media/upload-tmp";
 const B2C_MAX_PHOTOS = 30;
@@ -222,16 +223,17 @@ export default function SellPage() {
   const hasActive = listings.some((l) => l.status !== "withdrawn" && l.moderation_status !== "rejected");
 
   return (
-    <div data-testid="sell-page" className="max-w-4xl mx-auto px-4 sm:px-6 py-8">
-      <header className="mb-8">
-        <h1 className="text-3xl md:text-4xl font-light tracking-tight" style={{ fontFamily: "'Fraunces', Georgia, serif" }}>
-          {t("cloud.sell.title")}
-        </h1>
-        <p className="text-stone-500 text-sm mt-1">{t("cloud.sell.subtitle")}</p>
-      </header>
+    <div data-testid="sell-page">
+      <CloudPageHero
+        eyebrow="ImmobilCloud · Vendi"
+        title={t("cloud.sell.title")}
+        subtitle={t("cloud.sell.subtitle")}
+        image="/cloud/intent-sell.jpg"
+      />
 
+      <div className="max-w-4xl mx-auto px-5 sm:px-8 md:px-16 py-10">
       {error && (
-        <div data-testid="sell-error" className="mb-4 text-xs text-rose-700 bg-rose-50 border border-rose-200 rounded px-3 py-2">
+        <div data-testid="sell-error" className="mb-4 text-xs text-rose-700 bg-rose-50 border border-rose-200 rounded-xl px-4 py-3">
           {error}
         </div>
       )}
@@ -243,7 +245,7 @@ export default function SellPage() {
             <article
               key={l.id}
               data-testid={`listing-${l.id}`}
-              className="bg-white border border-stone-200 rounded-lg p-5"
+              className="bg-white border border-stone-200 rounded-2xl p-5"
             >
               <div className="flex items-start justify-between gap-4 flex-wrap">
                 <div className="min-w-0 flex-1">
@@ -494,16 +496,17 @@ export default function SellPage() {
 
           <div className="flex gap-3 pt-2">
             <button type="submit" disabled={busy} data-testid="sell-save-btn"
-              className="px-6 py-2.5 bg-[#0B1E3F] text-white text-sm uppercase tracking-widest rounded hover:bg-[#C19A6B] transition disabled:opacity-50">
+              className="px-6 py-2.5 bg-[#0B1E3F] text-white text-sm uppercase tracking-widest rounded-lg hover:bg-[#C19A6B] transition disabled:opacity-50">
               {busy ? t("common.saving") : t("common.save")}
             </button>
             <button type="button" onClick={() => { setShowForm(false); setEditing(null); }}
-              className="px-6 py-2.5 border border-stone-300 text-sm uppercase tracking-widest rounded hover:bg-stone-50">
+              className="px-6 py-2.5 border border-stone-300 text-sm uppercase tracking-widest rounded-lg hover:bg-stone-50">
               {t("common.cancel")}
             </button>
           </div>
         </form>
       )}
+      </div>
     </div>
   );
 }

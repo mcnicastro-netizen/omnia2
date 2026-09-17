@@ -13,6 +13,7 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import AddressAutocomplete from "./AddressAutocomplete";
+import CloudPageHero from "./CloudPageHero";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api/cloud/valuator`;
@@ -209,16 +210,23 @@ export default function ValuatorPage() {
   const canSubmit = form.city && form.surface_sqm && Number(form.surface_sqm) >= 10;
 
   return (
-    <div className="min-h-screen bg-stone-50">
-      <div className="max-w-6xl mx-auto px-4 py-8">
-        <div className="mb-6">
-          <Link to="/it/cloud" className="text-sm text-stone-600 hover:text-stone-900" data-testid="valuator-back">← {t("common.back", "Torna al portale")}</Link>
-          <h1 className="mt-2 text-3xl font-serif text-stone-900" data-testid="valuator-title">{t("valuator.page_title", "Valutatore immobiliare")}</h1>
-          <p className="mt-2 text-stone-600 max-w-2xl">{t("valuator.page_subtitle", "Scegli fra stima rapida gratuita o valutazione professionale UNI 10750 con report PDF.")}</p>
-        </div>
+    <div data-testid="valuator-page">
+      <CloudPageHero
+        eyebrow="ImmobilCloud · Valuta"
+        title={t("valuator.page_title", "Valutatore immobiliare")}
+        subtitle={t("valuator.page_subtitle", "Scegli fra stima rapida gratuita o valutazione professionale UNI 10750 con report PDF.")}
+        image="/cloud/intent-value.jpg"
+      />
+
+      <div className="max-w-6xl mx-auto px-5 sm:px-8 md:px-16 py-10">
+        <Link to="/it/cloud" className="text-sm text-stone-600 hover:text-[#0B1E3F]" data-testid="valuator-back">
+          ← {t("common.back", "Torna al portale")}
+        </Link>
+        {/* keep test id on an h1 for existing tests */}
+        <h1 className="sr-only" data-testid="valuator-title">{t("valuator.page_title", "Valutatore immobiliare")}</h1>
 
         {!user && (
-          <div className="mb-6 p-4 rounded-lg border border-amber-300 bg-amber-50 text-amber-900" data-testid="valuator-anon-banner">
+          <div className="mt-6 mb-6 p-5 rounded-2xl border border-amber-200 bg-amber-50 text-amber-950" data-testid="valuator-anon-banner">
             {t("valuator.anon_banner", "Per usare il valutatore devi essere registrato su ImmobilCloud.")}
             <Link to="/it/cloud/login" className="ml-2 underline font-medium">{t("common.login", "Accedi")}</Link>
             <span> · </span>
@@ -227,7 +235,7 @@ export default function ValuatorPage() {
         )}
 
         {/* Tier tabs */}
-        <div className="grid md:grid-cols-2 gap-4 mb-6" data-testid="valuator-tier-cards">
+        <div className="grid md:grid-cols-2 gap-4 my-6" data-testid="valuator-tier-cards">
           <TierCard
             testid="tier-base-card"
             active={tier === "base"}
@@ -248,63 +256,63 @@ export default function ValuatorPage() {
           />
         </div>
 
-        <form onSubmit={handleSubmit} className="grid md:grid-cols-2 gap-6 bg-white border border-stone-200 rounded-lg p-6" data-testid="valuator-form">
+        <form onSubmit={handleSubmit} className="grid md:grid-cols-2 gap-6 bg-white border border-stone-200 rounded-2xl p-6 md:p-8" data-testid="valuator-form">
           {/* Left: base fields */}
           <div className="space-y-4">
-            <h3 className="font-serif text-lg text-stone-800">{t("valuator.section_location", "Ubicazione")}</h3>
+            <h3 className="text-lg text-[#0B1E3F] font-light" style={{ fontFamily: "'Fraunces', Georgia, serif" }}>{t("valuator.section_location", "Ubicazione")}</h3>
             <AddressAutocomplete
               value={form.address}
               onSelect={({ address, city, zone }) => setForm(f => ({ ...f, address: address || "", city: city || f.city, zone: zone || f.zone }))}
               placeholder={t("valuator.address_placeholder", "Indirizzo o via")}
               data-testid="valuator-address"
             />
-            <input className="w-full border rounded p-2" placeholder={t("valuator.city", "Città")} value={form.city} onChange={e => setForm(f => ({ ...f, city: e.target.value }))} data-testid="valuator-city" />
-            <input className="w-full border rounded p-2" placeholder={t("valuator.zone", "Zona")} value={form.zone} onChange={e => setForm(f => ({ ...f, zone: e.target.value }))} data-testid="valuator-zone" />
+            <input className="w-full border border-stone-200 rounded-lg p-2.5 text-sm focus:border-[#0B1E3F] outline-none" placeholder={t("valuator.city", "Città")} value={form.city} onChange={e => setForm(f => ({ ...f, city: e.target.value }))} data-testid="valuator-city" />
+            <input className="w-full border border-stone-200 rounded-lg p-2.5 text-sm focus:border-[#0B1E3F] outline-none" placeholder={t("valuator.zone", "Zona")} value={form.zone} onChange={e => setForm(f => ({ ...f, zone: e.target.value }))} data-testid="valuator-zone" />
           </div>
           <div className="space-y-4">
-            <h3 className="font-serif text-lg text-stone-800">{t("valuator.section_property", "Immobile")}</h3>
-            <select className="w-full border rounded p-2" value={form.property_type} onChange={e => setForm(f => ({ ...f, property_type: e.target.value }))} data-testid="valuator-property-type">
+            <h3 className="text-lg text-[#0B1E3F] font-light" style={{ fontFamily: "'Fraunces', Georgia, serif" }}>{t("valuator.section_property", "Immobile")}</h3>
+            <select className="w-full border border-stone-200 rounded-lg p-2.5 text-sm" value={form.property_type} onChange={e => setForm(f => ({ ...f, property_type: e.target.value }))} data-testid="valuator-property-type">
               {PROPERTY_TYPES.map(o => <option key={o} value={o}>{o}</option>)}
             </select>
-            <input type="number" min="10" max="10000" className="w-full border rounded p-2" placeholder={t("valuator.surface", "Superficie calpestabile m²")} value={form.surface_sqm} onChange={e => setForm(f => ({ ...f, surface_sqm: e.target.value }))} data-testid="valuator-surface" />
-            <select className="w-full border rounded p-2" value={form.condition} onChange={e => setForm(f => ({ ...f, condition: e.target.value }))} data-testid="valuator-condition">
+            <input type="number" min="10" max="10000" className="w-full border border-stone-200 rounded-lg p-2.5 text-sm" placeholder={t("valuator.surface", "Superficie calpestabile m²")} value={form.surface_sqm} onChange={e => setForm(f => ({ ...f, surface_sqm: e.target.value }))} data-testid="valuator-surface" />
+            <select className="w-full border border-stone-200 rounded-lg p-2.5 text-sm" value={form.condition} onChange={e => setForm(f => ({ ...f, condition: e.target.value }))} data-testid="valuator-condition">
               {CONDITIONS.map(o => <option key={o} value={o}>{o}</option>)}
             </select>
-            <select className="w-full border rounded p-2" value={form.energy_class} onChange={e => setForm(f => ({ ...f, energy_class: e.target.value }))} data-testid="valuator-energy">
+            <select className="w-full border border-stone-200 rounded-lg p-2.5 text-sm" value={form.energy_class} onChange={e => setForm(f => ({ ...f, energy_class: e.target.value }))} data-testid="valuator-energy">
               <option value="">{t("valuator.energy_none", "Classe energetica (opzionale)")}</option>
               {ENERGY_CLASSES.map(o => <option key={o} value={o}>{o}</option>)}
             </select>
-            <input type="number" min="-2" max="80" className="w-full border rounded p-2" placeholder={t("valuator.floor", "Piano (opzionale)")} value={form.floor} onChange={e => setForm(f => ({ ...f, floor: e.target.value }))} data-testid="valuator-floor" />
+            <input type="number" min="-2" max="80" className="w-full border border-stone-200 rounded-lg p-2.5 text-sm" placeholder={t("valuator.floor", "Piano (opzionale)")} value={form.floor} onChange={e => setForm(f => ({ ...f, floor: e.target.value }))} data-testid="valuator-floor" />
           </div>
 
           {/* Pro section — only UNI tier */}
           {tier === "uni" && (
-            <div className="md:col-span-2 border-t pt-4 mt-2" data-testid="valuator-pro-section">
-              <h3 className="font-serif text-lg text-stone-800 mb-3">{t("valuator.pro_surfaces_title", "Superfici commerciali UNI 10750")}</h3>
+            <div className="md:col-span-2 border-t border-stone-100 pt-4 mt-2" data-testid="valuator-pro-section">
+              <h3 className="text-lg text-[#0B1E3F] font-light mb-3" style={{ fontFamily: "'Fraunces', Georgia, serif" }}>{t("valuator.pro_surfaces_title", "Superfici commerciali UNI 10750")}</h3>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
                 {["veranda_mq", "terrazzo_mq", "balcone_mq", "cantina_mq", "soffitta_mq", "box_auto_mq", "posto_auto_scoperto_mq", "giardino_villa_mq", "giardino_condom_mq", "taverna_mq", "mansarda_abitabile_mq"].map(k => (
-                  <input key={k} type="number" min="0" className="border rounded p-2" placeholder={k.replace(/_mq$/, "").replace(/_/g, " ")} value={pro[k]} onChange={e => setPro(p => ({ ...p, [k]: e.target.value }))} data-testid={`pro-${k}`} />
+                  <input key={k} type="number" min="0" className="border border-stone-200 rounded-lg p-2" placeholder={k.replace(/_mq$/, "").replace(/_/g, " ")} value={pro[k]} onChange={e => setPro(p => ({ ...p, [k]: e.target.value }))} data-testid={`pro-${k}`} />
                 ))}
               </div>
-              <h3 className="font-serif text-lg text-stone-800 mt-6 mb-3">{t("valuator.pro_merit_title", "Coefficienti di merito")}</h3>
+              <h3 className="text-lg text-[#0B1E3F] font-light mt-6 mb-3" style={{ fontFamily: "'Fraunces', Georgia, serif" }}>{t("valuator.pro_merit_title", "Coefficienti di merito")}</h3>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-3 text-sm">
                 <Sel label="Piano" opts={FLOOR_CLASSES} v={pro.floor_class} on={v => setPro(p => ({ ...p, floor_class: v }))} tid="pro-floor-class" />
                 <Sel label="Esposizione" opts={EXPOSURES} v={pro.exposure} on={v => setPro(p => ({ ...p, exposure: v }))} tid="pro-exposure" />
                 <Sel label="Vista" opts={VIEWS} v={pro.view} on={v => setPro(p => ({ ...p, view: v }))} tid="pro-view" />
                 <Sel label="Riscaldamento" opts={HEATINGS} v={pro.heating} on={v => setPro(p => ({ ...p, heating: v }))} tid="pro-heating" />
                 <Sel label="Ascensore" opts={ELEVATORS} v={pro.elevator} on={v => setPro(p => ({ ...p, elevator: v }))} tid="pro-elevator" />
-                <input type="number" min="1700" max="2030" className="border rounded p-2" placeholder="Anno costruzione" value={pro.year_built} onChange={e => setPro(p => ({ ...p, year_built: e.target.value }))} data-testid="pro-year-built" />
+                <input type="number" min="1700" max="2030" className="border border-stone-200 rounded-lg p-2" placeholder="Anno costruzione" value={pro.year_built} onChange={e => setPro(p => ({ ...p, year_built: e.target.value }))} data-testid="pro-year-built" />
               </div>
             </div>
           )}
 
-          <div className="md:col-span-2 flex items-center justify-between pt-4 border-t">
+          <div className="md:col-span-2 flex flex-wrap items-center justify-between gap-3 pt-4 border-t border-stone-100">
             {tier === "base" ? (
-              <button type="submit" disabled={!canSubmit || busy} className="px-6 py-3 bg-stone-900 text-white rounded-lg disabled:opacity-40" data-testid="valuator-submit-base">
+              <button type="submit" disabled={!canSubmit || busy} className="px-6 py-3 bg-[#0B1E3F] text-white rounded-lg disabled:opacity-40 hover:bg-[#C19A6B] transition" data-testid="valuator-submit-base">
                 {busy ? "..." : t("valuator.submit_base", "Ottieni la stima gratuita")}
               </button>
             ) : (
-              <button type="submit" disabled={!canSubmit || busy} className="px-6 py-3 bg-emerald-700 text-white rounded-lg disabled:opacity-40" data-testid="valuator-submit-uni">
+              <button type="submit" disabled={!canSubmit || busy} className="px-6 py-3 bg-[#C19A6B] text-white rounded-lg disabled:opacity-40 hover:bg-[#0B1E3F] transition" data-testid="valuator-submit-uni">
                 {busy ? "..." : (isAgent ? t("valuator.submit_uni_agent", "Calcola UNI (crediti agenzia)") : t("valuator.submit_uni_b2c", "Calcola UNI · €2,99"))}
               </button>
             )}
@@ -319,13 +327,13 @@ export default function ValuatorPage() {
 
         {/* Errors + upsell */}
         {error && (
-          <div className="mt-6 p-5 rounded-lg border border-red-300 bg-red-50 text-red-900" data-testid="valuator-error">
+          <div className="mt-6 p-5 rounded-2xl border border-red-200 bg-red-50 text-red-900" data-testid="valuator-error">
             <div className="font-medium">{error.message}</div>
             {error.reset_at && (
               <div className="text-sm mt-1">{t("valuator.reset_at", "Riprova dopo il")}: {new Date(error.reset_at).toLocaleDateString()}</div>
             )}
             {(error.code === "payment_required" || error.upsell_product_key) && (
-              <button onClick={() => handleCheckout("upsell")} disabled={checkoutBusy} className="mt-3 px-4 py-2 bg-emerald-700 text-white rounded" data-testid="valuator-checkout-cta">
+              <button onClick={() => handleCheckout("upsell")} disabled={checkoutBusy} className="mt-3 px-4 py-2 bg-[#0B1E3F] text-white rounded-lg hover:bg-[#C19A6B]" data-testid="valuator-checkout-cta">
                 {checkoutBusy ? "..." : (isAgent ? t("valuator.use_agency_credits", "Usa crediti agenzia") : t("valuator.pay_and_unlock", "Paga €2,99 e sblocca"))}
               </button>
             )}
@@ -335,11 +343,11 @@ export default function ValuatorPage() {
         {/* Result */}
         {result && (
           <div ref={resultRef} className="mt-6 space-y-4">
-            <div className="bg-white border border-stone-200 rounded-lg p-6" data-testid="valuator-result">
-              <div className="text-sm text-stone-500 uppercase tracking-wide">{t("valuator.result_value", "Valore stimato")}</div>
-              <div className="text-3xl font-serif text-stone-900" data-testid="r-value">€ {Number(result.estimated_value || result.value_avg || 0).toLocaleString("it-IT")}</div>
+            <div className="bg-[#f7f4ef] border border-stone-200 rounded-2xl p-6 md:p-8" data-testid="valuator-result">
+              <div className="text-[11px] text-[#C19A6B] uppercase tracking-[0.28em]">{t("valuator.result_value", "Valore stimato")}</div>
+              <div className="text-3xl md:text-4xl font-light text-[#0B1E3F] mt-1" style={{ fontFamily: "'Fraunces', Georgia, serif" }} data-testid="r-value">€ {Number(result.estimated_value || result.value_avg || 0).toLocaleString("it-IT")}</div>
               {result.value_range && (
-                <div className="text-sm text-stone-600 mt-1">
+                <div className="text-sm text-stone-600 mt-2">
                   Range: € {Number(result.value_range.min).toLocaleString("it-IT")} – € {Number(result.value_range.max).toLocaleString("it-IT")}
                 </div>
               )}
@@ -352,18 +360,18 @@ export default function ValuatorPage() {
             </div>
 
             {result._tier === "base" && (
-              <div className="p-5 rounded-lg border border-emerald-300 bg-emerald-50" data-testid="valuator-upsell">
-                <div className="font-medium text-emerald-900">{t("valuator.upsell_uni_cta", "Vuoi una valutazione UNI 10750 con report PDF professionale?")}</div>
-                <div className="text-sm text-emerald-800 mt-1">{t("valuator.upsell_uni_details", "Superficie commerciale ponderata + coefficienti di merito + PDF brandizzato scaricabile.")}</div>
-                <button onClick={() => { setTier("uni"); window.scrollTo({ top: 0, behavior: "smooth" }); }} className="mt-3 px-4 py-2 bg-emerald-700 text-white rounded" data-testid="upsell-goto-uni">
+              <div className="p-5 rounded-2xl border border-[#C19A6B]/40 bg-white" data-testid="valuator-upsell">
+                <div className="font-medium text-[#0B1E3F]">{t("valuator.upsell_uni_cta", "Vuoi una valutazione UNI 10750 con report PDF professionale?")}</div>
+                <div className="text-sm text-stone-600 mt-1">{t("valuator.upsell_uni_details", "Superficie commerciale ponderata + coefficienti di merito + PDF brandizzato scaricabile.")}</div>
+                <button onClick={() => { setTier("uni"); window.scrollTo({ top: 0, behavior: "smooth" }); }} className="mt-3 px-4 py-2 bg-[#C19A6B] text-white rounded-lg hover:bg-[#0B1E3F] transition" data-testid="upsell-goto-uni">
                   {isAgent ? t("valuator.upsell_agent_cta", "Passa a UNI (crediti agenzia)") : t("valuator.upsell_b2c_cta", "Passa a UNI · €2,99")}
                 </button>
               </div>
             )}
 
             {result._tier === "uni" && (
-              <button onClick={handleDownloadPdf} disabled={pdfBusy} className="w-full md:w-auto px-6 py-3 bg-stone-900 text-white rounded-lg disabled:opacity-40" data-testid="r-download-pdf">
-                {pdfBusy ? "..." : `📄 ${t("valuator.r_pdf_btn", "Scarica report PDF")}`}
+              <button onClick={handleDownloadPdf} disabled={pdfBusy} className="w-full md:w-auto px-6 py-3 bg-[#0B1E3F] text-white rounded-lg disabled:opacity-40 hover:bg-[#C19A6B] transition" data-testid="r-download-pdf">
+                {pdfBusy ? "..." : t("valuator.r_pdf_btn", "Scarica report PDF")}
               </button>
             )}
           </div>
@@ -379,11 +387,21 @@ export default function ValuatorPage() {
 
 function TierCard({ active, title, subtitle, price, onClick, note, highlight, testid }) {
   return (
-    <button type="button" onClick={onClick} data-testid={testid}
-      className={`text-left p-5 rounded-lg border transition ${active ? (highlight ? "border-emerald-500 bg-emerald-50 ring-2 ring-emerald-300" : "border-stone-900 bg-stone-50 ring-2 ring-stone-300") : "border-stone-200 bg-white hover:border-stone-400"}`}>
-      <div className="flex items-baseline justify-between">
-        <div className="font-serif text-lg text-stone-900">{title}</div>
-        <div className={`text-sm font-medium ${highlight ? "text-emerald-700" : "text-stone-700"}`}>{price}</div>
+    <button
+      type="button"
+      onClick={onClick}
+      data-testid={testid}
+      className={`text-left p-5 rounded-2xl border transition ${
+        active
+          ? highlight
+            ? "border-[#C19A6B] bg-[#f7f4ef] ring-2 ring-[#C19A6B]/30"
+            : "border-[#0B1E3F] bg-[#f7f4ef] ring-2 ring-[#0B1E3F]/20"
+          : "border-stone-200 bg-white hover:border-stone-400"
+      }`}
+    >
+      <div className="flex items-baseline justify-between gap-3">
+        <div className="text-lg text-[#0B1E3F] font-light" style={{ fontFamily: "'Fraunces', Georgia, serif" }}>{title}</div>
+        <div className={`text-sm font-medium shrink-0 ${highlight ? "text-[#C19A6B]" : "text-stone-700"}`}>{price}</div>
       </div>
       <div className="text-sm text-stone-600 mt-1">{subtitle}</div>
       {note && <div className="text-xs text-amber-700 mt-2">{note}</div>}
@@ -393,7 +411,7 @@ function TierCard({ active, title, subtitle, price, onClick, note, highlight, te
 
 function Sel({ label, opts, v, on, tid }) {
   return (
-    <select className="border rounded p-2 w-full" value={v} onChange={e => on(e.target.value)} data-testid={tid}>
+    <select className="border border-stone-200 rounded-lg p-2 w-full" value={v} onChange={e => on(e.target.value)} data-testid={tid}>
       <option value="">{label}</option>
       {opts.map(o => <option key={o} value={o}>{o}</option>)}
     </select>
