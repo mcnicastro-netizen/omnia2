@@ -514,10 +514,10 @@ export default function PropertyDetailPage() {
                           </ol>
                         </div>
                       )}
-                      {scout.seller_gaps?.length > 0 && (
+                      {isLister && scout.seller_gaps?.length > 0 && (
                         <div data-testid="scout-seller-gaps">
                           <p className="text-[10px] uppercase tracking-widest text-amber-800 mb-1">
-                            {isLister ? "Cosa aggiungere all'annuncio" : "All'annuncio manca ancora"}
+                            Cosa aggiungere all&apos;annuncio
                           </p>
                           <ul className="text-sm text-stone-800 space-y-1 list-disc pl-4 leading-relaxed">
                             {scout.seller_gaps.map((g, i) => (
