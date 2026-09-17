@@ -18,10 +18,15 @@ const BUILD = path.join(__dirname, "build");
 // Disable with CRM_PUBLIC_PREVIEW=0 after the review.
 const CRM_PUBLIC_PREVIEW = String(process.env.CRM_PUBLIC_PREVIEW || "0") === "1";
 const QC_SHOTS_DIRS = [
-  path.join(BUILD, "_qc", "screenshots"),
   "/opt/cursor/artifacts/screenshots",
   "/tmp/omnia-stack/qc-screenshots",
-].filter((d) => fs.existsSync(d));
+].filter((d) => {
+  try {
+    return fs.existsSync(d);
+  } catch {
+    return false;
+  }
+});
 
 const BOT_UA =
   /bot|crawler|spider|slurp|facebookexternalhit|facebot|twitterbot|linkedinbot|whatsapp|telegram|discordbot|slackbot|pinterest|embedly|quora link preview|outbrain|vkshare|w3c_validator|google-inspectiontool|bingpreview|preview|semrush|ahrefs|mj12|dotbot|bytespider|ia_archiver|curl\/|wget\/|python-requests|httpclient|scrapy/i;
@@ -575,21 +580,27 @@ function sendCloudSsr(req, res) {
 app.get(/^\/(it|en|es)\/cloud(\/.*)?$/, sendCloudSsr);
 
 // —— QC artifacts (public screenshots for external review) ——
+// Keep outside frontend/build so express.static cannot redirect-loop /_qc/.
 function resolveQcShot(name) {
   const safe = path.basename(String(name || ""));
   if (!safe || safe !== name || !/\.png$/i.test(safe)) return null;
-  for (const dir of QC_SHOTS_DIRS) {
-    const full = path.join(dir, safe);
-    if (fs.existsSync(full)) return full;
+  const dirs = [
+    "/opt/cursor/artifacts/screenshots",
+    "/tmp/omnia-stack/qc-screenshots",
+    ...QC_SHOTS_DIRS,
+  ];
+  for (const dir of dirs) {
+    try {
+      const full = path.join(dir, safe);
+      if (fs.existsSync(full)) return full;
+    } catch {
+      /* continue */
+    }
   }
   return null;
 }
 
-app.get("/_qc", (_req, res) => {
-  res.redirect(302, "/_qc/");
-});
-
-app.get("/_qc/", (req, res) => {
+function sendQcGallery(req, res) {
   const origin = publicOrigin(req);
   const shots = [
     ["01-gestionale-dashboard.png", "Dashboard gestionale"],
@@ -627,11 +638,20 @@ app.get("/_qc/", (req, res) => {
   </header>
   <main style="padding:32px 24px;max-width:1140px;margin:0 auto">${cards}</main>
 </body></html>`);
-});
+}
+
+app.get(["/_qc", "/_qc/", "/qc", "/qc/"], sendQcGallery);
 
 app.get("/_qc/screenshots/:file", (req, res) => {
   const full = resolveQcShot(req.params.file);
-  if (!full) return res.status(404).send("not found");
+  if (!full) return res.status(404).type("text").send("not found");
+  res.setHeader("Cache-Control", "public, max-age=300");
+  res.sendFile(full);
+});
+
+app.get("/qc/screenshots/:file", (req, res) => {
+  const full = resolveQcShot(req.params.file);
+  if (!full) return res.status(404).type("text").send("not found");
   res.setHeader("Cache-Control", "public, max-age=300");
   res.sendFile(full);
 });
