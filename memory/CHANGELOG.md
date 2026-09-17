@@ -1,5 +1,14 @@
 # OMNIA — Changelog
 
+## 2026-09-17 — Gestionale stress S0–S6 @ 2000 clients
+
+**Tipo**: QA / resilience CRM.
+
+- Script `backend/scripts/stress_gestionale.py` (inventario tool, seed 2k, fan-out, Mongo, security bait, soft SKIP vendor)
+- Report: `memory/GESTIONALE_STRESS_REPORT.md` · run `7e1d21fd` **PASS**
+- Findings: match O(n×m) da contenere; `clients.status` invalid → 500; `clients/smart` p95~436ms a 2k
+
+---
 ## 2026-09-17 — Gestionale: ingresso CRM + dashboard demo-ready
 
 **Tipo**: UX ImmoWeb (gestionale-first).
