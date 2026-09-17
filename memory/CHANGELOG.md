@@ -1,5 +1,16 @@
 # OMNIA — Changelog
 
+## 2026-09-17 — Preprod confidence gate (no vendor burn)
+
+**Tipo**: QA / go-live safety.
+
+- Script `backend/scripts/preprod_confidence_gate.py`: health/readiness, Mongo load 500 docs, portal+CRM fan-out, soft externals (SKIP send/checkout/visure/fal/Nominatim), security walls (bait email — no lock Founder), regression smoke (private detail + photo), pytest subset free
+- Localhost rate-limit reset so the gate non si auto-blocca sul budget search 120/h
+- Report: `memory/PREPROD_GATE_REPORT.md` + `memory/reports/preprod_gate_*.json`
+- Policy: zero soldi / zero ban risk su vendor a pagamento
+- Verdict run `63c82729`: **PASS** required (prod flags WARN attesi in locale)
+
+---
 ## 2026-09-17 — D-084 sync manuale (inquiry privato + Ken Burns)
 
 **Tipo**: Docs / HAL.

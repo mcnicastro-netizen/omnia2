@@ -1,7 +1,8 @@
 # Prossima sessione — programma passi
 
-**Aggiornato**: 17 Settembre 2026 — contatto privato + gallery smoke + check programma  
+**Aggiornato**: 17 Settembre 2026 — preprod confidence gate  
 **Stato base**: Sprint 1→4 **CONCLUSO**. Stress: `PLATFORM_STRESS_REPORT.md` + `STRESS_REPORT.md`.  
+**Preprod gate**: `memory/PREPROD_GATE_REPORT.md` (PASS required — no vendor burn).  
 **Nord prodotto B2C**: `memory/PRODUCT_NORTHSTAR_B2C.md` (**obbligatorio** prima di ship `/cloud`).
 
 ---
@@ -13,6 +14,7 @@
 3. Rileggere `PRODUCT_NORTHSTAR_B2C.md`
 4. Founder: **«vai»** sull’ID se fuori programma
 5. **D-084**: ogni ship aggiorna manuale+YAML ✅ (17-Set: Cap.18 inquiry privato + Cap.23 Ken Burns)
+6. Preprod: `python scripts/preprod_confidence_gate.py` prima di go-live / ship rischiosi
 
 ---
 
@@ -22,6 +24,7 @@
 |------|:-----:|
 | Sprint 1→4 | ✅ |
 | Gap ImmobilCloud + stress | ✅ |
+| Preprod confidence gate (no € / no ban) | ✅ (17-Set) |
 | Home B2C visual + SSR preview | ✅ (16-Set) |
 | Layout altre pagine B2C | ✅ (17-Set) |
 | Scout v1 + fiducia + voce lister | ✅ |
@@ -33,6 +36,7 @@
 | Demo **A-025** | ❌ **next di programma** (architettare, non shippare a caso) |
 | A-026 micro-tour agenzia (501→Kling) | 🔬 da approfondire |
 | Stripe live / A-014 | ⏸️ post-Vercel |
+| Prod flags readiness (`cookie_secure`, CORS, master key, monitoring, `OMNIA_ENV`) | ⚠️ solo su host prod |
 | Competitor «prima visita» | ✅ ricercato (remoto agent-led ≠ Scout) |
 
 ---
@@ -46,5 +50,6 @@
 | — | Intake annuncio esterno (Nord D) | Solo dopo ok Founder + scope legale |
 | — | A-026 path Kling agenzia | Approfondire UX (docs Cap.23 già allineati) |
 | — | A-014 Stripe live | post-Vercel |
+| — | Go-live env flags | readiness WARN locali → set su Vercel |
 
-Report: `memory/PLATFORM_STRESS_REPORT.md` · `memory/STRESS_REPORT.md` · `memory/PRODUCT_NORTHSTAR_B2C.md`
+Report: `memory/PREPROD_GATE_REPORT.md` · `memory/PLATFORM_STRESS_REPORT.md` · `memory/STRESS_REPORT.md` · `memory/PRODUCT_NORTHSTAR_B2C.md`

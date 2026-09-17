@@ -1,0 +1,292 @@
+{
+  "run_id": "63c82729",
+  "started_at": "2026-09-17T10:27:27.822830+00:00",
+  "api": "http://127.0.0.1:43121/api",
+  "sections": {
+    "local_rate_reset": {
+      "deleted": 652,
+      "ok": true,
+      "note": "localhost counters only"
+    },
+    "health_readiness": {
+      "health": {
+        "path": "/health",
+        "method": "GET",
+        "status": 200,
+        "ms": 4.9,
+        "bytes": 170,
+        "ok": true
+      },
+      "readiness_http": {
+        "path": "/health/readiness",
+        "method": "GET",
+        "status": 200,
+        "ms": 47.2,
+        "bytes": 380,
+        "ok": true
+      },
+      "readiness_body": {
+        "ready": false,
+        "missing": [
+          "cors_explicit",
+          "cookie_secure",
+          "credentials_master_key",
+          "monitoring_configured",
+          "omnia_env_production"
+        ],
+        "checks": {
+          "omnia_env_production": false,
+          "jwt_secret_set": true,
+          "credentials_master_key": false,
+          "cors_explicit": false,
+          "cookie_secure": false,
+          "monitoring_configured": false,
+          "mongo_url": true,
+          "csrf_will_enforce": false
+        },
+        "excluded": [
+          "stripe_live",
+          "ape_siape"
+        ]
+      },
+      "ok": true,
+      "warn": [
+        "cors_explicit",
+        "cookie_secure",
+        "credentials_master_key",
+        "monitoring_configured",
+        "omnia_env_production"
+      ],
+      "hard_missing": [],
+      "note": "prod flags pending: cors_explicit, cookie_secure, credentials_master_key, monitoring_configured, omnia_env_production"
+    },
+    "security": {
+      "unauth_/app/clients": {
+        "status": 401,
+        "ok": true
+      },
+      "unauth_/app/properties": {
+        "status": 401,
+        "ok": true
+      },
+      "unauth_/cloud/me/properties": {
+        "status": 401,
+        "ok": true
+      },
+      "unauth_/cloud/me/saved-searches": {
+        "status": 401,
+        "ok": true
+      },
+      "unauth_/notifications": {
+        "status": 401,
+        "ok": true
+      },
+      "brute_force": {
+        "bait_email": "preprod-gate-bait-21941f17@example.com",
+        "statuses": [
+          401,
+          401,
+          401,
+          401,
+          401,
+          429
+        ],
+        "last_status": 429,
+        "locked_or_rejected": true,
+        "ok": true
+      },
+      "ok": true
+    },
+    "regressions": {
+      "search": {
+        "path": "/cloud/search?operation=sale&page_size=10",
+        "method": "GET",
+        "status": 200,
+        "ms": 16.9,
+        "bytes": 4721,
+        "ok": true
+      },
+      "private_detail": {
+        "path": "/cloud/property/smoke-private-contact-001",
+        "method": "GET",
+        "status": 200,
+        "ms": 48.6,
+        "bytes": 1277,
+        "ok": true
+      },
+      "private_publisher": {
+        "kind": "private",
+        "accepts_messages": true,
+        "ok": true
+      },
+      "photo_serve": {
+        "path": "/public/property/smoke-private-contact-001/photo/0",
+        "method": "GET",
+        "status": 200,
+        "ms": 8.0,
+        "bytes": 337966,
+        "ok": true
+      },
+      "clients": {
+        "path": "/app/clients?page=1&page_size=20",
+        "method": "GET",
+        "status": 200,
+        "ms": 10.7,
+        "bytes": 5916,
+        "ok": true
+      },
+      "kpis": {
+        "path": "/app/dashboard/kpis",
+        "method": "GET",
+        "status": 200,
+        "ms": 49.7,
+        "bytes": 798,
+        "ok": true
+      },
+      "ok": true,
+      "hard_failures": []
+    },
+    "mongo_internal": {
+      "written": 500,
+      "write_ms": 10.4,
+      "concurrent_reads": 200,
+      "read_misses": 0,
+      "read_p50_ms": 3.24,
+      "read_p95_ms": 18.02,
+      "deleted": 500,
+      "ok": true
+    },
+    "api_portal_fanout": {
+      "search": {
+        "path": "/cloud/search?operation=sale&page_size=10",
+        "n": 40,
+        "errors": 0,
+        "wall_s": 0.261,
+        "statuses": [
+          200
+        ],
+        "ok": true,
+        "p50_ms": 98.2,
+        "p95_ms": 118.0,
+        "max_ms": 126.7
+      },
+      "facets": {
+        "path": "/cloud/facets?operation=sale",
+        "n": 30,
+        "errors": 0,
+        "wall_s": 0.174,
+        "statuses": [
+          200
+        ],
+        "ok": true,
+        "p50_ms": 63.8,
+        "p95_ms": 76.6,
+        "max_ms": 77.2
+      },
+      "ok": true
+    },
+    "api_crm_fanout": {
+      "clients": {
+        "path": "/app/clients?page=1&page_size=20",
+        "n": 30,
+        "errors": 0,
+        "wall_s": 0.141,
+        "statuses": [
+          200
+        ],
+        "ok": true,
+        "p50_ms": 49.0,
+        "p95_ms": 64.6,
+        "max_ms": 66.1
+      },
+      "kpis": {
+        "path": "/app/dashboard/kpis",
+        "n": 20,
+        "errors": 0,
+        "wall_s": 0.159,
+        "statuses": [
+          200
+        ],
+        "ok": true,
+        "p50_ms": 74.1,
+        "p95_ms": 114.8,
+        "max_ms": 115.0
+      },
+      "ok": true
+    },
+    "soft_externals": {
+      "resend": {
+        "mode": "mock_or_unset",
+        "action": "SKIP_SEND",
+        "ok": true,
+        "note": "Gate never sends email. Unit path: send_email falls back to mock without key.",
+        "client_import": "ok"
+      },
+      "stripe": {
+        "STRIPE_ENABLED": "true",
+        "has_secret": true,
+        "mode_hint": "test",
+        "catalog_probe": {
+          "path": "/cloud/mutui/config",
+          "method": "GET",
+          "status": 200,
+          "ms": 3.1,
+          "bytes": 347,
+          "ok": true
+        },
+        "ok": true,
+        "note": "No Checkout/PaymentIntent created by this gate."
+      },
+      "visura": {
+        "catalog": {
+          "path": "/cloud/visura/catalog",
+          "method": "GET",
+          "status": 200,
+          "ms": 46.5,
+          "bytes": 162,
+          "ok": true
+        },
+        "ok": true,
+        "note": "Catalog only. No provider order / PDF purchase."
+      },
+      "circuits": {
+        "ok": true,
+        "snapshot_keys": []
+      },
+      "nominatim": {
+        "action": "SKIP_LIVE_GEOCODE",
+        "ok": true,
+        "note": "No Nominatim hammering. Geocode exercised only in feature tests with throttle."
+      },
+      "fal_kling": {
+        "action": "SKIP",
+        "has_fal_key": false,
+        "ok": true,
+        "note": "No fal.ai generation in gate (cost)."
+      },
+      "ape_siape": {
+        "action": "SKIP",
+        "ok": true,
+        "note": "APE/SIAPE excluded from readiness by design."
+      },
+      "ok": true,
+      "note": "vendors soft-probed only"
+    },
+    "pytest_subset": {
+      "ok": true,
+      "returncode": 0,
+      "ms": 8119.1,
+      "tests": [
+        "tests/test_private_publisher_contact.py",
+        "tests/test_viewer_is_lister.py",
+        "tests/test_scout_hal_and_pulse.py",
+        "tests/test_a017_notifications.py",
+        "tests/test_a021_notification_prefs.py"
+      ],
+      "stdout_tail": "...............                                                          [100%]\n=============================== warnings summary ===============================\n.venv/lib/python3.12/site-packages/starlette/formparsers.py:12\n  /workspace/backend/.venv/lib/python3.12/site-packages/starlette/formparsers.py:12: PendingDeprecationWarning: Please use `import python_multipart` instead.\n    import multipart\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n15 passed, 1 warning in 7.47s\n",
+      "stderr_tail": ""
+    }
+  },
+  "required_ok": true,
+  "finished_at": "2026-09-17T10:27:37.883011+00:00"
+}
