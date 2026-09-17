@@ -10,9 +10,8 @@
 | Emergent (GitHub pubblico collegato) | https://github.com/mcnicastro-netizen/OMNIA | `790d9fb` | 2026-08-16 |
 | Workspace Cursor attuale | `/workspace` (remote tmp Cursor) | `dc27086` | ongoing |
 
-> **Nota onesta**: ho accesso al mirror GitHub pubblico `mcnicastro-netizen/OMNIA` (stesso job Emergent del 16-ago).
-> Non ho login alla UI Emergent.sh né al repo GitHub privato `mcnicastro/OMNIA` (404 senza auth).
-> Se Emergent ha lavoro **non pushato** su quel GitHub, va esportato a parte — dimmelo e lo includiamo nel confronto.
+> **Nota**: fonte Emergent = repo GitHub pubblico `mcnicastro-netizen/OMNIA` (tutto il codice del progetto lì; Founder conferma: nessuna variante privata separata).
+> Confrontato interamente dall’agente — **nessuno zip richiesto**.
 
 ## Verdetto (codice sorgente)
 
@@ -216,7 +215,7 @@ Nessun path sorgente Emergent manca qui. Il nuovo repo ufficiale deve nascere da
 - [x] Mirror Emergent GitHub accessibile e clonato
 - [x] Diff path: 0 file solo-Emergent
 - [x] Cursor contiene lavoro post-16-ago (Scout, gate, security, …)
-- [ ] Tu confermi che Emergent UI non ha commit/file **non** pushati su `mcnicastro-netizen/OMNIA`
+- [x] Tu confermi: versione Emergent = tutto pubblico su quel GitHub (niente ramo/file privati extra)
 - [ ] Creazione nuovo repo Cursor (nome da te) **senza** cancellare Emergent
 - [ ] Push mirror di questo workspace → nuovo repo
 - [ ] Clone fresco + `bash scripts/omnia-stack.sh ensure` OK
