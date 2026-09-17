@@ -28,6 +28,7 @@
 | Scout thin visita + documenti | ✅ (17-Set) |
 | Home claim allineato nord (ritocco) | ⬜ opzionale |
 | Demo A-025 | ❌ **next** |
+| A-026 micro-tour agenzia (501→Kling) | 🔬 da approfondire |
 | Stripe live | ⏸️ post-Vercel |
 
 ---

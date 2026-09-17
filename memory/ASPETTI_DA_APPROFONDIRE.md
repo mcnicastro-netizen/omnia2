@@ -2,7 +2,7 @@
 
 > File di appoggio per **temi strategici/tecnici** che il Founder ha esplicitamente segnalato come "da rivedere più avanti", **senza essere ancora decisioni**. Ogni voce va promossa in `DECISIONS.md` o `ROADMAP.md` quando si decide di procedere.
 
-**Ultimo aggiornamento**: 16-Sep-2026 (D-084 sync manuale · Cap.18/9/12/13 allineati · Stripe live post-Vercel)
+**Ultimo aggiornamento**: 17-Sep-2026 (A-026 Ken Burns agenzia 501 → Kling/Sora crediti)
 
 > **Backlog qualità prodotto (A-006+)**: voci tracciate durante lo sprint manuale Cap. 1-18. Priorità assegnata da Cursor (P1=alto ROI/costo basso, P3=futuro). Decisione Founder post-manuale — **NON implementare senza "vai" esplicito**.
 
@@ -1007,7 +1007,7 @@ Implementazione: TTL index Mongo dove semantica lo consente + job archivio S3 me
 
 ---
 
-# 📊 Tabella riepilogo Backlog qualità (A-006 → A-025)
+# 📊 Tabella riepilogo Backlog qualità (A-006 → A-026)
 
 | ID | Titolo | P | Effort | Origine | Timing |
 |----|--------|:-:|:-:|---------|:-:|
@@ -1031,6 +1031,7 @@ Implementazione: TTL index Mongo dove semantica lo consente + job archivio S3 me
 | A-023 | Toast duration tuning | P3 | XS (~15min) | Spark Cap.18 | Raggruppare micro-fix |
 | A-024 | CTA Richiedi demo via email (D-080) | ✅ | S | Founder 15-Sep-2026 | Chiuso — niente Calendly |
 | A-025 | **Demo prodotto** (cavallo di Troia) | **P0** | XL | Founder 15-Sep-2026 | Architettare in seguito — non self-serve oggi |
+| A-026 | **Micro-tour agenzia** (Ken Burns 501 → Kling/Sora crediti) | **P2** | M-L | Founder 17-Sep-2026 | UX/pricing path gestionale — non sbloccare Ken Burns agenzia |
 
 **Legenda priorità**: **P0** fondamentale pre-acquisition · **P1** alta (ROI alto/effort basso o revenue-critical) · P2 media · P3 futuro (validation-gated)
 **Legenda effort**: XS <30min · S 30min-2h · M 2-6h · L 6-20h · XL >20h
@@ -1066,6 +1067,32 @@ Confermato in sessione: **non esiste ancora una demo self-serve** per il cliente
 ### Trigger di ripresa
 - Founder dice «architettiamo la demo» / riapre filone commerciale post-M6 o pre-outreach
 - Prima di qualsiasi cold email / 1.000 mail demo
+
+---
+
+## 🟠 A-026 — Micro-tour canale agenzia: Ken Burns disabilitato (501 → Kling/Sora a crediti)
+
+**Data inserimento**: 17-Sep-2026  
+**Segnalato da**: Founder (Marco Nicastro) — sessione micro-tour B2C vs competitor «prima visita»  
+**Priorità**: **P2** — da approfondire (UX + pricing + completezza path agenzia); **NON** riaprire Ken Burns nel gestionale senza «vai».
+
+### Stato attuale (già deciso, da non invertire alla leggera)
+- **Portale B2C** (`/api/cloud/videos/kenburns/...`): Ken Burns **gratuito** (ffmpeg) — contenuto video a costo zero.
+- **Gestionale agenzia** (`POST /api/app/videos/kenburns/property/{pid}`): **501** con detail tipo `kenburns_disabled_in_agency` → l’agente deve usare **Kling Pro (fal.ai) a crediti** (path ufficiale D-065/D-066). Endpoint Sora storico: stub/deprecato (410/501), non è il path prodotto.
+- Decisioni: **D-064** (Ken Burns solo B2C), **D-065** (Sora scartato → Kling), **D-066** (10s / 10 crediti Kling Pro solo gestionale).
+
+### Cosa approfondire (quando si riprende)
+1. **UX agenzia**: oggi 501 è corretto economicamente ma grezzo — messaggio chiaro in UI («Video premium a crediti») vs errore tecnico; CTA verso acquisto crediti / Kling.
+2. **Completezza path Kling**: job async, stato rendering, embed in scheda/listing, errori 402 senza crediti, fallback se `FAL_KEY` assente.
+3. **Pricing/messaging**: allineare copy gestionale + Cap. 23 manuale + `PRICING_OMNIA` (Kling 10 crediti) senza far percepire Ken Burns come “mancante” nel gestionale.
+4. **Cannibalizzazione**: conferma policy — niente Ken Burns free in agenzia anche se richiesto da demo/vendita (salvo revisione D-064 esplicita).
+
+### Stato
+🟠 **DA APPROFONDIRE** — tracciato su richiesta Founder (17-Sep-2026). Implementazione solo con «vai»; default = mantenere split B2C free / agenzia a crediti.
+
+### Trigger di ripresa
+- Founder vuole rifinire video nel gestionale o demo agenzia con wow video
+- Prima di pitch commerciale che mostri «genera video» lato OMNIA app
 
 ---
 
