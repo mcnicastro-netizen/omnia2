@@ -469,8 +469,11 @@ voci:
       passi:
         - Dalla pagina Portali clicca il bottone blu scuro
           '+ Aggiungi portale personalizzato' in alto a destra.
-        - "Step 1 Identità: nome, slug (auto-compilato dal nome),
-          sito ufficiale (opzionale), categoria (gratuito /
+        - "Step 1 Identità: nome e codice tecnico (slug). Lo slug
+          e' un nome breve per il computer (minuscole, numeri,
+          trattini); si auto-compila dal nome e serve a identificare
+          il portale nell'URL del feed — non va chiesto al portale.
+          Poi sito ufficiale (opzionale), categoria (gratuito /
           freemium / premium), scope (locale / regionale /
           nazionale)."
         - "Step 2 Formato: dialetto XML (osf_federata
