@@ -296,6 +296,8 @@ Elementi che ESISTONO ma per decisione del Founder o per regola redazionale NON 
 - **NO auto-refresh token FB long-lived**: la libreria non ha job cron per rinnovare. Documentato come "rinnovi manuale dalle Impostazioni canale".
 - **Multi-tenant safe by design**: ogni endpoint filtra per `agency_id` estratto da `require_agency_404`. Scope isolato.
 - **Limiti v1 espliciti in `social.limitazioni-v1`**: no scheduling, no X/LinkedIn/TikTok/YouTube/Threads, no carosello, no video/reel/story, no editor caption, no template caption, no analytics engagement, no auto-refresh token, no bulk publish, no rollback multi-canale, no preview finale, no moderazione pre-pubblicazione. WhatsApp consumer = wa.me only; WABA = messaggio 1:1.
+- **Cross-ref**: Cap. 3 (bottone "Pubblica sui social" parte da scheda immobile), Cap. 6 (sync engine portali = feed pull, distinto da social = push), Cap. 8 (listing_url = URL sito agenzia), Cap. 12 (HAL Knowledge legge Cap. 15), Cap. 13 (ruoli richiesti).
+
 ### Cap. 16 · Compliance Portali (validatore HARD/SOFT) — Feb 2026
 - **Architettura pure functions 1:1** con `shared/validators/compliance.py` (~171 righe): `validate_property`, `is_publishable`, `summarize_agency_compliance`. Nessun DB, ricalcolo on-the-fly. Documentato onestamente.
 - **5 regole HARD business → 7 codici**:
