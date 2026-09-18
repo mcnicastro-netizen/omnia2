@@ -1,6 +1,6 @@
 # Prossima sessione — programma passi
 
-**Aggiornato**: 18 Settembre 2026 — Tools QC gestionale chiuso  
+**Aggiornato**: 18 Settembre 2026 — Valutatore mini-sample accuratezza PASS  
 **Stato base**: Sprint 1→4 **CONCLUSO**. Stress: `PLATFORM_STRESS_REPORT.md` + `STRESS_REPORT.md`.  
 **Preprod gate**: `memory/PREPROD_GATE_REPORT.md` (PASS required — no vendor burn).  
 **Repo ufficiale**: https://github.com/mcnicastro-netizen/omnia2 ✅ (Emergent `OMNIA` = backup, non cancellare)  
@@ -14,10 +14,11 @@
 2. ✅ **Tools QC ImmoWeb** eseguito → `memory/GESTIONALE_TOOLS_QC_REPORT.md` (**PASS 69 / FAIL 1 / SKIP 2 / GAP 1**)
 3. Review QC esterna → backlog **A-028**: gerarchia sidebar, cockpit «Oggi», Match Score explainability, HAL contestuale — **no implementazione senza «vai»**
 4. ✅ `CRM_PUBLIC_PREVIEW=false` (preview healthz)
-5. Founder: **«vai»** su Top 5 A-028 (o ID fuori programma)
-6. **D-084**: ogni ship aggiorna manuale+YAML
-7. Preprod: `python scripts/preprod_confidence_gate.py` prima di go-live / ship rischiosi
-8. Nota tecnica: `GET /app/matches` agency-wide sotto stress seed (~2M pairs) uccide API — usare solo client-scoped `min_score`+`limit`
+5. ✅ **Valutatore mini-sample** → `memory/GESTIONALE_VALUATOR_ACCURACY_SAMPLE.md` (**PASS 20 / FAIL 0** — non è prova OMI ~27k)
+6. Founder: **«vai»** su Top 5 A-028 (o ID fuori programma)
+7. **D-084**: ogni ship aggiorna manuale+YAML
+8. Preprod: `python scripts/preprod_confidence_gate.py` prima di go-live / ship rischiosi
+9. Nota tecnica: `GET /app/matches` agency-wide sotto stress seed (~2M pairs) uccide API — usare solo client-scoped `min_score`+`limit`
 
 ---
 
@@ -33,6 +34,7 @@
 | Gestionale stress S0–S6 @ 2000 clients | ✅ PASS (`GESTIONALE_STRESS_REPORT.md`) |
 | **Gestionale tools QC A→E + loop mattina** | ✅ (18-Set) `GESTIONALE_TOOLS_QC_REPORT.md` |
 | **A-028a Cockpit Dashboard «Oggi»** | ✅ (18-Set) `/app/dashboard/today` |
+| **Valutatore mini-sample accuratezza** | ✅ (18-Set) PASS 20/20 — `GESTIONALE_VALUATOR_ACCURACY_SAMPLE.md` |
 | Home B2C visual + SSR preview | ✅ (16-Set) |
 | Layout altre pagine B2C | ✅ (17-Set) |
 | Scout v1 + fiducia + voce lister | ✅ |
@@ -63,4 +65,4 @@
 | — | A-014 Stripe live | post-Vercel |
 | — | Go-live env flags | readiness WARN locali → set su Vercel |
 
-Report: `memory/GESTIONALE_TOOLS_QC_REPORT.md` · `memory/PREPROD_GATE_REPORT.md` · `memory/PLATFORM_STRESS_REPORT.md` · `memory/STRESS_REPORT.md` · `memory/PRODUCT_NORTHSTAR_B2C.md`
+Report: `memory/GESTIONALE_TOOLS_QC_REPORT.md` · `memory/GESTIONALE_VALUATOR_ACCURACY_SAMPLE.md` · `memory/PREPROD_GATE_REPORT.md` · `memory/PLATFORM_STRESS_REPORT.md` · `memory/STRESS_REPORT.md` · `memory/PRODUCT_NORTHSTAR_B2C.md`

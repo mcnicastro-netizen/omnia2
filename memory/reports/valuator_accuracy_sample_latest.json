@@ -1,0 +1,365 @@
+{
+  "meta": {
+    "started": "2026-09-18T09:38:56.319382+00:00",
+    "finished": "2026-09-18T09:38:58.080491+00:00",
+    "run_id": "9b4c33b7",
+    "sample_size": 16,
+    "tolerance": 0.12,
+    "profile": {
+      "zone": "semicentro",
+      "property_type": "appartamento",
+      "surface_sqm": 80,
+      "condition": "buono"
+    },
+    "counts": {
+      "PASS": 20,
+      "FAIL": 0,
+      "SKIP": 0
+    },
+    "note": "Mini-sample only. Does not prove OMI ~27k zone accuracy. Curated cities checked vs CITY_PRICES semicentro; small comuni vs province×0.88 band."
+  },
+  "rows": [
+    {
+      "city": "Milano",
+      "layer_expected": "city",
+      "layer_actual": "city",
+      "city_resolved": "milano",
+      "province_sigla": null,
+      "region": "lombardia",
+      "pps_avg": 6582,
+      "value_avg": 526560,
+      "band": [
+        5500,
+        7500
+      ],
+      "confidence": "high",
+      "data_source": "Borsino/OMI Milano 2025-Q1",
+      "status": "PASS",
+      "reasons": [],
+      "ms": 7.6,
+      "http": 200
+    },
+    {
+      "city": "Roma",
+      "layer_expected": "city",
+      "layer_actual": "city",
+      "city_resolved": "roma",
+      "province_sigla": null,
+      "region": "lazio",
+      "pps_avg": 4792,
+      "value_avg": 383360,
+      "band": [
+        4000,
+        5500
+      ],
+      "confidence": "high",
+      "data_source": "OMI Roma 2025-Q1 (centro storico vs GRA)",
+      "status": "PASS",
+      "reasons": [],
+      "ms": 9.6,
+      "http": 200
+    },
+    {
+      "city": "Napoli",
+      "layer_expected": "city",
+      "layer_actual": "city",
+      "city_resolved": "napoli",
+      "province_sigla": null,
+      "region": "campania",
+      "pps_avg": 2635,
+      "value_avg": 210800,
+      "band": [
+        2200,
+        3200
+      ],
+      "confidence": "high",
+      "data_source": "OMI Napoli 2025-Q1 (Chiaia/Vomero vs periferia)",
+      "status": "PASS",
+      "reasons": [],
+      "ms": 8.6,
+      "http": 200
+    },
+    {
+      "city": "Torino",
+      "layer_expected": "city",
+      "layer_actual": "city",
+      "city_resolved": "torino",
+      "province_sigla": null,
+      "region": "piemonte",
+      "pps_avg": 2264,
+      "value_avg": 181120,
+      "band": [
+        1900,
+        2700
+      ],
+      "confidence": "high",
+      "data_source": "OMI Torino 2025-S1",
+      "status": "PASS",
+      "reasons": [],
+      "ms": 8.5,
+      "http": 200
+    },
+    {
+      "city": "Bologna",
+      "layer_expected": "city",
+      "layer_actual": "city",
+      "city_resolved": "bologna",
+      "province_sigla": null,
+      "region": "emilia_romagna",
+      "pps_avg": 3888,
+      "value_avg": 311040,
+      "band": [
+        3200,
+        4500
+      ],
+      "confidence": "high",
+      "data_source": "OMI Bologna 2025",
+      "status": "PASS",
+      "reasons": [],
+      "ms": 8.1,
+      "http": 200
+    },
+    {
+      "city": "Firenze",
+      "layer_expected": "city",
+      "layer_actual": "city",
+      "city_resolved": "firenze",
+      "province_sigla": null,
+      "region": "toscana",
+      "pps_avg": 4154,
+      "value_avg": 332320,
+      "band": [
+        3500,
+        4800
+      ],
+      "confidence": "high",
+      "data_source": "OMI Firenze 2025-S1",
+      "status": "PASS",
+      "reasons": [],
+      "ms": 7.6,
+      "http": 200
+    },
+    {
+      "city": "Catania",
+      "layer_expected": "city",
+      "layer_actual": "city",
+      "city_resolved": "catania",
+      "province_sigla": null,
+      "region": "sicilia",
+      "pps_avg": 1360,
+      "value_avg": 108800,
+      "band": [
+        1200,
+        1700
+      ],
+      "confidence": "high",
+      "data_source": "Borsino/OMI 2025 curated city",
+      "status": "PASS",
+      "reasons": [],
+      "ms": 4.8,
+      "http": 200
+    },
+    {
+      "city": "Palermo",
+      "layer_expected": "city",
+      "layer_actual": "city",
+      "city_resolved": "palermo",
+      "province_sigla": null,
+      "region": "sicilia",
+      "pps_avg": 1406,
+      "value_avg": 112480,
+      "band": [
+        1200,
+        1800
+      ],
+      "confidence": "high",
+      "data_source": "Borsino/OMI 2025 curated city",
+      "status": "PASS",
+      "reasons": [],
+      "ms": 7.9,
+      "http": 200
+    },
+    {
+      "city": "Bari",
+      "layer_expected": "city",
+      "layer_actual": "city",
+      "city_resolved": "bari",
+      "province_sigla": null,
+      "region": "puglia",
+      "pps_avg": 2074,
+      "value_avg": 165920,
+      "band": [
+        1800,
+        2500
+      ],
+      "confidence": "high",
+      "data_source": "OMI Bari 2025",
+      "status": "PASS",
+      "reasons": [],
+      "ms": 7.9,
+      "http": 200
+    },
+    {
+      "city": "Genova",
+      "layer_expected": "city",
+      "layer_actual": "city",
+      "city_resolved": "genova",
+      "province_sigla": null,
+      "region": "liguria",
+      "pps_avg": 2142,
+      "value_avg": 171360,
+      "band": [
+        1800,
+        2500
+      ],
+      "confidence": "high",
+      "data_source": "OMI Genova 2025",
+      "status": "PASS",
+      "reasons": [],
+      "ms": 7.9,
+      "http": 200
+    },
+    {
+      "city": "Venezia",
+      "layer_expected": "city",
+      "layer_actual": "city",
+      "city_resolved": "venezia",
+      "province_sigla": null,
+      "region": "veneto",
+      "pps_avg": 4240,
+      "value_avg": 339200,
+      "band": [
+        3500,
+        5000
+      ],
+      "confidence": "high",
+      "data_source": "OMI Venezia centro storico vs Mestre",
+      "status": "PASS",
+      "reasons": [],
+      "ms": 8.2,
+      "http": 200
+    },
+    {
+      "city": "Cagliari",
+      "layer_expected": "city",
+      "layer_actual": "city",
+      "city_resolved": "cagliari",
+      "province_sigla": null,
+      "region": "sardegna",
+      "pps_avg": 1956,
+      "value_avg": 156480,
+      "band": [
+        1700,
+        2400
+      ],
+      "confidence": "high",
+      "data_source": "Borsino/OMI 2025 curated city",
+      "status": "PASS",
+      "reasons": [],
+      "ms": 8.4,
+      "http": 200
+    },
+    {
+      "city": "Saronno",
+      "layer_expected": "province",
+      "layer_actual": "province",
+      "city_resolved": null,
+      "province_sigla": "VA",
+      "region": "lombardia",
+      "pps_avg": 1782,
+      "value_avg": 142560,
+      "band": [
+        1496,
+        2024
+      ],
+      "confidence": "medium",
+      "data_source": "Province fallback (Varese) via Nominatim geocoding",
+      "status": "PASS",
+      "reasons": [],
+      "ms": 733.6,
+      "http": 200
+    },
+    {
+      "city": "Belpasso",
+      "layer_expected": "province",
+      "layer_actual": "province",
+      "city_resolved": null,
+      "province_sigla": "CT",
+      "region": "sicilia",
+      "pps_avg": 1362,
+      "value_avg": 108960,
+      "band": [
+        1232,
+        1672
+      ],
+      "confidence": "medium",
+      "data_source": "Province fallback (Catania) via Nominatim geocoding",
+      "status": "PASS",
+      "reasons": [],
+      "ms": 225.7,
+      "http": 200
+    },
+    {
+      "city": "Carpi",
+      "layer_expected": "province",
+      "layer_actual": "province",
+      "city_resolved": null,
+      "province_sigla": "MO",
+      "region": "emilia_romagna",
+      "pps_avg": 1778,
+      "value_avg": 142240,
+      "band": [
+        1496,
+        2024
+      ],
+      "confidence": "medium",
+      "data_source": "Province fallback (Modena) via Nominatim geocoding",
+      "status": "PASS",
+      "reasons": [],
+      "ms": 583.0,
+      "http": 200
+    },
+    {
+      "city": "Sulmona",
+      "layer_expected": "province",
+      "layer_actual": "province",
+      "city_resolved": null,
+      "province_sigla": "AQ",
+      "region": "abruzzo",
+      "pps_avg": 1100,
+      "value_avg": 88000,
+      "band": [
+        968,
+        1320
+      ],
+      "confidence": "medium",
+      "data_source": "Province fallback (L'Aquila) via Nominatim geocoding",
+      "status": "PASS",
+      "reasons": [],
+      "ms": 123.0,
+      "http": 200
+    }
+  ],
+  "order_checks": [
+    {
+      "pair": "Milano>Catania",
+      "status": "PASS",
+      "detail": "6582 vs 1360"
+    },
+    {
+      "pair": "Milano>Bari",
+      "status": "PASS",
+      "detail": "6582 vs 2074"
+    },
+    {
+      "pair": "Firenze>Palermo",
+      "status": "PASS",
+      "detail": "4154 vs 1406"
+    },
+    {
+      "pair": "Bologna>Catania",
+      "status": "PASS",
+      "detail": "3888 vs 1360"
+    }
+  ]
+}
