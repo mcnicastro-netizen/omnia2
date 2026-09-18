@@ -648,12 +648,17 @@
     "see_all": "Vedi tutti",
     "no_matches_for_property": "Nessun cliente compatibile al momento. Aggiungi clienti con preferenze coerenti per vedere i match qui."
   },
-  "portals": {
+  "portali": {
     "title": "Portali pubblicitari",
     "subtitle": "Pubblica i tuoi annunci automaticamente sui portali immobiliari.",
     "credentials_footnote": "* Le credenziali sono cifrate end-to-end.",
     "empty": "Nessun portale ancora attivato. Scegli un portale qui sotto per iniziare.",
     "available": "Portali disponibili",
+    "disponibili": "Disponibili",
+    "active": "Attivi",
+    "total_active": "Portali attivi",
+    "catalog_total": "Catalogo totale",
+    "confirm_deactivate": "Disattivare questo portale?",
     "not_yet_active": "Non ancora attivo",
     "not_yet_active_hint": "Integrazione reale non disponibile — non attivabile."
   },

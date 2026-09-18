@@ -138,7 +138,7 @@ export default function PortalWizardPage() {
       >
         <div>
           <p className="text-[10px] uppercase tracking-[0.3em] text-stone-500 mb-2">
-            <Brand>ImmoWeb · Publishing · Wizard</Brand>
+            <Brand>ImmoWeb · Portali · Wizard</Brand>
           </p>
           <h1
             className="text-3xl md:text-4xl tracking-tight"

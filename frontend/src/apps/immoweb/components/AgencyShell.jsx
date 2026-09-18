@@ -92,7 +92,7 @@ export default function AgencyShell({ children, current = "dashboard", showBack 
       ? [{ key: "import", to: `/${lang}/app/import`, label: t("immoweb_app.nav_import") || "Importa", icon: "⇪" }]
       : []),
     ...(isAgencyAdmin
-      ? [{ key: "publishing", to: `/${lang}/app/publishing`, label: t("immoweb_app.nav_publishing") || "Publishing", icon: "📡" }]
+      ? [{ key: "publishing", to: `/${lang}/app/publishing`, label: t("immoweb_app.nav_publishing") || "Portali", icon: "📡" }]
       : []),
     { key: "properties", to: `/${lang}/app/properties`, label: t("immoweb_app.nav_properties"), icon: "🏠" },
     { key: "clients", to: `/${lang}/app/clients`, label: t("immoweb_app.nav_clients"), icon: "👥" },

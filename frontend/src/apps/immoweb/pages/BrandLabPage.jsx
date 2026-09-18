@@ -253,7 +253,7 @@ export default function BrandLabPage() {
               "Video 15sec verticale — social/reels/tiktok",
               "Video 15sec orizzontale — landing/youtube/linkedin",
               "Loop animato splash — 3sec webapp loading",
-              "Set icone brand — CRM · Portale · Academy · Publishing · Widget in stile ologramma",
+              "Set icone brand — CRM · Portale · Academy · Portali · Widget in stile ologramma",
               "Font pairing samples — Fraunces + Inter per marketing",
             ].map((task, i) => (
               <div key={i} className="flex items-start gap-3 text-sm border border-stone-200 rounded-lg p-3 bg-white">

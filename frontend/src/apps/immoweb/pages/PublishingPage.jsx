@@ -69,7 +69,7 @@ export default function PortalsPage() {
   };
 
   const deactivate = async (id) => {
-    if (!confirm(t("portals.confirm_deactivate") || "Disattivare questo portale?")) return;
+    if (!confirm(t("portali.confirm_deactivate") || "Disattivare questo portale?")) return;
     try {
       await api.delete(`/app/publishing/connections/${id}`);
       await load();
@@ -104,11 +104,11 @@ export default function PortalsPage() {
       <section data-testid="portals-page" className="space-y-8">
         <div>
           <p className="text-[10px] uppercase tracking-[0.3em] text-stone-500 mb-2">
-            <Brand>ImmoWeb · Publishing Center</Brand>
+            <Brand>ImmoWeb · Portali</Brand>
           </p>
           <div className="flex flex-wrap items-start justify-between gap-4">
             <h1 className="text-3xl md:text-4xl tracking-tight" style={{ fontFamily: "'Fraunces', Georgia, serif" }}>
-              {t("portals.title") || "Portali Immobiliari"}
+              {t("portali.title") || "Portali Immobiliari"}
             </h1>
             <div className="flex gap-2 flex-wrap">
               <Link
@@ -128,7 +128,7 @@ export default function PortalsPage() {
             </div>
           </div>
           <p className="text-sm text-stone-600 mt-2 max-w-2xl">
-            {t("portals.subtitle") ||
+            {t("portali.subtitle") ||
               "Attiva i portali su cui vuoi pubblicare gli annunci. OMNIA genera un feed XML aggiornato in tempo reale — ogni portale scarica autonomamente ogni notte."}
           </p>
           <div className="mt-3 text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded px-3 py-2 max-w-2xl">
@@ -138,9 +138,9 @@ export default function PortalsPage() {
 
         {/* Metrics header */}
         <div className="grid grid-cols-3 gap-4 max-w-2xl">
-          <MetricBox label={t("portals.total_active") || "Portali attivi"} value={connections.filter((c) => c.status === "active").length} testid="metric-active" />
-          <MetricBox label={t("portals.available") || "Disponibili"} value={available.length} testid="metric-available" />
-          <MetricBox label={t("portals.catalog_total") || "Catalogo totale"} value={catalog.length} testid="metric-catalog" />
+          <MetricBox label={t("portali.total_active") || "Portali attivi"} value={connections.filter((c) => c.status === "active").length} testid="metric-active" />
+          <MetricBox label={t("portali.available") || "Disponibili"} value={available.length} testid="metric-available" />
+          <MetricBox label={t("portali.catalog_total") || "Catalogo totale"} value={catalog.length} testid="metric-catalog" />
         </div>
 
         {error && <div data-testid="portals-error" className="text-sm text-red-700 bg-red-50 border border-red-300 rounded p-3">{error}</div>}
@@ -173,7 +173,7 @@ export default function PortalsPage() {
                 tab === k ? "border-stone-900 text-stone-900" : "border-transparent text-stone-500 hover:text-stone-800"
               }`}
             >
-              {k === "active" ? `${t("portals.active") || "Attivi"} (${connections.length})` : `${t("portals.disponibili") || "Disponibili"} (${available.length})`}
+              {k === "active" ? `${t("portali.active") || "Attivi"} (${connections.length})` : `${t("portali.disponibili") || "Disponibili"} (${available.length})`}
             </button>
           ))}
         </div>
@@ -266,7 +266,7 @@ export default function PortalsPage() {
                           data-testid={`portal-coming-soon-${p.slug}`}
                           className="ml-2 inline-block text-[9px] uppercase tracking-widest text-amber-800 bg-amber-50 border border-amber-200 px-2 py-0.5"
                         >
-                          {t("portals.not_yet_active") || "Non ancora attivo"}
+                          {t("portali.not_yet_active") || "Non ancora attivo"}
                         </span>
                       )}
                     </td>
@@ -275,7 +275,7 @@ export default function PortalsPage() {
                     <td className="px-4 py-3 text-stone-600">{"★".repeat(p.traffic_score || 0)}</td>
                     <td className="px-4 py-3 text-stone-500 text-xs">
                       {notReady
-                        ? (t("portals.not_yet_active_hint") || "Integrazione reale non disponibile — non attivabile.")
+                        ? (t("portali.not_yet_active_hint") || "Integrazione reale non disponibile — non attivabile.")
                         : (p.notes?.substring(0, 40) || "—")}
                     </td>
                     <td className="px-4 py-3 text-right">
@@ -284,7 +284,7 @@ export default function PortalsPage() {
                           data-testid={`portal-activate-disabled-${p.slug}`}
                           className="text-[10px] uppercase tracking-widest text-stone-400"
                         >
-                          {t("portals.not_yet_active") || "Non ancora attivo"}
+                          {t("portali.not_yet_active") || "Non ancora attivo"}
                         </span>
                       ) : (
                         <button onClick={() => openActivate(p)} data-testid={`portal-activate-${p.slug}`} className="text-xs uppercase tracking-widest bg-emerald-700 text-white px-3 py-1.5 rounded hover:bg-emerald-800">Attiva</button>
@@ -413,7 +413,7 @@ export default function PortalsPage() {
         data-testid="portals-credentials-footnote"
         className="text-[10px] text-stone-400 mt-2 px-0"
       >
-        {t("portals.credentials_footnote")}
+        {t("portali.credentials_footnote")}
       </p>
     </AgencyShell>
   );

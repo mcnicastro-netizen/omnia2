@@ -854,8 +854,13 @@
     },
     "nav_mutui": "Mortgages"
   },
-  "portals": {
+  "portali": {
     "available": "Available portals",
+    "disponibili": "Available",
+    "active": "Active",
+    "total_active": "Active portals",
+    "catalog_total": "Full catalog",
+    "confirm_deactivate": "Deactivate this portal?",
     "title": "Advertising portals",
     "subtitle": "Automatically publish your listings on real estate portals.",
     "credentials_footnote": "* Credentials are end-to-end encrypted.",

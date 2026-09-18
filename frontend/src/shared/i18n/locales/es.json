@@ -991,12 +991,19 @@
     "field_negotiable": "Negociable",
     "field_surface": "Superficie (m²)"
   },
-  "portals": {
+  "portali": {
     "available": "Portales disponibles",
+    "disponibili": "Disponibles",
+    "active": "Activos",
+    "total_active": "Portales activos",
+    "catalog_total": "Catálogo total",
+    "confirm_deactivate": "¿Desactivar este portal?",
     "title": "Portales inmobiliarios",
     "subtitle": "Publica tus anuncios automáticamente en portales inmobiliarios.",
     "credentials_footnote": "* Las credenciales están cifradas de extremo a extremo.",
-    "empty": "Aún no hay portales activados. Elige un portal a continuación para comenzar."
+    "empty": "Aún no hay portales activados. Elige un portal a continuación para comenzar.",
+    "not_yet_active": "Aún no activo",
+    "not_yet_active_hint": "Integración real no disponible — no se puede activar."
   },
   "valuator": {
     "eyebrow": "Valorador GIS · Gratis",
