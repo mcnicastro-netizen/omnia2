@@ -245,6 +245,45 @@ voci:
         - Titolare, agente, segreteria (come agente)
     screenshot: []
 
+  - id: immobili.caricare-planimetrie
+    titolo: Caricare planimetrie (JPEG e PDF)
+    modulo: Immobili
+    widget: null
+    pubblico: [titolare, agente, segreteria]
+    livello: base
+    tags: [immobili, planimetrie, pdf, jpeg, media, upload]
+    correlati:
+      - immobili.caricare-foto
+      - immobili.caricare-video
+      - immobili.privacy-4-livelli-cosa-sono
+    domanda_naturale: "Come carico le planimetrie? Posso allegare un PDF della pianta?"
+    contenuto:
+      a_cosa_serve: >
+        Allegare fino a 5 planimetrie (piante, disegni tecnici)
+        separate dalle foto di ambiente. Formati JPEG, PNG, WebP
+        e PDF. Sul portale pubblico compaiono da privacy L3 in su.
+      quando_si_usa: >
+        Quando hai la pianta dell'immobile da allegare all'annuncio.
+      passi:
+        - Apri l'immobile (o creane uno nuovo).
+        - Scorri fino alla sezione Planimetrie (sotto Video immobile).
+        - Trascina JPEG / PNG / WebP / PDF oppure clicca per selezionare.
+        - Max 15 MB per file, fino a 5 planimetrie.
+        - Le immagini vengono ridimensionate; i PDF restano scaricabili.
+      errori_comuni:
+        - problema: "Formato non supportato"
+          soluzione: >
+            Solo JPEG, PNG, WebP e PDF. Niente DWG/DXF in v1.
+        - problema: "File troppo grande"
+          soluzione: >
+            Riduci sotto i 15 MB.
+        - problema: "Massimo 5 planimetrie"
+          soluzione: >
+            Elimina una planimetria prima di caricarne un'altra.
+      permessi:
+        - Titolare, agente, segreteria (come agente)
+    screenshot: []
+
   - id: immobili.impostare-copertina
     titolo: Impostare la foto di copertina
     modulo: Immobili
