@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useState, useCallback } from "react";
-import { api } from "./api";
+import { api, refreshSession } from "./api";
 
 /**
  * AuthContext — 3 states:
@@ -21,12 +21,24 @@ export function formatApiErrorDetail(detail) {
   return String(detail);
 }
 
+async function loadSessionUser() {
+  try {
+    const { data } = await api.get("/auth/me");
+    return data;
+  } catch {
+    // Access cookie TTL is 15m; refresh cookie lasts 7d — restore silently
+    await refreshSession();
+    const { data } = await api.get("/auth/me");
+    return data;
+  }
+}
+
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
 
   const refresh = useCallback(async () => {
     try {
-      const { data } = await api.get("/auth/me");
+      const data = await loadSessionUser();
       setUser(data);
       return data;
     } catch {
@@ -37,15 +49,14 @@ export function AuthProvider({ children }) {
 
   useEffect(() => {
     let mounted = true;
-    api
-      .get("/auth/me")
-      .then((r) => {
-        if (mounted) setUser(r.data);
+    loadSessionUser()
+      .then((data) => {
+        if (mounted) setUser(data);
       })
       .catch(() => {
         if (mounted) setUser(false);
       });
-    // M9 — 401 on any protected call → drop the local session (ProtectedRoute redirects to login)
+    // M9 — 401 after failed refresh → drop the local session (ProtectedRoute → login)
     const onUnauthorized = () => setUser((u) => (u ? false : u));
     window.addEventListener("omnia:unauthorized", onUnauthorized);
     return () => {

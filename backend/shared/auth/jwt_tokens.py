@@ -5,8 +5,10 @@ from datetime import datetime, timezone, timedelta
 from typing import Optional
 
 JWT_ALGORITHM = "HS256"
-ACCESS_TOKEN_MINUTES = 15
-REFRESH_TOKEN_DAYS = 7
+# Short access TTL; frontend silent-refreshes via refresh_token (7d).
+# Override with ACCESS_TOKEN_MINUTES for longer sessions without refresh churn.
+ACCESS_TOKEN_MINUTES = int(os.environ.get("ACCESS_TOKEN_MINUTES", "15"))
+REFRESH_TOKEN_DAYS = int(os.environ.get("REFRESH_TOKEN_DAYS", "7"))
 
 
 def _get_secret() -> str:

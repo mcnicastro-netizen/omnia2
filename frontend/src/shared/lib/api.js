@@ -2,7 +2,7 @@
  * OMNIA — Shared API client (axios)
  * - Reads REACT_APP_BACKEND_URL from .env
  * - Automatically sends Accept-Language header from current i18n lang
- * - Centralised place to add auth token (M1.S3)
+ * - Silent session refresh on 401 (access cookie TTL is short; refresh cookie lasts days)
  */
 import axios from "axios";
 import i18n from "../i18n/config";
@@ -15,6 +15,34 @@ export const api = axios.create({
   baseURL: API_BASE,
   timeout: 30000, // R6 — le chiamate AI/PDF possono superare 15s; override per-call dove serve
 });
+
+let refreshPromise = null;
+
+function isAuthPath(url = "") {
+  return (
+    url.includes("/auth/login") ||
+    url.includes("/auth/register") ||
+    url.includes("/auth/refresh") ||
+    url.includes("/auth/logout") ||
+    url.includes("/auth/google") ||
+    url.includes("/auth/mfa/") ||
+    url.includes("/auth/forgot") ||
+    url.includes("/auth/reset")
+  );
+}
+
+/** Single-flight refresh so parallel 401s don't stampede. */
+export function refreshSession() {
+  if (!refreshPromise) {
+    refreshPromise = api
+      .post("/auth/refresh")
+      .then((r) => r.data)
+      .finally(() => {
+        refreshPromise = null;
+      });
+  }
+  return refreshPromise;
+}
 
 api.interceptors.request.use((config) => {
   config.headers["Accept-Language"] = i18n.language || "it";
@@ -37,14 +65,28 @@ api.interceptors.request.use((config) => {
 
 api.interceptors.response.use(
   (r) => r,
-  (error) => {
-    // Centralised error logging — extend in later milestones
+  async (error) => {
     if (process.env.NODE_ENV !== "production") {
       console.error("[OMNIA API]", error?.response?.status, error?.message);
     }
-    // M9 — session expired on a protected endpoint → notify AuthProvider
-    const url = error?.config?.url || "";
-    if (error?.response?.status === 401 && !url.includes("/auth/")) {
+
+    const status = error?.response?.status;
+    const config = error?.config || {};
+    const url = config.url || "";
+
+    // Access expired → try refresh once, then retry the original call
+    if (status === 401 && !config.__isRetry && !isAuthPath(url)) {
+      try {
+        await refreshSession();
+        config.__isRetry = true;
+        return api.request(config);
+      } catch {
+        window.dispatchEvent(new CustomEvent("omnia:unauthorized"));
+        return Promise.reject(error);
+      }
+    }
+
+    if (status === 401 && !isAuthPath(url)) {
       window.dispatchEvent(new CustomEvent("omnia:unauthorized"));
     }
     return Promise.reject(error);
