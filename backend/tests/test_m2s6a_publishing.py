@@ -36,20 +36,28 @@ class TestCatalog:
         # M2.6d: catalog can also include agency-owned custom portals (is_custom=True).
         # This test guards ONLY the 8 seeded system portals.
         system_items = [p for p in data["items"] if not p.get("is_custom")]
-        assert len(system_items) == 8
+        assert len(system_items) == 15
         slugs = {p["slug"] for p in system_items}
-        assert slugs == {"subito", "bakeca", "kijiji", "wikicasa",
-                         "facebook-marketplace", "google-business", "attico", "case24"}
+        assert slugs == {
+            "subito", "wikicasa", "bakeca", "trovocasa", "kijiji", "attico", "case24",
+            "immobiliare", "idealista", "casa",
+            "facebook-marketplace", "google-business",
+            "gate-away", "mitula", "trovit",
+        }
         by = {p["slug"]: p for p in system_items}
         assert by["facebook-marketplace"].get("integration_ready") is False
         assert by["google-business"].get("integration_ready") is False
+        assert by["immobiliare"].get("integration_ready") is False
+        assert by["idealista"].get("integration_ready") is False
+        assert by["casa"].get("integration_ready") is False
         assert by["subito"].get("integration_ready") is not False
+        assert by["trovocasa"].get("integration_ready") is not False
 
     def test_cannot_activate_not_yet_active_portals(self, session):
-        for slug in ("facebook-marketplace", "google-business"):
+        for slug in ("facebook-marketplace", "google-business", "immobiliare", "idealista", "casa"):
             r = session.post(
                 f"{BASE_URL}/api/app/publishing/connections",
-                json={"portal_slug": slug, "credentials": {"page_id": "x", "access_token": "y", "account_id": "z"}},
+                json={"portal_slug": slug, "credentials": {"page_id": "x", "access_token": "y", "account_id": "z", "agency_code": "a", "api_key": "k"}},
             )
             assert r.status_code == 409, slug
             assert r.json()["detail"] == "portal_not_yet_active"

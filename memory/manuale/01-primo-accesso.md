@@ -146,7 +146,7 @@ Sapere dove trovi ogni cosa. La barra a sinistra è il tuo indice: da qui apri i
 | **Gruppo** | Gestione filiali (solo tier **Agency** — reti multi-sede) | Titolare + capogruppo |
 | **API Keys** | Chiavi per widget e integrazioni esterne | Solo titolare |
 | **Importa** | Import massivo di immobili da file XML | Solo titolare |
-| **Portali** | Publishing Center: catalogo v1 di 8 portali generalisti (Subito, Bakeca, Kijiji, Wikicasa, Facebook Marketplace, Google Business, Attico, Case24). Immobiliare.it/Casa.it/Idealista non sono in v1 — vedi Cap. 6. | Solo titolare (in questa versione) |
+| **Portali** | Publishing Center: catalogo di sistema **15 portali** (attivabili solo se integrazione pronta; Idealista/Immobiliare/Casa/Meta/Google in catalogo come Non ancora attivo). Vedi Cap. 6. | Solo titolare (in questa versione) |
 | **Immobili** | Elenco e schede degli immobili | Tutti |
 | **Clienti** | Anagrafica clienti + preferenze di ricerca | Tutti |
 | **Match** | Abbinamenti automatici cliente↔immobile con Lead Scoring | Tutti |

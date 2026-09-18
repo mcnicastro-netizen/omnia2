@@ -37,18 +37,25 @@ Prima: aprivi Idealista, aprivi Immobiliare.it, aprivi Casa.it, aprivi Subito, c
 
 ## 6.2 · I portali del catalogo (chi c'è, chi manca)
 
-Al primo accesso al modulo trovi **8 portali** nella scheda **Disponibili**, ordinati per "traffico stimato" (stellette da 1 a 5). Sono i portali che abbiamo integrato per lo Sprint 1 del Publishing Center.
+Al primo accesso al modulo trovi **15 portali** nella scheda **Disponibili**, ordinati per traffico stimato. Solo quelli con integrazione pronta hanno **Attiva**; gli altri restano visibili come **Non ancora attivo** (niente sync finto).
 
-| Portale | Categoria | Modalità | Traffico | Cosa richiede |
+| Portale | Categoria | Modalità | Traffico | Stato OMNIA |
 |---------|-----------|:-:|:-:|---------------|
-| **Subito.it** | freemium | feed_pull | ★★★★★ | Username + (opzionale) chiave partner |
-| **Wikicasa.it** | freemium | feed_pull | ★★★★☆ | API Key (fornita dopo iscrizione) |
-| **Facebook Marketplace** | gratuito | api_push | ★★★★☆ | **Non ancora attivo** — integrazione Meta reale assente; non attivabile |
-| **Google Business Profile** | gratuito | api_push | ★★★★☆ | **Non ancora attivo** — integrazione Google reale assente; non attivabile |
-| **Bakeca.it** | gratuito | feed_pull | ★★★☆☆ | Email account |
-| **Kijiji.it** | gratuito | feed_pull | ★★☆☆☆ | Email account |
-| **Attico.it** | freemium | feed_pull | ★★☆☆☆ | Email account (free tier limitato) |
-| **Case24.it** | freemium | feed_pull | ★★☆☆☆ | Email account |
+| **Subito.it** | freemium | feed_pull | ★★★★★ | Attivabile |
+| **Immobiliare.it** | a pagamento | feed_pull | ★★★★★ | **Non ancora attivo** |
+| **Idealista.it** | a pagamento | feed_pull | ★★★★★ | **Non ancora attivo** |
+| **Casa.it** | a pagamento | feed_pull | ★★★★☆ | **Non ancora attivo** |
+| **Wikicasa.it** | freemium | feed_pull | ★★★★☆ | Attivabile |
+| **Facebook Marketplace** | gratuito | api_push | ★★★★☆ | **Non ancora attivo** |
+| **Google Business Profile** | gratuito | api_push | ★★★★☆ | **Non ancora attivo** |
+| **Bakeca.it** | gratuito | feed_pull | ★★★☆☆ | Attivabile |
+| **Trovocasa.it** | freemium | feed_pull | ★★★☆☆ | Attivabile |
+| **Gate-away** | a pagamento | feed_pull | ★★★☆☆ | **Non ancora attivo** |
+| **Kijiji.it** | gratuito | feed_pull | ★★☆☆☆ | Attivabile |
+| **Attico.it** | freemium | feed_pull | ★★☆☆☆ | Attivabile |
+| **Case24.it** | freemium | feed_pull | ★★☆☆☆ | Attivabile |
+| **Mitula** | aggregatore | feed_pull | ★★☆☆☆ | **Non ancora attivo** |
+| **Trovit** | aggregatore | feed_pull | ★★☆☆☆ | **Non ancora attivo** |
 
 **Cosa vuol dire "modalità"**
 - **feed_pull** = il portale scarica da solo il tuo feed XML pubblico (`.../publishing/feed/<agenzia>.xml`) ogni notte. Non serve che OMNIA "spinga" nulla. Devi solo comunicare al portale l'URL del feed (spesso durante l'iscrizione).
@@ -57,8 +64,7 @@ Al primo accesso al modulo trovi **8 portali** nella scheda **Disponibili**, ord
 **Non trovi il portale che ti serve?**
 Se il tuo portale (regionale, di franchising, di nicchia) non è nel catalogo puoi aggiungerlo tu con il **Universal Portal Wizard** — vedi 6.7. Il portale personalizzato è visibile solo alla tua agenzia.
 
-**Idealista, Immobiliare.it, Casa.it — dove sono?**
-Volutamente non nel catalogo v1: sono a pagamento con integrazione commerciale diretta portale ↔ agenzia. Continua a usarli come oggi. Quando saranno integrati te lo diremo esplicitamente.
+**Idealista, Immobiliare.it, Casa.it** sono in catalogo con etichetta **Non ancora attivo** finché non c’è tubo reale. Puoi continuare a usarli dal loro pannello agenzia.
 
 [SCREEN: cap6-catalog-disponibili]
 
@@ -236,7 +242,7 @@ Un pannello di visualizzazione log-per-riga in UI è pianificato per uno sprint 
 
 ## 6.7 · Universal Portal Wizard (aggiungere un portale tuo)
 
-Il catalogo v1 copre 8 portali generalisti. Se lavori con un portale regionale, di franchising o di nicchia (es. il portale della tua rete provinciale, un aggregatore ligure, un club di ville storiche) puoi **aggiungerlo tu** senza aspettare OMNIA. Il portale personalizzato è **visibile solo alla tua agenzia**.
+Il catalogo di sistema copre **15 portali** (di cui solo i feed_pull *ready* sono attivabili). Se lavori con un portale regionale, di franchising o di nicchia puoi **aggiungerlo tu** con il Wizard — visibile solo alla tua agenzia.
 
 **Prerequisito**
 Il portale deve accettare feed XML in uno di questi due formati:

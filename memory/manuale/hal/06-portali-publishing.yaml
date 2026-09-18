@@ -45,11 +45,11 @@ voci:
         - problema: "Il Publishing Center pubblica su Idealista e
             Immobiliare.it?"
           soluzione: >
-            No, non ancora. In v1 il catalogo contiene 8 portali
-            generalisti (Subito, Bakeca, Wikicasa, Facebook
-            Marketplace, Google Business, Attico, Case24, Kijiji).
-            Idealista, Immobiliare.it e Casa.it richiedono accordi
-            commerciali diretti: continua a usarli come oggi.
+            Idealista, Immobiliare.it e Casa.it sono in catalogo
+            come Non ancora attivo: non si possono attivare finché
+            non c'è tubo ufficiale. Continua a usarli dal loro
+            pannello. Oggi sono attivabili i feed pronti (Subito,
+            Wikicasa, Bakeca, Trovocasa, Kijiji, Attico, Case24).
       permessi:
         - Titolare
         - Agente (pieno controllo)
@@ -59,13 +59,13 @@ voci:
       - "[SCREEN: cap6-portali-panoramica]"
 
   - id: portali.catalogo-portali
-    titolo: I portali disponibili nel catalogo v1 (chi c'è, chi manca)
+    titolo: I portali disponibili nel catalogo (15) — chi è attivo
     modulo: Portali
     widget: null
     pubblico: [titolare, agente, segreteria]
     livello: base
     tags: [portali, catalogo, subito, bakeca, wikicasa, facebook,
-      google-business, portali-disponibili]
+      google-business, immobiliare, idealista, casa, portali-disponibili]
     correlati:
       - portali.a-cosa-serve
       - portali.attivare-portale
@@ -77,20 +77,13 @@ voci:
       quando_si_usa: >
         Prima di attivare un portale, per capire cosa serve.
       passi:
-        - "Subito.it — freemium, feed_pull, traffico ★★★★★.
-          Richiede username."
-        - "Wikicasa.it — freemium, feed_pull, traffico ★★★★☆.
-          Richiede API Key."
-        - "Facebook Marketplace — gratuito, api_push, traffico ★★★★☆.
-          Stato: Non ancora attivo (integrazione Meta reale assente).
-          Non attivabile."
-        - "Google Business Profile — gratuito, api_push, traffico ★★★★☆.
-          Stato: Non ancora attivo (integrazione Google reale assente).
-          Non attivabile."
-        - "Bakeca.it, Kijiji.it, Attico.it, Case24.it — categoria
-          e traffico minori, tutti feed_pull con email account."
-        - "Idealista, Immobiliare.it, Casa.it NON sono nel catalogo
-          v1 — accordi commerciali diretti agenzia ↔ portale."
+        - "Attivabili ora (feed_pull): Subito.it, Wikicasa.it,
+          Bakeca.it, Trovocasa.it, Kijiji.it, Attico.it, Case24.it."
+        - "Non ancora attivi (visibili, non attivabili):
+          Immobiliare.it, Idealista.it, Casa.it, Facebook Marketplace,
+          Google Business Profile, Gate-away, Mitula, Trovit."
+        - "Regola: niente sync simulato. Se non è pronto, lo dice
+          HAL e l'UI mostra Non ancora attivo."
       errori_comuni:
         - problema: "Cosa vuol dire feed_pull vs api_push?"
           soluzione: >
@@ -105,6 +98,11 @@ voci:
             Corretto. Sono in catalogo solo per trasparenza, con
             etichetta Non ancora attivo, finché non esiste
             integrazione reale.
+        - problema: "Non posso attivare Idealista o Immobiliare.it"
+          soluzione: >
+            Corretto per ora. Sono in catalogo come Non ancora
+            attivo finché non c'è accordo/tubo ufficiale. Usa il
+            loro pannello agenzia.
         - problema: "Non trovo il mio portale regionale nella lista"
           soluzione: >
             Puoi aggiungerlo tu con l'Universal Portal Wizard
