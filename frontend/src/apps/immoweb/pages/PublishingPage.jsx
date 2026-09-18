@@ -305,7 +305,7 @@ export default function PortalsPage() {
             <p>2. OMNIA genera automaticamente un feed XML alla tua URL agenzia (per portali "pull") o pubblica via API (per portali "push")</p>
             <p>3. Il <strong>sync automatico</strong> gira ogni notte alle 06:00 UTC e sincronizza tutti i portali attivi. Puoi anche forzare un sync manuale con il pulsante "Sync"</p>
             <p>4. Il validatore <strong>Compliance</strong> controlla ogni immobile prima della pubblicazione: se manca prezzo, superficie, APE, indirizzo o 3+ foto viene escluso automaticamente (regola HARD, obbligo D.Lgs 192/2005 + AGCM)</p>
-            <p>5. Clicca "Compliance" su un portale attivo per vedere il dettaglio degli immobili bloccati e i motivi</p>
+            <p>5. Su un portale <strong>Attivo</strong>, nella colonna Azioni, clicca <strong>Compliance</strong> per vedere gli immobili bloccati e i motivi</p>
           </div>
         </details>
 
