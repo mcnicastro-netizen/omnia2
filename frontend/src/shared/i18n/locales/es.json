@@ -989,7 +989,7 @@
   "valuator": {
     "eyebrow": "Valorador GIS · Gratis",
     "title": "¿Cuánto vale tu inmueble?",
-    "subtitle": "Estimación instantánea del valor de mercado basada en benchmark OMI 2025 con cobertura nacional en más de 20.000 municipios italianos. Introduce unos pocos datos y recibe la valoración en tiempo real.",
+    "subtitle": "Estimación instantánea del valor de mercado sobre un snapshot OMI/Borsino actualizado al mes en curso (FOI + tendencia regional), con cobertura nacional (ciudades curadas + fallback provincia/región). Introduce unos pocos datos y recibe la valoración en tiempo real.",
     "section_location": "Ubicación del inmueble",
     "section_property": "Características del inmueble",
     "section_contact_optional": "¿Quieres recibir la valoración también por email? (opcional)",

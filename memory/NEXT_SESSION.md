@@ -1,6 +1,6 @@
 # Prossima sessione — programma passi
 
-**Aggiornato**: 18 Settembre 2026 — Valutatore mini-sample accuratezza PASS  
+**Aggiornato**: 18 Settembre 2026 — Cap.21/HAL/index allineati 100% (PDF + FOI)  
 **Stato base**: Sprint 1→4 **CONCLUSO**. Stress: `PLATFORM_STRESS_REPORT.md` + `STRESS_REPORT.md`.  
 **Preprod gate**: `memory/PREPROD_GATE_REPORT.md` (PASS required — no vendor burn).  
 **Repo ufficiale**: https://github.com/mcnicastro-netizen/omnia2 ✅ (Emergent `OMNIA` = backup, non cancellare)  
@@ -15,10 +15,11 @@
 3. Review QC esterna → backlog **A-028**: gerarchia sidebar, cockpit «Oggi», Match Score explainability, HAL contestuale — **no implementazione senza «vai»**
 4. ✅ `CRM_PUBLIC_PREVIEW=false` (preview healthz)
 5. ✅ **Valutatore mini-sample** → `memory/GESTIONALE_VALUATOR_ACCURACY_SAMPLE.md` (**PASS 20 / FAIL 0** — non è prova OMI ~27k)
-6. Founder: **«vai»** su Top 5 A-028 (o ID fuori programma)
-7. **D-084**: ogni ship aggiorna manuale+YAML
-8. Preprod: `python scripts/preprod_confidence_gate.py` prima di go-live / ship rischiosi
-9. Nota tecnica: `GET /app/matches` agency-wide sotto stress seed (~2M pairs) uccide API — usare solo client-scoped `min_score`+`limit`
+6. ✅ **Cap. 21 + HAL + `hal-index.json`** allineati 100% (PDF white-label + roll-forward FOI/trend) — `regenerate_hal_index.py`
+7. Founder: **«vai»** su Top 5 A-028 (o ID fuori programma)
+8. **D-084**: ogni ship aggiorna manuale+YAML+index (sempre 100%)
+9. Preprod: `python scripts/preprod_confidence_gate.py` prima di go-live / ship rischiosi
+10. Nota tecnica: `GET /app/matches` agency-wide sotto stress seed (~2M pairs) uccide API — usare solo client-scoped `min_score`+`limit`
 
 ---
 
@@ -36,6 +37,7 @@
 | **A-028a Cockpit Dashboard «Oggi»** | ✅ (18-Set) `/app/dashboard/today` |
 | **Valutatore mini-sample accuratezza** | ✅ (18-Set) PASS 20/20 — `GESTIONALE_VALUATOR_ACCURACY_SAMPLE.md` |
 | **Report PDF UNI (layout elegante)** | ✅ (18-Set) OMNIA + whitelabel + hybrid — `valuation_pdf.py` |
+| **Cap.21 / HAL / hal-index 100%** | ✅ (18-Set) FOI roll-forward + PDF brand · `regenerate_hal_index.py` |
 | Home B2C visual + SSR preview | ✅ (16-Set) |
 | Layout altre pagine B2C | ✅ (17-Set) |
 | Scout v1 + fiducia + voce lister | ✅ |

@@ -1007,7 +1007,7 @@
   "valuator": {
     "eyebrow": "Valutatore GIS · Gratis",
     "title": "Quanto vale il tuo immobile?",
-    "subtitle": "Stima istantanea del valore di mercato basata su benchmark OMI 2025 con copertura nazionale su oltre 20.000 comuni italiani. Inserisci pochi dati e ricevi la valutazione in tempo reale.",
+    "subtitle": "Stima istantanea del valore di mercato su snapshot OMI/Borsino aggiornato al mese corrente (FOI + trend), con copertura nazionale (città curate + fallback provincia/regione). Inserisci pochi dati e ricevi la valutazione in tempo reale.",
     "section_location": "Dove si trova l'immobile",
     "section_property": "Caratteristiche immobile",
     "section_contact_optional": "Vuoi ricevere la valutazione anche via email? (opzionale)",

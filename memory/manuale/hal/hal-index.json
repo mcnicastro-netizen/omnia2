@@ -1,7 +1,7 @@
 {
-  "version": "0.18-cap27-code",
-  "updated": "2026-09-14",
-  "voices_total": 333,
+  "version": "0.19-cap21-align",
+  "updated": "2026-09-18",
+  "voices_total": 334,
   "source_files": [
     {
       "file": "00-api-codice.yaml",
@@ -26,7 +26,7 @@
     {
       "file": "04-clienti.yaml",
       "voices": 12,
-      "md5": "a3ecb03c3fe8f5a2a617050a8580432e"
+      "md5": "2666896608b0774fa54d7740f5376a24"
     },
     {
       "file": "05-match.yaml",
@@ -36,7 +36,7 @@
     {
       "file": "06-portali-publishing.yaml",
       "voices": 12,
-      "md5": "c052042a52ff70d97d34cf99d14337e6"
+      "md5": "1dd948786b77a967a4d1635552b55e7a"
     },
     {
       "file": "07-fascicolo-immobile.yaml",
@@ -51,7 +51,7 @@
     {
       "file": "09-virtual-staging.yaml",
       "voices": 12,
-      "md5": "ed996184e07398cfc6a54cc8f629c893"
+      "md5": "c40b9f7f6aac2083bf03ec3f8b7bdc7c"
     },
     {
       "file": "10-hal-agent-crm.yaml",
@@ -66,12 +66,12 @@
     {
       "file": "12-hal-knowledge.yaml",
       "voices": 13,
-      "md5": "203cd148a6989aa5cbf3e6071c720c6f"
+      "md5": "a142cd1bf277f91800ca7e82326ab6e2"
     },
     {
       "file": "13-team-ruoli.yaml",
       "voices": 13,
-      "md5": "548c7acd4a3a26d2739a29590f504a3f"
+      "md5": "fea46b8bdcb7eb6a3d06bc2bc4f0387b"
     },
     {
       "file": "14-import-xml.yaml",
@@ -95,8 +95,8 @@
     },
     {
       "file": "18-notifiche-attivita.yaml",
-      "voices": 16,
-      "md5": "e9b094b5fce65e983ba4957463e55716"
+      "voices": 17,
+      "md5": "04f327c44dbced5a23e76c9a5fafbdf2"
     },
     {
       "file": "19-impostazioni-agenzia.yaml",
@@ -111,7 +111,7 @@
     {
       "file": "21-valutatore-immobiliare.yaml",
       "voices": 12,
-      "md5": "52f4d82652ab970ab7e6c170abedcb8a"
+      "md5": "28b2f20060bacc990882b00d51e5da4b"
     },
     {
       "file": "22-hal-legal.yaml",
@@ -121,7 +121,7 @@
     {
       "file": "23-video-ab-testing.yaml",
       "voices": 8,
-      "md5": "f04e52640b44cf690af73066b189fb79"
+      "md5": "b1be888569a6972b0b031ad0707035a2"
     },
     {
       "file": "24-gruppi-sedi.yaml",
@@ -141,7 +141,7 @@
     {
       "file": "27-mls-network.yaml",
       "voices": 10,
-      "md5": "8942a95fd5161314d42384dabb46aa97"
+      "md5": "5e88370cdf2c070dc30c7c3f036b85db"
     }
   ],
   "new_chapters_m3": [
@@ -167,7 +167,7 @@
       "title": "Micro-tour video e A/B testing",
       "yaml": "23-video-ab-testing.yaml",
       "voices": 8,
-      "md5": "f04e52640b44cf690af73066b189fb79"
+      "md5": "b1be888569a6972b0b031ad0707035a2"
     },
     {
       "id": 24,
@@ -199,8 +199,8 @@
       "title": "MLS Network",
       "yaml": "27-mls-network.yaml",
       "voices": 10,
-      "md5": "8942a95fd5161314d42384dabb46aa97"
+      "md5": "5e88370cdf2c070dc30c7c3f036b85db"
     }
   ],
-  "notes": "Cap.22-27 + corpus API codice. Reindex live via POST /api/app/hal/knowledge/reindex?force=true"
+  "notes": "Fingerprints regenerated from YAML on disk. Live RAG reindex: POST /api/app/hal/knowledge/reindex?force=true (super_admin). Cap.21 aligned 2026-09-18: PDF white-label + price roll-forward FOI/trend."
 }

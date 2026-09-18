@@ -299,4 +299,4 @@ Totale merito **cappato** tra −40% e +30%.
 
 ---
 
-**Versione**: v1.0 · Ago 2026 (post B2C-VAL-01 · dual-tier base 1×/12m + UNI €2,99 Stripe + PDF paywall)
+**Versione**: v1.2 · 18-Set-2026 (dual-tier B2C-VAL-01 + PDF elegante OMNIA/white-label + roll-forward FOI/trend prezzi · D-084 allineato)

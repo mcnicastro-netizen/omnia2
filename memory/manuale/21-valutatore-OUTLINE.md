@@ -1,8 +1,8 @@
-# Cap. 21 · Valutatore immobiliare — OUTLINE (post-implementazione B2C-VAL-01)
+# Cap. 21 · Valutatore immobiliare — OUTLINE (allineato codice live)
 
-**Stato**: ✅ PUBBLICATO — Cap. 21 scritto post B2C-VAL-01 (Ago 2026)  
-**Regola D-051**: ogni paragrafo deve riflettere UI/codice live al momento della scrittura  
-**Cursor scrive**: MD + YAML HAL dopo merge Founder su `main`
+**Stato**: ✅ PUBBLICATO — Cap. 21 · aggiornato 18-Set-2026 (PDF elegante + roll-forward prezzi)  
+**Regola D-051 / D-084**: ogni paragrafo deve riflettere UI/codice live  
+**Cursor scrive**: MD + YAML HAL + `hal-index.json` ad ogni ship rilevante
 
 ---
 
@@ -12,12 +12,13 @@ Spiegare al privato su ImmobilCloud e all'agente (cross-ref) come funzionano **d
 
 ---
 
-## Struttura proposta (~12 voci HAL)
+## Struttura (~12 voci HAL)
 
 ### §21.1 Cos'è il Valutatore OMNIA
 - Strumento stima mercato per immobili residenziali in Italia
 - Due livelli: **Stima rapida (base)** vs **Valutazione UNI 10750 + PDF**
 - Dove si trova: `/cloud/valutatore` + CTA su scheda annuncio
+- Motore: snapshot OMI/Borsino **2025-Q1** + **roll-forward** FOI ISTAT + trend regionale YoY al mese corrente
 
 ### §21.2 Stima rapida gratuita (base)
 - Cosa serve: città, zona, tipologia, mq, stato, energia
@@ -28,7 +29,10 @@ Spiegare al privato su ImmobilCloud e all'agente (cross-ref) come funzionano **d
 ### §21.3 Valutazione UNI 10750 + PDF (a pagamento B2C)
 - Prezzo privati: **€2,99** carta
 - Cosa aggiunge: superfici ponderate (balconi, box, cantina…), merito (esposizione, vista, piano…)
-- Report PDF brandizzato (OMNIA o agenzia se agente loggato)
+- Report PDF elegante (1 pagina tipica):
+  - **ImmobilCloud/OMNIA** (privato)
+  - **Agenzia hybrid/turnkey**: brand agenzia + nota soft OMNIA
+  - **`plan_type=whitelabel`**: zero menzione OMNIA/ImmobilCloud; logo se `branding.logo_url`
 - Disclaimer: stima orientativa, non perizia vincolante
 
 ### §21.4 Differenza base vs UNI (tabella utente)
@@ -55,13 +59,17 @@ Spiegare al privato su ImmobilCloud e all'agente (cross-ref) come funzionano **d
 ### §21.7 Valutatore per le agenzie (cross-ref B2B)
 - Stesso motore, rail **crediti** (non carta)
 - Base: 6 crediti · UNI+PDF: 12 crediti
+- PDF brandizzato con nome/colori/logo agenzia; white-label senza footer OMNIA
 - Cross-ref Cap. 7 Fascicolo (stima base integrata)
 - Cross-ref Cap. 20 API partner (Track B, 5 crediti)
 
 ### §21.8 Affidabilità e dati di mercato
-- Dataset OMI/Borsino 2025, fallback provincia/regione
+- Snapshot curato **2025-Q1** (124 città + 107 province + fallback regionale)
+- **Aggiornamento automatico** al mese corrente: FOI ISTAT + trend YoY regionale
+- Attribution API/PDF: `… 2025-Q1 · aggiornato a YYYY-MM (FOI×…, trend N mesi)`
 - Livelli confidence (alta/media/orientativa)
 - Comparables da annunci attivi piattaforma
+- **Non** è copertura sulle ~27k zone OMI ufficiali live
 
 ### §21.9 Limitazioni oneste (D-051)
 - Non sostituisce perizia bancaria o CTU
@@ -84,7 +92,7 @@ Spiegare al privato su ImmobilCloud e all'agente (cross-ref) come funzionano **d
 
 ---
 
-## Voci HAL YAML (prefisso suggerito `valutatore.*`)
+## Voci HAL YAML (prefisso `valutatore.*`)
 
 1. `valutatore.cos-e`
 2. `valutatore.tier-base-gratis`
@@ -111,4 +119,4 @@ Spiegare al privato su ImmobilCloud e all'agente (cross-ref) come funzionano **d
 
 ---
 
-*Outline Cursor · post B2C-VAL-01*
+*Outline Cursor · allineato 18-Set-2026 (PDF + FOI roll-forward)*

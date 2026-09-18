@@ -864,7 +864,7 @@
   "valuator": {
     "eyebrow": "GIS Valuer · Free",
     "title": "How much is your property worth?",
-    "subtitle": "Instant market value estimate based on 2025 OMI benchmarks with national coverage across over 20,000 Italian municipalities. Enter a few details to receive your real-time valuation.",
+    "subtitle": "Instant market value estimate on an OMI/Borsino snapshot rolled forward to the current month (FOI + regional trend), with national coverage (curated cities + province/region fallback). Enter a few details to receive your real-time valuation.",
     "section_location": "Property location",
     "section_property": "Property features",
     "section_contact_optional": "Would you like to receive the valuation via email too? (optional)",

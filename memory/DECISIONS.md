@@ -561,7 +561,7 @@ Registro di tutte le decisioni di business e tecniche prese durante il progetto.
   2. **Superficie commerciale UNI 10750 / DPR 138/1998**: ponderazione progressiva di principale (100%), verande (60%), terrazzi/balconi (30%→10% oltre 25mq), cantine/soffitte (25%), box (50%), giardino villa (10%→5%→2%), taverna (60%), mansarda (80%). Implementazione in `data/coefficients.py:compute_commercial_surface()`
   3. **Coefficienti di merito**: piano (classe), esposizione (sud/nord/cieca/...), affaccio (mare/panoramico/verde/cortile), riscaldamento (autonomo/centralizzato/pompa), ascensore vs piano, età immobile (decay -0,5%/anno oltre 30 anni capped -20%), vincoli (storico -10%, paesaggistico -5%), locazione in essere (-5/-15%), nuda proprietà (-30%). Cap totale: -40%/+30%
   4. **Coefficienti regionali**: liquidità di mercato (months time-to-sell × discount factor: Lombardia 0% → Calabria -8%) + trend YoY 2024-25 per regione (Lombardia +2.5% → Calabria -1%)
-  5. **FOI ISTAT cumulato** per rivalutazione: pronto in `foi_revaluation(year_from, year_to)`, da attivare quando avremo prezzi storici
+  5. **FOI ISTAT cumulato** per rivalutazione: **attivo** (18-Set-2026) — `foi_revaluation(base_year, today)` + trend regionale YoY sui mesi trascorsi dallo snapshot `PRICE_DATASET_AS_OF` (2025-Q1). Attribution API/PDF: snapshot + `aggiornato a YYYY-MM`. Non è feed OMI live ~27k zone.
 - **Files creati**:
   - `/app/backend/apps/immocloud/data/coefficients.py` (UNI 10750 + merito + regionali + FOI)
   - `/app/backend/apps/immocloud/data/province_prices.py` (107 province + nomi)

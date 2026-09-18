@@ -194,8 +194,10 @@ voci:
         - "3. Click Calcola UNI · €2,99."
         - "4. Redirect Stripe Checkout (success/cancel pages)."
         - "5. Post-pagamento: entitlement 24h per stesso immobile."
-        - "6. Click Scarica report PDF."
-        - "7. Polling /checkout/success su session_id se necessario."
+        - "6. Click Scarica report PDF (layout elegante 1 pagina)."
+        - "7. Branding PDF: ImmobilCloud se privato; agenzia se agente;
+        white-label (plan_type=whitelabel) = zero menzione OMNIA."
+        - "8. Polling /checkout/success su session_id se necessario."
         - "Pre-fill: ?tier=uni&city=&property_type=&surface_sqm="
       errori_comuni:
         - problema: "PDF 402 senza entitlement"
@@ -245,7 +247,7 @@ voci:
     widget: null
     pubblico: [privato, titolare, agente]
     livello: intermedio
-    tags: [valutatore, affidabilita, omi, borsino, comparables, fallback, provincia, confidence]
+    tags: [valutatore, affidabilita, omi, borsino, comparables, fallback, provincia, confidence, foi, roll-forward]
     correlati: [valutatore.limitazioni, valutatore.cos-e]
     domanda_naturale: "Quanto e' affidabile la stima? Da dove vengono i dati?"
     contenuto:
@@ -254,11 +256,15 @@ voci:
       quando_si_usa: >
         Quando il valore sembra alto/basso o per comuni piccoli.
       passi:
-        - "Dataset: snapshot OMI/Borsino 2025-Q1, citta' curate + province + regioni; prezzi rivalutati al mese corrente (FOI + trend)."
+        - "Snapshot base: OMI/Borsino/Tecnocasa 2025-Q1 (CITY_PRICES ~124 citta' + 107 province)."
+        - "Roll-forward automatico al mese corrente: FOI ISTAT + trend regionale YoY
+        (mesi trascorsi dallo snapshot). Attribution: '... aggiornato a YYYY-MM'."
+        - "Coverage endpoint: dataset_as_of + prices_updated_to + update_method."
         - "Fallback: citta' → provincia (Nominatim/ANNCSU) → regione."
-        - "Comuni piccoli: sconto 8-12% vs capoluogo provinciale."
+        - "Comuni piccoli: sconto ~12% vs capoluogo provinciale, poi stesso roll-forward."
         - "Confidence: alta / media / orientativa (score 0-110)."
         - "Comparables: annunci attivi pubblici stessa citta'+tipologia."
+        - "Onesta': NON e' copertura live sulle ~27.000 zone OMI ufficiali."
         - "Notice fallback provincia in UI se city non in dataset."
       errori_comuni:
         - problema: "Valore strano per paese piccolo"
@@ -293,6 +299,7 @@ voci:
         - "Agente /cloud: pass-through, debito 6/12 cr NON automatico."
         - "Form UI v1: NO campi lead name/email (backend li supporta)."
         - "Widget Track B: rail crediti partner, non tier €2,99 B2C."
+        - "Prezzi: snapshot 2025-Q1 (non OMI live 27k zone); rivalutati FOI+trend al mese corrente."
       errori_comuni: []
       permessi:
         - "Documentazione informativa"

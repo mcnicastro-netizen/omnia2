@@ -1,5 +1,16 @@
 # OMNIA — Changelog
 
+## 2026-09-18 — Cap.21 / HAL / index allineati 100% (PDF + FOI)
+
+**Tipo**: Docs / HAL / Valutatore.
+
+- Report PDF UNI elegante (OMNIA + white-label + hybrid) — `valuation_pdf.py`
+- Roll-forward prezzi: snapshot 2025-Q1 → mese corrente (FOI ISTAT + trend YoY)
+- Cap.21 MD + OUTLINE + YAML HAL aggiornati 1:1; i18n IT/EN/ES onesti (niente “20.000 comuni OMI 2025”)
+- `hal-index.json` rigenerato (`backend/scripts/regenerate_hal_index.py` · v0.19-cap21-align)
+- D-034 FOI marcato attivo · GAP Cap.21 aggiornato
+
+---
 ## 2026-09-17 — Gestionale stress S0–S6 @ 2000 clients
 
 **Tipo**: QA / resilience CRM.
