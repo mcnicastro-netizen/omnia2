@@ -184,7 +184,11 @@ Totale merito **cappato** tra −40% e +30%.
 3. Click **Calcola UNI · €2,99** (privato) o **Calcola UNI (crediti agenzia)** (agente).
 4. **Privato senza entitlement** → redirect Stripe → paga €2,99 → torna su `/checkout/success`.
 5. Ricalcola o scarica: **Scarica report PDF**.
-6. Il PDF include: dati immobile, valore + range, breakdown UNI, merito, comparables (se presenti), metodologia, disclaimer. Se agente loggato → **branding agenzia** (nome, colori, contatti).
+6. Il PDF include: dati immobile, valore + range, breakdown UNI, merito, comparabili (se presenti), metodologia, disclaimer.
+   - **Privato / ImmobilCloud**: brand ImmobilCloud · OMNIA (navy + accento bronzo), tipografia serif+sans, hero valore a piena larghezza.
+   - **Agente hybrid/turnkey**: nome/colori/logo/tagline agenzia + nota footer «Generato con OMNIA ImmobilCloud».
+   - **Agente `plan_type=whitelabel`**: stesso layout elegante, **zero menzione OMNIA/ImmobilCloud** (disclaimer e metodologia neutralizzati).
+   - Logo agenzia (`branding.logo_url`) incluso se raggiungibile.
 
 **Stripe non configurato**
 - Se ambiente preview senza `STRIPE_ENABLED=true` → checkout restituisce *"Il pagamento è in preparazione"*. In produzione va abilitato Stripe test/live.

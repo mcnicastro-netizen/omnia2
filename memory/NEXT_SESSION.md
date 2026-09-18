@@ -35,6 +35,7 @@
 | **Gestionale tools QC A→E + loop mattina** | ✅ (18-Set) `GESTIONALE_TOOLS_QC_REPORT.md` |
 | **A-028a Cockpit Dashboard «Oggi»** | ✅ (18-Set) `/app/dashboard/today` |
 | **Valutatore mini-sample accuratezza** | ✅ (18-Set) PASS 20/20 — `GESTIONALE_VALUATOR_ACCURACY_SAMPLE.md` |
+| **Report PDF UNI (layout elegante)** | ✅ (18-Set) OMNIA + whitelabel + hybrid — `valuation_pdf.py` |
 | Home B2C visual + SSR preview | ✅ (16-Set) |
 | Layout altre pagine B2C | ✅ (17-Set) |
 | Scout v1 + fiducia + voce lister | ✅ |
