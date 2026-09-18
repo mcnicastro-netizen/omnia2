@@ -1,0 +1,694 @@
+{
+  "meta": {
+    "started": "2026-09-18T07:42:54.553853+00:00",
+    "finished": "2026-09-18T07:53:49.631355+00:00",
+    "user": {
+      "role": "super_admin",
+      "agency": "demo-agency-001",
+      "email": "mcnicastro@gmail.com"
+    },
+    "counts": {
+      "PASS": 69,
+      "GAP": 1,
+      "FAIL": 1,
+      "SKIP": 2
+    },
+    "notes": [
+      "Merged: Operativo PASS from full run + B–E reprobe after API restart",
+      "A8 global matches list intentionally FAIL (perf bomb under stress seed)",
+      "Post-reprobe: lead-score query params + HAL publish/Legal recovered"
+    ],
+    "gaps": [
+      "A9: missing Attività/follow-up module in CRM nav/routes"
+    ],
+    "preview_healthz": {
+      "ok": true,
+      "preview": true,
+      "api_origin": "http://127.0.0.1:43121",
+      "api_ok": true,
+      "api_status": 200,
+      "crm_public_preview": false,
+      "error": null
+    },
+    "reprobe": true
+  },
+  "rows": [
+    {
+      "section": "A",
+      "tool": "A1 Dashboard KPIs",
+      "route": "/app/dashboard",
+      "status": "PASS",
+      "http": 200,
+      "detail": "list n=6",
+      "ts": "2026-09-18T07:42:54.793897+00:00"
+    },
+    {
+      "section": "A",
+      "tool": "A1 Dashboard UI",
+      "route": "/it/app/dashboard",
+      "status": "PASS",
+      "http": 200,
+      "detail": "ImmoWeb — Gestionale OMNIA",
+      "ts": "2026-09-18T07:42:54.795556+00:00"
+    },
+    {
+      "section": "A",
+      "tool": "A2 Properties list",
+      "route": "/app/properties",
+      "status": "PASS",
+      "http": 200,
+      "detail": "keys=['items', 'total', 'page', 'page_size'] total=2204 n=20",
+      "ts": "2026-09-18T07:42:54.876286+00:00"
+    },
+    {
+      "section": "A",
+      "tool": "A3 Property get",
+      "route": "/app/properties/b63a4274-0501-48c4-85fe-6517489d17d3",
+      "status": "PASS",
+      "http": 200,
+      "detail": "keys=['created_at', 'updated_at', 'id', 'agency_id', 'title', 'description', 'reference_code', 'property_type']",
+      "ts": "2026-09-18T07:42:54.888856+00:00"
+    },
+    {
+      "section": "A",
+      "tool": "A3 Property patch",
+      "route": "/app/properties/b63a4274-0501-48c4-85fe-6517489d17d3",
+      "status": "PASS",
+      "http": 200,
+      "detail": "{\"created_at\":\"2026-09-18T07:31:10.970232+00:00\",\"updated_at\":\"2026-09-18T07:42:54.908147+00:00\",\"id\":\"b63a4274-0501-48c",
+      "ts": "2026-09-18T07:42:54.913207+00:00"
+    },
+    {
+      "section": "A",
+      "tool": "A3 Fascicolo",
+      "route": "/app/properties/b63a4274-0501-48c4-85fe-6517489d17d3/fascicolo",
+      "status": "PASS",
+      "http": 200,
+      "detail": "keys=['property', 'checklist', 'progress', 'documents', 'staging_jobs', 'valuation', 'last_analysis']",
+      "ts": "2026-09-18T07:42:54.924553+00:00"
+    },
+    {
+      "section": "A",
+      "tool": "A3 HAL improve",
+      "route": "/app/al/improve",
+      "status": "PASS",
+      "http": 200,
+      "detail": "{'field': 'title', 'lang': 'it', 'tone': 'standard', 'improved': 'Appartamento signorile in zona centrale finemente rist",
+      "ts": "2026-09-18T07:43:39.131055+00:00"
+    },
+    {
+      "section": "A",
+      "tool": "A4 Property create",
+      "route": "/app/properties/new",
+      "status": "PASS",
+      "http": 201,
+      "detail": "id=67ae4b85-7c10-409b-872b-11c0e71f7bab",
+      "ts": "2026-09-18T07:43:39.152229+00:00"
+    },
+    {
+      "section": "A",
+      "tool": "A5 Clients list",
+      "route": "/app/clients",
+      "status": "PASS",
+      "http": 200,
+      "detail": "keys=['items', 'total', 'page', 'page_size'] total=10003 n=20",
+      "ts": "2026-09-18T07:43:39.168598+00:00"
+    },
+    {
+      "section": "A",
+      "tool": "A5 Clients smart",
+      "route": "/app/clients",
+      "status": "PASS",
+      "http": 200,
+      "detail": "keys=['items', 'total', 'page', 'page_size', 'counts', 'counts_scope', 'scanned', 'properties_matched'] total=1000 n=20",
+      "ts": "2026-09-18T07:43:39.516116+00:00"
+    },
+    {
+      "section": "A",
+      "tool": "A6 Client get",
+      "route": "/app/clients/38ac1708-bfae-40a4-b4c5-bf4badde2a32",
+      "status": "PASS",
+      "http": 200,
+      "detail": "keys=['created_at', 'updated_at', 'id', 'agency_id', 'name', 'surname', 'email', 'phone']",
+      "ts": "2026-09-18T07:43:39.525776+00:00"
+    },
+    {
+      "section": "A",
+      "tool": "A6 Client matches",
+      "route": "/app/matches/client/38ac1708-bfae-40a4-b4c5-bf4badde2a32",
+      "status": "PASS",
+      "http": 200,
+      "detail": "keys=['client', 'items', 'total'] total=2000 n=5",
+      "ts": "2026-09-18T07:43:39.562827+00:00"
+    },
+    {
+      "section": "A",
+      "tool": "A7 Client create",
+      "route": "/app/clients/new",
+      "status": "PASS",
+      "http": 201,
+      "detail": "id=5ab82bc1-b8b2-408b-a33b-70b3e69e047e",
+      "ts": "2026-09-18T07:43:39.568713+00:00"
+    },
+    {
+      "section": "A",
+      "tool": "A9 Attività / follow-up",
+      "route": "/app/activities",
+      "status": "GAP",
+      "http": null,
+      "detail": "Nessuna route UI /app/activities o /app/tasks in App.js — conferma gap review QC",
+      "ts": "2026-09-18T07:44:24.228778+00:00"
+    },
+    {
+      "section": "B",
+      "tool": "B1 Publishing UI",
+      "route": "/it/app/publishing",
+      "status": "PASS",
+      "http": 200,
+      "detail": "ImmoWeb — Gestionale OMNIA",
+      "ts": "2026-09-18T07:44:24.232388+00:00"
+    },
+    {
+      "section": "B",
+      "tool": "B2 Portal wizard UI",
+      "route": "/it/app/publishing/wizard",
+      "status": "PASS",
+      "http": 200,
+      "detail": "ImmoWeb — Gestionale OMNIA",
+      "ts": "2026-09-18T07:44:24.234129+00:00"
+    },
+    {
+      "section": "B",
+      "tool": "B3 Social UI",
+      "route": "/it/app/publishing/social",
+      "status": "PASS",
+      "http": 200,
+      "detail": "ImmoWeb — Gestionale OMNIA",
+      "ts": "2026-09-18T07:44:24.236303+00:00"
+    },
+    {
+      "section": "B",
+      "tool": "B4 MLS UI",
+      "route": "/it/app/mls",
+      "status": "PASS",
+      "http": 200,
+      "detail": "ImmoWeb — Gestionale OMNIA",
+      "ts": "2026-09-18T07:44:24.238450+00:00"
+    },
+    {
+      "section": "B",
+      "tool": "B5 Website UI",
+      "route": "/it/app/website",
+      "status": "PASS",
+      "http": 200,
+      "detail": "ImmoWeb — Gestionale OMNIA",
+      "ts": "2026-09-18T07:44:24.240579+00:00"
+    },
+    {
+      "section": "B",
+      "tool": "B6 Import XML UI",
+      "route": "/it/app/import",
+      "status": "PASS",
+      "http": 200,
+      "detail": "ImmoWeb — Gestionale OMNIA",
+      "ts": "2026-09-18T07:44:24.241933+00:00"
+    },
+    {
+      "section": "C",
+      "tool": "C1 Staging UI",
+      "route": "/it/app/staging",
+      "status": "PASS",
+      "http": 200,
+      "detail": "ImmoWeb — Gestionale OMNIA",
+      "ts": "2026-09-18T07:44:24.244162+00:00"
+    },
+    {
+      "section": "C",
+      "tool": "C2 Mutui UI",
+      "route": "/it/app/mutui",
+      "status": "PASS",
+      "http": 200,
+      "detail": "ImmoWeb — Gestionale OMNIA",
+      "ts": "2026-09-18T07:44:24.245868+00:00"
+    },
+    {
+      "section": "C",
+      "tool": "C3 Modulistica UI",
+      "route": "/it/app/modulistica",
+      "status": "PASS",
+      "http": 200,
+      "detail": "ImmoWeb — Gestionale OMNIA",
+      "ts": "2026-09-18T07:44:24.248207+00:00"
+    },
+    {
+      "section": "C",
+      "tool": "C4 Moderation UI",
+      "route": "/it/app/moderation",
+      "status": "PASS",
+      "http": 200,
+      "detail": "ImmoWeb — Gestionale OMNIA",
+      "ts": "2026-09-18T07:44:24.250023+00:00"
+    },
+    {
+      "section": "D",
+      "tool": "D1 HAL Knowledge UI",
+      "route": "/it/app/hal-knowledge",
+      "status": "PASS",
+      "http": 200,
+      "detail": "ImmoWeb — Gestionale OMNIA",
+      "ts": "2026-09-18T07:44:24.252308+00:00"
+    },
+    {
+      "section": "D",
+      "tool": "D4 Analytics UI",
+      "route": "/it/app/analytics",
+      "status": "PASS",
+      "http": 200,
+      "detail": "ImmoWeb — Gestionale OMNIA",
+      "ts": "2026-09-18T07:44:24.255864+00:00"
+    },
+    {
+      "section": "E",
+      "tool": "E1 Group UI",
+      "route": "/it/app/group",
+      "status": "PASS",
+      "http": 200,
+      "detail": "ImmoWeb — Gestionale OMNIA",
+      "ts": "2026-09-18T07:44:24.258269+00:00"
+    },
+    {
+      "section": "E",
+      "tool": "E2 Members UI",
+      "route": "/it/app/members",
+      "status": "PASS",
+      "http": 200,
+      "detail": "ImmoWeb — Gestionale OMNIA",
+      "ts": "2026-09-18T07:44:24.260100+00:00"
+    },
+    {
+      "section": "E",
+      "tool": "E3 API Keys UI",
+      "route": "/it/app/api-keys",
+      "status": "PASS",
+      "http": 200,
+      "detail": "ImmoWeb — Gestionale OMNIA",
+      "ts": "2026-09-18T07:44:24.262268+00:00"
+    },
+    {
+      "section": "E",
+      "tool": "E4 Settings UI",
+      "route": "/it/app/settings",
+      "status": "PASS",
+      "http": 200,
+      "detail": "ImmoWeb — Gestionale OMNIA",
+      "ts": "2026-09-18T07:44:24.264193+00:00"
+    },
+    {
+      "section": "E",
+      "tool": "E5 Billing UI",
+      "route": "/it/app/settings/billing",
+      "status": "PASS",
+      "http": 200,
+      "detail": "ImmoWeb — Gestionale OMNIA",
+      "ts": "2026-09-18T07:44:24.266101+00:00"
+    },
+    {
+      "section": "E",
+      "tool": "E6 Brand Lab UI",
+      "route": "/it/app/brand-lab",
+      "status": "PASS",
+      "http": 200,
+      "detail": "ImmoWeb — Gestionale OMNIA",
+      "ts": "2026-09-18T07:44:24.267222+00:00"
+    },
+    {
+      "section": "E",
+      "tool": "E7 Ops UI",
+      "route": "/it/app/ops",
+      "status": "PASS",
+      "http": 200,
+      "detail": "ImmoWeb — Gestionale OMNIA",
+      "ts": "2026-09-18T07:44:24.268703+00:00"
+    },
+    {
+      "section": "LOOP",
+      "tool": "Mattina agente",
+      "route": "/app/dashboard→clients→matches→properties→publishing→hal",
+      "status": "PASS",
+      "http": null,
+      "detail": "API chain exercised; dashboard still KPI-only (gap A-028a)",
+      "ts": "2026-09-18T07:44:24.268718+00:00"
+    },
+    {
+      "section": "A",
+      "tool": "A8 Matches list",
+      "route": "/app/matches",
+      "status": "FAIL",
+      "http": null,
+      "detail": "blocked: agency-wide /app/matches scans ~2M pairs under stress seed and kills API; client-scoped only",
+      "ts": "2026-09-18T07:46:46.672016+00:00"
+    },
+    {
+      "section": "A",
+      "tool": "A8 Matches by client",
+      "route": "/app/matches?client=38ac1708-bfae-40a4-b4c5-bf4badde2a32",
+      "status": "PASS",
+      "http": 200,
+      "detail": "keys=['client', 'items', 'total'] total=2000",
+      "ts": "2026-09-18T07:46:46.779992+00:00"
+    },
+    {
+      "section": "A",
+      "tool": "A8 Lead score",
+      "route": "/app/matches/lead",
+      "status": "PASS",
+      "http": 200,
+      "detail": "query client_id+property_id required; 200 score returned",
+      "ts": "2026-09-18T07:53:49.631355+00:00"
+    },
+    {
+      "section": "B",
+      "tool": "B1 Publishing connections",
+      "route": "/app/publishing",
+      "status": "PASS",
+      "http": 200,
+      "detail": "keys=['items', 'total'] total=0",
+      "ts": "2026-09-18T07:46:46.796000+00:00"
+    },
+    {
+      "section": "B",
+      "tool": "B1 Publishing catalog",
+      "route": "/app/publishing",
+      "status": "PASS",
+      "http": 200,
+      "detail": "keys=['items', 'total'] total=8",
+      "ts": "2026-09-18T07:46:46.803540+00:00"
+    },
+    {
+      "section": "B",
+      "tool": "B3 Social catalog",
+      "route": "/app/publishing/social",
+      "status": "PASS",
+      "http": 200,
+      "detail": "keys=['items', 'total'] total=3",
+      "ts": "2026-09-18T07:46:46.810040+00:00"
+    },
+    {
+      "section": "B",
+      "tool": "B3 Social channels",
+      "route": "/app/publishing/social",
+      "status": "PASS",
+      "http": 200,
+      "detail": "keys=['items', 'total'] total=0",
+      "ts": "2026-09-18T07:46:46.816567+00:00"
+    },
+    {
+      "section": "B",
+      "tool": "B4 MLS dashboard",
+      "route": "/app/mls",
+      "status": "PASS",
+      "http": 200,
+      "detail": "keys=['mls_enabled', 'joined_at', 'province_sigla', 'mine', 'network', 'collaborations']",
+      "ts": "2026-09-18T07:46:46.840750+00:00"
+    },
+    {
+      "section": "B",
+      "tool": "B4 MLS inventory",
+      "route": "/app/mls",
+      "status": "PASS",
+      "http": 200,
+      "detail": "keys=['scope', 'total', 'items', 'limit', 'skip'] total=2205",
+      "ts": "2026-09-18T07:46:46.855033+00:00"
+    },
+    {
+      "section": "B",
+      "tool": "B5 Website themes",
+      "route": "/app/website",
+      "status": "PASS",
+      "http": 200,
+      "detail": "keys=['themes', 'default_theme_id']",
+      "ts": "2026-09-18T07:46:46.862201+00:00"
+    },
+    {
+      "section": "B",
+      "tool": "B5 Website theme",
+      "route": "/app/website",
+      "status": "PASS",
+      "http": 200,
+      "detail": "keys=['agency_id', 'agency_slug', 'saved_theme_config', 'resolved', 'extracted_profile', 'public_url']",
+      "ts": "2026-09-18T07:46:46.869937+00:00"
+    },
+    {
+      "section": "C",
+      "tool": "C1 Staging styles",
+      "route": "/app/staging",
+      "status": "PASS",
+      "http": 200,
+      "detail": "keys=['styles', 'room_types', 'modes', 'credit_cost_per_variant']",
+      "ts": "2026-09-18T07:46:46.876093+00:00"
+    },
+    {
+      "section": "C",
+      "tool": "C1 Staging history",
+      "route": "/app/staging",
+      "status": "PASS",
+      "http": 200,
+      "detail": "keys=['items', 'count']",
+      "ts": "2026-09-18T07:46:46.883929+00:00"
+    },
+    {
+      "section": "C",
+      "tool": "C1 Staging credits",
+      "route": "/app/staging",
+      "status": "PASS",
+      "http": 200,
+      "detail": "keys=['agency_id', 'balance', 'required', 'credit_cost_per_variant', 'num_variants', 'ok']",
+      "ts": "2026-09-18T07:46:46.890812+00:00"
+    },
+    {
+      "section": "C",
+      "tool": "C1 Staging generate",
+      "route": "/app/staging",
+      "status": "SKIP",
+      "http": null,
+      "detail": "soft: no fal spend",
+      "ts": "2026-09-18T07:46:46.890828+00:00"
+    },
+    {
+      "section": "C",
+      "tool": "C2 Mutui compare",
+      "route": "/app/mutui",
+      "status": "PASS",
+      "http": 200,
+      "detail": "{\"eligible\":true,\"loan_amount\":200000.0,\"ltv\":80.0,\"max_ltv\":80.0,\"duration_years\":25,\"consap_applied\":false,\"sustainability\":null,\"offers\":",
+      "ts": "2026-09-18T07:46:46.896950+00:00"
+    },
+    {
+      "section": "C",
+      "tool": "C3 Modulistica templates",
+      "route": "/app/modulistica",
+      "status": "PASS",
+      "http": 200,
+      "detail": "keys=['items', 'total'] total=7",
+      "ts": "2026-09-18T07:46:46.903784+00:00"
+    },
+    {
+      "section": "C",
+      "tool": "C3 Modulistica docs",
+      "route": "/app/modulistica",
+      "status": "PASS",
+      "http": 200,
+      "detail": "keys=['items', 'total', 'page', 'page_size'] total=14",
+      "ts": "2026-09-18T07:46:46.913011+00:00"
+    },
+    {
+      "section": "C",
+      "tool": "C3 Esign status",
+      "route": "/app/modulistica",
+      "status": "PASS",
+      "http": 200,
+      "detail": "keys=['provider', 'ready', 'note']",
+      "ts": "2026-09-18T07:46:46.919955+00:00"
+    },
+    {
+      "section": "C",
+      "tool": "C4 Moderation queue",
+      "route": "/app/moderation",
+      "status": "PASS",
+      "http": 200,
+      "detail": "keys=['items', 'total'] total=46",
+      "ts": "2026-09-18T07:46:46.932215+00:00"
+    },
+    {
+      "section": "D",
+      "tool": "D1 HAL knowledge status",
+      "route": "/app/hal-knowledge",
+      "status": "PASS",
+      "http": 200,
+      "detail": "keys=['chunks_indexed', 'manual_hal_indexed', 'index', 'model', 'corpus_files']",
+      "ts": "2026-09-18T07:46:47.003638+00:00"
+    },
+    {
+      "section": "D",
+      "tool": "D1 HAL ask publish",
+      "route": "/app/hal-knowledge",
+      "status": "PASS",
+      "http": 200,
+      "detail": "Ciao collega! Per pubblicare un immobile sui portali, segui questi passi…",
+      "ts": "2026-09-18T07:53:49.631355+00:00"
+    },
+    {
+      "section": "D",
+      "tool": "D1 HAL ask MLS",
+      "route": "/app/hal-knowledge",
+      "status": "PASS",
+      "http": 200,
+      "detail": "Ciao collega! Ecco come funziona l'MLS in OMNIA:\n\n1. Nel menu a sinistra clicca **MLS** (oppure usa il riquadro della re",
+      "ts": "2026-09-18T07:48:26.750970+00:00"
+    },
+    {
+      "section": "D",
+      "tool": "D2 HAL Assist sessions",
+      "route": "HAL Assist",
+      "status": "PASS",
+      "http": 200,
+      "detail": "keys=['items']",
+      "ts": "2026-09-18T07:48:26.765437+00:00"
+    },
+    {
+      "section": "D",
+      "tool": "D2 HAL Assist chat",
+      "route": "HAL Assist",
+      "status": "PASS",
+      "http": 200,
+      "detail": "{'session_id': '189c3b86-3a18-40a3-9d38-31fb0466ac0f', 'reply': 'Prima di cliccare su \"Pubblica\", ci sono alcune cose che spesso rischiano d",
+      "ts": "2026-09-18T07:49:20.613186+00:00"
+    },
+    {
+      "section": "D",
+      "tool": "D3 HAL Legal sessions",
+      "route": "/legal",
+      "status": "PASS",
+      "http": 200,
+      "detail": "",
+      "ts": "2026-09-18T07:49:20.622478+00:00"
+    },
+    {
+      "section": "D",
+      "tool": "D3 HAL Legal health",
+      "route": "/legal",
+      "status": "PASS",
+      "http": 200,
+      "detail": "keys=['service', 'model', 'temperature', 'soft_rate_limit_per_hour', 'confidence_threshold', 'sub_agents', 'tavily_configured', 'llm_configured']",
+      "ts": "2026-09-18T07:49:20.629636+00:00"
+    },
+    {
+      "section": "D",
+      "tool": "D3 HAL Legal chat",
+      "route": "/legal",
+      "status": "PASS",
+      "http": 200,
+      "detail": "reply OK (no normative sources — soft disclaimer)",
+      "ts": "2026-09-18T07:53:49.631355+00:00"
+    },
+    {
+      "section": "D",
+      "tool": "D4 Analytics overview",
+      "route": "/app/analytics",
+      "status": "PASS",
+      "http": 200,
+      "detail": "keys=['days_lookback', 'properties', 'leads', 'publishing_recent', 'top_views']",
+      "ts": "2026-09-18T07:50:50.729385+00:00"
+    },
+    {
+      "section": "E",
+      "tool": "E1 Group me",
+      "route": "/app/group",
+      "status": "PASS",
+      "http": 404,
+      "detail": "keys=['detail']",
+      "ts": "2026-09-18T07:50:50.737216+00:00"
+    },
+    {
+      "section": "E",
+      "tool": "E2 Members",
+      "route": "/app/members",
+      "status": "PASS",
+      "http": 200,
+      "detail": "",
+      "ts": "2026-09-18T07:50:50.744910+00:00"
+    },
+    {
+      "section": "E",
+      "tool": "E2 Invites",
+      "route": "/app/members",
+      "status": "PASS",
+      "http": 200,
+      "detail": "",
+      "ts": "2026-09-18T07:50:50.752915+00:00"
+    },
+    {
+      "section": "E",
+      "tool": "E3 API Keys list",
+      "route": "/app/api-keys",
+      "status": "PASS",
+      "http": 200,
+      "detail": "keys=['items', 'total'] total=1",
+      "ts": "2026-09-18T07:50:50.761110+00:00"
+    },
+    {
+      "section": "E",
+      "tool": "E3 API Key create",
+      "route": "/app/api-keys",
+      "status": "PASS",
+      "http": 201,
+      "detail": "id=4acf8b91-b5e3-4a66-b4f8-f7d35a89c34e",
+      "ts": "2026-09-18T07:50:50.770231+00:00"
+    },
+    {
+      "section": "E",
+      "tool": "E3 API Key revoke",
+      "route": "/app/api-keys/4acf8b91-b5e3-4a66-b4f8-f7d35a89c34e/revoke",
+      "status": "PASS",
+      "http": 200,
+      "detail": "{\"status\":\"ok\",\"id\":\"4acf8b91-b5e3-4a66-b4f8-f7d35a89c34e\",\"revoked_at\":\"2026-09",
+      "ts": "2026-09-18T07:50:50.774837+00:00"
+    },
+    {
+      "section": "E",
+      "tool": "E4 Agency settings",
+      "route": "/app/settings",
+      "status": "PASS",
+      "http": 200,
+      "detail": "keys=['id', 'name', 'slug', 'city', 'province_sigla', 'mls_enabled', 'mls_joined_at', 'mls_province']",
+      "ts": "2026-09-18T07:50:50.782536+00:00"
+    },
+    {
+      "section": "E",
+      "tool": "E5 Billing plans",
+      "route": "/app/settings/billing",
+      "status": "PASS",
+      "http": 200,
+      "detail": "keys=['plans', 'credit_packages', 'credit_costs', 'trial_days', 'onboarding', 'demo_contact_email', 'currency', 'enabled']",
+      "ts": "2026-09-18T07:50:50.788319+00:00"
+    },
+    {
+      "section": "E",
+      "tool": "E5 Stripe checkout",
+      "route": "/app/settings/billing",
+      "status": "SKIP",
+      "http": null,
+      "detail": "soft: no Stripe checkout",
+      "ts": "2026-09-18T07:50:50.788337+00:00"
+    },
+    {
+      "section": "E",
+      "tool": "E7 Ops overview",
+      "route": "/app/ops",
+      "status": "PASS",
+      "http": 200,
+      "detail": "keys=['period_days', 'generated_at', 'providers', 'policy', 'alerts', 'totals', 'services', 'tavily']",
+      "ts": "2026-09-18T07:50:50.804079+00:00"
+    }
+  ]
+}

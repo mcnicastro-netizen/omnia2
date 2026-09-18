@@ -240,28 +240,65 @@ def main():
     except Exception as e:
         p.add("A", "A7 Client create", "/app/clients/new", "FAIL", str(e)[:180])
 
-    p.expect_get("A", "A8 Matches list", "/app/matches", "/app/matches?min_score=80&limit=10", timeout=60)
-    if client_id:
+    # Global /app/matches under stress seed materializes ~2M pairs even with limit —
+    # document as known performance block; do not call it in soft QC.
+    p.add(
+        "A",
+        "A8 Matches list",
+        "/app/matches",
+        "FAIL",
+        "blocked: GET /app/matches?min_score=80&limit=10 still scans agency-wide (~2M pairs) and kills API; use client-scoped only",
+    )
+    # Prefer warm smart-sort client for scoped match; newly created buyer has no prefs → still heavy scan
+    match_client = None
+    try:
+        rs = p.get("/app/clients/smart?page=1&page_size=5", timeout=30)
+        if rs.status_code == 200:
+            for it in rs.json().get("items") or []:
+                if it.get("id"):
+                    match_client = it["id"]
+                    break
+    except Exception:
+        pass
+    match_client = match_client or client_id
+    if match_client and p.health_gate("A8 by client"):
         p.expect_get(
             "A",
             "A8 Matches by client",
-            f"/app/matches?client={client_id}",
-            f"/app/matches/client/{client_id}?min_score=80&limit=5",
+            f"/app/matches?client={match_client}",
+            f"/app/matches/client/{match_client}?min_score=80&limit=5",
             timeout=60,
         )
         if p.health_gate("A8 lead-score"):
             try:
-                rr = p.post("/app/matches/lead-score", json={"client_id": client_id}, timeout=60)
-                if rr.status_code == 200:
-                    p.add("A", "A8 Lead score", "/app/matches/lead", "PASS", str(rr.json())[:140], 200)
-                elif rr.status_code in (400, 404, 501, 503):
-                    p.add("A", "A8 Lead score", "/app/matches/lead", "SKIP", rr.text[:160], rr.status_code)
+                # lead-score requires query params client_id + property_id
+                lead_prop = prop_id
+                if not lead_prop:
+                    rp = p.get("/app/properties?page=1&page_size=1")
+                    if rp.status_code == 200:
+                        items = rp.json().get("items") or []
+                        if items:
+                            lead_prop = items[0].get("id")
+                if not lead_prop:
+                    p.add("A", "A8 Lead score", "/app/matches/lead", "SKIP", "no property_id")
                 else:
-                    p.add("A", "A8 Lead score", "/app/matches/lead", "FAIL", rr.text[:160], rr.status_code)
+                    rr = p.post(
+                        f"/app/matches/lead-score?client_id={match_client}&property_id={lead_prop}",
+                        timeout=60,
+                    )
+                    if rr.status_code == 200:
+                        p.add("A", "A8 Lead score", "/app/matches/lead", "PASS", str(rr.json())[:140], 200)
+                    elif rr.status_code in (400, 404, 501, 503):
+                        p.add("A", "A8 Lead score", "/app/matches/lead", "SKIP", rr.text[:160], rr.status_code)
+                    else:
+                        p.add("A", "A8 Lead score", "/app/matches/lead", "FAIL", rr.text[:160], rr.status_code)
             except Exception as e:
                 p.add("A", "A8 Lead score", "/app/matches/lead", "SKIP", str(e)[:180])
         else:
             p.add("A", "A8 Lead score", "/app/matches/lead", "SKIP", "API down — deferred")
+    else:
+        p.add("A", "A8 Matches by client", "/app/matches?client=…", "SKIP", "no client or API down")
+        p.add("A", "A8 Lead score", "/app/matches/lead", "SKIP", "no client or API down")
 
     # A9 activities gap
     p.add(
@@ -501,6 +538,31 @@ def main():
         "- Match score visible in UI clients but explainability (A-028b) not verified as tooltip API",
         "- Sidebar still flat (A-028c) — not in scope today",
         "",
+        "## Blocchi tecnici",
+        "",
+    ]
+    fails = [r for r in p.rows if r["status"] == "FAIL"]
+    skips = [r for r in p.rows if r["status"] == "SKIP"]
+    if fails:
+        for r in fails:
+            lines.append(f"- **FAIL** {r['section']}/{r['tool']}: {(r.get('detail') or '')[:160]}")
+    else:
+        lines.append("- Nessun FAIL bloccante sul percorso soft (match limitati, no vendor burn).")
+    if skips:
+        lines.append("")
+        lines.append("### SKIP (soft / defer)")
+        for r in skips:
+            lines.append(f"- {r['section']}/{r['tool']}: {(r.get('detail') or '')[:120]}")
+    lines += [
+        "",
+        "## Burn check",
+        "",
+        "- Resend: non chiamato",
+        "- Stripe checkout: SKIP policy",
+        "- fal generate: SKIP policy",
+        "- Portal sync-now: non chiamato",
+        "- Nominatim: solo eventuale geocode implicito su property create (1×) — no hammer",
+        "",
         "## Top 5 next (solo con «vai»)",
         "",
         "1. A-028a Cockpit Dashboard «Oggi»",
@@ -515,10 +577,9 @@ def main():
     OUT.write_text("\n".join(lines), encoding="utf-8")
     print("WROTE", OUT)
     print("COUNTS", counts)
-    fails = [r for r in p.rows if r["status"] == "FAIL"]
     print("FAILS", len(fails))
     for f in fails:
-        print(" -", f["tool"], f["route"], f.get("http"), f.get("detail")[:80])
+        print(" -", f["tool"], f["route"], f.get("http"), (f.get("detail") or "")[:80])
     return 0 if not fails else 1
 
 
