@@ -24,7 +24,7 @@ Prima: aprivi Idealista, aprivi Immobiliare.it, aprivi Casa.it, aprivi Subito, c
 
 **Cosa NON fa (ancora) il Publishing Center**
 - Non pubblica *automaticamente* su Idealista / Immobiliare.it / Casa.it (i tre portali dominanti). Servono accordi commerciali diretti tra agenzia e portale; OMNIA non ha ancora integrazione ufficiale. Continuerai a usarli come oggi finché non lo dichiareremo esplicitamente.
-- Per i portali "push" (Facebook Marketplace, Google Business Profile) il sync per ora è **simulato**: il pulsante Sync gira, il log si aggiorna, ma la pubblicazione reale via API arriverà con lo Sprint successivo. È comunque visibile in dashboard per non "perdere il ricordo" del portale.
+- Per Facebook Marketplace e Google Business Profile lo stato è **Non ancora attivo**: restano in catalogo per trasparenza, ma **non si possono attivare** e non c’è sync simulato. HAL lo dice chiaramente.
 
 **Chi vede la pagina Portali**
 - **Titolare**: pieno controllo (attivare, disattivare, forzare sync, vedere compliance).
@@ -43,8 +43,8 @@ Al primo accesso al modulo trovi **8 portali** nella scheda **Disponibili**, ord
 |---------|-----------|:-:|:-:|---------------|
 | **Subito.it** | freemium | feed_pull | ★★★★★ | Username + (opzionale) chiave partner |
 | **Wikicasa.it** | freemium | feed_pull | ★★★★☆ | API Key (fornita dopo iscrizione) |
-| **Facebook Marketplace** | gratuito | api_push ⚠️ *simulato* | ★★★★☆ | Page ID + Access Token Meta |
-| **Google Business Profile** | gratuito | api_push ⚠️ *simulato* | ★★★★☆ | Google Business Account ID |
+| **Facebook Marketplace** | gratuito | api_push | ★★★★☆ | **Non ancora attivo** — integrazione Meta reale assente; non attivabile |
+| **Google Business Profile** | gratuito | api_push | ★★★★☆ | **Non ancora attivo** — integrazione Google reale assente; non attivabile |
 | **Bakeca.it** | gratuito | feed_pull | ★★★☆☆ | Email account |
 | **Kijiji.it** | gratuito | feed_pull | ★★☆☆☆ | Email account |
 | **Attico.it** | freemium | feed_pull | ★★☆☆☆ | Email account (free tier limitato) |
@@ -52,7 +52,7 @@ Al primo accesso al modulo trovi **8 portali** nella scheda **Disponibili**, ord
 
 **Cosa vuol dire "modalità"**
 - **feed_pull** = il portale scarica da solo il tuo feed XML pubblico (`.../publishing/feed/<agenzia>.xml`) ogni notte. Non serve che OMNIA "spinga" nulla. Devi solo comunicare al portale l'URL del feed (spesso durante l'iscrizione).
-- **api_push** = OMNIA dovrebbe chiamare le API del portale per pubblicare. Al momento è **simulato**: il pulsante "Sync" gira, il log dice "simulated_push", ma non c'è ancora una chiamata reale. Le integrazioni Meta e Google arriveranno in uno sprint dedicato.
+- **api_push** = OMNIA chiama le API del portale. Finché `integration_ready` è falso, il portale resta in catalogo come **Non ancora attivo** (niente Attiva, niente sync finto).
 
 **Non trovi il portale che ti serve?**
 Se il tuo portale (regionale, di franchising, di nicchia) non è nel catalogo puoi aggiungerlo tu con il **Universal Portal Wizard** — vedi 6.7. Il portale personalizzato è visibile solo alla tua agenzia.
@@ -300,7 +300,8 @@ Apri la Compliance (6.5) per capire il motivo esatto.
 | Problema | Cosa fare |
 |----------|-----------|
 | "Il portale non riceve gli annunci" | 1. Verifica che il portale sia nella scheda **Attivi**. 2. Verifica che almeno un immobile passi la Compliance. 3. Forza un sync manuale (6.4). 4. Se il portale è feed_pull, verifica che al portale hai comunicato l'URL corretto del feed (6.8). |
-| "Vedo 'simulated_push' nel log" | È normale per Facebook Marketplace e Google Business Profile: l'integrazione live arriverà. Il portale non riceverà annunci reali finché non lo abilitiamo. |
+| "Vedo 'simulated_push' nel log" | Non dovrebbe più comparire: i canali push non pronti sono **Non ancora attivi** e non si attivano. Se vedi ancora una vecchia connessione, disattivala. |
+| "Non posso attivare Facebook/Google" | Corretto: sono in catalogo come **Non ancora attivo** finché non c'è integrazione reale. |
 | "Ultimo sync ieri, ma sono le 15:00" | Il sync gira alle 06:00 UTC. Se vuoi aggiornamento immediato → Sync manuale. |
 | "Compliance dice 5 bloccati ma non vedo quali" | Nella modale Compliance scorri sotto ai contatori: c'è la lista "Immobili bloccati (primi 20)" con link Correggi. |
 | "Ho attivato Idealista/Immobiliare.it e non li vedo" | Non sono nel catalogo v1. Continua a usarli col loro pannello agenzia. Se ti servono come Custom Portal, aggiungili col Wizard (6.7) usando dialetto `generic_rss` o `osf_federata`. |

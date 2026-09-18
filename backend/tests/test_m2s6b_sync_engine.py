@@ -148,12 +148,10 @@ class TestComplianceValidator:
 class TestSyncEndpoints:
     @pytest.fixture(autouse=True)
     def _make_conn(self, session):
-        # Activate one PULL (bakeca) and one PUSH (facebook-marketplace)
-        for slug, creds in [("bakeca", {"email": "test@x.it"}),
-                            ("facebook-marketplace", {"page_id": "1", "access_token": "tok"})]:
-            r = session.post(f"{BASE_URL}/api/app/publishing/connections",
-                             json={"portal_slug": slug, "credentials": creds})
-            assert r.status_code in (201, 409)  # 409 if leftover
+        # Only feed_pull portals are activatable (FB/Google = not yet active)
+        r = session.post(f"{BASE_URL}/api/app/publishing/connections",
+                         json={"portal_slug": "bakeca", "credentials": {"email": "test@x.it"}})
+        assert r.status_code in (201, 409)  # 409 if leftover
 
     def _conn(self, session, slug):
         r = session.get(f"{BASE_URL}/api/app/publishing/connections")
@@ -167,11 +165,14 @@ class TestSyncEndpoints:
         assert "publishable" in d and "blocked" in d
         assert d["integration_type"] == "feed_pull"
 
-    def test_sync_now_push_portal_simulated(self, session):
-        c = self._conn(session, "facebook-marketplace")
-        r = session.post(f"{BASE_URL}/api/app/publishing/connections/{c['id']}/sync-now")
-        assert r.status_code == 200
-        assert r.json()["integration_type"] == "api_push"
+    def test_activate_push_portal_blocked_until_ready(self, session):
+        r = session.post(
+            f"{BASE_URL}/api/app/publishing/connections",
+            json={"portal_slug": "facebook-marketplace",
+                  "credentials": {"page_id": "1", "access_token": "tok"}},
+        )
+        assert r.status_code == 409
+        assert r.json()["detail"] == "portal_not_yet_active"
 
     def test_sync_now_404_unknown_id(self, session):
         r = session.post(f"{BASE_URL}/api/app/publishing/connections/does-not-exist/sync-now")

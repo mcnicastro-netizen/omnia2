@@ -641,7 +641,9 @@
     "title": "Portali pubblicitari",
     "subtitle": "Pubblica i tuoi annunci automaticamente sui portali immobiliari. Le credenziali sono cifrate end-to-end.",
     "empty": "Nessun portale ancora attivato. Scegli un portale qui sotto per iniziare.",
-    "available": "Portali disponibili"
+    "available": "Portali disponibili",
+    "not_yet_active": "Non ancora attivo",
+    "not_yet_active_hint": "Integrazione reale non disponibile — non attivabile."
   },
   "accept_invite": {
     "title": "Accetta invito",

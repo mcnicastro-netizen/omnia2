@@ -45,55 +45,84 @@ router = APIRouter(prefix="/publishing", tags=["publishing"])
 
 CATALOG_SEED = [
     {"slug": "subito", "name": "Subito.it", "category": "freemium", "dialect": "osf_federata",
-     "integration_type": "feed_pull", "traffic_score": 5,
+     "integration_type": "feed_pull", "traffic_score": 5, "integration_ready": True,
      "credential_fields": [{"name": "username", "label": "Username", "type": "text"},
                            {"name": "api_key", "label": "Chiave partner (opz.)", "type": "text"}],
      "notes": "Piu' grande portale generalista italiano."},
     {"slug": "bakeca", "name": "Bakeca.it", "category": "gratuito", "dialect": "osf_federata",
-     "integration_type": "feed_pull", "traffic_score": 3,
+     "integration_type": "feed_pull", "traffic_score": 3, "integration_ready": True,
      "credential_fields": [{"name": "email", "label": "Email account", "type": "email"}],
      "notes": "Gratuito con pubblicita'. Setup semplice."},
     {"slug": "kijiji", "name": "Kijiji.it", "category": "gratuito", "dialect": "osf_federata",
-     "integration_type": "feed_pull", "traffic_score": 2,
+     "integration_type": "feed_pull", "traffic_score": 2, "integration_ready": True,
      "credential_fields": [{"name": "email", "label": "Email account", "type": "email"}], "notes": "Adevinta group."},
     {"slug": "wikicasa", "name": "Wikicasa.it", "category": "freemium", "dialect": "generic_rss",
-     "integration_type": "feed_pull", "traffic_score": 4,
+     "integration_type": "feed_pull", "traffic_score": 4, "integration_ready": True,
      "credential_fields": [{"name": "api_key", "label": "API Key", "type": "text"}],
      "notes": "Free tier fino a ~20 annunci."},
     {"slug": "facebook-marketplace", "name": "Facebook Marketplace", "category": "gratuito",
      "dialect": "facebook_catalog", "integration_type": "api_push", "traffic_score": 4,
+     "integration_ready": False,
      "credential_fields": [{"name": "page_id", "label": "Page ID", "type": "text"},
                            {"name": "access_token", "label": "Access Token", "type": "text"}],
-     "notes": "Meta Business API. Copertura enorme."},
+     "notes": "Non ancora attivo: integrazione Meta API reale non disponibile. Non attivabile."},
     {"slug": "google-business", "name": "Google Business Profile", "category": "gratuito",
      "dialect": "google_merchant", "integration_type": "api_push", "traffic_score": 4,
+     "integration_ready": False,
      "credential_fields": [{"name": "account_id", "label": "Google Business Account ID", "type": "text"}],
-     "notes": "Migliora visibilita' su Google Search / Maps."},
+     "notes": "Non ancora attivo: integrazione Google reale non disponibile. Non attivabile."},
     {"slug": "attico", "name": "Attico.it", "category": "freemium", "dialect": "osf_federata",
-     "integration_type": "feed_pull", "traffic_score": 2,
+     "integration_type": "feed_pull", "traffic_score": 2, "integration_ready": True,
      "credential_fields": [{"name": "email", "label": "Email account", "type": "email"}], "notes": "Free tier limitato."},
     {"slug": "case24", "name": "Case24.it", "category": "freemium", "dialect": "osf_federata",
-     "integration_type": "feed_pull", "traffic_score": 2,
+     "integration_type": "feed_pull", "traffic_score": 2, "integration_ready": True,
      "credential_fields": [{"name": "email", "label": "Email account", "type": "email"}],
      "notes": "Portale generalista minore."},
 ]
 
 
 async def seed_publishing_catalog() -> None:
-    """Idempotent catalog seed. Called from server startup."""
+    """Idempotent catalog seed. Called from server startup.
+
+    Upserts system portals so flags like integration_ready stay honest on restart.
+    """
     db = Database.get()
     now = datetime.now(timezone.utc).isoformat()
     inserted = 0
+    updated = 0
     for p in CATALOG_SEED:
+        ready = bool(p.get("integration_ready", True))
+        fields = {
+            **p,
+            "id": p["slug"],
+            "is_active": True,
+            "integration_ready": ready,
+            "geographic_scope": "national",
+            "updated_at": now,
+        }
         existing = await db.publishing_catalog.find_one({"slug": p["slug"]})
         if existing:
+            await db.publishing_catalog.update_one(
+                {"slug": p["slug"]},
+                {"$set": {
+                    "name": fields["name"],
+                    "category": fields["category"],
+                    "dialect": fields["dialect"],
+                    "integration_type": fields["integration_type"],
+                    "traffic_score": fields["traffic_score"],
+                    "integration_ready": ready,
+                    "credential_fields": fields["credential_fields"],
+                    "notes": fields["notes"],
+                    "is_active": True,
+                    "updated_at": now,
+                }},
+            )
+            updated += 1
             continue
-        await db.publishing_catalog.insert_one(
-            {**p, "id": p["slug"], "is_active": True, "geographic_scope": "national",
-             "created_at": now, "updated_at": now})
+        await db.publishing_catalog.insert_one({**fields, "created_at": now})
         inserted += 1
-    if inserted:
-        logger.info("publishing_catalog seeded (%d new entries)", inserted)
+    if inserted or updated:
+        logger.info("publishing_catalog seed insert=%d update=%d", inserted, updated)
 
 
 from shared.auth.tenant import require_agency_404 as _agency_id
@@ -146,6 +175,11 @@ async def create_connection(
     portal = await db.publishing_catalog.find_one({"slug": payload.portal_slug})
     if not portal:
         raise HTTPException(status_code=404, detail="portal_not_in_catalog")
+    if portal.get("integration_ready") is False:
+        raise HTTPException(
+            status_code=409,
+            detail="portal_not_yet_active",
+        )
     existing = await db.publishing_connections.find_one(
         {"agency_id": aid, "portal_slug": payload.portal_slug})
     if existing:

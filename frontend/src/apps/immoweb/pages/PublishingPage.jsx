@@ -150,7 +150,13 @@ export default function PortalsPage() {
             <div className="flex-1">
               <strong>Sync {syncResult.portal}</strong> — {syncResult.publishable ?? 0} immobili pubblicabili, {syncResult.blocked ?? 0} bloccati dal validatore compliance.
               {syncResult.log?.error_message && <div className="text-xs mt-1 text-stone-600">{syncResult.log.error_message}</div>}
-              {syncResult.integration_type === "api_push" && <div className="text-xs mt-1 text-stone-600">ℹ️ Portale push: integrazione reale in arrivo con M2.6c/d — per ora simulata.</div>}
+              {syncResult.integration_type === "api_push" && (
+                <div className="text-xs mt-1 text-stone-600">
+                  {syncResult.ok
+                    ? "Push API completato."
+                    : "Questo canale push non è ancora attivo in OMNIA — nessuna pubblicazione reale."}
+                </div>
+              )}
             </div>
             <button onClick={() => setSyncResult(null)} className="text-xs text-stone-500 hover:text-stone-800">✕</button>
           </div>
@@ -249,18 +255,44 @@ export default function PortalsPage() {
               ) : (
                 available.length === 0 ? (
                   <tr><td colSpan={6} className="px-4 py-6 text-stone-500 text-center">Tutti i portali del catalogo sono già attivi.</td></tr>
-                ) : available.map((p) => (
-                  <tr key={p.slug} data-testid={`portal-catalog-${p.slug}`} className="border-t border-stone-200 hover:bg-stone-50">
-                    <td className="px-4 py-3 font-medium">{p.name}</td>
+                ) : available.map((p) => {
+                  const notReady = p.integration_ready === false;
+                  return (
+                  <tr key={p.slug} data-testid={`portal-catalog-${p.slug}`} className={`border-t border-stone-200 ${notReady ? "bg-stone-50/80" : "hover:bg-stone-50"}`}>
+                    <td className="px-4 py-3 font-medium">
+                      {p.name}
+                      {notReady && (
+                        <span
+                          data-testid={`portal-coming-soon-${p.slug}`}
+                          className="ml-2 inline-block text-[9px] uppercase tracking-widest text-amber-800 bg-amber-50 border border-amber-200 px-2 py-0.5"
+                        >
+                          {t("portals.not_yet_active") || "Non ancora attivo"}
+                        </span>
+                      )}
+                    </td>
                     <td className="px-4 py-3 text-stone-600 text-xs">{p.category}</td>
                     <td className="px-4 py-3 text-stone-600 text-xs">{p.integration_type}</td>
                     <td className="px-4 py-3 text-stone-600">{"★".repeat(p.traffic_score || 0)}</td>
-                    <td className="px-4 py-3 text-stone-500 text-xs">{p.notes?.substring(0, 40) || "—"}</td>
+                    <td className="px-4 py-3 text-stone-500 text-xs">
+                      {notReady
+                        ? (t("portals.not_yet_active_hint") || "Integrazione reale non disponibile — non attivabile.")
+                        : (p.notes?.substring(0, 40) || "—")}
+                    </td>
                     <td className="px-4 py-3 text-right">
-                      <button onClick={() => openActivate(p)} data-testid={`portal-activate-${p.slug}`} className="text-xs uppercase tracking-widest bg-emerald-700 text-white px-3 py-1.5 rounded hover:bg-emerald-800">Attiva</button>
+                      {notReady ? (
+                        <span
+                          data-testid={`portal-activate-disabled-${p.slug}`}
+                          className="text-[10px] uppercase tracking-widest text-stone-400"
+                        >
+                          {t("portals.not_yet_active") || "Non ancora attivo"}
+                        </span>
+                      ) : (
+                        <button onClick={() => openActivate(p)} data-testid={`portal-activate-${p.slug}`} className="text-xs uppercase tracking-widest bg-emerald-700 text-white px-3 py-1.5 rounded hover:bg-emerald-800">Attiva</button>
+                      )}
                     </td>
                   </tr>
-                ))
+                  );
+                })
               )}
             </tbody>
           </table>

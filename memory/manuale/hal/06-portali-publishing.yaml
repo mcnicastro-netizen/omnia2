@@ -81,12 +81,12 @@ voci:
           Richiede username."
         - "Wikicasa.it — freemium, feed_pull, traffico ★★★★☆.
           Richiede API Key."
-        - "Facebook Marketplace — gratuito, api_push (simulato in
-          v1), traffico ★★★★☆. Richiede Page ID + Access Token
-          Meta."
-        - "Google Business Profile — gratuito, api_push (simulato
-          in v1), traffico ★★★★☆. Richiede Google Business
-          Account ID."
+        - "Facebook Marketplace — gratuito, api_push, traffico ★★★★☆.
+          Stato: Non ancora attivo (integrazione Meta reale assente).
+          Non attivabile."
+        - "Google Business Profile — gratuito, api_push, traffico ★★★★☆.
+          Stato: Non ancora attivo (integrazione Google reale assente).
+          Non attivabile."
         - "Bakeca.it, Kijiji.it, Attico.it, Case24.it — categoria
           e traffico minori, tutti feed_pull con email account."
         - "Idealista, Immobiliare.it, Casa.it NON sono nel catalogo
@@ -96,11 +96,15 @@ voci:
           soluzione: >
             feed_pull = il portale scarica autonomamente il tuo
             feed XML pubblico. Non serve che OMNIA spinga nulla.
-            api_push = OMNIA dovrebbe chiamare le API del portale.
-            In v1 api_push è SIMULATO (il pulsante Sync gira, il
-            log dice simulated_push, ma non c'è ancora una chiamata
-            reale). Le integrazioni Meta/Google arriveranno in uno
-            sprint dedicato.
+            api_push = OMNIA chiama le API del portale. Finché un
+            portale push non è pronto (integration_ready=false),
+            resta in catalogo come Non ancora attivo: niente
+            Attiva e niente sync finto.
+        - problema: "Non posso attivare Facebook o Google"
+          soluzione: >
+            Corretto. Sono in catalogo solo per trasparenza, con
+            etichetta Non ancora attivo, finché non esiste
+            integrazione reale.
         - problema: "Non trovo il mio portale regionale nella lista"
           soluzione: >
             Puoi aggiungerlo tu con l'Universal Portal Wizard
@@ -572,13 +576,13 @@ voci:
         - "Trigger: scheduled (job automatico), manual
           (bottone), admin_manual (bypass super_admin)."
         - "Stato: success, partial (con blocchi compliance),
-          failed, simulated_push (per api_push in v1)."
+          failed."
         - "Items OK: numero immobili pubblicati/pubblicabili."
         - "Items Failed: numero immobili bloccati dalla
           compliance."
         - "Retry count: 0 (prima volta) fino a 3 (max retries)."
         - "Error message: testo tecnico, es.
-          'blocked_by_compliance:5'."
+          'blocked_by_compliance:5' o 'portal_not_yet_active'."
         - "Started/Ended: timestamp UTC."
         - "In v1 in dashboard vedi solo: ultimo sync sotto il
           nome del portale + contatore 'N pubblicati · M
@@ -589,9 +593,11 @@ voci:
       errori_comuni:
         - problema: "Vedo simulated_push nei log"
           soluzione: >
-            È normale per Facebook Marketplace e Google Business
-            Profile in v1. L'integrazione live arriverà; per ora
-            gli annunci non finiscono davvero su quei portali.
+            Non dovrebbe più comparire. Facebook Marketplace e
+            Google Business Profile sono Non ancora attivi e non
+            si attivano. Se resta una connessione vecchia,
+            disattivala: lo sync fallirà con portal_not_yet_active
+            invece di fingere successo.
       permessi:
         - Titolare
         - Agente

@@ -160,15 +160,19 @@ async def sync_connection(connection: Dict[str, Any], trigger: str = "scheduled"
             action_status = "success"
             action_error: Optional[str] = None
         elif integration_type == "api_push":
-            # Real push integrations arrive in M2.6c/M2.6d. For now: simulated.
-            action_status = "simulated_push"
-            action_error = None
+            # Honesty rule: no simulated success. Push portals must be integration_ready.
+            if portal.get("integration_ready") is False:
+                action_status = "failed"
+                action_error = "portal_not_yet_active"
+            else:
+                action_status = "failed"
+                action_error = "api_push_not_implemented"
         else:
             action_status = "failed"
             action_error = f"unsupported_integration_type:{integration_type}"
 
         # 4. Log
-        final_status = "success" if action_status in ("success", "simulated_push") else "failed"
+        final_status = "success" if action_status == "success" else "failed"
         error_message = action_error
         if blocked > 0 and final_status == "success":
             final_status = "partial"

@@ -40,6 +40,19 @@ class TestCatalog:
         slugs = {p["slug"] for p in system_items}
         assert slugs == {"subito", "bakeca", "kijiji", "wikicasa",
                          "facebook-marketplace", "google-business", "attico", "case24"}
+        by = {p["slug"]: p for p in system_items}
+        assert by["facebook-marketplace"].get("integration_ready") is False
+        assert by["google-business"].get("integration_ready") is False
+        assert by["subito"].get("integration_ready") is not False
+
+    def test_cannot_activate_not_yet_active_portals(self, session):
+        for slug in ("facebook-marketplace", "google-business"):
+            r = session.post(
+                f"{BASE_URL}/api/app/publishing/connections",
+                json={"portal_slug": slug, "credentials": {"page_id": "x", "access_token": "y", "account_id": "z"}},
+            )
+            assert r.status_code == 409, slug
+            assert r.json()["detail"] == "portal_not_yet_active"
 
     def test_catalog_sorted_by_traffic_score(self, session):
         r = session.get(f"{BASE_URL}/api/app/publishing/catalog")
