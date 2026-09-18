@@ -136,7 +136,6 @@
     "step_conferma": "Conferma",
     "field_name": "Nome del portale",
     "name_placeholder": "es. Portale Immobiliare Veneto",
-    "name_help": "Il nome visibile nel Publishing Center.",
     "field_slug": "Slug tecnico",
     "slug_help": "Identificatore univoco (lowercase, trattini). Verrà prefissato automaticamente per evitare collisioni tra agenzie.",
     "field_site_url": "URL del sito (facoltativo)",

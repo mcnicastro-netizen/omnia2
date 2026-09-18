@@ -208,9 +208,6 @@ export default function PortalWizardPage() {
                 placeholder={t("portal_wizard.name_placeholder")}
                 className={inputClass}
               />
-              <p className="text-xs text-stone-500 -mt-2">
-                {t("portal_wizard.name_help")}
-              </p>
 
               <FieldLabel required>{t("portal_wizard.field_slug")}</FieldLabel>
               <input

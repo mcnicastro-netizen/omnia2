@@ -136,7 +136,6 @@
     "step_conferma": "Confirm",
     "field_name": "Portal name",
     "name_placeholder": "e.g. Veneto Real Estate Portal",
-    "name_help": "The name shown in the Publishing Center.",
     "field_slug": "Technical slug",
     "slug_help": "Unique identifier (lowercase, hyphens). Automatically namespaced to prevent cross-agency collisions.",
     "field_site_url": "Website URL (optional)",

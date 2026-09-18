@@ -136,7 +136,6 @@
     "step_conferma": "Confirmar",
     "field_name": "Nombre del portal",
     "name_placeholder": "ej. Portal Inmobiliario Cataluña",
-    "name_help": "El nombre visible en el Publishing Center.",
     "field_slug": "Slug técnico",
     "slug_help": "Identificador único (minúsculas, guiones). Se prefija automáticamente para evitar colisiones entre agencias.",
     "field_site_url": "URL del sitio (opcional)",
