@@ -153,8 +153,7 @@ export default function SocialPublisherPage() {
           </div>
           <p className="text-sm text-stone-600 mt-2 max-w-2xl">
             Configura le tue Pagine Facebook, account Instagram Business e canali Telegram per
-            pubblicare on-demand un annuncio con foto e caption. Le credenziali sono cifrate
-            AES-256-GCM e non lasciano il tuo tenant.
+            pubblicare on-demand un annuncio con foto e caption.
           </p>
         </div>
 
@@ -447,6 +446,13 @@ export default function SocialPublisherPage() {
           </div>
         )}
       </section>
+
+      <p
+        data-testid="social-credentials-footnote"
+        className="text-[10px] text-stone-400 mt-2 px-0"
+      >
+        * Le credenziali sono cifrate AES-256-GCM e non lasciano il tuo tenant.
+      </p>
     </AgencyShell>
   );
 }
