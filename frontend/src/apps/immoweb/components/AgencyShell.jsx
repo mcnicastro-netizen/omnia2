@@ -258,13 +258,18 @@ export default function AgencyShell({ children, current = "dashboard", showBack 
           >
             ☰
           </button>
-          <div className="flex-1 min-w-0">
-            <p className="text-[10px] uppercase tracking-widest text-stone-500">
-              {t("immoweb_app.agency_label")}
-            </p>
-            <p className="text-sm font-semibold text-stone-900 truncate">
-              {agency?.display_name || "—"}
-            </p>
+          <div className="flex items-center gap-3 min-w-0 flex-1">
+            {backVisible && (
+              <BackButton className="shrink-0 border border-stone-200 rounded-md px-2.5 py-1.5 bg-white hover:bg-stone-100" />
+            )}
+            <div className="min-w-0">
+              <p className="text-[10px] uppercase tracking-widest text-stone-500">
+                {t("immoweb_app.agency_label")}
+              </p>
+              <p className="text-sm font-semibold text-stone-900 truncate">
+                {agency?.display_name || "—"}
+              </p>
+            </div>
           </div>
           <div className="flex items-center gap-2 shrink-0">
             <NotificationBell />
@@ -274,11 +279,6 @@ export default function AgencyShell({ children, current = "dashboard", showBack 
 
         {/* Content */}
         <main className="flex-1 px-4 md:px-8 py-6 md:py-10 max-w-screen-2xl w-full mx-auto">
-          {backVisible && (
-            <div className="mb-4 md:mb-5">
-              <BackButton />
-            </div>
-          )}
           {children}
         </main>
       </div>
