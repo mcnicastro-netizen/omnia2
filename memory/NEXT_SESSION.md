@@ -32,6 +32,7 @@
 | Gestionale ingresso CRM + dashboard quick actions | ✅ (17-Set) |
 | Gestionale stress S0–S6 @ 2000 clients | ✅ PASS (`GESTIONALE_STRESS_REPORT.md`) |
 | **Gestionale tools QC A→E + loop mattina** | ✅ (18-Set) `GESTIONALE_TOOLS_QC_REPORT.md` |
+| **A-028a Cockpit Dashboard «Oggi»** | ✅ (18-Set) `/app/dashboard/today` |
 | Home B2C visual + SSR preview | ✅ (16-Set) |
 | Layout altre pagine B2C | ✅ (17-Set) |
 | Scout v1 + fiducia + voce lister | ✅ |
@@ -53,7 +54,7 @@
 
 | # | Cosa | Note |
 |:-:|------|------|
-| 1 | **A-028 Top 5** (cockpit Oggi → score → sidebar → HAL contestuale → Attività) | Solo «vai» Founder |
+| 1 | **A-028 Top rimanenti** (score → sidebar → HAL contestuale → Attività) | A-028a cockpit ✅ 18-Set; resto solo «vai» |
 | 2 | **A-025 demo prodotto** | GTM / walkthrough Scout end-to-end — richiede «vai» |
 | 3 | Fix perf `GET /app/matches` agency-wide | FAIL QC A8 — pagination/early-exit sotto seed 2k |
 | — | Home claim micro-ritocco | Solo se Founder vuole ancora più “pre-visita” |

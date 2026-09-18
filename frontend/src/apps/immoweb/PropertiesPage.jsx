@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import AgencyShell from "./components/AgencyShell";
 import { api } from "../../shared/lib/api";
 
@@ -16,10 +16,14 @@ export default function PropertiesPage() {
   const { t, i18n } = useTranslation();
   const lang = (i18n.language || "it").slice(0, 2);
   const nav = useNavigate();
+  const [searchParams] = useSearchParams();
   const [data, setData] = useState({ items: [], total: 0, page: 1, page_size: 20 });
   const [loading, setLoading] = useState(true);
   const [q, setQ] = useState("");
-  const [status, setStatus] = useState("");
+  const [status, setStatus] = useState(() => {
+    const s = searchParams.get("status") || "";
+    return STATUSES.includes(s) ? s : "";
+  });
   const [operation, setOperation] = useState("");
 
   const load = async () => {
@@ -39,7 +43,7 @@ export default function PropertiesPage() {
   useEffect(() => {
     load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [status]);
 
   const onSearch = (e) => {
     e.preventDefault();

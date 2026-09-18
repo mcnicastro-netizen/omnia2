@@ -1119,14 +1119,14 @@ Concordo sul nucleo. Temperatura: «OS agenzia» è **nord**, non claim immediat
 
 | ID interno | Tema | Priorità proposta | Note |
 |------------|------|:-----------------:|------|
-| A-028a | **Cockpit Dashboard «Oggi»** — attività da fare (follow-up, immobili incompleti, match da inviare, visite) + attività recenti | **P1** | Trasforma KPI in cockpit; collega idealmente ad A-018 activity feed |
+| A-028a | **Cockpit Dashboard «Oggi»** — attività da fare (follow-up, immobili incompleti, match da inviare, visite) + attività recenti | **P1** | ✅ **FATTO** 18-Set-2026 — `GET /app/dashboard/today` + UI priorità sopra KPI |
 | A-028b | **Explainability Match Score** — tooltip 83/100 con breakdown criteri | **P1** | Fiducia agente; basso effort UI se score già calcolato server-side |
 | A-028c | **IA sidebar a cluster** (Operativo / Pubblicazione / Strumenti / Intelligenza / Amministrazione) | **P1** | Solo IA nav; niente cambio route/backend |
 | A-028d | **HAL contestuale in scheda immobile** — «cosa manca» + genera descrizione da dati noti | **P1** | Oltre bottone «Migliora»; allinea A-005 direzione copilota |
 | A-028e | **Vista tabella immobili** + toggle card; sort aggiornamento/prezzo/superficie/agente | **P2** | Necessaria a scala 2k+ |
 | A-028f | **Filtri intelligenti** — senza foto, incompleti, senza cliente compatibile, variazione prezzo | **P2** | «Azioni intelligenti» non solo filtri |
 | A-028g | **HAL operativo «esegui con conferma»** — genera + proponi apply su campo | **P2** | Dopo contestuale stabile; D-051 onestà |
-| A-028h | Modulo **Attività / follow-up** dedicato (se assente post tools QC = GAP) | **P2** | Reviewer assume «trattative»; verificare esistenza in QC tools |
+| A-028h | Modulo **Attività / follow-up** dedicato (se assente post tools QC = GAP) | **P2** | GAP confermato tools QC 18-Set; cockpit Oggi mitiga senza modulo dedicato |
 | A-028i | Claim commerciale «OS agenzia» vs «gestionale AI» — copy landing/pitch | **P3** | Solo messaging dopo loop mattina dimostrabile |
 
 ### Ordine di attacco proposto (post `GESTIONALE_TOOLS_QC_REPORT`)

@@ -305,6 +305,19 @@ class TestDashboardKpis:
         pa = by_key.get("properties_active", {})
         assert isinstance(pa.get("value"), int) and pa.get("value") > 0, f"properties_active: {pa}"
 
+    def test_today_cockpit(self, http, auth_headers):
+        r = http.get(f"{API}/app/dashboard/today", headers=auth_headers)
+        assert r.status_code == 200, r.text
+        data = r.json()
+        assert "actions" in data and isinstance(data["actions"], list)
+        assert "summary" in data
+        assert "generated_at" in data
+        # Under stress seed we expect at least incomplete properties or clients
+        if data["actions"]:
+            a0 = data["actions"][0]
+            assert "id" in a0 and "href" in a0 and "count" in a0
+            assert isinstance(a0.get("items"), list)
+
 
 # ============================================================
 # P0-D: Matches exclude draft

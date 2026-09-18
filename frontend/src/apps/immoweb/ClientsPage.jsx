@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import AgencyShell from "./components/AgencyShell";
 import { api } from "../../shared/lib/api";
 
@@ -12,6 +12,7 @@ import { api } from "../../shared/lib/api";
 
 // Temperature labels in IT/EN/ES sourced from i18n at render-time.
 const TEMP_ORDER = ["rovente", "caldo", "tiepido", "freddo"];
+const BUCKETS = ["all", "to_call_today", "rovente", "caldo", "tiepido", "freddo", "searchers", "sellers"];
 
 function TempPill({ temp, t }) {
   if (!temp) {
@@ -93,11 +94,15 @@ export default function ClientsPage() {
   const { t, i18n } = useTranslation();
   const lang = (i18n.language || "it").slice(0, 2);
   const nav = useNavigate();
+  const [searchParams] = useSearchParams();
 
   const [data, setData] = useState({ items: [], counts: {}, total: 0, page: 1, page_size: 50 });
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [bucket, setBucket] = useState("all");
+  const [bucket, setBucket] = useState(() => {
+    const b = searchParams.get("bucket") || "all";
+    return BUCKETS.includes(b) ? b : "all";
+  });
   const [sort, setSort] = useState("score_desc");
   const [q, setQ] = useState("");
   const [page, setPage] = useState(1);
