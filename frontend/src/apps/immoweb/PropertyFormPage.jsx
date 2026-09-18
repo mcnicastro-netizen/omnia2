@@ -336,11 +336,11 @@ export default function PropertyFormPage() {
             <PhotoUploader
               photos={form.photos || []}
               onChange={(photos) => upd("photos", photos)}
-              max={15}
+              max={60}
               onStage={(p) => setStagingPhoto(p)}
             />
             <p className="text-xs text-stone-400 mt-2">
-              🪄 Passa il mouse su una foto e clicca la bacchetta per arredarla con il Virtual Staging AI.
+              Fino a 60 foto (come sui principali portali). Passa il mouse su una foto e clicca la bacchetta per arredarla con il Virtual Staging AI.
             </p>
           </Section>
 

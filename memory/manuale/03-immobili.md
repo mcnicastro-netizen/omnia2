@@ -128,7 +128,8 @@ Le foto sono il primo motivo per cui un cliente clicca (o scarta) un annuncio. L
 **Formati e limiti**
 - Formati accettati: **JPEG · PNG · WEBP**.
 - Peso massimo per foto: **8 MB**.
-- Non c'è un numero massimo, ma i portali richiedono in genere **minimo 5-8 foto**.
+- Numero massimo: **60 foto** per immobile (allineato ai principali portali IT; Idealista/Immobiliare.it consentono fasce simili).
+- I portali richiedono in genere **minimo 3–8 foto** (OMNIA compliance HARD: almeno 3).
 
 **Passi (nuova foto)**
 1. Apri l'immobile (Immobili → clicca sulla riga).

@@ -181,6 +181,7 @@ async def create_property(
         data["owner"] = PropertyOwner().model_dump()
     if data.get("photos") is None:
         data["photos"] = []
+    _enforce_photos_limit(data.get("photos"))
 
     prop = PropertyInDB(
         agency_id=agency_id,
@@ -238,6 +239,9 @@ async def update_property(
         else:
             update_doc[k] = v
 
+    if "photos" in update_doc:
+        _enforce_photos_limit(update_doc["photos"])
+
     await db.properties.update_one({"id": prop_id, "agency_id": agency_id}, {"$set": update_doc})
 
     # Price-drop watch (ImmobilCloud alerts)
@@ -286,6 +290,20 @@ async def delete_property(
 
 _ALLOWED_PHOTO_MIME = {"image/jpeg", "image/png", "image/webp"}
 _MAX_PHOTO_BYTES = 8 * 1024 * 1024  # 8MB
+# Align with major IT portals (Idealista/Immobiliare.it allow ~40–60). UI was hard-capped at 15.
+AGENCY_MAX_PHOTOS = 60
+
+
+def _enforce_photos_limit(photos) -> None:
+    if photos is not None and len(photos) > AGENCY_MAX_PHOTOS:
+        raise HTTPException(
+            status_code=400,
+            detail={
+                "error": "photos_limit_exceeded",
+                "max": AGENCY_MAX_PHOTOS,
+                "got": len(photos),
+            },
+        )
 
 
 @router.post("/{prop_id}/photos/upload")
@@ -325,6 +343,15 @@ async def upload_property_photo(
         raise HTTPException(status_code=502, detail="storage_upload_failed") from e
 
     photos = list(prop.get("photos") or [])
+    if len(photos) >= AGENCY_MAX_PHOTOS:
+        raise HTTPException(
+            status_code=400,
+            detail={
+                "error": "photos_limit_exceeded",
+                "max": AGENCY_MAX_PHOTOS,
+                "got": len(photos),
+            },
+        )
     if is_cover:
         for p in photos:
             p["is_cover"] = False

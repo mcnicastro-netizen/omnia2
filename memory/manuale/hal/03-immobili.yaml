@@ -182,7 +182,7 @@ voci:
       passi:
         - Apri l'immobile (Immobili → clicca sulla riga).
         - Scorri fino alla sezione Fotografie.
-        - Trascina le foto nel riquadro oppure clicca per sceglierle.
+        - Trascina le foto nel riquadro oppure clicca per sceglierle (max 60).
         - Aspetta il caricamento (barra di avanzamento).
         - Le foto appaiono in ordine di caricamento.
         - Trascina le miniature per riordinarle.
@@ -195,6 +195,10 @@ voci:
           soluzione: >
             Riduci con Foto (Mac/Windows) o servizi come TinyPNG.
             Per foto di annuncio, 1-2 MB per foto è già ottimo.
+        - problema: "Ho raggiunto il limite di foto"
+          soluzione: >
+            Massimo 60 foto per immobile (come sui principali portali).
+            Elimina le meno utili o riduci i duplicati.
         - problema: "Caricamento lento"
           soluzione: >
             Foto pesanti + connessione lenta. Preferisci JPEG 1-2 MB.

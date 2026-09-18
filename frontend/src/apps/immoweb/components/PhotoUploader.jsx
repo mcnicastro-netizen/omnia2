@@ -12,7 +12,7 @@ import { api } from "../../../shared/lib/api";
  * Props:
  *   photos: [{ id, url, caption?, order, is_cover }]
  *   onChange: (newPhotos) => void
- *   max: max number of photos (default 15)
+ *   max: max number of photos (default 60 — allineato ai portali IT)
  *   uploadUrl: override upload endpoint (default CRM agency upload-tmp)
  *   uploadExtraFields: optional FormData fields (e.g. { kind: "photo" })
  *   onStage: optional virtual-staging callback
@@ -20,7 +20,7 @@ import { api } from "../../../shared/lib/api";
 export default function PhotoUploader({
   photos = [],
   onChange,
-  max = 15,
+  max = 60,
   onStage = null,
   uploadUrl = "/app/properties/photos/upload-tmp",
   uploadExtraFields = null,

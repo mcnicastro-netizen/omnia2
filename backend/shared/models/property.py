@@ -137,7 +137,7 @@ class PropertyInDB(TenantModel):
     energy: PropertyEnergy = Field(default_factory=PropertyEnergy)
 
     # Media
-    photos: List[PropertyPhoto] = Field(default_factory=list)
+    photos: List[PropertyPhoto] = Field(default_factory=list, max_length=60)
     virtual_tour_url: Optional[str] = Field(default=None, max_length=500)
     floor_plan_url: Optional[str] = Field(default=None, max_length=500)
 
