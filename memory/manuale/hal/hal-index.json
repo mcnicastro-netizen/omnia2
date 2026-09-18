@@ -1,7 +1,7 @@
 {
   "version": "0.19-cap21-align",
   "updated": "2026-09-18",
-  "voices_total": 334,
+  "voices_total": 335,
   "source_files": [
     {
       "file": "00-api-codice.yaml",
@@ -20,8 +20,8 @@
     },
     {
       "file": "03-immobili.yaml",
-      "voices": 15,
-      "md5": "07426f830a8e785fd1a0f8d566a810ae"
+      "voices": 16,
+      "md5": "4bd0e6eeec37c221c461ee3ffa21f225"
     },
     {
       "file": "04-clienti.yaml",
