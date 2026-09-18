@@ -420,8 +420,25 @@ export default function ClientFormPage() {
               </div>
             </Field>
 
-            <Field label={t("clients.pref_floors")}>
-              <div className="flex flex-wrap gap-2">
+            <div className="space-y-2" data-testid="client-pref-floor-energy">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-end">
+                <p className="text-xs uppercase tracking-widest text-stone-600">
+                  {t("clients.pref_floors")}
+                </p>
+                <Field label={t("clients.pref_energy_min")}>
+                  <select
+                    value={form.preferences.energy_min_class || ""}
+                    onChange={(e) => updPref("energy_min_class", e.target.value)}
+                    className="form-input"
+                    data-testid="client-pref-energy-min"
+                  >
+                    {ENERGY_CLASSES.map((c) => (
+                      <option key={c.value || "any"} value={c.value}>{c.value ? c.label : t("clients.pref_any")}</option>
+                    ))}
+                  </select>
+                </Field>
+              </div>
+              <div className="flex flex-wrap gap-2 justify-start">
                 {FLOORS.map((f) => {
                   const on = form.preferences.floor_preferences?.includes(f);
                   return (
@@ -438,21 +455,14 @@ export default function ClientFormPage() {
                   );
                 })}
               </div>
-            </Field>
+            </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <Field label={t("clients.pref_energy_min")}>
-                <select value={form.preferences.energy_min_class || ""} onChange={(e) => updPref("energy_min_class", e.target.value)} className="form-input">
-                  {ENERGY_CLASSES.map((c) => (
-                    <option key={c.value || "any"} value={c.value}>{c.value ? c.label : t("clients.pref_any")}</option>
-                  ))}
-                </select>
-              </Field>
-              <label className="flex items-center gap-2 text-sm text-stone-700 mt-7">
+            <div className="flex flex-wrap gap-x-6 gap-y-2 justify-start">
+              <label className="flex items-center gap-2 text-sm text-stone-700">
                 <input type="checkbox" checked={!!form.preferences.needs_photos} onChange={(e) => updPref("needs_photos", e.target.checked)} />
                 {t("clients.pref_needs_photos")}
               </label>
-              <label className="flex items-center gap-2 text-sm text-stone-700 mt-7">
+              <label className="flex items-center gap-2 text-sm text-stone-700">
                 <input type="checkbox" checked={!!form.preferences.needs_virtual_tour} onChange={(e) => updPref("needs_virtual_tour", e.target.checked)} />
                 {t("clients.pref_needs_vtour")}
               </label>
