@@ -132,7 +132,7 @@ export default function PortalsPage() {
               "Attiva i portali su cui vuoi pubblicare gli annunci. OMNIA genera un feed XML aggiornato in tempo reale — ogni portale scarica autonomamente ogni notte."}
           </p>
           <div className="mt-3 text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded px-3 py-2 max-w-2xl">
-            ⚠️ <strong>Compliance HARD attiva + Sync automatico</strong>: solo gli annunci con prezzo, superficie, indirizzo, classe energetica valida e almeno 3 foto vengono pubblicati. Il sync gira automaticamente ogni notte alle 06:00 UTC su tutti i portali attivi. Clicca "Compliance" per vedere quali immobili sono bloccati e perché.
+            ⚠️ <strong>Compliance HARD attiva + Sync automatico</strong>: solo gli annunci con prezzo, superficie, indirizzo, classe energetica valida e almeno 3 foto vengono pubblicati. Il sync gira automaticamente ogni notte alle 06:00 UTC su tutti i portali attivi. Per vedere quali immobili sono bloccati e perché: apri la tab <strong>Attivi</strong>, poi nella colonna <strong>Azioni</strong> clicca il pulsante <strong>Compliance</strong> sul portale che ti interessa.
           </div>
         </div>
 
