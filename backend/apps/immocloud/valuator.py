@@ -34,6 +34,7 @@ Endpoint:
 import logging
 import re
 import unicodedata
+from datetime import date
 from typing import Any, Dict, List, Literal, Optional, Tuple
 
 from fastapi import APIRouter, Depends, HTTPException, Request
@@ -55,6 +56,11 @@ from apps.immocloud.data.italy_real_estate_prices_2025 import (
     PROPERTY_TYPE_MULTIPLIER,
     CONDITION_MULTIPLIER,
     ENERGY_CLASS_MULTIPLIER,
+    PRICE_DATASET_AS_OF,
+    PRICE_DATASET_BASE_YEAR,
+    PRICE_DATASET_LABEL,
+    months_since_price_dataset,
+    format_updated_data_source,
 )
 from apps.immocloud.data.province_prices import PROVINCE_PRICES, PROVINCE_NAMES
 from apps.immocloud.data.coefficients import (
@@ -387,7 +393,7 @@ async def _estimate_value_core(payload: ValuationPayload) -> Dict[str, Any]:
     if city_data:
         base_min, base_max = city_data[zone_tier]
         region = city_data.get("region")
-        data_source = city_data.get("source", "Borsino/OMI 2025 curated city")
+        data_source = city_data.get("source", PRICE_DATASET_LABEL)
     else:
         # Layer 2: Nominatim geocoding → province lookup
         province_sigla = await _lookup_province_via_nominatim(payload.city)
@@ -395,7 +401,10 @@ async def _estimate_value_core(payload: ValuationPayload) -> Dict[str, Any]:
             prov = PROVINCE_PRICES[province_sigla]
             base_min, base_max = prov[zone_tier]
             region = prov.get("region")
-            data_source = f"Province fallback ({PROVINCE_NAMES.get(province_sigla, province_sigla)}) via Nominatim geocoding"
+            data_source = (
+                f"Province fallback ({PROVINCE_NAMES.get(province_sigla, province_sigla)}) "
+                f"via Nominatim · base {PRICE_DATASET_LABEL}"
+            )
             fallback_source = "province"
             # comune piccolo → discount 8-15% vs capoluogo
             small_town_discount = 0.88
@@ -405,8 +414,16 @@ async def _estimate_value_core(payload: ValuationPayload) -> Dict[str, Any]:
             # Layer 3: regional default (worst case)
             region = None
             base_min, base_max = REGIONAL_DEFAULTS["center"]
-            data_source = "Regional fallback (no city/province match)"
+            data_source = f"Regional fallback · base {PRICE_DATASET_LABEL}"
             fallback_source = "regional"
+
+    # 1b. Roll-forward snapshot → mese corrente (FOI + trend regionale)
+    today = date.today()
+    months_elapsed = months_since_price_dataset(today)
+    foi = foi_revaluation(PRICE_DATASET_BASE_YEAR, today.year)
+    if foi != 1.0:
+        base_min = round(base_min * foi)
+        base_max = round(base_max * foi)
 
     # 2. Calcolo superficie commerciale ponderata UNI 10750
     if payload.commercial_surfaces:
@@ -439,8 +456,10 @@ async def _estimate_value_core(payload: ValuationPayload) -> Dict[str, Any]:
     else:
         merit_pct, merit_breakdown = 0.0, {}
 
-    # 5. Coefficienti regionali (liquidità + trend)
-    regional_pct, regional_breakdown = compute_regional_adjustment(region, months_since_omi=6)
+    # 5. Coefficienti regionali (liquidità + trend YoY sul tempo trascorso dallo snapshot)
+    regional_pct, regional_breakdown = compute_regional_adjustment(
+        region, months_since_omi=months_elapsed
+    )
 
     # 6. Total combined multiplier
     base_mult = ptype_mult * cond_mult * energy_mult * floor_mult
@@ -576,16 +595,23 @@ async def _estimate_value_core(payload: ValuationPayload) -> Dict[str, Any]:
         },
         "merit_breakdown": merit_breakdown,
         "regional_breakdown": regional_breakdown,
+        "foi_factor": round(foi, 4),
+        "months_since_snapshot": months_elapsed,
+        "dataset_as_of": PRICE_DATASET_AS_OF.isoformat(),
+        "prices_updated_to": today.strftime("%Y-%m"),
         "confidence": confidence,
         "confidence_score": confidence_score,
         "methodology": (
             "Pipeline professionale OMNIA: 1) prezzo base OMI/Borsino città o provincia (Nominatim), "
-            "2) superficie commerciale UNI 10750 / DPR 138/1998 con ponderazione di balconi/terrazzi/cantine/box, "
-            "3) moltiplicatori tipologia·condizione·classe energetica·piano, "
-            "4) coefficienti di merito (esposizione, vista, riscaldamento, ascensore, età, vincoli), "
-            "5) coefficienti regionali (liquidità + trend semestrale)."
+            "2) rivalutazione allo snapshot corrente (FOI ISTAT + trend regionale YoY), "
+            "3) superficie commerciale UNI 10750 / DPR 138/1998 con ponderazione di balconi/terrazzi/cantine/box, "
+            "4) moltiplicatori tipologia·condizione·classe energetica·piano, "
+            "5) coefficienti di merito (esposizione, vista, riscaldamento, ascensore, età, vincoli), "
+            "6) coefficienti regionali (liquidità + trend sul tempo trascorso dallo snapshot)."
         ),
-        "data_source": data_source,
+        "data_source": format_updated_data_source(
+            data_source, foi=foi, months=months_elapsed, as_of=today
+        ),
         "comparable_count": comparable_count,
         "comparables": comparables[:10],
         "valuation_lead_id": lead_id,
@@ -600,6 +626,7 @@ async def _estimate_value_core(payload: ValuationPayload) -> Dict[str, Any]:
 @router.get("/coverage")
 async def coverage_info():
     """Public info endpoint: how many cities + provinces are in the dataset."""
+    today = date.today()
     return {
         "cities_covered": len(CITY_PRICES),
         "provinces_covered": len(PROVINCE_PRICES),
@@ -610,5 +637,10 @@ async def coverage_info():
         "property_types": list(PROPERTY_TYPE_MULTIPLIER.keys()),
         "conditions": list(CONDITION_MULTIPLIER.keys()),
         "norms_applied": ["UNI 10750:1998", "DPR 138/1998"],
-        "data_year": 2025,
+        "dataset_base": PRICE_DATASET_LABEL,
+        "dataset_as_of": PRICE_DATASET_AS_OF.isoformat(),
+        "data_year": today.year,
+        "prices_updated_to": today.strftime("%Y-%m"),
+        "update_method": "FOI ISTAT + regional YoY trend from curated snapshot",
+        "months_since_snapshot": months_since_price_dataset(today),
     }

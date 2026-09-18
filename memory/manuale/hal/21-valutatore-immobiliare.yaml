@@ -26,7 +26,7 @@ voci:
         - "Pagina dedicata /it/cloud/valutatore con due tier card."
         - "CTA su scheda annuncio (Stima gratuita + Report UNI €2,99)."
         - "ActionCard Valutatore immobiliare su home ImmobilCloud."
-        - "Motore: OMI/Borsino 2025 + UNI 10750 + merito + comparables."
+        - "Motore: snapshot OMI/Borsino 2025-Q1 + roll-forward FOI/trend + UNI 10750 + merito + comparables."
         - "Login ImmobilCloud obbligatorio (no stima anonima illimitata v1)."
       errori_comuni:
         - problema: "E' una perizia bancaria ufficiale?"
@@ -132,7 +132,7 @@ voci:
         - "BASE: gratis, 1×/12 mesi, mq calpestabili, no merito, no PDF."
         - "UNI: €2,99, superficie commerciale ponderata UNI 10750,
         coefficienti merito (piano, esposizione, vista...), PDF."
-        - "Entrambi: login obbligatorio, stesso motore prezzi OMI 2025."
+        - "Entrambi: login obbligatorio, stesso motore prezzi (snapshot + aggiornamento mese corrente)."
         - "Upsell: dopo stima base banner 'Passa a UNI · €2,99'."
       errori_comuni:
         - problema: "Perche' la stima base e' diversa dalla UNI?"
@@ -240,7 +240,7 @@ voci:
       screenshot: []
 
   - id: valutatore.affidabilita-dati
-    titolo: Affidabilita' stima · dataset OMI 2025 · comparables
+    titolo: Affidabilita' stima · snapshot prezzi + aggiornamento · comparables
     modulo: Valutatore
     widget: null
     pubblico: [privato, titolare, agente]
@@ -254,7 +254,7 @@ voci:
       quando_si_usa: >
         Quando il valore sembra alto/basso o per comuni piccoli.
       passi:
-        - "Dataset: OMI/Borsino 2025, citta' curate + province + regioni."
+        - "Dataset: snapshot OMI/Borsino 2025-Q1, citta' curate + province + regioni; prezzi rivalutati al mese corrente (FOI + trend)."
         - "Fallback: citta' → provincia (Nominatim/ANNCSU) → regione."
         - "Comuni piccoli: sconto 8-12% vs capoluogo provinciale."
         - "Confidence: alta / media / orientativa (score 0-110)."

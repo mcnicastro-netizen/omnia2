@@ -225,7 +225,9 @@ REGIONAL_LIQUIDITY = {
     "valle_d_aosta":          ( 6, -0.02),
 }
 
-# Trend prezzi annuo (2024→2025), source ABI/Idealista/OMI cross
+# Trend prezzi annuo (proxy YoY per roll-forward oltre lo snapshot 2025-Q1).
+# Source storica ABI/Idealista/OMI 2024→2025; riusata come tasso corrente
+# finché non arriva un feed OMI live.
 REGIONAL_TREND_YOY = {
     "lombardia":              0.025,
     "lazio":                  0.018,
@@ -282,8 +284,11 @@ FOI_ANNUAL_INDEX = {
     2026: 1.205,   # +1.5% (stima)
 }
 
-def foi_revaluation(from_year: int, to_year: int = 2026) -> float:
-    """Multiplier to revalue a price from `from_year` to `to_year`."""
+def foi_revaluation(from_year: int, to_year: int | None = None) -> float:
+    """Multiplier to revalue a price from `from_year` to `to_year` (default: current year)."""
+    if to_year is None:
+        from datetime import date
+        to_year = date.today().year
     if from_year not in FOI_ANNUAL_INDEX or to_year not in FOI_ANNUAL_INDEX:
         return 1.0
     return FOI_ANNUAL_INDEX[to_year] / FOI_ANNUAL_INDEX[from_year]

@@ -378,7 +378,7 @@ export default function ValuatorPage() {
         )}
 
         <div className="mt-10 text-xs text-stone-500 text-center">
-          {t("valuator.disclaimer", "Stima algoritmica basata su dati OMI 2025 + coefficienti UNI 10750. Non sostituisce una perizia professionale.")}
+          {t("valuator.disclaimer", "Stima algoritmica basata su snapshot OMI/Borsino aggiornato al mese corrente (FOI + trend) + coefficienti UNI 10750. Non sostituisce una perizia professionale.")}
         </div>
       </div>
     </div>

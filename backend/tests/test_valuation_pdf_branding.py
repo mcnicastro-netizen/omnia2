@@ -34,9 +34,13 @@ def _sample_result(**over):
         ],
         "methodology": (
             "Pipeline professionale OMNIA: 1) prezzo base OMI/Borsino città, "
-            "2) superficie commerciale UNI 10750."
+            "2) rivalutazione allo snapshot corrente (FOI ISTAT + trend regionale YoY), "
+            "3) superficie commerciale UNI 10750."
         ),
-        "data_source": "CITY_PRICES · Milano semicentro",
+        "data_source": "Borsino/OMI Milano 2025-Q1 · aggiornato a 2026-09 (FOI×1.015, trend mercato 18 mesi)",
+        "dataset_as_of": "2025-03-31",
+        "prices_updated_to": "2026-09",
+        "foi_factor": 1.015,
         "disclaimer": (
             "Stima orientativa basata su dati statistici di mercato e norme UNI 10750. "
             "Per una valutazione vincolante richiedi una perizia ufficiale a un agente OMNIA "

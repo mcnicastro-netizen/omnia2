@@ -1,20 +1,61 @@
 """OMNIA — Italian Real Estate Price Benchmarks (M3.S6).
 
-Curated 2025 €/m² reference data for residential property valuation across
+Curated €/m² reference data for residential property valuation across
 ~120 Italian cities, with zone tiers (centro/semicentro/periferia) where
-applicable. Sources cross-referenced from:
+applicable.
+
+Snapshot base (auditable): Borsino/OMI/Tecnocasa **2025-Q1**
   - Borsino Immobiliare 2024-Q4 / 2025-Q1 (https://www.borsinoimmobiliare.it)
   - Tecnocasa annual report 2024
   - Idealista price reports IT
   - OMI Agenzia Entrate (last available semester)
   - Casa.it heatmaps
 
+At valuation time the engine **roll-forwards** these base prices to the
+current month via FOI ISTAT + regional YoY trend (see `valuator.py` /
+`coefficients.py`). The PDF/API attribution always shows both the snapshot
+vintage and the update month — never a stale fixed “Dataset 2025” alone.
+
 Values are mid-market for USED residential apartments in habitable condition.
 Multipliers are applied for property type and condition (see valuator.py).
 
 This is intentionally hard-coded (not a DB seed) so the algorithm has a stable,
-auditable baseline. Future versions can layer real OMI data on top.
+auditable baseline. Future versions can layer live OMI feeds on top.
 """
+from __future__ import annotations
+
+from datetime import date
+
+# ---------------------------------------------------------------
+# Vintage — base snapshot that CITY_PRICES / PROVINCE_PRICES encode
+# ---------------------------------------------------------------
+PRICE_DATASET_AS_OF = date(2025, 3, 31)  # 2025-Q1
+PRICE_DATASET_BASE_YEAR = 2025
+PRICE_DATASET_LABEL = "Borsino/OMI/Tecnocasa 2025-Q1"
+
+
+def months_since_price_dataset(as_of: date | None = None) -> int:
+    """Months elapsed from the curated snapshot to `as_of` (default: today)."""
+    today = as_of or date.today()
+    months = (today.year - PRICE_DATASET_AS_OF.year) * 12 + (today.month - PRICE_DATASET_AS_OF.month)
+    return max(0, months)
+
+
+def format_updated_data_source(
+    base_source: str,
+    *,
+    foi: float,
+    months: int,
+    as_of: date | None = None,
+) -> str:
+    """Human-readable source line: snapshot + roll-forward attribution."""
+    today = as_of or date.today()
+    base = (base_source or PRICE_DATASET_LABEL).strip()
+    return (
+        f"{base} · aggiornato a {today.strftime('%Y-%m')} "
+        f"(FOI×{foi:.3f}, trend mercato {months} mesi)"
+    )
+
 
 # ---------------------------------------------------------------
 # Default fallbacks if city not found (regional averages)
@@ -37,9 +78,9 @@ REGION_TO_AREA = {
 }
 
 # ---------------------------------------------------------------
-# City-level benchmarks (€/m² residential apartment, used, 2025)
+# City-level benchmarks (€/m² residential apartment, used, snapshot 2025-Q1)
 # Format: city_normalized → {"centro": (min, max), "semicentro": (min, max), "periferia": (min, max), "region": str}
-# Sources documented inline.
+# Sources documented inline. Engine roll-forwards to current month at runtime.
 # ---------------------------------------------------------------
 CITY_PRICES = {
     # ============ NORD ============

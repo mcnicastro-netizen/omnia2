@@ -550,9 +550,22 @@ def build_valuation_pdf(
     story.append(Paragraph(_esc(methodology), styles["disc"]))
     story.append(Spacer(1, 3))
     story.append(Paragraph(
-        f"Fonte dati: {_esc(result.get('data_source', '—'))} · Dataset 2025",
+        f"Fonte dati: {_esc(result.get('data_source', '—'))}",
         styles["disc"],
     ))
+    updated = result.get("prices_updated_to")
+    base_as_of = result.get("dataset_as_of")
+    if updated or base_as_of:
+        story.append(Spacer(1, 2))
+        bits = []
+        if base_as_of:
+            bits.append(f"Snapshot base: {_esc(base_as_of)}")
+        if updated:
+            bits.append(f"Aggiornato a: {_esc(updated)}")
+        foi = result.get("foi_factor")
+        if foi:
+            bits.append(f"FOI×{_esc(foi)}")
+        story.append(Paragraph(" · ".join(bits), styles["disc"]))
     story.append(Spacer(1, 8))
     story.append(HRFlowable(width="100%", thickness=0.5, color=colors.HexColor("#e7e5e4")))
     story.append(Spacer(1, 4))

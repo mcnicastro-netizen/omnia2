@@ -70,7 +70,24 @@ ORDER_CHECKS = [
     ("Bologna", "Catania"),
 ]
 
-TOLERANCE = 0.12  # ±12% vs expected band edges
+TOLERANCE = 0.12  # ±12% vs expected band edges (post roll-forward)
+
+
+def _roll_forward_band(band: tuple[float, float], region: str | None) -> tuple[float, float]:
+    """Apply the same FOI + regional YoY roll-forward as the valuator engine."""
+    from apps.immocloud.data.italy_real_estate_prices_2025 import (
+        PRICE_DATASET_BASE_YEAR,
+        months_since_price_dataset,
+    )
+    from apps.immocloud.data.coefficients import compute_regional_adjustment, foi_revaluation
+    from datetime import date
+
+    today = date.today()
+    foi = foi_revaluation(PRICE_DATASET_BASE_YEAR, today.year)
+    months = months_since_price_dataset(today)
+    regional_pct, _ = compute_regional_adjustment(region, months_since_omi=months)
+    mult = foi * (1 + regional_pct)
+    return (round(band[0] * mult), round(band[1] * mult))
 
 
 def _province_band(sigla: str):
@@ -81,7 +98,8 @@ def _province_band(sigla: str):
     if not sc:
         return None
     # small-town discount ~12% as in valuator province fallback path
-    return (round(sc[0] * 0.88), round(sc[1] * 0.88))
+    raw = (round(sc[0] * 0.88), round(sc[1] * 0.88))
+    return _roll_forward_band(raw, row.get("region"))
 
 
 def login() -> requests.Session:
@@ -100,9 +118,14 @@ def in_band(avg: float, band: tuple[float, float], tol: float = TOLERANCE) -> bo
 
 
 def main() -> int:
-    # Enrich None bands from province table
+    # Enrich None bands from province table; roll-forward curated city bands
     for row in SAMPLE:
         if row["band"] is None and row.get("province_hint"):
+            row["band"] = _province_band(row["province_hint"])
+        elif row["band"] is not None and row["layer"] == "city":
+            row["band"] = _roll_forward_band(row["band"], row.get("region_hint"))
+        elif row["band"] is not None and row["layer"] == "province" and row.get("province_hint"):
+            # static province bands in SAMPLE are pre-discount raw — recompute via helper
             row["band"] = _province_band(row["province_hint"])
 
     s = login()
@@ -240,8 +263,9 @@ def main() -> int:
             "counts": counts,
             "note": (
                 "Mini-sample only. Does not prove OMI ~27k zone accuracy. "
-                "Curated cities checked vs CITY_PRICES semicentro; "
-                "small comuni vs province×0.88 band."
+                "Curated cities checked vs CITY_PRICES semicentro roll-forwarded "
+                "(FOI + regional YoY) to current month; "
+                "small comuni vs province×0.88 then same roll-forward."
             ),
         },
         "rows": rows,
@@ -264,7 +288,7 @@ def main() -> int:
         "## Cosa valida (e cosa no)",
         "",
         "- Sì: campione rappresentativo (grandi città curate + comuni piccoli con fallback provincia).",
-        "- Sì: €/m² medio dentro banda attesa (dataset curato / provincia×0.88).",
+        "- Sì: €/m² medio dentro banda attesa (snapshot 2025-Q1 roll-forward FOI+trend / provincia×0.88).",
         "- Sì: ordinamento relativo Milano/Firenze/Bologna vs Catania/Palermo/Bari.",
         "- No: non è una prova sulle ~27.000 zone OMI ufficiali.",
         "",

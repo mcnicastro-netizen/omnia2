@@ -62,12 +62,13 @@ Capire in pochi minuti l'**ordine di grandezza** del valore di un immobile senza
 - Immobile: tipologia (9 valori: appartamento, attico, loft, villa, monolocale, rustico/casale, ufficio, negozio, garage/box), **mq calpestabili** (min 10), stato conservativo (7 valori), classe energetica (opzionale), piano (opzionale).
 
 **Cosa calcola il motore (base)**
-1. Prezzo base €/m² da dataset **OMI/Borsino 2025** per città + fascia zona (centro / semicentro / periferia).
-2. Fallback a **provincia** (geocoding Nominatim/ANNCSU) o **regione** se città non in dataset.
-3. Moltiplicatori: tipologia · condizione · classe energetica · piano.
-4. Coefficienti regionali (liquidità mercato + trend semestrale).
-5. Superficie usata = **mq calpestabili** (`method: calpestabile_only`).
-6. Comparables: fino a 10 annunci attivi simili (stessa città + tipologia) se disponibili.
+1. Prezzo base €/m² da snapshot **OMI/Borsino 2025-Q1** per città + fascia zona (centro / semicentro / periferia).
+2. **Aggiornamento automatico al mese corrente**: FOI ISTAT + trend regionale YoY sul tempo trascorso dallo snapshot (attribution sempre con “aggiornato a YYYY-MM”).
+3. Fallback a **provincia** (geocoding Nominatim/ANNCSU) o **regione** se città non in dataset.
+4. Moltiplicatori: tipologia · condizione · classe energetica · piano.
+5. Coefficienti regionali (liquidità mercato + trend sul tempo dallo snapshot).
+6. Superficie usata = **mq calpestabili** (`method: calpestabile_only`).
+7. Comparables: fino a 10 annunci attivi simili (stessa città + tipologia) se disponibili.
 
 **Cosa ottieni a schermo**
 - Valore stimato medio + range min/max.
@@ -219,12 +220,12 @@ Totale merito **cappato** tra −40% e +30%.
 ## 21.8 · Affidabilità, dati di mercato e comparables
 
 **Dataset prezzi**
-- **Città curate** OMI/Borsino 2025 (`CITY_PRICES`) — centinaia di comuni.
+- **Città curate** OMI/Borsino (snapshot 2025-Q1, roll-forward FOI+trend) (`CITY_PRICES`) — centinaia di comuni.
 - **Fallback provincia** via geocoding (Nominatim / ANNCSU ISTAT) con sconto 8–12% vs capoluogo per comuni piccoli.
 - **Fallback regionale** se provincia non risolvibile.
 
 **Endpoint pubblico metadati**
-- Pagina info copertura: elenco città/province/regioni, tier zona, tipologie supportate, norme UNI 10750 applicate, anno dati 2025.
+- Pagina info copertura: elenco città/province/regioni, tier zona, tipologie supportate, norme UNI 10750 applicate, snapshot base + mese di aggiornamento prezzi.
 
 **Livelli affidabilità**
 

@@ -9,7 +9,10 @@ The flow:
 Prices represent capoluogo + provincial average. For small comuni the
 algorithm applies a downward regional adjustment via coefficients.
 
-Source: Borsino Immobiliare + Tecnocasa + OMI Q4-2024/Q1-2025 cross-ref.
+Source: Borsino Immobiliare + Tecnocasa + OMI Q4-2024/Q1-2025 cross-ref
+(snapshot base). At runtime the valuator roll-forwards to the current month
+via FOI ISTAT + regional YoY trend — see italy_real_estate_prices_2025.py
+PRICE_DATASET_* constants.
 """
 
 # Province → (centro_min, centro_max, semicentro_min, semicentro_max,
