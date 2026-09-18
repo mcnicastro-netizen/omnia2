@@ -474,7 +474,7 @@ voci:
           trattini); si auto-compila dal nome e serve a identificare
           il portale nell'URL del feed — non va chiesto al portale.
           Poi sito ufficiale (opzionale), categoria (gratuito /
-          freemium / premium), scope (locale / regionale /
+          a pagamento), scope (locale / regionale /
           nazionale)."
         - "Step 2 Formato: dialetto XML (osf_federata
           consigliato, oppure generic_rss per aggregatori).

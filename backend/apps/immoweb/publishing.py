@@ -416,7 +416,7 @@ class CustomPortalCreate(OmniaBaseModel):
     slug: str = Field(min_length=2, max_length=60)
     dialect: str = Field(default="osf_federata")
     integration_type: str = Field(default="feed_pull")
-    category: str = Field(default="freemium")
+    category: str = Field(default="gratuito")
     site_url: Optional[str] = Field(default=None, max_length=300)
     endpoint_url: Optional[str] = Field(default=None, max_length=300)
     geographic_scope: str = Field(default="local")

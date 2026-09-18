@@ -98,7 +98,7 @@ class TestCreateCustomPortal:
             "slug": f"qa-{uuid.uuid4().hex[:6]}",
             "dialect": "osf_federata",
             "integration_type": "feed_pull",
-            "category": "freemium",
+            "category": "gratuito",
             "site_url": "https://test-qa.example.com",
             "endpoint_url": "https://test-qa.example.com/import",
             "geographic_scope": "regional",

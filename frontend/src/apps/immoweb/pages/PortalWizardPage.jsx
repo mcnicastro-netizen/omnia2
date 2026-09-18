@@ -25,7 +25,7 @@ const DIALECTS = [
   { code: "generic_rss", label_key: "portal_wizard.dialect_generic_rss" },
 ];
 
-const CATEGORIES = ["gratuito", "freemium", "premium"];
+const CATEGORIES = ["gratuito", "a_pagamento"];
 const SCOPES = ["local", "regional", "national"];
 
 export default function PortalWizardPage() {
@@ -38,7 +38,7 @@ export default function PortalWizardPage() {
     name: "",
     slug: "",
     site_url: "",
-    category: "freemium",
+    category: "gratuito",
     geographic_scope: "regional",
     dialect: "osf_federata",
     integration_type: "feed_pull",
