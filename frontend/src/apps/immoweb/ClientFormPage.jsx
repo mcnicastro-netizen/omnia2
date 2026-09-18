@@ -45,7 +45,7 @@ const emptyPrefs = {
   must_have_features: [],
   energy_min_class: "",
   needs_photos: false,
-  needs_virtual_tour: false,
+  // needs_virtual_tour: non esposto in UI — niente Virtual Tour nel gestionale v1
   notes: "",
 };
 
@@ -145,6 +145,8 @@ export default function ClientFormPage() {
       if (!prefs.operation) prefs.operation = null;
       if (!prefs.energy_min_class) prefs.energy_min_class = null;
       if (!prefs.notes || !prefs.notes.trim()) prefs.notes = null;
+      // Virtual Tour non offerto nel gestionale v1 — non esporre né persistere il filtro
+      prefs.needs_virtual_tour = false;
 
       const payload = {
         name: form.name.trim(),
@@ -420,51 +422,47 @@ export default function ClientFormPage() {
               </div>
             </Field>
 
-            <div className="space-y-2" data-testid="client-pref-floor-energy">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-end">
-                <p className="text-xs uppercase tracking-widest text-stone-600">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start" data-testid="client-pref-floor-energy">
+              <div>
+                <p className="block text-xs uppercase tracking-widest text-stone-600 mb-1.5">
                   {t("clients.pref_floors")}
                 </p>
-                <Field label={t("clients.pref_energy_min")}>
-                  <select
-                    value={form.preferences.energy_min_class || ""}
-                    onChange={(e) => updPref("energy_min_class", e.target.value)}
-                    className="form-input"
-                    data-testid="client-pref-energy-min"
-                  >
-                    {ENERGY_CLASSES.map((c) => (
-                      <option key={c.value || "any"} value={c.value}>{c.value ? c.label : t("clients.pref_any")}</option>
-                    ))}
-                  </select>
-                </Field>
+                <div className="flex flex-wrap gap-2 justify-start">
+                  {FLOORS.map((f) => {
+                    const on = form.preferences.floor_preferences?.includes(f);
+                    return (
+                      <button
+                        key={f}
+                        type="button"
+                        onClick={() => togglePrefArr("floor_preferences", f)}
+                        className={`text-xs px-3 py-1.5 rounded-full border transition ${
+                          on ? "bg-stone-900 text-stone-50 border-stone-900" : "bg-white text-stone-700 border-stone-300 hover:border-stone-500"
+                        }`}
+                      >
+                        {t(`clients.floor_${f}`)}
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
-              <div className="flex flex-wrap gap-2 justify-start">
-                {FLOORS.map((f) => {
-                  const on = form.preferences.floor_preferences?.includes(f);
-                  return (
-                    <button
-                      key={f}
-                      type="button"
-                      onClick={() => togglePrefArr("floor_preferences", f)}
-                      className={`text-xs px-3 py-1.5 rounded-full border transition ${
-                        on ? "bg-stone-900 text-stone-50 border-stone-900" : "bg-white text-stone-700 border-stone-300 hover:border-stone-500"
-                      }`}
-                    >
-                      {t(`clients.floor_${f}`)}
-                    </button>
-                  );
-                })}
-              </div>
+              <Field label={t("clients.pref_energy_min")}>
+                <select
+                  value={form.preferences.energy_min_class || ""}
+                  onChange={(e) => updPref("energy_min_class", e.target.value)}
+                  className="form-input"
+                  data-testid="client-pref-energy-min"
+                >
+                  {ENERGY_CLASSES.map((c) => (
+                    <option key={c.value || "any"} value={c.value}>{c.value ? c.label : t("clients.pref_any")}</option>
+                  ))}
+                </select>
+              </Field>
             </div>
 
             <div className="flex flex-wrap gap-x-6 gap-y-2 justify-start">
               <label className="flex items-center gap-2 text-sm text-stone-700">
                 <input type="checkbox" checked={!!form.preferences.needs_photos} onChange={(e) => updPref("needs_photos", e.target.checked)} />
                 {t("clients.pref_needs_photos")}
-              </label>
-              <label className="flex items-center gap-2 text-sm text-stone-700">
-                <input type="checkbox" checked={!!form.preferences.needs_virtual_tour} onChange={(e) => updPref("needs_virtual_tour", e.target.checked)} />
-                {t("clients.pref_needs_vtour")}
               </label>
             </div>
 

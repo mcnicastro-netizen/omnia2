@@ -91,7 +91,7 @@ Subito, al primo colloquio, per i clienti **Acquirenti · Affittuari · Investit
 9. **Stato dell'immobile** (Nuovo, Ottime, Buone, Da ristrutturare, Ristrutturato — scelta multipla).
 10. **Piano preferito**: Piano terra · Piani intermedi · Ultimo piano.
 11. **Classe energetica minima** (A4→G inclusa A+).
-12. **Solo con foto · Solo con virtual tour** (checkbox).
+12. **Solo con foto** (checkbox). Il filtro «Solo con virtual tour» non è in UI: OMNIA non offre Virtual Tour nel gestionale v1 (c’è Virtual Staging e micro-tour video, Cap. 9 / 23).
 13. **Caratteristiche imprescindibili** (es. *"ascensore obbligatorio se al 3° piano"*).
 14. **Note di ricerca** (testo libero — orientamento, vincoli particolari).
 

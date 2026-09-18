@@ -70,7 +70,7 @@ Il punteggio totale è la somma di 14 sotto-punteggi, ognuno con un peso diverso
 | **Bagni** | 4 | Bagni ≥ minimo richiesto |
 | **Condizione** | 4 | Nuovo / Ottime / Buone / Ristrutturato ecc. — l'immobile deve essere nella lista accettata |
 | **Classe energetica** | 4 | Classe ≥ soglia minima (A4 > A3 > A2 > A1 > A+ > A > B > … > G) |
-| **Multimedia** | 4 | Foto presenti; virtual tour se richiesto |
+| **Multimedia** | 4 | Foto presenti (se richiesto «Solo con foto»). Il filtro virtual tour non è in UI v1. |
 | **Piano preferito** | 3 | Piano terra / intermedio / ultimo piano |
 | **TOTALE** | **100** | |
 
