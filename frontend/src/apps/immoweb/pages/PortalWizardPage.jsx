@@ -217,7 +217,7 @@ export default function PortalWizardPage() {
                 placeholder="es. immo-veneto"
                 className={inputClass}
               />
-              <p className="text-xs text-stone-500 -mt-2">
+              <p className="text-xs text-stone-500 -mt-2 leading-relaxed max-w-2xl">
                 {t("portal_wizard.slug_help")}
               </p>
 
