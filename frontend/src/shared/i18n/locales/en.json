@@ -859,7 +859,8 @@
   "portals": {
     "available": "Available portals",
     "title": "Advertising portals",
-    "subtitle": "Automatically publish your listings on real estate portals. Credentials are end-to-end encrypted.",
+    "subtitle": "Automatically publish your listings on real estate portals.",
+    "credentials_footnote": "* Credentials are end-to-end encrypted.",
     "empty": "No portals activated yet. Choose a portal below to get started.",
     "not_yet_active": "Not yet active",
     "not_yet_active_hint": "Real integration not available — cannot activate."

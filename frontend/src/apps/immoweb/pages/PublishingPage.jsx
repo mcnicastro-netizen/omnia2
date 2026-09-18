@@ -408,6 +408,13 @@ export default function PortalsPage() {
           </div>
         )}
       </section>
+
+      <p
+        data-testid="portals-credentials-footnote"
+        className="text-[10px] text-stone-400 mt-2 px-0"
+      >
+        {t("portals.credentials_footnote")}
+      </p>
     </AgencyShell>
   );
 }

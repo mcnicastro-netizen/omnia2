@@ -996,7 +996,8 @@
   "portals": {
     "available": "Portales disponibles",
     "title": "Portales inmobiliarios",
-    "subtitle": "Publica tus anuncios automáticamente en portales inmobiliarios. Las credenciales están cifradas de extremo a extremo.",
+    "subtitle": "Publica tus anuncios automáticamente en portales inmobiliarios.",
+    "credentials_footnote": "* Las credenciales están cifradas de extremo a extremo.",
     "empty": "Aún no hay portales activados. Elige un portal a continuación para comenzar."
   },
   "valuator": {

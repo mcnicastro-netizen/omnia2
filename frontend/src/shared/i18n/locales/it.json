@@ -652,7 +652,8 @@
   },
   "portals": {
     "title": "Portali pubblicitari",
-    "subtitle": "Pubblica i tuoi annunci automaticamente sui portali immobiliari. Le credenziali sono cifrate end-to-end.",
+    "subtitle": "Pubblica i tuoi annunci automaticamente sui portali immobiliari.",
+    "credentials_footnote": "* Le credenziali sono cifrate end-to-end.",
     "empty": "Nessun portale ancora attivato. Scegli un portale qui sotto per iniziare.",
     "available": "Portali disponibili",
     "not_yet_active": "Non ancora attivo",
