@@ -27,10 +27,8 @@ def agency_sess():
     r = s.post(f"{API}/auth/login", json={"email": email, "password": password}, timeout=20)
     if r.status_code != 200:
         pytest.skip(f"login failed: {r.status_code} {r.text[:200]}")
-    tok = r.json().get("access_token") or r.json().get("token")
-    if not tok:
-        pytest.skip("no access_token in login response")
-    s.headers.update({"Authorization": f"Bearer {tok}"})
+    if not s.cookies.get("access_token"):
+        pytest.skip("login ok but no access_token cookie")
     return s
 
 
