@@ -125,7 +125,7 @@ Serve quando: hai appena aggiunto un immobile importante, hai corretto un errore
 
 **Il banner risultato manuale (leggerlo bene)**
 - `N immobili pubblicabili, M bloccati dal validatore compliance`.
-- Se il portale è api_push il banner aggiunge una nota chiara: *"ℹ️ Portale push: integrazione reale in arrivo — per ora simulata."*
+- Se il portale è api_push e non pronto, non compare tra gli attivabili con successo: etichetta **Non ancora attivo**.
 - Il banner si chiude col ✕ in alto a destra.
 
 **Errori comuni**
@@ -134,7 +134,7 @@ Serve quando: hai appena aggiunto un immobile importante, hai corretto un errore
 |----------|-----------|
 | "connection_disabled" | Hai disattivato il portale prima. Riattivalo o rimuovilo definitivamente. |
 | Sync gira ma "0 pubblicabili" | Nessun immobile passa la Compliance HARD. Apri Compliance (6.5) per capire i motivi. |
-| Sync fallito per portale api_push | Normale in v1: l'integrazione live non è ancora attiva. Il log dirà "simulated_push". |
+| Sync fallito per portale api_push | Se il canale non è ancora attivo: errore onesto `portal_not_yet_active` / `api_push_not_implemented`. Nessun successo finto. |
 
 ---
 
@@ -218,7 +218,7 @@ Ogni sync (automatico o manuale) lascia una **riga di log** salvata in permanenz
 | Campo | Cosa dice |
 |-------|-----------|
 | **Trigger** | `scheduled` (job automatico), `manual` (bottone Sync), `admin_manual` (bypass admin) |
-| **Stato** | `success`, `partial` (con blocchi compliance), `failed`, `simulated_push` |
+| **Stato** | `success`, `partial` (con blocchi compliance), `failed` (es. `portal_not_yet_active`) |
 | **Items OK** | Numero immobili pubblicati / pubblicabili |
 | **Items Failed** | Numero immobili bloccati dalla compliance |
 | **Retry count** | Se è un retry: 0, 1, 2, 3 (max) |
