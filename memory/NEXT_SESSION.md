@@ -1,6 +1,6 @@
 # Prossima sessione — programma passi
 
-**Aggiornato**: 18 Settembre 2026 — Cap.21/HAL/index allineati 100% (PDF + FOI)  
+**Aggiornato**: 18 Settembre 2026 — Gestionale: Social WA/WABA/GBP + planimetrie + Portali UX + HAL v0.20  
 **Stato base**: Sprint 1→4 **CONCLUSO**. Stress: `PLATFORM_STRESS_REPORT.md` + `STRESS_REPORT.md`.  
 **Preprod gate**: `memory/PREPROD_GATE_REPORT.md` (PASS required — no vendor burn).  
 **Repo ufficiale**: https://github.com/mcnicastro-netizen/omnia2 ✅ (Emergent `OMNIA` = backup, non cancellare)  
@@ -15,11 +15,14 @@
 3. Review QC esterna → backlog **A-028**: gerarchia sidebar, cockpit «Oggi», Match Score explainability, HAL contestuale — **no implementazione senza «vai»**
 4. ✅ `CRM_PUBLIC_PREVIEW=false` (preview healthz)
 5. ✅ **Valutatore mini-sample** → `memory/GESTIONALE_VALUATOR_ACCURACY_SAMPLE.md` (**PASS 20 / FAIL 0** — non è prova OMI ~27k)
-6. ✅ **Cap. 21 + HAL + `hal-index.json`** allineati 100% (PDF white-label + roll-forward FOI/trend) — `regenerate_hal_index.py`
-7. Founder: **«vai»** su Top 5 A-028 (o ID fuori programma)
-8. **D-084**: ogni ship aggiorna manuale+YAML+index (sempre 100%)
-9. Preprod: `python scripts/preprod_confidence_gate.py` prima di go-live / ship rischiosi
-10. Nota tecnica: `GET /app/matches` agency-wide sotto stress seed (~2M pairs) uccide API — usare solo client-scoped `min_score`+`limit`
+6. ✅ **Cap. 21 + HAL + `hal-index.json`** allineati 100% (PDF white-label + roll-forward FOI/trend)
+7. ✅ **18-Set gestionale**: Social 6 canali · planimetrie Cap.3 · Portali wizard/i18n/Compliance · `hal-index` **v0.20** (339 voci)
+8. Founder: **«vai»** su Top 5 A-028 (o ID fuori programma)
+9. **D-084**: ogni ship aggiorna manuale+YAML+index (sempre 100%)
+10. Preprod: `python scripts/preprod_confidence_gate.py` prima di go-live / ship rischiosi
+11. Nota tecnica: `GET /app/matches` agency-wide sotto stress seed (~2M pairs) uccide API — usare solo client-scoped `min_score`+`limit`
+12. ⏸️ **Cleanup residui Emergent** (stub / `EMERGENT_LLM_KEY` / pacchetti / URL) — solo con «vai», a pezzi
+13. ⏸️ **i18n EN/ES copertura uniforme gestionale** — selettore OK; molte UI ancora IT hardcoded — solo con «vai»
 
 ---
 
@@ -37,7 +40,10 @@
 | **A-028a Cockpit Dashboard «Oggi»** | ✅ (18-Set) `/app/dashboard/today` |
 | **Valutatore mini-sample accuratezza** | ✅ (18-Set) PASS 20/20 — `GESTIONALE_VALUATOR_ACCURACY_SAMPLE.md` |
 | **Report PDF UNI (layout elegante)** | ✅ (18-Set) OMNIA + whitelabel + hybrid — `valuation_pdf.py` |
-| **Cap.21 / HAL / hal-index 100%** | ✅ (18-Set) FOI roll-forward + PDF brand · `regenerate_hal_index.py` |
+| **Cap.21 / HAL / hal-index 100%** | ✅ (18-Set) FOI roll-forward + PDF brand |
+| **Social Publisher 6 canali (WA/WABA/GBP)** | ✅ (18-Set) Cap.15 + HAL |
+| **Planimetrie JPEG/PDF su immobile** | ✅ (18-Set) Cap.3 + HAL |
+| **Portali wizard UX + i18n `portali`** | ✅ (18-Set) Cap.6 + HAL |
 | Home B2C visual + SSR preview | ✅ (16-Set) |
 | Layout altre pagine B2C | ✅ (17-Set) |
 | Scout v1 + fiducia + voce lister | ✅ |
@@ -48,7 +54,9 @@
 | Nord **D** intake annuncio esterno | ⏸️ solo con «vai» + legale |
 | Demo **A-025** | ❌ **next di programma** (architettare, non shippare a caso) |
 | **A-028** redesign gerarchia ImmoWeb | ⏸️ solo con «vai» post-report |
-| A-026 micro-tour agenzia (501→Kling) | 🔬 da approfondire |
+| A-026 micro-video agenzia (501→Kling) | 🔬 da approfondire |
+| Cleanup residui Emergent | ⏸️ solo con «vai» |
+| i18n EN/ES copertura uniforme CRM | ⏸️ solo con «vai» |
 | Stripe live / A-014 | ⏸️ post-Vercel |
 | Prod flags readiness (`cookie_secure`, CORS, master key, monitoring, `OMNIA_ENV`) | ⚠️ solo su host prod |
 | Competitor «prima visita» | ✅ ricercato (remoto agent-led ≠ Scout) |
@@ -62,6 +70,7 @@
 | 1 | **A-028 Top rimanenti** (score → sidebar → HAL contestuale → Attività) | A-028a cockpit ✅ 18-Set; resto solo «vai» |
 | 2 | **A-025 demo prodotto** | GTM / walkthrough Scout end-to-end — richiede «vai» |
 | 3 | Fix perf `GET /app/matches` agency-wide | FAIL QC A8 — pagination/early-exit sotto seed 2k |
+| — | Cleanup Emergent / i18n EN-ES full | Solo con «vai» Founder (a mente riposata) |
 | — | Home claim micro-ritocco | Solo se Founder vuole ancora più “pre-visita” |
 | — | Intake annuncio esterno (Nord D) | Solo dopo ok Founder + scope legale |
 | — | A-026 path Kling agenzia | Approfondire UX (docs Cap.23 già allineati) |

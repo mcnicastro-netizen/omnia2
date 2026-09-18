@@ -51,7 +51,7 @@ def main() -> None:
         new_chapters.append(entry)
 
     out = {
-        "version": "0.19-cap21-align",
+        "version": "0.20-gestionale-18set",
         "updated": date.today().isoformat(),
         "voices_total": total,
         "source_files": source_files,
@@ -59,7 +59,8 @@ def main() -> None:
         "notes": (
             "Fingerprints regenerated from YAML on disk. "
             "Live RAG reindex: POST /api/app/hal/knowledge/reindex?force=true (super_admin). "
-            "Cap.21 aligned 2026-09-18: PDF white-label + price roll-forward FOI/trend."
+            "2026-09-18 gestionale: Cap.15 social 6 canali · Cap.3 planimetrie · "
+            "Cap.6 wizard slug/categoria/Compliance · Cap.21 FOI/PDF."
         ),
     }
     INDEX_PATH.write_text(json.dumps(out, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")

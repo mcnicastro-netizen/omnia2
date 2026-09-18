@@ -89,7 +89,8 @@ Elementi che ESISTONO ma per decisione del Founder o per regola redazionale NON 
 - **L4 privacy**: corretto v1.0.1 → rimosso "e le agenzie in rete" (non c'è ancora MLS network M4). L4 = solo team di agenzia.
 - **Preview privacy** (`/preview`) — non nel manuale v1 (backend-only).
 - **Analytics A/B** — non menzionato (nessuna UI).
-- **Micro-tour Kling/Sora** — placeholder "in arrivo" in Cap. 3.6/3.7? No, in Cap. 13 (Virtual Staging). Cap. 3 non lo menziona.
+- **Micro-video Kling/Sora** — placeholder "in arrivo" in Cap. 3.6/3.7? No, in Cap. 13 (Virtual Staging). Cap. 3 non lo menziona.
+- **Planimetrie (18-Set-2026)**: upload JPEG/PNG/WebP/PDF documentato in Cap.3 + HAL `immobili.caricare-planimetrie` (max 5, 15 MB, privacy L3+). Non confondere con planimetria catastale B2C «coming soon» (servizi ImmobilCloud).
 
 ### Cap. 6 · Portali / Publishing — Feb 2026
 - **Catalogo 8 portali documentati** (Subito, Bakeca, Kijiji, Wikicasa, Facebook Marketplace, Google Business Profile, Attico, Case24): coincide 1:1 con `CATALOG_SEED` in `apps/immoweb/publishing.py`.
@@ -100,7 +101,7 @@ Elementi che ESISTONO ma per decisione del Founder o per regola redazionale NON 
 - **Retry backoff 60/300/1800 sec** documentato come 1min/5min/30min (`sync_engine.py:39`).
 - **Regole HARD compliance**: 5 regole documentate 1:1 dal codice (`shared/validators/compliance.py:99-111`).
 - **Classi APE ammesse**: lista completa dal codice (`compliance.py:20-24`) — inclusi EXEMPT_IN_PROGRESS/EXEMPT_NOT_APPLICABLE.
-- **Universal Portal Wizard (M2.6d)**: 4 step documentati come da `PortalWizardPage.jsx:21` (STEPS array) + solo feed_pull come da `publishing.py:320` (_SUPPORTED_INTEGRATIONS).
+- **Universal Portal Wizard (M2.6d)**: 4 step documentati come da `PortalWizardPage.jsx` (STEPS array) + solo feed_pull come da `publishing.py` (_SUPPORTED_INTEGRATIONS). Categoria UI/API: solo **gratuito | a_pagamento** (18-Set-2026). Slug = codice tecnico auto-compilato, spiegato in linguaggio semplice.
 - **Log sync in UI**: attualmente in dashboard si vedono solo timestamp ultimo sync + counter items_published/items_failed + last_error badge (`PublishingPage.jsx:198-218`). Endpoint `GET /connections/{id}/logs` esiste ma **nessuna UI dedicata**. Documentato onestamente come "in arrivo".
 - **Sospensione via PATCH `status=disabled`**: endpoint esiste (`publishing.py:182-183`) ma **nessun bottone "Sospendi temporaneamente"** in UI (solo "Disattiva" = DELETE). Documentato come cosa esistente lato API senza inventare UI.
 - **Nome route sidebar**: la sidebar mostra "Portali" (label in italiano) — `AgencyShell.jsx` menu key `publishing`. Corretto nel manuale.
@@ -262,7 +263,7 @@ Elementi che ESISTONO ma per decisione del Founder o per regola redazionale NON 
 - **Limiti v1 espliciti in `import.limitazioni-v1`**: no CSV/JSON/Excel, no sync automatica, no wizard mappatura, no rollback batch, no session persistita, no preview foto (solo count), no import clienti/lead via XML, no fuzzy match dedupe, no auto-assign agent, no storico import UI.
 - **Cross-ref**: Cap. 3 (Immobili post-import), Cap. 4 (clienti via `/clients/csv-import`), Cap. 6 (Portali & Publishing), Cap. 12 (HAL Knowledge legge Cap. 14), Cap. 13 (permessi agency_admin).
 
-### Cap. 15 · Social Publisher (Facebook, Instagram, Telegram) — Feb 2026
+### Cap. 15 · Social Publisher (FB, IG, Telegram, WhatsApp, WABA, Google Business) — Feb 2026 / aggiornato 18-Set-2026
 - **Endpoint reali documentati 1:1** con `social_publisher.py`: `GET /catalog`, `GET /channels`, `POST /channels`, `PATCH /channels/{id}`, `DELETE /channels/{id}`, `POST /channels/{id}/validate`, `POST /publish`, `GET /posts`. Prefix `/publishing/social` sotto `/api/app`.
 - **Ruoli richiesti**: `agency_admin`, `super_admin`, `branch_admin`, `group_admin` (tuple `_ROLES`, `social_publisher.py:333`). Documentato onestamente ("agent semplice non ha accesso").
 - **6 canali supportati esatti** (`ChannelType` Literal a `social_publisher.py`): `facebook_page`, `instagram_business`, `telegram`, `whatsapp`, `whatsapp_business`, `google_business`. Zero invenzioni.

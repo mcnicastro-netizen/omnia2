@@ -1,7 +1,7 @@
 {
-  "version": "0.19-cap21-align",
+  "version": "0.20-gestionale-18set",
   "updated": "2026-09-18",
-  "voices_total": 338,
+  "voices_total": 339,
   "source_files": [
     {
       "file": "00-api-codice.yaml",
@@ -20,8 +20,8 @@
     },
     {
       "file": "03-immobili.yaml",
-      "voices": 16,
-      "md5": "baf8cffd5eb43c90166d88ba0fb3f322"
+      "voices": 17,
+      "md5": "24ea5e16e56c2f6b9f40efa1cf7ce903"
     },
     {
       "file": "04-clienti.yaml",
@@ -202,5 +202,5 @@
       "md5": "5e88370cdf2c070dc30c7c3f036b85db"
     }
   ],
-  "notes": "Fingerprints regenerated from YAML on disk. Live RAG reindex: POST /api/app/hal/knowledge/reindex?force=true (super_admin). Cap.21 aligned 2026-09-18: PDF white-label + price roll-forward FOI/trend."
+  "notes": "Fingerprints regenerated from YAML on disk. Live RAG reindex: POST /api/app/hal/knowledge/reindex?force=true (super_admin). 2026-09-18 gestionale: Cap.15 social 6 canali · Cap.3 planimetrie · Cap.6 wizard slug/categoria/Compliance · Cap.21 FOI/PDF."
 }

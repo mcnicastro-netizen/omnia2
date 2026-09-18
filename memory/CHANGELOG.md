@@ -1,5 +1,27 @@
 # OMNIA — Changelog
 
+## 2026-09-18 — Immobili: upload planimetrie JPEG/PNG/WebP + PDF
+
+**Tipo**: Feature / Cap.3 / HAL.
+
+- Nuovo uploader `FloorPlanUploader` su Nuovo/Modifica immobile (sotto Video)
+- Max **5** planimetrie · **15 MB**/file · formati JPEG/PNG/WebP/PDF
+- Backend `floor_plans[]` + `upload-tmp` · privacy pubblica da **L3** in su
+- Cap.3 MD + voce HAL `immobili.caricare-planimetrie` · `hal-index` **339** voci
+
+---
+## 2026-09-18 — Portali: UX wizard + i18n `portali` + Compliance
+
+**Tipo**: UX / Cap.6 / i18n.
+
+- Wizard: rimosso help «nome visibile nel Publishing Center»
+- Slug spiegato in linguaggio semplice (IT/EN/ES)
+- Categoria solo **Gratuito / A pagamento** (niente più «altro»)
+- Namespace i18n `portals` → **`portali`** + stringhe complete
+- Hint UI: Compliance è in scheda **Attivi** → Azioni (riga portale)
+- Cap.6 MD/HAL allineati
+
+---
 ## 2026-09-18 — Social Publisher: WhatsApp + WhatsApp Business + Google Business
 
 **Tipo**: Feature / Cap.15 / HAL.
