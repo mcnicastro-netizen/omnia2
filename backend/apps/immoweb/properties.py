@@ -185,6 +185,10 @@ async def create_property(
     if data.get("videos") is None:
         data["videos"] = []
     _enforce_videos_limit(data.get("videos"))
+    if data.get("floor_plans") is None:
+        data["floor_plans"] = []
+    _enforce_floor_plans_limit(data.get("floor_plans"))
+    _sync_floor_plan_url(data)
 
     prop = PropertyInDB(
         agency_id=agency_id,
@@ -246,6 +250,9 @@ async def update_property(
         _enforce_photos_limit(update_doc["photos"])
     if "videos" in update_doc:
         _enforce_videos_limit(update_doc["videos"])
+    if "floor_plans" in update_doc:
+        _enforce_floor_plans_limit(update_doc["floor_plans"])
+        _sync_floor_plan_url(update_doc)
 
     await db.properties.update_one({"id": prop_id, "agency_id": agency_id}, {"$set": update_doc})
 
@@ -521,6 +528,91 @@ async def upload_video_tmp(
         raise HTTPException(status_code=502, detail="storage_upload_failed") from e
     return {
         "id": video_id,
+        "url": f"/api/media/{storage_path}",
+        "content_type": ct,
+        "size_bytes": len(data),
+    }
+
+
+# -------------------- FLOOR PLANS (planimetrie JPEG/PDF) --------------------
+
+_ALLOWED_FLOOR_PLAN_MIME = {
+    "image/jpeg",
+    "image/png",
+    "image/webp",
+    "application/pdf",
+}
+_MAX_FLOOR_PLAN_BYTES = 15 * 1024 * 1024  # 15 MB — PDF tecnici possono essere più pesanti
+AGENCY_MAX_FLOOR_PLANS = 5
+
+
+def _enforce_floor_plans_limit(plans) -> None:
+    if plans is not None and len(plans) > AGENCY_MAX_FLOOR_PLANS:
+        raise HTTPException(
+            status_code=400,
+            detail={
+                "error": "floor_plans_limit_exceeded",
+                "max": AGENCY_MAX_FLOOR_PLANS,
+                "got": len(plans),
+            },
+        )
+
+
+def _sync_floor_plan_url(data: dict) -> None:
+    """Keep legacy floor_plan_url aligned with floor_plans[0] for privacy/B2C."""
+    plans = data.get("floor_plans") or []
+    if plans and isinstance(plans[0], dict) and plans[0].get("url"):
+        data["floor_plan_url"] = plans[0]["url"]
+    elif "floor_plans" in data:
+        data["floor_plan_url"] = None
+
+
+def _floor_plan_ext(ct: str) -> str:
+    return {
+        "image/jpeg": "jpg",
+        "image/png": "png",
+        "image/webp": "webp",
+        "application/pdf": "pdf",
+    }[ct]
+
+
+@router.post("/floor-plans/upload-tmp")
+async def upload_floor_plan_tmp(
+    file: UploadFile = File(...),
+    user: dict = Depends(require_roles("agency_admin", "agent", "super_admin")),
+):
+    """Upload a floor plan (JPEG/PNG/WebP/PDF) before the property exists."""
+    agency_id = await _require_agency(user)
+    ct = (file.content_type or "").lower()
+    # Some browsers send empty/octet-stream for PDF — sniff by filename
+    name = (file.filename or "").lower()
+    if ct not in _ALLOWED_FLOOR_PLAN_MIME:
+        if name.endswith(".pdf"):
+            ct = "application/pdf"
+        elif name.endswith((".jpg", ".jpeg")):
+            ct = "image/jpeg"
+        elif name.endswith(".png"):
+            ct = "image/png"
+        elif name.endswith(".webp"):
+            ct = "image/webp"
+    if ct not in _ALLOWED_FLOOR_PLAN_MIME:
+        raise HTTPException(status_code=415, detail="unsupported_media_type")
+    data = await file.read()
+    if len(data) > _MAX_FLOOR_PLAN_BYTES:
+        raise HTTPException(status_code=413, detail="file_too_large")
+    if not data:
+        raise HTTPException(status_code=400, detail="empty_file")
+
+    plan_id = str(uuid4())
+    ext = _floor_plan_ext(ct)
+    storage_path = f"omnia/agencies/{agency_id}/floor_plans/{plan_id}.{ext}"
+    try:
+        put_object(storage_path, data, ct)
+    except ObjStoreError as e:
+        logger.exception("tmp floor plan upload failed agency=%s: %s", agency_id, e)
+        raise HTTPException(status_code=502, detail="storage_upload_failed") from e
+    return {
+        "id": plan_id,
         "url": f"/api/media/{storage_path}",
         "content_type": ct,
         "size_bytes": len(data),

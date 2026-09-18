@@ -73,6 +73,16 @@ class PropertyVideo(OmniaBaseModel):
     size_bytes: Optional[int] = None
 
 
+class PropertyFloorPlan(OmniaBaseModel):
+    """Floor plan / planimetria — JPEG/PNG/WebP or PDF."""
+    id: str = Field(default_factory=lambda: str(uuid4()))
+    url: str
+    caption: Optional[str] = None
+    order: int = 0
+    content_type: Optional[str] = Field(default=None, max_length=80)
+    size_bytes: Optional[int] = None
+
+
 class PropertyOwner(OmniaBaseModel):
     """Reserved (internal) owner info — never exposed to public portal."""
     name: Optional[str] = Field(default=None, max_length=200)
@@ -154,8 +164,9 @@ class PropertyInDB(TenantModel):
     # Media
     photos: List[PropertyPhoto] = Field(default_factory=list, max_length=60)
     videos: List[PropertyVideo] = Field(default_factory=list, max_length=3)
+    floor_plans: List[PropertyFloorPlan] = Field(default_factory=list, max_length=5)
     virtual_tour_url: Optional[str] = Field(default=None, max_length=500)
-    floor_plan_url: Optional[str] = Field(default=None, max_length=500)
+    floor_plan_url: Optional[str] = Field(default=None, max_length=500)  # alias = floor_plans[0].url
 
     # Internal / privacy
     owner: PropertyOwner = Field(default_factory=PropertyOwner)
@@ -234,6 +245,7 @@ class PropertyCreate(OmniaBaseModel):
     floor_plan_url: Optional[str] = Field(default=None, max_length=500)
     photos: Optional[List[PropertyPhoto]] = None
     videos: Optional[List[PropertyVideo]] = None
+    floor_plans: Optional[List[PropertyFloorPlan]] = None
     is_listed_on_immobilcloud: bool = True  # M3.S2 Publishing Center
     contact_public: Optional[PrivateContactPublic] = None
 
@@ -267,6 +279,7 @@ class PropertyUpdate(OmniaBaseModel):
     energy: Optional[PropertyEnergy] = None
     photos: Optional[List[PropertyPhoto]] = None
     videos: Optional[List[PropertyVideo]] = None
+    floor_plans: Optional[List[PropertyFloorPlan]] = None
     virtual_tour_url: Optional[str] = None
     floor_plan_url: Optional[str] = Field(default=None, max_length=500)
     owner: Optional[PropertyOwner] = None

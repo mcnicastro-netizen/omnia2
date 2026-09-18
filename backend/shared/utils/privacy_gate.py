@@ -132,6 +132,7 @@ def apply_privacy_view(prop: Dict[str, Any], viewer_level: ViewerLevel) -> Dict[
         # hide exact address (keep only city + zone)
         out.pop("address", None)
         out.pop("floor_plan_url", None)
+        out.pop("floor_plans", None)
         # Coordinates rounded to ~1km (2 decimals ≈ 1.1 km at Italian latitudes)
         out["lat"] = _round_coord(out.get("lat"), 2)
         out["lng"] = _round_coord(out.get("lng"), 2)
@@ -142,6 +143,7 @@ def apply_privacy_view(prop: Dict[str, Any], viewer_level: ViewerLevel) -> Dict[
     # ---- L1 (anonymous public) -------------------------------------------
     out.pop("address", None)
     out.pop("floor_plan_url", None)
+    out.pop("floor_plans", None)
     out.pop("virtual_tour_url", None)
     out.pop("postal_code", None)
     out.pop("floor", None)

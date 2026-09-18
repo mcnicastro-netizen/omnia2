@@ -4,6 +4,7 @@ import { useNavigate, useParams, Link } from "react-router-dom";
 import AgencyShell from "./components/AgencyShell";
 import PhotoUploader from "./components/PhotoUploader";
 import VideoUploader from "./components/VideoUploader";
+import FloorPlanUploader from "./components/FloorPlanUploader";
 import StagingStudio from "./components/StagingStudio";
 import PropertyMatchesPreview from "./components/PropertyMatchesPreview";
 import PublishingCenter from "./components/PublishingCenter";
@@ -46,6 +47,7 @@ const empty = {
   seller_client_id: "",
   photos: [],
   videos: [],
+  floor_plans: [],
   is_listed_on_immobilcloud: true,
 };
 
@@ -121,6 +123,8 @@ export default function PropertyFormPage() {
       payload.seller_client_id = form.seller_client_id || null;
       payload.photos = form.photos || [];
       payload.videos = form.videos || [];
+      payload.floor_plans = form.floor_plans || [];
+      payload.floor_plan_url = (payload.floor_plans[0] && payload.floor_plans[0].url) || null;
 
       if (isEdit) {
         await api.patch(`/app/properties/${id}`, payload);
@@ -358,6 +362,17 @@ export default function PropertyFormPage() {
             />
             <p className="text-xs text-stone-400 mt-2">
               Fino a 3 video (MP4 · WEBM · MOV, max 80 MB), come sui principali portali. Diverso dal micro-tour AI (Cap. 23).
+            </p>
+          </Section>
+
+          <Section label="Planimetrie">
+            <FloorPlanUploader
+              plans={form.floor_plans || []}
+              onChange={(floor_plans) => upd("floor_plans", floor_plans)}
+              max={5}
+            />
+            <p className="text-xs text-stone-400 mt-2">
+              Fino a 5 planimetrie in JPEG, PNG, WebP o PDF (max 15 MB). Visibili secondo il livello privacy dell&apos;annuncio (da L3 in su sul portale pubblico).
             </p>
           </Section>
 

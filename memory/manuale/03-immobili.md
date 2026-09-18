@@ -188,6 +188,33 @@ Aggiungere un video reale dell'immobile (visita, drone, walkthrough) come fanno 
 
 ---
 
+## 3.3ter · Planimetrie (JPEG e PDF)
+
+**A cosa serve**
+Allegare le planimetrie dell'immobile (piante, disegni tecnici) separate dalle foto di ambiente. Sul portale pubblico compaiono solo da **privacy L3** in su (lead qualificato).
+
+**Formati e limiti**
+- Formati accettati: **JPEG · PNG · WebP · PDF**.
+- Peso massimo per file: **15 MB**.
+- Numero massimo: **5 planimetrie** per immobile.
+
+**Passi**
+1. Apri l'immobile (o creane uno nuovo).
+2. Scorri fino alla sezione **Planimetrie** (sotto Video immobile).
+3. Trascina i file nel riquadro o clicca per sceglierli.
+4. Le immagini JPEG/PNG/WebP vengono ridimensionate in automatico; i PDF restano come file scaricabili.
+5. Puoi rimuovere una planimetria in qualsiasi momento.
+
+**Errori comuni**
+- *"Formato non supportato"* → usa JPEG/PNG/WebP o PDF. Niente DWG/DXF in v1.
+- *"File troppo grande"* → riduci sotto i 15 MB.
+- *"Massimo 5 planimetrie"* → elimina una prima di caricarne un'altra.
+
+**Chi può farlo**
+- **Titolare · Agente · Segreteria** (come agente).
+
+---
+
 ## 3.4 · Privacy 4 livelli (chi vede cosa)
 
 Ogni immobile ha un **livello di privacy** (L1 → L4) che decide **cosa mostra** al mondo esterno.
