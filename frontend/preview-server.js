@@ -517,8 +517,8 @@ app.use(
     target: API,
     changeOrigin: true,
     ws: false,
-    proxyTimeout: 120000,
-    timeout: 120000,
+    proxyTimeout: 300000,
+    timeout: 300000,
     xfwd: true,
     logLevel: "warn",
     onProxyRes(proxyRes) {

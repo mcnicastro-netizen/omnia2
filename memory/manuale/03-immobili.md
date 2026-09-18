@@ -161,6 +161,33 @@ Passa il mouse e clicca l'icona ✕ (cestino). L'operazione è **immediata**: as
 
 ---
 
+## 3.3bis · Video immobile (upload)
+
+**A cosa serve**
+Aggiungere un video reale dell'immobile (visita, drone, walkthrough) come fanno Idealista e Immobiliare.it. È **diverso** dal micro-tour AI generato dalle foto (Cap. 23).
+
+**Formati e limiti**
+- Formati accettati: **MP4 · WEBM · MOV** (iPhone).
+- Peso massimo per video: **80 MB**.
+- Numero massimo: **3 video** per immobile.
+
+**Passi**
+1. Apri l'immobile (o creane uno nuovo).
+2. Scorri fino alla sezione **Video immobile** (sotto le foto).
+3. Trascina i file nel riquadro o clicca per sceglierli.
+4. Aspetta il caricamento (può richiedere qualche minuto su video grandi).
+5. Anteprima inline: riproduci, riordina o elimina.
+
+**Errori comuni**
+- *"Formato non supportato"* → esporta in MP4 (H.264). I file AVI/MKV non sono accettati.
+- *"File troppo grande"* → comprimi a ≤ 80 MB (HandBrake, QuickTime → Esporta).
+- *"Massimo 3 video"* → elimina un video prima di caricarne un altro.
+
+**Chi può farlo**
+- **Titolare · Agente · Segreteria** (come agente).
+
+---
+
 ## 3.4 · Privacy 4 livelli (chi vede cosa)
 
 Ogni immobile ha un **livello di privacy** (L1 → L4) che decide **cosa mostra** al mondo esterno.

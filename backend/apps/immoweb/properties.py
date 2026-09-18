@@ -182,6 +182,9 @@ async def create_property(
     if data.get("photos") is None:
         data["photos"] = []
     _enforce_photos_limit(data.get("photos"))
+    if data.get("videos") is None:
+        data["videos"] = []
+    _enforce_videos_limit(data.get("videos"))
 
     prop = PropertyInDB(
         agency_id=agency_id,
@@ -241,6 +244,8 @@ async def update_property(
 
     if "photos" in update_doc:
         _enforce_photos_limit(update_doc["photos"])
+    if "videos" in update_doc:
+        _enforce_videos_limit(update_doc["videos"])
 
     await db.properties.update_one({"id": prop_id, "agency_id": agency_id}, {"$set": update_doc})
 
@@ -399,3 +404,124 @@ async def upload_photo_tmp(
         logger.exception("tmp photo upload failed agency=%s: %s", agency_id, e)
         raise HTTPException(status_code=502, detail="storage_upload_failed") from e
     return {"id": photo_id, "url": f"/api/media/{storage_path}"}
+
+
+# -------------------- VIDEOS: UPLOAD FILE --------------------
+
+_ALLOWED_VIDEO_MIME = {
+    "video/mp4",
+    "video/webm",
+    "video/quicktime",  # .mov (iPhone)
+}
+_MAX_VIDEO_BYTES = 80 * 1024 * 1024  # 80 MB — fascia tipica portali IT
+AGENCY_MAX_VIDEOS = 3  # Idealista/Immobiliare.it: 1–3 clip per annuncio
+
+
+def _enforce_videos_limit(videos) -> None:
+    if videos is not None and len(videos) > AGENCY_MAX_VIDEOS:
+        raise HTTPException(
+            status_code=400,
+            detail={
+                "error": "videos_limit_exceeded",
+                "max": AGENCY_MAX_VIDEOS,
+                "got": len(videos),
+            },
+        )
+
+
+def _video_ext(ct: str) -> str:
+    return {
+        "video/mp4": "mp4",
+        "video/webm": "webm",
+        "video/quicktime": "mov",
+    }[ct]
+
+
+@router.post("/{prop_id}/videos/upload")
+async def upload_property_video(
+    prop_id: str,
+    file: UploadFile = File(...),
+    user: dict = Depends(require_roles("agency_admin", "agent", "super_admin")),
+):
+    """Upload a listing video to Object Storage (max 3 per property, 80 MB each)."""
+    agency_id = await _require_agency(user)
+    db = Database.get()
+    prop = await db.properties.find_one({"id": prop_id, "agency_id": agency_id})
+    if not prop:
+        raise HTTPException(status_code=404, detail="property_not_found")
+
+    ct = (file.content_type or "").lower()
+    if ct not in _ALLOWED_VIDEO_MIME:
+        raise HTTPException(status_code=415, detail="unsupported_media_type")
+    data = await file.read()
+    if len(data) > _MAX_VIDEO_BYTES:
+        raise HTTPException(status_code=413, detail="file_too_large")
+    if not data:
+        raise HTTPException(status_code=400, detail="empty_file")
+
+    videos = list(prop.get("videos") or [])
+    if len(videos) >= AGENCY_MAX_VIDEOS:
+        raise HTTPException(
+            status_code=400,
+            detail={
+                "error": "videos_limit_exceeded",
+                "max": AGENCY_MAX_VIDEOS,
+                "got": len(videos),
+            },
+        )
+
+    video_id = str(uuid4())
+    ext = _video_ext(ct)
+    storage_path = f"omnia/properties/{prop_id}/videos/{video_id}.{ext}"
+    try:
+        put_object(storage_path, data, ct)
+    except ObjStoreError as e:
+        logger.exception("video upload failed prop=%s: %s", prop_id, e)
+        raise HTTPException(status_code=502, detail="storage_upload_failed") from e
+
+    new_video = {
+        "id": video_id,
+        "url": f"/api/media/{storage_path}",
+        "caption": (file.filename or "").rsplit(".", 1)[0] or None,
+        "order": len(videos),
+        "content_type": ct,
+        "size_bytes": len(data),
+    }
+    videos.append(new_video)
+    await db.properties.update_one(
+        {"id": prop_id, "agency_id": agency_id},
+        {"$set": {"videos": videos, "updated_at": datetime.now(timezone.utc).isoformat()}},
+    )
+    return {"video": new_video, "videos": videos}
+
+
+@router.post("/videos/upload-tmp")
+async def upload_video_tmp(
+    file: UploadFile = File(...),
+    user: dict = Depends(require_roles("agency_admin", "agent", "super_admin")),
+):
+    """Upload a listing video before the property exists (create mode)."""
+    agency_id = await _require_agency(user)
+    ct = (file.content_type or "").lower()
+    if ct not in _ALLOWED_VIDEO_MIME:
+        raise HTTPException(status_code=415, detail="unsupported_media_type")
+    data = await file.read()
+    if len(data) > _MAX_VIDEO_BYTES:
+        raise HTTPException(status_code=413, detail="file_too_large")
+    if not data:
+        raise HTTPException(status_code=400, detail="empty_file")
+
+    video_id = str(uuid4())
+    ext = _video_ext(ct)
+    storage_path = f"omnia/agencies/{agency_id}/videos/{video_id}.{ext}"
+    try:
+        put_object(storage_path, data, ct)
+    except ObjStoreError as e:
+        logger.exception("tmp video upload failed agency=%s: %s", agency_id, e)
+        raise HTTPException(status_code=502, detail="storage_upload_failed") from e
+    return {
+        "id": video_id,
+        "url": f"/api/media/{storage_path}",
+        "content_type": ct,
+        "size_bytes": len(data),
+    }

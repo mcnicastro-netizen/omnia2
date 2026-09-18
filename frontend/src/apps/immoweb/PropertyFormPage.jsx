@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { useNavigate, useParams, Link } from "react-router-dom";
 import AgencyShell from "./components/AgencyShell";
 import PhotoUploader from "./components/PhotoUploader";
+import VideoUploader from "./components/VideoUploader";
 import StagingStudio from "./components/StagingStudio";
 import PropertyMatchesPreview from "./components/PropertyMatchesPreview";
 import PublishingCenter from "./components/PublishingCenter";
@@ -43,6 +44,7 @@ const empty = {
   owner: { name: "", phone: "", email: "" },
   seller_client_id: "",
   photos: [],
+  videos: [],
   is_listed_on_immobilcloud: true,
 };
 
@@ -117,6 +119,7 @@ export default function PropertyFormPage() {
       });
       payload.seller_client_id = form.seller_client_id || null;
       payload.photos = form.photos || [];
+      payload.videos = form.videos || [];
 
       if (isEdit) {
         await api.patch(`/app/properties/${id}`, payload);
@@ -341,6 +344,17 @@ export default function PropertyFormPage() {
             />
             <p className="text-xs text-stone-400 mt-2">
               Fino a 60 foto (come sui principali portali). Passa il mouse su una foto e clicca la bacchetta per arredarla con il Virtual Staging AI.
+            </p>
+          </Section>
+
+          <Section label="Video immobile">
+            <VideoUploader
+              videos={form.videos || []}
+              onChange={(videos) => upd("videos", videos)}
+              max={3}
+            />
+            <p className="text-xs text-stone-400 mt-2">
+              Fino a 3 video (MP4 · WEBM · MOV, max 80 MB), come sui principali portali. Diverso dal micro-tour AI (Cap. 23).
             </p>
           </Section>
 

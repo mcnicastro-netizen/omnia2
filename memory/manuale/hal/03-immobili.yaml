@@ -207,6 +207,44 @@ voci:
     screenshot:
       - "[SCREEN: cap3-photos-dropzone-cover]"
 
+  - id: immobili.caricare-video
+    titolo: Caricare video di un immobile
+    modulo: Immobili
+    widget: null
+    pubblico: [titolare, agente, segreteria]
+    livello: base
+    tags: [immobili, video, media, upload, mp4]
+    correlati:
+      - immobili.caricare-foto
+      - video.cos-e
+    domanda_naturale: "Come carico un video sull'immobile? Posso mettere video come sui portali?"
+    contenuto:
+      a_cosa_serve: >
+        Aggiungere fino a 3 video reali (visita, drone, walkthrough)
+        all'annuncio, come su Idealista/Immobiliare.it. Diverso dal
+        micro-tour AI (Cap. 23).
+      quando_si_usa: >
+        Quando hai un video dell'immobile da allegare all'annuncio.
+      passi:
+        - Apri l'immobile (o creane uno nuovo).
+        - Scorri fino alla sezione Video immobile (sotto le foto).
+        - Trascina MP4 / WEBM / MOV oppure clicca per selezionare.
+        - Aspetta il caricamento (max 80 MB per file, max 3 video).
+        - Riproduci, riordina o elimina dall'anteprima.
+      errori_comuni:
+        - problema: "Formato non supportato"
+          soluzione: >
+            Solo MP4, WEBM e MOV. Esporta in MP4 H.264 se hai AVI/MKV.
+        - problema: "File troppo grande (max 80 MB)"
+          soluzione: >
+            Comprimi con HandBrake o QuickTime Esporta fino a ≤ 80 MB.
+        - problema: "Ho raggiunto il limite di video"
+          soluzione: >
+            Massimo 3 video per immobile. Elimina uno prima di caricarne un altro.
+      permessi:
+        - Titolare, agente, segreteria (come agente)
+    screenshot: []
+
   - id: immobili.impostare-copertina
     titolo: Impostare la foto di copertina
     modulo: Immobili
