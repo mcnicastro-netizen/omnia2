@@ -8,12 +8,13 @@ import OmniaLogo from "../../../shared/components/OmniaLogo";
 import LanguageSwitcher from "../../../shared/components/LanguageSwitcher";
 import AlChatWidget from "./AlChatWidget";
 import NotificationBell from "../../../shared/components/NotificationBell";
+import BackButton, { isCrmDashboardPath } from "./BackButton";
 
 /**
  * AgencyShell — shared sidebar+topbar layout for all authenticated ImmoWeb pages.
  * Loads /agencies/me once. If no agency → redirect to onboarding.
  */
-export default function AgencyShell({ children, current = "dashboard" }) {
+export default function AgencyShell({ children, current = "dashboard", showBack }) {
   const { t, i18n } = useTranslation();
   const lang = (i18n.language || "it").slice(0, 2);
   const { user, logout } = useAuth();
@@ -22,6 +23,11 @@ export default function AgencyShell({ children, current = "dashboard" }) {
   const [agency, setAgency] = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [myAgencies, setMyAgencies] = useState([]);
+
+  const backVisible =
+    typeof showBack === "boolean"
+      ? showBack
+      : !isCrmDashboardPath(location.pathname);
 
   // M5 — multi-agency switcher: carica l'elenco solo se l'utente ha più agenzie
   useEffect(() => {
@@ -268,6 +274,11 @@ export default function AgencyShell({ children, current = "dashboard" }) {
 
         {/* Content */}
         <main className="flex-1 px-4 md:px-8 py-6 md:py-10 max-w-screen-2xl w-full mx-auto">
+          {backVisible && (
+            <div className="mb-4 md:mb-5">
+              <BackButton />
+            </div>
+          )}
           {children}
         </main>
       </div>

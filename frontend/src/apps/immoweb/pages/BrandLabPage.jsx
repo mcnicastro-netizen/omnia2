@@ -1,6 +1,5 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
-import { useTranslation } from "react-i18next";
+import AgencyShell from "../components/AgencyShell";
 
 /**
  * OMNIA Brand Lab — internal repository for creative reference material.
@@ -89,8 +88,6 @@ STYLE: Neom 'The Line' + Apple Vision Pro + Blade Runner 2049 Vegas warmth + Lou
 NEGATIVE: NO red rooftops, NO Bialetti, NO cypress, NO handshakes, NO purple gradients, NO Tron neon, NO Chinese skyline. Mediterranean-FUTURE not Generic-Future.`;
 
 export default function BrandLabPage() {
-  const { i18n } = useTranslation();
-  const lang = i18n.language?.slice(0, 2) || "it";
   const [copied, setCopied] = useState(null);
 
   const copy = async (id, text) => {
@@ -102,6 +99,7 @@ export default function BrandLabPage() {
   };
 
   return (
+    <AgencyShell current="brand-lab">
     <div className="min-h-screen bg-stone-50 text-stone-900" data-testid="brand-lab-page">
       {/* ======= HERO ======= */}
       <section className="relative">
@@ -270,11 +268,10 @@ export default function BrandLabPage() {
           Pagina interna Brand Lab · super_admin only · aggiornata ad ogni nuovo asset
           <br />
           File di riferimento: <code className="text-stone-600">/app/memory/creatives/brand_lab_reference.md</code>
-          {" · "}
-          <Link to={`/${lang}/app`} className="text-emerald-700 hover:underline">← Torna al CRM</Link>
         </div>
       </div>
     </div>
+    </AgencyShell>
   );
 }
 

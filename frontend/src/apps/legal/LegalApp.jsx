@@ -8,8 +8,8 @@
  */
 import React, { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Link } from "react-router-dom";
 import { api } from "../../shared/lib/api";
+import BackButton from "../immoweb/components/BackButton";
 
 const SUB_AGENT_BADGE = {
   general: "bg-stone-100 text-stone-700",
@@ -445,13 +445,7 @@ export default function LegalApp() {
               {t("legal.page_subtitle")}
             </p>
           </div>
-          <Link
-            data-testid="legal-nav-back"
-            to={`/${document.documentElement.lang || "it"}/app/dashboard`}
-            className="text-[10px] uppercase tracking-widest text-stone-600 hover:text-[#0B1E3F]"
-          >
-            ← {t("legal.nav_back")}
-          </Link>
+          <BackButton testId="legal-nav-back" className="text-[10px]" />
         </div>
         <nav className="max-w-7xl mx-auto px-6 flex gap-1 border-t border-stone-100">
           <button
