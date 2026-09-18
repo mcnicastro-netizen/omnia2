@@ -45,7 +45,7 @@ const emptyPrefs = {
   must_have_features: [],
   energy_min_class: "",
   needs_photos: false,
-  // needs_virtual_tour: non esposto in UI — niente Virtual Tour nel gestionale v1
+  needs_video: false,
   notes: "",
 };
 
@@ -145,7 +145,8 @@ export default function ClientFormPage() {
       if (!prefs.operation) prefs.operation = null;
       if (!prefs.energy_min_class) prefs.energy_min_class = null;
       if (!prefs.notes || !prefs.notes.trim()) prefs.notes = null;
-      // Virtual Tour non offerto nel gestionale v1 — non esporre né persistere il filtro
+      // Video annuncio (upload immobile), non Virtual Tour
+      prefs.needs_video = !!prefs.needs_video;
       prefs.needs_virtual_tour = false;
 
       const payload = {
@@ -463,6 +464,15 @@ export default function ClientFormPage() {
               <label className="flex items-center gap-2 text-sm text-stone-700">
                 <input type="checkbox" checked={!!form.preferences.needs_photos} onChange={(e) => updPref("needs_photos", e.target.checked)} />
                 {t("clients.pref_needs_photos")}
+              </label>
+              <label className="flex items-center gap-2 text-sm text-stone-700">
+                <input
+                  type="checkbox"
+                  data-testid="client-pref-needs-video"
+                  checked={!!form.preferences.needs_video}
+                  onChange={(e) => updPref("needs_video", e.target.checked)}
+                />
+                {t("clients.pref_needs_video")}
               </label>
             </div>
 

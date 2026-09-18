@@ -175,9 +175,10 @@ voci:
         - Metti un range Prezzo min/max e Superficie min/max.
         - Compila Locali, Camere, Bagni se il cliente ha idee precise.
         - Compila Piano preferito, Classe energetica minima,
-          «Solo con foto» e Caratteristiche imprescindibili solo se
-          davvero rilevanti. (Niente «Solo con virtual tour»: il
-          Virtual Tour non è offerto nel gestionale v1.)
+          «Solo con foto», «Solo con video» e Caratteristiche
+          imprescindibili solo se davvero rilevanti.
+          («Solo con video» = immobile con video caricato; niente
+          Virtual Tour nel gestionale v1.)
         - Aggiungi Note di ricerca per dettagli extra (es.
           "ascensore obbligatorio se al 3° piano").
         - Clicca "Salva cliente".

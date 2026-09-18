@@ -34,7 +34,8 @@ class SearchPreferences(OmniaBaseModel):
     energy_min_class: Optional[str] = None
     # Multimedia requirements
     needs_photos: bool = False
-    needs_virtual_tour: bool = False
+    needs_video: bool = False  # listing has agency-uploaded videos[]
+    needs_virtual_tour: bool = False  # legacy; prefer needs_video
     notes: Optional[str] = Field(default=None, max_length=2000)
 
 

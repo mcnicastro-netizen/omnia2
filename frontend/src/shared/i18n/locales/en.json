@@ -480,6 +480,7 @@
     "pref_floors": "Floor preference",
     "pref_energy_min": "Min energy class",
     "pref_needs_photos": "Only with photos",
+    "pref_needs_video": "Only with video",
     "pref_needs_vtour": "Only with virtual tour",
     "pref_features": "Must-have features",
     "pref_notes": "Search notes",

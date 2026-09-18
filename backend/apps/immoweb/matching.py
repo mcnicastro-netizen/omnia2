@@ -285,15 +285,18 @@ def compute_match(prop: Dict[str, Any], client: Dict[str, Any]) -> Dict[str, Any
     # --- Multimedia requirements ---
     photos = prop.get("photos") or []
     has_photos = len(photos) > 0
-    vtour = prop.get("virtual_tour_url")
+    videos = prop.get("videos") or []
+    has_video = len(videos) > 0
+    # Legacy clients may still have needs_virtual_tour=True → treat as needs_video
+    wants_video = bool(prefs.get("needs_video") or prefs.get("needs_virtual_tour"))
     mm = W["multimedia"]
     score_mm = mm
     if prefs.get("needs_photos") and not has_photos:
         score_mm -= mm * 0.6
         missing.append("photos_required")
-    if prefs.get("needs_virtual_tour") and not vtour:
+    if wants_video and not has_video:
         score_mm -= mm * 0.6
-        missing.append("vtour_required")
+        missing.append("video_required")
     award("multimedia", max(score_mm, 0))
 
     total = sum(b["got"] for b in breakdown.values())
@@ -452,12 +455,14 @@ def compute_match_score_fast(prop: Dict[str, Any], prefs: Dict[str, Any]) -> int
     # Multimedia
     photos = prop.get("photos") or []
     has_photos = len(photos) > 0
-    vtour = prop.get("virtual_tour_url")
+    videos = prop.get("videos") or []
+    has_video = len(videos) > 0
+    wants_video = bool(prefs.get("needs_video") or prefs.get("needs_virtual_tour"))
     mm = W["multimedia"]
     score_mm = mm
     if prefs.get("needs_photos") and not has_photos:
         score_mm -= mm * 0.6
-    if prefs.get("needs_virtual_tour") and not vtour:
+    if wants_video and not has_video:
         score_mm -= mm * 0.6
     total += max(score_mm, 0)
 

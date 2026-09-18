@@ -258,20 +258,18 @@ export default function AgencyShell({ children, current = "dashboard", showBack 
           >
             ☰
           </button>
-          <div className="flex items-center gap-3 min-w-0 flex-1">
-            {backVisible && (
-              <BackButton className="shrink-0 border border-stone-200 rounded-md px-2.5 py-1.5 bg-white hover:bg-stone-100" />
-            )}
-            <div className="min-w-0">
-              <p className="text-[10px] uppercase tracking-widest text-stone-500">
-                {t("immoweb_app.agency_label")}
-              </p>
-              <p className="text-sm font-semibold text-stone-900 truncate">
-                {agency?.display_name || "—"}
-              </p>
-            </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-[10px] uppercase tracking-widest text-stone-500">
+              {t("immoweb_app.agency_label")}
+            </p>
+            <p className="text-sm font-semibold text-stone-900 truncate">
+              {agency?.display_name || "—"}
+            </p>
           </div>
           <div className="flex items-center gap-2 shrink-0">
+            {backVisible && (
+              <BackButton className="border border-stone-200 rounded-md px-2.5 py-1.5 bg-white hover:bg-stone-100" />
+            )}
             <NotificationBell />
             <LanguageSwitcher />
           </div>

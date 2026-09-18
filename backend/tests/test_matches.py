@@ -31,7 +31,7 @@ class TestComputeMatchUnit:
             "price": 300000, "surface_sqm": 90, "rooms": 4, "bedrooms": 2, "bathrooms": 2,
             "condition": "good", "floor": 2, "total_floors": 5,
             "energy": {"energy_class": "B"}, "features": {"balcone": True, "ascensore": True},
-            "photos": [{"url": "x", "is_cover": True}], "virtual_tour_url": "http://x",
+            "photos": [{"url": "x", "is_cover": True}], "videos": [{"url": "v"}],
         }
         client = {
             "client_type": "buyer", "preferences": {
@@ -40,7 +40,7 @@ class TestComputeMatchUnit:
                 "rooms_min": 3, "rooms_max": 5, "bedrooms_min": 2, "bathrooms_min": 1,
                 "conditions": ["good", "new"], "floor_preferences": ["intermedi"],
                 "energy_min_class": "C", "must_have_features": ["balcone"],
-                "needs_photos": True, "needs_virtual_tour": True,
+                "needs_photos": True, "needs_video": True,
             }
         }
         m = compute_match(prop, client)
@@ -62,7 +62,7 @@ class TestComputeMatchUnit:
             "price": 300000, "surface_sqm": 90, "rooms": 4, "bedrooms": 2, "bathrooms": 2,
             "condition": "good", "floor": 2, "total_floors": 5,
             "energy": {"energy_class": "B"}, "features": {"balcone": True},
-            "photos": [{"url": "x", "is_cover": True}], "virtual_tour_url": "http://x",
+            "photos": [{"url": "x", "is_cover": True}], "videos": [{"url": "v"}],
         }
         client = {
             "client_type": "buyer", "preferences": {
@@ -70,7 +70,7 @@ class TestComputeMatchUnit:
                 "price_min": 200000, "price_max": 350000, "surface_min": 60, "surface_max": 120,
                 "rooms_min": 3, "rooms_max": 5, "bedrooms_min": 2, "bathrooms_min": 1,
                 "conditions": ["good"], "energy_min_class": "C", "must_have_features": ["balcone"],
-                "needs_photos": True, "needs_virtual_tour": True,
+                "needs_photos": True, "needs_video": True,
             }
         }
         m = compute_match(prop, client)

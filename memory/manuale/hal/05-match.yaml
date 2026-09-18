@@ -123,8 +123,7 @@ voci:
         - "Zona/Quartiere: 5 punti."
         - "Locali (vani): 5 punti."
         - "Camere: 4 · Bagni: 4 · Condizione: 4 · Classe energetica:
-          4 · Multimedia (foto se richieste): fino a 4 punti.
-            Il filtro virtual tour non è in UI v1."
+          4 · Multimedia (foto e/o video se richiesti): fino a 4 punti."
         - "Piano preferito: 3 punti."
         - "Un criterio non compilato nelle preferenze conta come
           indifferente e assegna piena scoring su quel criterio."
