@@ -1,7 +1,7 @@
 {
   "version": "0.19-cap21-align",
   "updated": "2026-09-18",
-  "voices_total": 335,
+  "voices_total": 338,
   "source_files": [
     {
       "file": "00-api-codice.yaml",
@@ -26,12 +26,12 @@
     {
       "file": "04-clienti.yaml",
       "voices": 12,
-      "md5": "2666896608b0774fa54d7740f5376a24"
+      "md5": "ab172ef106ad045da7326eee4ffe534e"
     },
     {
       "file": "05-match.yaml",
       "voices": 11,
-      "md5": "9100cbc4ff833518f2591b3102e6500a"
+      "md5": "ba683037bc665fe5214ac188660d4017"
     },
     {
       "file": "06-portali-publishing.yaml",
@@ -80,8 +80,8 @@
     },
     {
       "file": "15-social-publisher.yaml",
-      "voices": 14,
-      "md5": "c1d14181ef1c62a4184f75c7b1edb7b4"
+      "voices": 17,
+      "md5": "eda389d29016f0f91442740050ef778a"
     },
     {
       "file": "16-compliance-portali.yaml",

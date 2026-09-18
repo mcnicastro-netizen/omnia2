@@ -1,33 +1,33 @@
 # HAL — Voci esportate per RAG
-# Capitolo 15 · Social Publisher (Pubblicazione su Facebook, Instagram, Telegram)
+# Capitolo 15 · Social Publisher (FB, IG, Telegram, WhatsApp, WhatsApp Business, Google Business)
 
 voci:
 
   - id: social.cos-e
-    titolo: Cos'è il Social Publisher (pubblicazione su FB, IG, Telegram)
+    titolo: Cos'è il Social Publisher (pubblicazione su FB, IG, Telegram, WA, GBP)
     modulo: Social Publisher
     widget: null
     pubblico: [titolare, super_admin]
     livello: base
-    tags: [social, publisher, facebook, instagram, telegram, panoramica, primi-passi, marketing, white-label, d-041]
+    tags: [social, publisher, facebook, instagram, telegram, whatsapp, google-business, panoramica, primi-passi, marketing, white-label, d-041]
     correlati: [social.dove-trovarlo, social.canali-supportati, social.pubblicare-immobile]
     domanda_naturale: "Cos'è il Social Publisher? A cosa serve?"
     contenuto:
       a_cosa_serve: >
         Strumento a push on-demand che invia un annuncio immobiliare
         (foto + didascalia + link) sulla tua Pagina Facebook, sul
-        tuo account Instagram Business o sul tuo canale Telegram
-        sotto la TUA identita' di brand (white label D-041). OMNIA
-        e' invisibile per il pubblico finale.
+        tuo account Instagram Business, sul tuo canale Telegram,
+        via WhatsApp / WhatsApp Business o sul tuo profilo Google
+        Business sotto la TUA identita' di brand (white label D-041).
+        OMNIA e' invisibile per il pubblico finale.
       quando_si_usa: >
         Ogni volta che vuoi pubblicare un immobile sui social
         aziendali con un click, senza copiare/incollare a mano.
       passi:
-        - "3 canali supportati v1: Facebook Page, Instagram Business,
-          Telegram Channel."
-        - "White label D-041: ogni post parte con la TUA Pagina/Bot,
-          non con quella OMNIA. OMNIA non ha profili social pubblici
-          per pubblicare per conto delle agenzie."
+        - "6 canali supportati: Facebook Page, Instagram Business,
+          Telegram Channel, WhatsApp, WhatsApp Business, Google Business."
+        - "White label D-041: ogni post parte con la TUA Pagina/Bot/
+          WABA/GBP, non con quella OMNIA."
         - "On-demand: apri immobile > clic Pubblica > il post parte
           subito. Nessuno scheduling, nessuna coda."
         - "1 immagine per post + caption testuale. Nessun carosello,
@@ -66,8 +66,9 @@ voci:
         - "Nella barra a sinistra sezione Publishing o Marketing
           clicca 'Social Publisher'."
         - "Rotta: /it/app/social."
-        - "In pagina vedi 3 card canali (FB/IG/Telegram) + elenco
-          post recenti (fino a 20)."
+        - "In pagina vedi 6 card canali (FB/IG/Telegram/WhatsApp/
+          WhatsApp Business/Google Business) + elenco post recenti
+          (fino a 20)."
       errori_comuni:
         - problema: "Non vedo la voce Social Publisher"
           soluzione: >
@@ -79,18 +80,18 @@ voci:
     screenshot: []
 
   - id: social.canali-supportati
-    titolo: Quali canali social sono supportati (FB Page, IG Business, Telegram)
+    titolo: Quali canali social sono supportati (FB, IG, Telegram, WA, WABA, GBP)
     modulo: Social Publisher
     widget: null
     pubblico: [titolare, super_admin]
     livello: base
-    tags: [social, canali, facebook-page, instagram-business, telegram, meta-graph, bot-api, twitter, tiktok, linkedin, limitazioni]
-    correlati: [social.cos-e, social.credenziali-facebook, social.credenziali-instagram, social.credenziali-telegram]
-    domanda_naturale: "Su quali social posso pubblicare? Ci sono X/Twitter, TikTok o LinkedIn?"
+    tags: [social, canali, facebook-page, instagram-business, telegram, whatsapp, whatsapp-business, google-business, meta-graph, bot-api, twitter, tiktok, linkedin, limitazioni]
+    correlati: [social.cos-e, social.credenziali-facebook, social.credenziali-instagram, social.credenziali-telegram, social.credenziali-whatsapp, social.credenziali-whatsapp-business, social.credenziali-google-business]
+    domanda_naturale: "Su quali social posso pubblicare? Ci sono WhatsApp, Google Business, X/Twitter, TikTok o LinkedIn?"
     contenuto:
       a_cosa_serve: >
-        Sapere quali sono i 3 canali v1 e quali NON sono ancora
-        supportati.
+        Sapere quali sono i 6 canali supportati e quali NON sono
+        ancora disponibili.
       quando_si_usa: >
         Prima di aspettarsi di pubblicare su X, TikTok, LinkedIn.
       passi:
@@ -104,15 +105,23 @@ voci:
         - "Telegram Channel: manda messaggio nel tuo canale via il
           tuo bot. API Bot Telegram. Richiede bot_token da
           @BotFather + chat_id (@nomecanale o numerico negativo)."
+        - "WhatsApp: genera link wa.me con caption precompilata
+          verso il tuo numero (phone E.164). Non e' invio automatico."
+        - "WhatsApp Business: invia messaggio testo via Cloud API
+          Meta (phone_number_id + access_token + recipient_phone)."
+        - "Google Business: crea Local Post STANDARD sul profilo
+          attivita' (location_name accounts/.../locations/... +
+          OAuth access_token con scope business.manage)."
         - "NO in v1: X/Twitter, LinkedIn, TikTok, YouTube Shorts,
-          WhatsApp Business, Threads."
+          Threads."
         - "1 canale per tipo per agenzia: non puoi avere 2 Pagine
           FB collegate contemporaneamente (409 channel_already_
           configured al secondo tentativo)."
       errori_comuni:
         - problema: "Voglio pubblicare su X (ex Twitter)"
           soluzione: >
-            Non disponibile v1. Solo FB Page, IG Business, Telegram.
+            Non disponibile v1. Solo FB Page, IG Business, Telegram,
+            WhatsApp, WhatsApp Business, Google Business.
       permessi:
         - Info descrittiva per titolari
     screenshot: []
@@ -252,6 +261,117 @@ voci:
         - Titolari e super_admin
     screenshot: []
 
+  - id: social.credenziali-whatsapp
+    titolo: Come configuro WhatsApp (link wa.me)
+    modulo: Social Publisher
+    widget: null
+    pubblico: [titolare, super_admin]
+    livello: base
+    tags: [social, whatsapp, credenziali, phone, wa-me, e164]
+    correlati: [social.configurare-canale, social.canali-supportati]
+    domanda_naturale: "Come collego WhatsApp al Social Publisher?"
+    contenuto:
+      a_cosa_serve: >
+        Collegare il numero WhatsApp dell'agenzia per generare link
+        wa.me con caption precompilata al publish.
+      quando_si_usa: >
+        Prima configurazione del canale WhatsApp.
+      passi:
+        - "Usa il numero WhatsApp aziendale in formato internazionale
+          senza + ne spazi (es. 393331234567)."
+        - "In OMNIA: Social Publisher > card WhatsApp > Configura >
+          incolla phone > Salva."
+        - "Validate controlla solo il formato (8-15 cifre)."
+        - "Al publish OMNIA salva in audit l'URL wa.me con caption:
+          non c'e' invio automatico (WhatsApp consumer non ha Cloud API)."
+      errori_comuni:
+        - problema: "422 invalid_phone"
+          soluzione: >
+            Solo cifre, prefisso paese incluso, senza + o spazi.
+      permessi:
+        - Titolari e super_admin
+    screenshot: []
+
+  - id: social.credenziali-whatsapp-business
+    titolo: Come ottengo le credenziali WhatsApp Business (Cloud API)
+    modulo: Social Publisher
+    widget: null
+    pubblico: [titolare, super_admin]
+    livello: intermedio
+    tags: [social, whatsapp-business, waba, cloud-api, phone-number-id, access-token, recipient]
+    correlati: [social.configurare-canale, social.errori]
+    domanda_naturale: "Come collego WhatsApp Business Cloud API?"
+    contenuto:
+      a_cosa_serve: >
+        Collegare un WABA Meta per inviare l'annuncio via Cloud API
+        al numero destinatario configurato.
+      quando_si_usa: >
+        Prima configurazione o rinnovo token WABA.
+      passi:
+        - "Crea/apri un'app su developers.facebook.com con prodotto
+          WhatsApp (Cloud API) e un WABA attivo."
+        - "phone_number_id: Meta Developer Dashboard > WhatsApp >
+          API Setup > Phone number ID."
+        - "access_token: token permanente/long-lived con permesso
+          whatsapp_business_messaging."
+        - "recipient_phone: numero E.164 (senza +) a cui inviare gli
+          annunci (es. numero interno marketing)."
+        - "In OMNIA: Social Publisher > card WhatsApp Business >
+          Configura > 3 campi > Salva > Valida."
+        - "Validate chiama GET /{phone_number_id}?fields=id,
+          display_phone_number,verified_name."
+        - "Publish: POST /{phone_number_id}/messages (testo). Fuori
+          finestra 24h Meta puo' richiedere un template approvato."
+      errori_comuni:
+        - problema: "meta_error sul publish WABA"
+          soluzione: >
+            Token scaduto, phone_number_id errato, o destinatario
+            fuori finestra 24h senza template. Rigenera token e
+            verifica WABA.
+      permessi:
+        - Titolari e super_admin
+    screenshot: []
+
+  - id: social.credenziali-google-business
+    titolo: Come ottengo le credenziali Google Business (Local Posts)
+    modulo: Social Publisher
+    widget: null
+    pubblico: [titolare, super_admin]
+    livello: intermedio
+    tags: [social, google-business, gbp, local-posts, location-name, oauth, business-manage]
+    correlati: [social.configurare-canale, social.errori]
+    domanda_naturale: "Come collego Google Business Profile al Social Publisher?"
+    contenuto:
+      a_cosa_serve: >
+        Collegare il profilo Google Business per creare Local Post
+        STANDARD con summary, foto e CTA.
+      quando_si_usa: >
+        Prima configurazione o rinnovo OAuth GBP.
+      passi:
+        - "Abilita Google Business Profile API sul progetto Google
+          Cloud e ottieni OAuth con scope
+          https://www.googleapis.com/auth/business.manage."
+        - "location_name: formato accounts/{accountId}/locations/
+          {locationId} (da Business Profile Manager / API list)."
+        - "access_token: OAuth Bearer valido."
+        - "In OMNIA: Social Publisher > card Google Business >
+          Configura > Salva > Valida."
+        - "Validate: GET Business Information API su location_name."
+        - "Publish: POST /v4/{location_name}/localPosts (topicType
+          STANDARD, summary, media PHOTO opzionale, CTA LEARN_MORE)."
+      errori_comuni:
+        - problema: "422 invalid_location_name"
+          soluzione: >
+            Il name deve iniziare con accounts/ e contenere
+            /locations/. Copia il name completo dall'API.
+        - problema: "gbp_error sul validate/publish"
+          soluzione: >
+            Token scaduto o scope mancante. Rigenera OAuth con
+            business.manage.
+      permessi:
+        - Titolari e super_admin
+    screenshot: []
+
   - id: social.configurare-canale
     titolo: Configurare un canale social (self-service, 3 step)
     modulo: Social Publisher
@@ -269,16 +389,15 @@ voci:
         Prima configurazione o cambio credenziali.
       passi:
         - "Vai in Social Publisher. Sezione 'Canali disponibili'."
-        - "Identifica il canale (FB/IG/Telegram) e clicca Configura."
-        - "Compila i campi credenziale (vedi voci dedicate per FB,
-          IG, Telegram)."
+        - "Identifica il canale (FB/IG/Telegram/WhatsApp/WABA/GBP) e clicca Configura."
+        - "Compila i campi credenziale (vedi voci dedicate per ogni canale)."
         - "Clicca 'Salva credenziali'."
         - "Backend cifra AES-256-GCM le credenziali via
           encrypt_dict() prima di salvare (mai in chiaro nel DB)."
         - "Il canale diventa attivo (status='active') subito, ma
           non e' ancora verificato con una chiamata reale."
         - "Clicca 'Valida connessione' per fare un test live con
-          Meta/Telegram."
+          Meta/Telegram/WhatsApp/GBP."
       errori_comuni:
         - problema: "409 channel_already_configured"
           soluzione: >
@@ -484,8 +603,14 @@ voci:
       passi:
         - "422 channels_required: al publish non hai selezionato
           nessun canale. Selezionane almeno uno."
-        - "422 unsupported_channel: canale non fra facebook_page/
-          instagram_business/telegram. Solitamente bug UI."
+        - "422 unsupported_channel: canale non fra i 6 supportati
+          (facebook_page, instagram_business, telegram, whatsapp,
+          whatsapp_business, google_business). Solitamente bug UI."
+        - "422 invalid_phone: numero WhatsApp non E.164 (8-15 cifre)."
+        - "422 invalid_location_name: location_name non nel formato
+          accounts/.../locations/..."
+        - "502 gbp_error:…: Google Business ha rifiutato (token/scope/
+          location). Rigenera OAuth business.manage."
         - "422 missing_credentials:page_id,access_token: uno o piu'
           campi vuoti nella modale. Compila tutto."
         - "409 channel_already_configured: hai gia' un canale attivo
@@ -529,7 +654,7 @@ voci:
     livello: intermedio
     tags: [social, limiti, cosa-non-fa, scheduling, carosello, video, reel, analytics, engagement, twitter, tiktok, linkedin, bulk, template, moderazione, d-051]
     correlati: [social.cos-e, social.canali-supportati]
-    domanda_naturale: "Cosa NON fa il Social Publisher v1? Il Social Publisher supporta scheduling, analytics, LinkedIn, TikTok o X/Twitter? Il modulo Social Publisher ha calendario editoriale / programmazione futura, LinkedIn, TikTok, X/Twitter, WhatsApp Business, YouTube Shorts, Threads, carosello multi-immagine, video, reel, story, GIF, analytics engagement (like, commenti, share, reach, impressioni), bulk publish, template caption personalizzati, preview live, moderazione pre-pubblicazione, rollback multi-canale?"
+    domanda_naturale: "Cosa NON fa il Social Publisher v1? Il Social Publisher supporta scheduling, analytics, LinkedIn, TikTok o X/Twitter? Il modulo Social Publisher ha calendario editoriale / programmazione futura, LinkedIn, TikTok, X/Twitter, YouTube Shorts, Threads, carosello multi-immagine, video, reel, story, GIF, analytics engagement (like, commenti, share, reach, impressioni), bulk publish, template caption personalizzati, preview live, moderazione pre-pubblicazione, rollback multi-canale?"
     contenuto:
       a_cosa_serve: >
         Aspettative chiare su cosa il Social Publisher NON fa in v1:
@@ -543,9 +668,12 @@ voci:
       passi:
         - "NO scheduling: solo on-demand. Nessun calendario
           editoriale, nessuna coda, nessuna programmazione futura."
-        - "NO X/Twitter, LinkedIn, TikTok, YouTube Shorts,
-          WhatsApp Business, Threads. Solo 3 canali (FB Page,
-          IG Business, Telegram)."
+        - "6 canali: FB Page, IG Business, Telegram, WhatsApp,
+          WhatsApp Business, Google Business. NO X/Twitter, LinkedIn,
+          TikTok, YouTube Shorts, Threads."
+        - "WhatsApp consumer = solo link wa.me (no invio automatico).
+          WhatsApp Business = messaggio 1:1 Cloud API al destinatario
+          (no Status/wall)."
         - "NO carosello: 1 sola immagine per post (Meta e Telegram
           supportano piu' immagini, ma noi non le usiamo v1)."
         - "NO video, reel, story, GIF, collage. Solo foto + testo."
@@ -575,7 +703,7 @@ voci:
             se e' un canale prioritario per te.
         - problema: "Voglio vedere quanti like ha preso il post"
           soluzione: >
-            OMNIA non lo espone. Vai direttamente su FB/IG/Telegram
+            OMNIA non lo espone. Vai direttamente sul canale nativo
             e cerca il post usando l'external_id salvato in
             social_posts.
       permessi:

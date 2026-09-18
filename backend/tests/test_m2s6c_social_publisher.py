@@ -1,15 +1,17 @@
 """Backend tests for M2.6c Social Publisher (Sprint 1 · Item #2).
 
 Copre:
-- Catalog dei canali social (facebook_page, instagram_business, telegram)
+- Catalog dei canali social (facebook_page, instagram_business, telegram,
+  whatsapp, whatsapp_business, google_business)
 - CRUD dei channel per agenzia (activate, update, delete, list)
 - Tenant isolation dei canali
 - Error handling su credenziali mancanti (422) e canale non supportato (422)
 - Publish endpoint: channels required + channel_not_configured error path
 - Audit log social_posts + filtering per canale
 
-Le chiamate reali a Meta/Telegram NON vengono effettuate qui — quelle vengono
-validate manualmente dal Founder con le sue credenziali di produzione.
+Le chiamate reali a Meta/Telegram/WhatsApp/GBP NON vengono effettuate qui —
+quelle vengono validate manualmente dal Founder con le sue credenziali di
+produzione.
 """
 import os
 import pytest
@@ -43,13 +45,20 @@ def cleanup(session):
 
 
 class TestCatalog:
-    def test_catalog_returns_three_channels(self, session):
+    def test_catalog_returns_six_channels(self, session):
         r = session.get(f"{BASE_URL}/api/app/publishing/social/catalog")
         assert r.status_code == 200
         data = r.json()
-        assert data["total"] == 3
+        assert data["total"] == 6
         slugs = {c["channel"] for c in data["items"]}
-        assert slugs == {"facebook_page", "instagram_business", "telegram"}
+        assert slugs == {
+            "facebook_page",
+            "instagram_business",
+            "telegram",
+            "whatsapp",
+            "whatsapp_business",
+            "google_business",
+        }
 
     def test_catalog_declares_credential_fields(self, session):
         r = session.get(f"{BASE_URL}/api/app/publishing/social/catalog")
@@ -57,7 +66,16 @@ class TestCatalog:
         assert {f["name"] for f in by_ch["facebook_page"]["credential_fields"]} == {"page_id", "access_token"}
         assert {f["name"] for f in by_ch["instagram_business"]["credential_fields"]} == {"ig_user_id", "access_token"}
         assert {f["name"] for f in by_ch["telegram"]["credential_fields"]} == {"bot_token", "chat_id"}
-
+        assert {f["name"] for f in by_ch["whatsapp"]["credential_fields"]} == {"phone"}
+        assert {f["name"] for f in by_ch["whatsapp_business"]["credential_fields"]} == {
+            "phone_number_id",
+            "access_token",
+            "recipient_phone",
+        }
+        assert {f["name"] for f in by_ch["google_business"]["credential_fields"]} == {
+            "location_name",
+            "access_token",
+        }
 
 class TestChannelsCRUD:
     def test_activate_channel_encrypts_credentials(self, session):

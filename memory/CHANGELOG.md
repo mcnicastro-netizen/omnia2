@@ -1,5 +1,14 @@
 # OMNIA — Changelog
 
+## 2026-09-18 — Social Publisher: WhatsApp + WhatsApp Business + Google Business
+
+**Tipo**: Feature / Cap.15 / HAL.
+
+- Catalog social da 3 → **6 canali**: `whatsapp`, `whatsapp_business`, `google_business`
+- WhatsApp: link `wa.me` (phone E.164); WABA: Cloud API messages; GBP: Local Posts v4
+- UI `SocialPublisherPage` + test catalog=6 + Cap.15 MD/HAL (17 voci)
+
+---
 ## 2026-09-18 — Cap.21 / HAL / index allineati 100% (PDF + FOI)
 
 **Tipo**: Docs / HAL / Valutatore.

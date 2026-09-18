@@ -9,9 +9,9 @@ import Brand from "../../../shared/components/Brand";
  * M2.6c — Social Publisher (Sprint 1 · Item #2).
  *
  * Configurazione self-service di canali social (Facebook Page, Instagram
- * Business, Telegram Channel) per pubblicare on-demand un immobile. Le
- * credenziali vengono cifrate lato backend (AES-256-GCM) e non tornano mai
- * in chiaro alla UI.
+ * Business, Telegram, WhatsApp, WhatsApp Business, Google Business) per
+ * pubblicare on-demand un immobile. Le credenziali vengono cifrate lato
+ * backend (AES-256-GCM) e non tornano mai in chiaro alla UI.
  */
 const CHANNEL_META = {
   facebook_page: {
@@ -28,6 +28,21 @@ const CHANNEL_META = {
     label: "Telegram Channel",
     hint: "Ottieni il bot token da @BotFather. Il bot deve essere admin del canale target.",
     color: "#26A5E4",
+  },
+  whatsapp: {
+    label: "WhatsApp",
+    hint: "Numero in formato internazionale senza + (es. 393331234567). Genera un link wa.me con caption precompilata.",
+    color: "#25D366",
+  },
+  whatsapp_business: {
+    label: "WhatsApp Business",
+    hint: "Phone Number ID + token Cloud API Meta. Invia l'annuncio al numero destinatario configurato.",
+    color: "#128C7E",
+  },
+  google_business: {
+    label: "Google Business",
+    hint: "Location name tipo accounts/123/locations/456 + OAuth token con scope business.manage (Local Post).",
+    color: "#4285F4",
   },
 };
 
@@ -152,8 +167,8 @@ export default function SocialPublisherPage() {
             </Link>
           </div>
           <p className="text-sm text-stone-600 mt-2 max-w-2xl">
-            Configura le tue Pagine Facebook, account Instagram Business e canali Telegram per
-            pubblicare on-demand un annuncio con foto e caption.
+            Configura Facebook, Instagram, Telegram, WhatsApp, WhatsApp Business e Google Business
+            per pubblicare on-demand un annuncio con foto e caption.
           </p>
           <p
             data-testid="social-hal-hint"
@@ -195,6 +210,7 @@ export default function SocialPublisherPage() {
                   {validationResult.name && <>Nome: <strong>{validationResult.name}</strong> · </>}
                   {validationResult.username && <>Handle: <strong>@{validationResult.username}</strong> · </>}
                   {validationResult.bot_username && <>Bot: <strong>@{validationResult.bot_username}</strong> · </>}
+                  {validationResult.phone && <>Tel: <strong>{validationResult.phone}</strong> · </>}
                   ID: <code className="text-[11px]">{validationResult.id || validationResult.chat_id}</code>
                 </div>
               ) : (

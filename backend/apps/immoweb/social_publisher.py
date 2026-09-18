@@ -1,7 +1,8 @@
 """OMNIA — Social Publisher (M2.6c, Sprint 1 Item #2).
 
-Auto-publish properties on Facebook Pages, Instagram Business and Telegram
-channels via the official APIs (Meta Graph v20 + Telegram Bot API).
+Auto-publish properties on Facebook Pages, Instagram Business, Telegram,
+WhatsApp, WhatsApp Business and Google Business Profile via the official APIs
+(Meta Graph v20 + Telegram Bot API + WhatsApp Cloud API + GBP Local Posts).
 
 Design constraints:
 - Multi-tenant: each agency stores its own encrypted credentials (AES-GCM via
@@ -9,7 +10,7 @@ Design constraints:
 - On-demand publish (POST /social/publish) — the scheduled sync in
   sync_engine.py stays focused on feed_pull portals; social is push.
 - White label (D-041): every channel operates under the agency's own Meta app /
-  Telegram bot. OMNIA never posts under its own identity.
+  Telegram bot / GBP account. OMNIA never posts under its own identity.
 - Audit-first: every attempt (success or fail) writes to social_posts.
 
 Collections owned:
@@ -21,8 +22,9 @@ Router mounted at /api/app/publishing/social/*
 from __future__ import annotations
 
 import logging
-from datetime import datetime, timezone
+import re
 from typing import Any, Dict, List, Literal, Optional
+from urllib.parse import quote
 from uuid import uuid4
 
 import httpx
@@ -44,11 +46,22 @@ router = APIRouter(prefix="/publishing/social", tags=["publishing-social"])
 
 GRAPH_BASE = "https://graph.facebook.com/v20.0"
 TELEGRAM_BASE = "https://api.telegram.org"
+GBP_BASE = "https://mybusiness.googleapis.com/v4"
+GBP_INFO_BASE = "https://mybusinessbusinessinformation.googleapis.com/v1"
 HTTP_TIMEOUT = 20.0
 CAPTION_MAX = 2000  # safe budget across FB (5000) / IG (2200) / TG (1024)
 TELEGRAM_CAPTION_MAX = 1024
+GBP_SUMMARY_MAX = 1500
+WHATSAPP_TEXT_MAX = 4096
 
-ChannelType = Literal["facebook_page", "instagram_business", "telegram"]
+ChannelType = Literal[
+    "facebook_page",
+    "instagram_business",
+    "telegram",
+    "whatsapp",
+    "whatsapp_business",
+    "google_business",
+]
 
 SOCIAL_CATALOG: List[Dict[str, Any]] = [
     {
@@ -81,7 +94,42 @@ SOCIAL_CATALOG: List[Dict[str, Any]] = [
         ],
         "notes": "Il bot deve essere admin del canale. Ottieni il token da @BotFather in Telegram.",
     },
+    {
+        "channel": "whatsapp",
+        "name": "WhatsApp",
+        "kind": "whatsapp",
+        "credential_fields": [
+            {"name": "phone", "label": "Numero WhatsApp (E.164, es. 393331234567)", "type": "text"},
+        ],
+        "notes": "Genera un link wa.me con caption precompilata verso il tuo numero. Non è un invio automatico Cloud API.",
+    },
+    {
+        "channel": "whatsapp_business",
+        "name": "WhatsApp Business",
+        "kind": "meta",
+        "credential_fields": [
+            {"name": "phone_number_id", "label": "Phone Number ID (Cloud API)", "type": "text"},
+            {"name": "access_token", "label": "Access Token (WhatsApp Cloud API)", "type": "text"},
+            {"name": "recipient_phone", "label": "Numero destinatario (E.164)", "type": "text"},
+        ],
+        "notes": "Invia l'annuncio via WhatsApp Cloud API al numero destinatario configurato. Serve un WABA attivo su Meta.",
+    },
+    {
+        "channel": "google_business",
+        "name": "Google Business",
+        "kind": "google",
+        "credential_fields": [
+            {"name": "location_name", "label": "Location name (accounts/…/locations/…)", "type": "text"},
+            {"name": "access_token", "label": "OAuth Access Token (GBP)", "type": "text"},
+        ],
+        "notes": "Crea un Local Post sul tuo profilo Google Business. Serve OAuth con scope business.manage.",
+    },
 ]
+
+_VALID_CHANNELS = {c["channel"] for c in SOCIAL_CATALOG}
+_REQUIRED_CREDS: Dict[str, List[str]] = {
+    c["channel"]: [f["name"] for f in c["credential_fields"]] for c in SOCIAL_CATALOG
+}
 
 
 # ---------------------------------------------------------------------------
@@ -144,7 +192,7 @@ def _public_channel(doc: dict) -> dict:
 
 
 def _valid_channel(ch: str) -> None:
-    if ch not in {"facebook_page", "instagram_business", "telegram"}:
+    if ch not in _VALID_CHANNELS:
         raise HTTPException(status_code=422, detail="unsupported_channel")
 
 
@@ -152,6 +200,14 @@ def _require_creds(payload: Dict[str, str], required: List[str]) -> None:
     missing = [k for k in required if not (payload.get(k) or "").strip()]
     if missing:
         raise HTTPException(status_code=422, detail=f"missing_credentials:{','.join(missing)}")
+
+
+def _normalize_phone(raw: str) -> str:
+    """Strip spaces/plus/dashes; keep digits only for wa.me / Cloud API `to`."""
+    digits = re.sub(r"\D+", "", (raw or "").strip())
+    if len(digits) < 8 or len(digits) > 15:
+        raise HTTPException(status_code=422, detail="invalid_phone")
+    return digits
 
 
 def _build_default_caption(prop: dict) -> str:
@@ -235,6 +291,23 @@ async def meta_post(path: str, params: Dict[str, Any]) -> Dict[str, Any]:
     return data
 
 
+async def meta_post_json(path: str, access_token: str, body: Dict[str, Any]) -> Dict[str, Any]:
+    """POST JSON body to Graph (required by WhatsApp Cloud API messages)."""
+    async with await _http_client() as client:
+        r = await client.post(
+            f"{GRAPH_BASE}{path}",
+            params={"access_token": access_token},
+            json=body,
+        )
+    try:
+        data = r.json()
+    except Exception:
+        data = {"raw": r.text}
+    if r.status_code >= 400:
+        raise HTTPException(status_code=502, detail=_classify_meta_error(RuntimeError(r.status_code), data))
+    return data
+
+
 async def telegram_call(bot_token: str, method: str, payload: Dict[str, Any]) -> Dict[str, Any]:
     async with await _http_client() as client:
         r = await client.post(f"{TELEGRAM_BASE}/bot{bot_token}/{method}", json=payload)
@@ -246,6 +319,40 @@ async def telegram_call(bot_token: str, method: str, payload: Dict[str, Any]) ->
         desc = (data or {}).get("description") or f"http_{r.status_code}"
         raise HTTPException(status_code=502, detail=f"telegram_error:{desc}")
     return data.get("result", {})
+
+
+async def gbp_get(path: str, access_token: str) -> Dict[str, Any]:
+    async with await _http_client() as client:
+        r = await client.get(
+            f"{GBP_INFO_BASE}{path}",
+            headers={"Authorization": f"Bearer {access_token}"},
+            params={"readMask": "name,title,storefrontAddress"},
+        )
+    try:
+        data = r.json()
+    except Exception:
+        data = {"raw": r.text}
+    if r.status_code >= 400:
+        msg = (data.get("error") or {}).get("message") if isinstance(data, dict) else r.text
+        raise HTTPException(status_code=502, detail=f"gbp_error:{msg or r.status_code}")
+    return data
+
+
+async def gbp_post(path: str, access_token: str, body: Dict[str, Any]) -> Dict[str, Any]:
+    async with await _http_client() as client:
+        r = await client.post(
+            f"{GBP_BASE}{path}",
+            headers={"Authorization": f"Bearer {access_token}", "Content-Type": "application/json"},
+            json=body,
+        )
+    try:
+        data = r.json()
+    except Exception:
+        data = {"raw": r.text}
+    if r.status_code >= 400:
+        msg = (data.get("error") or {}).get("message") if isinstance(data, dict) else r.text
+        raise HTTPException(status_code=502, detail=f"gbp_error:{msg or r.status_code}")
+    return data
 
 
 # --- Validation --------------------------------------------------------------
@@ -268,6 +375,37 @@ async def validate_instagram_business(ig_user_id: str, access_token: str) -> Dic
 async def validate_telegram(bot_token: str, chat_id: str) -> Dict[str, Any]:
     me = await telegram_call(bot_token, "getMe", {})
     return {"ok": True, "bot_username": me.get("username"), "chat_id": chat_id}
+
+
+async def validate_whatsapp(phone: str) -> Dict[str, Any]:
+    normalized = _normalize_phone(phone)
+    return {"ok": True, "id": normalized, "phone": normalized, "name": f"+{normalized}"}
+
+
+async def validate_whatsapp_business(
+    phone_number_id: str, access_token: str, recipient_phone: str
+) -> Dict[str, Any]:
+    recipient = _normalize_phone(recipient_phone)
+    data = await meta_get(
+        f"/{phone_number_id}",
+        {"access_token": access_token, "fields": "id,display_phone_number,verified_name"},
+    )
+    return {
+        "ok": True,
+        "id": data.get("id") or phone_number_id,
+        "name": data.get("verified_name") or data.get("display_phone_number"),
+        "phone": data.get("display_phone_number"),
+        "recipient_phone": recipient,
+    }
+
+
+async def validate_google_business(location_name: str, access_token: str) -> Dict[str, Any]:
+    name = (location_name or "").strip().lstrip("/")
+    if not name.startswith("accounts/") or "/locations/" not in name:
+        raise HTTPException(status_code=422, detail="invalid_location_name")
+    data = await gbp_get(f"/{name}", access_token)
+    title = data.get("title") or name.split("/")[-1]
+    return {"ok": True, "id": data.get("name") or name, "name": title}
 
 
 # --- Publish -----------------------------------------------------------------
@@ -326,6 +464,66 @@ async def publish_telegram(
     return {"external_id": str(result.get("message_id")), "raw": result}
 
 
+async def publish_whatsapp(
+    phone: str, caption: str, listing_url: Optional[str]
+) -> Dict[str, Any]:
+    """Build a wa.me deep-link (no Cloud API send — consumer WhatsApp has none)."""
+    normalized = _normalize_phone(phone)
+    text = _truncate(caption or "", WHATSAPP_TEXT_MAX)
+    if listing_url:
+        text = _truncate(f"{text}\n{listing_url}".strip(), WHATSAPP_TEXT_MAX)
+    link = f"https://wa.me/{normalized}?text={quote(text)}"
+    return {"external_id": link, "raw": {"share_url": link, "phone": normalized}}
+
+
+async def publish_whatsapp_business(
+    phone_number_id: str,
+    access_token: str,
+    recipient_phone: str,
+    caption: str,
+    listing_url: Optional[str],
+) -> Dict[str, Any]:
+    to = _normalize_phone(recipient_phone)
+    body = _truncate(caption or "", WHATSAPP_TEXT_MAX)
+    if listing_url:
+        body = _truncate(f"{body}\n{listing_url}".strip(), WHATSAPP_TEXT_MAX)
+    result = await meta_post_json(
+        f"/{phone_number_id}/messages",
+        access_token,
+        {
+            "messaging_product": "whatsapp",
+            "to": to,
+            "type": "text",
+            "text": {"body": body or " "},
+        },
+    )
+    # Meta returns messages[{id}] on success
+    messages = result.get("messages") or []
+    ext = (messages[0].get("id") if messages else None) or result.get("id")
+    return {"external_id": ext, "raw": result}
+
+
+async def publish_google_business(
+    location_name: str,
+    access_token: str,
+    caption: str,
+    image_url: Optional[str],
+    listing_url: Optional[str],
+) -> Dict[str, Any]:
+    name = (location_name or "").strip().lstrip("/")
+    body: Dict[str, Any] = {
+        "languageCode": "it",
+        "summary": _truncate(caption or "Nuovo immobile", GBP_SUMMARY_MAX),
+        "topicType": "STANDARD",
+    }
+    if listing_url:
+        body["callToAction"] = {"actionType": "LEARN_MORE", "url": listing_url}
+    if image_url:
+        body["media"] = [{"mediaFormat": "PHOTO", "sourceUrl": image_url}]
+    result = await gbp_post(f"/{name}/localPosts", access_token, body)
+    return {"external_id": result.get("name") or result.get("searchUrl"), "raw": result}
+
+
 # ---------------------------------------------------------------------------
 # Router endpoints
 # ---------------------------------------------------------------------------
@@ -359,11 +557,7 @@ async def create_channel(
     if existing:
         raise HTTPException(status_code=409, detail="channel_already_configured")
 
-    required = {
-        "facebook_page": ["page_id", "access_token"],
-        "instagram_business": ["ig_user_id", "access_token"],
-        "telegram": ["bot_token", "chat_id"],
-    }[payload.channel]
+    required = _REQUIRED_CREDS[payload.channel]
     _require_creds(payload.credentials, required)
 
     ch = SocialChannel(
@@ -391,11 +585,7 @@ async def update_channel(
         raise HTTPException(status_code=404, detail="channel_not_found")
     update: Dict[str, Any] = {"updated_at": utcnow_iso()}
     if payload.credentials is not None:
-        required = {
-            "facebook_page": ["page_id", "access_token"],
-            "instagram_business": ["ig_user_id", "access_token"],
-            "telegram": ["bot_token", "chat_id"],
-        }[ch["channel"]]
+        required = _REQUIRED_CREDS[ch["channel"]]
         _require_creds(payload.credentials, required)
         update["credentials_encrypted"] = encrypt_dict(payload.credentials)
         update["status"] = "active"
@@ -435,15 +625,34 @@ async def validate_channel(
             info = await validate_facebook_page(creds.get("page_id", ""), creds.get("access_token", ""))
         elif ch["channel"] == "instagram_business":
             info = await validate_instagram_business(creds.get("ig_user_id", ""), creds.get("access_token", ""))
-        else:
+        elif ch["channel"] == "telegram":
             info = await validate_telegram(creds.get("bot_token", ""), creds.get("chat_id", ""))
+        elif ch["channel"] == "whatsapp":
+            info = await validate_whatsapp(creds.get("phone", ""))
+        elif ch["channel"] == "whatsapp_business":
+            info = await validate_whatsapp_business(
+                creds.get("phone_number_id", ""),
+                creds.get("access_token", ""),
+                creds.get("recipient_phone", ""),
+            )
+        elif ch["channel"] == "google_business":
+            info = await validate_google_business(
+                creds.get("location_name", ""), creds.get("access_token", "")
+            )
+        else:
+            raise HTTPException(status_code=422, detail="unsupported_channel")
     except HTTPException as e:
         await db.social_channels.update_one(
             {"id": channel_id},
             {"$set": {"status": "error", "last_error": str(e.detail), "updated_at": utcnow_iso()}},
         )
         raise
-    display = info.get("name") or info.get("username") or info.get("bot_username")
+    display = (
+        info.get("name")
+        or info.get("username")
+        or info.get("bot_username")
+        or info.get("phone")
+    )
     await db.social_channels.update_one(
         {"id": channel_id},
         {"$set": {"status": "active", "display_name": display, "last_error": None, "updated_at": utcnow_iso()}},
@@ -502,11 +711,33 @@ async def publish_property(
                     creds.get("ig_user_id", ""), creds.get("access_token", ""),
                     caption, image_url or "",
                 )
-            else:
+            elif ch_type == "telegram":
                 out = await publish_telegram(
                     creds.get("bot_token", ""), creds.get("chat_id", ""),
                     caption, image_url,
                 )
+            elif ch_type == "whatsapp":
+                out = await publish_whatsapp(
+                    creds.get("phone", ""), caption, listing_url,
+                )
+            elif ch_type == "whatsapp_business":
+                out = await publish_whatsapp_business(
+                    creds.get("phone_number_id", ""),
+                    creds.get("access_token", ""),
+                    creds.get("recipient_phone", ""),
+                    caption,
+                    listing_url,
+                )
+            elif ch_type == "google_business":
+                out = await publish_google_business(
+                    creds.get("location_name", ""),
+                    creds.get("access_token", ""),
+                    caption,
+                    image_url,
+                    listing_url,
+                )
+            else:
+                raise HTTPException(status_code=422, detail="unsupported_channel")
         except HTTPException as e:
             err_msg = str(e.detail)
             results[ch_type] = {"ok": False, "error": err_msg}
