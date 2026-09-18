@@ -80,7 +80,7 @@ Le regole HARD **bloccano** l'immobile: se anche una sola fallisce, l'immobile *
 | 5 | Città + Provincia | `city`, `province` | `missing_address` |
 
 **Perché sono 5 regole ma 7 codici**
-- La regola APE emette 2 codici distinti (`missing` se mancante, `invalid` se presente ma fuori dalle 14 classi ammesse).
+- La regola APE emette 2 codici distinti (`missing` se mancante, `invalid` se presente ma fuori dalle 15 classi ammesse).
 - La regola foto emette 2 codici distinti (`less_than_3_photos` se meno di 3 foto, `no_valid_photo_url` se ce ne sono ma nessuna ha URL valido).
 
 **Il flag `publishable`**
@@ -148,12 +148,12 @@ Il backend emette **sempre** il codice `missing_price` — anche per gli affitti
 
 ---
 
-## 16.6 · HARD APE · le 14 classi ammesse
+## 16.6 · HARD APE · le 15 classi ammesse
 
 **A cosa serve capirlo**
-Se pubblichi senza APE (o con APE non riconosciuta), l'immobile è bloccato per legge (D.Lgs 192/2005). Il validatore controlla che il campo esista **E** che il valore sia una delle **14 classi ammesse** definite in `VALID_ENERGY_CLASSES`.
+Se pubblichi senza APE (o con APE non riconosciuta), l'immobile è bloccato per legge (D.Lgs 192/2005). Il validatore controlla che il campo esista **E** che il valore sia una delle **15 classi ammesse** definite in `VALID_ENERGY_CLASSES`.
 
-**Le 14 classi ammesse (`compliance.py:20-24`)**
+**Le 15 classi ammesse (`compliance.py:20-24`)**
 
 | Classe | Significato |
 |:-:|-------------|
@@ -254,7 +254,7 @@ Se apri la scheda di un immobile bloccato e vuoi sapere *"dove correggo?"*, ques
 |--------|----------------------|------------|------------|
 | `missing_price` | Sezione Prezzo → Prezzo di vendita (o Canone mensile per affitti) | `price` (sale) / `rent_monthly` (rent) / `price_on_request: true` | Inserisci un numero > 0 oppure spunta *"prezzo su richiesta"* |
 | `missing_surface` | Sezione Caratteristiche → Superficie (mq) | `surface_sqm` | Inserisci un numero > 0 (in mq) |
-| `missing_energy_class` | Sezione Efficienza energetica → Classe energetica | `energy.energy_class` | Scegli una delle 14 classi (A4/A3/A2/A1/A/B/C/D/E/F/G/EXEMPT_IN_PROGRESS/EXEMPT_NOT_APPLICABLE) |
+| `missing_energy_class` | Sezione Efficienza energetica → Classe energetica | `energy.energy_class` | Scegli una delle 15 classi (A4/A3/A2/A1/A+/A/B/C/D/E/F/G/EXEMPT_IN_PROGRESS/EXEMPT_NOT_APPLICABLE) |
 | `invalid_energy_class` | Idem | Idem | Idem — il valore attuale non è in `VALID_ENERGY_CLASSES` (probabile bug import) |
 | `less_than_3_photos` | Sezione Foto (Cap. 3 §foto) | `photos: [...]` | Carica almeno 3 foto (drag & drop o upload) |
 | `no_valid_photo_url` | Idem | `photos[].url` | Le foto hanno metadati ma URL non risolti — ricarica |

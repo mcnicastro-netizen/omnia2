@@ -64,7 +64,7 @@ class SearchFilters(BaseModel):
     rooms_min: Optional[int] = Field(default=None, ge=0)
     bedrooms_min: Optional[int] = Field(default=None, ge=0)
     bathrooms_min: Optional[int] = Field(default=None, ge=0)
-    energy_class: Optional[str] = Field(default=None, pattern="^(A4|A3|A2|A1|A|B|C|D|E|F|G)?$")
+    energy_class: Optional[str] = Field(default=None, pattern="^(A4|A3|A2|A1|A\+|A|B|C|D|E|F|G)?$")
 
 
 class SavedSearchCreate(BaseModel):

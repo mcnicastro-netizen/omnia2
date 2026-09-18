@@ -123,7 +123,7 @@ voci:
     screenshot: []
 
   - id: compliance.hard-ape-classi-ammesse
-    titolo: HARD APE - le 14 classi energetiche ammesse
+    titolo: HARD APE - le 15 classi energetiche ammesse
     modulo: Compliance Portali
     widget: null
     pubblico: [titolare, agente, super_admin]
@@ -139,8 +139,8 @@ voci:
         Automaticamente. Emette 2 codici distinti (missing vs
         invalid).
       passi:
-        - "Le 14 classi ammesse (VALID_ENERGY_CLASSES in
-          compliance.py:20-24): A4, A3, A2, A1, A, B, C, D, E, F, G
+        - "Le 15 classi ammesse (VALID_ENERGY_CLASSES in
+          compliance.py:20-24): A4, A3, A2, A1, A+, A, B, C, D, E, F, G
           (11 classi standard) + EXEMPT_IN_PROGRESS (attestato in
           preparazione) + EXEMPT_NOT_APPLICABLE (esente
           normativamente, es. rudere agricolo)."
@@ -490,7 +490,7 @@ voci:
           - ipe_missing: energy.ipe non presente."
         - "Costanti hardcoded (compliance.py:27-29):
           MIN_PHOTOS=3, MIN_TITLE_CHARS=10, MIN_DESCRIPTION_CHARS=50."
-        - "Le 14 classi energetiche ammesse: A4/A3/A2/A1/A/B/C/D/E/F/G/
+        - "Le 15 classi energetiche ammesse: A4/A3/A2/A1/A+/A/B/C/D/E/F/G/
           EXEMPT_IN_PROGRESS/EXEMPT_NOT_APPLICABLE."
       errori_comuni:
         - problema: "Vedo un codice che non riconosco"

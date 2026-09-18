@@ -349,9 +349,9 @@ voci:
         - problema: "Ho compilato la classe APE ma dice
             invalid_energy_class"
           soluzione: >
-            Il campo accetta solo A4, A3, A2, A1, A, B, C, D, E,
-            F, G o le due sigle EXEMPT_IN_PROGRESS /
-            EXEMPT_NOT_APPLICABLE. Valori come 'E2' o
+            Il campo accetta A4, A3, A2, A1, A+, A, B, C, D, E,
+            F, G oppure In corso (EXEMPT_IN_PROGRESS) /
+            Non soggetto (EXEMPT_NOT_APPLICABLE). Valori come 'E2' o
             'in_calcolo' non sono validi.
       permessi:
         - Tutti (in lettura)

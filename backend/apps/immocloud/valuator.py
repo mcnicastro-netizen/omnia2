@@ -262,7 +262,7 @@ class ValuationPayload(BaseModel):
     property_type: str = Field(default="appartamento", max_length=50)
     surface_sqm: int = Field(ge=10, le=10000)   # superficie calpestabile principale
     condition: Optional[str] = Field(default="buono", max_length=50)
-    energy_class: Optional[str] = Field(default=None, pattern="^(A4|A3|A2|A1|A|B|C|D|E|F|G)?$")
+    energy_class: Optional[str] = Field(default=None, pattern="^(A4|A3|A2|A1|A\+|A|B|C|D|E|F|G)?$")
     floor: Optional[int] = Field(default=None, ge=-2, le=80)
 
     # NEW M3.S6-pro: superficie commerciale UNI 10750 (se passata, sovrascrive surface_sqm)

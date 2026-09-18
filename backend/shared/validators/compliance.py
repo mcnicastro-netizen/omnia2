@@ -16,12 +16,49 @@ Backwards compat: `is_publishable(prop)` still exposed by publishing.py.
 from __future__ import annotations
 from typing import Any, Dict, List, Tuple
 
-# Valid APE classes as per D.Lgs 192/2005 (Italian energy classes)
+# Valid APE classes — scala IT portali (Immobiliare.it / Idealista) + D.Lgs 192/2005.
+# UI CRM e compliance HARD condividono questo set.
 VALID_ENERGY_CLASSES = {
-    "A4", "A3", "A2", "A1", "A", "B", "C", "D", "E", "F", "G",
-    # exempt reasons must be declared explicitly
+    "A4", "A3", "A2", "A1", "A+", "A", "B", "C", "D", "E", "F", "G",
+    # esenzioni esplicite (obbligatorie in pubblicazione se non c'è una lettera)
     "EXEMPT_IN_PROGRESS", "EXEMPT_NOT_APPLICABLE",
 }
+
+# Pattern FastAPI Query/Field (filtri ricerca: solo lettere)
+ENERGY_CLASS_LETTER_PATTERN = r"^(A4|A3|A2|A1|A\+|A|B|C|D|E|F|G)$"
+ENERGY_CLASS_FULL_PATTERN = (
+    r"^(A4|A3|A2|A1|A\+|A|B|C|D|E|F|G|EXEMPT_IN_PROGRESS|EXEMPT_NOT_APPLICABLE|exempt)$"
+)
+
+_ENERGY_ALIASES = {
+    "EXEMPT": "EXEMPT_NOT_APPLICABLE",
+    "EXEMPT_NOT_APPLICABLE": "EXEMPT_NOT_APPLICABLE",
+    "EXEMPT_IN_PROGRESS": "EXEMPT_IN_PROGRESS",
+}
+
+
+def normalize_energy_class(raw: str | None) -> str:
+    """Canonical APE token for storage/compliance (A+ preserved; exempt→EXEMPT_NOT_APPLICABLE)."""
+    s = (raw or "").strip()
+    if not s:
+        return ""
+    if s == "A+" or s.upper() == "A+":
+        return "A+"
+    u = s.upper()
+    if u in _ENERGY_ALIASES:
+        return _ENERGY_ALIASES[u]
+    return u
+
+
+def _has_energy(prop: Dict[str, Any]) -> Tuple[bool, str]:
+    """Return (ok, reason). Energy must be present AND valid class."""
+    energy = prop.get("energy") or {}
+    cls = normalize_energy_class(energy.get("energy_class"))
+    if not cls:
+        return False, "missing_energy_class"
+    if cls not in VALID_ENERGY_CLASSES:
+        return False, "invalid_energy_class"
+    return True, ""
 
 # Business rule constants (single source of truth)
 MIN_PHOTOS = 3
@@ -61,17 +98,6 @@ def _has_price(prop: Dict[str, Any]) -> bool:
     if prop.get("price_on_request") is True:
         return True
     return False
-
-
-def _has_energy(prop: Dict[str, Any]) -> Tuple[bool, str]:
-    """Return (ok, reason). Energy must be present AND valid class."""
-    energy = prop.get("energy") or {}
-    cls = (energy.get("energy_class") or "").strip().upper()
-    if not cls:
-        return False, "missing_energy_class"
-    if cls not in VALID_ENERGY_CLASSES:
-        return False, "invalid_energy_class"
-    return True, ""
 
 
 def _has_surface(prop: Dict[str, Any]) -> bool:

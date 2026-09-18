@@ -7,6 +7,7 @@ import PropertyMapView from "../components/PropertyMapView";
 import PropertyCard from "../components/PropertyCard";
 import CloudPageHero from "../components/CloudPageHero";
 import { FIELD, BTN_PRIMARY } from "../cloudTheme";
+import { ENERGY_CLASS_LETTER_OPTIONS } from "../../../shared/lib/energyClasses";
 
 export default function CloudSearchPage() {
   const { t } = useTranslation();
@@ -344,8 +345,8 @@ export default function CloudSearchPage() {
                   className={FIELD}
                 >
                   <option value="">{t("cloud.any")}</option>
-                  {["A4", "A3", "A2", "A1", "A", "B", "C", "D", "E", "F", "G"].map((c) => (
-                    <option key={c} value={c}>{c}</option>
+                  {ENERGY_CLASS_LETTER_OPTIONS.map((c) => (
+                    <option key={c.value} value={c.value}>{c.label}</option>
                   ))}
                 </select>
               </FilterBlock>

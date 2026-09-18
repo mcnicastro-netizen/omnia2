@@ -15,7 +15,12 @@ PropertyType = Literal[
 
 PropertyOperation = Literal["sale", "rent", "rent_to_buy", "auction"]
 PropertyStatus = Literal["draft", "active", "reserved", "sold", "rented", "withdrawn"]
-EnergyClass = Literal["A4", "A3", "A2", "A1", "A", "B", "C", "D", "E", "F", "G", "exempt"]
+EnergyClass = Literal[
+    "A4", "A3", "A2", "A1", "A+", "A",
+    "B", "C", "D", "E", "F", "G",
+    "EXEMPT_IN_PROGRESS", "EXEMPT_NOT_APPLICABLE",
+    "exempt",  # legacy alias → treat as EXEMPT_NOT_APPLICABLE in compliance
+]
 HeatingType = Literal["autonomo", "centralizzato", "assente"]
 FurnishedState = Literal["arredato", "parz_arredato", "non_arredato"]
 PropertyCondition = Literal["nuovo", "ottime", "buone", "da_ristrutturare", "ristrutturato"]

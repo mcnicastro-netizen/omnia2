@@ -83,8 +83,8 @@ CONTRATTO_MAP = {
 # DL 192/2005:  0=G, 1=A+, 2=A, 3=B..8=G
 # DL 90/2013:  10=A4, 11=A3, 12=A2, 13=A1, 14=B..19=G
 ENERGY_MAP = {
-    "-1": None, "9": "exempt",
-    "0": "G", "1": "A", "2": "A", "3": "B", "4": "C", "5": "D", "6": "E", "7": "F", "8": "G",
+    "-1": None, "9": "EXEMPT_NOT_APPLICABLE",
+    "0": "G", "1": "A+", "2": "A", "3": "B", "4": "C", "5": "D", "6": "E", "7": "F", "8": "G",
     "10": "A4", "11": "A3", "12": "A2", "13": "A1", "14": "B",
     "15": "C", "16": "D", "17": "E", "18": "F", "19": "G",
 }
@@ -214,7 +214,7 @@ def parse_vendor_a_item(elem: ET.Element, agency_id: str, user_id: str) -> tuple
             total_floors=_to_int(_t(elem, "piani_totali")),
             features=features,
             energy=PropertyEnergy(
-                energy_class=energy_class if energy_class != "exempt" else "exempt",
+                energy_class=energy_class if energy_class != "EXEMPT_NOT_APPLICABLE" else "EXEMPT_NOT_APPLICABLE",
                 energy_value=epi,
                 heating=heat,
             ),

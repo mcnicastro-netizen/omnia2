@@ -10,6 +10,7 @@ import PublishingCenter from "./components/PublishingCenter";
 import AlImproveButton from "../../shared/components/AlImproveButton";
 import { api } from "../../shared/lib/api";
 import { formatApiErrorDetail } from "../../shared/lib/auth";
+import { ENERGY_CLASS_OPTIONS } from "../../shared/lib/energyClasses";
 
 const TYPES = [
   "appartamento", "villa", "villetta_a_schiera", "loft", "attico", "monolocale",
@@ -21,7 +22,7 @@ const STATUSES = ["draft", "active", "reserved", "sold", "rented", "withdrawn"];
 const CONDITIONS = ["nuovo", "ottime", "buone", "da_ristrutturare", "ristrutturato"];
 const FURNISHED = ["arredato", "parz_arredato", "non_arredato"];
 const HEATING = ["autonomo", "centralizzato", "assente"];
-const ENERGY_CLASSES = ["A4", "A3", "A2", "A1", "A", "B", "C", "D", "E", "F", "G"];
+const ENERGY_CLASSES = ENERGY_CLASS_OPTIONS;
 
 const FEATURES = [
   "balcone", "terrazza", "giardino", "piscina", "ascensore",
@@ -317,9 +318,11 @@ export default function PropertyFormPage() {
           <Section label={t("properties.section_energy")}>
             <div className="grid grid-cols-3 gap-4">
               <Field label={t("properties.field_energy_class")}>
-                <select value={form.energy.energy_class || ""} onChange={(e) => updNested("energy", "energy_class", e.target.value)} className="form-input">
+                <select value={form.energy.energy_class || ""} onChange={(e) => updNested("energy", "energy_class", e.target.value)} className="form-input" data-testid="property-energy-class">
                   <option value="">—</option>
-                  {ENERGY_CLASSES.map((c) => <option key={c} value={c}>{c}</option>)}
+                  {ENERGY_CLASSES.map((c) => (
+                    <option key={c.value} value={c.value}>{c.label}</option>
+                  ))}
                 </select>
               </Field>
               <Field label={t("properties.field_energy_value")}>

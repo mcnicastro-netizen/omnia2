@@ -102,7 +102,7 @@ Le righe **9 e 10** compaiono solo se la **tipologia** dell'immobile è: `appart
 In alto trovi una barra `N / M obbligatori` che diventa **verde** quando arrivi a 5/5 (o al totale di riferimento) e **ambra** finché è incompleta.
 
 **Nota APE speciale**
-Se nell'annuncio hai **dichiarato la classe energetica** (A4 → G) ma non hai ancora caricato il PDF, la riga APE mostra la nota:
+Se nell'annuncio hai **dichiarato la classe energetica** (A4→G, A+, In corso, Non soggetto) ma non hai ancora caricato il PDF, la riga APE mostra la nota:
 > *Classe energetica X dichiarata nell'annuncio ma APE non caricato*
 
 Per pubblicare in regola sui portali serve almeno la classe dichiarata; per il **rogito** serve il documento firmato dal tecnico (vedi §7.7 sotto).

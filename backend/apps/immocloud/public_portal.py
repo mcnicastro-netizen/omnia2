@@ -212,7 +212,7 @@ async def public_search(
     rooms_min: Optional[int] = Query(None, ge=0),
     bedrooms_min: Optional[int] = Query(None, ge=0),
     bathrooms_min: Optional[int] = Query(None, ge=0),
-    energy_class: Optional[str] = Query(None, pattern="^(A4|A3|A2|A1|A|B|C|D|E|F|G)$"),
+    energy_class: Optional[str] = Query(None, pattern="^(A4|A3|A2|A1|A\+|A|B|C|D|E|F|G)$"),
     sort: str = Query("recent", pattern="^(recent|price_asc|price_desc|surface_desc)$"),
     page: int = Query(1, ge=1, le=500),
     page_size: int = Query(20, ge=1, le=60),
@@ -336,7 +336,7 @@ class AdvancedSearchBody(BaseModel):
     surface_max: Optional[float] = Field(default=None, ge=0)
     rooms_min: Optional[int] = Field(default=None, ge=0)
     bedrooms_min: Optional[int] = Field(default=None, ge=0)
-    energy_class: Optional[str] = Field(default=None, pattern="^(A4|A3|A2|A1|A|B|C|D|E|F|G)$")
+    energy_class: Optional[str] = Field(default=None, pattern="^(A4|A3|A2|A1|A\+|A|B|C|D|E|F|G)$")
     polygon: Optional[List[List[float]]] = Field(default=None, max_length=100)
     near_me: Optional[Dict[str, float]] = None
     compare_prices: bool = False
@@ -519,7 +519,7 @@ async def public_map_markers(
     price_max: Optional[int] = Query(None, ge=0),
     rooms_min: Optional[int] = Query(None, ge=0),
     bedrooms_min: Optional[int] = Query(None, ge=0),
-    energy_class: Optional[str] = Query(None, pattern="^(A4|A3|A2|A1|A|B|C|D|E|F|G)$"),
+    energy_class: Optional[str] = Query(None, pattern="^(A4|A3|A2|A1|A\+|A|B|C|D|E|F|G)$"),
     bbox: Optional[str] = Query(None, description="south,west,north,east"),
     limit: int = Query(500, ge=1, le=2000),
 ):

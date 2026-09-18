@@ -69,7 +69,7 @@ Il punteggio totale è la somma di 14 sotto-punteggi, ognuno con un peso diverso
 | **Camere da letto** | 4 | Camere ≥ minimo richiesto |
 | **Bagni** | 4 | Bagni ≥ minimo richiesto |
 | **Condizione** | 4 | Nuovo / Ottime / Buone / Ristrutturato ecc. — l'immobile deve essere nella lista accettata |
-| **Classe energetica** | 4 | Classe ≥ soglia minima (A4 > A3 > A2 > A1 > A > B > … > G) |
+| **Classe energetica** | 4 | Classe ≥ soglia minima (A4 > A3 > A2 > A1 > A+ > A > B > … > G) |
 | **Multimedia** | 4 | Foto presenti; virtual tour se richiesto |
 | **Piano preferito** | 3 | Piano terra / intermedio / ultimo piano |
 | **TOTALE** | **100** | |

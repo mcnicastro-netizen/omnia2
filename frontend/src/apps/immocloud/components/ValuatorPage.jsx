@@ -14,6 +14,7 @@ import { Link, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import AddressAutocomplete from "./AddressAutocomplete";
 import CloudPageHero from "./CloudPageHero";
+import { ENERGY_CLASS_LETTER_OPTIONS } from "../../../shared/lib/energyClasses";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api/cloud/valuator`;
@@ -24,7 +25,7 @@ const PDF_URL = `${BACKEND_URL}/api/cloud/valuator/report-pdf`;
 
 const PROPERTY_TYPES = ["appartamento", "attico", "loft", "villa", "monolocale", "rustico_casale", "ufficio", "negozio", "garage_box"];
 const CONDITIONS = ["nuovo", "ristrutturato", "ottimo", "buono", "abitabile", "da_ristrutturare", "ruderi_da_demolire"];
-const ENERGY_CLASSES = ["A4", "A3", "A2", "A1", "A", "B", "C", "D", "E", "F", "G"];
+const ENERGY_CLASSES = ENERGY_CLASS_LETTER_OPTIONS;
 const FLOOR_CLASSES = ["seminterrato", "piano_terra", "piano_1", "piano_intermedio", "ultimo_no_asc", "ultimo_con_asc", "attico_panoramico"];
 const EXPOSURES = ["sud", "sud_est", "sud_ovest", "est", "ovest", "nord_est", "nord_ovest", "nord", "cieca", "doppia_esp"];
 const VIEWS = ["interno", "cortile", "strada", "verde", "panoramico", "mare", "lago_montagna"];
@@ -280,7 +281,7 @@ export default function ValuatorPage() {
             </select>
             <select className="w-full border border-stone-200 rounded-lg p-2.5 text-sm" value={form.energy_class} onChange={e => setForm(f => ({ ...f, energy_class: e.target.value }))} data-testid="valuator-energy">
               <option value="">{t("valuator.energy_none", "Classe energetica (opzionale)")}</option>
-              {ENERGY_CLASSES.map(o => <option key={o} value={o}>{o}</option>)}
+              {ENERGY_CLASSES.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
             </select>
             <input type="number" min="-2" max="80" className="w-full border border-stone-200 rounded-lg p-2.5 text-sm" placeholder={t("valuator.floor", "Piano (opzionale)")} value={form.floor} onChange={e => setForm(f => ({ ...f, floor: e.target.value }))} data-testid="valuator-floor" />
           </div>

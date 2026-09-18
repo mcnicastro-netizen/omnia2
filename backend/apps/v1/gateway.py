@@ -228,7 +228,7 @@ class FeedPropertyItem(BaseModel):
     city: Optional[str] = Field(default=None, max_length=120)
     province: Optional[str] = Field(default=None, max_length=10)
     address: Optional[str] = Field(default=None, max_length=300)
-    energy_class: Optional[str] = Field(default=None, max_length=5)
+    energy_class: Optional[str] = Field(default=None, max_length=32)
     photo_urls: Optional[list[str]] = Field(default=None, max_length=30)
     status: Optional[str] = Field(default="active", pattern="^(active|reserved|sold|rented|withdrawn|draft)$")
 

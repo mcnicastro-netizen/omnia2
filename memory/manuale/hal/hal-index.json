@@ -21,7 +21,7 @@
     {
       "file": "03-immobili.yaml",
       "voices": 16,
-      "md5": "4bd0e6eeec37c221c461ee3ffa21f225"
+      "md5": "baf8cffd5eb43c90166d88ba0fb3f322"
     },
     {
       "file": "04-clienti.yaml",
@@ -36,7 +36,7 @@
     {
       "file": "06-portali-publishing.yaml",
       "voices": 12,
-      "md5": "1dd948786b77a967a4d1635552b55e7a"
+      "md5": "c9d5c7580eae4e062cf77e5495ebed05"
     },
     {
       "file": "07-fascicolo-immobile.yaml",
@@ -86,7 +86,7 @@
     {
       "file": "16-compliance-portali.yaml",
       "voices": 14,
-      "md5": "5d066f2fdc18cce9dab031a05d1ebcf2"
+      "md5": "3c026590986d71606a9c188fa1c356f6"
     },
     {
       "file": "17-domain-vault.yaml",

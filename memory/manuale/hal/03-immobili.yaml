@@ -600,9 +600,10 @@ voci:
         ingegnere certificatore).
       passi:
         - "OMNIA NON calcola l'APE ufficiale (serve un tecnico
-          abilitato ENEA). Puoi dichiarare la classe energetica (A4→G)
-          nei dati dell'immobile, ma il documento firmato dal tecnico
-          va comunque prodotto e caricato."
+          abilitato ENEA). Puoi dichiarare la classe energetica
+          (A4→G, A+, In corso, Non soggetto/Esente — come sui
+          portali) nei dati dell'immobile, ma il documento firmato
+          dal tecnico va comunque prodotto e caricato."
         - Se hai già il PDF firmato dal tecnico → caricalo come "APE"
           (vedi immobili.fascicolo-caricare-documento).
         - Se manca ancora → nell'attesa dichiara la classe energetica

@@ -34,7 +34,7 @@ Ogni volta che acquisisci un nuovo mandato o inserisci un immobile appena affida
    - **Zona / Quartiere** (compare in mappa e cerca)
    - **Vani · Camere · Bagni · Piano · Piani totali · Anno**
    - **Condizione**: Nuovo · Ottime · Buone · Da ristrutturare · Ristrutturato
-   - **Classe energetica** (A4→G) + **consumo** kWh/m²·anno
+   - **Classe energetica** (A4→G, A+, In corso, Non soggetto/Esente — allineato ai portali) + **consumo** kWh/m²·anno
    - **Spese condominiali · Arredamento · Riscaldamento**
    - **Cliente venditore** (collega l'anagrafica del proprietario dal modulo Clienti)
 5. Aggiungi almeno 3 fotografie (vedi 3.3).
@@ -350,7 +350,7 @@ L'APE non è calcolabile da OMNIA: deve essere **prodotto da un tecnico abilitat
 
 - Se ce l'hai già → caricalo come *APE*.
 - Se non ce l'hai ancora → **l'ordine APE via partner integrato è in valutazione** (nessun bottone in UI oggi). Nell'attesa, chiedi il documento al tuo tecnico abilitato di fiducia (geometra/architetto/ingegnere certificatore) e caricalo appena disponibile.
-- Nell'attesa, puoi comunque **dichiarare la classe energetica** (A4 → G) nei dati dell'immobile: il portale la mostrerà, ma per il rogito serve il documento firmato dal tecnico.
+- Nell'attesa, puoi comunque **dichiarare la classe energetica** nei dati dell'immobile: **A4 · A3 · A2 · A1 · A+ · A · B · C · D · E · F · G**, oppure **In corso** / **Non soggetto · Esente** (come sui portali maggiori). Il portale la mostrerà, ma per il rogito serve il documento firmato dal tecnico.
 
 **Chi vede il Fascicolo**
 - **Titolare · Agente responsabile**: sempre.

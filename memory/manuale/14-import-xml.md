@@ -124,7 +124,7 @@ Codici fuori tabella o campi testuali (es. `<tipologia>appartamento</tipologia>`
 | `ASTA` | auction |
 
 ### Classe energetica (19 codici → APE OMNIA)
-Il parser accetta sia la stringa esplicita (`"A"`, `"A4"`, `"B"`, …) sia i codici numerici legacy `1`-`8`, `10`-`19`, `99` (esente). Sotto il cofano vengono normalizzati alle classi standard OMNIA: `A4/A3/A2/A1/A/B/C/D/E/F/G/exempt`.
+Il parser accetta sia la stringa esplicita (`"A"`, `"A4"`, `"B"`, …) sia i codici numerici legacy `1`-`8`, `10`-`19`, `99` (esente). Sotto il cofano vengono normalizzati alle classi standard OMNIA: `A4/A3/A2/A1/A+/A/B/C/D/E/F/G/EXEMPT_NOT_APPLICABLE`.
 
 ### Categoria (`R/U/C`)
 - `R` → residenziale

@@ -59,12 +59,12 @@ TYPE_CODE_MAP: Dict[str, str] = {
 
 # Numeric energy-class codes → OMNIA EnergyClass literal
 ENERGY_CODE_MAP: Dict[str, str] = {
-    "1": "A", "2": "A", "3": "B", "4": "C", "5": "D",
+    "1": "A+", "2": "A", "3": "B", "4": "C", "5": "D",
     "6": "E", "7": "F", "8": "G",
     "10": "A4", "11": "A3", "12": "A2", "13": "A1",
     "14": "A", "15": "B", "16": "C", "17": "D",
     "18": "F", "19": "G",
-    "99": "exempt",
+    "99": "EXEMPT_NOT_APPLICABLE",
 }
 
 # Category letters → informational only (residential/commercial/office)
@@ -192,11 +192,16 @@ def _map_energy_class(elem: ET.Element) -> Optional[str]:
     code = _text(elem, "codice_classe_energetica") or _text(elem, "classe_energetica_codice")
     if code and code.strip() in ENERGY_CODE_MAP:
         return ENERGY_CODE_MAP[code.strip()]
-    label = (_text(elem, "classe_energetica") or _text(elem, "classe") or "").upper().strip()
+    raw = (_text(elem, "classe_energetica") or _text(elem, "classe") or "").strip()
+    label = raw.upper()
+    if raw == "A+" or label == "A+":
+        return "A+"
     if label in {"A4", "A3", "A2", "A1", "A", "B", "C", "D", "E", "F", "G"}:
         return label
-    if label in {"ESENTE", "EXEMPT", "N/A"}:
-        return "exempt"
+    if label in {"ESENTE", "EXEMPT", "N/A", "NON SOGGETTO", "EXEMPT_NOT_APPLICABLE"}:
+        return "EXEMPT_NOT_APPLICABLE"
+    if label in {"IN CORSO", "IN_CORSO", "EXEMPT_IN_PROGRESS"}:
+        return "EXEMPT_IN_PROGRESS"
     return None
 
 

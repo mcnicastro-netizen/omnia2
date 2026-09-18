@@ -4,6 +4,7 @@ import { useNavigate, useParams, Link } from "react-router-dom";
 import AgencyShell from "./components/AgencyShell";
 import { api } from "../../shared/lib/api";
 import { formatApiErrorDetail } from "../../shared/lib/auth";
+import { ENERGY_CLASS_LETTER_OPTIONS } from "../../shared/lib/energyClasses";
 
 const CLIENT_TYPES = ["buyer", "seller", "tenant", "landlord", "investor"];
 const CLIENT_STATUSES = ["new", "contacted", "qualified", "negotiating", "closed_won", "closed_lost", "archived"];
@@ -16,7 +17,7 @@ const PROPERTY_TYPES = [
 ];
 const CONDITIONS = ["nuovo", "buone", "da_ristrutturare", "ristrutturato"];
 const FLOORS = ["terra", "intermedi", "ultimo"];
-const ENERGY_CLASSES = ["", "A", "B", "C", "D", "E", "F", "G"];
+const ENERGY_CLASSES = [{ value: "", label: "" }, ...ENERGY_CLASS_LETTER_OPTIONS];
 const FEATURES = [
   "balcone", "terrazza", "giardino", "piscina", "ascensore",
   "aria_condizionata", "riscaldamento_autonomo", "cantina", "soffitta",
@@ -443,7 +444,7 @@ export default function ClientFormPage() {
               <Field label={t("clients.pref_energy_min")}>
                 <select value={form.preferences.energy_min_class || ""} onChange={(e) => updPref("energy_min_class", e.target.value)} className="form-input">
                   {ENERGY_CLASSES.map((c) => (
-                    <option key={c} value={c}>{c || t("clients.pref_any")}</option>
+                    <option key={c.value || "any"} value={c.value}>{c.value ? c.label : t("clients.pref_any")}</option>
                   ))}
                 </select>
               </Field>

@@ -26,7 +26,7 @@ W = {
 # Sanity: assert sum(W.values()) == 100  (14+11+12+5+17+7+5+4+4+4+3+4+6+4 = 100)
 
 # Energy class ranking (best to worst). Used for "min class" check.
-ENERGY_ORDER = ["A4", "A3", "A2", "A1", "A", "B", "C", "D", "E", "F", "G"]
+ENERGY_ORDER = ["A4", "A3", "A2", "A1", "A+", "A", "B", "C", "D", "E", "F", "G"]
 
 
 def _norm_str(s: Optional[str]) -> str:

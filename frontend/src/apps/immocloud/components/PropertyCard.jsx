@@ -1,6 +1,7 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import { energyClassLabel } from "../../../shared/lib/energyClasses";
 import { formatEUR } from "../cloudTheme";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
@@ -26,7 +27,7 @@ export default function PropertyCard({ p }) {
         )}
         {p.energy_class && (
           <span className="absolute top-3 right-3 text-[10px] uppercase tracking-widest bg-white/90 backdrop-blur px-2 py-1 rounded">
-            {t("cloud.energy")}: {p.energy_class}
+            {t("cloud.energy")}: {energyClassLabel(p.energy_class)}
           </span>
         )}
         {p.operation === "rent" && (

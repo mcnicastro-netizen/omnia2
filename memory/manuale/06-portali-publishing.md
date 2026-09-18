@@ -159,7 +159,7 @@ L'annuncio **viene escluso** dal feed se manca anche uno solo di questi requisit
 |--------|-------------|
 | **Prezzo o canone** presente e > 0 | Obbligo di trasparenza AGCM. Sale → serve `price`. Affitto → serve `rent_monthly`. È ammesso il flag "Prezzo su richiesta" (`price_on_request`). |
 | **Superficie (mq)** presente e > 0 | Obbligo normativo + regola di ogni portale. |
-| **Classe energetica APE** valida | D.Lgs 192/2005. Classi ammesse: A4, A3, A2, A1, A, B, C, D, E, F, G, EXEMPT_IN_PROGRESS, EXEMPT_NOT_APPLICABLE. Se la classe è vuota o fuori lista → blocco. |
+| **Classe energetica APE** valida | D.Lgs 192/2005. Classi ammesse: A4, A3, A2, A1, A+, A, B, C, D, E, F, G, EXEMPT_IN_PROGRESS, EXEMPT_NOT_APPLICABLE. Se la classe è vuota o fuori lista → blocco. |
 | **Almeno 3 foto** con URL valido | Standard portali (Immobiliare.it, Idealista, tutti). Meno di 3 → blocco. |
 | **Indirizzo** (città + provincia) compilato | Serve al portale per la geo-ricerca. Manca la provincia → blocco. |
 

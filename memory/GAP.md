@@ -301,7 +301,7 @@ Elementi che ESISTONO ma per decisione del Founder o per regola redazionale NON 
   - `_photos_count` + `_first_photo_ok` (2 codici) → `less_than_3_photos` + `no_valid_photo_url`
   - `_has_address` → `missing_address`
 - **4 regole SOFT**: `title_too_short`, `description_too_short`, `rooms_not_specified`, `ipe_missing`. Non bloccanti (publishable resta true).
-- **14 classi APE ammesse** (`VALID_ENERGY_CLASSES` a `compliance.py:20-24`): A4/A3/A2/A1/A/B/C/D/E/F/G + EXEMPT_IN_PROGRESS + EXEMPT_NOT_APPLICABLE. Documentate 1:1.
+- **15 classi APE ammesse** (`VALID_ENERGY_CLASSES`): A4/A3/A2/A1/A+/A/B/C/D/E/F/G + EXEMPT_IN_PROGRESS + EXEMPT_NOT_APPLICABLE. Documentate 1:1.
 - **Costanti hardcoded**: `MIN_PHOTOS=3`, `MIN_TITLE_CHARS=10`, `MIN_DESCRIPTION_CHARS=50` (`compliance.py:27-29`). Documentati come non-configurabili v1.
 - **Cornice normativa**: D.Lgs 192/2005 APE, AGCM trasparenza prezzi, standard portali IT. Documentata come contesto (non consulenza legale).
 - **Ghost label `missing_rent` D-051 esplicito**: `PublishingPage.jsx:410` ha `REASON_LABELS.missing_rent = "Canone mensile mancante"` MA il backend `compliance.py:99-100` emette **sempre** `missing_price` (anche per affitti). Documentato onestamente come *imprecisione UX v1*.
