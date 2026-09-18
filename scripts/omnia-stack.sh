@@ -179,7 +179,7 @@ adopt_or_start_preview() {
   fi
   cd "$ROOT/frontend"
   nohup env PREVIEW_PORT="$PREVIEW_PORT" API_ORIGIN="$API_ORIGIN" \
-    CRM_PUBLIC_PREVIEW="${CRM_PUBLIC_PREVIEW:-1}" \
+    CRM_PUBLIC_PREVIEW="${CRM_PUBLIC_PREVIEW:-0}" \
     node preview-server.js >>"$LOG_DIR/preview.log" 2>&1 &
   echo $! >"$pid_preview"
   for _ in $(seq 1 30); do
