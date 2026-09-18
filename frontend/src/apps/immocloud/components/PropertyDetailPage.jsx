@@ -21,6 +21,7 @@ import { MapContainer, TileLayer, Marker } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import { api } from "../../../shared/lib/api";
 import { useAuth } from "../../../shared/lib/auth";
+import { energyClassLabel } from "../../../shared/lib/energyClasses";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api/cloud`;
@@ -169,7 +170,9 @@ export default function PropertyDetailPage() {
   const cover = photos[activePhoto];
   const publicUrl = `${window.location.origin}/${lang}/cloud/property/${pid}`;
 
-  const energy = prop.energy?.energy_class || "—";
+  const energy = prop.energy?.energy_class
+    ? energyClassLabel(prop.energy.energy_class)
+    : "—";
   const features = Object.entries(prop.features || {}).filter(([_, v]) => v).map(([k]) => k);
 
   return (
