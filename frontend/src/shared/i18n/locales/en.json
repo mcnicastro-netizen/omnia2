@@ -66,6 +66,8 @@
     "login_cta": "Sign in",
     "register_cta": "Create account",
     "forgot_password": "Forgot password?",
+    "show_password": "Show password",
+    "hide_password": "Hide password",
     "send_reset_link": "Send reset link",
     "no_account": "Don't have an account?",
     "register_now": "Sign up now",

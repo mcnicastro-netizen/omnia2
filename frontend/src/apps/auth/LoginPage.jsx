@@ -8,6 +8,25 @@ import Brand from "../../shared/components/Brand";
 import OmniaLogo from "../../shared/components/OmniaLogo";
 import GoogleSignInButton from "../../shared/components/GoogleSignInButton";
 
+function EyeIcon({ open }) {
+  // Minimal inline icons — no extra icon dependency
+  if (open) {
+    return (
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z" stroke="currentColor" strokeWidth="1.6" />
+        <circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="1.6" />
+      </svg>
+    );
+  }
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z" stroke="currentColor" strokeWidth="1.6" />
+      <circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="1.6" />
+      <path d="M4 4l16 16" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+    </svg>
+  );
+}
+
 export default function LoginPage() {
   const { t, i18n } = useTranslation();
   const lang = (i18n.language || "it").slice(0, 2);
@@ -21,21 +40,28 @@ export default function LoginPage() {
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [passwordFieldKey, setPasswordFieldKey] = useState(0);
   const [mfaToken, setMfaToken] = useState("");
   const [mfaCode, setMfaCode] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const passwordRef = useRef(null);
   const mfaCodeRef = useRef(null);
-  const clearPasswordOnError = useRef(false);
+  const focusPasswordAfterClear = useRef(false);
   const clearMfaOnError = useRef(false);
 
   useEffect(() => {
-    if (clearPasswordOnError.current) {
-      clearPasswordOnError.current = false;
-      passwordRef.current?.focus();
+    if (focusPasswordAfterClear.current) {
+      focusPasswordAfterClear.current = false;
+      // Remounted input — focus after paint; also wipe any late browser autofill
+      const el = passwordRef.current;
+      if (el) {
+        el.value = "";
+        el.focus();
+      }
     }
-  }, [password, error]);
+  }, [passwordFieldKey]);
 
   useEffect(() => {
     if (clearMfaOnError.current) {
@@ -43,6 +69,14 @@ export default function LoginPage() {
       mfaCodeRef.current?.focus();
     }
   }, [mfaCode, error]);
+
+  const wipePassword = () => {
+    setPassword("");
+    setShowPassword(false);
+    focusPasswordAfterClear.current = true;
+    // Remount defeats Chrome/Firefox password-manager re-fill after failed login
+    setPasswordFieldKey((k) => k + 1);
+  };
 
   const submit = async (e) => {
     e.preventDefault();
@@ -57,8 +91,7 @@ export default function LoginPage() {
       nav(next, { replace: true });
     } catch (err) {
       const detail = err.response?.data?.detail;
-      clearPasswordOnError.current = true;
-      setPassword("");
+      wipePassword();
       setError(
         detail === "use_google_sign_in"
           ? t("auth.use_google")
@@ -193,16 +226,37 @@ export default function LoginPage() {
               <span className="block text-xs font-sans uppercase tracking-widest text-stone-500 mb-2">
                 {t("auth.password")}
               </span>
-              <input
-                data-testid="login-password"
-                type="password"
-                required
-                autoComplete="current-password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                ref={passwordRef}
-                className="w-full px-4 py-3 border border-stone-300 bg-stone-50 font-sans text-base focus:outline-none focus:border-stone-900"
-              />
+              <div className="relative">
+                <input
+                  key={passwordFieldKey}
+                  data-testid="login-password"
+                  type={showPassword ? "text" : "password"}
+                  required
+                  autoComplete="current-password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  ref={passwordRef}
+                  className="w-full px-4 py-3 pr-12 border border-stone-300 bg-stone-50 font-sans text-base focus:outline-none focus:border-stone-900"
+                />
+                <button
+                  type="button"
+                  data-testid="login-password-toggle"
+                  onClick={() => setShowPassword((v) => !v)}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 p-2 text-stone-500 hover:text-stone-900"
+                  aria-label={
+                    showPassword
+                      ? t("auth.hide_password", "Nascondi password")
+                      : t("auth.show_password", "Mostra password")
+                  }
+                  title={
+                    showPassword
+                      ? t("auth.hide_password", "Nascondi password")
+                      : t("auth.show_password", "Mostra password")
+                  }
+                >
+                  <EyeIcon open={showPassword} />
+                </button>
+              </div>
             </label>
 
             <Link
