@@ -155,6 +155,19 @@ export default function SocialPublisherPage() {
             Configura le tue Pagine Facebook, account Instagram Business e canali Telegram per
             pubblicare on-demand un annuncio con foto e caption.
           </p>
+          <p
+            data-testid="social-hal-hint"
+            className="text-sm text-stone-500 mt-3 max-w-2xl"
+          >
+            Hai difficoltà a collegare un canale?{" "}
+            <Link
+              to={`/${lang}/app/hal-knowledge`}
+              className="text-[#1F6B5C] underline underline-offset-2 hover:text-[#0B1E3F]"
+            >
+              Fatti aiutare da HAL
+            </Link>
+            {" "}— ti guida passo passo, oppure aprilo dalla chat in basso a destra.
+          </p>
         </div>
 
         {error && (
