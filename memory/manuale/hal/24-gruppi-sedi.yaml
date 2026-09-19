@@ -54,54 +54,66 @@ voci:
       screenshot: []
 
   - id: gruppi.creare
-    titolo: Come creo un gruppo?
+    titolo: Come creo un gruppo / holding?
     modulo: Gruppi
     widget: null
-    pubblico: [titolare, agente, segreteria]
+    pubblico: [titolare, super_admin]
     livello: base
-    tags: [api, create, gruppi, cap24]
-    correlati: []
-    domanda_naturale: "Come creo un gruppo?"
+    tags: [api, create, gruppi, franchising, cap24, real-estate-spa]
+    correlati: [gruppi.branch, gruppi.ruoli, gruppi.dove-trovarlo]
+    domanda_naturale: "Come creo un gruppo? Posso creare Real Estate Spa da super admin?"
     contenuto:
       a_cosa_serve: >
-        POST /api/app/groups poi aggiungi branch.
+        Creare un AgencyGroup (holding multi-filiale) con slug e
+        credits_mode group|branch.
       quando_si_usa: >
-        Quando l'utente lavora sul modulo Gruppi in ImmoWeb/ImmobilCloud.
+        Avvio rete / franchising / simulazione Founder.
       passi:
-        - "Apri il modulo indicato nel capitolo 24."
-        - "Segui il flusso descritto nel manuale operativo."
-        - "In caso di errore leggi la sezione limitazioni/errori."
+        - "Ruoli: super_admin, agency_admin o group_admin."
+        - "POST /api/app/groups con name, franchise_name opzionale,
+          credits_mode (group|branch), notes."
+        - "Un owner puo' avere un solo gruppo (400 group_already_exists)."
+        - "super_admin resta super_admin (solo group_id aggiornato);
+          altri caller diventano group_admin."
+        - "Poi allega filiali con POST /groups/{id}/branches."
+        - "UI: /app/group (GroupPage)."
       errori_comuni:
-        - problema: "Funzione non trovata o 403"
-          soluzione: "Verifica ruolo (agency_admin/agent/super_admin) e piano."
+        - problema: "group_already_exists"
+          soluzione: >
+            Hai gia' un gruppo come owner. Usa quello o elimina/cedi
+            prima di crearne un altro.
       permessi:
-        - "Dipende dal modulo — vedi capitolo 24"
-      screenshot: []
+        - "super_admin · agency_admin · group_admin"
+    screenshot: []
 
   - id: gruppi.branch
-    titolo: Come aggiungo una sede?
+    titolo: Come aggiungo una sede / filiale al gruppo?
     modulo: Gruppi
     widget: null
-    pubblico: [titolare, agente, segreteria]
+    pubblico: [titolare, super_admin]
     livello: base
-    tags: [branch, sede, gruppi, cap24]
-    correlati: []
-    domanda_naturale: "Come aggiungo una sede?"
+    tags: [branch, sede, gruppi, cap24, attach]
+    correlati: [gruppi.creare, gruppi.kpi]
+    domanda_naturale: "Come aggiungo una sede al gruppo?"
     contenuto:
       a_cosa_serve: >
-        POST /api/app/groups/{id}/branches.
+        Collegare un'agenzia esistente come branch del gruppo.
       quando_si_usa: >
-        Quando l'utente lavora sul modulo Gruppi in ImmoWeb/ImmobilCloud.
+        Dopo create gruppo, o quando apri una nuova sede.
       passi:
-        - "Apri il modulo indicato nel capitolo 24."
-        - "Segui il flusso descritto nel manuale operativo."
-        - "In caso di errore leggi la sezione limitazioni/errori."
+        - "POST /api/app/groups/{id}/branches con agency_id e
+          branch_code (es. RES-HQ)."
+        - "Solo super_admin puo' attaccare agenzie non proprie."
+        - "GET /groups/{id}/branches elenca filiali con KPI locali.
+          plan_type legacy fuori catalogo viene normalizzato a hybrid."
       errori_comuni:
-        - problema: "Funzione non trovata o 403"
-          soluzione: "Verifica ruolo (agency_admin/agent/super_admin) e piano."
+        - problema: "403 / branch conflict"
+          soluzione: >
+            L'agenzia e' gia' in un altro gruppo o non hai permesso
+            di attach. Verifica ownership.
       permessi:
-        - "Dipende dal modulo — vedi capitolo 24"
-      screenshot: []
+        - "super_admin · group_admin del gruppo"
+    screenshot: []
 
   - id: gruppi.kpi
     titolo: Dove vedo i KPI consolidati?
@@ -129,29 +141,34 @@ voci:
       screenshot: []
 
   - id: gruppi.ruoli
-    titolo: Quali ruoli franchising esistono?
+    titolo: Super admin Founder vs admin gruppo / agenzia
     modulo: Gruppi
     widget: null
-    pubblico: [titolare, agente, segreteria]
+    pubblico: [titolare, super_admin]
     livello: base
-    tags: [ruoli, rbac, gruppi, cap24]
-    correlati: []
-    domanda_naturale: "Quali ruoli franchising esistono?"
+    tags: [ruoli, rbac, gruppi, cap24, super-admin, group-admin, agency-admin]
+    correlati: [gruppi.creare, api-keys.ruota-chiave-smarrita]
+    domanda_naturale: "Le info di gruppo e API key le vede solo il super admin Founder?"
     contenuto:
       a_cosa_serve: >
-        group_admin, branch_admin, branch_agent (+ alias RBAC).
+        Distinguere chi vede Gruppo e API Keys.
       quando_si_usa: >
-        Quando l'utente lavora sul modulo Gruppi in ImmoWeb/ImmobilCloud.
+        Onboarding rete o supporto chiave smarrita.
       passi:
-        - "Apri il modulo indicato nel capitolo 24."
-        - "Segui il flusso descritto nel manuale operativo."
-        - "In caso di errore leggi la sezione limitazioni/errori."
+        - "super_admin (Founder OMNIA): vede tutti i gruppi, puo'
+          creare/allegare e supportare Ruota API key."
+        - "group_admin: vede solo il proprio gruppo in /app/group."
+        - "agency_admin: gestisce API key della sua agenzia; non vede
+          tutti i gruppi OMNIA."
+        - "agent / segreteria: niente menu Gruppo ne API Keys."
       errori_comuni:
-        - problema: "Funzione non trovata o 403"
-          soluzione: "Verifica ruolo (agency_admin/agent/super_admin) e piano."
+        - problema: "L'agente non vede API Keys"
+          soluzione: >
+            Normale. Solo agency_admin / super_admin (e UI group_admin
+            via menu admin).
       permessi:
-        - "Dipende dal modulo — vedi capitolo 24"
-      screenshot: []
+        - "Vedi tabella Cap. 24.4"
+    screenshot: []
 
   - id: gruppi.limitazioni-v1
     titolo: Limiti gruppi v1

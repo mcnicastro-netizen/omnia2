@@ -88,9 +88,29 @@
 ## 20.6 · Revoca chiave · no undo
 
 **Endpoint**: `POST /api/app/api-keys/{id}/revoke`
-**Effetto**: `is_active=false`, `revoked_at=now`. **Non reversibile** (per "riattivare" serve emettere nuova chiave con crediti trasferiti).
+**Effetto**: `is_active=false`, `revoked_at=now`. **Non reversibile** (per "riattivare" serve emettere nuova chiave o usare **Ruota**).
 
 **UI**: bottone "revoca" rosso in tabella, con `confirm()` browser nativo (Cap. 20 UI non usa modale custom).
+
+---
+
+## 20.6bis · Ruota chiave smarrita / compromessa (show-once)
+
+**Endpoint**: `POST /api/app/api-keys/{id}/rotate`  
+**Chi**: `agency_admin` della propria agenzia · `super_admin` (supporto Founder).
+
+**Cosa fa**
+1. Revoca subito la chiave vecchia (`api_key_revoked`).
+2. Emette una chiave nuova con **stessi crediti**, `partner_id`, `allowed_origins`, `group_id`.
+3. Mostra il plaintext **una sola volta** (come in emissione).
+
+**Cosa NON fa**
+- Non tocca immobili, clienti, documenti, foto, gruppo, filiali.
+- Non “recupera” il segreto smarrito (impossibile: hash SHA-256 irreversibile).
+
+**UI**: bottone **Ruota** in `/app/api-keys` + `confirm()`.
+
+**Simulazione Founder 19-Set-2026** (`memory/reports/apikey_rotate_sim_2026-09-19.json`): archivi invariati (2205 immobili / 10004 clienti), crediti 500 preservati, feed `/api/v1` ancora total=2200, CRM JWT indipendente dalla chiave Track B.
 
 ---
 
@@ -171,7 +191,7 @@
 - **E2 · 402 insufficient_credits**: saldo chiave insufficiente per l'endpoint (5cr per valuator, ecc.). Fix: `POST /api/app/api-keys/{id}/credits` con delta positivo.
 - **E3 · 403 origin_not_allowed**: chiave con `allowed_origins` popolato + widget in dominio non whitelisted. Fix: aggiorna origins via `PATCH /origins` o svuota lista per uso server-side.
 - **E4 · 404 api_key_not_found** su revoke/top-up: la chiave non appartiene alla tua agency (o è stata già cancellata da super_admin). Fix: verifica ownership.
-- **E5 · Persa la plaintext dopo emissione**: nessun recovery. Emetti nuova chiave + `POST /credits` con delta = saldo vecchia chiave + revoca vecchia.
+- **E5 · Persa la plaintext dopo emissione / chiave smarrita**: nessun recovery del segreto. Preferisci **Ruota** (`POST /rotate`) — crediti e origins restano. In alternativa: emetti nuova + top-up crediti + revoca vecchia.
 
 ---
 
@@ -180,7 +200,7 @@
 - ❌ NO auto-ricarica Stripe (top-up manuale via `POST /credits`)
 - ❌ NO UI usage detail per chiave (endpoint `/usage` esiste, no button)
 - ❌ NO reportistica per-partner (`partner_id` tracciato ma nessun rollup UI)
-- ❌ NO rotazione automatica chiavi (nessun cron scadenza)
+- ❌ NO rotazione **automatica** chiavi (nessun cron scadenza). **Sì** rotazione **manuale** (`POST /rotate` / bottone Ruota).
 - ❌ NO scoping per endpoint (una chiave con crediti può chiamare TUTTI gli endpoint v1)
 - ❌ NO rate limit per-chiave (solo controllo saldo)
 - ❌ NO IP whitelist (solo Origin/Referer per widget)

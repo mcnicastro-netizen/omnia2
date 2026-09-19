@@ -51,7 +51,7 @@ def main() -> None:
         new_chapters.append(entry)
 
     out = {
-        "version": "0.20-gestionale-18set",
+        "version": "0.21-gruppi-rotate",
         "updated": date.today().isoformat(),
         "voices_total": total,
         "source_files": source_files,
@@ -59,8 +59,8 @@ def main() -> None:
         "notes": (
             "Fingerprints regenerated from YAML on disk. "
             "Live RAG reindex: POST /api/app/hal/knowledge/reindex?force=true (super_admin). "
-            "2026-09-18 gestionale: Cap.15 social 6 canali · Cap.3 planimetrie · "
-            "Cap.6 wizard slug/categoria/Compliance · Cap.21 FOI/PDF."
+            "2026-09-19: Cap.20 Ruota API key · Cap.24 Real Estate Spa · "
+            "cleanup Emergent · Cap.15 social · Cap.3 planimetrie."
         ),
     }
     INDEX_PATH.write_text(json.dumps(out, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")

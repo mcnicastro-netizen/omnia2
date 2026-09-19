@@ -1,5 +1,16 @@
 # OMNIA — Changelog
 
+## 2026-09-19 — Gruppo Real Estate Spa + Ruota API key (sim PASS)
+
+**Tipo**: Feature sim / Cap.20 / Cap.24 / HAL.
+
+- Gruppo **Real Estate Spa** (`real-estate-spa`) + filiale Demo `RES-HQ`
+- API key Track B + simulazione smarrimento → **Ruota**: archivi intatti (2205 prop / 10004 clienti), crediti 500, feed 2200
+- Fix `agency_inactive` su `is_active` null · fix `BranchSummary` plan_type legacy
+- Cap.20 §20.6bis Ruota · Cap.24 v1.1 ruoli Founder vs admin · HAL `api-keys.ruota-chiave-smarrita`
+- Report: `memory/reports/apikey_rotate_sim_2026-09-19.json`
+
+---
 ## 2026-09-19 — Cleanup Emergent (incrementale, 4 step)
 
 **Tipo**: Refactor / sicurezza runtime.

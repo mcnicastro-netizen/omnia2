@@ -175,27 +175,63 @@ voci:
     pubblico: [titolare, super_admin]
     livello: intermedio
     tags: [api-keys, revoca, is-active, revoked-at, no-undo, security]
-    correlati: [api-keys.emissione-show-once]
+    correlati: [api-keys.emissione-show-once, api-keys.ruota-chiave-smarrita]
     domanda_naturale: "Come revoco una API key compromessa? Posso riattivarla?"
     contenuto:
       a_cosa_serve: >
         Deattivare immediatamente una chiave API (non reversibile).
       quando_si_usa: >
-        Chiave compromessa/perdita partner/fine progetto.
+        Chiave compromessa/perduta partner/fine progetto.
       passi:
         - "Endpoint: POST /api/app/api-keys/{id}/revoke."
         - "Effetto: is_active=false, revoked_at=now."
-        - "NON reversibile. Per 'riattivare' → emetti nuova chiave
-          + trasferisci crediti + revoca la vecchia."
+        - "NON reversibile. Preferisci Ruota (POST /rotate) se serve
+          una sostituta con stessi crediti."
         - "UI: bottone rosso 'revoca' + confirm() browser (NO modale
           custom)."
       errori_comuni:
         - problema: "Ho revocato per errore"
           soluzione: >
-            Non recuperabile. Emetti nuova chiave con POST /api-keys +
-            top-up crediti + comunica nuova chiave al partner.
+            Non recuperabile. Emetti nuova chiave o usa Ruota su una
+            chiave ancora attiva; comunica il nuovo plaintext al partner.
       permessi:
-        - "agency_admin owner della chiave"
+        - "agency_admin owner · super_admin (supporto Founder)"
+    screenshot: []
+
+  - id: api-keys.ruota-chiave-smarrita
+    titolo: Ruota chiave smarrita · archivi intatti · crediti preservati
+    modulo: API Keys
+    widget: null
+    pubblico: [titolare, super_admin]
+    livello: intermedio
+    tags: [api-keys, rotate, smarrimento, show-once, crediti, archivi, security, super-admin]
+    correlati: [api-keys.revoca-key, api-keys.emissione-show-once, api-keys.errori-comuni]
+    domanda_naturale: "L'admin agenzia ha smarrito la API key: cosa fa il super admin? Ruotando perdo immobili o clienti?"
+    contenuto:
+      a_cosa_serve: >
+        Sostituire una chiave smarrita/compromessa senza perdere
+        archivi CRM ne saldo crediti.
+      quando_si_usa: >
+        Plaintext perso, sospetto leak, o richiesta supporto Founder.
+      passi:
+        - "Apri /app/api-keys (agency_admin o super_admin)."
+        - "Trova la chiave (vedi solo prefisso/nome/crediti)."
+        - "Clicca Ruota (POST /api/app/api-keys/{id}/rotate) e conferma."
+        - "La vecchia chiave muore subito (403 api_key_revoked)."
+        - "Copia il nuovo omk_live_… mostrato UNA sola volta."
+        - "Consegna il segreto in modo sicuro all'admin agenzia."
+        - "Garanzia: immobili, clienti, documenti, gruppo NON cambiano.
+          Crediti, partner_id, allowed_origins e group_id restano."
+      errori_comuni:
+        - problema: "Posso rileggere la chiave vecchia?"
+          soluzione: >
+            No. Hash SHA-256 irreversibile. Solo Ruota o nuova emissione.
+        - problema: "403 origin_not_allowed dopo Ruota"
+          soluzione: >
+            La whitelist Origin e' stata preservata. Chiama /api/v1 con
+            Origin ammesso oppure svuota origins per uso server-side.
+      permessi:
+        - "agency_admin (sua agenzia) · super_admin (supporto)"
     screenshot: []
 
   - id: api-keys.usage-log
@@ -403,9 +439,9 @@ voci:
           /origins o svuota lista."
         - "E4 · 404 api_key_not_found: chiave non appartiene alla
           tua agency. Fix: verifica ownership."
-        - "E5 · Persa la plaintext dopo emissione: nessun recovery.
-          Emetti nuova chiave + POST /credits con delta = saldo
-          vecchia + revoca vecchia con POST /revoke."
+        - "E5 · Persa la plaintext / chiave smarrita: nessun recovery.
+          Preferisci POST /rotate (Ruota) — crediti e origins restano.
+          Altrimenti nuova emissione + top-up + revoke."
       errori_comuni: []
       permessi:
         - "Troubleshooting"
@@ -431,7 +467,8 @@ voci:
           no button v1). Backlog A-026."
         - "NO reportistica per-partner (partner_id tracciato ma
           nessun rollup UI). Backlog A-027."
-        - "NO rotazione automatica chiavi (nessun cron scadenza)."
+        - "NO rotazione automatica chiavi (nessun cron scadenza).
+          SI rotazione manuale: POST /rotate / bottone Ruota."
         - "NO scoping per endpoint (chiave con crediti puo' chiamare
           TUTTI gli endpoint /api/v1/*, no restrizione feature)."
         - "NO rate limit per-chiave (solo controllo saldo)."

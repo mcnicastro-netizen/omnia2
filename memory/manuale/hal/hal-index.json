@@ -1,7 +1,7 @@
 {
   "version": "0.20-gestionale-18set",
   "updated": "2026-09-19",
-  "voices_total": 339,
+  "voices_total": 340,
   "source_files": [
     {
       "file": "00-api-codice.yaml",
@@ -105,8 +105,8 @@
     },
     {
       "file": "20-api-keys-integrazioni.yaml",
-      "voices": 14,
-      "md5": "9fed60baf766a6442a1a62845d1d998d"
+      "voices": 15,
+      "md5": "f8e456384b056c88725e5efbad062441"
     },
     {
       "file": "21-valutatore-immobiliare.yaml",
@@ -126,7 +126,7 @@
     {
       "file": "24-gruppi-sedi.yaml",
       "voices": 8,
-      "md5": "684b98eabfadb57869982c5810ea40b8"
+      "md5": "8cbd4f30cb4e8918430a32a3c3c1aa30"
     },
     {
       "file": "25-privacy-immobili.yaml",
@@ -175,7 +175,7 @@
       "title": "Gruppi e sedi (multi-branch)",
       "yaml": "24-gruppi-sedi.yaml",
       "voices": 8,
-      "md5": "684b98eabfadb57869982c5810ea40b8"
+      "md5": "8cbd4f30cb4e8918430a32a3c3c1aa30"
     },
     {
       "id": 25,
