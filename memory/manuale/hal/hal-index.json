@@ -1,12 +1,12 @@
 {
   "version": "0.20-gestionale-18set",
-  "updated": "2026-09-18",
+  "updated": "2026-09-19",
   "voices_total": 339,
   "source_files": [
     {
       "file": "00-api-codice.yaml",
       "voices": 16,
-      "md5": "c5aef79c45d717f823aba76bff3d950c"
+      "md5": "4e2d1c3e61c4e04a238cadce24b6ee69"
     },
     {
       "file": "01-primo-accesso.yaml",
@@ -151,7 +151,7 @@
       "title": "Corpus codice/API",
       "yaml": "00-api-codice.yaml",
       "voices": 16,
-      "md5": "c5aef79c45d717f823aba76bff3d950c"
+      "md5": "4e2d1c3e61c4e04a238cadce24b6ee69"
     },
     {
       "id": 22,

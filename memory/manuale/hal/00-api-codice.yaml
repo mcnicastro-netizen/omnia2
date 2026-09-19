@@ -289,7 +289,7 @@ voci:
     domanda_naturale: "Come chiama Gemini il backend?"
     contenuto:
       a_cosa_serve: >
-        shared/llm + bridge emergentintegrations.llm.chat → GEMINI_API_KEY / gemini-3.6-flash.
+        shared/llm (+ LlmChat in shared.llm.chat) → GEMINI_API_KEY / gemini-3.5-flash.
       quando_si_usa: >
         Quando HAL deve assistere su come è fatto il codice o quale endpoint usare.
       passi:
