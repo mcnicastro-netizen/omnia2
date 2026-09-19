@@ -83,6 +83,7 @@
 | — | Intake annuncio esterno (Nord D) | Solo dopo ok Founder + scope legale |
 | — | A-026 path Kling agenzia | Approfondire UX (docs Cap.23 già allineati) |
 | — | A-014 Stripe live | post-Vercel |
+| — | Backup DB automatico (mongodump) | Rete di sicurezza infra — dopo Cestino ✅ |
 | — | Go-live env flags | readiness WARN locali → set su Vercel |
 
 Report: `memory/GESTIONALE_TOOLS_QC_REPORT.md` · `memory/GESTIONALE_VALUATOR_ACCURACY_SAMPLE.md` · `memory/PREPROD_GATE_REPORT.md` · `memory/PLATFORM_STRESS_REPORT.md` · `memory/STRESS_REPORT.md` · `memory/PRODUCT_NORTHSTAR_B2C.md`
