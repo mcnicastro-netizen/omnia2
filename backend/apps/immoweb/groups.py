@@ -252,13 +252,17 @@ async def list_branches(group_id: str, user: dict = Depends(get_current_user)):
         props_active = await db.properties.count_documents({"agency_id": aid, "status": "active"})
         clients_total = await db.clients.count_documents({"agency_id": aid})
         leads_open = await db.leads.count_documents({"agency_id": aid, "status": "new"})
+        # Legacy seed agencies may still carry plan_type outside turnkey/whitelabel/hybrid
+        plan_type = a.get("plan_type") or "hybrid"
+        if plan_type not in ("turnkey", "whitelabel", "hybrid"):
+            plan_type = "hybrid"
         summaries.append(
             BranchSummary(
                 id=aid,
                 slug=a.get("slug", ""),
-                display_name=a.get("display_name", ""),
+                display_name=a.get("display_name") or a.get("name") or a.get("slug") or aid,
                 branch_code=a.get("branch_code"),
-                plan_type=a.get("plan_type", "hybrid"),
+                plan_type=plan_type,
                 plan=a.get("plan", "free"),
                 is_active=a.get("is_active", True),
                 city=(a.get("address") or {}).get("city"),
