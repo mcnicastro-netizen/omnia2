@@ -1,6 +1,6 @@
 # Prossima sessione — programma passi
 
-**Aggiornato**: 18 Settembre 2026 — Gestionale: Social WA/WABA/GBP + planimetrie + Portali UX + HAL v0.20  
+**Aggiornato**: 19 Settembre 2026 — HAL live reindex force=true (Mongo = Cap.3/6/15)  
 **Stato base**: Sprint 1→4 **CONCLUSO**. Stress: `PLATFORM_STRESS_REPORT.md` + `STRESS_REPORT.md`.  
 **Preprod gate**: `memory/PREPROD_GATE_REPORT.md` (PASS required — no vendor burn).  
 **Repo ufficiale**: https://github.com/mcnicastro-netizen/omnia2 ✅ (Emergent `OMNIA` = backup, non cancellare)  
@@ -17,12 +17,13 @@
 5. ✅ **Valutatore mini-sample** → `memory/GESTIONALE_VALUATOR_ACCURACY_SAMPLE.md` (**PASS 20 / FAIL 0** — non è prova OMI ~27k)
 6. ✅ **Cap. 21 + HAL + `hal-index.json`** allineati 100% (PDF white-label + roll-forward FOI/trend)
 7. ✅ **18-Set gestionale**: Social 6 canali · planimetrie Cap.3 · Portali wizard/i18n/Compliance · `hal-index` **v0.20** (339 voci)
-8. Founder: **«vai»** su Top 5 A-028 (o ID fuori programma)
-9. **D-084**: ogni ship aggiorna manuale+YAML+index (sempre 100%)
-10. Preprod: `python scripts/preprod_confidence_gate.py` prima di go-live / ship rischiosi
-11. Nota tecnica: `GET /app/matches` agency-wide sotto stress seed (~2M pairs) uccide API — usare solo client-scoped `min_score`+`limit`
-12. ⏸️ **Cleanup residui Emergent** (stub / `EMERGENT_LLM_KEY` / pacchetti / URL) — solo con «vai», a pezzi
-13. ⏸️ **i18n EN/ES copertura uniforme gestionale** — selettore OK; molte UI ancora IT hardcoded — solo con «vai»
+8. ✅ **19-Set HAL live reindex** `force=true` (super_admin): **842** chunk · **339** voci YAML · smoke planimetrie/social/wizard OK
+9. Founder: **«vai»** su Top 5 A-028 (o ID fuori programma)
+10. **D-084**: ogni ship aggiorna manuale+YAML+index (sempre 100%)
+11. Preprod: `python scripts/preprod_confidence_gate.py` prima di go-live / ship rischiosi
+12. Nota tecnica: `GET /app/matches` agency-wide sotto stress seed (~2M pairs) uccide API — usare solo client-scoped `min_score`+`limit`
+13. ⏸️ **Cleanup residui Emergent** (stub / `EMERGENT_LLM_KEY` / pacchetti / URL) — solo con «vai», a pezzi
+14. ⏸️ **i18n EN/ES copertura uniforme gestionale** — selettore OK; molte UI ancora IT hardcoded — solo con «vai»
 
 ---
 
@@ -44,6 +45,7 @@
 | **Social Publisher 6 canali (WA/WABA/GBP)** | ✅ (18-Set) Cap.15 + HAL |
 | **Planimetrie JPEG/PDF su immobile** | ✅ (18-Set) Cap.3 + HAL |
 | **Portali wizard UX + i18n `portali`** | ✅ (18-Set) Cap.6 + HAL |
+| **HAL Mongo reindex live (force)** | ✅ (19-Set) 842 chunk · 339 voci |
 | Home B2C visual + SSR preview | ✅ (16-Set) |
 | Layout altre pagine B2C | ✅ (17-Set) |
 | Scout v1 + fiducia + voce lister | ✅ |

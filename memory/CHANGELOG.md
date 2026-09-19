@@ -1,5 +1,14 @@
 # OMNIA — Changelog
 
+## 2026-09-19 — HAL Knowledge: reindex live Mongo (force=true)
+
+**Tipo**: Ops / HAL.
+
+- `POST /api/app/hal/knowledge/reindex?force=true` da `super_admin`
+- Esito: **35** file reingestiti · **842** chunk · **339** voci YAML manuale
+- Smoke retrieval OK: `immobili.caricare-planimetrie` · `social.canali-supportati` · `portali.wizard-custom-portal`
+
+---
 ## 2026-09-18 — Immobili: upload planimetrie JPEG/PNG/WebP + PDF
 
 **Tipo**: Feature / Cap.3 / HAL.
