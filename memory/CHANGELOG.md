@@ -1,5 +1,17 @@
 # OMNIA — Changelog
 
+## 2026-09-19 — Cleanup Emergent (incrementale, 4 step)
+
+**Tipo**: Refactor / sicurezza runtime.
+
+1. `LlmChat` → `shared.llm.chat` (call-site AI fuori da Emergent)
+2. Chiave LLM via `try_resolve_api_key` (`GEMINI` → `GOOGLE` → `EMERGENT` alias)
+3. Rimosso stub `backend/emergentintegrations` + wheel `litellm` da emergentagent.com
+4. FE: tolto `@emergentbase/visual-edits` + `emergent-main.js`; test BASE_URL → `127.0.0.1:43121`
+
+Residui intenzionali (non bloccanti): alias env `EMERGENT_LLM_KEY`, path storage `STORAGE_BACKEND=emergent` legacy, immagine BrandLab su CDN storica, suffix riservati `emergent.*` in custom domain.
+
+---
 ## 2026-09-19 — HAL Knowledge: reindex live Mongo (force=true)
 
 **Tipo**: Ops / HAL.

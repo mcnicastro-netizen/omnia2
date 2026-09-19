@@ -1,6 +1,6 @@
 # Prossima sessione — programma passi
 
-**Aggiornato**: 19 Settembre 2026 — HAL live reindex force=true (Mongo = Cap.3/6/15)  
+**Aggiornato**: 19 Settembre 2026 — Cleanup Emergent (shared.llm) + HAL live reindex  
 **Stato base**: Sprint 1→4 **CONCLUSO**. Stress: `PLATFORM_STRESS_REPORT.md` + `STRESS_REPORT.md`.  
 **Preprod gate**: `memory/PREPROD_GATE_REPORT.md` (PASS required — no vendor burn).  
 **Repo ufficiale**: https://github.com/mcnicastro-netizen/omnia2 ✅ (Emergent `OMNIA` = backup, non cancellare)  
@@ -22,8 +22,9 @@
 10. **D-084**: ogni ship aggiorna manuale+YAML+index (sempre 100%)
 11. Preprod: `python scripts/preprod_confidence_gate.py` prima di go-live / ship rischiosi
 12. Nota tecnica: `GET /app/matches` agency-wide sotto stress seed (~2M pairs) uccide API — usare solo client-scoped `min_score`+`limit`
-13. ⏸️ **Cleanup residui Emergent** (stub / `EMERGENT_LLM_KEY` / pacchetti / URL) — solo con «vai», a pezzi
+13. ✅ **Cleanup Emergent incrementale** (19-Set): shared.llm · alias key · stub/pacchetti fuori · FE visual-edits fuori · test URL locali
 14. ⏸️ **i18n EN/ES copertura uniforme gestionale** — selettore OK; molte UI ancora IT hardcoded — solo con «vai»
+15. ⏸️ Residui minori Emergent (CDN BrandLab, `STORAGE_BACKEND=emergent` dead path, alias env) — opzionale
 
 ---
 
@@ -57,7 +58,7 @@
 | Demo **A-025** | ❌ **next di programma** (architettare, non shippare a caso) |
 | **A-028** redesign gerarchia ImmoWeb | ⏸️ solo con «vai» post-report |
 | A-026 micro-video agenzia (501→Kling) | 🔬 da approfondire |
-| Cleanup residui Emergent | ⏸️ solo con «vai» |
+| Cleanup residui Emergent | ✅ (19-Set) core fatto; CDN BrandLab / alias env opzionali |
 | i18n EN/ES copertura uniforme CRM | ⏸️ solo con «vai» |
 | Stripe live / A-014 | ⏸️ post-Vercel |
 | Prod flags readiness (`cookie_secure`, CORS, master key, monitoring, `OMNIA_ENV`) | ⚠️ solo su host prod |
@@ -72,7 +73,7 @@
 | 1 | **A-028 Top rimanenti** (score → sidebar → HAL contestuale → Attività) | A-028a cockpit ✅ 18-Set; resto solo «vai» |
 | 2 | **A-025 demo prodotto** | GTM / walkthrough Scout end-to-end — richiede «vai» |
 | 3 | Fix perf `GET /app/matches` agency-wide | FAIL QC A8 — pagination/early-exit sotto seed 2k |
-| — | Cleanup Emergent / i18n EN-ES full | Solo con «vai» Founder (a mente riposata) |
+| — | Cleanup Emergent / i18n EN-ES full | Emergent core ✅ 19-Set; i18n solo con «vai» |
 | — | Home claim micro-ritocco | Solo se Founder vuole ancora più “pre-visita” |
 | — | Intake annuncio esterno (Nord D) | Solo dopo ok Founder + scope legale |
 | — | A-026 path Kling agenzia | Approfondire UX (docs Cap.23 già allineati) |
