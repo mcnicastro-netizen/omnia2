@@ -307,22 +307,33 @@ Se il flag **"Pubblica su ImmobilCloud"** è attivo (default), l'immobile compar
 - Rogito firmato → *Venduto* (o *Affittato*).
 - Mandato revocato → *Ritirato*.
 
-L'immobile non viene mai eliminato: resta nello storico. Se serve **eliminarlo definitivamente**, vedi sotto.
+L'immobile non viene mai eliminato subito: resta nello storico. Se serve **togliarlo dalla lista**, vedi sotto (va nel **Cestino**).
 
-### Eliminare un immobile (definitivo)
+### Eliminare un immobile (va nel Cestino)
 
 **Passi**
 1. Apri l'immobile.
 2. In fondo clicca **Elimina**.
-3. Conferma la richiesta *"Sei sicuro? L'operazione è definitiva."*
+3. Conferma: l'immobile viene spostato nel **Cestino**.
 
-⚠️ **L'operazione non è reversibile.** Perdi anche foto, documenti e storia contatti collegati.
+✅ **Non è perso.** Lo trovi in menu **Cestino** (barra a sinistra) e puoi **Ripristinarlo** entro **30 giorni**. Foto, documenti e dati restano insieme all'immobile.
+
+⚠️ Dopo 30 giorni (o se dal Cestino scegli **Elimina per sempre**) non si può più recuperare.
+
+**Consiglio**: se l'immobile è solo fuori mercato, preferisci lo stato **Ritirato** invece di eliminarlo.
 
 [SCREEN: cap3-state-select]
 
 **Chi può farlo**
 - **Cambio di stato**: titolare, agente, segreteria (come agente).
-- **Eliminazione**: **solo titolare** (l'agente non può eliminare, per evitare cancellazioni accidentali).
+- **Eliminazione (Cestino)**: **solo titolare** (l'agente non può eliminare, per evitare cancellazioni accidentali).
+
+### Ripristinare dal Cestino
+
+1. Clicca **Cestino** nella barra a sinistra.
+2. Trova l'immobile.
+3. Clicca **Ripristina**.
+4. Torna in **Immobili**: è di nuovo nella lista, come prima.
 
 ---
 
@@ -400,7 +411,7 @@ Riassumo i problemi più frequenti su questo modulo. Le soluzioni dettagliate so
 | Ho pubblicato ma l'immobile non compare sui portali | Portali | Il sync automatico gira ogni notte alle 06:00 UTC; puoi anche forzare *Sync subito* dalla scheda del portale. Se dopo la finestra di sync non appare, apri la modale **Compliance** per vedere se è stato bloccato. Vedi Cap. 6. |
 | Voglio nascondere solo l'indirizzo, non tutto | Privacy | Attiva *"Nascondi indirizzo esatto pubblicamente"*. |
 | Import CSV: molte righe scartate | Importa CSV | Apri l'accordion errori: mancano campi obbligatori (prezzo, tipologia, città). |
-| Import XML: file troppo grande | Import universale | Chiedi al vecchio gestionale di esportare per zona/agente. Massimo 50 MB per file. |
+| Ho eliminato un immobile per sbaglio | Apri **Cestino** a sinistra e clicca **Ripristina** (entro 30 giorni). |
 
 ---
 

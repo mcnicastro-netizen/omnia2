@@ -1,5 +1,16 @@
 # OMNIA — Changelog
 
+## 2026-09-19 — Cestino 30 giorni (immobili + clienti)
+
+**Tipo**: Feature / fiducia archivi / Cap.3 / Cap.4 / HAL.
+
+- Eliminare immobile o cliente → **Cestino** (non cancellazione immediata)
+- Ripristino self-service entro **30 giorni** · pagina `/app/trash`
+- Dopo 30 giorni: purge automatico (`POST /api/app/cron/trash/purge`)
+- Manuale Cap.3/4 in linguaggio semplice · HAL `cestino.ripristinare`
+- `hal-index` **v0.22-cestino**
+
+---
 ## 2026-09-19 — Gruppo Real Estate Spa + Ruota API key (sim PASS)
 
 **Tipo**: Feature sim / Cap.20 / Cap.24 / HAL.

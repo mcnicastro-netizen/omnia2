@@ -223,7 +223,8 @@
     "nav_group": "Grupo",
     "nav_api_keys": "API Keys",
     "nav_import": "Importar",
-    "nav_publishing": "Portales"
+    "nav_publishing": "Portales",
+    "nav_trash": "Papelera"
   },
   "import": {
     "page_title": "Importar inmuebles",
@@ -483,7 +484,7 @@
     "save": "Guardar cliente",
     "saved": "Cliente guardado",
     "delete": "Eliminar cliente",
-    "delete_confirm": "¿Eliminar este cliente definitivamente? La acción es irreversible.",
+    "delete_confirm": "¿Mover este cliente a la Papelera? Podrás restaurarlo en 30 días.",
     "section_carried_properties": "Inmuebles en cartera",
     "carried_empty": "Este cliente aún no tiene inmuebles. Ve a Inmuebles → Nuevo y selecciónalo como propietario.",
     "op_sale": "Venta",
@@ -868,7 +869,7 @@
     "save": "Guardar inmueble",
     "saved": "Inmueble guardado",
     "delete": "Eliminar",
-    "delete_confirm": "¿Estás seguro? Esta operación es definitiva.",
+    "delete_confirm": "¿Mover este inmueble a la Papelera? Podrás restaurarlo en 30 días.",
     "type_appartamento": "Piso / Apartamento",
     "type_villa": "Chalet / Villa",
     "type_villetta_a_schiera": "Chalet adosado",
@@ -1287,5 +1288,24 @@
     "detail_box_from": "desde",
     "detail_box_note": "hipoteca a 25 años, entrada del 20%",
     "detail_box_cta": "Simula tu hipoteca"
+  },
+  "trash": {
+    "title": "Papelera",
+    "subtitle": "Inmuebles y clientes eliminados. Puedes restaurarlos en {{days}} días.",
+    "filter_all": "Todos",
+    "filter_properties": "Inmuebles",
+    "filter_clients": "Clientes",
+    "empty_title": "Papelera vacía",
+    "empty_subtitle": "Cuando eliminas un inmueble o un cliente, permanece aquí 30 días.",
+    "kind_property": "Inmueble",
+    "kind_client": "Cliente",
+    "days_left": "Quedan {{days}} días para restaurar",
+    "days_unknown": "Plazo de recuperación en curso",
+    "restore": "Restaurar",
+    "purge": "Eliminar para siempre",
+    "purge_confirm": "¿Eliminar para siempre? Después no se puede recuperar.",
+    "load_error": "No se puede cargar la Papelera.",
+    "restore_error": "No se pudo restaurar.",
+    "purge_error": "No se pudo eliminar definitivamente."
   }
 }

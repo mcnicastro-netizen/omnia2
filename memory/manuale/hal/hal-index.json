@@ -1,7 +1,7 @@
 {
-  "version": "0.21-gruppi-rotate",
+  "version": "0.22-cestino",
   "updated": "2026-09-19",
-  "voices_total": 340,
+  "voices_total": 341,
   "source_files": [
     {
       "file": "00-api-codice.yaml",
@@ -20,13 +20,13 @@
     },
     {
       "file": "03-immobili.yaml",
-      "voices": 17,
-      "md5": "24ea5e16e56c2f6b9f40efa1cf7ce903"
+      "voices": 18,
+      "md5": "ea174b146c6dcd302e60ed00907f1512"
     },
     {
       "file": "04-clienti.yaml",
       "voices": 12,
-      "md5": "ab172ef106ad045da7326eee4ffe534e"
+      "md5": "1f309eb87b737b94fda97807da643601"
     },
     {
       "file": "05-match.yaml",
@@ -202,5 +202,5 @@
       "md5": "5e88370cdf2c070dc30c7c3f036b85db"
     }
   ],
-  "notes": "Fingerprints regenerated from YAML on disk. Live RAG reindex: POST /api/app/hal/knowledge/reindex?force=true (super_admin). 2026-09-19: Cap.20 Ruota API key · Cap.24 Real Estate Spa · cleanup Emergent · Cap.15 social · Cap.3 planimetrie."
+  "notes": "Fingerprints regenerated from YAML on disk. Live RAG reindex: POST /api/app/hal/knowledge/reindex?force=true (super_admin). 2026-09-19: Cestino 30gg · Cap.20 Ruota · Cap.24 Real Estate Spa · cleanup Emergent · Cap.15 social · Cap.3 planimetrie."
 }

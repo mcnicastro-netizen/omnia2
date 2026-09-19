@@ -525,50 +525,40 @@ voci:
   # ---------- 4.7 · Modifica / archivia / elimina ----------
 
   - id: clienti.archiviare-eliminare
-    titolo: Archiviare o eliminare un cliente
+    titolo: Archiviare o eliminare un cliente (Cestino)
     modulo: Clienti
     widget: null
     pubblico: [titolare]
     livello: base
-    tags: [clienti, archivio, eliminazione, chiusura]
+    tags: [clienti, archivio, eliminazione, cestino, ripristino]
     correlati:
       - clienti.stato-crm
-    domanda_naturale: "Come archivio o elimino un cliente che non è
-      più attivo?"
+      - cestino.ripristinare
+    domanda_naturale: "Come archivio o elimino un cliente? Posso recuperarlo?"
     contenuto:
       a_cosa_serve: >
-        Ripulire la lista da contatti vecchi mantenendo lo storico
-        (archivio) o eliminando definitivamente (rischioso).
+        Pulire la lista: archiviare (consigliato) oppure eliminare
+        spostando nel Cestino per 30 giorni.
       quando_si_usa: >
-        Archivio: cliente che ha già comprato/venduto con te tempo fa,
-        o ha smesso di cercare. Eliminazione: caso raro (dato inserito
-        per errore).
+        Archivio: cliente non più attivo ma da tenere in storico.
+        Eliminazione: dato creato per errore.
       passi:
-        - "Per archiviare apri il cliente, cambia Stato CRM in
-          'Archiviato', salva. Il cliente scompare dai bucket ma resta
-          nello storico e nelle statistiche."
-        - "Per eliminare definitivamente apri il cliente, scorri in
-          fondo, clicca 'Elimina', conferma. Perdi anche le note e
-          la storia dei contatti."
-        - "Se il cliente ha immobili collegati (proprietario/venditore)
-          il sistema blocca l'eliminazione con il messaggio
-          'Impossibile eliminare: questo cliente ha N immobile/i in
-          carico'. Prima riassegna o rimuovi il collegamento
-          dagli immobili, poi ritenta."
+        - "Per archiviare: apri il cliente, metti Stato CRM =
+          Archiviato, salva."
+        - "Per eliminare: apri il cliente, Elimina, conferma.
+          Va nel Cestino (non è perso subito)."
+        - "Se ha immobili collegati, OMNIA blocca: collega prima gli
+          immobili a un altro cliente oppure spostali nel Cestino."
+        - "Per recuperare: Cestino → Ripristina (entro 30 giorni)."
       errori_comuni:
         - problema: "Ho eliminato per sbaglio"
           soluzione: >
-            L'operazione non è reversibile. In futuro preferisci
-            'Archiviato': stesso effetto visivo, storico salvo.
-        - problema: "Non riesco a eliminare, mi dice 'immobili in carico'"
+            Apri Cestino a sinistra e clicca Ripristina entro 30 giorni.
+        - problema: "Non riesco a eliminare, immobili collegati"
           soluzione: >
-            Il sistema protegge gli immobili con proprietario. Vai su
-            Immobili, apri gli immobili collegati a questo cliente,
-            e per ciascuno riassegna il cliente venditore a un'altra
-            anagrafica oppure rimuovi il collegamento. Poi ritenta
-            l'eliminazione.
+            Prima collega quegli immobili a un altro cliente, oppure
+            spostali nel Cestino, poi riprova.
       permessi:
-        - "Archiviare (cambio stato): titolare, agente, segreteria."
-        - "Eliminare: solo titolare (agency_admin). L'agente e la
-          segreteria non possono eliminare."
+        - "Archiviare: titolare, agente, segreteria."
+        - "Eliminare / Cestino: solo titolare."
     screenshot: []

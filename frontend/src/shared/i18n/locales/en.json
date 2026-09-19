@@ -229,7 +229,8 @@
     "nav_group": "Group",
     "nav_api_keys": "API Keys",
     "nav_import": "Import",
-    "nav_publishing": "Portals"
+    "nav_publishing": "Portals",
+    "nav_trash": "Trash"
   },
   "import": {
     "page_title": "Import properties",
@@ -489,7 +490,7 @@
     "save": "Save client",
     "saved": "Client saved",
     "delete": "Delete client",
-    "delete_confirm": "Permanently delete this client? This cannot be undone.",
+    "delete_confirm": "Move this client to the Trash? You can restore it within 30 days.",
     "section_carried_properties": "Properties under management",
     "carried_empty": "This client has no properties yet. Go to Properties → New and pick them as the owner.",
     "op_sale": "Sale",
@@ -1150,7 +1151,7 @@
     "save": "Save property",
     "saved": "Property saved",
     "delete": "Delete",
-    "delete_confirm": "Are you sure? This action is permanent.",
+    "delete_confirm": "Move this property to the Trash? You can restore it within 30 days.",
     "type_appartamento": "Apartment",
     "type_villa": "Villa",
     "type_villetta_a_schiera": "Townhouse",
@@ -1297,5 +1298,24 @@
     "detail_box_from": "from",
     "detail_box_note": "25-year mortgage, 20% down payment",
     "detail_box_cta": "Simulate your mortgage"
+  },
+  "trash": {
+    "title": "Trash",
+    "subtitle": "Deleted properties and clients. You can restore them within {{days}} days.",
+    "filter_all": "All",
+    "filter_properties": "Properties",
+    "filter_clients": "Clients",
+    "empty_title": "Trash is empty",
+    "empty_subtitle": "When you delete a property or client, it stays here for 30 days.",
+    "kind_property": "Property",
+    "kind_client": "Client",
+    "days_left": "{{days}} days left to restore",
+    "days_unknown": "Recovery window in progress",
+    "restore": "Restore",
+    "purge": "Delete forever",
+    "purge_confirm": "Delete forever? This cannot be undone.",
+    "load_error": "Could not load the Trash.",
+    "restore_error": "Restore failed.",
+    "purge_error": "Permanent delete failed."
   }
 }

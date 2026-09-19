@@ -30,6 +30,7 @@ from shared.models.property import (
 from shared.importers.vendor_map_legacy_a import detect_and_parse as detect_vendor_a
 from shared.utils.net_guard import assert_public_url
 from apps.immocloud.geocoding import schedule_geocode
+from shared.db.trash import soft_delete_fields, with_not_trashed
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/properties", tags=["properties"])
@@ -106,22 +107,30 @@ async def list_properties(
     agency_id = await _require_agency(user)
     db = Database.get()
 
-    query = {"agency_id": agency_id}
+    query = with_not_trashed({"agency_id": agency_id})
+    extras = {}
     if status:
-        query["status"] = status
+        extras["status"] = status
     if operation:
-        query["operation"] = operation
+        extras["operation"] = operation
     if property_type:
-        query["property_type"] = property_type
+        extras["property_type"] = property_type
     if city:
-        query["city"] = {"$regex": re.escape(city[:100]), "$options": "i"}
+        extras["city"] = {"$regex": re.escape(city[:100]), "$options": "i"}
+    if extras:
+        query = {"$and": [query, extras]}
     if q:
         q_safe = re.escape(q[:100])
-        query["$or"] = [
-            {"title": {"$regex": q_safe, "$options": "i"}},
-            {"description": {"$regex": q_safe, "$options": "i"}},
-            {"reference_code": {"$regex": q_safe, "$options": "i"}},
-        ]
+        query = {
+            "$and": [
+                query,
+                {"$or": [
+                    {"title": {"$regex": q_safe, "$options": "i"}},
+                    {"description": {"$regex": q_safe, "$options": "i"}},
+                    {"reference_code": {"$regex": q_safe, "$options": "i"}},
+                ]},
+            ]
+        }
 
     total = await db.properties.count_documents(query)
     # Sprint 4 · Task #11 — projection esplicita: evita di trasportare `photos`
@@ -212,7 +221,9 @@ async def create_property(
 async def get_property(prop_id: str, user: dict = Depends(get_current_user)):
     agency_id = await _require_agency(user)
     db = Database.get()
-    doc = await db.properties.find_one({"id": prop_id, "agency_id": agency_id})
+    doc = await db.properties.find_one(
+        with_not_trashed({"id": prop_id, "agency_id": agency_id})
+    )
     if not doc:
         raise HTTPException(status_code=404, detail="property_not_found")
     return _strip(doc)
@@ -228,7 +239,9 @@ async def update_property(
 ):
     agency_id = await _require_agency(user)
     db = Database.get()
-    existing = await db.properties.find_one({"id": prop_id, "agency_id": agency_id})
+    existing = await db.properties.find_one(
+        with_not_trashed({"id": prop_id, "agency_id": agency_id})
+    )
     if not existing:
         raise HTTPException(status_code=404, detail="property_not_found")
 
@@ -290,12 +303,16 @@ async def delete_property(
     prop_id: str,
     user: dict = Depends(require_roles("agency_admin", "super_admin")),
 ):
+    """Sposta l'immobile nel Cestino (recuperabile per 30 giorni)."""
     agency_id = await _require_agency(user)
     db = Database.get()
-    result = await db.properties.delete_one({"id": prop_id, "agency_id": agency_id})
-    if result.deleted_count == 0:
+    result = await db.properties.update_one(
+        with_not_trashed({"id": prop_id, "agency_id": agency_id}),
+        {"$set": soft_delete_fields(user.get("id"))},
+    )
+    if result.matched_count == 0:
         raise HTTPException(status_code=404, detail="property_not_found")
-    return {"status": "ok"}
+    return {"status": "ok", "trashed": True, "retention_days": 30}
 
 
 # -------------------- PHOTOS: UPLOAD FILE (Sprint 4 · GAP #1) --------------------

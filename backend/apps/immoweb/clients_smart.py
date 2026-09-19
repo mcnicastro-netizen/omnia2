@@ -129,15 +129,21 @@ def _escape_q(q: Optional[str]) -> Optional[str]:
 
 
 def _client_base_query(agency_id: str, q: Optional[str]) -> Dict[str, Any]:
-    cl_query: Dict[str, Any] = {"agency_id": agency_id}
+    from shared.db.trash import with_not_trashed
+    cl_query: Dict[str, Any] = with_not_trashed({"agency_id": agency_id})
     eq = _escape_q(q)
     if eq:
-        cl_query["$or"] = [
-            {"name": {"$regex": eq, "$options": "i"}},
-            {"surname": {"$regex": eq, "$options": "i"}},
-            {"email": {"$regex": eq, "$options": "i"}},
-            {"phone": {"$regex": eq, "$options": "i"}},
-        ]
+        cl_query = {
+            "$and": [
+                cl_query,
+                {"$or": [
+                    {"name": {"$regex": eq, "$options": "i"}},
+                    {"surname": {"$regex": eq, "$options": "i"}},
+                    {"email": {"$regex": eq, "$options": "i"}},
+                    {"phone": {"$regex": eq, "$options": "i"}},
+                ]},
+            ]
+        }
     return cl_query
 
 

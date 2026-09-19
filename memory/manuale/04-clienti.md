@@ -280,18 +280,24 @@ Per non perdere lo storico:
 
 Il cliente scompare dai bucket ma resta nello storico e nelle statistiche.
 
-### Eliminare definitivamente
-⚠️ Perdi anche le note e la storia dei contatti.
+### Eliminare (va nel Cestino)
 
-**Prima di eliminare**: se il cliente ha immobili collegati (proprietario/venditore) il sistema **blocca l'eliminazione** con un messaggio del tipo *"Impossibile eliminare: questo cliente ha N immobile/i in carico. Riassegna o elimina prima quegli immobili."*
+Quando elimini un cliente, **non sparisce subito**: va nel **Cestino** per **30 giorni**. Da lì puoi **Ripristinarlo** con un clic.
 
-Per procedere devi prima:
-- **Riassegnare** ogni immobile a un altro cliente venditore/proprietario (Cap. 3.5), oppure
-- **Rimuovere il collegamento** dall'immobile (in questo caso l'immobile resta senza proprietario collegato).
+**Prima di eliminare**: se il cliente ha immobili collegati (proprietario/venditore) OMNIA **blocca** l'eliminazione e ti dice quanti immobili sono ancora collegati.
 
+Per procedere:
+- collega quegli immobili a un altro cliente, oppure
+- sposta prima quegli immobili nel Cestino.
+
+Poi:
 1. Apri il cliente.
-2. In fondo alla scheda clicca **Elimina**.
-3. Conferma.
+2. In fondo clicca **Elimina**.
+3. Conferma: il cliente va nel **Cestino**.
+
+Per ripristinare: menu **Cestino** → **Ripristina**.
+
+⚠️ **Elimina per sempre** (dal Cestino) o dopo 30 giorni: non si può più recuperare. Se hai dubbi, **Archivia** invece di eliminare.
 
 **Chi può eliminare**
 - **Solo titolare** (l'agente non può eliminare, per evitare cancellazioni accidentali).
@@ -308,7 +314,7 @@ Per procedere devi prima:
 | Non riesco a collegare un venditore all'immobile | Il cliente deve esistere e essere di tipo **Venditore** o **Proprietario (affitta)**. Se è un Acquirente, cambia prima il tipo. |
 | Ho importato 200 clienti ma ne vedo 180 | 20 righe sono state scartate: apri l'accordion errori nell'import per capire perché (email duplicate, campi obbligatori mancanti). |
 | Voglio contattare tutti i "Roventi" via WhatsApp | Passa da un cliente all'altro con il pulsante **💬 WhatsApp** — non c'è ancora invio massivo (in arrivo). |
-| Ho perso il consenso GDPR | Senza spunta GDPR non puoi ricontattare commercialmente. Serve un nuovo consenso esplicito (email o modulo cartaceo firmato). |
+| Ho eliminato un immobile / cliente per sbaglio | Apri **Cestino** a sinistra → **Ripristina** (entro 30 giorni). |
 
 ---
 

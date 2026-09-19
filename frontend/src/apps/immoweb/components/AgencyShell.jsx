@@ -96,6 +96,9 @@ export default function AgencyShell({ children, current = "dashboard", showBack 
       : []),
     { key: "properties", to: `/${lang}/app/properties`, label: t("immoweb_app.nav_properties"), icon: "🏠" },
     { key: "clients", to: `/${lang}/app/clients`, label: t("immoweb_app.nav_clients"), icon: "👥" },
+    ...(isAgencyAdmin
+      ? [{ key: "trash", to: `/${lang}/app/trash`, label: t("immoweb_app.nav_trash") || "Cestino", icon: "🗑" }]
+      : []),
     { key: "matches", to: `/${lang}/app/matches`, label: t("immoweb_app.nav_matches"), icon: "✦" },
     { key: "analytics", to: `/${lang}/app/analytics`, label: "Analytics A/B", icon: "▣" },
     { key: "mls", to: `/${lang}/app/mls`, label: "MLS", icon: "⧉" },

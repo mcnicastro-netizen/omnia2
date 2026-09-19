@@ -8,6 +8,7 @@ from fastapi import APIRouter, Depends, HTTPException
 
 from shared.auth.dependencies import get_current_user
 from apps.immocloud.saved_searches import run_all_active_saved_searches
+from apps.immoweb.trash import run_trash_purge
 
 router = APIRouter(prefix="/cron", tags=["cron"])
 
@@ -20,3 +21,11 @@ async def cron_run_saved_searches(user: dict = Depends(get_current_user)):
         raise HTTPException(status_code=403, detail="cron_forbidden")
     result = await run_all_active_saved_searches()
     return {"ok": True, **result}
+
+
+@router.post("/trash/purge")
+async def cron_purge_trash(user: dict = Depends(get_current_user)):
+    """Svuota dal Cestino immobili/clienti oltre i 30 giorni."""
+    if user.get("role") not in ALLOWED_ROLES:
+        raise HTTPException(status_code=403, detail="cron_forbidden")
+    return await run_trash_purge()

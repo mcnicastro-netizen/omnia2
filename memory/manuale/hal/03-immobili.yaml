@@ -503,35 +503,70 @@ voci:
     screenshot: []
 
   - id: immobili.eliminare-definitivo
-    titolo: Eliminare definitivamente un immobile
+    titolo: Eliminare un immobile (va nel Cestino)
     modulo: Immobili
     widget: null
     pubblico: [titolare]
     livello: base
-    tags: [immobili, eliminazione, archivio, definitivo]
+    tags: [immobili, eliminazione, cestino, ripristino]
     correlati:
       - immobili.cambiare-stato
-    domanda_naturale: "Posso cancellare un immobile per sempre?"
+      - cestino.ripristinare
+    domanda_naturale: "Ho cancellato un immobile per sbaglio, lo posso recuperare?"
     contenuto:
       a_cosa_serve: >
-        Rimuovere per sempre un immobile da ImmoWeb, inclusi foto,
-        documenti e storia.
+        Togliere un immobile dalla lista attiva senza perderlo subito.
+        Va nel Cestino per 30 giorni.
       quando_si_usa: >
-        Solo in casi particolari (immobile inserito per errore,
-        richiesta esplicita del proprietario). Nella normalità
-        preferisci cambiare stato a Ritirato per mantenere lo storico.
+        Immobile inserito per errore, o da rimuovere del tutto.
+        Se è solo fuori mercato, meglio stato Ritirato.
       passi:
         - Apri l'immobile.
-        - Scorri in fondo e clicca "Elimina".
-        - Conferma il messaggio "Sei sicuro? L'operazione è definitiva".
+        - In fondo clicca Elimina e conferma.
+        - L'immobile sparisce dalla lista Immobili e appare in Cestino.
+        - "Entro 30 giorni: Cestino → Ripristina."
+        - "Elimina per sempre (nel Cestino) o dopo 30 giorni: non si recupera più."
       errori_comuni:
-        - problema: "L'operazione è reversibile?"
+        - problema: "L'ho perso per sempre?"
           soluzione: >
-            No. Perdi foto, documenti e storia. Se hai dubbi, usa lo
-            stato "Ritirato" invece di eliminare.
+            No, se sono passati meno di 30 giorni. Apri Cestino a
+            sinistra e clicca Ripristina.
+        - problema: "Non vedo il Cestino"
+          soluzione: >
+            Il Cestino lo vede solo il titolare (agency_admin).
       permessi:
-        - Solo titolare (agency_admin). L'agente non può eliminare per
-          evitare cancellazioni accidentali.
+        - Solo titolare. L'agente non può eliminare.
+    screenshot: []
+
+  - id: cestino.ripristinare
+    titolo: Cestino · ripristinare immobile o cliente
+    modulo: Cestino
+    widget: null
+    pubblico: [titolare]
+    livello: base
+    tags: [cestino, ripristino, immobili, clienti, 30 giorni]
+    correlati:
+      - immobili.eliminare-definitivo
+      - clienti.archiviare-eliminare
+    domanda_naturale: "Dove trovo il Cestino? Come ripristino un cliente eliminato?"
+    contenuto:
+      a_cosa_serve: >
+        Recuperare immobili e clienti eliminati entro 30 giorni.
+      quando_si_usa: >
+        Dopo una cancellazione accidentale o un ripensamento.
+      passi:
+        - Nella barra a sinistra clicca Cestino.
+        - Filtra Tutti, Immobili o Clienti se serve.
+        - Clicca Ripristina sulla riga giusta.
+        - L'elemento torna nella lista Immobili o Clienti.
+        - "Se sei sicuro di non volerlo più: Elimina per sempre (irreversibile)."
+      errori_comuni:
+        - problema: "Sono passati più di 30 giorni"
+          soluzione: >
+            Dopo 30 giorni il sistema lo cancella da solo. Non si
+            può più ripristinare dal Cestino.
+      permessi:
+        - Solo titolare
     screenshot: []
 
   # ---------- 3.6 · Fascicolo ----------

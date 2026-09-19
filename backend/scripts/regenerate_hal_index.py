@@ -51,7 +51,7 @@ def main() -> None:
         new_chapters.append(entry)
 
     out = {
-        "version": "0.21-gruppi-rotate",
+        "version": "0.22-cestino",
         "updated": date.today().isoformat(),
         "voices_total": total,
         "source_files": source_files,
@@ -59,7 +59,7 @@ def main() -> None:
         "notes": (
             "Fingerprints regenerated from YAML on disk. "
             "Live RAG reindex: POST /api/app/hal/knowledge/reindex?force=true (super_admin). "
-            "2026-09-19: Cap.20 Ruota API key · Cap.24 Real Estate Spa · "
+            "2026-09-19: Cestino 30gg · Cap.20 Ruota · Cap.24 Real Estate Spa · "
             "cleanup Emergent · Cap.15 social · Cap.3 planimetrie."
         ),
     }

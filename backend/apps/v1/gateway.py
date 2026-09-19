@@ -187,6 +187,8 @@ async def v1_feed_properties(
         flt = {"agency_id": key["agency_id"]}
         if status and status != "all":
             flt["status"] = status
+        from shared.db.trash import with_not_trashed
+        flt = with_not_trashed(flt)
         cursor = (
             db.properties.find(flt, {"_id": 0, "photos": 0})
             .sort("created_at", -1)

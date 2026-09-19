@@ -298,7 +298,7 @@
     "save": "Salva immobile",
     "saved": "Immobile salvato",
     "delete": "Elimina",
-    "delete_confirm": "Sei sicuro? L'operazione è definitiva.",
+    "delete_confirm": "Spostare questo immobile nel Cestino? Potrai ripristinarlo entro 30 giorni.",
     "type_appartamento": "Appartamento",
     "type_villa": "Villa",
     "type_villetta_a_schiera": "Villetta a schiera",
@@ -414,7 +414,8 @@
     "nav_group": "Gruppo",
     "nav_api_keys": "API Keys",
     "nav_import": "Importa",
-    "nav_publishing": "Portali"
+    "nav_publishing": "Portali",
+    "nav_trash": "Cestino"
   },
   "api_keys": {
     "title": "Chiavi API",
@@ -618,7 +619,7 @@
     "save": "Salva cliente",
     "saved": "Cliente salvato",
     "delete": "Elimina cliente",
-    "delete_confirm": "Eliminare definitivamente questo cliente? L'operazione è irreversibile.",
+    "delete_confirm": "Spostare questo cliente nel Cestino? Potrai ripristinarlo entro 30 giorni.",
     "section_carried_properties": "Immobili in carico",
     "carried_empty": "Questo cliente non ha ancora immobili in carico. Vai in Immobili → Nuovo e selezionalo come proprietario.",
     "op_sale": "Vendita",
@@ -1271,5 +1272,24 @@
     "detail_box_from": "da",
     "detail_box_note": "mutuo 25 anni, anticipo 20%",
     "detail_box_cta": "Simula il tuo mutuo"
+  },
+  "trash": {
+    "title": "Cestino",
+    "subtitle": "Immobili e clienti eliminati. Puoi ripristinarli entro {{days}} giorni.",
+    "filter_all": "Tutti",
+    "filter_properties": "Immobili",
+    "filter_clients": "Clienti",
+    "empty_title": "Cestino vuoto",
+    "empty_subtitle": "Quando elimini un immobile o un cliente, lo trovi qui per 30 giorni.",
+    "kind_property": "Immobile",
+    "kind_client": "Cliente",
+    "days_left": "Ancora {{days}} giorni per ripristinare",
+    "days_unknown": "Tempo di recupero in corso",
+    "restore": "Ripristina",
+    "purge": "Elimina per sempre",
+    "purge_confirm": "Eliminare per sempre? Dopo non si può più recuperare.",
+    "load_error": "Non riesco a caricare il Cestino.",
+    "restore_error": "Ripristino non riuscito.",
+    "purge_error": "Eliminazione definitiva non riuscita."
   }
 }

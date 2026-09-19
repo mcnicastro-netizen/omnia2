@@ -337,8 +337,9 @@ async def connection_compliance(
     conn = await db.publishing_connections.find_one({"id": conn_id, "agency_id": aid})
     if not conn:
         raise HTTPException(status_code=404, detail="connection_not_found")
+    from shared.db.trash import with_not_trashed
     props = await db.properties.find(
-        {"agency_id": aid, "status": "active"}, {"_id": 0}
+        with_not_trashed({"agency_id": aid, "status": "active"}), {"_id": 0}
     ).limit(2000).to_list(2000)
     summary = summarize_agency_compliance(props)
     # Also give the per-property status for the top 20 blocked ones (so the UI
@@ -622,8 +623,9 @@ async def portals_feed(
     agency = await db.agencies.find_one({"slug": agency_slug, "is_active": True})
     if not agency:
         raise HTTPException(status_code=404, detail="agency_not_found")
+    from shared.db.trash import with_not_trashed
     props = await db.properties.find(
-        {"agency_id": agency["id"], "status": "active"}
+        with_not_trashed({"agency_id": agency["id"], "status": "active"})
     ).limit(2000).to_list(2000)
     publishable = [p for p in props if is_publishable(p)[0]]
     xml = _render_generic_rss(publishable, agency) if dialect == "generic_rss" \

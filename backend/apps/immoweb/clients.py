@@ -14,6 +14,7 @@ from shared.models.client import (
     ClientInDB, ClientCreate, ClientUpdate, ClientListResponse,
     ClientCSVPayload, SearchPreferences,
 )
+from shared.db.trash import soft_delete_fields, with_not_trashed
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/clients", tags=["clients"])
@@ -37,19 +38,27 @@ async def list_clients(
 ):
     agency_id = await _agency(user)
     db = Database.get()
-    query = {"agency_id": agency_id}
+    query = with_not_trashed({"agency_id": agency_id})
+    extras = {}
     if status:
-        query["status"] = status
+        extras["status"] = status
     if client_type:
-        query["client_type"] = client_type
+        extras["client_type"] = client_type
+    if extras:
+        query = {"$and": [query, extras]}
     if q:
         q_safe = re.escape(q[:100])
-        query["$or"] = [
-            {"name": {"$regex": q_safe, "$options": "i"}},
-            {"surname": {"$regex": q_safe, "$options": "i"}},
-            {"email": {"$regex": q_safe, "$options": "i"}},
-            {"phone": {"$regex": q_safe, "$options": "i"}},
-        ]
+        query = {
+            "$and": [
+                query,
+                {"$or": [
+                    {"name": {"$regex": q_safe, "$options": "i"}},
+                    {"surname": {"$regex": q_safe, "$options": "i"}},
+                    {"email": {"$regex": q_safe, "$options": "i"}},
+                    {"phone": {"$regex": q_safe, "$options": "i"}},
+                ]},
+            ]
+        }
     total = await db.clients.count_documents(query)
     docs = await db.clients.find(query, {"_id": 0}).sort("created_at", -1).skip((page - 1) * page_size).limit(page_size).to_list(page_size)
     return {
@@ -85,18 +94,23 @@ async def list_sellers_for_autocomplete(
     """
     agency_id = await _agency(user)
     db = Database.get()
-    query = {
+    query = with_not_trashed({
         "agency_id": agency_id,
         "client_type": {"$in": ["seller", "landlord"]},
-    }
+    })
     if q:
         q_safe = re.escape(q[:100])
-        query["$or"] = [
-            {"name": {"$regex": q_safe, "$options": "i"}},
-            {"surname": {"$regex": q_safe, "$options": "i"}},
-            {"email": {"$regex": q_safe, "$options": "i"}},
-            {"phone": {"$regex": q_safe, "$options": "i"}},
-        ]
+        query = {
+            "$and": [
+                query,
+                {"$or": [
+                    {"name": {"$regex": q_safe, "$options": "i"}},
+                    {"surname": {"$regex": q_safe, "$options": "i"}},
+                    {"email": {"$regex": q_safe, "$options": "i"}},
+                    {"phone": {"$regex": q_safe, "$options": "i"}},
+                ]},
+            ]
+        }
     docs = await db.clients.find(
         query, {"_id": 0, "id": 1, "name": 1, "surname": 1, "email": 1, "phone": 1, "client_type": 1},
     ).sort("name", 1).limit(limit).to_list(limit)
@@ -107,7 +121,7 @@ async def list_sellers_for_autocomplete(
 async def get_client(cid: str, user: dict = Depends(get_current_user)):
     agency_id = await _agency(user)
     db = Database.get()
-    doc = await db.clients.find_one({"id": cid, "agency_id": agency_id})
+    doc = await db.clients.find_one(with_not_trashed({"id": cid, "agency_id": agency_id}))
     if not doc:
         raise HTTPException(status_code=404, detail="client_not_found")
     return _strip(doc)
@@ -121,7 +135,7 @@ async def update_client(
 ):
     agency_id = await _agency(user)
     db = Database.get()
-    if not await db.clients.find_one({"id": cid, "agency_id": agency_id}):
+    if not await db.clients.find_one(with_not_trashed({"id": cid, "agency_id": agency_id})):
         raise HTTPException(status_code=404, detail="client_not_found")
     data = payload.model_dump(exclude_unset=True)
     update_doc = {"updated_at": datetime.now(timezone.utc).isoformat()}
@@ -129,17 +143,21 @@ async def update_client(
         if v is None:
             continue
         update_doc[k] = v.model_dump() if hasattr(v, "model_dump") else v
-    await db.clients.update_one({"id": cid, "agency_id": agency_id}, {"$set": update_doc})
+    await db.clients.update_one(
+        with_not_trashed({"id": cid, "agency_id": agency_id}),
+        {"$set": update_doc},
+    )
     return _strip(await db.clients.find_one({"id": cid}))
 
 
 @router.delete("/{cid}")
 async def delete_client(cid: str, user: dict = Depends(require_roles("agency_admin", "super_admin"))):
+    """Sposta il cliente nel Cestino (recuperabile per 30 giorni)."""
     agency_id = await _agency(user)
     db = Database.get()
-    # Refuse deletion if the client has properties in carico (avoid orphan seller_client_id)
+    # Refuse if client has active (non-trashed) properties in carico
     linked_count = await db.properties.count_documents(
-        {"agency_id": agency_id, "seller_client_id": cid}
+        with_not_trashed({"agency_id": agency_id, "seller_client_id": cid})
     )
     if linked_count > 0:
         raise HTTPException(
@@ -148,15 +166,19 @@ async def delete_client(cid: str, user: dict = Depends(require_roles("agency_adm
                 "error": "client_has_linked_properties",
                 "linked_properties": linked_count,
                 "message": (
-                    "Impossibile eliminare: questo cliente ha "
-                    f"{linked_count} immobile/i in carico. Riassegna o elimina prima quegli immobili."
+                    "Non puoi eliminare questo cliente: ha ancora "
+                    f"{linked_count} immobile/i collegati. "
+                    "Prima collega quegli immobili a un altro cliente, oppure spostali nel Cestino."
                 ),
             },
         )
-    result = await db.clients.delete_one({"id": cid, "agency_id": agency_id})
-    if result.deleted_count == 0:
+    result = await db.clients.update_one(
+        with_not_trashed({"id": cid, "agency_id": agency_id}),
+        {"$set": soft_delete_fields(user.get("id"))},
+    )
+    if result.matched_count == 0:
         raise HTTPException(status_code=404, detail="client_not_found")
-    return {"status": "ok"}
+    return {"status": "ok", "trashed": True, "retention_days": 30}
 
 
 @router.get("/{cid}/properties")
@@ -165,10 +187,13 @@ async def list_properties_for_client(cid: str, user: dict = Depends(get_current_
     agency_id = await _agency(user)
     db = Database.get()
     # ensure client exists in tenant
-    if not await db.clients.find_one({"id": cid, "agency_id": agency_id}, {"_id": 0, "id": 1}):
+    if not await db.clients.find_one(
+        with_not_trashed({"id": cid, "agency_id": agency_id}),
+        {"_id": 0, "id": 1},
+    ):
         raise HTTPException(status_code=404, detail="client_not_found")
     cursor = db.properties.find(
-        {"agency_id": agency_id, "seller_client_id": cid},
+        with_not_trashed({"agency_id": agency_id, "seller_client_id": cid}),
         {"_id": 0, "id": 1, "title": 1, "property_type": 1, "operation": 1,
          "status": 1, "city": 1, "price": 1, "rent_monthly": 1,
          "surface_sqm": 1, "rooms": 1, "reference_code": 1,

@@ -118,12 +118,13 @@ LIST_FIELDS = {
 
 def _base_filter() -> Dict[str, Any]:
     """Common visibility filter applied to every public query."""
-    return {
+    from shared.db.trash import with_not_trashed
+    return with_not_trashed({
         "status": "active",
         "visibility": "public",
         "is_listed_on_immobilcloud": {"$ne": False},
         "moderation_status": {"$nin": ["pending", "rejected"]},
-    }
+    })
 
 
 def _cover_photo(photos: Optional[List[dict]]) -> Optional[str]:
