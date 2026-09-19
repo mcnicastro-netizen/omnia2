@@ -27,7 +27,8 @@
 13. ✅ **Cleanup Emergent incrementale** (19-Set): shared.llm · alias key · stub/pacchetti fuori · FE visual-edits fuori · test URL locali
 14. ⏸️ **i18n EN/ES copertura uniforme gestionale** — selettore OK; molte UI ancora IT hardcoded — solo con «vai»
 15. ⏸️ Residui minori Emergent (CDN BrandLab, `STORAGE_BACKEND=emergent` dead path, alias env) — opzionale
-16. ⏸️ **Backup DB automatico** (mongodump) — rete di sicurezza infra, dopo Cestino
+16. ⏸️ **Backup DB + quota storage (D-085)** — policy ✅ 30/100/300 GB + extra €15 · meter + blocco upload; ship codice solo con «vai»
+17. ⏸️ Residui minori Emergent (CDN BrandLab, `STORAGE_BACKEND=emergent` dead path, alias env) — opzionale
 
 ---
 
@@ -52,6 +53,7 @@
 | **HAL Mongo reindex live (force)** | ✅ (19-Set) v0.22 Cestino |
 | **Gruppo Real Estate Spa + Ruota API key** | ✅ (19-Set) sim PASS · Cap.20/24 · smoke Ruota top-1 |
 | **Cestino 30gg immobili/clienti** | ✅ (19-Set) `/app/trash` · Cap.3/4 · soft-delete |
+| **D-085 Storage quota + backup policy** | ✅ policy (30/100/300 + €15) · ⬜ codice |
 | Home B2C visual + SSR preview | ✅ (16-Set) |
 | Layout altre pagine B2C | ✅ (17-Set) |
 | Scout v1 + fiducia + voce lister | ✅ |
@@ -83,6 +85,7 @@
 | — | Intake annuncio esterno (Nord D) | Solo dopo ok Founder + scope legale |
 | — | A-026 path Kling agenzia | Approfondire UX (docs Cap.23 già allineati) |
 | — | A-014 Stripe live | post-Vercel |
+| — | **D-085 ship** metering + blocco upload + backup + extra €15 | solo con «vai»; validare testo con legale |
 | — | Backup DB automatico (mongodump) | Rete di sicurezza infra — dopo Cestino ✅ |
 | — | Go-live env flags | readiness WARN locali → set su Vercel |
 

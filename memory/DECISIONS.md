@@ -1360,3 +1360,22 @@ Registro di tutte le decisioni di business e tecniche prese durante il progetto.
   4. Dopo YAML: reindex / ingest HAL (startup o endpoint super_admin) prima di chiudere.
   5. Eccezioni solo esplicite Founder (es. Cap. Billing live post Stripe — D-051).
 - **Stato**: ✅ CONFERMATA — applicata da subito (primo sync: Cap. 18 A-017/A-021 + drift Cap. 9/12/13)
+
+### D-085 — Storage archivi: quota per piano + backup (non illimitato) · 19-Set-2026
+- **Data**: 19 Settembre 2026
+- **Contesto**: Dopo Cestino 30gg, Founder + consulente su backup media (foto/video). Paura costi video; Agency “illimitato” non deve significare GB illimitati. Simulazione worst-case con limiti prodotto attuali (60 foto × 8 MB, 3 video × 80 MB).
+- **Decisione commerciale**:
+  1. **Modello A — un solo contatore**: i GB inclusi sono lo spazio archivio media dell’agenzia (foto + documenti + video). Il backup automatico (retention 30 gg, ripristino via supporto) protegge ciò che sta dentro la quota. Niente esclusione nascosta dei video.
+  2. **Quote incluse** (indipendenti dal n° immobili):
+     - Starter €49 → **30 GB**
+     - Pro €99 → **100 GB**
+     - Agency €299 → **300 GB** (immobili illimitati ≠ storage illimitato)
+  3. **Extra**: **+100 GB a €15/mese**
+  4. **UI Meter**: uso vs quota (es. 82/100 GB) + avvisi ~80% / ~90%.
+  5. **A 100%**: **blocca nuovi upload** + CTA “Aggiungi 100 GB (€15/mese)”. Non cancellare file esistenti; non fallire il backup in silenzio.
+  6. **Cestino 30gg** resta separato (recupero self-service da delete accidentale).
+  7. Linguaggio: “backup automatico, retention 30 giorni” — mai “cassaforte / nessun dato perso / backup illimitato”.
+- **Razionale**: costo nostro ~€0,04/GB/mese (ops+bak versionato) → quote ~2–4% del canone; extra ~4× sul costo. Allineato ai cloud migliori senza passività Agency video-heavy.
+- **Stato**: ✅ CONFERMATA (policy) — implementazione codice/UI/billing solo con «vai» Founder
+- **Aperti per lo ship**: metering storage reale, blocco upload, add-on Stripe, testo listino/contratto/DPA (con legale), fine abbonamento sui backup
+

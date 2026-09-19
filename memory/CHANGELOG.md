@@ -1,5 +1,16 @@
 # OMNIA — Changelog
 
+## 2026-09-19 — D-085 Storage quota + backup (policy Founder)
+
+**Tipo**: Decisione commerciale (no codice ancora).
+
+- Quote: Starter **30 GB** · Pro **100 GB** · Agency **300 GB** · Extra **+100 GB €15/mese**
+- Modello **A**: un contatore (foto+doc+video); backup 30gg incluso nella quota
+- UI meter + a 100% **blocco nuovi upload** + CTA extra
+- Agency illimitato = solo n° immobili, non i GB
+- Dettaglio: `DECISIONS.md` **D-085**
+
+---
 ## 2026-09-19 — Cestino 30 giorni (immobili + clienti)
 
 **Tipo**: Feature / fiducia archivi / Cap.3 / Cap.4 / HAL.
