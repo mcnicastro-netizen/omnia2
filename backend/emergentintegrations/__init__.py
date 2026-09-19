@@ -1,9 +1,9 @@
-"""Temporary bridge: Emergent package removed from PyPI.
+"""Compatibility shim — Emergent package removed from PyPI.
 
-M0: allow imports so the app boots.
-M1: replace call sites with shared.llm (Gemini). This stub will be deleted.
+Prefer: `from shared.llm.chat import LlmChat, UserMessage, TextDelta`
+This package remains only as a temporary re-export.
 """
 
-from emergentintegrations.llm.chat import LlmChat, UserMessage, TextDelta
+from shared.llm.chat import LlmChat, UserMessage, TextDelta
 
 __all__ = ["LlmChat", "UserMessage", "TextDelta"]

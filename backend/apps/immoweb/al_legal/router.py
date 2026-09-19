@@ -124,7 +124,7 @@ async def _call_llm(system_prompt: str, user_msg: str, session_id: str) -> str:
     if not _llm_key():
         raise HTTPException(status_code=503, detail="llm_key_not_configured")
     try:
-        from emergentintegrations.llm.chat import LlmChat, UserMessage
+        from shared.llm.chat import LlmChat, UserMessage
         from shared.llm import LlmBusy
         client = LlmChat(
             api_key=_llm_key(),

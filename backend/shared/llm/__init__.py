@@ -4,6 +4,8 @@ Key resolution order:
   GEMINI_API_KEY → GOOGLE_API_KEY → EMERGENT_LLM_KEY (legacy env name only)
 
 Default model: gemini-2.0-flash (override via GEMINI_MODEL).
+
+Chat surface (LlmChat / UserMessage / TextDelta): see shared.llm.chat
 """
 from __future__ import annotations
 
@@ -13,6 +15,9 @@ import os
 from typing import Any, AsyncIterator, Optional
 
 logger = logging.getLogger("omnia.llm")
+
+# Re-export chat surface for `from shared.llm import LlmChat, ...`
+from shared.llm.chat import LlmChat, UserMessage, TextDelta  # noqa: E402
 
 DEFAULT_MODEL = os.environ.get("GEMINI_MODEL", "gemini-3.5-flash")
 

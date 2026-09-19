@@ -32,7 +32,7 @@ def unflat_set(d, dotted, value):
 
 
 async def translate_batch(items, lang_name):
-    from emergentintegrations.llm.chat import LlmChat, UserMessage
+    from shared.llm.chat import LlmChat, UserMessage
 
     chat = LlmChat(
         api_key=os.environ["EMERGENT_LLM_KEY"],

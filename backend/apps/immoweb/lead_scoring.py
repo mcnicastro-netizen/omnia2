@@ -139,7 +139,7 @@ async def score_lead(
         return _rule_based_fallback(client, match)
 
     try:
-        from emergentintegrations.llm.chat import LlmChat, UserMessage  # type: ignore
+        from shared.llm.chat import LlmChat, UserMessage  # type: ignore
 
         chat = LlmChat(
             api_key=api_key,

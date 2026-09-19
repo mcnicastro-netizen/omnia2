@@ -250,7 +250,7 @@ async def _crm_prompt_fragment(db, agency_id: Optional[str], property_id: str) -
     if not api_key:
         return None, None
     try:
-        from emergentintegrations.llm.chat import LlmChat, UserMessage  # type: ignore
+        from shared.llm.chat import LlmChat, UserMessage  # type: ignore
 
         chat = LlmChat(
             api_key=api_key,

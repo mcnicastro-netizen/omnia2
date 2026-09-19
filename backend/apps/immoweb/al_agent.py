@@ -355,7 +355,7 @@ async def improve_text(req: ImproveRequest, user: dict = Depends(get_current_use
 
     prompt = _build_improve_prompt(req)
 
-    from emergentintegrations.llm.chat import LlmChat, UserMessage
+    from shared.llm.chat import LlmChat, UserMessage
     chat_client = LlmChat(
         api_key=_llm_key(),
         session_id=f"improve-{user['id']}-{uuid4().hex[:8]}",
@@ -428,7 +428,7 @@ async def chat(req: ChatRequest, user: dict = Depends(get_current_user)):
     history.append({"role": "user", "content": req.message})
 
     # Init LLM — chiave piattaforma, senza addebito crediti agenzia (D-075)
-    from emergentintegrations.llm.chat import LlmChat, UserMessage
+    from shared.llm.chat import LlmChat, UserMessage
     chat_client = LlmChat(
         api_key=_llm_key(),
         session_id=sid,
@@ -576,7 +576,7 @@ async def chat_stream(req: ChatRequest, user: dict = Depends(get_current_user)):
     history = sess.get("messages", [])[-MAX_TURNS * 2:]
     history.append({"role": "user", "content": req.message})
 
-    from emergentintegrations.llm.chat import LlmChat, UserMessage, TextDelta
+    from shared.llm.chat import LlmChat, UserMessage, TextDelta
     chat_client = LlmChat(
         api_key=_llm_key(),
         session_id=sid,

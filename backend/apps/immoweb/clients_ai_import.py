@@ -226,7 +226,7 @@ async def _gemini_extract_batch(rows: List[Dict[str, Any]]) -> List[Dict[str, An
     if not api_key:
         raise HTTPException(status_code=503, detail="emergent_llm_key_missing")
     try:
-        from emergentintegrations.llm.chat import LlmChat, UserMessage  # type: ignore
+        from shared.llm.chat import LlmChat, UserMessage  # type: ignore
         chat = LlmChat(
             api_key=api_key,
             session_id=f"client-ai-import-{uuid4()}",

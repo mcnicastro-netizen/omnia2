@@ -562,7 +562,7 @@ RISPOSTA (semplice, operativa):"""
 
 async def generate_answer(prompt: str, session_id: str) -> Dict[str, Any]:
     """Non-streaming generation via Gemini (shared.llm bridge)."""
-    from emergentintegrations.llm.chat import LlmChat, UserMessage
+    from shared.llm.chat import LlmChat, UserMessage
     api_key = os.environ.get("EMERGENT_LLM_KEY") or os.environ.get("GEMINI_API_KEY")
     if not api_key:
         raise HTTPException(status_code=500, detail="emergent_llm_key_not_configured")

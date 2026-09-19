@@ -316,7 +316,7 @@ async def analyze_fascicolo(property_id: str, user=Depends(get_current_user)) ->
     api_key = os.environ.get("EMERGENT_LLM_KEY")
     if api_key:
         try:
-            from emergentintegrations.llm.chat import LlmChat, UserMessage
+            from shared.llm.chat import LlmChat, UserMessage
             import json as _json
 
             ctx = {

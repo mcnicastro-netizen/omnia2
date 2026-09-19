@@ -61,7 +61,7 @@ async def validate(answer: str, sources_block: str) -> Dict[str, Any]:
     )
 
     try:
-        from emergentintegrations.llm.chat import LlmChat, UserMessage
+        from shared.llm.chat import LlmChat, UserMessage
         client = LlmChat(
             api_key=EMERGENT_LLM_KEY,
             session_id=f"legal-validator-{abs(hash(answer)) % 10_000_000:07d}",

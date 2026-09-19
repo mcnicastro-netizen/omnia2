@@ -132,7 +132,7 @@ async def _gemini_brand_profile(summary: Dict[str, Any]) -> Dict[str, Any]:
     if not api_key:
         raise HTTPException(status_code=503, detail="emergent_llm_key_missing")
     try:
-        from emergentintegrations.llm.chat import LlmChat, UserMessage  # type: ignore
+        from shared.llm.chat import LlmChat, UserMessage  # type: ignore
         chat = LlmChat(
             api_key=api_key,
             session_id=f"brand-extract-{uuid4()}",
