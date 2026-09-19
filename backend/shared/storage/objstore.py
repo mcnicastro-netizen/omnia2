@@ -42,7 +42,11 @@ def _local_root() -> Path:
 
 
 def _emergent_key() -> str:
-    key = os.environ.get("EMERGENT_LLM_KEY")
+    key = (
+        os.environ.get("EMERGENT_LLM_KEY")
+        or os.environ.get("GEMINI_API_KEY")
+        or os.environ.get("GOOGLE_API_KEY")
+    )
     if not key:
         raise ObjStoreError("EMERGENT_LLM_KEY not configured (emergent storage backend)")
     return key

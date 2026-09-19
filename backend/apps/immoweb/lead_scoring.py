@@ -2,17 +2,14 @@
 
 Input: client profile + match result + property context.
 Output: structured JSON {score, temperature, reasons[], action_hint} in Italian.
-Uses Gemini-3-flash-preview via Emergent LLM Key. Graceful rule-based fallback.
+Uses Gemini via shared.llm (GEMINI_API_KEY; EMERGENT_LLM_KEY = legacy alias). Graceful rule-based fallback.
 """
 import json
 import logging
-import os
 from typing import Any, Dict, Optional
 from uuid import uuid4
 
 logger = logging.getLogger("omnia.lead_scoring")
-
-_EMERGENT_KEY_ENV = "EMERGENT_LLM_KEY"
 
 SYSTEM_PROMPT = """Sei un esperto consulente di agenzia immobiliare italiana.
 Il tuo compito: stimare quanto un cliente è "caldo" per uno specifico immobile in base ai dati forniti.
@@ -133,9 +130,11 @@ async def score_lead(
     match: Dict[str, Any],
 ) -> Dict[str, Any]:
     """Score a (client, property, match) tuple. Always returns a valid dict."""
-    api_key = os.environ.get(_EMERGENT_KEY_ENV)
+    from shared.llm import try_resolve_api_key
+
+    api_key = try_resolve_api_key()
     if not api_key:
-        logger.warning("EMERGENT_LLM_KEY not set, using rule-based fallback")
+        logger.warning("LLM API key not set, using rule-based fallback")
         return _rule_based_fallback(client, match)
 
     try:

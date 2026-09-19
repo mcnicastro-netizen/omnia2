@@ -222,7 +222,9 @@ def _detect_format(filename: str, content_type: Optional[str], head_bytes: bytes
 
 async def _gemini_extract_batch(rows: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
     """Send a chunk of pre-parsed rows to Gemini → return mapped client array."""
-    api_key = os.environ.get("EMERGENT_LLM_KEY")
+    from shared.llm import try_resolve_api_key
+
+    api_key = try_resolve_api_key()
     if not api_key:
         raise HTTPException(status_code=503, detail="emergent_llm_key_missing")
     try:

@@ -99,12 +99,10 @@ async def ops_overview(
     db = Database.get()
     since = _since(days)
     month_start = _month_start()
+    from shared.llm import try_resolve_api_key
+
     tavily_on = bool(os.environ.get("TAVILY_API_KEY"))
-    llm_on = bool(
-        os.environ.get("GEMINI_API_KEY")
-        or os.environ.get("GOOGLE_API_KEY")
-        or os.environ.get("EMERGENT_LLM_KEY")
-    )
+    llm_on = bool(try_resolve_api_key())
 
     # --- Volume per servizio --------------------------------------------
     al_chat = await _count(db, "al_audit", {"ts": {"$gte": since}, "kind": {"$exists": False}})

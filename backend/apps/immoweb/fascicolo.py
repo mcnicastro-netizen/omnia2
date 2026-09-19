@@ -313,7 +313,9 @@ async def analyze_fascicolo(property_id: str, user=Depends(get_current_user)) ->
 
     text = fallback
     source = "rule_based"
-    api_key = os.environ.get("EMERGENT_LLM_KEY")
+    from shared.llm import try_resolve_api_key
+
+    api_key = try_resolve_api_key()
     if api_key:
         try:
             from shared.llm.chat import LlmChat, UserMessage

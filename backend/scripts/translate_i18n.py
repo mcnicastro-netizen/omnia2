@@ -33,9 +33,10 @@ def unflat_set(d, dotted, value):
 
 async def translate_batch(items, lang_name):
     from shared.llm.chat import LlmChat, UserMessage
+    from shared.llm import resolve_api_key
 
     chat = LlmChat(
-        api_key=os.environ["EMERGENT_LLM_KEY"],
+        api_key=resolve_api_key(),
         session_id=f"i18n-{lang_name}-{hash(tuple(items))}",
         system_message=(
             f"You are a professional translator for an Italian real-estate SaaS platform (OMNIA). "

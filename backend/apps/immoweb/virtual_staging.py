@@ -246,7 +246,9 @@ async def _crm_prompt_fragment(db, agency_id: Optional[str], property_id: str) -
         "operazione": prop.get("operation"),
         "titolo": prop.get("title"),
     }
-    api_key = os.environ.get("EMERGENT_LLM_KEY")
+    from shared.llm import try_resolve_api_key
+
+    api_key = try_resolve_api_key()
     if not api_key:
         return None, None
     try:

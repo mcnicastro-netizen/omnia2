@@ -19,7 +19,6 @@ from typing import Any, Dict, List
 
 logger = logging.getLogger("omnia.legal.validator")
 
-EMERGENT_LLM_KEY = os.environ.get("EMERGENT_LLM_KEY")
 MODEL = "gemini-3-flash-preview"
 CONFIDENCE_THRESHOLD = 0.85
 
@@ -50,7 +49,10 @@ async def validate(answer: str, sources_block: str) -> Dict[str, Any]:
     Defaults to confidence=0.5 + rationale="validator_unavailable" on errors,
     so the user still gets the response but with the cautionary CTA.
     """
-    if not EMERGENT_LLM_KEY:
+    from shared.llm import try_resolve_api_key
+
+    api_key = try_resolve_api_key()
+    if not api_key:
         return {"confidence": 0.5, "unsupported_claims": [], "fabricated_refs": [],
                 "rationale": "validator_no_key"}
 
@@ -63,7 +65,7 @@ async def validate(answer: str, sources_block: str) -> Dict[str, Any]:
     try:
         from shared.llm.chat import LlmChat, UserMessage
         client = LlmChat(
-            api_key=EMERGENT_LLM_KEY,
+            api_key=api_key,
             session_id=f"legal-validator-{abs(hash(answer)) % 10_000_000:07d}",
             system_message=VALIDATOR_PROMPT,
         ).with_model("gemini", MODEL)

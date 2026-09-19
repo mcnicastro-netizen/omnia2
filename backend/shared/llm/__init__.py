@@ -47,7 +47,7 @@ def resolve_api_key(explicit: Optional[str] = None) -> str:
         explicit
         or os.environ.get("GEMINI_API_KEY")
         or os.environ.get("GOOGLE_API_KEY")
-        or os.environ.get("EMERGENT_LLM_KEY")
+        or os.environ.get("EMERGENT_LLM_KEY")  # legacy alias only
         or ""
     ).strip()
     if not key:
@@ -55,6 +55,14 @@ def resolve_api_key(explicit: Optional[str] = None) -> str:
             "No LLM API key. Set GEMINI_API_KEY (preferred) in backend/.env"
         )
     return key
+
+
+def try_resolve_api_key(explicit: Optional[str] = None) -> Optional[str]:
+    """Same resolution order as resolve_api_key, or None if missing."""
+    try:
+        return resolve_api_key(explicit)
+    except LlmNotConfigured:
+        return None
 
 
 def _normalize_model(provider: Optional[str], model: Optional[str]) -> str:

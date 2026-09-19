@@ -35,15 +35,12 @@ router = APIRouter(prefix="/legal", tags=["al-legal"])
 
 
 def _llm_key() -> Optional[str]:
-    return (
-        os.environ.get("GEMINI_API_KEY")
-        or os.environ.get("GOOGLE_API_KEY")
-        or os.environ.get("EMERGENT_LLM_KEY")
-        or ""
-    ).strip() or None
+    from shared.llm import try_resolve_api_key
+
+    return try_resolve_api_key()
 
 
-EMERGENT_LLM_KEY = _llm_key()
+EMERGENT_LLM_KEY = _llm_key()  # nome legacy; valore risolto da Gemini / alias
 MODEL = os.environ.get("GEMINI_MODEL", "gemini-flash-latest")
 TEMPERATURE = 0.2          # D-029: low temp for legal accuracy
 SOFT_RATE_LIMIT = 30       # per-user / per-hour (lower than CRM chat — costlier)

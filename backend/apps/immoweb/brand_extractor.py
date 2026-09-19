@@ -128,7 +128,9 @@ async def _fetch_html(url: str) -> Dict[str, Any]:
 
 
 async def _gemini_brand_profile(summary: Dict[str, Any]) -> Dict[str, Any]:
-    api_key = os.environ.get("EMERGENT_LLM_KEY")
+    from shared.llm import try_resolve_api_key
+
+    api_key = try_resolve_api_key()
     if not api_key:
         raise HTTPException(status_code=503, detail="emergent_llm_key_missing")
     try:

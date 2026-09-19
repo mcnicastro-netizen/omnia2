@@ -39,15 +39,12 @@ router = APIRouter(prefix="/al", tags=["al-agent"])
 
 def _llm_key() -> Optional[str]:
     """Chiave piattaforma OMNIA — HAL/AL in-app è incluso (D-075), senza crediti agenzia."""
-    return (
-        os.environ.get("GEMINI_API_KEY")
-        or os.environ.get("GOOGLE_API_KEY")
-        or os.environ.get("EMERGENT_LLM_KEY")
-        or ""
-    ).strip() or None
+    from shared.llm import try_resolve_api_key
+
+    return try_resolve_api_key()
 
 
-EMERGENT_LLM_KEY = _llm_key()  # nome legacy; valore risolto da Gemini
+EMERGENT_LLM_KEY = _llm_key()  # nome legacy; valore risolto da Gemini / alias
 MODEL = os.environ.get("GEMINI_MODEL", "gemini-flash-latest")
 TEMPERATURE = 0.2  # deterministic for CRM queries
 MAX_TURNS = 30     # cap conversation history per session

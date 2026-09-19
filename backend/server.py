@@ -23,6 +23,7 @@ sys.path.insert(0, str(ROOT_DIR))
 load_dotenv(ROOT_DIR / ".env", override=True)
 
 # M1 bridge: legacy checks look for EMERGENT_LLM_KEY — mirror Gemini key if present
+# (safe alias: old code / env still work; preferred key remains GEMINI_API_KEY)
 if not os.environ.get("EMERGENT_LLM_KEY"):
     _gemini = (os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY") or "").strip()
     if _gemini:
