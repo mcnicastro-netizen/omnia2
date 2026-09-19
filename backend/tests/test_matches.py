@@ -9,7 +9,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")
 
 from apps.immoweb.matching import compute_match, is_searcher, W  # noqa: E402
 
-BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "https://omnia-crm-docs.preview.emergentagent.com").rstrip("/")
+BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "http://127.0.0.1:43121").rstrip("/")
 ADMIN_EMAIL = os.environ["OMNIA_ADMIN_EMAIL"]
 ADMIN_PASSWORD = os.environ["OMNIA_ADMIN_PASSWORD"]
 

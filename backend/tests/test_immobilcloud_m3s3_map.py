@@ -18,7 +18,7 @@ import requests
 
 BASE_URL = (
     os.environ.get("REACT_APP_BACKEND_URL")
-    or "https://omnia-crm-docs.preview.emergentagent.com"
+    or "http://127.0.0.1:43121"
 ).rstrip("/")
 ADMIN_EMAIL = os.environ["OMNIA_ADMIN_EMAIL"]
 ADMIN_PASSWORD = os.environ["OMNIA_ADMIN_PASSWORD"]

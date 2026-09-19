@@ -1,12 +1,12 @@
 """Backend tests for D-FUTURE-07 AI Smart Import Clienti (v1).
-Tests use real Gemini calls (gemini-3-flash via EMERGENT_LLM_KEY).
+Tests use real Gemini calls (gemini-3-flash via GEMINI_API_KEY (legacy EMERGENT alias)).
 """
 import os
 import io
 import pytest
 import requests
 
-BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "https://omnia-crm-docs.preview.emergentagent.com").rstrip("/")
+BASE_URL = os.environ.get("REACT_APP_BACKEND_URL", "http://127.0.0.1:43121").rstrip("/")
 
 ADMIN_EMAIL = os.environ["OMNIA_ADMIN_EMAIL"]
 ADMIN_PASS = os.environ["OMNIA_ADMIN_PASSWORD"]
