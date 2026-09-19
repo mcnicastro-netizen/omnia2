@@ -171,6 +171,7 @@ voci:
     correlati:
       - immobili.impostare-copertina
       - immobili.pubblicare-bozza
+      - settings.spazio-archivio
     domanda_naturale: "Come aggiungo le foto a un immobile?"
     contenuto:
       a_cosa_serve: >
@@ -199,6 +200,11 @@ voci:
           soluzione: >
             Massimo 60 foto per immobile (come sui principali portali).
             Elimina le meno utili o riduci i duplicati.
+        - problema: "Spazio archivio esaurito"
+          soluzione: >
+            Hai finito i GB del piano. In Piano & Crediti guarda la
+            barra Spazio archivio: libera file inutili oppure
+            Aggiungi 100 GB (15 euro/mese). Vedi settings.spazio-archivio.
         - problema: "Caricamento lento"
           soluzione: >
             Foto pesanti + connessione lenta. Preferisci JPEG 1-2 MB.
@@ -217,6 +223,7 @@ voci:
     correlati:
       - immobili.caricare-foto
       - video.cos-e
+      - settings.spazio-archivio
     domanda_naturale: "Come carico un video sull'immobile? Posso mettere video come sui portali?"
     contenuto:
       a_cosa_serve: >
@@ -241,6 +248,11 @@ voci:
         - problema: "Ho raggiunto il limite di video"
           soluzione: >
             Massimo 3 video per immobile. Elimina uno prima di caricarne un altro.
+        - problema: "Spazio archivio esaurito"
+          soluzione: >
+            I video pesano sulla stessa quota di foto e documenti.
+            Libera spazio o Aggiungi 100 GB in Piano & Crediti
+            (vedi settings.spazio-archivio).
       permessi:
         - Titolare, agente, segreteria (come agente)
     screenshot: []
@@ -256,6 +268,7 @@ voci:
       - immobili.caricare-foto
       - immobili.caricare-video
       - immobili.privacy-4-livelli-cosa-sono
+      - settings.spazio-archivio
     domanda_naturale: "Come carico le planimetrie? Posso allegare un PDF della pianta?"
     contenuto:
       a_cosa_serve: >
@@ -280,6 +293,10 @@ voci:
         - problema: "Massimo 5 planimetrie"
           soluzione: >
             Elimina una planimetria prima di caricarne un'altra.
+        - problema: "Spazio archivio esaurito"
+          soluzione: >
+            Conta nella stessa quota archivio. Libera spazio o
+            Aggiungi 100 GB (vedi settings.spazio-archivio).
       permessi:
         - Titolare, agente, segreteria (come agente)
     screenshot: []
@@ -623,6 +640,7 @@ voci:
     correlati:
       - immobili.fascicolo-panoramica
       - immobili.fascicolo-ape
+      - settings.spazio-archivio
     domanda_naturale: "Come carico la visura catastale nel Fascicolo?"
     contenuto:
       a_cosa_serve: >
@@ -649,6 +667,11 @@ voci:
           soluzione: >
             Converti in PDF, JPEG o PNG. Da Word/Pages usa "Salva
             come PDF".
+        - problema: "Spazio archivio esaurito"
+          soluzione: >
+            I documenti del Fascicolo usano la stessa quota di foto
+            e video. In Piano & Crediti libera spazio o Aggiungi
+            100 GB (vedi settings.spazio-archivio).
       permessi:
         - Titolare, agente responsabile, segreteria (come agente)
     screenshot: []

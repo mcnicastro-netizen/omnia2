@@ -155,6 +155,7 @@ Passa il mouse e clicca l'icona ✕ (cestino). L'operazione è **immediata**: as
 - *"Formato non supportato"* → converti in JPEG/PNG/WEBP. Se hai HEIC (foto da iPhone) apri con l'app Foto ed **esporta** come JPEG.
 - *"File troppo grande"* → riduci con Foto (Mac/Windows) o con un servizio come TinyPNG.
 - *"Caricamento lento"* → foto pesanti e connessione lenta. Preferisci JPEG intorno a 1-2 MB per foto (qualità ottima, peso contenuto).
+- *"Spazio archivio esaurito"* → in **Piano & Crediti** vedi la barra dello spazio. A quota piena non puoi caricare altri file: libera spazio oppure **Aggiungi 100 GB (€15/mese)**. Dettagli Cap. 19.
 
 **Chi può farlo**
 - **Titolare · Agente · Segreteria** (come agente): tutti possono caricare, ordinare, eliminare foto degli immobili a cui hanno accesso.

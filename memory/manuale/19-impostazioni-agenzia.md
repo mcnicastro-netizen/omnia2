@@ -1,13 +1,14 @@
 # Capitolo 19 · Impostazioni agenzia
 
-> **Versione**: v1.0 · Feb 2026 · Onestà documentale D-051
+> **Versione**: v1.1 · 19-Set-2026 · D-085 spazio archivio + onestà D-051
 > **Codice coperto**:
 > - `frontend/src/apps/immoweb/SettingsPage.jsx` (358 righe · 5 sezioni form)
 > - `backend/apps/immoweb/agencies.py` (180 righe · GET/PATCH `/agencies/me`)
-> - `backend/shared/models/agency.py` (305 righe · `AgencyInDB`, `AgencyPublic`, `AgencyUpdate`, 5 sotto-schemi)
-> - `frontend/src/apps/immoweb/pages/BillingPage.jsx` (235 righe · piani + credit packages + checkout Stripe)
-> - `backend/apps/billing/routes.py` (473 righe · endpoint billing)
-> - `backend/apps/billing/plans.py` (164 righe · LAUNCH_PLANS Founders + POST_TRACTION_PLANS)
+> - `backend/shared/models/agency.py` (+ `storage_extra_gb` D-085)
+> - `frontend/src/apps/immoweb/pages/BillingPage.jsx` (piani + crediti + **meter spazio** + extra GB)
+> - `backend/apps/billing/routes.py` (+ `/billing/storage/purchase`)
+> - `backend/apps/billing/plans.py` (LAUNCH + STORAGE_ADDONS)
+> - `backend/shared/storage/quota.py` · `apps/immoweb/storage_quota.py` · backup giornaliero
 
 > ⚠️ **Nota D-051 chiave**: la SettingsPage v1 copre **solo 5 sezioni di anagrafica agenzia + modalità sito web**. NON è un pannello impostazioni completo. Molti attributi presenti nello schema `AgencyInDB` (logo, colori, REA, FIAIP, plan_type, credits_mode) **non hanno UI di modifica v1**. Team, API Keys, Domain Vault, Notifiche, Billing sono pagine separate documentate rispettivamente in Cap. 13, Cap. Track B (futuro), Cap. 17, Cap. 18, e questa stessa pagina §19.10.
 

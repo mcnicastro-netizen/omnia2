@@ -21,7 +21,7 @@
     {
       "file": "03-immobili.yaml",
       "voices": 18,
-      "md5": "ea174b146c6dcd302e60ed00907f1512"
+      "md5": "a2c296d57b1bae0be267434b8aec2864"
     },
     {
       "file": "04-clienti.yaml",
@@ -41,7 +41,7 @@
     {
       "file": "07-fascicolo-immobile.yaml",
       "voices": 12,
-      "md5": "ab350f525bfd22b74a72250d8b95bb66"
+      "md5": "97091b8d5e4b0d6905b1dcbfd14813ba"
     },
     {
       "file": "08-sito-web.yaml",

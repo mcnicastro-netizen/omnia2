@@ -1,5 +1,14 @@
 # OMNIA — Changelog
 
+## 2026-09-19 — D-085 polish manuali + HAL errori «spazio esaurito»
+
+**Tipo**: Docs / HAL sync (D-084).
+
+- Cap.3 / Cap.7 / Cap.19: messaggio *Spazio archivio esaurito* + meter Piano & Crediti
+- HAL: errori + correlato `settings.spazio-archivio` su foto / video / planimetrie / fascicolo
+- `hal-index.json` **v0.23-storage-d085** · reindex live `force=true`
+
+---
 ## 2026-09-19 — D-085 Storage quota + backup (ship)
 
 **Tipo**: Feature / Billing / Cap.19 / HAL.

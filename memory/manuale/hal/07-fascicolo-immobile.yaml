@@ -226,6 +226,7 @@ voci:
       - fascicolo.checklist-rogito
       - fascicolo.scaricare-documento
       - fascicolo.eliminare-documento
+      - settings.spazio-archivio
     domanda_naturale: "Come carico un documento nel Fascicolo dell'immobile?"
     contenuto:
       a_cosa_serve: >
@@ -248,6 +249,11 @@ voci:
             Il file supera il limite. Riduci il PDF (scansione 200 dpi
             invece che 600, o comprimi con iLovePDF/Smallpdf) e
             ricarica.
+        - problema: "Spazio archivio esaurito"
+          soluzione: >
+            Hai finito i GB del piano. Vai in Piano & Crediti, libera
+            spazio o Aggiungi 100 GB (15 euro/mese). Vedi
+            settings.spazio-archivio.
         - problema: "storage_upload_failed"
           soluzione: >
             L'Object Storage non ha risposto. Riprova dopo qualche

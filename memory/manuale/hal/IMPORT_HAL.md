@@ -1,6 +1,6 @@
 # 📚 HAL Knowledge — Import & Cold Start (v0.18)
 
-**Ultimo aggiornamento**: 19-Sep-2026 (Cestino 30gg · Cap.20 Ruota · Cap.24 Real Estate Spa · cleanup Emergent · hal-index v0.23)
+**Ultimo aggiornamento**: 19-Sep-2026 (D-085 storage 30/100/300 · Cestino · Cap.20 Ruota · Cap.24 · cleanup Emergent · hal-index v0.23)
 **Corpus**: YAML in `memory/manuale/hal/*.yaml` (Cap. 1–27) · MD esclusi dal RAG ingest
 **Motore**: `hal_knowledge.py` · reindex: `POST /api/app/hal/knowledge/reindex?force=true` (super_admin)
 **Regola Founder D-084**: ogni ship aggiorna MD+YAML nello stesso giro — vedi `memory/MANUAL_SYNC.md`.

@@ -1,6 +1,6 @@
 # Prossima sessione — programma passi
 
-**Aggiornato**: 19 Settembre 2026 — Cestino 30gg · Real Estate Spa + Ruota API key · Cleanup Emergent · HAL reindex
+**Aggiornato**: 19 Settembre 2026 — D-085 storage + polish HAL · Cestino · Real Estate Spa · Cleanup Emergent
 **Stato base**: Sprint 1→4 **CONCLUSO**. Stress: `PLATFORM_STRESS_REPORT.md` + `STRESS_REPORT.md`.  
 **Preprod gate**: `memory/PREPROD_GATE_REPORT.md` (PASS required — no vendor burn).  
 **Repo ufficiale**: https://github.com/mcnicastro-netizen/omnia2 ✅ (Emergent `OMNIA` = backup, non cancellare)  
@@ -20,6 +20,7 @@
 8. ✅ **19-Set HAL live reindex** `force=true` (super_admin): aggiornato con Cestino (v0.22)
 8b. ✅ **19-Set Gruppo Real Estate Spa** + API key + sim Ruota PASS · Cap.20/24 + HAL `api-keys.ruota-chiave-smarrita` · index **v0.21-gruppi-rotate**
 8c. ✅ **19-Set Cestino 30gg** immobili/clienti · `/app/trash` · Cap.3/4 semplici · HAL `cestino.ripristinare` · index **v0.22-cestino**
+8d. ✅ **19-Set D-085** quota 30/100/300 + polish errori «spazio esaurito» Cap.3/7/19 + HAL · reindex **846** chunk / **342** voci
 9. Founder: **«vai»** su Top 5 A-028 (o ID fuori programma)
 10. **D-084**: ogni ship aggiorna manuale+YAML+index (sempre 100%)
 11. Preprod: `python scripts/preprod_confidence_gate.py` prima di go-live / ship rischiosi
@@ -51,7 +52,7 @@
 | **Social Publisher 6 canali (WA/WABA/GBP)** | ✅ (18-Set) Cap.15 + HAL |
 | **Planimetrie JPEG/PDF su immobile** | ✅ (18-Set) Cap.3 + HAL |
 | **Portali wizard UX + i18n `portali`** | ✅ (18-Set) Cap.6 + HAL |
-| **HAL Mongo reindex live (force)** | ✅ (19-Set) v0.22 Cestino |
+| **HAL Mongo reindex live (force)** | ✅ (19-Set) v0.23 D-085 polish |
 | **Gruppo Real Estate Spa + Ruota API key** | ✅ (19-Set) sim PASS · Cap.20/24 · smoke Ruota top-1 |
 | **Cestino 30gg immobili/clienti** | ✅ (19-Set) `/app/trash` · Cap.3/4 · soft-delete |
 | **D-085 Storage quota + backup** | ✅ (19-Set) 30/100/300 + €15 · meter · blocco · backup cron |
@@ -86,8 +87,7 @@
 | — | Intake annuncio esterno (Nord D) | Solo dopo ok Founder + scope legale |
 | — | A-026 path Kling agenzia | Approfondire UX (docs Cap.23 già allineati) |
 | — | A-014 Stripe live | post-Vercel |
-| — | **D-085 ship** metering + blocco upload + backup + extra €15 | solo con «vai»; validare testo con legale |
-| — | Backup DB automatico (mongodump) | Rete di sicurezza infra — dopo Cestino ✅ |
+| — | Seed Stripe `storage_100gb_monthly` + contratto/DPA fine abbonamento | residuo D-085 · con legale |
 | — | Go-live env flags | readiness WARN locali → set su Vercel |
 
 Report: `memory/GESTIONALE_TOOLS_QC_REPORT.md` · `memory/GESTIONALE_VALUATOR_ACCURACY_SAMPLE.md` · `memory/PREPROD_GATE_REPORT.md` · `memory/PLATFORM_STRESS_REPORT.md` · `memory/STRESS_REPORT.md` · `memory/PRODUCT_NORTHSTAR_B2C.md`

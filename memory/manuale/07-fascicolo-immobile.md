@@ -137,6 +137,7 @@ Per pubblicare in regola sui portali serve almeno la classe dichiarata; per il *
 | Messaggio | Perché succede | Cosa fare |
 |-----------|----------------|-----------|
 | *Max 8 MB* | File più pesante del limite | Riduci il PDF (scansione a 200 dpi invece che 600, o comprimi con iLovePDF/Smallpdf) |
+| *Spazio archivio esaurito* | Hai finito i GB del piano | Vai in **Piano & Crediti**, libera spazio o **Aggiungi 100 GB (€15/mese)** (Cap. 19) |
 | *Tipo documento non valido* | Chiave `doc_type` non prevista | Non capita da UI (il bottone imposta la chiave giusta). Se accade contatta HAL / assistenza |
 | *storage_upload_failed* | Object Storage transitoriamente non disponibile | Riprova dopo qualche secondo. Se persiste, segnala |
 | *Documento non trovato* (in download) | Il file è stato eliminato o l'ID URL è vecchio | Ricarica la pagina Fascicolo |
