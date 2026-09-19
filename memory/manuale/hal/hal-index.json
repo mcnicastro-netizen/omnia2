@@ -1,5 +1,5 @@
 {
-  "version": "0.20-gestionale-18set",
+  "version": "0.21-gruppi-rotate",
   "updated": "2026-09-19",
   "voices_total": 340,
   "source_files": [
@@ -202,5 +202,5 @@
       "md5": "5e88370cdf2c070dc30c7c3f036b85db"
     }
   ],
-  "notes": "Fingerprints regenerated from YAML on disk. Live RAG reindex: POST /api/app/hal/knowledge/reindex?force=true (super_admin). 2026-09-18 gestionale: Cap.15 social 6 canali · Cap.3 planimetrie · Cap.6 wizard slug/categoria/Compliance · Cap.21 FOI/PDF."
+  "notes": "Fingerprints regenerated from YAML on disk. Live RAG reindex: POST /api/app/hal/knowledge/reindex?force=true (super_admin). 2026-09-19: Cap.20 Ruota API key · Cap.24 Real Estate Spa · cleanup Emergent · Cap.15 social · Cap.3 planimetrie."
 }

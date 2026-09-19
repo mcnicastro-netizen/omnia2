@@ -8,6 +8,7 @@
 - API key Track B + simulazione smarrimento → **Ruota**: archivi intatti (2205 prop / 10004 clienti), crediti 500, feed 2200
 - Fix `agency_inactive` su `is_active` null · fix `BranchSummary` plan_type legacy
 - Cap.20 §20.6bis Ruota · Cap.24 v1.1 ruoli Founder vs admin · HAL `api-keys.ruota-chiave-smarrita`
+- `hal-index.json` **v0.21-gruppi-rotate** · reindex live **843** chunk / **340** voci · smoke top-1 Ruota OK
 - Report: `memory/reports/apikey_rotate_sim_2026-09-19.json`
 
 ---

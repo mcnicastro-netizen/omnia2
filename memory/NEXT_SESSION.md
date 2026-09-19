@@ -17,8 +17,8 @@
 5. ✅ **Valutatore mini-sample** → `memory/GESTIONALE_VALUATOR_ACCURACY_SAMPLE.md` (**PASS 20 / FAIL 0** — non è prova OMI ~27k)
 6. ✅ **Cap. 21 + HAL + `hal-index.json`** allineati 100% (PDF white-label + roll-forward FOI/trend)
 7. ✅ **18-Set gestionale**: Social 6 canali · planimetrie Cap.3 · Portali wizard/i18n/Compliance · `hal-index` **v0.20** (339 voci)
-8. ✅ **19-Set HAL live reindex** `force=true` (super_admin): **842** chunk · **339** voci YAML · smoke planimetrie/social/wizard OK
-8b. ✅ **19-Set Gruppo Real Estate Spa** + API key + sim Ruota PASS · Cap.20/24 + HAL aggiornati
+8. ✅ **19-Set HAL live reindex** `force=true` (super_admin): **843** chunk · **340** voci YAML · smoke planimetrie/social/wizard + Ruota OK
+8b. ✅ **19-Set Gruppo Real Estate Spa** + API key + sim Ruota PASS · Cap.20/24 + HAL `api-keys.ruota-chiave-smarrita` · index **v0.21-gruppi-rotate**
 9. Founder: **«vai»** su Top 5 A-028 (o ID fuori programma)
 10. **D-084**: ogni ship aggiorna manuale+YAML+index (sempre 100%)
 11. Preprod: `python scripts/preprod_confidence_gate.py` prima di go-live / ship rischiosi
@@ -47,8 +47,8 @@
 | **Social Publisher 6 canali (WA/WABA/GBP)** | ✅ (18-Set) Cap.15 + HAL |
 | **Planimetrie JPEG/PDF su immobile** | ✅ (18-Set) Cap.3 + HAL |
 | **Portali wizard UX + i18n `portali`** | ✅ (18-Set) Cap.6 + HAL |
-| **HAL Mongo reindex live (force)** | ✅ (19-Set) 842 chunk · 339 voci |
-| **Gruppo Real Estate Spa + Ruota API key** | ✅ (19-Set) sim PASS · Cap.20/24 |
+| **HAL Mongo reindex live (force)** | ✅ (19-Set) 843 chunk · 340 voci · v0.21 |
+| **Gruppo Real Estate Spa + Ruota API key** | ✅ (19-Set) sim PASS · Cap.20/24 · smoke Ruota top-1 |
 | Home B2C visual + SSR preview | ✅ (16-Set) |
 | Layout altre pagine B2C | ✅ (17-Set) |
 | Scout v1 + fiducia + voce lister | ✅ |

@@ -299,6 +299,7 @@ Prima di dichiarare il cold start "attivo", eseguire manualmente queste 5 query 
 1. **"Come emetto una nuova API key OMNIA? Posso rileggerla dopo?"** → top-1 atteso `20-api-keys-integrazioni.yaml::api-keys.emissione-show-once`
 2. **"Quanto costa un credito Track B? È diverso dai piani B2B?"** → top-1 atteso `20-api-keys-integrazioni.yaml::api-keys.pricing-track-b`
 3. **"Quali endpoint /api/v1 esistono? Come autentico?"** → top-1 atteso `20-api-keys-integrazioni.yaml::api-keys.api-v1-endpoints`
+4. **"Admin agenzia ha smarrito la API key: cosa fa il super admin? Ruotando perdo immobili?"** → top-1 atteso `20-api-keys-integrazioni.yaml::api-keys.ruota-chiave-smarrita` ✅ (19-Set sim ≥ 0.37)
 
 Criteri smoke: top-1 chunk_id atteso OR **stesso file** `20-api-keys-integrazioni.yaml` · sim ≥ 0.08.
 
