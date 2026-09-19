@@ -1376,6 +1376,6 @@ Registro di tutte le decisioni di business e tecniche prese durante il progetto.
   6. **Cestino 30gg** resta separato (recupero self-service da delete accidentale).
   7. Linguaggio: “backup automatico, retention 30 giorni” — mai “cassaforte / nessun dato perso / backup illimitato”.
 - **Razionale**: costo nostro ~€0,04/GB/mese (ops+bak versionato) → quote ~2–4% del canone; extra ~4× sul costo. Allineato ai cloud migliori senza passività Agency video-heavy.
-- **Stato**: ✅ CONFERMATA (policy) — implementazione codice/UI/billing solo con «vai» Founder
-- **Aperti per lo ship**: metering storage reale, blocco upload, add-on Stripe, testo listino/contratto/DPA (con legale), fine abbonamento sui backup
+- **Stato**: ✅ APPLICATA (codice 19-Set-2026) — meter UI, blocco upload, extra €15, backup cron
+- **Residui**: seed Stripe price `storage_100gb_monthly` in live; testo contratto/DPA fine abbonamento con legale
 

@@ -61,6 +61,7 @@ class PropertyPhoto(OmniaBaseModel):
     caption: Optional[str] = None
     order: int = 0
     is_cover: bool = False
+    size_bytes: Optional[int] = None
 
 
 class PropertyVideo(OmniaBaseModel):

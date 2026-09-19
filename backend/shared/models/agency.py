@@ -101,6 +101,8 @@ class AgencyInDB(TimestampedModel):
     owner_id: str  # user_id of the agency_admin who created it
     is_active: bool = True
     onboarding_completed: bool = False
+    # D-085 — extra archive GB purchased (+100 packs)
+    storage_extra_gb: int = 0
     # M2.5.1 — Franchising / Multi-branch layer (D-041)
     group_id: Optional[str] = None                # attached to an AgencyGroup (None = standalone)
     branch_code: Optional[str] = Field(default=None, max_length=30)  # internal code (e.g. "MI-01")

@@ -18,6 +18,8 @@ from pydantic import BaseModel, Field
 from shared.auth.dependencies import get_current_user
 from shared.db.connection import Database
 from shared.storage import put_object, get_object, ObjStoreError
+from shared.storage.quota import assert_can_upload
+from shared.auth.tenant import arequire_agency as _require_agency
 
 logger = logging.getLogger("omnia.fascicolo")
 router = APIRouter(prefix="/fascicolo", tags=["fascicolo"])
@@ -242,6 +244,8 @@ async def upload_document_multipart(
         raise HTTPException(413, f"Documento troppo grande (max {MAX_DOC_MB} MB)")
 
     await _get_property(db, user, property_id, {"_id": 1})
+    agency_id = await _require_agency(user)
+    await assert_can_upload(db, agency_id, len(raw))
 
     doc_id = str(uuid4())
     mime = file.content_type or "application/octet-stream"

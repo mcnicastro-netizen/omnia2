@@ -129,6 +129,25 @@ CREDIT_PACKAGES: List[CreditPackage] = [
     CreditPackage(key="pkg_20000", credits=20000, price_eur=1000.0),
 ]
 
+
+class StorageAddon(BaseModel):
+    """D-085 — extra archive storage (recurring monthly)."""
+    key: str
+    gb: int
+    price_eur: float
+
+
+STORAGE_ADDONS: List[StorageAddon] = [
+    StorageAddon(key="storage_100gb", gb=100, price_eur=15.0),
+]
+
+# Included media quota GB by commercial tier (D-085)
+STORAGE_INCLUDED_GB = {
+    "starter": 30,
+    "pro": 100,
+    "agency": 300,
+}
+
 # --- Credit consumption catalog ---------------------------------------
 # Listino Founder — 5 Agosto 2026 · Rimossi: planimetria catastale,
 # ispezione ipotecaria (margini troppo bassi in v1).

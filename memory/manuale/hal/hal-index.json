@@ -1,7 +1,7 @@
 {
-  "version": "0.22-cestino",
+  "version": "0.23-storage-d085",
   "updated": "2026-09-19",
-  "voices_total": 341,
+  "voices_total": 342,
   "source_files": [
     {
       "file": "00-api-codice.yaml",
@@ -100,8 +100,8 @@
     },
     {
       "file": "19-impostazioni-agenzia.yaml",
-      "voices": 14,
-      "md5": "5c2d44823b6eb9061622a88a87c31564"
+      "voices": 15,
+      "md5": "1eab4c24d9a910ee841e568abfc5fb6d"
     },
     {
       "file": "20-api-keys-integrazioni.yaml",
@@ -202,5 +202,5 @@
       "md5": "5e88370cdf2c070dc30c7c3f036b85db"
     }
   ],
-  "notes": "Fingerprints regenerated from YAML on disk. Live RAG reindex: POST /api/app/hal/knowledge/reindex?force=true (super_admin). 2026-09-19: Cestino 30gg · Cap.20 Ruota · Cap.24 Real Estate Spa · cleanup Emergent · Cap.15 social · Cap.3 planimetrie."
+  "notes": "Fingerprints regenerated from YAML on disk. Live RAG reindex: POST /api/app/hal/knowledge/reindex?force=true (super_admin). 2026-09-19: D-085 storage quota · Cestino · Cap.20 Ruota · cleanup Emergent · Cap.15 social · Cap.3 planimetrie."
 }

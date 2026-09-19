@@ -9,6 +9,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from shared.auth.dependencies import get_current_user
 from apps.immocloud.saved_searches import run_all_active_saved_searches
 from apps.immoweb.trash import run_trash_purge
+from apps.immoweb.backup_job import run_daily_backup
 
 router = APIRouter(prefix="/cron", tags=["cron"])
 
@@ -29,3 +30,11 @@ async def cron_purge_trash(user: dict = Depends(get_current_user)):
     if user.get("role") not in ALLOWED_ROLES:
         raise HTTPException(status_code=403, detail="cron_forbidden")
     return await run_trash_purge()
+
+
+@router.post("/backup/daily")
+async def cron_daily_backup(user: dict = Depends(get_current_user)):
+    """Backup giornaliero archivi (DB + media locali), retention 30 gg — D-085."""
+    if user.get("role") not in ALLOWED_ROLES:
+        raise HTTPException(status_code=403, detail="cron_forbidden")
+    return await run_daily_backup()

@@ -31,6 +31,7 @@ from shared.importers.vendor_map_legacy_a import detect_and_parse as detect_vend
 from shared.utils.net_guard import assert_public_url
 from apps.immocloud.geocoding import schedule_geocode
 from shared.db.trash import soft_delete_fields, with_not_trashed
+from shared.storage.quota import assert_can_upload
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/properties", tags=["properties"])
@@ -362,6 +363,8 @@ async def upload_property_photo(
     if not data:
         raise HTTPException(status_code=400, detail="empty_file")
 
+    await assert_can_upload(db, agency_id, len(data))
+
     ext = {"image/jpeg": "jpg", "image/png": "png", "image/webp": "webp"}[ct]
     photo_id = str(uuid4())
     storage_path = f"omnia/properties/{prop_id}/{photo_id}.{ext}"
@@ -390,6 +393,7 @@ async def upload_property_photo(
         "caption": None,
         "order": len(photos),
         "is_cover": bool(is_cover) or not photos,
+        "size_bytes": len(data),
     }
     photos.append(new_photo)
     await db.properties.update_one(
@@ -410,6 +414,7 @@ async def upload_photo_tmp(
     to embed in the `photos` array on save.
     """
     agency_id = await _require_agency(user)
+    db = Database.get()
     ct = (file.content_type or "").lower()
     if ct not in _ALLOWED_PHOTO_MIME:
         raise HTTPException(status_code=415, detail="unsupported_media_type")
@@ -419,6 +424,8 @@ async def upload_photo_tmp(
     if not data:
         raise HTTPException(status_code=400, detail="empty_file")
 
+    await assert_can_upload(db, agency_id, len(data))
+
     ext = {"image/jpeg": "jpg", "image/png": "png", "image/webp": "webp"}[ct]
     photo_id = str(uuid4())
     storage_path = f"omnia/agencies/{agency_id}/photos/{photo_id}.{ext}"
@@ -427,7 +434,7 @@ async def upload_photo_tmp(
     except ObjStoreError as e:
         logger.exception("tmp photo upload failed agency=%s: %s", agency_id, e)
         raise HTTPException(status_code=502, detail="storage_upload_failed") from e
-    return {"id": photo_id, "url": f"/api/media/{storage_path}"}
+    return {"id": photo_id, "url": f"/api/media/{storage_path}", "size_bytes": len(data)}
 
 
 # -------------------- VIDEOS: UPLOAD FILE --------------------
@@ -494,6 +501,8 @@ async def upload_property_video(
             },
         )
 
+    await assert_can_upload(db, agency_id, len(data))
+
     video_id = str(uuid4())
     ext = _video_ext(ct)
     storage_path = f"omnia/properties/{prop_id}/videos/{video_id}.{ext}"
@@ -526,6 +535,7 @@ async def upload_video_tmp(
 ):
     """Upload a listing video before the property exists (create mode)."""
     agency_id = await _require_agency(user)
+    db = Database.get()
     ct = (file.content_type or "").lower()
     if ct not in _ALLOWED_VIDEO_MIME:
         raise HTTPException(status_code=415, detail="unsupported_media_type")
@@ -534,6 +544,8 @@ async def upload_video_tmp(
         raise HTTPException(status_code=413, detail="file_too_large")
     if not data:
         raise HTTPException(status_code=400, detail="empty_file")
+
+    await assert_can_upload(db, agency_id, len(data))
 
     video_id = str(uuid4())
     ext = _video_ext(ct)
@@ -600,6 +612,7 @@ async def upload_floor_plan_tmp(
 ):
     """Upload a floor plan (JPEG/PNG/WebP/PDF) before the property exists."""
     agency_id = await _require_agency(user)
+    db = Database.get()
     ct = (file.content_type or "").lower()
     # Some browsers send empty/octet-stream for PDF — sniff by filename
     name = (file.filename or "").lower()
@@ -619,6 +632,8 @@ async def upload_floor_plan_tmp(
         raise HTTPException(status_code=413, detail="file_too_large")
     if not data:
         raise HTTPException(status_code=400, detail="empty_file")
+
+    await assert_can_upload(db, agency_id, len(data))
 
     plan_id = str(uuid4())
     ext = _floor_plan_ext(ct)

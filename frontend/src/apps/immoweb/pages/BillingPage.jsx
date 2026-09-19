@@ -6,13 +6,14 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 
 /**
- * OMNIA — Settings ▸ Billing (M4.S3/S4)
+ * OMNIA — Settings ▸ Billing (M4.S3/S4) + D-085 storage meter
  *
  * D-080: demo guidata prima dell'abbonamento.
  * CTA primaria = Richiedi demo; checkout solo dopo conferma demo (o piano già attivo).
  */
 export default function BillingPage() {
   const [state, setState] = useState({ loading: true, data: null, sub: null });
+  const [storage, setStorage] = useState(null);
   const [billingCycle, setBillingCycle] = useState("monthly");
   const [busy, setBusy] = useState(false);
   const [demoDone, setDemoDone] = useState(() => {
@@ -36,6 +37,12 @@ export default function BillingPage() {
         console.error(e);
         setState({ loading: false, data: null, sub: null });
       }
+      try {
+        const { data: st } = await api.get("/app/storage/usage");
+        setStorage(st);
+      } catch (err) {
+        console.error(err);
+      }
     })();
   }, []);
 
@@ -56,6 +63,10 @@ export default function BillingPage() {
             api.get("/billing/subscription"),
           ]);
           setState((s) => ({ ...s, sub }));
+          try {
+            const { data: st } = await api.get("/app/storage/usage");
+            setStorage(st);
+          } catch (_) { /* noop */ }
         } else if (data.payment_status === "failed") {
           toast.error("Pagamento fallito — controlla la carta o contattaci.");
         } else {
@@ -128,6 +139,31 @@ export default function BillingPage() {
     }
   };
 
+  const buyStorage = async () => {
+    setBusy(true);
+    try {
+      const { data } = await api.post("/billing/storage/purchase");
+      if (data.checkout_url) {
+        window.location.href = data.checkout_url;
+        return;
+      }
+      if (data.stripe_required) {
+        const email = data.demo_contact_email || "mcnicastro@gmail.com";
+        const subject = encodeURIComponent("OMNIA — spazio archivio extra +100 GB");
+        const body = encodeURIComponent(
+          `Ciao,\n\nvorrei aggiungere ${data.addon?.gb || 100} GB di archivio (€${data.addon?.price_eur || 15}/mese) alla mia agenzia.\n\nAgenzia / email account:\n`
+        );
+        window.location.href = `mailto:${email}?subject=${subject}&body=${body}`;
+        toast.message(data.message || "Contatta il supporto per aggiungere spazio.");
+      }
+    } catch (e) {
+      const d = e?.response?.data?.detail;
+      toast.error(typeof d === "string" ? d : d?.message || "Errore acquisto spazio");
+    } finally {
+      setBusy(false);
+    }
+  };
+
   const openPortal = async () => {
     setBusy(true);
     try {
@@ -185,7 +221,7 @@ export default function BillingPage() {
           </div>
         )}
 
-        <div className="grid md:grid-cols-2 gap-4 mb-10">
+        <div className="grid md:grid-cols-3 gap-4 mb-10">
           <div className="border border-stone-200 bg-white p-6">
             <div className="text-xs uppercase tracking-widest text-stone-500 mb-1">Piano attuale</div>
             <div className="text-2xl font-serif text-[#0B1E3F]" data-testid="current-plan">
@@ -214,6 +250,42 @@ export default function BillingPage() {
             <div className="text-sm text-stone-500 mt-1">
               Consumati per valutatore, staging, video, ecc.
             </div>
+          </div>
+          <div
+            className={`border bg-white p-6 ${
+              storage?.full ? "border-rose-300" : storage?.warn_80 ? "border-amber-300" : "border-stone-200"
+            }`}
+            data-testid="storage-meter"
+          >
+            <div className="text-xs uppercase tracking-widest text-stone-500 mb-1">Spazio archivio</div>
+            <div className="text-2xl font-serif text-[#0B1E3F]">
+              {storage ? `${storage.used_gb} / ${storage.quota_gb} GB` : "—"}
+            </div>
+            <div className="mt-3 h-2 w-full bg-stone-100 rounded overflow-hidden">
+              <div
+                className={`h-full ${
+                  storage?.full ? "bg-rose-600" : storage?.warn_90 ? "bg-amber-500" : storage?.warn_80 ? "bg-amber-400" : "bg-emerald-700"
+                }`}
+                style={{ width: `${Math.min(100, storage?.percent_used || 0)}%` }}
+              />
+            </div>
+            <p className="text-sm text-stone-500 mt-2">
+              Foto, documenti e video. Backup automatico incluso (30 giorni).
+            </p>
+            {storage?.full && (
+              <p className="text-sm text-rose-700 mt-2" data-testid="storage-full-msg">
+                Spazio esaurito: non puoi caricare nuovi file finché non liberi spazio o aggiungi GB.
+              </p>
+            )}
+            <Button
+              className="mt-4 bg-[#0B1E3F] hover:bg-stone-800 text-white"
+              size="sm"
+              onClick={buyStorage}
+              disabled={busy}
+              data-testid="buy-storage-btn"
+            >
+              Aggiungi 100 GB (€15/mese)
+            </Button>
           </div>
         </div>
 

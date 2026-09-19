@@ -200,15 +200,29 @@ Il titolare **non ha un sito** e vuole che OMNIA gli generi un portale con templ
 - `post_traction` → `POST_TRACTION_PLANS`: Starter €79/mese, Pro €179/mese, Agency €399/mese
 
 **Piano Founders (LAUNCH)** — D-080:
-| Tier | Prezzo mese | Prezzo anno (−1 mese) | Max agenti | Max immobili | Crediti/mese |
-|------|:-----------:|:-----------:|:----------:|:------------:|:------------:|
-| starter | €49 | €539 | 3 | 30 | 120 |
-| pro | €99 | €1.089 | 10 | 200 | 1200 |
-| agency | €299 | €3.289 | ∞ | ∞ | 3600 |
+| Tier | Prezzo mese | Prezzo anno (−1 mese) | Max agenti | Max immobili | Crediti/mese | Spazio archivio |
+|------|:-----------:|:-----------:|:----------:|:------------:|:------------:|:---------------:|
+| starter | €49 | €539 | 3 | 30 | 120 | **30 GB** |
+| pro | €99 | €1.089 | 10 | 200 | 1200 | **100 GB** |
+| agency | €299 | €3.289 | ∞ | ∞ | 3600 | **300 GB** |
 
 **Onboarding**: demo guidata → abbonamento (niente trial self-serve). Enterprise fuori catalogo.
 
 **Bottone "Attiva"** → `POST /billing/checkout` con `{plan_tier, billing_cycle: monthly|yearly}` → redirect a `data.checkout_url` (Stripe hosted checkout).
+
+### 19.10.2bis · Spazio archivio (foto, documenti, video) · D-085
+
+Nella stessa pagina **Piano & Crediti** vedi anche il riquadro **Spazio archivio**:
+
+- Barra di utilizzo (es. *12 / 100 GB*).
+- Cosa conta: **foto, documenti del fascicolo, planimetrie e video**.
+- Il **backup automatico** (copie di sicurezza per 30 giorni) protegge ciò che sta dentro questa quota. Il ripristino in caso di guaio grave lo fa il supporto OMNIA.
+- **Agency “immobili illimitati” non significa spazio illimitato.**
+- Avvisi quando sei intorno all’80% e al 90%.
+- A **100%**: non puoi caricare nuovi file. I file già presenti restano. Usa **Aggiungi 100 GB (€15/mese)** oppure libera spazio.
+- Extra: pacchetti da **+100 GB a €15/mese** (bottone nella stessa scheda).
+
+Il **Cestino** (menu a sinistra) è un’altra cosa: serve se hai eliminato per errore un immobile o un cliente (recupero entro 30 giorni da soli).
 
 ### 19.10.3 · Sezione credit packages (top-up)
 

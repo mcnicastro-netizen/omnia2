@@ -19,6 +19,7 @@ from shared.db.connection import Database
 
 from apps.billing.plans import (
     get_active_catalog, get_plan, CREDIT_PACKAGES, CREDIT_COSTS,
+    STORAGE_ADDONS, STORAGE_INCLUDED_GB,
 )
 from apps.billing.models import (
     CheckoutSessionRequest, CreditPurchaseRequest,
@@ -65,6 +66,8 @@ async def list_plans():
     return {
         "plans": [p.model_dump() for p in catalog.values()],
         "credit_packages": [pkg.model_dump() for pkg in CREDIT_PACKAGES],
+        "storage_addons": [a.model_dump() for a in STORAGE_ADDONS],
+        "storage_included_gb": STORAGE_INCLUDED_GB,
         "credit_costs": CREDIT_COSTS,
         "trial_days": 0,
         "onboarding": "guided_demo",
@@ -219,6 +222,80 @@ async def buy_credits(
     return {"checkout_url": session.url, "session_id": session.id}
 
 
+@router.post("/storage/purchase")
+async def buy_storage(
+    request: Request,
+    user: dict = Depends(require_roles("super_admin", "agency_admin", "group_admin")),
+    package_key: str = "storage_100gb",
+):
+    """Buy +100 GB archive storage (D-085). Recurring monthly when Stripe is live."""
+    addon = next((a for a in STORAGE_ADDONS if a.key == package_key), None)
+    if not addon:
+        raise HTTPException(status_code=400, detail="unknown_storage_addon")
+
+    agency_ids = user.get("agency_ids") or []
+    if not agency_ids:
+        raise HTTPException(status_code=400, detail="no_agency")
+    agency_id = agency_ids[0]
+    db = Database.get()
+    now = datetime.now(timezone.utc).isoformat()
+
+    # Stripe off → support path (no silent free grant)
+    if not _is_enabled():
+        return {
+            "ok": False,
+            "stripe_required": True,
+            "message": (
+                f"Per aggiungere {addon.gb} GB (€{addon.price_eur:.0f}/mese) "
+                "completa il pagamento da Piano & Crediti quando Stripe è attivo, "
+                "oppure contatta il supporto OMNIA."
+            ),
+            "addon": addon.model_dump(),
+            "demo_contact_email": (os.environ.get("DEMO_CONTACT_EMAIL") or "mcnicastro@gmail.com").strip(),
+        }
+
+    lookup = f"{addon.key}_monthly"
+    prices = stripe.Price.list(lookup_keys=[lookup, addon.key], active=True, limit=2).data
+    if not prices:
+        raise HTTPException(status_code=503, detail=f"price_not_found:{lookup}")
+    price = prices[0]
+    origin = str(request.base_url)
+    try:
+        session = stripe.checkout.Session.create(
+            line_items=[{"price": price.id, "quantity": 1}],
+            mode="subscription",
+            success_url=_build_success_url(origin),
+            cancel_url=_build_cancel_url(origin),
+            customer_email=user["email"],
+            metadata={
+                "agency_id": agency_id,
+                "user_id": user["id"],
+                "package_key": addon.key,
+                "storage_gb": str(addon.gb),
+                "kind": "storage_addon",
+            },
+        )
+    except stripe.error.StripeError as e:
+        logger.exception("stripe checkout storage error: %s", e)
+        raise HTTPException(status_code=502, detail={"stripe_error": str(e)})
+
+    await db.payment_transactions.insert_one({
+        "session_id": session.id,
+        "agency_id": agency_id,
+        "user_id": user["id"],
+        "lookup_key": addon.key,
+        "amount": addon.price_eur,
+        "currency": price.currency,
+        "kind": "storage_addon",
+        "storage_gb": addon.gb,
+        "status": "initiated",
+        "payment_status": "pending",
+        "created_at": now,
+        "updated_at": now,
+    })
+    return {"checkout_url": session.url, "session_id": session.id}
+
+
 @router.get("/status/{session_id}")
 async def get_session_status(session_id: str, user: dict = Depends(get_current_user)):
     """Frontend polling on success page. Auth-bound (H15): only the initiating
@@ -353,6 +430,16 @@ async def _apply_session_side_effects(session_id: str) -> None:
             upsert=True,
         )
         logger.info("Subscription applied: agency=%s tier=%s", agency_id, tx.get("tier"))
+
+    elif tx["kind"] == "storage_addon":
+        agency_id = tx.get("agency_id")
+        gb = int(tx.get("storage_gb") or 100)
+        if agency_id and gb > 0:
+            await db.agencies.update_one(
+                {"id": agency_id},
+                {"$inc": {"storage_extra_gb": gb}, "$set": {"updated_at": now}},
+            )
+            logger.info("Storage addon applied: agency=%s +%d GB", agency_id, gb)
 
     await db.payment_transactions.update_one(
         {"session_id": session_id},

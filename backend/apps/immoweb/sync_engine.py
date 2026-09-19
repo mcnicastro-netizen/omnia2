@@ -296,10 +296,27 @@ def start_scheduler() -> None:
         max_instances=1,
         coalesce=True,
     )
+
+    async def _daily_backup_tick():
+        from apps.immoweb.backup_job import run_daily_backup
+        try:
+            report = await run_daily_backup()
+            logger.info("daily backup ok=%s day=%s", report.get("ok"), report.get("day"))
+        except Exception as e:  # noqa: BLE001
+            logger.warning("daily backup failed: %s", e)
+
+    sched.add_job(
+        _daily_backup_tick,
+        CronTrigger(hour=3, minute=15),
+        id="archive_daily_backup",
+        replace_existing=True,
+        max_instances=1,
+        coalesce=True,
+    )
     sched.start()
     _scheduler = sched
     logger.info(
-        "Publishing scheduler started (daily sync %02d:%02d UTC + saved-searches every 5m)",
+        "Publishing scheduler started (daily sync %02d:%02d UTC + saved-searches every 5m + backup 03:15 UTC)",
         DAILY_SYNC_HOUR_UTC, DAILY_SYNC_MINUTE_UTC,
     )
 

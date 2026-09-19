@@ -635,3 +635,43 @@ voci:
       permessi:
         - "N/A · documentativo"
     screenshot: []
+
+  - id: settings.spazio-archivio
+    titolo: Spazio archivio · quota GB · extra €15 · blocco upload
+    modulo: Impostazioni
+    widget: null
+    pubblico: [titolare]
+    livello: base
+    tags: [storage, spazio, backup, foto, video, quota, billing, d-085]
+    correlati: [settings.billing-pagina-separata, cestino.ripristinare]
+    domanda_naturale: "Quanto spazio ho per le foto? Cosa succede se finisco i GB? Come aggiungo spazio?"
+    contenuto:
+      a_cosa_serve: >
+        Capire quanto spazio archivio hai (foto, documenti, video),
+        come funziona il backup e come comprare GB extra.
+      quando_si_usa: >
+        Quando carichi molti media o vedi l'avviso di spazio quasi pieno.
+      passi:
+        - "Apri Piano & Crediti dalla barra a sinistra."
+        - "Guarda il riquadro Spazio archivio (barra uso / quota)."
+        - "Quote: Starter 30 GB, Pro 100 GB, Agency 300 GB."
+        - "Se serve di più: Aggiungi 100 GB a 15 euro al mese."
+        - "A quota piena non puoi caricare nuovi file finché non liberi
+          spazio o aggiungi GB. I file già presenti restano."
+        - "Il backup automatico (30 giorni) protegge ciò che è nella
+          quota; il ripristino grave lo fa il supporto OMNIA."
+        - "Il Cestino è separato: serve per ripristinare immobili o
+          clienti eliminati per errore."
+      errori_comuni:
+        - problema: "Agency è illimitato, perché ho un limite di GB?"
+          soluzione: >
+            Illimitati sono gli immobili, non lo spazio foto/video.
+            Oltre la quota del piano si compra extra.
+        - problema: "Non riesco a caricare una foto"
+          soluzione: >
+            Controlla Spazio archivio in Piano & Crediti. Se è pieno,
+            aggiungi 100 GB o elimina media inutili.
+      permessi:
+        - Solo titolare gestisce piano e spazio extra
+    screenshot: []
+

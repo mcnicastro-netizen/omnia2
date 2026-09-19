@@ -27,8 +27,9 @@
 13. ✅ **Cleanup Emergent incrementale** (19-Set): shared.llm · alias key · stub/pacchetti fuori · FE visual-edits fuori · test URL locali
 14. ⏸️ **i18n EN/ES copertura uniforme gestionale** — selettore OK; molte UI ancora IT hardcoded — solo con «vai»
 15. ⏸️ Residui minori Emergent (CDN BrandLab, `STORAGE_BACKEND=emergent` dead path, alias env) — opzionale
-16. ⏸️ **Backup DB + quota storage (D-085)** — policy ✅ 30/100/300 GB + extra €15 · meter + blocco upload; ship codice solo con «vai»
+16. ✅ **Backup + quota storage (D-085)** — 30/100/300 GB + extra €15 · meter · blocco upload · backup cron
 17. ⏸️ Residui minori Emergent (CDN BrandLab, `STORAGE_BACKEND=emergent` dead path, alias env) — opzionale
+18. ⏸️ Seed Stripe price `storage_100gb_monthly` + testo contratto/DPA fine abbonamento (legale)
 
 ---
 
@@ -53,7 +54,7 @@
 | **HAL Mongo reindex live (force)** | ✅ (19-Set) v0.22 Cestino |
 | **Gruppo Real Estate Spa + Ruota API key** | ✅ (19-Set) sim PASS · Cap.20/24 · smoke Ruota top-1 |
 | **Cestino 30gg immobili/clienti** | ✅ (19-Set) `/app/trash` · Cap.3/4 · soft-delete |
-| **D-085 Storage quota + backup policy** | ✅ policy (30/100/300 + €15) · ⬜ codice |
+| **D-085 Storage quota + backup** | ✅ (19-Set) 30/100/300 + €15 · meter · blocco · backup cron |
 | Home B2C visual + SSR preview | ✅ (16-Set) |
 | Layout altre pagine B2C | ✅ (17-Set) |
 | Scout v1 + fiducia + voce lister | ✅ |

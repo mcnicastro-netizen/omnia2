@@ -25,6 +25,7 @@ from apps.immoweb.clients import router as clients_router
 from apps.immoweb.clients_smart import router as clients_smart_router
 from apps.immoweb.clients_ai_import import router as clients_ai_import_router
 from apps.immoweb.trash import router as trash_router
+from apps.immoweb.storage_quota import router as storage_quota_router
 from apps.immoweb.matches import router as matches_router
 from apps.immoweb.brand_extractor import router as brand_router
 from apps.immoweb.custom_domain import router as custom_domain_router
@@ -73,6 +74,7 @@ router.include_router(clients_smart_router)
 router.include_router(clients_ai_import_router)
 router.include_router(clients_router)
 router.include_router(trash_router)
+router.include_router(storage_quota_router)
 router.include_router(matches_router)
 router.include_router(brand_router)
 router.include_router(custom_domain_router)
