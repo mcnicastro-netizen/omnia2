@@ -110,9 +110,9 @@ async def require_api_key(request: Request, endpoint_key: str) -> dict:
             )
             raise HTTPException(status_code=403, detail="origin_not_allowed")
 
-    # Verify owning agency is still active
+    # Verify owning agency is still active (missing/null is_active = legacy active)
     ag = await db.agencies.find_one({"id": key["agency_id"]}, {"_id": 0, "is_active": 1})
-    if not ag or not ag.get("is_active", True):
+    if not ag or ag.get("is_active") is False:
         raise HTTPException(status_code=403, detail="agency_inactive")
 
     cost = CREDIT_COSTS.get(endpoint_key, 0)

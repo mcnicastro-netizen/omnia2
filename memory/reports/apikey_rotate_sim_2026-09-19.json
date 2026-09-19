@@ -1,0 +1,48 @@
+{
+  "scenario": "Admin agenzia smarrisce API key → Super Admin Ruota",
+  "pass": true,
+  "before": {
+    "properties": 2205,
+    "properties_active": 2200,
+    "clients": 10004,
+    "photos_docs": 1,
+    "fascicolo_docs": 1,
+    "group_id": "16ffb1d0-f12d-4025-95e5-3c4939800d35",
+    "group_name": "Real Estate Spa",
+    "agency_is_active": true
+  },
+  "after": {
+    "properties": 2205,
+    "properties_active": 2200,
+    "clients": 10004,
+    "photos_docs": 1,
+    "fascicolo_docs": 1,
+    "group_id": "16ffb1d0-f12d-4025-95e5-3c4939800d35",
+    "group_name": "Real Estate Spa",
+    "agency_is_active": true
+  },
+  "diffs": {},
+  "sample_property_ids_stable": true,
+  "old_key_http": 403,
+  "old_key_detail": "api_key_revoked",
+  "new_key_http": 200,
+  "new_key_prefix": "omk_live_mPV",
+  "credits_preserved": true,
+  "credits": 500,
+  "feed_total_via_new_key": 2200,
+  "crm_after_rotate": {
+    "properties": 200,
+    "clients": 200,
+    "group": 200,
+    "group_name": "Real Estate Spa",
+    "properties_total": 2205,
+    "clients_total": 10004
+  },
+  "guarantees": [
+    "Immobili/clienti/documenti non toccati dalla rotazione",
+    "CRM JWT continua a funzionare senza la API key",
+    "Vecchia chiave revocata (403 api_key_revoked)",
+    "Nuova chiave stessa whitelist Origin + stessi crediti",
+    "Feed /api/v1 espone lo stesso portafoglio (total=properties_active)"
+  ]
+}
