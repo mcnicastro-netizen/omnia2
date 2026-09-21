@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<annunci>
+  <immobile id="A-001">
+    <riferimento>FIX-A-001</riferimento>
+    <titolo>Trilocale via Roma fixture A</titolo>
+    <citta>Milano</citta>
+    <indirizzo>Via Roma 10</indirizzo>
+    <provincia>MI</provincia>
+    <codice_tipologia>3</codice_tipologia>
+    <codice_contratto>V</codice_contratto>
+    <prezzo>250000</prezzo>
+    <mq>85</mq>
+    <camere>2</camere>
+    <testo>Balcone, ascensore, cantina. Fixture forma A (universal XML).</testo>
+    <url_foto_1>https://example.test/foto-a1.jpg</url_foto_1>
+  </immobile>
+  <immobile id="A-002">
+    <riferimento>FIX-A-002</riferimento>
+    <titolo>Bilocale affitto fixture A</titolo>
+    <citta>Catania</citta>
+    <codice_tipologia>3</codice_tipologia>
+    <codice_contratto>A</codice_contratto>
+    <canone>650</canone>
+    <mq>52</mq>
+    <testo>Bilocale arredato. Fixture forma A.</testo>
+  </immobile>
+</annunci>

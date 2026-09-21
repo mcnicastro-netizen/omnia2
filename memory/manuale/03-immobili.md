@@ -52,10 +52,10 @@ Ogni volta che acquisisci un nuovo mandato o inserisci un immobile appena affida
 
 ## 3.2 · Importare immobili da file (CSV o XML)
 
-Sono disponibili **due percorsi**:
+Sono disponibili **due percorsi** (lettere = hub `memory/manuale/import/HUB.md`):
 
-- **Import CSV/XML "veloce"** dalla pagina Immobili → utile per caricare batch piccoli/medi con template guidato.
-- **Import XML "universale"** dedicato → utile quando arrivi da un altro gestionale e vuoi analizzare il file prima di importare.
+- **Forma B / C — Import CSV/XML "veloce"** dalla pagina Immobili → utile per caricare batch piccoli/medi con template guidato.
+- **Forma A — Import XML "universale"** dedicato → utile quando arrivi da un altro gestionale e vuoi analizzare il file prima di importare. Clienti: forme **D** CSV e **E** AI (Cap. 4).
 
 ### 3.2.1 Import veloce CSV
 

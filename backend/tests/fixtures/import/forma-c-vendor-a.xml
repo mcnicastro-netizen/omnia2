@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feed>
+  <id_agenzia>demo-agency-001</id_agenzia>
+  <immobile>
+    <rif>FIX-C-001</rif>
+    <id_agenzia>demo-agency-001</id_agenzia>
+    <titolo>Appartamento Vendor A fixture C</titolo>
+    <comune>Palermo</comune>
+    <cod_tipologia>3</cod_tipologia>
+    <contratto>V</contratto>
+    <prezzo>210000</prezzo>
+    <mq>70</mq>
+    <locali>3</locali>
+    <camere>2</camere>
+    <bagni>1</bagni>
+    <classe_energetica>10</classe_energetica>
+    <balcone>1</balcone>
+    <ascensore>1</ascensore>
+  </immobile>
+</feed>

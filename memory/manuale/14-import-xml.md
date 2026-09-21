@@ -12,6 +12,9 @@
 - Non salva un log persistente delle preview. Una preview vive **10 minuti in memoria** sul processo backend. Se il backend riavvia (deploy, restart), la preview scompare e ti tocca ricaricare il file.
 - Non supporta formati diversi da XML in v1 (no CSV, no JSON, no Excel).
 
+**Hub tutte le forme A–E** (questo capitolo = solo forma **A**): `memory/manuale/import/HUB.md`.  
+B CSV immobili · C XML veloce · D CSV clienti · E Smart Import AI — guide Top 5 + fixture in `backend/tests/fixtures/import/`.
+
 ---
 
 ## 14.1 · Cos'è il modulo Import XML e a chi serve
@@ -317,8 +320,9 @@ Se il campo esprime la necessità, in versioni successive: CSV/JSON, sync period
 
 ## 14.11 · Cross-ref con altri capitoli
 
-- **Cap. 3 · Immobili**: dopo l'import, la scheda immobile è editabile normalmente (foto, planimetrie, publishing). Cap. 3 §privacy governa cosa vedono gli agenti degli immobili importati (L1-L4).
-- **Cap. 4 · Clienti**: per importare clienti da CSV c'è un flusso separato (`/clients/csv-import`), non copre questo capitolo.
+- **Hub A–E**: `memory/manuale/import/HUB.md` — mappa di tutte le porte di import (non solo XML).
+- **Cap. 3 · Immobili**: dopo l'import, la scheda immobile è editabile normalmente (foto, planimetrie, publishing). Cap. 3 §privacy governa cosa vedono gli agenti degli immobili importati (L1-L4). Forme **B** (CSV) e **C** (XML veloce) vivono in Cap. 3 §3.2.
+- **Cap. 4 · Clienti**: forme **D** (CSV template) e **E** (Smart Import AI) su `/app/clients/import` — non via XML.
 - **Cap. 6 · Portali & Publishing**: gli immobili importati con `is_listed_on_immobilcloud: true` sono immediatamente candidati al publishing (dopo compliance HARD/SOFT).
 - **Cap. 12 · HAL Knowledge**: puoi chiedere a HAL Knowledge *"Come importo da un vecchio gestionale?"* → risposta con fonti da `14-import-xml.yaml`.
 - **Cap. 13 · Team & Ruoli**: l'endpoint richiede `agency_admin` — gli agenti non hanno accesso.

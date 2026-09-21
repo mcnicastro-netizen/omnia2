@@ -1,5 +1,15 @@
 # OMNIA — Changelog
 
+## 2026-09-21 — Hub import forme A–E + guide Top 5 + fixture
+
+**Tipo**: Docs (D-084) · Cap. 14 rinvio · Cap. 3 etichette.
+
+- Hub `memory/manuale/import/HUB.md`: cinque porte reali (A XML migrazione · B CSV immobili · C XML veloce · D CSV clienti · E Smart Import AI)
+- Guide Top 5 in `memory/manuale/import/guida-*.md` (1:1 UI/API/ruoli/limiti)
+- Fixture `backend/tests/fixtures/import/forma-{a-e}.*` + test offline `test_import_forme_fixtures.py`
+- Cap. 14 e Cap. 3 puntano al hub. Nessun nuovo endpoint.
+
+---
 ## 2026-09-21 — D-086 Cloud Agent harden + seed demo gestionale
 
 **Tipo**: Ops / Cloud Agent / seed.

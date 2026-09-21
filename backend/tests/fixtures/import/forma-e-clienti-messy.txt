@@ -1,0 +1,5 @@
+Lista sporca dal vecchio CRM (fixture forma E — Smart Import AI)
+
+1) Giuseppe Neri tel 333-4444444 mail giuseppe.neri@example.it — vende trilocale a Catania, ha incarico
+2) Anna Bianchi, cerca bilocale affitto Palermo budget max 700 euro, cell +39 347 5555555
+3) nota interna: non importare questa riga, è un promemoria riunione
