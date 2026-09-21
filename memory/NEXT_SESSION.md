@@ -59,6 +59,8 @@
 | **Gruppo Real Estate Spa + Ruota API key** | ✅ (19-Set) sim PASS · Cap.20/24 · smoke Ruota top-1 |
 | **Cestino 30gg immobili/clienti** | ✅ (19-Set) `/app/trash` · Cap.3/4 · soft-delete |
 | **D-085 Storage quota + backup** | ✅ (19-Set) 30/100/300 + €15 · meter · blocco · backup cron |
+| **Import forme A–E + hub migrazione** | ✅ (21-Set) Cap.14 §14.0 · fixture · guide CS Top 5 |
+| **Import A UX (foto / agente / storico)** | ✅ (21-Set) Cap.14 v1.2 · HAL v0.25 · 17 voci |
 | Home B2C visual + SSR preview | ✅ (16-Set) |
 | Layout altre pagine B2C | ✅ (17-Set) |
 | Scout v1 + fiducia + voce lister | ✅ |
