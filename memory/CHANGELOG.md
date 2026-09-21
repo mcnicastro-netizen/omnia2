@@ -1,5 +1,23 @@
 # OMNIA — Changelog
 
+## 2026-09-21 — D-087 source of truth GitHub omnia2 (no Origin-tmp)
+
+**Tipo**: Ops / processo Founder.
+
+- Cloud Agent sempre su `github.com/mcnicastro-netizen/omnia2`
+- Origin-tmp non è master; push nativo non richiede `GITHUB_TOKEN`
+- Docs: `memory/OMNIA2_REPO_SETUP.md` · `NEXT_SESSION.md` · regola `omnia-cloud.mdc`
+
+---
+## 2026-09-21 — wire GitHub omnia2 push via GITHUB_TOKEN (fallback)
+
+**Tipo**: Ops / Cloud.
+
+- Script `scripts/github-omnia2-push.sh`: se origin è già GitHub omnia2 → push nativo (no username).
+- Fallback Origin-tmp: prova HTTPS github.com, poi `GITHUB_TOKEN` via extraHeader. **Non riscrive origin.**
+- `backend/.env.example`: nota che GITHUB_TOKEN è opzionale e non è la via principale.
+
+---
 ## 2026-09-21 — HAL smoke Cap.14 query `import.tutte-le-forme`
 
 **Tipo**: Docs / HAL (D-084).

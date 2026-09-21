@@ -3,9 +3,12 @@ description: Come lavorare su OMNIA in Cursor Cloud Agent (repo omnia2)
 alwaysApply: true
 ---
 
-# OMNIA Cloud Agent (D-086)
+# OMNIA Cloud Agent (D-086 / D-087)
 
-- Repo ufficiale: `mcnicastro-netizen/omnia2`. Workspace = `/workspace` (non `/app` Emergent).
+- Repo ufficiale: `mcnicastro-netizen/omnia2` **su GitHub**. Workspace = `/workspace` (non `/app` Emergent).
+- **Avvia sempre l’agent su omnia2 GitHub.** Origin-tmp / New Project Cursor **non** è source of truth.
+- Push nativo: `git push origin` = GitHub, auth Cursor (niente username). **Non dipende da `GITHUB_TOKEN`** se sei su omnia2.
+- Fallback Origin-tmp: `bash scripts/github-omnia2-push.sh` (usa `GITHUB_TOKEN` se serve; non riscrive origin).
 - Stack: `bash scripts/omnia-stack.sh ensure` (API `43121`, preview `43123`). Install/start Cloud: `scripts/cloud-agent-install.sh` e `scripts/cloud-agent-start.sh`.
 - HAL corpus: `memory/` risolto da `OMNIA_MEMORY_ROOT` o `/workspace/memory` (mai hardcodare solo `/app/memory`).
 - Seed demo CRM: `backend/scripts/seed_demo_gestionale.py` (agenzia `demo-agency-001`). Login Founder da `ADMIN_EMAIL` / `ADMIN_PASSWORD` in `backend/.env` (vedi `.env.example`). Demo admin: `demo.admin@omniaecosystem.it`.

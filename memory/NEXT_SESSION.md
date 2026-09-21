@@ -1,9 +1,9 @@
 # Prossima sessione — programma passi
 
-**Aggiornato**: 19 Settembre 2026 — D-085 storage + polish HAL · Cestino · Real Estate Spa · Cleanup Emergent
+**Aggiornato**: 21 Settembre 2026 — ripristino flusso GitHub omnia2 (D-087) · hub import A–E · D-086 Cloud  
 **Stato base**: Sprint 1→4 **CONCLUSO**. Stress: `PLATFORM_STRESS_REPORT.md` + `STRESS_REPORT.md`.  
 **Preprod gate**: `memory/PREPROD_GATE_REPORT.md` (PASS required — no vendor burn).  
-**Repo ufficiale**: https://github.com/mcnicastro-netizen/omnia2 ✅ (Emergent `OMNIA` = backup, non cancellare)  
+**Repo ufficiale**: https://github.com/mcnicastro-netizen/omnia2 ✅ — **apri gli agent QUI**. Origin-tmp non è master. Setup: `memory/OMNIA2_REPO_SETUP.md`.  
 **Nord prodotto B2C**: `memory/PRODUCT_NORTHSTAR_B2C.md` (**obbligatorio** prima di ship `/cloud`).
 
 ---
@@ -31,6 +31,7 @@
 16. ✅ **Backup + quota storage (D-085)** — 30/100/300 GB + extra €15 · meter · blocco upload · backup cron
 17. ⏸️ Residui minori Emergent (CDN BrandLab, `STORAGE_BACKEND=emergent` dead path, alias env) — opzionale
 18. ⏸️ Seed Stripe price `storage_100gb_monthly` + testo contratto/DPA fine abbonamento (legale)
+19. ✅ **D-087**: apri i prossimi Cloud Agent **solo** su GitHub `omnia2` (vedi `OMNIA2_REPO_SETUP.md`)
 
 ---
 

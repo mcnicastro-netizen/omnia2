@@ -1391,4 +1391,16 @@ Registro di tutte le decisioni di business e tecniche prese durante il progetto.
   6. **Regola** `.cursor/rules/omnia-cloud.mdc` per agenti futuri (`/workspace`, no PR se Founder dice no).
 - **Stato**: ✅ APPLICATA (codice 21-Set-2026)
 
+### D-087 — Source of truth = GitHub `omnia2` (mai Origin-tmp) · 21-Set-2026
+- **Data**: 21 Settembre 2026
+- **Contesto**: Fino a sabato (e D-086 stamattina) i push su GitHub `omnia2` funzionavano. Una sessione New Project/Origin-tmp ha creato commit locali non visibili su GitHub (`main` fermo a `d61ad5d`). Origin-tmp non è autenticabile da questo agent e **non** è il master.
+- **Decisione**:
+  1. **Cloud Agent = sempre** su `github.com/mcnicastro-netizen/omnia2`.
+  2. **Origin-tmp / New Project non è source of truth.** Non clonarci sopra il lavoro, non aprirci gli agent successivi.
+  3. **Push nativo** `git push origin` = GitHub, auth Cursor. **Non dipende da `GITHUB_TOKEN`** se l’agent è su omnia2.
+  4. **`GITHUB_TOKEN`** resta **fallback** (`scripts/github-omnia2-push.sh`) solo se un agent finisce per errore su Origin-tmp. Non riscrive `origin`.
+  5. Setup scritto in `memory/OMNIA2_REPO_SETUP.md` + regola `.cursor/rules/omnia-cloud.mdc`. Environment D-086 resta `omnia2-cloud`.
+- **Stato**: ✅ APPLICATA (docs + script fallback 21-Set-2026)
+
+
 
