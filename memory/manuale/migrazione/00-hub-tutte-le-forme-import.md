@@ -8,7 +8,7 @@ OMNIA ha **cinque porte di import**. Non sono un unico wizard. Scegli la forma.
 
 | Forma | Cosa | UI | Chi | API |
 |:-----:|------|----|-----|-----|
-| **A** | XML universale immobili (preview → commit) | `/app/import` · nav **Importa** | solo titolare / super_admin | `POST /api/app/import/xml/preview` + `/commit` |
+| **A** | XML universale immobili (preview → commit) | `/app/import` · nav **Importa** | solo titolare / super_admin | `POST /api/app/import/xml/preview` + `/commit` · `GET /api/app/import/jobs` |
 | **B** | CSV immobili (template) | `/app/properties/import` tab CSV | titolare + agente + segreteria | `GET /api/app/properties/_template/csv` · `POST .../import/csv` |
 | **C** | XML immobili veloce (URL o incolla) | `/app/properties/import` tab XML | titolare + agente + segreteria | `POST /api/app/properties/import/xml` (+ job se URL) |
 | **D** | CSV clienti (template) | `/app/clients/import` tab Template CSV | titolare + agente + segreteria | `GET /api/app/clients/_template/csv` · `POST .../import/csv` |
@@ -17,8 +17,11 @@ OMNIA ha **cinque porte di import**. Non sono un unico wizard. Scegli la forma.
 **In una riga (come da checklist)**  
 A = **XML universale** · B+C = **CSV/XML immobili** · D+E = **AI+CSV clienti**.
 
+**Forma A — novità 21-Set-2026**  
+Warning foto (senza / URL deboli + rif.) · select **Assegna agente** · **Storico import** · flag ImmobilCloud + MLS al commit · dry-run con conteggio would-be (session non consumata) · parser `url_foto_N`.
+
 **Cosa NON esiste (v1)**  
-Import AI Excel per immobili · CSV/JSON/Excel sulla forma A · sync live dal vecchio CRM · rollback batch forma A · import trattative.
+Import AI Excel per immobili · CSV/JSON/Excel sulla forma A · sync live dal vecchio CRM · rollback batch forma A · import trattative · multiposting portali terzi al commit.
 
 ---
 

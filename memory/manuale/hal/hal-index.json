@@ -1,7 +1,7 @@
 {
-  "version": "0.24-import-forme",
+  "version": "0.25-import-preview-agent-history",
   "updated": "2026-09-21",
-  "voices_total": 343,
+  "voices_total": 346,
   "source_files": [
     {
       "file": "00-api-codice.yaml",
@@ -75,8 +75,8 @@
     },
     {
       "file": "14-import-xml.yaml",
-      "voices": 14,
-      "md5": "94707231565b1c8bd7a6df1f18d265dc"
+      "voices": 17,
+      "md5": "72b08abc42c3768bb8b8575eddbf6434"
     },
     {
       "file": "15-social-publisher.yaml",

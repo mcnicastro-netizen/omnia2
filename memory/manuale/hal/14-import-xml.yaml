@@ -98,26 +98,28 @@ voci:
           POST /api/app/import/xml/preview (multipart file).
           Il backend parsa e restituisce session_id + report.
           NESSUNA scrittura sul DB in questa fase."
-        - "FASE 2 Preview report: vedi in schermata 'X/Y immobili
-          leggibili', 3 cards (per tipologia/contratto/citta'),
-          warning (senza foto, senza prezzo), anteprima 5 immobili,
-          divergenze (max 50), toggle dedupe."
-        - "FASE 3 Commit: clicchi 'Simulazione' (dry_run=true)
-          oppure 'Importa in OMNIA' (dry_run=false). Chiama
-          POST /api/app/import/xml/commit con session_id."
+        - "FASE 2 Preview report: 'X/Y immobili leggibili', 3 cards
+          (tipologia/contratto/citta'), warning senza foto + URL
+          deboli (con rif.) + senza prezzo, anteprima 5, divergenze
+          (max 50), opzioni dedupe / ImmobilCloud / MLS /
+          Assegna agente."
+        - "FASE 3 Commit: 'Simulazione' (dry_run=true, inserted=
+          would-be, session resta) oppure 'Importa in OMNIA'
+          (dry_run=false, crea ImportJob, consuma session). Body
+          opz. listing_agent_id, list_on_immobilcloud, share_on_mls."
+        - "In fondo pagina: Storico import (GET /api/app/import/jobs)."
         - "Session TTL: 10 minuti dalla preview. Formato session_id:
           prv_{millis}_{user_id[:8]} - legata all'utente uploader."
-        - "Endpoint aggiuntivo: GET /api/app/import/xml/session/{id}
-          per rileggere il report se ricarichi la pagina prima del
-          commit."
+        - "Endpoint: POST /preview, POST /commit,
+          GET /session/{id}, GET /api/app/import/jobs."
       errori_comuni:
         - problema: "Passa piu' di 10 minuti fra preview e commit"
           soluzione: >
             La session e' scaduta (in-memory, TTL 10 min). Ricarica
             il file e ripeti preview → commit.
       permessi:
-        - Solo agency_admin e super_admin su tutti gli endpoint
-          /import/xml/*
+        - Solo agency_admin e super_admin su /import/xml/*
+        - GET /import/jobs anche agent (storico agenzia)
     screenshot: ["[SCREEN: import-xml-preview]"]
 
   - id: import.file-xml-requisiti
@@ -288,18 +290,21 @@ voci:
           reale ma NON inserisce nulla."
         - "Risposta contiene inserted (quanti sarebbero stati
           inseriti), skipped_by_reference (quanti saltati),
-          dry_run=true."
+          dry_run=true, job_id=null."
         - "La session RIMANE VALIDA dopo la simulazione: puoi
           rilanciarla o passare al commit reale (session non
           consumata)."
-        - "Il commit reale (dry_run=false) invece CONSUMA la session
-          - se serve rifarlo devi ricaricare il file."
+        - "Il commit reale (dry_run=false) CONSUMA la session e crea
+          ImportJob (vedi import.storico-jobs)."
       errori_comuni:
         - problema: "Ho fatto simulazione e poi la session e' scaduta"
           soluzione: >
             La simulazione non consuma la session ma il TTL resta
             10 minuti dalla preview iniziale. Se ti distrai troppo,
             ricarica il file.
+        - problema: "Dopo simulazione non compare riga nello storico"
+          soluzione: >
+            Atteso: solo il commit reale crea ImportJob.
       permessi:
         - Solo agency_admin e super_admin
     screenshot: []
@@ -363,26 +368,29 @@ voci:
         - "Insert in batch da 100 (ordered=False) su
           db.properties.insert_many."
         - "Ogni immobile importato ha di default:
-          moderation_status='approved',
-          is_listed_on_immobilcloud=true, is_private_listing=false,
-          visibility='public', view_count=0, lead_count=0."
-        - "NON ha agent_id: appare come immobile 'dell'agenzia'
-          senza responsabile finche' il titolare non assegna
-          manualmente (bulk edit o singolo, Cap. 3)."
+          moderation_status='approved', status='active',
+          listing_agent_id = agente scelto (o chi importa),
+          is_listed_on_immobilcloud / mls_shared / visibility
+          secondo le checkbox del commit (default ON → public)."
         - "Ha _import_source='universal_xml_importer_v1' e
           _import_reference=<valore riferimento> per audit."
         - "Response commit: {inserted, skipped_by_reference,
-          skipped_references[:50], committed_at (ISO 8601),
-          dry_run}."
-        - "Session viene rimossa dallo store dopo commit reale
-          (non dopo dry_run)."
+          skipped_references[:50], committed_at, dry_run,
+          list_on_immobilcloud, share_on_mls, listing_agent_id,
+          job_id (null se dry_run)}."
+        - "Commit reale crea ImportJob source=universal_xml e
+          rimuove la session. Dry-run non crea job e non consuma
+          session."
       errori_comuni:
-        - problema: "Ho importato 200 immobili ma nessuno ha un agente assegnato"
+        - problema: "Ho importato ma l'agente sbagliato e' sul listing"
           soluzione: >
-            Voluto: l'importatore non tenta di indovinare l'agent_id
-            (non sa a chi assegnarli). Usa il bulk edit in Immobili
-            per selezionare tutti gli immobili appena creati (filtra
-            per data) e assegnarli in blocco.
+            Al commit scegli 'Assegna agente' dalla select membri.
+            Se hai gia' importato, riassegna via bulk edit Immobili
+            (Cap. 3) o ripeti import dopo aver cancellato i doppioni.
+        - problema: "listing_agent_not_in_agency"
+          soluzione: >
+            L'id non e' un membro dell'agenzia. Lascia vuoto (tu)
+            oppure scegli dalla select.
       permessi:
         - Solo agency_admin e super_admin
     screenshot: []
@@ -421,6 +429,8 @@ voci:
           agency_id diverso dal tuo attuale. Rifai preview."
         - "403 require_roles (senza detail): sei agent invece che
           agency_admin. Chiedi al titolare."
+        - "400 listing_agent_not_in_agency: listing_agent_id non e'
+          membro dell'agenzia. Scegli dalla select o lascia Io."
       errori_comuni:
         - problema: "Ho fatto tutto giusto ma vedo 500"
           soluzione: >
@@ -463,24 +473,21 @@ voci:
           scompaiono."
         - "TTL session 10 minuti dalla preview. Poi scade
           (404 preview_session_not_found_or_expired)."
-        - "NO preview foto: samples mostrano solo photos_count
-          (conteggio), non thumbnail. Le foto arrivano poi dai URL
-          nel feed."
+        - "NO preview thumbnail foto: samples mostrano photos_count
+          + flag photo_urls_weak, non scaricano le immagini."
         - "NO import clienti/lead/trattative via XML. Solo
-          properties. Per clienti c'e' /clients/csv-import (Cap. 4)."
-        - "Dedupe solo per reference_code: nessun fuzzy match su
-          titolo/indirizzo/coordinate. Ref instabili = rischio
-          doppioni."
-        - "NO assegnazione automatica agente: immobili importati non
-          hanno agent_id. Vanno assegnati manualmente."
-        - "NO storico import UI: non c'e' un pannello 'ecco tutti
-          gli import fatti in passato'. Solo _import_source e
-          _import_reference in DB (accesso super_admin per audit)."
+          properties. Per clienti: forme D/E Cap. 4."
+        - "Dedupe solo per reference_code: nessun fuzzy match."
+        - "NO multiposting portali terzi (Idealista ecc.) al commit:
+          solo flag ImmobilCloud + MLS inventario OMNIA."
+        - "SI (21-Set-2026): warning foto dettagliati, Assegna
+          agente (listing_agent_id), Storico ImportJob UI +
+          GET /import/jobs, publish flags, dry-run would-be count."
       errori_comuni:
         - problema: "Voglio migrare anche i miei clienti CRM"
           soluzione: >
-            Import XML non li tocca. Usa /clients/csv-import (Cap. 4
-            §clienti-import) per il CSV dei clienti B2B."
+            Import XML non li tocca. Usa forme D/E su
+            /app/clients/import (Cap. 4)."
         - problema: "Voglio sync automatica ogni notte dal vecchio gestionale"
           soluzione: >
             Non disponibile v1. L'import e' one-shot manuale."
@@ -517,13 +524,12 @@ voci:
           citta', le tipologie sono corretti?"
         - "Passo 6: Espandi le Divergenze (se ci sono) - quali
           record vengono scartati?"
-        - "Passo 7 (opzionale): Clicca Simulazione per contare gli
-          effettivi nuovi dopo dedupe."
-        - "Passo 8: Se tutto torna, clicca 'Importa in OMNIA'."
-        - "Passo 9: Vai in Immobili e verifica il conteggio: ci sono
-          gli appena importati?"
-        - "Passo 10: Assegna un agente ai nuovi immobili (bulk edit
-          se sono tanti, Cap. 3)."
+        - "Passo 7 (opzionale): Simulazione — inserted would-be dopo
+          dedupe, session resta."
+        - "Passo 8: Scegli Assegna agente + flag ImmobilCloud/MLS,
+          poi 'Importa in OMNIA'."
+        - "Passo 9: Verifica Immobili + Storico import in fondo a
+          /app/import."
       errori_comuni:
         - problema: "Ho importato per errore un XML sbagliato"
           soluzione: >
@@ -594,22 +600,21 @@ voci:
         aprire, oppure chiedi a HAL "come importo tutto".
       passi:
         - "Forma A — XML universale (preview→commit): /app/import, solo
-          titolare. POST /api/app/import/xml/preview + /commit. Max 50 MB.
-          Hub: memory/manuale/migrazione/00-hub-tutte-le-forme-import.md."
+          titolare. Preview warning foto, Assegna agente, Storico
+          ImportJob, flag ImmobilCloud/MLS. POST preview+commit,
+          GET /api/app/import/jobs. Max 50 MB. Hub migrazione/00."
         - "Forma B — CSV immobili template: /app/properties/import tab CSV.
-          GET /api/app/properties/_template/csv, POST .../import/csv.
+          GET template + POST import/csv. Flag attiva/ImmobilCloud/MLS.
           Obbligatori title + city. Separatore ; ."
         - "Forma C — XML veloce URL o incolla: stessa pagina tab XML.
-          POST /api/app/properties/import/xml. Rileva schema italiano
-          (cod_tipologia / id_agenzia) o XML generico. Job se URL."
+          POST import/xml. Stessi flag publish. Job se URL."
         - "Forma D — CSV clienti template: /app/clients/import.
           GET /api/app/clients/_template/csv, POST .../import/csv."
         - "Forma E — Smart Import AI clienti: stesso URL tab Import AI.
           .csv .xlsx .vcf .txt, max 5 MB / 500 righe, draft 1 ora.
           POST /api/app/clients/import/ai."
-        - "Fixture: memory/fixtures/import/ (XML 5 immobili, CSV immobili,
-          CSV clienti). Guide CS interne 01–05 in memory/manuale/migrazione/.
-          In UI: zero nomi di altri gestionali."
+        - "Fixture: memory/fixtures/import/. Guide CS 01–05 in
+          memory/manuale/migrazione/. UI: zero brand competitor."
       errori_comuni:
         - problema: "Cerco di importare clienti dall'XML di Importa"
           soluzione: >
@@ -622,4 +627,98 @@ voci:
       permessi:
         - Forma A solo agency_admin / super_admin
         - Forme B–E anche agent / segreteria
+    screenshot: []
+
+  - id: import.warning-foto
+    titolo: Warning foto in preview Import XML
+    modulo: Import XML
+    widget: null
+    pubblico: [titolare, super_admin]
+    livello: base
+    tags: [import, xml, foto, warning, url-deboli, placeholder, without-photos, preview]
+    correlati: [import.flusso-preview-commit, import.file-xml-requisiti]
+    domanda_naturale: "Perche' Import XML mi avvisa sulle foto? Cosa sono URL deboli?"
+    contenuto:
+      a_cosa_serve: >
+        Capire i warning amber in preview: immobili senza foto o con
+        URL di test/placeholder, con elenco riferimenti.
+      quando_si_usa: >
+        Dopo 'Analizza contenuto', prima del commit.
+      passi:
+        - "Report.without_photos + without_photo_refs (max 20)."
+        - "Report.weak_photo_urls + weak_photo_refs se URL contiene
+          example. / localhost / 127.0.0.1 / placeholder / picsum id/0."
+        - "Samples: photos_count e photo_urls_weak; UI marca ! o ∅."
+        - "Tag foto riconosciuti: urlN, fotoN, immagineN, url_foto_N,
+          url_fotoN, foto_N (fino a ~100). tipoN=P = planimetria."
+        - "Non bloccano il commit: puoi importare e sostituire URL dopo."
+      errori_comuni:
+        - problema: "Tutti e 5 i DEMO del fixture risultano URL deboli"
+          soluzione: >
+            Atteso: il fixture usa https://example.test/... Sostituisci
+            con URL reali prima di pubblicare su ImmobilCloud.
+      permessi:
+        - Solo chi puo' fare preview (agency_admin / super_admin)
+    screenshot: []
+
+  - id: import.assegna-agente
+    titolo: Assegna agente al commit Import XML
+    modulo: Import XML
+    widget: null
+    pubblico: [titolare, super_admin]
+    livello: base
+    tags: [import, xml, listing-agent, assegna-agente, team, commit]
+    correlati: [import.risultato-commit, import.flusso-preview-commit]
+    domanda_naturale: "Come assegno gli immobili importati a un agente del team?"
+    contenuto:
+      a_cosa_serve: >
+        Impostare listing_agent_id su tutti i record del commit senza
+        bulk edit successivo.
+      quando_si_usa: >
+        In preview, prima di 'Importa in OMNIA' o Simulazione.
+      passi:
+        - "Select 'Assegna agente' carica GET /app/agencies/me/members."
+        - "Default vuoto = chi importa (user id del committer)."
+        - "Body commit: listing_agent_id opzionale. Backend valida che
+          l'utente sia in agency_ids dell'agenzia, altrimenti 400
+          listing_agent_not_in_agency."
+        - "Ogni property inserita riceve listing_agent_id scelto."
+      errori_comuni:
+        - problema: "listing_agent_not_in_agency"
+          soluzione: >
+            Scegli un membro attivo dalla select o lascia 'Io'."
+      permessi:
+        - Solo agency_admin / super_admin (commit)
+    screenshot: []
+
+  - id: import.storico-jobs
+    titolo: Storico import agenzia (ImportJob)
+    modulo: Import XML
+    widget: null
+    pubblico: [titolare, super_admin, agente]
+    livello: base
+    tags: [import, storico, import-job, jobs, audit, csv, xml]
+    correlati: [import.risultato-commit, import.tutte-le-forme]
+    domanda_naturale: "Dove vedo lo storico degli import fatti nella mia agenzia?"
+    contenuto:
+      a_cosa_serve: >
+        Audit degli import completati (XML gestionale, CSV, feed XML)
+        con data, conteggi e status.
+      quando_si_usa: >
+        Sulla pagina /app/import, sezione 'Storico import' in fondo;
+        dopo ogni commit reale forma A.
+      passi:
+        - "GET /api/app/import/jobs?limit=1..100 → {jobs, count}."
+        - "Commit forma A (non dry_run) inserisce ImportJob
+          source=universal_xml, source_label=filename, imported_count,
+          error_count (skipped dup), listing_agent_id metadata."
+        - "Anche CSV/XML veloce (forme B/C) scrivono ImportJob
+          (source csv / xml_feed) — compaiono nello stesso elenco."
+        - "UI: data, tipo, filename, imported/total, status + Aggiorna."
+      errori_comuni:
+        - problema: "Dopo la simulazione non vedo una nuova riga storico"
+          soluzione: >
+            Atteso: dry_run non crea ImportJob. Solo il commit reale."
+      permessi:
+        - agency_admin, agent, super_admin (lista)
     screenshot: []

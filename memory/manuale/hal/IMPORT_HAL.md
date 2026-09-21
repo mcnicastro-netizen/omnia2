@@ -1,8 +1,8 @@
-# 📚 HAL Knowledge — Import & Cold Start (v0.18)
+# 📚 HAL Knowledge — Import & Cold Start (v0.25)
 
-**Ultimo aggiornamento**: 21-Sep-2026 (hub import A–E · smoke `import.tutte-le-forme` · D-086 Cloud)
-**Corpus**: YAML in `memory/manuale/hal/*.yaml` (Cap. 1–27) · MD esclusi dal RAG ingest
-**Motore**: `hal_knowledge.py` · reindex: `POST /api/app/hal/knowledge/reindex?force=true` (super_admin)
+**Ultimo aggiornamento**: 21-Sep-2026 (Import A: warning foto · assegna agente · storico jobs · publish flags)  
+**Corpus**: YAML in `memory/manuale/hal/*.yaml` (Cap. 1–27) · MD esclusi dal RAG ingest  
+**Motore**: `hal_knowledge.py` · reindex: `POST /api/app/hal/knowledge/reindex?force=true` (super_admin)  
 **Regola Founder D-084**: ogni ship aggiorna MD+YAML nello stesso giro — vedi `memory/MANUAL_SYNC.md`.
 
 ---
@@ -289,6 +289,7 @@ Prima di dichiarare il cold start "attivo", eseguire manualmente queste 5 query 
 | Feb-2026 (Cap. 19) | **v0.15-cap19** | Cap. 19 Impostazioni agenzia aggiunto (+14 voci → 241). Copertura `SettingsPage.jsx` (358 righe) + `apps/immoweb/agencies.py` (180 righe · GET/PATCH `/agencies/me`) + `shared/models/agency.py` (305 righe · AgencyInDB/AgencyUpdate + 5 sotto-schemi) + `BillingPage.jsx` (235 righe) + `apps/billing/routes.py` (473 righe) + `apps/billing/plans.py` (LAUNCH Founders €49/€99/€249/€299 + POST_TRACTION €79/€179/€349/€499 + 6 credit packages €0,05/cred). **Onestà D-051**: v1 solo 5 sezioni anagrafica (identità/fiscale/indirizzo/contatti/modalità sito), 3 template omnia stub "presto disponibile", NO uploader logo/color picker, campi schema-only (logo_url/primary_color/accent_color/REA/FIAIP/contact.website/country/plan_type/group_id/branch_code), NO validazione P.IVA/CF/CAP/telefono/geocoding, NO transfer ownership (owner_id immutabile), NO audit trail settings, toast success = banner embedded (NON sonner Cap. 18). Team/API Keys/Domain/Notifiche/Billing = pagine SEPARATE. |
 | Feb-2026 (Cap. 20) | **v0.16-cap20** | Cap. 20 API Keys e integrazioni (Track B / API Gateway) aggiunto (+14 voci → 255). Copertura `ApiKeysPage.jsx` (351 righe) + `apps/immoweb/api_keys.py` (199 righe · router `/api/app/api-keys`) + `apps/v1/gateway.py` (Bearer consumer `/api/v1/*`) + `shared/auth/api_key.py` (issuance/hash/require_api_key) + `shared/models/api_key.py` (ApiKeyInDB/Public/Create/IssueResponse). **Onestà D-051 pricing dual-track**: Track B = €0,03/cred vs Track A = €0,05/cred (wallet contabilmente separati). Endpoint `/api/v1/*` documentati con costi (valuator 5, mortgages 1, legal 3, feed/me/health 0, staging ~15). Plaintext `omk_live_<28chars>` show-once + hash SHA-256. NO auto-ricarica Stripe (top-up manuale), NO UI usage detail, NO reportistica per-partner, NO rate limit, NO scoping endpoint, NO IP whitelist, NO webhook, NO rotazione. Widget embed via `<script data-key data-widget>`. |
 | 21-Set-2026 (import A–E) | **v0.24-import-forme** | Hub tutte le forme A–E + HAL `import.tutte-le-forme` · smoke Cap.14 query unica · fixture `backend/tests/fixtures/import/`. |
+| 21-Set-2026 (import A UX) | **v0.25-import-preview-agent-history** | Cap.14/3 + hub: warning foto (rif./URL deboli), Assegna agente (`listing_agent_id`), Storico `GET /import/jobs`, publish ImmobilCloud/MLS, dry-run would-be, parser `url_foto_N`. HAL +3 voci (`import.warning-foto`, `import.assegna-agente`, `import.storico-jobs`) → Cap.14 = 17 voci. |
 | 19-Set-2026 (storage D-085) | **v0.23-storage-d085** | Quota 30/100/300 GB + extra €15 · meter · blocco upload · backup giornaliero · Cap.19. |
 | 19-Set-2026 (cestino) | **v0.22-cestino** | Soft-delete immobili/clienti · pagina Cestino 30gg · Cap.3/4 linguaggio semplice · HAL `cestino.ripristinare` · purge cron. |
 | 19-Set-2026 (gruppi+rotate) | **v0.21-gruppi-rotate** | Cap.20 §20.6bis Ruota chiave smarrita · Cap.24 v1.1 Real Estate Spa + ruoli Founder/admin · HAL `api-keys.ruota-chiave-smarrita` + voci gruppi.create/branch/ruoli · sim PASS report · fix is_active null + BranchSummary plan_type. |
@@ -307,6 +308,12 @@ Prima di dichiarare il cold start "attivo", eseguire manualmente queste 5 query 
 
 Criteri smoke: top-1 `import.tutte-le-forme` **oppure** stesso file `14-import-xml.yaml` con sim ≥ 0.08.  
 Hub: `memory/manuale/import/HUB.md`.
+
+### Smoke aggiuntivi Cap. 14 (21-Set UX)
+
+1. **"Perché Import XML mi avvisa sulle foto deboli?"** → `import.warning-foto`
+2. **"Come assegno gli immobili importati a un agente?"** → `import.assegna-agente`
+3. **"Dove vedo lo storico degli import della mia agenzia?"** → `import.storico-jobs`
 
 ---
 

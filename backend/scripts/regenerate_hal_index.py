@@ -51,7 +51,7 @@ def main() -> None:
         new_chapters.append(entry)
 
     out = {
-        "version": "0.24-import-forme",
+        "version": "0.25-import-preview-agent-history",
         "updated": date.today().isoformat(),
         "voices_total": total,
         "source_files": source_files,

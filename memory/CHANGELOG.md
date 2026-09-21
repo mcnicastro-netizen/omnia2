@@ -1,5 +1,15 @@
 # OMNIA — Changelog
 
+## 2026-09-21 — Docs D-084: Cap.14/3 + HAL Import A UX
+
+**Tipo**: Docs / HAL (D-084).
+
+- Cap.14 v1.2 + Cap.3 §3.2 + hub migrazione: warning foto, Assegna agente, Storico jobs, publish flags, dry-run would-be, `url_foto_N`
+- HAL `14-import-xml.yaml` +3 voci (`import.warning-foto`, `import.assegna-agente`, `import.storico-jobs`) → 17 voci Cap.14
+- `IMPORT_HAL.md` → v0.25 · smoke query aggiuntive · `hal-index.json` regenerato
+- `NEXT_SESSION.md` 8e/8f
+
+---
 ## 2026-09-21 — Import XML: warning foto, agente, storico
 
 **Tipo**: Feature / Import (A).

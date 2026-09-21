@@ -9,8 +9,8 @@
 - Non importa **clienti / lead / trattative** via XML. Solo **immobili** (`properties`). Per i clienti esiste un flusso separato (`/clients/csv-import`, Cap. 4 §clienti-import).
 - Non fa **rollback batch**: una volta finalizzato il commit, gli immobili sono dentro. Se ti accorgi dopo che c'era un problema, li elimini uno alla volta dal modulo Immobili (o via `bulk` — Cap. 3).
 - Non fa **fuzzy match** sul titolo o sull'indirizzo per il dedupe. Il dedupe usa **solo `reference_code`**: se il tuo XML non ha ref stabili, il dedupe è meno efficace.
-- Non salva un log persistente delle preview. Una preview vive **10 minuti in memoria** sul processo backend. Se il backend riavvia (deploy, restart), la preview scompare e ti tocca ricaricare il file.
-- Non supporta formati diversi da XML in v1 (no CSV, no JSON, no Excel).
+- Non salva un log persistente delle **preview**. Una preview vive **10 minuti in memoria** sul processo backend. Se il backend riavvia (deploy, restart), la preview scompare e ti tocca ricaricare il file. Lo **storico dei commit** (ImportJob) sì: è in fondo alla pagina Importa.
+- Non supporta formati diversi da XML sulla forma A in v1 (no CSV/JSON/Excel su `/app/import`). CSV e XML veloce immobili = forme B/C (Cap. 3).
 
 ---
 
@@ -78,21 +78,30 @@ Il modulo è progettato per **non sorprenderti**: prima ti mostra *"ho letto N i
 Ricevi in schermata:
 - **Totale letto**: *"N / M immobili leggibili"* (M = record trovati; N = parseabili senza errori bloccanti).
 - **Aggregazioni**: 3 cards con **Per tipologia** / **Per contratto** / **Per città**.
-- **Warning**: quanti immobili senza foto, quanti senza prezzo/canone.
-- **Anteprima 5 immobili**: tabella con Ref, Titolo, Città, Tipo, Contratto, Prezzo, MQ, N. foto.
+- **Warning foto/prezzo** (amber):
+  - immobili **senza foto** + elenco rif. (max 20);
+  - immobili con **URL foto deboli** (example.*/localhost/placeholder) + rif.;
+  - immobili senza prezzo/canone.
+- **Anteprima 5 immobili**: tabella con Ref, Titolo, Città, Tipo, Contratto, Prezzo, MQ, N. foto (marcatori `!` / `∅` se URL deboli o zero foto).
 - **Divergenze**: elenco espandibile dei record scartati/anomali (max 50 righe).
-- **Opzioni pre-commit**: toggle *"Salta immobili già presenti (dedupe per codice riferimento)"* — di default **ON**.
+- **Opzioni pre-commit** (default ON dove indicato):
+  - *"Salta immobili già presenti"* (dedupe per `reference_code`);
+  - *"Online sul portale annunci OMNIA"* → `list_on_immobilcloud` / ImmobilCloud;
+  - *"Condividi in inventario MLS"* → `mls_shared`;
+  - **"Assegna agente"** — select membri agenzia (default = chi importa); scrive `listing_agent_id` su tutti i record del commit.
 
 Da qui puoi:
-- Cliccare **"Simulazione (nessuna scrittura)"** — chiama commit con `dry_run=true`.
-- Cliccare **"Importa in OMNIA"** — chiama commit con `dry_run=false`.
+- Cliccare **"Simulazione (nessuna scrittura)"** — commit con `dry_run=true` (conta quanti *sarebbero* inseriti; **non** consuma la session).
+- Cliccare **"Importa in OMNIA"** — commit reale; crea `ImportJob` e consuma la session.
 - Cliccare **"Annulla"** — chiude la preview, torna al passo 1.
 
-### FASE 3 · Commit result
+### FASE 3 · Commit result + storico
 Dopo il commit vedi:
-- **Simulazione**: *"In caso di import reale sarebbero stati inseriti X immobili, Y saltati per duplicato."*
-- **Import reale con inseriti**: *"✅ X immobili importati con successo, Y saltati (già presenti)."*
-- **Import reale con 0 inseriti**: *"ℹ️ Tutti gli Y immobili erano già presenti (dedupe attivo)."*
+- **Simulazione**: *"In caso di import reale sarebbero stati inseriti X immobili, Y saltati per duplicato."* (`inserted` = conteggio *would-be*, non zero).
+- **Import reale con inseriti**: *"X immobili importati… Y saltati"* + `job_id`.
+- **Import reale con 0 inseriti**: tutti già presenti (dedupe).
+
+In fondo alla pagina (anche senza preview attiva): **Storico import** — lista `ImportJob` dell’agenzia (XML gestionale / CSV / feed XML), con data, conteggi, status. Refresh manuale.
 
 [SCREEN: import-xml-preview]
 
@@ -100,8 +109,9 @@ Dopo il commit vedi:
 | Endpoint | Metodo | Ruolo richiesto | Cosa fa |
 |----------|:-:|:-:|---------|
 | `/api/app/import/xml/preview` | POST multipart | `agency_admin` / `super_admin` | Legge XML, ritorna report + session_id (10min) |
-| `/api/app/import/xml/commit` | POST JSON | `agency_admin` / `super_admin` | Applica preview al DB (o simula se `dry_run=true`) |
+| `/api/app/import/xml/commit` | POST JSON | `agency_admin` / `super_admin` | Applica preview al DB (o simula se `dry_run=true`); body opz. `listing_agent_id`, `list_on_immobilcloud`, `share_on_mls` |
 | `/api/app/import/xml/session/{id}` | GET | `agency_admin` / `super_admin` | Rilegge il report di una sessione ancora valida |
+| `/api/app/import/jobs` | GET | `agency_admin` / `agent` / `super_admin` | Storico ImportJob agenzia (newest first) |
 
 **Session ID pattern**
 Formato: `prv_{millisecondi}_{primi 8 char user id}` (es. `prv_1738419300123_a1b2c3d4`). Legato all'utente che ha fatto upload — un altro utente della stessa agenzia con quella session id riceve `403 session_owner_mismatch`.
@@ -236,12 +246,12 @@ Vuoi sapere **quanti immobili sarebbero effettivamente inseriti** dopo il dedupe
 1. Dalla preview, invece di cliccare *"Importa in OMNIA"*, clicca **"Simulazione (nessuna scrittura)"**.
 2. Chiama `POST /commit` con `dry_run: true`.
 3. Il backend fa tutti i controlli di dedupe come nell'import reale.
-4. Restituisce lo stesso payload di risposta con `dry_run: true` — ma **non inserisce nulla**.
+4. Restituisce lo stesso payload con `dry_run: true`, `inserted` = quanti *sarebbero* inseriti dopo dedupe, `job_id: null` — **non** scrive su `properties` né crea ImportJob.
 5. Puoi rilanciare il commit vero dopo (la session è ancora valida per 10 minuti, la simulazione **non la consuma**).
 
 **Differenza chiave con l'import reale**
-- Simulazione (`dry_run=true`): la session rimane valida, puoi rilanciare simulazioni multiple o passare al commit reale.
-- Commit reale (`dry_run=false`): al termine la session viene **consumata** (rimossa dallo store), non puoi rieseguirla — devi ricaricare il file.
+- Simulazione (`dry_run=true`): session valida; `inserted` informativo; nessun `ImportJob`.
+- Commit reale (`dry_run=false`): session **consumata**; scrive immobili + riga `ImportJob` (`source=universal_xml`).
 
 ---
 
@@ -289,8 +299,11 @@ Ogni record deve avere almeno:
 **Campi opzionali ma consigliati**
 - `<riferimento>` per il dedupe.
 - `<prezzo>` o `<canone>` (altrimenti warning "senza prezzo").
-- Almeno una `<url_foto_1>` (altrimenti warning "senza foto").
+- Almeno una foto (`<url1>`, `<url_foto_1>`, `<url_foto1>`, `<foto1>`, …) — altrimenti warning "senza foto". URL di test (`example.*`, localhost, placeholder) → warning "URL deboli".
 - `<mq>` / `<surface>` per una scheda immobile completa.
+
+**Tag foto riconosciuti (21-Set-2026)**  
+Il parser itera `url{N}` / `foto{N}` / `immagine{N}` **e** `url_foto_{N}` / `url_foto{N}` / `foto_{N}` (fino a ~100 slot). `tipo{N}=P` → planimetria, non conteggiata tra le foto.
 
 ---
 
@@ -305,8 +318,9 @@ Ogni record deve avere almeno:
 | Session scaduta | 404 `preview_session_not_found_or_expired` | Sono passati > 10 minuti dalla preview. | Ricarica il file (Preview + Commit). |
 | Session di altro utente | 403 `session_owner_mismatch` | Stai provando a committare una session_id che non è tua. | Ogni utente ha le proprie session. Fai tu il preview + commit dallo stesso utente. |
 | Ruolo non consentito | 403 (require_roles) | Sei `agent` invece che `agency_admin`. | Chiedi al titolare di fare l'import. |
+| Agente non in agenzia | 400 `listing_agent_not_in_agency` | `listing_agent_id` non appartiene all'agenzia. | Scegli un membro dalla select o lascia "Io". |
 | Molte divergenze | Nessuno | Parsing riuscito ma molti record scartati (senza città/titolo, o mapping fallito). | Apri il dettaglio divergenze. Correggi l'XML alla fonte o accetta che i record borderline vengano scartati (i buoni entrano lo stesso). |
-| Import fatto ma non vedo gli immobili | Nessuno | Il commit ha inserito X immobili ma non li vedi in lista. | Refresh pagina Immobili. Verifica il filtro attivo (potresti avere un filtro che esclude gli stati appena inseriti). Ogni immobile è creato con `moderation_status: "approved"` e `is_listed_on_immobilcloud: true`. |
+| Import fatto ma non vedo gli immobili | Nessuno | Il commit ha inserito X immobili ma non li vedi in lista. | Refresh pagina Immobili. Verifica filtri. Flag publish (ImmobilCloud/MLS) dipendono dalle checkbox del commit (default ON). |
 
 ---
 
@@ -314,20 +328,25 @@ Ogni record deve avere almeno:
 
 **Cosa il modulo Import XML NON fa oggi**
 
-- ❌ **Solo XML in v1** — no CSV, no JSON, no Excel, no API pull da CRM esterni. Il backend accetta anche `.txt` come workaround per feed rinominati, ma la UI filtra `.xml`.
+- ❌ **Solo XML sulla forma A** — no CSV/JSON/Excel su `/app/import`. Forme B/C (Cap. 3) e D/E clienti (Cap. 4) restano porte separate.
 - ❌ **Nessuna sync automatica**. Ogni import è **one-shot**: tu esporti dal vecchio gestionale, tu carichi in OMNIA. Non c'è polling, webhook, cron.
-- ❌ **Nessun wizard di mappatura personalizzabile**. Le tabelle sono euristiche interne (`TYPE_CODE_MAP`, `ENERGY_CODE_MAP`, `OPERATION_CODE_MAP`, `FEATURE_KEYWORDS`). Se il tuo XML usa codici mai visti, finiscono in divergenze.
-- ❌ **Nessun rollback batch**. Una volta finalizzato il commit, gli immobili sono nel DB — vanno cancellati uno alla volta (o via bulk dalla pagina Immobili, Cap. 3).
-- ❌ **Session in-memory, non persistita**. Se il backend riavvia (deploy, restart), tutte le preview attive scompaiono. Devi rifare l'upload.
-- ❌ **TTL session solo 10 minuti**. Se ti distrai fra preview e commit più a lungo → devi ricaricare il file.
-- ❌ **Nessuna preview delle foto** nella tabella samples. Solo il **conteggio** delle foto (`photos_count`). Le foto vengono comunque scaricate/riferite dagli URL indicati nel feed.
-- ❌ **Nessun import di clienti / lead / trattative via XML**. Solo `properties`. Per clienti B2B c'è `/clients/csv-import` (Cap. 4), per la generazione lead da immobili c'è il modulo Match (Cap. 5).
-- ❌ **Dedupe solo per `reference_code`**. Non fa fuzzy match su titolo/indirizzo/coordinate. Se il tuo export non ha `<riferimento>` stabile, il dedupe è inefficace e potresti creare doppioni.
-- ❌ **Nessuna assegnazione automatica a un agente specifico**. Gli immobili importati non hanno `agent_id` — verranno visti come immobili "dell'agenzia" senza responsabile finché il titolare non li ri-assegna manualmente (o via bulk).
-- ❌ **Nessuna traccia dello storico import**. Non c'è un pannello *"Ecco tutti gli import fatti in passato, con data e conteggi"*. I singoli record hanno `_import_source` e `_import_reference` in DB, ma non c'è UI.
+- ❌ **Nessun wizard di mappatura personalizzabile**. Le tabelle sono euristiche interne. Codici mai visti → divergenze.
+- ❌ **Nessun rollback batch**. Commit finale = immobili nel DB (cancella uno a uno o bulk Cap. 3).
+- ❌ **Session preview in-memory**. Deploy/restart → preview perse. TTL 10 minuti.
+- ❌ **Nessuna thumbnail foto in preview**. Solo conteggio + warning URL deboli / senza foto (non scarica le immagini in anteprima).
+- ❌ **Nessun import di clienti / lead / trattative via XML**. Solo `properties`.
+- ❌ **Dedupe solo per `reference_code`**. Nessun fuzzy match titolo/indirizzo.
+- ❌ **Nessun multiposting portali terzi** (Idealista, Immobiliare.it, …) al commit: solo flag ImmobilCloud + MLS inventario OMNIA.
+
+**Cosa è arrivato (21-Set-2026) — non è più un limite**
+- ✅ Warning foto dettagliati (rif. senza foto / URL deboli).
+- ✅ Assegna agente al commit (`listing_agent_id`).
+- ✅ Storico ImportJob in UI + `GET /api/app/import/jobs`.
+- ✅ Flag publish ImmobilCloud + MLS al commit (anche B/C).
+- ✅ Dry-run riporta il conteggio *would-be* e non consuma la session.
 
 **Cosa può cambiare in futuro**
-Se il campo esprime la necessità, in versioni successive: CSV/JSON, sync periodica via API/URL, wizard mappatura, rollback batch, session persistita, import clienti via XML, storico import lato UI, assegnazione automatica agente.
+CSV/JSON sulla forma A, sync periodica, wizard mappatura, rollback batch, session persistita, import clienti via XML, multiposting portali terzi.
 
 ---
 
@@ -348,21 +367,18 @@ Se il campo esprime la necessità, in versioni successive: CSV/JSON, sync period
 1. **Esporta** il tuo portafoglio dal vecchio strumento come XML (opzione tipica: *"Export feed portali"* o *"Esporta annunci"*).
 2. Verifica il file: apri con un editor testuale, controlla che contenga tag come `<prezzo>`, `<citta>`, `<mq>`.
 3. Vai in OMNIA **Import XML** → carica il file → clicca **Analizza contenuto**.
-4. Leggi la preview: verifica che "leggibili / trovati" sia una % accettabile (idealmente > 90%).
-5. Guarda le 5 righe di **anteprima**: sono immobili sensati? I prezzi, le città, le tipologie sono corrette?
-6. Espandi **Divergenze** se il conteggio è > 0: quali record vengono scartati? Sono importanti?
-7. (Opzionale) Clicca **Simulazione** per vedere quanti sarebbero effettivamente inseriti (dopo dedupe).
-8. Se tutto ti torna, clicca **Importa in OMNIA** — il commit inserisce e consuma la session.
-9. Vai in **Immobili** e verifica il conteggio: dovrebbero esserci gli immobili appena importati.
-10. **Assegna un agente** ai nuovi immobili (bulk edit se sono tanti, Cap. 3).
+4. Rivedi la preview: % leggibili, warning **foto** (senza / URL deboli) e prezzo, anteprima 5, divergenze.
+5. Opzioni: dedupe ON · ImmobilCloud · MLS · **Assegna agente** (select).
+6. (Opzionale) **Simulazione** — vedi `inserted` would-be senza scrivere.
+7. **Importa in OMNIA** — commit + riga nello **Storico import**.
+8. Verifica in Immobili + storico in fondo a `/app/import`.
 
 **Se hai importato per errore**
-- Vai in Immobili, filtra per data creazione (oggi) o per il flag `_import_source` (se hai accesso super_admin).
-- Elimina in bulk o singolarmente.
-- Poi rilancia con l'XML corretto.
+- Vai in Immobili, filtra per data creazione (oggi) o `_import_source` (super_admin).
+- Elimina in bulk o singolarmente, poi rilancia con l'XML corretto.
 
 ---
 
 **Progressione manuale**: 14/26 capitoli (54%).
-**Voci HAL totali**: **168** (Cap. 1-14, +13 nuove voci Cap. 14).
-**Versione capitolo**: v1.0 (Feb 2026 · TASK K).
+**Voci HAL Cap. 14**: **17** (+3: warning-foto, assegna-agente, storico-jobs).
+**Versione capitolo**: v1.2 (21-Set-2026 · warning foto · agente · storico · publish flags).

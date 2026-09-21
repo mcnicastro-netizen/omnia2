@@ -67,8 +67,9 @@ Sono disponibili **due percorsi** (lettere = hub `memory/manuale/migrazione/00-h
 4. Salva il file in formato **CSV** (UTF-8).
 5. Torna in ImmoWeb: **trascina** il file nel riquadro tratteggiato oppure cliccalo per scegliere dal disco.
 6. Verifica la **preview delle prime 5 righe** e il numero totale che stai per importare.
-7. Clicca **Importa**.
-8. A fine importazione vedi *"Importati X immobili"* e — se ci sono errori — un elenco a discesa con la riga e la causa.
+7. Opzionale (default ON): **Attiva subito** · **Online portale OMNIA** · **Condividi MLS**.
+8. Clicca **Importa**.
+9. A fine importazione vedi *"Importati X immobili"* e — se ci sono errori — l'elenco riga/causa. Lo storico job resta anche sulla pagina Importa (forma A).
 
 [SCREEN: cap3-import-csv-flow]
 
@@ -100,22 +101,23 @@ Un percorso dedicato per grosse migrazioni, con **due fasi** (analisi + conferma
 4. Rivedi il report di analisi:
    - Numero totale di immobili trovati
    - Ripartizione **per tipologia · per contratto · per città**
-   - Divergenze rilevate (es. campi non standard)
-   - Warning: *"immobili senza foto"*, *"immobili senza prezzo"*
-   - Anteprima primi 5 immobili
-5. Attiva **Salta immobili già presenti** (consigliato: usa il codice di riferimento per non duplicare).
-6. Opzionale: **Simulazione** — vedi cosa succederebbe senza scrivere nulla.
-7. Clicca **Importa in OMNIA**.
+   - Warning: senza foto / **URL foto deboli** (con rif.) / senza prezzo
+   - Anteprima primi 5 (marcatori foto)
+   - Divergenze rilevate
+5. Opzioni: **Salta già presenti** · **Online portale OMNIA (ImmobilCloud)** · **Condividi MLS** · **Assegna agente**.
+6. Opzionale: **Simulazione** (conteggio would-be, nessuna scrittura).
+7. Clicca **Importa in OMNIA**. Controlla lo **Storico import** in fondo alla pagina.
 
 [SCREEN: cap3-xml-import-preview]
 
 **Errori comuni XML**
 - *"Il file deve avere estensione .xml"* → sbagli formato. Rinomina o riesporta.
-- *"File troppo grande (max 50 MB)"* → dividi il feed. Molti gestionali permettono export per zona/agente.
-- *"Divergenze rilevate"* nel report → alcuni campi non sono standard. Non è bloccante: vedi cosa manca e completerai dopo, oppure chiedi al fornitore XML uno schema standard (OSF).
+- *"File troppo grande (max 50 MB)"* → dividi il feed.
+- *"Divergenze rilevate"* → campi non standard; non bloccante.
+- *"URL foto deboli"* → il feed punta a example/localhost/placeholder: sostituisci URL reali prima di pubblicare.
 
 **Chi può farlo**
-- **Import CSV/XML veloce**: titolare + agente + segreteria (come agente).
+- **Import CSV/XML veloce**: titolare + agente + segreteria (come agente). Su B/C esistono anche i flag *Attiva subito* / ImmobilCloud / MLS.
 - **Import XML universale** (`/app/import`): **solo titolare**.
 
 ---

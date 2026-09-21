@@ -1,6 +1,6 @@
 # Prossima sessione — programma passi
 
-**Aggiornato**: 21 Settembre 2026 — ripristino flusso GitHub omnia2 (D-087) · hub import A–E · D-086 Cloud  
+**Aggiornato**: 21 Settembre 2026 — Import A UX (foto/agente/storico) + D-084 docs · D-087 omnia2  
 **Stato base**: Sprint 1→4 **CONCLUSO**. Stress: `PLATFORM_STRESS_REPORT.md` + `STRESS_REPORT.md`.  
 **Preprod gate**: `memory/PREPROD_GATE_REPORT.md` (PASS required — no vendor burn).  
 **Repo ufficiale**: https://github.com/mcnicastro-netizen/omnia2 ✅ — **apri gli agent QUI**. Origin-tmp non è master. Setup: `memory/OMNIA2_REPO_SETUP.md`.  
@@ -21,6 +21,8 @@
 8b. ✅ **19-Set Gruppo Real Estate Spa** + API key + sim Ruota PASS · Cap.20/24 + HAL `api-keys.ruota-chiave-smarrita` · index **v0.21-gruppi-rotate**
 8c. ✅ **19-Set Cestino 30gg** immobili/clienti · `/app/trash` · Cap.3/4 semplici · HAL `cestino.ripristinare` · index **v0.22-cestino**
 8d. ✅ **19-Set D-085** quota 30/100/300 + polish errori «spazio esaurito» Cap.3/7/19 + HAL · reindex **846** chunk / **342** voci
+8e. ✅ **21-Set Import forme A–E hub** + guide CS Top 5 + fixture + flags ImmobilCloud/MLS
+8f. ✅ **21-Set Import A UX**: warning foto · Assegna agente · Storico jobs · Cap.14/3/HAL **v0.25** (17 voci Cap.14) · index regenerato
 9. Founder: **«vai»** su Top 5 A-028 (o ID fuori programma)
 10. **D-084**: ogni ship aggiorna manuale+YAML+index (sempre 100%)
 11. Preprod: `python scripts/preprod_confidence_gate.py` prima di go-live / ship rischiosi
