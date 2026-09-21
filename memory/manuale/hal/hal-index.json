@@ -1,7 +1,7 @@
 {
-  "version": "0.23-storage-d085",
-  "updated": "2026-09-19",
-  "voices_total": 342,
+  "version": "0.24-import-forme",
+  "updated": "2026-09-21",
+  "voices_total": 343,
   "source_files": [
     {
       "file": "00-api-codice.yaml",
@@ -75,8 +75,8 @@
     },
     {
       "file": "14-import-xml.yaml",
-      "voices": 13,
-      "md5": "06635af601bbbaf1f584647e9fef9270"
+      "voices": 14,
+      "md5": "73e2a6ffbee3e2a5b6b9921bcd18f5fe"
     },
     {
       "file": "15-social-publisher.yaml",
@@ -202,5 +202,5 @@
       "md5": "5e88370cdf2c070dc30c7c3f036b85db"
     }
   ],
-  "notes": "Fingerprints regenerated from YAML on disk. Live RAG reindex: POST /api/app/hal/knowledge/reindex?force=true (super_admin). 2026-09-19: D-085 storage quota · Cestino · Cap.20 Ruota · cleanup Emergent · Cap.15 social · Cap.3 planimetrie."
+  "notes": "Fingerprints regenerated from YAML on disk. Live RAG reindex: POST /api/app/hal/knowledge/reindex?force=true (super_admin). 2026-09-21: hub import A–E · HAL import.tutte-le-forme. 2026-09-19: D-085 storage quota · Cestino · Cap.20 Ruota · cleanup Emergent · Cap.15 social · Cap.3 planimetrie."
 }

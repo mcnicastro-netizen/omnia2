@@ -51,7 +51,7 @@ def main() -> None:
         new_chapters.append(entry)
 
     out = {
-        "version": "0.23-storage-d085",
+        "version": "0.24-import-forme",
         "updated": date.today().isoformat(),
         "voices_total": total,
         "source_files": source_files,
@@ -59,6 +59,7 @@ def main() -> None:
         "notes": (
             "Fingerprints regenerated from YAML on disk. "
             "Live RAG reindex: POST /api/app/hal/knowledge/reindex?force=true (super_admin). "
+            "2026-09-21: hub import A–E · HAL import.tutte-le-forme. "
             "2026-09-19: D-085 storage quota · Cestino · Cap.20 Ruota · "
             "cleanup Emergent · Cap.15 social · Cap.3 planimetrie."
         ),

@@ -10,7 +10,7 @@ voci:
     pubblico: [titolare, super_admin]
     livello: base
     tags: [import, xml, migrazione, gestionale, universal-xml-importer, primi-passi, one-shot, agenzia]
-    correlati: [import.dove-trovarlo, import.flusso-preview-commit, import.limitazioni-v1]
+    correlati: [import.dove-trovarlo, import.flusso-preview-commit, import.limitazioni-v1, import.tutte-le-forme]
     domanda_naturale: "Cos'è Import XML? A cosa serve?"
     contenuto:
       a_cosa_serve: >
@@ -573,4 +573,52 @@ voci:
             approvarli. Poi il publishing avviene tramite il Cap. 6."
       permessi:
         - Info descrittiva
+    screenshot: []
+
+  - id: import.tutte-le-forme
+    titolo: Tutte le forme di import A–E
+    modulo: Import XML
+    widget: null
+    pubblico: [titolare, super_admin, agente, segreteria]
+    livello: base
+    tags: [import, xml, csv, smart-import-ai, tutte-le-forme, forma-a, forma-b, forma-c, forma-d, forma-e, migrazione, hub]
+    correlati: [import.cos-e, import.dove-trovarlo, import.limitazioni-v1, import.checklist-migrazione]
+    domanda_naturale: "Quali sono tutte le forme di import in OMNIA? XML, CSV, AI?"
+    contenuto:
+      a_cosa_serve: >
+        Orientarti fra le cinque porte di import senza confonderle:
+        A XML migrazione, B CSV immobili, C XML veloce, D CSV clienti,
+        E Smart Import AI.
+      quando_si_usa: >
+        Quando devi migrare portafoglio o rubrica e non sai quale schermata
+        aprire, oppure chiedi a HAL "come importo tutto".
+      passi:
+        - "Forma A — XML migrazione (preview→commit): /app/import, solo
+          titolare. POST /api/app/import/xml/preview + /commit. Max 50 MB.
+          Guide: memory/manuale/import/guida-a-xml-migrazione.md."
+        - "Forma B — CSV immobili template: /app/properties/import tab CSV.
+          GET /api/app/properties/_template/csv, POST .../import/csv.
+          Obbligatori title + city. Separatore ; ."
+        - "Forma C — XML veloce URL o incolla: stessa pagina tab XML.
+          POST /api/app/properties/import/xml. Rileva Vendor A
+          (cod_tipologia / id_agenzia) o XML generico. Job se URL."
+        - "Forma D — CSV clienti template: /app/clients/import.
+          GET /api/app/clients/_template/csv, POST .../import/csv."
+        - "Forma E — Smart Import AI clienti: stesso URL tab Import AI.
+          .csv .xlsx .vcf .txt, max 5 MB / 500 righe, draft 1 ora.
+          POST /api/app/clients/import/ai."
+        - "Hub: memory/manuale/import/HUB.md. Fixture:
+          backend/tests/fixtures/import/forma-a…e."
+      errori_comuni:
+        - problema: "Cerco di importare clienti dall'XML di Importa"
+          soluzione: >
+            Forma A importa solo immobili. Clienti = forma D (CSV pulito)
+            o forma E (file brutto). Cap. 4.
+        - problema: "Ho un Excel immobili e uso /app/import"
+          soluzione: >
+            /app/import accetta solo XML. Excel/CSV immobili = forma B
+            (template). Non esiste import AI Excel per immobili in v1.
+      permessi:
+        - Forma A solo agency_admin / super_admin
+        - Forme B–E anche agent / segreteria
     screenshot: []

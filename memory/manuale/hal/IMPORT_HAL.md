@@ -1,6 +1,6 @@
 # 📚 HAL Knowledge — Import & Cold Start (v0.18)
 
-**Ultimo aggiornamento**: 19-Sep-2026 (D-085 storage 30/100/300 · Cestino · Cap.20 Ruota · Cap.24 · cleanup Emergent · hal-index v0.23)
+**Ultimo aggiornamento**: 21-Sep-2026 (hub import A–E · smoke `import.tutte-le-forme` · D-086 Cloud)
 **Corpus**: YAML in `memory/manuale/hal/*.yaml` (Cap. 1–27) · MD esclusi dal RAG ingest
 **Motore**: `hal_knowledge.py` · reindex: `POST /api/app/hal/knowledge/reindex?force=true` (super_admin)
 **Regola Founder D-084**: ogni ship aggiorna MD+YAML nello stesso giro — vedi `memory/MANUAL_SYNC.md`.
@@ -288,11 +288,24 @@ Prima di dichiarare il cold start "attivo", eseguire manualmente queste 5 query 
 | 17-Sep-2026 (D-084) | **v0.14.1-cap18-privati** | Cap. 18 → **v1.2**: voce `notifiche.inquiry-annuncio-privato` (+1); lead_notification ristretto ad annunci agenzia; Cap. 23 Ken Burns split B2C free / agenzia 501→Kling (A-026); note Cap. 8 + Cap. 10 SellPage canali contatto. |
 | Feb-2026 (Cap. 19) | **v0.15-cap19** | Cap. 19 Impostazioni agenzia aggiunto (+14 voci → 241). Copertura `SettingsPage.jsx` (358 righe) + `apps/immoweb/agencies.py` (180 righe · GET/PATCH `/agencies/me`) + `shared/models/agency.py` (305 righe · AgencyInDB/AgencyUpdate + 5 sotto-schemi) + `BillingPage.jsx` (235 righe) + `apps/billing/routes.py` (473 righe) + `apps/billing/plans.py` (LAUNCH Founders €49/€99/€249/€299 + POST_TRACTION €79/€179/€349/€499 + 6 credit packages €0,05/cred). **Onestà D-051**: v1 solo 5 sezioni anagrafica (identità/fiscale/indirizzo/contatti/modalità sito), 3 template omnia stub "presto disponibile", NO uploader logo/color picker, campi schema-only (logo_url/primary_color/accent_color/REA/FIAIP/contact.website/country/plan_type/group_id/branch_code), NO validazione P.IVA/CF/CAP/telefono/geocoding, NO transfer ownership (owner_id immutabile), NO audit trail settings, toast success = banner embedded (NON sonner Cap. 18). Team/API Keys/Domain/Notifiche/Billing = pagine SEPARATE. |
 | Feb-2026 (Cap. 20) | **v0.16-cap20** | Cap. 20 API Keys e integrazioni (Track B / API Gateway) aggiunto (+14 voci → 255). Copertura `ApiKeysPage.jsx` (351 righe) + `apps/immoweb/api_keys.py` (199 righe · router `/api/app/api-keys`) + `apps/v1/gateway.py` (Bearer consumer `/api/v1/*`) + `shared/auth/api_key.py` (issuance/hash/require_api_key) + `shared/models/api_key.py` (ApiKeyInDB/Public/Create/IssueResponse). **Onestà D-051 pricing dual-track**: Track B = €0,03/cred vs Track A = €0,05/cred (wallet contabilmente separati). Endpoint `/api/v1/*` documentati con costi (valuator 5, mortgages 1, legal 3, feed/me/health 0, staging ~15). Plaintext `omk_live_<28chars>` show-once + hash SHA-256. NO auto-ricarica Stripe (top-up manuale), NO UI usage detail, NO reportistica per-partner, NO rate limit, NO scoping endpoint, NO IP whitelist, NO webhook, NO rotazione. Widget embed via `<script data-key data-widget>`. |
+| 21-Set-2026 (import A–E) | **v0.24-import-forme** | Hub tutte le forme A–E + HAL `import.tutte-le-forme` · smoke Cap.14 query unica · fixture `backend/tests/fixtures/import/`. |
 | 19-Set-2026 (storage D-085) | **v0.23-storage-d085** | Quota 30/100/300 GB + extra €15 · meter · blocco upload · backup giornaliero · Cap.19. |
 | 19-Set-2026 (cestino) | **v0.22-cestino** | Soft-delete immobili/clienti · pagina Cestino 30gg · Cap.3/4 linguaggio semplice · HAL `cestino.ripristinare` · purge cron. |
 | 19-Set-2026 (gruppi+rotate) | **v0.21-gruppi-rotate** | Cap.20 §20.6bis Ruota chiave smarrita · Cap.24 v1.1 Real Estate Spa + ruoli Founder/admin · HAL `api-keys.ruota-chiave-smarrita` + voci gruppi.create/branch/ruoli · sim PASS report · fix is_active null + BranchSummary plan_type. |
 | 18-Set-2026 (gestionale) | **v0.20-gestionale-18set** | Cap.15 Social: 6 canali (WA / WABA / GBP) · Cap.3 planimetrie JPEG/PDF · Cap.6 wizard slug/categoria/Compliance · `hal-index.json` 339 voci · CHANGELOG/GAP/NEXT_SESSION. |
 | 18-Set-2026 (Cap. 21 align) | **v0.19-cap21-align** | Cap. 21 Valutatore allineato 100% al codice: PDF elegante OMNIA/white-label/hybrid · roll-forward prezzi FOI+trend · OUTLINE/MD/YAML aggiornati · `hal-index.json` rigenerato (`regenerate_hal_index.py`) · reindex live force=true · i18n IT/EN/ES senza claim «20.000 comuni OMI 2025». |
+
+---
+
+## 🚦 Smoke Cap. 14 — query `import.tutte-le-forme`
+
+**Domanda**: *"Quali sono tutte le forme di import in OMNIA? XML, CSV, AI?"*  
+**Voce attesa (top-1)**: `import.tutte-le-forme` (file `14-import-xml.yaml`)  
+**Accettabile top-3**: `import.cos-e`, `import.limitazioni-v1`, `clienti.smart-import-ai`  
+**Confidence**: ≥ 0.08 (meglio ≥ 0.20)
+
+Criteri smoke: top-1 `import.tutte-le-forme` **oppure** stesso file `14-import-xml.yaml` con sim ≥ 0.08.  
+Hub: `memory/manuale/import/HUB.md`.
 
 ---
 
@@ -352,6 +365,7 @@ Criteri smoke: top-1 chunk_id atteso OR **stesso file** `13-team-ruoli.yaml` · 
 1. **"Come importo immobili da un file XML del vecchio gestionale?"** → top-1 atteso qualunque chunk di `14-import-xml.yaml` (post fix Pattern B: `immobili.importare-xml` di Cap. 3 depreca)
 2. **"Come evito di importare due volte lo stesso immobile via XML?"** → top-1 atteso `14-import-xml.yaml::import.dedupe`
 3. **"Cosa NON fa Import XML? Posso usarlo per CSV o sync automatica?"** → top-1 atteso `14-import-xml.yaml::import.limitazioni-v1`
+4. **"Quali sono tutte le forme di import in OMNIA? XML, CSV, AI?"** → top-1 atteso `14-import-xml.yaml::import.tutte-le-forme` (hub A–E)
 
 Criteri smoke: top-1 chunk_id atteso OR **stesso file** `14-import-xml.yaml` · sim ≥ 0.08.
 
