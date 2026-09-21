@@ -44,7 +44,7 @@ async def _ensure_demo_admin(db) -> None:
             lang="it",
             agency_ids=[DEMO_AGENCY_ID],
             active_agency_id=DEMO_AGENCY_ID,
-            account_type="agent",
+            account_type="b2b",
         )
         await db.users.insert_one(user.model_dump())
         logger.info("Demo admin created: %s", email)
