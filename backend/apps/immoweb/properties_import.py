@@ -17,6 +17,9 @@ from shared.db.connection import Database
 from shared.auth.dependencies import get_current_user, require_roles
 from shared.models.property import (
     PropertyInDB,
+    PropertyFeatures,
+    PropertyEnergy,
+    PropertyOwner,
     ImportJob,
     CSVImportPayload,
     XMLImportPayload,

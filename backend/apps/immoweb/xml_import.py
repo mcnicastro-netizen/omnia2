@@ -158,13 +158,16 @@ async def commit_xml(
     # Session consumed — remove
     _PREVIEW_SESSIONS.pop(body.session_id, None)
 
+    # dry_run: report how many WOULD be inserted (UI Cap.14 simulation copy)
+    inserted_count = len(to_insert) if body.dry_run else len(inserted_ids)
+
     now_iso = datetime.now(timezone.utc).isoformat()
     logger.info(
         "xml_import_commit: agency=%s inserted=%d skipped=%d dry_run=%s",
-        agency_id, len(inserted_ids), len(skipped_ref), body.dry_run,
+        agency_id, inserted_count, len(skipped_ref), body.dry_run,
     )
     return {
-        "inserted": len(inserted_ids),
+        "inserted": inserted_count,
         "skipped_by_reference": len(skipped_ref),
         "skipped_references": skipped_ref[:50],
         "committed_at": now_iso,

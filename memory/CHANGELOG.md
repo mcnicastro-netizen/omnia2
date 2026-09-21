@@ -1,5 +1,13 @@
 # OMNIA — Changelog
 
+## 2026-09-21 — Fix import CSV immobili + dry-run XML conteggio
+
+**Tipo**: Bugfix / Import.
+
+- `properties_import.py`: import mancanti `PropertyFeatures` / `PropertyEnergy` / `PropertyOwner` (CSV falliva su ogni riga)
+- `xml_import.py`: commit `dry_run=true` ora restituisce `inserted` = quanti *sarebbero* inseriti (UI simulazione Cap.14)
+
+---
 ## 2026-09-21 — Suite migrazione A–E (hub + CS Top 5 + fixture + UI)
 
 **Tipo**: Docs / HAL / UI (D-084, D-051).
