@@ -262,18 +262,32 @@ def _extract_photos(elem: ET.Element) -> List[Dict[str, Any]]:
     """
     Photos in legacy feeds usually appear as repeated tags:
         <titolo1/>, <url1/>, <tipo1/>, <titolo2/>, <url2/>, <tipo2/>, …
-    We iterate numerically until no more url<N> is found.
+        or <url_foto_1/>, <url_foto1/>, <foto_1/> …
+    We iterate numerically until no more url variants are found.
     """
     photos: List[Dict[str, Any]] = []
     i = 1
     consecutive_misses = 0
     while consecutive_misses < 3 and i < 100:
-        url = _text(elem, f"url{i}") or _text(elem, f"foto{i}") or _text(elem, f"immagine{i}")
+        url = (
+            _text(elem, f"url{i}")
+            or _text(elem, f"foto{i}")
+            or _text(elem, f"immagine{i}")
+            or _text(elem, f"url_foto_{i}")
+            or _text(elem, f"url_foto{i}")
+            or _text(elem, f"foto_{i}")
+            or _text(elem, f"immagine_{i}")
+        )
         if url:
             consecutive_misses = 0
-            tipo = (_text(elem, f"tipo{i}") or "F").upper().strip()
+            tipo = (
+                _text(elem, f"tipo{i}")
+                or _text(elem, f"tipo_foto_{i}")
+                or _text(elem, f"tipo_foto{i}")
+                or "F"
+            ).upper().strip()
             # Only include actual photos (F=Foto); skip P=Piantina (floor plan) into a separate field
-            title = _text(elem, f"titolo{i}") or None
+            title = _text(elem, f"titolo{i}") or _text(elem, f"titolo_foto_{i}") or None
             if tipo in {"F", "FOTO", ""}:
                 photos.append({
                     "id": str(uuid4()),
@@ -291,10 +305,19 @@ def _extract_photos(elem: ET.Element) -> List[Dict[str, Any]]:
 def _extract_floor_plan_url(elem: ET.Element) -> Optional[str]:
     """First photo tagged P (piantina) becomes floor_plan_url."""
     for i in range(1, 100):
-        url = _text(elem, f"url{i}") or _text(elem, f"foto{i}")
+        url = (
+            _text(elem, f"url{i}")
+            or _text(elem, f"foto{i}")
+            or _text(elem, f"url_foto_{i}")
+            or _text(elem, f"url_foto{i}")
+        )
         if not url:
             continue
-        tipo = (_text(elem, f"tipo{i}") or "").upper().strip()
+        tipo = (
+            _text(elem, f"tipo{i}")
+            or _text(elem, f"tipo_foto_{i}")
+            or ""
+        ).upper().strip()
         if tipo == "P":
             return url
     return None
