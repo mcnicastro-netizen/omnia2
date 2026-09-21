@@ -8,6 +8,7 @@
 - Commit: `listing_agent_id` (picker membri agenzia; default = chi importa); dry_run non consuma la sessione
 - Persistenza `ImportJob` source=`universal_xml` + `GET /api/app/import/jobs` (storico agenzia)
 - UI ImportXmlPage: warning dettagliati, select agente, lista storico
+- Parser: riconosce anche tag `url_foto_N` / `url_fotoN` (fixture gestionale)
 
 ---
 ## 2026-09-21 — Import flags: ImmobilCloud + MLS
