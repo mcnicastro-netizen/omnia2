@@ -1,5 +1,15 @@
 # OMNIA — Changelog
 
+## 2026-09-21 — HAL smoke Cap.14 query `import.tutte-le-forme`
+
+**Tipo**: Docs / HAL (D-084).
+
+- Voce YAML `import.tutte-le-forme` in `14-import-xml.yaml` (14 voci Cap.14)
+- `hal-index.json` **v0.24-import-forme** · 343 voci
+- Smoke: *"Quali sono tutte le forme di import in OMNIA? XML, CSV, AI?"* → top-1 atteso `import.tutte-le-forme`
+- `IMPORT_HAL.md` + `regenerate_hal_index.py` allineati
+
+---
 ## 2026-09-21 — Hub import forme A–E + guide Top 5 + fixture
 
 **Tipo**: Docs (D-084) · Cap. 14 rinvio · Cap. 3 etichette.
