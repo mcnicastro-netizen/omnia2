@@ -18,13 +18,14 @@ TIER_QUOTA_GB = {
 # No active subscription → free / trial soft cap
 FREE_QUOTA_GB = 5
 
-# Legacy agencies.plan → tier
+# Legacy agencies.plan / agencies.plan_type → tier
 _PLAN_ALIAS = {
     "free": None,
     "starter": "starter",
     "pro": "pro",
     "enterprise": "agency",
     "agency": "agency",
+    "turnkey": "pro",
 }
 
 STORAGE_ADDON_GB = 100
@@ -50,8 +51,11 @@ async def resolve_tier(db, agency_id: str, agency: Optional[dict] = None) -> Opt
     if sub and sub.get("tier") in TIER_QUOTA_GB:
         return sub["tier"]
     if agency is None:
-        agency = await db.agencies.find_one({"id": agency_id}, {"_id": 0, "plan": 1})
-    plan = (agency or {}).get("plan")
+        agency = await db.agencies.find_one(
+            {"id": agency_id}, {"_id": 0, "plan": 1, "plan_type": 1}
+        )
+    agency = agency or {}
+    plan = agency.get("plan") or agency.get("plan_type")
     return _PLAN_ALIAS.get(plan)
 
 
@@ -100,7 +104,7 @@ async def compute_usage_bytes(db, agency_id: str) -> int:
 async def get_storage_status(db, agency_id: str) -> Dict[str, Any]:
     agency = await db.agencies.find_one(
         {"id": agency_id},
-        {"_id": 0, "id": 1, "plan": 1, "storage_extra_gb": 1, "display_name": 1},
+        {"_id": 0, "id": 1, "plan": 1, "plan_type": 1, "storage_extra_gb": 1, "display_name": 1},
     )
     tier = await resolve_tier(db, agency_id, agency)
     included = included_quota_gb(tier)
