@@ -593,22 +593,23 @@ voci:
         Quando devi migrare portafoglio o rubrica e non sai quale schermata
         aprire, oppure chiedi a HAL "come importo tutto".
       passi:
-        - "Forma A — XML migrazione (preview→commit): /app/import, solo
+        - "Forma A — XML universale (preview→commit): /app/import, solo
           titolare. POST /api/app/import/xml/preview + /commit. Max 50 MB.
-          Guide: memory/manuale/import/guida-a-xml-migrazione.md."
+          Hub: memory/manuale/migrazione/00-hub-tutte-le-forme-import.md."
         - "Forma B — CSV immobili template: /app/properties/import tab CSV.
           GET /api/app/properties/_template/csv, POST .../import/csv.
           Obbligatori title + city. Separatore ; ."
         - "Forma C — XML veloce URL o incolla: stessa pagina tab XML.
-          POST /api/app/properties/import/xml. Rileva Vendor A
+          POST /api/app/properties/import/xml. Rileva schema italiano
           (cod_tipologia / id_agenzia) o XML generico. Job se URL."
         - "Forma D — CSV clienti template: /app/clients/import.
           GET /api/app/clients/_template/csv, POST .../import/csv."
         - "Forma E — Smart Import AI clienti: stesso URL tab Import AI.
           .csv .xlsx .vcf .txt, max 5 MB / 500 righe, draft 1 ora.
           POST /api/app/clients/import/ai."
-        - "Hub: memory/manuale/import/HUB.md. Fixture:
-          backend/tests/fixtures/import/forma-a…e."
+        - "Fixture: memory/fixtures/import/ (XML 5 immobili, CSV immobili,
+          CSV clienti). Guide CS interne 01–05 in memory/manuale/migrazione/.
+          In UI: zero nomi di altri gestionali."
       errori_comuni:
         - problema: "Cerco di importare clienti dall'XML di Importa"
           soluzione: >

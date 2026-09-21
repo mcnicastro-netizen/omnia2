@@ -12,8 +12,21 @@
 - Non salva un log persistente delle preview. Una preview vive **10 minuti in memoria** sul processo backend. Se il backend riavvia (deploy, restart), la preview scompare e ti tocca ricaricare il file.
 - Non supporta formati diversi da XML in v1 (no CSV, no JSON, no Excel).
 
-**Hub tutte le forme A–E** (questo capitolo = solo forma **A**): `memory/manuale/import/HUB.md`.  
-B CSV immobili · C XML veloce · D CSV clienti · E Smart Import AI — guide Top 5 + fixture in `backend/tests/fixtures/import/`.
+---
+
+## 14.0 · Tutte le forme di import (A–E)
+
+Questo capitolo descrive in dettaglio la forma **A**. Le altre porte sono in Cap. 3 e Cap. 4. **Hub**: `memory/manuale/migrazione/00-hub-tutte-le-forme-import.md`. **Fixture**: `memory/fixtures/import/`.
+
+| Forma | Cosa | UI | Chi |
+|:-----:|------|----|-----|
+| **A** | XML universale immobili (preview → commit) | `/app/import` | solo titolare |
+| **B** | CSV immobili | `/app/properties/import` tab CSV | titolare + agente + segreteria |
+| **C** | XML immobili veloce (URL / incolla) | `/app/properties/import` tab XML | titolare + agente + segreteria |
+| **D** | CSV clienti | `/app/clients/import` tab Template | titolare + agente + segreteria |
+| **E** | AI + file brutto clienti | `/app/clients/import` tab Import AI | titolare + agente + segreteria |
+
+Guide CS interne Top 5 (zero brand in UI): `memory/manuale/migrazione/01-da-agestanet.md` … `05-da-agim.md`. HAL: `import.tutte-le-forme`.
 
 ---
 
@@ -320,7 +333,7 @@ Se il campo esprime la necessità, in versioni successive: CSV/JSON, sync period
 
 ## 14.11 · Cross-ref con altri capitoli
 
-- **Hub A–E**: `memory/manuale/import/HUB.md` — mappa di tutte le porte di import (non solo XML).
+- **Hub A–E**: `memory/manuale/migrazione/00-hub-tutte-le-forme-import.md` — mappa di tutte le porte (non solo XML). Fixture `memory/fixtures/import/`.
 - **Cap. 3 · Immobili**: dopo l'import, la scheda immobile è editabile normalmente (foto, planimetrie, publishing). Cap. 3 §privacy governa cosa vedono gli agenti degli immobili importati (L1-L4). Forme **B** (CSV) e **C** (XML veloce) vivono in Cap. 3 §3.2.
 - **Cap. 4 · Clienti**: forme **D** (CSV template) e **E** (Smart Import AI) su `/app/clients/import` — non via XML.
 - **Cap. 6 · Portali & Publishing**: gli immobili importati con `is_listed_on_immobilcloud: true` sono immediatamente candidati al publishing (dopo compliance HARD/SOFT).

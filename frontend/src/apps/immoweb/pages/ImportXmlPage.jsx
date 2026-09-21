@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { api } from "../../../shared/lib/api";
 import AgencyShell from "../components/AgencyShell";
 import Brand from "../../../shared/components/Brand";
+import ImportFormsCrossLinks from "../components/ImportFormsCrossLinks";
 
 /**
  * ImportXmlPage — M2.5.4a Universal XML Importer.
@@ -99,6 +100,7 @@ export default function ImportXmlPage() {
             {t("import.subtitle") ||
               "Carica il file XML esportato dal tuo attuale gestionale. Vediamo insieme cosa contiene, poi confermi l'import in OMNIA. Nessuna modifica alla tua fonte originale."}
           </p>
+          <ImportFormsCrossLinks current="a" />
         </div>
 
         {/* STEP 1 — Upload */}

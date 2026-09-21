@@ -110,6 +110,8 @@ Non riempire "a tutti i costi": campi vuoti = *indifferente*. Meglio 3 criteri c
 **A cosa serve**
 Caricare in blocco molti clienti da un file (Excel, Google Sheets) — utile alla prima migrazione dal vecchio gestionale o quando hai una lista di lead da una campagna.
 
+**Hub A–E**: forma **D** (questa sezione). Forma **E** = §4.4. Immobili XML = Cap. 14 / `/app/import`. Mappa: `memory/manuale/migrazione/00-hub-tutte-le-forme-import.md`. Fixture CSV: `memory/fixtures/import/sample-clienti.csv`.
+
 **Passi**
 
 1. Dalla lista Clienti, in alto a destra, clicca **⬆ Importa CSV**.

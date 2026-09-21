@@ -2,6 +2,7 @@ import React, { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useNavigate } from "react-router-dom";
 import AgencyShell from "./components/AgencyShell";
+import ImportFormsCrossLinks from "./components/ImportFormsCrossLinks";
 import { api, API_BASE } from "../../shared/lib/api";
 import { formatApiErrorDetail } from "../../shared/lib/auth";
 
@@ -161,6 +162,7 @@ export default function PropertyImportPage() {
             {t("import.page_title")}
           </h1>
           <p className="text-stone-600 mt-1">{t("import.page_subtitle")}</p>
+          <ImportFormsCrossLinks current="bc" />
         </div>
 
         <div className="flex border-b border-stone-200">
@@ -273,9 +275,7 @@ export default function PropertyImportPage() {
             <div className="bg-amber-50 border border-amber-200 rounded-lg p-5">
               <h2 className="font-semibold text-amber-900 mb-1">{t("import.xml_intro_title")}</h2>
               <p className="text-sm text-amber-800">{t("import.xml_intro_text")}</p>
-              <p className="text-xs text-amber-900 mt-2">
-                ✨ <strong>Formato Agestanet riconosciuto automaticamente.</strong> Se il tuo XML proviene da Agestanet, i 51 codici tipologia, le classi energetiche e i campi di sistema saranno mappati senza intervento.
-              </p>
+              <p className="text-xs text-amber-900 mt-2">{t("import.xml_dialect_hint")}</p>
             </div>
 
             {/* Sub-mode toggle */}
@@ -285,14 +285,14 @@ export default function PropertyImportPage() {
                 onClick={() => setXmlMode("url")}
                 className={`px-4 py-2 ${xmlMode === "url" ? "bg-stone-900 text-stone-50" : "bg-white text-stone-600 hover:bg-stone-50"}`}
               >
-                URL feed
+                {t("import.xml_mode_url")}
               </button>
               <button
                 data-testid="xml-mode-paste"
                 onClick={() => setXmlMode("paste")}
                 className={`px-4 py-2 border-l border-stone-300 ${xmlMode === "paste" ? "bg-stone-900 text-stone-50" : "bg-white text-stone-600 hover:bg-stone-50"}`}
               >
-                Incolla XML
+                {t("import.xml_mode_paste")}
               </button>
             </div>
 
@@ -313,7 +313,7 @@ export default function PropertyImportPage() {
             {xmlMode === "paste" && (
               <div className="space-y-3">
                 <label className="block text-xs uppercase tracking-widest text-stone-600">
-                  Contenuto XML
+                  {t("import.xml_paste_label")}
                 </label>
                 <textarea
                   data-testid="xml-content-input"
@@ -323,7 +323,7 @@ export default function PropertyImportPage() {
                   className="w-full px-3 py-3 border border-stone-300 rounded-md text-xs font-mono h-64 focus:outline-none focus:border-stone-900"
                 />
                 <p className="text-xs text-stone-500">
-                  Apri il file XML in un editor di testo (Blocco note, TextEdit), copia <strong>tutto il contenuto</strong> e incollalo qui sopra. Riconosciamo automaticamente il formato Agestanet.
+                  {t("import.xml_paste_hint")}
                 </p>
               </div>
             )}
@@ -342,10 +342,10 @@ export default function PropertyImportPage() {
             {xmlResult && (
               <div data-testid="xml-result" className="bg-emerald-50 border border-emerald-200 rounded-lg p-5">
                 <h3 className="font-semibold text-emerald-900 mb-2">
-                  ✓ {t("import.csv_done_title")}
-                  {xmlResult.format_detected === "agestanet" && (
+                  ✓                   {t("import.csv_done_title")}
+                  {xmlResult.format_detected === "legacy_vendor_a" && (
                     <span className="ml-2 text-xs uppercase tracking-widest bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded">
-                      Agestanet
+                      {t("import.xml_dialect_badge")}
                     </span>
                   )}
                 </h3>

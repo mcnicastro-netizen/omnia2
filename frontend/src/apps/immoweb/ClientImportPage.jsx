@@ -2,6 +2,7 @@ import React, { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useNavigate } from "react-router-dom";
 import AgencyShell from "./components/AgencyShell";
+import ImportFormsCrossLinks from "./components/ImportFormsCrossLinks";
 import { api, API_BASE } from "../../shared/lib/api";
 import { formatApiErrorDetail } from "../../shared/lib/auth";
 
@@ -26,6 +27,7 @@ export default function ClientImportPage() {
             {t("client_import.title")}
           </h1>
           <p className="text-stone-600 mt-1">{t("client_import.subtitle")}</p>
+          <ImportFormsCrossLinks current="de" />
         </div>
 
         {/* Tab switcher */}

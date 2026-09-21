@@ -301,6 +301,7 @@ Prima di dichiarare il cold start "attivo", eseguire manualmente queste 5 query 
 
 **Domanda**: *"Quali sono tutte le forme di import in OMNIA? XML, CSV, AI?"*  
 **Voce attesa (top-1)**: `import.tutte-le-forme` (file `14-import-xml.yaml`)  
+**Hub**: `memory/manuale/migrazione/00-hub-tutte-le-forme-import.md`  
 **Accettabile top-3**: `import.cos-e`, `import.limitazioni-v1`, `clienti.smart-import-ai`  
 **Confidence**: ≥ 0.08 (meglio ≥ 0.20)
 
@@ -365,7 +366,7 @@ Criteri smoke: top-1 chunk_id atteso OR **stesso file** `13-team-ruoli.yaml` · 
 1. **"Come importo immobili da un file XML del vecchio gestionale?"** → top-1 atteso qualunque chunk di `14-import-xml.yaml` (post fix Pattern B: `immobili.importare-xml` di Cap. 3 depreca)
 2. **"Come evito di importare due volte lo stesso immobile via XML?"** → top-1 atteso `14-import-xml.yaml::import.dedupe`
 3. **"Cosa NON fa Import XML? Posso usarlo per CSV o sync automatica?"** → top-1 atteso `14-import-xml.yaml::import.limitazioni-v1`
-4. **"Quali sono tutte le forme di import in OMNIA? XML, CSV, AI?"** → top-1 atteso `14-import-xml.yaml::import.tutte-le-forme` (hub A–E)
+4. **"Quali sono tutte le forme di import in OMNIA? XML, CSV, AI?"** → top-1 atteso `14-import-xml.yaml::import.tutte-le-forme` (hub `memory/manuale/migrazione/00-hub-tutte-le-forme-import.md`)
 
 Criteri smoke: top-1 chunk_id atteso OR **stesso file** `14-import-xml.yaml` · sim ≥ 0.08.
 

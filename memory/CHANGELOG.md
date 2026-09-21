@@ -1,5 +1,18 @@
 # OMNIA — Changelog
 
+## 2026-09-21 — Suite migrazione A–E (hub + CS Top 5 + fixture + UI)
+
+**Tipo**: Docs / HAL / UI (D-084, D-051).
+
+- Hub `memory/manuale/migrazione/00-hub-tutte-le-forme-import.md` (A XML universale · B+C CSV/XML immobili · D+E AI+CSV clienti)
+- Guide CS interne `01-da-agestanet.md` … `05-da-agim.md` (zero brand in UI)
+- Fixture `memory/fixtures/import/` (XML 5 immobili, CSV immobili, CSV clienti)
+- Cap.14 §14.0 · Cap.3/4 puntatori · HAL `import.tutte-le-forme` · smoke query 4
+- Cross-link UI su ImportXmlPage / PropertyImportPage / ClientImportPage + i18n it/en/es
+- Hub ridotto `memory/manuale/import/` reindirizza a `migrazione/`
+- Rimossi nomi competitor hardcoded da PropertyImportPage
+
+---
 ## 2026-09-21 — D-087 source of truth GitHub omnia2 (no Origin-tmp)
 
 **Tipo**: Ops / processo Founder.

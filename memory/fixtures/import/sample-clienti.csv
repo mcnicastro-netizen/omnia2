@@ -1,0 +1,4 @@
+name;surname;email;phone;whatsapp;fiscal_code;client_type;status;source;pref_operation;pref_cities;pref_property_types;pref_price_min;pref_price_max;pref_surface_min;pref_rooms_min;pref_bedrooms_min;notes;gdpr_consent
+Anna;Russo;anna.russo@example.it;+39 333 2000001;+39 333 2000001;RSSNNA80A41C351X;buyer;new;fixture;sale;Catania;appartamento;120000;250000;50;2;1;Cerca zona centro;true
+Marco;Bianchi;marco.bianchi@example.it;+39 333 2000002;+39 333 2000002;BNCMRC75C15G273Y;tenant;new;fixture;rent;Palermo;appartamento;;;40;1;0;Affitto bilocale;true
+Elena;Costa;elena.costa@example.it;+39 333 2000003;;;seller;qualified;fixture;sale;Messina;villa;;;;;Ha incarico vendita;true

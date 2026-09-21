@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<annunci>
+  <immobile id="S1">
+    <riferimento>DEMO-001</riferimento>
+    <titolo>Trilocale luminoso in centro</titolo>
+    <citta>Catania</citta>
+    <indirizzo>Via Etnea 120</indirizzo>
+    <provincia>CT</provincia>
+    <codice_tipologia>3</codice_tipologia>
+    <codice_contratto>V</codice_contratto>
+    <prezzo>189000</prezzo>
+    <mq>85</mq>
+    <camere>2</camere>
+    <testo>Balcone, ascensore, cantina. Vicino metro.</testo>
+    <url_foto_1>https://example.test/demo-001-a.jpg</url_foto_1>
+    <url_foto_2>https://example.test/demo-001-b.jpg</url_foto_2>
+  </immobile>
+  <immobile id="S2">
+    <riferimento>DEMO-002</riferimento>
+    <titolo>Bilocale arredato zona universitaria</titolo>
+    <citta>Catania</citta>
+    <indirizzo>Via Biblioteca 8</indirizzo>
+    <codice_tipologia>3</codice_tipologia>
+    <codice_contratto>A</codice_contratto>
+    <canone>650</canone>
+    <mq>52</mq>
+    <camere>1</camere>
+    <testo>Arredato, posto auto, vicino ateneo.</testo>
+    <url_foto_1>https://example.test/demo-002.jpg</url_foto_1>
+  </immobile>
+  <immobile id="S3">
+    <riferimento>DEMO-003</riferimento>
+    <titolo>Villa indipendente con giardino</titolo>
+    <citta>Acireale</citta>
+    <indirizzo>Via Romeo 4</indirizzo>
+    <provincia>CT</provincia>
+    <codice_tipologia>10</codice_tipologia>
+    <codice_contratto>V</codice_contratto>
+    <prezzo>420000</prezzo>
+    <mq>180</mq>
+    <camere>4</camere>
+    <testo>Giardino, terrazza, garage doppio.</testo>
+    <url_foto_1>https://example.test/demo-003.jpg</url_foto_1>
+  </immobile>
+  <immobile id="S4">
+    <riferimento>DEMO-004</riferimento>
+    <titolo>Attico con terrazza vista mare</titolo>
+    <citta>Palermo</citta>
+    <indirizzo>Via Libertà 90</indirizzo>
+    <provincia>PA</provincia>
+    <codice_tipologia>31</codice_tipologia>
+    <codice_contratto>V</codice_contratto>
+    <prezzo>375000</prezzo>
+    <mq>110</mq>
+    <camere>3</camere>
+    <testo>Terrazza, ascensore, classe energetica A.</testo>
+    <url_foto_1>https://example.test/demo-004.jpg</url_foto_1>
+  </immobile>
+  <immobile id="S5">
+    <riferimento>DEMO-005</riferimento>
+    <titolo>Negozio vetrina corso principale</titolo>
+    <citta>Messina</citta>
+    <indirizzo>Corso Cavour 15</indirizzo>
+    <provincia>ME</provincia>
+    <codice_tipologia>4</codice_tipologia>
+    <codice_contratto>A</codice_contratto>
+    <canone>1200</canone>
+    <mq>70</mq>
+    <testo>Uso commerciale, doppia vetrina.</testo>
+    <url_foto_1>https://example.test/demo-005.jpg</url_foto_1>
+  </immobile>
+</annunci>
