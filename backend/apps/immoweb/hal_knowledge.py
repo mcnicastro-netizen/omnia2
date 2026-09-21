@@ -1,12 +1,9 @@
 """OMNIA — HAL Knowledge (M5.S2, Sprint 2).
 
-RAG (Retrieval Augmented Generation) sul corpus di documentazione OMNIA:
-    - /app/memory/PRD.md
-    - /app/memory/ROADMAP.md
-    - /app/memory/DECISIONS.md
-    - /app/memory/AUDIT_M2.md
-    - /app/memory/PROGRAMMA_OMNIA.md
-    - /app/memory/manuale/*.md (quando pronti)
+RAG (Retrieval Augmented Generation) sul corpus di documentazione OMNIA
+sotto MEMORY_ROOT (Cursor: /workspace/memory · legacy Emergent: /app/memory):
+    - PRD.md, ROADMAP.md, DECISIONS.md, AUDIT_M2.md, PROGRAMMA_OMNIA.md
+    - manuale/hal/*.yaml (voci atomiche)
 
 Approccio (D-061):
 - Retrieval: TF-IDF + cosine similarity (nessuna API call, zero costi).
@@ -55,7 +52,20 @@ router = APIRouter(prefix="/hal/knowledge", tags=["hal-knowledge"])
 # Config
 # ---------------------------------------------------------------------------
 
-MEMORY_ROOT = Path("/app/memory")
+def _resolve_memory_root() -> Path:
+    """Cursor Cloud uses /workspace/memory; Emergent used /app/memory."""
+    env = (os.environ.get("OMNIA_MEMORY_ROOT") or "").strip()
+    if env:
+        return Path(env)
+    here = Path(__file__).resolve()
+    repo_memory = here.parents[3] / "memory"  # backend/apps/immoweb → repo root
+    for candidate in (Path("/workspace/memory"), repo_memory, Path("/app/memory")):
+        if candidate.is_dir():
+            return candidate
+    return Path("/workspace/memory")
+
+
+MEMORY_ROOT = _resolve_memory_root()
 CORPUS_FILES = [
     "PRD.md",
     "ROADMAP.md",

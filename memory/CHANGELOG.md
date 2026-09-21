@@ -1,5 +1,18 @@
 # OMNIA — Changelog
 
+## 2026-09-21 — D-086 Cloud Agent harden + seed demo gestionale
+
+**Tipo**: Ops / Cloud Agent / seed.
+
+- Dockerfile: Python 3 + Node 22 + Yarn + MongoDB 8 (Ubuntu 24.04)
+- `scripts/cloud-agent-install.sh` · `scripts/cloud-agent-start.sh`
+- `.cursor/environment.json` punta agli script; regola `.cursor/rules/omnia-cloud.mdc`
+- HAL: `MEMORY_ROOT` su `/workspace/memory` (fallback `/app/memory`)
+- `backend/.env.example`: `ADMIN_EMAIL` / `ADMIN_PASSWORD` (seed Founder)
+- Seed CRM: `backend/scripts/seed_demo_gestionale.py` (agenzia demo + 4 immobili + 4 clienti)
+- Fix `omnia-stack.sh`: loop tunnel non usa più `$_` (unbound `https:` con `set -u`)
+
+---
 ## 2026-09-19 — D-085 polish manuali + HAL errori «spazio esaurito»
 
 **Tipo**: Docs / HAL sync (D-084).

@@ -268,11 +268,12 @@ adopt_or_start_tunnel() {
   echo $! >"$pid_tunnel"
 
   local url=""
-  for _ in $(seq 1 40); do
+  local i
+  for i in $(seq 1 40); do
     url="$(grep -oE 'https://[a-z0-9-]+\.trycloudflare\.com' "$tunnel_log" | tail -n1 || true)"
     if [[ -n "$url" ]]; then
       # give the connector a moment; do not require health for return
-      if tunnel_alive "$url" || [[ $_ -gt 12 ]]; then
+      if tunnel_alive "$url" || [[ "$i" -gt 12 ]]; then
         printf '%s\n' "$url"
         return 0
       fi

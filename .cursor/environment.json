@@ -1,10 +1,17 @@
 {
-  "install": "mkdir -p /workspace/.mongo-data\ncd /workspace/backend && python3 -m venv .venv\n/workspace/backend/.venv/bin/pip install -q -r /workspace/backend/requirements.txt\ncd /workspace/frontend && yarn install --frozen-lockfile\ncd /workspace/frontend && REACT_APP_BACKEND_URL= yarn build\nif [ ! -f /workspace/backend/.env ] && [ -f /workspace/backend/.env.example ]; then cp /workspace/backend/.env.example /workspace/backend/.env; fi\nif [ ! -f /workspace/frontend/.env ] && [ -f /workspace/frontend/.env.example ]; then cp /workspace/frontend/.env.example /workspace/frontend/.env; fi",
-  "start": "mkdir -p /workspace/.mongo-data\nif [ ! -f /workspace/backend/.env ] && [ -f /workspace/backend/.env.example ]; then cp /workspace/backend/.env.example /workspace/backend/.env; fi\nif [ ! -f /workspace/frontend/.env ] && [ -f /workspace/frontend/.env.example ]; then cp /workspace/frontend/.env.example /workspace/frontend/.env; fi\nif ! pgrep -x mongod >/dev/null 2>&1; then mongod --dbpath /workspace/.mongo-data --bind_ip 127.0.0.1 --port 27017 --logpath /tmp/mongod.log --fork; fi\nbash /workspace/scripts/omnia-stack.sh ensure",
+  "name": "omnia2-cloud",
+  "user": "ubuntu",
+  "build": {
+    "dockerfile": "../Dockerfile",
+    "context": ".."
+  },
+  "install": "bash /workspace/scripts/cloud-agent-install.sh",
+  "start": "bash /workspace/scripts/cloud-agent-start.sh",
   "terminals": [
     {
       "name": "omnia-stack-watch",
-      "command": "bash /workspace/scripts/omnia-stack.sh watch"
+      "command": "bash /workspace/scripts/omnia-stack.sh watch",
+      "description": "Keeps API + preview healthy and prints the public CRM URL."
     }
   ],
   "ports": [

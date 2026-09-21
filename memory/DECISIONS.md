@@ -1379,3 +1379,16 @@ Registro di tutte le decisioni di business e tecniche prese durante il progetto.
 - **Stato**: ✅ APPLICATA (codice 19-Set-2026) — meter UI, blocco upload, extra €15, backup cron
 - **Residui**: seed Stripe price `storage_100gb_monthly` in live; testo contratto/DPA fine abbonamento con legale
 
+### D-086 — Cloud Agent harden + seed demo gestionale · 21-Set-2026
+- **Data**: 21 Settembre 2026
+- **Contesto**: Gli agenti Cursor su `omnia2` partivano senza MongoDB di sistema, con HAL che cercava il corpus in `/app/memory` (path Emergent) e senza `ADMIN_EMAIL` in `.env.example` — lo seed Founder/demo veniva skippato e il CRM era vuoto.
+- **Decisione**:
+  1. **Dockerfile** in root: Ubuntu 24.04 + Python 3 + Node 22 + Yarn + MongoDB 8 (nessun `COPY` dell'app).
+  2. **`.cursor/environment.json`**: `install` = `scripts/cloud-agent-install.sh`, `start` = `scripts/cloud-agent-start.sh` (mongod, stack, seed demo).
+  3. **HAL**: `MEMORY_ROOT` risolve `OMNIA_MEMORY_ROOT` → `/workspace/memory` → repo `memory/` → `/app/memory`.
+  4. **`.env.example`**: `ADMIN_EMAIL` / `ADMIN_PASSWORD` / `DEMO_ADMIN_PASSWORD` (+ alias `OMNIA_ADMIN_*` per pytest).
+  5. **Seed CRM demo** idempotente `backend/scripts/seed_demo_gestionale.py` (4 immobili + 4 clienti su `demo-agency-001`).
+  6. **Regola** `.cursor/rules/omnia-cloud.mdc` per agenti futuri (`/workspace`, no PR se Founder dice no).
+- **Stato**: ✅ APPLICATA (codice 21-Set-2026)
+
+
