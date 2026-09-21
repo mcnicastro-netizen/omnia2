@@ -449,6 +449,9 @@ class ParseReport:
         self.by_city: Dict[str, int] = {}
         self.without_photos: int = 0
         self.without_price: int = 0
+        self.weak_photo_urls: int = 0  # CDN di test / localhost / example.*
+        self.without_photo_refs: List[str] = []
+        self.weak_photo_refs: List[str] = []
         self.divergences: List[str] = []
         self.samples: List[Dict[str, Any]] = []
 
@@ -462,6 +465,9 @@ class ParseReport:
             "by_city": self.by_city,
             "without_photos": self.without_photos,
             "without_price": self.without_price,
+            "weak_photo_urls": self.weak_photo_urls,
+            "without_photo_refs": self.without_photo_refs[:20],
+            "weak_photo_refs": self.weak_photo_refs[:20],
             "divergences": self.divergences[:50],  # cap
             "samples": self.samples[:5],
         }
@@ -527,8 +533,24 @@ def parse_xml_feed(
         report.by_type[prop["property_type"]] = report.by_type.get(prop["property_type"], 0) + 1
         report.by_operation[prop["operation"]] = report.by_operation.get(prop["operation"], 0) + 1
         report.by_city[prop["city"]] = report.by_city.get(prop["city"], 0) + 1
-        if not prop["photos"]:
+        ref = prop.get("reference_code") or prop.get("_import_reference") or el.get("id") or "?"
+        photos = prop.get("photos") or []
+        if not photos:
             report.without_photos += 1
+            report.without_photo_refs.append(str(ref))
+        else:
+            weak = False
+            for ph in photos:
+                url = (ph.get("url") or "").lower()
+                if any(bad in url for bad in (
+                    "example.", "example.test", "localhost", "127.0.0.1",
+                    "placeholder", "via.placeholder", "picsum.photos/id/0",
+                )):
+                    weak = True
+                    break
+            if weak:
+                report.weak_photo_urls += 1
+                report.weak_photo_refs.append(str(ref))
         if not prop.get("price") and not prop.get("rent_monthly"):
             report.without_price += 1
 
@@ -544,6 +566,14 @@ def parse_xml_feed(
             "rent_monthly": p.get("rent_monthly"),
             "surface_sqm": p.get("surface_sqm"),
             "photos_count": len(p.get("photos") or []),
+            "photo_urls_weak": bool(
+                any(
+                    any(bad in (ph.get("url") or "").lower() for bad in (
+                        "example.", "example.test", "localhost", "127.0.0.1", "placeholder",
+                    ))
+                    for ph in (p.get("photos") or [])
+                )
+            ),
         }
         for p in properties[:5]
     ]

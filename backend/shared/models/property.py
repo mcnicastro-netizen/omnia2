@@ -331,7 +331,7 @@ class PropertyListResponse(OmniaBaseModel):
 
 # -------------------- IMPORT --------------------
 
-ImportSource = Literal["csv", "xml_feed"]
+ImportSource = Literal["csv", "xml_feed", "universal_xml"]
 ImportStatus = Literal["pending", "processing", "completed", "completed_with_errors", "failed"]
 
 

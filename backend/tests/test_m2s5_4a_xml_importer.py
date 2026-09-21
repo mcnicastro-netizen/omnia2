@@ -87,6 +87,22 @@ class TestParser:
         assert report["parsed_ok"] == 2
         assert report["skipped"] == 0
 
+    def test_photo_warnings_in_report(self, session, refs):
+        """T002 has no photos; T001 uses x.test (not weak). Fixture-style weak URLs counted."""
+        xml = SAMPLE_XML.format(**refs)
+        # Inject a weak URL on REF1
+        xml = xml.replace(
+            "https://x.test/a.jpg",
+            "https://example.test/a.jpg",
+        )
+        r = _upload(session, xml)
+        assert r.status_code == 200, r.text
+        report = r.json()["report"]
+        assert report["without_photos"] == 1
+        assert refs["REF2"] in report["without_photo_refs"]
+        assert report["weak_photo_urls"] == 1
+        assert refs["REF1"] in report["weak_photo_refs"]
+
     def test_property_type_codes_translated(self, session, refs):
         xml = SAMPLE_XML.format(**refs)
         r = _upload(session, xml)
@@ -138,8 +154,17 @@ class TestCommitFlow:
                          json={"session_id": sid, "dry_run": True,
                                "skip_duplicates_by_ref": True})
         assert r.status_code == 200
-        assert r.json()["inserted"] == 0
+        # Cap.14: dry_run reports how many WOULD be inserted (session kept)
+        assert r.json()["inserted"] == 2
         assert r.json()["dry_run"] is True
+        assert r.json()["job_id"] is None
+        # Session still usable for real commit
+        r2 = session.post(f"{BASE_URL}/api/app/import/xml/commit",
+                          json={"session_id": sid, "dry_run": False,
+                                "skip_duplicates_by_ref": True})
+        assert r2.status_code == 200
+        assert r2.json()["inserted"] == 2
+        assert r2.json()["job_id"]
 
     def test_real_commit_inserts_and_dedupes(self, session, refs):
         xml = SAMPLE_XML.format(**refs)
@@ -151,6 +176,7 @@ class TestCommitFlow:
                                "skip_duplicates_by_ref": True})
         assert r.status_code == 200
         assert r.json()["inserted"] == 2
+        assert r.json().get("listing_agent_id")
 
         # Second commit with same refs should skip both
         prev2 = _upload(session, xml)
@@ -169,6 +195,28 @@ class TestCommitFlow:
                                "dry_run": True, "skip_duplicates_by_ref": True})
         assert r.status_code == 404
 
+    def test_bad_listing_agent_400(self, session, refs):
+        xml = SAMPLE_XML.format(**refs)
+        prev = _upload(session, xml)
+        sid = prev.json()["session_id"]
+        r = session.post(f"{BASE_URL}/api/app/import/xml/commit",
+                         json={"session_id": sid, "dry_run": True,
+                               "skip_duplicates_by_ref": True,
+                               "listing_agent_id": "not-a-real-member-id"})
+        assert r.status_code == 400
+        assert r.json()["detail"] == "listing_agent_not_in_agency"
+
+
+# ---------- HISTORY ----------
+
+class TestImportHistory:
+    def test_list_jobs(self, session):
+        r = session.get(f"{BASE_URL}/api/app/import/jobs", params={"limit": 10})
+        assert r.status_code == 200
+        body = r.json()
+        assert "jobs" in body
+        assert isinstance(body["jobs"], list)
+
 
 # ---------- AUTH BOUNDARY ----------
 
@@ -182,6 +230,10 @@ class TestAuthBoundary:
         r = requests.post(f"{BASE_URL}/api/app/import/xml/commit",
                           json={"session_id": "prv_x", "dry_run": True,
                                 "skip_duplicates_by_ref": True})
+        assert r.status_code in (401, 403)
+
+    def test_jobs_unauth_401(self):
+        r = requests.get(f"{BASE_URL}/api/app/import/jobs")
         assert r.status_code in (401, 403)
 
 

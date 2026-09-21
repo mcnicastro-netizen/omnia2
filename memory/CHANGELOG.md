@@ -1,5 +1,15 @@
 # OMNIA — Changelog
 
+## 2026-09-21 — Import XML: warning foto, agente, storico
+
+**Tipo**: Feature / Import (A).
+
+- Preview: conteggio + rif. immobili senza foto / URL deboli (example/localhost/placeholder)
+- Commit: `listing_agent_id` (picker membri agenzia; default = chi importa); dry_run non consuma la sessione
+- Persistenza `ImportJob` source=`universal_xml` + `GET /api/app/import/jobs` (storico agenzia)
+- UI ImportXmlPage: warning dettagliati, select agente, lista storico
+
+---
 ## 2026-09-21 — Import flags: ImmobilCloud + MLS
 
 **Tipo**: Feature / Import.

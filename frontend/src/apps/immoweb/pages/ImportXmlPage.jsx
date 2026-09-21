@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { api } from "../../../shared/lib/api";
 import AgencyShell from "../components/AgencyShell";
@@ -21,6 +21,36 @@ export default function ImportXmlPage() {
   const [skipDup, setSkipDup] = useState(true);
   const [listOnCloud, setListOnCloud] = useState(true);
   const [shareOnMls, setShareOnMls] = useState(true);
+  const [members, setMembers] = useState([]);
+  const [listingAgentId, setListingAgentId] = useState("");
+  const [jobs, setJobs] = useState([]);
+
+  const loadJobs = useCallback(async () => {
+    try {
+      const r = await api.get("/app/import/jobs", { params: { limit: 15 } });
+      setJobs(r.data?.jobs || []);
+    } catch {
+      /* history is best-effort */
+    }
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const [memRes] = await Promise.all([
+          api.get("/app/agencies/me/members"),
+          loadJobs(),
+        ]);
+        if (cancelled) return;
+        const list = Array.isArray(memRes.data) ? memRes.data : [];
+        setMembers(list.filter((m) => m.is_active !== false));
+      } catch {
+        /* members optional for UI */
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [loadJobs]);
 
   const onFile = useCallback((f) => {
     setError(null);
@@ -67,16 +97,19 @@ export default function ImportXmlPage() {
     setBusy(true);
     setError(null);
     try {
-      const r = await api.post("/app/import/xml/commit", {
+      const payload = {
         session_id: preview.session_id,
         dry_run: dryRun,
         skip_duplicates_by_ref: skipDup,
         list_on_immobilcloud: listOnCloud,
         share_on_mls: shareOnMls,
-      });
+      };
+      if (listingAgentId) payload.listing_agent_id = listingAgentId;
+      const r = await api.post("/app/import/xml/commit", payload);
       setCommitResult({ ...r.data, dry_run: dryRun });
       if (!dryRun) {
         setPreview(null); // session consumed
+        loadJobs();
       }
     } catch (e) {
       setError(e?.response?.data?.detail || "commit_error");
@@ -86,6 +119,17 @@ export default function ImportXmlPage() {
   };
 
   const report = preview?.report;
+  const hasPhotoIssues =
+    (report?.without_photos > 0) ||
+    (report?.weak_photo_urls > 0) ||
+    (report?.without_price > 0);
+
+  const sourceLabel = (src) => {
+    if (src === "universal_xml") return t("import.history_src_xml") || "XML gestionale";
+    if (src === "csv") return t("import.history_src_csv") || "CSV";
+    if (src === "xml_feed") return t("import.history_src_feed") || "Feed XML";
+    return src || "—";
+  };
 
   return (
     <AgencyShell current="import">
@@ -184,10 +228,42 @@ export default function ImportXmlPage() {
               <StatCard label={t("import.by_city") || "Per città"} data={report.by_city} testid="stat-city" />
             </div>
 
-            {(report.without_photos > 0 || report.without_price > 0) && (
-              <div className="bg-amber-50 border border-amber-300 rounded-lg p-4 text-sm text-amber-900" data-testid="import-warnings">
-                {report.without_photos > 0 && <p>⚠️ {report.without_photos} {t("import.warn_photos") || "immobili senza foto"}</p>}
-                {report.without_price > 0 && <p>⚠️ {report.without_price} {t("import.warn_price") || "immobili senza prezzo/canone"}</p>}
+            {hasPhotoIssues && (
+              <div className="bg-amber-50 border border-amber-300 rounded-lg p-4 text-sm text-amber-900 space-y-3" data-testid="import-warnings">
+                {report.without_photos > 0 && (
+                  <div>
+                    <p>
+                      {report.without_photos}{" "}
+                      {t("import.warn_photos") || "immobili senza foto"}
+                    </p>
+                    {(report.without_photo_refs || []).length > 0 && (
+                      <p className="text-xs text-amber-800 mt-1 font-mono" data-testid="import-warn-photo-refs">
+                        {t("import.warn_refs") || "Rif."}: {(report.without_photo_refs || []).slice(0, 12).join(", ")}
+                        {(report.without_photo_refs || []).length > 12 ? "…" : ""}
+                      </p>
+                    )}
+                  </div>
+                )}
+                {report.weak_photo_urls > 0 && (
+                  <div>
+                    <p>
+                      {report.weak_photo_urls}{" "}
+                      {t("import.warn_weak_photos") || "immobili con URL foto deboli (test/placeholder)"}
+                    </p>
+                    {(report.weak_photo_refs || []).length > 0 && (
+                      <p className="text-xs text-amber-800 mt-1 font-mono" data-testid="import-warn-weak-refs">
+                        {t("import.warn_refs") || "Rif."}: {(report.weak_photo_refs || []).slice(0, 12).join(", ")}
+                        {(report.weak_photo_refs || []).length > 12 ? "…" : ""}
+                      </p>
+                    )}
+                  </div>
+                )}
+                {report.without_price > 0 && (
+                  <p>
+                    {report.without_price}{" "}
+                    {t("import.warn_price") || "immobili senza prezzo/canone"}
+                  </p>
+                )}
               </div>
             )}
 
@@ -207,7 +283,7 @@ export default function ImportXmlPage() {
                       <th className="text-left px-3 py-2">Contratto</th>
                       <th className="text-right px-3 py-2">Prezzo</th>
                       <th className="text-right px-3 py-2">MQ</th>
-                      <th className="text-right px-3 py-2">📷</th>
+                      <th className="text-right px-3 py-2">Foto</th>
                     </tr>
                   </thead>
                   <tbody data-testid="import-samples-table">
@@ -222,7 +298,17 @@ export default function ImportXmlPage() {
                           {s.price ? `€${s.price.toLocaleString("it-IT")}` : s.rent_monthly ? `€${s.rent_monthly}/mese` : "—"}
                         </td>
                         <td className="px-3 py-2 text-right tabular-nums text-stone-500">{s.surface_sqm || "—"}</td>
-                        <td className="px-3 py-2 text-right tabular-nums text-stone-500">{s.photos_count}</td>
+                        <td className="px-3 py-2 text-right tabular-nums text-stone-500">
+                          {s.photos_count || 0}
+                          {s.photo_urls_weak ? (
+                            <span className="ml-1 text-amber-700 text-[10px]" title={t("import.warn_weak_photos") || "URL deboli"}>
+                              !
+                            </span>
+                          ) : null}
+                          {!s.photos_count ? (
+                            <span className="ml-1 text-amber-700 text-[10px]">∅</span>
+                          ) : null}
+                        </td>
                       </tr>
                     ))}
                   </tbody>
@@ -289,7 +375,33 @@ export default function ImportXmlPage() {
                   </span>
                 </span>
               </label>
-              <div className="flex gap-2 pt-2">
+
+              <div className="pt-1" data-testid="import-agent-picker">
+                <label className="block text-xs uppercase tracking-widest text-stone-500 mb-1">
+                  {t("import.assign_agent") || "Assegna agente"}
+                </label>
+                <select
+                  value={listingAgentId}
+                  onChange={(e) => setListingAgentId(e.target.value)}
+                  data-testid="import-agent-select"
+                  className="w-full max-w-md border border-stone-300 rounded px-3 py-2 text-sm text-stone-800 bg-white"
+                >
+                  <option value="">
+                    {t("import.assign_agent_me") || "Io (chi sta importando)"}
+                  </option>
+                  {members.map((m) => (
+                    <option key={m.id} value={m.id}>
+                      {m.name || m.email || m.id}
+                      {m.role ? ` · ${m.role}` : ""}
+                    </option>
+                  ))}
+                </select>
+                <p className="text-xs text-stone-500 mt-1">
+                  {t("import.assign_agent_hint") || "Tutti gli immobili importati saranno assegnati a questo agente."}
+                </p>
+              </div>
+
+              <div className="flex gap-2 pt-2 flex-wrap">
                 <button
                   onClick={() => doCommit(true)}
                   disabled={busy}
@@ -330,7 +442,7 @@ export default function ImportXmlPage() {
           >
             {commitResult.dry_run ? (
               <>
-                <p className="font-semibold">🧪 {t("import.simulation_done") || "Simulazione completata"}</p>
+                <p className="font-semibold">{t("import.simulation_done") || "Simulazione completata"}</p>
                 <p className="text-sm mt-1">
                   In caso di import reale sarebbero stati inseriti <strong>{commitResult.inserted}</strong> immobili,{" "}
                   <strong>{commitResult.skipped_by_reference}</strong> saltati per duplicato.
@@ -338,7 +450,7 @@ export default function ImportXmlPage() {
               </>
             ) : commitResult.inserted > 0 ? (
               <>
-                <p className="font-semibold">✅ {t("import.done") || "Import completato"}</p>
+                <p className="font-semibold">{t("import.done") || "Import completato"}</p>
                 <p className="text-sm mt-1">
                   <strong>{commitResult.inserted}</strong> immobili importati con successo,{" "}
                   <strong>{commitResult.skipped_by_reference}</strong> saltati (già presenti).
@@ -346,7 +458,7 @@ export default function ImportXmlPage() {
               </>
             ) : (
               <>
-                <p className="font-semibold">ℹ️ {t("import.nothing_new") || "Nessun immobile nuovo importato"}</p>
+                <p className="font-semibold">{t("import.nothing_new") || "Nessun immobile nuovo importato"}</p>
                 <p className="text-sm mt-1">
                   Tutti i <strong>{commitResult.skipped_by_reference}</strong> immobili erano già presenti (dedupe attivo).
                 </p>
@@ -354,6 +466,52 @@ export default function ImportXmlPage() {
             )}
           </div>
         )}
+
+        {/* Import history */}
+        <div data-testid="import-history" className="border border-stone-200 rounded-lg bg-white overflow-hidden">
+          <div className="px-4 py-3 border-b border-stone-200 flex items-center justify-between">
+            <p className="text-[10px] uppercase tracking-widest text-stone-500">
+              {t("import.history_title") || "Storico import"}
+            </p>
+            <button
+              type="button"
+              onClick={loadJobs}
+              className="text-[10px] uppercase tracking-widest text-stone-500 hover:text-stone-800"
+              data-testid="import-history-refresh"
+            >
+              {t("import.history_refresh") || "Aggiorna"}
+            </button>
+          </div>
+          {jobs.length === 0 ? (
+            <p className="p-4 text-sm text-stone-500" data-testid="import-history-empty">
+              {t("import.history_empty") || "Nessun import ancora registrato per questa agenzia."}
+            </p>
+          ) : (
+            <ul className="divide-y divide-stone-100" data-testid="import-history-list">
+              {jobs.map((j) => (
+                <li key={j.id} className="px-4 py-3 text-sm flex flex-wrap gap-x-4 gap-y-1 items-baseline">
+                  <span className="font-mono text-xs text-stone-400 shrink-0">
+                    {(j.created_at || "").slice(0, 16).replace("T", " ")}
+                  </span>
+                  <span className="text-stone-800 font-medium">{sourceLabel(j.source)}</span>
+                  <span className="text-stone-500 truncate max-w-[12rem]">{j.source_label}</span>
+                  <span className="text-stone-700 tabular-nums ml-auto">
+                    {j.imported_count ?? 0}/{j.total_rows ?? 0}
+                  </span>
+                  <span className={`text-xs ${
+                    j.status === "completed" || j.status === "completed_with_errors"
+                      ? "text-emerald-700"
+                      : j.status === "failed"
+                        ? "text-red-600"
+                        : "text-stone-500"
+                  }`}>
+                    {j.status}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
       </section>
     </AgencyShell>
   );
