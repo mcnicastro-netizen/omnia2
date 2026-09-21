@@ -56,6 +56,9 @@ class CommitBody(BaseModel):
     session_id: str = Field(min_length=8, max_length=64)
     skip_duplicates_by_ref: bool = True
     dry_run: bool = False
+    # Post-import publishing (default ON — populate ImmobilCloud + MLS inventory)
+    list_on_immobilcloud: bool = True
+    share_on_mls: bool = True
 
 
 @router.post("/xml/preview")
@@ -144,7 +147,26 @@ async def commit_xml(
         if body.skip_duplicates_by_ref and ref and ref in existing_refs:
             skipped_ref.append(ref)
             continue
-        to_insert.append(p)
+        # Apply publish flags chosen in preview UI
+        doc = dict(p)
+        list_cloud = bool(body.list_on_immobilcloud)
+        share_mls = bool(body.share_on_mls)
+        doc["is_listed_on_immobilcloud"] = list_cloud
+        doc["mls_shared"] = share_mls
+        doc["moderation_status"] = doc.get("moderation_status") or "approved"
+        doc["status"] = "active"
+        if list_cloud and share_mls:
+            doc["visibility"] = "public"
+        elif list_cloud and not share_mls:
+            doc["visibility"] = "public"
+        elif not list_cloud and share_mls:
+            doc["visibility"] = "mls_only"
+            doc["is_listed_on_immobilcloud"] = False
+        else:
+            doc["visibility"] = "private"
+            doc["is_listed_on_immobilcloud"] = False
+            doc["mls_shared"] = False
+        to_insert.append(doc)
 
     inserted_ids: List[str] = []
     if to_insert and not body.dry_run:
@@ -163,8 +185,9 @@ async def commit_xml(
 
     now_iso = datetime.now(timezone.utc).isoformat()
     logger.info(
-        "xml_import_commit: agency=%s inserted=%d skipped=%d dry_run=%s",
+        "xml_import_commit: agency=%s inserted=%d skipped=%d dry_run=%s cloud=%s mls=%s",
         agency_id, inserted_count, len(skipped_ref), body.dry_run,
+        body.list_on_immobilcloud, body.share_on_mls,
     )
     return {
         "inserted": inserted_count,
@@ -172,6 +195,8 @@ async def commit_xml(
         "skipped_references": skipped_ref[:50],
         "committed_at": now_iso,
         "dry_run": body.dry_run,
+        "list_on_immobilcloud": body.list_on_immobilcloud,
+        "share_on_mls": body.share_on_mls,
     }
 
 

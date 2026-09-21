@@ -293,7 +293,13 @@
     "form_bc_label": "CSV o XML de inmuebles",
     "form_bc_hint": "Desde la página Inmuebles",
     "form_de_label": "CSV o Import AI de clientes",
-    "form_de_hint": "Desde la página Clientes"
+    "form_de_hint": "Desde la página Clientes",
+    "publish_cloud": "Publicar en el portal de anuncios OMNIA",
+    "publish_cloud_hint": "(ImmobilCloud — activo por defecto)",
+    "publish_mls": "Compartir en inventario MLS",
+    "publish_mls_hint": "(si la agencia está en la red — activo por defecto)",
+    "publish_activate": "Activar anuncios de inmediato",
+    "publish_activate_hint": "(estado activo en lugar de borrador)"
   },
   "api_keys": {
     "title": "Claves API",

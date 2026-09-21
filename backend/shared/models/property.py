@@ -190,6 +190,10 @@ class PropertyInDB(TenantModel):
     # (cloud.omniarealestateecosystem.it). Default ON (opt-out per agent/admin).
     is_listed_on_immobilcloud: bool = True
 
+    # MLS inventory (Cap. 27): when False, excluded from rete MLS even if visibility is public.
+    # Default True — import / new listings opt-out.
+    mls_shared: bool = True
+
     # M3.S5 — Private listing (B2C user publishing without agency)
     is_private_listing: bool = False
     owner_user_id: Optional[str] = None  # link to users.id (B2C account)
@@ -248,6 +252,7 @@ class PropertyCreate(OmniaBaseModel):
     videos: Optional[List[PropertyVideo]] = None
     floor_plans: Optional[List[PropertyFloorPlan]] = None
     is_listed_on_immobilcloud: bool = True  # M3.S2 Publishing Center
+    mls_shared: bool = True
     contact_public: Optional[PrivateContactPublic] = None
 
 
@@ -293,6 +298,7 @@ class PropertyUpdate(OmniaBaseModel):
     seller_notes: Optional[str] = None
     reference_code: Optional[str] = None
     is_listed_on_immobilcloud: Optional[bool] = None  # M3.S2 Publishing Center
+    mls_shared: Optional[bool] = None
     contact_public: Optional[PrivateContactPublic] = None
 
 
@@ -345,8 +351,15 @@ class CSVImportPayload(OmniaBaseModel):
     """Bulk CSV import — rows already parsed by frontend."""
     rows: List[dict]  # already mapped to canonical OMNIA field names
     filename: Optional[str] = None
+    # Post-import publishing defaults (titolare/agente)
+    activate_listings: bool = True  # status=active instead of draft when row omits status
+    list_on_immobilcloud: bool = True
+    share_on_mls: bool = True
 
 
 class XMLImportPayload(OmniaBaseModel):
     feed_url: Optional[str] = Field(default=None, max_length=500)
     xml_content: Optional[str] = Field(default=None, max_length=10_000_000)  # up to 10MB pasted
+    activate_listings: bool = True
+    list_on_immobilcloud: bool = True
+    share_on_mls: bool = True

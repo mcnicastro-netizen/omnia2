@@ -111,7 +111,15 @@ def _to_int(v):
     return int(f) if f is not None else None
 
 
-def _row_to_property(row: dict, agency_id: str, listing_agent_id: str) -> tuple[Optional[PropertyInDB], Optional[str]]:
+def _row_to_property(
+    row: dict,
+    agency_id: str,
+    listing_agent_id: str,
+    *,
+    activate_listings: bool = True,
+    list_on_immobilcloud: bool = True,
+    share_on_mls: bool = True,
+) -> tuple[Optional[PropertyInDB], Optional[str]]:
     """Parse a CSV row into a Property model. Returns (model, error_message)."""
     try:
         title = (row.get("title") or "").strip()
@@ -133,6 +141,26 @@ def _row_to_property(row: dict, agency_id: str, listing_agent_id: str) -> tuple[
             "email": (row.get("owner_email") or "").strip() or None,
         }
 
+        raw_status = (row.get("status") or "").strip().lower()
+        if raw_status:
+            status = raw_status
+        else:
+            status = "active" if activate_listings else "draft"
+
+        list_cloud = list_on_immobilcloud
+        share_mls = share_on_mls
+        if list_cloud and share_mls:
+            visibility = "public"
+        elif list_cloud and not share_mls:
+            visibility = "public"
+        elif not list_cloud and share_mls:
+            visibility = "mls_only"
+            list_cloud = False
+        else:
+            visibility = "private"
+            list_cloud = False
+            share_mls = False
+
         prop = PropertyInDB(
             agency_id=agency_id,
             listing_agent_id=listing_agent_id,
@@ -141,7 +169,7 @@ def _row_to_property(row: dict, agency_id: str, listing_agent_id: str) -> tuple[
             reference_code=(row.get("reference_code") or "").strip() or None,
             property_type=(row.get("property_type") or "appartamento").strip().lower() or "appartamento",
             operation=(row.get("operation") or "sale").strip().lower() or "sale",
-            status=(row.get("status") or "draft").strip().lower() or "draft",
+            status=status,
             condition=(row.get("condition") or None) or None,
             address=(row.get("address") or "").strip() or None,
             city=city,
@@ -162,6 +190,10 @@ def _row_to_property(row: dict, agency_id: str, listing_agent_id: str) -> tuple[
             furnished=(row.get("furnished") or None) or None,
             energy=PropertyEnergy(**{k: v for k, v in energy.items() if v is not None}),
             owner=PropertyOwner(**{k: v for k, v in owner.items() if v}),
+            visibility=visibility,
+            is_listed_on_immobilcloud=list_cloud,
+            mls_shared=share_mls,
+            moderation_status="approved",
         )
         return prop, None
     except Exception as e:
@@ -192,7 +224,14 @@ async def import_csv(
     errors = []
     docs_to_insert = []
     for i, row in enumerate(payload.rows, start=1):
-        prop, err = _row_to_property(row, agency_id, user["id"])
+        prop, err = _row_to_property(
+            row,
+            agency_id,
+            user["id"],
+            activate_listings=payload.activate_listings,
+            list_on_immobilcloud=payload.list_on_immobilcloud,
+            share_on_mls=payload.share_on_mls,
+        )
         if err:
             errors.append({"row": i, "message": err})
             continue
@@ -238,7 +277,11 @@ def _xml_get(elem, *paths):
 
 
 async def _process_xml_text(
-    db, xml_text: str, agency_id: str, user_id: str, source_label: str, job_id: Optional[str] = None
+    db, xml_text: str, agency_id: str, user_id: str, source_label: str, job_id: Optional[str] = None,
+    *,
+    activate_listings: bool = True,
+    list_on_immobilcloud: bool = True,
+    share_on_mls: bool = True,
 ) -> dict:
     """Parse + insert del feed XML; crea/aggiorna l'ImportJob.
 
@@ -350,6 +393,20 @@ async def _process_xml_text(
                 if url:
                     photos.append({"id": str(uuid4()), "url": url, "order": pi, "is_cover": pi == 0})
 
+            list_cloud = list_on_immobilcloud
+            share_mls = share_on_mls
+            if list_cloud and share_mls:
+                visibility = "public"
+            elif list_cloud and not share_mls:
+                visibility = "public"
+            elif not list_cloud and share_mls:
+                visibility = "mls_only"
+                list_cloud = False
+            else:
+                visibility = "private"
+                list_cloud = False
+                share_mls = False
+
             prop = PropertyInDB(
                 agency_id=agency_id,
                 listing_agent_id=user_id,
@@ -363,7 +420,7 @@ async def _process_xml_text(
                     "palazzo_stabile", "altro",
                 } else "appartamento",
                 operation=op if op in {"sale", "rent", "rent_to_buy", "auction"} else "sale",
-                status="draft",
+                status="active" if activate_listings else "draft",
                 city=city,
                 address=address,
                 province=province,
@@ -375,6 +432,10 @@ async def _process_xml_text(
                 bedrooms=bedrooms,
                 bathrooms=bathrooms,
                 photos=photos,
+                visibility=visibility,
+                is_listed_on_immobilcloud=list_cloud,
+                mls_shared=share_mls,
+                moderation_status="approved",
             )
             docs_to_insert.append(prop.model_dump())
         except Exception as e:
@@ -408,7 +469,16 @@ async def _process_xml_text(
     }
 
 
-async def _run_url_import(feed_url: str, agency_id: str, user_id: str, job_id: str) -> None:
+async def _run_url_import(
+    feed_url: str,
+    agency_id: str,
+    user_id: str,
+    job_id: str,
+    *,
+    activate_listings: bool = True,
+    list_on_immobilcloud: bool = True,
+    share_on_mls: bool = True,
+) -> None:
     """M23 — download + import in background; il job traccia lo stato."""
     db = Database.get()
     try:
@@ -416,7 +486,12 @@ async def _run_url_import(feed_url: str, agency_id: str, user_id: str, job_id: s
             r = await client.get(feed_url)
             r.raise_for_status()
             xml_text = r.text
-        await _process_xml_text(db, xml_text, agency_id, user_id, feed_url, job_id=job_id)
+        await _process_xml_text(
+            db, xml_text, agency_id, user_id, feed_url, job_id=job_id,
+            activate_listings=activate_listings,
+            list_on_immobilcloud=list_on_immobilcloud,
+            share_on_mls=share_on_mls,
+        )
     except Exception as e:
         logger.exception("xml url import failed job=%s: %s", job_id, e)
         await db.import_jobs.update_one(
@@ -444,7 +519,12 @@ async def import_xml_feed(
         raise HTTPException(status_code=400, detail="feed_url_or_xml_required")
 
     if payload.xml_content:
-        return await _process_xml_text(db, payload.xml_content, agency_id, user["id"], "pasted-xml")
+        return await _process_xml_text(
+            db, payload.xml_content, agency_id, user["id"], "pasted-xml",
+            activate_listings=payload.activate_listings,
+            list_on_immobilcloud=payload.list_on_immobilcloud,
+            share_on_mls=payload.share_on_mls,
+        )
 
     assert_public_url(payload.feed_url)  # C7 — SSRF guard (sincrona: 400 immediato)
     job = ImportJob(
@@ -456,7 +536,16 @@ async def import_xml_feed(
         initiated_by=user["id"],
     )
     await db.import_jobs.insert_one(job.model_dump())
-    background_tasks.add_task(_run_url_import, payload.feed_url, agency_id, user["id"], job.id)
+    background_tasks.add_task(
+        _run_url_import,
+        payload.feed_url,
+        agency_id,
+        user["id"],
+        job.id,
+        activate_listings=payload.activate_listings,
+        list_on_immobilcloud=payload.list_on_immobilcloud,
+        share_on_mls=payload.share_on_mls,
+    )
     return {"job_id": job.id, "status": "processing", "async": True}
 
 

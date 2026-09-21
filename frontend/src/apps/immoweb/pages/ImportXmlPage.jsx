@@ -19,6 +19,8 @@ export default function ImportXmlPage() {
   const [preview, setPreview] = useState(null); // {session_id, report}
   const [commitResult, setCommitResult] = useState(null);
   const [skipDup, setSkipDup] = useState(true);
+  const [listOnCloud, setListOnCloud] = useState(true);
+  const [shareOnMls, setShareOnMls] = useState(true);
 
   const onFile = useCallback((f) => {
     setError(null);
@@ -69,6 +71,8 @@ export default function ImportXmlPage() {
         session_id: preview.session_id,
         dry_run: dryRun,
         skip_duplicates_by_ref: skipDup,
+        list_on_immobilcloud: listOnCloud,
+        share_on_mls: shareOnMls,
       });
       setCommitResult({ ...r.data, dry_run: dryRun });
       if (!dryRun) {
@@ -252,6 +256,36 @@ export default function ImportXmlPage() {
                   <strong>{t("import.dedupe") || "Salta immobili già presenti"}</strong>{" "}
                   <span className="text-stone-500">
                     {t("import.dedupe_hint") || "(match per codice riferimento — consigliato per non duplicare)"}
+                  </span>
+                </span>
+              </label>
+              <label className="flex items-start gap-2 text-sm text-stone-700">
+                <input
+                  type="checkbox"
+                  checked={listOnCloud}
+                  onChange={(e) => setListOnCloud(e.target.checked)}
+                  data-testid="import-cloud-checkbox"
+                  className="mt-1"
+                />
+                <span>
+                  <strong>{t("import.publish_cloud") || "Online sul portale annunci OMNIA"}</strong>{" "}
+                  <span className="text-stone-500">
+                    {t("import.publish_cloud_hint") || "(ImmobilCloud — default attivo)"}
+                  </span>
+                </span>
+              </label>
+              <label className="flex items-start gap-2 text-sm text-stone-700">
+                <input
+                  type="checkbox"
+                  checked={shareOnMls}
+                  onChange={(e) => setShareOnMls(e.target.checked)}
+                  data-testid="import-mls-checkbox"
+                  className="mt-1"
+                />
+                <span>
+                  <strong>{t("import.publish_mls") || "Condividi in inventario MLS"}</strong>{" "}
+                  <span className="text-stone-500">
+                    {t("import.publish_mls_hint") || "(se l'agenzia è iscritta alla rete — default attivo)"}
                   </span>
                 </span>
               </label>

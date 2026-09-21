@@ -69,6 +69,9 @@ export default function PropertyImportPage() {
   const [xmlImporting, setXmlImporting] = useState(false);
   const [xmlResult, setXmlResult] = useState(null);
   const [xmlError, setXmlError] = useState("");
+  const [listOnCloud, setListOnCloud] = useState(true);
+  const [shareOnMls, setShareOnMls] = useState(true);
+  const [activateListings, setActivateListings] = useState(true);
 
   const downloadTemplate = async () => {
     const url = `${API_BASE}/app/properties/_template/csv`;
@@ -107,7 +110,13 @@ export default function PropertyImportPage() {
     setCsvImporting(true);
     setCsvError("");
     try {
-      const { data } = await api.post("/app/properties/import/csv", { rows: csvRows, filename: csvFilename });
+      const { data } = await api.post("/app/properties/import/csv", {
+        rows: csvRows,
+        filename: csvFilename,
+        activate_listings: activateListings,
+        list_on_immobilcloud: listOnCloud,
+        share_on_mls: shareOnMls,
+      });
       setCsvResult(data);
     } catch (err) {
       setCsvError(formatApiErrorDetail(err?.response?.data?.detail) || t("common.error"));
@@ -121,8 +130,18 @@ export default function PropertyImportPage() {
     setXmlError("");
     try {
       const payload = xmlMode === "url"
-        ? { feed_url: xmlUrl.trim() }
-        : { xml_content: xmlContent };
+        ? {
+            feed_url: xmlUrl.trim(),
+            activate_listings: activateListings,
+            list_on_immobilcloud: listOnCloud,
+            share_on_mls: shareOnMls,
+          }
+        : {
+            xml_content: xmlContent,
+            activate_listings: activateListings,
+            list_on_immobilcloud: listOnCloud,
+            share_on_mls: shareOnMls,
+          };
       const { data } = await api.post("/app/properties/import/xml", payload);
       if (data.async && data.job_id) {
         // M23 — import URL in background: polling dello stato job ogni 2s (max 5 min)
@@ -237,6 +256,20 @@ export default function PropertyImportPage() {
                     </table>
                   </div>
                 </div>
+                <div className="space-y-2 mb-4 text-sm text-stone-700">
+                  <label className="flex items-start gap-2 cursor-pointer">
+                    <input type="checkbox" className="mt-1" checked={activateListings} onChange={(e) => setActivateListings(e.target.checked)} data-testid="csv-activate-checkbox" />
+                    <span><strong>{t("import.publish_activate")}</strong> <span className="text-stone-500">{t("import.publish_activate_hint")}</span></span>
+                  </label>
+                  <label className="flex items-start gap-2 cursor-pointer">
+                    <input type="checkbox" className="mt-1" checked={listOnCloud} onChange={(e) => setListOnCloud(e.target.checked)} data-testid="csv-cloud-checkbox" />
+                    <span><strong>{t("import.publish_cloud")}</strong> <span className="text-stone-500">{t("import.publish_cloud_hint")}</span></span>
+                  </label>
+                  <label className="flex items-start gap-2 cursor-pointer">
+                    <input type="checkbox" className="mt-1" checked={shareOnMls} onChange={(e) => setShareOnMls(e.target.checked)} data-testid="csv-mls-checkbox" />
+                    <span><strong>{t("import.publish_mls")}</strong> <span className="text-stone-500">{t("import.publish_mls_hint")}</span></span>
+                  </label>
+                </div>
                 <button data-testid="csv-import-btn" onClick={importCsv} disabled={csvImporting} className="px-6 py-3 bg-emerald-700 text-stone-50 text-xs uppercase tracking-widest font-medium rounded-md hover:bg-emerald-800 disabled:opacity-50">
                   {csvImporting ? t("import.csv_importing") : t("import.csv_import_btn")}
                 </button>
@@ -329,6 +362,21 @@ export default function PropertyImportPage() {
             )}
 
             {xmlError && <p className="text-sm text-red-700 bg-red-50 border border-red-200 rounded-md px-3 py-2">{xmlError}</p>}
+
+            <div className="space-y-2 text-sm text-stone-700">
+              <label className="flex items-start gap-2 cursor-pointer">
+                <input type="checkbox" className="mt-1" checked={activateListings} onChange={(e) => setActivateListings(e.target.checked)} data-testid="xml-activate-checkbox" />
+                <span><strong>{t("import.publish_activate")}</strong> <span className="text-stone-500">{t("import.publish_activate_hint")}</span></span>
+              </label>
+              <label className="flex items-start gap-2 cursor-pointer">
+                <input type="checkbox" className="mt-1" checked={listOnCloud} onChange={(e) => setListOnCloud(e.target.checked)} data-testid="xml-cloud-checkbox" />
+                <span><strong>{t("import.publish_cloud")}</strong> <span className="text-stone-500">{t("import.publish_cloud_hint")}</span></span>
+              </label>
+              <label className="flex items-start gap-2 cursor-pointer">
+                <input type="checkbox" className="mt-1" checked={shareOnMls} onChange={(e) => setShareOnMls(e.target.checked)} data-testid="xml-mls-checkbox" />
+                <span><strong>{t("import.publish_mls")}</strong> <span className="text-stone-500">{t("import.publish_mls_hint")}</span></span>
+              </label>
+            </div>
 
             <button
               data-testid="xml-import-btn"

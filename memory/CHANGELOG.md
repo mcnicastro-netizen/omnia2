@@ -1,5 +1,15 @@
 # OMNIA — Changelog
 
+## 2026-09-21 — Import flags: ImmobilCloud + MLS
+
+**Tipo**: Feature / Import.
+
+- Preview Import XML: checkbox *Online portale OMNIA* + *Condividi MLS* (default ON)
+- CSV / XML veloce immobili: stessi flag + *Attiva subito* (status active)
+- Campo `mls_shared` su Property; filtri MLS rispettano il flag
+- Non copre multiposting portali terzi (Idealista ecc.)
+
+---
 ## 2026-09-21 — Fix import CSV immobili + dry-run XML conteggio
 
 **Tipo**: Bugfix / Import.

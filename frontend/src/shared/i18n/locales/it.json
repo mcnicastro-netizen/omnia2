@@ -429,7 +429,13 @@
     "form_bc_label": "CSV o XML immobili",
     "form_bc_hint": "Dalla pagina Immobili",
     "form_de_label": "CSV o Import AI clienti",
-    "form_de_hint": "Dalla pagina Clienti"
+    "form_de_hint": "Dalla pagina Clienti",
+    "publish_cloud": "Online sul portale annunci OMNIA",
+    "publish_cloud_hint": "(ImmobilCloud — default attivo)",
+    "publish_mls": "Condividi in inventario MLS",
+    "publish_mls_hint": "(se l'agenzia è iscritta alla rete — default attivo)",
+    "publish_activate": "Attiva subito gli annunci",
+    "publish_activate_hint": "(stato attivo invece di bozza)"
   },
   "help": {
     "title": "Centro Guida",

@@ -421,6 +421,7 @@ def map_property(elem: ET.Element, agency_id: str, preferred_lang: str = "it") -
         "is_exclusive": _bool(_text(elem, "tipo_incarico")) or (_text(elem, "tipo_incarico") == "E"),
         "visibility": "public",
         "is_listed_on_immobilcloud": True,
+        "mls_shared": True,
         "is_private_listing": False,
         "moderation_status": "approved",
         "view_count": 0,

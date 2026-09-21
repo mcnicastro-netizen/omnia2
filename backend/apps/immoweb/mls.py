@@ -26,6 +26,15 @@ OfferStatus = Literal["pending", "accepted", "rejected", "expired", "revoked"]
 PartnerStatus = Literal["pending", "active", "revoked"]
 
 
+def _shareable_listing_clause() -> Dict[str, Any]:
+    """Immobili visibili in inventario MLS (Cap. 27 + flag mls_shared)."""
+    return {
+        "visibility": {"$in": ["public", "mls_only"]},
+        "mls_shared": {"$ne": False},
+        "status": {"$ne": "deleted"},
+    }
+
+
 class JoinMlsBody(BaseModel):
     accept_terms: bool = True
     province_sigla: Optional[str] = Field(default=None, max_length=2)
@@ -138,7 +147,7 @@ async def mls_dashboard(user: dict = Depends(require_roles("agency_admin", "agen
         raise HTTPException(status_code=404, detail="agency_not_found")
 
     my_shared = await db.properties.count_documents(
-        {"agency_id": aid, "visibility": {"$in": ["public", "mls_only"]}, "status": {"$ne": "deleted"}}
+        {"agency_id": aid, "visibility": {"$in": ["public", "mls_only"]}, "mls_shared": {"$ne": False}, "status": {"$ne": "deleted"}}
     )
     my_exclusive = await db.properties.count_documents(
         {"agency_id": aid, "visibility": "private", "status": {"$ne": "deleted"}}
@@ -146,7 +155,7 @@ async def mls_dashboard(user: dict = Depends(require_roles("agency_admin", "agen
     with_photos = await db.properties.count_documents(
         {
             "agency_id": aid,
-            "visibility": {"$in": ["public", "mls_only"]},
+            "visibility": {"$in": ["public", "mls_only"]}, "mls_shared": {"$ne": False},
             "status": {"$ne": "deleted"},
             "$or": [{"cover_url": {"$exists": True, "$ne": None}}, {"photos.0": {"$exists": True}}],
         }
@@ -155,6 +164,7 @@ async def mls_dashboard(user: dict = Depends(require_roles("agency_admin", "agen
     province = (agency.get("mls_province") or agency.get("province_sigla") or "").upper()
     local_q: Dict[str, Any] = {
         "visibility": {"$in": ["public", "mls_only"]},
+        "mls_shared": {"$ne": False},
         "status": {"$ne": "deleted"},
         "agency_id": {"$ne": aid},
     }
@@ -163,7 +173,7 @@ async def mls_dashboard(user: dict = Depends(require_roles("agency_admin", "agen
     local_listings = await db.properties.count_documents(local_q)
     national_listings = await db.properties.count_documents(
         {
-            "visibility": {"$in": ["public", "mls_only"]},
+            "visibility": {"$in": ["public", "mls_only"]}, "mls_shared": {"$ne": False},
             "status": {"$ne": "deleted"},
             "agency_id": {"$ne": aid},
         }
@@ -253,6 +263,7 @@ async def my_mls_inventory(
 
     q: Dict[str, Any] = {
         "visibility": {"$in": ["public", "mls_only"]},
+        "mls_shared": {"$ne": False},
         "status": {"$ne": "deleted"},
     }
     if scope == "mine":
@@ -401,11 +412,11 @@ async def create_offer(
     aid = _agency_id(user)
     prop = await db.properties.find_one(
         {"id": body.property_id, "agency_id": aid},
-        {"_id": 0, "id": 1, "title": 1, "visibility": 1},
+        {"_id": 0, "id": 1, "title": 1, "visibility": 1, "mls_shared": 1},
     )
     if not prop:
         raise HTTPException(status_code=404, detail="property_not_found")
-    if prop.get("visibility") == "private":
+    if prop.get("visibility") == "private" or prop.get("mls_shared") is False:
         raise HTTPException(status_code=400, detail="property_not_shared_on_mls")
     target = await db.agencies.find_one({"id": body.to_agency_id, "mls_enabled": True}, {"_id": 0, "id": 1})
     if not target:
@@ -461,6 +472,7 @@ async def public_network_search(
     db = Database.get()
     q: Dict[str, Any] = {
         "visibility": {"$in": ["public", "mls_only"]},
+        "mls_shared": {"$ne": False},
         "status": {"$ne": "deleted"},
     }
     if province:
@@ -568,6 +580,7 @@ async def seed_mls_network(
                     "sqm": 60 + j * 10,
                     "rooms": 2 + (j % 3),
                     "visibility": "mls_only" if j % 4 == 0 else "public",
+                    "mls_shared": True,
                     "status": "listed",
                     "privacy_level": "L2",
                     "reference_code": f"{province}-{i+1}-{j+1}",
@@ -602,7 +615,7 @@ async def seed_mls_network(
 
     total_mls = await db.agencies.count_documents({"mls_enabled": True})
     total_listings = await db.properties.count_documents(
-        {"visibility": {"$in": ["public", "mls_only"]}, "status": {"$ne": "deleted"}}
+        {"visibility": {"$in": ["public", "mls_only"]}, "mls_shared": {"$ne": False}, "status": {"$ne": "deleted"}}
     )
     return {
         "created_agencies": created_agencies,

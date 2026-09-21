@@ -299,7 +299,13 @@
     "form_bc_label": "Property CSV or XML",
     "form_bc_hint": "From the Properties page",
     "form_de_label": "Client CSV or AI import",
-    "form_de_hint": "From the Clients page"
+    "form_de_hint": "From the Clients page",
+    "publish_cloud": "List on OMNIA property portal",
+    "publish_cloud_hint": "(ImmobilCloud — on by default)",
+    "publish_mls": "Share in MLS inventory",
+    "publish_mls_hint": "(if the agency joined the network — on by default)",
+    "publish_activate": "Activate listings immediately",
+    "publish_activate_hint": "(active status instead of draft)"
   },
   "api_keys": {
     "title": "API Keys",
