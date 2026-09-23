@@ -1,5 +1,15 @@
 # OMNIA — Changelog
 
+## 2026-09-23 — Login tunnel HTTPS (cookie Secure) + sync manuale/HAL D-092
+
+**Tipo**: Fix / Docs.
+
+- Preview proxy: su `x-forwarded-proto=https` aggiunge `Secure` ai Set-Cookie (Safari/Firefox/Chrome)
+- SPA same-origin `/api` (niente `127.0.0.1` nel build)
+- Manuale Cap.1 + HAL 01/02/04/06/14/20/24 allineati a D-092 e al fix login
+- NEXT_SESSION: ripresa «analisi gestionale»
+
+---
 ## 2026-09-23 — D-092 UX pass: destinazioni, Import hub, Clienti↔Richieste, Portali, API Keys, Gruppo
 
 **Tipo**: UX / CRM.

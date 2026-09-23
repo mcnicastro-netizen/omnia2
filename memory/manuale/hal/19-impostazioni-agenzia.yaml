@@ -465,8 +465,8 @@ voci:
           (DomainVerifyPage.jsx, Cap. 17)."
         - "Domain sovereignty policy → /app/domain-sovereignty-policy
           (page pubblica, Cap. 17)."
-        - "API Keys / Webhook Track B → /app/api-keys (ApiKeysPage,
-          non ancora documentata come capitolo)."
+        - "API Keys / Webhook Track B → Impostazioni (card) poi /app/api-keys
+          (D-092: non in sidebar primaria)."
         - "Notifiche / preferenze email → ❌ NO UI v1 (Cap. 18 §18.10)."
         - "Sito web rendering (template + brand extractor + themes)
           → Cap. 8 (Settings gestisce SOLO il flag mode)."

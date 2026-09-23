@@ -65,8 +65,8 @@ voci:
           super_admin."
         - "Nella barra a sinistra, sezione Migrazione o Impostazioni,
           clicca 'Import da altro gestionale'."
-        - "Rotta finale: /it/app/import (o /en/app/import,
-          /es/app/import)."
+        - "Rotta hub: /it/app/import (3 card). Forma A XML:
+          /it/app/import/xml (o /en /es)."
       errori_comuni:
         - problema: "Non vedo la voce Import"
           soluzione: >
@@ -599,8 +599,8 @@ voci:
         Quando devi migrare portafoglio o rubrica e non sai quale schermata
         aprire, oppure chiedi a HAL "come importo tutto".
       passi:
-        - "Forma A — XML universale (preview→commit): /app/import, solo
-          titolare. Preview warning foto, Assegna agente, Storico
+        - "Hub Importa: /app/import (3 card). Forma A XML: /app/import/xml,
+          solo titolare. Preview warning foto, Assegna agente, Storico
           ImportJob, flag ImmobilCloud/MLS. POST preview+commit,
           GET /api/app/import/jobs. Max 50 MB. Hub migrazione/00."
         - "Forma B — CSV immobili template: /app/properties/import tab CSV.

@@ -25,15 +25,18 @@ voci:
       a_cosa_serve: >
         Registrare in ImmoWeb una persona (compratore, venditore,
         affittuario, proprietario, investitore) con dati di contatto
-        e stato commerciale, in modo da poter proporre immobili e
-        tracciare la relazione nel tempo.
+        e stato commerciale. D-092: Clienti = anagrafica; la coda di
+        lavoro (brief, match, MLS) è il modulo Richieste.
       quando_si_usa: >
         A ogni nuovo lead (telefono, walk-in, portale, widget). A ogni
         proprietario che affida un mandato. A ogni investitore.
       passi:
-        - Dalla barra a sinistra clicca "Clienti".
-        - In alto a destra clicca "+ Nuovo cliente".
-        - Compila Nome e Cognome (obbligatori).
+        - "Dalla barra a sinistra clicca Clienti."
+        - "Segmento Acquirenti vs Venditori/Proprietari."
+        - "Per gli acquirenti: pulsante Coda Richieste apre /app/requests."
+        - "In alto a destra clicca + Nuovo acquirente (o venditore)."
+        - "Compila Nome e Cognome (obbligatori)."
+        - "Preferenze di ricerca: al salvataggio sync sulla search_brief aperta."
         - Aggiungi email (consigliata), telefono, WhatsApp, codice
           fiscale se disponibili.
         - Scegli il "Tipo cliente" (Acquirente, Venditore, Affittuario,
@@ -406,8 +409,7 @@ voci:
         Ogni mattina, per decidere l'ordine delle chiamate.
       passi:
         - Apri la lista Clienti.
-        - In cima scegli il segmento: **Acquirenti** oppure
-          **Venditori / Proprietari** (liste separate, non miste).
+        - "In cima scegli il segmento: Acquirenti oppure Venditori / Proprietari (liste separate, non miste)."
         - Nel segmento Acquirenti vedi le linguette di priorità.
         - "Tutti gli acquirenti: clienti in ricerca
           (Acquirente/Affittuario/Investitore)."

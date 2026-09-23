@@ -69,14 +69,14 @@ voci:
       quando_si_usa: >
         Avvio rete / franchising / simulazione Founder.
       passi:
+        - "UI preferita (D-092): /app/group → form «Crea gruppo»
+          (name, franchise opz., credits_mode)."
         - "Ruoli: super_admin, agency_admin o group_admin."
-        - "POST /api/app/groups con name, franchise_name opzionale,
+        - "API: POST /api/app/groups con name, franchise_name opzionale,
           credits_mode (group|branch), notes."
         - "Un owner puo' avere un solo gruppo (400 group_already_exists)."
-        - "super_admin resta super_admin (solo group_id aggiornato);
-          altri caller diventano group_admin."
-        - "Poi allega filiali con POST /groups/{id}/branches."
-        - "UI: /app/group (GroupPage)."
+        - "L'agenzia attuale viene auto-collegata come prima filiale."
+        - "Poi «Collega filiale» in UI oppure POST /groups/{id}/branches."
       errori_comuni:
         - problema: "group_already_exists"
           soluzione: >
@@ -101,7 +101,9 @@ voci:
       quando_si_usa: >
         Dopo create gruppo, o quando apri una nuova sede.
       passi:
-        - "POST /api/app/groups/{id}/branches con agency_id e
+        - "UI (D-092): bottone «Collega filiale» su /app/group
+          (agenzie tue senza group_id + branch_code opz.)."
+        - "API: POST /api/app/groups/{id}/branches con agency_id e
           branch_code (es. RES-HQ)."
         - "Solo super_admin puo' attaccare agenzie non proprie."
         - "GET /groups/{id}/branches elenca filiali con KPI locali.

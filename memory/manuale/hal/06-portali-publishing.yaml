@@ -32,10 +32,10 @@ voci:
         - Compili l'immobile una sola volta nel modulo Immobili
           (Cap. 3), inclusi prezzo, superficie, indirizzo, classe
           APE e almeno 3 foto.
-        - "Vai in Pubblicità su portali dalla barra a sinistra: vedi 2 schede,
-          Attivi (i portali che stai usando) e Disponibili (il
-          catalogo)."
-        - Attivi un portale dalla scheda Disponibili con il
+        - "Vai in Pubblicità su portali dalla barra a sinistra: vedi 3 tab
+          (D-092) — Attivi oggi (collegati), Attivabili ora (integrazione
+          pronta), In arrivo (catalogo non ancora integrato, non attivabili)."
+        - Attivi un portale dalla scheda Attivabili ora con il
           bottone Attiva.
         - Da quel momento l'immobile finisce nel feed XML della
           tua agenzia, che i portali attivi scaricano ogni notte.

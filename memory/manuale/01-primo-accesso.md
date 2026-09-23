@@ -1,6 +1,6 @@
 # Capitolo 1 · Primo accesso
 
-**Versione manuale**: v1.0 · **Ultima revisione**: Feb 2026
+**Versione manuale**: v1.1 · **Ultima revisione**: Set 2026
 **Chi lo legge**: titolari, agenti, segreteria (chiunque debba iniziare a usare ImmoWeb)
 **Prerequisiti**: aver ricevuto le credenziali (email + password) o un invito da un collega
 
@@ -52,6 +52,7 @@ Il tuo titolare (o il servizio OMNIA se ti sei registrato tu stesso) ti ha invia
 **Errori comuni**
 - *"Email o password sbagliata"*: controlla di avere copiato la password senza spazi iniziali/finali. Se hai fatto copia-incolla dalla mail, spesso viene copiato uno spazio in più.
 - *"Il link scade dopo 7 giorni"*: se hai ricevuto un invito e non l'hai aperto in tempo, chiedi al titolare di re-inviarlo dalla sezione **Collaboratori** (Cap. 13).
+- *Login che sembra riuscito ma resti fuori / “non funziona” su URL pubblico (tunnel Cloudflare)*: fai un **hard refresh** (Safari: Cmd+Option+R; Firefox: Ctrl+Shift+R). I cookie di sessione sul dominio HTTPS devono avere il flag **Secure** — il preview OMNIA li aggiunge automaticamente. Vale per Safari, Firefox ed Edge, non solo Chrome. Demo Cloud: `demo.admin@omniaecosystem.it` / password in `DEMO_ADMIN_PASSWORD`.
 
 ### 1.2.2 Ho dimenticato la password
 

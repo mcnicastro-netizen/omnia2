@@ -23,18 +23,19 @@ voci:
     contenuto:
       a_cosa_serve: >
         Vedere in un colpo d'occhio lo stato dell'agenzia oggi:
-        immobili in vetrina, lead da chiamare, match nuovi, visite in
-        agenda, collaboratori e inviti pendenti.
+        immobili in vetrina, richieste aperte, match nuovi, visite,
+        collaboratori e inviti. Sotto il saluto: azioni rapide e
+        cockpit «Cosa fare oggi» (D-092).
       quando_si_usa: >
         Ogni mattina, all'apertura, per capire dove concentrare la
         giornata. La Dashboard è un cruscotto di stato, non un feed
         di eventi.
       passi:
-        - Fai login (vedi primo-accesso.login-primo-ingresso).
-        - Vieni portato direttamente sulla Dashboard.
-        - In alto vedi il saluto "Bentornato, {tuo nome}".
-        - Sotto vedi sei riquadri (KPI card) con i numeri chiave.
-        - In fondo trovi una nota che ricorda cosa rappresentano.
+        - "Fai login (vedi primo-accesso.login-primo-ingresso)."
+        - "Vieni portato direttamente sulla Dashboard."
+        - "In alto: saluto + azioni rapide (Nuovo immobile, Nuovo cliente, Nuova richiesta, Match, Portali, HAL)."
+        - "Poi il cockpit Cosa fare oggi con link a Richieste / Immobili."
+        - "Sotto: sei riquadri KPI (Immobili attivi, Richieste aperte, ...)."
       errori_comuni: []
       permessi:
         - Tutti i ruoli
@@ -65,11 +66,11 @@ voci:
         naturale con cui pensare all'agenzia.
       passi:
         - "Immobili attivi: numero di immobili in stato Pubblicato."
-        - "Lead aperti: contatti in stato Nuovo o Contattato (non
-          ancora chiusi)."
-        - "Nuovi match (7gg): abbinamenti cliente↔immobile generati
-          negli ultimi 7 giorni."
-        - "Visite (7gg): visite in agenda nei prossimi 7 giorni."
+        - "Richieste aperte: richieste di ricerca/interesse in corso
+          (fallback lead grezzi se non ci sono ancora richieste). Clic → /app/requests."
+        - "Nuovi match (7gg): abbinamenti generati negli ultimi 7 giorni."
+        - "Visite (7gg): visite in agenda nei prossimi 7 giorni
+          (link a immobile/cliente)."
         - "Collaboratori: membri dell'agenzia con account attivo."
         - "Inviti pendenti: inviti spediti ma non ancora accettati."
       errori_comuni:

@@ -11,12 +11,12 @@
     {
       "file": "01-primo-accesso.yaml",
       "voices": 10,
-      "md5": "98337d35d9efff301f3f59ef37ee50d1"
+      "md5": "ba9810daa2a8853c895e2ce994438870"
     },
     {
       "file": "02-dashboard.yaml",
       "voices": 8,
-      "md5": "4d2ebe2a34d34791826205c824ecd089"
+      "md5": "0b1c46352ee1fdf728fcd4f352c9b51d"
     },
     {
       "file": "03-immobili.yaml",
@@ -26,7 +26,7 @@
     {
       "file": "04-clienti.yaml",
       "voices": 12,
-      "md5": "1f309eb87b737b94fda97807da643601"
+      "md5": "0960c71727a087a5316e25bcaeb6f94c"
     },
     {
       "file": "05-match.yaml",
@@ -36,7 +36,7 @@
     {
       "file": "06-portali-publishing.yaml",
       "voices": 12,
-      "md5": "f96415367f3734296824df169e10e296"
+      "md5": "5fe9ab9e6ae1fcc7b90e4225749d7aa4"
     },
     {
       "file": "07-fascicolo-immobile.yaml",
@@ -76,7 +76,7 @@
     {
       "file": "14-import-xml.yaml",
       "voices": 17,
-      "md5": "72b08abc42c3768bb8b8575eddbf6434"
+      "md5": "577b3bb86811ef8d9e15342e86dc3e26"
     },
     {
       "file": "15-social-publisher.yaml",
@@ -101,12 +101,12 @@
     {
       "file": "19-impostazioni-agenzia.yaml",
       "voices": 15,
-      "md5": "1eab4c24d9a910ee841e568abfc5fb6d"
+      "md5": "b92076a673ec14a3c3c55ec9706fdcfc"
     },
     {
       "file": "20-api-keys-integrazioni.yaml",
       "voices": 15,
-      "md5": "f8e456384b056c88725e5efbad062441"
+      "md5": "6b686c89d751211728ddc5e80657203f"
     },
     {
       "file": "21-valutatore-immobiliare.yaml",
@@ -126,7 +126,7 @@
     {
       "file": "24-gruppi-sedi.yaml",
       "voices": 8,
-      "md5": "8cbd4f30cb4e8918430a32a3c3c1aa30"
+      "md5": "4a0e751e573bad846a2a631a9a050267"
     },
     {
       "file": "25-privacy-immobili.yaml",
@@ -175,7 +175,7 @@
       "title": "Gruppi e sedi (multi-branch)",
       "yaml": "24-gruppi-sedi.yaml",
       "voices": 8,
-      "md5": "8cbd4f30cb4e8918430a32a3c3c1aa30"
+      "md5": "4a0e751e573bad846a2a631a9a050267"
     },
     {
       "id": 25,

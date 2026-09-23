@@ -87,6 +87,12 @@ voci:
           soluzione: >
             Gli inviti scadono dopo 24 ore. Chiedi al titolare di
             re-inviarti l'invito dalla sezione Collaboratori.
+        - problema: "Login non entra sull'URL pubblico / tunnel (Safari o Firefox)"
+          soluzione: >
+            Hard refresh (Safari Cmd+Option+R, Firefox Ctrl+Shift+R).
+            Sul tunnel HTTPS i cookie di sessione devono essere Secure:
+            il preview OMNIA li imposta. Non è un problema solo Chrome.
+            Demo: demo.admin@omniaecosystem.it + DEMO_ADMIN_PASSWORD.
       permessi:
         - Tutti gli utenti che hanno ricevuto un invito o un account
     screenshot:

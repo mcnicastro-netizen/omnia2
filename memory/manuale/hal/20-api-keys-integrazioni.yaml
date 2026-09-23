@@ -48,18 +48,19 @@ voci:
     domanda_naturale: "Dove trovo la pagina per gestire le API Keys?"
     contenuto:
       a_cosa_serve: >
-        Localizzare la ApiKeysPage nel menu laterale ImmoWeb.
+        Localizzare ApiKeysPage: non è più nella sidebar primaria (D-092).
       quando_si_usa: >
         Quando vuoi emettere/gestire chiavi Track B.
       passi:
-        - "Sidebar: voce Chiavi API (current='api-keys')."
-        - "Route frontend: /app/api-keys."
-        - "Permessi: agency_admin, super_admin, group_admin. Il
-          group_admin con group_id popolato vede TUTTE le chiavi
-          delle branch del gruppo."
-      errori_comuni: []
+        - "Impostazioni → card «API Keys (integrazioni)» → Apri API Keys."
+        - "Route frontend: /app/api-keys (resto invariato)."
+        - "Permessi: agency_admin, branch_admin, super_admin, group_admin."
+      errori_comuni:
+        - problema: "Non trovo API Keys nella barra a sinistra"
+          soluzione: >
+            È voluto (D-092). Entra da Impostazioni.
       permessi:
-        - "agency_admin, super_admin, group_admin"
+        - "agency_admin, branch_admin, super_admin, group_admin"
     screenshot: []
 
   - id: api-keys.emissione-show-once
