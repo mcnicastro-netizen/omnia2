@@ -1,5 +1,15 @@
 # OMNIA — Changelog
 
+## 2026-09-23 — Clienti: distinzione Acquirenti vs Venditori/Proprietari
+
+**Tipo**: UX / CRM.
+
+- Lista Clienti: due segmenti primari (**Acquirenti** · **Venditori / Proprietari**) al posto di pill miste
+- Bucket temperatura / Da chiamare oggi solo nel segmento Acquirenti; CTA e empty state contestuali
+- Form nuovo cliente: optgroup tipi + `?type=seller` da Venditori
+- Cap.4 + HAL `04-clienti` + screenshots-index aggiornati (i18n IT/EN/ES)
+
+---
 ## 2026-09-23 — D-088 Mongo sempre presente sui Cloud Agent
 
 **Tipo**: Ops / Cloud Agent.

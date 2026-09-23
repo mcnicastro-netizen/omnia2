@@ -5,20 +5,32 @@ import AgencyShell from "./components/AgencyShell";
 import { api } from "../../shared/lib/api";
 
 /** D-FUTURE-04 Smart Clients List
- *  Editorial sober variant: stone palette only, no vivid colors.
- *  Order: lead_score desc (deterministic when AI not cached, AI when cached).
- *  Filters: bucket pills (to_call_today / rovente / caldo / tiepido / freddo / searchers / sellers / all).
+ *  Primary split: Acquirenti (searchers) vs Venditori/Proprietari (sellers).
+ *  Within Acquirenti: temperature / to_call_today filters + lead score.
+ *  Editorial sober: stone palette only.
  */
 
-// Temperature labels in IT/EN/ES sourced from i18n at render-time.
-const TEMP_ORDER = ["rovente", "caldo", "tiepido", "freddo"];
-const BUCKETS = ["all", "to_call_today", "rovente", "caldo", "tiepido", "freddo", "searchers", "sellers"];
+const TEMP_BUCKETS = ["to_call_today", "rovente", "caldo", "tiepido", "freddo"];
+const SEGMENTS = ["searchers", "sellers"];
+
+function resolveInitial(searchParams) {
+  const raw = searchParams.get("bucket") || "";
+  if (raw === "sellers") return { segment: "sellers", filter: "all" };
+  if (TEMP_BUCKETS.includes(raw)) return { segment: "searchers", filter: raw };
+  // searchers | all | missing → Acquirenti (netta distinzione di default)
+  return { segment: "searchers", filter: "all" };
+}
+
+function apiBucket(segment, filter) {
+  if (segment === "sellers") return "sellers";
+  if (filter && filter !== "all") return filter;
+  return "searchers";
+}
 
 function TempPill({ temp, t }) {
   if (!temp) {
     return <span data-testid="temp-pill" className="text-[10px] uppercase tracking-widest text-stone-400">—</span>;
   }
-  // Sober styling: monospace dot + grayscale label. No vivid colors.
   const dotShade = {
     rovente: "bg-stone-900",
     caldo: "bg-stone-700",
@@ -90,24 +102,68 @@ function FilterPill({ id, active, label, count, onClick }) {
   );
 }
 
+function SegmentTab({ id, active, label, count, hint, onClick }) {
+  return (
+    <button
+      type="button"
+      role="tab"
+      aria-selected={active}
+      data-testid={`clients-segment-${id}`}
+      onClick={onClick}
+      className={`flex-1 min-w-[200px] text-left px-5 py-4 rounded-lg border transition ${
+        active
+          ? "bg-stone-900 text-stone-50 border-stone-900 shadow-sm"
+          : "bg-white text-stone-800 border-stone-300 hover:border-stone-600"
+      }`}
+    >
+      <div className="flex items-baseline justify-between gap-3">
+        <span className="text-sm uppercase tracking-widest font-medium">{label}</span>
+        {typeof count === "number" && (
+          <span
+            className={`text-2xl font-light leading-none tabular-nums ${active ? "text-stone-100" : "text-stone-900"}`}
+            style={{ fontFamily: "'Fraunces', Georgia, serif" }}
+          >
+            {count}
+          </span>
+        )}
+      </div>
+      {hint && (
+        <p className={`mt-2 text-xs leading-snug ${active ? "text-stone-300" : "text-stone-500"}`}>{hint}</p>
+      )}
+    </button>
+  );
+}
+
 export default function ClientsPage() {
   const { t, i18n } = useTranslation();
   const lang = (i18n.language || "it").slice(0, 2);
   const nav = useNavigate();
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
 
+  const initial = resolveInitial(searchParams);
   const [data, setData] = useState({ items: [], counts: {}, total: 0, page: 1, page_size: 50 });
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [bucket, setBucket] = useState(() => {
-    const b = searchParams.get("bucket") || "all";
-    return BUCKETS.includes(b) ? b : "all";
-  });
-  const [sort, setSort] = useState("score_desc");
+  const [segment, setSegment] = useState(initial.segment);
+  const [filter, setFilter] = useState(initial.filter);
+  const [sort, setSort] = useState(() =>
+    initial.segment === "sellers" ? "created_desc" : "score_desc",
+  );
   const [q, setQ] = useState("");
   const [page, setPage] = useState(1);
   const [toast, setToast] = useState("");
   const pageSize = 50;
+
+  const bucket = apiBucket(segment, filter);
+
+  // Keep URL in sync for deep-links / refresh
+  useEffect(() => {
+    const next = new URLSearchParams(searchParams);
+    next.set("bucket", bucket);
+    if (next.get("bucket") !== searchParams.get("bucket")) {
+      setSearchParams(next, { replace: true });
+    }
+  }, [bucket]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const load = async (signal, pageOverride) => {
     setLoading(true);
@@ -116,7 +172,7 @@ export default function ClientsPage() {
       params.set("sort", sort);
       params.set("page", String(pageOverride ?? page));
       params.set("page_size", String(pageSize));
-      if (bucket && bucket !== "all") params.set("bucket", bucket);
+      params.set("bucket", bucket);
       if (q) params.set("q", q);
       const { data } = await api.get(`/app/clients/smart?${params.toString()}`, { signal });
       setData(data);
@@ -133,7 +189,7 @@ export default function ClientsPage() {
     const ac = new AbortController();
     load(ac.signal);
     return () => ac.abort();
-  }, [bucket, sort, page]);
+  }, [bucket, sort, page]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const onSearch = (e) => {
     e.preventDefault();
@@ -141,9 +197,21 @@ export default function ClientsPage() {
     else load();
   };
 
-  const onBucket = (id) => {
+  const onSegment = (id) => {
+    if (!SEGMENTS.includes(id) || id === segment) return;
     setPage(1);
-    setBucket(id);
+    setSegment(id);
+    setFilter("all");
+    if (id === "sellers" && (sort === "score_desc" || sort === "score_asc")) {
+      setSort("created_desc");
+    } else if (id === "searchers" && sort === "created_desc") {
+      setSort("score_desc");
+    }
+  };
+
+  const onFilter = (id) => {
+    setPage(1);
+    setFilter(id);
   };
 
   const onSort = (value) => {
@@ -171,17 +239,26 @@ export default function ClientsPage() {
 
   const counts = data.counts || {};
   const uncached = counts.ai_uncached_searchers || 0;
+  const isSearchers = segment === "searchers";
 
-  const pills = useMemo(() => ([
-    { id: "all",            label: t("clients_smart.bucket_all"),            count: counts.all },
-    { id: "to_call_today",  label: t("clients_smart.bucket_to_call_today"),  count: counts.to_call_today },
-    { id: "rovente",        label: t("clients_smart.bucket_rovente"),        count: counts.rovente },
-    { id: "caldo",          label: t("clients_smart.bucket_caldo"),          count: counts.caldo },
-    { id: "tiepido",        label: t("clients_smart.bucket_tiepido"),        count: counts.tiepido },
-    { id: "freddo",         label: t("clients_smart.bucket_freddo"),         count: counts.freddo },
-    { id: "searchers",      label: t("clients_smart.bucket_searchers"),      count: counts.searchers },
-    { id: "sellers",        label: t("clients_smart.bucket_sellers"),        count: counts.sellers },
-  ]), [counts, t]);
+  const secondaryPills = useMemo(() => {
+    if (!isSearchers) return [];
+    return [
+      { id: "all", label: t("clients_smart.bucket_all_searchers"), count: counts.searchers },
+      { id: "to_call_today", label: t("clients_smart.bucket_to_call_today"), count: counts.to_call_today },
+      { id: "rovente", label: t("clients_smart.bucket_rovente"), count: counts.rovente },
+      { id: "caldo", label: t("clients_smart.bucket_caldo"), count: counts.caldo },
+      { id: "tiepido", label: t("clients_smart.bucket_tiepido"), count: counts.tiepido },
+      { id: "freddo", label: t("clients_smart.bucket_freddo"), count: counts.freddo },
+    ];
+  }, [isSearchers, counts, t]);
+
+  const emptyTitle = isSearchers
+    ? t("clients_smart.empty_searchers_title")
+    : t("clients_smart.empty_sellers_title");
+  const emptySubtitle = isSearchers
+    ? t("clients_smart.empty_searchers_subtitle")
+    : t("clients_smart.empty_sellers_subtitle");
 
   return (
     <AgencyShell current="clients">
@@ -191,10 +268,12 @@ export default function ClientsPage() {
             <h1 className="text-3xl md:text-4xl tracking-tight" style={{ fontFamily: "'Fraunces', Georgia, serif" }}>
               {t("clients.title")}
             </h1>
-            <p className="text-stone-600 mt-1">{t("clients_smart.subtitle")}</p>
+            <p className="text-stone-600 mt-1">
+              {isSearchers ? t("clients_smart.subtitle_searchers") : t("clients_smart.subtitle_sellers")}
+            </p>
           </div>
-          <div className="flex gap-2">
-            {uncached > 0 && (
+          <div className="flex gap-2 flex-wrap">
+            {isSearchers && uncached > 0 && (
               <button
                 type="button"
                 data-testid="clients-refresh-ai-btn"
@@ -214,21 +293,46 @@ export default function ClientsPage() {
               {t("clients_smart.import_csv_btn")}
             </Link>
             <Link
-              to={`/${lang}/app/clients/new`}
+              to={`/${lang}/app/clients/new${isSearchers ? "" : "?type=seller"}`}
               data-testid="clients-new-btn"
               className="px-5 py-2.5 bg-stone-900 text-stone-50 text-xs uppercase tracking-widest font-medium rounded-md hover:bg-stone-700 transition"
             >
-              {t("clients.new_btn")}
+              {isSearchers ? t("clients_smart.new_searcher_btn") : t("clients_smart.new_seller_btn")}
             </Link>
           </div>
         </div>
 
-        {/* Smart sorting banner */}
-        <div data-testid="smart-banner" className="bg-stone-100 border border-stone-200 rounded-lg p-4 flex gap-3 items-start text-sm text-stone-700">
+        {/* Primary: Acquirenti vs Venditori/Proprietari */}
+        <div
+          role="tablist"
+          aria-label={t("clients_smart.segment_aria")}
+          className="grid grid-cols-1 sm:grid-cols-2 gap-3"
+          data-testid="clients-segments"
+        >
+          <SegmentTab
+            id="searchers"
+            active={isSearchers}
+            label={t("clients_smart.segment_searchers")}
+            count={counts.searchers}
+            hint={t("clients_smart.segment_searchers_hint")}
+            onClick={() => onSegment("searchers")}
+          />
+          <SegmentTab
+            id="sellers"
+            active={!isSearchers}
+            label={t("clients_smart.segment_sellers")}
+            count={counts.sellers}
+            hint={t("clients_smart.segment_sellers_hint")}
+            onClick={() => onSegment("sellers")}
+          />
+        </div>
+
+        <div
+          data-testid="smart-banner"
+          className="bg-stone-100 border border-stone-200 rounded-lg p-4 flex gap-3 items-start text-sm text-stone-700"
+        >
           <span className="text-base leading-none mt-0.5">◆</span>
-          <p>
-            {t("clients_smart.banner_text")}
-          </p>
+          <p>{isSearchers ? t("clients_smart.banner_searchers") : t("clients_smart.banner_sellers")}</p>
         </div>
 
         {toast && (
@@ -237,7 +341,6 @@ export default function ClientsPage() {
           </p>
         )}
 
-        {/* Search + bucket filters */}
         <form onSubmit={onSearch} className="flex flex-wrap gap-3 items-center">
           <input
             data-testid="clients-search"
@@ -255,46 +358,59 @@ export default function ClientsPage() {
             onChange={(e) => onSort(e.target.value)}
             className="px-3 py-2 bg-white border border-stone-300 rounded-md text-sm"
           >
-            <option value="score_desc">{t("clients_smart.sort_score_desc")}</option>
-            <option value="score_asc">{t("clients_smart.sort_score_asc")}</option>
+            {isSearchers && (
+              <>
+                <option value="score_desc">{t("clients_smart.sort_score_desc")}</option>
+                <option value="score_asc">{t("clients_smart.sort_score_asc")}</option>
+              </>
+            )}
             <option value="created_desc">{t("clients_smart.sort_created_desc")}</option>
             <option value="name_asc">{t("clients_smart.sort_name_asc")}</option>
           </select>
         </form>
 
-        <div className="flex flex-wrap gap-2" data-testid="bucket-filters">
-          {pills.map((p) => (
-            <FilterPill
-              key={p.id}
-              id={p.id}
-              active={bucket === p.id}
-              label={p.label}
-              count={p.count}
-              onClick={() => onBucket(p.id)}
-            />
-          ))}
-        </div>
+        {isSearchers && (
+          <div className="flex flex-wrap gap-2" data-testid="bucket-filters">
+            {secondaryPills.map((p) => (
+              <FilterPill
+                key={p.id}
+                id={p.id}
+                active={filter === p.id}
+                label={p.label}
+                count={p.count}
+                onClick={() => onFilter(p.id)}
+              />
+            ))}
+          </div>
+        )}
 
         {loading ? (
           <p className="text-stone-500 text-sm" data-testid="clients-loading">{t("common.loading")}</p>
         ) : data.items.length === 0 ? (
           <div data-testid="clients-empty" className="bg-white border border-stone-200 rounded-lg p-12 text-center">
             <p className="text-2xl mb-2" style={{ fontFamily: "'Fraunces', Georgia, serif" }}>
-              {t("clients.empty_title")}
+              {emptyTitle}
             </p>
-            <p className="text-stone-500 mb-6 max-w-md mx-auto">{t("clients.empty_subtitle")}</p>
+            <p className="text-stone-500 mb-6 max-w-md mx-auto">{emptySubtitle}</p>
             <Link
-              to={`/${lang}/app/clients/new`}
+              to={`/${lang}/app/clients/new${isSearchers ? "" : "?type=seller"}`}
               className="inline-block px-5 py-2.5 bg-stone-900 text-stone-50 text-xs uppercase tracking-widest rounded-md hover:bg-stone-700"
             >
-              {t("clients.new_btn")}
+              {isSearchers ? t("clients_smart.new_searcher_btn") : t("clients_smart.new_seller_btn")}
             </Link>
           </div>
         ) : (
           <>
-            <div className="space-y-2" data-testid="clients-smart-list">
+            <div className="space-y-2" data-testid="clients-smart-list" data-segment={segment}>
               {data.items.map((c) => (
-                <ClientRow key={c.id} c={c} lang={lang} t={t} onOpen={() => nav(`/${lang}/app/clients/${c.id}`)} />
+                <ClientRow
+                  key={c.id}
+                  c={c}
+                  lang={lang}
+                  t={t}
+                  segment={segment}
+                  onOpen={() => nav(`/${lang}/app/clients/${c.id}`)}
+                />
               ))}
             </div>
             {(() => {
@@ -341,8 +457,8 @@ export default function ClientsPage() {
 }
 
 
-function ClientRow({ c, lang, t, onOpen }) {
-  const isSeller = !["buyer", "tenant", "investor"].includes(c.client_type);
+function ClientRow({ c, lang, t, segment, onOpen }) {
+  const isSeller = segment === "sellers" || !["buyer", "tenant", "investor"].includes(c.client_type);
   const fullName = `${c.name || ""} ${c.surname || ""}`.trim() || "—";
   const prefs = c.preferences || {};
   const prefBits = [];
@@ -350,9 +466,10 @@ function ClientRow({ c, lang, t, onOpen }) {
   if ((prefs.property_types || []).length) prefBits.push((prefs.property_types || []).slice(0, 2).join("/"));
   if ((prefs.cities || []).length) prefBits.push((prefs.cities || []).slice(0, 2).join(", "));
   if (prefs.price_max) prefBits.push(`fino a ${new Intl.NumberFormat("it-IT", { style: "currency", currency: "EUR", maximumFractionDigits: 0 }).format(prefs.price_max)}`);
-  const prefLine = prefBits.length ? prefBits.join(" · ") : (isSeller ? t("clients_smart.seller_no_prefs") : t("clients_smart.no_prefs_set"));
+  const prefLine = prefBits.length
+    ? prefBits.join(" · ")
+    : (isSeller ? t("clients_smart.seller_no_prefs") : t("clients_smart.no_prefs_set"));
 
-  // Quick-action links: tel: + wa.me
   const cleanPhone = (s) => String(s || "").replace(/[^\d+]/g, "");
   const phoneDigits = cleanPhone(c.phone);
   const waDigits = cleanPhone(c.whatsapp || c.phone).replace(/^\+/, "");
@@ -366,28 +483,38 @@ function ClientRow({ c, lang, t, onOpen }) {
   return (
     <div
       data-testid={`client-row-${c.id}`}
+      data-client-role={isSeller ? "seller" : "searcher"}
       onClick={onOpen}
-      className="bg-white border border-stone-200 rounded-lg px-5 py-4 cursor-pointer hover:border-stone-500 hover:shadow-sm transition grid grid-cols-1 md:grid-cols-[60px_1fr_auto_auto] gap-4 items-center"
+      className={`bg-white border border-stone-200 rounded-lg px-5 py-4 cursor-pointer hover:border-stone-500 hover:shadow-sm transition grid grid-cols-1 gap-4 items-center ${
+        isSeller
+          ? "md:grid-cols-[1fr_auto] border-l-[3px] border-l-stone-400"
+          : "md:grid-cols-[60px_1fr_auto_auto]"
+      }`}
     >
-      <ScoreBox score={c.lead_score} cached={c.ai_cached} />
+      {!isSeller && <ScoreBox score={c.lead_score} cached={c.ai_cached} />}
 
       <div className="min-w-0">
         <div className="flex items-center gap-3 flex-wrap">
           <span className="font-medium text-stone-900 text-base">{fullName}</span>
-          <TempPill temp={c.temperature} t={t} />
+          {!isSeller && <TempPill temp={c.temperature} t={t} />}
           <span className="text-[10px] uppercase tracking-widest text-stone-400">
             {t(`clients.type_${c.client_type}`)}
           </span>
         </div>
         <div className="text-stone-600 text-sm mt-0.5 truncate">{prefLine}</div>
-        {c.action_hint && (
+        {c.action_hint && !isSeller && (
           <div className="text-stone-500 text-xs mt-1.5 italic truncate">
             <span className="not-italic mr-1">·</span>{c.action_hint}
           </div>
         )}
+        {isSeller && c.status && (
+          <div className="text-stone-500 text-xs mt-1.5 uppercase tracking-widest">
+            {t(`clients.status_${c.status}`)}
+          </div>
+        )}
       </div>
 
-      <MatchesPill count={c.matches_count} t={t} />
+      {!isSeller && <MatchesPill count={c.matches_count} t={t} />}
 
       <div className="flex items-center gap-1.5" onClick={stop}>
         {telHref ? (

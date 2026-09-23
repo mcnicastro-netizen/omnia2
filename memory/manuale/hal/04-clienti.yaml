@@ -385,8 +385,8 @@ voci:
   # ---------- 4.6 · Smart Sorting + Lead Scoring intro ----------
 
   - id: clienti.smart-sorting-buckets
-    titolo: Smart Sorting — i bucket per priorità (Roventi, Caldi,
-      Tiepidi, Freddi)
+    titolo: Smart Sorting — segmenti Acquirenti vs Venditori/Proprietari
+      e bucket di priorità
     modulo: Clienti
     widget: null
     pubblico: [titolare, agente, segreteria]
@@ -406,21 +406,20 @@ voci:
         Ogni mattina, per decidere l'ordine delle chiamate.
       passi:
         - Apri la lista Clienti.
-        - Sopra la tabella vedi le linguette dei bucket.
-        - "Tutti: tutti i clienti attivi."
-        - "Da chiamare oggi: score alto + non contattati di recente."
-        - "Roventi 🔥, Caldi 🌶️, Tiepidi ☀️, Freddi ❄️: filtro per
-          temperatura Lead Scoring AI."
-        - "Acquirenti: solo tipi Acquirente/Investitore/Affittuario
-          con preferenze."
-        - "Venditori: solo clienti di tipo Venditore, Proprietario o
-          Investitore (indipendentemente da eventuali immobili
-          collegati)."
-        - Clicca il bucket che ti interessa per filtrare la lista.
+        - In cima scegli il segmento: **Acquirenti** oppure
+          **Venditori / Proprietari** (liste separate, non miste).
+        - Nel segmento Acquirenti vedi le linguette di priorità.
+        - "Tutti gli acquirenti: clienti in ricerca
+          (Acquirente/Affittuario/Investitore)."
+        - "Da chiamare oggi: score alto + match disponibili."
+        - "Roventi, Caldi, Tiepidi, Freddi: filtro per temperatura
+          Lead Scoring AI."
+        - "Venditori / Proprietari: tipi Venditore e Proprietario
+          (affitta) — mandati, senza matching automatico."
+        - Clicca il segmento e il bucket che ti interessano.
         - "La lista è paginata (50 per pagina). Il ranking per score
-          valuta fino a circa 1.000 clienti e 150 immobili attivi
-          recenti (cache breve ~45s); oltre usa ricerca o i bucket
-          Acquirenti/Venditori."
+          (solo Acquirenti) valuta fino a circa 1.000 clienti e 150
+          immobili attivi recenti (cache breve ~45s)."
       errori_comuni:
         - problema: "Il bucket 'Da chiamare oggi' è vuoto"
           soluzione: >
@@ -428,12 +427,16 @@ voci:
             Roventi o Caldi. Se sono tutti vuoti, l'agenzia è nuova o
             senza attività recente — è il momento di alimentare
             Clienti e preferenze.
+        - problema: "Non vedo i venditori nella lista"
+          soluzione: >
+            Passa al segmento "Venditori / Proprietari" in alto.
+            Acquirenti e venditori non sono più misti nella stessa vista.
         - problema: "Non vedo tutti i 5.000+ clienti nella prima pagina"
           soluzione: >
             È normale: Smart Clients mostra 50 righe per pagina e
             calcola lo score sulla finestra di ranking. Usa
-            Precedente/Successiva, la ricerca per nome, o i bucket
-            Acquirenti/Venditori.
+            Precedente/Successiva, la ricerca per nome, o cambia
+            segmento.
       permessi:
         - Titolare, agente, segreteria (come agente)
     screenshot:

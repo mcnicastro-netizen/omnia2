@@ -224,21 +224,24 @@ Dopo aver popolato Clienti e Immobili, ImmoWeb inizia a proporti chi chiamare **
 
 **Cosa vedi in Clienti**
 
-- Sopra la lista trovi una banda con i **bucket** (filtri rapidi):
+- In cima trovi due **segmenti** netti (non misti nella stessa lista):
+
+| Segmento | Chi include | Cosa fa |
+|----------|-------------|---------|
+| **Acquirenti** | Tipi *Acquirente · Affittuario · Investitore* | Lead score, match automatici, bucket temperatura |
+| **Venditori / Proprietari** | Tipi *Venditore · Proprietario (affitta)* | Mandati e anagrafica proprietari — **senza** matching automatico |
+
+- Nel segmento **Acquirenti**, sotto i due tab, trovi i **bucket** di priorità:
 
 | Bucket | Cosa contiene |
 |--------|---------------|
-| **Tutti** | Tutti i clienti attivi |
-| **Da chiamare oggi** | Clienti che oggi hanno la priorità (score alto + non contattati di recente) |
-| **Roventi 🔥** | Massima priorità — chiamali subito |
-| **Caldi 🌶️** | Alta priorità — questa settimana |
-| **Tiepidi ☀️** | Media — quando puoi |
-| **Freddi ❄️** | Bassa — nel dubbio salta |
-| **Acquirenti** | Solo clienti di tipo *Acquirente/Investitore/Affittuario* con preferenze |
-| **Venditori** | Solo clienti di tipo *Venditore/Proprietario/Investitore* — utile per gestire proprietari e chi affida mandati (indipendentemente da eventuali immobili collegati) |
+| **Tutti gli acquirenti** | Tutti i clienti in ricerca |
+| **Da chiamare oggi** | Score alto + match disponibili |
+| **Roventi / Caldi / Tiepidi / Freddi** | Filtro per temperatura Lead Scoring AI |
 
-- La lista è **paginata** (50 clienti per pagina): in fondo trovi Precedente / Successiva. Il ranking per score valuta fino a ~1.000 clienti e fino a ~150 immobili attivi più recenti (oltre quella soglia usa i bucket Acquirenti/Venditori o la ricerca per nome). Il risultato del ranking resta in cache breve (~45 s) per evitare rallentamenti se più agenti aprono Clienti insieme.
-- Ogni riga cliente mostra un **badge temperatura** (Rovente / Caldo / Tiepido / Freddo) e — se calcolato — il **numero di match** con immobili in portafoglio.
+- Nel segmento **Venditori / Proprietari** non compaiono i bucket temperatura (non hanno match). Usa ricerca, ordinamento per data/nome e le azioni rapide Chiama / WhatsApp.
+- La lista è **paginata** (50 clienti per pagina): in fondo trovi Precedente / Successiva. Il ranking per score (solo Acquirenti) valuta fino a ~1.000 clienti e fino a ~150 immobili attivi più recenti. Il risultato del ranking resta in cache breve (~45 s) per evitare rallentamenti se più agenti aprono Clienti insieme.
+- Ogni riga **Acquirente** mostra un **badge temperatura** e — se calcolato — il **numero di match**. Le righe **Venditore/Proprietario** mostrano tipo, stato CRM e contatti.
 
 **Aggiornare il punteggio AI**
 

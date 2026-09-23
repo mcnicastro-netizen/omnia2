@@ -1,12 +1,15 @@
 import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useNavigate, useParams, Link } from "react-router-dom";
+import { useNavigate, useParams, Link, useSearchParams } from "react-router-dom";
 import AgencyShell from "./components/AgencyShell";
 import { api } from "../../shared/lib/api";
 import { formatApiErrorDetail } from "../../shared/lib/auth";
 import { ENERGY_CLASS_LETTER_OPTIONS } from "../../shared/lib/energyClasses";
 
-const CLIENT_TYPES = ["buyer", "seller", "tenant", "landlord", "investor"];
+/** Tipi raggruppati: chi cerca (match) vs chi affida / possiede. */
+const SEARCHER_TYPES = ["buyer", "tenant", "investor"];
+const SELLER_TYPES = ["seller", "landlord"];
+const CLIENT_TYPES = [...SEARCHER_TYPES, ...SELLER_TYPES];
 const CLIENT_STATUSES = ["new", "contacted", "qualified", "negotiating", "closed_won", "closed_lost", "archived"];
 
 const OPERATIONS = ["", "sale", "rent", "rent_to_buy", "auction"];
@@ -72,9 +75,12 @@ export default function ClientFormPage() {
   const { t, i18n } = useTranslation();
   const lang = (i18n.language || "it").slice(0, 2);
   const { id } = useParams();
+  const [searchParams] = useSearchParams();
   const nav = useNavigate();
   const isEdit = !!id;
-  const [form, setForm] = useState(empty);
+  const presetType = searchParams.get("type");
+  const initialType = CLIENT_TYPES.includes(presetType) ? presetType : "buyer";
+  const [form, setForm] = useState(() => ({ ...empty, client_type: initialType }));
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(isEdit);
@@ -241,7 +247,12 @@ export default function ClientFormPage() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <Field label={t("clients.field_type")}>
                 <select data-testid="client-type" value={form.client_type} onChange={(e) => upd("client_type", e.target.value)} className="form-input">
-                  {CLIENT_TYPES.map((c) => <option key={c} value={c}>{t(`clients.type_${c}`)}</option>)}
+                  <optgroup label={t("clients.type_group_searchers")}>
+                    {SEARCHER_TYPES.map((c) => <option key={c} value={c}>{t(`clients.type_${c}`)}</option>)}
+                  </optgroup>
+                  <optgroup label={t("clients.type_group_sellers")}>
+                    {SELLER_TYPES.map((c) => <option key={c} value={c}>{t(`clients.type_${c}`)}</option>)}
+                  </optgroup>
                 </select>
               </Field>
               <Field label={t("clients.field_status")}>
