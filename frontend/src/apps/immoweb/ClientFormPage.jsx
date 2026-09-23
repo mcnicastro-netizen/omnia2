@@ -85,7 +85,9 @@ export default function ClientFormPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(isEdit);
   const [carriedProperties, setCarriedProperties] = useState([]);
+  const [clientRequests, setClientRequests] = useState([]);
   const isSellerType = form.client_type === "seller" || form.client_type === "landlord";
+  const isSearcherType = SEARCHER_TYPES.includes(form.client_type);
 
   useEffect(() => {
     if (!isEdit || !id) return;
@@ -94,6 +96,16 @@ export default function ClientFormPage() {
       .then((r) => setCarriedProperties(r.data.items || []))
       .catch(() => setCarriedProperties([]));
   }, [id, isEdit, isSellerType]);
+
+  useEffect(() => {
+    if (!isEdit || !id || !isSearcherType) {
+      setClientRequests([]);
+      return;
+    }
+    api.get(`/app/requests`, { params: { client_id: id, page_size: 20, enrich_match: false, migrate: true } })
+      .then((r) => setClientRequests(r.data.items || []))
+      .catch(() => setClientRequests([]));
+  }, [id, isEdit, isSearcherType]);
 
   useEffect(() => {
     if (!isEdit) return;
@@ -323,6 +335,46 @@ export default function ClientFormPage() {
                           </div>
                         </div>
                       </a>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </Section>
+          )}
+
+          {/* Richieste — acquirenti (D-089) */}
+          {isEdit && isSearcherType && (
+            <Section label={t("clients.section_requests") || "Richieste"}>
+              <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
+                <p className="text-sm text-stone-600">{t("clients.section_requests_hint")}</p>
+                <Link
+                  to={`/${lang}/app/requests/new?client_id=${id}`}
+                  data-testid="client-add-request"
+                  className="px-3 py-1.5 text-[10px] uppercase tracking-widest bg-stone-900 text-stone-50 rounded-md"
+                >
+                  {t("clients.add_request_btn")}
+                </Link>
+              </div>
+              {clientRequests.length === 0 ? (
+                <p data-testid="client-requests-empty" className="text-sm text-stone-500 bg-stone-50 border border-stone-200 rounded-md px-4 py-6 text-center">
+                  {t("clients.requests_empty")}
+                </p>
+              ) : (
+                <ul data-testid="client-requests-list" className="space-y-2">
+                  {clientRequests.map((r) => (
+                    <li key={r.id}>
+                      <Link
+                        to={`/${lang}/app/requests/${r.id}`}
+                        className="flex items-center justify-between gap-3 border border-stone-200 rounded-md p-3 hover:bg-stone-50"
+                      >
+                        <div className="min-w-0">
+                          <div className="font-medium text-stone-900 truncate">{r.title || "—"}</div>
+                          <div className="text-[10px] uppercase tracking-widest text-stone-500 mt-0.5">
+                            {t(`requests.type_${r.request_type}`)} · {r.source} · {t(`requests.status_${r.status}`)}
+                          </div>
+                        </div>
+                        <span className="text-xs text-stone-400">→</span>
+                      </Link>
                     </li>
                   ))}
                 </ul>

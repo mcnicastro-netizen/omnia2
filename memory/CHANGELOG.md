@@ -1,5 +1,16 @@
 # OMNIA — Changelog
 
+## 2026-09-23 — D-089 Lista richieste CRM + match portafoglio→MLS
+
+**Tipo**: Feature / CRM.
+
+- Nuova entità `client_requests` (tipo A interesse immobile / B brief ricerca)
+- API `/api/app/requests` + match (portafoglio prima, poi MLS) + flag `mls_shared`
+- Auto: ImmobilCloud + widget → richiesta; migrazione preferenze clienti esistenti
+- UI: nav **Richieste**, lista/filtri per fonte, form + match, sezione in scheda acquirente
+- Decisione D-089
+
+---
 ## 2026-09-23 — Clienti: distinzione Acquirenti vs Venditori/Proprietari
 
 **Tipo**: UX / CRM.

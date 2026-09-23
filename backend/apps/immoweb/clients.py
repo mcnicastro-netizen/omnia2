@@ -79,6 +79,29 @@ async def create_client(
     client = ClientInDB(agency_id=agency_id, assigned_agent_id=user["id"], **data)
     doc = client.model_dump()
     await db.clients.insert_one(doc)
+    # D-089 — se acquirente con preferenze, crea richiesta search_brief
+    try:
+        from apps.immoweb.client_requests_service import (
+            SEARCHER_TYPES,
+            _prefs_nonempty,
+            build_request_doc,
+            create_request,
+        )
+        prefs = doc.get("preferences") or {}
+        if doc.get("client_type") in SEARCHER_TYPES and _prefs_nonempty(prefs):
+            name = f"{doc.get('name') or ''} {doc.get('surname') or ''}".strip() or "Cliente"
+            req = build_request_doc(
+                agency_id=agency_id,
+                client_id=doc["id"],
+                request_type="search_brief",
+                source=doc.get("source") or "manual",
+                criteria=prefs if isinstance(prefs, dict) else {},
+                title=f"Ricerca · {name}",
+                assigned_agent_id=user.get("id"),
+            )
+            await create_request(db, req)
+    except Exception as e:  # noqa: BLE001
+        logger.warning("auto request on client create failed: %s", e)
     return _strip(doc)
 
 

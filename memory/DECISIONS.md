@@ -7,6 +7,17 @@ Registro di tutte le decisioni di business e tecniche prese durante il progetto.
 
 ## Decisioni prese
 
+### D-089 — Richieste CRM (lista dedicata, match portafoglio→MLS)
+- **Data**: 23 Settembre 2026
+- **Contesto**: Founder — distinzione mandati vendita vs richieste acquirenti; serve **Lista richieste** nel gestionale; match anche MLS; condivisione opt-in; fonti distinte.
+- **Decisione**:
+  1. **Entità `client_requests`** distinta dal cliente. Tipi: `property_interest` (A) e `search_brief` (B). Default 1:1; stesso cliente può avere N richieste («Aggiungi nuova richiesta»).
+  2. **Mandati vendita**: restano Cliente venditore/proprietario + `seller_client_id` su Immobile (nessun merge con Richieste).
+  3. **Match**: prima portafoglio agenzia; **solo se** nessun match ≥ soglia → inventario MLS altre agenzie (`mls_shared` + visibility). Flag **`mls_shared` sulla richiesta** = visibile/matchabile alle altre agenzie solo se esplicito.
+  4. **Ingest automatico**: ImmobilCloud contatto → Richiesta A; widget lead → Richiesta A/B (+ cliente se manca). Preferenze cliente esistenti → migrazione a Richiesta B (`source=migration_preferences`).
+  5. **UI**: nav **Richieste** `/app/requests`; filtro per tipo/stato/**fonte**.
+- **Stato**: ✅ Implementata (slice v1)
+
 ### D-001 — Architettura ecosistema a 3 pilastri
 - **Data**: Gennaio 2026
 - **Contesto**: Definizione visione iniziale

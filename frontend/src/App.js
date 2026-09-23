@@ -37,6 +37,8 @@ const PropertyImportPage = lazy(() => import("@/apps/immoweb/PropertyImportPage"
 const ClientsPage = lazy(() => import("@/apps/immoweb/ClientsPage"));
 const ClientFormPage = lazy(() => import("@/apps/immoweb/ClientFormPage"));
 const ClientImportPage = lazy(() => import("@/apps/immoweb/ClientImportPage"));
+const RequestsPage = lazy(() => import("@/apps/immoweb/RequestsPage"));
+const RequestFormPage = lazy(() => import("@/apps/immoweb/RequestFormPage"));
 const MatchesPage = lazy(() => import("@/apps/immoweb/MatchesPage"));
 const MatchLeadScorePage = lazy(() => import("@/apps/immoweb/MatchLeadScorePage"));
 const WebsitePage = lazy(() => import("@/apps/immoweb/WebsitePage"));
@@ -405,6 +407,32 @@ function App() {
                     element={
                       <ProtectedRoute allowedRoles={["super_admin", "agency_admin", "agent"]}>
                         <ClientFormPage />
+                      </ProtectedRoute>
+                    }
+                  />
+
+                  {/* Richieste CRM (D-089) */}
+                  <Route
+                    path="app/requests"
+                    element={
+                      <ProtectedRoute allowedRoles={["super_admin", "agency_admin", "agent"]}>
+                        <RequestsPage />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="app/requests/new"
+                    element={
+                      <ProtectedRoute allowedRoles={["super_admin", "agency_admin", "agent"]}>
+                        <RequestFormPage />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="app/requests/:id"
+                    element={
+                      <ProtectedRoute allowedRoles={["super_admin", "agency_admin", "agent"]}>
+                        <RequestFormPage />
                       </ProtectedRoute>
                     }
                   />

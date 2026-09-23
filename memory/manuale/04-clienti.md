@@ -6,6 +6,8 @@
 
 Il modulo **Clienti** raccoglie tutte le persone con cui la tua agenzia parla: chi vuole comprare, chi vuole vendere, chi vuole affittare e chi affitta. Ci arrivi cliccando **Clienti** dalla barra a sinistra.
 
+Le **richieste** degli acquirenti (interesse su un immobile o brief di ricerca) vivono nel modulo dedicato **Richieste** (nav a sinistra, D-089): collegate al cliente, distinte per fonte, con match sul portafoglio e poi sull’MLS.
+
 ---
 
 ## 4.1 · Creare un nuovo cliente (anagrafica)

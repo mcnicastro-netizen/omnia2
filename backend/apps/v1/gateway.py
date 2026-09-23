@@ -412,6 +412,22 @@ async def v1_widget_lead(
             "updated_at": now_iso,
         }
         await db.leads.insert_one(lead_doc)
+        # D-089 — auto-crea Richiesta (+ cliente se serve)
+        try:
+            from apps.immoweb.client_requests_service import ensure_from_widget
+            await ensure_from_widget(
+                db,
+                agency_id=key["agency_id"],
+                lead_id=lead_id,
+                source=lead_doc["source"],
+                name=body.name,
+                email=body.email,
+                phone=body.phone,
+                message=body.message,
+                context=body.context if isinstance(body.context, dict) else None,
+            )
+        except Exception as e:  # noqa: BLE001
+            logger.warning("client_request from widget failed: %s", e)
         # A-017 — in-app notify agency owner/admins
         try:
             from shared.notifications.center import (
@@ -426,7 +442,7 @@ async def v1_widget_lead(
                 type=TYPE_LEAD_NEW,
                 title=f"Nuovo lead widget · {body.widget}",
                 body=f"{who} ha inviato un contatto dal widget.",
-                link="/app/clients",
+                link="/app/requests",
                 agency_id=key["agency_id"],
                 meta={"lead_id": lead_id, "source": lead_doc["source"]},
             )

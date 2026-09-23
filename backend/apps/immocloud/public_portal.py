@@ -893,6 +893,21 @@ async def public_property_contact(pid: str, payload: PropertyContactPayload, req
         "updated_at": now,
     })
 
+    # D-089 — auto-crea Richiesta tipo A (interesse immobile)
+    try:
+        from apps.immoweb.client_requests_service import ensure_from_immobilcloud
+        await ensure_from_immobilcloud(
+            db,
+            agency_id=agency_id,
+            client_id=client_id,
+            property_id=pid,
+            lead_id=lead_id,
+            notes="\n".join(note_lines),
+            assigned_agent_id=(prop_full or {}).get("listing_agent_id"),
+        )
+    except Exception as e:  # noqa: BLE001
+        logger.warning("client_request from ImmobilCloud failed: %s", e)
+
     # 4) Bump property lead counter (best-effort)
     try:
         await db.properties.update_one({"id": pid}, {"$inc": {"lead_count": 1}})
@@ -931,7 +946,7 @@ async def public_property_contact(pid: str, payload: PropertyContactPayload, req
             type=TYPE_LEAD_NEW,
             title=f"Nuovo lead · {prop_title}",
             body=f"{lead_name} ha contattato l'agenzia da ImmobilCloud.",
-            link="/app/clients",
+            link="/app/requests",
             agency_id=agency_id,
             meta={"lead_id": lead_id, "property_id": pid, "client_id": client_id},
         )
