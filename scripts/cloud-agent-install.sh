@@ -35,6 +35,22 @@ ensure_env_key "$ROOT/backend/.env" "ADMIN_PASSWORD" "[REDACTED]"
 ensure_env_key "$ROOT/backend/.env" "DEMO_ADMIN_PASSWORD" "OmniaDemo2026!"
 ensure_env_key "$ROOT/backend/.env" "JWT_SECRET" "change-me-to-a-long-random-string"
 
+# Origin-tmp agents get Origin git auth only. When GITHUB_TOKEN is set as an
+# Environment secret, wire push access to the real omnia2 GitHub repo.
+if [[ -n "${GITHUB_TOKEN:-}" ]]; then
+  git -C "$ROOT" config --global \
+    "url.https://x-access-token:${GITHUB_TOKEN}@github.com/.insteadOf" \
+    "https://github.com/"
+  if git -C "$ROOT" remote get-url github >/dev/null 2>&1; then
+    git -C "$ROOT" remote set-url github "https://github.com/mcnicastro-netizen/omnia2.git"
+  else
+    git -C "$ROOT" remote add github "https://github.com/mcnicastro-netizen/omnia2.git"
+  fi
+  echo "[cloud-agent-install] github remote wired via GITHUB_TOKEN → omnia2"
+else
+  echo "[cloud-agent-install] WARN: GITHUB_TOKEN missing — cannot push to GitHub omnia2 from this Origin-backed agent"
+fi
+
 echo "[cloud-agent-install] python venv + pip"
 cd "$ROOT/backend"
 if [[ ! -x .venv/bin/python ]]; then
