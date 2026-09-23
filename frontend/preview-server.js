@@ -511,6 +511,27 @@ app.get("/healthz", (_req, res) => {
   });
 });
 
+/** Ensure auth cookies stick on the public HTTPS tunnel (Cloudflare).
+ *  Backend often runs with COOKIE_SECURE=false for local http://127.0.0.1 preview;
+ *  browsers on https://*.trycloudflare.com then drop non-Secure Set-Cookie. */
+function rewriteSetCookieForPublicHttps(proxyRes, req) {
+  const xfProto = String((req.headers["x-forwarded-proto"] || "").split(",")[0] || "").trim();
+  const https = xfProto === "https" || !!req.secure;
+  if (!https) return;
+  const raw = proxyRes.headers["set-cookie"];
+  if (!raw) return;
+  const list = Array.isArray(raw) ? raw : [raw];
+  proxyRes.headers["set-cookie"] = list.map((cookie) => {
+    let parts = String(cookie)
+      .split(";")
+      .map((p) => p.trim())
+      .filter((p) => p && !/^domain=/i.test(p));
+    if (!parts.some((p) => /^secure$/i.test(p))) parts.push("Secure");
+    // Keep SameSite=Lax for first-party tunnel (do not force None)
+    return parts.join("; ");
+  });
+}
+
 app.use(
   "/api",
   createProxyMiddleware({
@@ -521,9 +542,10 @@ app.use(
     timeout: 300000,
     xfwd: true,
     logLevel: "warn",
-    onProxyRes(proxyRes) {
+    onProxyRes(proxyRes, req) {
       proxyRes.headers["connection"] = "close";
       delete proxyRes.headers["keep-alive"];
+      rewriteSetCookieForPublicHttps(proxyRes, req);
     },
     onError(err, _req, res) {
       console.error("[preview-proxy]", err.message);
