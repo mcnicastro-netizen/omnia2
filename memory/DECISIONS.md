@@ -1379,6 +1379,16 @@ Registro di tutte le decisioni di business e tecniche prese durante il progetto.
 - **Stato**: ✅ APPLICATA (codice 19-Set-2026) — meter UI, blocco upload, extra €15, backup cron
 - **Residui**: seed Stripe price `storage_100gb_monthly` in live; testo contratto/DPA fine abbonamento con legale
 
+### D-088 — Cloud Agent Mongo always present (install/start fallback) · 23-Set-2026
+- **Data**: 23 Settembre 2026
+- **Contesto**: Agenti Cloud ripartivano senza `mongod` in PATH quando il pod **non** bootava da un environment build finito (`no_finished_builds` / JIT). `cloud-agent-start.sh` usciva con exit 1 → API/tunnel morti. D-086 aveva messo Mongo solo nel Dockerfile, insufficiente senza build green.
+- **Decisione**:
+  1. Nuovo `scripts/ensure-system-deps.sh`: se manca `mongod`, installa `mongodb-org` 8.0 via apt (idempotente); stesso per `python3-venv`.
+  2. Chiamato all’inizio di **`cloud-agent-install.sh`** e **`cloud-agent-start.sh`** (doppio cintura: anche se install viene skippato sullo snapshot).
+  3. Dockerfile resta la via preferita per i build; il fallback apt copre i pod JIT.
+  4. Founder: abilitare/usare **environment builds** su Cursor dashboard per boot più veloci — non obbligatorio per la presenza di Mongo dopo D-088.
+- **Stato**: ✅ APPLICATA (23-Set-2026)
+
 ### D-086 — Cloud Agent harden + seed demo gestionale · 21-Set-2026
 - **Data**: 21 Settembre 2026
 - **Contesto**: Gli agenti Cursor su `omnia2` partivano senza MongoDB di sistema, con HAL che cercava il corpus in `/app/memory` (path Emergent) e senza `ADMIN_EMAIL` in `.env.example` — lo seed Founder/demo veniva skippato e il CRM era vuoto.

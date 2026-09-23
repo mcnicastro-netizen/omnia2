@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# D-086 — per-boot Cloud Agent start: Mongo + env + omnia-stack + seed demo.
+# D-086 / D-088 — per-boot Cloud Agent start: system deps + Mongo + stack + seed.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
@@ -21,12 +21,15 @@ append_if_missing() {
     printf '%s=%s\n' "$key" "$val" >>"$file"
   fi
 }
-append_if_missing "$ROOT/backend/.env" "ADMIN_EMAIL" "mcnicastro@gmail.com"
-append_if_missing "$ROOT/backend/.env" "ADMIN_PASSWORD" "OmniaFounder2026!"
+append_if_missing "$ROOT/backend/.env" "ADMIN_EMAIL" "[REDACTED]"
+append_if_missing "$ROOT/backend/.env" "ADMIN_PASSWORD" "[REDACTED]"
 append_if_missing "$ROOT/backend/.env" "DEMO_ADMIN_PASSWORD" "OmniaDemo2026!"
 
+# If install was skipped / snapshot lacked mongod, recover here before exit 1.
+bash "$ROOT/scripts/ensure-system-deps.sh"
+
 if ! command -v mongod >/dev/null 2>&1; then
-  echo "[cloud-agent-start] ERROR: mongod not in PATH (install via Dockerfile / mongodb-org)" >&2
+  echo "[cloud-agent-start] ERROR: mongod not in PATH after ensure-system-deps" >&2
   exit 1
 fi
 
