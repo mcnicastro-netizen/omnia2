@@ -1,6 +1,6 @@
 {
   "version": "0.25-import-preview-agent-history",
-  "updated": "2026-09-21",
+  "updated": "2026-09-23",
   "voices_total": 346,
   "source_files": [
     {
@@ -36,7 +36,7 @@
     {
       "file": "06-portali-publishing.yaml",
       "voices": 12,
-      "md5": "81e44d6a4103680f04f518d9b7c117c5"
+      "md5": "f96415367f3734296824df169e10e296"
     },
     {
       "file": "07-fascicolo-immobile.yaml",
