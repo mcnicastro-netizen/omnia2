@@ -7,6 +7,13 @@ Registro di tutte le decisioni di business e tecniche prese durante il progetto.
 
 ## Decisioni prese
 
+### D-091 — No area riservata cliente tipo MyAgency
+- **Data**: 23 Settembre 2026
+- **Contesto**: Dopo D-090 il gap “MyAgency” era rimasto come epic separata.
+- **Decisione**: **Non fare** un’area riservata B2C per acquirente/proprietario (login cliente, proposte da accettare, storico appuntamenti in self-service). Il Founder la ritiene inutile.
+- **Conseguenza**: il cliente finale resta fuori dal prodotto; comunicazione via agente + email transazionali (match/lead). Nessuna roadmap MyOMNIA / MyAgency.
+- **Stato**: ✅ Vincolante
+
 ### D-090 — Chiusura gap vs gestionali IT (match inverso, tolleranze, matching notturno, rete richieste)
 - **Data**: 23 Settembre 2026
 - **Contesto**: Dopo D-089, confronto AgestaNET/Realgest/Gestim/Agim: gap su match inverso, tolleranze, matching automatico, regole MLS richieste.
