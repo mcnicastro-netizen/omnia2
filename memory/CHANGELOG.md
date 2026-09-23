@@ -1,5 +1,14 @@
 # OMNIA — Changelog
 
+## 2026-09-23 — D-088 Mongo sempre presente sui Cloud Agent
+
+**Tipo**: Ops / Cloud Agent.
+
+- `scripts/ensure-system-deps.sh`: apt-install `mongodb-org` 8 + `python3-venv` se mancanti
+- `cloud-agent-install.sh` / `cloud-agent-start.sh` lo invocano all’avvio (niente exit 1 su pod JIT senza Dockerfile build)
+- Decisione D-088 in `DECISIONS.md` · regola `omnia-cloud.mdc` aggiornata
+
+---
 ## 2026-09-21 — Docs D-084: Cap.14/3 + HAL Import A UX
 
 **Tipo**: Docs / HAL (D-084).
