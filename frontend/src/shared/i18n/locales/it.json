@@ -178,7 +178,7 @@
     "qa_new_property": "Nuovo immobile",
     "qa_new_client": "Nuovo cliente",
     "qa_matches": "Match",
-    "qa_publishing": "Portali",
+    "qa_publishing": "Pubblicità su portali",
     "qa_hal": "HAL Knowledge",
     "today_brand": "Oggi",
     "today_heading": "Cosa fare oggi",
@@ -464,7 +464,7 @@
     "nav_properties": "Immobili",
     "nav_clients": "Clienti",
     "nav_matches": "Match",
-    "nav_portals": "Portali",
+    "nav_portals": "Pubblicità su portali",
     "nav_members": "Collaboratori",
     "nav_settings": "Impostazioni",
     "nav_logout": "Esci",
@@ -473,7 +473,7 @@
     "nav_group": "Gruppo",
     "nav_api_keys": "API Keys",
     "nav_import": "Importa",
-    "nav_publishing": "Portali",
+    "nav_publishing": "Pubblicità su portali",
     "nav_trash": "Cestino"
   },
   "api_keys": {

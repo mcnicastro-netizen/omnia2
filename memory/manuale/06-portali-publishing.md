@@ -4,7 +4,7 @@
 **Chi lo legge**: titolari, agenti (segreteria in sola lettura)
 **Prerequisiti**: aver caricato almeno 1 immobile (Cap. 3) con foto, prezzo, indirizzo, superficie e classe APE compilati
 
-Il modulo **Portali** (Publishing Center) è il ponte tra ImmoWeb e i portali immobiliari esterni. Serve a rispondere alla domanda "*dove finiscono i miei annunci?*" e "*perché quell'annuncio non viene pubblicato?*". Ci arrivi cliccando **Portali** dalla barra a sinistra.
+Il modulo **Pubblicità su portali** (Publishing Center) è il ponte tra ImmoWeb e i portali immobiliari esterni. Serve a rispondere alla domanda "*dove finiscono i miei annunci?*" e "*perché quell'annuncio non viene pubblicato?*". Ci arrivi cliccando **Pubblicità su portali** dalla barra a sinistra.
 
 Al posto di caricare gli annunci a mano su ogni portale, OMNIA genera un **feed XML** aggiornato in tempo reale e i portali attivi lo scaricano automaticamente ogni notte. Un **validatore Compliance** controlla che ogni annuncio rispetti le regole di legge (D.Lgs 192/2005 sull'APE, AGCM sul prezzo) e le regole tecniche dei portali (minimo 3 foto). Un **sync automatico giornaliero** alle 06:00 UTC (~07:00 in inverno / 08:00 in estate ora italiana) gira su tutti i portali attivi.
 
@@ -26,7 +26,7 @@ Prima: aprivi Idealista, aprivi Immobiliare.it, aprivi Casa.it, aprivi Subito, c
 - Non pubblica *automaticamente* su Idealista / Immobiliare.it / Casa.it (i tre portali dominanti). Servono accordi commerciali diretti tra agenzia e portale; OMNIA non ha ancora integrazione ufficiale. Continuerai a usarli come oggi finché non lo dichiareremo esplicitamente.
 - Per Facebook Marketplace e Google Business Profile lo stato è **Non ancora attivo**: restano in catalogo per trasparenza, ma **non si possono attivare** e non c’è sync simulato. HAL lo dice chiaramente.
 
-**Chi vede la pagina Portali**
+**Chi vede la pagina Pubblicità su portali**
 - **Titolare**: pieno controllo (attivare, disattivare, forzare sync, vedere compliance).
 - **Agente**: pieno controllo (stesso perimetro del titolare).
 - **Segreteria** (concetto operativo, non ruolo): può vedere ma il consiglio è demandare al titolare le attivazioni con credenziali.
@@ -77,7 +77,7 @@ Se il tuo portale (regionale, di franchising, di nicchia) non è nel catalogo pu
 - Almeno un immobile deve superare la Compliance HARD (vedi 6.5), altrimenti il feed sarà vuoto.
 
 **Passi**
-1. Vai su **Portali** (barra a sinistra) → scheda **Disponibili**.
+1. Vai su **Pubblicità su portali** (barra a sinistra) → scheda **Disponibili**.
 2. Trova il portale che ti interessa nella tabella.
 3. Clicca **Attiva** in fondo alla riga.
 4. Si apre una **finestra di attivazione**: contiene una breve descrizione del portale e i campi credenziali richiesti (variano da portale a portale — email, username, API key, ecc.).
@@ -117,7 +117,7 @@ OMNIA fa girare un job schedulato ogni notte alle **06:00 UTC** (07:00 in invern
 **Il sync manuale**
 Serve quando: hai appena aggiunto un immobile importante, hai corretto un errore di compliance, vuoi vedere subito lo stato senza aspettare la notte.
 
-1. Vai su **Portali** → scheda **Attivi**.
+1. Vai su **Pubblicità su portali** → scheda **Attivi**.
 2. Trova il portale nella tabella.
 3. Clicca il pulsante **Sync** (nero, piccolo, a destra della riga).
 4. Nella riga compare "…" per qualche secondo.
@@ -176,7 +176,7 @@ L'annuncio **viene pubblicato lo stesso**, ma appare un avviso in dashboard.
 
 ### 6.5.3 · Aprire la Compliance di un portale
 
-1. Vai su **Portali** → scheda **Attivi**.
+1. Vai su **Pubblicità su portali** → scheda **Attivi**.
 2. Clicca **Compliance** (bottone bianco a destra della riga).
 3. Si apre una **finestra** con 4 riquadri contatore:
    - **Totale** — immobili attivi dell'agenzia.
@@ -253,13 +253,13 @@ Non supportiamo (ancora) push via API o webhook per i custom portal — arrivera
 
 **Passi (wizard a 4 step)**
 
-1. **Apri il Wizard**: dalla pagina Portali clicca **"+ Aggiungi portale personalizzato"** (bottone blu scuro in alto a destra).
+1. **Apri il Wizard**: dalla pagina Pubblicità su portali clicca **"+ Aggiungi portale personalizzato"** (bottone blu scuro in alto a destra).
 2. **Step 1 · Identità**: dai un nome (es. *"Portale AgenziaLiguria"*). Il **codice tecnico (slug)** si compila da solo dal nome: è un nome breve per il computer (solo minuscole, numeri e trattini, es. `portale-agenzialiguria`) usato nell'URL del feed per identificare il portale. Non lo chiedi al portale — lascialo così o accorcialo. Opzionalmente inserisci il sito ufficiale del portale (informativo), scegli categoria (**gratuito** / **a pagamento**) e scope geografico (locale / regionale / nazionale).
 3. **Step 2 · Formato**: scegli il dialetto XML (**osf_federata** consigliato se non sai, oppure **generic_rss** per aggregatori). L'integrazione è fissa a **feed_pull** (il portale scarica il tuo feed).
 4. **Step 3 · Endpoint**: incolla (opzionale) l'URL dove il portale scaricherà il feed OMNIA. È solo informativo: OMNIA non chiama quell'URL, serve al pilota del portale se glielo devi passare via email.
 5. **Step 4 · Conferma**: appare **l'URL del feed OMNIA della tua agenzia** (`.../publishing/feed/<slug-agenzia>.xml?dialect=osf_federata`). Cliccando **"Copia"** lo copi negli appunti. Questo URL è quello che devi passare al portale.
 6. Clicca **Conferma** → il portale viene creato + la connessione viene attivata subito (feed_pull non richiede credenziali → status **active**).
-7. Torni alla pagina Portali con il tuo nuovo portale già nella scheda **Attivi**.
+7. Torni alla pagina Pubblicità su portali con il tuo nuovo portale già nella scheda **Attivi**.
 
 [SCREEN: cap6-wizard-step4-conferma]
 

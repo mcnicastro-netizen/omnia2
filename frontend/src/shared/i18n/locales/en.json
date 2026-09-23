@@ -178,7 +178,7 @@
     "qa_new_property": "New property",
     "qa_new_client": "New client",
     "qa_matches": "Matches",
-    "qa_publishing": "Portals",
+    "qa_publishing": "Advertise on portals",
     "qa_hal": "HAL Knowledge",
     "today_brand": "Today",
     "today_heading": "What to do today",
@@ -225,11 +225,11 @@
     "nav_logout": "Sign out",
     "agency_label": "Agency",
     "nav_website": "Website",
-    "nav_portals": "Portals",
+    "nav_portals": "Advertise on portals",
     "nav_group": "Group",
     "nav_api_keys": "API Keys",
     "nav_import": "Import",
-    "nav_publishing": "Portals",
+    "nav_publishing": "Advertise on portals",
     "nav_trash": "Trash"
   },
   "import": {
