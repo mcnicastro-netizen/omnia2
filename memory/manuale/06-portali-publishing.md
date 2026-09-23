@@ -37,7 +37,15 @@ Prima: aprivi Idealista, aprivi Immobiliare.it, aprivi Casa.it, aprivi Subito, c
 
 ## 6.2 · I portali del catalogo (chi c'è, chi manca)
 
-Al primo accesso al modulo trovi **15 portali** nella scheda **Disponibili**, ordinati per traffico stimato. Solo quelli con integrazione pronta hanno **Attiva**; gli altri restano visibili come **Non ancora attivo** (niente sync finto).
+Al primo accesso al modulo trovi tre tab oneste:
+
+| Tab | Significato |
+|-----|-------------|
+| **Attivi oggi** | Portali già collegati alla tua agenzia (feed sync reale) |
+| **Attivabili ora** | Catalogo con integrazione pronta — puoi premere **Attiva** |
+| **In arrivo** | Grandi portali in catalogo ma **non** ancora integrati (es. Immobiliare.it, Idealista) — badge *Non ancora attivo*, niente sync finto |
+
+Sulla scheda immobile, nel Centro pubblicazione, vedi i chip dei portali agenzia attivi (nessun toggle per-annuncio: il feed notturno include gli annunci compliance-ok).
 
 | Portale | Categoria | Modalità | Traffico | Stato OMNIA |
 |---------|-----------|:-:|:-:|---------------|

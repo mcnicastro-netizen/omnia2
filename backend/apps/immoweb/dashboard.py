@@ -85,10 +85,17 @@ async def get_kpis(user: dict = Depends(get_current_user)):
         properties_active = await db.properties.count_documents(
             {"agency_id": agency_id, "status": "active"}
         )
-        # M3.S4 leads (from B2C contact, valuator, mortgage, API v1)
-        leads_open = await db.leads.count_documents(
+        # Coda lavoro: richieste aperte (preferite); fallback lead grezzi
+        requests_open = await db.client_requests.count_documents(
+            {
+                "agency_id": agency_id,
+                "status": {"$in": ["open", "matched", "negotiating"]},
+            }
+        )
+        leads_raw = await db.leads.count_documents(
             {"agency_id": agency_id, "status": {"$in": ["new", "contacted"]}}
         )
+        leads_open = requests_open if requests_open else leads_raw
         # M2.S3 matches: computed on-read, so we look at the audit log of last 7 days.
         # Fallback: count clients marked "active" that have at least one property match cached.
         since = (datetime.now(timezone.utc) - timedelta(days=7)).isoformat()
@@ -113,7 +120,7 @@ async def get_kpis(user: dict = Depends(get_current_user)):
         ),
         DashboardKPI(
             key="leads_open",
-            label="Lead aperti",
+            label="Richieste aperte",
             value=leads_open,
             icon="user-plus",
             locked=False,
@@ -311,36 +318,75 @@ async def get_today(user: dict = Depends(get_current_user)) -> Dict[str, Any]:
             }
         )
 
-    # —— Lead aperti ——
-    q_leads = {"agency_id": agency_id, "status": {"$in": ["new", "contacted"]}}
-    n_leads = await db.leads.count_documents(q_leads)
-    if n_leads:
-        lead_proj = {"_id": 0, "id": 1, "name": 1, "email": 1, "source": 1, "status": 1}
-        samples = await db.leads.find(q_leads, lead_proj).sort("created_at", -1).limit(5).to_list(5)
+    # —— Richieste aperte (coda lavoro; lead grezzi confluiscono qui) ——
+    q_requests = {
+        "agency_id": agency_id,
+        "status": {"$in": ["open", "matched", "negotiating"]},
+    }
+    n_requests = await db.client_requests.count_documents(q_requests)
+    if n_requests:
+        req_proj = {
+            "_id": 0, "id": 1, "title": 1, "request_type": 1,
+            "status": 1, "source": 1, "client_id": 1,
+        }
+        samples = await db.client_requests.find(q_requests, req_proj).sort(
+            "updated_at", -1
+        ).limit(5).to_list(5)
         actions.append(
             {
-                "id": "leads_open",
-                "kind": "lead",
+                "id": "requests_open",
+                "kind": "request",
                 "priority": 5,
-                "title_key": "dashboard.today_leads",
-                "title": "Lead aperti",
-                "count": n_leads,
-                "href": "/app/clients",
-                "cta_key": "dashboard.today_cta_leads",
-                "cta": "Vedi lead",
+                "title_key": "dashboard.today_requests",
+                "title": "Richieste aperte",
+                "count": n_requests,
+                "href": "/app/requests",
+                "cta_key": "dashboard.today_cta_requests",
+                "cta": "Apri richieste",
                 "items": [
                     {
                         "id": d.get("id"),
-                        "label": d.get("name") or d.get("email") or d.get("id") or "Lead",
-                        "meta": d.get("source") or d.get("status") or "",
-                        "href": "/app/clients",
-                        "reason_key": "dashboard.today_reason_lead",
-                        "reason": "Lead da contattare",
+                        "label": d.get("title") or d.get("id") or "Richiesta",
+                        "meta": d.get("request_type") or d.get("status") or "",
+                        "href": f"/app/requests/{d['id']}" if d.get("id") else "/app/requests",
+                        "reason_key": "dashboard.today_reason_request",
+                        "reason": "Richiesta da lavorare / matchare",
                     }
                     for d in samples
                 ],
             }
         )
+    else:
+        # Fallback: lead grezzi non ancora migrati a richieste
+        q_leads = {"agency_id": agency_id, "status": {"$in": ["new", "contacted"]}}
+        n_leads = await db.leads.count_documents(q_leads)
+        if n_leads:
+            lead_proj = {"_id": 0, "id": 1, "name": 1, "email": 1, "source": 1, "status": 1}
+            samples = await db.leads.find(q_leads, lead_proj).sort("created_at", -1).limit(5).to_list(5)
+            actions.append(
+                {
+                    "id": "leads_open",
+                    "kind": "lead",
+                    "priority": 5,
+                    "title_key": "dashboard.today_leads",
+                    "title": "Lead aperti",
+                    "count": n_leads,
+                    "href": "/app/requests",
+                    "cta_key": "dashboard.today_cta_leads",
+                    "cta": "Vedi richieste",
+                    "items": [
+                        {
+                            "id": d.get("id"),
+                            "label": d.get("name") or d.get("email") or d.get("id") or "Lead",
+                            "meta": d.get("source") or d.get("status") or "",
+                            "href": "/app/requests",
+                            "reason_key": "dashboard.today_reason_lead",
+                            "reason": "Lead da contattare / trasformare in richiesta",
+                        }
+                        for d in samples
+                    ],
+                }
+            )
 
     # —— Visite oggi / prossimi 7gg ——
     q_visits_today = {
@@ -356,7 +402,10 @@ async def get_today(user: dict = Depends(get_current_user)) -> Dict[str, Any]:
     }
     n_visits_week = await db.calendar_events.count_documents(q_visits_week)
     if n_visits_today or n_visits_week:
-        cal_proj = {"_id": 0, "id": 1, "title": 1, "start_at": 1, "client_id": 1, "property_id": 1}
+        cal_proj = {
+            "_id": 0, "id": 1, "title": 1, "start_at": 1,
+            "client_id": 1, "property_id": 1, "request_id": 1,
+        }
         samples = await db.calendar_events.find(
             q_visits_week if not n_visits_today else q_visits_today, cal_proj
         ).sort("start_at", 1).limit(5).to_list(5)
@@ -368,9 +417,9 @@ async def get_today(user: dict = Depends(get_current_user)) -> Dict[str, Any]:
                 "title_key": "dashboard.today_visits" if n_visits_today else "dashboard.today_visits_week",
                 "title": "Visite di oggi" if n_visits_today else "Visite (7 giorni)",
                 "count": n_visits_today or n_visits_week,
-                "href": "/app/clients",
+                "href": "/app/properties",
                 "cta_key": "dashboard.today_cta_visits",
-                "cta": "Apri agenda",
+                "cta": "Apri immobili",
                 "items": [
                     {
                         "id": d.get("id"),
@@ -382,7 +431,11 @@ async def get_today(user: dict = Depends(get_current_user)) -> Dict[str, Any]:
                             else (
                                 f"/app/clients/{d['client_id']}"
                                 if d.get("client_id")
-                                else "/app/clients"
+                                else (
+                                    f"/app/requests/{d['request_id']}"
+                                    if d.get("request_id")
+                                    else "/app/properties"
+                                )
                             )
                         ),
                         "reason_key": "dashboard.today_reason_visit",

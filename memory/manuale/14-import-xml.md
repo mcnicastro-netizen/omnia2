@@ -10,7 +10,8 @@
 - Non fa **rollback batch**: una volta finalizzato il commit, gli immobili sono dentro. Se ti accorgi dopo che c'era un problema, li elimini uno alla volta dal modulo Immobili (o via `bulk` — Cap. 3).
 - Non fa **fuzzy match** sul titolo o sull'indirizzo per il dedupe. Il dedupe usa **solo `reference_code`**: se il tuo XML non ha ref stabili, il dedupe è meno efficace.
 - Non salva un log persistente delle **preview**. Una preview vive **10 minuti in memoria** sul processo backend. Se il backend riavvia (deploy, restart), la preview scompare e ti tocca ricaricare il file. Lo **storico dei commit** (ImportJob) sì: è in fondo alla pagina Importa.
-- Non supporta formati diversi da XML sulla forma A in v1 (no CSV/JSON/Excel su `/app/import`). CSV e XML veloce immobili = forme B/C (Cap. 3).
+- Non supporta formati diversi da XML sulla forma A in v1 (no CSV/JSON/Excel su `/app/import/xml`). CSV e XML veloce immobili = forme B/C (Cap. 3).
+- La voce nav **Importa** apre l’**hub** (`/app/import`) con tre card; la forma A sta sotto `/app/import/xml`.
 
 ---
 
@@ -20,7 +21,8 @@ Questo capitolo descrive in dettaglio la forma **A**. Le altre porte sono in Cap
 
 | Forma | Cosa | UI | Chi |
 |:-----:|------|----|-----|
-| **A** | XML universale immobili (preview → commit) | `/app/import` | solo titolare |
+| **Hub** | Scelta porta (3 card) | `/app/import` | solo titolare |
+| **A** | XML universale immobili (preview → commit) | `/app/import/xml` | solo titolare |
 | **B** | CSV immobili | `/app/properties/import` tab CSV | titolare + agente + segreteria |
 | **C** | XML immobili veloce (URL / incolla) | `/app/properties/import` tab XML | titolare + agente + segreteria |
 | **D** | CSV clienti | `/app/clients/import` tab Template | titolare + agente + segreteria |

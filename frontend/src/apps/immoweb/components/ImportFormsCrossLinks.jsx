@@ -12,8 +12,15 @@ export default function ImportFormsCrossLinks({ current }) {
 
   const items = [
     {
-      id: "a",
+      id: "hub",
       to: `/${lang}/app/import`,
+      label: t("import.hub_nav_label"),
+      hint: t("import.hub_nav_hint"),
+      testid: "import-cross-hub",
+    },
+    {
+      id: "a",
+      to: `/${lang}/app/import/xml`,
       label: t("import.form_a_label"),
       hint: t("import.form_a_hint"),
       testid: "import-cross-a",
@@ -43,7 +50,7 @@ export default function ImportFormsCrossLinks({ current }) {
       <p className="text-[10px] uppercase tracking-widest text-stone-500 mb-2">
         {t("import.forms_cross_title")}
       </p>
-      <ul className="grid gap-2 sm:grid-cols-3">
+      <ul className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
         {items.map((item) => {
           const active = item.id === current;
           const body = (

@@ -7,6 +7,18 @@ Registro di tutte le decisioni di business e tecniche prese durante il progetto.
 
 ## Decisioni prese
 
+### D-092 — UX pass CRM (destinazioni, Import hub, onestà Portali, API Keys, Gruppo)
+- **Data**: 23 Settembre 2026
+- **Contesto**: Founder accetta in blocco i suggerimenti di analisi critica su Dashboard, Gruppo, API Keys, Importa, Portali, Clienti.
+- **Decisione**:
+  1. **Dashboard**: KPI e coda «Oggi» puntano a destinazioni corrette (Richieste / Immobili / scheda visita), non a Clienti per lead/visite.
+  2. **Importa**: hub unico a 3 card; forma A XML sotto `/app/import/xml`.
+  3. **Clienti ↔ Richieste**: Clienti = anagrafica; Richieste = coda lavoro; salvataggio preferenze sincronizza la `search_brief` aperta.
+  4. **Portali**: tab oneste Attivi oggi / Attivabili ora / In arrivo; chip canali su immobile senza toggle finto per-annuncio.
+  5. **API Keys**: fuori dalla nav primaria; entrata da Impostazioni.
+  6. **Gruppo**: wizard UI crea gruppo + collega filiale (niente hint POST API in empty state).
+- **Stato**: ✅ APPLICATA (codice 23-Set-2026)
+
 ### D-091 — No area riservata cliente tipo MyAgency
 - **Data**: 23 Settembre 2026
 - **Contesto**: Dopo D-090 il gap “MyAgency” era rimasto come epic separata.

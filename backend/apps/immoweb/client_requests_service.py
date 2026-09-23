@@ -323,6 +323,54 @@ async def migrate_preferences_for_agency(db, agency_id: str) -> int:
     return created
 
 
+async def sync_client_preferences_to_request(
+    db,
+    agency_id: str,
+    client_id: str,
+    preferences: Dict[str, Any],
+    *,
+    client_name: Optional[str] = None,
+) -> Optional[str]:
+    """Keep the primary open search_brief aligned with client.preferences.
+
+    - If an open/matched/negotiating search_brief exists → update its criteria.
+    - Else if preferences are non-empty → create a new search_brief.
+    Returns request id or None.
+    """
+    if not isinstance(preferences, dict) or not _prefs_nonempty(preferences):
+        return None
+
+    open_req = await db[COLLECTION].find_one(
+        {
+            "agency_id": agency_id,
+            "client_id": client_id,
+            "request_type": "search_brief",
+            "status": {"$in": ["open", "matched", "negotiating"]},
+        },
+        {"_id": 0, "id": 1},
+        sort=[("updated_at", -1)],
+    )
+    now = datetime.now(timezone.utc).isoformat()
+    if open_req:
+        await db[COLLECTION].update_one(
+            {"id": open_req["id"], "agency_id": agency_id},
+            {"$set": {"criteria": preferences, "updated_at": now}},
+        )
+        return open_req["id"]
+
+    name = (client_name or "").strip() or "Cliente"
+    doc = build_request_doc(
+        agency_id=agency_id,
+        client_id=client_id,
+        request_type="search_brief",
+        source="client_preferences_sync",
+        criteria=preferences,
+        title=f"Ricerca · {name}",
+    )
+    created = await create_request(db, doc)
+    return created.get("id") if isinstance(created, dict) else None
+
+
 async def score_properties(
     properties: List[Dict[str, Any]],
     criteria: Dict[str, Any],

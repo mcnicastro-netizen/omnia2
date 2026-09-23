@@ -100,7 +100,7 @@ export default function ApiKeysPage() {
   };
 
   return (
-    <AgencyShell current="api-keys">
+    <AgencyShell current="settings">
       <section data-testid="api-keys-page" className="space-y-8">
         <div>
           <p className="text-[10px] uppercase tracking-[0.3em] text-stone-500 mb-2">

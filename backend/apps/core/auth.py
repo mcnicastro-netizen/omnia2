@@ -363,7 +363,10 @@ async def my_agencies(user: dict = Depends(get_current_user)):
     if not ids:
         return {"items": [], "active_agency_id": None}
     db = Database.get()
-    cursor = db.agencies.find({"id": {"$in": ids}}, {"_id": 0, "id": 1, "display_name": 1, "slug": 1})
+    cursor = db.agencies.find(
+        {"id": {"$in": ids}},
+        {"_id": 0, "id": 1, "display_name": 1, "slug": 1, "group_id": 1, "name": 1},
+    )
     items = await cursor.to_list(length=100)
     from shared.auth.tenant import optional_agency_id
     return {"items": items, "active_agency_id": optional_agency_id(user)}

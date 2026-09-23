@@ -273,6 +273,15 @@ export default function ClientsPage() {
             </p>
           </div>
           <div className="flex gap-2 flex-wrap">
+            {isSearchers && (
+              <Link
+                to={`/${lang}/app/requests`}
+                data-testid="clients-goto-requests-btn"
+                className="px-4 py-2.5 bg-white border border-stone-400 text-stone-800 text-xs uppercase tracking-widest font-medium rounded-md hover:border-stone-700 transition"
+              >
+                {t("clients_smart.goto_requests_btn")}
+              </Link>
+            )}
             {isSearchers && uncached > 0 && (
               <button
                 type="button"
@@ -332,7 +341,17 @@ export default function ClientsPage() {
           className="bg-stone-100 border border-stone-200 rounded-lg p-4 flex gap-3 items-start text-sm text-stone-700"
         >
           <span className="text-base leading-none mt-0.5">◆</span>
-          <p>{isSearchers ? t("clients_smart.banner_searchers") : t("clients_smart.banner_sellers")}</p>
+          <div className="space-y-1">
+            <p>{isSearchers ? t("clients_smart.banner_searchers") : t("clients_smart.banner_sellers")}</p>
+            {isSearchers && (
+              <p className="text-xs text-stone-500">
+                {t("clients_smart.anagrafica_vs_requests")}{" "}
+                <Link to={`/${lang}/app/requests`} className="underline text-stone-800">
+                  {t("clients_smart.goto_requests_link")}
+                </Link>
+              </p>
+            )}
+          </div>
         </div>
 
         {toast && (

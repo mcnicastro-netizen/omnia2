@@ -8,6 +8,7 @@
  */
 import React, { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { Link } from "react-router-dom";
 import { api } from "../../../shared/lib/api";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
@@ -32,12 +33,15 @@ export default function PublishingCenter({
   isListedOnImmobilCloud,
   onToggleImmobilCloud,
 }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const lang = (i18n.language || "it").slice(0, 2);
   const [copied, setCopied] = useState(false);
   const [recipient, setRecipient] = useState(null);
   const [q, setQ] = useState("");
   const [results, setResults] = useState([]);
   const [pickerOpen, setPickerOpen] = useState(false);
+  const [portalConns, setPortalConns] = useState([]);
+  const [portalCatalog, setPortalCatalog] = useState([]);
 
   const slug = agency?.slug || "";
   const publicUrl = useMemo(() => {
@@ -82,6 +86,27 @@ export default function PublishingCenter({
   }, [publicUrl, recipient, title, shareText]);
 
   useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const [conn, cat] = await Promise.all([
+          api.get("/app/publishing/connections"),
+          api.get("/app/publishing/catalog"),
+        ]);
+        if (cancelled) return;
+        setPortalConns(conn.data?.items || []);
+        setPortalCatalog(cat.data?.items || []);
+      } catch {
+        if (!cancelled) {
+          setPortalConns([]);
+          setPortalCatalog([]);
+        }
+      }
+    })();
+    return () => { cancelled = true; };
+  }, []);
+
+  useEffect(() => {
     if (!pickerOpen) return undefined;
     const handle = setTimeout(async () => {
       try {
@@ -108,6 +133,11 @@ export default function PublishingCenter({
   };
 
   const canShare = !!propertyId && !!slug;
+  const catalogMap = useMemo(
+    () => Object.fromEntries(portalCatalog.map((p) => [p.slug, p])),
+    [portalCatalog],
+  );
+  const activePortals = portalConns.filter((c) => c.status === "active");
 
   return (
     <div data-testid="publishing-center" className="space-y-5">
@@ -133,6 +163,44 @@ export default function PublishingCenter({
             <span className="absolute left-0.5 top-0.5 w-5 h-5 bg-white rounded-full transition peer-checked:translate-x-5" />
           </span>
         </label>
+      </div>
+
+      {/* Canali portali (agenzia) — onesto: feed sync, non toggle per-annuncio */}
+      <div data-testid="property-portal-channels" className="border border-stone-200 rounded-md p-4 space-y-3">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <div className="text-xs uppercase tracking-widest text-stone-500">
+              {t("properties.portals_channels_title")}
+            </div>
+            <p className="text-sm text-stone-600 mt-1 max-w-2xl">
+              {t("properties.portals_channels_hint")}
+            </p>
+          </div>
+          <Link
+            to={`/${lang}/app/publishing`}
+            data-testid="property-goto-publishing"
+            className="text-[11px] uppercase tracking-widest text-stone-800 border-b border-stone-400 hover:border-stone-900 shrink-0"
+          >
+            {t("properties.portals_manage_cta")} →
+          </Link>
+        </div>
+        {activePortals.length === 0 ? (
+          <p data-testid="property-portals-empty" className="text-xs text-stone-500">
+            {t("properties.portals_none_active")}
+          </p>
+        ) : (
+          <ul className="flex flex-wrap gap-2">
+            {activePortals.map((c) => (
+              <li
+                key={c.id}
+                data-testid={`property-portal-chip-${c.portal_slug}`}
+                className="text-[11px] uppercase tracking-widest px-2.5 py-1 border border-stone-300 bg-white text-stone-700 rounded"
+              >
+                {catalogMap[c.portal_slug]?.name || c.portal_slug}
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
 
       {/* Share */}

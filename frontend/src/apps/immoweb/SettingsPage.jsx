@@ -1,17 +1,25 @@
 import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { Link } from "react-router-dom";
 import AgencyShell from "./components/AgencyShell";
 import { api } from "../../shared/lib/api";
-import { formatApiErrorDetail } from "../../shared/lib/auth";
+import { formatApiErrorDetail, useAuth } from "../../shared/lib/auth";
 import NotificationPreferencesPanel from "../../shared/components/NotificationPreferencesPanel";
 import SecuritySettingsPanel from "../../shared/components/SecuritySettingsPanel";
 
 export default function SettingsPage() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const lang = (i18n.language || "it").slice(0, 2);
+  const { user } = useAuth();
   const [form, setForm] = useState(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [toast, setToast] = useState("");
+  const isAgencyAdmin =
+    user?.role === "agency_admin" ||
+    user?.role === "branch_admin" ||
+    user?.role === "group_admin" ||
+    user?.role === "super_admin";
 
   useEffect(() => {
     api
@@ -106,6 +114,29 @@ export default function SettingsPage() {
         </div>
 
         <form onSubmit={save} className="space-y-8">
+          {isAgencyAdmin && (
+            <section
+              data-testid="settings-api-keys-card"
+              className="border border-stone-200 bg-white rounded-lg p-5 flex flex-wrap items-start justify-between gap-4"
+            >
+              <div className="min-w-0">
+                <h2 className="text-xs uppercase tracking-widest text-stone-500">
+                  {t("settings.api_keys_section")}
+                </h2>
+                <p className="text-sm text-stone-600 mt-1 max-w-xl">
+                  {t("settings.api_keys_hint")}
+                </p>
+              </div>
+              <Link
+                to={`/${lang}/app/api-keys`}
+                data-testid="settings-open-api-keys"
+                className="px-4 py-2 text-xs uppercase tracking-widest bg-stone-900 text-stone-50 rounded-md hover:bg-stone-700 shrink-0"
+              >
+                {t("settings.api_keys_cta")}
+              </Link>
+            </section>
+          )}
+
           <Section label={t("onboarding.step_identity")}>
             <FieldRow label={t("onboarding.display_name")}>
               <input

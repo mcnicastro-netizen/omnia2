@@ -26,9 +26,9 @@
 
 ## 20.2 · Dove trovarlo
 
-**Route frontend**: `/app/api-keys` (ApiKeysPage.jsx, 351 righe).
-**Sidebar**: voce `current="api-keys"` in AgencyShell.
-**Permessi**: `agency_admin`, `super_admin`, `group_admin` (group_admin vede tutte le chiavi delle branch se `group_id` popolato).
+**Route frontend**: `/app/api-keys` (ApiKeysPage.jsx).
+**Nav**: **non** in sidebar primaria (D-092). Entra da **Impostazioni → API Keys (integrazioni)**.
+**Permessi**: `agency_admin`, `super_admin`, `group_admin`, `branch_admin`.
 
 ---
 

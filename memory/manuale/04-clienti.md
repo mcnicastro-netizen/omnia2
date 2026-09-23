@@ -8,6 +8,11 @@ Il modulo **Clienti** raccoglie tutte le persone con cui la tua agenzia parla: c
 
 Le **richieste** degli acquirenti (interesse su un immobile o brief di ricerca) vivono nel modulo dedicato **Richieste** (nav a sinistra, D-089): collegate al cliente, distinte per fonte, con match sul portafoglio e poi sull’MLS.
 
+**Regola operativa (D-092)**  
+- **Clienti** = anagrafica (persone, contatti, mandati).  
+- **Richieste** = coda di lavoro (brief, match, MLS share).  
+Dalla lista Acquirenti trovi il pulsante **Coda Richieste**. Salvando le preferenze di ricerca sulla scheda cliente, OMNIA aggiorna (o crea) la richiesta `search_brief` aperta collegata.
+
 ---
 
 ## 4.1 · Creare un nuovo cliente (anagrafica)

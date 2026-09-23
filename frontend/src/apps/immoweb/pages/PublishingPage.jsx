@@ -43,7 +43,12 @@ export default function PortalsPage() {
   useEffect(() => { load(); }, []);
 
   const activePortalSlugs = new Set(connections.map((c) => c.portal_slug));
-  const available = catalog.filter((p) => !activePortalSlugs.has(p.slug));
+  const availableReady = catalog.filter(
+    (p) => !activePortalSlugs.has(p.slug) && p.integration_ready !== false,
+  );
+  const comingSoon = catalog.filter(
+    (p) => !activePortalSlugs.has(p.slug) && p.integration_ready === false,
+  );
   const portalMap = Object.fromEntries(catalog.map((p) => [p.slug, p]));
 
   const openActivate = (portal) => {
@@ -131,16 +136,19 @@ export default function PortalsPage() {
             {t("portali.subtitle") ||
               "Attiva i portali su cui vuoi pubblicare gli annunci. OMNIA genera un feed XML aggiornato in tempo reale — ogni portale scarica autonomamente ogni notte."}
           </p>
-          <div className="mt-3 text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded px-3 py-2 max-w-2xl">
-            ⚠️ <strong>Compliance HARD attiva + Sync automatico</strong>: solo gli annunci con prezzo, superficie, indirizzo, classe energetica valida e almeno 3 foto vengono pubblicati. Il sync gira automaticamente ogni notte alle 06:00 UTC su tutti i portali attivi. Per vedere quali immobili sono bloccati e perché: apri la tab <strong>Attivi</strong>, poi nella colonna <strong>Azioni</strong> clicca il pulsante <strong>Compliance</strong> sul portale che ti interessa.
+          <div className="mt-3 text-xs text-stone-800 bg-stone-50 border border-stone-200 rounded px-3 py-2 max-w-2xl" data-testid="portals-honesty-banner">
+            {t("portali.honesty_banner")}
+          </div>
+          <div className="mt-2 text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded px-3 py-2 max-w-2xl">
+            {t("portali.compliance_banner")}
           </div>
         </div>
 
         {/* Metrics header */}
         <div className="grid grid-cols-3 gap-4 max-w-2xl">
           <MetricBox label={t("portali.total_active") || "Portali attivi"} value={connections.filter((c) => c.status === "active").length} testid="metric-active" />
-          <MetricBox label={t("portali.available") || "Disponibili"} value={available.length} testid="metric-available" />
-          <MetricBox label={t("portali.catalog_total") || "Catalogo totale"} value={catalog.length} testid="metric-catalog" />
+          <MetricBox label={t("portali.ready_now") || "Attivabili ora"} value={availableReady.length} testid="metric-available" />
+          <MetricBox label={t("portali.coming_soon_count") || "In arrivo"} value={comingSoon.length} testid="metric-catalog" />
         </div>
 
         {error && <div data-testid="portals-error" className="text-sm text-red-700 bg-red-50 border border-red-300 rounded p-3">{error}</div>}
@@ -162,9 +170,13 @@ export default function PortalsPage() {
           </div>
         )}
 
-        {/* Tabs */}
-        <div className="flex gap-6 border-b border-stone-200">
-          {["active", "available"].map((k) => (
+        {/* Tabs: Attivi oggi · Attivabili ora · In arrivo */}
+        <div className="flex gap-6 border-b border-stone-200 flex-wrap">
+          {[
+            { k: "active", label: t("portali.tab_active_today"), count: connections.length },
+            { k: "ready", label: t("portali.tab_ready"), count: availableReady.length },
+            { k: "soon", label: t("portali.tab_coming_soon"), count: comingSoon.length },
+          ].map(({ k, label, count }) => (
             <button
               key={k}
               onClick={() => setTab(k)}
@@ -173,7 +185,7 @@ export default function PortalsPage() {
                 tab === k ? "border-stone-900 text-stone-900" : "border-transparent text-stone-500 hover:text-stone-800"
               }`}
             >
-              {k === "active" ? `${t("portali.active") || "Attivi"} (${connections.length})` : `${t("portali.disponibili") || "Disponibili"} (${available.length})`}
+              {label} ({count})
             </button>
           ))}
         </div>
@@ -252,47 +264,55 @@ export default function PortalsPage() {
                     </tr>
                   );
                 })
+              ) : tab === "ready" ? (
+                availableReady.length === 0 ? (
+                  <tr><td colSpan={6} className="px-4 py-6 text-stone-500 text-center" data-testid="portals-empty-ready">
+                    {t("portali.empty_ready") || "Nessun portale attivabile al momento — tutti quelli pronti sono già collegati, oppure guarda In arrivo."}
+                  </td></tr>
+                ) : availableReady.map((p) => (
+                  <tr key={p.slug} data-testid={`portal-catalog-${p.slug}`} className="border-t border-stone-200 hover:bg-stone-50">
+                    <td className="px-4 py-3 font-medium">{p.name}</td>
+                    <td className="px-4 py-3 text-stone-600 text-xs">{p.category}</td>
+                    <td className="px-4 py-3 text-stone-600 text-xs">{p.integration_type}</td>
+                    <td className="px-4 py-3 text-stone-600">{"★".repeat(p.traffic_score || 0)}</td>
+                    <td className="px-4 py-3 text-stone-500 text-xs">{p.notes?.substring(0, 60) || "—"}</td>
+                    <td className="px-4 py-3 text-right">
+                      <button onClick={() => openActivate(p)} data-testid={`portal-activate-${p.slug}`} className="text-xs uppercase tracking-widest bg-emerald-700 text-white px-3 py-1.5 rounded hover:bg-emerald-800">
+                        {t("portali.activate") || "Attiva"}
+                      </button>
+                    </td>
+                  </tr>
+                ))
               ) : (
-                available.length === 0 ? (
-                  <tr><td colSpan={6} className="px-4 py-6 text-stone-500 text-center">Tutti i portali del catalogo sono già attivi.</td></tr>
-                ) : available.map((p) => {
-                  const notReady = p.integration_ready === false;
-                  return (
-                  <tr key={p.slug} data-testid={`portal-catalog-${p.slug}`} className={`border-t border-stone-200 ${notReady ? "bg-stone-50/80" : "hover:bg-stone-50"}`}>
+                comingSoon.length === 0 ? (
+                  <tr><td colSpan={6} className="px-4 py-6 text-stone-500 text-center">—</td></tr>
+                ) : comingSoon.map((p) => (
+                  <tr key={p.slug} data-testid={`portal-catalog-${p.slug}`} className="border-t border-stone-200 bg-stone-50/80">
                     <td className="px-4 py-3 font-medium">
                       {p.name}
-                      {notReady && (
-                        <span
-                          data-testid={`portal-coming-soon-${p.slug}`}
-                          className="ml-2 inline-block text-[9px] uppercase tracking-widest text-amber-800 bg-amber-50 border border-amber-200 px-2 py-0.5"
-                        >
-                          {t("portali.not_yet_active") || "Non ancora attivo"}
-                        </span>
-                      )}
+                      <span
+                        data-testid={`portal-coming-soon-${p.slug}`}
+                        className="ml-2 inline-block text-[9px] uppercase tracking-widest text-amber-800 bg-amber-50 border border-amber-200 px-2 py-0.5"
+                      >
+                        {t("portali.not_yet_active") || "Non ancora attivo"}
+                      </span>
                     </td>
                     <td className="px-4 py-3 text-stone-600 text-xs">{p.category}</td>
                     <td className="px-4 py-3 text-stone-600 text-xs">{p.integration_type}</td>
                     <td className="px-4 py-3 text-stone-600">{"★".repeat(p.traffic_score || 0)}</td>
                     <td className="px-4 py-3 text-stone-500 text-xs">
-                      {notReady
-                        ? (t("portali.not_yet_active_hint") || "Integrazione reale non disponibile — non attivabile.")
-                        : (p.notes?.substring(0, 40) || "—")}
+                      {t("portali.not_yet_active_hint") || "Integrazione reale non disponibile — non attivabile."}
                     </td>
                     <td className="px-4 py-3 text-right">
-                      {notReady ? (
-                        <span
-                          data-testid={`portal-activate-disabled-${p.slug}`}
-                          className="text-[10px] uppercase tracking-widest text-stone-400"
-                        >
-                          {t("portali.not_yet_active") || "Non ancora attivo"}
-                        </span>
-                      ) : (
-                        <button onClick={() => openActivate(p)} data-testid={`portal-activate-${p.slug}`} className="text-xs uppercase tracking-widest bg-emerald-700 text-white px-3 py-1.5 rounded hover:bg-emerald-800">Attiva</button>
-                      )}
+                      <span
+                        data-testid={`portal-activate-disabled-${p.slug}`}
+                        className="text-[10px] uppercase tracking-widest text-stone-400"
+                      >
+                        {t("portali.not_yet_active") || "Non ancora attivo"}
+                      </span>
                     </td>
                   </tr>
-                  );
-                })
+                ))
               )}
             </tbody>
           </table>

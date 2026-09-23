@@ -385,6 +385,14 @@ export default function ClientFormPage() {
           {/* Preferenze di ricerca (mirror idealista filters) */}
           <Section label={t("clients.section_preferences")}>
             <p className="text-sm text-stone-600 -mt-2">{t("clients.section_preferences_hint")}</p>
+            {isEdit && isSearcherType && (
+              <p
+                data-testid="prefs-sync-hint"
+                className="text-xs text-stone-700 bg-stone-50 border border-stone-200 rounded-md px-3 py-2"
+              >
+                {t("clients.prefs_sync_hint")}
+              </p>
+            )}
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <Field label={t("clients.pref_operation")}>

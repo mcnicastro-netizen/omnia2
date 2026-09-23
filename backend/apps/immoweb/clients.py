@@ -170,7 +170,21 @@ async def update_client(
         with_not_trashed({"id": cid, "agency_id": agency_id}),
         {"$set": update_doc},
     )
-    return _strip(await db.clients.find_one({"id": cid}))
+    doc = await db.clients.find_one({"id": cid})
+    # D-089 — preferenze anagrafica → richiesta search_brief aperta
+    if "preferences" in update_doc and doc:
+        ctype = doc.get("client_type")
+        if ctype in ("buyer", "tenant", "investor"):
+            try:
+                from apps.immoweb import client_requests_service as req_svc
+                prefs = update_doc.get("preferences") or {}
+                name = f"{doc.get('name') or ''} {doc.get('surname') or ''}".strip()
+                await req_svc.sync_client_preferences_to_request(
+                    db, agency_id, cid, prefs, client_name=name,
+                )
+            except Exception as e:
+                logger.warning("client preferences→request sync failed client=%s: %s", cid, e)
+    return _strip(doc)
 
 
 @router.delete("/{cid}")

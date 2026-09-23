@@ -1,8 +1,10 @@
 # Capitolo 2 · Dashboard
 
-**Versione manuale**: v1.0 · **Ultima revisione**: Feb 2026
+**Versione manuale**: v1.1 · **Ultima revisione**: Set 2026
 **Chi lo legge**: titolari, agenti, segreteria
 **Prerequisiti**: aver fatto login (vedi Cap. 1)
+
+Sotto il saluto trovi anche **azioni rapide** (Nuovo immobile, Nuovo cliente, **Nuova richiesta**, Match, Portali, HAL) e il cockpit **Cosa fare oggi**: code operative con link diretti (immobili da completare, clienti da riprendere, **richieste aperte**, visite → scheda immobile/cliente).
 
 ---
 
@@ -32,9 +34,9 @@ I sei numeri della dashboard si aggiornano automaticamente ogni volta che apri l
 | # | Contatore | Cosa conta | Da dove viene |
 |---|-----------|-----------|---------------|
 | 1 | **Immobili attivi** | Numero di immobili in stato *Pubblicato* | Modulo Immobili |
-| 2 | **Lead aperti** | Contatti in stato *Nuovo* o *Contattato* (non ancora chiusi) | Modulo Clienti + form contatto portale + widget |
+| 2 | **Richieste aperte** | Richieste di ricerca/interesse in corso (fallback: lead grezzi se non ci sono richieste) | Modulo **Richieste** |
 | 3 | **Nuovi match (7gg)** | Match generati negli ultimi 7 giorni | Modulo Match (motore di abbinamento) |
-| 4 | **Visite (7gg)** | Appuntamenti di visita nei prossimi 7 giorni | Calendario (da un modulo che verrà collegato prossimamente) |
+| 4 | **Visite (7gg)** | Appuntamenti di visita nei prossimi 7 giorni | Calendario eventi → link a immobile/cliente |
 | 5 | **Collaboratori** | Membri dell'agenzia con account attivo | Modulo Collaboratori |
 | 6 | **Inviti pendenti** | Inviti spediti ma non ancora accettati | Modulo Collaboratori |
 
@@ -53,9 +55,9 @@ Non tutti i numeri servono allo stesso modo. Ecco come usarli ogni mattina:
 - **Sale**: hai acquisito nuovi mandati o riattivato annunci → controlla che tutti i portali stiano aggiornando (Cap. 8 · Portali).
 - **Scende**: qualcuno si è venduto/affittato o è stato archiviato → verifica dal modulo Immobili.
 
-### Lead aperti
-- **Sale rapido**: campagna in corso, o si è messo online un annuncio molto interessante.
-- **Fermo/alto per giorni**: c'è un accumulo di contatti non gestiti — vai in **Clienti** e filtra per stato *Nuovo*.
+### Richieste aperte
+- Cliccando il KPI apri la coda **Richieste** (non più Clienti).
+- Nel blocco «Cosa fare oggi» vedi le richieste da lavorare; i lead grezzi appaiono solo se non ci sono ancora richieste.
 
 ### Nuovi match (7gg)
 - **Bassi**: potresti non avere abbastanza clienti registrati o le loro preferenze sono troppo strette. Vedi Cap. 4 · Clienti (paragrafo Preferenze di ricerca).

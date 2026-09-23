@@ -10,6 +10,7 @@ import Brand from "../../shared/components/Brand";
 const QUICK_ACTIONS = [
   { key: "new_property", to: "properties/new", labelKey: "dashboard.qa_new_property", fallback: "Nuovo immobile" },
   { key: "new_client", to: "clients/new", labelKey: "dashboard.qa_new_client", fallback: "Nuovo cliente" },
+  { key: "new_request", to: "requests/new", labelKey: "dashboard.qa_new_request", fallback: "Nuova richiesta" },
   { key: "matches", to: "matches", labelKey: "dashboard.qa_matches", fallback: "Match" },
   { key: "publishing", to: "publishing", labelKey: "dashboard.qa_publishing", fallback: "Pubblicità su portali" },
   { key: "hal", to: "hal-knowledge", labelKey: "dashboard.qa_hal", fallback: "HAL Knowledge" },

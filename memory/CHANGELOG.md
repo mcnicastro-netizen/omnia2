@@ -1,5 +1,18 @@
 # OMNIA — Changelog
 
+## 2026-09-23 — D-092 UX pass: destinazioni, Import hub, Clienti↔Richieste, Portali, API Keys, Gruppo
+
+**Tipo**: UX / CRM.
+
+- Dashboard: KPI/coda «Oggi» → Richieste / Immobili (niente più link sbagliati a Clienti)
+- Hub Importa (`/app/import`) con 3 card; XML forma A su `/app/import/xml`
+- Clienti = anagrafica, Richieste = coda; sync preferenze → search_brief
+- Portali: tab Attivi oggi / Attivabili ora / In arrivo + canali su scheda immobile
+- API Keys spostate sotto Impostazioni (fuori dalla nav primaria)
+- Gruppo: wizard crea gruppo + collega filiale in UI
+- Decisione D-092 · manuale Cap. 2/4/6/14/20/24
+
+---
 ## 2026-09-23 — D-090 Gap vs gestionali: match inverso, tolleranze, matching notturno
 
 **Tipo**: Feature / CRM.
