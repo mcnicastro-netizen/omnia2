@@ -158,6 +158,11 @@ ensure_build() {
     echo "[omnia-stack] building frontend (missing build/)..."
     (cd "$ROOT/frontend" && REACT_APP_BACKEND_URL= yarn build) >>"$LOG_DIR/build.log" 2>&1
   fi
+  # Guard: never serve a SPA that calls the developer's localhost API
+  if rg -q '127\.0\.0\.1:43121' "$ROOT/frontend/build/static/js/main."*.js 2>/dev/null; then
+    echo "[omnia-stack] stale build bakes localhost API — rebuilding with same-origin /api..."
+    (cd "$ROOT/frontend" && REACT_APP_BACKEND_URL= yarn build) >>"$LOG_DIR/build.log" 2>&1
+  fi
 }
 
 adopt_or_start_preview() {
