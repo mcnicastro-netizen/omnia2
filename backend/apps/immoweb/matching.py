@@ -308,6 +308,65 @@ def compute_match(prop: Dict[str, Any], client: Dict[str, Any]) -> Dict[str, Any
     }
 
 
+def prefs_with_tolerance(
+    prefs: Optional[Dict[str, Any]],
+    *,
+    price_pct: float = 0.10,
+    surface_pct: float = 0.10,
+) -> Dict[str, Any]:
+    """Widen price/surface bands (Agim/Gestim-style tolleranze).
+
+    price_pct=0.10 → ±10% su price_min/max; surface_pct analogo.
+    """
+    if not isinstance(prefs, dict):
+        return {}
+    out = dict(prefs)
+    price_pct = max(0.0, min(0.50, float(price_pct or 0)))
+    surface_pct = max(0.0, min(0.50, float(surface_pct or 0)))
+
+    def _widen(key_min: str, key_max: str, pct: float) -> None:
+        if pct <= 0:
+            return
+        lo = out.get(key_min)
+        hi = out.get(key_max)
+        try:
+            if lo not in (None, ""):
+                out[key_min] = float(lo) * (1.0 - pct)
+            if hi not in (None, ""):
+                out[key_max] = float(hi) * (1.0 + pct)
+        except (TypeError, ValueError):
+            pass
+
+    _widen("price_min", "price_max", price_pct)
+    _widen("surface_min", "surface_max", surface_pct)
+    return out
+
+
+def resolve_tolerances(raw: Optional[Dict[str, Any]]) -> Dict[str, float]:
+    """Normalize request.match_tolerances → price_pct, surface_pct, min_score (0-1 / 0-100)."""
+    raw = raw if isinstance(raw, dict) else {}
+
+    def _pct(val, default=10.0) -> float:
+        try:
+            v = float(val if val is not None else default)
+        except (TypeError, ValueError):
+            v = default
+        # 10 → 0.10 ; 0.10 stays 0.10
+        if v > 1.0:
+            v = v / 100.0
+        return max(0.0, min(0.50, v))
+
+    try:
+        min_score = float(raw.get("min_score", 50))
+    except (TypeError, ValueError):
+        min_score = 50.0
+    return {
+        "price_pct": _pct(raw.get("price_pct"), 10.0),
+        "surface_pct": _pct(raw.get("surface_pct"), 10.0),
+        "min_score": max(0.0, min(100.0, min_score)),
+    }
+
+
 def is_searcher(client: Dict[str, Any]) -> bool:
     """Only buyer/tenant/investor clients actively search; sellers/landlords don't."""
     ct = (client.get("client_type") or "").lower()

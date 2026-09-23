@@ -10,6 +10,7 @@ from shared.auth.dependencies import get_current_user
 from apps.immocloud.saved_searches import run_all_active_saved_searches
 from apps.immoweb.trash import run_trash_purge
 from apps.immoweb.backup_job import run_daily_backup
+from apps.immoweb.request_matching_job import run_all_request_matching
 
 router = APIRouter(prefix="/cron", tags=["cron"])
 
@@ -21,6 +22,15 @@ async def cron_run_saved_searches(user: dict = Depends(get_current_user)):
     if user.get("role") not in ALLOWED_ROLES:
         raise HTTPException(status_code=403, detail="cron_forbidden")
     result = await run_all_active_saved_searches()
+    return {"ok": True, **result}
+
+
+@router.post("/requests/matching")
+async def cron_run_request_matching(user: dict = Depends(get_current_user)):
+    """D-090 — matching notturno richieste → portafoglio (+ email cliente se GDPR)."""
+    if user.get("role") not in ALLOWED_ROLES:
+        raise HTTPException(status_code=403, detail="cron_forbidden")
+    result = await run_all_request_matching()
     return {"ok": True, **result}
 
 

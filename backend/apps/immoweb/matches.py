@@ -99,6 +99,7 @@ async def matches_for_property(
     limit: int = Query(20, ge=1, le=100),
     user: dict = Depends(get_current_user),
 ):
+    """Match inverso: clienti (preferenze) + richieste aperte (D-090)."""
     agency_id = await _agency(user)
     db = Database.get()
     p = await db.properties.find_one({"id": pid, "agency_id": agency_id}, {"_id": 0})
@@ -118,9 +119,45 @@ async def matches_for_property(
             "score": m["score"],
             "missing": m["missing"],
             "breakdown": m["breakdown"],
+            "kind": "client_prefs",
         })
     results.sort(key=lambda r: r["score"], reverse=True)
-    return {"property": _trim_property(p), "items": results[:limit], "total": len(results)}
+
+    # D-090 — anche richieste CRM (+ MLS shared di altre agenzie)
+    from apps.immoweb.client_requests_service import match_property_to_requests
+    req_hits = await match_property_to_requests(
+        db, agency_id, p, min_score=min_score, limit=limit, include_mls_shared=True,
+    )
+    # Enrich client names for own-agency requests
+    client_ids = [r["client_id"] for r in req_hits if r.get("client_id") and r.get("scope") == "portfolio"]
+    cmap = {}
+    if client_ids:
+        for c in await db.clients.find({"id": {"$in": client_ids}}, {"_id": 0, "id": 1, "name": 1, "surname": 1, "email": 1, "phone": 1, "client_type": 1, "status": 1}).to_list(len(client_ids)):
+            cmap[c["id"]] = c
+    request_items = []
+    for r in req_hits:
+        c = cmap.get(r.get("client_id") or "", {})
+        request_items.append({
+            **r,
+            "client": _trim_client(c) if c else {
+                "id": r.get("client_id"),
+                "name": None,
+                "surname": None,
+                "email": None,
+                "phone": None,
+                "client_type": None,
+                "status": None,
+            },
+            "kind": "request",
+        })
+
+    return {
+        "property": _trim_property(p),
+        "items": results[:limit],
+        "total": len(results),
+        "requests": request_items,
+        "requests_total": len(req_hits),
+    }
 
 
 # -------------------- GET /matches/client/{cid} --------------------

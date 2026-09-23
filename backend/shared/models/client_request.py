@@ -54,6 +54,8 @@ class ClientRequestUpdate(OmniaBaseModel):
     property_id: Optional[str] = None
     criteria: Optional[SearchPreferences] = None
     mls_shared: Optional[bool] = None
+    auto_match: Optional[bool] = None
+    match_tolerances: Optional[dict] = None
     notes: Optional[str] = None
     assigned_agent_id: Optional[str] = None
 

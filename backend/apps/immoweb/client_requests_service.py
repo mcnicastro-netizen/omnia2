@@ -7,7 +7,11 @@ from typing import Any, Dict, List, Optional, Tuple
 from uuid import uuid4
 
 from shared.models.client import SearchPreferences
-from apps.immoweb.matching import compute_match_score_fast
+from apps.immoweb.matching import (
+    compute_match_score_fast,
+    prefs_with_tolerance,
+    resolve_tolerances,
+)
 from apps.immoweb.mls import _shareable_listing_clause
 
 logger = logging.getLogger("omnia.client_requests")
@@ -16,6 +20,7 @@ COLLECTION = "client_requests"
 MATCH_THRESHOLD = 50
 PORTFOLIO_SCAN_CAP = 200
 MLS_SCAN_CAP = 150
+DEFAULT_TOLERANCES = {"price_pct": 10, "surface_pct": 10, "min_score": 50}
 
 SEARCHER_TYPES = {"buyer", "tenant", "investor"}
 
@@ -119,6 +124,8 @@ def build_request_doc(
         "property_id": property_id,
         "criteria": crit,
         "mls_shared": bool(mls_shared),
+        "auto_match": True,
+        "match_tolerances": dict(DEFAULT_TOLERANCES),
         "assigned_agent_id": assigned_agent_id,
         "notes": notes,
         "lead_id": lead_id,
@@ -321,11 +328,17 @@ async def score_properties(
     criteria: Dict[str, Any],
     *,
     threshold: int = MATCH_THRESHOLD,
+    price_pct: float = 0.10,
+    surface_pct: float = 0.10,
 ) -> Tuple[List[Dict[str, Any]], Optional[int]]:
     """Return matches >= threshold sorted by score desc, plus best score (any)."""
     scored: List[Dict[str, Any]] = []
     best: Optional[int] = None
-    prefs = criteria if isinstance(criteria, dict) else {}
+    prefs = prefs_with_tolerance(
+        criteria if isinstance(criteria, dict) else {},
+        price_pct=price_pct,
+        surface_pct=surface_pct,
+    )
     for raw in properties:
         p = _normalize_prop_for_match(raw)
         s = compute_match_score_fast(p, prefs)
@@ -352,20 +365,22 @@ async def match_request(
     agency_id: str,
     req: Dict[str, Any],
     *,
-    min_score: int = MATCH_THRESHOLD,
+    min_score: Optional[int] = None,
 ) -> Dict[str, Any]:
     """Portfolio first; if no useful match, fall through to MLS shareable inventory."""
+    tol = resolve_tolerances(req.get("match_tolerances"))
+    threshold = int(min_score if min_score is not None else tol["min_score"])
     criteria = req.get("criteria") or {}
     # Type A with explicit property: score that one first
     if req.get("request_type") == "property_interest" and req.get("property_id"):
         prop = await db.properties.find_one({"id": req["property_id"]}, _PROP_PROJ)
         if prop:
             p = _normalize_prop_for_match(prop)
-            # For interest requests without criteria, treat as 100 if same agency listing
+            prefs = prefs_with_tolerance(criteria, price_pct=tol["price_pct"], surface_pct=tol["surface_pct"])
             if not _prefs_nonempty(criteria):
                 score = 100 if prop.get("agency_id") == agency_id else 70
             else:
-                score = compute_match_score_fast(p, criteria)
+                score = compute_match_score_fast(p, prefs)
             scope = "portfolio" if prop.get("agency_id") == agency_id else "mls"
             item = {
                 "property_id": p.get("id"),
@@ -382,16 +397,20 @@ async def match_request(
             return {
                 "scope_used": scope,
                 "best_score": score,
-                "portfolio_matches": [item] if scope == "portfolio" and score >= min_score else [],
-                "mls_matches": [item] if scope == "mls" and score >= min_score else [],
-                "items": [item] if score >= min_score else [],
+                "tolerances": tol,
+                "portfolio_matches": [item] if scope == "portfolio" and score >= threshold else [],
+                "mls_matches": [item] if scope == "mls" and score >= threshold else [],
+                "items": [item] if score >= threshold else [],
             }
 
     own = await db.properties.find(
         {"agency_id": agency_id, "status": "active"},
         _PROP_PROJ,
     ).sort("updated_at", -1).to_list(length=PORTFOLIO_SCAN_CAP)
-    portfolio_hits, best_own = await score_properties(own, criteria, threshold=min_score)
+    portfolio_hits, best_own = await score_properties(
+        own, criteria, threshold=threshold,
+        price_pct=tol["price_pct"], surface_pct=tol["surface_pct"],
+    )
 
     if portfolio_hits:
         for h in portfolio_hits:
@@ -399,6 +418,7 @@ async def match_request(
         return {
             "scope_used": "portfolio",
             "best_score": best_own,
+            "tolerances": tol,
             "portfolio_matches": portfolio_hits,
             "mls_matches": [],
             "items": portfolio_hits,
@@ -412,7 +432,10 @@ async def match_request(
         "status": "active",
     }
     mls_props = await db.properties.find(mls_q, _PROP_PROJ).sort("updated_at", -1).to_list(length=MLS_SCAN_CAP)
-    mls_hits, best_mls = await score_properties(mls_props, criteria, threshold=min_score)
+    mls_hits, best_mls = await score_properties(
+        mls_props, criteria, threshold=threshold,
+        price_pct=tol["price_pct"], surface_pct=tol["surface_pct"],
+    )
     for h in mls_hits:
         h["scope"] = "mls"
     best = best_own if best_own is not None else best_mls
@@ -421,10 +444,75 @@ async def match_request(
     return {
         "scope_used": "mls" if mls_hits else "none",
         "best_score": best,
+        "tolerances": tol,
         "portfolio_matches": [],
         "mls_matches": mls_hits,
         "items": mls_hits,
     }
+
+
+async def match_property_to_requests(
+    db,
+    agency_id: str,
+    prop: Dict[str, Any],
+    *,
+    min_score: int = 40,
+    limit: int = 20,
+    include_mls_shared: bool = True,
+) -> List[Dict[str, Any]]:
+    """Match inverso: immobile → richieste aperte (proprie + MLS shared di altre agenzie)."""
+    p = _normalize_prop_for_match(prop)
+    results: List[Dict[str, Any]] = []
+
+    own_reqs = await db[COLLECTION].find(
+        {"agency_id": agency_id, "status": {"$in": ["open", "matched", "negotiating"]}},
+        {"_id": 0},
+    ).to_list(length=2000)
+
+    network_reqs: List[Dict[str, Any]] = []
+    if include_mls_shared:
+        network_reqs = await db[COLLECTION].find(
+            {
+                "agency_id": {"$ne": agency_id},
+                "mls_shared": True,
+                "status": {"$in": ["open", "matched", "negotiating"]},
+            },
+            {"_id": 0},
+        ).to_list(length=1000)
+
+    for req in own_reqs + network_reqs:
+        # Explicit property interest
+        if req.get("request_type") == "property_interest" and req.get("property_id"):
+            if req["property_id"] != p.get("id"):
+                continue
+            score = 100 if req.get("agency_id") == agency_id else 90
+        else:
+            tol = resolve_tolerances(req.get("match_tolerances"))
+            prefs = prefs_with_tolerance(
+                req.get("criteria") or {},
+                price_pct=tol["price_pct"],
+                surface_pct=tol["surface_pct"],
+            )
+            if not prefs:
+                continue
+            score = compute_match_score_fast(p, prefs)
+        if score < min_score:
+            continue
+        scope = "portfolio" if req.get("agency_id") == agency_id else "mls"
+        results.append({
+            "request_id": req.get("id"),
+            "client_id": req.get("client_id"),
+            "agency_id": req.get("agency_id"),
+            "title": req.get("title"),
+            "request_type": req.get("request_type"),
+            "source": req.get("source"),
+            "mls_shared": bool(req.get("mls_shared")),
+            "score": score,
+            "scope": scope,
+        })
+
+    results.sort(key=lambda r: r["score"], reverse=True)
+    return results[:limit]
 
 
 async def quick_match_summary(

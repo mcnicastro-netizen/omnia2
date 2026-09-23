@@ -1,5 +1,16 @@
 # OMNIA — Changelog
 
+## 2026-09-23 — D-090 Gap vs gestionali: match inverso, tolleranze, matching notturno
+
+**Tipo**: Feature / CRM.
+
+- Match inverso immobile → richieste (+ MLS shared) in `GET /matches/property/{id}` e preview scheda
+- Tolleranze prezzo/mq + soglia su ogni richiesta (`match_tolerances`, `auto_match`)
+- Job notturno matching + email `request_match_alert` + cron/manual run
+- Tab «Rete MLS» richieste condivise senza PII
+- Decisione D-090 (MyAgency fuori scope)
+
+---
 ## 2026-09-23 — D-089 Lista richieste CRM + match portafoglio→MLS
 
 **Tipo**: Feature / CRM.

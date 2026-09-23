@@ -38,6 +38,8 @@ export default function RequestFormPage() {
     title: "",
     notes: "",
     mls_shared: false,
+    auto_match: true,
+    match_tolerances: { price_pct: 10, surface_pct: 10, min_score: 50 },
     source: "manual",
     criteria: { ...emptyCriteria },
   });
@@ -62,6 +64,12 @@ export default function RequestFormPage() {
           title: data.title || "",
           notes: data.notes || "",
           mls_shared: !!data.mls_shared,
+          auto_match: data.auto_match !== false,
+          match_tolerances: {
+            price_pct: data.match_tolerances?.price_pct ?? 10,
+            surface_pct: data.match_tolerances?.surface_pct ?? 10,
+            min_score: data.match_tolerances?.min_score ?? 50,
+          },
           source: data.source || "manual",
           status: data.status,
           criteria: {
@@ -159,6 +167,15 @@ export default function RequestFormPage() {
           criteria,
         };
         const { data } = await api.post("/app/requests", body);
+        // set tolerances / auto_match after create
+        await api.patch(`/app/requests/${data.id}`, {
+          auto_match: !!form.auto_match,
+          match_tolerances: {
+            price_pct: Number(form.match_tolerances.price_pct) || 10,
+            surface_pct: Number(form.match_tolerances.surface_pct) || 10,
+            min_score: Number(form.match_tolerances.min_score) || 50,
+          },
+        });
         nav(`/${lang}/app/requests/${data.id}`, { replace: true });
       } else {
         await api.patch(`/app/requests/${id}`, {
@@ -167,6 +184,12 @@ export default function RequestFormPage() {
           title: form.title || null,
           notes: form.notes || null,
           mls_shared: !!form.mls_shared,
+          auto_match: !!form.auto_match,
+          match_tolerances: {
+            price_pct: Number(form.match_tolerances.price_pct) || 10,
+            surface_pct: Number(form.match_tolerances.surface_pct) || 10,
+            min_score: Number(form.match_tolerances.min_score) || 50,
+          },
           criteria,
           status: form.status,
         });
@@ -323,6 +346,65 @@ export default function RequestFormPage() {
             />
             <span>{t("requests.field_mls_shared")}</span>
           </label>
+
+          <label className="flex items-start gap-2 text-sm text-stone-700">
+            <input
+              type="checkbox"
+              data-testid="request-auto-match"
+              checked={!!form.auto_match}
+              onChange={(e) => upd("auto_match", e.target.checked)}
+              className="mt-1"
+            />
+            <span>{t("requests.field_auto_match")}</span>
+          </label>
+
+          <fieldset className="border border-stone-200 rounded-md p-4 space-y-3">
+            <legend className="text-xs uppercase tracking-widest text-stone-500 px-1">{t("requests.section_tolerances")}</legend>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+              <div>
+                <label className="text-xs text-stone-500">{t("requests.tol_price")}</label>
+                <input
+                  type="number"
+                  min={0}
+                  max={50}
+                  value={form.match_tolerances.price_pct}
+                  onChange={(e) => setForm((f) => ({
+                    ...f,
+                    match_tolerances: { ...f.match_tolerances, price_pct: e.target.value },
+                  }))}
+                  className="form-input w-full"
+                />
+              </div>
+              <div>
+                <label className="text-xs text-stone-500">{t("requests.tol_surface")}</label>
+                <input
+                  type="number"
+                  min={0}
+                  max={50}
+                  value={form.match_tolerances.surface_pct}
+                  onChange={(e) => setForm((f) => ({
+                    ...f,
+                    match_tolerances: { ...f.match_tolerances, surface_pct: e.target.value },
+                  }))}
+                  className="form-input w-full"
+                />
+              </div>
+              <div>
+                <label className="text-xs text-stone-500">{t("requests.tol_min_score")}</label>
+                <input
+                  type="number"
+                  min={0}
+                  max={100}
+                  value={form.match_tolerances.min_score}
+                  onChange={(e) => setForm((f) => ({
+                    ...f,
+                    match_tolerances: { ...f.match_tolerances, min_score: e.target.value },
+                  }))}
+                  className="form-input w-full"
+                />
+              </div>
+            </div>
+          </fieldset>
 
           <div>
             <label className="block text-xs uppercase tracking-widest text-stone-500 mb-1">{t("requests.field_notes")}</label>

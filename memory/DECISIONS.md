@@ -7,6 +7,17 @@ Registro di tutte le decisioni di business e tecniche prese durante il progetto.
 
 ## Decisioni prese
 
+### D-090 — Chiusura gap vs gestionali IT (match inverso, tolleranze, matching notturno, rete richieste)
+- **Data**: 23 Settembre 2026
+- **Contesto**: Dopo D-089, confronto AgestaNET/Realgest/Gestim/Agim: gap su match inverso, tolleranze, matching automatico, regole MLS richieste.
+- **Decisione**:
+  1. **Match inverso** da scheda immobile → clienti + `client_requests` (anche MLS shared, senza PII cliente esterno).
+  2. **Tolleranze** su richiesta: `match_tolerances` (price_pct, surface_pct, min_score); default ±10%.
+  3. **Matching notturno** 02:30 UTC (`request_matching_nightly`) + `POST /cron/requests/matching` + `POST /app/requests/run-matching` agenzia; email `request_match_alert` se GDPR; dedup `request_match_notifications`.
+  4. **Rete MLS richieste**: `GET /app/requests/mls-network` (solo criteri, no anagrafica); tab UI «Rete MLS».
+  5. **Fuori scope v1**: area riservata MyAgency-like (epic separata).
+- **Stato**: ✅ Implementata (v1)
+
 ### D-089 — Richieste CRM (lista dedicata, match portafoglio→MLS)
 - **Data**: 23 Settembre 2026
 - **Contesto**: Founder — distinzione mandati vendita vs richieste acquirenti; serve **Lista richieste** nel gestionale; match anche MLS; condivisione opt-in; fonti distinte.

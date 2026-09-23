@@ -313,10 +313,32 @@ def start_scheduler() -> None:
         max_instances=1,
         coalesce=True,
     )
+
+    async def _request_matching_tick():
+        from apps.immoweb.request_matching_job import run_all_request_matching
+        try:
+            report = await run_all_request_matching()
+            logger.info(
+                "request matching scanned=%s new=%s emailed=%s",
+                report.get("scanned"),
+                report.get("with_new_matches"),
+                report.get("emailed"),
+            )
+        except Exception as e:  # noqa: BLE001
+            logger.warning("request matching scheduled run failed: %s", e)
+
+    sched.add_job(
+        _request_matching_tick,
+        CronTrigger(hour=2, minute=30),
+        id="request_matching_nightly",
+        replace_existing=True,
+        max_instances=1,
+        coalesce=True,
+    )
     sched.start()
     _scheduler = sched
     logger.info(
-        "Publishing scheduler started (daily sync %02d:%02d UTC + saved-searches every 5m + backup 03:15 UTC)",
+        "Publishing scheduler started (daily sync %02d:%02d UTC + saved-searches every 5m + backup 03:15 UTC + request-matching 02:30 UTC)",
         DAILY_SYNC_HOUR_UTC, DAILY_SYNC_MINUTE_UTC,
     )
 

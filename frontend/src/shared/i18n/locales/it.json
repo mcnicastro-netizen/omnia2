@@ -713,7 +713,8 @@
     "section_title": "✨ Lead caldi per questo immobile",
     "top_clients_for_property": "Top clienti compatibili",
     "see_all": "Vedi tutti",
-    "no_matches_for_property": "Nessun cliente compatibile al momento. Aggiungi clienti con preferenze coerenti per vedere i match qui."
+    "no_matches_for_property": "Nessun cliente compatibile al momento. Aggiungi clienti con preferenze coerenti per vedere i match qui.",
+    "top_requests_for_property": "Richieste compatibili (match inverso)"
   },
   "portali": {
     "title": "Portali pubblicitari",
@@ -873,6 +874,15 @@
     "field_title": "Titolo",
     "field_notes": "Note",
     "field_mls_shared": "Condividi questa richiesta con altre agenzie sull’MLS (visibile solo se spuntato).",
+    "field_auto_match": "Matching automatico notturno (email al cliente se GDPR + notifica in agenzia).",
+    "section_tolerances": "Tolleranze match",
+    "tol_price": "Prezzo ± %",
+    "tol_surface": "Superficie ± %",
+    "tol_min_score": "Score minimo",
+    "view_mine": "Le mie richieste",
+    "view_mls": "Rete MLS",
+    "mls_network_hint": "Richieste condivise da altre agenzie che matchano il tuo portafoglio (nessun dato personale del loro cliente).",
+    "mls_network_empty": "Nessuna richiesta MLS compatibile con il tuo stock al momento.",
     "section_criteria": "Criteri di ricerca",
     "save": "Salva richiesta",
     "save_error": "Errore salvataggio",

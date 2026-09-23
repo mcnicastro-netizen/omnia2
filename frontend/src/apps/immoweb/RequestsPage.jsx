@@ -67,20 +67,28 @@ export default function RequestsPage() {
   const [q, setQ] = useState("");
   const [page, setPage] = useState(1);
   const [toast, setToast] = useState("");
+  const [view, setView] = useState("mine"); // mine | mls
+  const [mlsData, setMlsData] = useState({ items: [], total: 0 });
   const pageSize = 50;
 
   const load = async (signal) => {
     setLoading(true);
     try {
-      const params = new URLSearchParams();
-      params.set("page", String(page));
-      params.set("page_size", String(pageSize));
-      if (typeFilter && typeFilter !== "all") params.set("request_type", typeFilter);
-      if (statusFilter && statusFilter !== "all") params.set("status", statusFilter);
-      if (sourceFilter) params.set("source", sourceFilter);
-      if (q) params.set("q", q);
-      const { data: res } = await api.get(`/app/requests?${params.toString()}`, { signal });
-      setData(res);
+      if (view === "mls") {
+        const { data: res } = await api.get(`/app/requests/mls-network?page=1&page_size=50&min_score_vs_my_stock=50`, { signal });
+        setMlsData(res);
+        setData({ items: [], counts: data.counts || {}, total: 0 });
+      } else {
+        const params = new URLSearchParams();
+        params.set("page", String(page));
+        params.set("page_size", String(pageSize));
+        if (typeFilter && typeFilter !== "all") params.set("request_type", typeFilter);
+        if (statusFilter && statusFilter !== "all") params.set("status", statusFilter);
+        if (sourceFilter) params.set("source", sourceFilter);
+        if (q) params.set("q", q);
+        const { data: res } = await api.get(`/app/requests?${params.toString()}`, { signal });
+        setData(res);
+      }
     } catch (e) {
       if (e.name !== "CanceledError") console.error(e);
     } finally {
@@ -92,7 +100,7 @@ export default function RequestsPage() {
     const ac = new AbortController();
     load(ac.signal);
     return () => ac.abort();
-  }, [typeFilter, statusFilter, sourceFilter, page]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [typeFilter, statusFilter, sourceFilter, page, view]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     const next = new URLSearchParams();
@@ -147,10 +155,33 @@ export default function RequestsPage() {
           {t("requests.banner")}
         </div>
 
+        <div className="flex flex-wrap gap-2" data-testid="requests-view-tabs">
+          <button
+            type="button"
+            onClick={() => setView("mine")}
+            className={`px-4 py-2 text-xs uppercase tracking-widest rounded-md border ${
+              view === "mine" ? "bg-stone-900 text-stone-50 border-stone-900" : "bg-white border-stone-300"
+            }`}
+          >
+            {t("requests.view_mine")}
+          </button>
+          <button
+            type="button"
+            onClick={() => setView("mls")}
+            className={`px-4 py-2 text-xs uppercase tracking-widest rounded-md border ${
+              view === "mls" ? "bg-stone-900 text-stone-50 border-stone-900" : "bg-white border-stone-300"
+            }`}
+          >
+            {t("requests.view_mls")}
+          </button>
+        </div>
+
         {toast && (
           <p className="text-sm text-stone-700 bg-stone-100 border border-stone-200 rounded-md px-3 py-2">✓ {toast}</p>
         )}
 
+        {view === "mine" && (
+        <>
         {/* Type segments */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3" data-testid="requests-type-filters">
           {TYPE_FILTERS.map((id) => {
@@ -287,6 +318,42 @@ export default function RequestsPage() {
                 </div>
               </div>
             ))}
+          </div>
+        )}
+        </>
+        )}
+
+        {view === "mls" && (
+          <div data-testid="requests-mls-list" className="space-y-3">
+            <p className="text-sm text-stone-600">{t("requests.mls_network_hint")}</p>
+            {loading ? (
+              <p className="text-stone-500 text-sm">{t("common.loading")}</p>
+            ) : (mlsData.items || []).length === 0 ? (
+              <div className="bg-white border border-stone-200 rounded-lg p-10 text-center text-stone-500">
+                {t("requests.mls_network_empty")}
+              </div>
+            ) : (
+              (mlsData.items || []).map((r) => (
+                <div
+                  key={r.id}
+                  className="bg-white border border-stone-200 rounded-lg px-5 py-4 flex flex-wrap justify-between gap-3"
+                >
+                  <div>
+                    <div className="font-medium text-stone-900">{r.title}</div>
+                    <div className="text-[10px] uppercase tracking-widest text-stone-500 mt-1">
+                      {t(`requests.type_${r.request_type}`)} · {t("requests.scope_mls")}
+                      {r.criteria?.cities?.length ? ` · ${r.criteria.cities.slice(0, 2).join(", ")}` : ""}
+                    </div>
+                  </div>
+                  {r.best_vs_my_stock != null && (
+                    <div className="text-2xl font-light" style={{ fontFamily: "'Fraunces', Georgia, serif" }}>
+                      {r.best_vs_my_stock}
+                      <span className="text-[10px] uppercase tracking-widest text-stone-400 ml-2">vs stock</span>
+                    </div>
+                  )}
+                </div>
+              ))
+            )}
           </div>
         )}
       </section>

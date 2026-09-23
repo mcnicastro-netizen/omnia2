@@ -67,6 +67,11 @@ SUBJECTS = {
         "en": "🔔 {{match_count}} new listings for your search \"{{search_name}}\"",
         "es": "🔔 {{match_count}} nuevos inmuebles para tu búsqueda \"{{search_name}}\"",
     },
+    "request_match_alert": {
+        "it": "🔔 {{match_count}} immobili per la tua richiesta «{{request_title}}»",
+        "en": "🔔 {{match_count}} properties for your request “{{request_title}}”",
+        "es": "🔔 {{match_count}} inmuebles para tu solicitud «{{request_title}}»",
+    },
     "error_alert": {
         "it": "[OMNIA] Allarme: {{title}}",
         "en": "[OMNIA] Alert: {{title}}",

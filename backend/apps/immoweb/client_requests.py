@@ -172,6 +172,17 @@ async def list_requests(
     }
 
 
+@router.post("/run-matching")
+async def run_matching_now(
+    user: dict = Depends(require_roles("agency_admin", "super_admin")),
+):
+    """Trigger matching digest for the active agency (manual / test)."""
+    agency_id = await _agency(user)
+    from apps.immoweb.request_matching_job import run_all_request_matching
+    result = await run_all_request_matching(agency_id=agency_id)
+    return {"ok": True, **result}
+
+
 @router.post("/migrate-preferences", response_model=MigrateResult)
 async def migrate_preferences(
     user: dict = Depends(require_roles("agency_admin", "agent", "super_admin")),
@@ -180,6 +191,83 @@ async def migrate_preferences(
     db = Database.get()
     n = await svc.migrate_preferences_for_agency(db, agency_id)
     return {"created": n}
+
+
+@router.get("/mls-network")
+async def list_mls_shared_requests(
+    page: int = Query(1, ge=1),
+    page_size: int = Query(50, ge=1, le=100),
+    min_score_vs_my_stock: Optional[int] = Query(
+        None, ge=0, le=100,
+        description="Se impostato, tiene solo richieste che matchano almeno un immobile del mio portafoglio",
+    ),
+    user: dict = Depends(get_current_user),
+):
+    """Richieste condivise da altre agenzie (mls_shared=true) — D-090 regole rete."""
+    agency_id = await _agency(user)
+    db = Database.get()
+    q = {
+        "agency_id": {"$ne": agency_id},
+        "mls_shared": True,
+        "status": {"$in": ["open", "matched", "negotiating"]},
+    }
+    total = await db[svc.COLLECTION].count_documents(q)
+    docs = await (
+        db[svc.COLLECTION]
+        .find(q, {"_id": 0, "client_id": 0, "notes": 0, "lead_id": 0})  # privacy: no client PII
+        .sort("updated_at", -1)
+        .skip((page - 1) * page_size)
+        .limit(page_size)
+        .to_list(page_size)
+    )
+
+    # Optional: filter by compatibility with my active stock
+    items = []
+    my_props = None
+    if min_score_vs_my_stock is not None:
+        my_props = await db.properties.find(
+            {"agency_id": agency_id, "status": "active"},
+            svc._PROP_PROJ,
+        ).to_list(length=svc.PORTFOLIO_SCAN_CAP)
+
+    for d in docs:
+        row = {
+            "id": d.get("id"),
+            "agency_id": d.get("agency_id"),
+            "request_type": d.get("request_type"),
+            "title": d.get("title") or "Richiesta MLS",
+            "criteria": d.get("criteria") or {},
+            "match_tolerances": d.get("match_tolerances"),
+            "status": d.get("status"),
+            "updated_at": d.get("updated_at"),
+            "best_vs_my_stock": None,
+        }
+        # Strip criteria notes that might leak PII
+        if isinstance(row["criteria"], dict):
+            row["criteria"] = {k: v for k, v in row["criteria"].items() if k != "notes"}
+        if my_props is not None:
+            from apps.immoweb.matching import resolve_tolerances
+            tol = resolve_tolerances(d.get("match_tolerances"))
+            scored, best = await svc.score_properties(
+                my_props,
+                row["criteria"],
+                threshold=min_score_vs_my_stock,
+                price_pct=tol["price_pct"],
+                surface_pct=tol["surface_pct"],
+            )
+            row["best_vs_my_stock"] = best
+            if best is None or best < min_score_vs_my_stock:
+                continue
+            row["matches_vs_my_stock"] = len(scored)
+        items.append(row)
+
+    return {
+        "items": items,
+        "total": total if min_score_vs_my_stock is None else len(items),
+        "page": page,
+        "page_size": page_size,
+        "privacy": "no_client_pii",
+    }
 
 
 @router.post("", status_code=201)
