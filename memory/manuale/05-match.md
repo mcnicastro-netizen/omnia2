@@ -1,10 +1,12 @@
 # Capitolo 5 · Match
 
-**Versione manuale**: v1.0 · **Ultima revisione**: Feb 2026
+**Versione manuale**: v1.1 · **Ultima revisione**: 24-Set-2026 (A-028b)  
 **Chi lo legge**: titolari, agenti, segreteria
 **Prerequisiti**: aver caricato almeno alcuni immobili (Cap. 3) e clienti con preferenze (Cap. 4)
 
-Il modulo **Match** è il motore che risponde alla domanda "*a chi propongo questa casa?*" e "*quale casa consiglio a questo cliente?*" — automaticamente, a partire dagli immobili in portafoglio e dalle preferenze di ricerca dei clienti. Ci arrivi cliccando **Match** dalla barra a sinistra.
+Il modulo **Match** è il motore che risponde alla domanda "*a chi propongo questa casa?*" e "*quale casa consiglio a questo cliente?*" — automaticamente, a partire dagli immobili in portafoglio e dalle preferenze di ricerca dei clienti. Ci arrivi cliccando **Match** dalla barra a sinistra (cluster **Operativo**).
+
+Sulla card Match, **clicca lo score** (es. 83/100) per aprire il **breakdown a barre** dei 14 criteri (A-028b). In lista Clienti, clicca il numero dello score per le fasce temperatura (Rovente/Caldo/…).
 
 ---
 

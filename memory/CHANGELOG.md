@@ -1,5 +1,16 @@
 # OMNIA — Changelog
 
+## 2026-09-24 — Analisi gestionale + A-028b/c (score explain + sidebar cluster)
+
+**Tipo**: Docs / UX CRM.
+
+- Analisi: `memory/GESTIONALE_ANALISI_2026-09-24.md`
+- **A-028b**: breakdown criteri su card Match (click score); popover fasce su score Clienti
+- **A-028c**: sidebar a 5 cluster (Operativo / Pubblicazione / Strumenti / Intelligenza / Amministrazione)
+- Match list harden: scan fast+cap 400×400, breakdown solo sulla page (mitiga QC A8)
+- Prossimi solo con «vai»: A-028d HAL contestuale · e/f tabella+filtri · harden ulteriore
+
+---
 ## 2026-09-24 — D-093 Gap Idealista/Immobiliare P0 (stats privato + alert preferiti ended)
 
 **Tipo**: Feature / B2C ImmobilCloud.

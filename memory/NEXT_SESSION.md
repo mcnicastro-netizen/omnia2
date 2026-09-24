@@ -1,6 +1,6 @@
 # Prossima sessione — programma passi
 
-**Aggiornato**: 24 Settembre 2026 — D-093 P0 (stats privato + alert preferiti ended) · poi **analisi gestionale**  
+**Aggiornato**: 24 Settembre 2026 — Analisi gestionale + A-028b/c  
 **Stato base**: Sprint 1→4 **CONCLUSO**. Stress: `PLATFORM_STRESS_REPORT.md` + `STRESS_REPORT.md`.  
 **Preprod gate**: `memory/PREPROD_GATE_REPORT.md` (PASS required — no vendor burn).  
 **Repo ufficiale**: https://github.com/mcnicastro-netizen/omnia2 ✅ — **apri gli agent QUI**. Origin-tmp non è master. Setup: `memory/OMNIA2_REPO_SETUP.md`.  
@@ -11,19 +11,14 @@
 ## Ripresa (checklist)
 
 1. `bash scripts/omnia-stack.sh ensure`
-2. Login demo: `demo.admin@omniaecosystem.it` / `DEMO_ADMIN_PASSWORD` (tunnel HTTPS: cookie Secure OK su Safari/Firefox/Chrome)
-3. **Founder: analisi del gestionale** (tema ancora aperto)
-4. ✅ **D-092** shippata: Dashboard destinazioni, Import hub, Clienti↔Richieste, Portali 3 tab, API Keys in Impostazioni, wizard Gruppo
-5. ✅ Login tunnel: same-origin `/api` + Secure cookie rewrite in `preview-server.js`
-6. ✅ **D-093 P0**: A-029 stats privato · A-030 alert preferiti ended (A-031…033 backlog, solo con «vai»)
-7. ✅ Tools QC ImmoWeb → `memory/GESTIONALE_TOOLS_QC_REPORT.md`
-8. Backlog **A-028** (sidebar gerarchia, Match Score explainability, HAL contestuale) — **no implementazione senza «vai»**
-9. **D-084**: ogni ship aggiorna manuale+YAML+index
-10. Preprod: `python scripts/preprod_confidence_gate.py` prima di go-live / ship rischiosi
-11. ✅ **D-087**: Cloud Agent solo su GitHub `omnia2`
-12. ✅ **D-088 / D-089 / D-090 / D-091**: Mongo JIT, Richieste, matching notturno, no MyAgency
-13. ⏸️ i18n EN/ES uniforme gestionale — solo con «vai»
-14. ⏸️ Seed Stripe `storage_100gb_monthly` + DPA fine abbonamento (legale)
+2. Login demo: `demo.admin@omniaecosystem.it` / `DEMO_ADMIN_PASSWORD`
+3. ✅ Analisi gestionale → `memory/GESTIONALE_ANALISI_2026-09-24.md`
+4. ✅ **A-028a/b/c**: Oggi + score explain + sidebar cluster
+5. 🔜 Solo con «vai»: **A-028d** HAL contestuale scheda · **e/f** tabella+filtri immobili · match scoped
+6. ✅ **D-092** / **D-093 P0** (B2C stats + preferiti ended)
+7. Backlog A-028h Attività · A-031…033 B2C — **no senza «vai»**
+8. **D-084**: ogni ship aggiorna manuale+YAML+index
+9. ✅ **D-087**: Cloud Agent solo su GitHub `omnia2`
 
 ---
 
@@ -31,12 +26,10 @@
 
 | Area | Stato |
 |------|:-----:|
-| Sprint 1→4 | ✅ |
-| D-092 UX CRM | ✅ (23-Set) |
-| D-093 P0 B2C gap Imm/Idealista | ✅ A-029/A-030 (24-Set) |
-| Login tunnel HTTPS | ✅ Secure cookies |
-| Richieste + matching D-089/090 | ✅ |
+| Analisi gestionale 24-Set | ✅ |
+| A-028a Oggi / b score / c cluster | ✅ |
+| A-028d…i | 🔜 con «vai» |
+| D-093 P0 B2C | ✅ |
 | Repo GitHub `omnia2` | ✅ |
-| Prossima: analisi gestionale | 🔜 |
 
 ---

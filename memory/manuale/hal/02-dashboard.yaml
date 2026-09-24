@@ -36,6 +36,7 @@ voci:
         - "In alto: saluto + azioni rapide (Nuovo immobile, Nuovo cliente, Nuova richiesta, Match, Portali, HAL)."
         - "Poi il cockpit Cosa fare oggi con link a Richieste / Immobili."
         - "Sotto: sei riquadri KPI (Immobili attivi, Richieste aperte, ...)."
+        - "Barra sinistra a cluster A-028c: Operativo, Pubblicazione, Strumenti, Intelligenza, Amministrazione."
       errori_comuni: []
       permessi:
         - Tutti i ruoli

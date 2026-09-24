@@ -201,14 +201,13 @@ voci:
         Quando un match sembra troppo alto o troppo basso, o prima
         di chiamare un cliente per prepararsi la telefonata.
       passi:
-        - Clicca una riga nella lista Match.
-        - Si apre il dettaglio Match con anagrafica cliente + scheda
-          immobile.
-        - Nella sezione "Breakdown" vedi quanti punti su ciascuno
-          dei 14 criteri.
-        - Nella sezione "Cosa manca" leggi in italiano i mismatch
-          (es. "Prezzo sopra budget di €25.000", "Zona non tra le
-          preferite").
+        - "Sulla card Match, clicca lo score (es. 83/100) — si apre il
+          breakdown a barre dei 14 criteri (A-028b)."
+        - "Oppure apri Lead Score AI dalla card per reasons + breakdown."
+        - "Nella sezione Breakdown vedi punti got/max per criterio."
+        - "Nella sezione Cosa manca (chips) i mismatch principali."
+        - "In lista Clienti, clicca il numero score per le fasce
+          Rovente/Caldo/Tiepido/Freddo."
       errori_comuni: []
       permessi:
         - Tutti

@@ -1120,8 +1120,8 @@ Concordo sul nucleo. Temperatura: «OS agenzia» è **nord**, non claim immediat
 | ID interno | Tema | Priorità proposta | Note |
 |------------|------|:-----------------:|------|
 | A-028a | **Cockpit Dashboard «Oggi»** — attività da fare (follow-up, immobili incompleti, match da inviare, visite) + attività recenti | **P1** | ✅ **FATTO** 18-Set-2026 — `GET /app/dashboard/today` + UI priorità sopra KPI |
-| A-028b | **Explainability Match Score** — tooltip 83/100 con breakdown criteri | **P1** | Fiducia agente; basso effort UI se score già calcolato server-side |
-| A-028c | **IA sidebar a cluster** (Operativo / Pubblicazione / Strumenti / Intelligenza / Amministrazione) | **P1** | Solo IA nav; niente cambio route/backend |
+| A-028b | **Explainability Match Score** — tooltip 83/100 con breakdown criteri | **P1** | ✅ **FATTO** 24-Set-2026 — breakdown barre su Match card; popover fasce su Clienti ScoreBox |
+| A-028c | **IA sidebar a cluster** (Operativo / Pubblicazione / Strumenti / Intelligenza / Amministrazione) | **P1** | ✅ **FATTO** 24-Set-2026 — `AgencyShell` cluster labels, zero cambio route |
 | A-028d | **HAL contestuale in scheda immobile** — «cosa manca» + genera descrizione da dati noti | **P1** | Oltre bottone «Migliora»; allinea A-005 direzione copilota |
 | A-028e | **Vista tabella immobili** + toggle card; sort aggiornamento/prezzo/superficie/agente | **P2** | Necessaria a scala 2k+ |
 | A-028f | **Filtri intelligenti** — senza foto, incompleti, senza cliente compatibile, variazione prezzo | **P2** | «Azioni intelligenti» non solo filtri |
@@ -1147,11 +1147,10 @@ Concordo sul nucleo. Temperatura: «OS agenzia» è **nord**, non claim immediat
 3. HAL «esegui con conferma» richiede audit log obbligatorio (D-051 / compliance) — ok come prerequisito?
 
 ### Stato
-🟠 **DA APPROFONDIRE** — review esterna acquisita 17-Sep-2026. **NON implementare senza «vai»**. Prima eseguire piano tools QC domani.
+🟠 **IN CORSO** — A-028a/b/c ✅ (24-Set analisi + ship). Restano **d…i** solo con «vai» esplicito. Report: `memory/GESTIONALE_ANALISI_2026-09-24.md`.
 
 ### Trigger di ripresa
-- Completato `GESTIONALE_TOOLS_QC_REPORT.md`
-- Founder dice «vai» su una sotto-voce A-028a…i
+- Founder dice «vai» su A-028d…i
 - Demo commerciale che mostri il loop mattina agente
 
 ---

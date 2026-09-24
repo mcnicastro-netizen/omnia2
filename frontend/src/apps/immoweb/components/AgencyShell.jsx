@@ -81,49 +81,58 @@ export default function AgencyShell({ children, current = "dashboard", showBack 
     user?.role === "branch_admin" ||
     isGroupAdmin;
   const navItems = [
-    { key: "dashboard", to: `/${lang}/app/dashboard`, label: t("immoweb_app.nav_dashboard"), icon: "▦" },
+    { key: "dashboard", to: `/${lang}/app/dashboard`, label: t("immoweb_app.nav_dashboard"), icon: "▦", cluster: "operativo" },
     ...(isGroupAdmin
-      ? [{ key: "group", to: `/${lang}/app/group`, label: t("immoweb_app.nav_group") || "Gruppo", icon: "🏢" }]
+      ? [{ key: "group", to: `/${lang}/app/group`, label: t("immoweb_app.nav_group") || "Gruppo", icon: "🏢", cluster: "amministrazione" }]
       : []),
     ...(isAgencyAdmin
-      ? [{ key: "import", to: `/${lang}/app/import`, label: t("immoweb_app.nav_import") || "Importa", icon: "⇪" }]
+      ? [{ key: "import", to: `/${lang}/app/import`, label: t("immoweb_app.nav_import") || "Importa", icon: "⇪", cluster: "pubblicazione" }]
       : []),
     ...(isAgencyAdmin
-      ? [{ key: "publishing", to: `/${lang}/app/publishing`, label: t("immoweb_app.nav_publishing") || "Pubblicità su portali", icon: "📡" }]
+      ? [{ key: "publishing", to: `/${lang}/app/publishing`, label: t("immoweb_app.nav_publishing") || "Pubblicità su portali", icon: "📡", cluster: "pubblicazione" }]
       : []),
-    { key: "properties", to: `/${lang}/app/properties`, label: t("immoweb_app.nav_properties"), icon: "🏠" },
-    { key: "clients", to: `/${lang}/app/clients`, label: t("immoweb_app.nav_clients"), icon: "👥" },
-    { key: "requests", to: `/${lang}/app/requests`, label: t("immoweb_app.nav_requests") || "Richieste", icon: "⎘" },
+    { key: "properties", to: `/${lang}/app/properties`, label: t("immoweb_app.nav_properties"), icon: "🏠", cluster: "operativo" },
+    { key: "clients", to: `/${lang}/app/clients`, label: t("immoweb_app.nav_clients"), icon: "👥", cluster: "operativo" },
+    { key: "requests", to: `/${lang}/app/requests`, label: t("immoweb_app.nav_requests") || "Richieste", icon: "⎘", cluster: "operativo" },
     ...(isAgencyAdmin
-      ? [{ key: "trash", to: `/${lang}/app/trash`, label: t("immoweb_app.nav_trash") || "Cestino", icon: "🗑" }]
+      ? [{ key: "trash", to: `/${lang}/app/trash`, label: t("immoweb_app.nav_trash") || "Cestino", icon: "🗑", cluster: "amministrazione" }]
       : []),
-    { key: "matches", to: `/${lang}/app/matches`, label: t("immoweb_app.nav_matches"), icon: "✦" },
-    { key: "analytics", to: `/${lang}/app/analytics`, label: "Analytics A/B", icon: "▣" },
-    { key: "mls", to: `/${lang}/app/mls`, label: "MLS", icon: "⧉" },
+    { key: "matches", to: `/${lang}/app/matches`, label: t("immoweb_app.nav_matches"), icon: "✦", cluster: "operativo" },
+    { key: "analytics", to: `/${lang}/app/analytics`, label: "Analytics A/B", icon: "▣", cluster: "strumenti" },
+    { key: "mls", to: `/${lang}/app/mls`, label: "MLS", icon: "⧉", cluster: "pubblicazione" },
     ...(isAgencyAdmin
-      ? [{ key: "website", to: `/${lang}/app/website`, label: t("immoweb_app.nav_website") || "Sito web", icon: "🎨" }]
+      ? [{ key: "website", to: `/${lang}/app/website`, label: t("immoweb_app.nav_website") || "Sito web", icon: "🎨", cluster: "pubblicazione" }]
       : []),
-    { key: "staging", to: `/${lang}/app/staging`, label: "Virtual Staging", icon: "✨" },
-    { key: "mutui", to: `/${lang}/app/mutui`, label: t("mutui.nav") || "Mutui", icon: "💰" },
-    { key: "modulistica", to: `/${lang}/app/modulistica`, label: "Modulistica", icon: "📑" },
-    { key: "legal", to: `/${lang}/legal`, label: "HAL Legal", icon: "⚖" },
-    { key: "hal-knowledge", to: `/${lang}/app/hal-knowledge`, label: "Guida HAL", icon: "📚" },
-    { key: "members", to: `/${lang}/app/members`, label: t("immoweb_app.nav_members"), icon: "✉" },
+    { key: "staging", to: `/${lang}/app/staging`, label: "Virtual Staging", icon: "✨", cluster: "strumenti" },
+    { key: "mutui", to: `/${lang}/app/mutui`, label: t("mutui.nav") || "Mutui", icon: "💰", cluster: "strumenti" },
+    { key: "modulistica", to: `/${lang}/app/modulistica`, label: "Modulistica", icon: "📑", cluster: "strumenti" },
+    { key: "legal", to: `/${lang}/legal`, label: "HAL Legal", icon: "⚖", cluster: "intelligenza" },
+    { key: "hal-knowledge", to: `/${lang}/app/hal-knowledge`, label: "Guida HAL", icon: "📚", cluster: "intelligenza" },
+    { key: "members", to: `/${lang}/app/members`, label: t("immoweb_app.nav_members"), icon: "✉", cluster: "amministrazione" },
     ...(isAgencyAdmin
-      ? [{ key: "billing", to: `/${lang}/app/settings/billing`, label: "Piano & Crediti", icon: "💳" }]
+      ? [{ key: "billing", to: `/${lang}/app/settings/billing`, label: "Piano & Crediti", icon: "💳", cluster: "amministrazione" }]
       : []),
     ...(isAgencyAdmin
-      ? [{ key: "settings", to: `/${lang}/app/settings`, label: t("immoweb_app.nav_settings"), icon: "⚙" }]
+      ? [{ key: "settings", to: `/${lang}/app/settings`, label: t("immoweb_app.nav_settings"), icon: "⚙", cluster: "amministrazione" }]
       : []),
-    // Brand Lab — internal creative repository (super_admin only)
     ...(user?.role === "super_admin"
-      ? [{ key: "brand-lab", to: `/${lang}/app/brand-lab`, label: "Brand Lab", icon: "◈" }]
+      ? [{ key: "brand-lab", to: `/${lang}/app/brand-lab`, label: "Brand Lab", icon: "◈", cluster: "amministrazione" }]
       : []),
-    // Cruscotto Founder — costi/consumi (super_admin only)
     ...(user?.role === "super_admin"
-      ? [{ key: "ops", to: `/${lang}/app/ops`, label: "Ops Costi", icon: "◎" }]
+      ? [{ key: "ops", to: `/${lang}/app/ops`, label: "Ops Costi", icon: "◎", cluster: "amministrazione" }]
       : []),
   ];
+
+  const NAV_CLUSTERS = [
+    { id: "operativo", label: "Operativo" },
+    { id: "pubblicazione", label: "Pubblicazione" },
+    { id: "strumenti", label: "Strumenti" },
+    { id: "intelligenza", label: "Intelligenza" },
+    { id: "amministrazione", label: "Amministrazione" },
+  ];
+  const clusteredNav = NAV_CLUSTERS
+    .map((cl) => ({ ...cl, items: navItems.filter((i) => i.cluster === cl.id) }))
+    .filter((cl) => cl.items.length > 0);
 
   if (agency === null) {
     return (
@@ -191,40 +200,49 @@ export default function AgencyShell({ children, current = "dashboard", showBack 
           )}
         </div>
 
-        <nav className="flex-1 px-3 py-4 space-y-1">
-          {navItems.map((item) => {
-            const isActive = current === item.key && !item.locked;
-            return (
-              <Link
-                key={item.key}
-                to={item.locked ? "#" : item.to}
-                data-testid={`sidebar-nav-${item.key}`}
-                onClick={(e) => {
-                  if (item.locked) e.preventDefault();
-                  setSidebarOpen(false);
-                }}
-                className={`flex items-center justify-between gap-3 px-3 py-2.5 rounded-md text-sm transition ${
-                  isActive
-                    ? "bg-stone-100/10 text-stone-50 font-medium"
-                    : item.locked
-                    ? "text-stone-500 cursor-not-allowed"
-                    : "text-stone-300 hover:bg-stone-100/5 hover:text-stone-50"
-                }`}
-              >
-                <span className="flex items-center gap-3">
-                  <span className="text-base w-5 inline-block text-center" aria-hidden="true">
-                    {item.icon}
-                  </span>
-                  <span>{item.label}</span>
-                </span>
-                {item.locked && (
-                  <span className="text-[9px] uppercase tracking-widest text-amber-500">
-                    M2.S4
-                  </span>
-                )}
-              </Link>
-            );
-          })}
+        <nav className="flex-1 px-3 py-4 space-y-4 overflow-y-auto" data-testid="agency-nav-clusters">
+          {clusteredNav.map((cluster) => (
+            <div key={cluster.id} data-testid={`nav-cluster-${cluster.id}`}>
+              <p className="px-3 mb-1.5 text-[9px] uppercase tracking-[0.2em] text-stone-500">
+                {cluster.label}
+              </p>
+              <div className="space-y-0.5">
+                {cluster.items.map((item) => {
+                  const isActive = current === item.key && !item.locked;
+                  return (
+                    <Link
+                      key={item.key}
+                      to={item.locked ? "#" : item.to}
+                      data-testid={`sidebar-nav-${item.key}`}
+                      onClick={(e) => {
+                        if (item.locked) e.preventDefault();
+                        setSidebarOpen(false);
+                      }}
+                      className={`flex items-center justify-between gap-3 px-3 py-2 rounded-md text-sm transition ${
+                        isActive
+                          ? "bg-stone-100/10 text-stone-50 font-medium"
+                          : item.locked
+                          ? "text-stone-500 cursor-not-allowed"
+                          : "text-stone-300 hover:bg-stone-100/5 hover:text-stone-50"
+                      }`}
+                    >
+                      <span className="flex items-center gap-3">
+                        <span className="text-base w-5 inline-block text-center" aria-hidden="true">
+                          {item.icon}
+                        </span>
+                        <span>{item.label}</span>
+                      </span>
+                      {item.locked && (
+                        <span className="text-[9px] uppercase tracking-widest text-amber-500">
+                          M2.S4
+                        </span>
+                      )}
+                    </Link>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
         </nav>
 
         <div className="px-3 py-4 border-t border-stone-700/40 space-y-3">

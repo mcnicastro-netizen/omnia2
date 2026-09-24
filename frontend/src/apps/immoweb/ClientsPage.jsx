@@ -45,7 +45,8 @@ function TempPill({ temp, t }) {
   );
 }
 
-function ScoreBox({ score, cached }) {
+function ScoreBox({ score, cached, clientId, lang }) {
+  const [open, setOpen] = useState(false);
   if (score === null || score === undefined) {
     return (
       <div className="w-14 text-center" data-testid="score-box-empty">
@@ -55,13 +56,64 @@ function ScoreBox({ score, cached }) {
     );
   }
   return (
-    <div className="w-14 text-center" data-testid="score-box" data-cached={cached ? "ai" : "rule"}>
-      <div className="text-stone-900 text-2xl font-light leading-none" style={{ fontFamily: "'Fraunces', Georgia, serif" }}>
-        {score}
-      </div>
-      <div className="text-[9px] uppercase tracking-widest text-stone-500 mt-1">
-        {cached ? "AI" : "match"}
-      </div>
+    <div className="relative w-14 text-center" data-testid="score-box" data-cached={cached ? "ai" : "rule"}>
+      <button
+        type="button"
+        data-testid="score-box-btn"
+        title="Cosa significa questo score"
+        onClick={(e) => {
+          e.stopPropagation();
+          setOpen((v) => !v);
+        }}
+        className="w-full"
+      >
+        <div className="text-stone-900 text-2xl font-light leading-none hover:underline" style={{ fontFamily: "'Fraunces', Georgia, serif" }}>
+          {score}
+        </div>
+        <div className="text-[9px] uppercase tracking-widest text-stone-500 mt-1">
+          {cached ? "AI" : "match"}
+        </div>
+      </button>
+      {open && (
+        <div
+          data-testid="score-explain-popover"
+          className="absolute z-30 left-0 top-full mt-1 w-64 bg-white border border-stone-200 shadow-lg rounded-lg p-3 text-left"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <p className="text-[10px] uppercase tracking-widest text-stone-500 mb-2">
+            Lead score {score}
+          </p>
+          <ul className="text-[11px] text-stone-600 space-y-1 mb-2">
+            <li><strong className="text-stone-900">85–100</strong> Rovente — chiama oggi</li>
+            <li><strong className="text-stone-900">65–84</strong> Caldo — questa settimana</li>
+            <li><strong className="text-stone-900">40–64</strong> Tiepido — nurturing</li>
+            <li><strong className="text-stone-900">0–39</strong> Freddo — bassa priorità</li>
+          </ul>
+          <p className="text-[11px] text-stone-500 mb-2">
+            Il dettaglio criteri (prezzo, zona, m²…) è sul Match di questo cliente.
+          </p>
+          {clientId && (
+            <Link
+              to={`/${lang}/app/clients/${clientId}`}
+              data-testid="score-explain-client"
+              className="text-[11px] uppercase tracking-widest text-[#0B1E3F] border-b border-stone-400 hover:border-stone-900"
+              onClick={(e) => e.stopPropagation()}
+            >
+              Apri scheda →
+            </Link>
+          )}
+          <button
+            type="button"
+            className="block mt-2 text-[10px] uppercase tracking-widest text-stone-500"
+            onClick={(e) => {
+              e.stopPropagation();
+              setOpen(false);
+            }}
+          >
+            Chiudi
+          </button>
+        </div>
+      )}
     </div>
   );
 }
@@ -510,7 +562,7 @@ function ClientRow({ c, lang, t, segment, onOpen }) {
           : "md:grid-cols-[60px_1fr_auto_auto]"
       }`}
     >
-      {!isSeller && <ScoreBox score={c.lead_score} cached={c.ai_cached} />}
+      {!isSeller && <ScoreBox score={c.lead_score} cached={c.ai_cached} clientId={c.id} lang={lang} />}
 
       <div className="min-w-0">
         <div className="flex items-center gap-3 flex-wrap">

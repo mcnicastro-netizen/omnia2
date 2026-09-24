@@ -10,7 +10,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from shared.auth.dependencies import get_current_user
 from shared.db.connection import Database
 
-from apps.immoweb.matching import compute_match, is_searcher
+from apps.immoweb.matching import compute_match, compute_match_score_fast, is_searcher
 from apps.immoweb.lead_scoring import score_lead
 
 
@@ -59,35 +59,52 @@ async def list_all_matches(
     limit: int = Query(50, ge=1, le=200),
     user: dict = Depends(get_current_user),
 ):
-    """Top matches across the agency, sorted by score desc."""
+    """Top matches across the agency, sorted by score desc.
+
+    Hardened (analisi 24-Set): fast score scan on capped sets, full
+    `compute_match` (breakdown) only for the returned page — avoids the
+    ~2M full-pair bomb under stress seed (QC A8).
+    """
     agency_id = await _agency(user)
     db = Database.get()
-    # Only active/published properties get matched (never drafts)
+    # Cap inventory for agency-wide scan (scoped endpoints stay wider)
     props_cursor = db.properties.find(
         {"agency_id": agency_id, "status": "active"}, {"_id": 0},
     )
-    properties = await props_cursor.to_list(length=2000)
+    properties = await props_cursor.to_list(length=400)
     clients_cursor = db.clients.find(
         {"agency_id": agency_id, "client_type": {"$in": ["buyer", "tenant", "investor"]}},
         {"_id": 0},
     )
-    clients = await clients_cursor.to_list(length=2000)
+    clients = await clients_cursor.to_list(length=400)
 
-    results = []
+    scored = []
     for p in properties:
         for c in clients:
-            m = compute_match(p, c)
-            if m["score"] < min_score:
+            s = compute_match_score_fast(p, c.get("preferences") or {})
+            if s < min_score:
                 continue
-            results.append({
-                "property": _trim_property(p),
-                "client": _trim_client(c),
-                "score": m["score"],
-                "missing": m["missing"],
-                "breakdown": m["breakdown"],
-            })
-    results.sort(key=lambda r: r["score"], reverse=True)
-    return {"items": results[:limit], "total": len(results), "min_score": min_score}
+            scored.append((s, p, c))
+    scored.sort(key=lambda x: x[0], reverse=True)
+
+    results = []
+    for _s, p, c in scored[:limit]:
+        m = compute_match(p, c)
+        results.append({
+            "property": _trim_property(p),
+            "client": _trim_client(c),
+            "score": m["score"],
+            "missing": m["missing"],
+            "breakdown": m["breakdown"],
+        })
+    return {
+        "items": results,
+        "total": len(scored),
+        "min_score": min_score,
+        "scan_capped": True,
+        "scanned_properties": len(properties),
+        "scanned_clients": len(clients),
+    }
 
 
 # -------------------- GET /matches/property/{pid} --------------------
