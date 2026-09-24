@@ -58,11 +58,36 @@ voci:
         - "Apri Immobili → scheda in modifica."
         - "In alto il pannello Cosa manca (summary + lista gap)."
         - "HARD blocca i portali; SOFT sono miglioramenti."
-        - "Su gap titolo/descrizione: bottone HAL Improve → Applica."
+        - "Su gap titolo/descrizione: bottone HAL Improve → Conferma e applica (audit)."
         - "Foto, prezzo e APE restano a carico dell'agente (niente auto-fill)."
       errori_comuni:
         - problema: "Il coach dice ancora HARD dopo aver caricato le foto"
           soluzione: "Clicca Aggiorna sul pannello (o ricarica la scheda)."
+      permessi: [titolare, agente]
+    screenshot: []
+
+  - id: immobili.hal-conferma-applica
+    titolo: HAL Improve — Conferma e applica (A-028g)
+    modulo: Immobili
+    widget: null
+    pubblico: [titolare, agente]
+    livello: base
+    tags: [immobili, hal, improve, audit, a-028g]
+    correlati: [immobili.coach-cosa-manca]
+    domanda_naturale: >
+      HAL può scrivere da solo sul mio annuncio? Devo confermare prima di applicare?
+    contenuto:
+      a_cosa_serve: >
+        Aprire il suggerimento HAL su titolo/descrizione e applicarlo
+        solo dopo conferma esplicita (audit apply_confirmed).
+      quando_si_usa: >
+        Nel form immobile o dal pannello Cosa manca, dopo Migliora con HAL.
+      passi:
+        - "Clicca Migliora con HAL sul campo."
+        - "Rileggi Originale vs Suggerito."
+        - "Clicca Conferma e applica (POST /app/al/confirm-apply + update form)."
+        - "Salva immobile per persistere sul server."
+      errori_comuni: []
       permessi: [titolare, agente]
     screenshot: []
 

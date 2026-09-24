@@ -29,7 +29,7 @@
     "pillar_cloud_title": "ImmobilCloud",
     "pillar_cloud_desc": "El portal inmobiliario para clientes privados.",
     "pillar_app_title": "ImmoWeb",
-    "pillar_app_desc": "La plataforma de gestión completa para agentes y agencias.",
+    "pillar_app_desc": "CRM con IA para agencias: prioridades de hoy, matches, HAL con confirmación. Norte: SO de la agencia.",
     "pillar_learn_title": "Omnia Academy",
     "pillar_learn_desc": "La plataforma de formación certificada para agentes inmobiliarios."
   },
@@ -39,7 +39,7 @@
   },
   "immoweb": {
     "title": "ImmoWeb",
-    "tagline": "Tu agencia digital"
+    "tagline": "CRM con IA — hacia el SO de la agencia"
   },
   "academy": {
     "title": "Omnia Academy",
@@ -187,6 +187,7 @@
     "today_no_photos": "Inmuebles sin fotos",
     "today_drafts": "Borradores por completar",
     "today_weak_copy": "Anuncios por mejorar",
+    "today_activities": "Actividades por cerrar",
     "today_clients": "Clientes por retomar",
     "today_leads": "Leads abiertos",
     "today_visits": "Visitas de hoy",
@@ -196,6 +197,7 @@
     "today_cta_properties": "Abrir inmuebles",
     "today_cta_drafts": "Abrir borradores",
     "today_cta_improve": "Abrir y mejorar",
+    "today_cta_activities": "Abrir actividades",
     "today_cta_clients": "Abrir clientes smart",
     "today_cta_leads": "Ver leads",
     "today_cta_visits": "Abrir agenda",
@@ -204,6 +206,7 @@
     "today_reason_no_photos": "Faltan fotos",
     "today_reason_draft": "Aún en borrador",
     "today_reason_weak_copy": "Descripción ausente o demasiado corta",
+    "today_reason_activity": "Seguimiento / llamada / visita pendiente",
     "today_reason_client": "Comprador / buscador por seguir",
     "today_reason_lead": "Lead por contactar",
     "today_reason_visit": "Visita en calendario",
@@ -214,6 +217,7 @@
     "nav_properties": "Inmuebles",
     "nav_clients": "Clientes",
     "nav_requests": "Solicitudes",
+    "nav_activities": "Actividades",
     "nav_matches": "Coincidencias",
     "nav_members": "Equipo",
     "nav_settings": "Ajustes",
@@ -1250,7 +1254,8 @@
     "empty_suggested": "Pulsa regenerar para producir una sugerencia",
     "generating": "HAL está escribiendo...",
     "regenerate": "Regenerar",
-    "apply": "Aplicar",
+    "apply": "Confirmar y aplicar",
+    "confirm_hint": "HAL propone; tú confirmas. Sin cambios automáticos sin tu OK (auditoría).",
     "cancel": "Cancelar"
   },
   "moderation": {

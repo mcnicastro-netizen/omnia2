@@ -395,12 +395,48 @@ async def improve_text(req: ImproveRequest, user: dict = Depends(get_current_use
         "lang": req.target_lang,
         "tone": req.tone,
         "improved": cleaned,
+        "proposal_id": str(uuid4()),  # A-028g — client confirms via /al/confirm-apply
     }
+
+
+class ConfirmApplyRequest(BaseModel):
+    """A-028g — explicit user confirmation before applying HAL text to a field."""
+    proposal_id: Optional[str] = None
+    field: str = Field(..., pattern="^(title|description)$")
+    property_id: Optional[str] = None
+    previous_text: str = ""
+    new_text: str = Field(..., min_length=1, max_length=8000)
+
+
+@router.post("/confirm-apply")
+async def confirm_apply(req: ConfirmApplyRequest, user: dict = Depends(get_current_user)):
+    """Audit trail for «esegui con conferma» — never auto-writes the property."""
+    db = Database.get()
+    agency_id = None
+    try:
+        agency_id = _agency_id(user)
+    except Exception:
+        agency_id = None
+    doc = {
+        "id": str(uuid4()),
+        "user_id": user["id"],
+        "agency_id": agency_id,
+        "kind": "apply_confirmed",
+        "proposal_id": req.proposal_id,
+        "field": req.field,
+        "property_id": req.property_id,
+        "previous_len": len(req.previous_text or ""),
+        "new_len": len(req.new_text or ""),
+        "ts": datetime.now(timezone.utc).isoformat(),
+    }
+    await db.al_audit.insert_one(doc)
+    return {"ok": True, "audit_id": doc["id"], "field": req.field}
 
 
 # ============================================================
 # Chat endpoint
 # ============================================================
+
 
 @router.post("/chat")
 async def chat(req: ChatRequest, user: dict = Depends(get_current_user)):

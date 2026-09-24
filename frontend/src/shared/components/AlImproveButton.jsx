@@ -30,14 +30,17 @@ export default function AlImproveButton({
   const [lang, setLang] = useState("it");
   const [loading, setLoading] = useState(false);
   const [suggestion, setSuggestion] = useState("");
+  const [proposalId, setProposalId] = useState(null);
   const [error, setError] = useState(null);
 
   const tid = testId || `al-improve-${field}`;
+  const propertyId = propertyData?.id || null;
 
   const generate = async (targetLang = lang) => {
     setLoading(true);
     setError(null);
     setSuggestion("");
+    setProposalId(null);
     try {
       const r = await api.post("/app/al/improve", {
         field,
@@ -47,6 +50,7 @@ export default function AlImproveButton({
         tone: "standard",
       });
       setSuggestion(r.data.improved || "");
+      setProposalId(r.data.proposal_id || null);
     } catch (e) {
       const d = e?.response?.data?.detail;
       setError(
@@ -64,6 +68,7 @@ export default function AlImproveButton({
   const openModal = () => {
     setOpen(true);
     setSuggestion("");
+    setProposalId(null);
     setError(null);
     setLang("it");
     generate("it");
@@ -74,8 +79,20 @@ export default function AlImproveButton({
     generate(code);
   };
 
-  const apply = () => {
-    if (suggestion) onApply(suggestion);
+  const apply = async () => {
+    if (!suggestion) return;
+    try {
+      await api.post("/app/al/confirm-apply", {
+        proposal_id: proposalId,
+        field,
+        property_id: propertyId,
+        previous_text: value || "",
+        new_text: suggestion,
+      });
+    } catch {
+      // non bloccare l'apply UI se audit fallisce
+    }
+    onApply(suggestion);
     setOpen(false);
   };
 
@@ -113,6 +130,9 @@ export default function AlImproveButton({
                 </h2>
                 <p className="text-[10px] uppercase tracking-widest text-stone-500 mt-0.5">
                   {t("al_improve.subtitle")}
+                </p>
+                <p className="text-[11px] text-stone-500 mt-2 max-w-md">
+                  {t("al_improve.confirm_hint")}
                 </p>
               </div>
               <button

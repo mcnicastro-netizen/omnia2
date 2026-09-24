@@ -29,7 +29,7 @@
     "pillar_cloud_title": "ImmobilCloud",
     "pillar_cloud_desc": "The real estate portal for private clients.",
     "pillar_app_title": "ImmoWeb",
-    "pillar_app_desc": "The complete management platform for agents and agencies.",
+    "pillar_app_desc": "AI agency CRM: today’s priorities, explained matches, HAL with confirm. North star: agency OS.",
     "pillar_learn_title": "Omnia Academy",
     "pillar_learn_desc": "The certified training platform for real estate agents."
   },
@@ -39,7 +39,7 @@
   },
   "immoweb": {
     "title": "ImmoWeb",
-    "tagline": "Your digital agency"
+    "tagline": "AI CRM — toward the agency OS"
   },
   "academy": {
     "title": "Omnia Academy",
@@ -178,6 +178,7 @@
     "qa_new_property": "New property",
     "qa_new_client": "New client",
     "qa_new_request": "New request",
+    "qa_activities": "Activities",
     "qa_matches": "Matches",
     "qa_publishing": "Advertise on portals",
     "qa_hal": "HAL Knowledge",
@@ -194,6 +195,7 @@
     "today_no_photos": "Listings without photos",
     "today_drafts": "Drafts to finish",
     "today_weak_copy": "Listings to improve",
+    "today_activities": "Activities to close",
     "today_clients": "Clients to follow up",
     "today_leads": "Open leads",
     "today_requests": "Open requests",
@@ -204,6 +206,7 @@
     "today_cta_properties": "Open properties",
     "today_cta_drafts": "Open drafts",
     "today_cta_improve": "Open and improve",
+    "today_cta_activities": "Open activities",
     "today_cta_clients": "Open smart clients",
     "today_cta_leads": "View requests",
     "today_cta_requests": "Open requests",
@@ -213,6 +216,7 @@
     "today_reason_no_photos": "Photos missing",
     "today_reason_draft": "Still a draft",
     "today_reason_weak_copy": "Missing or too-short description",
+    "today_reason_activity": "Follow-up / call / visit to do",
     "today_reason_client": "Buyer / searcher to follow",
     "today_reason_lead": "Lead to contact / turn into a request",
     "today_reason_request": "Request to work / match",
@@ -224,6 +228,7 @@
     "nav_properties": "Properties",
     "nav_clients": "Clients",
     "nav_requests": "Requests",
+    "nav_activities": "Activities",
     "nav_matches": "Matches",
     "nav_members": "Team",
     "nav_settings": "Settings",
@@ -1169,7 +1174,8 @@
     "empty_suggested": "Press regenerate to produce a suggestion",
     "generating": "HAL is typing...",
     "regenerate": "Regenerate",
-    "apply": "Apply",
+    "apply": "Confirm and apply",
+    "confirm_hint": "HAL proposes; you confirm. No automatic edits without your OK (audit).",
     "cancel": "Cancel"
   },
   "moderation": {

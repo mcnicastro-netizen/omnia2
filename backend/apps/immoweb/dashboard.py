@@ -388,6 +388,65 @@ async def get_today(user: dict = Depends(get_current_user)) -> Dict[str, Any]:
                 }
             )
 
+    # —— Attività CRM aperte (A-028h) — overdue + due today ——
+    today_prefix = now_iso[:10]
+    q_act_open = {"agency_id": agency_id, "status": "open"}
+    n_act = await db.activities.count_documents(q_act_open)
+    if n_act:
+        act_proj = {
+            "_id": 0, "id": 1, "title": 1, "kind": 1, "due_at": 1,
+            "related_client_id": 1, "related_property_id": 1,
+        }
+        overdue = await db.activities.find(
+            {**q_act_open, "due_at": {"$lt": f"{today_prefix}T00:00:00", "$ne": None}},
+            act_proj,
+        ).sort("due_at", 1).limit(5).to_list(5)
+        today_due = await db.activities.find(
+            {**q_act_open, "due_at": {"$regex": f"^{today_prefix}"}},
+            act_proj,
+        ).sort("due_at", 1).limit(5).to_list(5)
+        samples = (overdue + today_due)[:5]
+        if not samples:
+            samples = await db.activities.find(q_act_open, act_proj).sort(
+                "due_at", 1
+            ).limit(5).to_list(5)
+
+        def _act_href(d: dict) -> str:
+            if d.get("related_client_id"):
+                return f"/app/clients/{d['related_client_id']}"
+            if d.get("related_property_id"):
+                return f"/app/properties/{d['related_property_id']}"
+            return "/app/activities"
+
+        actions.append(
+            {
+                "id": "activities_open",
+                "kind": "activity",
+                "priority": 0 if overdue else 1,
+                "title_key": "dashboard.today_activities",
+                "title": "Attività da chiudere",
+                "count": n_act,
+                "count_label": f"{len(overdue)} in ritardo · {n_act} aperte" if overdue else None,
+                "href": "/app/activities",
+                "cta_key": "dashboard.today_cta_activities",
+                "cta": "Apri attività",
+                "items": [
+                    {
+                        "id": d.get("id"),
+                        "label": d.get("title") or "Attività",
+                        "meta": (d.get("kind") or "") + (
+                            f" · {str(d.get('due_at') or '')[:10]}" if d.get("due_at") else ""
+                        ),
+                        "href": _act_href(d),
+                        "reason_key": "dashboard.today_reason_activity",
+                        "reason": "Follow-up / chiamata / visita da fare",
+                    }
+                    for d in samples
+                    if d.get("id")
+                ],
+            }
+        )
+
     # —— Visite oggi / prossimi 7gg ——
     q_visits_today = {
         "agency_id": agency_id,

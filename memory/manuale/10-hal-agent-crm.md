@@ -208,7 +208,7 @@ Nella stessa pagina Vendi il privato configura `contact_public`: nome pubblico +
    - Selettore lingua **IT / EN / ES** (test-id: `al-improve-{field}-lang-{it|en|es}`).
    - Bottone **Genera** (o auto-genera all'apertura).
    - Il testo **migliorato** (destra) — appena arriva dall'API.
-4. Al termine puoi cliccare **Applica** per sostituire il testo del campo con la versione migliorata, oppure chiudere la modale.
+4. Al termine puoi cliccare **Conferma e applica** per sostituire il testo del campo con la versione migliorata (A-028g: HAL propone, tu confermi; l'audit salva `apply_confirmed` in `al_audit` — nessuna scrittura automatica sulla scheda senza il tuo click), oppure chiudere la modale.
 
 **Regole di generazione (dal system prompt)**
 

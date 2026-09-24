@@ -180,8 +180,9 @@ export default function AgenziesLandingPage() {
           </h1>
           <p className="text-base sm:text-lg text-white/80 mt-8 max-w-2xl mx-auto leading-relaxed"
             data-testid="agenzie-hero-sub">
-            ImmobilCloud (portale B2C) · ImmoWeb (CRM AI) · Omnia Academy.
-            Un solo ecosistema. White-label. Prezzo bloccato 24 mesi.
+            ImmobilCloud (portale B2C) · ImmoWeb (gestionale AI) · Omnia Academy.
+            Priorità di oggi, match spiegati, HAL che propone e tu confermi.
+            Un ecosistema — nord: sistema operativo dell&apos;agenzia. White-label. Prezzo bloccato 24 mesi.
           </p>
 
           {/* Spots counter */}

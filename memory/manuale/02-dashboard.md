@@ -1,12 +1,12 @@
 # Capitolo 2 · Dashboard
 
-**Versione manuale**: v1.2 · **Ultima revisione**: 24-Set-2026 (A-028b/c)  
+**Versione manuale**: v1.3 · **Ultima revisione**: 24-Set-2026 (A-028g/h)  
 **Chi lo legge**: titolari, agenti, segreteria
 **Prerequisiti**: aver fatto login (vedi Cap. 1)
 
-Sotto il saluto trovi anche **azioni rapide** (Nuovo immobile, Nuovo cliente, **Nuova richiesta**, Match, Portali, HAL) e il cockpit **Cosa fare oggi**: code operative con link diretti (immobili da completare, clienti da riprendere, **richieste aperte**, visite → scheda immobile/cliente).
+Sotto il saluto trovi anche **azioni rapide** (Nuovo immobile, Nuovo cliente, **Nuova richiesta**, **Attività**, Match, Portali, HAL) e il cockpit **Cosa fare oggi**: code operative con link diretti (attività da chiudere, immobili da completare, clienti da riprendere, **richieste aperte**, visite → scheda immobile/cliente).
 
-La **barra a sinistra** è organizzata in cluster (A-028c): Operativo · Pubblicazione · Strumenti · Intelligenza · Amministrazione — stesse voci di prima, raggruppate.
+La **barra a sinistra** è organizzata in cluster (A-028c): Operativo · Pubblicazione · Strumenti · Intelligenza · Amministrazione — stesse voci di prima, raggruppate. Nel cluster **Operativo** trovi anche **Attività** (A-028h): follow-up / chiamate / visite da chiudere (non è un calendario completo).
 
 ---
 

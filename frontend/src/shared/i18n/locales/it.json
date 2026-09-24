@@ -29,7 +29,7 @@
     "pillar_cloud_title": "ImmobilCloud",
     "pillar_cloud_desc": "Il portale immobiliare per privati e clienti.",
     "pillar_app_title": "ImmoWeb",
-    "pillar_app_desc": "Il gestionale completo per agenti e agenzie.",
+    "pillar_app_desc": "Gestionale AI per agenzie: priorità di oggi, match, HAL con conferma. Nord: sistema operativo dell'agenzia.",
     "pillar_learn_title": "Omnia Academy",
     "pillar_learn_desc": "La piattaforma di formazione per agenti certificati."
   },
@@ -39,7 +39,7 @@
   },
   "immoweb": {
     "title": "ImmoWeb",
-    "tagline": "Il tuo studio digitale"
+    "tagline": "Gestionale AI — verso l'OS dell'agenzia"
   },
   "academy": {
     "title": "Omnia Academy",
@@ -178,6 +178,7 @@
     "qa_new_property": "Nuovo immobile",
     "qa_new_client": "Nuovo cliente",
     "qa_new_request": "Nuova richiesta",
+    "qa_activities": "Attività",
     "qa_matches": "Match",
     "qa_publishing": "Pubblicità su portali",
     "qa_hal": "HAL Knowledge",
@@ -194,6 +195,7 @@
     "today_no_photos": "Immobili senza foto",
     "today_drafts": "Bozze da completare",
     "today_weak_copy": "Annunci da migliorare",
+    "today_activities": "Attività da chiudere",
     "today_clients": "Clienti da riprendere",
     "today_leads": "Lead aperti",
     "today_requests": "Richieste aperte",
@@ -204,6 +206,7 @@
     "today_cta_properties": "Apri immobili",
     "today_cta_drafts": "Apri bozze",
     "today_cta_improve": "Apri e migliora",
+    "today_cta_activities": "Apri attività",
     "today_cta_clients": "Apri clienti smart",
     "today_cta_leads": "Vedi richieste",
     "today_cta_requests": "Apri richieste",
@@ -213,6 +216,7 @@
     "today_reason_no_photos": "Mancano le foto",
     "today_reason_draft": "Ancora in bozza",
     "today_reason_weak_copy": "Descrizione assente o troppo corta",
+    "today_reason_activity": "Follow-up / chiamata / visita da fare",
     "today_reason_client": "Acquirente / cercatore da seguire",
     "today_reason_lead": "Lead da contattare / trasformare in richiesta",
     "today_reason_request": "Richiesta da lavorare / matchare",
@@ -482,6 +486,7 @@
     "nav_properties": "Immobili",
     "nav_clients": "Clienti",
     "nav_requests": "Richieste",
+    "nav_activities": "Attività",
     "nav_matches": "Match",
     "nav_portals": "Pubblicità su portali",
     "nav_members": "Collaboratori",
@@ -1361,7 +1366,8 @@
     "empty_suggested": "Premi rigenera per produrre un suggerimento",
     "generating": "HAL sta scrivendo...",
     "regenerate": "Rigenera",
-    "apply": "Applica",
+    "apply": "Conferma e applica",
+    "confirm_hint": "HAL propone: tu confermi. Nessuna modifica automatica senza il tuo ok (audit).",
     "cancel": "Annulla"
   },
   "moderation": {

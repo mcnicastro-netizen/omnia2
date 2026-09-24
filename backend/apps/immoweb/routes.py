@@ -40,6 +40,7 @@ from apps.immoweb.virtual_staging import router as virtual_staging_router
 from apps.immoweb.fascicolo import router as fascicolo_router
 from apps.immoweb.mls import router as mls_router
 from apps.immoweb.modulistica import router as modulistica_router
+from apps.immoweb.activities import router as activities_router
 
 router = APIRouter(prefix="/app", tags=["immoweb"])
 
@@ -90,3 +91,4 @@ router.include_router(virtual_staging_router)
 router.include_router(fascicolo_router)
 router.include_router(mls_router)
 router.include_router(modulistica_router)
+router.include_router(activities_router)

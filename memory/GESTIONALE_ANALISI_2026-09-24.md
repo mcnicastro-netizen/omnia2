@@ -53,9 +53,9 @@ Da `AgencyShell.jsx` (ordine reale, admin tipico):
 | **A-028d** | HAL contestuale scheda | 🟡 | «Migliora» titolo/descrizione + Fascicolo; manca pannello «cosa manca / genera da dati» |
 | **A-028e** | Vista tabella immobili | ❌ | solo grid card (`PropertiesPage`) |
 | **A-028f** | Filtri intelligenti | ❌ | status/operation base; no «senza foto / incompleti» |
-| **A-028g** | HAL esegui+conferma | ❌ | post-d |
-| **A-028h** | Modulo Attività | ❌ GAP | QC A9; cockpit mitiga |
-| **A-028i** | Claim «OS agenzia» | ❌ | copy only |
+| **A-028g** | HAL esegui+conferma | ✅ | `proposal_id` + `/al/confirm-apply` + UI Conferma e applica |
+| **A-028h** | Modulo Attività | ✅ | CRUD + pagina + coda Oggi |
+| **A-028i** | Claim «OS agenzia» | ✅ | copy soft landing (nord OS, gestionale AI oggi) |
 
 **Post D-092**: destinazioni dashboard, Import hub, Richieste vs Clienti, Portali onesti, Gruppo wizard — **ok**. Residuo soft: Analytics A/B ancora in nav primaria (rumore per agente medio).
 

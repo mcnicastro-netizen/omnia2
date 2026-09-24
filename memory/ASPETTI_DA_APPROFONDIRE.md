@@ -1125,9 +1125,9 @@ Concordo sul nucleo. Temperatura: «OS agenzia» è **nord**, non claim immediat
 | A-028d | **HAL contestuale in scheda immobile** — «cosa manca» + genera descrizione da dati noti | **P1** | ✅ **FATTO** 24-Set-2026 — `GET .../coach` + `PropertyCoachPanel` + HAL improve su gap testo |
 | A-028e | **Vista tabella immobili** + toggle card; sort aggiornamento/prezzo/superficie/agente | **P2** | ✅ **FATTO** 24-Set-2026 — toggle Card/Tabella + sort (no colonna agente v1) |
 | A-028f | **Filtri intelligenti** — senza foto, incompleti, senza cliente compatibile, variazione prezzo | **P2** | ✅ **FATTO** 24-Set-2026 — `smart=no_photos\|incomplete\|weak_copy` (no «senza match» / price-delta v1) |
-| A-028g | **HAL operativo «esegui con conferma»** — genera + proponi apply su campo | **P2** | Dopo contestuale stabile; D-051 onestà |
-| A-028h | Modulo **Attività / follow-up** dedicato (se assente post tools QC = GAP) | **P2** | GAP confermato tools QC 18-Set; cockpit Oggi mitiga senza modulo dedicato |
-| A-028i | Claim commerciale «OS agenzia» vs «gestionale AI» — copy landing/pitch | **P3** | Solo messaging dopo loop mattina dimostrabile |
+| A-028g | **HAL operativo «esegui con conferma»** — genera + proponi apply su campo | **P2** | ✅ **FATTO** 24-Set-2026 — `proposal_id` + `POST /app/al/confirm-apply` audit + UI «Conferma e applica» |
+| A-028h | Modulo **Attività / follow-up** dedicato (se assente post tools QC = GAP) | **P2** | ✅ **FATTO** 24-Set-2026 — CRUD `/app/activities` + pagina + coda Oggi |
+| A-028i | Claim commerciale «OS agenzia» vs «gestionale AI» — copy landing/pitch | **P3** | ✅ **FATTO** 24-Set-2026 — copy soft («gestionale AI… nord: OS agenzia»), D-051 onestà |
 
 ### Ordine di attacco proposto (post `GESTIONALE_TOOLS_QC_REPORT`)
 1. A-028a cockpit «Oggi»  
@@ -1147,11 +1147,11 @@ Concordo sul nucleo. Temperatura: «OS agenzia» è **nord**, non claim immediat
 3. HAL «esegui con conferma» richiede audit log obbligatorio (D-051 / compliance) — ok come prerequisito?
 
 ### Stato
-🟠 **IN CORSO** — A-028a…f ✅ (24-Set). Restano **g/h/i** solo con «vai». Report: `memory/GESTIONALE_ANALISI_2026-09-24.md`.
+✅ **CHIUSO** — A-028a…i ✅ (24-Set). Loop mattina agente dimostrabile. Report: `memory/GESTIONALE_ANALISI_2026-09-24.md`.
 
 ### Trigger di ripresa
-- Founder dice «vai» su A-028g (HAL esegui+conferma) · **h** Attività · **i** claim OS
 - Demo commerciale che mostri il loop mattina agente
+- Eventuali harden residuali (match «senza cliente», calendario pieno) solo con nuovo «vai»
 
 ---
 

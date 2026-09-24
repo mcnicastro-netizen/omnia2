@@ -1,5 +1,15 @@
 # OMNIA — Changelog
 
+## 2026-09-24 — A-028g/h/i HAL conferma + Attività + claim OS soft
+
+**Tipo**: Feature / UX CRM / Copy.
+
+- **A-028g**: `proposal_id` su improve + `POST /app/al/confirm-apply` (audit `apply_confirmed`); UI «Conferma e applica» + hint
+- **A-028h**: CRUD `GET/POST/PATCH/DELETE /app/activities` + `ActivitiesPage` + nav Operativo + coda Dashboard Oggi
+- **A-028i**: claim soft landing/agenzie — «gestionale AI… nord: OS agenzia» (D-051, non parity OS full)
+- Docs: Cap.2/3/10 · ASPETTI A-028 chiuso · test `test_a028_ghi_activities_confirm.py`
+
+---
 ## 2026-09-24 — A-028d/e/f HAL coach scheda + tabella/filtri immobili
 
 **Tipo**: Feature / UX CRM.
@@ -7,7 +17,7 @@
 - **A-028d**: `GET /app/properties/{id}/coach` + pannello «Cosa manca» in scheda (HARD/SOFT + HAL improve su titolo/descrizione)
 - **A-028e**: toggle Card/Tabella su Immobili + sort (updated/price/surface/created)
 - **A-028f**: filtri smart `no_photos` · `incomplete` · `weak_copy`; flag su card/riga; dashboard Oggi deep-link
-- Residuo A-028: **g** esegui+conferma · **h** Attività · **i** claim OS
+- Residuo A-028: **g** esegui+conferma · **h** Attività · **i** claim OS → chiusi in entry sopra
 
 ---
 ## 2026-09-24 — Analisi gestionale + A-028b/c (score explain + sidebar cluster)
