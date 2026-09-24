@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate, Link } from "react-router-dom";
 import AgencyShell from "./components/AgencyShell";
+import { MatchBreakdownBars } from "./components/MatchBreakdown";
 import { api } from "../../shared/lib/api";
 
 function formatPrice(v) {
@@ -23,6 +24,7 @@ export default function MatchesPage() {
   const [data, setData] = useState({ items: [], total: 0, min_score: 50 });
   const [loading, setLoading] = useState(true);
   const [minScore, setMinScore] = useState(50);
+  const [openBreakdown, setOpenBreakdown] = useState(null);
 
   const load = async (score = minScore) => {
     setLoading(true);
@@ -89,9 +91,11 @@ export default function MatchesPage() {
               const sc = scoreColors(m.score);
               const p = m.property;
               const c = m.client;
+              const key = `${p.id}-${c.id}`;
+              const showBd = openBreakdown === key;
               return (
                 <div
-                  key={`${p.id}-${c.id}`}
+                  key={key}
                   data-testid={`match-card-${p.id}-${c.id}`}
                   className="bg-white border border-stone-200 rounded-lg overflow-hidden hover:border-stone-400 transition"
                 >
@@ -99,11 +103,26 @@ export default function MatchesPage() {
                     <span className={`text-xs uppercase tracking-widest font-semibold ${sc.text}`}>
                       {sc.label}
                     </span>
-                    <span className={`text-2xl font-bold ${sc.text}`} style={{ fontFamily: "'Fraunces', Georgia, serif" }}>
+                    <button
+                      type="button"
+                      data-testid={`match-score-toggle-${p.id}-${c.id}`}
+                      title="Mostra breakdown criteri"
+                      onClick={() => setOpenBreakdown(showBd ? null : key)}
+                      className={`text-2xl font-bold ${sc.text} hover:underline`}
+                      style={{ fontFamily: "'Fraunces', Georgia, serif" }}
+                    >
                       {m.score}<span className="text-sm">/100</span>
-                    </span>
+                    </button>
                   </div>
                   <div className="p-4">
+                    {showBd && m.breakdown && (
+                      <div className="mb-3 pb-3 border-b border-stone-100" data-testid={`match-breakdown-${p.id}-${c.id}`}>
+                        <p className="text-[10px] uppercase tracking-widest text-stone-500 mb-2">
+                          Perché {m.score}/100
+                        </p>
+                        <MatchBreakdownBars breakdown={m.breakdown} compact />
+                      </div>
+                    )}
                     <Link
                       to={`/${lang}/app/properties/${p.id}`}
                       className="block mb-3 hover:bg-stone-50 -mx-2 -my-1 px-2 py-1 rounded"
