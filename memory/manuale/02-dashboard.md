@@ -86,13 +86,30 @@ Dalla dashboard non parte quasi mai un'azione diretta: è un **punto di partenza
 | Lead aperti in aumento | **Clienti** → filtra *Nuovo* → chiama in ordine di temperatura |
 | Nuovi match alti | **Match** → apri prima i ROVENTI (rosso) |
 | Immobili attivi calati | **Immobili** → verifica quali sono in bozza da riattivare |
+| Follow-up / chiamate da fare | **Attività** (cluster Operativo) o coda «Attività da chiudere» in Oggi |
 | Visite (7gg) = 0 | **Clienti** → richiama i CALDI di questa settimana |
 | Inviti pendenti > 0 | **Collaboratori** → re-invita chi non ha risposto |
 | Nessun match, agenzia nuova | **Immobili** + **Clienti** → assicurati di avere almeno 10 immobili e 20 clienti con preferenze compilate |
 
 ---
 
-## 2.5 · Errori comuni
+## 2.5 · Modulo Attività (A-028h)
+
+**A cosa serve**
+Lista minima di follow-up / chiamate / visite. Non sostituisce un calendario; alimenta il cockpit «Oggi».
+
+**Passi**
+1. Sidebar **Operativo → Attività** oppure azione rapida **Attività** in Dashboard.
+2. Compila titolo, tipo, scadenza → **Aggiungi**.
+3. Filtra Aperte / Oggi / In ritardo / Fatte; **Fatto** chiude, **Elimina** rimuove.
+
+**API**: `GET/POST /app/activities` · `PATCH/DELETE /app/activities/{id}`.
+
+**Non confondere** con Cap. 18 «Notifiche e attività» (email/inbox/audit): lì «attività» = trail tecnico, non il modulo follow-up CRM.
+
+---
+
+## 2.6 · Errori comuni
 
 - **"La dashboard è vuota, tutti i numeri sono 0"**
   Se l'agenzia è nuova è normale. I contatori si popolano man mano che aggiungi immobili, clienti, inviti collaboratori. Se hai già dati e vedi tutto 0, verifica in alto a sinistra di aver **selezionato l'agenzia giusta**.

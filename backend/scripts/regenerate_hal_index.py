@@ -51,7 +51,7 @@ def main() -> None:
         new_chapters.append(entry)
 
     out = {
-        "version": "0.25-import-preview-agent-history",
+        "version": "0.26-a028-ghi",
         "updated": date.today().isoformat(),
         "voices_total": total,
         "source_files": source_files,
@@ -59,9 +59,9 @@ def main() -> None:
         "notes": (
             "Fingerprints regenerated from YAML on disk. "
             "Live RAG reindex: POST /api/app/hal/knowledge/reindex?force=true (super_admin). "
+            "2026-09-24: A-028g/h/i · Cap.2 Attività · Cap.10 Conferma e applica · Cap.18 distinzione. "
             "2026-09-21: hub import A–E · HAL import.tutte-le-forme. "
-            "2026-09-19: D-085 storage quota · Cestino · Cap.20 Ruota · "
-            "cleanup Emergent · Cap.15 social · Cap.3 planimetrie."
+            "2026-09-19: D-085 storage quota · Cestino · Cap.20 Ruota."
         ),
     }
     INDEX_PATH.write_text(json.dumps(out, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")

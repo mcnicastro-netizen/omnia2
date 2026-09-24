@@ -584,13 +584,21 @@ voci:
           NON e' una lista eventi cliccabili con drill-down, NON
           mostra chi ha creato ultimo immobile / risposto ultimo
           lead / lanciato ultima sync."
+        - "DISTINZIONE A-028h: il modulo CRM Attività (/app/activities)
+          e' una lista follow-up operativa (Cap. 2), NON l'activity
+          feed timeline (A-018 ancora assente)."
         - "Backlog A-018 (Activity feed dashboard) proposto per v1.1
           per aggregare gli audit trail in timeline."
       errori_comuni:
         - problema: "Voglio vedere le ultime azioni dei collaboratori"
           soluzione: >
             Non esiste v1. Solo query Mongo diretta agli audit
-            (super_admin) puo' mostrare storico per-utente.
+            (super_admin) puo' mostrare storico per-utente. Per
+            follow-up giornalieri usa Attività (A-028h).
+        - problema: "Attività in sidebar e Cap. 18 sono la stessa cosa?"
+          soluzione: >
+            No. Sidebar Attività = follow-up CRM. Cap. 18 = email,
+            inbox, toast, audit senza timeline.
       permessi:
         - "Tutti i membri agenzia vedono i KPI counters dell'agency"
     screenshot:

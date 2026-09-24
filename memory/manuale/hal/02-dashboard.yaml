@@ -33,15 +33,50 @@ voci:
       passi:
         - "Fai login (vedi primo-accesso.login-primo-ingresso)."
         - "Vieni portato direttamente sulla Dashboard."
-        - "In alto: saluto + azioni rapide (Nuovo immobile, Nuovo cliente, Nuova richiesta, Match, Portali, HAL)."
-        - "Poi il cockpit Cosa fare oggi con link a Richieste / Immobili."
+        - "In alto: saluto + azioni rapide (Nuovo immobile, Nuovo cliente, Nuova richiesta, Attività, Match, Portali, HAL)."
+        - "Poi il cockpit Cosa fare oggi (anche coda Attività aperte A-028h) con link a Richieste / Immobili / Attività."
         - "Sotto: sei riquadri KPI (Immobili attivi, Richieste aperte, ...)."
-        - "Barra sinistra a cluster A-028c: Operativo, Pubblicazione, Strumenti, Intelligenza, Amministrazione."
+        - "Barra sinistra a cluster A-028c: Operativo (include Attività), Pubblicazione, Strumenti, Intelligenza, Amministrazione."
       errori_comuni: []
       permessi:
         - Tutti i ruoli
     screenshot:
       - "[SCREEN: cap2-dashboard-panoramica]"
+
+  - id: dashboard.attivita-follow-up
+    titolo: Modulo Attività / follow-up (A-028h)
+    modulo: Dashboard
+    widget: null
+    pubblico: [titolare, agente, segreteria]
+    livello: base
+    tags: [dashboard, attivita, follow-up, oggi, a-028h]
+    correlati:
+      - dashboard.panoramica-iniziale
+      - dashboard.dove-vado-dopo
+    domanda_naturale: >
+      Dove gestisco i follow-up e le attività della giornata?
+      C'è un modulo Attività nel CRM?
+    contenuto:
+      a_cosa_serve: >
+        Elenco minimo di follow-up / chiamate / visite da chiudere.
+        Alimenta la coda «Attività da chiudere» nel cockpit Oggi.
+        Non è un calendario completo né il feed notifiche (Cap. 18).
+      quando_si_usa: >
+        Mattina o durante la giornata per segnare cosa richiamare.
+      passi:
+        - "Sidebar Operativo → Attività (/app/activities) oppure azione rapida Attività in Dashboard."
+        - "Aggiungi titolo, tipo (follow-up/chiamata/visita/altro), scadenza."
+        - "Filtra Aperte / Oggi / In ritardo / Fatte."
+        - "Clicca Fatto quando chiusa; Elimina se non serve più."
+        - "API: GET/POST /app/activities · PATCH/DELETE /app/activities/{id}."
+      errori_comuni:
+        - problema: "Non vedo le attività nel cockpit Oggi"
+          soluzione: >
+            Solo le attività in stato open contano. Se le hai tutte
+            segnate Fatte, la coda scompare (normale).
+      permessi:
+        - Titolare, agente (stessi ruoli CRM operativo)
+    screenshot: []
 
   # ---------- 2.2 · I sei contatori ----------
 
@@ -298,12 +333,11 @@ voci:
           ROVENTI (rosso)."
         - "Se gli Immobili attivi sono calati → Immobili → riattiva
           le bozze."
-        - "Se le Visite (7gg) sono a zero → Clienti → richiama i CALDI
-          della settimana."
-        - "Se gli Inviti pendenti sono > 0 → Collaboratori → re-invita."
-        - "Se sei una nuova agenzia con tutto a zero → prima Immobili
-          (almeno 10) poi Clienti (almeno 20 con preferenze compilate)."
+        - "Se hai follow-up da fare → Attività (A-028h) o coda Oggi."
+        - "Se Visite (7gg) = 0 → Clienti → richiama i CALDI."
+        - "Se Inviti pendenti > 0 → Collaboratori → re-invita."
+        - "Agenzia nuova senza match → Immobili + Clienti con preferenze."
       errori_comuni: []
       permessi:
-        - Tutti
+        - Tutti i ruoli
     screenshot: []

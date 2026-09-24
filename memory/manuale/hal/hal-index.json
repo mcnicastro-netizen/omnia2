@@ -1,7 +1,7 @@
 {
   "version": "0.25-import-preview-agent-history",
-  "updated": "2026-09-23",
-  "voices_total": 346,
+  "updated": "2026-09-24",
+  "voices_total": 352,
   "source_files": [
     {
       "file": "00-api-codice.yaml",
@@ -15,13 +15,13 @@
     },
     {
       "file": "02-dashboard.yaml",
-      "voices": 8,
-      "md5": "0b1c46352ee1fdf728fcd4f352c9b51d"
+      "voices": 9,
+      "md5": "d2afac76091c173847e07917966060c2"
     },
     {
       "file": "03-immobili.yaml",
-      "voices": 18,
-      "md5": "a2c296d57b1bae0be267434b8aec2864"
+      "voices": 21,
+      "md5": "dd730aecab89c1338d7d4f0c42343594"
     },
     {
       "file": "04-clienti.yaml",
@@ -31,7 +31,7 @@
     {
       "file": "05-match.yaml",
       "voices": 11,
-      "md5": "ba683037bc665fe5214ac188660d4017"
+      "md5": "9fb61f8658ac54837cb8ce43489571a1"
     },
     {
       "file": "06-portali-publishing.yaml",
@@ -55,8 +55,8 @@
     },
     {
       "file": "10-hal-agent-crm.yaml",
-      "voices": 13,
-      "md5": "833b420239ddb8cd3c2a995e83efd181"
+      "voices": 14,
+      "md5": "63ca3d61373064d1ead7de42b72f8080"
     },
     {
       "file": "11-mutui-comparatore.yaml",
@@ -95,8 +95,8 @@
     },
     {
       "file": "18-notifiche-attivita.yaml",
-      "voices": 17,
-      "md5": "04f327c44dbced5a23e76c9a5fafbdf2"
+      "voices": 18,
+      "md5": "eef5280ae52aa3618f5b8e52bed91809"
     },
     {
       "file": "19-impostazioni-agenzia.yaml",

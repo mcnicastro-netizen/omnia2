@@ -1,5 +1,16 @@
 # OMNIA — Changelog
 
+## 2026-09-24 — Sync manuale/HAL A-028g/h/i (D-084)
+
+**Tipo**: Docs / HAL corpus.
+
+- Cap.2 MD+YAML: § Attività follow-up + voce `dashboard.attivita-follow-up`
+- Cap.3 YAML: già `immobili.hal-conferma-applica` (giro precedente)
+- Cap.10 MD+YAML: `hal.improve-conferma-applica` · audit `apply_confirmed` · limiti chat vs confirm
+- Cap.18 MD+YAML: distinzione Attività CRM (A-028h) vs activity feed (A-018)
+- `hal-index.json` rigenerato · reindex live · NEXT_SESSION ripresa domani
+
+---
 ## 2026-09-24 — A-028g/h/i HAL conferma + Attività + claim OS soft
 
 **Tipo**: Feature / UX CRM / Copy.

@@ -24,7 +24,8 @@
 
 > ⚠️ **Nota D-051 (v1.3)**: OMNIA **ha** campanella + inbox in-app (**A-017**) e UI preferenze email (**A-021**).  
 > **D-093 P0**: stats oneste per privato (**A-029**) + alert preferiti su annuncio terminato (**A-030**, oltre al ribasso).  
-> **Ancora NON esiste**: activity feed dashboard (**A-018**), liste/note preferiti (**A-031**), digest settimanale preferiti (**A-032**), confronto+push (**A-033**), SMS/WhatsApp, SSE real-time (polling 45s), retry queue email, webhook Resend delivery.
+> **A-028h (24-Set)**: esiste il modulo CRM **Attività** (`/app/activities`) = follow-up operativo — **non** è l’activity feed Cap. 18 / A-018.  
+> **Ancora NON esiste**: activity feed dashboard timeline (**A-018**), liste/note preferiti (**A-031**), digest settimanale preferiti (**A-032**), confronto+push (**A-033**), SMS/WhatsApp, SSE real-time (polling 45s), retry queue email, webhook Resend delivery.
 
 ---
 
@@ -40,7 +41,7 @@
 - Audit collections per debug (non timeline utente)
 
 **Non è (ancora)**:
-- una pagina dedicata "Attività" / activity feed (**A-018**)
+- una pagina dedicata "Attività" / activity feed timeline (**A-018**) — diverso dal modulo CRM **Attività** follow-up (**A-028h**, Cap. 2)
 - push web/mobile, SMS, WhatsApp
 - SSE/WebSocket (la campanella fa **polling ogni 45s**)
 

@@ -4,9 +4,10 @@
 > Il modulo **HAL Agent** è l'assistente AI di OMNIA integrato nel CRM: puoi **chattare** con HAL per interrogare il tuo portafoglio, i tuoi clienti e i tuoi lead (5 tool whitelist), e puoi **migliorare titoli/descrizioni** di annunci con il bottone *"Migliora con HAL"* nei form (multi-lingua IT/EN/ES + 3 toni). Il capitolo copre: come apri la chat, quali domande sa gestire, come funziona il pulsante *"Migliora con HAL"*, i limiti operativi (rate limit, streaming, sessioni), e cosa HAL **non fa** onestamente.
 
 **Cosa NON è (D-051 onestà)**
-- HAL **non modifica** il tuo CRM: è **sola lettura**. Non crea, non aggiorna, non elimina immobili/clienti/lead.
-- HAL **non è un consulente legale**: per contratti, notai, leggi rimanda al modulo **HAL Legal** (in arrivo — non attivo in v1).
-- HAL **non naviga il web**: risponde solo con dati del tuo CRM + conoscenza generale del modello Gemini 3 Flash.
+- HAL **chat** non modifica il CRM: è **sola lettura** (5 tool whitelist). Non crea, non aggiorna, non elimina immobili/clienti/lead.
+- **Eccezione A-028g**: il pulsante *Migliora con HAL* propone testo; solo **Conferma e applica** (con audit) aggiorna il campo form — poi salvi tu l’immobile.
+- HAL **non è un consulente legale**: per contratti, notai, leggi rimanda al modulo **HAL Legal**.
+- HAL **non naviga il web**: risponde solo con dati del tuo CRM + conoscenza generale del modello Gemini.
 - HAL **non ha memoria fra sessioni**: ogni sessione è isolata. Le conversazioni sono persistenti (le ritrovi nella lista sessioni), ma HAL non "impara" dagli scambi passati.
 - HAL **non vede foto/documenti**: opera su testo/dati strutturati (non è multimodale in questo modulo).
 

@@ -251,13 +251,16 @@ voci:
     correlati:
       - hal.improve-lingue-toni
       - hal.rate-limit-improve
+      - hal.improve-conferma-applica
       - immobili.creazione-manuale
+      - immobili.hal-conferma-applica
     domanda_naturale: "A cosa serve il pulsante 'Migliora con HAL' nei form?"
     contenuto:
       a_cosa_serve: >
         Rigenerare o migliorare in un click il titolo o la descrizione
         di un annuncio immobiliare, coerente coi dati del form. Endpoint
-        dedicato /api/app/al/improve (separato dalla chat).
+        dedicato /api/app/al/improve (separato dalla chat). A-028g:
+        la proposta non scrive da sola — serve Conferma e applica.
       quando_si_usa: >
         Ogni volta che stai creando/modificando un immobile in
         PropertyForm (ImmoWeb) o SellPage (B2C privati) e vuoi un
@@ -269,10 +272,10 @@ voci:
         - "Clicca ✨ 'Migliora con HAL' accanto al campo Titolo o
           Descrizione (test-id al-improve-{title|description}-trigger)."
         - "Si apre una modale con: testo attuale a sinistra, selettore
-          lingua IT/EN/ES, bottone Genera (o auto-genera all'apertura),
-          testo migliorato a destra."
-        - "Al termine puoi cliccare Applica per sostituire il campo,
-          oppure chiudere la modale."
+          lingua IT/EN/ES, testo migliorato a destra, hint conferma."
+        - "Clicca Conferma e applica (non solo 'Applica'): POST
+          /app/al/confirm-apply scrive audit apply_confirmed, poi
+          aggiorna il campo form. Salva immobile per persistenza DB."
         - "REGOLE OUTPUT: Titolo max 80 caratteri (tipologia + zona/citta'
           + 1-2 punti forza, no prezzo, no emoji, no virgolette).
           Descrizione 600-1200 caratteri (attacco + locali/finiture +
@@ -293,6 +296,45 @@ voci:
         - Titolare, agente (chi puo' modificare l'immobile)
     screenshot:
       - "[SCREEN: cap10-hal-improve-modal]"
+
+  - id: hal.improve-conferma-applica
+    titolo: Conferma e applica — HAL non scrive da solo (A-028g)
+    modulo: HAL Agent
+    widget: null
+    pubblico: [titolare, agente]
+    livello: base
+    tags: [hal, improve, conferma, audit, a-028g, d-051]
+    correlati:
+      - hal.improve-titolo-descrizione
+      - hal.privacy-audit
+      - immobili.hal-conferma-applica
+    domanda_naturale: >
+      HAL può modificare da solo titolo e descrizione?
+      Devo confermare prima di applicare il testo migliorato?
+    contenuto:
+      a_cosa_serve: >
+        Onesta' D-051: HAL propone (proposal_id), l'agente conferma.
+        Nessuna scrittura automatica sul CRM senza click esplicito.
+      quando_si_usa: >
+        Dopo ogni generazione Migliora con HAL, prima di sostituire
+        il testo nel form.
+      passi:
+        - "improve restituisce improved + proposal_id."
+        - "UI: bottone 'Conferma e applica' + hint conferma."
+        - "POST /api/app/al/confirm-apply → audit kind=apply_confirmed
+          (proposal_id, field, property_id, lunghezze testo)."
+        - "Poi onApply aggiorna solo il form locale; Salva immobile
+          persiste sul server."
+        - "La chat HAL resta sola lettura (tool whitelist); solo
+          questo flusso improve+confirm scrive sul campo form."
+      errori_comuni:
+        - problema: "Ho cliccato Conferma ma non vedo il testo salvato dopo reload"
+          soluzione: >
+            Conferma aggiorna il form. Devi ancora Salvare l'immobile
+            per scrivere su Mongo.
+      permessi:
+        - Titolare, agente
+    screenshot: []
 
   - id: hal.improve-lingue-toni
     titolo: Lingue e toni del pulsante Migliora con HAL
@@ -383,36 +425,17 @@ voci:
       quando_si_usa: >
         Sempre - da leggere prima di iniziare a usare HAL in operativo.
       passi:
-        - "SOLA LETTURA CRM: HAL non modifica il tuo CRM. Non crea, non
-          aggiorna, non elimina immobili/clienti/lead. I 5 tool sono
-          tutti query."
-        - "NO CONSULENZA LEGALE VINCOLANTE: per contratti/notai/leggi
-          rimanda a HAL Legal (in arrivo, NON attivo in v1) o a
-          notaio/avvocato di fiducia."
-        - "NO NAVIGAZIONE WEB: non consulta Google, portali immobiliari,
-          siti pubblici. Le fonti dati sono: tuo CRM (via 5 tool) +
-          conoscenza generale del modello Gemini."
-        - "NO MEMORIA TRA SESSIONI: ogni sessione ha session_id
-          isolato. Max 30 turn (60 messaggi) nella sessione corrente.
-          HAL non 'impara' dagli scambi passati."
-        - "NO FOTO/DOCUMENTI: HAL Agent CRM e' text-only. Per analisi
-          documentale del Fascicolo usa 'Analizza con HAL' (Cap. 7
-          §7.5) - e' un endpoint diverso, sempre Gemini 3 Flash."
-        - "NO AZIONI DISTRUTTIVE: system prompt include 'NON eseguire
-          azioni distruttive'. Se scrivi 'cancella il mio ultimo lead'
-          HAL risponde che non puo'."
-      errori_comuni:
-        - problema: "Ho chiesto a HAL di scrivermi il contratto di mandato"
-          soluzione: >
-            HAL non produce testi contrattuali. Rimanda al notaio o al
-            modulo HAL Legal (in arrivo). Per bozze commerciali del
-            mandato usa la modulistica interna dell'agenzia.
-        - problema: "HAL non risponde a 'quali immobili competitor sono in vendita?'"
-          soluzione: >
-            Comportamento atteso: no navigazione web. Usa fonti esterne
-            (portali) per confronto competitor.
+        - "CHAT = SOLA LETTURA CRM: HAL non crea/aggiorna/elimina
+          immobili/clienti/lead. I 5 tool sono whitelist read-only."
+        - "ECCEZIONE A-028g: Migliora con HAL propone testo; solo
+          Conferma e applica (audit) aggiorna il campo form — poi
+          l'agente Salva l'immobile. Nessuna auto-write silenziosa."
+        - "NON e' consulente legale: per contratti/notai usa HAL Legal."
+        - "NON naviga il web: solo CRM + conoscenza modello."
+        - "NON ha memoria fra sessioni; NON vede foto/documenti."
+      errori_comuni: []
       permessi:
-        - Titolare, agente, segreteria
+        - Tutti
     screenshot: []
 
   - id: hal.sessioni-lista
@@ -487,13 +510,15 @@ voci:
           (ISO UTC), user_msg (primi 500 char), assistant_msg (primi
           1000 char), tool (nome tool o null), tool_params_count."
         - "Per gli improve inoltre: kind='improve', field, lang, tone,
-          input_len, output_len."
+          input_len, output_len + proposal_id nella response."
+        - "Per Conferma e applica (A-028g): kind='apply_confirmed',
+          proposal_id, field, property_id, previous_len, new_len."
         - "Per gli stream: stream=true."
         - "Il log NON contiene: body completo della risposta (troncato
           a 1000 char), credenziali/token, dati sensibili GDPR oltre
           a user_id + agency_id."
         - "USO: rate limiting orario (query su ts + user_id + kind),
-          debugging assistenza, compliance interna."
+          debugging assistenza, compliance interna, audit conferma."
         - "RETENTION: nessun TTL automatico in v1. Contatta assistenza
           per richieste GDPR di cancellazione log audit."
         - "Le conversazioni utente in al_sessions sono cancellabili
