@@ -198,7 +198,7 @@ async def get_today(user: dict = Depends(get_current_user)) -> Dict[str, Any]:
                 "title_key": "dashboard.today_no_photos",
                 "title": "Immobili senza foto",
                 "count": n_no_photos,
-                "href": "/app/properties",
+                "href": "/app/properties?smart=no_photos",
                 "cta_key": "dashboard.today_cta_properties",
                 "cta": "Apri immobili",
                 "items": [
@@ -265,7 +265,7 @@ async def get_today(user: dict = Depends(get_current_user)) -> Dict[str, Any]:
                 "title_key": "dashboard.today_weak_copy",
                 "title": "Annunci da migliorare",
                 "count": n_weak,
-                "href": "/app/properties?status=active",
+                "href": "/app/properties?smart=weak_copy&status=active",
                 "cta_key": "dashboard.today_cta_improve",
                 "cta": "Apri e migliora",
                 "items": [

@@ -320,6 +320,8 @@ class PropertyListItem(OmniaBaseModel):
     reference_code: Optional[str] = None
     created_at: str
     updated_at: str
+    photo_count: int = 0
+    listing_flags: Optional[List[str]] = None  # A-028f: no_photos | incomplete | weak_copy
 
 
 class PropertyListResponse(OmniaBaseModel):
@@ -327,6 +329,8 @@ class PropertyListResponse(OmniaBaseModel):
     total: int
     page: int
     page_size: int
+    smart: Optional[str] = None
+    sort: Optional[str] = None
 
 
 # -------------------- IMPORT --------------------

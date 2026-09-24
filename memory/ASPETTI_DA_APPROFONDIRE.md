@@ -1122,9 +1122,9 @@ Concordo sul nucleo. Temperatura: «OS agenzia» è **nord**, non claim immediat
 | A-028a | **Cockpit Dashboard «Oggi»** — attività da fare (follow-up, immobili incompleti, match da inviare, visite) + attività recenti | **P1** | ✅ **FATTO** 18-Set-2026 — `GET /app/dashboard/today` + UI priorità sopra KPI |
 | A-028b | **Explainability Match Score** — tooltip 83/100 con breakdown criteri | **P1** | ✅ **FATTO** 24-Set-2026 — breakdown barre su Match card; popover fasce su Clienti ScoreBox |
 | A-028c | **IA sidebar a cluster** (Operativo / Pubblicazione / Strumenti / Intelligenza / Amministrazione) | **P1** | ✅ **FATTO** 24-Set-2026 — `AgencyShell` cluster labels, zero cambio route |
-| A-028d | **HAL contestuale in scheda immobile** — «cosa manca» + genera descrizione da dati noti | **P1** | Oltre bottone «Migliora»; allinea A-005 direzione copilota |
-| A-028e | **Vista tabella immobili** + toggle card; sort aggiornamento/prezzo/superficie/agente | **P2** | Necessaria a scala 2k+ |
-| A-028f | **Filtri intelligenti** — senza foto, incompleti, senza cliente compatibile, variazione prezzo | **P2** | «Azioni intelligenti» non solo filtri |
+| A-028d | **HAL contestuale in scheda immobile** — «cosa manca» + genera descrizione da dati noti | **P1** | ✅ **FATTO** 24-Set-2026 — `GET .../coach` + `PropertyCoachPanel` + HAL improve su gap testo |
+| A-028e | **Vista tabella immobili** + toggle card; sort aggiornamento/prezzo/superficie/agente | **P2** | ✅ **FATTO** 24-Set-2026 — toggle Card/Tabella + sort (no colonna agente v1) |
+| A-028f | **Filtri intelligenti** — senza foto, incompleti, senza cliente compatibile, variazione prezzo | **P2** | ✅ **FATTO** 24-Set-2026 — `smart=no_photos\|incomplete\|weak_copy` (no «senza match» / price-delta v1) |
 | A-028g | **HAL operativo «esegui con conferma»** — genera + proponi apply su campo | **P2** | Dopo contestuale stabile; D-051 onestà |
 | A-028h | Modulo **Attività / follow-up** dedicato (se assente post tools QC = GAP) | **P2** | GAP confermato tools QC 18-Set; cockpit Oggi mitiga senza modulo dedicato |
 | A-028i | Claim commerciale «OS agenzia» vs «gestionale AI» — copy landing/pitch | **P3** | Solo messaging dopo loop mattina dimostrabile |
@@ -1147,10 +1147,10 @@ Concordo sul nucleo. Temperatura: «OS agenzia» è **nord**, non claim immediat
 3. HAL «esegui con conferma» richiede audit log obbligatorio (D-051 / compliance) — ok come prerequisito?
 
 ### Stato
-🟠 **IN CORSO** — A-028a/b/c ✅ (24-Set analisi + ship). Restano **d…i** solo con «vai» esplicito. Report: `memory/GESTIONALE_ANALISI_2026-09-24.md`.
+🟠 **IN CORSO** — A-028a…f ✅ (24-Set). Restano **g/h/i** solo con «vai». Report: `memory/GESTIONALE_ANALISI_2026-09-24.md`.
 
 ### Trigger di ripresa
-- Founder dice «vai» su A-028d…i
+- Founder dice «vai» su A-028g (HAL esegui+conferma) · **h** Attività · **i** claim OS
 - Demo commerciale che mostri il loop mattina agente
 
 ---

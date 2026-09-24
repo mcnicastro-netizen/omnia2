@@ -1,11 +1,13 @@
 # Capitolo 3 · Immobili
 
-**Versione manuale**: v1.0 · **Ultima revisione**: Feb 2026
+**Versione manuale**: v1.1 · **Ultima revisione**: 24-Set-2026 (A-028d/e/f)  
 **Chi lo legge**: titolari, agenti, segreteria
 **Prerequisiti**: aver fatto login (Cap. 1), essere assegnati a un'agenzia attiva
 
 Il modulo **Immobili** è il cuore operativo di ImmoWeb: qui vive il tuo portafoglio.
-Ci arrivi cliccando **Immobili** dalla barra a sinistra oppure da un contatore della Dashboard.
+Ci arrivi cliccando **Immobili** dalla barra a sinistra (cluster **Operativo**) oppure da un contatore della Dashboard.
+
+In lista: toggle **Card / Tabella**, filtri smart (**Senza foto · Incompleti · Testo debole**) e ordinamento. In scheda (modifica): pannello **Cosa manca** (A-028d) con blocchi HARD/SOFT e scorciatoia HAL su titolo/descrizione.
 
 ---
 

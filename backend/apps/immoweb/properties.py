@@ -69,9 +69,27 @@ def _normalize_property_type(v):
 
 
 def _to_list_item(doc: dict) -> dict:
-    cover = next((p["url"] for p in (doc.get("photos") or []) if p.get("is_cover")), None)
-    if not cover and doc.get("photos"):
-        cover = doc["photos"][0].get("url")
+    photos = doc.get("photos") or []
+    cover = next((p["url"] for p in photos if isinstance(p, dict) and p.get("is_cover")), None)
+    if not cover and photos and isinstance(photos[0], dict):
+        cover = photos[0].get("url")
+    # photo_count: prefer explicit field from aggregation; else len(photos)
+    # (list projection may $slice to 1 — then use photo_count from $addFields)
+    photo_count = doc.get("photo_count")
+    if photo_count is None:
+        photo_count = len([p for p in photos if isinstance(p, dict) and p.get("url")])
+    flags = []
+    if photo_count == 0:
+        flags.append("no_photos")
+    desc = (doc.get("description") or "").strip()
+    if len(desc) < 50:
+        flags.append("weak_copy")
+    energy = doc.get("energy") or {}
+    has_price = bool(doc.get("price") or doc.get("rent_monthly") or doc.get("price_on_request"))
+    has_city = bool((doc.get("city") or "").strip())
+    has_energy = bool(energy.get("energy_class"))
+    if photo_count < 3 or not has_price or not has_city or not has_energy:
+        flags.append("incomplete")
     return {
         "id": doc["id"],
         "title": doc["title"],
@@ -89,6 +107,8 @@ def _to_list_item(doc: dict) -> dict:
         "reference_code": doc.get("reference_code"),
         "created_at": doc["created_at"],
         "updated_at": doc["updated_at"],
+        "photo_count": int(photo_count or 0),
+        "listing_flags": flags or None,
     }
 
 
@@ -103,6 +123,14 @@ async def list_properties(
     property_type: Optional[str] = None,
     city: Optional[str] = None,
     q: Optional[str] = None,
+    smart: Optional[str] = Query(
+        None,
+        description="A-028f: no_photos | incomplete | weak_copy",
+    ),
+    sort: Optional[str] = Query(
+        "updated_desc",
+        description="updated_desc|updated_asc|price_desc|price_asc|surface_desc|created_desc",
+    ),
     user: dict = Depends(get_current_user),
 ):
     agency_id = await _require_agency(user)
@@ -133,42 +161,119 @@ async def list_properties(
             ]
         }
 
-    total = await db.properties.count_documents(query)
-    # Sprint 4 · Task #11 — projection esplicita: evita di trasportare `photos`
-    # (base64) e altri campi pesanti (features/energy/owner sub-docs) che poi
-    # `_to_list_item` scarta. Rende GET /properties p95 <200ms vs ~3s prima.
-    LIST_PROJECTION = {
-        "_id": 0,
-        "id": 1,
-        "title": 1,
-        "property_type": 1,
-        "operation": 1,
-        "status": 1,
-        "city": 1,
-        "address": 1,
-        "price": 1,
-        "rent_monthly": 1,
-        "surface_sqm": 1,
-        "rooms": 1,
-        "bedrooms": 1,
-        "reference_code": 1,
-        "created_at": 1,
-        "updated_at": 1,
-        # Only the first photo is needed for `cover_photo_url`
-        "photos": {"$slice": 1},
+    # A-028f — smart filters (Mongo-side where possible)
+    smart_key = (smart or "").strip() or None
+    if smart_key and smart_key not in ("no_photos", "incomplete", "weak_copy"):
+        raise HTTPException(status_code=422, detail="invalid_smart_filter")
+    sort_key = (sort or "updated_desc").strip()
+    if sort_key not in (
+        "updated_desc", "updated_asc", "price_desc", "price_asc",
+        "surface_desc", "created_desc",
+    ):
+        raise HTTPException(status_code=422, detail="invalid_sort")
+    if smart_key == "no_photos":
+        query = {
+            "$and": [
+                query,
+                {"$or": [
+                    {"photos": {"$exists": False}},
+                    {"photos": {"$size": 0}},
+                    {"photos.0": {"$exists": False}},
+                ]},
+            ]
+        }
+    elif smart_key == "weak_copy":
+        query = {
+            "$and": [
+                query,
+                {"$or": [
+                    {"description": {"$exists": False}},
+                    {"description": None},
+                    {"description": ""},
+                    {"description": {"$regex": r"^.{0,49}$"}},
+                ]},
+            ]
+        }
+    elif smart_key == "incomplete":
+        query = {
+            "$and": [
+                query,
+                {"$or": [
+                    {"photos.2": {"$exists": False}},  # < 3 photos
+                    {"city": {"$in": [None, ""]}},
+                    {"city": {"$exists": False}},
+                    {"energy.energy_class": {"$in": [None, ""]}},
+                    {"energy.energy_class": {"$exists": False}},
+                    {"$and": [
+                        {"operation": {"$ne": "rent"}},
+                        {"price_on_request": {"$ne": True}},
+                        {"$or": [
+                            {"price": {"$in": [None, 0]}},
+                            {"price": {"$exists": False}},
+                        ]},
+                    ]},
+                    {"$and": [
+                        {"operation": "rent"},
+                        {"$or": [
+                            {"rent_monthly": {"$in": [None, 0]}},
+                            {"rent_monthly": {"$exists": False}},
+                        ]},
+                    ]},
+                ]},
+            ]
+        }
+
+    sort_map = {
+        "updated_desc": [("updated_at", -1)],
+        "updated_asc": [("updated_at", 1)],
+        "price_desc": [("price", -1)],
+        "price_asc": [("price", 1)],
+        "surface_desc": [("surface_sqm", -1)],
+        "created_desc": [("created_at", -1)],
     }
-    cursor = (
-        db.properties.find(query, LIST_PROJECTION)
-        .sort("created_at", -1)
-        .skip((page - 1) * page_size)
-        .limit(page_size)
-    )
-    docs = await cursor.to_list(length=page_size)
+    sort_spec = sort_map.get(sort_key, [("updated_at", -1)])
+
+    total = await db.properties.count_documents(query)
+    pipeline = [
+        {"$match": query},
+        {"$addFields": {
+            "photo_count": {"$size": {"$ifNull": ["$photos", []]}},
+        }},
+        {"$sort": {k: v for k, v in sort_spec}},
+        {"$skip": (page - 1) * page_size},
+        {"$limit": page_size},
+        {"$project": {
+            "_id": 0,
+            "id": 1,
+            "title": 1,
+            "property_type": 1,
+            "operation": 1,
+            "status": 1,
+            "city": 1,
+            "address": 1,
+            "price": 1,
+            "rent_monthly": 1,
+            "surface_sqm": 1,
+            "rooms": 1,
+            "bedrooms": 1,
+            "reference_code": 1,
+            "created_at": 1,
+            "updated_at": 1,
+            "description": 1,
+            "energy": 1,
+            "price_on_request": 1,
+            "photo_count": 1,
+            "photos": {"$slice": ["$photos", 1]},
+        }},
+    ]
+    docs = await db.properties.aggregate(pipeline).to_list(length=page_size)
     return {
         "items": [_to_list_item(d) for d in docs],
         "total": total,
         "page": page,
         "page_size": page_size,
+        "smart": smart_key,
+        "sort": sort_key,
     }
 
 
@@ -228,6 +333,21 @@ async def get_property(prop_id: str, user: dict = Depends(get_current_user)):
     if not doc:
         raise HTTPException(status_code=404, detail="property_not_found")
     return _strip(doc)
+
+
+@router.get("/{prop_id}/coach")
+async def property_coach(prop_id: str, user: dict = Depends(get_current_user)):
+    """A-028d — deterministic «cosa manca» for listing readiness (no LLM)."""
+    agency_id = await _require_agency(user)
+    db = Database.get()
+    doc = await db.properties.find_one(
+        with_not_trashed({"id": prop_id, "agency_id": agency_id}),
+        {"_id": 0},
+    )
+    if not doc:
+        raise HTTPException(status_code=404, detail="property_not_found")
+    from apps.immoweb.property_coach import build_coach_report
+    return build_coach_report(doc)
 
 
 # -------------------- UPDATE --------------------

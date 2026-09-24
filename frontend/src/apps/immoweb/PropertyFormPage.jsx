@@ -9,6 +9,7 @@ import StagingStudio from "./components/StagingStudio";
 import PropertyMatchesPreview from "./components/PropertyMatchesPreview";
 import PublishingCenter from "./components/PublishingCenter";
 import AlImproveButton from "../../shared/components/AlImproveButton";
+import PropertyCoachPanel from "./components/PropertyCoachPanel";
 import { api } from "../../shared/lib/api";
 import { formatApiErrorDetail } from "../../shared/lib/auth";
 import { ENERGY_CLASS_OPTIONS } from "../../shared/lib/energyClasses";
@@ -168,6 +169,15 @@ export default function PropertyFormPage() {
             </Link>
           )}
         </div>
+
+        {isEdit && (
+          <PropertyCoachPanel
+            propertyId={id}
+            form={form}
+            isEdit={isEdit}
+            onApplyField={(field, text) => upd(field, text)}
+          />
+        )}
 
         <form onSubmit={submit} className="space-y-8 bg-white border border-stone-200 rounded-lg p-6 md:p-8">
           {/* Basics */}

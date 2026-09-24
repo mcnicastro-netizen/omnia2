@@ -6,6 +6,66 @@
 
 voci:
 
+  # ---------- 3.0 · Lista + coach (A-028d/e/f) ----------
+
+  - id: immobili.lista-tabella-filtri-smart
+    titolo: Lista immobili — tabella, filtri smart e ordinamento (A-028e/f)
+    modulo: Immobili
+    widget: null
+    pubblico: [titolare, agente, segreteria]
+    livello: base
+    tags: [immobili, lista, tabella, filtri, smart, a-028e, a-028f]
+    correlati: [immobili.creazione-manuale, immobili.coach-cosa-manca]
+    domanda_naturale: >
+      Come vedo gli immobili in tabella? Come filtro quelli senza foto
+      o incompleti?
+    contenuto:
+      a_cosa_serve: >
+        Gestire portafogli grandi (2k+) con vista tabella, filtri
+        intelligenti e sort — oltre alle card.
+      quando_si_usa: >
+        Ogni mattina dalla Dashboard «Oggi» (link Senza foto / Testo
+        debole) o dalla lista Immobili.
+      passi:
+        - "Apri Immobili (cluster Operativo)."
+        - "Toggle Card / Tabella in alto a destra."
+        - "Filtro Smart: Senza foto · Incompleti · Testo debole."
+        - "Ordina per aggiornamento, prezzo, superficie o data creazione."
+        - "I flag (Senza foto / Incompleto / Testo debole) compaiono su card e riga."
+      errori_comuni: []
+      permessi: [Tutti]
+    screenshot: []
+
+  - id: immobili.coach-cosa-manca
+    titolo: Pannello «Cosa manca» in scheda immobile (A-028d)
+    modulo: Immobili
+    widget: null
+    pubblico: [titolare, agente]
+    livello: base
+    tags: [immobili, coach, hal, compliance, a-028d]
+    correlati: [immobili.lista-tabella-filtri-smart, immobili.creazione-manuale]
+    domanda_naturale: >
+      Cosa manca al mio annuncio per i portali? HAL può scrivere la
+      descrizione per me?
+    contenuto:
+      a_cosa_serve: >
+        Mostrare i gap HARD/SOFT di compliance (prezzo, APE, 3 foto,
+        testo…) e offrire HAL Improve su titolo/descrizione.
+      quando_si_usa: >
+        Aprendo un immobile in modifica. Aggiorna dopo aver salvato
+        o applicato un improve.
+      passi:
+        - "Apri Immobili → scheda in modifica."
+        - "In alto il pannello Cosa manca (summary + lista gap)."
+        - "HARD blocca i portali; SOFT sono miglioramenti."
+        - "Su gap titolo/descrizione: bottone HAL Improve → Applica."
+        - "Foto, prezzo e APE restano a carico dell'agente (niente auto-fill)."
+      errori_comuni:
+        - problema: "Il coach dice ancora HARD dopo aver caricato le foto"
+          soluzione: "Clicca Aggiorna sul pannello (o ricarica la scheda)."
+      permessi: [titolare, agente]
+    screenshot: []
+
   # ---------- 3.1 · Creare a mano ----------
 
   - id: immobili.creazione-manuale

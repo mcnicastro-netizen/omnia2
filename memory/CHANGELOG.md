@@ -1,5 +1,15 @@
 # OMNIA — Changelog
 
+## 2026-09-24 — A-028d/e/f HAL coach scheda + tabella/filtri immobili
+
+**Tipo**: Feature / UX CRM.
+
+- **A-028d**: `GET /app/properties/{id}/coach` + pannello «Cosa manca» in scheda (HARD/SOFT + HAL improve su titolo/descrizione)
+- **A-028e**: toggle Card/Tabella su Immobili + sort (updated/price/surface/created)
+- **A-028f**: filtri smart `no_photos` · `incomplete` · `weak_copy`; flag su card/riga; dashboard Oggi deep-link
+- Residuo A-028: **g** esegui+conferma · **h** Attività · **i** claim OS
+
+---
 ## 2026-09-24 — Analisi gestionale + A-028b/c (score explain + sidebar cluster)
 
 **Tipo**: Docs / UX CRM.
