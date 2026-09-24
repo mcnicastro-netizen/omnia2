@@ -286,6 +286,19 @@ async def update_property(
         except Exception:
             pass
 
+    # D-093 / A-030 — notify favoriters when listing ends
+    if "status" in update_doc:
+        try:
+            from apps.immocloud.favorite_watch import record_listing_ended
+            await record_listing_ended(
+                db,
+                property_id=prop_id,
+                existing=existing,
+                new_status=update_doc["status"],
+            )
+        except Exception:
+            pass
+
     updated = await db.properties.find_one({"id": prop_id})
     # M3.S3 — re-geocode if any address field changed (best-effort)
     address_changed = any(k in update_doc for k in ("address", "city", "province", "postal_code"))

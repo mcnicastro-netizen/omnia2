@@ -225,6 +225,35 @@ async def get_my_private_listing(pid: str, user: dict = Depends(get_current_user
     return p
 
 
+@router.get("/{pid}/stats")
+async def get_my_private_listing_stats(
+    pid: str,
+    days: int = 30,
+    user: dict = Depends(get_current_user),
+):
+    """D-093 / A-029 — views + contacts for the private seller dashboard.
+
+    `days` clamped 1–90. Series starts filling from first tracked day after ship;
+    lifetime totals come from `view_count` / `lead_count` on the property.
+    """
+    await _ensure_b2c(user)
+    db = Database.get()
+    p = await db.properties.find_one(
+        {"id": pid, "owner_user_id": user["id"], "is_private_listing": True},
+        {"_id": 0, "id": 1, "view_count": 1, "lead_count": 1},
+    )
+    if not p:
+        raise HTTPException(status_code=404, detail="listing_not_found")
+    from apps.immocloud.listing_stats import get_listing_stats
+    return await get_listing_stats(
+        db,
+        pid,
+        days=days,
+        lifetime_views=int(p.get("view_count") or 0),
+        lifetime_leads=int(p.get("lead_count") or 0),
+    )
+
+
 @router.patch("/{pid}")
 async def update_my_private_listing(
     pid: str, payload: PropertyUpdate, user: dict = Depends(get_current_user),

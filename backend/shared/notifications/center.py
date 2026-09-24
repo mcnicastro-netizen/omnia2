@@ -20,6 +20,7 @@ TYPE_INVITE_ACCEPTED = "invite_accepted"
 TYPE_SAVED_SEARCH = "saved_search_match"
 TYPE_MATCH_NEW = "match_new"  # reserved (matches are on-read; no emitter v1)
 TYPE_FAVORITE_DROP = "favorite_price_drop"
+TYPE_FAVORITE_ENDED = "favorite_listing_ended"  # D-093 / A-030 sold|rented|withdrawn
 TYPE_LISTING_INQUIRY = "listing_inquiry"  # B2C private seller contact form
 
 KNOWN_TYPES = (
@@ -28,6 +29,7 @@ KNOWN_TYPES = (
     TYPE_SAVED_SEARCH,
     TYPE_MATCH_NEW,
     TYPE_FAVORITE_DROP,
+    TYPE_FAVORITE_ENDED,
     TYPE_LISTING_INQUIRY,
 )
 

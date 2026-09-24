@@ -7,6 +7,19 @@ Registro di tutte le decisioni di business e tecniche prese durante il progetto.
 
 ## Decisioni prese
 
+### D-093 — Gap Idealista/Immobiliare · preferiti alert + stats privato (P0)
+- **Data**: 24 Settembre 2026
+- **Contesto**: Founder chiede come colmare il gap B2C vs Idealista/Immobiliare su preferiti, alert modifiche, stats per chi pubblica come privato. Dice «vai» sul piano proposto.
+- **Decisione (ordine di ship)**:
+  1. **P0 A-029** — Dashboard venditore privato: `view_count` / `lead_count` lifetime + serie giornaliera 30g (aperture scheda + contatti, **non** impressioni feed). UI su SellPage.
+  2. **P0 A-030** — Alert preferiti su **fine annuncio** (sold / rented / withdrawn) oltre al ribasso già presente; lista preferiti tiene gli annunci terminati con badge.
+  3. **P1 A-031** — Liste/note preferiti + toggle «Avvisami» esplicito.
+  4. **P1 A-032** — Digest unificato «I tuoi preferiti questa settimana».
+  5. **P2 A-033** — Confronto annunci + push browser (se opt-in).
+- **Onestà (D-051)**: non claimare parity totale Imm/Idealista; metriche chiare; no impressioni inventate.
+- **Fuori scope v1 di questa decisione**: area MyAgency-like (già no in D-091), multiposting portali terzi.
+- **Stato**: ✅ P0 A-029 + A-030 APPLICATI (codice 24-Set-2026); A-031…A-033 in backlog
+
 ### D-092 — UX pass CRM (destinazioni, Import hub, onestà Portali, API Keys, Gruppo)
 - **Data**: 23 Settembre 2026
 - **Contesto**: Founder accetta in blocco i suggerimenti di analisi critica su Dashboard, Gruppo, API Keys, Importa, Portali, Clienti.

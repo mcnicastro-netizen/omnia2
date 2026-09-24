@@ -695,9 +695,11 @@ async def public_property_detail(pid: str, request: Request):
         agency=agency,
     )
 
-    # Bump view counter (best-effort)
+    # Bump view counter + daily bucket (best-effort) — D-093 / A-029
     try:
         await db.properties.update_one({"id": pid}, {"$inc": {"view_count": 1}})
+        from apps.immocloud.listing_stats import bump_daily_stat
+        await bump_daily_stat(db, pid, "view")
     except Exception:
         pass
 
@@ -908,9 +910,11 @@ async def public_property_contact(pid: str, payload: PropertyContactPayload, req
     except Exception as e:  # noqa: BLE001
         logger.warning("client_request from ImmobilCloud failed: %s", e)
 
-    # 4) Bump property lead counter (best-effort)
+    # 4) Bump property lead counter + daily bucket (best-effort) — D-093 / A-029
     try:
         await db.properties.update_one({"id": pid}, {"$inc": {"lead_count": 1}})
+        from apps.immocloud.listing_stats import bump_daily_stat
+        await bump_daily_stat(db, pid, "lead")
     except Exception:
         pass
 
@@ -997,6 +1001,8 @@ async def _private_listing_contact(db, prop: Dict[str, Any], payload: PropertyCo
 
     try:
         await db.properties.update_one({"id": prop["id"]}, {"$inc": {"lead_count": 1}})
+        from apps.immocloud.listing_stats import bump_daily_stat
+        await bump_daily_stat(db, prop["id"], "lead")
     except Exception:
         pass
 

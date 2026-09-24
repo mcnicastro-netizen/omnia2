@@ -914,7 +914,14 @@
       "boost_subtitle": "Vitrina, Premium o TOP — pago único con tarjeta. Tu anuncio sube en el ranking durante el periodo elegido.",
       "boost_cta": "Pagar con Stripe",
       "boost_active": "Boost {{tier}} activo hasta el {{until}}",
-      "boost_checkout_error": "No se pudo iniciar el pago. Inténtalo de nuevo."
+      "boost_checkout_error": "No se pudo iniciar el pago. Inténtalo de nuevo.",
+      "stats_title": "Rendimiento del anuncio",
+      "stats_loading": "Cargando estadísticas…",
+      "stats_views": "visualizaciones totales",
+      "stats_leads": "contactos recibidos",
+      "stats_views_30": "vistas últimos 30 días",
+      "stats_rate": "tasa de contacto (30d)",
+      "stats_note": "Visualización = apertura de la ficha. Contacto = mensaje enviado. No son impresiones del feed de búsqueda."
     },
     "save_search": {
       "cta": "Guardar esta búsqueda",

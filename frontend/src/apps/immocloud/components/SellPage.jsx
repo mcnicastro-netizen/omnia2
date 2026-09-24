@@ -63,6 +63,7 @@ export default function SellPage() {
   const [boostCatalog, setBoostCatalog] = useState([]);
   const [boostBusy, setBoostBusy] = useState(null); // product_key being purchased
   const [stagingBusy, setStagingBusy] = useState(false);
+  const [statsById, setStatsById] = useState({}); // pid → stats payload
 
   // Redirect if not logged in or not a B2C user
   useEffect(() => {
@@ -72,11 +73,37 @@ export default function SellPage() {
     }
   }, [user, lang, nav]);
 
-  // Load listings + boost catalog
+  // Load listings + boost catalog + per-listing stats (D-093 / A-029)
   useEffect(() => {
     if (user && user.account_type === "b2c") {
       api.get("/cloud/me/properties")
-        .then((r) => setListings(r.data.items || []))
+        .then(async (r) => {
+          const items = r.data.items || [];
+          setListings(items);
+          const entries = await Promise.all(
+            items.map(async (l) => {
+              try {
+                const s = await api.get(`/cloud/me/properties/${l.id}/stats`, {
+                  params: { days: 30 },
+                });
+                return [l.id, s.data];
+              } catch {
+                return [
+                  l.id,
+                  {
+                    lifetime: {
+                      views: l.view_count || 0,
+                      leads: l.lead_count || 0,
+                    },
+                    period: { views: 0, leads: 0, contact_rate: null },
+                    series: [],
+                  },
+                ];
+              }
+            }),
+          );
+          setStatsById(Object.fromEntries(entries));
+        })
         .catch(() => {});
       api.get("/billing/b2c/boosts")
         .then((r) => setBoostCatalog(r.data.products || []))
@@ -296,6 +323,7 @@ export default function SellPage() {
                     </p>
                   )}
                   <StatusBadge status={l.moderation_status} listingStatus={l.status} notes={l.moderation_notes} />
+                  <ListingStatsPanel stats={statsById[l.id]} t={t} />
                   {boostActive(l) && (
                     <p className="text-[11px] text-emerald-800 mt-1" data-testid={`boost-active-${l.id}`}>
                       {t("cloud.sell.boost_active", {
@@ -726,6 +754,67 @@ function FloorPlanUploader({ url, onChange }) {
         onChange={(e) => e.target.files?.[0] && handleFile(e.target.files[0])}
       />
       {err && <p className="text-xs text-rose-700" data-testid="floor-plan-error">{err}</p>}
+    </div>
+  );
+}
+
+function ListingStatsPanel({ stats, t }) {
+  if (!stats) {
+    return (
+      <p className="text-[11px] text-stone-400 mt-2" data-testid="listing-stats-loading">
+        {t("cloud.sell.stats_loading")}
+      </p>
+    );
+  }
+  const life = stats.lifetime || {};
+  const period = stats.period || {};
+  const series = stats.series || [];
+  const maxViews = Math.max(1, ...series.map((d) => d.views || 0));
+  return (
+    <div
+      data-testid="listing-stats"
+      className="mt-3 rounded-xl bg-[#f7f4ef] border border-stone-200 px-3 py-3"
+    >
+      <p className="text-[10px] uppercase tracking-widest text-stone-500 mb-2">
+        {t("cloud.sell.stats_title")}
+      </p>
+      <div className="flex flex-wrap gap-4 text-sm text-[#0B1E3F]">
+        <div data-testid="stat-views-life">
+          <span className="font-medium">{Number(life.views || 0).toLocaleString("it-IT")}</span>
+          <span className="text-[11px] text-stone-500 ml-1">{t("cloud.sell.stats_views")}</span>
+        </div>
+        <div data-testid="stat-leads-life">
+          <span className="font-medium">{Number(life.leads || 0).toLocaleString("it-IT")}</span>
+          <span className="text-[11px] text-stone-500 ml-1">{t("cloud.sell.stats_leads")}</span>
+        </div>
+        <div data-testid="stat-period-30">
+          <span className="font-medium">{Number(period.views || 0).toLocaleString("it-IT")}</span>
+          <span className="text-[11px] text-stone-500 ml-1">{t("cloud.sell.stats_views_30")}</span>
+        </div>
+        {period.contact_rate != null && (
+          <div data-testid="stat-contact-rate">
+            <span className="font-medium">{period.contact_rate}%</span>
+            <span className="text-[11px] text-stone-500 ml-1">{t("cloud.sell.stats_rate")}</span>
+          </div>
+        )}
+      </div>
+      {series.length > 0 && (
+        <div
+          className="mt-3 flex items-end gap-[2px] h-10"
+          data-testid="listing-stats-spark"
+          aria-hidden
+        >
+          {series.map((d) => (
+            <span
+              key={d.day}
+              title={`${d.day}: ${d.views} view`}
+              className="flex-1 min-w-0 rounded-sm bg-[#0B1E3F]/70"
+              style={{ height: `${Math.max(8, Math.round((100 * (d.views || 0)) / maxViews))}%` }}
+            />
+          ))}
+        </div>
+      )}
+      <p className="text-[10px] text-stone-500 mt-2 leading-snug">{t("cloud.sell.stats_note")}</p>
     </div>
   );
 }

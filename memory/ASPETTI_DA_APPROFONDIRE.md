@@ -1156,6 +1156,60 @@ Concordo sul nucleo. Temperatura: «OS agenzia» è **nord**, non claim immediat
 
 ---
 
+## ✅ A-029 — Stats annuncio privato (view/lead + serie 30g) · D-093 P0
+
+**Data inserimento**: 24-Sep-2026  
+**Chiusura**: 24-Sep-2026  
+**Segnalato da**: Founder (Marco) — gap Idealista/Immobiliare
+
+### Consegna
+- Collezione `property_stat_days` (bucket giornalieri views/leads)
+- Hook su apertura scheda + contatto (agenzia e privato)
+- `GET /api/cloud/me/properties/{pid}/stats?days=30`
+- UI pannello su SellPage (lifetime + 30g + sparkline + nota onesta)
+
+### Stato
+✅ **CHIUSO** — serie si riempie da ship in avanti; lifetime da `view_count`/`lead_count`.
+
+---
+
+## ✅ A-030 — Alert preferiti su annuncio terminato (sold/rented/withdrawn) · D-093 P0
+
+**Data inserimento**: 24-Sep-2026  
+**Chiusura**: 24-Sep-2026  
+
+### Consegna
+- `favorite_watch.record_listing_ended` su PATCH immobile quando status → terminale
+- Inbox `favorite_listing_ended` + email (tipo `saved_search_alert`)
+- Cron safety-net in `run_all_active_saved_searches`
+- Lista preferiti: annunci terminati restano con badge Venduto/Affittato/Ritirato
+
+### Stato
+✅ **CHIUSO** — ribasso preferiti già coperto da pass precedente.
+
+---
+
+## 🟡 A-031 — Preferiti: liste/note + «Avvisami» esplicito · D-093 P1
+
+**Data**: 24-Sep-2026 · Solo con «vai»  
+Cartelle preferiti, note private, toggle alert per-annuncio (oltre alla ★).
+
+---
+
+## 🟡 A-032 — Digest unificato preferiti (settimanale) · D-093 P1
+
+**Data**: 24-Sep-2026 · Solo con «vai»  
+Una mail «I tuoi preferiti questa settimana» (ribassi + terminati + reminder).
+
+---
+
+## 🟡 A-033 — Confronto annunci + push browser preferiti · D-093 P2
+
+**Data**: 24-Sep-2026 · Solo con «vai»  
+Side-by-side 2–3 preferiti; Web Push già infrastrutturato — attivare per eventi preferiti.
+
+---
+
 ## ✅ A-024 — CTA «Richiedi demo» via email (onboarding commerciale D-080)
 
 **Data inserimento**: 15-Sep-2026  

@@ -1185,7 +1185,14 @@
       "staging_title": "Virtual Staging",
       "staging_subtitle": "Arreda una foto vuota in pochi secondi — €0,90 a immagine (max 3/giorno).",
       "staging_cta": "Paga staging €0,90",
-      "staging_checkout_error": "Impossibile avviare lo staging. Riprova."
+      "staging_checkout_error": "Impossibile avviare lo staging. Riprova.",
+      "stats_title": "Prestazioni annuncio",
+      "stats_loading": "Caricamento statistiche…",
+      "stats_views": "visualizzazioni totali",
+      "stats_leads": "contatti ricevuti",
+      "stats_views_30": "view ultimi 30 giorni",
+      "stats_rate": "tasso contatto (30g)",
+      "stats_note": "Visualizzazione = apertura della scheda. Contatto = messaggio inviato. Non sono impressioni nel feed di ricerca."
     },
     "save_search": {
       "cta": "Salva questa ricerca",

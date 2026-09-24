@@ -1,5 +1,16 @@
 # OMNIA — Changelog
 
+## 2026-09-24 — D-093 Gap Idealista/Immobiliare P0 (stats privato + alert preferiti ended)
+
+**Tipo**: Feature / B2C ImmobilCloud.
+
+- **A-029**: `property_stat_days` + `GET /cloud/me/properties/{id}/stats` + pannello Prestazioni su SellPage (view/lead lifetime + 30g, nota onesta)
+- **A-030**: alert preferiti su sold/rented/withdrawn (inbox `favorite_listing_ended` + email); cron safety-net; lista preferiti con badge terminati
+- Ribasso preferiti già presente (invariato)
+- Backlog P1/P2: A-031 liste/note · A-032 digest · A-033 confronto+push
+- Docs: DECISIONS D-093 · ASPETTI · Cap. 18 v1.3 · test `test_d093_portal_gap.py`
+
+---
 ## 2026-09-23 — Login tunnel HTTPS (cookie Secure) + sync manuale/HAL D-092
 
 **Tipo**: Fix / Docs.

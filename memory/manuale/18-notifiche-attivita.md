@@ -1,27 +1,30 @@
 # Capitolo 18 · Notifiche e attività
 
-> **Versione**: v1.2 · 17-Sep-2026 · Onestà documentale D-051 · sync D-084  
+> **Versione**: v1.3 · 24-Sep-2026 · Onestà documentale D-051 · sync D-084 · **D-093**  
 > **Codice coperto**:
 > - `backend/shared/email/client.py` (Resend + SUBJECTS + mock mode)
 > - `backend/shared/email/templates/*.html` (7 template × lingue)
-> - `backend/shared/notifications/prefs.py` + `center.py` (**A-021** preferenze · **A-017** inbox · tipo `listing_inquiry`)
+> - `backend/shared/notifications/prefs.py` + `center.py` (**A-021** preferenze · **A-017** inbox · tipi `listing_inquiry` · `favorite_price_drop` · **`favorite_listing_ended` A-030**)
 > - `backend/apps/core/notifications_inbox.py` — `GET/POST /api/notifications*`
 > - `backend/apps/core/auth.py` (welcome + password_reset + `GET/PATCH /auth/me/notification-preferences`)
 > - `backend/apps/immoweb/invites.py` (agency_invite + in-app invite_accepted)
-> - `backend/apps/immocloud/public_portal.py` (contatto **agenzia** → CRM lead + `lead_new`; contatto **privato** → `listing_inquiries` + `listing_inquiry`)
-> - `backend/apps/immocloud/private_listings.py` (`contact_public` canali opt-in email/tel/WhatsApp)
-> - `backend/apps/immocloud/saved_searches.py` (saved_search_alert + in-app `saved_search_match`)
+> - `backend/apps/immocloud/public_portal.py` (contatto **agenzia** → CRM lead + `lead_new`; contatto **privato** → `listing_inquiries` + `listing_inquiry`; bump view/lead + **A-029** daily buckets)
+> - `backend/apps/immocloud/private_listings.py` (`contact_public` · **`GET .../stats` A-029**)
+> - `backend/apps/immocloud/listing_stats.py` · `favorite_watch.py` (**D-093**)
+> - `backend/apps/immocloud/saved_searches.py` (saved_search_alert + ribasso preferiti + **cron ended preferiti**)
 > - `backend/apps/v1/gateway.py` (widget lead → in-app)
 > - `backend/apps/immoweb/cron.py` (super_admin trigger saved-searches)
 > - `backend/apps/marketing/founders.py` (founders_welcome + founders_admin_notification)
 > - `frontend/src/shared/components/NotificationBell.jsx` · `NotificationPreferencesPanel.jsx`
 > - `frontend/src/apps/immoweb/components/AgencyShell.jsx` · `immocloud/.../CloudTopNav.jsx`
 > - `frontend/src/apps/immocloud/components/PropertyDetailPage.jsx` (ContactPanel agenzia/privato)
-> - `frontend/src/apps/immocloud/components/SellPage.jsx` (toggle canali contatto)
+> - `frontend/src/apps/immocloud/components/SellPage.jsx` (toggle canali contatto · **pannello Prestazioni A-029**)
+> - `frontend/src/apps/immocloud/components/AccountDashboard.jsx` (preferiti + badge terminati)
 > - `frontend/src/components/ui/sonner.jsx` (toast)
 
-> ⚠️ **Nota D-051 (v1.1)**: OMNIA **ha** campanella + inbox in-app (**A-017**) e UI preferenze email (**A-021**).  
-> **Ancora NON esiste**: activity feed dashboard (**A-018**), push/SMS/WhatsApp, SSE real-time (polling 45s), digest titolare, retry queue email, webhook Resend delivery.
+> ⚠️ **Nota D-051 (v1.3)**: OMNIA **ha** campanella + inbox in-app (**A-017**) e UI preferenze email (**A-021**).  
+> **D-093 P0**: stats oneste per privato (**A-029**) + alert preferiti su annuncio terminato (**A-030**, oltre al ribasso).  
+> **Ancora NON esiste**: activity feed dashboard (**A-018**), liste/note preferiti (**A-031**), digest settimanale preferiti (**A-032**), confronto+push (**A-033**), SMS/WhatsApp, SSE real-time (polling 45s), retry queue email, webhook Resend delivery.
 
 ---
 
@@ -414,18 +417,19 @@ db.al_audit.find({user_id: "..."}).sort({created_at: -1}).limit(50)
 
 ---
 
-## 18.17 · Onestà documentale (D-051) · sintesi Cap. 18 v1.2
+## 18.17 · Onestà documentale (D-051) · sintesi Cap. 18 v1.3
 
 - **A-017 e A-021 shippati** (15-Sep-2026): campanella + preferenze UI — capitolo allineato 16-Sep (D-084).
 - **17-Sep-2026**: contatto annuncio **privato** documentato (§18.7b): `listing_inquiries` + `listing_inquiry` ≠ CRM lead agenzia.
+- **24-Sep-2026 · D-093 P0**: **A-029** stats privato (view/lead + serie 30g su SellPage); **A-030** alert preferiti su sold/rented/withdrawn (+ ribasso già live). Backlog A-031…A-033.
 - **A-018 activity feed** ancora assente: dashboard = KPI, non timeline.
-- **`push` schema / non implementato**.
-- Cron saved-searches: frequenza rispettata (A-019) + **scheduler interno orario :15 UTC** (A-020).
+- **`push` schema / non implementato** (A-033 futuro).
+- Cron saved-searches: frequenza rispettata (A-019) + **scheduler interno** (A-020) + pass preferiti ribasso/ended.
 - Email fire-and-forget; no webhook Resend.
 - Audit Mongo non esposto in UI.
 - Sync manuale obbligatorio ad ogni ship successivo: `MANUAL_SYNC.md` · **D-084**.
 
-Backlog residuo Cap. 18: **A-018**, **A-022**, **A-023** + emitter residuali A-017.
+Backlog residuo Cap. 18: **A-018**, **A-022**, **A-023** + emitter residuali A-017 + **A-031…A-033** (D-093).
 
 ---
 
@@ -439,3 +443,5 @@ Backlog residuo Cap. 18: **A-018**, **A-022**, **A-023** + emitter residuali A-0
 - `[SCREEN: cap18-email-saved-search]` — email saved search
 - `[SCREEN: cap18-toast-success]` — toast success
 - `[SCREEN: cap18-dashboard-kpi]` — dashboard KPI (non activity feed)
+- `[SCREEN: cap18-sell-stats]` — SellPage pannello Prestazioni (A-029)
+- `[SCREEN: cap18-fav-ended-badge]` — Account preferiti con badge Venduto/Ritirato (A-030)

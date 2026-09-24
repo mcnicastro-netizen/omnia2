@@ -643,6 +643,44 @@ voci:
         - "Debug richiede accesso a log backend (dev o super_admin prod)"
     screenshot: []
 
+  # ---------- 18.14b · D-093 preferiti + stats privato ----------
+
+  - id: notifiche.d093-preferiti-stats
+    titolo: Gap Idealista/Immobiliare P0 — stats privato e alert preferiti terminati (D-093)
+    modulo: Notifiche
+    widget: null
+    pubblico: [b2c_client, titolare, super_admin]
+    livello: base
+    tags: [d-093, a-029, a-030, preferiti, stats, privato, sellpage, idealista, immobiliare, ribasso, venduto]
+    correlati: [notifiche.template-saved-search-alert, notifiche.limitazioni-v1, notifiche.inquiry-annuncio-privato]
+    domanda_naturale: >
+      Posso vedere quante persone hanno visto il mio annuncio privato?
+      Ricevo un avviso se un preferito viene venduto o ritirato come su Idealista?
+    contenuto:
+      a_cosa_serve: >
+        Chiude i due gap P0 vs Idealista/Immobiliare.it: (1) il privato vede
+        visualizzazioni scheda e contatti sul proprio annuncio; (2) chi ha
+        salvato un preferito viene avvisato se l'annuncio finisce
+        (venduto/affittato/ritirato), oltre al ribasso prezzo già attivo.
+      quando_si_usa: >
+        Dopo login B2C su ImmobilCloud → area Vendi (stats) o Account → Preferiti
+        (badge + alert).
+      passi:
+        - "Stats · GET /api/cloud/me/properties/{id}/stats?days=30 (owner only)."
+        - "UI · SellPage pannello Prestazioni: lifetime views/leads + serie 30g."
+        - "Onesta' · views = aperture scheda; leads = messaggi contatto; NON impressioni feed."
+        - "Alert ended · status sold|rented|withdrawn → inbox favorite_listing_ended + email."
+        - "Lista preferiti tiene gli annunci terminati con badge (non spariscono)."
+        - "Backlog P1/P2 · A-031 liste/note · A-032 digest · A-033 confronto+push."
+      errori_comuni:
+        - problema: "La serie 30g e' a zero ma ho avuto view in passato"
+          soluzione: >
+            I bucket giornalieri partono dal deploy D-093; i totali lifetime
+            restano su view_count/lead_count dell'immobile.
+      permessi:
+        - "Stats solo owner B2C dell'annuncio privato."
+    screenshot: [cap18-sell-stats, cap18-fav-ended-badge]
+
   # ---------- 18.15 · limitazioni v1 ----------
 
   - id: notifiche.limitazioni-v1
@@ -665,16 +703,20 @@ voci:
         - "ESISTE · Router /api/notifications + collezione Mongo (A-017)."
         - "ESISTE · Bell icon + badge unread + mark read (A-017)."
         - "ESISTE · Preferenze UI canale/tipo (A-021)."
+        - "ESISTE · Alert preferiti ribasso + annuncio terminato (D-093 / A-030)."
+        - "ESISTE · Stats privato view/lead su SellPage (D-093 / A-029)."
         - "BACKEND · NO router /activity o activity feed (A-018)."
-        - "BACKEND · NO servizio push sender (schema 'push' dead code)."
+        - "BACKEND · NO servizio push sender (schema 'push' dead code · A-033)."
+        - "BACKEND · NO liste/note preferiti / digest settimanale (A-031 / A-032)."
         - "BACKEND · NO coda retry email / webhook Resend delivery."
-        - "BACKEND · Scheduler interno saved-search orario (A-020 ✅)."
+        - "BACKEND · Scheduler interno saved-search (A-020 ✅) + pass preferiti."
         - "BACKEND · Emitter residuali: match on-read, import, social,
           compliance, DNS non ancora in campanella."
         - "FRONTEND · NO pagina full-screen Notifiche (solo dropdown)."
         - "FRONTEND · NO mute/snooze / moderazione admin."
         - "CHANNELS · NO SMS / WhatsApp / Push web-mobile / Slack."
         - "password_reset sempre inviata (non disattivabile)."
+        - "Metriche privato: aperture scheda + contatti — NON impressioni feed."
       errori_comuni:
         - problema: "Voglio ricevere notifiche mobile push"
           soluzione: >

@@ -971,7 +971,14 @@
       "staging_title": "Virtual Staging",
       "staging_subtitle": "Furnish an empty photo in seconds — €0.90 per image (max 3/day).",
       "staging_cta": "Pay staging €0.90",
-      "staging_checkout_error": "Could not start staging checkout. Please try again."
+      "staging_checkout_error": "Could not start staging checkout. Please try again.",
+      "stats_title": "Listing performance",
+      "stats_loading": "Loading stats…",
+      "stats_views": "total views",
+      "stats_leads": "contacts received",
+      "stats_views_30": "views last 30 days",
+      "stats_rate": "contact rate (30d)",
+      "stats_note": "A view is a detail-page open. A contact is a message sent. These are not search-feed impressions."
     },
     "save_search": {
       "cta": "Save this search",

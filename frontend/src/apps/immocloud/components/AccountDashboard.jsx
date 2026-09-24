@@ -204,12 +204,26 @@ export default function AccountDashboard() {
             <ul className="grid grid-cols-1 md:grid-cols-2 gap-3">
               {favorites.map((p) => (
                 <li key={p.id} className="border border-stone-200 rounded-2xl p-5 bg-white">
-                  <Link
-                    to={`/${lang}/cloud/property/${p.id}`}
-                    className="font-medium text-[#0B1E3F] hover:text-[#C19A6B]"
-                  >
-                    {p.title || p.property_type}
-                  </Link>
+                  <div className="flex items-start justify-between gap-2">
+                    <Link
+                      to={`/${lang}/cloud/property/${p.id}`}
+                      className="font-medium text-[#0B1E3F] hover:text-[#C19A6B]"
+                    >
+                      {p.title || p.property_type}
+                    </Link>
+                    {p.listing_ended && (
+                      <span
+                        data-testid={`fav-ended-${p.id}`}
+                        className="shrink-0 text-[10px] uppercase tracking-widest px-2 py-0.5 rounded border border-stone-300 text-stone-600 bg-stone-50"
+                      >
+                        {p.listing_end_status === "sold"
+                          ? "Venduto"
+                          : p.listing_end_status === "rented"
+                            ? "Affittato"
+                            : "Ritirato"}
+                      </span>
+                    )}
+                  </div>
                   <p className="text-xs text-stone-500 mt-1">
                     {p.city}
                     {p.price ? ` · € ${Number(p.price).toLocaleString("it-IT")}` : ""}

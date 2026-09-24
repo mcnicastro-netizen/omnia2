@@ -473,10 +473,18 @@ async def run_all_active_saved_searches() -> Dict[str, Any]:
     except Exception as e:
         logger.warning("favorites price-drop pass failed: %s", e)
 
+    ended_pass = {"favorite_ended_notices": 0, "emails_sent": 0}
+    try:
+        from apps.immocloud.favorite_watch import cron_favorites_ended_pass
+        ended_pass = await cron_favorites_ended_pass(db)
+    except Exception as e:
+        logger.warning("favorites ended pass failed: %s", e)
+
     return {
         "searches_checked": total_searches,
-        "emails_sent": total_emails,
+        "emails_sent": total_emails + int(ended_pass.get("emails_sent") or 0),
         "total_matches": total_matches,
         "favorite_drop_notices": fav_drop_notices,
+        "favorite_ended_notices": int(ended_pass.get("favorite_ended_notices") or 0),
         "run_at": now,
     }
