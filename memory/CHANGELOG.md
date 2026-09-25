@@ -1,5 +1,16 @@
 # OMNIA — Changelog
 
+## 2026-09-25 — Analisi gestionale refresh post A-028 · demo in pausa
+
+**Tipo**: Docs / SoT prodotto.
+
+- `GESTIONALE_ANALISI_2026-09-24.md` riscritto (rev. 25-Set): A-028a…i tutti ✅; backlog residuale **R1–R8** / **A-034**
+- `NEXT_SESSION.md`: demo **A-025 in pausa**; prossimo solo «vai» su residuali o B2C A-031…
+- `ASPETTI`: A-025 ⏸ · A-034 aperto · A-028 trigger aggiornato
+- `GESTIONALE_TOOLS_QC_REPORT.md`: banner **STALE** (Gaps/Top-5 18-Set superati)
+- Nessun ship codice prodotto in questo giro
+
+---
 ## 2026-09-24 — Sync manuale/HAL A-028g/h/i (D-084)
 
 **Tipo**: Docs / HAL corpus.

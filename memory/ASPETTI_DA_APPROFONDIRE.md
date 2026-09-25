@@ -2,7 +2,7 @@
 
 > File di appoggio per **temi strategici/tecnici** che il Founder ha esplicitamente segnalato come "da rivedere più avanti", **senza essere ancora decisioni**. Ogni voce va promossa in `DECISIONS.md` o `ROADMAP.md` quando si decide di procedere.
 
-**Ultimo aggiornamento**: 17-Sep-2026 (A-028 ImmoWeb QC esterna — gerarchia + loop mattina agente)
+**Ultimo aggiornamento**: 25-Sep-2026 (analisi gestionale refresh post A-028 · demo A-025 in pausa)
 
 > **Backlog qualità prodotto (A-006+)**: voci tracciate durante lo sprint manuale Cap. 1-18. Priorità assegnata da Cursor (P1=alto ROI/costo basso, P3=futuro). Decisione Founder post-manuale — **NON implementare senza "vai" esplicito**.
 
@@ -1030,7 +1030,7 @@ Implementazione: TTL index Mongo dove semantica lo consente + job archivio S3 me
 | A-022 | Retention policy audit collections | P3 | M (~4h) | Spark Cap.18 | Post-primi clienti |
 | A-023 | Toast duration tuning | P3 | XS (~15min) | Spark Cap.18 | Raggruppare micro-fix |
 | A-024 | CTA Richiedi demo via email (D-080) | ✅ | S | Founder 15-Sep-2026 | Chiuso — niente Calendly |
-| A-025 | **Demo prodotto** (cavallo di Troia) | **P0** | XL | Founder 15-Sep-2026 | Architettare in seguito — non self-serve oggi |
+| A-025 | **Demo prodotto** (cavallo di Troia) | **P0** ⏸ | XL | Founder 15-Sep-2026 | **In pausa** 25-Set — non riprendere senza ok |
 | A-026 | **Micro-tour agenzia** (Ken Burns 501 → Kling/Sora crediti) | **P2** | M-L | Founder 17-Sep-2026 | Docs Cap.23 ✅ · resta UX/path Kling da approfondire |
 
 **Legenda priorità**: **P0** fondamentale pre-acquisition · **P1** alta (ROI alto/effort basso o revenue-critical) · P2 media · P3 futuro (validation-gated)
@@ -1038,11 +1038,12 @@ Implementazione: TTL index Mongo dove semantica lo consente + job archivio S3 me
 
 ---
 
-## 🔴 A-025 — Demo prodotto OMNIA (cavallo di Troia) — da architettare
+## ⏸ A-025 — Demo prodotto OMNIA (cavallo di Troia) — da architettare · IN PAUSA
 
 **Data inserimento**: 15-Sep-2026  
+**Pausa**: 25-Sep-2026 — Founder: «tralascia la demo per ora»  
 **Segnalato da**: Founder (Marco Nicastro)  
-**Priorità**: **P0 / fondamentale** per acquisition — **NON implementare ora**; solo tracciare e approfondire quando si riapre il filone commerciale.
+**Priorità**: **P0 / fondamentale** per acquisition — **in pausa**; non architettare né shippare finché Founder non toglie la pausa.
 
 ### Contesto
 Confermato in sessione: **non esiste ancora una demo self-serve** per il cliente intenzionato. Oggi c’è solo:
@@ -1062,10 +1063,10 @@ Confermato in sessione: **non esiste ancora una demo self-serve** per il cliente
 4. **Dipendenze**: landing `/it/agenzie`, Resend warm-up, pricing Founders — allineare a GTM, non bruciare outreach prima
 
 ### Stato
-🔴 **DA APPROFONDIRE / DA FARE** — essenziale per go-to-market, **rinviato esplicitamente** dal Founder (15-Sep-2026). Architettare in sessione dedicata.
+⏸ **IN PAUSA** (25-Set) — essenziale per GTM ma Founder ha chiesto di tralasciare la demo per ora. Non architettare né shippare.
 
 ### Trigger di ripresa
-- Founder dice «architettiamo la demo» / riapre filone commerciale post-M6 o pre-outreach
+- Founder toglie esplicitamente la pausa («riprendiamo la demo» / «architettiamo la demo»)
 - Prima di qualsiasi cold email / 1.000 mail demo
 
 ---
@@ -1147,11 +1148,36 @@ Concordo sul nucleo. Temperatura: «OS agenzia» è **nord**, non claim immediat
 3. HAL «esegui con conferma» richiede audit log obbligatorio (D-051 / compliance) — ok come prerequisito?
 
 ### Stato
-✅ **CHIUSO** — A-028a…i ✅ (24-Set). Loop mattina agente dimostrabile. Report: `memory/GESTIONALE_ANALISI_2026-09-24.md`.
+✅ **CHIUSO** — A-028a…i ✅ (24-Set). Loop mattina agente dimostrabile. Analisi refresh: `memory/GESTIONALE_ANALISI_2026-09-24.md` (rev. 25-Set).
 
 ### Trigger di ripresa
-- Demo commerciale che mostri il loop mattina agente
-- Eventuali harden residuali (match «senza cliente», calendario pieno) solo con nuovo «vai»
+- Harden residuali R1–R8 (analisi §5–§8) solo con nuovo «vai»
+- Demo commerciale (A-025) resta in **pausa** — non è trigger automatico
+
+---
+
+## 🟡 A-034 — Harden gestionale residuale post A-028 (R1–R8)
+
+**Data inserimento**: 25-Sep-2026  
+**Segnalato da**: Analisi gestionale refresh (Cloud Agent) post chiusura A-028  
+**Solo con «vai»** — dettaglio in `GESTIONALE_ANALISI_2026-09-24.md` §5–§8.
+
+| ID | Tema | Effort |
+|----|------|:------:|
+| R1 | Smart filtro `no_match` | M |
+| R2 | Flag / filtro price-delta | M |
+| R3 | Attività → agenda leggera (+ link client/property) | M–L |
+| R4 | Analytics A/B fuori nav primaria | S |
+| R5 | UI onesta match `scan_capped` | S |
+| R6 | Refresh QC Tools report | S |
+| R7 | clients/smart latency 2k | M |
+| R8 | Colonna agente in tabella immobili | S |
+
+### Stato
+🟡 **APERTO** — backlog analisi; ordine consigliato R4 → R5 → R6 → R1 → R3.
+
+### Trigger di ripresa
+- Founder «vai» su una riga R*
 
 ---
 

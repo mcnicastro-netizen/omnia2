@@ -1,22 +1,32 @@
 # Prossima sessione — programma passi
 
-**Aggiornato**: 24 Settembre 2026 — sera · A-028 chiuso + sync HAL  
+**Aggiornato**: 25 Settembre 2026 · Analisi gestionale refresh · **demo in pausa**  
 **Repo ufficiale**: https://github.com/mcnicastro-netizen/omnia2 ✅  
 
 ---
 
-## Ripresa (domani)
-
-1. `bash scripts/omnia-stack.sh ensure` · tunnel share URL
-2. Demo login Founder (`ADMIN_EMAIL` / `ADMIN_PASSWORD` in `backend/.env`)
-3. Smoke loop mattina: Dashboard Oggi → Attività → Immobili coach → HAL Conferma e applica → Match score
-4. 🔜 Solo con «vai»: harden residuali / B2C P1 (**A-031** liste-note · **A-032** digest · **A-033** confronto+push) / demo commerciale
+## Stato
 
 | Area | Stato |
 |------|:-----:|
-| A-028a…i | ✅ |
-| Manuale + YAML HAL sync | ✅ (questa sera) |
-| `hal-index` + reindex | ✅ |
-| GitHub `omnia2` `main` | ✅ |
+| A-028a…i | ✅ chiuso |
+| Analisi gestionale post A-028 | ✅ `GESTIONALE_ANALISI_2026-09-24.md` (rev. 25-Set) |
+| Manuale + YAML HAL sync | ✅ |
+| Demo commerciale **A-025** | ⏸ **pausa** (Founder) |
+| Harden residuali R1–R8 / B2C A-031…033 | 🔜 solo con «vai» |
 
-**Link utili**: `/it/app/dashboard` · `/it/app/activities` · Cap.2 §2.5 · Cap.10 improve conferma · Cap.18 distinzione Attività CRM vs feed
+---
+
+## Ripresa
+
+1. `bash scripts/omnia-stack.sh ensure` · tunnel share URL se serve browser
+2. Login Founder (`ADMIN_EMAIL` / `ADMIN_PASSWORD` in `backend/.env`)
+3. Smoke opzionale: Dashboard Oggi → Attività → Immobili (tabella + smart) → Match score → HAL Conferma e applica
+4. 🔜 Solo con «vai» (scegliere una riga):
+   - **Gestionale residuali** — R4 Analytics nav · R5 match `scan_capped` UI · R6 QC refresh · R1 `no_match` · R3 agenda Attività (vedi analisi §8)
+   - **B2C P1** — **A-031** liste-note · **A-032** digest · **A-033** confronto+push
+   - **Demo A-025** — ripresa architettura solo se Founder toglie la pausa
+
+**Non ripartire** da A-028 come aperto. **Non** aprire lavoro demo senza ok esplicito.
+
+**Link utili**: `/it/app/dashboard` · `/it/app/activities` · analisi §5–§8 · Cap.2 §2.5 · Cap.10 improve conferma

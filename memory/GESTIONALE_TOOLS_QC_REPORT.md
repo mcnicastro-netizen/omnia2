@@ -1,5 +1,7 @@
 # Gestionale Tools QC Report
 
+> **STALE (25-Set-2026)** — run del **18-Set**. Post A-028a…i: Attività ✅, Oggi ✅, cluster ✅, score explain ✅, match harden cap 400×400. Non usare Gaps/Top-5 sotto come coda. SoT: `GESTIONALE_ANALISI_2026-09-24.md` (rev. 25-Set). Rieseguire QC solo con «vai».
+
 **Run**: 2026-09-18T07:42:54.553853+00:00 → 2026-09-18T07:53:49.631355+00:00 (reprobe merged + HAL/lead recover)
 **User**: `{'role': 'super_admin', 'agency': 'demo-agency-001', 'email': 'mcnicastro@gmail.com'}`
 **Preview healthz**: `{"ok": true, "preview": true, "api_origin": "http://127.0.0.1:43121", "api_ok": true, "api_status": 200, "crm_public_preview": false, "error": null}`
@@ -94,16 +96,16 @@
 | E | E5 Stripe checkout | `/app/settings/billing` | **SKIP** |  | soft: no Stripe checkout |
 | E | E7 Ops overview | `/app/ops` | **PASS** | 200 | keys=['period_days', 'generated_at', 'providers', 'policy', 'alerts', 'totals', 'services', 'tavily' |
 
-## Gaps prodotto (A-028)
+## Gaps prodotto (A-028) — storico 18-Set (superato)
 
-- A9: missing Attività/follow-up module in CRM nav/routes
-- Dashboard = KPI/stato account, non cockpit «Oggi» (A-028a)
-- Match score visible in UI clients but explainability (A-028b) not verified as tooltip API
-- Sidebar still flat (A-028c) — not in scope today
+- ~~A9: missing Attività~~ → ✅ A-028h (24-Set)
+- ~~Dashboard KPI-only~~ → ✅ A-028a
+- ~~Match score explain~~ → ✅ A-028b
+- ~~Sidebar flat~~ → ✅ A-028c
 
-## Blocchi tecnici
+## Blocchi tecnici — storico 18-Set
 
-- **FAIL** A/A8 Matches list: blocked: agency-wide /app/matches scans ~2M pairs under stress seed and kills API; client-scoped only
+- **FAIL** A/A8 Matches list (18-Set): agency-wide ~2M pairs. **Mitigato 24-Set**: scan fast + cap 400×400 + breakdown solo sulla page (`scan_capped`). Non rieseguire stress full senza «vai».
 
 ### SKIP (soft / defer)
 - C/C1 Staging generate: soft: no fal spend
@@ -117,12 +119,9 @@
 - Portal sync-now: non chiamato
 - Nominatim: solo eventuale geocode implicito su property create (1×) — no hammer
 
-## Top 5 next (solo con «vai»)
+## Top 5 next (solo con «vai») — aggiornato 25-Set
 
-1. A-028a Cockpit Dashboard «Oggi»
-2. A-028b Match Score tooltip/breakdown
-3. A-028c Sidebar clusters
-4. A-028d HAL contestuale scheda immobile
-5. A-028h Modulo Attività / follow-up (GAP A9)
+Vedi analisi §8: **R4** Analytics nav · **R5** UI match capped · **R6** QC refresh · **R1** smart `no_match` · **R3** agenda Attività.  
+A-028 chiuso. Demo A-025 in pausa.
 
 JSON: `/workspace/memory/reports/gestionale_tools_qc_latest.json`

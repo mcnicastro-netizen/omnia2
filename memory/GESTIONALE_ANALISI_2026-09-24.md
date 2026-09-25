@@ -1,89 +1,85 @@
-# Analisi gestionale ImmoWeb — 24 Settembre 2026
+# Analisi gestionale ImmoWeb — 25 Settembre 2026
 
-**Autore**: Cloud Agent (post D-092 / D-093)  
-**Fonte**: codice live + `GESTIONALE_TOOLS_QC_REPORT` (18-Set, parzialmente stale) + A-028  
-**Scopo**: verdetto onesto sul CRM agenzia e ordine di ship. Solo proposte vincolate a «vai» sulle sotto-voci.
+**Autore**: Cloud Agent (refresh post A-028a…i)  
+**Fonte**: codice live (`AgencyShell`, `DashboardPage`, `PropertiesPage`, `MatchesPage`, `ActivitiesPage`, `matches.py`, coach/confirm-apply) + QC report 18-Set (**stale** su A9/A-028a)  
+**Scopo**: verdetto aggiornato sul CRM agenzia dopo chiusura A-028. Solo proposte vincolate a «vai».  
+**Demo commerciale (A-025)**: **in pausa** (Founder 25-Set) — non in coda operativa.
 
 ---
 
 ## 1. Verdetto in una frase
 
-Il gestionale **ha già il loop prodotto** (immobili ↔ clienti ↔ richieste ↔ match ↔ portali ↔ HAL); il rischio non è “mancano 30 feature”, è **gerarchia e fiducia sul numero** (sidebar piatta, score non spiegato in lista, scala immobili a card-only).
+Il gestionale **ha il loop mattina dimostrabile** (Oggi → Attività → Immobili coach/filtri → Match spiegato → HAL conferma → Portali); il rischio non è più “mancano i pezzi P0 del review”, è **profondità operativa e rumore residuo** (Attività minimale, filtri smart incompleti, Analytics in nav, QC/docs stale, match ancora capped).
 
 ---
 
-## 2. Mappa nav attuale (flat)
+## 2. Mappa nav attuale (a cluster — A-028c ✅)
 
-Da `AgencyShell.jsx` (ordine reale, admin tipico):
+Da `AgencyShell.jsx` — voci raggruppate, route invariate:
 
-| Voce | Ruolo |
-|------|--------|
-| Dashboard | Operativo |
-| Importa | Pubblicazione / migrazione |
-| Pubblicità su portali | Pubblicazione |
-| Immobili | Operativo |
-| Clienti | Operativo |
-| Richieste | Operativo (D-089) |
-| Cestino | Admin |
-| Match | Operativo |
-| Analytics A/B | Strumenti |
-| MLS | Pubblicazione / rete |
-| Sito web | Pubblicazione |
-| Virtual Staging | Strumenti / AI |
-| Mutui | Strumenti |
-| Modulistica | Strumenti |
-| HAL Legal | Intelligenza |
-| Guida HAL | Intelligenza |
-| Membri | Amministrazione |
-| Piano & Crediti | Amministrazione |
-| Impostazioni | Amministrazione |
-| (+ Brand Lab / Ops) | Founder |
+| Cluster | Voci tipiche (admin) |
+|---------|----------------------|
+| **Operativo** | Dashboard · Immobili · Clienti · Richieste · **Attività** · Match |
+| **Pubblicazione** | Importa · Pubblicità su portali · MLS · Sito web |
+| **Strumenti** | **Analytics A/B** · Virtual Staging · Mutui · Modulistica |
+| **Intelligenza** | HAL Legal · Guida HAL |
+| **Amministrazione** | Gruppo · Cestino · Membri · Piano & Crediti · Impostazioni · (+ Brand Lab / Ops Founder) |
 
-**Problema**: ~15–18 voci allo stesso livello → l’agente “mattina” non ha una gerarchia mentale. API Keys già fuori nav (D-092 ✅).
+API Keys fuori nav primaria (D-092 ✅).  
+**Residuo soft**: Analytics A/B resta in nav primaria del cluster Strumenti — rumore per l’agente medio rispetto al loop quotidiano.
 
 ---
 
-## 3. Stato A-028 (aggiornato 24-Set)
+## 3. Stato A-028 (chiuso 24-Set — verificato in codice 25-Set)
 
-| ID | Tema | Stato | Evidenza |
-|----|------|:-----:|----------|
-| **A-028a** | Cockpit «Oggi» | ✅ | `GET /app/dashboard/today` + `DashboardPage` TodayCockpit (QC report ancora dice KPI-only → **stale**) |
-| **A-028b** | Explain Match Score | ❌ lista | API match già manda `breakdown`+`missing`; UI lista mostra solo chips “Mancano”. Breakdown pieno solo su Lead Score page |
-| **A-028c** | Sidebar a cluster | ❌ | `navItems` flat |
-| **A-028d** | HAL contestuale scheda | 🟡 | «Migliora» titolo/descrizione + Fascicolo; manca pannello «cosa manca / genera da dati» |
-| **A-028e** | Vista tabella immobili | ❌ | solo grid card (`PropertiesPage`) |
-| **A-028f** | Filtri intelligenti | ❌ | status/operation base; no «senza foto / incompleti» |
-| **A-028g** | HAL esegui+conferma | ✅ | `proposal_id` + `/al/confirm-apply` + UI Conferma e applica |
-| **A-028h** | Modulo Attività | ✅ | CRUD + pagina + coda Oggi |
+| ID | Tema | Stato | Evidenza live |
+|----|------|:-----:|---------------|
+| **A-028a** | Cockpit «Oggi» | ✅ | `GET /app/dashboard/today` + `TodayCockpit` sopra KPI |
+| **A-028b** | Explain Match Score | ✅ | `MatchBreakdownBars` su card Match; popover fasce su `ScoreBox` Clienti |
+| **A-028c** | Sidebar a cluster | ✅ | `NAV_CLUSTERS` + `data-testid="agency-nav-clusters"` |
+| **A-028d** | HAL contestuale scheda | ✅ | `GET .../coach` + `PropertyCoachPanel` + improve su gap |
+| **A-028e** | Vista tabella immobili | ✅ | toggle Card/Tabella + sort (no colonna agente v1) |
+| **A-028f** | Filtri intelligenti | ✅ | `smart=no_photos\|incomplete\|weak_copy` (+ deep-link da Oggi) |
+| **A-028g** | HAL esegui+conferma | ✅ | `proposal_id` + `POST /app/al/confirm-apply` + UI |
+| **A-028h** | Modulo Attività | ✅ | CRUD `/app/activities` + pagina + coda Oggi |
 | **A-028i** | Claim «OS agenzia» | ✅ | copy soft landing (nord OS, gestionale AI oggi) |
 
-**Post D-092**: destinazioni dashboard, Import hub, Richieste vs Clienti, Portali onesti, Gruppo wizard — **ok**. Residuo soft: Analytics A/B ancora in nav primaria (rumore per agente medio).
+**Post D-092**: destinazioni dashboard, Import hub, Richieste vs Clienti, Portali onesti, Gruppo wizard — **ok**.
 
 ---
 
-## 4. Loop mattina agente (9:00)
+## 4. Loop mattina agente (9:00) — post A-028
 
-| Passo | Oggi | Gap |
-|-------|------|-----|
-| Apri Dashboard | «Cosa fare oggi» + KPI | Code ok; non sostituisce calendario visite/attività |
-| Chiama / WhatsApp caldi | Clienti smart + score | **83 senza spiegazione** in riga |
-| Guarda match | Cards + missing chips | Breakdown nascosto; `/app/matches` agency-wide **FAIL perf** sotto stress (2M pair) |
-| Completa immobili | Card grid | A 2k+ serve **tabella** + filtri incompleti |
+| Passo | Oggi (25-Set) | Gap residuo |
+|-------|---------------|-------------|
+| Apri Dashboard | «Cosa fare oggi» + KPI + link Attività | Non è un calendario visite (lista due_at, no slot/agenda) |
+| Follow-up / chiamate | Pagina Attività + coda Oggi | CRUD minimale: no link forte a cliente/immobile in create, no reminder push |
+| Chiama / WhatsApp caldi | Clienti smart + score spiegato | OK per demo; smart path ancora il più lento a 2k (stress) |
+| Guarda match | Cards + breakdown on click | Agency-wide **capped 400×400** (`scan_capped`); non è full inventory |
+| Completa immobili | Tabella + filtri smart + coach | Manca filtro «senza match» e price-delta (fuori v1 A-028f) |
 | Pubblica | Publishing 3 tab (D-092) | Ok |
-| Chiedi a HAL | Guida + improve | Contestuale scheda ancora debole |
+| Chiedi a HAL | Guida + improve + conferma apply | Chat HAL ancora dipende da chiave LLM env; conferma-apply cablata |
+
+**Conclusione loop**: dimostrabile end-to-end. Non serve altro P0 A-028.
 
 ---
 
-## 5. Top problemi concreti
+## 5. Residui concreti (nuovo backlog — solo con «vai»)
 
-1. **Sidebar piatta** — `AgencyShell.jsx` · A-028c  
-2. **Score opaco in lista** — Clients/Matches · A-028b (dati già in API)  
-3. **Match agency-wide perf bomb** — QC A8 FAIL · rischio demo stress  
-4. **Immobili solo card** — `PropertiesPage.jsx` · A-028e  
-5. **Niente filtri «incompleti / senza foto»** — A-028f  
-6. **Nessun modulo Attività** — GAP A9 · A-028h (P2; cockpit the workaround)  
-7. **Analytics A/B in nav primaria** — rumore vs loop quotidiano  
-8. **QC report stale su A-028a** — confonde riprese future
+Ordinati per impatto sul loop / fiducia / demo stress (non ship senza ok Founder):
+
+| # | Tema | Perché | Effort | Note |
+|---|------|--------|:------:|------|
+| R1 | **Filtro smart `no_match`** (immobili attivi senza cliente/richiesta sopra soglia) | Completa A-028f come da review esterna | M | Richiede scan match capped o materiale notturno |
+| R2 | **Filtro / flag price-delta** (ribasso recente) | Coda commerciale «da ripubblicare / avvisare» | M | Dati prezzo storico se già presenti |
+| R3 | **Attività → calendario leggero** (settimana + link client/property obbligatori) | Oggi è todo-list, non agenda visite | M–L | Cap.2 già onesto: «non calendario completo» |
+| R4 | **Analytics A/B fuori nav primaria** (sotto Impostazioni o Founder-only) | Riduce rumore sidebar | S | Solo IA nav, zero backend |
+| R5 | **Match: paginate / require filter / cap UI onesto** | Cap 400×400 mitiga A8 ma UI non spiega `scan_capped` | S | Badge «campione» + link scoped client/property |
+| R6 | **QC Tools report refresh** | Report 18-Set dice A9 GAP + dashboard KPI-only → confonde riprese | S | Docs/automation; non prodotto |
+| R7 | **clients/smart p95** a seed 2k | Stress: path più lento (~436 ms p95) | M | Ottimizzazione, non feature |
+| R8 | **Colonna agente** in tabella immobili | Lasciato fuori A-028e v1 | S | Se multi-agente in demo |
+
+**Non in questa lista**: A-031…033 B2C (altro binario D-093); A-025 demo (pausa); multiposting Idealista/Immobiliare (accordi); redesign visuale / dark mode.
 
 ---
 
@@ -91,29 +87,43 @@ Da `AgencyShell.jsx` (ordine reale, admin tipico):
 
 - **D-091** no MyAgency / area riservata cliente  
 - Multiposting Idealista/Immobiliare (accordi commerciali)  
-- Redesign visuale completo / dark mode / “OS” claim prima del loop dimostrabile  
-- A-031…033 B2C (già backlog D-093, altro binario)
+- Claim «OS agenzia» pieno (D-051 / A-028i soft già shippato)  
+- A-031…033 B2C senza «vai»  
+- **A-025 demo commerciale** — esplicitamente in pausa  
+- Riaprire A-028 chiuso come se fosse ❌ (il file analisi precedente era stale)
 
 ---
 
-## 7. Ordine di attacco consigliato
+## 7. Documentazione stale da non credere
 
-| Priorità | ID | Perché | Effort |
-|:--------:|----|--------|:------:|
-| 1 | **A-028b** | Fiducia immediata; breakdown già in API | S |
-| 2 | **A-028c** | Solo IA nav; zero backend | S |
-| 3 | **Match list harden** | Evita kill API in demo (cap/paginate/require filter) | M |
-| 4 | **A-028d** | Copilota in scheda | M |
-| 5 | **A-028e+f** | Scala 2k+ | M |
-| 6 | A-028h / i | Dopo loop stabile | L / copy |
-
-**Quick wins**: b + c. **Invasivi**: e/f tabella, h attività, g esegui-con-conferma.
+| Doc | Problema | Azione |
+|-----|----------|--------|
+| `GESTIONALE_TOOLS_QC_REPORT.md` (18-Set) | A9 = GAP Attività; LOOP dice dashboard KPI-only | Segnato stale in coda report; rieseguire solo con «vai» |
+| Analisi 24-Set (prima revisione in questo file) | A-028b…f ancora ❌ | **Sostituita** da questa revisione 25-Set |
+| Stress report 17-Set | Match OK con 40 active; non riflette harden 400×400 | Ancora utile per clients/smart latency |
 
 ---
 
-## 8. Decisione operativa di questa sessione
+## 8. Ordine di attacco consigliato (prossimo «vai»)
 
-Founder: «vai» sulla ripresa **analisi gestionale**.  
-→ Documento pubblicato qui.  
-→ Ship immediato dei quick win **A-028b + A-028c** (già in cima all’ordine A-028 approvato).  
-→ Match harden + A-028d restano per successivo «vai» esplicito.
+| Priorità | Item | Perché |
+|:--------:|------|--------|
+| 1 | **R4** Analytics fuori nav | Quick win IA, zero rischio |
+| 2 | **R5** UI onesta su match capped | Fiducia + anti-confusione demo |
+| 3 | **R6** Refresh QC report | Allinea SoT docs |
+| 4 | **R1** smart `no_match` | Chiude gap review esterna su Immobili |
+| 5 | **R3** Attività → agenda leggera | Profondità loop visite |
+| 6 | R2 / R7 / R8 | Dopo i precedenti |
+
+**B2C P1** (A-031…033) resta binario separato — non mischiare con harden gestionale salvo priorità Founder.
+
+---
+
+## 9. Decisione operativa di questa sessione (25-Set)
+
+Founder: «tralascia la demo… ultimiamo lavoro in programma e continuiamo con analisi del gestionale».
+
+→ A-028 già chiuso in codice + HAL sync (sera 24-Set) — **nessun ship codice aggiuntivo senza nuovo «vai»**.  
+→ Demo A-025 **in pausa**.  
+→ Questo documento = SoT analisi gestionale aggiornata + backlog residuale R1–R8.  
+→ Prossimo passo prodotto: solo con «vai» su una riga della §8 (o B2C A-031…).
