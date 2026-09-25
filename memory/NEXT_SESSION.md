@@ -14,7 +14,7 @@
 | Analisi gestionale post A-028 | ✅ + **§10 moduli restanti** |
 | Demo commerciale **A-025** | ⏸ **pausa** |
 | Soft gap G1–G3 / B2C A-031…033 | 🔜 solo con «vai» |
-| Audit architettura SaaS | P1 chiuso · P2 APPROVATO · **P3 Multi-tenancy consegnato** (feedback Founder) |
+| Audit architettura SaaS | P1–P2 OK · **P3 ACQUISITO** · **P4 AuthN/AuthZ consegnato** (feedback) |
 
 Note audit: `memory/AUDIT_ARCHITETTURA_NOTE.md`
 
@@ -26,6 +26,6 @@ Note audit: `memory/AUDIT_ARCHITETTURA_NOTE.md`
 2. Login Founder (`ADMIN_EMAIL` / `ADMIN_PASSWORD` in `backend/.env`)
 3. Smoke: Oggi → Attività (Settimana) → Immobili smart `no_match`/`price_drop` → Match banner campione → Impostazioni → Analytics
 4. 🔜 Solo con «vai»: **G4** nav Moderazione · G1 autocomplete Attività · G5/G6 soft · B2C A-031… · demo se toglie pausa
-5. Audit: P3 consegnato · **Punto 4** solo su ok Founder
+5. Audit: P3 acquisito · P4 consegnato · **Punto 5** solo su ok Founder
 
 **Link utili**: `/it/app/dashboard` · `/it/app/activities` · `/it/app/properties` · `/it/app/settings`
