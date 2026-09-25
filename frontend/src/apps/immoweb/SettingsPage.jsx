@@ -137,6 +137,27 @@ export default function SettingsPage() {
             </section>
           )}
 
+          <section
+            data-testid="settings-analytics-card"
+            className="border border-stone-200 bg-white rounded-lg p-5 flex flex-wrap items-start justify-between gap-4"
+          >
+            <div className="min-w-0">
+              <h2 className="text-xs uppercase tracking-widest text-stone-500">
+                Analytics A/B
+              </h2>
+              <p className="text-sm text-stone-600 mt-1 max-w-xl">
+                Panoramica annunci, lead e pubblicazioni. Strumento di analisi — non serve ogni mattina.
+              </p>
+            </div>
+            <Link
+              to={`/${lang}/app/analytics`}
+              data-testid="settings-open-analytics"
+              className="px-4 py-2 text-xs uppercase tracking-widest border border-stone-300 bg-white text-stone-900 rounded-md hover:bg-stone-50 shrink-0"
+            >
+              Apri Analytics
+            </Link>
+          </section>
+
           <Section label={t("onboarding.step_identity")}>
             <FieldRow label={t("onboarding.display_name")}>
               <input

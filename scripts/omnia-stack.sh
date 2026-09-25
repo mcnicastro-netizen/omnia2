@@ -111,17 +111,18 @@ read_public_url() {
 tunnel_alive() {
   local url="$1"
   [[ -n "$url" ]] || return 1
-  # Cluster DNS (10.0.0.2) often cannot resolve *.trycloudflare.com — probe via 1.1.1.1
-  local host path ip
+  # Cluster DNS often prefers broken IPv6 for *.trycloudflare.com — force A + resolve
+  local host ip
   host="${url#https://}"
   host="${host%%/*}"
   if command -v dig >/dev/null 2>&1; then
     ip="$(dig @1.1.1.1 +short "$host" A 2>/dev/null | head -n1 || true)"
   fi
+  local probe="${url}/it/login"
   if [[ -n "${ip:-}" ]]; then
-    curl -sf --max-time 8 --resolve "${host}:443:${ip}" "${url}/healthz" >/dev/null 2>&1
+    curl -4 -sf --max-time 8 --resolve "${host}:443:${ip}" "$probe" >/dev/null 2>&1
   else
-    curl -sf --max-time 8 "${url}/healthz" >/dev/null 2>&1
+    curl -4 -sf --max-time 8 "$probe" >/dev/null 2>&1
   fi
 }
 
@@ -267,7 +268,9 @@ adopt_or_start_tunnel() {
   local bin
   bin="$(ensure_cloudflared_bin)"
   : >"$tunnel_log"
+  # Prefer HTTP/2: QUIC quick tunnels often return Cloudflare 530 in this env
   nohup "$bin" tunnel --url "http://127.0.0.1:${PREVIEW_PORT}" \
+    --protocol http2 \
     --ha-connections 1 \
     >>"$tunnel_log" 2>&1 &
   echo $! >"$pid_tunnel"

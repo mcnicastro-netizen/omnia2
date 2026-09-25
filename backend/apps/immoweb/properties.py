@@ -90,6 +90,18 @@ def _to_list_item(doc: dict) -> dict:
     has_energy = bool(energy.get("energy_class"))
     if photo_count < 3 or not has_price or not has_city or not has_energy:
         flags.append("incomplete")
+    drop = doc.get("last_price_drop")
+    if isinstance(drop, dict) and (drop.get("drop_eur") or drop.get("drop_rent_eur")):
+        flags.append("price_drop")
+    if doc.get("_no_match"):
+        flags.append("no_match")
+    drop_out = None
+    if isinstance(drop, dict):
+        drop_out = {
+            "drop_eur": drop.get("drop_eur") or drop.get("drop_rent_eur"),
+            "drop_pct": drop.get("drop_pct"),
+            "at": drop.get("at") or drop.get("price_dropped_at"),
+        }
     return {
         "id": doc["id"],
         "title": doc["title"],
@@ -109,7 +121,26 @@ def _to_list_item(doc: dict) -> dict:
         "updated_at": doc["updated_at"],
         "photo_count": int(photo_count or 0),
         "listing_flags": flags or None,
+        "listing_agent_id": doc.get("listing_agent_id"),
+        "listing_agent_name": doc.get("listing_agent_name"),
+        "last_price_drop": drop_out,
     }
+
+
+async def _attach_agent_names(db, docs: list) -> None:
+    """A-034 R8 — resolve listing_agent_id → display name (mutates docs)."""
+    ids = {d.get("listing_agent_id") for d in docs if d.get("listing_agent_id")}
+    if not ids:
+        return
+    users = await db.users.find(
+        {"id": {"$in": list(ids)}},
+        {"_id": 0, "id": 1, "name": 1},
+    ).to_list(length=len(ids))
+    by_id = {u["id"]: (u.get("name") or "").strip() or None for u in users}
+    for d in docs:
+        aid = d.get("listing_agent_id")
+        if aid:
+            d["listing_agent_name"] = by_id.get(aid)
 
 
 # -------------------- LIST --------------------
@@ -125,7 +156,7 @@ async def list_properties(
     q: Optional[str] = None,
     smart: Optional[str] = Query(
         None,
-        description="A-028f: no_photos | incomplete | weak_copy",
+        description="A-028f/A-034: no_photos | incomplete | weak_copy | no_match | price_drop",
     ),
     sort: Optional[str] = Query(
         "updated_desc",
@@ -161,9 +192,11 @@ async def list_properties(
             ]
         }
 
-    # A-028f — smart filters (Mongo-side where possible)
+    # A-028f / A-034 — smart filters (Mongo-side where possible)
     smart_key = (smart or "").strip() or None
-    if smart_key and smart_key not in ("no_photos", "incomplete", "weak_copy"):
+    if smart_key and smart_key not in (
+        "no_photos", "incomplete", "weak_copy", "no_match", "price_drop",
+    ):
         raise HTTPException(status_code=422, detail="invalid_smart_filter")
     sort_key = (sort or "updated_desc").strip()
     if sort_key not in (
@@ -222,6 +255,17 @@ async def list_properties(
                 ]},
             ]
         }
+    elif smart_key == "price_drop":
+        query = {
+            "$and": [
+                query,
+                {"last_price_drop": {"$exists": True, "$ne": None}},
+                {"$or": [
+                    {"last_price_drop.drop_eur": {"$gt": 0}},
+                    {"last_price_drop.drop_rent_eur": {"$gt": 0}},
+                ]},
+            ]
+        }
 
     sort_map = {
         "updated_desc": [("updated_at", -1)],
@@ -232,6 +276,60 @@ async def list_properties(
         "created_desc": [("created_at", -1)],
     }
     sort_spec = sort_map.get(sort_key, [("updated_at", -1)])
+
+    # A-034 R1 — no_match: scan capped props×clients (fast score), then page in memory
+    if smart_key == "no_match":
+        from apps.immoweb.matching import compute_match_score_fast
+        NO_MATCH_MIN = 40
+        PROP_CAP, CLIENT_CAP = 400, 400
+        props = await db.properties.find(
+            {"$and": [query, {"status": {"$in": ["active", "draft"]}}]},
+            {"_id": 0},
+        ).sort("updated_at", -1).to_list(length=PROP_CAP)
+        from shared.db.trash import with_not_trashed as _nt
+        clients = await db.clients.find(
+            _nt({
+                "agency_id": agency_id,
+                "client_type": {"$in": ["buyer", "tenant", "investor"]},
+            }),
+            {"_id": 0, "id": 1, "preferences": 1},
+        ).to_list(length=CLIENT_CAP)
+        no_match_docs = []
+        for p in props:
+            best = 0
+            for c in clients:
+                s = compute_match_score_fast(p, c.get("preferences") or {})
+                if s > best:
+                    best = s
+                    if best >= NO_MATCH_MIN:
+                        break
+            if best < NO_MATCH_MIN:
+                p = dict(p)
+                p["_no_match"] = True
+                p["photo_count"] = len(p.get("photos") or [])
+                no_match_docs.append(p)
+        total = len(no_match_docs)
+        # sort in memory
+        rev = sort_key.endswith("_desc")
+        key_field = {
+            "updated_desc": "updated_at", "updated_asc": "updated_at",
+            "price_desc": "price", "price_asc": "price",
+            "surface_desc": "surface_sqm", "created_desc": "created_at",
+        }.get(sort_key, "updated_at")
+        no_match_docs.sort(key=lambda d: (d.get(key_field) is None, d.get(key_field) or ""), reverse=rev)
+        page_docs = no_match_docs[(page - 1) * page_size: page * page_size]
+        await _attach_agent_names(db, page_docs)
+        return {
+            "items": [_to_list_item(d) for d in page_docs],
+            "total": total,
+            "page": page,
+            "page_size": page_size,
+            "smart": smart_key,
+            "sort": sort_key,
+            "scan_capped": True,
+            "scanned_properties": len(props),
+            "scanned_clients": len(clients),
+        }
 
     total = await db.properties.count_documents(query)
     pipeline = [
@@ -264,9 +362,12 @@ async def list_properties(
             "price_on_request": 1,
             "photo_count": 1,
             "photos": {"$slice": ["$photos", 1]},
+            "listing_agent_id": 1,
+            "last_price_drop": 1,
         }},
     ]
     docs = await db.properties.aggregate(pipeline).to_list(length=page_size)
+    await _attach_agent_names(db, docs)
     return {
         "items": [_to_list_item(d) for d in docs],
         "total": total,

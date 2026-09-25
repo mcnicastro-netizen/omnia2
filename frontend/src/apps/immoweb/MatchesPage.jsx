@@ -71,6 +71,22 @@ export default function MatchesPage() {
           </div>
         </div>
 
+        {!loading && data.scan_capped && (
+          <div
+            data-testid="matches-scan-capped-banner"
+            className="bg-amber-50 border border-amber-200 text-amber-900 text-sm rounded-lg px-4 py-3"
+          >
+            <p className="font-medium">Campione inventario (non tutta l’agenzia)</p>
+            <p className="mt-1 text-amber-800/90">
+              Scansione limitata a {data.scanned_properties ?? "—"} immobili × {data.scanned_clients ?? "—"} clienti
+              per tenere l’API reattiva. Per risultati completi apri i match da una{" "}
+              <Link to={`/${lang}/app/clients`} className="underline font-medium">scheda cliente</Link>
+              {" "}o da un{" "}
+              <Link to={`/${lang}/app/properties`} className="underline font-medium">immobile</Link>.
+            </p>
+          </div>
+        )}
+
         {loading ? (
           <p className="text-stone-500 text-sm">{t("common.loading")}</p>
         ) : data.items.length === 0 ? (

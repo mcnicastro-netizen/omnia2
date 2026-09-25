@@ -384,14 +384,6 @@ async def smart_clients(
         _PROP_PROJ,
     ).sort("updated_at", -1).to_list(length=PROPERTY_MATCH_CAP)
 
-    # Lead score cache (agency-scoped)
-    cache_docs = await db.lead_score_cache.find(
-        {"agency_id": agency_id}, {"_id": 0},
-    ).to_list(length=20000)
-    cache_index: Dict[tuple, Dict[str, Any]] = {
-        (d["property_id"], d["client_id"]): d for d in cache_docs
-    }
-
     bkt = bucket if bucket and bucket != "all" else None
     skip = (page - 1) * page_size
 
@@ -412,11 +404,19 @@ async def smart_clients(
             .limit(page_size)
             .to_list(length=page_size)
         )
+        # A-034 R7 — cache solo per i clienti della pagina
+        page_ids = [c["id"] for c in page_clients]
+        cache_docs = await db.lead_score_cache.find(
+            {"agency_id": agency_id, "client_id": {"$in": page_ids}},
+            {"_id": 0},
+        ).to_list(length=max(200, len(page_ids) * 5)) if page_ids else []
+        cache_index: Dict[tuple, Dict[str, Any]] = {
+            (d["property_id"], d["client_id"]): d for d in cache_docs
+            if d.get("property_id") and d.get("client_id")
+        }
         items = [_enrich_client(c, properties, cache_index) for c in page_clients]
 
         all_n, searchers_n, sellers_n = await _mongo_type_counts(db, agency_id, base_q)
-        # Temp / AI counts need a score scan — omit numbers here (FE hides non-numbers).
-        # Switching to score sort or a temperature bucket triggers the scored path.
         counts = {
             "all": all_n,
             "searchers": searchers_n,
@@ -478,6 +478,17 @@ async def smart_clients(
                     clients = searchers + sellers
                 else:
                     clients = await db.clients.find(scan_q, _CLIENT_PROJ).to_list(length=CLIENT_SCAN_CAP)
+
+                # A-034 R7 — lead cache scoped to scanned clients (not agency-wide 20k)
+                scanned_ids = [c["id"] for c in clients]
+                cache_docs = await db.lead_score_cache.find(
+                    {"agency_id": agency_id, "client_id": {"$in": scanned_ids}},
+                    {"_id": 0},
+                ).to_list(length=min(20000, max(500, len(scanned_ids) * 8))) if scanned_ids else []
+                cache_index: Dict[tuple, Dict[str, Any]] = {
+                    (d["property_id"], d["client_id"]): d for d in cache_docs
+                    if d.get("property_id") and d.get("client_id")
+                }
 
                 def _run_enrich():
                     return [_enrich_client(c, properties, cache_index) for c in clients]

@@ -11,6 +11,8 @@ const SMART = [
   { id: "no_photos", label: "Senza foto" },
   { id: "incomplete", label: "Incompleti" },
   { id: "weak_copy", label: "Testo debole" },
+  { id: "no_match", label: "Senza match" },
+  { id: "price_drop", label: "Ribasso recente" },
 ];
 const SORTS = [
   { id: "updated_desc", label: "Aggiornati ↓" },
@@ -32,6 +34,8 @@ function FlagChips({ flags }) {
     no_photos: "Senza foto",
     incomplete: "Incompleto",
     weak_copy: "Testo debole",
+    no_match: "Senza match",
+    price_drop: "Ribasso",
   };
   return (
     <span className="flex flex-wrap gap-1">
@@ -243,6 +247,7 @@ export default function PropertiesPage() {
                   <th className="px-3 py-2 font-medium">Prezzo</th>
                   <th className="px-3 py-2 font-medium">m²</th>
                   <th className="px-3 py-2 font-medium">Foto</th>
+                  <th className="px-3 py-2 font-medium">Agente</th>
                   <th className="px-3 py-2 font-medium">Flag</th>
                 </tr>
               </thead>
@@ -260,6 +265,9 @@ export default function PropertiesPage() {
                     <td className="px-3 py-2.5 text-stone-900">{formatPrice(p.price || p.rent_monthly)}</td>
                     <td className="px-3 py-2.5 text-stone-600">{p.surface_sqm ?? "—"}</td>
                     <td className="px-3 py-2.5 text-stone-600">{p.photo_count ?? 0}</td>
+                    <td className="px-3 py-2.5 text-stone-600 max-w-[120px] truncate" title={p.listing_agent_name || ""}>
+                      {p.listing_agent_name || "—"}
+                    </td>
                     <td className="px-3 py-2.5"><FlagChips flags={p.listing_flags} /></td>
                   </tr>
                 ))}

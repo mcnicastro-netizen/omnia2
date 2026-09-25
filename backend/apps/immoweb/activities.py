@@ -58,7 +58,8 @@ class ActivityUpdate(BaseModel):
 @router.get("")
 async def list_activities(
     status: Optional[str] = Query("open"),
-    due: Optional[str] = Query(None, description="today | overdue | all"),
+    due: Optional[str] = Query(None, description="today | overdue | week | all"),
+    week_start: Optional[str] = Query(None, description="YYYY-MM-DD (lunedì) when due=week"),
     limit: int = Query(50, ge=1, le=200),
     user: dict = Depends(get_current_user),
 ):
@@ -70,12 +71,21 @@ async def list_activities(
     now = _now()
     today = now[:10]
     if due == "today":
-        q["due_at"] = {"$gte": f"{today}T00:00:00", "$lte": f"{today}T23:59:59.999999+00:00"}
-        # also accept date-only or any ISO starting with today
         q["due_at"] = {"$regex": f"^{today}"}
     elif due == "overdue":
         q["status"] = "open"
         q["due_at"] = {"$lt": f"{today}T00:00:00", "$ne": None}
+    elif due == "week":
+        start = (week_start or today)[:10]
+        # inclusive 7 days from week_start
+        from datetime import datetime as _dt, timedelta
+        try:
+            start_d = _dt.strptime(start, "%Y-%m-%d")
+        except ValueError:
+            start_d = _dt.strptime(today, "%Y-%m-%d")
+            start = today
+        end = (start_d + timedelta(days=6)).strftime("%Y-%m-%d")
+        q["due_at"] = {"$gte": f"{start}T00:00:00", "$lte": f"{end}T23:59:59.999999"}
     cursor = db.activities.find(q, {"_id": 0}).sort("due_at", 1).limit(limit)
     items = await cursor.to_list(length=limit)
     return {"items": items, "total": len(items)}

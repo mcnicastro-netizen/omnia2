@@ -321,7 +321,10 @@ class PropertyListItem(OmniaBaseModel):
     created_at: str
     updated_at: str
     photo_count: int = 0
-    listing_flags: Optional[List[str]] = None  # A-028f: no_photos | incomplete | weak_copy
+    listing_flags: Optional[List[str]] = None  # A-028f / A-034: no_photos | incomplete | weak_copy | price_drop | no_match
+    listing_agent_id: Optional[str] = None
+    listing_agent_name: Optional[str] = None
+    last_price_drop: Optional[dict] = None  # {drop_eur, drop_pct, at} if present
 
 
 class PropertyListResponse(OmniaBaseModel):
@@ -331,6 +334,9 @@ class PropertyListResponse(OmniaBaseModel):
     page_size: int
     smart: Optional[str] = None
     sort: Optional[str] = None
+    scan_capped: Optional[bool] = None
+    scanned_properties: Optional[int] = None
+    scanned_clients: Optional[int] = None
 
 
 # -------------------- IMPORT --------------------
