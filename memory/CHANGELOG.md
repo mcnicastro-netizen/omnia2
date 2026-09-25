@@ -1,5 +1,19 @@
 # OMNIA — Changelog
 
+## 2026-09-25 — A-034 harden gestionale residuale (R1–R8)
+
+**Tipo**: Feature / UX CRM / Ops.
+
+- **R4**: Analytics A/B fuori nav → card in Impostazioni
+- **R5**: banner Match «campione inventario» se `scan_capped`
+- **R1/R2**: smart `no_match` + `price_drop` su Immobili
+- **R8**: colonna Agente in tabella immobili
+- **R3**: Attività vista Settimana + link cliente/immobile
+- **R7**: clients/smart — lead_score_cache scoped ai clienti scansionati
+- **Tunnel**: `omnia-stack.sh` preferisce cloudflared **http2** (mitiga 530 QUIC)
+- Test: `test_a034_residuals.py`
+
+---
 ## 2026-09-25 — Analisi gestionale refresh post A-028 · demo in pausa
 
 **Tipo**: Docs / SoT prodotto.

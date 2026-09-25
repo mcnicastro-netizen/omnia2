@@ -64,22 +64,20 @@ API Keys fuori nav primaria (D-092 ✅).
 
 ---
 
-## 5. Residui concreti (nuovo backlog — solo con «vai»)
+## 5. Residui A-034 — **shippati 25-Set** (erano R1–R8)
 
-Ordinati per impatto sul loop / fiducia / demo stress (non ship senza ok Founder):
+| # | Tema | Stato |
+|---|------|:-----:|
+| R1 | Smart `no_match` | ✅ |
+| R2 | Smart / flag `price_drop` | ✅ |
+| R3 | Attività agenda settimana + link client/property | ✅ |
+| R4 | Analytics fuori nav → Impostazioni | ✅ |
+| R5 | UI Match `scan_capped` | ✅ |
+| R6 | QC report STALE banner | ✅ (docs) |
+| R7 | clients/smart cache scoped | ✅ |
+| R8 | Colonna agente tabella | ✅ |
 
-| # | Tema | Perché | Effort | Note |
-|---|------|--------|:------:|------|
-| R1 | **Filtro smart `no_match`** (immobili attivi senza cliente/richiesta sopra soglia) | Completa A-028f come da review esterna | M | Richiede scan match capped o materiale notturno |
-| R2 | **Filtro / flag price-delta** (ribasso recente) | Coda commerciale «da ripubblicare / avvisare» | M | Dati prezzo storico se già presenti |
-| R3 | **Attività → calendario leggero** (settimana + link client/property obbligatori) | Oggi è todo-list, non agenda visite | M–L | Cap.2 già onesto: «non calendario completo» |
-| R4 | **Analytics A/B fuori nav primaria** (sotto Impostazioni o Founder-only) | Riduce rumore sidebar | S | Solo IA nav, zero backend |
-| R5 | **Match: paginate / require filter / cap UI onesto** | Cap 400×400 mitiga A8 ma UI non spiega `scan_capped` | S | Badge «campione» + link scoped client/property |
-| R6 | **QC Tools report refresh** | Report 18-Set dice A9 GAP + dashboard KPI-only → confonde riprese | S | Docs/automation; non prodotto |
-| R7 | **clients/smart p95** a seed 2k | Stress: path più lento (~436 ms p95) | M | Ottimizzazione, non feature |
-| R8 | **Colonna agente** in tabella immobili | Lasciato fuori A-028e v1 | S | Se multi-agente in demo |
-
-**Non in questa lista**: A-031…033 B2C (altro binario D-093); A-025 demo (pausa); multiposting Idealista/Immobiliare (accordi); redesign visuale / dark mode.
+**Nuovi gap** (se emergono dall’analisi completa moduli oltre Clienti) → solo con «vai».
 
 ---
 
@@ -90,7 +88,7 @@ Ordinati per impatto sul loop / fiducia / demo stress (non ship senza ok Founder
 - Claim «OS agenzia» pieno (D-051 / A-028i soft già shippato)  
 - A-031…033 B2C senza «vai»  
 - **A-025 demo commerciale** — esplicitamente in pausa  
-- Riaprire A-028 chiuso come se fosse ❌ (il file analisi precedente era stale)
+- Riaprire A-028 / A-034 chiusi come se fossero ❌
 
 ---
 
@@ -98,32 +96,23 @@ Ordinati per impatto sul loop / fiducia / demo stress (non ship senza ok Founder
 
 | Doc | Problema | Azione |
 |-----|----------|--------|
-| `GESTIONALE_TOOLS_QC_REPORT.md` (18-Set) | A9 = GAP Attività; LOOP dice dashboard KPI-only | Segnato stale in coda report; rieseguire solo con «vai» |
-| Analisi 24-Set (prima revisione in questo file) | A-028b…f ancora ❌ | **Sostituita** da questa revisione 25-Set |
-| Stress report 17-Set | Match OK con 40 active; non riflette harden 400×400 | Ancora utile per clients/smart latency |
+| `GESTIONALE_TOOLS_QC_REPORT.md` (18-Set) | A9 = GAP Attività; LOOP dice dashboard KPI-only | Banner STALE; rieseguire solo con «vai» |
+| Analisi 24-Set (prima bozza A-028 ❌) | Superata | Rev. 25-Set + A-034 |
+| Stress report 17-Set | Match OK con 40 active; non riflette harden 400×400 | Utile per latency storica |
 
 ---
 
 ## 8. Ordine di attacco consigliato (prossimo «vai»)
 
-| Priorità | Item | Perché |
-|:--------:|------|--------|
-| 1 | **R4** Analytics fuori nav | Quick win IA, zero rischio |
-| 2 | **R5** UI onesta su match capped | Fiducia + anti-confusione demo |
-| 3 | **R6** Refresh QC report | Allinea SoT docs |
-| 4 | **R1** smart `no_match` | Chiude gap review esterna su Immobili |
-| 5 | **R3** Attività → agenda leggera | Profondità loop visite |
-| 6 | R2 / R7 / R8 | Dopo i precedenti |
-
-**B2C P1** (A-031…033) resta binario separato — non mischiare con harden gestionale salvo priorità Founder.
+Dopo A-034: **analisi completa restanti moduli** (Richieste, Pubblicazione, Strumenti, Admin) → nuovo backlog solo se gap reali.  
+Binario B2C: A-031…033 separato.
 
 ---
 
-## 9. Decisione operativa di questa sessione (25-Set)
+## 9. Decisione operativa (25-Set)
 
-Founder: «tralascia la demo… ultimiamo lavoro in programma e continuiamo con analisi del gestionale».
-
-→ A-028 già chiuso in codice + HAL sync (sera 24-Set) — **nessun ship codice aggiuntivo senza nuovo «vai»**.  
-→ Demo A-025 **in pausa**.  
-→ Questo documento = SoT analisi gestionale aggiornata + backlog residuale R1–R8.  
-→ Prossimo passo prodotto: solo con «vai» su una riga della §8 (o B2C A-031…).
+Founder: rifinire residuali, poi analizzare tutto il resto del gestionale (eravamo ai Clienti).  
+→ A-034 R1–R8 shippati.  
+→ Demo A-025 resta in pausa.  
+→ Tunnel CRM condivisibile (cloudflared http2).  
+→ Sezione analisi moduli restanti: append sotto (§10) quando audit completo.

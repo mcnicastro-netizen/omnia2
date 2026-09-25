@@ -1174,10 +1174,10 @@ Concordo sul nucleo. Temperatura: «OS agenzia» è **nord**, non claim immediat
 | R8 | Colonna agente in tabella immobili | S |
 
 ### Stato
-🟡 **APERTO** — backlog analisi; ordine consigliato R4 → R5 → R6 → R1 → R3.
+✅ **CHIUSO** 25-Set-2026 — R1…R8 shippati (vedi CHANGELOG A-034). Analisi resto moduli in corso.
 
 ### Trigger di ripresa
-- Founder «vai» su una riga R*
+- Nuovi gap dall’analisi completa moduli (post-Clienti) solo con «vai»
 
 ---
 
