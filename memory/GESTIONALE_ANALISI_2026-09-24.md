@@ -104,15 +104,86 @@ API Keys fuori nav primaria (D-092 ✅).
 
 ## 8. Ordine di attacco consigliato (prossimo «vai»)
 
-Dopo A-034: **analisi completa restanti moduli** (Richieste, Pubblicazione, Strumenti, Admin) → nuovo backlog solo se gap reali.  
-Binario B2C: A-031…033 separato.
+Dopo A-034 e §10: solo gap **G1–G6** sotto (o B2C A-031…). Nessun P0 aperto sul loop mattina.
 
 ---
 
 ## 9. Decisione operativa (25-Set)
 
-Founder: rifinire residuali, poi analizzare tutto il resto del gestionale (eravamo ai Clienti).  
+Founder: rifinire residuali, poi analizzare tutto il resto del gestionale.  
 → A-034 R1–R8 shippati.  
 → Demo A-025 resta in pausa.  
-→ Tunnel CRM condivisibile (cloudflared http2).  
-→ Sezione analisi moduli restanti: append sotto (§10) quando audit completo.
+→ Tunnel CRM: cloudflared **http2** (anti-530 QUIC).  
+→ §10 = mappa moduli oltre Clienti.
+
+---
+
+## 10. Analisi resto moduli (25-Set) — oltre Dashboard / Immobili / Match / Attività
+
+### Operativo
+
+| Modulo | Stato | Nota da codice |
+|--------|:-----:|----------------|
+| **Clienti** | ✅ solido | `ClientsPage` smart: segmenti searchers/sellers, bucket temperatura, score explain, refresh AI. Path lento mitigato A-034 R7. |
+| **Richieste** | ✅ solido | `RequestsPage` + form: tipi interest/search_brief, stati, match portfolio/MLS, vista rete. Allineato D-089/D-090. |
+| **Match** | ✅ + onesto | Banner campione (R5). Scoped client/property restano il path «completo». |
+
+**Gap soft Clienti/Attività**  
+- **G1** — Attività: link cliente/immobile via UUID testuale (no autocomplete). Funziona, UX grezza.  
+- **G2** — Clienti smart: bucket temperatura su scan capped (già documentato in API `counts_scope`).
+
+### Pubblicazione
+
+| Modulo | Stato | Nota |
+|--------|:-----:|------|
+| **Importa** | ✅ | Hub 3 card (`ImportHubPage`) → XML / clienti / legacy. D-092. |
+| **Pubblicità portali** | ✅ onesto | Tab attivi / attivabili / in arrivo + sync/compliance. Multiposting Idealista/Immobiliare = fuori (accordi). |
+| **Social** | ✅ v1 | On-demand, no scheduler (Cap.15 onesto). |
+| **MLS** | ✅ seed | Dashboard + inventory scope + partners/offers. Rete commerciale post-società. |
+| **Sito web** | ✅ | Brand Studio + domain. |
+
+**Gap soft Pubblicazione**  
+- **G3** — Social: niente calendario editoriale (già backlog Cap.15, non riaprire senza «vai»).
+
+### Strumenti
+
+| Modulo | Stato | Nota |
+|--------|:-----:|------|
+| **Analytics A/B** | ✅ fuori nav | Overview + confronto 2–6 listing. Ora da Impostazioni (R4). |
+| **Virtual Staging** | ✅ | Crediti + fal (skip burn in QC). |
+| **Mutui** | ✅ | Comparatore operativo. |
+| **Modulistica** | ✅ | Template + docs; e-sign status soft. |
+
+### Intelligenza
+
+| Modulo | Stato | Nota |
+|--------|:-----:|------|
+| **Guida HAL** | ✅ | Knowledge + ask (dipende LLM key env). |
+| **HAL Legal** | ✅ | Chat + disclaimer. |
+| **HAL in scheda** | ✅ | Coach + improve + conferma (A-028d/g). |
+
+### Amministrazione
+
+| Modulo | Stato | Nota |
+|--------|:-----:|------|
+| **Membri** | ✅ | Inviti / ruoli. |
+| **Piano & Crediti** | ✅ | Billing Founders; checkout Stripe soft in QC. |
+| **Impostazioni** | ✅ | Identità + API Keys + Analytics + notifiche. |
+| **Gruppo** | ✅ | Wizard multi-filiale (group_admin). |
+| **Cestino** | ✅ | Soft-delete restore. |
+| **Brand Lab / Ops** | ✅ Founder | Solo `super_admin`. |
+| **Moderazione B2C** | ✅ route | Coda annunci privati — **non in nav CRM** (ok: non è loop agente). |
+
+### Verdetto §10
+
+Il gestionale **non ha buchi grossi di prodotto** fuori dal loop già chiuso. I residui utili sono **G1** (autocomplete Attività) e, solo se serve go-to-market portali, gli accordi Idealista/Immobiliare (non codice). Il resto è profondità (scheduler social, MLS commerciale) già esplicitamente fuori o post-società.
+
+### Backlog candidato (solo «vai»)
+
+| ID | Tema | Effort |
+|----|------|:------:|
+| G1 | Autocomplete cliente/immobile in Attività | S |
+| G2 | Copy UI su `counts_scope` Clienti smart | XS |
+| G3 | Social scheduling | L (Cap.15) |
+| — | B2C A-031…033 | binario D-093 |
+| — | Demo A-025 | ⏸ pausa |

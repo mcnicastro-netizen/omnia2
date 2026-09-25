@@ -1,5 +1,13 @@
 # OMNIA — Changelog
 
+## 2026-09-25 — Analisi moduli restanti gestionale (§10)
+
+**Tipo**: Docs.
+
+- `GESTIONALE_ANALISI` §10: Clienti→Admin mappa completa + backlog soft G1–G3
+- A-034 già shippato; demo A-025 resta in pausa
+
+---
 ## 2026-09-25 — A-034 harden gestionale residuale (R1–R8)
 
 **Tipo**: Feature / UX CRM / Ops.

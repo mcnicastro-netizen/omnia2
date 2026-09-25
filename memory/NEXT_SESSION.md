@@ -11,9 +11,9 @@
 |------|:-----:|
 | A-028a…i | ✅ |
 | A-034 R1…R8 | ✅ (25-Set) |
-| Analisi gestionale post A-028 | ✅ + **analisi resto moduli** in corso |
+| Analisi gestionale post A-028 | ✅ + **§10 moduli restanti** |
 | Demo commerciale **A-025** | ⏸ **pausa** |
-| B2C P1 A-031…033 | 🔜 solo con «vai» |
+| Soft gap G1–G3 / B2C A-031…033 | 🔜 solo con «vai» |
 
 ---
 
