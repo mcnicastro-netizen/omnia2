@@ -302,6 +302,9 @@ Per ogni miniatura vedi:
 | Ho caricato un doc ma non lo vedo | Upload | Il documento è stato salvato: refresh della pagina. Se persiste, controlla la scheda documenti direttamente sull'immobile. |
 | Vedo *"Documento non più disponibile"* al download | Download | Il blob è stato purgato dallo storage. Elimina il riferimento (✕) e ricarica il PDF. |
 
+**Accesso documenti (D-051 · audit P3/P4)**  
+I documenti del Fascicolo sono pensati per il **team della tua agenzia** tramite la pagina Fascicolo in ImmoWeb. Non condividere URL di download “diretti” a terzi: usa il CRM o un canale sicuro (email cifrata / consegna fisica). Il lavoro di hardening storage/media è tracciato in Cap. 00 / A-035 e **non è ancora chiuso**.
+
 ---
 
 ## Voci correlate (fuori capitolo)

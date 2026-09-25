@@ -1,6 +1,6 @@
 # Prossima sessione — programma passi
 
-**Aggiornato**: 25 Settembre 2026 · A-034 residuali shippati · **demo in pausa**  
+**Aggiornato**: 25 Settembre 2026 · audit SaaS **in pausa** (P1–P4) · demo in pausa  
 **Repo ufficiale**: https://github.com/mcnicastro-netizen/omnia2 ✅  
 
 ---
@@ -14,9 +14,9 @@
 | Analisi gestionale post A-028 | ✅ + **§10 moduli restanti** |
 | Demo commerciale **A-025** | ⏸ **pausa** |
 | Soft gap G1–G3 / B2C A-031…033 | 🔜 solo con «vai» |
-| Audit architettura SaaS | P1–P2 OK · **P3 ACQUISITO** · **P4 AuthN/AuthZ consegnato** (feedback) |
+| Audit architettura SaaS | ⏸ **P1–P3 acquisiti · P4 consegnato · A-035** |
 
-Note audit: `memory/AUDIT_ARCHITETTURA_NOTE.md`
+Note: `memory/AUDIT_ARCHITETTURA_NOTE.md` · Cap. 00 · HAL `api.tenant-*` / `api.auth-lifecycle`
 
 ---
 
@@ -24,8 +24,8 @@ Note audit: `memory/AUDIT_ARCHITETTURA_NOTE.md`
 
 1. `bash scripts/omnia-stack.sh ensure` · tunnel (http2) share URL
 2. Login Founder (`ADMIN_EMAIL` / `ADMIN_PASSWORD` in `backend/.env`)
-3. Smoke: Oggi → Attività (Settimana) → Immobili smart `no_match`/`price_drop` → Match banner campione → Impostazioni → Analytics
-4. 🔜 Solo con «vai»: **G4** nav Moderazione · G1 autocomplete Attività · G5/G6 soft · B2C A-031… · demo se toglie pausa
-5. Audit: P3 acquisito · P4 consegnato · **Punto 5** solo su ok Founder
+3. Smoke gestionale se serve demo
+4. 🔜 Solo con «vai»: G4 Moderazione · G1… · B2C · demo A-025
+5. Audit: **Punto 5** o priorità finding A-035 — solo su richiesta Founder
 
 **Link utili**: `/it/app/dashboard` · `/it/app/activities` · `/it/app/properties` · `/it/app/settings`

@@ -296,6 +296,7 @@ La regola *"upgrade role solo se era client"* è **onesta e stretta**: non c'è 
 - ❌ **Nessun flusso franchising / gruppo / branch**. I ruoli `group_admin`, `branch_admin`, `branch_agent` esistono nel database ma sono gestiti da un altro flusso (M2 Group Flow, non attivo v1). Il `POST /agencies` **blocca** con 403 chi ha già uno di questi ruoli.
 - ❌ **Nessun avviso in tempo reale** al titolare quando un invito viene accettato. Vedi lo status cambiare solo ricaricando la pagina Inviti.
 - ❌ **Nessuna trasferimento ownership** dell'agenzia. Se il titolare vuole cedere il ruolo `owner`, oggi va gestito manualmente lato super_admin.
+- ⚠️ **Multi-agenzia (audit P3/P4)**: se un utente ha più `agency_ids`, alcune azioni (inviti, API keys) possono ancora ancorarsi alla **prima** agenzia della lista invece che a quella **attiva**. Preferisci un account per agenzia finché non sarà allineato. Dettaglio tecnico: Cap. 00 / A-035 — **nessun fix senza «vai»**.
 
 **Cosa può cambiare in futuro**
 Se il campo esprime la necessità, in versioni successive potranno arrivare: rimozione membro, cambio ruolo, audit log, permessi granulari per membro, franchising, notifiche in tempo reale, transfer ownership.

@@ -2,7 +2,7 @@
 
 > File di appoggio per **temi strategici/tecnici** che il Founder ha esplicitamente segnalato come "da rivedere più avanti", **senza essere ancora decisioni**. Ogni voce va promossa in `DECISIONS.md` o `ROADMAP.md` quando si decide di procedere.
 
-**Ultimo aggiornamento**: 25-Sep-2026 (analisi gestionale refresh post A-028 · demo A-025 in pausa)
+**Ultimo aggiornamento**: 25-Sep-2026 (analisi gestionale · **A-035** audit architettura in pausa)
 
 > **Backlog qualità prodotto (A-006+)**: voci tracciate durante lo sprint manuale Cap. 1-18. Priorità assegnata da Cursor (P1=alto ROI/costo basso, P3=futuro). Decisione Founder post-manuale — **NON implementare senza "vai" esplicito**.
 
@@ -1178,6 +1178,36 @@ Concordo sul nucleo. Temperatura: «OS agenzia» è **nord**, non claim immediat
 
 ### Trigger di ripresa
 - Nuovi gap dall’analisi completa moduli (post-Clienti) solo con «vai»
+
+---
+
+## 🟡 A-035 — Audit architettura SaaS · finding P3/P4 (no fix finché prioritizzati)
+
+**Data inserimento**: 25-Sep-2026  
+**Segnalato da**: Founder + Cloud Agent · audit punti 1–4  
+**Stato**: ⏸ **audit in pausa** dopo P4 · **NON implementare** senza «vai» e priorità P0/P1
+
+### Verdetti acquisiti
+- P2 modello concettuale: **approvato**
+- P3 multi-tenancy: **acquisito** — *isolation applicativa generalmente presente · end-to-end incompleta*
+- P4 AuthN/AuthZ: **consegnato** (feedback aperto)
+
+### Finding da non dimenticare (sintesi)
+1. Media pubblici vs documenti fascicolo (dato fisico)
+2. Guard Mongo non universale
+3. Bypass super_admin/job = trusted paths
+4. Query `id` senza `agency_id`
+5. `agency_ids[0]` vs agenzia attiva
+6. Backup = privileged data plane
+7. Fascicolo IDOR se user senza agency_ids
+8. Accept invite riscrive password account esistente
+9. Lifecycle sessione (no refresh rotation; reset non revoca; is_active su access)
+
+### Dove
+`memory/AUDIT_ARCHITETTURA_NOTE.md` · Cap. 00 · HAL `api.tenant-isolation` / `api.auth-lifecycle` / `api.audit-architettura-stato`
+
+### Trigger di ripresa
+- Founder chiede **Punto 5** dell’audit, **oppure** prioritizza finding + «vai» su un fix
 
 ---
 

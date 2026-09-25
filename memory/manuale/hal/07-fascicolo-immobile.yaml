@@ -243,6 +243,8 @@ voci:
         - Scegli il file dal filesystem del PC.
         - Attendi qualche secondo (indicatore "..." mentre carica).
         - La riga passa a ✅ e il documento compare col nome sotto.
+        - "Non condividere URL di download diretti fuori dal CRM:
+          i documenti sono per il team agenzia (Cap. 7 / A-035)."
       errori_comuni:
         - problema: "Errore 'Max 8 MB'"
           soluzione: >

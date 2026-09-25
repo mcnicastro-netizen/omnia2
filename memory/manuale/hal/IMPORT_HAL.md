@@ -1,7 +1,7 @@
 # 📚 HAL Knowledge — Import & Cold Start (v0.25)
 
-**Ultimo aggiornamento**: 21-Sep-2026 (Import A: warning foto · assegna agente · storico jobs · publish flags)  
-**Corpus**: YAML in `memory/manuale/hal/*.yaml` (Cap. 1–27) · MD esclusi dal RAG ingest  
+**Ultimo aggiornamento**: 25-Sep-2026 (Audit SaaS P1–P4 · Cap. 00 · voci api.tenant-isolation / auth-lifecycle)  
+**Corpus**: YAML in `memory/manuale/hal/*.yaml` (Cap. 1–27 + `00-api-codice`) · MD esclusi dal RAG ingest  
 **Motore**: `hal_knowledge.py` · reindex: `POST /api/app/hal/knowledge/reindex?force=true` (super_admin)  
 **Regola Founder D-084**: ogni ship aggiorna MD+YAML nello stesso giro — vedi `memory/MANUAL_SYNC.md`.
 

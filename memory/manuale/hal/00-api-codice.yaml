@@ -385,7 +385,7 @@ voci:
     pubblico: [titolare, agente, super_admin]
     livello: avanzato
     tags: [codice, api, architettura, d-073]
-    correlati: []
+    correlati: [api.tenant-isolation]
     domanda_naturale: "Come è pensata la scala 10k agenzie?"
     contenuto:
       a_cosa_serve: >
@@ -401,4 +401,119 @@ voci:
           soluzione: "Citare solo route reali dal corpus codice."
       permessi:
         - "Dipende dall'endpoint"
+      screenshot: []
+
+  - id: api.tenant-isolation
+    titolo: Isolamento multi-tenant agenzia — stato audit
+    modulo: Codice API
+    widget: null
+    pubblico: [super_admin, titolare]
+    livello: avanzato
+    tags: [codice, api, architettura, multi-tenant, agency_id, d-073, audit]
+    correlati: [api.auth, api.auth-lifecycle, api.scala-10k]
+    domanda_naturale: "Le agenzie sono isolate? Come funziona il multi-tenant? agency_id è sicuro?"
+    contenuto:
+      a_cosa_serve: >
+        Spiegare onestamente lo stato dell'isolamento: isolation
+        applicativa generalmente presente sul CRM; isolation end-to-end
+        incompleta (media, guard non universale, backup, bypass
+        super_admin/job). Fonte: audit Punto 3 · Cap. 00.
+      quando_si_usa: >
+        Domande su sicurezza tra agenzie, tenant, agency_id, backup
+        globale, media pubblici.
+      passi:
+        - "Confine = Agenzia (agency_id). Su /api/app JWT + require_agency
+          + filtri espliciti; tenant_guard auto-inject su TENANT_COLLECTIONS."
+        - "Verdetto Founder: isolation applicativa sì in pratica;
+          end-to-end no. Non dire 'multi-tenancy sicura' senza caveat."
+        - "Finding acquisiti (NO fix senza vai): media pubblico su
+          documenti; collezioni fuori guard; trusted paths
+          super_admin/job; id senza agency_id; agency_ids[0] vs attiva;
+          backup = privileged data plane."
+        - "Dettaglio: memory/AUDIT_ARCHITETTURA_NOTE.md e Cap. 00
+          manuale."
+      errori_comuni:
+        - problema: "Un agente vede dati di un'altra agenzia"
+          soluzione: >
+            Non dovrebbe sul CRM normale. Segnala bug. Non confondere
+            con ImmoCloud/feed pubblici o azioni super_admin.
+        - problema: "Il backup è per-agenzia?"
+          soluzione: >
+            Oggi dump giornaliero pan-tenant su disco: piano dati
+            privilegiato, non isolation API.
+      permessi:
+        - Lettura concetto: titolare / super_admin
+        - Fix: solo Founder con «vai»
+      screenshot: []
+
+  - id: api.auth-lifecycle
+    titolo: Login JWT cookie MFA API key — lifecycle
+    modulo: Codice API
+    widget: null
+    pubblico: [super_admin, titolare]
+    livello: avanzato
+    tags: [codice, api, auth, jwt, mfa, csrf, audit, d-073]
+    correlati: [api.auth, api.tenant-isolation]
+    domanda_naturale: "Come funziona il login? C'è MFA? Come funzionano le API key? Refresh token?"
+    contenuto:
+      a_cosa_serve: >
+        Mappa AuthN/AuthZ post audit Punto 4: cookie HttpOnly access
+        ~15m + refresh ~7g con jti; CSRF in prod; brute-force login;
+        MFA TOTP; API key omk_live hash + crediti. Gap acquisiti senza fix.
+      quando_si_usa: >
+        Domande su sessione, logout, MFA, invite password, ruoli,
+        API key.
+      passi:
+        - "AuthN: apps/core/auth.py + shared/auth/* . Ruolo effettivo
+          dal DB user, non solo claim JWT."
+        - "Tre piani: /api/app JWT+ruoli; /api/cloud JWT/anon; /api/v1
+          Bearer API key."
+        - "MFA: shared/auth/mfa.py + /api/auth/mfa/* — TOTP + backup."
+        - "Finding (NO fix): fascicolo senza agency_ids; invite
+          riscrive password; no refresh rotation; reset non revoca
+          sessioni; get_current_user senza is_active; agency_ids[0]
+          su invite/api_keys."
+      errori_comuni:
+        - problema: "Sono bloccato al login dopo troppi tentativi"
+          soluzione: >
+            Brute-force: max 5 tentativi, lock ~15 minuti su ip+email.
+            Aspetta o reset password.
+        - problema: "Ho accettato un invito e non riesco più a entrare
+          con la vecchia password"
+          soluzione: >
+            Accept invite su email già registrata imposta la nuova
+            password dell'invito (comportamento attuale documentato).
+      permessi:
+        - Concetto: titolare / super_admin
+      screenshot: []
+
+  - id: api.audit-architettura-stato
+    titolo: Dove siamo con l'audit architettura SaaS?
+    modulo: Codice API
+    widget: null
+    pubblico: [super_admin]
+    livello: avanzato
+    tags: [codice, audit, architettura, roadmap, d-073]
+    correlati: [api.tenant-isolation, api.auth-lifecycle]
+    domanda_naturale: "A che punto è l'audit architettura? Cosa manca? Posso fixare i finding?"
+    contenuto:
+      a_cosa_serve: >
+        Stato sessione 25-Set-2026: P1 contesto OK, P2 modello
+        approvato, P3 multi-tenancy acquisito, P4 auth consegnato.
+        Audit in pausa. Nessun fix senza «vai».
+      quando_si_usa: >
+        Ripresa lavoro, priorità sicurezza, domande sul metodo audit.
+      passi:
+        - "Note: memory/AUDIT_ARCHITETTURA_NOTE.md · Cap. 00 · A-035."
+        - "Metodo: un punto alla volta; acquisire finding; priorità
+          P0/P1 dopo; non confondere superfici privilegiate con defect."
+        - "Prossimo: Punto 5 solo su richiesta Founder."
+        - "NON implementare fix dai finding finché non prioritizzati."
+      errori_comuni:
+        - problema: "Inizio a patchare i media pubblici subito"
+          soluzione: >
+            Bloccato dal metodo Founder. Annota, non shippare senza
+            «vai» e priorità.
+      permessi:
+        - super_admin / Founder
       screenshot: []

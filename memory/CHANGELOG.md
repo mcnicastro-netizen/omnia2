@@ -1,5 +1,17 @@
 # OMNIA — Changelog
 
+## 2026-09-25 — Audit architettura SaaS P1–P4 · pausa · sync manuale/HAL
+
+**Tipo**: Docs / HAL / SoT audit.
+
+- Session audit **in pausa** dopo Punto 4 (AuthN/AuthZ). Nessun fix codice.
+- P1 contesto · P2 modello **approvato** · P3 multi-tenancy **acquisito** (isolation applicativa vs end-to-end) · P4 consegnato
+- Note: `AUDIT_ARCHITETTURA_NOTE.md` · Cap. **00** `manuale/00-architettura-tenancy-auth.md`
+- HAL `00-api-codice.yaml`: +`api.tenant-isolation` · `api.auth-lifecycle` · `api.audit-architettura-stato`
+- Cap. 13 + Cap. 7: limiti onesti multi-agenzia / accesso documenti
+- Backlog **A-035** in ASPETTI (finding senza «vai»)
+
+---
 ## 2026-09-25 — Analisi §10 arricchita (audit moduli + G4 Moderazione)
 
 **Tipo**: Docs.

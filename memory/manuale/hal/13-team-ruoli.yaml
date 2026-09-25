@@ -502,6 +502,10 @@ voci:
         - "NO disattivazione temporanea membro in UI."
         - "NO audit log UI / permessi granulari per membro."
         - "SI notifica in-app al inviter quando invito accepted (A-017)."
+        - "Multi-agenzia: alcune azioni (inviti, API keys) possono
+          usare agency_ids[0] invece dell'agenzia attiva — limite
+          noto audit 25-Set (A-035). Un account per agenzia è più
+          sicuro finché non allineato."
       errori_comuni:
         - problema: "Devo rimuovere urgentemente un ex-collaboratore"
           soluzione: >
