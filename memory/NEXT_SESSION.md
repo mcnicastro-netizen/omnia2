@@ -14,7 +14,7 @@
 | Analisi gestionale post A-028 | ✅ + **§10 moduli restanti** |
 | Demo commerciale **A-025** | ⏸ **pausa** |
 | Soft gap G1–G3 / B2C A-031…033 | 🔜 solo con «vai» |
-| Audit architettura SaaS | Punto 1 chiuso · **Punto 2 APPROVATO** (3 oss. precisione) · **Punto 3 in attesa** |
+| Audit architettura SaaS | P1 chiuso · P2 APPROVATO · **P3 Multi-tenancy consegnato** (feedback Founder) |
 
 Note audit: `memory/AUDIT_ARCHITETTURA_NOTE.md`
 
