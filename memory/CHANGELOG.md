@@ -1,5 +1,13 @@
 # OMNIA — Changelog
 
+## 2026-09-25 — Analisi §10 arricchita (audit moduli + G4 Moderazione)
+
+**Tipo**: Docs.
+
+- Merge audit codice: Moderazione = **gap nav** (G4); soft G5 lista venditori, G6 HAL Legal shell, e-sign mock, demo-gate client
+- Fonte: agent [Audit moduli CRM](bc-37f6b433-b800-5ba0-8f71-5e2d50a2f2ee)
+
+---
 ## 2026-09-25 — Analisi moduli restanti gestionale (§10)
 
 **Tipo**: Docs.

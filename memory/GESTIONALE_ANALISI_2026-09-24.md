@@ -120,70 +120,81 @@ Founder: rifinire residuali, poi analizzare tutto il resto del gestionale.
 
 ## 10. Analisi resto moduli (25-Set) — oltre Dashboard / Immobili / Match / Attività
 
+*Audit codice cross-check: [Audit moduli CRM](bc-37f6b433-b800-5ba0-8f71-5e2d50a2f2ee).*
+
 ### Operativo
 
 | Modulo | Stato | Nota da codice |
 |--------|:-----:|----------------|
-| **Clienti** | ✅ solido | `ClientsPage` smart: segmenti searchers/sellers, bucket temperatura, score explain, refresh AI. Path lento mitigato A-034 R7. |
-| **Richieste** | ✅ solido | `RequestsPage` + form: tipi interest/search_brief, stati, match portfolio/MLS, vista rete. Allineato D-089/D-090. |
-| **Match** | ✅ + onesto | Banner campione (R5). Scoped client/property restano il path «completo». |
+| **Clienti** | ✅ solido | `ClientsPage` smart: Acquirenti/Venditori, bucket temperatura, call/WA, score explain, refresh AI. Scheda: preferenze, immobili in carico, richieste. Path lento mitigato A-034 R7. |
+| **Richieste** | ✅ solido | `RequestsPage` + form: tipi interest/search_brief, stati, match portfolio/MLS, share rete. D-089/D-090. |
+| **Match** | ✅ + onesto | Banner campione (R5). Scoped client/property = path «completo». |
 
-**Gap soft Clienti/Attività**  
-- **G1** — Attività: link cliente/immobile via UUID testuale (no autocomplete). Funziona, UX grezza.  
-- **G2** — Clienti smart: bucket temperatura su scan capped (già documentato in API `counts_scope`).
+**Gap soft Operativo**  
+- **G1** — Attività: link cliente/immobile via UUID (no autocomplete).  
+- **G2** — Clienti smart: copy su `counts_scope` / scan capped.  
+- **G5** — Lista Venditori: niente conteggio «immobili in carico» in riga (solo in scheda).
 
 ### Pubblicazione
 
 | Modulo | Stato | Nota |
 |--------|:-----:|------|
-| **Importa** | ✅ | Hub 3 card (`ImportHubPage`) → XML / clienti / legacy. D-092. |
-| **Pubblicità portali** | ✅ onesto | Tab attivi / attivabili / in arrivo + sync/compliance. Multiposting Idealista/Immobiliare = fuori (accordi). |
-| **Social** | ✅ v1 | On-demand, no scheduler (Cap.15 onesto). |
-| **MLS** | ✅ seed | Dashboard + inventory scope + partners/offers. Rete commerciale post-società. |
-| **Sito web** | ✅ | Brand Studio + domain. |
+| **Importa** | ✅ | Hub 3 card (`ImportHubPage`) → XML / immobili / clienti. D-092. |
+| **Pubblicità portali** | ✅ onesto | Tab attivi / attivabili / in arrivo + sync/compliance. Push Idealista/Immobiliare = fuori (accordi). |
+| **Social** | ✅ v1 | On-demand FB/IG/Telegram/… — no scheduler (Cap.15). |
+| **MLS** | ✅ seed | Join, scope mine/locale/Italia, partner, offerte. |
+| **Sito web** | ✅ | Brand extract, temi, custom domain. |
 
 **Gap soft Pubblicazione**  
-- **G3** — Social: niente calendario editoriale (già backlog Cap.15, non riaprire senza «vai»).
+- **G3** — Social scheduling (Cap.15, L).
 
 ### Strumenti
 
 | Modulo | Stato | Nota |
 |--------|:-----:|------|
-| **Analytics A/B** | ✅ fuori nav | Overview + confronto 2–6 listing. Ora da Impostazioni (R4). |
-| **Virtual Staging** | ✅ | Crediti + fal (skip burn in QC). |
-| **Mutui** | ✅ | Comparatore operativo. |
-| **Modulistica** | ✅ | Template + docs; e-sign status soft. |
+| **Analytics A/B** | ✅ fuori nav | Overview + A/B 2–6 listing → Impostazioni (R4). |
+| **Virtual Staging** | ✅ | Studio + crediti + 402 se insufficienti. |
+| **Mutui** | ✅ | Wrapper su comparatore in-house. |
+| **Modulistica** | ✅ caveat | PDF white-label; e-sign **mock** in locale (Yousign/DocuSign solo con credenziali). |
 
 ### Intelligenza
 
 | Modulo | Stato | Nota |
 |--------|:-----:|------|
-| **Guida HAL** | ✅ | Knowledge + ask (dipende LLM key env). |
-| **HAL Legal** | ✅ | Chat + disclaimer. |
+| **Guida HAL** | ✅ | Ask/history; widget chat nascosto su quella pagina. |
+| **HAL Legal** | ✅ frizione | Chat + PDF + disclaimer; route `/{lang}/legal` **fuori** `AgencyShell` (shell CRM sparisce). |
 | **HAL in scheda** | ✅ | Coach + improve + conferma (A-028d/g). |
+
+**Gap soft**  
+- **G6** — HAL Legal: restare in shell CRM o CTA «torna al gestionale» più evidente.
 
 ### Amministrazione
 
 | Modulo | Stato | Nota |
 |--------|:-----:|------|
-| **Membri** | ✅ | Inviti / ruoli. |
-| **Piano & Crediti** | ✅ | Billing Founders; checkout Stripe soft in QC. |
-| **Impostazioni** | ✅ | Identità + API Keys + Analytics + notifiche. |
-| **Gruppo** | ✅ | Wizard multi-filiale (group_admin). |
-| **Cestino** | ✅ | Soft-delete restore. |
-| **Brand Lab / Ops** | ✅ Founder | Solo `super_admin`. |
-| **Moderazione B2C** | ✅ route | Coda annunci privati — **non in nav CRM** (ok: non è loop agente). |
+| **Membri** | ✅ | Inviti / revoke (admin). |
+| **Piano & Crediti** | ✅ soft-gate | Billing + storage; gate demo D-080 via `localStorage` (bypassabile — ok MVP). |
+| **Impostazioni** | ✅ | Anagrafica + API Keys + Analytics + notifiche/security. |
+| **Gruppo** | ✅ | Wizard multi-filiale (`group_admin` / `super_admin`). |
+| **Cestino** | ✅ | Soft-delete property/client, 30g. |
+| **Brand Lab / Ops** | ✅ Founder | Statico + costi; solo `super_admin`. |
+| **Moderazione B2C** | ⚠ gap nav | Coda approve/reject **funziona** (`ModerationPage` + `moderation.py`, solo `super_admin`) ma **assente da nav** → URL da conoscere. |
 
 ### Verdetto §10
 
-Il gestionale **non ha buchi grossi di prodotto** fuori dal loop già chiuso. I residui utili sono **G1** (autocomplete Attività) e, solo se serve go-to-market portali, gli accordi Idealista/Immobiliare (non codice). Il resto è profondità (scheduler social, MLS commerciale) già esplicitamente fuori o post-società.
+Niente buchi P0 sul loop agenzia. Unico gap **reale e piccolo**: discoverability Moderazione Founder (**G4**). Soft: G1, G5, G6, e-sign reale, demo-gate server-side. Multiposting portali / MLS commerciale / demo A-025 = fuori o in pausa.
 
 ### Backlog candidato (solo «vai»)
 
 | ID | Tema | Effort |
 |----|------|:------:|
+| **G4** | Nav Moderazione B2C per `super_admin` (o link da Ops) | S |
 | G1 | Autocomplete cliente/immobile in Attività | S |
-| G2 | Copy UI su `counts_scope` Clienti smart | XS |
+| G2 | Copy UI `counts_scope` Clienti smart | XS |
+| G5 | Conteggio immobili in lista Venditori | S |
+| G6 | HAL Legal in shell / CTA ritorno CRM | S |
 | G3 | Social scheduling | L (Cap.15) |
+| — | E-sign provider reale | M (credenziali) |
+| — | Demo-gate billing server-side | M |
 | — | B2C A-031…033 | binario D-093 |
 | — | Demo A-025 | ⏸ pausa |

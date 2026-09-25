@@ -22,6 +22,6 @@
 1. `bash scripts/omnia-stack.sh ensure` · tunnel (http2) share URL
 2. Login Founder (`ADMIN_EMAIL` / `ADMIN_PASSWORD` in `backend/.env`)
 3. Smoke: Oggi → Attività (Settimana) → Immobili smart `no_match`/`price_drop` → Match banner campione → Impostazioni → Analytics
-4. 🔜 Solo con «vai»: gap dal resto analisi moduli · B2C A-031… · demo se Founder toglie pausa
+4. 🔜 Solo con «vai»: **G4** nav Moderazione · G1 autocomplete Attività · G5/G6 soft · B2C A-031… · demo se toglie pausa
 
 **Link utili**: `/it/app/dashboard` · `/it/app/activities` · `/it/app/properties` · `/it/app/settings`
