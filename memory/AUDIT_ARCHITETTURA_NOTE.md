@@ -58,7 +58,30 @@ Separati / incompleti:
 - MLS → previsto / incompleto  
 - Franchising → scheletro / incompleto  
 
-### Prossimo
+### Prossimo (storico)
 
-**Punto 3 — Multi-tenancy**: dal “quali sono le entità?” al “il confine tra agenzie è impermeabile?”.  
-Avviare solo su richiesta Founder.
+Punto 3 avviato su richiesta Founder — vedi sotto.
+
+---
+
+## Punto 3 — Multi-tenancy · consegnato 25-Set-2026 (in attesa feedback Founder)
+
+### Verdetto
+**Per lo più impermeabile** sul CRM JWT→Mongo (`/api/app` + agency_admin/agent).  
+**Non impermeabile end-to-end**: foro principale media pubblici + path fascicolo; gap secondari su collezioni fuori guard e bypass super_admin/job.
+
+### Meccanismo
+1. Agenzia attiva da JWT (`active_agency_id` ∈ `agency_ids`, else primo).
+2. Auto-inject `agency_id` su `TENANT_COLLECTIONS` solo se `tenant_enforce` (`/api/app/*`).
+3. Bypass: path non-app, job, **`super_admin`**.
+4. Route tipiche: `require_agency` + filtro esplicito.
+
+### Gap da tenere in audit (no fix senza «vai»)
+1. `GET /api/media/{path}` pubblico → fascicolo `omnia/fascicolo/{pid}/{doc}` leggibile se si conosce il path.
+2. Collezioni tenant-like fuori da `TENANT_COLLECTIONS` (es. activities, social_channels, import_jobs…).
+3. Query solo-`id` sotto bypass (fascicolo, jobs, alcuni client_requests).
+4. Multi-agenzia: alcuni flussi usano `agency_ids[0]` invece di active (api_keys/invites).
+5. Backup giornaliero = dump pan-tenant su disco (rischio operativo filesystem).
+
+### Prossimo
+Punto 4 solo su richiesta Founder.
