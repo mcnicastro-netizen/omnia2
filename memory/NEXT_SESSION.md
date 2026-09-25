@@ -26,6 +26,6 @@ Note audit: `memory/AUDIT_ARCHITETTURA_NOTE.md`
 2. Login Founder (`ADMIN_EMAIL` / `ADMIN_PASSWORD` in `backend/.env`)
 3. Smoke: Oggi → Attività (Settimana) → Immobili smart `no_match`/`price_drop` → Match banner campione → Impostazioni → Analytics
 4. 🔜 Solo con «vai»: **G4** nav Moderazione · G1 autocomplete Attività · G5/G6 soft · B2C A-031… · demo se toglie pausa
-5. Audit: **Punto 3 Multi-tenancy** solo quando Founder dice di passare
+5. Audit: P3 consegnato · **Punto 4** solo su ok Founder
 
 **Link utili**: `/it/app/dashboard` · `/it/app/activities` · `/it/app/properties` · `/it/app/settings`
