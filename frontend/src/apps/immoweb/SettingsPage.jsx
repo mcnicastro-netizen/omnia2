@@ -146,7 +146,7 @@ export default function SettingsPage() {
                 Analytics A/B
               </h2>
               <p className="text-sm text-stone-600 mt-1 max-w-xl">
-                Panoramica annunci, lead e pubblicazioni. Strumento di analisi — non serve ogni mattina.
+                Confronta come vanno i tuoi annunci (visualizzazioni e contatti).
               </p>
             </div>
             <Link

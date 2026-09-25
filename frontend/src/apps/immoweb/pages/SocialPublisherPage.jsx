@@ -167,8 +167,8 @@ export default function SocialPublisherPage() {
             </Link>
           </div>
           <p className="text-sm text-stone-600 mt-2 max-w-2xl">
-            Configura Facebook, Instagram, Telegram, WhatsApp, WhatsApp Business e Google Business
-            per pubblicare on-demand un annuncio con foto e caption.
+            Collega Facebook, Instagram, Telegram, WhatsApp e Google Business
+            per pubblicare un annuncio con foto e testo, quando vuoi.
           </p>
           <p
             data-testid="social-hal-hint"

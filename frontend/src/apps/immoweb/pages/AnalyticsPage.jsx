@@ -63,16 +63,16 @@ export default function AnalyticsPage() {
             Analytics A/B
           </h1>
           <p className="text-stone-600 mt-1 text-sm">
-            Confronta views, lead e conversion rate tra 2–6 annunci della tua agenzia.
+            Confronta come performano 2–6 annunci (visite e contatti).
           </p>
         </div>
 
         {overview && (
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3" data-testid="analytics-overview">
             <Stat label="Immobili attivi" value={overview.properties?.active} />
-            <Stat label="Lead totali" value={overview.leads?.total} />
-            <Stat label="Lead periodo" value={overview.leads?.recent_period} />
-            <Stat label="Sync OK" value={overview.publishing_recent?.sync_success} />
+            <Stat label="Contatti totali" value={overview.leads?.total} />
+            <Stat label="Contatti periodo" value={overview.leads?.recent_period} />
+            <Stat label="Pubblicazioni ok" value={overview.publishing_recent?.sync_success} />
           </div>
         )}
 

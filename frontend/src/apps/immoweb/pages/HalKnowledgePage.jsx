@@ -108,8 +108,8 @@ export default function HalKnowledgePage() {
             )}
           </div>
           <p className="text-sm text-stone-600 mt-2 max-w-3xl">
-            Qui HAL ti spiega <strong>come usare OMNIA</strong> (menu, passi, MLS, immobili…).
-            Per domande sul tuo lavoro quotidiano — immobili, clienti, lead — usa il pulsante HAL
+            Domande su come usare OMNIA: menu, passi, immobili, MLS…
+            Per il lavoro di tutti i giorni (un immobile, un cliente) usa il pulsante HAL
             in basso a destra nelle altre pagine.
           </p>
         </div>

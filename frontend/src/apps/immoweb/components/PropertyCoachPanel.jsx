@@ -21,7 +21,7 @@ export default function PropertyCoachPanel({
       const { data } = await api.get(`/app/properties/${propertyId}/coach`);
       setCoach(data);
     } catch (e) {
-      setErr("Impossibile caricare il coach.");
+      setErr("Impossibile caricare i suggerimenti.");
       setCoach(null);
     } finally {
       setLoading(false);
@@ -42,7 +42,7 @@ export default function PropertyCoachPanel({
     >
       <div className="flex items-start justify-between gap-3">
         <div>
-          <p className="text-[10px] uppercase tracking-[0.2em] text-stone-500">HAL · Scheda</p>
+          <p className="text-[10px] uppercase tracking-[0.2em] text-stone-500">Suggerimenti</p>
           <h2
             className="text-xl tracking-tight text-[#0B1E3F] mt-1"
             style={{ fontFamily: "'Fraunces', Georgia, serif" }}
@@ -72,7 +72,7 @@ export default function PropertyCoachPanel({
             {coach.summary}
           </p>
           {coach.gaps?.length === 0 ? (
-            <p className="text-xs text-stone-500">Nessun gap — puoi pubblicare sui portali.</p>
+            <p className="text-xs text-stone-500">Tutto a posto — puoi pubblicare.</p>
           ) : (
             <ul className="space-y-2" data-testid="coach-gaps">
               {coach.gaps.map((g) => (
@@ -87,7 +87,7 @@ export default function PropertyCoachPanel({
                         g.severity === "hard" ? "text-rose-700" : "text-amber-700"
                       }`}
                     >
-                      {g.severity === "hard" ? "HARD" : "SOFT"}
+                      {g.severity === "hard" ? "Obbligatorio" : "Consigliato"}
                     </span>
                     <span className="text-sm text-stone-800">{g.label}</span>
                   </div>

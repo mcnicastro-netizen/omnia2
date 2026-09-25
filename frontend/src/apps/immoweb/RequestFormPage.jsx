@@ -296,7 +296,7 @@ export default function RequestFormPage() {
                   data-testid="request-property-id"
                   value={form.property_id}
                   onChange={(e) => upd("property_id", e.target.value)}
-                  placeholder="UUID immobile"
+                  placeholder="Codice immobile (opzionale)"
                   className="form-input w-full"
                 />
               </div>

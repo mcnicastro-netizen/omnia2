@@ -65,9 +65,9 @@ export function ScoreExplainPopover({ score, open, onClose, children }) {
       </p>
       <ul className="text-[11px] text-stone-600 space-y-1 mb-2">
         <li><strong className="text-stone-900">85–100</strong> Rovente — chiama oggi</li>
-        <li><strong className="text-stone-900">65–84</strong> Caldo — questa settimana</li>
-        <li><strong className="text-stone-900">40–64</strong> Tiepido — nurturing</li>
-        <li><strong className="text-stone-900">0–39</strong> Freddo — bassa priorità</li>
+        <li><strong className="text-stone-900">65–84</strong> Caldo — proponi in giornata</li>
+        <li><strong className="text-stone-900">40–64</strong> Tiepido — aggiorna le preferenze</li>
+        <li><strong className="text-stone-900">0–39</strong> Freddo — da riqualificare</li>
       </ul>
       {children}
       <button

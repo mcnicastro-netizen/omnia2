@@ -51,11 +51,11 @@ export default function MatchesPage() {
             >
               {t("matches.title") || "Match"}
             </h1>
-            <p className="text-stone-600 mt-1">{t("matches.subtitle") || "Cross-reference automatico tra i tuoi immobili e i tuoi clienti."}</p>
+            <p className="text-stone-600 mt-1">{t("matches.subtitle")}</p>
           </div>
           <div className="flex items-center gap-3">
             <label className="text-xs uppercase tracking-widest text-stone-500">
-              {t("matches.min_score") || "Score minimo"}
+              {t("matches.min_score")}
             </label>
             <select
               data-testid="min-score-filter"
@@ -76,13 +76,10 @@ export default function MatchesPage() {
             data-testid="matches-scan-capped-banner"
             className="bg-amber-50 border border-amber-200 text-amber-900 text-sm rounded-lg px-4 py-3"
           >
-            <p className="font-medium">Campione inventario (non tutta l’agenzia)</p>
+            <p className="font-medium">Vista d’insieme</p>
             <p className="mt-1 text-amber-800/90">
-              Scansione limitata a {data.scanned_properties ?? "—"} immobili × {data.scanned_clients ?? "—"} clienti
-              per tenere l’API reattiva. Per risultati completi apri i match da una{" "}
-              <Link to={`/${lang}/app/clients`} className="underline font-medium">scheda cliente</Link>
-              {" "}o da un{" "}
-              <Link to={`/${lang}/app/properties`} className="underline font-medium">immobile</Link>.
+              Qui vedi i migliori abbinamenti. Per un cliente o un immobile specifico,
+              apri la sua scheda e usa i match lì.
             </p>
           </div>
         )}
@@ -122,7 +119,7 @@ export default function MatchesPage() {
                     <button
                       type="button"
                       data-testid={`match-score-toggle-${p.id}-${c.id}`}
-                      title="Mostra breakdown criteri"
+                      title="Perché questo punteggio"
                       onClick={() => setOpenBreakdown(showBd ? null : key)}
                       className={`text-2xl font-bold ${sc.text} hover:underline`}
                       style={{ fontFamily: "'Fraunces', Georgia, serif" }}
@@ -175,7 +172,7 @@ export default function MatchesPage() {
                       onClick={() => nav(`/${lang}/app/matches/lead?p=${p.id}&c=${c.id}`)}
                       className="mt-4 w-full text-xs uppercase tracking-widest font-medium border border-stone-300 rounded-md py-2 hover:bg-stone-50"
                     >
-                      ✨ {t("matches.ai_score_btn") || "Calcola Lead Score AI"}
+                      {t("matches.ai_score_btn")}
                     </button>
                   </div>
                 </div>

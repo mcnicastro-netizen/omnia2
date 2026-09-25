@@ -51,7 +51,7 @@ function ScoreBox({ score, cached, clientId, lang }) {
     return (
       <div className="w-14 text-center" data-testid="score-box-empty">
         <div className="text-stone-300 text-lg font-light" style={{ fontFamily: "'Fraunces', Georgia, serif" }}>—</div>
-        <div className="text-[9px] uppercase tracking-widest text-stone-400 mt-0.5">n/a</div>
+        <div className="text-[9px] uppercase tracking-widest text-stone-400 mt-0.5">—</div>
       </div>
     );
   }
@@ -60,7 +60,7 @@ function ScoreBox({ score, cached, clientId, lang }) {
       <button
         type="button"
         data-testid="score-box-btn"
-        title="Cosa significa questo score"
+        title="Cosa significa questo numero"
         onClick={(e) => {
           e.stopPropagation();
           setOpen((v) => !v);
@@ -71,7 +71,7 @@ function ScoreBox({ score, cached, clientId, lang }) {
           {score}
         </div>
         <div className="text-[9px] uppercase tracking-widest text-stone-500 mt-1">
-          {cached ? "AI" : "match"}
+          priorità
         </div>
       </button>
       {open && (
@@ -81,7 +81,7 @@ function ScoreBox({ score, cached, clientId, lang }) {
           onClick={(e) => e.stopPropagation()}
         >
           <p className="text-[10px] uppercase tracking-widest text-stone-500 mb-2">
-            Lead score {score}
+            Priorità {score}
           </p>
           <ul className="text-[11px] text-stone-600 space-y-1 mb-2">
             <li><strong className="text-stone-900">85–100</strong> Rovente — chiama oggi</li>

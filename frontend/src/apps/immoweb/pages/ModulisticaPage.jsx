@@ -229,7 +229,7 @@ export default function ModulisticaPage() {
                     className="w-full border border-stone-300 px-3 py-2 text-sm"
                     value={propertyId}
                     onChange={(e) => setPropertyId(e.target.value)}
-                    placeholder="uuid immobile"
+                    placeholder="Codice immobile"
                   />
                 </label>
                 <label className="block text-sm space-y-1">
@@ -239,7 +239,7 @@ export default function ModulisticaPage() {
                     className="w-full border border-stone-300 px-3 py-2 text-sm"
                     value={clientId}
                     onChange={(e) => setClientId(e.target.value)}
-                    placeholder="uuid cliente"
+                    placeholder="Codice cliente"
                   />
                 </label>
                 <button

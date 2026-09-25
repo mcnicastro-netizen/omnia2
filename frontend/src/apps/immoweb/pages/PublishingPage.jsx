@@ -133,8 +133,7 @@ export default function PortalsPage() {
             </div>
           </div>
           <p className="text-sm text-stone-600 mt-2 max-w-2xl">
-            {t("portali.subtitle") ||
-              "Attiva i portali su cui vuoi pubblicare gli annunci. OMNIA genera un feed XML aggiornato in tempo reale — ogni portale scarica autonomamente ogni notte."}
+            {t("portali.subtitle")}
           </p>
           <div className="mt-3 text-xs text-stone-800 bg-stone-50 border border-stone-200 rounded px-3 py-2 max-w-2xl" data-testid="portals-honesty-banner">
             {t("portali.honesty_banner")}
@@ -156,7 +155,7 @@ export default function PortalsPage() {
         {syncResult && (
           <div data-testid="sync-result-banner" className={`text-sm border rounded p-3 flex items-start gap-3 ${syncResult.ok ? "text-emerald-800 bg-emerald-50 border-emerald-200" : "text-amber-800 bg-amber-50 border-amber-200"}`}>
             <div className="flex-1">
-              <strong>Sync {syncResult.portal}</strong> — {syncResult.publishable ?? 0} immobili pubblicabili, {syncResult.blocked ?? 0} bloccati dal validatore compliance.
+              <strong>Aggiornamento {syncResult.portal}</strong> — {syncResult.publishable ?? 0} annunci ok, {syncResult.blocked ?? 0} da completare.
               {syncResult.log?.error_message && <div className="text-xs mt-1 text-stone-600">{syncResult.log.error_message}</div>}
               {syncResult.integration_type === "api_push" && (
                 <div className="text-xs mt-1 text-stone-600">
@@ -219,7 +218,7 @@ export default function PortalsPage() {
                       <td className="px-4 py-3">
                         <div className="font-medium">{p.name || c.portal_slug}</div>
                         <div className="text-[10px] text-stone-500 mt-0.5" data-testid={`portal-lastsync-${c.portal_slug}`}>
-                          Ultimo sync: {lastSync}
+                          Ultimo aggiornamento: {lastSync}
                           {c.items_published > 0 && ` · ${c.items_published} pubblicati`}
                           {c.items_failed > 0 && ` · ${c.items_failed} bloccati`}
                         </div>
@@ -243,14 +242,14 @@ export default function PortalsPage() {
                             data-testid={`portal-sync-${c.portal_slug}`}
                             className="text-[10px] uppercase tracking-widest bg-stone-800 text-white px-2 py-1 rounded hover:bg-stone-900 disabled:opacity-40"
                           >
-                            {syncing === c.id ? "…" : "Sync"}
+                            {syncing === c.id ? "…" : "Aggiorna"}
                           </button>
                           <button
                             onClick={() => openCompliance(c)}
                             data-testid={`portal-compliance-${c.portal_slug}`}
                             className="text-[10px] uppercase tracking-widest border border-stone-300 text-stone-700 px-2 py-1 rounded hover:bg-stone-100"
                           >
-                            Compliance
+                            Controlla
                           </button>
                           <button
                             onClick={() => deactivate(c.id)}
@@ -319,13 +318,12 @@ export default function PortalsPage() {
         </div>
 
         <details className="text-xs text-stone-600 max-w-2xl">
-          <summary className="cursor-pointer">Come funziona</summary>
+          <summary className="cursor-pointer">Come funziona (in breve)</summary>
           <div className="mt-2 space-y-1 bg-stone-50 border border-stone-200 rounded p-3">
-            <p>1. Attivi un portale qui e (se richiesto) inserisci le credenziali del tuo account presso quel portale</p>
-            <p>2. OMNIA genera automaticamente un feed XML alla tua URL agenzia (per portali "pull") o pubblica via API (per portali "push")</p>
-            <p>3. Il <strong>sync automatico</strong> gira ogni notte alle 06:00 UTC e sincronizza tutti i portali attivi. Puoi anche forzare un sync manuale con il pulsante "Sync"</p>
-            <p>4. Il validatore <strong>Compliance</strong> controlla ogni immobile prima della pubblicazione: se manca prezzo, superficie, APE, indirizzo o 3+ foto viene escluso automaticamente (regola HARD, obbligo D.Lgs 192/2005 + AGCM)</p>
-            <p>5. Su un portale <strong>Attivo</strong>, nella colonna Azioni, clicca <strong>Compliance</strong> per vedere gli immobili bloccati e i motivi</p>
+            <p>1. Attivi un portale e, se serve, inserisci le credenziali del tuo account lì.</p>
+            <p>2. Di notte i portali ricevono gli annunci aggiornati. Puoi anche aggiornare subito con il pulsante «Aggiorna».</p>
+            <p>3. Pubblichiamo solo annunci completi: prezzo, superficie, indirizzo, APE e almeno 3 foto.</p>
+            <p>4. Su un portale attivo, clicca «Controlla» per vedere quali annunci mancano di qualcosa.</p>
           </div>
         </details>
 
@@ -335,7 +333,7 @@ export default function PortalsPage() {
             <div className="bg-white rounded-lg max-w-2xl w-full p-6 max-h-[85vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
               <div className="flex justify-between items-start mb-4">
                 <div>
-                  <p className="text-[10px] uppercase tracking-[0.3em] text-stone-500 mb-1">Compliance</p>
+                  <p className="text-[10px] uppercase tracking-[0.3em] text-stone-500 mb-1">Controllo annunci</p>
                   <h3 className="text-xl" style={{ fontFamily: "'Fraunces', Georgia, serif" }}>
                     {portalMap[complianceModal.connection.portal_slug]?.name || complianceModal.connection.portal_slug}
                   </h3>

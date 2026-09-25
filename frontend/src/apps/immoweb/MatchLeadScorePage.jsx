@@ -28,7 +28,7 @@ export default function MatchLeadScorePage() {
     setError("");
     api.post(`/app/matches/lead-score?property_id=${pid}&client_id=${cid}`)
       .then((r) => setData(r.data))
-      .catch((e) => setError(e?.response?.data?.detail || "Errore nel calcolo del Lead Score"));
+      .catch((e) => setError(e?.response?.data?.detail || "Errore nella valutazione"));
   }, [pid, cid]);
 
   return (
@@ -42,7 +42,7 @@ export default function MatchLeadScorePage() {
             className="text-3xl md:text-4xl tracking-tight mt-2"
             style={{ fontFamily: "'Fraunces', Georgia, serif" }}
           >
-            ✨ Lead Score AI
+            Valutazione abbinamento
           </h1>
         </div>
 
@@ -52,8 +52,8 @@ export default function MatchLeadScorePage() {
 
         {!data && !error && (
           <div data-testid="leadscore-loading" className="bg-white border border-stone-200 rounded-lg p-8 text-center">
-            <div className="inline-block animate-pulse text-stone-500">L'AI sta valutando il lead…</div>
-            <p className="text-xs text-stone-400 mt-2">Gemini-3 Flash · ~3-5 secondi</p>
+            <div className="inline-block animate-pulse text-stone-500">Stiamo valutando l’abbinamento…</div>
+            <p className="text-xs text-stone-400 mt-2">Pochi secondi</p>
           </div>
         )}
 
@@ -140,7 +140,7 @@ export default function MatchLeadScorePage() {
             {/* Deterministic breakdown */}
             <details className="bg-white border border-stone-200 rounded-lg p-4">
               <summary className="cursor-pointer text-xs uppercase tracking-widest text-stone-500">
-                {t("matches.match_detail") || "Dettaglio match deterministico"} ({data.match.score}/100)
+                {t("matches.match_detail")} ({data.match.score}/100)
               </summary>
               <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 gap-2 text-xs">
                 {Object.entries(data.match.breakdown || {}).map(([k, v]) => (

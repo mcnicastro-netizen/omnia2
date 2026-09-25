@@ -110,11 +110,10 @@ export default function ApiKeysPage() {
             className="text-3xl md:text-4xl tracking-tight"
             style={{ fontFamily: "'Fraunces', Georgia, serif" }}
           >
-            {t("api_keys.title") || "Chiavi API"}
+            {t("api_keys.title")}
           </h1>
           <p className="text-sm text-stone-600 mt-1 max-w-2xl">
-            {t("api_keys.subtitle") ||
-              "Emetti chiavi API per far consumare le feature OMNIA (Valutatore, Mutui, HAL Legal) da widget o gestionali esterni. 1 credito = €0,03."}
+            {t("api_keys.subtitle")}
           </p>
         </div>
 

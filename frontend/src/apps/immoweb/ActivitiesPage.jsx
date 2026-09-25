@@ -141,7 +141,7 @@ export default function ActivitiesPage() {
             Attività
           </h1>
           <p className="text-sm text-stone-600 mt-2 max-w-xl">
-            Follow-up e visite della settimana. Agenda leggera — non sostituisce un calendario esterno.
+            Chiamate, visite e cose da fare. Organizzate per giorno.
           </p>
         </div>
 
@@ -186,22 +186,22 @@ export default function ActivitiesPage() {
               />
             </label>
             <label className="min-w-[140px] flex-1">
-              <span className="text-[10px] uppercase tracking-widest text-stone-500">Cliente ID (opz.)</span>
+              <span className="text-[10px] uppercase tracking-widest text-stone-500">Cliente (opzionale)</span>
               <input
                 data-testid="activity-client-id"
                 value={clientId}
                 onChange={(e) => setClientId(e.target.value)}
-                placeholder="id cliente"
+                placeholder="Codice cliente, se ce l’hai"
                 className="mt-1 w-full px-3 py-2 border border-stone-300 rounded-md text-sm"
               />
             </label>
             <label className="min-w-[140px] flex-1">
-              <span className="text-[10px] uppercase tracking-widest text-stone-500">Immobile ID (opz.)</span>
+              <span className="text-[10px] uppercase tracking-widest text-stone-500">Immobile (opzionale)</span>
               <input
                 data-testid="activity-property-id"
                 value={propertyId}
                 onChange={(e) => setPropertyId(e.target.value)}
-                placeholder="id immobile"
+                placeholder="Codice immobile, se ce l’hai"
                 className="mt-1 w-full px-3 py-2 border border-stone-300 rounded-md text-sm"
               />
             </label>

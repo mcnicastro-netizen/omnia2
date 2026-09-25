@@ -54,11 +54,11 @@ def build_coach_report(prop: Dict[str, Any]) -> Dict[str, Any]:
     n_hard = sum(1 for g in gaps if g["severity"] == "hard")
     n_soft = sum(1 for g in gaps if g["severity"] == "soft")
     if n_hard == 0 and n_soft == 0:
-        summary = "Annuncio pronto per i portali — nessun blocco HARD."
+        summary = "Annuncio pronto per i portali."
     elif n_hard == 0:
-        summary = f"Pubblicabile, con {n_soft} miglioramento/i consigliato/i."
+        summary = f"Si può pubblicare: {n_soft} consiglio/i per migliorarlo."
     else:
-        summary = f"{n_hard} blocco/i HARD da risolvere prima dei portali."
+        summary = f"Mancano {n_hard} dato/i obbligatori prima di pubblicare."
 
     return {
         "property_id": prop.get("id"),
@@ -68,7 +68,7 @@ def build_coach_report(prop: Dict[str, Any]) -> Dict[str, Any]:
         "hard_count": n_hard,
         "soft_count": n_soft,
         "hint": (
-            "HAL può riscrivere titolo e descrizione dai dati già compilati. "
-            "Foto, prezzo e APE restano a carico dell'agente."
+            "Puoi far riscrivere titolo e descrizione con HAL. "
+            "Foto, prezzo e APE li aggiorni tu."
         ),
     }
