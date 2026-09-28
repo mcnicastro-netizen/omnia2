@@ -441,6 +441,8 @@ Operatore esperto *potrebbe* tentare: leggere MANIFEST → import JSONL → copi
 
 **Onestà:** non c’è foglio costi hosting ufficiale nel repo. Ordini di grandezza da assunzioni P9/P10 — **non** conferma listino.
 
+**Nota metodologica (Founder 28-Set):** nella prima consegna P11 Mongo era mescolato con “API” in un range grezzo — **andava separato prima**. Sotto: voce Mongo a sé (foto/video **non** stanno in Mongo).
+
 #### Assunzioni
 
 | Assumption | Valore |
@@ -449,9 +451,35 @@ Operatore esperto *potrebbe* tentare: leggere MANIFEST → import JSONL → copi
 | Quota | 30 / 100 / 300 GB |
 | Utilizzo medio vs quota | A 25% · B 50% · C 80% |
 | Bak | full-copy ≈ **31×** live; live+bak ≈ **32×** |
-| €/GB disco (range grezzo) | **€0,02–0,08 /GB/mese** (≠ €0,04 D-085 confermato) |
+| €/GB disco media (range grezzo) | **€0,02–0,08 /GB/mese** (≠ €0,04 D-085 confermato) |
 | ARPU mix | ≈ **€104**/agenzia (`0,5×49 + 0,35×99 + 0,15×299`) |
-| Mongo + API | grezzi; egress/LLM **esclusi** o solo nota |
+| Mongo | Atlas (prod); locale in Cloud Agent ≈ €0 marginale |
+| API / egress / LLM | **voci separate**; non nel dettaglio Mongo sotto |
+
+#### Solo Mongo (Atlas — ordine di grandezza)
+
+Dev/Cloud Agent = `mongod` locale ≈ €0. Prod target = Atlas (`DEPLOY_VERCEL.md` / D-*).  
+Foto/video **fuori** Mongo → il DB cresce molto meno del media store.
+
+| Tier Atlas (listino AWS tipico) | ≈ €/mese* |
+|---------------------------------|-----------|
+| M0 Free | €0 |
+| Flex / shared | ~€9–€30 |
+| M10 | ~€55–€60 |
+| M20 | ~€140–€150 |
+| M30 | ~€380–€400 |
+| M40+ | ~€750+ |
+
+\*USD listino convertito; regione/storage extra variano. Produzione HA a 3 nodi può avvicinarsi a **~3×** il singolo nodo — da verificare sul preventivo Atlas.
+
+| Agenzie | Tier plausibile | Mongo ≈ / mese |
+|---------|-----------------|----------------|
+| **1** | Free / Flex o Mongo sulla VPS | **€0–€30** |
+| **10** | M10 | **~€55–€180** (con HA) |
+| **100** | M20–M30 | **~€150–€1.200** |
+| **1000** | M30–M40+ | **~€400–€2.500+** |
+
+**Lettura:** Mongo è costo a **scaglioni**, non “€ per GB di foto”. Il rischio margine a scala resta soprattutto **media + bak full-copy**, non Mongo.
 
 GB live medi/agenzia (mix): A ≈ **22 GB** · B ≈ **44 GB** · C ≈ **70 GB**  
 ×32 live+bak: A ≈ **700 GB** · B ≈ **1,4 TB** · C ≈ **2,2 TB**
