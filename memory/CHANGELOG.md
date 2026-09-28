@@ -1,5 +1,15 @@
 # OMNIA — Changelog
 
+## 2026-09-28 — D-095 media pubblici vs privati · lifecycle blob
+
+**Tipo**: Decision / Docs.
+
+- Distinguere media pubblici e privati; **no** “UUID = secret”
+- Cleanup blob indipendente da S3/R2, affidabile/idempotente
+- Cluster: media-authorization (P3.1+P4.1+M-01) · Mongo⟷blob (M-02…M-04, L-05/L-06)
+- Codice ⏳ · M-01…M-14 restano aperti
+
+---
 ## 2026-09-28 — Audit Punto 8 · Jobs / processi asincroni
 
 **Tipo**: Docs / SoT audit · **nessun fix codice**.

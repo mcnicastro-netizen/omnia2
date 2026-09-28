@@ -1197,8 +1197,10 @@ Concordo sul nucleo. Temperatura: «OS agenzia» è **nord**, non claim immediat
 - P8: **consegnato** — Jobs/cron (J-01…J-12) · trusted vs tenant · niente fix
 
 ### Cluster finding da non dimenticare
-- **P3.1+P4.1 / M-01** media pubblici vs doc sensibili
-- **P4.2–P4.7** auth · **L-*** lifecycle · **E-01…E-07** proiezioni · **M-02…M-04** no blob delete · **J-01…J-04** jobs vs D-094/D-095
+- **Media authorization** = P3.1 + P4.1 + M-01 → **D-095**
+- **Mongo ⟷ blob lifecycle** = M-02…M-04 + L-05/L-06 → **D-095**
+- **Proiezioni/jobs vs D-094** = E-01…E-07 · J-01…J-04
+- **P4.2–P4.7** auth · Attività lifecycle aperto
 
 ### Dove
 `memory/AUDIT_ARCHITETTURA_NOTE.md` · Cap. 00 · HAL `api.tenant-*` / `api.auth-lifecycle`
