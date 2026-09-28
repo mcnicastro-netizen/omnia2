@@ -109,11 +109,19 @@ Non defect automatici: super_admin bypass, register pubblico, superfici pubblich
 | L-12 | oss. | `agency_ids[0]` / remove member | **P4.5–7** |
 | L-13 | oss. | No unmatch se immobile poi trashed | — |
 
-### Domande aperte (non bloccanti per continuare)
+### Decisioni di dominio (P5) · **D-094** · registrate, codice ⏳
 
-1. Soft-delete immobile → deve uscire da feed/sync (solo filtro trash) o anche forzare `status=withdrawn`?
-2. Delete cliente → archiviare/cascadare richieste, o lasciarle storiche?
+| Domanda | Direzione |
+|---------|-----------|
+| Immobile in Trash esce da feed/sync/pubblicazioni? | **Sì, escluso** (`trashed` = esclusione globale esterna) |
+| Trash cambia `status` commerciale? | **No**, non automaticamente |
+| Delete/Trash Cliente cancella Richieste? | **No** (niente cascade distruttivo) |
+| Cosa succede alle Richieste? | **Archiviate / non operative**, storico conservato |
+| Restore Cliente riattiva Richieste? | **No** |
+
+L-03 / L-02: gap di **implementazione** rispetto a D-094 (regola chiara, codice non ancora allineato).  
+Aperto: GDPR/retention “cliente cancellato” → punto privacy/retention.
 
 ### Prossimo
 
-Punto 6 solo su ok Founder. Nessun fix.
+Punto 6 solo su ok Founder. Nessun fix (D-094 è dominio, non patch).

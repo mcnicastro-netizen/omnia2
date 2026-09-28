@@ -58,14 +58,20 @@ Non equivale ancora a “multi-tenancy sicura”.
 
 ## 0.5 · Lifecycle entità (Punto 5 · consegnato)
 
-**Bozza:** ciclo maturo su Immobile/Cliente (cestino) e Richieste (stati); incompleto E2E su feed/sync vs trash, blob, cascate, agency offboarding. Dettaglio L-01…L-13 in `AUDIT_ARCHITETTURA_NOTE.md`.
+Ciclo maturo su Immobile/Cliente (cestino) e Richieste (stati); incompleto E2E su feed/sync vs trash, blob, agency. Dettaglio L-01…L-13 in note.
+
+### D-094 (dominio · codice ⏳)
+
+- `status` = commerciale · `trashed` = lifecycle record — **non** confondere.
+- Immobile trashed → **escluso** da feed/sync/pubblicazioni **senza** forzare `withdrawn`.
+- Cliente Trash → Richieste **archiviate** (storico), non distrutte; restore Cliente **non** le riapre.
 
 ---
 
 ## 0.6 · Ripresa
 
-1. Feedback Founder su Punto 5.
-2. Solo su richiesta: **Punto 6**.
-3. Fix: solo dopo priorità + «vai».
+1. Feedback / ok Punto 5.
+2. Solo su richiesta: **Punto 6** (come garantire tecnicamente D-094, ecc.).
+3. Fix codice: solo dopo priorità + «vai».
 
 Backlog **A-035**.
