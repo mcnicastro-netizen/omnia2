@@ -494,13 +494,13 @@ voci:
     pubblico: [super_admin]
     livello: avanzato
     tags: [codice, audit, architettura, roadmap, d-073]
-    correlati: [api.tenant-isolation, api.auth-lifecycle, api.entity-lifecycle, api.jobs-async, api.storage-costi]
+    correlati: [api.tenant-isolation, api.auth-lifecycle, api.entity-lifecycle, api.jobs-async, api.storage-costi, api.backup-archivio]
     domanda_naturale: "A che punto è l'audit architettura? Cosa manca? Posso fixare i finding?"
     contenuto:
       a_cosa_serve: >
         Prompt master AUDIT_PROMPT_MASTER.md (§1–§27). Numerazione
-        sessione distinta (P1…P9): non riallineare artificialmente.
-        P8 Jobs acquisito; P9 Storage/costi consegnato. D-094/D-095
+        sessione distinta (P1…P10): non riallineare artificialmente.
+        P9 Storage acquisito; P10 Backup consegnato. D-094/D-095
         dominio, codice ⏳. Finding in AUDIT_ARCHITETTURA_NOTE + A-035.
       quando_si_usa: >
         Ripresa audit, metodo, priorità, dove siamo.
@@ -509,7 +509,7 @@ voci:
         - "Progresso in AUDIT_ARCHITETTURA_NOTE.md · Cap. 00 · A-035."
         - "Un punto alla volta; no P0–P3 finché non §23; no fix senza
           «vai» implementazione."
-        - "Prossimo naturale tipico: Backup (master §9)."
+        - "Prossimo naturale tipico: Restore (master §10)."
       errori_comuni:
         - problema: "Inizio a patchare i media pubblici subito"
           soluzione: >
@@ -623,21 +623,21 @@ voci:
     pubblico: [super_admin, titolare]
     livello: avanzato
     tags: [codice, storage, quota, billing, audit, d-073, d-085]
-    correlati: [api.media-file, api.jobs-async, api.audit-architettura-stato]
+    correlati: [api.media-file, api.jobs-async, api.audit-architettura-stato, api.backup-archivio]
     domanda_naturale: "Quanto storage ho incluso? Cosa succede se finisco lo spazio? Il piano Agency illimitato quanto ci costa?"
     contenuto:
       a_cosa_serve: >
-        Audit P9 (master §8): D-085 quota Starter 30 / Pro 100 /
-        Agency 300 GB + addon €15/100 GB; meter + 413. max_properties
-        listino non enforced. Backup full-copy media ×30g moltiplica
-        disco ops. B2C e bandwidth senza meter. Finding C-01…C-15.
+        Audit P9 ACQUISITO (master §8): D-085 tetto commerciale chiaro
+        (30/100/300 GB + addon + 413). Formulazione: costo infra
+        MASSIMO non ancora sufficientemente determinabile col bak
+        attuale. €0,04/GB non confermato. Nessun secondo tetto video.
+        Finding C-01…C-15 aperti.
       quando_si_usa: >
         Domande su piano, quota, video, margine Agency, addon storage.
       passi:
         - "Quota runtime in shared/storage/quota.py; UI Piano & Crediti."
         - "Tetti per immobile: 60 foto / 3 video 80MB / 5 planimetrie."
-        - "Costo previsibile: parziale — bak naive e Agency ∞ immobili
-          restano rischio (C-04, C-10). Nessun fix senza vai."
+        - "Moltiplicatore bak ~31× analizzato in P10 (B-01 / C-04)."
       errori_comuni:
         - problema: "Ho finito i GB e non posso più caricare foto"
           soluzione: >
@@ -645,4 +645,35 @@ voci:
             spazio (anche Cestino conta nel meter).
       permessi:
         - Concetto: titolare / super_admin
+      screenshot: []
+
+  - id: api.backup-archivio
+    titolo: Backup giornaliero archivio — cosa salva e quanto costa
+    modulo: Codice API
+    widget: null
+    pubblico: [super_admin]
+    livello: avanzato
+    tags: [codice, backup, storage, audit, d-073, d-085]
+    correlati: [api.storage-costi, api.jobs-async, api.media-file]
+    domanda_naturale: "Come funziona il backup? Cosa viene salvato? Posso ripristinare un'agenzia?"
+    contenuto:
+      a_cosa_serve: >
+        Audit P10 (master §9): APScheduler 03:15 + cron HTTP
+        super_admin. Full copytree MEDIA_ROOT × retention 30g (~31×).
+        Dump Mongo whitelist parziale; groups≠agency_groups; Emergent
+        OUT; nessun restore code path (P11). Finding B-01…B-14.
+      quando_si_usa: >
+        Domande su backup, retention, restore, costo disco ops.
+      passi:
+        - "backup_job.py: JSONL whitelist + copytree local + purge >R."
+        - "Costo: GB_bak ≈ X×(R+1); €/GB all-in non confermato."
+        - "Restore: solo via supporto (promessa D-085) — codice assente."
+        - "Niente fix senza «vai» post-audit."
+      errori_comuni:
+        - problema: "Ho lanciato il backup ma mancano le richieste clienti"
+          soluzione: >
+            Atteso oggi (B-02): client_requests fuori whitelist.
+            Annotato in audit — non patchare senza priorità Founder.
+      permessi:
+        - super_admin / Founder
       screenshot: []

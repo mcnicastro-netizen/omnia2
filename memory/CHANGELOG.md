@@ -1,5 +1,14 @@
 # OMNIA — Changelog
 
+## 2026-09-28 — Audit P9 acquisito · P10 Backup
+
+**Tipo**: Docs / SoT audit · **nessun fix codice**.
+
+- **P9 ACQUISITO**: formulazione «costo infra **massimo** non ancora sufficientemente determinabile col bak attuale»; €0,04 non confermato; no secondo tetto video; C-01…C-15 + K-STOR aperti
+- **P10 Backup** (master §9): full `copytree` × (R+1) ≈ **31×** conferma C-04; dump Mongo parziale; `groups`≠`agency_groups`; no restore code; finding **B-01…B-14**; K-BAK-*
+- Cap.00 · HAL `api.backup-archivio` · A-035 · note · numerazione sessione invariata
+
+---
 ## 2026-09-28 — Audit P8 acquisito · P9 Storage e costi
 
 **Tipo**: Docs / SoT audit · **nessun fix codice**.

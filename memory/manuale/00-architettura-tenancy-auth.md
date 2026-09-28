@@ -1,4 +1,4 @@
-# Cap. 00 · Architettura tenancy, auth, media, jobs, storage (audit SaaS)
+# Cap. 00 · Architettura tenancy, auth, media, jobs, storage, backup (audit SaaS)
 
 **Ambito**: founder / super_admin.  
 **Prompt master**: `memory/AUDIT_PROMPT_MASTER.md` (§1–§27).  
@@ -25,6 +25,7 @@ Un blocco alla volta · niente fix senza «vai» implementazione · no P0–P3 p
 
 ### D-085 (già prodotto)
 - Quota storage GB per piano + addon €15/100 GB · meter + blocco 413  
+- Backup automatico retention 30g (implementazione attuale = full copytree — vedi P10)
 
 ---
 
@@ -37,9 +38,9 @@ Un blocco alla volta · niente fix senza «vai» implementazione · no P0–P3 p
 | Proiezioni/jobs vs D-094 | E-* · J-01…J-04 |
 | AuthZ E2E | P4 cluster |
 | Attività | domanda aperta |
-| Costo infra / margine | C-* (P9) · bak full-copy · Agency ∞ |
-| Trusted path tenant context | domanda aperta P8 |
-| APScheduler in-process | area da verificare (deploy/affidabilità) — **non** finding |
+| Costo infra massimo / bak | C-* · **B-01** (~31×) · €/GB all-in non confermato |
+| Trusted path tenant context | domanda aperta P8 (bak = no tenant) |
+| APScheduler in-process | area da verificare — **non** finding |
 
 ---
 
@@ -50,9 +51,10 @@ Un blocco alla volta · niente fix senza «vai» implementazione · no P0–P3 p
 | P1–P5 | §1–§5 | acquisiti / finding aperti |
 | P6 Proiezioni | fuori | **ACQUISITO** · E-* |
 | P7 Media | §7 | **ACQUISITO** · D-095 · M-* |
-| P8 Jobs | §15 | **ACQUISITO** · J-* · decisioni purge/trusted aperte |
-| P9 Storage/costi | §8 | Consegnato · C-* |
+| P8 Jobs | §15 | **ACQUISITO** · J-* |
+| P9 Storage/costi | §8 | **ACQUISITO** · C-* · formulazione costo “massimo non determinabile col bak attuale” |
+| P10 Backup | §9 | Consegnato · B-* |
 | — | §6 Cestino | da blocco dedicato |
-| — | §9 Backup | **prossimo naturale** |
+| — | §10 Restore | **prossimo naturale** |
 
-Dettaglio: `AUDIT_ARCHITETTURA_NOTE.md` · A-035 · HAL `api.*` correlati.
+Dettaglio: `AUDIT_ARCHITETTURA_NOTE.md` · A-035 · HAL correlati.

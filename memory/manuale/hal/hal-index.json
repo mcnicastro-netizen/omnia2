@@ -1,12 +1,12 @@
 {
   "version": "0.26-a028-ghi",
   "updated": "2026-09-28",
-  "voices_total": 359,
+  "voices_total": 360,
   "source_files": [
     {
       "file": "00-api-codice.yaml",
-      "voices": 23,
-      "md5": "f5973aadbfe8ba43bfae410931366e51"
+      "voices": 24,
+      "md5": "598f1eeb1fa0f093f5a53347bafb16b2"
     },
     {
       "file": "01-primo-accesso.yaml",
@@ -150,8 +150,8 @@
       "file": "00-api-codice",
       "title": "Corpus codice/API",
       "yaml": "00-api-codice.yaml",
-      "voices": 23,
-      "md5": "f5973aadbfe8ba43bfae410931366e51"
+      "voices": 24,
+      "md5": "598f1eeb1fa0f093f5a53347bafb16b2"
     },
     {
       "id": 22,

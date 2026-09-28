@@ -6,7 +6,7 @@
 > **Numerazione = continuum di sessione** (non forzare allineamento al master).  
 > Prompt master: `memory/AUDIT_PROMPT_MASTER.md` (§1–§27) — corrispondenza in tabella sotto.
 
-**Ultimo aggiornamento**: 28-Set-2026 · **P8 ACQUISITO** · **P9 Storage e costi consegnato**
+**Ultimo aggiornamento**: 28-Set-2026 · **P9 ACQUISITO** · **P10 Backup consegnato**
 
 ---
 
@@ -22,9 +22,10 @@
 | P6 | Proiezioni / D-094 | fuori indice | 🟠 **ACQUISITO** · E-* |
 | P7 | Media / File + **D-095** | §7 | 🟠 **ACQUISITO** · M-* |
 | P8 | Jobs / processi asincroni | §15 (anticipato) | 🟠 **ACQUISITO** · J-* |
-| P9 | Storage e costi | §8 | 🟠 Consegnato (feedback) |
+| P9 | Storage e costi | §8 | 🟠 **ACQUISITO** · C-* |
+| P10 | Backup | §9 | 🟠 Consegnato (feedback) |
 | — | Cestino (blocco dedicato) | §6 | 🟡 parziale in P5 |
-| — | Backup / Restore / Retention… | §9–§14 | ⬜ prossimo naturale: **§9 Backup** |
+| — | Restore / Retention / GDPR… | §10–§14 | ⬜ prossimo naturale: **§10 Restore** |
 | — | Osservabilità → report | §16–§27 | ⬜ |
 
 Decisioni dominio (codice ⏳): **D-094**, **D-095**.
@@ -38,8 +39,8 @@ Decisioni dominio (codice ⏳): **D-094**, **D-095**.
 3. **Proiezioni/jobs vs D-094** = E-* · J-01…J-04  
 4. **AuthZ non uniforme** login→risorsa (P4)  
 5. **Attività**: appartenenza aperta (non = Richieste)  
-6. **Costo infra / margine piano** = C-* (P9) · backup full-copy · Agency ∞ immobili  
-7. **Trusted path tenant context** = domanda aperta P8 (approfondire su backup/restore/sync/cleanup)  
+6. **Costo infra massimo / bak** = C-* + **B-01** (full-copy ~31×) — €/GB all-in **non confermato**  
+7. **Trusted path tenant context** = domanda aperta P8 (bak = *nessun* tenant scope)  
 8. **APScheduler in-process** = *area da verificare* in affidabilità/deployment (**non** finding ancora)
 
 ---
@@ -128,13 +129,45 @@ Da verificare nei capitoli affidabilità / scalabilità / deployment (master §1
 
 ---
 
-## Punto 9 — Storage e costi · consegnato 28-Set (master §8 · continuum sessione)
+## Punto 9 — Storage e costi · **ACQUISITO** Founder (28-Set · master §8)
 
-### Verdetto (bozza)
+### Verdetto acquisito (formulazione Founder)
 
-> Esiste un **tetto commerciale** sul volume archivio B2B (D-085: tier GB + meter + blocco **413** + addon €15/100 GB) e tetti per-immobile (foto/video/planimetrie).  
-> Il **costo infra reale per cliente non è ancora prevedibile end-to-end**: `max_properties` è catalogo non enforced; il backup fa **full `copytree`** di tutto `.media` × retention 30g (~moltiplicatore fino a ~31× sul live); **nessun** metering bandwidth/CDN; B2C e alcuni path legacy sfuggono al contatore.  
-> Con Agency «∞ immobili» + video, il rischio di pressione sul margine del canone è reale se il backup resta full-copy.
+> Esiste un **tetto commerciale** chiaro (D-085: 30/100/300 GB + addon €15/100 GB + **413**).  
+> Il cliente **non** può consumare storage infinito senza acquistarlo.  
+> Formulazione corretta:  
+> **«Il costo infra massimo per cliente non è ancora sufficientemente determinabile con l’architettura di backup attuale.»**  
+> (Non: “il costo non è prevedibile” — il tetto commerciale c’è; manca la determinazione di quanto costa un **GB venduto** all-in: primario + bak + retention + traffico + repliche + video.)
+
+### Lettura Founder degli elementi (acquisita)
+
+| Elemento | Valutazione |
+|----------|-------------|
+| D-085 30/100/300 + addon | ✅ Modello commerciale chiaro |
+| 413 al superamento | ✅ Enforcement tecnico corretto |
+| Metering + blocco | 🟠 Da verificare nei dettagli (`max_properties` non enforced) |
+| C-01 `max_properties` | 🟠 Finding corretto, aperto |
+| 60 foto / 3×80 MB / 5 planimetrie | ✅ Limiti utili |
+| C-04 bak full ×30g | 🔴 Non fix ora — **approfondito in P10** |
+| Crediti ≠ storage | ✅ Concettualmente corretto |
+| C-09 bandwidth | 🟠 Aperto (importante con video/download) |
+| C-08 B2C senza quota | 🟠 Da verificare nel modello economico |
+| Agency ∞ + video | 🟠 Non necessariamente problema (c’è tetto storage); bak può amplificare → C-10 |
+
+### Risposte alle domande aperte P9
+
+1. **€0,04/GB** → **non confermato**; si aspetta l’analisi Backup (P10).  
+2. **Video** → **nessun secondo tetto** specifico; limite principale = storage.
+
+Finding **C-01…C-15** e **K-STOR-01…08** restano aperti. **Niente fix.**
+
+---
+
+## Punto 9 — dettaglio tecnico (riferimento)
+
+### Verdetto tecnico (pre-acquisizione, riformulato)
+
+> Tetto commerciale B2B presente. Costo infra **massimo** non ancora sufficientemente determinabile con bak full-copy attuale.
 
 ### Mappa limiti piano vs storage
 
@@ -221,12 +254,118 @@ Worst-case grezzo ≈ **~0,78–0,85 GB/immobile** (+ fascicolo). **Nessun** che
 7. **K-STOR-07** — Chiudere path fascicolo base64 vs solo multipart quotato?  
 8. **K-STOR-08** — Seed Stripe live `storage_100gb_monthly` prima del go-live?
 
+### Domande aperte P9 — **chiuse** dal Founder (vedi sopra)
+
+1. €0,04/GB → non confermato; aspetta Backup.  
+2. Video → nessun secondo tetto; limite = storage.
+
+---
+
+## Punto 10 — Backup · consegnato 28-Set (master §9 · continuum sessione)
+
+### Verdetto (bozza)
+
+> Il backup giornaliero esiste (APScheduler 03:15 UTC + `POST /cron/backup/daily` `super_admin`) e fa ciò che D-085 promette a livello di *intent*: dump Mongo whitelist + copia media local + retention 30g.  
+> Architettura: **full `shutil.copytree`** di tutto `LOCAL_STORAGE_ROOT` ogni giorno, **senza** incremental/dedup/snapshot → in regime stazionario  
+> `GB_backup ≈ X × (R+1)` ≈ **31×** live (R=30); live+bak ≈ **32×**.  
+> Quindi: **€0,04/GB all-in non è confermabile** con questo modello (allinea P9).  
+> Inoltre il dump Mongo è **parziale** (manca CRM critico: `client_requests`, activities, …); `"groups"` ≠ `agency_groups`; media Emergent **OUT**; **nessun** restore code path (→ P11); bak **globale** multi-tenant (trusted path senza tenant context — chiarisce P8).
+
+### Trigger
+
+| Meccanismo | Dove | Note |
+|------------|------|------|
+| APScheduler `archive_daily_backup` | `sync_engine.py` 03:15 UTC | `max_instances=1`, `coalesce=True` |
+| HTTP `POST /api/app/cron/backup/daily` | `cron.py` | JWT `super_admin` |
+| Lock condiviso HTTP↔scheduler | **assente** | race possibile sullo stesso giorno |
+
+### Cosa viene salvato / cosa no
+
+**IN Mongo** (`backup_job.py` `_COLLECTIONS`):  
+`agencies`, `users`, `properties`, `clients`, `leads`, `subscriptions`, `credit_wallets`, `credit_ledger`, `api_keys`, `groups`, `publishing_connections`  
+— dump **globale**, cap `to_list(100_000)`, include record **trashed**.
+
+**IN media**: `copytree` di tutto `MEDIA_ROOT` se presente (local). Trashed/orphan blob inclusi finché restano su disco.
+
+**OUT / gap**:
+| Asset | Stato |
+|-------|--------|
+| `client_requests`, `activities`, calendar, matches, social_*, favorites, saved_searches, HAL… | **OUT** |
+| `agency_groups` (codice reale) vs `"groups"` in bak | **OUT di fatto** (nome sbagliato) |
+| `refresh_tokens`, modulistica meta | **OUT** |
+| Emergent / non-local object store | **OUT** |
+| Checksum / cifratura bak | **assenti** |
+| Restore automatizzato | **assente** (P11) |
+
+### Modello di costo (conferma C-04)
+
+```text
+GB_backup_tree  ≈ X × (R + 1)     # R=BACKUP_RETENTION_DAYS default 30 → ~31X
+GB_disk_totale  ≈ X × (R + 2)     # live + bak → ~32X
+```
+
+| Quota piena | X live | Bak ≈31X | Live+bak ≈32X |
+|-------------|--------|----------|---------------|
+| Starter 30 GB | 30 | ~930 GB | ~960 GB |
+| Pro 100 GB | 100 | ~3,1 TB | ~3,2 TB |
+| Agency 300 GB | 300 | ~9,3 TB | ~9,6 TB |
+
+Bak = costo **OMNIA** (non nel meter cliente). Un tenant pesante amplifica il tree **globale**.
+
+### Affidabilità (sintesi)
+
+- Failure collection/media → `ok=false`, cartella giorno può restare **parziale**; MANIFEST scritto comunque; purge vecchi gira dopo.  
+- APScheduler: no overlap stesso job (`max_instances=1`); **no** lock vs HTTP cron; multi-istanza API → doppio scheduler (area P8).  
+- Nessun test `backup_job` in `backend/tests/`.  
+- Trusted path: bak = **assenza di tenant scope** (dump all).
+
+### Finding B-xx (no fix · no P0–P3)
+
+| ID | Tipo | Sintesi | Link |
+|----|------|---------|------|
+| **B-01** | rischio | Full copytree × (R+1) → ~31× disco | **C-04** |
+| **B-02** | gap | Dump Mongo parziale (CRM critico fuori) | — |
+| **B-03** | gap | `"groups"` ≠ `agency_groups` | Cap.24 |
+| **B-04** | gap | Cap soft 100k doc senza warning | — |
+| **B-05** | rischio | Emergent → media bak incompleto | M-12 · STORAGE |
+| **B-06** | gap | Nessuna cifratura at-rest / ACL esplicita BACKUP_ROOT | — |
+| **B-07** | gap | Manifest senza checksum | — |
+| **B-08** | rischio | Concorrenza HTTP cron ↔ APScheduler; multi-replica | P8 area |
+| **B-09** | oss. | Giorno parziale + purge può cancellare vecchi comunque | — |
+| **B-10** | oss. | Trashed + orphan inclusi → allungano costo bak | D-095 · D-094 |
+| **B-11** | gap | `BACKUP_*` poco documentati in `.env.example` | — |
+| **B-12** | gap | Nessun restore code path | → **P11** |
+| **B-13** | oss. | Bak globale: no isolamento disaster/costo per cliente | P3 · P8 |
+| **B-14** | oss. | Doppia orchestration in-process + HTTP | P8 decisione aperta |
+
+### Link
+
+| Ref | Ruolo |
+|-----|--------|
+| **C-04** | Rischio P9 — deep dive qui: **confermato** |
+| **J-05** | Job bak globale trusted |
+| **P8** | Orchestrazione e tenant context ancora aperti; bak = no tenant |
+| **D-085** | Promessa bak 30g + restore via supporto; €0,04 / “versionato” ≠ codice full-copy |
+
+### Decisioni da prendere (K-style · non implementare)
+
+1. **K-BAK-01** — Accettare full-copy ~31×, o incremental/snapshot/object-versioning? (= chiude anche K-STOR-02)  
+2. **K-BAK-02** — Orchestrazione unica bak (+ purge/blob): APScheduler in-API / cron esterno / worker dedicato?  
+3. **K-BAK-03** — Scope dump: ampliare whitelist vs `mongodump` vs per-tenant?  
+4. **K-BAK-04** — Media: solo local, o mirror obbligatorio anche Emergent/S3/R2?  
+5. **K-BAK-05** — Cifratura / path / ACL / offsite di `BACKUP_ROOT`?  
+6. **K-BAK-06** — Trashed/orphan nel bak: ok fino a retention, o exclude + policy (→ Retention §12)?
+
 ### Domande aperte (max 2)
 
-1. Il Founder conferma ancora ~**€0,04/GB/mese** come costo all-in, sapendo che il codice fa **full daily copytree** (non bak “smart”)?  
-2. Su Agency video-heavy: resta **solo freno storage** (D-085) o serve anche un tetto soft su n° video/agenzia oltre i 3/immobile?
+1. Si vuole ancora basare il listino GB su un all-in tipo **€0,04/GB**, sapendo che il moltiplicatore disco bak è **~31× full-copy**?  
+2. Per bak (+ future purge/blob): **APScheduler nel processo API** resta accettabile in produzione, o si impone **cron/worker esterno** come orchestrazione primaria?
+
+### Anteprima Restore (defer P11)
+
+**Non esiste** entrypoint di restore (né API né script). Il prodotto promette ripristino “via supporto OMNIA” (Cap.19 / D-085). Il commento in `backup_job.py` descrive un’intenzione, non codice. Gap per P11: completo vs per-agenzia, relazioni, media Emergent, collection fuori whitelist, giorno `ok=false`.
 
 ### Prossimo
 
-Su ok Founder: tipicamente **Backup** (master §9) — chiarirà anche orchestrazione job periodici (P8) e moltiplicatore costo (C-04).  
+Su ok Founder: **Restore** (master §10 / sessione P11).  
 **Niente fix. Nessuna severità definitiva.**

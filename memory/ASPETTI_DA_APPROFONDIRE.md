@@ -1183,7 +1183,7 @@ Concordo sul nucleo. Temperatura: «OS agenzia» è **nord**, non claim immediat
 
 ## 🟡 A-035 — Audit architettura SaaS (prompt master §1–§27)
 
-**Data inserimento**: 25-Sep-2026 · **agg.** 28-Sep-2026 (P8 acquisito · P9 Storage)  
+**Data inserimento**: 25-Sep-2026 · **agg.** 28-Sep-2026 (P9 acquisito · P10 Backup)  
 **Prompt master**: `memory/AUDIT_PROMPT_MASTER.md`  
 **Stato**: 🟠 **in corso** · numerazione **sessione** (non forzare = master) · **NON implementare** · **NO P0–P3** finché non aperti §23+
 
@@ -1194,21 +1194,22 @@ Concordo sul nucleo. Temperatura: «OS agenzia» è **nord**, non claim immediat
 - P5: **consegnato** + **D-094** dominio · codice ⏳
 - P6: **ACQUISITO** — E-01…E-07 aperti; Attività = domanda aperta
 - P7: **ACQUISITO** — Media/File (M-01…M-14) + **D-095** dominio · niente fix
-- P8: **ACQUISITO** — Jobs (J-01…J-12); purge/blob = automatici/osservabili ma orchestrazione TBD; trusted tenant context da approfondire; APScheduler in-process = area (non finding)
-- P9: **consegnato** — Storage e costi (C-01…C-15) · D-085 sì · costo end-to-end non ancora prevedibile
+- P8: **ACQUISITO** — Jobs (J-01…J-12); purge/blob automatici TBD; trusted context aperto; APScheduler = area
+- P9: **ACQUISITO** — Storage (C-01…C-15); tetto commerciale OK; costo infra **massimo** non ancora determinabile col bak attuale; €0,04 non confermato; no secondo tetto video
+- P10: **consegnato** — Backup (B-01…B-14); full-copy ~31× conferma C-04; dump Mongo parziale; no restore code
 
 ### Cluster finding da non dimenticare
 - **Media authorization** = P3.1 + P4.1 + M-01 → **D-095**
 - **Mongo ⟷ blob lifecycle** = M-02…M-04 + L-05/L-06 → **D-095**
 - **Proiezioni/jobs vs D-094** = E-01…E-07 · J-01…J-04
-- **Costo infra / margine** = C-* · bak full-copy · Agency ∞ immobili
+- **Costo infra massimo / bak** = C-* · **B-01** (~31×) · €/GB all-in non confermato
 - **P4.2–P4.7** auth · Attività lifecycle aperto
 
 ### Dove
-`memory/AUDIT_ARCHITETTURA_NOTE.md` · Cap. 00 · HAL `api.jobs-async` / `api.storage-costi`
+`memory/AUDIT_ARCHITETTURA_NOTE.md` · Cap. 00 · HAL `api.storage-costi` / `api.backup-archivio`
 
 ### Prossimo tipico
-- Feedback P9 → poi **Backup** (master §9) — chiarisce anche orchestrazione job (P8) e moltiplicatore disco (C-04)
+- Feedback P10 → poi **Restore** (master §10 / sessione P11)
 - «vai» di **implementazione** = distinto (fix codice su finding prioritizzati)
 
 ---
