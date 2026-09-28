@@ -77,14 +77,18 @@ D-094 dominio OK; enforcement a macchia di leopardo. Finding **E-01…E-07** ape
 
 ## 0.7 · Media / File (Punto 7 · consegnato · prompt originario)
 
-Un GET pubblico `/api/media/*` serve foto listing **e** blob sensibili. `delete_object` senza caller → orfani. Finding **M-01…M-14** in note (cluster P3.1+P4.1, L-05, L-06).
+Un GET pubblico `/api/media/*` serve foto listing **e** blob sensibili. `delete_object` senza caller → orfani. Finding **M-01…M-14** in note (cluster P3.1+P4.1, L-05, L-06). D-095 dominio (pubblico vs privato · lifecycle blob).
+
+## 0.8 · Jobs / processi asincroni (Punto 8 · consegnato)
+
+APScheduler in `sync_engine.start_scheduler` + cron HTTP `super_admin` = **trusted paths** (P3). Scope tenant per-item; sync/matching senza trash filter (D-094); purge trash non schedulato; nessun job blob (D-095). Finding **J-01…J-12** in note.
 
 ---
 
-## 0.8 · Ripresa
+## 0.9 · Ripresa
 
-1. Feedback Punto 7.
-2. Solo su richiesta: **Punto 8** (indice originario).
+1. Feedback Punto 8.
+2. Solo su richiesta: prossimo punto audit.
 3. Fix codice: solo dopo fine audit / priorità + «vai» esplicito implementazione.
 
 Backlog **A-035**.

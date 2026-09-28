@@ -1482,4 +1482,21 @@ Registro di tutte le decisioni di business e tecniche prese durante il progetto.
 - **Implementazione**: ❌ **non** applicata in codice finché Founder non dice «vai» (post-audit / priorità). Verifica tecnica prevista in Punto 6/7+.
 - **Stato**: ✅ **DECISIONE DI DOMINIO REGISTRATA** (docs 28-Set-2026) · codice ⏳
 
+### D-095 — Media: pubblico vs privato · lifecycle blob indipendente dallo storage · 28-Set-2026
+- **Data**: 28 Settembre 2026
+- **Contesto**: Audit Punto 7 (Media/File). Founder: storage fisico e AuthZ non sono realmente separati. Cluster P3.1 + P4.1 + M-01 = un unico problema di **media authorization**; M-02/M-03/M-04/L-05/L-06 = Mongo e blob non sono ancora un unico lifecycle.
+- **Decisione — Accesso**:
+  1. Distinguere **media pubblici** e **media privati**.
+  2. Foto/asset destinati alla pubblicazione → accesso pubblico ammissibile.
+  3. Fascicoli, documenti, modulistica e altri file sensibili → **controllo autorizzativo** oppure URL firmati/temporanei.
+  4. **Non** adottare “UUID/path = secret” come barriera di sicurezza.
+  5. Signed URL vs proxy auth-only = dettaglio architetturale da valutare dopo; la regola di dominio è la separazione pubblico/privato.
+- **Decisione — Lifecycle blob**:
+  1. La regola di lifecycle blob deve esistere **già oggi**, indipendente dal backend (`local` / futuro S3/R2).
+  2. S3/R2 **non** è prerequisito per correggere gli orphan.
+  3. Target: cleanup **affidabile/idempotente** (record eliminato → blob da eliminare → job/cleanup → delete riuscito → marcato completato), non delete sincrono fragile che perde traccia se fallisce a metà.
+  4. Emergent `delete_object` no-op resta debito finché il backend non supporta delete reale.
+- **Implementazione**: ❌ codice ⏳ — solo post-audit / priorità + «vai» esplicito.
+- **Stato**: ✅ **DECISIONE DI DOMINIO REGISTRATA** (docs 28-Set-2026) · codice ⏳
+
 

@@ -1,5 +1,15 @@
 # OMNIA — Changelog
 
+## 2026-09-28 — Audit Punto 8 · Jobs / processi asincroni
+
+**Tipo**: Docs / SoT audit · **nessun fix codice**.
+
+- Inventario APScheduler (sync, saved-searches, backup, request-matching) + cron HTTP + `create_task`/BackgroundTasks
+- Verdetto: trusted paths cross-tenant OK by design; D-094/D-095 non enforcement nei job sync/match/purge
+- Finding **J-01…J-12** (no P0–P3) · link P3 trusted, D-094, D-095, purge trash
+- Note + Cap.00 aggiornati
+
+---
 ## 2026-09-28 — Audit P6 acquisito · P7 Media/File (prompt originario)
 
 **Tipo**: Docs / SoT audit.
