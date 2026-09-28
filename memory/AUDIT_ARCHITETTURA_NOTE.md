@@ -1,167 +1,110 @@
 # Audit architettura SaaS — note Founder
 
-> Un punto alla volta. **Niente codice** senza «vai».  
-> Nessuna classificazione P0–P3 definitiva finché non si vede l’intero sistema.  
-> SoT: GitHub `mcnicastro-netizen/omnia2` (mai Origin-tmp).
+> Un punto alla volta. **Niente codice** senza «vai» esplicito di implementazione.  
+> **Nessuna classificazione P0–P3** finché non si completa l’audit.  
+> SoT: GitHub `mcnicastro-netizen/omnia2`.  
+> Numerazione = quella costruita in sessione; temi allineati al prompt originario dove possibile.
 
-**Ultimo aggiornamento**: 28-Set-2026 · P5 + D-094 · **P6 proiezioni esterne consegnato**
+**Ultimo aggiornamento**: 28-Set-2026 · P6 acquisito · **P7 Media/File consegnato**
 
 ---
 
 ## Stato audit
 
-| Area | Stato |
-|------|--------|
-| P1 — Architettura attuale | 🟢 Ricostruito |
-| P2 — Modello concettuale | 🟢 Ricostruito / approvato |
-| P3 — Multi-tenancy | 🟠 Isolamento applicativo presente, E2E incompleto · **ACQUISITO** |
-| P4 — AuthN/AuthZ | 🟠 Strutturato, AuthZ E2E incompleta · **ACQUISITO** |
-| P5 — Lifecycle entità | 🟠 + **D-094** dominio · feedback |
-| P6 — Proiezioni esterne / enforcement D-094 | 🟠 Consegnato (feedback Founder) |
+| # | Area | Stato |
+|---|------|--------|
+| P1 | Architettura attuale | 🟢 |
+| P2 | Modello concettuale | 🟢 |
+| P3 | Multi-tenancy | 🟠 finding aperti |
+| P4 | AuthN/AuthZ | 🟠 finding aperti |
+| P5 | Lifecycle + **D-094** | 🟠 finding aperti |
+| P6 | Proiezioni / enforcement D-094 | 🟠 **ACQUISITO** · E-01…E-07 aperti |
+| P7 | **Media / File** (prompt originario) | 🟠 Consegnato (feedback) |
+
+```
+P1…P6 → NIENTE FIX → P7 → …
+```
 
 ---
 
-## Punto 1 — Contesto (chiuso)
+## Punto 6 — **ACQUISITO** Founder (28-Set)
 
-| Tema | Realtà |
-|------|--------|
-| Storage | Locale oggi; Emergent legacy; S3/R2 non in codice |
-| Purge cestino 30g | Endpoint cron; **non** in APScheduler |
-| Deploy API | Target Vercel+ASGI; oggi Cloud Agent |
+D-094 corretta come dominio; **non** ancora applicata uniformemente a tutte le proiezioni/automazioni.
 
----
+### Finding aperti (senza P0–P3)
 
-## Punto 2 — Modello · APPROVATO
+E-01, E-02, E-03, E-04, E-06, E-07 (E-05/E-08/E-09 oss. utili).
 
-Agenzia = confine · Cliente ≠ Richiesta · Due mondi stesso DB = zona sensibile.
+### Attività (domanda aperta — non decidere ora)
 
----
-
-## Punto 3 — Multi-tenancy · ACQUISITO
-
-> Tenant isolation **applicativa**: generalmente presente.  
-> Tenant isolation **end-to-end**: incompleta.
-
-Finding: media pubblici; guard non universale; trusted paths super_admin/job; `id` senza agency_id; `agency_ids[0]`; backup privileged data plane.
+Non assimilare automaticamente le Attività alle Richieste.  
+Domanda corretta: *un’Attività appartiene al Cliente, alla Richiesta, all’Agente, o può essere autonoma?*  
+Possibili grafi: Cliente→Richiesta→Attività · Cliente→Attività · Immobile→Attività.  
+Rischio: archiviare/cancellare attività = perdita storico operativo.  
+→ Risolvere con modello Attività + retention/privacy (punto dedicato), non in P6.
 
 ---
 
-## Punto 4 — AuthN/AuthZ · **ACQUISITO** Founder (28-Set)
+## Punto 3–5 (sintesi vincolante)
 
-### Formulazione vincolante
+- P3: isolation applicativa sì · E2E no  
+- P4: AuthN strutturata · AuthZ E2E incompleta (catena non uniforme)  
+- P5 + **D-094**: Trash ≠ status; Cliente Trash → Richieste archiviate non distrutte; restore non riapre  
 
-> OMNIA ha diversi meccanismi di sicurezza individualmente sensati,  
-> ma **non ancora una catena di autorizzazione completamente uniforme**  
-> dal login fino alla singola risorsa.
-
-Diverso da “AuthN insicura”: AuthN strutturata; fragilità soprattutto in **verifica contesto risorsa** e **lifecycle sessione**.
-
-### Finding aperti (tutti e 7, senza severità definitiva)
-
-| ID | Cluster | Contenuto |
-|----|---------|-----------|
-| **P3.1 + P4.1** | Documenti fascicolo | Access control + media access (concreto) |
-| **P4.2** | Account lifecycle | Accept invite riscrive password — delicato |
-| **P4.3–P4.4** | Session management | No refresh rotation; reset non revoca — incident response |
-| **P4.5–P4.6** | Agency governance | `agency_ids[0]`; privilege boundaries |
-| **P4.7** | Membership → endpoint | Condizionato: problematico se membership debole |
-
-Non defect automatici: super_admin bypass, register pubblico, superfici pubbliche (valutare nel contesto).
+Cluster: P3.1+P4.1 fascicolo/media · P4.2 invite · P4.3–4 sessioni · P4.5–7 governance · L-* lifecycle
 
 ---
 
-## Punto 5 — Lifecycle entità · consegnato 28-Set (feedback)
-
-### Verdetto (bozza agente)
-
-> Lifecycle **strutturato** su Immobile/Cliente (cestino 30g) e su Richieste (macchina a stati D-090).  
-> Lifecycle **end-to-end incompleto** su feed/sync vs trash, cascate orfane, blob fascicolo, agency senza deactivate/delete — più i legami già aperti in P3/P4.
-
-### Mappa sintetica
-
-| Entità | Maturità ciclo | Note |
-|--------|----------------|------|
-| Immobile | Soft-delete 30g + restore/purge | `status` non cambia al trash; feed/sync **senza** `with_not_trashed` |
-| Cliente | Soft-delete 30g (block se immobili) | Non cascada richieste/attività |
-| Richiesta | Stati open→…→archived | Delete = archive; no trash/hard purge |
-| Attività | open/done/cancelled | Hard delete immediato |
-| Match | On-read | No persist; scan può includere trashed |
-| Agency | Create/update | **Nessuna** API deactivate/delete |
-| Invite | pending→accepted/revoked/expired | Vedi P4.2 |
-| Fascicolo/media | Upload OK | Delete = solo ref DB; blob resta → P3.1/P4.1 |
-| API key | Issue/revoke | No hard delete ledger |
-| User erase | GDPR self | Non chiude CRM agenzia |
-
-### Finding lifecycle (L-xx) — acquisibili, no fix, no P0–P3
-
-| ID | Tipo | Sintesi | Link |
-|----|------|---------|------|
-| L-01 | gap | Richieste: archive sì, trash/hard purge no | — |
-| L-02 | gap | Trash cliente non cascada richieste/attività | — |
-| L-03 | rischio | Immobile in cestino può restare in **feed/sync** (`status=active`, no `with_not_trashed`) | P3 E2E |
-| L-04 | oss. | Match/nightly stesso pattern vs trash | — |
-| L-05 | gap | Purge Mongo senza cleanup blob/notif/cache | **P3.1** |
-| L-06 | rischio | Fascicolo delete senza `delete_object` + scoping fragile | **P3.1+P4.1** |
-| L-07 | rischio | Invite overwrite password | **P4.2** |
-| L-08 | gap | Agency senza deactivate/delete API | **P4.5–6** |
-| L-09 | oss. | Attività: hard delete, no soft | — |
-| L-10 | gap | migrate prefs filtra `trashed_at` (campo morto; reale è `deleted_at`) | — |
-| L-11 | oss. | Erasure user ≠ chiusura CRM; sessioni | **P4.3–4** |
-| L-12 | oss. | `agency_ids[0]` / remove member | **P4.5–7** |
-| L-13 | oss. | No unmatch se immobile poi trashed | — |
-
-### Decisioni di dominio (P5) · **D-094** · registrate, codice ⏳
-
-| Domanda | Direzione |
-|---------|-----------|
-| Immobile in Trash esce da feed/sync/pubblicazioni? | **Sì, escluso** (`trashed` = esclusione globale esterna) |
-| Trash cambia `status` commerciale? | **No**, non automaticamente |
-| Delete/Trash Cliente cancella Richieste? | **No** (niente cascade distruttivo) |
-| Cosa succede alle Richieste? | **Archiviate / non operative**, storico conservato |
-| Restore Cliente riattiva Richieste? | **No** |
-
-L-03 / L-02: gap di **implementazione** rispetto a D-094 (regola chiara, codice non ancora allineato).  
-Aperto: GDPR/retention “cliente cancellato” → punto privacy/retention.
-
----
-
-## Punto 6 — Proiezioni esterne e enforcement dominio · consegnato 28-Set
+## Punto 7 — Media / File · consegnato 28-Set (prompt originario)
 
 ### Verdetto (bozza)
 
-> **D-094 è chiaro; l’enforcement in codice è a macchia di leopardo.**  
-> Alcune superfici già usano `with_not_trashed` (ImmoCloud, v1 gateway, publishing feed/compliance).  
-> OSF `feed.py`, `sync_engine`, sito, social, MLS, match **filtrano solo `status=active`**.  
-> Trash immobile **non** muta `status` (OK su D-094 write-path). Trash/restore cliente **non** archivia richieste (gap vs D-094).
+> Upload autenticato e storage locale funzionano.  
+> Il serve è **un unico GET pubblico** su tutto lo store: foto listing e documenti sensibili condividono lo stesso canale.  
+> `delete_object` esiste ma **nessun caller** in app → delete/purge = solo Mongo → orfani su disco.
 
-### Matrice (sintesi)
+### Flusso
 
-| Superficie | vs D-094 |
-|------------|----------|
-| publishing feed + compliance | ✅ `with_not_trashed` |
-| ImmoCloud public_portal · v1 `/feed/properties` | ✅ |
-| OSF `feed.py` · sync_engine · site · social · MLS · matches/nightly | ❌ solo `status=active` |
-| Property trash write-path | ✅ non tocca `status` |
-| Client trash → archive requests | ❌ non implementato |
+```
+UPLOAD (auth) → put_object(path) → GET /api/media/{path} PUBBLICO → DELETE = solo DB
+```
 
-### Finding E-xx (no fix · no P0–P3)
+Path tipici: `omnia/properties/…`, `omnia/fascicolo/…`, `omnia/modulistica/…`, `omnia/private/…`, `omnia/b2c-visura/…`.  
+Nessuna signed URL. Backup media solo se `STORAGE_BACKEND=local`. Emergent delete = no-op.
+
+### Finding M-xx (no fix · no P0–P3)
 
 | ID | Tipo | Sintesi | Link |
 |----|------|---------|------|
-| E-01 | gap | Split-brain: publishing feed OK, OSF feed.py no | L-03 |
-| E-02 | rischio | sync_engine pusha trashed (path reale portali) | L-03 · D-094 |
-| E-03 | gap | site.py + MLS espongono active+trashed | D-094 |
-| E-04 | gap | social publish senza check trash/status | D-094 |
-| E-05 | oss. | Immocloud + v1 già allineati | — |
-| E-06 | gap | Match/nightly trattano trashed come operativi | L-04/L-13 |
-| E-07 | gap | Client trash non archivia richieste | L-02 · D-094 |
-| E-08 | oss. | Trash property non muta status | D-094 OK |
-| E-09 | gap | migrate prefs filtra `trashed_at` morto | L-10 |
+| **M-01** | rischio | Un GET pubblico per foto **e** fascicolo/modulistica/visura | **P3.1+P4.1** |
+| **M-02** | gap | `delete_object` zero call-site app | — |
+| **M-03** | gap | Fascicolo delete = `$pull` senza blob | **L-06** |
+| **M-04** | gap | Purge cestino = Mongo only | **L-05** |
+| M-05 | oss. | Update property può droppare array media senza cleanup | — |
+| M-06 | gap | upload-tmp orfani se create abortisce | — |
+| M-07 | gap | Quota incompleta (tmp, modulistica, B2C, base64) | — |
+| M-08 | oss. | Path in API auth → se leak, media pubblico | M-01 |
+| M-09 | oss. | Privacy gate nasconde planimetrie in JSON, non il blob | — |
+| M-10 | oss. | Fascicolo multipart: MIME libero | — |
+| M-11 | oss. | Range 206 carica file intero in RAM | — |
+| M-12 | oss. | Backup media solo local; emergent escluso | P3 backup |
+| M-13 | oss. | Doppio canale fascicolo (base64 + OS) | — |
+| M-14 | oss. | Emergent `delete_object` no-op | — |
 
-### Domanda aperta
+### Intenzionale vs incompleto
 
-D-094 vincola le **Richieste** al Trash Cliente. Le **Attività** (L-02) restano fuori scope (P7) o stesso enforcement?
+| Intenzionale | Incompleto |
+|--------------|------------|
+| Foto listing pubbliche (D-068 / B2C) | Stesso endpoint per doc sensibili |
+| Quota tier (D-085) | Meter incompleto |
+| Download fascicolo via API auth | Blob comunque su `/api/media` |
+| Backup tree locale | No cleanup blob; emergent fuori backup |
+
+### Domande aperte
+
+1. Prefissi sensibili (`fascicolo`, `modulistica`, `b2c-visura`) devono uscire dal GET pubblico (auth-only / signed), o resta “UUID = secret”?
+2. Cleanup blob a purge: local-first subito, o dopo S3/R2 (oggi emergent delete è no-op)?
 
 ### Prossimo
 
-Punto 7 su ok Founder (candidato: retention/privacy + purge blob + unmatch). Nessun fix senza priorità + «vai» esplicito su implementazione.
+Punto 8 su ok Founder (indice originario). **Niente fix.**

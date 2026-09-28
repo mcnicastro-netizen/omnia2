@@ -526,34 +526,58 @@ voci:
     pubblico: [super_admin, titolare]
     livello: avanzato
     tags: [codice, lifecycle, cestino, richieste, feed, audit, d-073]
-    correlati: [api.audit-architettura-stato, api.tenant-isolation]
+    correlati: [api.audit-architettura-stato, api.tenant-isolation, api.media-file]
     domanda_naturale: "Cosa succede quando metto un immobile nel cestino? Le richieste si cancellano? Escono dal feed?"
     contenuto:
       a_cosa_serve: >
-        Mappa onesta del lifecycle (audit P5): Immobile/Cliente hanno
-        cestino 30g; Richieste hanno stati e archive; Attività hard
-        delete. Feed/sync possono ancora vedere immobili trashed se
-        status resta active. Blob fascicolo non sempre eliminati.
+        Lifecycle P5/P6: cestino Immobile/Cliente; Richieste archiviate;
+        D-094 dominio. Attività = domanda aperta (non = Richieste).
+        Enforcement proiezioni a macchia di leopardo (E-01…E-07).
       quando_si_usa: >
-        Domande su cestino, purge, archive richieste, offboarding
-        agenzia, orfani.
+        Domande su cestino, feed, archive richieste, attività.
       passi:
-        - "Immobile/Cliente: DELETE → deleted_at 30g → restore o purge
-          (cron esterno o manuale). Purge = Mongo; blob spesso restano."
-        - "Richiesta: DELETE = status archived (D-090). No cestino."
-        - "Attività: open/done/cancelled; DELETE hard."
-        - "D-094 (dominio): trashed esclude feed/sync senza forzare
-          withdrawn; Cliente Trash → Richieste archiviate non
-          distrutte; restore Cliente non riapre richieste."
-        - "P6 enforcement: OK ImmoCloud/v1/publishing feed; gap OSF
-          feed.py, sync_engine, site, social, MLS, match (E-01…E-06).
-          Client trash non archivia richieste (E-07)."
-        - "Dettaglio L-* / E-* in AUDIT_ARCHITETTURA_NOTE.md."
+        - "D-094: trashed esclude feed/sync senza forzare withdrawn;
+          Cliente Trash → Richieste archiviate; restore non riapre."
+        - "P6: OK ImmoCloud/v1/publishing feed; gap OSF/sync/site/social/MLS."
+        - "Attività: non decidere cascade con Cliente finché non
+          chiarito appartengono a chi (audit aperto)."
+        - "Dettaglio in AUDIT_ARCHITETTURA_NOTE.md."
       errori_comuni:
         - problema: "Ho cestinato un annuncio ma lo vedo ancora sul feed"
           soluzione: >
-            Possibile su feed OSF/sync (E-01/E-02). D-094 lo vieta —
-            fix codice solo con «vai» esplicito Founder.
+            Possibile (E-01/E-02). D-094 lo vieta — fix solo post-audit
+            con «vai» implementazione.
+      permessi:
+        - Concetto: titolare / super_admin
+      screenshot: []
+
+  - id: api.media-file
+    titolo: Media e file — upload, GET pubblico, delete blob
+    modulo: Codice API
+    widget: null
+    pubblico: [super_admin, titolare]
+    livello: avanzato
+    tags: [codice, media, fascicolo, storage, audit, d-073]
+    correlati: [api.entity-lifecycle, api.tenant-isolation]
+    domanda_naturale: "Come sono salvate le foto e i documenti del Fascicolo? Sono pubblici? Si cancellano dal disco?"
+    contenuto:
+      a_cosa_serve: >
+        Audit P7 Media/File: put_object autenticato; serve unico
+        GET /api/media/{path} pubblico (foto listing e doc sensibili);
+        delete_object senza caller → orfani. Cluster P3.1+P4.1.
+      quando_si_usa: >
+        Domande su storage, fascicolo PDF, privacy foto, cestino e GB.
+      passi:
+        - "Path: omnia/properties|fascicolo|modulistica|private|…"
+        - "Foto listing pubbliche = intenzionale (B2C). Fascicolo sotto
+          stesso GET = finding M-01 (non fixare senza vai)."
+        - "Delete/purge CRM = Mongo; blob spesso restano (M-02…M-04)."
+        - "Quota D-085 meter incompleto su tmp/modulistica/B2C."
+      errori_comuni:
+        - problema: "Ho eliminato un documento dal Fascicolo ma il file?"
+          soluzione: >
+            Oggi si rimuove il riferimento DB; il blob può restare
+            (M-03/L-06). Annotato in audit — niente patch a caldo.
       permessi:
         - Concetto: titolare / super_admin
       screenshot: []

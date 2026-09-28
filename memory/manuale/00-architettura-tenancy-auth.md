@@ -68,16 +68,23 @@ Ciclo maturo su Immobile/Cliente (cestino) e Richieste (stati); incompleto E2E s
 
 ---
 
-## 0.6 · Proiezioni esterne (Punto 6 · consegnato)
+## 0.6 · Proiezioni esterne (Punto 6 · **ACQUISITO**)
 
-Enforcement D-094 **a macchia di leopardo**: OK su ImmoCloud / v1 / publishing feed; **non** su OSF feed, sync_engine, sito, social, MLS, match. Client trash → archive richieste ancora assente. Finding E-01…E-09 in note.
+D-094 dominio OK; enforcement a macchia di leopardo. Finding **E-01…E-07** aperti (no P0–P3).  
+**Attività**: domanda aperta (appartenenza Cliente/Richiesta/Agente/autonoma) — non assimilare alle Richieste.
 
 ---
 
-## 0.7 · Ripresa
+## 0.7 · Media / File (Punto 7 · consegnato · prompt originario)
 
-1. Feedback Punto 6.
-2. Solo su richiesta: **Punto 7**.
-3. Fix D-094 in codice: solo priorità + «vai» esplicito (non confondere con «vai» = prossimo punto audit).
+Un GET pubblico `/api/media/*` serve foto listing **e** blob sensibili. `delete_object` senza caller → orfani. Finding **M-01…M-14** in note (cluster P3.1+P4.1, L-05, L-06).
+
+---
+
+## 0.8 · Ripresa
+
+1. Feedback Punto 7.
+2. Solo su richiesta: **Punto 8** (indice originario).
+3. Fix codice: solo dopo fine audit / priorità + «vai» esplicito implementazione.
 
 Backlog **A-035**.
