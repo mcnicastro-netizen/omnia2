@@ -545,15 +545,15 @@ voci:
         - "D-094 (dominio): trashed esclude feed/sync senza forzare
           withdrawn; Cliente Trash → Richieste archiviate non
           distrutte; restore Cliente non riapre richieste."
-        - "Gap codice vs D-094 (L-03/L-02): feed/sync possono ancora
-          vedere trashed; cascade archive richieste non automatico.
-          Agency senza deactivate API. No fix senza «vai»."
-        - "Dettaglio L-01…L-13 in AUDIT_ARCHITETTURA_NOTE.md."
+        - "P6 enforcement: OK ImmoCloud/v1/publishing feed; gap OSF
+          feed.py, sync_engine, site, social, MLS, match (E-01…E-06).
+          Client trash non archivia richieste (E-07)."
+        - "Dettaglio L-* / E-* in AUDIT_ARCHITETTURA_NOTE.md."
       errori_comuni:
         - problema: "Ho cestinato un annuncio ma lo vedo ancora sul feed"
           soluzione: >
-            Comportamento attuale possibile (L-03). Regola di dominio
-            D-094 dice che non dovrebbe — fix solo con «vai» Founder.
+            Possibile su feed OSF/sync (E-01/E-02). D-094 lo vieta —
+            fix codice solo con «vai» esplicito Founder.
       permessi:
         - Concetto: titolare / super_admin
       screenshot: []

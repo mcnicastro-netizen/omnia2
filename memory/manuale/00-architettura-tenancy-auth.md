@@ -68,10 +68,16 @@ Ciclo maturo su Immobile/Cliente (cestino) e Richieste (stati); incompleto E2E s
 
 ---
 
-## 0.6 · Ripresa
+## 0.6 · Proiezioni esterne (Punto 6 · consegnato)
 
-1. Feedback / ok Punto 5.
-2. Solo su richiesta: **Punto 6** (come garantire tecnicamente D-094, ecc.).
-3. Fix codice: solo dopo priorità + «vai».
+Enforcement D-094 **a macchia di leopardo**: OK su ImmoCloud / v1 / publishing feed; **non** su OSF feed, sync_engine, sito, social, MLS, match. Client trash → archive richieste ancora assente. Finding E-01…E-09 in note.
+
+---
+
+## 0.7 · Ripresa
+
+1. Feedback Punto 6.
+2. Solo su richiesta: **Punto 7**.
+3. Fix D-094 in codice: solo priorità + «vai» esplicito (non confondere con «vai» = prossimo punto audit).
 
 Backlog **A-035**.

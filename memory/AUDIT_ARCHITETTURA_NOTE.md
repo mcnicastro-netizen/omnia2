@@ -4,7 +4,7 @@
 > Nessuna classificazione P0–P3 definitiva finché non si vede l’intero sistema.  
 > SoT: GitHub `mcnicastro-netizen/omnia2` (mai Origin-tmp).
 
-**Ultimo aggiornamento**: 28-Set-2026 · P4 acquisito · P5 lifecycle consegnato
+**Ultimo aggiornamento**: 28-Set-2026 · P5 + D-094 · **P6 proiezioni esterne consegnato**
 
 ---
 
@@ -16,7 +16,8 @@
 | P2 — Modello concettuale | 🟢 Ricostruito / approvato |
 | P3 — Multi-tenancy | 🟠 Isolamento applicativo presente, E2E incompleto · **ACQUISITO** |
 | P4 — AuthN/AuthZ | 🟠 Strutturato, AuthZ E2E incompleta · **ACQUISITO** |
-| P5 — Lifecycle entità | 🟠 Consegnato (feedback Founder) |
+| P5 — Lifecycle entità | 🟠 + **D-094** dominio · feedback |
+| P6 — Proiezioni esterne / enforcement D-094 | 🟠 Consegnato (feedback Founder) |
 
 ---
 
@@ -122,6 +123,45 @@ Non defect automatici: super_admin bypass, register pubblico, superfici pubblich
 L-03 / L-02: gap di **implementazione** rispetto a D-094 (regola chiara, codice non ancora allineato).  
 Aperto: GDPR/retention “cliente cancellato” → punto privacy/retention.
 
+---
+
+## Punto 6 — Proiezioni esterne e enforcement dominio · consegnato 28-Set
+
+### Verdetto (bozza)
+
+> **D-094 è chiaro; l’enforcement in codice è a macchia di leopardo.**  
+> Alcune superfici già usano `with_not_trashed` (ImmoCloud, v1 gateway, publishing feed/compliance).  
+> OSF `feed.py`, `sync_engine`, sito, social, MLS, match **filtrano solo `status=active`**.  
+> Trash immobile **non** muta `status` (OK su D-094 write-path). Trash/restore cliente **non** archivia richieste (gap vs D-094).
+
+### Matrice (sintesi)
+
+| Superficie | vs D-094 |
+|------------|----------|
+| publishing feed + compliance | ✅ `with_not_trashed` |
+| ImmoCloud public_portal · v1 `/feed/properties` | ✅ |
+| OSF `feed.py` · sync_engine · site · social · MLS · matches/nightly | ❌ solo `status=active` |
+| Property trash write-path | ✅ non tocca `status` |
+| Client trash → archive requests | ❌ non implementato |
+
+### Finding E-xx (no fix · no P0–P3)
+
+| ID | Tipo | Sintesi | Link |
+|----|------|---------|------|
+| E-01 | gap | Split-brain: publishing feed OK, OSF feed.py no | L-03 |
+| E-02 | rischio | sync_engine pusha trashed (path reale portali) | L-03 · D-094 |
+| E-03 | gap | site.py + MLS espongono active+trashed | D-094 |
+| E-04 | gap | social publish senza check trash/status | D-094 |
+| E-05 | oss. | Immocloud + v1 già allineati | — |
+| E-06 | gap | Match/nightly trattano trashed come operativi | L-04/L-13 |
+| E-07 | gap | Client trash non archivia richieste | L-02 · D-094 |
+| E-08 | oss. | Trash property non muta status | D-094 OK |
+| E-09 | gap | migrate prefs filtra `trashed_at` morto | L-10 |
+
+### Domanda aperta
+
+D-094 vincola le **Richieste** al Trash Cliente. Le **Attività** (L-02) restano fuori scope (P7) o stesso enforcement?
+
 ### Prossimo
 
-Punto 6 solo su ok Founder. Nessun fix (D-094 è dominio, non patch).
+Punto 7 su ok Founder (candidato: retention/privacy + purge blob + unmatch). Nessun fix senza priorità + «vai» esplicito su implementazione.

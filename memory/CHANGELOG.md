@@ -1,5 +1,14 @@
 # OMNIA — Changelog
 
+## 2026-09-28 — Audit Punto 6 · proiezioni esterne vs D-094
+
+**Tipo**: Docs / SoT audit.
+
+- Matrice superfici: OK ImmoCloud/v1/publishing feed; gap OSF feed, sync_engine, site, social, MLS, match
+- Finding E-01…E-09 · Client trash→archive richieste ancora assente
+- Note + Cap.00 + A-035 · **nessun fix codice**
+
+---
 ## 2026-09-28 — D-094 lifecycle dominio (Trash ≠ status · Cliente→Richieste)
 
 **Tipo**: Decision / Docs.
