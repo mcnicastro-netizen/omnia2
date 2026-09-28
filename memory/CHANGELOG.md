@@ -1,5 +1,15 @@
 # OMNIA — Changelog
 
+## 2026-09-28 — Audit P10 acquisito · P11 Restore + stima costi
+
+**Tipo**: Docs / SoT audit · **nessun fix codice** · **listino fermo**.
+
+- **P10 ACQUISITO** (linguaggio Founder): bak esiste ma pesante; incompleto; no restore; €0,04 non confermare; orchestrazione TBD
+- **P11 Restore**: risposta **NO** a «possiamo rimettere OMNIA come ieri?»; finding **R-01…R-12**
+- Stima ops grezza 1 / 10 / 100 / 1000 agenzie vs €49/€99/€299 (bak 31× pressiona margine Agency pieno)
+- Cap.00 · HAL `api.restore-disaster` · A-035 · note
+
+---
 ## 2026-09-28 — Audit P9 acquisito · P10 Backup
 
 **Tipo**: Docs / SoT audit · **nessun fix codice**.

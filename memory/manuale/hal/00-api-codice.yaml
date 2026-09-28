@@ -494,14 +494,14 @@ voci:
     pubblico: [super_admin]
     livello: avanzato
     tags: [codice, audit, architettura, roadmap, d-073]
-    correlati: [api.tenant-isolation, api.auth-lifecycle, api.entity-lifecycle, api.jobs-async, api.storage-costi, api.backup-archivio]
+    correlati: [api.tenant-isolation, api.auth-lifecycle, api.entity-lifecycle, api.jobs-async, api.storage-costi, api.backup-archivio, api.restore-disaster]
     domanda_naturale: "A che punto è l'audit architettura? Cosa manca? Posso fixare i finding?"
     contenuto:
       a_cosa_serve: >
         Prompt master AUDIT_PROMPT_MASTER.md (§1–§27). Numerazione
-        sessione distinta (P1…P10): non riallineare artificialmente.
-        P9 Storage acquisito; P10 Backup consegnato. D-094/D-095
-        dominio, codice ⏳. Finding in AUDIT_ARCHITETTURA_NOTE + A-035.
+        sessione distinta (P1…P11): non riallineare artificialmente.
+        P10 Backup acquisito; P11 Restore consegnato (NO ripristino
+        fedele automatico). Listino fermo. Finding in note + A-035.
       quando_si_usa: >
         Ripresa audit, metodo, priorità, dove siamo.
       passi:
@@ -509,7 +509,8 @@ voci:
         - "Progresso in AUDIT_ARCHITETTURA_NOTE.md · Cap. 00 · A-035."
         - "Un punto alla volta; no P0–P3 finché non §23; no fix senza
           «vai» implementazione."
-        - "Prossimo naturale tipico: Restore (master §10)."
+        - "Listino €/GB e orchestrazione job: non decidere prima di
+          design Backup+Restore."
       errori_comuni:
         - problema: "Inizio a patchare i media pubblici subito"
           soluzione: >
@@ -654,26 +655,56 @@ voci:
     pubblico: [super_admin]
     livello: avanzato
     tags: [codice, backup, storage, audit, d-073, d-085]
-    correlati: [api.storage-costi, api.jobs-async, api.media-file]
+    correlati: [api.storage-costi, api.jobs-async, api.media-file, api.restore-disaster]
     domanda_naturale: "Come funziona il backup? Cosa viene salvato? Posso ripristinare un'agenzia?"
     contenuto:
       a_cosa_serve: >
-        Audit P10 (master §9): APScheduler 03:15 + cron HTTP
-        super_admin. Full copytree MEDIA_ROOT × retention 30g (~31×).
-        Dump Mongo whitelist parziale; groups≠agency_groups; Emergent
-        OUT; nessun restore code path (P11). Finding B-01…B-14.
+        Audit P10 ACQUISITO: bak esiste ma ricopia tutto ogni giorno
+        (~31×). Dump incompleto; può partire due volte; trash/orphan
+        inclusi. Restore assente → P11. €0,04 non confermato; listino
+        fermo. Orchestrazione job non decidere ancora. B-01…B-14.
       quando_si_usa: >
         Domande su backup, retention, restore, costo disco ops.
       passi:
         - "backup_job.py: JSONL whitelist + copytree local + purge >R."
         - "Costo: GB_bak ≈ X×(R+1); €/GB all-in non confermato."
-        - "Restore: solo via supporto (promessa D-085) — codice assente."
-        - "Niente fix senza «vai» post-audit."
+        - "Restore: promessa D-085 via supporto — codice assente (P11)."
+        - "Niente fix / niente listino senza design Backup+Restore."
       errori_comuni:
         - problema: "Ho lanciato il backup ma mancano le richieste clienti"
           soluzione: >
             Atteso oggi (B-02): client_requests fuori whitelist.
             Annotato in audit — non patchare senza priorità Founder.
+      permessi:
+        - super_admin / Founder
+      screenshot: []
+
+  - id: api.restore-disaster
+    titolo: Ripristino da backup — cosa manca oggi
+    modulo: Codice API
+    widget: null
+    pubblico: [super_admin]
+    livello: avanzato
+    tags: [codice, restore, backup, disaster, audit, d-073, d-085]
+    correlati: [api.backup-archivio, api.storage-costi, api.audit-architettura-stato]
+    domanda_naturale: "Se perdiamo database e file, possiamo rimettere OMNIA come ieri?"
+    contenuto:
+      a_cosa_serve: >
+        Audit P11: risposta NO. Nessun restore automatico; promessa
+        Cap.19/D-085 senza tool; dump incompleto → ripristino non fedele.
+        Finding R-01…R-12. Stima costi 1→1000 agenzie in note audit.
+      quando_si_usa: >
+        Domande su disaster recovery, ripristino agenzia, supporto.
+      passi:
+        - "Cestino restore ≠ disaster restore piattaforma."
+        - "Operatore manuale: JSONL + copia media — non testato, incompleto."
+        - "Contratto da chiarire: piattaforma intera vs singola agenzia."
+        - "Niente fix senza «vai»; listino fermo."
+      errori_comuni:
+        - problema: "Il manuale dice che il supporto ripristina"
+          soluzione: >
+            Promessa documentata (R-02) ma oggi senza codice/tool.
+            Gap acquisito in audit — non improvvisare restore in prod.
       permessi:
         - super_admin / Founder
       screenshot: []

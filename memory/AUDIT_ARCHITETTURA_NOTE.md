@@ -6,7 +6,7 @@
 > **Numerazione = continuum di sessione** (non forzare allineamento al master).  
 > Prompt master: `memory/AUDIT_PROMPT_MASTER.md` (§1–§27) — corrispondenza in tabella sotto.
 
-**Ultimo aggiornamento**: 28-Set-2026 · **P9 ACQUISITO** · **P10 Backup consegnato**
+**Ultimo aggiornamento**: 28-Set-2026 · **P10 ACQUISITO** · **P11 Restore consegnato**
 
 ---
 
@@ -23,9 +23,10 @@
 | P7 | Media / File + **D-095** | §7 | 🟠 **ACQUISITO** · M-* |
 | P8 | Jobs / processi asincroni | §15 (anticipato) | 🟠 **ACQUISITO** · J-* |
 | P9 | Storage e costi | §8 | 🟠 **ACQUISITO** · C-* |
-| P10 | Backup | §9 | 🟠 Consegnato (feedback) |
+| P10 | Backup | §9 | 🟠 **ACQUISITO** · B-* |
+| P11 | Restore | §10 | 🟠 Consegnato (feedback) |
 | — | Cestino (blocco dedicato) | §6 | 🟡 parziale in P5 |
-| — | Restore / Retention / GDPR… | §10–§14 | ⬜ prossimo naturale: **§10 Restore** |
+| — | Retention / GDPR… | §11–§14 | ⬜ prossimo naturale: **§11 Backup vs cestino** o §12 Retention |
 | — | Osservabilità → report | §16–§27 | ⬜ |
 
 Decisioni dominio (codice ⏳): **D-094**, **D-095**.
@@ -39,9 +40,10 @@ Decisioni dominio (codice ⏳): **D-094**, **D-095**.
 3. **Proiezioni/jobs vs D-094** = E-* · J-01…J-04  
 4. **AuthZ non uniforme** login→risorsa (P4)  
 5. **Attività**: appartenenza aperta (non = Richieste)  
-6. **Costo infra massimo / bak** = C-* + **B-01** (full-copy ~31×) — €/GB all-in **non confermato**  
-7. **Trusted path tenant context** = domanda aperta P8 (bak = *nessun* tenant scope)  
-8. **APScheduler in-process** = *area da verificare* in affidabilità/deployment (**non** finding ancora)
+6. **Costo infra massimo / bak** = C-* + **B-01** (~31×) — €/GB all-in **non confermato**; listino **non** toccare  
+7. **Disaster recovery incompleto** = Backup pesante + dump parziale + **nessun Restore** (R-*)  
+8. **Trusted path tenant context** = domanda aperta P8 (bak = *nessun* tenant scope)  
+9. **APScheduler in-process** = *area da verificare* — decisione orchestrazione **rimandata** post Backup+Restore design
 
 ---
 
@@ -261,15 +263,39 @@ Worst-case grezzo ≈ **~0,78–0,85 GB/immobile** (+ fascicolo). **Nessun** che
 
 ---
 
-## Punto 10 — Backup · consegnato 28-Set (master §9 · continuum sessione)
+## Punto 10 — Backup · **ACQUISITO** Founder (28-Set · master §9)
 
-### Verdetto (bozza)
+### Verdetto acquisito (linguaggio normale Founder)
 
-> Il backup giornaliero esiste (APScheduler 03:15 UTC + `POST /cron/backup/daily` `super_admin`) e fa ciò che D-085 promette a livello di *intent*: dump Mongo whitelist + copia media local + retention 30g.  
-> Architettura: **full `shutil.copytree`** di tutto `LOCAL_STORAGE_ROOT` ogni giorno, **senza** incremental/dedup/snapshot → in regime stazionario  
-> `GB_backup ≈ X × (R+1)` ≈ **31×** live (R=30); live+bak ≈ **32×**.  
-> Quindi: **€0,04/GB all-in non è confermabile** con questo modello (allinea P9).  
-> Inoltre il dump Mongo è **parziale** (manca CRM critico: `client_requests`, activities, …); `"groups"` ≠ `agency_groups`; media Emergent **OUT**; **nessun** restore code path (→ P11); bak **globale** multi-tenant (trusted path senza tenant context — chiarisce P8).
+| | |
+|--|--|
+| 🟢 | **Il backup esiste** (ogni giorno). |
+| 🟠 | **Troppo pesante**: ricopia **tutto** ogni giorno (es. 100 GB → ~3.000 GB bak in 30g + i 100 live). |
+| 🔴 | **Non salva ancora tutti i dati importanti** (es. richieste clienti, attività). |
+| 🔴 | **Non c’è ancora il sistema per ripristinare** OMNIA da un backup → P11. |
+| 🟠 | **Costo reale non ancora calcolabile con sicurezza.** |
+
+### Quattro problemi principali (acquisiti)
+
+1. **Backup incompleto** (CRM critico OUT) → **va sistemato** (quando si progetta).  
+2. **Può partire due volte** (auto + manuale) → da controllare, non necessariamente disastro.  
+3. **Prende anche trash/orphan** → migliorare quando si definisce il sistema definitivo.  
+4. **Restore assente** → **punto più importante**; metà del lavoro manca.
+
+### Risposte alle domande aperte P10
+
+1. **€0,04/GB** → **NO, non confermare**. Non cambiare listino. Aspettare Backup+Restore design, poi i conti.  
+2. **APScheduler vs esterno** → **non decidere ancora**. Prima capire bak + restore.
+
+**Decisione operativa ora:** niente codice, niente listino. Finding **B-01…B-14** e **K-BAK-*** restano aperti.
+
+---
+
+## Punto 10 — dettaglio tecnico (riferimento)
+
+### Verdetto tecnico (pre-acquisizione)
+
+> Bak giornaliero esiste; full `copytree` ~31×; dump Mongo parziale; nessun restore path.
 
 ### Trigger
 
@@ -356,16 +382,117 @@ Bak = costo **OMNIA** (non nel meter cliente). Un tenant pesante amplifica il tr
 5. **K-BAK-05** — Cifratura / path / ACL / offsite di `BACKUP_ROOT`?  
 6. **K-BAK-06** — Trashed/orphan nel bak: ok fino a retention, o exclude + policy (→ Retention §12)?
 
-### Domande aperte (max 2)
+### Domande aperte P10 — **chiuse** dal Founder (vedi sopra)
 
-1. Si vuole ancora basare il listino GB su un all-in tipo **€0,04/GB**, sapendo che il moltiplicatore disco bak è **~31× full-copy**?  
-2. Per bak (+ future purge/blob): **APScheduler nel processo API** resta accettabile in produzione, o si impone **cron/worker esterno** come orchestrazione primaria?
+1. €0,04 → non confermare; listino fermo.  
+2. Orchestrazione → non decidere ancora.
 
-### Anteprima Restore (defer P11)
+---
 
-**Non esiste** entrypoint di restore (né API né script). Il prodotto promette ripristino “via supporto OMNIA” (Cap.19 / D-085). Il commento in `backup_job.py` descrive un’intenzione, non codice. Gap per P11: completo vs per-agenzia, relazioni, media Emergent, collection fuori whitelist, giorno `ok=false`.
+## Punto 11 — Restore · consegnato 28-Set (master §10 · continuum sessione)
+
+### Verdetto in linguaggio normale
+
+**Domanda fondamentale Founder:**
+
+> *«Se domani mattina perdiamo database e file, possiamo riportare OMNIA esattamente alla situazione di ieri?»*
+
+**Risposta: NO** (al massimo un ripristino **parziale e manuale**, senza procedura né tool).
+
+- Il backup del giorno esiste come cartella su disco.  
+- **Non esiste** restore automatico (né API, né script, né CLI, né runbook ops).  
+- Cap.19 / D-085 promettono «ripristino via supporto OMNIA», ma il supporto oggi **non ha un tool**: avrebbe solo JSONL + media da ricostruire a mano.  
+- Anche a mano: dump Mongo **incompleto** → non si ricostruisce «OMNIA di ieri» in modo fedele (mancano richieste, attività, …; gruppi sbagliati; media Emergent fuori).
+
+### Cosa esiste vs cosa manca
+
+| Esiste | Manca |
+|--------|--------|
+| Bak giornaliero (scheduler + cron HTTP) | Qualsiasi `restore` disaster |
+| JSONL whitelist + media local + MANIFEST | Playbook ops «disastro → passi 1…N» |
+| Promessa Cap.19 / D-085 «via supporto» | Codice/tool che attua la promessa |
+| Cestino self-service (`trash` restore) | ≠ disaster restore piattaforma/agenzia |
+
+Commento in `backup_job.py` («Collections that restore an agency archive») = **intenzione**, non codice.
+
+### Scenario disastro (oggi)
+
+Operatore esperto *potrebbe* tentare: leggere MANIFEST → import JSONL → copiare `media/` su `LOCAL_STORAGE_ROOT` → riavvio.  
+**Non testato, non automatizzato.** Rischi: giorno `ok=false` parziale; collisioni unique se DB non vuoto; `groups.jsonl` inutile; CRM fuori bak **perso**; Emergent = blob irrecuperabili; **no** restore singola agenzia sicuro (bak globale).
+
+### Finding R-xx (no fix · no P0–P3)
+
+| ID | Tipo | Sintesi | Link |
+|----|------|---------|------|
+| **R-01** | gap | Nessun restore code path | **B-12** |
+| **R-02** | rischio | Promessa «via supporto» senza tool | Cap.19 · D-085 |
+| **R-03** | gap | Dump incompleto → restore incompleto | **B-02** |
+| **R-04** | gap | `groups` ≠ `agency_groups` | **B-03** |
+| **R-05** | rischio | Media Emergent OUT | **B-05** |
+| **R-06** | rischio | Giorno `ok=false` comunque scritto | **B-09** |
+| **R-07** | rischio | Collisioni unique su restore DB non vuoto | indexes users/agencies |
+| **R-08** | gap | Bak globale → no restore single-agency sicuro | **B-13** |
+| **R-09** | oss. | Trash/orphan nel bak = rumore + costo | **B-10** |
+| **R-10** | oss. | Commento codice sovrastima capacità | `backup_job.py:22` |
+| **R-11** | gap | No checksum / cifratura documentata | **B-06/B-07** |
+| **R-12** | oss. | Cestino ≠ disaster restore | Cap.19 |
+
+### Stima costo ops — 1 / 10 / 100 / 1.000 agenzie
+
+**Onestà:** non c’è foglio costi hosting ufficiale nel repo. Ordini di grandezza da assunzioni P9/P10 — **non** conferma listino.
+
+#### Assunzioni
+
+| Assumption | Valore |
+|------------|--------|
+| Mix piani | 50% Starter / 35% Pro / 15% Agency |
+| Quota | 30 / 100 / 300 GB |
+| Utilizzo medio vs quota | A 25% · B 50% · C 80% |
+| Bak | full-copy ≈ **31×** live; live+bak ≈ **32×** |
+| €/GB disco (range grezzo) | **€0,02–0,08 /GB/mese** (≠ €0,04 D-085 confermato) |
+| ARPU mix | ≈ **€104**/agenzia (`0,5×49 + 0,35×99 + 0,15×299`) |
+| Mongo + API | grezzi; egress/LLM **esclusi** o solo nota |
+
+GB live medi/agenzia (mix): A ≈ **22 GB** · B ≈ **44 GB** · C ≈ **70 GB**  
+×32 live+bak: A ≈ **700 GB** · B ≈ **1,4 TB** · C ≈ **2,2 TB**
+
+#### Ordine di grandezza €/mese
+
+| N | Storage (A–C, €0,02–0,08) | + Mongo/API | Totale grezzo | Revenue mix (~€104×N) |
+|---|---------------------------|-------------|---------------|------------------------|
+| **1** | ~€14–€180 | ~€70–€230 | **~€80–€400** | ~€49–€299 (1 piano) |
+| **10** | ~€140–€1,8k | ~€150–€500 | **~€0,3k–€2,3k** | ~€1,0k |
+| **100** | ~€1,4k–€18k | ~€0,4k–€2k | **~€2k–€20k** | ~€10k |
+| **1000** | ~€14k–€180k | ~€2k–€15k | **~€16k–€200k** | ~€104k |
+
+Esempio: 100 agenzie × 1,4 TB × €0,04 ≈ **€5,6k/mese solo disco** a utilizzo medio.
+
+#### I prezzi €49 / €99 / €299 hanno senso?
+
+| Lettura | Verdetto |
+|---------|----------|
+| Uso basso (A) + disco economico + pochi Agency pieni | Margine **possibile** su Pro/Agency; Starter €49 **stretto** se riempie i 30 GB (~960 GB live+bak ≈ **€38** solo disco a €0,04 vs €49) |
+| Uso medio/alto (B/C) + bak **31×** | A 100–1000 agenzie il disco può **mangiare** gran parte del canone; Agency 300 GB pieni ≈ 9,6 TB → **€190–€770/mese** solo disco a €0,02–0,08 — nel caso alto **> €299** |
+| Bak incrementale (~1,2–3×) | Economics molto più difendibili; razionale €0,04 torna plausibile |
+| Listino ora | **Non toccare** — prima design Backup+Restore, poi i conti |
+
+**Sintesi:** i canoni possono funzionare come posizionamento se l’uso medio resta sotto quota **e** si riduce il moltiplicatore bak. Con full-copy attuale e Agency al tetto, l’economia storage **non** regge da sola.
+
+### Decisioni da prendere / Domande aperte (max 2)
+
+1. **Contratto restore:** disaster **piattaforma intera** vs **singola agenzia** «via supporto» (Cap.19) — oggi nessuno dei due è affidabile; quale è la promessa reale?  
+2. Conferma metodo Founder: **chiudere design Backup+Restore** prima di qualsiasi conferma €/GB o cambio listino?
+
+### Link
+
+| Ref | Ruolo |
+|-----|--------|
+| **B-01 / C-04** | ~31× → pressione su ARPU |
+| **B-02…B-05, B-12, B-13** | Incompletezza bak → incompletezza restore |
+| **D-085** | Promessa ripristino via supporto; €0,04 non confermato |
+| Cap.19 §19.10.2bis | Testo cliente |
 
 ### Prossimo
 
-Su ok Founder: **Restore** (master §10 / sessione P11).  
-**Niente fix. Nessuna severità definitiva.**
+Su ok Founder: tipicamente **Backup vs cestino** (master §11) o **Retention** (§12).  
+**Niente fix. Nessuna severità definitiva. Listino fermo.**

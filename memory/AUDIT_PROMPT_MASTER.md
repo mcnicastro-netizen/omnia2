@@ -90,11 +90,12 @@ In altre parole:
 | P6 Proiezioni / D-094 | **fuori indice** | **ACQUISITO** · E-* |
 | P7 Media | **§7** | **ACQUISITO** · D-095 · M-* |
 | P8 Jobs | **§15** (anticipato) | **ACQUISITO** · J-* · decisioni purge/trusted aperte |
-| P9 Storage e costi | **§8** | **ACQUISITO** · C-* · costo massimo non determinabile col bak attuale |
-| P10 Backup | **§9** | Consegnato · B-* (feedback) · full-copy ~31× |
+| P9 Storage e costi | **§8** | **ACQUISITO** · C-* · listino fermo |
+| P10 Backup | **§9** | **ACQUISITO** · B-* · pesante/incompleto · €0,04 non confermare |
+| P11 Restore | **§10** | Consegnato · R-* · **NO** ripristino fedele automatico |
 | — | **§6 Cestino** | Parziale in P5 · blocco dedicato ancora da fare |
-| — | **§10 Restore** | **Prossimo naturale** dopo feedback P10 |
-| — | **§11–§14, §16–§27** | Non avviati |
+| — | **§11 Backup vs cestino** | **Prossimo naturale** tipico dopo feedback P11 |
+| — | **§12–§14, §16–§27** | Non avviati |
 
 **Regola numerazione**: mantenere il continuum di sessione; documentare la corrispondenza qui / in `AUDIT_ARCHITETTURA_NOTE.md` — non riallineare artificialmente i numeri.
 

@@ -1183,33 +1183,28 @@ Concordo sul nucleo. Temperatura: «OS agenzia» è **nord**, non claim immediat
 
 ## 🟡 A-035 — Audit architettura SaaS (prompt master §1–§27)
 
-**Data inserimento**: 25-Sep-2026 · **agg.** 28-Sep-2026 (P9 acquisito · P10 Backup)  
+**Data inserimento**: 25-Sep-2026 · **agg.** 28-Sep-2026 (P10 acquisito · P11 Restore)  
 **Prompt master**: `memory/AUDIT_PROMPT_MASTER.md`  
-**Stato**: 🟠 **in corso** · numerazione **sessione** (non forzare = master) · **NON implementare** · **NO P0–P3** finché non aperti §23+
+**Stato**: 🟠 **in corso** · numerazione **sessione** · **NON implementare** · **NO P0–P3** · **listino fermo**
 
 ### Verdetti acquisiti
-- P2: **approvato**
-- P3: **acquisito** — isolation applicativa sì · E2E incompleta
-- P4: **acquisito** — AuthN strutturata · AuthZ E2E incompleta (catena non uniforme login→risorsa)
-- P5: **consegnato** + **D-094** dominio · codice ⏳
-- P6: **ACQUISITO** — E-01…E-07 aperti; Attività = domanda aperta
-- P7: **ACQUISITO** — Media/File (M-01…M-14) + **D-095** dominio · niente fix
-- P8: **ACQUISITO** — Jobs (J-01…J-12); purge/blob automatici TBD; trusted context aperto; APScheduler = area
-- P9: **ACQUISITO** — Storage (C-01…C-15); tetto commerciale OK; costo infra **massimo** non ancora determinabile col bak attuale; €0,04 non confermato; no secondo tetto video
-- P10: **consegnato** — Backup (B-01…B-14); full-copy ~31× conferma C-04; dump Mongo parziale; no restore code
+- P2–P9: acquisiti (vedi note)
+- P10: **ACQUISITO** — bak esiste ma pesante (~31×); incompleto; no restore; €0,04 non confermare; orchestrazione TBD
+- P11: **consegnato** — Restore: risposta **NO** a «possiamo rimettere OMNIA come ieri?»; R-01…R-12; stima costi 1→1000 agenzie
 
 ### Cluster finding da non dimenticare
 - **Media authorization** = P3.1 + P4.1 + M-01 → **D-095**
 - **Mongo ⟷ blob lifecycle** = M-02…M-04 + L-05/L-06 → **D-095**
 - **Proiezioni/jobs vs D-094** = E-01…E-07 · J-01…J-04
-- **Costo infra massimo / bak** = C-* · **B-01** (~31×) · €/GB all-in non confermato
+- **Disaster recovery incompleto** = B-* · **R-***
+- **Costo infra massimo / bak** = C-* · B-01 · €/GB non confermato · listino fermo
 - **P4.2–P4.7** auth · Attività lifecycle aperto
 
 ### Dove
-`memory/AUDIT_ARCHITETTURA_NOTE.md` · Cap. 00 · HAL `api.storage-costi` / `api.backup-archivio`
+`memory/AUDIT_ARCHITETTURA_NOTE.md` · Cap. 00 · HAL `api.backup-archivio` / `api.restore-disaster`
 
 ### Prossimo tipico
-- Feedback P10 → poi **Restore** (master §10 / sessione P11)
+- Feedback P11 → tipicamente **Backup vs cestino** (master §11) o Retention (§12)
 - «vai» di **implementazione** = distinto (fix codice su finding prioritizzati)
 
 ---

@@ -1,46 +1,35 @@
-# Cap. 00 · Architettura tenancy, auth, media, jobs, storage, backup (audit SaaS)
+# Cap. 00 · Architettura tenancy → backup/restore (audit SaaS)
 
 **Ambito**: founder / super_admin.  
 **Prompt master**: `memory/AUDIT_PROMPT_MASTER.md` (§1–§27).  
-**Numerazione sessione**: continuum in `AUDIT_ARCHITETTURA_NOTE.md` (non forzare allineamento artificialmente).
+**Numerazione sessione**: continuum in `AUDIT_ARCHITETTURA_NOTE.md`.
 
 ---
 
 ## Metodo
 
-Un blocco alla volta · niente fix senza «vai» implementazione · no P0–P3 prematuri · aggiornare le note.
+Un blocco alla volta · niente fix senza «vai» · no P0–P3 prematuri · **listino fermo** finché Backup+Restore non sono disegnati.
 
 ---
 
 ## Decisioni di dominio (codice ⏳)
 
-### D-094
-- `status` = commerciale · `trashed` = lifecycle  
-- Trashed → escluso da feed/sync/pubblicazioni **senza** forzare `withdrawn`  
-- Cliente Trash → Richieste **archiviate** (storico), non distrutte; restore non riapre  
-
-### D-095
-- Media **pubblici** vs **privati** · no “UUID = secret”  
-- Cleanup blob indipendente da S3/R2 · idempotente  
-
-### D-085 (già prodotto)
-- Quota storage GB per piano + addon €15/100 GB · meter + blocco 413  
-- Backup automatico retention 30g (implementazione attuale = full copytree — vedi P10)
+### D-094 / D-095 / D-085
+- Trash ≠ status · media pubblico/privato · quota GB + bak 30g  
+- Promessa D-085 «ripristino via supporto» = **oggi senza tool** (P11)
 
 ---
 
-## Cluster aperti (sintesi)
+## Cluster aperti
 
 | Cluster | Finding |
 |---------|---------|
 | Media authorization | P3.1 + P4.1 + M-01 |
 | Mongo ⟷ blob | M-02…M-04 · L-05/L-06 |
 | Proiezioni/jobs vs D-094 | E-* · J-01…J-04 |
-| AuthZ E2E | P4 cluster |
-| Attività | domanda aperta |
-| Costo infra massimo / bak | C-* · **B-01** (~31×) · €/GB all-in non confermato |
-| Trusted path tenant context | domanda aperta P8 (bak = no tenant) |
-| APScheduler in-process | area da verificare — **non** finding |
+| Disaster recovery incompleto | B-* · **R-*** (no restore) |
+| Costo infra massimo | C-* · B-01 ~31× · €/GB non confermato |
+| Orchestrazione job | rimandata post design bak+restore |
 
 ---
 
@@ -48,13 +37,9 @@ Un blocco alla volta · niente fix senza «vai» implementazione · no P0–P3 p
 
 | Sessione | Master | Stato |
 |----------|--------|--------|
-| P1–P5 | §1–§5 | acquisiti / finding aperti |
-| P6 Proiezioni | fuori | **ACQUISITO** · E-* |
-| P7 Media | §7 | **ACQUISITO** · D-095 · M-* |
-| P8 Jobs | §15 | **ACQUISITO** · J-* |
-| P9 Storage/costi | §8 | **ACQUISITO** · C-* · formulazione costo “massimo non determinabile col bak attuale” |
-| P10 Backup | §9 | Consegnato · B-* |
-| — | §6 Cestino | da blocco dedicato |
-| — | §10 Restore | **prossimo naturale** |
+| P1–P9 | §1–§8 (+§15 Jobs) | acquisiti |
+| P10 Backup | §9 | **ACQUISITO** · pesante, incompleto, no restore |
+| P11 Restore | §10 | Consegnato · **NO** ripristino fedele da ieri |
+| — | §11+ | prossimo su feedback Founder |
 
-Dettaglio: `AUDIT_ARCHITETTURA_NOTE.md` · A-035 · HAL correlati.
+Dettaglio: `AUDIT_ARCHITETTURA_NOTE.md` · A-035 · HAL `api.backup-archivio` / `api.restore-disaster`.

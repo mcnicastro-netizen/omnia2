@@ -1,6 +1,6 @@
 # Prossima sessione — programma passi
 
-**Aggiornato**: 28 Settembre 2026 · audit **in corso** (P10 Backup consegnato)  
+**Aggiornato**: 28 Settembre 2026 · audit **in corso** (P11 Restore consegnato)  
 **Repo**: https://github.com/mcnicastro-netizen/omnia2 ✅  
 
 ---
@@ -10,12 +10,11 @@
 | | |
 |--|--|
 | Prompt master | `memory/AUDIT_PROMPT_MASTER.md` (§1–§27) |
-| Note progresso | `memory/AUDIT_ARCHITETTURA_NOTE.md` (numerazione **sessione**) |
+| Note progresso | `memory/AUDIT_ARCHITETTURA_NOTE.md` |
 | Backlog | **A-035** |
-| Ultimo | **P9 ACQUISITO** · **P10 Backup** consegnato (B-*) |
-| Prossimo | Feedback Founder su P10 → tipicamente **Restore** (master §10) |
-
-Niente fix senza «vai» di implementazione. No P0–P3 finché non §23.
+| Ultimo | **P10 ACQUISITO** · **P11 Restore** consegnato (R-* + stima 1→1000) |
+| Prossimo | Feedback Founder → tipicamente **Backup vs cestino** (§11) o Retention |
+| Vincolo | **Listino fermo** · niente fix · no P0–P3 finché non §23 |
 
 ---
 
