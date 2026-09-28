@@ -80,19 +80,22 @@ In altre parole:
 
 ## Mappa sessione già svolta ↔ questo indice
 
-| Sessione (fino al 28-Set) | Punto master | Note |
-|---------------------------|--------------|------|
+| Sessione | Punto master | Note |
+|----------|--------------|------|
 | P1 Architettura | **§1** | Acquisito |
 | P2 Modello | **§2** | Approvato |
 | P3 Multi-tenancy | **§3** | Acquisito · finding aperti |
 | P4 AuthN/AuthZ | **§4** | Acquisito · finding aperti |
 | P5 Lifecycle + D-094 | **§5** (+ pezzi §6) | Acquisito · D-094 |
-| “P6 Proiezioni / D-094” | **fuori indice** / anticipa §15–§20 | Finding E-* · tenere |
-| “P7 Media” | **§7** | + **D-095** · M-* |
-| “P8 Jobs” | **§15** (anticipato) | Finding J-* · tenere |
-| — | **§6 Cestino** | Parziale in P5 · da approfondire come blocco dedicato |
-| — | **§8 Storage e costi** | **Prossimo blocco naturale** dopo Media |
-| — | **§9–§14, §16–§27** | Non avviati |
+| P6 Proiezioni / D-094 | **fuori indice** | **ACQUISITO** · E-* |
+| P7 Media | **§7** | **ACQUISITO** · D-095 · M-* |
+| P8 Jobs | **§15** (anticipato) | **ACQUISITO** · J-* · decisioni purge/trusted aperte |
+| P9 Storage e costi | **§8** | Consegnato · C-* (feedback) |
+| — | **§6 Cestino** | Parziale in P5 · blocco dedicato ancora da fare |
+| — | **§9 Backup** | **Prossimo naturale** dopo feedback P9 |
+| — | **§10–§14, §16–§27** | Non avviati |
+
+**Regola numerazione**: mantenere il continuum di sessione; documentare la corrispondenza qui / in `AUDIT_ARCHITETTURA_NOTE.md` — non riallineare artificialmente i numeri.
 
 Decisioni di dominio già registrate (codice ⏳): **D-094**, **D-095**.
 

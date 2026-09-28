@@ -1,14 +1,14 @@
-# Cap. 00 · Architettura tenancy, auth, media, jobs (audit SaaS)
+# Cap. 00 · Architettura tenancy, auth, media, jobs, storage (audit SaaS)
 
 **Ambito**: founder / super_admin.  
 **Prompt master**: `memory/AUDIT_PROMPT_MASTER.md` (§1–§27).  
-**Stato**: ⏸ audit in pausa fino a «vai» Founder.
+**Numerazione sessione**: continuum in `AUDIT_ARCHITETTURA_NOTE.md` (non forzare allineamento artificialmente).
 
 ---
 
 ## Metodo
 
-Un blocco alla volta · niente fix senza «vai» implementazione · no P0–P3 prematuri · aggiornare `AUDIT_ARCHITETTURA_NOTE.md`.
+Un blocco alla volta · niente fix senza «vai» implementazione · no P0–P3 prematuri · aggiornare le note.
 
 ---
 
@@ -23,6 +23,9 @@ Un blocco alla volta · niente fix senza «vai» implementazione · no P0–P3 p
 - Media **pubblici** vs **privati** · no “UUID = secret”  
 - Cleanup blob indipendente da S3/R2 · idempotente  
 
+### D-085 (già prodotto)
+- Quota storage GB per piano + addon €15/100 GB · meter + blocco 413  
+
 ---
 
 ## Cluster aperti (sintesi)
@@ -34,11 +37,22 @@ Un blocco alla volta · niente fix senza «vai» implementazione · no P0–P3 p
 | Proiezioni/jobs vs D-094 | E-* · J-01…J-04 |
 | AuthZ E2E | P4 cluster |
 | Attività | domanda aperta |
+| Costo infra / margine | C-* (P9) · bak full-copy · Agency ∞ |
+| Trusted path tenant context | domanda aperta P8 |
+| APScheduler in-process | area da verificare (deploy/affidabilità) — **non** finding |
 
 ---
 
-## Progresso master
+## Progresso
 
-§1–§5 sostanzialmente fatti · §7 + pezzi §15 fatti · **§6 Cestino** e **§8 Storage/costi** tra i prossimi · resto ⬜.
+| Sessione | Master | Stato |
+|----------|--------|--------|
+| P1–P5 | §1–§5 | acquisiti / finding aperti |
+| P6 Proiezioni | fuori | **ACQUISITO** · E-* |
+| P7 Media | §7 | **ACQUISITO** · D-095 · M-* |
+| P8 Jobs | §15 | **ACQUISITO** · J-* · decisioni purge/trusted aperte |
+| P9 Storage/costi | §8 | Consegnato · C-* |
+| — | §6 Cestino | da blocco dedicato |
+| — | §9 Backup | **prossimo naturale** |
 
-Dettaglio: `AUDIT_ARCHITETTURA_NOTE.md` · A-035.
+Dettaglio: `AUDIT_ARCHITETTURA_NOTE.md` · A-035 · HAL `api.*` correlati.

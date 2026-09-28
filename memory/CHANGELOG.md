@@ -1,5 +1,15 @@
 # OMNIA — Changelog
 
+## 2026-09-28 — Audit P8 acquisito · P9 Storage e costi
+
+**Tipo**: Docs / SoT audit · **nessun fix codice**.
+
+- **P8 ACQUISITO**: J-01…J-12 aperti; purge+blob = automatici/osservabili ma orchestrazione TBD; trusted tenant context da approfondire; APScheduler in-process = area (non finding)
+- **P9 Storage/costi** (master §8): D-085 sì; `max_properties` non enforced; bak full-copy ×30g; finding **C-01…C-15**; K-STOR-* da decidere
+- Numerazione sessione mantenuta · corrispondenza master aggiornata
+- Cap.00 · HAL `api.jobs-async` + `api.storage-costi` · A-035 · note
+
+---
 ## 2026-09-28 — Prompt master audit SaaS (§1–§27) · sessione in pausa
 
 **Tipo**: Docs / SoT audit.

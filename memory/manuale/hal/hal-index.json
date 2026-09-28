@@ -1,12 +1,12 @@
 {
-  "version": "0.25-import-preview-agent-history",
-  "updated": "2026-09-24",
-  "voices_total": 352,
+  "version": "0.26-a028-ghi",
+  "updated": "2026-09-28",
+  "voices_total": 359,
   "source_files": [
     {
       "file": "00-api-codice.yaml",
-      "voices": 16,
-      "md5": "4e2d1c3e61c4e04a238cadce24b6ee69"
+      "voices": 23,
+      "md5": "f5973aadbfe8ba43bfae410931366e51"
     },
     {
       "file": "01-primo-accesso.yaml",
@@ -41,7 +41,7 @@
     {
       "file": "07-fascicolo-immobile.yaml",
       "voices": 12,
-      "md5": "97091b8d5e4b0d6905b1dcbfd14813ba"
+      "md5": "f40b97faa464fe828e9b3aa7777c239e"
     },
     {
       "file": "08-sito-web.yaml",
@@ -71,7 +71,7 @@
     {
       "file": "13-team-ruoli.yaml",
       "voices": 13,
-      "md5": "fea46b8bdcb7eb6a3d06bc2bc4f0387b"
+      "md5": "8e7c91cb4c4befb627b5a0d13bed49c8"
     },
     {
       "file": "14-import-xml.yaml",
@@ -150,8 +150,8 @@
       "file": "00-api-codice",
       "title": "Corpus codice/API",
       "yaml": "00-api-codice.yaml",
-      "voices": 16,
-      "md5": "4e2d1c3e61c4e04a238cadce24b6ee69"
+      "voices": 23,
+      "md5": "f5973aadbfe8ba43bfae410931366e51"
     },
     {
       "id": 22,
@@ -202,5 +202,5 @@
       "md5": "5e88370cdf2c070dc30c7c3f036b85db"
     }
   ],
-  "notes": "Fingerprints regenerated from YAML on disk. Live RAG reindex: POST /api/app/hal/knowledge/reindex?force=true (super_admin). 2026-09-21: hub import A–E · HAL import.tutte-le-forme. 2026-09-19: D-085 storage quota · Cestino · Cap.20 Ruota · cleanup Emergent · Cap.15 social · Cap.3 planimetrie."
+  "notes": "Fingerprints regenerated from YAML on disk. Live RAG reindex: POST /api/app/hal/knowledge/reindex?force=true (super_admin). 2026-09-24: A-028g/h/i · Cap.2 Attività · Cap.10 Conferma e applica · Cap.18 distinzione. 2026-09-21: hub import A–E · HAL import.tutte-le-forme. 2026-09-19: D-085 storage quota · Cestino · Cap.20 Ruota."
 }

@@ -1183,9 +1183,9 @@ Concordo sul nucleo. Temperatura: «OS agenzia» è **nord**, non claim immediat
 
 ## 🟡 A-035 — Audit architettura SaaS (prompt master §1–§27)
 
-**Data inserimento**: 25-Sep-2026 · **agg.** 28-Sep-2026  
+**Data inserimento**: 25-Sep-2026 · **agg.** 28-Sep-2026 (P8 acquisito · P9 Storage)  
 **Prompt master**: `memory/AUDIT_PROMPT_MASTER.md`  
-**Stato**: ⏸ **in pausa** fino a «vai» Founder · **NON implementare** · **NO P0–P3** finché non aperti §23+
+**Stato**: 🟠 **in corso** · numerazione **sessione** (non forzare = master) · **NON implementare** · **NO P0–P3** finché non aperti §23+
 
 ### Verdetti acquisiti
 - P2: **approvato**
@@ -1193,20 +1193,22 @@ Concordo sul nucleo. Temperatura: «OS agenzia» è **nord**, non claim immediat
 - P4: **acquisito** — AuthN strutturata · AuthZ E2E incompleta (catena non uniforme login→risorsa)
 - P5: **consegnato** + **D-094** dominio · codice ⏳
 - P6: **ACQUISITO** — E-01…E-07 aperti; Attività = domanda aperta
-- P7: **consegnato** — Media/File (M-01…M-14) + **D-095** dominio · niente fix
-- P8: **consegnato** — Jobs/cron (J-01…J-12) · trusted vs tenant · niente fix
+- P7: **ACQUISITO** — Media/File (M-01…M-14) + **D-095** dominio · niente fix
+- P8: **ACQUISITO** — Jobs (J-01…J-12); purge/blob = automatici/osservabili ma orchestrazione TBD; trusted tenant context da approfondire; APScheduler in-process = area (non finding)
+- P9: **consegnato** — Storage e costi (C-01…C-15) · D-085 sì · costo end-to-end non ancora prevedibile
 
 ### Cluster finding da non dimenticare
 - **Media authorization** = P3.1 + P4.1 + M-01 → **D-095**
 - **Mongo ⟷ blob lifecycle** = M-02…M-04 + L-05/L-06 → **D-095**
 - **Proiezioni/jobs vs D-094** = E-01…E-07 · J-01…J-04
+- **Costo infra / margine** = C-* · bak full-copy · Agency ∞ immobili
 - **P4.2–P4.7** auth · Attività lifecycle aperto
 
 ### Dove
-`memory/AUDIT_ARCHITETTURA_NOTE.md` · Cap. 00 · HAL `api.tenant-*` / `api.auth-lifecycle`
+`memory/AUDIT_ARCHITETTURA_NOTE.md` · Cap. 00 · HAL `api.jobs-async` / `api.storage-costi`
 
-### Trigger di ripresa
-- Founder dice **«vai»** → rileggere `AUDIT_PROMPT_MASTER.md` e proseguire dal prossimo § (tipicamente §6 Cestino o §8 Storage/costi)
+### Prossimo tipico
+- Feedback P9 → poi **Backup** (master §9) — chiarisce anche orchestrazione job (P8) e moltiplicatore disco (C-04)
 - «vai» di **implementazione** = distinto (fix codice su finding prioritizzati)
 
 ---
