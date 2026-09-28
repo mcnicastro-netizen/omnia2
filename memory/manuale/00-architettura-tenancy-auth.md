@@ -40,36 +40,32 @@ Non equivale ancora a “multi-tenancy sicura”.
 
 ---
 
-## 0.4 · Autenticazione e autorizzazioni (Punto 4 · consegnato, feedback aperto)
+## 0.4 · Autenticazione e autorizzazioni (Punto 4 · **ACQUISITO**)
 
-**Bozza verdetto:** AuthN generalmente solida per la fase; AuthZ a strati (ruolo + membership + agency) con buchi di scoping e lifecycle sessione.
+**Formulazione Founder:** meccanismi individualmente sensati, ma **non ancora una catena AuthZ uniforme** dal login alla singola risorsa. AuthN strutturata; fragilità su contesto risorsa e lifecycle sessione.
 
-### Finding candidati (no fix)
+### Cluster finding (aperti, senza P0–P3)
 
-| Sev. | Finding |
-|------|---------|
-| rischio | Fascicolo: utente senza `agency_ids` → query solo per `id` immobile |
-| rischio | Accept invite può riscrivere password di account già esistente |
-| gap | Refresh senza rotation; reset password non revoca sessioni |
-| gap | `get_current_user` non ricontrolla `is_active` |
-| gap | Inviti / API keys legati a `agency_ids[0]` (vedi P3#5) |
-| gap | Admin non-owner può invitare peer `agency_admin`; self-mint crediti API |
-| oss. | MFA TOTP, CSRF prod, register role-lock presenti |
-
-### Cosa c’è e funziona
-
-- Cookie HttpOnly access (~15m) + refresh (~7g, jti revocabile).
-- CSRF double-submit in produzione.
-- Brute-force login; bcrypt; MFA TOTP.
-- API key Track B hashata + crediti.
-- Tre piani auth distinti (app / cloud / v1).
+| ID | Cluster |
+|----|---------|
+| P3.1 + P4.1 | Fascicolo: access control + media |
+| P4.2 | Invite riscrive password (account lifecycle) |
+| P4.3–P4.4 | Session management / revoca |
+| P4.5–P4.6 | Governance agenzia / privilege boundaries |
+| P4.7 | Membership → endpoint (condizionato) |
 
 ---
 
-## 0.5 · Ripresa
+## 0.5 · Lifecycle entità (Punto 5 · consegnato)
 
-1. Feedback Founder su Punto 4 (se serve rettifica formulazione).
-2. Solo su richiesta: **Punto 5** dell’audit.
-3. Fix codice: solo dopo backlog prioritizzato + «vai».
+**Bozza:** ciclo maturo su Immobile/Cliente (cestino) e Richieste (stati); incompleto E2E su feed/sync vs trash, blob, cascate, agency offboarding. Dettaglio L-01…L-13 in `AUDIT_ARCHITETTURA_NOTE.md`.
 
-Backlog tracciato anche come **A-035** in `ASPETTI_DA_APPROFONDIRE.md`.
+---
+
+## 0.6 · Ripresa
+
+1. Feedback Founder su Punto 5.
+2. Solo su richiesta: **Punto 6**.
+3. Fix: solo dopo priorità + «vai».
+
+Backlog **A-035**.

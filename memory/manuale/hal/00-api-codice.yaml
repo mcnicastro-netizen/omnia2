@@ -494,21 +494,22 @@ voci:
     pubblico: [super_admin]
     livello: avanzato
     tags: [codice, audit, architettura, roadmap, d-073]
-    correlati: [api.tenant-isolation, api.auth-lifecycle]
+    correlati: [api.tenant-isolation, api.auth-lifecycle, api.entity-lifecycle]
     domanda_naturale: "A che punto è l'audit architettura? Cosa manca? Posso fixare i finding?"
     contenuto:
       a_cosa_serve: >
-        Stato sessione 25-Set-2026: P1 contesto OK, P2 modello
-        approvato, P3 multi-tenancy acquisito, P4 auth consegnato.
-        Audit in pausa. Nessun fix senza «vai».
+        Stato 28-Set-2026: P1–P4 acquisiti (P3 isolation applicativa
+        vs E2E; P4 AuthN OK / AuthZ E2E incompleta). P5 lifecycle
+        consegnato. Nessun P0–P3 definitivo. Nessun fix senza «vai».
       quando_si_usa: >
         Ripresa lavoro, priorità sicurezza, domande sul metodo audit.
       passi:
         - "Note: memory/AUDIT_ARCHITETTURA_NOTE.md · Cap. 00 · A-035."
         - "Metodo: un punto alla volta; acquisire finding; priorità
-          P0/P1 dopo; non confondere superfici privilegiate con defect."
-        - "Prossimo: Punto 5 solo su richiesta Founder."
-        - "NON implementare fix dai finding finché non prioritizzati."
+          P0/P1 solo a fine audit; non confondere superfici privilegiate
+          con defect."
+        - "Prossimo: Punto 6 solo su richiesta Founder."
+        - "NON implementare fix finché non prioritizzati."
       errori_comuni:
         - problema: "Inizio a patchare i media pubblici subito"
           soluzione: >
@@ -516,4 +517,39 @@ voci:
             «vai» e priorità.
       permessi:
         - super_admin / Founder
+      screenshot: []
+
+  - id: api.entity-lifecycle
+    titolo: Lifecycle entità CRM — cestino, richieste, feed
+    modulo: Codice API
+    widget: null
+    pubblico: [super_admin, titolare]
+    livello: avanzato
+    tags: [codice, lifecycle, cestino, richieste, feed, audit, d-073]
+    correlati: [api.audit-architettura-stato, api.tenant-isolation]
+    domanda_naturale: "Cosa succede quando metto un immobile nel cestino? Le richieste si cancellano? Escono dal feed?"
+    contenuto:
+      a_cosa_serve: >
+        Mappa onesta del lifecycle (audit P5): Immobile/Cliente hanno
+        cestino 30g; Richieste hanno stati e archive; Attività hard
+        delete. Feed/sync possono ancora vedere immobili trashed se
+        status resta active. Blob fascicolo non sempre eliminati.
+      quando_si_usa: >
+        Domande su cestino, purge, archive richieste, offboarding
+        agenzia, orfani.
+      passi:
+        - "Immobile/Cliente: DELETE → deleted_at 30g → restore o purge
+          (cron esterno o manuale). Purge = Mongo; blob spesso restano."
+        - "Richiesta: DELETE = status archived (D-090). No cestino."
+        - "Attività: open/done/cancelled; DELETE hard."
+        - "Gap noti (no fix): feed/sync senza with_not_trashed; no
+          cascade cliente→richieste; agency senza deactivate API."
+        - "Dettaglio L-01…L-13 in AUDIT_ARCHITETTURA_NOTE.md."
+      errori_comuni:
+        - problema: "Ho cestinato un annuncio ma lo vedo ancora sul feed"
+          soluzione: >
+            Possibile: feed filtra status=active, non deleted_at.
+            Segnalato come finding L-03 — non patchare senza «vai».
+      permessi:
+        - Concetto: titolare / super_admin
       screenshot: []

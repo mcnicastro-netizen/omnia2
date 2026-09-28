@@ -1181,33 +1181,27 @@ Concordo sul nucleo. Temperatura: «OS agenzia» è **nord**, non claim immediat
 
 ---
 
-## 🟡 A-035 — Audit architettura SaaS · finding P3/P4 (no fix finché prioritizzati)
+## 🟡 A-035 — Audit architettura SaaS · finding P3–P5 (no fix finché prioritizzati)
 
-**Data inserimento**: 25-Sep-2026  
-**Segnalato da**: Founder + Cloud Agent · audit punti 1–4  
-**Stato**: ⏸ **audit in pausa** dopo P4 · **NON implementare** senza «vai» e priorità P0/P1
+**Data inserimento**: 25-Sep-2026 · **agg.** 28-Sep-2026  
+**Segnalato da**: Founder + Cloud Agent · audit punti 1–5  
+**Stato**: in corso un punto alla volta · **NON implementare** senza «vai» · **NO P0–P3** finché non visto l’intero sistema
 
 ### Verdetti acquisiti
-- P2 modello concettuale: **approvato**
-- P3 multi-tenancy: **acquisito** — *isolation applicativa generalmente presente · end-to-end incompleta*
-- P4 AuthN/AuthZ: **consegnato** (feedback aperto)
+- P2: **approvato**
+- P3: **acquisito** — isolation applicativa sì · E2E incompleta
+- P4: **acquisito** — AuthN strutturata · AuthZ E2E incompleta (catena non uniforme login→risorsa)
+- P5: **consegnato** — lifecycle maturo cestino/richieste · E2E incompleto (feed vs trash, blob, cascate, agency)
 
-### Finding da non dimenticare (sintesi)
-1. Media pubblici vs documenti fascicolo (dato fisico)
-2. Guard Mongo non universale
-3. Bypass super_admin/job = trusted paths
-4. Query `id` senza `agency_id`
-5. `agency_ids[0]` vs agenzia attiva
-6. Backup = privileged data plane
-7. Fascicolo IDOR se user senza agency_ids
-8. Accept invite riscrive password account esistente
-9. Lifecycle sessione (no refresh rotation; reset non revoca; is_active su access)
+### Cluster finding da non dimenticare
+- **P3.1+P4.1** fascicolo/media · **P4.2** invite password · **P4.3–4** sessioni · **P4.5–6** governance · **P4.7** membership
+- **L-01…L-13** lifecycle (vedi `AUDIT_ARCHITETTURA_NOTE.md`) — esp. L-03 feed/sync vs trash, L-05/L-06 blob
 
 ### Dove
-`memory/AUDIT_ARCHITETTURA_NOTE.md` · Cap. 00 · HAL `api.tenant-isolation` / `api.auth-lifecycle` / `api.audit-architettura-stato`
+`memory/AUDIT_ARCHITETTURA_NOTE.md` · Cap. 00 · HAL `api.tenant-*` / `api.auth-lifecycle`
 
 ### Trigger di ripresa
-- Founder chiede **Punto 5** dell’audit, **oppure** prioritizza finding + «vai» su un fix
+- Founder: feedback P5 · **Punto 6** · oppure priorità finding + «vai»
 
 ---
 

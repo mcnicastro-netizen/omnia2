@@ -1,5 +1,16 @@
 # OMNIA — Changelog
 
+## 2026-09-28 — Audit SaaS: P4 acquisito · P5 lifecycle consegnato
+
+**Tipo**: Docs / SoT audit.
+
+- P4 AuthN/AuthZ **acquisito** (formulazione Founder: catena AuthZ non uniforme login→risorsa)
+- Cluster finding P3.1+P4.1 … P4.7 tenuti aperti **senza** severità P0–P3
+- P5 lifecycle entità consegnato (L-01…L-13): cestino/richieste maturi; feed/sync vs trash, blob, agency offboarding incompleti
+- Note + Cap.00 + A-035 aggiornati · **nessun fix codice**
+- Workspace riallineato a GitHub `omnia2` SoT (Origin-tmp non è master)
+
+---
 ## 2026-09-25 — Audit architettura SaaS P1–P4 · pausa · sync manuale/HAL
 
 **Tipo**: Docs / HAL / SoT audit.
