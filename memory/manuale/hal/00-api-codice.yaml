@@ -562,22 +562,51 @@ voci:
     domanda_naturale: "Come sono salvate le foto e i documenti del Fascicolo? Sono pubblici? Si cancellano dal disco?"
     contenuto:
       a_cosa_serve: >
-        Audit P7 Media/File: put_object autenticato; serve unico
-        GET /api/media/{path} pubblico (foto listing e doc sensibili);
-        delete_object senza caller → orfani. Cluster P3.1+P4.1.
+        Audit P7 + D-095: distinguere media pubblici e privati; no
+        UUID=secret; cleanup blob indipendente da S3/R2, idempotente.
+        Oggi GET /api/media unico; delete_object senza caller.
       quando_si_usa: >
-        Domande su storage, fascicolo PDF, privacy foto, cestino e GB.
+        Domande su storage, fascicolo, privacy foto, orphan blob.
       passi:
-        - "Path: omnia/properties|fascicolo|modulistica|private|…"
-        - "Foto listing pubbliche = intenzionale (B2C). Fascicolo sotto
-          stesso GET = finding M-01 (non fixare senza vai)."
-        - "Delete/purge CRM = Mongo; blob spesso restano (M-02…M-04)."
-        - "Quota D-085 meter incompleto su tmp/modulistica/B2C."
+        - "D-095 dominio: foto pubblicabili OK pubblici; fascicolo/
+          modulistica con AuthZ o URL firmati (meccanismo dopo)."
+        - "Cluster: media-authorization = P3.1+P4.1+M-01; Mongo⟷blob
+          = M-02…M-04+L-05/L-06. Codice ⏳."
+        - "P8: nessun job cleanup blob (J-04); sync senza trash (J-01)."
       errori_comuni:
         - problema: "Ho eliminato un documento dal Fascicolo ma il file?"
           soluzione: >
-            Oggi si rimuove il riferimento DB; il blob può restare
-            (M-03/L-06). Annotato in audit — niente patch a caldo.
+            Oggi solo ref DB (M-03). D-095 richiede cleanup affidabile —
+            non implementato finché Founder non dà «vai» post-audit.
       permessi:
         - Concetto: titolare / super_admin
+      screenshot: []
+
+  - id: api.jobs-async
+    titolo: Job asincroni APScheduler e cron — tenant e trash
+    modulo: Codice API
+    widget: null
+    pubblico: [super_admin]
+    livello: avanzato
+    tags: [codice, jobs, cron, apscheduler, audit, d-073]
+    correlati: [api.media-file, api.entity-lifecycle, api.tenant-isolation]
+    domanda_naturale: "Come funzionano i job notturni? Il cestino viene svuotato automaticamente?"
+    contenuto:
+      a_cosa_serve: >
+        Audit P8: APScheduler (sync 06:00, saved-search */5, backup
+        03:15, matching 02:30) + cron HTTP super_admin. Trusted paths.
+        Purge trash NON in scheduler. Sync/match senza with_not_trashed.
+      quando_si_usa: >
+        Domande su cron, backup, matching notturno, purge cestino.
+      passi:
+        - "Trusted = process o JWT super_admin; scope agency per item."
+        - "Finding J-01…J-12 aperti — no fix senza vai."
+        - "D-094/D-095: job non ancora allineati (trash, blob cleanup)."
+      errori_comuni:
+        - problema: "Il cestino non si svuota da solo dopo 30 giorni"
+          soluzione: >
+            Corretto oggi (J-03): serve POST /cron/trash/purge da
+            cron esterno o manuale. Annotato in audit.
+      permessi:
+        - super_admin / Founder
       screenshot: []

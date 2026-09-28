@@ -58,55 +58,28 @@ Cluster: P3.1+P4.1 fascicolo/media · P4.2 invite · P4.3–4 sessioni · P4.5�
 
 ---
 
-## Punto 7 — Media / File · consegnato 28-Set (prompt originario)
+## Punto 7 — Media / File · finding aperti + **D-095** (28-Set)
 
-### Verdetto (bozza)
+### Verdetto acquisito
 
-> Upload autenticato e storage locale funzionano.  
-> Il serve è **un unico GET pubblico** su tutto lo store: foto listing e documenti sensibili condividono lo stesso canale.  
-> `delete_object` esiste ma **nessun caller** in app → delete/purge = solo Mongo → orfani su disco.
+Storage fisico e AuthZ **non** sono realmente separati.  
+Serve = un GET pubblico unico. Delete = solo Mongo → orfani.
 
-### Flusso
+### Cluster architetturali (non bug isolati)
 
-```
-UPLOAD (auth) → put_object(path) → GET /api/media/{path} PUBBLICO → DELETE = solo DB
-```
+1. **Media authorization** = P3.1 + P4.1 + **M-01** (stesso problema).  
+2. **Lifecycle Mongo ⟷ blob inconsistente** = M-02 + M-03 + M-04 + L-05 + L-06.
 
-Path tipici: `omnia/properties/…`, `omnia/fascicolo/…`, `omnia/modulistica/…`, `omnia/private/…`, `omnia/b2c-visura/…`.  
-Nessuna signed URL. Backup media solo se `STORAGE_BACKEND=local`. Emergent delete = no-op.
+### D-095 (dominio · codice ⏳)
 
-### Finding M-xx (no fix · no P0–P3)
+| Tema | Direzione |
+|------|-----------|
+| Prefissi sensibili | **Fuori** dal GET pubblico; **no** “UUID = secret” |
+| Foto pubblicabili | Pubblico ammissibile |
+| Fascicolo/modulistica/… | AuthZ o URL firmati/temporanei (meccanismo dopo) |
+| Cleanup blob | Regola **oggi**, indipendente da S3/R2; cleanup **idempotente** (non delete sincrono fragile) |
 
-| ID | Tipo | Sintesi | Link |
-|----|------|---------|------|
-| **M-01** | rischio | Un GET pubblico per foto **e** fascicolo/modulistica/visura | **P3.1+P4.1** |
-| **M-02** | gap | `delete_object` zero call-site app | — |
-| **M-03** | gap | Fascicolo delete = `$pull` senza blob | **L-06** |
-| **M-04** | gap | Purge cestino = Mongo only | **L-05** |
-| M-05 | oss. | Update property può droppare array media senza cleanup | — |
-| M-06 | gap | upload-tmp orfani se create abortisce | — |
-| M-07 | gap | Quota incompleta (tmp, modulistica, B2C, base64) | — |
-| M-08 | oss. | Path in API auth → se leak, media pubblico | M-01 |
-| M-09 | oss. | Privacy gate nasconde planimetrie in JSON, non il blob | — |
-| M-10 | oss. | Fascicolo multipart: MIME libero | — |
-| M-11 | oss. | Range 206 carica file intero in RAM | — |
-| M-12 | oss. | Backup media solo local; emergent escluso | P3 backup |
-| M-13 | oss. | Doppio canale fascicolo (base64 + OS) | — |
-| M-14 | oss. | Emergent `delete_object` no-op | — |
-
-### Intenzionale vs incompleto
-
-| Intenzionale | Incompleto |
-|--------------|------------|
-| Foto listing pubbliche (D-068 / B2C) | Stesso endpoint per doc sensibili |
-| Quota tier (D-085) | Meter incompleto |
-| Download fascicolo via API auth | Blob comunque su `/api/media` |
-| Backup tree locale | No cleanup blob; emergent fuori backup |
-
-### Domande aperte
-
-1. Prefissi sensibili (`fascicolo`, `modulistica`, `b2c-visura`) devono uscire dal GET pubblico (auth-only / signed), o resta “UUID = secret”?
-2. Cleanup blob a purge: local-first subito, o dopo S3/R2 (oggi emergent delete è no-op)?
+Finding **M-01…M-14** restano aperti (no P0–P3).
 
 ---
 

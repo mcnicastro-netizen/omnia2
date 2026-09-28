@@ -75,20 +75,21 @@ D-094 dominio OK; enforcement a macchia di leopardo. Finding **E-01…E-07** ape
 
 ---
 
-## 0.7 · Media / File (Punto 7 · consegnato · prompt originario)
+## 0.7 · Media / File (Punto 7) + **D-095**
 
-Un GET pubblico `/api/media/*` serve foto listing **e** blob sensibili. `delete_object` senza caller → orfani. Finding **M-01…M-14** in note (cluster P3.1+P4.1, L-05, L-06). D-095 dominio (pubblico vs privato · lifecycle blob).
+GET pubblico unico. Cluster: **media-authorization** (P3.1+P4.1+M-01) · **Mongo⟷blob** (M-02…M-04, L-05/L-06).  
+D-095: pubblici vs privati (no UUID=secret); cleanup blob indipendente da S3/R2, idempotente. Codice ⏳. M-01…M-14 aperti.
 
-## 0.8 · Jobs / processi asincroni (Punto 8 · consegnato)
+## 0.8 · Jobs / asincroni (Punto 8 · consegnato)
 
-APScheduler in `sync_engine.start_scheduler` + cron HTTP `super_admin` = **trusted paths** (P3). Scope tenant per-item; sync/matching senza trash filter (D-094); purge trash non schedulato; nessun job blob (D-095). Finding **J-01…J-12** in note.
+Trusted paths APScheduler + cron `super_admin`. J-01…J-12: sync/match senza trash; purge fuori scheduler; nessun job blob (D-095).
 
 ---
 
 ## 0.9 · Ripresa
 
-1. Feedback Punto 8.
-2. Solo su richiesta: prossimo punto audit.
-3. Fix codice: solo dopo fine audit / priorità + «vai» esplicito implementazione.
+1. Feedback Punto 8 (se il prompt originale aveva un altro titolo per P8, riallineare).
+2. Solo su richiesta: **Punto 9**.
+3. Fix: solo post-audit / priorità + «vai» implementazione.
 
 Backlog **A-035**.

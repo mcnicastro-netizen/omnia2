@@ -1,6 +1,6 @@
 # Prossima sessione — programma passi
 
-**Aggiornato**: 28 Settembre 2026 · audit P6 acquisito · **P7 Media/File consegnato**  
+**Aggiornato**: 28 Settembre 2026 · D-095 · **P8 Jobs consegnato**  
 **Repo**: https://github.com/mcnicastro-netizen/omnia2 ✅  
 
 ---
@@ -9,17 +9,15 @@
 
 | Area | Stato |
 |------|:-----:|
-| Audit SaaS | P1–P2 🟢 · P3–P6 🟠 acquisiti · **P7 Media in feedback** · A-035 |
-| Demo A-025 / soft gap | ⏸ / 🔜 solo «vai» |
+| Audit SaaS | P1–P6 acquisiti · P7+D-095 · **P8 Jobs in feedback** · A-035 |
+| Demo / soft gap | ⏸ / 🔜 solo «vai» |
 
-Note: `memory/AUDIT_ARCHITETTURA_NOTE.md` · Cap. 00
+Note: `memory/AUDIT_ARCHITETTURA_NOTE.md` · Cap. 00 · D-094 · D-095
 
 ---
 
 ## Ripresa
 
-1. Feedback P7 · poi **Punto 8** (indice originario)
-2. **Niente fix** finché audit non completo + priorità P0–P3
-3. Stack/demo solo se richiesto
-
-**Link**: `/it/app/dashboard` · fascicolo · `/api/media/…`
+1. Feedback P8 (titolo OK? lista originaria non in ambiente)
+2. **Punto 9** su richiesta · **niente fix** finché audit completo + priorità
+3. Stack/demo solo se chiesto
