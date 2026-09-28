@@ -1,5 +1,14 @@
 # OMNIA — Changelog
 
+## 2026-09-28 — Audit P6 acquisito · P7 Media/File (prompt originario)
+
+**Tipo**: Docs / SoT audit.
+
+- P6 acquisito: E-01…E-07 aperti; Attività lasciata come domanda aperta (non = Richieste)
+- P7 Media/File: GET pubblico unico store; `delete_object` senza caller; finding M-01…M-14
+- Collegamenti P3.1+P4.1 / L-05 / L-06 · **nessun fix** · no P0–P3
+
+---
 ## 2026-09-28 — Audit Punto 6 · proiezioni esterne vs D-094
 
 **Tipo**: Docs / SoT audit.

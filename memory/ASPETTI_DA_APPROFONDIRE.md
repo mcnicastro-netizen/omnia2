@@ -1192,11 +1192,12 @@ Concordo sul nucleo. Temperatura: «OS agenzia» è **nord**, non claim immediat
 - P3: **acquisito** — isolation applicativa sì · E2E incompleta
 - P4: **acquisito** — AuthN strutturata · AuthZ E2E incompleta (catena non uniforme login→risorsa)
 - P5: **consegnato** + **D-094** dominio · codice ⏳
-- P6: **consegnato** — enforcement D-094 a macchia di leopardo (E-01…E-09)
+- P6: **ACQUISITO** — E-01…E-07 aperti; Attività = domanda aperta
+- P7: **consegnato** — Media/File (M-01…M-14) · niente fix
 
 ### Cluster finding da non dimenticare
-- **P3.1+P4.1** fascicolo/media · **P4.2** invite · **P4.3–4** sessioni · **P4.5–7** governance
-- **L-01…L-13** · **E-01…E-09** (esp. E-02 sync_engine, E-01 split feed, E-07 client→requests)
+- **P3.1+P4.1 / M-01** media pubblici vs doc sensibili
+- **P4.2–P4.7** auth · **L-*** lifecycle · **E-01…E-07** proiezioni · **M-02…M-04** no blob delete
 
 ### Dove
 `memory/AUDIT_ARCHITETTURA_NOTE.md` · Cap. 00 · HAL `api.tenant-*` / `api.auth-lifecycle`

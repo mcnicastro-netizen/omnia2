@@ -1,7 +1,7 @@
 # Prossima sessione — programma passi
 
-**Aggiornato**: 28 Settembre 2026 · audit P1–P4 acquisiti · P5+D-094 · **P6 consegnato**  
-**Repo ufficiale**: https://github.com/mcnicastro-netizen/omnia2 ✅  
+**Aggiornato**: 28 Settembre 2026 · audit P6 acquisito · **P7 Media/File consegnato**  
+**Repo**: https://github.com/mcnicastro-netizen/omnia2 ✅  
 
 ---
 
@@ -9,11 +9,8 @@
 
 | Area | Stato |
 |------|:-----:|
-| A-028a…i | ✅ |
-| A-034 R1…R8 | ✅ |
-| Demo commerciale **A-025** | ⏸ |
-| Soft gap G1–G3 / B2C | 🔜 solo «vai» |
-| Audit architettura SaaS | P1–P4 acquisiti · P5+D-094 · **P6 in feedback** · A-035 |
+| Audit SaaS | P1–P2 🟢 · P3–P6 🟠 acquisiti · **P7 Media in feedback** · A-035 |
+| Demo A-025 / soft gap | ⏸ / 🔜 solo «vai» |
 
 Note: `memory/AUDIT_ARCHITETTURA_NOTE.md` · Cap. 00
 
@@ -21,8 +18,8 @@ Note: `memory/AUDIT_ARCHITETTURA_NOTE.md` · Cap. 00
 
 ## Ripresa
 
-1. `bash scripts/omnia-stack.sh ensure` · tunnel http2
-2. Audit: feedback P6 · **Punto 7** su richiesta · fix D-094 solo con «vai» esplicito implementazione
-3. Soft gap / demo solo con «vai»
+1. Feedback P7 · poi **Punto 8** (indice originario)
+2. **Niente fix** finché audit non completo + priorità P0–P3
+3. Stack/demo solo se richiesto
 
-**Link**: `/it/app/dashboard` · `/it/app/activities` · `/it/app/properties` · `/it/app/requests`
+**Link**: `/it/app/dashboard` · fascicolo · `/api/media/…`
