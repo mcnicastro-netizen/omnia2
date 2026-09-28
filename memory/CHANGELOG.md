@@ -1,5 +1,15 @@
 # OMNIA — Changelog
 
+## 2026-09-28 — D-094 lifecycle dominio (Trash ≠ status · Cliente→Richieste)
+
+**Tipo**: Decision / Docs.
+
+- **D-094**: immobile trashed escluso da feed/sync/pubblicazioni **senza** cambiare `status` commerciale
+- Cliente Trash → Richieste archiviate (storico), non distrutte; restore non riattiva
+- GDPR/retention “cliente cancellato” rimandato al punto privacy
+- Audit note + Cap.00 + A-035 · **nessun fix codice** (attende «vai»)
+
+---
 ## 2026-09-28 — Audit SaaS: P4 acquisito · P5 lifecycle consegnato
 
 **Tipo**: Docs / SoT audit.

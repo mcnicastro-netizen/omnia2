@@ -1191,11 +1191,12 @@ Concordo sul nucleo. Temperatura: «OS agenzia» è **nord**, non claim immediat
 - P2: **approvato**
 - P3: **acquisito** — isolation applicativa sì · E2E incompleta
 - P4: **acquisito** — AuthN strutturata · AuthZ E2E incompleta (catena non uniforme login→risorsa)
-- P5: **consegnato** — lifecycle maturo cestino/richieste · E2E incompleto (feed vs trash, blob, cascate, agency)
+- P5: **consegnato** — lifecycle maturo cestino/richieste · E2E incompleto
+- **D-094** dominio registrato (Trash≠status · Cliente Trash→Richieste archiviate) · **codice non ancora**
 
 ### Cluster finding da non dimenticare
 - **P3.1+P4.1** fascicolo/media · **P4.2** invite password · **P4.3–4** sessioni · **P4.5–6** governance · **P4.7** membership
-- **L-01…L-13** lifecycle (vedi `AUDIT_ARCHITETTURA_NOTE.md`) — esp. L-03 feed/sync vs trash, L-05/L-06 blob
+- **L-01…L-13** — L-03/L-02 = gap vs **D-094**; L-05/L-06 blob
 
 ### Dove
 `memory/AUDIT_ARCHITETTURA_NOTE.md` · Cap. 00 · HAL `api.tenant-*` / `api.auth-lifecycle`

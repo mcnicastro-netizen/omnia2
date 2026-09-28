@@ -1466,5 +1466,20 @@ Registro di tutte le decisioni di business e tecniche prese durante il progetto.
   5. Setup scritto in `memory/OMNIA2_REPO_SETUP.md` + regola `.cursor/rules/omnia-cloud.mdc`. Environment D-086 resta `omnia2-cloud`.
 - **Stato**: ✅ APPLICATA (docs + script fallback 21-Set-2026)
 
+### D-094 — Lifecycle dominio: Trash ≠ status commerciale · Cliente Trash → Richieste archiviate (non distrutte) · 28-Set-2026
+- **Data**: 28 Settembre 2026
+- **Contesto**: Audit SaaS Punto 5 (lifecycle). Finding L-03 (immobile trashed ancora in feed/sync) e L-02 (cliente trashed vs richieste). Founder formalizza regole di dominio **prima** di qualsiasi fix.
+- **Decisione — Immobile / Trash vs proiezioni esterne**:
+  1. Un immobile in **Trash** **non** deve essere pubblicabile né sincronizzato verso l’esterno (feed nuovi, sync portali, pubblicazioni, elaborazioni che lo trattano come attivo).
+  2. `trashed` (`deleted_at`) = condizione globale di **esclusione** dalle proiezioni/operazioni esterne.
+  3. Il Trash **non** altera automaticamente lo **`status` commerciale** (`active` / `withdrawn` / …).
+  4. Distinzione: `status` = stato commerciale; `trashed` = lifecycle del record in OMNIA. Esempio: `active + trashed` → non pubblicabile; restore ripristina il record **senza** reinterpretare lo status.
+- **Decisione — Cliente Trash / Delete vs Richieste** (coerente Punto 2: Cliente ≠ Richiesta):
+  1. **Niente cascade distruttivo**: le Richieste non spariscono con il Cliente.
+  2. Trash/Delete Cliente → le Richieste collegate diventano **non operative / archiviate**, restano come **storico** (attività, match, trattative, audit).
+  3. **Restore Cliente** → le Richieste storiche restano disponibili; **non** si riattivano automaticamente.
+- **Fuori scope ora**: significato GDPR/retention di “cliente cancellato” → punto audit retention/privacy.
+- **Implementazione**: ❌ **non** applicata in codice finché Founder non dice «vai» (post-audit / priorità). Verifica tecnica prevista in Punto 6/7+.
+- **Stato**: ✅ **DECISIONE DI DOMINIO REGISTRATA** (docs 28-Set-2026) · codice ⏳
 
 
