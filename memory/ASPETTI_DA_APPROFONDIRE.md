@@ -1193,17 +1193,18 @@ Concordo sul nucleo. Temperatura: «OS agenzia» è **nord**, non claim immediat
 - P4: **acquisito** — AuthN strutturata · AuthZ E2E incompleta (catena non uniforme login→risorsa)
 - P5: **consegnato** + **D-094** dominio · codice ⏳
 - P6: **ACQUISITO** — E-01…E-07 aperti; Attività = domanda aperta
-- P7: **consegnato** — Media/File (M-01…M-14) · niente fix
+- P7: **consegnato** — Media/File (M-01…M-14) + **D-095** dominio · niente fix
+- P8: **consegnato** — Jobs/cron (J-01…J-12) · trusted vs tenant · niente fix
 
 ### Cluster finding da non dimenticare
 - **P3.1+P4.1 / M-01** media pubblici vs doc sensibili
-- **P4.2–P4.7** auth · **L-*** lifecycle · **E-01…E-07** proiezioni · **M-02…M-04** no blob delete
+- **P4.2–P4.7** auth · **L-*** lifecycle · **E-01…E-07** proiezioni · **M-02…M-04** no blob delete · **J-01…J-04** jobs vs D-094/D-095
 
 ### Dove
 `memory/AUDIT_ARCHITETTURA_NOTE.md` · Cap. 00 · HAL `api.tenant-*` / `api.auth-lifecycle`
 
 ### Trigger di ripresa
-- Founder: feedback P5 · **Punto 6** · oppure priorità finding + «vai»
+- Founder: feedback P8 · prossimo punto · oppure priorità finding + «vai»
 
 ---
 
