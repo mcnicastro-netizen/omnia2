@@ -1,5 +1,14 @@
 # OMNIA — Changelog
 
+## 2026-09-28 — Prompt master audit SaaS (§1–§27) · sessione in pausa
+
+**Tipo**: Docs / SoT audit.
+
+- Nuovo `memory/AUDIT_PROMPT_MASTER.md` — prompt vincolante Founder (logico/architetturale/funzionale)
+- Mappa sessione ↔ indice master · Cap.00 + A-035 + note
+- **Stop** fino al prossimo «vai» · nessun fix · nessun P0–P3
+
+---
 ## 2026-09-28 — D-095 media pubblici vs privati · lifecycle blob
 
 **Tipo**: Decision / Docs.

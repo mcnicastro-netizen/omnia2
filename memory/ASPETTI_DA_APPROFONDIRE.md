@@ -1181,11 +1181,11 @@ Concordo sul nucleo. Temperatura: «OS agenzia» è **nord**, non claim immediat
 
 ---
 
-## 🟡 A-035 — Audit architettura SaaS · finding P3–P5 (no fix finché prioritizzati)
+## 🟡 A-035 — Audit architettura SaaS (prompt master §1–§27)
 
 **Data inserimento**: 25-Sep-2026 · **agg.** 28-Sep-2026  
-**Segnalato da**: Founder + Cloud Agent · audit punti 1–5  
-**Stato**: in corso un punto alla volta · **NON implementare** senza «vai» · **NO P0–P3** finché non visto l’intero sistema
+**Prompt master**: `memory/AUDIT_PROMPT_MASTER.md`  
+**Stato**: ⏸ **in pausa** fino a «vai» Founder · **NON implementare** · **NO P0–P3** finché non aperti §23+
 
 ### Verdetti acquisiti
 - P2: **approvato**
@@ -1206,7 +1206,8 @@ Concordo sul nucleo. Temperatura: «OS agenzia» è **nord**, non claim immediat
 `memory/AUDIT_ARCHITETTURA_NOTE.md` · Cap. 00 · HAL `api.tenant-*` / `api.auth-lifecycle`
 
 ### Trigger di ripresa
-- Founder: feedback P8 · prossimo punto · oppure priorità finding + «vai»
+- Founder dice **«vai»** → rileggere `AUDIT_PROMPT_MASTER.md` e proseguire dal prossimo § (tipicamente §6 Cestino o §8 Storage/costi)
+- «vai» di **implementazione** = distinto (fix codice su finding prioritizzati)
 
 ---
 

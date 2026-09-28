@@ -498,18 +498,17 @@ voci:
     domanda_naturale: "A che punto è l'audit architettura? Cosa manca? Posso fixare i finding?"
     contenuto:
       a_cosa_serve: >
-        Stato 28-Set-2026: P1–P4 acquisiti (P3 isolation applicativa
-        vs E2E; P4 AuthN OK / AuthZ E2E incompleta). P5 lifecycle
-        consegnato. Nessun P0–P3 definitivo. Nessun fix senza «vai».
+        Prompt master in memory/AUDIT_PROMPT_MASTER.md (§1–§27).
+        Sessione in pausa fino a «vai» Founder. Finding aperti in
+        AUDIT_ARCHITETTURA_NOTE + A-035. D-094 e D-095 dominio, codice ⏳.
       quando_si_usa: >
-        Ripresa lavoro, priorità sicurezza, domande sul metodo audit.
+        Ripresa audit, metodo, priorità, dove siamo.
       passi:
-        - "Note: memory/AUDIT_ARCHITETTURA_NOTE.md · Cap. 00 · A-035."
-        - "Metodo: un punto alla volta; acquisire finding; priorità
-          P0/P1 solo a fine audit; non confondere superfici privilegiate
-          con defect."
-        - "Prossimo: Punto 6 solo su richiesta Founder."
-        - "NON implementare fix finché non prioritizzati."
+        - "Rileggi AUDIT_PROMPT_MASTER.md prima di ogni blocco."
+        - "Progresso in AUDIT_ARCHITETTURA_NOTE.md · Cap. 00 · A-035."
+        - "Un § alla volta; no P0–P3 finché non §23; no fix senza vai
+          implementazione."
+        - "Prossimo tipico: §6 Cestino o §8 Storage/costi."
       errori_comuni:
         - problema: "Inizio a patchare i media pubblici subito"
           soluzione: >

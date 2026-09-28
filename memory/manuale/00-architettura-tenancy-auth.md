@@ -1,95 +1,44 @@
-# Cap. 00 · Architettura tenancy & autenticazione (audit SaaS)
+# Cap. 00 · Architettura tenancy, auth, media, jobs (audit SaaS)
 
-**Ambito**: founder / super_admin / assistenza tecnica.  
-**Fonte**: audit architettura 25-Set-2026 · `memory/AUDIT_ARCHITETTURA_NOTE.md`  
-**Stato sessione**: **in pausa** dopo Punto 4 (AuthN/AuthZ). Punti 5–27 non avviati.  
-**Regola**: **nessun fix codice** finché il Founder non dice «vai» e non si prioritizzano i finding.
-
----
-
-## 0.1 · Metodo
-
-L’audit procede **un punto alla volta**. Si descrive e si acquisiscono finding; non si patcha a caldo. Obiettivo: mappare dove il confine può rompersi, poi classificare P0/P1 vs superfici privilegiate intenzionali.
+**Ambito**: founder / super_admin.  
+**Prompt master**: `memory/AUDIT_PROMPT_MASTER.md` (§1–§27).  
+**Stato**: ⏸ audit in pausa fino a «vai» Founder.
 
 ---
 
-## 0.2 · Cosa è OMNIA (richiamo)
+## Metodo
 
-Tre piani: **B2B ImmoWeb** (`/app`) · **B2C ImmoCloud** (`/cloud`) · **API v1** partner.  
-Tenant commerciale: **Agenzia**. Cliente ≠ Richiesta. Academy fuori perimetro; MLS/franchising incompleti.
-
----
-
-## 0.3 · Multi-tenancy (Punto 3 · ACQUISITO)
-
-**Formulazione Founder (vincolante):**
-
-> Tenant isolation **applicativa**: generalmente presente.  
-> Tenant isolation **end-to-end**: incompleta.
-
-Non equivale ancora a “multi-tenancy sicura”.
-
-### Finding acquisiti (no fix)
-
-1. `GET /api/media/...` pubblico — rischio su documenti fisici (fascicolo), non solo query Mongo.
-2. Guard Mongo non universale — alcune collection fuori dalla rete di sicurezza.
-3. `super_admin` / job = **trusted execution paths**.
-4. Pattern `id` senza `agency_id` fragile fuori contesto tenant.
-5. Multi-agency: a volte `agency_ids[0]` invece di agenzia attiva (semantica).
-6. Backup globale = **privileged data plane** (filesystem), non isolation API.
+Un blocco alla volta · niente fix senza «vai» implementazione · no P0–P3 prematuri · aggiornare `AUDIT_ARCHITETTURA_NOTE.md`.
 
 ---
 
-## 0.4 · Autenticazione e autorizzazioni (Punto 4 · **ACQUISITO**)
+## Decisioni di dominio (codice ⏳)
 
-**Formulazione Founder:** meccanismi individualmente sensati, ma **non ancora una catena AuthZ uniforme** dal login alla singola risorsa. AuthN strutturata; fragilità su contesto risorsa e lifecycle sessione.
+### D-094
+- `status` = commerciale · `trashed` = lifecycle  
+- Trashed → escluso da feed/sync/pubblicazioni **senza** forzare `withdrawn`  
+- Cliente Trash → Richieste **archiviate** (storico), non distrutte; restore non riapre  
 
-### Cluster finding (aperti, senza P0–P3)
-
-| ID | Cluster |
-|----|---------|
-| P3.1 + P4.1 | Fascicolo: access control + media |
-| P4.2 | Invite riscrive password (account lifecycle) |
-| P4.3–P4.4 | Session management / revoca |
-| P4.5–P4.6 | Governance agenzia / privilege boundaries |
-| P4.7 | Membership → endpoint (condizionato) |
+### D-095
+- Media **pubblici** vs **privati** · no “UUID = secret”  
+- Cleanup blob indipendente da S3/R2 · idempotente  
 
 ---
 
-## 0.5 · Lifecycle entità (Punto 5 · consegnato)
+## Cluster aperti (sintesi)
 
-Ciclo maturo su Immobile/Cliente (cestino) e Richieste (stati); incompleto E2E su feed/sync vs trash, blob, agency. Dettaglio L-01…L-13 in note.
-
-### D-094 (dominio · codice ⏳)
-
-- `status` = commerciale · `trashed` = lifecycle record — **non** confondere.
-- Immobile trashed → **escluso** da feed/sync/pubblicazioni **senza** forzare `withdrawn`.
-- Cliente Trash → Richieste **archiviate** (storico), non distrutte; restore Cliente **non** le riapre.
-
----
-
-## 0.6 · Proiezioni esterne (Punto 6 · **ACQUISITO**)
-
-D-094 dominio OK; enforcement a macchia di leopardo. Finding **E-01…E-07** aperti (no P0–P3).  
-**Attività**: domanda aperta (appartenenza Cliente/Richiesta/Agente/autonoma) — non assimilare alle Richieste.
+| Cluster | Finding |
+|---------|---------|
+| Media authorization | P3.1 + P4.1 + M-01 |
+| Mongo ⟷ blob | M-02…M-04 · L-05/L-06 |
+| Proiezioni/jobs vs D-094 | E-* · J-01…J-04 |
+| AuthZ E2E | P4 cluster |
+| Attività | domanda aperta |
 
 ---
 
-## 0.7 · Media / File (Punto 7) + **D-095**
+## Progresso master
 
-GET pubblico unico. Cluster: **media-authorization** (P3.1+P4.1+M-01) · **Mongo⟷blob** (M-02…M-04, L-05/L-06).  
-D-095: pubblici vs privati (no UUID=secret); cleanup blob indipendente da S3/R2, idempotente. Codice ⏳. M-01…M-14 aperti.
+§1–§5 sostanzialmente fatti · §7 + pezzi §15 fatti · **§6 Cestino** e **§8 Storage/costi** tra i prossimi · resto ⬜.
 
-## 0.8 · Jobs / asincroni (Punto 8 · consegnato)
-
-Trusted paths APScheduler + cron `super_admin`. J-01…J-12: sync/match senza trash; purge fuori scheduler; nessun job blob (D-095).
-
----
-
-## 0.9 · Ripresa
-
-1. Feedback Punto 8 (se il prompt originale aveva un altro titolo per P8, riallineare).
-2. Solo su richiesta: **Punto 9**.
-3. Fix: solo post-audit / priorità + «vai» implementazione.
-
-Backlog **A-035**.
+Dettaglio: `AUDIT_ARCHITETTURA_NOTE.md` · A-035.
