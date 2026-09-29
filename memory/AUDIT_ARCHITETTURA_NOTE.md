@@ -32,7 +32,7 @@
 | — | Cestino (blocco dedicato) | §6 | 🟡 coperto in P5 + P12 |
 | — | Job async / osservabilità… | §15–§27 | ⬜ prossimo tipico |
 
-Decisioni dominio (codice ⏳): **D-094**, **D-095**, **D-096**, **D-097**, **D-098**.
+Decisioni dominio (codice ⏳): **D-094** … **D-099**.
 
 ---
 
