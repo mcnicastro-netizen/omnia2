@@ -96,14 +96,14 @@ In altre parole:
 | P12 Backup vs Cestino | **§11** | **ACQUISITO** · **D-097** · BC-* / T-* |
 | P13 Retention | **§12** | **ACQUISITO** · **D-098** · RET-* |
 | P14 GDPR / privacy | **§13** | **ACQUISITO** · **D-099** · G-* |
-| P15 Concorrenza / race | **§14** | Consegnato · **RC-*** (feedback) |
+| P15 Concorrenza / race | **§14** | **ACQUISITO** · **RC-*** · single-instance · **D-100** |
+| P16 Jobs deepen | **§15** | Consegnato · **JA-*** · J-* aperti |
 | — | **§6 Cestino** | Parziale P5 + coperto in P12 |
-| — | **§15 Job asincroni** | Anticipato in P8 · **prossimo tipico** post-P15 |
-| — | **§16–§27** | Non avviati |
+| — | **§16–§27** | Non avviati · prossimo tipico §16 osservabilità |
 
 **Regola numerazione**: mantenere il continuum di sessione; documentare la corrispondenza qui / in `AUDIT_ARCHITETTURA_NOTE.md` — non riallineare artificialmente i numeri.
 
-Decisioni di dominio già registrate (codice ⏳): **D-094** … **D-099**.
+Decisioni di dominio già registrate (codice ⏳): **D-094** … **D-100**.
 
 ---
 

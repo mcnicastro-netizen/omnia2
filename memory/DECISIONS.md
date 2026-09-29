@@ -1559,4 +1559,15 @@ Registro di tutte le decisioni di business e tecniche prese durante il progetto.
 - **Implementazione**: ❌ codice ⏳ — post-audit / priorità + «vai».
 - **Stato**: ✅ **DECISIONE DI DOMINIO REGISTRATA** (docs 29-Set-2026) · codice ⏳
 
+### D-100 — Invite accept: mai overwrite password utente esistente · 29-Set-2026
+- **Data**: 29 Settembre 2026
+- **Contesto**: Audit P15 (RC-11) + feedback Founder. Oggi `POST` accept invite su email già registrata fa `$set` di `password_hash` (`invites.py:246-254`) — overwrite password utente esistente (P4.2 / Cap.13). Tier RC Founder: **rosso** = mutazione credenziali inattesa.
+- **Decisione**:
+  1. Se l’utente **esiste già**: **link** `agency_ids` + accettazione invite (ruolo/membership); **mai** sovrascrivere `password_hash`.
+  2. Autenticazione: login esistente / sessione / flusso “collega account”, non reset password implicito via invite.
+  3. Solo utente **nuovo** può impostare password in accept.
+  4. Trattare come **fix-needed** (non nice-to-have / non solo backlog futuro).
+- **Implementazione**: ❌ codice ⏳ — post-audit / «vai» esplicito (priorità alta tra i fix).
+- **Stato**: ✅ **DECISIONE DI DOMINIO REGISTRATA** (docs 29-Set-2026) · codice ⏳
+
 

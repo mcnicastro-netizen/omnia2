@@ -6,7 +6,7 @@
 > **Numerazione = continuum di sessione** (non forzare allineamento al master).  
 > Prompt master: `memory/AUDIT_PROMPT_MASTER.md` (§1–§27) — corrispondenza in tabella sotto.
 
-**Ultimo aggiornamento**: 29-Set-2026 · **P14 ACQUISITO** + **D-099** · **P15 Race consegnato**
+**Ultimo aggiornamento**: 29-Set-2026 · **P15 acquisito** (single-instance jobs · invite D-100) · **P16 Jobs approfondito**
 
 ---
 
@@ -28,11 +28,12 @@
 | P12 | Backup vs Cestino | §11 | 🟠 **ACQUISITO** · **D-097** · BC-* / T-* |
 | P13 | Retention | §12 | 🟠 **ACQUISITO** · **D-098** · RET-* |
 | P14 | GDPR / privacy | §13 | 🟠 **ACQUISITO** · **D-099** · G-* |
-| P15 | Concorrenza / race | §14 | 🟠 Consegnato (feedback) · **RC-*** |
+| P15 | Concorrenza / race | §14 | 🟠 **ACQUISITO** · **RC-*** · single-instance jobs · invite → **D-100** |
+| P16 | Job asincroni (approfondimento) | §15 | 🟠 Consegnato · **JA-*** · J-* ancora aperti |
 | — | Cestino (blocco dedicato) | §6 | 🟡 coperto in P5 + P12 |
-| — | Job async / osservabilità… | §15–§27 | ⬜ prossimo tipico |
+| — | Osservabilità… | §16–§27 | ⬜ prossimo tipico |
 
-Decisioni dominio (codice ⏳): **D-094** … **D-099**.
+Decisioni dominio (codice ⏳): **D-094** … **D-100**.
 
 ---
 
@@ -48,7 +49,9 @@ Decisioni dominio (codice ⏳): **D-094** … **D-099**.
 8. **Cestino ≠ Backup** = BC-* / T-* → **D-097** (copy + trash-in-bak)  
 9. **Retention incompleta** = RET-* (orphan ∞ · no offboarding · copy da allineare)  
 10. **GDPR / privacy** = **G-*** (erase ≠ wipe · fascicolo/media · DPA · no DSAR export)  
-10. **Trusted path / APScheduler** = aperti; orchestrazione rimandata post design Bak+Restore
+10. **Trusted path / APScheduler** = aperti; single-instance Founder (P15); JA-* approfondiscono; orchestrazione purge/worker ancora aperta
+11. **Concorrenza / race** = **RC-*** · invite → **D-100**
+12. **Jobs deepen** = **JA-*** · J-* ancora aperti
 
 ---
 
@@ -1079,12 +1082,80 @@ Sotto uso reale (due agenti, doppio click, webhook retry, HTTP cron + APSchedule
 | **Crediti** | `credit_wallets` atomico; ledger senza unique su `ref_id`; API-key wallet distinto; Kling su `agencies.credits_balance` |
 | **Trash** | Soft-delete/restore helpers OK; purge solo HTTP (J-03); blob orphan = D-095 |
 
-### Decisioni da prendere / Domande aperte (max 2)
+### Decisioni Founder su P15 (acquisite → P16)
 
-1. **K-RC-01** — Prima del go-live multi-pod: lock condiviso (DB/file) su backup + publishing run-all, o accettare **single-replica** finché non c’è worker dedicato (lega P8 / B-08)?  
-2. **K-RC-02** — Invite accept su utente già registrato: tenere overwrite password (Cap.13), o chiedere login / link account senza reset password?
+1. **K-RC-01 → single-instance** per job automatici **ora** (non lock distribuiti complessi). **Non finale**: multi-pod richiederà anti-duplicato condiviso. **RC restano aperti**, non blocco immediato.  
+2. **K-RC-02 → MUST change** (→ **D-100**): invite su utente esistente = link agency + accept; **mai** overwrite `password_hash`. Fix-needed (P4.2), non nice-to-have.  
+3. **Tier RC**: 🔴 password overwrite / mutazione dati inattesa; 🟠 doppio bak/sync-trash; 🟢 wallet + trash restore/purge. Non trasformare ogni RC in fix immediato.
 
 ### Prossimo
 
-Su ok Founder: tipicamente **job asincroni approfonditi** (master §15) o osservabilità (§16), senza aprire §23.
+→ **Punto 16** Jobs approfondito (sotto) · tipicamente poi osservabilità (§16 master).
 **Niente fix. Nessuna severità P0–P3. Listino fermo. Bak design ancora aperto.**
+
+---
+
+## Punto 16 — Job asincroni (approfondimento post-P15) · consegnato 29-Set (master §15)
+
+**Tipo**: audit read-only · **nessun fix** · **no P0–P3**.  
+**Contesto**: P8 J-01…J-12 aperti; Founder single-instance per job automatici; deepen reliability.
+
+### Verdetto (con decisione single-instance Founder)
+
+Con **una sola replica API** per i job automatici, il rischio “due APScheduler = doppia esecuzione” è **mitigato operativamente**, non chiuso architetturalmente (`max_instances=1` resta **per-processo** — `sync_engine.py:274-337`).  
+**Restano fragili anche a 1 istanza**: race HTTP cron ↔ scheduler (🟠 RC-08/RC-09 / B-08), purge cestino **mai** schedulato (J-03), D-094 non applicato in sync/match (J-01/J-02/RC-03), fallimento a metà senza ledger/DLQ, invite overwrite password (🔴 RC-11 → **D-100** fix-needed).  
+Multi-pod = **critico solo allora** per anti-duplicato condiviso; RC restano aperti senza blocco immediato.
+
+### Inventario aggiornato
+
+| ID | Trigger | Single-instance? | Note |
+|----|---------|------------------|------|
+| `publishing_daily_sync` | APSched 06:00 UTC | **sì** (auto) | `max_instances=1`+coalesce · HTTP `/publishing/sync/run-all` parallelo | `sync_engine.py:274-282` · `publishing.py:366-370` |
+| `saved_searches_frequent` | APSched `*/5` | **sì** | + HTTP `/cron/saved-searches/run-all` · include fav drop/ended | `sync_engine.py:291-298` · `saved_searches.py:289` · `cron.py:20-25` |
+| `archive_daily_backup` | APSched 03:15 | **sì** | + HTTP `/cron/backup/daily` · path giorno senza lock | `sync_engine.py:308-315` · `backup_job.py:38-93` · `cron.py:45-50` |
+| `request_matching_nightly` | APSched 02:30 | **sì** | + HTTP `/cron/requests/matching` + agency `/requests/run-matching` | `sync_engine.py:330-337` · `cron.py:28-34` · `client_requests.py:175-182` |
+| Purge trash | **solo HTTP** | n/a (manca auto) | `/cron/trash/purge` · **non** in APScheduler | `cron.py:37-42` · `trash.py:154-166` |
+| Geocode / lead email | `create_task` | request-bound | fire-and-forget; no durable queue | `geocoding.py:81-104` · `public_portal.py:1045-1094` |
+| Staging / video / XML import | BackgroundTasks / `create_task` | request-bound | job doc Mongo; staging reap on boot | `virtual_staging.py:728` · `micro_tour_video.py:301,507` · `properties_import.py:539` |
+| Staging reaper | lifespan startup | once/boot | marca stale failed | `server.py:69-72` · `virtual_staging.py:499-510` |
+
+**Garanzia single-instance necessaria**: i 4 job APScheduler globali (+ qualsiasi futuro purge/blob).  
+**Request-bound**: geocode, email lead, staging, video, XML URL import — scoped alla richiesta; restart può orphanare task in-flight (staging ha reaper).
+
+### Cosa rimane fragile anche con 1 istanza
+
+1. **HTTP ↔ APScheduler** sullo stesso entrypoint (bak/sync/match/saved-search) — nessun lock file/DB (`backup_job.py:41-73`; RC-09 🟠).  
+2. **Purge zero volte** se nessuno chiama HTTP (J-03 / T-04).  
+3. **D-094 nei job**: `_fetch_properties` e `match_request` = `status=active` senza `deleted_at` (`sync_engine.py:61`; `client_requests_service.py:454-457`); fav drop idem (`saved_searches.py:431-434`); matching client senza check trash (J-11). Compliance UI **sì** filtra trash (`publishing.py:340-343`) — drift vs sync.  
+4. **Mid-job**: bak continua collection-by-collection, `ok=False` + MANIFEST, solo log (`backup_job.py:54-90`); sync ha `publishing_sync_logs` per connection ma **nessun** run ledger; matching **email/inbox prima** di `_mark_notified` (`request_matching_job.py:109-163`) → crash mid → possibile re-email.  
+5. **Shutdown**: `stop_scheduler(wait=False)` (`server.py:108-109` · `sync_engine.py:346-353`) — abort senza checkpoint.  
+6. **Osservabilità**: logger + report return HTTP; no metriche/alert dedicati job health (area §16).
+
+### Cosa diventa critico solo multi-pod
+
+- Due processi = due AsyncIOScheduler → doppio bak/sync/match/saved-search.  
+- `max_instances=1` **non** cross-process.  
+- Anti-duplicato condiviso (lease Mongo/Redis o worker unico) — **RC aperti, non blocco ora** (Founder).
+
+### Finding JA-xx (nuovi) + link J-* / RC-*
+
+| ID | Tipo | Problema | Link | Evidenza |
+|----|------|----------|------|----------|
+| **JA-01** | oss. | Single-replica mitiga doppio scheduler; **non** chiude HTTP↔sched overlap | RC-08 · RC-09 · B-08 | `sync_engine.py:274-337` · `cron.py` · `publishing.py:366-370` |
+| **JA-02** | rischio | Matching: side-effect email/inbox **prima** del mark dedup → mid-crash = possibile doppia email | J-02 · J-11 | `request_matching_job.py:109-163` |
+| **JA-03** | gap | Nessun run ledger / DLQ / checkpoint per bak·sync·match; solo log + MANIFEST/`PortalSyncLog` | J-05 · area P8 | `backup_job.py:45-90` · `sync_engine.py:67-92` |
+| **JA-04** | gap | Purge+blob ancora fuori APScheduler; single-instance **non** crea il job mancante | J-03 · J-04 · T-04 · D-095 | `cron.py:37-42` · vs bak `sync_engine.py:308-315` |
+| **JA-05** | drift | Compliance sync filtra trash; `_fetch_properties` del job **no** | J-01 · RC-03 · D-094 | `publishing.py:340-343` vs `sync_engine.py:58-64` |
+| **JA-06** | gap | Gap vs worker futuro: no coda, no lock condiviso, no job-table globale, cron ancora JWT `super_admin` | J-06 · P8 area | `cron.py:17` · `server.py:64-65` |
+| **JA-07** | fix-needed* | Invite accept overwrite password utente esistente — **D-100** | RC-11 · P4.2 | `invites.py:246-254` |
+
+\*JA-07 non è “job”, citato qui per D-100 da feedback P15 (Founder: MUST change).
+
+**Overlap intervallo**: APSched `max_instances=1`+`coalesce=True` evita overlap *stesso job stesso processo*. Sync retry sleep max ~36 min su cron giornaliero → OK. Saved-search `*/5` coalesce salta tick persi. Critico resta **secondo trigger HTTP** mentre il job gira.
+
+### Domande aperte (max 2)
+
+1. **K-JA-01** — Purge+blob: dato single-replica accettato, schedulare **ora** in APScheduler (stesso processo del bak), o tenere orchestrazione aperta fino al worker (P8/D-096)?  
+2. **K-JA-02** — Prima del multi-pod: anti-duplicato minimo (lease Mongo su `job_id`+giorno) riusabile dal futuro worker, o estrarre worker dedicato come primo passo?
+
+**Niente fix. Nessuna severità P0–P3. Listino fermo.**

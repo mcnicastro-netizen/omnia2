@@ -1183,7 +1183,7 @@ Concordo sul nucleo. Temperatura: «OS agenzia» è **nord**, non claim immediat
 
 ## 🟡 A-035 — Audit architettura SaaS (prompt master §1–§27)
 
-**Data inserimento**: 25-Sep-2026 · **agg.** 29-Sep-2026 (P14 + **D-099** · P15 race)  
+**Data inserimento**: 25-Sep-2026 · **agg.** 29-Sep-2026 (P15 acquisito · **D-100** · P16 Jobs)  
 **Prompt master**: `memory/AUDIT_PROMPT_MASTER.md`  
 **Stato**: 🟠 **in corso** · numerazione **sessione** · **NON implementare** · **NO P0–P3** · **listino fermo**
 
@@ -1192,17 +1192,19 @@ Concordo sul nucleo. Temperatura: «OS agenzia» è **nord**, non claim immediat
 - P12: **ACQUISITO** + **D-097** — Elimina per sempre ≠ irrecuperabile assoluto; trash può restare nel bak
 - P13: **ACQUISITO** + **D-098** — orphan path→delete (WHEN col bak); agency V1 controllata; lifecycle unica; RET-* aperti
 - P14: **ACQUISITO** + **D-099** — Founders GDPR assistito; fascicolo AuthZ prima bak; G-* aperti
-- P15: **consegnato** — concorrenza/race (RC-01…RC-14); wallet debit locked; B-08/TOCTOU/Stripe CAS aperti
+- P15: **ACQUISITO** — RC-*; single-instance jobs; invite → **D-100**; tier RC 🔴/🟠/🟢
+- P16: **consegnato** — deepen jobs (JA-01…JA-07); J-* aperti; fragile anche 1 istanza
 
 ### Cluster finding da non dimenticare
 - **Media authorization** = P3.1 + P4.1 + M-01 → **D-095** · **G-02**
 - **Mongo ⟷ blob lifecycle** = M-02…M-04 + L-05/L-06 → **D-095** · **T-02** · **RET-02**
-- **Proiezioni/jobs vs D-094** = E-01…E-07 · J-01…J-04 · **T-03** · **RC-03**
+- **Proiezioni/jobs vs D-094** = E-01…E-07 · J-01…J-04 · **T-03** · **RC-03** · **JA-05**
 - **Disaster recovery incompleto** = B-* · R-* → **D-096**
 - **Cestino vs Backup** = BC-* / T-* → **D-097**
 - **Retention incompleta** = **RET-***
 - **GDPR / privacy** = **G-*** (erase ≠ CRM wipe · no DPA · no DSAR export · fascicolo/media)
-- **Concorrenza / race** = **RC-*** (TOCTOU trash · B-08 · Stripe applied_at · invite P4.2 · agency_ids[0])
+- **Concorrenza / race** = **RC-*** · invite → **D-100**
+- **Jobs deepen** = **JA-*** · J-* · single-instance Founder
 - **Costo infra massimo / bak** = C-* · B-01 · listino fermo
 - **P4.2–P4.7** auth · Attività lifecycle aperto
 
@@ -1210,8 +1212,8 @@ Concordo sul nucleo. Temperatura: «OS agenzia» è **nord**, non claim immediat
 `memory/AUDIT_ARCHITETTURA_NOTE.md` · Cap. 00 · HAL `api.retention-cancellazione`
 
 ### Prossimo tipico
-- Feedback P15 → tipicamente **job asincroni** (master §15) o osservabilità (§16)
-- «vai» di **implementazione** = distinto (fix codice su finding prioritizzati)
+- Feedback P16 → tipicamente **osservabilità** (master §16)
+- «vai» di **implementazione** = distinto (fix codice: **D-100** tra i primi)
 
 ---
 
