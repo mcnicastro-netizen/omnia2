@@ -49,9 +49,9 @@ Decisioni dominio (codice ⏳): **D-094** … **D-100**.
 8. **Cestino ≠ Backup** = BC-* / T-* → **D-097** (copy + trash-in-bak)  
 9. **Retention incompleta** = RET-* (orphan ∞ · no offboarding · copy da allineare)  
 10. **GDPR / privacy** = **G-*** (erase ≠ wipe · fascicolo/media · DPA · no DSAR export)  
-10. **Trusted path / APScheduler** = aperti; single-instance Founder (P15); JA-* approfondiscono; orchestrazione purge/worker ancora aperta
-11. **Concorrenza / race** = **RC-*** · invite → **D-100**
-12. **Jobs deepen** = **JA-*** · J-* ancora aperti
+11. **Trusted path / APScheduler** = aperti; single-instance Founder (P15); JA-* approfondiscono; orchestrazione purge/worker ancora aperta  
+12. **Concorrenza / race** = **RC-*** · invite → **D-100**  
+13. **Jobs deepen** = **JA-*** · J-* ancora aperti
 
 ---
 
