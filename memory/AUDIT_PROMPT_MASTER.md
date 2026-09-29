@@ -94,7 +94,7 @@ In altre parole:
 | P10 Backup | **§9** | **ACQUISITO** · B-* · pesante/incompleto · €0,04 non confermare |
 | P11 Restore | **§10** | **ACQUISITO** · **D-096** · agency-first · Bak+Restore insieme |
 | P12 Backup vs Cestino | **§11** | **ACQUISITO** · **D-097** · BC-* / T-* |
-| P13 Retention | **§12** | **ACQUISITO** Founder · RET-* · orphan→bak · agency V1 controllata |
+| P13 Retention | **§12** | **ACQUISITO** · **D-098** · RET-* |
 | P14 GDPR / privacy | **§13** | Consegnato · **G-*** (feedback) |
 | — | **§6 Cestino** | Parziale P5 + coperto in P12 |
 | — | **§14 Concorrenza / race** | **Prossimo naturale** tipico dopo feedback P14 |
@@ -102,7 +102,7 @@ In altre parole:
 
 **Regola numerazione**: mantenere il continuum di sessione; documentare la corrispondenza qui / in `AUDIT_ARCHITETTURA_NOTE.md` — non riallineare artificialmente i numeri.
 
-Decisioni di dominio già registrate (codice ⏳): **D-094**, **D-095**, **D-096**, **D-097**.
+Decisioni di dominio già registrate (codice ⏳): **D-094**, **D-095**, **D-096**, **D-097**, **D-098**.
 
 ---
 
