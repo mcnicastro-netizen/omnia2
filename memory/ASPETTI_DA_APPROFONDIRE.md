@@ -1183,21 +1183,21 @@ Concordo sul nucleo. Temperatura: «OS agenzia» è **nord**, non claim immediat
 
 ## 🟡 A-035 — Audit architettura SaaS (prompt master §1–§27)
 
-**Data inserimento**: 25-Sep-2026 · **agg.** 29-Sep-2026 (P11 acquisito · P12 Backup vs Cestino)  
+**Data inserimento**: 25-Sep-2026 · **agg.** 29-Sep-2026 (P11 + **D-096** · P12)  
 **Prompt master**: `memory/AUDIT_PROMPT_MASTER.md`  
 **Stato**: 🟠 **in corso** · numerazione **sessione** · **NON implementare** · **NO P0–P3** · **listino fermo**
 
 ### Verdetti acquisiti
 - P2–P9: acquisiti (vedi note)
 - P10: **ACQUISITO** — bak esiste ma pesante (~31×); incompleto; no restore; €0,04 non confermare; orchestrazione TBD
-- P11: **ACQUISITO** — restore target = **singola agenzia**; Bak+Restore insieme; procedura testabile; R-01…R-12
+- P11: **ACQUISITO** + **D-096** — restore **agency-first**; Bak+Restore insieme; procedura testabile; R-01…R-12
 - P12: **consegnato** — Cestino ≠ Backup; BC-01…BC-05 · T-01…T-05; stesso «30gg» = confusione
 
 ### Cluster finding da non dimenticare
 - **Media authorization** = P3.1 + P4.1 + M-01 → **D-095**
 - **Mongo ⟷ blob lifecycle** = M-02…M-04 + L-05/L-06 → **D-095** · **T-02**
 - **Proiezioni/jobs vs D-094** = E-01…E-07 · J-01…J-04 · **T-03**
-- **Disaster recovery incompleto** = B-* · R-* · **BC-05**
+- **Disaster recovery incompleto** = B-* · R-* · **BC-05** → **D-096**
 - **Cestino vs Backup** = **BC-*** / **T-***
 - **Costo infra massimo / bak** = C-* · B-01 · €/GB non confermato · listino fermo
 - **P4.2–P4.7** auth · Attività lifecycle aperto

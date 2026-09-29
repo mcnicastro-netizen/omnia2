@@ -14,10 +14,10 @@ Un blocco alla volta · niente fix senza «vai» · no P0–P3 prematuri · **li
 
 ## Decisioni di dominio (codice ⏳)
 
-### D-094 / D-095 / D-085
+### D-094 / D-095 / D-085 / D-096
 - Trash ≠ status · media pubblico/privato · quota GB + bak 30g  
-- Promessa D-085 «ripristino via supporto» = **oggi senza tool** (P11)
-- P11: restore target = **singola agenzia**; Bak+Restore insieme; listino fermo
+- Promessa D-085 «ripristino via supporto» = **oggi senza tool** (P11)  
+- **D-096**: Bak+Restore insieme · restore **agency-first** · listino fermo finché costi reali post-design
 - P12: Cestino ≠ Backup (stesso «30gg» = confusione prodotto) · BC-* / T-*
 
 ---

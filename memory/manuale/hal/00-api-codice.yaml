@@ -685,22 +685,22 @@ voci:
     widget: null
     pubblico: [super_admin]
     livello: avanzato
-    tags: [codice, restore, backup, disaster, audit, d-073, d-085]
+    tags: [codice, restore, backup, disaster, audit, d-073, d-085, d-096]
     correlati: [api.backup-archivio, api.storage-costi, api.audit-architettura-stato]
     domanda_naturale: "Se perdiamo database e file, possiamo rimettere OMNIA come ieri?"
     contenuto:
       a_cosa_serve: >
-        Audit P11 ACQUISITO + P12: ripristino fedele automatico = NO.
-        Target Founder = singola agenzia via supporto (tool assente).
-        Cestino ≠ Backup (BC-*). Dump incompleto → scenario testabile
-        (requests/activities) non coperto. R-01…R-12 · BC-01…BC-05.
+        Audit P11 ACQUISITO + D-096 + P12: ripristino automatico = NO.
+        Target = singola agenzia via supporto (bak globale → extract);
+        piattaforma = emergenza interna. Bak+Restore insieme; listino
+        fermo. Cestino ≠ Backup (BC-*). R-01…R-12 · BC-01…BC-05.
       quando_si_usa: >
         Domande su disaster recovery, ripristino agenzia, supporto,
         differenza cestino vs backup.
       passi:
-        - "Cestino restore ≠ disaster restore piattaforma/agenzia."
-        - "Operatore manuale: JSONL + copia media — non testato, incompleto."
-        - "Contratto: singola agenzia first (P11); piattaforma = emergenza."
+        - "D-096: Bak→Restore→costi→eventuale listino; agency-first."
+        - "Successo testabile: props+clients+requests+activities+docs+media."
+        - "Cestino = delete accidentale; Backup = guaio grave (P12)."
         - "Niente fix senza «vai»; listino fermo."
       errori_comuni:
         - problema: "Il manuale dice che il supporto ripristina"

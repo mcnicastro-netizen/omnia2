@@ -1499,4 +1499,20 @@ Registro di tutte le decisioni di business e tecniche prese durante il progetto.
 - **Implementazione**: ❌ codice ⏳ — solo post-audit / priorità + «vai» esplicito.
 - **Stato**: ✅ **DECISIONE DI DOMINIO REGISTRATA** (docs 28-Set-2026) · codice ⏳
 
+### D-096 — Backup + Restore progettati insieme · restore agency-first · 29-Set-2026
+- **Data**: 29 Settembre 2026
+- **Contesto**: Audit Punto 11 (Restore). Founder: «facciamo il backup» ≠ «i dati sono recuperabili». Listino non va toccato finché bak+restore non sono disegnati.
+- **Decisione — Target restore**:
+  1. Promessa commerciale = ripristino **dati della singola agenzia** via supporto (non self-service obbligatorio).
+  2. Modello: **backup globale → extract/restore per agency_id**.
+  3. Restore **piattaforma intera** = solo procedura interna di emergenza; **non** promessa cliente oggi.
+  4. Criterio di successo testabile: immobile + cliente + richieste + attività + documenti + media **coerenti** dopo restore.
+- **Decisione — Sequenza di lavoro**:
+  1. Progettare **Backup e Restore insieme** (non costi bak in isolamento).
+  2. Sequenza: Backup → Restore → costi reali → **eventuale** revisione listino.
+  3. Fino ad allora: canoni €49/€99/€299 **fermi**; quota storage **ferma**; €0,04/GB **non confermato**; nessun nuovo tetto video.
+- **Fuori scope ora**: orchestrazione APScheduler vs worker (rimane aperta da P8/P10).
+- **Implementazione**: ❌ codice ⏳ — solo post-audit / «vai» esplicito.
+- **Stato**: ✅ **DECISIONE DI DOMINIO REGISTRATA** (docs 29-Set-2026) · codice ⏳
+
 

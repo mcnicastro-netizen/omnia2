@@ -30,7 +30,7 @@
 | — | Retention / GDPR… | §12–§14 | ⬜ prossimo naturale tipico |
 | — | Osservabilità → report | §16–§27 | ⬜ |
 
-Decisioni dominio (codice ⏳): **D-094**, **D-095**.
+Decisioni dominio (codice ⏳): **D-094**, **D-095**, **D-096**.
 
 ---
 
@@ -42,9 +42,10 @@ Decisioni dominio (codice ⏳): **D-094**, **D-095**.
 4. **AuthZ non uniforme** login→risorsa (P4)  
 5. **Attività**: appartenenza aperta (non = Richieste)  
 6. **Costo infra massimo / bak** = C-* + **B-01** (~31×) — €/GB all-in **non confermato**; listino **non** toccare  
-7. **Disaster recovery incompleto** = Backup pesante + dump parziale + **nessun Restore** (R-*)  
-8. **Trusted path tenant context** = domanda aperta P8 (bak = *nessun* tenant scope)  
-9. **APScheduler in-process** = *area da verificare* — decisione orchestrazione **rimandata** post Backup+Restore design
+7. **Disaster recovery incompleto** = Backup pesante + dump parziale + **nessun Restore** (R-*) → **D-096**  
+8. **Cestino ≠ Backup** = BC-* / T-* (stesso «30gg», due macchine)  
+9. **Trusted path tenant context** = domanda aperta P8 (bak = *nessun* tenant scope)  
+10. **APScheduler in-process** = *area da verificare* — orchestrazione **rimandata** post design Bak+Restore
 
 ---
 
@@ -528,12 +529,29 @@ Esempio: 100 agenzie × 1,4 TB × €0,04 ≈ **€5,6k/mese solo disco** a util
 
 ---
 
-## Punto 11 — ACQUISITO Founder (29-Set · feedback post-consegna)
+## Punto 11 — **ACQUISITO** Founder (29-Set) · **D-096**
 
-1. **Restore target** = **singola agenzia** prima («support can restore agency data»); restore piattaforma intera = emergenza interna only.  
-2. **Backup+Restore** si progettano **insieme**; sequenza Bak→Restore→costi reali→forse listino. **Listino frozen**; **€0,04 non confermato**; nessun nuovo cap video.  
-3. Insight chiave: **«facciamo backup» ≠ «i dati sono recuperabili»**. Serve procedura supporto **testabile**: Agenzia A perde dati → scegli bak valido → restore → properties, clients, requests, activities, docs, media **coerenti**.  
-4. Next = chiarire **Trash vs Backup** una volta per tutte → **P12**.
+P11 cambia la lettura del progetto, ma **non** implica fermarsi né cambiare listino subito.
+
+### Decisioni fissate
+
+1. **Restore: partire dalla singola agenzia**  
+   Promessa commerciale: *«In caso di necessità, il supporto può ripristinare i dati dell’agenzia.»*  
+   **Non** promettere oggi il ripristino dell’intera piattaforma.  
+   Modello: **backup globale → possibilità di recuperare una singola agenzia**; restore completo piattaforma = procedura interna di emergenza (opzionale).  
+   Riduce il rischio di sovrascrivere per errore dati di altre agenzie.
+
+2. **Backup + Restore si progettano insieme** (**D-096**)  
+   Sequenza corretta: **Backup → Restore → costi reali → eventuale revisione listino**.  
+   Per ora: €49/€99/€299 **fermi** · quota storage **ferma** · €0,04/GB **non confermato** · nessun nuovo limite video.
+
+3. **Insight chiave**  
+   > *«Facciamo il backup» non significa ancora «i dati sono realmente recuperabili».*  
+   Target di protezione:  
+   **Agenzia A perde dati → scegliamo un backup valido → ripristiniamo → immobili, clienti, richieste, attività, documenti e media tornano coerenti.**  
+   Non necessariamente automatico / con pulsante cliente: può essere **procedura interna supporto**, ma deve **esistere ed essere testabile**.
+
+Finding **R-01…R-12** restano aperti. **Niente fix.**
 
 ---
 
