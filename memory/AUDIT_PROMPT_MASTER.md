@@ -93,14 +93,15 @@ In altre parole:
 | P9 Storage e costi | **§8** | **ACQUISITO** · C-* · listino fermo |
 | P10 Backup | **§9** | **ACQUISITO** · B-* · pesante/incompleto · €0,04 non confermare |
 | P11 Restore | **§10** | **ACQUISITO** · **D-096** · agency-first · Bak+Restore insieme |
-| P12 Backup vs Cestino | **§11** | Consegnato · BC-* / T-* (feedback) |
+| P12 Backup vs Cestino | **§11** | **ACQUISITO** · **D-097** · BC-* / T-* |
+| P13 Retention | **§12** | Consegnato · RET-* (feedback) |
 | — | **§6 Cestino** | Parziale P5 + coperto in P12 |
-| — | **§12 Retention** | **Prossimo naturale** tipico dopo feedback P12 |
-| — | **§13–§14, §16–§27** | Non avviati |
+| — | **§13 GDPR / privacy** | **Prossimo naturale** tipico dopo feedback P13 |
+| — | **§14, §16–§27** | Non avviati |
 
 **Regola numerazione**: mantenere il continuum di sessione; documentare la corrispondenza qui / in `AUDIT_ARCHITETTURA_NOTE.md` — non riallineare artificialmente i numeri.
 
-Decisioni di dominio già registrate (codice ⏳): **D-094**, **D-095**, **D-096**.
+Decisioni di dominio già registrate (codice ⏳): **D-094**, **D-095**, **D-096**, **D-097**.
 
 ---
 

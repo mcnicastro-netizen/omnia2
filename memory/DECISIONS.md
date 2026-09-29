@@ -1515,4 +1515,19 @@ Registro di tutte le decisioni di business e tecniche prese durante il progetto.
 - **Implementazione**: ❌ codice ⏳ — solo post-audit / «vai» esplicito.
 - **Stato**: ✅ **DECISIONE DI DOMINIO REGISTRATA** (docs 29-Set-2026) · codice ⏳
 
+### D-097 — «Elimina per sempre» vs Backup · trash può restare nel bak · 29-Set-2026
+- **Data**: 29 Settembre 2026
+- **Contesto**: Audit Punto 12 (Backup vs Cestino). Evitare promessa commerciale ambigua su recuperabilità.
+- **Decisione — Linguaggio / significato**:
+  1. **«Elimina per sempre»** = eliminato dall’**area operativa**; **non** recuperabile dall’**utente** tramite Cestino.
+  2. In caso di **grave incidente**, il supporto **può valutare** un recupero da **backup valido ancora disponibile** — non garantito, non self-service.
+  3. **Non** promettere che ogni cosa cancellata sia sempre recuperabile.
+- **Decisione — Trash nel backup**:
+  1. Gli elementi in Cestino **possono restare** nel backup (almeno inizialmente).
+  2. Non introdurre «se è nel Cestino → escluso dal bak».
+  3. Timeline: soft-delete → fino a 30gg in Cestino+bak → purge Cestino → bak può ancora avere copia fino a scadenza bak → poi sparisce anche lì.
+- **Copy prodotto**: Cap.3/4/HAL da riallineare a questo testo (docs) quando Founder dà «vai» — **non** implica fix codice ora.
+- **Implementazione**: ❌ codice ⏳ · copy ⏳.
+- **Stato**: ✅ **DECISIONE DI DOMINIO REGISTRATA** (docs 29-Set-2026) · codice/copy ⏳
+
 

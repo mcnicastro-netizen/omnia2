@@ -6,7 +6,7 @@
 > **Numerazione = continuum di sessione** (non forzare allineamento al master).  
 > Prompt master: `memory/AUDIT_PROMPT_MASTER.md` (§1–§27) — corrispondenza in tabella sotto.
 
-**Ultimo aggiornamento**: 29-Set-2026 · **P11 ACQUISITO** · **P12 Backup vs Cestino consegnato**
+**Ultimo aggiornamento**: 29-Set-2026 · **P12 ACQUISITO** + **D-097** · **P13 Retention consegnato**
 
 ---
 
@@ -24,28 +24,29 @@
 | P8 | Jobs / processi asincroni | §15 (anticipato) | 🟠 **ACQUISITO** · J-* |
 | P9 | Storage e costi | §8 | 🟠 **ACQUISITO** · C-* |
 | P10 | Backup | §9 | 🟠 **ACQUISITO** · B-* |
-| P11 | Restore | §10 | 🟠 **ACQUISITO** · target = singola agenzia |
-| P12 | Backup vs Cestino | §11 | 🟠 Consegnato · BC-* / T-* |
+| P11 | Restore | §10 | 🟠 **ACQUISITO** · **D-096** |
+| P12 | Backup vs Cestino | §11 | 🟠 **ACQUISITO** · **D-097** · BC-* / T-* |
+| P13 | Retention | §12 | 🟠 Consegnato (feedback) · RET-* |
 | — | Cestino (blocco dedicato) | §6 | 🟡 coperto in P5 + P12 |
-| — | Retention / GDPR… | §12–§14 | ⬜ prossimo naturale tipico |
+| — | GDPR / privacy… | §13–§14 | ⬜ prossimo naturale tipico |
 | — | Osservabilità → report | §16–§27 | ⬜ |
 
-Decisioni dominio (codice ⏳): **D-094**, **D-095**, **D-096**.
+Decisioni dominio (codice ⏳): **D-094**, **D-095**, **D-096**, **D-097**.
 
 ---
 
 ## Cluster già emersi (no P0–P3 finché Founder non apre §23)
 
 1. **Media authorization** = P3.1 + P4.1 + M-01 → D-095  
-2. **Mongo ⟷ blob lifecycle** = M-02…M-04 + L-05/L-06 → D-095  
+2. **Mongo ⟷ blob lifecycle** = M-02…M-04 + L-05/L-06 → D-095 · **RET-02**  
 3. **Proiezioni/jobs vs D-094** = E-* · J-01…J-04  
 4. **AuthZ non uniforme** login→risorsa (P4)  
 5. **Attività**: appartenenza aperta (non = Richieste)  
-6. **Costo infra massimo / bak** = C-* + **B-01** (~31×) — €/GB all-in **non confermato**; listino **non** toccare  
-7. **Disaster recovery incompleto** = Backup pesante + dump parziale + **nessun Restore** (R-*) → **D-096**  
-8. **Cestino ≠ Backup** = BC-* / T-* (stesso «30gg», due macchine)  
-9. **Trusted path tenant context** = domanda aperta P8 (bak = *nessun* tenant scope)  
-10. **APScheduler in-process** = *area da verificare* — orchestrazione **rimandata** post design Bak+Restore
+6. **Costo infra massimo / bak** = C-* + **B-01** (~31×) — listino fermo  
+7. **Disaster recovery incompleto** = B-* · R-* → **D-096**  
+8. **Cestino ≠ Backup** = BC-* / T-* → **D-097** (copy + trash-in-bak)  
+9. **Retention incompleta** = RET-* (orphan ∞ · no offboarding · copy da allineare)  
+10. **Trusted path / APScheduler** = aperti; orchestrazione rimandata post design Bak+Restore
 
 ---
 
@@ -646,9 +647,135 @@ Cap.19 lo dice già in una frase — ma Cap.3/4 ripetono «dopo 30 giorni **non 
 | **J-03 / J-04** | Purge non automatico · no blob cleanup job |
 | **P11 decisioni** | Agency-first restore · Bak+Restore insieme · procedura testabile · listino fermo |
 
-### Decisioni da prendere / Domande aperte (max 2)
+### Domande aperte P12 — **chiuse** dal Founder → **D-097**
 
-1. **Copy prodotto**: dopo «Elimina per sempre» / 30gg cestino, cosa diciamo al titolare — *perso del tutto* oppure *solo dal Cestino; recovery grave = supporto (se bak valido)*? (Chiude BC-01/BC-04.)  
-2. **Trashed nel bak**: tenere (come oggi) fino a retention bak, o escludere + policy Retention §12? (K-BAK-06 · BC-03.)
+1. Copy «Elimina per sempre» → vedi acquisizione sotto.  
+2. Trashed nel bak → **sì, restano** (almeno inizialmente).
 
+---
+
+## Punto 12 — **ACQUISITO** Founder (29-Set) · **D-097**
+
+Due decisioni nette per evitare promessa commerciale ambigua.
+
+### 1. «Elimina per sempre» ≠ «irrecuperabile in assoluto»
+
+> **«Elimina per sempre» = il dato viene eliminato definitivamente dall’area operativa e non è più recuperabile dall’utente tramite il Cestino. In caso di grave incidente, il supporto può valutare un recupero da backup valido, se ancora disponibile.**
+
+| Livello | Significato |
+|---------|-------------|
+| Cestino | Recuperabile **dall’utente** entro 30 giorni |
+| Elimina per sempre | **Non** recuperabile dall’utente |
+| Backup | Eventuale recupero **straordinario** via supporto, se bak valido ancora esiste |
+
+Evita di promettere che ogni cosa cancellata sia sempre recuperabile.
+
+### 2. Elementi nel Cestino possono restare nel backup
+
+**Sì, almeno inizialmente.** Non introdurre «se è nel Cestino, non va nel bak».  
+Il bak rappresenta una situazione recuperabile del sistema, non solo i dati «visibili».
+
+Timeline acquisita:
+
+```text
+G1: soft-delete → Cestino
+G1–G30: Cestino + backup possono contenerlo
+G30: Cestino purge → fuori area operativa utente
+Backup: può ancora avere copia fino a propria scadenza
+Scadenza bak: anche quella copia scompare
+```
+
+→ Porta direttamente a **P13 Retention**: *per quanto tempo può sopravvivere un dato dopo «elimina per sempre»?* (Cestino / bak / media / chiusura agenzia — semplici).
+
+Finding **BC-*** / **T-*** restano aperti. **Niente fix.**
+
+---
+
+## Punto 13 — Retention · consegnato 29-Set (master §12 · continuum sessione)
+
+### Verdetto (linguaggio normale)
+
+**Domanda Founder:** *Per quanto tempo può sopravvivere un dato dopo che l’utente lo ha «eliminato per sempre»?*
+
+**Oggi — risposta onesta:**
+
+| Dove | Dopo «elimina per sempre» / purge |
+|------|-----------------------------------|
+| Area operativa / Cestino | **Sparisce subito** (allineato D-097 #1) |
+| Backup JSONL | Solo se un bak aveva già fotografato il record; i bak *nuovi* non lo hanno più |
+| File/media | Spesso restano come **orphan** — **nessun GC**, vita potenzialmente **indefinita** |
+| Cartelle bak media | Continuano a copiare l’orphan finché è su disco; cartelle scadono a ~**30 gg** bak |
+| Supporto | **Può** valutare un bak valido — **non garantito**; tool restore assente (D-096) |
+
+Quindi: **fuori dall’utente sì**; **sparito da ogni copia no**.
+
+### Matrice retention oggi
+
+| Area | Clock | Finestra | Dopo | Evidenza |
+|------|-------|----------|------|----------|
+| **Cestino** | soft-delete `deleted_at` | **30 gg hardcoded** (`TRASH_RETENTION_DAYS`) | hard-delete Mongo; blob **non** toccati | `shared/db/trash.py` · `trash.py` |
+| **Backup** | cartella giorno bak | **`BACKUP_RETENTION_DAYS` env · default 30** | purge cartelle vecchie; trash/orphan inclusi | `backup_job.py` |
+| **Media/blob** | upload / orphan da purge | **Nessun TTL / nessun GC** | orphan ∞ su disco (D-095 ⏳) | `objstore.py` · T-02 |
+| **Agenzia chiusa** | — | **Assente** | no wipe / offboarding a cancel sub | billing webhook · no agency delete |
+| **GDPR utente** | `POST /auth/me/erase` | immediato | wipe PII user; inventory agenzia **tenuto** | `erasure.py` |
+| **Refresh token** | emissione | **7 gg** | cleanup opportunistico | `REFRESH_TOKEN_DAYS` |
+| **Crediti / ledger / API keys** | — | **nessun TTL** | append-only / revoke flag | — |
+| **Staging jobs** | create | `JOB_TTL_DAYS=30` **dichiarato ma non applicato** | solo reaper stale / delete manuale | `virtual_staging.py` |
+
+Purge cestino automatico: **solo HTTP** cron — non in APScheduler (J-03 / T-04 / RET-03).
+
+### Timeline esempio (allineata D-097)
+
+| Giorno | Live Mongo | Cestino UI | Blob | Bak |
+|--------|------------|------------|------|-----|
+| G1 soft-delete | `deleted_at` | recuperabile utente | refs OK | notturno include record+media |
+| G1–G30 | in trash | sì | sì | copia trash+media |
+| G30+ purge* | hard-delete | no (D-097) | **orphan** | nuovi bak: no JSONL; media orphan sì |
+| fino a scadenza bak | — | — | orphan | snapshot storici |
+| dopo expiry bak + GC (oggi **no GC**) | — | — | oggi: **resta** | bak sparito |
+
+\*Se qualcuno chiama `POST /cron/trash/purge`.
+
+### Gap vs D-097
+
+| Decisione | Oggi | Gap |
+|-----------|------|-----|
+| Copy: fuori Cestino; supporto MAY bak | Cap.3/4/HAL: «non si può più recuperare» assoluto | **RET-04** / BC-04 — copy da riallineare (docs, non codice ora) |
+| Trash può restare in bak | Sì (comportamento attuale) | OK concettualmente; orphan ∞ rompe «poi gone» |
+| Clock separati Cestino/bak/media/agenzia | Solo Cestino+Bak hanno numeri; media=∞; offboarding=∅ | K-RET sotto |
+
+### Finding RET-xx (no fix · no P0–P3)
+
+| ID | Tipo | Sintesi | Link |
+|----|------|---------|------|
+| **RET-01** | confusione | Trash 30 hardcoded vs Bak env 30 — due clock, stesso numero | BC-01 |
+| **RET-02** | gap | Purge = solo Mongo; blob orphan senza GC | D-095 · T-02 |
+| **RET-03** | rischio | Purge cestino non schedulato | J-03 · T-04 |
+| **RET-04** | gap prodotto | Copy «irrecuperabile» ≠ D-097 (support MAY) | Cap.3/4 · HAL |
+| **RET-05** | gap | Nessun offboarding / wipe agenzia | D-085 residuo |
+| **RET-06** | gap | GDPR erase = utente, non cliente CRM / agenzia | D-094 · erasure.py |
+| **RET-07** | oss. | Orphan + bak daily → costo e vita copie | B-01 · B-10 · BC-03 |
+| **RET-08** | gap | `JOB_TTL_DAYS=30` staging non applicato | Cap.9 |
+| **RET-09** | gap | Audit/consent «N anni» senza job | A-022 |
+| **RET-10** | oss. | Crediti/ledger/API keys senza scadenza retention | — |
+
+### Decisioni da prendere (K-style · semplici · no implement)
+
+1. **K-RET-01** — Allineare copy prodotto a D-097 (testo unico Founder).  
+2. **K-RET-02** — Quattro numeri max: Cestino 30 · Bak 30 · Media orphan (grace?) · Agenzia chiusa (N gg o manuale v1).  
+3. **K-RET-03** — Clock espliciti: soft-delete / hard-delete / giorno bak / chiusura agenzia.  
+4. **K-RET-04** — Purge cestino deve diventare automatico/osservabile (lega P8).
+
+### Domande aperte (max 2)
+
+1. Dopo purge: i **blob orphan** — grace (0 / 7 / allineati al bak) o restano finché scade l’ultimo bak che li ha copiati?  
+2. **Chiusura abbonamento/agenzia**: grace (30/90 gg) + wipe, o solo procedura legale/manuale v1?
+
+### Link
+
+**D-094** · **D-095** · **D-096** · **D-097** · BC-* · T-* · B-* · R-* · J-03/J-04
+
+### Prossimo
+
+Su ok Founder: tipicamente **GDPR / privacy** (master §13).  
 **Niente fix. Nessuna severità definitiva. Listino fermo.**

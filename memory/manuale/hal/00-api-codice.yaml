@@ -494,14 +494,14 @@ voci:
     pubblico: [super_admin]
     livello: avanzato
     tags: [codice, audit, architettura, roadmap, d-073]
-    correlati: [api.tenant-isolation, api.auth-lifecycle, api.entity-lifecycle, api.jobs-async, api.storage-costi, api.backup-archivio, api.restore-disaster]
+    correlati: [api.tenant-isolation, api.auth-lifecycle, api.entity-lifecycle, api.jobs-async, api.storage-costi, api.backup-archivio, api.restore-disaster, api.retention-cancellazione]
     domanda_naturale: "A che punto è l'audit architettura? Cosa manca? Posso fixare i finding?"
     contenuto:
       a_cosa_serve: >
         Prompt master AUDIT_PROMPT_MASTER.md (§1–§27). Numerazione
-        sessione distinta (P1…P11): non riallineare artificialmente.
-        P10 Backup acquisito; P11 Restore consegnato (NO ripristino
-        fedele automatico). Listino fermo. Finding in note + A-035.
+        sessione distinta (P1…P13). P12 acquisito + D-097; P13
+        Retention consegnato. D-094…D-097 dominio, codice ⏳.
+        Listino fermo. Finding in note + A-035.
       quando_si_usa: >
         Ripresa audit, metodo, priorità, dove siamo.
       passi:
@@ -709,9 +709,40 @@ voci:
             Gap acquisito in audit — non improvvisare restore in prod.
         - problema: "Ho svuotato il Cestino: è come un restore da backup?"
           soluzione: >
-            No (BC-02). Cestino = undo delete; Backup = guaio grave.
-            Dopo purge UI dice irrecuperabile (Cap.3/4) ma bak può
-            ancora avere copia — senza tool di ripristino.
+            No (BC-02 / D-097). Cestino = undo delete utente.
+            «Elimina per sempre» = fuori area operativa; supporto può
+            valutare bak valido se ancora disponibile — non garantito.
+      permessi:
+        - super_admin / Founder
+      screenshot: []
+
+  - id: api.retention-cancellazione
+    titolo: Retention — quanto sopravvive un dato dopo eliminazione
+    modulo: Codice API
+    widget: null
+    pubblico: [super_admin]
+    livello: avanzato
+    tags: [codice, retention, cestino, backup, media, audit, d-073, d-097]
+    correlati: [api.restore-disaster, api.backup-archivio, api.media-file]
+    domanda_naturale: "Dopo Elimina per sempre, i dati spariscono davvero? Per quanto restano nel backup?"
+    contenuto:
+      a_cosa_serve: >
+        Audit P13 (master §12) + D-097: Cestino 30gg; bak 30gg;
+        media orphan senza GC; nessun offboarding agenzia.
+        Finding RET-01…RET-10. Copy Cap.3/4 da riallineare a D-097.
+      quando_si_usa: >
+        Domande su scadenza cestino, bak, file orfani, chiusura agenzia.
+      passi:
+        - "D-097: Elimina per sempre ≠ irrecuperabile in assoluto."
+        - "Trash può restare nel bak fino a scadenza bak."
+        - "Orphan media oggi senza cleanup (D-095 ⏳)."
+        - "Niente fix senza «vai»; listino fermo."
+      errori_comuni:
+        - problema: "Ho eliminato per sempre: è sparito ovunque?"
+          soluzione: >
+            Fuori dal Cestino sì. Blob e bak possono ancora avere
+            copie (RET-02/RET-07) — recupero solo via supporto se bak
+            valido, non garantito (D-097).
       permessi:
         - super_admin / Founder
       screenshot: []
