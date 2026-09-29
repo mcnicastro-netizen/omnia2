@@ -17,6 +17,8 @@ Un blocco alla volta · niente fix senza «vai» · no P0–P3 prematuri · **li
 ### D-094 / D-095 / D-085
 - Trash ≠ status · media pubblico/privato · quota GB + bak 30g  
 - Promessa D-085 «ripristino via supporto» = **oggi senza tool** (P11)
+- P11: restore target = **singola agenzia**; Bak+Restore insieme; listino fermo
+- P12: Cestino ≠ Backup (stesso «30gg» = confusione prodotto) · BC-* / T-*
 
 ---
 
@@ -25,9 +27,10 @@ Un blocco alla volta · niente fix senza «vai» · no P0–P3 prematuri · **li
 | Cluster | Finding |
 |---------|---------|
 | Media authorization | P3.1 + P4.1 + M-01 |
-| Mongo ⟷ blob | M-02…M-04 · L-05/L-06 |
-| Proiezioni/jobs vs D-094 | E-* · J-01…J-04 |
-| Disaster recovery incompleto | B-* · **R-*** (no restore) |
+| Mongo ⟷ blob | M-02…M-04 · L-05/L-06 · **T-02** |
+| Proiezioni/jobs vs D-094 | E-* · J-01…J-04 · **T-03** |
+| Disaster recovery incompleto | B-* · R-* · **BC-05** (scenario testabile ≠ bak) |
+| Cestino vs Backup | **BC-01…BC-05** · **T-01…T-05** |
 | Costo infra massimo | C-* · B-01 ~31× · €/GB non confermato |
 | Orchestrazione job | rimandata post design bak+restore |
 
@@ -39,7 +42,8 @@ Un blocco alla volta · niente fix senza «vai» · no P0–P3 prematuri · **li
 |----------|--------|--------|
 | P1–P9 | §1–§8 (+§15 Jobs) | acquisiti |
 | P10 Backup | §9 | **ACQUISITO** · pesante, incompleto, no restore |
-| P11 Restore | §10 | Consegnato · **NO** ripristino fedele da ieri |
-| — | §11+ | prossimo su feedback Founder |
+| P11 Restore | §10 | **ACQUISITO** · agency-first · no tool oggi |
+| P12 Backup vs Cestino | §11 | Consegnato · BC-* / T-* |
+| — | §12+ Retention | prossimo su feedback Founder |
 
 Dettaglio: `AUDIT_ARCHITETTURA_NOTE.md` · A-035 · HAL `api.backup-archivio` / `api.restore-disaster`.

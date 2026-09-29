@@ -1,5 +1,14 @@
 # OMNIA — Changelog
 
+## 2026-09-29 — Audit P11 acquisito · P12 Backup vs Cestino
+
+**Tipo**: Docs / SoT audit · **nessun fix codice** · **listino fermo**.
+
+- **P11 ACQUISITO**: restore target = **singola agenzia**; Bak+Restore insieme; €0,04 non confermato; procedura supporto testabile
+- **P12 Backup vs Cestino** (master §11): due macchine / stesso «30gg»; finding **BC-01…BC-05** · **T-01…T-05**
+- Cap.00 · HAL · A-035 · note · NEXT_SESSION → Retention tipico
+
+---
 ## 2026-09-28 — Audit P10 acquisito · P11 Restore + stima costi
 
 **Tipo**: Docs / SoT audit · **nessun fix codice** · **listino fermo**.

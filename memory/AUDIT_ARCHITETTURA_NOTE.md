@@ -6,7 +6,7 @@
 > **Numerazione = continuum di sessione** (non forzare allineamento al master).  
 > Prompt master: `memory/AUDIT_PROMPT_MASTER.md` (§1–§27) — corrispondenza in tabella sotto.
 
-**Ultimo aggiornamento**: 28-Set-2026 · **P10 ACQUISITO** · **P11 Restore consegnato**
+**Ultimo aggiornamento**: 29-Set-2026 · **P11 ACQUISITO** · **P12 Backup vs Cestino consegnato**
 
 ---
 
@@ -24,9 +24,10 @@
 | P8 | Jobs / processi asincroni | §15 (anticipato) | 🟠 **ACQUISITO** · J-* |
 | P9 | Storage e costi | §8 | 🟠 **ACQUISITO** · C-* |
 | P10 | Backup | §9 | 🟠 **ACQUISITO** · B-* |
-| P11 | Restore | §10 | 🟠 Consegnato (feedback) |
-| — | Cestino (blocco dedicato) | §6 | 🟡 parziale in P5 |
-| — | Retention / GDPR… | §11–§14 | ⬜ prossimo naturale: **§11 Backup vs cestino** o §12 Retention |
+| P11 | Restore | §10 | 🟠 **ACQUISITO** · target = singola agenzia |
+| P12 | Backup vs Cestino | §11 | 🟠 Consegnato · BC-* / T-* |
+| — | Cestino (blocco dedicato) | §6 | 🟡 coperto in P5 + P12 |
+| — | Retention / GDPR… | §12–§14 | ⬜ prossimo naturale tipico |
 | — | Osservabilità → report | §16–§27 | ⬜ |
 
 Decisioni dominio (codice ⏳): **D-094**, **D-095**.
@@ -522,5 +523,114 @@ Esempio: 100 agenzie × 1,4 TB × €0,04 ≈ **€5,6k/mese solo disco** a util
 
 ### Prossimo
 
-Su ok Founder: tipicamente **Backup vs cestino** (master §11) o **Retention** (§12).  
+→ **P12 Backup vs Cestino** (sotto).  
+**Niente fix. Nessuna severità definitiva. Listino fermo.**
+
+---
+
+## Punto 11 — ACQUISITO Founder (29-Set · feedback post-consegna)
+
+1. **Restore target** = **singola agenzia** prima («support can restore agency data»); restore piattaforma intera = emergenza interna only.  
+2. **Backup+Restore** si progettano **insieme**; sequenza Bak→Restore→costi reali→forse listino. **Listino frozen**; **€0,04 non confermato**; nessun nuovo cap video.  
+3. Insight chiave: **«facciamo backup» ≠ «i dati sono recuperabili»**. Serve procedura supporto **testabile**: Agenzia A perde dati → scegli bak valido → restore → properties, clients, requests, activities, docs, media **coerenti**.  
+4. Next = chiarire **Trash vs Backup** una volta per tutte → **P12**.
+
+---
+
+## Punto 12 — Backup vs Cestino · consegnato 29-Set (master §11)
+
+### Verdetto (linguaggio normale)
+
+Sono **due macchine diverse** con lo **stesso numero magico (30 giorni)** — e questo confonde.
+
+| | Cestino | Backup |
+|--|---------|--------|
+| Problema | «Ho cancellato per sbaglio» | «Abbiamo perso dati / disco / DB» |
+| Chi agisce | Titolare in UI | Supporto OMNIA (promessa) |
+| Cosa fa | Soft-delete → ripristina il **record** | Copia giornaliera JSONL+media |
+| Cosa **non** fa | Non ricostruisce un’agenzia dopo un disastro | Non è il cestino; **non** ha ancora un restore tool |
+
+Cap.19 lo dice già in una frase — ma Cap.3/4 ripetono «dopo 30 giorni **non si recupera più**» senza menzionare il bak. Stesso «30 giorni» su due sistemi = falsa equivalenza.
+
+### Tabella confronto
+
+| | **Cestino** | **Backup** | **Retention** (cenni · §12 futuro) |
+|--|-------------|------------|-------------------------------------|
+| Scopo | Undo delete accidentale | Disaster / guaio grave | Quanto restano le **copie** (live, trash, bak, orphan) e quando spariscono davvero |
+| Self-service | Sì (`/app/trash`) | No (via supporto) | Policy + job, non UI agente |
+| Entità | Solo `properties` + `clients` | Whitelist Mongo + `MEDIA_ROOT` | Tutte le copie incl. GDPR |
+| Media blob | Soft-delete: **restano**; purge: **non** cancellati → orphan (D-095) | `copytree` di tutto (trash/orphan inclusi) | Cleanup blob + scadenza bak |
+| Richieste / attività | **Fuori** cestino; client trash **non** archivia richieste (D-094 ⏳) | **OUT** del dump (`client_requests`, `activities`) | Da definire |
+| Finestra | 30 gg (`TRASH_RETENTION_DAYS`) | 30 gg cartelle (`BACKUP_RETENTION_DAYS`) | Può differire da entrambe |
+| Dopo «Elimina per sempre» | Record Mongo sparito; blob orphan; UI dice irrecuperabile | Copia può restare nel bak del giorno finché non scade | Domanda GDPR: quante copie restano? |
+
+### Cosa fa oggi il codice (evidenza)
+
+**Cestino — soft-delete**
+- Immobile: `properties.py:536-550` → `$set` `deleted_at` / `deleted_by` (`soft_delete_fields`).
+- Cliente: `clients.py:190-218` → stesso; **blocca** se immobili non-trashed collegati; **nessun** touch a `client_requests`.
+- Helper: `shared/db/trash.py:14-44` — `TRASH_RETENTION_DAYS=30`; restore = `$unset deleted_at/deleted_by`.
+
+**Cestino — UI restore / purge**
+- Lista + restore + purge-now: `trash.py:59-141` — solo update/delete sul documento `properties`|`clients`.
+- **Non** ripristina/cancella: richieste, attività, media blob, documenti esterni.
+- Cap.3 (`03-immobili.md:324`) «Foto, documenti e dati restano insieme» = **vero in soft-delete** (refs restano sul doc); **non** è un restore dei blob (non erano mai stati tolti).
+
+**Cestino — purge 30gg**
+- `run_trash_purge` `trash.py:154-166`: `delete_many` su properties/clients con `deleted_at <= cutoff`.
+- **Zero** chiamata a `delete_object` / cleanup media → orphan (gap D-095 / L-05·L-06 / J-04).
+- Trigger: solo HTTP `POST /cron/trash/purge` (`cron.py:37-42`) — **non** in APScheduler (a differenza del bak 03:15). Docs «purge automatico» = fragile se nessuno chiama l’endpoint (J-03).
+
+**Backup vs stato trash**
+- Dump `find({}, …)` senza filtro trash → **record trashed IN bak** (`backup_job.py:54-61`, B-10).
+- Media: `copytree` intero `MEDIA_ROOT` → blob di item in cestino / orphan **inclusi** finché su disco (`backup_job.py:67-74`).
+- OUT: `client_requests`, `activities`, … (B-02) — quindi lo scenario Founder P11 «requests + activities coerenti» **non** è coperto dal bak attuale.
+
+**Due path dopo perdita dati**
+
+| Scenario utente | Path | Oggi |
+|-----------------|------|------|
+| Eliminato per sbaglio, ≤30gg, ancora in Cestino | UI Ripristina | Funziona (record + refs media) |
+| «Elimina per sempre» / purge scaduto | Cestino chiuso | Cap.3/4: «non si recupera»; bak può ancora avere copia ~30gg — **ma restore tool assente** (R-01/R-02) |
+| Disastro DB/disk / agenzia | Bak → restore supporto | Promesso Cap.19/D-085; codice restore **assente**; target Founder = **singola agenzia** (P11) ancora da costruire |
+
+### Rischi di confusione prodotto/docs
+
+1. **Stesso «30 giorni»** Cestino e Backup → sembra un solo sistema (Cap.3/4 vs Cap.19).  
+2. Cap.3/4 / HAL `cestino.ripristinare`: «dopo 30gg **non si può più**» — omette che il bak *potrebbe* ancora avere una copia (e omette che il restore non esiste).  
+3. Cap.19: distingue bene Cestino ≠ Backup (`19-impostazioni-agenzia.md:220-226`) ma promette ripristino supporto **senza tool** (R-02).  
+4. Commento `backup_job.py:22` «Collections that restore an agency archive» = intenzione, non codice (R-10).  
+5. Procedura Founder testabile (props+clients+**requests**+**activities**+docs+media) **non** allineata al dump attuale.
+
+### Finding BC-xx / T-xx (no P0–P3 · no fix)
+
+| ID | Tipo | Sintesi | Link |
+|----|------|---------|------|
+| **BC-01** | confusione | «30 giorni» condiviso Cestino/Backup → falsa equivalenza prodotto | Cap.3/4 · Cap.19 · D-085 |
+| **BC-02** | oss. | Due path distinti: empty-trash ≠ disaster restore | R-12 · master §11 |
+| **BC-03** | oss. | Trashed/orphan **dentro** bak (costo + rumore restore) | B-10 · R-09 · K-BAK-06 |
+| **BC-04** | gap prodotto | Cap.3/4 «irrecuperabile» dopo purge ignora bak (e gap tool) | Cap.3:326 · Cap.4:312 · HAL |
+| **BC-05** | gap | Scenario supporto testabile (requests/activities/media) ≠ bake attuale | P11 dec.3 · B-02 · R-03 |
+| **T-01** | gap | Restore cestino = solo `$unset deleted_at` (no cascade) | `trash.py:108-123` |
+| **T-02** | gap | Purge cestino = solo hard-delete Mongo; **blob non toccati** | `trash.py:154-166` · D-095 |
+| **T-03** | gap | Client trash **non** archivia richieste (D-094 ⏳); campo legacy `trashed_at` in migrate prefs | `clients.py:212-218` · `client_requests_service.py:288` |
+| **T-04** | rischio | Purge cestino **non** schedulato in APScheduler (solo HTTP) | `cron.py:37` · J-03 |
+| **T-05** | oss. | Soft-delete: media «tornano» perché non erano mai stati rimossi — non è un restore blob | Cap.3:324 · D-095 |
+
+### Link
+
+| Ref | Ruolo |
+|-----|--------|
+| **D-085** | Cestino separato; bak 30g + restore via supporto; linguaggio onesto |
+| **D-094** | Trash ≠ status; client trash → richieste archiviate; codice ⏳ |
+| **D-095** | Lifecycle blob indipendente; cleanup ⏳ |
+| **B-*** / **R-*** | Bak incompleto · no restore tool · trash in bak |
+| **J-03 / J-04** | Purge non automatico · no blob cleanup job |
+| **P11 decisioni** | Agency-first restore · Bak+Restore insieme · procedura testabile · listino fermo |
+
+### Decisioni da prendere / Domande aperte (max 2)
+
+1. **Copy prodotto**: dopo «Elimina per sempre» / 30gg cestino, cosa diciamo al titolare — *perso del tutto* oppure *solo dal Cestino; recovery grave = supporto (se bak valido)*? (Chiude BC-01/BC-04.)  
+2. **Trashed nel bak**: tenere (come oggi) fino a retention bak, o escludere + policy Retention §12? (K-BAK-06 · BC-03.)
+
 **Niente fix. Nessuna severità definitiva. Listino fermo.**

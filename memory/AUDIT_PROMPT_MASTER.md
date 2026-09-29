@@ -92,10 +92,11 @@ In altre parole:
 | P8 Jobs | **§15** (anticipato) | **ACQUISITO** · J-* · decisioni purge/trusted aperte |
 | P9 Storage e costi | **§8** | **ACQUISITO** · C-* · listino fermo |
 | P10 Backup | **§9** | **ACQUISITO** · B-* · pesante/incompleto · €0,04 non confermare |
-| P11 Restore | **§10** | Consegnato · R-* · **NO** ripristino fedele automatico |
-| — | **§6 Cestino** | Parziale in P5 · blocco dedicato ancora da fare |
-| — | **§11 Backup vs cestino** | **Prossimo naturale** tipico dopo feedback P11 |
-| — | **§12–§14, §16–§27** | Non avviati |
+| P11 Restore | **§10** | **ACQUISITO** · agency-first · R-* |
+| P12 Backup vs Cestino | **§11** | Consegnato · BC-* / T-* |
+| — | **§6 Cestino** | Parziale P5 + coperto in P12 |
+| — | **§12 Retention** | **Prossimo naturale** tipico dopo feedback P12 |
+| — | **§13–§14, §16–§27** | Non avviati |
 
 **Regola numerazione**: mantenere il continuum di sessione; documentare la corrispondenza qui / in `AUDIT_ARCHITETTURA_NOTE.md` — non riallineare artificialmente i numeri.
 

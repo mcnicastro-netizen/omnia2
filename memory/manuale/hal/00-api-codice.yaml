@@ -690,21 +690,28 @@ voci:
     domanda_naturale: "Se perdiamo database e file, possiamo rimettere OMNIA come ieri?"
     contenuto:
       a_cosa_serve: >
-        Audit P11: risposta NO. Nessun restore automatico; promessa
-        Cap.19/D-085 senza tool; dump incompleto → ripristino non fedele.
-        Finding R-01…R-12. Stima costi 1→1000 agenzie in note audit.
+        Audit P11 ACQUISITO + P12: ripristino fedele automatico = NO.
+        Target Founder = singola agenzia via supporto (tool assente).
+        Cestino ≠ Backup (BC-*). Dump incompleto → scenario testabile
+        (requests/activities) non coperto. R-01…R-12 · BC-01…BC-05.
       quando_si_usa: >
-        Domande su disaster recovery, ripristino agenzia, supporto.
+        Domande su disaster recovery, ripristino agenzia, supporto,
+        differenza cestino vs backup.
       passi:
-        - "Cestino restore ≠ disaster restore piattaforma."
+        - "Cestino restore ≠ disaster restore piattaforma/agenzia."
         - "Operatore manuale: JSONL + copia media — non testato, incompleto."
-        - "Contratto da chiarire: piattaforma intera vs singola agenzia."
+        - "Contratto: singola agenzia first (P11); piattaforma = emergenza."
         - "Niente fix senza «vai»; listino fermo."
       errori_comuni:
         - problema: "Il manuale dice che il supporto ripristina"
           soluzione: >
             Promessa documentata (R-02) ma oggi senza codice/tool.
             Gap acquisito in audit — non improvvisare restore in prod.
+        - problema: "Ho svuotato il Cestino: è come un restore da backup?"
+          soluzione: >
+            No (BC-02). Cestino = undo delete; Backup = guaio grave.
+            Dopo purge UI dice irrecuperabile (Cap.3/4) ma bak può
+            ancora avere copia — senza tool di ripristino.
       permessi:
         - super_admin / Founder
       screenshot: []
