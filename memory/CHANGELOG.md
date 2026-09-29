@@ -1,5 +1,14 @@
 # OMNIA — Changelog
 
+## 2026-09-29 — Audit P12 acquisito · D-097 · P13 Retention
+
+**Tipo**: Docs / SoT audit · **nessun fix codice** · **listino fermo**.
+
+- **P12 ACQUISITO** + **D-097**: «Elimina per sempre» = fuori area operativa utente; supporto MAY bak; trash può restare nel bak
+- **P13 Retention** (master §12): matrice Cestino/bak/media/agenzia; orphan ∞; no offboarding; finding **RET-01…RET-10**
+- Cap.00 · HAL `api.retention-cancellazione` · A-035 · note
+
+---
 ## 2026-09-29 — Audit P11 acquisito · D-096 · P12 Backup vs Cestino
 
 **Tipo**: Docs / SoT audit · **nessun fix codice** · **listino fermo**.
