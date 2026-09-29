@@ -1,5 +1,14 @@
 # OMNIA — Changelog
 
+## 2026-09-29 — Audit P14 acquisito · P15 Concorrenza / Race
+
+**Tipo**: Docs / SoT audit · **nessun fix codice** · **listino fermo**.
+
+- **P14 ACQUISITO** (Founder): Founders GDPR provisional OK; fascicolo AuthZ **prima** bak; G-* aperti; non gonfiare oltre fascicolo/path
+- **P15 Concorrenza / race** (master §14): verdetto; matrice 12 scenari; finding **RC-01…RC-14**; link P8 · B-08 · D-094 · crediti · trash; K-RC-01/02
+- note · NEXT_SESSION → tipicamente §15 job async / §16 osservabilità
+
+---
 ## 2026-09-29 — Audit P13 acquisito · D-098 · P14 GDPR / Privacy
 
 **Tipo**: Docs / SoT audit · **nessun fix codice** · **listino fermo**.

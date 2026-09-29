@@ -6,7 +6,7 @@
 > **Numerazione = continuum di sessione** (non forzare allineamento al master).  
 > Prompt master: `memory/AUDIT_PROMPT_MASTER.md` (§1–§27) — corrispondenza in tabella sotto.
 
-**Ultimo aggiornamento**: 29-Set-2026 · **P13 ACQUISITO** (feedback Founder) · **P14 GDPR / privacy consegnato**
+**Ultimo aggiornamento**: 29-Set-2026 · **P14 ACQUISITO** (feedback Founder) · **P15 Concorrenza / race consegnato**
 
 ---
 
@@ -27,10 +27,10 @@
 | P11 | Restore | §10 | 🟠 **ACQUISITO** · **D-096** |
 | P12 | Backup vs Cestino | §11 | 🟠 **ACQUISITO** · **D-097** · BC-* / T-* |
 | P13 | Retention | §12 | 🟠 **ACQUISITO** · **D-098** · RET-* |
-| P14 | GDPR / privacy | §13 | 🟠 Consegnato (feedback) · **G-*** |
+| P14 | GDPR / privacy | §13 | 🟠 **ACQUISITO** · **G-*** (Founders OK · fascicolo AuthZ prima bak · G-* aperti) |
+| P15 | Concorrenza / race | §14 | 🟠 Consegnato (feedback) · **RC-*** |
 | — | Cestino (blocco dedicato) | §6 | 🟡 coperto in P5 + P12 |
-| — | Concorrenza / race… | §14+ | ⬜ prossimo tipico |
-| — | Osservabilità → report | §16–§27 | ⬜ |
+| — | Job async / osservabilità… | §15–§27 | ⬜ prossimo tipico |
 
 Decisioni dominio (codice ⏳): **D-094**, **D-095**, **D-096**, **D-097**, **D-098**.
 
@@ -986,5 +986,82 @@ Allineato docstring: *agency inventory kept*.
 
 ### Prossimo
 
-Su ok Founder: tipicamente **concorrenza / race** (master §14) o altro blocco scelto.  
+→ **P15** sotto (feedback Founder acquisito: Founders GDPR OK · fascicolo AuthZ prima bak · G-* aperti).
+
+---
+
+## Punto 15 — Concorrenza / Race Conditions (master §14) · 29-Set-2026
+
+**Tipo**: audit read-only · **nessun fix** · **no P0–P3**.  
+**Contesto Founder P14**: Founders GDPR = provisional OK (procedura eseguibile); fascicolo AuthZ **prima** bak; G-* aperti; non gonfiare oltre fascicolo/path.
+
+### Verdetto (dove può rompersi sotto uso reale)
+
+Sotto uso reale (due agenti, doppio click, webhook retry, HTTP cron + APScheduler):
+
+1. **TOCTOU edit/upload vs soft-delete** — PATCH/upload non chiudono atomicamente sul filtro `not_trashed` → scrittura su record appena cestino.  
+2. **Sync / matching vs Trash** — già E/J + D-094 ⏳: fetch `status=active` **senza** `deleted_at`; non è un nuovo bug di lock, è la stessa lacuna di dominio sotto carico concurrent.  
+3. **Backup stesso giorno** HTTP ↔ APScheduler (B-08) — nessun lock; `rmtree`+`copytree` sul path `YYYY-MM-DD`.  
+4. **Stripe topup** — `applied_at` è check-then-act, non CAS → rischio doppio accredito su redelivery parallela.  
+5. **Invite accept** — password overwrite su utente esistente (P4.2 / Cap.13) + status `pending→accepted` non atomico.  
+6. **Multi-agency** — CRM core usa `optional_agency_id`; `/agencies/me*` ancora `agency_ids[0]`.
+
+**Locked (onesto)**: wallet `debit_credits` e debit API-key con `$gte`+`$inc` atomici; restore/purge cestino usano filtro `in_trash()` (un vincitore, niente zombie); APScheduler `max_instances=1` **per processo**; dedup matching notifica `unique(request_id, property_id)`.
+
+### Matrice scenari critici
+
+| # | Scenario | Esito sotto race | Lock / difesa | Evidenza |
+|---|----------|------------------|---------------|----------|
+| 1 | Soft-delete + edit/publish | Edit può scrivere su trashed (TOCTOU); sync/publish ignorano trash | find `with_not_trashed` ma update **senza**; sync no filter | `properties.py:464-492` · `sync_engine.py:58-64` |
+| 2 | Purge vs restore | Un vincitore (404 all’altro) — **OK** | `in_trash()` su restore e delete | `trash.py:117-141` · `154-166` |
+| 3 | Double create prop/client | Duplicati possibili (no idempotency key; email/ref non unique) | index non unique | `properties.py:383-415` · `clients.py:69-81` · `connection.py:105-106` |
+| 4 | Credit wallet debit | Wallet **locked**; staging può riddebitare se job ritenta; Kling su `agencies.credits_balance` parallelo | `find_one_and_update` `$gte` | `billing/routes.py:556-589` · `virtual_staging.py:471-487` · `micro_tour_video.py:473-498` |
+| 5 | Publishing run-all overlap | Stesso processo: no overlap job; HTTP+scheduler **sì**; multi-replica **sì** | `max_instances=1` solo in-proc | `sync_engine.py:274-281` · `publishing.py:366-370` |
+| 6 | Backup HTTP + APScheduler | Stesso giorno → race `rmtree`/`copytree` (B-08) | **assente** | `backup_job.py:38-73` · `cron.py:45-50` · `sync_engine.py:308-315` |
+| 7 | Agency switch | Switcher OK su tenant helper; `/agencies/me*` ignora `active_agency_id` | misto | `tenant.py:12-17` · `agencies.py:120-172` |
+| 8 | Invite accept password | Overwrite password utente esistente **by design**; doppio accept non CAS | check `status!=pending` poi update | `invites.py:225-284` · Cap.13:249-254 |
+| 9 | MFA / refresh | Refresh **non** ruota (riuso jti OK); backup code RMW race | store jti; no rotation | `auth.py:316-345` · `session_store.py` · `mfa_routes.py:196-208` |
+| 10 | Upload media + delete prop | Upload **non** filtra trash; blob su prop cestino / orphan | find solo `id+agency` | `properties.py:587-636` |
+| 11 | Matching vs trash | Match su `status=active` anche trashed (D-094 ⏳) | dedup notifica OK | `client_requests_service.py:454-457` · `request_matching_job.py:179-181` |
+| 12 | Stripe webhook vs sub | Sub update last-write-wins OK; topup **non** CAS su `applied_at` | commento “idempotent” fragile | `billing/routes.py:366-447` · `498-510` |
+
+### Finding RC-xx
+
+| ID | Tipo | Problema | Evidenza |
+|----|------|----------|----------|
+| **RC-01** | rischio | PATCH property: read not_trashed → write senza filtro (TOCTOU vs soft-delete) | `properties.py:464-492` |
+| **RC-02** | rischio | Upload foto su prop senza `with_not_trashed` (+ race vs delete) | `properties.py:587-636` |
+| **RC-03** | gap* | Sync portali / match: no `deleted_at` (D-094 ⏳ · già J-01/J-02/E-*) | `sync_engine.py:61` · `client_requests_service.py:454-457` |
+| **RC-04** | ok | Restore vs purge hard: filtri `in_trash()` — race benigna | `trash.py:117-141` |
+| **RC-05** | rischio | Create property/client non idempotenti; no unique `(agency,email)` / `reference_code` | `properties.py:415` · `clients.py:81` · `connection.py:105-106` |
+| **RC-06** | ok+gap | Wallet `debit_credits` atomico (**locked**); API adjust RMW; Kling wallet separato su `agencies` | `routes.py:567-571` · `api_keys.py:196-204` · `micro_tour_video.py:473-498` |
+| **RC-07** | rischio | Staging: debit post-success senza guard `credits_charged` → ritento = doppio addebito | `virtual_staging.py:471-487` |
+| **RC-08** | rischio | Publishing: `max_instances=1` ≠ lock vs HTTP `/sync/run-all` / multi-pod (P8) | `sync_engine.py:274-281` · `publishing.py:366-370` |
+| **RC-09** | rischio | **B-08** backup: nessun lock HTTP↔scheduler; stesso `BACKUP_ROOT/day` | `backup_job.py:41-73` · note P10 |
+| **RC-10** | drift | `/agencies/me*` = `agency_ids[0]`; resto = `active_agency_id` | `agencies.py:120-172` · `tenant.py:12-17` |
+| **RC-11** | gap | Invite accept overwrite `password_hash` (P4.2); accept non CAS su status | `invites.py:246-284` |
+| **RC-12** | oss. | Refresh senza rotation (no race invalidazione); MFA backup code RMW | `auth.py:339-344` · `mfa_routes.py:199-208` |
+| **RC-13** | rischio | Stripe `_apply_session_side_effects`: check `applied_at` → grant → set (TOCTOU) | `billing/routes.py:372-447` |
+| **RC-14** | oss. | `customer.subscription.updated` last-write-wins — accettabile v1 | `routes.py:498-510` |
+
+\*RC-03 non è “nuova race di locking”: è D-094 non applicato, che sotto concorrenza produce sync/email su immobile cestino.
+
+### Link P8 · B-08 · D-094 · crediti · trash
+
+| Area | Collegamento |
+|------|----------------|
+| **P8 / J-*** | Orchestrazione aperta; `max_instances=1` in-process; HTTP cron parallelo; multi-replica = doppio scheduler |
+| **B-08** | Conferma: race bak HTTP↔APScheduler (e multi-replica) |
+| **D-094** | Trash ≠ status; codice ⏳ → RC-03 / J-01 / J-02 |
+| **Crediti** | `credit_wallets` atomico; ledger senza unique su `ref_id`; API-key wallet distinto; Kling su `agencies.credits_balance` |
+| **Trash** | Soft-delete/restore helpers OK; purge solo HTTP (J-03); blob orphan = D-095 |
+
+### Decisioni da prendere / Domande aperte (max 2)
+
+1. **K-RC-01** — Prima del go-live multi-pod: lock condiviso (DB/file) su backup + publishing run-all, o accettare **single-replica** finché non c’è worker dedicato (lega P8 / B-08)?  
+2. **K-RC-02** — Invite accept su utente già registrato: tenere overwrite password (Cap.13), o chiedere login / link account senza reset password?
+
+### Prossimo
+
+Su ok Founder: tipicamente **job asincroni approfonditi** (master §15) o osservabilità (§16), senza aprire §23.
 **Niente fix. Nessuna severità P0–P3. Listino fermo. Bak design ancora aperto.**

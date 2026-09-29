@@ -1,6 +1,6 @@
 # Prossima sessione — programma passi
 
-**Aggiornato**: 29 Settembre 2026 · audit **in corso** (P14 GDPR consegnato · D-098)  
+**Aggiornato**: 29 Settembre 2026 · audit **in corso** (P15 race consegnato · P14 acquisito)  
 **Repo**: https://github.com/mcnicastro-netizen/omnia2 ✅  
 
 ---
@@ -12,8 +12,8 @@
 | Prompt master | `memory/AUDIT_PROMPT_MASTER.md` (§1–§27) |
 | Note progresso | `memory/AUDIT_ARCHITETTURA_NOTE.md` |
 | Backlog | **A-035** |
-| Ultimo | **P13 ACQUISITO** + **D-098** · **P14 GDPR** (G-01…G-12) |
-| Prossimo | Feedback Founder su P14 → tipicamente **concorrenza / race** (master §14) |
+| Ultimo | **P14 ACQUISITO** · **P15 Concorrenza / race** (RC-01…RC-14) |
+| Prossimo | Feedback Founder su P15 → tipicamente **job asincroni** (master §15) o osservabilità (§16) |
 | Vincolo | **Listino fermo** · niente fix · no P0–P3 finché non §23 |
 
 ---
