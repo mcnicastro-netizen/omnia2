@@ -35,6 +35,7 @@ Trash **può** restare nel backup. Copy prodotto da riallineare.
 | Disaster recovery | B-* · R-* · D-096 |
 | Cestino vs Backup | BC-* · T-* · **D-097** |
 | Retention incompleta | **RET-*** (orphan ∞ · no offboarding) |
+| GDPR / privacy | **G-*** (erase ≠ wipe · fascicolo/media · DPA) |
 | Costo infra / listino | C-* · B-01 · fermo |
 
 ---
@@ -44,7 +45,8 @@ Trash **può** restare nel backup. Copy prodotto da riallineare.
 | Sessione | Master | Stato |
 |----------|--------|--------|
 | P1–P12 | §1–§11 (+ anticipi) | acquisiti / D-094…D-097 |
-| P13 Retention | §12 | Consegnato · RET-* |
-| — | §13 GDPR | prossimo tipico |
+| P13 Retention | §12 | **ACQUISITO** · RET-* |
+| P14 GDPR | §13 | Consegnato · G-* |
+| — | §14 race… | prossimo tipico |
 
 Dettaglio: `AUDIT_ARCHITETTURA_NOTE.md` · A-035.

@@ -1,5 +1,14 @@
 # OMNIA — Changelog
 
+## 2026-09-29 — Audit P13 acquisito · P14 GDPR / Privacy
+
+**Tipo**: Docs / SoT audit · **nessun fix codice** · **listino fermo**.
+
+- **P13 ACQUISITO** Founder: orphan → path a delete definitivo (WHEN col bak); agency close V1 = procedura controllata (no auto-wipe); RET-* aperti
+- **P14 GDPR / privacy** (master §13): verdetto parziale; tabella diritti; superfici sensibili; finding **G-01…G-12**; K-GDPR-*; link D-094…D-097 / P13
+- Cap.00 · A-035 · note · NEXT_SESSION → tipicamente §14 race
+
+---
 ## 2026-09-29 — Audit P12 acquisito · D-097 · P13 Retention
 
 **Tipo**: Docs / SoT audit · **nessun fix codice** · **listino fermo**.

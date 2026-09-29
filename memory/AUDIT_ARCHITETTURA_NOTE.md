@@ -6,7 +6,7 @@
 > **Numerazione = continuum di sessione** (non forzare allineamento al master).  
 > Prompt master: `memory/AUDIT_PROMPT_MASTER.md` (§1–§27) — corrispondenza in tabella sotto.
 
-**Ultimo aggiornamento**: 29-Set-2026 · **P12 ACQUISITO** + **D-097** · **P13 Retention consegnato**
+**Ultimo aggiornamento**: 29-Set-2026 · **P13 ACQUISITO** (feedback Founder) · **P14 GDPR / privacy consegnato**
 
 ---
 
@@ -26,9 +26,10 @@
 | P10 | Backup | §9 | 🟠 **ACQUISITO** · B-* |
 | P11 | Restore | §10 | 🟠 **ACQUISITO** · **D-096** |
 | P12 | Backup vs Cestino | §11 | 🟠 **ACQUISITO** · **D-097** · BC-* / T-* |
-| P13 | Retention | §12 | 🟠 Consegnato (feedback) · RET-* |
+| P13 | Retention | §12 | 🟠 **ACQUISITO** Founder · RET-* · orphan→bak · agency V1 controllata |
+| P14 | GDPR / privacy | §13 | 🟠 Consegnato (feedback) · **G-*** |
 | — | Cestino (blocco dedicato) | §6 | 🟡 coperto in P5 + P12 |
-| — | GDPR / privacy… | §13–§14 | ⬜ prossimo naturale tipico |
+| — | Concorrenza / race… | §14+ | ⬜ prossimo tipico |
 | — | Osservabilità → report | §16–§27 | ⬜ |
 
 Decisioni dominio (codice ⏳): **D-094**, **D-095**, **D-096**, **D-097**.
@@ -46,6 +47,7 @@ Decisioni dominio (codice ⏳): **D-094**, **D-095**, **D-096**, **D-097**.
 7. **Disaster recovery incompleto** = B-* · R-* → **D-096**  
 8. **Cestino ≠ Backup** = BC-* / T-* → **D-097** (copy + trash-in-bak)  
 9. **Retention incompleta** = RET-* (orphan ∞ · no offboarding · copy da allineare)  
+10. **GDPR / privacy** = **G-*** (erase ≠ wipe · fascicolo/media · DPA · no DSAR export)  
 10. **Trusted path / APScheduler** = aperti; orchestrazione rimandata post design Bak+Restore
 
 ---
@@ -775,7 +777,179 @@ Purge cestino automatico: **solo HTTP** cron — non in APScheduler (J-03 / T-04
 
 **D-094** · **D-095** · **D-096** · **D-097** · BC-* · T-* · B-* · R-* · J-03/J-04
 
+### Feedback Founder P13 → vincoli P14
+
+1. **Orphan**: unreferenced file MUST avere path a cancellazione definitiva; **WHEN** = decide con design bak finale (non fissare 0/7/30 ora).  
+2. **Agency close V1** = procedura controllata (account disabled + data non-operative + retention/wipe TBD) — **non** auto-wipe aggressivo; non promettere erasure immediata completa.  
+3. Storage+bak progettati insieme; catena lifecycle created→…→final delete; **RET-*** restano aperti; no fix; → GDPR.
+
 ### Prossimo
 
-Su ok Founder: tipicamente **GDPR / privacy** (master §13).  
-**Niente fix. Nessuna severità definitiva. Listino fermo.**
+→ **P14 GDPR / privacy** (sotto).
+
+---
+
+## Punto 14 — GDPR / Privacy (master §13) · 29-Set-2026
+
+**Ambito**: SaaS multi-tenant immobiliare IT · read-only · no fix · no P0–P3.  
+**Non è consulenza legale**: distingue *tecnico* vs *validazione legale/DPO*.
+
+### Verdetto (SaaS commerciale: quanto è difendibile oggi?)
+
+**Parzialmente difendibile su superfici “account utente” e lead pubblici; non ancora difendibile come pacchetto SaaS B2B completo.**
+
+Esiste un nucleo tecnico onesto: erase account (`POST /auth/me/erase`), consent log append-only, hard-gate su alcuni lead, privacy L1–L4 annunci, isolamento applicativo `agency_id`, checklist E-* in `SECURITY_CHECKLIST.md`.  
+Manca il perimetro commerciale tipico go-live IT: informativa/cookie policy piattaforma, DPA/art.28, diritti accesso/portabilità/rettifica self-service, wipe cliente CRM e chiusura agenzia, AuthZ media sensibili (fascicolo vs `/api/media` pubblico), retention audit dichiarata ma senza job (A-022 / RET-09), third-party inventariato (fal / LLM / Resend / Stripe / Emergent storage) senza transfer map.
+
+Per vendita Founders: **non** presentare OMNIA come “GDPR-ready end-to-end”. Presentare: *cancellazione account utente sì; inventory agenzia tenuta; procedura chiusura agenzia e diritti DSAR ancora da definire con legale*.
+
+### Cosa esiste vs cosa manca (tabella diritti GDPR)
+
+| Diritto | Esiste oggi? | Evidenza | Gap |
+|---------|--------------|----------|-----|
+| **Informativa / trasparenza** (art. 12–14) | 🟡 parziale | Modulistica `informativa_privacy` per *agenzia* (`modulistica/catalog.py`); Domain Sovereignty Policy; Cap.8 no Analytics default | **Nessuna** Privacy Policy / Cookie Policy piattaforma OMNIA in FE routes; B2B register senza `gdpr_consent` backend |
+| **Consenso** (art. 6/7) | 🟡 | Hard: B2C register, contact, mutui lead, widget lead, domain lead/kit. Log `consent_events` | CRM cliente: flag `gdpr_consent` **non** hard-gate create; Cap.11 testo “non bloccante” **obsoleto** vs codice mutui hard; marketing consent separato = claim Cap.11, **campo assente** |
+| **Accesso** (art. 15) | ❌ | Solo template legale *verso altri fornitori* (`gdpr_20`) | Nessun endpoint DSAR / “esporta i miei dati” utente o cliente |
+| **Rettifica** (art. 16) | 🟡 | PATCH profilo / clienti / immobili via CRUD normale | Non inquadrato come diritto; no audit “rectification request” |
+| **Cancellazione** (art. 17) | 🟡 | User erase + cestino cliente/immobile | Erase ≠ wipe CRM/agenzia; purge lascia orphan; bak può tenere copie (D-097); no agency wipe |
+| **Limitazione** (art. 18) | ❌ | — | Assente |
+| **Portabilità** (art. 20) | 🟡 Track B only | `GET /api/v1/leads/export` (agenzia→CRM esterno) | Non per interessato B2C/utente; template PDF è *lettera a fornitore*, non export OMNIA |
+| **Opposizione / marketing** (art. 21) | 🟡 | Notification preferences PATCH | No marketing_consent distinto; no cookie banner (e oggi no tracker terzi default — aiuta) |
+
+### Superfici dati sensibili
+
+| Superficie | Cosa c’è | Rischio privacy |
+|------------|----------|-----------------|
+| **User account** | email, nome, phone, MFA, Google sub | Erase anonimizza + revoca sessioni; inventory agenzia **tenuta** (`erasure.py:17-19`) |
+| **CRM clients** | PII + `fiscal_code` + notes + `gdpr_consent` | Soft-delete 30g → hard Mongo; blob N/A; D-094 richieste→archivio ⏳; **nessun** erase GDPR cliente |
+| **Fascicolo** | CI venditore, atti, APE, visure — path `omnia/fascicolo/…` | Download API **auth+agency** (`fascicolo.py:276`); ma `GET /api/media/{path}` **pubblico senza auth** (`media.py:26-34`) → **D-095 / P3.1**: path≠secret |
+| **Foto annuncio** | pubbliche by design | OK portale; L3/L4 escluse feed |
+| **B2C private listings** | `contact_public` email/phone/WA gate | Erase withdraw+strip; detail espone canali se flag |
+| **Lead / mutui / contact** | email/phone + consent log | Mutui hard-gate codice; Cap.11 docs drift |
+| **API keys / Track B** | hash SHA-256, `api_usage_log`, leads widget | Erase revoca keys `created_by`; log/usage **senza TTL** (RET-10) |
+| **Audit trails** | 10 coll. + `consent_events` | Claim retention Cap.18 / A-022 **senza job** (RET-09) |
+| **Third parties** | fal.ai (foto staging), LLM Gemini, Resend, Stripe, Emergent objstore legacy | Nessuna mappa transfer / DPA sub-processor in repo |
+
+### 1) User erase — cosa fa / non fa
+
+**Endpoint**: `POST /auth/me/erase` (`auth.py:233-268`) — confirm `DELETE` + password (salvo OAuth); log `account_erasure`; clear cookie.
+
+**Fa** (`erasure.py:14-129`):
+- delete: favorites, saved_searches, notifications, password_reset_tokens, refresh_tokens
+- delete lead: mortgage_leads, visura_orders, cloud_contact_leads, contact_leads (by email/uid)
+- B2C listings: withdraw + strip owner/contact PII
+- revoke api_keys `created_by`
+- anonymize user (tombstone email, wipe PII, `is_active=False`, clear agency_ids)
+
+**Non fa**:
+- clienti CRM / richieste / attività / matches / publishing / fascicolo docs / properties **agenzia**
+- `consent_events` (restano con email/user_id pre-erase se loggati prima)
+- audit collections, api_usage_log, bak copies, media orphan
+- wipe intera agenzia
+
+Allineato docstring: *agency inventory kept*.
+
+### 2) Consensi / policy / cookie
+
+- `log_consent` → `consent_events` (`consent_log.py:14-42`) su register B2B (senza field gdpr), B2C register, contact, mutui, erase.
+- Cookie = auth HttpOnly (+ CSRF); **nessun** CookieBanner / CookieConsent in FE.
+- Cap.8: no Google Analytics default — riduce pressione cookie marketing.
+- Informativa piattaforma OMNIA: **assente** come pagina prodotto (solo Domain Sovereignty + modulistica *per agenzia*).
+
+### 3) Cliente CRM + D-094
+
+- Campo `gdpr_consent` su Client (`client.py:56`) — UI checkbox; create **non** rifiuta se false.
+- Delete = Cestino 30g (`clients.py:190-218`); purge hard Mongo (`trash.py:154-166`); **non** archivia richieste in codice (D-094 ⏳).
+- Significato GDPR “cliente cancellato” = **ancora aperto** (D-094 fuori scope → qui).
+
+### 4) Fascicolo vs media pubblici (D-095)
+
+- Cap.7: fascicolo “utente esterno / pubblico: mai”.
+- Serve blob: download gated; **passthrough** `/api/media` no-auth serve qualsiasi path incluso `omnia/fascicolo/…` se noto.
+- Decisione D-095 codice ⏳.
+
+### 5) Multi-tenant (link P3)
+
+- Isolation **applicativa** sì: filtri `agency_id`, middleware inject `/api/app/*` (`tenant_middleware.py`, `tenant_guard.py` TENANT_COLLECTIONS).
+- E2E / media AuthZ **no** (P3 sintesi: isolation sì · E2E no; cluster P3.1+P4.1+M-01→D-095).
+- Job trusted cross-tenant OK by design (P8).
+- Agenzia A **non** dovrebbe vedere CRM B via `/api/app` se route disciplina agency_id; eccezione rischio = media path pubblici + bug AuthZ non uniformi (P4).
+
+### 6) DPA / data processor
+
+- Unico cenno: residuo D-085 «testo contratto/DPA fine abbonamento con legale» (`DECISIONS.md` ~1434).
+- **Nessun** DPA art.28, registro trattamenti, elenco sub-processor in repo.
+
+### 7) Log / audit vs A-022
+
+- Claim Cap.18 / A-022: 90gg / 365gg / 5 anni su coll. audit.
+- Codice: indici su `consent_events`; **nessun** TTL/job archivio audit (RET-09).
+- Crescita ∞ fino a policy reale.
+
+### 8) B2C private listings PII
+
+- Sentinel `_private_listings`; `contact_public` gated; contact form → inquiries.
+- Erase withdraw+strip; PUBLIC_FIELDS nasconde owner crudo.
+
+### 9) API keys / Track B
+
+- Keys hash-only; scoped `agency_id`; leads export/ingest tenant-scoped.
+- Usage log append-only no retention; erase revoca solo keys dell’utente.
+
+### 10) Cross-border / third parties
+
+- fal.ai (upload foto staging), Gemini via key Emergent/Google, Resend, Stripe, objstore Emergent legacy.
+- **Nessuna** documentazione transfer UE/extra-UE / SCC in repo. → legale/DPO.
+
+### 11) Accesso / portabilità / rettifica endpoints
+
+- **No** `/me/export`, **no** DSAR client.
+- Unico “export”: Track B leads (operativo B2B, non diritto interessato).
+
+### 12) Gap: agency wipe vs user erase vs client trash
+
+| Meccanismo | Target | Effetto | Copie residue |
+|------------|--------|---------|---------------|
+| **User erase** | persona/account | PII user wiped; inventory agenzia tenuta | bak, consent_events, audit, orphan media |
+| **Client trash→purge** | record CRM | fuori operativo poi hard Mongo | richieste (oggi non archiviate auto), bak, no blob GC |
+| **Agency close** | tenant intero | **Assente** (RET-05); Founder V1 = procedura controllata non auto-wipe | tutto resta finché non definito |
+
+### Finding G-xx (no P0–P3 · no fix)
+
+| ID | Tipo | Sintesi | Link |
+|----|------|---------|------|
+| **G-01** | gap | Erase utente ≠ erase cliente CRM ≠ wipe agenzia | RET-06 · erasure.py · D-094 |
+| **G-02** | rischio | Fascicolo sensibile raggiungibile via `/api/media` pubblico se path noto | D-095 · M-01 · media.py |
+| **G-03** | gap | No Privacy/Cookie Policy piattaforma; B2B register senza gdpr_consent field | RegisterRequest · FE routes |
+| **G-04** | gap | No endpoint accesso/portabilità/rettifica interessato | art.15/16/20 |
+| **G-05** | gap | DPA / sub-processor / transfer map assenti (solo residuo D-085) | legale |
+| **G-06** | drift | Cap.11 mutui “consent non bloccante” vs codice hard-gate | mutui.py:64-65 |
+| **G-07** | gap | CRM `gdpr_consent` soft (no hard create); marketing_consent assente | client.py · Cap.11 |
+| **G-08** | gap | Retention audit/consent dichiarata, job assente | A-022 · RET-09 |
+| **G-09** | gap | Agency offboarding assente; V1 = procedura controllata (Founder P13) | RET-05 |
+| **G-10** | oss. | consent_events / usage / ledger sopravvivono all’erase | erasure.py scope |
+| **G-11** | oss. | Isolamento app OK; E2E media/AuthZ incompleto (P3) | tenant_guard · D-095 |
+| **G-12** | oss. | Third parties (fal/LLM/Resend/Stripe) operativi senza inventario privacy | Cap.9 · shared/llm |
+
+### Decisioni da prendere (K-style · semplici · prima del bak design)
+
+1. **K-GDPR-01** — Ruoli: OMNIA = titolare (B2C) / responsabile (B2B CRM agenzia)? (legale)  
+2. **K-GDPR-02** — V1 diritti: solo erase account + canale email DSAR, o anche export self-service?  
+3. **K-GDPR-03** — Cliente CRM cancellato: trash+purge basta, o serve “anonimizza PII / mantieni storico”? (lega D-094)  
+4. **K-GDPR-04** — Agency close V1: testo procedura (disable + non-operative + retention TBD) — **no** auto-wipe (già Founder)  
+5. **K-GDPR-05** — Media: fascicolo **mai** su path pubblico (enforce D-095) — prima o insieme al bak?  
+6. **K-GDPR-06** — Orphan WHEN: solo con design bak finale (già Founder P13)
+
+### Domande aperte (max 2)
+
+1. Per il go-live Founders: basta **canale email DSAR + erase account + DPA cartaceo**, o serve export self-service prima dei primi clienti paganti?  
+2. Sul fascicolo: blocco AuthZ su `/api/media` per path `omnia/fascicolo/*` è prerequisito commerciale **prima** del design bak, o può aspettare il pacchetto D-095?
+
+### Link
+
+**D-094** · **D-095** · **D-096** · **D-097** · **RET-05/06/09** · **A-022** · **P3** · P13 orphan/agency feedback
+
+### Prossimo
+
+Su ok Founder: tipicamente **concorrenza / race** (master §14) o altro blocco scelto.  
+**Niente fix. Nessuna severità P0–P3. Listino fermo. Bak design ancora aperto.**
