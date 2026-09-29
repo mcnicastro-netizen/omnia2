@@ -666,22 +666,28 @@ voci:
     domanda_naturale: "Come funziona il backup? Cosa viene salvato? Posso ripristinare un'agenzia?"
     contenuto:
       a_cosa_serve: >
-        Audit P10 ACQUISITO: bak esiste ma ricopia tutto ogni giorno
-        (~31×). Dump incompleto; può partire due volte; trash/orphan
-        inclusi. Restore assente → P11. €0,04 non confermato; listino
-        fermo. Orchestrazione job non decidere ancora. B-01…B-14.
+        Audit P10 + P17 Osservabilità: bak esiste ma ricopia tutto
+        (~31×). Esito solo in MANIFEST.json + log (O-01); tick
+        swallowa errori (O-02); no last_run (O-05). Restore assente
+        (D-096). Listino fermo. B-* · O-01…O-05.
       quando_si_usa: >
-        Domande su backup, retention, restore, costo disco ops.
+        Domande su backup, retention, restore, costo disco ops,
+        “il bak di ieri è andato a buon fine?”.
       passi:
         - "backup_job.py: JSONL whitelist + copytree local + purge >R."
-        - "Costo: GB_bak ≈ X×(R+1); €/GB all-in non confermato."
-        - "Restore: promessa D-085 via supporto — codice assente (P11)."
+        - "Osservabilità: nessuno stato Mongo/API/alert su esito bak
+          (O-01) — Founder Ops non mostra bak health (O-13)."
+        - "Restore: promessa D-085 via supporto — codice assente (D-096)."
         - "Niente fix / niente listino senza design Backup+Restore."
       errori_comuni:
         - problema: "Ho lanciato il backup ma mancano le richieste clienti"
           soluzione: >
             Atteso oggi (B-02): client_requests fuori whitelist.
             Annotato in audit — non patchare senza priorità Founder.
+        - problema: "Come so se il backup notturno è riuscito?"
+          soluzione: >
+            Oggi solo MANIFEST sul filesystem + log stdout (O-01).
+            Gap acquisito in P17 — non c’è cruscotto/alert dedicato.
       permessi:
         - super_admin / Founder
       screenshot: []
