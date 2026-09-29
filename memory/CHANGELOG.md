@@ -1,5 +1,16 @@
 # OMNIA — Changelog
 
+## 2026-09-29 — D-104 · GTM-01 Demo Readiness registrato (post-audit)
+
+**Tipo**: Docs / SoT audit · **nessun fix** · **nessuna analisi GTM ora**.
+
+- **D-104**: checkpoint **GTM-01** prima del lancio ~5000 email; dopo audit tecnico principale
+- Non dimensionare per 5000 concurrent — verificare picco (2/50/200) + ~20 concurrent + percorso demo sotto stress
+- P17 resta in attesa feedback; continuum tipico §17 API/FE; GTM-01 dopo i punti principali
+- Cap.00 · A-035/A-036 · note · NEXT_SESSION · master
+
+---
+
 ## 2026-09-29 — Audit P16 acquisito · D-102 · D-103 · P17 Osservabilità
 
 **Tipo**: Docs / SoT audit · **nessun fix codice** · **listino fermo**.

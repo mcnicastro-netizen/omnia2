@@ -502,10 +502,9 @@ voci:
     contenuto:
       a_cosa_serve: >
         Prompt master AUDIT_PROMPT_MASTER.md (§1–§27). Numerazione
-        sessione (P1…P17). P16 acquisito + D-102/D-103; P17
-        Osservabilità (O-*) consegnato. D-094…D-103 dominio, codice ⏳.
-        Listino fermo. Finding in note + A-035. Prossimo tipico §17
-        API/FE.
+        sessione (P1…P17). P17 Osservabilità (O-*) ⏳ feedback.
+        D-094…D-104 dominio. GTM-01 Demo Readiness (D-104 / A-036)
+        dopo audit tecnico · prima ~5000 email. Listino fermo.
       quando_si_usa: >
         Ripresa audit, metodo, priorità, dove siamo.
       passi:
@@ -513,8 +512,8 @@ voci:
         - "Progresso in AUDIT_ARCHITETTURA_NOTE.md · Cap. 00 · A-035."
         - "Un punto alla volta; no P0–P3 finché non §23; no fix senza
           «vai» (D-100 invite; D-102 purge auto)."
-        - "Job: D-101 single-instance; D-102 purge+blob auto; D-103
-          no worker ora. Bak health = O-01…O-05 (P17)."
+        - "GTM-01 (D-104): non ora — dopo punti principali; demo sotto
+          stress prima del lancio email. Bak health = O-01…O-05."
       errori_comuni:
         - problema: "Inizio a patchare i media pubblici subito"
           soluzione: >

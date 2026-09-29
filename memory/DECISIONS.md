@@ -1604,4 +1604,17 @@ Registro di tutte le decisioni di business e tecniche prese durante il progetto.
 - **Implementazione**: ❌ codice ⏳ (lease minimo opzionale post-audit; worker TBD).
 - **Stato**: ✅ **DECISIONE OPERATIVA REGISTRATA** (docs 29-Set-2026) · codice ⏳
 
+### D-104 — Checkpoint GTM-01 Demo Readiness prima del lancio email · 29-Set-2026
+- **Data**: 29 Settembre 2026
+- **Contesto**: Outreach previsto ~5000 email. Founder: non = 5000 concurrent; rischio = prime ~20 persone in demo contemporanea + percorso prodotto rotto. Audit tecnico continua; serve fase dedicata **dopo** i punti principali.
+- **Decisione**:
+  1. Aggiungere blocco **GTM-01 — Demo Readiness / capacità di sostenere il primo afflusso commerciale**.
+  2. **Quando**: dopo completamento audit tecnico principale — **non** aspettare la fine di ogni §27 se i punti principali sono chiusi; **non** analizzare GTM-01 ora (in attesa feedback P17 / continuum §17…).
+  3. **Non** dimensionare per 5000 utenti contemporanei; verificare picco (2 / 50 / 200 richieste; ~20 concurrent su funzioni chiave) + processo commerciale + lead non persi.
+  4. Prima delle 5000 email: **demo sotto stress** sul percorso reale prospect (agenzia→admin→agente→immobili→foto→docs→cliente→richiesta→matching→pubblicazione→sessioni…).
+  5. Capacità tecnica **e** qualità demo (UI rotta, 500, leak tenant, invite/password D-100, scaffold, upload, job).
+  6. I 5000 destinatari sono motivo sufficiente per questa verifica **prima** del lancio — non aspettare 200 clienti.
+- **Implementazione**: ❌ analisi GTM-01 ⏳ post-audit tecnico · codice/fix solo con «vai».
+- **Stato**: ✅ **DECISIONE DI PIANO REGISTRATA** (docs 29-Set-2026) · blocco GTM-01 aperto
+
 

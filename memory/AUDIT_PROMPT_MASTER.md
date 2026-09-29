@@ -98,13 +98,16 @@ In altre parole:
 | P14 GDPR / privacy | **§13** | **ACQUISITO** · **D-099** · G-* |
 | P15 Concorrenza / race | **§14** | **ACQUISITO** · **RC-*** · **D-100** · **D-101** |
 | P16 Jobs deepen | **§15** | **ACQUISITO** · **JA-*** · **D-102** · **D-103** |
-| P17 Osservabilità | **§16** | Consegnato · **O-*** |
+| P17 Osservabilità | **§16** | Consegnato · **O-*** · ⏳ feedback |
 | — | **§6 Cestino** | Parziale P5 + coperto in P12 |
 | — | **§17–§27** | Non avviati · prossimo tipico §17 API/FE |
+| **GTM-01** Demo Readiness | **post-audit** | ⬜ registrato · **D-104** · dopo punti principali · prima ~5000 email |
 
 **Regola numerazione**: mantenere il continuum di sessione; documentare la corrispondenza qui / in `AUDIT_ARCHITETTURA_NOTE.md` — non riallineare artificialmente i numeri.
 
-Decisioni di dominio già registrate (codice ⏳): **D-094** … **D-103**.
+Decisioni di dominio già registrate (codice ⏳): **D-094** … **D-104**.
+
+> **GTM-01** non è un § del master 1–27: è un checkpoint commerciale/ops **dopo** l’audit tecnico principale (vedi `AUDIT_ARCHITETTURA_NOTE.md` · **D-104**).
 
 ---
 

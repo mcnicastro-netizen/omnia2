@@ -1183,7 +1183,7 @@ Concordo sul nucleo. Temperatura: «OS agenzia» è **nord**, non claim immediat
 
 ## 🟡 A-035 — Audit architettura SaaS (prompt master §1–§27)
 
-**Data inserimento**: 25-Sep-2026 · **agg.** 29-Sep-2026 (P16 acquisito · **D-102** · **D-103** · P17 Osservabilità)  
+**Data inserimento**: 25-Sep-2026 · **agg.** 29-Sep-2026 (P17 ⏳ feedback · **D-104** / **GTM-01** registrato)  
 **Prompt master**: `memory/AUDIT_PROMPT_MASTER.md`  
 **Stato**: 🟠 **in corso** · numerazione **sessione** · **NON implementare** · **NO P0–P3** · **listino fermo**
 
@@ -1194,7 +1194,8 @@ Concordo sul nucleo. Temperatura: «OS agenzia» è **nord**, non claim immediat
 - P14: **ACQUISITO** + **D-099** — Founders GDPR assistito; fascicolo AuthZ prima bak; G-* aperti
 - P15: **ACQUISITO** — RC-*; invite → **D-100**; job auto → **D-101** single-instance; tier RC 🔴/🟠/🟢
 - P16: **ACQUISITO** — **D-102** purge+blob auto ora; **D-103** no worker ora; JA-02/JA-03 in registro; **D-101** confermata
-- P17: **consegnato** — Osservabilità **O-01…O-15**; bak senza stato/alert operativo
+- P17: **consegnato** — Osservabilità **O-01…O-15**; bak senza stato/alert operativo · ⏳ feedback
+- **GTM-01**: **registrato** (**D-104**) — dopo audit tecnico · prima ~5000 email · vedi **A-036**
 
 ### Cluster finding da non dimenticare
 - **Media authorization** = P3.1 + P4.1 + M-01 → **D-095** · **G-02**
@@ -1207,6 +1208,7 @@ Concordo sul nucleo. Temperatura: «OS agenzia» è **nord**, non claim immediat
 - **Concorrenza / race** = **RC-*** · invite → **D-100**
 - **Jobs deepen** = **JA-*** · J-* · **D-101**…**D-103** · **JA-02**/JA-03 registro
 - **Osservabilità** = **O-*** (bak health, job heartbeat, ops_alerts gap)
+- **GTM / Demo Readiness** = **GTM-01** · **D-104** · **A-036**
 - **Costo infra massimo / bak** = C-* · B-01 · listino fermo
 - **P4.2–P4.7** auth · Attività lifecycle aperto
 
@@ -1215,7 +1217,35 @@ Concordo sul nucleo. Temperatura: «OS agenzia» è **nord**, non claim immediat
 
 ### Prossimo tipico
 - Feedback P17 → tipicamente **API e frontend** (master §17)
+- Dopo punti principali audit → **GTM-01** (A-036) · prima delle ~5000 email
 - «vai» di **implementazione** = distinto (fix: **D-100**; job: **D-102** purge auto)
+
+---
+
+## 🟡 A-036 — GTM-01 Demo Readiness / primo afflusso commerciale · D-104
+
+**Data inserimento**: 29-Sep-2026  
+**Decisione**: **D-104**  
+**Stato**: ⬜ **registrato** · **NON analizzare ora** · dopo audit tecnico principale (A-035 punti principali) · **prima** del lancio ~5000 email
+
+### Perché
+~5000 email outreach ≠ 5000 utenti contemporanei. Rischio reale: demo ok in 1:1, poi ~20 concurrent / percorso prodotto rotto = brutta figura commerciale.
+
+### Quattro domande (checkpoint)
+1. **2** richieste demo → deve funzionare tutto  
+2. **50** → OMNIA + processo commerciale gestiscono  
+3. **200** → non obbligo 200 demo; evitare rottura / lead persi  
+4. **Clienti paganti** → tenant, utenti, dati, storage, bak, sicurezza, billing, supporto pronti
+
+### Pratica
+**Demo sotto stress** sul percorso prospect reale (agenzia→…→matching→pubblicazione→sessioni), non solo load test da laboratorio.  
+Tecnica **e** qualità (UI, 500, tenant leak, D-100 invite, scaffold, upload, job).
+
+### Dove
+`AUDIT_ARCHITETTURA_NOTE.md` § GTM-01 · Cap. 00 · `AUDIT_PROMPT_MASTER.md` mappa
+
+### Non fare ora
+Niente analisi GTM-01 · niente fix · continua audit (feedback P17 → §17…)
 
 ---
 
