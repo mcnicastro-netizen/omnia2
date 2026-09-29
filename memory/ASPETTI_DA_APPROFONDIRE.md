@@ -1183,7 +1183,7 @@ Concordo sul nucleo. Temperatura: «OS agenzia» è **nord**, non claim immediat
 
 ## 🟡 A-035 — Audit architettura SaaS (prompt master §1–§27)
 
-**Data inserimento**: 25-Sep-2026 · **agg.** 29-Sep-2026 (P15 acquisito · **D-100** · **D-101** · P16 Jobs)  
+**Data inserimento**: 25-Sep-2026 · **agg.** 29-Sep-2026 (P16 acquisito · **D-102** · **D-103** · P17 Osservabilità)  
 **Prompt master**: `memory/AUDIT_PROMPT_MASTER.md`  
 **Stato**: 🟠 **in corso** · numerazione **sessione** · **NON implementare** · **NO P0–P3** · **listino fermo**
 
@@ -1193,27 +1193,29 @@ Concordo sul nucleo. Temperatura: «OS agenzia» è **nord**, non claim immediat
 - P13: **ACQUISITO** + **D-098** — orphan path→delete (WHEN col bak); agency V1 controllata; lifecycle unica; RET-* aperti
 - P14: **ACQUISITO** + **D-099** — Founders GDPR assistito; fascicolo AuthZ prima bak; G-* aperti
 - P15: **ACQUISITO** — RC-*; invite → **D-100**; job auto → **D-101** single-instance; tier RC 🔴/🟠/🟢
-- P16: **consegnato** — deepen jobs (JA-01…JA-07); J-* aperti; fragile anche 1 istanza (HTTP↔sched, purge, D-094)
+- P16: **ACQUISITO** — **D-102** purge+blob auto ora; **D-103** no worker ora; JA-02/JA-03 in registro; **D-101** confermata
+- P17: **consegnato** — Osservabilità **O-01…O-15**; bak senza stato/alert operativo
 
 ### Cluster finding da non dimenticare
 - **Media authorization** = P3.1 + P4.1 + M-01 → **D-095** · **G-02**
-- **Mongo ⟷ blob lifecycle** = M-02…M-04 + L-05/L-06 → **D-095** · **T-02** · **RET-02**
+- **Mongo ⟷ blob lifecycle** = M-02…M-04 + L-05/L-06 → **D-095** · **T-02** · **RET-02** · **D-102**
 - **Proiezioni/jobs vs D-094** = E-01…E-07 · J-01…J-04 · **T-03** · **RC-03** · **JA-05**
 - **Disaster recovery incompleto** = B-* · R-* → **D-096**
 - **Cestino vs Backup** = BC-* / T-* → **D-097**
 - **Retention incompleta** = **RET-***
 - **GDPR / privacy** = **G-*** (erase ≠ CRM wipe · no DPA · no DSAR export · fascicolo/media)
 - **Concorrenza / race** = **RC-*** · invite → **D-100**
-- **Jobs deepen** = **JA-*** · J-* · **D-101** single-instance
+- **Jobs deepen** = **JA-*** · J-* · **D-101**…**D-103** · **JA-02**/JA-03 registro
+- **Osservabilità** = **O-*** (bak health, job heartbeat, ops_alerts gap)
 - **Costo infra massimo / bak** = C-* · B-01 · listino fermo
 - **P4.2–P4.7** auth · Attività lifecycle aperto
 
 ### Dove
-`memory/AUDIT_ARCHITETTURA_NOTE.md` · Cap. 00 · HAL `api.retention-cancellazione`
+`memory/AUDIT_ARCHITETTURA_NOTE.md` · Cap. 00 · HAL `api.retention-cancellazione` · `api.jobs-async` · `api.audit-architettura-stato`
 
 ### Prossimo tipico
-- Feedback P16 → tipicamente **osservabilità** (master §16)
-- «vai» di **implementazione** = distinto (fix codice: **D-100** tra i primi)
+- Feedback P17 → tipicamente **API e frontend** (master §17)
+- «vai» di **implementazione** = distinto (fix: **D-100**; job: **D-102** purge auto)
 
 ---
 

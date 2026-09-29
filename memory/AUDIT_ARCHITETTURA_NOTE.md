@@ -6,7 +6,7 @@
 > **Numerazione = continuum di sessione** (non forzare allineamento al master).  
 > Prompt master: `memory/AUDIT_PROMPT_MASTER.md` (§1–§27) — corrispondenza in tabella sotto.
 
-**Ultimo aggiornamento**: 29-Set-2026 · **P15 acquisito** (**D-100** · **D-101**) · **P16 Jobs approfondito**
+**Ultimo aggiornamento**: 29-Set-2026 · **P16 acquisito** (**D-102** · **D-103**) · **P17 Osservabilità**
 
 ---
 
@@ -29,11 +29,12 @@
 | P13 | Retention | §12 | 🟠 **ACQUISITO** · **D-098** · RET-* |
 | P14 | GDPR / privacy | §13 | 🟠 **ACQUISITO** · **D-099** · G-* |
 | P15 | Concorrenza / race | §14 | 🟠 **ACQUISITO** · **RC-*** · invite → **D-100** · jobs → **D-101** |
-| P16 | Job asincroni (approfondimento) | §15 | 🟠 Consegnato · **JA-*** · **D-101** · J-* aperti |
+| P16 | Job asincroni (approfondimento) | §15 | 🟠 **ACQUISITO** · **JA-*** · **D-102** · **D-103** |
+| P17 | Osservabilità | §16 | 🟠 Consegnato · **O-*** |
 | — | Cestino (blocco dedicato) | §6 | 🟡 coperto in P5 + P12 |
-| — | Osservabilità… | §16–§27 | ⬜ prossimo tipico |
+| — | API/FE… | §17–§27 | ⬜ prossimo tipico |
 
-Decisioni dominio (codice ⏳): **D-094** … **D-101**.
+Decisioni dominio (codice ⏳): **D-094** … **D-103**.
 
 ---
 
@@ -49,9 +50,10 @@ Decisioni dominio (codice ⏳): **D-094** … **D-101**.
 8. **Cestino ≠ Backup** = BC-* / T-* → **D-097** (copy + trash-in-bak)  
 9. **Retention incompleta** = RET-* (orphan ∞ · no offboarding · copy da allineare)  
 10. **GDPR / privacy** = **G-*** (erase ≠ wipe · fascicolo/media · DPA · no DSAR export)  
-11. **Trusted path / APScheduler** = aperti; **D-101** single-instance; JA-* approfondiscono; orchestrazione purge/worker ancora aperta  
+11. **Trusted path / APScheduler** = **D-101** single-instance · **D-102** purge+blob da automatizzare · **D-103** no worker ora  
 12. **Concorrenza / race** = **RC-*** · invite → **D-100**  
-13. **Jobs deepen** = **JA-*** · J-* · **D-101**
+13. **Jobs deepen** = **JA-*** · J-* · **JA-02**/JA-03 in registro finale  
+14. **Osservabilità** = **O-*** (bak/job health, alert, Founder Ops)
 
 ---
 
@@ -1179,9 +1181,119 @@ Multi-pod = **critico solo allora** per anti-duplicato condiviso; RC restano ape
 
 **Overlap intervallo**: APSched `max_instances=1`+`coalesce=True` evita overlap *stesso job stesso processo*. Sync retry sleep max ~36 min su cron giornaliero → OK. Saved-search `*/5` coalesce salta tick persi. Critico resta **secondo trigger HTTP** mentre il job gira.
 
+### Domande aperte (max 2) — **RISOLTE** Founder
+
+1. **K-JA-01 → SÌ schedulare ora** — purge + blob cleanup nel ciclo automatico (→ **D-102**). Non aspettare il worker.  
+2. **K-JA-02 → NO worker dedicato ora** — resta **D-101** (1 replica → APScheduler). Eventuale anti-duplicato minimo stesso-giorno OK; worker quando il deploy lo richiede (→ **D-103**).
+
+### Decisioni Founder su P16 — **ACQUISITO** → **D-102** · **D-103**
+
+#### 1. Purge + blob: automatizzare ora — **D-102**
+
+> Non lasciare una pulizia necessaria senza un processo automatico.
+
+Convergenza graduale: **Cestino → purge → cleanup orphan** nel ciclo automatico OMNIA.  
+Allinea **D-098** (orphan → path a delete). Non richiede sistema sofisticato subito — richiede che purge non resti solo HTTP (`cron.py:37-42`).
+
+#### 2. Lease vs worker — **D-103** (conferma D-101)
+
+**Non** introdurre worker dedicato solo per P16.  
+Eventuale meccanismo minimo anti doppia esecuzione stesso giorno (job delicati) — non infrastruttura da 1000 agenzie.  
+Worker = decisione quando l’architettura di deployment lo richiederà.
+
+#### 3. Evidenze da registro
+
+| ID | Nota Founder |
+|----|----------------|
+| **JA-02** | Più importante di quanto sembri: email **prima** del mark → mid-crash = possibile re-email. Tenere nel registro finale. |
+| **JA-03** | Nessun ledger/DLQ/checkpoint — registro finale. |
+| **D-101** | Confermata: risolve il problema principale della fase attuale, non pretendere di risolvere l’architettura futura. |
+| **D-100** | Resta fix-needed. |
+
+**Niente fix. Nessuna severità P0–P3. Listino fermo.**
+
+### Prossimo
+
+→ **Punto 17** Osservabilità (sotto). Particolarmente rilevante per Bak/Restore: non basta che il bak parta — sapere se è riuscito, incompleto, se serve intervento.
+
+---
+
+## Punto 17 — Osservabilità · consegnato 29-Set (master §16)
+
+**Tipo**: audit read-only · **nessun fix** · **no P0–P3**.  
+**Focus Founder**: Backup/Restore — sapere se bak riuscito / incompleto / serve intervento.
+
+### Verdetto
+
+Esiste un **nucleo utile** (health/readiness, Sentry opzionale + webhook/email, `ops_alerts` → Founder Ops, sync logs per-connection, MANIFEST filesystem).  
+**Non** esiste un controllo operativo chiaro su successo/fallimento backup, né heartbeat dei job APScheduler, né Prometheus/OTel, né alert unificati per i job schedulati.  
+Per Bak/Restore: oggi si sa che *qualcosa* ha scritto file e log; **non** si sa in UI/API/alert se l’ultimo bak è OK, parziale o fallito e se qualcuno deve intervenire.
+
+### Inventario (cosa c’è)
+
+| Area | Stato | Evidenza |
+|------|-------|----------|
+| Logging | stdlib testo piano; no JSON/request-id | `server.py:44-48` |
+| Sentry + webhook/email | opzionale; init fail-soft; rate-limit | `shared/monitoring/alerts.py` · env `SENTRY_*` / `ERROR_ALERT_*` |
+| `AlertLoggingHandler` | **definito, non installato** sul root logger | `alerts.py:143-159` |
+| Exception HTTP → `notify_error` | sì | `server.py` global handler |
+| `ops_alerts` Mongo | sì; UI Founder Ops ultimi 20; **no ack API** | `ops_alerts.py:16-40` · `founder_ops.py:398-426` |
+| Chi chiama `ops_alerts` | HAL Agents/Legal, Stripe — **non** bak/sync/sched | grep chiamanti |
+| Health | `GET /api/health` ping Mongo ma **sempre 200**; circuits snapshot | `server.py:191-211` |
+| Readiness | checklist go-live incl. `monitoring_configured` | `server.py:214-251` |
+| Sub-health | `/api/app/health` ecc. spesso **senza** DB | `immoweb/routes.py:48` |
+| Backup status | solo `MANIFEST.json` + `logger.info`; tick swallowa → WARNING | `backup_job.py:38-93` · `sync_engine.py:300-306` |
+| Sync portal | `publishing_sync_logs` + API per-connection | `sync_engine.py:67-92` · `publishing.py` |
+| Job heartbeat / last_run | **assente** | — |
+| Metrics RED/USE / `/metrics` | **assente** (no Prom/OTel) | — |
+| Restore da bak | **assente** (restore = solo Cestino) | D-096 ⏳ |
+| Founder Ops UI | COGS + ops_alerts LLM/Stripe; **no** bak/job panel | `FounderOpsPage.jsx` |
+| Storage cliente | `GET /storage/usage` quota agenzia | D-085 |
+| Disk bak / integrità | **assente** in ops | — |
+| Audit prodotto | disperso (`privacy_audit`, `al_audit`, …) | Cap.18 note |
+| Audit ops (chi ha lanciato cron/bak) | **assente** | — |
+
+### Cosa serve per Bak (e oggi manca)
+
+| Bisogno | Oggi |
+|---------|------|
+| Esito ultimo bak (ok / partial / fail) queryable | Solo filesystem MANIFEST + stdout |
+| Alert se job non gira o fallisce | Assente (`ops_alerts` non usato; tick cattura e fa WARNING — niente Sentry/`notify_error`) |
+| Incomplete vs ok (collection vs media) | Nel report in-memory/MANIFEST sì; **nessun surfacing** |
+| “Needs intervention” + ack | Nessuno stato operativo; `acked` in schema senza endpoint |
+| Heartbeat 03:15 vivo | Nessun `last_run` in DB |
+| Restore status | Restore bak assente (D-096) |
+
+### Finding O-xx
+
+| ID | Tipo | Problema | Link | Evidenza |
+|----|------|----------|------|----------|
+| **O-01** | gap | Bak: nessun stato persistito/API/alert oltre MANIFEST+log → impossibile sapere successo/incomplete/intervento | B-* · JA-03 · focus Founder | `backup_job.py:38-93` |
+| **O-02** | rischio | `_daily_backup_tick` swallowa errori → solo WARNING; niente Sentry/`ops_alerts` | JA-01 area | `sync_engine.py:300-306` |
+| **O-03** | gap | Nessun restore da backup; “restore” = solo Cestino | D-096 · R-* | note P11 |
+| **O-04** | gap* | Purge trash solo HTTP — **D-102** da automatizzare (non solo osservabilità) | JA-04 · J-03 · D-098 | `cron.py:37-42` |
+| **O-05** | gap | Nessun heartbeat / `last_run` / `last_error` dei 4 job APScheduler | JA-03 · J-05 | `sync_engine.py:274-337` |
+| **O-06** | drift | `AlertLoggingHandler` definito ma non wired al root logger | monitoring | `alerts.py:143-159` |
+| **O-07** | gap | Nessun Prometheus / OTel / `/metrics` | master §16 | — |
+| **O-08** | gap | `ops_alerts.acked` senza endpoint ack; UI read-only | Founder Ops | `founder_ops.py:403-424` |
+| **O-09** | gap | `ops_alerts` non copre bak / sync massiva / scheduler / disk | O-01 · O-02 | `ops_alerts.py` chiamanti |
+| **O-10** | oss. | Health globale non degrada HTTP su DB error (sempre 200; `db: error` nel body) | readiness vs liveness | `server.py:191-211` |
+| **O-11** | oss. | `/api/app/health` non pinga Mongo (falso “verde” di processo) | — | `immoweb/routes.py:48` |
+| **O-12** | drift | `BACKUP_ROOT` / `BACKUP_RETENTION_DAYS` assenti da `.env.example` | B-* | `.env.example` vs `backup_job.py` |
+| **O-13** | gap | Founder Ops = COGS/LLM/Stripe, non job/bak/storage infra | O-01 · O-05 | `FounderOpsPage.jsx` |
+| **O-14** | gap | Logging non strutturato; no correlazione request-id | — | `server.py:44-48` |
+| **O-15** | gap | Sync portal: log per-connection OK; manca alert aggregato “N sync failed today” | J-* · publishing | `publishing_sync_logs` |
+
+\*O-04 è gap di **orchestrazione** (D-102), citato qui perché senza job automatico non c’è neanche osservabilità del purge.
+
+### Priorità tipiche (no P0–P3; guida post-audit)
+
+Per Bak/Restore (come da Founder): **O-01 → O-02 → O-05 → O-09/O-13** prima di Prom/OTel (O-07) o structured log (O-14).  
+**D-102** (purge auto) è implementazione job, non solo osservabilità — ma abilita di misurarlo.
+
 ### Domande aperte (max 2)
 
-1. **K-JA-01** — Purge+blob: dato single-replica accettato, schedulare **ora** in APScheduler (stesso processo del bak), o tenere orchestrazione aperta fino al worker (P8/D-096)?  
-2. **K-JA-02** — Prima del multi-pod: anti-duplicato minimo (lease Mongo su `job_id`+giorno) riusabile dal futuro worker, o estrarre worker dedicato come primo passo?
+1. **K-O-01** — Superficie minima Bak health per Founder Ops: solo “ultimo run ok/partial/fail + alert su fail”, o anche footprint disco / retention / lista giorni MANIFEST?  
+2. **K-O-02** — Alert bak fallito: riusare `ops_alerts` + canale `ERROR_ALERT_*` esistenti, o canale dedicato (es. email/webhook “backup”)?
 
 **Niente fix. Nessuna severità P0–P3. Listino fermo.**

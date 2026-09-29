@@ -97,13 +97,14 @@ In altre parole:
 | P13 Retention | **§12** | **ACQUISITO** · **D-098** · RET-* |
 | P14 GDPR / privacy | **§13** | **ACQUISITO** · **D-099** · G-* |
 | P15 Concorrenza / race | **§14** | **ACQUISITO** · **RC-*** · **D-100** · **D-101** |
-| P16 Jobs deepen | **§15** | Consegnato · **JA-*** · J-* aperti · **D-101** |
+| P16 Jobs deepen | **§15** | **ACQUISITO** · **JA-*** · **D-102** · **D-103** |
+| P17 Osservabilità | **§16** | Consegnato · **O-*** |
 | — | **§6 Cestino** | Parziale P5 + coperto in P12 |
-| — | **§16–§27** | Non avviati · prossimo tipico §16 osservabilità |
+| — | **§17–§27** | Non avviati · prossimo tipico §17 API/FE |
 
 **Regola numerazione**: mantenere il continuum di sessione; documentare la corrispondenza qui / in `AUDIT_ARCHITETTURA_NOTE.md` — non riallineare artificialmente i numeri.
 
-Decisioni di dominio già registrate (codice ⏳): **D-094** … **D-101**.
+Decisioni di dominio già registrate (codice ⏳): **D-094** … **D-103**.
 
 ---
 

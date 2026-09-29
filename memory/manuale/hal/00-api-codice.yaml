@@ -502,19 +502,19 @@ voci:
     contenuto:
       a_cosa_serve: >
         Prompt master AUDIT_PROMPT_MASTER.md (§1–§27). Numerazione
-        sessione (P1…P16). P15 acquisito + D-100/D-101; P16 Jobs
-        deepen (JA-*) consegnato. D-094…D-101 dominio, codice ⏳.
-        Listino fermo. Finding in note + A-035. Prossimo tipico §16
-        osservabilità.
+        sessione (P1…P17). P16 acquisito + D-102/D-103; P17
+        Osservabilità (O-*) consegnato. D-094…D-103 dominio, codice ⏳.
+        Listino fermo. Finding in note + A-035. Prossimo tipico §17
+        API/FE.
       quando_si_usa: >
         Ripresa audit, metodo, priorità, dove siamo.
       passi:
         - "Rileggi AUDIT_PROMPT_MASTER.md e la mappa sessione↔master."
         - "Progresso in AUDIT_ARCHITETTURA_NOTE.md · Cap. 00 · A-035."
         - "Un punto alla volta; no P0–P3 finché non §23; no fix senza
-          «vai» implementazione (D-100 tra i primi fix)."
-        - "Job automatici: D-101 single-instance ora; worker poi.
-          Listino fermo finché Bak+Restore disegnati."
+          «vai» (D-100 invite; D-102 purge auto)."
+        - "Job: D-101 single-instance; D-102 purge+blob auto; D-103
+          no worker ora. Bak health = O-01…O-05 (P17)."
       errori_comuni:
         - problema: "Inizio a patchare i media pubblici subito"
           soluzione: >
@@ -598,26 +598,28 @@ voci:
     domanda_naturale: "Come funzionano i job notturni? Il cestino viene svuotato automaticamente?"
     contenuto:
       a_cosa_serve: >
-        Audit P8 + P16 deepen: APScheduler in-process + cron HTTP
-        super_admin. **D-101**: una sola istanza per job automatici
-        finché non c’è worker (non lock multi-pod ora). Purge trash
-        NON in APScheduler (JA-04/J-03). Sync/match senza
-        with_not_trashed (JA-05). Finding JA-01…JA-07 + J-*.
+        Audit P8 + P16 ACQUISITO + P17 Osservabilità. APScheduler
+        in-process + cron HTTP. **D-101** single-instance; **D-102**
+        purge+blob da automatizzare (oggi ancora solo HTTP);
+        **D-103** no worker dedicato ora. Bak senza stato ops (O-01).
+        Finding JA-* · J-* · O-*.
       quando_si_usa: >
         Domande su cron, backup, matching notturno, purge cestino.
       passi:
         - "4 job APSched (bak/sync/match/saved-search) + HTTP cron
           parallelo senza lock → overlap HTTP↔sched anche a 1 istanza
           (JA-01)."
-        - "Finding J-01…J-12 e JA-01…JA-07 aperti — no fix senza vai."
-        - "D-101 ops: single-replica per job auto; worker/lease poi."
-        - "D-094/D-095: job non ancora allineati (trash, blob cleanup)."
+        - "Finding J-* / JA-* / O-* aperti — no fix senza vai."
+        - "D-101 ops single-replica; D-102 schedulare purge+orphan;
+          D-103 no worker ora (eventuale anti-dup minimo)."
+        - "Bak health: MANIFEST+log only (O-01); tick swallowa (O-02);
+          no last_run (O-05)."
       errori_comuni:
         - problema: "Il cestino non si svuota da solo dopo 30 giorni"
           soluzione: >
-            Corretto oggi (J-03/JA-04): serve POST /cron/trash/purge da
-            cron esterno o manuale. Single-instance non crea il job
-            mancante — orchestrazione ancora aperta.
+            Corretto oggi (J-03/JA-04): serve POST /cron/trash/purge.
+            Decisione D-102: va schedulato nel ciclo automatico
+            (codice ⏳ post-«vai»).
       permessi:
         - super_admin / Founder
       screenshot: []

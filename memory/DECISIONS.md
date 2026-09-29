@@ -1580,6 +1580,28 @@ Registro di tutte le decisioni di business e tecniche prese durante il progetto.
   4. **Non definitiva**: a crescita / più istanze servirà meccanismo condiviso anti-duplicato (lease o worker).
   5. RC-08/RC-09 / JA-01 restano aperti come osservazione; **non** blocco immediato go-live single-replica.
 - **Implementazione**: ❌ codice ⏳ (deploy/ops: single replica) · worker futuro post-audit.
-- **Stato**: ✅ **DECISIONE OPERATIVA REGISTRATA** (docs 29-Set-2026) · codice/worker ⏳
+- **Stato**: ✅ **DECISIONE OPERATIVA REGISTRATA** (docs 29-Set-2026) · **confermata** in acquisizione P16 · codice/worker ⏳
+
+### D-102 — Purge cestino + cleanup orphan: automatizzare nel ciclo job · 29-Set-2026
+- **Data**: 29 Settembre 2026
+- **Contesto**: Audit P16 (K-JA-01). Oggi `POST /cron/trash/purge` è solo HTTP (J-03 / JA-04). D-098: orphan deve avere percorso a cancellazione definitiva.
+- **Decisione**:
+  1. **Sì**, schedulare purge (+ percorso cleanup blob/orphan) **ora**, senza aspettare il worker futuro.
+  2. Convergenza graduale: **Cestino → purge → cleanup file orphan** nel ciclo automatico OMNIA (APScheduler, stessa istanza D-101).
+  3. Non richiede subito un sistema sofisticato: richiede che una pulizia necessaria **non** resti senza processo automatico.
+  4. Allinea D-098 (WHEN col bak) e D-095 (blob lifecycle).
+- **Implementazione**: ❌ codice ⏳ — post-audit / «vai» (job + eventuale osservabilità O-*).
+- **Stato**: ✅ **DECISIONE DI DOMINIO REGISTRATA** (docs 29-Set-2026) · codice ⏳
+
+### D-103 — No worker dedicato ora; eventuale anti-duplicato minimo · 29-Set-2026
+- **Data**: 29 Settembre 2026
+- **Contesto**: Audit P16 (K-JA-02). Coerente con D-101.
+- **Decisione**:
+  1. **Non** introdurre worker dedicato solo per chiudere P16 / multi-pod prematuro.
+  2. Resta: **1 replica → APScheduler**.
+  3. Eventuale meccanismo **minimo** per evitare doppia esecuzione dello stesso job nello stesso giorno (job delicati, es. bak) — non infrastruttura da 1000 agenzie.
+  4. Worker dedicato = decisione quando l’architettura di **deployment** lo richiederà.
+- **Implementazione**: ❌ codice ⏳ (lease minimo opzionale post-audit; worker TBD).
+- **Stato**: ✅ **DECISIONE OPERATIVA REGISTRATA** (docs 29-Set-2026) · codice ⏳
 
 

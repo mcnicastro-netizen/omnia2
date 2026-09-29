@@ -1,5 +1,17 @@
 # OMNIA — Changelog
 
+## 2026-09-29 — Audit P16 acquisito · D-102 · D-103 · P17 Osservabilità
+
+**Tipo**: Docs / SoT audit · **nessun fix codice** · **listino fermo**.
+
+- **P16 ACQUISITO**: **D-101** confermata; purge+blob → **D-102** automatizzare ora; **D-103** no worker dedicato ora (eventuale anti-dup minimo)
+- **JA-02** / **JA-03** evidenziati per registro finale (email-before-mark; no ledger)
+- **D-100** resta fix-needed
+- **P17 Osservabilità** (master §16): finding **O-01…O-15**; bak senza stato/alert operativo; focus “riuscito / incompleto / intervento”
+- Cap.00 · A-035 · HAL · NEXT_SESSION → tipicamente §17 API/FE
+
+---
+
 ## 2026-09-29 — Audit P15 acquisito · D-100 · D-101 · P16 Jobs approfondimento
 
 **Tipo**: Docs / SoT audit · **nessun fix codice** · **listino fermo**.
