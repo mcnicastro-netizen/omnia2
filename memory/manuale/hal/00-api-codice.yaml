@@ -598,25 +598,26 @@ voci:
     domanda_naturale: "Come funzionano i job notturni? Il cestino viene svuotato automaticamente?"
     contenuto:
       a_cosa_serve: >
-        Audit P8 ACQUISITO: APScheduler in-process + cron HTTP
-        super_admin = trusted paths. Purge trash NON automatico.
-        Sync/match senza with_not_trashed. Decisione aperta: purge+blob
-        automatici/osservabili (dove gira: TBD dopo backup/deploy).
+        Audit P8 + P16 deepen: APScheduler in-process + cron HTTP
+        super_admin. **D-101**: una sola istanza per job automatici
+        finché non c’è worker (non lock multi-pod ora). Purge trash
+        NON in APScheduler (JA-04/J-03). Sync/match senza
+        with_not_trashed (JA-05). Finding JA-01…JA-07 + J-*.
       quando_si_usa: >
         Domande su cron, backup, matching notturno, purge cestino.
       passi:
-        - "Trusted = process o JWT super_admin; scope agency per item
-          necessario ma non sufficiente — tenant context da approfondire."
-        - "Finding J-01…J-12 aperti — no fix senza vai."
-        - "APScheduler nel processo API: area da verificare in
-          affidabilità/deployment (non finding ancora)."
+        - "4 job APSched (bak/sync/match/saved-search) + HTTP cron
+          parallelo senza lock → overlap HTTP↔sched anche a 1 istanza
+          (JA-01)."
+        - "Finding J-01…J-12 e JA-01…JA-07 aperti — no fix senza vai."
+        - "D-101 ops: single-replica per job auto; worker/lease poi."
         - "D-094/D-095: job non ancora allineati (trash, blob cleanup)."
       errori_comuni:
         - problema: "Il cestino non si svuota da solo dopo 30 giorni"
           soluzione: >
-            Corretto oggi (J-03): serve POST /cron/trash/purge da
-            cron esterno o manuale. Deve diventare automatico/osservabile
-            — orchestrazione ancora aperta.
+            Corretto oggi (J-03/JA-04): serve POST /cron/trash/purge da
+            cron esterno o manuale. Single-instance non crea il job
+            mancante — orchestrazione ancora aperta.
       permessi:
         - super_admin / Founder
       screenshot: []
