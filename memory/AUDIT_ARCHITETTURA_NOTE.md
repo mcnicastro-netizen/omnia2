@@ -6,7 +6,7 @@
 > **Numerazione = continuum di sessione** (non forzare allineamento al master).  
 > Prompt master: `memory/AUDIT_PROMPT_MASTER.md` (§1–§27) — corrispondenza in tabella sotto.
 
-**Ultimo aggiornamento**: 29-Set-2026 · **P15 acquisito** (single-instance jobs · invite D-100) · **P16 Jobs approfondito**
+**Ultimo aggiornamento**: 29-Set-2026 · **P15 acquisito** (**D-100** · **D-101**) · **P16 Jobs approfondito**
 
 ---
 
@@ -28,12 +28,12 @@
 | P12 | Backup vs Cestino | §11 | 🟠 **ACQUISITO** · **D-097** · BC-* / T-* |
 | P13 | Retention | §12 | 🟠 **ACQUISITO** · **D-098** · RET-* |
 | P14 | GDPR / privacy | §13 | 🟠 **ACQUISITO** · **D-099** · G-* |
-| P15 | Concorrenza / race | §14 | 🟠 **ACQUISITO** · **RC-*** · single-instance jobs · invite → **D-100** |
-| P16 | Job asincroni (approfondimento) | §15 | 🟠 Consegnato · **JA-*** · J-* ancora aperti |
+| P15 | Concorrenza / race | §14 | 🟠 **ACQUISITO** · **RC-*** · invite → **D-100** · jobs → **D-101** |
+| P16 | Job asincroni (approfondimento) | §15 | 🟠 Consegnato · **JA-*** · **D-101** · J-* aperti |
 | — | Cestino (blocco dedicato) | §6 | 🟡 coperto in P5 + P12 |
 | — | Osservabilità… | §16–§27 | ⬜ prossimo tipico |
 
-Decisioni dominio (codice ⏳): **D-094** … **D-100**.
+Decisioni dominio (codice ⏳): **D-094** … **D-101**.
 
 ---
 
@@ -49,9 +49,9 @@ Decisioni dominio (codice ⏳): **D-094** … **D-100**.
 8. **Cestino ≠ Backup** = BC-* / T-* → **D-097** (copy + trash-in-bak)  
 9. **Retention incompleta** = RET-* (orphan ∞ · no offboarding · copy da allineare)  
 10. **GDPR / privacy** = **G-*** (erase ≠ wipe · fascicolo/media · DPA · no DSAR export)  
-11. **Trusted path / APScheduler** = aperti; single-instance Founder (P15); JA-* approfondiscono; orchestrazione purge/worker ancora aperta  
+11. **Trusted path / APScheduler** = aperti; **D-101** single-instance; JA-* approfondiscono; orchestrazione purge/worker ancora aperta  
 12. **Concorrenza / race** = **RC-*** · invite → **D-100**  
-13. **Jobs deepen** = **JA-*** · J-* ancora aperti
+13. **Jobs deepen** = **JA-*** · J-* · **D-101**
 
 ---
 
@@ -1082,16 +1082,42 @@ Sotto uso reale (due agenti, doppio click, webhook retry, HTTP cron + APSchedule
 | **Crediti** | `credit_wallets` atomico; ledger senza unique su `ref_id`; API-key wallet distinto; Kling su `agencies.credits_balance` |
 | **Trash** | Soft-delete/restore helpers OK; purge solo HTTP (J-03); blob orphan = D-095 |
 
-### Decisioni Founder su P15 (acquisite → P16)
+### Decisioni Founder su P15 — **ACQUISITO** → **D-100** · **D-101**
 
-1. **K-RC-01 → single-instance** per job automatici **ora** (non lock distribuiti complessi). **Non finale**: multi-pod richiederà anti-duplicato condiviso. **RC restano aperti**, non blocco immediato.  
-2. **K-RC-02 → MUST change** (→ **D-100**): invite su utente esistente = link agency + accept; **mai** overwrite `password_hash`. Fix-needed (P4.2), non nice-to-have.  
-3. **Tier RC**: 🔴 password overwrite / mutazione dati inattesa; 🟠 doppio bak/sync-trash; 🟢 wallet + trash restore/purge. Non trasformare ogni RC in fix immediato.
+#### 1. Backup/sync: single-instance (non lock complessi) — **D-101**
+
+> **Una sola istanza responsabile dei job automatici**, finché non c’è un vero worker.
+
+Evita due server che eseguono lo stesso bak/sync. **Non** infrastruttura sofisticata multi-pod ora.  
+**Non definitiva**: a crescita servirà anti-duplicato condiviso.  
+RC-08/RC-09 restano aperti; **non** blocco immediato.
+
+#### 2. Invite: cambiare comportamento — **D-100** (fix-needed)
+
+**Non** mantenere overwrite password utente già registrato.
+
+| Caso | Comportamento |
+|------|----------------|
+| Utente **non** esistente | Creazione account + credenziali |
+| Utente **già** esistente | Invito/collegamento agenzia + login/accettazione · **mai** modificare password esistente |
+
+Evita che un admin agenzia cambi (anche involontariamente) le credenziali di chi ha già un account.  
+**Da correggere**, non solo miglioramento futuro (P4.2 / RC-11).
+
+#### 3. Tier RC (utile per priorità)
+
+| Tier | Esempi | Azione |
+|------|--------|--------|
+| 🔴 Da correggere | Password overwrite / mutazione dati non prevista | Fix-needed (**D-100**) |
+| 🟠 Da rendere robusti | Bak doppio, sync/match vs cestino | Aperti; single-instance mitiga parte |
+| 🟢 Già buono | Wallet atomico · restore/purge cestino | Tenere |
+
+**Non** trasformare ogni RC-01…RC-14 in fix immediato.
 
 ### Prossimo
 
-→ **Punto 16** Jobs approfondito (sotto) · tipicamente poi osservabilità (§16 master).
-**Niente fix. Nessuna severità P0–P3. Listino fermo. Bak design ancora aperto.**
+→ **Punto 16** Jobs approfondito (sotto) · tipicamente poi osservabilità (§16 master).  
+**Niente fix ora** (D-100 attende «vai»). Listino fermo.
 
 ---
 

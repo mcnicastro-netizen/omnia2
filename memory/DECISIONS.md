@@ -1570,4 +1570,16 @@ Registro di tutte le decisioni di business e tecniche prese durante il progetto.
 - **Implementazione**: ❌ codice ⏳ — post-audit / «vai» esplicito (priorità alta tra i fix).
 - **Stato**: ✅ **DECISIONE DI DOMINIO REGISTRATA** (docs 29-Set-2026) · codice ⏳
 
+### D-101 — Job automatici: single-instance operativa (non lock multi-pod) · 29-Set-2026
+- **Data**: 29 Settembre 2026
+- **Contesto**: Audit P15/P16. Founder: non risolvere bak/sync doppi con lock distribuiti complessi ora.
+- **Decisione**:
+  1. **Fase attuale**: **una sola istanza** responsabile dei job automatici (APScheduler), finché non c’è un vero worker.
+  2. Evitare due server che eseguono contemporaneamente lo stesso backup o la stessa sync.
+  3. **Non** costruire ora infrastruttura sofisticata solo per multi-pod.
+  4. **Non definitiva**: a crescita / più istanze servirà meccanismo condiviso anti-duplicato (lease o worker).
+  5. RC-08/RC-09 / JA-01 restano aperti come osservazione; **non** blocco immediato go-live single-replica.
+- **Implementazione**: ❌ codice ⏳ (deploy/ops: single replica) · worker futuro post-audit.
+- **Stato**: ✅ **DECISIONE OPERATIVA REGISTRATA** (docs 29-Set-2026) · codice/worker ⏳
+
 

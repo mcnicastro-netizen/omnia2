@@ -1183,7 +1183,7 @@ Concordo sul nucleo. Temperatura: «OS agenzia» è **nord**, non claim immediat
 
 ## 🟡 A-035 — Audit architettura SaaS (prompt master §1–§27)
 
-**Data inserimento**: 25-Sep-2026 · **agg.** 29-Sep-2026 (P15 acquisito · **D-100** · P16 Jobs)  
+**Data inserimento**: 25-Sep-2026 · **agg.** 29-Sep-2026 (P15 acquisito · **D-100** · **D-101** · P16 Jobs)  
 **Prompt master**: `memory/AUDIT_PROMPT_MASTER.md`  
 **Stato**: 🟠 **in corso** · numerazione **sessione** · **NON implementare** · **NO P0–P3** · **listino fermo**
 
@@ -1192,8 +1192,8 @@ Concordo sul nucleo. Temperatura: «OS agenzia» è **nord**, non claim immediat
 - P12: **ACQUISITO** + **D-097** — Elimina per sempre ≠ irrecuperabile assoluto; trash può restare nel bak
 - P13: **ACQUISITO** + **D-098** — orphan path→delete (WHEN col bak); agency V1 controllata; lifecycle unica; RET-* aperti
 - P14: **ACQUISITO** + **D-099** — Founders GDPR assistito; fascicolo AuthZ prima bak; G-* aperti
-- P15: **ACQUISITO** — RC-*; single-instance jobs; invite → **D-100**; tier RC 🔴/🟠/🟢
-- P16: **consegnato** — deepen jobs (JA-01…JA-07); J-* aperti; fragile anche 1 istanza
+- P15: **ACQUISITO** — RC-*; invite → **D-100**; job auto → **D-101** single-instance; tier RC 🔴/🟠/🟢
+- P16: **consegnato** — deepen jobs (JA-01…JA-07); J-* aperti; fragile anche 1 istanza (HTTP↔sched, purge, D-094)
 
 ### Cluster finding da non dimenticare
 - **Media authorization** = P3.1 + P4.1 + M-01 → **D-095** · **G-02**
@@ -1204,7 +1204,7 @@ Concordo sul nucleo. Temperatura: «OS agenzia» è **nord**, non claim immediat
 - **Retention incompleta** = **RET-***
 - **GDPR / privacy** = **G-*** (erase ≠ CRM wipe · no DPA · no DSAR export · fascicolo/media)
 - **Concorrenza / race** = **RC-*** · invite → **D-100**
-- **Jobs deepen** = **JA-*** · J-* · single-instance Founder
+- **Jobs deepen** = **JA-*** · J-* · **D-101** single-instance
 - **Costo infra massimo / bak** = C-* · B-01 · listino fermo
 - **P4.2–P4.7** auth · Attività lifecycle aperto
 

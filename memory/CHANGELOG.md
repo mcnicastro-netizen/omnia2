@@ -1,12 +1,13 @@
 # OMNIA — Changelog
 
-## 2026-09-29 — Audit P15 acquisito · D-100 · P16 Jobs approfondimento
+## 2026-09-29 — Audit P15 acquisito · D-100 · D-101 · P16 Jobs approfondimento
 
 **Tipo**: Docs / SoT audit · **nessun fix codice** · **listino fermo**.
 
-- **P15 ACQUISITO**: single-instance per job automatici (RC aperti, non blocco); invite MUST change → **D-100**; tier RC 🔴/🟠/🟢
-- **D-100**: accept invite utente esistente = link agency, **mai** overwrite `password_hash` (`invites.py:246-254`)
-- **P16 Jobs** (master §15 deepen post-P8): inventario APSched+HTTP+BackgroundTasks; finding **JA-01…JA-07**; fragile anche 1 istanza (HTTP↔sched, purge assente, D-094, mid-job); multi-pod solo dopo
+- **P15 ACQUISITO**: tier RC 🔴/🟠/🟢; invite MUST change → **D-100**; job auto → **D-101** single-instance (non lock multi-pod)
+- **D-100**: accept invite utente esistente = link agency, **mai** overwrite `password_hash` (`invites.py:246-254`) — fix-needed
+- **D-101**: una sola istanza per job automatici finché non c’è worker
+- **P16 Jobs** (master §15 deepen post-P8): finding **JA-01…JA-07**; fragile anche 1 istanza (HTTP↔sched, purge, D-094, mid-job)
 - Cap.00 · A-035 · note · NEXT_SESSION → tipicamente §16 osservabilità
 
 ---
