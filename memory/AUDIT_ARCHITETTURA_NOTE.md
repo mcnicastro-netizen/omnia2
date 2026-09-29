@@ -26,13 +26,13 @@
 | P10 | Backup | §9 | 🟠 **ACQUISITO** · B-* |
 | P11 | Restore | §10 | 🟠 **ACQUISITO** · **D-096** |
 | P12 | Backup vs Cestino | §11 | 🟠 **ACQUISITO** · **D-097** · BC-* / T-* |
-| P13 | Retention | §12 | 🟠 **ACQUISITO** Founder · RET-* · orphan→bak · agency V1 controllata |
+| P13 | Retention | §12 | 🟠 **ACQUISITO** · **D-098** · RET-* |
 | P14 | GDPR / privacy | §13 | 🟠 Consegnato (feedback) · **G-*** |
 | — | Cestino (blocco dedicato) | §6 | 🟡 coperto in P5 + P12 |
 | — | Concorrenza / race… | §14+ | ⬜ prossimo tipico |
 | — | Osservabilità → report | §16–§27 | ⬜ |
 
-Decisioni dominio (codice ⏳): **D-094**, **D-095**, **D-096**, **D-097**.
+Decisioni dominio (codice ⏳): **D-094**, **D-095**, **D-096**, **D-097**, **D-098**.
 
 ---
 
@@ -777,19 +777,54 @@ Purge cestino automatico: **solo HTTP** cron — non in APScheduler (J-03 / T-04
 
 **D-094** · **D-095** · **D-096** · **D-097** · BC-* · T-* · B-* · R-* · J-03/J-04
 
-### Feedback Founder P13 → vincoli P14
+### Domande aperte P13 — **chiuse** dal Founder → **D-098**
 
-1. **Orphan**: unreferenced file MUST avere path a cancellazione definitiva; **WHEN** = decide con design bak finale (non fissare 0/7/30 ora).  
-2. **Agency close V1** = procedura controllata (account disabled + data non-operative + retention/wipe TBD) — **non** auto-wipe aggressivo; non promettere erasure immediata completa.  
-3. Storage+bak progettati insieme; catena lifecycle created→…→final delete; **RET-*** restano aperti; no fix; → GDPR.
-
-### Prossimo
-
-→ **P14 GDPR / privacy** (sotto).
+1. Orphan WHEN (0/7/30) → **non fissare ora**; prima regola di percorso, timing col bak.  
+2. Agency wipe auto → **no** in V1; procedura controllata.
 
 ---
 
-## Punto 14 — GDPR / Privacy (master §13) · 29-Set-2026
+## Punto 13 — **ACQUISITO** Founder (29-Set) · **D-098**
+
+Attenzione: **non complicare** le decisioni prima del design definitivo del backup.
+
+### 1. File orphan
+
+Il problema non è scegliere subito 0 / 7 / 30 giorni.  
+Il problema è: **oggi un file può restare sul disco anche quando il record che lo indicava è eliminato** (sostenibilità + pulizia storage).
+
+Regola da portare avanti:
+
+> **Un file non più referenziato dall’applicazione deve avere un percorso verso la cancellazione definitiva.**
+
+Il **quando** lo decidiamo **insieme al design definitivo del backup**. Evitare di fissare ora i 7 giorni.
+
+### 2. Chiusura dell’agenzia
+
+Non fissare ancora cancellazione automatica aggressiva (Mongo + media + bak + fatture + obblighi conservazione + riattivazione + wipe).
+
+Decisione provvisoria V1:
+
+> **Chiusura agenzia = account disattivato + dati non operativi + procedura di retention/wipe da definire.**
+
+Non promettere cancellazione immediata di ogni traccia.
+
+### Conferma metodologica
+
+Storage e backup vanno **progettati insieme**. Oggi: media→orphan→spazio; bak→copie→moltiplica spazio.  
+Regola unica da costruire:
+
+```text
+dato creato → modificato → cancellato → Cestino → purge → backup → scadenza bak → cancellazione definitiva
+```
+
+Solo allora si sa quanto storage reale si paga.
+
+**RET-01…RET-10** restano aperti. **Nessun fix.** → P14.
+
+---
+
+## Punto 14 — GDPR / Privacy · consegnato 29-Set (master §13 · continuum sessione)
 
 **Ambito**: SaaS multi-tenant immobiliare IT · read-only · no fix · no P0–P3.  
 **Non è consulenza legale**: distingue *tecnico* vs *validazione legale/DPO*.

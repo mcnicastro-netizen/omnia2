@@ -1190,7 +1190,7 @@ Concordo sul nucleo. Temperatura: «OS agenzia» è **nord**, non claim immediat
 ### Verdetti acquisiti
 - P2–P11: acquisiti · **D-094…D-096**
 - P12: **ACQUISITO** + **D-097** — Elimina per sempre ≠ irrecuperabile assoluto; trash può restare nel bak
-- P13: **ACQUISITO** — orphan path→delete (WHEN col bak); agency close V1 controllata (no auto-wipe); RET-* aperti
+- P13: **ACQUISITO** + **D-098** — orphan path→delete (WHEN col bak); agency V1 controllata; lifecycle unica; RET-* aperti
 - P14: **consegnato** — GDPR/privacy (G-01…G-12); erase utente sì · pacchetto SaaS B2B incompleto
 
 ### Cluster finding da non dimenticare

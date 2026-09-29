@@ -1,4 +1,4 @@
-# Cap. 00 · Architettura tenancy → retention (audit SaaS)
+# Cap. 00 · Architettura tenancy → GDPR (audit SaaS)
 
 **Ambito**: founder / super_admin.  
 **Prompt master**: `memory/AUDIT_PROMPT_MASTER.md` (§1–§27).  
@@ -14,15 +14,13 @@ Un blocco alla volta · niente fix senza «vai» · no P0–P3 prematuri · **li
 
 ## Decisioni di dominio (codice ⏳)
 
-### D-094 / D-095 / D-085
-Trash ≠ status · media pubblico/privato · quota GB + bak 30g
-
-### D-096
-Bak+Restore insieme · restore **agency-first** · listino fermo
-
-### D-097
-«Elimina per sempre» = fuori area operativa utente; supporto **MAY** bak valido.  
-Trash **può** restare nel backup. Copy prodotto da riallineare.
+| ID | Sintesi |
+|----|---------|
+| **D-094** | Trash ≠ status · Cliente Trash → Richieste archiviate |
+| **D-095** | Media pubblici vs privati · cleanup blob |
+| **D-096** | Bak+Restore insieme · restore agency-first |
+| **D-097** | Elimina per sempre ≠ irrecuperabile assoluto · trash in bak OK |
+| **D-098** | Orphan → path a delete (WHEN col bak) · agency close V1 controllata |
 
 ---
 
@@ -30,13 +28,13 @@ Trash **può** restare nel backup. Copy prodotto da riallineare.
 
 | Cluster | Finding |
 |---------|---------|
-| Media authorization | P3.1 + P4.1 + M-01 |
-| Mongo ⟷ blob | M-02…M-04 · L-05/L-06 · T-02 · **RET-02** |
+| Media authorization | P3.1 + P4.1 + M-01 · **G-02** |
+| Mongo ⟷ blob / orphan | M-* · RET-02 · **D-098** |
 | Disaster recovery | B-* · R-* · D-096 |
-| Cestino vs Backup | BC-* · T-* · **D-097** |
-| Retention incompleta | **RET-*** (orphan ∞ · no offboarding) |
-| GDPR / privacy | **G-*** (erase ≠ wipe · fascicolo/media · DPA) |
-| Costo infra / listino | C-* · B-01 · fermo |
+| Cestino vs Backup | BC-* · D-097 |
+| Retention | RET-* |
+| GDPR / privacy | **G-01…G-12** |
+| Costo / listino | C-* · B-01 · fermo |
 
 ---
 
@@ -44,9 +42,8 @@ Trash **può** restare nel backup. Copy prodotto da riallineare.
 
 | Sessione | Master | Stato |
 |----------|--------|--------|
-| P1–P12 | §1–§11 (+ anticipi) | acquisiti / D-094…D-097 |
-| P13 Retention | §12 | **ACQUISITO** · RET-* |
+| P1–P13 | §1–§12 (+ anticipi) | acquisiti · D-094…D-098 |
 | P14 GDPR | §13 | Consegnato · G-* |
-| — | §14 race… | prossimo tipico |
+| — | §14 race | prossimo tipico |
 
 Dettaglio: `AUDIT_ARCHITETTURA_NOTE.md` · A-035.

@@ -1530,4 +1530,19 @@ Registro di tutte le decisioni di business e tecniche prese durante il progetto.
 - **Implementazione**: ❌ codice ⏳ · copy ⏳.
 - **Stato**: ✅ **DECISIONE DI DOMINIO REGISTRATA** (docs 29-Set-2026) · codice/copy ⏳
 
+### D-098 — Orphan path-to-delete · chiusura agenzia V1 controllata · 29-Set-2026
+- **Data**: 29 Settembre 2026
+- **Contesto**: Audit Punto 13 (Retention). Non complicare tempistiche prima del design definitivo Backup+Restore.
+- **Decisione — File orphan**:
+  1. Problema vero = file può restare su disco dopo eliminazione del record che lo referenziava.
+  2. Regola: **un file non più referenziato dall’applicazione deve avere un percorso verso la cancellazione definitiva.**
+  3. Il **quando** (0 / 7 / 30 / allineato al bak) si decide **con il design definitivo del backup** — non fissarlo ora.
+- **Decisione — Chiusura agenzia (V1)**:
+  1. **Niente** cancellazione automatica aggressiva ora (troppe dipendenze: Mongo, media, bak, fatture, obblighi conservazione, riattivazione).
+  2. V1 = **procedura controllata**: account disattivato + dati non operativi + retention/wipe **da definire**.
+  3. **Non** promettere all’utente cancellazione immediata di ogni traccia.
+- **Conferma**: storage e backup si progettano **insieme**; catena unica `creato → … → Cestino → purge → bak → scadenza bak → cancellazione definitiva` prima di chiudere i conti €/GB.
+- **Implementazione**: ❌ codice ⏳ — post-audit / design bak+restore + «vai».
+- **Stato**: ✅ **DECISIONE DI DOMINIO REGISTRATA** (docs 29-Set-2026) · codice ⏳
+
 
