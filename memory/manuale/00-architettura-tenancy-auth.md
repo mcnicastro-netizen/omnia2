@@ -43,7 +43,8 @@ Un blocco alla volta · niente fix senza «vai» · no P0–P3 prematuri · **li
 | Sessione | Master | Stato |
 |----------|--------|--------|
 | P1–P13 | §1–§12 (+ anticipi) | acquisiti · D-094…D-098 |
-| P14 GDPR | §13 | Consegnato · G-* |
-| — | §14 race | prossimo tipico |
+| P14 GDPR | §13 | **ACQUISITO** · G-* |
+| P15 race | §14 | Consegnato · RC-* |
+| — | §15 job / §16+ | prossimo tipico |
 
 Dettaglio: `AUDIT_ARCHITETTURA_NOTE.md` · A-035.

@@ -95,9 +95,10 @@ In altre parole:
 | P11 Restore | **§10** | **ACQUISITO** · **D-096** · agency-first · Bak+Restore insieme |
 | P12 Backup vs Cestino | **§11** | **ACQUISITO** · **D-097** · BC-* / T-* |
 | P13 Retention | **§12** | **ACQUISITO** · **D-098** · RET-* |
-| P14 GDPR / privacy | **§13** | Consegnato · **G-*** (feedback) |
+| P14 GDPR / privacy | **§13** | **ACQUISITO** · **G-*** (Founders OK · fascicolo AuthZ prima bak) |
+| P15 Concorrenza / race | **§14** | Consegnato · **RC-*** (feedback) |
 | — | **§6 Cestino** | Parziale P5 + coperto in P12 |
-| — | **§14 Concorrenza / race** | **Prossimo naturale** tipico dopo feedback P14 |
+| — | **§15 Job asincroni** | Anticipato in P8 · **prossimo tipico** post-P15 |
 | — | **§16–§27** | Non avviati |
 
 **Regola numerazione**: mantenere il continuum di sessione; documentare la corrispondenza qui / in `AUDIT_ARCHITETTURA_NOTE.md` — non riallineare artificialmente i numeri.
