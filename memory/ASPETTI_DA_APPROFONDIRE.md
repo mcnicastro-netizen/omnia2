@@ -1183,7 +1183,7 @@ Concordo sul nucleo. Temperatura: «OS agenzia» è **nord**, non claim immediat
 
 ## 🟡 A-035 — Audit architettura SaaS (prompt master §1–§27)
 
-**Data inserimento**: 25-Sep-2026 · **agg.** 29-Sep-2026 (P14 acquisito · **P15 race**)  
+**Data inserimento**: 25-Sep-2026 · **agg.** 29-Sep-2026 (P14 + **D-099** · P15 race)  
 **Prompt master**: `memory/AUDIT_PROMPT_MASTER.md`  
 **Stato**: 🟠 **in corso** · numerazione **sessione** · **NON implementare** · **NO P0–P3** · **listino fermo**
 
@@ -1191,7 +1191,7 @@ Concordo sul nucleo. Temperatura: «OS agenzia» è **nord**, non claim immediat
 - P2–P11: acquisiti · **D-094…D-096**
 - P12: **ACQUISITO** + **D-097** — Elimina per sempre ≠ irrecuperabile assoluto; trash può restare nel bak
 - P13: **ACQUISITO** + **D-098** — orphan path→delete (WHEN col bak); agency V1 controllata; lifecycle unica; RET-* aperti
-- P14: **ACQUISITO** — Founders GDPR provisional OK; fascicolo AuthZ prima bak; G-* aperti
+- P14: **ACQUISITO** + **D-099** — Founders GDPR assistito; fascicolo AuthZ prima bak; G-* aperti
 - P15: **consegnato** — concorrenza/race (RC-01…RC-14); wallet debit locked; B-08/TOCTOU/Stripe CAS aperti
 
 ### Cluster finding da non dimenticare

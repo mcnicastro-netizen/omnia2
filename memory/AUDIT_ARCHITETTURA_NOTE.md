@@ -6,7 +6,7 @@
 > **Numerazione = continuum di sessione** (non forzare allineamento al master).  
 > Prompt master: `memory/AUDIT_PROMPT_MASTER.md` (§1–§27) — corrispondenza in tabella sotto.
 
-**Ultimo aggiornamento**: 29-Set-2026 · **P14 ACQUISITO** (feedback Founder) · **P15 Concorrenza / race consegnato**
+**Ultimo aggiornamento**: 29-Set-2026 · **P14 ACQUISITO** + **D-099** · **P15 Race consegnato**
 
 ---
 
@@ -27,7 +27,7 @@
 | P11 | Restore | §10 | 🟠 **ACQUISITO** · **D-096** |
 | P12 | Backup vs Cestino | §11 | 🟠 **ACQUISITO** · **D-097** · BC-* / T-* |
 | P13 | Retention | §12 | 🟠 **ACQUISITO** · **D-098** · RET-* |
-| P14 | GDPR / privacy | §13 | 🟠 **ACQUISITO** · **G-*** (Founders OK · fascicolo AuthZ prima bak · G-* aperti) |
+| P14 | GDPR / privacy | §13 | 🟠 **ACQUISITO** · **D-099** · G-* |
 | P15 | Concorrenza / race | §14 | 🟠 Consegnato (feedback) · **RC-*** |
 | — | Cestino (blocco dedicato) | §6 | 🟡 coperto in P5 + P12 |
 | — | Job async / osservabilità… | §15–§27 | ⬜ prossimo tipico |
@@ -975,25 +975,48 @@ Allineato docstring: *agency inventory kept*.
 5. **K-GDPR-05** — Media: fascicolo **mai** su path pubblico (enforce D-095) — prima o insieme al bak?  
 6. **K-GDPR-06** — Orphan WHEN: solo con design bak finale (già Founder P13)
 
-### Domande aperte (max 2)
+### Domande aperte P14 — **chiuse** dal Founder → **D-099**
 
-1. Per il go-live Founders: basta **canale email DSAR + erase account + DPA cartaceo**, o serve export self-service prima dei primi clienti paganti?  
-2. Sul fascicolo: blocco AuthZ su `/api/media` per path `omnia/fascicolo/*` è prerequisito commerciale **prima** del design bak, o può aspettare il pacchetto D-095?
-
-### Link
-
-**D-094** · **D-095** · **D-096** · **D-097** · **RET-05/06/09** · **A-022** · **P3** · P13 orphan/agency feedback
-
-### Prossimo
-
-→ **P15** sotto (feedback Founder acquisito: Founders GDPR OK · fascicolo AuthZ prima bak · G-* aperti).
+1. Founders DSAR → procedura assistita OK (non self-service bloccante).  
+2. Fascicolo AuthZ → **prima** del backup.
 
 ---
 
-## Punto 15 — Concorrenza / Race Conditions (master §14) · 29-Set-2026
+## Punto 14 — **ACQUISITO** Founder (29-Set) · **D-099**
+
+Non trasformare “GDPR-ready” in una montagna di funzionalità immediate.
+
+### 1. Founders: email DSAR + erase + DPA
+
+**Soluzione provvisoria**, non stato finale. Per i primi utenti: gestione assistita (richiesta email → verifica → export/risposta supporto → erase dove applicabile → DPA contrattuale).  
+Self-service export **non** blocca i Founders; va in **roadmap prima di scala significativa**.  
+Criterio: la procedura deve **esistere ed essere eseguibile**.
+
+### 2. AuthZ fascicolo: prima del backup
+
+**Sì.** `/api/media/...` raggiungibile se si conosce il path = problema di **accesso**, non di backup.
+
+Sequenza adottata:
+
+```text
+1. Proteggere fascicolo / media sensibili
+2. Sistemare cancellazione / orphan
+3. Progettare Backup + Restore
+4. Definire retention definitiva
+5. Verificare costi
+```
+
+### Precisazione
+
+Il finding fascicolo **non** significa che tutto OMNIA sia esposto: è specifico sul controllo di accesso a quei file.  
+**G-01…G-12** restano aperti; non allargare oltre il verificato.
+
+---
+
+## Punto 15 — Concorrenza / Race Conditions · consegnato 29-Set (master §14)
 
 **Tipo**: audit read-only · **nessun fix** · **no P0–P3**.  
-**Contesto Founder P14**: Founders GDPR = provisional OK (procedura eseguibile); fascicolo AuthZ **prima** bak; G-* aperti; non gonfiare oltre fascicolo/path.
+**Contesto Founder P14 / D-099**: Founders GDPR provisional; fascicolo AuthZ **prima** bak; G-* aperti.
 
 ### Verdetto (dove può rompersi sotto uso reale)
 

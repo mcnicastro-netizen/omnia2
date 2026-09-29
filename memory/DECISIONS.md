@@ -1545,4 +1545,18 @@ Registro di tutte le decisioni di business e tecniche prese durante il progetto.
 - **Implementazione**: ❌ codice ⏳ — post-audit / design bak+restore + «vai».
 - **Stato**: ✅ **DECISIONE DI DOMINIO REGISTRATA** (docs 29-Set-2026) · codice ⏳
 
+### D-099 — Founders GDPR assistito · fascicolo AuthZ prima del backup · 29-Set-2026
+- **Data**: 29 Settembre 2026
+- **Contesto**: Audit Punto 14 (GDPR/Privacy). Non trasformare “GDPR-ready” in una montagna di feature immediate.
+- **Decisione — Founders / DSAR**:
+  1. Per i primi clienti: **email DSAR + erase account + DPA cartaceo** = **soluzione provvisoria accettabile**.
+  2. Procedura assistita (richiesta → verifica → export/risposta supporto → erase dove applicabile) deve **esistere ed essere eseguibile**.
+  3. Export self-service **non** è blocco Founders; va in **roadmap prima di una scala significativa**.
+- **Decisione — Priorità fascicolo vs backup**:
+  1. **AuthZ fascicolo / media sensibili prima del design Backup+Restore** (è accesso, non bak).
+  2. Sequenza: proteggere fascicolo → orphan/delete → Bak+Restore → retention definitiva → costi.
+  3. Il finding G-02 è **specifico** (path `/api/media` + fascicolo): non gonfiare a “tutto OMNIA esposto”.
+- **Implementazione**: ❌ codice ⏳ — post-audit / priorità + «vai».
+- **Stato**: ✅ **DECISIONE DI DOMINIO REGISTRATA** (docs 29-Set-2026) · codice ⏳
+
 
