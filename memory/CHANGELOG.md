@@ -1,5 +1,16 @@
 # OMNIA — Changelog
 
+## 2026-09-30 — Chiusura giornata · sync HAL + manuale + repo
+
+**Tipo**: Docs HAL/manuale · consolidamento sessione dogfood.
+
+- Cap. **8** §8.11 · Cap. **17** §17.13 · Cap. **18** Founders aggiornati (lead sito, annuale 11 mesi, email HAL, A-037)
+- HAL: voci `sito.demo-a037`, `domain.non-proprietario-a037` · `hal-index.json` rigenerato
+- Codice già su `github/main`: O2–O6, landing form/nav/prezzi, Resend, A-037 SoT
+- Self-serve resta OFF · prossimo: restore firmato + A-037
+
+---
+
 ## 2026-09-30 — Priorità A-037: demo da sito + template pack (Founder)
 
 **Tipo**: Docs / SoT · priorità prodotto.

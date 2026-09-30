@@ -8,13 +8,15 @@
 
 ## 🚨 PROTOCOLLO OBBLIGATORIO PER AGENTI CHE SUBENTRANO
 
-### Step 1 — Leggi questi 4 file PRIMA di parlare
+### Step 1 — Leggi questi file PRIMA di parlare
 ```
-1. /app/memory/PROGRAMMA_OMNIA.md   ← Il manuale operativo
-2. /app/memory/ROADMAP.md            ← Dove siamo arrivati
-3. /app/memory/DECISIONS.md          ← Decisioni vincolanti
-4. /app/memory/PRD.md                ← Product Requirements
+1. /workspace/memory/DECISIONS.md                              ← Decisioni vincolanti
+2. /workspace/docs/audit/OMNIA_AUDIT_STATE.md                   ← Master State audit / pre-attivazione
+3. /workspace/docs/audit/OMNIA_PROGRAMMA_PRE_ATTIVAZIONE.md     ← Programma O0–O6
+4. /workspace/memory/NEXT_SESSION.md                            ← Prossimi passi (+ A-037)
+5. /workspace/memory/ROADMAP.md · PRD.md                        ← Contesto storico
 ```
+Workspace Cloud = `/workspace` (non `/app` Emergent). HAL corpus = `memory/manuale/hal/` (+ `OMNIA_MEMORY_ROOT`).
 
 ### Step 2 — Verifica lo stato
 Dopo aver letto i file, devi sapere rispondere a:
