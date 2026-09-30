@@ -58,7 +58,8 @@ Un blocco alla volta · niente fix senza «vai» · no P0–P3 prematuri · **li
 | Coerenza prodotto | **CT-*** · **D-109** · **D-110** · P21 CHIUSO |
 | Casi limite | **EC-*** · **D-111** · **D-112** · P22 CHIUSO |
 | Debito architetturale | **AD-*** · **D-113** · P23 CHIUSO |
-| Non lista infinita | **NI-*** · P24 ⏳ |
+| Non lista infinita | **NI-*** · P24 CHIUSO · SoT ripago §25bis |
+| Report finale | P25 A–K · ⏳ |
 | GTM / Demo | **GTM-01 ACQUISITO** · **D-104** · in coda · pre-~5000 email |
 | Costo / listino | C-* · B-01 · fermo |
 
@@ -68,9 +69,9 @@ Un blocco alla volta · niente fix senza «vai» · no P0–P3 prematuri · **li
 
 | Sessione | Master | Stato |
 |----------|--------|--------|
-| P1–P23 | §1–§22 | chiusi · D-094…D-113 |
-| P24 Non una lista infinita | §24 | Consegnato · NI-* · ⏳ analisi |
-| — | §23 Priorità | ⬜ chiuso finché Founder apre |
+| P1–P24 | §1–§24 | chiusi · D-094…D-113 · classificazione congelata |
+| P25 Report finale | §25 | Consegnato · A–K · ⏳ analisi |
+| — | §23 Priorità | ⬜ CLOSED fino al «vai» |
 | GTM-01 | post-audit | 🟠 **ACQUISITO** · in coda · smoke ~20 |
 
 Dettaglio: `docs/audit/OMNIA_AUDIT_STATE.md` · `AUDIT_ARCHITETTURA_NOTE.md` · A-035 · A-036.

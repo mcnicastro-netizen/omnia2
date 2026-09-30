@@ -1183,15 +1183,15 @@ Concordo sul nucleo. Temperatura: «OS agenzia» è **nord**, non claim immediat
 
 ## 🟡 A-035 — Audit architettura SaaS (prompt master §1–§27)
 
-**Data inserimento**: 25-Sep-2026 · **agg.** 30-Sep-2026 (**P23 CHIUSO** · **P24** consegnato)  
+**Data inserimento**: 25-Sep-2026 · **agg.** 30-Sep-2026 (**P24 CHIUSO** · **P25** consegnato)  
 **Prompt master**: `memory/AUDIT_PROMPT_MASTER.md`  
 **SoT continuità**: `docs/audit/OMNIA_AUDIT_STATE.md`  
 **Stato**: 🟠 **in corso** · numerazione **sessione** · **NON implementare** · **NO P0–P3** · **listino fermo** · **niente codice** senza «vai»
 
 ### Verdetti acquisiti
-- P2–P22: chiusi · **D-094…D-112**
-- P23: **CHIUSO** — ripago vs accettare · **D-113** restore manuale · FS+1replica GTM · smoke media = trigger AD-01
-- P24: **consegnato** — Non una lista infinita **NI-01…NI-12** · ⏳ analisi Founder · §23 Priorità non aperto
+- P2–P23: chiusi · **D-094…D-113**
+- P24: **CHIUSO** — classificazione congelata · §23 Priorità CLOSED fino al «vai» · SoT ripago Master §25bis
+- P25: **consegnato** — Report finale A–K · ⏳ analisi Founder
 - **GTM-01**: **ACQUISITO** (**D-104**) — in coda; upload · empty≠error · pagination FE · smoke ~20
 
 ### Cluster finding da non dimenticare
@@ -1214,9 +1214,9 @@ Concordo sul nucleo. Temperatura: «OS agenzia» è **nord**, non claim immediat
 `docs/audit/OMNIA_AUDIT_STATE.md` · `memory/AUDIT_ARCHITETTURA_NOTE.md` · Cap. 00
 
 ### Prossimo tipico
-- Analisi Founder **P24** (NI-* · K-NI-01/02)
-- Poi tipicamente report finale §25 · oppure §23 Priorità (**solo se Founder apre**) · **GTM-01**
-- «vai» = distinto (D-100 · D-102 · D-105…D-113 · requisiti GTM)
+- Analisi Founder **P25** (K-RF-01/02) → chiusura continuum e/o GTM-01
+- §23 Priorità diventa operativo **solo al «vai»** (sequenza ripago), non in audit
+- «vai» = distinto (SoT §25bis · D-100 · D-102 · D-105…D-113 · requisiti GTM)
 
 ---
 

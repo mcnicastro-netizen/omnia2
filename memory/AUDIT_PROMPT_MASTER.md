@@ -105,15 +105,17 @@ In altre parole:
 | P21 Coerenza prodotto/tecnologia | **§20** | **CHIUSO** · **CT-*** · **D-109** · **D-110** |
 | P22 Casi limite | **§21** | **CHIUSO** · **EC-*** · **D-111** · **D-112** · D-094/D-106↑ |
 | P23 Debito architetturale | **§22** | **CHIUSO** · **AD-*** · **D-113** |
-| P24 Non una lista infinita | **§24** | Consegnato · **NI-*** · ⏳ analisi |
+| P24 Non una lista infinita | **§24** | **CHIUSO** · **NI-*** · classificazione **congelata** |
+| P25 Report finale A–K | **§25** | Consegnato · ⏳ analisi |
 | — | **§6 Cestino** | Parziale P5 + P12 + **D-111** |
-| — | **§23 Priorità** | ⬜ **chiuso** finché Founder non apre |
-| — | **§25–§27** | Non avviati · dopo acquisizione P24 |
+| — | **§23 Priorità** | ⬜ **CLOSED** fino al «vai» (non in audit) |
+| — | **§26–§27** | Rituale opzionale dopo acquisizione P25 |
 | **GTM-01** Demo Readiness | **post-audit** | 🟠 **ACQUISITO** · **D-104** · in coda · **vincolo pre-~5000 email** |
 
 **Regola numerazione**: mantenere il continuum di sessione; documentare la corrispondenza qui / in `AUDIT_ARCHITETTURA_NOTE.md` — non riallineare artificialmente i numeri.
 
-Decisioni di dominio già registrate (codice ⏳): **D-094** … **D-113**.
+Decisioni di dominio già registrate (codice ⏳): **D-094** … **D-113**.  
+SoT ripago congelato: `docs/audit/OMNIA_AUDIT_STATE.md` §25bis.
 
 > **Continuità SoT**: `docs/audit/OMNIA_AUDIT_STATE.md` — leggere prima di ogni nuovo punto.  
 > **GTM-01** = checkpoint post-audit (**D-104**), non un § del master 1–27.

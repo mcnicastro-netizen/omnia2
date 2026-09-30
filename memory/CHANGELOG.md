@@ -1,5 +1,15 @@
 # OMNIA — Changelog
 
+## 2026-09-30 — P24 CHIUSO · SoT ripago congelato · P25 Report finale A–K
+
+**Tipo**: Docs / SoT audit · **nessun codice** · **listino fermo** · no nuovi P0–P3.
+
+- **P24 CHIUSO**: classificazione finale (non ricalcolo severità); §23 Priorità CLOSED fino al «vai»; SoT ripago congelato (PRE-GTM da chiudere / accettato / potenziale / post); NI-08/09 restano potenziale; NI-12 = OK fase
+- **P25 Report finale** consegnato (A–K); K-RF-01/02 aperti
+- Metodologia: P24 non riapre P1–P23 · implementazioni solo al «vai»
+
+---
+
 ## 2026-09-30 — P23 CHIUSO · D-113 · P24 Non una lista infinita (NI-*)
 
 **Tipo**: Docs / SoT audit · **nessun codice** · **listino fermo** · no nuovi P0–P3.

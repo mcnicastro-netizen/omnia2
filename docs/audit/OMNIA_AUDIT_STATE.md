@@ -5,9 +5,9 @@
 **Usage rule:** questo documento è la fonte di continuità dell'audit.
 Prima di analizzare un nuovo punto, leggere questo file. Non riaprire decisioni già fissate salvo nuove evidenze. Non inventare informazioni mancanti.
 
-**Current status:** P1–P23 **chiusi** · **P24 Non una lista infinita consegnato** ⏳ analisi Founder. Nessun fix. Listino fermo. SoT: questo file. **Niente codice** senza «vai».
+**Current status:** P1–P24 **chiusi** · **P25 Report finale consegnato** ⏳ analisi Founder. Nessun fix. Listino fermo. SoT: questo file. **Niente codice** senza «vai».
 
-**Next:** analisi Founder su **P24 (NI-*)**. GTM-01 in coda. Master §23 Priorità **non aperto** finché Founder non lo chiede.
+**Next:** analisi Founder su **P25 (report A–K)**. GTM-01 in coda. Master §23 Priorità **CLOSED** fino al «vai» (non riaprire severità in audit).
 
 ---
 
@@ -660,7 +660,11 @@ AD-01…AD-16 · **D-113** restore manuale · **P23 CHIUSO**
 
 ### Non una lista infinita
 
-NI-01…NI-12 · **P24** ⏳ analisi Founder
+NI-01…NI-12 · **P24 CHIUSO** · classificazione **congelata** (vedi §25 / § SoT ripago)
+
+### Report finale
+
+P25 A–K · ⏳ analisi Founder · §23 Priorità CLOSED
 
 ### Storage
 
@@ -946,64 +950,155 @@ Finding AD-01…AD-16 restano nel registro. Dettaglio: `memory/AUDIT_ARCHITETTUR
 
 ---
 
-# 25. P24 — NON UNA LISTA INFINITA (consegnato · ⏳ analisi Founder · master §24)
+# 25. P24 — NON UNA LISTA INFINITA — **CHIUSO** (Founder 30-Set · nessun codice · no nuovi P0–P3)
 
-**Nota continuum:** master **§23 Priorità (P0–P3)** resta **chiuso** finché Founder non lo apre esplicitamente. P24 = §24 (distinguere reale / potenziale / opzionale / preferenza).
+**Verdetto acquisito:** P24 = **classificazione finale del debito**, non ricalcolo delle severità. Non riaprire continuamente la severità. Il report finale riporta i cluster NI e le decisioni già prese **senza** nuovi P0–P3. Quando arriverà il «vai», §23 può diventare operativo (cosa implementare e in quale sequenza) — distinto dall’audit.
 
-**Verdetto:** L’audit non ha prodotto “cento bug uguali”: ha prodotto **pochi drift accidentali ripetuti** (invite, SoT agency, trash, AuthZ fascicolo, contratto commerciale/demo) e **lock-in intenzionali incompleti** (FS, bak full-copy, single-replica). **D-094…D-113** hanno già filtrato intenzionale vs accidentale. Trattare ogni ID di §14 come priorità uguale è rumore. Il monolite + CRM tenant-guard + AuthN + soft-delete **non sono sbagliati** per la fase attuale.
-**Nessun nuovo P0–P3.** Nessun fix. **D-094…D-113 / GTM-01 / P18–P23 non riaperti** (solo link).
+### Baseline P24
 
-### Classificazione NI-*
+* **K-NI-01**: report finale / GTM-01 ora; **§23 Priorità resta CLOSED** fino al «vai».
+* **K-NI-02**: distinzione P23 **congelata** come SoT di ripago (sotto).
+* **NI-08/09**: restano **potenziale** — non trasformare “oltre D-113” in “deve essere pre-GTM”.
+* **NI-12**: OK **fase attuale / perimetro**, non certificazione eterna.
+* **Metodologia:** la classificazione P24 **non** modifica severità, listino o priorità già congelate; eventuali implementazioni solo al «vai». Impedisce che P24 riapra retroattivamente P1–P23.
+* **Nessun fix. Nessun nuovo P0–P3. Listino fermo.**
 
-| ID | Cluster | Classe | Link | Decisioni |
-|----|---------|--------|------|-----------|
-| NI-01 | Fascicolo / media AuthZ | **reale** | AD-05 · M-01 · EC-10 | **D-095** |
-| NI-02 | Invite overwrite / contratto unico | **reale** | AD-09 · AF-01 · EC-05 | **D-100** |
-| NI-03 | SoT `active_agency_id` | **reale** (codice ⏳) | AD-08 · EC-01 | **D-106** |
-| NI-04 | Trash/proiezioni + freeze | **reale** (codice ⏳) | AD-10 · EC-02/03 | **D-094** · **D-111** |
-| NI-05 | Pricing / demo / bak≠restore | **reale** | AD-13/14 · CT-* · AD-03 | **D-109** · **D-110** · **D-113** |
-| NI-06 | Minimi Demo Readiness | **reale** (gate GTM) | AF-04/05 · EH-03/04 · SC-08 | **D-104** |
-| NI-07 | Bak health Founder Ops | **reale** (ops) | AD-12 · O-01 | **D-105** |
-| NI-08 | Bak incompleto / restore piattaforma | **potenziale** → procedura manuale in **D-113**; non DR completa | AD-02/03 · B-* · R-* | **D-096** · **D-113** |
-| NI-09 | Orphan / purge / Mongo↔blob | **potenziale** (path deciso, WHEN col bak) | AD-04/11 · M-02… | **D-098** · **D-102** |
-| NI-10 | GDPR package incompleto | **opzionale** pre-GTM | G-* · AD-16 | **D-099** |
-| NI-11 | Object storage / worker / OTel / bak incr. | **preferenza / post-GTM** (vincolo dichiarato OK) | AD-01/02/07 · SC-* | **D-101** · **D-103** · K-AD-02 |
-| NI-12 | AuthN · tenant CRM base · mount demo · soft-delete · listino fermo · single-replica deliberata | **già corretto / OK** | P18 · P23 · RC wallet | D-101/D-103 |
-
-### Cose che funzionano
-
-* AuthN (JWT/refresh/Google/MFA/API key) solida per la fase.
-* Multi-tenancy CRM presente (non end-to-end perfetto, non assente).
-* Modello Client ≠ Request + soft-delete/cestino come scheletro (D-094/D-097/D-111).
-* Monolite **non** classificato come errore (P23).
-* Decisioni D-094…D-113 filtrano intenzionale vs accidentale.
-* Race “già buone”: wallet + restore/purge trash.
-* Ops base esiste; manca soprattutto bak health leggibile (**D-105**).
-
-### Domande aperte
-
-1. **K-NI-01**: Dopo P23 chiuso — si apre ora master **§23 Priorità** (P0–P3), oppure si va a **report finale (§25)** / **GTM-01**, lasciando le severità al momento del «vai» sul ripago pre-GTM?
-2. **K-NI-02**: La lista P23 «pre-GTM da chiudere» vs «pre-GTM accettabile» (riflessa in NI-01…07 vs NI-11) va **congelata come SoT di ripago**, o Founder vuole restringerla/estenderla prima di qualsiasi §23 Priorità?
-
-### Lettura Founder
-
-| Classe | Cosa |
-|--------|------|
-| **Reale pre-GTM** | NI-01…NI-07 (+ D-113 procedura restore) |
-| **Potenziale / design** | NI-08 (oltre D-113) · NI-09 |
-| **Opzionale / post** | NI-10 · NI-11 |
-| **OK fase attuale** | NI-12 |
-
-Dettaglio: `memory/AUDIT_ARCHITETTURA_NOTE.md` § Punto 24.
+Finding NI-01…NI-12 restano nel registro. Dettaglio: `memory/AUDIT_ARCHITETTURA_NOTE.md` § Punto 24.
 
 ---
 
-# 26. PROSSIMO PUNTO
+# 25bis. SoT RIPAGO — DISTINZIONE CONGELATA (P23/P24)
 
-Dopo acquisizione Founder su **P24**: tipicamente report finale (master §25) · oppure §23 Priorità **solo se Founder apre** · GTM-01 in coda.
+> **La classificazione P24 non modifica severità, listino o priorità già congelate; eventuali implementazioni vengono decise solo al «vai».**
+
+### PRE-GTM / DA CHIUDERE
+
+* NI-01…NI-07
+* Invarianti **D-094 / D-100 / D-106 / D-111**
+* Fascicolo AuthZ (**D-095**)
+* Pricing / demo (**D-109 / D-110**)
+* GTM minimum (**D-104** · AF-05/EH-03 · EH-04 · SC-08/AF-04 · smoke ~20)
+* Bak health (**D-105**) + restore manuale testabile (**D-113**)
+* Correlati implementativi quando si toccano i percorsi: **D-107** · **D-108** · **D-112**
+
+### PRE-GTM / ACCETTATO COME VINCOLO
+
+Baseline architetturale deliberata, purché superi i gate già definiti:
+
+* filesystem locale `.media`
+* single / limited replica
+* bak full-copy
+* match on-read
+* assenza worker
+* assenza OTel
+* assenza object storage/CDN
+
+Trigger: fallimento **smoke media** (K-SC-01) → anticipare AD-01 — non “1 replica ⇒ object storage”.
+
+### POTENZIALE
+
+* NI-08 / NI-09 — non blocker GTM per default; D-113 evita il salto a DR completa.
+
+### POST-GTM / RIPAGARE (roadmap)
+
+* NI-08/09 quando raggiungono le condizioni definite
+* NI-10 / NI-11 secondo roadmap
+
+**“Non fare ora” ≠ “non esiste”** — e non ogni elemento differito è un blocker.
+
+---
+
+# 26. P25 — REPORT FINALE (consegnato · ⏳ analisi Founder · master §25)
+
+**Meta:** P1–P24 **CHIUSI** · classificazione P24 **congelata** · §23 Priorità **CLOSED** · nessun nuovo P0–P3 · listino fermo · nessun codice.
+
+### A. Executive summary
+
+* Monolite FastAPI + React + Mongo + FS `.media` + APScheduler 1-replica **adeguato alla fase**.
+* Dominio: **Client ≠ Request**; soft-delete/Cestino; agency = confine B2B.
+* Audit = **pochi drift ripetuti**, non cento bug: invite, SoT agency, trash, AuthZ fascicolo, pricing/demo, bak osservabile.
+* **D-094…D-113** filtrano intenzionale vs accidentale; ripago pre-GTM = SoT §25bis.
+* AuthN e tenant-guard CRM **OK fase**; AuthZ fascicolo e contratto invite **non**.
+* Bak full-copy ×~30g → ~**32×** storage; €0,04/GB **non confermato**; listino **fermo**.
+* Pre-GTM restore = **D-105 + linguaggio onesto + D-113** — non DR commerciale.
+* **GTM-01** obbligatorio prima delle ~5k email (smoke ~20, upload, pagination, seed).
+* Catena: Fascicolo AuthZ → blob → bak → restore → retention → costi → *eventuale* listino.
+* Fix solo al «vai»; §23 resta chiuso in audit.
+* Verdetto: **base solida per continuare** se si ripaga il set pre-GTM e si tiene onesto il contratto commerciale.
+
+### B. Mappa architettura attuale
+
+Monolite FastAPI · React CRA · Mongo/Motor · FS `.media` · APScheduler 1-replica · JWT/refresh/Google/MFA + `omk_live` · TenantContext/`agency_id` · Stripe/Resend/Gemini/… · Ops: health, Sentry/webhook, `ops_alerts`, Founder Ops.
+
+### C. Modello di dominio
+
+Client = persona · Request = esigenza · Trash ≠ status (**D-094**) · Cestino = freeze (**D-111**) · Media pub/priv (**D-095**) · Pricing SoT (**D-109**) · Demo ≠ entitlement (**D-110**).
+
+### D. Flussi principali
+
+Login/`active_agency_id` · CRM property/client/request · Match/sync · Upload/serve media · Soft-delete→trash→purge · Invite · Billing · Demo seed · Bak · GTM demo path · Track B.
+
+### E. Problemi — set ripago pre-GTM
+
+*Registro completo: §14. Nessuna colonna P0–P3 — classe NI.*
+
+| ID | Area | Problema | Impatto | Evidenza | Decisione |
+|----|------|----------|---------|----------|-----------|
+| NI-01 | AuthZ media | Fascicolo via path pubblico | Leak | AD-05 · M-01 | **D-095** |
+| NI-02 | Invite | Overwrite password esistente | Account risk | AD-09 · AF-01 | **D-100** |
+| NI-03 | Sessione | `agency_ids[0]` vs `active_agency_id` | Cross-agency | AD-08 · EC-01 | **D-106** |
+| NI-04 | Lifecycle | Trash non uniforme + freeze | Dati morti operativi | AD-10 · EC-02/03 | **D-094** · **D-111** |
+| NI-05 | Contratto | Pricing/demo/bak≠restore | Promesse false | AD-13/14 · CT-* | **D-109** · **D-110** · **D-113** |
+| NI-06 | GTM | Minimi Demo Readiness | Demo fragile | AF-04/05 · EH-03/04 · SC-08 | **D-104** |
+| NI-07 | Ops bak | No health OK/PARTIAL/FAILED | Bak silenzioso | AD-12 · O-01 | **D-105** |
+
+Correlati: **D-107** errori · **D-108** scheduling · **D-112** seed.
+
+### F. Cose che funzionano bene
+
+AuthN fase-ok · tenant-guard CRM · Client/Request + soft-delete · monolite non errore · wallet atomico · restore/purge con vincitore · mount demo · D-094…D-113 come filtro · Ops base · listino deliberatamente fermo.
+
+### G. Cose mancanti
+
+Implementazione NI-01…07 (codice ⏳) · bak health UI · restore manuale testabile · contratto errori · owner scheduling · seed idempotente · (dopo) orphan WHEN · GDPR package · object storage/worker/OTel = **post**.
+
+### H. Rischi futuri
+
+Costi bak Agency media-heavy · orphan · overlap job · marketing > capability restore · GTM senza smoke · scalare senza owner scheduling · listino prima dei costi reali.
+
+### I. Piano di intervento (senza etichette P0–P3)
+
+| Fascia | Cosa |
+|--------|------|
+| **Pre-prod / GTM** | SoT §25bis DA CHIUDERE · GTM-01 smoke · linguaggio bak≠restore · listino fermo |
+| **~100** | D-098/102 orphan+purge · sharpen D-105 · object storage solo se smoke media fallisce |
+| **~1000** | Bak+restore agency-first → retention → costi → *eventuale* listino · rivalutare replica/CDN |
+| **Dopo** | NI-10 GDPR · NI-11 worker/OTel/bak incr. · DR piattaforma se prodotto la richiede |
+
+### J. Architettura consigliata (evolutiva)
+
+Tenere monolite + 1 replica + FS finché smoke GTM regge. Rafforzare AuthZ/SoT dominio prima di infra. Bak+restore+retention = catena unica. Object storage = trigger capacità media. Worker solo dopo ownership scheduling. Nessun rewrite.
+
+### K. Decisioni — prese / aperte
+
+**Prese:** D-094…D-113 (vedi §4).  
+**Aperte:** (1) esecuzione GTM-01 quando Founder dà sequenza; (2) «vai» sul ripago pre-GTM — §23 Priorità resta CLOSED.
+
+### Domande aperte
+
+1. **K-RF-01**: acquisire P25 come **CHIUSO** del continuum audit, o ancora rituale master §26/§27 prima di qualsiasi azione?
+2. **K-RF-02**: prossimo passo = avvio **GTM-01** (dopo/accanto ripago NI), o solo acquisizione report fino a nuovo «vai»?
+
+Dettaglio: `memory/AUDIT_ARCHITETTURA_NOTE.md` § Punto 25.
+
+---
+
+# 27. PROSSIMO PUNTO
+
+Dopo acquisizione Founder su **P25**: tipicamente chiusura continuum · oppure rituale §26/§27 · GTM-01 in coda · «vai» sul ripago pre-GTM (allora §23 può diventare operativo).
 
 Il Master Audit State deve essere aggiornato dopo il completamento di ogni punto significativo.
 
-**Current next action:** analisi Founder su **P24 (NI-*)**. GTM-01 in coda (vincolo pre-~5000 email). Master §23 Priorità non aperto.
+**Current next action:** analisi Founder su **P25 (report A–K)**. GTM-01 in coda. §23 Priorità CLOSED.
 
 **Niente fix. Nessuna severità P0–P3. Listino fermo. Attende «vai».**

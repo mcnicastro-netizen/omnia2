@@ -6,7 +6,7 @@
 > **Numerazione = continuum di sessione** (non forzare allineamento al master).  
 > Prompt master: `memory/AUDIT_PROMPT_MASTER.md` (§1–§27) — corrispondenza in tabella sotto.
 
-**Ultimo aggiornamento**: 30-Set-2026 · **SoT** `docs/audit/OMNIA_AUDIT_STATE.md` · **P23 CHIUSO** · **P24** ⏳ analisi
+**Ultimo aggiornamento**: 30-Set-2026 · **SoT** `docs/audit/OMNIA_AUDIT_STATE.md` · **P24 CHIUSO** · **P25** ⏳ analisi
 
 ---
 
@@ -37,14 +37,15 @@
 | P21 | Coerenza prodotto/tecnologia | §20 | 🟢 **CHIUSO** · **CT-*** · **D-109** · **D-110** |
 | P22 | Casi limite | §21 | 🟢 **CHIUSO** · **EC-*** · **D-111** · **D-112** · D-094/D-106↑ |
 | P23 | Debito architetturale | §22 | 🟢 **CHIUSO** · **AD-*** · **D-113** |
-| P24 | Non una lista infinita | §24 | 🟠 Consegnato · **NI-*** · ⏳ analisi |
+| P24 | Non una lista infinita | §24 | 🟢 **CHIUSO** · **NI-*** · classificazione **congelata** |
+| P25 | Report finale A–K | §25 | 🟠 Consegnato · ⏳ analisi |
 | — | Cestino (blocco dedicato) | §6 | 🟡 coperto in P5 + P12 + D-111 |
-| — | Priorità P0–P3 | §23 | ⬜ **chiuso** finché Founder non apre |
-| — | … | §25–§27 | ⬜ dopo acquisizione P24 |
+| — | Priorità P0–P3 | §23 | ⬜ **CLOSED** fino al «vai» |
+| — | … | §26–§27 | ⬜ rituale opzionale dopo P25 |
 | **GTM-01** | Demo Readiness / primo afflusso | **post-audit** | 🟠 **ACQUISITO** · **D-104** · in coda · **vincolo pre-~5000 email** |
 
 Decisioni dominio (codice ⏳): **D-094** … **D-113**.  
-P18–P23 chiusi · P24 in analisi Founder.  
+P18–P24 chiusi · P25 in analisi Founder. SoT ripago: Master §25bis.  
 **Continuità SoT**: `docs/audit/OMNIA_AUDIT_STATE.md` (non riaprire decisioni fissate). · **Niente codice** senza «vai».
 
 ---
@@ -1672,10 +1673,30 @@ Pochi drift ripetuti + lock-in intenzionali incompleti. D-094…D-113 filtrano g
 
 Vedi `docs/audit/OMNIA_AUDIT_STATE.md` §25. Sintesi: **reale pre-GTM** = NI-01…07 (+ D-113); **potenziale** = NI-08/09; **opzionale/post** = NI-10/11; **OK** = NI-12.
 
+### Domande — **RISOLTE** Founder
+
+1. **K-NI-01**: report finale / GTM-01 ora; **§23 Priorità CLOSED** fino al «vai».
+2. **K-NI-02**: distinzione ripago **congelata** (Master §25bis).
+
+### Baseline P24 — **CHIUSO** Founder
+
+* P24 = classificazione finale, **non** ricalcolo severità.
+* NI-08/09 restano potenziale; NI-12 = OK fase (non eternità).
+* Metodologia: P24 non modifica severità/listino/priorità congelate; implementazioni solo al «vai».
+**Nessun nuovo P0–P3. Nessun codice. Listino fermo.** → **P25** sotto.
+
+---
+
+## Punto 25 — Report finale · consegnato 30-Set (master §25)
+
+**Ambito:** formato A–K. Nessun fix. Nessun P0–P3. §23 CLOSED. Classificazione P24 congelata.
+
+Vedi `docs/audit/OMNIA_AUDIT_STATE.md` §26 (A–K) e §25bis (SoT ripago).
+
 ### Domande
 
-1. **K-NI-01**: aprire §23 Priorità ora, o report finale (§25) / GTM-01 lasciando severità al «vai»?
-2. **K-NI-02**: congelare lista P23 pre-GTM da chiudere vs accettabile come SoT di ripago?
+1. **K-RF-01**: acquisire P25 come CHIUSO continuum, o ancora §26/§27?
+2. **K-RF-02**: prossimo = GTM-01 (dopo/accanto ripago), o stop fino a nuovo «vai»?
 
 **Niente fix. Nessuna severità P0–P3. Listino fermo. Attende «vai».**
 
