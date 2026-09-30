@@ -36,6 +36,8 @@ Non confondere:
 
 Non introdurre fix durante l'audit salvo richiesta esplicita.
 
+**Metodologia P24 (congelata):** la classificazione del debito **non** modifica severità, listino o priorità già congelate; non riapre P1–P23. Eventuali implementazioni solo al «vai». §23 Priorità resta CLOSED in audit.
+
 ---
 
 # 2. ARCHITETTURA ATTUALE — CONTEXT MINIMO
