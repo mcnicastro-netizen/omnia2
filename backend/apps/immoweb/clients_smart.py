@@ -378,9 +378,10 @@ async def smart_clients(
     db = Database.get()
     base_q = _client_base_query(agency_id, q)
 
-    # Properties once (capped, projected, newest first)
+    # Properties once (capped, projected, newest first) — D-094 not trashed
+    from shared.db.trash import with_not_trashed
     properties = await db.properties.find(
-        {"agency_id": agency_id, "status": "active"},
+        with_not_trashed({"agency_id": agency_id, "status": "active"}),
         _PROP_PROJ,
     ).sort("updated_at", -1).to_list(length=PROPERTY_MATCH_CAP)
 
@@ -562,12 +563,16 @@ async def refresh_smart_scores(
     agency_id = await _agency_id(user)
     db = Database.get()
 
+    from shared.db.trash import with_not_trashed
     clients = await db.clients.find(
-        {"agency_id": agency_id, "client_type": {"$in": list(SEARCHER_TYPES)}},
+        with_not_trashed({
+            "agency_id": agency_id,
+            "client_type": {"$in": list(SEARCHER_TYPES)},
+        }),
         _CLIENT_PROJ,
     ).to_list(length=CLIENT_SCAN_CAP)
     properties = await db.properties.find(
-        {"agency_id": agency_id, "status": "active"},
+        with_not_trashed({"agency_id": agency_id, "status": "active"}),
         _PROP_PROJ,
     ).sort("updated_at", -1).to_list(length=PROPERTY_MATCH_CAP)
     if not clients or not properties:

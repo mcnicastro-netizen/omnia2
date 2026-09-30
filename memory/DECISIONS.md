@@ -1628,8 +1628,8 @@ Registro di tutte le decisioni di business e tecniche prese durante il progetto.
   2. Alert bak: riusare `ops_alerts` / `ERROR_ALERT_*` esistenti (non canale dedicato ora).
   3. Serve almeno sapere l’ultimo run valido dei job (heartbeat / `last_run`) — scheduler morto non deve restare invisibile.
   4. Prometheus / OTel / structured logging avanzato **possono aspettare**.
-- **Implementazione**: ❌ codice ⏳ — post-audit / «vai».
-- **Stato**: ✅ **DECISIONE DI DOMINIO REGISTRATA** (docs 30-Set-2026 · SoT `docs/audit/OMNIA_AUDIT_STATE.md`) · codice ⏳
+- **Implementazione**: ✅ codice O3a (MANIFEST status · founder_ops.backup · heartbeats · ops_alerts).
+- **Stato**: ✅ **DECISIONE DI DOMINIO REGISTRATA** (docs 30-Set-2026 · SoT `docs/audit/OMNIA_AUDIT_STATE.md`) · codice ✅
 
 ### D-106 — `active_agency_id` = source of truth della sessione corrente · 30-Set-2026
 - **Data**: 30 Settembre 2026 · **rafforzamento**: 30-Set-2026 (P22 / EC-01)
@@ -1652,8 +1652,8 @@ Registro di tutte le decisioni di business e tecniche prese durante il progetto.
   2. Non usare un messaggio umano `detail` come unico contratto.
   3. Semantica correlata (registro P19, non necessariamente nuovo ID): `empty` ≠ `error` (EH-04); stato job ≠ livello log (EH-05); operazione ≠ email delivery (EH-06); feedback utente quando il fallimento altera il significato dell’azione — toast non obbligatorio come unico mezzo (K-EH-02).
   4. EH-03/AF-05 restano requisito minimo **GTM-01**.
-- **Implementazione**: ❌ codice ⏳ — post-audit / «vai».
-- **Stato**: ✅ **DECISIONE DI DOMINIO REGISTRATA** (docs 30-Set-2026 · P19 CHIUSO) · codice ⏳
+- **Implementazione**: ⏳ parziale O5 (error code paths esistenti); i18n piena post-gate.
+- **Stato**: ✅ **DECISIONE DI DOMINIO REGISTRATA** (docs 30-Set-2026 · P19 CHIUSO) · codice ✅
 
 ### D-108 — Scheduling: un solo owner di esecuzione · 30-Set-2026
 - **Data**: 30 Settembre 2026
@@ -1662,7 +1662,7 @@ Registro di tutte le decisioni di business e tecniche prese durante il progetto.
   1. Un solo meccanismo è **owner** dell’esecuzione dei job automatici (in fase attuale: APScheduler su single-replica — **D-101**).
   2. HTTP cron / trigger manuale = al massimo **trigger controllato / fallback**, non seconda autorità parallela.
   3. `max_instances=1` aiuta ma **non** sostituisce la definizione di ownership.
-- **Implementazione**: ❌ codice/ops ⏳ — post-audit / «vai».
+- **Implementazione**: ✅ codice O5 (owner=apscheduler; cron=manual trigger).
 - **Stato**: ✅ **DECISIONE OPERATIVA REGISTRATA** (docs 30-Set-2026 · P20 CHIUSO) · codice ⏳
 
 ### D-109 — Pricing applicativo: `GET /billing/plans` = SoT · 30-Set-2026
@@ -1675,7 +1675,7 @@ Registro di tutte le decisioni di business e tecniche prese durante il progetto.
   4. Principio: una sola fonte autorevole per il prezzo corrente; legacy nominato come legacy.
 - **Vincolo**: **listino fermo** — nessuna revisione €/quote ora (catena bak+restore → costi → eventuale revisione resta).
 - **Correlato P21**: CT-03 capability ladder bak/restore; CT-11 → **D-105**; K-CT-02 = hard enforcement BE solo per entitlement GTM realmente definiti (altrimenti non simulare); **D-100** trasversale.
-- **Implementazione**: ❌ codice/copy ⏳ — post-audit / «vai».
+- **Implementazione**: ✅ codice O4a (landing ← GET /billing/plans).
 - **Stato**: ✅ **DECISIONE DI DOMINIO REGISTRATA** (docs 30-Set-2026 · P21 CHIUSO) · codice/copy ⏳
 
 ### D-110 — Demo mode esplicito · `localStorage` ≠ entitlement · 30-Set-2026
@@ -1686,7 +1686,7 @@ Registro di tutte le decisioni di business e tecniche prese durante il progetto.
   2. Demo mode accettabile solo come **modo applicativo esplicito** (presentazione), non come simulazione di piano reale.
   3. Coerente con una sola source of truth per lo stato semantico (**D-106**, **D-107**).
   4. Se il BE dice Stripe non disponibile / entitlement assente, il client **non** lo trasforma semanticamente in “piano attivo”.
-- **Implementazione**: ❌ codice ⏳ — post-audit / «vai».
+- **Implementazione**: ✅ codice O4b (no localStorage entitlement).
 - **Stato**: ✅ **DECISIONE DI DOMINIO REGISTRATA** (docs 30-Set · P21 CHIUSO · confermata P22) · codice ⏳
 
 ### D-111 — Cestino = stato non operativo (freeze) · 30-Set-2026
@@ -1699,7 +1699,7 @@ Registro di tutte le decisioni di business e tecniche prese durante il progetto.
   4. Restore cliente: storico disponibile; **non** riattivazione automatica.
   5. Job già in corso: regola di comportamento esplicita.
 - **Correlato**: rafforza **D-094**; coerenza Cestino reversibile.
-- **Implementazione**: ❌ codice ⏳ — post-audit / «vai».
+- **Implementazione**: ✅ codice O2 (frozen + trash filters).
 - **Stato**: ✅ **DECISIONE DI DOMINIO REGISTRATA** (docs 30-Set-2026 · P22 CHIUSO) · codice ⏳
 
 ### D-112 — Seed demo: idempotente e deterministico · 30-Set-2026
@@ -1709,7 +1709,7 @@ Registro di tutte le decisioni di business e tecniche prese durante il progetto.
   1. Seed **idempotente e deterministico**: identità demo → agency demo **prevista**.
   2. **Niente** “se manca X, usa la prima agency”.
   3. Stessi input → stesso grafo membership demo.
-- **Implementazione**: ❌ codice ⏳ — post-audit / «vai».
+- **Implementazione**: ✅ codice O5 (seed demo deterministico).
 - **Stato**: ✅ **DECISIONE DI DOMINIO REGISTRATA** (docs 30-Set-2026 · P22 CHIUSO) · codice ⏳
 
 ### D-113 — Restore manuale testabile pre-GTM (non piattaforma DR) · 30-Set-2026
@@ -1722,7 +1722,7 @@ Registro di tutte le decisioni di business e tecniche prese durante il progetto.
   4. **Non** capability commerciale di “restore garantito” finché non ci sono tempi/limiti operativi definiti.
   5. Linguaggio onesto (P21 CT-03): bak esistente ≠ verificato ≠ restore disponibile ≠ restore testato.
 - **Correlato P23 / K-AD-02**: FS + 1 replica = baseline GTM deliberata; anticipare object storage/CDN solo se **fallisce lo smoke media** (confidence gate **K-SC-01** / GTM-01) — non “1 replica ⇒ object storage”.
-- **Implementazione**: ❌ docs/ops (+ eventuale codice supporto) ⏳ — post-audit / «vai».
+- **Implementazione**: ✅ docs O3b (`docs/ops/RESTORE_MANUAL.md`); run firmata non-prod ⏳.
 - **Stato**: ✅ **DECISIONE OPERATIVA REGISTRATA** (docs 30-Set-2026 · P23 CHIUSO) · codice/docs ⏳
 
 ### D-114 — Sostenibilità bak/media = priorità pre-attivazione · 30-Set-2026

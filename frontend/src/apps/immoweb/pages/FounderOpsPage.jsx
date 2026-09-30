@@ -92,6 +92,38 @@ export default function FounderOpsPage() {
           <div className="text-sm text-red-800 bg-red-50 border border-red-200 rounded p-3">{error}</div>
         ) : null}
 
+        {data?.backup ? (
+          <div
+            className={`rounded-lg border px-4 py-3 text-sm ${
+              data.backup.status === "OK"
+                ? "border-emerald-300 bg-emerald-50 text-emerald-950"
+                : data.backup.status === "PARTIAL"
+                  ? "border-amber-300 bg-amber-50 text-amber-950"
+                  : "border-rose-300 bg-rose-50 text-rose-950"
+            }`}
+            data-testid="ops-backup-health"
+          >
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <p className="font-medium">
+                Backup ·{" "}
+                <span data-testid="ops-backup-status">{data.backup.status || "—"}</span>
+              </p>
+              <span className="text-xs text-stone-600">
+                {(data.backup.created_at || "").slice(0, 19).replace("T", " ") || "nessun run"}
+                {data.backup.day ? ` · giorno ${data.backup.day}` : ""}
+              </span>
+            </div>
+            {data.backup.message ? (
+              <p className="text-xs mt-1">{data.backup.message}</p>
+            ) : (
+              <p className="text-xs mt-1 text-stone-600">
+                Ultimo MANIFEST OK/PARTIAL/FAILED · scheduler owner:{" "}
+                {data.scheduler?.owner || "apscheduler"}
+              </p>
+            )}
+          </div>
+        ) : null}
+
         {data?.alerts?.recent?.length ? (
           <div
             className={`rounded-lg border px-4 py-3 text-sm ${

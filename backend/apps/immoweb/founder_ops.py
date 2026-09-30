@@ -407,6 +407,22 @@ async def ops_overview(
 
     unacked = sum(1 for a in recent_alerts if not a.get("acked"))
 
+    # D-105 — backup health from latest MANIFEST + scheduler heartbeats
+    backup_health: Dict[str, Any] = {}
+    try:
+        from apps.immoweb.backup_job import read_latest_backup_health
+        backup_health = read_latest_backup_health()
+    except Exception:
+        logger.exception("backup health read failed")
+        backup_health = {"status": "FAILED", "message": "lettura health fallita"}
+
+    scheduler_info: Dict[str, Any] = {"running": False, "jobs": {}}
+    try:
+        from apps.immoweb.sync_engine import get_scheduler_heartbeats
+        scheduler_info = get_scheduler_heartbeats()
+    except Exception:
+        logger.exception("scheduler heartbeats failed")
+
     return {
         "period_days": days,
         "generated_at": datetime.now(timezone.utc).isoformat(),
@@ -423,6 +439,12 @@ async def ops_overview(
         "alerts": {
             "unacked": unacked,
             "recent": recent_alerts,
+        },
+        "backup": backup_health,
+        "scheduler": {
+            "owner": "apscheduler",  # D-108 — HTTP cron = trigger manuale, non seconda autorità
+            "running": scheduler_info.get("running"),
+            "jobs": scheduler_info.get("jobs") or {},
         },
         "totals": {
             "events": total_events,
@@ -458,5 +480,6 @@ async def ops_overview(
         },
         "links": {
             "legal_detail": "/app/ops/legal",
+            "restore_procedure": "/docs/ops/RESTORE_MANUAL.md",
         },
     }

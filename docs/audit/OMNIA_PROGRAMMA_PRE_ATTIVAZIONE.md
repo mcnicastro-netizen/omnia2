@@ -5,7 +5,7 @@
 **Regola commerciale:** **nessun pagamento self-serve finché O6 non è PASS.**  
 **Provisioning assistito (SLA interno provvisorio):** ≤ **5 giorni lavorativi** dall’accordo — da raffinare, non scappatoia permanente.  
 **Obiettivo:** prima OMNIA attivabile senza sorprese, poi rubinetto commerciale — non corsa outreach ~5k email.  
-**In esecuzione:** O0 (design) · O1a fascicolo · O1b invite · O1c SoT agency. **O2–O6:** non aperti.
+**Esecuzione:** O0–O5 codice/docs shippati · **O6 checklist** `OMNIA_O6_GATE_CHECKLIST.md` · self-serve **OFF** finché restore run firmata + Founder ON.
 
 ### Priorità Founder (ordine di senso)
 

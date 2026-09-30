@@ -1,5 +1,17 @@
 # OMNIA — Changelog
 
+## 2026-09-30 — Programma O2–O6 completato (codice+docs) · self-serve OFF
+
+**Tipo**: Codice O2–O5 + docs O3b/O6 · listino fermo · no self-serve.
+
+- **O2 D-094/D-111:** `with_not_trashed` su match/sync/smart/job/feed/site; client trash → richieste `frozen`; PATCH bloccato su frozen
+- **O3a D-105:** MANIFEST `status` OK/PARTIAL/FAILED · Founder Ops `backup` + scheduler heartbeats · `ops_alerts` su bak fail
+- **O3b D-113:** `docs/ops/RESTORE_MANUAL.md` (run firmata ancora ⏳ non-prod)
+- **O4 D-109/D-110:** landing da `GET /billing/plans`; Billing senza entitlement `localStorage`
+- **O5:** PhotoUploader pending/error/retry · pagination properties · cron = trigger manuale (D-108) · seed demo D-112
+- **O6:** `docs/audit/OMNIA_O6_GATE_CHECKLIST.md` — CONDITIONAL PASS · self-serve bloccato
+
+
 ## 2026-09-30 — «vai» O0 ∥ O1 · D-095/D-100/D-106 + design bak
 
 **Tipo**: Codice O1 + docs O0 · listino fermo · no self-serve pre-O6.

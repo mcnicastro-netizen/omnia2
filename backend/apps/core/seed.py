@@ -106,13 +106,20 @@ async def seed_admin() -> None:
             updates["agency_ids"] = [DEMO_AGENCY_ID]
             updates["active_agency_id"] = DEMO_AGENCY_ID
             logger.info("Admin attached to demo agency %s", DEMO_AGENCY_ID)
-        # D-106 — ensure active_agency_id valid if membership exists
+        # D-106 / D-112 — active_agency_id valida; preferisci DEMO se in membership
         elif not existing.get("active_agency_id") or existing.get("active_agency_id") not in (
             existing.get("agency_ids") or []
         ):
-            ids = existing.get("agency_ids") or [DEMO_AGENCY_ID]
-            updates["active_agency_id"] = ids[0]
+            ids = list(existing.get("agency_ids") or [])
+            if DEMO_AGENCY_ID in ids:
+                updates["active_agency_id"] = DEMO_AGENCY_ID
+            elif ids:
+                updates["active_agency_id"] = ids[0]
+            else:
+                updates["agency_ids"] = [DEMO_AGENCY_ID]
+                updates["active_agency_id"] = DEMO_AGENCY_ID
         await db.users.update_one({"email": email}, {"$set": updates})
 
+    # D-112 — agency demo prima, poi admin demo (grafo deterministico)
     await _ensure_demo_agency(db)
     await _ensure_demo_admin(db)

@@ -9,57 +9,32 @@ const API = `${BACKEND_URL}/api/founders`;
 const HERO_IMG =
   "https://images.unsplash.com/photo-1551836022-deb4988cc6c0?w=1600&q=80&auto=format&fit=crop";
 
-const PRICING = [
-  {
-    id: "starter",
-    name: "Starter",
-    foundersPrice: 39,
-    standardPrice: 59,
-    users: 3,
-    credits: 20,
-    listings: 15,
-    features: [
-      "HAL Chatbot AI + Lead Scoring",
-      "HAL Legal anti-hallucination",
-      "Valutatore Pro UNI 10750",
-      "Multiposting 3 portali",
-      "Supporto email 48h",
-    ],
-  },
-  {
-    id: "pro",
-    name: "Pro",
-    foundersPrice: 99,
-    standardPrice: 179,
-    users: "4–20",
-    credits: 200,
-    listings: 50,
-    highlight: true,
-    features: [
-      "Tutto di Starter +",
-      "HAL Improve copywriter inline",
-      "White-label con tuo dominio",
-      "Multiposting 8 portali",
-      "Supporto email 24h + chat",
-    ],
-  },
-  {
-    id: "agency",
-    name: "Agency",
-    foundersPrice: 249,
-    standardPrice: 349,
-    users: "21+",
-    credits: 600,
-    listings: 70,
-    features: [
-      "Tutto di Pro +",
-      "White-label + SSO custom",
-      "Multiposting tutti i portali + custom",
-      "Boost portale illimitati (fair-use)",
-      "Supporto dedicato SLA 4h",
-    ],
-  },
-];
+// D-109 — prezzi da GET /billing/plans (SoT); niente listino morto in FE
+const BILLING_API = `${BACKEND_URL}/api/billing/plans`;
+
+const PLAN_FEATURES = {
+  starter: [
+    "HAL Chatbot AI + Lead Scoring",
+    "HAL Legal anti-hallucination",
+    "Valutatore Pro UNI 10750",
+    "Multiposting incluso",
+    "Supporto email",
+  ],
+  pro: [
+    "Tutto di Starter +",
+    "HAL Improve copywriter inline",
+    "White-label con tuo dominio",
+    "Multiposting avanzato",
+    "Supporto prioritario",
+  ],
+  agency: [
+    "Tutto di Pro +",
+    "White-label + custom",
+    "Multiposting tutti i portali",
+    "Limiti immobili/agenti illimitati",
+    "Supporto dedicato",
+  ],
+};
 
 const WOW_MOMENTS = [
   {
@@ -87,6 +62,8 @@ export default function AgenziesLandingPage() {
   const lang = (i18n.language || "it").slice(0, 2);
 
   const [spots, setSpots] = useState({ remaining: 50, total: 50, registered: 0 });
+  const [plans, setPlans] = useState([]);
+  const [plansError, setPlansError] = useState(null);
   const [formData, setFormData] = useState({
     email: "",
     name: "",
@@ -105,6 +82,27 @@ export default function AgenziesLandingPage() {
       .get(`${API}/spots`)
       .then((r) => setSpots(r.data))
       .catch(() => {});
+    axios
+      .get(BILLING_API)
+      .then((r) => {
+        const list = (r.data?.plans || []).map((p, idx) => ({
+          id: p.tier,
+          name: p.name,
+          foundersPrice: p.price_monthly,
+          standardPrice: null,
+          users: p.max_agents === -1 ? "illimitati" : p.max_agents,
+          credits: p.credits_included_monthly,
+          listings: p.max_properties === -1 ? "illimitati" : p.max_properties,
+          highlight: p.tier === "pro",
+          features: PLAN_FEATURES[p.tier] || [],
+        }));
+        setPlans(list);
+        setPlansError(null);
+      })
+      .catch(() => {
+        setPlans([]);
+        setPlansError("Prezzi temporaneamente non disponibili");
+      });
   }, []);
 
   const handleChange = (e) => {
@@ -229,18 +227,21 @@ export default function AgenziesLandingPage() {
       {/* Pricing */}
       <section className="bg-stone-50 px-6 sm:px-12 py-24 border-y border-stone-200">
         <div className="max-w-6xl mx-auto">
-          <p className="text-xs uppercase tracking-[0.3em] text-stone-500 mb-3 text-center">Founders 50 Pricing</p>
+          <p className="text-xs uppercase tracking-[0.3em] text-stone-500 mb-3 text-center">Listino corrente</p>
           <h2 className="text-3xl sm:text-4xl text-stone-900 text-center mb-4 font-light"
             style={{ fontFamily: "'Fraunces', Georgia, serif" }}>
-            Prezzo bloccato 24 mesi
+            Piani agenzia
           </h2>
           <p className="text-center text-stone-600 mb-16 text-sm">
-            Dopo 24 mesi: prezzo standard <span className="line-through">€59 / €179 / €349</span> →{" "}
-            <strong className="text-[#C19A6B]">sconto 50% a vita</strong>
+            Prezzi da catalogo applicativo · attivazione assistita fino a gate O6
           </p>
 
+          {plansError ? (
+            <p className="text-center text-sm text-stone-500 mb-8" data-testid="agenzie-pricing-unavailable">{plansError}</p>
+          ) : null}
+
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {PRICING.map((p) => (
+            {plans.map((p) => (
               <div key={p.id}
                 className={`bg-white p-8 border ${p.highlight ? "border-[#C19A6B] shadow-lg relative" : "border-stone-200"}`}
                 data-testid={`agenzie-tier-${p.id}`}>
@@ -256,12 +257,14 @@ export default function AgenziesLandingPage() {
                     style={{ fontFamily: "'Fraunces', Georgia, serif" }}>
                     €{p.foundersPrice}<span className="text-sm text-stone-500 ml-1">/mese</span>
                   </p>
-                  <p className="text-xs text-stone-400 line-through mt-1">€{p.standardPrice}/mese standard</p>
+                  {p.standardPrice ? (
+                    <p className="text-xs text-stone-400 line-through mt-1">€{p.standardPrice}/mese standard</p>
+                  ) : null}
                 </div>
                 <ul className="text-sm space-y-2 mb-6 text-stone-700">
-                  <li>👥 <strong>{p.users}</strong> utenti</li>
-                  <li>💳 <strong>{p.credits}</strong> crediti/mese</li>
-                  <li>📋 <strong>{p.listings}</strong> annunci portale</li>
+                  <li><strong>{p.users}</strong> agenti</li>
+                  <li><strong>{p.credits}</strong> crediti/mese</li>
+                  <li><strong>{p.listings}</strong> immobili</li>
                 </ul>
                 <ul className="text-xs space-y-2 text-stone-600 border-t border-stone-200 pt-4">
                   {p.features.map((f, i) => (
@@ -273,7 +276,7 @@ export default function AgenziesLandingPage() {
           </div>
 
           <p className="text-center text-xs text-stone-500 mt-10">
-            Sistema crediti €0,30/cad · Pacchetti top-up · Boost portale -30% vs Idealista
+            Fonte prezzi: GET /api/billing/plans · crediti e top-up come da catalogo
           </p>
         </div>
       </section>

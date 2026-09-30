@@ -281,12 +281,12 @@ async def ensure_from_widget(
 async def migrate_preferences_for_agency(db, agency_id: str) -> int:
     """Create search_brief requests from existing client.preferences (once per client)."""
     created = 0
+    from shared.db.trash import with_not_trashed
     cursor = db.clients.find(
-        {
+        with_not_trashed({
             "agency_id": agency_id,
             "client_type": {"$in": list(SEARCHER_TYPES)},
-            "$or": [{"trashed_at": {"$exists": False}}, {"trashed_at": None}],
-        },
+        }),
         {"_id": 0, "id": 1, "preferences": 1, "name": 1, "surname": 1, "source": 1},
     )
     clients = await cursor.to_list(length=5000)
@@ -451,8 +451,9 @@ async def match_request(
                 "items": [item] if score >= threshold else [],
             }
 
+    from shared.db.trash import with_not_trashed
     own = await db.properties.find(
-        {"agency_id": agency_id, "status": "active"},
+        with_not_trashed({"agency_id": agency_id, "status": "active"}),
         _PROP_PROJ,
     ).sort("updated_at", -1).to_list(length=PORTFOLIO_SCAN_CAP)
     portfolio_hits, best_own = await score_properties(
@@ -474,11 +475,12 @@ async def match_request(
 
     # Fall through to MLS (other agencies, shareable)
     clause = _shareable_listing_clause()
-    mls_q = {
+    from shared.db.trash import with_not_trashed
+    mls_q = with_not_trashed({
         **clause,
         "agency_id": {"$ne": agency_id},
         "status": "active",
-    }
+    })
     mls_props = await db.properties.find(mls_q, _PROP_PROJ).sort("updated_at", -1).to_list(length=MLS_SCAN_CAP)
     mls_hits, best_mls = await score_properties(
         mls_props, criteria, threshold=threshold,

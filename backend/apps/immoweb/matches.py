@@ -18,6 +18,7 @@ router = APIRouter(prefix="/matches", tags=["matches"])
 
 
 from shared.auth.tenant import arequire_agency as _agency
+from shared.db.trash import with_not_trashed
 
 
 def _trim_client(c: dict) -> dict:
@@ -69,11 +70,14 @@ async def list_all_matches(
     db = Database.get()
     # Cap inventory for agency-wide scan (scoped endpoints stay wider)
     props_cursor = db.properties.find(
-        {"agency_id": agency_id, "status": "active"}, {"_id": 0},
+        with_not_trashed({"agency_id": agency_id, "status": "active"}), {"_id": 0},
     )
     properties = await props_cursor.to_list(length=400)
     clients_cursor = db.clients.find(
-        {"agency_id": agency_id, "client_type": {"$in": ["buyer", "tenant", "investor"]}},
+        with_not_trashed({
+            "agency_id": agency_id,
+            "client_type": {"$in": ["buyer", "tenant", "investor"]},
+        }),
         {"_id": 0},
     )
     clients = await clients_cursor.to_list(length=400)
@@ -119,11 +123,16 @@ async def matches_for_property(
     """Match inverso: clienti (preferenze) + richieste aperte (D-090)."""
     agency_id = await _agency(user)
     db = Database.get()
-    p = await db.properties.find_one({"id": pid, "agency_id": agency_id}, {"_id": 0})
+    p = await db.properties.find_one(
+        with_not_trashed({"id": pid, "agency_id": agency_id}), {"_id": 0}
+    )
     if not p:
         raise HTTPException(status_code=404, detail="property_not_found")
     clients = await db.clients.find(
-        {"agency_id": agency_id, "client_type": {"$in": ["buyer", "tenant", "investor"]}},
+        with_not_trashed({
+            "agency_id": agency_id,
+            "client_type": {"$in": ["buyer", "tenant", "investor"]},
+        }),
         {"_id": 0},
     ).to_list(length=2000)
     results = []
@@ -188,14 +197,16 @@ async def matches_for_client(
 ):
     agency_id = await _agency(user)
     db = Database.get()
-    c = await db.clients.find_one({"id": cid, "agency_id": agency_id}, {"_id": 0})
+    c = await db.clients.find_one(
+        with_not_trashed({"id": cid, "agency_id": agency_id}), {"_id": 0}
+    )
     if not c:
         raise HTTPException(status_code=404, detail="client_not_found")
     if not is_searcher(c):
         return {"client": _trim_client(c), "items": [], "total": 0,
                 "info": "client_type_does_not_search"}
     props = await db.properties.find(
-        {"agency_id": agency_id, "status": "active"}, {"_id": 0},
+        with_not_trashed({"agency_id": agency_id, "status": "active"}), {"_id": 0},
     ).to_list(length=2000)
     results = []
     for p in props:
@@ -228,10 +239,14 @@ async def compute_lead_score(
     """
     agency_id = await _agency(user)
     db = Database.get()
-    p = await db.properties.find_one({"id": property_id, "agency_id": agency_id}, {"_id": 0})
+    p = await db.properties.find_one(
+        with_not_trashed({"id": property_id, "agency_id": agency_id}), {"_id": 0}
+    )
     if not p:
         raise HTTPException(status_code=404, detail="property_not_found")
-    c = await db.clients.find_one({"id": client_id, "agency_id": agency_id}, {"_id": 0})
+    c = await db.clients.find_one(
+        with_not_trashed({"id": client_id, "agency_id": agency_id}), {"_id": 0}
+    )
     if not c:
         raise HTTPException(status_code=404, detail="client_not_found")
     match = compute_match(p, c)

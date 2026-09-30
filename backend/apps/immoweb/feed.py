@@ -42,9 +42,10 @@ async def _resolve_agency(slug: str) -> Dict[str, Any]:
 
 
 async def _list_active_properties(agency_id: str) -> List[Dict[str, Any]]:
+    from shared.db.trash import with_not_trashed
     db = Database.get()
     cursor = db.properties.find(
-        {"agency_id": agency_id, "status": "active"},
+        with_not_trashed({"agency_id": agency_id, "status": "active"}),
         {"_id": 0, "owner": 0},  # never leak owner block externally
     ).sort("updated_at", -1)
     return await cursor.to_list(length=5000)

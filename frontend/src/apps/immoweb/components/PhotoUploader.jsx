@@ -1,20 +1,19 @@
-import React, { useRef } from "react";
+import React, { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { api } from "../../../shared/lib/api";
 
 /**
  * PhotoUploader — drag&drop JPEG/PNG upload with client-side resize.
  *
- * H10 — Photos are uploaded to Object Storage (multipart) and only the media
- * URL is stored in the property document. Base64 data-URL is kept as a
- * fallback if the storage upload fails (preview resilience).
+ * O5 / D-104 — stati espliciti pending → success | error + retry.
+ * H10 — upload Object Storage; base64 solo fallback blob piccoli.
  *
  * Props:
- *   photos: [{ id, url, caption?, order, is_cover }]
+ *   photos: [{ id, url, caption?, order, is_cover, upload_status?, upload_error? }]
  *   onChange: (newPhotos) => void
- *   max: max number of photos (default 60 — allineato ai portali IT)
- *   uploadUrl: override upload endpoint (default CRM agency upload-tmp)
- *   uploadExtraFields: optional FormData fields (e.g. { kind: "photo" })
+ *   max: max number of photos (default 60)
+ *   uploadUrl: override upload endpoint
+ *   uploadExtraFields: optional FormData fields
  *   onStage: optional virtual-staging callback
  */
 export default function PhotoUploader({
@@ -27,6 +26,7 @@ export default function PhotoUploader({
 }) {
   const { t } = useTranslation();
   const fileInput = useRef(null);
+  const [uploading, setUploading] = useState(false);
 
   const resizeToBlob = (file) => new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -74,34 +74,123 @@ export default function PhotoUploader({
     return data.url;
   };
 
+  const patchPhoto = (id, patch) => {
+    onChange(photos.map((p) => (p.id === id ? { ...p, ...patch } : p)));
+  };
+
+  const uploadOne = async (photo, blob, fileName) => {
+    patchPhoto(photo.id, { upload_status: "pending", upload_error: null });
+    try {
+      let url;
+      try {
+        url = await uploadBlob(blob, fileName);
+      } catch (err) {
+        if (blob.size > 600 * 1024) throw err;
+        url = await blobToDataUrl(blob);
+      }
+      patchPhoto(photo.id, {
+        url,
+        upload_status: "success",
+        upload_error: null,
+        _blob: undefined,
+        _fileName: undefined,
+      });
+      return true;
+    } catch (err) {
+      const msg = err?.response?.data?.detail || err?.message || "upload_failed";
+      patchPhoto(photo.id, {
+        upload_status: "error",
+        upload_error: typeof msg === "string" ? msg : "upload_failed",
+      });
+      return false;
+    }
+  };
+
   const handleFiles = async (files) => {
     const remaining = max - photos.length;
     const filesArr = Array.from(files).slice(0, remaining);
-    const newPhotos = [...photos];
+    if (!filesArr.length) return;
+    setUploading(true);
+    const staged = [];
     for (const file of filesArr) {
       if (!file.type.startsWith("image/")) continue;
       try {
         const blob = await resizeToBlob(file);
-        let url;
-        try {
-          url = await uploadBlob(blob, file.name);
-        } catch {
-          // R4 — fallback base64 solo per blob piccoli: mai payload JSON enormi
-          if (blob.size > 600 * 1024) continue;
-          url = await blobToDataUrl(blob);
-        }
-        newPhotos.push({
-          id: crypto.randomUUID ? crypto.randomUUID() : String(Math.random()).slice(2),
-          url,
+        const preview = await blobToDataUrl(blob);
+        const id = crypto.randomUUID ? crypto.randomUUID() : String(Math.random()).slice(2);
+        staged.push({
+          id,
+          url: preview,
           caption: file.name.replace(/\.[^.]+$/, ""),
-          order: newPhotos.length,
-          is_cover: newPhotos.length === 0, // first photo = cover by default
+          order: photos.length + staged.length,
+          is_cover: photos.length + staged.length === 0,
+          upload_status: "pending",
+          upload_error: null,
+          _blob: blob,
+          _fileName: file.name,
         });
       } catch {
-        // skip on error
+        // skip unreadable file
       }
     }
-    onChange(newPhotos);
+    const next = [...photos, ...staged];
+    onChange(next);
+    for (const item of staged) {
+      try {
+        let url;
+        try {
+          url = await uploadBlob(item._blob, item._fileName);
+        } catch (err) {
+          if (item._blob.size > 600 * 1024) throw err;
+          url = item.url;
+        }
+        const idx = next.findIndex((p) => p.id === item.id);
+        if (idx >= 0) {
+          next[idx] = {
+            ...next[idx],
+            url,
+            upload_status: "success",
+            upload_error: null,
+          };
+          delete next[idx]._blob;
+          delete next[idx]._fileName;
+        }
+        onChange([...next]);
+      } catch (err) {
+        const msg = err?.response?.data?.detail || err?.message || "upload_failed";
+        const idx = next.findIndex((p) => p.id === item.id);
+        if (idx >= 0) {
+          next[idx] = {
+            ...next[idx],
+            upload_status: "error",
+            upload_error: typeof msg === "string" ? msg : "upload_failed",
+          };
+        }
+        onChange([...next]);
+      }
+    }
+    setUploading(false);
+  };
+
+  const retryUpload = async (idx) => {
+    const photo = photos[idx];
+    if (!photo) return;
+    setUploading(true);
+    try {
+      // re-fetch blob from current url if data URL, else mark error
+      let blob = photo._blob;
+      if (!blob && typeof photo.url === "string" && photo.url.startsWith("data:")) {
+        const res = await fetch(photo.url);
+        blob = await res.blob();
+      }
+      if (!blob) {
+        patchPhoto(photo.id, { upload_status: "error", upload_error: "retry_needs_reselect" });
+        return;
+      }
+      await uploadOne(photo, blob, photo._fileName || `${photo.caption || "foto"}.jpg`);
+    } finally {
+      setUploading(false);
+    }
   };
 
   const onDrop = (e) => {
@@ -111,7 +200,6 @@ export default function PhotoUploader({
 
   const removePhoto = (idx) => {
     const newPhotos = photos.filter((_, i) => i !== idx).map((p, i) => ({ ...p, order: i }));
-    // if removed cover, set first as cover
     if (newPhotos.length > 0 && !newPhotos.some((p) => p.is_cover)) {
       newPhotos[0].is_cover = true;
     }
@@ -132,13 +220,12 @@ export default function PhotoUploader({
 
   return (
     <div data-testid="photo-uploader" className="space-y-4">
-      {/* Dropzone */}
       <div
         data-testid="photo-dropzone"
         role="button"
         tabIndex={0}
         aria-label="Carica foto: trascina qui i file JPEG o PNG, oppure premi Invio per selezionarli"
-        onClick={() => fileInput.current?.click()}
+        onClick={() => !uploading && fileInput.current?.click()}
         onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); fileInput.current?.click(); } }}
         onDragOver={(e) => e.preventDefault()}
         onDrop={onDrop}
@@ -148,7 +235,9 @@ export default function PhotoUploader({
           Trascina qui le foto JPEG / PNG
         </p>
         <p className="text-xs text-stone-500 mt-1">
-          oppure clicca per selezionarle (max {max} foto, ridotte automaticamente a 1600px)
+          {uploading
+            ? "Caricamento in corso…"
+            : `oppure clicca per selezionarle (max ${max} foto, ridotte automaticamente a 1600px)`}
         </p>
       </div>
       <input
@@ -161,7 +250,6 @@ export default function PhotoUploader({
         className="hidden"
       />
 
-      {/* Grid */}
       {photos.length > 0 && (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
           {photos.map((p, idx) => (
@@ -169,13 +257,35 @@ export default function PhotoUploader({
               key={p.id || idx}
               data-testid={`photo-thumb-${idx}`}
               className={`relative group rounded-lg overflow-hidden border-2 ${
-                p.is_cover ? "border-amber-500" : "border-stone-200"
+                p.upload_status === "error"
+                  ? "border-rose-400"
+                  : p.is_cover
+                    ? "border-amber-500"
+                    : "border-stone-200"
               }`}
             >
               <div className="aspect-[4/3] bg-stone-100">
                 <img src={p.url} alt={p.caption || `Foto immobile ${p.order + 1}`} className="w-full h-full object-cover" />
               </div>
-              {p.is_cover && (
+              {p.upload_status === "pending" && (
+                <span
+                  data-testid={`photo-status-pending-${idx}`}
+                  className="absolute top-1 right-1 bg-stone-800/80 text-white text-[9px] uppercase tracking-widest px-1.5 py-0.5 rounded"
+                >
+                  Pending
+                </span>
+              )}
+              {p.upload_status === "error" && (
+                <button
+                  type="button"
+                  data-testid={`photo-retry-${idx}`}
+                  onClick={() => retryUpload(idx)}
+                  className="absolute inset-x-1 bottom-1 bg-rose-600 text-white text-[10px] uppercase tracking-widest px-2 py-1 rounded"
+                >
+                  Riprova
+                </button>
+              )}
+              {p.is_cover && p.upload_status !== "error" && (
                 <span className="absolute top-1 left-1 bg-amber-500 text-white text-[9px] uppercase tracking-widest px-1.5 py-0.5 rounded">
                   ★ Cover
                 </span>
@@ -239,6 +349,9 @@ export default function PhotoUploader({
       {photos.length > 0 && (
         <p className="text-xs text-stone-500">
           {photos.length} / {max} foto · La prima con la stella ★ è la copertina (mostrata in lista immobili)
+          {photos.some((p) => p.upload_status === "error")
+            ? " · Una o più foto in errore: usa Riprova"
+            : ""}
         </p>
       )}
     </div>

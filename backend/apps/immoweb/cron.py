@@ -1,8 +1,9 @@
-"""OMNIA — Admin cron triggers (M3.S7).
+"""OMNIA — Admin cron triggers (M3.S7) · D-108.
 
-Endpoints that an external scheduler (k8s CronJob, cron, GitHub Actions)
-can call to run periodic jobs. Admin-protected so we can also call them
-manually from the dashboard.
+Owner automatico dei job = APScheduler (sync_engine.start_scheduler).
+Questi endpoint HTTP sono **solo trigger manuali / fallback controllato**
+per super_admin — non una seconda autorità di scheduling parallela.
+Non registrare CronJob esterni che li chiamino in parallelo allo scheduler.
 """
 from fastapi import APIRouter, Depends, HTTPException
 
@@ -19,32 +20,35 @@ ALLOWED_ROLES = {"super_admin"}
 
 @router.post("/saved-searches/run-all")
 async def cron_run_saved_searches(user: dict = Depends(get_current_user)):
+    """Trigger manuale (D-108) — owner automatico = APScheduler."""
     if user.get("role") not in ALLOWED_ROLES:
         raise HTTPException(status_code=403, detail="cron_forbidden")
     result = await run_all_active_saved_searches()
-    return {"ok": True, **result}
+    return {"ok": True, "trigger": "manual", "owner": "apscheduler", **result}
 
 
 @router.post("/requests/matching")
 async def cron_run_request_matching(user: dict = Depends(get_current_user)):
-    """D-090 — matching notturno richieste → portafoglio (+ email cliente se GDPR)."""
+    """D-090 — matching notturno. Trigger manuale (D-108)."""
     if user.get("role") not in ALLOWED_ROLES:
         raise HTTPException(status_code=403, detail="cron_forbidden")
     result = await run_all_request_matching()
-    return {"ok": True, **result}
+    return {"ok": True, "trigger": "manual", "owner": "apscheduler", **result}
 
 
 @router.post("/trash/purge")
 async def cron_purge_trash(user: dict = Depends(get_current_user)):
-    """Svuota dal Cestino immobili/clienti oltre i 30 giorni."""
+    """Svuota dal Cestino immobili/clienti oltre i 30 giorni. Trigger manuale."""
     if user.get("role") not in ALLOWED_ROLES:
         raise HTTPException(status_code=403, detail="cron_forbidden")
-    return await run_trash_purge()
+    result = await run_trash_purge()
+    return {**(result if isinstance(result, dict) else {"result": result}), "trigger": "manual", "owner": "apscheduler"}
 
 
 @router.post("/backup/daily")
 async def cron_daily_backup(user: dict = Depends(get_current_user)):
-    """Backup giornaliero archivi (DB + media locali), retention 30 gg — D-085."""
+    """Backup giornaliero (DB + media). Trigger manuale (D-108) — D-085/D-105."""
     if user.get("role") not in ALLOWED_ROLES:
         raise HTTPException(status_code=403, detail="cron_forbidden")
-    return await run_daily_backup()
+    report = await run_daily_backup()
+    return {"ok": True, "trigger": "manual", "owner": "apscheduler", **report}

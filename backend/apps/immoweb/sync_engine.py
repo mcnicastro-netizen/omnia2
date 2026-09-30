@@ -57,11 +57,12 @@ def _next_daily_at_iso() -> str:
 
 async def _fetch_properties(agency_id: str, is_all: bool,
                              property_ids: Optional[List[str]] = None) -> List[Dict[str, Any]]:
+    from shared.db.trash import with_not_trashed
     db = Database.get()
     q: Dict[str, Any] = {"agency_id": agency_id, "status": "active"}
     if not is_all and property_ids:
         q["id"] = {"$in": property_ids}
-    return await db.properties.find(q).limit(2000).to_list(2000)
+    return await db.properties.find(with_not_trashed(q)).limit(2000).to_list(2000)
 
 
 async def _record_log(agency_id: str, portal_slug: str, connection_id: str,
@@ -251,15 +252,35 @@ async def run_all_active_syncs(trigger: str = "scheduled") -> Dict[str, Any]:
 
 
 # ---------- APScheduler wiring ----------
+# D-108 — APScheduler is the sole owner of automatic job execution.
+# HTTP /cron/* endpoints are manual/fallback triggers only (not a second schedule).
 
 _scheduler = None
+_job_heartbeats: Dict[str, Dict[str, Any]] = {}
+
+
+def _mark_job(job_id: str, *, ok: bool, detail: Optional[str] = None) -> None:
+    _job_heartbeats[job_id] = {
+        "last_run_at": datetime.now(timezone.utc).isoformat(),
+        "ok": ok,
+        "detail": (detail or "")[:200] or None,
+    }
+
+
+def get_scheduler_heartbeats() -> Dict[str, Any]:
+    """D-105 — last_run per job for Founder Ops."""
+    running = _scheduler is not None and getattr(_scheduler, "running", False)
+    return {
+        "running": bool(running),
+        "jobs": dict(_job_heartbeats),
+    }
 
 
 def start_scheduler() -> None:
     """Start the AsyncIOScheduler and register the daily job.
 
     Called from server.py lifespan. Idempotent (safe if called twice in
-    hot-reload dev).
+    hot-reload dev). Owner unico automatico (D-108).
     """
     global _scheduler
     if _scheduler is not None:
@@ -271,10 +292,18 @@ def start_scheduler() -> None:
         logger.warning("APScheduler not installed — daily sync disabled")
         return
     sched = AsyncIOScheduler(timezone="UTC")
+
+    async def _publishing_tick():
+        try:
+            await run_all_active_syncs(trigger="scheduled")
+            _mark_job("publishing_daily_sync", ok=True)
+        except Exception as e:  # noqa: BLE001
+            _mark_job("publishing_daily_sync", ok=False, detail=str(e))
+            logger.warning("publishing sync scheduled run failed: %s", e)
+
     sched.add_job(
-        run_all_active_syncs,
+        _publishing_tick,
         CronTrigger(hour=DAILY_SYNC_HOUR_UTC, minute=DAILY_SYNC_MINUTE_UTC),
-        kwargs={"trigger": "scheduled"},
         id="publishing_daily_sync",
         replace_existing=True,
         max_instances=1,
@@ -285,7 +314,9 @@ def start_scheduler() -> None:
         from apps.immocloud.saved_searches import run_all_active_saved_searches
         try:
             await run_all_active_saved_searches()
+            _mark_job("saved_searches_frequent", ok=True)
         except Exception as e:  # noqa: BLE001
+            _mark_job("saved_searches_frequent", ok=False, detail=str(e))
             logger.warning("saved_searches scheduled run failed: %s", e)
 
     sched.add_job(
@@ -301,9 +332,25 @@ def start_scheduler() -> None:
         from apps.immoweb.backup_job import run_daily_backup
         try:
             report = await run_daily_backup()
+            ok = (report.get("status") or ("OK" if report.get("ok") else "FAILED")) == "OK"
+            _mark_job(
+                "archive_daily_backup",
+                ok=ok,
+                detail=f"status={report.get('status')} day={report.get('day')}",
+            )
             logger.info("daily backup ok=%s day=%s", report.get("ok"), report.get("day"))
         except Exception as e:  # noqa: BLE001
+            _mark_job("archive_daily_backup", ok=False, detail=str(e))
             logger.warning("daily backup failed: %s", e)
+            try:
+                from shared.ops_alerts import record_alert
+                await record_alert(
+                    kind="backup",
+                    severity="error",
+                    message=f"Backup giornaliero eccezione: {e}",
+                )
+            except Exception:  # noqa: BLE001
+                pass
 
     sched.add_job(
         _daily_backup_tick,
@@ -318,6 +365,11 @@ def start_scheduler() -> None:
         from apps.immoweb.request_matching_job import run_all_request_matching
         try:
             report = await run_all_request_matching()
+            _mark_job(
+                "request_matching_nightly",
+                ok=True,
+                detail=f"scanned={report.get('scanned')}",
+            )
             logger.info(
                 "request matching scanned=%s new=%s emailed=%s",
                 report.get("scanned"),
@@ -325,6 +377,7 @@ def start_scheduler() -> None:
                 report.get("emailed"),
             )
         except Exception as e:  # noqa: BLE001
+            _mark_job("request_matching_nightly", ok=False, detail=str(e))
             logger.warning("request matching scheduled run failed: %s", e)
 
     sched.add_job(
@@ -338,7 +391,7 @@ def start_scheduler() -> None:
     sched.start()
     _scheduler = sched
     logger.info(
-        "Publishing scheduler started (daily sync %02d:%02d UTC + saved-searches every 5m + backup 03:15 UTC + request-matching 02:30 UTC)",
+        "Publishing scheduler started (D-108 owner=apscheduler; daily sync %02d:%02d UTC + saved-searches every 5m + backup 03:15 UTC + request-matching 02:30 UTC)",
         DAILY_SYNC_HOUR_UTC, DAILY_SYNC_MINUTE_UTC,
     )
 

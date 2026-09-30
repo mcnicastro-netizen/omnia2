@@ -215,7 +215,33 @@ async def delete_client(cid: str, user: dict = Depends(require_roles("agency_adm
     )
     if result.matched_count == 0:
         raise HTTPException(status_code=404, detail="client_not_found")
-    return {"status": "ok", "trashed": True, "retention_days": 30}
+    # D-111 — freeze operative requests (preserve history; no auto-unfreeze on restore)
+    from shared.models.base import utcnow_iso
+    now = utcnow_iso()
+    frozen_n = 0
+    async for req in db.client_requests.find(
+        {
+            "agency_id": agency_id,
+            "client_id": cid,
+            "status": {"$in": ["open", "matched", "negotiating"]},
+        },
+        {"_id": 0, "id": 1, "status": 1},
+    ):
+        await db.client_requests.update_one(
+            {"id": req["id"]},
+            {"$set": {
+                "status": "frozen",
+                "status_before_freeze": req.get("status"),
+                "updated_at": now,
+            }},
+        )
+        frozen_n += 1
+    return {
+        "status": "ok",
+        "trashed": True,
+        "retention_days": 30,
+        "requests_frozen": frozen_n,
+    }
 
 
 @router.get("/{cid}/properties")

@@ -101,10 +101,16 @@ async def process_request(db, req: Dict[str, Any]) -> Dict[str, Any]:
     if not fresh:
         return {"request_id": req["id"], "new": 0, "emailed": False}
 
+    from shared.db.trash import with_not_trashed
+    # D-094/D-111 — skip trashed clients and frozen requests
+    if req.get("status") == "frozen":
+        return {"request_id": req["id"], "new": 0, "emailed": False, "skipped": "frozen"}
     client = await db.clients.find_one(
-        {"id": req["client_id"]},
-        {"_id": 0, "id": 1, "name": 1, "surname": 1, "email": 1, "gdpr_consent": 1, "lang": 1},
+        with_not_trashed({"id": req["client_id"]}),
+        {"_id": 0, "id": 1, "name": 1, "surname": 1, "email": 1, "gdpr_consent": 1, "lang": 1, "deleted_at": 1},
     )
+    if not client:
+        return {"request_id": req["id"], "new": 0, "emailed": False, "skipped": "client_trashed"}
     emailed = False
     to_email = (client or {}).get("email")
     if to_email and (client or {}).get("gdpr_consent"):
@@ -182,7 +188,7 @@ async def run_all_request_matching(*, agency_id: Optional[str] = None) -> Dict[s
     await db[NOTIF_COLLECTION].create_index([("agency_id", 1), ("notified_at", -1)])
 
     q: Dict[str, Any] = {
-        "status": {"$in": ["open", "matched", "negotiating"]},
+        "status": {"$in": ["open", "matched", "negotiating"]},  # excludes frozen (D-111)
         "auto_match": {"$ne": False},
     }
     if agency_id:

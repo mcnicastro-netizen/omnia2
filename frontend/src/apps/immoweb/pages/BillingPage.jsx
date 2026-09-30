@@ -9,20 +9,16 @@ import { toast } from "sonner";
  * OMNIA — Settings ▸ Billing (M4.S3/S4) + D-085 storage meter
  *
  * D-080: demo guidata prima dell'abbonamento.
- * CTA primaria = Richiedi demo; checkout solo dopo conferma demo (o piano già attivo).
+ * D-110: localStorage ≠ entitlement — "Piano attivo" solo da subscription server-side.
+ * Demo confirm resta UX in-memory (sessione), non simula piano pagato.
  */
 export default function BillingPage() {
   const [state, setState] = useState({ loading: true, data: null, sub: null });
   const [storage, setStorage] = useState(null);
   const [billingCycle, setBillingCycle] = useState("monthly");
   const [busy, setBusy] = useState(false);
-  const [demoDone, setDemoDone] = useState(() => {
-    try {
-      return localStorage.getItem("omnia_demo_done") === "1";
-    } catch {
-      return false;
-    }
-  });
+  // D-110 — non leggere/scrivere entitlement da localStorage
+  const [demoRequested, setDemoRequested] = useState(false);
   const location = useLocation();
 
   useEffect(() => {
@@ -81,21 +77,23 @@ export default function BillingPage() {
   }, [location.search]);
 
   const openDemo = () => {
-    const email = (state.data?.demo_contact_email || "mcnicastro@gmail.com").trim();
+    const email = (state.data?.demo_contact_email || "[REDACTED]").trim();
     const subject = encodeURIComponent("Richiesta demo guidata OMNIA");
     const body = encodeURIComponent(
       "Ciao Marco,\n\nvorrei prenotare una demo guidata di OMNIA per la mia agenzia.\n\nAgenzia:\nCittà:\nTelefono:\n"
     );
     window.location.href = `mailto:${email}?subject=${subject}&body=${body}`;
-    try {
-      localStorage.setItem("omnia_demo_done", "1");
-    } catch { /* noop */ }
-    setDemoDone(true);
-    toast.success("Perfetto — dopo la demo potrai attivare il piano qui.");
+    setDemoRequested(true);
+    toast.success("Richiesta demo aperta — l'attivazione piano resta lato server dopo provisioning.");
   };
 
   const checkoutSubscription = async (tier) => {
-    if (!demoDone && !state.sub?.subscription) {
+    if (!state.data?.enabled) {
+      toast.message("Checkout non disponibile — contattaci per provisioning assistito.");
+      openDemo();
+      return;
+    }
+    if (!demoRequested && !state.sub?.subscription) {
       const ok = window.confirm(
         "L'abbonamento si attiva dopo la demo guidata.\n\nHai già fatto la demo con OMNIA?"
       );
@@ -103,10 +101,7 @@ export default function BillingPage() {
         openDemo();
         return;
       }
-      try {
-        localStorage.setItem("omnia_demo_done", "1");
-      } catch { /* noop */ }
-      setDemoDone(true);
+      setDemoRequested(true);
     }
     setBusy(true);
     try {
@@ -188,7 +183,9 @@ export default function BillingPage() {
   const wallet = sub?.wallet || { balance: 0 };
   const plans = data?.plans || [];
   const packages = data?.credit_packages || [];
-  const canCheckoutDirect = Boolean(activeSub) || demoDone;
+  // D-110 — CTA checkout solo se Stripe enabled; "Piano attivo" solo con activeSub
+  const stripeEnabled = Boolean(data?.enabled);
+  const canCheckoutDirect = stripeEnabled && (Boolean(activeSub) || demoRequested);
 
   return (
     <AgencyShell current="settings">
@@ -328,6 +325,14 @@ export default function BillingPage() {
               {activeSub?.tier === p.tier ? (
                 <Button className="mt-5" disabled data-testid={`checkout-${p.tier}-btn`}>
                   Piano attivo
+                </Button>
+              ) : !stripeEnabled ? (
+                <Button
+                  className="mt-5 bg-[#0B1E3F] hover:bg-[#16305a] text-white"
+                  onClick={openDemo}
+                  data-testid={`checkout-${p.tier}-btn`}
+                >
+                  Richiedi attivazione
                 </Button>
               ) : canCheckoutDirect ? (
                 <Button

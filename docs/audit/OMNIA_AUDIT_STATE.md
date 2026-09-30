@@ -7,7 +7,7 @@ Prima di analizzare un nuovo punto, leggere questo file. Non riaprire decisioni 
 
 **Current status:** P1–P24 **chiusi** · programma **APPROVATO** (**D-115**) · **«vai» O0 ∥ O1 in esecuzione**. Listino fermo. SoT: questo file.
 
-**Next:** chiudere ship O0∥O1 → poi «vai» **O2**. Regola: **no self-serve finché O6 ≠ PASS**. §23 Priorità **CLOSED**.
+**Next:** firmare run restore non-prod (O3b) → Founder decide self-serve. O0–O5 shippati · O6 checklist CONDITIONAL. Regola: **no self-serve finché O6 ≠ PASS**. §23 Priorità **CLOSED**.
 
 ---
 

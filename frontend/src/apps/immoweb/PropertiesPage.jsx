@@ -57,6 +57,8 @@ export default function PropertiesPage() {
   const nav = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const [data, setData] = useState({ items: [], total: 0, page: 1, page_size: 20 });
+  const [page, setPage] = useState(() => Math.max(1, parseInt(searchParams.get("page") || "1", 10) || 1));
+  const pageSize = 20;
   const [loading, setLoading] = useState(true);
   const [q, setQ] = useState("");
   const [status, setStatus] = useState(() => {
@@ -71,10 +73,13 @@ export default function PropertiesPage() {
     return v === "table" ? "table" : "cards";
   });
 
-  const load = async () => {
+  const load = async (pageOverride) => {
     setLoading(true);
     try {
       const params = new URLSearchParams();
+      const p = pageOverride ?? page;
+      params.set("page", String(p));
+      params.set("page_size", String(pageSize));
       if (q) params.set("q", q);
       if (status) params.set("status", status);
       if (operation) params.set("operation", operation);
@@ -88,20 +93,28 @@ export default function PropertiesPage() {
   };
 
   useEffect(() => {
-    load();
+    load(page);
     const next = new URLSearchParams();
     if (status) next.set("status", status);
     if (smart) next.set("smart", smart);
     if (sort && sort !== "updated_desc") next.set("sort", sort);
     if (view === "table") next.set("view", "table");
+    if (page > 1) next.set("page", String(page));
     setSearchParams(next, { replace: true });
     localStorage.setItem("omnia_props_view", view);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [status, smart, sort, view]);
+  }, [status, smart, sort, view, page]);
+
+  // reset page when filters change (not view/page)
+  useEffect(() => {
+    setPage(1);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [status, smart, sort, operation]);
 
   const onSearch = (e) => {
     e.preventDefault();
-    load();
+    if (page !== 1) setPage(1);
+    else load(1);
   };
 
   const openProp = (id) => nav(`/${lang}/app/properties/${id}`);
@@ -318,6 +331,32 @@ export default function PropertiesPage() {
             ))}
           </div>
         )}
+
+        {!loading && data.total > pageSize ? (
+          <div className="flex items-center justify-between gap-3 pt-2" data-testid="properties-pagination">
+            <button
+              type="button"
+              data-testid="properties-page-prev"
+              disabled={page <= 1}
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              className="px-3 py-2 text-xs uppercase tracking-widest border border-stone-300 rounded-md disabled:opacity-40"
+            >
+              Precedente
+            </button>
+            <span className="text-xs text-stone-500" data-testid="properties-page-label">
+              Pagina {data.page || page} · {data.total} immobili
+            </span>
+            <button
+              type="button"
+              data-testid="properties-page-next"
+              disabled={(data.page || page) * pageSize >= data.total}
+              onClick={() => setPage((p) => p + 1)}
+              className="px-3 py-2 text-xs uppercase tracking-widest border border-stone-300 rounded-md disabled:opacity-40"
+            >
+              Successiva
+            </button>
+          </div>
+        ) : null}
       </section>
     </AgencyShell>
   );

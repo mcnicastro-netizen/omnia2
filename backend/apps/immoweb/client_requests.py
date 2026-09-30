@@ -348,7 +348,11 @@ async def update_request(
     if not existing:
         raise HTTPException(status_code=404, detail="request_not_found")
 
+    # D-111 — frozen = non operativa; solo archive esplicito ammesso
     data = payload.model_dump(exclude_unset=True)
+    if existing.get("status") == "frozen":
+        if data.get("status") != "archived":
+            raise HTTPException(status_code=409, detail="request_frozen")
     if "criteria" in data and data["criteria"] is not None:
         if hasattr(data["criteria"], "model_dump"):
             data["criteria"] = data["criteria"].model_dump()

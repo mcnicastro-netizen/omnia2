@@ -12,7 +12,8 @@ from shared.models.base import TenantModel, OmniaBaseModel
 from shared.models.client import SearchPreferences
 
 RequestType = Literal["property_interest", "search_brief"]
-RequestStatus = Literal["open", "matched", "negotiating", "won", "lost", "archived"]
+# D-111 — frozen = non operativa (client in Cestino); storico preservato, no unfreeze auto
+RequestStatus = Literal["open", "matched", "negotiating", "won", "lost", "archived", "frozen"]
 
 
 class ClientRequestInDB(TenantModel):
