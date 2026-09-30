@@ -6,7 +6,7 @@
 > **Numerazione = continuum di sessione** (non forzare allineamento al master).  
 > Prompt master: `memory/AUDIT_PROMPT_MASTER.md` (§1–§27) — corrispondenza in tabella sotto.
 
-**Ultimo aggiornamento**: 30-Set-2026 · **SoT** `docs/audit/OMNIA_AUDIT_STATE.md` · **P19** error handling · **D-106**
+**Ultimo aggiornamento**: 30-Set-2026 · **SoT** `docs/audit/OMNIA_AUDIT_STATE.md` · **P18 CHIUSO** · **P19** ⏳ analisi
 
 ---
 
@@ -31,9 +31,10 @@
 | P15 | Concorrenza / race | §14 | 🟠 **ACQUISITO** · **RC-*** · invite → **D-100** · jobs → **D-101** |
 | P16 | Job asincroni (approfondimento) | §15 | 🟠 **ACQUISITO** · **JA-*** · **D-102** · **D-103** |
 | P17 | Osservabilità | §16 | 🟠 **ACQUISITO** (Master State) · **O-*** · **D-105** bak health |
-| P18 | API / Frontend | §17 | 🟠 **osservazioni acquisite** · **AF-*** · **D-106** |
+| P18 | API / Frontend | §17 | 🟢 **CHIUSO** · baseline · **D-106** · AF-05=GTM-01 min |
+| P19 | Error handling | §18 | 🟠 Consegnato · **EH-*** · ⏳ analisi |
 | — | Cestino (blocco dedicato) | §6 | 🟡 coperto in P5 + P12 |
-| — | post-P19 / GTM… | §19–§27 | ⬜ da confermare Founder |
+| — | Scalabilità… | §19–§27 | ⬜ dopo acquisizione P19 |
 | **GTM-01** | Demo Readiness / primo afflusso | **post-audit** | 🟠 **ACQUISITO** · **D-104** · in coda · **vincolo pre-~5000 email** |
 
 Decisioni dominio (codice ⏳): **D-094** … **D-106**.  
@@ -59,7 +60,8 @@ P18 chiuso · P19 in analisi Founder.
 13. **Jobs deepen** = **JA-*** · J-* · **JA-02**/JA-03 in registro finale  
 14. **Osservabilità** = **O-*** · **D-105** bak health minimo  
 15. **GTM / Demo Readiness** = **GTM-01 ACQUISITO** · **D-104** — in coda; **obbligatorio prima delle ~5000 email**  
-16. **API / Frontend** = **AF-*** · **D-106** `active_agency_id` SoT · nota decisionale P18
+16. **API / Frontend** = **AF-*** · **D-106** · P18 CHIUSO · AF-05=GTM-01 min  
+17. **Error handling** = **EH-*** (swallow FE · email soft-fail · job WARNING)
 
 ---
 
