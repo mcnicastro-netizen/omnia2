@@ -232,6 +232,8 @@ Verificare almeno:
 
 **Confidence gate (P20 / K-SC-01):** smoke load dedicato leggero ~20 concurrent — upload + read/serve media + match + combinazione; errori/latenza/memoria; ambiente rappresentativo. Stress ladder resta baseline. **Non** è gate P0–P3.
 
+**Trigger AD-01 (P23 / K-AD-02):** FS + 1 replica = baseline GTM deliberata; anticipare object storage/CDN solo se lo **smoke media** fallisce (I/O, RAM, latenza, errori concorrenti, consistenza) — non “1 replica ⇒ object storage”.
+
 **Requisiti minimi già collegati a GTM-01:** AF-05/EH-03 upload osservabile; EH-04 empty≠error; **SC-08/AF-04** paginazione FE properties.
 
 Non significa dimensionare OMNIA per 5.000 utenti contemporanei.
