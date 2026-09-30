@@ -7,7 +7,7 @@ Prima di analizzare un nuovo punto, leggere questo file. Non riaprire decisioni 
 
 **Current status:** P1–P24 **chiusi** · **P25 Report finale consegnato** ⏳ analisi Founder · **D-114** bak/media = priorità pre-attivazione. Nessun fix. Listino fermo. SoT: questo file. **Niente codice** senza «vai».
 
-**Next:** analisi Founder su **P25 (report A–K)** / sequenza ripago pre-attivazione. Master §23 Priorità **CLOSED** fino al «vai».
+**Next:** Founder su **programma pre-attivazione** (`docs/audit/OMNIA_PROGRAMMA_PRE_ATTIVAZIONE.md` · review auditer · K-PA-01…03). P25 in coda. §23 Priorità **CLOSED** fino al «vai».
 
 ---
 
@@ -1026,6 +1026,8 @@ Trigger tecnico: fallimento **smoke media** (K-SC-01) → anticipare AD-01 — n
 
 **Nota Founder (30-Set):** non si può prescindere da bak/media — ne va della **sostenibilità economica**. Elevato a priorità pre-attivazione (**D-114**), non lasciato come debito “accettato”.
 
+**Programma attuativo:** `docs/audit/OMNIA_PROGRAMMA_PRE_ATTIVAZIONE.md` (onde O0–O6 · review auditer · gate attivazione O6).
+
 ---
 
 # 26. P25 — REPORT FINALE (consegnato · ⏳ analisi Founder · master §25)
@@ -1121,6 +1123,6 @@ Dopo acquisizione Founder su **P25**: tipicamente chiusura continuum · oppure r
 
 Il Master Audit State deve essere aggiornato dopo il completamento di ogni punto significativo.
 
-**Current next action:** analisi Founder su **P25 (report A–K)**. GTM-01 in coda. §23 Priorità CLOSED.
+**Current next action:** risposta Founder a **K-PA-01…03** / approvazione programma pre-attivazione. Poi «vai» sulle onde. §23 Priorità CLOSED.
 
 **Niente fix. Nessuna severità P0–P3. Listino fermo. Attende «vai».**

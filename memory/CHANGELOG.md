@@ -1,5 +1,16 @@
 # OMNIA — Changelog
 
+## 2026-09-30 — Programma pre-attivazione O0–O6 + review auditer
+
+**Tipo**: Docs / SoT audit · **nessun codice** · **listino fermo**.
+
+- Nuovo: `docs/audit/OMNIA_PROGRAMMA_PRE_ATTIVAZIONE.md`
+- Onde O0 (D-114) → O1 sicurezza → O2 trash → O3 recupero → O4 contratto → O5 percorso → O6 gate attivazione
+- Review auditer: raccomanda approvazione con R1–R5 · domande K-PA-01…03
+- Framing: pre-attivazione commerciale, non corsa outreach GTM
+
+---
+
 ## 2026-09-30 — D-114 Sostenibilità bak/media priorità pre-attivazione
 
 **Tipo**: Docs / SoT audit · **nessun codice** · **listino fermo** · no nuovi P0–P3.
