@@ -1734,7 +1734,21 @@ Registro di tutte le decisioni di business e tecniche prese durante il progetto.
   3. FS locale come backend fisico ≠ modello economico sostenibile del volume.
   4. **Listino fermo** finché i numeri esistono; poi eventuale revisione.
   5. Non eleva automaticamente a P0–P3 in audit; entra nel set da chiudere prima di accettare clienti paganti.
-- **Implementazione**: ❌ design/ops/codice ⏳ — post-audit / «vai».
-- **Stato**: ✅ **DECISIONE DI DOMINIO REGISTRATA** (docs 30-Set-2026) · codice/design ⏳
+- **O0 (K-PA-01):** deliverable = numeri + **design vincolante** scritto (retention, scope, full/incrementale, restore agency-first, costo, “questo implementeremo”); **non** refactoring obbligatorio del bak dentro O0.
+- **Implementazione:** design O0 ⏳ al «vai»; codice bak nuovo = fase successiva al design.
+- **Stato**: ✅ **DECISIONE DI DOMINIO REGISTRATA** (docs 30-Set-2026 · K-PA-01) · design/codice ⏳
+
+### D-115 — Programma pre-attivazione approvato · no self-serve prima di O6 · 30-Set-2026
+- **Data**: 30 Settembre 2026
+- **Contesto**: Founder approva `docs/audit/OMNIA_PROGRAMMA_PRE_ATTIVAZIONE.md` dopo review auditer. K-PA-01…03.
+- **Decisione**:
+  1. Programma **O0 ∥ O1 → O2 → O3 → O4 → O5 → O6** = SoT attuativo.
+  2. **O2 prima di O3**: prima regole trash/freeze, poi test recupero.
+  3. Durante le onde: solo **provisioning assistito dichiarato** (tempi interni da definire; non scappatoia permanente).
+  4. **Nessun pagamento self-serve finché O6 non è PASS.**
+  5. Self-serve a pagamento ammissibile solo dopo O6 PASS.
+  6. Listino fermo · nessun codice senza «vai» esplicito sulle onde.
+- **Implementazione**: ❌ codice ⏳ — attende «vai» (tipicamente O0 e/o O1).
+- **Stato**: ✅ **DECISIONE OPERATIVA REGISTRATA** (docs 30-Set-2026) · codice ⏳
 
 

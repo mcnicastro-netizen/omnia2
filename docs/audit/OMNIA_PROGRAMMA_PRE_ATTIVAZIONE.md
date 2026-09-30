@@ -1,9 +1,10 @@
 # OMNIA — Programma attuativo pre-attivazione commerciale
 
-**Stato:** bozza Founder · **sottoposto a review auditer** (sezione in fondo)  
-**SoT continuità:** `docs/audit/OMNIA_AUDIT_STATE.md` (§25bis · D-094…D-114)  
-**Vincoli:** listino fermo · nessun P0–P3 nuovo in audit · **nessun codice** finché Founder non dà «vai» su questo programma (o su singole onde)  
-**Obiettivo:** account pagante attivabile in modo responsabile — non corsa outreach ~5k email.
+**Stato:** ✅ **APPROVATO Founder** (30-Set-2026) · K-PA-01…03 risolte · **D-115**  
+**SoT continuità:** `docs/audit/OMNIA_AUDIT_STATE.md` (§25bis · D-094…D-115)  
+**Vincoli:** listino fermo · nessun P0–P3 nuovo in audit · **nessun codice** finché Founder non dà «vai» su onde/implementazione  
+**Regola commerciale:** **nessun pagamento self-serve finché O6 non è PASS.**  
+**Obiettivo:** prima OMNIA attivabile senza sorprese, poi rubinetto commerciale — non corsa outreach ~5k email.
 
 ### Priorità Founder (ordine di senso)
 
@@ -24,6 +25,7 @@ GTM-01 resta in coda come **checkpoint** quando si sceglierà l’outreach; non 
 4. **Bak + restore + retention + costi** = catena unica (**D-096** · **D-114**); listino fermo finché ci sono numeri.
 5. **FS locale** può restare backend fisico; il full-copy × retention **non** resta modello economico silenzioso.
 6. Implementazione solo al «vai»; §23 Priorità audit resta CLOSED — questo documento è la sequenza operativa.
+7. **Nessun pagamento self-serve finché O6 ≠ PASS** (**D-115**). Durante le onde: solo **provisioning assistito dichiarato** (tempi interni da definire; non scappatoia permanente).
 
 ---
 
@@ -31,7 +33,7 @@ GTM-01 resta in coda come **checkpoint** quando si sceglierà l’outreach; non 
 
 | Onda | Nome | Focus Founder | Esito |
 |------|------|---------------|--------|
-| **O0** | Design & numeri bak/media | Storage / economia | Modello sostenibile + stima costi (anche senza ship completo) |
+| **O0** | Design & numeri bak/media | Storage / economia | **Numeri + design vincolante** (no refactoring obbligatorio in O0) |
 | **O1** | Confini di sicurezza | Sicurezza dati | Fascicolo + invite + SoT agency |
 | **O2** | Integrità di dominio | Anticrash | Trash uniforme + freeze |
 | **O3** | Catena di recupero | Recupero + anticrash ops | Bak health + restore manuale testato |
@@ -47,15 +49,15 @@ Le onde **O0∥O1** possono partire in parallelo (design economia vs fix AuthZ).
 
 ## Dettaglio voci (motivo · evidenza · done)
 
-### O0 — Sostenibilità bak/media · **D-114**
+### O0 — Sostenibilità bak/media · **D-114** · **K-PA-01**
 
 | Campo | Contenuto |
 |-------|-----------|
-| **Cosa** | Stima costi reali (live `.media` + bak retention attuale); design bak sostenibile (retention / incrementale / scope agency); allineamento a restore agency-first |
-| **Motivo** | Full-copy × ~30g ≈ moltiplicatore ~32×: senza numeri si vende margine cieco. Founder: non prescindibile |
-| **Evidenza** | AD-02 · B-01 · C-04 · SC-03 · Master §5 |
-| **Done quando** | Documento costi + design target approvato Founder; impatto d’onda su listino **valutato** (listino ancora fermo finché non si decide revisione) |
-| **Non include** | Rewrite storage completo obbligatorio; object storage se non imposto da numeri/smoke |
+| **Cosa** | **Calcolo reale dei costi** + **modello target deciso e scritto**. Deliverable minimi: retention target · cosa entra/esce dal bak · full vs incrementale · restore agency-first · costo stimato · frase vincolante: *“questo è il modello che implementeremo”* |
+| **Motivo** | Full-copy × ~30g ≈ ~32×: margine cieco. Corregge R1: non Excel morto, non mega-refactor in O0 |
+| **Evidenza** | AD-02 · B-01 · C-04 · SC-03 · Master §5 · review auditer R1 |
+| **Done quando** | Documento costi + design **vincolante** approvato Founder; listino ancora fermo finché non si decide revisione |
+| **Non include** | Refactoring/implementazione del nuovo bak **dentro O0** — quella è fase successiva post-design |
 
 ### O1a — Fascicolo AuthZ · **D-095** · NI-01
 
@@ -163,12 +165,17 @@ Le onde **O0∥O1** possono partire in parallelo (design economia vs fix AuthZ).
 
 ---
 
-## Criterio “cliente ha pagato → operativo”
+## Criterio “cliente ha pagato → operativo” · **K-PA-02** · **D-115**
 
-**Self-serve:** solo con O6 = PASS.  
-**Assistito:** ammissibile prima del PASS solo se dichiarato in vendita (“provisioning dopo verifica affidabilità”), non come sorpresa post-pagamento.
+> **Nessun pagamento self-serve finché O6 non è PASS.**
 
-Non si stima calendario qui: la durata dipende da quante onde si aprono al «vai» e dalla profondità di O0 (solo numeri vs già primo passo incrementale). Quello che resta fisso è il **cancello O6**, non una promessa di SLA inventata.
+| Fase | Modello |
+|------|---------|
+| **Durante O0–O5** | Solo **provisioning assistito dichiarato** (tempi interni da definire; non “paga ora, poi vediamo”) |
+| **Dopo O6 PASS** | Self-serve a pagamento ammissibile |
+| **Assistito** | Non scappatoia permanente — da chiudere quando O6 è PASS |
+
+Non si stima calendario qui. Fisso resta il **cancello O6**.
 
 ---
 
@@ -196,21 +203,25 @@ Il programma è **coerente** con Master State §25bis, D-094…D-114 e con le pr
 | R4 | Parallelismo O0∥O1 senza owner unico → O0 slitta di nuovo nel “dopo” | Owner esplicito Founder su O0; O6 non passa senza O0 DONE |
 | R5 | “Assistito” diventa scappatoia infinita | SLA interno massimo di provisioning assistito da dichiarare quando si sceglie quel modello — non lasciarlo vago |
 
-### Domande auditer al Founder (prima del «vai»)
+### Domande auditer — **RISOLTE** Founder (30-Set)
 
-1. **K-PA-01:** O0 al «vai» = solo *design+numeri*, o include già il **primo passo implementativo** del bak sostenibile (es. retention più stretta / exclude path / incremental MVP)?  
-2. **K-PA-02:** Primo modello commerciale post-audit = **self-serve dopo O6 PASS**, o **provisioning assistito** esplicito durante le onde?  
-3. **K-PA-03:** Confermi sequenza **O0∥O1 → O2 → O3 → O4 → O5 → O6**, o vuoi O3 (recupero) subito dopo O1 (sicurezza) e O2 in parallelo?
+| K-PA | Decisione |
+|------|-----------|
+| **K-PA-01** | O0 = **numeri + design vincolante**; **non** refactoring obbligatorio del bak in O0. Poi implementazione = fase successiva |
+| **K-PA-02** | Durante le onde: **provisioning assistito dichiarato**. Self-serve a pagamento: **solo dopo O6 PASS**. Assistito ≠ scappatoia permanente |
+| **K-PA-03** | Sequenza **O0 ∥ O1 → O2 → O3 → O4 → O5 → O6**. O3 non prima di O2: prima regole dato eliminato/frozen, poi test recupero |
 
-### Raccomandazione auditer
+**Motivo K-PA-03 (Founder):** O2 protegge il comportamento del sistema; O3 verifica che possiamo recuperarlo. O0 e O1 in parallelo = binari distinti (economia bak vs confini AuthZ).
 
-**Approvare il programma come SoT attuativo** con vincoli:
+### Regola commerciale aggiuntiva
 
-* O6 non è bypassabile in silenzio;  
-* O0 è gate al pari di O1–O3;  
-* nessun nuovo P0–P3 finché non si apre esplicitamente la fase «vai»;  
-* listino fermo fino a numeri D-114;  
-* GTM outreach **dopo** (o disaccoppiato da) O6, non al posto di O6.
+> **Nessun pagamento self-serve finché O6 non è PASS.** (**D-115**)
+
+Prima rendiamo OMNIA attivabile senza sorprese, poi apriamo il rubinetto commerciale.
+
+### Raccomandazione auditer — **ACQUISITA**
+
+Programma approvato come SoT attuativo con vincoli Founder sopra. R1 chiuso da K-PA-01 (design vincolante senza mega-refactor in O0). R5 mitigato da K-PA-02 (assistito dichiarato, non permanente).
 
 ---
 
@@ -218,8 +229,8 @@ Il programma è **coerente** con Master State §25bis, D-094…D-114 e con le pr
 
 | Ruolo | Stato |
 |-------|--------|
-| Founder (bozza priorità) | proposta |
-| Auditer (questa review) | **raccomanda approvazione con R1–R5 e K-PA-01…03** |
-| «vai» implementazione | ⏳ non dato |
+| Founder | ✅ **APPROVATO** · K-PA-01…03 · regola self-serve |
+| Auditer | ✅ review acquisita · programma coerente Master State |
+| «vai» implementazione onde | ⏳ **non ancora dato** |
 
-*Aggiornare questa tabella quando Founder risponde alle K-PA e/o dà «vai».*
+*Prossimo:* Founder dà «vai» su O0 e/o O1 (paralleli), oppure su sottoinsieme esplicito.
