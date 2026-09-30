@@ -1,5 +1,15 @@
 # OMNIA — Changelog
 
+## 2026-09-30 — Priorità A-037: demo da sito + template pack (Founder)
+
+**Tipo**: Docs / SoT · priorità prodotto.
+
+- **A-037** in `ASPETTI_DA_APPROFONDIRE.md`: demo personalizzata da URL esistente + pacchetto template per no-sito / restyling / non-proprietario dominio
+- Contesto: `/it/verifica-dominio` nato da queste considerazioni; brand extractor + themes esistono ma loop demo non chiuso
+- Elevata priorità A-015 in relazione ad A-037 · `NEXT_SESSION` + Master State aggiornati
+
+---
+
 ## 2026-09-30 — Programma O2–O6 completato (codice+docs) · self-serve OFF
 
 **Tipo**: Codice O2–O5 + docs O3b/O6 · listino fermo · no self-serve.

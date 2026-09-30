@@ -804,10 +804,10 @@ Prossimo sprint tecnico (post-manuale)
 - Testing SEO + performance su domini custom (Cap. 8 Domain Vault)
 
 ### Priorità
-**P2** · task aperto Founder · alto valore commerciale ma effort significativo
+**P1 elevato** · **30-Set-2026 Founder**: parte del percorso demo (vedi **A-037**). Non più «solo P2 nice-to-have».
 
 ### Timing consigliato
-Post-manuale, dopo review scope con Founder (Cap. 16 potrebbe essere HAL Legal o Domain Vault prima di v2 sito)
+Allineare a **A-037** (demo da URL + template pack + verifica dominio). Scope Cap. 8 v2 resta valido ma la **priorità commerciale** è A-037.
 
 ### File coinvolti
 - `backend/apps/immoweb/site.py` — endpoint modelli sezioni
@@ -1300,6 +1300,41 @@ Una mail «I tuoi preferiti questa settimana» (ribassi + terminati + reminder).
 
 **Data**: 24-Sep-2026 · Solo con «vai»  
 Side-by-side 2–3 preferiti; Web Push già infrastrutturato — attivare per eventi preferiti.
+
+---
+
+## 🟠 A-037 — Demo personalizzata da sito esistente + pacchetto template (no-sito / restyling / non-proprietario)
+
+**Data inserimento**: 30-Set-2026  
+**Segnalato da**: Founder (Marco Nicastro) · sessione dogfood cliente-1  
+**Priorità**: **ALTA** — percorso demo commerciale (O6 / GTM-01)  
+**Correlati**: **A-015** · **A-025** · **D-054** `/it/verifica-dominio` · **D-022/D-023** themes + brand extractor · lead `has_website` / `website_url`
+
+### Contesto Founder
+La personalizzazione della demo dal sito dell’agenzia **ci doveva già essere**, con un **pacchetto template** per chi:
+1. non ha un sito;
+2. vuole un restyling;
+3. scopre di non esserne il proprietario (es. sito/email registrati da terzo tipo Basic Soft).
+
+`/it/verifica-dominio` è nato da queste considerazioni.
+
+### Stato attuale (onesto)
+| Pezzo | Stato |
+|-------|--------|
+| Lead «hai un sito?» + URL | ✅ |
+| Brand extractor | ⚠️ parziale — non chiude URL → demo vestita |
+| Theme catalog | ⚠️ backend; UI stub «presto disponibile» |
+| Verifica dominio + Legal Kit | ✅ D-054/D-055 |
+| Pipeline automatica demo col look cliente | ❌ |
+| Template pack commerciale (no-sito / restyling / recovery dominio) | ❌ |
+
+### Done quando
+1. Con sito: URL → brand applicato a tema demo visitabile.  
+2. Senza sito / restyling / non-proprietario: scelta template pack + percorso verifica/recupero dominio.  
+3. Cap. 8/17 + checklist demo aggiornati; niente promessa «clone automatico» finché (1) non è PASS.
+
+### Stato
+🟠 **PRIORITÀ APERTA** — Founder 30-Set-2026 · dopo/in parallelo a O6 operativo (restore firmato), **prima** di outreach large-scale.
 
 ---
 
