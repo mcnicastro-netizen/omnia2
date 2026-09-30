@@ -5,9 +5,9 @@
 **Usage rule:** questo documento è la fonte di continuità dell'audit.
 Prima di analizzare un nuovo punto, leggere questo file. Non riaprire decisioni già fissate salvo nuove evidenze. Non inventare informazioni mancanti.
 
-**Current status:** P1–P17 analizzati. Nessun fix applicato salvo dove esplicitamente indicato come già esistente. Listino fermo.
+**Current status:** P1–P18 analizzati. Nessun fix applicato salvo dove esplicitamente indicato come già esistente. Listino fermo. SoT continuità: questo file.
 
-**Next:** P18 — API / Frontend.
+**Next:** P19 — Error handling.
 
 ---
 
@@ -197,6 +197,20 @@ Quando OMNIA crescerà / passerà a più repliche, valutare anti-duplicazione co
 
 ---
 
+## D-102 — Purge + orphan cleanup automatico
+
+Purge cestino + percorso cleanup blob/orphan devono entrare nel ciclo automatico APScheduler.
+Non aspettare il worker futuro. Allinea D-098 / D-095.
+
+---
+
+## D-103 — No worker dedicato ora
+
+Nessun worker dedicato solo per chiudere i finding job.
+Eventuale anti-duplicato minimo stesso-giorno OK; worker quando il deployment lo richiede.
+
+---
+
 ## D-104 — GTM Demo Readiness
 
 Prima dell'invio delle circa 5.000 email GTM deve essere eseguito un checkpoint:
@@ -215,6 +229,20 @@ Verificare almeno:
 Non significa dimensionare OMNIA per 5.000 utenti contemporanei.
 
 **Vincolo hard:** checkpoint prima delle ~5.000 email.
+
+---
+
+## D-105 — Backup health minimo
+
+Founder Ops deve poter mostrare almeno:
+
+* ultimo backup OK / PARTIAL / FAILED;
+* data/ora;
+* alert quando necessario (`ops_alerts` / `ERROR_ALERT_*`).
+
+Serve anche sapere l’ultimo run valido dei job (`last_run`).
+Prometheus / OTel / structured logging avanzato possono aspettare.
+Codice ⏳ — post-audit / «vai».
 
 ---
 
@@ -518,7 +546,11 @@ JA-01…JA-07
 
 ### Observability
 
-O-01…O-15
+O-01…O-15 · **D-105** bak health
+
+### API / Frontend
+
+AF-01…AF-16
 
 ### Storage
 
@@ -673,10 +705,40 @@ Per ogni nuovo punto:
 
 ---
 
-# 19. PROSSIMO PUNTO
+# 19. P18 — API / FRONTEND (consegnato 30-Set)
 
-**P18 — API / Frontend**
+**Verdetto:** mount/routing demo coerenti; drift su invite (D-100), multi-agency `/me`, pagination properties, upload foto silenzioso, B2C URL raw, sessione B2B/B2C unica.
+
+### Finding AF-*
+
+| ID | Tipo | Problema |
+|----|------|----------|
+| AF-01 | fix-needed | Invite overwrite password · FE chiede sempre password (**D-100**) |
+| AF-02 | rischio | `/api/media` pubblico (**D-095**) |
+| AF-03 | drift | Switcher `active_agency_id` vs `/agencies/me` = `agency_ids[0]` |
+| AF-04 | gap | Properties: no paginazione UI → >20 invisibili |
+| AF-05 | gap | PhotoUploader silent fail |
+| AF-06 | drift | B2C usa `REACT_APP_BACKEND_URL` grezzo |
+| AF-07 | rischio | Sessione unica · login default → CRM |
+| AF-08 | oss. | Billing UI senza gate Stripe enabled |
+| AF-09 | gap | Error UX non uniforme |
+| AF-10 | perf | Match scan pesante · SellPage 1+N stats |
+| AF-11 | gap | Requests: page senza UI |
+| AF-12…AF-16 | oss. | Nav IT hardcoded · versioning · CORS default · a11y · scaffold etichettato |
+
+### Domande aperte
+
+1. **K-AF-01** — Allineare `/agencies/me*` a `active_agency_id`, o nascondere switcher?
+2. **K-AF-02** — D-100: flusso FE “utente esistente → link/login” subito, o solo fix server al «vai»?
+
+Dettaglio: `memory/AUDIT_ARCHITETTURA_NOTE.md` § Punto 18.
+
+---
+
+# 20. PROSSIMO PUNTO
+
+**P19 — Error handling** (master §18)
 
 Il Master Audit State deve essere aggiornato dopo il completamento di ogni punto significativo.
 
-**Current next action:** analizzare P18 senza ripetere integralmente P1–P17.
+**Current next action:** analizzare P19 senza ripetere integralmente P1–P18.

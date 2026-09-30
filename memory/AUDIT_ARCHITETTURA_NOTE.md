@@ -6,7 +6,7 @@
 > **Numerazione = continuum di sessione** (non forzare allineamento al master).  
 > Prompt master: `memory/AUDIT_PROMPT_MASTER.md` (§1–§27) — corrispondenza in tabella sotto.
 
-**Ultimo aggiornamento**: 30-Set-2026 · **GTM-01 ACQUISITO** (**D-104**) · **P17** riconsegnato per analisi
+**Ultimo aggiornamento**: 30-Set-2026 · **SoT** `docs/audit/OMNIA_AUDIT_STATE.md` · **P18** API/FE · **D-105**
 
 ---
 
@@ -30,12 +30,14 @@
 | P14 | GDPR / privacy | §13 | 🟠 **ACQUISITO** · **D-099** · G-* |
 | P15 | Concorrenza / race | §14 | 🟠 **ACQUISITO** · **RC-*** · invite → **D-100** · jobs → **D-101** |
 | P16 | Job asincroni (approfondimento) | §15 | 🟠 **ACQUISITO** · **JA-*** · **D-102** · **D-103** |
-| P17 | Osservabilità | §16 | 🟠 Consegnato · **O-*** · ⏳ analisi Founder |
+| P17 | Osservabilità | §16 | 🟠 **ACQUISITO** (Master State) · **O-*** · **D-105** bak health |
+| P18 | API / Frontend | §17 | 🟠 Consegnato · **AF-*** |
 | — | Cestino (blocco dedicato) | §6 | 🟡 coperto in P5 + P12 |
-| — | API/FE… | §17–§27 | ⬜ dopo acquisizione P17 |
+| — | Error handling… | §18–§27 | ⬜ prossimo tipico |
 | **GTM-01** | Demo Readiness / primo afflusso | **post-audit** | 🟠 **ACQUISITO** · **D-104** · in coda · **vincolo pre-~5000 email** |
 
-Decisioni dominio (codice ⏳): **D-094** … **D-104**.
+Decisioni dominio (codice ⏳): **D-094** … **D-105**.  
+**Continuità SoT**: `docs/audit/OMNIA_AUDIT_STATE.md` (non riaprire decisioni fissate).
 
 ---
 
@@ -54,8 +56,9 @@ Decisioni dominio (codice ⏳): **D-094** … **D-104**.
 11. **Trusted path / APScheduler** = **D-101** single-instance · **D-102** purge+blob da automatizzare · **D-103** no worker ora  
 12. **Concorrenza / race** = **RC-*** · invite → **D-100**  
 13. **Jobs deepen** = **JA-*** · J-* · **JA-02**/JA-03 in registro finale  
-14. **Osservabilità** = **O-*** (bak/job health, alert, Founder Ops)  
-15. **GTM / Demo Readiness** = **GTM-01 ACQUISITO** · **D-104** — in coda; **obbligatorio prima delle ~5000 email**
+14. **Osservabilità** = **O-*** · **D-105** bak health minimo  
+15. **GTM / Demo Readiness** = **GTM-01 ACQUISITO** · **D-104** — in coda; **obbligatorio prima delle ~5000 email**  
+16. **API / Frontend** = **AF-*** (coerenza FE↔API · demo path)
 
 ---
 
@@ -1294,23 +1297,17 @@ Per Bak/Restore: oggi si sa che *qualcosa* ha scritto file e log; **non** si sa 
 |--------|------|
 | **Già solido** | Health + readiness go-live; Sentry/webhook/email opzionali; `notify_error` su exception HTTP; `ops_alerts` + UI Founder Ops (LLM/Stripe); sync portal `publishing_sync_logs` per-connection; MANIFEST scrive ok/partial; quota storage cliente |
 | **Realmente rischioso** | **O-01/O-02**: bak fallisce in silenzio (WARNING only) — non sai se intervenire; **O-05**: nessun `last_run` → job “morto” invisibile; **O-09**: ops_alerts non copre bak/sched |
-| **Da decidere** | **K-O-01** superficie Bak health; **K-O-02** canale alert bak |
-| **Può aspettare** | O-07 Prom/OTel; O-14 structured log/request-id; O-08 ack API (utile ma non bloccante); O-10/O-11 nuance health HTTP; O-12 `.env.example`; O-15 alert sync aggregato (dopo bak health) |
+| **Da decidere** | — (K-O risolte → **D-105**) |
+| **Può aspettare** | O-07 Prom/OTel; O-14 structured log/request-id; O-08 ack API; O-10/O-11 nuance health; O-12 `.env.example`; O-15 alert sync aggregato |
 
-\*O-03/O-04 sono gap di **restore/purge** (D-096/D-102), non solo osservabilità — già in altre decisioni.
+\*O-03/O-04 = restore/purge (D-096/D-102).
 
-### Priorità tipiche (no P0–P3; guida)
+### Domande aperte — **RISOLTE** (Master State §11 → **D-105**)
 
-Per Bak/Restore: **O-01 → O-02 → O-05 → O-09/O-13** prima di Prom/OTel (O-07) o structured log (O-14).  
-**D-102** (purge auto) abilita di misurare il purge.
+1. **K-O-01 → minimo**: ultimo bak OK / PARTIAL / FAILED + data/ora + alert — non dashboard complessa.  
+2. **K-O-02 → riusare** `ops_alerts` / `ERROR_ALERT_*`. Heartbeat/`last_run` job necessario. Prom/OTel attendono.
 
-### Domande aperte (max 2)
-
-1. **K-O-01** — Superficie minima Bak health per Founder Ops: solo “ultimo run ok/partial/fail + alert su fail”, o anche footprint disco / retention / lista giorni MANIFEST?  
-2. **K-O-02** — Alert bak fallito: riusare `ops_alerts` + canale `ERROR_ALERT_*` esistenti, o canale dedicato (es. email/webhook “backup”)?
-
-**Niente fix. Nessuna severità P0–P3. Listino fermo.**  
-**In analisi Founder.** Poi tipicamente §17 API/FE… · **GTM-01 in coda** (vincolo pre-~5000 email).
+**P17 ACQUISITO** via Master Audit State. → **P18** sotto.
 
 ---
 
@@ -1368,7 +1365,60 @@ Collegamenti: seed `demo-agency-001` · A-025 (⏸) · stress scripts esistenti 
 
 ### Piano
 
-- Percorso audit **invariato**: P17 → (acquisizione) → tipicamente §17 API/FE…  
+- Percorso audit **invariato**: continuità via `docs/audit/OMNIA_AUDIT_STATE.md`.  
 - **GTM-01 resta in coda** dopo i punti principali.  
 - **Hard gate**: niente lancio ~5000 email senza checkpoint Demo Readiness eseguito.  
 **Niente analisi GTM-01 ora. Niente fix. Listino fermo.**
+
+---
+
+## Punto 18 — API / Frontend · consegnato 30-Set (master §17)
+
+**Tipo**: audit read-only · **nessun fix** · **no P0–P3**.  
+**SoT continuità**: `docs/audit/OMNIA_AUDIT_STATE.md`.  
+**Ambito**: coerenza FE ↔ API ↔ BE per percorso demo/commerciale — senza ripetere P1–P17.
+
+### Verdetto
+
+Nucleo demo (login cookie+CSRF, onboarding, CRM shell/role gate, matching, publishing, trash, billing catalog) **coerente** su mount/routing (`/api/app` ↔ `/:lang/app/*`, cloud, Track B `/api/v1`).  
+Si spezza su: **D-100** ancora vivo nel contratto FE; **drift multi-agency** (`/agencies/me` = `agency_ids[0]` vs `active_agency_id` nei list CRM); **liste immobili senza paginazione UI**; upload foto silenziosi; pezzi B2C fuori dal client API shared.
+
+### Lettura Founder
+
+| Classe | Cosa |
+|--------|------|
+| **Già solido** | Mount chiaro; lang + `ProtectedRoute` + role aliases; axios cookie+CSRF+refresh 401; fascicolo visura gated; ErrorBoundary; i18n IT/EN/ES con test parità chiavi; OpenAPI off in prod |
+| **Realmente rischioso** | **AF-01** D-100 invite FE+BE; **AF-02** `/api/media` pubblico (D-095); **AF-03** switcher vs `/agencies/me`; **AF-04** properties >20 invisibili; **AF-05** PhotoUploader silent; **AF-06** B2C URL raw; **AF-07** sessione unica B2B/B2C bleed |
+| **Da decidere** | **K-AF-01** allineare `/me` o nascondere switcher; **K-AF-02** flusso FE D-100 oltre fix server |
+| **Può aspettare** | Nav hardcoded IT; a11y row-click; Academy; OpenAPI `0.1.0`; KPI coming soon; esign mock etichettato |
+
+### Finding AF-xx
+
+| ID | Tipo | Problema | Link | Evidenza |
+|----|------|----------|------|----------|
+| **AF-01** | fix-needed* | Invite accept overwrite password; FE chiede sempre password | **D-100** · RC-11 | `invites.py:246-254` · `AcceptInvitePage.jsx:50,137-150` |
+| **AF-02** | rischio | `GET /api/media/{path}` senza auth | **D-095** · G-02 · M-01 | `media.py:26-34` · `server.py:272-274` |
+| **AF-03** | drift | Switcher setta `active_agency_id`; `/app/agencies/me*` usa `agency_ids[0]` (CRM list usa `require_agency` OK) | RC-10 | `agencies.py:120-172` · `tenant.py:12-17` · `AgencyShell.jsx` |
+| **AF-04** | gap | Properties: API pagina 20; FE **non passa `page`** / no controlli → stock >20 invisibile in demo | GTM | `PropertiesPage.jsx:59,74-84` |
+| **AF-05** | gap | PhotoUploader: catch vuoto, nessuna toast/413 (VideoUploader sì) | GTM upload | `PhotoUploader.jsx:86-102` |
+| **AF-06** | drift | B2C Valuator/Checkout/PropertyCard: `REACT_APP_BACKEND_URL` grezzo ≠ `api.js` same-origin / CSRF | — | `ValuatorPage.jsx:19-24` · `api.js:10-12` |
+| **AF-07** | rischio | Sessione unica B2B/B2C; login default → `/app/dashboard`; onboarding può promuovere client→admin | — | `LoginPage.jsx:36-39` · `agencies.py:50-98` |
+| **AF-08** | oss. | Billing UI senza gate `plans.enabled`; checkout 503 se Stripe off sembra “live” | — | `BillingPage.jsx:31-35` · `billing/routes.py:35-47` |
+| **AF-09** | gap | Error UX non uniforme: interceptor solo 401; Matches senza catch; 403 statico | — | `api.js:66-93` · `MatchesPage.jsx:29-36` |
+| **AF-10** | perf | Match agency-wide scan pesante; SellPage 1+N `/stats` | — | `matches.py:71-99` · `SellPage.jsx:83-104` |
+| **AF-11** | gap | Requests: stato `page` senza UI next/prev | — | `RequestsPage.jsx:68-84` |
+| **AF-12** | oss. | Nav CRM: molte voci hardcoded IT | — | `AgencyShell.jsx:103-114` |
+| **AF-13** | oss. | Versioning asimmetrico: CRM `/api/app` non versionato; solo `/api/v1` Track B | — | `server.py:118-126` |
+| **AF-14** | rischio | CORS default `*` + credentials se `CORS_ORIGINS` assente | readiness | `server.py:128-141` |
+| **AF-15** | oss. | a11y demo: row-click senza keyboard; aria miste | — | `RequestsPage.jsx:272` |
+| **AF-16** | oss. | Fascicolo nasconde visura se off (bene); Modulistica mock esign etichettato | — | `FascicoloPage.jsx` · `ModulisticaPage.jsx` |
+
+\*AF-01 = **D-100** (fix-needed, attende «vai»).
+
+### Domande aperte (max 2)
+
+1. **K-AF-01** — Prima di demo multi-sede: allineare `/app/agencies/me*` a `active_agency_id`, o **nascondere** lo switcher finché non è allineato?  
+2. **K-AF-02** — Per D-100: oltre no-overwrite backend, flusso FE “utente esistente → link agency / login” subito, o basta fix server al «vai»?
+
+**Niente fix. Nessuna severità P0–P3. Listino fermo.**  
+Prossimo tipico: **Error handling** (master §18). GTM-01 in coda.

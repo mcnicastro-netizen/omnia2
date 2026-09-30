@@ -1,5 +1,16 @@
 # OMNIA — Changelog
 
+## 2026-09-30 — Master Audit State · D-105 · P18 API/Frontend
+
+**Tipo**: Docs / SoT audit · **nessun fix** · **listino fermo**.
+
+- **SoT continuità**: `docs/audit/OMNIA_AUDIT_STATE.md` (P1–P18)
+- **P17 ACQUISITO** (via Master State) → **D-105** bak health minimo Founder Ops + `ops_alerts`/`ERROR_ALERT_*` + `last_run`
+- **P18 API/FE** (master §17): finding **AF-01…AF-16**; K-AF-01/K-AF-02 aperti
+- Prossimo tipico: §18 Error handling · GTM-01 in coda
+
+---
+
 ## 2026-09-30 — GTM-01 ACQUISITO · P17 riconsegnato per analisi
 
 **Tipo**: Docs / SoT audit · **nessun fix** · **listino fermo**.

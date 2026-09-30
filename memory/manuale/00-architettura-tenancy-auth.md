@@ -27,7 +27,9 @@ Un blocco alla volta · niente fix senza «vai» · no P0–P3 prematuri · **li
 | **D-102** | Purge + orphan cleanup: **automatizzare ora** nel ciclo APScheduler |
 | **D-103** | No worker dedicato ora; eventuale anti-dup minimo stesso-giorno |
 | **D-104** | **GTM-01 ACQUISITO** · in coda · **vincolo hard** pre-~5000 email |
+| **D-105** | Bak health minimo Founder Ops (OK/PARTIAL/FAILED + alert + last_run) |
 
+**SoT continuità:** `docs/audit/OMNIA_AUDIT_STATE.md`  
 **Sequenza priorità (D-099):** fascicolo → orphan → Bak+Restore → retention → costi.
 
 ---
@@ -42,7 +44,8 @@ Un blocco alla volta · niente fix senza «vai» · no P0–P3 prematuri · **li
 | GDPR | G-* · D-099 (Founders assistito) |
 | Race | **RC-*** · invite → **D-100** |
 | Jobs | **J-*** · **JA-*** · **D-101**…**D-103** |
-| Osservabilità | **O-*** (bak/job health) |
+| Osservabilità | **O-*** · **D-105** |
+| API / Frontend | **AF-*** |
 | GTM / Demo | **GTM-01 ACQUISITO** · **D-104** · in coda · pre-~5000 email |
 | Costo / listino | C-* · B-01 · fermo |
 
@@ -52,11 +55,9 @@ Un blocco alla volta · niente fix senza «vai» · no P0–P3 prematuri · **li
 
 | Sessione | Master | Stato |
 |----------|--------|--------|
-| P1–P14 | §1–§13 (+ anticipi) | acquisiti · D-094…D-099 |
-| P15 Race | §14 | **ACQUISITO** · RC-* · **D-100** · **D-101** |
-| P16 Jobs deepen | §15 | **ACQUISITO** · JA-* · **D-102** · **D-103** |
-| P17 Osservabilità | §16 | Consegnato · O-* · ⏳ analisi |
-| — | §17 API/FE… | dopo acquisizione P17 |
-| GTM-01 | post-audit | 🟠 **ACQUISITO** · **D-104** · in coda |
+| P1–P17 | §1–§16 | acquisiti · D-094…D-105 |
+| P18 API/FE | §17 | Consegnato · AF-* |
+| — | §18 Error handling… | prossimo tipico |
+| GTM-01 | post-audit | 🟠 **ACQUISITO** · in coda |
 
-Dettaglio: `AUDIT_ARCHITETTURA_NOTE.md` · A-035 · A-036.
+Dettaglio: `docs/audit/OMNIA_AUDIT_STATE.md` · `AUDIT_ARCHITETTURA_NOTE.md` · A-035 · A-036.

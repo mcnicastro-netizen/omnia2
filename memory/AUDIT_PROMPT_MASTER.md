@@ -98,16 +98,18 @@ In altre parole:
 | P14 GDPR / privacy | **§13** | **ACQUISITO** · **D-099** · G-* |
 | P15 Concorrenza / race | **§14** | **ACQUISITO** · **RC-*** · **D-100** · **D-101** |
 | P16 Jobs deepen | **§15** | **ACQUISITO** · **JA-*** · **D-102** · **D-103** |
-| P17 Osservabilità | **§16** | Consegnato · **O-*** · ⏳ analisi Founder |
+| P17 Osservabilità | **§16** | **ACQUISITO** · **O-*** · **D-105** |
+| P18 API / Frontend | **§17** | Consegnato · **AF-*** |
 | — | **§6 Cestino** | Parziale P5 + coperto in P12 |
-| — | **§17–§27** | Non avviati · dopo acquisizione P17 |
+| — | **§18–§27** | Non avviati · prossimo tipico §18 Error handling |
 | **GTM-01** Demo Readiness | **post-audit** | 🟠 **ACQUISITO** · **D-104** · in coda · **vincolo pre-~5000 email** |
 
 **Regola numerazione**: mantenere il continuum di sessione; documentare la corrispondenza qui / in `AUDIT_ARCHITETTURA_NOTE.md` — non riallineare artificialmente i numeri.
 
-Decisioni di dominio già registrate (codice ⏳): **D-094** … **D-104**.
+Decisioni di dominio già registrate (codice ⏳): **D-094** … **D-105**.
 
-> **GTM-01** non è un § del master 1–27: è un checkpoint commerciale/ops **dopo** l’audit tecnico principale (vedi `AUDIT_ARCHITETTURA_NOTE.md` · **D-104**).
+> **Continuità SoT**: `docs/audit/OMNIA_AUDIT_STATE.md` — leggere prima di ogni nuovo punto.  
+> **GTM-01** = checkpoint post-audit (**D-104**), non un § del master 1–27.
 
 ---
 

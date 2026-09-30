@@ -1618,4 +1618,15 @@ Registro di tutte le decisioni di business e tecniche prese durante il progetto.
 - **Implementazione**: ❌ analisi GTM-01 ⏳ post-audit tecnico · codice/fix solo con «vai».
 - **Stato**: ✅ **ACQUISITO** Founder (30-Set-2026) · in coda · vincolo pre-~5000 email
 
+### D-105 — Backup health minimo in Founder Ops · 30-Set-2026
+- **Data**: 30 Settembre 2026
+- **Contesto**: Audit P17 (O-01/O-02/O-05) · Master Audit State §11. Founder: non serve dashboard complessa.
+- **Decisione**:
+  1. Founder Ops deve poter mostrare almeno: ultimo bak **OK** / **PARTIAL** / **FAILED** + data/ora + alert quando necessario.
+  2. Alert bak: riusare `ops_alerts` / `ERROR_ALERT_*` esistenti (non canale dedicato ora).
+  3. Serve almeno sapere l’ultimo run valido dei job (heartbeat / `last_run`) — scheduler morto non deve restare invisibile.
+  4. Prometheus / OTel / structured logging avanzato **possono aspettare**.
+- **Implementazione**: ❌ codice ⏳ — post-audit / «vai».
+- **Stato**: ✅ **DECISIONE DI DOMINIO REGISTRATA** (docs 30-Set-2026 · SoT `docs/audit/OMNIA_AUDIT_STATE.md`) · codice ⏳
+
 

@@ -1,25 +1,22 @@
 # Prossima sessione — programma passi
 
-**Aggiornato**: 30 Settembre 2026 · audit **in corso** (P17 ⏳ analisi · **GTM-01 ACQUISITO**)  
+**Aggiornato**: 30 Settembre 2026 · audit **in corso** (P18 consegnato · SoT Master State)  
 **Repo**: https://github.com/mcnicastro-netizen/omnia2 ✅  
 
 ---
 
-## Audit SaaS
+## Continuità audit
 
 | | |
 |--|--|
+| **SoT compatto** | `docs/audit/OMNIA_AUDIT_STATE.md` |
+| Note dettaglio | `memory/AUDIT_ARCHITETTURA_NOTE.md` |
 | Prompt master | `memory/AUDIT_PROMPT_MASTER.md` (§1–§27) |
-| Note progresso | `memory/AUDIT_ARCHITETTURA_NOTE.md` |
-| Backlog | **A-035** · **A-036** (GTM-01) |
-| Ultimo | **GTM-01 ACQUISITO** · **P17** riconsegnato (O-01…O-15) |
-| Prossimo | Analisi Founder su P17 → tipicamente **API e frontend** (§17) |
-| In coda | **GTM-01** Demo Readiness — **obbligatorio prima delle ~5000 email** |
-| Vincolo | **Listino fermo** · niente fix · no P0–P3 finché non §23 |
-| Priorità post-audit (D-099) | fascicolo AuthZ → orphan → Bak+Restore → retention → costi |
-| Fix-needed noto | **D-100** invite no password overwrite (attende «vai») |
-| Ops noto | **D-101**…**D-103** · **D-104** GTM hard gate |
-| Registro finale | **JA-02** · **JA-03** |
+| Ultimo | **P18 API/FE** (AF-01…AF-16) · **D-105** bak health |
+| Prossimo | Feedback P18 → tipicamente **Error handling** (§18) |
+| In coda | **GTM-01** · vincolo hard pre-~5000 email |
+| Vincolo | Listino fermo · niente fix · no P0–P3 finché non §23 |
+| Fix-needed | **D-100** invite (attende «vai») |
 
 ---
 
@@ -27,5 +24,5 @@
 
 | Area | Stato |
 |------|:-----:|
-| Demo A-025 / soft gap | ⏸ / 🔜 solo «vai» |
-| GTM-01 Demo Readiness | 🟠 **ACQUISITO** · in coda · pre-~5000 email |
+| GTM-01 Demo Readiness | 🟠 ACQUISITO · in coda |
+| Demo A-025 | ⏸ |
