@@ -5,9 +5,9 @@
 **Usage rule:** questo documento è la fonte di continuità dell'audit.
 Prima di analizzare un nuovo punto, leggere questo file. Non riaprire decisioni già fissate salvo nuove evidenze. Non inventare informazioni mancanti.
 
-**Current status:** P1–P20 **chiusi** · **P21 Coerenza prodotto/tecnologia consegnato** ⏳ analisi Founder. Nessun fix. Listino fermo. SoT: questo file. **Niente codice** senza «vai».
+**Current status:** P1–P20 **chiusi** · **P21** ⏳ analisi Founder · **P22 Casi limite consegnato** ⏳ analisi Founder. Nessun fix. Listino fermo. SoT: questo file. **Niente codice** senza «vai».
 
-**Next:** analisi Founder su P21 → tipicamente **P22 Casi limite** (master §21). GTM-01 in coda.
+**Next:** analisi Founder su P21 (CT-*) e **P22 (EC-*)**. GTM-01 in coda.
 
 ---
 
@@ -863,12 +863,56 @@ Dettaglio: `memory/AUDIT_ARCHITETTURA_NOTE.md` § Punto 21.
 
 ---
 
-# 23. PROSSIMO PUNTO
+# 23. P22 — CASI LIMITE (consegnato · ⏳ analisi Founder · master §21)
 
-**P22 — Casi limite** (master §21) — tipico dopo acquisizione P21.
+**Verdetto:** I percorsi felici CRM (Cestino restore/purge, size/quota upload, feed pubblico trash-aware, guard invite scaduto/revocato, webhook `applied_at`, empty properties) tengono. I casi limite che rompono **demo multi-tenant** o **safety** sono: matching/sync che ignorano `deleted_at` (D-094), client trash con richieste ancora operative + email matching, invite overwrite (D-100) + accept non atomico, SoT agency `agency_ids[0]` vs `active_agency_id` (D-106), JWT disabilitato ancora valido, seed demo che riaggancia `demo.admin`/Founder a `demo-agency-001`.
+**Nessun nuovo P0–P3.** Nessun fix. **D-094…D-108 / GTM-01 / P18–P21 non riaperti** (solo link).
+
+### Finding EC-*
+
+| ID | Tipo | Problema | Prior | Evidenza |
+|----|------|----------|-------|----------|
+| EC-01 | drift SoT | CRM usa `active_agency_id`; `/agencies/me`, invites, billing usano `agency_ids[0]` → switcher non governa tutto | **D-106** · AF-03 | `tenant.py:12-17` · `agencies.py:120` · `invites.py:51` · `billing/routes.py:91` |
+| EC-02 | gap D-094 | Match + sync + smart-clients: `status=active` **senza** `with_not_trashed` | **D-094** · E-* · RC | `client_requests_service.py:454-456` · `sync_engine.py:58-64` · `clients_smart.py:382-384` |
+| EC-03 | gap D-094 | Client trash non tocca richieste open; job matching continua (email) | **D-094** · T-03 | `clients.py:190-218` · `request_matching_job.py:184-193` · `104-110` |
+| EC-04 | bug campo | Migrate prefs filtra `trashed_at` (inesistente) non `deleted_at` | T-03 | `client_requests_service.py:284-289` |
+| EC-05 | fix-needed | Accept invite overwrite password utente esistente; verify senza `user_exists` | **D-100** · CT-09 | `invites.py:246-254` · `176-206` |
+| EC-06 | race | Accept non-atomic (check pending → write); doppio accept possibile | RC-invite | `invites.py:222-284` |
+| EC-07 | demo gate | Stripe off 503; FE sblocca checkout con `localStorage omnia_demo_done` | CT-06 | `billing/routes.py:41-47` · `BillingPage.jsx:83-110` |
+| EC-08 | race | Webhook `applied_at` idempotente in seriale; TOCTOU doppio credito sotto replay concorrente | RC | `billing/routes.py:366-374` · `481-491` |
+| EC-09 | gap | Downgrade piano: nessun clamp usage; solo block upload 413 se over quota | CT-02 · D-085 | `quota.py:46-52` · `138-152` |
+| EC-10 | AuthZ | Fascicolo path sotto `/api/media` pubblico se noto; media trashed resta servibile | **D-095** · M-01 | `media.py:26-34` · `fascicolo.py:252` · `objstore.py:109-118` |
+| EC-11 | sessione | `get_current_user` non ricontrolla `is_active`; reset password non revoca refresh | P4 auth | `dependencies.py:18-40` · `auth.py:427-452` · `session_store.py:34-42` |
+| EC-12 | job | Trash purge **solo** HTTP cron, non APScheduler; cron+sched stesso giorno su bak/match | **D-102** · **D-108** | `sync_engine.py:258-337` · `cron.py:37-50` |
+| EC-13 | seed | Seed forza `demo.admin` (+ Founder senza agency) su `demo-agency-001` | demo | `seed.py:52-61` · `104-112` · `seed_demo_gestionale.py` |
+| EC-14 | upload edge | Upload foto su property **già trashed** (find senza `with_not_trashed`) | L / RC | `properties.py:587-589` |
+| EC-15 | i18n | Codici invite BE non in locale; FE collassa verify a `accept_invite.invalid` | **D-107** | `AcceptInvitePage.jsx:39-41` · `locales/it.json` (solo auth.*) |
+
+### Domande aperte
+
+1. **K-EC-01**: Prima di GTM, matching/sync devono rifiutare trashed **ovunque** (enforcement uniforme D-094), o basta feed pubblico già filtrato?
+2. **K-EC-02**: Client in Cestino → archiviare/freeze richieste open subito, o solo escluderle dai job finché il client è trashed?
+
+### Lettura Founder
+
+| Classe | Cosa |
+|--------|------|
+| **Già mitigato** | Restore/purge happy+404 post-purge; feed XML + compliance `with_not_trashed`; size limit upload + 413 quota; `..` in media path; invite expired/revoked codes; empty properties UI; remove_member clear `active_agency_id`; addon Stripe-off messaggio supporto |
+| **Rischio latente** | EC-06/08 race; EC-09 downgrade; EC-10/14 media; EC-11 sessioni; EC-12 dual schedule + purge non schedulato; EC-04 trashed_at; EC-15 i18n |
+| **Demo-critical** | EC-01 multi-agency SoT; EC-02/03 D-094 match+client; EC-05 D-100; EC-07 Stripe/localStorage; EC-13 seed collision |
+| **Da decidere** | K-EC-01 · K-EC-02 |
+| **Può aspettare** | Null geocode soft-fail; sessioni concurrent deliberate; MFA challenge TTL |
+
+Dettaglio: `memory/AUDIT_ARCHITETTURA_NOTE.md` § Punto 22.
+
+---
+
+# 24. PROSSIMO PUNTO
+
+Dopo acquisizione Founder su **P21** e **P22**: tipicamente master §22+ / GTM-01 in coda.
 
 Il Master Audit State deve essere aggiornato dopo il completamento di ogni punto significativo.
 
-**Current next action:** analisi Founder su **P21** (CT-* · K-CT-01/02). P20 chiuso. GTM-01 in coda (vincolo pre-~5000 email).
+**Current next action:** analisi Founder su **P21 (CT-*)** e **P22 (EC-*)**. GTM-01 in coda (vincolo pre-~5000 email).
 
 **Niente fix. Nessuna severità P0–P3. Listino fermo. Attende «vai».**

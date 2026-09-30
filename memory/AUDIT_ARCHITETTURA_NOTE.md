@@ -6,7 +6,7 @@
 > **Numerazione = continuum di sessione** (non forzare allineamento al master).  
 > Prompt master: `memory/AUDIT_PROMPT_MASTER.md` (§1–§27) — corrispondenza in tabella sotto.
 
-**Ultimo aggiornamento**: 30-Set-2026 · **SoT** `docs/audit/OMNIA_AUDIT_STATE.md` · **P20 CHIUSO** · **P21** ⏳ analisi
+**Ultimo aggiornamento**: 30-Set-2026 · **SoT** `docs/audit/OMNIA_AUDIT_STATE.md` · **P20 CHIUSO** · **P21** ⏳ · **P22** ⏳ analisi
 
 ---
 
@@ -35,8 +35,9 @@
 | P19 | Error handling | §18 | 🟢 **CHIUSO** · **EH-*** · **D-107** |
 | P20 | Scalabilità | §19 | 🟢 **CHIUSO** · **SC-*** · **D-108** · SC-08=GTM-01 |
 | P21 | Coerenza prodotto/tecnologia | §20 | 🟠 Consegnato · **CT-*** · ⏳ analisi |
+| P22 | Casi limite | §21 | 🟠 Consegnato · **EC-*** · ⏳ analisi |
 | — | Cestino (blocco dedicato) | §6 | 🟡 coperto in P5 + P12 |
-| — | Casi limite… | §21–§27 | ⬜ dopo acquisizione P21 |
+| — | … | §22–§27 | ⬜ dopo acquisizione P21/P22 |
 | **GTM-01** | Demo Readiness / primo afflusso | **post-audit** | 🟠 **ACQUISITO** · **D-104** · in coda · **vincolo pre-~5000 email** |
 
 Decisioni dominio (codice ⏳): **D-094** … **D-108**.  
@@ -1585,5 +1586,32 @@ Nucleo CRM (quota D-085, Cestino, Match, publishing feed-pull, widget Valuator/M
 | **Può aspettare** | CT-14 · esign mock senza provider · staging 501 se non venduto · Cap.3/4 wording |
 
 **Niente fix. Nessuna severità P0–P3. Listino fermo. Attende «vai».**  
-Prossimo tipico dopo acquisizione: **P22 Casi limite** (master §21). GTM-01 in coda.
+→ **P22** sotto. GTM-01 in coda.
+
+---
+
+## Punto 22 — Casi limite · consegnato 30-Set (master §21)
+
+**Ambito**: happy + unhappy path che rompono demo SaaS o multi-tenant safety. Nessun fix. Nessun P0–P3. Non riaprire D-094…D-108 / GTM-01 / P18–P21 (solo link). P21 in chiusura con: pricing SoT=`GET /billing/plans`; bak≠restore; localStorage≠entitlement; D-100 trasversale; Founder Ops bak health.
+
+### Verdetto
+
+Percorsi felici Cestino (restore/purge), limiti upload+quota, feed pubblico trash-aware, reject invite scaduto/revocato, empty properties, clear `active_agency_id` su remove-member tengono. Rotture reali demo/safety: **match/sync/smart senza `deleted_at`**, **client trash + matching email**, **invite overwrite + accept non atomico**, **SoT agency spezzata**, **JWT utente disabilitato**, **seed demo che riaggancia membership**.
+
+### Finding EC-01…EC-15
+
+Vedi tabella in `docs/audit/OMNIA_AUDIT_STATE.md` §23. Sintesi gruppi:
+
+**Già mitigato:** restore→404 post-purge; feed+compliance `with_not_trashed`; size/quota upload; `..` su media; invite expired/revoked codes; empty UI properties; `optional_agency_id` fallback; storage addon Stripe-off messaggio.
+
+**Rischio latente:** EC-04/06/08/09/10/11/12/14/15.
+
+**Demo-critical:** EC-01, EC-02, EC-03, EC-05, EC-07, EC-13.
+
+### Domande
+
+1. **K-EC-01**: D-094 uniforme su match/sync pre-GTM, o solo feed?
+2. **K-EC-02**: Client trashed → archivia richieste vs freeze nei soli job?
+
+**Niente fix. Nessuna severità P0–P3. Listino fermo. Attende «vai».**
 
