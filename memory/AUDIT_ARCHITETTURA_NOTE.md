@@ -1433,3 +1433,46 @@ Si spezza su: **D-100** ancora vivo nel contratto FE; **drift multi-agency** (`/
 
 **Niente fix. Nessuna severità P0–P3. Listino fermo. Attende «vai».**  
 Prossimo tipico: **Error handling** (master §18). GTM-01 in coda.
+
+---
+
+## Punto 19 — Error handling (ACQUISITO · 30-Set-2026)
+
+**Verdetto:** superficie utente decentemente protetta sui path “caldi” (auth, staging, form save con `formatApiErrorDetail`); operatori hanno `notify_error` + `ops_alerts` ma **non** sui tick job critici. Fail mid-demo tipici: upload foto silenzioso, match list = empty, invite “ok” senza email.
+
+### Solid
+
+| Area | Evidence |
+|------|----------|
+| Global 500 → i18n + `notify_error` | `server.py:312-329` |
+| Auth lockout/disabled i18n | `auth.py:185-203` · `locales/it.json:13-14` |
+| 401 refresh single-flight | `api.js:34-93` · `auth.jsx:59-64` |
+| 403 page ProtectedRoute | `ProtectedRoute.jsx:36-45` |
+| ErrorBoundary nested | `ErrorBoundary.jsx` · `App.js` |
+| Staging errori job/UI | `virtual_staging.py:354-359` · `StagingStudio.jsx:532-534` |
+| Sync portal retry + log | `sync_engine.py:196-227` |
+
+### Risky / debito
+
+| ID | Tipo | Problema | Link | Evidence |
+|----|------|----------|------|----------|
+| **EH-01** | debito | `detail` misto (i18n / code / object) | AF-08 area | auth `t(...)` vs CRM snake_case vs billing `{error,message}` |
+| **EH-02** | gap | No handler 422 custom | — | solo `@exception_handler(Exception)` |
+| **EH-03** | debito+oss. | PhotoUploader silent | **AF-05** | `PhotoUploader.jsx:86-102` |
+| **EH-04** | debito demo | Matches no catch → empty | AF error UX | `MatchesPage.jsx:29-36` |
+| **EH-05** | rischio | Job swallow WARNING | **O-02** · JA | `sync_engine.py:288-328` |
+| **EH-06** | rischio | Email soft-fail | JA-02 area | `email/client.py:155-157` · invite `invites.py:110-123` · match `request_matching_job.py:115-127` |
+| **EH-07** | gap | Geocode/Resend non user-visible | O-* | `geocoding.py:72-78` · circuit mock |
+| **EH-08** | oss. | Billing load silent | **AF-08** | `BillingPage.jsx:36-39` |
+| **EH-09** | gap | No request-id; AlertLoggingHandler unwired | **O-14** · **O-06** | `server.py:44-48` · `alerts.py:143-159` |
+| **EH-10** | oss. | Liste CRM fail→empty | AF-04 area | `PropertiesPage.jsx:74-87` · `ClientsPage.jsx:231-234` |
+| **EH-11** | solid* | Pattern buoni (vedi sopra) | — | — |
+| **EH-12** | gap | No retry UX generale | — | solo 401 + sync BE |
+
+### Domande
+
+1. **K-EH-01**: snake_case stabile + i18n FE vs messaggi BE localizzati?
+2. **K-EH-02**: mid-demo upload/invite/email — toast obbligatorio?
+
+**Niente fix. Nessuna severità P0–P3. Listino fermo. Attende «vai».**  
+Prossimo: da confermare Founder (GTM-01 / riepilogo).
