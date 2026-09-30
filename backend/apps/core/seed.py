@@ -106,6 +106,12 @@ async def seed_admin() -> None:
             updates["agency_ids"] = [DEMO_AGENCY_ID]
             updates["active_agency_id"] = DEMO_AGENCY_ID
             logger.info("Admin attached to demo agency %s", DEMO_AGENCY_ID)
+        # D-106 — ensure active_agency_id valid if membership exists
+        elif not existing.get("active_agency_id") or existing.get("active_agency_id") not in (
+            existing.get("agency_ids") or []
+        ):
+            ids = existing.get("agency_ids") or [DEMO_AGENCY_ID]
+            updates["active_agency_id"] = ids[0]
         await db.users.update_one({"email": email}, {"$set": updates})
 
     await _ensure_demo_agency(db)
