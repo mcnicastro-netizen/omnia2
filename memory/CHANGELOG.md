@@ -1,5 +1,15 @@
 # OMNIA — Changelog
 
+## 2026-09-30 — P18 CHIUSO · P19 Error handling (EH-*)
+
+**Tipo**: Docs / SoT audit · **nessun codice** · **listino fermo** · no nuovi P0–P3.
+
+- **P18 CHIUSO** baseline Founder: D-106 · K-AF-02 · AF-02/04/06/07 · **AF-05 = requisito minimo GTM-01** (`pending→success/error`+retry, non P0)
+- **P19 Error handling** consegnato: finding **EH-01…EH-12**; K-EH-01/K-EH-02 aperti
+- Master State aggiornato · prossimo tipico P20 Scalabilità
+
+---
+
 ## 2026-09-30 — P18 osservazioni Founder · D-106 active_agency_id SoT
 
 **Tipo**: Docs / SoT audit · **nessun codice** · **listino fermo** · no nuovi P0–P3.

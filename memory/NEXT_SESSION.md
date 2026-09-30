@@ -1,6 +1,6 @@
 # Prossima sessione — programma passi
 
-**Aggiornato**: 30 Settembre 2026 · audit **in corso** (P18 consegnato · SoT Master State)  
+**Aggiornato**: 30 Settembre 2026 · **P18 CHIUSO** · **P19** consegnato ⏳ analisi  
 **Repo**: https://github.com/mcnicastro-netizen/omnia2 ✅  
 
 ---
@@ -11,12 +11,13 @@
 |--|--|
 | **SoT compatto** | `docs/audit/OMNIA_AUDIT_STATE.md` |
 | Note dettaglio | `memory/AUDIT_ARCHITETTURA_NOTE.md` |
-| Prompt master | `memory/AUDIT_PROMPT_MASTER.md` (§1–§27) |
-| Ultimo | **P18** osservazioni · **D-106** `active_agency_id` SoT |
-| Prossimo | Tipicamente **Error handling** (§18) · **niente codice** senza «vai» |
+| Ultimo chiuso | **P18** baseline (D-106 · AF-05=GTM-01 min) |
+| Ultimo consegnato | **P19 Error handling** (EH-01…EH-12) |
+| Prossimo | Analisi Founder P19 → tipicamente **P20 Scalabilità** (§19) |
 | In coda | **GTM-01** · vincolo hard pre-~5000 email |
-| Vincolo | Listino fermo · niente fix · no P0–P3 finché non §23 |
-| Fix-needed | **D-100** invite (attende «vai») |
+| Vincolo | Listino fermo · **niente codice** senza «vai» · no P0–P3 finché §23 |
+| Fix-needed | **D-100** invite · **D-106** active_agency_id |
+| GTM-01 min noto | **AF-05** upload `pending→success/error` + retry |
 
 ---
 
@@ -25,4 +26,3 @@
 | Area | Stato |
 |------|:-----:|
 | GTM-01 Demo Readiness | 🟠 ACQUISITO · in coda |
-| Demo A-025 | ⏸ |

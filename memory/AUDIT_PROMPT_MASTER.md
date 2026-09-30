@@ -99,9 +99,10 @@ In altre parole:
 | P15 Concorrenza / race | **§14** | **ACQUISITO** · **RC-*** · **D-100** · **D-101** |
 | P16 Jobs deepen | **§15** | **ACQUISITO** · **JA-*** · **D-102** · **D-103** |
 | P17 Osservabilità | **§16** | **ACQUISITO** · **O-*** · **D-105** |
-| P18 API / Frontend | **§17** | Osservazioni acquisite · **AF-*** · **D-106** |
+| P18 API / Frontend | **§17** | **CHIUSO** · **D-106** · AF-05=GTM-01 min |
+| P19 Error handling | **§18** | Consegnato · **EH-*** · ⏳ analisi |
 | — | **§6 Cestino** | Parziale P5 + coperto in P12 |
-| — | **§18–§27** | Non avviati · prossimo tipico §18 Error handling |
+| — | **§19–§27** | Non avviati · prossimo tipico §19 Scalabilità |
 | **GTM-01** Demo Readiness | **post-audit** | 🟠 **ACQUISITO** · **D-104** · in coda · **vincolo pre-~5000 email** |
 
 **Regola numerazione**: mantenere il continuum di sessione; documentare la corrispondenza qui / in `AUDIT_ARCHITETTURA_NOTE.md` — non riallineare artificialmente i numeri.

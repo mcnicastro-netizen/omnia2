@@ -32,12 +32,12 @@
 | P16 | Job asincroni (approfondimento) | §15 | 🟠 **ACQUISITO** · **JA-*** · **D-102** · **D-103** |
 | P17 | Osservabilità | §16 | 🟠 **ACQUISITO** (Master State) · **O-*** · **D-105** bak health |
 | P18 | API / Frontend | §17 | 🟠 **osservazioni acquisite** · **AF-*** · **D-106** |
-| P19 | Error handling | §18 | 🟠 **ACQUISITO** · **EH-*** |
 | — | Cestino (blocco dedicato) | §6 | 🟡 coperto in P5 + P12 |
 | — | post-P19 / GTM… | §19–§27 | ⬜ da confermare Founder |
 | **GTM-01** | Demo Readiness / primo afflusso | **post-audit** | 🟠 **ACQUISITO** · **D-104** · in coda · **vincolo pre-~5000 email** |
 
 Decisioni dominio (codice ⏳): **D-094** … **D-106**.  
+P18 chiuso · P19 in analisi Founder.  
 **Continuità SoT**: `docs/audit/OMNIA_AUDIT_STATE.md` (non riaprire decisioni fissate). · **Niente codice** senza «vai».
 
 ---
@@ -1431,12 +1431,14 @@ Si spezza su: **D-100** ancora vivo nel contratto FE; **drift multi-agency** (`/
 * Documentare se sessione B2B/B2C unica è deliberata (**AF-07**) — separato da “default → CRM”.  
 * **Nessun nuovo P0–P3** da P18.
 
-**Niente fix. Nessuna severità P0–P3. Listino fermo. Attende «vai».**  
-Prossimo tipico: **Error handling** (master §18). GTM-01 in coda.
+### Baseline P18 — **CHIUSO** Founder
+
+D-106 · K-AF-02 (server→FE, 3 stati) · AF-02 boundary media · AF-04 debito demo · **AF-05 = GTM-01 min** (`pending→success/error`+retry, non P0) · AF-06 unica API · AF-07 sessione da chiarire.  
+**Nessun nuovo P0–P3. Nessun codice.**
 
 ---
 
-## Punto 19 — Error handling (ACQUISITO · 30-Set-2026)
+## Punto 19 — Error handling · consegnato 30-Set (master §18) · ⏳ analisi Founder
 
 **Verdetto:** superficie utente decentemente protetta sui path “caldi” (auth, staging, form save con `formatApiErrorDetail`); operatori hanno `notify_error` + `ops_alerts` ma **non** sui tick job critici. Fail mid-demo tipici: upload foto silenzioso, match list = empty, invite “ok” senza email.
 
@@ -1474,5 +1476,15 @@ Prossimo tipico: **Error handling** (master §18). GTM-01 in coda.
 1. **K-EH-01**: snake_case stabile + i18n FE vs messaggi BE localizzati?
 2. **K-EH-02**: mid-demo upload/invite/email — toast obbligatorio?
 
+### Lettura Founder
+
+| Classe | Cosa |
+|--------|------|
+| **Già solido** | EH-11: 500+notify · ErrorBoundary · 401 refresh · lockout · staging UI · sync retry |
+| **Realmente rischioso** | EH-03/AF-05 (GTM-01) · EH-04 match empty · EH-05 job WARNING (**O-02**) · EH-06 email soft-fail |
+| **Da decidere** | K-EH-01 · K-EH-02 |
+| **Può aspettare** | EH-09/O-14 · EH-02 · EH-12 · EH-07 |
+
 **Niente fix. Nessuna severità P0–P3. Listino fermo. Attende «vai».**  
-Prossimo: da confermare Founder (GTM-01 / riepilogo).
+Prossimo tipico dopo acquisizione: **P20 Scalabilità** (master §19). GTM-01 in coda.
+

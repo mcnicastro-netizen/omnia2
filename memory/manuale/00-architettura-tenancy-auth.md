@@ -57,9 +57,9 @@ Un blocco alla volta · niente fix senza «vai» · no P0–P3 prematuri · **li
 
 | Sessione | Master | Stato |
 |----------|--------|--------|
-| P1–P17 | §1–§16 | acquisiti · D-094…D-105 |
-| P18 API/FE | §17 | Consegnato · AF-* |
-| — | §18 Error handling… | prossimo tipico |
+| P1–P18 | §1–§17 | chiusi · D-094…D-106 · AF-05=GTM-01 min |
+| P19 Error handling | §18 | Consegnato · EH-* · ⏳ analisi |
+| — | §19 Scalabilità… | dopo acquisizione P19 |
 | GTM-01 | post-audit | 🟠 **ACQUISITO** · in coda |
 
 Dettaglio: `docs/audit/OMNIA_AUDIT_STATE.md` · `AUDIT_ARCHITETTURA_NOTE.md` · A-035 · A-036.

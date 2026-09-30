@@ -5,9 +5,9 @@
 **Usage rule:** questo documento è la fonte di continuità dell'audit.
 Prima di analizzare un nuovo punto, leggere questo file. Non riaprire decisioni già fissate salvo nuove evidenze. Non inventare informazioni mancanti.
 
-**Current status:** P1–P19 analizzati · osservazioni P18 (**D-106**) · P19 error handling acquisito. Nessun fix applicato. Listino fermo. SoT continuità: questo file. **Niente codice** senza «vai».
+**Current status:** P1–P18 **chiusi** (baseline P18) · **P19 Error handling consegnato** ⏳ analisi Founder. Nessun fix. Listino fermo. SoT: questo file. **Niente codice** senza «vai».
 
-**Next:** prossimo punto master post-P19 (tipico GTM-01 / riepilogo) — da confermare Founder.
+**Next:** analisi Founder su P19 → tipicamente **P20 Scalabilità** (master §19). GTM-01 in coda.
 
 ---
 
@@ -728,7 +728,7 @@ Per ogni nuovo punto:
 | AF-02 | rischio | `/api/media` pubblico — boundary da chiarire (**D-095**) |
 | AF-03 | → **D-106** | Due fonti di verità agency: `agency_ids[0]` vs `active_agency_id` |
 | AF-04 | debito demo | Properties senza paginazione UI → lista sembra completa |
-| AF-05 | debito + oss. | PhotoUploader silent fail — serve stato upload osservabile |
+| AF-05 | **GTM-01 min** | `pending→success/error` + retry (non P0 ora; requisito Demo Readiness) |
 | AF-06 | drift | B2C config API duplicata (`REACT_APP_BACKEND_URL`) |
 | AF-07 | doc/decisione | Sessione unica B2B/B2C — da documentare se deliberata |
 | AF-08…AF-16 | oss./gap | Billing · error UX · perf · nav · versioning · CORS · a11y |
@@ -738,22 +738,22 @@ Per ogni nuovo punto:
 1. **K-AF-01 → D-106**: `active_agency_id` = SoT; **non** nascondere switcher.
 2. **K-AF-02**: contratto server prima (new / existing+auth / expired-consumed), poi FE; niente magia FE.
 
-### Nota decisionale P18 (pre-implementazione)
+### Baseline P18 — **CHIUSO** (Founder 30-Set · nessun codice · no nuovi P0–P3)
 
-* SoT `active_agency_id` (**D-106**);
-* tre stati invite (new / existing / expired-consumed) — estende **D-100**;
-* boundary media esplicito (file / enumerate / upload / mutate / associazione) — **D-095**;
-* pagination / upload-error / error UX = debito non bloccante (AF-04/AF-05 rilevanti demo);
-* una sola astrazione API FE anche per B2C;
-* documentare modello sessione B2B/B2C.
-
-**K-AF-01 = priorità** tra i fix FE/API post-«vai».
+* **D-106**: `active_agency_id` = SoT; switcher mantenuto.
+* **K-AF-02**: contratto server prima, FE dopo; tre stati invite espliciti (**D-100**).
+* **AF-02**: boundary media da definire esplicitamente (**D-095**).
+* **AF-04**: debito demo / non-blocking.
+* **AF-05**: requisito minimo **GTM-01** — `pending → success/error` + retry (non elevato a P0 ora).
+* **AF-06**: unica astrazione API FE (anche B2C).
+* **AF-07**: chiarire se sessione B2B/B2C condivisa è deliberata.
+* **K-AF-01 / D-106** = priorità tra i fix FE/API post-«vai».
 
 Dettaglio: `memory/AUDIT_ARCHITETTURA_NOTE.md` § Punto 18.
 
 ---
 
-# 20. P19 — ERROR HANDLING (consegnato)
+# 20. P19 — ERROR HANDLING (consegnato 30-Set · ⏳ analisi Founder)
 
 **Verdetto:** 500 unhandled → utente i18n + `notify_error`; auth lockout/403 decenti; staging/billing toast spesso OK. Debito: swallow FE (upload, matches→empty, liste), job tick solo WARNING (**O-02**/JA), email soft-fail senza UX, no request-id (**O-14**), contratto `detail` misto.
 **Nessun nuovo P0–P3** da P19. Nessun fix finché «vai».
@@ -784,10 +784,21 @@ Dettaglio: report agente P19 + `memory/AUDIT_ARCHITETTURA_NOTE.md` § Punto 19.
 
 ---
 
+### Lettura Founder (solido / rischioso / decidere / aspetta)
+
+| Classe | Cosa |
+|--------|------|
+| **Già solido** | Global 500 + `notify_error`; ErrorBoundary; 401 refresh; lockout/403 i18n; staging errori UI; sync portal retry+log (**EH-11**) |
+| **Realmente rischioso** | **EH-03/AF-05** upload silenzioso (GTM-01); **EH-04** match→empty; **EH-05** job WARNING only (**O-02**); **EH-06** email soft-fail (invite/match “ok” senza invio) |
+| **Da decidere** | **K-EH-01** contratto `detail`; **K-EH-02** toast mid-demo obbligatorio? |
+| **Può aspettare** | EH-09 request-id (**O-14**); EH-02 handler 422; EH-12 retry UX generale; EH-07 geocode |
+
+---
+
 # 21. PROSSIMO PUNTO
 
-Da confermare Founder (tipico: GTM readiness / riepilogo audit).
+**P20 — Scalabilità** (master §19) — tipico dopo acquisizione P19.
 
 Il Master Audit State deve essere aggiornato dopo il completamento di ogni punto significativo.
 
-**Current next action:** non riaprire P1–P19; attendere direzione Founder.
+**Current next action:** analisi Founder su P19 (EH-* · K-EH-01/02). GTM-01 resta in coda (vincolo pre-~5000 email).
