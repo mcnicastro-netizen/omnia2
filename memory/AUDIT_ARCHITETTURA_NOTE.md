@@ -6,7 +6,7 @@
 > **Numerazione = continuum di sessione** (non forzare allineamento al master).  
 > Prompt master: `memory/AUDIT_PROMPT_MASTER.md` (§1–§27) — corrispondenza in tabella sotto.
 
-**Ultimo aggiornamento**: 30-Set-2026 · **SoT** `docs/audit/OMNIA_AUDIT_STATE.md` · **P18** osservazioni · **D-106**
+**Ultimo aggiornamento**: 30-Set-2026 · **SoT** `docs/audit/OMNIA_AUDIT_STATE.md` · **P19** error handling · **D-106**
 
 ---
 
@@ -32,8 +32,9 @@
 | P16 | Job asincroni (approfondimento) | §15 | 🟠 **ACQUISITO** · **JA-*** · **D-102** · **D-103** |
 | P17 | Osservabilità | §16 | 🟠 **ACQUISITO** (Master State) · **O-*** · **D-105** bak health |
 | P18 | API / Frontend | §17 | 🟠 **osservazioni acquisite** · **AF-*** · **D-106** |
+| P19 | Error handling | §18 | 🟠 **ACQUISITO** · **EH-*** |
 | — | Cestino (blocco dedicato) | §6 | 🟡 coperto in P5 + P12 |
-| — | Error handling… | §18–§27 | ⬜ prossimo tipico |
+| — | post-P19 / GTM… | §19–§27 | ⬜ da confermare Founder |
 | **GTM-01** | Demo Readiness / primo afflusso | **post-audit** | 🟠 **ACQUISITO** · **D-104** · in coda · **vincolo pre-~5000 email** |
 
 Decisioni dominio (codice ⏳): **D-094** … **D-106**.  

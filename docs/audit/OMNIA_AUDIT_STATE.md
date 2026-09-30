@@ -5,9 +5,9 @@
 **Usage rule:** questo documento è la fonte di continuità dell'audit.
 Prima di analizzare un nuovo punto, leggere questo file. Non riaprire decisioni già fissate salvo nuove evidenze. Non inventare informazioni mancanti.
 
-**Current status:** P1–P18 analizzati · osservazioni P18 acquisite (**D-106**). Nessun fix applicato. Listino fermo. SoT continuità: questo file. **Niente codice** senza «vai».
+**Current status:** P1–P19 analizzati · osservazioni P18 (**D-106**) · P19 error handling acquisito. Nessun fix applicato. Listino fermo. SoT continuità: questo file. **Niente codice** senza «vai».
 
-**Next:** P19 — Error handling.
+**Next:** prossimo punto master post-P19 (tipico GTM-01 / riepilogo) — da confermare Founder.
 
 ---
 
@@ -753,10 +753,41 @@ Dettaglio: `memory/AUDIT_ARCHITETTURA_NOTE.md` § Punto 18.
 
 ---
 
-# 20. PROSSIMO PUNTO
+# 20. P19 — ERROR HANDLING (consegnato)
 
-**P19 — Error handling** (master §18)
+**Verdetto:** 500 unhandled → utente i18n + `notify_error`; auth lockout/403 decenti; staging/billing toast spesso OK. Debito: swallow FE (upload, matches→empty, liste), job tick solo WARNING (**O-02**/JA), email soft-fail senza UX, no request-id (**O-14**), contratto `detail` misto.
+**Nessun nuovo P0–P3** da P19. Nessun fix finché «vai».
+
+### Finding EH-*
+
+| ID | Tipo | Problema |
+|----|------|----------|
+| EH-01 | debito | Contratto `detail` misto: i18n auth / snake_case CRM / oggetti billing — FE `formatApiErrorDetail` fragile |
+| EH-02 | gap | Solo catch-all `Exception`; no handler custom 422/HTTPException; Pydantic raw all’utente |
+| EH-03 | debito+oss. | PhotoUploader silent fail + fallback base64 nascosto (**AF-05**) |
+| EH-04 | debito demo | MatchesPage senza catch → API fail = empty state |
+| EH-05 | rischio | Job tick bak/match/saved_searches swallow → WARNING; bak partial solo INFO (**O-02**/JA-03) |
+| EH-06 | rischio | `send_email` soft-fail (no raise); invite/match possono sembrare inviati |
+| EH-07 | gap | Geocode best-effort invisibile; Resend circuit/mock senza feedback utente |
+| EH-08 | oss. | Billing load fail silenzioso; checkout toast OK ma 503 stripe_not_configured poco chiaro (**AF-08**) |
+| EH-09 | gap | No request-id / correlazione (**O-14**); `AlertLoggingHandler` non wired (**O-06**) |
+| EH-10 | oss. | Liste CRM (properties/clients) error→empty; KPI dashboard swallow |
+| EH-11 | solid* | Global 500 + notify_error; ErrorBoundary; 401 refresh; lockout i18n; staging errori visibili |
+| EH-12 | gap | Nessun retry UX generale (solo 401 single-flight + sync portal backoff BE) |
+
+### Domande aperte
+
+1. **K-EH-01**: contratto errori API = snake_case stabile + i18n FE, o messaggi già localizzati BE?
+2. **K-EH-02**: mid-demo (upload/invite/match email) — toast obbligatorio vs solo log ops?
+
+Dettaglio: report agente P19 + `memory/AUDIT_ARCHITETTURA_NOTE.md` § Punto 19.
+
+---
+
+# 21. PROSSIMO PUNTO
+
+Da confermare Founder (tipico: GTM readiness / riepilogo audit).
 
 Il Master Audit State deve essere aggiornato dopo il completamento di ogni punto significativo.
 
-**Current next action:** analizzare P19 senza ripetere integralmente P1–P18.
+**Current next action:** non riaprire P1–P19; attendere direzione Founder.
