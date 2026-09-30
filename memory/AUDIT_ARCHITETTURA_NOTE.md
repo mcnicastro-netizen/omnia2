@@ -6,7 +6,7 @@
 > **Numerazione = continuum di sessione** (non forzare allineamento al master).  
 > Prompt master: `memory/AUDIT_PROMPT_MASTER.md` (§1–§27) — corrispondenza in tabella sotto.
 
-**Ultimo aggiornamento**: 30-Set-2026 · **SoT** `docs/audit/OMNIA_AUDIT_STATE.md` · **P22 CHIUSO** · **P23** ⏳ analisi
+**Ultimo aggiornamento**: 30-Set-2026 · **SoT** `docs/audit/OMNIA_AUDIT_STATE.md` · **P23 CHIUSO** · **P24** ⏳ analisi
 
 ---
 
@@ -36,13 +36,15 @@
 | P20 | Scalabilità | §19 | 🟢 **CHIUSO** · **SC-*** · **D-108** · SC-08=GTM-01 |
 | P21 | Coerenza prodotto/tecnologia | §20 | 🟢 **CHIUSO** · **CT-*** · **D-109** · **D-110** |
 | P22 | Casi limite | §21 | 🟢 **CHIUSO** · **EC-*** · **D-111** · **D-112** · D-094/D-106↑ |
-| P23 | Debito architetturale | §22 | 🟠 Consegnato · **AD-*** · ⏳ analisi |
+| P23 | Debito architetturale | §22 | 🟢 **CHIUSO** · **AD-*** · **D-113** |
+| P24 | Non una lista infinita | §24 | 🟠 Consegnato · **NI-*** · ⏳ analisi |
 | — | Cestino (blocco dedicato) | §6 | 🟡 coperto in P5 + P12 + D-111 |
-| — | … | §23–§27 | ⬜ dopo acquisizione P23 · §23 Priorità solo se Founder apre |
+| — | Priorità P0–P3 | §23 | ⬜ **chiuso** finché Founder non apre |
+| — | … | §25–§27 | ⬜ dopo acquisizione P24 |
 | **GTM-01** | Demo Readiness / primo afflusso | **post-audit** | 🟠 **ACQUISITO** · **D-104** · in coda · **vincolo pre-~5000 email** |
 
-Decisioni dominio (codice ⏳): **D-094** … **D-112**.  
-P18–P22 chiusi · P23 in analisi Founder.  
+Decisioni dominio (codice ⏳): **D-094** … **D-113**.  
+P18–P23 chiusi · P24 in analisi Founder.  
 **Continuità SoT**: `docs/audit/OMNIA_AUDIT_STATE.md` (non riaprire decisioni fissate). · **Niente codice** senza «vai».
 
 ---
@@ -1643,10 +1645,37 @@ Vedi tabella in `docs/audit/OMNIA_AUDIT_STATE.md` §24.
 | **Post-GTM OK** | AD-01 storage · AD-02 bak incr. · AD-07 worker · OTel · wipe · DSAR |
 | **Da decidere** | K-AD-01 · K-AD-02 |
 
+### Domande — **RISOLTE** Founder
+
+1. **K-AD-01 → D-113**: D-105 + linguaggio onesto + **restore manuale testabile** pre-GTM (non piattaforma DR; non “restore garantito” commerciale).
+2. **K-AD-02**: FS + 1 replica = baseline GTM deliberata; trigger object storage/CDN = **fallimento smoke media** (K-SC-01 / GTM-01).
+
+### Baseline P23 — **CHIUSO** Founder
+
+* AD-05: AuthZ fascicolo senza anticipare AD-01 (separa storage / endpoint / AuthZ / associazione).
+* AD-08/09/10: invarianti → implementare sui percorsi, non mega-cleanup.
+* AD-12/13/14: stato dichiarato = stato reale (D-105/D-110/D-109).
+* Pre-GTM da chiudere vs accettabile (vincolo dichiarato) — vedi Master State §24.
+**Nessun nuovo P0–P3. Nessun codice. Listino fermo.** → **P24** sotto.
+
+---
+
+## Punto 24 — Non una lista infinita · consegnato 30-Set (master §24)
+
+**Ambito**: distinguere problema reale · rischio potenziale · miglioramento opzionale · preferenza architetturale. Dire cosa è corretto. **§23 Priorità non aperto.** Nessun fix. Nessun P0–P3.
+
+### Verdetto
+
+Pochi drift ripetuti + lock-in intenzionali incompleti. D-094…D-113 filtrano già. Non ogni ID di §14 è priorità uguale. Monolite/AuthN/tenant CRM base OK per la fase.
+
+### Classificazione NI-01…NI-12
+
+Vedi `docs/audit/OMNIA_AUDIT_STATE.md` §25. Sintesi: **reale pre-GTM** = NI-01…07 (+ D-113); **potenziale** = NI-08/09; **opzionale/post** = NI-10/11; **OK** = NI-12.
+
 ### Domande
 
-1. **K-AD-01**: AD-03 restore testabile pre-GTM vs D-105 + linguaggio onesto?
-2. **K-AD-02**: FS+1replica accettato tutta la coorte, o smoke media fallito anticipa object-storage+CDN?
+1. **K-NI-01**: aprire §23 Priorità ora, o report finale (§25) / GTM-01 lasciando severità al «vai»?
+2. **K-NI-02**: congelare lista P23 pre-GTM da chiudere vs accettabile come SoT di ripago?
 
 **Niente fix. Nessuna severità P0–P3. Listino fermo. Attende «vai».**
 

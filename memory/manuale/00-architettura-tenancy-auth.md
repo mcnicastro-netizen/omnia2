@@ -35,6 +35,7 @@ Un blocco alla volta · niente fix senza «vai» · no P0–P3 prematuri · **li
 | **D-110** | Demo mode esplicito; `localStorage` ≠ entitlement authority |
 | **D-111** | Cestino = stato non operativo (freeze); storico preservato |
 | **D-112** | Seed demo idempotente e deterministico |
+| **D-113** | Restore manuale testabile pre-GTM (non piattaforma DR) |
 
 **SoT continuità:** `docs/audit/OMNIA_AUDIT_STATE.md`  
 **Sequenza priorità (D-099):** fascicolo → orphan → Bak+Restore → retention → costi.  
@@ -56,7 +57,8 @@ Un blocco alla volta · niente fix senza «vai» · no P0–P3 prematuri · **li
 | API / Frontend | **AF-*** |
 | Coerenza prodotto | **CT-*** · **D-109** · **D-110** · P21 CHIUSO |
 | Casi limite | **EC-*** · **D-111** · **D-112** · P22 CHIUSO |
-| Debito architetturale | **AD-*** · P23 ⏳ |
+| Debito architetturale | **AD-*** · **D-113** · P23 CHIUSO |
+| Non lista infinita | **NI-*** · P24 ⏳ |
 | GTM / Demo | **GTM-01 ACQUISITO** · **D-104** · in coda · pre-~5000 email |
 | Costo / listino | C-* · B-01 · fermo |
 
@@ -66,9 +68,9 @@ Un blocco alla volta · niente fix senza «vai» · no P0–P3 prematuri · **li
 
 | Sessione | Master | Stato |
 |----------|--------|--------|
-| P1–P22 | §1–§21 | chiusi · D-094…D-112 |
-| P23 Debito architetturale | §22 | Consegnato · AD-* · ⏳ analisi |
-| — | §23 Priorità… | solo se Founder apre |
+| P1–P23 | §1–§22 | chiusi · D-094…D-113 |
+| P24 Non una lista infinita | §24 | Consegnato · NI-* · ⏳ analisi |
+| — | §23 Priorità | ⬜ chiuso finché Founder apre |
 | GTM-01 | post-audit | 🟠 **ACQUISITO** · in coda · smoke ~20 |
 
 Dettaglio: `docs/audit/OMNIA_AUDIT_STATE.md` · `AUDIT_ARCHITETTURA_NOTE.md` · A-035 · A-036.

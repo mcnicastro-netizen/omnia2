@@ -1,5 +1,15 @@
 # OMNIA — Changelog
 
+## 2026-09-30 — P23 CHIUSO · D-113 · P24 Non una lista infinita (NI-*)
+
+**Tipo**: Docs / SoT audit · **nessun codice** · **listino fermo** · no nuovi P0–P3.
+
+- **P23 CHIUSO**: debito da ripagare vs accettare; AD-05 AuthZ fascicolo senza anticipare object storage; invarianti sui percorsi; **D-113** restore manuale testabile pre-GTM; FS+1replica baseline GTM con smoke media come trigger AD-01
+- **P24** consegnato (master §24; §23 Priorità non aperto): **NI-01…NI-12**; K-NI-01/02 aperti
+- Master State aggiornato · prossimo = analisi Founder P24
+
+---
+
 ## 2026-09-30 — P22 CHIUSO · D-111/D-112 · P23 Debito (AD-*)
 
 **Tipo**: Docs / SoT audit · **nessun codice** · **listino fermo** · no nuovi P0–P3.

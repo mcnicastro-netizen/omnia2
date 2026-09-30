@@ -1712,4 +1712,17 @@ Registro di tutte le decisioni di business e tecniche prese durante il progetto.
 - **Implementazione**: ❌ codice ⏳ — post-audit / «vai».
 - **Stato**: ✅ **DECISIONE DI DOMINIO REGISTRATA** (docs 30-Set-2026 · P22 CHIUSO) · codice ⏳
 
+### D-113 — Restore manuale testabile pre-GTM (non piattaforma DR) · 30-Set-2026
+- **Data**: 30 Settembre 2026
+- **Contesto**: Audit P23 (AD-03 / K-AD-01). “Backup presente” ≠ “restore testato”. Non serve subito una piattaforma DR completa.
+- **Decisione**:
+  1. Pre-GTM: **procedura manuale, documentata e ripetibile** di restore su ambiente **non-prod**, con esito verificabile.
+  2. Non richiede automatizzazione.
+  3. **D-105** = “il processo bak funziona?”; restore test = “sappiamo recuperare?”.
+  4. **Non** capability commerciale di “restore garantito” finché non ci sono tempi/limiti operativi definiti.
+  5. Linguaggio onesto (P21 CT-03): bak esistente ≠ verificato ≠ restore disponibile ≠ restore testato.
+- **Correlato P23 / K-AD-02**: FS + 1 replica = baseline GTM deliberata; anticipare object storage/CDN solo se **fallisce lo smoke media** (confidence gate **K-SC-01** / GTM-01) — non “1 replica ⇒ object storage”.
+- **Implementazione**: ❌ docs/ops (+ eventuale codice supporto) ⏳ — post-audit / «vai».
+- **Stato**: ✅ **DECISIONE OPERATIVA REGISTRATA** (docs 30-Set-2026 · P23 CHIUSO) · codice/docs ⏳
+
 

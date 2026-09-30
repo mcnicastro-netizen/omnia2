@@ -5,9 +5,9 @@
 **Usage rule:** questo documento è la fonte di continuità dell'audit.
 Prima di analizzare un nuovo punto, leggere questo file. Non riaprire decisioni già fissate salvo nuove evidenze. Non inventare informazioni mancanti.
 
-**Current status:** P1–P22 **chiusi** · **P23 Debito architetturale consegnato** ⏳ analisi Founder. Nessun fix. Listino fermo. SoT: questo file. **Niente codice** senza «vai».
+**Current status:** P1–P23 **chiusi** · **P24 Non una lista infinita consegnato** ⏳ analisi Founder. Nessun fix. Listino fermo. SoT: questo file. **Niente codice** senza «vai».
 
-**Next:** analisi Founder su **P23 (AD-*)**. GTM-01 in coda.
+**Next:** analisi Founder su **P24 (NI-*)**. GTM-01 in coda. Master §23 Priorità **non aperto** finché Founder non lo chiede.
 
 ---
 
@@ -317,6 +317,16 @@ Codice ⏳ — post-audit / «vai».
 * **Niente** logica “se manca X, usa la prima agency” (stesso errore concettuale di **EC-01** / **D-106**).
 * Seed ripetibile: stessi input → stesso grafo membership demo.
 Codice ⏳ — post-audit / «vai».
+
+
+## D-113 — Restore manuale testabile pre-GTM (non piattaforma DR)
+
+* Pre-GTM: **procedura manuale, documentata e ripetibile** di restore su ambiente **non-prod**, con esito verificabile.
+* Non richiede automatizzazione / piattaforma disaster recovery.
+* **D-105** risponde a “il processo bak funziona?”; il restore test risponde a “sappiamo recuperare?”.
+* **Non** è ancora capability commerciale di “restore garantito” finché non esistono tempi/limiti operativi definiti.
+* Linguaggio onesto: bak esistente ≠ bak verificato ≠ restore disponibile ≠ restore testato (**P21 CT-03**).
+Codice/docs ops ⏳ — post-audit / «vai».
 
 ---
 
@@ -644,7 +654,11 @@ EC-01…EC-15 · **D-094**/ **D-106** rafforzati · **D-111** freeze · **D-112*
 
 ### Debito architetturale
 
-AD-01…AD-16 · **P23** ⏳ analisi Founder
+AD-01…AD-16 · **D-113** restore manuale · **P23 CHIUSO**
+
+### Non una lista infinita
+
+NI-01…NI-12 · **P24** ⏳ analisi Founder
 
 ### Storage
 
@@ -911,56 +925,83 @@ Finding EC-01…EC-15 restano nel registro. Dettaglio: `memory/AUDIT_ARCHITETTUR
 
 ---
 
-# 24. P23 — DEBITO ARCHITETTURALE (consegnato · ⏳ analisi Founder · master §22)
+# 24. P23 — DEBITO ARCHITETTURALE — **CHIUSO** (Founder 30-Set · nessun codice · no nuovi P0–P3)
 
-**Verdetto:** Il debito non è “monolite sbagliato”: è una **catena di lock-in intenzionali incompleti** (FS locale, bak full-copy, APScheduler single-replica, no worker) più **drift accidentali** (multi-agency, invite, trash nelle proiezioni, AuthZ media). Le decisioni **D-094…D-112** hanno già classificato molto come accettato ora / codice ⏳. Per GTM/ops resta pericoloso il **disallineamento capacità↔promesse** e i **coupling storage↔API↔scheduler**. Pre-GTM il ripagamento critico non è S3/worker/OTel: è **SoT + fascicolo AuthZ + invite + D-094/D-111 + bak health + onestà commerciale**. Object storage, bak incrementale, worker = post-coorte se il gate GTM-01 regge.
-**Nessun nuovo P0–P3.** Nessun fix. **D-094…D-112 / GTM-01 / P18–P22 non riaperti** (solo link).
+**Verdetto acquisito:** il debito non è “monolite = problema”, ma **quali assunzioni sono deliberate e quali rimaste incomplete**. Distinguere **debito da ripagare** vs **debito da accettare consapevolmente**. Nessun nuovo P0–P3. Nessun fix. Listino fermo.
 
-### Finding AD-*
+### Baseline P23
 
-| ID | Tipo | Problema | Link | Evidenza |
-|----|------|----------|------|----------|
-| AD-01 | coupling / strutturale | Storage `.media` accoppiato al processo API; non horizontal-ready | SC-02 · SC-15 · D-095 | `objstore.py:30-118` · `media.py:26-59` |
-| AD-02 | intenzionale / strutturale | Bak full copytree × ~30gg (~31× disco); listino non verificabile | B-01 · C-04 · SC-03 · D-096 | `backup_job.py:67-77` |
-| AD-03 | strutturale | Bak incompleto + zero restore applicativo vs Cap.19 | B-02 · R-01/R-02 · CT-03 · D-096 | `backup_job.py:22-35,54-61` |
-| AD-04 | accidentale / strutturale | Mongo ↔ blob spezzato; `delete_object` senza call-site; orphan | M-02…M-04 · D-095 · D-098 · D-102 | `objstore.py:138-145` · `trash.py:154-166` |
-| AD-05 | coupling | `/api/media` pubblico = AuthZ anche per fascicolo | M-01 · EC-10 · D-095 · D-099 | `media.py:26-34` · `fascicolo.py:252-265` |
-| AD-06 | coupling / ops | Due autorità scheduling (APScheduler + HTTP cron) | SC-10 · EC-12 · D-108 · D-101 | `sync_engine.py:258-337` · `cron.py:37-50` |
-| AD-07 | intenzionale | Ceiling single-replica / no worker | SC-01 · D-101 · D-103 | `server.py:51-67` |
-| AD-08 | accidentale / coupling | `active_agency_id` ≠ `agency_ids[0]` | AF-03 · EC-01 · **D-106** | `tenant.py:12-17` · `agencies.py:120` · `invites.py:48-51` |
-| AD-09 | accidentale | Contratto invite rotto (overwrite + race + i18n) | AF-01 · EC-05/06/15 · **D-100** · D-107 | `invites.py:222-284` |
-| AD-10 | accidentale | D-094 non end-to-end (match/sync/smart; client trash) | EC-02/03/04 · **D-094** · **D-111** | `sync_engine.py:58-64` · `client_requests_service.py:454-456` |
-| AD-11 | coupling / ops | Purge cestino fuori APScheduler | JA-04 · EC-12 · **D-102** | `cron.py:37-42` vs `sync_engine.py:308-315` |
-| AD-12 | ops | Bak/job non osservabili (no last_run Founder Ops) | O-01/02/05 · CT-11 · **D-105** | `sync_engine.py:300-306` · `backup_job.py:38-93` |
-| AD-13 | coupling | `localStorage` gate + Stripe 503 | CT-06 · EC-07 · **D-110** | `BillingPage.jsx:83-110` · `billing/routes.py:35-47` |
-| AD-14 | coupling / accidentale | Pricing multi-fonte (landing vs plans API) | CT-01 · **D-109** | `AgenziesLandingPage.jsx:32-50` |
-| AD-15 | coupling | Contratto errori FE↔BE fragile | EH-* · EC-15 · **D-107** | Master P19 · AcceptInvite i18n |
-| AD-16 | strutturale / ops | Catena fascicolo→blob→bak→restore→retention→€ aperta | RET-* · G-* · D-096…D-099 | Master §7–§13 · §17 deps |
+* **AD-05**: correggere il **boundary di autorizzazione** fascicolo (storage fisico ≠ endpoint ≠ AuthZ ≠ associazione media↔fascicolo/agency). FS locale pre-GTM OK — **non** anticipare AD-01/object storage solo per questo.
+* **AD-08/09/10**: **D-106 / D-100 / D-094·D-111** = invarianti di dominio. Implementare quando si toccano i percorsi relativi — non un grande “architecture cleanup” (evita di pagare due volte).
+* **AD-12/13/14**: stesso problema — **lo stato dichiarato deve corrispondere allo stato reale** (**D-105**, **D-110**, **D-109** più importanti del refactor infra). Demo `localStorage` non deve diventare semantica di produzione.
+* **K-AD-01 → D-113**: pre-GTM = **D-105 + linguaggio onesto + restore manuale testabile** (non-prod, documentato, ripetibile, esito verificabile). Non = piattaforma DR né “restore garantito” commerciale.
+* **K-AD-02**: **FS + 1 replica = baseline GTM deliberata**; trigger misurabile per anticipare object storage/CDN = **fallimento smoke media** (confidence gate **K-SC-01** / GTM-01 — *non* “1 replica ⇒ object storage”). Coerente P20.
+* **Pre-GTM da chiudere/garantire:** SoT agency · invite · trash · media AuthZ fascicolo · bak health · demo entitlement · pricing · restore manuale testabile.
+* **Pre-GTM accettabile come vincolo dichiarato:** FS locale · single/limited replica · bak full · match on-read · no worker · no OTel · no object storage/CDN.
+* **Nessun fix. Nessun nuovo P0–P3. Listino fermo.**
+
+Finding AD-01…AD-16 restano nel registro. Dettaglio: `memory/AUDIT_ARCHITETTURA_NOTE.md` § Punto 23.
+
+---
+
+# 25. P24 — NON UNA LISTA INFINITA (consegnato · ⏳ analisi Founder · master §24)
+
+**Nota continuum:** master **§23 Priorità (P0–P3)** resta **chiuso** finché Founder non lo apre esplicitamente. P24 = §24 (distinguere reale / potenziale / opzionale / preferenza).
+
+**Verdetto:** L’audit non ha prodotto “cento bug uguali”: ha prodotto **pochi drift accidentali ripetuti** (invite, SoT agency, trash, AuthZ fascicolo, contratto commerciale/demo) e **lock-in intenzionali incompleti** (FS, bak full-copy, single-replica). **D-094…D-113** hanno già filtrato intenzionale vs accidentale. Trattare ogni ID di §14 come priorità uguale è rumore. Il monolite + CRM tenant-guard + AuthN + soft-delete **non sono sbagliati** per la fase attuale.
+**Nessun nuovo P0–P3.** Nessun fix. **D-094…D-113 / GTM-01 / P18–P23 non riaperti** (solo link).
+
+### Classificazione NI-*
+
+| ID | Cluster | Classe | Link | Decisioni |
+|----|---------|--------|------|-----------|
+| NI-01 | Fascicolo / media AuthZ | **reale** | AD-05 · M-01 · EC-10 | **D-095** |
+| NI-02 | Invite overwrite / contratto unico | **reale** | AD-09 · AF-01 · EC-05 | **D-100** |
+| NI-03 | SoT `active_agency_id` | **reale** (codice ⏳) | AD-08 · EC-01 | **D-106** |
+| NI-04 | Trash/proiezioni + freeze | **reale** (codice ⏳) | AD-10 · EC-02/03 | **D-094** · **D-111** |
+| NI-05 | Pricing / demo / bak≠restore | **reale** | AD-13/14 · CT-* · AD-03 | **D-109** · **D-110** · **D-113** |
+| NI-06 | Minimi Demo Readiness | **reale** (gate GTM) | AF-04/05 · EH-03/04 · SC-08 | **D-104** |
+| NI-07 | Bak health Founder Ops | **reale** (ops) | AD-12 · O-01 | **D-105** |
+| NI-08 | Bak incompleto / restore piattaforma | **potenziale** → procedura manuale in **D-113**; non DR completa | AD-02/03 · B-* · R-* | **D-096** · **D-113** |
+| NI-09 | Orphan / purge / Mongo↔blob | **potenziale** (path deciso, WHEN col bak) | AD-04/11 · M-02… | **D-098** · **D-102** |
+| NI-10 | GDPR package incompleto | **opzionale** pre-GTM | G-* · AD-16 | **D-099** |
+| NI-11 | Object storage / worker / OTel / bak incr. | **preferenza / post-GTM** (vincolo dichiarato OK) | AD-01/02/07 · SC-* | **D-101** · **D-103** · K-AD-02 |
+| NI-12 | AuthN · tenant CRM base · mount demo · soft-delete · listino fermo · single-replica deliberata | **già corretto / OK** | P18 · P23 · RC wallet | D-101/D-103 |
+
+### Cose che funzionano
+
+* AuthN (JWT/refresh/Google/MFA/API key) solida per la fase.
+* Multi-tenancy CRM presente (non end-to-end perfetto, non assente).
+* Modello Client ≠ Request + soft-delete/cestino come scheletro (D-094/D-097/D-111).
+* Monolite **non** classificato come errore (P23).
+* Decisioni D-094…D-113 filtrano intenzionale vs accidentale.
+* Race “già buone”: wallet + restore/purge trash.
+* Ops base esiste; manca soprattutto bak health leggibile (**D-105**).
 
 ### Domande aperte
 
-1. **K-AD-01**: Prima del GTM, AD-03 (bak incompleto + zero restore) va ripagato almeno come *procedura supporto testabile su una agenzia*, o basta **D-105** + linguaggio onesto («bak ≠ restore testato») finché non c’è «vai» sul design Bak+Restore?
-2. **K-AD-02**: Il blocco FS locale + 1 replica + no worker resta accettato per tutta la prima coorte GTM, oppure un fallimento del smoke ~20 concurrent su media (**K-SC-01** / SC-15) anticipa già la soglia object-storage+CDN (**K-SC-02**), separata dal worker?
+1. **K-NI-01**: Dopo P23 chiuso — si apre ora master **§23 Priorità** (P0–P3), oppure si va a **report finale (§25)** / **GTM-01**, lasciando le severità al momento del «vai» sul ripago pre-GTM?
+2. **K-NI-02**: La lista P23 «pre-GTM da chiudere» vs «pre-GTM accettabile» (riflessa in NI-01…07 vs NI-11) va **congelata come SoT di ripago**, o Founder vuole restringerla/estenderla prima di qualsiasi §23 Priorità?
 
 ### Lettura Founder
 
 | Classe | Cosa |
 |--------|------|
-| **Già gestito** (deciso, codice ⏳) | D-101/D-103 single-replica · D-108 one-owner · listino fermo · D-094/D-111 trash · D-097 · D-098 path-to-delete · D-104 GTM-01 · D-112 seed |
-| **Debito pre-GTM** | AD-05 fascicolo · AD-09 invite · AD-08 SoT agency · AD-10 trash uniforme · AD-13/14 demo+pricing · AD-12 bak health · AD-03 onestà restore · minimi GTM-01 |
-| **Debito post-GTM OK** | AD-01 object storage+CDN · AD-02 bak incrementale · AD-07 worker · OTel · wipe agenzia · DSAR self-service |
-| **Da decidere** | K-AD-01 · K-AD-02 |
+| **Reale pre-GTM** | NI-01…NI-07 (+ D-113 procedura restore) |
+| **Potenziale / design** | NI-08 (oltre D-113) · NI-09 |
+| **Opzionale / post** | NI-10 · NI-11 |
+| **OK fase attuale** | NI-12 |
 
-Dettaglio: `memory/AUDIT_ARCHITETTURA_NOTE.md` § Punto 23.
+Dettaglio: `memory/AUDIT_ARCHITETTURA_NOTE.md` § Punto 24.
 
 ---
 
-# 25. PROSSIMO PUNTO
+# 26. PROSSIMO PUNTO
 
-Dopo acquisizione Founder su **P23**: tipicamente master §23 Priorità (P0–P3) — **solo quando Founder apre** · oppure GTM-01 in coda.
+Dopo acquisizione Founder su **P24**: tipicamente report finale (master §25) · oppure §23 Priorità **solo se Founder apre** · GTM-01 in coda.
 
 Il Master Audit State deve essere aggiornato dopo il completamento di ogni punto significativo.
 
-**Current next action:** analisi Founder su **P23 (AD-*)**. GTM-01 in coda (vincolo pre-~5000 email).
+**Current next action:** analisi Founder su **P24 (NI-*)**. GTM-01 in coda (vincolo pre-~5000 email). Master §23 Priorità non aperto.
 
 **Niente fix. Nessuna severità P0–P3. Listino fermo. Attende «vai».**
