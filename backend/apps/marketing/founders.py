@@ -39,6 +39,8 @@ class FounderRegistration(BaseModel):
     address: str = Field(min_length=2, max_length=200, description="Via / indirizzo sede")
     street_number: str = Field(min_length=1, max_length=20, description="Civico")
     agents_count: int = Field(default=1, ge=1, le=500, description="Optional; default 1 if omitted from form")
+    has_website: str = Field(description="yes|no — per personalizzare la demo col layout agenzia")
+    website_url: Optional[str] = Field(default=None, max_length=300)
     tier_interest: Optional[str] = Field(default=None, description="Optional: starter|pro|agency")
     notes: Optional[str] = Field(default=None, max_length=500)
 
@@ -46,6 +48,22 @@ class FounderRegistration(BaseModel):
     @classmethod
     def strip_whitespace(cls, v: str) -> str:
         return v.strip()
+
+    @field_validator("has_website")
+    @classmethod
+    def validate_has_website(cls, v: str) -> str:
+        val = (v or "").strip().lower()
+        if val not in ("yes", "no"):
+            raise ValueError("has_website must be yes or no")
+        return val
+
+    @field_validator("website_url")
+    @classmethod
+    def normalize_website_url(cls, v: Optional[str]) -> Optional[str]:
+        if v is None:
+            return None
+        s = v.strip()
+        return s or None
 
 
 @router.get("/spots")
@@ -81,6 +99,12 @@ async def register_founder(payload: FounderRegistration, request: Request):
             detail="Email already registered. We will get back to you soon.",
         )
 
+    if payload.has_website == "yes" and not payload.website_url:
+        raise HTTPException(
+            status_code=400,
+            detail="Inserisci l'URL del sito web per personalizzare la demo.",
+        )
+
     # Build lead document
     now = datetime.now(timezone.utc)
     lead_doc = {
@@ -91,6 +115,8 @@ async def register_founder(payload: FounderRegistration, request: Request):
         "address": payload.address,
         "street_number": payload.street_number,
         "agents_count": payload.agents_count,
+        "has_website": payload.has_website == "yes",
+        "website_url": payload.website_url if payload.has_website == "yes" else None,
         "tier_interest": payload.tier_interest,
         "notes": payload.notes,
         "created_at": now.isoformat(),
@@ -141,6 +167,12 @@ async def register_founder(payload: FounderRegistration, request: Request):
                 "address": payload.address,
                 "street_number": payload.street_number,
                 "agents_count": payload.agents_count,
+                "has_website": "Sì" if payload.has_website == "yes" else "No",
+                "website_url": (
+                    payload.website_url
+                    if payload.has_website == "yes" and payload.website_url
+                    else "—"
+                ),
                 "tier_interest": payload.tier_interest or "—",
                 "notes": payload.notes or "—",
                 "position": position,

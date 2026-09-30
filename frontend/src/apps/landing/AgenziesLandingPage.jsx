@@ -71,7 +71,8 @@ export default function AgenziesLandingPage() {
     city: "",
     address: "",
     street_number: "",
-    agents_count: 3,
+    has_website: "",
+    website_url: "",
     tier_interest: "",
     notes: "",
   });
@@ -117,9 +118,21 @@ export default function AgenziesLandingPage() {
     setSubmitting(true);
     setErrorMsg(null);
     try {
+      if (!formData.has_website) {
+        setErrorMsg("Indica se hai già un sito web.");
+        setSubmitting(false);
+        return;
+      }
+      if (formData.has_website === "yes" && !(formData.website_url || "").trim()) {
+        setErrorMsg("Inserisci l'URL del sito web per personalizzare la demo.");
+        setSubmitting(false);
+        return;
+      }
       const payload = {
         ...formData,
-        agents_count: 1, // non richiesto in form — default lead
+        agents_count: 1,
+        has_website: formData.has_website,
+        website_url: formData.has_website === "yes" ? (formData.website_url || "").trim() : null,
         tier_interest: formData.tier_interest || null,
         notes: formData.notes || null,
       };
@@ -344,6 +357,25 @@ export default function AgenziesLandingPage() {
                   data-testid="founders-input-street-number"
                   className="bg-white/10 border border-white/20 px-4 py-3 text-white placeholder:text-white/40 focus:outline-none focus:border-[#C19A6B]" />
               </div>
+              <select name="has_website" required value={formData.has_website} onChange={handleChange}
+                data-testid="founders-input-has-website"
+                className="w-full bg-white/10 border border-white/20 px-4 py-3 text-white focus:outline-none focus:border-[#C19A6B]">
+                <option value="" className="text-stone-900">Hai già un sito web? *</option>
+                <option value="yes" className="text-stone-900">Sì — voglio una demo col mio look</option>
+                <option value="no" className="text-stone-900">No — parto da zero con OMNIA</option>
+              </select>
+              {formData.has_website === "yes" ? (
+                <input
+                  name="website_url"
+                  type="url"
+                  required
+                  value={formData.website_url}
+                  onChange={handleChange}
+                  placeholder="URL del sito (es. https://www.tuaagenzia.it) *"
+                  data-testid="founders-input-website-url"
+                  className="w-full bg-white/10 border border-white/20 px-4 py-3 text-white placeholder:text-white/40 focus:outline-none focus:border-[#C19A6B]"
+                />
+              ) : null}
               <select name="tier_interest" value={formData.tier_interest} onChange={handleChange}
                 data-testid="founders-input-package"
                 className="w-full bg-white/10 border border-white/20 px-4 py-3 text-white focus:outline-none focus:border-[#C19A6B]">
