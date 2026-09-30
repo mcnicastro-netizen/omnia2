@@ -6,7 +6,7 @@
 > **Numerazione = continuum di sessione** (non forzare allineamento al master).  
 > Prompt master: `memory/AUDIT_PROMPT_MASTER.md` (§1–§27) — corrispondenza in tabella sotto.
 
-**Ultimo aggiornamento**: 29-Set-2026 · **P17 Osservabilità** (in attesa feedback) · **GTM-01** registrato (**D-104**)
+**Ultimo aggiornamento**: 30-Set-2026 · **GTM-01 ACQUISITO** (**D-104**) · **P17** riconsegnato per analisi
 
 ---
 
@@ -30,10 +30,10 @@
 | P14 | GDPR / privacy | §13 | 🟠 **ACQUISITO** · **D-099** · G-* |
 | P15 | Concorrenza / race | §14 | 🟠 **ACQUISITO** · **RC-*** · invite → **D-100** · jobs → **D-101** |
 | P16 | Job asincroni (approfondimento) | §15 | 🟠 **ACQUISITO** · **JA-*** · **D-102** · **D-103** |
-| P17 | Osservabilità | §16 | 🟠 Consegnato · **O-*** · ⏳ feedback |
+| P17 | Osservabilità | §16 | 🟠 Consegnato · **O-*** · ⏳ analisi Founder |
 | — | Cestino (blocco dedicato) | §6 | 🟡 coperto in P5 + P12 |
-| — | API/FE… | §17–§27 | ⬜ prossimo tipico post-feedback P17 |
-| **GTM-01** | Demo Readiness / primo afflusso | **post-audit** | ⬜ **registrato** · **D-104** · non ora |
+| — | API/FE… | §17–§27 | ⬜ dopo acquisizione P17 |
+| **GTM-01** | Demo Readiness / primo afflusso | **post-audit** | 🟠 **ACQUISITO** · **D-104** · in coda · **vincolo pre-~5000 email** |
 
 Decisioni dominio (codice ⏳): **D-094** … **D-104**.
 
@@ -55,7 +55,7 @@ Decisioni dominio (codice ⏳): **D-094** … **D-104**.
 12. **Concorrenza / race** = **RC-*** · invite → **D-100**  
 13. **Jobs deepen** = **JA-*** · J-* · **JA-02**/JA-03 in registro finale  
 14. **Osservabilità** = **O-*** (bak/job health, alert, Founder Ops)  
-15. **GTM / Demo Readiness** = **GTM-01** · **D-104** — dopo audit tecnico principale; prima delle ~5000 email
+15. **GTM / Demo Readiness** = **GTM-01 ACQUISITO** · **D-104** — in coda; **obbligatorio prima delle ~5000 email**
 
 ---
 
@@ -1288,10 +1288,21 @@ Per Bak/Restore: oggi si sa che *qualcosa* ha scritto file e log; **non** si sa 
 
 \*O-04 è gap di **orchestrazione** (D-102), citato qui perché senza job automatico non c’è neanche osservabilità del purge.
 
-### Priorità tipiche (no P0–P3; guida post-audit)
+### Lettura Founder (stessa logica: solido / rischioso / decidere / aspetta)
 
-Per Bak/Restore (come da Founder): **O-01 → O-02 → O-05 → O-09/O-13** prima di Prom/OTel (O-07) o structured log (O-14).  
-**D-102** (purge auto) è implementazione job, non solo osservabilità — ma abilita di misurarlo.
+| Classe | Cosa |
+|--------|------|
+| **Già solido** | Health + readiness go-live; Sentry/webhook/email opzionali; `notify_error` su exception HTTP; `ops_alerts` + UI Founder Ops (LLM/Stripe); sync portal `publishing_sync_logs` per-connection; MANIFEST scrive ok/partial; quota storage cliente |
+| **Realmente rischioso** | **O-01/O-02**: bak fallisce in silenzio (WARNING only) — non sai se intervenire; **O-05**: nessun `last_run` → job “morto” invisibile; **O-09**: ops_alerts non copre bak/sched |
+| **Da decidere** | **K-O-01** superficie Bak health; **K-O-02** canale alert bak |
+| **Può aspettare** | O-07 Prom/OTel; O-14 structured log/request-id; O-08 ack API (utile ma non bloccante); O-10/O-11 nuance health HTTP; O-12 `.env.example`; O-15 alert sync aggregato (dopo bak health) |
+
+\*O-03/O-04 sono gap di **restore/purge** (D-096/D-102), non solo osservabilità — già in altre decisioni.
+
+### Priorità tipiche (no P0–P3; guida)
+
+Per Bak/Restore: **O-01 → O-02 → O-05 → O-09/O-13** prima di Prom/OTel (O-07) o structured log (O-14).  
+**D-102** (purge auto) abilita di misurare il purge.
 
 ### Domande aperte (max 2)
 
@@ -1299,13 +1310,15 @@ Per Bak/Restore (come da Founder): **O-01 → O-02 → O-05 → O-09/O-13** prim
 2. **K-O-02** — Alert bak fallito: riusare `ops_alerts` + canale `ERROR_ALERT_*` esistenti, o canale dedicato (es. email/webhook “backup”)?
 
 **Niente fix. Nessuna severità P0–P3. Listino fermo.**  
-**In attesa feedback Founder su P17.** Piano: poi tipicamente §17 API/FE… · **GTM-01 dopo** audit tecnico principale (**D-104**).
+**In analisi Founder.** Poi tipicamente §17 API/FE… · **GTM-01 in coda** (vincolo pre-~5000 email).
 
 ---
 
-## GTM-01 — Demo Readiness / capacità primo afflusso · **REGISTRATO** 29-Set (**D-104**)
+## GTM-01 — Demo Readiness / capacità primo afflusso · **ACQUISITO** 30-Set (**D-104** · **A-036**)
 
-**Stato**: ⬜ aperto · **non analizzare ora** · dopo completamento punti principali dell’audit tecnico.  
+**Stato**: 🟠 **ACQUISITO** · **in coda** (non altera il percorso audit) · analisi **dopo** i punti principali.  
+**Vincolo vincolante**: **prima delle ~5.000 email deve essere eseguito il checkpoint Demo Readiness.**
+
 **Motivo**: ~5000 email outreach possono diventare rapidamente un test reale di OMNIA. Non dimensionare per 5000 utenti contemporanei — verificare il **picco** e il **percorso demo**.
 
 ### Rischio da evitare
@@ -1352,4 +1365,10 @@ nuova agenzia → admin → agente → immobili → foto → documenti → clien
 = il percorso che si mostra ai prospect deve essere **solido**.
 
 Collegamenti: seed `demo-agency-001` · A-025 (⏸) · stress scripts esistenti · finding audit già aperti.  
-**Niente fix ora. Niente analisi GTM-01 ora.** Continua audit (feedback P17 → §17…).
+
+### Piano
+
+- Percorso audit **invariato**: P17 → (acquisizione) → tipicamente §17 API/FE…  
+- **GTM-01 resta in coda** dopo i punti principali.  
+- **Hard gate**: niente lancio ~5000 email senza checkpoint Demo Readiness eseguito.  
+**Niente analisi GTM-01 ora. Niente fix. Listino fermo.**

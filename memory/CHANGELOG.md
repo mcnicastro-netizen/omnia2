@@ -1,5 +1,15 @@
 # OMNIA — Changelog
 
+## 2026-09-30 — GTM-01 ACQUISITO · P17 riconsegnato per analisi
+
+**Tipo**: Docs / SoT audit · **nessun fix** · **listino fermo**.
+
+- **GTM-01 / D-104 / A-036 ACQUISITI**: in coda, percorso audit invariato; **vincolo hard** = checkpoint Demo Readiness **prima** delle ~5000 email
+- **P17 Osservabilità**: riconsegnato con lettura solido/rischioso/decidere/aspetta; K-O-01/K-O-02 aperti
+- Cap.00 · A-035/A-036 · note · NEXT_SESSION · master · HAL
+
+---
+
 ## 2026-09-29 — D-104 · GTM-01 Demo Readiness registrato (post-audit)
 
 **Tipo**: Docs / SoT audit · **nessun fix** · **nessuna analisi GTM ora**.

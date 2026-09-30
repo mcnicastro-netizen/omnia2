@@ -1605,16 +1605,17 @@ Registro di tutte le decisioni di business e tecniche prese durante il progetto.
 - **Stato**: ✅ **DECISIONE OPERATIVA REGISTRATA** (docs 29-Set-2026) · codice ⏳
 
 ### D-104 — Checkpoint GTM-01 Demo Readiness prima del lancio email · 29-Set-2026
-- **Data**: 29 Settembre 2026
-- **Contesto**: Outreach previsto ~5000 email. Founder: non = 5000 concurrent; rischio = prime ~20 persone in demo contemporanea + percorso prodotto rotto. Audit tecnico continua; serve fase dedicata **dopo** i punti principali.
+- **Data**: 29 Settembre 2026 · **acquisizione Founder**: 30 Settembre 2026
+- **Contesto**: Outreach previsto ~5000 email. Founder: non = 5000 concurrent; rischio = prime ~20 persone in demo contemporanea + percorso prodotto rotto. Audit tecnico continua; fase dedicata **dopo** i punti principali.
 - **Decisione**:
-  1. Aggiungere blocco **GTM-01 — Demo Readiness / capacità di sostenere il primo afflusso commerciale**.
-  2. **Quando**: dopo completamento audit tecnico principale — **non** aspettare la fine di ogni §27 se i punti principali sono chiusi; **non** analizzare GTM-01 ora (in attesa feedback P17 / continuum §17…).
-  3. **Non** dimensionare per 5000 utenti contemporanei; verificare picco (2 / 50 / 200 richieste; ~20 concurrent su funzioni chiave) + processo commerciale + lead non persi.
-  4. Prima delle 5000 email: **demo sotto stress** sul percorso reale prospect (agenzia→admin→agente→immobili→foto→docs→cliente→richiesta→matching→pubblicazione→sessioni…).
-  5. Capacità tecnica **e** qualità demo (UI rotta, 500, leak tenant, invite/password D-100, scaffold, upload, job).
-  6. I 5000 destinatari sono motivo sufficiente per questa verifica **prima** del lancio — non aspettare 200 clienti.
+  1. Blocco **GTM-01 — Demo Readiness / capacità di sostenere il primo afflusso commerciale** (**A-036**).
+  2. **Non altera il percorso audit**: resta **in coda**; si continua P17 → §17… come previsto.
+  3. **Vincolo hard**: **prima delle ~5.000 email** il checkpoint Demo Readiness **deve essere eseguito**.
+  4. **Quando analizzare**: dopo i punti principali dell’audit tecnico — non ora.
+  5. **Non** dimensionare per 5000 utenti contemporanei; verificare picco (2 / 50 / 200; ~20 concurrent) + processo commerciale + lead non persi.
+  6. Prima delle 5000 email: **demo sotto stress** sul percorso prospect reale.
+  7. Capacità tecnica **e** qualità demo (UI, 500, tenant, D-100, scaffold, upload, job).
 - **Implementazione**: ❌ analisi GTM-01 ⏳ post-audit tecnico · codice/fix solo con «vai».
-- **Stato**: ✅ **DECISIONE DI PIANO REGISTRATA** (docs 29-Set-2026) · blocco GTM-01 aperto
+- **Stato**: ✅ **ACQUISITO** Founder (30-Set-2026) · in coda · vincolo pre-~5000 email
 
 

@@ -26,7 +26,7 @@ Un blocco alla volta · niente fix senza «vai» · no P0–P3 prematuri · **li
 | **D-101** | Job automatici: **single-instance** ora (non lock multi-pod); worker poi |
 | **D-102** | Purge + orphan cleanup: **automatizzare ora** nel ciclo APScheduler |
 | **D-103** | No worker dedicato ora; eventuale anti-dup minimo stesso-giorno |
-| **D-104** | **GTM-01** Demo Readiness dopo audit tecnico · prima ~5000 email |
+| **D-104** | **GTM-01 ACQUISITO** · in coda · **vincolo hard** pre-~5000 email |
 
 **Sequenza priorità (D-099):** fascicolo → orphan → Bak+Restore → retention → costi.
 
@@ -43,7 +43,7 @@ Un blocco alla volta · niente fix senza «vai» · no P0–P3 prematuri · **li
 | Race | **RC-*** · invite → **D-100** |
 | Jobs | **J-*** · **JA-*** · **D-101**…**D-103** |
 | Osservabilità | **O-*** (bak/job health) |
-| GTM / Demo | **GTM-01** · **D-104** (post-audit) |
+| GTM / Demo | **GTM-01 ACQUISITO** · **D-104** · in coda · pre-~5000 email |
 | Costo / listino | C-* · B-01 · fermo |
 
 ---
@@ -55,8 +55,8 @@ Un blocco alla volta · niente fix senza «vai» · no P0–P3 prematuri · **li
 | P1–P14 | §1–§13 (+ anticipi) | acquisiti · D-094…D-099 |
 | P15 Race | §14 | **ACQUISITO** · RC-* · **D-100** · **D-101** |
 | P16 Jobs deepen | §15 | **ACQUISITO** · JA-* · **D-102** · **D-103** |
-| P17 Osservabilità | §16 | Consegnato · O-* · ⏳ feedback |
-| — | §17 API/FE… | prossimo tipico |
-| GTM-01 | post-audit | ⬜ registrato · **D-104** |
+| P17 Osservabilità | §16 | Consegnato · O-* · ⏳ analisi |
+| — | §17 API/FE… | dopo acquisizione P17 |
+| GTM-01 | post-audit | 🟠 **ACQUISITO** · **D-104** · in coda |
 
 Dettaglio: `AUDIT_ARCHITETTURA_NOTE.md` · A-035 · A-036.
