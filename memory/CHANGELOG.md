@@ -1,5 +1,15 @@
 # OMNIA — Changelog
 
+## 2026-09-30 — P22 CHIUSO · D-111/D-112 · P23 Debito (AD-*)
+
+**Tipo**: Docs / SoT audit · **nessun codice** · **listino fermo** · no nuovi P0–P3.
+
+- **P22 CHIUSO**: **D-094↑** filtro trash uniforme pre-GTM (dominio); **D-106↑** no fallback `agency_ids[0]`; **D-111** Cestino=freeze/non-operativo; **D-112** seed demo deterministico; D-100/D-110 invariati
+- **P23 Debito architetturale** consegnato: **AD-01…AD-16**; K-AD-01/02 aperti
+- Master State aggiornato · prossimo = analisi Founder P23
+
+---
+
 ## 2026-09-30 — P21 CHIUSO · D-109/D-110 · P22 Casi limite (EC-*)
 
 **Tipo**: Docs / SoT audit · **nessun codice** · **listino fermo** · no nuovi P0–P3.

@@ -1466,21 +1466,22 @@ Registro di tutte le decisioni di business e tecniche prese durante il progetto.
   5. Setup scritto in `memory/OMNIA2_REPO_SETUP.md` + regola `.cursor/rules/omnia-cloud.mdc`. Environment D-086 resta `omnia2-cloud`.
 - **Stato**: ✅ APPLICATA (docs + script fallback 21-Set-2026)
 
-### D-094 — Lifecycle dominio: Trash ≠ status commerciale · Cliente Trash → Richieste archiviate (non distrutte) · 28-Set-2026
-- **Data**: 28 Settembre 2026
-- **Contesto**: Audit SaaS Punto 5 (lifecycle). Finding L-03 (immobile trashed ancora in feed/sync) e L-02 (cliente trashed vs richieste). Founder formalizza regole di dominio **prima** di qualsiasi fix.
+### D-094 — Lifecycle dominio: Trash ≠ status commerciale · filtro uniforme · 28-Set-2026
+- **Data**: 28 Settembre 2026 · **rafforzamento**: 30-Set-2026 (P22 / K-EC-01)
+- **Contesto**: Audit SaaS Punto 5 (lifecycle). Finding L-03 (immobile trashed ancora in feed/sync) e L-02 (cliente trashed vs richieste). P22: trash non è preferenza UI ma **invariante di dominio**.
 - **Decisione — Immobile / Trash vs proiezioni esterne**:
   1. Un immobile in **Trash** **non** deve essere pubblicabile né sincronizzato verso l’esterno (feed nuovi, sync portali, pubblicazioni, elaborazioni che lo trattano come attivo).
   2. `trashed` (`deleted_at`) = condizione globale di **esclusione** dalle proiezioni/operazioni esterne.
   3. Il Trash **non** altera automaticamente lo **`status` commerciale** (`active` / `withdrawn` / …).
   4. Distinzione: `status` = stato commerciale; `trashed` = lifecycle del record in OMNIA. Esempio: `active + trashed` → non pubblicabile; restore ripristina il record **senza** reinterpretare lo status.
-- **Decisione — Cliente Trash / Delete vs Richieste** (coerente Punto 2: Cliente ≠ Richiesta):
-  1. **Niente cascade distruttivo**: le Richieste non spariscono con il Cliente.
-  2. Trash/Delete Cliente → le Richieste collegate diventano **non operative / archiviate**, restano come **storico** (attività, match, trattative, audit).
-  3. **Restore Cliente** → le Richieste storiche restano disponibili; **non** si riattivano automaticamente.
-- **Fuori scope ora**: significato GDPR/retention di “cliente cancellato” → punto audit retention/privacy.
-- **Implementazione**: ❌ **non** applicata in codice finché Founder non dice «vai» (post-audit / priorità). Verifica tecnica prevista in Punto 6/7+.
-- **Stato**: ✅ **DECISIONE DI DOMINIO REGISTRATA** (docs 28-Set-2026) · codice ⏳
+- **Decisione — Dove si applica il filtro (P22)**:
+  1. Filtro trash = proprietà del **punto di selezione/servizio del dominio**, non affidato al chiamante.
+  2. Default = **non-trashed**; accesso al trash solo via **opt-in esplicito** e percorso autorizzato.
+  3. **Uniforme pre-GTM** su feed, sync, matching, smart-clients, job correlati — non basta il feed già filtrato.
+- **Decisione — Cliente Trash vs Richieste**: vedi **D-111** (freeze / non-operativo; storico preservato). Restore cliente → storico disponibile; **non** riattivazione automatica.
+- **Fuori scope ora**: significato GDPR/retention di “cliente cancellato” → retention/privacy.
+- **Implementazione**: ❌ codice ⏳ — post-audit / «vai».
+- **Stato**: ✅ **DECISIONE DI DOMINIO REGISTRATA** (docs 28-Set · rafforzata P22) · codice ⏳
 
 ### D-095 — Media: pubblico vs privato · lifecycle blob indipendente dallo storage · 28-Set-2026
 - **Data**: 28 Settembre 2026
@@ -1631,15 +1632,17 @@ Registro di tutte le decisioni di business e tecniche prese durante il progetto.
 - **Stato**: ✅ **DECISIONE DI DOMINIO REGISTRATA** (docs 30-Set-2026 · SoT `docs/audit/OMNIA_AUDIT_STATE.md`) · codice ⏳
 
 ### D-106 — `active_agency_id` = source of truth della sessione corrente · 30-Set-2026
-- **Data**: 30 Settembre 2026
-- **Contesto**: Audit P18 (AF-03 / K-AF-01). Founder: problema di semantica, non solo UI. Due fonti di verità se `/agencies/me*` usa `agency_ids[0]` mentre lo switcher usa `active_agency_id`.
+- **Data**: 30 Settembre 2026 · **rafforzamento**: 30-Set-2026 (P22 / EC-01)
+- **Contesto**: Audit P18 (AF-03 / K-AF-01). Founder: problema di semantica, non solo UI. Due fonti di verità se `/agencies/me*` usa `agency_ids[0]` mentre lo switcher usa `active_agency_id`. P22: stesso errore concettuale nel seed demo.
 - **Decisione**:
   1. **`active_agency_id`** = source of truth della sessione corrente (agency in cui l’utente sta operando).
   2. **`agency_ids`** = solo l’insieme delle agency disponibili (membership), non la selezione operativa.
   3. Flusso: `session.active_agency_id → /agencies/me* → FE` (allineato a `require_agency` / TenantContext).
   4. **Non** nascondere lo switcher per mascherare il drift — sarebbe regressione funzionale.
+  5. **Nessun fallback semantico a `agency_ids[0]`** quando il contesto richiede l’agency attiva.
+  6. Se `active_agency_id` manca o non è valida → **stato di errore**, non scelta arbitraria della prima agency.
 - **Implementazione**: ❌ codice ⏳ — post-audit / «vai» (priorità tra i fix FE/API).
-- **Stato**: ✅ **DECISIONE DI DOMINIO REGISTRATA** (docs 30-Set-2026) · codice ⏳
+- **Stato**: ✅ **DECISIONE DI DOMINIO REGISTRATA** (docs 30-Set · rafforzata P22) · codice ⏳
 
 ### D-107 — Contratto errori API: code stabile + i18n FE · 30-Set-2026
 - **Data**: 30 Settembre 2026
@@ -1676,13 +1679,37 @@ Registro di tutte le decisioni di business e tecniche prese durante il progetto.
 - **Stato**: ✅ **DECISIONE DI DOMINIO REGISTRATA** (docs 30-Set-2026 · P21 CHIUSO) · codice/copy ⏳
 
 ### D-110 — Demo mode esplicito · `localStorage` ≠ entitlement · 30-Set-2026
-- **Data**: 30 Settembre 2026
+- **Data**: 30 Settembre 2026 · **conferma**: 30-Set-2026 (P22 / EC-07)
 - **Contesto**: Audit P21 (CT-06). Stripe off → 503 può essere legittimo; il punto delicato è lo sblocco checkout via `localStorage` che simula entitlement.
 - **Decisione**:
   1. `localStorage` (o storage client) **non** è autorità di entitlement / “utente ha pagato”.
   2. Demo mode accettabile solo come **modo applicativo esplicito** (presentazione), non come simulazione di piano reale.
   3. Coerente con una sola source of truth per lo stato semantico (**D-106**, **D-107**).
+  4. Se il BE dice Stripe non disponibile / entitlement assente, il client **non** lo trasforma semanticamente in “piano attivo”.
 - **Implementazione**: ❌ codice ⏳ — post-audit / «vai».
-- **Stato**: ✅ **DECISIONE DI DOMINIO REGISTRATA** (docs 30-Set-2026 · P21 CHIUSO) · codice ⏳
+- **Stato**: ✅ **DECISIONE DI DOMINIO REGISTRATA** (docs 30-Set · P21 CHIUSO · confermata P22) · codice ⏳
+
+### D-111 — Cestino = stato non operativo (freeze) · 30-Set-2026
+- **Data**: 30 Settembre 2026
+- **Contesto**: Audit P22 (EC-03 / K-EC-02). Distinguere visibilità e operatività: escludere dai soli job non basta se si possono ancora creare/modificare richieste o side effect.
+- **Decisione**:
+  1. **Cestino = stato non operativo.**
+  2. Entrando in `TRASHED`: no nuovi match/sync; no nuove notifiche automatiche; **blocco nuove operazioni** con side effect; dati/storico **preservati** (non cancellati).
+  3. Richieste già esistenti: transizione esplicita (es. `active → frozen`); **niente cascade distruttivo**.
+  4. Restore cliente: storico disponibile; **non** riattivazione automatica.
+  5. Job già in corso: regola di comportamento esplicita.
+- **Correlato**: rafforza **D-094**; coerenza Cestino reversibile.
+- **Implementazione**: ❌ codice ⏳ — post-audit / «vai».
+- **Stato**: ✅ **DECISIONE DI DOMINIO REGISTRATA** (docs 30-Set-2026 · P22 CHIUSO) · codice ⏳
+
+### D-112 — Seed demo: idempotente e deterministico · 30-Set-2026
+- **Data**: 30 Settembre 2026
+- **Contesto**: Audit P22 (EC-13). Seed che riaggancia `demo.admin`/Founder all’agency sbagliata → demo non deterministica. Stesso errore concettuale di **EC-01** / **D-106**.
+- **Decisione**:
+  1. Seed **idempotente e deterministico**: identità demo → agency demo **prevista**.
+  2. **Niente** “se manca X, usa la prima agency”.
+  3. Stessi input → stesso grafo membership demo.
+- **Implementazione**: ❌ codice ⏳ — post-audit / «vai».
+- **Stato**: ✅ **DECISIONE DI DOMINIO REGISTRATA** (docs 30-Set-2026 · P22 CHIUSO) · codice ⏳
 
 

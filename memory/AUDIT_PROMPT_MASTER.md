@@ -103,14 +103,15 @@ In altre parole:
 | P19 Error handling | **§18** | **CHIUSO** · **EH-*** · **D-107** |
 | P20 Scalabilità | **§19** | **CHIUSO** · **SC-*** · **D-108** · SC-08=GTM-01 |
 | P21 Coerenza prodotto/tecnologia | **§20** | **CHIUSO** · **CT-*** · **D-109** · **D-110** |
-| P22 Casi limite | **§21** | Consegnato · **EC-*** · ⏳ analisi |
-| — | **§6 Cestino** | Parziale P5 + coperto in P12 |
-| — | **§22–§27** | Non avviati · dopo acquisizione P22 |
+| P22 Casi limite | **§21** | **CHIUSO** · **EC-*** · **D-111** · **D-112** · D-094/D-106↑ |
+| P23 Debito architetturale | **§22** | Consegnato · **AD-*** · ⏳ analisi |
+| — | **§6 Cestino** | Parziale P5 + P12 + **D-111** |
+| — | **§23–§27** | Non avviati · §23 Priorità solo se Founder apre |
 | **GTM-01** Demo Readiness | **post-audit** | 🟠 **ACQUISITO** · **D-104** · in coda · **vincolo pre-~5000 email** |
 
 **Regola numerazione**: mantenere il continuum di sessione; documentare la corrispondenza qui / in `AUDIT_ARCHITETTURA_NOTE.md` — non riallineare artificialmente i numeri.
 
-Decisioni di dominio già registrate (codice ⏳): **D-094** … **D-110**.
+Decisioni di dominio già registrate (codice ⏳): **D-094** … **D-112**.
 
 > **Continuità SoT**: `docs/audit/OMNIA_AUDIT_STATE.md` — leggere prima di ogni nuovo punto.  
 > **GTM-01** = checkpoint post-audit (**D-104**), non un § del master 1–27.

@@ -5,9 +5,9 @@
 **Usage rule:** questo documento è la fonte di continuità dell'audit.
 Prima di analizzare un nuovo punto, leggere questo file. Non riaprire decisioni già fissate salvo nuove evidenze. Non inventare informazioni mancanti.
 
-**Current status:** P1–P21 **chiusi** · **P22 Casi limite consegnato** ⏳ analisi Founder. Nessun fix. Listino fermo. SoT: questo file. **Niente codice** senza «vai».
+**Current status:** P1–P22 **chiusi** · **P23 Debito architetturale consegnato** ⏳ analisi Founder. Nessun fix. Listino fermo. SoT: questo file. **Niente codice** senza «vai».
 
-**Next:** analisi Founder su **P22 (EC-*)**. GTM-01 in coda.
+**Next:** analisi Founder su **P23 (AD-*)**. GTM-01 in coda.
 
 ---
 
@@ -77,7 +77,7 @@ B2B e B2C condividono il DB ma hanno confini applicativi differenti.
 
 # 4. DECISIONI FISSATE
 
-## D-094 — Lifecycle/proiezioni
+## D-094 — Lifecycle/proiezioni (rafforzato P22)
 
 Gli elementi cestinati non devono essere considerati operativi dalle proiezioni esterne.
 Da rispettare in:
@@ -85,11 +85,16 @@ Da rispettare in:
 * feed;
 * sync;
 * matching;
+* smart-clients / proiezioni correlate;
 * pubblicazioni;
 * website/MLS;
 * job correlati.
 
 `status` commerciale e lifecycle/trash sono concetti distinti.
+
+**Invariante (P22 / K-EC-01):** il filtro trash è proprietà del **dominio operativo**, non del chiamante.
+Default = **non-trashed**; accesso al trash solo via **opt-in esplicito** e percorso autorizzato.
+Applicazione **uniforme pre-GTM** (non basta il feed già filtrato).
 
 ---
 
@@ -249,12 +254,14 @@ Codice ⏳ — post-audit / «vai».
 
 ---
 
-## D-106 — `active_agency_id` SoT sessione
+## D-106 — `active_agency_id` SoT sessione (rafforzato P22)
 
 * `active_agency_id` = agency operativa corrente (source of truth).
 * `agency_ids` = membership / agency disponibili.
 * Flusso: `active_agency_id → /agencies/me* → FE`.
 * **Non** nascondere lo switcher per evitare il drift.
+* **Nessun fallback semantico a `agency_ids[0]`** quando il contesto richiede l’agency attiva (**EC-01**).
+* Se `active_agency_id` manca o non è valida → **stato di errore**, non scelta arbitraria della prima agency.
 Codice ⏳ — post-audit / «vai».
 
 
@@ -290,6 +297,25 @@ Codice/copy ⏳ — post-audit / «vai». **Listino fermo** (nessuna revisione �
 * Demo mode accettabile solo come **modo applicativo esplicito** (presentazione), non come simulazione di piano reale via storage client.
 * Coerente con una sola source of truth per lo stato semantico (come **D-106** agency, **D-107** errori).
 * `Stripe off → 503` può restare legittimo se il billing non è disponibile.
+* Conferma P22 (**EC-07**): il client non trasforma semanticamente “Stripe off / entitlement assente” in “piano attivo”.
+Codice ⏳ — post-audit / «vai».
+
+
+## D-111 — Cestino = stato non operativo (freeze)
+
+* Entrando in `TRASHED`: non nuovi match/sync; non nuove notifiche automatiche; **blocco nuove operazioni** che producono side effect; dati/storico **preservati** (non cancellati).
+* Richieste già esistenti: transizione esplicita (es. `active → frozen`); **non** cascade distruttivo.
+* Restore client: storico disponibile; **non** riattivazione automatica delle richieste (coerente **D-094**).
+* Job già in corso: regola di comportamento esplicita (non ambigua).
+* Distinzione: **visibilità** ≠ **operatività**. Escludere dai soli job non basta se l’utente può ancora creare/modificare.
+Codice ⏳ — post-audit / «vai».
+
+
+## D-112 — Seed demo: idempotente e deterministico
+
+* Identità demo → agency demo **prevista**, senza dipendere dall’ordine esistente delle agency.
+* **Niente** logica “se manca X, usa la prima agency” (stesso errore concettuale di **EC-01** / **D-106**).
+* Seed ripetibile: stessi input → stesso grafo membership demo.
 Codice ⏳ — post-audit / «vai».
 
 ---
@@ -612,6 +638,14 @@ SC-01…SC-15
 
 CT-01…CT-14 · **D-109** pricing SoT · **D-110** demo≠entitlement · **P21 CHIUSO**
 
+### Casi limite
+
+EC-01…EC-15 · **D-094**/ **D-106** rafforzati · **D-111** freeze · **D-112** seed · **P22 CHIUSO**
+
+### Debito architetturale
+
+AD-01…AD-16 · **P23** ⏳ analisi Founder
+
 ### Storage
 
 C-01…C-15
@@ -859,56 +893,74 @@ Finding CT-01…CT-14 restano nel registro. Dettaglio: `memory/AUDIT_ARCHITETTUR
 ---
 
 
-# 23. P22 — CASI LIMITE (consegnato · ⏳ analisi Founder · master §21)
+# 23. P22 — CASI LIMITE — **CHIUSO** (Founder 30-Set · nessun codice · no nuovi P0–P3)
 
-**Verdetto:** I percorsi felici CRM (Cestino restore/purge, size/quota upload, feed pubblico trash-aware, guard invite scaduto/revocato, webhook `applied_at`, empty properties) tengono. I casi limite che rompono **demo multi-tenant** o **safety** sono: matching/sync che ignorano `deleted_at` (D-094), client trash con richieste ancora operative + email matching, invite overwrite (D-100) + accept non atomico, SoT agency `agency_ids[0]` vs `active_agency_id` (D-106), JWT disabilitato ancora valido, seed demo che riaggancia `demo.admin`/Founder a `demo-agency-001`.
-**Nessun nuovo P0–P3.** Nessun fix. **D-094…D-110 / GTM-01 / P18–P21 non riaperti** (solo link).
+**Verdetto acquisito:** i casi limite non rivelano nuovi problemi strutturali, ma punti in cui il dominio **non applica in modo uniforme** decisioni già prese. **D-094, D-100, D-106, D-110** convergono come invarianti anche negli edge case. Nessun nuovo P0–P3. Nessun fix.
 
-### Finding EC-*
+### Baseline P22
 
-| ID | Tipo | Problema | Prior | Evidenza |
-|----|------|----------|-------|----------|
-| EC-01 | drift SoT | CRM usa `active_agency_id`; `/agencies/me`, invites, billing usano `agency_ids[0]` → switcher non governa tutto | **D-106** · AF-03 | `tenant.py:12-17` · `agencies.py:120` · `invites.py:51` · `billing/routes.py:91` |
-| EC-02 | gap D-094 | Match + sync + smart-clients: `status=active` **senza** `with_not_trashed` | **D-094** · E-* · RC | `client_requests_service.py:454-456` · `sync_engine.py:58-64` · `clients_smart.py:382-384` |
-| EC-03 | gap D-094 | Client trash non tocca richieste open; job matching continua (email) | **D-094** · T-03 | `clients.py:190-218` · `request_matching_job.py:184-193` · `104-110` |
-| EC-04 | bug campo | Migrate prefs filtra `trashed_at` (inesistente) non `deleted_at` | T-03 | `client_requests_service.py:284-289` |
-| EC-05 | fix-needed | Accept invite overwrite password utente esistente; verify senza `user_exists` | **D-100** · CT-09 | `invites.py:246-254` · `176-206` |
-| EC-06 | race | Accept non-atomic (check pending → write); doppio accept possibile | RC-invite | `invites.py:222-284` |
-| EC-07 | demo gate | Stripe off 503; FE sblocca checkout con `localStorage omnia_demo_done` | **D-110** · CT-06 | `billing/routes.py:41-47` · `BillingPage.jsx:83-110` |
-| EC-08 | race | Webhook `applied_at` idempotente in seriale; TOCTOU doppio credito sotto replay concorrente | RC | `billing/routes.py:366-374` · `481-491` |
-| EC-09 | gap | Downgrade piano: nessun clamp usage; solo block upload 413 se over quota | CT-02 · D-085 | `quota.py:46-52` · `138-152` |
-| EC-10 | AuthZ | Fascicolo path sotto `/api/media` pubblico se noto; media trashed resta servibile | **D-095** · M-01 | `media.py:26-34` · `fascicolo.py:252` · `objstore.py:109-118` |
-| EC-11 | sessione | `get_current_user` non ricontrolla `is_active`; reset password non revoca refresh | P4 auth | `dependencies.py:18-40` · `auth.py:427-452` · `session_store.py:34-42` |
-| EC-12 | job | Trash purge **solo** HTTP cron, non APScheduler; cron+sched stesso giorno su bak/match | **D-102** · **D-108** | `sync_engine.py:258-337` · `cron.py:37-50` |
-| EC-13 | seed | Seed forza `demo.admin` (+ Founder senza agency) su `demo-agency-001` | demo | `seed.py:52-61` · `104-112` · `seed_demo_gestionale.py` |
-| EC-14 | upload edge | Upload foto su property **già trashed** (find senza `with_not_trashed`) | L / RC | `properties.py:587-589` |
-| EC-15 | i18n | Codici invite BE non in locale; FE collassa verify a `accept_invite.invalid` | **D-107** | `AcceptInvitePage.jsx:39-41` · `locales/it.json` (solo auth.*) |
+* **EC-01 → D-106 rafforzato**: nessun fallback semantico a `agency_ids[0]`; `active_agency_id` assente/invalida = **errore**.
+* **EC-02 / K-EC-01 → D-094 rafforzato**: filtro trash **uniforme pre-GTM** su match/sync/smart; proprietà del dominio (default non-trashed; trash solo opt-in autorizzato).
+* **EC-03 / K-EC-02 → D-111**: Cestino = **stato non operativo**; freeze nuove operazioni; preserva dati/storico; richieste `active → frozen` (no cancellazione).
+* **EC-05**: **D-100** invariato — contratto invite unico; identità esistente intatta.
+* **EC-07**: **D-110** invariato — demo esplicita sì; client non altera entitlement server-side.
+* **EC-13 → D-112**: seed demo **idempotente e deterministico** (identità → agency prevista; no “prima agency”).
+* **Nessun fix. Nessun nuovo P0–P3. Listino fermo.**
+
+Finding EC-01…EC-15 restano nel registro. Dettaglio: `memory/AUDIT_ARCHITETTURA_NOTE.md` § Punto 22.
+
+---
+
+# 24. P23 — DEBITO ARCHITETTURALE (consegnato · ⏳ analisi Founder · master §22)
+
+**Verdetto:** Il debito non è “monolite sbagliato”: è una **catena di lock-in intenzionali incompleti** (FS locale, bak full-copy, APScheduler single-replica, no worker) più **drift accidentali** (multi-agency, invite, trash nelle proiezioni, AuthZ media). Le decisioni **D-094…D-112** hanno già classificato molto come accettato ora / codice ⏳. Per GTM/ops resta pericoloso il **disallineamento capacità↔promesse** e i **coupling storage↔API↔scheduler**. Pre-GTM il ripagamento critico non è S3/worker/OTel: è **SoT + fascicolo AuthZ + invite + D-094/D-111 + bak health + onestà commerciale**. Object storage, bak incrementale, worker = post-coorte se il gate GTM-01 regge.
+**Nessun nuovo P0–P3.** Nessun fix. **D-094…D-112 / GTM-01 / P18–P22 non riaperti** (solo link).
+
+### Finding AD-*
+
+| ID | Tipo | Problema | Link | Evidenza |
+|----|------|----------|------|----------|
+| AD-01 | coupling / strutturale | Storage `.media` accoppiato al processo API; non horizontal-ready | SC-02 · SC-15 · D-095 | `objstore.py:30-118` · `media.py:26-59` |
+| AD-02 | intenzionale / strutturale | Bak full copytree × ~30gg (~31× disco); listino non verificabile | B-01 · C-04 · SC-03 · D-096 | `backup_job.py:67-77` |
+| AD-03 | strutturale | Bak incompleto + zero restore applicativo vs Cap.19 | B-02 · R-01/R-02 · CT-03 · D-096 | `backup_job.py:22-35,54-61` |
+| AD-04 | accidentale / strutturale | Mongo ↔ blob spezzato; `delete_object` senza call-site; orphan | M-02…M-04 · D-095 · D-098 · D-102 | `objstore.py:138-145` · `trash.py:154-166` |
+| AD-05 | coupling | `/api/media` pubblico = AuthZ anche per fascicolo | M-01 · EC-10 · D-095 · D-099 | `media.py:26-34` · `fascicolo.py:252-265` |
+| AD-06 | coupling / ops | Due autorità scheduling (APScheduler + HTTP cron) | SC-10 · EC-12 · D-108 · D-101 | `sync_engine.py:258-337` · `cron.py:37-50` |
+| AD-07 | intenzionale | Ceiling single-replica / no worker | SC-01 · D-101 · D-103 | `server.py:51-67` |
+| AD-08 | accidentale / coupling | `active_agency_id` ≠ `agency_ids[0]` | AF-03 · EC-01 · **D-106** | `tenant.py:12-17` · `agencies.py:120` · `invites.py:48-51` |
+| AD-09 | accidentale | Contratto invite rotto (overwrite + race + i18n) | AF-01 · EC-05/06/15 · **D-100** · D-107 | `invites.py:222-284` |
+| AD-10 | accidentale | D-094 non end-to-end (match/sync/smart; client trash) | EC-02/03/04 · **D-094** · **D-111** | `sync_engine.py:58-64` · `client_requests_service.py:454-456` |
+| AD-11 | coupling / ops | Purge cestino fuori APScheduler | JA-04 · EC-12 · **D-102** | `cron.py:37-42` vs `sync_engine.py:308-315` |
+| AD-12 | ops | Bak/job non osservabili (no last_run Founder Ops) | O-01/02/05 · CT-11 · **D-105** | `sync_engine.py:300-306` · `backup_job.py:38-93` |
+| AD-13 | coupling | `localStorage` gate + Stripe 503 | CT-06 · EC-07 · **D-110** | `BillingPage.jsx:83-110` · `billing/routes.py:35-47` |
+| AD-14 | coupling / accidentale | Pricing multi-fonte (landing vs plans API) | CT-01 · **D-109** | `AgenziesLandingPage.jsx:32-50` |
+| AD-15 | coupling | Contratto errori FE↔BE fragile | EH-* · EC-15 · **D-107** | Master P19 · AcceptInvite i18n |
+| AD-16 | strutturale / ops | Catena fascicolo→blob→bak→restore→retention→€ aperta | RET-* · G-* · D-096…D-099 | Master §7–§13 · §17 deps |
 
 ### Domande aperte
 
-1. **K-EC-01**: Prima di GTM, matching/sync devono rifiutare trashed **ovunque** (enforcement uniforme D-094), o basta feed pubblico già filtrato?
-2. **K-EC-02**: Client in Cestino → archiviare/freeze richieste open subito, o solo escluderle dai job finché il client è trashed?
+1. **K-AD-01**: Prima del GTM, AD-03 (bak incompleto + zero restore) va ripagato almeno come *procedura supporto testabile su una agenzia*, o basta **D-105** + linguaggio onesto («bak ≠ restore testato») finché non c’è «vai» sul design Bak+Restore?
+2. **K-AD-02**: Il blocco FS locale + 1 replica + no worker resta accettato per tutta la prima coorte GTM, oppure un fallimento del smoke ~20 concurrent su media (**K-SC-01** / SC-15) anticipa già la soglia object-storage+CDN (**K-SC-02**), separata dal worker?
 
 ### Lettura Founder
 
 | Classe | Cosa |
 |--------|------|
-| **Già mitigato** | Restore/purge happy+404 post-purge; feed XML + compliance `with_not_trashed`; size limit upload + 413 quota; `..` in media path; invite expired/revoked codes; empty properties UI; remove_member clear `active_agency_id`; addon Stripe-off messaggio supporto |
-| **Rischio latente** | EC-06/08 race; EC-09 downgrade; EC-10/14 media; EC-11 sessioni; EC-12 dual schedule + purge non schedulato; EC-04 trashed_at; EC-15 i18n |
-| **Demo-critical** | EC-01 multi-agency SoT; EC-02/03 D-094 match+client; EC-05 D-100; EC-07 Stripe/localStorage; EC-13 seed collision |
-| **Da decidere** | K-EC-01 · K-EC-02 |
-| **Può aspettare** | Null geocode soft-fail; sessioni concurrent deliberate; MFA challenge TTL |
+| **Già gestito** (deciso, codice ⏳) | D-101/D-103 single-replica · D-108 one-owner · listino fermo · D-094/D-111 trash · D-097 · D-098 path-to-delete · D-104 GTM-01 · D-112 seed |
+| **Debito pre-GTM** | AD-05 fascicolo · AD-09 invite · AD-08 SoT agency · AD-10 trash uniforme · AD-13/14 demo+pricing · AD-12 bak health · AD-03 onestà restore · minimi GTM-01 |
+| **Debito post-GTM OK** | AD-01 object storage+CDN · AD-02 bak incrementale · AD-07 worker · OTel · wipe agenzia · DSAR self-service |
+| **Da decidere** | K-AD-01 · K-AD-02 |
 
-Dettaglio: `memory/AUDIT_ARCHITETTURA_NOTE.md` § Punto 22.
+Dettaglio: `memory/AUDIT_ARCHITETTURA_NOTE.md` § Punto 23.
 
 ---
 
-# 24. PROSSIMO PUNTO
+# 25. PROSSIMO PUNTO
 
-Dopo acquisizione Founder su **P22**: tipicamente master §22+ / GTM-01 in coda.
+Dopo acquisizione Founder su **P23**: tipicamente master §23 Priorità (P0–P3) — **solo quando Founder apre** · oppure GTM-01 in coda.
 
 Il Master Audit State deve essere aggiornato dopo il completamento di ogni punto significativo.
 
-**Current next action:** analisi Founder su **P22 (EC-*)**. GTM-01 in coda (vincolo pre-~5000 email).
+**Current next action:** analisi Founder su **P23 (AD-*)**. GTM-01 in coda (vincolo pre-~5000 email).
 
 **Niente fix. Nessuna severità P0–P3. Listino fermo. Attende «vai».**

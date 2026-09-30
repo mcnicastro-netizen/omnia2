@@ -6,7 +6,7 @@
 > **Numerazione = continuum di sessione** (non forzare allineamento al master).  
 > Prompt master: `memory/AUDIT_PROMPT_MASTER.md` (§1–§27) — corrispondenza in tabella sotto.
 
-**Ultimo aggiornamento**: 30-Set-2026 · **SoT** `docs/audit/OMNIA_AUDIT_STATE.md` · **P21 CHIUSO** · **P22** ⏳ analisi
+**Ultimo aggiornamento**: 30-Set-2026 · **SoT** `docs/audit/OMNIA_AUDIT_STATE.md` · **P22 CHIUSO** · **P23** ⏳ analisi
 
 ---
 
@@ -35,13 +35,14 @@
 | P19 | Error handling | §18 | 🟢 **CHIUSO** · **EH-*** · **D-107** |
 | P20 | Scalabilità | §19 | 🟢 **CHIUSO** · **SC-*** · **D-108** · SC-08=GTM-01 |
 | P21 | Coerenza prodotto/tecnologia | §20 | 🟢 **CHIUSO** · **CT-*** · **D-109** · **D-110** |
-| P22 | Casi limite | §21 | 🟠 Consegnato · **EC-*** · ⏳ analisi |
-| — | Cestino (blocco dedicato) | §6 | 🟡 coperto in P5 + P12 |
-| — | … | §22–§27 | ⬜ dopo acquisizione P22 |
+| P22 | Casi limite | §21 | 🟢 **CHIUSO** · **EC-*** · **D-111** · **D-112** · D-094/D-106↑ |
+| P23 | Debito architetturale | §22 | 🟠 Consegnato · **AD-*** · ⏳ analisi |
+| — | Cestino (blocco dedicato) | §6 | 🟡 coperto in P5 + P12 + D-111 |
+| — | … | §23–§27 | ⬜ dopo acquisizione P23 · §23 Priorità solo se Founder apre |
 | **GTM-01** | Demo Readiness / primo afflusso | **post-audit** | 🟠 **ACQUISITO** · **D-104** · in coda · **vincolo pre-~5000 email** |
 
-Decisioni dominio (codice ⏳): **D-094** … **D-110**.  
-P18–P21 chiusi · P22 in analisi Founder.  
+Decisioni dominio (codice ⏳): **D-094** … **D-112**.  
+P18–P22 chiusi · P23 in analisi Founder.  
 **Continuità SoT**: `docs/audit/OMNIA_AUDIT_STATE.md` (non riaprire decisioni fissate). · **Niente codice** senza «vai».
 
 ---
@@ -1606,10 +1607,46 @@ Vedi tabella in `docs/audit/OMNIA_AUDIT_STATE.md` §23. Sintesi gruppi:
 
 **Demo-critical:** EC-01, EC-02, EC-03, EC-05, EC-07, EC-13.
 
+### Domande — **RISOLTE** Founder
+
+1. **K-EC-01 → D-094 rafforzato**: uniforme pre-GTM su match/sync/smart; filtro = proprietà del dominio (default non-trashed; trash opt-in).
+2. **K-EC-02 → D-111**: **freeze** (Cestino = non operativo); preserva dati/storico; `active → frozen` sulle richieste.
+
+### Baseline P22 — **CHIUSO** Founder
+
+* **EC-01 → D-106↑**: nessun fallback `agency_ids[0]`; missing/invalid = errore.
+* **EC-02 / K-EC-01 → D-094↑**: invariante dominio uniforme pre-GTM.
+* **EC-03 / K-EC-02 → D-111**: freeze nuove ops; storico preservato.
+* **EC-05**: D-100 invariato (contratto invite unico).
+* **EC-07**: D-110 invariato.
+* **EC-13 → D-112**: seed idempotente/deterministico.
+**Nessun nuovo P0–P3. Nessun codice. Listino fermo.** → **P23** sotto.
+
+---
+
+## Punto 23 — Debito architetturale · consegnato 30-Set (master §22)
+
+**Ambito**: classificare debito OK / Monitorare / Migliorare / Critico (senza rewrite automatiche). Nessun fix. Nessun P0–P3. Non riaprire D-094…D-112 / GTM-01 / P18–P22 (solo link).
+
+### Verdetto
+
+Debito = lock-in intenzionali incompleti (FS, bak full-copy, single-replica) + drift accidentali (SoT agency, invite, trash, AuthZ media). Pre-GTM: SoT + fascicolo + invite + D-094/D-111 + bak health + onestà commerciale — non S3/worker/OTel.
+
+### Finding AD-01…AD-16
+
+Vedi tabella in `docs/audit/OMNIA_AUDIT_STATE.md` §24.
+
+| Classe | Cosa |
+|--------|------|
+| **Già gestito** | D-101/103/108 · listino fermo · D-094/111 · D-097/098 · D-104 · D-112 |
+| **Pre-GTM** | AD-05 · AD-08 · AD-09 · AD-10 · AD-12 · AD-13/14 · AD-03 onestà · GTM-01 min |
+| **Post-GTM OK** | AD-01 storage · AD-02 bak incr. · AD-07 worker · OTel · wipe · DSAR |
+| **Da decidere** | K-AD-01 · K-AD-02 |
+
 ### Domande
 
-1. **K-EC-01**: D-094 uniforme su match/sync pre-GTM, o solo feed?
-2. **K-EC-02**: Client trashed → archivia richieste vs freeze nei soli job?
+1. **K-AD-01**: AD-03 restore testabile pre-GTM vs D-105 + linguaggio onesto?
+2. **K-AD-02**: FS+1replica accettato tutta la coorte, o smoke media fallito anticipa object-storage+CDN?
 
 **Niente fix. Nessuna severità P0–P3. Listino fermo. Attende «vai».**
 
