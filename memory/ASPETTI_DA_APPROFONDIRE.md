@@ -1183,16 +1183,16 @@ Concordo sul nucleo. Temperatura: «OS agenzia» è **nord**, non claim immediat
 
 ## 🟡 A-035 — Audit architettura SaaS (prompt master §1–§27)
 
-**Data inserimento**: 25-Sep-2026 · **agg.** 30-Sep-2026 (**P18 CHIUSO** · **P19** consegnato)  
+**Data inserimento**: 25-Sep-2026 · **agg.** 30-Sep-2026 (**P19 CHIUSO** · **P20** consegnato)  
 **Prompt master**: `memory/AUDIT_PROMPT_MASTER.md`  
 **SoT continuità**: `docs/audit/OMNIA_AUDIT_STATE.md`  
 **Stato**: 🟠 **in corso** · numerazione **sessione** · **NON implementare** · **NO P0–P3** · **listino fermo** · **niente codice** senza «vai»
 
 ### Verdetti acquisiti
-- P2–P17: acquisiti · **D-094…D-105**
-- P18: **CHIUSO** — baseline D-106 · AF-05=GTM-01 min · no nuovi P0–P3
-- P19: **consegnato** — Error handling **EH-01…EH-12** · ⏳ analisi Founder
-- **GTM-01**: **ACQUISITO** (**D-104** / **A-036**) — in coda; vincolo hard pre-~5000 email; AF-05 = requisito min upload
+- P2–P18: chiusi · **D-094…D-106**
+- P19: **CHIUSO** — **D-107** · EH-04 empty≠error · EH-05/06 semantica · EH-03=GTM-01
+- P20: **consegnato** — Scalabilità **SC-01…SC-15** · ⏳ analisi Founder
+- **GTM-01**: **ACQUISITO** (**D-104** / **A-036**) — in coda; AF-05/EH-03 upload; EH-04 empty≠error
 
 ### Cluster finding da non dimenticare
 - **Media authorization** = P3.1 + P4.1 + M-01 → **D-095** · **G-02**
@@ -1214,9 +1214,9 @@ Concordo sul nucleo. Temperatura: «OS agenzia» è **nord**, non claim immediat
 `docs/audit/OMNIA_AUDIT_STATE.md` · `memory/AUDIT_ARCHITETTURA_NOTE.md` · Cap. 00
 
 ### Prossimo tipico
-- Analisi Founder P19 → tipicamente **Scalabilità** (master §19)
+- Analisi Founder P20 → tipicamente **Coerenza prodotto/tecnologia** (master §20)
 - Dopo punti principali → **GTM-01** (obbligatorio **prima** ~5000 email)
-- «vai» di **implementazione** = distinto (D-100 · D-102 · D-105 · D-106 · AF-05 GTM)
+- «vai» = distinto (D-100 · D-102 · D-105…D-107 · AF-05/EH-03 GTM)
 
 ---
 

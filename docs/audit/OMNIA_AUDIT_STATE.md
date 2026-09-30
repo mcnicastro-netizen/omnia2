@@ -5,9 +5,9 @@
 **Usage rule:** questo documento è la fonte di continuità dell'audit.
 Prima di analizzare un nuovo punto, leggere questo file. Non riaprire decisioni già fissate salvo nuove evidenze. Non inventare informazioni mancanti.
 
-**Current status:** P1–P18 **chiusi** (baseline P18) · **P19 Error handling** ⏳ analisi Founder · **P20 Scalabilità consegnato** ⏳ analisi Founder. Nessun fix. Listino fermo. SoT: questo file. **Niente codice** senza «vai».
+**Current status:** P1–P19 **chiusi** · **P20 Scalabilità consegnato** ⏳ analisi Founder. Nessun fix. Listino fermo. SoT: questo file. **Niente codice** senza «vai».
 
-**Next:** analisi Founder su P19 (EH-*) e P20 (SC-*) → tipicamente **P21 Coerenza prodotto/tecnologia** (master §20). GTM-01 in coda.
+**Next:** analisi Founder su P20 → tipicamente **P21 Coerenza prodotto/tecnologia** (master §20). GTM-01 in coda.
 
 ---
 
@@ -252,6 +252,15 @@ Codice ⏳ — post-audit / «vai».
 * `agency_ids` = membership / agency disponibili.
 * Flusso: `active_agency_id → /agencies/me* → FE`.
 * **Non** nascondere lo switcher per evitare il drift.
+Codice ⏳ — post-audit / «vai».
+
+
+## D-107 — Contratto errori API: code stabile + i18n FE
+
+* BE restituisce **error code** strutturato stabile (+ `detail` diagnostico/fallback).
+* FE decide la localizzazione / UX.
+* Non usare un `detail` umano come unico contratto (cambio wording non deve rompere i18n).
+* Feedback utente obbligatorio quando il fallimento **altera il significato** dell’azione; toast = possibile implementazione, non il contratto.
 Codice ⏳ — post-audit / «vai».
 
 ---
@@ -562,6 +571,14 @@ O-01…O-15 · **D-105** bak health
 
 AF-01…AF-16
 
+### Error handling
+
+EH-01…EH-12 · **D-107** · P19 CHIUSO
+
+### Scalabilità
+
+SC-01…SC-15
+
 ### Storage
 
 C-01…C-15
@@ -753,45 +770,22 @@ Dettaglio: `memory/AUDIT_ARCHITETTURA_NOTE.md` § Punto 18.
 
 ---
 
-# 20. P19 — ERROR HANDLING (consegnato 30-Set · ⏳ analisi Founder)
+# 20. P19 — ERROR HANDLING — **CHIUSO** (Founder 30-Set · nessun codice · no nuovi P0–P3)
 
-**Verdetto:** 500 unhandled → utente i18n + `notify_error`; auth lockout/403 decenti; staging/billing toast spesso OK. Debito: swallow FE (upload, matches→empty, liste), job tick solo WARNING (**O-02**/JA), email soft-fail senza UX, no request-id (**O-14**), contratto `detail` misto.
-**Nessun nuovo P0–P3** da P19. Nessun fix finché «vai».
+**Verdetto acquisito:** rete 500 ok; debito = swallow FE e soft-fail che mascherano fallimenti come risultati plausibili.
 
-### Finding EH-*
+### Baseline P19
 
-| ID | Tipo | Problema |
-|----|------|----------|
-| EH-01 | debito | Contratto `detail` misto: i18n auth / snake_case CRM / oggetti billing — FE `formatApiErrorDetail` fragile |
-| EH-02 | gap | Solo catch-all `Exception`; no handler custom 422/HTTPException; Pydantic raw all’utente |
-| EH-03 | debito+oss. | PhotoUploader silent fail + fallback base64 nascosto (**AF-05**) |
-| EH-04 | debito demo | MatchesPage senza catch → API fail = empty state |
-| EH-05 | rischio | Job tick bak/match/saved_searches swallow → WARNING; bak partial solo INFO (**O-02**/JA-03) |
-| EH-06 | rischio | `send_email` soft-fail (no raise); invite/match possono sembrare inviati |
-| EH-07 | gap | Geocode best-effort invisibile; Resend circuit/mock senza feedback utente |
-| EH-08 | oss. | Billing load fail silenzioso; checkout toast OK ma 503 stripe_not_configured poco chiaro (**AF-08**) |
-| EH-09 | gap | No request-id / correlazione (**O-14**); `AlertLoggingHandler` non wired (**O-06**) |
-| EH-10 | oss. | Liste CRM (properties/clients) error→empty; KPI dashboard swallow |
-| EH-11 | solid* | Global 500 + notify_error; ErrorBoundary; 401 refresh; lockout i18n; staging errori visibili |
-| EH-12 | gap | Nessun retry UX generale (solo 401 single-flight + sync portal backoff BE) |
+* **EH-03** → GTM-01 confermato (`pending→success/error`+retry; mai UI success prima della conferma upload).
+* **EH-04** → `empty` ≠ `error`; **vietato** trasformare failure API in empty state (loading → success(data|empty) vs loading → error).
+* **EH-05** → stato del job distinto dal livello di logging (completed / failed / retrying / partial); WARNING ≠ successo.
+* **EH-06** → separare operazione da delivery: es. `invite_created=success` + `email_delivery=failed` (retry mail senza ricreare invite); stesso per match.
+* **K-EH-01 → D-107**: BE `code` stabile + `detail` diagnostico; FE i18n.
+* **K-EH-02**: feedback utente obbligatorio quando il fallimento altera il significato dell’azione; toast non necessariamente obbligatorio.
+* Differiti: request-id / 422 / retry UX generale / geocode.
+* **Nessun nuovo P0–P3. Nessun codice.**
 
-### Domande aperte
-
-1. **K-EH-01**: contratto errori API = snake_case stabile + i18n FE, o messaggi già localizzati BE?
-2. **K-EH-02**: mid-demo (upload/invite/match email) — toast obbligatorio vs solo log ops?
-
-Dettaglio: report agente P19 + `memory/AUDIT_ARCHITETTURA_NOTE.md` § Punto 19.
-
----
-
-### Lettura Founder (solido / rischioso / decidere / aspetta)
-
-| Classe | Cosa |
-|--------|------|
-| **Già solido** | Global 500 + `notify_error`; ErrorBoundary; 401 refresh; lockout/403 i18n; staging errori UI; sync portal retry+log (**EH-11**) |
-| **Realmente rischioso** | **EH-03/AF-05** upload silenzioso (GTM-01); **EH-04** match→empty; **EH-05** job WARNING only (**O-02**); **EH-06** email soft-fail (invite/match “ok” senza invio) |
-| **Da decidere** | **K-EH-01** contratto `detail`; **K-EH-02** toast mid-demo obbligatorio? |
-| **Può aspettare** | EH-09 request-id (**O-14**); EH-02 handler 422; EH-12 retry UX generale; EH-07 geocode |
+Finding EH-01…EH-12 restano aperti nel registro. Dettaglio: `memory/AUDIT_ARCHITETTURA_NOTE.md` § Punto 19.
 
 ---
 
@@ -840,10 +834,10 @@ Dettaglio: `memory/AUDIT_ARCHITETTURA_NOTE.md` § Punto 20.
 
 # 22. PROSSIMO PUNTO
 
-**P21 — Coerenza prodotto/tecnologia** (master §20) — tipico dopo acquisizione P19+P20.
+**P21 — Coerenza prodotto/tecnologia** (master §20) — tipico dopo acquisizione P20.
 
 Il Master Audit State deve essere aggiornato dopo il completamento di ogni punto significativo.
 
-**Current next action:** analisi Founder su **P19** (EH-* · K-EH-01/02) e **P20** (SC-* · K-SC-01/02). GTM-01 in coda (vincolo pre-~5000 email).
+**Current next action:** analisi Founder su **P20** (SC-* · K-SC-01/02). P19 chiuso. GTM-01 in coda (vincolo pre-~5000 email).
 
 **Niente fix. Nessuna severità P0–P3. Listino fermo. Attende «vai».**

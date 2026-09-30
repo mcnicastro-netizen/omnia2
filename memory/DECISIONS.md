@@ -1640,4 +1640,15 @@ Registro di tutte le decisioni di business e tecniche prese durante il progetto.
 - **Implementazione**: ❌ codice ⏳ — post-audit / «vai» (priorità tra i fix FE/API).
 - **Stato**: ✅ **DECISIONE DI DOMINIO REGISTRATA** (docs 30-Set-2026) · codice ⏳
 
+### D-107 — Contratto errori API: code stabile + i18n FE · 30-Set-2026
+- **Data**: 30 Settembre 2026
+- **Contesto**: Audit P19 (K-EH-01/K-EH-02). Founder chiusura P19.
+- **Decisione**:
+  1. BE restituisce **error code** strutturato stabile (+ `detail` diagnostico/fallback); FE localizza.
+  2. Non usare un messaggio umano `detail` come unico contratto.
+  3. Semantica correlata (registro P19, non necessariamente nuovo ID): `empty` ≠ `error` (EH-04); stato job ≠ livello log (EH-05); operazione ≠ email delivery (EH-06); feedback utente quando il fallimento altera il significato dell’azione — toast non obbligatorio come unico mezzo (K-EH-02).
+  4. EH-03/AF-05 restano requisito minimo **GTM-01**.
+- **Implementazione**: ❌ codice ⏳ — post-audit / «vai».
+- **Stato**: ✅ **DECISIONE DI DOMINIO REGISTRATA** (docs 30-Set-2026 · P19 CHIUSO) · codice ⏳
+
 

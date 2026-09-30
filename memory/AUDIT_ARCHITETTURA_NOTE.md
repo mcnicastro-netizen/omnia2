@@ -32,14 +32,14 @@
 | P16 | Job asincroni (approfondimento) | §15 | 🟠 **ACQUISITO** · **JA-*** · **D-102** · **D-103** |
 | P17 | Osservabilità | §16 | 🟠 **ACQUISITO** (Master State) · **O-*** · **D-105** bak health |
 | P18 | API / Frontend | §17 | 🟢 **CHIUSO** · baseline · **D-106** · AF-05=GTM-01 min |
-| P19 | Error handling | §18 | 🟠 Consegnato · **EH-*** · ⏳ analisi |
+| P19 | Error handling | §18 | 🟢 **CHIUSO** · **EH-*** · **D-107** |
 | P20 | Scalabilità | §19 | 🟠 Consegnato · **SC-*** · ⏳ analisi |
 | — | Cestino (blocco dedicato) | §6 | 🟡 coperto in P5 + P12 |
 | — | Coerenza… | §20–§27 | ⬜ dopo acquisizione P19+P20 |
 | **GTM-01** | Demo Readiness / primo afflusso | **post-audit** | 🟠 **ACQUISITO** · **D-104** · in coda · **vincolo pre-~5000 email** |
 
-Decisioni dominio (codice ⏳): **D-094** … **D-106**.  
-P18 chiuso · P19 in analisi Founder.  
+Decisioni dominio (codice ⏳): **D-094** … **D-107**.  
+P18–P19 chiusi · P20 in analisi Founder.  
 **Continuità SoT**: `docs/audit/OMNIA_AUDIT_STATE.md` (non riaprire decisioni fissate). · **Niente codice** senza «vai».
 
 ---
@@ -62,7 +62,8 @@ P18 chiuso · P19 in analisi Founder.
 14. **Osservabilità** = **O-*** · **D-105** bak health minimo  
 15. **GTM / Demo Readiness** = **GTM-01 ACQUISITO** · **D-104** — in coda; **obbligatorio prima delle ~5000 email**  
 16. **API / Frontend** = **AF-*** · **D-106** · P18 CHIUSO · AF-05=GTM-01 min  
-17. **Error handling** = **EH-*** (swallow FE · email soft-fail · job WARNING)
+17. **Error handling** = **EH-*** · **D-107** · P19 CHIUSO  
+18. **Scalabilità** = **SC-*** (GTM ~20 vs crescita 200–1000)
 
 ---
 
@@ -1474,22 +1475,16 @@ D-106 · K-AF-02 (server→FE, 3 stati) · AF-02 boundary media · AF-04 debito 
 | **EH-11** | solid* | Pattern buoni (vedi sopra) | — | — |
 | **EH-12** | gap | No retry UX generale | — | solo 401 + sync BE |
 
-### Domande
+### Domande — **RISOLTE** Founder
 
-1. **K-EH-01**: snake_case stabile + i18n FE vs messaggi BE localizzati?
-2. **K-EH-02**: mid-demo upload/invite/email — toast obbligatorio?
+1. **K-EH-01 → D-107**: BE `code` stabile + `detail` diagnostico; FE i18n.  
+2. **K-EH-02**: feedback utente se il fallimento altera il significato dell’azione; toast non obbligatorio come unico mezzo.
 
-### Lettura Founder
+### Baseline P19 — **CHIUSO** Founder
 
-| Classe | Cosa |
-|--------|------|
-| **Già solido** | EH-11: 500+notify · ErrorBoundary · 401 refresh · lockout · staging UI · sync retry |
-| **Realmente rischioso** | EH-03/AF-05 (GTM-01) · EH-04 match empty · EH-05 job WARNING (**O-02**) · EH-06 email soft-fail |
-| **Da decidere** | K-EH-01 · K-EH-02 |
-| **Può aspettare** | EH-09/O-14 · EH-02 · EH-12 · EH-07 |
+EH-03=GTM-01 · EH-04 empty≠error · EH-05 job state≠log level · EH-06 op≠email delivery · **D-107** · feedback semantico (K-EH-02). Differiti: request-id/422/retry/geocode.  
+**Nessun nuovo P0–P3. Nessun codice.** → **P20** sotto.
 
-**Niente fix. Nessuna severità P0–P3. Listino fermo. Attende «vai».**  
-Prossimo tipico dopo acquisizione: **P20 Scalabilità** (master §19). GTM-01 in coda.
 
 ---
 

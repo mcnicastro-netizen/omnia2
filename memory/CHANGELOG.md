@@ -1,5 +1,15 @@
 # OMNIA — Changelog
 
+## 2026-09-30 — P19 CHIUSO · D-107 · P20 Scalabilità (SC-*)
+
+**Tipo**: Docs / SoT audit · **nessun codice** · **listino fermo** · no nuovi P0–P3.
+
+- **P19 CHIUSO**: EH-04 empty≠error · EH-05 job≠log · EH-06 op≠email · **D-107** code+FE i18n · K-EH-02 feedback semantico
+- **P20 Scalabilità** consegnato: **SC-01…SC-15**; GTM ~20 vs crescita 200–1000; K-SC-01/02 aperti
+- Master State aggiornato · prossimo tipico P21 Coerenza prodotto/tecnologia
+
+---
+
 ## 2026-09-30 — P18 CHIUSO · P19 Error handling (EH-*)
 
 **Tipo**: Docs / SoT audit · **nessun codice** · **listino fermo** · no nuovi P0–P3.
