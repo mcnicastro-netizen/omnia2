@@ -1,5 +1,17 @@
 # OMNIA — Changelog
 
+## 2026-09-30 — D-115 Programma pre-attivazione APPROVATO (K-PA)
+
+**Tipo**: Docs / SoT · **nessun codice** · **listino fermo**.
+
+- **K-PA-01:** O0 = numeri + design vincolante; no refactor bak obbligatorio in O0
+- **K-PA-02:** provisioning assistito durante onde; self-serve solo dopo O6 PASS
+- **K-PA-03:** O0 ∥ O1 → O2 → O3 → O4 → O5 → O6
+- Regola: **nessun pagamento self-serve finché O6 ≠ PASS**
+- Prossimo: «vai» su O0 e/o O1
+
+---
+
 ## 2026-09-30 — Programma pre-attivazione O0–O6 + review auditer
 
 **Tipo**: Docs / SoT audit · **nessun codice** · **listino fermo**.

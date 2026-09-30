@@ -44,8 +44,8 @@
 | — | … | §26–§27 | ⬜ rituale opzionale dopo P25 |
 | **GTM-01** | Demo Readiness / primo afflusso | **post-audit** | 🟠 **ACQUISITO** · **D-104** · in coda · **vincolo pre-~5000 email** |
 
-Decisioni dominio (codice ⏳): **D-094** … **D-114**.  
-P18–P24 chiusi · P25 in analisi Founder. SoT ripago: Master §25bis (**D-114** bak/media in DA CHIUDERE).  
+Decisioni dominio (codice ⏳): **D-094** … **D-115**.  
+P18–P24 chiusi · Programma pre-attivazione **APPROVATO** (D-115). SoT: Master §25bis + `OMNIA_PROGRAMMA_PRE_ATTIVAZIONE.md`.  
 **Continuità SoT**: `docs/audit/OMNIA_AUDIT_STATE.md` (non riaprire decisioni fissate). · **Niente codice** senza «vai».
 
 ---

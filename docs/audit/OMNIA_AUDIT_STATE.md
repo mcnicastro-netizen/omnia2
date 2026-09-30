@@ -5,9 +5,9 @@
 **Usage rule:** questo documento è la fonte di continuità dell'audit.
 Prima di analizzare un nuovo punto, leggere questo file. Non riaprire decisioni già fissate salvo nuove evidenze. Non inventare informazioni mancanti.
 
-**Current status:** P1–P24 **chiusi** · **P25 Report finale consegnato** ⏳ analisi Founder · **D-114** bak/media = priorità pre-attivazione. Nessun fix. Listino fermo. SoT: questo file. **Niente codice** senza «vai».
+**Current status:** P1–P24 **chiusi** · P25 consegnato · **programma pre-attivazione APPROVATO** (**D-115** · K-PA risolte). Nessun fix. Listino fermo. SoT: questo file. **Niente codice** senza «vai».
 
-**Next:** Founder su **programma pre-attivazione** (`docs/audit/OMNIA_PROGRAMMA_PRE_ATTIVAZIONE.md` · review auditer · K-PA-01…03). P25 in coda. §23 Priorità **CLOSED** fino al «vai».
+**Next:** «vai» su **O0** e/o **O1** (paralleli). Regola: **no self-serve finché O6 ≠ PASS**. §23 Priorità **CLOSED**.
 
 ---
 
@@ -337,10 +337,20 @@ Codice/docs ops ⏳ — post-audit / «vai».
 
 * **Non si può prescindere** dal modello bak/media: ne va della **sostenibilità economica**.
 * Full-copy giornaliero × retention (~32×) **non** resta “vincolo accettato in silenzio”.
-* Priorità pre-attivazione commerciale: (1) **stima costi reali** storage live + bak; (2) **design bak sostenibile** (retention / incrementale / scope) allineato a restore (**D-096**/**D-113**); (3) media lifecycle coerente (**D-095**/**D-098**).
+* **O0 (K-PA-01):** numeri + **design vincolante** (retention, scope, full/incrementale, restore agency-first, costo, “questo implementeremo”) — **non** refactoring obbligatorio in O0.
 * **Listino fermo** finché esistono i numeri — poi eventuale revisione commerciale.
 * Distinto da: FS locale come backend fisico (può restare) vs modello economico del volume (da chiudere).
-Codice/design/ops ⏳ — post-audit / «vai».
+Design/ops ⏳ — al «vai» O0; codice bak nuovo = fase successiva.
+
+
+## D-115 — Programma pre-attivazione · no self-serve prima di O6
+
+* Programma **O0 ∥ O1 → O2 → O3 → O4 → O5 → O6** approvato (**K-PA-03**).
+* O2 prima di O3 (regole trash/freeze → poi test recupero).
+* Durante le onde: **provisioning assistito dichiarato** (**K-PA-02**).
+* **Nessun pagamento self-serve finché O6 non è PASS.**
+* SoT: `docs/audit/OMNIA_PROGRAMMA_PRE_ATTIVAZIONE.md`.
+Codice ⏳ — attende «vai» sulle onde.
 
 ---
 
@@ -1026,7 +1036,7 @@ Trigger tecnico: fallimento **smoke media** (K-SC-01) → anticipare AD-01 — n
 
 **Nota Founder (30-Set):** non si può prescindere da bak/media — ne va della **sostenibilità economica**. Elevato a priorità pre-attivazione (**D-114**), non lasciato come debito “accettato”.
 
-**Programma attuativo:** `docs/audit/OMNIA_PROGRAMMA_PRE_ATTIVAZIONE.md` (onde O0–O6 · review auditer · gate attivazione O6).
+**Programma attuativo:** `docs/audit/OMNIA_PROGRAMMA_PRE_ATTIVAZIONE.md` — ✅ **APPROVATO** (**D-115** · K-PA-01…03). Gate: **no self-serve finché O6 ≠ PASS**.
 
 ---
 
@@ -1123,6 +1133,6 @@ Dopo acquisizione Founder su **P25**: tipicamente chiusura continuum · oppure r
 
 Il Master Audit State deve essere aggiornato dopo il completamento di ogni punto significativo.
 
-**Current next action:** risposta Founder a **K-PA-01…03** / approvazione programma pre-attivazione. Poi «vai» sulle onde. §23 Priorità CLOSED.
+**Current next action:** Founder dà «vai» su **O0** e/o **O1**. Programma approvato (**D-115**). §23 Priorità CLOSED.
 
 **Niente fix. Nessuna severità P0–P3. Listino fermo. Attende «vai».**

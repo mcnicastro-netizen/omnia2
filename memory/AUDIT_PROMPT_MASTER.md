@@ -114,8 +114,8 @@ In altre parole:
 
 **Regola numerazione**: mantenere il continuum di sessione; documentare la corrispondenza qui / in `AUDIT_ARCHITETTURA_NOTE.md` — non riallineare artificialmente i numeri.
 
-Decisioni di dominio già registrate (codice ⏳): **D-094** … **D-114**.  
-SoT ripago: `docs/audit/OMNIA_AUDIT_STATE.md` §25bis (**D-114** bak/media = pre-attivazione).
+Decisioni di dominio già registrate (codice ⏳): **D-094** … **D-115**.  
+SoT ripago: Master §25bis · Programma: `docs/audit/OMNIA_PROGRAMMA_PRE_ATTIVAZIONE.md` (**D-115** APPROVATO).
 
 > **Continuità SoT**: `docs/audit/OMNIA_AUDIT_STATE.md` — leggere prima di ogni nuovo punto.  
 > **GTM-01** = checkpoint post-audit (**D-104**), non un § del master 1–27.
