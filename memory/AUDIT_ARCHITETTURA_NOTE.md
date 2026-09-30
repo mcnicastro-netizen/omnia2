@@ -41,7 +41,7 @@
 | **GTM-01** | Demo Readiness / primo afflusso | **post-audit** | 🟠 **ACQUISITO** · **D-104** · in coda · **vincolo pre-~5000 email** |
 
 Decisioni dominio (codice ⏳): **D-094** … **D-108**.  
-P18–P20 chiusi · P21 in analisi Founder.  
+P18–P20 chiusi · P21/P22 in analisi Founder.  
 **Continuità SoT**: `docs/audit/OMNIA_AUDIT_STATE.md` (non riaprire decisioni fissate). · **Niente codice** senza «vai».
 
 ---
