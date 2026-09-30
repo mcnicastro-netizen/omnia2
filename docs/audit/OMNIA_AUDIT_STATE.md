@@ -5,9 +5,9 @@
 **Usage rule:** questo documento è la fonte di continuità dell'audit.
 Prima di analizzare un nuovo punto, leggere questo file. Non riaprire decisioni già fissate salvo nuove evidenze. Non inventare informazioni mancanti.
 
-**Current status:** P1–P19 **chiusi** · **P20 Scalabilità consegnato** ⏳ analisi Founder. Nessun fix. Listino fermo. SoT: questo file. **Niente codice** senza «vai».
+**Current status:** P1–P19 **chiusi** · P20 Scalabilità ⏳ analisi Founder · **P21 Coerenza prodotto/tecnologia consegnato** ⏳ analisi Founder. Nessun fix. Listino fermo. SoT: questo file. **Niente codice** senza «vai».
 
-**Next:** analisi Founder su P20 → tipicamente **P21 Coerenza prodotto/tecnologia** (master §20). GTM-01 in coda.
+**Next:** analisi Founder su **P21** (CT-*) e/o chiusura P20 (SC-*). GTM-01 in coda.
 
 ---
 
@@ -579,6 +579,10 @@ EH-01…EH-12 · **D-107** · P19 CHIUSO
 
 SC-01…SC-15
 
+### Coerenza prodotto/tecnologia
+
+CT-01…CT-14 · **P21** ⏳ analisi Founder
+
 ### Storage
 
 C-01…C-15
@@ -832,12 +836,52 @@ Dettaglio: `memory/AUDIT_ARCHITETTURA_NOTE.md` § Punto 20.
 
 ---
 
-# 22. PROSSIMO PUNTO
+# 22. P21 — COERENZA PRODOTTO/TECNOLOGIA (consegnato · ⏳ analisi Founder · master §20)
 
-**P21 — Coerenza prodotto/tecnologia** (master §20) — tipico dopo acquisizione P20.
+**Verdetto:** Il nucleo CRM demo (quota storage D-085, Cestino, Match, feed-pull publishing, widget Valuator/Mutui, catalogo piani API) è **allineato** a decisioni e Cap.19. La divergenza è **commerciale/operativa**: landing `/agenzie` con listino morto; `max_properties`/`max_agents` solo in UI; restore D-096 promesso in Cap.19 ma assente; invite D-100 ancora overwrite; Stripe gated 503 ma UI sblocca checkout via `localStorage`; Track B staging documentato ma 501/lead-only; Founder Ops senza bak health (D-105).
+**Nessun nuovo P0–P3** da P21. Nessun fix finché «vai». **D-085…D-107 / GTM-01 / P18–P20 non riaperti.**
+
+### Finding CT-*
+
+| ID | Tipo | Problema | Prior |
+|----|------|----------|-------|
+| CT-01 | drift commerciale | Landing `/agenzie` prezzi/quote morti (€39/€249, 15/50/70 imm., cr 20/200/600) ≠ listino ufficiale €49/€99/€299 · 30/200/∞ · 120/1200/3600 | `PRICING_OMNIA.md` · `plans.py` |
+| CT-02 | gap enforcement | `max_properties` / `max_agents` in catalogo+Billing UI **mai** enforced in BE | `plans.py` · C-01 |
+| CT-03 | promessa vs codice | Cap.19 / Billing «backup 30g + ripristino supporto» · **nessun tool restore** (D-096) | Cap.19:220 · `backup_job.py:22` · R-02 |
+| CT-04 | copy vs D-097 | Cap.3/4 «dopo 30gg / elimina per sempre → non recuperabile» omette bak/supporto (non garantito) | Cap.3:326 · Cap.4:312 · D-097 |
+| CT-05 | scaffold live | E-sign default **mock**; UI mostra flusso firma come operativo | `esign.py` · `ModulisticaPage.jsx` |
+| CT-06 | gate commerciale | Stripe `STRIPE_ENABLED` → checkout **503**; UI «Attiva» + addon GB dopo `omnia_demo_done` in **localStorage** (D-080 soft-bypass) | `billing/routes.py:35-47` · `BillingPage.jsx:83-110` |
+| CT-07 | doc vs API | Cap.20/26: staging Track B «~15 cr async» · `POST /v1/staging/render` = **501**; widget staging = lead-capture demo | Cap.20:140 · `gateway.py:469-476` · `staging.html` |
+| CT-08 | rischio prodotto | Sessione unica B2B/B2C; login default → `/app/dashboard`; onboarding può promuovere `client`→`agency_admin` | AF-07 · `LoginPage.jsx:36-39` · `agencies.py:94-98` |
+| CT-09 | demo path | Invite FE+BE overwrite password utente esistente; verify **senza** `user_exists` | **D-100** · AF-01 · `invites.py:246-254` · `AcceptInvitePage.jsx` |
+| CT-10 | marketing vs tetto | Agency «immobili illimitati» UI ok su storage Cap.19; **listino book** `PRICING_OMNIA.md` **senza** riga GB D-085 | D-085 · `PRICING_OMNIA.md` |
+| CT-11 | ops vs D-105 | Founder Ops = costi/alert LLM·Stripe; **zero** bak OK/PARTIAL/FAILED / `last_run` | **D-105** · O-01/O-13 · `founder_ops.py` |
+| CT-12 | GDPR copy | UI erase «account + dati personali»; **non** wipe cliente CRM / agenzia (D-099 ok ma copy può sovrastimare) | `SecuritySettingsPanel.jsx:228` · G-01 · `erasure.py` |
+| CT-13 | catalogo Stripe | `setup_stripe.py` **non** crea price `storage_100gb` (addon D-085) | C-13 · `setup_stripe.py:70-86` |
+| CT-14 | oss. demo | Publishing distingue ready vs coming_soon (onesto); Match/lead-score live; KPI `locked` residuo non usato in dashboard prod | `publishing.py:49-113` · `KPICard.jsx` |
+
+### Domande aperte
+
+1. **K-CT-01**: Landing `/agenzie` — ritirare, allineare a `GET /billing/plans`, o tenere come legacy Founders-50?
+2. **K-CT-02**: Prima di GTM, `max_properties`/`max_agents` enforcement hard o solo storage D-085 come unico tetto dichiarato?
+
+### Lettura Founder
+
+| Classe | Cosa |
+|--------|------|
+| **Già solido** | Quota GB meter+413 (D-085); Cap.19 onesto su storage≠∞ immobili; HAL codice onesto su restore assente; widget Valuator/Mutui; feed v1 con `with_not_trashed`; Publishing «in arrivo» esplicito |
+| **Realmente rischioso** | **CT-01** listino pubblico falso; **CT-03/CT-11** bak/restore promessi non operativi; **CT-06** demo gate locale + Stripe off; **CT-09** D-100 invite |
+| **Da decidere** | **K-CT-01** · **K-CT-02** |
+| **Può aspettare** | CT-14 KPI locked; esign mock finché no provider key; staging v1 501 se non venduto Track B; Cap.3/4 wording D-097 |
+
+Dettaglio: `memory/AUDIT_ARCHITETTURA_NOTE.md` § Punto 21.
+
+---
+
+# 23. PROSSIMO PUNTO
+
+Analisi Founder su **P21** (CT-* · K-CT-01/02) e/o chiusura **P20** (SC-*). GTM-01 in coda (vincolo pre-~5000 email).
 
 Il Master Audit State deve essere aggiornato dopo il completamento di ogni punto significativo.
-
-**Current next action:** analisi Founder su **P20** (SC-* · K-SC-01/02). P19 chiuso. GTM-01 in coda (vincolo pre-~5000 email).
 
 **Niente fix. Nessuna severità P0–P3. Listino fermo. Attende «vai».**
