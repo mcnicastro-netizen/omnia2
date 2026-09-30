@@ -25,7 +25,10 @@ _leads = _db["founders_50_leads"]
 
 # Configuration
 FOUNDERS_TOTAL_SPOTS = 50
-ADMIN_NOTIFICATION_EMAIL = "mcnicastro@gmail.com"
+ADMIN_NOTIFICATION_EMAIL = (
+    (os.environ.get("DEMO_CONTACT_EMAIL") or os.environ.get("ADMIN_EMAIL") or "").strip()
+    or "[REDACTED]"
+)
 
 
 class FounderRegistration(BaseModel):
@@ -33,11 +36,13 @@ class FounderRegistration(BaseModel):
     name: str = Field(min_length=2, max_length=120)
     agency: str = Field(min_length=2, max_length=200)
     city: str = Field(min_length=2, max_length=100)
+    address: str = Field(min_length=2, max_length=200, description="Via / indirizzo sede")
+    street_number: str = Field(min_length=1, max_length=20, description="Civico")
     agents_count: int = Field(ge=1, le=500, description="Number of agents in the agency")
     tier_interest: Optional[str] = Field(default=None, description="Optional: starter|pro|agency")
     notes: Optional[str] = Field(default=None, max_length=500)
 
-    @field_validator("name", "agency", "city")
+    @field_validator("name", "agency", "city", "address", "street_number")
     @classmethod
     def strip_whitespace(cls, v: str) -> str:
         return v.strip()
@@ -83,6 +88,8 @@ async def register_founder(payload: FounderRegistration, request: Request):
         "name": payload.name,
         "agency": payload.agency,
         "city": payload.city,
+        "address": payload.address,
+        "street_number": payload.street_number,
         "agents_count": payload.agents_count,
         "tier_interest": payload.tier_interest,
         "notes": payload.notes,
@@ -98,11 +105,14 @@ async def register_founder(payload: FounderRegistration, request: Request):
     position = lead_doc["position"]
     remaining = FOUNDERS_TOTAL_SPOTS - position
 
+    welcome_status = "skipped"
+    admin_status = "skipped"
+
     # Send thank-you email to lead (fire & forget — don't fail registration if email fails)
     try:
-        await send_email(
+        welcome = await send_email(
             to=payload.email,
-            subject=f"✨ Benvenuto in OMNIA Founders 50 — Posto #{position} confermato",
+            subject=f"Benvenuto in OMNIA Founders 50 — Posto #{position} confermato",
             template="founders_welcome",
             variables={
                 "name": payload.name,
@@ -112,20 +122,24 @@ async def register_founder(payload: FounderRegistration, request: Request):
             },
             lang="it",
         )
+        welcome_status = (welcome or {}).get("status") or "unknown"
     except Exception as e:
+        welcome_status = "error"
         logger.warning(f"Founders welcome email failed for {payload.email}: {e}")
 
     # Notify admin of new registration
     try:
-        await send_email(
+        admin = await send_email(
             to=ADMIN_NOTIFICATION_EMAIL,
-            subject=f"🎯 OMNIA Founders 50 — Nuovo lead #{position}/50: {payload.agency}",
+            subject=f"OMNIA Founders 50 — Nuovo lead #{position}/50: {payload.agency}",
             template="founders_admin_notification",
             variables={
                 "name": payload.name,
                 "email": payload.email,
                 "agency": payload.agency,
                 "city": payload.city,
+                "address": payload.address,
+                "street_number": payload.street_number,
                 "agents_count": payload.agents_count,
                 "tier_interest": payload.tier_interest or "—",
                 "notes": payload.notes or "—",
@@ -134,13 +148,32 @@ async def register_founder(payload: FounderRegistration, request: Request):
             },
             lang="it",
         )
+        admin_status = (admin or {}).get("status") or "unknown"
     except Exception as e:
+        admin_status = "error"
         logger.warning(f"Founders admin notification failed: {e}")
+
+    email_delivered = welcome_status == "sent"
+    if email_delivered:
+        msg = f"Sei il #{position}/50. Ti abbiamo inviato una mail di conferma a {payload.email}."
+    elif welcome_status == "mock":
+        msg = (
+            f"Sei il #{position}/50. Richiesta registrata. "
+            "In questo ambiente di prova l'email non è stata inviata "
+            "(manca RESEND_API_KEY) — la trovi nei log server."
+        )
+    else:
+        msg = (
+            f"Sei il #{position}/50. Richiesta registrata, "
+            "ma l'email di conferma non è partita. Ti contattiamo comunque."
+        )
 
     return {
         "ok": True,
         "id": str(result.inserted_id),
         "position": position,
         "remaining": remaining,
-        "message": f"Sei il #{position}/50. Ti abbiamo inviato una mail di conferma a {payload.email}.",
+        "email_status": welcome_status,
+        "admin_email_status": admin_status,
+        "message": msg,
     }

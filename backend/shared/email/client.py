@@ -77,6 +77,16 @@ SUBJECTS = {
         "en": "[OMNIA] Alert: {{title}}",
         "es": "[OMNIA] Alerta: {{title}}",
     },
+    "founders_welcome": {
+        "it": "Benvenuto in OMNIA Founders 50 — Posto #{{position}} confermato",
+        "en": "Welcome to OMNIA Founders 50 — Seat #{{position}} confirmed",
+        "es": "Bienvenido a OMNIA Founders 50 — Plaza #{{position}} confirmada",
+    },
+    "founders_admin_notification": {
+        "it": "OMNIA Founders 50 — Nuovo lead #{{position}}/50: {{agency}}",
+        "en": "OMNIA Founders 50 — New lead #{{position}}/50: {{agency}}",
+        "es": "OMNIA Founders 50 — Nuevo lead #{{position}}/50: {{agency}}",
+    },
 }
 
 
@@ -85,8 +95,12 @@ async def send_email(
     template: str,
     lang: str = "it",
     variables: Optional[dict] = None,
+    subject: Optional[str] = None,
 ) -> dict:
-    """Send a localized transactional email via Resend."""
+    """Send a localized transactional email via Resend.
+
+    Optional ``subject`` overrides the template default (used by founders flow).
+    """
     # Anti-abuse: per-recipient + global soft limits (fail-open on DB errors)
     try:
         from shared.security.rate_limit import enforce_rate_limit
@@ -124,7 +138,12 @@ async def send_email(
         "public_base",
         os.environ.get("OMNIA_PUBLIC_URL", "https://omniarealestateecosystem.it"),
     )
-    subject_raw = SUBJECTS.get(template, {}).get(lang) or SUBJECTS.get(template, {}).get("it") or "OMNIA"
+    subject_raw = (
+        subject
+        or SUBJECTS.get(template, {}).get(lang)
+        or SUBJECTS.get(template, {}).get("it")
+        or "OMNIA"
+    )
     subject = _render(subject_raw, variables)
     html = _render(_read_template(template, lang), variables)
 

@@ -69,6 +69,8 @@ export default function AgenziesLandingPage() {
     name: "",
     agency: "",
     city: "",
+    address: "",
+    street_number: "",
     agents_count: 3,
     tier_interest: "",
     notes: "",
@@ -287,7 +289,7 @@ export default function AgenziesLandingPage() {
           <p className="text-xs uppercase tracking-[0.3em] text-[#C19A6B] mb-3 text-center">Aderisci ora</p>
           <h2 className="text-3xl sm:text-4xl text-white text-center mb-4 font-light"
             style={{ fontFamily: "'Fraunces', Georgia, serif" }}>
-            Blocca il tuo posto
+            Prenota il tuo posto
           </h2>
           <p className="text-center text-white/70 mb-12 text-sm">
             {spots.remaining > 0
@@ -302,7 +304,15 @@ export default function AgenziesLandingPage() {
                 Benvenuto, Founder #{result.position}
               </p>
               <p className="text-white/80 text-sm">{result.message}</p>
-              <p className="text-white/60 text-xs mt-6">Controlla la tua casella email (anche spam).</p>
+              {result.email_status === "sent" ? (
+                <p className="text-white/60 text-xs mt-6">Controlla la tua casella email (anche spam).</p>
+              ) : result.email_status === "mock" ? (
+                <p className="text-amber-200/90 text-xs mt-6" data-testid="agenzie-email-mock">
+                  Ambiente di prova: email non inviata (serve RESEND_API_KEY). La richiesta è comunque registrata.
+                </p>
+              ) : (
+                <p className="text-amber-200/90 text-xs mt-6">Email di conferma non partita — ti contattiamo comunque.</p>
+              )}
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="space-y-4" data-testid="agenzie-form">
@@ -320,24 +330,38 @@ export default function AgenziesLandingPage() {
                 placeholder="Nome agenzia *"
                 data-testid="founders-input-agency"
                 className="w-full bg-white/10 border border-white/20 px-4 py-3 text-white placeholder:text-white/40 focus:outline-none focus:border-[#C19A6B]" />
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <input name="city" required value={formData.city} onChange={handleChange}
-                  placeholder="Città *"
-                  data-testid="founders-input-city"
-                  className="bg-white/10 border border-white/20 px-4 py-3 text-white placeholder:text-white/40 focus:outline-none focus:border-[#C19A6B]" />
-                <input name="agents_count" type="number" min="1" max="500" required
-                  value={formData.agents_count} onChange={handleChange}
-                  placeholder="Numero agenti *"
-                  data-testid="founders-input-agents"
+              <input name="city" required value={formData.city} onChange={handleChange}
+                placeholder="Città *"
+                data-testid="founders-input-city"
+                className="w-full bg-white/10 border border-white/20 px-4 py-3 text-white placeholder:text-white/40 focus:outline-none focus:border-[#C19A6B]" />
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <input name="address" required value={formData.address} onChange={handleChange}
+                  placeholder="Indirizzo (via) *"
+                  data-testid="founders-input-address"
+                  className="md:col-span-2 bg-white/10 border border-white/20 px-4 py-3 text-white placeholder:text-white/40 focus:outline-none focus:border-[#C19A6B]" />
+                <input name="street_number" required value={formData.street_number} onChange={handleChange}
+                  placeholder="Civico *"
+                  data-testid="founders-input-street-number"
                   className="bg-white/10 border border-white/20 px-4 py-3 text-white placeholder:text-white/40 focus:outline-none focus:border-[#C19A6B]" />
               </div>
+              <input name="agents_count" type="number" min="1" max="500" required
+                value={formData.agents_count} onChange={handleChange}
+                placeholder="Numero agenti *"
+                data-testid="founders-input-agents"
+                className="w-full bg-white/10 border border-white/20 px-4 py-3 text-white placeholder:text-white/40 focus:outline-none focus:border-[#C19A6B]" />
               <select name="tier_interest" value={formData.tier_interest} onChange={handleChange}
-                data-testid="founders-input-tier"
+                data-testid="founders-input-package"
                 className="w-full bg-white/10 border border-white/20 px-4 py-3 text-white focus:outline-none focus:border-[#C19A6B]">
-                <option value="" className="text-stone-900">Quale tier ti interessa? (opzionale)</option>
-                <option value="starter" className="text-stone-900">Starter — €39/mese</option>
-                <option value="pro" className="text-stone-900">Pro — €99/mese (più scelto)</option>
-                <option value="agency" className="text-stone-900">Agency — €249/mese</option>
+                <option value="" className="text-stone-900">Quale pacchetto ti interessa? (opzionale)</option>
+                {(plans.length ? plans : [
+                  { id: "starter", name: "Starter", foundersPrice: 49 },
+                  { id: "pro", name: "Pro", foundersPrice: 99, highlight: true },
+                  { id: "agency", name: "Agency", foundersPrice: 299 },
+                ]).map((p) => (
+                  <option key={p.id} value={p.id} className="text-stone-900">
+                    {p.name} — €{p.foundersPrice}/mese{p.highlight ? " (più scelto)" : ""}
+                  </option>
+                ))}
               </select>
               <textarea name="notes" value={formData.notes} onChange={handleChange}
                 placeholder="Note (opzionale)" rows="3"
@@ -353,7 +377,7 @@ export default function AgenziesLandingPage() {
               <button type="submit" disabled={submitting || isFull}
                 data-testid="agenzie-form-submit"
                 className="w-full bg-[#C19A6B] text-white py-4 text-sm uppercase tracking-widest hover:bg-[#a8845a] transition disabled:opacity-50 disabled:cursor-not-allowed">
-                {submitting ? "Invio in corso..." : isFull ? "Programma completo" : `Blocca il mio posto #${spots.registered + 1}`}
+                {submitting ? "Invio in corso..." : isFull ? "Programma completo" : `Prenota il tuo posto #${spots.registered + 1}`}
               </button>
 
               <p className="text-xs text-white/40 text-center mt-4">
