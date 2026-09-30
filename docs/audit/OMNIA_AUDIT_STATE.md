@@ -1013,7 +1013,8 @@ Trigger tecnico: fallimento **smoke media** (K-SC-01) → anticipare AD-01 — n
 
 ### POTENZIALE
 
-* NI-08 / NI-09 — non blocker GTM per default; D-113 evita il salto a DR completa.
+* NI-08 (restore **piattaforma**/DR oltre D-113) / NI-09 (orphan timing) — non blocker attivazione per default.
+* Attenzione: la **sostenibilità economica** bak/media non è più qui — è **D-114** (da chiudere).
 
 ### POST-ATTIVAZIONE / RIPAGARE (roadmap)
 
