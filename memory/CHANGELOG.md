@@ -1,5 +1,16 @@
 # OMNIA — Changelog
 
+## 2026-09-30 — P18 osservazioni Founder · D-106 active_agency_id SoT
+
+**Tipo**: Docs / SoT audit · **nessun codice** · **listino fermo** · no nuovi P0–P3.
+
+- **D-106**: `active_agency_id` = SoT sessione; `agency_ids` = membership; non nascondere switcher
+- Invite: tre stati (new/existing/expired) — contratto server prima del FE (**D-100**)
+- Nota decisionale P18 in Master State §19 · AF-04/05 debito demo non bloccante
+- Prossimo tipico: P19 Error handling
+
+---
+
 ## 2026-09-30 — Master Audit State · D-105 · P18 API/Frontend
 
 **Tipo**: Docs / SoT audit · **nessun fix** · **listino fermo**.

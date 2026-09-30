@@ -6,7 +6,7 @@
 > **Numerazione = continuum di sessione** (non forzare allineamento al master).  
 > Prompt master: `memory/AUDIT_PROMPT_MASTER.md` (§1–§27) — corrispondenza in tabella sotto.
 
-**Ultimo aggiornamento**: 30-Set-2026 · **SoT** `docs/audit/OMNIA_AUDIT_STATE.md` · **P18** API/FE · **D-105**
+**Ultimo aggiornamento**: 30-Set-2026 · **SoT** `docs/audit/OMNIA_AUDIT_STATE.md` · **P18** osservazioni · **D-106**
 
 ---
 
@@ -31,13 +31,13 @@
 | P15 | Concorrenza / race | §14 | 🟠 **ACQUISITO** · **RC-*** · invite → **D-100** · jobs → **D-101** |
 | P16 | Job asincroni (approfondimento) | §15 | 🟠 **ACQUISITO** · **JA-*** · **D-102** · **D-103** |
 | P17 | Osservabilità | §16 | 🟠 **ACQUISITO** (Master State) · **O-*** · **D-105** bak health |
-| P18 | API / Frontend | §17 | 🟠 Consegnato · **AF-*** |
+| P18 | API / Frontend | §17 | 🟠 **osservazioni acquisite** · **AF-*** · **D-106** |
 | — | Cestino (blocco dedicato) | §6 | 🟡 coperto in P5 + P12 |
 | — | Error handling… | §18–§27 | ⬜ prossimo tipico |
 | **GTM-01** | Demo Readiness / primo afflusso | **post-audit** | 🟠 **ACQUISITO** · **D-104** · in coda · **vincolo pre-~5000 email** |
 
-Decisioni dominio (codice ⏳): **D-094** … **D-105**.  
-**Continuità SoT**: `docs/audit/OMNIA_AUDIT_STATE.md` (non riaprire decisioni fissate).
+Decisioni dominio (codice ⏳): **D-094** … **D-106**.  
+**Continuità SoT**: `docs/audit/OMNIA_AUDIT_STATE.md` (non riaprire decisioni fissate). · **Niente codice** senza «vai».
 
 ---
 
@@ -58,7 +58,7 @@ Decisioni dominio (codice ⏳): **D-094** … **D-105**.
 13. **Jobs deepen** = **JA-*** · J-* · **JA-02**/JA-03 in registro finale  
 14. **Osservabilità** = **O-*** · **D-105** bak health minimo  
 15. **GTM / Demo Readiness** = **GTM-01 ACQUISITO** · **D-104** — in coda; **obbligatorio prima delle ~5000 email**  
-16. **API / Frontend** = **AF-*** (coerenza FE↔API · demo path)
+16. **API / Frontend** = **AF-*** · **D-106** `active_agency_id` SoT · nota decisionale P18
 
 ---
 
@@ -1415,10 +1415,20 @@ Si spezza su: **D-100** ancora vivo nel contratto FE; **drift multi-agency** (`/
 
 \*AF-01 = **D-100** (fix-needed, attende «vai»).
 
-### Domande aperte (max 2)
+### Domande aperte — **RISOLTE / AFFINATE** Founder (osservazioni P18)
 
-1. **K-AF-01** — Prima di demo multi-sede: allineare `/app/agencies/me*` a `active_agency_id`, o **nascondere** lo switcher finché non è allineato?  
-2. **K-AF-02** — Per D-100: oltre no-overwrite backend, flusso FE “utente esistente → link agency / login” subito, o basta fix server al «vai»?
+1. **K-AF-01 → D-106**: `active_agency_id` = SoT sessione; `agency_ids` = membership; **non** nascondere switcher.  
+2. **K-AF-02**: tre stati invite (new / existing+auth esistente / expired-consumed); **contratto server prima**, poi FE; niente magia FE. Estende **D-100**.
 
-**Niente fix. Nessuna severità P0–P3. Listino fermo.**  
+### Nota decisionale P18 (pre-implementazione · nessun codice)
+
+* SoT `active_agency_id` (**D-106**) — priorità tra fix FE/API.  
+* Formalizzare tre stati invite (**D-100**).  
+* Boundary media esplicito (file / enumerate / upload / mutate / associazione) — **D-095**; FE non forzato a URL pubblici per asset autenticati.  
+* AF-04 pagination / AF-05 upload stato `pending→success/error` / error UX = **debito non bloccante** (AF-04/05 rilevanti demo).  
+* B2C: stessa astrazione API del FE (**AF-06**).  
+* Documentare se sessione B2B/B2C unica è deliberata (**AF-07**) — separato da “default → CRM”.  
+* **Nessun nuovo P0–P3** da P18.
+
+**Niente fix. Nessuna severità P0–P3. Listino fermo. Attende «vai».**  
 Prossimo tipico: **Error handling** (master §18). GTM-01 in coda.

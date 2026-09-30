@@ -5,7 +5,7 @@
 **Usage rule:** questo documento è la fonte di continuità dell'audit.
 Prima di analizzare un nuovo punto, leggere questo file. Non riaprire decisioni già fissate salvo nuove evidenze. Non inventare informazioni mancanti.
 
-**Current status:** P1–P18 analizzati. Nessun fix applicato salvo dove esplicitamente indicato come già esistente. Listino fermo. SoT continuità: questo file.
+**Current status:** P1–P18 analizzati · osservazioni P18 acquisite (**D-106**). Nessun fix applicato. Listino fermo. SoT continuità: questo file. **Niente codice** senza «vai».
 
 **Next:** P19 — Error handling.
 
@@ -242,6 +242,16 @@ Founder Ops deve poter mostrare almeno:
 
 Serve anche sapere l’ultimo run valido dei job (`last_run`).
 Prometheus / OTel / structured logging avanzato possono aspettare.
+Codice ⏳ — post-audit / «vai».
+
+---
+
+## D-106 — `active_agency_id` SoT sessione
+
+* `active_agency_id` = agency operativa corrente (source of truth).
+* `agency_ids` = membership / agency disponibili.
+* Flusso: `active_agency_id → /agencies/me* → FE`.
+* **Non** nascondere lo switcher per evitare il drift.
 Codice ⏳ — post-audit / «vai».
 
 ---
@@ -705,31 +715,39 @@ Per ogni nuovo punto:
 
 ---
 
-# 19. P18 — API / FRONTEND (consegnato 30-Set)
+# 19. P18 — API / FRONTEND (consegnato 30-Set · osservazioni Founder)
 
-**Verdetto:** mount/routing demo coerenti; drift su invite (D-100), multi-agency `/me`, pagination properties, upload foto silenzioso, B2C URL raw, sessione B2B/B2C unica.
+**Verdetto:** mount/routing demo coerenti; drift su invite (D-100), multi-agency `/me`, pagination, upload silenzioso, B2C URL raw, sessione B2B/B2C.
+**Nessun nuovo P0–P3** da P18. Nessun fix finché «vai».
 
 ### Finding AF-*
 
 | ID | Tipo | Problema |
 |----|------|----------|
-| AF-01 | fix-needed | Invite overwrite password · FE chiede sempre password (**D-100**) |
-| AF-02 | rischio | `/api/media` pubblico (**D-095**) |
-| AF-03 | drift | Switcher `active_agency_id` vs `/agencies/me` = `agency_ids[0]` |
-| AF-04 | gap | Properties: no paginazione UI → >20 invisibili |
-| AF-05 | gap | PhotoUploader silent fail |
-| AF-06 | drift | B2C usa `REACT_APP_BACKEND_URL` grezzo |
-| AF-07 | rischio | Sessione unica · login default → CRM |
-| AF-08 | oss. | Billing UI senza gate Stripe enabled |
-| AF-09 | gap | Error UX non uniforme |
-| AF-10 | perf | Match scan pesante · SellPage 1+N stats |
-| AF-11 | gap | Requests: page senza UI |
-| AF-12…AF-16 | oss. | Nav IT hardcoded · versioning · CORS default · a11y · scaffold etichettato |
+| AF-01 | fix-needed | Invite overwrite · tre stati da formalizzare (**D-100**) |
+| AF-02 | rischio | `/api/media` pubblico — boundary da chiarire (**D-095**) |
+| AF-03 | → **D-106** | Due fonti di verità agency: `agency_ids[0]` vs `active_agency_id` |
+| AF-04 | debito demo | Properties senza paginazione UI → lista sembra completa |
+| AF-05 | debito + oss. | PhotoUploader silent fail — serve stato upload osservabile |
+| AF-06 | drift | B2C config API duplicata (`REACT_APP_BACKEND_URL`) |
+| AF-07 | doc/decisione | Sessione unica B2B/B2C — da documentare se deliberata |
+| AF-08…AF-16 | oss./gap | Billing · error UX · perf · nav · versioning · CORS · a11y |
 
-### Domande aperte
+### Domande — RISOLTE / AFFINATE
 
-1. **K-AF-01** — Allineare `/agencies/me*` a `active_agency_id`, o nascondere switcher?
-2. **K-AF-02** — D-100: flusso FE “utente esistente → link/login” subito, o solo fix server al «vai»?
+1. **K-AF-01 → D-106**: `active_agency_id` = SoT; **non** nascondere switcher.
+2. **K-AF-02**: contratto server prima (new / existing+auth / expired-consumed), poi FE; niente magia FE.
+
+### Nota decisionale P18 (pre-implementazione)
+
+* SoT `active_agency_id` (**D-106**);
+* tre stati invite (new / existing / expired-consumed) — estende **D-100**;
+* boundary media esplicito (file / enumerate / upload / mutate / associazione) — **D-095**;
+* pagination / upload-error / error UX = debito non bloccante (AF-04/AF-05 rilevanti demo);
+* una sola astrazione API FE anche per B2C;
+* documentare modello sessione B2B/B2C.
+
+**K-AF-01 = priorità** tra i fix FE/API post-«vai».
 
 Dettaglio: `memory/AUDIT_ARCHITETTURA_NOTE.md` § Punto 18.
 

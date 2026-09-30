@@ -28,9 +28,11 @@ Un blocco alla volta · niente fix senza «vai» · no P0–P3 prematuri · **li
 | **D-103** | No worker dedicato ora; eventuale anti-dup minimo stesso-giorno |
 | **D-104** | **GTM-01 ACQUISITO** · in coda · **vincolo hard** pre-~5000 email |
 | **D-105** | Bak health minimo Founder Ops (OK/PARTIAL/FAILED + alert + last_run) |
+| **D-106** | `active_agency_id` = SoT sessione; `agency_ids` = membership |
 
 **SoT continuità:** `docs/audit/OMNIA_AUDIT_STATE.md`  
-**Sequenza priorità (D-099):** fascicolo → orphan → Bak+Restore → retention → costi.
+**Sequenza priorità (D-099):** fascicolo → orphan → Bak+Restore → retention → costi.  
+**Niente codice** senza «vai».
 
 ---
 

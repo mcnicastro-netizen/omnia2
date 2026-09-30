@@ -12,8 +12,8 @@
 | **SoT compatto** | `docs/audit/OMNIA_AUDIT_STATE.md` |
 | Note dettaglio | `memory/AUDIT_ARCHITETTURA_NOTE.md` |
 | Prompt master | `memory/AUDIT_PROMPT_MASTER.md` (§1–§27) |
-| Ultimo | **P18 API/FE** (AF-01…AF-16) · **D-105** bak health |
-| Prossimo | Feedback P18 → tipicamente **Error handling** (§18) |
+| Ultimo | **P18** osservazioni · **D-106** `active_agency_id` SoT |
+| Prossimo | Tipicamente **Error handling** (§18) · **niente codice** senza «vai» |
 | In coda | **GTM-01** · vincolo hard pre-~5000 email |
 | Vincolo | Listino fermo · niente fix · no P0–P3 finché non §23 |
 | Fix-needed | **D-100** invite (attende «vai») |

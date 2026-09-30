@@ -1629,4 +1629,15 @@ Registro di tutte le decisioni di business e tecniche prese durante il progetto.
 - **Implementazione**: ❌ codice ⏳ — post-audit / «vai».
 - **Stato**: ✅ **DECISIONE DI DOMINIO REGISTRATA** (docs 30-Set-2026 · SoT `docs/audit/OMNIA_AUDIT_STATE.md`) · codice ⏳
 
+### D-106 — `active_agency_id` = source of truth della sessione corrente · 30-Set-2026
+- **Data**: 30 Settembre 2026
+- **Contesto**: Audit P18 (AF-03 / K-AF-01). Founder: problema di semantica, non solo UI. Due fonti di verità se `/agencies/me*` usa `agency_ids[0]` mentre lo switcher usa `active_agency_id`.
+- **Decisione**:
+  1. **`active_agency_id`** = source of truth della sessione corrente (agency in cui l’utente sta operando).
+  2. **`agency_ids`** = solo l’insieme delle agency disponibili (membership), non la selezione operativa.
+  3. Flusso: `session.active_agency_id → /agencies/me* → FE` (allineato a `require_agency` / TenantContext).
+  4. **Non** nascondere lo switcher per mascherare il drift — sarebbe regressione funzionale.
+- **Implementazione**: ❌ codice ⏳ — post-audit / «vai» (priorità tra i fix FE/API).
+- **Stato**: ✅ **DECISIONE DI DOMINIO REGISTRATA** (docs 30-Set-2026) · codice ⏳
+
 
