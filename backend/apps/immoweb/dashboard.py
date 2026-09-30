@@ -46,8 +46,8 @@ _WEAK_DESC = {
 
 
 def _agency_id(user: dict) -> Optional[str]:
-    agency_ids = user.get("agency_ids") or []
-    return agency_ids[0] if agency_ids else None
+    from shared.auth.tenant import optional_agency_id
+    return optional_agency_id(user)
 
 
 def _prop_label(doc: dict) -> str:

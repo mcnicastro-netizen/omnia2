@@ -203,12 +203,14 @@ class InviteVerifyResponse(OmniaBaseModel):
     role: str
     email: EmailStr
     expires_at: str
+    user_exists: bool = False  # D-100 — FE non chiede password se True
 
 
 class InviteAcceptRequest(OmniaBaseModel):
     token: str
-    name: str = Field(min_length=1, max_length=120)
-    password: str = Field(min_length=8, max_length=128)
+    name: str = Field(default="", max_length=120)
+    # D-100 — obbligatoria solo per utente nuovo; esistente non deve resettare password
+    password: Optional[str] = Field(default=None, max_length=128)
 
 
 # -------------------- DASHBOARD KPI --------------------

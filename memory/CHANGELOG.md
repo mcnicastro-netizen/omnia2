@@ -1,5 +1,17 @@
 # OMNIA — Changelog
 
+## 2026-09-30 — «vai» O0 ∥ O1 · D-095/D-100/D-106 + design bak
+
+**Tipo**: Codice O1 + docs O0 · listino fermo · no self-serve pre-O6.
+
+- **O0:** `docs/audit/OMNIA_O0_BAK_MEDIA_DESIGN.md` — retention hot ≤7g, preferenza incrementale, restore agency-first, listino fermo
+- **O1a D-095:** `/api/media` non serve più `omnia/fascicolo/` né `omnia/modulistica/` (404)
+- **O1b D-100:** accept invite non overwrite password; verify espone `user_exists`; FE flusso esistente
+- **O1c D-106:** `active_agency_id` SoT senza fallback `agency_ids[0]` (tenant, agencies, invites, billing, dashboard…)
+- SLA assistito provvisorio ≤5 gg lav. · O2–O6 non aperti
+
+---
+
 ## 2026-09-30 — D-115 Programma pre-attivazione APPROVATO (K-PA)
 
 **Tipo**: Docs / SoT · **nessun codice** · **listino fermo**.

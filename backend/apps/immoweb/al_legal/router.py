@@ -62,8 +62,8 @@ DISCLAIMER_HEADER = (
 
 
 def _agency_id_of(user: dict) -> Optional[str]:
-    ids = user.get("agency_ids") or []
-    return user.get("active_agency_id") or (ids[0] if ids else None)
+    from shared.auth.tenant import optional_agency_id
+    return optional_agency_id(user)
 
 
 def _estimate_query_cost(*, had_citations: bool = True) -> Dict[str, Any]:

@@ -213,6 +213,16 @@ async def login(req: LoginRequest, request: Request, response: Response,
             "email": email,
         }
 
+    # D-106 — init SoT: se manca active valida e c'è esattamente 1 membership, impostala
+    ids = user.get("agency_ids") or []
+    active = user.get("active_agency_id")
+    if ids and (not active or active not in ids) and len(ids) == 1:
+        await db.users.update_one(
+            {"id": user["id"]},
+            {"$set": {"active_agency_id": ids[0], "updated_at": datetime.now(timezone.utc).isoformat()}},
+        )
+        user = {**user, "active_agency_id": ids[0]}
+
     _refresh_tok = _set_auth_cookies(response, user["id"], email, user["role"])
     await store_refresh(_refresh_tok)
     return _public(user)

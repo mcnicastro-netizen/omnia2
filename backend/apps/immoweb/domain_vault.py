@@ -67,15 +67,18 @@ def _normalize_domain(raw: Optional[str]) -> Optional[str]:
 
 
 async def _resolve_agency_id(user: dict) -> str:
-    db = Database.get()
-    agency_ids = user.get("agency_ids") or []
-    if agency_ids:
-        return agency_ids[0]
-    # Fallback: some legacy users own an agency but are not attached yet.
-    owned = await db.agencies.find_one({"owner_id": user["id"]})
-    if owned:
-        return owned["id"]
-    raise HTTPException(status_code=404, detail="no_agency")
+    from shared.auth.tenant import require_agency_404
+    try:
+        return require_agency_404(user)
+    except HTTPException:
+        # Legacy: owner not yet attached — attach and set active (D-106 init)
+        db = Database.get()
+        owned = await db.agencies.find_one({"owner_id": user["id"]})
+        if owned:
+            from apps.immoweb.agencies import _attach_user_to_agency
+            await _attach_user_to_agency(db, user["id"], owned["id"])
+            return owned["id"]
+        raise HTTPException(status_code=404, detail="no_agency")
 
 
 @router.get("/me/domain-sovereignty", response_model=DomainSovereigntyResponse)

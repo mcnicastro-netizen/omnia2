@@ -29,6 +29,8 @@ export default function AcceptInvitePage() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
 
+  const userExists = Boolean(invite?.user_exists);
+
   useEffect(() => {
     if (!token) {
       setVerifyError(t("accept_invite.invalid"));
@@ -38,7 +40,16 @@ export default function AcceptInvitePage() {
     api
       .get(`/app/invites/verify?token=${encodeURIComponent(token)}`)
       .then((r) => setInvite(r.data))
-      .catch(() => setVerifyError(t("accept_invite.invalid")))
+      .catch((err) => {
+        const code = err?.response?.data?.detail;
+        const key =
+          code === "invite_expired"
+            ? "accept_invite.expired"
+            : code === "invite_used_or_revoked"
+              ? "accept_invite.used"
+              : "accept_invite.invalid";
+        setVerifyError(t(key));
+      })
       .finally(() => setVerifying(false));
   }, [token, t]);
 
@@ -47,7 +58,11 @@ export default function AcceptInvitePage() {
     setError("");
     setSubmitting(true);
     try {
-      await api.post("/app/invites/accept", { token, name: name.trim(), password });
+      const body = { token, name: name.trim() };
+      if (!userExists) {
+        body.password = password;
+      }
+      await api.post("/app/invites/accept", body);
       await refresh();
       setSuccess(true);
       setTimeout(() => nav(`/${lang}/app/dashboard`, { replace: true }), 1500);
@@ -91,7 +106,7 @@ export default function AcceptInvitePage() {
               className="text-2xl tracking-tight mb-3"
               style={{ fontFamily: "'Fraunces', Georgia, serif" }}
             >
-              {t("accept_invite.invalid")}
+              {verifyError}
             </h1>
             <a
               href={`/${lang}/login`}
@@ -111,44 +126,51 @@ export default function AcceptInvitePage() {
               className="text-3xl tracking-tight mb-2"
               style={{ fontFamily: "'Fraunces', Georgia, serif" }}
             >
-              {t("accept_invite.title")}
+              {userExists ? t("accept_invite.title_existing") : t("accept_invite.title")}
             </h1>
             <p className="text-stone-600 mb-2">
               {t("accept_invite.subtitle", { agency_name: invite.agency_name, role: invite.role })}
             </p>
             <p className="text-sm text-stone-500 mb-8">
               <strong>{invite.email}</strong>
+              {userExists && (
+                <span className="block mt-2 text-stone-600">{t("accept_invite.existing_hint")}</span>
+              )}
             </p>
 
             <form onSubmit={submit} className="space-y-4">
-              <div>
-                <label className="block text-xs uppercase tracking-widest text-stone-600 mb-1.5">
-                  {t("accept_invite.name")}
-                </label>
-                <input
-                  required
-                  autoFocus
-                  data-testid="accept-name-input"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  className="w-full px-3 py-2.5 bg-white border border-stone-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-stone-900/10 focus:border-stone-900"
-                />
-              </div>
-              <div>
-                <label className="block text-xs uppercase tracking-widest text-stone-600 mb-1.5">
-                  {t("accept_invite.password")}
-                </label>
-                <input
-                  required
-                  type="password"
-                  minLength={8}
-                  data-testid="accept-password-input"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full px-3 py-2.5 bg-white border border-stone-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-stone-900/10 focus:border-stone-900"
-                />
-                <p className="text-xs text-stone-400 mt-1">{t("accept_invite.password_hint")}</p>
-              </div>
+              {!userExists && (
+                <div>
+                  <label className="block text-xs uppercase tracking-widest text-stone-600 mb-1.5">
+                    {t("accept_invite.name")}
+                  </label>
+                  <input
+                    required
+                    autoFocus
+                    data-testid="accept-name-input"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    className="w-full px-3 py-2.5 bg-white border border-stone-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-stone-900/10 focus:border-stone-900"
+                  />
+                </div>
+              )}
+              {!userExists && (
+                <div>
+                  <label className="block text-xs uppercase tracking-widest text-stone-600 mb-1.5">
+                    {t("accept_invite.password")}
+                  </label>
+                  <input
+                    required
+                    type="password"
+                    minLength={8}
+                    data-testid="accept-password-input"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="w-full px-3 py-2.5 bg-white border border-stone-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-stone-900/10 focus:border-stone-900"
+                  />
+                  <p className="text-xs text-stone-400 mt-1">{t("accept_invite.password_hint")}</p>
+                </div>
+              )}
 
               {error && (
                 <p data-testid="accept-error" className="text-sm text-red-700 bg-red-50 border border-red-200 rounded-md px-3 py-2">
@@ -162,7 +184,11 @@ export default function AcceptInvitePage() {
                 data-testid="accept-submit-btn"
                 className="w-full px-6 py-3 bg-stone-900 text-stone-50 text-xs uppercase tracking-widest font-medium rounded-md hover:bg-stone-700 disabled:opacity-50 transition"
               >
-                {submitting ? t("common.loading") : t("accept_invite.accept")}
+                {submitting
+                  ? t("common.loading")
+                  : userExists
+                    ? t("accept_invite.accept_existing")
+                    : t("accept_invite.accept")}
               </button>
             </form>
           </div>
@@ -175,7 +201,7 @@ export default function AcceptInvitePage() {
               className="text-xl tracking-tight"
               style={{ fontFamily: "'Fraunces', Georgia, serif" }}
             >
-              {t("accept_invite.success")}
+              {userExists ? t("accept_invite.success_existing") : t("accept_invite.success")}
             </p>
           </div>
         )}

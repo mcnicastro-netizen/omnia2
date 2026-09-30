@@ -5,9 +5,9 @@
 **Usage rule:** questo documento è la fonte di continuità dell'audit.
 Prima di analizzare un nuovo punto, leggere questo file. Non riaprire decisioni già fissate salvo nuove evidenze. Non inventare informazioni mancanti.
 
-**Current status:** P1–P24 **chiusi** · P25 consegnato · **programma pre-attivazione APPROVATO** (**D-115** · K-PA risolte). Nessun fix. Listino fermo. SoT: questo file. **Niente codice** senza «vai».
+**Current status:** P1–P24 **chiusi** · programma **APPROVATO** (**D-115**) · **«vai» O0 ∥ O1 in esecuzione**. Listino fermo. SoT: questo file.
 
-**Next:** «vai» su **O0** e/o **O1** (paralleli). Regola: **no self-serve finché O6 ≠ PASS**. §23 Priorità **CLOSED**.
+**Next:** chiudere ship O0∥O1 → poi «vai» **O2**. Regola: **no self-serve finché O6 ≠ PASS**. §23 Priorità **CLOSED**.
 
 ---
 

@@ -1739,16 +1739,16 @@ Registro di tutte le decisioni di business e tecniche prese durante il progetto.
 - **Stato**: ✅ **DECISIONE DI DOMINIO REGISTRATA** (docs 30-Set-2026 · K-PA-01) · design/codice ⏳
 
 ### D-115 — Programma pre-attivazione approvato · no self-serve prima di O6 · 30-Set-2026
-- **Data**: 30 Settembre 2026
-- **Contesto**: Founder approva `docs/audit/OMNIA_PROGRAMMA_PRE_ATTIVAZIONE.md` dopo review auditer. K-PA-01…03.
+- **Data**: 30 Settembre 2026 · **«vai» O0∥O1**: 30-Set-2026
+- **Contesto**: Founder approva `docs/audit/OMNIA_PROGRAMMA_PRE_ATTIVAZIONE.md` dopo review auditer. K-PA-01…03. Poi «vai» su O0∥O1 (non O2–O6 in blocco).
 - **Decisione**:
   1. Programma **O0 ∥ O1 → O2 → O3 → O4 → O5 → O6** = SoT attuativo.
   2. **O2 prima di O3**: prima regole trash/freeze, poi test recupero.
-  3. Durante le onde: solo **provisioning assistito dichiarato** (tempi interni da definire; non scappatoia permanente).
+  3. Durante le onde: solo **provisioning assistito dichiarato** (SLA interno provvisorio ≤ 5 gg lavorativi; non scappatoia permanente).
   4. **Nessun pagamento self-serve finché O6 non è PASS.**
   5. Self-serve a pagamento ammissibile solo dopo O6 PASS.
-  6. Listino fermo · nessun codice senza «vai» esplicito sulle onde.
-- **Implementazione**: ❌ codice ⏳ — attende «vai» (tipicamente O0 e/o O1).
-- **Stato**: ✅ **DECISIONE OPERATIVA REGISTRATA** (docs 30-Set-2026) · codice ⏳
+  6. Listino fermo · codice solo con «vai» esplicito sulle onde.
+- **Implementazione**: ✅ «vai» O0∥O1 · O0 design in `docs/audit/OMNIA_O0_BAK_MEDIA_DESIGN.md` · O1 codice D-095/D-100/D-106 · O2+ ⏳
+- **Stato**: ✅ **DECISIONE OPERATIVA REGISTRATA** · O0∥O1 in ship
 
 

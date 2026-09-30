@@ -2,8 +2,11 @@
 
 Sprint 4 · GAP #1 — Serve i binari caricati su Object Storage (foto + video).
 Rotte:
-- `GET /api/media/{path:path}` — PUBBLICO (media immobili sul portale B2C).
-  Supporta Range (206) per playback HTML5 video.
+- `GET /api/media/{path:path}` — PUBBLICO solo per media destinati a pubblicazione
+  (foto/video listing). Supporta Range (206) per playback HTML5 video.
+
+D-095 / O1a — path sensibili (fascicolo, modulistica) NON sono serviti qui.
+Accesso solo tramite endpoint autenticati (es. fascicolo download).
 
 Il DB conserva SOLO l'url relativa `/api/media/{path}`.
 """
@@ -22,11 +25,25 @@ logger = logging.getLogger(__name__)
 
 _RANGE_RE = re.compile(r"bytes=(\d*)-(\d*)")
 
+# D-095 — private media prefixes (AuthZ via dedicated routes, not public passthrough)
+_PRIVATE_PREFIXES = (
+    "omnia/fascicolo/",
+    "omnia/modulistica/",
+)
+
+
+def _is_private_media_path(path: str) -> bool:
+    p = (path or "").lstrip("/")
+    return any(p.startswith(prefix) for prefix in _PRIVATE_PREFIXES)
+
 
 @router.get("/{path:path}")
 async def serve_media(path: str, request: Request) -> Response:
     if not path or ".." in path:
         raise HTTPException(status_code=400, detail="invalid_path")
+    if _is_private_media_path(path):
+        # 404: non rivelare esistenza; AuthZ via fascicolo/modulistica download
+        raise HTTPException(status_code=404, detail="not_found")
     try:
         data, ct = get_object(path)
     except ObjStoreError as e:

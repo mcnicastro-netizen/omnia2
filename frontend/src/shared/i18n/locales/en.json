@@ -571,14 +571,20 @@
   },
   "accept_invite": {
     "title": "Accept invitation",
+    "title_existing": "Link your account",
     "subtitle": "You're joining {{agency_name}} as {{role}}.",
     "name": "Your full name",
     "password": "Create a password",
     "password_hint": "At least 8 characters.",
+    "existing_hint": "You already have an OMNIA account with this email. Your password will not be changed.",
     "accept": "Create my account",
+    "accept_existing": "Join the agency",
     "loading": "Verifying invitation…",
     "invalid": "This invitation is no longer valid or has expired.",
-    "success": "Account created. Taking you to the dashboard…"
+    "expired": "This invitation has expired.",
+    "used": "This invitation was already used or revoked.",
+    "success": "Account created. Taking you to the dashboard…",
+    "success_existing": "Agency linked. Taking you to the dashboard…"
   },
   "website": {
     "title": "Website & Brand Studio",

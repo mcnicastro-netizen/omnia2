@@ -15,6 +15,7 @@ import stripe
 from fastapi import APIRouter, Depends, HTTPException, Request
 
 from shared.auth.dependencies import get_current_user, require_roles
+from shared.auth.tenant import optional_agency_id, require_agency
 from shared.db.connection import Database
 
 from apps.billing.plans import (
@@ -85,10 +86,9 @@ async def list_plans():
 async def get_subscription(user: dict = Depends(get_current_user)):
     """Current agency subscription state (if any)."""
     db = Database.get()
-    agency_ids = user.get("agency_ids") or []
-    if not agency_ids:
+    aid = optional_agency_id(user)
+    if not aid:
         return {"subscription": None, "wallet": {"balance": 0}}
-    aid = agency_ids[0]
     sub = await db.subscriptions.find_one({"agency_id": aid}, {"_id": 0})
     wallet = await db.credit_wallets.find_one({"agency_id": aid}, {"_id": 0})
     return {
@@ -119,7 +119,7 @@ async def create_checkout(
     price = prices[0]
 
     origin = payload.success_url or str(request.base_url)
-    agency_id = user["agency_ids"][0] if user.get("agency_ids") else None
+    agency_id = require_agency(user)
 
     try:
         session_kwargs = dict(
@@ -183,7 +183,7 @@ async def buy_credits(
     price = prices[0]
 
     origin = payload.success_url or str(request.base_url)
-    agency_id = user["agency_ids"][0] if user.get("agency_ids") else None
+    agency_id = require_agency(user)
     try:
         session = stripe.checkout.Session.create(
             line_items=[{"price": price.id, "quantity": 1}],
@@ -233,10 +233,7 @@ async def buy_storage(
     if not addon:
         raise HTTPException(status_code=400, detail="unknown_storage_addon")
 
-    agency_ids = user.get("agency_ids") or []
-    if not agency_ids:
-        raise HTTPException(status_code=400, detail="no_agency")
-    agency_id = agency_ids[0]
+    agency_id = require_agency(user)
     db = Database.get()
     now = datetime.now(timezone.utc).isoformat()
 
@@ -344,10 +341,8 @@ async def customer_portal(request: Request, user: dict = Depends(get_current_use
     """Return a Stripe Customer Portal link for the current agency."""
     _guard_enabled()
     db = Database.get()
-    agency_ids = user.get("agency_ids") or []
-    if not agency_ids:
-        raise HTTPException(status_code=400, detail="no_agency")
-    sub = await db.subscriptions.find_one({"agency_id": agency_ids[0]}, {"stripe_customer_id": 1})
+    agency_id = require_agency(user)
+    sub = await db.subscriptions.find_one({"agency_id": agency_id}, {"stripe_customer_id": 1})
     if not sub or not sub.get("stripe_customer_id"):
         raise HTTPException(status_code=400, detail="no_stripe_customer")
     origin = str(request.base_url).rstrip("/")

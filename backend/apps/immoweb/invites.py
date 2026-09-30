@@ -10,6 +10,7 @@ from fastapi import APIRouter, HTTPException, Depends, Response, Header
 from shared.db.connection import Database
 from shared.auth.dependencies import get_current_user, require_roles
 from shared.auth.hashing import hash_password
+from shared.auth.tenant import require_agency
 from shared.auth.jwt_tokens import (
     create_access_token,
     create_refresh_token,
@@ -45,10 +46,7 @@ async def create_invite(
     lang = normalize_lang(accept_language)
     db = Database.get()
 
-    agency_ids = user.get("agency_ids") or []
-    if not agency_ids:
-        raise HTTPException(status_code=400, detail="no_agency")
-    agency_id = agency_ids[0]
+    agency_id = require_agency(user)
     agency = await db.agencies.find_one({"id": agency_id})
     if not agency:
         raise HTTPException(status_code=404, detail="agency_not_found")
@@ -139,11 +137,9 @@ async def list_invites(
     user: dict = Depends(require_roles("agency_admin", "super_admin")),
 ):
     db = Database.get()
-    agency_ids = user.get("agency_ids") or []
-    if not agency_ids:
-        return []
+    agency_id = require_agency(user)
     cursor = db.agency_invites.find(
-        {"agency_id": agency_ids[0]},
+        {"agency_id": agency_id},
         {"_id": 0, "token": 0},  # never leak token
     ).sort("created_at", -1)
     invites = await cursor.to_list(length=200)
@@ -158,11 +154,9 @@ async def revoke_invite(
     user: dict = Depends(require_roles("agency_admin", "super_admin")),
 ):
     db = Database.get()
-    agency_ids = user.get("agency_ids") or []
-    if not agency_ids:
-        raise HTTPException(status_code=404, detail="no_agency")
+    agency_id = require_agency(user)
     invite = await db.agency_invites.find_one({"id": invite_id})
-    if not invite or invite["agency_id"] != agency_ids[0]:
+    if not invite or invite["agency_id"] != agency_id:
         raise HTTPException(status_code=404, detail="invite_not_found")
     await db.agency_invites.update_one(
         {"id": invite_id},
@@ -197,16 +191,18 @@ async def verify_invite(token: str):
         raise HTTPException(status_code=400, detail="invite_expired")
 
     agency = await db.agencies.find_one({"id": invite["agency_id"]})
+    existing = await db.users.find_one({"email": invite["email"]}, {"_id": 1})
     return InviteVerifyResponse(
         invite_id=invite["id"],
         agency_name=agency.get("display_name", "OMNIA") if agency else "OMNIA",
         role=invite["role"],
         email=invite["email"],
         expires_at=invite["expires_at"],
+        user_exists=bool(existing),
     )
 
 
-# -------------------- ACCEPT INVITE (public, sets password) --------------------
+# -------------------- ACCEPT INVITE (public) --------------------
 
 @router.post("/invites/accept")
 async def accept_invite(
@@ -214,8 +210,8 @@ async def accept_invite(
     response: Response,
     accept_language: Optional[str] = Header(None),
 ):
-    """Public: invitee sets name+password and is auto-logged in.
-    Creates a new user or links existing user to the agency.
+    """Public: create new user (password required) or link existing user (D-100: never overwrite password).
+    Auto-login after accept; sets active_agency_id to invited agency (D-106).
     """
     lang = normalize_lang(accept_language)
     db = Database.get()
@@ -241,34 +237,47 @@ async def accept_invite(
     email = invite["email"]
     agency_id = invite["agency_id"]
     role = invite["role"]
+    now = datetime.now(timezone.utc).isoformat()
 
     user = await db.users.find_one({"email": email})
     if user:
-        # Link existing user — update role only if it's an upgrade
+        # D-100 — link membership only; NEVER overwrite password_hash
+        set_fields = {
+            "active_agency_id": agency_id,
+            "updated_at": now,
+        }
+        name = (payload.name or "").strip()
+        if name:
+            set_fields["name"] = name
+        if user.get("role") == "client":
+            set_fields["role"] = role
         await db.users.update_one(
             {"id": user["id"]},
             {
                 "$addToSet": {"agency_ids": agency_id},
-                "$set": {
-                    "name": payload.name.strip() or user["name"],
-                    "password_hash": hash_password(payload.password),
-                    "updated_at": datetime.now(timezone.utc).isoformat(),
-                    **({"role": role} if user["role"] == "client" else {}),
-                },
+                "$set": set_fields,
             },
         )
         user_id = user["id"]
-        user_role = role if user["role"] == "client" else user["role"]
+        user_role = role if user.get("role") == "client" else user["role"]
     else:
+        password = payload.password or ""
+        if len(password) < 8:
+            raise HTTPException(status_code=400, detail="password_required")
+        name = (payload.name or "").strip()
+        if not name:
+            raise HTTPException(status_code=400, detail="name_required")
         new_user = UserInDB(
             email=email,
-            password_hash=hash_password(payload.password),
-            name=payload.name.strip(),
+            password_hash=hash_password(password),
+            name=name,
             role=role,
             lang=lang,
             agency_ids=[agency_id],
         )
-        await db.users.insert_one(new_user.model_dump())
+        doc = new_user.model_dump()
+        doc["active_agency_id"] = agency_id
+        await db.users.insert_one(doc)
         user_id = new_user.id
         user_role = role
 

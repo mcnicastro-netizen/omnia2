@@ -787,14 +787,20 @@
   },
   "accept_invite": {
     "title": "Accetta invito",
+    "title_existing": "Collega il tuo account",
     "subtitle": "Stai per unirti a {{agency_name}} come {{role}}.",
     "name": "Il tuo nome completo",
     "password": "Crea una password",
     "password_hint": "Minimo 8 caratteri.",
+    "existing_hint": "Hai già un account OMNIA con questa email. La password non verrà modificata.",
     "accept": "Crea il mio account",
+    "accept_existing": "Unisciti all'agenzia",
     "loading": "Verifica invito…",
     "invalid": "Questo invito non è più valido o è scaduto.",
-    "success": "Account creato. Ti stiamo portando alla dashboard…"
+    "expired": "Questo invito è scaduto.",
+    "used": "Questo invito è già stato usato o revocato.",
+    "success": "Account creato. Ti stiamo portando alla dashboard…",
+    "success_existing": "Agenzia collegata. Ti stiamo portando alla dashboard…"
   },
   "website": {
     "title": "Sito web & Brand Studio",

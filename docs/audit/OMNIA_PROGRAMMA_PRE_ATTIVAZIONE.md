@@ -1,10 +1,11 @@
 # OMNIA — Programma attuativo pre-attivazione commerciale
 
-**Stato:** ✅ **APPROVATO Founder** (30-Set-2026) · K-PA-01…03 risolte · **D-115**  
+**Stato:** ✅ **APPROVATO Founder** · **«vai» O0 ∥ O1** (30-Set-2026) · K-PA-01…03 · **D-115**  
 **SoT continuità:** `docs/audit/OMNIA_AUDIT_STATE.md` (§25bis · D-094…D-115)  
-**Vincoli:** listino fermo · nessun P0–P3 nuovo in audit · **nessun codice** finché Founder non dà «vai» su onde/implementazione  
 **Regola commerciale:** **nessun pagamento self-serve finché O6 non è PASS.**  
-**Obiettivo:** prima OMNIA attivabile senza sorprese, poi rubinetto commerciale — non corsa outreach ~5k email.
+**Provisioning assistito (SLA interno provvisorio):** ≤ **5 giorni lavorativi** dall’accordo — da raffinare, non scappatoia permanente.  
+**Obiettivo:** prima OMNIA attivabile senza sorprese, poi rubinetto commerciale — non corsa outreach ~5k email.  
+**In esecuzione:** O0 (design) · O1a fascicolo · O1b invite · O1c SoT agency. **O2–O6:** non aperti.
 
 ### Priorità Founder (ordine di senso)
 
@@ -231,6 +232,8 @@ Programma approvato come SoT attuativo con vincoli Founder sopra. R1 chiuso da K
 |-------|--------|
 | Founder | ✅ **APPROVATO** · K-PA-01…03 · regola self-serve |
 | Auditer | ✅ review acquisita · programma coerente Master State |
-| «vai» implementazione onde | ⏳ **non ancora dato** |
+| «vai» O0 ∥ O1 | ✅ **dato** 30-Set-2026 (non O2–O6 in blocco) |
+| O0 design | ✅ `docs/audit/OMNIA_O0_BAK_MEDIA_DESIGN.md` |
+| O1 codice | ✅ D-095 / D-100 / D-106 in corso di ship |
 
-*Prossimo:* Founder dà «vai» su O0 e/o O1 (paralleli), oppure su sottoinsieme esplicito.
+*Prossimo dopo chiusura O0∥O1:* «vai» su **O2** (poi O3…).

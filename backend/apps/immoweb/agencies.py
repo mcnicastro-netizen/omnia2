@@ -6,6 +6,7 @@ from datetime import datetime, timezone
 from fastapi import APIRouter, HTTPException, Depends, status
 from shared.db.connection import Database
 from shared.auth.dependencies import get_current_user, require_roles
+from shared.auth.tenant import require_agency
 from shared.models.agency import (
     AgencyInDB,
     AgencyPublic,
@@ -34,13 +35,18 @@ async def _ensure_unique_slug(db, base_slug: str) -> str:
 
 
 async def _attach_user_to_agency(db, user_id: str, agency_id: str) -> None:
-    """Add agency_id to user's agency_ids list (idempotent)."""
+    """Add agency_id to membership; set active_agency_id if missing/invalid (D-106 init)."""
+    user = await db.users.find_one(
+        {"id": user_id}, {"_id": 0, "agency_ids": 1, "active_agency_id": 1}
+    )
+    ids = list((user or {}).get("agency_ids") or [])
+    active = (user or {}).get("active_agency_id")
+    set_fields = {"updated_at": datetime.now(timezone.utc).isoformat()}
+    if not active or active not in (ids + [agency_id]):
+        set_fields["active_agency_id"] = agency_id
     await db.users.update_one(
         {"id": user_id},
-        {
-            "$addToSet": {"agency_ids": agency_id},
-            "$set": {"updated_at": datetime.now(timezone.utc).isoformat()},
-        },
+        {"$addToSet": {"agency_ids": agency_id}, "$set": set_fields},
     )
 
 
@@ -106,7 +112,7 @@ async def create_agency(
 
 @router.get("/me")
 async def get_my_agency(user: dict = Depends(get_current_user)):
-    """Return the agency belonging to the current user (first if multiple)."""
+    """Return the active agency (D-106 SoT: active_agency_id)."""
     db = Database.get()
     agency_ids = user.get("agency_ids") or []
     if not agency_ids:
@@ -117,7 +123,8 @@ async def get_my_agency(user: dict = Depends(get_current_user)):
             return _public(owned)
         raise HTTPException(status_code=404, detail="no_agency")
 
-    doc = await db.agencies.find_one({"id": agency_ids[0]})
+    agency_id = require_agency(user)
+    doc = await db.agencies.find_one({"id": agency_id})
     if not doc:
         raise HTTPException(status_code=404, detail="agency_not_found")
     return _public(doc)
@@ -132,11 +139,7 @@ async def update_my_agency(
 ):
     """Update the current user's agency. Owner only."""
     db = Database.get()
-    agency_ids = user.get("agency_ids") or []
-    if not agency_ids:
-        raise HTTPException(status_code=404, detail="no_agency")
-
-    agency_id = agency_ids[0]
+    agency_id = require_agency(user)
     existing = await db.agencies.find_one({"id": agency_id})
     if not existing:
         raise HTTPException(status_code=404, detail="agency_not_found")
@@ -166,10 +169,7 @@ async def update_my_agency(
 async def list_members(user: dict = Depends(get_current_user)):
     """List all users belonging to the current user's agency."""
     db = Database.get()
-    agency_ids = user.get("agency_ids") or []
-    if not agency_ids:
-        return []
-    agency_id = agency_ids[0]
+    agency_id = require_agency(user)
 
     cursor = db.users.find(
         {"agency_ids": agency_id},
@@ -192,10 +192,7 @@ async def remove_member(
     - no remove of the last agency_admin in the agency
     """
     db = Database.get()
-    agency_ids = user.get("agency_ids") or []
-    if not agency_ids:
-        raise HTTPException(400, detail="no_agency")
-    agency_id = agency_ids[0]
+    agency_id = require_agency(user)
 
     if member_id == user.get("id"):
         raise HTTPException(403, detail="self_remove_forbidden")

@@ -29,7 +29,7 @@ async def get_current_user(request: Request) -> dict:
     if not user:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="user_not_found")
 
-    # M5 — tenant filtering usa l'agenzia attiva (active_agency_id se legittima, altrimenti la prima)
+    # M5 / D-106 — tenant filtering usa solo active_agency_id se legittima (no fallback [0])
     from shared.auth.tenant import optional_agency_id
     from shared.db.tenant_guard import set_current_role
     set_current_role(user.get("role"))
