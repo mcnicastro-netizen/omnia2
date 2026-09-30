@@ -5,9 +5,9 @@
 **Usage rule:** questo documento è la fonte di continuità dell'audit.
 Prima di analizzare un nuovo punto, leggere questo file. Non riaprire decisioni già fissate salvo nuove evidenze. Non inventare informazioni mancanti.
 
-**Current status:** P1–P18 **chiusi** (baseline P18) · **P19 Error handling consegnato** ⏳ analisi Founder. Nessun fix. Listino fermo. SoT: questo file. **Niente codice** senza «vai».
+**Current status:** P1–P18 **chiusi** (baseline P18) · **P19 Error handling** ⏳ analisi Founder · **P20 Scalabilità consegnato** ⏳ analisi Founder. Nessun fix. Listino fermo. SoT: questo file. **Niente codice** senza «vai».
 
-**Next:** analisi Founder su P19 → tipicamente **P20 Scalabilità** (master §19). GTM-01 in coda.
+**Next:** analisi Founder su P19 (EH-*) e P20 (SC-*) → tipicamente **P21 Coerenza prodotto/tecnologia** (master §20). GTM-01 in coda.
 
 ---
 
@@ -795,10 +795,55 @@ Dettaglio: report agente P19 + `memory/AUDIT_ARCHITETTURA_NOTE.md` § Punto 19.
 
 ---
 
-# 21. PROSSIMO PUNTO
+# 21. P20 — SCALABILITÀ (consegnato · ⏳ analisi Founder · master §19)
 
-**P20 — Scalabilità** (master §19) — tipico dopo acquisizione P19.
+**Verdetto:** per **GTM-01 (~20 concurrent)** monolitico single-replica + Mongo + FS locale è **adeguato in verticale**, se non si martella Match/media in parallelo. **Non** è pronto a orizzontale (FS locale, APScheduler in-process — **D-101**/ **D-103**). Crescita **200–1000 agenzie** collassa prima su **storage+bak (~31× B-01)**, serve media, match on-read e job globali — non su “mancano 5000 user contemporanei”.
+**Nessun nuovo P0–P3** da P20. Nessun fix finché «vai». **D-101 / D-103 / B-01 / GTM-01 non riaperti.**
+
+### Finding SC-*
+
+| ID | Tipo | Problema | Prior |
+|----|------|----------|-------|
+| SC-01 | oss. | 1 processo uvicorn + APScheduler in-API; no worker; horizontal = doppio scheduler | D-101 · D-103 · JA-01 |
+| SC-02 | rischio crescita | `.media` locale + `get_object` full-read in RAM via API — no multi-istanza / no CDN | M-* · C-09 |
+| SC-03 | rischio eco | Bak full `copytree` ~31× — pressione disco ≫ concurrent users | B-01 · C-04 |
+| SC-04 | rischio demo/load | Match on-read fino a 400×400 (+ scoped 2000); stress ~5,8s @10k clienti | — |
+| SC-05 | gap | Nessun indice su `deleted_at`; `with_not_trashed` = `$or` | trash |
+| SC-06 | gap | `rate_limit_events` senza index in `ensure_indexes` (solo stress script) | — |
+| SC-07 | oss. | Motor `AsyncIOMotorClient()` senza pool esplicito — default OK GTM | — |
+| SC-08 | debito demo | Properties FE senza `page` / controlli (**AF-04**) | AF-04 |
+| SC-09 | rischio crescita | Saved-search tick ogni 5m su **tutte** le ricerche attive | JA · A-020 |
+| SC-10 | rischio ops | Overlap HTTP cron ↔ APScheduler; `max_instances=1` solo in-proc | JA-01 · B-08 · RC-09 |
+| SC-11 | rischio crescita | Feed pubblico fino a 5000 prop full-doc | C-09 |
+| SC-12 | oss. | Auth: JWT cookie + `users.find_one` per request | — |
+| SC-13 | rischio crescita | Publishing sync sequenziale fino a 1000 connection | J-* |
+| SC-14 | oss. | Liste CRM API con `page_size` capped; FE gaps AF-04/AF-11 | AF-04 |
+| SC-15 | rischio demo | Hot path media: upload + serve sullo stesso event loop | AF-05 · EH-03 |
+
+### Domande aperte
+
+1. **K-SC-01**: Prima di GTM-01, smoke load dedicato (upload+media+match ×~20) o basta ladder stress esistente?
+2. **K-SC-02**: Soglia agenzie/storage per forzare object storage condiviso + CDN (prima di worker — **D-103**)?
+
+### Lettura Founder
+
+| Classe | Cosa |
+|--------|------|
+| **Già solido** | Liste properties/clients paginate lato API; match capped; job `max_instances=1`+`coalesce`; rate limit pubblico; quota upload; single-replica job (**D-101**) |
+| **Realmente rischioso** | Media via API+FS; match 400×400 in demo; bak 31×; AF-04 stock>20; overlap HTTP↔sched |
+| **Da decidere** | **K-SC-01** · **K-SC-02** |
+| **Può aspettare** | Pool Motor esplicito; indici `deleted_at`; precompute match; worker (**D-103**); horizontal API |
+
+Dettaglio: `memory/AUDIT_ARCHITETTURA_NOTE.md` § Punto 20.
+
+---
+
+# 22. PROSSIMO PUNTO
+
+**P21 — Coerenza prodotto/tecnologia** (master §20) — tipico dopo acquisizione P19+P20.
 
 Il Master Audit State deve essere aggiornato dopo il completamento di ogni punto significativo.
 
-**Current next action:** analisi Founder su P19 (EH-* · K-EH-01/02). GTM-01 resta in coda (vincolo pre-~5000 email).
+**Current next action:** analisi Founder su **P19** (EH-* · K-EH-01/02) e **P20** (SC-* · K-SC-01/02). GTM-01 in coda (vincolo pre-~5000 email).
+
+**Niente fix. Nessuna severità P0–P3. Listino fermo. Attende «vai».**

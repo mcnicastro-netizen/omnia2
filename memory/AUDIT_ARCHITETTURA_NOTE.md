@@ -6,7 +6,7 @@
 > **Numerazione = continuum di sessione** (non forzare allineamento al master).  
 > Prompt master: `memory/AUDIT_PROMPT_MASTER.md` (§1–§27) — corrispondenza in tabella sotto.
 
-**Ultimo aggiornamento**: 30-Set-2026 · **SoT** `docs/audit/OMNIA_AUDIT_STATE.md` · **P18 CHIUSO** · **P19** ⏳ analisi
+**Ultimo aggiornamento**: 30-Set-2026 · **SoT** `docs/audit/OMNIA_AUDIT_STATE.md` · **P18 CHIUSO** · **P19** ⏳ · **P20 Scalabilità** ⏳ analisi
 
 ---
 
@@ -33,8 +33,9 @@
 | P17 | Osservabilità | §16 | 🟠 **ACQUISITO** (Master State) · **O-*** · **D-105** bak health |
 | P18 | API / Frontend | §17 | 🟢 **CHIUSO** · baseline · **D-106** · AF-05=GTM-01 min |
 | P19 | Error handling | §18 | 🟠 Consegnato · **EH-*** · ⏳ analisi |
+| P20 | Scalabilità | §19 | 🟠 Consegnato · **SC-*** · ⏳ analisi |
 | — | Cestino (blocco dedicato) | §6 | 🟡 coperto in P5 + P12 |
-| — | Scalabilità… | §19–§27 | ⬜ dopo acquisizione P19 |
+| — | Coerenza… | §20–§27 | ⬜ dopo acquisizione P19+P20 |
 | **GTM-01** | Demo Readiness / primo afflusso | **post-audit** | 🟠 **ACQUISITO** · **D-104** · in coda · **vincolo pre-~5000 email** |
 
 Decisioni dominio (codice ⏳): **D-094** … **D-106**.  
@@ -1489,4 +1490,60 @@ D-106 · K-AF-02 (server→FE, 3 stati) · AF-02 boundary media · AF-04 debito 
 
 **Niente fix. Nessuna severità P0–P3. Listino fermo. Attende «vai».**  
 Prossimo tipico dopo acquisizione: **P20 Scalabilità** (master §19). GTM-01 in coda.
+
+---
+
+## Punto 20 — Scalabilità (master §19) · CONSEGNATO ⏳
+
+**Vincoli non riaperti:** D-101 single-replica jobs · D-103 no worker ora · B-01 bak ~31× · GTM-01 ~20 concurrent (non 5000).
+
+### Verdetto
+
+Per **GTM (~20 concurrent)** il monolitico single-replica regge **in verticale** sulle liste CRM paginate; i colli demo sono **Match on-read**, **media via API/FS**, **AF-04**.  
+Per **crescita 200–1000 agenzie** falliscono prima storage+bak, media locale e job globali — non il “mancano N worker HTTP”. Orizzontale API **non** pronto (FS + scheduler in-process).
+
+### Dimensioni (separati)
+
+| Dimensione | Cosa regge | Cosa si rompe prima |
+|------------|------------|---------------------|
+| **GTM ~20 concurrent** | properties/clients list API; KPI; JWT cookie; rate limit pubblico; job nightly non in picco demo | Match 400×400; N upload+serve media sullo stesso processo; FE stock>20 (AF-04) |
+| **~50 agenzie** | stesso modello se inventario medio e 1 replica | bak disco (B-01); saved-search 5m cross-tenant; feed 5k; sync publishing sequenziale |
+| **200–1000 agenzie** | richiede storage condiviso(+CDN), anti-dup job già deciso al multi-pod, match non on-read full-scan | FS non condiviso; doppio APScheduler se multi-replica; copytree bak; tick saved-search |
+
+### Finding SC-*
+
+| ID | Tipo | Problema | Link | Evidence |
+|----|------|----------|------|----------|
+| **SC-01** | oss. | 1 uvicorn + APScheduler in lifespan; stack `--reload` no workers | D-101 · D-103 · JA-01 | `server.py:51-65` · `sync_engine.py:258-337` · `omnia-stack.sh:147-148` |
+| **SC-02** | rischio crescita | `.media` locale; `get_object` legge tutto in RAM; serve via `/api/media` | M-* · C-09 | `objstore.py:34-118` · `media.py:26-59` |
+| **SC-03** | rischio eco | Bak `copytree` + dump ≤100k/coll → ~31× | B-01 · C-04 | `backup_job.py:38-77` |
+| **SC-04** | rischio demo/load | Match agency 400×400; property/client scoped 2000; no_match smart 400×400 | — | `matches.py:71-79,125-128,197-199` · `properties.py:284-288` · stress ~5,8s |
+| **SC-05** | gap | No index `deleted_at`; `with_not_trashed` `$or` | trash | `trash.py:19` · `connection.py:97-116` |
+| **SC-06** | gap | `rate_limit_events` index solo in stress script | — | `rate_limit.py:37-56` vs `ensure_indexes` |
+| **SC-07** | oss. | Motor senza `maxPoolSize` esplicito | — | `connection.py:54` |
+| **SC-08** | debito demo | Properties FE no `page` / no next | **AF-04** | `PropertiesPage.jsx:59,74-84` |
+| **SC-09** | rischio crescita | Saved-search ogni 5m su tutte le active | A-020 · JA | `sync_engine.py:283-297` · `saved_searches.py:299-300` |
+| **SC-10** | rischio ops | HTTP cron ↔ sched overlap; coalesce solo in-proc | JA-01 · B-08 · RC-09 | `sync_engine.py:274-337` · `publishing.py:366-370` |
+| **SC-11** | rischio crescita | Feed pubblico ≤5000 full docs | C-09 | `feed.py:44-50` |
+| **SC-12** | oss. | Access JWT + `users.find_one` ogni request | — | `dependencies.py:18-28` · `session_store.py` |
+| **SC-13** | rischio crescita | `run_all_active_syncs` sequenziale ≤1000 conn | J-* | `sync_engine.py:230-250` |
+| **SC-14** | oss. | API page_size capped (prop ≤100); FE gaps | AF-04 · AF-11 | `properties.py:150-151` |
+| **SC-15** | rischio demo | Upload+serve media sullo stesso event loop | AF-05 · EH-03 | `properties.py:573-637` · `media.py:26-59` |
+
+### Domande
+
+1. **K-SC-01**: smoke load GTM (upload+media+match ×~20) obbligatorio vs ladder stress già fatto?
+2. **K-SC-02**: soglia agenzie/GB per object storage+CDN (prima del worker — D-103)?
+
+### Lettura Founder
+
+| Classe | Cosa |
+|--------|------|
+| **Già solido** | Liste API paginate · match capped · job max_instances=1+coalesce · rate limit pubblico · quota upload · D-101 |
+| **Realmente rischioso** | Media API/FS · Match 400×400 · bak 31× · AF-04 · HTTP↔sched |
+| **Da decidere** | K-SC-01 · K-SC-02 |
+| **Può aspettare** | Pool Motor · index deleted_at · precompute match · worker (D-103) · horizontal |
+
+**Niente fix. Nessuna severità P0–P3. Listino fermo. Attende «vai».**  
+Prossimo tipico: **P21 Coerenza prodotto/tecnologia** (master §20). GTM-01 in coda.
 
