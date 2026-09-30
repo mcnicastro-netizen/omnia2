@@ -88,10 +88,12 @@ export default function AgenziesLandingPage() {
     axios
       .get(BILLING_API)
       .then((r) => {
-        const list = (r.data?.plans || []).map((p, idx) => ({
+        const list = (r.data?.plans || []).map((p) => ({
           id: p.tier,
           name: p.name,
           foundersPrice: p.price_monthly,
+          // D-079 — annuale = 11× mensile (−1 mese)
+          yearlyPrice: p.price_yearly ?? Math.round(p.price_monthly * 11),
           standardPrice: null,
           users: p.max_agents === -1 ? "illimitati" : p.max_agents,
           credits: p.credits_included_monthly,
@@ -151,9 +153,9 @@ export default function AgenziesLandingPage() {
 
   return (
     <div className="min-h-screen bg-[#fbf9f5] text-stone-900" data-testid="agenzie-landing">
-      {/* Top minimal nav */}
-      <header className="absolute top-0 left-0 right-0 z-10 px-6 sm:px-12 py-6">
-        <div className="flex items-center justify-between max-w-screen-2xl mx-auto">
+      {/* Top nav — Chi siamo / Prodotti / Prezzi */}
+      <header className="absolute top-0 left-0 right-0 z-10 px-6 sm:px-12 py-5">
+        <div className="flex flex-wrap items-center justify-between gap-4 max-w-screen-2xl mx-auto">
           <Link
             to={`/${lang}`}
             className="text-xl md:text-2xl tracking-tight font-medium text-white"
@@ -162,13 +164,22 @@ export default function AgenziesLandingPage() {
           >
             OMNIA<sup className="text-[10px] text-white/60 ml-0.5">™</sup>
           </Link>
-          <a
-            href="#founders-form"
-            className="text-xs uppercase tracking-widest text-white border border-white/40 px-5 py-2 hover:bg-white hover:text-stone-900 transition"
-            data-testid="agenzie-cta-top"
+          <nav
+            className="flex flex-wrap items-center gap-4 sm:gap-6 text-[11px] uppercase tracking-widest text-white/80"
+            data-testid="agenzie-top-nav"
+            aria-label="Sezioni landing"
           >
-            Aderisci ora →
-          </a>
+            <a href="#chi-siamo" className="hover:text-white transition">Chi siamo</a>
+            <a href="#prodotti" className="hover:text-white transition">Prodotti</a>
+            <a href="#prezzi" className="hover:text-white transition">Prezzi</a>
+            <a
+              href="#founders-form"
+              className="text-white border border-white/40 px-4 py-2 hover:bg-white hover:text-stone-900 transition"
+              data-testid="agenzie-cta-top"
+            >
+              Richiedi demo
+            </a>
+          </nav>
         </div>
       </header>
 
@@ -218,9 +229,23 @@ export default function AgenziesLandingPage() {
         </div>
       </section>
 
-      {/* 3 wow moments */}
-      <section className="px-6 sm:px-12 py-24 max-w-6xl mx-auto">
-        <p className="text-xs uppercase tracking-[0.3em] text-stone-500 mb-3 text-center">Cosa otteniamo</p>
+      {/* Chi siamo */}
+      <section id="chi-siamo" className="px-6 sm:px-12 py-20 max-w-3xl mx-auto text-center" data-testid="agenzie-chi-siamo">
+        <p className="text-xs uppercase tracking-[0.3em] text-stone-500 mb-3">Chi siamo</p>
+        <h2 className="text-3xl sm:text-4xl text-stone-900 mb-6 font-light"
+          style={{ fontFamily: "'Fraunces', Georgia, serif" }}>
+          OMNIA — sistema operativo dell&apos;agenzia
+        </h2>
+        <p className="text-stone-600 text-sm sm:text-base leading-relaxed">
+          Uniamo gestionale AI, portale B2C e Academy in un unico ecosistema white-label.
+          HAL ti assiste nel quotidiano; tu resti al comando. Nati per agenzie italiane che
+          vogliono lavorare meglio — non per accumulare software inutili.
+        </p>
+      </section>
+
+      {/* Prodotti */}
+      <section id="prodotti" className="px-6 sm:px-12 py-24 max-w-6xl mx-auto">
+        <p className="text-xs uppercase tracking-[0.3em] text-stone-500 mb-3 text-center">Prodotti</p>
         <h2 className="text-3xl sm:text-4xl text-stone-900 text-center mb-16 font-light"
           style={{ fontFamily: "'Fraunces', Georgia, serif" }}>
           3 strumenti AI che cambiano la giornata di un agente
@@ -240,7 +265,7 @@ export default function AgenziesLandingPage() {
       </section>
 
       {/* Pricing */}
-      <section className="bg-stone-50 px-6 sm:px-12 py-24 border-y border-stone-200">
+      <section id="prezzi" className="bg-stone-50 px-6 sm:px-12 py-24 border-y border-stone-200">
         <div className="max-w-6xl mx-auto">
           <p className="text-xs uppercase tracking-[0.3em] text-stone-500 mb-3 text-center">Listino corrente</p>
           <h2 className="text-3xl sm:text-4xl text-stone-900 text-center mb-4 font-light"
@@ -248,7 +273,7 @@ export default function AgenziesLandingPage() {
             Piani agenzia
           </h2>
           <p className="text-center text-stone-600 mb-16 text-sm">
-            Prezzi da catalogo applicativo · attivazione assistita fino a gate O6
+            Mensile o annuale (11 mesi — 1 mese incluso) · attivazione assistita fino a gate O6
           </p>
 
           {plansError ? (
@@ -271,6 +296,10 @@ export default function AgenziesLandingPage() {
                   <p className="text-4xl text-stone-900 font-light"
                     style={{ fontFamily: "'Fraunces', Georgia, serif" }}>
                     €{p.foundersPrice}<span className="text-sm text-stone-500 ml-1">/mese</span>
+                  </p>
+                  <p className="text-sm text-stone-600 mt-2" data-testid={`agenzie-tier-yearly-${p.id}`}>
+                    oppure <strong>€{p.yearlyPrice}</strong>/anno
+                    <span className="text-stone-500"> (equivalente 11 mesi)</span>
                   </p>
                   {p.standardPrice ? (
                     <p className="text-xs text-stone-400 line-through mt-1">€{p.standardPrice}/mese standard</p>
