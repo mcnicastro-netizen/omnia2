@@ -36,6 +36,7 @@ Un blocco alla volta · niente fix senza «vai» · no P0–P3 prematuri · **li
 | **D-111** | Cestino = stato non operativo (freeze); storico preservato |
 | **D-112** | Seed demo idempotente e deterministico |
 | **D-113** | Restore manuale testabile pre-GTM (non piattaforma DR) |
+| **D-114** | Sostenibilità bak/media = priorità pre-attivazione (listino fermo finché numeri) |
 
 **SoT continuità:** `docs/audit/OMNIA_AUDIT_STATE.md`  
 **Sequenza priorità (D-099):** fascicolo → orphan → Bak+Restore → retention → costi.  
@@ -69,7 +70,7 @@ Un blocco alla volta · niente fix senza «vai» · no P0–P3 prematuri · **li
 
 | Sessione | Master | Stato |
 |----------|--------|--------|
-| P1–P24 | §1–§24 | chiusi · D-094…D-113 · classificazione congelata |
+| P1–P24 | §1–§24 | chiusi · D-094…D-114 · classificazione + D-114 bak/media |
 | P25 Report finale | §25 | Consegnato · A–K · ⏳ analisi |
 | — | §23 Priorità | ⬜ CLOSED fino al «vai» |
 | GTM-01 | post-audit | 🟠 **ACQUISITO** · in coda · smoke ~20 |

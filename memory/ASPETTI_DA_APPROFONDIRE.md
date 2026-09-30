@@ -1192,7 +1192,8 @@ Concordo sul nucleo. Temperatura: «OS agenzia» è **nord**, non claim immediat
 - P2–P23: chiusi · **D-094…D-113**
 - P24: **CHIUSO** — classificazione congelata · §23 Priorità CLOSED fino al «vai» · SoT ripago Master §25bis
 - P25: **consegnato** — Report finale A–K · ⏳ analisi Founder
-- **GTM-01**: **ACQUISITO** (**D-104**) — in coda; upload · empty≠error · pagination FE · smoke ~20
+- **D-114**: sostenibilità bak/media = priorità **pre-attivazione** (non prescindibile; listino fermo finché numeri)
+- **GTM-01**: **ACQUISITO** (**D-104**) — in coda; framing Founder = attivazione/affidabilità, non corsa outreach
 
 ### Cluster finding da non dimenticare
 - **Media authorization** = P3.1 + P4.1 + M-01 → **D-095** · **G-02**

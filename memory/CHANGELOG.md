@@ -1,5 +1,15 @@
 # OMNIA — Changelog
 
+## 2026-09-30 — D-114 Sostenibilità bak/media priorità pre-attivazione
+
+**Tipo**: Docs / SoT audit · **nessun codice** · **listino fermo** · no nuovi P0–P3.
+
+- Founder: bak/media **non prescindibili** (sostenibilità economica)
+- **D-114** registrata · SoT §25bis: bak full-copy uscito da “accettato silenzioso” → **DA CHIUDERE**
+- Framing: pre-**attivazione** (sicurezza/storage/anticrash/recupero), non corsa outreach GTM
+
+---
+
 ## 2026-09-30 — P24 CHIUSO · SoT ripago congelato · P25 Report finale A–K
 
 **Tipo**: Docs / SoT audit · **nessun codice** · **listino fermo** · no nuovi P0–P3.

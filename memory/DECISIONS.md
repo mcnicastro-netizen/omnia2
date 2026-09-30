@@ -1725,4 +1725,16 @@ Registro di tutte le decisioni di business e tecniche prese durante il progetto.
 - **Implementazione**: ❌ docs/ops (+ eventuale codice supporto) ⏳ — post-audit / «vai».
 - **Stato**: ✅ **DECISIONE OPERATIVA REGISTRATA** (docs 30-Set-2026 · P23 CHIUSO) · codice/docs ⏳
 
+### D-114 — Sostenibilità bak/media = priorità pre-attivazione · 30-Set-2026
+- **Data**: 30 Settembre 2026
+- **Contesto**: Founder: non si può prescindere da bak/media — ne va della sostenibilità economica. Priorità = sicurezza dati, storage, anticrash, recupero — non corsa GTM outreach. Il full-copy × retention non può restare “debito accettato in silenzio”.
+- **Decisione**:
+  1. Sostenibilità **bak + media** è priorità **pre-attivazione commerciale** (SoT ripago §25bis).
+  2. Inclunde: stima costi reali (live + bak); design bak sostenibile allineato a restore (**D-096**/**D-113**); lifecycle media coerente (**D-095**/**D-098**).
+  3. FS locale come backend fisico ≠ modello economico sostenibile del volume.
+  4. **Listino fermo** finché i numeri esistono; poi eventuale revisione.
+  5. Non eleva automaticamente a P0–P3 in audit; entra nel set da chiudere prima di accettare clienti paganti.
+- **Implementazione**: ❌ design/ops/codice ⏳ — post-audit / «vai».
+- **Stato**: ✅ **DECISIONE DI DOMINIO REGISTRATA** (docs 30-Set-2026) · codice/design ⏳
+
 

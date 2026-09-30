@@ -17,8 +17,8 @@
 | Prossimo | Analisi Founder **P25** (K-RF-01 / K-RF-02) |
 | In coda | **GTM-01** · «vai» sul ripago pre-GTM (allora §23 operativo) |
 | Vincolo | Listino fermo · **niente codice** senza «vai» · no nuovi P0–P3 in audit |
-| PRE-GTM da chiudere | NI-01…07 · D-094/100/106/111 · D-095 · D-109/110 · D-104 min · D-105 · **D-113** |
-| PRE-GTM accettato | FS · 1 replica · bak full · no worker/OTel/object storage |
+| PRE-attivazione da chiudere | NI-01…07 · D-094/100/106/111 · D-095 · D-109/110 · D-104 min · D-105 · **D-113** · **D-114 bak/media sostenibile** |
+| PRE-attivazione accettato | FS fisico · 1 replica · no worker/OTel · object storage solo se smoke/D-114 |
 
 ---
 

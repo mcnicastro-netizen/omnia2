@@ -5,9 +5,9 @@
 **Usage rule:** questo documento è la fonte di continuità dell'audit.
 Prima di analizzare un nuovo punto, leggere questo file. Non riaprire decisioni già fissate salvo nuove evidenze. Non inventare informazioni mancanti.
 
-**Current status:** P1–P24 **chiusi** · **P25 Report finale consegnato** ⏳ analisi Founder. Nessun fix. Listino fermo. SoT: questo file. **Niente codice** senza «vai».
+**Current status:** P1–P24 **chiusi** · **P25 Report finale consegnato** ⏳ analisi Founder · **D-114** bak/media = priorità pre-attivazione. Nessun fix. Listino fermo. SoT: questo file. **Niente codice** senza «vai».
 
-**Next:** analisi Founder su **P25 (report A–K)**. GTM-01 in coda. Master §23 Priorità **CLOSED** fino al «vai» (non riaprire severità in audit).
+**Next:** analisi Founder su **P25 (report A–K)** / sequenza ripago pre-attivazione. Master §23 Priorità **CLOSED** fino al «vai».
 
 ---
 
@@ -331,6 +331,16 @@ Codice ⏳ — post-audit / «vai».
 * **Non** è ancora capability commerciale di “restore garantito” finché non esistono tempi/limiti operativi definiti.
 * Linguaggio onesto: bak esistente ≠ bak verificato ≠ restore disponibile ≠ restore testato (**P21 CT-03**).
 Codice/docs ops ⏳ — post-audit / «vai».
+
+
+## D-114 — Sostenibilità bak/media = priorità pre-attivazione
+
+* **Non si può prescindere** dal modello bak/media: ne va della **sostenibilità economica**.
+* Full-copy giornaliero × retention (~32×) **non** resta “vincolo accettato in silenzio”.
+* Priorità pre-attivazione commerciale: (1) **stima costi reali** storage live + bak; (2) **design bak sostenibile** (retention / incrementale / scope) allineato a restore (**D-096**/**D-113**); (3) media lifecycle coerente (**D-095**/**D-098**).
+* **Listino fermo** finché esistono i numeri — poi eventuale revisione commerciale.
+* Distinto da: FS locale come backend fisico (può restare) vs modello economico del volume (da chiudere).
+Codice/design/ops ⏳ — post-audit / «vai».
 
 ---
 
@@ -973,40 +983,47 @@ Finding NI-01…NI-12 restano nel registro. Dettaglio: `memory/AUDIT_ARCHITETTUR
 
 > **La classificazione P24 non modifica severità, listino o priorità già congelate; eventuali implementazioni vengono decise solo al «vai».**
 
-### PRE-GTM / DA CHIUDERE
+### PRE-ATTIVAZIONE / DA CHIUDERE
+
+*(Rinominato da “PRE-GTM”: priorità Founder = sicurezza dati · storage · anticrash · recupero — non corsa outreach.)*
 
 * NI-01…NI-07
 * Invarianti **D-094 / D-100 / D-106 / D-111**
 * Fascicolo AuthZ (**D-095**)
 * Pricing / demo (**D-109 / D-110**)
-* GTM minimum (**D-104** · AF-05/EH-03 · EH-04 · SC-08/AF-04 · smoke ~20)
+* Percorso anti-fallimento / Demo Readiness min (**D-104** · AF-05/EH-03 · EH-04 · SC-08/AF-04 · smoke ~20)
 * Bak health (**D-105**) + restore manuale testabile (**D-113**)
+* **Sostenibilità bak/media (**D-114**)** — non prescindibile: costo reale del modello storage+backup; design bak sostenibile (full-copy × retention **non** resta “vincolo silenzioso”). Listino **fermo** finché i numeri esistono (catena D-096).
 * Correlati implementativi quando si toccano i percorsi: **D-107** · **D-108** · **D-112**
 
-### PRE-GTM / ACCETTATO COME VINCOLO
+### PRE-ATTIVAZIONE / ACCETTATO COME VINCOLO
 
 Baseline architetturale deliberata, purché superi i gate già definiti:
 
-* filesystem locale `.media`
+* filesystem locale `.media` **come backend fisico** (≠ sostenibilità economica del volume bak — quella è **D-114**)
 * single / limited replica
-* bak full-copy
 * match on-read
 * assenza worker
 * assenza OTel
-* assenza object storage/CDN
+* assenza object storage/CDN **finché** smoke media / D-114 non impongono altrimenti
 
-Trigger: fallimento **smoke media** (K-SC-01) → anticipare AD-01 — non “1 replica ⇒ object storage”.
+**Non più in “accettato silenzioso”:** bak full-copy illimitato come modello economico → **D-114** (da chiudere).
+
+Trigger tecnico: fallimento **smoke media** (K-SC-01) → anticipare AD-01 — non “1 replica ⇒ object storage”.
 
 ### POTENZIALE
 
 * NI-08 / NI-09 — non blocker GTM per default; D-113 evita il salto a DR completa.
 
-### POST-GTM / RIPAGARE (roadmap)
+### POST-ATTIVAZIONE / RIPAGARE (roadmap)
 
-* NI-08/09 quando raggiungono le condizioni definite
+* NI-08/09 quando raggiungono le condizioni definite (oltre quanto già coperto da D-113/D-114)
 * NI-10 / NI-11 secondo roadmap
+* Object storage/CDN / worker / OTel quando D-114 o smoke lo richiedono
 
 **“Non fare ora” ≠ “non esiste”** — e non ogni elemento differito è un blocker.
+
+**Nota Founder (30-Set):** non si può prescindere da bak/media — ne va della **sostenibilità economica**. Elevato a priorità pre-attivazione (**D-114**), non lasciato come debito “accettato”.
 
 ---
 
@@ -1022,7 +1039,8 @@ Trigger: fallimento **smoke media** (K-SC-01) → anticipare AD-01 — non “1 
 * **D-094…D-113** filtrano intenzionale vs accidentale; ripago pre-GTM = SoT §25bis.
 * AuthN e tenant-guard CRM **OK fase**; AuthZ fascicolo e contratto invite **non**.
 * Bak full-copy ×~30g → ~**32×** storage; €0,04/GB **non confermato**; listino **fermo**.
-* Pre-GTM restore = **D-105 + linguaggio onesto + D-113** — non DR commerciale.
+* **D-114**: sostenibilità bak/media = priorità pre-attivazione (non prescindibile).
+* Restore = **D-105 + linguaggio onesto + D-113** — non DR commerciale.
 * **GTM-01** obbligatorio prima delle ~5k email (smoke ~20, upload, pagination, seed).
 * Catena: Fascicolo AuthZ → blob → bak → restore → retention → costi → *eventuale* listino.
 * Fix solo al «vai»; §23 resta chiuso in audit.
@@ -1053,8 +1071,9 @@ Login/`active_agency_id` · CRM property/client/request · Match/sync · Upload/
 | NI-05 | Contratto | Pricing/demo/bak≠restore | Promesse false | AD-13/14 · CT-* | **D-109** · **D-110** · **D-113** |
 | NI-06 | GTM | Minimi Demo Readiness | Demo fragile | AF-04/05 · EH-03/04 · SC-08 | **D-104** |
 | NI-07 | Ops bak | No health OK/PARTIAL/FAILED | Bak silenzioso | AD-12 · O-01 | **D-105** |
+| **D-114** | Economia bak/media | Full-copy × retention non sostenibile | Margine / listino cieco | AD-02 · B-01 · C-04 · SC-03 | **D-114** · D-096 |
 
-Correlati: **D-107** errori · **D-108** scheduling · **D-112** seed.
+Correlati: **D-107** errori · **D-108** scheduling · **D-112** seed · **D-113** restore.
 
 ### F. Cose che funzionano bene
 
@@ -1072,9 +1091,9 @@ Costi bak Agency media-heavy · orphan · overlap job · marketing > capability 
 
 | Fascia | Cosa |
 |--------|------|
-| **Pre-prod / GTM** | SoT §25bis DA CHIUDERE · GTM-01 smoke · linguaggio bak≠restore · listino fermo |
-| **~100** | D-098/102 orphan+purge · sharpen D-105 · object storage solo se smoke media fallisce |
-| **~1000** | Bak+restore agency-first → retention → costi → *eventuale* listino · rivalutare replica/CDN |
+| **Pre-attivazione** | SoT §25bis DA CHIUDERE incl. **D-114** bak/media sostenibile · D-113 restore · linguaggio bak≠restore · listino fermo finché numeri |
+| **~100** | D-098/102 orphan+purge · sharpen D-105 · object storage se smoke **o** D-114 lo impone |
+| **~1000** | Bak+restore agency-first maturo → retention → costi → *eventuale* listino · rivalutare replica/CDN |
 | **Dopo** | NI-10 GDPR · NI-11 worker/OTel/bak incr. · DR piattaforma se prodotto la richiede |
 
 ### J. Architettura consigliata (evolutiva)
