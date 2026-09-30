@@ -1,12 +1,12 @@
 {
   "version": "0.26-a028-ghi",
-  "updated": "2026-09-29",
-  "voices_total": 362,
+  "updated": "2026-09-30",
+  "voices_total": 364,
   "source_files": [
     {
       "file": "00-api-codice.yaml",
       "voices": 26,
-      "md5": "4f294f129df5d3ddb205c77d65692d25"
+      "md5": "2ed01a1ed66fac0f5aa6d9968843a476"
     },
     {
       "file": "01-primo-accesso.yaml",
@@ -45,8 +45,8 @@
     },
     {
       "file": "08-sito-web.yaml",
-      "voices": 12,
-      "md5": "8a75af77933c6cf241c5325d166dd189"
+      "voices": 13,
+      "md5": "e9fe1eecba34edd1b39a7e75a63a9f90"
     },
     {
       "file": "09-virtual-staging.yaml",
@@ -90,13 +90,13 @@
     },
     {
       "file": "17-domain-vault.yaml",
-      "voices": 15,
-      "md5": "c85caa2830a0e0bd24f5dff3685b86b0"
+      "voices": 16,
+      "md5": "63e9f2df14b151f27ccbd65ef700b438"
     },
     {
       "file": "18-notifiche-attivita.yaml",
       "voices": 18,
-      "md5": "eef5280ae52aa3618f5b8e52bed91809"
+      "md5": "ae80997a3aae0b3712996208755c5d03"
     },
     {
       "file": "19-impostazioni-agenzia.yaml",
@@ -151,7 +151,7 @@
       "title": "Corpus codice/API",
       "yaml": "00-api-codice.yaml",
       "voices": 26,
-      "md5": "4f294f129df5d3ddb205c77d65692d25"
+      "md5": "2ed01a1ed66fac0f5aa6d9968843a476"
     },
     {
       "id": 22,

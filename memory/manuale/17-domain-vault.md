@@ -286,13 +286,27 @@ Multi-dominio per agenzia, notifiche scadenza (cron), UI storico eventi, deep-li
 ## 17.12 · Cross-ref con altri capitoli
 
 - **Cap. 6 · Portali & Publishing**: il `listing_url` degli immobili pubblicati sui portali usa il tuo dominio custom (se collegato). Se il DNS non è verificato, il fallback è il sottodominio OMNIA (`agenzia.omnia.example`).
-- **Cap. 8 · Sito web agenzia**: il modulo Sito si serve del Custom Domain per rispondere sul tuo dominio. Cap. 8 documenta la parte UI/tema; Cap. 17 la parte DNS.
+- **Cap. 8 · Sito web agenzia**: il modulo Sito si serve del Custom Domain per rispondere sul tuo dominio. Cap. 8 documenta la parte UI/tema; Cap. 17 la parte DNS. Vedi anche **§8.11 / A-037**.
 - **Cap. 13 · Team & Ruoli**: il POST domain-sovereignty richiede `agency_admin`+ (o rete). Un `agent` semplice non può confermare.
 - **Cap. 15 · Social Publisher**: quando pubblichi immobili sui social, il `listing_url` allegato viene dal tuo dominio custom (se attivo).
 - **Cap. 12 · HAL Knowledge**: puoi chiedere *"OMNIA registra il mio dominio?"* → risposta dalla voce `domain.d-054-promise`.
 
 ---
 
+## 17.13 · Non-proprietario del dominio · percorso demo **A-037** (30-Set-2026)
+
+**Perché esiste il checker**  
+Molte agenzie scoprono (come nel caso Founder: sito/email intestati a un fornitore tipo Basic Soft) di **non** controllare dominio e caselle. `/it/verifica-dominio` è nato da queste considerazioni.
+
+**Cosa fare oggi**
+1. Lanciare il check RDAP su `/it/verifica-dominio`.
+2. Se il registrant è un terzo → warning «webmaster/provider» → Legal Kit (D-055) + contatto assistito.
+3. In parallelo: lead Founders su `/it/agenzie` dichiara sito sì/no + URL (per demo). Il **pacchetto template** per chi non ha sito / vuole restyling / deve recuperare il dominio è **A-037** (aperto) — Cap. 8 §8.11.
+
+**Limite onesto**  
+Il checker informa e genera lead; **non** trasferisce il dominio né crea da solo la demo white-label.
+
+---
+
 **Progressione manuale**: 17/26 capitoli (65%).
-**Voci HAL totali**: **211** (Cap. 1-17, +15 nuove voci Cap. 17).
-**Versione capitolo**: v1.0 (Feb 2026 · TASK N).
+**Versione capitolo**: v1.1 · 30-Set-2026 (+ §17.13 A-037) · base v1.0 Feb 2026.

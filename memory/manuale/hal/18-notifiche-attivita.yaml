@@ -141,10 +141,10 @@ voci:
         - "saved_search_alert (it/en/es): cron admin lancia
           run_all_active_saved_searches() in
           apps/immocloud/saved_searches.py:245. Digest HTML max 6 righe."
-        - "founders_welcome (solo it): signup Founders in
-          apps/marketing/founders.py:103."
-        - "founders_admin_notification (solo it): notifica admin OMNIA
-          post-signup Founders in apps/marketing/founders.py:120."
+        - "founders_welcome (solo it): lead landing /it/agenzie —
+          copy 30-Set: no sconto 50%; prossimi passi Demo+HAL."
+        - "founders_admin_notification (solo it): include has_website +
+          website_url per prep demo (A-037)."
         - "Lingua fallback: se il template richiesto non ha la lingua,
           fallback su 'it'."
         - "Mock mode: se RESEND_API_KEY non configurata, l'email NON

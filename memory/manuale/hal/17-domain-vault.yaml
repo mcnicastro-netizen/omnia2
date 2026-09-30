@@ -483,3 +483,39 @@ voci:
       errori_comuni: []
       permessi: []
     screenshot: []
+
+  - id: domain.non-proprietario-a037
+    titolo: Dominio intestato a terzi (Basic Soft & co.) e percorso A-037
+    modulo: Domain Vault
+    widget: null
+    pubblico: [titolare, super_admin]
+    livello: base
+    tags: [domain, verifica-dominio, non-proprietario, a-037, basic-soft, rdap]
+    correlati:
+      - domain.checker-pubblico
+      - domain.d-054-promise
+      - sito.demo-a037
+    domanda_naturale: "Il mio sito è registrato dal webmaster, cosa faccio?"
+    contenuto:
+      a_cosa_serve: >
+        Spiegare perché esiste /it/verifica-dominio e come si collega al
+        percorso demo A-037 quando dominio/email sono intestati a un
+        fornitore (es. Basic Soft), non all'agenzia.
+      quando_si_usa: >
+        Pre-signup o onboarding assistito, se sospetti che il dominio non
+        sia tuo.
+      passi:
+        - "Apri /it/verifica-dominio e lancia il check RDAP."
+        - "Se il registrant è un provider/webmaster → warning + Legal Kit."
+        - "OMNIA non trasferisce il dominio: ti guida a recuperarlo al
+          registrar o a registrarne uno nuovo (D-054)."
+        - "In parallelo: lead Founders con sito sì/no; template pack per
+          restyling/no-sito è A-037 (ancora da chiudere)."
+      errori_comuni:
+        - problema: "Voglio che OMNIA registri il dominio al posto mio"
+          soluzione: >
+            Vietato da D-054. Compra/recupera tu il dominio; OMNIA fa
+            help-to-connect DNS.
+      permessi:
+        - Pubblico (checker) · titolare/super_admin (onboarding)
+    screenshot: []

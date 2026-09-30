@@ -126,14 +126,20 @@ PATCH /api/auth/me/notification-preferences
 | `agency_invite` | Titolare invita collaboratore | it, en, es | `apps/immoweb/invites.py:102` (Cap. 13) |
 | `lead_notification` | Form contatto su annuncio **agenzia** *oppure* messaggio su annuncio **privato** (stesso template email; backend diverso) | it, en, es | `apps/immocloud/public_portal.py` |
 | `saved_search_alert` | Cron saved-searches trova nuovi match | it, en, es | `apps/immocloud/saved_searches.py:245` |
-| `founders_welcome` | Signup Founders (marketing page) | it | `apps/marketing/founders.py:103` |
-| `founders_admin_notification` | Signup Founders → notifica admin OMNIA | it | `apps/marketing/founders.py:120` |
+| `founders_welcome` | Signup Founders (landing `/it/agenzie`) | it | `apps/marketing/founders.py` |
+| `founders_admin_notification` | Signup Founders → notifica admin OMNIA | it | `apps/marketing/founders.py` |
 
 **Totale asset HTML in `templates/`**: 17 file (5 template × 3 lingue = 15 + 2 template italiani only = 17).
 
 **Struttura template**: HTML con placeholder `{{key}}` sostituiti da `_render(tpl, variables)`. Assets di default iniettati automaticamente: `logo_url`, `public_base` (da env `OMNIA_LOGO_URL`, `OMNIA_PUBLIC_URL`).
 
-**Subject line**: definiti in `SUBJECTS` dict (client.py:44-70), anch'essi con placeholder resolvibili (es. `agency_invite.it`: `"Sei stato invitato a unirti a {{agency_name}} su OMNIA"`).
+**Subject line**: in `SUBJECTS` (`client.py`); `send_email(..., subject=)` può sovrascrivere. Senza `RESEND_API_KEY` → mock (`status: mock`).
+
+### Founders (aggiornamento 30-Set-2026)
+- Lead: indirizzo + civico, `has_website` / `website_url`, pacchetto opzionale; CTA form **Richiedi demo**.
+- `founders_welcome`: niente claim «sconto 50% a vita»; prossimi passi = Demo con **HAL** (non call 30' + scraping).
+- `founders_admin_notification`: include sito sì/no + URL (prep demo · A-037).
+- Landing prezzi: mensile + annuale = **11 mesi** (D-079) da `GET /billing/plans`.
 
 ---
 

@@ -1020,7 +1020,8 @@ Implementazione: TTL index Mongo dove semantica lo consente + job archivio S3 me
 | A-012 | Social metrics/insights | P3 | L (15-25h) | Spark Cap.15 | Post-A-011 |
 | A-013 | Hard-gate crediti Staging | ✅ | S | SPRINT + Cursor | Fatto 15-Sep-2026 |
 | A-014 | Billing UI + B2C Stripe live | **P1** ⏸️ post-Vercel | L | SPRINT (revenue) | Dopo deploy · non ora |
-| A-015 | Sito Web v2 (Hero, Chi Siamo, ...) | P2 | XL | SPRINT + Founder | Da decidere con Founder |
+| A-015 | Sito Web v2 (Hero, Chi Siamo, ...) | **P1** via A-037 | XL | SPRINT + Founder | Allineare ad A-037 |
+| A-037 | **Demo da sito + template pack** (no-sito/restyling/non-proprietario) | **P0/P1** 🟠 | XL | Founder 30-Set-2026 | Prima di outreach large-scale · legata a verifica-dominio |
 | A-016 | Boost tag mutui "banche" | P3 | XS | Cursor gap iter.35 | Raggruppare micro-fix |
 | A-017 | Notification center in-app | **P1** ✅ shipped 15-Sep | L | Spark Cap.18 | Bell + API + emitters core |
 | A-018 | Activity feed dashboard | P2 | M-L (8-15h) | Spark Cap.18 | Post-A-017 |
@@ -1043,7 +1044,7 @@ Implementazione: TTL index Mongo dove semantica lo consente + job archivio S3 me
 **Data inserimento**: 15-Sep-2026  
 **Pausa**: 25-Sep-2026 — Founder: «tralascia la demo per ora»  
 **Segnalato da**: Founder (Marco Nicastro)  
-**Priorità**: **P0 / fondamentale** per acquisition — **in pausa**; non architettare né shippare finché Founder non toglie la pausa.
+**Priorità**: **P0 / fondamentale** per acquisition — **in pausa** come mega-scope A-025; **30-Set-2026** il Founder ha riaperto il pezzo operativo come **A-037** (demo da sito + template pack + non-proprietario dominio).
 
 ### Contesto
 Confermato in sessione: **non esiste ancora una demo self-serve** per il cliente intenzionato. Oggi c’è solo:

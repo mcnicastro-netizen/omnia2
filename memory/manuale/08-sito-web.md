@@ -384,13 +384,36 @@ Puoi rimuovere il custom domain in qualsiasi momento con **Elimina dominio**. At
 
 ---
 
+## 8.11 · Demo da sito esistente + template pack · **A-037** (30-Set-2026)
+
+**Priorità Founder**: alta. La personalizzazione della demo a partire dal sito dell’agenzia + un pacchetto template per chi non ha sito / vuole restyling / non è proprietario del dominio **dovevano già esserci** come percorso commerciale.
+
+### Cosa c’è oggi (onesto)
+| Pezzo | Stato |
+|-------|--------|
+| Brand Extractor (`POST` website extract) | ⚠️ estrae profilo brand; **non** chiude automaticamente «URL → demo vestita visitabile» |
+| 4 temi backend (minimal/classic/bold/luxury) | ⚠️ presenti in `themes.py` |
+| UI template / picker commerciale | ❌ stub «presto disponibile» in Settings (vedi anche Cap. 19) |
+| Lead landing `/it/agenzie`: «Hai un sito?» + URL | ✅ (30-Set-2026) |
+| Pacchetto template per no-sito / restyling / recovery dominio | ❌ **A-037 aperto** |
+
+### Relazione con Domain Vault
+Chi scopre di non essere proprietario del dominio (es. registrato da un fornitore IT) usa `/it/verifica-dominio` (Cap. 17) e il percorso A-037 (template + recovery dominio).
+
+### Promessa commerciale
+Non promettere «cloniamo il tuo sito in automatico» finché A-037 non è PASS sul loop URL→demo.
+
+---
+
 ## Voci correlate (fuori capitolo)
 
 - **Cap. 3 · Immobili** — solo gli immobili `status: active` sono pubblicati. La cover photo definisce l'anteprima home + og:image.
 - **Cap. 3.4 · Privacy L1-L4** — il sito pubblico rispetta il livello privacy: L3/L4 non appaiono in vetrina agli anonimi.
 - **Cap. 6 · Portali** — il sito pubblico OMNIA è **complementare** ai portali, non li sostituisce. Il feed XML degli 8 portali generalisti convive con questo sito.
 - **Cap. 7 · Fascicolo Immobile** — mai visibile al pubblico. Nessun documento del Fascicolo passa nel sito.
+- **Cap. 17 · Domain Vault** — verifica titolarità dominio + custom domain.
+- **Landing `/it/agenzie`** — form Founders / richiedi demo (prezzi da `GET /billing/plans`, annuale = 11 mesi).
 
 ---
 
-**Versione**: v1.0 · Feb 2026 (TASK E · Cap. 8 Sito web agenzia)
+**Versione**: v1.1 · 30-Set-2026 (+ §8.11 A-037) · base v1.0 Feb 2026

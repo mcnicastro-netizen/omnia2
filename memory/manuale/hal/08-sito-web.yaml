@@ -546,3 +546,40 @@ voci:
         - Titolare (visualizza stato)
         - Super_admin (unico ad attivare SSL sul pannello hosting)
     screenshot: []
+
+  - id: sito.demo-a037
+    titolo: Demo da sito esistente e pacchetto template (A-037)
+    modulo: Sito web
+    widget: null
+    pubblico: [titolare, super_admin]
+    livello: avanzato
+    tags: [sito-web, demo, a-037, brand-extractor, template, restyling, founders]
+    correlati:
+      - sito.brand-extractor
+      - sito.temi-disponibili
+      - domain.non-proprietario-a037
+    domanda_naturale: "Possiamo personalizzare la demo col look del mio sito attuale?"
+    contenuto:
+      a_cosa_serve: >
+        Chiarire lo stato onesto del percorso demo commerciale: URL del
+        sito cliente → brand → tema OMNIA visitabile, più template per chi
+        non ha sito, vuole restyling o non è proprietario del dominio.
+      quando_si_usa: >
+        Quando un prospect chiede una demo vestita come il suo sito, o
+        quando dichiara di non avere sito / non controllare il dominio.
+      passi:
+        - "Lead /it/agenzie: campo Hai un sito? + URL (salvato sul lead)."
+        - "Brand Extractor esiste e può estrarre palette/font/logo da URL."
+        - "LIMITAZIONE OGGI: non c'è ancora il loop automatico URL → demo
+          pubblica vestita (A-037 aperto)."
+        - "I 4 temi backend ci sono; UI template pack commerciale ancora
+          stub — A-037 deve chiuderlo per no-sito/restyling/non-proprietario."
+        - "Non promettere clone automatico del sito finché A-037 non è PASS."
+      errori_comuni:
+        - problema: "Ho dato l'URL ma la demo non ha il mio look"
+          soluzione: >
+            Atteso finché A-037 non chiude il loop. Oggi l'URL serve come
+            brief; setup branding/tema è assistito.
+      permessi:
+        - Titolare / Founder Ops (prep demo)
+    screenshot: []
