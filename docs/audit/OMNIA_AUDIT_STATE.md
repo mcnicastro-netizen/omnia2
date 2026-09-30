@@ -5,9 +5,9 @@
 **Usage rule:** questo documento è la fonte di continuità dell'audit.
 Prima di analizzare un nuovo punto, leggere questo file. Non riaprire decisioni già fissate salvo nuove evidenze. Non inventare informazioni mancanti.
 
-**Current status:** P1–P19 **chiusi** · P20 Scalabilità ⏳ analisi Founder · **P21 Coerenza prodotto/tecnologia consegnato** ⏳ analisi Founder. Nessun fix. Listino fermo. SoT: questo file. **Niente codice** senza «vai».
+**Current status:** P1–P20 **chiusi** · **P21 Coerenza prodotto/tecnologia consegnato** ⏳ analisi Founder. Nessun fix. Listino fermo. SoT: questo file. **Niente codice** senza «vai».
 
-**Next:** analisi Founder su **P21** (CT-*) e/o chiusura P20 (SC-*). GTM-01 in coda.
+**Next:** analisi Founder su P21 → tipicamente **P22 Casi limite** (master §21). GTM-01 in coda.
 
 ---
 
@@ -219,12 +219,14 @@ Prima dell'invio delle circa 5.000 email GTM deve essere eseguito un checkpoint:
 
 Verificare almeno:
 
-* 2 richieste demo;
-* 50 richieste;
-* 200 richieste;
+* 2 / 50 / 200 richieste demo;
 * circa 20 utenti contemporanei;
 * percorso demo completo;
 * stabilità delle funzioni mostrate ai prospect.
+
+**Confidence gate (P20 / K-SC-01):** smoke load dedicato leggero ~20 concurrent — upload + read/serve media + match + combinazione; errori/latenza/memoria; ambiente rappresentativo. Stress ladder resta baseline. **Non** è gate P0–P3.
+
+**Requisiti minimi già collegati a GTM-01:** AF-05/EH-03 upload osservabile; EH-04 empty≠error; **SC-08/AF-04** paginazione FE properties.
 
 Non significa dimensionare OMNIA per 5.000 utenti contemporanei.
 
@@ -261,6 +263,14 @@ Codice ⏳ — post-audit / «vai».
 * FE decide la localizzazione / UX.
 * Non usare un `detail` umano come unico contratto (cambio wording non deve rompere i18n).
 * Feedback utente obbligatorio quando il fallimento **altera il significato** dell’azione; toast = possibile implementazione, non il contratto.
+Codice ⏳ — post-audit / «vai».
+
+
+## D-108 — Scheduling: un solo owner di esecuzione
+
+* Un solo meccanismo è **owner** dell’esecuzione dei job automatici (APScheduler in single-replica, **D-101**).
+* HTTP cron / trigger manuale può al massimo essere **trigger controllato / fallback**, non seconda autorità di scheduling parallela.
+* `max_instances=1` aiuta ma **non** sostituisce la definizione di ownership (**SC-10**).
 Codice ⏳ — post-audit / «vai».
 
 ---
@@ -793,53 +803,28 @@ Finding EH-01…EH-12 restano aperti nel registro. Dettaglio: `memory/AUDIT_ARCH
 
 ---
 
-# 21. P20 — SCALABILITÀ (consegnato · ⏳ analisi Founder · master §19)
+# 21. P20 — SCALABILITÀ — **CHIUSO** (Founder 30-Set · nessun codice · no nuovi P0–P3)
 
-**Verdetto:** per **GTM-01 (~20 concurrent)** monolitico single-replica + Mongo + FS locale è **adeguato in verticale**, se non si martella Match/media in parallelo. **Non** è pronto a orizzontale (FS locale, APScheduler in-process — **D-101**/ **D-103**). Crescita **200–1000 agenzie** collassa prima su **storage+bak (~31× B-01)**, serve media, match on-read e job globali — non su “mancano 5000 user contemporanei”.
-**Nessun nuovo P0–P3** da P20. Nessun fix finché «vai». **D-101 / D-103 / B-01 / GTM-01 non riaperti.**
+**Principio:** non confondere **capacità GTM** con **architettura target**.
 
-### Finding SC-*
+### Baseline P20
 
-| ID | Tipo | Problema | Prior |
-|----|------|----------|-------|
-| SC-01 | oss. | 1 processo uvicorn + APScheduler in-API; no worker; horizontal = doppio scheduler | D-101 · D-103 · JA-01 |
-| SC-02 | rischio crescita | `.media` locale + `get_object` full-read in RAM via API — no multi-istanza / no CDN | M-* · C-09 |
-| SC-03 | rischio eco | Bak full `copytree` ~31× — pressione disco ≫ concurrent users | B-01 · C-04 |
-| SC-04 | rischio demo/load | Match on-read fino a 400×400 (+ scoped 2000); stress ~5,8s @10k clienti | — |
-| SC-05 | gap | Nessun indice su `deleted_at`; `with_not_trashed` = `$or` | trash |
-| SC-06 | gap | `rate_limit_events` senza index in `ensure_indexes` (solo stress script) | — |
-| SC-07 | oss. | Motor `AsyncIOMotorClient()` senza pool esplicito — default OK GTM | — |
-| SC-08 | debito demo | Properties FE senza `page` / controlli (**AF-04**) | AF-04 |
-| SC-09 | rischio crescita | Saved-search tick ogni 5m su **tutte** le ricerche attive | JA · A-020 |
-| SC-10 | rischio ops | Overlap HTTP cron ↔ APScheduler; `max_instances=1` solo in-proc | JA-01 · B-08 · RC-09 |
-| SC-11 | rischio crescita | Feed pubblico fino a 5000 prop full-doc | C-09 |
-| SC-12 | oss. | Auth: JWT cookie + `users.find_one` per request | — |
-| SC-13 | rischio crescita | Publishing sync sequenziale fino a 1000 connection | J-* |
-| SC-14 | oss. | Liste CRM API con `page_size` capped; FE gaps AF-04/AF-11 | AF-04 |
-| SC-15 | rischio demo | Hot path media: upload + serve sullo stesso event loop | AF-05 · EH-03 |
+* **SC-02/15** → accettabile per GTM se assunto esplicitamente; **non** horizontal-ready (coupling storage↔traffico↔API).
+* **SC-03** → limite operativo da monitorare; **bak non scala automaticamente** col n. agenzie; “31×” non è soglia produzione da sola; worker (**D-103**) non è prerequisito GTM.
+* **SC-04** → monitorare costo/frequenza match; **match costoso non deve diventare conseguenza accidentale di una GET** ordinaria (precompute non obbligatorio ora).
+* **SC-08 / AF-04** → requisito **GTM-01** (API paginata + FE prima pagina = dataset incompleto).
+* **SC-10 → D-108**: un solo owner dello scheduling; l’altro al massimo trigger/fallback.
+* **K-SC-01** → smoke load dedicato ~20 concurrent (upload+media+match+combo) = **confidence gate GTM-01** (non gate P0–P3); stress ladder resta baseline.
+* **K-SC-02** → soglia object storage+CDN su **capacità/traffico media** (due dimensioni), non solo n. agenzie; **separato** da worker (**D-103**).
 
-### Domande aperte
-
-1. **K-SC-01**: Prima di GTM-01, smoke load dedicato (upload+media+match ×~20) o basta ladder stress esistente?
-2. **K-SC-02**: Soglia agenzie/storage per forzare object storage condiviso + CDN (prima di worker — **D-103**)?
-
-### Lettura Founder
-
-| Classe | Cosa |
-|--------|------|
-| **Già solido** | Liste properties/clients paginate lato API; match capped; job `max_instances=1`+`coalesce`; rate limit pubblico; quota upload; single-replica job (**D-101**) |
-| **Realmente rischioso** | Media via API+FS; match 400×400 in demo; bak 31×; AF-04 stock>20; overlap HTTP↔sched |
-| **Da decidere** | **K-SC-01** · **K-SC-02** |
-| **Può aspettare** | Pool Motor esplicito; indici `deleted_at`; precompute match; worker (**D-103**); horizontal API |
-
-Dettaglio: `memory/AUDIT_ARCHITETTURA_NOTE.md` § Punto 20.
+Finding SC-01…SC-15 restano nel registro. Dettaglio: `memory/AUDIT_ARCHITETTURA_NOTE.md` § Punto 20.
 
 ---
 
 # 22. P21 — COERENZA PRODOTTO/TECNOLOGIA (consegnato · ⏳ analisi Founder · master §20)
 
 **Verdetto:** Il nucleo CRM demo (quota storage D-085, Cestino, Match, feed-pull publishing, widget Valuator/Mutui, catalogo piani API) è **allineato** a decisioni e Cap.19. La divergenza è **commerciale/operativa**: landing `/agenzie` con listino morto; `max_properties`/`max_agents` solo in UI; restore D-096 promesso in Cap.19 ma assente; invite D-100 ancora overwrite; Stripe gated 503 ma UI sblocca checkout via `localStorage`; Track B staging documentato ma 501/lead-only; Founder Ops senza bak health (D-105).
-**Nessun nuovo P0–P3** da P21. Nessun fix finché «vai». **D-085…D-107 / GTM-01 / P18–P20 non riaperti.**
+**Nessun nuovo P0–P3** da P21. Nessun fix finché «vai». **D-085…D-108 / GTM-01 / P18–P20 non riaperti.**
 
 ### Finding CT-*
 
@@ -880,8 +865,10 @@ Dettaglio: `memory/AUDIT_ARCHITETTURA_NOTE.md` § Punto 21.
 
 # 23. PROSSIMO PUNTO
 
-Analisi Founder su **P21** (CT-* · K-CT-01/02) e/o chiusura **P20** (SC-*). GTM-01 in coda (vincolo pre-~5000 email).
+**P22 — Casi limite** (master §21) — tipico dopo acquisizione P21.
 
 Il Master Audit State deve essere aggiornato dopo il completamento di ogni punto significativo.
+
+**Current next action:** analisi Founder su **P21** (CT-* · K-CT-01/02). P20 chiuso. GTM-01 in coda (vincolo pre-~5000 email).
 
 **Niente fix. Nessuna severità P0–P3. Listino fermo. Attende «vai».**

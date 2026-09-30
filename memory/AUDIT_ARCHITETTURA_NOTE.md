@@ -6,7 +6,7 @@
 > **Numerazione = continuum di sessione** (non forzare allineamento al master).  
 > Prompt master: `memory/AUDIT_PROMPT_MASTER.md` (§1–§27) — corrispondenza in tabella sotto.
 
-**Ultimo aggiornamento**: 30-Set-2026 · **SoT** `docs/audit/OMNIA_AUDIT_STATE.md` · **P18–P19 CHIUSI** · **P20–P21** ⏳ analisi Founder
+**Ultimo aggiornamento**: 30-Set-2026 · **SoT** `docs/audit/OMNIA_AUDIT_STATE.md` · **P20 CHIUSO** · **P21** ⏳ analisi
 
 ---
 
@@ -33,14 +33,14 @@
 | P17 | Osservabilità | §16 | 🟠 **ACQUISITO** (Master State) · **O-*** · **D-105** bak health |
 | P18 | API / Frontend | §17 | 🟢 **CHIUSO** · baseline · **D-106** · AF-05=GTM-01 min |
 | P19 | Error handling | §18 | 🟢 **CHIUSO** · **EH-*** · **D-107** |
-| P20 | Scalabilità | §19 | 🟠 Consegnato · **SC-*** · ⏳ analisi |
+| P20 | Scalabilità | §19 | 🟢 **CHIUSO** · **SC-*** · **D-108** · SC-08=GTM-01 |
 | P21 | Coerenza prodotto/tecnologia | §20 | 🟠 Consegnato · **CT-*** · ⏳ analisi |
 | — | Cestino (blocco dedicato) | §6 | 🟡 coperto in P5 + P12 |
-| — | §21–§27 | §21–§27 | ⬜ dopo P21 |
+| — | Casi limite… | §21–§27 | ⬜ dopo acquisizione P21 |
 | **GTM-01** | Demo Readiness / primo afflusso | **post-audit** | 🟠 **ACQUISITO** · **D-104** · in coda · **vincolo pre-~5000 email** |
 
-Decisioni dominio (codice ⏳): **D-094** … **D-107**.  
-P18–P19 chiusi · P20–P21 in analisi Founder.  
+Decisioni dominio (codice ⏳): **D-094** … **D-108**.  
+P18–P20 chiusi · P21 in analisi Founder.  
 **Continuità SoT**: `docs/audit/OMNIA_AUDIT_STATE.md` (non riaprire decisioni fissate). · **Niente codice** senza «vai».
 
 ---
@@ -64,7 +64,8 @@ P18–P19 chiusi · P20–P21 in analisi Founder.
 15. **GTM / Demo Readiness** = **GTM-01 ACQUISITO** · **D-104** — in coda; **obbligatorio prima delle ~5000 email**  
 16. **API / Frontend** = **AF-*** · **D-106** · P18 CHIUSO · AF-05=GTM-01 min  
 17. **Error handling** = **EH-*** · **D-107** · P19 CHIUSO  
-18. **Scalabilità** = **SC-*** (GTM ~20 vs crescita 200–1000)
+18. **Scalabilità** = **SC-*** · **D-108** · P20 CHIUSO · SC-08=GTM-01  
+19. **Coerenza prodotto/tecnologia** = **CT-***
 
 ---
 
@@ -1586,5 +1587,5 @@ Nucleo CRM (quota D-085, Cestino, Match, publishing feed-pull, widget Valuator/M
 | **Può aspettare** | CT-14 · esign mock senza provider · staging 501 se non venduto · Cap.3/4 wording |
 
 **Niente fix. Nessuna severità P0–P3. Listino fermo. Attende «vai».**  
-Prossimo: analisi Founder P21/P20 · GTM-01 in coda.
+Prossimo tipico dopo acquisizione: **P22 Casi limite** (master §21). GTM-01 in coda.
 

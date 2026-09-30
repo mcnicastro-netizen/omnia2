@@ -1651,4 +1651,14 @@ Registro di tutte le decisioni di business e tecniche prese durante il progetto.
 - **Implementazione**: ❌ codice ⏳ — post-audit / «vai».
 - **Stato**: ✅ **DECISIONE DI DOMINIO REGISTRATA** (docs 30-Set-2026 · P19 CHIUSO) · codice ⏳
 
+### D-108 — Scheduling: un solo owner di esecuzione · 30-Set-2026
+- **Data**: 30 Settembre 2026
+- **Contesto**: Audit P20 (SC-10). Founder: il rischio non è che esistano APScheduler e HTTP cron, ma che entrambi siano autorità di scheduling.
+- **Decisione**:
+  1. Un solo meccanismo è **owner** dell’esecuzione dei job automatici (in fase attuale: APScheduler su single-replica — **D-101**).
+  2. HTTP cron / trigger manuale = al massimo **trigger controllato / fallback**, non seconda autorità parallela.
+  3. `max_instances=1` aiuta ma **non** sostituisce la definizione di ownership.
+- **Implementazione**: ❌ codice/ops ⏳ — post-audit / «vai».
+- **Stato**: ✅ **DECISIONE OPERATIVA REGISTRATA** (docs 30-Set-2026 · P20 CHIUSO) · codice ⏳
+
 

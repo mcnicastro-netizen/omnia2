@@ -1,5 +1,15 @@
 # OMNIA — Changelog
 
+## 2026-09-30 — P20 CHIUSO · D-108 · P21 Coerenza (CT-*)
+
+**Tipo**: Docs / SoT audit · **nessun codice** · **listino fermo** · no nuovi P0–P3.
+
+- **P20 CHIUSO**: GTM ≠ architettura target; SC-08=GTM-01; smoke load ~20 = confidence gate; **D-108** scheduling owner; object storage ≠ worker
+- **P21 Coerenza prodotto/tecnologia** consegnato: **CT-01…CT-14**; K-CT-01/02 aperti
+- Master State aggiornato · prossimo tipico P22 Casi limite
+
+---
+
 ## 2026-09-30 — P19 CHIUSO · D-107 · P20 Scalabilità (SC-*)
 
 **Tipo**: Docs / SoT audit · **nessun codice** · **listino fermo** · no nuovi P0–P3.

@@ -101,14 +101,15 @@ In altre parole:
 | P17 Osservabilità | **§16** | **ACQUISITO** · **O-*** · **D-105** |
 | P18 API / Frontend | **§17** | **CHIUSO** · **D-106** · AF-05=GTM-01 min |
 | P19 Error handling | **§18** | **CHIUSO** · **EH-*** · **D-107** |
-| P20 Scalabilità | **§19** | Consegnato · **SC-*** · ⏳ analisi |
+| P20 Scalabilità | **§19** | **CHIUSO** · **SC-*** · **D-108** · SC-08=GTM-01 |
+| P21 Coerenza prodotto/tecnologia | **§20** | Consegnato · **CT-*** · ⏳ analisi |
 | — | **§6 Cestino** | Parziale P5 + coperto in P12 |
-| — | **§20–§27** | Non avviati · prossimo tipico §20 Coerenza prodotto |
+| — | **§21–§27** | Non avviati · prossimo tipico §21 Casi limite |
 | **GTM-01** Demo Readiness | **post-audit** | 🟠 **ACQUISITO** · **D-104** · in coda · **vincolo pre-~5000 email** |
 
 **Regola numerazione**: mantenere il continuum di sessione; documentare la corrispondenza qui / in `AUDIT_ARCHITETTURA_NOTE.md` — non riallineare artificialmente i numeri.
 
-Decisioni di dominio già registrate (codice ⏳): **D-094** … **D-107**.
+Decisioni di dominio già registrate (codice ⏳): **D-094** … **D-108**.
 
 > **Continuità SoT**: `docs/audit/OMNIA_AUDIT_STATE.md` — leggere prima di ogni nuovo punto.  
 > **GTM-01** = checkpoint post-audit (**D-104**), non un § del master 1–27.

@@ -30,6 +30,7 @@ Un blocco alla volta · niente fix senza «vai» · no P0–P3 prematuri · **li
 | **D-105** | Bak health minimo Founder Ops (OK/PARTIAL/FAILED + alert + last_run) |
 | **D-106** | `active_agency_id` = SoT sessione; `agency_ids` = membership |
 | **D-107** | Errori API: `code` stabile BE + i18n FE; feedback se altera significato azione |
+| **D-108** | Scheduling: un solo owner di esecuzione (cron = trigger/fallback) |
 
 **SoT continuità:** `docs/audit/OMNIA_AUDIT_STATE.md`  
 **Sequenza priorità (D-099):** fascicolo → orphan → Bak+Restore → retention → costi.  
@@ -58,9 +59,9 @@ Un blocco alla volta · niente fix senza «vai» · no P0–P3 prematuri · **li
 
 | Sessione | Master | Stato |
 |----------|--------|--------|
-| P1–P19 | §1–§18 | chiusi · D-094…D-107 |
-| P20 Scalabilità | §19 | Consegnato · SC-* · ⏳ analisi |
-| — | §20 Coerenza… | dopo acquisizione P20 |
-| GTM-01 | post-audit | 🟠 **ACQUISITO** · in coda |
+| P1–P20 | §1–§19 | chiusi · D-094…D-108 |
+| P21 Coerenza prodotto/tecnologia | §20 | Consegnato · CT-* · ⏳ analisi |
+| — | §21 Casi limite… | dopo acquisizione P21 |
+| GTM-01 | post-audit | 🟠 **ACQUISITO** · in coda · smoke ~20 |
 
 Dettaglio: `docs/audit/OMNIA_AUDIT_STATE.md` · `AUDIT_ARCHITETTURA_NOTE.md` · A-035 · A-036.
