@@ -1,36 +1,45 @@
 # Prossima sessione — programma passi
 
-**Aggiornato**: 30 Settembre 2026 · O0–O5 shippati · O6 CONDITIONAL · **A-037 priorità Founder**  
+**Aggiornato**: 30 Settembre 2026 sera · **Domani: invio demo → Nicastroimmobiliare (cliente 1)**  
 **Repo**: https://github.com/mcnicastro-netizen/omnia2 ✅  
 
 ---
 
-## Continuità
+## 🎯 Domani (1-Ott) — Demo Nicastroimmobiliare
+
+**Obiettivo Founder:** inviare / aprire la demo all’agenzia **Nicastroimmobiliare** (dogfood cliente-1).
+
+### Checklist operativa
+
+1. Ambiente prova su (`bash scripts/omnia-stack.sh ensure`) + tunnel pubblico stabile  
+2. Account **agenzia ufficiale** Nicastroimmobiliare (non `demo-agency-001`) · ruolo `agency_admin`  
+3. Lead Founders già fatto / reinvio se serve · URL sito dichiarato sul lead  
+4. Prep **assistita** (A-037 non chiude ancora URL→demo automatica):
+   - brand extractor sull’URL sito se disponibile  
+   - oppure tema OMNIA + logo/colori a mano  
+   - pochi immobili reali + HAL (foto/testi)  
+5. Inviare link login / accesso demo a Marco-titolare (esperienza cliente, non solo super_admin)  
+6. Annotare cosa gratta → backlog / A-037
+
+### Limiti onesti da non promettere in mail
+- Clone automatico del sito **non** ancora live (A-037)  
+- Self-serve Stripe **OFF** (O6 CONDITIONAL)  
+- Dominio/email Basic Soft → percorso verifica-dominio se serve
+
+---
+
+## Continuità SoT
 
 | | |
 |--|--|
 | **Programma** | `docs/audit/OMNIA_PROGRAMMA_PRE_ATTIVAZIONE.md` |
 | **O6 gate** | `docs/audit/OMNIA_O6_GATE_CHECKLIST.md` — CONDITIONAL PASS |
 | **Restore** | `docs/ops/RESTORE_MANUAL.md` — run firmata ⏳ non-prod |
-| **Priorità prodotto Founder** | **A-037** — demo da sito esistente + pacchetto template (no-sito / restyling / non-proprietario) · legato a `/it/verifica-dominio` |
+| **Priorità prodotto** | **A-037** — demo da sito + template pack / non-proprietario |
 | Regola | **Nessun self-serve finché O6 ≠ PASS** |
-| Assistito SLA | ≤ 5 gg lavorativi (provvisorio) |
 
-### Prossimi passi (ordine di senso)
+### Dopo la demo Nicastro
 
-1. Firmare restore non-prod (O3b) → sblocca O6 operativo  
-2. **A-037** (priorità Founder): chiudere il loop URL→demo vestita + template pack + percorso “non sono proprietario del dominio”  
-3. Dogfood cliente-1 (Nicastroimmobiliare) sul percorso reale  
-4. Solo dopo: Founder decide self-serve ON
-
-### Ship O0–O6 (codice/docs)
-
-| Onda | Stato |
-|------|--------|
-| O0 design bak | ✅ |
-| O1 AuthZ/invite/SoT | ✅ |
-| O2 trash+freeze | ✅ |
-| O3 bak health + procedura restore | ✅ docs · ⏳ run |
-| O4 pricing SoT + demo≠entitlement | ✅ |
-| O5 upload/pagination/sched/seed | ✅ minimi |
-| O6 checklist | ✅ CONDITIONAL · self-serve OFF |
+1. Firmare restore non-prod (O3b) se non fatto  
+2. A-037 (chiudere loop URL→demo + template pack)  
+3. Founder decide self-serve ON solo con O6 PASS  

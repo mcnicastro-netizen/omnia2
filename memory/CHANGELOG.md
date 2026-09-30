@@ -1,5 +1,14 @@
 # OMNIA — Changelog
 
+## 2026-09-30 — Domani: demo Nicastroimmobiliare (cliente 1)
+
+**Tipo**: Ops / continuità · `NEXT_SESSION.md`.
+
+- Founder: **1-Ott** invio demo a Nicastroimmobiliare (dogfood)
+- Prep assistita (A-037 non automatico) · self-serve OFF · checklist in NEXT_SESSION
+
+---
+
 ## 2026-09-30 — Chiusura giornata · sync HAL + manuale + repo
 
 **Tipo**: Docs HAL/manuale · consolidamento sessione dogfood.
