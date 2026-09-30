@@ -1183,18 +1183,15 @@ Concordo sul nucleo. Temperatura: «OS agenzia» è **nord**, non claim immediat
 
 ## 🟡 A-035 — Audit architettura SaaS (prompt master §1–§27)
 
-**Data inserimento**: 25-Sep-2026 · **agg.** 30-Sep-2026 (**GTM-01 ACQUISITO** · P17 ⏳ analisi)  
+**Data inserimento**: 25-Sep-2026 · **agg.** 30-Sep-2026 (SoT Master State · **P18** · **D-105**)  
 **Prompt master**: `memory/AUDIT_PROMPT_MASTER.md`  
+**SoT continuità**: `docs/audit/OMNIA_AUDIT_STATE.md`  
 **Stato**: 🟠 **in corso** · numerazione **sessione** · **NON implementare** · **NO P0–P3** · **listino fermo**
 
 ### Verdetti acquisiti
-- P2–P11: acquisiti · **D-094…D-096**
-- P12: **ACQUISITO** + **D-097** — Elimina per sempre ≠ irrecuperabile assoluto; trash può restare nel bak
-- P13: **ACQUISITO** + **D-098** — orphan path→delete (WHEN col bak); agency V1 controllata; lifecycle unica; RET-* aperti
-- P14: **ACQUISITO** + **D-099** — Founders GDPR assistito; fascicolo AuthZ prima bak; G-* aperti
-- P15: **ACQUISITO** — RC-*; invite → **D-100**; job auto → **D-101** single-instance; tier RC 🔴/🟠/🟢
-- P16: **ACQUISITO** — **D-102** purge+blob auto ora; **D-103** no worker ora; JA-02/JA-03 in registro; **D-101** confermata
-- P17: **consegnato** — Osservabilità **O-01…O-15** · ⏳ analisi Founder (solido/rischioso/decidere/aspetta)
+- P2–P16: acquisiti · **D-094…D-103**
+- P17: **ACQUISITO** — **O-*** · **D-105** bak health minimo
+- P18: **consegnato** — API/FE **AF-01…AF-16** · ⏳ analisi Founder
 - **GTM-01**: **ACQUISITO** (**D-104** / **A-036**) — in coda; **vincolo hard** pre-~5000 email
 
 ### Cluster finding da non dimenticare
@@ -1207,18 +1204,19 @@ Concordo sul nucleo. Temperatura: «OS agenzia» è **nord**, non claim immediat
 - **GDPR / privacy** = **G-*** (erase ≠ CRM wipe · no DPA · no DSAR export · fascicolo/media)
 - **Concorrenza / race** = **RC-*** · invite → **D-100**
 - **Jobs deepen** = **JA-*** · J-* · **D-101**…**D-103** · **JA-02**/JA-03 registro
-- **Osservabilità** = **O-*** (bak health, job heartbeat, ops_alerts gap)
+- **Osservabilità** = **O-*** · **D-105**
+- **API / Frontend** = **AF-***
 - **GTM / Demo Readiness** = **GTM-01** · **D-104** · **A-036**
 - **Costo infra massimo / bak** = C-* · B-01 · listino fermo
 - **P4.2–P4.7** auth · Attività lifecycle aperto
 
 ### Dove
-`memory/AUDIT_ARCHITETTURA_NOTE.md` · Cap. 00 · HAL `api.retention-cancellazione` · `api.jobs-async` · `api.audit-architettura-stato`
+`docs/audit/OMNIA_AUDIT_STATE.md` · `memory/AUDIT_ARCHITETTURA_NOTE.md` · Cap. 00
 
 ### Prossimo tipico
-- Analisi Founder P17 → tipicamente **API e frontend** (master §17)
+- Analisi Founder P18 → tipicamente **Error handling** (master §18)
 - Dopo punti principali → **GTM-01** (obbligatorio **prima** ~5000 email)
-- «vai» di **implementazione** = distinto (fix: **D-100**; job: **D-102** purge auto)
+- «vai» di **implementazione** = distinto (fix: **D-100**; job: **D-102**; bak health: **D-105**)
 
 ---
 
