@@ -1527,27 +1527,25 @@ Per **crescita 200–1000 agenzie** falliscono prima storage+bak, media locale e
 | **SC-14** | oss. | API page_size capped (prop ≤100); FE gaps | AF-04 · AF-11 | `properties.py:150-151` |
 | **SC-15** | rischio demo | Upload+serve media sullo stesso event loop | AF-05 · EH-03 | `properties.py:573-637` · `media.py:26-59` |
 
-### Domande
+### Domande — **RISOLTE** Founder
 
-1. **K-SC-01**: smoke load GTM (upload+media+match ×~20) obbligatorio vs ladder stress già fatto?
-2. **K-SC-02**: soglia agenzie/GB per object storage+CDN (prima del worker — D-103)?
+1. **K-SC-01 → smoke load GTM dedicato** ~20 concurrent (upload+media+match+combo) = **confidence gate GTM-01** (non P0–P3); stress ladder resta baseline.  
+2. **K-SC-02 → soglia su capacità/traffico media** (due dimensioni), non solo n. agenzie; object storage+CDN **separato** da worker (**D-103**).
 
-### Lettura Founder
+### Baseline P20 — **CHIUSO** Founder
 
-| Classe | Cosa |
-|--------|------|
-| **Già solido** | Liste API paginate · match capped · job max_instances=1+coalesce · rate limit pubblico · quota upload · D-101 |
-| **Realmente rischioso** | Media API/FS · Match 400×400 · bak 31× · AF-04 · HTTP↔sched |
-| **Da decidere** | K-SC-01 · K-SC-02 |
-| **Può aspettare** | Pool Motor · index deleted_at · precompute match · worker (D-103) · horizontal |
-
-**Niente fix. Nessuna severità P0–P3. Listino fermo. Attende «vai».**
+* SC-02/15: OK GTM se assunto; **non** horizontal-ready.  
+* SC-03: limite operativo; bak **non** scala automaticamente col n. agenzie.  
+* SC-04: match costoso **non** via GET accidentale.  
+* **SC-08/AF-04 = GTM-01**.  
+* **SC-10 → D-108**: un solo owner di scheduling.  
+**Nessun nuovo P0–P3. Nessun codice.** → **P21** sotto.
 
 ---
 
 ## Punto 21 — Coerenza prodotto/tecnologia · consegnato 30-Set (master §20 · continuum sessione)
 
-**Ambito**: dove promesse prodotto / UI / docs / listino divergono dal comportamento reale del codice. Nessun fix. Nessun P0–P3. Decisioni D-094…D-107, GTM-01, baseline P18–P20 **non riaperte**.
+**Ambito**: dove promesse prodotto / UI / docs / listino divergono dal comportamento reale del codice. Nessun fix. Nessun P0–P3. Decisioni D-094…D-108, GTM-01, baseline P18–P20 **non riaperte**.
 
 ### Verdetto
 
