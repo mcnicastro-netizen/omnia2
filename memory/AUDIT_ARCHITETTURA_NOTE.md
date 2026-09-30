@@ -6,7 +6,7 @@
 > **Numerazione = continuum di sessione** (non forzare allineamento al master).  
 > Prompt master: `memory/AUDIT_PROMPT_MASTER.md` (§1–§27) — corrispondenza in tabella sotto.
 
-**Ultimo aggiornamento**: 30-Set-2026 · **SoT** `docs/audit/OMNIA_AUDIT_STATE.md` · **P20 CHIUSO** · **P21** ⏳ · **P22** ⏳ analisi
+**Ultimo aggiornamento**: 30-Set-2026 · **SoT** `docs/audit/OMNIA_AUDIT_STATE.md` · **P21 CHIUSO** · **P22** ⏳ analisi
 
 ---
 
@@ -34,14 +34,14 @@
 | P18 | API / Frontend | §17 | 🟢 **CHIUSO** · baseline · **D-106** · AF-05=GTM-01 min |
 | P19 | Error handling | §18 | 🟢 **CHIUSO** · **EH-*** · **D-107** |
 | P20 | Scalabilità | §19 | 🟢 **CHIUSO** · **SC-*** · **D-108** · SC-08=GTM-01 |
-| P21 | Coerenza prodotto/tecnologia | §20 | 🟠 Consegnato · **CT-*** · ⏳ analisi |
+| P21 | Coerenza prodotto/tecnologia | §20 | 🟢 **CHIUSO** · **CT-*** · **D-109** · **D-110** |
 | P22 | Casi limite | §21 | 🟠 Consegnato · **EC-*** · ⏳ analisi |
 | — | Cestino (blocco dedicato) | §6 | 🟡 coperto in P5 + P12 |
-| — | … | §22–§27 | ⬜ dopo acquisizione P21/P22 |
+| — | … | §22–§27 | ⬜ dopo acquisizione P22 |
 | **GTM-01** | Demo Readiness / primo afflusso | **post-audit** | 🟠 **ACQUISITO** · **D-104** · in coda · **vincolo pre-~5000 email** |
 
-Decisioni dominio (codice ⏳): **D-094** … **D-108**.  
-P18–P20 chiusi · P21/P22 in analisi Founder.  
+Decisioni dominio (codice ⏳): **D-094** … **D-110**.  
+P18–P21 chiusi · P22 in analisi Founder.  
 **Continuità SoT**: `docs/audit/OMNIA_AUDIT_STATE.md` (non riaprire decisioni fissate). · **Niente codice** senza «vai».
 
 ---
@@ -1571,28 +1571,26 @@ Nucleo CRM (quota D-085, Cestino, Match, publishing feed-pull, widget Valuator/M
 | **CT-13** | catalogo | setup_stripe ommette storage_100gb | C-13 · D-085 | `setup_stripe.py:70-86` |
 | **CT-14** | oss. | Publishing coming_soon onesto; KPI locked residuo | — | `publishing.py:49-113` · `KPICard.jsx:47-53` |
 
-### Domande
+### Domande — **RISOLTE** Founder
 
-1. **K-CT-01**: Landing `/agenzie` — ritirare, allineare a API piani, o legacy consapevole?
-2. **K-CT-02**: Enforcement `max_properties`/`max_agents` hard pre-GTM, o solo storage come tetto?
+1. **K-CT-01 → D-109**: `GET /billing/plans` = SoT; landing allineata dinamicamente **oppure** ritirata/nascosta; Founders-50 solo se **esplicitamente legacy**.
+2. **K-CT-02**: hard enforcement BE di `max_properties`/`max_agents` **solo** se entitlement GTM reali; altrimenti non simulare (storage **D-085** resta tetto tecnico).
 
-### Lettura Founder
+### Baseline P21 — **CHIUSO** Founder
 
-| Classe | Cosa |
-|--------|------|
-| **Già solido** | Meter+413 D-085 · Cap.19 storage≠∞ · HAL onesto restore assente · Valuator/Mutui widget · feed trash-aware · Publishing «in arrivo» |
-| **Realmente rischioso** | CT-01 listino pubblico · CT-03/11 bak/restore · CT-06 demo+Stripe · CT-09 D-100 |
-| **Da decidere** | K-CT-01 · K-CT-02 |
-| **Può aspettare** | CT-14 · esign mock senza provider · staging 501 se non venduto · Cap.3/4 wording |
-
-**Niente fix. Nessuna severità P0–P3. Listino fermo. Attende «vai».**  
-→ **P22** sotto. GTM-01 in coda.
+* **CT-01 / K-CT-01 → D-109**: una sola fonte autorevole per pricing; legacy esplicito.
+* **CT-03**: bak esistente ≠ verificato ≠ restore disponibile ≠ restore testato; marketing/UI/Ops ≤ capability reale (**D-096**).
+* **CT-06 → D-110**: demo mode esplicito sì; `localStorage` ≠ entitlement authority.
+* **CT-09**: **D-100** decisione **trasversale** (contratto invite unico).
+* **CT-11**: operatività → **D-105** bak health osservabile in Founder Ops.
+* **K-CT-02**: enforcement BE solo per entitlement commerciali definiti.
+**Nessun nuovo P0–P3. Nessun codice. Listino fermo.** → **P22** sotto.
 
 ---
 
 ## Punto 22 — Casi limite · consegnato 30-Set (master §21)
 
-**Ambito**: happy + unhappy path che rompono demo SaaS o multi-tenant safety. Nessun fix. Nessun P0–P3. Non riaprire D-094…D-108 / GTM-01 / P18–P21 (solo link). P21 in chiusura con: pricing SoT=`GET /billing/plans`; bak≠restore; localStorage≠entitlement; D-100 trasversale; Founder Ops bak health.
+**Ambito**: happy + unhappy path che rompono demo SaaS o multi-tenant safety. Nessun fix. Nessun P0–P3. Non riaprire D-094…D-110 / GTM-01 / P18–P21 (solo link). Baseline P21 chiusa: **D-109** pricing SoT; bak≠restore; **D-110** localStorage≠entitlement; **D-100** trasversale; **D-105** bak health.
 
 ### Verdetto
 

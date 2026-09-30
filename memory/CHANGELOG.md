@@ -1,5 +1,15 @@
 # OMNIA — Changelog
 
+## 2026-09-30 — P21 CHIUSO · D-109/D-110 · P22 Casi limite (EC-*)
+
+**Tipo**: Docs / SoT audit · **nessun codice** · **listino fermo** · no nuovi P0–P3.
+
+- **P21 CHIUSO**: **D-109** `GET /billing/plans` = SoT pricing (landing allineata o nascosta; Founders-50 solo legacy esplicito); **D-110** demo mode esplicito · `localStorage` ≠ entitlement; CT-03 capability ladder bak/restore; **D-100** trasversale; CT-11→**D-105**; K-CT-02 enforcement BE solo se entitlement GTM reali
+- **P22 Casi limite** consegnato: **EC-01…EC-15**; K-EC-01/02 aperti
+- Master State aggiornato · prossimo = analisi Founder P22
+
+---
+
 ## 2026-09-30 — P20 CHIUSO · D-108 · P21 Coerenza (CT-*)
 
 **Tipo**: Docs / SoT audit · **nessun codice** · **listino fermo** · no nuovi P0–P3.

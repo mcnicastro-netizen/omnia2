@@ -1560,15 +1560,16 @@ Registro di tutte le decisioni di business e tecniche prese durante il progetto.
 - **Stato**: ✅ **DECISIONE DI DOMINIO REGISTRATA** (docs 29-Set-2026) · codice ⏳
 
 ### D-100 — Invite accept: mai overwrite password utente esistente · 29-Set-2026
-- **Data**: 29 Settembre 2026
-- **Contesto**: Audit P15 (RC-11) + feedback Founder. Oggi `POST` accept invite su email già registrata fa `$set` di `password_hash` (`invites.py:246-254`) — overwrite password utente esistente (P4.2 / Cap.13). Tier RC Founder: **rosso** = mutazione credenziali inattesa.
+- **Data**: 29 Settembre 2026 · **rafforzamento**: 30-Set-2026 (P21 — trasversale)
+- **Contesto**: Audit P15 (RC-11) + feedback Founder. Oggi `POST` accept invite su email già registrata fa `$set` di `password_hash` (`invites.py:246-254`) — overwrite password utente esistente (P4.2 / Cap.13). Tier RC Founder: **rosso** = mutazione credenziali inattesa. Compare anche in AF/EH/CT/EC.
 - **Decisione**:
   1. Se l’utente **esiste già**: **link** `agency_ids` + accettazione invite (ruolo/membership); **mai** sovrascrivere `password_hash`.
   2. Autenticazione: login esistente / sessione / flusso “collega account”, non reset password implicito via invite.
   3. Solo utente **nuovo** può impostare password in accept.
   4. Trattare come **fix-needed** (non nice-to-have / non solo backlog futuro).
+  5. **Trasversale** (P21): un solo contratto invite di riferimento — evitare fix indipendenti su sintomi AF/EH/CT.
 - **Implementazione**: ❌ codice ⏳ — post-audit / «vai» esplicito (priorità alta tra i fix).
-- **Stato**: ✅ **DECISIONE DI DOMINIO REGISTRATA** (docs 29-Set-2026) · codice ⏳
+- **Stato**: ✅ **DECISIONE DI DOMINIO REGISTRATA** (docs 29-Set-2026 · trasversale P21) · codice ⏳
 
 ### D-101 — Job automatici: single-instance operativa (non lock multi-pod) · 29-Set-2026
 - **Data**: 29 Settembre 2026
@@ -1660,5 +1661,28 @@ Registro di tutte le decisioni di business e tecniche prese durante il progetto.
   3. `max_instances=1` aiuta ma **non** sostituisce la definizione di ownership.
 - **Implementazione**: ❌ codice/ops ⏳ — post-audit / «vai».
 - **Stato**: ✅ **DECISIONE OPERATIVA REGISTRATA** (docs 30-Set-2026 · P20 CHIUSO) · codice ⏳
+
+### D-109 — Pricing applicativo: `GET /billing/plans` = SoT · 30-Set-2026
+- **Data**: 30 Settembre 2026
+- **Contesto**: Audit P21 (CT-01 / K-CT-01). Landing `/agenzie` con prezzi morti crea contratto commerciale divergente rispetto al runtime.
+- **Decisione**:
+  1. **`GET /billing/plans` = source of truth** del pricing applicativo corrente.
+  2. Landing/marketing: **allineata dinamicamente** al contratto corrente, **oppure ritirata/nascosta** finché non può esserlo.
+  3. Founders-50 (o simili) solo se **esplicitamente legacy/founder offer** — mai terza interpretazione nascosta del listino.
+  4. Principio: una sola fonte autorevole per il prezzo corrente; legacy nominato come legacy.
+- **Vincolo**: **listino fermo** — nessuna revisione €/quote ora (catena bak+restore → costi → eventuale revisione resta).
+- **Correlato P21**: CT-03 capability ladder bak/restore; CT-11 → **D-105**; K-CT-02 = hard enforcement BE solo per entitlement GTM realmente definiti (altrimenti non simulare); **D-100** trasversale.
+- **Implementazione**: ❌ codice/copy ⏳ — post-audit / «vai».
+- **Stato**: ✅ **DECISIONE DI DOMINIO REGISTRATA** (docs 30-Set-2026 · P21 CHIUSO) · codice/copy ⏳
+
+### D-110 — Demo mode esplicito · `localStorage` ≠ entitlement · 30-Set-2026
+- **Data**: 30 Settembre 2026
+- **Contesto**: Audit P21 (CT-06). Stripe off → 503 può essere legittimo; il punto delicato è lo sblocco checkout via `localStorage` che simula entitlement.
+- **Decisione**:
+  1. `localStorage` (o storage client) **non** è autorità di entitlement / “utente ha pagato”.
+  2. Demo mode accettabile solo come **modo applicativo esplicito** (presentazione), non come simulazione di piano reale.
+  3. Coerente con una sola source of truth per lo stato semantico (**D-106**, **D-107**).
+- **Implementazione**: ❌ codice ⏳ — post-audit / «vai».
+- **Stato**: ✅ **DECISIONE DI DOMINIO REGISTRATA** (docs 30-Set-2026 · P21 CHIUSO) · codice ⏳
 
 
