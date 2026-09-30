@@ -119,7 +119,7 @@ export default function AgenziesLandingPage() {
     try {
       const payload = {
         ...formData,
-        agents_count: parseInt(formData.agents_count, 10) || 1,
+        agents_count: 1, // non richiesto in form — default lead
         tier_interest: formData.tier_interest || null,
         notes: formData.notes || null,
       };
@@ -199,7 +199,7 @@ export default function AgenziesLandingPage() {
             <a href="#founders-form"
               className="inline-block bg-[#C19A6B] text-white px-10 py-4 text-sm uppercase tracking-widest hover:bg-[#a8845a] transition"
               data-testid="agenzie-hero-cta">
-              Voglio il mio posto →
+              Prenota il tuo posto →
             </a>
           </div>
         </div>
@@ -344,11 +344,6 @@ export default function AgenziesLandingPage() {
                   data-testid="founders-input-street-number"
                   className="bg-white/10 border border-white/20 px-4 py-3 text-white placeholder:text-white/40 focus:outline-none focus:border-[#C19A6B]" />
               </div>
-              <input name="agents_count" type="number" min="1" max="500" required
-                value={formData.agents_count} onChange={handleChange}
-                placeholder="Numero agenti *"
-                data-testid="founders-input-agents"
-                className="w-full bg-white/10 border border-white/20 px-4 py-3 text-white placeholder:text-white/40 focus:outline-none focus:border-[#C19A6B]" />
               <select name="tier_interest" value={formData.tier_interest} onChange={handleChange}
                 data-testid="founders-input-package"
                 className="w-full bg-white/10 border border-white/20 px-4 py-3 text-white focus:outline-none focus:border-[#C19A6B]">
@@ -377,7 +372,7 @@ export default function AgenziesLandingPage() {
               <button type="submit" disabled={submitting || isFull}
                 data-testid="agenzie-form-submit"
                 className="w-full bg-[#C19A6B] text-white py-4 text-sm uppercase tracking-widest hover:bg-[#a8845a] transition disabled:opacity-50 disabled:cursor-not-allowed">
-                {submitting ? "Invio in corso..." : isFull ? "Programma completo" : `Prenota il tuo posto #${spots.registered + 1}`}
+                {submitting ? "Invio in corso..." : isFull ? "Programma completo" : "Richiedi demo"}
               </button>
 
               <p className="text-xs text-white/40 text-center mt-4">

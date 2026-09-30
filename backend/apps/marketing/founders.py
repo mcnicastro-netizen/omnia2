@@ -38,7 +38,7 @@ class FounderRegistration(BaseModel):
     city: str = Field(min_length=2, max_length=100)
     address: str = Field(min_length=2, max_length=200, description="Via / indirizzo sede")
     street_number: str = Field(min_length=1, max_length=20, description="Civico")
-    agents_count: int = Field(ge=1, le=500, description="Number of agents in the agency")
+    agents_count: int = Field(default=1, ge=1, le=500, description="Optional; default 1 if omitted from form")
     tier_interest: Optional[str] = Field(default=None, description="Optional: starter|pro|agency")
     notes: Optional[str] = Field(default=None, max_length=500)
 
