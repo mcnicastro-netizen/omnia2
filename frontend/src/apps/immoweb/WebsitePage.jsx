@@ -34,6 +34,17 @@ export default function WebsitePage() {
 
   const showToast = (msg) => { setToast(msg); setTimeout(() => setToast(""), 4500); };
 
+  const apiError = (err) => {
+    const detail = err?.response?.data?.detail;
+    const code = typeof detail === "string" ? detail : "";
+    if (code) {
+      const key = `website.err_${code}`;
+      const translated = t(key);
+      if (translated && translated !== key) return translated;
+    }
+    return String(detail || err.message);
+  };
+
   const loadAll = async () => {
     setLoading(true);
     try {
@@ -52,6 +63,14 @@ export default function WebsitePage() {
   };
 
   useEffect(() => { loadAll(); }, []);
+
+  useEffect(() => {
+    if (extractUrl) return;
+    const fromExtracted =
+      current?.extracted_profile?.extracted_from
+      || current?.extracted_profile?.source_url;
+    if (fromExtracted) setExtractUrl(fromExtracted);
+  }, [current, extractUrl]);
 
   const refreshIframe = () => {
     if (iframeRef.current) {
@@ -73,7 +92,7 @@ export default function WebsitePage() {
       setCurrent(r2.data);
       showToast(t("website.extract_success"));
     } catch (err) {
-      setError(String(err?.response?.data?.detail || err.message));
+      setError(apiError(err));
     } finally {
       setExtracting(false);
     }
@@ -89,7 +108,7 @@ export default function WebsitePage() {
       showToast(t("website.auto_success", { theme: data.theme_id }));
       refreshIframe();
     } catch (err) {
-      setError(String(err?.response?.data?.detail || err.message));
+      setError(apiError(err));
     } finally {
       setApplying(false);
     }
@@ -99,10 +118,11 @@ export default function WebsitePage() {
     setApplying(true); setError("");
     try {
       // preserve any extracted palette/logo from current extracted_profile
-      const bp = current?.extracted_profile?.brand_profile || {};
-      const palette = bp.palette || {};
-      const logo = current?.extracted_profile?.logo_hint?.url;
-      const tagline = bp.voice?.tagline_guess;
+      const extracted = current?.extracted_profile || {};
+      const bp = extracted.brand_profile || (extracted.palette ? extracted : {});
+      const palette = bp.palette || extracted.palette || {};
+      const logo = extracted.logo_hint?.url || bp.logo_hint?.url;
+      const tagline = bp.voice?.tagline_guess || extracted.voice?.tagline_guess;
       await api.post("/app/website/theme/apply", {
         theme_id: themeId,
         palette: {
@@ -120,7 +140,7 @@ export default function WebsitePage() {
       showToast(t("website.apply_success", { theme: themeId }));
       refreshIframe();
     } catch (err) {
-      setError(String(err?.response?.data?.detail || err.message));
+      setError(apiError(err));
     } finally {
       setApplying(false);
     }
@@ -496,12 +516,17 @@ function DNSRow({ label, host, value, onCopy }) {
 
 
 function ExtractedSummary({ data, onAutoConfigure, autoBtnDisabled, t }) {
-  const bp = data?.brand_profile || data?.extracted_profile?.brand_profile || {};
-  const logoHint = data?.summary?.logo_found ? "✓" : (data?.logo_hint?.url ? "✓" : "—");
-  const palette = bp.palette || {};
-  const voice = bp.voice || {};
-  const structure = bp.structure || {};
-  const confidence = bp.confidence ?? 0;
+  const nested = data?.brand_profile || data?.extracted_profile?.brand_profile;
+  const bp = (nested && (nested.palette || nested.voice || nested.confidence))
+    ? nested
+    : (data?.palette ? data : {});
+  const logoHint = data?.summary?.logo_found
+    ? "✓"
+    : ((data?.logo_hint?.url || bp?.logo_hint?.url) ? "✓" : "—");
+  const palette = bp.palette || data?.palette || {};
+  const voice = bp.voice || data?.voice || {};
+  const structure = bp.structure || data?.structure || {};
+  const confidence = bp.confidence ?? data?.confidence ?? 0;
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-3 flex-wrap">

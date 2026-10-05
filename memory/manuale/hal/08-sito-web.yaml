@@ -207,8 +207,8 @@ voci:
           automaticamente."
         - "OMNIA scelglie il tema con heuristic mapping: voice=lusso ->
           Luxury; header=bold o card=image_dominant -> Bold; voice=
-          familiare/amichevole -> Classic; voice=tecnico -> Bold;
-          altrimenti Minimal."
+          familiare/amichevole -> Classic; header=classic -> Classic;
+          voice=tecnico -> Bold; altrimenti Minimal."
         - "La palette applicata = quella estratta (solo hex validi
           #RRGGBB), altrimenti default del tema."
         - "Il logo e la tagline provengono dal brand estratto o dal
@@ -216,10 +216,12 @@ voci:
         - "Salva theme_config con source: auto_from_extracted e
           timestamp applied_at."
       errori_comuni:
-        - problema: "no_extracted_profile (400)"
+        - problema: "no_extracted_profile (400) o banner rosso in Brand Studio"
           soluzione: >
-            Non hai ancora fatto l'estrazione. Torna in Brand Extractor,
-            estrai, poi rilancia auto-configura.
+            Succede anche se logo/palette sono in forma 'piatta' (seed
+            assistito) senza brand_profile nested. Dal 5-Ott l'API
+            normalizza entrambi gli shape. Ricarica la pagina e premi
+            Configura sito automaticamente, oppure Estrai brand.
       permessi:
         - Titolare (agency_admin), super_admin
     screenshot: []

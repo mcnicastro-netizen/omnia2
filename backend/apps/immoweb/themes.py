@@ -144,6 +144,8 @@ def auto_pick_theme(brand_profile: Dict[str, Any]) -> str:
         return "bold"
     if voice in ("familiare", "amichevole"):
         return "classic"
+    if header_style == "classic":
+        return "classic"
     if voice == "tecnico":
         return "bold"
     return "minimal"
@@ -159,6 +161,44 @@ def _palette_from_brand_profile(brand_profile: Dict[str, Any]) -> Dict[str, str]
         if isinstance(v, str) and _re.match(r"^#[0-9A-Fa-f]{6}$", v.strip()):
             out[k] = v.strip()
     return out
+
+
+def normalize_extracted_profile(extracted: Optional[Dict[str, Any]]) -> Dict[str, Any]:
+    """Accept extractor shape (`brand_profile` nested) and seed/legacy flat shape.
+
+    Seed Nicastro wrote palette/voice/logo_hint on extracted_profile itself.
+    Auto-configure used to 400 `no_extracted_profile` because it only read
+    `extracted_profile.brand_profile`.
+    """
+    extracted = dict(extracted or {})
+    bp = extracted.get("brand_profile")
+    nested_ok = isinstance(bp, dict) and bool(
+        bp.get("palette") or bp.get("voice") or bp.get("confidence") or bp.get("logo_hint")
+    )
+    if nested_ok:
+        if not extracted.get("logo_hint") and bp.get("logo_hint"):
+            extracted["logo_hint"] = bp.get("logo_hint")
+        return extracted
+    if extracted.get("palette") or extracted.get("voice") or extracted.get("logo_hint"):
+        logo = extracted.get("logo_hint")
+        return {
+            "brand_profile": {
+                "palette": extracted.get("palette") or {},
+                "typography": extracted.get("typography") or {},
+                "structure": extracted.get("structure") or {},
+                "voice": extracted.get("voice") or {},
+                "logo_hint": logo,
+                "confidence": extracted.get("confidence") or 0,
+            },
+            "logo_hint": logo,
+            "extracted_from": extracted.get("extracted_from") or extracted.get("source_url"),
+            "source_url": extracted.get("source_url") or extracted.get("extracted_from"),
+            "extracted_at": extracted.get("extracted_at"),
+            "title": extracted.get("title"),
+            "assisted": extracted.get("assisted"),
+            "note": extracted.get("note"),
+        }
+    return extracted
 
 
 # ============================================================
@@ -651,7 +691,7 @@ async def get_current_theme(user: dict = Depends(get_current_user)):
     agency = await _agency_for(user)
     saved = (agency.get("website") or {}).get("theme_config")
     resolved = _resolve_theme_config(agency)
-    extracted = (agency.get("website") or {}).get("extracted_profile")
+    extracted = normalize_extracted_profile((agency.get("website") or {}).get("extracted_profile"))
     return {
         "agency_id": agency["id"],
         "agency_slug": agency.get("slug"),
@@ -705,9 +745,13 @@ async def auto_configure(
     """Picks the best theme + palette from the previously extracted brand_profile.
     Saves it as the active theme_config and returns the resolved config."""
     agency = await _agency_for(user)
-    extracted = (agency.get("website") or {}).get("extracted_profile") or {}
+    extracted = normalize_extracted_profile((agency.get("website") or {}).get("extracted_profile"))
     brand_profile = extracted.get("brand_profile") or {}
-    if not brand_profile:
+    if not (
+        brand_profile.get("palette")
+        or brand_profile.get("voice")
+        or extracted.get("logo_hint")
+    ):
         raise HTTPException(status_code=400, detail="no_extracted_profile")
 
     theme_id = auto_pick_theme(brand_profile)
@@ -728,7 +772,13 @@ async def auto_configure(
     }
     await db.agencies.update_one(
         {"id": agency["id"]},
-        {"$set": {"website.theme_config": theme_config, "updated_at": now}},
+        {
+            "$set": {
+                "website.theme_config": theme_config,
+                "website.extracted_profile": extracted,
+                "updated_at": now,
+            }
+        },
     )
     updated = await db.agencies.find_one({"id": agency["id"]})
     return {
@@ -752,7 +802,7 @@ async def preview_theme(
     agency = await _agency_for(user)
 
     # Inject a transient theme_config into a shallow copy of agency
-    extracted = (agency.get("website") or {}).get("extracted_profile") or {}
+    extracted = normalize_extracted_profile((agency.get("website") or {}).get("extracted_profile"))
     bp = extracted.get("brand_profile") or {}
     transient = dict(agency)
     transient_website = dict(agency.get("website") or {})

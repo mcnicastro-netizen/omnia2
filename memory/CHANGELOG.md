@@ -1,3 +1,9 @@
+## 2026-10-05 — Brand Studio: no_extracted_profile su profilo seed piatto
+
+- Causa: seed Nicastro salvava palette/logo in piano; auto-config leggeva solo `brand_profile` nested → 400
+- Fix: `normalize_extracted_profile` + seed nested + UI legge entrambi gli shape
+- Heuristic: `header_style: classic` → tema Classic
+
 ## 2026-10-05 — Nicastro CRM svuotato per dati reali
 
 - `backend/scripts/wipe_nicastro_operational.py` — solo `nicastro-agency-001`

@@ -156,6 +156,7 @@ Un unico click che combina brand estratto + scelta tema + palette dedotta.
 | `lusso` | qualunque | **Luxury** |
 | — | `header_style: bold` **o** `card_style: image_dominant` | **Bold** |
 | `familiare` **o** `amichevole` | — | **Classic** |
+| — | `header_style: classic` | **Classic** |
 | `tecnico` | — | **Bold** |
 | altrimenti | — | **Minimal** |
 
@@ -174,7 +175,7 @@ La **tagline** proposta = quella estratta come `tagline_guess` (o quella salvata
 
 | Messaggio | Perché succede | Cosa fare |
 |-----------|----------------|-----------|
-| *`no_extracted_profile`* (400) | Non hai ancora estratto un brand | Vai in §8.2 e lancia l'estrazione |
+| *`no_extracted_profile`* (400) | Profilo brand assente **o** salvato in forma piatta (seed assistito senza `brand_profile` nested) | Ricarica Brand Studio: l’API normalizza lo shape. Poi **Configura sito automaticamente** o **Estrai brand**. |
 
 **Cosa NON fa l'auto-config**
 - ❌ Non richiede il dominio custom.

@@ -237,15 +237,21 @@ async def _ensure_agency(db) -> None:
             "custom_domain": "www.nicastroimmobiliare.it",
             "custom_domain_status": None,
             "extracted_profile": {
-                "source_url": SITE_URL,
-                "palette": {
-                    "primary": PRIMARY,
-                    "accent": ACCENT,
-                    "neutral_dark": "#2B2B2B",
-                    "neutral_light": "#F4F4F4",
+                "brand_profile": {
+                    "palette": {
+                        "primary": PRIMARY,
+                        "accent": ACCENT,
+                        "neutral_dark": "#2B2B2B",
+                        "neutral_light": "#F4F4F4",
+                    },
+                    "voice": {"tone": "professionale", "tagline_guess": "La tua casa in Sicilia"},
+                    "structure": {"header_style": "classic"},
+                    "logo_hint": {"url": LOGO_URL, "alt": "Nicastroimmobiliare"},
+                    "confidence": 70,
                 },
-                "voice": {"tone": "professionale", "tagline_guess": "La tua casa in Sicilia"},
                 "logo_hint": {"url": LOGO_URL, "alt": "Nicastroimmobiliare"},
+                "extracted_from": SITE_URL,
+                "source_url": SITE_URL,
                 "confidence": 70,
                 "assisted": True,
                 "note": "A-037: estrazione assistita (crawl CSS), non auto-clone sito",
