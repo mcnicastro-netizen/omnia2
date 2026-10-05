@@ -157,7 +157,7 @@ export default function WebsitePage() {
   const extracted = current?.extracted_profile;
   const resolved = current?.resolved;
   const publicUrl = current?.public_url
-    ? `${BACKEND_URL}${current.public_url}`
+    ? `${BACKEND_URL || ""}${current.public_url}`
     : null;
   const previewSrc = publicUrl
     ? `${publicUrl}?t=${Date.now()}`

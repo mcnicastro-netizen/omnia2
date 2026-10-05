@@ -234,8 +234,14 @@ async def _ensure_agency(db) -> None:
             "mode": "omnia_template",
             "external_url": SITE_URL,
             "template_id": "classic",
-            "custom_domain": "www.nicastroimmobiliare.it",
+            # Do NOT seed custom_domain: that marks Brand Studio "IN ATTESA DNS"
+            # for the agency's *live* production domain. Dogfood uses tunnel slug.
+            "custom_domain": None,
             "custom_domain_status": None,
+            "custom_domain_token": None,
+            "custom_domain_verified_at": None,
+            "custom_domain_requested_at": None,
+            "custom_domain_last_error": None,
             "extracted_profile": {
                 "brand_profile": {
                     "palette": {
