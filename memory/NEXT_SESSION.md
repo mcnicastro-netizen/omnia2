@@ -29,7 +29,7 @@
 4. ✅ Prep **assistita** (A-037 non chiude ancora URL→demo automatica):
    - palette/logo da crawl sito (`#BC4F08` / `#3DB04B` + logo AgestaWeb)
    - tema Classic + 4 immobili CT + 3 clienti  
-5. ⏳ Inviare link login / accesso demo a Marco-titolare  
+5. ✅ Login QA browser PASS (titolare Nicastro · 4 immobili CT) — invio link a Marco-titolare  
 6. ⏳ Annotare cosa gratta → backlog / A-037
 
 ### Limiti onesti da non promettere in mail
