@@ -35,9 +35,9 @@ NICASTRO_ADMIN_PASSWORD = os.environ.get(
 )
 NICASTRO_ADMIN_USER_ID = "nicastro-admin-001"
 
-# Palette assistita da https://www.nicastroimmobiliare.it/ (crawl 2026-10-05)
-PRIMARY = "#BC4F08"
-ACCENT = "#3DB04B"
+# Chrome sito reale (nav/search verde Gestanet-like) — Track A layout parity
+PRIMARY = "#3D8B40"
+ACCENT = "#2E7D32"
 LOGO_URL = "https://media.agestaweb.it/siti/02427/public/foto/logo.jpg"
 SITE_URL = "https://www.nicastroimmobiliare.it/"
 
@@ -278,6 +278,9 @@ async def _ensure_agency(db) -> None:
         "plan_type": "turnkey",
         "owner_id": NICASTRO_ADMIN_USER_ID,
         "is_active": True,
+        "mls_enabled": True,
+        "mls_joined_at": NOW,
+        "mls_province": "CT",
         "onboarding_completed": True,
         "domain_sovereignty_confirmed": True,
         "domain_sovereignty_confirmed_at": NOW,

@@ -127,6 +127,23 @@ async def site_index(slug: str):
     props = await db.properties.find(
         with_not_trashed({"agency_id": agency["id"], "status": "active"}), {"_id": 0},
     ).sort("updated_at", -1).to_list(length=200)
+    # Claim box MLS (layout Track A): conteggio live agenzie in rete, se aderente.
+    if agency.get("mls_enabled"):
+        try:
+            network_props = await db.properties.count_documents(
+                with_not_trashed({
+                    "status": "active",
+                    "mls_shared": True,
+                    "visibility": {"$in": ["public", "mls_only"]},
+                })
+            )
+            agency = dict(agency)
+            agency["_mls_network_count"] = int(network_props) or await db.properties.count_documents(
+                with_not_trashed({"status": "active", "visibility": {"$in": ["public", "mls_only"]}})
+            )
+        except Exception:
+            agency = dict(agency)
+            agency["_mls_network_count"] = 0
     html = render_index(agency, props, slug)
     return Response(content=html, media_type="text/html; charset=utf-8")
 
