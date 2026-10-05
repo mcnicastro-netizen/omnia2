@@ -1,3 +1,9 @@
+## 2026-10-05 — Project rule anti–New Project (niente Settings)
+
+- `.cursor/rules/anti-new-project.mdc` Always Apply: Prompt 2 Founder nel repo
+- Serve perché le User Rules si editano solo da Cursor Desktop (Customize → Rules), non da cursor.com/agents
+- Limite onesto: su New Project / Origin-tmp il file non c’è — non cliccare Start from scratch
+
 ## 2026-10-05 — Vault omnia2: tre key presenti (stato pod)
 
 - `RESEND_API_KEY`, `GEMINI_API_KEY`, `FAL_KEY` **PRESENT** su env omnia2 (`scripts/check-secrets-presence.sh`)

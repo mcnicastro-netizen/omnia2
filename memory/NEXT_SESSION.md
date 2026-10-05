@@ -45,6 +45,7 @@ Verifica: `bash scripts/check-secrets-presence.sh` (nomi + present/missing, **ma
 - SoT key = password manager + console provider. Cursor vault = sola copia di iniezione.  
 - Inventario nomi: `memory/CLOUD_SECRETS_INVENTORY.md`. Policy: `memory/INTEGRITY_AND_SECRETS.md`.  
 - Se un *altro* agent mostra solo `GITHUB_TOKEN` → environment sbagliato (New Project / Origin-tmp), non chiavi cancellate. **Non** usare New Project per OMNIA.
+- Regola anti–New Project committata in `.cursor/rules/anti-new-project.mdc` (Always Apply). Founder non deve incollarla in Settings. Su `cursor.com/agents` aprire **sempre** omnia2, mai Start from scratch / New Project.
 
 ### Limiti onesti da non promettere in mail
 - Clone automatico del sito **non** ancora live (A-037)  
