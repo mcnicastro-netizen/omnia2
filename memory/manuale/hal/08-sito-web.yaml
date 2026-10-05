@@ -558,6 +558,7 @@ voci:
       - sito.brand-extractor
       - sito.temi-disponibili
       - domain.non-proprietario-a037
+      - api.demo-nicastro
     domanda_naturale: "Possiamo personalizzare la demo col look del mio sito attuale?"
     contenuto:
       a_cosa_serve: >
@@ -574,7 +575,10 @@ voci:
           pubblica vestita (A-037 aperto)."
         - "I 4 temi backend ci sono; UI template pack commerciale ancora
           stub — A-037 deve chiuderlo per no-sito/restyling/non-proprietario."
+        - "5-Ott-2026: prep ASSISTITA Nicastroimmobiliare fatta
+          (brand da sito + Classic + 4 immobili CT). Non chiude A-037."
         - "Non promettere clone automatico del sito finché A-037 non è PASS."
+        - "Credenziali titolare dogfood: voce api.demo-nicastro (Cap. 00)."
       errori_comuni:
         - problema: "Ho dato l'URL ma la demo non ha il mio look"
           soluzione: >

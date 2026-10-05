@@ -38,10 +38,26 @@ Un blocco alla volta · niente fix senza «vai» · no P0–P3 prematuri · **li
 | **D-113** | Restore manuale testabile pre-GTM (non piattaforma DR) |
 | **D-114** | Sostenibilità bak/media = priorità pre-attivazione; O0 = numeri+design vincolante |
 | **D-115** | Programma O0…O6 approvato · **no self-serve finché O6 ≠ PASS** |
+| **D-116** | SoT codice = github/main · SoT API key = password manager + console · Cursor = sola iniezione · no New Project |
 
 **SoT continuità:** `docs/audit/OMNIA_AUDIT_STATE.md`  
 **Sequenza priorità (D-099):** fascicolo → orphan → Bak+Restore → retention → costi.  
 **Niente codice** senza «vai».
+
+---
+
+## D-116 · Integrità Cloud (5-Ott-2026)
+
+| Cosa | SoT | Copia | Mai |
+|------|-----|-------|-----|
+| Codice | `github.com/mcnicastro-netizen/omnia2` `main` | clone locale / pod | Origin-tmp, New Project come master |
+| API key (`RESEND_API_KEY`, `GEMINI_API_KEY`, `FAL_KEY`, …) | password manager + console provider | vault Secrets env **omnia2** | git, chat, `.env` committato |
+
+- New Project / `tmp-*` = vault **vuoto** (spesso solo `GITHUB_TOKEN`). Non è una cancellazione su Resend/Gemini/fal.
+- Verifica presenza: `bash scripts/check-secrets-presence.sh` — **mai** stampare valori.
+- Regola agent: `.cursor/rules/anti-new-project.mdc` (Always Apply). User Rules Desktop = opzionale; non si editano da `cursor.com/agents`.
+- **Stato 5 Ott (questo env omnia2):** tre key **PRESENT**. Inventario nomi: `memory/CLOUD_SECRETS_INVENTORY.md`.
+- Demo dogfood cliente-1: seed `backend/scripts/seed_nicastro_agency.py` · agenzia `nicastro-agency-001` · slug `nicastroimmobiliare` · login titolare `titolare@nicastroimmobiliare.it` (≠ `demo-agency-001`). A-037 ancora aperta (niente clone automatico URL→demo).
 
 ---
 

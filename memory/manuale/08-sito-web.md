@@ -396,12 +396,15 @@ Puoi rimuovere il custom domain in qualsiasi momento con **Elimina dominio**. At
 | UI template / picker commerciale | ❌ stub «presto disponibile» in Settings (vedi anche Cap. 19) |
 | Lead landing `/it/agenzie`: «Hai un sito?» + URL | ✅ (30-Set-2026) |
 | Pacchetto template per no-sito / restyling / recovery dominio | ❌ **A-037 aperto** |
+| Prep **assistita** Nicastroimmobiliare (cliente-1, 5-Ott-2026) | ✅ palette/logo da crawl + Classic + 4 immobili CT — **non** chiude A-037 |
 
 ### Relazione con Domain Vault
 Chi scopre di non essere proprietario del dominio (es. registrato da un fornitore IT) usa `/it/verifica-dominio` (Cap. 17) e il percorso A-037 (template + recovery dominio).
 
 ### Promessa commerciale
 Non promettere «cloniamo il tuo sito in automatico» finché A-037 non è PASS sul loop URL→demo.
+
+**Dogfood 5-Ott-2026**: demo Nicastroimmobiliare pronta in prep assistita (seed `seed_nicastro_agency.py`). Esperienza titolare ≠ super_admin. Vedi Cap. 00 § D-116 e voce HAL `api.demo-nicastro`.
 
 ---
 
@@ -416,4 +419,4 @@ Non promettere «cloniamo il tuo sito in automatico» finché A-037 non è PASS 
 
 ---
 
-**Versione**: v1.1 · 30-Set-2026 (+ §8.11 A-037) · base v1.0 Feb 2026
+**Versione**: v1.2 · 5-Ott-2026 (+ dogfood Nicastro assistita · A-037 ancora aperta) · base v1.1 30-Set-2026

@@ -289,7 +289,9 @@ voci:
     domanda_naturale: "Come chiama Gemini il backend?"
     contenuto:
       a_cosa_serve: >
-        shared/llm (+ LlmChat in shared.llm.chat) → GEMINI_API_KEY / gemini-3.5-flash.
+        shared/llm (+ LlmChat in shared.llm.chat) → GEMINI_API_KEY
+        (alias GOOGLE_API_KEY / EMERGENT_LLM_KEY). D-116: vault omnia2,
+        non .env git. 5-Ott-2026 GEMINI PRESENT.
       quando_si_usa: >
         Quando HAL deve assistere su come è fatto il codice o quale endpoint usare.
       passi:
@@ -497,7 +499,7 @@ voci:
     pubblico: [super_admin]
     livello: avanzato
     tags: [codice, audit, architettura, roadmap, d-073]
-    correlati: [api.tenant-isolation, api.auth-lifecycle, api.entity-lifecycle, api.jobs-async, api.storage-costi, api.backup-archivio, api.restore-disaster, api.retention-cancellazione]
+    correlati: [api.tenant-isolation, api.auth-lifecycle, api.entity-lifecycle, api.jobs-async, api.storage-costi, api.backup-archivio, api.restore-disaster, api.retention-cancellazione, api.secrets-sot, api.anti-new-project]
     domanda_naturale: "A che punto è l'audit architettura? Cosa manca? Posso fixare i finding?"
     contenuto:
       a_cosa_serve: >
@@ -757,4 +759,157 @@ voci:
             valido, non garantito (D-097).
       permessi:
         - super_admin / Founder
+      screenshot: []
+
+  - id: api.secrets-sot
+    titolo: Dove stanno davvero le API key (D-116)
+    modulo: Codice API
+    widget: null
+    pubblico: [super_admin]
+    livello: avanzato
+    tags: [codice, secrets, d-116, resend, gemini, fal, vault, integrita]
+    correlati: [api.anti-new-project, api.check-secrets, api.llm, notifiche.email-panoramica]
+    domanda_naturale: >
+      Le API key sono perse? Dove recupero RESEND GEMINI FAL?
+      Dove sta RESEND_API_KEY GEMINI_API_KEY FAL_KEY?
+      Cursor è l'unica copia? check-secrets-presence.sh
+    contenuto:
+      a_cosa_serve: >
+        D-116 integrità secrets: le API key NON sono perse se il vault
+        Cursor è vuoto. SoT RESEND_API_KEY GEMINI_API_KEY FAL_KEY =
+        password manager entry OMNIA + console Resend / Google AI Studio
+        / fal.ai. Vault Secrets environment omnia2 = sola copia di
+        iniezione. Valori mai in git, chat, screenshot, backend/.env
+        committato. Script check-secrets-presence.sh = PRESENT/MISSING.
+      quando_si_usa: >
+        Quando un agent mostra vault vuoto, solo GITHUB_TOKEN, o
+        mail in [EMAIL MOCK] / HAL 503 llm.
+      passi:
+        - "Non ruotare le key a caso: prima verifica se sei su omnia2."
+        - "SoT valori: password manager entry OMNIA + console provider."
+        - "Copia operativa: Dashboard Cursor → Environments → omnia2 → Secrets."
+        - "Dopo Save Secrets serve un NUOVO agent sullo stesso env."
+        - "Mai stampare i valori. Presence only."
+      errori_comuni:
+        - problema: "Vedo solo GITHUB_TOKEN, le key sono cancellate"
+          soluzione: >
+            Quasi sempre environment sbagliato (New Project / Origin-tmp).
+            Le console Resend/Gemini/fal non sono state svuotate.
+            Vedi api.anti-new-project.
+      permessi:
+        - super_admin / Founder
+      screenshot: []
+
+  - id: api.anti-new-project
+    titolo: Mai New Project / Origin-tmp per OMNIA
+    modulo: Codice API
+    widget: null
+    pubblico: [super_admin]
+    livello: avanzato
+    tags: [codice, d-087, d-116, omnia2, new-project, origin-tmp, cloud-agent]
+    correlati: [api.secrets-sot, api.check-secrets, api.demo-nicastro]
+    domanda_naturale: >
+      Posso continuare OMNIA da New Project?
+      Posso continuare OMNIA da New Project o da un repo tmp di Cursor?
+      Start from scratch Origin-tmp tmp-* environment vuoto
+    contenuto:
+      a_cosa_serve: >
+        Anti New Project: NON continuare OMNIA da New Project, Start
+        from scratch, o repo Origin-tmp / tmp-*. SoT codice (D-087 +
+        D-116) = github.com/mcnicastro-netizen/omnia2 branch main.
+        New Project apre vault Secrets vuoto (solo GITHUB_TOKEN) e un
+        clone usa-e-getta. Non è master. Non cancella github/main.
+        Regola Always Apply: .cursor/rules/anti-new-project.mdc.
+      quando_si_usa: >
+        Prima di avviare un Cloud Agent, o se il run è agganciato a
+        un repo tmp-* / environment vuoto.
+      passi:
+        - "Su cursor.com/agents apri SEMPRE mcnicastro-netizen/omnia2."
+        - "Mai Start from scratch / New Project per lavoro prodotto."
+        - "Se il run è tmp o diverso da omnia2: FERMATI, avvisa il
+          Founder in 3 righe, niente lavoro prodotto."
+        - "Regola repo Always Apply: .cursor/rules/anti-new-project.mdc."
+        - "User Rules account si editano solo da Cursor Desktop
+          (Customize → Rules), non da cursor.com/agents."
+      errori_comuni:
+        - problema: "L'agent su New Project non vede le key"
+          soluzione: >
+            Atteso. Quel vault è nuovo e vuoto. Non reiniettare in
+            chat. Torna su omnia2; le key SoT sono in password manager
+            + console.
+      permessi:
+        - super_admin / Founder
+      screenshot: []
+
+  - id: api.check-secrets
+    titolo: Come verifico se RESEND GEMINI FAL sono presenti
+    modulo: Codice API
+    widget: null
+    pubblico: [super_admin]
+    livello: avanzato
+    tags: [codice, secrets, check-secrets, d-116, resend, gemini, fal]
+    correlati: [api.secrets-sot, api.anti-new-project, api.llm, notifiche.errori-comuni]
+    domanda_naturale: "Come controllo che RESEND_API_KEY GEMINI_API_KEY FAL_KEY ci siano senza stampare i valori?"
+    contenuto:
+      a_cosa_serve: >
+        scripts/check-secrets-presence.sh riporta solo PRESENT/MISSING.
+        Exit 1 se manca una required (RESEND, GEMINI o alias
+        GOOGLE_API_KEY / EMERGENT_LLM_KEY). FAL_KEY è optional.
+        Hook in cloud-agent-start.sh (non-fatal).
+      quando_si_usa: >
+        Boot Cloud Agent, debug mail mock, debug HAL/LLM, handoff.
+      passi:
+        - "bash scripts/check-secrets-presence.sh"
+        - "Stato env omnia2 5-Ott-2026: RESEND, GEMINI, FAL PRESENT."
+        - "backend/.env ha solo placeholder commentati: corretto.
+          Le key arrivano dal vault del processo, non dal file gitignored."
+        - "Mai echo $RESEND_API_KEY. Solo wc -c / length se serve."
+      errori_comuni:
+        - problema: "Lo script dice MISSING ma le ho in My Secrets"
+          soluzione: >
+            I secret non arrivano in un pod già aperto. Riavvia un
+            nuovo agent sullo stesso environment omnia2.
+      permessi:
+        - super_admin / Founder / Cloud Agent
+      screenshot: []
+
+  - id: api.demo-nicastro
+    titolo: Demo Nicastroimmobiliare (cliente-1 dogfood)
+    modulo: Codice API
+    widget: null
+    pubblico: [super_admin]
+    livello: avanzato
+    tags: [demo, nicastro, dogfood, seed, a-037, d-112]
+    correlati: [sito.demo-a037, api.anti-new-project, notifiche.email-panoramica]
+    domanda_naturale: >
+      Quali credenziali uso per la demo titolare Nicastroimmobiliare?
+      Login titolare@nicastroimmobiliare.it NicastroDemo nicastro-agency-001
+      È la demo-agency?
+    contenuto:
+      a_cosa_serve: >
+        Credenziali demo titolare Nicastroimmobiliare (cliente-1 dogfood):
+        email titolare@nicastroimmobiliare.it password NicastroDemo2026!
+        agenzia nicastro-agency-001 slug nicastroimmobiliare ruolo
+        agency_admin. NON è demo-agency-001 né super_admin Founder.
+        Seed idempotente backend/scripts/seed_nicastro_agency.py.
+      quando_si_usa: >
+        Reinoltro demo al titolare, QA login, prep assistita A-037.
+      passi:
+        - "Agenzia nicastro-agency-001 · slug nicastroimmobiliare."
+        - "Login titolare (agency_admin): titolare@nicastroimmobiliare.it
+          / NicastroDemo2026! (override NICASTRO_ADMIN_PASSWORD)."
+        - "NON è demo-agency-001 né super_admin Founder."
+        - "Prep assistita già fatta: brand da sito + tema Classic +
+          4 immobili CT + 3 clienti. A-037 resta aperta (no clone
+          automatico URL→demo)."
+        - "Stack: bash scripts/omnia-stack.sh ensure · URL tunnel in
+          /tmp/omnia-stack/CRM_LOGIN_URL.txt."
+        - "Self-serve Stripe OFF (O6 CONDITIONAL / D-115)."
+      errori_comuni:
+        - problema: "Entro come super_admin e non vedo l'esperienza titolare"
+          soluzione: >
+            Usa titolare@nicastroimmobiliare.it. Il Founder
+            super_admin non è il giro dogfood cliente.
+      permessi:
+        - super_admin / Founder Ops
       screenshot: []

@@ -1328,6 +1328,7 @@ La personalizzazione della demo dal sito dell’agenzia **ci doveva già essere*
 | Verifica dominio + Legal Kit | ✅ D-054/D-055 |
 | Pipeline automatica demo col look cliente | ❌ |
 | Template pack commerciale (no-sito / restyling / recovery dominio) | ❌ |
+| Prep **assistita** Nicastroimmobiliare (5-Ott-2026) | ✅ brand+Classic+4 CT — non chiude il loop automatico |
 
 ### Done quando
 1. Con sito: URL → brand applicato a tema demo visitabile.  
@@ -1335,7 +1336,7 @@ La personalizzazione della demo dal sito dell’agenzia **ci doveva già essere*
 3. Cap. 8/17 + checklist demo aggiornati; niente promessa «clone automatico» finché (1) non è PASS.
 
 ### Stato
-🟠 **PRIORITÀ APERTA** — Founder 30-Set-2026 · dopo/in parallelo a O6 operativo (restore firmato), **prima** di outreach large-scale.
+🟠 **PRIORITÀ APERTA** — Founder 30-Set-2026 · prep assistita Nicastro ✅ 5-Ott · loop URL→demo automatico ancora ❌ · dopo/in parallelo a O6 operativo (restore firmato), **prima** di outreach large-scale.
 
 ---
 

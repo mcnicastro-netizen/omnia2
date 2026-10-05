@@ -1,12 +1,12 @@
 {
-  "version": "0.26-a028-ghi",
-  "updated": "2026-09-30",
-  "voices_total": 364,
+  "version": "0.27-d116-secrets",
+  "updated": "2026-10-05",
+  "voices_total": 369,
   "source_files": [
     {
       "file": "00-api-codice.yaml",
-      "voices": 26,
-      "md5": "2ed01a1ed66fac0f5aa6d9968843a476"
+      "voices": 30,
+      "md5": "a02762594c31cd60b8b6dc0b8fda9946"
     },
     {
       "file": "01-primo-accesso.yaml",
@@ -46,7 +46,7 @@
     {
       "file": "08-sito-web.yaml",
       "voices": 13,
-      "md5": "e9fe1eecba34edd1b39a7e75a63a9f90"
+      "md5": "e173667f5faa218ecce16a13723108e0"
     },
     {
       "file": "09-virtual-staging.yaml",
@@ -66,7 +66,7 @@
     {
       "file": "12-hal-knowledge.yaml",
       "voices": 13,
-      "md5": "a142cd1bf277f91800ca7e82326ab6e2"
+      "md5": "74820d1c227ee2b8a004a8755e28abea"
     },
     {
       "file": "13-team-ruoli.yaml",
@@ -95,8 +95,8 @@
     },
     {
       "file": "18-notifiche-attivita.yaml",
-      "voices": 18,
-      "md5": "ae80997a3aae0b3712996208755c5d03"
+      "voices": 19,
+      "md5": "8acbb05ca027ff13d6e62d0aa376ebea"
     },
     {
       "file": "19-impostazioni-agenzia.yaml",
@@ -150,8 +150,8 @@
       "file": "00-api-codice",
       "title": "Corpus codice/API",
       "yaml": "00-api-codice.yaml",
-      "voices": 26,
-      "md5": "2ed01a1ed66fac0f5aa6d9968843a476"
+      "voices": 30,
+      "md5": "a02762594c31cd60b8b6dc0b8fda9946"
     },
     {
       "id": 22,
@@ -202,5 +202,5 @@
       "md5": "5e88370cdf2c070dc30c7c3f036b85db"
     }
   ],
-  "notes": "Fingerprints regenerated from YAML on disk. Live RAG reindex: POST /api/app/hal/knowledge/reindex?force=true (super_admin). 2026-09-24: A-028g/h/i · Cap.2 Attività · Cap.10 Conferma e applica · Cap.18 distinzione. 2026-09-21: hub import A–E · HAL import.tutte-le-forme. 2026-09-19: D-085 storage quota · Cestino · Cap.20 Ruota."
+  "notes": "Fingerprints regenerated from YAML on disk. Live RAG reindex: POST /api/app/hal/knowledge/reindex?force=true (super_admin). 2026-10-05: D-116 secrets SoT · anti-New Project · demo Nicastro · Cap.00/08/12/18. 2026-09-24: A-028g/h/i · Cap.2 Attività · Cap.10 Conferma e applica · Cap.18 distinzione. 2026-09-21: hub import A–E · HAL import.tutte-le-forme. 2026-09-19: D-085 storage quota · Cestino · Cap.20 Ruota."
 }

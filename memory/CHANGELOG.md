@@ -1,3 +1,12 @@
+## 2026-10-05 — HAL + manuale D-116 (secrets / anti-New Project / Nicastro)
+
+- D-116 in `DECISIONS.md` + Cap. 00 § integrità Cloud
+- HAL Cap. 00 +4 voci: `api.secrets-sot`, `api.anti-new-project`, `api.check-secrets`, `api.demo-nicastro`
+- Cap. 8 §8.11 / `sito.demo-a037`: prep assistita Nicastro ✅ · A-037 loop auto ancora aperto
+- Cap. 12 + 18: `GEMINI_API_KEY` / `RESEND_API_KEY` = vault omnia2 (D-116), non Emergent/.env git
+- `hal-index.json` v0.27-d116-secrets + reindex live
+- A-037 backlog aggiornato (assistita ≠ automatica)
+
 ## 2026-10-05 — Project rule anti–New Project (niente Settings)
 
 - `.cursor/rules/anti-new-project.mdc` Always Apply: Prompt 2 Founder nel repo

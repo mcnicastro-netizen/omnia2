@@ -66,6 +66,7 @@ Verifica: `bash scripts/check-secrets-presence.sh` (nomi + present/missing, **ma
 
 ### Prossimi passi (in ordine)
 
+0. ✅ HAL + manuale sync D-116 (Cap. 00/08/12/18 + `hal-index` v0.27)  
 1. Reinoltro demo / link login **titolare** (esperienza cliente, non solo super_admin)  
 2. Annotare friction → backlog / A-037  
 3. Firmare restore non-prod (O3b) se non fatto  
