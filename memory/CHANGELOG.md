@@ -1,3 +1,9 @@
+## 2026-10-05 — Vault omnia2: tre key presenti (stato pod)
+
+- `RESEND_API_KEY`, `GEMINI_API_KEY`, `FAL_KEY` **PRESENT** su env omnia2 (`scripts/check-secrets-presence.sh`)
+- Corretti gli appunti stale in `NEXT_SESSION.md` / `INTEGRITY_AND_SECRETS.md` / `CLOUD_SECRETS_INVENTORY.md` (non erano un New Project vuoto)
+- SoT key resta password manager + console; Cursor = sola copia di iniezione
+
 ## 2026-10-05 — Integrità SoT: codice + API key fuori da Cursor
 
 - `memory/INTEGRITY_AND_SECRETS.md`: codice = github/main; API key = password manager + console provider; Cursor = sola copia di iniezione
