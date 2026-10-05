@@ -1,3 +1,9 @@
+## 2026-10-05 — Integrità SoT: codice + API key fuori da Cursor
+
+- `memory/INTEGRITY_AND_SECRETS.md`: codice = github/main; API key = password manager + console provider; Cursor = sola copia di iniezione
+- `scripts/check-secrets-presence.sh` + hook in `cloud-agent-start` (report present/missing, mai valori)
+- Branch protection GitHub consigliata su `main`
+
 ## 2026-10-05 — Inventario Secrets Cloud (anti-perdita New Project)
 
 - `memory/CLOUD_SECRETS_INVENTORY.md`: solo NOMI + dove recuperare (Resend/Gemini/fal/…)

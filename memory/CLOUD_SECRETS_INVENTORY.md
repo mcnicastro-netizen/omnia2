@@ -1,8 +1,11 @@
 # Inventario Secrets Cloud Agent — OMNIA (solo NOMI)
 
-**Perché esiste**: i Secrets Cursor sono **per environment**.  
+**Politica SoT (obbligatoria)**: `memory/INTEGRITY_AND_SECRETS.md`  
+→ Codice = github/main. API key = password manager + console provider. Cursor = solo *copia* di iniezione.
+
+**Perché esiste questo file**: i Secrets Cursor sono **per environment**.  
 Un **New Project** / repo Origin-tmp apre un vault **vuoto** → in UI vedi solo `GITHUB_TOKEN` (iniettato dalla piattaforma).  
-**I valori non sono cancellati**: restano sull’environment storico **omnia2** e/o sulle console dei provider. Non vanno mai in git né in chat.
+**I valori non sono cancellati** dalle console: resta perso solo il collegamento a *questo* vault. Non vanno mai in git né in chat.
 
 **Regola Founder**: per OMNIA avvia sempre l’agent su `github.com/mcnicastro-netizen/omnia2`.  
 Non usare New Project per continuare lavoro prodotto.

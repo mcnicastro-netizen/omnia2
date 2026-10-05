@@ -64,6 +64,28 @@ fi
 
 bash "$ROOT/scripts/omnia-stack.sh" ensure
 
+# Integrity: report secret presence (names only). Non-fatal — empty vault ≠ deleted keys.
+if [[ -f "$ROOT/scripts/check-secrets-presence.sh" ]]; then
+  set +e
+  # Load selected keys from backend/.env into this check only (never echo values)
+  if [[ -f "$ROOT/backend/.env" ]]; then
+    while IFS= read -r line; do
+      case "$line" in
+        RESEND_API_KEY=*|GEMINI_API_KEY=*|GOOGLE_API_KEY=*|EMERGENT_LLM_KEY=*|FAL_KEY=*|TAVILY_API_KEY=*|STRIPE_SECRET_KEY=*|GOOGLE_CLIENT_ID=*|JWT_SECRET=*)
+          key="${line%%=*}"
+          val="${line#*=}"
+          # Only fill if process env empty
+          if [[ -z "${!key:-}" ]]; then
+            export "$key=$val"
+          fi
+          ;;
+      esac
+    done < "$ROOT/backend/.env"
+  fi
+  bash "$ROOT/scripts/check-secrets-presence.sh" || true
+  set -e
+fi
+
 if [[ -x "$ROOT/backend/.venv/bin/python" ]]; then
   echo "[cloud-agent-start] seed demo gestionale"
   "$ROOT/backend/.venv/bin/python" "$ROOT/backend/scripts/seed_demo_gestionale.py" \
