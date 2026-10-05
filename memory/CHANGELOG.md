@@ -1,3 +1,10 @@
+## 2026-10-05 — Brand Studio: anteprima iframe + dominio seed
+
+- Causa anteprima Firefox: `X-Frame-Options: DENY` su `/api/p/*` → ora `SAMEORIGIN` (API diretta)
+- Tunnel Cloudflare quick tunnel **forza DENY** comunque → anteprima via `fetch` + `iframe srcDoc`
+- Seed Nicastro non setta più `custom_domain` (evita «IN ATTESA DNS» sul dominio di produzione)
+- `publicUrl` tollera `REACT_APP_BACKEND_URL` vuoto (same-origin)
+
 ## 2026-10-05 — Brand Studio: no_extracted_profile su profilo seed piatto
 
 - Causa: seed Nicastro salvava palette/logo in piano; auto-config leggeva solo `brand_profile` nested → 400

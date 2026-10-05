@@ -30,6 +30,10 @@ export default function WebsitePage() {
   const [selectedTheme, setSelectedTheme] = useState(null);
   const [applying, setApplying] = useState(false);
 
+  const [previewHtml, setPreviewHtml] = useState("");
+  const [previewLoading, setPreviewLoading] = useState(false);
+  const [previewTick, setPreviewTick] = useState(0);
+
   const iframeRef = useRef(null);
 
   const showToast = (msg) => { setToast(msg); setTimeout(() => setToast(""), 4500); };
@@ -43,6 +47,38 @@ export default function WebsitePage() {
       if (translated && translated !== key) return translated;
     }
     return String(detail || err.message);
+  };
+
+  const publicPath = current?.public_url
+    ? `${BACKEND_URL || ""}${current.public_url}`
+    : null;
+
+  const loadPreviewHtml = async () => {
+    if (!publicPath) {
+      setPreviewHtml("");
+      return;
+    }
+    setPreviewLoading(true);
+    try {
+      // Fetch + srcdoc: Cloudflare quick-tunnels force X-Frame-Options: DENY on
+      // navigated iframe documents, which broke Brand Studio live preview.
+      const r = await fetch(`${publicPath}${publicPath.includes("?") ? "&" : "?"}t=${Date.now()}`, {
+        credentials: "same-origin",
+        headers: { Accept: "text/html" },
+      });
+      if (!r.ok) throw new Error(`preview_http_${r.status}`);
+      const html = await r.text();
+      setPreviewHtml(html);
+    } catch (e) {
+      setPreviewHtml(
+        `<!doctype html><html><body style="font-family:system-ui;padding:2rem;color:#7f1d1d">`
+        + `<p>Anteprima non disponibile (${String(e.message || e)}).</p>`
+        + `<p><a href="${publicPath}" target="_blank" rel="noreferrer">Apri sito pubblico</a></p>`
+        + `</body></html>`
+      );
+    } finally {
+      setPreviewLoading(false);
+    }
   };
 
   const loadAll = async () => {
@@ -72,13 +108,13 @@ export default function WebsitePage() {
     if (fromExtracted) setExtractUrl(fromExtracted);
   }, [current, extractUrl]);
 
-  const refreshIframe = () => {
-    if (iframeRef.current) {
-      // bust cache so preview reloads
-      const src = iframeRef.current.src.split("?")[0];
-      iframeRef.current.src = `${src}?t=${Date.now()}`;
-    }
-  };
+  useEffect(() => {
+    if (loading) return;
+    loadPreviewHtml();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loading, publicPath, selectedTheme, previewTick]);
+
+  const refreshIframe = () => setPreviewTick((n) => n + 1);
 
   const extractBrand = async (e) => {
     e?.preventDefault?.();
@@ -156,12 +192,7 @@ export default function WebsitePage() {
 
   const extracted = current?.extracted_profile;
   const resolved = current?.resolved;
-  const publicUrl = current?.public_url
-    ? `${BACKEND_URL || ""}${current.public_url}`
-    : null;
-  const previewSrc = publicUrl
-    ? `${publicUrl}?t=${Date.now()}`
-    : "about:blank";
+  const publicUrl = publicPath;
 
   return (
     <AgencyShell current="website">
@@ -308,12 +339,17 @@ export default function WebsitePage() {
             </div>
           </div>
 
-          <div className="border border-stone-300 rounded-md overflow-hidden bg-stone-50"
+          <div className="border border-stone-300 rounded-md overflow-hidden bg-stone-50 relative"
                style={{ height: "640px" }}>
+            {previewLoading && (
+              <p className="absolute inset-x-0 top-0 z-10 text-xs text-stone-500 bg-stone-100/90 px-3 py-1">
+                {t("common.loading")}
+              </p>
+            )}
             <iframe
               ref={iframeRef}
               data-testid="website-preview-iframe"
-              src={previewSrc}
+              srcDoc={previewHtml || undefined}
               title="Site preview"
               className="w-full h-full bg-white"
               sandbox="allow-same-origin allow-scripts"
