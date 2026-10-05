@@ -27,7 +27,11 @@ OMNIA pubblica per ogni agenzia un sito pubblico **autonomo, indicizzabile da Go
 - URL personalizzato: `https://www.tuoagenzia.it/` (dopo verifica DNS e attivazione SSL).
 
 **Cosa contiene il sito pubblico**
-- **Home / vetrina** con la griglia dei tuoi annunci attivi (`status: active`), ordinati per data di aggiornamento decrescente. Fino a 200 in una pagina.
+- **Home / vetrina (Track A, 5-Ott-2026)**: layout allineato al pattern di riferimento (nav, hero con immagine, dual search, In evidenza, Ultimi annunci, footer). Non è ancora il clone pixel-perfect D-023/A-037.
+  - **Hero**: foto di default per tema (Unsplash); override con `branding.hero_image_url` o `theme_config.hero_image_url`.
+  - **Box MLS** (sx): solo se `agency.mls_enabled` — claim network + ricerca semplice + badge *Powered by OMNIA*.
+  - **Box «Cerca il tuo immobile»** (dx): ricerca sul portafoglio **proprio**.
+  - **In evidenza** (fino a 3) + **Ultimi annunci** (fino a 6) dal portafoglio agenzia (`status: active`).
 - **Scheda singolo immobile** con foto, prezzo, caratteristiche in griglia, descrizione, features, share block sociale, contatto agenzia.
 
 > **Nota ImmobilCloud (`/cloud`)**: il form contatto del portale B2C è distinto dal sito white-label. Su annuncio **agenzia** crea lead CRM (Cap. 18 §18.7); su annuncio **privato** crea inquiry al venditore (Cap. 18 §18.7b).
@@ -187,37 +191,63 @@ La **tagline** proposta = quella estratta come `tagline_guess` (o quella salvata
 ## 8.5 · Live Preview
 
 **A cosa serve**
-Vedere il sito **prima di condividerlo**, senza aprire una tab nuova. L'iframe carica direttamente il sito pubblico corrente.
+Vedere il sito **prima di condividerlo**, senza aprire una tab nuova.
 
-**Come funziona**
-- L'iframe punta a `{REACT_APP_BACKEND_URL}/api/p/{tuo-slug}/?t={timestamp}` — il timestamp forza refresh evitando cache.
-- L'iframe è **sandboxed** (`allow-same-origin allow-scripts`) — nessun rischio di script esterni.
-- Il bottone **↻ Aggiorna** ricarica l'iframe (utile dopo aver cambiato tema).
-- Il bottone **Apri sito pubblico ↗** apre lo stesso URL in una nuova tab.
+**Come funziona (5-Ott-2026)**
+- Il CRM fa `fetch` same-origin di `/api/p/{slug}/` e inietta l'HTML in un **iframe `srcDoc`** (non `src=` navigato).
+- Motivo: i tunnel Cloudflare quick-tunnel forzano `X-Frame-Options: DENY` sulle risposte navigabili; con `srcDoc` l'anteprima funziona comunque.
+- Sandbox: `allow-same-origin allow-scripts`.
+- Bottone **↻ Aggiorna** rilancia il fetch; **Apri sito pubblico ↗** apre l'URL in nuova tab.
 
 **Anteprima transient di un tema NON salvato**
-Endpoint dedicato `GET /website/preview/{theme_id}` (usato internamente): applica un tema temporaneo alla vetrina senza persisterlo. Header risposta: `X-Robots-Tag: noindex` per evitare indicizzazione delle anteprime.
+Endpoint dedicato `GET /website/preview/{theme_id}` (usato internamente): applica un tema temporaneo alla vetrina senza persisterlo (include anche la hero del tema). Header risposta: `X-Robots-Tag: noindex`.
 
 **Errori comuni**
 
 | Sintomo | Perché succede | Cosa fare |
 |---------|----------------|-----------|
-| Iframe vuoto o "Impossibile connettersi" | Il tuo slug agenzia non è attivo o il backend è down | Verifica in **Impostazioni** che la tua agenzia sia `is_active: true` (contatta assistenza se dubbi) |
-| Anteprima mostra "Nessun immobile pubblicato" | Nessun immobile in `status: active` | Vai in **Immobili**, verifica gli stati (vedi Cap. 3.5) |
-| Foto rotte / non caricano | Le foto sono state eliminate ma referenziate | Ricarica le foto degli immobili (Cap. 3.3) |
+| Iframe vuoto / «Anteprima non disponibile» | Fetch fallito o slug inattivo | Hard-refresh; verifica agenzia `is_active` |
+| Anteprima mostra «Nessun immobile» nelle sezioni | Nessun immobile `status: active` | Carica immobili (manuale / CSV / XML) |
+| Vedi ancora il layout vecchio (solo H1 arancione) | Cache JS del CRM | Hard-refresh (Ctrl+Shift+R) |
 
 ---
 
-## 8.6 · Vetrina pubblica (`/p/{slug}/`)
+## 8.6 · Vetrina pubblica (`/p/{slug}/`) — layout Track A
 
-**Cosa vedono gli utenti sulla home**
-- **Header** con logo + nome agenzia (tagline solo in Luxury).
-- **H1** col nome dell'agenzia + counter *"N immobili attivi"*.
-- **Griglia listings** con card per ogni immobile:
-  - Cover photo (dalla prima foto `is_cover=true`, o dalla prima foto se nessuna è cover).
-  - Titolo, città, tipologia, superficie m², numero locali.
-  - Prezzo (o `€X/mese` per affitti).
-- Se non ci sono annunci attivi, appare: *"Nessun immobile pubblicato al momento."*
+**Cosa vedono i visitatori sulla home (5-Ott-2026)**
+1. **Header** — logo + nome + nav (Contatti / Links / Home / Chi siamo / Vendita / Affitto). Chrome colore = `--o-primary` del tema.
+2. **Hero** — immagine full-bleed (default per tema o override agenzia) + nome agenzia.
+3. **Dual search**
+   - *MLS* (se `mls_enabled`): claim «N immobili condivisi» + filtri compatti + *Powered by OMNIA*.
+   - *Agenzia*: «Cerca il tuo immobile» (contratto, tipologia, provincia, prezzo, mq, vani, camere, rif.).
+4. **In evidenza** — fino a 3 card (preferenza `is_exclusive`, altrimenti top view).
+5. **Ultimi annunci inseriti** — fino a 6 card dal portafoglio proprio.
+6. **Footer** — links + contatti/fiscali agenzia.
+
+**Card immobile**
+- Badge operazione (Vendita/Affitto), prezzo, città, titolo, zona, meta Mq / Vani / Camere.
+- Link a `/api/p/{slug}/{property_id}`.
+
+**Widget embed (stesso stile card)**
+- `GET /api/mls-box/agency/{slug}.html` — iframe «Vetrina Immobili» (In evidenza + Ultimi).
+- JSON: `GET /api/mls-box/agency/{slug}`.
+- Snippet: `GET /api/mls-box/embed-snippet/{slug}`.
+
+**Dati annunci**
+- Solo sito → inserimento manuale in CRM.
+- Gestionale → CSV / XML / import già previsti (Cap. 14).
+- Gli annunci in vetrina sono **sempre del portafoglio proprio** (non l’inventario MLS multi-agenzia).
+
+**SEO invariato**
+- Sitemap `/api/p/{slug}/sitemap.xml`, JSON-LD, meta OG.
+
+---
+
+## 8.6b · Hero immagine di default
+
+Ogni tema ha una hero Unsplash dedicata (`THEME_HERO_IMAGES` in `themes.py`).  
+Priorità risoluzione: `theme_config.hero_image_url` → `branding.hero_image_url` → hero del tema → `DEFAULT_HERO_IMAGE`.  
+`POST /website/theme/apply` accetta anche `hero_image_url`.
 
 **Meta SEO generati automaticamente**
 - `<title>`: *"{Nome Agenzia} — Immobili in vendita e affitto"*
@@ -225,9 +255,6 @@ Endpoint dedicato `GET /website/preview/{theme_id}` (usato internamente): applic
 - `<link rel="canonical">`: URL assoluto della home.
 - `<meta property="og:title|description|url">` e `og:type: website`.
 - JSON-LD `RealEstateAgent` con `name` e `url`.
-
-**Ordinamento**
-Gli immobili sono ordinati per `updated_at` decrescente — le modifiche recenti vanno in cima. Max 200 immobili in home. Per portafogli più grandi, la sitemap.xml elenca comunque tutti (fino a 5.000).
 
 **Sitemap.xml**
 - URL: `/api/p/{slug}/sitemap.xml`
@@ -392,20 +419,23 @@ Puoi rimuovere il custom domain in qualsiasi momento con **Elimina dominio**. At
 ### Cosa c’è oggi (onesto)
 | Pezzo | Stato |
 |-------|--------|
+| Lead «hai un sito?» + URL | ✅ |
 | Brand Extractor (`POST` website extract) | ⚠️ estrae profilo brand; **non** chiude automaticamente «URL → demo vestita visitabile» |
-| 4 temi backend (minimal/classic/bold/luxury) | ⚠️ presenti in `themes.py` |
+| 4 temi backend (minimal/classic/bold/luxury) + hero default | ✅ in `themes.py` |
+| Home Track A (dual search MLS + vetrina portafoglio) | ✅ struttura 5-Ott-2026 — **raffinamento layout** ancora da fare (Founder) |
 | UI template / picker commerciale | ❌ stub «presto disponibile» in Settings (vedi anche Cap. 19) |
-| Lead landing `/it/agenzie`: «Hai un sito?» + URL | ✅ (30-Set-2026) |
 | Pacchetto template per no-sito / restyling / recovery dominio | ❌ **A-037 aperto** |
-| Prep **assistita** Nicastroimmobiliare (cliente-1, 5-Ott-2026) | ✅ palette/logo da crawl + Classic + 4 immobili CT — **non** chiude A-037 |
+| Prep **assistita** Nicastroimmobiliare (cliente-1) | ✅ brand + Classic verde + MLS on + CRM vuoto per dati reali |
+| Clone pixel-perfect D-023 | ❌ ancora A-037 / Track B |
 
 ### Relazione con Domain Vault
 Chi scopre di non essere proprietario del dominio (es. registrato da un fornitore IT) usa `/it/verifica-dominio` (Cap. 17) e il percorso A-037 (template + recovery dominio).
 
 ### Promessa commerciale
-Non promettere «cloniamo il tuo sito in automatico» finché A-037 non è PASS sul loop URL→demo.
+Non promettere «cloniamo il tuo sito in automatico» finché A-037 non è PASS sul loop URL→demo (Track B).  
+Track A dà già una home riconoscibile (pattern box MLS + vetrina); il polish pixel vs sito legacy è backlog layout.
 
-**Dogfood 5-Ott-2026**: demo Nicastroimmobiliare pronta in prep assistita (seed `seed_nicastro_agency.py`). Esperienza titolare ≠ super_admin. Vedi Cap. 00 § D-116 e voce HAL `api.demo-nicastro`.
+**Dogfood 5-Ott-2026**: demo Nicastroimmobiliare su Track A + brand Classic verde. Esperienza titolare ≠ super_admin. Vedi Cap. 00 § D-116 e voce HAL `api.demo-nicastro`.
 
 ---
 
@@ -415,9 +445,11 @@ Non promettere «cloniamo il tuo sito in automatico» finché A-037 non è PASS 
 - **Cap. 3.4 · Privacy L1-L4** — il sito pubblico rispetta il livello privacy: L3/L4 non appaiono in vetrina agli anonimi.
 - **Cap. 6 · Portali** — il sito pubblico OMNIA è **complementare** ai portali, non li sostituisce. Il feed XML degli 8 portali generalisti convive con questo sito.
 - **Cap. 7 · Fascicolo Immobile** — mai visibile al pubblico. Nessun documento del Fascicolo passa nel sito.
+- **Cap. 14 · Import** — CSV/XML alimentano il portafoglio che popola la vetrina.
 - **Cap. 17 · Domain Vault** — verifica titolarità dominio + custom domain.
 - **Landing `/it/agenzie`** — form Founders / richiedi demo (prezzi da `GET /billing/plans`, annuale = 11 mesi).
+- **`memory/MLS_RESEARCH.md`** — pattern dual box (network + agenzia) di riferimento.
 
 ---
 
-**Versione**: v1.2 · 5-Ott-2026 (+ dogfood Nicastro assistita · A-037 ancora aperta) · base v1.1 30-Set-2026
+**Versione**: v1.3 · 5-Ott-2026 (Track A home + hero default · A-037/Track B ancora aperti) · base v1.2

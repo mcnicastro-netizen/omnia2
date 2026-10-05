@@ -288,6 +288,7 @@ Registro di tutte le decisioni di business e tecniche prese durante il progetto.
 - **Razionale**: Migration friction → ZERO. Demo killer in fase commerciale ("Inserisci URL → 60 sec → ecco il tuo sito dentro OMNIA"). Eradica completamente la resistenza al cambio gestionale.
 - **Quando**: M2.S5 (anticipa la fase di multiposting con questa feature distintiva).
 - **Stato**: ✅ Confermata.
+- **Avanzamento 5-Ott-2026**: **Track A** (struttura home dual-search + vetrina + hero) live su `/api/p/{slug}/` — non chiude il clone pixel-perfect. **Track B** (Playwright + Vision → bundle identico) resta da implementare (A-037).
 
 ### D-024 — Pricing aggressivo fase lancio + listino trasparente ✅
 - **Data**: 16 Giugno 2026 (post analisi competitiva)

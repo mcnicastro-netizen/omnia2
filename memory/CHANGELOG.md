@@ -1,3 +1,11 @@
+## 2026-10-05 — Track A home + hero + docs HAL Cap.8
+
+- Home white-label `/api/p/{slug}/`: dual search (MLS se `mls_enabled` + ricerca propria), In evidenza/Ultimi, footer, hero Unsplash per tema
+- `mls_box` restyle allineato; seed Nicastro chrome verde + MLS on
+- Anteprima Brand Studio già su `srcDoc` (commit precedenti)
+- Manuele Cap.8 v1.3 §8.5–8.6b / §8.11; HAL +2 voci `sito.home-layout-track-a`, `sito.mls-box-embed`
+- Founder: raffinamento layout pixel → dopo; Track B/D-023 ancora A-037
+
 ## 2026-10-05 — Brand Studio: anteprima iframe + dominio seed
 
 - Causa anteprima Firefox: `X-Frame-Options: DENY` su `/api/p/*` → ora `SAMEORIGIN` (API diretta)

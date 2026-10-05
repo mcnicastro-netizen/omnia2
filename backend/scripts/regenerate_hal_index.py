@@ -51,7 +51,7 @@ def main() -> None:
         new_chapters.append(entry)
 
     out = {
-        "version": "0.27-d116-secrets",
+        "version": "0.28-track-a-home",
         "updated": date.today().isoformat(),
         "voices_total": total,
         "source_files": source_files,

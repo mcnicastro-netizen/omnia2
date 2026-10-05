@@ -989,6 +989,7 @@ class ApplyThemeRequest(BaseModel):
     typography: Optional[TypographyOverride] = None
     logo_url: Optional[str] = Field(default=None, max_length=500)
     tagline: Optional[str] = Field(default=None, max_length=200)
+    hero_image_url: Optional[str] = Field(default=None, max_length=500)
 
 
 async def _agency_for(user: dict) -> Dict[str, Any]:
@@ -1047,6 +1048,7 @@ async def apply_theme(
         "typography": typography,
         "logo_url": payload.logo_url,
         "tagline": payload.tagline,
+        "hero_image_url": payload.hero_image_url or THEME_HERO_IMAGES.get(payload.theme_id),
         "applied_at": now,
     }
     await db.agencies.update_one(

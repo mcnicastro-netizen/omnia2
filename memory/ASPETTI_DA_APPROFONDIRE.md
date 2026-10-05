@@ -1323,20 +1323,22 @@ La personalizzazione della demo dal sito dell’agenzia **ci doveva già essere*
 | Pezzo | Stato |
 |-------|--------|
 | Lead «hai un sito?» + URL | ✅ |
-| Brand extractor | ⚠️ parziale — non chiude URL → demo vestita |
-| Theme catalog | ⚠️ backend; UI stub «presto disponibile» |
+| Brand extractor | ⚠️ parziale — non chiude URL → demo clone |
+| Theme catalog + hero default | ✅ backend; UI Settings template pack ancora stub |
+| **Home Track A** (dual search + vetrina + hero) | ✅ 5-Ott-2026 — raffinamento pixel layout **dopo** (Founder) |
 | Verifica dominio + Legal Kit | ✅ D-054/D-055 |
-| Pipeline automatica demo col look cliente | ❌ |
-| Template pack commerciale (no-sito / restyling / recovery dominio) | ❌ |
-| Prep **assistita** Nicastroimmobiliare (5-Ott-2026) | ✅ brand+Classic+4 CT — non chiude il loop automatico |
+| Pipeline automatica demo clone D-023 (Track B) | ❌ |
+| Template pack commerciale (no-sito / restyling / recovery dominio) | ❌ **A-037 aperto** |
+| Prep **assistita** Nicastroimmobiliare | ✅ Classic verde + MLS + CRM per dati reali |
 
 ### Done quando
-1. Con sito: URL → brand applicato a tema demo visitabile.  
+1. Con sito: URL → brand + **clone layout** visitabile (Track B / D-023).  
 2. Senza sito / restyling / non-proprietario: scelta template pack + percorso verifica/recupero dominio.  
-3. Cap. 8/17 + checklist demo aggiornati; niente promessa «clone automatico» finché (1) non è PASS.
+3. Cap. 8/17 + checklist demo aggiornati; niente promessa «clone automatico» finché (1) non è PASS.  
+4. (Intermedio) Track A struttura ✅ — polish layout su backlog Founder.
 
 ### Stato
-🟠 **PRIORITÀ APERTA** — Founder 30-Set-2026 · prep assistita Nicastro ✅ 5-Ott · loop URL→demo automatico ancora ❌ · dopo/in parallelo a O6 operativo (restore firmato), **prima** di outreach large-scale.
+🟠 **PRIORITÀ APERTA** — Track A struttura ✅ 5-Ott · Track B/D-023 ❌ · raffinamento layout ⏳ · dopo/in parallelo a O6
 
 ---
 

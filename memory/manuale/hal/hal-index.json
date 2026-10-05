@@ -1,7 +1,7 @@
 {
-  "version": "0.27-d116-secrets",
+  "version": "0.28-track-a-home",
   "updated": "2026-10-05",
-  "voices_total": 369,
+  "voices_total": 371,
   "source_files": [
     {
       "file": "00-api-codice.yaml",
@@ -45,8 +45,8 @@
     },
     {
       "file": "08-sito-web.yaml",
-      "voices": 13,
-      "md5": "89472d563a3c9c208985eb7ea34b99b8"
+      "voices": 15,
+      "md5": "a2bd363bafdd1639190dd8b166ee0134"
     },
     {
       "file": "09-virtual-staging.yaml",
