@@ -21,8 +21,8 @@ append_if_missing() {
     printf '%s=%s\n' "$key" "$val" >>"$file"
   fi
 }
-append_if_missing "$ROOT/backend/.env" "ADMIN_EMAIL" "[REDACTED]"
-append_if_missing "$ROOT/backend/.env" "ADMIN_PASSWORD" "[REDACTED]"
+append_if_missing "$ROOT/backend/.env" "ADMIN_EMAIL" "mcnicastro@gmail.com"
+append_if_missing "$ROOT/backend/.env" "ADMIN_PASSWORD" "OmniaFounder2026!"
 append_if_missing "$ROOT/backend/.env" "DEMO_ADMIN_PASSWORD" "OmniaDemo2026!"
 
 # If install was skipped / snapshot lacked mongod, recover here before exit 1.
@@ -68,6 +68,9 @@ if [[ -x "$ROOT/backend/.venv/bin/python" ]]; then
   echo "[cloud-agent-start] seed demo gestionale"
   "$ROOT/backend/.venv/bin/python" "$ROOT/backend/scripts/seed_demo_gestionale.py" \
     || echo "[cloud-agent-start] seed demo skipped/failed (non-fatal)" >&2
+  echo "[cloud-agent-start] seed Nicastroimmobiliare (cliente-1)"
+  "$ROOT/backend/.venv/bin/python" "$ROOT/backend/scripts/seed_nicastro_agency.py" \
+    || echo "[cloud-agent-start] seed nicastro skipped/failed (non-fatal)" >&2
 fi
 
 echo "[cloud-agent-start] done"

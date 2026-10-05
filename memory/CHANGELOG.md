@@ -1,3 +1,10 @@
+## 2026-10-05 — Demo Nicastroimmobiliare ambiente pronto
+
+- Seed `backend/scripts/seed_nicastro_agency.py` (agenzia ufficiale ≠ demo-agency-001)
+- Login titolare: `titolare@nicastroimmobiliare.it` / `NicastroDemo2026!`
+- Brand assistito da crawl sito (palette + logo) · tema Classic · 4 immobili CT
+- `cloud-agent-start.sh`: seed Nicastro dopo seed demo; fix placeholder ADMIN `[REDACTED]`
+
 # OMNIA — Changelog
 
 ## 2026-09-30 — Domani: demo Nicastroimmobiliare (cliente 1)
