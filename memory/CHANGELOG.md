@@ -1,3 +1,9 @@
+## 2026-10-05 — Inventario Secrets Cloud (anti-perdita New Project)
+
+- `memory/CLOUD_SECRETS_INVENTORY.md`: solo NOMI + dove recuperare (Resend/Gemini/fal/…)
+- Causa ripetuta: New Project = vault Secrets vuoto; valori restano su env omnia2 / console provider
+- Regola: avviare agent su github/omnia2, non Origin-tmp
+
 ## 2026-10-05 — Demo Nicastroimmobiliare ambiente pronto
 
 - Seed `backend/scripts/seed_nicastro_agency.py` (agenzia ufficiale ≠ demo-agency-001)

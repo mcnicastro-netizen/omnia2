@@ -37,6 +37,7 @@
 - Self-serve Stripe **OFF** (O6 CONDITIONAL)  
 - Dominio/email Basic Soft → percorso verifica-dominio se serve  
 - `RESEND_API_KEY` non in questo pod → mail demo solo se chiave reiniettata  
+- **Secrets**: vault di questo env New Project è vuoto (solo `GITHUB_TOKEN` auto). Inventario nomi + dove recuperarli: `memory/CLOUD_SECRETS_INVENTORY.md`. Regola: niente New Project per OMNIA — agent su github/omnia2.
 
 ---
 
