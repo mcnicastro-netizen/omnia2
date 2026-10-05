@@ -58,6 +58,7 @@ Un blocco alla volta · niente fix senza «vai» · no P0–P3 prematuri · **li
 - Regola agent: `.cursor/rules/anti-new-project.mdc` (Always Apply). User Rules Desktop = opzionale; non si editano da `cursor.com/agents`.
 - **Stato 5 Ott (questo env omnia2):** tre key **PRESENT**. Inventario nomi: `memory/CLOUD_SECRETS_INVENTORY.md`.
 - Demo dogfood cliente-1: seed `backend/scripts/seed_nicastro_agency.py` · agenzia `nicastro-agency-001` · slug `nicastroimmobiliare` · login titolare `titolare@nicastroimmobiliare.it` (≠ `demo-agency-001`). A-037 ancora aperta (niente clone automatico URL→demo).
+- **5-Ott-2026 CRM vuoto per dati reali**: `wipe_nicastro_operational.py` ha cancellato i 4 immobili CT + 3 clienti finti. Tiene login/brand/widget keys. Flag `dogfood_skip_fixtures` impedisce al seed di ripopolare al boot.
 
 ---
 

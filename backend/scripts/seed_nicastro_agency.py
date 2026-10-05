@@ -322,7 +322,19 @@ async def _upsert(col, doc: dict) -> None:
         await col.insert_one(doc)
 
 
-async def main() -> None:
+def _want_fixtures(argv: list[str]) -> bool:
+    if "--with-fixtures" in argv:
+        return True
+    if "--identity-only" in argv:
+        return False
+    flag = (os.environ.get("NICASTRO_SKIP_FIXTURES") or "").strip().lower()
+    if flag in {"1", "true", "yes", "on"}:
+        return False
+    return True  # default: seed demo listings unless agency flag says otherwise
+
+
+async def main(argv: list[str] | None = None) -> None:
+    argv = list(sys.argv[1:] if argv is None else argv)
     mongo_url = os.environ.get("MONGO_URL", "mongodb://127.0.0.1:27017")
     db_name = os.environ.get("DB_NAME", "omnia")
     client = AsyncIOMotorClient(mongo_url)
@@ -331,16 +343,33 @@ async def main() -> None:
     await _ensure_agency(db)
     await _ensure_admin(db)
 
-    for prop in PROPERTIES:
-        await _upsert(db.properties, prop)
-    for cli in CLIENTS:
-        await _upsert(db.clients, cli)
+    agency = await db.agencies.find_one(
+        {"id": NICASTRO_AGENCY_ID},
+        {"_id": 0, "slug": 1, "display_name": 1, "dogfood_skip_fixtures": 1},
+    )
+    force_fixtures = "--with-fixtures" in argv
+    skip_by_env = not _want_fixtures(argv) and not force_fixtures
+    skip_by_agency = bool(agency.get("dogfood_skip_fixtures")) and not force_fixtures
+    seeded_fixtures = 0
+    if skip_by_env or skip_by_agency:
+        print(
+            f"nicastro seed identity-only (skip fixtures) "
+            f"agency_flag={bool(agency.get('dogfood_skip_fixtures'))} "
+            f"env_skip={skip_by_env}"
+        )
+    else:
+        for prop in PROPERTIES:
+            await _upsert(db.properties, prop)
+        for cli in CLIENTS:
+            await _upsert(db.clients, cli)
+        seeded_fixtures = len(PROPERTIES)
 
-    agency = await db.agencies.find_one({"id": NICASTRO_AGENCY_ID}, {"_id": 0, "slug": 1, "display_name": 1})
     admin = await db.users.find_one({"email": NICASTRO_ADMIN_EMAIL}, {"_id": 0, "email": 1, "role": 1})
+    n_props = await db.properties.count_documents({"agency_id": NICASTRO_AGENCY_ID})
+    n_cli = await db.clients.count_documents({"agency_id": NICASTRO_AGENCY_ID})
     print(
         f"nicastro seed OK agency={NICASTRO_AGENCY_ID} slug={agency.get('slug')} "
-        f"properties={len(PROPERTIES)} clients={len(CLIENTS)} "
+        f"properties={n_props} clients={n_cli} fixtures_written={seeded_fixtures} "
         f"admin={admin.get('email')} role={admin.get('role')}"
     )
     print(f"LOGIN email={NICASTRO_ADMIN_EMAIL} password={NICASTRO_ADMIN_PASSWORD}")

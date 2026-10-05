@@ -1,3 +1,10 @@
+## 2026-10-05 — Nicastro CRM svuotato per dati reali
+
+- `backend/scripts/wipe_nicastro_operational.py` — solo `nicastro-agency-001`
+- Tiene titolare + brand + API key/widget; cancella immobili/clienti/richieste
+- Seed identity-only se `dogfood_skip_fixtures` (niente 4 CT finti al reboot)
+- `demo-agency-001` intatta
+
 ## 2026-10-05 — HAL + manuale D-116 (secrets / anti-New Project / Nicastro)
 
 - D-116 in `DECISIONS.md` + Cap. 00 § integrità Cloud

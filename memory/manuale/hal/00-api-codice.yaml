@@ -899,9 +899,12 @@ voci:
         - "Login titolare (agency_admin): titolare@nicastroimmobiliare.it
           / NicastroDemo2026! (override NICASTRO_ADMIN_PASSWORD)."
         - "NON è demo-agency-001 né super_admin Founder."
-        - "Prep assistita già fatta: brand da sito + tema Classic +
-          4 immobili CT + 3 clienti. A-037 resta aperta (no clone
-          automatico URL→demo)."
+        - "5-Ott-2026: CRM operativo SVUOTATO per carico reale
+          (wipe_nicastro_operational.py). Restano titolare + brand
+          Classic. Immobili/clienti/richieste = 0. Seed non reinserisce
+          i 4 CT finti (dogfood_skip_fixtures). --with-fixtures per
+          ripristinare i fixture."
+        - "A-037 resta aperta (no clone automatico URL→demo)."
         - "Stack: bash scripts/omnia-stack.sh ensure · URL tunnel in
           /tmp/omnia-stack/CRM_LOGIN_URL.txt."
         - "Self-serve Stripe OFF (O6 CONDITIONAL / D-115)."

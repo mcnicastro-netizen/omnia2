@@ -576,7 +576,8 @@ voci:
         - "I 4 temi backend ci sono; UI template pack commerciale ancora
           stub — A-037 deve chiuderlo per no-sito/restyling/non-proprietario."
         - "5-Ott-2026: prep ASSISTITA Nicastroimmobiliare fatta
-          (brand da sito + Classic + 4 immobili CT). Non chiude A-037."
+          (brand da sito + Classic). CRM poi svuotato per immobili/
+          richieste reali. Non chiude A-037."
         - "Non promettere clone automatico del sito finché A-037 non è PASS."
         - "Credenziali titolare dogfood: voce api.demo-nicastro (Cap. 00)."
       errori_comuni:

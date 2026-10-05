@@ -1,6 +1,6 @@
 # Prossima sessione — programma passi
 
-**Aggiornato**: 5 Ottobre 2026 · **Demo Nicastroimmobiliare PRONTA (cliente 1)**  
+**Aggiornato**: 5 Ottobre 2026 · **Demo Nicastroimmobiliare VUOTA per dati reali**  
 **Repo**: https://github.com/mcnicastro-netizen/omnia2 ✅ (SoT = github/main; non Origin-tmp / New Project)
 
 ---
@@ -28,8 +28,10 @@
 3. Lead Founders — reinvio se serve · URL sito `https://www.nicastroimmobiliare.it/`  
 4. ✅ Prep **assistita** (A-037 non chiude ancora URL→demo automatica):
    - palette/logo da crawl sito (`#BC4F08` / `#3DB04B` + logo AgestaWeb)
-   - tema Classic + 4 immobili CT + 3 clienti  
-5. ✅ Login QA browser PASS (titolare Nicastro · 4 immobili CT) — invio link a Marco-titolare  
+   - tema Classic + brand da sito  
+   - **CRM operativo vuoto** (5-Ott wipe): 0 immobili / 0 clienti / 0 richieste — da caricare reali  
+   - Seed non rimette i fixture CT (`dogfood_skip_fixtures`) · `backend/scripts/wipe_nicastro_operational.py`
+5. ✅ Login QA browser PASS (titolare) — poi CRM svuotato per carico reale  
 6. ⏳ Annotare cosa gratta → backlog / A-037
 
 ### Secrets (pod omnia2, 5 Ott 2026)

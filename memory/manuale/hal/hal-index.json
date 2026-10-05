@@ -6,7 +6,7 @@
     {
       "file": "00-api-codice.yaml",
       "voices": 30,
-      "md5": "a02762594c31cd60b8b6dc0b8fda9946"
+      "md5": "579f21fd1386a0f18a2d38c13b714237"
     },
     {
       "file": "01-primo-accesso.yaml",
@@ -46,7 +46,7 @@
     {
       "file": "08-sito-web.yaml",
       "voices": 13,
-      "md5": "e173667f5faa218ecce16a13723108e0"
+      "md5": "fb37368c7acc1daa84bbf2fba96a3b3f"
     },
     {
       "file": "09-virtual-staging.yaml",
@@ -151,7 +151,7 @@
       "title": "Corpus codice/API",
       "yaml": "00-api-codice.yaml",
       "voices": 30,
-      "md5": "a02762594c31cd60b8b6dc0b8fda9946"
+      "md5": "579f21fd1386a0f18a2d38c13b714237"
     },
     {
       "id": 22,
