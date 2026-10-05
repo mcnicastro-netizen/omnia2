@@ -25,6 +25,8 @@ class TestAgencyHomeLayout:
         assert "Powered by OMNIA" in html
         assert "In evidenza" in html
         assert "Ultimi annunci inseriti" in html
+        assert "agency-home-hero" in html
+        assert "background-image:url(" in html
         # no competitor badge
         assert "GESTANET" not in html.upper()
         assert "AGESTANET" not in html.upper()

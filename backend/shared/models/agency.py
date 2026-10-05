@@ -62,6 +62,8 @@ class AgencyBranding(OmniaBaseModel):
     primary_color: str = Field(default="#0B1E3F", pattern=r"^#[0-9a-fA-F]{6}$")
     accent_color: str = Field(default="#1F6B5C", pattern=r"^#[0-9a-fA-F]{6}$")
     tagline: Optional[str] = Field(default=None, max_length=200)
+    # Track A — hero banner home pubblica (fallback = DEFAULT_HERO_IMAGE in themes.py)
+    hero_image_url: Optional[str] = Field(default=None, max_length=500)
 
 
 # Website strategy: agencies either already have a site (we feed it via XML)

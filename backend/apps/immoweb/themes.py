@@ -38,6 +38,7 @@ THEME_CATALOG: List[Dict[str, Any]] = [
         "preview_palette": {"primary": "#1c1917", "accent": "#1f6b5c", "neutral_light": "#fafaf9"},
         "header_style": "minimal",
         "card_style": "minimal_border",
+        "hero_image": "https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?w=1600&q=80&auto=format&fit=crop",
     },
     {
         "id": "classic",
@@ -47,6 +48,7 @@ THEME_CATALOG: List[Dict[str, Any]] = [
         "preview_palette": {"primary": "#0B1E3F", "accent": "#C19A6B", "neutral_light": "#f5f3ee"},
         "header_style": "classic",
         "card_style": "shadow_lift",
+        "hero_image": "https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=1600&q=80&auto=format&fit=crop",
     },
     {
         "id": "bold",
@@ -56,6 +58,7 @@ THEME_CATALOG: List[Dict[str, Any]] = [
         "preview_palette": {"primary": "#FF5A1F", "accent": "#111111", "neutral_light": "#ffffff"},
         "header_style": "bold",
         "card_style": "image_dominant",
+        "hero_image": "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=1600&q=80&auto=format&fit=crop",
     },
     {
         "id": "luxury",
@@ -65,11 +68,18 @@ THEME_CATALOG: List[Dict[str, Any]] = [
         "preview_palette": {"primary": "#0a0a0a", "accent": "#B89D5E", "neutral_light": "#fafafa"},
         "header_style": "bold",
         "card_style": "image_dominant",
+        "hero_image": "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=1600&q=80&auto=format&fit=crop",
     },
 ]
 
 THEME_IDS = {t["id"] for t in THEME_CATALOG}
 DEFAULT_THEME_ID = "minimal"
+
+# Hero banner di default (home pubblica) — override via branding.hero_image_url / theme_config
+DEFAULT_HERO_IMAGE = (
+    "https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=1600&q=80&auto=format&fit=crop"
+)
+THEME_HERO_IMAGES = {t["id"]: t.get("hero_image") or DEFAULT_HERO_IMAGE for t in THEME_CATALOG}
 
 
 # ============================================================
@@ -127,6 +137,22 @@ def _resolve_theme_config(agency: Dict[str, Any]) -> Dict[str, Any]:
         "logo_url": logo_url,
         "tagline": tagline,
     }
+
+
+def _resolve_hero_image(agency: Dict[str, Any], cfg: Dict[str, Any]) -> str:
+    """Hero banner: agency override → theme default → global default."""
+    branding = agency.get("branding") or {}
+    website = agency.get("website") or {}
+    theme_cfg = website.get("theme_config") or {}
+    for candidate in (
+        theme_cfg.get("hero_image_url"),
+        branding.get("hero_image_url"),
+        THEME_HERO_IMAGES.get(cfg.get("theme_id") or ""),
+        DEFAULT_HERO_IMAGE,
+    ):
+        if isinstance(candidate, str) and candidate.startswith(("http://", "https://", "/")):
+            return candidate
+    return DEFAULT_HERO_IMAGE
 
 
 def auto_pick_theme(brand_profile: Dict[str, Any]) -> str:
@@ -522,11 +548,12 @@ def _home_css() -> str:
     .ah-nav a{color:#fff;text-decoration:none;padding:10px 14px;font-size:.85rem;font-weight:600;border-right:1px solid rgba(255,255,255,.18)}
     .ah-nav a:last-child{border-right:0}
     .ah-nav a:hover{background:rgba(0,0,0,.12)}
-    .ah-hero{margin:8px 0 16px;background:linear-gradient(135deg,var(--o-primary),#1b5e20);min-height:220px;border-radius:2px;position:relative;overflow:hidden;display:flex;align-items:flex-end;justify-content:center}
-    .ah-hero-inner{padding:28px 20px;color:#fff;text-align:center;width:100%;background:linear-gradient(transparent,rgba(0,0,0,.35))}
-    .ah-hero-inner strong{display:block;font-size:1.35rem;letter-spacing:.06em;text-transform:uppercase}
+    .ah-hero{margin:8px 0 16px;min-height:260px;border-radius:2px;position:relative;overflow:hidden;display:flex;align-items:flex-end;justify-content:center;background-color:var(--o-primary);background-size:cover;background-position:center center;background-repeat:no-repeat}
+    .ah-hero::before{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.15) 0%,rgba(0,0,0,.45) 100%);pointer-events:none}
+    .ah-hero-inner{position:relative;z-index:1;padding:28px 20px;color:#fff;text-align:center;width:100%}
+    .ah-hero-inner strong{display:block;font-size:1.35rem;letter-spacing:.06em;text-transform:uppercase;text-shadow:0 1px 3px rgba(0,0,0,.35)}
     .ah-hero-dots{display:flex;gap:8px;justify-content:center;margin-top:12px}
-    .ah-hero-dots span{width:10px;height:10px;border-radius:50%;background:rgba(255,255,255,.55)}
+    .ah-hero-dots span{width:10px;height:10px;border-radius:50%;background:rgba(255,255,255,.55);box-shadow:0 0 0 1px rgba(0,0,0,.15)}
     .ah-hero-dots span.on{background:#fff}
     .ah-search-row{display:grid;grid-template-columns:260px 1fr;gap:14px;margin-bottom:28px}
     .ah-search-row.solo{grid-template-columns:1fr}
@@ -727,6 +754,8 @@ def render_index(agency: Dict[str, Any], props: List[Dict[str, Any]], slug: str)
         f'<img src="{escape(logo)}" alt="{escape(name)}"/>'
         if logo else ""
     )
+    hero_url = _resolve_hero_image(agency, cfg)
+    hero_style = f'style="background-image:url(\'{escape(hero_url)}\')"'
     contact = agency.get("contact") or {}
     address = agency.get("address") or {}
     fiscal = agency.get("fiscal") or {}
@@ -803,7 +832,7 @@ def render_index(agency: Dict[str, Any], props: List[Dict[str, Any]], slug: str)
       </a>
       {nav}
     </div>
-    <div class="ah-hero" data-testid="agency-home-hero">
+    <div class="ah-hero" data-testid="agency-home-hero" {hero_style}>
       <div class="ah-hero-inner">
         <strong>{escape(name)}</strong>
         <div class="ah-hero-dots" aria-hidden="true"><span class="on"></span><span></span><span></span></div>
@@ -1109,6 +1138,7 @@ async def preview_theme(
                     or (agency.get("branding") or {}).get("logo_url"),
         "tagline": (bp.get("voice") or {}).get("tagline_guess")
                    or (agency.get("branding") or {}).get("tagline"),
+        "hero_image_url": THEME_HERO_IMAGES.get(theme_id) or DEFAULT_HERO_IMAGE,
     }
     transient["website"] = transient_website
 
