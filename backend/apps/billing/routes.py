@@ -33,10 +33,16 @@ stripe.api_key = os.environ.get("STRIPE_SECRET_KEY", "")
 STRIPE_WEBHOOK_SECRET = os.environ.get("STRIPE_WEBHOOK_SECRET", "")
 
 
+def _refresh_stripe_api_key() -> str:
+    """Re-read vault/process env (avoid stale import-time key after materialize)."""
+    key = (os.environ.get("STRIPE_SECRET_KEY") or "").strip()
+    stripe.api_key = key
+    return key
+
+
 def _is_enabled() -> bool:
-    return (os.environ.get("STRIPE_ENABLED") or "").lower() == "true" and bool(
-        stripe.api_key
-    )
+    key = _refresh_stripe_api_key()
+    return (os.environ.get("STRIPE_ENABLED") or "").lower() == "true" and bool(key)
 
 
 def _guard_enabled() -> None:
