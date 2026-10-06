@@ -385,8 +385,8 @@ voci:
     widget: null
     pubblico: [titolare, super_admin]
     livello: intermedio
-    tags: [impostazioni, billing, stripe, piani, founders, credit-packages, checkout, customer-portal, stripe-enabled, "503"]
-    correlati: [settings.cos-e, settings.limitazioni-v1]
+    tags: [impostazioni, billing, stripe, piani, founders, credit-packages, checkout, customer-portal, stripe-enabled, "503", cloud-agent, sandbox]
+    correlati: [settings.cos-e, settings.limitazioni-v1, api.stripe-sandbox-cloud, api.cloud-secrets-vault]
     domanda_naturale: "Dove attivo un piano OMNIA? Come compro crediti? Come funzionano i Founders €49/€99/€249?"
     contenuto:
       a_cosa_serve: >
@@ -397,9 +397,12 @@ voci:
         Prima volta che attivi un piano o quando ricarichi crediti.
       passi:
         - "Route: /app/settings/billing (BillingPage.jsx, 235 righe)."
-        - "Feature flag env: STRIPE_ENABLED=true + STRIPE_SECRET_KEY.
-          Se disabilitato → HTTP 503 stripe_not_configured con
-          messaggio 'Billing e' in preparazione'."
+        - "Feature flag env: STRIPE_ENABLED=true + STRIPE_SECRET_KEY
+          (sk_test_ in sandbox Cloud). Se disabilitato → HTTP 503
+          stripe_not_configured con messaggio 'Billing e' in preparazione'."
+        - "Su Cloud Agent: vault Cursor + scripts/activate-stripe-sandbox.sh
+          (materialize, setup_stripe, GET /billing/plans enabled=true).
+          Vedi api.stripe-sandbox-cloud / api.cloud-secrets-vault."
         - "Sezione piano corrente: GET /billing/subscription. Se
           nessun piano → 'Nessuno'."
         - "Wallet crediti: sub.wallet.balance (integer). Se nessun
@@ -425,8 +428,9 @@ voci:
       errori_comuni:
         - problema: "HTTP 503 Billing e' in preparazione"
           soluzione: >
-            STRIPE_ENABLED non e' 'true' in .env backend. Configura
-            la chiave Stripe e riavvia.
+            STRIPE_ENABLED non e' 'true' nel process env (vault Cloud
+            o .env). Su Cloud: check-secrets + activate-stripe-sandbox.sh.
+            Chiavi devono essere sk_test_ in sandbox (non sk_live_).
         - problema: "Voglio cambiare piano ma non trovo il bottone"
           soluzione: >
             Cambio piano post-attivazione va fatto dal customer portal

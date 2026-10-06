@@ -1,12 +1,12 @@
 {
   "version": "0.26-a028-ghi",
-  "updated": "2026-09-30",
-  "voices_total": 364,
+  "updated": "2026-10-06",
+  "voices_total": 366,
   "source_files": [
     {
       "file": "00-api-codice.yaml",
-      "voices": 26,
-      "md5": "2ed01a1ed66fac0f5aa6d9968843a476"
+      "voices": 28,
+      "md5": "d753b64eb6fcc9595a035f7ce98f857b"
     },
     {
       "file": "01-primo-accesso.yaml",
@@ -101,7 +101,7 @@
     {
       "file": "19-impostazioni-agenzia.yaml",
       "voices": 15,
-      "md5": "b92076a673ec14a3c3c55ec9706fdcfc"
+      "md5": "3e6dbed6496cb3c48ba39a3af9d8347a"
     },
     {
       "file": "20-api-keys-integrazioni.yaml",
@@ -150,8 +150,8 @@
       "file": "00-api-codice",
       "title": "Corpus codice/API",
       "yaml": "00-api-codice.yaml",
-      "voices": 26,
-      "md5": "2ed01a1ed66fac0f5aa6d9968843a476"
+      "voices": 28,
+      "md5": "d753b64eb6fcc9595a035f7ce98f857b"
     },
     {
       "id": 22,

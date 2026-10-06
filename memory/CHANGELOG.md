@@ -1,3 +1,14 @@
+## 2026-10-06 — Stripe sandbox Cloud OK + vault harden + HAL
+
+**Tipo**: Ops Cloud + docs HAL/manuale · dogfood prep.
+
+- **Sandbox Stripe attiva** su env omnia2: inject `sk_test_` / `pk_test_`, `STRIPE_ENABLED=true`, catalogo `setup_stripe` creato, `GET /api/billing/plans` → `enabled=true` `mode=test`
+- Codice già su `main` (#3 vault wins dotenv, #4 prefer sk_test + wipe .env stale + `activate-stripe-sandbox.sh`)
+- HAL Cap. **00**: +2 voci `api.cloud-secrets-vault`, `api.stripe-sandbox-cloud`
+- HAL Cap. **19** + MD §19.10: Cloud vault / activate script / anti-live
+- `CLOUD_SECRETS_INVENTORY.md`: stato 6 Ott verificato
+- Regola operativa: scope **Environment** per secret omnia2; no doppioni Personal+Environment; chat vecchie non rileggono vault
+
 ## 2026-10-05 — Integrità SoT: codice + API key fuori da Cursor
 
 - `memory/INTEGRITY_AND_SECRETS.md`: codice = github/main; API key = password manager + console provider; Cursor = sola copia di iniezione
