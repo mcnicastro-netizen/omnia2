@@ -118,7 +118,7 @@ voci:
     pubblico: [titolare, super_admin]
     livello: intermedio
     tags: [notifiche, email, resend, template, transazionali, multilingua, mock-mode, d-051]
-    correlati: [notifiche.template-welcome-password, notifiche.template-agency-invite, notifiche.template-lead-notification, notifiche.template-saved-search-alert, notifiche.errori-comuni]
+    correlati: [notifiche.template-welcome-password, notifiche.template-agency-invite, notifiche.template-lead-notification, notifiche.template-saved-search-alert, notifiche.errori-comuni, notifiche.resend-vault-d116]
     domanda_naturale: "Quali email invia OMNIA automaticamente? Che template esistono? Come funziona il mock mode?"
     contenuto:
       a_cosa_serve: >
@@ -147,19 +147,65 @@ voci:
           website_url per prep demo (A-037)."
         - "Lingua fallback: se il template richiesto non ha la lingua,
           fallback su 'it'."
-        - "Mock mode: se RESEND_API_KEY non configurata, l'email NON
-          viene spedita, solo loggata con prefix `[EMAIL MOCK]`."
+        - "Mock mode: se RESEND_API_KEY assente nel process env, l'email
+          NON viene spedita, solo loggata con prefix `[EMAIL MOCK]`."
+        - "D-116: SoT chiave = console Resend + password manager.
+          Cloud omnia2 = vault Secrets, non backend/.env committato.
+          Verifica: scripts/check-secrets-presence.sh (mai valori).
+          5-Ott-2026 env omnia2: RESEND_API_KEY PRESENT."
         - "Assets iniettati automaticamente: logo_url (env
           OMNIA_LOGO_URL) e public_base (env OMNIA_PUBLIC_URL)."
       errori_comuni:
         - problema: "Vedo `[EMAIL MOCK]` nei log e nessuna email arriva"
           soluzione: >
-            Configura RESEND_API_KEY nel backend .env. Riavvia il
-            backend. Le email successive andranno realmente spedite.
+            RESEND_API_KEY manca in QUESTO processo. Su Cloud: check
+            scripts/check-secrets-presence.sh; se MISSING sei su New
+            Project / vault vuoto (D-116), non le key sono cancellate.
+            Reinietta da console Resend nel vault omnia2 e avvia un
+            NUOVO agent. Non stampare il valore. Dev locale: .env
+            gitignored + riavvio backend.
       permessi:
         - "Fire-and-forget (fallimenti solo loggati, no retry queue)"
     screenshot:
       - "[SCREEN: cap18-email-welcome]"
+
+  - id: notifiche.resend-vault-d116
+    titolo: RESEND GEMINI FAL — dove sono le key (D-116)
+    modulo: Notifiche
+    widget: null
+    pubblico: [titolare, super_admin]
+    livello: intermedio
+    tags: [notifiche, resend, gemini, fal, secrets, d-116, vault, check-secrets, email-mock, new-project]
+    correlati: [notifiche.email-panoramica, notifiche.errori-comuni, api.secrets-sot, api.check-secrets]
+    domanda_naturale: >
+      Le API key sono perse? Dove recupero RESEND GEMINI FAL?
+      Dove sta RESEND_API_KEY GEMINI_API_KEY FAL_KEY?
+      Perché vedo EMAIL MOCK?
+    contenuto:
+      a_cosa_serve: >
+        Se manca RESEND_API_KEY GEMINI_API_KEY o FAL_KEY nel pod, le
+        key NON sono cancellate. D-116: SoT = password manager + console
+        Resend / Google AI / fal.ai. Vault Cursor omnia2 = copia di
+        iniezione. New Project = vault vuoto (solo GITHUB_TOKEN).
+        check-secrets-presence.sh riporta PRESENT/MISSING, mai i valori.
+        5-Ott-2026 env omnia2: le tre key sono PRESENT.
+      quando_si_usa: >
+        Mail in [EMAIL MOCK], HAL 503 llm, staging/video senza FAL,
+        agent che vede solo GITHUB_TOKEN.
+      passi:
+        - "bash scripts/check-secrets-presence.sh (nomi only)."
+        - "Se MISSING: conferma repo github.com/mcnicastro-netizen/omnia2,
+          non New Project."
+        - "Reinietta da console provider nel vault omnia2, poi NUOVO agent."
+        - "Non stampare valori. Non committare .env."
+      errori_comuni:
+        - problema: "Le API key sono perse"
+          soluzione: >
+            Quasi sempre environment sbagliato. Recupera da password
+            manager / console. Vedi Cap. 00 api.secrets-sot.
+      permessi:
+        - super_admin / Founder; titolare vede solo il sintomo (email mock)
+    screenshot: []
 
   # ---------- 18.5 · welcome + password_reset ----------
 
@@ -624,8 +670,8 @@ voci:
         Quando un utente segnala "non mi arriva l'email".
       passi:
         - "E1 Non ricevo welcome/password_reset. Causa 1: RESEND_API_KEY
-          non configurata → mock mode. Fix dev: guarda log per
-          `[EMAIL MOCK]`. Fix prod: configura RESEND_API_KEY."
+          assente nel process env → mock. Fix: check-secrets-presence.sh.
+          Cloud: vault omnia2 (D-116), non .env git. 5-Ott omnia2 PRESENT."
         - "E1 Causa 2: email in spam. Fix: whitelist EMAIL_FROM."
         - "E1 Causa 3: Resend rifiuta (rate limit / dominio non
           verificato). Fix: log backend cerca `[EMAIL ERROR]`."
@@ -645,8 +691,10 @@ voci:
       errori_comuni:
         - problema: "Log backend mostra `[EMAIL MOCK]`"
           soluzione: >
-            RESEND_API_KEY manca. In dev e' comportamento atteso
-            (nessuna email reale). In prod, configura la chiave.
+            RESEND_API_KEY manca in questo processo. Dev: atteso se
+            .env vuoto. Cloud: environment sbagliato o vault non
+            iniettato (D-116). Non ruotare la key senza aver
+            controllato la console Resend.
       permessi:
         - "Debug richiede accesso a log backend (dev o super_admin prod)"
     screenshot: []

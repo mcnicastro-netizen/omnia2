@@ -838,7 +838,8 @@
     "cd_status_pending": "In attesa DNS",
     "cd_status_verified": "Verificato",
     "cd_status_error": "Errore",
-    "cd_admin_will_activate_ssl": "DNS ok. Attiveremo la connessione sicura entro 24 ore e ti avviseremo via email."
+    "cd_admin_will_activate_ssl": "DNS ok. Attiveremo la connessione sicura entro 24 ore e ti avviseremo via email.",
+    "err_no_extracted_profile": "Manca il profilo brand completo. Premi Estrai brand, oppure Configura sito automaticamente se hai già palette/logo."
   },
   "clients_smart": {
     "subtitle": "In alto chi conviene chiamare prima.",

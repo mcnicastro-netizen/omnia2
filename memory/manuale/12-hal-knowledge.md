@@ -152,7 +152,7 @@ Se una risposta ti sembra strana, sapere **come è stata costruita** aiuta a int
    - Si calcola la **cosine similarity** con ogni chunk del corpus.
    - Si tengono i **top-5** (`TOP_K=5`) più simili.
    - Se il migliore ha similarity **< 0,08** → `insufficient_context`.
-4. **Generation (LLM)**: se ci sono chunk sufficienti, HAL costruisce un prompt strutturato con le fonti e chiede a **Gemini 3 Flash Preview** (`gemini-3-flash-preview` via Emergent LLM Key) di rispondere.
+4. **Generation (LLM)**: se ci sono chunk sufficienti, HAL costruisce un prompt strutturato con le fonti e chiede a **Gemini** (`GEMINI_API_KEY` preferita; alias `GOOGLE_API_KEY` / `EMERGENT_LLM_KEY`). D-116: SoT = console Google + password manager; vault Cloud omnia2 = iniezione. 5-Ott-2026: `GEMINI_API_KEY` **PRESENT** su env omnia2.
    - System prompt (`hal_knowledge.py:_build_prompt` linee 468-486): *"Rispondi ESCLUSIVAMENTE sulle fonti qui sotto. Se le fonti non contengono la risposta, di' onestamente 'Non ho abbastanza contesto'. NON inventare. Usa il formato [FONTE N] alla fine delle frasi. Risposta max 300 parole, italiano, tono professionale conciso."*
 5. **Risposta**: la prosa generata viene mostrata all'utente insieme al badge di confidence e alla lista delle 5 fonti recuperate.
 
@@ -216,7 +216,7 @@ Un report JSON con:
 
 **Costo del reindex**
 - **Zero** (nessuna chiamata LLM). La matrice TF-IDF si rigenera **in-process** in pochi secondi (< 5 sec per il corpus attuale).
-- Solo la **generation** (Q&A live) consuma Gemini via Emergent LLM Key.
+- Solo la **generation** (Q&A live) consuma Gemini via `GEMINI_API_KEY`.
 
 **Endpoint di status per verificare l'esito**
 ```

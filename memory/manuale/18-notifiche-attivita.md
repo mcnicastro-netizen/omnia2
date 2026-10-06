@@ -1,6 +1,6 @@
 # Capitolo 18 · Notifiche e attività
 
-> **Versione**: v1.3 · 24-Sep-2026 · Onestà documentale D-051 · sync D-084 · **D-093**  
+> **Versione**: v1.4 · 5-Ott-2026 · D-116 vault omnia2 · base v1.3 24-Sep-2026 · D-051 · D-084 · **D-093**  
 > **Codice coperto**:
 > - `backend/shared/email/client.py` (Resend + SUBJECTS + mock mode)
 > - `backend/shared/email/templates/*.html` (7 template × lingue)
@@ -113,7 +113,9 @@ PATCH /api/auth/me/notification-preferences
 
 ## 18.4 · Email transazionali · panoramica 7 template
 
-**Provider**: Resend (via `resend-py`, chiamata `resend.Emails.send`). Chiave in env `RESEND_API_KEY`. Sender in env `EMAIL_FROM`. Se `RESEND_API_KEY` non è configurata → **mock mode**: nessun invio, log a stdout con prefix `[EMAIL MOCK]`.
+**Provider**: Resend (via `resend-py`, chiamata `resend.Emails.send`). Chiave in env `RESEND_API_KEY`. Sender in env `EMAIL_FROM` / `SENDER_EMAIL`. Se `RESEND_API_KEY` non è configurata → **mock mode**: nessun invio, log a stdout con prefix `[EMAIL MOCK]`.
+
+**Dove sta la chiave (D-116)**: SoT = console Resend + password manager. Su Cloud Agent omnia2 la copia operativa è il vault Secrets (iniezione processo), **non** `backend/.env` committato. Verifica: `bash scripts/check-secrets-presence.sh` (mai valori). **Stato 5-Ott-2026 env omnia2:** `RESEND_API_KEY` **PRESENT** — la mail demo non è bloccata per assenza chiave. Se un altro pod è in mock, è environment sbagliato (New Project), non key cancellata.
 
 **Lingua**: derivata da user (o parametro esplicito). Default `it`. Fallback su `it` se lingua richiesta non ha template.
 
@@ -348,9 +350,10 @@ db.al_audit.find({user_id: "..."}).sort({created_at: -1}).limit(50)
 ## 18.14 · Errori comuni
 
 ### E1 · "Non ricevo l'email di benvenuto / password reset"
-- **Causa 1**: `RESEND_API_KEY` non configurata in `.env` backend → mock mode, l'email è **solo loggata**, non spedita.
-  - Fix (dev): controlla i log backend, cerca `[EMAIL MOCK]`.
-  - Fix (prod): configura `RESEND_API_KEY` nel deploy env.
+- **Causa 1**: `RESEND_API_KEY` assente nel **process env** → mock mode, l'email è **solo loggata**, non spedita. Su Cloud non basta il placeholder in `backend/.env`.
+  - Fix (dev): log backend `[EMAIL MOCK]`.
+  - Fix (Cloud omnia2): `bash scripts/check-secrets-presence.sh`. Se MISSING, sei sul vault sbagliato — torna a omnia2 / reinietta da console Resend nel vault omnia2, poi **nuovo** agent. Non stampare la key.
+  - Fix (prod): secret `RESEND_API_KEY` nel deploy env.
 - **Causa 2**: email finita in spam. Fix: whitelist mittente Resend (env `EMAIL_FROM`).
 - **Causa 3**: Resend rifiuta (rate limit, dominio non verificato). Fix: log backend cerca `[EMAIL ERROR]`.
 
@@ -429,6 +432,7 @@ db.al_audit.find({user_id: "..."}).sort({created_at: -1}).limit(50)
 - **A-017 e A-021 shippati** (15-Sep-2026): campanella + preferenze UI — capitolo allineato 16-Sep (D-084).
 - **17-Sep-2026**: contatto annuncio **privato** documentato (§18.7b): `listing_inquiries` + `listing_inquiry` ≠ CRM lead agenzia.
 - **24-Sep-2026 · D-093 P0**: **A-029** stats privato (view/lead + serie 30g su SellPage); **A-030** alert preferiti su sold/rented/withdrawn (+ ribasso già live). Backlog A-031…A-033.
+- **5-Ott-2026 · D-116**: `RESEND_API_KEY` su env omnia2 **PRESENT** (vault, non `.env` git). Mock = chiave assente in *quel* processo / env sbagliato. Voce HAL `notifiche.resend-vault-d116`.
 - **A-018 activity feed** ancora assente: dashboard = KPI, non timeline.
 - **`push` schema / non implementato** (A-033 futuro).
 - Cron saved-searches: frequenza rispettata (A-019) + **scheduler interno** (A-020) + pass preferiti ribasso/ended.

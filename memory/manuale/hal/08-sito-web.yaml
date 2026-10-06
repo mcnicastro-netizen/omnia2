@@ -17,6 +17,8 @@ voci:
       - sito.brand-extractor
       - sito.temi-disponibili
       - sito.custom-domain
+      - sito.home-layout-track-a
+      - sito.vetrina-pubblica
     domanda_naturale: "A cosa serve il modulo Sito web?"
     contenuto:
       a_cosa_serve: >
@@ -122,21 +124,21 @@ voci:
       passi:
         - "MINIMAL - agenzie boutique, tono familiare/professionale.
           Palette default nero+verde bosco, tipografia Fraunces serif.
-          Layout con spazio bianco, header trasparente."
-        - "CLASSIC - agenzie generaliste, tono istituzionale. Blu notte
-          + ottone. Playfair Display serif. Header colorato con logo
-          invertito, cards con ombra."
+          Hero default: interno moderno (Unsplash)."
+        - "CLASSIC - agenzie generaliste / dogfood Nicastro (chrome verde
+          override). Hero default: chiavi/casa. Dual search + vetrina."
         - "BOLD - agenzie moderne ad alto volume. Arancio + nero.
-          Inter 700-800. Typo maiuscola enorme, card a piena immagine."
-        - "LUXURY - immobili di pregio. Nero puro + oro rosato.
-          Playfair Display + Inter. Header centrato con tagline
-          spaziata, foto grandi, features come pill outline."
+          Hero default: skyline."
+        - "LUXURY - immobili di pregio. Nero puro + oro.
+          Hero default: villa contemporanea."
+        - "Ogni tema ha hero dedicata; override con branding.hero_image_url
+          o theme_config.hero_image_url / apply hero_image_url."
       errori_comuni:
         - problema: "Nessuno dei 4 temi mi piace, voglio custom CSS"
           soluzione: >
             In v1 non e' supportato custom CSS. Puoi comunque sovrascrivere
-            palette (4 hex), tipografia (font-family CSS), logo URL e
-            tagline entro il framework dei 4 temi.
+            palette (4 hex), tipografia (font-family CSS), logo URL,
+            tagline e hero_image_url entro il framework dei 4 temi.
       permessi:
         - Titolare (agency_admin), super_admin
     screenshot:
@@ -207,8 +209,8 @@ voci:
           automaticamente."
         - "OMNIA scelglie il tema con heuristic mapping: voice=lusso ->
           Luxury; header=bold o card=image_dominant -> Bold; voice=
-          familiare/amichevole -> Classic; voice=tecnico -> Bold;
-          altrimenti Minimal."
+          familiare/amichevole -> Classic; header=classic -> Classic;
+          voice=tecnico -> Bold; altrimenti Minimal."
         - "La palette applicata = quella estratta (solo hex validi
           #RRGGBB), altrimenti default del tema."
         - "Il logo e la tagline provengono dal brand estratto o dal
@@ -216,10 +218,12 @@ voci:
         - "Salva theme_config con source: auto_from_extracted e
           timestamp applied_at."
       errori_comuni:
-        - problema: "no_extracted_profile (400)"
+        - problema: "no_extracted_profile (400) o banner rosso in Brand Studio"
           soluzione: >
-            Non hai ancora fatto l'estrazione. Torna in Brand Extractor,
-            estrai, poi rilancia auto-configura.
+            Succede anche se logo/palette sono in forma 'piatta' (seed
+            assistito) senza brand_profile nested. Dal 5-Ott l'API
+            normalizza entrambi gli shape. Ricarica la pagina e premi
+            Configura sito automaticamente, oppure Estrai brand.
       permessi:
         - Titolare (agency_admin), super_admin
     screenshot: []
@@ -230,41 +234,121 @@ voci:
     widget: null
     pubblico: [titolare]
     livello: base
-    tags: [sito-web, preview, iframe, verifica]
+    tags: [sito-web, preview, iframe, srcdoc, verifica]
     correlati:
       - sito.applicare-tema
       - sito.vetrina-pubblica
+      - sito.home-layout-track-a
     domanda_naturale: "Come vedo l'anteprima del sito prima di pubblicarlo?"
     contenuto:
       a_cosa_serve: >
         Vedere in tempo reale come apparira' il sito pubblico dopo un
-        cambio tema, senza aprire una tab nuova. L'iframe punta al sito
-        pubblico corrente con timestamp anti-cache.
+        cambio tema, senza aprire una tab nuova.
       quando_si_usa: >
-        Ogni volta che cambi tema, palette, logo, tagline; oppure per
-        verificare come vengono renderizzati nuovi immobili.
+        Ogni volta che cambi tema, palette, logo, tagline, hero; oppure
+        per verificare nuovi immobili in vetrina.
       passi:
         - "Vai in Sito web -> sezione Anteprima."
-        - "L'iframe carica automaticamente il sito pubblico con
-          timestamp ?t={now}."
-        - "Se hai appena modificato qualcosa, clicca il bottone
-          ricarica per forzare refresh dell'iframe."
-        - "Bottone Apri sito pubblico -> apre in nuova tab lo stesso URL."
-        - "L'iframe e' sandboxato (allow-same-origin allow-scripts),
-          nessun rischio script terzi."
+        - "Il CRM fa fetch same-origin di /api/p/{slug}/ e mostra l'HTML
+          in iframe srcDoc (non src navigato)."
+        - "Perche' srcDoc: i tunnel Cloudflare quick-tunnel forzano
+          X-Frame-Options DENY sulle risposte navigabili."
+        - "Bottone Aggiorna rilancia il fetch; Apri sito pubblico apre
+          l'URL in nuova tab."
+        - "Sandbox allow-same-origin allow-scripts."
       errori_comuni:
-        - problema: "Iframe vuoto o Impossibile connettersi"
+        - problema: "Firefox: Impossibile aprire questa pagina (frame)"
           soluzione: >
-            La tua agenzia deve avere is_active=true e uno slug valido.
-            Se il pannello dice attiva ma il sito da' 404, contatta
-            assistenza.
-        - problema: "Preview mostra Nessun immobile pubblicato"
+            Hard-refresh (Ctrl+Shift+R). Serve il build con srcDoc. Se
+            persiste, Apri sito pubblico in nuova tab.
+        - problema: "Anteprima non disponibile (preview_http_...)"
           soluzione: >
-            Nessun immobile con status=active. Vai in Immobili, verifica
-            gli stati (vedi Cap. 3.5).
+            Verifica is_active e slug; riprova Aggiorna.
+        - problema: "Preview mostra Nessun immobile nelle sezioni"
+          soluzione: >
+            Nessun immobile status=active. Carica via manuale/CSV/XML.
       permessi:
         - Titolare (agency_admin), super_admin
     screenshot: []
+
+  - id: sito.home-layout-track-a
+    titolo: Home pubblica Track A (dual search + vetrina)
+    modulo: Sito web
+    widget: null
+    pubblico: [titolare, agente, super_admin]
+    livello: base
+    tags: [sito-web, track-a, mls-box, vetrina, layout, d-023]
+    correlati:
+      - sito.vetrina-pubblica
+      - sito.mls-box-embed
+      - sito.demo-a037
+      - sito.temi-disponibili
+    domanda_naturale: "Come e' fatta la home del sito OMNIA dell'agenzia?"
+    contenuto:
+      a_cosa_serve: >
+        Descrivere la struttura home white-label allineata al pattern di
+        riferimento (box MLS + ricerca propria + In evidenza + Ultimi):
+        trasferimento sito senza stravolgere l'esperienza visitatore.
+      quando_si_usa: >
+        Sempre sul sito pubblico /api/p/{slug}/ e in Brand Studio preview.
+      passi:
+        - "Header: logo + nome + nav Contatti/Links/Home/Chi siamo/
+          Vendita/Affitto (chrome = primary del tema)."
+        - "Hero: immagine default per tema (o override hero_image_url)."
+        - "Box MLS a sinistra SOLO se agency.mls_enabled: claim network +
+          filtri + Powered by OMNIA (mai nomi competitor)."
+        - "Box Cerca il tuo immobile a destra: portafoglio proprio."
+        - "In evidenza (max 3) + Ultimi annunci (max 6) dal portafoglio
+          agenzia status=active."
+        - "Footer: links + contatti/fiscali."
+        - "NON e' ancora il clone pixel-perfect D-023 (Track B / A-037).
+          Raffinamento layout = prossimo step Founder."
+      errori_comuni:
+        - problema: "Non vedo il box MLS a sinistra"
+          soluzione: >
+            L'agenzia non ha mls_enabled=true. Aderisci all'MLS (Cap. 27)
+            o abilita il flag in seed/dogfood.
+        - problema: "Le card sono vuote / senza foto"
+          soluzione: >
+            Pubblica immobili con foto. I _demo_layout dogfood sono solo
+            per QA visuale.
+      permessi:
+        - Tutti (contenuto pubblico); titolare configura tema/MLS
+    screenshot:
+      - "[SCREEN: theme-classic-hero]"
+      - "[SCREEN: theme-minimal-hero]"
+
+  - id: sito.mls-box-embed
+    titolo: Widget Vetrina Immobili (mls-box embed)
+    modulo: Sito web
+    widget: mls_box
+    pubblico: [titolare, agente]
+    livello: base
+    tags: [sito-web, mls-box, vetrina, embed, iframe, widget]
+    correlati:
+      - sito.home-layout-track-a
+      - sito.vetrina-pubblica
+    domanda_naturale: "Come incorporo la vetrina immobili sul mio sito esterno?"
+    contenuto:
+      a_cosa_serve: >
+        Esporre In evidenza + Ultimi annunci del portafoglio proprio in
+        un iframe sullo stesso stile della home Track A.
+      quando_si_usa: >
+        Se l'agenzia tiene ancora un sito esterno (modo external) o vuole
+        un box embed su landing.
+      passi:
+        - "HTML: GET /api/mls-box/agency/{slug}.html"
+        - "JSON: GET /api/mls-box/agency/{slug}"
+        - "Snippet pronto: GET /api/mls-box/embed-snippet/{slug}"
+        - "Privacy Gate L1 sul pubblico anonimo."
+        - "Badge Powered by OMNIA in footer widget."
+      errori_comuni:
+        - problema: "agency_not_found"
+          soluzione: "Slug agenzia errato o agenzia non attiva."
+      permessi:
+        - Endpoint pubblici (no auth)
+    screenshot:
+      - "[SCREEN: mls-box-embed]"
 
   - id: sito.vetrina-pubblica
     titolo: Cosa mostra la vetrina pubblica del sito
@@ -272,40 +356,30 @@ voci:
     widget: null
     pubblico: [titolare, agente]
     livello: base
-    tags: [sito-web, vetrina, home, immobili, seo]
+    tags: [sito-web, vetrina, home, immobili, seo, track-a]
     correlati:
       - sito.a-cosa-serve
+      - sito.home-layout-track-a
       - sito.scheda-pubblica
       - immobili.stato-ciclo-vita
     domanda_naturale: "Cosa vede un visitatore sulla home del mio sito OMNIA?"
     contenuto:
       a_cosa_serve: >
-        Capire cosa il pubblico vede: griglia annunci attivi, header con
-        logo/nome agenzia, ordinamento aggiornati per primi, sitemap SEO.
+        Capire cosa il pubblico vede sulla home Track A: dual search,
+        In evidenza, Ultimi annunci, SEO.
       quando_si_usa: >
-        Sempre - il sito e' pubblico e sempre online se la tua agenzia
-        e' attiva.
+        Sempre - il sito e' pubblico se l'agenzia e' attiva.
       passi:
-        - "Header con logo + nome agenzia (tagline solo nel tema Luxury)."
-        - "H1 = nome agenzia + counter 'N immobili attivi'."
-        - "Griglia listings: card per ogni immobile con cover photo +
-          titolo + citta' + tipologia + m2 + locali + prezzo (o
-          EUR/mese per affitti)."
-        - "Solo immobili con status=active. Bozze/prenotati/venduti/
-          affittati/ritirati NON compaiono."
-        - "Ordinati per updated_at decrescente, max 200 immobili in home."
-        - "Sitemap.xml automatica su /api/p/{slug}/sitemap.xml con
-          fino a 5000 URL."
-        - "Se nessun annuncio -> 'Nessun immobile pubblicato al momento.'"
+        - "Vedi voce sito.home-layout-track-a per la struttura completa."
+        - "Solo immobili status=active del portafoglio proprio."
+        - "In evidenza preferisce is_exclusive; Ultimi per created_at."
+        - "Sitemap.xml su /api/p/{slug}/sitemap.xml (fino a 5000 URL)."
+        - "Se nessun annuncio: messaggio vuoto nelle sezioni card."
+        - "Annunci: manuale (solo sito) oppure CSV/XML se gestionale."
       errori_comuni:
         - problema: "Un immobile che ho creato non compare"
           soluzione: >
-            Verifica che lo stato sia Pubblicato (active). Le bozze non
-            appaiono. Vedi Cap. 3.5 per il ciclo di vita.
-        - problema: "L'ordinamento non e' quello che voglio"
-          soluzione: >
-            E' fisso su updated_at decrescente. Per far salire un
-            immobile, aprilo e salva (updated_at si aggiorna).
+            Verifica status Pubblicato (active). Vedi Cap. 3.5.
       permessi:
         - Titolare, agente (per capire cosa vede il pubblico)
     screenshot: []
@@ -553,33 +627,37 @@ voci:
     widget: null
     pubblico: [titolare, super_admin]
     livello: avanzato
-    tags: [sito-web, demo, a-037, brand-extractor, template, restyling, founders]
+    tags: [sito-web, demo, a-037, brand-extractor, template, restyling, founders, track-a, d-023]
     correlati:
       - sito.brand-extractor
       - sito.temi-disponibili
+      - sito.home-layout-track-a
       - domain.non-proprietario-a037
+      - api.demo-nicastro
     domanda_naturale: "Possiamo personalizzare la demo col look del mio sito attuale?"
     contenuto:
       a_cosa_serve: >
-        Chiarire lo stato onesto del percorso demo commerciale: URL del
-        sito cliente → brand → tema OMNIA visitabile, più template per chi
-        non ha sito, vuole restyling o non è proprietario del dominio.
+        Chiarire lo stato onesto: Track A (struttura home) e' live;
+        clone automatico pixel-perfect (D-023 / Track B) ancora A-037.
       quando_si_usa: >
         Quando un prospect chiede una demo vestita come il suo sito, o
         quando dichiara di non avere sito / non controllare il dominio.
       passi:
-        - "Lead /it/agenzie: campo Hai un sito? + URL (salvato sul lead)."
-        - "Brand Extractor esiste e può estrarre palette/font/logo da URL."
-        - "LIMITAZIONE OGGI: non c'è ancora il loop automatico URL → demo
-          pubblica vestita (A-037 aperto)."
-        - "I 4 temi backend ci sono; UI template pack commerciale ancora
-          stub — A-037 deve chiuderlo per no-sito/restyling/non-proprietario."
-        - "Non promettere clone automatico del sito finché A-037 non è PASS."
+        - "Lead /it/agenzie: campo Hai un sito? + URL."
+        - "Brand Extractor estrae palette/font/logo da URL."
+        - "Track A (5-Ott-2026): home con dual search + vetrina + hero
+          default — pattern riconoscibile, non ancora 1:1 col sito legacy."
+        - "LIMITAZIONE: loop automatico URL -> demo clone D-023 ancora
+          aperto (A-037 / Track B). Raffinamento layout = prossimo."
+        - "Template pack commerciale no-sito/restyling ancora stub."
+        - "Dogfood Nicastro: Classic verde + MLS on + CRM vuoto per dati
+          reali. Credenziali: api.demo-nicastro."
+        - "Non promettere clone automatico finche' A-037 Track B non e' PASS."
       errori_comuni:
-        - problema: "Ho dato l'URL ma la demo non ha il mio look"
+        - problema: "Ho dato l'URL ma la demo non e' identica al mio sito"
           soluzione: >
-            Atteso finché A-037 non chiude il loop. Oggi l'URL serve come
-            brief; setup branding/tema è assistito.
+            Atteso: Track A da' struttura; Track B (D-023) clona il look.
+            Annota gap layout per il prossimo ciclo.
       permessi:
         - Titolare / Founder Ops (prep demo)
     screenshot: []

@@ -1,3 +1,52 @@
+## 2026-10-05 — Track A home + hero + docs HAL Cap.8
+
+- Home white-label `/api/p/{slug}/`: dual search (MLS se `mls_enabled` + ricerca propria), In evidenza/Ultimi, footer, hero Unsplash per tema
+- `mls_box` restyle allineato; seed Nicastro chrome verde + MLS on
+- Anteprima Brand Studio già su `srcDoc` (commit precedenti)
+- Manuele Cap.8 v1.3 §8.5–8.6b / §8.11; HAL +2 voci `sito.home-layout-track-a`, `sito.mls-box-embed`
+- Founder: raffinamento layout pixel → dopo; Track B/D-023 ancora A-037
+
+## 2026-10-05 — Brand Studio: anteprima iframe + dominio seed
+
+- Causa anteprima Firefox: `X-Frame-Options: DENY` su `/api/p/*` → ora `SAMEORIGIN` (API diretta)
+- Tunnel Cloudflare quick tunnel **forza DENY** comunque → anteprima via `fetch` + `iframe srcDoc`
+- Seed Nicastro non setta più `custom_domain` (evita «IN ATTESA DNS» sul dominio di produzione)
+- `publicUrl` tollera `REACT_APP_BACKEND_URL` vuoto (same-origin)
+
+## 2026-10-05 — Brand Studio: no_extracted_profile su profilo seed piatto
+
+- Causa: seed Nicastro salvava palette/logo in piano; auto-config leggeva solo `brand_profile` nested → 400
+- Fix: `normalize_extracted_profile` + seed nested + UI legge entrambi gli shape
+- Heuristic: `header_style: classic` → tema Classic
+
+## 2026-10-05 — Nicastro CRM svuotato per dati reali
+
+- `backend/scripts/wipe_nicastro_operational.py` — solo `nicastro-agency-001`
+- Tiene titolare + brand + API key/widget; cancella immobili/clienti/richieste
+- Seed identity-only se `dogfood_skip_fixtures` (niente 4 CT finti al reboot)
+- `demo-agency-001` intatta
+
+## 2026-10-05 — HAL + manuale D-116 (secrets / anti-New Project / Nicastro)
+
+- D-116 in `DECISIONS.md` + Cap. 00 § integrità Cloud
+- HAL Cap. 00 +4 voci: `api.secrets-sot`, `api.anti-new-project`, `api.check-secrets`, `api.demo-nicastro`
+- Cap. 8 §8.11 / `sito.demo-a037`: prep assistita Nicastro ✅ · A-037 loop auto ancora aperto
+- Cap. 12 + 18: `GEMINI_API_KEY` / `RESEND_API_KEY` = vault omnia2 (D-116), non Emergent/.env git
+- `hal-index.json` v0.27-d116-secrets + reindex live
+- A-037 backlog aggiornato (assistita ≠ automatica)
+
+## 2026-10-05 — Project rule anti–New Project (niente Settings)
+
+- `.cursor/rules/anti-new-project.mdc` Always Apply: Prompt 2 Founder nel repo
+- Serve perché le User Rules si editano solo da Cursor Desktop (Customize → Rules), non da cursor.com/agents
+- Limite onesto: su New Project / Origin-tmp il file non c’è — non cliccare Start from scratch
+
+## 2026-10-05 — Vault omnia2: tre key presenti (stato pod)
+
+- `RESEND_API_KEY`, `GEMINI_API_KEY`, `FAL_KEY` **PRESENT** su env omnia2 (`scripts/check-secrets-presence.sh`)
+- Corretti gli appunti stale in `NEXT_SESSION.md` / `INTEGRITY_AND_SECRETS.md` / `CLOUD_SECRETS_INVENTORY.md` (non erano un New Project vuoto)
+- SoT key resta password manager + console; Cursor = sola copia di iniezione
+
 ## 2026-10-05 — Integrità SoT: codice + API key fuori da Cursor
 
 - `memory/INTEGRITY_AND_SECRETS.md`: codice = github/main; API key = password manager + console provider; Cursor = sola copia di iniezione

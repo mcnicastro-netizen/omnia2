@@ -580,7 +580,8 @@
     "cd_status_pending": "Esperando DNS",
     "cd_status_verified": "Verificado",
     "cd_status_error": "Error",
-    "cd_admin_will_activate_ssl": "DNS verificados. El admin de OMNIA activará el SSL (Let's Encrypt) en 24h."
+    "cd_admin_will_activate_ssl": "DNS verificados. El admin de OMNIA activará el SSL (Let's Encrypt) en 24h.",
+    "err_no_extracted_profile": "Falta el perfil de marca. Pulsa Extraer marca, o Auto-configurar si ya hay paleta/logo."
   },
   "clients_smart": {
     "subtitle": "Ordenados por prioridad de acción — los leads más calientes primero.",

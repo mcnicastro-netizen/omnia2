@@ -51,7 +51,7 @@ def main() -> None:
         new_chapters.append(entry)
 
     out = {
-        "version": "0.26-a028-ghi",
+        "version": "0.28-track-a-home",
         "updated": date.today().isoformat(),
         "voices_total": total,
         "source_files": source_files,
@@ -59,6 +59,7 @@ def main() -> None:
         "notes": (
             "Fingerprints regenerated from YAML on disk. "
             "Live RAG reindex: POST /api/app/hal/knowledge/reindex?force=true (super_admin). "
+            "2026-10-05: D-116 secrets SoT · anti-New Project · demo Nicastro · Cap.00/08/12/18. "
             "2026-09-24: A-028g/h/i · Cap.2 Attività · Cap.10 Conferma e applica · Cap.18 distinzione. "
             "2026-09-21: hub import A–E · HAL import.tutte-le-forme. "
             "2026-09-19: D-085 storage quota · Cestino · Cap.20 Ruota."
