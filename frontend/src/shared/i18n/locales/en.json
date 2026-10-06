@@ -622,7 +622,8 @@
     "cd_status_pending": "Awaiting DNS",
     "cd_status_verified": "Verified",
     "cd_status_error": "Error",
-    "cd_admin_will_activate_ssl": "DNS verified! OMNIA admin will activate SSL (Let's Encrypt) within 24h. You'll receive a confirmation email."
+    "cd_admin_will_activate_ssl": "DNS verified! OMNIA admin will activate SSL (Let's Encrypt) within 24h. You'll receive a confirmation email.",
+    "err_no_extracted_profile": "No complete brand profile yet. Click Extract brand, or Auto-configure if palette/logo are already saved."
   },
   "clients_smart": {
     "subtitle": "Sorted by action priority — hottest leads first.",

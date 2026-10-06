@@ -60,3 +60,5 @@ Alias legacy accettati dal backend (se li avevi): `GOOGLE_API_KEY`, `EMERGENT_LL
 2. [ ] Secrets UI ha almeno `RESEND_API_KEY` + `GEMINI_API_KEY`  
 3. [ ] Nuovo agent boot → `echo $RESEND_API_KEY | wc -c` > 0 (solo length)  
 4. [ ] Mail non più in `[EMAIL MOCK]`  
+
+**Stato 5 Ott 2026 (env omnia2, questo pod):** checklist 1–3 OK. `RESEND_API_KEY`, `GEMINI_API_KEY`, `FAL_KEY` presenti. Verifica: `bash scripts/check-secrets-presence.sh`. Valori mai in git/chat.  

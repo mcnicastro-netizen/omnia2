@@ -272,8 +272,9 @@ voci:
           top-5 (TOP_K=5). Se il migliore ha sim < 0.08 -> rifiuta."
         - "Generation: se ci sono chunk sufficienti, prompt strutturato
           con le fonti + istruzione a citare come [FONTE N] +
-          Gemini 3 Flash Preview via Emergent LLM Key, max 300 parole
-          in risposta."
+          Gemini (GEMINI_API_KEY preferita; alias GOOGLE_API_KEY /
+          EMERGENT_LLM_KEY), max 300 parole in risposta. D-116:
+          chiave da vault omnia2 / password manager, mai in git."
         - "Persistenza indice: matrice TF-IDF serializzata in JSON
           (non pickle, per sicurezza H9 D-051) in Mongo
           hal_knowledge_meta singleton. Cache in-memory al primo uso."

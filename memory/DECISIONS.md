@@ -288,6 +288,7 @@ Registro di tutte le decisioni di business e tecniche prese durante il progetto.
 - **Razionale**: Migration friction → ZERO. Demo killer in fase commerciale ("Inserisci URL → 60 sec → ecco il tuo sito dentro OMNIA"). Eradica completamente la resistenza al cambio gestionale.
 - **Quando**: M2.S5 (anticipa la fase di multiposting con questa feature distintiva).
 - **Stato**: ✅ Confermata.
+- **Avanzamento 5-Ott-2026**: **Track A** (struttura home dual-search + vetrina + hero) live su `/api/p/{slug}/` — non chiude il clone pixel-perfect. **Track B** (Playwright + Vision → bundle identico) resta da implementare (A-037).
 
 ### D-024 — Pricing aggressivo fase lancio + listino trasparente ✅
 - **Data**: 16 Giugno 2026 (post analisi competitiva)
@@ -1751,4 +1752,16 @@ Registro di tutte le decisioni di business e tecniche prese durante il progetto.
 - **Implementazione**: ✅ «vai» O0∥O1 · O0 design in `docs/audit/OMNIA_O0_BAK_MEDIA_DESIGN.md` · O1 codice D-095/D-100/D-106 · O2+ ⏳
 - **Stato**: ✅ **DECISIONE OPERATIVA REGISTRATA** · O0∥O1 in ship
 
+### D-116 — Integrità SoT: codice github/main · API key fuori da Cursor · 5-Ott-2026
+- **Data**: 5 Ottobre 2026
+- **Contesto**: Un New Project / Origin-tmp apre un vault Secrets **vuoto** (spesso solo `GITHUB_TOKEN` auto). Sembra che le key siano “perse”. Non lo sono: Cursor non è SoT. Policy in `memory/INTEGRITY_AND_SECRETS.md`.
+- **Decisione**:
+  1. **Codice SoT** = `github.com/mcnicastro-netizen/omnia2` branch `main`. Origin-tmp / New Project non è SoT (rafforza D-087).
+  2. **API key SoT** = password manager (entry OMNIA) + console provider (Resend / Google AI / fal.ai). Cursor Environment Secrets = **sola copia di iniezione** nel VM.
+  3. Vault vuoto ≠ chiavi cancellate. Prima di ruotare/reiniettare: conferma environment = omnia2 e `bash scripts/check-secrets-presence.sh` (nomi only, **mai valori**).
+  4. Non committare `.env` né valori secret. Non stampare key in chat/PR/log.
+  5. User Rules account si editano **solo** da Cursor Desktop (Customize → Rules), non da `cursor.com/agents`. Fallback repo Always Apply: `.cursor/rules/anti-new-project.mdc`.
+  6. Su `cursor.com/agents` aprire **sempre** omnia2 — mai Start from scratch / New Project.
+- **Stato verificato (env omnia2, 5-Ott-2026)**: `RESEND_API_KEY`, `GEMINI_API_KEY`, `FAL_KEY` **PRESENT**.
+- **Stato**: ✅ Vincolante
 

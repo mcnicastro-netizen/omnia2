@@ -1,18 +1,13 @@
-"""OMNIA — MLS Box: public widget e API per griglia immobili embed.
+"""OMNIA — MLS Box / Vetrina Immobili: public widget e API.
 
-Replica la struttura della homepage www.nicastroimmobiliare.it:
-- 3 immobili "in evidenza" (slider top)
-- 6 "ultimi annunci inseriti" (griglia 3x2)
+Replica la struttura della homepage di riferimento (box network + griglia
+In evidenza / Ultimi annunci) — layout Track A allineato al white-label.
 
 Endpoint pubblici (no auth — Bearer API-key facoltativo per rev-share):
   GET  /api/mls-box/agency/{agency_slug}       → JSON per widget
   GET  /api/mls-box/agency/{agency_slug}.html  → HTML embeddabile (iframe)
 
-Rispetta Privacy Gate L1 (viewer anonimo):
-- indirizzo esatto oscurato
-- proprietario / prezzo trattabile / note interne rimossi
-- energy_class visibile (fix P0-A)
-
+Rispetta Privacy Gate L1 (viewer anonimo).
 Sempre foto Object Storage (URL assoluto).
 """
 import os
@@ -35,15 +30,14 @@ def _serialize_property_card(p: dict) -> dict:
     cover_url = None
     if photos:
         first = photos[0]
-        # objstore path or absolute URL
         base = os.environ.get("PUBLIC_BASE_URL", "").rstrip("/")
         raw = first.get("url") or first.get("path") or ""
         cover_url = raw if raw.startswith("http") else f"{base}{raw}"
     price = p.get("price") or p.get("rent_monthly")
     return {
         "id": p.get("id"),
-        "reference_code": p.get("reference_code"),  # es. "Rif 25002"
-        "operation": p.get("operation"),  # sale / rent
+        "reference_code": p.get("reference_code"),
+        "operation": p.get("operation"),
         "property_type": p.get("property_type"),
         "title": p.get("title"),
         "city": p.get("city"),
@@ -53,6 +47,7 @@ def _serialize_property_card(p: dict) -> dict:
         "surface_sqm": p.get("surface_sqm"),
         "rooms": p.get("rooms"),
         "bedrooms": p.get("bedrooms"),
+        "bathrooms": p.get("bathrooms"),
         "energy_class": (p.get("energy") or {}).get("energy_class"),
         "view_count": p.get("view_count") or 0,
         "cover_url": cover_url,
@@ -74,20 +69,19 @@ async def mls_box_json(
         featured: [ {card1}, {card2}, {card3} ],
         latest:   [ {card1}, ... {card6} ] }
     """
-    # Route disambiguation: `.html` variant is a separate endpoint below.
     if agency_slug.endswith(".html"):
         return await mls_box_html(agency_slug[:-5], featured_limit=featured_limit,
                                   latest_limit=latest_limit)
     db = Database.get()
     agency = await db.agencies.find_one(
         {"slug": agency_slug},
-        {"_id": 0, "id": 1, "name": 1, "logo_url": 1, "slug": 1, "brand_color": 1},
+        {"_id": 0, "id": 1, "name": 1, "display_name": 1, "logo_url": 1,
+         "slug": 1, "brand_color": 1, "branding": 1, "mls_enabled": 1},
     )
     if not agency:
         raise HTTPException(status_code=404, detail="agency_not_found")
 
     aid = agency["id"]
-    # Featured: is_exclusive OR view_count top, active + public
     featured_cursor = db.properties.find(
         {"agency_id": aid, "status": "active",
          "visibility": {"$in": ["public", "mls_only"]},
@@ -96,7 +90,6 @@ async def mls_box_json(
     ).sort("updated_at", -1).limit(featured_limit)
     featured_raw = await featured_cursor.to_list(length=featured_limit)
 
-    # Se meno di N featured → completa con top-view immobili
     if len(featured_raw) < featured_limit:
         already = {p["id"] for p in featured_raw}
         extra_cursor = db.properties.find(
@@ -107,7 +100,6 @@ async def mls_box_json(
         ).sort("view_count", -1).limit(featured_limit - len(featured_raw))
         featured_raw += await extra_cursor.to_list(length=featured_limit)
 
-    # Latest: last inserted
     latest_cursor = db.properties.find(
         {"agency_id": aid, "status": "active",
          "visibility": {"$in": ["public", "mls_only"]}},
@@ -115,11 +107,9 @@ async def mls_box_json(
     ).sort("created_at", -1).limit(latest_limit)
     latest_raw = await latest_cursor.to_list(length=latest_limit)
 
-    # Apply Privacy Gate L1 (anonymous viewer)
     featured = [_serialize_property_card(apply_privacy_view(p, "L1")) for p in featured_raw]
     latest = [_serialize_property_card(apply_privacy_view(p, "L1")) for p in latest_raw]
 
-    # Increment view_count on rendered properties (best-effort, batched)
     ids = [p["id"] for p in (featured_raw + latest_raw) if p.get("id")]
     if ids:
         try:
@@ -130,32 +120,35 @@ async def mls_box_json(
         except Exception:  # pragma: no cover
             pass
 
+    primary = ((agency.get("branding") or {}).get("primary_color")
+               or agency.get("brand_color")
+               or "#3D8B40")
     return {
-        "agency": agency,
+        "agency": {
+            **agency,
+            "display_name": agency.get("display_name") or agency.get("name"),
+            "primary_color": primary,
+        },
         "featured": featured,
         "latest": latest,
     }
 
 
-# ---------- HTML embed (iframe-friendly, self-styled Mediterranean Future 2035) ----------
-
 _CARD_HTML = """
 <a href="{detail_url}" class="mls-card" target="_blank" rel="noopener">
   <div class="mls-card__img" style="background-image:url({cover_url})">
-    <span class="mls-card__op mls-card__op--{op}">{op_label}</span>
-    {featured_badge}
+    <span class="mls-card__op">{op_label}</span>
+    <span class="mls-card__price">{price}</span>
   </div>
   <div class="mls-card__body">
-    <div class="mls-card__ref">{ref}</div>
-    <div class="mls-card__price">{price}</div>
     <div class="mls-card__city">{city}</div>
     <div class="mls-card__title">{title}</div>
     <div class="mls-card__zone">{zone}</div>
-    <div class="mls-card__meta">
-      <span>{sqm} m²</span>
-      <span>{rooms} vani</span>
-      <span class="mls-card__energy mls-card__energy--{energy}">{energy}</span>
-    </div>
+  </div>
+  <div class="mls-card__meta">
+    <span>{sqm} Mq</span>
+    <span>{rooms} Vani</span>
+    <span>{beds} Cam.</span>
   </div>
 </a>
 """
@@ -171,21 +164,17 @@ def _fmt_price(p: dict) -> str:
 def _render_card(p: dict, detail_base: str, featured: bool = False) -> str:
     op = p.get("operation") or "sale"
     op_label = "Vendita" if op == "sale" else "Affitto"
-    energy = (p.get("energy_class") or "-").upper()[:2]
     return _CARD_HTML.format(
         detail_url=f"{detail_base}{p.get('detail_path') or ''}",
         cover_url=p.get("cover_url") or "",
-        op=op,
         op_label=op_label,
-        featured_badge='<span class="mls-card__featured">In evidenza</span>' if featured else "",
-        ref=p.get("reference_code") or "",
         price=_fmt_price(p),
         city=(p.get("city") or "").upper(),
         title=p.get("title") or "",
         zone=p.get("zone") or "",
-        sqm=int(p.get("surface_sqm") or 0),
-        rooms=int(p.get("rooms") or 0),
-        energy=energy,
+        sqm=int(p.get("surface_sqm") or 0) if p.get("surface_sqm") else "—",
+        rooms=int(p.get("rooms") or 0) if p.get("rooms") else "—",
+        beds=int(p.get("bedrooms") or 0) if p.get("bedrooms") else "—",
     )
 
 
@@ -195,7 +184,7 @@ async def mls_box_html(
     featured_limit: int = Query(3, ge=1, le=10),
     latest_limit: int = Query(6, ge=1, le=24),
 ):
-    """HTML embeddabile in iframe sul sito dell'agenzia."""
+    """HTML embeddabile in iframe sul sito dell'agenzia (layout Track A)."""
     data = await mls_box_json(agency_slug, featured_limit=featured_limit,
                               latest_limit=latest_limit)
     base = os.environ.get("FRONTEND_BASE_URL") or os.environ.get("PUBLIC_BASE_URL", "")
@@ -203,83 +192,79 @@ async def mls_box_html(
 
     featured_html = "".join(_render_card(c, base, featured=True) for c in data["featured"])
     latest_html = "".join(_render_card(c, base) for c in data["latest"])
+    if not featured_html:
+        featured_html = '<div class="mls-empty">Nessun immobile in evidenza.</div>'
+    if not latest_html:
+        latest_html = '<div class="mls-empty">Nessun annuncio pubblicato.</div>'
 
-    agency_name = (data["agency"].get("name") or "").strip()
+    agency_name = (data["agency"].get("display_name") or data["agency"].get("name") or "").strip()
+    primary = data["agency"].get("primary_color") or "#3D8B40"
 
     html = f"""<!doctype html>
 <html lang="it">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>MLS Box · {agency_name}</title>
+<title>Vetrina Immobili · {agency_name}</title>
 <style>
-  :root {{
-    --navy:#0B1E3F; --emerald:#0F6B5B; --gold:#C69F4C; --offwhite:#FAF8F3;
-    --stone:#6B6B6B; --ink:#0E1419;
-  }}
+  :root {{ --primary:{primary}; --ink:#222; --muted:#777; --bg:#f4f4f4; }}
   * {{ box-sizing:border-box; }}
-  body {{ margin:0; font-family:'Fraunces',Georgia,serif; background:var(--offwhite); color:var(--ink); }}
+  body {{ margin:0; font-family:Arial,Helvetica,sans-serif; background:var(--bg); color:var(--ink); }}
+  .mls-wrap {{ max-width:1100px; margin:0 auto; padding:16px 12px 32px; }}
   .mls-hero-title {{
-    font-size:1.35rem; letter-spacing:.08em; text-transform:uppercase;
-    color:var(--navy); margin:2rem 0 1rem; padding-left:1rem; border-left:3px solid var(--gold);
+    font-size:1.25rem; font-weight:700; color:#333; margin:1.25rem 0 .85rem;
+    padding-bottom:6px; border-bottom:2px solid var(--primary);
   }}
   .mls-grid {{
-    display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr));
-    gap:1.25rem; padding:0 1rem 2rem;
+    display:grid; grid-template-columns:repeat(3,minmax(0,1fr));
+    gap:16px;
   }}
-  .mls-grid--featured {{ grid-template-columns:repeat(auto-fill,minmax(320px,1fr)); }}
   .mls-card {{
     display:block; text-decoration:none; color:inherit;
-    background:#fff; border:1px solid #E9E4D6; overflow:hidden;
-    transition:transform .25s ease, box-shadow .25s ease;
+    background:#fff; border:1px solid #ddd; overflow:hidden;
   }}
-  .mls-card:hover {{ transform:translateY(-2px); box-shadow:0 12px 28px rgba(11,30,63,.10); }}
+  .mls-card:hover {{ box-shadow:0 4px 14px rgba(0,0,0,.1); }}
   .mls-card__img {{
-    position:relative; aspect-ratio:16/10; background-size:cover; background-position:center;
-    background-color:#E9E4D6;
+    position:relative; aspect-ratio:4/3; background-size:cover; background-position:center;
+    background-color:#e8e8e8;
   }}
   .mls-card__op {{
-    position:absolute; top:.75rem; left:.75rem; padding:.25rem .6rem;
-    font-family:'Inter',sans-serif; font-size:.7rem; letter-spacing:.1em;
-    text-transform:uppercase; color:#fff; background:var(--navy);
+    position:absolute; top:0; left:0; padding:5px 10px;
+    font-size:.72rem; font-weight:700; text-transform:uppercase; color:#fff; background:var(--primary);
   }}
-  .mls-card__op--rent {{ background:var(--emerald); }}
-  .mls-card__featured {{
-    position:absolute; top:.75rem; right:.75rem; padding:.25rem .6rem;
-    font-family:'Inter',sans-serif; font-size:.65rem; letter-spacing:.15em;
-    text-transform:uppercase; color:var(--navy); background:var(--gold);
+  .mls-card__price {{
+    position:absolute; right:8px; bottom:8px; padding:4px 8px;
+    font-size:.95rem; font-weight:700; color:#111; background:rgba(255,255,255,.95);
   }}
-  .mls-card__body {{ padding:1rem 1.1rem 1.25rem; }}
-  .mls-card__ref {{ font-family:'Inter',sans-serif; font-size:.7rem; letter-spacing:.1em; color:var(--stone); }}
-  .mls-card__price {{ font-size:1.5rem; font-weight:600; color:var(--navy); margin:.15rem 0 .35rem; }}
-  .mls-card__city {{ font-size:.9rem; letter-spacing:.14em; color:var(--emerald); text-transform:uppercase; }}
-  .mls-card__title {{ font-size:1rem; margin:.35rem 0 .25rem; color:var(--ink); line-height:1.35; }}
-  .mls-card__zone {{ font-family:'Inter',sans-serif; font-size:.8rem; color:var(--stone); }}
+  .mls-card__body {{ padding:10px 12px 0; }}
+  .mls-card__city {{ font-size:.85rem; font-weight:700; letter-spacing:.06em; text-transform:uppercase; }}
+  .mls-card__title {{ font-size:.92rem; line-height:1.3; min-height:2.4em; margin-top:4px; }}
+  .mls-card__zone {{ font-size:.78rem; color:var(--muted); margin:4px 0 8px; }}
   .mls-card__meta {{
-    display:flex; gap:.85rem; margin-top:.75rem; padding-top:.6rem;
-    border-top:1px dashed #E4DFCE; font-family:'Inter',sans-serif;
-    font-size:.78rem; color:var(--stone);
+    display:flex; background:#eee; border-top:1px solid #ddd; margin-top:8px;
   }}
-  .mls-card__energy {{
-    margin-left:auto; padding:0 .5rem; color:#fff; font-weight:600; letter-spacing:.05em;
-    background:var(--stone);
+  .mls-card__meta span {{
+    flex:1; text-align:center; padding:8px 4px; font-size:.75rem; color:#444;
+    border-right:1px solid #ddd;
   }}
-  .mls-card__energy--A, .mls-card__energy--A1, .mls-card__energy--A2,
-  .mls-card__energy--A3, .mls-card__energy--A4 {{ background:#1E8449; }}
-  .mls-card__energy--B, .mls-card__energy--C {{ background:#28B463; }}
-  .mls-card__energy--D, .mls-card__energy--E {{ background:#D68910; }}
-  .mls-card__energy--F, .mls-card__energy--G {{ background:#C0392B; }}
-  @media (max-width:640px) {{
-    .mls-grid, .mls-grid--featured {{ grid-template-columns:1fr; }}
+  .mls-card__meta span:last-child {{ border-right:0; }}
+  .mls-empty {{
+    grid-column:1/-1; background:#fff; border:1px dashed #ccc; padding:24px; text-align:center; color:#666;
   }}
+  .mls-powered {{ text-align:center; margin-top:18px; font-size:.65rem; letter-spacing:.12em; text-transform:uppercase; color:#888; }}
+  @media (max-width:900px) {{ .mls-grid {{ grid-template-columns:1fr 1fr; }} }}
+  @media (max-width:560px) {{ .mls-grid {{ grid-template-columns:1fr; }} }}
 </style>
 </head>
 <body>
-  <h2 class="mls-hero-title">In evidenza</h2>
-  <div class="mls-grid mls-grid--featured">{featured_html}</div>
+  <div class="mls-wrap" data-testid="mls-box-embed">
+    <h2 class="mls-hero-title">In evidenza</h2>
+    <div class="mls-grid mls-grid--featured">{featured_html}</div>
 
-  <h2 class="mls-hero-title">Ultimi annunci inseriti</h2>
-  <div class="mls-grid">{latest_html}</div>
+    <h2 class="mls-hero-title">Ultimi annunci inseriti</h2>
+    <div class="mls-grid">{latest_html}</div>
+    <div class="mls-powered">Powered by OMNIA</div>
+  </div>
 </body>
 </html>"""
     return HTMLResponse(content=html)

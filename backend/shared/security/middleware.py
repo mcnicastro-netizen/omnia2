@@ -36,14 +36,20 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next: Callable) -> Response:
         response = await call_next(request)
         response.headers.setdefault("X-Content-Type-Options", "nosniff")
-        response.headers.setdefault("X-Frame-Options", "DENY")
+        path = request.url.path or ""
+        # Public themed site + Brand Studio live preview (same-origin iframe).
+        # Widgets set their own frame-ancestors *; do not force DENY over them.
+        if path.startswith("/api/p/") or path.startswith("/api/app/website/preview/"):
+            response.headers["X-Frame-Options"] = "SAMEORIGIN"
+        else:
+            response.headers.setdefault("X-Frame-Options", "DENY")
         response.headers.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")
         response.headers.setdefault(
             "Permissions-Policy",
             "geolocation=(self), microphone=(), camera=()",
         )
         response.headers.setdefault("X-OMNIA-Protected", "1")
-        if request.url.path.startswith("/api/"):
+        if path.startswith("/api/"):
             response.headers.setdefault("X-Robots-Tag", "noindex, nofollow, noarchive")
         return response
 
