@@ -21,7 +21,9 @@ Nomi obbligatori (env var, niente italiano/spazi):
 
 Dopo il Save, **riavvia un nuovo agent** sullo stesso environment (i secret non compaiono magicamente nel pod già aperto).
 
-**Trappola fixata (Ott 2026)**: `backend/.env` template ha `STRIPE_ENABLED=false`. Prima `load_dotenv(override=True)` **cancellava** il vault. Ora `shared/env_bootstrap.py` + `cloud-agent-start.sh` fanno vincere i secret iniettati; con `sk_test_…` la sandbox si auto-abilita.
+**Trappola fixata (Ott 2026)**: `backend/.env` template ha `STRIPE_ENABLED=false`. Prima `load_dotenv(override=True)` **cancellava** il vault. Ora `shared/env_bootstrap.py` + `scripts/stripe-vault-materialize.py` fanno vincere i secret iniettati; con `sk_test_…` la sandbox si auto-abilita.
+
+**Hardening**: wipe Stripe da `.env` a ogni boot (niente live stale su warm disk); preferisci qualsiasi valore `sk_test_`/`pk_test_` presente nel process env anche se lo slot canonico ha ancora `sk_live_`; **non** reimportare `STRIPE_*` da `.env` nel process. Attivazione one-shot: `bash scripts/activate-stripe-sandbox.sh`.
 
 ---
 

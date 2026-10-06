@@ -56,8 +56,15 @@ router = APIRouter(prefix="/billing/b2c", tags=["billing-b2c"])
 stripe.api_key = os.environ.get("STRIPE_SECRET_KEY", "")
 
 
+def _refresh_stripe_api_key() -> str:
+    key = (os.environ.get("STRIPE_SECRET_KEY") or "").strip()
+    stripe.api_key = key
+    return key
+
+
 def _is_enabled() -> bool:
-    return os.environ.get("STRIPE_ENABLED", "").lower() == "true" and bool(stripe.api_key)
+    key = _refresh_stripe_api_key()
+    return os.environ.get("STRIPE_ENABLED", "").lower() == "true" and bool(key)
 
 
 def _guard_enabled() -> None:
