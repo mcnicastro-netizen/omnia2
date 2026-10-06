@@ -14,13 +14,15 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI, APIRouter, Header, Request
 from fastapi.responses import JSONResponse
 from starlette.middleware.cors import CORSMiddleware
-from dotenv import load_dotenv
-
 # Make backend/ importable as root for `shared` and `apps`
 ROOT_DIR = Path(__file__).resolve().parent
 sys.path.insert(0, str(ROOT_DIR))
-# override=True: .env is source of truth (avoids stale exported vars in long-lived shells)
-load_dotenv(ROOT_DIR / ".env", override=True)
+# .env fills gaps, but Cloud Agent vault / process secrets win (D-Secrets).
+# Previously load_dotenv(override=True) wiped vault STRIPE_ENABLED=true with
+# the template STRIPE_ENABLED=false → permanent billing 503.
+from shared.env_bootstrap import load_backend_env  # noqa: E402
+
+load_backend_env(ROOT_DIR / ".env", override=True)
 
 # M1 bridge: legacy checks look for EMERGENT_LLM_KEY — mirror Gemini key if present
 # (safe alias: old code / env still work; preferred key remains GEMINI_API_KEY)
