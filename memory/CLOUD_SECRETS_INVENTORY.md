@@ -14,7 +14,8 @@ Non usare New Project per continuare lavoro prodotto.
 
 ## Dove reiniettare
 
-Dashboard Cursor → **Cloud Agents** → **My Secrets** (All Repositories) **oppure** Environments → env omnia2 → **Secrets**
+Dashboard Cursor → **Cloud Agents** → Environments → env **omnia2** → **Secrets**  
+(preferire scope **Environment**; evitare doppioni con My Secrets / Personal sullo stesso nome)
 
 Nomi obbligatori (env var, niente italiano/spazi):
 `STRIPE_SECRET_KEY`, `STRIPE_PUBLISHABLE_KEY`, `STRIPE_ENABLED=true` (+ opzionale `STRIPE_WEBHOOK_SECRET`).
@@ -62,3 +63,11 @@ Alias legacy accettati dal backend (se li avevi): `GOOGLE_API_KEY`, `EMERGENT_LL
 2. [ ] Secrets UI ha almeno `RESEND_API_KEY` + `GEMINI_API_KEY`  
 3. [ ] Nuovo agent boot → `echo $RESEND_API_KEY | wc -c` > 0 (solo length)  
 4. [ ] Mail non più in `[EMAIL MOCK]`  
+
+---
+
+## Stato verificato — 6 Ott 2026
+
+Env omnia2, questa chat: `sk_test` / `pk_test` iniettati, `STRIPE_ENABLED=true`.  
+`/api/billing/plans` → `enabled=true`, `mode=test`. Sandbox OK.  
+Scripts env proposti per Save: `cloud-agent-install.sh` + `cloud-agent-start.sh`.

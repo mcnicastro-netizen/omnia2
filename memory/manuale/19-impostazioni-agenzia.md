@@ -183,6 +183,7 @@ Il titolare **non ha un sito** e vuole che OMNIA gli generi un portale con templ
 **Stato billing (feature flag)**:
 - Se `STRIPE_ENABLED != "true"` in env → endpoint restituiscono **HTTP 503** con `{"error": "stripe_not_configured", "message": "Billing è in preparazione."}`. In UI: la pagina carica ma i piani non sono attivabili.
 - Se `STRIPE_ENABLED == "true"` E `STRIPE_SECRET_KEY` presente → billing operativo.
+- **Cloud Agent (6 Ott 2026)**: i secret arrivano dal vault Cursor (scope **Environment** su omnia2, preferire `sk_test_` / `pk_test_`). Il template `backend/.env` ha `STRIPE_ENABLED=false` ma `shared/env_bootstrap.py` + `scripts/stripe-vault-materialize.py` fanno vincere il vault. Attivazione one-shot: `bash scripts/activate-stripe-sandbox.sh` → `GET /api/billing/plans` con `enabled=true`, `mode=test`. Non riusare chat agent avviate con inject `sk_live_`. Dettaglio HAL: `api.cloud-secrets-vault`, `api.stripe-sandbox-cloud`.
 
 ### 19.10.1 · Sezione piano corrente + wallet crediti
 

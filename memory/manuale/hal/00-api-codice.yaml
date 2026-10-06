@@ -758,3 +758,95 @@ voci:
       permessi:
         - super_admin / Founder
       screenshot: []
+
+  - id: api.cloud-secrets-vault
+    titolo: Secrets Cloud Agent — vault Cursor vs .env (D-Secrets)
+    modulo: Codice API
+    widget: null
+    pubblico: [super_admin]
+    livello: avanzato
+    tags: [codice, secrets, vault, cursor, cloud-agent, stripe, resend, gemini, d-116]
+    correlati: [api.stripe-sandbox-cloud, settings.billing-pagina-separata]
+    domanda_naturale: "Dove metto le API key su Cloud Agent? Perché l'agent non vede Stripe anche se le ho salvate?"
+    contenuto:
+      a_cosa_serve: >
+        I secret Cursor (My Secrets / Environment Secrets) sono una COPIA
+        di iniezione. SoT = password manager + console provider
+        (INTEGRITY_AND_SECRETS.md · CLOUD_SECRETS_INVENTORY.md).
+        Nomi env var esatti (niente italiano/spazi). Scope Environment
+        preferito per omnia2; evitare doppioni Personal+Environment
+        (possono iniettare live e test insieme).
+      quando_si_usa: >
+        Agent dice secret missing/live; New Project vault vuoto;
+        billing 503; mail in [EMAIL MOCK].
+      passi:
+        - "Avvia sempre agent su github.com/mcnicastro-netizen/omnia2
+          (mai New Project / Origin-tmp)."
+        - "Secrets UI: RESEND_API_KEY, GEMINI_API_KEY, FAL_KEY,
+          STRIPE_SECRET_KEY, STRIPE_PUBLISHABLE_KEY, STRIPE_ENABLED=true."
+        - "Verifica presence (mai valori): bash scripts/check-secrets-presence.sh
+          — stampa anche CLOUD_AGENT_INJECTED_SECRET_NAMES e class sk_test/sk_live."
+        - "cloud-agent-start chiama stripe-vault-materialize.py: wipe Stripe
+          da .env stale, preferisce sk_test_/pk_test_ ovunque nel process,
+          materializza vault → backend/.env."
+        - "server.py usa shared.env_bootstrap.load_backend_env: vault vince
+          su template STRIPE_ENABLED=false (load_dotenv override)."
+        - "Secret nuovi = serve agent con boot NUOVO (chat vecchie tengono
+          l'inject del loro avvio)."
+      errori_comuni:
+        - problema: "In UI vedo le chiavi ma l'agent dice sk_live o absent"
+          soluzione: >
+            Controlla doppioni Personal vs Environment; class reale =
+            check-secrets sul process. Chat già aperte non rileggono
+            vault aggiornato. Exit 2 di activate-stripe-sandbox.sh =
+            inject ancora live.
+        - problema: "Ho messo Chiave pubblicabile come nome secret"
+          soluzione: >
+            Nome invalido. Usa STRIPE_PUBLISHABLE_KEY / STRIPE_SECRET_KEY.
+      permessi:
+        - super_admin / Founder
+      screenshot: []
+
+  - id: api.stripe-sandbox-cloud
+    titolo: Stripe sandbox su Cloud Agent — attivazione test
+    modulo: Codice API
+    widget: null
+    pubblico: [super_admin]
+    livello: avanzato
+    tags: [codice, stripe, sandbox, billing, sk-test, setup-stripe, cloud-agent]
+    correlati: [api.cloud-secrets-vault, settings.billing-pagina-separata]
+    domanda_naturale: "Come attivo Stripe sandbox su OMNIA Cloud? Perché billing resta disabilitato?"
+    contenuto:
+      a_cosa_serve: >
+        Sandbox = chiavi sk_test_ / pk_test_ + STRIPE_ENABLED=true.
+        Catalogo piani/crediti via python -m apps.billing.setup_stripe
+        (idempotente, lookup_key). One-shot:
+        bash scripts/activate-stripe-sandbox.sh
+        (materialize + setup + restart stack + GET /billing/plans).
+        sk_live_ non auto-abilita (anti-soldi-veri).
+      quando_si_usa: >
+        Dogfood billing, checkout piani Founders, crediti, B2C Stripe.
+      passi:
+        - "Vault: STRIPE_SECRET_KEY=sk_test_… STRIPE_PUBLISHABLE_KEY=pk_test_…
+          STRIPE_ENABLED=true (scope Environment su omnia2)."
+        - "bash scripts/check-secrets-presence.sh → class=sk_test / pk_test."
+        - "bash scripts/activate-stripe-sandbox.sh → exit 0 e
+          GET /api/billing/plans enabled=true mode=test."
+        - "Se API già up senza Stripe: riavvia listener :43121 poi
+          omnia-stack ensure (adopt non ricarica .env da solo)."
+        - "Verifica UI: /it/app/settings/billing."
+      errori_comuni:
+        - problema: "activate exit 2 class sk_live"
+          soluzione: >
+            Vault inject ancora live. Correggi secret test; non riusare
+            chat partite con live. Codice OMNIA rileva e blocca sandbox.
+        - problema: "setup_stripe ok ma /billing/plans enabled=false"
+          soluzione: >
+            Processo uvicorn vecchio. Riavvia API dopo materialize.
+        - problema: "HTTP 503 Billing in preparazione"
+          soluzione: >
+            STRIPE_ENABLED!=true o secret key assente nel process
+            (non solo nel file .env commentato).
+      permessi:
+        - super_admin / Founder
+      screenshot: []

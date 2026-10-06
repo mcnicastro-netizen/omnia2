@@ -1,7 +1,33 @@
 # Prossima sessione — programma passi
 
-**Aggiornato**: 5 Ottobre 2026 · **Demo Nicastroimmobiliare PRONTA (cliente 1)**  
+**Aggiornato**: 6 Ottobre 2026 · **Stripe sandbox Cloud OK** · Demo Nicastro PRONTA  
 **Repo**: https://github.com/mcnicastro-netizen/omnia2 ✅  
+**Chat SoT sessione**: UNICA chat — Stripe sandbox OK (`bc-7412138c-…`)
+
+---
+
+## ✅ Stripe sandbox (Cloud) — chiuso 6 Ott
+
+| Check | Esito |
+|--|--|
+| Vault inject | `sk_test` / `pk_test` · `STRIPE_ENABLED=true` |
+| Catalogo | `python -m apps.billing.setup_stripe` OK |
+| API | `GET /api/billing/plans` → `enabled=true` `mode=test` |
+| Script | `bash scripts/activate-stripe-sandbox.sh` |
+| Docs | HAL `api.cloud-secrets-vault` + `api.stripe-sandbox-cloud` · Cap. 19 §19.10 |
+
+**Regole**: scope secret **Environment** (evitare doppioni Personal); non riusare chat agent avviate con `sk_live_`.
+
+---
+
+## 🎯 Riprendere dogfood E2E (dopo docs)
+
+1. Billing UI `/it/app/settings/billing` (piani + checkout test Stripe)
+2. Annuncio privato B2C
+3. Nuova agenzia self-serve (se O6 consente) / seed
+4. API keys Track B (super_admin)
+
+CRM pubblico (tunnel): vedi `/tmp/omnia-stack/SHARE_URL.txt` / `CRM_LOGIN_URL.txt`
 
 ---
 
@@ -26,18 +52,16 @@
 1. ✅ Ambiente prova su (`bash scripts/omnia-stack.sh ensure`) + tunnel pubblico  
 2. ✅ Account **agenzia ufficiale** Nicastroimmobiliare (non `demo-agency-001`) · `agency_admin`  
 3. Lead Founders — reinvio se serve · URL sito `https://www.nicastroimmobiliare.it/`  
-4. ✅ Prep **assistita** (A-037 non chiude ancora URL→demo automatica):
-   - palette/logo da crawl sito (`#BC4F08` / `#3DB04B` + logo AgestaWeb)
-   - tema Classic + 4 immobili CT + 3 clienti  
-5. ✅ Login QA browser PASS (titolare Nicastro · 4 immobili CT) — invio link a Marco-titolare  
-6. ⏳ Annotare cosa gratta → backlog / A-037
+4. ✅ Prep **assistita** (A-037 non chiude ancora URL→demo automatica)  
+5. ✅ Login QA browser PASS (titolare Nicastro · 4 immobili CT)  
+6. ✅ Stripe sandbox Cloud (sk_test) — billing abilitato  
+7. ⏳ Annotare cosa gratta → backlog / A-037 · riprendere E2E dogfood
 
 ### Limiti onesti da non promettere in mail
 - Clone automatico del sito **non** ancora live (A-037)  
-- Self-serve Stripe **OFF** (O6 CONDITIONAL)  
+- Self-serve Stripe prodotto **OFF** finché O6 ≠ PASS (sandbox Cloud ≠ self-serve pubblico)  
 - Dominio/email Basic Soft → percorso verifica-dominio se serve  
-- `RESEND_API_KEY` non in questo pod → mail demo solo se chiave reiniettata  
-- **Secrets**: vault di questo env New Project è vuoto (solo `GITHUB_TOKEN` auto). Inventario nomi + dove recuperarli: `memory/CLOUD_SECRETS_INVENTORY.md`. Regola: niente New Project per OMNIA — agent su github/omnia2.
+- **Secrets**: SoT = password manager + console; Cursor = inject. Inventario: `memory/CLOUD_SECRETS_INVENTORY.md`
 
 ---
 
