@@ -14,9 +14,14 @@ Non usare New Project per continuare lavoro prodotto.
 
 ## Dove reiniettare
 
-Dashboard Cursor → **Cloud Agents** → **Environments** → (questo env o meglio env omnia2) → **Secrets**
+Dashboard Cursor → **Cloud Agents** → **My Secrets** (All Repositories) **oppure** Environments → env omnia2 → **Secrets**
+
+Nomi obbligatori (env var, niente italiano/spazi):
+`STRIPE_SECRET_KEY`, `STRIPE_PUBLISHABLE_KEY`, `STRIPE_ENABLED=true` (+ opzionale `STRIPE_WEBHOOK_SECRET`).
 
 Dopo il Save, **riavvia un nuovo agent** sullo stesso environment (i secret non compaiono magicamente nel pod già aperto).
+
+**Trappola fixata (Ott 2026)**: `backend/.env` template ha `STRIPE_ENABLED=false`. Prima `load_dotenv(override=True)` **cancellava** il vault. Ora `shared/env_bootstrap.py` + `cloud-agent-start.sh` fanno vincere i secret iniettati; con `sk_test_…` la sandbox si auto-abilita.
 
 ---
 

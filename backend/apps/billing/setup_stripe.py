@@ -15,8 +15,12 @@ import logging
 # ensure /app/backend is on path when run directly
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
-from dotenv import load_dotenv
-load_dotenv(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", ".env"))
+from shared.env_bootstrap import load_backend_env
+
+load_backend_env(
+    os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", ".env"),
+    override=True,
+)
 
 import stripe
 
