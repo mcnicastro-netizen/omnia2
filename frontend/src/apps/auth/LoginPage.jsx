@@ -290,8 +290,14 @@ export default function LoginPage() {
 
             <p className="text-sm font-sans text-stone-500 text-center">
               {t("auth.no_account")}{" "}
-              <Link to={`/${lang}/register`} className="text-stone-900 underline">
+              <Link to={`/${lang}/cloud/register`} className="text-stone-900 underline">
                 {t("auth.register_now")}
+              </Link>
+            </p>
+            <p className="text-xs font-sans text-stone-400 text-center mt-2">
+              {t("auth.register_agency_hint")}{" "}
+              <Link to={`/${lang}/register`} className="underline">
+                {t("auth.register_agency_link")}
               </Link>
             </p>
           </form>
