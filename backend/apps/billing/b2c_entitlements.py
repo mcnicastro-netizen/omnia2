@@ -122,11 +122,21 @@ async def record_uni_purchase(
     product_key: str = "b2c_valuator_uni_pdf",
     status: str = "pending",
     listing_id: Optional[str] = None,
+    amount_eur: Optional[float] = None,
 ) -> str:
     """Create a b2c_purchases record. Returns internal id."""
+    from apps.billing.b2c_products import get_b2c_product
+
     db = Database.get()
     now = datetime.now(timezone.utc)
     doc_id = uuid4().hex
+    catalog = get_b2c_product(product_key) or {}
+    price = amount_eur
+    if price is None:
+        try:
+            price = float(catalog.get("price_eur") or 0)
+        except (TypeError, ValueError):
+            price = 0.0
     doc = {
         "id": doc_id,
         "user_id": user_id,
@@ -135,6 +145,8 @@ async def record_uni_purchase(
         "payload_hash": payload_hash,
         "listing_id": listing_id,
         "status": status,
+        "amount_eur": float(price or 0),
+        "price_eur": float(price or 0),
         "created_at": now.isoformat(),
         "expires_at": None,  # populated only when status transitions to paid
     }
@@ -146,22 +158,44 @@ async def mark_uni_purchase_paid(
     stripe_session_id: str,
     *,
     expires_at: Optional[datetime] = None,
+    amount_eur: Optional[float] = None,
 ) -> Optional[dict]:
     """Idempotent: called from the Stripe webhook (checkout.session.completed).
 
     Marks the purchase paid. Default entitlement window is 24h (UNI/PDF);
     boost products pass an explicit `expires_at` (now + duration_days).
     """
+    from apps.billing.b2c_products import get_b2c_product
+
     db = Database.get()
     now = datetime.now(timezone.utc)
     expires = expires_at or (now + timedelta(hours=UNI_ENTITLEMENT_TTL_HOURS))
+    existing = await db.b2c_purchases.find_one({"stripe_session_id": stripe_session_id})
+    patch: dict = {
+        "status": "paid",
+        "paid_at": now.isoformat(),
+        "expires_at": expires.isoformat(),
+    }
+    # Garantisce amount_eur per il cruscotto Founder (D-117) anche su record legacy.
+    cur_amount = None
+    if existing:
+        cur_amount = existing.get("amount_eur")
+        if cur_amount is None:
+            cur_amount = existing.get("price_eur")
+    if amount_eur is not None:
+        patch["amount_eur"] = float(amount_eur)
+        patch["price_eur"] = float(amount_eur)
+    elif cur_amount is None and existing:
+        catalog = get_b2c_product(existing.get("product_key") or "") or {}
+        try:
+            price = float(catalog.get("price_eur") or 0)
+        except (TypeError, ValueError):
+            price = 0.0
+        patch["amount_eur"] = price
+        patch["price_eur"] = price
     doc = await db.b2c_purchases.find_one_and_update(
         {"stripe_session_id": stripe_session_id},
-        {"$set": {
-            "status": "paid",
-            "paid_at": now.isoformat(),
-            "expires_at": expires.isoformat(),
-        }},
+        {"$set": patch},
         return_document=True,
     )
     return doc

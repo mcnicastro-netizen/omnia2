@@ -292,11 +292,21 @@ async def apply_b2c_purchase_side_effects(session: dict) -> None:
 
     from apps.billing.b2c_entitlements import mark_uni_purchase_paid
 
+    amount_eur = None
+    try:
+        total = session.get("amount_total")
+        if total is not None:
+            amount_eur = float(total) / 100.0
+    except (TypeError, ValueError):
+        amount_eur = None
+
     if is_b2c_boost_product(product_key):
         days = boost_duration_days(product_key) or 30
         now = datetime.now(timezone.utc)
         expires = now + timedelta(days=days)
-        updated = await mark_uni_purchase_paid(session_id, expires_at=expires)
+        updated = await mark_uni_purchase_paid(
+            session_id, expires_at=expires, amount_eur=amount_eur
+        )
         if not updated:
             logger.warning("b2c_purchase webhook: no local record for session=%s", session_id)
             return
@@ -321,7 +331,7 @@ async def apply_b2c_purchase_side_effects(session: dict) -> None:
         return
 
     if product_key in ("b2c_valuator_uni_pdf", "b2c_visura_catastale"):
-        updated = await mark_uni_purchase_paid(session_id)
+        updated = await mark_uni_purchase_paid(session_id, amount_eur=amount_eur)
         if updated:
             logger.info(
                 "b2c_purchase paid: session=%s product=%s user=%s",
@@ -337,7 +347,7 @@ async def apply_b2c_purchase_side_effects(session: dict) -> None:
     # Other catalog products (staging, HAL legal): mark paid with 24h ledger window;
     # fulfillment is consumed at feature call-time via b2c_purchases.
     if product_key in B2C_ONE_SHOT_PRODUCTS:
-        updated = await mark_uni_purchase_paid(session_id)
+        updated = await mark_uni_purchase_paid(session_id, amount_eur=amount_eur)
         if updated:
             logger.info(
                 "b2c_purchase paid: session=%s product=%s user=%s",

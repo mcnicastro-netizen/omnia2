@@ -1,3 +1,14 @@
+## 2026-10-07 — A-038 post-test: fattura + dati fiscali
+
+- Backlog Founder: Invoice Stripe + raccolta CF/P.IVA su ogni incasso (B2C/B2B); FE/SDI da decidere
+- Tracciato in `ASPETTI_DA_APPROFONDIRE.md` + `NEXT_SESSION.md` · no codice finché «vai»
+
+## 2026-10-07 — D-117 Founder Ops finance (incassi / fatture / mese)
+
+- Cruscotto `/app/ops`: incassi per voce, fatture Stripe, ricevute B2C, scheda mensile P&L
+- `b2c_purchases.amount_eur` su create/paid + backfill catalogo
+- Helper `founder_ops_finance.py` + test unitari
+
 ## 2026-10-06 — Stripe sandbox Cloud OK + vault harden + HAL
 
 **Tipo**: Ops Cloud + docs HAL/manuale · dogfood prep.

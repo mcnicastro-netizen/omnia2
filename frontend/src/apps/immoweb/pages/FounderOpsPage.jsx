@@ -40,6 +40,8 @@ export default function FounderOpsPage() {
   }, [days]);
 
   const t = data?.totals || {};
+  const finance = data?.finance || {};
+  const monthly = finance.monthly || null;
   const maxDay = Math.max(1, ...(data?.by_day || []).map((d) => d.events));
 
   return (
@@ -54,10 +56,10 @@ export default function FounderOpsPage() {
               className="text-3xl md:text-4xl tracking-tight text-[#0B1E3F]"
               style={{ fontFamily: "'Fraunces', Georgia, serif" }}
             >
-              Cruscotto costi
+              Cruscotto costi e incassi
             </h1>
             <p className="text-sm text-stone-600 mt-2 max-w-2xl">
-              Tutti i consumi principali: AI in-app, staging, video, API e wallet crediti.
+              Incassi per voce, fatture Stripe, riepilogo mensile e consumi AI/ops.
             </p>
           </div>
           <div className="flex items-center gap-2">
@@ -165,16 +167,189 @@ export default function FounderOpsPage() {
               <p><strong>B2C:</strong> {data.policy?.b2c}</p>
             </div>
 
+            {monthly ? (
+              <div
+                className="rounded-xl border border-[#0B1E3F]/20 bg-gradient-to-br from-[#f7f4ef] to-white p-5 space-y-4"
+                data-testid="ops-monthly-pnl"
+              >
+                <div className="flex flex-wrap items-end justify-between gap-3">
+                  <div>
+                    <p className="text-[10px] uppercase tracking-widest text-[#C19A6B]">Scheda mensile</p>
+                    <h2
+                      className="text-2xl text-[#0B1E3F] mt-1"
+                      style={{ fontFamily: "'Fraunces', Georgia, serif" }}
+                    >
+                      {monthly.label || monthly.month}
+                    </h2>
+                  </div>
+                  <p className="text-xs text-stone-500 max-w-md">{monthly.note}</p>
+                </div>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  <Kpi label="Incasso mese" value={eur(monthly.revenue_eur)} hint="B2C + B2B paid" />
+                  <Kpi
+                    label="Costo reale (stima)"
+                    value={eur(monthly.cogs_eur)}
+                    hint={`ops ${eur(monthly.ops_cogs_eur)} · prodotto ${eur(monthly.product_cogs_eur)} · Stripe ${eur(monthly.stripe_fees_eur)}`}
+                  />
+                  <Kpi
+                    label="Margine mese"
+                    value={eur(monthly.margin_eur)}
+                    hint="Incasso − costo"
+                    tone={(monthly.margin_eur ?? 0) >= 0 ? "good" : "bad"}
+                  />
+                  <Kpi
+                    label="Voci con vendita"
+                    value={(monthly.by_line || []).length}
+                    hint="solo linee con almeno 1 pagamento"
+                  />
+                </div>
+                {(monthly.by_line || []).length > 0 ? (
+                  <ul className="text-sm divide-y divide-stone-100 border border-stone-200 rounded-lg bg-white">
+                    {monthly.by_line.map((l) => (
+                      <li key={l.key} className="px-4 py-2.5 flex justify-between gap-3">
+                        <span>
+                          {l.label}
+                          <span className="text-stone-400 text-xs ml-2">×{l.count}</span>
+                        </span>
+                        <span className="tabular-nums text-stone-800">{eur(l.revenue_eur)}</span>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="text-sm text-stone-500">Nessun incasso carta nel mese corrente.</p>
+                )}
+              </div>
+            ) : null}
+
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
               <Kpi label="Eventi periodo" value={t.events ?? 0} />
-              <Kpi label="Costi (stima)" value={`€ ${(t.cogs_eur ?? 0).toFixed(2)}`} hint="COGS provider" />
-              <Kpi label="Incassi" value={`€ ${(t.revenue_eur ?? 0).toFixed(2)}`} hint="crediti + Stripe + B2C" />
+              <Kpi label="Costi (stima)" value={`€ ${(t.cogs_eur ?? 0).toFixed(2)}`} hint="COGS + Stripe fee" />
+              <Kpi
+                label="Incassi"
+                value={`€ ${(t.revenue_eur ?? 0).toFixed(2)}`}
+                hint={`carta ${eur(t.cash_revenue_eur)} · crediti ${eur(t.credit_revenue_eur)}`}
+              />
               <Kpi
                 label="Margine"
                 value={`€ ${(t.margin_eur ?? 0).toFixed(2)}`}
                 hint="Incassi − Costi"
                 tone={(t.margin_eur ?? 0) >= 0 ? "good" : "bad"}
               />
+            </div>
+
+            {/* Incassi per voce */}
+            <div className="rounded-lg border border-stone-200 bg-white overflow-hidden" data-testid="ops-revenue-lines">
+              <div className="px-4 py-3 border-b border-stone-200">
+                <h2 className="text-xs uppercase tracking-widest text-stone-500">Incassi per voce</h2>
+                <p className="text-[11px] text-stone-500 mt-1">
+                  Periodo selezionato · totale carta {eur(finance.revenue_total_eur)} · fee Stripe {eur(finance.stripe_fees_eur)}
+                </p>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead className="bg-stone-50 text-[10px] uppercase tracking-widest text-stone-500">
+                    <tr>
+                      <th className="text-left px-4 py-2 font-medium">Voce</th>
+                      <th className="text-left px-4 py-2 font-medium">Canale</th>
+                      <th className="text-right px-4 py-2 font-medium">N°</th>
+                      <th className="text-right px-4 py-2 font-medium">Incasso €</th>
+                      <th className="text-right px-4 py-2 font-medium">Costo €</th>
+                      <th className="text-right px-4 py-2 font-medium">Margine €</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-stone-100">
+                    {(finance.revenue_lines || []).map((l) => (
+                      <tr key={l.key} className={l.count ? "hover:bg-stone-50/80" : "opacity-50"}>
+                        <td className="px-4 py-2.5 text-stone-900">{l.label}</td>
+                        <td className="px-4 py-2.5">
+                          <ChannelBadge channel={l.channel === "b2b" ? "abbonamento" : "b2c"} />
+                        </td>
+                        <td className="px-4 py-2.5 text-right tabular-nums">{l.count}</td>
+                        <td className="px-4 py-2.5 text-right tabular-nums">{eur(l.revenue_eur)}</td>
+                        <td className="px-4 py-2.5 text-right tabular-nums text-stone-500">
+                          {eur(l.cogs_total_eur)}
+                        </td>
+                        <td className={`px-4 py-2.5 text-right tabular-nums font-medium ${
+                          (l.margin_eur ?? 0) >= 0 ? "text-emerald-700" : "text-rose-700"
+                        }`}>
+                          {eur(l.margin_eur)}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            {/* Fatture Stripe + ricevute B2C */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              <div className="rounded-lg border border-stone-200 bg-white overflow-hidden" data-testid="ops-invoices">
+                <div className="px-4 py-3 border-b border-stone-200">
+                  <h2 className="text-xs uppercase tracking-widest text-stone-500">Fatture emesse</h2>
+                  <p className="text-[11px] text-stone-500 mt-1">{finance.invoices_note}</p>
+                </div>
+                {(finance.invoices || []).length === 0 ? (
+                  <p className="px-4 py-4 text-sm text-stone-500">Nessuna fattura Stripe in archivio.</p>
+                ) : (
+                  <ul className="divide-y divide-stone-100 max-h-80 overflow-y-auto">
+                    {finance.invoices.map((inv) => (
+                      <li key={inv.stripe_invoice_id || inv.id} className="px-4 py-3 text-sm flex justify-between gap-3">
+                        <div className="min-w-0">
+                          <p className="font-medium text-stone-900 truncate">
+                            {inv.number || inv.stripe_invoice_id || "—"}
+                          </p>
+                          <p className="text-[11px] text-stone-500 truncate">
+                            {inv.customer_email || inv.customer_name || inv.description || "—"}
+                            {" · "}
+                            {(inv.stripe_created_at || inv.created_at || "").slice(0, 10)}
+                          </p>
+                        </div>
+                        <div className="text-right shrink-0">
+                          <p className="tabular-nums">{eur(inv.amount_paid)}</p>
+                          <p className="text-[10px] uppercase tracking-wider text-stone-400">{inv.status}</p>
+                          {inv.hosted_invoice_url ? (
+                            <a
+                              href={inv.hosted_invoice_url}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="text-[10px] text-[#1F6B5C] hover:underline"
+                            >
+                              Apri
+                            </a>
+                          ) : null}
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+
+              <div className="rounded-lg border border-stone-200 bg-white overflow-hidden" data-testid="ops-b2c-receipts">
+                <div className="px-4 py-3 border-b border-stone-200">
+                  <h2 className="text-xs uppercase tracking-widest text-stone-500">Ricevute B2C (Checkout)</h2>
+                  <p className="text-[11px] text-stone-500 mt-1">
+                    Pagamenti one-shot carta nel periodo (visura, legal, boost, …).
+                  </p>
+                </div>
+                {(finance.b2c_receipts || []).length === 0 ? (
+                  <p className="px-4 py-4 text-sm text-stone-500">Nessuna ricevuta B2C nel periodo.</p>
+                ) : (
+                  <ul className="divide-y divide-stone-100 max-h-80 overflow-y-auto">
+                    {finance.b2c_receipts.map((r, i) => (
+                      <li key={`${r.stripe_session_id || i}`} className="px-4 py-3 text-sm flex justify-between gap-3">
+                        <div className="min-w-0">
+                          <p className="font-medium text-stone-900 truncate">{r.label}</p>
+                          <p className="text-[11px] text-stone-500 truncate">
+                            {(r.paid_at || "").slice(0, 16).replace("T", " ")}
+                            {r.stripe_session_id ? ` · ${String(r.stripe_session_id).slice(0, 18)}…` : ""}
+                          </p>
+                        </div>
+                        <p className="tabular-nums shrink-0">{eur(r.amount_eur)}</p>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3">

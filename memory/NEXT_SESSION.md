@@ -1,8 +1,16 @@
 # Prossima sessione — programma passi
 
-**Aggiornato**: 6 Ottobre 2026 · **Stripe sandbox Cloud OK** · Demo Nicastro PRONTA  
+**Aggiornato**: 7 Ottobre 2026 · dogfood Visura OK · D-117 Ops finance · **A-038** in coda post-test  
 **Repo**: https://github.com/mcnicastro-netizen/omnia2 ✅  
-**Chat SoT sessione**: UNICA chat — Stripe sandbox OK (`bc-7412138c-…`)
+**Chat SoT sessione**: UNICA chat — Stripe sandbox / dogfood / Ops finance
+
+---
+
+## 🟠 Post-test (priorità Founder — non ora)
+
+| ID | Tema | Note |
+|--|--|--|
+| **A-038** | Fattura Stripe + dati fiscali su ogni incasso | B2C Checkout → Invoice; raccolta CF/P.IVA; FE/SDI = decisione a parte. Dettaglio in `ASPETTI_DA_APPROFONDIRE.md` · **solo con «vai»** |
 
 ---
 
@@ -75,8 +83,9 @@ CRM pubblico (tunnel): vedi `/tmp/omnia-stack/SHARE_URL.txt` / `CRM_LOGIN_URL.tx
 | **Priorità prodotto** | **A-037** — demo da sito + template pack / non-proprietario |
 | Regola | **Nessun self-serve finché O6 ≠ PASS** |
 
-### Dopo la demo Nicastro
+### Dopo la demo Nicastro / post dogfood
 
 1. Firmare restore non-prod (O3b) se non fatto  
 2. A-037 (chiudere loop URL→demo + template pack)  
-3. Founder decide self-serve ON solo con O6 PASS  
+3. **A-038** — fattura + dati fiscali su ogni incasso (quando Founder dice «vai»)  
+4. Founder decide self-serve ON solo con O6 PASS  
