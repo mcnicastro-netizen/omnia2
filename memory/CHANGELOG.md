@@ -2,6 +2,8 @@
 
 - `docs/audit/OMNIA_PORTALE_AUDIT_PROGRAM.md`: 10 onde A–J (funzionamento, codice, key, Ops, bottoni, gestionale, GDPR/AI Act, resilienza, fascicolo)
 - `NEXT_SESSION.md` punta a partenza **domani 8 Ott** · nessun codice prodotto in questa fase
+- Manuale Cap. **00** / **19** §19.10.6 · HAL +2 voci (`api.cloud-environment-builds`, `api.portale-audit-program`) · `CLOUD_SECRETS_INVENTORY` nota `bld-…`
+- Nota Founder: ID `bld-…` in chat = snapshot env, **non** secret da password manager
 
 ## 2026-10-06 — Stripe sandbox Cloud OK + vault harden + HAL
 

@@ -71,3 +71,19 @@ Alias legacy accettati dal backend (se li avevi): `GOOGLE_API_KEY`, `EMERGENT_LL
 Env omnia2, questa chat: `sk_test` / `pk_test` iniettati, `STRIPE_ENABLED=true`.  
 `/api/billing/plans` → `enabled=true`, `mode=test`. Sandbox OK.  
 Scripts env proposti per Save: `cloud-agent-install.sh` + `cloud-agent-start.sh`.
+
+---
+
+## ID `bld-…` (Environment Builds) — 7 Ott 2026
+
+Esempio UI chat: `bld-20261007-349ad6c9-7db4-471c-af4e-2ea4fea82e8e`.
+
+| Domanda | Risposta |
+|--|--|
+| È un secret? | **No** |
+| Devo salvarlo nel password manager? | **No** — Cursor lo tiene in Dashboard → Environments → Builds |
+| A cosa serve? | Snapshot install dell’env omnia2 (SUCCEEDED = build sano) |
+| Quando annotarlo? | Solo pin/debug/supporto di *quel* snapshot |
+| Sostituisce le API key? | **No** — vault invariato |
+
+HAL: `api.cloud-environment-builds`.

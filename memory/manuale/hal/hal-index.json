@@ -1,12 +1,12 @@
 {
-  "version": "0.26-a028-ghi",
-  "updated": "2026-10-06",
-  "voices_total": 366,
+  "version": "0.29-stripe-sandbox",
+  "updated": "2026-10-07",
+  "voices_total": 368,
   "source_files": [
     {
       "file": "00-api-codice.yaml",
-      "voices": 28,
-      "md5": "d753b64eb6fcc9595a035f7ce98f857b"
+      "voices": 30,
+      "md5": "2e82661bedc1644070ff0a38d7a639b3"
     },
     {
       "file": "01-primo-accesso.yaml",
@@ -101,7 +101,7 @@
     {
       "file": "19-impostazioni-agenzia.yaml",
       "voices": 15,
-      "md5": "3e6dbed6496cb3c48ba39a3af9d8347a"
+      "md5": "d4f406d720c4ec27e0adc3bb8bb2e4f3"
     },
     {
       "file": "20-api-keys-integrazioni.yaml",
@@ -150,8 +150,8 @@
       "file": "00-api-codice",
       "title": "Corpus codice/API",
       "yaml": "00-api-codice.yaml",
-      "voices": 28,
-      "md5": "d753b64eb6fcc9595a035f7ce98f857b"
+      "voices": 30,
+      "md5": "2e82661bedc1644070ff0a38d7a639b3"
     },
     {
       "id": 22,
@@ -202,5 +202,5 @@
       "md5": "5e88370cdf2c070dc30c7c3f036b85db"
     }
   ],
-  "notes": "Fingerprints regenerated from YAML on disk. Live RAG reindex: POST /api/app/hal/knowledge/reindex?force=true (super_admin). 2026-09-24: A-028g/h/i · Cap.2 Attività · Cap.10 Conferma e applica · Cap.18 distinzione. 2026-09-21: hub import A–E · HAL import.tutte-le-forme. 2026-09-19: D-085 storage quota · Cestino · Cap.20 Ruota."
+  "notes": "Fingerprints regenerated from YAML on disk. Live RAG reindex: POST /api/app/hal/knowledge/reindex?force=true (super_admin). 2026-10-06: Stripe sandbox Cloud · api.cloud-secrets-vault · api.stripe-sandbox-cloud · Cap.19 billing. 2026-09-24: A-028g/h/i · Cap.2 Attività · Cap.10 Conferma e applica · Cap.18 distinzione. 2026-09-21: hub import A–E · HAL import.tutte-le-forme. 2026-09-19: D-085 storage quota · Cestino · Cap.20 Ruota."
 }

@@ -38,10 +38,21 @@ Un blocco alla volta · niente fix senza «vai» · no P0–P3 prematuri · **li
 | **D-113** | Restore manuale testabile pre-GTM (non piattaforma DR) |
 | **D-114** | Sostenibilità bak/media = priorità pre-attivazione; O0 = numeri+design vincolante |
 | **D-115** | Programma O0…O6 approvato · **no self-serve finché O6 ≠ PASS** |
+| **D-118** | **Audit Portale ImmobilCloud** · programma 10 onde A–J · start **8-Ott-2026** · SoT `docs/audit/OMNIA_PORTALE_AUDIT_PROGRAM.md` · finding `P-###` · no fix senza «vai» |
 
 **SoT continuità:** `docs/audit/OMNIA_AUDIT_STATE.md`  
 **Sequenza priorità (D-099):** fascicolo → orphan → Bak+Restore → retention → costi.  
 **Niente codice** senza «vai».
+
+### Cloud Agent — ID `bld-…` (7-Ott-2026)
+
+Nella UI chat può comparire un ID tipo `bld-20261007-…`: è lo **snapshot Environment Build** (install già fatto), **non** un secret.  
+Cursor lo tiene in Dashboard → Environments → Builds. **Non serve** salvarlo nel password manager; annotalo solo se vuoi pin/debug di quello snapshot. I secret restano nel vault (`CLOUD_SECRETS_INVENTORY.md`). HAL: `api.cloud-environment-builds`.
+
+### Prossimo lavoro (D-118)
+
+Dal **8 Ottobre 2026**: esecuzione Audit Portale (funzionamento → codice → key → Ops → bottoni → gestionale → GDPR/AI Act → resilienza → fascicolo).  
+Post-test già tracciato: **A-038** fattura Stripe + dati fiscali (solo con «vai»).
 
 ---
 
@@ -63,6 +74,7 @@ Un blocco alla volta · niente fix senza «vai» · no P0–P3 prematuri · **li
 | Non lista infinita | **NI-*** · P24 CHIUSO · SoT ripago §25bis |
 | Report finale | P25 A–K · ⏳ |
 | GTM / Demo | **GTM-01 ACQUISITO** · **D-104** · in coda · pre-~5000 email |
+| Portale B2C audit | **D-118** · onde A–J · start 8-Ott · `P-###` |
 | Costo / listino | C-* · B-01 · fermo |
 
 ---

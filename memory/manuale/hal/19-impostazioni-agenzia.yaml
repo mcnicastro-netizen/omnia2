@@ -386,7 +386,7 @@ voci:
     pubblico: [titolare, super_admin]
     livello: intermedio
     tags: [impostazioni, billing, stripe, piani, founders, credit-packages, checkout, customer-portal, stripe-enabled, "503", cloud-agent, sandbox]
-    correlati: [settings.cos-e, settings.limitazioni-v1, api.stripe-sandbox-cloud, api.cloud-secrets-vault]
+    correlati: [settings.cos-e, settings.limitazioni-v1, api.stripe-sandbox-cloud, api.cloud-secrets-vault, api.portale-audit-program, api.cloud-environment-builds]
     domanda_naturale: "Dove attivo un piano OMNIA? Come compro crediti? Come funzionano i Founders €49/€99/€249?"
     contenuto:
       a_cosa_serve: >

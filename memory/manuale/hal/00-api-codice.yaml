@@ -850,3 +850,79 @@ voci:
       permessi:
         - super_admin / Founder
       screenshot: []
+
+  - id: api.cloud-environment-builds
+    titolo: Build Cloud Agent (bld-…) — cosa sono e se salvarli
+    modulo: Codice API
+    widget: null
+    pubblico: [super_admin]
+    livello: avanzato
+    tags: [codice, cloud-agent, builds, snapshot, bld, cursor, environment]
+    correlati: [api.cloud-secrets-vault, api.portale-audit-program]
+    domanda_naturale: "A destra della chat vedo bld-20261007-… devo salvarlo? Cos'è un environment build?"
+    contenuto:
+      a_cosa_serve: >
+        Un ID `bld-YYYYMMDD-…` è uno snapshot di environment Cloud Agent
+        (install già eseguito sul default branch). Cursor lo crea in
+        automatico (RECURRING / CONFIG_CHANGE) o on-demand. Non è una
+        password né un secret: è un riferimento operativo allo snapshot.
+      quando_si_usa: >
+        Founder vede un bld a destra in chat; vuole capire se annotarlo;
+        debug “agent lento / install fallito”; pin di un build sano.
+      passi:
+        - "Non serve salvarlo come secret (non va in password manager)."
+        - "Cursor tiene lo storico in Dashboard → Environments → Builds."
+        - "Utile annotarlo solo se vuoi: (a) ripartire da QUELLO snapshot,
+          (b) confrontare un build SUCCEEDED vs FAILED, (c) ticket supporto."
+        - "La chat corrente può essere su un bld diverso dal più recente
+          SUCCEEDED (es. boot da build precedente) — normale."
+        - "Secret (Stripe/Resend/…) restano nel vault Environment; il bld
+          non li sostituisce."
+      errori_comuni:
+        - problema: "Ho salvato il bld nel password manager"
+          soluzione: >
+            Non necessario. Tieni lì solo API key. Il bld è già in Dashboard.
+        - problema: "Build SUCCEEDED ma l'agent non ha Mongo/Stripe"
+          soluzione: >
+            start/secrets sono per-boot; verifica cloud-agent-start + vault,
+            non solo lo snapshot install.
+      permessi:
+        - super_admin / Founder
+      screenshot: []
+
+  - id: api.portale-audit-program
+    titolo: Programma Audit Portale ImmobilCloud (D-118)
+    modulo: Codice API
+    widget: null
+    pubblico: [super_admin]
+    livello: avanzato
+    tags: [codice, audit, portale, immobilcloud, d-118, gdpr, ai-act, stripe, ops]
+    correlati: [api.cloud-environment-builds, api.stripe-sandbox-cloud, api.cloud-secrets-vault]
+    domanda_naturale: "Cos'è l'audit del portale? Quando parte? Cosa controlliamo?"
+    contenuto:
+      a_cosa_serve: >
+        Programma Founder (7-Ott-2026) per analizzare ImmobilCloud B2C
+        passo × passo: funzionamento, codice, API key, segnali super_admin,
+        bottoni, rapporto gestionale, GDPR + AI Act, anti-crash/dati/Stripe.
+        SoT: docs/audit/OMNIA_PORTALE_AUDIT_PROGRAM.md. Partenza 8-Ott-2026.
+        Durante le onde: analisi e matrici — fix solo con «vai» su P-###.
+      quando_si_usa: >
+        Domande su cosa fare dopo dogfood Visura; priorità post-test;
+        dove trovare il calendario onde A–J.
+      passi:
+        - "Leggi docs/audit/OMNIA_PORTALE_AUDIT_PROGRAM.md (D-118)."
+        - "Calendario: 8→17 Ott 2026 · onde A funzionamento … J fascicolo."
+        - "Diario: docs/audit/portale-diario/YYYY-MM-DD.md."
+        - "Finding: P-### (P0 bloccante … P3 backlog)."
+        - "Post-test già in coda: A-038 fattura/dati fiscali (solo con «vai»)."
+        - "Self-serve resta OFF finché O6 ≠ PASS (D-115)."
+      errori_comuni:
+        - problema: "Durante l'audit l'agent ha già riscritto il portale"
+          soluzione: >
+            Fuori mandato. Onde = analisi. Fix solo P0 con «vai» Founder.
+        - problema: "Dove sono i risultati giorno per giorno?"
+          soluzione: >
+            Diario + matrici sotto docs/audit/portale-*; fascicolo a Onda J.
+      permessi:
+        - super_admin / Founder
+      screenshot: []

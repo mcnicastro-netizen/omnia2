@@ -269,6 +269,13 @@ Il redirect Stripe `success_url` include `?session_id={CHECKOUT_SESSION_ID}&ok=1
 Se lo stato resta pending o `?cancel=1`:
 - Mostra `toast.error("Pagamento fallito")` o silent (cancel).
 
+### 19.10.6 · Founder Ops (super_admin) e audit portale
+
+Oltre a `/app/settings/billing` (agenzia), il **Founder** ha `/app/ops` (cruscotto costi/incassi · D-077 / estensione finance).  
+Dal **8-Ott-2026** parte l’**Audit Portale** ImmobilCloud (**D-118**): programma in `docs/audit/OMNIA_PORTALE_AUDIT_PROGRAM.md` (onde A–J).  
+Post-test già in coda: **A-038** (Invoice Stripe + dati fiscali su ogni incasso — solo con «vai»).  
+HAL: `api.portale-audit-program`, `api.cloud-environment-builds` (ID `bld-…` in chat ≠ secret).
+
 ---
 
 ## 19.11 · Chi NON è coperto in Settings v1
@@ -282,6 +289,7 @@ Molte impostazioni logiche che l'utente si aspetta di trovare in una "pagina Set
 | Cambio piano | `/app/settings/billing` (BillingPage) o Stripe portal | 19 (§19.10) |
 | Acquisto crediti | `/app/settings/billing` (BillingPage) | 19 (§19.10) |
 | Fatture | Stripe customer portal (link da BillingPage) | 19 (§19.10.4) |
+| Incassi B2C / Ops Founder | `/app/ops` (solo super_admin) · audit portale D-118 | 19 (§19.10.6) · Cap. 00 |
 | Custom domain | `/app/settings/domain-verify` (DomainVerifyPage) | 17 |
 | Domain sovereignty policy | `/app/domain-sovereignty-policy` (page pubblica) | 17 |
 | API Keys | `/app/api-keys` (ApiKeysPage) | Track B (futuro) |
