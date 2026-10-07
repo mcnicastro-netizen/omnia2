@@ -42,24 +42,32 @@ export default function AlImproveButton({
     setSuggestion("");
     setProposalId(null);
     try {
-      const r = await api.post("/app/al/improve", {
-        field,
-        current_text: value || "",
-        property_data: propertyData || {},
-        target_lang: targetLang,
-        tone: "standard",
-      });
+      const r = await api.post(
+        "/app/al/improve",
+        {
+          field,
+          current_text: value || "",
+          property_data: propertyData || {},
+          target_lang: targetLang,
+          tone: "standard",
+        },
+        { timeout: 90000 }
+      );
       setSuggestion(r.data.improved || "");
       setProposalId(r.data.proposal_id || null);
     } catch (e) {
       const d = e?.response?.data?.detail;
-      setError(
-        d === "llm_budget_exceeded" || d === "llm_unavailable" || d === "llm_busy"
-          ? t("al.err_unavailable")
-          : d === "rate_limit_exceeded"
-          ? t("al.err_rate_limit")
-          : t("al.err_generic")
-      );
+      if (!e?.response) {
+        setError(t("al_improve.err_timeout"));
+      } else {
+        setError(
+          d === "llm_budget_exceeded" || d === "llm_unavailable" || d === "llm_busy"
+            ? t("al_improve.err_llm_busy")
+            : d === "rate_limit_exceeded"
+            ? t("al.err_rate_limit")
+            : t("al.err_generic")
+        );
+      }
     } finally {
       setLoading(false);
     }

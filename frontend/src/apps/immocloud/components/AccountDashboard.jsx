@@ -119,6 +119,24 @@ export default function AccountDashboard() {
               {t("cloud.account.sell_cta_btn")}
             </Link>
           </div>
+          <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <Link
+              to={`/${lang}/legal`}
+              data-testid="account-goto-hal-legal"
+              className="rounded-xl border border-stone-200 bg-white px-4 py-3 text-sm text-[#0B1E3F] hover:border-[#C19A6B]"
+            >
+              <span className="text-[10px] uppercase tracking-widest text-[#C19A6B] block mb-1">HAL Legal</span>
+              Chat legale immobiliare →
+            </Link>
+            <Link
+              to={`/${lang}/cloud/visura`}
+              data-testid="account-goto-visura"
+              className="rounded-xl border border-stone-200 bg-white px-4 py-3 text-sm text-[#0B1E3F] hover:border-[#C19A6B]"
+            >
+              <span className="text-[10px] uppercase tracking-widest text-[#C19A6B] block mb-1">Visura</span>
+              PDF catastale (dati demo già pronti) →
+            </Link>
+          </div>
         </section>
 
         <section data-testid="saved-searches-section">

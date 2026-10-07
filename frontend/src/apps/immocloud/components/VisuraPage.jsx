@@ -17,6 +17,16 @@ const empty = {
   tipo_catasto: "F",
 };
 
+/** Dati ufficiali di esempio OpenAPI.it sandbox (non legati all'annuncio). */
+const SANDBOX_DEMO = {
+  provincia: "RM",
+  comune: "ROMA",
+  foglio: "872",
+  particella: "405",
+  subalterno: "48",
+  tipo_catasto: "F",
+};
+
 export default function VisuraPage() {
   const { i18n } = useTranslation();
   const lang = (i18n.language || "it").slice(0, 2);
@@ -24,14 +34,19 @@ export default function VisuraPage() {
   const sessionId = params.get("session_id");
 
   const [catalog, setCatalog] = useState(null);
-  const [form, setForm] = useState(empty);
+  /** Prefill demo sandbox: non serve conoscere foglio/particella dell'annuncio. */
+  const [form, setForm] = useState(SANDBOX_DEMO);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
   const [order, setOrder] = useState(null);
   const [user, setUser] = useState(null);
 
   useEffect(() => {
-    api.get("/cloud/visura/catalog").then((r) => setCatalog(r.data)).catch(() => {});
+    api.get("/cloud/visura/catalog").then((r) => {
+      setCatalog(r.data);
+      // Se sandbox OpenAPI attiva, ripristina sempre i dati demo (dogfood).
+      if (r.data?.openapi_enabled) setForm({ ...SANDBOX_DEMO });
+    }).catch(() => {});
     api.get("/auth/me").then((r) => setUser(r.data)).catch(() => setUser(null));
   }, []);
 
@@ -125,7 +140,7 @@ export default function VisuraPage() {
       <CloudPageHero
         eyebrow="ImmobilCloud · Visura"
         title="Visura catastale"
-        subtitle="Richiedi il PDF ufficiale e paga con carta. Nessun credito — solo Stripe."
+        subtitle="In demo i campi sono già compilati (Roma sandbox). Paga con carta test — non servono i dati del tuo annuncio."
         image="/cloud/intent-value.jpg"
         compact
       />
@@ -134,6 +149,10 @@ export default function VisuraPage() {
         <Link to={`/${lang}/cloud`} className="text-xs uppercase tracking-widest text-stone-500 hover:text-[#0B1E3F]">
           ← Torna al portale
         </Link>
+        <div className="mt-4 p-4 rounded-xl border border-emerald-200 bg-emerald-50 text-sm text-emerald-950" data-testid="cloud-visura-demo-banner">
+          <strong>Demo sandbox:</strong> provincia <code>RM</code>, comune <code>ROMA</code>, foglio <code>872</code>, particella <code>405</code>, sub. <code>48</code>.
+          {" "}Clicca «Paga» — non serve la visura dell’immobile su Como.
+        </div>
 
         {!user && (
           <div className="mt-6 p-4 rounded-2xl border border-amber-200 bg-amber-50 text-sm text-amber-900" data-testid="cloud-visura-anon">
@@ -169,12 +188,23 @@ export default function VisuraPage() {
 
         {!sessionId && (
           <form onSubmit={pay} className="mt-8 border border-stone-200 bg-white rounded-2xl p-6 space-y-4" data-testid="cloud-visura-form">
-            <div className="flex items-baseline justify-between gap-3">
+            <div className="flex items-baseline justify-between gap-3 flex-wrap">
               <p className="text-sm font-medium text-stone-800">Dati catastali</p>
               <p className="text-lg text-[#0B1E3F]" data-testid="cloud-visura-price">
                 € {Number(price).toFixed(2).replace(".", ",")}
               </p>
             </div>
+            <button
+              type="button"
+              data-testid="cloud-visura-demo-fill"
+              onClick={() => setForm({ ...SANDBOX_DEMO })}
+              className="text-xs uppercase tracking-widest text-[#0B1E3F] border border-stone-300 rounded-lg px-3 py-2 hover:bg-[#f7f4ef]"
+            >
+              Usa dati demo sandbox (Roma)
+            </button>
+            <p className="text-[11px] text-stone-500 -mt-2">
+              Non servono i dati del tuo annuncio: in sandbox OpenAPI usa provincia RM, comune ROMA, foglio 872, particella 405, sub. 48.
+            </p>
             <div className="grid grid-cols-2 gap-3">
               <label className="text-xs text-stone-600 space-y-1">
                 <span>Provincia</span>

@@ -891,6 +891,8 @@
       "free_limit_notice": "Ya tiene un anuncio activo. El plan gratuito permite un anuncio a la vez; modifique o elimine el actual para crear uno nuevo.",
       "form_new_title": "Nuevo anuncio",
       "form_edit_title": "Editar anuncio",
+      "form_new_hint": "Completa los campos y guarda. Luego envía a revisión si hace falta.",
+      "form_edit_hint": "El formulario está abajo: edita y guarda. El anuncio sigue en revisión hasta aprobación.",
       "submit_review": "Enviar para revisión",
       "resubmit": "Reenviar tras modificaciones",
       "confirm_delete": "¿Eliminar definitivamente este anuncio?",
@@ -1277,7 +1279,9 @@
     "regenerate": "Regenerar",
     "apply": "Confirmar y aplicar",
     "confirm_hint": "HAL propone; tú confirmas. Sin cambios automáticos sin tu OK (auditoría).",
-    "cancel": "Cancelar"
+    "cancel": "Cancelar",
+    "err_timeout": "HAL tarda demasiado (IA saturada). Reintenta en 30–60 segundos.",
+    "err_llm_busy": "HAL no disponible temporalmente (cola IA). Reintenta en un minuto — no es un fallo de tu anuncio."
   },
   "moderation": {
     "title": "Moderación de anuncios particulares",

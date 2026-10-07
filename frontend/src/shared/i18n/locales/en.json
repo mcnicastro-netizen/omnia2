@@ -945,6 +945,10 @@
       "free_limit_notice": "You already have an active listing. The free plan allows one listing at a time — edit or delete the existing one to create a new one.",
       "form_new_title": "New listing",
       "form_edit_title": "Edit listing",
+      "form_new_hint": "Fill the fields and save. Then submit for review if needed.",
+      "form_edit_hint": "The form is below: edit and save. Listing stays in review until approved.",
+      "form_new_hint": "Fill the fields and save. Then submit for review if needed.",
+      "form_edit_hint": "The form is below: edit and save. The listing stays under review until approved.",
       "submit_review": "Submit for review",
       "resubmit": "Resubmit after changes",
       "confirm_delete": "Permanently delete this listing?",
@@ -1197,7 +1201,9 @@
     "regenerate": "Regenerate",
     "apply": "Confirm and apply",
     "confirm_hint": "HAL proposes; you confirm. No automatic edits without your OK (audit).",
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "err_timeout": "HAL is taking too long (AI busy). Retry in 30–60 seconds.",
+    "err_llm_busy": "HAL temporarily unavailable (AI queue). Retry in a minute — not a problem with your listing."
   },
   "moderation": {
     "title": "Private listing moderation",

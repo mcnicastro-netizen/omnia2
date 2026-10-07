@@ -1161,6 +1161,8 @@
       "free_limit_notice": "Hai già un annuncio attivo. Il piano gratuito consente un annuncio per volta — modifica o elimina quello esistente per crearne uno nuovo.",
       "form_new_title": "Nuovo annuncio",
       "form_edit_title": "Modifica annuncio",
+      "form_new_hint": "Compila i campi e salva. Poi invia in revisione se richiesto.",
+      "form_edit_hint": "Il modulo è qui sotto: modifica e salva. L’annuncio resta in revisione finché non viene approvato.",
       "submit_review": "Invia per la revisione",
       "resubmit": "Reinvia dopo modifiche",
       "confirm_delete": "Eliminare definitivamente questo annuncio?",
@@ -1391,7 +1393,9 @@
     "regenerate": "Rigenera",
     "apply": "Conferma e applica",
     "confirm_hint": "HAL propone il testo: tu confermi prima di applicarlo.",
-    "cancel": "Annulla"
+    "cancel": "Annulla",
+    "err_timeout": "HAL sta impiegando troppo (Gemini saturo). Riprova tra 30–60 secondi.",
+    "err_llm_busy": "HAL temporaneamente non disponibile (coda AI). Riprova tra un minuto — non è un errore del tuo annuncio."
   },
   "moderation": {
     "title": "Moderazione annunci privati",

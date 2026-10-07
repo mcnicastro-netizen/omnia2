@@ -7,7 +7,7 @@
  * Media: up to 30 photos + optional floor plan (planimetria) via B2C upload-tmp.
  */
 import React, { useEffect, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { api } from "../../../shared/lib/api";
 import { useAuth, formatApiErrorDetail } from "../../../shared/lib/auth";
@@ -53,6 +53,7 @@ export default function SellPage() {
   const lang = (i18n.language || "it").slice(0, 2);
   const nav = useNavigate();
   const { user } = useAuth();
+  const formRef = useRef(null);
   const [listings, setListings] = useState([]);
   const [editing, setEditing] = useState(null); // listing object or null
   const [form, setForm] = useState(empty);
@@ -164,6 +165,13 @@ export default function SellPage() {
     return l.boost_tier;
   };
 
+  const revealForm = () => {
+    // Form is below the listing card — scroll so Modifica non sembra “rotto”
+    requestAnimationFrame(() => {
+      formRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  };
+
   const startNew = () => {
     setEditing(null);
     setForm({
@@ -174,6 +182,7 @@ export default function SellPage() {
     });
     setShowForm(true);
     setError("");
+    revealForm();
   };
 
   const startEdit = (listing) => {
@@ -204,6 +213,7 @@ export default function SellPage() {
     });
     setShowForm(true);
     setError("");
+    revealForm();
   };
 
   const save = async (e) => {
@@ -297,6 +307,27 @@ export default function SellPage() {
           {error}
         </div>
       )}
+
+      <div className="mb-6 grid grid-cols-1 sm:grid-cols-2 gap-3" data-testid="sell-tools-bar">
+        <Link
+          to={`/${lang}/legal`}
+          data-testid="sell-goto-hal-legal"
+          className="block rounded-2xl border border-stone-200 bg-[#f7f4ef] px-5 py-4 hover:border-[#0B1E3F] transition"
+        >
+          <p className="text-[10px] uppercase tracking-widest text-[#C19A6B] mb-1">HAL Legal</p>
+          <p className="text-sm text-[#0B1E3F] font-medium">Chat legale (€1 a domanda per privati)</p>
+          <p className="text-xs text-stone-500 mt-1">Apri → fai una domanda → paga se richiesto</p>
+        </Link>
+        <Link
+          to={`/${lang}/cloud/visura`}
+          data-testid="sell-goto-visura"
+          className="block rounded-2xl border border-stone-200 bg-[#f7f4ef] px-5 py-4 hover:border-[#0B1E3F] transition"
+        >
+          <p className="text-[10px] uppercase tracking-widest text-[#C19A6B] mb-1">Visura</p>
+          <p className="text-sm text-[#0B1E3F] font-medium">PDF catastale demo (dati già compilati)</p>
+          <p className="text-xs text-stone-500 mt-1">Non usa i dati di questo annuncio</p>
+        </Link>
+      </div>
 
       {/* Existing listings */}
       {listings.length > 0 && (
@@ -429,10 +460,18 @@ export default function SellPage() {
 
       {/* Form */}
       {showForm && (
-        <form data-testid="sell-form" onSubmit={save} className="bg-white border border-stone-200 rounded-lg p-6 space-y-4">
+        <form
+          ref={formRef}
+          data-testid="sell-form"
+          onSubmit={save}
+          className="bg-white border border-stone-200 rounded-lg p-6 space-y-4 scroll-mt-24"
+        >
           <h2 className="text-xl font-light mb-2" style={{ fontFamily: "'Fraunces', Georgia, serif" }}>
             {editing ? t("cloud.sell.form_edit_title") : t("cloud.sell.form_new_title")}
           </h2>
+          <p className="text-xs text-stone-500 -mt-2 mb-2">
+            {editing ? t("cloud.sell.form_edit_hint") : t("cloud.sell.form_new_hint")}
+          </p>
 
           <Field label={t("cloud.sell.f_title")} required>
             <div className="flex items-start gap-2">
