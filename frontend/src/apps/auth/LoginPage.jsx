@@ -35,7 +35,7 @@ export default function LoginPage() {
   const location = useLocation();
   const next = sanitizeNextParam(
     new URLSearchParams(location.search).get("next"),
-    `/${lang}/app/dashboard`
+    `/${lang}/cloud`
   );
 
   const [email, setEmail] = useState("");

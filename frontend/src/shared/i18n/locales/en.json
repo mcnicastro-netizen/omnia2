@@ -871,6 +871,7 @@
     "reg_hint_pick_intent": "Select at least one goal under “What do you want to do?” to enable the button.",
     "reg_hint_gdpr": "Check the privacy (GDPR) box to enable the button.",
     "reg_err_email_taken": "This email is already registered. Sign in with your password.",
+    "reg_err_email_login_failed": "Email already registered. Go to login — reset your password if needed.",
     "reg_err_intent_required": "Pick at least one goal (sell, rent out, or alerts).",
     "reg_err_gdpr_required": "You must accept the privacy policy.",
     "reg_go_login": "Go to login",

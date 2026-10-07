@@ -817,6 +817,7 @@
     "reg_hint_pick_intent": "Selecciona al menos una opción en «¿Qué quieres hacer?» para activar el botón.",
     "reg_hint_gdpr": "Marca el consentimiento de privacidad (RGPD) para activar el botón.",
     "reg_err_email_taken": "Este email ya está registrado. Inicia sesión con tu contraseña.",
+    "reg_err_email_login_failed": "Email ya registrado. Ve al login — restablece la contraseña si hace falta.",
     "reg_err_intent_required": "Indica al menos un objetivo (vender, alquilar o alertas).",
     "reg_err_gdpr_required": "Debes aceptar la política de privacidad.",
     "reg_go_login": "Ir al login",

@@ -23,9 +23,10 @@ export default function CloudRegisterPage() {
   const { t, i18n } = useTranslation();
   const lang = (i18n.language || "it").slice(0, 2);
   const nav = useNavigate();
-  const { refresh } = useAuth();
+  const { refresh, login } = useAuth();
   const [params] = useSearchParams();
   const presetIntent = params.get("intent");
+  const nextPath = params.get("next");
   const [form, setForm] = useState({
     name: "", email: "", password: "",
     intents: presetIntent ? [presetIntent] : [],
@@ -48,7 +49,24 @@ export default function CloudRegisterPage() {
       setDone(data.user);
       await refresh();
     } catch (e) {
-      setErr(formatCloudRegError(e?.response?.data?.detail, t) || String(e.message || e));
+      const detail = e?.response?.data?.detail;
+      const code = typeof detail === "string" ? detail : detail?.code;
+      if (e?.response?.status === 409 && code === "email_already_registered") {
+        try {
+          await login(form.email.trim(), form.password);
+          await refresh();
+          if (nextPath && nextPath.startsWith("/")) {
+            nav(nextPath, { replace: true });
+          } else {
+            nav(`/${lang}/cloud/account`, { replace: true });
+          }
+          return;
+        } catch {
+          setErr(t("cloud.reg_err_email_login_failed"));
+          return;
+        }
+      }
+      setErr(formatCloudRegError(detail, t) || String(e.message || e));
     } finally { setBusy(false); }
   };
 

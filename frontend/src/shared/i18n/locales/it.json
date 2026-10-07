@@ -1144,6 +1144,7 @@
     "reg_hint_pick_intent": "Seleziona almeno un’opzione sotto «Cosa vuoi fare?» per abilitare il pulsante.",
     "reg_hint_gdpr": "Spunta il consenso privacy (GDPR) per abilitare il pulsante.",
     "reg_err_email_taken": "Questa email è già registrata. Accedi con la password che hai scelto.",
+    "reg_err_email_login_failed": "Email già registrata. Vai al login — se la password non è corretta, reimpostala.",
     "reg_err_intent_required": "Indica almeno un obiettivo (vendere, affittare o alert).",
     "reg_err_gdpr_required": "Devi accettare l’informativa privacy.",
     "reg_go_login": "Vai al login",
