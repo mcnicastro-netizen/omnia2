@@ -1,7 +1,7 @@
 # OMNIA Real Estate Ecosystem — Brief marketing completo
 ## Kit per creatore video · slide · pitch deck · social
 
-**Versione**: 1.0  
+**Versione**: 1.1  
 **Data**: 7 Ottobre 2026  
 **Destinatario**: creatore video / slide / marketing  
 **Fonte**: corpus ufficiale `memory/` (PRD, GTM, pricing, design north star, manuale, decisioni)  
@@ -9,6 +9,15 @@
 
 > **Uso**: questo documento è il “pasto unico” per produrre video, slide investor/agenzie, reel, LinkedIn, landing.  
 > Non inventare feature oltre a quanto elencato. Non promettere “abbandona i portali”. Non usare cliché Toscana / tetti rossi / handshake corporate.
+
+### Pacchetto creativo (solo docs)
+| File | Contenuto |
+|---|---|
+| `OMNIA_ECOSYSTEM_MARKETING_BRIEF.md` | Master brief (questo file) |
+| `OMNIA_VO_SCRIPTS.md` | Solo voice-over + caption mute |
+| `OMNIA_SLIDE_DECK.md` | Deck 18 slide + varianti + speaker notes |
+| `omnia_2035_video_prompt.md` | Prompt video 15s Sora/Veo |
+| `brand_lab_reference.md` | North Star visivo + palette |
 
 ---
 
