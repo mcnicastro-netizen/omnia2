@@ -100,6 +100,27 @@ export default function AccountDashboard() {
           </div>
         )}
 
+        <section data-testid="account-sell-cta" className="mb-10">
+          <div className="bg-[#0B1E3F] text-white rounded-2xl px-6 py-7 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div>
+              <h2
+                className="text-xl font-light tracking-tight mb-1"
+                style={{ fontFamily: "'Fraunces', Georgia, serif" }}
+              >
+                {t("cloud.account.sell_cta_title")}
+              </h2>
+              <p className="text-sm text-white/75">{t("cloud.account.sell_cta_desc")}</p>
+            </div>
+            <Link
+              to={`/${lang}/cloud/account/sell`}
+              data-testid="account-create-listing"
+              className="inline-block shrink-0 px-6 py-2.5 bg-[#C19A6B] text-white text-xs uppercase tracking-widest rounded-lg hover:bg-[#a88355] transition text-center"
+            >
+              {t("cloud.account.sell_cta_btn")}
+            </Link>
+          </div>
+        </section>
+
         <section data-testid="saved-searches-section">
           <div className="flex items-baseline justify-between mb-5">
             <h2

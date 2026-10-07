@@ -35,7 +35,11 @@ export default function CloudTopNav() {
           <Link to={`/${lang}/cloud/visura`} data-testid="cloud-nav-visura" className="text-stone-600 hover:text-[#0B1E3F] transition">
             Visura
           </Link>
-          <Link to={`/${lang}/cloud/register?intent=sell`} data-testid="cloud-nav-sell" className="text-stone-600 hover:text-[#0B1E3F] transition">
+          <Link
+            to={loggedIn ? `/${lang}/cloud/account/sell` : `/${lang}/cloud/register?intent=sell`}
+            data-testid="cloud-nav-sell"
+            className="text-stone-600 hover:text-[#0B1E3F] transition"
+          >
             {t("cloud.nav_sell")}
           </Link>
         </nav>
