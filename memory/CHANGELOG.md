@@ -1,3 +1,14 @@
+## 2026-10-07 — Dogfood strumenti privato B2C
+
+**Tipo**: Ops dogfood ImmobilCloud (privati).
+
+- Boost Vetrina + Virtual Staging + Valutatore UNI: checkout Stripe test OK
+- Valutatore gratis OK (email verificata; limite 1/anno)
+- Mutui confronto banche PASS
+- Visura BLOCCATA (OpenAPI.it non configurato in env)
+- HAL Legal PARZIALE (timeout senza Tavily; paywall €1 non collegato in UI)
+- Nota minore: label `CLOUD.NAV_ACCOUNT` non tradotta
+
 ## 2026-10-07 — Dogfood E2E PASS + tunnel quick-restart
 
 **Tipo**: Ops dogfood UI + fix stack tunnel.
