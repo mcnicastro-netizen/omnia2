@@ -7,7 +7,7 @@ Prima di analizzare un nuovo punto, leggere questo file. Non riaprire decisioni 
 
 **Current status:** P1–P24 **chiusi** · programma **APPROVATO** (**D-115**) · **«vai» O0 ∥ O1 in esecuzione**. Listino fermo. SoT: questo file.
 
-**Next:** firmare run restore non-prod (O3b) → **A-037** (demo da sito + template pack / non-proprietario dominio, legato a verifica-dominio) → Founder decide self-serve. O0–O5 shippati · O6 checklist CONDITIONAL. Regola: **no self-serve finché O6 ≠ PASS**. §23 Priorità **CLOSED**.
+**Next:** **D-118 Audit Portale** — programma `OMNIA_PORTALE_AUDIT_PROGRAM.md`, partenza **8-Ott-2026** (onde A–J). Poi: firmare restore non-prod (O3b) → **A-037** → Founder self-serve. O0–O5 shippati · O6 CONDITIONAL. Regola: **no self-serve finché O6 ≠ PASS**. §23 Priorità **CLOSED**.
 
 ---
 
