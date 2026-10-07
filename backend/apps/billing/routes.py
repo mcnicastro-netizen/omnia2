@@ -511,18 +511,37 @@ async def stripe_webhook(request: Request):
         await db.subscriptions.update_one(q, {"$set": upd})
 
     elif etype == "invoice.paid":
-        await db.invoices.insert_one({
-            "id": __import__("uuid").uuid4().hex,
+        # Upsert: sync Founder Ops può già aver importato la stessa invoice.
+        inv_desc = obj.get("description")
+        if not inv_desc:
+            lines = obj.get("lines") or {}
+            line_rows = lines.get("data") if isinstance(lines, dict) else []
+            if line_rows:
+                inv_desc = line_rows[0].get("description")
+        inv_doc = {
             "agency_id": (obj.get("metadata") or {}).get("agency_id"),
             "stripe_invoice_id": obj["id"],
+            "number": obj.get("number"),
+            "customer_email": obj.get("customer_email"),
+            "customer_name": obj.get("customer_name"),
+            "description": inv_desc,
             "amount_paid": (obj.get("amount_paid") or 0) / 100.0,
             "amount_due": (obj.get("amount_due") or 0) / 100.0,
             "currency": obj.get("currency", "eur"),
             "status": "paid",
             "hosted_invoice_url": obj.get("hosted_invoice_url"),
             "pdf_url": obj.get("invoice_pdf"),
-            "created_at": now, "updated_at": now,
-        })
+            "period_start": datetime.fromtimestamp(obj["period_start"], tz=timezone.utc).isoformat() if obj.get("period_start") else None,
+            "period_end": datetime.fromtimestamp(obj["period_end"], tz=timezone.utc).isoformat() if obj.get("period_end") else None,
+            "updated_at": now,
+        }
+        existing = await db.invoices.find_one({"stripe_invoice_id": obj["id"]})
+        if existing:
+            await db.invoices.update_one({"stripe_invoice_id": obj["id"]}, {"$set": inv_doc})
+        else:
+            inv_doc["id"] = __import__("uuid").uuid4().hex
+            inv_doc["created_at"] = now
+            await db.invoices.insert_one(inv_doc)
 
     elif etype == "invoice.payment_failed":
         stripe_sub_id = obj.get("subscription")

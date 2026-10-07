@@ -1751,4 +1751,15 @@ Registro di tutte le decisioni di business e tecniche prese durante il progetto.
 - **Implementazione**: ✅ «vai» O0∥O1 · O0 design in `docs/audit/OMNIA_O0_BAK_MEDIA_DESIGN.md` · O1 codice D-095/D-100/D-106 · O2+ ⏳
 - **Stato**: ✅ **DECISIONE OPERATIVA REGISTRATA** · O0∥O1 in ship
 
+### D-117 — Founder Ops: incassi per voce + fatture + scheda mensile · 07-Ott-2026
+- **Data**: 7 Ottobre 2026
+- **Contesto**: dopo dogfood Visura il Founder non vedeva l’incasso sul cruscotto super_admin (`amount_eur` assente; nessuna riga B2C dedicata; zero UI fatture).
+- **Decisione**:
+  1. Cruscotto `/app/ops` mostra **incassi distinti per voce** (tutti i SKU B2C + abbonamenti/ricariche B2B).
+  2. Sezione **fatture Stripe** (sync `Invoice.list` + webhook `invoice.paid`) e **ricevute B2C Checkout** (one-shot non = fattura elettronica IT automatica).
+  3. **Scheda mensile**: incasso del mese vs costo stimato Founder (COGS prodotto + fee Stripe 1,5%+€0,25 + AI/ops mese).
+  4. Ledger `b2c_purchases.amount_eur` obbligatorio a creazione/pagamento (backfill da catalogo sui legacy).
+- **Implementazione**: `founder_ops_finance.py` · `FounderOpsPage.jsx` · `b2c_entitlements.record_uni_purchase`.
+- **Stato**: ✅ ATTIVA
+
 

@@ -1,3 +1,9 @@
+## 2026-10-07 — D-117 Founder Ops finance (incassi / fatture / mese)
+
+- Cruscotto `/app/ops`: incassi per voce, fatture Stripe, ricevute B2C, scheda mensile P&L
+- `b2c_purchases.amount_eur` su create/paid + backfill catalogo
+- Helper `founder_ops_finance.py` + test unitari
+
 ## 2026-10-06 — Stripe sandbox Cloud OK + vault harden + HAL
 
 **Tipo**: Ops Cloud + docs HAL/manuale · dogfood prep.
