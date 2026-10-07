@@ -959,7 +959,8 @@
       "active": "Activa",
       "confirm_delete": "¿Eliminar esta búsqueda guardada?"
     },
-    "nav_mutui": "Hipotecas"
+    "nav_mutui": "Hipotecas",
+    "nav_account": "Cuenta"
   },
   "properties": {
     "field_rooms": "Habitaciones / Estancias",
@@ -1316,6 +1317,9 @@
     "pdf_scanned": "El PDF parece estar escaneado (sin texto seleccionable). HAL no puede leerlo sin OCR.",
     "err_generic": "Error. Reinténtelo en un momento.",
     "err_rate_limit": "Has alcanzado el límite de preguntas por hora (30). Reinténtelo más tarde.",
+    "err_payment_required": "Para particulares cada pregunta de HAL Legal cuesta €1,00 (tarjeta).",
+    "pay_cta": "Pagar €{{price}} y preguntar",
+    "pay_busy": "Abriendo pago…",
     "cta_notary": "Hable con un notario",
     "nav_back": "Volver al panel de control",
     "history_title": "Tus conversaciones",

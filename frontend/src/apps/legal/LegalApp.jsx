@@ -107,24 +107,53 @@ function SourcesPanel({ citations }) {
 }
 
 function ChatTab() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const lang = (i18n.language || "it").slice(0, 2);
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [busy, setBusy] = useState(false);
+  const [payBusy, setPayBusy] = useState(false);
   const [sid, setSid] = useState(null);
+  const [needsPay, setNeedsPay] = useState(false);
+  const [payPrice, setPayPrice] = useState(1);
   const scrollRef = useRef(null);
+  const pendingMsg = useRef("");
 
   useEffect(() => {
     if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
   }, [messages, busy]);
+
+  const startHalCheckout = async () => {
+    if (payBusy) return;
+    setPayBusy(true);
+    try {
+      const origin = window.location.origin;
+      const r = await api.post("/billing/b2c/checkout", {
+        product_key: "b2c_hal_legal_query",
+        success_url: `${origin}/${lang}/legal?hal_paid=1`,
+        cancel_url: `${origin}/${lang}/legal?hal_cancel=1`,
+      });
+      if (r.data?.checkout_url) {
+        window.location.href = r.data.checkout_url;
+        return;
+      }
+      setMessages((m) => [...m, { role: "assistant", content: t("legal.err_generic"), error: true }]);
+    } catch {
+      setMessages((m) => [...m, { role: "assistant", content: t("legal.err_generic"), error: true }]);
+    } finally {
+      setPayBusy(false);
+    }
+  };
 
   const send = async (e) => {
     e?.preventDefault();
     const text = input.trim();
     if (!text || busy) return;
     setBusy(true);
+    setNeedsPay(false);
     setMessages((m) => [...m, { role: "user", content: text }]);
     setInput("");
+    pendingMsg.current = text;
     try {
       const r = await api.post("/app/legal/chat",
         { session_id: sid, message: text },
@@ -139,14 +168,28 @@ function ChatTab() {
         confidence: r.data.confidence,
         low_confidence: r.data.low_confidence,
       }]);
+      pendingMsg.current = "";
     } catch (err) {
       const d = err?.response?.data?.detail;
-      const msg = d === "rate_limit_exceeded"
-        ? t("legal.err_rate_limit")
-        : (d === "llm_unavailable" || d === "llm_busy")
-          ? t("legal.err_unavailable")
-          : t("legal.err_generic");
-      setMessages((m) => [...m, { role: "assistant", content: msg, error: true }]);
+      const code = typeof d === "object" && d ? d.code : d;
+      if (err?.response?.status === 402 || code === "payment_required") {
+        const price = typeof d === "object" && d?.price_eur != null ? Number(d.price_eur) : 1;
+        setPayPrice(price);
+        setNeedsPay(true);
+        setMessages((m) => [...m, {
+          role: "assistant",
+          content: (typeof d === "object" && d?.message) || t("legal.err_payment_required"),
+          error: true,
+          payment_required: true,
+        }]);
+      } else {
+        const msg = code === "rate_limit_exceeded"
+          ? t("legal.err_rate_limit")
+          : (code === "llm_unavailable" || code === "llm_busy")
+            ? t("legal.err_unavailable")
+            : t("legal.err_generic");
+        setMessages((m) => [...m, { role: "assistant", content: msg, error: true }]);
+      }
     } finally {
       setBusy(false);
     }
@@ -201,6 +244,23 @@ function ChatTab() {
             </div>
           )}
         </div>
+        {needsPay && (
+          <div
+            data-testid="legal-paywall"
+            className="border-t border-amber-200 bg-amber-50 px-4 py-3 flex flex-wrap items-center justify-between gap-3"
+          >
+            <p className="text-sm text-amber-950">{t("legal.err_payment_required")}</p>
+            <button
+              type="button"
+              data-testid="legal-pay-cta"
+              disabled={payBusy}
+              onClick={startHalCheckout}
+              className="px-5 py-2 bg-[#0B1E3F] text-white text-xs uppercase tracking-widest rounded hover:bg-[#C19A6B] disabled:opacity-40"
+            >
+              {payBusy ? t("legal.pay_busy") : t("legal.pay_cta", { price: payPrice.toFixed(2).replace(".", ",") })}
+            </button>
+          </div>
+        )}
         <form onSubmit={send} className="border-t border-stone-200 p-4 flex gap-3">
           <input
             data-testid="legal-input"

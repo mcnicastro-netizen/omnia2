@@ -149,9 +149,37 @@ async def _call_llm(system_prompt: str, user_msg: str, session_id: str) -> str:
 # ─── Endpoints ───────────────────────────────────────────────────
 @router.post("/chat")
 async def legal_chat(req: LegalChatRequest, user: dict = Depends(get_current_user)) -> Dict[str, Any]:
-    """Multi-turn legal chat with web search + anti-hallucination."""
+    """Multi-turn legal chat with web search + anti-hallucination.
+
+    B2C (account_type=b2c): requires a paid €1 credit (`b2c_hal_legal_query`)
+    via Stripe one-shot — 402 payment_required if missing.
+    Agency / staff: unchanged (rate-limit only; no B2C catalog charge).
+    """
     db = Database.get()
     await _check_rate_limit(db, user["id"])
+
+    is_b2c = (user.get("account_type") or "") == "b2c"
+    hal_credit = None
+    if is_b2c:
+        from apps.billing.b2c_entitlements import (
+            HAL_LEGAL_PRODUCT_KEY,
+            check_hal_legal_query_credit,
+            consume_hal_legal_query_credit,
+        )
+        from apps.billing.b2c_products import get_b2c_product
+
+        hal_credit = await check_hal_legal_query_credit(user["id"])
+        if not hal_credit:
+            catalog = get_b2c_product(HAL_LEGAL_PRODUCT_KEY) or {}
+            raise HTTPException(
+                status_code=402,
+                detail={
+                    "code": "payment_required",
+                    "product_key": HAL_LEGAL_PRODUCT_KEY,
+                    "price_eur": float(catalog.get("price_eur") or 1.0),
+                    "message": "Per i privati ogni domanda HAL Legal costa €1,00 (pagamento con carta).",
+                },
+            )
 
     sid = req.session_id or str(uuid4())
 
@@ -197,6 +225,10 @@ async def legal_chat(req: LegalChatRequest, user: dict = Depends(get_current_use
     })
     await _persist_session(db, sid, user["id"], history)
 
+    if is_b2c and hal_credit:
+        from apps.billing.b2c_entitlements import consume_hal_legal_query_credit
+        await consume_hal_legal_query_credit(hal_credit["id"])
+
     await db.al_legal_audit.insert_one({
         "id": str(uuid4()),
         "user_id": user["id"],
@@ -214,6 +246,7 @@ async def legal_chat(req: LegalChatRequest, user: dict = Depends(get_current_use
         "validator_rationale": verdict.get("rationale", "")[:300],
         "cost_estimate": _estimate_query_cost(had_citations=bool(citations)),
         "channel": "in_app",
+        "b2c_paid": bool(is_b2c and hal_credit),
     })
 
     return {

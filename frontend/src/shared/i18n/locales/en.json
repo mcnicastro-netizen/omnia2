@@ -1017,7 +1017,8 @@
       "active": "Active",
       "confirm_delete": "Delete this saved search?"
     },
-    "nav_mutui": "Mortgages"
+    "nav_mutui": "Mortgages",
+    "nav_account": "Account"
   },
   "portali": {
     "available": "Available portals",
@@ -1236,6 +1237,9 @@
     "pdf_scanned": "The PDF appears to be scanned (no selectable text). HAL cannot read it without OCR.",
     "err_generic": "Error. Please try again in a moment.",
     "err_rate_limit": "You have reached the hourly limit for questions (30). Please try again later.",
+    "err_payment_required": "For private users each HAL Legal question costs €1.00 (card).",
+    "pay_cta": "Pay €{{price}} and ask",
+    "pay_busy": "Opening checkout…",
     "cta_notary": "Consult a notary",
     "nav_back": "Back to dashboard",
     "history_title": "Your conversations",

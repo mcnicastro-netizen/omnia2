@@ -179,6 +179,64 @@ async def count_uni_purchases_today(user_id: str) -> int:
     return int(n)
 
 
+HAL_LEGAL_PRODUCT_KEY = "b2c_hal_legal_query"
+
+
+async def check_hal_legal_query_credit(user_id: str) -> Optional[dict]:
+    """Return one unused paid HAL Legal (€1) purchase for this B2C user, or None.
+
+    A credit is a `b2c_purchases` row with status=paid, product b2c_hal_legal_query,
+    not yet consumed, and not expired.
+    """
+    if not user_id:
+        return None
+    now_iso = datetime.now(timezone.utc).isoformat()
+    db = Database.get()
+    doc = await db.b2c_purchases.find_one(
+        {
+            "user_id": user_id,
+            "product_key": HAL_LEGAL_PRODUCT_KEY,
+            "status": "paid",
+            "$and": [
+                {"$or": [
+                    {"consumed_at": {"$exists": False}},
+                    {"consumed_at": None},
+                ]},
+                {"$or": [
+                    {"expires_at": {"$exists": False}},
+                    {"expires_at": None},
+                    {"expires_at": {"$gt": now_iso}},
+                ]},
+            ],
+        },
+        {"_id": 0},
+        sort=[("paid_at", 1), ("created_at", 1)],
+    )
+    return doc
+
+
+async def consume_hal_legal_query_credit(purchase_id: str) -> bool:
+    """Mark a paid HAL Legal credit as consumed (1 query = 1 euro). Idempotent."""
+    if not purchase_id:
+        return False
+    db = Database.get()
+    now = datetime.now(timezone.utc).isoformat()
+    doc = await db.b2c_purchases.find_one_and_update(
+        {
+            "id": purchase_id,
+            "product_key": HAL_LEGAL_PRODUCT_KEY,
+            "status": "paid",
+            "$or": [
+                {"consumed_at": {"$exists": False}},
+                {"consumed_at": None},
+            ],
+        },
+        {"$set": {"consumed_at": now}},
+        return_document=True,
+    )
+    return bool(doc)
+
+
 def is_uni_payload(payload: Dict[str, Any]) -> bool:
     """Return True when a valuation payload requires UNI tier (paid) —
     i.e. any of `commercial_surfaces` or `merit` is present and non-empty."""

@@ -1233,7 +1233,8 @@
       "active": "Attiva",
       "confirm_delete": "Eliminare questa ricerca salvata?"
     },
-    "nav_mutui": "Mutui"
+    "nav_mutui": "Mutui",
+    "nav_account": "Account"
   },
   "valuator": {
     "eyebrow": "Valutatore GIS · Gratis",
@@ -1432,6 +1433,9 @@
     "err_rate_limit": "Hai raggiunto il limite di domande all'ora (30). Riprova più tardi.",
     "err_unavailable": "Il servizio AI è momentaneamente saturo. Riprova tra un minuto.",
     "err_busy": "Il servizio AI è momentaneamente saturo. Riprova tra un minuto.",
+    "err_payment_required": "Per i privati ogni domanda HAL Legal costa €1,00 (carta).",
+    "pay_cta": "Paga €{{price}} e fai la domanda",
+    "pay_busy": "Apertura pagamento…",
     "cta_notary": "Parla con un notaio",
     "nav_back": "Torna alla dashboard",
     "history_title": "Le tue conversazioni",

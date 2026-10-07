@@ -46,7 +46,9 @@ export default function CloudTopNav() {
             data-testid="cloud-nav-area"
             className="px-4 py-2 text-[11px] uppercase tracking-[0.18em] bg-[#0B1E3F] text-white rounded-lg hover:bg-[#C19A6B] transition"
           >
-            {loggedIn ? (t("cloud.nav_account") || "Account") : t("cloud.nav_area")}
+            {loggedIn
+              ? (t("cloud.nav_account", { defaultValue: "Account" }))
+              : t("cloud.nav_area")}
           </Link>
           <LanguageSwitcher />
         </div>
