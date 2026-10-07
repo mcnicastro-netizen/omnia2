@@ -1,3 +1,8 @@
+## 2026-10-07 — A-038 post-test: fattura + dati fiscali
+
+- Backlog Founder: Invoice Stripe + raccolta CF/P.IVA su ogni incasso (B2C/B2B); FE/SDI da decidere
+- Tracciato in `ASPETTI_DA_APPROFONDIRE.md` + `NEXT_SESSION.md` · no codice finché «vai»
+
 ## 2026-10-07 — D-117 Founder Ops finance (incassi / fatture / mese)
 
 - Cruscotto `/app/ops`: incassi per voce, fatture Stripe, ricevute B2C, scheda mensile P&L

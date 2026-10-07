@@ -2,7 +2,7 @@
 
 > File di appoggio per **temi strategici/tecnici** che il Founder ha esplicitamente segnalato come "da rivedere più avanti", **senza essere ancora decisioni**. Ogni voce va promossa in `DECISIONS.md` o `ROADMAP.md` quando si decide di procedere.
 
-**Ultimo aggiornamento**: 25-Sep-2026 (analisi gestionale · **A-035** audit architettura in pausa)
+**Ultimo aggiornamento**: 7-Ott-2026 (dogfood Visura · **A-038** fattura/dati fiscali post-test)
 
 > **Backlog qualità prodotto (A-006+)**: voci tracciate durante lo sprint manuale Cap. 1-18. Priorità assegnata da Cursor (P1=alto ROI/costo basso, P3=futuro). Decisione Founder post-manuale — **NON implementare senza "vai" esplicito**.
 
@@ -1336,6 +1336,34 @@ La personalizzazione della demo dal sito dell’agenzia **ci doveva già essere*
 
 ### Stato
 🟠 **PRIORITÀ APERTA** — Founder 30-Set-2026 · dopo/in parallelo a O6 operativo (restore firmato), **prima** di outreach large-scale.
+
+---
+
+## 🟠 A-038 — Fattura Stripe + dati fiscali su ogni incasso (B2C/B2B) · post dogfood
+
+**Data inserimento**: 7-Ott-2026  
+**Segnalato da**: Founder (Marco Nicastro) · dopo dogfood Visura + D-117 Ops finance  
+**Priorità**: **ALTA post-test** — non blocca il dogfood in corso; da risolvere prima del go-live pagamenti  
+**Correlati**: D-117 · Cap. 19 billing · `b2c_checkout` · Stripe Invoice · fatturazione IT / SDI
+
+### Contesto Founder
+Oggi i Checkout B2C one-shot (Visura, HAL Legal, boost, …) generano pagamento/ricevuta, non Invoice Stripe automatica. Le fatture Billing compaiono in Ops solo per abbonamenti. Domanda Founder: *Stripe può emettere fattura per ogni incasso?* + *da dove arrivano i dati fiscali?*
+
+### Cosa fare (quando «vai»)
+1. **Raccolta dati fiscali** dal cliente al momento giusto:
+   - B2B: già in Impostazioni agenzia (P.IVA, PEC/SDI) → riuso su Customer Stripe  
+   - B2C: form CF/P.IVA + indirizzo (e SDI/PEC se azienda) prima o subito dopo il pagamento, oppure campi custom Checkout
+2. **Invoice Stripe** su ogni Checkout one-shot (`invoice_creation` / Customer + Invoice) → finiscono in Ops «Fatture emesse»
+3. **Percorso fattura elettronica IT (SDI)** — chiarire chi emette (OMNIA / commercialista / Fatture in Cloud); Stripe Invoice PDF ≠ XML SDI
+4. Documentare onestamente in Cap. 19 / Ops cosa è ricevuta vs Invoice vs FE
+
+### Done quando
+- Ogni incasso carta ha documento Stripe (Invoice o ricevuta esplicita) collegato in Founder Ops  
+- Dati fiscali richiesti quando serve fattura; non inventati da carta/email  
+- Decisione scritta su FE italiana (in-scope OMNIA vs esterno)
+
+### Stato
+🟠 **PRIORITÀ APERTA — post test / post dogfood** · Founder 7-Ott-2026 · **NON implementare senza «vai»**
 
 ---
 
