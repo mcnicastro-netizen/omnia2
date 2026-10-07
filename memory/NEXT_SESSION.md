@@ -1,8 +1,24 @@
 # Prossima sessione — programma passi
 
-**Aggiornato**: 6 Ottobre 2026 · **Stripe sandbox Cloud OK** · Demo Nicastro PRONTA  
+**Aggiornato**: 7 Ottobre 2026 · **Domani 8 Ott: Audit Portale (programma)**  
 **Repo**: https://github.com/mcnicastro-netizen/omnia2 ✅  
-**Chat SoT sessione**: UNICA chat — Stripe sandbox OK (`bc-7412138c-…`)
+**Chat SoT sessione**: continuare questa linea / agent su omnia2 GitHub
+
+---
+
+## 🎯 DOMANI 8 Ott 2026 — partenza Audit Portale
+
+**Programma completo (SoT)**: [`docs/audit/OMNIA_PORTALE_AUDIT_PROGRAM.md`](../docs/audit/OMNIA_PORTALE_AUDIT_PROGRAM.md) · **D-118**
+
+| | |
+|--|--|
+| **Cosa** | Solo analisi passo × passo — **nessun fix** salvo P0 con «vai» Founder |
+| **Inizio** | Onda **A** — funzionamento end-to-end ImmobilCloud |
+| **Calendario** | D1–D10 (8→17 Ott): A funzionamento → B codice → C key → D prova key → E super_admin → F bottoni → G gestionale → H GDPR/AI Act → I anti-crash/Stripe → J fascicolo |
+| **Diario** | `docs/audit/portale-diario/YYYY-MM-DD.md` |
+| **Finding** | `P-###` severità P0–P3 |
+
+**Rituale mattina**: `omnia-stack ensure` · secrets presence · tunnel URL · Stripe `mode=test`.
 
 ---
 
@@ -69,14 +85,17 @@ CRM pubblico (tunnel): vedi `/tmp/omnia-stack/SHARE_URL.txt` / `CRM_LOGIN_URL.tx
 
 | | |
 |--|--|
-| **Programma** | `docs/audit/OMNIA_PROGRAMMA_PRE_ATTIVAZIONE.md` |
+| **Programma audit portale** | `docs/audit/OMNIA_PORTALE_AUDIT_PROGRAM.md` · **D-118** · start 8-Ott |
+| **Programma pre-attivazione** | `docs/audit/OMNIA_PROGRAMMA_PRE_ATTIVAZIONE.md` |
 | **O6 gate** | `docs/audit/OMNIA_O6_GATE_CHECKLIST.md` — CONDITIONAL PASS |
 | **Restore** | `docs/ops/RESTORE_MANUAL.md` — run firmata ⏳ non-prod |
-| **Priorità prodotto** | **A-037** — demo da sito + template pack / non-proprietario |
+| **Priorità prodotto** | **A-037** demo sito · **A-038** fattura/fiscali post-test (se già su branch Ops) |
 | Regola | **Nessun self-serve finché O6 ≠ PASS** |
 
-### Dopo la demo Nicastro
+### Dopo fascicolo audit portale / demo Nicastro
 
-1. Firmare restore non-prod (O3b) se non fatto  
-2. A-037 (chiudere loop URL→demo + template pack)  
-3. Founder decide self-serve ON solo con O6 PASS  
+1. Eseguire fix P0/P1 emersi dall’audit (solo con «vai»)  
+2. Firmare restore non-prod (O3b) se non fatto  
+3. A-037 (chiudere loop URL→demo + template pack)  
+4. A-038 fattura + dati fiscali (post-test)  
+5. Founder decide self-serve ON solo con O6 PASS  

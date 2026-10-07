@@ -1751,4 +1751,15 @@ Registro di tutte le decisioni di business e tecniche prese durante il progetto.
 - **Implementazione**: ✅ «vai» O0∥O1 · O0 design in `docs/audit/OMNIA_O0_BAK_MEDIA_DESIGN.md` · O1 codice D-095/D-100/D-106 · O2+ ⏳
 - **Stato**: ✅ **DECISIONE OPERATIVA REGISTRATA** · O0∥O1 in ship
 
+### D-118 — Programma Audit Portale ImmobilCloud (start 8-Ott-2026) · 07-Ott-2026
+- **Data**: 7 Ottobre 2026  
+- **Contesto**: Founder chiede di programmare il lavoro futuro post-dogfood: controllo portale, codice, API key, super_admin, bottoni, rapporto gestionale, GDPR + AI Act, anti-crash/dati/Stripe + extra necessari — **solo programma**, partenza da domani.
+- **Decisione**:
+  1. SoT esecutivo = `docs/audit/OMNIA_PORTALE_AUDIT_PROGRAM.md`.
+  2. Calendario **10 onde (A–J)** dal **8 al 17 Ott 2026**; finding `P-###`.
+  3. Durante le onde: **analisi e matrici**, non fix di prodotto (salvo P0 con «vai» esplicito).
+  4. Ambito = ImmobilCloud B2C + Legal B2C; gestionale solo ai ponti.
+  5. Fascicolo finale obbligatorio a chiusura Onda J.
+- **Stato**: ✅ PROGRAMMA APPROVATO · esecuzione da 8-Ott
+
 

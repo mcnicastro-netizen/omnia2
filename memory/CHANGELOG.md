@@ -1,3 +1,8 @@
+## 2026-10-07 — D-118 Programma Audit Portale (start 8 Ott)
+
+- `docs/audit/OMNIA_PORTALE_AUDIT_PROGRAM.md`: 10 onde A–J (funzionamento, codice, key, Ops, bottoni, gestionale, GDPR/AI Act, resilienza, fascicolo)
+- `NEXT_SESSION.md` punta a partenza **domani 8 Ott** · nessun codice prodotto in questa fase
+
 ## 2026-10-06 — Stripe sandbox Cloud OK + vault harden + HAL
 
 **Tipo**: Ops Cloud + docs HAL/manuale · dogfood prep.
