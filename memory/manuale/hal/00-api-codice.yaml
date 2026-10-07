@@ -850,3 +850,90 @@ voci:
       permessi:
         - super_admin / Founder
       screenshot: []
+
+  - id: api.stripe-webhook-b2c
+    titolo: Webhook Stripe — sblocco boost / PDF / Visura / HAL €1
+    modulo: Codice API
+    widget: null
+    pubblico: [super_admin]
+    livello: avanzato
+    tags: [codice, stripe, webhook, b2c, boost, visura, hal-legal, whsec]
+    correlati: [api.stripe-sandbox-cloud, legal.paywall-b2c, api.openapi-catasto-sandbox]
+    domanda_naturale: "Perché dopo il pagamento Stripe non si attiva il boost o il PDF? Come collego il webhook?"
+    contenuto:
+      a_cosa_serve: >
+        POST /api/billing/webhook con firma STRIPE_WEBHOOK_SECRET.
+        Su checkout.session.completed chiama apply_b2c_purchase_side_effects
+        (boost, valuator PDF, visura, credito HAL Legal).
+      quando_si_usa: >
+        Dogfood B2C: paga ok ma entitlement non scatta.
+      passi:
+        - "Prendi URL pubblico corrente (omnia-stack SHARE_URL / tunnel)."
+        - "Stripe test → Webhooks → endpoint
+          https://<tunnel>/api/billing/webhook · evento checkout.session.completed."
+        - "Copia whsec_… in STRIPE_WEBHOOK_SECRET (vault o .env pod) e riavvia API."
+        - "Rifai un checkout test e verifica b2c_purchases status=paid + side-effect."
+      errori_comuni:
+        - problema: "503 webhook_secret_missing"
+          soluzione: "Secret assente nel process uvicorn — materializza e restart."
+        - problema: "Tunnel cambiato, webhook 404"
+          soluzione: "Aggiorna URL endpoint in Stripe (quick tunnel si rinnova)."
+      permessi:
+        - super_admin / Founder
+      screenshot: []
+
+  - id: api.openapi-catasto-sandbox
+    titolo: OpenAPI.it Catasto sandbox — Visura B2C
+    modulo: Codice API
+    widget: null
+    pubblico: [super_admin]
+    livello: avanzato
+    tags: [codice, openapi, catasto, visura, sandbox, b2c]
+    correlati: [api.cloud-secrets-vault, api.stripe-webhook-b2c]
+    domanda_naturale: "Come abilito la Visura catastale in sandbox? Perché openapi_not_configured?"
+    contenuto:
+      a_cosa_serve: >
+        Client shared/openapi_catasto.py: OAuth Basic EMAIL+API_KEY su
+        test.oauth.openapi.com, API su test.catasto.openapi.it.
+        GET /api/cloud/visura/catalog → openapi_enabled true se configurato.
+      quando_si_usa: >
+        Dogfood Visura €4,90; catalog mostra openapi_enabled false.
+      passi:
+        - "OPENAPI_ENABLED=true OPENAPI_EMAIL=… OPENAPI_API_KEY=… (sandbox)."
+        - "Bases già in .env.example: OPENAPI_CATASTO_BASE / OPENAPI_OAUTH_BASE test."
+        - "Riavvia API; verifica catalog openapi_enabled=true."
+        - "Checkout + webhook per fulfillment PDF."
+      errori_comuni:
+        - problema: "openapi_not_configured / openapi_enabled false"
+          soluzione: "Manca EMAIL o KEY nel process (entrambi obbligatori se no TOKEN)."
+        - problema: "oauth_failed 401"
+          soluzione: "Email console ≠ OPENAPI_EMAIL, o chiave non sandbox."
+      permessi:
+        - super_admin / Founder
+      screenshot: []
+
+  - id: api.tavily-hal-legal
+    titolo: Tavily — fonti HAL Legal (chiave tvly-dev)
+    modulo: Codice API
+    widget: null
+    pubblico: [super_admin]
+    livello: avanzato
+    tags: [codice, tavily, hal-legal, sandbox, tvly-dev]
+    correlati: [legal.chat, api.cloud-secrets-vault]
+    domanda_naturale: "Serve Tavily per HAL Legal? Come distinguo chiave sandbox?"
+    contenuto:
+      a_cosa_serve: >
+        TAVILY_API_KEY abilita ricerca fonti in al_legal. Prefisso tvly-dev-
+        = development (ok demo). Senza chiave: hang/timeout o fonti vuote.
+      quando_si_usa: >
+        HAL Legal lento o senza citazioni in dogfood.
+      passi:
+        - "Crea chiave su tavily.com (dev)."
+        - "Inject TAVILY_API_KEY (vault o .env pod) e riavvia API :43121."
+        - "Smoke: domanda su Caparra confirmatoria → citazioni."
+      errori_comuni:
+        - problema: "Ho messo tvly-prod per sbaglio in demo"
+          soluzione: "Per demo preferisci tvly-dev-; non loggare la chiave."
+      permessi:
+        - super_admin / Founder
+      screenshot: []

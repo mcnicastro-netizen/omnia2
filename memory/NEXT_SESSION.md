@@ -1,86 +1,77 @@
 # Prossima sessione — programma passi
 
-**Aggiornato**: 7 Ottobre 2026 · **Dogfood E2E PASS** · Stripe sandbox Cloud OK  
+**Aggiornato**: 7 Ottobre 2026 · **Pausa** dopo dogfood B2C + secret sandbox in-pod  
 **Repo**: https://github.com/mcnicastro-netizen/omnia2 ✅  
-**Chat SoT sessione**: UNICA chat — Stripe + dogfood (`bc-7412138c-…`)
+**Branch lavoro**: `cursor/e2e-dogfood-results-cc7d` · PR #6  
+**Chat SoT**: questa chat (stesso thread — non aprire decine di new chat per secret sandbox)
 
 ---
 
-## ✅ Dogfood E2E (7 Ott) — chiuso PASS
+## ▶️ Da dove ricominciamo (ordine)
 
-| Step | Esito |
+1. **Webhook Stripe → questo tunnel**  
+   - URL attuale: `/tmp/omnia-stack/SHARE_URL.txt` + path `/api/billing/webhook`  
+   - Secret: `STRIPE_WEBHOOK_SECRET` (`whsec_…`) — incolla in chat (demo) o Environment Secrets  
+   - Evento: `checkout.session.completed`  
+   - Smoke: paga Boost o HAL €1 → vedi entitlement / PDF / boost attivo
+
+2. **Dogfood chiusura strumenti B2C** (con OpenAPI + Tavily già in questo pod)  
+   - Visura €4,90 end-to-end (checkout → webhook → PDF)  
+   - HAL Legal: paga €1 → domanda con fonti Tavily  
+   - Conferma label nav **Account** (fix già shippato)
+
+3. **Persistenza secret (quando hai 2 minuti, non bloccante)**  
+   - Copiare in Environment Secrets omnia2: `OPENAPI_*`, `TAVILY_API_KEY`, `STRIPE_WEBHOOK_SECRET`  
+   - Così un reboot agent non richiede re-incolla
+
+4. **Solo dopo**: restore firmato O3b → poi self-serve O6 / A-037 come da programma
+
+---
+
+## ✅ Stato chiuso in questa sessione (7 Ott)
+
+| Area | Esito |
 |--|--|
-| Billing UI Nicastro + checkout Stripe test | PASS (`cs_test` · Sandbox) |
-| Annuncio privato B2C | PASS (IN REVISIONE) |
-| Nuova agenzia (register → onboarding) | PASS (`agency_admin`) |
-| API keys Track B (Founder) | PASS (`omk_live_` prefix) |
+| Dogfood E2E (billing → B2C annuncio → nuova agenzia → API keys) | PASS |
+| Stripe sandbox Cloud (`sk_test`) | PASS |
+| Paywall HAL Legal €1 B2C (API 402 + CTA UI) | SHIPPATO |
+| Fix UI `CLOUD.NAV_ACCOUNT` → «Account» | SHIPPATO |
+| OpenAPI Catasto sandbox (OAuth + `openapi_enabled=true`) | OK **in questo pod** (chiave demo in `.env` locale) |
+| Tavily `tvly-dev-` (search 200) | OK **in questo pod** |
+| Webhook Stripe post-pay (boost/PDF/visura/HAL) | ⏳ **prossimo** |
+| O6 self-serve pagamento pubblico | OFF (invariato) |
 
-### Dogfood strumenti privato B2C (7 Ott pomeriggio)
+### Tabella strumenti B2C (aggiornata)
 
-| Strumento | Esito | Nota onesta |
+| Strumento | Esito | Nota |
 |--|--|--|
-| Boost Vetrina | PASS → Stripe test | Checkout ok; effetto post-pagamento non chiuso (webhook) |
-| Virtual staging | PASS → Stripe test | Serve ≥1 foto |
-| Valutatore gratis | PASS | Serve email verificata; 1/anno |
-| Valutatore UNI €2,99 | PASS → Stripe test | |
-| Visura €4,90 | BLOCCATA | Manca secret provider catasto (OpenAPI.it) |
-| HAL Legal | PARZIALE | Chat apre ma risposta timeout (Tavily assente); €1 catalogo non in UI |
-| Mutui | PASS | Gratis · offerte banche ok |
+| Boost Vetrina | PASS checkout | Effetto post-pay → webhook |
+| Virtual staging | PASS checkout | Serve ≥1 foto |
+| Valutatore gratis | PASS | Email verificata; 1/anno |
+| Valutatore UNI €2,99 | PASS checkout | PDF → webhook |
+| Visura €4,90 | Provider ON (pod) | E2E PDF dopo webhook |
+| HAL Legal | Paywall ON + Tavily ON (pod) | E2E domanda dopo pay+webhook |
+| Mutui | PASS | Gratis |
 
-Report strumenti: `/opt/cursor/artifacts/dogfood-b2c-tools-report.json` (solo agent VM).
-
-CRM pubblico (tunnel): vedi `/tmp/omnia-stack/CRM_LOGIN_URL.txt` (quick tunnel si rinnova).  
-Report E2E: `/opt/cursor/artifacts/dogfood-e2e-report.json` (solo su agent VM).
-
-**Onesto**: O6 self-serve *pagamento* resta OFF — creazione account agenzia ≠ checkout pubblico.
-
----
-
-## ✅ Stripe sandbox (Cloud) — chiuso 6 Ott
-
-| Check | Esito |
-|--|--|
-| Vault inject | `sk_test` / `pk_test` · `STRIPE_ENABLED=true` |
-| Catalogo | `python -m apps.billing.setup_stripe` OK |
-| API | `GET /api/billing/plans` → `enabled=true` `mode=test` |
-| Script | `bash scripts/activate-stripe-sandbox.sh` |
-| Docs | HAL `api.cloud-secrets-vault` + `api.stripe-sandbox-cloud` · Cap. 19 §19.10 |
-
-**Regole**: scope secret **Environment** (evitare doppioni Personal); non riusare chat agent avviate con `sk_live_`.
+CRM pubblico: `/tmp/omnia-stack/CRM_LOGIN_URL.txt` (tunnel trycloudflare si rinnova).
 
 ---
 
 ## 🎯 Demo Nicastroimmobiliare — ambiente pronto
 
-**Obiettivo Founder:** inviare / aprire la demo all’agenzia **Nicastroimmobiliare** (dogfood cliente-1).
-
-### Accesso titolare (esperienza cliente, non super_admin)
-
 | | |
 |--|--|
-| **CRM login** | vedi `/tmp/omnia-stack/CRM_LOGIN_URL.txt` (tunnel trycloudflare) |
+| **CRM login** | `/tmp/omnia-stack/CRM_LOGIN_URL.txt` |
 | **Locale** | http://127.0.0.1:43123/it/login |
 | **Email** | `titolare@nicastroimmobiliare.it` |
 | **Password** | `NicastroDemo2026!` (override: `NICASTRO_ADMIN_PASSWORD`) |
 | **Agenzia** | `nicastro-agency-001` · slug `nicastroimmobiliare` |
-| **Ruolo** | `agency_admin` |
-| **Seed** | `backend/scripts/seed_nicastro_agency.py` (idempotente) |
 
-### Checklist operativa
-
-1. ✅ Ambiente prova su (`bash scripts/omnia-stack.sh ensure`) + tunnel pubblico  
-2. ✅ Account **agenzia ufficiale** Nicastroimmobiliare (non `demo-agency-001`) · `agency_admin`  
-3. Lead Founders — reinvio se serve · URL sito `https://www.nicastroimmobiliare.it/`  
-4. ✅ Prep **assistita** (A-037 non chiude ancora URL→demo automatica)  
-5. ✅ Login QA browser PASS (titolare Nicastro · 4 immobili CT)  
-6. ✅ Stripe sandbox Cloud (sk_test) — billing abilitato  
-7. ✅ Dogfood E2E UI PASS (billing → B2C privato → nuova agenzia → API keys)
-
-### Limiti onesti da non promettere in mail
-- Clone automatico del sito **non** ancora live (A-037)  
-- Self-serve Stripe prodotto **OFF** finché O6 ≠ PASS (sandbox Cloud ≠ self-serve pubblico)  
-- Dominio/email Basic Soft → percorso verifica-dominio se serve  
-- **Secrets**: SoT = password manager + console; Cursor = inject. Inventario: `memory/CLOUD_SECRETS_INVENTORY.md`
+### Limiti onesti
+- Clone automatico sito **non** live (A-037)  
+- Self-serve Stripe prodotto **OFF** finché O6 ≠ PASS  
+- Secret sandbox in-pod **non** sopravvivono a wipe/reboot senza Environment Secrets  
+- Inventario nomi: `memory/CLOUD_SECRETS_INVENTORY.md`
 
 ---
 
@@ -90,12 +81,7 @@ Report E2E: `/opt/cursor/artifacts/dogfood-e2e-report.json` (solo su agent VM).
 |--|--|
 | **Programma** | `docs/audit/OMNIA_PROGRAMMA_PRE_ATTIVAZIONE.md` |
 | **O6 gate** | `docs/audit/OMNIA_O6_GATE_CHECKLIST.md` — CONDITIONAL PASS |
-| **Restore** | `docs/ops/RESTORE_MANUAL.md` — run firmata ⏳ non-prod |
-| **Priorità prodotto** | **A-037** — demo da sito + template pack / non-proprietario |
-| Regola | **Nessun self-serve finché O6 ≠ PASS** |
-
-### Dopo la demo Nicastro
-
-1. Firmare restore non-prod (O3b) se non fatto  
-2. Annotare friction dogfood → backlog  
-3. A-037 / template pack
+| **Restore** | `docs/ops/RESTORE_MANUAL.md` — run firmata ⏳ |
+| **Priorità prodotto** | **A-037** dopo chiusura dogfood webhook |
+| **Manuale sync** | Cap. 19 §19.10.6–7 · Cap. 22 v1.1 · HAL `api.stripe-webhook-b2c` / `api.openapi-catasto-sandbox` / `api.tavily-hal-legal` / `legal.paywall-b2c` |
+| Regola | **Nessun self-serve finché O6 ≠ PASS** · **no push `main` senza ok Founder** |

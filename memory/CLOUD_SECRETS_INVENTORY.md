@@ -55,9 +55,11 @@ Alias legacy accettati dal backend (se li avevi): `GOOGLE_API_KEY`, `EMERGENT_LL
 
 ## Cosa NON fare
 
-- Non committare valori in `backend/.env`, script, PR, chat  
-- Non copiare secret da un environment all’altro **in chiaro in chat**  
+- Non committare valori in `backend/.env`, script, PR  
+- Non mettere in chat chiavi **live/prod**  
 - Non considerare “perso” un secret solo perché il **pod nuovo** non lo vede  
+
+**Eccezione demo (7 Ott 2026, Founder)**: chiavi **sandbox temporanee** (`OPENAPI_API_KEY` sandbox, `tvly-dev-…`) possono essere incollate **nella stessa chat** → agent le scrive solo in `backend/.env` del pod (gitignored) e riavvia API, **senza** nuovo agent. Persistenza tra reboot = comunque Environment Secrets.
 
 ---
 
@@ -67,11 +69,13 @@ Alias legacy accettati dal backend (se li avevi): `GOOGLE_API_KEY`, `EMERGENT_LL
 2. [ ] Secrets UI ha almeno `RESEND_API_KEY` + `GEMINI_API_KEY`  
 3. [ ] Nuovo agent boot → `echo $RESEND_API_KEY | wc -c` > 0 (solo length)  
 4. [ ] Mail non più in `[EMAIL MOCK]`  
+5. [ ] Opzionale dogfood: `OPENAPI_*`, `TAVILY_API_KEY`, `STRIPE_WEBHOOK_SECRET`
 
 ---
 
-## Stato verificato — 6 Ott 2026
+## Stato verificato — 7 Ott 2026 (pausa)
 
-Env omnia2, questa chat: `sk_test` / `pk_test` iniettati, `STRIPE_ENABLED=true`.  
-`/api/billing/plans` → `enabled=true`, `mode=test`. Sandbox OK.  
-Scripts env proposti per Save: `cloud-agent-install.sh` + `cloud-agent-start.sh`.
+Env omnia2, chat dogfood: Stripe `sk_test` / `pk_test` OK.  
+Pod corrente (non vault): OpenAPI sandbox OAuth OK · Tavily `tvly-dev` search OK.  
+Manca per chiusura post-pay: `STRIPE_WEBHOOK_SECRET` + endpoint sul tunnel.  
+Scripts env: `cloud-agent-install.sh` + `cloud-agent-start.sh`.

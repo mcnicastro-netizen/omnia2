@@ -1,6 +1,6 @@
 # 📚 HAL Knowledge — Import & Cold Start (v0.29)
 
-**Ultimo aggiornamento**: 6-Ott-2026 (Stripe sandbox Cloud · vault secrets · Cap. 00/19)  
+**Ultimo aggiornamento**: 7-Ott-2026 (paywall HAL B2C · webhook/Visura/Tavily · Cap. 00/19/22)  
 **Corpus**: YAML in `memory/manuale/hal/*.yaml` (Cap. 1–27 + `00-api-codice`) · MD esclusi dal RAG ingest  
 **Motore**: `hal_knowledge.py` · reindex: `POST /api/app/hal/knowledge/reindex?force=true` (super_admin)  
 **Regola Founder D-084**: ogni ship aggiorna MD+YAML nello stesso giro — vedi `memory/MANUAL_SYNC.md`.
