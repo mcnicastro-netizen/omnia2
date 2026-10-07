@@ -73,6 +73,7 @@
     "register_now": "Regístrate ahora",
     "register_agency_hint": "¿Eres una agencia inmobiliaria?",
     "register_agency_link": "Registrar agencia (CRM)",
+    "network_error": "No se pudo conectar al servidor. Comprueba la red e inténtalo de nuevo (Ctrl+F5).",
     "have_account": "¿Ya tienes cuenta?",
     "login_now": "Inicia sesión aquí",
     "logout": "Cerrar sesión",

@@ -92,11 +92,13 @@ export default function LoginPage() {
     } catch (err) {
       const detail = err.response?.data?.detail;
       wipePassword();
-      setError(
-        detail === "use_google_sign_in"
-          ? t("auth.use_google")
-          : formatApiErrorDetail(detail) || err.message
-      );
+      if (!err.response) {
+        setError(t("auth.network_error"));
+      } else if (detail === "use_google_sign_in") {
+        setError(t("auth.use_google"));
+      } else {
+        setError(formatApiErrorDetail(detail));
+      }
     } finally {
       setLoading(false);
     }

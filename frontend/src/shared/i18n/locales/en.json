@@ -73,6 +73,7 @@
     "register_now": "Sign up now",
     "register_agency_hint": "Real estate agency?",
     "register_agency_link": "Register agency (CRM)",
+    "network_error": "Could not reach the server. Check your connection and retry in a few seconds (hard refresh).",
     "have_account": "Already have an account?",
     "login_now": "Sign in here",
     "logout": "Log out",
