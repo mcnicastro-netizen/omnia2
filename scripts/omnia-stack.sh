@@ -221,17 +221,21 @@ adopt_or_start_tunnel() {
   running="$(tunnel_process_pids | head -n1 || true)"
   existing="$(read_public_url || true)"
 
-  # Prefer a live cloudflared process: never kill it just because a probe flaked
+  # Adopt only if the public URL still answers. A live cloudflared PID with
+  # "Unauthorized: Tunnel not found" (stale quick tunnel) must be restarted.
   if [[ -n "${running:-}" ]]; then
     echo "$running" >"$pid_tunnel"
     if [[ -z "${existing:-}" ]]; then
       existing="$(grep -oE 'https://[a-z0-9-]+\.trycloudflare\.com' "$tunnel_log" 2>/dev/null | tail -n1 || true)"
     fi
-    if [[ -n "${existing:-}" ]]; then
+    if [[ -n "${existing:-}" ]] && tunnel_alive "$existing"; then
       printf '%s\n' "$existing" >"$share_file"
       printf '%s/it/login\n' "$existing" >"$LOG_DIR/CRM_LOGIN_URL.txt"
       printf '%s\n' "$existing"
       return 0
+    fi
+    if [[ -n "${existing:-}" ]]; then
+      echo "[omnia-stack] tunnel PID up but URL dead (${existing}) — will restart" >&2
     fi
   fi
 
@@ -243,12 +247,12 @@ adopt_or_start_tunnel() {
     return 0
   fi
 
-  if [[ -n "${running:-}" ]]; then
+  if [[ -n "${running:-}" ]] && [[ -z "${existing:-}" ]]; then
     echo "[omnia-stack] tunnel process up but no URL yet — waiting" >&2
     local url=""
     for _ in $(seq 1 20); do
       url="$(grep -oE 'https://[a-z0-9-]+\.trycloudflare\.com' "$tunnel_log" 2>/dev/null | tail -n1 || true)"
-      if [[ -n "$url" ]]; then
+      if [[ -n "$url" ]] && tunnel_alive "$url"; then
         printf '%s\n' "$url"
         return 0
       fi
@@ -259,10 +263,18 @@ adopt_or_start_tunnel() {
   local old
   old="$(tunnel_process_pids || true)"
   if [[ -n "${old:-}" ]]; then
-    echo "[omnia-stack] tunnel without URL — restarting: $old" >&2
+    echo "[omnia-stack] tunnel stale/unreachable — restarting: $old" >&2
     # shellcheck disable=SC2086
     kill $old 2>/dev/null || true
     sleep 1
+    # force-kill leftovers that ignore SIGTERM
+    old="$(tunnel_process_pids || true)"
+    if [[ -n "${old:-}" ]]; then
+      # shellcheck disable=SC2086
+      kill -9 $old 2>/dev/null || true
+      sleep 0.5
+    fi
+    rm -f "$share_file" "$LOG_DIR/CRM_LOGIN_URL.txt"
   fi
 
   local bin

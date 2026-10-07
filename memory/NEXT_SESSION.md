@@ -1,8 +1,24 @@
 # Prossima sessione — programma passi
 
-**Aggiornato**: 6 Ottobre 2026 · **Stripe sandbox Cloud OK** · Demo Nicastro PRONTA  
+**Aggiornato**: 7 Ottobre 2026 · **Dogfood E2E PASS** · Stripe sandbox Cloud OK  
 **Repo**: https://github.com/mcnicastro-netizen/omnia2 ✅  
-**Chat SoT sessione**: UNICA chat — Stripe sandbox OK (`bc-7412138c-…`)
+**Chat SoT sessione**: UNICA chat — Stripe + dogfood (`bc-7412138c-…`)
+
+---
+
+## ✅ Dogfood E2E (7 Ott) — chiuso PASS
+
+| Step | Esito |
+|--|--|
+| Billing UI Nicastro + checkout Stripe test | PASS (`cs_test` · Sandbox) |
+| Annuncio privato B2C | PASS (IN REVISIONE) |
+| Nuova agenzia (register → onboarding) | PASS (`agency_admin`) |
+| API keys Track B (Founder) | PASS (`omk_live_` prefix) |
+
+CRM pubblico (tunnel): vedi `/tmp/omnia-stack/CRM_LOGIN_URL.txt` (quick tunnel si rinnova).  
+Report: `/opt/cursor/artifacts/dogfood-e2e-report.json` (solo su agent VM).
+
+**Onesto**: O6 self-serve *pagamento* resta OFF — creazione account agenzia ≠ checkout pubblico.
 
 ---
 
@@ -17,17 +33,6 @@
 | Docs | HAL `api.cloud-secrets-vault` + `api.stripe-sandbox-cloud` · Cap. 19 §19.10 |
 
 **Regole**: scope secret **Environment** (evitare doppioni Personal); non riusare chat agent avviate con `sk_live_`.
-
----
-
-## 🎯 Riprendere dogfood E2E (dopo docs)
-
-1. Billing UI `/it/app/settings/billing` (piani + checkout test Stripe)
-2. Annuncio privato B2C
-3. Nuova agenzia self-serve (se O6 consente) / seed
-4. API keys Track B (super_admin)
-
-CRM pubblico (tunnel): vedi `/tmp/omnia-stack/SHARE_URL.txt` / `CRM_LOGIN_URL.txt`
 
 ---
 
@@ -55,7 +60,7 @@ CRM pubblico (tunnel): vedi `/tmp/omnia-stack/SHARE_URL.txt` / `CRM_LOGIN_URL.tx
 4. ✅ Prep **assistita** (A-037 non chiude ancora URL→demo automatica)  
 5. ✅ Login QA browser PASS (titolare Nicastro · 4 immobili CT)  
 6. ✅ Stripe sandbox Cloud (sk_test) — billing abilitato  
-7. ⏳ Annotare cosa gratta → backlog / A-037 · riprendere E2E dogfood
+7. ✅ Dogfood E2E UI PASS (billing → B2C privato → nuova agenzia → API keys)
 
 ### Limiti onesti da non promettere in mail
 - Clone automatico del sito **non** ancora live (A-037)  
@@ -78,5 +83,5 @@ CRM pubblico (tunnel): vedi `/tmp/omnia-stack/SHARE_URL.txt` / `CRM_LOGIN_URL.tx
 ### Dopo la demo Nicastro
 
 1. Firmare restore non-prod (O3b) se non fatto  
-2. A-037 (chiudere loop URL→demo + template pack)  
-3. Founder decide self-serve ON solo con O6 PASS  
+2. Annotare friction dogfood → backlog  
+3. A-037 / template pack

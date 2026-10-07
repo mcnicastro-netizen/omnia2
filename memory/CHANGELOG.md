@@ -1,3 +1,11 @@
+## 2026-10-07 — Dogfood E2E PASS + tunnel quick-restart
+
+**Tipo**: Ops dogfood UI + fix stack tunnel.
+
+- Dogfood E2E PASS: Billing Nicastro→Stripe `cs_test`, annuncio privato B2C IN REVISIONE, nuova agenzia onboarding, API keys Founder (`omk_live_`)
+- `scripts/omnia-stack.sh`: non adottare cloudflared zombie (URL trycloudflare morto / Unauthorized) — restart + kill -9 leftover
+- `NEXT_SESSION.md`: checklist dogfood chiusa
+
 ## 2026-10-06 — Stripe sandbox Cloud OK + vault harden + HAL
 
 **Tipo**: Ops Cloud + docs HAL/manuale · dogfood prep.
