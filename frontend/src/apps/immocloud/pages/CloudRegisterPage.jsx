@@ -1,17 +1,32 @@
 import React, { useState } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { api } from "../../../shared/lib/api";
 import { useAuth, formatApiErrorDetail } from "../../../shared/lib/auth";
 import CloudPageHero from "../components/CloudPageHero";
 
+function formatCloudRegError(detail, t) {
+  const code = typeof detail === "string" ? detail : detail?.code || detail?.detail;
+  if (code === "email_already_registered") {
+    return t("cloud.reg_err_email_taken");
+  }
+  if (code === "at_least_one_intent_required") {
+    return t("cloud.reg_err_intent_required");
+  }
+  if (code === "gdpr_consent_required") {
+    return t("cloud.reg_err_gdpr_required");
+  }
+  return formatApiErrorDetail(detail);
+}
+
 export default function CloudRegisterPage() {
   const { t, i18n } = useTranslation();
   const lang = (i18n.language || "it").slice(0, 2);
   const nav = useNavigate();
-  const { refresh } = useAuth();
+  const { refresh, login } = useAuth();
   const [params] = useSearchParams();
   const presetIntent = params.get("intent");
+  const nextPath = params.get("next");
   const [form, setForm] = useState({
     name: "", email: "", password: "",
     intents: presetIntent ? [presetIntent] : [],
@@ -34,9 +49,33 @@ export default function CloudRegisterPage() {
       setDone(data.user);
       await refresh();
     } catch (e) {
-      setErr(formatApiErrorDetail(e?.response?.data?.detail) || String(e.message || e));
+      const detail = e?.response?.data?.detail;
+      const code = typeof detail === "string" ? detail : detail?.code;
+      if (e?.response?.status === 409 && code === "email_already_registered") {
+        try {
+          await login(form.email.trim(), form.password);
+          await refresh();
+          if (nextPath && nextPath.startsWith("/")) {
+            nav(nextPath, { replace: true });
+          } else {
+            nav(`/${lang}/cloud/account`, { replace: true });
+          }
+          return;
+        } catch {
+          setErr(t("cloud.reg_err_email_login_failed"));
+          return;
+        }
+      }
+      setErr(formatCloudRegError(detail, t) || String(e.message || e));
     } finally { setBusy(false); }
   };
+
+  const submitBlocked =
+    form.intents.length === 0
+      ? "intent"
+      : !form.gdpr_consent
+        ? "gdpr"
+        : null;
 
   if (done) {
     return (
@@ -50,9 +89,17 @@ export default function CloudRegisterPage() {
           <p className="text-sm text-stone-600 mb-6">
             {t("cloud.reg_done_text", { name: done.name })}
           </p>
-          <button onClick={() => nav(`/${lang}/cloud`)}
+          <button
+            onClick={() => nav(
+              nextPath && nextPath.startsWith("/")
+                ? nextPath
+                : form.intents.includes("sell") || form.intents.includes("rent_out")
+                  ? `/${lang}/cloud/account/sell`
+                  : `/${lang}/cloud/account`,
+              { replace: true }
+            )}
             className="px-5 py-2.5 bg-[#0B1E3F] text-white text-xs uppercase tracking-widest rounded-lg hover:bg-[#C19A6B]">
-            {t("cloud.reg_back_home")}
+            {t("cloud.reg_go_account")}
           </button>
         </div>
       </section>
@@ -133,11 +180,27 @@ export default function CloudRegisterPage() {
             <span>{t("cloud.reg_gdpr_text")}</span>
           </label>
 
-          <button type="submit" disabled={busy || form.intents.length === 0 || !form.gdpr_consent}
+          {submitBlocked && !busy && (
+            <p data-testid="reg-submit-hint" className="text-sm text-amber-900 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+              {submitBlocked === "intent"
+                ? t("cloud.reg_hint_pick_intent")
+                : t("cloud.reg_hint_gdpr")}
+            </p>
+          )}
+
+          <button type="submit" disabled={busy || !!submitBlocked}
             data-testid="reg-submit-btn"
             className="w-full bg-[#0B1E3F] text-white px-6 py-3 rounded-lg font-medium text-sm uppercase tracking-widest hover:bg-[#C19A6B] transition disabled:opacity-50">
             {busy ? t("cloud.reg_submitting") : t("cloud.reg_submit_btn")}
           </button>
+
+          {err === t("cloud.reg_err_email_taken") && (
+            <p className="text-sm text-center text-stone-600">
+              <Link to={`/${lang}/login`} className="underline font-medium text-[#0B1E3F]">
+                {t("cloud.reg_go_login")}
+              </Link>
+            </p>
+          )}
         </form>
       </section>
     </div>

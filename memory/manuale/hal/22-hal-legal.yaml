@@ -60,22 +60,54 @@ voci:
     pubblico: [titolare, agente, segreteria]
     livello: base
     tags: [chat, tavily, legal, cap22]
-    correlati: []
+    correlati: [legal.paywall-b2c]
     domanda_naturale: "Come funziona la chat legale?"
     contenuto:
       a_cosa_serve: >
         POST /api/app/legal/chat con domanda; risposta + fonti se Tavily ok.
+        Privati B2C: prima del chat serve credito €1 (vedi legal.paywall-b2c).
       quando_si_usa: >
         Quando l'utente lavora sul modulo HAL Legal in ImmoWeb/ImmobilCloud.
       passi:
-        - "Apri il modulo indicato nel capitolo 22."
-        - "Segui il flusso descritto nel manuale operativo."
-        - "In caso di errore leggi la sezione limitazioni/errori."
+        - "Apri /:lang/legal e autenticati."
+        - "Se B2C senza credito: paga €1 dalla CTA (Stripe Checkout)."
+        - "Invia la domanda; leggi citazioni se presenti."
       errori_comuni:
-        - problema: "Funzione non trovata o 403"
-          soluzione: "Verifica ruolo (agency_admin/agent/super_admin) e piano."
+        - problema: "HTTP 402 payment_required"
+          soluzione: "Account privato: completa checkout b2c_hal_legal_query."
+        - problema: "Timeout / nessuna fonte"
+          soluzione: "Configura TAVILY_API_KEY (tvly-dev- in sandbox) e GEMINI_API_KEY."
       permessi:
-        - "Dipende dal modulo — vedi capitolo 22"
+        - "Utente autenticato; B2C con credito o B2B agenzia"
+      screenshot: []
+
+  - id: legal.paywall-b2c
+    titolo: Perché HAL Legal chiede €1 ai privati?
+    modulo: HAL Legal
+    widget: null
+    pubblico: [titolare, agente, segreteria]
+    livello: base
+    tags: [paywall, b2c, stripe, legal, cap22, 402]
+    correlati: [legal.chat, api.stripe-webhook-b2c]
+    domanda_naturale: "Perché HAL Legal chiede 1 euro? Come pago una domanda?"
+    contenuto:
+      a_cosa_serve: >
+        Ogni domanda HAL Legal per account_type=b2c costa €1,00 (carta).
+        Prodotto Stripe b2c_hal_legal_query. UI LegalApp mostra CTA dopo 402.
+        Il credito si attiva via webhook checkout.session.completed.
+      quando_si_usa: >
+        Privato ImmobilCloud apre HAL Legal e riceve paywall.
+      passi:
+        - "Clicca Paga €1,00 → Stripe Checkout test/live."
+        - "Dopo paid, webhook marca b2c_purchases e sblocca 1 domanda."
+        - "Invia di nuovo la domanda (credito consumato a risposta ok)."
+      errori_comuni:
+        - problema: "Ho pagato ma chiede ancora €1"
+          soluzione: >
+            Manca STRIPE_WEBHOOK_SECRET o endpoint verso questo tunnel.
+            Vedi Cap. 19 §19.10.6.
+      permessi:
+        - "account_type=b2c"
       screenshot: []
 
   - id: legal.pdf
@@ -159,23 +191,24 @@ voci:
     widget: null
     pubblico: [titolare, agente, segreteria]
     livello: base
-    tags: [errori, 503, legal, cap22]
-    correlati: []
+    tags: [errori, 503, 402, legal, cap22]
+    correlati: [legal.paywall-b2c]
     domanda_naturale: "HAL Legal non risponde / 503"
     contenuto:
       a_cosa_serve: >
-        Verifica GEMINI_API_KEY e budget LLM; riprova.
+        503/timeout: GEMINI_API_KEY + TAVILY_API_KEY nel process.
+        402: paywall B2C €1. Non confondere i due.
       quando_si_usa: >
         Quando l'utente lavora sul modulo HAL Legal in ImmoWeb/ImmobilCloud.
       passi:
-        - "Apri il modulo indicato nel capitolo 22."
-        - "Segui il flusso descritto nel manuale operativo."
-        - "In caso di errore leggi la sezione limitazioni/errori."
+        - "Se 402 → paga o verifica webhook."
+        - "Se 503/timeout → check-secrets GEMINI + TAVILY; riavvia API."
+        - "Riprova con domanda più contestualizzata."
       errori_comuni:
-        - problema: "Funzione non trovata o 403"
-          soluzione: "Verifica ruolo (agency_admin/agent/super_admin) e piano."
+        - problema: "Chat apre ma hang senza risposta"
+          soluzione: "Spesso Tavily assente: aggiungi TAVILY_API_KEY e restart API."
       permessi:
-        - "Dipende dal modulo — vedi capitolo 22"
+        - "Utente autenticato"
       screenshot: []
 
   - id: legal.collegamenti

@@ -386,13 +386,14 @@ voci:
     pubblico: [titolare, super_admin]
     livello: intermedio
     tags: [impostazioni, billing, stripe, piani, founders, credit-packages, checkout, customer-portal, stripe-enabled, "503", cloud-agent, sandbox]
-    correlati: [settings.cos-e, settings.limitazioni-v1, api.stripe-sandbox-cloud, api.cloud-secrets-vault]
+    correlati: [settings.cos-e, settings.limitazioni-v1, api.stripe-sandbox-cloud, api.cloud-secrets-vault, api.stripe-webhook-b2c]
     domanda_naturale: "Dove attivo un piano OMNIA? Come compro crediti? Come funzionano i Founders €49/€99/€249?"
     contenuto:
       a_cosa_serve: >
         Attivazione piano B2B (Starter/Pro/Agency/Enterprise) tramite
         Stripe hosted checkout + acquisto credit packages top-up
-        (ratio 1 credito = €0,05).
+        (ratio 1 credito = €0,05). One-shot B2C (boost/PDF/visura/HAL)
+        richiedono anche webhook (§19.10.6).
       quando_si_usa: >
         Prima volta che attivi un piano o quando ricarichi crediti.
       passi:
@@ -425,6 +426,8 @@ voci:
           customer portal (fatture, cambio piano, cancel, aggiorna PM)."
         - "Polling post-checkout: GET /billing/status/{session_id}
           finche' complete → toast success sonner + reload sub."
+        - "Webhook B2C: POST /api/billing/webhook + STRIPE_WEBHOOK_SECRET
+          (Cap. 19 §19.10.6 · api.stripe-webhook-b2c)."
       errori_comuni:
         - problema: "HTTP 503 Billing e' in preparazione"
           soluzione: >
@@ -435,6 +438,10 @@ voci:
           soluzione: >
             Cambio piano post-attivazione va fatto dal customer portal
             Stripe (POST /billing/portal), non da BillingPage.
+        - problema: "Pagato boost/PDF ma non si attiva"
+          soluzione: >
+            Collega webhook Stripe al tunnel corrente + whsec
+            (api.stripe-webhook-b2c).
       permessi:
         - "GET /billing/plans: pubblico"
         - "GET /billing/subscription, POST /billing/checkout, POST
@@ -442,6 +449,32 @@ voci:
     screenshot:
       - "[SCREEN: cap19-billing-plans]"
       - "[SCREEN: cap19-billing-credits]"
+
+  - id: settings.visura-b2c-openapi
+    titolo: Visura catastale B2C — OpenAPI.it sandbox
+    modulo: Impostazioni
+    widget: null
+    pubblico: [titolare, super_admin]
+    livello: intermedio
+    tags: [visura, b2c, openapi, catasto, sandbox, stripe]
+    correlati: [api.openapi-catasto-sandbox, api.stripe-webhook-b2c, settings.billing-pagina-separata]
+    domanda_naturale: "Come funziona la Visura catastale per i privati? Perché dice servizio non disponibile?"
+    contenuto:
+      a_cosa_serve: >
+        Prodotto ImmobilCloud Visura €4,90 (b2c_visura_catastale).
+        Catalog GET /api/cloud/visura/catalog. Provider OpenAPI.it sandbox.
+      quando_si_usa: >
+        Dogfood Visura; openapi_enabled false.
+      passi:
+        - "Configura OPENAPI_ENABLED + EMAIL + API_KEY sandbox."
+        - "Verifica catalog openapi_enabled=true."
+        - "Checkout carta → webhook → PDF ufficiale."
+      errori_comuni:
+        - problema: "openapi_not_configured"
+          soluzione: "Secret catasto assenti nel process — Cap. 19 §19.10.7."
+      permessi:
+        - "Catalog pubblico; checkout utente B2C autenticato"
+      screenshot: []
 
   # ---------- 19.11 · Chi NON e' coperto ----------
 

@@ -35,10 +35,14 @@ Dopo il Save, **riavvia un nuovo agent** sullo stesso environment (i secret non 
 | `RESEND_API_KEY` | **Sì** (mail demo/prod) | [Resend](https://resend.com/api-keys) → API Keys | Email transazionali |
 | `GEMINI_API_KEY` | **Sì** (HAL/AI) | Google AI Studio / Google Cloud | LLM HAL, brand extract, coach |
 | `FAL_KEY` | Consigliato | [fal.ai](https://fal.ai/dashboard/keys) | Staging / video |
-| `TAVILY_API_KEY` | Opzionale | Tavily dashboard | AL Legal search |
+| `TAVILY_API_KEY` | Consigliato (HAL Legal) | [Tavily](https://tavily.com/) → API Keys | Ricerca fonti normative HAL Legal |
+| `OPENAPI_EMAIL` | Per Visura sandbox | [console.openapi.com](https://console.openapi.com) → Autenticazione → email account | OAuth Catasto |
+| `OPENAPI_API_KEY` | Per Visura sandbox | Stessa console → API Key **Sandbox** | OAuth Catasto (con EMAIL) |
+| `OPENAPI_TOKEN` | Alternativa a EMAIL+KEY | Bearer già mintato (raro) | Skip OAuth |
+| `OPENAPI_ENABLED` | `true` se Visura ON | Impostare `true` (anche in `.env`) | Abilita client catasto |
 | `STRIPE_SECRET_KEY` | Solo se billing ON | Stripe Dashboard → API keys (test/live) | Pagamenti |
 | `STRIPE_PUBLISHABLE_KEY` | Solo se billing ON | Stripe | Frontend Stripe |
-| `STRIPE_WEBHOOK_SECRET` | Solo se webhook | Stripe → Webhooks | Eventi Stripe |
+| `STRIPE_WEBHOOK_SECRET` | Per effetti post-pagamento | Stripe → Developers → Webhooks → endpoint → Signing secret | Conferma pagamenti → boost/PDF/visura |
 | `GOOGLE_CLIENT_ID` | Opzionale | Google Cloud Console → OAuth | Login Google |
 | `JWT_SECRET` | Consigliato (prod) | Genera nuovo se perso (`openssl rand -hex 32`) | Sessioni; se cambi, tutti i login scadono |
 | `ADMIN_EMAIL` / `ADMIN_PASSWORD` | Bootstrap | Non secret “API”: seed Founder; già in `.env.example` per Cloud | Utente super_admin |
@@ -51,9 +55,11 @@ Alias legacy accettati dal backend (se li avevi): `GOOGLE_API_KEY`, `EMERGENT_LL
 
 ## Cosa NON fare
 
-- Non committare valori in `backend/.env`, script, PR, chat  
-- Non copiare secret da un environment all’altro **in chiaro in chat**  
+- Non committare valori in `backend/.env`, script, PR  
+- Non mettere in chat chiavi **live/prod**  
 - Non considerare “perso” un secret solo perché il **pod nuovo** non lo vede  
+
+**Eccezione demo (7 Ott 2026, Founder)**: chiavi **sandbox temporanee** (`OPENAPI_API_KEY` sandbox, `tvly-dev-…`) possono essere incollate **nella stessa chat** → agent le scrive solo in `backend/.env` del pod (gitignored) e riavvia API, **senza** nuovo agent. Persistenza tra reboot = comunque Environment Secrets.
 
 ---
 
@@ -63,11 +69,13 @@ Alias legacy accettati dal backend (se li avevi): `GOOGLE_API_KEY`, `EMERGENT_LL
 2. [ ] Secrets UI ha almeno `RESEND_API_KEY` + `GEMINI_API_KEY`  
 3. [ ] Nuovo agent boot → `echo $RESEND_API_KEY | wc -c` > 0 (solo length)  
 4. [ ] Mail non più in `[EMAIL MOCK]`  
+5. [ ] Opzionale dogfood: `OPENAPI_*`, `TAVILY_API_KEY`, `STRIPE_WEBHOOK_SECRET`
 
 ---
 
-## Stato verificato — 6 Ott 2026
+## Stato verificato — 7 Ott 2026 (pausa)
 
-Env omnia2, questa chat: `sk_test` / `pk_test` iniettati, `STRIPE_ENABLED=true`.  
-`/api/billing/plans` → `enabled=true`, `mode=test`. Sandbox OK.  
-Scripts env proposti per Save: `cloud-agent-install.sh` + `cloud-agent-start.sh`.
+Env omnia2, chat dogfood: Stripe `sk_test` / `pk_test` OK.  
+Pod corrente (non vault): OpenAPI sandbox OAuth OK · Tavily `tvly-dev` search OK.  
+Manca per chiusura post-pay: `STRIPE_WEBHOOK_SECRET` + endpoint sul tunnel.  
+Scripts env: `cloud-agent-install.sh` + `cloud-agent-start.sh`.

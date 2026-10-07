@@ -184,6 +184,7 @@ Il titolare **non ha un sito** e vuole che OMNIA gli generi un portale con templ
 - Se `STRIPE_ENABLED != "true"` in env → endpoint restituiscono **HTTP 503** con `{"error": "stripe_not_configured", "message": "Billing è in preparazione."}`. In UI: la pagina carica ma i piani non sono attivabili.
 - Se `STRIPE_ENABLED == "true"` E `STRIPE_SECRET_KEY` presente → billing operativo.
 - **Cloud Agent (6 Ott 2026)**: i secret arrivano dal vault Cursor (scope **Environment** su omnia2, preferire `sk_test_` / `pk_test_`). Il template `backend/.env` ha `STRIPE_ENABLED=false` ma `shared/env_bootstrap.py` + `scripts/stripe-vault-materialize.py` fanno vincere il vault. Attivazione one-shot: `bash scripts/activate-stripe-sandbox.sh` → `GET /api/billing/plans` con `enabled=true`, `mode=test`. Non riusare chat agent avviate con inject `sk_live_`. Dettaglio HAL: `api.cloud-secrets-vault`, `api.stripe-sandbox-cloud`.
+- **Demo stessa chat (7 Ott 2026)**: per chiavi **sandbox temporanee** (OpenAPI Catasto, Tavily `tvly-dev-`) il Founder può incollarle in chat: l’agent le materializza solo in `backend/.env` del pod (gitignored), riavvia API, **senza** nuovo agent. Non vale per chiavi live/prod. Persistenza tra reboot = Environment Secrets.
 
 ### 19.10.1 · Sezione piano corrente + wallet crediti
 
@@ -268,6 +269,34 @@ Il redirect Stripe `success_url` include `?session_id={CHECKOUT_SESSION_ID}&ok=1
 
 Se lo stato resta pending o `?cancel=1`:
 - Mostra `toast.error("Pagamento fallito")` o silent (cancel).
+
+### 19.10.6 · Webhook Stripe → effetti post-pagamento (B2C + abbonamenti)
+
+**Perché serve**: il checkout Stripe hosted conferma la carta sul lato Stripe; OMNIA sblocca boost / PDF valutatore / Visura / credito HAL Legal **solo** quando riceve l’evento firmato.
+
+| | |
+|--|--|
+| Endpoint | `POST /api/billing/webhook` |
+| Secret | `STRIPE_WEBHOOK_SECRET` (`whsec_…`) |
+| Evento minimo | `checkout.session.completed` |
+| Handler B2C | `apply_b2c_purchase_side_effects` (`b2c_checkout.py`) |
+| URL Cloud demo | `https://<tunnel-trycloudflare>/api/billing/webhook` (il tunnel cambia a ogni restart) |
+
+**Setup sandbox (Founder)**:
+1. Stripe Dashboard (test) → Developers → Webhooks → Add endpoint con l’URL pubblico corrente.
+2. Copia Signing secret → Environment Secret `STRIPE_WEBHOOK_SECRET` **oppure** inject nel pod demo.
+3. Senza secret: webhook risponde `503 webhook_secret_missing` → dopo il paga non vedi boost/PDF attivi.
+
+**Onestà D-051**: polling `GET /billing/status/{session_id}` può aggiornare UI abbonamento; i one-shot B2C (boost, UNI PDF, visura, HAL €1) dipendono dal webhook.
+
+### 19.10.7 · Visura catastale B2C (OpenAPI.it sandbox)
+
+- UI ImmobilCloud → Visura · prodotto `b2c_visura_catastale` (€4,90 carta).
+- Catalogo pubblico: `GET /api/cloud/visura/catalog` → `openapi_enabled` + `stripe_enabled`.
+- Provider: OpenAPI.it Catasto. Sandbox bases: `test.catasto.openapi.it` + `test.oauth.openapi.com`.
+- Secret: `OPENAPI_ENABLED=true` + `OPENAPI_EMAIL` + `OPENAPI_API_KEY` (sandbox). Alternativa: `OPENAPI_TOKEN`.
+- Flusso: checkout Stripe → webhook paid → create/poll visura → PDF `GET …/documento`.
+- Senza OpenAPI: checkout/UI con `openapi_not_configured` / `openapi_enabled: false`.
 
 ---
 

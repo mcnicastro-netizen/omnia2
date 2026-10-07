@@ -1,12 +1,12 @@
 {
-  "version": "0.26-a028-ghi",
-  "updated": "2026-10-06",
-  "voices_total": 366,
+  "version": "0.29-stripe-sandbox",
+  "updated": "2026-10-07",
+  "voices_total": 371,
   "source_files": [
     {
       "file": "00-api-codice.yaml",
-      "voices": 28,
-      "md5": "d753b64eb6fcc9595a035f7ce98f857b"
+      "voices": 31,
+      "md5": "8c26a21ee0bb494c306b45ab26b49b04"
     },
     {
       "file": "01-primo-accesso.yaml",
@@ -100,8 +100,8 @@
     },
     {
       "file": "19-impostazioni-agenzia.yaml",
-      "voices": 15,
-      "md5": "3e6dbed6496cb3c48ba39a3af9d8347a"
+      "voices": 16,
+      "md5": "759eb862ee0d18a1da61f91d757e3956"
     },
     {
       "file": "20-api-keys-integrazioni.yaml",
@@ -115,8 +115,8 @@
     },
     {
       "file": "22-hal-legal.yaml",
-      "voices": 8,
-      "md5": "d71332b7c64bc1b459bf114b3e80242e"
+      "voices": 9,
+      "md5": "0ea791712a7a4f5a721f66117b1af580"
     },
     {
       "file": "23-video-ab-testing.yaml",
@@ -150,16 +150,16 @@
       "file": "00-api-codice",
       "title": "Corpus codice/API",
       "yaml": "00-api-codice.yaml",
-      "voices": 28,
-      "md5": "d753b64eb6fcc9595a035f7ce98f857b"
+      "voices": 31,
+      "md5": "8c26a21ee0bb494c306b45ab26b49b04"
     },
     {
       "id": 22,
       "file": "22-hal-legal",
       "title": "HAL Legal",
       "yaml": "22-hal-legal.yaml",
-      "voices": 8,
-      "md5": "d71332b7c64bc1b459bf114b3e80242e"
+      "voices": 9,
+      "md5": "0ea791712a7a4f5a721f66117b1af580"
     },
     {
       "id": 23,
@@ -202,5 +202,5 @@
       "md5": "5e88370cdf2c070dc30c7c3f036b85db"
     }
   ],
-  "notes": "Fingerprints regenerated from YAML on disk. Live RAG reindex: POST /api/app/hal/knowledge/reindex?force=true (super_admin). 2026-09-24: A-028g/h/i · Cap.2 Attività · Cap.10 Conferma e applica · Cap.18 distinzione. 2026-09-21: hub import A–E · HAL import.tutte-le-forme. 2026-09-19: D-085 storage quota · Cestino · Cap.20 Ruota."
+  "notes": "Fingerprints regenerated from YAML on disk. Live RAG reindex: POST /api/app/hal/knowledge/reindex?force=true (super_admin). 2026-10-06: Stripe sandbox Cloud · api.cloud-secrets-vault · api.stripe-sandbox-cloud · Cap.19 billing. 2026-09-24: A-028g/h/i · Cap.2 Attività · Cap.10 Conferma e applica · Cap.18 distinzione. 2026-09-21: hub import A–E · HAL import.tutte-le-forme. 2026-09-19: D-085 storage quota · Cestino · Cap.20 Ruota."
 }

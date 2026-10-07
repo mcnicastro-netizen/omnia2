@@ -267,6 +267,20 @@ async def visura_order_status(
     )
     pay_status = (purchase or {}).get("status") or "pending"
 
+    # Se il webhook Stripe non arriva (tunnel cambiato), conferma il paga da Stripe.
+    if pay_status != "paid" and session_id.startswith("cs_"):
+        try:
+            import stripe
+            from apps.billing.b2c_entitlements import mark_uni_purchase_paid
+            s = stripe.checkout.Session.retrieve(session_id)
+            if getattr(s, "payment_status", None) == "paid" or getattr(s, "status", None) == "complete":
+                await mark_uni_purchase_paid(session_id)
+                pay_status = "paid"
+                purchase = {"status": "paid"}
+                logger.info("visura: synced paid from Stripe session=%s", session_id)
+        except Exception as e:
+            logger.warning("visura Stripe sync failed session=%s: %s", session_id, e)
+
     if pay_status == "paid" and order.get("status") in {"awaiting_payment", "failed"} and not order.get("external_id"):
         order = await fulfill_paid_visura_order(session_id) or order
 

@@ -13,10 +13,11 @@
 1. /workspace/memory/DECISIONS.md                              ← Decisioni vincolanti
 2. /workspace/docs/audit/OMNIA_AUDIT_STATE.md                   ← Master State audit / pre-attivazione
 3. /workspace/docs/audit/OMNIA_PROGRAMMA_PRE_ATTIVAZIONE.md     ← Programma O0–O6
-4. /workspace/memory/NEXT_SESSION.md                            ← Prossimi passi (+ A-037)
+4. /workspace/memory/NEXT_SESSION.md                            ← Prossimi passi (ripresa = webhook Stripe → E2E Visura/HAL)
 5. /workspace/memory/ROADMAP.md · PRD.md                        ← Contesto storico
 ```
 Workspace Cloud = `/workspace` (non `/app` Emergent). HAL corpus = `memory/manuale/hal/` (+ `OMNIA_MEMORY_ROOT`).
+Branch dogfood attivo (7 Ott): `cursor/e2e-dogfood-results-cc7d` · PR #6 — **non** pushare `main` senza ok Founder.
 
 ### Step 2 — Verifica lo stato
 Dopo aver letto i file, devi sapere rispondere a:

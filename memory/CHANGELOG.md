@@ -1,3 +1,35 @@
+## 2026-10-07 — Pausa: sync HAL + manuale + paywall HAL + secret sandbox in-pod
+
+**Tipo**: Docs HAL/manuale · B2C · ops secret demo.
+
+- Cap. **22** v1.1: paywall B2C €1 (`b2c_hal_legal_query`, HTTP 402 + CTA)
+- Cap. **19** §19.10.6 webhook Stripe B2C · §19.10.7 Visura OpenAPI sandbox · nota inject demo stessa chat
+- Cap. **21**: Visura = prodotto separato (non nel valutatore)
+- HAL YAML: `legal.paywall-b2c`, `api.stripe-webhook-b2c`, `api.openapi-catasto-sandbox`, `api.tavily-hal-legal` + aggiornamenti Cap. 19/22
+- Codice già su branch PR #6: entitlements HAL, LegalApp checkout, fix `cloud.nav_account`
+- Pod demo: OpenAPI sandbox OAuth OK · Tavily `tvly-dev-` search OK (solo `.env` locale)
+- `NEXT_SESSION.md`: ripresa = webhook → E2E Visura/HAL post-pay
+- **Prossimo**: `STRIPE_WEBHOOK_SECRET` + endpoint sul tunnel corrente
+
+## 2026-10-07 — Dogfood strumenti privato B2C
+
+**Tipo**: Ops dogfood ImmobilCloud (privati).
+
+- Boost Vetrina + Virtual Staging + Valutatore UNI: checkout Stripe test OK
+- Valutatore gratis OK (email verificata; limite 1/anno)
+- Mutui confronto banche PASS
+- Visura BLOCCATA (OpenAPI.it non configurato in env) → **sbloccata in pod pomeriggio** (vedi voce pausa sopra)
+- HAL Legal PARZIALE (timeout senza Tavily; paywall €1 non collegato in UI) → **paywall + Tavily in pausa sopra**
+- Nota minore: label `CLOUD.NAV_ACCOUNT` non tradotta → **fix shippato**
+
+## 2026-10-07 — Dogfood E2E PASS + tunnel quick-restart
+
+**Tipo**: Ops dogfood UI + fix stack tunnel.
+
+- Dogfood E2E PASS: Billing Nicastro→Stripe `cs_test`, annuncio privato B2C IN REVISIONE, nuova agenzia onboarding, API keys Founder (`omk_live_`)
+- `scripts/omnia-stack.sh`: non adottare cloudflared zombie (URL trycloudflare morto / Unauthorized) — restart + kill -9 leftover
+- `NEXT_SESSION.md`: checklist dogfood chiusa
+
 ## 2026-10-06 — Stripe sandbox Cloud OK + vault harden + HAL
 
 **Tipo**: Ops Cloud + docs HAL/manuale · dogfood prep.

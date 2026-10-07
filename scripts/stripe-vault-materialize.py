@@ -35,6 +35,14 @@ UPSERT_KEYS = (
     "STRIPE_WEBHOOK_SECRET",
     "STRIPE_ENABLED",
     "STRIPE_MODE",
+    # OpenAPI.it Catasto (visure) — sandbox o live
+    "OPENAPI_ENABLED",
+    "OPENAPI_EMAIL",
+    "OPENAPI_API_KEY",
+    "OPENAPI_TOKEN",
+    "OPENAPI_CATASTO_BASE",
+    "OPENAPI_OAUTH_BASE",
+    "OPENAPI_SCOPES",
 )
 
 

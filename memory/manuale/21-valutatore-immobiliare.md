@@ -258,7 +258,7 @@ Totale merito **cappato** tra −40% e +30%.
 | Agente: crediti non auto | Pass-through senza debito wallet automatico su `/cloud` v1 |
 | Lead capture form | Backend supporta `name`+`email` → `valuation_leads`, ma **form B2C dual-tier v1 non espone** campi contatto opzionali |
 | Widget embed valutatore | Esiste su Track B (Cap. 20) — rail crediti partner, non tier B2C €2,99 |
-| Visura/planimetria | Non integrate nel valutatore (prodotti B2C fase 2) |
+| Visura/planimetria | Visura B2C €4,90 è prodotto separato (ImmobilCloud → Visura · OpenAPI.it sandbox; Cap. 19 §19.10.7). Non dentro il valutatore. |
 
 ---
 

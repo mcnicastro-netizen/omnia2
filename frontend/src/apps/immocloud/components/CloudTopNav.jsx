@@ -35,18 +35,31 @@ export default function CloudTopNav() {
           <Link to={`/${lang}/cloud/visura`} data-testid="cloud-nav-visura" className="text-stone-600 hover:text-[#0B1E3F] transition">
             Visura
           </Link>
-          <Link to={`/${lang}/cloud/register?intent=sell`} data-testid="cloud-nav-sell" className="text-stone-600 hover:text-[#0B1E3F] transition">
+          <Link to={`/${lang}/legal`} data-testid="cloud-nav-hal-legal" className="text-stone-600 hover:text-[#0B1E3F] transition">
+            HAL Legal
+          </Link>
+          <Link
+            to={loggedIn ? `/${lang}/cloud/account/sell` : `/${lang}/cloud/register?intent=sell`}
+            data-testid="cloud-nav-sell"
+            className="text-stone-600 hover:text-[#0B1E3F] transition"
+          >
             {t("cloud.nav_sell")}
           </Link>
         </nav>
         <div className="flex items-center gap-3">
           {loggedIn && <NotificationBell />}
           <Link
-            to={loggedIn ? `/${lang}/cloud/account` : `/${lang}/cloud/register`}
+            to={
+              loggedIn
+                ? `/${lang}/cloud/account`
+                : `/${lang}/login?next=${encodeURIComponent(`/${lang}/cloud/account`)}`
+            }
             data-testid="cloud-nav-area"
             className="px-4 py-2 text-[11px] uppercase tracking-[0.18em] bg-[#0B1E3F] text-white rounded-lg hover:bg-[#C19A6B] transition"
           >
-            {loggedIn ? (t("cloud.nav_account") || "Account") : t("cloud.nav_area")}
+            {loggedIn
+              ? (t("cloud.nav_account", { defaultValue: "Account" }))
+              : t("cloud.nav_area")}
           </Link>
           <LanguageSwitcher />
         </div>

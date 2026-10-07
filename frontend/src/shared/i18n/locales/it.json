@@ -71,6 +71,9 @@
     "send_reset_link": "Invia link di reset",
     "no_account": "Non hai un account?",
     "register_now": "Registrati ora",
+    "register_agency_hint": "Sei un’agenzia immobiliare?",
+    "register_agency_link": "Registra agenzia (CRM)",
+    "network_error": "Connessione al server non riuscita. Controlla la rete e riprova tra qualche secondo (Ctrl+F5).",
     "have_account": "Hai già un account?",
     "login_now": "Accedi qui",
     "logout": "Esci",
@@ -1139,9 +1142,17 @@
     "reg_gdpr_text": "Accetto il trattamento dei miei dati personali secondo l'informativa privacy (GDPR).",
     "reg_submit_btn": "Crea account",
     "reg_submitting": "Creazione in corso…",
+    "reg_hint_pick_intent": "Seleziona almeno un’opzione sotto «Cosa vuoi fare?» per abilitare il pulsante.",
+    "reg_hint_gdpr": "Spunta il consenso privacy (GDPR) per abilitare il pulsante.",
+    "reg_err_email_taken": "Questa email è già registrata. Accedi con la password che hai scelto.",
+    "reg_err_email_login_failed": "Email già registrata. Vai al login — se la password non è corretta, reimpostala.",
+    "reg_err_intent_required": "Indica almeno un obiettivo (vendere, affittare o alert).",
+    "reg_err_gdpr_required": "Devi accettare l’informativa privacy.",
+    "reg_go_login": "Vai al login",
     "reg_done_title": "Benvenuto su ImmobilCloud!",
     "reg_done_text": "Ciao {{name}}, il tuo account è stato creato. A breve ti contatteremo via email.",
     "reg_back_home": "Vai alla home",
+    "reg_go_account": "Vai all’area riservata",
     "sell": {
       "title": "I tuoi annunci",
       "subtitle": "Pubblica gratuitamente il tuo immobile su ImmobilCloud. Un annuncio attivo per ogni account privato.",
@@ -1150,6 +1161,8 @@
       "free_limit_notice": "Hai già un annuncio attivo. Il piano gratuito consente un annuncio per volta — modifica o elimina quello esistente per crearne uno nuovo.",
       "form_new_title": "Nuovo annuncio",
       "form_edit_title": "Modifica annuncio",
+      "form_new_hint": "Compila i campi e salva. Poi invia in revisione se richiesto.",
+      "form_edit_hint": "Il modulo è qui sotto: modifica e salva. L’annuncio resta in revisione finché non viene approvato.",
       "submit_review": "Invia per la revisione",
       "resubmit": "Reinvia dopo modifiche",
       "confirm_delete": "Eliminare definitivamente questo annuncio?",
@@ -1222,6 +1235,9 @@
       "eyebrow": "Area riservata",
       "title": "Ciao {{name}}",
       "subtitle": "Gestisci le tue ricerche salvate e ricevi alert quando arrivano nuovi immobili compatibili.",
+      "sell_cta_title": "Vuoi vendere o affittare?",
+      "sell_cta_desc": "Crea il tuo annuncio gratuito e gestisci boost, foto e stato di pubblicazione.",
+      "sell_cta_btn": "Crea / gestisci annuncio",
       "saved_searches_title": "Ricerche salvate",
       "new_search": "Nuova ricerca",
       "ss_empty_desc": "Non hai ancora salvato nessuna ricerca. Salvane una e riceverai email automatiche quando trovo immobili compatibili.",
@@ -1233,7 +1249,8 @@
       "active": "Attiva",
       "confirm_delete": "Eliminare questa ricerca salvata?"
     },
-    "nav_mutui": "Mutui"
+    "nav_mutui": "Mutui",
+    "nav_account": "Account"
   },
   "valuator": {
     "eyebrow": "Valutatore GIS · Gratis",
@@ -1376,7 +1393,9 @@
     "regenerate": "Rigenera",
     "apply": "Conferma e applica",
     "confirm_hint": "HAL propone il testo: tu confermi prima di applicarlo.",
-    "cancel": "Annulla"
+    "cancel": "Annulla",
+    "err_timeout": "HAL sta impiegando troppo (Gemini saturo). Riprova tra 30–60 secondi.",
+    "err_llm_busy": "HAL temporaneamente non disponibile (coda AI). Riprova tra un minuto — non è un errore del tuo annuncio."
   },
   "moderation": {
     "title": "Moderazione annunci privati",
@@ -1432,6 +1451,9 @@
     "err_rate_limit": "Hai raggiunto il limite di domande all'ora (30). Riprova più tardi.",
     "err_unavailable": "Il servizio AI è momentaneamente saturo. Riprova tra un minuto.",
     "err_busy": "Il servizio AI è momentaneamente saturo. Riprova tra un minuto.",
+    "err_payment_required": "Per i privati ogni domanda HAL Legal costa €1,00 (carta).",
+    "pay_cta": "Paga €{{price}} e fai la domanda",
+    "pay_busy": "Apertura pagamento…",
     "cta_notary": "Parla con un notaio",
     "nav_back": "Torna alla dashboard",
     "history_title": "Le tue conversazioni",
