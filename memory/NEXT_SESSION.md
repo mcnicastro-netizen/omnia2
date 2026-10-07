@@ -15,8 +15,22 @@
 | Nuova agenzia (register → onboarding) | PASS (`agency_admin`) |
 | API keys Track B (Founder) | PASS (`omk_live_` prefix) |
 
+### Dogfood strumenti privato B2C (7 Ott pomeriggio)
+
+| Strumento | Esito | Nota onesta |
+|--|--|--|
+| Boost Vetrina | PASS → Stripe test | Checkout ok; effetto post-pagamento non chiuso (webhook) |
+| Virtual staging | PASS → Stripe test | Serve ≥1 foto |
+| Valutatore gratis | PASS | Serve email verificata; 1/anno |
+| Valutatore UNI €2,99 | PASS → Stripe test | |
+| Visura €4,90 | BLOCCATA | Manca secret provider catasto (OpenAPI.it) |
+| HAL Legal | PARZIALE | Chat apre ma risposta timeout (Tavily assente); €1 catalogo non in UI |
+| Mutui | PASS | Gratis · offerte banche ok |
+
+Report strumenti: `/opt/cursor/artifacts/dogfood-b2c-tools-report.json` (solo agent VM).
+
 CRM pubblico (tunnel): vedi `/tmp/omnia-stack/CRM_LOGIN_URL.txt` (quick tunnel si rinnova).  
-Report: `/opt/cursor/artifacts/dogfood-e2e-report.json` (solo su agent VM).
+Report E2E: `/opt/cursor/artifacts/dogfood-e2e-report.json` (solo su agent VM).
 
 **Onesto**: O6 self-serve *pagamento* resta OFF — creazione account agenzia ≠ checkout pubblico.
 
