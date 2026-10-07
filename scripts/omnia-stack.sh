@@ -144,7 +144,11 @@ adopt_or_start_api() {
   cd "$ROOT/backend"
   local UV
   if [[ -x .venv/bin/uvicorn ]]; then UV=".venv/bin/uvicorn"; else UV="uvicorn"; fi
-  nohup "$UV" server:app --host 0.0.0.0 --port "$API_PORT" --reload \
+  local reload_args=()
+  if [[ "${OMNIA_UVICORN_RELOAD:-0}" == "1" ]]; then
+    reload_args=(--reload)
+  fi
+  nohup "$UV" server:app --host 0.0.0.0 --port "$API_PORT" "${reload_args[@]}" \
     >>"$LOG_DIR/api.log" 2>&1 &
   echo $! >"$pid_api"
   for _ in $(seq 1 40); do
