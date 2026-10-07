@@ -878,6 +878,7 @@
     "reg_go_login": "Go to login",
     "reg_done_title": "Welcome to ImmobilCloud!",
     "reg_done_text": "Hi {{name}}, your account is ready.",
+    "reg_go_account": "Go to your private area",
     "reg_back_home": "Back to home",
     "f_bedrooms_min": "Minimum bedrooms",
     "f_energy_class": "Energy rating",

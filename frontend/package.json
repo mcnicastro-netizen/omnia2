@@ -24,7 +24,8 @@
   },
   "scripts": {
     "start": "craco start",
-    "build": "craco build",
+    "build": "REACT_APP_BACKEND_URL= craco build",
+    "build:local-api": "REACT_APP_BACKEND_URL=http://127.0.0.1:43121 craco build",
     "test": "craco test"
   },
   "browserslist": {

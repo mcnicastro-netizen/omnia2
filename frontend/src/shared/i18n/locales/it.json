@@ -1152,6 +1152,7 @@
     "reg_done_title": "Benvenuto su ImmobilCloud!",
     "reg_done_text": "Ciao {{name}}, il tuo account è stato creato. A breve ti contatteremo via email.",
     "reg_back_home": "Vai alla home",
+    "reg_go_account": "Vai all’area riservata",
     "sell": {
       "title": "I tuoi annunci",
       "subtitle": "Pubblica gratuitamente il tuo immobile su ImmobilCloud. Un annuncio attivo per ogni account privato.",

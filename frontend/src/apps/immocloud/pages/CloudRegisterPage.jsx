@@ -89,9 +89,17 @@ export default function CloudRegisterPage() {
           <p className="text-sm text-stone-600 mb-6">
             {t("cloud.reg_done_text", { name: done.name })}
           </p>
-          <button onClick={() => nav(`/${lang}/cloud`)}
+          <button
+            onClick={() => nav(
+              nextPath && nextPath.startsWith("/")
+                ? nextPath
+                : form.intents.includes("sell") || form.intents.includes("rent_out")
+                  ? `/${lang}/cloud/account/sell`
+                  : `/${lang}/cloud/account`,
+              { replace: true }
+            )}
             className="px-5 py-2.5 bg-[#0B1E3F] text-white text-xs uppercase tracking-widest rounded-lg hover:bg-[#C19A6B]">
-            {t("cloud.reg_back_home")}
+            {t("cloud.reg_go_account")}
           </button>
         </div>
       </section>
