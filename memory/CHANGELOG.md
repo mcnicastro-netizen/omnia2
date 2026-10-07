@@ -1,3 +1,7 @@
+## 2026-10-07 — A-038 post-test fattura Stripe + dati fiscali
+
+- Priorità ops: completare dati fiscali / fattura dopo test Stripe (vedi ASPETTI A-038)
+
 ## 2026-10-07 — D-117 Founder finance (incassi / fatture / mese)
 
 - `founder_ops_finance.py` + overview `finance` block
