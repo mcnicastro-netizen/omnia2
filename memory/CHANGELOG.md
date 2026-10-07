@@ -1,3 +1,9 @@
+## 2026-10-07 — D-117 Founder finance (incassi / fatture / mese)
+
+- `founder_ops_finance.py` + overview `finance` block
+- Backfill amount_eur + sync fatture Stripe
+- UI Founder Ops: voci ricavo, ricevute B2C, scheda mensile
+
 ## 2026-10-15 — Planimetria catastale B2C €12 (OpenAPI + Stripe)
 
 - SKU `b2c_planimetria_catastale` + checkout/webhook fulfill
