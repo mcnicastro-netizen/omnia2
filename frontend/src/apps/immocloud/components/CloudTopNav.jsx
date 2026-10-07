@@ -49,7 +49,11 @@ export default function CloudTopNav() {
         <div className="flex items-center gap-3">
           {loggedIn && <NotificationBell />}
           <Link
-            to={loggedIn ? `/${lang}/cloud/account` : `/${lang}/cloud/register`}
+            to={
+              loggedIn
+                ? `/${lang}/cloud/account`
+                : `/${lang}/login?next=${encodeURIComponent(`/${lang}/cloud/account`)}`
+            }
             data-testid="cloud-nav-area"
             className="px-4 py-2 text-[11px] uppercase tracking-[0.18em] bg-[#0B1E3F] text-white rounded-lg hover:bg-[#C19A6B] transition"
           >
