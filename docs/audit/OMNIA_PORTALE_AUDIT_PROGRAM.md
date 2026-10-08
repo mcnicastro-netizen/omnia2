@@ -1,8 +1,8 @@
 # OMNIA — Programma Audit Portale ImmobilCloud (passo × passo)
 
-**Status**: ▶️ IN ESECUZIONE — Onda A chiusa in analisi (2026-10-08) · fix solo con «vai»  
+**Status**: ▶️ IN ESECUZIONE — Onde A–D analizzate (2026-10-08) · Onda D green bloccata da P-022 · fix solo con «vai»  
 **Partenza**: **8 Ottobre 2026**  
-**Tunnel giorno 1**: `https://king-kai-mia-giants.trycloudflare.com`  
+**Tunnel giorno 1**: `https://king-kai-mia-giants.trycloudflare.com` · **Onda D**: `https://artistic-quantity-loan-sol.trycloudflare.com`  
 **Finding**: `docs/audit/portale-finding.md`  
 **Owner esecuzione**: Cloud Agent + Founder (gate «vai» su fix)  
 **Repo SoT**: `mcnicastro-netizen/omnia2` (GitHub)  
@@ -227,7 +227,8 @@ Per ogni riga: Presente in vault? Usato da path portale? Fail-soft?
 
 ## Onda D — Controllo funzionamento delle stesse key (D4)
 
-**Obiettivo**: prova live **sandbox** di ogni provider usato dal portale.
+**Obiettivo**: prova live **sandbox** di ogni provider usato dal portale.  
+**Stato**: ✅ analisi eseguita 2026-10-08 · matrice `portale-matrici/2026-10-08-onda-d.md` · **chiusura green bloccata da P-022** (Stripe live)
 
 ### D.1 Protocollo prova (per provider)
 1. Check presence (length > 0)  
@@ -239,26 +240,26 @@ Per ogni riga: Presente in vault? Usato da path portale? Fail-soft?
 ### D.2 Matrice provider
 | Provider | Smoke | Flusso portale | Esito |
 |--|--|--|--|
-| Stripe test | plans enabled + mode=test | Checkout € min / Visura | |
-| Stripe webhook | firma valida su evento test | `checkout.session.completed` → `b2c_purchases.paid` | |
-| OpenAPI Catasto | catalog/create sandbox | Visura PDF | |
-| Gemini | ping / 1 completion | Valutatore o Legal | |
-| Tavily | 1 search | HAL Legal | |
-| fal | account/model smoke | Staging 1 foto (se on) | |
-| Resend | send a Founder only | register welcome / inquiry | |
-| Google OAuth | se `GOOGLE_CLIENT_ID` | login button | |
-| Mongo | ping | persist order | |
+| Stripe test | plans `enabled=true` **`mode=live`** | Checkout **non** eseguito | **FAIL** P-022 |
+| Stripe webhook | sync SKIP (serve sk_test) | non provato | **SKIP** |
+| OpenAPI Catasto | OAuth+create+PDF 58KB sandbox | product `openapi_visure_enabled=false` | **FAIL** P-023 |
+| Gemini | HAL knowledge/ask 200 | product OK | **OK** |
+| Tavily | absent | — | **SKIP** |
+| fal | models 200 | staging render SKIP soft | **OK** |
+| Resend | domains 200 | outbound SKIP soft | **OK** |
+| Google OAuth | absent | button OFF | **SKIP** |
+| Mongo | health db=ok | persist | **OK** |
 
 ### D.3 Stripe — controlli speciali
-- [ ] Solo `sk_test_` / `pk_test_`  
-- [ ] Nessun `sk_live_` attivo nel process  
-- [ ] Webhook secret allineato (no alert “firma non valida” nuovi)  
-- [ ] `b2c_purchases.amount_eur` popolato  
-- [ ] Ops Founder vede incasso per voce (D-117 se merged; altrimenti annotare dipendenza PR)  
+- [x] Solo `sk_test_` / `pk_test_` → **FAIL** (process = live)  
+- [x] Nessun `sk_live_` attivo nel process → **FAIL**  
+- [ ] Webhook secret allineato (no alert “firma non valida” nuovi) → SKIP  
+- [ ] `b2c_purchases.amount_eur` popolato → SKIP  
+- [ ] Ops Founder vede incasso per voce (D-117 se merged; altrimenti annotare dipendenza PR) → SKIP  
 
 ### D.4 Criteri chiusura Onda D
-- [ ] Matrice provider completa  
-- [ ] Zero P0 key “silenti” (feature mostra successo falso)  
+- [x] Matrice provider completa  
+- [ ] Zero P0 key “silenti” (feature mostra successo falso) → **P-022 aperto**  
 
 ---
 

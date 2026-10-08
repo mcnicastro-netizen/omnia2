@@ -1,6 +1,6 @@
 # Audit Portale — registro finding `P-###`
 
-**Aggiornato**: 2026-10-08 · Onda C automazione boot (vai Founder) · P-018…P-020 mitigati · P-021 opz.  
+**Aggiornato**: 2026-10-08 · Onda D prove live key · P-022…P-024 aperti  
 **Regola**: nessun fix senza «vai» Founder (D-118)
 
 | ID | Sev | Onda | Titolo | Stato |
@@ -26,6 +26,9 @@
 | P-019 | P2 | C | `FRONTEND_*` / `OMNIA_PUBLIC_URL` = localhost:43122 | CHIUSO |
 | P-020 | P3 | C | `check-secrets` non copre `OPENAPI_*` / Stripe dogfood | CHIUSO |
 | P-021 | P3 | C | `GOOGLE_CLIENT_ID` absent — login Google OFF | APERTO (opz.) |
+| P-022 | **P0** | D | Stripe **live** in Cloud (`sk_live`/`pk_live`, plans `mode=live`) | **APERTO** |
+| P-023 | **P1** | D | OpenAPI key OK ma product `openapi_visure_enabled=false` (manca email / D-116) | **APERTO** |
+| P-024 | P3 | D | Env/docs citano `gemini-2.0-flash` deprecato; product HAL OK | **APERTO** |
 
 ## P-009 — dettaglio (CHIUSO)
 
@@ -63,6 +66,25 @@
 ## P-021 — dettaglio (APERTO opz.)
 
 - `GOOGLE_CLIENT_ID` absent → Google Sign-In OFF (fail-soft). Opzionale dogfood.
+
+## P-022 — dettaglio (APERTO · Onda D)
+
+- **Evidenza**: `check-secrets` class=`sk_live`/`pk_live`; `GET /api/billing/plans` → `enabled=true` `mode=live`
+- **Impatto**: viola regola D-118 “solo sk_test in Cloud”; rischio checkout denaro reale; webhook sync e dogfood Visura/B2C bloccati
+- **Azione Founder**: in vault Environment omnia2 sostituire Stripe con `sk_test_` / `pk_test_` (+ webhook test); **nuovo agent boot**; non riusare chat avviate con live
+- **Fix codice**: nessuno finché vault non è test (eventuale hard-refuse `sk_live` in Cloud = solo con «vai»)
+
+## P-023 — dettaglio (APERTO · Onda D)
+
+- **Evidenza**: OAuth sandbox con `ADMIN_EMAIL`+`OPENAPI_API_KEY` → create Visura + PDF 58 054 byte; `GET /api/docs/status` → `openapi_visure_enabled=false` (manca `OPENAPI_EMAIL` nel gate attuale)
+- **Mitiga**: merge PR D-116 (single-key) **oppure** aggiungere `OPENAPI_EMAIL` al vault
+- Catasto **non** sospeso in questa run (handoff sera superato)
+
+## P-024 — dettaglio (APERTO · Onda D)
+
+- Raw Generative Language su `gemini-2.0-flash` → 404 “no longer available”
+- Product: `POST /api/app/hal/knowledge/ask` 200 con `GEMINI_API_KEY`
+- Azione: allineare `.env.example` / commenti al default `shared/llm` (flash-latest / 3.5) — P3
 
 ## P-012…P-017 — fix breve
 
