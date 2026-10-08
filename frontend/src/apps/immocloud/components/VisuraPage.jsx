@@ -21,7 +21,11 @@ export default function VisuraPage() {
   const { i18n } = useTranslation();
   const lang = (i18n.language || "it").slice(0, 2);
   const [params] = useSearchParams();
-  const sessionId = params.get("session_id");
+  // Prefer query (Stripe return), else sessionStorage (P-015 — avoid keeping sid in shared links)
+  const sessionId = params.get("session_id") || (() => {
+    try { return sessionStorage.getItem("omnia_b2c_checkout_sid") || ""; }
+    catch { return ""; }
+  })();
 
   const [catalog, setCatalog] = useState(null);
   const [form, setForm] = useState(empty);

@@ -12,6 +12,12 @@ export default function CloudRegisterPage() {
   const { refresh } = useAuth();
   const [params] = useSearchParams();
   const presetIntent = params.get("intent");
+  const nextCandidate = params.get("next") || "";
+  const nextPath = (
+    nextCandidate.startsWith("/")
+    && !nextCandidate.startsWith("//")
+    && !nextCandidate.includes("://")
+  ) ? nextCandidate : "";
   const [form, setForm] = useState({
     name: "", email: "", password: "",
     intents: presetIntent ? [presetIntent] : [],
@@ -32,8 +38,12 @@ export default function CloudRegisterPage() {
     setBusy(true); setErr(""); setDupEmail(false);
     try {
       const { data } = await api.post("/cloud/auth/register", { ...form, lang });
-      setDone(data.user);
       await refresh();
+      if (nextPath) {
+        nav(nextPath.startsWith("/") ? nextPath : `/${lang}/${nextPath}`, { replace: true });
+        return;
+      }
+      setDone(data.user);
     } catch (e) {
       const detail = e?.response?.data?.detail;
       if (e?.response?.status === 409 || detail === "email_already_registered") {

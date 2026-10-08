@@ -179,6 +179,53 @@ async def count_uni_purchases_today(user_id: str) -> int:
     return int(n)
 
 
+async def consume_hal_legal_query(user_id: str) -> bool:
+    """Atomically consume one paid HAL Legal query credit (P-010).
+
+    Matches `b2c_hal_legal_query` with status=paid, not yet consumed, and
+    within expires_at when set. Returns True if a credit was consumed.
+    """
+    if not user_id:
+        return False
+    now = datetime.now(timezone.utc)
+    now_iso = now.isoformat()
+    db = Database.get()
+    doc = await db.b2c_purchases.find_one_and_update(
+        {
+            "user_id": user_id,
+            "product_key": "b2c_hal_legal_query",
+            "status": "paid",
+            "$and": [
+                {"$or": [
+                    {"consumed_at": {"$exists": False}},
+                    {"consumed_at": None},
+                ]},
+                {"$or": [
+                    {"expires_at": None},
+                    {"expires_at": {"$exists": False}},
+                    {"expires_at": {"$gt": now_iso}},
+                ]},
+            ],
+        },
+        {"$set": {"consumed_at": now_iso}},
+        sort=[("paid_at", 1), ("created_at", 1)],
+        return_document=True,
+    )
+    return bool(doc)
+
+
+def user_requires_b2c_legal_paywall(user: Dict[str, Any]) -> bool:
+    """B2C clients must pay per query; CRM agents/admins skip the B2C SKU gate."""
+    if not user:
+        return True
+    if user.get("role") in (
+        "super_admin", "agency_admin", "group_admin", "branch_admin",
+        "agent", "branch_agent",
+    ):
+        return False
+    return user.get("account_type") == "b2c" or user.get("role") == "client"
+
+
 def is_uni_payload(payload: Dict[str, Any]) -> bool:
     """Return True when a valuation payload requires UNI tier (paid) —
     i.e. any of `commercial_surfaces` or `merit` is present and non-empty."""

@@ -6,7 +6,8 @@ import { useTranslation } from "react-i18next";
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 
 export default function CheckoutSuccessPage() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const lang = (i18n.language || "it").slice(0, 2);
   const [params] = useSearchParams();
   const sid = params.get("session_id");
   const [status, setStatus] = useState(null);
@@ -14,6 +15,9 @@ export default function CheckoutSuccessPage() {
 
   useEffect(() => {
     if (!sid) return;
+    try {
+      sessionStorage.setItem("omnia_b2c_checkout_sid", sid);
+    } catch { /* ignore */ }
     let cancelled = false;
     async function poll() {
       const r = await fetch(`${BACKEND_URL}/api/billing/b2c/status/${sid}`, { credentials: "include" });
@@ -46,11 +50,15 @@ export default function CheckoutSuccessPage() {
         </p>
         <div className="mt-6 flex flex-wrap gap-3 justify-center">
           {status?.product_key === "b2c_visura_catastale" ? (
-            <Link to={`/it/cloud/visura?session_id=${encodeURIComponent(sid || "")}`} className="px-4 py-2 bg-stone-900 text-white rounded" data-testid="checkout-success-visura">
+            <Link to={`/${lang}/cloud/visura`} className="px-4 py-2 bg-stone-900 text-white rounded" data-testid="checkout-success-visura">
               Apri Visura
             </Link>
+          ) : status?.product_key === "b2c_hal_legal_query" ? (
+            <Link to={`/${lang}/legal`} className="px-4 py-2 bg-stone-900 text-white rounded" data-testid="checkout-success-legal">
+              Apri HAL Legal
+            </Link>
           ) : (
-            <Link to="/it/cloud/valutatore?tier=uni" className="px-4 py-2 bg-stone-900 text-white rounded" data-testid="checkout-success-back">
+            <Link to={`/${lang}/cloud/valutatore?tier=uni`} className="px-4 py-2 bg-stone-900 text-white rounded" data-testid="checkout-success-back">
               {t("checkout.back_to_valuator", "Torna al valutatore")}
             </Link>
           )}

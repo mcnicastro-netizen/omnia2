@@ -146,12 +146,33 @@ async def _call_llm(system_prompt: str, user_msg: str, session_id: str) -> str:
         raise HTTPException(status_code=503, detail=detail)
 
 
+async def _ensure_b2c_legal_credit(user: dict) -> None:
+    """P-010 — B2C clients must have a paid unused b2c_hal_legal_query credit."""
+    from apps.billing.b2c_entitlements import (
+        consume_hal_legal_query,
+        user_requires_b2c_legal_paywall,
+    )
+    if not user_requires_b2c_legal_paywall(user):
+        return
+    ok = await consume_hal_legal_query(user["id"])
+    if not ok:
+        raise HTTPException(
+            status_code=402,
+            detail={
+                "code": "legal_payment_required",
+                "message": "Acquista una domanda HAL Legal per continuare.",
+                "product_key": "b2c_hal_legal_query",
+            },
+        )
+
+
 # ─── Endpoints ───────────────────────────────────────────────────
 @router.post("/chat")
 async def legal_chat(req: LegalChatRequest, user: dict = Depends(get_current_user)) -> Dict[str, Any]:
     """Multi-turn legal chat with web search + anti-hallucination."""
     db = Database.get()
     await _check_rate_limit(db, user["id"])
+    await _ensure_b2c_legal_credit(user)
 
     sid = req.session_id or str(uuid4())
 
@@ -237,6 +258,7 @@ async def analyze_pdf(
     and receive a structured analysis from HAL Legal."""
     db = Database.get()
     await _check_rate_limit(db, user["id"])
+    await _ensure_b2c_legal_credit(user)
 
     if not file.filename or not file.filename.lower().endswith(".pdf"):
         raise HTTPException(status_code=400, detail="only_pdf_allowed")

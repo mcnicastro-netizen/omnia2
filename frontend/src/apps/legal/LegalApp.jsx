@@ -11,6 +11,24 @@ import { useTranslation } from "react-i18next";
 import { api } from "../../shared/lib/api";
 import BackButton from "../immoweb/components/BackButton";
 
+function legalDetailCode(detail) {
+  if (!detail) return null;
+  if (typeof detail === "string") return detail;
+  return detail.code || detail.message || null;
+}
+
+async function startLegalCheckout(lang) {
+  const origin = window.location.origin;
+  const r = await api.post("/billing/b2c/checkout", {
+    product_key: "b2c_hal_legal_query",
+    success_url: `${origin}/${lang}/legal?paid=1`,
+    cancel_url: `${origin}/${lang}/legal?paid=0`,
+  });
+  const url = r.data?.checkout_url || r.data?.url;
+  if (url) window.location.href = url;
+  else throw new Error("checkout_url_missing");
+}
+
 const SUB_AGENT_BADGE = {
   general: "bg-stone-100 text-stone-700",
   proposta: "bg-amber-100 text-amber-900",
@@ -107,22 +125,36 @@ function SourcesPanel({ citations }) {
 }
 
 function ChatTab() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const lang = (i18n.language || "it").slice(0, 2);
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [busy, setBusy] = useState(false);
   const [sid, setSid] = useState(null);
+  const [paywall, setPaywall] = useState(false);
+  const [payBusy, setPayBusy] = useState(false);
   const scrollRef = useRef(null);
 
   useEffect(() => {
     if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
   }, [messages, busy]);
 
+  const buyCredit = async () => {
+    setPayBusy(true);
+    try {
+      await startLegalCheckout(lang);
+    } catch {
+      setMessages((m) => [...m, { role: "assistant", content: t("legal.err_checkout"), error: true }]);
+      setPayBusy(false);
+    }
+  };
+
   const send = async (e) => {
     e?.preventDefault();
     const text = input.trim();
     if (!text || busy) return;
     setBusy(true);
+    setPaywall(false);
     setMessages((m) => [...m, { role: "user", content: text }]);
     setInput("");
     try {
@@ -141,12 +173,23 @@ function ChatTab() {
       }]);
     } catch (err) {
       const d = err?.response?.data?.detail;
-      const msg = d === "rate_limit_exceeded"
-        ? t("legal.err_rate_limit")
-        : (d === "llm_unavailable" || d === "llm_busy")
-          ? t("legal.err_unavailable")
-          : t("legal.err_generic");
-      setMessages((m) => [...m, { role: "assistant", content: msg, error: true }]);
+      const code = legalDetailCode(d);
+      if (err?.response?.status === 402 || code === "legal_payment_required") {
+        setPaywall(true);
+        setMessages((m) => [...m, {
+          role: "assistant",
+          content: t("legal.err_payment_required"),
+          error: true,
+          paywall: true,
+        }]);
+      } else {
+        const msg = code === "rate_limit_exceeded"
+          ? t("legal.err_rate_limit")
+          : (code === "llm_unavailable" || code === "llm_busy")
+            ? t("legal.err_unavailable")
+            : t("legal.err_generic");
+        setMessages((m) => [...m, { role: "assistant", content: msg, error: true }]);
+      }
     } finally {
       setBusy(false);
     }
@@ -201,6 +244,20 @@ function ChatTab() {
             </div>
           )}
         </div>
+        {paywall && (
+          <div data-testid="legal-paywall" className="border-t border-amber-200 bg-amber-50 px-4 py-3 flex flex-wrap items-center gap-3">
+            <p className="text-xs text-amber-900 flex-1">{t("legal.err_payment_required")}</p>
+            <button
+              type="button"
+              data-testid="legal-buy-credit"
+              disabled={payBusy}
+              onClick={buyCredit}
+              className="px-4 py-2 bg-[#0B1E3F] text-white text-[11px] uppercase tracking-widest rounded hover:bg-[#C19A6B] disabled:opacity-40"
+            >
+              {payBusy ? "…" : t("legal.buy_credit")}
+            </button>
+          </div>
+        )}
         <form onSubmit={send} className="border-t border-stone-200 p-4 flex gap-3">
           <input
             data-testid="legal-input"
@@ -264,7 +321,8 @@ function ChatTab() {
 }
 
 function PdfTab() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const lang = (i18n.language || "it").slice(0, 2);
   const [file, setFile] = useState(null);
   const [question, setQuestion] = useState(
     "Analizza questo documento immobiliare e segnala criticità, clausole atipiche e verifiche da fare prima della firma."
@@ -272,6 +330,8 @@ function PdfTab() {
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState(null);
   const [error, setError] = useState(null);
+  const [paywall, setPaywall] = useState(false);
+  const [payBusy, setPayBusy] = useState(false);
   const fileInputRef = useRef(null);
 
   const onPick = (e) => {
@@ -284,10 +344,21 @@ function PdfTab() {
     if (f) setFile(f);
   };
 
+  const buyCredit = async () => {
+    setPayBusy(true);
+    try {
+      await startLegalCheckout(lang);
+    } catch {
+      setError(t("legal.err_checkout"));
+      setPayBusy(false);
+    }
+  };
+
   const analyze = async () => {
     if (!file) return;
     setBusy(true);
     setError(null);
+    setPaywall(false);
     setResult(null);
     try {
       const fd = new FormData();
@@ -300,15 +371,21 @@ function PdfTab() {
       setResult(r.data);
     } catch (err) {
       const d = err?.response?.data?.detail;
-      const m = {
-        file_too_large: t("legal.pdf_too_large"),
-        invalid_pdf: t("legal.pdf_invalid"),
-        encrypted_pdf: t("legal.pdf_encrypted"),
-        no_text_extracted: t("legal.pdf_scanned"),
-        only_pdf_allowed: t("legal.pdf_invalid"),
-        rate_limit_exceeded: t("legal.err_rate_limit"),
-      }[d] || t("legal.err_generic");
-      setError(m);
+      const code = legalDetailCode(d);
+      if (err?.response?.status === 402 || code === "legal_payment_required") {
+        setPaywall(true);
+        setError(t("legal.err_payment_required"));
+      } else {
+        const m = {
+          file_too_large: t("legal.pdf_too_large"),
+          invalid_pdf: t("legal.pdf_invalid"),
+          encrypted_pdf: t("legal.pdf_encrypted"),
+          no_text_extracted: t("legal.pdf_scanned"),
+          only_pdf_allowed: t("legal.pdf_invalid"),
+          rate_limit_exceeded: t("legal.err_rate_limit"),
+        }[code] || t("legal.err_generic");
+        setError(m);
+      }
     } finally {
       setBusy(false);
     }
@@ -360,7 +437,21 @@ function PdfTab() {
           {busy ? t("legal.pdf_uploading") : t("legal.pdf_analyze")}
         </button>
 
-        {error && (
+        {paywall && (
+          <div data-testid="legal-pdf-paywall" className="bg-amber-50 border border-amber-200 rounded p-3 flex flex-wrap items-center gap-3">
+            <p className="text-xs text-amber-900 flex-1">{t("legal.err_payment_required")}</p>
+            <button
+              type="button"
+              data-testid="legal-pdf-buy-credit"
+              disabled={payBusy}
+              onClick={buyCredit}
+              className="px-4 py-2 bg-[#0B1E3F] text-white text-[11px] uppercase tracking-widest rounded hover:bg-[#C19A6B] disabled:opacity-40"
+            >
+              {payBusy ? "…" : t("legal.buy_credit")}
+            </button>
+          </div>
+        )}
+        {error && !paywall && (
           <p data-testid="legal-pdf-error" className="text-sm text-red-700 bg-red-50 border border-red-200 rounded p-3">
             {error}
           </p>
