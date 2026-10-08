@@ -75,8 +75,10 @@ Alias legacy accettati dal backend (se li avevi): `GOOGLE_API_KEY`, `EMERGENT_LL
 
 1. [ ] Conferma environment = **omnia2** (non `tmp-…`)  
 2. [ ] Secrets UI ha almeno `RESEND_API_KEY` + `GEMINI_API_KEY`  
-3. [ ] Nuovo agent boot → `echo $RESEND_API_KEY | wc -c` > 0 (solo length)  
-4. [ ] Mail non più in `[EMAIL MOCK]`  
+3. [ ] + billing: `STRIPE_SECRET_KEY` / `STRIPE_PUBLISHABLE_KEY` / `STRIPE_ENABLED` / `STRIPE_WEBHOOK_SECRET`  
+4. [ ] + Visura: `OPENAPI_ENABLED` + `OPENAPI_EMAIL` + `OPENAPI_API_KEY` (+ base sandbox)  
+5. [ ] Nuovo agent boot → `bash scripts/check-secrets-presence.sh` OK  
+6. [ ] Mail non più in `[EMAIL MOCK]` · plans `enabled=true` `mode=test`  
 
 ---
 
