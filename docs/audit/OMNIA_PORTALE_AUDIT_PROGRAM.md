@@ -183,9 +183,9 @@ Per ogni modulo (Home, Search, Property, Account, Sell, Valuator, Visura, Mutui,
 10. [ ] Rischio sicurezza (IDOR, path traversal media, PII in log)  
 
 ### B.3 Deliverable Onda B
-- [ ] Tabella `modulo → files → endpoints → rischi`  
-- [ ] Finding codice `P-###`  
-- [ ] Diagramma mermaid flussi soldi B2C (Visura / UNI / Legal / Boost)  
+- [x] Tabella `modulo → files → endpoints → rischi` → `portale-matrici/2026-10-08-onda-b.md`  
+- [x] Finding codice `P-009…P-017` → `portale-finding.md`  
+- [x] Diagramma mermaid flussi soldi B2C (Visura / UNI / Legal / Boost)  
 
 ---
 
