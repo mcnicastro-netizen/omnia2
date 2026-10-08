@@ -1,6 +1,6 @@
 # Audit Portale — registro finding `P-###`
 
-**Aggiornato**: 2026-10-08 · Onda C analisi secrets · P-018…P-021 aperti  
+**Aggiornato**: 2026-10-08 · Onda C automazione boot (vai Founder) · P-018…P-020 mitigati · P-021 opz.  
 **Regola**: nessun fix senza «vai» Founder (D-118)
 
 | ID | Sev | Onda | Titolo | Stato |
@@ -22,10 +22,10 @@
 | P-015 | P2 | B | `session_id` Stripe in query URL | CHIUSO (mitigato) |
 | P-016 | P3 | B | Mutui lead `gdpr_consent:true` hardcoded | CHIUSO |
 | P-017 | P3 | B | CloudTopNav senza menu mobile | CHIUSO |
-| P-018 | P1 | C | Vault Cloud incompleto vs runtime (Stripe/OPENAPI solo `.env`) | APERTO |
-| P-019 | P2 | C | `FRONTEND_*` / `OMNIA_PUBLIC_URL` = localhost:43122 | APERTO |
-| P-020 | P3 | C | `check-secrets` non copre `OPENAPI_*` / Stripe dogfood | APERTO |
-| P-021 | P3 | C | `GOOGLE_CLIENT_ID` absent — login Google OFF | APERTO |
+| P-018 | P1 | C | Vault Cloud incompleto vs runtime (Stripe/OPENAPI solo `.env`) | MITIGATO |
+| P-019 | P2 | C | `FRONTEND_*` / `OMNIA_PUBLIC_URL` = localhost:43122 | CHIUSO |
+| P-020 | P3 | C | `check-secrets` non copre `OPENAPI_*` / Stripe dogfood | CHIUSO |
+| P-021 | P3 | C | `GOOGLE_CLIENT_ID` absent — login Google OFF | APERTO (opz.) |
 
 ## P-009 — dettaglio (CHIUSO)
 
@@ -44,27 +44,25 @@
 - **Fix**: `listing_id` obbligatorio su `b2c_staging_render` · `consume_b2c_staging_render` · webhook `fulfill_paid_staging_render` (job `payment_rail=b2c_stripe`, no debit crediti) · `POST/GET /cloud/me/properties/{pid}/staging` · SellPage resume post-`staging=ok` · auto-save foto watermarked sull’annuncio · success_url Stripe con `&session_id=` se già query
 - **Verifica**: `test_b2c_staging.py` (catalog + consume + fulfill idempotent); checkout senza `listing_id` → 400
 
-## P-018 — dettaglio (APERTO)
+## P-018 — dettaglio (MITIGATO · automazione + azione vault una tantum)
 
-- `CLOUD_AGENT_ALL_SECRET_NAMES` = solo `FAL_KEY,GEMINI_API_KEY,RESEND_API_KEY,STRIPE_ENABLED`
-- Runtime oggi OK perché `.env` disk ha `STRIPE_SECRET_KEY` (`sk_test`), `STRIPE_PUBLISHABLE_KEY`, `STRIPE_WEBHOOK_SECRET`, famiglia `OPENAPI_*`, `TAVILY_API_KEY`
-- **Rischio**: boot su vault-only / env nuovo → billing 503 + Visura `openapi_not_configured`
-- **Azione Founder**: reiniettare nomi in lista C.3 (`portale-matrici/2026-10-08-onda-c.md`)
+- **Boot auto**: `stripe-vault-materialize.py` upsert anche `OPENAPI_*`; `sync-stripe-webhook-url.py` crea/aggiorna endpoint test → `{tunnel}/api/billing/webhook`
+- **Founder (una tantum)**: Cursor ha richiesto Save Secrets env omnia2 (Stripe sk/pk/whsec + OPENAPI_*). Dopo Save, ogni nuovo agent li riceve e materializza da solo.
+- Finché vault incompleto, runtime continua a usare `.env` disk (warm) + WARN in check-secrets
 
-## P-019 — dettaglio (APERTO)
+## P-019 — dettaglio (CHIUSO)
 
-- `FRONTEND_BASE_URL` / `FRONTEND_URL` / `OMNIA_PUBLIC_URL` = `http://127.0.0.1:43122`
-- Preview/tunnel = `43123` / trycloudflare → link in email dogfood puntano a localhost
-- Fix tipico: allineare a URL tunnel corrente (o rewrite in stack start) — serve «vai»
+- **Fix**: `scripts/sync-public-base-url.py` da `omnia-stack` quando tunnel healthy → upsert `FRONTEND_*` / `OMNIA_PUBLIC_URL`; restart API se CHANGED
+- **Runtime**: `shared/public_base.get_public_base_url()` preferisce `SHARE_URL` tunnel su localhost env (email/alert)
+- **Verifica**: base = trycloudflare corrente; `test_public_base_url.py` 2 passed
 
-## P-020 — dettaglio (APERTO)
+## P-020 — dettaglio (CHIUSO)
 
-- `scripts/check-secrets-presence.sh`: REQUIRED solo Resend+Gemini; Stripe optional; **zero** `OPENAPI_*`
-- Gap di diagnostica, non di runtime (se `.env` completo)
+- `check-secrets-presence.sh`: JWT required; Stripe/OpenAPI dogfood condizionali; FRONTEND tunnel vs localhost; WARN nomi vault mancanti
 
-## P-021 — dettaglio (APERTO)
+## P-021 — dettaglio (APERTO opz.)
 
-- `GOOGLE_CLIENT_ID` absent → Google Sign-In disabilitato (fail-soft). Opzionale dogfood.
+- `GOOGLE_CLIENT_ID` absent → Google Sign-In OFF (fail-soft). Opzionale dogfood.
 
 ## P-012…P-017 — fix breve
 

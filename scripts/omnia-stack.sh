@@ -51,6 +51,36 @@ ensure_cloudflared_bin() {
   printf '%s\n' /tmp/cloudflared
 }
 
+# P-019 / P-018 — after a healthy tunnel URL: sync FRONTEND_* + optional Stripe webhook
+sync_runtime_public_urls() {
+  local public_url="$1"
+  [[ -n "${public_url:-}" ]] || return 0
+  local py="${ROOT}/backend/.venv/bin/python"
+  [[ -x "$py" ]] || py="python3"
+  local changed=0
+  if [[ -f "$ROOT/scripts/sync-public-base-url.py" ]]; then
+    local out
+    out="$("$py" "$ROOT/scripts/sync-public-base-url.py" --url "$public_url" --env "$ROOT/backend/.env" 2>&1 || true)"
+    echo "$out" | sed 's/^/[omnia-stack] /' >&2 || true
+    if echo "$out" | grep -q 'CHANGED=1'; then
+      changed=1
+    fi
+  fi
+  if [[ -f "$ROOT/scripts/sync-stripe-webhook-url.py" ]]; then
+    "$py" "$ROOT/scripts/sync-stripe-webhook-url.py" --url "$public_url" 2>&1 \
+      | sed 's/^/[omnia-stack] /' >&2 || true
+  fi
+  # Uvicorn --reload does not re-read env; bounce API only when public base URL changed
+  if [[ "$changed" == "1" ]]; then
+    echo "[omnia-stack] public base URL changed — restarting API so FRONTEND_* take effect" >&2
+    if [[ -f "$pid_api" ]]; then
+      kill "$(cat "$pid_api")" 2>/dev/null || true
+      rm -f "$pid_api"
+    fi
+    adopt_or_start_api || true
+  fi
+}
+
 write_status() {
   local api_ok="$1" preview_ok="$2" tunnel_ok="$3" public_url="$4" msg="${5:-}"
   python3 - "$status_file" "$API_PORT" "$PREVIEW_PORT" "$api_ok" "$preview_ok" "$tunnel_ok" "$public_url" "$msg" <<'PY'
@@ -77,6 +107,9 @@ PY
   if [[ -n "${public_url:-}" ]]; then
     printf '%s\n' "$public_url" >"$share_file"
     printf '%s/it/login\n' "$public_url" >"$LOG_DIR/CRM_LOGIN_URL.txt"
+    if [[ "$tunnel_ok" == "true" ]]; then
+      sync_runtime_public_urls "$public_url"
+    fi
   fi
 }
 

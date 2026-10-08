@@ -1051,7 +1051,8 @@ def _schedule_lead_email(*, to: str, lang: str, property_title: str,
     import os
     from shared.email.client import send_email
 
-    base = os.environ.get("FRONTEND_BASE_URL", "https://omniarealestateecosystem.it")
+    from shared.public_base import get_public_base_url
+    base = get_public_base_url()
     crm_url = f"{base}/{lang if lang in ('it', 'en', 'es') else 'it'}/app/properties/{property_id}"
     phone_block = (
         f'<p style="margin:4px 0 0 0; font-size:14px; color:#0E1419;">📞 '

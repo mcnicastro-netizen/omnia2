@@ -288,9 +288,9 @@ async def _send_alert_email(*, to_email: str, user_name: str, lang: str,
 
 async def run_all_active_saved_searches() -> Dict[str, Any]:
     """Iterate every active saved search and email matches found since last_run_at."""
-    import os
+    from shared.public_base import get_public_base_url
     db = Database.get()
-    frontend_base = os.environ.get("FRONTEND_BASE_URL", "https://omniarealestateecosystem.it")
+    frontend_base = get_public_base_url()
     now = datetime.now(timezone.utc).isoformat()
     total_searches = 0
     total_emails = 0

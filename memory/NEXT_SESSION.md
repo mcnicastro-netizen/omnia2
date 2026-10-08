@@ -17,11 +17,11 @@
 |--|--|--|
 | 8 Ott | **A** funzionamento | ✅ CHIUSA · P-001…P-008 |
 | 8 Ott | **B** codice solo portale | ✅ CHIUSA · P-009…P-017 |
-| 8 Ott | **C** secrets | ✅ analisi · aperti **P-018…P-021** |
+| 8 Ott | **C** secrets | ✅ automazione boot · Save vault Founder · P-021 opz. |
 | succ. | **D** prova live provider | ⏭ «vai» |
 | poi | E→J | pianificate |
 
-**Onda C**: vault incompleto (P-018) · FRONTEND localhost (P-019) · check-secrets gap (P-020) · Google OFF (P-021). Lista reiniezione in matrice C.3.
+**Onda C**: sync FRONTEND+webhook al tunnel · materialize OPENAPI · check-secrets ampliato. **Una tantum**: Save Secrets env omnia2 (prompt UI).
 
 ---
 

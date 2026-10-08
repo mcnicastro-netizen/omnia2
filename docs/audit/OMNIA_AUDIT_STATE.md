@@ -7,7 +7,7 @@ Prima di analizzare un nuovo punto, leggere questo file. Non riaprire decisioni 
 
 **Current status:** P1–P24 **chiusi** · programma **APPROVATO** (**D-115**) · **«vai» O0 ∥ O1 in esecuzione**. Listino fermo. SoT: questo file.
 
-**Next:** **D-118 Audit Portale** — Onda A+B+C fatte · aperti **P-018…P-021** (vault/FRONTEND/check-secrets/Google) · poi **Onda D** prova live provider. SoT: `OMNIA_PORTALE_AUDIT_PROGRAM.md` + `portale-finding.md`. Poi: O3b restore → **A-037** → self-serve. O6 CONDITIONAL. **no self-serve finché O6 ≠ PASS**. §23 Priorità **CLOSED**.
+**Next:** **D-118 Audit Portale** — Onda A+B+C fatte · boot auto P-018/P-019/P-020 · resta **P-021** Google opz. + **Save vault** Founder · poi **Onda D** prova live provider. SoT: `OMNIA_PORTALE_AUDIT_PROGRAM.md` + `portale-finding.md`. Poi: O3b restore → **A-037** → self-serve. O6 CONDITIONAL. **no self-serve finché O6 ≠ PASS**. §23 Priorità **CLOSED**.
 
 ---
 

@@ -63,7 +63,8 @@ async def fanout_listing_event(
     # Instant searches always; price_drop also wakes daily watchers once
     cursor = db.saved_searches.find({"is_active": True})
     notified = 0
-    frontend = os.environ.get("FRONTEND_BASE_URL", "https://omniarealestateecosystem.it")
+    from shared.public_base import get_public_base_url
+    frontend = get_public_base_url()
     async for s in cursor:
         freq = s.get("frequency") or "instant"
         if event == "new" and freq not in ("instant",):

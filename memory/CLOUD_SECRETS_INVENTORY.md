@@ -92,11 +92,12 @@ Scripts env proposti per Save: `cloud-agent-install.sh` + `cloud-agent-start.sh`
 
 | Check | Esito |
 |--|--|
-| Vault inject list | solo 4 nomi (P-018) — Stripe/OPENAPI su disk `.env` |
+| Vault inject list | solo 4 nomi → **Save Secrets richiesto** (UI) |
+| Boot auto | `stripe-vault-materialize` (+OPENAPI) · `sync-public-base-url` · `sync-stripe-webhook-url` |
 | `/api/billing/plans` | `enabled=true` `mode=test` |
 | Visura catalog | `openapi_enabled=true` `stripe_enabled=true` |
 | FE build | same-origin `/api` (no localhost bake) |
-| `FRONTEND_*` | ancora `127.0.0.1:43122` (P-019) |
+| `FRONTEND_*` | sync → trycloudflare · `get_public_base_url()` |
 
 ---
 
