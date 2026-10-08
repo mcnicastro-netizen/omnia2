@@ -1,6 +1,6 @@
 # Prossima sessione — programma passi
 
-**Aggiornato**: 8 Ottobre 2026 · Audit Portale D-118 · **P-001 CHIUSO**  
+**Aggiornato**: 8 Ottobre 2026 · Audit Portale D-118 · **Onda A CHIUSA**  
 **Repo**: https://github.com/mcnicastro-netizen/omnia2 ✅  
 **Chat SoT sessione**: continuare questa linea / agent su omnia2 GitHub
 
@@ -14,11 +14,11 @@
 
 | Giorno | Onda | Stato |
 |--|--|--|
-| 8 Ott | **A** funzionamento | ✅ · **P-001 CHIUSO** (seed visibility + trash restore + QC) |
+| 8 Ott | **A** funzionamento | ✅ **CHIUSA** · P-001…P-008 CHIUSI |
 | 9 Ott | **B** codice solo portale | ⏭ prossimo |
 | 10–17 | C→J | pianificate |
 
-**P-001 fix**: `visibility:"public"` nei seed demo/Nicastro; upsert `$unset deleted_at`; QC `qc_public_portal_inventory.py` → `match_base_filter=8`, search `total=8`. Finding aperti: P-002…P-008.
+**Onda A fix (vai)**: inventory pubblica, footer legale, intent buy, `/api/ready`, tunnel_alive, check-secrets `.env`, nav HAL Legal, register 409→login.
 
 ---
 
