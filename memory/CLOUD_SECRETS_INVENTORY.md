@@ -20,6 +20,10 @@ Dashboard Cursor → **Cloud Agents** → Environments → env **omnia2** → **
 Nomi obbligatori (env var, niente italiano/spazi):
 `STRIPE_SECRET_KEY`, `STRIPE_PUBLISHABLE_KEY`, `STRIPE_ENABLED=true` (+ opzionale `STRIPE_WEBHOOK_SECRET`).
 
+**Audit Portale Onda C (8 Ott 2026)**: il vault env omnia2 aveva iniettato solo  
+`FAL_KEY`, `GEMINI_API_KEY`, `RESEND_API_KEY`, `STRIPE_ENABLED` — **mancavano** Stripe sk/pk/whsec e tutta la famiglia OpenAPI (erano solo su `backend/.env` disk).  
+Reiniettare i nomi sotto «Elenco» + sezione OpenAPI; poi nuovo agent boot. Dettaglio: `docs/audit/portale-matrici/2026-10-08-onda-c.md`.
+
 Dopo il Save, **riavvia un nuovo agent** sullo stesso environment (i secret non compaiono magicamente nel pod già aperto).
 
 **Trappola fixata (Ott 2026)**: `backend/.env` template ha `STRIPE_ENABLED=false`. Prima `load_dotenv(override=True)` **cancellava** il vault. Ora `shared/env_bootstrap.py` + `scripts/stripe-vault-materialize.py` fanno vincere i secret iniettati; con `sk_test_…` la sandbox si auto-abilita.
@@ -36,11 +40,21 @@ Dopo il Save, **riavvia un nuovo agent** sullo stesso environment (i secret non 
 | `GEMINI_API_KEY` | **Sì** (HAL/AI) | Google AI Studio / Google Cloud | LLM HAL, brand extract, coach |
 | `FAL_KEY` | Consigliato | [fal.ai](https://fal.ai/dashboard/keys) | Staging / video |
 | `TAVILY_API_KEY` | Opzionale | Tavily dashboard | AL Legal search |
-| `STRIPE_SECRET_KEY` | Solo se billing ON | Stripe Dashboard → API keys (test/live) | Pagamenti |
-| `STRIPE_PUBLISHABLE_KEY` | Solo se billing ON | Stripe | Frontend Stripe |
-| `STRIPE_WEBHOOK_SECRET` | Solo se webhook | Stripe → Webhooks | Eventi Stripe |
+| `STRIPE_SECRET_KEY` | **Sì** se billing ON | Stripe Dashboard → API keys (**test** in Cloud) | Pagamenti B2B/B2C |
+| `STRIPE_PUBLISHABLE_KEY` | **Sì** se billing ON | Stripe | Plans API / Stripe.js |
+| `STRIPE_WEBHOOK_SECRET` | **Sì** se webhook | Stripe → Webhooks (endpoint = tunnel + `/api/billing/webhook`) | Eventi Stripe |
+| `STRIPE_ENABLED` | **Sì** `=true` sandbox | Vault / env | Gate billing |
+| `OPENAPI_ENABLED` | **Sì** Visura PDF | `true` | Catasto OpenAPI.it |
+| `OPENAPI_EMAIL` | **Sì** Visura (se no token) | Console OpenAPI.it | OAuth Basic |
+| `OPENAPI_API_KEY` | **Sì** Visura (se no token) | Console OpenAPI.it | OAuth Basic |
+| `OPENAPI_TOKEN` | Opz. alt. a email+key | Console OpenAPI.it | Bearer statico |
+| `OPENAPI_CATASTO_BASE` | Consigliato sandbox | es. `https://test.catasto.openapi.it` | Host Catasto |
+| `OPENAPI_OAUTH_BASE` | Consigliato sandbox | es. `https://test.oauth.openapi.com` | Host OAuth |
 | `GOOGLE_CLIENT_ID` | Opzionale | Google Cloud Console → OAuth | Login Google |
 | `JWT_SECRET` | Consigliato (prod) | Genera nuovo se perso (`openssl rand -hex 32`) | Sessioni; se cambi, tutti i login scadono |
+| `FRONTEND_BASE_URL` | Dogfood tunnel | URL pubblico preview/tunnel (non `127.0.0.1`) | Link in email alert/lead |
+| `FRONTEND_URL` | Dogfood tunnel | idem | Welcome / reset password |
+| `OMNIA_PUBLIC_URL` | Consigliato | idem | Asset/link email |
 | `ADMIN_EMAIL` / `ADMIN_PASSWORD` | Bootstrap | Non secret “API”: seed Founder; già in `.env.example` per Cloud | Utente super_admin |
 | `DEMO_ADMIN_PASSWORD` | Bootstrap | `.env.example` | Demo agency_admin |
 | `GITHUB_TOKEN` | Auto | Lo mette Cursor — **non** è il vault OMNIA | Push git |
@@ -71,6 +85,16 @@ Alias legacy accettati dal backend (se li avevi): `GOOGLE_API_KEY`, `EMERGENT_LL
 Env omnia2, questa chat: `sk_test` / `pk_test` iniettati, `STRIPE_ENABLED=true`.  
 `/api/billing/plans` → `enabled=true`, `mode=test`. Sandbox OK.  
 Scripts env proposti per Save: `cloud-agent-install.sh` + `cloud-agent-start.sh`.
+
+## Stato verificato — 8 Ott 2026 (Onda C)
+
+| Check | Esito |
+|--|--|
+| Vault inject list | solo 4 nomi (P-018) — Stripe/OPENAPI su disk `.env` |
+| `/api/billing/plans` | `enabled=true` `mode=test` |
+| Visura catalog | `openapi_enabled=true` `stripe_enabled=true` |
+| FE build | same-origin `/api` (no localhost bake) |
+| `FRONTEND_*` | ancora `127.0.0.1:43122` (P-019) |
 
 ---
 

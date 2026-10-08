@@ -213,15 +213,15 @@ Per ogni riga: Presente in vault? Usato da path portale? Fail-soft?
 | Altri emersi in B | … | … | … |
 
 ### C.2 Checklist agganci
-- [ ] Ogni `os.environ.get` nel perimetro B mappato  
-- [ ] Nessuna chiave hardcodata in FE build  
-- [ ] FE non punta a `127.0.0.1:43121` in build tunnel (same-origin `/api`)  
-- [ ] Webhook Stripe endpoint = URL tunnel corrente + `/api/billing/webhook`  
-- [ ] Allineamento con `memory/CLOUD_SECRETS_INVENTORY.md` (solo nomi)  
+- [x] Ogni `os.environ.get` nel perimetro B mappato  
+- [x] Nessuna chiave hardcodata in FE build  
+- [x] FE non punta a `127.0.0.1:43121` in build tunnel (same-origin `/api`)  
+- [ ] Webhook Stripe endpoint = URL tunnel corrente + `/api/billing/webhook` *(verifica Dashboard → Onda D)*  
+- [x] Allineamento con `memory/CLOUD_SECRETS_INVENTORY.md` (solo nomi)  
 
 ### C.3 Deliverable Onda C
-- [ ] Tabella secret→uso→gap  
-- [ ] Lista “manca in vault” per Founder (senza valori)  
+- [x] Tabella secret→uso→gap → `docs/audit/portale-matrici/2026-10-08-onda-c.md`  
+- [x] Lista “manca in vault” per Founder (senza valori) · finding P-018…P-021  
 
 ---
 

@@ -1,6 +1,6 @@
 # Audit Portale — registro finding `P-###`
 
-**Aggiornato**: 2026-10-08 · Onda B fix (vai Founder) · P-011 staging CHIUSO  
+**Aggiornato**: 2026-10-08 · Onda C analisi secrets · P-018…P-021 aperti  
 **Regola**: nessun fix senza «vai» Founder (D-118)
 
 | ID | Sev | Onda | Titolo | Stato |
@@ -22,6 +22,10 @@
 | P-015 | P2 | B | `session_id` Stripe in query URL | CHIUSO (mitigato) |
 | P-016 | P3 | B | Mutui lead `gdpr_consent:true` hardcoded | CHIUSO |
 | P-017 | P3 | B | CloudTopNav senza menu mobile | CHIUSO |
+| P-018 | P1 | C | Vault Cloud incompleto vs runtime (Stripe/OPENAPI solo `.env`) | APERTO |
+| P-019 | P2 | C | `FRONTEND_*` / `OMNIA_PUBLIC_URL` = localhost:43122 | APERTO |
+| P-020 | P3 | C | `check-secrets` non copre `OPENAPI_*` / Stripe dogfood | APERTO |
+| P-021 | P3 | C | `GOOGLE_CLIENT_ID` absent — login Google OFF | APERTO |
 
 ## P-009 — dettaglio (CHIUSO)
 
@@ -39,6 +43,28 @@
 
 - **Fix**: `listing_id` obbligatorio su `b2c_staging_render` · `consume_b2c_staging_render` · webhook `fulfill_paid_staging_render` (job `payment_rail=b2c_stripe`, no debit crediti) · `POST/GET /cloud/me/properties/{pid}/staging` · SellPage resume post-`staging=ok` · auto-save foto watermarked sull’annuncio · success_url Stripe con `&session_id=` se già query
 - **Verifica**: `test_b2c_staging.py` (catalog + consume + fulfill idempotent); checkout senza `listing_id` → 400
+
+## P-018 — dettaglio (APERTO)
+
+- `CLOUD_AGENT_ALL_SECRET_NAMES` = solo `FAL_KEY,GEMINI_API_KEY,RESEND_API_KEY,STRIPE_ENABLED`
+- Runtime oggi OK perché `.env` disk ha `STRIPE_SECRET_KEY` (`sk_test`), `STRIPE_PUBLISHABLE_KEY`, `STRIPE_WEBHOOK_SECRET`, famiglia `OPENAPI_*`, `TAVILY_API_KEY`
+- **Rischio**: boot su vault-only / env nuovo → billing 503 + Visura `openapi_not_configured`
+- **Azione Founder**: reiniettare nomi in lista C.3 (`portale-matrici/2026-10-08-onda-c.md`)
+
+## P-019 — dettaglio (APERTO)
+
+- `FRONTEND_BASE_URL` / `FRONTEND_URL` / `OMNIA_PUBLIC_URL` = `http://127.0.0.1:43122`
+- Preview/tunnel = `43123` / trycloudflare → link in email dogfood puntano a localhost
+- Fix tipico: allineare a URL tunnel corrente (o rewrite in stack start) — serve «vai»
+
+## P-020 — dettaglio (APERTO)
+
+- `scripts/check-secrets-presence.sh`: REQUIRED solo Resend+Gemini; Stripe optional; **zero** `OPENAPI_*`
+- Gap di diagnostica, non di runtime (se `.env` completo)
+
+## P-021 — dettaglio (APERTO)
+
+- `GOOGLE_CLIENT_ID` absent → Google Sign-In disabilitato (fail-soft). Opzionale dogfood.
 
 ## P-012…P-017 — fix breve
 

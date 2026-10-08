@@ -1,6 +1,6 @@
 # Prossima sessione — programma passi
 
-**Aggiornato**: 8 Ottobre 2026 · Audit Portale D-118 · **Onda B chiusa**  
+**Aggiornato**: 8 Ottobre 2026 · Audit Portale D-118 · **Onda C fatta**  
 **Repo**: https://github.com/mcnicastro-netizen/omnia2 ✅  
 **Chat SoT sessione**: continuare questa linea / agent su omnia2 GitHub
 
@@ -10,17 +10,18 @@
 
 **Programma**: [`docs/audit/OMNIA_PORTALE_AUDIT_PROGRAM.md`](../docs/audit/OMNIA_PORTALE_AUDIT_PROGRAM.md)  
 **Finding**: [`docs/audit/portale-finding.md`](../docs/audit/portale-finding.md)  
-**Matrice B**: [`docs/audit/portale-matrici/2026-10-08-onda-b.md`](../docs/audit/portale-matrici/2026-10-08-onda-b.md)  
+**Matrice C**: [`docs/audit/portale-matrici/2026-10-08-onda-c.md`](../docs/audit/portale-matrici/2026-10-08-onda-c.md)  
 **Tunnel oggi**: `https://king-kai-mia-giants.trycloudflare.com`
 
 | Giorno | Onda | Stato |
 |--|--|--|
 | 8 Ott | **A** funzionamento | ✅ CHIUSA · P-001…P-008 |
-| 8 Ott | **B** codice solo portale | ✅ CHIUSA · P-009…P-017 (P-011 staging incluso) |
-| succ. | **C** secrets | ⏭ «vai» |
-| poi | D→J | pianificate |
+| 8 Ott | **B** codice solo portale | ✅ CHIUSA · P-009…P-017 |
+| 8 Ott | **C** secrets | ✅ analisi · aperti **P-018…P-021** |
+| succ. | **D** prova live provider | ⏭ «vai» |
+| poi | E→J | pianificate |
 
-**Onda B fix**: P-009 media private AuthZ · P-010 Legal paywall · P-011 staging consume/job · P-012…P-017 UX.
+**Onda C**: vault incompleto (P-018) · FRONTEND localhost (P-019) · check-secrets gap (P-020) · Google OFF (P-021). Lista reiniezione in matrice C.3.
 
 ---
 
