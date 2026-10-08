@@ -286,6 +286,17 @@ async def b2c_status(session_id: str, user: dict = Depends(get_current_user)):
     }
 
 
+def _session_amount_eur(session: dict) -> Optional[float]:
+    """Stripe Checkout amount_total is in cents."""
+    total = session.get("amount_total")
+    if total is None:
+        return None
+    try:
+        return round(float(total) / 100.0, 2)
+    except (TypeError, ValueError):
+        return None
+
+
 async def apply_b2c_purchase_side_effects(session: dict) -> None:
     """Called by the shared Stripe webhook when a `checkout.session.completed`
     event carries `metadata.b2c_product_key`. Idempotent."""
@@ -297,11 +308,15 @@ async def apply_b2c_purchase_side_effects(session: dict) -> None:
 
     from apps.billing.b2c_entitlements import mark_uni_purchase_paid
 
+    amount_eur = _session_amount_eur(session)
+
     if is_b2c_boost_product(product_key):
         days = boost_duration_days(product_key) or 30
         now = datetime.now(timezone.utc)
         expires = now + timedelta(days=days)
-        updated = await mark_uni_purchase_paid(session_id, expires_at=expires)
+        updated = await mark_uni_purchase_paid(
+            session_id, expires_at=expires, amount_eur=amount_eur,
+        )
         if not updated:
             logger.warning("b2c_purchase webhook: no local record for session=%s", session_id)
             return
@@ -326,11 +341,11 @@ async def apply_b2c_purchase_side_effects(session: dict) -> None:
         return
 
     if product_key in ("b2c_valuator_uni_pdf", "b2c_visura_catastale"):
-        updated = await mark_uni_purchase_paid(session_id)
+        updated = await mark_uni_purchase_paid(session_id, amount_eur=amount_eur)
         if updated:
             logger.info(
-                "b2c_purchase paid: session=%s product=%s user=%s",
-                session_id, product_key, updated.get("user_id"),
+                "b2c_purchase paid: session=%s product=%s user=%s amount_eur=%s",
+                session_id, product_key, updated.get("user_id"), updated.get("amount_eur"),
             )
             if product_key == "b2c_visura_catastale":
                 from apps.immocloud.visura_b2c import fulfill_paid_visura_order
@@ -340,11 +355,12 @@ async def apply_b2c_purchase_side_effects(session: dict) -> None:
         return
 
     if product_key == "b2c_staging_render":
-        updated = await mark_uni_purchase_paid(session_id)
+        updated = await mark_uni_purchase_paid(session_id, amount_eur=amount_eur)
         if updated:
             logger.info(
-                "b2c_purchase paid (staging): session=%s user=%s listing=%s",
+                "b2c_purchase paid (staging): session=%s user=%s listing=%s amount_eur=%s",
                 session_id, updated.get("user_id"), updated.get("listing_id"),
+                updated.get("amount_eur"),
             )
             from apps.immoweb.virtual_staging import fulfill_paid_staging_render
             await fulfill_paid_staging_render(session_id)
@@ -355,11 +371,11 @@ async def apply_b2c_purchase_side_effects(session: dict) -> None:
     # Other catalog products (HAL legal): mark paid with 24h ledger window;
     # fulfillment is consumed at feature call-time via b2c_purchases.
     if product_key in B2C_ONE_SHOT_PRODUCTS:
-        updated = await mark_uni_purchase_paid(session_id)
+        updated = await mark_uni_purchase_paid(session_id, amount_eur=amount_eur)
         if updated:
             logger.info(
-                "b2c_purchase paid: session=%s product=%s user=%s",
-                session_id, product_key, updated.get("user_id"),
+                "b2c_purchase paid: session=%s product=%s user=%s amount_eur=%s",
+                session_id, product_key, updated.get("user_id"), updated.get("amount_eur"),
             )
         else:
             logger.warning("b2c_purchase webhook: no local record for session=%s", session_id)

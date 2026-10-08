@@ -15,6 +15,7 @@ export default function FounderOpsPage() {
   const [data, setData] = useState(null);
   const [error, setError] = useState(null);
   const [busy, setBusy] = useState(true);
+  const [backupBusy, setBackupBusy] = useState(false);
 
   const load = async (d = days) => {
     setBusy(true);
@@ -38,6 +39,36 @@ export default function FounderOpsPage() {
     load(days);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [days]);
+
+  const ackOne = async (id) => {
+    try {
+      await api.post(`/app/ops/alerts/${id}/ack`);
+      await load(days);
+    } catch {
+      /* ignore — reload shows truth */
+    }
+  };
+
+  const ackAll = async () => {
+    try {
+      await api.post(`/app/ops/alerts/ack-all`);
+      await load(days);
+    } catch {
+      /* ignore */
+    }
+  };
+
+  const runBackup = async () => {
+    setBackupBusy(true);
+    try {
+      await api.post(`/app/ops/backup/run`);
+      await load(days);
+    } catch {
+      setError("Backup non riuscito. Riprova o controlla i log.");
+    } finally {
+      setBackupBusy(false);
+    }
+  };
 
   const t = data?.totals || {};
   const maxDay = Math.max(1, ...(data?.by_day || []).map((d) => d.events));
@@ -108,10 +139,23 @@ export default function FounderOpsPage() {
                 Backup ·{" "}
                 <span data-testid="ops-backup-status">{data.backup.status || "—"}</span>
               </p>
-              <span className="text-xs text-stone-600">
-                {(data.backup.created_at || "").slice(0, 19).replace("T", " ") || "nessun run"}
-                {data.backup.day ? ` · giorno ${data.backup.day}` : ""}
-              </span>
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-stone-600">
+                  {(data.backup.created_at || "").slice(0, 19).replace("T", " ") || "nessun run"}
+                  {data.backup.day ? ` · giorno ${data.backup.day}` : ""}
+                </span>
+                {data.backup.status !== "OK" ? (
+                  <button
+                    type="button"
+                    data-testid="ops-backup-run"
+                    disabled={backupBusy}
+                    onClick={runBackup}
+                    className="text-[10px] uppercase tracking-widest px-2 py-1 rounded border border-current/30 hover:bg-white/50 disabled:opacity-50"
+                  >
+                    {backupBusy ? "Backup…" : "Esegui ora"}
+                  </button>
+                ) : null}
+              </div>
             </div>
             {data.backup.message ? (
               <p className="text-xs mt-1">{data.backup.message}</p>
@@ -140,10 +184,20 @@ export default function FounderOpsPage() {
                   ? ` · ${data.alerts.unacked} da vedere`
                   : ""}
               </p>
+              {(data.alerts.unacked || 0) > 0 ? (
+                <button
+                  type="button"
+                  data-testid="ops-alerts-ack-all"
+                  onClick={ackAll}
+                  className="text-[10px] uppercase tracking-widest px-2 py-1 rounded border border-amber-400 hover:bg-amber-100"
+                >
+                  Segna tutti visti
+                </button>
+              ) : null}
             </div>
             <ul className="space-y-1.5 text-xs">
               {data.alerts.recent.slice(0, 8).map((a) => (
-                <li key={a.id} className="flex gap-2">
+                <li key={a.id} className="flex gap-2 items-start">
                   <span className="uppercase tracking-wider text-[10px] shrink-0 w-14">
                     {a.severity}
                   </span>
@@ -151,9 +205,62 @@ export default function FounderOpsPage() {
                   <span className="text-stone-400 shrink-0">
                     {(a.created_at || "").slice(0, 16).replace("T", " ")}
                   </span>
+                  {!a.acked ? (
+                    <button
+                      type="button"
+                      data-testid={`ops-alert-ack-${a.id}`}
+                      onClick={() => ackOne(a.id)}
+                      className="text-[10px] uppercase tracking-widest shrink-0 underline"
+                    >
+                      Visto
+                    </button>
+                  ) : (
+                    <span className="text-[10px] text-stone-400 shrink-0">ok</span>
+                  )}
                 </li>
               ))}
             </ul>
+          </div>
+        ) : null}
+
+        {data?.portal ? (
+          <div
+            className="rounded-lg border border-stone-200 bg-white px-4 py-3 space-y-3"
+            data-testid="ops-portal-telemetry"
+          >
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <h2 className="text-xs uppercase tracking-widest text-stone-500">
+                Portale · segnali ({days}g)
+              </h2>
+              <div className="flex gap-3 text-[11px]">
+                <Link
+                  to={`/${lang}/app/moderation`}
+                  className="uppercase tracking-widest text-[#1F6B5C] hover:underline"
+                >
+                  Moderazione
+                  {(data.portal.ugc_pending_moderation || 0) > 0
+                    ? ` (${data.portal.ugc_pending_moderation})`
+                    : ""}{" "}
+                  →
+                </Link>
+                <Link
+                  to={`/${lang}/app/ops/legal`}
+                  className="uppercase tracking-widest text-[#1F6B5C] hover:underline"
+                >
+                  Ops Legal →
+                </Link>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              <Kpi label="Registrazioni B2C" value={data.portal.b2c_registrations_period ?? 0} hint={`24h: ${data.portal.b2c_registrations_24h ?? 0}`} />
+              <Kpi label="Pagamenti B2C" value={data.portal.b2c_paid_period ?? 0} hint={`incasso € ${(t.b2c_revenue_eur ?? 0).toFixed(2)}`} />
+              <Kpi label="Lead mutui" value={data.portal.mortgage_leads_period ?? 0} />
+              <Kpi label="Inquiry UGC" value={data.portal.listing_inquiries_period ?? 0} />
+              <Kpi label="Digest saved-search" value={data.portal.saved_search_runs_period ?? 0} hint={`attive ${data.portal.saved_searches_active ?? 0}`} />
+              <Kpi label="Visure (ordini)" value={data.portal.visura_orders_period ?? 0} hint={`fail ${data.portal.visura_failed_period ?? 0}`} tone={(data.portal.visura_failed_period || 0) > 0 ? "bad" : undefined} />
+              <Kpi label="UGC in coda" value={data.portal.ugc_pending_moderation ?? 0} />
+              <Kpi label="Fatture Stripe" value={data.portal.invoices_period ?? 0} hint="A-038 post-test" />
+            </div>
           </div>
         ) : null}
 

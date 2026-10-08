@@ -146,22 +146,50 @@ async def mark_uni_purchase_paid(
     stripe_session_id: str,
     *,
     expires_at: Optional[datetime] = None,
+    amount_eur: Optional[float] = None,
 ) -> Optional[dict]:
     """Idempotent: called from the Stripe webhook (checkout.session.completed).
 
     Marks the purchase paid. Default entitlement window is 24h (UNI/PDF);
     boost products pass an explicit `expires_at` (now + duration_days).
+
+    P-025: persist `amount_eur` (Stripe `amount_total`/100, else catalog price)
+    so Founder Ops can sum B2C revenue.
     """
     db = Database.get()
     now = datetime.now(timezone.utc)
     expires = expires_at or (now + timedelta(hours=UNI_ENTITLEMENT_TTL_HOURS))
+    existing = await db.b2c_purchases.find_one(
+        {"stripe_session_id": stripe_session_id},
+        {"_id": 0, "product_key": 1, "amount_eur": 1},
+    )
+    resolved_amount = amount_eur
+    if resolved_amount is None and existing and existing.get("amount_eur") is not None:
+        try:
+            resolved_amount = float(existing["amount_eur"])
+        except (TypeError, ValueError):
+            resolved_amount = None
+    if resolved_amount is None and existing:
+        try:
+            from apps.billing.b2c_products import B2C_ONE_SHOT_PRODUCTS
+            pk = existing.get("product_key") or ""
+            cat = B2C_ONE_SHOT_PRODUCTS.get(pk) or {}
+            if cat.get("price_eur") is not None:
+                resolved_amount = float(cat["price_eur"])
+        except Exception:
+            pass
+
+    update: dict = {
+        "status": "paid",
+        "paid_at": now.isoformat(),
+        "expires_at": expires.isoformat(),
+    }
+    if resolved_amount is not None:
+        update["amount_eur"] = round(float(resolved_amount), 2)
+
     doc = await db.b2c_purchases.find_one_and_update(
         {"stripe_session_id": stripe_session_id},
-        {"$set": {
-            "status": "paid",
-            "paid_at": now.isoformat(),
-            "expires_at": expires.isoformat(),
-        }},
+        {"$set": update},
         return_document=True,
     )
     return doc

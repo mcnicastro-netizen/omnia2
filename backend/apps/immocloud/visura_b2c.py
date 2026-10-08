@@ -230,6 +230,20 @@ async def fulfill_paid_visura_order(session_id: str) -> Optional[dict]:
             {"stripe_session_id": session_id},
             {"$set": {"status": "failed", "error": str(e)[:300], "updated_at": now}},
         )
+        # P-027 — Founder Ops must hear paid-but-failed Visura
+        try:
+            from shared.ops_alerts import record_alert
+            await record_alert(
+                kind="openapi_visura",
+                severity="error",
+                message="Visura OpenAPI fallita dopo pagamento Stripe",
+                meta={
+                    "session_prefix": str(session_id)[:20],
+                    "error": str(e)[:200],
+                },
+            )
+        except Exception:
+            logger.exception("visura ops_alert failed")
         return None
 
     ext_id = str(raw.get("id") or "")
