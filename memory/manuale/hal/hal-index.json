@@ -1,12 +1,12 @@
 {
   "version": "0.29-stripe-sandbox",
   "updated": "2026-10-08",
-  "voices_total": 369,
+  "voices_total": 370,
   "source_files": [
     {
       "file": "00-api-codice.yaml",
-      "voices": 31,
-      "md5": "a2ca48288cae767f88cd6ab677d201ad"
+      "voices": 32,
+      "md5": "6d651b1cccbd5cb4993355e7e58eee3a"
     },
     {
       "file": "01-primo-accesso.yaml",
@@ -101,7 +101,7 @@
     {
       "file": "19-impostazioni-agenzia.yaml",
       "voices": 15,
-      "md5": "d4f406d720c4ec27e0adc3bb8bb2e4f3"
+      "md5": "305aaebfe02d7457d0c4accc2d0be261"
     },
     {
       "file": "20-api-keys-integrazioni.yaml",
@@ -150,8 +150,8 @@
       "file": "00-api-codice",
       "title": "Corpus codice/API",
       "yaml": "00-api-codice.yaml",
-      "voices": 31,
-      "md5": "a2ca48288cae767f88cd6ab677d201ad"
+      "voices": 32,
+      "md5": "6d651b1cccbd5cb4993355e7e58eee3a"
     },
     {
       "id": 22,

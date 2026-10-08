@@ -897,43 +897,80 @@ voci:
       screenshot: []
 
   - id: api.visura-openapi-catasto
-    titolo: Visura B2C e OpenAPI.it Catasto — dipendenza provider
+    titolo: Visura B2C e OpenAPI.it Catasto — D-116 single-key
     modulo: Codice API
     widget: null
     pubblico: [super_admin]
     livello: avanzato
-    tags: [codice, visura, openapi, catasto, b2c, provider, dogfood, d-118]
-    correlati: [api.cloud-secrets-vault, api.portale-audit-program, api.stripe-sandbox-cloud]
-    domanda_naturale: "Perché Visura catastale non funziona? OpenAPI Catasto sospeso?"
+    tags: [codice, visura, openapi, catasto, b2c, provider, dogfood, d-118, d-116]
+    correlati: [api.cloud-secrets-vault, api.portale-audit-program, api.stripe-sandbox-cloud, api.founder-ops-portale]
+    domanda_naturale: "Come attivo Visura con una sola API key? Serve OPENAPI_EMAIL?"
     contenuto:
       a_cosa_serve: >
-        La Visura B2C (€4,90 carta, SKU b2c_visura_catastale) fulfillment
-        passa da OpenAPI.it Catasto (shared/openapi_catasto.py · visura_b2c.py).
-        Env: OPENAPI_ENABLED, OPENAPI_EMAIL+OPENAPI_API_KEY (o OPENAPI_TOKEN),
-        basi sandbox test.catasto.openapi.it / test.oauth.openapi.com.
-        Se il provider sospende Catasto, OMNIA non può emettere PDF — non è
-        un bug vault né un bug portale.
+        Visura B2C (€4,90, SKU b2c_visura_catastale) via OpenAPI.it Catasto
+        (shared/openapi_catasto.py · visura_b2c.py). D-116: in sandbox basta
+        OPENAPI_ENABLED=true + OPENAPI_API_KEY; email OAuth = OPENAPI_EMAIL
+        oppure fallback ADMIN_EMAIL / OMNIA_ADMIN_EMAIL (auth_mode=oauth_single_key).
+        Host default test.catasto.openapi.it / test.oauth.openapi.com finché
+        OPENAPI_MODE≠live. Fail post-pagamento → ops_alert kind=openapi_visura.
       quando_si_usa: >
-        Dogfood Visura fallisce; console OpenAPI mostra Catasto non attivo /
-        sospeso; Onda D audit provider.
+        Dogfood Visura; catalog openapi_enabled=false; Onda D provider;
+        manca OPENAPI_EMAIL in vault.
       passi:
-        - "Verifica catalog: GET /api/cloud/visura/catalog → openapi_enabled."
-        - "Vault: OPENAPI_* solo se Catasto è operativi lato provider."
-        - "Se Catasto sospeso dal provider (annotato 8-Ott-2026 Founder):
-          Onda D = SKIP Visura; dogfood su Stripe test / altri moduli."
-        - "Quando OpenAPI riattiva: OPENAPI_ENABLED=true + EMAIL + API_KEY
-          (+ basi test), nuovo agent, prova create/PDF sandbox."
-        - "Non confondere la pagina Prezzi/Abbonamenti Catasto con le API key
-          (le key stanno in console account OpenAPI.it)."
+        - "Vault minimo sandbox: OPENAPI_ENABLED=true + OPENAPI_API_KEY
+          (console Sandbox). ADMIN_EMAIL già in .env = fallback OAuth."
+        - "GET /api/cloud/visura/catalog → openapi_enabled=true."
+        - "Smoke: ping + create + PDF sandbox (byte %PDF)."
+        - "Se create fallisce dopo Stripe paid: Allarmi Ops (openapi_visura)."
+        - "Produzione: OPENAPI_MODE=live + credenziali/host prod — non auto."
       errori_comuni:
-        - problema: "Ho la API key ma servizio Catasto non attivo / sospeso"
+        - problema: "openapi_enabled=false con solo OPENAPI_API_KEY"
           soluzione: >
-            Gap provider. Imposta OPENAPI_ENABLED=false o accetta fail
-            Visura. Non bloccare Stripe sandbox / resto audit.
-        - problema: "OPENAPI_API_KEY sì ma manca OPENAPI_EMAIL"
+            Serve D-116 in codice (merge) e ADMIN_EMAIL risolvibile, oppure
+            OPENAPI_EMAIL / OPENAPI_TOKEN espliciti.
+        - problema: "Ho la key ma Catasto provider sospeso"
           soluzione: >
-            Per OAuth Basic servono email+key (o OPENAPI_TOKEN statico).
-            Usa l'email di login OpenAPI.it.
+            Gap provider. SKIP dogfood Visura; non bloccare Stripe test.
+      permessi:
+        - super_admin / Founder
+      screenshot: []
+
+  - id: api.founder-ops-portale
+    titolo: Founder Ops — costi, portale, alert, backup (super_admin)
+    modulo: Codice API
+    widget: null
+    pubblico: [super_admin]
+    livello: avanzato
+    tags: [codice, ops, founder, b2c, telemetry, backup, alert, p-025, p-027, d-118]
+    correlati: [api.portale-audit-program, api.stripe-sandbox-cloud, api.visura-openapi-catasto, settings.billing-pagina-separata]
+    domanda_naturale: "Cosa vedo in /app/ops? Perché gli incassi B2C erano a zero?"
+    contenuto:
+      a_cosa_serve: >
+        Cruscotto Founder (solo super_admin): GET /api/app/ops/overview
+        (costi AI, wallet, B2C revenue, alert, backup, scheduler, portal.*).
+        Legal volume: /app/ops/legal. Moderazione UGC: /app/moderation.
+        P-025: b2c_purchases.amount_eur da Stripe amount_total/100 (o catalogo).
+        P-027: portal = registrazioni, mutui, inquiry UGC, digest runs, visura,
+        UGC pending, invoices count. P-028: POST /ops/alerts/{id}/ack e ack-all.
+        P-029: POST /ops/backup/run. Nav Shell: Ops Costi / Ops Legal / Moderazione.
+      quando_si_usa: >
+        Controllare incassi B2C; allarmi Stripe/LLM/Visura; backup MISSING;
+        coda annunci privati; audit Onda E.
+      passi:
+        - "UI: /it/app/ops · API GET /api/app/ops/overview?days=7|30|90."
+        - "Card Portale: contatori periodo · link Moderazione / Ops Legal."
+        - "Allarmi: Visto / Segna tutti visti (ack)."
+        - "Backup ≠ OK → Esegui ora (POST /ops/backup/run)."
+        - "A-038 fatture/dati fiscali = post-test, non in questo cruscotto."
+      errori_comuni:
+        - problema: "b2c_revenue_eur=0 con acquisti paid"
+          soluzione: >
+            Pre-fix: amount_eur assente (P-025). Post-fix: webhook scrive
+            importo; overview fa backfill da catalogo sui legacy.
+        - problema: "Backup MISSING su Cloud"
+          soluzione: >
+            Premi Esegui ora o attendi cron 03:15 UTC. Path BACKUP_ROOT
+            (default backend/.backups, gitignored).
       permessi:
         - super_admin / Founder
       screenshot: []
@@ -944,36 +981,32 @@ voci:
     widget: null
     pubblico: [super_admin]
     livello: avanzato
-    tags: [codice, audit, portale, immobilcloud, d-118, gdpr, ai-act, stripe, ops]
-    correlati: [api.cloud-environment-builds, api.stripe-sandbox-cloud, api.cloud-secrets-vault, api.visura-openapi-catasto]
-    domanda_naturale: "Cos'è l'audit del portale? Quando parte? Cosa controlliamo?"
+    tags: [codice, audit, portale, immobilcloud, d-118, gdpr, ai-act, stripe, ops, onda-f]
+    correlati: [api.cloud-environment-builds, api.stripe-sandbox-cloud, api.cloud-secrets-vault, api.visura-openapi-catasto, api.founder-ops-portale]
+    domanda_naturale: "A che punto è l'audit del portale? Cosa facciamo domani?"
     contenuto:
       a_cosa_serve: >
-        Programma Founder (7-Ott-2026) per analizzare ImmobilCloud B2C
-        passo × passo: funzionamento, codice, API key, segnali super_admin,
-        bottoni, rapporto gestionale, GDPR + AI Act, anti-crash/dati/Stripe.
-        SoT: docs/audit/OMNIA_PORTALE_AUDIT_PROGRAM.md. Partenza 8-Ott-2026.
-        Stato 8-Ott: Onda A+B chiuse (P-001…P-017); Onda C secrets + boot auto
-        (P-018…P-020); Onda D = prove live provider (Visura SKIP se Catasto
-        provider sospeso). Fix solo con «vai» su P-###.
+        Programma Founder (D-118) ImmobilCloud B2C: onde A–J.
+        SoT docs/audit/OMNIA_PORTALE_AUDIT_PROGRAM.md. Finding P-###.
+        Stato 8-Ott-2026: A–E fatte (anticipato vs calendario originale);
+        D GREEN (Stripe test + OpenAPI D-116); E telemetry Ops; gap critici
+        P-025…P-030 chiusi con «vai». Prossimo: Onda F bottoni (9 Ott).
+        Fix prodotto solo con «vai» su P-###. A-038 post-test.
       quando_si_usa: >
-        Domande su cosa fare dopo dogfood; priorità post-test;
-        dove trovare il calendario onde A–J; chat SoT secrets vs audit.
+        Stato audit; priorità giornata; dove sono matrici/diario/finding.
       passi:
-        - "Leggi docs/audit/OMNIA_PORTALE_AUDIT_PROGRAM.md (D-118)."
+        - "Programma: docs/audit/OMNIA_PORTALE_AUDIT_PROGRAM.md."
         - "Finding: docs/audit/portale-finding.md · matrici portale-matrici/."
-        - "Diario: docs/audit/portale-diario/YYYY-MM-DD.md."
-        - "Dopo Save vault: continua su chat con inject fresco (controllo secrets)
-          — chat vecchie non vedono i secret nuovi."
-        - "Onda D: Stripe test obbligatorio; Visura SKIP se Catasto sospeso."
-        - "Self-serve resta OFF finché O6 ≠ PASS (D-115)."
+        - "Diario: docs/audit/portale-diario/ · NEXT_SESSION.md."
+        - "9 Ott: Onda F — matrice bottoni CTA (analisi; fix solo «vai»)."
+        - "Self-serve OFF finché O6 ≠ PASS (D-115)."
       errori_comuni:
-        - problema: "Durante l'audit l'agent ha già riscritto il portale"
+        - problema: "L'agent ha già riscritto il portale senza vai"
           soluzione: >
-            Fuori mandato di default. Fix solo con «vai» Founder su P-###.
-        - problema: "Dove sono i risultati giorno per giorno?"
+            Fuori mandato. Fix solo con «vai» Founder su P-###.
+        - problema: "Calendario originale diceva B per il 9 Ott"
           soluzione: >
-            Diario + matrici sotto docs/audit/portale-*; fascicolo a Onda J.
+            A–E anticipate l'8 Ott. Non saltare onde: prossimo = F, poi G→J.
       permessi:
         - super_admin / Founder
       screenshot: []

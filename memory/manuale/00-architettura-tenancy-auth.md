@@ -38,9 +38,10 @@ Un blocco alla volta · niente fix senza «vai» · no P0–P3 prematuri · **li
 | **D-113** | Restore manuale testabile pre-GTM (non piattaforma DR) |
 | **D-114** | Sostenibilità bak/media = priorità pre-attivazione; O0 = numeri+design vincolante |
 | **D-115** | Programma O0…O6 approvato · **no self-serve finché O6 ≠ PASS** |
-| **D-118** | **Audit Portale ImmobilCloud** · programma 10 onde A–J · start **8-Ott-2026** · SoT `docs/audit/OMNIA_PORTALE_AUDIT_PROGRAM.md` · finding `P-###` · no fix senza «vai» |
+| **D-118** | **Audit Portale ImmobilCloud** · onde A–J · start **8-Ott-2026** · SoT `docs/audit/OMNIA_PORTALE_AUDIT_PROGRAM.md` · finding `P-###` · no fix senza «vai» |
+| **D-116** | OpenAPI Catasto sandbox: **una sola API key** (`OPENAPI_API_KEY` + fallback `ADMIN_EMAIL`) |
 
-**SoT continuità:** `docs/audit/OMNIA_AUDIT_STATE.md`  
+**SoT continuità:** `docs/audit/OMNIA_AUDIT_STATE.md` · `memory/NEXT_SESSION.md`  
 **Sequenza priorità (D-099):** fascicolo → orphan → Bak+Restore → retention → costi.  
 **Niente codice** senza «vai».
 
@@ -49,10 +50,12 @@ Un blocco alla volta · niente fix senza «vai» · no P0–P3 prematuri · **li
 Nella UI chat può comparire un ID tipo `bld-20261007-…`: è lo **snapshot Environment Build** (install già fatto), **non** un secret.  
 Cursor lo tiene in Dashboard → Environments → Builds. **Non serve** salvarlo nel password manager; annotalo solo se vuoi pin/debug di quello snapshot. I secret restano nel vault (`CLOUD_SECRETS_INVENTORY.md`). HAL: `api.cloud-environment-builds`.
 
-### Prossimo lavoro (D-118)
+### Prossimo lavoro (D-118) — aggiornato 8-Ott sera
 
-Dal **8 Ottobre 2026**: esecuzione Audit Portale (funzionamento → codice → key → Ops → bottoni → gestionale → GDPR/AI Act → resilienza → fascicolo).  
-Post-test già tracciato: **A-038** fattura Stripe + dati fiscali (solo con «vai»).
+**Fatto 8 Ott**: Onde **A–E** (anticipate) · D GREEN · gap Ops **P-025…P-030** chiusi.  
+**9 Ott**: **Onda F** — matrice bottoni CTA portale. Poi G→J (catch-up).  
+Post-test: **A-038** fattura Stripe + dati fiscali (solo con «vai»).  
+HAL: `api.portale-audit-program` · `api.founder-ops-portale` · `api.visura-openapi-catasto`.
 
 ---
 

@@ -1,63 +1,89 @@
 # Prossima sessione — programma passi
 
-**Aggiornato**: 8 Ottobre 2026 · Audit Portale D-118 · vault + HAL sync  
+**Aggiornato**: 8 Ottobre 2026 sera · D-118 A–E + fix P-025…P-030  
 **Repo**: https://github.com/mcnicastro-netizen/omnia2 ✅  
-**Chat SoT vault / Onda D**: **controllo secrets omnia** (inject fresco)  
-**Chat storica audit A–C**: chiusa / non reiniettare secret qui
+**Branch audit**: `cursor/portale-audit-onda-d-live-4532` (PR #12) · merge su `main` solo se Founder lo chiede  
+**Chat SoT**: questa run Cloud (inject Stripe test + OpenAPI)
 
 ---
 
-## 🎯 Audit Portale — in corso (D-118)
+## 🎯 Domani 9 Ottobre 2026 — Onda F (bottoni)
 
-**Programma**: [`docs/audit/OMNIA_PORTALE_AUDIT_PROGRAM.md`](../docs/audit/OMNIA_PORTALE_AUDIT_PROGRAM.md)  
-**Finding**: [`docs/audit/portale-finding.md`](../docs/audit/portale-finding.md)  
-**Matrice C**: [`docs/audit/portale-matrici/2026-10-08-onda-c.md`](../docs/audit/portale-matrici/2026-10-08-onda-c.md)  
-**Secrets**: [`memory/CLOUD_SECRETS_INVENTORY.md`](CLOUD_SECRETS_INVENTORY.md)
+**Obiettivo**: matrice esaustiva di ogni CTA/controllo del portale B2C (+ Legal B2C).  
+**SoT**: [`docs/audit/OMNIA_PORTALE_AUDIT_PROGRAM.md`](../docs/audit/OMNIA_PORTALE_AUDIT_PROGRAM.md) § Onda F  
+**Regola**: analisi/matrici/finding `P-###` · **fix codice solo con «vai»** su ID
 
-| Giorno | Onda | Stato |
+### Boot (obbligatorio)
+1. `bash scripts/omnia-stack.sh ensure`
+2. `bash scripts/check-secrets-presence.sh` → `sk_test` / `pk_test`
+3. `GET /api/billing/plans` → `mode=test` `enabled=true` (se `sk_live` → STOP)
+4. Rebuild FE se tocchi UI: `yarn build` + `omnia-stack restart-preview`
+
+### Deliverable Onda F
+- [ ] Estrarre FE: `<button` / `onClick` / `Link` CTA / `submit` in immocloud+legal+footer
+- [ ] Matrice `docs/audit/portale-matrici/2026-10-09-onda-f.md`  
+  colonne: `ID | Pagina | Label/testid | Azione attesa | Precondizione | Esito | Evidenza | Finding`
+- [ ] Zone obbligatorie: TopNav (desktop+mobile), hero, search, property, account, sell, valutatore, Visura, mutui, Legal, register/login, footer, cookie/banner
+- [ ] Diario `portale-diario/2026-10-09.md` · aggiornare `portale-finding.md`
+- [ ] 100% catalogati · 100% provati o SKIP motivato
+
+### Fuori scope domani
+- Onda G (gestionale) / H (GDPR) — non iniziare finché F non è chiusa o Founder dice «vai» a sovrapporre
+- A-038 fatture/dati fiscali (post-test)
+- Push `main` senza ordine Founder
+
+### Aperti residui (non bloccanti F)
+| ID | Note |
+|--|--|
+| P-021 | Google OAuth opz. |
+| P-024 | gemini model string docs P3 |
+| P-026 | Vault `whsec` ≠ endpoint auto-sync — Founder aggiorna Environment |
+
+---
+
+## ✅ Stato 8 Ott (fatto oggi)
+
+| Onda | Esito |
+|--|--|
+| **A** funzionamento | CHIUSA · P-001…P-008 |
+| **B** codice | CHIUSA · P-009…P-017 |
+| **C** secrets | CHIUSA/mitigata · boot auto |
+| **D** provider live | **GREEN** · P-022/P-023 CHIUSI · Stripe test + OpenAPI D-116 |
+| **E** Ops telemetry | CHIUSA · P-025…P-030 CHIUSI (vai) |
+
+**PR draft**: https://github.com/mcnicastro-netizen/omnia2/pull/12  
+**HAL**: `api.portale-audit-program` · `api.founder-ops-portale` · `api.visura-openapi-catasto` (D-116)
+
+---
+
+## Calendario catch-up (dopo anticipo A–E)
+
+| Data | Onda | Focus |
 |--|--|--|
-| 8 Ott | **A** funzionamento | ✅ CHIUSA · P-001…P-008 |
-| 8 Ott | **B** codice solo portale | ✅ CHIUSA · P-009…P-017 |
-| 8 Ott | **C** secrets | ✅ boot auto · vault Save fatto · correggere **sk_live→sk_test** |
-| succ. | **D** prova live provider | ⏭ su chat *controllo secrets* · Visura **SKIP** (Catasto provider sospeso) |
-| poi | E→J | pianificate |
+| **9 Ott** | **F** | Matrice bottoni CTA |
+| 10 Ott | **G** | Portale ↔ gestionale |
+| 11 Ott | **H** | GDPR + AI Act portale |
+| 12 Ott | **I** | Anti-crash / dati / Stripe resilienza |
+| 13 Ott | **J** | Extra + fascicolo + priorità fix |
 
-### Prima di Onda D (Founder, su chat secrets)
-1. Vault: sostituire Stripe **live** con **test** (`sk_test_` / `pk_test_` / `whsec` test)  
-2. Aggiungere `OPENAPI_EMAIL` se serve OAuth (Visura resta SKIP finché Catasto sospeso)  
-3. `JWT_SECRET` reale (no `change-me-…`)  
-4. Nuovo agent se hai appena corretto i secret · `bash scripts/check-secrets-presence.sh` → class=sk_test  
-5. «vai» Onda D (senza Visura PDF)
+> Regola SoT: non saltare onde. A–E fatte in anticipo → si avanza a F.
 
 ---
 
-## ✅ Boot auto Cloud (8 Ott) — già in repo
+## Boot auto Cloud (invariato)
 
 | Script | Ruolo |
 |--|--|
-| `stripe-vault-materialize.py` | vault → `.env` (+ OPENAPI_*) · prefer sk_test_ |
-| `sync-public-base-url.py` | FRONTEND_* / OMNIA_PUBLIC_URL = trycloudflare |
-| `sync-stripe-webhook-url.py` | webhook test → `{tunnel}/api/billing/webhook` |
-| `shared/public_base.py` | email/alert preferiscono SHARE_URL |
-| `check-secrets-presence.sh` | dogfood Stripe/OpenAPI + WARN vault |
+| `stripe-vault-materialize.py` | vault → `.env` · prefer `sk_test_` |
+| `sync-public-base-url.py` | FRONTEND_* = trycloudflare |
+| `sync-stripe-webhook-url.py` | webhook → tunnel `/api/billing/webhook` |
+| `check-secrets-presence.sh` | presence + classi Stripe |
 
----
-
-## ✅ Stripe sandbox (regola Cloud)
-
-Solo `sk_test_` / `pk_test_` · `STRIPE_ENABLED=true` · `STRIPE_MODE` opzionale (auto).  
-`bash scripts/activate-stripe-sandbox.sh` · HAL `api.stripe-sandbox-cloud`.
-
----
-
-## ⚠ Visura / OpenAPI Catasto
-
-**8 Ott 2026 Founder**: servizio **Catasto sospeso dal provider** OpenAPI.it.  
-Dogfood Visura = SKIP. HAL: `api.visura-openapi-catasto`.
+**Founder (quando puoi)**: allinea vault `STRIPE_WEBHOOK_SECRET` all’endpoint auto-sync (P-026).
 
 ---
 
 ## HAL / manuale
 
-Aggiornati Cap. 00 HAL (`api.cloud-secrets-vault`, `api.visura-openapi-catasto`, `api.portale-audit-program`) + Cap. 19 §19.10.  
-Reindex: `POST /api/app/hal/knowledge/reindex?force=true` (super_admin) dopo merge.
+Cap. 00 HAL + Cap. 19 §19.10.6 aggiornati 8-Ott sera.  
+Reindex: `POST /api/app/hal/knowledge/reindex?force=true` (super_admin) dopo merge/pull.

@@ -51,20 +51,33 @@ Produrre un **fascicolo audit** completo del portale: funzionamento, codice, API
 
 ## Calendario esecutivo (partenza 8 Ott 2026)
 
+### Piano originale
+
 | Giorno | Data | Onda | Focus |
 |--|--|--|--|
-| D1 | gio 8 Ott | **Onda A** | Funzionamento end-to-end portale (virgola × virgola UI) |
-| D2 | ven 9 Ott | **Onda B** | Analisi codice **solo** portale (FE+BE `/cloud`) |
-| D3 | sab 10 Ott | **Onda C** | Inventario e agganci API key portale |
-| D4 | dom 11 Ott | **Onda D** | Prova funzionale di ogni key / provider |
+| D1 | gio 8 Ott | **Onda A** | Funzionamento end-to-end portale |
+| D2 | ven 9 Ott | **Onda B** | Analisi codice **solo** portale |
+| D3 | sab 10 Ott | **Onda C** | Inventario API key |
+| D4 | dom 11 Ott | **Onda D** | Prova live key / provider |
 | D5 | lun 12 Ott | **Onda E** | Informazioni → super_admin + Ops |
-| D6 | mar 13 Ott | **Onda F** | Matrice bottoni (tutti i CTA) |
-| D7 | mer 14 Ott | **Onda G** | Rapporto portale ↔ gestionale |
-| D8 | gio 15 Ott | **Onda H** | GDPR + AI Act (portale) |
-| D9 | ven 16 Ott | **Onda I** | Anti-crash, dati, Stripe, resilienza |
-| D10 | sab 17 Ott | **Onda J** | Extra necessari + fascicolo chiuso + priorità fix |
+| D6 | mar 13 Ott | **Onda F** | Matrice bottoni |
+| D7 | mer 14 Ott | **Onda G** | Portale ↔ gestionale |
+| D8 | gio 15 Ott | **Onda H** | GDPR + AI Act |
+| D9 | ven 16 Ott | **Onda I** | Anti-crash / dati / Stripe |
+| D10 | sab 17 Ott | **Onda J** | Fascicolo + priorità fix |
 
-> Se un giorno slitta: **non saltare onde**; si sposta in avanti l’intero calendario. Onde C↔D e E↔F possono sovrapporsi solo se lo stesso agent completa A–B.
+### Catch-up reale (8 Ott sera)
+
+| Data | Onda | Stato |
+|--|--|--|
+| 8 Ott | **A–E** | ✅ fatte (anticipate) · D GREEN · P-025…P-030 chiusi |
+| **9 Ott** | **F** | ⏭ **programma domani** — matrice bottoni |
+| 10 Ott | **G** | Portale ↔ gestionale |
+| 11 Ott | **H** | GDPR + AI Act |
+| 12 Ott | **I** | Resilienza |
+| 13 Ott | **J** | Fascicolo |
+
+> Se un giorno slitta: **non saltare onde**; si sposta in avanti. Dettaglio giornata: `memory/NEXT_SESSION.md`.
 
 ---
 

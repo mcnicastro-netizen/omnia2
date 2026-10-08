@@ -271,10 +271,22 @@ Se lo stato resta pending o `?cancel=1`:
 
 ### 19.10.6 · Founder Ops (super_admin) e audit portale
 
-Oltre a `/app/settings/billing` (agenzia), il **Founder** ha `/app/ops` (cruscotto costi/incassi · D-077 / estensione finance).  
-Dal **8-Ott-2026** parte l’**Audit Portale** ImmobilCloud (**D-118**): programma in `docs/audit/OMNIA_PORTALE_AUDIT_PROGRAM.md` (onde A–J).  
-Post-test già in coda: **A-038** (Invoice Stripe + dati fiscali su ogni incasso — solo con «vai»).  
-HAL: `api.portale-audit-program`, `api.cloud-environment-builds` (ID `bld-…` in chat ≠ secret).
+Oltre a `/app/settings/billing` (agenzia), il **Founder** ha:
+
+| UI | API / ruolo |
+|--|--|
+| `/app/ops` | `GET /api/app/ops/overview` — costi, **B2C revenue** (`amount_eur`), card **Portale**, alert, backup |
+| `/app/ops/legal` | volume HAL Legal |
+| `/app/moderation` | coda UGC privati (approve/reject) |
+
+Nav Shell (super_admin): **Ops Costi** · **Ops Legal** · **Moderazione**.  
+Alert: `POST /api/app/ops/alerts/{id}/ack` · `…/ack-all`.  
+Backup: `POST /api/app/ops/backup/run` (se health ≠ OK).  
+Fail Visura post-pagamento → `ops_alerts` kind `openapi_visura`.
+
+**Audit Portale D-118** (8-Ott): onde A–E fatte; **9 Ott = Onda F** bottoni. SoT `docs/audit/OMNIA_PORTALE_AUDIT_PROGRAM.md`.  
+Post-test: **A-038** (Invoice Stripe + dati fiscali — solo con «vai»).  
+HAL: `api.founder-ops-portale`, `api.portale-audit-program`, `api.cloud-environment-builds`.
 
 ---
 
@@ -289,7 +301,7 @@ Molte impostazioni logiche che l'utente si aspetta di trovare in una "pagina Set
 | Cambio piano | `/app/settings/billing` (BillingPage) o Stripe portal | 19 (§19.10) |
 | Acquisto crediti | `/app/settings/billing` (BillingPage) | 19 (§19.10) |
 | Fatture | Stripe customer portal (link da BillingPage) | 19 (§19.10.4) |
-| Incassi B2C / Ops Founder | `/app/ops` (solo super_admin) · audit portale D-118 | 19 (§19.10.6) · Cap. 00 |
+| Incassi B2C / Ops Founder | `/app/ops` (+ Legal, Moderazione) · solo super_admin · D-118 | 19 (§19.10.6) · Cap. 00 |
 | Custom domain | `/app/settings/domain-verify` (DomainVerifyPage) | 17 |
 | Domain sovereignty policy | `/app/domain-sovereignty-policy` (page pubblica) | 17 |
 | API Keys | `/app/api-keys` (ApiKeysPage) | Track B (futuro) |

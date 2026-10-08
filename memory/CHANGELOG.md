@@ -1,3 +1,11 @@
+## 2026-10-08 sera — D-118 A–E + Ops P-025…P-030 + HAL v0.31
+
+- Onde **A–E** chiuse (anticipate) · D GREEN · Stripe test + OpenAPI D-116
+- Fix Ops: `amount_eur`, portal telemetry, alert ack, backup run, nav Moderazione/Legal
+- HAL Cap. **00**: +`api.founder-ops-portale` · update Visura D-116 · portale-audit stato
+- Cap. **00** / **19** §19.10.6 MD · `NEXT_SESSION` · programma **9 Ott = Onda F**
+- Diario `portale-diario/2026-10-09-programma.md` · PR #12
+
 ## 2026-10-08 — D-118 Onda C + boot auto secrets + HAL Visura/Catasto
 
 - Boot Cloud: `sync-public-base-url` · `sync-stripe-webhook-url` · materialize OPENAPI_* · `get_public_base_url()`
