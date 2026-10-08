@@ -1,6 +1,6 @@
 # Audit Portale — registro finding `P-###`
 
-**Aggiornato**: 2026-10-08 · Onda B fix (vai Founder) · P-011 staging resta aperto  
+**Aggiornato**: 2026-10-08 · Onda B fix (vai Founder) · P-011 staging CHIUSO  
 **Regola**: nessun fix senza «vai» Founder (D-118)
 
 | ID | Sev | Onda | Titolo | Stato |
@@ -15,7 +15,7 @@
 | P-008 | P2 | A | Register email esistente → 409 (no auto-login) | CHIUSO |
 | P-009 | P0 | B | Media `omnia/private/…` pubblici via `GET /api/media` | CHIUSO |
 | P-010 | P1 | B | HAL Legal B2C senza gate pagamento (SKU €1) | CHIUSO |
-| P-011 | P2 | B | `b2c_staging_render` paid senza consume path | APERTO |
+| P-011 | P2 | B | `b2c_staging_render` paid senza consume path | CHIUSO |
 | P-012 | P2 | B | Valuator `/it/cloud/login` morto + lang hardcode | CHIUSO |
 | P-013 | P2 | B | TopNav Vendi → sempre register se loggato | CHIUSO |
 | P-014 | P2 | B | Register ignora `?next=` | CHIUSO |
@@ -35,9 +35,10 @@
 - **FE**: paywall + checkout `b2c_hal_legal_query` in `LegalApp.jsx`
 - **Verifica**: B2C register → `POST /app/legal/chat` → **402** `legal_payment_required`
 
-## P-011 — dettaglio (APERTO)
+## P-011 — dettaglio (CHIUSO)
 
-- Staging: checkout marca paid ma manca job/render consume. CTA Sell resta; serve «vai» dedicato o hide WIP.
+- **Fix**: `listing_id` obbligatorio su `b2c_staging_render` · `consume_b2c_staging_render` · webhook `fulfill_paid_staging_render` (job `payment_rail=b2c_stripe`, no debit crediti) · `POST/GET /cloud/me/properties/{pid}/staging` · SellPage resume post-`staging=ok` · auto-save foto watermarked sull’annuncio · success_url Stripe con `&session_id=` se già query
+- **Verifica**: `test_b2c_staging.py` (catalog + consume + fulfill idempotent); checkout senza `listing_id` → 400
 
 ## P-012…P-017 — fix breve
 

@@ -1,6 +1,6 @@
 # Prossima sessione — programma passi
 
-**Aggiornato**: 8 Ottobre 2026 · Audit Portale D-118 · **Onda B analisi fatta**  
+**Aggiornato**: 8 Ottobre 2026 · Audit Portale D-118 · **Onda B chiusa**  
 **Repo**: https://github.com/mcnicastro-netizen/omnia2 ✅  
 **Chat SoT sessione**: continuare questa linea / agent su omnia2 GitHub
 
@@ -16,11 +16,11 @@
 | Giorno | Onda | Stato |
 |--|--|--|
 | 8 Ott | **A** funzionamento | ✅ CHIUSA · P-001…P-008 |
-| 8 Ott | **B** codice solo portale | ✅ analisi + fix · resta **P-011 staging** |
-| succ. | **C** secrets / P-011 | ⏭ «vai» |
+| 8 Ott | **B** codice solo portale | ✅ CHIUSA · P-009…P-017 (P-011 staging incluso) |
+| succ. | **C** secrets | ⏭ «vai» |
 | poi | D→J | pianificate |
 
-**Onda B fix**: P-009 media private AuthZ · P-010 Legal paywall · P-012…P-017 UX. Aperto: P-011 staging render.
+**Onda B fix**: P-009 media private AuthZ · P-010 Legal paywall · P-011 staging consume/job · P-012…P-017 UX.
 
 ---
 

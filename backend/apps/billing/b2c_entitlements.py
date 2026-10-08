@@ -214,6 +214,54 @@ async def consume_hal_legal_query(user_id: str) -> bool:
     return bool(doc)
 
 
+async def consume_b2c_staging_render(
+    user_id: str,
+    *,
+    listing_id: Optional[str] = None,
+    stripe_session_id: Optional[str] = None,
+    job_id: Optional[str] = None,
+) -> Optional[dict]:
+    """Atomically consume one paid B2C staging render (P-011).
+
+    Prefer `stripe_session_id` when known (post-checkout). Otherwise consume the
+    oldest paid unconsumed purchase for this user (optionally bound to listing).
+    Returns the updated purchase doc, or None if nothing to consume.
+    """
+    if not user_id:
+        return None
+    now_iso = datetime.now(timezone.utc).isoformat()
+    db = Database.get()
+    filt: Dict[str, Any] = {
+        "user_id": user_id,
+        "product_key": "b2c_staging_render",
+        "status": "paid",
+        "$and": [
+            {"$or": [
+                {"consumed_at": {"$exists": False}},
+                {"consumed_at": None},
+            ]},
+            {"$or": [
+                {"expires_at": None},
+                {"expires_at": {"$exists": False}},
+                {"expires_at": {"$gt": now_iso}},
+            ]},
+        ],
+    }
+    if stripe_session_id:
+        filt["stripe_session_id"] = stripe_session_id
+    if listing_id:
+        filt["listing_id"] = listing_id
+    patch: Dict[str, Any] = {"consumed_at": now_iso}
+    if job_id:
+        patch["job_id"] = job_id
+    return await db.b2c_purchases.find_one_and_update(
+        filt,
+        {"$set": patch},
+        sort=[("paid_at", 1), ("created_at", 1)],
+        return_document=True,
+    )
+
+
 def user_requires_b2c_legal_paywall(user: Dict[str, Any]) -> bool:
     """B2C clients must pay per query; CRM agents/admins skip the B2C SKU gate."""
     if not user:

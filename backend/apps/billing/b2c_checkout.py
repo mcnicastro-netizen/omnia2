@@ -37,6 +37,7 @@ from apps.billing.b2c_products import (
     is_b2c_boost_product,
     list_b2c_catalog,
     list_boost_products,
+    product_requires_listing,
 )
 from apps.billing.b2c_entitlements import (
     check_base_valuation_allowed,
@@ -176,7 +177,7 @@ async def b2c_checkout(
         raise HTTPException(status_code=400, detail=f"unknown_product:{payload.product_key}")
 
     listing_id: Optional[str] = None
-    if is_b2c_boost_product(payload.product_key):
+    if product_requires_listing(payload.product_key):
         if not payload.listing_id:
             raise HTTPException(status_code=400, detail="listing_id_required")
         await _assert_listing_owned(user["id"], payload.listing_id)
@@ -210,10 +211,12 @@ async def b2c_checkout(
 
     try:
         price_id = _get_or_create_stripe_price(payload.product_key)
+        success = str(payload.success_url)
+        sep = "&" if "?" in success else "?"
         session = stripe.checkout.Session.create(
             mode="payment",
             line_items=[{"price": price_id, "quantity": 1}],
-            success_url=f"{str(payload.success_url)}?session_id={{CHECKOUT_SESSION_ID}}",
+            success_url=f"{success}{sep}session_id={{CHECKOUT_SESSION_ID}}",
             cancel_url=str(payload.cancel_url),
             customer_email=user.get("email"),
             metadata=meta,
@@ -278,6 +281,8 @@ async def b2c_status(session_id: str, user: dict = Depends(get_current_user)):
         "listing_id": doc.get("listing_id"),
         "expires_at": doc.get("expires_at"),
         "paid_at": doc.get("paid_at"),
+        "consumed_at": doc.get("consumed_at"),
+        "job_id": doc.get("job_id"),
     }
 
 
@@ -334,7 +339,20 @@ async def apply_b2c_purchase_side_effects(session: dict) -> None:
             logger.warning("b2c_purchase webhook: no local record for session=%s", session_id)
         return
 
-    # Other catalog products (staging, HAL legal): mark paid with 24h ledger window;
+    if product_key == "b2c_staging_render":
+        updated = await mark_uni_purchase_paid(session_id)
+        if updated:
+            logger.info(
+                "b2c_purchase paid (staging): session=%s user=%s listing=%s",
+                session_id, updated.get("user_id"), updated.get("listing_id"),
+            )
+            from apps.immoweb.virtual_staging import fulfill_paid_staging_render
+            await fulfill_paid_staging_render(session_id)
+        else:
+            logger.warning("b2c_purchase webhook: no local record for session=%s", session_id)
+        return
+
+    # Other catalog products (HAL legal): mark paid with 24h ledger window;
     # fulfillment is consumed at feature call-time via b2c_purchases.
     if product_key in B2C_ONE_SHOT_PRODUCTS:
         updated = await mark_uni_purchase_paid(session_id)

@@ -25,6 +25,7 @@ from typing import Literal
 from uuid import uuid4
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
+from pydantic import BaseModel, Field
 
 from shared.auth.dependencies import get_current_user
 from shared.db.connection import Database
@@ -362,6 +363,105 @@ async def submit_for_moderation(pid: str, user: dict = Depends(get_current_user)
     )
     logger.info("private listing submitted: id=%s user=%s", pid, user["id"])
     return {"ok": True, "moderation_status": "pending"}
+
+
+class B2CStagingStartBody(BaseModel):
+    """Kick (or re-kick) B2C staging fulfill after Stripe return (P-011)."""
+    session_id: str = Field(..., min_length=8, max_length=200)
+
+
+@router.post("/{pid}/staging")
+async def start_b2c_staging(
+    pid: str,
+    body: B2CStagingStartBody,
+    user: dict = Depends(get_current_user),
+):
+    """Consume paid `b2c_staging_render` and start AI job for this listing.
+
+    Idempotent when webhook already fulfilled the same `session_id`.
+    """
+    await _ensure_b2c(user)
+    db = Database.get()
+    listing = await db.properties.find_one(
+        {"id": pid, "owner_user_id": user["id"], "is_private_listing": True},
+        {"_id": 0, "id": 1, "photos": 1},
+    )
+    if not listing:
+        raise HTTPException(status_code=404, detail="listing_not_found")
+    if not (listing.get("photos") or []):
+        raise HTTPException(status_code=400, detail="listing_has_no_photos")
+
+    purchase = await db.b2c_purchases.find_one({
+        "stripe_session_id": body.session_id,
+        "user_id": user["id"],
+        "product_key": "b2c_staging_render",
+    })
+    if not purchase:
+        raise HTTPException(status_code=404, detail="purchase_not_found")
+    if purchase.get("listing_id") and purchase["listing_id"] != pid:
+        raise HTTPException(status_code=400, detail="listing_mismatch")
+    if purchase.get("status") != "paid":
+        raise HTTPException(status_code=402, detail={
+            "error": "staging_payment_required",
+            "message": "Pagamento staging non ancora confermato.",
+        })
+
+    from apps.immoweb.virtual_staging import fulfill_paid_staging_render, _job_to_out
+
+    result = await fulfill_paid_staging_render(body.session_id)
+    job = (result or {}).get("job") if isinstance(result, dict) else None
+    if not job:
+        # Re-read if fulfill returned bare purchase
+        purchase = await db.b2c_purchases.find_one(
+            {"stripe_session_id": body.session_id}, {"_id": 0},
+        ) or purchase
+        if purchase.get("fulfillment_error"):
+            raise HTTPException(status_code=400, detail=purchase["fulfillment_error"])
+        if purchase.get("job_id"):
+            job = await db.virtual_staging_jobs.find_one(
+                {"id": purchase["job_id"], "user_id": user["id"]},
+            )
+    if not job:
+        raise HTTPException(status_code=409, detail="staging_fulfill_failed")
+
+    # Normalize job dict (may include Mongo _id)
+    if job.get("_id") is not None:
+        job = {k: v for k, v in job.items() if k != "_id"}
+    out = _job_to_out(job)
+    return {
+        "ok": True,
+        "job": out.model_dump(),
+        "session_id": body.session_id,
+        "listing_id": pid,
+    }
+
+
+@router.get("/{pid}/staging/{job_id}")
+async def get_b2c_staging_job(
+    pid: str,
+    job_id: str,
+    user: dict = Depends(get_current_user),
+):
+    """Poll B2C staging job bound to one of the caller's private listings."""
+    await _ensure_b2c(user)
+    db = Database.get()
+    listing = await db.properties.find_one(
+        {"id": pid, "owner_user_id": user["id"], "is_private_listing": True},
+        {"_id": 1},
+    )
+    if not listing:
+        raise HTTPException(status_code=404, detail="listing_not_found")
+    from apps.immoweb.virtual_staging import _job_to_out
+
+    job = await db.virtual_staging_jobs.find_one({
+        "id": job_id,
+        "user_id": user["id"],
+        "property_id": pid,
+        "payment_rail": "b2c_stripe",
+    })
+    if not job:
+        raise HTTPException(status_code=404, detail="job_not_found")
+    return _job_to_out(job).model_dump()
 
 
 @router.delete("/{pid}", status_code=204)
