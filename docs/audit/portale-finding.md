@@ -1,6 +1,6 @@
 # Audit Portale — registro finding `P-###`
 
-**Aggiornato**: 2026-10-08 · Onda D prove live key · P-022…P-024 aperti  
+**Aggiornato**: 2026-10-08 · Onda D GREEN (ripresa Stripe test + D-116) · P-025/P-026 aperti  
 **Regola**: nessun fix senza «vai» Founder (D-118)
 
 | ID | Sev | Onda | Titolo | Stato |
@@ -26,9 +26,11 @@
 | P-019 | P2 | C | `FRONTEND_*` / `OMNIA_PUBLIC_URL` = localhost:43122 | CHIUSO |
 | P-020 | P3 | C | `check-secrets` non copre `OPENAPI_*` / Stripe dogfood | CHIUSO |
 | P-021 | P3 | C | `GOOGLE_CLIENT_ID` absent — login Google OFF | APERTO (opz.) |
-| P-022 | **P0** | D | Stripe **live** in Cloud (`sk_live`/`pk_live`, plans `mode=live`) | **APERTO** |
-| P-023 | **P1** | D | OpenAPI key OK ma product `openapi_visure_enabled=false` (manca email / D-116) | **APERTO** |
-| P-024 | P3 | D | Env/docs citano `gemini-2.0-flash` deprecato; product HAL OK | **APERTO** |
+| P-022 | P0 | D | Stripe **live** in Cloud (`sk_live`/`pk_live`, plans `mode=live`) | **CHIUSO** |
+| P-023 | P1 | D | OpenAPI key OK ma product `openapi_visure_enabled=false` (manca email / D-116) | **CHIUSO** |
+| P-024 | P3 | D | Env/docs citano `gemini-2.0-flash` deprecato; product HAL OK | APERTO |
+| P-025 | P2 | D | `b2c_purchases` paid senza `amount_eur` (Ops finance cieco su importo) | **APERTO** |
+| P-026 | P3 | D | Vault `STRIPE_WEBHOOK_SECRET` ≠ secret endpoint auto-sync tunnel | **APERTO** |
 
 ## P-009 — dettaglio (CHIUSO)
 
@@ -67,24 +69,35 @@
 
 - `GOOGLE_CLIENT_ID` absent → Google Sign-In OFF (fail-soft). Opzionale dogfood.
 
-## P-022 — dettaglio (APERTO · Onda D)
+## P-022 — dettaglio (CHIUSO · Onda D ripresa)
 
-- **Evidenza**: `check-secrets` class=`sk_live`/`pk_live`; `GET /api/billing/plans` → `enabled=true` `mode=live`
-- **Impatto**: viola regola D-118 “solo sk_test in Cloud”; rischio checkout denaro reale; webhook sync e dogfood Visura/B2C bloccati
-- **Azione Founder**: in vault Environment omnia2 sostituire Stripe con `sk_test_` / `pk_test_` (+ webhook test); **nuovo agent boot**; non riusare chat avviate con live
-- **Fix codice**: nessuno finché vault non è test (eventuale hard-refuse `sk_live` in Cloud = solo con «vai»)
+- **Chiusura**: vault Environment = `sk_test_` / `pk_test_`; plans `mode=test` `enabled=true`
+- **Verifica**: checkout B2C `b2c_hal_legal_query` €1 → session `cs_test_…` · webhook signed → `b2c_purchases.status=paid`
+- Log: `/opt/cursor/artifacts/onda-d-live-stripe-openapi.log`
 
-## P-023 — dettaglio (APERTO · Onda D)
+## P-023 — dettaglio (CHIUSO · Onda D ripresa)
 
-- **Evidenza**: OAuth sandbox con `ADMIN_EMAIL`+`OPENAPI_API_KEY` → create Visura + PDF 58 054 byte; `GET /api/docs/status` → `openapi_visure_enabled=false` (manca `OPENAPI_EMAIL` nel gate attuale)
-- **Mitiga**: merge PR D-116 (single-key) **oppure** aggiungere `OPENAPI_EMAIL` al vault
-- Catasto **non** sospeso in questa run (handoff sera superato)
+- **Chiusura**: merge D-116 (PR #10) su branch audit — `auth_mode=oauth_single_key` (key + `ADMIN_EMAIL`)
+- **Verifica**: ping Catasto sandbox 200 · create Visura · PDF 58054 byte · catalog `openapi_enabled=true`
+- **Follow-up Founder**: merge PR #10 su `main` se non già fatto (questa ripresa lo usa sul branch audit)
 
 ## P-024 — dettaglio (APERTO · Onda D)
 
 - Raw Generative Language su `gemini-2.0-flash` → 404 “no longer available”
 - Product: `POST /api/app/hal/knowledge/ask` 200 con `GEMINI_API_KEY`
 - Azione: allineare `.env.example` / commenti al default `shared/llm` (flash-latest / 3.5) — P3
+
+## P-025 — dettaglio (APERTO · Onda D)
+
+- **Evidenza**: dopo webhook paid, doc `b2c_purchases` ha `status=paid` ma `amount_eur`/`price_eur` = null
+- `mark_uni_purchase_paid` non scrive importo; `founder_ops` aggrega su `$amount_eur` → incassi B2C sottostimati/zero
+- **Fix** (solo con «vai»): in `apply_b2c_purchase_side_effects` / `mark_uni_purchase_paid` settare `amount_eur` da `session.amount_total/100` o catalogo
+
+## P-026 — dettaglio (APERTO · Onda D)
+
+- **Evidenza**: `sync-stripe-webhook-url.py` CREATED endpoint → nuovo `whsec` in `.env`; vault process resta sul whsec precedente (hash diversi, stessa len)
+- Run audit: API avviata con whsec `.env` allineato all’endpoint tunnel
+- **Azione Founder**: aggiornare vault `STRIPE_WEBHOOK_SECRET` al secret dell’endpoint “OMNIA Cloud Agent portal (auto-sync)” (o disabilitare endpoint orfani)
 
 ## P-012…P-017 — fix breve
 

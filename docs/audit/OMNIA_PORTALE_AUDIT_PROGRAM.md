@@ -228,7 +228,7 @@ Per ogni riga: Presente in vault? Usato da path portale? Fail-soft?
 ## Onda D — Controllo funzionamento delle stesse key (D4)
 
 **Obiettivo**: prova live **sandbox** di ogni provider usato dal portale.  
-**Stato**: ✅ analisi eseguita 2026-10-08 · matrice `portale-matrici/2026-10-08-onda-d.md` · **chiusura green bloccata da P-022** (Stripe live)
+**Stato**: ✅ **GREEN** 2026-10-08 (ripresa) · matrice `portale-matrici/2026-10-08-onda-d.md` · P-022/P-023 CHIUSI · gap P-025/P-026
 
 ### D.1 Protocollo prova (per provider)
 1. Check presence (length > 0)  
@@ -240,9 +240,9 @@ Per ogni riga: Presente in vault? Usato da path portale? Fail-soft?
 ### D.2 Matrice provider
 | Provider | Smoke | Flusso portale | Esito |
 |--|--|--|--|
-| Stripe test | plans `enabled=true` **`mode=live`** | Checkout **non** eseguito | **FAIL** P-022 |
-| Stripe webhook | sync SKIP (serve sk_test) | non provato | **SKIP** |
-| OpenAPI Catasto | OAuth+create+PDF 58KB sandbox | product `openapi_visure_enabled=false` | **FAIL** P-023 |
+| Stripe test | plans `enabled=true` **`mode=test`** | Checkout €1 `b2c_hal_legal_query` → paid | **OK** (P-022 CHIUSO) |
+| Stripe webhook | sync endpoint tunnel · signed 200 | `checkout.session.completed` → paid | **OK** |
+| OpenAPI Catasto | OAuth single-key + PDF 58KB | catalog `openapi_enabled=true` (D-116) | **OK** (P-023 CHIUSO) |
 | Gemini | HAL knowledge/ask 200 | product OK | **OK** |
 | Tavily | absent | — | **SKIP** |
 | fal | models 200 | staging render SKIP soft | **OK** |
@@ -251,15 +251,15 @@ Per ogni riga: Presente in vault? Usato da path portale? Fail-soft?
 | Mongo | health db=ok | persist | **OK** |
 
 ### D.3 Stripe — controlli speciali
-- [x] Solo `sk_test_` / `pk_test_` → **FAIL** (process = live)  
-- [x] Nessun `sk_live_` attivo nel process → **FAIL**  
-- [ ] Webhook secret allineato (no alert “firma non valida” nuovi) → SKIP  
-- [ ] `b2c_purchases.amount_eur` popolato → SKIP  
-- [ ] Ops Founder vede incasso per voce (D-117 se merged; altrimenti annotare dipendenza PR) → SKIP  
+- [x] Solo `sk_test_` / `pk_test_` → **OK**  
+- [x] Nessun `sk_live_` attivo nel process → **OK**  
+- [x] Webhook secret allineato (handler 200 in-run) → **OK** · vault Environment da aggiornare (P-026)  
+- [ ] `b2c_purchases.amount_eur` popolato → **FAIL** P-025  
+- [ ] Ops Founder vede incasso per voce (D-117 se merged; altrimenti annotare dipendenza PR) → deferred Onda E  
 
 ### D.4 Criteri chiusura Onda D
 - [x] Matrice provider completa  
-- [ ] Zero P0 key “silenti” (feature mostra successo falso) → **P-022 aperto**  
+- [x] Zero P0 key “silenti” → **P-022 CHIUSO** · Onda D **GREEN**
 
 ---
 
