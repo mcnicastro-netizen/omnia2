@@ -41,6 +41,13 @@ _VAULT_PROTECTED: frozenset[str] = frozenset(
         "ADMIN_EMAIL",
         "ADMIN_PASSWORD",
         "DEMO_ADMIN_PASSWORD",
+        "OPENAPI_ENABLED",
+        "OPENAPI_API_KEY",
+        "OPENAPI_EMAIL",
+        "OPENAPI_TOKEN",
+        "OPENAPI_MODE",
+        "OPENAPI_CATASTO_BASE",
+        "OPENAPI_OAUTH_BASE",
     }
 )
 

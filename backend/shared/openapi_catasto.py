@@ -1,8 +1,14 @@
 """OpenAPI.it Catasto client — visure catastali ufficiali (sandbox → prod).
 
-Auth (OAuth V2):
+Auth modes (in priority order):
+  1. OPENAPI_TOKEN — pre-minted Bearer (console → Autenticazione)
+  2. OPENAPI_EMAIL + OPENAPI_API_KEY — OAuth client_credentials
+  3. Sandbox single-key (onda D): OPENAPI_API_KEY alone — OAuth with
+     email fallback ADMIN_EMAIL / OMNIA_ADMIN_EMAIL, default sandbox hosts
+
+OAuth:
   POST {OPENAPI_OAUTH_BASE}/tokens
-  Basic auth: OPENAPI_EMAIL : OPENAPI_API_KEY
+  Basic auth: email : OPENAPI_API_KEY
   JSON body: {"grant_type":"client_credentials","scopes":"..."}
   → data.token used as Bearer on Catasto API
 
@@ -37,26 +43,73 @@ def _truthy(name: str) -> bool:
     return (os.environ.get(name) or "").lower() in {"1", "true", "yes"}
 
 
+def _env(name: str) -> str:
+    return (os.environ.get(name) or "").strip()
+
+
+def _openapi_email() -> str:
+    """Resolve console email: explicit OPENAPI_EMAIL, else Founder admin aliases."""
+    for name in ("OPENAPI_EMAIL", "ADMIN_EMAIL", "OMNIA_ADMIN_EMAIL"):
+        val = _env(name)
+        if val:
+            return val
+    return ""
+
+
+def _api_key() -> str:
+    return _env("OPENAPI_API_KEY")
+
+
+def _static_token() -> str:
+    return _env("OPENAPI_TOKEN")
+
+
+def _live_mode() -> bool:
+    """True only when Founder explicitly opts into production Catasto hosts."""
+    mode = (_env("OPENAPI_MODE") or _env("OPENAPI_ENV")).lower()
+    if mode in {"live", "prod", "production"}:
+        return True
+    base = _env("OPENAPI_CATASTO_BASE").lower()
+    if base and "test.catasto" not in base and "catasto.openapi.it" in base:
+        return True
+    return False
+
+
+def auth_mode() -> str:
+    """Return configured auth mode label (for status/ping)."""
+    if _static_token():
+        return "static_token"
+    if _api_key() and _env("OPENAPI_EMAIL"):
+        return "oauth"
+    if _api_key() and _openapi_email():
+        return "oauth_single_key"
+    return "none"
+
+
 def openapi_enabled() -> bool:
     if not _truthy("OPENAPI_ENABLED"):
         return False
-    if (os.environ.get("OPENAPI_TOKEN") or "").strip():
+    if _static_token():
         return True
-    email = (os.environ.get("OPENAPI_EMAIL") or "").strip()
-    key = (os.environ.get("OPENAPI_API_KEY") or "").strip()
-    return bool(email and key)
+    # Sandbox single-key: API key + resolvable email (OPENAPI_EMAIL or ADMIN_*)
+    return bool(_api_key() and _openapi_email())
 
 
 def _base() -> str:
-    return (os.environ.get("OPENAPI_CATASTO_BASE") or DEFAULT_BASE).rstrip("/")
+    explicit = _env("OPENAPI_CATASTO_BASE")
+    if explicit:
+        return explicit.rstrip("/")
+    if _live_mode():
+        return DEFAULT_BASE
+    # Default sandbox when not live (Cloud Agent / local dogfood)
+    return DEFAULT_SANDBOX_BASE
 
 
 def _oauth_base() -> str:
-    explicit = (os.environ.get("OPENAPI_OAUTH_BASE") or "").strip()
+    explicit = _env("OPENAPI_OAUTH_BASE")
     if explicit:
         return explicit.rstrip("/")
-    # Infer sandbox OAuth from catasto base
-    if "test.catasto" in _base():
+    if "test.catasto" in _base() or not _live_mode():
         return DEFAULT_SANDBOX_OAUTH
     return DEFAULT_OAUTH
 
@@ -82,12 +135,12 @@ async def _mint_oauth_token() -> str:
     if cached and time.time() < expires - 60:
         return cached
 
-    email = (os.environ.get("OPENAPI_EMAIL") or "").strip()
-    key = (os.environ.get("OPENAPI_API_KEY") or "").strip()
+    email = _openapi_email()
+    key = _api_key()
     if not email or not key:
-        raise RuntimeError("OPENAPI_EMAIL/OPENAPI_API_KEY missing")
+        raise RuntimeError("OPENAPI_API_KEY missing (and/or no ADMIN_EMAIL/OPENAPI_EMAIL for OAuth)")
 
-    scopes = (os.environ.get("OPENAPI_SCOPES") or "").strip() or _default_scopes()
+    scopes = _env("OPENAPI_SCOPES") or _default_scopes()
     url = f"{_oauth_base()}/tokens"
     body = {"grant_type": "client_credentials", "scopes": scopes}
 
@@ -120,12 +173,16 @@ async def _mint_oauth_token() -> str:
         else:
             expires_epoch = time.time() + 86400
         _token_cache = (token, expires_epoch)
-        logger.info("OpenAPI OAuth token minted (expires epoch=%s)", int(expires_epoch))
+        logger.info(
+            "OpenAPI OAuth token minted mode=%s expires_epoch=%s",
+            auth_mode(),
+            int(expires_epoch),
+        )
         return token
 
 
 async def _bearer() -> str:
-    static = (os.environ.get("OPENAPI_TOKEN") or "").strip()
+    static = _static_token()
     if static:
         return static
     return await _mint_oauth_token()
@@ -216,8 +273,9 @@ async def ping() -> Dict[str, Any]:
         return {
             "ok": r.status_code < 400,
             "status_code": r.status_code,
-            "auth": "oauth" if not (os.environ.get("OPENAPI_TOKEN") or "").strip() else "static_token",
+            "auth": auth_mode(),
             "base": _base(),
             "oauth_base": _oauth_base(),
+            "live_mode": _live_mode(),
             "body_preview": (r.text or "")[:200],
         }

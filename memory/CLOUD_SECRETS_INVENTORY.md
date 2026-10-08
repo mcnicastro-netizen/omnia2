@@ -41,7 +41,10 @@ Dopo il Save, **riavvia un nuovo agent** sullo stesso environment (i secret non 
 | `STRIPE_WEBHOOK_SECRET` | Solo se webhook | Stripe → Webhooks | Eventi Stripe |
 | `GOOGLE_CLIENT_ID` | Opzionale | Google Cloud Console → OAuth | Login Google |
 | `JWT_SECRET` | Consigliato (prod) | Genera nuovo se perso (`openssl rand -hex 32`) | Sessioni; se cambi, tutti i login scadono |
-| `ADMIN_EMAIL` / `ADMIN_PASSWORD` | Bootstrap | Non secret “API”: seed Founder; già in `.env.example` per Cloud | Utente super_admin |
+| `OPENAPI_API_KEY` | Visure sandbox | [OpenAPI Console](https://console.openapi.com) → Autenticazione → API Key **Sandbox** | Catasto visure; **basta questa key** + `OPENAPI_ENABLED=true` (email = `ADMIN_EMAIL`) |
+| `OPENAPI_ENABLED` | Con visure | `true` / `false` | Feature flag; host default sandbox finché `OPENAPI_MODE≠live` |
+| `OPENAPI_EMAIL` | Solo se ≠ ADMIN | Email login console OpenAPI | Opzionale in sandbox se `ADMIN_EMAIL` = account console |
+| `ADMIN_EMAIL` / `ADMIN_PASSWORD` | Bootstrap | Non secret “API”: seed Founder; già in `.env.example` per Cloud | Utente super_admin (+ fallback OAuth OpenAPI) |
 | `DEMO_ADMIN_PASSWORD` | Bootstrap | `.env.example` | Demo agency_admin |
 | `GITHUB_TOKEN` | Auto | Lo mette Cursor — **non** è il vault OMNIA | Push git |
 

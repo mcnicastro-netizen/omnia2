@@ -4,7 +4,7 @@
 set -euo pipefail
 
 REQUIRED=(RESEND_API_KEY GEMINI_API_KEY)
-OPTIONAL=(FAL_KEY TAVILY_API_KEY STRIPE_SECRET_KEY STRIPE_PUBLISHABLE_KEY STRIPE_ENABLED STRIPE_WEBHOOK_SECRET GOOGLE_CLIENT_ID JWT_SECRET)
+OPTIONAL=(FAL_KEY TAVILY_API_KEY STRIPE_SECRET_KEY STRIPE_PUBLISHABLE_KEY STRIPE_ENABLED STRIPE_WEBHOOK_SECRET GOOGLE_CLIENT_ID JWT_SECRET OPENAPI_API_KEY OPENAPI_ENABLED)
 
 # Also accept Gemini aliases
 has_gemini() {
@@ -44,11 +44,11 @@ for k in "${REQUIRED[@]}"; do
 done
 
 for k in "${OPTIONAL[@]}"; do
-  if [[ "$k" == "STRIPE_ENABLED" ]]; then
-    if [[ -n "${STRIPE_ENABLED:-}" ]]; then
-      echo "  PRESENT  STRIPE_ENABLED=${STRIPE_ENABLED}"
+  if [[ "$k" == "STRIPE_ENABLED" || "$k" == "OPENAPI_ENABLED" ]]; then
+    if [[ -n "${!k:-}" ]]; then
+      echo "  PRESENT  ${k}=${!k}"
     else
-      echo "  absent   STRIPE_ENABLED (optional)"
+      echo "  absent   ${k} (optional)"
     fi
     continue
   fi
@@ -66,6 +66,8 @@ for k in "${OPTIONAL[@]}"; do
         pk_live_*) echo "  PRESENT  STRIPE_PUBLISHABLE_KEY (optional, class=pk_live)" ;;
         *) echo "  PRESENT  STRIPE_PUBLISHABLE_KEY (optional, class=other)" ;;
       esac
+    elif [[ "$k" == "OPENAPI_API_KEY" ]]; then
+      echo "  PRESENT  OPENAPI_API_KEY (optional, len=${#OPENAPI_API_KEY})"
     else
       echo "  PRESENT  $k (optional)"
     fi
