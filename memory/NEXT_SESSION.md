@@ -6,19 +6,19 @@
 
 ---
 
-## 🎯 DOMANI 8 Ott 2026 — partenza Audit Portale
+## 🎯 Audit Portale — in corso (D-118)
 
-**Programma completo (SoT)**: [`docs/audit/OMNIA_PORTALE_AUDIT_PROGRAM.md`](../docs/audit/OMNIA_PORTALE_AUDIT_PROGRAM.md) · **D-118**
+**Programma**: [`docs/audit/OMNIA_PORTALE_AUDIT_PROGRAM.md`](../docs/audit/OMNIA_PORTALE_AUDIT_PROGRAM.md)  
+**Finding**: [`docs/audit/portale-finding.md`](../docs/audit/portale-finding.md)  
+**Tunnel oggi**: `https://king-kai-mia-giants.trycloudflare.com`
 
-| | |
-|--|--|
-| **Cosa** | Solo analisi passo × passo — **nessun fix** salvo P0 con «vai» Founder |
-| **Inizio** | Onda **A** — funzionamento end-to-end ImmobilCloud |
-| **Calendario** | D1–D10 (8→17 Ott): A funzionamento → B codice → C key → D prova key → E super_admin → F bottoni → G gestionale → H GDPR/AI Act → I anti-crash/Stripe → J fascicolo |
-| **Diario** | `docs/audit/portale-diario/YYYY-MM-DD.md` |
-| **Finding** | `P-###` severità P0–P3 |
+| Giorno | Onda | Stato |
+|--|--|--|
+| 8 Ott | **A** funzionamento | ✅ analisi · **P-001 P0** search/schede vuote |
+| 9 Ott | **B** codice solo portale | ⏭ prossimo |
+| 10–17 | C→J | pianificate |
 
-**Rituale mattina**: `omnia-stack ensure` · secrets presence · tunnel URL · Stripe `mode=test`.
+**P-001**: seed demo senza `visibility=public` + Nicastro trashed → portale senza annunci. Fix solo con «vai».
 
 ---
 

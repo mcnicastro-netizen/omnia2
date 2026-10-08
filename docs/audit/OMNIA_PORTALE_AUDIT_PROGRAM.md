@@ -1,7 +1,9 @@
 # OMNIA — Programma Audit Portale ImmobilCloud (passo × passo)
 
-**Status**: 📋 PROGRAMMA SOLO — nessuna implementazione in questa fase  
-**Partenza**: **8 Ottobre 2026** (domani rispetto alla sessione Founder 7-Ott)  
+**Status**: ▶️ IN ESECUZIONE — Onda A chiusa in analisi (2026-10-08) · fix solo con «vai»  
+**Partenza**: **8 Ottobre 2026**  
+**Tunnel giorno 1**: `https://king-kai-mia-giants.trycloudflare.com`  
+**Finding**: `docs/audit/portale-finding.md`  
 **Owner esecuzione**: Cloud Agent + Founder (gate «vai» su fix)  
 **Repo SoT**: `mcnicastro-netizen/omnia2` (GitHub)  
 **Ambito**: portale B2C ImmobilCloud (`/it/cloud/*`) + superfici B2C collegate (`/it/legal`, checkout, auth cloud)  
