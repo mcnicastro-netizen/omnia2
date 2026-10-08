@@ -105,11 +105,11 @@ if [[ "${OPENAPI_ENABLED:-}" == "true" || "${OPENAPI_ENABLED:-}" == "1" ]]; then
 fi
 
 for k in "${OPTIONAL[@]}"; do
-  if [[ "$k" == "STRIPE_ENABLED" ]]; then
-    if [[ -n "${STRIPE_ENABLED:-}" ]]; then
-      echo "  PRESENT  STRIPE_ENABLED=${STRIPE_ENABLED}"
+  if [[ "$k" == "STRIPE_ENABLED" || "$k" == "OPENAPI_ENABLED" ]]; then
+    if [[ -n "${!k:-}" ]]; then
+      echo "  PRESENT  ${k}=${!k}"
     else
-      echo "  absent   STRIPE_ENABLED (optional)"
+      echo "  absent   ${k} (optional)"
     fi
     continue
   fi
@@ -145,6 +145,8 @@ for k in "${OPTIONAL[@]}"; do
         pk_live_*) echo "  PRESENT  STRIPE_PUBLISHABLE_KEY (optional, class=pk_live)" ;;
         *) echo "  PRESENT  STRIPE_PUBLISHABLE_KEY (optional, class=other)" ;;
       esac
+    elif [[ "$k" == "OPENAPI_API_KEY" ]]; then
+      echo "  PRESENT  OPENAPI_API_KEY (optional, len=${#OPENAPI_API_KEY})"
     elif [[ "$k" == "FRONTEND_BASE_URL" || "$k" == "FRONTEND_URL" || "$k" == "OMNIA_PUBLIC_URL" ]]; then
       val="${!k}"
       # Prefer .env / SHARE_URL if process still has stale localhost from parent shell

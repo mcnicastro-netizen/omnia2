@@ -44,9 +44,9 @@ Dopo il Save, **riavvia un nuovo agent** sullo stesso environment (i secret non 
 | `STRIPE_PUBLISHABLE_KEY` | **Sì** se billing ON | Stripe | Plans API / Stripe.js |
 | `STRIPE_WEBHOOK_SECRET` | **Sì** se webhook | Stripe → Webhooks (endpoint = tunnel + `/api/billing/webhook`) | Eventi Stripe |
 | `STRIPE_ENABLED` | **Sì** `=true` sandbox | Vault / env | Gate billing |
-| `OPENAPI_ENABLED` | **Sì** Visura PDF | `true` | Catasto OpenAPI.it |
-| `OPENAPI_EMAIL` | **Sì** Visura (se no token) | Console OpenAPI.it | OAuth Basic |
-| `OPENAPI_API_KEY` | **Sì** Visura (se no token) | Console OpenAPI.it | OAuth Basic |
+| `OPENAPI_ENABLED` | **Sì** Visura PDF | `true` | Feature flag; host default sandbox finché `OPENAPI_MODE≠live` |
+| `OPENAPI_API_KEY` | **Sì** Visura sandbox | Console OpenAPI.it (Sandbox) | OAuth; **basta questa key** + enabled (D-116); email = `OPENAPI_EMAIL` o `ADMIN_EMAIL` |
+| `OPENAPI_EMAIL` | Solo se ≠ ADMIN | Console OpenAPI.it | Opzionale in sandbox se `ADMIN_EMAIL` = account console |
 | `OPENAPI_TOKEN` | Opz. alt. a email+key | Console OpenAPI.it | Bearer statico |
 | `OPENAPI_CATASTO_BASE` | Consigliato sandbox | es. `https://test.catasto.openapi.it` | Host Catasto |
 | `OPENAPI_OAUTH_BASE` | Consigliato sandbox | es. `https://test.oauth.openapi.com` | Host OAuth |
@@ -55,7 +55,7 @@ Dopo il Save, **riavvia un nuovo agent** sullo stesso environment (i secret non 
 | `FRONTEND_BASE_URL` | Dogfood tunnel | URL pubblico preview/tunnel (non `127.0.0.1`) | Link in email alert/lead |
 | `FRONTEND_URL` | Dogfood tunnel | idem | Welcome / reset password |
 | `OMNIA_PUBLIC_URL` | Consigliato | idem | Asset/link email |
-| `ADMIN_EMAIL` / `ADMIN_PASSWORD` | Bootstrap | Non secret “API”: seed Founder; già in `.env.example` per Cloud | Utente super_admin |
+| `ADMIN_EMAIL` / `ADMIN_PASSWORD` | Bootstrap | Non secret “API”: seed Founder; già in `.env.example` per Cloud | Utente super_admin (+ fallback OAuth OpenAPI D-116) |
 | `DEMO_ADMIN_PASSWORD` | Bootstrap | `.env.example` | Demo agency_admin |
 | `GITHUB_TOKEN` | Auto | Lo mette Cursor — **non** è il vault OMNIA | Push git |
 
