@@ -221,17 +221,26 @@ adopt_or_start_tunnel() {
   running="$(tunnel_process_pids | head -n1 || true)"
   existing="$(read_public_url || true)"
 
-  # Prefer a live cloudflared process: never kill it just because a probe flaked
+  # Prefer a live cloudflared process only if its URL still answers (P-002).
   if [[ -n "${running:-}" ]]; then
     echo "$running" >"$pid_tunnel"
     if [[ -z "${existing:-}" ]]; then
       existing="$(grep -oE 'https://[a-z0-9-]+\.trycloudflare\.com' "$tunnel_log" 2>/dev/null | tail -n1 || true)"
     fi
-    if [[ -n "${existing:-}" ]]; then
+    if [[ -n "${existing:-}" ]] && tunnel_alive "$existing"; then
       printf '%s\n' "$existing" >"$share_file"
       printf '%s/it/login\n' "$existing" >"$LOG_DIR/CRM_LOGIN_URL.txt"
       printf '%s\n' "$existing"
       return 0
+    fi
+    if [[ -n "${existing:-}" ]]; then
+      echo "[omnia-stack] tunnel process up but URL stale (${existing}) — restarting" >&2
+      # shellcheck disable=SC2086
+      kill $running 2>/dev/null || true
+      sleep 1
+      running=""
+      existing=""
+      rm -f "$share_file" 2>/dev/null || true
     fi
   fi
 
@@ -248,7 +257,7 @@ adopt_or_start_tunnel() {
     local url=""
     for _ in $(seq 1 20); do
       url="$(grep -oE 'https://[a-z0-9-]+\.trycloudflare\.com' "$tunnel_log" 2>/dev/null | tail -n1 || true)"
-      if [[ -n "$url" ]]; then
+      if [[ -n "$url" ]] && tunnel_alive "$url"; then
         printf '%s\n' "$url"
         return 0
       fi
@@ -259,7 +268,7 @@ adopt_or_start_tunnel() {
   local old
   old="$(tunnel_process_pids || true)"
   if [[ -n "${old:-}" ]]; then
-    echo "[omnia-stack] tunnel without URL — restarting: $old" >&2
+    echo "[omnia-stack] tunnel without healthy URL — restarting: $old" >&2
     # shellcheck disable=SC2086
     kill $old 2>/dev/null || true
     sleep 1
@@ -326,10 +335,20 @@ case "$cmd" in
     if adopt_or_start_preview; then preview_ok=true; else msg="${msg:+$msg;}preview_start_failed"; fi
     if [[ "$preview_ok" == true ]]; then
       if public_url="$(adopt_or_start_tunnel)"; then
-        [[ -n "$public_url" ]] && tunnel_ok=true
+        # Never mark tunnel_ok without a live probe (P-002)
+        if [[ -n "$public_url" ]] && tunnel_alive "$public_url"; then
+          tunnel_ok=true
+        elif [[ -n "$public_url" ]]; then
+          tunnel_ok=false
+          msg="${msg:+$msg;}tunnel_stale_or_dead"
+        else
+          tunnel_ok=false
+          msg="${msg:+$msg;}tunnel_start_failed"
+        fi
       else
         msg="${msg:+$msg;}tunnel_start_failed"
         public_url=""
+        tunnel_ok=false
       fi
     fi
     write_status "$api_ok" "$preview_ok" "$tunnel_ok" "$public_url" "${msg:-ok}"

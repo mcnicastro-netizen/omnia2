@@ -3,8 +3,32 @@
 # Never prints values. Exit 1 if any required secret is missing.
 set -euo pipefail
 
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+ENV_FILE="${OMNIA_ENV_FILE:-$ROOT/backend/.env}"
+
 REQUIRED=(RESEND_API_KEY GEMINI_API_KEY)
 OPTIONAL=(FAL_KEY TAVILY_API_KEY STRIPE_SECRET_KEY STRIPE_PUBLISHABLE_KEY STRIPE_ENABLED STRIPE_WEBHOOK_SECRET GOOGLE_CLIENT_ID JWT_SECRET)
+
+# Load backend/.env for shell↔uvicorn parity (P-006). Vault/process env wins over file.
+load_dotenv_file() {
+  local f="$1"
+  [[ -f "$f" ]] || return 0
+  echo "  ENVFILE  loading $f (keys only fill if unset in process)"
+  while IFS= read -r line || [[ -n "$line" ]]; do
+    [[ "$line" =~ ^[[:space:]]*# ]] && continue
+    [[ "$line" =~ ^[[:space:]]*$ ]] && continue
+    if [[ "$line" =~ ^([A-Za-z_][A-Za-z0-9_]*)=(.*)$ ]]; then
+      local key="${BASH_REMATCH[1]}"
+      local val="${BASH_REMATCH[2]}"
+      # strip optional surrounding quotes
+      if [[ "$val" =~ ^\"(.*)\"$ ]]; then val="${BASH_REMATCH[1]}"; fi
+      if [[ "$val" =~ ^\'(.*)\'$ ]]; then val="${BASH_REMATCH[1]}"; fi
+      if [[ -z "${!key:-}" ]]; then
+        export "${key}=${val}"
+      fi
+    fi
+  done <"$f"
+}
 
 # Also accept Gemini aliases
 has_gemini() {
@@ -12,6 +36,7 @@ has_gemini() {
 }
 
 echo "[check-secrets] presence report (values never printed)"
+load_dotenv_file "$ENV_FILE"
 
 # Cursor inject list — explains “I see secrets in UI but agent says missing”
 if [[ -n "${CLOUD_AGENT_INJECTED_SECRET_NAMES:-}" ]]; then

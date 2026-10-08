@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { api } from "../../../shared/lib/api";
 import { useAuth, formatApiErrorDetail } from "../../../shared/lib/auth";
@@ -20,6 +20,7 @@ export default function CloudRegisterPage() {
   });
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
+  const [dupEmail, setDupEmail] = useState(false);
   const [done, setDone] = useState(null);
 
   const toggleArray = (key, val) => {
@@ -28,13 +29,19 @@ export default function CloudRegisterPage() {
 
   const submit = async (e) => {
     e.preventDefault();
-    setBusy(true); setErr("");
+    setBusy(true); setErr(""); setDupEmail(false);
     try {
       const { data } = await api.post("/cloud/auth/register", { ...form, lang });
       setDone(data.user);
       await refresh();
     } catch (e) {
-      setErr(formatApiErrorDetail(e?.response?.data?.detail) || String(e.message || e));
+      const detail = e?.response?.data?.detail;
+      if (e?.response?.status === 409 || detail === "email_already_registered") {
+        setDupEmail(true);
+        setErr(t("cloud.reg_email_exists"));
+      } else {
+        setErr(formatApiErrorDetail(detail) || String(e.message || e));
+      }
     } finally { setBusy(false); }
   };
 
@@ -70,7 +77,22 @@ export default function CloudRegisterPage() {
       />
       <section className="max-w-xl mx-auto py-10 px-5">
         <form onSubmit={submit} className="bg-white border border-stone-200 rounded-2xl p-7 space-y-5">
-          {err && <p data-testid="reg-error" className="text-sm text-red-700 bg-red-50 border border-red-200 rounded-lg px-3 py-2">{err}</p>}
+          {err && (
+            <div data-testid="reg-error" className="text-sm text-red-700 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
+              <p>{err}</p>
+              {dupEmail && (
+                <p className="mt-2">
+                  <Link
+                    to={`/${lang}/login`}
+                    data-testid="reg-login-link"
+                    className="underline font-medium text-[#0B1E3F] hover:text-[#C19A6B]"
+                  >
+                    {t("cloud.reg_go_login")}
+                  </Link>
+                </p>
+              )}
+            </div>
+          )}
 
           <Field label={t("cloud.reg_name")}>
             <input data-testid="reg-name" required value={form.name}
@@ -94,6 +116,7 @@ export default function CloudRegisterPage() {
           <Field label={t("cloud.reg_intents_title")}>
             <div className="space-y-2">
               {[
+                { id: "buy", label: t("cloud.reg_intent_buy"), desc: t("cloud.reg_intent_buy_desc") },
                 { id: "sell", label: t("cloud.reg_intent_sell"), desc: t("cloud.reg_intent_sell_desc") },
                 { id: "rent_out", label: t("cloud.reg_intent_rent_out"), desc: t("cloud.reg_intent_rent_out_desc") },
                 { id: "get_alerts", label: t("cloud.reg_intent_alerts"), desc: t("cloud.reg_intent_alerts_desc") },
@@ -130,7 +153,12 @@ export default function CloudRegisterPage() {
             <input type="checkbox" checked={form.gdpr_consent}
               onChange={(e) => setForm({ ...form, gdpr_consent: e.target.checked })}
               data-testid="reg-gdpr" required />
-            <span>{t("cloud.reg_gdpr_text")}</span>
+            <span>
+              {t("cloud.reg_gdpr_text")}{" "}
+              <Link to={`/${lang}/privacy`} className="underline text-[#0B1E3F]" data-testid="reg-privacy-link">
+                {t("cloud.footer_privacy")}
+              </Link>
+            </span>
           </label>
 
           <button type="submit" disabled={busy || form.intents.length === 0 || !form.gdpr_consent}

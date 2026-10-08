@@ -22,7 +22,7 @@ from shared.db.connection import Database
 logger = logging.getLogger("omnia.cloud_auth")
 router = APIRouter(prefix="/auth", tags=["cloud-auth"])
 
-Intent = Literal["sell", "rent_out", "get_alerts"]
+Intent = Literal["buy", "sell", "rent_out", "get_alerts"]
 Channel = Literal["email", "push"]
 
 

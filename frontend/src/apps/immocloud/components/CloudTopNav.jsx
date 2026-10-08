@@ -38,6 +38,9 @@ export default function CloudTopNav() {
           <Link to={`/${lang}/cloud/register?intent=sell`} data-testid="cloud-nav-sell" className="text-stone-600 hover:text-[#0B1E3F] transition">
             {t("cloud.nav_sell")}
           </Link>
+          <Link to={`/${lang}/legal`} data-testid="cloud-nav-legal" className="text-stone-600 hover:text-[#0B1E3F] transition">
+            {t("cloud.nav_legal")}
+          </Link>
         </nav>
         <div className="flex items-center gap-3">
           {loggedIn && <NotificationBell />}
