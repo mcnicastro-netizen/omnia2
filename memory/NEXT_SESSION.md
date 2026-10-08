@@ -1,6 +1,6 @@
 # Prossima sessione — programma passi
 
-**Aggiornato**: 8 Ottobre 2026 · Audit Portale D-118 · **Onda A CHIUSA**  
+**Aggiornato**: 8 Ottobre 2026 · Audit Portale D-118 · **Onda B analisi fatta**  
 **Repo**: https://github.com/mcnicastro-netizen/omnia2 ✅  
 **Chat SoT sessione**: continuare questa linea / agent su omnia2 GitHub
 
@@ -10,15 +10,17 @@
 
 **Programma**: [`docs/audit/OMNIA_PORTALE_AUDIT_PROGRAM.md`](../docs/audit/OMNIA_PORTALE_AUDIT_PROGRAM.md)  
 **Finding**: [`docs/audit/portale-finding.md`](../docs/audit/portale-finding.md)  
+**Matrice B**: [`docs/audit/portale-matrici/2026-10-08-onda-b.md`](../docs/audit/portale-matrici/2026-10-08-onda-b.md)  
 **Tunnel oggi**: `https://king-kai-mia-giants.trycloudflare.com`
 
 | Giorno | Onda | Stato |
 |--|--|--|
-| 8 Ott | **A** funzionamento | ✅ **CHIUSA** · P-001…P-008 CHIUSI |
-| 9 Ott | **B** codice solo portale | ⏭ prossimo |
-| 10–17 | C→J | pianificate |
+| 8 Ott | **A** funzionamento | ✅ CHIUSA · P-001…P-008 |
+| 8 Ott | **B** codice solo portale | ✅ analisi · **P-009…P-017 aperti** |
+| succ. | fix B / **C** secrets | ⏭ «vai» su P-009 (consigliato) o Onda C |
+| poi | D→J | pianificate |
 
-**Onda A fix (vai)**: inventory pubblica, footer legale, intent buy, `/api/ready`, tunnel_alive, check-secrets `.env`, nav HAL Legal, register 409→login.
+**Priorità fix B**: **P-009** media `omnia/private` pubblici (P0) → **P-010** Legal unpaid (P1) → P-012 login morto.
 
 ---
 

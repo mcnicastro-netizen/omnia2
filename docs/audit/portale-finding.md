@@ -1,6 +1,6 @@
 # Audit Portale — registro finding `P-###`
 
-**Aggiornato**: 2026-10-08 · Onda A · fix P-001…P-008 (vai Founder)  
+**Aggiornato**: 2026-10-08 · Onda B analisi (P-009…P-017 aperti)  
 **Regola**: nessun fix senza «vai» Founder (D-118)
 
 | ID | Sev | Onda | Titolo | Stato |
@@ -13,6 +13,15 @@
 | P-006 | P3 | A | check-secrets shell ≠ uvicorn env | CHIUSO |
 | P-007 | P2 | A | HAL Legal assente da CloudTopNav | CHIUSO |
 | P-008 | P2 | A | Register email esistente → 409 (no auto-login) | CHIUSO |
+| P-009 | P0 | B | Media `omnia/private/…` pubblici via `GET /api/media` | APERTO |
+| P-010 | P1 | B | HAL Legal B2C senza gate pagamento (SKU €1) | APERTO |
+| P-011 | P2 | B | `b2c_staging_render` paid senza consume path | APERTO |
+| P-012 | P2 | B | Valuator `/it/cloud/login` morto + lang hardcode | APERTO |
+| P-013 | P2 | B | TopNav Vendi → sempre register se loggato | APERTO |
+| P-014 | P2 | B | Register ignora `?next=` | APERTO |
+| P-015 | P2 | B | `session_id` Stripe in query URL | APERTO |
+| P-016 | P3 | B | Mutui lead `gdpr_consent:true` hardcoded | APERTO |
+| P-017 | P3 | B | CloudTopNav senza menu mobile | APERTO |
 
 ## P-001 — dettaglio
 
@@ -60,3 +69,52 @@
 
 - **File**: `CloudRegisterPage.jsx`
 - **Fix**: su 409 `email_already_registered` messaggio chiaro + link a `/:lang/login` (API resta 409; no auto-login)
+
+## P-009 — dettaglio (Onda B)
+
+- **File**: `backend/apps/immoweb/media.py` — `_PRIVATE_PREFIXES` copre solo `fascicolo`/`modulistica`, **non** `omnia/private/`
+- **Evidenza**: listing privato con photo URL `/api/media/omnia/private/{uid}/photos/{id}.jpg` → `GET` anon **200** JPEG (~338 KB)
+- **Impatto**: foto annunci privati B2C accessibili a chi conosce/guess URL (UUID riduce brute-force ma nessun AuthZ)
+- **Fix proposto**: trattare `omnia/private/` come path protetto (404 pubblico) + endpoint autenticato owner-only; o signed URL TTL
+
+## P-010 — dettaglio (Onda B)
+
+- **File**: `al_legal/router.py` `POST /chat` / `analyze-pdf`; catalog `b2c_hal_legal_query` in `b2c_products.py`; webhook marca paid ma Legal non consulta `b2c_purchases`
+- **Sintomo**: qualsiasi utente autenticato usa HAL Legal gratis (solo soft RL 30/h)
+- **Fix proposto**: gate 402 se manca purchase paid non consumato; decremento/consume a chiamata
+
+## P-011 — dettaglio (Onda B)
+
+- **File**: `b2c_checkout.apply_b2c_purchase_side_effects` — staging/legal → solo `mark_uni_purchase_paid`
+- **Fix proposto**: consume path in Sell staging job o documentare come “ledger-only WIP” e nascondere CTA se non pronto
+
+## P-012 — dettaglio (Onda B)
+
+- **File**: `ValuatorPage.jsx` → `/it/cloud/login` (route assente in ImmocloudApp; SPA shell 200 vuota/catch)
+- **Fix proposto**: `/${lang}/login?next=…`; rimuovere hardcode `/it/` su checkout success/cancel
+
+## P-013 — dettaglio (Onda B)
+
+- **File**: `CloudTopNav.jsx` link sell sempre `register?intent=sell`
+- **Fix proposto**: se `user.account_type===b2c` → `/${lang}/cloud/account/sell`
+
+## P-014 — dettaglio (Onda B)
+
+- **File**: `CloudRegisterPage.jsx` legge solo `intent`; Visura passa `?next=`
+- **Fix proposto**: dopo register/login navigare a `next` se same-origin path
+
+## P-015 — dettaglio (Onda B)
+
+- **File**: `VisuraPage.jsx`, `CheckoutSuccessPage.jsx` — `session_id` in query
+- **Impatto**: leak via Referer/history/screenshot; mitigato da bind `user_id` server-side
+- **Fix proposto**: short-lived server token o storage session-only post-redirect
+
+## P-016 — dettaglio (Onda B)
+
+- **File**: `MortgageComparator.jsx` lead POST `gdpr_consent: true` fisso
+- **Fix proposto**: checkbox obbligatorio legato al payload
+
+## P-017 — dettaglio (Onda B)
+
+- **File**: `CloudTopNav.jsx` — `nav` `hidden md:flex`, nessun hamburger
+- **Fix proposto**: menu mobile accessibile con stessi link
