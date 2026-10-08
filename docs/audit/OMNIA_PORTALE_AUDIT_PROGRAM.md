@@ -265,38 +265,39 @@ Per ogni riga: Presente in vault? Usato da path portale? Fail-soft?
 
 ## Onda E — Informazioni che devono arrivare in super_admin (D5)
 
-**Obiettivo**: definire e verificare **cosa il Founder deve vedere** per ogni evento portale.
+**Obiettivo**: definire e verificare **cosa il Founder deve vedere** per ogni evento portale.  
+**Stato**: ✅ analisi 2026-10-08 · matrice `portale-matrici/2026-10-08-onda-e.md` · finding P-027…P-030
 
 ### E.1 Catalogo eventi → destinazione Ops
 Per ogni evento: oggi arriva? dove? gap?
 
-| Evento portale | Destinazione attesa | Stato oggi (da verificare) |
+| Evento portale | Destinazione attesa | Stato oggi |
 |--|--|--|
-| Registrazione client B2C | conteggio / lista? | |
-| Inquiry su annuncio | email agenzia + audit | |
-| Annuncio UGC submit | coda moderazione CRM | |
-| Pagamento Visura | Ops finance + ricevuta B2C | |
-| Pagamento UNI PDF | Ops finance | |
-| Pagamento HAL Legal | Ops finance + legal ops | |
-| Boost / staging paid | Ops finance + listing flags | |
-| Webhook firma fail | `ops_alerts` | |
-| AI provider down | `ops_alerts` | |
-| Saved-search digest inviato | log / conteggio | |
-| Errore OpenAPI Visura | order failed + alert? | |
-| Login Google nuovo user | ? | |
-| Contatto / lead mutui | ? | |
+| Registrazione client B2C | conteggio / lista? | **GAP** solo DB → P-027 |
+| Inquiry su annuncio | email agenzia + audit | OK tenant CRM · UGC → **GAP** Ops P-027 |
+| Annuncio UGC submit | coda moderazione CRM | **OK** `/it/app/moderation` · no nav P-030 |
+| Pagamento Visura | Ops finance + ricevuta B2C | finance cieco P-025 · ricevuta **A-038** |
+| Pagamento UNI PDF | Ops finance | P-025 |
+| Pagamento HAL Legal | Ops finance + legal ops | finance P-025 · Legal volume OK |
+| Boost / staging paid | Ops finance + listing flags | PARZIALE P-025 |
+| Webhook firma fail | `ops_alerts` | **OK** |
+| AI provider down | `ops_alerts` | **OK** (codice) |
+| Saved-search digest inviato | log / conteggio | **GAP** P-027 |
+| Errore OpenAPI Visura | order failed + alert? | order sì · alert **no** → P-027 |
+| Login Google nuovo user | ? | SKIP P-021 |
+| Contatto / lead mutui | ? | **GAP** `mortgage_leads` only → P-027 |
 
 ### E.2 Checklist UI super_admin
-- [ ] `/it/app/ops` — scheda mensile, voci, fatture, ricevute, alert  
-- [ ] `/it/app/ops/legal` — volume Legal  
-- [ ] Coda moderazione annunci privati (path esatto da confermare in codice)  
-- [ ] Backup health  
-- [ ] Nessun PII inutile in chiaro negli alert  
+- [x] `/it/app/ops` — scheda/voci/alert OK · fatture/ricevute **assenti** · revenue B2C €0 (P-025)  
+- [x] `/it/app/ops/legal` — volume Legal OK  
+- [x] Coda moderazione = `/it/app/moderation` (+ API `/api/app/moderation/queue`)  
+- [x] Backup health — presente in UI ma status **MISSING** (P-029)  
+- [x] Alert: messaggi generici OK · Legal `top_users` *può* esporre email (n=0 in prova)
 
 ### E.3 Deliverable
-- [ ] Spec “telemetry minima Founder” (gap list)  
-- [ ] Link ad **A-038** (fattura/dati fiscali) come post-test già registrato  
-- [ ] Proposta finding se manca segnale critico  
+- [x] Spec “telemetry minima Founder” (gap list) in matrice Onda E §E.3  
+- [x] Link ad **A-038** (fattura/dati fiscali) come post-test già registrato  
+- [x] Finding: P-027…P-030 (+ P-025 confermato)
 
 ---
 

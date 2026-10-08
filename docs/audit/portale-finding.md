@@ -1,6 +1,6 @@
 # Audit Portale — registro finding `P-###`
 
-**Aggiornato**: 2026-10-08 · Onda D GREEN (ripresa Stripe test + D-116) · P-025/P-026 aperti  
+**Aggiornato**: 2026-10-08 · Onda E telemetry Ops · P-027…P-030 aperti  
 **Regola**: nessun fix senza «vai» Founder (D-118)
 
 | ID | Sev | Onda | Titolo | Stato |
@@ -29,8 +29,12 @@
 | P-022 | P0 | D | Stripe **live** in Cloud (`sk_live`/`pk_live`, plans `mode=live`) | **CHIUSO** |
 | P-023 | P1 | D | OpenAPI key OK ma product `openapi_visure_enabled=false` (manca email / D-116) | **CHIUSO** |
 | P-024 | P3 | D | Env/docs citano `gemini-2.0-flash` deprecato; product HAL OK | APERTO |
-| P-025 | P2 | D | `b2c_purchases` paid senza `amount_eur` (Ops finance cieco su importo) | **APERTO** |
+| P-025 | P2 | D/E | `b2c_purchases` paid senza `amount_eur` (Ops finance cieco su importo) | **APERTO** |
 | P-026 | P3 | D | Vault `STRIPE_WEBHOOK_SECRET` ≠ secret endpoint auto-sync tunnel | **APERTO** |
+| P-027 | **P1** | E | Telemetry gap: eventi portale senza sink Ops (register/mutui/inquiry/digest/Visura fail) | **APERTO** |
+| P-028 | P2 | E | `ops_alerts.acked` senza API/UI di ack (“da vedere” permanente) | **APERTO** |
+| P-029 | P2 | E | Backup health `MISSING` in Cloud (nessuna cartella `.backups`) | **APERTO** |
+| P-030 | P3 | E | Moderazione (e Legal) fuori nav Shell — solo URL / link interno Ops | **APERTO** |
 
 ## P-009 — dettaglio (CHIUSO)
 
@@ -87,17 +91,43 @@
 - Product: `POST /api/app/hal/knowledge/ask` 200 con `GEMINI_API_KEY`
 - Azione: allineare `.env.example` / commenti al default `shared/llm` (flash-latest / 3.5) — P3
 
-## P-025 — dettaglio (APERTO · Onda D)
+## P-025 — dettaglio (APERTO · Onda D/E)
 
-- **Evidenza**: dopo webhook paid, doc `b2c_purchases` ha `status=paid` ma `amount_eur`/`price_eur` = null
-- `mark_uni_purchase_paid` non scrive importo; `founder_ops` aggrega su `$amount_eur` → incassi B2C sottostimati/zero
-- **Fix** (solo con «vai»): in `apply_b2c_purchase_side_effects` / `mark_uni_purchase_paid` settare `amount_eur` da `session.amount_total/100` o catalogo
+- **Evidenza D**: dopo webhook paid, doc senza `amount_eur`/`price_eur`
+- **Evidenza E**: `GET /api/app/ops/overview` → `totals.b2c_revenue_eur=0.0` con 1 purchase paid (`b2c_hal_legal_query`)
+- `founder_ops` somma `$amount_eur`/`$price_eur` → €0; Legal/staging revenue B2C ugualmente ciechi
+- **Fix** (solo con «vai»): scrivere `amount_eur` da `session.amount_total/100` (o catalogo) in `mark_uni_purchase_paid` / side effects
 
 ## P-026 — dettaglio (APERTO · Onda D)
 
 - **Evidenza**: `sync-stripe-webhook-url.py` CREATED endpoint → nuovo `whsec` in `.env`; vault process resta sul whsec precedente (hash diversi, stessa len)
 - Run audit: API avviata con whsec `.env` allineato all’endpoint tunnel
 - **Azione Founder**: aggiornare vault `STRIPE_WEBHOOK_SECRET` al secret dell’endpoint “OMNIA Cloud Agent portal (auto-sync)” (o disabilitare endpoint orfani)
+
+## P-027 — dettaglio (APERTO · Onda E)
+
+- **Evidenza**: catalogo E.1 — nessun sink Ops per: registrazioni B2C, `mortgage_leads`, inquiry UGC (`listing_inquiries`), digest saved-search, fail OpenAPI Visura (solo order status), lista `invoices`
+- Inquiry agenzia → CRM tenant (OK per design); Founder non ha hub domanda/portale
+- **Spec**: matrice `portale-matrici/2026-10-08-onda-e.md` §E.3
+- **Fix** (solo con «vai»): telemetry minima — contatori + `record_alert` su Visura fail + card Ops; non implica A-038
+
+## P-028 — dettaglio (APERTO · Onda E)
+
+- `ops_alerts` ha `acked:false`; UI mostra “N da vedere”
+- Nessun `POST /app/ops/alerts/{id}/ack` (né bulk)
+- **Fix** (solo con «vai»): endpoint ack + bottone in `FounderOpsPage`
+
+## P-029 — dettaglio (APERTO · Onda E)
+
+- Live: `backup.status=MISSING`, message «Nessuna cartella backup», path `backend/.backups`
+- Scheduler saved-searches `ok=true`; backup job non ha prodotto MANIFEST in questa env
+- **Fix/ops** (solo con «vai»): assicurare run backup Cloud + path persistente, o documentare SKIP env ephemeral
+
+## P-030 — dettaglio (APERTO · Onda E)
+
+- `AgencyShell` super_admin: solo «Ops Costi» → `/app/ops`
+- Moderazione: `/it/app/moderation` funziona ma fuori nav; Legal solo link interno Ops
+- **Fix** (solo con «vai»): voci nav Moderazione (+ Legal) per `super_admin`
 
 ## P-012…P-017 — fix breve
 
