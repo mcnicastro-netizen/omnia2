@@ -16,11 +16,11 @@
 | Giorno | Onda | Stato |
 |--|--|--|
 | 8 Ott | **A** funzionamento | ✅ CHIUSA · P-001…P-008 |
-| 8 Ott | **B** codice solo portale | ✅ analisi · **P-009…P-017 aperti** |
-| succ. | fix B / **C** secrets | ⏭ «vai» su P-009 (consigliato) o Onda C |
+| 8 Ott | **B** codice solo portale | ✅ analisi + fix · resta **P-011 staging** |
+| succ. | **C** secrets / P-011 | ⏭ «vai» |
 | poi | D→J | pianificate |
 
-**Priorità fix B**: **P-009** media `omnia/private` pubblici (P0) → **P-010** Legal unpaid (P1) → P-012 login morto.
+**Onda B fix**: P-009 media private AuthZ · P-010 Legal paywall · P-012…P-017 UX. Aperto: P-011 staging render.
 
 ---
 
