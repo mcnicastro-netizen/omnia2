@@ -99,6 +99,19 @@ Scripts env proposti per Save: `cloud-agent-install.sh` + `cloud-agent-start.sh`
 | FE build | same-origin `/api` (no localhost bake) |
 | `FRONTEND_*` | sync → trycloudflare · `get_public_base_url()` |
 
+## Stato verificato — 8 Ott 2026 sera (chat «controllo secrets»)
+
+Founder ha salvato i secret Environment su omnia2. Nuovo agent vede Stripe + OpenAPI inject.
+
+| Alert | Azione |
+|--|--|
+| Stripe inject **`sk_live` / `pk_live`** | **Sostituire** subito con `sk_test_` / `pk_test_` (+ webhook `whsec` **test**) |
+| `STRIPE_MODE` | non obbligatorio in vault |
+| `OPENAPI_EMAIL` | aggiungere (OAuth con API key) |
+| OpenAPI.it **Catasto sospeso dal provider** | Visura dogfood = **SKIP** finché riattivano; non è bug OMNIA |
+| `JWT_SECRET` | evitare placeholder `change-me-…` — mettere valore reale in vault |
+| SoT sessione vault | chat **controllo secrets** (inject fresco); questa linea audit resta storica |
+
 ---
 
 ## ID `bld-…` (Environment Builds) — 7 Ott 2026

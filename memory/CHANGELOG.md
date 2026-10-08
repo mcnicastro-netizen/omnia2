@@ -1,3 +1,12 @@
+## 2026-10-08 — D-118 Onda C + boot auto secrets + HAL Visura/Catasto
+
+- Boot Cloud: `sync-public-base-url` · `sync-stripe-webhook-url` · materialize OPENAPI_* · `get_public_base_url()`
+- Vault Founder Save (sera): inject OK su chat *controllo secrets* · **alert sk_live→sk_test**
+- OpenAPI.it **Catasto sospeso dal provider** → Visura dogfood SKIP
+- HAL Cap. 00: aggiornato `api.cloud-secrets-vault` / `api.portale-audit-program` · nuova `api.visura-openapi-catasto`
+- Cap. 19 §19.10 MD · `CLOUD_SECRETS_INVENTORY` · `NEXT_SESSION` · `PRICING_B2C` nota Visura
+- Chat SoT Onda D: **controllo secrets omnia** (non questa storica)
+
 ## 2026-10-08 — D-118 Onda A (funzionamento portale)
 
 - Diario + matrice + registro `P-001…P-008`
