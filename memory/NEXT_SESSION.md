@@ -1,6 +1,6 @@
 # Prossima sessione — programma passi
 
-**Aggiornato**: 9 Ottobre 2026 · Onda G **GREEN** · P-033…P-036 aperti  
+**Aggiornato**: 9 Ottobre 2026 · Onda G GREEN · P-035/P-036 CHIUSI · P-034 WONTFIX  
 **Repo**: https://github.com/mcnicastro-netizen/omnia2 ✅  
 **Branch audit**: `cursor/portale-audit-onda-d-live-4532` (PR #12) · merge su `main` solo se Founder lo chiede  
 **Chat SoT**: questa run Cloud (inject Stripe test + OpenAPI)
@@ -20,10 +20,7 @@ Attende «vai» Founder.
 | P-024 | gemini model string docs P3 |
 | P-026 | Vault `whsec` — Founder Environment |
 | P-032 | alias `/cloud/valuator` (P3) |
-| P-033 | Search lista L3/L4 (P2) |
-| P-034 | Brand ignora flags cloud (P2) |
-| P-035 | Ops saved_searches `active`≠`is_active` (P2) |
-| P-036 | HAL Legal CRM gratis vs listino 12 (P3) |
+| P-033 | Search lista L3/L4 (P2) — «dopo» |
 
 ---
 
