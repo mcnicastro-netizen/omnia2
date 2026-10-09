@@ -1,28 +1,35 @@
 # Prossima sessione — programma passi
 
-**Aggiornato**: 9 Ottobre 2026 · D-118 **MERGED su main** (PR #12 · `361bd98`)  
+**Aggiornato**: 9 Ottobre 2026  
 **Repo**: https://github.com/mcnicastro-netizen/omnia2 ✅  
 **Branch**: `main`
 
 ---
 
-## 🎯 Prossimo passo
+## 🎯 SoT freccia (leggere prima)
 
-D-118 chiuso. Ripresa tipica post-audit:
-1. O3b restore / bak (collegato P-046 già in codice)
-2. **A-037** demo da sito (se Founder vuole)
-3. **A-038** fatture fiscali (post-test)
-4. **O6** self-serve — resta OFF finché O6 ≠ PASS
+**Coerenza di sistema:** [`docs/audit/OMNIA_COERENZA_SISTEMA.md`](../docs/audit/OMNIA_COERENZA_SISTEMA.md)
 
-Residui non bloccanti: **P-021** Google opz. · **P-026** aggiornare vault whsec endpoint auto-sync.
-
-**Fascicolo**: `docs/audit/OMNIA_PORTALE_AUDIT_FASCICOLO.md`
+Scala verità: DECISO → CODICE → LIVE → FIRMATO.  
+Sequenza chiusura: **S1 restore firmata → S2 bak O0 runtime → … → S9 O6 → S10 GTM-01**.
 
 ---
 
-## ✅ Stato
+## Prossimo passo tipico
+
+1. **S1** — O3b restore firmata non-prod (tabella in `docs/ops/RESTORE_MANUAL.md`)  
+2. **S2** — Bak runtime = O0 (≤7g / incrementale; oggi ancora full×30)  
+3. Solo dopo: demo story unica + O6 PASS + GTM-01  
+
+**Non:** monoblocco “chiudi tutto” · self-serve ON prima di S9 · outreach ~5k email prima di GTM-01.
+
+---
+
+## Stato rapido
 
 | Voce | Esito |
 |--|--|
-| D-118 A–J + residuo codice | ✅ su `main` |
-| O6 self-serve | OFF |
+| D-118 A–J + residuo codice | su `main` — ri-verificare LIVE, non rifare |
+| O6 self-serve | OFF (CONDITIONAL; manca restore firmata) |
+| Bak economia | Design O0 ✅ · runtime ancora as-is (~32×) |
+| Fascicolo portale | `docs/audit/OMNIA_PORTALE_AUDIT_FASCICOLO.md` |

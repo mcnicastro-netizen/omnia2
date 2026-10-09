@@ -1,0 +1,130 @@
+# OMNIA — Coerenza di sistema (SoT Founder)
+
+**Data**: 9 Ottobre 2026  
+**Repo**: `mcnicastro-netizen/omnia2` · branch di lavoro tipico = `main`  
+**Scopo**: una sola freccia — *cosa è il sistema oggi, dove la logica si spezza, in che ordine chiudere prima di demo definitiva / O6 / GTM*.  
+**Non sostituisce**: fascicolo D-118, O6 checklist, O0 design, DECISIONS. Li **ordina**.
+
+**Scala di verità** (obbligatoria da qui in poi):
+
+| Livello | Significa |
+|---------|-----------|
+| DECISO | Decisione / design scritto |
+| CODICE | Comportamento in repo |
+| LIVE | Prova su tunnel / non-prod con artefatto |
+| FIRMATO | Founder (o run firmata) attesta l’esito |
+
+Solo **FIRMATO** (o almeno LIVE esplicito) = “chiuso per GTM”.  
+PASS su design ≠ chiuso.
+
+---
+
+## 1. Stato reale — cosa *è* omnia2 oggi
+
+Un monorepo **FastAPI + React + Mongo** che opera **due prodotti** sulla stessa base (`users` / `properties`):
+
+| Pilastro | Superficie | Ruolo |
+|----------|------------|--------|
+| **ImmoWeb** | `/app` + `/api/app` | Gestionale B2B: clienti, match, publishing, MLS, HAL, crediti |
+| **ImmobilCloud** | `/cloud` + `/api/cloud` | Portale B2C: search, schede, UGC, Visura, Stripe one-shot |
+| **Academy** | `/learn` | Quasi solo vetrina / “coming soon” — **non** offerta GTM |
+
+Più: Founder Ops, Cloud Agent riproducibile (seed demo + Nicastro), corpus `memory/` + audit in `docs/audit/`.
+
+**Tesi**: ecosistema *dual-rail* tecnicamente unificato, commercialmente in modalità **assistita** (D-115: self-serve OFF finché O6 ≠ PASS). Non è ancora una sola storia GTM-ready; è un sistema che *sa* esserlo se si chiudono le contraddizioni sotto.
+
+**Promessa da chiudere (una frase):**  
+*Prospect apre demo → usa il gestionale → vede gli annunci sul portale → a scadenza acquista → i dati sono recuperabili → il canone regge lo storage.*
+
+---
+
+## 2. Cosa tiene (non buttare)
+
+1. Un backend, due superfici (D-015) — meno drift di due repo.  
+2. Ponte CRM ↔ portale modellato (listati, privacy, lead, moderazione).  
+3. Due binari denaro in design: subscription/crediti B2B vs carta B2C.  
+4. Tenancy su `active_agency_id` (direzione corretta).  
+5. Trash come dominio in molti path (non solo UI).  
+6. Fail-soft su AI / email / Stripe.  
+7. Ops + bak health come superficie di verità.  
+8. Cloud Agent + seed dogfoodabili.  
+9. O6 dichiarato come cancello commerciale.  
+10. Memoria decisionale / HAL — il prodotto *sa* perché esiste.
+
+---
+
+## 3. Contraddizioni di sistema (logica spezzata)
+
+Non è una lista infinita di bug: sono **tensioni** che impediscono di firmare “sì” a demo/O6/GTM.
+
+| # | Contraddizione | Effetto |
+|---|----------------|---------|
+| C1 | **Messaggio a 3 pilastri / prodotto a 2** — Academy in pitch, capacità assente | Overpromise GTM |
+| C2 | **D-115 self-serve OFF vs `STRIPE_ENABLED`** — nessun hard flag O6; checkout test aperti se Stripe ON | Policy umana ≠ kill-switch |
+| C3 | **Rail monetari spezzati** — valuator “crediti” a tratti narrativo; HAL Legal edge gratis senza agency | Listino ≠ contabilità |
+| C4 | **Due verità pubbliche** — feed ImmobilCloud ≠ sito brand `/p/{slug}` sullo stesso immobile | Pitch portale+gestionale debole |
+| C5 | **Trash non ovunque** — KPI / alcuni MLS senza soft-delete uniforme | Integrità dominio quasi-una |
+| C6 | **O0 PASS design / bak as-is** — ancora `copytree` × retention **30** (~32× disco) | Agency ∞ economicamente finta al tetto GB |
+| C7 | **Restore: docs sì, run firmata no** | “Sappiamo recuperare?” aperto |
+| C8 | **Due seed = due storie demo** (demo-agency + Nicastro) | Nessuna “demo definitiva” unica |
+| C9 | **SoT documentali in conflitto temporale** (AUDIT_STATE / GTM freeze / fascicolo / NEXT) | Founder e agent leggono più futuri |
+| C10 | **CHIUSO/PASS/GREEN spesso = DECISO o CODICE**, raramente FIRMATO | Falsa chiusura (caso bak) |
+
+**Pattern**: gli audit erano affidabili nel *vedere*; meno affidabili nel tenere la catena  
+`TROVATO → DECISO → CODICE → LIVE → FIRMATO`.
+
+---
+
+## 4. Sequenza di chiusura (prima di GTM)
+
+Ordine di **coerenza**, non di feature. Niente monoblocco; ogni step ha artefatto o firma.
+
+| Step | Cosa chiudere | Contraddizioni | Done quando |
+|------|---------------|----------------|-------------|
+| **S1** | **O3b** — una restore firmata non-prod (agency + perimetro B2C rilevante) | C7 | Tabella firma in `RESTORE_MANUAL` compilata + artefatto |
+| **S2** | **Bak = O0 runtime** — retention hot ≤7g e/o incrementale (come da design) | C6 | Codice + prova LIVE (non solo env comment) |
+| **S3** | **Meter economia** — GB reali post-S2; conferma canoni vs Agency 300 GB + addon | C6 | Nota numeri FIRMATO Founder; listino fermo o revisione esplicita |
+| **S4** | **Una regola di visibilità** — stesso contratto pubblico portale / brand site | C4 | Spec + codice allineati LIVE |
+| **S5** | **Soldi onesti** — addebito reale o UI onesta; opz. hard-gate self-serve distinto da Stripe test | C2, C3 | Probe LIVE |
+| **S6** | **Narrativa 2 prodotti** — Academy fuori pitch finché non esiste | C1 | Landing/agenzie allineate |
+| **S7** | **Una demo story** — un seed; percorso admin→portale; giorni prova; scadenza → **Acquista pacchetto** (post-O6) | C8 | Script demo ripetibile ×2 senza agent “al volo” |
+| **S8** | **SoT unico** — questo doc + O6 + NEXT; resto frozen/archiviato | C9, C10 | Header stati allineati |
+| **S9** | **O6 PASS** — checklist senza ⏳ su restore; firma Founder self-serve | C2, C7 | Rubinetto ON solo qui |
+| **S10** | **GTM-01** — smoke ~20 concurrent + percorso prospect **prima** di ~5k email | — | Gate D-104 |
+
+**Fuori sequenza finché S7 non è verde:** redesign UI, A-038 fatture, Stripe live, outreach di massa, O6 ON “perché prima o poi”.
+
+**Demo funnel (decisione Founder in discussione):** richiesta da ads/email/reel → sandbox a tempo (gestionale + agganci portale) → a scadenza CTA acquista — **senza call**. Pitch/video = strumento pubblicitario, non sostituto della prova. Checkout acquisto solo post-**S9**.
+
+---
+
+## 5. Cosa *non* riesaminare da zero
+
+- Finding D-118 già in codice su `main` (CSRF, Stripe fallback, rate limit, ecc.): **ri-verificare LIVE**, non riscrivere.  
+- O1 AuthZ / invite / agency: in gran parte CODICE vero.  
+- Trash/freeze di dominio: distinto da economia bak (C6).  
+- Vault Environment: oggi più completo; presence check = rituale di boot, non audit nuovo.
+
+---
+
+## 6. Verdetto Founder
+
+Il repo **non** è un pasticcio casuale: è un ecosistema dual-product con spina dorsale solida.  
+Il rischio di fallimento non è “manca un modulo magico”: è **raccontare o vendere una storia più chiusa** di quanto il sistema sia logicamente allineato (soldi, restore, storage, messaggio, una sola demo).
+
+**Prossimo «vai» consigliato:** S1 (restore firmata) **oppure** truth-LIVE mirato su C2/C3/C4 se serve evidenza prima di S1 — mai un nuovo monoblocco “chiudi tutto”.
+
+---
+
+## 7. Indice SoT collegati
+
+| Documento | Uso |
+|-----------|-----|
+| Questo file | Freccia coerenza / sequenza |
+| `OMNIA_O6_GATE_CHECKLIST.md` | Cancello self-serve |
+| `OMNIA_O0_BAK_MEDIA_DESIGN.md` | Modello bak target (DECISO) |
+| `docs/ops/RESTORE_MANUAL.md` | Procedura + firma run |
+| `OMNIA_PORTALE_AUDIT_FASCICOLO.md` | Audit portale D-118 |
+| `OMNIA_PROGRAMMA_PRE_ATTIVAZIONE.md` | Onde O0–O6 |
+| `memory/NEXT_SESSION.md` | Puntatore sessione (punta qui) |
+| `memory/PRICING_OMNIA.md` / `PRICING_B2C.md` | Listino (fermo finché S3) |
