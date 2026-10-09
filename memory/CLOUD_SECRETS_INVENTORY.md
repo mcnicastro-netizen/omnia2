@@ -112,6 +112,30 @@ Founder ha salvato i secret Environment su omnia2. Nuovo agent vede Stripe + Ope
 | `JWT_SECRET` | evitare placeholder `change-me-…` — mettere valore reale in vault |
 | SoT sessione vault | chat **controllo secrets** (inject fresco); questa linea audit resta storica |
 
+## Stato verificato — 9 Ott 2026
+
+Env **omnia2** ([b80b635c-b592-11f1-bb68-864e54d14197](https://cursor.com/dashboard/cloud-agents/environments/e/b80b635c-b592-11f1-bb68-864e54d14197)), build `bld-20261008-3840e376-7980-4abe-9d37-f871abfaf008`.
+
+Vault inject (`CLOUD_AGENT_INJECTED_SECRET_NAMES`):  
+`FAL_KEY`, `GEMINI_API_KEY`, `RESEND_API_KEY`, `STRIPE_ENABLED`, `OPENAPI_API_KEY`, `OPENAPI_ENABLED`, `STRIPE_PUBLISHABLE_KEY`, `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`.
+
+| Nome | Stato |
+|------|--------|
+| `RESEND_API_KEY` | PRESENT (obbligatorio) |
+| `GEMINI_API_KEY` | PRESENT (obbligatorio) |
+| `FAL_KEY` | PRESENT |
+| `STRIPE_SECRET_KEY` | PRESENT (`sk_test_`) — live sostituito OK |
+| `STRIPE_PUBLISHABLE_KEY` | PRESENT (`pk_test_`) |
+| `STRIPE_ENABLED` | `true` |
+| `STRIPE_WEBHOOK_SECRET` | PRESENT |
+| `OPENAPI_API_KEY` / `OPENAPI_ENABLED` | PRESENT / `true` |
+| `OPENAPI_EMAIL` | **absent** — richiesto in panel (OAuth Catasto) |
+| `TAVILY_API_KEY` | absent (opzionale, richiesto in panel) |
+| `GOOGLE_CLIENT_ID` | absent (opzionale, richiesto in panel) |
+| `JWT_SECRET` | solo `.env` locale — richiesto in panel |
+
+`scripts/check-secrets-presence.sh` → **OK**.
+
 ---
 
 ## ID `bld-…` (Environment Builds) — 7 Ott 2026
