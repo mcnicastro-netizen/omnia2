@@ -1,6 +1,6 @@
 # Audit Portale — registro finding `P-###`
 
-**Aggiornato**: 2026-10-08 · Fix gap critici P-025…P-030 (vai Founder)  
+**Aggiornato**: 2026-10-09 · Onda F bottoni · P-031/P-032 aperti  
 **Regola**: nessun fix senza «vai» Founder (D-118)
 
 | ID | Sev | Onda | Titolo | Stato |
@@ -35,6 +35,8 @@
 | P-028 | P2 | E | `ops_alerts.acked` senza API/UI di ack (“da vedere” permanente) | **CHIUSO** |
 | P-029 | P2 | E | Backup health `MISSING` in Cloud (nessuna cartella `.backups`) | **CHIUSO** |
 | P-030 | P3 | E | Moderazione (e Legal) fuori nav Shell — solo URL / link interno Ops | **CHIUSO** |
+| P-031 | **P0** | F | Regressione inventory: demo props `visibility=null` → search total=0 (P-001) | **APERTO** |
+| P-032 | P3 | F | Route solo `/cloud/valutatore`; `/cloud/valuator` shell vuota | **APERTO** |
 
 ## P-009 — dettaglio (CHIUSO)
 
@@ -120,6 +122,20 @@
 ## P-030 — dettaglio (CHIUSO · vai Founder)
 
 - **Fix**: `AgencyShell` super_admin — voci Ops Legal + Moderazione · link in card portale Ops
+
+## P-031 — dettaglio (APERTO · Onda F)
+
+- **Evidenza**: `qc_public_portal_inventory.py` → `match_base_filter=0`; `GET /api/cloud/search` `total=0`
+- Mongo: 8 props `is_listed_on_immobilcloud=true` ma **`visibility=null`** (0 `visibility=public`)
+- Seed script ha già `"visibility":"public"` + upsert `$set` — **non rieseguito** su questo boot / DB stale
+- **Impatto**: search/schede/property CTA Onda F non dogfoodabili; portale vuoto come P-001
+- **Fix** (solo con «vai»): `python backend/scripts/seed_demo_gestionale.py` (o ensure-seed in boot Cloud) + QC `match_base_filter>0`
+
+## P-032 — dettaglio (APERTO · Onda F)
+
+- Nav/SoT: `/:lang/cloud/valutatore` (`ImmocloudApp.jsx`)
+- Nessuna route `valuator` (EN) → SPA 200 con area contenuto vuota (nav+footer restano)
+- **Fix** (solo con «vai»): alias route `valuator` → stessa `ValuatorPage` oppure redirect
 
 ## P-012…P-017 — fix breve
 
