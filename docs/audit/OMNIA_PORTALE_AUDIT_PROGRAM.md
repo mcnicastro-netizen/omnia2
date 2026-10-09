@@ -71,8 +71,8 @@ Produrre un **fascicolo audit** completo del portale: funzionamento, codice, API
 | Data | Onda | Stato |
 |--|--|--|
 | 8 Ott | **A–E** | ✅ fatte (anticipate) · D GREEN · P-025…P-030 chiusi |
-| **9 Ott** | **F** | ⏭ **programma domani** — matrice bottoni |
-| 10 Ott | **G** | Portale ↔ gestionale |
+| 9 Ott | **F** | ✅ catalogo+prove · green bloccata **P-031** (inventory) |
+| succ. | **G** | Portale ↔ gestionale (dopo «vai» / fix P-031) |
 | 11 Ott | **H** | GDPR + AI Act |
 | 12 Ott | **I** | Resilienza |
 | 13 Ott | **J** | Fascicolo |
@@ -316,7 +316,8 @@ Per ogni evento: oggi arriva? dove? gap?
 
 ## Onda F — Controllo di tutti i bottoni del portale (D6)
 
-**Obiettivo**: matrice esaustiva controllo × controllo.
+**Obiettivo**: matrice esaustiva controllo × controllo.  
+**Stato**: ✅ 2026-10-09 · matrice `portale-matrici/2026-10-09-onda-f.md` · **P-031 P0** inventory · P-032 slug valuator
 
 ### F.1 Metodo
 1. Estrarre da FE tutti i `<button`, `onClick`, `Link` CTA, `type="submit"` nel perimetro immocloud+legal+footer  
