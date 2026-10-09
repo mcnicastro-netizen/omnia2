@@ -1,6 +1,6 @@
 # OMNIA — Programma Audit Portale ImmobilCloud (passo × passo)
 
-**Status**: ▶️ IN ESECUZIONE — Onde A–I fatte · Onda I **GREEN** (2026-10-09) · fix solo con «vai»  
+**Status**: ✅ **CHIUSO (analisi)** — Onde **A–J GREEN** (2026-10-09) · fascicolo pronto · fix solo con «vai»  
 **Partenza**: **8 Ottobre 2026**  
 **Tunnel giorno 1**: `https://king-kai-mia-giants.trycloudflare.com` · **corrente**: vedi diario del giorno  
 **Finding**: `docs/audit/portale-finding.md`  
@@ -75,7 +75,7 @@ Produrre un **fascicolo audit** completo del portale: funzionamento, codice, API
 | 9 Ott | **G** | ✅ **GREEN** · ponti verificati · P-035/036 chiusi · P-033 dopo · P-034 WONTFIX |
 | 9 Ott | **H** | ✅ **GREEN** · P-037…P-044 chiusi · P-045 WONTFIX |
 | 9 Ott | **I** | ✅ **GREEN** · resilienza · P-046…P-053 aperti |
-| succ. | **J** | Fascicolo — attende «vai» |
+| 9 Ott | **J** | ✅ **GREEN** · fascicolo · P-054…P-058 aperti |
 
 > Se un giorno slitta: **non saltare onde**; si sposta in avanti. Dettaglio giornata: `memory/NEXT_SESSION.md`.
 
@@ -458,32 +458,28 @@ Per ogni evento: oggi arriva? dove? gap?
 ## Onda J — Extra necessari + chiusura fascicolo (D10)
 
 ### J.1 Extra che il programma include comunque
-1. **i18n** — stringhe mancanti / fallback IT su pagine soldi  
-2. **Accessibilità base** — focus, contrast CTA primarie, `sr-only` titoli  
-3. **Performance** — LCP home/search su tunnel; immagini  
-4. **SEO tecnico** — title/meta scheda, noindex ambienti demo se serve  
-5. **Moderazione UGC** — tempi, stati, notifiche utente  
-6. **Email fanout** — preferiti ended / price drop (A-029/030) lato B2C  
-7. **Mobile** — nav nascosta md:flex: come si naviga su telefono?  
-8. **Observability** — log strutturati portale; cosa manca a Founder  
-9. **Disaster tunnel** — runbook “tunnel morto / nuovo URL / aggiorna webhook”  
-10. **Dipendenze PR aperte** — elenco PR che l’audit assume (es. D-117 Ops finance)  
-11. **QC scripts esistenti** — `preprod_confidence_gate`, stress cloud: cosa coprono già vs gap  
-12. **Confronto promise marketing vs codice** (D-051) — landing vs portale reale  
+1. **i18n** — **GAP** P-054 (Visura hardcode / checkout / Legal EN-ES / Sell ES)  
+2. **Accessibilità base** — **WARN** focus/CTA OK · sr-only parziale  
+3. **Performance** — **WARN** lazy card OK · hero senza fetchpriority  
+4. **SEO tecnico** — **GAP** P-055 scheda generica · **P-056** noindex demo  
+5. **Moderazione UGC** — stati OK · **GAP** P-057 no notify owner  
+6. **Email fanout** — **OK** ended + price drop preferiti  
+7. **Mobile** — **OK** post P-017 drawer  
+8. **Observability** — **WARN** Ops metrics OK · log non JSON  
+9. **Disaster tunnel** — sync auto OK · **GAP** P-058 runbook  
+10. **Dipendenze PR aperte** — **WARN** #12/#10/#7/#8/#11/#6  
+11. **QC scripts esistenti** — **OK** search gate · WARN no Stripe E2E  
+12. **Confronto promise marketing vs codice** (D-051) — **WARN** soft claim OS  
 
 ### J.2 Fascicolo finale (obbligatorio)
-Documento unico: `docs/audit/OMNIA_PORTALE_AUDIT_FASCICOLO.md` con:
-1. Executive summary Founder (1 pagina)  
-2. Scorecard onde A–J  
-3. Registro finding P-001… ordinato per severità  
-4. Matrici (link)  
-5. Lista «vai» consigliati (fix P0/P1) vs backlog  
-6. Ripresa A-037 / A-038 / O6 se impattati  
+- [x] Documento unico: `docs/audit/OMNIA_PORTALE_AUDIT_FASCICOLO.md`  
+- [x] Executive summary · scorecard A–J · registro per severità · matrici · «vai» · A-037/A-038/O6  
+- [x] Matrice J: `portale-matrici/2026-10-09-onda-j.md` · finding P-054…P-058  
 
 ### J.3 Criteri di chiusura programma
-- [ ] Tutte le onde A–J chiuse o esplicitamente rimandate con data  
-- [ ] Nessun P0 aperto senza issue/finding e proposta fix  
-- [ ] Founder ha ricevuto fascicolo + priorità  
+- [x] Tutte le onde A–J chiuse (GREEN analisi 9-Ott-2026)  
+- [x] Nessun P0 aperto senza issue/finding e proposta fix  
+- [x] Founder ha fascicolo + priorità (`OMNIA_PORTALE_AUDIT_FASCICOLO.md`)
 
 ---
 

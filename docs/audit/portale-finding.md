@@ -1,6 +1,6 @@
 # Audit Portale — registro finding `P-###`
 
-**Aggiornato**: 2026-10-09 · Onda I GREEN · P-046…P-053 aperti  
+**Aggiornato**: 2026-10-09 · Onda J GREEN · fascicolo · P-046…P-058 aperti  
 **Regola**: nessun fix senza «vai» Founder (D-118)
 
 | ID | Sev | Onda | Titolo | Stato |
@@ -58,6 +58,11 @@
 | P-051 | P1 | I | `COOKIE_SECURE=false` Cloud → CSRF middleware no-op su HTTPS tunnel | **APERTO** |
 | P-052 | P3 | I | Nessun handler UX globale API down / network error | **APERTO** |
 | P-053 | P3 | I | Alert `stripe_webhook` senza dedup/cooldown | **APERTO** |
+| P-054 | P2 | J | i18n incompleta Visura/checkout/Legal EN-ES/Sell staging ES | **APERTO** |
+| P-055 | P2 | J | SEO scheda: title/OG generici (non per-property) | **APERTO** |
+| P-056 | P3 | J | Tunnel/demo `index,follow` — manca noindex non-prod | **APERTO** |
+| P-057 | P2 | J | UGC approve/reject senza notifica owner | **APERTO** |
+| P-058 | P3 | J | Nessun runbook ops tunnel morto / webhook | **APERTO** |
 
 ## P-009 — dettaglio (CHIUSO)
 
@@ -264,6 +269,38 @@
 
 - Webhook signature fail → `record_alert(kind=stripe_webhook)` ogni volta, no dedup
 - **Fix**: cooldown / upsert per kind+day
+
+
+## P-054 — dettaglio (APERTO · Onda J)
+
+- Visura UI hardcode IT; nav label senza `t()`
+- Checkout success/cancel: chiavi solo fallback IT in `t()`, non nei JSON locale
+- Legal: gap EN/ES; Sell `staging_*` assenti in ES
+- **Fix**: portare stringhe in `locales/{it,en,es}.json` + parity test
+
+## P-055 — dettaglio (APERTO · Onda J)
+
+- Live tunnel: `/it/cloud/property/demo-prop-roma-01` → title/OG = home generica ImmobilCloud
+- `PropertyDetailPage` senza Helmet/`document.title` per-annuncio
+- **Fix**: SSR/meta per title, description, og:image foto principale
+
+## P-056 — dettaglio (APERTO · Onda J)
+
+- Preview/tunnel: `meta robots=index, follow`; `robots.txt` Allow /
+- Rischio indicizzazione ambienti effimeri trycloudflare
+- **Fix**: noindex se host tunnel / `OMNIA_ENV!=prod`
+
+## P-057 — dettaglio (APERTO · Onda J)
+
+- Moderazione approve/reject aggiorna stato + notes; fanout saved-search su approve
+- Nessuna `create_notification` / email all’owner UGC
+- **Fix**: inbox (+ email) su approve/reject
+
+## P-058 — dettaglio (APERTO · Onda J)
+
+- Automazione: `sync-stripe-webhook-url.py` + omnia-stack
+- Manca runbook `docs/ops` “tunnel morto → nuovo URL → webhook → COOKIE_SECURE”
+- **Fix**: doc ops breve collegata a P-026/P-051
 
 ## P-012…P-017 — fix breve
 

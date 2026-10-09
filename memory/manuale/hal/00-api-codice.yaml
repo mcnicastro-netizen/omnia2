@@ -981,25 +981,26 @@ voci:
     widget: null
     pubblico: [super_admin]
     livello: avanzato
-    tags: [codice, audit, portale, immobilcloud, d-118, gdpr, ai-act, stripe, ops, onda-i]
+    tags: [codice, audit, portale, immobilcloud, d-118, gdpr, ai-act, stripe, ops, onda-j]
     correlati: [api.cloud-environment-builds, api.stripe-sandbox-cloud, api.cloud-secrets-vault, api.visura-openapi-catasto, api.founder-ops-portale]
     domanda_naturale: "A che punto è l'audit del portale? Cosa facciamo domani?"
     contenuto:
       a_cosa_serve: >
-        Programma Founder (D-118) ImmobilCloud B2C: onde A–J.
-        SoT docs/audit/OMNIA_PORTALE_AUDIT_PROGRAM.md. Finding P-###.
-        Stato 9-Ott-2026: A–I GREEN. I = resilienza: IDOR/secrets/inquiry RL/
-        Stripe test OK; aperti P-046…P-053 (backup B2C, CSRF COOKIE_SECURE,
-        B2C status fallback, rate limit register/visura, …).
-        H fix P-037…P-044 chiusi. Prossimo: Onda J fascicolo.
+        Programma Founder (D-118) ImmobilCloud B2C: onde A–J CHIUSO (analisi).
+        Fascicolo docs/audit/OMNIA_PORTALE_AUDIT_FASCICOLO.md.
+        SoT OMNIA_PORTALE_AUDIT_PROGRAM.md. Finding P-###.
+        Stato 9-Ott-2026: A–J GREEN. Aperti P-046…P-058 (P1: backup B2C,
+        CSRF COOKIE_SECURE, B2C status fallback; J: i18n/SEO/UGC notify).
+        H fix P-037…P-044 chiusi. Prossimo: coda «vai» (P-051 P-049 P-046).
         Fix solo con «vai» su P-###.
       quando_si_usa: >
         Stato audit; priorità giornata; dove sono matrici/diario/finding.
       passi:
+        - "Fascicolo: docs/audit/OMNIA_PORTALE_AUDIT_FASCICOLO.md."
         - "Programma: docs/audit/OMNIA_PORTALE_AUDIT_PROGRAM.md."
         - "Finding: docs/audit/portale-finding.md · matrici portale-matrici/."
         - "Diario: docs/audit/portale-diario/ · NEXT_SESSION.md."
-        - "Prossimo: Onda J — fascicolo + extra (analisi; fix solo «vai»)."
+        - "Prossimo: «vai P-051 P-049 P-046» (o backlog fascicolo §5)."
         - "Self-serve OFF finché O6 ≠ PASS (D-115)."
       errori_comuni:
         - problema: "L'agent ha già riscritto il portale senza vai"
