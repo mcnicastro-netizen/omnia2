@@ -9,7 +9,7 @@ from datetime import datetime, timezone
 from typing import List, Literal, Optional
 from uuid import uuid4
 
-from fastapi import APIRouter, HTTPException, Response
+from fastapi import APIRouter, HTTPException, Request, Response
 from pydantic import BaseModel, EmailStr, Field
 
 from shared.auth.hashing import hash_password
@@ -40,10 +40,19 @@ class CloudRegisterRequest(BaseModel):
 
 
 @router.post("/register")
-async def cloud_register(payload: CloudRegisterRequest, response: Response):
+async def cloud_register(
+    payload: CloudRegisterRequest,
+    request: Request,
+    response: Response,
+):
     """Register a B2C user. No email verification required for MVP — verification
     flag stays False until user clicks the link sent via Resend (handled by
     the existing /api/auth/verify-email flow if present)."""
+    from shared.security.rate_limit import enforce_ip_rate_limit
+    # P-050 — anti-spam register
+    await enforce_ip_rate_limit(
+        request, bucket="cloud_register", max_requests=10, window_seconds=3600,
+    )
     if not payload.gdpr_consent:
         raise HTTPException(status_code=400, detail="gdpr_consent_required")
     if not payload.age_confirmed:

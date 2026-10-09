@@ -117,13 +117,18 @@ LIST_FIELDS = {
 
 
 def _base_filter() -> Dict[str, Any]:
-    """Common visibility filter applied to every public query."""
+    """Common visibility filter applied to every public query.
+
+    P-033: exclude privacy L3/L4 from list/map/search — detail already 404s
+    for viewers below the property privacy level (anon sees ghost cards).
+    """
     from shared.db.trash import with_not_trashed
     return with_not_trashed({
         "status": "active",
         "visibility": "public",
         "is_listed_on_immobilcloud": {"$ne": False},
         "moderation_status": {"$nin": ["pending", "rejected"]},
+        "privacy_level": {"$nin": ["L3", "L4"]},
     })
 
 

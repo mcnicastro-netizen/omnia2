@@ -266,7 +266,11 @@ async def valuator_status(user: dict = Depends(get_current_user)):
 
 @router.get("/status/{session_id}")
 async def b2c_status(session_id: str, user: dict = Depends(get_current_user)):
-    """Post-checkout polling. Returns purchase status + entitlement info."""
+    """Post-checkout polling. Returns purchase status + entitlement info.
+
+    P-049: if Mongo still pending, retrieve Stripe Checkout Session and apply
+    the same paid side-effects as the webhook (idempotent).
+    """
     db = Database.get()
     doc = await db.b2c_purchases.find_one(
         {"stripe_session_id": session_id, "user_id": user["id"]},
@@ -274,6 +278,31 @@ async def b2c_status(session_id: str, user: dict = Depends(get_current_user)):
     )
     if not doc:
         raise HTTPException(status_code=404, detail="purchase_not_found")
+
+    if doc.get("status") != "paid":
+        try:
+            s = stripe.checkout.Session.retrieve(session_id)
+            sess = s.to_dict() if hasattr(s, "to_dict") else dict(s)
+            if sess.get("payment_status") == "paid" or sess.get("status") == "complete":
+                # Ensure metadata present for apply_b2c_purchase_side_effects
+                md = dict(sess.get("metadata") or {})
+                if not md.get("b2c_product_key"):
+                    md["b2c_product_key"] = doc.get("product_key") or ""
+                if not md.get("user_id"):
+                    md["user_id"] = user["id"]
+                if doc.get("listing_id") and not md.get("listing_id"):
+                    md["listing_id"] = doc["listing_id"]
+                sess["metadata"] = md
+                if not sess.get("id"):
+                    sess["id"] = session_id
+                await apply_b2c_purchase_side_effects(sess)
+                doc = await db.b2c_purchases.find_one(
+                    {"stripe_session_id": session_id, "user_id": user["id"]},
+                    {"_id": 0},
+                ) or doc
+        except stripe.error.StripeError:
+            pass
+
     return {
         "status": doc.get("status"),
         "product_key": doc.get("product_key"),

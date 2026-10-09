@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 """Sync FRONTEND_* / OMNIA_PUBLIC_URL to the live public tunnel URL (P-019).
 
+Also sets COOKIE_SECURE=true on HTTPS trycloudflare (P-051 → CSRF enforce).
+
 Called from omnia-stack when trycloudflare URL is healthy.
 - Upserts backend/.env keys (no secret values)
 - Exit 0 always; prints CHANGED=1|0 for callers (API reload only when changed)
@@ -84,6 +86,12 @@ def main() -> int:
         lines, ch = upsert(lines, key, url)
         any_changed = any_changed or ch
         os.environ[key] = url
+
+    # P-051: HTTPS tunnel ⇒ secure cookies + CSRF middleware on
+    if url.startswith("https://"):
+        lines, ch = upsert(lines, "COOKIE_SECURE", "true")
+        any_changed = any_changed or ch
+        os.environ["COOKIE_SECURE"] = "true"
 
     # marker comment once
     marker = "# --- Public base URL (synced from trycloudflare; do not commit secrets) ---"

@@ -204,9 +204,10 @@ async def create_private_listing(
 @router.get("")
 async def list_my_private_listings(user: dict = Depends(get_current_user)):
     await _ensure_b2c(user)
+    from shared.db.trash import with_not_trashed
     db = Database.get()
     cursor = db.properties.find(
-        {"owner_user_id": user["id"], "is_private_listing": True},
+        with_not_trashed({"owner_user_id": user["id"], "is_private_listing": True}),
         {"_id": 0, "owner": 0},
     ).sort("created_at", -1)
     items = await cursor.to_list(length=50)
@@ -216,9 +217,14 @@ async def list_my_private_listings(user: dict = Depends(get_current_user)):
 @router.get("/{pid}")
 async def get_my_private_listing(pid: str, user: dict = Depends(get_current_user)):
     await _ensure_b2c(user)
+    from shared.db.trash import with_not_trashed
     db = Database.get()
     p = await db.properties.find_one(
-        {"id": pid, "owner_user_id": user["id"], "is_private_listing": True},
+        with_not_trashed({
+            "id": pid,
+            "owner_user_id": user["id"],
+            "is_private_listing": True,
+        }),
         {"_id": 0},
     )
     if not p:
@@ -466,11 +472,23 @@ async def get_b2c_staging_job(
 
 @router.delete("/{pid}", status_code=204)
 async def delete_my_private_listing(pid: str, user: dict = Depends(get_current_user)):
+    """P-048 — soft-delete (cestino) come CRM, non hard delete."""
     await _ensure_b2c(user)
+    from shared.db.trash import soft_delete_fields, with_not_trashed
     db = Database.get()
-    r = await db.properties.delete_one(
-        {"id": pid, "owner_user_id": user["id"], "is_private_listing": True},
+    r = await db.properties.update_one(
+        with_not_trashed({
+            "id": pid,
+            "owner_user_id": user["id"],
+            "is_private_listing": True,
+        }),
+        {"$set": {
+            **soft_delete_fields(user["id"]),
+            "status": "withdrawn",
+            "visibility": "private",
+            "is_listed_on_immobilcloud": False,
+        }},
     )
-    if r.deleted_count == 0:
+    if r.matched_count == 0:
         raise HTTPException(status_code=404, detail="listing_not_found")
     return None
