@@ -153,7 +153,7 @@ Seguendo il `PROGRAMMA_OMNIA.md` originale (D-035) e la sequenza D-032:
   1. `POST https://test.oauth.openapi.com/tokens` con Basic `email:API_KEY` e body JSON `{"grant_type":"client_credentials","scopes":"*:test.catasto.openapi.it/*"}`
   2. Usare `data.token` come `Authorization: Bearer …` su Catasto
 - **Smoke OMNIA**: create visura → `stato: evasa` + PDF `sandbox.pdf` (~58KB) → attach Fascicolo OK
-- **Env**: `OPENAPI_ENABLED` + `OPENAPI_EMAIL` + `OPENAPI_API_KEY` (+ basi test). Opzionale `OPENAPI_TOKEN` statico.
+- **Env (sandbox / D-116)**: `OPENAPI_ENABLED` + `OPENAPI_API_KEY` basta; email OAuth = `OPENAPI_EMAIL` o fallback `ADMIN_EMAIL`. Host default test.*. Opzionale `OPENAPI_TOKEN` statico. Live: `OPENAPI_MODE=live`.
 - **Caveat**: a scala valutare costi OpenAPI vs ISV QTSP / zornade+SISTER post-SRL.
 
 ---

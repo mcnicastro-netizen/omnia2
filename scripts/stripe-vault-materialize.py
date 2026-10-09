@@ -35,6 +35,14 @@ UPSERT_KEYS = (
     "STRIPE_WEBHOOK_SECRET",
     "STRIPE_ENABLED",
     "STRIPE_MODE",
+    # Visura / OpenAPI.it (Onda C · P-018) — vault → .env for uvicorn parity
+    "OPENAPI_ENABLED",
+    "OPENAPI_EMAIL",
+    "OPENAPI_API_KEY",
+    "OPENAPI_TOKEN",
+    "OPENAPI_CATASTO_BASE",
+    "OPENAPI_OAUTH_BASE",
+    "OPENAPI_SCOPES",
 )
 
 
@@ -118,12 +126,17 @@ def main() -> int:
     env_path.parent.mkdir(parents=True, exist_ok=True)
     env_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
 
+    openapi_bits = []
+    for k in ("OPENAPI_ENABLED", "OPENAPI_EMAIL", "OPENAPI_API_KEY", "OPENAPI_TOKEN"):
+        openapi_bits.append(f"{k}={'yes' if (os.environ.get(k) or '').strip() else 'no'}")
+
     klass = stripe_key_classes()
     print(
         "[stripe-vault-materialize] "
         f"secret={klass['secret']} publishable={klass['publishable']} "
         f"enabled={klass['enabled']} mode={klass['mode']} "
-        f"preferred_test={rep.get('preferred_test')}"
+        f"preferred_test={rep.get('preferred_test')} "
+        f"openapi[{','.join(openapi_bits)}]"
     )
     if klass["secret"] == "sk_live":
         print(

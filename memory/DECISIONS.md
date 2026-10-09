@@ -1751,4 +1751,26 @@ Registro di tutte le decisioni di business e tecniche prese durante il progetto.
 - **Implementazione**: ✅ «vai» O0∥O1 · O0 design in `docs/audit/OMNIA_O0_BAK_MEDIA_DESIGN.md` · O1 codice D-095/D-100/D-106 · O2+ ⏳
 - **Stato**: ✅ **DECISIONE OPERATIVA REGISTRATA** · O0∥O1 in ship
 
+### D-116 — OpenAPI Catasto sandbox: una sola API key nel vault · 8-Ott-2026
+- **Data**: 8 Ottobre 2026
+- **Contesto**: Vault Cloud ha `OPENAPI_API_KEY` + `OPENAPI_ENABLED` ma non `OPENAPI_EMAIL` → `openapi_enabled()` restava false. Founder: sandbox con **una sola chiave API**.
+- **Decisione**:
+  1. Sandbox Cloud: vault minimo = `OPENAPI_ENABLED=true` + `OPENAPI_API_KEY` (console Sandbox).
+  2. Email OAuth = `OPENAPI_EMAIL` se presente, altrimenti fallback `ADMIN_EMAIL` / `OMNIA_ADMIN_EMAIL`.
+  3. Host default = `test.catasto.openapi.it` / `test.oauth.openapi.com` finché `OPENAPI_MODE≠live` (e niente base prod esplicita).
+  4. Produzione: `OPENAPI_MODE=live` + credenziali/host prod — non auto.
+- **Implementazione**: `shared/openapi_catasto.py` · test `test_openapi_single_key_sandbox.py` · inventario secrets.
+- **Stato**: ✅ **DECISIONE OPERATIVA REGISTRATA** · codice in ship
+
+### D-118 — Programma Audit Portale ImmobilCloud (start 8-Ott-2026) · 07-Ott-2026
+- **Data**: 7 Ottobre 2026 · **chiusura analisi**: 9 Ottobre 2026  
+- **Contesto**: Founder chiede di programmare il lavoro futuro post-dogfood: controllo portale, codice, API key, super_admin, bottoni, rapporto gestionale, GDPR + AI Act, anti-crash/dati/Stripe + extra necessari — **solo programma**, partenza da domani.
+- **Decisione**:
+  1. SoT esecutivo = `docs/audit/OMNIA_PORTALE_AUDIT_PROGRAM.md`.
+  2. Calendario **10 onde (A–J)** dal **8 al 17 Ott 2026**; finding `P-###`.
+  3. Durante le onde: **analisi e matrici**, non fix di prodotto (salvo P0 con «vai» esplicito).
+  4. Ambito = ImmobilCloud B2C + Legal B2C; gestionale solo ai ponti.
+  5. Fascicolo finale obbligatorio a chiusura Onda J → `docs/audit/OMNIA_PORTALE_AUDIT_FASCICOLO.md`.
+- **Stato**: ✅ **ANALISI + RESIDUO CODICE CHIUSI** (A–J GREEN · vai 9-Ott su P-033/046…058) · fascicolo aggiornato · pronto `merge main` su ordine Founder · residui P-021 opz. / P-026 MITIGATO
+
 

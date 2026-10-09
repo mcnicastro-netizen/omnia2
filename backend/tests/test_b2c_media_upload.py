@@ -27,7 +27,7 @@ def b2c():
     s = requests.Session()
     r = s.post(f"{API}/cloud/auth/register", json={
         "email": B2C_EMAIL, "password": B2C_PASSWORD, "name": "Media Tester",
-        "intents": ["sell"], "lang": "it", "gdpr_consent": True,
+        "intents": ["sell"], "lang": "it", "gdpr_consent": True, "age_confirmed": True,
     })
     assert r.status_code in (200, 201), f"register failed: {r.status_code} {r.text}"
     return s
@@ -56,11 +56,13 @@ def test_upload_photo_and_floor_plan(b2c):
     assert "/floor_plans/" in plan["url"]
     assert plan["kind"] == "floor_plan"
 
-    # Media serve
+    # Media serve — owner OK; anon must 404 (P-009)
     for url in (photo["url"], plan["url"]):
         mr = b2c.get(f"{BASE_URL}{url}")
         assert mr.status_code == 200, f"{url} → {mr.status_code}"
         assert mr.headers.get("content-type", "").startswith("image/")
+        anon = requests.get(f"{BASE_URL}{url}", timeout=15)
+        assert anon.status_code == 404, f"anon {url} → {anon.status_code}"
 
 
 def test_create_listing_with_photos_and_floor_plan(b2c):

@@ -38,9 +38,23 @@ _VAULT_PROTECTED: frozenset[str] = frozenset(
         "TAVILY_API_KEY",
         "JWT_SECRET",
         "GOOGLE_CLIENT_ID",
+        "OPENAPI_ENABLED",
+        "OPENAPI_EMAIL",
+        "OPENAPI_API_KEY",
+        "OPENAPI_TOKEN",
+        "OPENAPI_CATASTO_BASE",
+        "OPENAPI_OAUTH_BASE",
+        "OPENAPI_SCOPES",
         "ADMIN_EMAIL",
         "ADMIN_PASSWORD",
         "DEMO_ADMIN_PASSWORD",
+        "OPENAPI_ENABLED",
+        "OPENAPI_API_KEY",
+        "OPENAPI_EMAIL",
+        "OPENAPI_TOKEN",
+        "OPENAPI_MODE",
+        "OPENAPI_CATASTO_BASE",
+        "OPENAPI_OAUTH_BASE",
     }
 )
 

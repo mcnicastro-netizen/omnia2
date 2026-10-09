@@ -99,6 +99,8 @@ def _public(user: dict) -> dict:
         "phone": user.get("phone"),
         "group_id": user.get("group_id"),
         "mfa_enabled": bool(user.get("mfa_enabled")),
+        "marketing_consent": bool(user.get("marketing_consent")),
+        "age_confirmed": bool(user.get("age_confirmed")),
         "created_at": user["created_at"],
         "updated_at": user["updated_at"],
     }
@@ -159,7 +161,8 @@ async def register(req: RegisterRequest, request: Request, response: Response,
         pass
 
     # Send welcome email (non-blocking; ignore failures)
-    frontend = os.environ.get("FRONTEND_URL", "")
+    from shared.public_base import get_public_base_url
+    frontend = get_public_base_url()
     try:
         await send_email(
             to=email,
@@ -233,6 +236,53 @@ async def login(req: LoginRequest, request: Request, response: Response,
 @router.get("/me")
 async def me(user: dict = Depends(get_current_user)):
     return _public(user)
+
+
+class PatchMeBody(OmniaBaseModel):
+    """P-038 — rettifica anagrafica (nome); marketing opt-in/out."""
+    name: Optional[str] = Field(default=None, min_length=1, max_length=120)
+    marketing_consent: Optional[bool] = None
+
+
+@router.patch("/me")
+async def patch_me(
+    body: PatchMeBody,
+    request: Request,
+    user: dict = Depends(get_current_user),
+):
+    updates: dict = {"updated_at": datetime.now(timezone.utc).isoformat()}
+    if body.name is not None:
+        updates["name"] = body.name.strip()
+    if body.marketing_consent is not None:
+        updates["marketing_consent"] = bool(body.marketing_consent)
+    if len(updates) == 1:
+        return _public(user)
+    db = Database.get()
+    await db.users.update_one({"id": user["id"]}, {"$set": updates})
+    if body.marketing_consent is not None:
+        try:
+            from shared.privacy.consent_log import log_consent
+            await log_consent(
+                action="b2c_marketing_consent_update",
+                email=user.get("email"),
+                user_id=user["id"],
+                source="auth.patch_me",
+                ip=_client_ip(request),
+                meta={"opt_in": bool(body.marketing_consent)},
+            )
+        except Exception:
+            pass
+    fresh = await db.users.find_one({"id": user["id"]}) or {**user, **updates}
+    return _public(fresh)
+
+
+@router.get("/me/export")
+async def export_my_data(user: dict = Depends(get_current_user)):
+    """P-038 — GDPR art. 15/20: export JSON dei dati personali."""
+    db = Database.get()
+    full = await db.users.find_one({"id": user["id"]}) or user
+    from shared.privacy.export_user import build_user_export
+    return await build_user_export(full)
 
 
 class EraseAccountBody(OmniaBaseModel):
@@ -416,7 +466,8 @@ async def forgot_password(req: ForgotPasswordRequest,
             "used": False,
             "created_at": datetime.now(timezone.utc).isoformat(),
         })
-        frontend = os.environ.get("FRONTEND_URL", "")
+        from shared.public_base import get_public_base_url
+        frontend = get_public_base_url()
         reset_url = f"{frontend}/{lang}/reset-password?token={token}"
         logger.info("Password reset link generated for %s", email)
         try:

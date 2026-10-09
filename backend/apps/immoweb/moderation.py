@@ -65,12 +65,62 @@ async def moderation_queue(
     return {"items": items, "total": len(items)}
 
 
+async def _notify_listing_owner(db, listing: dict, *, approved: bool, notes: str = "") -> None:
+    """P-057 — inbox (+ best-effort email) to UGC owner on moderation outcome."""
+    owner_id = listing.get("owner_user_id")
+    if not owner_id:
+        return
+    title = (
+        "Annuncio approvato" if approved else "Annuncio non pubblicato"
+    )
+    body = (
+        "Il tuo annuncio è online su ImmobilCloud."
+        if approved
+        else (notes or "Il tuo annuncio richiede modifiche. Apri Area riservata → Vendi.")
+    )
+    try:
+        from shared.notifications.center import (
+            TYPE_LISTING_MODERATION,
+            create_notification,
+        )
+        await create_notification(
+            user_id=owner_id,
+            type=TYPE_LISTING_MODERATION,
+            title=title,
+            body=body[:1000],
+            link="/cloud/account/sell",
+            meta={"listing_id": listing.get("id"), "approved": approved},
+        )
+    except Exception as e:
+        logger.warning("moderation notify inbox failed: %s", e)
+    # Email: best-effort via generic transactional template if configured
+    try:
+        owner = await db.users.find_one({"id": owner_id}, {"_id": 0, "email": 1, "lang": 1})
+        email = (owner or {}).get("email")
+        if email:
+            from shared.email.client import send_email
+            await send_email(
+                to=email,
+                template="listing_moderation",
+                lang=(owner or {}).get("lang") or "it",
+                subject=f"ImmobilCloud — {title}",
+                variables={
+                    "title": title,
+                    "body": body,
+                    "listing_id": listing.get("id") or "",
+                },
+            )
+    except Exception as e:
+        logger.warning("moderation notify email failed: %s", e)
+
+
 @router.post("/{pid}/approve")
 async def approve_listing(pid: str, user: dict = Depends(get_current_user)):
     await _ensure_admin(user)
     db = Database.get()
     p = await db.properties.find_one(
-        {"id": pid, "is_private_listing": True}, {"_id": 0, "id": 1},
+        {"id": pid, "is_private_listing": True},
+        {"_id": 0, "id": 1, "owner_user_id": 1, "title": 1},
     )
     if not p:
         raise HTTPException(status_code=404, detail="listing_not_found")
@@ -94,6 +144,7 @@ async def approve_listing(pid: str, user: dict = Depends(get_current_user)):
         await fanout_listing_event(pid, event="new")
     except Exception as e:
         logger.warning("fanout after approve failed: %s", e)
+    await _notify_listing_owner(db, p, approved=True)
     return {"ok": True, "moderation_status": "approved", "status": "active"}
 
 
@@ -105,7 +156,8 @@ async def reject_listing(
     await _ensure_admin(user)
     db = Database.get()
     p = await db.properties.find_one(
-        {"id": pid, "is_private_listing": True}, {"_id": 0, "id": 1},
+        {"id": pid, "is_private_listing": True},
+        {"_id": 0, "id": 1, "owner_user_id": 1, "title": 1},
     )
     if not p:
         raise HTTPException(status_code=404, detail="listing_not_found")
@@ -127,4 +179,5 @@ async def reject_listing(
         }},
     )
     logger.info("listing rejected: id=%s by=%s", pid, user["id"])
+    await _notify_listing_owner(db, p, approved=False, notes=notes_clean)
     return {"ok": True, "moderation_status": "rejected"}

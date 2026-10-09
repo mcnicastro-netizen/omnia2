@@ -52,7 +52,7 @@ class TestCloudRegister:
             "intents": ["get_alerts"],
             "notification_channels": ["email"],
             "lang": "it",
-            "gdpr_consent": True,
+            "gdpr_consent": True, "age_confirmed": True,
         }
         r = requests.post(f"{CLOUD_API}/auth/register", json=payload, timeout=20)
         assert r.status_code == 200, f"Expected 200 got {r.status_code}: {r.text}"
@@ -103,7 +103,7 @@ class TestCloudRegister:
             "intents": [],
             "notification_channels": ["email"],
             "lang": "it",
-            "gdpr_consent": True,
+            "gdpr_consent": True, "age_confirmed": True,
         }
         r = requests.post(f"{CLOUD_API}/auth/register", json=payload, timeout=15)
         assert r.status_code == 400
@@ -117,7 +117,7 @@ class TestCloudRegister:
             "intents": ["get_alerts"],
             "notification_channels": ["email"],
             "lang": "it",
-            "gdpr_consent": True,
+            "gdpr_consent": True, "age_confirmed": True,
         }
         r = requests.post(f"{CLOUD_API}/auth/register", json=payload, timeout=15)
         assert r.status_code == 409, f"got {r.status_code}: {r.text}"
@@ -131,7 +131,7 @@ class TestCloudRegister:
             "intents": ["get_alerts"],
             "notification_channels": ["email"],
             "lang": "it",
-            "gdpr_consent": True,
+            "gdpr_consent": True, "age_confirmed": True,
         }
         r = requests.post(f"{CLOUD_API}/auth/register", json=payload, timeout=15)
         assert r.status_code == 422
@@ -144,7 +144,7 @@ class TestCloudRegister:
             "intents": ["get_alerts"],
             "notification_channels": ["email"],
             "lang": "it",
-            "gdpr_consent": True,
+            "gdpr_consent": True, "age_confirmed": True,
         }
         r = requests.post(f"{CLOUD_API}/auth/register", json=payload, timeout=15)
         assert r.status_code == 422

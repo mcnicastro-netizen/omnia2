@@ -63,7 +63,7 @@ def b2c_user(mongo):
         "name": "B2C Valuator Test",
         "intents": ["get_alerts"],
         "notification_channels": ["email"],
-        "gdpr_consent": True,
+        "gdpr_consent": True, "age_confirmed": True,
     }
     r = requests.post(f"{API}/cloud/auth/register", json=payload, timeout=10)
     if r.status_code >= 400:

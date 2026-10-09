@@ -183,7 +183,7 @@ Il titolare **non ha un sito** e vuole che OMNIA gli generi un portale con templ
 **Stato billing (feature flag)**:
 - Se `STRIPE_ENABLED != "true"` in env → endpoint restituiscono **HTTP 503** con `{"error": "stripe_not_configured", "message": "Billing è in preparazione."}`. In UI: la pagina carica ma i piani non sono attivabili.
 - Se `STRIPE_ENABLED == "true"` E `STRIPE_SECRET_KEY` presente → billing operativo.
-- **Cloud Agent (6 Ott 2026)**: i secret arrivano dal vault Cursor (scope **Environment** su omnia2, preferire `sk_test_` / `pk_test_`). Il template `backend/.env` ha `STRIPE_ENABLED=false` ma `shared/env_bootstrap.py` + `scripts/stripe-vault-materialize.py` fanno vincere il vault. Attivazione one-shot: `bash scripts/activate-stripe-sandbox.sh` → `GET /api/billing/plans` con `enabled=true`, `mode=test`. Non riusare chat agent avviate con inject `sk_live_`. Dettaglio HAL: `api.cloud-secrets-vault`, `api.stripe-sandbox-cloud`.
+- **Cloud Agent (6–8 Ott 2026)**: i secret arrivano dal vault Cursor (scope **Environment** su omnia2). **Solo `sk_test_` / `pk_test_`** in Cloud — con `sk_live_` + `STRIPE_ENABLED=true` il billing punta a produzione. `STRIPE_MODE` non è obbligatorio in vault (derivato dalla classe chiave). Template `backend/.env` ha `STRIPE_ENABLED=false` ma `shared/env_bootstrap.py` + `scripts/stripe-vault-materialize.py` fanno vincere il vault (+ materialize `OPENAPI_*`). Boot auto: `sync-public-base-url.py` (FRONTEND_* = tunnel), `sync-stripe-webhook-url.py` (webhook test → trycloudflare). Attivazione one-shot: `bash scripts/activate-stripe-sandbox.sh` → `GET /api/billing/plans` `enabled=true` `mode=test`. **Dopo Save Secrets: nuovo agent** (le chat vecchie non rileggono il vault). Dettaglio HAL: `api.cloud-secrets-vault`, `api.stripe-sandbox-cloud`, `api.visura-openapi-catasto`.
 
 ### 19.10.1 · Sezione piano corrente + wallet crediti
 
@@ -269,6 +269,26 @@ Il redirect Stripe `success_url` include `?session_id={CHECKOUT_SESSION_ID}&ok=1
 Se lo stato resta pending o `?cancel=1`:
 - Mostra `toast.error("Pagamento fallito")` o silent (cancel).
 
+### 19.10.6 · Founder Ops (super_admin) e audit portale
+
+Oltre a `/app/settings/billing` (agenzia), il **Founder** ha:
+
+| UI | API / ruolo |
+|--|--|
+| `/app/ops` | `GET /api/app/ops/overview` — costi, **B2C revenue** (`amount_eur`), card **Portale**, alert, backup |
+| `/app/ops/legal` | volume HAL Legal |
+| `/app/moderation` | coda UGC privati (approve/reject) |
+
+Nav Shell (super_admin): **Ops Costi** · **Ops Legal** · **Moderazione**.  
+Alert: `POST /api/app/ops/alerts/{id}/ack` · `…/ack-all`.  
+Backup: `POST /api/app/ops/backup/run` (se health ≠ OK).  
+Fail Visura post-pagamento → `ops_alerts` kind `openapi_visura`.
+
+**Audit Portale D-118** (9-Ott): **analisi + residuo codice CHIUSI** · fascicolo `OMNIA_PORTALE_AUDIT_FASCICOLO.md`.  
+Residui: P-021 Google opz. · P-026 vault whsec MITIGATO. Prossimo: `merge main` su ordine Founder.  
+Post-test: **A-038** (Invoice Stripe + dati fiscali — solo con «vai»).  
+HAL: `api.founder-ops-portale`, `api.portale-audit-program`, `api.cloud-environment-builds`.
+
 ---
 
 ## 19.11 · Chi NON è coperto in Settings v1
@@ -282,6 +302,7 @@ Molte impostazioni logiche che l'utente si aspetta di trovare in una "pagina Set
 | Cambio piano | `/app/settings/billing` (BillingPage) o Stripe portal | 19 (§19.10) |
 | Acquisto crediti | `/app/settings/billing` (BillingPage) | 19 (§19.10) |
 | Fatture | Stripe customer portal (link da BillingPage) | 19 (§19.10.4) |
+| Incassi B2C / Ops Founder | `/app/ops` (+ Legal, Moderazione) · solo super_admin · D-118 | 19 (§19.10.6) · Cap. 00 |
 | Custom domain | `/app/settings/domain-verify` (DomainVerifyPage) | 17 |
 | Domain sovereignty policy | `/app/domain-sovereignty-policy` (page pubblica) | 17 |
 | API Keys | `/app/api-keys` (ApiKeysPage) | Track B (futuro) |

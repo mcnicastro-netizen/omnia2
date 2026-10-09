@@ -55,7 +55,8 @@ async function fetchJson(url, opts = {}) {
 }
 
 export default function ValuatorPage() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const lang = (i18n.language || "it").slice(0, 2);
   const query = useQuery();
 
   const [tier, setTier] = useState(query.tier === "uni" ? "uni" : "base");
@@ -149,7 +150,7 @@ export default function ValuatorPage() {
   async function handleCheckout(kind) {
     // kind: 'uni' (form submit fallback) or 'upsell' (from base result)
     if (!user) {
-      window.location.href = `/it/cloud/login?next=${encodeURIComponent(window.location.pathname + window.location.search)}`;
+      window.location.href = `/${lang}/login?next=${encodeURIComponent(window.location.pathname + window.location.search)}`;
       return;
     }
     setCheckoutBusy(true);
@@ -166,8 +167,8 @@ export default function ValuatorPage() {
     const preflight = await fetchJson(API, { method: "POST", body: JSON.stringify(payload) });
     let ph = payloadHash;
     if (!ph && preflight.status === 402) ph = preflight.body?.detail?.payload_hash;
-    const success = `${window.location.origin}/it/cloud/checkout/success`;
-    const cancel = `${window.location.origin}/it/cloud/checkout/cancel`;
+    const success = `${window.location.origin}/${lang}/cloud/checkout/success`;
+    const cancel = `${window.location.origin}/${lang}/cloud/checkout/cancel`;
     const r = await fetchJson(CHECKOUT_URL, {
       method: "POST",
       body: JSON.stringify({ product_key: "b2c_valuator_uni_pdf", success_url: success, cancel_url: cancel, payload_hash: ph }),
@@ -220,7 +221,7 @@ export default function ValuatorPage() {
       />
 
       <div className="max-w-6xl mx-auto px-5 sm:px-8 md:px-16 py-10">
-        <Link to="/it/cloud" className="text-sm text-stone-600 hover:text-[#0B1E3F]" data-testid="valuator-back">
+        <Link to={`/${lang}/cloud`} className="text-sm text-stone-600 hover:text-[#0B1E3F]" data-testid="valuator-back">
           ← {t("common.back", "Torna al portale")}
         </Link>
         {/* keep test id on an h1 for existing tests */}
@@ -229,9 +230,9 @@ export default function ValuatorPage() {
         {!user && (
           <div className="mt-6 mb-6 p-5 rounded-2xl border border-amber-200 bg-amber-50 text-amber-950" data-testid="valuator-anon-banner">
             {t("valuator.anon_banner", "Per usare il valutatore devi essere registrato su ImmobilCloud.")}
-            <Link to="/it/cloud/login" className="ml-2 underline font-medium">{t("common.login", "Accedi")}</Link>
+            <Link to={`/${lang}/login?next=${encodeURIComponent(`/${lang}/cloud/valutatore`)}`} className="ml-2 underline font-medium">{t("common.login", "Accedi")}</Link>
             <span> · </span>
-            <Link to="/it/cloud/register" className="underline font-medium">{t("common.register", "Registrati")}</Link>
+            <Link to={`/${lang}/cloud/register`} className="underline font-medium">{t("common.register", "Registrati")}</Link>
           </div>
         )}
 

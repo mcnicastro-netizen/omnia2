@@ -113,7 +113,7 @@ export default function MortgageComparator({ publicMode = false, initialPrice = 
   const [result, setResult] = useState(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
-  const [lead, setLead] = useState({ name: "", email: "", phone: "", sent: false, busy: false });
+  const [lead, setLead] = useState({ name: "", email: "", phone: "", sent: false, busy: false, gdpr: false });
 
   useEffect(() => {
     fetch(`${API}/config`).then((r) => r.json()).then(setConfig).catch(() => {});
@@ -153,6 +153,7 @@ export default function MortgageComparator({ publicMode = false, initialPrice = 
 
   const sendLead = async (e) => {
     e.preventDefault();
+    if (!lead.gdpr) return;
     setLead((l) => ({ ...l, busy: true }));
     try {
       await fetch(`${API}/lead`, {
@@ -291,8 +292,18 @@ export default function MortgageComparator({ publicMode = false, initialPrice = 
                   onChange={(e) => setLead((l) => ({ ...l, phone: e.target.value }))}
                   className="px-3 py-2 text-sm text-stone-900" />
               </div>
-              <button type="submit" disabled={lead.busy} data-testid="mutui-lead-submit"
-                className="bg-[#C19A6B] hover:bg-[#a98354] text-white text-xs uppercase tracking-widest px-6 py-2.5">
+              <label className="flex items-start gap-2 text-xs text-stone-200 cursor-pointer" data-testid="mutui-lead-gdpr">
+                <input
+                  type="checkbox"
+                  required
+                  checked={lead.gdpr}
+                  onChange={(e) => setLead((l) => ({ ...l, gdpr: e.target.checked }))}
+                  className="mt-0.5"
+                />
+                <span>{t("mutui.lead_gdpr", "Acconsento al trattamento dei dati per essere ricontattato (GDPR).")}</span>
+              </label>
+              <button type="submit" disabled={lead.busy || !lead.gdpr} data-testid="mutui-lead-submit"
+                className="bg-[#C19A6B] hover:bg-[#a98354] text-white text-xs uppercase tracking-widest px-6 py-2.5 disabled:opacity-40">
                 {lead.busy ? "..." : t("mutui.lead_submit")}
               </button>
             </form>

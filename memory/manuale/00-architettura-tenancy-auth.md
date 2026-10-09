@@ -38,10 +38,26 @@ Un blocco alla volta · niente fix senza «vai» · no P0–P3 prematuri · **li
 | **D-113** | Restore manuale testabile pre-GTM (non piattaforma DR) |
 | **D-114** | Sostenibilità bak/media = priorità pre-attivazione; O0 = numeri+design vincolante |
 | **D-115** | Programma O0…O6 approvato · **no self-serve finché O6 ≠ PASS** |
+| **D-118** | **Audit Portale ImmobilCloud** · A–J GREEN + **residuo codice CHIUSO** (9-Ott-2026) · fascicolo `OMNIA_PORTALE_AUDIT_FASCICOLO.md` · pronto merge su ordine · residui P-021/P-026 |
+| **D-116** | OpenAPI Catasto sandbox: **una sola API key** (`OPENAPI_API_KEY` + fallback `ADMIN_EMAIL`) |
 
-**SoT continuità:** `docs/audit/OMNIA_AUDIT_STATE.md`  
+**SoT continuità:** `docs/audit/OMNIA_AUDIT_STATE.md` · `memory/NEXT_SESSION.md` · fascicolo D-118  
 **Sequenza priorità (D-099):** fascicolo → orphan → Bak+Restore → retention → costi.  
 **Niente codice** senza «vai».
+
+### Cloud Agent — ID `bld-…` (7-Ott-2026)
+
+Nella UI chat può comparire un ID tipo `bld-20261007-…`: è lo **snapshot Environment Build** (install già fatto), **non** un secret.  
+Cursor lo tiene in Dashboard → Environments → Builds. **Non serve** salvarlo nel password manager; annotalo solo se vuoi pin/debug di quello snapshot. I secret restano nel vault (`CLOUD_SECRETS_INVENTORY.md`). HAL: `api.cloud-environment-builds`.
+
+### D-118 — stato (aggiornato 9-Ott-2026 sera)
+
+**Analisi + residuo codice chiusi**: A–J GREEN · fascicolo aggiornato · PR #12.  
+**Fix**: Ops/G/H + resilienza P-033/046…058 (CSRF, Stripe fallback, backup B2C, RL, soft-delete, i18n, SEO, notify…).  
+**Residui**: P-021 Google opz. · P-026 vault whsec MITIGATO.  
+**Prossimo**: `merge main` solo su ordine Founder.  
+SoT: `OMNIA_PORTALE_AUDIT_FASCICOLO.md` · `portale-finding.md`.  
+HAL: `api.portale-audit-program` · `api.founder-ops-portale` · `api.visura-openapi-catasto`.
 
 ---
 
@@ -63,6 +79,7 @@ Un blocco alla volta · niente fix senza «vai» · no P0–P3 prematuri · **li
 | Non lista infinita | **NI-*** · P24 CHIUSO · SoT ripago §25bis |
 | Report finale | P25 A–K · ⏳ |
 | GTM / Demo | **GTM-01 ACQUISITO** · **D-104** · in coda · pre-~5000 email |
+| Portale B2C audit | **D-118** · CHIUSO · pronto merge · P-021/P-026 residui |
 | Costo / listino | C-* · B-01 · fermo |
 
 ---
@@ -73,6 +90,7 @@ Un blocco alla volta · niente fix senza «vai» · no P0–P3 prematuri · **li
 |----------|--------|--------|
 | P1–P24 | §1–§24 | chiusi · D-094…D-114 · classificazione + D-114 bak/media |
 | P25 Report finale | §25 | Consegnato · A–K · ⏳ analisi |
+| D-118 Portale | A–J | ✅ GREEN + residuo codice CHIUSO · pronto merge |
 | — | §23 Priorità | ⬜ CLOSED fino al «vai» |
 | GTM-01 | post-audit | 🟠 **ACQUISITO** · in coda · smoke ~20 |
 

@@ -47,6 +47,12 @@ logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
 )
+try:
+    from shared.privacy.log_redact import install_pii_redaction  # noqa: E402
+
+    install_pii_redaction()
+except Exception:
+    pass
 logger = logging.getLogger("omnia")
 
 
@@ -213,8 +219,7 @@ async def global_health(accept_language: str = Header(None)):
     )
 
 
-@api_router.get("/health/readiness")
-async def readiness():
+async def _readiness_payload() -> dict:
     """Go-live readiness (no secrets leaked). Stripe/APE excluded by design."""
     import os
 
@@ -251,6 +256,17 @@ async def readiness():
         "checks": checks,
         "excluded": ["stripe_live", "ape_siape"],
     }
+
+
+@api_router.get("/health/readiness")
+async def readiness():
+    return await _readiness_payload()
+
+
+@api_router.get("/ready")
+async def ready_alias():
+    """Alias of /health/readiness (P-004 — probes that expect /api/ready)."""
+    return await _readiness_payload()
 
 
 # Mount sub-apps

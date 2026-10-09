@@ -25,7 +25,7 @@ append_if_missing "$ROOT/backend/.env" "ADMIN_EMAIL" "mcnicastro@gmail.com"
 append_if_missing "$ROOT/backend/.env" "ADMIN_PASSWORD" "OmniaFounder2026!"
 append_if_missing "$ROOT/backend/.env" "DEMO_ADMIN_PASSWORD" "OmniaDemo2026!"
 
-# Vault → .env (prefer sk_test_, wipe stale Stripe lines, never echo values)
+# Vault → .env (Stripe test prefer + OPENAPI_* + AI mail keys; never echo values)
 if [[ -x "$ROOT/backend/.venv/bin/python" ]]; then
   set +e
   "$ROOT/backend/.venv/bin/python" "$ROOT/scripts/stripe-vault-materialize.py" "$ROOT/backend/.env"
@@ -77,6 +77,16 @@ fi
 
 bash "$ROOT/scripts/omnia-stack.sh" ensure
 
+# Re-sync public URLs + webhook after ensure (tunnel may have just come up)
+if [[ -x "$ROOT/backend/.venv/bin/python" && -f /tmp/omnia-stack/SHARE_URL.txt ]]; then
+  set +e
+  "$ROOT/backend/.venv/bin/python" "$ROOT/scripts/sync-public-base-url.py" \
+    --share-file /tmp/omnia-stack/SHARE_URL.txt --env "$ROOT/backend/.env" || true
+  "$ROOT/backend/.venv/bin/python" "$ROOT/scripts/sync-stripe-webhook-url.py" \
+    --share-file /tmp/omnia-stack/SHARE_URL.txt || true
+  set -e
+fi
+
 # Integrity: report secret presence (names only). Non-fatal.
 # NEVER backfill STRIPE_* from .env into process (stale live risk).
 if [[ -f "$ROOT/scripts/check-secrets-presence.sh" ]]; then
@@ -84,7 +94,7 @@ if [[ -f "$ROOT/scripts/check-secrets-presence.sh" ]]; then
   if [[ -f "$ROOT/backend/.env" ]]; then
     while IFS= read -r line; do
       case "$line" in
-        RESEND_API_KEY=*|GEMINI_API_KEY=*|GOOGLE_API_KEY=*|EMERGENT_LLM_KEY=*|FAL_KEY=*|TAVILY_API_KEY=*|GOOGLE_CLIENT_ID=*|JWT_SECRET=*)
+        RESEND_API_KEY=*|GEMINI_API_KEY=*|GOOGLE_API_KEY=*|EMERGENT_LLM_KEY=*|FAL_KEY=*|TAVILY_API_KEY=*|GOOGLE_CLIENT_ID=*|JWT_SECRET=*|OPENAPI_*)
           key="${line%%=*}"
           val="${line#*=}"
           if [[ -z "${!key:-}" ]]; then

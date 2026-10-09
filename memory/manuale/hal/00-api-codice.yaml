@@ -765,41 +765,46 @@ voci:
     widget: null
     pubblico: [super_admin]
     livello: avanzato
-    tags: [codice, secrets, vault, cursor, cloud-agent, stripe, resend, gemini, d-116]
-    correlati: [api.stripe-sandbox-cloud, settings.billing-pagina-separata]
+    tags: [codice, secrets, vault, cursor, cloud-agent, stripe, resend, gemini, openapi, d-116, onda-c]
+    correlati: [api.stripe-sandbox-cloud, api.visura-openapi-catasto, api.portale-audit-program, settings.billing-pagina-separata]
     domanda_naturale: "Dove metto le API key su Cloud Agent? Perché l'agent non vede Stripe anche se le ho salvate?"
     contenuto:
       a_cosa_serve: >
-        I secret Cursor (My Secrets / Environment Secrets) sono una COPIA
+        I secret Cursor (Environment Secrets su omnia2) sono una COPIA
         di iniezione. SoT = password manager + console provider
         (INTEGRITY_AND_SECRETS.md · CLOUD_SECRETS_INVENTORY.md).
-        Nomi env var esatti (niente italiano/spazi). Scope Environment
-        preferito per omnia2; evitare doppioni Personal+Environment
-        (possono iniettare live e test insieme).
+        Nomi env var esatti. Scope Environment preferito; evitare doppioni
+        Personal+Environment (live+test insieme). Boot auto (8 Ott 2026):
+        materialize vault→.env (+OPENAPI_*), sync FRONTEND_* dal tunnel,
+        sync webhook Stripe test sul trycloudflare.
       quando_si_usa: >
         Agent dice secret missing/live; New Project vault vuoto;
-        billing 503; mail in [EMAIL MOCK].
+        billing 503; mail in [EMAIL MOCK]; dopo Save Secrets UI.
       passi:
         - "Avvia sempre agent su github.com/mcnicastro-netizen/omnia2
           (mai New Project / Origin-tmp)."
-        - "Secrets UI: RESEND_API_KEY, GEMINI_API_KEY, FAL_KEY,
-          STRIPE_SECRET_KEY, STRIPE_PUBLISHABLE_KEY, STRIPE_ENABLED=true."
-        - "Verifica presence (mai valori): bash scripts/check-secrets-presence.sh
-          — stampa anche CLOUD_AGENT_INJECTED_SECRET_NAMES e class sk_test/sk_live."
-        - "cloud-agent-start chiama stripe-vault-materialize.py: wipe Stripe
-          da .env stale, preferisce sk_test_/pk_test_ ovunque nel process,
-          materializza vault → backend/.env."
-        - "server.py usa shared.env_bootstrap.load_backend_env: vault vince
-          su template STRIPE_ENABLED=false (load_dotenv override)."
-        - "Secret nuovi = serve agent con boot NUOVO (chat vecchie tengono
-          l'inject del loro avvio)."
+        - "Secrets UI Environment: RESEND_API_KEY, GEMINI_API_KEY, FAL_KEY,
+          STRIPE_SECRET_KEY=sk_test_…, STRIPE_PUBLISHABLE_KEY=pk_test_…,
+          STRIPE_ENABLED=true, STRIPE_WEBHOOK_SECRET=whsec_…,
+          OPENAPI_ENABLED / OPENAPI_EMAIL / OPENAPI_API_KEY (Visura se Catasto attivo)."
+        - "STRIPE_MODE non obbligatorio in vault: con sk_test_ lo stack
+          imposta mode=test da solo."
+        - "Dopo Save: apri agent NUOVO — le chat vecchie tengono l'inject
+          del loro boot (anche se in UI Secrets vedi i nomi nuovi)."
+        - "Verifica: bash scripts/check-secrets-presence.sh
+          (class sk_test/sk_live · WARN vault missing · FRONTEND tunnel)."
+        - "Boot: stripe-vault-materialize.py + sync-public-base-url.py +
+          sync-stripe-webhook-url.py da cloud-agent-start / omnia-stack."
       errori_comuni:
         - problema: "In UI vedo le chiavi ma l'agent dice sk_live o absent"
           soluzione: >
             Controlla doppioni Personal vs Environment; class reale =
             check-secrets sul process. Chat già aperte non rileggono
-            vault aggiornato. Exit 2 di activate-stripe-sandbox.sh =
-            inject ancora live.
+            vault. Con sk_live_ + STRIPE_ENABLED=true il billing punta a
+            produzione — su Cloud sostituisci con sk_test_/pk_test_.
+        - problema: "Ho salvato i 12 secret ma questa chat non li vede"
+          soluzione: >
+            Normale. Chiudi e apri nuova chat/agent sullo stesso env omnia2.
         - problema: "Ho messo Chiave pubblicabile come nome secret"
           soluzione: >
             Nome invalido. Usa STRIPE_PUBLISHABLE_KEY / STRIPE_SECRET_KEY.
@@ -836,10 +841,11 @@ voci:
           omnia-stack ensure (adopt non ricarica .env da solo)."
         - "Verifica UI: /it/app/settings/billing."
       errori_comuni:
-        - problema: "activate exit 2 class sk_live"
+        - problema: "activate exit 2 class sk_live / check-secrets class=sk_live"
           soluzione: >
-            Vault inject ancora live. Correggi secret test; non riusare
-            chat partite con live. Codice OMNIA rileva e blocca sandbox.
+            Vault ha sk_live_/pk_live_. Su Cloud sostituisci con Test keys
+            (Stripe Dashboard → Test mode). Non riusare chat partite con
+            live. STRIPE_MODE non serve in vault: deriva da sk_test_.
         - problema: "setup_stripe ok ma /billing/plans enabled=false"
           soluzione: >
             Processo uvicorn vecchio. Riavvia API dopo materialize.
@@ -847,6 +853,165 @@ voci:
           soluzione: >
             STRIPE_ENABLED!=true o secret key assente nel process
             (non solo nel file .env commentato).
+      permessi:
+        - super_admin / Founder
+      screenshot: []
+
+  - id: api.cloud-environment-builds
+    titolo: Build Cloud Agent (bld-…) — cosa sono e se salvarli
+    modulo: Codice API
+    widget: null
+    pubblico: [super_admin]
+    livello: avanzato
+    tags: [codice, cloud-agent, builds, snapshot, bld, cursor, environment]
+    correlati: [api.cloud-secrets-vault, api.portale-audit-program]
+    domanda_naturale: "A destra della chat vedo bld-20261007-… devo salvarlo? Cos'è un environment build?"
+    contenuto:
+      a_cosa_serve: >
+        Un ID `bld-YYYYMMDD-…` è uno snapshot di environment Cloud Agent
+        (install già eseguito sul default branch). Cursor lo crea in
+        automatico (RECURRING / CONFIG_CHANGE) o on-demand. Non è una
+        password né un secret: è un riferimento operativo allo snapshot.
+      quando_si_usa: >
+        Founder vede un bld a destra in chat; vuole capire se annotarlo;
+        debug “agent lento / install fallito”; pin di un build sano.
+      passi:
+        - "Non serve salvarlo come secret (non va in password manager)."
+        - "Cursor tiene lo storico in Dashboard → Environments → Builds."
+        - "Utile annotarlo solo se vuoi: (a) ripartire da QUELLO snapshot,
+          (b) confrontare un build SUCCEEDED vs FAILED, (c) ticket supporto."
+        - "La chat corrente può essere su un bld diverso dal più recente
+          SUCCEEDED (es. boot da build precedente) — normale."
+        - "Secret (Stripe/Resend/…) restano nel vault Environment; il bld
+          non li sostituisce."
+      errori_comuni:
+        - problema: "Ho salvato il bld nel password manager"
+          soluzione: >
+            Non necessario. Tieni lì solo API key. Il bld è già in Dashboard.
+        - problema: "Build SUCCEEDED ma l'agent non ha Mongo/Stripe"
+          soluzione: >
+            start/secrets sono per-boot; verifica cloud-agent-start + vault,
+            non solo lo snapshot install.
+      permessi:
+        - super_admin / Founder
+      screenshot: []
+
+  - id: api.visura-openapi-catasto
+    titolo: Visura B2C e OpenAPI.it Catasto — D-116 single-key
+    modulo: Codice API
+    widget: null
+    pubblico: [super_admin]
+    livello: avanzato
+    tags: [codice, visura, openapi, catasto, b2c, provider, dogfood, d-118, d-116]
+    correlati: [api.cloud-secrets-vault, api.portale-audit-program, api.stripe-sandbox-cloud, api.founder-ops-portale]
+    domanda_naturale: "Come attivo Visura con una sola API key? Serve OPENAPI_EMAIL?"
+    contenuto:
+      a_cosa_serve: >
+        Visura B2C (€4,90, SKU b2c_visura_catastale) via OpenAPI.it Catasto
+        (shared/openapi_catasto.py · visura_b2c.py). D-116: in sandbox basta
+        OPENAPI_ENABLED=true + OPENAPI_API_KEY; email OAuth = OPENAPI_EMAIL
+        oppure fallback ADMIN_EMAIL / OMNIA_ADMIN_EMAIL (auth_mode=oauth_single_key).
+        Host default test.catasto.openapi.it / test.oauth.openapi.com finché
+        OPENAPI_MODE≠live. Fail post-pagamento → ops_alert kind=openapi_visura.
+      quando_si_usa: >
+        Dogfood Visura; catalog openapi_enabled=false; Onda D provider;
+        manca OPENAPI_EMAIL in vault.
+      passi:
+        - "Vault minimo sandbox: OPENAPI_ENABLED=true + OPENAPI_API_KEY
+          (console Sandbox). ADMIN_EMAIL già in .env = fallback OAuth."
+        - "GET /api/cloud/visura/catalog → openapi_enabled=true."
+        - "Smoke: ping + create + PDF sandbox (byte %PDF)."
+        - "Se create fallisce dopo Stripe paid: Allarmi Ops (openapi_visura)."
+        - "Produzione: OPENAPI_MODE=live + credenziali/host prod — non auto."
+      errori_comuni:
+        - problema: "openapi_enabled=false con solo OPENAPI_API_KEY"
+          soluzione: >
+            Serve D-116 in codice (merge) e ADMIN_EMAIL risolvibile, oppure
+            OPENAPI_EMAIL / OPENAPI_TOKEN espliciti.
+        - problema: "Ho la key ma Catasto provider sospeso"
+          soluzione: >
+            Gap provider. SKIP dogfood Visura; non bloccare Stripe test.
+      permessi:
+        - super_admin / Founder
+      screenshot: []
+
+  - id: api.founder-ops-portale
+    titolo: Founder Ops — costi, portale, alert, backup (super_admin)
+    modulo: Codice API
+    widget: null
+    pubblico: [super_admin]
+    livello: avanzato
+    tags: [codice, ops, founder, b2c, telemetry, backup, alert, p-025, p-027, d-118]
+    correlati: [api.portale-audit-program, api.stripe-sandbox-cloud, api.visura-openapi-catasto, settings.billing-pagina-separata]
+    domanda_naturale: "Cosa vedo in /app/ops? Perché gli incassi B2C erano a zero?"
+    contenuto:
+      a_cosa_serve: >
+        Cruscotto Founder (solo super_admin): GET /api/app/ops/overview
+        (costi AI, wallet, B2C revenue, alert, backup, scheduler, portal.*).
+        Legal volume: /app/ops/legal. Moderazione UGC: /app/moderation.
+        P-025: b2c_purchases.amount_eur da Stripe amount_total/100 (o catalogo).
+        P-027: portal = registrazioni, mutui, inquiry UGC, digest runs, visura,
+        UGC pending, invoices count. P-028: POST /ops/alerts/{id}/ack e ack-all.
+        P-029: POST /ops/backup/run. Nav Shell: Ops Costi / Ops Legal / Moderazione.
+      quando_si_usa: >
+        Controllare incassi B2C; allarmi Stripe/LLM/Visura; backup MISSING;
+        coda annunci privati; post-audit D-118 (fascicolo + finding aperti).
+      passi:
+        - "UI: /it/app/ops · API GET /api/app/ops/overview?days=7|30|90."
+        - "Card Portale: contatori periodo · link Moderazione / Ops Legal."
+        - "Allarmi: Visto / Segna tutti visti (ack)."
+        - "Backup ≠ OK → Esegui ora (POST /ops/backup/run)."
+        - "Nota P-046: backup_job ancora senza molte collection B2C (coda «vai»)."
+        - "A-038 fatture/dati fiscali = post-test, non in questo cruscotto."
+        - "Stato audit: docs/audit/OMNIA_PORTALE_AUDIT_FASCICOLO.md."
+      errori_comuni:
+        - problema: "b2c_revenue_eur=0 con acquisti paid"
+          soluzione: >
+            Pre-fix: amount_eur assente (P-025). Post-fix: webhook scrive
+            importo; overview fa backfill da catalogo sui legacy.
+        - problema: "Backup MISSING su Cloud"
+          soluzione: >
+            Premi Esegui ora o attendi cron 03:15 UTC. Path BACKUP_ROOT
+            (default backend/.backups, gitignored).
+        - problema: "Restore senza pagamenti/consensi B2C"
+          soluzione: >
+            Gap P-046/P-047: estendere _COLLECTIONS + RESTORE_MANUAL (solo «vai»).
+      permessi:
+        - super_admin / Founder
+      screenshot: []
+
+  - id: api.portale-audit-program
+    titolo: Programma Audit Portale ImmobilCloud (D-118)
+    modulo: Codice API
+    widget: null
+    pubblico: [super_admin]
+    livello: avanzato
+    tags: [codice, audit, portale, immobilcloud, d-118, gdpr, ai-act, stripe, ops, onda-j]
+    correlati: [api.cloud-environment-builds, api.stripe-sandbox-cloud, api.cloud-secrets-vault, api.visura-openapi-catasto, api.founder-ops-portale]
+    domanda_naturale: "A che punto è l'audit del portale? Cosa facciamo domani?"
+    contenuto:
+      a_cosa_serve: >
+        Programma Founder (D-118) ImmobilCloud B2C: onde A–J + residuo codice
+        CHIUSI (9-Ott-2026). Fascicolo OMNIA_PORTALE_AUDIT_FASCICOLO.md.
+        Finding P-###: coda codice vuota; residui P-021 Google opz. e
+        P-026 vault whsec MITIGATO. H GDPR P-037…P-044 e resilienza
+        P-033/046…058 chiusi. Prossimo: merge main solo su ordine Founder.
+      quando_si_usa: >
+        Stato audit; priorità giornata; dove sono matrici/diario/finding.
+      passi:
+        - "Fascicolo: docs/audit/OMNIA_PORTALE_AUDIT_FASCICOLO.md."
+        - "Programma: docs/audit/OMNIA_PORTALE_AUDIT_PROGRAM.md."
+        - "Finding: docs/audit/portale-finding.md · matrici portale-matrici/."
+        - "Diario: docs/audit/portale-diario/ · NEXT_SESSION.md."
+        - "Prossimo: «merge main» su ordine Founder (non auto)."
+        - "Self-serve OFF finché O6 ≠ PASS (D-115)."
+      errori_comuni:
+        - problema: "L'agent ha già riscritto il portale senza vai"
+          soluzione: >
+            Fuori mandato. Fix solo con «vai» Founder su P-###.
+        - problema: "Calendario originale diceva B per il 9 Ott"
+          soluzione: >
+            A–I anticipate. Non saltare onde: prossimo = J.
       permessi:
         - super_admin / Founder
       screenshot: []

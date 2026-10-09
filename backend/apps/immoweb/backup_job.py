@@ -22,7 +22,7 @@ BACKUP_ROOT = Path(os.environ.get("BACKUP_ROOT") or "/workspace/backend/.backups
 BACKUP_RETENTION_DAYS = int(os.environ.get("BACKUP_RETENTION_DAYS") or "30")
 MEDIA_ROOT = Path(os.environ.get("LOCAL_STORAGE_ROOT") or "/workspace/backend/.media")
 
-# Collections that restore an agency archive (target O0 also adds client_requests/activities)
+# Collections that restore an agency archive + portale B2C (P-046)
 _COLLECTIONS = [
     "agencies",
     "users",
@@ -37,6 +37,14 @@ _COLLECTIONS = [
     "api_keys",
     "groups",
     "publishing_connections",
+    # Portale B2C / privacy / UGC (P-046)
+    "b2c_purchases",
+    "b2c_visura_orders",
+    "consent_events",
+    "favorites",
+    "saved_searches",
+    "al_legal_audit",
+    "listing_inquiries",
 ]
 
 

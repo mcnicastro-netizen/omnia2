@@ -15,6 +15,8 @@ import AlImproveButton from "../../../shared/components/AlImproveButton";
 import PhotoUploader from "../../immoweb/components/PhotoUploader";
 import CloudPageHero from "./CloudPageHero";
 
+const STAGING_PENDING_KEY = "omnia_staging_pending";
+
 const B2C_MEDIA_UPLOAD = "/cloud/me/properties/media/upload-tmp";
 const B2C_MAX_PHOTOS = 30;
 
@@ -63,7 +65,10 @@ export default function SellPage() {
   const [boostCatalog, setBoostCatalog] = useState([]);
   const [boostBusy, setBoostBusy] = useState(null); // product_key being purchased
   const [stagingBusy, setStagingBusy] = useState(false);
+  const [stagingStatus, setStagingStatus] = useState(""); // progress message after Stripe return
   const [statsById, setStatsById] = useState({}); // pid → stats payload
+  const stagingPollRef = useRef(null);
+  const stagingResumeRef = useRef(false);
 
   // Redirect if not logged in or not a B2C user
   useEffect(() => {
@@ -73,43 +78,171 @@ export default function SellPage() {
     }
   }, [user, lang, nav]);
 
+  const reloadListings = async () => {
+    const r = await api.get("/cloud/me/properties");
+    const items = r.data.items || [];
+    setListings(items);
+    const entries = await Promise.all(
+      items.map(async (l) => {
+        try {
+          const s = await api.get(`/cloud/me/properties/${l.id}/stats`, {
+            params: { days: 30 },
+          });
+          return [l.id, s.data];
+        } catch {
+          return [
+            l.id,
+            {
+              lifetime: {
+                views: l.view_count || 0,
+                leads: l.lead_count || 0,
+              },
+              period: { views: 0, leads: 0, contact_rate: null },
+              series: [],
+            },
+          ];
+        }
+      }),
+    );
+    setStatsById(Object.fromEntries(entries));
+    return items;
+  };
+
   // Load listings + boost catalog + per-listing stats (D-093 / A-029)
   useEffect(() => {
     if (user && user.account_type === "b2c") {
-      api.get("/cloud/me/properties")
-        .then(async (r) => {
-          const items = r.data.items || [];
-          setListings(items);
-          const entries = await Promise.all(
-            items.map(async (l) => {
-              try {
-                const s = await api.get(`/cloud/me/properties/${l.id}/stats`, {
-                  params: { days: 30 },
-                });
-                return [l.id, s.data];
-              } catch {
-                return [
-                  l.id,
-                  {
-                    lifetime: {
-                      views: l.view_count || 0,
-                      leads: l.lead_count || 0,
-                    },
-                    period: { views: 0, leads: 0, contact_rate: null },
-                    series: [],
-                  },
-                ];
-              }
-            }),
-          );
-          setStatsById(Object.fromEntries(entries));
-        })
-        .catch(() => {});
+      reloadListings().catch(() => {});
       api.get("/billing/b2c/boosts")
         .then((r) => setBoostCatalog(r.data.products || []))
         .catch(() => {});
     }
   }, [user]);
+
+  // P-011 — after Stripe return: start/poll staging job, then refresh photos
+  useEffect(() => {
+    if (!user || user.account_type !== "b2c") return undefined;
+    if (stagingResumeRef.current) return undefined;
+    const params = new URLSearchParams(window.location.search);
+    const flag = params.get("staging");
+    if (flag === "cancel") {
+      stagingResumeRef.current = true;
+      nav(`/${lang}/cloud/account/sell`, { replace: true });
+      return undefined;
+    }
+    if (flag !== "ok") return undefined;
+    stagingResumeRef.current = true;
+
+    const sid =
+      params.get("session_id") ||
+      (() => {
+        try {
+          return sessionStorage.getItem("omnia_b2c_checkout_sid") || "";
+        } catch {
+          return "";
+        }
+      })();
+    let pending = null;
+    try {
+      pending = JSON.parse(sessionStorage.getItem(STAGING_PENDING_KEY) || "null");
+    } catch {
+      pending = null;
+    }
+    const listingId = pending?.listingId || "";
+    if (sid) {
+      try {
+        sessionStorage.setItem("omnia_b2c_checkout_sid", sid);
+      } catch {
+        /* ignore */
+      }
+    }
+    nav(`/${lang}/cloud/account/sell`, { replace: true });
+    if (!sid || !listingId) {
+      setError(t("cloud.sell.staging_checkout_error"));
+      return undefined;
+    }
+
+    let cancelled = false;
+    setStagingBusy(true);
+    setStagingStatus(t("cloud.sell.staging_processing"));
+    setError("");
+
+    const finishOk = async () => {
+      try {
+        sessionStorage.removeItem(STAGING_PENDING_KEY);
+      } catch {
+        /* ignore */
+      }
+      await reloadListings().catch(() => {});
+      setStagingStatus(t("cloud.sell.staging_done"));
+      setStagingBusy(false);
+    };
+
+    const fail = (msg) => {
+      setError(msg || t("cloud.sell.staging_checkout_error"));
+      setStagingStatus("");
+      setStagingBusy(false);
+    };
+
+    async function run() {
+      try {
+        let paid = false;
+        for (let i = 0; i < 30 && !cancelled; i += 1) {
+          const st = await api.get(`/billing/b2c/status/${sid}`);
+          if (st.data?.status === "paid") {
+            paid = true;
+            break;
+          }
+          await new Promise((r) => {
+            stagingPollRef.current = setTimeout(r, 1500);
+          });
+        }
+        if (cancelled) return;
+        if (!paid) {
+          fail(t("cloud.sell.staging_payment_pending"));
+          return;
+        }
+
+        const start = await api.post(`/cloud/me/properties/${listingId}/staging`, {
+          session_id: sid,
+        });
+        const jobId = start.data?.job?.id;
+        if (!jobId) {
+          fail(t("cloud.sell.staging_checkout_error"));
+          return;
+        }
+
+        for (let i = 0; i < 60 && !cancelled; i += 1) {
+          const jr = await api.get(`/cloud/me/properties/${listingId}/staging/${jobId}`);
+          const status = jr.data?.status;
+          if (status === "done") {
+            await finishOk();
+            return;
+          }
+          if (status === "failed") {
+            fail(jr.data?.error || t("cloud.sell.staging_failed"));
+            return;
+          }
+          setStagingStatus(t("cloud.sell.staging_processing"));
+          await new Promise((r) => {
+            stagingPollRef.current = setTimeout(r, 2500);
+          });
+        }
+        if (!cancelled) fail(t("cloud.sell.staging_timeout"));
+      } catch (e) {
+        if (!cancelled) {
+          fail(
+            formatApiErrorDetail(e?.response?.data?.detail) ||
+              t("cloud.sell.staging_checkout_error"),
+          );
+        }
+      }
+    }
+    run();
+    return () => {
+      cancelled = true;
+      if (stagingPollRef.current) clearTimeout(stagingPollRef.current);
+    };
+  }, [user, lang, nav, t]);
 
   const buyBoost = async (listingId, productKey) => {
     setBoostBusy(productKey);
@@ -135,17 +268,34 @@ export default function SellPage() {
   };
 
   const buyStaging = async (listingId) => {
+    if (!listingId) {
+      setError(t("cloud.sell.staging_need_listing"));
+      return;
+    }
     setStagingBusy(true);
     setError("");
+    setStagingStatus("");
     try {
+      try {
+        sessionStorage.setItem(STAGING_PENDING_KEY, JSON.stringify({ listingId }));
+      } catch {
+        /* ignore */
+      }
       const origin = window.location.origin;
       const { data } = await api.post("/billing/b2c/checkout", {
         product_key: "b2c_staging_render",
-        listing_id: listingId || undefined,
+        listing_id: listingId,
         success_url: `${origin}/${lang}/cloud/account/sell?staging=ok`,
         cancel_url: `${origin}/${lang}/cloud/account/sell?staging=cancel`,
       });
       if (data?.checkout_url) {
+        if (data.session_id) {
+          try {
+            sessionStorage.setItem("omnia_b2c_checkout_sid", data.session_id);
+          } catch {
+            /* ignore */
+          }
+        }
         window.location.href = data.checkout_url;
         return;
       }
@@ -295,6 +445,11 @@ export default function SellPage() {
       {error && (
         <div data-testid="sell-error" className="mb-4 text-xs text-rose-700 bg-rose-50 border border-rose-200 rounded-xl px-4 py-3">
           {error}
+        </div>
+      )}
+      {stagingStatus && (
+        <div data-testid="sell-staging-status" className="mb-4 text-xs text-stone-800 bg-stone-50 border border-stone-200 rounded-xl px-4 py-3">
+          {stagingStatus}
         </div>
       )}
 

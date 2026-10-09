@@ -85,6 +85,15 @@ export default function PropertyDetailPage() {
       .finally(() => setLoading(false));
   }, [pid]);
 
+  // P-055 — tab title per-property (SSR/OG handled in preview-server)
+  useEffect(() => {
+    if (!prop) return;
+    const prev = document.title;
+    const title = (prop.title || prop.city || "Immobile").toString().slice(0, 80);
+    document.title = `${title} · ImmobilCloud`;
+    return () => { document.title = prev; };
+  }, [prop]);
+
   useEffect(() => {
     if (!pid) return;
     api.get(`/cloud/videos/by-property/${pid}`)
@@ -196,6 +205,17 @@ export default function PropertyDetailPage() {
                     "linear-gradient(180deg, rgba(11,30,63,0.15) 0%, rgba(11,30,63,0.05) 40%, rgba(11,30,63,0.75) 100%)",
                 }}
               />
+              {(cover?.is_virtual_staging || photos.some((p) => p?.is_virtual_staging)) && (
+                <p
+                  data-testid="staging-disclosure"
+                  className="absolute top-4 left-4 md:left-8 z-10 max-w-xs text-[11px] uppercase tracking-widest text-white bg-black/55 px-3 py-1.5 rounded"
+                >
+                  {t(
+                    "cloud.staging_disclosure",
+                    "Render virtuale — immagine generata, non fotografia reale"
+                  )}
+                </p>
+              )}
             </div>
             {photos.length > 1 && (
               <div className="absolute bottom-4 left-0 right-0 px-5 sm:px-8 md:px-16">

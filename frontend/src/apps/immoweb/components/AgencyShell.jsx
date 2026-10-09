@@ -120,7 +120,11 @@ export default function AgencyShell({ children, current = "dashboard", showBack 
       ? [{ key: "brand-lab", to: `/${lang}/app/brand-lab`, label: "Brand Lab", icon: "◈", cluster: "amministrazione" }]
       : []),
     ...(user?.role === "super_admin"
-      ? [{ key: "ops", to: `/${lang}/app/ops`, label: "Ops Costi", icon: "◎", cluster: "amministrazione" }]
+      ? [
+          { key: "ops", to: `/${lang}/app/ops`, label: "Ops Costi", icon: "◎", cluster: "amministrazione" },
+          { key: "ops-legal", to: `/${lang}/app/ops/legal`, label: "Ops Legal", icon: "⚖", cluster: "amministrazione" },
+          { key: "moderation", to: `/${lang}/app/moderation`, label: "Moderazione", icon: "✓", cluster: "amministrazione" },
+        ]
       : []),
   ];
 

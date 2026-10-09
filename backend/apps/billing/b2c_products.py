@@ -59,9 +59,11 @@ B2C_ONE_SHOT_PRODUCTS: Dict[str, B2CProduct] = {
         "stripe_lookup_key": "b2c_staging_render",
         "unit": "per_photo",
         "daily_limit_per_user": 3,
+        "requires_listing": True,
         "notes": (
             "Max 3 foto per annuncio UGC del cliente. "
-            "Stesso € del prezzo B2B agenzia. Margine ~65% netto Stripe."
+            "Stesso € del prezzo B2B agenzia. Margine ~65% netto Stripe. "
+            "P-011: listing_id obbligatorio; consume + job post-pagamento."
         ),
     },
     "b2c_hal_legal_query": {
@@ -237,11 +239,18 @@ def is_b2c_boost_product(key: str) -> bool:
     return bool(p and p.get("requires_listing") and p.get("boost_tier"))
 
 
+def product_requires_listing(key: str) -> bool:
+    """True when checkout must bind a private listing (boosts + staging)."""
+    p = B2C_ONE_SHOT_PRODUCTS.get(key)
+    return bool(p and p.get("requires_listing"))
+
+
 def list_b2c_catalog(*, include_boosts: bool = True) -> List[dict]:
     """Public-facing catalog rows for UI / API."""
     rows: List[dict] = []
     for key, p in B2C_ONE_SHOT_PRODUCTS.items():
-        if not include_boosts and p.get("requires_listing"):
+        # Boost SKUs only (boost_tier set); staging keeps requires_listing but stays in tools catalog
+        if not include_boosts and p.get("boost_tier"):
             continue
         rows.append({
             "key": p["key"],
@@ -259,6 +268,6 @@ def list_b2c_catalog(*, include_boosts: bool = True) -> List[dict]:
 def list_boost_products() -> List[dict]:
     """Boost SKUs only, ordered Vetrina → Premium → TOP, then by duration."""
     tier_order = {"vetrina": 0, "premium": 1, "top": 2}
-    rows = [r for r in list_b2c_catalog(include_boosts=True) if r.get("requires_listing")]
+    rows = [r for r in list_b2c_catalog(include_boosts=True) if r.get("boost_tier")]
     rows.sort(key=lambda r: (tier_order.get(r.get("boost_tier") or "", 9), r.get("duration_days") or 0))
     return rows

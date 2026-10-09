@@ -2,7 +2,7 @@
 
 OpenAPI.it Catasto replaces SISTER scraping for production visure.
 Endpoints return 503 until OPENAPI_ENABLED=true and
-(OPENAPI_TOKEN or OPENAPI_EMAIL+OPENAPI_API_KEY) are set.
+(OPENAPI_TOKEN or OPENAPI_API_KEY with OPENAPI_EMAIL/ADMIN_EMAIL) are set.
 """
 import logging
 import os
@@ -96,7 +96,7 @@ async def request_visura(
             status_code=503,
             detail={
                 "error": "openapi_not_configured",
-                "message": "Imposta OPENAPI_ENABLED=true e OPENAPI_EMAIL+OPENAPI_API_KEY (o OPENAPI_TOKEN) in backend/.env",
+                "message": "Imposta OPENAPI_ENABLED=true e OPENAPI_API_KEY (sandbox: basta la key + ADMIN_EMAIL; oppure OPENAPI_TOKEN)",
             },
         )
     agency_id = await arequire_agency(user)

@@ -78,7 +78,8 @@ async def notify_favoriters_listing_ended(
     label = _STATUS_LABEL_IT.get(end_status, end_status or "non disponibile")
     title = prop.get("title") or "Immobile"
     city = prop.get("city") or ""
-    frontend = os.environ.get("FRONTEND_BASE_URL", "https://omniarealestateecosystem.it")
+    from shared.public_base import get_public_base_url
+    frontend = get_public_base_url()
 
     user_ids = [
         d["user_id"]
@@ -149,7 +150,8 @@ async def notify_favoriters_listing_ended(
 async def cron_favorites_ended_pass(db) -> Dict[str, Any]:
     """Safety-net: pick up ended listings since each user's favorites_ended_watch_at."""
     import os
-    frontend = os.environ.get("FRONTEND_BASE_URL", "https://omniarealestateecosystem.it")
+    from shared.public_base import get_public_base_url
+    frontend = get_public_base_url()
     now = _now_iso()
     notices = 0
     emails = 0

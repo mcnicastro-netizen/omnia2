@@ -19,7 +19,7 @@ from typing import Any, Dict, Optional
 from uuid import uuid4
 
 import stripe
-from fastapi import APIRouter, Depends, HTTPException, Response
+from fastapi import APIRouter, Depends, HTTPException, Request, Response
 from pydantic import BaseModel, Field, HttpUrl
 
 from shared.auth.dependencies import get_current_user
@@ -103,9 +103,15 @@ async def visura_catalog():
 @router.post("/checkout")
 async def visura_checkout(
     payload: VisuraCheckoutBody,
+    request: Request,
     user: dict = Depends(get_current_user),
 ):
     """Start Stripe card checkout, then fulfill via OpenAPI after payment."""
+    from shared.security.rate_limit import enforce_ip_rate_limit
+    # P-050 — anti-spam Visura checkout
+    await enforce_ip_rate_limit(
+        request, bucket="cloud_visura_checkout", max_requests=20, window_seconds=3600,
+    )
     if not _stripe_enabled():
         raise HTTPException(status_code=503, detail={
             "code": "stripe_not_configured",
@@ -230,6 +236,20 @@ async def fulfill_paid_visura_order(session_id: str) -> Optional[dict]:
             {"stripe_session_id": session_id},
             {"$set": {"status": "failed", "error": str(e)[:300], "updated_at": now}},
         )
+        # P-027 — Founder Ops must hear paid-but-failed Visura
+        try:
+            from shared.ops_alerts import record_alert
+            await record_alert(
+                kind="openapi_visura",
+                severity="error",
+                message="Visura OpenAPI fallita dopo pagamento Stripe",
+                meta={
+                    "session_prefix": str(session_id)[:20],
+                    "error": str(e)[:200],
+                },
+            )
+        except Exception:
+            logger.exception("visura ops_alert failed")
         return None
 
     ext_id = str(raw.get("id") or "")

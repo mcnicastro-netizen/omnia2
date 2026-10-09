@@ -1,6 +1,6 @@
-# 📚 HAL Knowledge — Import & Cold Start (v0.29)
+# 📚 HAL Knowledge — Import & Cold Start (v0.33-onda-j)
 
-**Ultimo aggiornamento**: 6-Ott-2026 (Stripe sandbox Cloud · vault secrets · Cap. 00/19)  
+**Ultimo aggiornamento**: 9-Ott-2026 sera (D-118 residuo codice CHIUSO · pronto merge · Cap. 00/19)  
 **Corpus**: YAML in `memory/manuale/hal/*.yaml` (Cap. 1–27 + `00-api-codice`) · MD esclusi dal RAG ingest  
 **Motore**: `hal_knowledge.py` · reindex: `POST /api/app/hal/knowledge/reindex?force=true` (super_admin)  
 **Regola Founder D-084**: ogni ship aggiorna MD+YAML nello stesso giro — vedi `memory/MANUAL_SYNC.md`.
@@ -267,6 +267,13 @@ Prima di dichiarare il cold start "attivo", eseguire manualmente queste 5 query 
 
 | Data | Versione | Note |
 |------|:-:|------|
+| 09-Ott-2026 sera | **v0.34-d118-close** | HAL Cap.00: D-118 residuo codice CHIUSO · pronto merge main · P-021/P-026 residui. Fascicolo aggiornato. |
+| 09-Ott-2026 | **v0.33-onda-j** | HAL Cap.00: A–J GREEN · fascicolo D-118 · P-046…P-058 · coda «vai». Matrice `2026-10-09-onda-j.md` · `OMNIA_PORTALE_AUDIT_FASCICOLO.md`. |
+| 09-Ott-2026 | **v0.33-onda-i** | HAL Cap.00: A–I GREEN · resilienza · P-046…P-053 aperti · prossimo Onda J. Matrice `2026-10-09-onda-i.md`. |
+| 09-Ott-2026 | **v0.33-onda-h** | HAL Cap.00: A–H GREEN · GDPR/AI Act · P-037…P-045 · prossimo Onda I. Matrice `2026-10-09-onda-h.md`. |
+| 09-Ott-2026 | **v0.32-onda-g** | HAL Cap.00 `api.portale-audit-program`: A–G GREEN · P-033…P-036 · prossimo Onda H. Matrice `2026-10-09-onda-g.md`. Reindex live. |
+| 08-Ott-2026 sera | **v0.31-ops-portale** | HAL Cap.00: +`api.founder-ops-portale` · aggiorna Visura D-116 + portale-audit (A–E fatte, F=9 Ott). Cap. 00/19 MD · NEXT_SESSION. Reindex post-push. |
+| 07-Ott-2026 (D-118) | **v0.30-portale-audit** | Cap. 00/19 + HAL Cap.00: +2 voci `api.cloud-environment-builds`, `api.portale-audit-program`. Programma audit portale start 8-Ott · bld-… ≠ secret. Reindex Founder post-merge. |
 | 06-Ago-2026 | **v0.1-cold-start** | Prima stesura. hal-index.json generato su 56 voci Cap. 1-5. Strategia chunk = 1 voce YAML atomica. 5 query test documentate. |
 | 06-Ago-2026 (sera) | **v0.2-attivato** | Opzione A applicata in `hal_knowledge.py` (loader YAML in `ingest_corpus`). 56 voci indicizzate come chunk atomici, 5/5 query PASS. |
 | 06-Ago-2026 (notte) | **v0.2-cleanup** | CHANGELOG.md rimosso dal corpus (`hal_knowledge.py:CORPUS_FILES`) per rompere feedback loop TF-IDF. |

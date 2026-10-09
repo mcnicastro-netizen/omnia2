@@ -1,3 +1,48 @@
+## 2026-10-09 — D-118 residuo codice CHIUSO (vai Founder)
+
+- Fix: P-051 CSRF/COOKIE_SECURE · P-049 B2C Stripe fallback · P-046/047 backup+restore B2C · P-050 RL · P-033 L3/L4 search · P-048 soft-delete · P-054 i18n · P-055 SEO · P-057 UGC notify · P-052/053/056/058/032/024 · P-026 MITIGATO
+- Visura dogfood: catalog + checkout `cs_test_` OK · openapi_enabled=true
+- Fascicolo / finding / Cap.00–19 / HAL sync · PR #12 · **pronto merge main su ordine**
+
+## 2026-10-09 — D-118 A–J GREEN + fascicolo + sync manuale/HAL
+
+- Onde **A–J GREEN** (analisi) · fascicolo `docs/audit/OMNIA_PORTALE_AUDIT_FASCICOLO.md`
+- Finding aperti **P-046…P-058** (+ P-033 dopo) · priorità «vai P-051 P-049 P-046»
+- Fix già shippati (sessioni precedenti): Ops P-025…P-030 · G P-035/036 · H GDPR P-037…P-044
+- Manuale Cap. **00** / **19** §19.10.6 · HAL Cap.00 `api.portale-audit-program` + `api.founder-ops-portale` · `IMPORT_HAL` v0.33-onda-j · `hal-index.json`
+- `DECISIONS` D-118 → ANALISI CHIUSA · `NEXT_SESSION` → coda «vai» · PR #12
+
+## 2026-10-08 sera — D-118 A–E + Ops P-025…P-030 + HAL v0.31
+
+- Onde **A–E** chiuse (anticipate) · D GREEN · Stripe test + OpenAPI D-116
+- Fix Ops: `amount_eur`, portal telemetry, alert ack, backup run, nav Moderazione/Legal
+- HAL Cap. **00**: +`api.founder-ops-portale` · update Visura D-116 · portale-audit stato
+- Cap. **00** / **19** §19.10.6 MD · `NEXT_SESSION` · programma **9 Ott = Onda F**
+- Diario `portale-diario/2026-10-09-programma.md` · PR #12
+
+## 2026-10-08 — D-118 Onda C + boot auto secrets + HAL Visura/Catasto
+
+- Boot Cloud: `sync-public-base-url` · `sync-stripe-webhook-url` · materialize OPENAPI_* · `get_public_base_url()`
+- Vault Founder Save (sera): inject OK su chat *controllo secrets* · **alert sk_live→sk_test**
+- OpenAPI.it **Catasto sospeso dal provider** → Visura dogfood SKIP
+- HAL Cap. 00: aggiornato `api.cloud-secrets-vault` / `api.portale-audit-program` · nuova `api.visura-openapi-catasto`
+- Cap. 19 §19.10 MD · `CLOUD_SECRETS_INVENTORY` · `NEXT_SESSION` · `PRICING_B2C` nota Visura
+- Chat SoT Onda D: **controllo secrets omnia** (non questa storica)
+
+## 2026-10-08 — D-118 Onda A (funzionamento portale)
+
+- Diario + matrice + registro `P-001…P-008`
+- **P-001 P0**: search/schede vuote (`visibility`/trash)
+- Tunnel nuovo: `king-kai-mia-giants.trycloudflare.com`
+- Nessun fix codice (mandato analisi)
+
+## 2026-10-07 — D-118 Programma Audit Portale (start 8 Ott)
+
+- `docs/audit/OMNIA_PORTALE_AUDIT_PROGRAM.md`: 10 onde A–J (funzionamento, codice, key, Ops, bottoni, gestionale, GDPR/AI Act, resilienza, fascicolo)
+- `NEXT_SESSION.md` punta a partenza **domani 8 Ott** · nessun codice prodotto in questa fase
+- Manuale Cap. **00** / **19** §19.10.6 · HAL +2 voci (`api.cloud-environment-builds`, `api.portale-audit-program`) · `CLOUD_SECRETS_INVENTORY` nota `bld-…`
+- Nota Founder: ID `bld-…` in chat = snapshot env, **non** secret da password manager
+
 ## 2026-10-06 — Stripe sandbox Cloud OK + vault harden + HAL
 
 **Tipo**: Ops Cloud + docs HAL/manuale · dogfood prep.

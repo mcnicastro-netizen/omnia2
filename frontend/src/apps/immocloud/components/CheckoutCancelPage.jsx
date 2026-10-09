@@ -4,7 +4,8 @@ import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 
 export default function CheckoutCancelPage() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const lang = (i18n.language || "it").slice(0, 2);
   return (
     <div className="min-h-screen bg-stone-50 flex items-center">
       <div className="max-w-lg mx-auto px-4 py-16 text-center">
@@ -16,10 +17,10 @@ export default function CheckoutCancelPage() {
           {t("checkout.cancel_body", "Nessun addebito effettuato. Puoi comunque usare la stima rapida gratuita.")}
         </p>
         <div className="mt-6 flex gap-2 justify-center">
-          <Link to="/it/cloud/valutatore?tier=base" className="px-4 py-2 bg-stone-900 text-white rounded" data-testid="checkout-cancel-base">
+          <Link to={`/${lang}/cloud/valutatore?tier=base`} className="px-4 py-2 bg-stone-900 text-white rounded" data-testid="checkout-cancel-base">
             {t("checkout.try_base", "Prova la stima gratuita")}
           </Link>
-          <Link to="/it/cloud" className="px-4 py-2 border border-stone-300 rounded" data-testid="checkout-cancel-home">
+          <Link to={`/${lang}/cloud`} className="px-4 py-2 border border-stone-300 rounded" data-testid="checkout-cancel-home">
             {t("common.home", "Home")}
           </Link>
         </div>

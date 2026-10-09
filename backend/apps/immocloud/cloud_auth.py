@@ -9,7 +9,7 @@ from datetime import datetime, timezone
 from typing import List, Literal, Optional
 from uuid import uuid4
 
-from fastapi import APIRouter, HTTPException, Response
+from fastapi import APIRouter, HTTPException, Request, Response
 from pydantic import BaseModel, EmailStr, Field
 
 from shared.auth.hashing import hash_password
@@ -22,7 +22,7 @@ from shared.db.connection import Database
 logger = logging.getLogger("omnia.cloud_auth")
 router = APIRouter(prefix="/auth", tags=["cloud-auth"])
 
-Intent = Literal["sell", "rent_out", "get_alerts"]
+Intent = Literal["buy", "sell", "rent_out", "get_alerts"]
 Channel = Literal["email", "push"]
 
 
@@ -34,15 +34,29 @@ class CloudRegisterRequest(BaseModel):
     notification_channels: List[Channel] = Field(default_factory=lambda: ["email"])
     lang: Optional[Literal["it", "en", "es"]] = "it"
     gdpr_consent: bool = False
+    # P-040 — conferma maggiorenne; P-039 — opt-in marketing distinto dal GDPR servizio
+    age_confirmed: bool = False
+    marketing_consent: bool = False
 
 
 @router.post("/register")
-async def cloud_register(payload: CloudRegisterRequest, response: Response):
+async def cloud_register(
+    payload: CloudRegisterRequest,
+    request: Request,
+    response: Response,
+):
     """Register a B2C user. No email verification required for MVP — verification
     flag stays False until user clicks the link sent via Resend (handled by
     the existing /api/auth/verify-email flow if present)."""
+    from shared.security.rate_limit import enforce_ip_rate_limit
+    # P-050 — anti-spam register
+    await enforce_ip_rate_limit(
+        request, bucket="cloud_register", max_requests=10, window_seconds=3600,
+    )
     if not payload.gdpr_consent:
         raise HTTPException(status_code=400, detail="gdpr_consent_required")
+    if not payload.age_confirmed:
+        raise HTTPException(status_code=400, detail="age_confirmation_required")
     if not payload.intents:
         raise HTTPException(status_code=400, detail="at_least_one_intent_required")
     db = Database.get()
@@ -65,6 +79,8 @@ async def cloud_register(payload: CloudRegisterRequest, response: Response):
         "intents": payload.intents,
         "notification_channels": payload.notification_channels or ["email"],
         "email_verified": False,
+        "age_confirmed": True,
+        "marketing_consent": bool(payload.marketing_consent),
         "created_at": now,
         "updated_at": now,
     }
@@ -77,8 +93,20 @@ async def cloud_register(payload: CloudRegisterRequest, response: Response):
             email=doc["email"],
             user_id=user_id,
             source="cloud.auth.register",
-            meta={"intents": list(payload.intents)},
+            meta={
+                "intents": list(payload.intents),
+                "age_confirmed": True,
+                "marketing_consent": bool(payload.marketing_consent),
+            },
         )
+        if payload.marketing_consent:
+            await log_consent(
+                action="b2c_marketing_consent",
+                email=doc["email"],
+                user_id=user_id,
+                source="cloud.auth.register",
+                meta={"opt_in": True},
+            )
     except Exception:
         pass
 

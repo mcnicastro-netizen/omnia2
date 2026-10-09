@@ -2,13 +2,16 @@
 from __future__ import annotations
 
 import logging
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, Optional
 from uuid import uuid4
 
 from shared.db.connection import Database
 
 logger = logging.getLogger("omnia.consent")
+
+# P-041 — retention proof-of-consent then auto-purge (10 years)
+CONSENT_TTL_DAYS = 3650
 
 
 async def log_consent(
@@ -25,6 +28,7 @@ async def log_consent(
     try:
         db = Database.get_raw() if hasattr(Database, "get_raw") else Database.get()
         raw = getattr(db, "_db", db)
+        now = datetime.now(timezone.utc)
         await raw.consent_events.insert_one(
             {
                 "id": eid,
@@ -34,7 +38,8 @@ async def log_consent(
                 "source": source,
                 "ip": (ip or "")[:64] or None,
                 "meta": meta or {},
-                "created_at": datetime.now(timezone.utc).isoformat(),
+                "created_at": now.isoformat(),
+                "expire_at": now + timedelta(days=CONSENT_TTL_DAYS),
             }
         )
     except Exception as e:

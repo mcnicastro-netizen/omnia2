@@ -783,6 +783,38 @@
     "rooms_short": "hab.",
     "baths_short": "baños",
     "footer_tagline": "Portal OMNIA · Privados y agencias · Italia",
+    "footer_privacy": "Privacidad",
+    "footer_cookie": "Cookies",
+    "footer_terms": "Términos",
+    "nav_legal": "HAL Legal",
+    "legal_privacy_title": "Aviso de privacidad",
+    "legal_privacy_body": [
+      "Responsable del tratamiento: OMNIA Real Estate Ecosystem (ImmobilCloud).",
+      "Tratamos datos de registro (nombre, email, intenciones, confirmación 18+, consentimiento de marketing opcional) y los necesarios para prestar los servicios, además de datos técnicos de sesión y seguridad.",
+      "Bases jurídicas: ejecución del contrato/servicio; consentimiento para marketing (opcional) y cuando proceda. Conservamos los datos el tiempo necesario, con retención automática en logs de consentimiento, auditoría Legal y ledger de compras B2C.",
+      "Encargados / proveedores técnicos: Stripe (pagos), Resend (email), OpenAPI.it (visuras), Google Gemini (HAL Legal / IA), Tavily (fuentes), fal.ai / Kling (staging y micro-tour).",
+      "Transferencias fuera de la UE: algunos proveedores (p. ej. Google, Stripe, fal.ai) pueden tratar datos en EE.UU. u otros países, con las garantías aplicables (p. ej. CCT).",
+      "Inteligencia artificial: no usamos tus chats, documentos o anuncios para entrenar modelos de terceros. Las respuestas HAL Legal y los renders de staging son generados automáticamente y son orientativos.",
+      "Derechos: acceso y exportación (cuenta → Descargar mis datos), rectificación, supresión, limitación, oposición, portabilidad — también privacy@omniaecosystem.it.",
+      "Aviso resumido del portal ImmobilCloud; no sustituye asesoramiento legal. Contratos B2B/DPA aparte."
+    ],
+    "reg_age_text": "Declaro tener al menos 18 años.",
+    "reg_marketing_text": "Acepto recibir comunicaciones comerciales y novedades de ImmobilCloud (opcional).",
+    "staging_disclosure": "Render virtual — imagen generada, no es una fotografía real",
+    "legal_cookie_title": "Cookies",
+    "legal_cookie_body": [
+      "Usamos cookies técnicas esenciales para autenticación (sesiones httpOnly), protección CSRF y preferencia de idioma.",
+      "Herramientas de medición solo si están configuradas en el entorno y, cuando se requiera, con consentimiento.",
+      "Puedes gestionar o borrar las cookies en el navegador; desactivar las técnicas puede impedir el login."
+    ],
+    "legal_terms_title": "Términos del servicio",
+    "legal_terms_body": [
+      "ImmobilCloud es el portal B2C de OMNIA Real Estate Ecosystem. El uso del sitio implica aceptar estos términos.",
+      "Los anuncios los publican agencias y particulares bajo su responsabilidad; OMNIA no garantiza la completitud de cada ficha.",
+      "Los servicios de pago se rigen en el momento de la compra.",
+      "Queda prohibido el uso abusivo de la plataforma. Podemos suspender cuentas en incumplimiento.",
+      "Controversias: normativa italiana del consumidor, salvo disposición imperativa distinta."
+    ],
     "nav_search": "Buscar",
     "nav_sell": "Vender",
     "nav_area": "Mi cuenta",
@@ -801,12 +833,16 @@
     "reg_password": "Contraseña",
     "reg_password_hint": "Mínimo 8 caracteres",
     "reg_intents_title": "¿Qué quieres hacer? (selección múltiple)",
+    "reg_intent_buy": "🏠 Quiero comprar o alquilar",
+    "reg_intent_buy_desc": "Busca casa y guarda favoritos / búsquedas",
     "reg_intent_sell": "🏷️ Quiero vender",
     "reg_intent_sell_desc": "Publica gratis",
     "reg_intent_rent_out": "🔑 Quiero alquilar",
     "reg_intent_rent_out_desc": "Encuentra inquilinos",
     "reg_intent_alerts": "🔔 Quiero alertas de nuevos anuncios",
     "reg_intent_alerts_desc": "Te avisamos cuando aparezca un inmueble compatible",
+    "reg_email_exists": "Este email ya está registrado. Accede con tu contraseña.",
+    "reg_go_login": "Ir al login →",
     "reg_channels_title": "¿Cómo contactarte?",
     "reg_channel_push_coming": "Notificaciones browser (próximamente)",
     "reg_gdpr_text": "Acepto el tratamiento de mis datos personales (GDPR).",
@@ -931,7 +967,17 @@
       "stats_leads": "contactos recibidos",
       "stats_views_30": "vistas últimos 30 días",
       "stats_rate": "tasa de contacto (30d)",
-      "stats_note": "Visualización = apertura de la ficha. Contacto = mensaje enviado. No son impresiones del feed de búsqueda."
+      "stats_note": "Visualización = apertura de la ficha. Contacto = mensaje enviado. No son impresiones del feed de búsqueda.",
+      "staging_title": "Virtual Staging",
+      "staging_subtitle": "Mejora las fotos con IA (pago con tarjeta).",
+      "staging_cta": "Generar staging",
+      "staging_checkout_error": "No se pudo iniciar el pago del staging.",
+      "staging_need_listing": "Guarda el anuncio antes de pedir el staging.",
+      "staging_processing": "Generando la imagen…",
+      "staging_done": "Staging listo",
+      "staging_failed": "El staging ha fallado. Inténtalo de nuevo.",
+      "staging_payment_pending": "Esperando confirmación del pago…",
+      "staging_timeout": "Tiempo de espera agotado. Recarga la página."
     },
     "save_search": {
       "cta": "Guardar esta búsqueda",
@@ -959,7 +1005,39 @@
       "active": "Activa",
       "confirm_delete": "¿Eliminar esta búsqueda guardada?"
     },
-    "nav_mutui": "Hipotecas"
+    "nav_mutui": "Hipotecas",
+    "nav_visura": "Visura",
+    "visura": {
+      "eyebrow": "ImmobilCloud · Visura",
+      "title": "Nota catastral",
+      "subtitle": "Solicita el PDF oficial y paga con tarjeta. Sin créditos — solo Stripe.",
+      "back": "← Volver al portal",
+      "anon": "Inicia sesión o regístrate en ImmobilCloud para comprar la nota catastral.",
+      "register": "Registrarse",
+      "order_label": "Tu pedido",
+      "payment": "Pago",
+      "status": "Visura",
+      "download_pdf": "Descargar PDF",
+      "preparing": "Preparando el documento…",
+      "form_legend": "Datos catastrales",
+      "f_provincia": "Provincia",
+      "f_comune": "Municipio",
+      "f_foglio": "Hoja",
+      "f_particella": "Parcela",
+      "f_subalterno": "Subalterno",
+      "f_catasto": "Catastro",
+      "tipo_f": "Edificios",
+      "tipo_t": "Terrenos",
+      "disclaimer": "Tras el pago recibes el PDF oficial. Documento informativo — no sustituye al técnico.",
+      "redirecting": "Redirigiendo…",
+      "pay_cta": "Pagar € {{price}} con tarjeta",
+      "stripe_off": "Los pagos con tarjeta aún no están activos en este entorno.",
+      "err_order_status": "No se pudo leer el estado del pedido",
+      "err_required_fields": "Completa provincia, municipio, hoja y parcela",
+      "err_checkout": "Checkout no disponible",
+      "err_pay_start": "No se pudo iniciar el pago",
+      "err_download": "Error al descargar el PDF"
+    }
   },
   "properties": {
     "field_rooms": "Habitaciones / Estancias",
@@ -1320,7 +1398,12 @@
     "nav_back": "Volver al panel de control",
     "history_title": "Tus conversaciones",
     "no_history": "Aún no hay conversaciones.",
-    "new_chat": "Nueva conversación"
+    "new_chat": "Nueva conversación",
+    "err_busy": "El servicio de IA está temporalmente saturado. Inténtalo en un minuto.",
+    "err_unavailable": "El servicio de IA no está disponible. Inténtalo más tarde.",
+    "buy_credit": "Comprar 1 pregunta · €1",
+    "err_payment_required": "Pago necesario para continuar.",
+    "err_checkout": "No se pudo iniciar el checkout."
   },
   "help": {
     "title": "Centro de ayuda",
@@ -1424,5 +1507,17 @@
     "load_error": "No se puede cargar la Papelera.",
     "restore_error": "No se pudo restaurar.",
     "purge_error": "No se pudo eliminar definitivamente."
+  },
+  "checkout": {
+    "success_title": "Pago recibido",
+    "success_paid": "El pago se ha completado.",
+    "success_paid_visura": "Pago ok — preparando la nota catastral.",
+    "success_pending": "Confirmando el pago…",
+    "back_to_valuator": "Volver al valorador",
+    "open_visura": "Abrir Visura",
+    "open_legal": "Abrir HAL Legal",
+    "cancel_title": "Pago cancelado",
+    "cancel_body": "No se ha cobrado nada. Puedes intentarlo de nuevo.",
+    "try_base": "Volver"
   }
 }

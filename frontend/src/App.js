@@ -65,6 +65,7 @@ const FounderLegalOpsPage = lazy(() => import("@/apps/immoweb/pages/FounderLegal
 const AnalyticsPage = lazy(() => import("@/apps/immoweb/pages/AnalyticsPage"));
 const AcademyApp = lazy(() => import("@/apps/academy/AcademyApp"));
 const LegalApp = lazy(() => import("@/apps/legal/LegalApp"));
+const LegalDocPage = lazy(() => import("@/apps/immocloud/pages/LegalDocPage"));
 const LoginPage = lazy(() => import("@/apps/auth/LoginPage"));
 const RegisterPage = lazy(() => import("@/apps/auth/RegisterPage"));
 const ForgotPasswordPage = lazy(() => import("@/apps/auth/ForgotPasswordPage"));
@@ -168,6 +169,11 @@ function App() {
                   <Route path="forgot-password" element={<ForgotPasswordPage />} />
                   <Route path="reset-password" element={<ResetPasswordPage />} />
                   <Route path="accept-invite" element={<AcceptInvitePage />} />
+
+                  {/* B2C legal docs (P-005) — public static pages linked from FooterB2C */}
+                  <Route path="privacy" element={<LegalDocPage />} />
+                  <Route path="cookie" element={<LegalDocPage />} />
+                  <Route path="termini" element={<LegalDocPage />} />
 
                   {/* B2C portal — nested boundary isolates portal crashes from CRM */}
                   <Route path="cloud/*" element={<ImmocloudApp />} />

@@ -117,13 +117,18 @@ LIST_FIELDS = {
 
 
 def _base_filter() -> Dict[str, Any]:
-    """Common visibility filter applied to every public query."""
+    """Common visibility filter applied to every public query.
+
+    P-033: exclude privacy L3/L4 from list/map/search — detail already 404s
+    for viewers below the property privacy level (anon sees ghost cards).
+    """
     from shared.db.trash import with_not_trashed
     return with_not_trashed({
         "status": "active",
         "visibility": "public",
         "is_listed_on_immobilcloud": {"$ne": False},
         "moderation_status": {"$nin": ["pending", "rejected"]},
+        "privacy_level": {"$nin": ["L3", "L4"]},
     })
 
 
@@ -713,6 +718,8 @@ async def public_property_detail(pid: str, request: Request):
                 "url": f"/api/public/property/{pid}/photo/{i}",
                 "is_cover": ph.get("is_cover", False),
                 "caption": ph.get("caption"),
+                # P-043 — disclosure staging / render AI sulla scheda pubblica
+                "is_virtual_staging": bool(ph.get("is_virtual_staging")),
             }
             for i, ph in enumerate(photos)
         ],
@@ -1051,7 +1058,8 @@ def _schedule_lead_email(*, to: str, lang: str, property_title: str,
     import os
     from shared.email.client import send_email
 
-    base = os.environ.get("FRONTEND_BASE_URL", "https://omniarealestateecosystem.it")
+    from shared.public_base import get_public_base_url
+    base = get_public_base_url()
     crm_url = f"{base}/{lang if lang in ('it', 'en', 'es') else 'it'}/app/properties/{property_id}"
     phone_block = (
         f'<p style="margin:4px 0 0 0; font-size:14px; color:#0E1419;">📞 '

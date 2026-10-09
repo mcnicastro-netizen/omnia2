@@ -129,7 +129,8 @@ async def google_login(
         await db.users.insert_one(doc)
         user = doc
         created = True
-        frontend = os.environ.get("FRONTEND_URL", "")
+        from shared.public_base import get_public_base_url
+        frontend = get_public_base_url()
         try:
             await send_email(
                 to=email,

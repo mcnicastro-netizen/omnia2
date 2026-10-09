@@ -283,6 +283,200 @@ async def _crm_prompt_fragment(db, agency_id: Optional[str], property_id: str) -
         return None, None
 
 
+# ─── Source URL helpers (B2C private media → fal) ─────────────────
+def _listing_photo_url(photo: Any) -> str:
+    if isinstance(photo, str):
+        return photo.strip()
+    if isinstance(photo, dict):
+        return str(photo.get("url") or "").strip()
+    return ""
+
+
+async def _resolve_image_url_for_fal(src: str) -> str:
+    """fal.ai needs a fetchable URL; private `/api/media/…` is re-uploaded to fal."""
+    raw = (src or "").strip()
+    if not raw:
+        raise RuntimeError("source_url vuota")
+    if not raw.startswith("/api/media/"):
+        return raw
+    from shared.storage import get_object, ObjStoreError
+
+    storage_path = raw[len("/api/media/"):]
+    try:
+        data, ct = get_object(storage_path)
+    except ObjStoreError as e:
+        raise RuntimeError(f"media non leggibile: {e}") from e
+    if not data:
+        raise RuntimeError("media vuoto")
+    import tempfile
+
+    ext = "jpg"
+    if ct and "png" in ct:
+        ext = "png"
+    elif ct and "webp" in ct:
+        ext = "webp"
+    with tempfile.NamedTemporaryFile(suffix=f".{ext}", delete=False) as tmp:
+        tmp.write(data)
+        tmp_path = tmp.name
+    try:
+        return await asyncio.to_thread(fal_client.upload_file, tmp_path)
+    finally:
+        try:
+            os.unlink(tmp_path)
+        except OSError:
+            pass
+
+
+async def _auto_save_b2c_variant(job_id: str, db) -> None:
+    """Attach watermarked variant #0 to the private listing after a paid B2C job."""
+    doc = await db.virtual_staging_jobs.find_one({"id": job_id})
+    if not doc or doc.get("payment_rail") != "b2c_stripe":
+        return
+    property_id = doc.get("property_id")
+    if not property_id or doc.get("saved_to_property_id"):
+        return
+    prop = await db.properties.find_one(
+        {"id": property_id, "is_private_listing": True, "owner_user_id": doc.get("user_id")},
+        {"_id": 0, "photos": 1},
+    )
+    if prop is None:
+        logger.warning("b2c staging auto-save: listing missing job=%s pid=%s", job_id, property_id)
+        return
+    source_bytes, style_key = await _fetch_variant_bytes(doc, 0)
+    processed = await asyncio.to_thread(
+        _apply_watermark, source_bytes, "Render virtuale OMNIA", MAX_PHOTO_WIDTH,
+    )
+    b64 = base64.b64encode(processed).decode("ascii")
+    photos = prop.get("photos") or []
+    new_photo = {
+        "id": str(uuid4()),
+        "url": f"data:image/jpeg;base64,{b64}",
+        "caption": _photo_caption(style_key, doc.get("room_type", "living")),
+        "order": len(photos),
+        "is_cover": False,
+        "is_virtual_staging": True,
+    }
+    await db.properties.update_one(
+        {"id": property_id},
+        {"$push": {"photos": new_photo}, "$set": {"updated_at": datetime.now(timezone.utc).isoformat()}},
+    )
+    await db.virtual_staging_jobs.update_one(
+        {"id": job_id}, {"$set": {"saved_to_property_id": property_id}},
+    )
+    logger.info("b2c staging auto-saved job=%s → property=%s photo=%s", job_id, property_id, new_photo["id"])
+
+
+async def fulfill_paid_staging_render(session_id: str) -> Optional[dict]:
+    """Idempotent webhook/API fulfill: consume purchase + start B2C staging job (P-011)."""
+    if not session_id:
+        return None
+    db = Database.get()
+    purchase = await db.b2c_purchases.find_one({
+        "stripe_session_id": session_id,
+        "product_key": "b2c_staging_render",
+    })
+    if not purchase:
+        logger.warning("staging fulfill: no purchase session=%s", session_id)
+        return None
+    if purchase.get("status") != "paid":
+        return purchase
+    if purchase.get("job_id"):
+        job = await db.virtual_staging_jobs.find_one({"id": purchase["job_id"]}, {"_id": 0})
+        return {"purchase": purchase, "job": job}
+
+    listing_id = purchase.get("listing_id")
+    user_id = purchase.get("user_id")
+    if not listing_id or not user_id:
+        logger.error("staging fulfill: missing listing/user session=%s", session_id)
+        return purchase
+
+    listing = await db.properties.find_one(
+        {
+            "id": listing_id,
+            "owner_user_id": user_id,
+            "is_private_listing": True,
+        },
+        {"_id": 0, "id": 1, "photos": 1},
+    )
+    if not listing:
+        logger.error("staging fulfill: listing not found session=%s listing=%s", session_id, listing_id)
+        return purchase
+    photos = listing.get("photos") or []
+    source_url = ""
+    for ph in photos:
+        u = _listing_photo_url(ph)
+        if u:
+            source_url = u
+            break
+    if not source_url:
+        await db.b2c_purchases.update_one(
+            {"stripe_session_id": session_id},
+            {"$set": {"fulfillment_error": "listing_has_no_photos"}},
+        )
+        logger.error("staging fulfill: no photos session=%s listing=%s", session_id, listing_id)
+        return purchase
+
+    job_id = str(uuid4())
+    from apps.billing.b2c_entitlements import consume_b2c_staging_render
+
+    claimed = await consume_b2c_staging_render(
+        user_id,
+        listing_id=listing_id,
+        stripe_session_id=session_id,
+        job_id=job_id,
+    )
+    if not claimed:
+        # Race: another fulfill already claimed
+        purchase = await db.b2c_purchases.find_one({"stripe_session_id": session_id}) or purchase
+        if purchase.get("job_id"):
+            job = await db.virtual_staging_jobs.find_one({"id": purchase["job_id"]}, {"_id": 0})
+            return {"purchase": purchase, "job": job}
+        return purchase
+
+    now = datetime.now(timezone.utc).isoformat()
+    stages = [
+        {"name": "sam2_mask", "status": "queued"},
+        {"name": "flux_inpaint", "status": "queued"},
+        {"name": "upscale", "status": "queued"},
+    ]
+    doc = {
+        "id": job_id,
+        "user_id": user_id,
+        "agency_id": None,
+        "property_id": listing_id,
+        "source_url": source_url,
+        "style": "modern",
+        "room_type": "living",
+        "mode": "standard",
+        "num_variants": 1,
+        "variant_mode": "same_style",
+        "styles_list": None,
+        "status": "pending",
+        "stages": stages,
+        "variants": [],
+        "variant_url": None,
+        "crm_context": None,
+        "cost_total_usd": None,
+        "error": None,
+        "created_at": now,
+        "completed_at": None,
+        "payment_rail": "b2c_stripe",
+        "b2c_stripe_session_id": session_id,
+        "b2c_purchase_id": claimed.get("id"),
+    }
+    await db.virtual_staging_jobs.insert_one(doc)
+    try:
+        asyncio.create_task(_run_pipeline(job_id, db))
+    except RuntimeError:
+        # No running loop (sync test harness) — caller may invoke pipeline later
+        logger.warning("staging fulfill: no event loop to schedule job=%s", job_id)
+    logger.info(
+        "b2c staging job started job=%s session=%s listing=%s",
+        job_id, session_id, listing_id,
+    )
+    return {"purchase": claimed, "job": doc}
+
+
 # ─── Pipeline stages ─────────────────────────────────────────────
 async def _stage_sam2_mask(image_url: str) -> str:
     handler = await fal_client.submit_async(
@@ -361,11 +555,19 @@ async def _run_pipeline(job_id: str, db) -> None:
         })
 
     await _mark_root({"status": "running"})
-    src = doc["source_url"]
+    src_raw = doc["source_url"]
     mode = doc.get("mode", "standard")
     variant_mode = doc.get("variant_mode", "same_style")
     num_variants = doc.get("num_variants", 1)
     total_cost = 0.0
+
+    try:
+        src = await _resolve_image_url_for_fal(src_raw)
+        if src != src_raw:
+            await _mark_root({"source_url_fal": src})
+    except Exception as e:
+        await _fail("sam2_mask", "Resolve source", e)
+        return
 
     # CRM-aware prompt (best-effort, silent)
     crm_fragment = None
@@ -468,12 +670,27 @@ async def _run_pipeline(job_id: str, db) -> None:
         "completed_at": datetime.now(timezone.utc).isoformat(),
     })
 
-    # Debit only after successful pipeline (no charge on mid-fail)
+    # Debit only after successful pipeline (no charge on mid-fail).
+    # B2C Stripe rail already paid via b2c_purchases — skip agency wallet.
     try:
-        doc_paid = await db.virtual_staging_jobs.find_one({"id": job_id}, {"agency_id": 1, "num_variants": 1})
+        doc_paid = await db.virtual_staging_jobs.find_one(
+            {"id": job_id},
+            {"agency_id": 1, "num_variants": 1, "payment_rail": 1},
+        )
+        rail = (doc_paid or {}).get("payment_rail")
         aid = (doc_paid or {}).get("agency_id")
         n = max(1, int((doc_paid or {}).get("num_variants") or 1))
-        if aid and variants:
+        if rail == "b2c_stripe":
+            await db.virtual_staging_jobs.update_one(
+                {"id": job_id},
+                {"$set": {"credits_charged": 0, "payment_rail": "b2c_stripe"}},
+            )
+            if variants:
+                try:
+                    await _auto_save_b2c_variant(job_id, db)
+                except Exception:
+                    logger.exception("b2c staging auto-save failed job=%s", job_id)
+        elif aid and variants:
             bal = await debit_credits(
                 aid,
                 STAGING_CREDIT_COST * n,

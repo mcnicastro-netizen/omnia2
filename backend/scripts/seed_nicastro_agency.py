@@ -66,6 +66,7 @@ PROPERTIES = [
         "energy": {"energy_class": "C", "heating": "autonomo"},
         "features": {"balcone": True, "ascensore": True, "luminoso": True},
         "privacy_level": "L2",
+        "visibility": "public",
         "is_listed_on_immobilcloud": True,
     },
     {
@@ -91,6 +92,7 @@ PROPERTIES = [
         "energy": {"energy_class": "D", "heating": "autonomo"},
         "features": {"giardino": True, "box_auto": True, "posto_auto": True},
         "privacy_level": "L2",
+        "visibility": "public",
         "is_listed_on_immobilcloud": True,
     },
     {
@@ -119,6 +121,7 @@ PROPERTIES = [
         "energy": {"energy_class": "E", "heating": "autonomo"},
         "features": {"arredato": True, "ascensore": True},
         "privacy_level": "L2",
+        "visibility": "public",
         "is_listed_on_immobilcloud": True,
     },
     {
@@ -145,6 +148,7 @@ PROPERTIES = [
         "energy": {"energy_class": "B", "heating": "autonomo"},
         "features": {"terrazza": True, "ascensore": True, "posto_auto": True, "vista_mare": True},
         "privacy_level": "L2",
+        "visibility": "public",
         "is_listed_on_immobilcloud": True,
     },
 ]
@@ -312,12 +316,16 @@ async def _ensure_admin(db) -> None:
         await db.users.insert_one(user_doc)
 
 
-async def _upsert(col, doc: dict) -> None:
+async def _upsert(col, doc: dict, *, restore_from_trash: bool = False) -> None:
     doc = {**doc, "agency_id": NICASTRO_AGENCY_ID, "updated_at": NOW}
     doc.setdefault("created_at", NOW)
     existing = await col.find_one({"id": doc["id"]})
     if existing:
-        await col.update_one({"id": doc["id"]}, {"$set": doc})
+        update: dict = {"$set": doc}
+        # Seed listed props must leave trash so public portal _base_filter can match (P-001).
+        if restore_from_trash:
+            update["$unset"] = {"deleted_at": "", "deleted_by": ""}
+        await col.update_one({"id": doc["id"]}, update)
     else:
         await col.insert_one(doc)
 
@@ -332,7 +340,7 @@ async def main() -> None:
     await _ensure_admin(db)
 
     for prop in PROPERTIES:
-        await _upsert(db.properties, prop)
+        await _upsert(db.properties, prop, restore_from_trash=True)
     for cli in CLIENTS:
         await _upsert(db.clients, cli)
 

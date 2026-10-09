@@ -15,9 +15,12 @@
 
 Bak ≠ restore testato. Non promettere “restore garantito” in marketing finché non ci sono tempi/limiti operativi firmati.
 
-## Perimetro V1 (agency-first)
+## Perimetro V1 (agency-first + portale B2C)
 
-**In scope:** una singola agency (es. `demo-agency-001`) — immobili, clienti, richieste, attività, media referenziati, membership utenti correlati.
+**In scope agency:** una singola agency (es. `demo-agency-001`) — immobili, clienti, richieste, attività, media referenziati, membership utenti correlati.
+
+**In scope portale B2C (P-046 / P-047):** collection presenti nel backup giornaliero:
+`b2c_purchases`, `b2c_visura_orders`, `consent_events`, `favorites`, `saved_searches`, `al_legal_audit`, `listing_inquiries` (+ `users` B2C / `properties` UGC già in dump properties).
 
 **Fuori scope V1:** restore multi-tenant atomico, RPO/RTO commerciali, self-serve.
 
@@ -61,7 +64,16 @@ day, aid = os.environ["DAY"], os.environ["AGENCY_ID"]
 src = os.path.join(os.environ["BACKUP_ROOT"], day)
 out = f"/tmp/restore_{aid}"
 os.makedirs(out, exist_ok=True)
-for coll in ("agencies","users","properties","clients","client_requests","activities","leads","subscriptions","credit_wallets","publishing_connections"):
+agency_colls = (
+    "agencies","users","properties","clients","client_requests","activities",
+    "leads","subscriptions","credit_wallets","publishing_connections",
+)
+# Portale B2C: di solito restore **globale** (non filtrato per agency) — copia intera collection
+b2c_colls = (
+    "b2c_purchases","b2c_visura_orders","consent_events","favorites",
+    "saved_searches","al_legal_audit","listing_inquiries",
+)
+for coll in agency_colls + b2c_colls:
     path = os.path.join(src, f"{coll}.jsonl")
     if not os.path.isfile(path):
         print("MISSING", coll); continue
@@ -69,17 +81,31 @@ for coll in ("agencies","users","properties","clients","client_requests","activi
     with open(path, encoding="utf-8") as f:
         for line in f:
             doc = json.loads(line)
-            if coll == "agencies" and doc.get("id") == aid:
+            if coll in b2c_colls:
+                kept.append(doc)  # dump intero
+            elif coll == "agencies" and doc.get("id") == aid:
                 kept.append(doc)
-            elif coll == "users" and aid in (doc.get("agency_ids") or []):
+            elif coll == "users" and (
+                aid in (doc.get("agency_ids") or []) or doc.get("account_type") == "b2c"
+            ):
+                # users B2C: includi tutti i b2c se restore portale; altrimenti solo membership agency
                 kept.append(doc)
             elif doc.get("agency_id") == aid:
                 kept.append(doc)
+            elif coll == "properties" and doc.get("is_private_listing") and doc.get("owner_user_id"):
+                kept.append(doc)  # UGC privati
     with open(os.path.join(out, f"{coll}.jsonl"), "w", encoding="utf-8") as w:
         for d in kept:
             w.write(json.dumps(d, ensure_ascii=False) + "\n")
     print(coll, len(kept))
 PY
+```
+
+### 2b. Verifica MANIFEST include B2C
+
+```bash
+python3 -c "import json; m=json.load(open('$BACKUP_ROOT/$DAY/MANIFEST.json')); print(sorted((m.get('collections') or {}).keys()))"
+# attesi tra gli altri: b2c_purchases, consent_events, favorites, …
 ```
 
 ### 3. Ripristina in Mongo (replace per agency)
@@ -104,7 +130,9 @@ Checklist pass/fail:
 - [ ] conteggio `properties` / `clients` / `client_requests` / `activities` coerente col dump  
 - [ ] almeno 1 immobile con foto raggiungibile via URL media  
 - [ ] login utente membership agency ok  
-- [ ] nessun documento di **altra** agency modificato (spot-check)
+- [ ] nessun documento di **altra** agency modificato (spot-check)  
+- [ ] (portale) `b2c_purchases` / `consent_events` / `favorites` presenti se erano nel bak  
+- [ ] (portale) login B2C + preferiti / ordini Visura coerenti col dump
 
 ### 6. Firma run
 

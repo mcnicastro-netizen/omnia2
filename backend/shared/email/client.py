@@ -130,14 +130,14 @@ async def send_email(
 
     variables = dict(variables or {})
     # Inject default assets for branded emails (D-060, logo asset in FE public/)
+    from shared.public_base import get_public_base_url
+
+    base = get_public_base_url()
     variables.setdefault(
         "logo_url",
-        os.environ.get("OMNIA_LOGO_URL", "https://omniarealestateecosystem.it/omnia-mark.png"),
+        os.environ.get("OMNIA_LOGO_URL", f"{base}/omnia-mark.png"),
     )
-    variables.setdefault(
-        "public_base",
-        os.environ.get("OMNIA_PUBLIC_URL", "https://omniarealestateecosystem.it"),
-    )
+    variables.setdefault("public_base", base)
     subject_raw = (
         subject
         or SUBJECTS.get(template, {}).get(lang)

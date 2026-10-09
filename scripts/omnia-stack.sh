@@ -51,6 +51,36 @@ ensure_cloudflared_bin() {
   printf '%s\n' /tmp/cloudflared
 }
 
+# P-019 / P-018 — after a healthy tunnel URL: sync FRONTEND_* + optional Stripe webhook
+sync_runtime_public_urls() {
+  local public_url="$1"
+  [[ -n "${public_url:-}" ]] || return 0
+  local py="${ROOT}/backend/.venv/bin/python"
+  [[ -x "$py" ]] || py="python3"
+  local changed=0
+  if [[ -f "$ROOT/scripts/sync-public-base-url.py" ]]; then
+    local out
+    out="$("$py" "$ROOT/scripts/sync-public-base-url.py" --url "$public_url" --env "$ROOT/backend/.env" 2>&1 || true)"
+    echo "$out" | sed 's/^/[omnia-stack] /' >&2 || true
+    if echo "$out" | grep -q 'CHANGED=1'; then
+      changed=1
+    fi
+  fi
+  if [[ -f "$ROOT/scripts/sync-stripe-webhook-url.py" ]]; then
+    "$py" "$ROOT/scripts/sync-stripe-webhook-url.py" --url "$public_url" 2>&1 \
+      | sed 's/^/[omnia-stack] /' >&2 || true
+  fi
+  # Uvicorn --reload does not re-read env; bounce API only when public base URL changed
+  if [[ "$changed" == "1" ]]; then
+    echo "[omnia-stack] public base URL changed — restarting API so FRONTEND_* take effect" >&2
+    if [[ -f "$pid_api" ]]; then
+      kill "$(cat "$pid_api")" 2>/dev/null || true
+      rm -f "$pid_api"
+    fi
+    adopt_or_start_api || true
+  fi
+}
+
 write_status() {
   local api_ok="$1" preview_ok="$2" tunnel_ok="$3" public_url="$4" msg="${5:-}"
   python3 - "$status_file" "$API_PORT" "$PREVIEW_PORT" "$api_ok" "$preview_ok" "$tunnel_ok" "$public_url" "$msg" <<'PY'
@@ -77,6 +107,9 @@ PY
   if [[ -n "${public_url:-}" ]]; then
     printf '%s\n' "$public_url" >"$share_file"
     printf '%s/it/login\n' "$public_url" >"$LOG_DIR/CRM_LOGIN_URL.txt"
+    if [[ "$tunnel_ok" == "true" ]]; then
+      sync_runtime_public_urls "$public_url"
+    fi
   fi
 }
 
@@ -221,17 +254,26 @@ adopt_or_start_tunnel() {
   running="$(tunnel_process_pids | head -n1 || true)"
   existing="$(read_public_url || true)"
 
-  # Prefer a live cloudflared process: never kill it just because a probe flaked
+  # Prefer a live cloudflared process only if its URL still answers (P-002).
   if [[ -n "${running:-}" ]]; then
     echo "$running" >"$pid_tunnel"
     if [[ -z "${existing:-}" ]]; then
       existing="$(grep -oE 'https://[a-z0-9-]+\.trycloudflare\.com' "$tunnel_log" 2>/dev/null | tail -n1 || true)"
     fi
-    if [[ -n "${existing:-}" ]]; then
+    if [[ -n "${existing:-}" ]] && tunnel_alive "$existing"; then
       printf '%s\n' "$existing" >"$share_file"
       printf '%s/it/login\n' "$existing" >"$LOG_DIR/CRM_LOGIN_URL.txt"
       printf '%s\n' "$existing"
       return 0
+    fi
+    if [[ -n "${existing:-}" ]]; then
+      echo "[omnia-stack] tunnel process up but URL stale (${existing}) — restarting" >&2
+      # shellcheck disable=SC2086
+      kill $running 2>/dev/null || true
+      sleep 1
+      running=""
+      existing=""
+      rm -f "$share_file" 2>/dev/null || true
     fi
   fi
 
@@ -248,7 +290,7 @@ adopt_or_start_tunnel() {
     local url=""
     for _ in $(seq 1 20); do
       url="$(grep -oE 'https://[a-z0-9-]+\.trycloudflare\.com' "$tunnel_log" 2>/dev/null | tail -n1 || true)"
-      if [[ -n "$url" ]]; then
+      if [[ -n "$url" ]] && tunnel_alive "$url"; then
         printf '%s\n' "$url"
         return 0
       fi
@@ -259,7 +301,7 @@ adopt_or_start_tunnel() {
   local old
   old="$(tunnel_process_pids || true)"
   if [[ -n "${old:-}" ]]; then
-    echo "[omnia-stack] tunnel without URL — restarting: $old" >&2
+    echo "[omnia-stack] tunnel without healthy URL — restarting: $old" >&2
     # shellcheck disable=SC2086
     kill $old 2>/dev/null || true
     sleep 1
@@ -313,6 +355,45 @@ print_share() {
   echo "════════════════════════════════════════════════════════"
 }
 
+# P-031 — if public search is empty, re-run demo seeds (visibility=public).
+ensure_portal_inventory() {
+  local py total
+  [[ "${api_ok:-false}" == true ]] || return 0
+  if [[ -x "$ROOT/backend/.venv/bin/python" ]]; then py="$ROOT/backend/.venv/bin/python"
+  else py="python3"; fi
+  total="$("$py" - <<'PY' 2>/dev/null || echo 0
+import json, urllib.request
+try:
+    with urllib.request.urlopen("http://127.0.0.1:43121/api/cloud/search?limit=1", timeout=5) as r:
+        print(int(json.load(r).get("total") or 0))
+except Exception:
+    print(0)
+PY
+)"
+  total="${total//[^0-9]/}"
+  total="${total:-0}"
+  if [[ "$total" -gt 0 ]]; then
+    echo "[omnia-stack] portal inventory ok total=$total"
+    return 0
+  fi
+  echo "[omnia-stack] portal inventory empty — re-seeding demo + nicastro (P-031)" >&2
+  "$py" "$ROOT/backend/scripts/seed_demo_gestionale.py" \
+    || echo "[omnia-stack] seed demo failed (non-fatal)" >&2
+  "$py" "$ROOT/backend/scripts/seed_nicastro_agency.py" \
+    || echo "[omnia-stack] seed nicastro failed (non-fatal)" >&2
+  total="$("$py" - <<'PY' 2>/dev/null || echo 0
+import json, urllib.request
+try:
+    with urllib.request.urlopen("http://127.0.0.1:43121/api/cloud/search?limit=1", timeout=5) as r:
+        print(int(json.load(r).get("total") or 0))
+except Exception:
+    print(0)
+PY
+)"
+  total="${total//[^0-9]/}"
+  echo "[omnia-stack] portal inventory after seed total=${total:-0}"
+}
+
 cmd="${1:-ensure}"
 
 case "$cmd" in
@@ -323,13 +404,24 @@ case "$cmd" in
     public_url=""
     msg=""
     if adopt_or_start_api; then api_ok=true; else msg="api_start_failed"; fi
+    if [[ "$api_ok" == true ]]; then ensure_portal_inventory || true; fi
     if adopt_or_start_preview; then preview_ok=true; else msg="${msg:+$msg;}preview_start_failed"; fi
     if [[ "$preview_ok" == true ]]; then
       if public_url="$(adopt_or_start_tunnel)"; then
-        [[ -n "$public_url" ]] && tunnel_ok=true
+        # Never mark tunnel_ok without a live probe (P-002)
+        if [[ -n "$public_url" ]] && tunnel_alive "$public_url"; then
+          tunnel_ok=true
+        elif [[ -n "$public_url" ]]; then
+          tunnel_ok=false
+          msg="${msg:+$msg;}tunnel_stale_or_dead"
+        else
+          tunnel_ok=false
+          msg="${msg:+$msg;}tunnel_start_failed"
+        fi
       else
         msg="${msg:+$msg;}tunnel_start_failed"
         public_url=""
+        tunnel_ok=false
       fi
     fi
     write_status "$api_ok" "$preview_ok" "$tunnel_ok" "$public_url" "${msg:-ok}"

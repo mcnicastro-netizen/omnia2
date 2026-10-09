@@ -14,7 +14,7 @@ import os
 from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, List, Optional
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 
 from shared.auth.dependencies import require_roles
 from shared.db.connection import Database
@@ -187,6 +187,28 @@ async def ops_overview(
             credit_delta = int(trows[0].get("delta") or 0)
     except Exception:
         pass
+
+    # P-025 — backfill amount_eur from catalog for legacy paid rows
+    try:
+        from apps.billing.b2c_products import B2C_ONE_SHOT_PRODUCTS
+        missing = await db.b2c_purchases.find(
+            {
+                "status": {"$in": ["paid", "complete", "completed", "succeeded"]},
+                "$or": [{"amount_eur": None}, {"amount_eur": {"$exists": False}}],
+            },
+            {"_id": 1, "product_key": 1},
+        ).to_list(500)
+        for doc in missing:
+            pk = doc.get("product_key") or ""
+            price = (B2C_ONE_SHOT_PRODUCTS.get(pk) or {}).get("price_eur")
+            if price is None:
+                continue
+            await db.b2c_purchases.update_one(
+                {"_id": doc["_id"]},
+                {"$set": {"amount_eur": round(float(price), 2)}},
+            )
+    except Exception:
+        logger.exception("b2c amount_eur backfill failed")
 
     # B2C purchases (carta) — se presenti
     b2c_revenue = 0.0
@@ -423,6 +445,54 @@ async def ops_overview(
     except Exception:
         logger.exception("scheduler heartbeats failed")
 
+    # P-027 — telemetry minima portale → Founder Ops
+    since_24h = _since(1)
+    portal = {
+        "b2c_registrations_24h": await _count(
+            db, "users",
+            {"account_type": "b2c", "created_at": {"$gte": since_24h}},
+        ),
+        "b2c_registrations_period": await _count(
+            db, "users",
+            {"account_type": "b2c", "created_at": {"$gte": since}},
+        ),
+        "mortgage_leads_period": await _count(
+            db, "mortgage_leads", {"created_at": {"$gte": since}},
+        ),
+        "listing_inquiries_period": await _count(
+            db, "listing_inquiries", {"created_at": {"$gte": since}},
+        ),
+        # P-035 — schema/job usano `is_active` (non `active`)
+        "saved_searches_active": await _count(db, "saved_searches", {"is_active": True}),
+        "saved_search_runs_period": await _count(
+            db, "saved_searches", {"last_run_at": {"$gte": since}},
+        ),
+        "visura_orders_period": await _count(
+            db, "b2c_visura_orders", {"created_at": {"$gte": since}},
+        ),
+        "visura_failed_period": await _count(
+            db, "b2c_visura_orders",
+            {"status": "failed", "updated_at": {"$gte": since}},
+        ),
+        "invoices_period": await _count(
+            db, "invoices", {"created_at": {"$gte": since}},
+        ),
+        "ugc_pending_moderation": await _count(
+            db, "properties",
+            {
+                "is_private_listing": True,
+                "moderation_status": "pending",
+            },
+        ),
+        "b2c_paid_period": await _count(
+            db, "b2c_purchases",
+            {
+                "status": {"$in": ["paid", "complete", "completed", "succeeded"]},
+                "created_at": {"$gte": since},
+            },
+        ),
+    }
+
     return {
         "period_days": days,
         "generated_at": datetime.now(timezone.utc).isoformat(),
@@ -446,6 +516,7 @@ async def ops_overview(
             "running": scheduler_info.get("running"),
             "jobs": scheduler_info.get("jobs") or {},
         },
+        "portal": portal,
         "totals": {
             "events": total_events,
             "cogs_eur": total_cogs,
@@ -480,6 +551,63 @@ async def ops_overview(
         },
         "links": {
             "legal_detail": "/app/ops/legal",
+            "moderation": "/app/moderation",
             "restore_procedure": "/docs/ops/RESTORE_MANUAL.md",
         },
+    }
+
+
+@router.post("/alerts/{alert_id}/ack")
+async def ack_ops_alert(
+    alert_id: str,
+    user: dict = Depends(require_roles("super_admin")),
+) -> Dict[str, Any]:
+    """P-028 — mark one ops alert as seen."""
+    db = Database.get()
+    now = datetime.now(timezone.utc).isoformat()
+    res = await db.ops_alerts.find_one_and_update(
+        {"id": alert_id},
+        {"$set": {"acked": True, "acked_at": now, "acked_by": user.get("id")}},
+        return_document=True,
+    )
+    if not res:
+        raise HTTPException(status_code=404, detail="alert_not_found")
+    return {
+        "ok": True,
+        "alert": {
+            "id": res.get("id"),
+            "acked": res.get("acked"),
+            "acked_at": res.get("acked_at"),
+        },
+    }
+
+
+@router.post("/alerts/ack-all")
+async def ack_all_ops_alerts(
+    user: dict = Depends(require_roles("super_admin")),
+) -> Dict[str, Any]:
+    """P-028 — ack every unacked ops alert."""
+    db = Database.get()
+    now = datetime.now(timezone.utc).isoformat()
+    result = await db.ops_alerts.update_many(
+        {"acked": False},
+        {"$set": {"acked": True, "acked_at": now, "acked_by": user.get("id")}},
+    )
+    return {"ok": True, "acked": int(result.modified_count)}
+
+
+@router.post("/backup/run")
+async def run_ops_backup(
+    user: dict = Depends(require_roles("super_admin")),
+) -> Dict[str, Any]:
+    """P-029 — trigger archive backup now (Cloud / demo when MISSING)."""
+    from apps.immoweb.backup_job import run_daily_backup, read_latest_backup_health
+    report = await run_daily_backup()
+    health = read_latest_backup_health()
+    return {
+        "ok": bool(report.get("ok")),
+        "status": report.get("status") or health.get("status"),
+        "day": report.get("day") or health.get("day"),
+        "path": report.get("path") or health.get("path"),
+        "backup": health,
     }

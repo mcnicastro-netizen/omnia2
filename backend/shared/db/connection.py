@@ -144,8 +144,28 @@ async def ensure_indexes() -> None:
         await db["consent_events"].create_index([("email", 1), ("created_at", -1)])
         await db["consent_events"].create_index([("user_id", 1), ("created_at", -1)])
         await db["consent_events"].create_index([("action", 1), ("created_at", -1)])
+        # P-041 — TTL on BSON expire_at (set at insert)
+        await db["consent_events"].create_index(
+            [("expire_at", 1)], expireAfterSeconds=0, name="consent_expire_at_ttl"
+        )
     except Exception as e:
         logger.warning(f"consent_events indexes skipped: {e}")
+
+    # P-041 — retention TTL for Legal audit + B2C purchase ledger
+    try:
+        await db["al_legal_audit"].create_index(
+            [("expire_at", 1)], expireAfterSeconds=0, name="al_legal_expire_at_ttl"
+        )
+        await db["al_legal_audit"].create_index([("user_id", 1), ("ts", -1)])
+    except Exception as e:
+        logger.warning(f"al_legal_audit TTL index skipped: {e}")
+    try:
+        await db["b2c_purchases"].create_index(
+            [("expire_at", 1)], expireAfterSeconds=0, name="b2c_purchases_expire_at_ttl"
+        )
+        await db["b2c_purchases"].create_index([("user_id", 1), ("created_at", -1)])
+    except Exception as e:
+        logger.warning(f"b2c_purchases TTL index skipped: {e}")
 
     # Cross-tenant collections (no agency_id filter, but indexed by lookup field)
     try:

@@ -33,6 +33,9 @@ logger = logging.getLogger("omnia.b2c_entitlements")
 
 BASE_TIER_COOLDOWN_DAYS = 365
 UNI_ENTITLEMENT_TTL_HOURS = 24
+# P-041 — ledger retention (pending short; paid fiscal window)
+B2C_PURCHASE_PENDING_TTL_DAYS = 90
+B2C_PURCHASE_PAID_TTL_DAYS = 2555  # ~7 years
 
 
 def hash_valuation_payload(payload: Dict[str, Any]) -> str:
@@ -137,6 +140,8 @@ async def record_uni_purchase(
         "status": status,
         "created_at": now.isoformat(),
         "expires_at": None,  # populated only when status transitions to paid
+        # P-041 — Mongo TTL field (BSON datetime); pending abandoned checkout
+        "expire_at": now + timedelta(days=B2C_PURCHASE_PENDING_TTL_DAYS),
     }
     await db.b2c_purchases.insert_one(doc)
     return doc_id
@@ -146,22 +151,52 @@ async def mark_uni_purchase_paid(
     stripe_session_id: str,
     *,
     expires_at: Optional[datetime] = None,
+    amount_eur: Optional[float] = None,
 ) -> Optional[dict]:
     """Idempotent: called from the Stripe webhook (checkout.session.completed).
 
     Marks the purchase paid. Default entitlement window is 24h (UNI/PDF);
     boost products pass an explicit `expires_at` (now + duration_days).
+
+    P-025: persist `amount_eur` (Stripe `amount_total`/100, else catalog price)
+    so Founder Ops can sum B2C revenue.
     """
     db = Database.get()
     now = datetime.now(timezone.utc)
     expires = expires_at or (now + timedelta(hours=UNI_ENTITLEMENT_TTL_HOURS))
+    existing = await db.b2c_purchases.find_one(
+        {"stripe_session_id": stripe_session_id},
+        {"_id": 0, "product_key": 1, "amount_eur": 1},
+    )
+    resolved_amount = amount_eur
+    if resolved_amount is None and existing and existing.get("amount_eur") is not None:
+        try:
+            resolved_amount = float(existing["amount_eur"])
+        except (TypeError, ValueError):
+            resolved_amount = None
+    if resolved_amount is None and existing:
+        try:
+            from apps.billing.b2c_products import B2C_ONE_SHOT_PRODUCTS
+            pk = existing.get("product_key") or ""
+            cat = B2C_ONE_SHOT_PRODUCTS.get(pk) or {}
+            if cat.get("price_eur") is not None:
+                resolved_amount = float(cat["price_eur"])
+        except Exception:
+            pass
+
+    update: dict = {
+        "status": "paid",
+        "paid_at": now.isoformat(),
+        "expires_at": expires.isoformat(),
+        # P-041 — extend ledger retention after payment
+        "expire_at": now + timedelta(days=B2C_PURCHASE_PAID_TTL_DAYS),
+    }
+    if resolved_amount is not None:
+        update["amount_eur"] = round(float(resolved_amount), 2)
+
     doc = await db.b2c_purchases.find_one_and_update(
         {"stripe_session_id": stripe_session_id},
-        {"$set": {
-            "status": "paid",
-            "paid_at": now.isoformat(),
-            "expires_at": expires.isoformat(),
-        }},
+        {"$set": update},
         return_document=True,
     )
     return doc
@@ -177,6 +212,101 @@ async def count_uni_purchases_today(user_id: str) -> int:
         "created_at": {"$gte": start.isoformat()},
     })
     return int(n)
+
+
+async def consume_hal_legal_query(user_id: str) -> bool:
+    """Atomically consume one paid HAL Legal query credit (P-010).
+
+    Matches `b2c_hal_legal_query` with status=paid, not yet consumed, and
+    within expires_at when set. Returns True if a credit was consumed.
+    """
+    if not user_id:
+        return False
+    now = datetime.now(timezone.utc)
+    now_iso = now.isoformat()
+    db = Database.get()
+    doc = await db.b2c_purchases.find_one_and_update(
+        {
+            "user_id": user_id,
+            "product_key": "b2c_hal_legal_query",
+            "status": "paid",
+            "$and": [
+                {"$or": [
+                    {"consumed_at": {"$exists": False}},
+                    {"consumed_at": None},
+                ]},
+                {"$or": [
+                    {"expires_at": None},
+                    {"expires_at": {"$exists": False}},
+                    {"expires_at": {"$gt": now_iso}},
+                ]},
+            ],
+        },
+        {"$set": {"consumed_at": now_iso}},
+        sort=[("paid_at", 1), ("created_at", 1)],
+        return_document=True,
+    )
+    return bool(doc)
+
+
+async def consume_b2c_staging_render(
+    user_id: str,
+    *,
+    listing_id: Optional[str] = None,
+    stripe_session_id: Optional[str] = None,
+    job_id: Optional[str] = None,
+) -> Optional[dict]:
+    """Atomically consume one paid B2C staging render (P-011).
+
+    Prefer `stripe_session_id` when known (post-checkout). Otherwise consume the
+    oldest paid unconsumed purchase for this user (optionally bound to listing).
+    Returns the updated purchase doc, or None if nothing to consume.
+    """
+    if not user_id:
+        return None
+    now_iso = datetime.now(timezone.utc).isoformat()
+    db = Database.get()
+    filt: Dict[str, Any] = {
+        "user_id": user_id,
+        "product_key": "b2c_staging_render",
+        "status": "paid",
+        "$and": [
+            {"$or": [
+                {"consumed_at": {"$exists": False}},
+                {"consumed_at": None},
+            ]},
+            {"$or": [
+                {"expires_at": None},
+                {"expires_at": {"$exists": False}},
+                {"expires_at": {"$gt": now_iso}},
+            ]},
+        ],
+    }
+    if stripe_session_id:
+        filt["stripe_session_id"] = stripe_session_id
+    if listing_id:
+        filt["listing_id"] = listing_id
+    patch: Dict[str, Any] = {"consumed_at": now_iso}
+    if job_id:
+        patch["job_id"] = job_id
+    return await db.b2c_purchases.find_one_and_update(
+        filt,
+        {"$set": patch},
+        sort=[("paid_at", 1), ("created_at", 1)],
+        return_document=True,
+    )
+
+
+def user_requires_b2c_legal_paywall(user: Dict[str, Any]) -> bool:
+    """B2C clients must pay per query; CRM agents/admins skip the B2C SKU gate."""
+    if not user:
+        return True
+    if user.get("role") in (
+        "super_admin", "agency_admin", "group_admin", "branch_admin",
+        "agent", "branch_agent",
+    ):
+        return False
+    return user.get("account_type") == "b2c" or user.get("role") == "client"
 
 
 def is_uni_payload(payload: Dict[str, Any]) -> bool:
