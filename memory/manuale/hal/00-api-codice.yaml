@@ -981,24 +981,25 @@ voci:
     widget: null
     pubblico: [super_admin]
     livello: avanzato
-    tags: [codice, audit, portale, immobilcloud, d-118, gdpr, ai-act, stripe, ops, onda-g]
+    tags: [codice, audit, portale, immobilcloud, d-118, gdpr, ai-act, stripe, ops, onda-h]
     correlati: [api.cloud-environment-builds, api.stripe-sandbox-cloud, api.cloud-secrets-vault, api.visura-openapi-catasto, api.founder-ops-portale]
     domanda_naturale: "A che punto è l'audit del portale? Cosa facciamo domani?"
     contenuto:
       a_cosa_serve: >
         Programma Founder (D-118) ImmobilCloud B2C: onde A–J.
         SoT docs/audit/OMNIA_PORTALE_AUDIT_PROGRAM.md. Finding P-###.
-        Stato 9-Ott-2026: A–G fatte. F GREEN (P-031 chiuso). G GREEN —
-        ponti CRM↔portale verificati live; aperti P-033…P-036 (search L3,
-        brand flags, Ops is_active, HAL Legal CRM gratis).
-        Prossimo: Onda H GDPR+AI Act. Fix solo con «vai» su P-###.
+        Stato 9-Ott-2026: A–H GREEN. H = GDPR/AI Act (analisi onesta, non
+        parere legale): consensi servizio OK; gap P-037…P-045 (privacy
+        vendors/transfer, DSAR export, marketing, age, TTL, log PII,
+        staging label, valuator gdpr/contest). Prossimo: Onda I resilienza.
+        Fix solo con «vai» su P-###. Nessun claim «siamo compliant».
       quando_si_usa: >
         Stato audit; priorità giornata; dove sono matrici/diario/finding.
       passi:
         - "Programma: docs/audit/OMNIA_PORTALE_AUDIT_PROGRAM.md."
         - "Finding: docs/audit/portale-finding.md · matrici portale-matrici/."
         - "Diario: docs/audit/portale-diario/ · NEXT_SESSION.md."
-        - "Prossimo: Onda H — GDPR + AI Act portale (analisi; fix solo «vai»)."
+        - "Prossimo: Onda I — anti-crash / dati / Stripe (analisi; fix solo «vai»)."
         - "Self-serve OFF finché O6 ≠ PASS (D-115)."
       errori_comuni:
         - problema: "L'agent ha già riscritto il portale senza vai"
@@ -1006,7 +1007,7 @@ voci:
             Fuori mandato. Fix solo con «vai» Founder su P-###.
         - problema: "Calendario originale diceva B per il 9 Ott"
           soluzione: >
-            A–G anticipate. Non saltare onde: prossimo = H, poi I→J.
+            A–H anticipate. Non saltare onde: prossimo = I, poi J.
       permessi:
         - super_admin / Founder
       screenshot: []

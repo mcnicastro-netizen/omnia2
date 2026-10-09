@@ -1,6 +1,6 @@
 # Audit Portale — registro finding `P-###`
 
-**Aggiornato**: 2026-10-09 · P-035/P-036 CHIUSI · P-034 WONTFIX · P-033 differito  
+**Aggiornato**: 2026-10-09 · Onda H GREEN · P-037…P-045 aperti  
 **Regola**: nessun fix senza «vai» Founder (D-118)
 
 | ID | Sev | Onda | Titolo | Stato |
@@ -41,6 +41,15 @@
 | P-034 | P2 | G | Sito brand `/api/p/{slug}` ignora visibility/listing/privacy/moderation | **WONTFIX** (by design) |
 | P-035 | P2 | G | Ops `saved_searches_active` query `active` ≠ schema `is_active` | **CHIUSO** |
 | P-036 | P3 | G | HAL Legal CRM non addebita listino 12 crediti | **CHIUSO** |
+| P-037 | P1 | H | Informativa privacy senza sub-responsabili / transfer extra-UE / no-train | **APERTO** |
+| P-038 | P2 | H | DSAR B2C: export 404 + rettifica anagrafica assente | **APERTO** |
+| P-039 | P2 | H | `marketing_consent` dedicato assente (privacy lo cita) | **APERTO** |
+| P-040 | P2 | H | Nessun age gate 18+ su register B2C | **APERTO** |
+| P-041 | P2 | H | No TTL Mongo su `al_legal_audit` / `consent_events` / ledger `b2c_purchases` | **APERTO** |
+| P-042 | P2 | H | Email PII in chiaro in `api.log` | **APERTO** |
+| P-043 | P2 | H | Staging: watermark OK ma disclosure pubblica scheda debole | **APERTO** |
+| P-044 | P2 | H | Valuator lead (`valuation_leads`) senza `gdpr_consent` | **APERTO** |
+| P-045 | P3 | H | Valuator senza CTA “contesta stima” (human oversight) | **APERTO** |
 
 ## P-009 — dettaglio (CHIUSO)
 
@@ -162,6 +171,50 @@
 - Response/audit: `payment_rail`, `credits_charged`
 - **402** `insufficient_credits` se wallet < 12
 - **Verifica**: pytest debit 100→88 · insufficient 402
+
+## P-037 — dettaglio (APERTO · Onda H)
+
+- `cloud.legal_privacy_body` (it.json): titolare + categorie + diritti email — **nessun** elenco Stripe/Resend/OpenAPI/Gemini/Tavily/fal/Kling
+- Zero menzione trasferimenti extra-UE / SCC; zero claim «non usiamo dati per training»
+- **Fix** (solo «vai» + preferibilmente legale): riscrivere informativa; allineare en/es
+
+## P-038 — dettaglio (APERTO · Onda H)
+
+- `GET /auth/me/export` → 404; erase OK (`POST /auth/me/erase` + UI)
+- Nessuna UI B2C per rettifica nome/email (solo notification prefs)
+- **Fix**: endpoint export JSON + form rettifica, oppure process documentato con SLA su privacy@
+
+## P-039 — dettaglio (APERTO · Onda H)
+
+- Privacy cita base «consenso (es. marketing/alert)» ma register non ha `marketing_consent`
+- Alert = intent `get_alerts` / prefs — non opt-in marketing distinto
+
+## P-040 — dettaglio (APERTO · Onda H)
+
+- `CloudRegisterPage` / `cloud_auth.py`: nessun checkbox 18+ / DOB
+
+## P-041 — dettaglio (APERTO · Onda H)
+
+- Nessun indice TTL su `al_legal_audit`, `consent_events`, `b2c_purchases`
+- UNI entitlement ha TTL feature 24h in codice (OK parziale)
+
+## P-042 — dettaglio (APERTO · Onda H)
+
+- Tail `/tmp/omnia-stack/api.log`: email in chiaro (register/contact/reset paths)
+- **Fix**: redact PII in logger / structured logging
+
+## P-043 — dettaglio (APERTO · Onda H)
+
+- Watermark server «Render virtuale OMNIA» presente
+- Scheda pubblica `PropertyDetailPage` senza label chiara «immagine generata / non reale»
+
+## P-044 — dettaglio (APERTO · Onda H)
+
+- `valuator.py` → `valuation_leads` con name/email **senza** campo/gate `gdpr_consent`
+
+## P-045 — dettaglio (APERTO · Onda H)
+
+- Valuator: disclaimer stima OK; nessun CTA «contesta / segnala errore»
 
 ## P-012…P-017 — fix breve
 

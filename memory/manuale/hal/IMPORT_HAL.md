@@ -1,4 +1,4 @@
-# 📚 HAL Knowledge — Import & Cold Start (v0.32)
+# 📚 HAL Knowledge — Import & Cold Start (v0.33)
 
 **Ultimo aggiornamento**: 8-Ott-2026 sera (D-118 A–E · `api.founder-ops-portale` · D-116 Visura · Cap. 00/19)  
 **Corpus**: YAML in `memory/manuale/hal/*.yaml` (Cap. 1–27 + `00-api-codice`) · MD esclusi dal RAG ingest  
@@ -267,6 +267,7 @@ Prima di dichiarare il cold start "attivo", eseguire manualmente queste 5 query 
 
 | Data | Versione | Note |
 |------|:-:|------|
+| 09-Ott-2026 | **v0.33-onda-h** | HAL Cap.00: A–H GREEN · GDPR/AI Act · P-037…P-045 · prossimo Onda I. Matrice `2026-10-09-onda-h.md`. |
 | 09-Ott-2026 | **v0.32-onda-g** | HAL Cap.00 `api.portale-audit-program`: A–G GREEN · P-033…P-036 · prossimo Onda H. Matrice `2026-10-09-onda-g.md`. Reindex live. |
 | 08-Ott-2026 sera | **v0.31-ops-portale** | HAL Cap.00: +`api.founder-ops-portale` · aggiorna Visura D-116 + portale-audit (A–E fatte, F=9 Ott). Cap. 00/19 MD · NEXT_SESSION. Reindex post-push. |
 | 07-Ott-2026 (D-118) | **v0.30-portale-audit** | Cap. 00/19 + HAL Cap.00: +2 voci `api.cloud-environment-builds`, `api.portale-audit-program`. Programma audit portale start 8-Ott · bld-… ≠ secret. Reindex Founder post-merge. |

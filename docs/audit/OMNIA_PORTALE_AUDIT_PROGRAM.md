@@ -1,6 +1,6 @@
 # OMNIA — Programma Audit Portale ImmobilCloud (passo × passo)
 
-**Status**: ▶️ IN ESECUZIONE — Onde A–G fatte · Onda G **GREEN** (2026-10-09) · fix solo con «vai»  
+**Status**: ▶️ IN ESECUZIONE — Onde A–H fatte · Onda H **GREEN** (2026-10-09) · fix solo con «vai»  
 **Partenza**: **8 Ottobre 2026**  
 **Tunnel giorno 1**: `https://king-kai-mia-giants.trycloudflare.com` · **corrente**: vedi diario del giorno  
 **Finding**: `docs/audit/portale-finding.md`  
@@ -72,9 +72,9 @@ Produrre un **fascicolo audit** completo del portale: funzionamento, codice, API
 |--|--|--|
 | 8 Ott | **A–E** | ✅ fatte (anticipate) · D GREEN · P-025…P-030 chiusi |
 | 9 Ott | **F** | ✅ **GREEN** · P-031 CHIUSO · P-032 P3 residuo |
-| 9 Ott | **G** | ✅ **GREEN** · ponti verificati · P-033…P-036 aperti |
-| succ. | **H** | GDPR + AI Act — attende «vai» |
-| poi | **I** | Resilienza |
+| 9 Ott | **G** | ✅ **GREEN** · ponti verificati · P-035/036 chiusi · P-033 dopo · P-034 WONTFIX |
+| 9 Ott | **H** | ✅ **GREEN** · GDPR/AI Act · P-037…P-045 aperti |
+| succ. | **I** | Resilienza — attende «vai» |
 | poi | **J** | Fascicolo |
 
 > Se un giorno slitta: **non saltare onde**; si sposta in avanti. Dettaglio giornata: `memory/NEXT_SESSION.md`.
@@ -385,33 +385,33 @@ Per ogni evento: oggi arriva? dove? gap?
 ### H.1 GDPR — checklist portale
 | Tema | Domanda di audit | Esito |
 |--|--|--|
-| Base giuridica | Consensi espliciti dove servono (inquiry, marketing)? | |
-| Informativa | Link privacy accessibile e coerente? | |
-| Cookie | Banner/preferenze se tracking; oggi no Analytics — confermare | |
-| Diritti interessato | Export / erase B2C — esiste o gap (rif. finding G-* audit)? | |
-| Minimizzazione | Campi raccolti vs necessari (Visura, register, inquiry) | |
-| Conservazione | TTL `b2c_purchases`, audit, media UGC | |
-| Sub-responsabili | Stripe, Resend, OpenAPI, Gemini, Tavily, fal — citati? | |
-| Data breach readiness | Log PII redatti? | |
-| Minori | Età / blocco? | |
-| Trasferimenti extra-UE | provider AI/US — trasparenza | |
+| Base giuridica | Consensi espliciti dove servono (inquiry, marketing)? | **OK** servizio (register/inquiry/mutui) · **GAP** marketing (**P-039**) · valuator lead (**P-044**) |
+| Informativa | Link privacy accessibile e coerente? | **OK** link · **GAP** completezza (**P-037**) |
+| Cookie | Banner/preferenze se tracking; oggi no Analytics — confermare | **OK / N/A** (no tracker terzi) |
+| Diritti interessato | Export / erase B2C — esiste o gap (rif. finding G-* audit)? | erase **OK** · export/rettifica **GAP** (**P-038**) |
+| Minimizzazione | Campi raccolti vs necessari (Visura, register, inquiry) | **OK** |
+| Conservazione | TTL `b2c_purchases`, audit, media UGC | **GAP** (**P-041**) |
+| Sub-responsabili | Stripe, Resend, OpenAPI, Gemini, Tavily, fal — citati? | **GAP** (**P-037**) |
+| Data breach readiness | Log PII redatti? | **GAP** (**P-042**) |
+| Minori | Età / blocco? | **GAP** (**P-040**) |
+| Trasferimenti extra-UE | provider AI/US — trasparenza | **GAP** (**P-037**) |
 
 ### H.2 AI Act (UE) — checklist portale
 | Tema | Domanda | Esito |
 |--|--|--|
-| Ruolo sistema | HAL Legal / Valutatore / staging = cosa dichiariamo all’utente? | |
-| Trasparenza | Utente sa che è AI? Disclaimer Legal? | |
-| Divieti / alto rischio | Valutazione immobiliare automatizzata — classificazione interna onesta | |
-| Human oversight | Come si contesta una stima / risposta Legal? | |
-| Log & tracciabilità | `al_legal_audit`, valuator logs | |
-| Dati training | Non usiamo dati cliente per train — verificabile? | |
-| Deepfake / staging | Disclosure foto generate? | |
-| Minori / vulnerabili | N/A o gap | |
+| Ruolo sistema | HAL Legal / Valutatore / staging = cosa dichiariamo all’utente? | Legal+Valuator **OK** · staging parziale (**P-043**) |
+| Trasparenza | Utente sa che è AI? Disclaimer Legal? | **OK** (modal + disclaimer response) |
+| Divieti / alto rischio | Valutazione immobiliare automatizzata — classificazione interna onesta | **N/A** (stima informativa, non credit scoring) |
+| Human oversight | Come si contesta una stima / risposta Legal? | Legal **OK** · Valuator **GAP** (**P-045**) |
+| Log & tracciabilità | `al_legal_audit`, valuator logs | Legal **OK** · Valuator WARN |
+| Dati training | Non usiamo dati cliente per train — verificabile? | **GAP** (**P-037**) |
+| Deepfake / staging | Disclosure foto generate? | watermark OK · label scheda **GAP** (**P-043**) |
+| Minori / vulnerabili | N/A o gap | **N/A** (+ P-040) |
 
 ### H.3 Deliverable
-- [ ] Tabella conformità: OK / GAP / N/A  
-- [ ] Priorità legali vs prodotto (nessun claim “siamo compliant” senza evidenza)  
-- [ ] Eventuale voce backlog A-xxx se mancante  
+- [x] Tabella conformità: OK / GAP / N/A — `portale-matrici/2026-10-09-onda-h.md`  
+- [x] Priorità legali vs prodotto (nessun claim “siamo compliant” senza evidenza)  
+- [x] Finding P-037…P-045 (no nuova A-xxx) 
 
 ---
 
