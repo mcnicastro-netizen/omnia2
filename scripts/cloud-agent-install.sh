@@ -5,6 +5,10 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 
+# Build pods often run install as root while agents boot as ubuntu (environment.json).
+# Paths created here must be writable by the runtime user on start.
+RUNTIME_USER="${OMNIA_RUNTIME_USER:-ubuntu}"
+
 mkdir -p "$ROOT/.mongo-data"
 
 # Belt-and-suspenders: Dockerfile *should* ship mongod, but JIT pods and
@@ -30,10 +34,17 @@ ensure_env_key() {
 
 ensure_env "$ROOT/backend/.env.example" "$ROOT/backend/.env"
 ensure_env "$ROOT/frontend/.env.example" "$ROOT/frontend/.env"
-ensure_env_key "$ROOT/backend/.env" "ADMIN_EMAIL" "[REDACTED]"
-ensure_env_key "$ROOT/backend/.env" "ADMIN_PASSWORD" "[REDACTED]"
-ensure_env_key "$ROOT/backend/.env" "DEMO_ADMIN_PASSWORD" "OmniaDemo2026!"
-ensure_env_key "$ROOT/backend/.env" "JWT_SECRET" "change-me-to-a-long-random-string"
+
+# Seed missing keys from process env or .env.example (no hardcoded secrets in this script).
+_env_example_val() {
+  local key="$1"
+  [[ -f "$ROOT/backend/.env.example" ]] || return 0
+  grep -E "^${key}=" "$ROOT/backend/.env.example" | head -1 | cut -d= -f2- || true
+}
+ensure_env_key "$ROOT/backend/.env" "ADMIN_EMAIL" "${ADMIN_EMAIL:-$(_env_example_val ADMIN_EMAIL)}"
+ensure_env_key "$ROOT/backend/.env" "ADMIN_PASSWORD" "${ADMIN_PASSWORD:-$(_env_example_val ADMIN_PASSWORD)}"
+ensure_env_key "$ROOT/backend/.env" "DEMO_ADMIN_PASSWORD" "${DEMO_ADMIN_PASSWORD:-$(_env_example_val DEMO_ADMIN_PASSWORD)}"
+ensure_env_key "$ROOT/backend/.env" "JWT_SECRET" "${JWT_SECRET:-change-me-to-a-long-random-string}"
 
 # Origin-tmp agents get Origin git auth only. When GITHUB_TOKEN is set as an
 # Environment secret, wire push access to the real omnia2 GitHub repo.
@@ -67,6 +78,22 @@ if [[ ! -d node_modules/express ]]; then
 fi
 if [[ ! -f build/index.html ]]; then
   REACT_APP_BACKEND_URL= yarn build
+fi
+
+# If install ran as root, hand runtime paths to ubuntu so start can write
+# mongod journal + vault materialize into backend/.env.
+if [[ "$(id -u)" -eq 0 ]] && id "$RUNTIME_USER" >/dev/null 2>&1; then
+  echo "[cloud-agent-install] chown runtime paths → ${RUNTIME_USER}"
+  chown -R "${RUNTIME_USER}:${RUNTIME_USER}" \
+    "$ROOT/.mongo-data" \
+    "$ROOT/backend/.env" \
+    "$ROOT/frontend/.env" \
+    "$ROOT/backend/.venv" \
+    "$ROOT/frontend/node_modules" \
+    "$ROOT/frontend/build" \
+    2>/dev/null || true
+  # Keep repo tree usable for the agent user when checkout was root-owned.
+  chown -R "${RUNTIME_USER}:${RUNTIME_USER}" "$ROOT" 2>/dev/null || true
 fi
 
 echo "[cloud-agent-install] done"

@@ -112,6 +112,34 @@ Founder ha salvato i secret Environment su omnia2. Nuovo agent vede Stripe + Ope
 | `JWT_SECRET` | evitare placeholder `change-me-…` — mettere valore reale in vault |
 | SoT sessione vault | chat **controllo secrets** (inject fresco); questa linea audit resta storica |
 
+## Stato verificato — 9 Ott 2026
+
+Env **omnia2** ([b80b635c-b592-11f1-bb68-864e54d14197](https://cursor.com/dashboard/cloud-agents/environments/e/b80b635c-b592-11f1-bb68-864e54d14197)), build `bld-20261008-3840e376-7980-4abe-9d37-f871abfaf008`.
+
+### Mattina (pre-Save Founder)
+Vault parziale; richiesti in panel gli opzionali mancanti.
+
+### Pomeriggio (post-Save Founder — setup ripreso)
+Vault inject completo:
+`FAL_KEY`, `GEMINI_API_KEY`, `RESEND_API_KEY`, `STRIPE_ENABLED`, `GOOGLE_CLIENT_ID`, `JWT_SECRET`, `OPENAPI_API_KEY`, `OPENAPI_EMAIL`, `OPENAPI_ENABLED`, `STRIPE_PUBLISHABLE_KEY`, `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `TAVILY_API_KEY`.
+
+| Nome | Stato |
+|------|--------|
+| `RESEND_API_KEY` | PRESENT (obbligatorio) |
+| `GEMINI_API_KEY` | PRESENT (obbligatorio) |
+| `JWT_SECRET` | PRESENT (len=64) |
+| `FAL_KEY` | PRESENT |
+| `TAVILY_API_KEY` | PRESENT |
+| `GOOGLE_CLIENT_ID` | PRESENT |
+| `STRIPE_SECRET_KEY` | PRESENT (`sk_test_`) |
+| `STRIPE_PUBLISHABLE_KEY` | PRESENT (`pk_test_`) |
+| `STRIPE_ENABLED` | `true` |
+| `STRIPE_WEBHOOK_SECRET` | PRESENT |
+| `OPENAPI_API_KEY` / `OPENAPI_EMAIL` / `OPENAPI_ENABLED` | PRESENT / PRESENT / `true` |
+
+`scripts/check-secrets-presence.sh` → **OK**.  
+Install×2 idempotente · API health 200 · billing `enabled=true` `mode=test`.
+
 ---
 
 ## ID `bld-…` (Environment Builds) — 7 Ott 2026

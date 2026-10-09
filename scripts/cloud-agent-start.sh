@@ -5,31 +5,69 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 
-mkdir -p "$ROOT/.mongo-data" /tmp/omnia-stack
+mkdir -p /tmp/omnia-stack
 
-if [[ ! -f "$ROOT/backend/.env" && -f "$ROOT/backend/.env.example" ]]; then
-  cp "$ROOT/backend/.env.example" "$ROOT/backend/.env"
+# Prefer repo dbpath; fall back when install left it root-owned (no passwordless sudo).
+MONGO_DBPATH="$ROOT/.mongo-data"
+mkdir -p "$MONGO_DBPATH" 2>/dev/null || true
+if ! touch "$MONGO_DBPATH/.omnia_write_test" 2>/dev/null; then
+  MONGO_DBPATH="/tmp/omnia-mongo-data"
+  mkdir -p "$MONGO_DBPATH"
+  echo "[cloud-agent-start] WARN: $ROOT/.mongo-data not writable — using $MONGO_DBPATH" >&2
+else
+  rm -f "$MONGO_DBPATH/.omnia_write_test"
+fi
+
+ENV_FILE="$ROOT/backend/.env"
+if [[ ! -f "$ENV_FILE" && -f "$ROOT/backend/.env.example" ]]; then
+  if cp "$ROOT/backend/.env.example" "$ENV_FILE" 2>/dev/null; then
+    :
+  else
+    ENV_FILE="/tmp/omnia-backend.env"
+    cp "$ROOT/backend/.env.example" "$ENV_FILE"
+    echo "[cloud-agent-start] WARN: cannot create backend/.env — using $ENV_FILE" >&2
+  fi
+elif [[ -f "$ENV_FILE" && ! -w "$ENV_FILE" ]]; then
+  # Build install as root can leave .env unwritable for ubuntu.
+  cp "$ENV_FILE" /tmp/omnia-backend.env
+  chmod u+rw /tmp/omnia-backend.env
+  ENV_FILE="/tmp/omnia-backend.env"
+  export OMNIA_ENV_FILE="$ENV_FILE"
+  echo "[cloud-agent-start] WARN: backend/.env not writable — materialize → $ENV_FILE" >&2
 fi
 if [[ ! -f "$ROOT/frontend/.env" && -f "$ROOT/frontend/.env.example" ]]; then
-  cp "$ROOT/frontend/.env.example" "$ROOT/frontend/.env"
+  cp "$ROOT/frontend/.env.example" "$ROOT/frontend/.env" 2>/dev/null || true
 fi
 
 append_if_missing() {
   local file="$1" key="$2" val="$3"
-  [[ -f "$file" ]] || return 0
+  [[ -f "$file" && -w "$file" ]] || return 0
   if ! grep -qE "^${key}=" "$file"; then
     printf '%s=%s\n' "$key" "$val" >>"$file"
   fi
 }
-append_if_missing "$ROOT/backend/.env" "ADMIN_EMAIL" "mcnicastro@gmail.com"
-append_if_missing "$ROOT/backend/.env" "ADMIN_PASSWORD" "OmniaFounder2026!"
-append_if_missing "$ROOT/backend/.env" "DEMO_ADMIN_PASSWORD" "OmniaDemo2026!"
+# Defaults from process env / .env.example (never hardcode Founder email here —
+# Cursor secret scan treats OPENAPI_EMAIL vault value as a blocked literal).
+_default_admin_email="${ADMIN_EMAIL:-}"
+if [[ -z "$_default_admin_email" && -f "$ROOT/backend/.env.example" ]]; then
+  _default_admin_email="$(grep -E '^ADMIN_EMAIL=' "$ROOT/backend/.env.example" | head -1 | cut -d= -f2- || true)"
+fi
+_default_admin_password="${ADMIN_PASSWORD:-OmniaFounder2026!}"
+_default_demo_password="${DEMO_ADMIN_PASSWORD:-OmniaDemo2026!}"
+[[ -n "$_default_admin_email" ]] && append_if_missing "$ENV_FILE" "ADMIN_EMAIL" "$_default_admin_email"
+append_if_missing "$ENV_FILE" "ADMIN_PASSWORD" "$_default_admin_password"
+append_if_missing "$ENV_FILE" "DEMO_ADMIN_PASSWORD" "$_default_demo_password"
 
 # Vault → .env (Stripe test prefer + OPENAPI_* + AI mail keys; never echo values)
 if [[ -x "$ROOT/backend/.venv/bin/python" ]]; then
   set +e
-  "$ROOT/backend/.venv/bin/python" "$ROOT/scripts/stripe-vault-materialize.py" "$ROOT/backend/.env"
-  _stripe_mat=$?
+  if [[ -w "$ENV_FILE" ]]; then
+    "$ROOT/backend/.venv/bin/python" "$ROOT/scripts/stripe-vault-materialize.py" "$ENV_FILE"
+    _stripe_mat=$?
+  else
+    echo "[cloud-agent-start] WARN: skip stripe vault materialize ($ENV_FILE not writable)" >&2
+    _stripe_mat=0
+  fi
   set -e
   if [[ "$_stripe_mat" -eq 2 ]]; then
     echo "[cloud-agent-start] Stripe materialize: live/mixed keys (sandbox not auto-enabled)" >&2
@@ -47,9 +85,9 @@ if ! command -v mongod >/dev/null 2>&1; then
 fi
 
 if ! pgrep -x mongod >/dev/null 2>&1; then
-  echo "[cloud-agent-start] starting mongod"
+  echo "[cloud-agent-start] starting mongod (dbpath=$MONGO_DBPATH)"
   mongod \
-    --dbpath "$ROOT/.mongo-data" \
+    --dbpath "$MONGO_DBPATH" \
     --bind_ip 127.0.0.1 \
     --port 27017 \
     --logpath /tmp/mongod.log \
@@ -81,7 +119,7 @@ bash "$ROOT/scripts/omnia-stack.sh" ensure
 if [[ -x "$ROOT/backend/.venv/bin/python" && -f /tmp/omnia-stack/SHARE_URL.txt ]]; then
   set +e
   "$ROOT/backend/.venv/bin/python" "$ROOT/scripts/sync-public-base-url.py" \
-    --share-file /tmp/omnia-stack/SHARE_URL.txt --env "$ROOT/backend/.env" || true
+    --share-file /tmp/omnia-stack/SHARE_URL.txt --env "$ENV_FILE" || true
   "$ROOT/backend/.venv/bin/python" "$ROOT/scripts/sync-stripe-webhook-url.py" \
     --share-file /tmp/omnia-stack/SHARE_URL.txt || true
   set -e
@@ -91,7 +129,7 @@ fi
 # NEVER backfill STRIPE_* from .env into process (stale live risk).
 if [[ -f "$ROOT/scripts/check-secrets-presence.sh" ]]; then
   set +e
-  if [[ -f "$ROOT/backend/.env" ]]; then
+  if [[ -f "$ENV_FILE" ]]; then
     while IFS= read -r line; do
       case "$line" in
         RESEND_API_KEY=*|GEMINI_API_KEY=*|GOOGLE_API_KEY=*|EMERGENT_LLM_KEY=*|FAL_KEY=*|TAVILY_API_KEY=*|GOOGLE_CLIENT_ID=*|JWT_SECRET=*|OPENAPI_*)
@@ -102,7 +140,7 @@ if [[ -f "$ROOT/scripts/check-secrets-presence.sh" ]]; then
           fi
           ;;
       esac
-    done < "$ROOT/backend/.env"
+    done < "$ENV_FILE"
   fi
   bash "$ROOT/scripts/check-secrets-presence.sh" || true
   set -e
