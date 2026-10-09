@@ -146,24 +146,51 @@ async def _call_llm(system_prompt: str, user_msg: str, session_id: str) -> str:
         raise HTTPException(status_code=503, detail=detail)
 
 
-async def _ensure_b2c_legal_credit(user: dict) -> None:
-    """P-010 — B2C clients must have a paid unused b2c_hal_legal_query credit."""
+async def _ensure_legal_payment(user: dict) -> Dict[str, Any]:
+    """Gate pagamento HAL Legal (P-010 B2C + P-036 CRM crediti).
+
+    - B2C client → consuma 1 acquisto Stripe `b2c_hal_legal_query` (€1)
+    - Utente CRM con agency attiva → addebita CREDIT_COSTS['hal_legal_query'] (12)
+    - Nessuna agency (edge) → passa senza addebito
+    """
     from apps.billing.b2c_entitlements import (
         consume_hal_legal_query,
         user_requires_b2c_legal_paywall,
     )
-    if not user_requires_b2c_legal_paywall(user):
-        return
-    ok = await consume_hal_legal_query(user["id"])
-    if not ok:
-        raise HTTPException(
-            status_code=402,
-            detail={
-                "code": "legal_payment_required",
-                "message": "Acquista una domanda HAL Legal per continuare.",
-                "product_key": "b2c_hal_legal_query",
-            },
-        )
+    from apps.billing.plans import CREDIT_COSTS
+    from apps.billing.routes import debit_credits
+
+    if user_requires_b2c_legal_paywall(user):
+        ok = await consume_hal_legal_query(user["id"])
+        if not ok:
+            raise HTTPException(
+                status_code=402,
+                detail={
+                    "code": "legal_payment_required",
+                    "message": "Acquista una domanda HAL Legal per continuare.",
+                    "product_key": "b2c_hal_legal_query",
+                },
+            )
+        return {"rail": "b2c_stripe", "credits_charged": 0, "agency_id": None}
+
+    agency_id = _agency_id_of(user)
+    if not agency_id:
+        return {"rail": "none", "credits_charged": 0, "agency_id": None}
+
+    cost = int(CREDIT_COSTS.get("hal_legal_query") or LIST_PRICE_CREDITS)
+    balance_after = await debit_credits(
+        agency_id,
+        cost,
+        reason="hal_legal_query",
+        ref_id=user.get("id"),
+        ref_type="al_legal_user",
+    )
+    return {
+        "rail": "agency_credits",
+        "credits_charged": cost,
+        "agency_id": agency_id,
+        "credits_balance_after": balance_after,
+    }
 
 
 # ─── Endpoints ───────────────────────────────────────────────────
@@ -172,7 +199,7 @@ async def legal_chat(req: LegalChatRequest, user: dict = Depends(get_current_use
     """Multi-turn legal chat with web search + anti-hallucination."""
     db = Database.get()
     await _check_rate_limit(db, user["id"])
-    await _ensure_b2c_legal_credit(user)
+    payment = await _ensure_legal_payment(user)
 
     sid = req.session_id or str(uuid4())
 
@@ -221,7 +248,7 @@ async def legal_chat(req: LegalChatRequest, user: dict = Depends(get_current_use
     await db.al_legal_audit.insert_one({
         "id": str(uuid4()),
         "user_id": user["id"],
-        "agency_id": _agency_id_of(user),
+        "agency_id": payment.get("agency_id") or _agency_id_of(user),
         "session_id": sid,
         "kind": "chat",
         "sub_agent": sub_agent_key,
@@ -235,9 +262,11 @@ async def legal_chat(req: LegalChatRequest, user: dict = Depends(get_current_use
         "validator_rationale": verdict.get("rationale", "")[:300],
         "cost_estimate": _estimate_query_cost(had_citations=bool(citations)),
         "channel": "in_app",
+        "payment_rail": payment.get("rail"),
+        "credits_charged": payment.get("credits_charged") or 0,
     })
 
-    return {
+    out = {
         "session_id": sid,
         "sub_agent": sub_agent_key,
         "reply": final_answer,
@@ -245,7 +274,12 @@ async def legal_chat(req: LegalChatRequest, user: dict = Depends(get_current_use
         "confidence": confidence,
         "low_confidence": confidence < CONFIDENCE_THRESHOLD,
         "disclaimer": DISCLAIMER_HEADER,
+        "payment_rail": payment.get("rail"),
+        "credits_charged": payment.get("credits_charged") or 0,
     }
+    if payment.get("credits_balance_after") is not None:
+        out["credits_balance_after"] = payment["credits_balance_after"]
+    return out
 
 
 @router.post("/analyze-pdf")
@@ -258,7 +292,7 @@ async def analyze_pdf(
     and receive a structured analysis from HAL Legal."""
     db = Database.get()
     await _check_rate_limit(db, user["id"])
-    await _ensure_b2c_legal_credit(user)
+    payment = await _ensure_legal_payment(user)
 
     if not file.filename or not file.filename.lower().endswith(".pdf"):
         raise HTTPException(status_code=400, detail="only_pdf_allowed")
@@ -297,7 +331,7 @@ async def analyze_pdf(
     await db.al_legal_audit.insert_one({
         "id": str(uuid4()),
         "user_id": user["id"],
-        "agency_id": _agency_id_of(user),
+        "agency_id": payment.get("agency_id") or _agency_id_of(user),
         "kind": "pdf_analysis",
         "filename": file.filename[:200],
         "page_count": total_pages,
@@ -309,6 +343,8 @@ async def analyze_pdf(
         "unsupported_claims": verdict.get("unsupported_claims", []),
         "cost_estimate": _estimate_query_cost(had_citations=bool(citations)),
         "channel": "in_app",
+        "payment_rail": payment.get("rail"),
+        "credits_charged": payment.get("credits_charged") or 0,
     })
 
     return {
@@ -318,6 +354,8 @@ async def analyze_pdf(
         "sub_agent": "pdf_analysis",
         "reply": final_answer,
         "citations": citations,
+        "payment_rail": payment.get("rail"),
+        "credits_charged": payment.get("credits_charged") or 0,
         "confidence": confidence,
         "low_confidence": confidence < CONFIDENCE_THRESHOLD,
         "disclaimer": DISCLAIMER_HEADER,

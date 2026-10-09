@@ -1,6 +1,6 @@
 # Audit Portale — registro finding `P-###`
 
-**Aggiornato**: 2026-10-09 · Onda G GREEN · P-033…P-036 aperti  
+**Aggiornato**: 2026-10-09 · P-035/P-036 CHIUSI · P-034 WONTFIX · P-033 differito  
 **Regola**: nessun fix senza «vai» Founder (D-118)
 
 | ID | Sev | Onda | Titolo | Stato |
@@ -37,10 +37,10 @@
 | P-030 | P3 | E | Moderazione (e Legal) fuori nav Shell — solo URL / link interno Ops | **CHIUSO** |
 | P-031 | P0 | F | Regressione inventory: demo props `visibility=null` → search total=0 (P-001) | **CHIUSO** |
 | P-032 | P3 | F | Route solo `/cloud/valutatore`; `/cloud/valuator` shell vuota | **APERTO** |
-| P-033 | P2 | G | Search lista card L3/L4 anche se detail anon = 404 | **APERTO** |
-| P-034 | P2 | G | Sito brand `/api/p/{slug}` ignora visibility/listing/privacy/moderation | **APERTO** |
-| P-035 | P2 | G | Ops `saved_searches_active` query `active` ≠ schema `is_active` | **APERTO** |
-| P-036 | P3 | G | HAL Legal CRM non addebita listino 12 crediti | **APERTO** |
+| P-033 | P2 | G | Search lista card L3/L4 anche se detail anon = 404 | **APERTO** (dopo) |
+| P-034 | P2 | G | Sito brand `/api/p/{slug}` ignora visibility/listing/privacy/moderation | **WONTFIX** (by design) |
+| P-035 | P2 | G | Ops `saved_searches_active` query `active` ≠ schema `is_active` | **CHIUSO** |
+| P-036 | P3 | G | HAL Legal CRM non addebita listino 12 crediti | **CHIUSO** |
 
 ## P-009 — dettaglio (CHIUSO)
 
@@ -146,25 +146,22 @@
 - **Evidenza**: `demo-prop-roma-01` L3 · in_search Roma=True · anon detail 404
 - **Fix** (solo con «vai»): escludere L3/L4 da search anon, oppure mostrare card “richiede accesso”
 
-## P-034 — dettaglio (APERTO · Onda G)
+## P-034 — dettaglio (WONTFIX · Founder 9-Ott)
 
-- Brand SSR `GET /api/p/{slug}/…` (`site.py` / themes) filtra solo `agency_id` + `status=active`
-- Prop `is_listed_on_immobilcloud=false` / `visibility=private` → cloud 404 ma brand **200**
-- Può essere by-design (vetrina agenzia); da conferma prodotto se internal deve restare nascosto anche sul sito
+- Brand SSR filtra solo `agency_id` + `status=active` — vetrina CRM distinta da ImmobilCloud
+- Decisione Founder: **no** allineare ai flags cloud
 
-## P-035 — dettaglio (APERTO · Onda G)
+## P-035 — dettaglio (CHIUSO · vai Founder)
 
-- Schema/job saved-search: campo `is_active`
-- `founder_ops.py`: `count(saved_searches, {"active": True})` → KPI sempre 0
-- **Evidenza**: mongo `is_active=1` · overview `saved_searches_active=0`
-- **Fix** (solo con «vai»): allineare query a `is_active`
+- **Fix**: `founder_ops.py` conta `{"is_active": True}`
+- **Verifica**: `test_p035_p036_legal_ops.py` · overview = mongo count
 
-## P-036 — dettaglio (APERTO · Onda G)
+## P-036 — dettaglio (CHIUSO · vai Founder)
 
-- Listino B2B `CREDIT_COSTS["hal_legal_query"]=12` in `plans.py`
-- `al_legal/router.py`: agent/admin saltano paywall B2C e **non** chiamano `debit_credits`
-- Path CRM di fatto gratis (solo rate limit) · B2C resta SKU €1
-- **Fix** (solo con «vai»): debit 12 crediti su chat CRM, oppure aggiornare listino/docs
+- **Fix**: `_ensure_legal_payment` — B2C Stripe €1 invariato; CRM con `active_agency_id` → `debit_credits(..., 12, reason=hal_legal_query)` su chat + analyze-pdf
+- Response/audit: `payment_rail`, `credits_charged`
+- **402** `insufficient_credits` se wallet < 12
+- **Verifica**: pytest debit 100→88 · insufficient 402
 
 ## P-012…P-017 — fix breve
 

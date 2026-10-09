@@ -462,7 +462,8 @@ async def ops_overview(
         "listing_inquiries_period": await _count(
             db, "listing_inquiries", {"created_at": {"$gte": since}},
         ),
-        "saved_searches_active": await _count(db, "saved_searches", {"active": True}),
+        # P-035 — schema/job usano `is_active` (non `active`)
+        "saved_searches_active": await _count(db, "saved_searches", {"is_active": True}),
         "saved_search_runs_period": await _count(
             db, "saved_searches", {"last_run_at": {"$gte": since}},
         ),
