@@ -1,6 +1,6 @@
 # Fascicolo Audit Portale ImmobilCloud (D-118)
 
-**Data fascicolo**: 2026-10-09  
+**Data fascicolo**: 2026-10-09 · **residuo codice CHIUSA**  
 **Repo**: `mcnicastro-netizen/omnia2` · branch `cursor/portale-audit-onda-d-live-4532` · PR #12  
 **Ambiente prova**: Cloud Agent · API `43121` · preview `43123` · tunnel trycloudflare del giorno  
 **Regola**: fix codice solo con «vai» Founder su `P-###` · no push `main` · Stripe solo test · O6 self-serve OFF  
@@ -22,7 +22,8 @@ Il portale ImmobilCloud è stato percorso a onde **A–J** (analisi + evidenze l
 | 4 | **P-050** | Register / Visura checkout senza rate limit |
 | 5 | **P-033** | Card L3/L4 in search anon (detail 404) — rimandato |
 
-Nessun **P0 runtime** aperto che blocchi il dogfood Cloud oggi.  
+**Residuo codice D-118: CHIUSO** (vai 9-Ott). Nessun **P0 runtime** aperto.
+Residui: **P-021** Google OAuth opz. · **P-026** vault whsec (MITIGATO, Save Founder).  
 Self-serve pubblico (**O6**) resta **OFF**. Fatturazione fiscale (**A-038**) e demo da sito (**A-037**) fuori scope fix di questo programma.
 
 ---
@@ -52,22 +53,12 @@ Self-serve pubblico (**O6**) resta **OFF**. Fatturazione fiscale (**A-038**) e d
 Nessuno aperto. Storici chiusi: P-001, P-009, P-022, P-031.
 
 ### P1 aperti
-| ID | Titolo | Onda |
-|--|--|--|
-| **P-046** | Backup senza collection B2C | I |
-| **P-049** | B2C status senza Stripe retrieve | I |
-| **P-051** | `COOKIE_SECURE=false` → CSRF off | I |
+Nessuno — P-046 / P-049 / P-051 **CHIUSI**.
+
 
 ### P2 aperti
-| ID | Titolo | Onda |
-|--|--|--|
-| P-033 | Search mostra L3/L4 anon | G (dopo) |
-| P-047 | Restore manual senza B2C/UGC | I |
-| P-048 | Hard-delete annunci privati | I |
-| P-050 | Rate limit register / Visura | I |
-| **P-054** | i18n Visura/checkout/Legal/Sell | J |
-| **P-055** | SEO scheda meta generici | J |
-| **P-057** | UGC no notify owner | J |
+Nessuno critico — chiusi P-033/047/048/050/054/055/057.
+
 
 ### P3 aperti / opzionali
 | ID | Titolo | Onda |
@@ -104,6 +95,10 @@ Artefatti live tipici: `/opt/cursor/artifacts/onda-*-live.log` · `*-results.jso
 ---
 
 ## 5. Lista «vai» consigliati
+
+**Coda codice D-118: VUOTA** (analisi + fix chiusi). Prossimo: `merge main` su ordine Founder.
+
+### Storico priorità (già eseguite)
 
 ### Prima del go-live pagamenti / HTTPS pubblico
 1. `vai P-051` — CSRF su tunnel HTTPS  

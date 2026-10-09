@@ -1,3 +1,9 @@
+## 2026-10-09 — D-118 residuo codice CHIUSO (vai Founder)
+
+- Fix: P-051 CSRF/COOKIE_SECURE · P-049 B2C Stripe fallback · P-046/047 backup+restore B2C · P-050 RL · P-033 L3/L4 search · P-048 soft-delete · P-054 i18n · P-055 SEO · P-057 UGC notify · P-052/053/056/058/032/024 · P-026 MITIGATO
+- Visura dogfood: catalog + checkout `cs_test_` OK · openapi_enabled=true
+- Fascicolo / finding / Cap.00–19 / HAL sync · PR #12 · **pronto merge main su ordine**
+
 ## 2026-10-09 — D-118 A–J GREEN + fascicolo + sync manuale/HAL
 
 - Onde **A–J GREEN** (analisi) · fascicolo `docs/audit/OMNIA_PORTALE_AUDIT_FASCICOLO.md`

@@ -1,6 +1,6 @@
 # OMNIA — Programma Audit Portale ImmobilCloud (passo × passo)
 
-**Status**: ✅ **CHIUSO (analisi)** — Onde **A–J GREEN** (2026-10-09) · fascicolo pronto · fix solo con «vai»  
+**Status**: ✅ **CHIUSO (analisi + residuo codice)** — Onde **A–J GREEN** · vai fix 9-Ott · pronto `merge main` su ordine  
 **Partenza**: **8 Ottobre 2026**  
 **Tunnel giorno 1**: `https://king-kai-mia-giants.trycloudflare.com` · **corrente**: vedi diario del giorno  
 **Finding**: `docs/audit/portale-finding.md`  

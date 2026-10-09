@@ -1,6 +1,6 @@
 # Audit Portale — registro finding `P-###`
 
-**Aggiornato**: 2026-10-09 · Onda J GREEN · fascicolo · P-046…P-058 aperti  
+**Aggiornato**: 2026-10-09 · D-118 residuo codice **CHIUSO** · P-021 opz. · P-026 MITIGATO  
 **Regola**: nessun fix senza «vai» Founder (D-118)
 
 | ID | Sev | Onda | Titolo | Stato |
@@ -28,16 +28,16 @@
 | P-021 | P3 | C | `GOOGLE_CLIENT_ID` absent — login Google OFF | APERTO (opz.) |
 | P-022 | P0 | D | Stripe **live** in Cloud (`sk_live`/`pk_live`, plans `mode=live`) | **CHIUSO** |
 | P-023 | P1 | D | OpenAPI key OK ma product `openapi_visure_enabled=false` (manca email / D-116) | **CHIUSO** |
-| P-024 | P3 | D | Env/docs citano `gemini-2.0-flash` deprecato; product HAL OK | APERTO |
+| P-024 | P3 | D | Env/docs citano `gemini-2.0-flash` deprecato; product HAL OK | **CHIUSO** |
 | P-025 | P2 | D/E | `b2c_purchases` paid senza `amount_eur` (Ops finance cieco su importo) | **CHIUSO** |
-| P-026 | P3 | D | Vault `STRIPE_WEBHOOK_SECRET` ≠ secret endpoint auto-sync tunnel | **APERTO** |
+| P-026 | P3 | D | Vault `STRIPE_WEBHOOK_SECRET` ≠ secret endpoint auto-sync tunnel | **MITIGATO** |
 | P-027 | P1 | E | Telemetry gap: eventi portale senza sink Ops (register/mutui/inquiry/digest/Visura fail) | **CHIUSO** |
 | P-028 | P2 | E | `ops_alerts.acked` senza API/UI di ack (“da vedere” permanente) | **CHIUSO** |
 | P-029 | P2 | E | Backup health `MISSING` in Cloud (nessuna cartella `.backups`) | **CHIUSO** |
 | P-030 | P3 | E | Moderazione (e Legal) fuori nav Shell — solo URL / link interno Ops | **CHIUSO** |
 | P-031 | P0 | F | Regressione inventory: demo props `visibility=null` → search total=0 (P-001) | **CHIUSO** |
-| P-032 | P3 | F | Route solo `/cloud/valutatore`; `/cloud/valuator` shell vuota | **APERTO** |
-| P-033 | P2 | G | Search lista card L3/L4 anche se detail anon = 404 | **APERTO** (dopo) |
+| P-032 | P3 | F | Route solo `/cloud/valutatore`; `/cloud/valuator` shell vuota | **CHIUSO** |
+| P-033 | P2 | G | Search lista card L3/L4 anche se detail anon = 404 | **CHIUSO** |
 | P-034 | P2 | G | Sito brand `/api/p/{slug}` ignora visibility/listing/privacy/moderation | **WONTFIX** (by design) |
 | P-035 | P2 | G | Ops `saved_searches_active` query `active` ≠ schema `is_active` | **CHIUSO** |
 | P-036 | P3 | G | HAL Legal CRM non addebita listino 12 crediti | **CHIUSO** |
@@ -50,19 +50,19 @@
 | P-043 | P2 | H | Staging: watermark OK ma disclosure pubblica scheda debole | **CHIUSO** |
 | P-044 | P2 | H | Valuator lead (`valuation_leads`) senza `gdpr_consent` | **CHIUSO** |
 | P-045 | P3 | H | Valuator senza CTA “contesta stima” (human oversight) | **WONTFIX** |
-| P-046 | P1 | I | Backup giornaliero senza collection B2C (`b2c_*`, consent, favorites, …) | **APERTO** |
-| P-047 | P2 | I | Restore manual non menziona dati portale B2C/UGC | **APERTO** |
-| P-048 | P2 | I | Delete annuncio privato = hard delete (no cestino) | **APERTO** |
-| P-049 | P1 | I | B2C `/billing/b2c/status` senza Stripe retrieve se webhook manca | **APERTO** |
-| P-050 | P2 | I | Rate limit assente su register B2C e Visura checkout | **APERTO** |
-| P-051 | P1 | I | `COOKIE_SECURE=false` Cloud → CSRF middleware no-op su HTTPS tunnel | **APERTO** |
-| P-052 | P3 | I | Nessun handler UX globale API down / network error | **APERTO** |
-| P-053 | P3 | I | Alert `stripe_webhook` senza dedup/cooldown | **APERTO** |
-| P-054 | P2 | J | i18n incompleta Visura/checkout/Legal EN-ES/Sell staging ES | **APERTO** |
-| P-055 | P2 | J | SEO scheda: title/OG generici (non per-property) | **APERTO** |
-| P-056 | P3 | J | Tunnel/demo `index,follow` — manca noindex non-prod | **APERTO** |
-| P-057 | P2 | J | UGC approve/reject senza notifica owner | **APERTO** |
-| P-058 | P3 | J | Nessun runbook ops tunnel morto / webhook | **APERTO** |
+| P-046 | P1 | I | Backup giornaliero senza collection B2C (`b2c_*`, consent, favorites, …) | **CHIUSO** |
+| P-047 | P2 | I | Restore manual non menziona dati portale B2C/UGC | **CHIUSO** |
+| P-048 | P2 | I | Delete annuncio privato = hard delete (no cestino) | **CHIUSO** |
+| P-049 | P1 | I | B2C `/billing/b2c/status` senza Stripe retrieve se webhook manca | **CHIUSO** |
+| P-050 | P2 | I | Rate limit assente su register B2C e Visura checkout | **CHIUSO** |
+| P-051 | P1 | I | `COOKIE_SECURE=false` Cloud → CSRF middleware no-op su HTTPS tunnel | **CHIUSO** |
+| P-052 | P3 | I | Nessun handler UX globale API down / network error | **CHIUSO** |
+| P-053 | P3 | I | Alert `stripe_webhook` senza dedup/cooldown | **CHIUSO** |
+| P-054 | P2 | J | i18n incompleta Visura/checkout/Legal EN-ES/Sell staging ES | **CHIUSO** |
+| P-055 | P2 | J | SEO scheda: title/OG generici (non per-property) | **CHIUSO** |
+| P-056 | P3 | J | Tunnel/demo `index,follow` — manca noindex non-prod | **CHIUSO** |
+| P-057 | P2 | J | UGC approve/reject senza notifica owner | **CHIUSO** |
+| P-058 | P3 | J | Nessun runbook ops tunnel morto / webhook | **CHIUSO** |
 
 ## P-009 — dettaglio (CHIUSO)
 
@@ -113,7 +113,7 @@
 - **Verifica**: ping Catasto sandbox 200 · create Visura · PDF 58054 byte · catalog `openapi_enabled=true`
 - **Follow-up Founder**: merge PR #10 su `main` se non già fatto (questa ripresa lo usa sul branch audit)
 
-## P-024 — dettaglio (APERTO · Onda D)
+## P-024 — dettaglio (CHIUSO · vai Founder)
 
 - Raw Generative Language su `gemini-2.0-flash` → 404 “no longer available”
 - Product: `POST /api/app/hal/knowledge/ask` 200 con `GEMINI_API_KEY`
@@ -124,7 +124,7 @@
 - **Fix**: `mark_uni_purchase_paid(amount_eur=…)` · webhook legge `session.amount_total/100` · fallback catalogo · backfill overview
 - **Verifica**: `b2c_revenue_eur` > 0 con paid · `tests/test_ops_portal_gaps.py`
 
-## P-026 — dettaglio (APERTO · Onda D)
+## P-026 — dettaglio (MITIGATO · vai Founder)
 
 - **Evidenza**: `sync-stripe-webhook-url.py` CREATED endpoint → nuovo `whsec` in `.env`; vault process resta sul whsec precedente (hash diversi, stessa len)
 - Run audit: API avviata con whsec `.env` allineato all’endpoint tunnel
@@ -155,13 +155,13 @@
 - **Verifica**: QC `match_base_filter=8` · search `total=8` · favorite 201 · contact 200
 - Artefatti: `/opt/cursor/artifacts/p031-seed.log` · `p031-qc.log` · `p031-property-cta.log`
 
-## P-032 — dettaglio (APERTO · Onda F)
+## P-032 — dettaglio (CHIUSO · vai Founder)
 
 - Nav/SoT: `/:lang/cloud/valutatore` (`ImmocloudApp.jsx`)
 - Nessuna route `valuator` (EN) → SPA 200 con area contenuto vuota (nav+footer restano)
 - **Fix** (solo con «vai»): alias route `valuator` → stessa `ValuatorPage` oppure redirect
 
-## P-033 — dettaglio (APERTO · Onda G)
+## P-033 — dettaglio (CHIUSO · vai Founder)
 
 - `_base_filter()` in `public_portal.py` (search) **non** filtra `privacy_level`
 - L3/L4 restano in card search; `GET /cloud/property/{id}` anon → 404 (gate OK)
@@ -222,85 +222,108 @@
 
 - Nessun bottone «contesta stima» — by design (disclaimer stima sufficiente)
 
-## P-046 — dettaglio (APERTO · Onda I)
+## P-046 — dettaglio (CHIUSO · vai Founder)
 
 - `backup_job._COLLECTIONS`: agencies/users/properties/CRM… — **mancano** `b2c_purchases`, `b2c_visura_orders`/`visura_orders`, `consent_events`, `favorites`, `saved_searches`, `al_legal_audit`, `listing_inquiries`
 - Media locali sì; ledger B2C no → restore non riporta pagamenti/consensi portale
 - **Fix** (solo «vai»): estendere `_COLLECTIONS` + verificare MANIFEST
 
-## P-047 — dettaglio (APERTO · Onda I)
+## P-047 — dettaglio (CHIUSO · vai Founder)
 
 - `docs/ops/RESTORE_MANUAL.md` perimetro agency-first; zero menzione `b2c_*` / UGC
 - **Fix**: aggiornare runbook allineato a P-046
 
-## P-048 — dettaglio (APERTO · Onda I)
+## P-048 — dettaglio (CHIUSO · vai Founder)
 
 - `private_listings.py` DELETE → `properties.delete_one` (hard)
 - CRM ha cestino soft-delete; B2C no
 - **Fix**: soft-delete `withdrawn`/`deleted_at` + retention, oppure conferma UI “irreversibile”
 
-## P-049 — dettaglio (APERTO · Onda I)
+## P-049 — dettaglio (CHIUSO · vai Founder)
 
 - `GET /billing/b2c/status/{session_id}` legge solo Mongo
 - Agency `/billing/.../status` fa `Session.retrieve` Stripe
 - Se webhook muore, poll B2C resta `pending` anche se Stripe paid
 - **Fix**: retrieve Stripe + `mark_uni_purchase_paid` idempotente sul poll
 
-## P-050 — dettaglio (APERTO · Onda I)
+## P-050 — dettaglio (CHIUSO · vai Founder)
 
 - Inquiry 20/h OK (live 429); Legal 30/h OK
 - `cloud_auth.register` e Visura checkout: **nessun** `enforce_ip_rate_limit`
 - **Fix**: rate limit IP (es. register 10/h, visura checkout 20/h)
 
-## P-051 — dettaglio (APERTO · Onda I)
+## P-051 — dettaglio (CHIUSO · vai Founder)
 
 - Runtime/disk: `COOKIE_SECURE=false` → `csrf_enabled()=False` → middleware no-op
 - Live tunnel: PATCH `/auth/me` **senza** `X-CSRF-Token` → **200**
 - Su trycloudflare HTTPS andrebbe `COOKIE_SECURE=true` + SameSite=None + CSRF enforce
 - **Fix**: `omnia-stack` / sync-public-base imposta `COOKIE_SECURE=true` quando tunnel HTTPS; restart API
 
-## P-052 — dettaglio (APERTO · Onda I)
+## P-052 — dettaglio (CHIUSO · vai Founder)
 
 - `api.js` gestisce 401+refresh; network/5xx/timeout senza UX globale
 - ErrorBoundary copre solo crash React
 - **Fix**: interceptor → evento `omnia:api-unreachable` + banner cloud
 
-## P-053 — dettaglio (APERTO · Onda I)
+## P-053 — dettaglio (CHIUSO · vai Founder)
 
 - Webhook signature fail → `record_alert(kind=stripe_webhook)` ogni volta, no dedup
 - **Fix**: cooldown / upsert per kind+day
 
 
-## P-054 — dettaglio (APERTO · Onda J)
+## P-054 — dettaglio (CHIUSO · vai Founder)
 
 - Visura UI hardcode IT; nav label senza `t()`
 - Checkout success/cancel: chiavi solo fallback IT in `t()`, non nei JSON locale
 - Legal: gap EN/ES; Sell `staging_*` assenti in ES
 - **Fix**: portare stringhe in `locales/{it,en,es}.json` + parity test
 
-## P-055 — dettaglio (APERTO · Onda J)
+## P-055 — dettaglio (CHIUSO · vai Founder)
 
 - Live tunnel: `/it/cloud/property/demo-prop-roma-01` → title/OG = home generica ImmobilCloud
 - `PropertyDetailPage` senza Helmet/`document.title` per-annuncio
 - **Fix**: SSR/meta per title, description, og:image foto principale
 
-## P-056 — dettaglio (APERTO · Onda J)
+## P-056 — dettaglio (CHIUSO · vai Founder)
 
 - Preview/tunnel: `meta robots=index, follow`; `robots.txt` Allow /
 - Rischio indicizzazione ambienti effimeri trycloudflare
 - **Fix**: noindex se host tunnel / `OMNIA_ENV!=prod`
 
-## P-057 — dettaglio (APERTO · Onda J)
+## P-057 — dettaglio (CHIUSO · vai Founder)
 
 - Moderazione approve/reject aggiorna stato + notes; fanout saved-search su approve
 - Nessuna `create_notification` / email all’owner UGC
 - **Fix**: inbox (+ email) su approve/reject
 
-## P-058 — dettaglio (APERTO · Onda J)
+## P-058 — dettaglio (CHIUSO · vai Founder)
 
 - Automazione: `sync-stripe-webhook-url.py` + omnia-stack
 - Manca runbook `docs/ops` “tunnel morto → nuovo URL → webhook → COOKIE_SECURE”
 - **Fix**: doc ops breve collegata a P-026/P-051
+
+
+## Chiusura residuo D-118 (vai Founder 9-Ott)
+
+| ID | Fix |
+|--|--|
+| P-051 | `sync-public-base-url` → `COOKIE_SECURE=true` su tunnel HTTPS · CSRF enforce |
+| P-049 | `b2c_status` Stripe `Session.retrieve` + `apply_b2c_purchase_side_effects` |
+| P-046/047 | `backup_job._COLLECTIONS` B2C + `RESTORE_MANUAL.md` |
+| P-050 | rate limit `cloud_register` 10/h · `cloud_visura_checkout` 20/h |
+| P-033 | `_base_filter` esclude `privacy_level` L3/L4 |
+| P-048 | soft-delete UGC (`deleted_at` + withdrawn) |
+| P-054 | i18n Visura/checkout/Legal EN-ES/Sell staging ES |
+| P-055 | SSR/meta per-property + `document.title` |
+| P-057 | notify inbox owner su approve/reject |
+| P-052 | evento `omnia:api-unreachable` + banner cloud |
+| P-053 | `record_alert` dedupe 24h per `stripe_webhook` |
+| P-032 | route alias `/cloud/valuator` |
+| P-024 | `.env.example` → `gemini-3.5-flash` |
+| P-056 | `noindex` su trycloudflare |
+| P-058 | `docs/ops/TUNNEL_RUNBOOK.md` |
+| P-026 | WARN sync whsec + runbook · vault Save resta Founder |
+| P-021 | APERTO(opz.) — `GOOGLE_CLIENT_ID` assente in vault |
 
 ## P-012…P-017 — fix breve
 

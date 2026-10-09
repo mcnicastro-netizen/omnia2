@@ -1771,6 +1771,6 @@ Registro di tutte le decisioni di business e tecniche prese durante il progetto.
   3. Durante le onde: **analisi e matrici**, non fix di prodotto (salvo P0 con «vai» esplicito).
   4. Ambito = ImmobilCloud B2C + Legal B2C; gestionale solo ai ponti.
   5. Fascicolo finale obbligatorio a chiusura Onda J → `docs/audit/OMNIA_PORTALE_AUDIT_FASCICOLO.md`.
-- **Stato**: ✅ **ANALISI CHIUSA** (A–J GREEN 9-Ott) · fascicolo consegnato · coda fix solo con «vai» (priorità P-051 / P-049 / P-046)
+- **Stato**: ✅ **ANALISI + RESIDUO CODICE CHIUSI** (A–J GREEN · vai 9-Ott su P-033/046…058) · fascicolo aggiornato · pronto `merge main` su ordine Founder · residui P-021 opz. / P-026 MITIGATO
 
 

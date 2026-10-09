@@ -1,6 +1,6 @@
 # 📚 HAL Knowledge — Import & Cold Start (v0.33-onda-j)
 
-**Ultimo aggiornamento**: 9-Ott-2026 (D-118 A–J GREEN · fascicolo · Cap. 00/19 · coda «vai» P-051/P-049/P-046)  
+**Ultimo aggiornamento**: 9-Ott-2026 sera (D-118 residuo codice CHIUSO · pronto merge · Cap. 00/19)  
 **Corpus**: YAML in `memory/manuale/hal/*.yaml` (Cap. 1–27 + `00-api-codice`) · MD esclusi dal RAG ingest  
 **Motore**: `hal_knowledge.py` · reindex: `POST /api/app/hal/knowledge/reindex?force=true` (super_admin)  
 **Regola Founder D-084**: ogni ship aggiorna MD+YAML nello stesso giro — vedi `memory/MANUAL_SYNC.md`.
@@ -267,6 +267,7 @@ Prima di dichiarare il cold start "attivo", eseguire manualmente queste 5 query 
 
 | Data | Versione | Note |
 |------|:-:|------|
+| 09-Ott-2026 sera | **v0.34-d118-close** | HAL Cap.00: D-118 residuo codice CHIUSO · pronto merge main · P-021/P-026 residui. Fascicolo aggiornato. |
 | 09-Ott-2026 | **v0.33-onda-j** | HAL Cap.00: A–J GREEN · fascicolo D-118 · P-046…P-058 · coda «vai». Matrice `2026-10-09-onda-j.md` · `OMNIA_PORTALE_AUDIT_FASCICOLO.md`. |
 | 09-Ott-2026 | **v0.33-onda-i** | HAL Cap.00: A–I GREEN · resilienza · P-046…P-053 aperti · prossimo Onda J. Matrice `2026-10-09-onda-i.md`. |
 | 09-Ott-2026 | **v0.33-onda-h** | HAL Cap.00: A–H GREEN · GDPR/AI Act · P-037…P-045 · prossimo Onda I. Matrice `2026-10-09-onda-h.md`. |

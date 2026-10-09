@@ -991,13 +991,11 @@ voci:
     domanda_naturale: "A che punto è l'audit del portale? Cosa facciamo domani?"
     contenuto:
       a_cosa_serve: >
-        Programma Founder (D-118) ImmobilCloud B2C: onde A–J CHIUSO (analisi).
-        Fascicolo docs/audit/OMNIA_PORTALE_AUDIT_FASCICOLO.md.
-        SoT OMNIA_PORTALE_AUDIT_PROGRAM.md. Finding P-###.
-        Stato 9-Ott-2026: A–J GREEN. Aperti P-046…P-058 (P1: backup B2C,
-        CSRF COOKIE_SECURE, B2C status fallback; J: i18n/SEO/UGC notify).
-        H fix P-037…P-044 chiusi. Prossimo: coda «vai» (P-051 P-049 P-046).
-        Fix solo con «vai» su P-###.
+        Programma Founder (D-118) ImmobilCloud B2C: onde A–J + residuo codice
+        CHIUSI (9-Ott-2026). Fascicolo OMNIA_PORTALE_AUDIT_FASCICOLO.md.
+        Finding P-###: coda codice vuota; residui P-021 Google opz. e
+        P-026 vault whsec MITIGATO. H GDPR P-037…P-044 e resilienza
+        P-033/046…058 chiusi. Prossimo: merge main solo su ordine Founder.
       quando_si_usa: >
         Stato audit; priorità giornata; dove sono matrici/diario/finding.
       passi:
@@ -1005,7 +1003,7 @@ voci:
         - "Programma: docs/audit/OMNIA_PORTALE_AUDIT_PROGRAM.md."
         - "Finding: docs/audit/portale-finding.md · matrici portale-matrici/."
         - "Diario: docs/audit/portale-diario/ · NEXT_SESSION.md."
-        - "Prossimo: «vai P-051 P-049 P-046» (o backlog fascicolo §5)."
+        - "Prossimo: «merge main» su ordine Founder (non auto)."
         - "Self-serve OFF finché O6 ≠ PASS (D-115)."
       errori_comuni:
         - problema: "L'agent ha già riscritto il portale senza vai"
