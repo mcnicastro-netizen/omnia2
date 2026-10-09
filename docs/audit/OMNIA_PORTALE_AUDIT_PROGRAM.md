@@ -1,8 +1,8 @@
 # OMNIA — Programma Audit Portale ImmobilCloud (passo × passo)
 
-**Status**: ▶️ IN ESECUZIONE — Onde A–D analizzate (2026-10-08) · Onda D green bloccata da P-022 · fix solo con «vai»  
+**Status**: ▶️ IN ESECUZIONE — Onde A–G fatte · Onda G **GREEN** (2026-10-09) · fix solo con «vai»  
 **Partenza**: **8 Ottobre 2026**  
-**Tunnel giorno 1**: `https://king-kai-mia-giants.trycloudflare.com` · **Onda D**: `https://artistic-quantity-loan-sol.trycloudflare.com`  
+**Tunnel giorno 1**: `https://king-kai-mia-giants.trycloudflare.com` · **corrente**: vedi diario del giorno  
 **Finding**: `docs/audit/portale-finding.md`  
 **Owner esecuzione**: Cloud Agent + Founder (gate «vai» su fix)  
 **Repo SoT**: `mcnicastro-netizen/omnia2` (GitHub)  
@@ -72,10 +72,10 @@ Produrre un **fascicolo audit** completo del portale: funzionamento, codice, API
 |--|--|--|
 | 8 Ott | **A–E** | ✅ fatte (anticipate) · D GREEN · P-025…P-030 chiusi |
 | 9 Ott | **F** | ✅ **GREEN** · P-031 CHIUSO · P-032 P3 residuo |
-| succ. | **G** | Portale ↔ gestionale — attende «vai» |
-| 11 Ott | **H** | GDPR + AI Act |
-| 12 Ott | **I** | Resilienza |
-| 13 Ott | **J** | Fascicolo |
+| 9 Ott | **G** | ✅ **GREEN** · ponti verificati · P-033…P-036 aperti |
+| succ. | **H** | GDPR + AI Act — attende «vai» |
+| poi | **I** | Resilienza |
+| poi | **J** | Fascicolo |
 
 > Se un giorno slitta: **non saltare onde**; si sposta in avanti. Dettaglio giornata: `memory/NEXT_SESSION.md`.
 
@@ -366,15 +366,15 @@ Per ogni evento: oggi arriva? dove? gap?
 | Domain / slug agenzia vs path cloud | no collision | |
 
 ### G.2 Checklist
-- [ ] Creare annuncio in CRM demo → compare in search cloud  
-- [ ] Privacy L3 in CRM → anon 404 in cloud  
-- [ ] Inquiry da cloud → record lato agenzia  
-- [ ] UGC approvato → live; rifiutato → non live  
-- [ ] Nessuna API cloud che muta dati agenzia senza authz  
+- [x] Creare annuncio in CRM demo → compare in search cloud  
+- [x] Privacy L3 in CRM → anon 404 in cloud  
+- [x] Inquiry da cloud → record lato agenzia  
+- [x] UGC approvato → live; rifiutato → non live  
+- [x] Nessuna API cloud che muta dati agenzia senza authz  
 
 ### G.3 Deliverable
-- [ ] Diagramma ponti  
-- [ ] Finding isolation / leak  
+- [x] Diagramma ponti — `docs/audit/portale-matrici/2026-10-09-onda-g.md`  
+- [x] Finding isolation / leak — P-033…P-036 
 
 ---
 

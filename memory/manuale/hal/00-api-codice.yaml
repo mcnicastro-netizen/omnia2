@@ -981,24 +981,24 @@ voci:
     widget: null
     pubblico: [super_admin]
     livello: avanzato
-    tags: [codice, audit, portale, immobilcloud, d-118, gdpr, ai-act, stripe, ops, onda-f]
+    tags: [codice, audit, portale, immobilcloud, d-118, gdpr, ai-act, stripe, ops, onda-g]
     correlati: [api.cloud-environment-builds, api.stripe-sandbox-cloud, api.cloud-secrets-vault, api.visura-openapi-catasto, api.founder-ops-portale]
     domanda_naturale: "A che punto è l'audit del portale? Cosa facciamo domani?"
     contenuto:
       a_cosa_serve: >
         Programma Founder (D-118) ImmobilCloud B2C: onde A–J.
         SoT docs/audit/OMNIA_PORTALE_AUDIT_PROGRAM.md. Finding P-###.
-        Stato 8-Ott-2026: A–E fatte (anticipato vs calendario originale);
-        D GREEN (Stripe test + OpenAPI D-116); E telemetry Ops; gap critici
-        P-025…P-030 chiusi con «vai». Prossimo: Onda F bottoni (9 Ott).
-        Fix prodotto solo con «vai» su P-###. A-038 post-test.
+        Stato 9-Ott-2026: A–G fatte. F GREEN (P-031 chiuso). G GREEN —
+        ponti CRM↔portale verificati live; aperti P-033…P-036 (search L3,
+        brand flags, Ops is_active, HAL Legal CRM gratis).
+        Prossimo: Onda H GDPR+AI Act. Fix solo con «vai» su P-###.
       quando_si_usa: >
         Stato audit; priorità giornata; dove sono matrici/diario/finding.
       passi:
         - "Programma: docs/audit/OMNIA_PORTALE_AUDIT_PROGRAM.md."
         - "Finding: docs/audit/portale-finding.md · matrici portale-matrici/."
         - "Diario: docs/audit/portale-diario/ · NEXT_SESSION.md."
-        - "9 Ott: Onda F — matrice bottoni CTA (analisi; fix solo «vai»)."
+        - "Prossimo: Onda H — GDPR + AI Act portale (analisi; fix solo «vai»)."
         - "Self-serve OFF finché O6 ≠ PASS (D-115)."
       errori_comuni:
         - problema: "L'agent ha già riscritto il portale senza vai"
@@ -1006,7 +1006,7 @@ voci:
             Fuori mandato. Fix solo con «vai» Founder su P-###.
         - problema: "Calendario originale diceva B per il 9 Ott"
           soluzione: >
-            A–E anticipate l'8 Ott. Non saltare onde: prossimo = F, poi G→J.
+            A–G anticipate. Non saltare onde: prossimo = H, poi I→J.
       permessi:
         - super_admin / Founder
       screenshot: []

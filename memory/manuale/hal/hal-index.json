@@ -1,12 +1,12 @@
 {
   "version": "0.29-stripe-sandbox",
-  "updated": "2026-10-08",
+  "updated": "2026-10-09",
   "voices_total": 370,
   "source_files": [
     {
       "file": "00-api-codice.yaml",
       "voices": 32,
-      "md5": "6d651b1cccbd5cb4993355e7e58eee3a"
+      "md5": "4887938af29cef7af04e362624ed2532"
     },
     {
       "file": "01-primo-accesso.yaml",
@@ -151,7 +151,7 @@
       "title": "Corpus codice/API",
       "yaml": "00-api-codice.yaml",
       "voices": 32,
-      "md5": "6d651b1cccbd5cb4993355e7e58eee3a"
+      "md5": "4887938af29cef7af04e362624ed2532"
     },
     {
       "id": 22,

@@ -1,16 +1,16 @@
 # Prossima sessione — programma passi
 
-**Aggiornato**: 9 Ottobre 2026 · Onda F **GREEN** · P-031 CHIUSO  
+**Aggiornato**: 9 Ottobre 2026 · Onda G **GREEN** · P-033…P-036 aperti  
 **Repo**: https://github.com/mcnicastro-netizen/omnia2 ✅  
 **Branch audit**: `cursor/portale-audit-onda-d-live-4532` (PR #12) · merge su `main` solo se Founder lo chiede  
 **Chat SoT**: questa run Cloud (inject Stripe test + OpenAPI)
 
 ---
 
-## 🎯 Prossimo passo — Onda G
+## 🎯 Prossimo passo — Onda H
 
-**SoT**: [`OMNIA_PORTALE_AUDIT_PROGRAM.md`](../docs/audit/OMNIA_PORTALE_AUDIT_PROGRAM.md) § Onda G  
-Portale ↔ gestionale (annunci CRM→cloud, UGC moderazione, inquiry→lead, privacy L*, rail B2C).  
+**SoT**: [`OMNIA_PORTALE_AUDIT_PROGRAM.md`](../docs/audit/OMNIA_PORTALE_AUDIT_PROGRAM.md) § Onda H  
+Portale ↔ GDPR e AI Act (consensi, informative, diritti, sub-responsabili, trasparenza AI).  
 Attende «vai» Founder.
 
 ### Aperti residui
@@ -20,35 +20,40 @@ Attende «vai» Founder.
 | P-024 | gemini model string docs P3 |
 | P-026 | Vault `whsec` — Founder Environment |
 | P-032 | alias `/cloud/valuator` (P3) |
+| P-033 | Search lista L3/L4 (P2) |
+| P-034 | Brand ignora flags cloud (P2) |
+| P-035 | Ops saved_searches `active`≠`is_active` (P2) |
+| P-036 | HAL Legal CRM gratis vs listino 12 (P3) |
 
 ---
 
-## ✅ Stato 8 Ott (fatto oggi)
+## ✅ Stato catch-up
 
 | Onda | Esito |
 |--|--|
 | **A** funzionamento | CHIUSA · P-001…P-008 |
 | **B** codice | CHIUSA · P-009…P-017 |
 | **C** secrets | CHIUSA/mitigata · boot auto |
-| **D** provider live | **GREEN** · P-022/P-023 CHIUSI · Stripe test + OpenAPI D-116 |
-| **E** Ops telemetry | CHIUSA · P-025…P-030 CHIUSI (vai) |
+| **D** provider live | **GREEN** · P-022/P-023 CHIUSI |
+| **E** Ops telemetry | CHIUSA · P-025…P-030 CHIUSI |
 | **F** bottoni CTA | ✅ **GREEN** · P-031 CHIUSO |
+| **G** portale↔gestionale | ✅ **GREEN** · P-033…P-036 aperti |
 
 **PR draft**: https://github.com/mcnicastro-netizen/omnia2/pull/12  
-**HAL**: `api.portale-audit-program` · `api.founder-ops-portale` · `api.visura-openapi-catasto` (D-116)
+**Matrice G**: `docs/audit/portale-matrici/2026-10-09-onda-g.md`
 
 ---
 
-## Calendario catch-up
+## Calendario
 
 | Data | Onda | Focus |
 |--|--|--|
 | 8 Ott | A–E | ✅ |
-| 9 Ott | **F** | ✅ matrice · P-031/P-032 |
-| succ. | **G** | Portale ↔ gestionale (dopo «vai» / fix P-031) |
-| poi | H → I → J | GDPR · resilienza · fascicolo |
+| 9 Ott | F + G | ✅ |
+| succ. | **H** | GDPR + AI Act (dopo «vai») |
+| poi | I → J | Resilienza · fascicolo |
 
-> Regola SoT: non saltare onde. A–E fatte in anticipo → si avanza a F.
+> Regola SoT: non saltare onde. Fix P-### solo con «vai».
 
 ---
 
@@ -58,14 +63,5 @@ Attende «vai» Founder.
 |--|--|
 | `stripe-vault-materialize.py` | vault → `.env` · prefer `sk_test_` |
 | `sync-public-base-url.py` | FRONTEND_* = trycloudflare |
-| `sync-stripe-webhook-url.py` | webhook → tunnel `/api/billing/webhook` |
-| `check-secrets-presence.sh` | presence + classi Stripe |
-
-**Founder (quando puoi)**: allinea vault `STRIPE_WEBHOOK_SECRET` all’endpoint auto-sync (P-026).
-
----
-
-## HAL / manuale
-
-Cap. 00 HAL + Cap. 19 §19.10.6 aggiornati 8-Ott sera.  
-Reindex: `POST /api/app/hal/knowledge/reindex?force=true` (super_admin) dopo merge/pull.
+| `sync-stripe-webhook-url.py` | endpoint test → tunnel webhook |
+| `omnia-stack ensure` | API+preview+tunnel · re-seed inventory se total=0 (P-031) |

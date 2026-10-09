@@ -7,7 +7,7 @@ Prima di analizzare un nuovo punto, leggere questo file. Non riaprire decisioni 
 
 **Current status:** P1–P24 **chiusi** · programma **APPROVATO** (**D-115**) · **«vai» O0 ∥ O1 in esecuzione**. Listino fermo. SoT: questo file.
 
-**Next:** **D-118 Audit Portale** — Onda A+B+C fatte · vault Save fatto · **correggere Stripe live→test** · Visura **SKIP** (Catasto OpenAPI sospeso provider) · **Onda D** su chat *controllo secrets*. SoT: `OMNIA_PORTALE_AUDIT_PROGRAM.md` + `portale-finding.md`. Poi: O3b restore → **A-037** → self-serve. O6 CONDITIONAL. **no self-serve finché O6 ≠ PASS**. §23 Priorità **CLOSED**.
+**Next:** **D-118 Audit Portale** — Onde **A–G GREEN** (9 Ott) · Stripe test · OpenAPI D-116 · aperti P-021/024/026/032–036 · prossimo **Onda H** GDPR+AI Act. SoT: `OMNIA_PORTALE_AUDIT_PROGRAM.md` + `portale-finding.md`. Poi: O3b restore → **A-037** → self-serve. O6 CONDITIONAL. **no self-serve finché O6 ≠ PASS**. §23 Priorità **CLOSED**.
 
 ---
 
