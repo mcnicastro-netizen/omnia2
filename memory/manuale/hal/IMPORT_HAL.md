@@ -1,6 +1,6 @@
-# 📚 HAL Knowledge — Import & Cold Start (v0.33)
+# 📚 HAL Knowledge — Import & Cold Start (v0.33-onda-j)
 
-**Ultimo aggiornamento**: 8-Ott-2026 sera (D-118 A–E · `api.founder-ops-portale` · D-116 Visura · Cap. 00/19)  
+**Ultimo aggiornamento**: 9-Ott-2026 (D-118 A–J GREEN · fascicolo · Cap. 00/19 · coda «vai» P-051/P-049/P-046)  
 **Corpus**: YAML in `memory/manuale/hal/*.yaml` (Cap. 1–27 + `00-api-codice`) · MD esclusi dal RAG ingest  
 **Motore**: `hal_knowledge.py` · reindex: `POST /api/app/hal/knowledge/reindex?force=true` (super_admin)  
 **Regola Founder D-084**: ogni ship aggiorna MD+YAML nello stesso giro — vedi `memory/MANUAL_SYNC.md`.

@@ -1,3 +1,11 @@
+## 2026-10-09 — D-118 A–J GREEN + fascicolo + sync manuale/HAL
+
+- Onde **A–J GREEN** (analisi) · fascicolo `docs/audit/OMNIA_PORTALE_AUDIT_FASCICOLO.md`
+- Finding aperti **P-046…P-058** (+ P-033 dopo) · priorità «vai P-051 P-049 P-046»
+- Fix già shippati (sessioni precedenti): Ops P-025…P-030 · G P-035/036 · H GDPR P-037…P-044
+- Manuale Cap. **00** / **19** §19.10.6 · HAL Cap.00 `api.portale-audit-program` + `api.founder-ops-portale` · `IMPORT_HAL` v0.33-onda-j · `hal-index.json`
+- `DECISIONS` D-118 → ANALISI CHIUSA · `NEXT_SESSION` → coda «vai» · PR #12
+
 ## 2026-10-08 sera — D-118 A–E + Ops P-025…P-030 + HAL v0.31
 
 - Onde **A–E** chiuse (anticipate) · D GREEN · Stripe test + OpenAPI D-116

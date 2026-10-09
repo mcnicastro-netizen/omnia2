@@ -7,7 +7,7 @@ Prima di analizzare un nuovo punto, leggere questo file. Non riaprire decisioni 
 
 **Current status:** P1–P24 **chiusi** · programma **APPROVATO** (**D-115**) · **«vai» O0 ∥ O1 in esecuzione**. Listino fermo. SoT: questo file.
 
-**Next:** **D-118 Audit Portale** — Onde **A–J GREEN** · fascicolo `OMNIA_PORTALE_AUDIT_FASCICOLO.md` · aperti P-046…P-058 (+ P-033) · coda «vai» (P-051/P-049/P-046). SoT: programma + `portale-finding.md`. Poi: O3b restore → **A-037** → self-serve. O6 CONDITIONAL. **no self-serve finché O6 ≠ PASS**. §23 Priorità **CLOSED**.
+**Next:** **D-118 Audit Portale** — **analisi CHIUSA** (A–J GREEN 9-Ott) · fascicolo + Cap.00/19 + HAL sync · aperti P-046…P-058 (+ P-033) · coda «vai» (P-051/P-049/P-046). SoT: `OMNIA_PORTALE_AUDIT_FASCICOLO.md` · programma · `portale-finding.md`. Poi: O3b restore → **A-037** → self-serve. O6 CONDITIONAL. **no self-serve finché O6 ≠ PASS**. §23 Priorità **CLOSED**.
 
 ---
 

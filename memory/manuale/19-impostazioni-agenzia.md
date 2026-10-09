@@ -284,7 +284,8 @@ Alert: `POST /api/app/ops/alerts/{id}/ack` · `…/ack-all`.
 Backup: `POST /api/app/ops/backup/run` (se health ≠ OK).  
 Fail Visura post-pagamento → `ops_alerts` kind `openapi_visura`.
 
-**Audit Portale D-118** (8-Ott): onde A–E fatte; **9 Ott = Onda F** bottoni. SoT `docs/audit/OMNIA_PORTALE_AUDIT_PROGRAM.md`.  
+**Audit Portale D-118** (9-Ott): onde **A–J GREEN** (analisi) · fascicolo `docs/audit/OMNIA_PORTALE_AUDIT_FASCICOLO.md`.  
+Coda fix: «vai P-051 P-049 P-046» (e backlog). SoT `OMNIA_PORTALE_AUDIT_PROGRAM.md` + `portale-finding.md`.  
 Post-test: **A-038** (Invoice Stripe + dati fiscali — solo con «vai»).  
 HAL: `api.founder-ops-portale`, `api.portale-audit-program`, `api.cloud-environment-builds`.
 

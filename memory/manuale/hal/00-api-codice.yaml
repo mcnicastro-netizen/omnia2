@@ -955,13 +955,15 @@ voci:
         P-029: POST /ops/backup/run. Nav Shell: Ops Costi / Ops Legal / Moderazione.
       quando_si_usa: >
         Controllare incassi B2C; allarmi Stripe/LLM/Visura; backup MISSING;
-        coda annunci privati; audit Onda E.
+        coda annunci privati; post-audit D-118 (fascicolo + finding aperti).
       passi:
         - "UI: /it/app/ops · API GET /api/app/ops/overview?days=7|30|90."
         - "Card Portale: contatori periodo · link Moderazione / Ops Legal."
         - "Allarmi: Visto / Segna tutti visti (ack)."
         - "Backup ≠ OK → Esegui ora (POST /ops/backup/run)."
+        - "Nota P-046: backup_job ancora senza molte collection B2C (coda «vai»)."
         - "A-038 fatture/dati fiscali = post-test, non in questo cruscotto."
+        - "Stato audit: docs/audit/OMNIA_PORTALE_AUDIT_FASCICOLO.md."
       errori_comuni:
         - problema: "b2c_revenue_eur=0 con acquisti paid"
           soluzione: >
@@ -971,6 +973,9 @@ voci:
           soluzione: >
             Premi Esegui ora o attendi cron 03:15 UTC. Path BACKUP_ROOT
             (default backend/.backups, gitignored).
+        - problema: "Restore senza pagamenti/consensi B2C"
+          soluzione: >
+            Gap P-046/P-047: estendere _COLLECTIONS + RESTORE_MANUAL (solo «vai»).
       permessi:
         - super_admin / Founder
       screenshot: []

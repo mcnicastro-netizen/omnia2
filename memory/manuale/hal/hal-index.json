@@ -6,7 +6,7 @@
     {
       "file": "00-api-codice.yaml",
       "voices": 32,
-      "md5": "509262db33081b84de4d741aeaa043a4"
+      "md5": "918554762a2920e0adffb081e95446d6"
     },
     {
       "file": "01-primo-accesso.yaml",
@@ -101,7 +101,7 @@
     {
       "file": "19-impostazioni-agenzia.yaml",
       "voices": 15,
-      "md5": "305aaebfe02d7457d0c4accc2d0be261"
+      "md5": "7dcc821e17ff499bf9d3c1a809919cd1"
     },
     {
       "file": "20-api-keys-integrazioni.yaml",
@@ -151,7 +151,7 @@
       "title": "Corpus codice/API",
       "yaml": "00-api-codice.yaml",
       "voices": 32,
-      "md5": "509262db33081b84de4d741aeaa043a4"
+      "md5": "918554762a2920e0adffb081e95446d6"
     },
     {
       "id": 22,

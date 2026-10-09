@@ -452,7 +452,7 @@ voci:
     pubblico: [titolare, super_admin]
     livello: base
     tags: [impostazioni, cosa-non-copre, pagine-separate, team, api-keys, domain, notifiche, membri, custom-domain]
-    correlati: [settings.cos-e, settings.limitazioni-v1]
+    correlati: [settings.cos-e, settings.limitazioni-v1, api.founder-ops-portale, api.portale-audit-program]
     domanda_naturale: "Perché nella Settings non trovo la gestione team, il dominio custom, le notifiche o le API keys?"
     contenuto:
       a_cosa_serve: >
@@ -465,6 +465,10 @@ voci:
           (MembersPage.jsx, Cap. 13)."
         - "Cambio piano / crediti / fatture → /app/settings/billing
           (BillingPage.jsx, §19.10). Fatture via Stripe portal."
+        - "Incassi B2C / Ops Founder (super_admin) → /app/ops · Legal ·
+          Moderazione (§19.10.6 · api.founder-ops-portale)."
+        - "Audit Portale D-118 (stato A–J / finding) → fascicolo
+          docs/audit/OMNIA_PORTALE_AUDIT_FASCICOLO.md · api.portale-audit-program."
         - "Custom domain / DNS TXT+CNAME → /app/settings/domain-verify
           (DomainVerifyPage.jsx, Cap. 17)."
         - "Domain sovereignty policy → /app/domain-sovereignty-policy

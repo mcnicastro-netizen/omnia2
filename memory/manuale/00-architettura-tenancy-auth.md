@@ -38,10 +38,10 @@ Un blocco alla volta · niente fix senza «vai» · no P0–P3 prematuri · **li
 | **D-113** | Restore manuale testabile pre-GTM (non piattaforma DR) |
 | **D-114** | Sostenibilità bak/media = priorità pre-attivazione; O0 = numeri+design vincolante |
 | **D-115** | Programma O0…O6 approvato · **no self-serve finché O6 ≠ PASS** |
-| **D-118** | **Audit Portale ImmobilCloud** · onde A–J · start **8-Ott-2026** · SoT `docs/audit/OMNIA_PORTALE_AUDIT_PROGRAM.md` · finding `P-###` · no fix senza «vai» |
+| **D-118** | **Audit Portale ImmobilCloud** · onde **A–J GREEN** (analisi **9-Ott-2026**) · fascicolo `docs/audit/OMNIA_PORTALE_AUDIT_FASCICOLO.md` · finding `P-###` · fix solo con «vai» |
 | **D-116** | OpenAPI Catasto sandbox: **una sola API key** (`OPENAPI_API_KEY` + fallback `ADMIN_EMAIL`) |
 
-**SoT continuità:** `docs/audit/OMNIA_AUDIT_STATE.md` · `memory/NEXT_SESSION.md`  
+**SoT continuità:** `docs/audit/OMNIA_AUDIT_STATE.md` · `memory/NEXT_SESSION.md` · fascicolo D-118  
 **Sequenza priorità (D-099):** fascicolo → orphan → Bak+Restore → retention → costi.  
 **Niente codice** senza «vai».
 
@@ -50,10 +50,12 @@ Un blocco alla volta · niente fix senza «vai» · no P0–P3 prematuri · **li
 Nella UI chat può comparire un ID tipo `bld-20261007-…`: è lo **snapshot Environment Build** (install già fatto), **non** un secret.  
 Cursor lo tiene in Dashboard → Environments → Builds. **Non serve** salvarlo nel password manager; annotalo solo se vuoi pin/debug di quello snapshot. I secret restano nel vault (`CLOUD_SECRETS_INVENTORY.md`). HAL: `api.cloud-environment-builds`.
 
-### Prossimo lavoro (D-118) — aggiornato 8-Ott sera
+### D-118 — stato (aggiornato 9-Ott-2026)
 
-**Fatto 8 Ott**: Onde **A–E** (anticipate) · D GREEN · gap Ops **P-025…P-030** chiusi.  
-**9 Ott**: **Onda F** — matrice bottoni CTA portale. Poi G→J (catch-up).  
+**Analisi chiusa**: onde **A–J GREEN** · fascicolo Founder pronto.  
+**Fix codice già fatti** (con «vai»): Ops P-025…P-030 · G P-035/P-036 · H GDPR P-037…P-044 (P-045 WONTFIX).  
+**Coda aperta**: P-046…P-058 (+ P-033 dopo) — priorità **P-051 / P-049 / P-046**.  
+SoT: `OMNIA_PORTALE_AUDIT_PROGRAM.md` · `OMNIA_PORTALE_AUDIT_FASCICOLO.md` · `portale-finding.md`.  
 Post-test: **A-038** fattura Stripe + dati fiscali (solo con «vai»).  
 HAL: `api.portale-audit-program` · `api.founder-ops-portale` · `api.visura-openapi-catasto`.
 
@@ -77,7 +79,7 @@ HAL: `api.portale-audit-program` · `api.founder-ops-portale` · `api.visura-ope
 | Non lista infinita | **NI-*** · P24 CHIUSO · SoT ripago §25bis |
 | Report finale | P25 A–K · ⏳ |
 | GTM / Demo | **GTM-01 ACQUISITO** · **D-104** · in coda · pre-~5000 email |
-| Portale B2C audit | **D-118** · onde A–J · start 8-Ott · `P-###` |
+| Portale B2C audit | **D-118** · A–J GREEN · fascicolo · coda «vai» `P-###` |
 | Costo / listino | C-* · B-01 · fermo |
 
 ---
@@ -88,6 +90,7 @@ HAL: `api.portale-audit-program` · `api.founder-ops-portale` · `api.visura-ope
 |----------|--------|--------|
 | P1–P24 | §1–§24 | chiusi · D-094…D-114 · classificazione + D-114 bak/media |
 | P25 Report finale | §25 | Consegnato · A–K · ⏳ analisi |
+| D-118 Portale | A–J | ✅ GREEN analisi · fascicolo · coda «vai» P-046…P-058 |
 | — | §23 Priorità | ⬜ CLOSED fino al «vai» |
 | GTM-01 | post-audit | 🟠 **ACQUISITO** · in coda · smoke ~20 |
 

@@ -1,6 +1,6 @@
 # Prossima sessione — programma passi
 
-**Aggiornato**: 9 Ottobre 2026 · Onda **J GREEN** · fascicolo D-118 · P-046…P-058 aperti  
+**Aggiornato**: 9 Ottobre 2026 · D-118 **analisi chiusa** (A–J) · fascicolo + manuale/HAL sync · P-046…P-058 aperti  
 **Repo**: https://github.com/mcnicastro-netizen/omnia2 ✅  
 **Branch audit**: `cursor/portale-audit-onda-d-live-4532` (PR #12)
 
