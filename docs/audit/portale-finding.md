@@ -1,6 +1,6 @@
 # Audit Portale — registro finding `P-###`
 
-**Aggiornato**: 2026-10-09 · Onda F bottoni · P-031/P-032 aperti  
+**Aggiornato**: 2026-10-09 · P-031 CHIUSO (re-seed + ensure inventory)  
 **Regola**: nessun fix senza «vai» Founder (D-118)
 
 | ID | Sev | Onda | Titolo | Stato |
@@ -35,7 +35,7 @@
 | P-028 | P2 | E | `ops_alerts.acked` senza API/UI di ack (“da vedere” permanente) | **CHIUSO** |
 | P-029 | P2 | E | Backup health `MISSING` in Cloud (nessuna cartella `.backups`) | **CHIUSO** |
 | P-030 | P3 | E | Moderazione (e Legal) fuori nav Shell — solo URL / link interno Ops | **CHIUSO** |
-| P-031 | **P0** | F | Regressione inventory: demo props `visibility=null` → search total=0 (P-001) | **APERTO** |
+| P-031 | P0 | F | Regressione inventory: demo props `visibility=null` → search total=0 (P-001) | **CHIUSO** |
 | P-032 | P3 | F | Route solo `/cloud/valutatore`; `/cloud/valuator` shell vuota | **APERTO** |
 
 ## P-009 — dettaglio (CHIUSO)
@@ -123,13 +123,11 @@
 
 - **Fix**: `AgencyShell` super_admin — voci Ops Legal + Moderazione · link in card portale Ops
 
-## P-031 — dettaglio (APERTO · Onda F)
+## P-031 — dettaglio (CHIUSO · vai Founder 9-Ott)
 
-- **Evidenza**: `qc_public_portal_inventory.py` → `match_base_filter=0`; `GET /api/cloud/search` `total=0`
-- Mongo: 8 props `is_listed_on_immobilcloud=true` ma **`visibility=null`** (0 `visibility=public`)
-- Seed script ha già `"visibility":"public"` + upsert `$set` — **non rieseguito** su questo boot / DB stale
-- **Impatto**: search/schede/property CTA Onda F non dogfoodabili; portale vuoto come P-001
-- **Fix** (solo con «vai»): `python backend/scripts/seed_demo_gestionale.py` (o ensure-seed in boot Cloud) + QC `match_base_filter>0`
+- **Fix**: re-seed `seed_demo_gestionale.py` + `seed_nicastro_agency.py` · `omnia-stack ensure` ora richiama seed se `GET /cloud/search` total=0
+- **Verifica**: QC `match_base_filter=8` · search `total=8` · favorite 201 · contact 200
+- Artefatti: `/opt/cursor/artifacts/p031-seed.log` · `p031-qc.log` · `p031-property-cta.log`
 
 ## P-032 — dettaglio (APERTO · Onda F)
 

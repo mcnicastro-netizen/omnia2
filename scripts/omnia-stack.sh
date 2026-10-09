@@ -355,6 +355,45 @@ print_share() {
   echo "════════════════════════════════════════════════════════"
 }
 
+# P-031 — if public search is empty, re-run demo seeds (visibility=public).
+ensure_portal_inventory() {
+  local py total
+  [[ "${api_ok:-false}" == true ]] || return 0
+  if [[ -x "$ROOT/backend/.venv/bin/python" ]]; then py="$ROOT/backend/.venv/bin/python"
+  else py="python3"; fi
+  total="$("$py" - <<'PY' 2>/dev/null || echo 0
+import json, urllib.request
+try:
+    with urllib.request.urlopen("http://127.0.0.1:43121/api/cloud/search?limit=1", timeout=5) as r:
+        print(int(json.load(r).get("total") or 0))
+except Exception:
+    print(0)
+PY
+)"
+  total="${total//[^0-9]/}"
+  total="${total:-0}"
+  if [[ "$total" -gt 0 ]]; then
+    echo "[omnia-stack] portal inventory ok total=$total"
+    return 0
+  fi
+  echo "[omnia-stack] portal inventory empty — re-seeding demo + nicastro (P-031)" >&2
+  "$py" "$ROOT/backend/scripts/seed_demo_gestionale.py" \
+    || echo "[omnia-stack] seed demo failed (non-fatal)" >&2
+  "$py" "$ROOT/backend/scripts/seed_nicastro_agency.py" \
+    || echo "[omnia-stack] seed nicastro failed (non-fatal)" >&2
+  total="$("$py" - <<'PY' 2>/dev/null || echo 0
+import json, urllib.request
+try:
+    with urllib.request.urlopen("http://127.0.0.1:43121/api/cloud/search?limit=1", timeout=5) as r:
+        print(int(json.load(r).get("total") or 0))
+except Exception:
+    print(0)
+PY
+)"
+  total="${total//[^0-9]/}"
+  echo "[omnia-stack] portal inventory after seed total=${total:-0}"
+}
+
 cmd="${1:-ensure}"
 
 case "$cmd" in
@@ -365,6 +404,7 @@ case "$cmd" in
     public_url=""
     msg=""
     if adopt_or_start_api; then api_ok=true; else msg="api_start_failed"; fi
+    if [[ "$api_ok" == true ]]; then ensure_portal_inventory || true; fi
     if adopt_or_start_preview; then preview_ok=true; else msg="${msg:+$msg;}preview_start_failed"; fi
     if [[ "$preview_ok" == true ]]; then
       if public_url="$(adopt_or_start_tunnel)"; then

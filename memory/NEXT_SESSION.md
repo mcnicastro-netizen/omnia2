@@ -1,22 +1,16 @@
 # Prossima sessione — programma passi
 
-**Aggiornato**: 9 Ottobre 2026 · Onda F fatta · P-031 blocco inventory  
+**Aggiornato**: 9 Ottobre 2026 · Onda F **GREEN** · P-031 CHIUSO  
 **Repo**: https://github.com/mcnicastro-netizen/omnia2 ✅  
 **Branch audit**: `cursor/portale-audit-onda-d-live-4532` (PR #12) · merge su `main` solo se Founder lo chiede  
 **Chat SoT**: questa run Cloud (inject Stripe test + OpenAPI)
 
 ---
 
-## 🎯 Prossimo passo — sblocca F + Onda G
+## 🎯 Prossimo passo — Onda G
 
-### Blocco attuale
-| ID | Azione |
-|--|--|
-| **P-031 P0** | «vai P-031» → re-seed demo (`visibility=public`) · QC search total>0 · ripeti property CTA |
-| P-032 P3 | alias `/cloud/valuator` (opz.) |
-
-### Poi Onda G (portale ↔ gestionale)
 **SoT**: [`OMNIA_PORTALE_AUDIT_PROGRAM.md`](../docs/audit/OMNIA_PORTALE_AUDIT_PROGRAM.md) § Onda G  
+Portale ↔ gestionale (annunci CRM→cloud, UGC moderazione, inquiry→lead, privacy L*, rail B2C).  
 Attende «vai» Founder.
 
 ### Aperti residui
@@ -25,8 +19,7 @@ Attende «vai» Founder.
 | P-021 | Google OAuth opz. |
 | P-024 | gemini model string docs P3 |
 | P-026 | Vault `whsec` — Founder Environment |
-| **P-031** | inventory vuota (P-001 regressione) |
-| P-032 | slug valuator EN |
+| P-032 | alias `/cloud/valuator` (P3) |
 
 ---
 
@@ -39,7 +32,7 @@ Attende «vai» Founder.
 | **C** secrets | CHIUSA/mitigata · boot auto |
 | **D** provider live | **GREEN** · P-022/P-023 CHIUSI · Stripe test + OpenAPI D-116 |
 | **E** Ops telemetry | CHIUSA · P-025…P-030 CHIUSI (vai) |
-| **F** bottoni CTA | ✅ catalogo+prove · green bloccata **P-031** |
+| **F** bottoni CTA | ✅ **GREEN** · P-031 CHIUSO |
 
 **PR draft**: https://github.com/mcnicastro-netizen/omnia2/pull/12  
 **HAL**: `api.portale-audit-program` · `api.founder-ops-portale` · `api.visura-openapi-catasto` (D-116)
