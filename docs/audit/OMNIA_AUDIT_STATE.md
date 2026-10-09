@@ -7,7 +7,7 @@ Prima di analizzare un nuovo punto, leggere questo file. Non riaprire decisioni 
 
 **Current status:** P1–P24 **chiusi** · programma **APPROVATO** (**D-115**) · **«vai» O0 ∥ O1 in esecuzione**. Listino fermo. SoT: questo file.
 
-**Next:** **D-118 Audit Portale** — **analisi + residuo codice CHIUSI** (9-Ott) · fascicolo aggiornato · residui P-021 opz. / P-026 MITIGATO · **pronto `merge main` su ordine Founder**. SoT: `OMNIA_PORTALE_AUDIT_FASCICOLO.md`. Poi: O3b restore → **A-037** → self-serve. O6 CONDITIONAL. **no self-serve finché O6 ≠ PASS**. §23 Priorità **CLOSED**.
+**Next:** **D-118 Audit Portale** — **analisi + residuo codice CHIUSI** (9-Ott) · fascicolo aggiornato · residui P-021 opz. / P-026 MITIGATO · **MERGED su main** (PR #12 · 9-Ott). SoT: `OMNIA_PORTALE_AUDIT_FASCICOLO.md`. Poi: O3b restore → **A-037** → self-serve. O6 CONDITIONAL. **no self-serve finché O6 ≠ PASS**. §23 Priorità **CLOSED**.
 
 ---
 

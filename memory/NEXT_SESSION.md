@@ -1,31 +1,28 @@
 # Prossima sessione — programma passi
 
-**Aggiornato**: 9 Ottobre 2026 · D-118 **residuo codice CHIUSO** · pronto `merge main` su ordine Founder  
+**Aggiornato**: 9 Ottobre 2026 · D-118 **MERGED su main** (PR #12 · `361bd98`)  
 **Repo**: https://github.com/mcnicastro-netizen/omnia2 ✅  
-**Branch audit**: `cursor/portale-audit-onda-d-live-4532` (PR #12)
+**Branch**: `main`
 
 ---
 
-## 🎯 Prossimo passo Founder
+## 🎯 Prossimo passo
 
-**`merge main`** — solo con messaggio esplicito Founder (non auto).
+D-118 chiuso. Ripresa tipica post-audit:
+1. O3b restore / bak (collegato P-046 già in codice)
+2. **A-037** demo da sito (se Founder vuole)
+3. **A-038** fatture fiscali (post-test)
+4. **O6** self-serve — resta OFF finché O6 ≠ PASS
 
-Residui non bloccanti:
-| ID | Nota |
-|--|--|
-| P-021 | Google OAuth OFF — opz. se vault ha `GOOGLE_CLIENT_ID` |
-| P-026 | MITIGATO — aggiornare vault `STRIPE_WEBHOOK_SECRET` all’endpoint auto-sync |
+Residui non bloccanti: **P-021** Google opz. · **P-026** aggiornare vault whsec endpoint auto-sync.
 
-**Fascicolo**: [`OMNIA_PORTALE_AUDIT_FASCICOLO.md`](../docs/audit/OMNIA_PORTALE_AUDIT_FASCICOLO.md)
+**Fascicolo**: `docs/audit/OMNIA_PORTALE_AUDIT_FASCICOLO.md`
 
 ---
 
 ## ✅ Stato
 
-| Onda | Esito |
+| Voce | Esito |
 |--|--|
-| **A–J** | ✅ GREEN (analisi) |
-| **Residuo codice** | ✅ CHIUSO (vai 9-Ott) |
-| **D-118** | ✅ pronto merge |
-
-**PR draft**: https://github.com/mcnicastro-netizen/omnia2/pull/12
+| D-118 A–J + residuo codice | ✅ su `main` |
+| O6 self-serve | OFF |
