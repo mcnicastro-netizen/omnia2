@@ -34,6 +34,9 @@ class CloudRegisterRequest(BaseModel):
     notification_channels: List[Channel] = Field(default_factory=lambda: ["email"])
     lang: Optional[Literal["it", "en", "es"]] = "it"
     gdpr_consent: bool = False
+    # P-040 — conferma maggiorenne; P-039 — opt-in marketing distinto dal GDPR servizio
+    age_confirmed: bool = False
+    marketing_consent: bool = False
 
 
 @router.post("/register")
@@ -43,6 +46,8 @@ async def cloud_register(payload: CloudRegisterRequest, response: Response):
     the existing /api/auth/verify-email flow if present)."""
     if not payload.gdpr_consent:
         raise HTTPException(status_code=400, detail="gdpr_consent_required")
+    if not payload.age_confirmed:
+        raise HTTPException(status_code=400, detail="age_confirmation_required")
     if not payload.intents:
         raise HTTPException(status_code=400, detail="at_least_one_intent_required")
     db = Database.get()
@@ -65,6 +70,8 @@ async def cloud_register(payload: CloudRegisterRequest, response: Response):
         "intents": payload.intents,
         "notification_channels": payload.notification_channels or ["email"],
         "email_verified": False,
+        "age_confirmed": True,
+        "marketing_consent": bool(payload.marketing_consent),
         "created_at": now,
         "updated_at": now,
     }
@@ -77,8 +84,20 @@ async def cloud_register(payload: CloudRegisterRequest, response: Response):
             email=doc["email"],
             user_id=user_id,
             source="cloud.auth.register",
-            meta={"intents": list(payload.intents)},
+            meta={
+                "intents": list(payload.intents),
+                "age_confirmed": True,
+                "marketing_consent": bool(payload.marketing_consent),
+            },
         )
+        if payload.marketing_consent:
+            await log_consent(
+                action="b2c_marketing_consent",
+                email=doc["email"],
+                user_id=user_id,
+                source="cloud.auth.register",
+                meta={"opt_in": True},
+            )
     except Exception:
         pass
 

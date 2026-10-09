@@ -273,6 +273,8 @@ class ValuationPayload(BaseModel):
     # Lead capture
     email: Optional[str] = Field(default=None, max_length=200)
     name: Optional[str] = Field(default=None, max_length=200)
+    # P-044 — required when name+email are provided for lead capture
+    gdpr_consent: bool = False
 
 
 @router.post("")
@@ -308,6 +310,10 @@ async def estimate_value(
     if request is not None:
         header_caller = (request.headers.get("x-omnia-caller") or "").lower().strip()
     is_agency_fascicolo = bypass_gate or header_caller == "agency_fascicolo"
+
+    # P-044 — lead capture requires explicit GDPR consent (fail fast)
+    if payload.email and payload.name and not payload.gdpr_consent:
+        raise HTTPException(status_code=400, detail="gdpr_consent_required")
 
     uni_requested = is_uni_payload(payload)
     is_agent = bool(user and (user.get("agency_id") or user.get("agency_ids")))
@@ -555,7 +561,18 @@ async def _estimate_value_core(payload: ValuationPayload) -> Dict[str, Any]:
                 "estimated_value_avg": value_avg,
                 "created_at": now,
                 "source": "ImmobilCloud-Valuator",
+                "gdpr_consent": True,
             })
+            try:
+                from shared.privacy.consent_log import log_consent
+                await log_consent(
+                    action="valuation_lead_consent",
+                    email=payload.email.lower(),
+                    source="cloud.valuator",
+                    meta={"lead_id": lead_id, "city": payload.city},
+                )
+            except Exception:
+                pass
         except Exception as e:
             logger.warning("valuation lead capture failed: %s", e)
             lead_id = None

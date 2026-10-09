@@ -53,6 +53,8 @@ TAVILY_EUR_PER_CREDIT = 0.0074        # ~$0.008 PAYG → EUR
 GEMINI_EUR_PER_QUERY = 0.01           # 2 chiamate Flash (risposta + validatore)
 LIST_PRICE_CREDITS = 12               # listino B2B PRICING_OMNIA
 LIST_PRICE_EUR = 0.60
+# P-041 — retention audit Legal (5 anni) poi purge TTL Mongo
+LEGAL_AUDIT_TTL_DAYS = 1825
 
 DISCLAIMER_HEADER = (
     "Le informazioni fornite da HAL Legal hanno carattere orientativo e divulgativo. "
@@ -264,6 +266,7 @@ async def legal_chat(req: LegalChatRequest, user: dict = Depends(get_current_use
         "channel": "in_app",
         "payment_rail": payment.get("rail"),
         "credits_charged": payment.get("credits_charged") or 0,
+        "expire_at": datetime.now(timezone.utc) + timedelta(days=LEGAL_AUDIT_TTL_DAYS),
     })
 
     out = {
@@ -345,6 +348,7 @@ async def analyze_pdf(
         "channel": "in_app",
         "payment_rail": payment.get("rail"),
         "credits_charged": payment.get("credits_charged") or 0,
+        "expire_at": datetime.now(timezone.utc) + timedelta(days=LEGAL_AUDIT_TTL_DAYS),
     })
 
     return {

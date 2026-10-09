@@ -790,11 +790,17 @@
     "legal_privacy_title": "Aviso de privacidad",
     "legal_privacy_body": [
       "Responsable del tratamiento: OMNIA Real Estate Ecosystem (ImmobilCloud).",
-      "Tratamos los datos de registro (nombre, email, intenciones) y los necesarios para prestar los servicios solicitados, además de datos técnicos de sesión y seguridad.",
-      "Bases jurídicas: ejecución del contrato/servicio y, cuando proceda, consentimiento. Conservamos los datos el tiempo necesario para el servicio y las obligaciones legales.",
-      "Derechos: acceso, rectificación, supresión, limitación, oposición, portabilidad — privacy@omniaecosystem.it.",
-      "Este es el aviso resumido del portal ImmobilCloud; los contratos B2B/DPA son independientes."
+      "Tratamos datos de registro (nombre, email, intenciones, confirmación 18+, consentimiento de marketing opcional) y los necesarios para prestar los servicios, además de datos técnicos de sesión y seguridad.",
+      "Bases jurídicas: ejecución del contrato/servicio; consentimiento para marketing (opcional) y cuando proceda. Conservamos los datos el tiempo necesario, con retención automática en logs de consentimiento, auditoría Legal y ledger de compras B2C.",
+      "Encargados / proveedores técnicos: Stripe (pagos), Resend (email), OpenAPI.it (visuras), Google Gemini (HAL Legal / IA), Tavily (fuentes), fal.ai / Kling (staging y micro-tour).",
+      "Transferencias fuera de la UE: algunos proveedores (p. ej. Google, Stripe, fal.ai) pueden tratar datos en EE.UU. u otros países, con las garantías aplicables (p. ej. CCT).",
+      "Inteligencia artificial: no usamos tus chats, documentos o anuncios para entrenar modelos de terceros. Las respuestas HAL Legal y los renders de staging son generados automáticamente y son orientativos.",
+      "Derechos: acceso y exportación (cuenta → Descargar mis datos), rectificación, supresión, limitación, oposición, portabilidad — también privacy@omniaecosystem.it.",
+      "Aviso resumido del portal ImmobilCloud; no sustituye asesoramiento legal. Contratos B2B/DPA aparte."
     ],
+    "reg_age_text": "Declaro tener al menos 18 años.",
+    "reg_marketing_text": "Acepto recibir comunicaciones comerciales y novedades de ImmobilCloud (opcional).",
+    "staging_disclosure": "Render virtual — imagen generada, no es una fotografía real",
     "legal_cookie_title": "Cookies",
     "legal_cookie_body": [
       "Usamos cookies técnicas esenciales para autenticación (sesiones httpOnly), protección CSRF y preferencia de idioma.",

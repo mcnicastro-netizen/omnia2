@@ -15,9 +15,16 @@ export default function SecuritySettingsPanel({ variant = "crm" }) {
   const [backupCodes, setBackupCodes] = useState(null);
   const [eraseConfirm, setEraseConfirm] = useState("");
   const [erasePassword, setErasePassword] = useState("");
+  const [profileName, setProfileName] = useState(user?.name || "");
+  const [marketingOptIn, setMarketingOptIn] = useState(Boolean(user?.marketing_consent));
   const [msg, setMsg] = useState("");
   const [err, setErr] = useState("");
   const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    setProfileName(user?.name || "");
+    setMarketingOptIn(Boolean(user?.marketing_consent));
+  }, [user?.name, user?.marketing_consent]);
 
   const load = async () => {
     try {
@@ -112,9 +119,86 @@ export default function SecuritySettingsPanel({ variant = "crm" }) {
       <div>
         <h2 className="text-xs uppercase tracking-widest text-stone-500">Sicurezza & privacy</h2>
         <p className="text-sm text-stone-600 mt-1">
-          Login a due fattori e cancellazione dei tuoi dati personali (GDPR).
+          Profilo, export dati, login a due fattori e cancellazione account (GDPR).
         </p>
       </div>
+
+      {(variant === "cloud" || variant === "crm") && (
+        <div className="space-y-3" data-testid="profile-rectify-block">
+          <h3 className="text-sm font-medium text-stone-900">I tuoi dati</h3>
+          <label className="block max-w-md">
+            <span className="text-xs uppercase tracking-widest text-stone-500">Nome</span>
+            <input
+              data-testid="profile-name"
+              value={profileName}
+              onChange={(e) => setProfileName(e.target.value)}
+              className="mt-1 w-full px-3 py-2 border border-stone-300 rounded-md text-sm"
+            />
+          </label>
+          <label className="flex items-start gap-2 text-xs text-stone-600 max-w-md">
+            <input
+              type="checkbox"
+              data-testid="profile-marketing"
+              checked={marketingOptIn}
+              onChange={(e) => setMarketingOptIn(e.target.checked)}
+            />
+            <span>Acconsento a comunicazioni commerciali (puoi revocare in qualsiasi momento).</span>
+          </label>
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              data-testid="profile-save-btn"
+              disabled={busy || !profileName.trim()}
+              onClick={async () => {
+                setErr("");
+                setBusy(true);
+                try {
+                  await api.patch("/auth/me", {
+                    name: profileName.trim(),
+                    marketing_consent: marketingOptIn,
+                  });
+                  setMsg("Profilo aggiornato.");
+                  await refresh();
+                } catch (e) {
+                  setErr(formatApiErrorDetail(e?.response?.data?.detail) || "Salvataggio non riuscito");
+                } finally {
+                  setBusy(false);
+                }
+              }}
+              className="px-4 py-2 bg-stone-900 text-white text-xs uppercase tracking-widest rounded-md disabled:opacity-50"
+            >
+              Salva profilo
+            </button>
+            <button
+              type="button"
+              data-testid="export-data-btn"
+              disabled={busy}
+              onClick={async () => {
+                setErr("");
+                setBusy(true);
+                try {
+                  const { data } = await api.get("/auth/me/export");
+                  const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+                  const url = URL.createObjectURL(blob);
+                  const a = document.createElement("a");
+                  a.href = url;
+                  a.download = `omnia-export-${(user?.id || "me").slice(0, 8)}.json`;
+                  a.click();
+                  URL.revokeObjectURL(url);
+                  setMsg("Export scaricato.");
+                } catch (e) {
+                  setErr(formatApiErrorDetail(e?.response?.data?.detail) || "Export non riuscito");
+                } finally {
+                  setBusy(false);
+                }
+              }}
+              className="px-4 py-2 border border-stone-300 text-xs uppercase tracking-widest rounded-md hover:bg-stone-50 disabled:opacity-50"
+            >
+              Scarica i miei dati
+            </button>
+          </div>
+        </div>
+      )}
 
       {err && (
         <p data-testid="security-error" className="text-sm text-rose-700 bg-rose-50 border border-rose-200 rounded px-3 py-2">

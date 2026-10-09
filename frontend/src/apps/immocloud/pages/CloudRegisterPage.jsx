@@ -23,6 +23,8 @@ export default function CloudRegisterPage() {
     intents: presetIntent ? [presetIntent] : [],
     notification_channels: ["email"],
     gdpr_consent: false,
+    age_confirmed: false,
+    marketing_consent: false,
   });
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
@@ -160,6 +162,13 @@ export default function CloudRegisterPage() {
           </Field>
 
           <label className="flex items-start gap-2 text-xs text-stone-600">
+            <input type="checkbox" checked={form.age_confirmed}
+              onChange={(e) => setForm({ ...form, age_confirmed: e.target.checked })}
+              data-testid="reg-age" required />
+            <span>{t("cloud.reg_age_text", "Dichiaro di avere almeno 18 anni.")}</span>
+          </label>
+
+          <label className="flex items-start gap-2 text-xs text-stone-600">
             <input type="checkbox" checked={form.gdpr_consent}
               onChange={(e) => setForm({ ...form, gdpr_consent: e.target.checked })}
               data-testid="reg-gdpr" required />
@@ -171,7 +180,14 @@ export default function CloudRegisterPage() {
             </span>
           </label>
 
-          <button type="submit" disabled={busy || form.intents.length === 0 || !form.gdpr_consent}
+          <label className="flex items-start gap-2 text-xs text-stone-600">
+            <input type="checkbox" checked={form.marketing_consent}
+              onChange={(e) => setForm({ ...form, marketing_consent: e.target.checked })}
+              data-testid="reg-marketing" />
+            <span>{t("cloud.reg_marketing_text", "Acconsento a ricevere comunicazioni commerciali e novità su ImmobilCloud (facoltativo).")}</span>
+          </label>
+
+          <button type="submit" disabled={busy || form.intents.length === 0 || !form.gdpr_consent || !form.age_confirmed}
             data-testid="reg-submit-btn"
             className="w-full bg-[#0B1E3F] text-white px-6 py-3 rounded-lg font-medium text-sm uppercase tracking-widest hover:bg-[#C19A6B] transition disabled:opacity-50">
             {busy ? t("cloud.reg_submitting") : t("cloud.reg_submit_btn")}

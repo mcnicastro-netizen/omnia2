@@ -47,6 +47,12 @@ logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
 )
+try:
+    from shared.privacy.log_redact import install_pii_redaction  # noqa: E402
+
+    install_pii_redaction()
+except Exception:
+    pass
 logger = logging.getLogger("omnia")
 
 

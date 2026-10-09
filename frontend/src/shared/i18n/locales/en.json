@@ -861,11 +861,17 @@
     "legal_privacy_title": "Privacy notice",
     "legal_privacy_body": [
       "Controller: OMNIA Real Estate Ecosystem (ImmobilCloud).",
-      "We process registration data (name, email, intents) and data needed to deliver requested services (listings, alerts, land-registry extracts, valuations, mortgages, HAL Legal), plus technical session/security data.",
-      "Legal bases: contract/service performance and, where required, consent (e.g. marketing/alerts). We retain data for as long as needed for the service and legal duties.",
-      "Rights: access, rectification, erasure, restriction, objection, portability — email privacy@omniaecosystem.it. You may also lodge a complaint with the Italian Data Protection Authority.",
-      "This is the ImmobilCloud portal summary notice; B2B contracts/DPAs are separate."
+      "We process registration data (name, email, intents, 18+ confirmation, optional marketing consent) and data needed to deliver requested services (listings, alerts, land-registry extracts, valuations, mortgages, HAL Legal), plus technical session/security data.",
+      "Legal bases: contract/service performance; consent for marketing (optional) and where otherwise required. We retain data as needed for the service and legal duties, with automatic retention on consent logs, Legal audit and B2C purchase ledger.",
+      "Processors / technical providers (may process data on our behalf): Stripe (payments), Resend (transactional email), OpenAPI.it (land-registry extracts), Google Gemini (HAL Legal / AI assistants), Tavily (legal source search), fal.ai / Kling (virtual staging and micro-tour). List may be updated operationally.",
+      "Extra-EU transfers: some providers (e.g. Google, Stripe, fal.ai) may process data in the USA or other countries. Where required we rely on applicable safeguards (e.g. SCCs / provider mechanisms). Contact us for the current details.",
+      "Artificial intelligence: we do not use your chat content, documents or listings to train third-party models. AI providers are used in service/inference mode. HAL Legal answers and staging renders are machine-generated and remain indicative.",
+      "Rights: access and export (account → Download my data), rectification, erasure, restriction, objection, portability — also privacy@omniaecosystem.it. You may lodge a complaint with the Italian DPA.",
+      "This is the ImmobilCloud portal summary notice; it is not legal advice. B2B contracts/DPAs are separate."
     ],
+    "reg_age_text": "I confirm that I am at least 18 years old.",
+    "reg_marketing_text": "I agree to receive commercial emails and ImmobilCloud updates (optional).",
+    "staging_disclosure": "Virtual render — AI-generated image, not a real photograph",
     "legal_cookie_title": "Cookies",
     "legal_cookie_body": [
       "We use essential technical cookies for authentication (httpOnly sessions), CSRF protection and language preferences. These are required for the site to work.",

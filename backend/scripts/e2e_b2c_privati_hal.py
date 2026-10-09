@@ -101,7 +101,7 @@ async def _one_user_inner(i: int, row: Dict[str, Any]) -> Dict[str, Any]:
                 "intents": ["sell", "get_alerts"],
                 "notification_channels": ["email"],
                 "lang": "it",
-                "gdpr_consent": True,
+                "gdpr_consent": True, "age_confirmed": True,
             },
         )
         row["register"] = {"ok": r.status_code in (200, 201), "status": r.status_code, "email": email}

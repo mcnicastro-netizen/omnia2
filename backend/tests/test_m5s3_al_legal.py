@@ -73,7 +73,7 @@ def b2c_session() -> requests.Session:
         "intents": ["sell"],
         "notification_channels": ["email"],
         "lang": "it",
-        "gdpr_consent": True,
+        "gdpr_consent": True, "age_confirmed": True,
     }
     # B2C register is at /api/cloud/auth/register (immocloud cloud_auth)
     r = s.post(f"{API}/cloud/auth/register", json=payload, timeout=30)

@@ -1120,11 +1120,17 @@
     "legal_privacy_title": "Informativa privacy",
     "legal_privacy_body": [
       "Titolare del trattamento: OMNIA Real Estate Ecosystem (ImmobilCloud).",
-      "Trattiamo i dati che ci fornisci in registrazione (nome, email, intenzioni d'uso) e quelli necessari a erogare i servizi richiesti (annunci, alert, visure, valutazioni, mutui, HAL Legal), nonché dati tecnici di sessione e sicurezza.",
-      "Base giuridica: esecuzione del contratto/servizio e, dove previsto, consenso (es. marketing/alert). Conserviamo i dati per il tempo necessario al servizio e agli obblighi di legge.",
-      "Diritti: accesso, rettifica, cancellazione, limitazione, opposizione, portabilità — scrivi a privacy@omniaecosystem.it. Hai anche diritto di reclamo al Garante Privacy.",
-      "Questa pagina è l'informativa di sintesi del portale ImmobilCloud; documenti contrattuali e DPA B2B restano regolati separatamente."
+      "Trattiamo i dati che ci fornisci in registrazione (nome, email, intenzioni d'uso, conferma età 18+, eventuale consenso marketing) e quelli necessari a erogare i servizi richiesti (annunci, alert, visure, valutazioni, mutui, HAL Legal), nonché dati tecnici di sessione e sicurezza.",
+      "Base giuridica: esecuzione del contratto/servizio; consenso per marketing (facoltativo) e dove altrimenti richiesto. Conserviamo i dati per il tempo necessario al servizio e agli obblighi di legge, con policy di retention automatica su log di consenso, audit Legal e ledger acquisti B2C.",
+      "Sub-responsabili / fornitori tecnici (possono trattare dati per nostro conto): Stripe (pagamenti), Resend (email transazionali), OpenAPI.it (visure catastali), Google Gemini (HAL Legal / assistenti AI), Tavily (ricerca fonti normative), fal.ai / Kling (virtual staging e micro-tour). Elenco soggetto ad aggiornamento operativo.",
+      "Trasferimenti extra-UE: alcuni fornitori (es. Google, Stripe, fal.ai) possono trattare dati negli USA o in altri Paesi. Dove richiesto usiamo le garanzie previste dalla normativa (es. clausole contrattuali standard / meccanismi del fornitore). Contattaci per dettagli aggiornati.",
+      "Intelligenza artificiale: non usiamo i contenuti delle tue chat, documenti o annunci per addestrare modelli di terze parti. I provider AI sono usati in modalità servizio (inferenza). Le risposte HAL Legal e i render di staging sono generati automaticamente e restano orientativi.",
+      "Diritti: accesso ed export (area account → Scarica i miei dati), rettifica, cancellazione, limitazione, opposizione, portabilità — anche via privacy@omniaecosystem.it. Hai diritto di reclamo al Garante Privacy.",
+      "Questa pagina è l'informativa di sintesi del portale ImmobilCloud; non sostituisce un parere legale. Documenti contrattuali e DPA B2B restano regolati separatamente."
     ],
+    "reg_age_text": "Dichiaro di avere almeno 18 anni.",
+    "reg_marketing_text": "Acconsento a ricevere comunicazioni commerciali e novità su ImmobilCloud (facoltativo).",
+    "staging_disclosure": "Render virtuale — immagine generata, non fotografia reale",
     "legal_cookie_title": "Cookie",
     "legal_cookie_body": [
       "Usiamo cookie tecnici essenziali per autenticazione (sessioni httpOnly), protezione CSRF e preferenze di lingua. Questi cookie sono necessari al funzionamento del sito.",

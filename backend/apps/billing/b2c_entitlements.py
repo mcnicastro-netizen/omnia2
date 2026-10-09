@@ -33,6 +33,9 @@ logger = logging.getLogger("omnia.b2c_entitlements")
 
 BASE_TIER_COOLDOWN_DAYS = 365
 UNI_ENTITLEMENT_TTL_HOURS = 24
+# P-041 — ledger retention (pending short; paid fiscal window)
+B2C_PURCHASE_PENDING_TTL_DAYS = 90
+B2C_PURCHASE_PAID_TTL_DAYS = 2555  # ~7 years
 
 
 def hash_valuation_payload(payload: Dict[str, Any]) -> str:
@@ -137,6 +140,8 @@ async def record_uni_purchase(
         "status": status,
         "created_at": now.isoformat(),
         "expires_at": None,  # populated only when status transitions to paid
+        # P-041 — Mongo TTL field (BSON datetime); pending abandoned checkout
+        "expire_at": now + timedelta(days=B2C_PURCHASE_PENDING_TTL_DAYS),
     }
     await db.b2c_purchases.insert_one(doc)
     return doc_id
@@ -183,6 +188,8 @@ async def mark_uni_purchase_paid(
         "status": "paid",
         "paid_at": now.isoformat(),
         "expires_at": expires.isoformat(),
+        # P-041 — extend ledger retention after payment
+        "expire_at": now + timedelta(days=B2C_PURCHASE_PAID_TTL_DAYS),
     }
     if resolved_amount is not None:
         update["amount_eur"] = round(float(resolved_amount), 2)

@@ -33,7 +33,7 @@ def b2c_session():
         "password": B2C_PASSWORD,
         "name": "B2C SavedTest",
         "lang": "it",
-        "gdpr_consent": True,
+        "gdpr_consent": True, "age_confirmed": True,
         "intents": ["get_alerts"],
     }
     r = s.post(f"{API}/cloud/auth/register", json=payload)

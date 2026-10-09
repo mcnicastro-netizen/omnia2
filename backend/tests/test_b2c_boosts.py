@@ -56,7 +56,7 @@ def b2c_session(mongo):
             "name": "B2C Boost Test",
             "intents": ["sell"],
             "notification_channels": ["email"],
-            "gdpr_consent": True,
+            "gdpr_consent": True, "age_confirmed": True,
         },
         timeout=15,
     )

@@ -713,6 +713,8 @@ async def public_property_detail(pid: str, request: Request):
                 "url": f"/api/public/property/{pid}/photo/{i}",
                 "is_cover": ph.get("is_cover", False),
                 "caption": ph.get("caption"),
+                # P-043 — disclosure staging / render AI sulla scheda pubblica
+                "is_virtual_staging": bool(ph.get("is_virtual_staging")),
             }
             for i, ph in enumerate(photos)
         ],

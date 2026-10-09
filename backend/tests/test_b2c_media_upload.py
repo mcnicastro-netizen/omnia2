@@ -27,7 +27,7 @@ def b2c():
     s = requests.Session()
     r = s.post(f"{API}/cloud/auth/register", json={
         "email": B2C_EMAIL, "password": B2C_PASSWORD, "name": "Media Tester",
-        "intents": ["sell"], "lang": "it", "gdpr_consent": True,
+        "intents": ["sell"], "lang": "it", "gdpr_consent": True, "age_confirmed": True,
     })
     assert r.status_code in (200, 201), f"register failed: {r.status_code} {r.text}"
     return s
