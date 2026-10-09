@@ -22,6 +22,7 @@ TYPE_MATCH_NEW = "match_new"  # reserved (matches are on-read; no emitter v1)
 TYPE_FAVORITE_DROP = "favorite_price_drop"
 TYPE_FAVORITE_ENDED = "favorite_listing_ended"  # D-093 / A-030 sold|rented|withdrawn
 TYPE_LISTING_INQUIRY = "listing_inquiry"  # B2C private seller contact form
+TYPE_LISTING_MODERATION = "listing_moderation"  # P-057 UGC approve/reject → owner
 
 KNOWN_TYPES = (
     TYPE_LEAD_NEW,
@@ -31,6 +32,7 @@ KNOWN_TYPES = (
     TYPE_FAVORITE_DROP,
     TYPE_FAVORITE_ENDED,
     TYPE_LISTING_INQUIRY,
+    TYPE_LISTING_MODERATION,
 )
 
 

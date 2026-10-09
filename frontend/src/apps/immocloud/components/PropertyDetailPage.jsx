@@ -85,6 +85,15 @@ export default function PropertyDetailPage() {
       .finally(() => setLoading(false));
   }, [pid]);
 
+  // P-055 — tab title per-property (SSR/OG handled in preview-server)
+  useEffect(() => {
+    if (!prop) return;
+    const prev = document.title;
+    const title = (prop.title || prop.city || "Immobile").toString().slice(0, 80);
+    document.title = `${title} · ImmobilCloud`;
+    return () => { document.title = prev; };
+  }, [prop]);
+
   useEffect(() => {
     if (!pid) return;
     api.get(`/cloud/videos/by-property/${pid}`)

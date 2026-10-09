@@ -116,14 +116,34 @@ def main() -> int:
         current = (ep.get("url") or "").rstrip("/")
         if current == target:
             print("[sync-stripe-webhook] OK already pointed at current tunnel")
+            _warn_vault_whsec_mismatch()
             return 0
 
         stripe.WebhookEndpoint.modify(ep["id"], url=target, description=ENDPOINT_DESC)
         print("[sync-stripe-webhook] UPDATED endpoint url → current tunnel")
+        _warn_vault_whsec_mismatch()
         return 0
     except Exception as e:
         print(f"[sync-stripe-webhook] mutate failed: {type(e).__name__}: {str(e)[:120]}")
         return 1
+
+
+def _warn_vault_whsec_mismatch() -> None:
+    """P-026 — vault inject may lag behind .env secret written on CREATE."""
+    vault = (os.environ.get("STRIPE_WEBHOOK_SECRET") or "").strip()
+    env_path = Path(__file__).resolve().parents[1] / "backend" / ".env"
+    disk = ""
+    if env_path.is_file():
+        for line in env_path.read_text(encoding="utf-8").splitlines():
+            if line.startswith("STRIPE_WEBHOOK_SECRET="):
+                disk = line.split("=", 1)[1].strip().strip('"').strip("'")
+                break
+    if vault and disk and vault != disk:
+        print(
+            "[sync-stripe-webhook] WARN P-026: process STRIPE_WEBHOOK_SECRET "
+            f"len={len(vault)} ≠ .env len={len(disk)} — prefer .env / restart API; "
+            "Founder: update Cursor vault to endpoint auto-sync whsec"
+        )
 
 
 if __name__ == "__main__":

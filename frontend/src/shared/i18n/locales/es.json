@@ -967,7 +967,17 @@
       "stats_leads": "contactos recibidos",
       "stats_views_30": "vistas últimos 30 días",
       "stats_rate": "tasa de contacto (30d)",
-      "stats_note": "Visualización = apertura de la ficha. Contacto = mensaje enviado. No son impresiones del feed de búsqueda."
+      "stats_note": "Visualización = apertura de la ficha. Contacto = mensaje enviado. No son impresiones del feed de búsqueda.",
+      "staging_title": "Virtual Staging",
+      "staging_subtitle": "Mejora las fotos con IA (pago con tarjeta).",
+      "staging_cta": "Generar staging",
+      "staging_checkout_error": "No se pudo iniciar el pago del staging.",
+      "staging_need_listing": "Guarda el anuncio antes de pedir el staging.",
+      "staging_processing": "Generando la imagen…",
+      "staging_done": "Staging listo",
+      "staging_failed": "El staging ha fallado. Inténtalo de nuevo.",
+      "staging_payment_pending": "Esperando confirmación del pago…",
+      "staging_timeout": "Tiempo de espera agotado. Recarga la página."
     },
     "save_search": {
       "cta": "Guardar esta búsqueda",
@@ -995,7 +1005,39 @@
       "active": "Activa",
       "confirm_delete": "¿Eliminar esta búsqueda guardada?"
     },
-    "nav_mutui": "Hipotecas"
+    "nav_mutui": "Hipotecas",
+    "nav_visura": "Visura",
+    "visura": {
+      "eyebrow": "ImmobilCloud · Visura",
+      "title": "Nota catastral",
+      "subtitle": "Solicita el PDF oficial y paga con tarjeta. Sin créditos — solo Stripe.",
+      "back": "← Volver al portal",
+      "anon": "Inicia sesión o regístrate en ImmobilCloud para comprar la nota catastral.",
+      "register": "Registrarse",
+      "order_label": "Tu pedido",
+      "payment": "Pago",
+      "status": "Visura",
+      "download_pdf": "Descargar PDF",
+      "preparing": "Preparando el documento…",
+      "form_legend": "Datos catastrales",
+      "f_provincia": "Provincia",
+      "f_comune": "Municipio",
+      "f_foglio": "Hoja",
+      "f_particella": "Parcela",
+      "f_subalterno": "Subalterno",
+      "f_catasto": "Catastro",
+      "tipo_f": "Edificios",
+      "tipo_t": "Terrenos",
+      "disclaimer": "Tras el pago recibes el PDF oficial. Documento informativo — no sustituye al técnico.",
+      "redirecting": "Redirigiendo…",
+      "pay_cta": "Pagar € {{price}} con tarjeta",
+      "stripe_off": "Los pagos con tarjeta aún no están activos en este entorno.",
+      "err_order_status": "No se pudo leer el estado del pedido",
+      "err_required_fields": "Completa provincia, municipio, hoja y parcela",
+      "err_checkout": "Checkout no disponible",
+      "err_pay_start": "No se pudo iniciar el pago",
+      "err_download": "Error al descargar el PDF"
+    }
   },
   "properties": {
     "field_rooms": "Habitaciones / Estancias",
@@ -1356,7 +1398,12 @@
     "nav_back": "Volver al panel de control",
     "history_title": "Tus conversaciones",
     "no_history": "Aún no hay conversaciones.",
-    "new_chat": "Nueva conversación"
+    "new_chat": "Nueva conversación",
+    "err_busy": "El servicio de IA está temporalmente saturado. Inténtalo en un minuto.",
+    "err_unavailable": "El servicio de IA no está disponible. Inténtalo más tarde.",
+    "buy_credit": "Comprar 1 pregunta · €1",
+    "err_payment_required": "Pago necesario para continuar.",
+    "err_checkout": "No se pudo iniciar el checkout."
   },
   "help": {
     "title": "Centro de ayuda",
@@ -1460,5 +1507,17 @@
     "load_error": "No se puede cargar la Papelera.",
     "restore_error": "No se pudo restaurar.",
     "purge_error": "No se pudo eliminar definitivamente."
+  },
+  "checkout": {
+    "success_title": "Pago recibido",
+    "success_paid": "El pago se ha completado.",
+    "success_paid_visura": "Pago ok — preparando la nota catastral.",
+    "success_pending": "Confirmando el pago…",
+    "back_to_valuator": "Volver al valorador",
+    "open_visura": "Abrir Visura",
+    "open_legal": "Abrir HAL Legal",
+    "cancel_title": "Pago cancelado",
+    "cancel_body": "No se ha cobrado nada. Puedes intentarlo de nuevo.",
+    "try_base": "Volver"
   }
 }

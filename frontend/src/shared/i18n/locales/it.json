@@ -1275,7 +1275,39 @@
       "active": "Attiva",
       "confirm_delete": "Eliminare questa ricerca salvata?"
     },
-    "nav_mutui": "Mutui"
+    "nav_mutui": "Mutui",
+    "nav_visura": "Visura",
+    "visura": {
+      "eyebrow": "ImmobilCloud · Visura",
+      "title": "Visura catastale",
+      "subtitle": "Richiedi il PDF ufficiale e paga con carta. Nessun credito — solo Stripe.",
+      "back": "← Torna al portale",
+      "anon": "Accedi o registrati su ImmobilCloud per acquistare la visura.",
+      "register": "Registrati",
+      "order_label": "Il tuo ordine",
+      "payment": "Pagamento",
+      "status": "Visura",
+      "download_pdf": "Scarica PDF",
+      "preparing": "Stiamo preparando il documento…",
+      "form_legend": "Dati catastali",
+      "f_provincia": "Provincia",
+      "f_comune": "Comune",
+      "f_foglio": "Foglio",
+      "f_particella": "Particella",
+      "f_subalterno": "Subalterno",
+      "f_catasto": "Catasto",
+      "tipo_f": "Fabbricati",
+      "tipo_t": "Terreni",
+      "disclaimer": "Dopo il pagamento ricevi il PDF ufficiale. Documento informativo — non sostituisce la consulenza di un tecnico.",
+      "redirecting": "Reindirizzamento…",
+      "pay_cta": "Paga € {{price}} con carta",
+      "stripe_off": "Pagamenti carta non ancora attivi su questo ambiente.",
+      "err_order_status": "Impossibile leggere lo stato dell'ordine",
+      "err_required_fields": "Compila provincia, comune, foglio e particella",
+      "err_checkout": "Checkout non disponibile",
+      "err_pay_start": "Pagamento non avviato",
+      "err_download": "Download PDF non riuscito"
+    }
   },
   "valuator": {
     "eyebrow": "Valutatore GIS · Gratis",
@@ -1550,5 +1582,17 @@
     "load_error": "Non riesco a caricare il Cestino.",
     "restore_error": "Ripristino non riuscito.",
     "purge_error": "Eliminazione definitiva non riuscita."
+  },
+  "checkout": {
+    "success_title": "Pagamento ricevuto",
+    "success_paid": "Il pagamento è andato a buon fine.",
+    "success_paid_visura": "Pagamento ok — stiamo preparando la visura.",
+    "success_pending": "Stiamo confermando il pagamento…",
+    "back_to_valuator": "Torna al valutatore",
+    "open_visura": "Apri Visura",
+    "open_legal": "Apri HAL Legal",
+    "cancel_title": "Pagamento annullato",
+    "cancel_body": "Nessun addebito. Puoi riprovare quando vuoi.",
+    "try_base": "Torna indietro"
   }
 }

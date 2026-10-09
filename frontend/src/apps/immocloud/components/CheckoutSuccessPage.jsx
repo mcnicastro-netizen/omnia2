@@ -51,11 +51,11 @@ export default function CheckoutSuccessPage() {
         <div className="mt-6 flex flex-wrap gap-3 justify-center">
           {status?.product_key === "b2c_visura_catastale" ? (
             <Link to={`/${lang}/cloud/visura`} className="px-4 py-2 bg-stone-900 text-white rounded" data-testid="checkout-success-visura">
-              Apri Visura
+              {t("checkout.open_visura", "Apri Visura")}
             </Link>
           ) : status?.product_key === "b2c_hal_legal_query" ? (
             <Link to={`/${lang}/legal`} className="px-4 py-2 bg-stone-900 text-white rounded" data-testid="checkout-success-legal">
-              Apri HAL Legal
+              {t("checkout.open_legal", "Apri HAL Legal")}
             </Link>
           ) : (
             <Link to={`/${lang}/cloud/valutatore?tier=uni`} className="px-4 py-2 bg-stone-900 text-white rounded" data-testid="checkout-success-back">

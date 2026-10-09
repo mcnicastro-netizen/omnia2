@@ -18,10 +18,9 @@ const empty = {
 };
 
 export default function VisuraPage() {
-  const { i18n } = useTranslation();
+  const { t, i18n } = useTranslation();
   const lang = (i18n.language || "it").slice(0, 2);
   const [params] = useSearchParams();
-  // Prefer query (Stripe return), else sessionStorage (P-015 — avoid keeping sid in shared links)
   const sessionId = params.get("session_id") || (() => {
     try { return sessionStorage.getItem("omnia_b2c_checkout_sid") || ""; }
     catch { return ""; }
@@ -45,10 +44,10 @@ export default function VisuraPage() {
       setOrder(r.data);
       return r.data;
     } catch (e) {
-      setErr(e.response?.data?.detail || "Impossibile leggere lo stato dell'ordine");
+      setErr(e.response?.data?.detail || t("cloud.visura.err_order_status"));
       return null;
     }
-  }, []);
+  }, [t]);
 
   useEffect(() => {
     if (!sessionId || !user) return;
@@ -76,7 +75,7 @@ export default function VisuraPage() {
       return;
     }
     if (!form.provincia.trim() || !form.comune.trim() || !form.foglio.trim() || !form.particella.trim()) {
-      setErr("Compila provincia, comune, foglio e particella");
+      setErr(t("cloud.visura.err_required_fields"));
       return;
     }
     setBusy(true);
@@ -94,10 +93,10 @@ export default function VisuraPage() {
         window.location.href = r.data.checkout_url;
         return;
       }
-      setErr("Checkout non disponibile");
+      setErr(t("cloud.visura.err_checkout"));
     } catch (ex) {
       const d = ex.response?.data?.detail;
-      setErr(typeof d === "string" ? d : d?.message || "Pagamento non avviato");
+      setErr(typeof d === "string" ? d : d?.message || t("cloud.visura.err_pay_start"));
     } finally {
       setBusy(false);
     }
@@ -116,43 +115,44 @@ export default function VisuraPage() {
       a.click();
       window.URL.revokeObjectURL(url);
     } catch (ex) {
-      setErr(ex.response?.data?.detail || "Download PDF non riuscito");
+      setErr(ex.response?.data?.detail || t("cloud.visura.err_download"));
     } finally {
       setBusy(false);
     }
   };
 
   const price = catalog?.price_eur ?? 4.9;
+  const priceLabel = Number(price).toFixed(2).replace(".", ",");
 
   return (
     <div data-testid="cloud-visura-page">
       <CloudPageHero
-        eyebrow="ImmobilCloud · Visura"
-        title="Visura catastale"
-        subtitle="Richiedi il PDF ufficiale e paga con carta. Nessun credito — solo Stripe."
+        eyebrow={t("cloud.visura.eyebrow")}
+        title={t("cloud.visura.title")}
+        subtitle={t("cloud.visura.subtitle")}
         image="/cloud/intent-value.jpg"
         compact
       />
       <div className="max-w-2xl mx-auto px-5 sm:px-8 py-10">
-        <h1 className="sr-only" data-testid="cloud-visura-title">Visura catastale</h1>
+        <h1 className="sr-only" data-testid="cloud-visura-title">{t("cloud.visura.title")}</h1>
         <Link to={`/${lang}/cloud`} className="text-xs uppercase tracking-widest text-stone-500 hover:text-[#0B1E3F]">
-          ← Torna al portale
+          {t("cloud.visura.back")}
         </Link>
 
         {!user && (
           <div className="mt-6 p-4 rounded-2xl border border-amber-200 bg-amber-50 text-sm text-amber-900" data-testid="cloud-visura-anon">
-            Accedi o registrati su ImmobilCloud per acquistare la visura.
-            <Link to={`/${lang}/cloud/register`} className="ml-2 underline font-medium">Registrati</Link>
+            {t("cloud.visura.anon")}
+            <Link to={`/${lang}/cloud/register`} className="ml-2 underline font-medium">{t("cloud.visura.register")}</Link>
           </div>
         )}
 
         {sessionId && (
           <div className="mt-6 border border-stone-200 bg-white rounded-2xl p-5 space-y-3" data-testid="cloud-visura-order">
-            <p className="text-[10px] uppercase tracking-widest text-[#C19A6B]">Il tuo ordine</p>
+            <p className="text-[10px] uppercase tracking-widest text-[#C19A6B]">{t("cloud.visura.order_label")}</p>
             <p className="text-sm text-stone-800">
-              Pagamento: <strong>{order?.payment_status || "…"}</strong>
+              {t("cloud.visura.payment")}: <strong>{order?.payment_status || "…"}</strong>
               {" · "}
-              Visura: <strong>{order?.status || "…"}</strong>
+              {t("cloud.visura.status")}: <strong>{order?.status || "…"}</strong>
             </p>
             {order?.download_ready && (
               <button
@@ -162,11 +162,11 @@ export default function VisuraPage() {
                 data-testid="cloud-visura-download"
                 className="bg-[#0B1E3F] text-white text-xs uppercase tracking-widest px-4 py-2 rounded-lg disabled:bg-stone-300 hover:bg-[#C19A6B]"
               >
-                Scarica PDF
+                {t("cloud.visura.download_pdf")}
               </button>
             )}
             {order?.payment_status === "paid" && !order?.download_ready && order?.status !== "failed" && (
-              <p className="text-xs text-stone-500">Stiamo preparando il documento…</p>
+              <p className="text-xs text-stone-500">{t("cloud.visura.preparing")}</p>
             )}
           </div>
         )}
@@ -174,59 +174,57 @@ export default function VisuraPage() {
         {!sessionId && (
           <form onSubmit={pay} className="mt-8 border border-stone-200 bg-white rounded-2xl p-6 space-y-4" data-testid="cloud-visura-form">
             <div className="flex items-baseline justify-between gap-3">
-              <p className="text-sm font-medium text-stone-800">Dati catastali</p>
+              <p className="text-sm font-medium text-stone-800">{t("cloud.visura.form_legend")}</p>
               <p className="text-lg text-[#0B1E3F]" data-testid="cloud-visura-price">
-                € {Number(price).toFixed(2).replace(".", ",")}
+                € {priceLabel}
               </p>
             </div>
             <div className="grid grid-cols-2 gap-3">
               <label className="text-xs text-stone-600 space-y-1">
-                <span>Provincia</span>
+                <span>{t("cloud.visura.f_provincia")}</span>
                 <input className="w-full border border-stone-200 px-2 py-1.5 text-sm" maxLength={2}
                   value={form.provincia} onChange={(e) => setField("provincia", e.target.value)} data-testid="cloud-visura-provincia" />
               </label>
               <label className="text-xs text-stone-600 space-y-1">
-                <span>Comune</span>
+                <span>{t("cloud.visura.f_comune")}</span>
                 <input className="w-full border border-stone-200 px-2 py-1.5 text-sm"
                   value={form.comune} onChange={(e) => setField("comune", e.target.value)} data-testid="cloud-visura-comune" />
               </label>
               <label className="text-xs text-stone-600 space-y-1">
-                <span>Foglio</span>
+                <span>{t("cloud.visura.f_foglio")}</span>
                 <input className="w-full border border-stone-200 px-2 py-1.5 text-sm"
                   value={form.foglio} onChange={(e) => setField("foglio", e.target.value)} data-testid="cloud-visura-foglio" />
               </label>
               <label className="text-xs text-stone-600 space-y-1">
-                <span>Particella</span>
+                <span>{t("cloud.visura.f_particella")}</span>
                 <input className="w-full border border-stone-200 px-2 py-1.5 text-sm"
                   value={form.particella} onChange={(e) => setField("particella", e.target.value)} data-testid="cloud-visura-particella" />
               </label>
               <label className="text-xs text-stone-600 space-y-1">
-                <span>Subalterno</span>
+                <span>{t("cloud.visura.f_subalterno")}</span>
                 <input className="w-full border border-stone-200 px-2 py-1.5 text-sm"
                   value={form.subalterno} onChange={(e) => setField("subalterno", e.target.value)} data-testid="cloud-visura-subalterno" />
               </label>
               <label className="text-xs text-stone-600 space-y-1">
-                <span>Catasto</span>
+                <span>{t("cloud.visura.f_catasto")}</span>
                 <select className="w-full border border-stone-200 px-2 py-1.5 text-sm bg-white"
                   value={form.tipo_catasto} onChange={(e) => setField("tipo_catasto", e.target.value)} data-testid="cloud-visura-tipo">
-                  <option value="F">Fabbricati</option>
-                  <option value="T">Terreni</option>
+                  <option value="F">{t("cloud.visura.tipo_f")}</option>
+                  <option value="T">{t("cloud.visura.tipo_t")}</option>
                 </select>
               </label>
             </div>
-            <p className="text-[11px] text-stone-500">
-              Dopo il pagamento ricevi il PDF ufficiale. Documento informativo — non sostituisce la consulenza di un tecnico.
-            </p>
+            <p className="text-[11px] text-stone-500">{t("cloud.visura.disclaimer")}</p>
             <button
               type="submit"
               disabled={busy || catalog?.stripe_enabled === false}
               data-testid="cloud-visura-pay-btn"
               className="w-full sm:w-auto bg-[#0B1E3F] hover:bg-[#16305a] disabled:bg-stone-300 text-white text-xs uppercase tracking-widest px-5 py-2.5"
             >
-              {busy ? "Reindirizzamento…" : `Paga € ${Number(price).toFixed(2).replace(".", ",")} con carta`}
+              {busy ? t("cloud.visura.redirecting") : t("cloud.visura.pay_cta", { price: priceLabel })}
             </button>
             {catalog && !catalog.stripe_enabled && (
-              <p className="text-xs text-amber-700">Pagamenti carta non ancora attivi su questo ambiente.</p>
+              <p className="text-xs text-amber-700">{t("cloud.visura.stripe_off")}</p>
             )}
           </form>
         )}

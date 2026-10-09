@@ -65,6 +65,57 @@ function isBot(req) {
   return false;
 }
 
+function isTunnelHost(req) {
+  const host =
+    (req.headers["x-forwarded-host"] || "").split(",")[0].trim() ||
+    req.headers.host ||
+    "";
+  return /\.trycloudflare\.com$/i.test(host) || process.env.OMNIA_ENV === "cloud";
+}
+
+function robotsContent(req) {
+  // P-056 — never index ephemeral tunnel / cloud demo hosts
+  return isTunnelHost(req) ? "noindex, nofollow" : "index, follow";
+}
+
+function propertyIdFromPath(pathName) {
+  const m = String(pathName || "").match(/\/(?:it|en|es)\/cloud\/property\/([^/?#]+)/i);
+  return m ? decodeURIComponent(m[1]) : null;
+}
+
+function fetchPropertyMeta(pid) {
+  return new Promise((resolve) => {
+    if (!pid) return resolve(null);
+    const url = `${API}/api/cloud/property/${encodeURIComponent(pid)}`;
+    const req = http.get(url, { timeout: 2500 }, (res) => {
+      let raw = "";
+      res.on("data", (c) => { raw += c; });
+      res.on("end", () => {
+        if (res.statusCode !== 200) return resolve(null);
+        try {
+          const d = JSON.parse(raw);
+          const title = (d.title || d.city || "Immobile").toString().slice(0, 80);
+          const city = d.city || "";
+          const price = d.price != null ? `€ ${Number(d.price).toLocaleString("it-IT")}` : "";
+          const description = [city, price, d.property_type].filter(Boolean).join(" · ") || title;
+          let image = null;
+          const photos = d.photos || [];
+          if (photos[0]) {
+            const idx = photos.findIndex((x) => x && x.is_cover);
+            const i = idx >= 0 ? idx : 0;
+            image = `${API}/api/public/property/${encodeURIComponent(d.id || pid)}/photo/${i}`;
+          }
+          resolve({ title: `${title} · ImmobilCloud`, description, image });
+        } catch {
+          resolve(null);
+        }
+      });
+    });
+    req.on("error", () => resolve(null));
+    req.on("timeout", () => { req.destroy(); resolve(null); });
+  });
+}
+
 function escapeHtml(s) {
   return String(s || "")
     .replace(/&/g, "&amp;")
@@ -89,7 +140,7 @@ function cloudSnapshotHtml(req) {
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>${escapeHtml(title)}</title>
   <meta name="description" content="${escapeHtml(description)}" />
-  <meta name="robots" content="index, follow" />
+  <meta name="robots" content="${robotsContent(req)}" />
   <link rel="canonical" href="${escapeHtml(url)}" />
   <meta property="og:type" content="website" />
   <meta property="og:site_name" content="ImmobilCloud" />
@@ -360,18 +411,25 @@ function cloudRootInnerHtml(origin) {
   </div>`;
 }
 
-function rewriteSpaHtml(html, req) {
+function rewriteSpaHtml(html, req, propMeta) {
   const origin = publicOrigin(req);
   const url = `${origin}${req.originalUrl || req.path || "/"}`;
-  const title = "ImmobilCloud — La casa giusta, senza farsi raccontare storie";
-  const description =
+  let title = "ImmobilCloud — La casa giusta, senza farsi raccontare storie";
+  let description =
     "Cerca immobili in Italia. Scout ti dice se l'annuncio è completo, se il prezzo ha senso e cosa chiedere — prima della visita.";
-  const image = `${origin}/cloud/hero.jpg`;
+  let image = `${origin}/cloud/hero.jpg`;
+  if (propMeta) {
+    if (propMeta.title) title = propMeta.title;
+    if (propMeta.description) description = propMeta.description;
+    if (propMeta.image) image = propMeta.image;
+  }
+  const robots = robotsContent(req);
 
   let out = html;
   const replacements = [
     [/<title>[^<]*<\/title>/i, `<title>${escapeHtml(title)}</title>`],
     [/<meta name="description" content="[^"]*"\s*\/?>/i, `<meta name="description" content="${escapeHtml(description)}" />`],
+    [/<meta name="robots" content="[^"]*"\s*\/?>/i, `<meta name="robots" content="${escapeHtml(robots)}" />`],
     [/<meta property="og:title" content="[^"]*"\s*\/?>/i, `<meta property="og:title" content="${escapeHtml(title)}" />`],
     [/<meta property="og:description" content="[^"]*"\s*\/?>/i, `<meta property="og:description" content="${escapeHtml(description)}" />`],
     [/<meta property="og:url" content="[^"]*"\s*\/?>/i, `<meta property="og:url" content="${escapeHtml(url)}" />`],
@@ -419,12 +477,18 @@ function extractSpaAssets(indexHtml) {
  * Markup is in the first byte of the response — curl/bots see "casa giusta"
  * without executing JS. SPA bundles still load and React replaces #root.
  */
-function cloudSsrDocument(req, indexHtml) {
+function cloudSsrDocument(req, indexHtml, propMeta) {
   const origin = publicOrigin(req);
-  const title = "ImmobilCloud — La casa giusta, senza farsi raccontare storie";
-  const description =
+  let title = "ImmobilCloud — La casa giusta, senza farsi raccontare storie";
+  let description =
     "Cerca immobili in Italia. Scout ti dice se l'annuncio è completo, se il prezzo ha senso e cosa chiedere — prima della visita.";
-  const image = `${origin}/cloud/hero.jpg`;
+  let image = `${origin}/cloud/hero.jpg`;
+  // P-055 — per-property title/OG when available
+  if (propMeta) {
+    if (propMeta.title) title = propMeta.title;
+    if (propMeta.description) description = propMeta.description;
+    if (propMeta.image) image = propMeta.image;
+  }
   const url = `${origin}${req.originalUrl || req.path || "/it/cloud"}`;
   const assets = extractSpaAssets(indexHtml || "");
   const inner = cloudRootInnerHtml(origin);
@@ -436,7 +500,7 @@ function cloudSsrDocument(req, indexHtml) {
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>${escapeHtml(title)}</title>
   <meta name="description" content="${escapeHtml(description)}" />
-  <meta name="robots" content="index, follow" />
+  <meta name="robots" content="${robotsContent(req)}" />
   <link rel="canonical" href="${escapeHtml(url)}" />
   <link rel="icon" type="image/png" href="/favicon.png" />
   <meta property="og:type" content="website" />
@@ -577,10 +641,16 @@ function sendCloudSsr(req, res) {
   res.setHeader("Connection", "close");
   res.setHeader("Pragma", "no-cache");
   const indexPath = path.join(BUILD, "index.html");
-  fs.readFile(indexPath, "utf8", (err, html) => {
-    const doc = cloudSsrDocument(req, err ? "" : html);
+  const pid = propertyIdFromPath(req.path || req.originalUrl || "");
+  Promise.all([
+    new Promise((resolve) => {
+      fs.readFile(indexPath, "utf8", (err, html) => resolve(err ? "" : html));
+    }),
+    fetchPropertyMeta(pid),
+  ]).then(([html, propMeta]) => {
+    const doc = cloudSsrDocument(req, html, propMeta);
     res.setHeader("Content-Type", "text/html; charset=utf-8");
-    res.setHeader("X-Omnia-Prerender", "ssr-always");
+    res.setHeader("X-Omnia-Prerender", propMeta ? "ssr-property" : "ssr-always");
     res.status(200).send(doc);
   });
 }

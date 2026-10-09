@@ -19,7 +19,7 @@ export default function CloudTopNav() {
     { to: `/${lang}/cloud/search`, testid: "cloud-nav-search", label: t("cloud.nav_search") },
     { to: `/${lang}/cloud/valutatore`, testid: "cloud-nav-valuator", label: t("cloud.nav_valuator") },
     { to: `/${lang}/cloud/mutui`, testid: "cloud-nav-mutui", label: t("cloud.nav_mutui") },
-    { to: `/${lang}/cloud/visura`, testid: "cloud-nav-visura", label: "Visura" },
+    { to: `/${lang}/cloud/visura`, testid: "cloud-nav-visura", label: t("cloud.nav_visura") },
     { to: sellTo, testid: "cloud-nav-sell", label: t("cloud.nav_sell") },
     { to: `/${lang}/legal`, testid: "cloud-nav-legal", label: t("cloud.nav_legal") },
   ];

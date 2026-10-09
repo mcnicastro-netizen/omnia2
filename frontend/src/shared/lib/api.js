@@ -89,6 +89,22 @@ api.interceptors.response.use(
     if (status === 401 && !isAuthPath(url)) {
       window.dispatchEvent(new CustomEvent("omnia:unauthorized"));
     }
+
+    // P-052 — network / gateway down (no spinner forever without signal)
+    const unreachable =
+      !error.response ||
+      status === 502 ||
+      status === 503 ||
+      status === 504 ||
+      error.code === "ECONNABORTED" ||
+      error.message === "Network Error";
+    if (unreachable && typeof window !== "undefined") {
+      window.dispatchEvent(
+        new CustomEvent("omnia:api-unreachable", {
+          detail: { status: status || null, url, message: error?.message },
+        }),
+      );
+    }
     return Promise.reject(error);
   }
 );
