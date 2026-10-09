@@ -6,7 +6,7 @@
     {
       "file": "00-api-codice.yaml",
       "voices": 32,
-      "md5": "2c4460ece25976a42b1f2dc9013b34a0"
+      "md5": "dcb36806fc44b71c317179e24499797f"
     },
     {
       "file": "01-primo-accesso.yaml",
@@ -151,7 +151,7 @@
       "title": "Corpus codice/API",
       "yaml": "00-api-codice.yaml",
       "voices": 32,
-      "md5": "2c4460ece25976a42b1f2dc9013b34a0"
+      "md5": "dcb36806fc44b71c317179e24499797f"
     },
     {
       "id": 22,

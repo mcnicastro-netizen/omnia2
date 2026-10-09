@@ -285,7 +285,7 @@ Backup: `POST /api/app/ops/backup/run` (se health ≠ OK).
 Fail Visura post-pagamento → `ops_alerts` kind `openapi_visura`.
 
 **Audit Portale D-118** (9-Ott): **analisi + residuo codice CHIUSI** · fascicolo `OMNIA_PORTALE_AUDIT_FASCICOLO.md`.  
-Residui: P-021 Google opz. · P-026 vault whsec MITIGATO. Prossimo: `merge main` su ordine Founder.  
+Residui: P-021 Google opz. · P-026 vault whsec MITIGATO. **MERGED su main** (PR #12).  
 Post-test: **A-038** (Invoice Stripe + dati fiscali — solo con «vai»).  
 HAL: `api.founder-ops-portale`, `api.portale-audit-program`, `api.cloud-environment-builds`.
 

@@ -995,7 +995,7 @@ voci:
         CHIUSI (9-Ott-2026). Fascicolo OMNIA_PORTALE_AUDIT_FASCICOLO.md.
         Finding P-###: coda codice vuota; residui P-021 Google opz. e
         P-026 vault whsec MITIGATO. H GDPR P-037…P-044 e resilienza
-        P-033/046…058 chiusi. Prossimo: merge main solo su ordine Founder.
+        P-033/046…058 chiusi. MERGED su main (PR #12 · 9-Ott-2026).
       quando_si_usa: >
         Stato audit; priorità giornata; dove sono matrici/diario/finding.
       passi:
@@ -1003,7 +1003,7 @@ voci:
         - "Programma: docs/audit/OMNIA_PORTALE_AUDIT_PROGRAM.md."
         - "Finding: docs/audit/portale-finding.md · matrici portale-matrici/."
         - "Diario: docs/audit/portale-diario/ · NEXT_SESSION.md."
-        - "Prossimo: «merge main» su ordine Founder (non auto)."
+        - "Stato: su main (PR #12 merged). Prossimo tipico: O3b / A-037 / A-038."
         - "Self-serve OFF finché O6 ≠ PASS (D-115)."
       errori_comuni:
         - problema: "L'agent ha già riscritto il portale senza vai"
