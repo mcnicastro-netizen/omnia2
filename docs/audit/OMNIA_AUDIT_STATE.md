@@ -7,7 +7,7 @@ Prima di analizzare un nuovo punto, leggere questo file. Non riaprire decisioni 
 
 **Current status:** P1–P24 **chiusi** · programma **APPROVATO** (**D-115**) · **«vai» O0 ∥ O1 in esecuzione**. Listino fermo. SoT: questo file.
 
-**Next:** **D-118 Audit Portale** — Onde **A–H GREEN** · P-037…P-044 CHIUSI · P-045 WONTFIX · residuo P-033 · prossimo **Onda I** resilienza. SoT: `OMNIA_PORTALE_AUDIT_PROGRAM.md` + `portale-finding.md`. Poi: O3b restore → **A-037** → self-serve. O6 CONDITIONAL. **no self-serve finché O6 ≠ PASS**. §23 Priorità **CLOSED**.
+**Next:** **D-118 Audit Portale** — Onde **A–I GREEN** · aperti P-046…P-053 (+ P-033) · prossimo **Onda J** fascicolo. SoT: `OMNIA_PORTALE_AUDIT_PROGRAM.md` + `portale-finding.md`. Poi: O3b restore → **A-037** → self-serve. O6 CONDITIONAL. **no self-serve finché O6 ≠ PASS**. §23 Priorità **CLOSED**.
 
 ---
 

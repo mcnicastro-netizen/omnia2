@@ -1,23 +1,27 @@
 # Prossima sessione — programma passi
 
-**Aggiornato**: 9 Ottobre 2026 · Onda H GREEN · P-037…P-044 CHIUSI · P-045 WONTFIX  
+**Aggiornato**: 9 Ottobre 2026 · Onda I **GREEN** · P-046…P-053 aperti  
 **Repo**: https://github.com/mcnicastro-netizen/omnia2 ✅  
-**Branch audit**: `cursor/portale-audit-onda-d-live-4532` (PR #12) · merge su `main` solo se Founder lo chiede  
+**Branch audit**: `cursor/portale-audit-onda-d-live-4532` (PR #12)
 
 ---
 
-## 🎯 Prossimo passo — Onda I
+## 🎯 Prossimo passo — Onda J
 
-**SoT**: [`OMNIA_PORTALE_AUDIT_PROGRAM.md`](../docs/audit/OMNIA_PORTALE_AUDIT_PROGRAM.md) § Onda I  
-Anti-crash, salvaguardia dati, Stripe, resilienza.  
+**SoT**: [`OMNIA_PORTALE_AUDIT_PROGRAM.md`](../docs/audit/OMNIA_PORTALE_AUDIT_PROGRAM.md) § Onda J  
+Extra (i18n, a11y, SEO, mobile…) + **fascicolo finale**.  
 Attende «vai» Founder.
 
-### Aperti residui
-| ID | Note |
-|--|--|
-| P-033 | Search L3/L4 — «dopo» |
-| P-021/024/026/032 | OAuth, gemini docs, whsec vault, valuator alias |
-| P-045 | WONTFIX (no CTA contest valuator) |
+### Fix prioritari residui (se «vai» prima di J)
+| ID | Sev | Note |
+|--|--|--|
+| **P-051** | P1 | `COOKIE_SECURE=true` su tunnel HTTPS → CSRF on |
+| **P-049** | P1 | B2C status → Stripe retrieve fallback |
+| **P-046** | P1 | Backup include `b2c_*` + consent/favorites |
+| P-050 | P2 | Rate limit register + Visura |
+| P-047/048 | P2 | Restore docs · soft-delete UGC |
+| P-033 | P2 | Search L3/L4 (dopo) |
+| P-052/053 | P3 | API-down UX · alert dedup |
 
 ---
 
@@ -25,7 +29,8 @@ Attende «vai» Founder.
 
 | Onda | Esito |
 |--|--|
-| **A–H** | ✅ GREEN |
-| Fix H | P-037…P-044 CHIUSI |
+| **A–I** | ✅ GREEN |
+| **J** | prossimo |
 
-**PR draft**: https://github.com/mcnicastro-netizen/omnia2/pull/12
+**PR draft**: https://github.com/mcnicastro-netizen/omnia2/pull/12  
+**Matrice I**: `docs/audit/portale-matrici/2026-10-09-onda-i.md`

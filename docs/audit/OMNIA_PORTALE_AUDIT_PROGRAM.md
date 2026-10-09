@@ -1,6 +1,6 @@
 # OMNIA — Programma Audit Portale ImmobilCloud (passo × passo)
 
-**Status**: ▶️ IN ESECUZIONE — Onde A–H fatte · Onda H **GREEN** (2026-10-09) · fix solo con «vai»  
+**Status**: ▶️ IN ESECUZIONE — Onde A–I fatte · Onda I **GREEN** (2026-10-09) · fix solo con «vai»  
 **Partenza**: **8 Ottobre 2026**  
 **Tunnel giorno 1**: `https://king-kai-mia-giants.trycloudflare.com` · **corrente**: vedi diario del giorno  
 **Finding**: `docs/audit/portale-finding.md`  
@@ -73,9 +73,9 @@ Produrre un **fascicolo audit** completo del portale: funzionamento, codice, API
 | 8 Ott | **A–E** | ✅ fatte (anticipate) · D GREEN · P-025…P-030 chiusi |
 | 9 Ott | **F** | ✅ **GREEN** · P-031 CHIUSO · P-032 P3 residuo |
 | 9 Ott | **G** | ✅ **GREEN** · ponti verificati · P-035/036 chiusi · P-033 dopo · P-034 WONTFIX |
-| 9 Ott | **H** | ✅ **GREEN** · GDPR/AI Act · P-037…P-045 aperti |
-| succ. | **I** | Resilienza — attende «vai» |
-| poi | **J** | Fascicolo |
+| 9 Ott | **H** | ✅ **GREEN** · P-037…P-044 chiusi · P-045 WONTFIX |
+| 9 Ott | **I** | ✅ **GREEN** · resilienza · P-046…P-053 aperti |
+| succ. | **J** | Fascicolo — attende «vai» |
 
 > Se un giorno slitta: **non saltare onde**; si sposta in avanti. Dettaglio giornata: `memory/NEXT_SESSION.md`.
 
@@ -418,39 +418,40 @@ Per ogni evento: oggi arriva? dove? gap?
 ## Onda I — Anti-crash, salvaguardia dati, Stripe, resilienza (D9)
 
 ### I.1 Anti-crash / UX failure
-- [ ] `ErrorBoundary` cloud cattura crash React  
-- [ ] API down → messaggio onesto, no spinner infinito  
-- [ ] Timeout AI (es. improve/legal) documentati  
-- [ ] Upload media fail → retry/messaggio  
-- [ ] Double-submit checkout prevenuto  
-- [ ] Tunnel cambio URL → cookie/login; webhook stale  
+- [x] `ErrorBoundary` cloud cattura crash React  
+- [ ] API down → messaggio onesto, no spinner infinito → **P-052**  
+- [x] Timeout AI Legal OK · Improve WARN  
+- [x] Upload media fail → retry/messaggio  
+- [x] Double-submit checkout prevenuto  
+- [x] Tunnel cambio URL → webhook sync (P-026 vault residuo)  
 
 ### I.2 Salvaguardia dati
-- [ ] Backup health in Ops (D-105) — include collection B2C?  
-- [ ] Restore procedure menziona `b2c_*` / media UGC?  
-- [ ] Soft-delete vs hard-delete annunci privati  
-- [ ] Indici Mongo essenziali presenti  
-- [ ] Nessuna cancellazione automatica aggressiva (D-098) inattesa  
+- [x] Backup health in Ops OK  
+- [ ] include collection B2C? → **P-046**  
+- [ ] Restore procedure menziona `b2c_*` / media UGC? → **P-047**  
+- [ ] Soft-delete vs hard-delete annunci privati → **P-048**  
+- [x] Indici Mongo essenziali presenti  
+- [x] Nessuna cancellazione automatica aggressiva (D-098) inattesa  
 
 ### I.3 Stripe & pagamenti
-- [ ] Sandbox only in Cloud  
-- [ ] Webhook idempotente  
-- [ ] Sync fallback se webhook manca (Visura)  
-- [ ] Alert firma non valida non ripetuti post-fix secret  
-- [ ] Riconciliazione Ops vs Stripe Dashboard test  
-- [ ] Nota A-038 fatture/dati fiscali = post-test, non bloccante audit  
+- [x] Sandbox only in Cloud  
+- [x] Webhook idempotente  
+- [ ] Sync fallback se webhook manca (B2C status) → **P-049**  
+- [ ] Alert firma non valida dedup → **P-053**  
+- [x] Riconciliazione Ops vs Stripe = manuale WARN  
+- [x] Nota A-038 = SKIP post-test  
 
 ### I.4 Sicurezza applicativa portale
-- [ ] Cookie `Secure` / `SameSite` su HTTPS tunnel  
-- [ ] CORS / CSRF su mutazioni  
-- [ ] Rate limit register, inquiry, Legal, Visura  
-- [ ] IDOR su `/cloud/me/properties/{id}`  
-- [ ] Download Visura solo owner paid  
-- [ ] Secrets non in bundle FE  
+- [ ] Cookie `Secure` / CSRF su HTTPS tunnel → **P-051** (`COOKIE_SECURE=false`)  
+- [x] Inquiry + Legal rate limit OK  
+- [ ] Rate limit register + Visura → **P-050**  
+- [x] IDOR `/cloud/me/properties/{id}` OK  
+- [x] Download Visura solo owner paid  
+- [x] Secrets non in bundle FE  
 
 ### I.5 Deliverable
-- [ ] Checklist I firmata  
-- [ ] P0 sicurezza se emergono  
+- [x] Checklist I — `portale-matrici/2026-10-09-onda-i.md`  
+- [x] Finding P-046…P-053 (no P0 runtime bloccante dogfood) 
 
 ---
 

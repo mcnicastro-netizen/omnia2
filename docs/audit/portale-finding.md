@@ -1,6 +1,6 @@
 # Audit Portale — registro finding `P-###`
 
-**Aggiornato**: 2026-10-09 · P-037…P-044 CHIUSI · P-045 WONTFIX  
+**Aggiornato**: 2026-10-09 · Onda I GREEN · P-046…P-053 aperti  
 **Regola**: nessun fix senza «vai» Founder (D-118)
 
 | ID | Sev | Onda | Titolo | Stato |
@@ -50,6 +50,14 @@
 | P-043 | P2 | H | Staging: watermark OK ma disclosure pubblica scheda debole | **CHIUSO** |
 | P-044 | P2 | H | Valuator lead (`valuation_leads`) senza `gdpr_consent` | **CHIUSO** |
 | P-045 | P3 | H | Valuator senza CTA “contesta stima” (human oversight) | **WONTFIX** |
+| P-046 | P1 | I | Backup giornaliero senza collection B2C (`b2c_*`, consent, favorites, …) | **APERTO** |
+| P-047 | P2 | I | Restore manual non menziona dati portale B2C/UGC | **APERTO** |
+| P-048 | P2 | I | Delete annuncio privato = hard delete (no cestino) | **APERTO** |
+| P-049 | P1 | I | B2C `/billing/b2c/status` senza Stripe retrieve se webhook manca | **APERTO** |
+| P-050 | P2 | I | Rate limit assente su register B2C e Visura checkout | **APERTO** |
+| P-051 | P1 | I | `COOKIE_SECURE=false` Cloud → CSRF middleware no-op su HTTPS tunnel | **APERTO** |
+| P-052 | P3 | I | Nessun handler UX globale API down / network error | **APERTO** |
+| P-053 | P3 | I | Alert `stripe_webhook` senza dedup/cooldown | **APERTO** |
 
 ## P-009 — dettaglio (CHIUSO)
 
@@ -208,6 +216,54 @@
 ## P-045 — dettaglio (WONTFIX · Founder)
 
 - Nessun bottone «contesta stima» — by design (disclaimer stima sufficiente)
+
+## P-046 — dettaglio (APERTO · Onda I)
+
+- `backup_job._COLLECTIONS`: agencies/users/properties/CRM… — **mancano** `b2c_purchases`, `b2c_visura_orders`/`visura_orders`, `consent_events`, `favorites`, `saved_searches`, `al_legal_audit`, `listing_inquiries`
+- Media locali sì; ledger B2C no → restore non riporta pagamenti/consensi portale
+- **Fix** (solo «vai»): estendere `_COLLECTIONS` + verificare MANIFEST
+
+## P-047 — dettaglio (APERTO · Onda I)
+
+- `docs/ops/RESTORE_MANUAL.md` perimetro agency-first; zero menzione `b2c_*` / UGC
+- **Fix**: aggiornare runbook allineato a P-046
+
+## P-048 — dettaglio (APERTO · Onda I)
+
+- `private_listings.py` DELETE → `properties.delete_one` (hard)
+- CRM ha cestino soft-delete; B2C no
+- **Fix**: soft-delete `withdrawn`/`deleted_at` + retention, oppure conferma UI “irreversibile”
+
+## P-049 — dettaglio (APERTO · Onda I)
+
+- `GET /billing/b2c/status/{session_id}` legge solo Mongo
+- Agency `/billing/.../status` fa `Session.retrieve` Stripe
+- Se webhook muore, poll B2C resta `pending` anche se Stripe paid
+- **Fix**: retrieve Stripe + `mark_uni_purchase_paid` idempotente sul poll
+
+## P-050 — dettaglio (APERTO · Onda I)
+
+- Inquiry 20/h OK (live 429); Legal 30/h OK
+- `cloud_auth.register` e Visura checkout: **nessun** `enforce_ip_rate_limit`
+- **Fix**: rate limit IP (es. register 10/h, visura checkout 20/h)
+
+## P-051 — dettaglio (APERTO · Onda I)
+
+- Runtime/disk: `COOKIE_SECURE=false` → `csrf_enabled()=False` → middleware no-op
+- Live tunnel: PATCH `/auth/me` **senza** `X-CSRF-Token` → **200**
+- Su trycloudflare HTTPS andrebbe `COOKIE_SECURE=true` + SameSite=None + CSRF enforce
+- **Fix**: `omnia-stack` / sync-public-base imposta `COOKIE_SECURE=true` quando tunnel HTTPS; restart API
+
+## P-052 — dettaglio (APERTO · Onda I)
+
+- `api.js` gestisce 401+refresh; network/5xx/timeout senza UX globale
+- ErrorBoundary copre solo crash React
+- **Fix**: interceptor → evento `omnia:api-unreachable` + banner cloud
+
+## P-053 — dettaglio (APERTO · Onda I)
+
+- Webhook signature fail → `record_alert(kind=stripe_webhook)` ogni volta, no dedup
+- **Fix**: cooldown / upsert per kind+day
 
 ## P-012…P-017 — fix breve
 
