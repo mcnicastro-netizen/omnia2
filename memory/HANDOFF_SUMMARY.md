@@ -216,7 +216,8 @@ Il codice locale in `/app` è sincronizzato con questo repo (il Founder pusha vi
 | `OPEN_SOURCE_FINDINGS.md` | ⭐⭐ | Repo GitHub utili (zornade/visura-api, PArSe, dati_catastali, ecc.) |
 | `PRICING_OMNIA.md` | ⭐ | Pricing v1.0 (Founders 50 €39/€99/€249) — congelato per D-035 |
 | `BUSINESS_MODEL.md` | ⭐ | Stream revenue + margini |
-| `RESEND_DOMAIN_GUIDE.md` | ⭐ | Config Resend + Cloudflare |
+| `RESEND_DOMAIN_GUIDE.md` | ⭐ | Email Resend VERIFIED + storia CF |
+| `DNS_SETUP_GUIDE.md` | ⭐ | SoT DNS Cloudflare · Vercel pending · no Emergent |
 | `NEXT_SESSION_TIPS.md` | ⭐ | Tips operativi vari |
 | `test_credentials.md` | ⭐⭐ | Admin: `mcnicastro@gmail.com` / `***ROTATED — vedi memory/test_credentials.env***` |
 

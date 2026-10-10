@@ -25,6 +25,7 @@
 | **S3.1** | Firma meter storage |
 | **D-038** | Partner APE |
 | Stripe live / outreach | Solo con «vai» Founder |
+| **Vercel deploy** | ⏳ pending (D-074) — DNS: `memory/DNS_SETUP_GUIDE.md` |
 
 ---
 
