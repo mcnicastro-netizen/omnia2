@@ -1,6 +1,6 @@
 # OMNIA — Coerenza di sistema (SoT Founder)
 
-**Data**: 9 Ottobre 2026 · **agg. S3**: 10 Ottobre 2026  
+**Data**: 9 Ottobre 2026 · **agg. S4**: 10 Ottobre 2026  
 **Repo**: `mcnicastro-netizen/omnia2` · branch di lavoro tipico = `main`  
 **Scopo**: una sola freccia — *cosa è il sistema oggi, dove la logica si spezza, in che ordine chiudere prima di demo definitiva / O6 / GTM*.  
 **Non sostituisce**: fascicolo D-118, O6 checklist, O0 design, DECISIONS. Li **ordina**.
@@ -62,9 +62,9 @@ Non è una lista infinita di bug: sono **tensioni** che impediscono di firmare �
 | C1 | **Messaggio a 3 pilastri / prodotto a 2** — Academy in pitch, capacità assente | Overpromise GTM |
 | C2 | **D-115 self-serve OFF vs `STRIPE_ENABLED`** — nessun hard flag O6; checkout test aperti se Stripe ON | Policy umana ≠ kill-switch |
 | C3 | **Rail monetari spezzati** — valuator “crediti” a tratti narrativo; HAL Legal edge gratis senza agency | Listino ≠ contabilità |
-| C4 | **Due verità pubbliche** — feed ImmobilCloud ≠ sito brand `/p/{slug}` sullo stesso immobile | Pitch portale+gestionale debole |
+| C4 | **Due verità pubbliche** — mitigato S4: surface condivisa; restano solo delta intenzionali (listing cloud / L3–L4) | Pitch allineato su “pubblico”; opt-out portale documentato |
 | C5 | **Trash non ovunque** — KPI / alcuni MLS senza soft-delete uniforme | Integrità dominio quasi-una |
-| C6 | **O0 ✅ / S2 ✅ / S3 numeri ✅** — firma listino **rimandata** (approfondire; non dimenticare) | Economia modellata; chiusura commerciale = S3.1 / firma Founder |
+| C6 | **O0 PASS design / bak as-is** — ancora `copytree` × retention **30** (~32× disco) | Agency ∞ economicamente finta al tetto GB |
 | C7 | **Restore: docs sì, run firmata sì (S1 2026-10-10)** — ancora manuale, non RTO commerciale | Chiuso per pre-GTM O3b; non = DR piattaforma |
 | C8 | **Due seed = due storie demo** (demo-agency + Nicastro) | Nessuna “demo definitiva” unica |
 | C9 | **SoT documentali in conflitto temporale** (AUDIT_STATE / GTM freeze / fascicolo / NEXT) | Founder e agent leggono più futuri |
@@ -82,9 +82,9 @@ Ordine di **coerenza**, non di feature. Niente monoblocco; ogni step ha artefatt
 | Step | Cosa chiudere | Contraddizioni | Done quando |
 |------|---------------|----------------|-------------|
 | **S1** | **O3b** — una restore firmata non-prod (agency + perimetro B2C rilevante) | C7 | ✅ **DONE 2026-10-10** — firma in `RESTORE_MANUAL` §6 + `docs/ops/runs/s1-restore-o3b-2026-10-10.log` |
-| **S2** | **Bak = O0 runtime** — retention hot ≤7g e/o incrementale (come da design) | C6 | ✅ **DONE 2026-10-10** — default 7 + hardlink; artefatto `docs/ops/runs/s2-bak-o0-runtime-live.log` |
-| **S3** | **Meter economia** — GB reali post-S2; conferma canoni vs Agency 300 GB + addon | C6 | ✅ numeri 10-Ott (`OMNIA_S3_METER_ECONOMIA.md` + listini pubblici) · ⏳ **firma Founder rimandata** → deepen S3.1 · promemoria `NEXT_SESSION` |
-| **S4** | **Una regola di visibilità** — stesso contratto pubblico portale / brand site | C4 | Spec + codice allineati LIVE |
+| **S2** | **Bak = O0 runtime** — retention hot ≤7g e/o incrementale (come da design) | C6 | Codice + prova LIVE (non solo env comment) |
+| **S3** | **Meter economia** — GB reali post-S2; conferma canoni vs Agency 300 GB + addon | C6 | Nota numeri FIRMATO Founder; listino fermo o revisione esplicita |
+| **S4** | **Una regola di visibilità** — stesso contratto pubblico portale / brand site | C4 | ✅ **DONE 2026-10-10** — `OMNIA_S4_VISIBILITA_PUBBLICA.md` + `public_visibility.py` + LIVE |
 | **S5** | **Soldi onesti** — addebito reale o UI onesta; opz. hard-gate self-serve distinto da Stripe test | C2, C3 | Probe LIVE |
 | **S6** | **Narrativa 2 prodotti** — Academy fuori pitch finché non esiste | C1 | Landing/agenzie allineate |
 | **S7** | **Una demo story** — un seed; percorso admin→portale; giorni prova; scadenza → **Acquista pacchetto** (post-O6) | C8 | Script demo ripetibile ×2 senza agent “al volo” |
@@ -112,7 +112,7 @@ Ordine di **coerenza**, non di feature. Niente monoblocco; ogni step ha artefatt
 Il repo **non** è un pasticcio casuale: è un ecosistema dual-product con spina dorsale solida.  
 Il rischio di fallimento non è “manca un modulo magico”: è **raccontare o vendere una storia più chiusa** di quanto il sistema sia logicamente allineato (soldi, restore, storage, messaggio, una sola demo).
 
-**Prossimo «vai» consigliato:** **S4** (visibilità portale/brand). Parallel reminder: **S3.1 firma/deepen storage** — non dimenticare prima di O6/GTM.
+**Prossimo «vai» consigliato:** **S5** (soldi onesti) — parallel: S1–S3 su PR dedicate se non ancora in `main`; S3.1 firma meter — non dimenticare.
 
 ---
 
@@ -124,8 +124,8 @@ Il rischio di fallimento non è “manca un modulo magico”: è **raccontare o 
 | `OMNIA_O6_GATE_CHECKLIST.md` | Cancello self-serve |
 | `OMNIA_O0_BAK_MEDIA_DESIGN.md` | Modello bak target (DECISO) |
 | `docs/ops/RESTORE_MANUAL.md` | Procedura + firma run |
+| `OMNIA_S4_VISIBILITA_PUBBLICA.md` | Contratto pubblico portale/brand |
 | `OMNIA_PORTALE_AUDIT_FASCICOLO.md` | Audit portale D-118 |
 | `OMNIA_PROGRAMMA_PRE_ATTIVAZIONE.md` | Onde O0–O6 |
 | `memory/NEXT_SESSION.md` | Puntatore sessione (punta qui) |
-| `OMNIA_S3_METER_ECONOMIA.md` | Meter storage post-S2 · proposta listino FERMO |
-| `memory/PRICING_OMNIA.md` / `PRICING_B2C.md` | Listino (FERMO post-S3 finché Founder non decide altrimenti) |
+| `memory/PRICING_OMNIA.md` / `PRICING_B2C.md` | Listino |

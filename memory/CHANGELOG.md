@@ -1,17 +1,10 @@
-## 2026-10-10 — S3 meter economia storage (numeri ✅ · firma ⏳)
+## 2026-10-10 — S4 visibilità pubblica unica (portale / brand)
 
-- Nota `docs/audit/OMNIA_S3_METER_ECONOMIA.md` + script `scripts/meter_storage_economia.py`
-- **Ancore listini pubblici** (R2 / S3 / Hetzner Volume) — non claim €0,04
-- Post-S2 mid Agency: R2 ≈€10,5 · Volume ≈€42,8; pre-S2 ×32 @ Volume FAIL
-- Founder: **non chiudere ora** — deepen dopo; firma §6 APERTA; promemoria `NEXT_SESSION` (S3.1)
-- Listino codice invariato · NEXT → S4 (+ reminder S3.1)
-
-## 2026-10-10 — S2 bak O0 runtime (retention 7 + hardlink)
-
-- `backup_job.py`: default `BACKUP_RETENTION_DAYS=7`; media incrementale hardlink da giorno precedente
-- Prove: unit `test_o2_o3_o4.py` + LIVE `docs/ops/runs/s2-bak-o0-runtime-live.log` (~1× disco vs 2× apparent)
-- SoT: O0 design / coerenza C6·S2 / D-114 / NEXT → **S3 meter**
-- Listino fermo
+- SoT `shared/db/public_visibility.py` — surface: active + visibility=public + moderation OK
+- Brand `/p/{slug}` usa `brand_site_filter` (non più solo status=active)
+- Portale resta su `portal_listing_filter` (listing cloud + no L3/L4)
+- P-034 CHIUSO · spec `OMNIA_S4_VISIBILITA_PUBBLICA.md` · LIVE PASS
+- NEXT → S5 (+ reminder S3.1)
 
 ## 2026-10-09 — D-118 residuo codice CHIUSO (vai Founder)
 
