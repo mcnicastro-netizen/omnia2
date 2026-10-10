@@ -1,6 +1,6 @@
 # Prossima sessione — programma passi
 
-**Aggiornato**: 9 Ottobre 2026  
+**Aggiornato**: 10 Ottobre 2026  
 **Repo**: https://github.com/mcnicastro-netizen/omnia2 ✅  
 **Branch**: `main`
 
@@ -12,6 +12,14 @@
 
 Scala verità: DECISO → CODICE → LIVE → FIRMATO.  
 Sequenza chiusura: **S1 restore firmata → S2 bak O0 runtime → … → S9 O6 → S10 GTM-01**.
+
+---
+
+## ⚠️ Non dimenticare
+
+| Voce | Nota |
+|------|------|
+| **D-038 APE partner** | ⏳ ordine certificazione APE **non attivo** — in attesa accordo commerciale (APEFACILE / Certificato-Energetico.it). Solo poi bottone “Ordina APE” (Fascicolo/scheda). Calcolatore in-house = NO (D-039). Compliance *classe APE* in publishing ≠ servizio certificazione. |
 
 ---
 
@@ -33,3 +41,4 @@ Sequenza chiusura: **S1 restore firmata → S2 bak O0 runtime → … → S9 O6 
 | O6 self-serve | OFF (CONDITIONAL; manca restore firmata) |
 | Bak economia | Design O0 ✅ · runtime ancora as-is (~32×) |
 | Fascicolo portale | `docs/audit/OMNIA_PORTALE_AUDIT_FASCICOLO.md` |
+| D-038 APE ordine | ⏳ accordo commerciale — non attivo |

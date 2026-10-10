@@ -1,3 +1,8 @@
+## 2026-10-10 — reminder D-038 APE partner ancora aperto
+
+- Segnalazione Founder: audit/S1–S6 non rimettevano in coda l’APE ufficiale non attivo
+- `NEXT_SESSION` + `OMNIA_COERENZA_SISTEMA` §4bis: D-038 ⏳ accordo commerciale (≠ compliance classe APE)
+
 ## 2026-10-09 — D-118 residuo codice CHIUSO (vai Founder)
 
 - Fix: P-051 CSRF/COOKIE_SECURE · P-049 B2C Stripe fallback · P-046/047 backup+restore B2C · P-050 RL · P-033 L3/L4 search · P-048 soft-delete · P-054 i18n · P-055 SEO · P-057 UGC notify · P-052/053/056/058/032/024 · P-026 MITIGATO
