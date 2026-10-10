@@ -12,7 +12,8 @@
 |-------|-----|
 | Freccia | [`docs/audit/OMNIA_COERENZA_SISTEMA.md`](../docs/audit/OMNIA_COERENZA_SISTEMA.md) — S1–S10 ✅ |
 | Pre-demo | [`docs/ops/PRE_DEMO_CHECKLIST.md`](../docs/ops/PRE_DEMO_CHECKLIST.md) · [`OMNIA_PRE_DEMO_8.md`](../docs/audit/OMNIA_PRE_DEMO_8.md) |
-| **Vercel go-live** | [`docs/ops/VERCEL_DEPLOY.md`](../docs/ops/VERCEL_DEPLOY.md) — prep ✅ · deploy ⏳ |
+| **API Railway** | [`docs/ops/RAILWAY_DEPLOY.md`](../docs/ops/RAILWAY_DEPLOY.md) — D-123 · prep ✅ · **prossimo** |
+| **Vercel go-live** | [`docs/ops/VERCEL_DEPLOY.md`](../docs/ops/VERCEL_DEPLOY.md) — dopo API |
 
 ---
 
@@ -20,7 +21,8 @@
 
 | Voce | Nota |
 |------|------|
-| **«vai Vercel»** | Dopo pausa: vault (`VERCEL_TOKEN`, `OMNIA_API_PUBLIC_URL`, CF…) poi agent E2E |
+| **«vai Railway»** | Prima API: vault `RAILWAY_TOKEN` → deploy API (Hetzner skip) |
+| **«vai Vercel»** | Dopo API live: `OMNIA_API_PUBLIC_URL` + `VERCEL_TOKEN` |
 | **Pre-demo probe** | `python scripts/pre_demo_probe.py` prima di ogni invio demo |
 | **OFFBOX_BACKUP_ROOT** | In prod = volume esterno (Cloud default `/tmp`) |
 | **S3.1** | Firma meter storage |
@@ -32,9 +34,9 @@
 
 ## Prossimo passo tipico
 
-1. Founder (pausa): secrets vault da `docs/ops/VERCEL_DEPLOY.md`  
-2. Nuovo agent + **«vai Vercel»** → deploy FE + DNS CF  
-3. In parallelo: checklist pre-demo manuale 5–10 min / demo su tunnel  
+1. Founder: `RAILWAY_TOKEN` in vault → **«vai Railway»**  
+2. Poi `OMNIA_API_PUBLIC_URL` + **«vai Vercel»**  
+3. Demo: tunnel finché dominio non è live  
 
 ---
 
