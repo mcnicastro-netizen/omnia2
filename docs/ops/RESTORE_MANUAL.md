@@ -1,8 +1,9 @@
 # Procedura restore manuale (D-113) — non-prod
 
-**Stato:** procedura documentata · test ripetibile su ambiente non-prod  
+**Stato:** procedura documentata · **run firmata PASS 2026-10-10** (non-prod)  
 **Non è:** DR piattaforma · restore self-service · garanzia commerciale  
-**Correlato:** D-096 · D-105 · O0 design · O3b
+**Correlato:** D-096 · D-105 · O0 design · O3b  
+**Script ripetibile:** `scripts/restore_agency_nonprod.py`
 
 ## Premessa onesta (CT-03)
 
@@ -138,13 +139,24 @@ Checklist pass/fail:
 
 | Campo | Valore |
 |-------|--------|
-| Data run | |
-| Ambiente | non-prod |
-| Day bak | |
-| Agency | |
-| Esecutore | |
-| Esito | PASS / FAIL |
-| Note limiti | tempi, gap collection, media orphan |
+| Data run | 2026-10-10T08:11:08Z |
+| Ambiente | non-prod (Cursor Cloud Agent · API `43121`) |
+| Day bak | `2026-10-10` (`MANIFEST.status=OK`) |
+| Agency | `demo-agency-001` |
+| Esecutore | Cloud Agent (script `scripts/restore_agency_nonprod.py`) |
+| Esito | **PASS** |
+| Note limiti | Restore manuale; B2C collections vuote in bak; media seed vuoto (foto N/A, non FAIL); altre agency invariate (Nicastro props=4); login `demo.admin@omniaecosystem.it` OK (`agency_admin`); RTO non commerciale; non-prod only |
+| Artefatto | `docs/ops/runs/s1-restore-o3b-2026-10-10.log` (+ Cloud `/opt/cursor/artifacts/…`) |
+| Script | `scripts/restore_agency_nonprod.py` |
+
+Checklist D-096 (questa run):
+
+- [x] `agencies` documento `demo-agency-001` presente  
+- [x] conteggio `properties=4` / `clients=4` / `client_requests=0` / `activities=0` coerente col dump extract  
+- [x] login membership agency ok  
+- [x] nessuna altra agency modificata (spot-check: other_agencies=1, nicastro_props=4 invariati)  
+- [x] portale B2C collections ripristinate dal bak (conteggi 0=0)  
+- [~] foto raggiungibile: **N/A** — seed demo senza media (dichiarato, non FAIL)
 
 ## Limiti interni (dichiarati)
 
