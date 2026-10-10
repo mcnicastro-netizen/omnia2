@@ -35,8 +35,8 @@ Pitch commerciale GTM = **due prodotti**:
 
 ## Prove
 
-- LIVE: landing senza pillar Academy; nav senza Formazione; `/learn` onesta coming soon  
-- Artefatto: `docs/ops/runs/s6-narrativa-2-prodotti-live.log` + screenshot/video in PR
+- LIVE **PASS** 2026-10-10: landing 2 pillar; nav senza Formazione; agenzie “Due prodotti…”; `/learn` coming soon + CTA  
+- Artefatto: `docs/ops/runs/s6-narrativa-2-prodotti-live.log`
 
 ---
 
