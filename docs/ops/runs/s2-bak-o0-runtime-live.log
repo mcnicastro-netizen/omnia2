@@ -1,0 +1,21 @@
+=== S2 LIVE proof 2026-10-10T08:18:42.754951+00:00 ===
+live_media_bytes=6000000
+BACKUP_RETENTION_DAYS_default_module=7
+day1=2026-10-09 stats={'mode': 'full_copytree', 'files_hardlinked': 0, 'files_copied': 3, 'files_removed': 0, 'prev_day': None, 'media_bytes_apparent': 6000000, 'media_bytes_unique_inodes': 6000000} ok=True
+day2=2026-10-10 stats={'mode': 'incremental_hardlink', 'files_hardlinked': 3, 'files_copied': 0, 'files_removed': 0, 'prev_day': '2026-10-09', 'media_bytes_apparent': 6000000, 'media_bytes_unique_inodes': 6000000} ok=True
+hardlink_share_file1=True ino=395704
+apparent_two_days_media_sum=12000000
+du_bak_root_real=6000750
+ratio_apparent_over_live=2.00x (naive full×2)
+ratio_real_bak_over_live=1.00x (hardlink shared)
+purged=['2026-09-20']
+old_removed=True
+checks={'retention_default_7': True, 'day1_full': True, 'day2_incremental': True, 'day2_all_hardlinked': True, 'inodes_shared': True, 'real_disk_lt_apparent': True, 'real_disk_near_1x_live': True, 'purge_dropped_old': True, 'kept_recent': True}
+ESITO=PASS failed=[]
+LIMITI: prova su sandbox /tmp (non prod); checksum contenuto non usato (size+mtime_ns); cold monthly 90g non in V1; listino fermo (S3 meter).
+
+=== Live stack bak (backend/.backups) ===
+manifest_status=OK
+manifest_retention_days=7
+manifest_media_mode=full_copytree
+collections_agencies=2

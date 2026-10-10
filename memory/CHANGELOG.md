@@ -1,3 +1,10 @@
+## 2026-10-10 — S2 bak O0 runtime (retention 7 + hardlink)
+
+- `backup_job.py`: default `BACKUP_RETENTION_DAYS=7`; media incrementale hardlink da giorno precedente
+- Prove: unit `test_o2_o3_o4.py` + LIVE `docs/ops/runs/s2-bak-o0-runtime-live.log` (~1× disco vs 2× apparent)
+- SoT: O0 design / coerenza C6·S2 / D-114 / NEXT → **S3 meter**
+- Listino fermo
+
 ## 2026-10-09 — D-118 residuo codice CHIUSO (vai Founder)
 
 - Fix: P-051 CSRF/COOKIE_SECURE · P-049 B2C Stripe fallback · P-046/047 backup+restore B2C · P-050 RL · P-033 L3/L4 search · P-048 soft-delete · P-054 i18n · P-055 SEO · P-057 UGC notify · P-052/053/056/058/032/024 · P-026 MITIGATO
