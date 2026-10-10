@@ -65,7 +65,7 @@ Non è una lista infinita di bug: sono **tensioni** che impediscono di firmare �
 | C4 | **Due verità pubbliche** — feed ImmobilCloud ≠ sito brand `/p/{slug}` sullo stesso immobile | Pitch portale+gestionale debole |
 | C5 | **Trash non ovunque** — KPI / alcuni MLS senza soft-delete uniforme | Integrità dominio quasi-una |
 | C6 | **O0 PASS design / bak as-is** — ancora `copytree` × retention **30** (~32× disco) | Agency ∞ economicamente finta al tetto GB |
-| C7 | **Restore: docs sì, run firmata no** | “Sappiamo recuperare?” aperto |
+| C7 | **Restore: docs sì, run firmata sì (S1 2026-10-10)** — ancora manuale, non RTO commerciale | Chiuso per pre-GTM O3b; non = DR piattaforma |
 | C8 | **Due seed = due storie demo** (demo-agency + Nicastro) | Nessuna “demo definitiva” unica |
 | C9 | **SoT documentali in conflitto temporale** (AUDIT_STATE / GTM freeze / fascicolo / NEXT) | Founder e agent leggono più futuri |
 | C10 | **CHIUSO/PASS/GREEN spesso = DECISO o CODICE**, raramente FIRMATO | Falsa chiusura (caso bak) |
@@ -81,7 +81,7 @@ Ordine di **coerenza**, non di feature. Niente monoblocco; ogni step ha artefatt
 
 | Step | Cosa chiudere | Contraddizioni | Done quando |
 |------|---------------|----------------|-------------|
-| **S1** | **O3b** — una restore firmata non-prod (agency + perimetro B2C rilevante) | C7 | Tabella firma in `RESTORE_MANUAL` compilata + artefatto |
+| **S1** | **O3b** — una restore firmata non-prod (agency + perimetro B2C rilevante) | C7 | ✅ **DONE 2026-10-10** — firma in `RESTORE_MANUAL` §6 + `docs/ops/runs/s1-restore-o3b-2026-10-10.log` |
 | **S2** | **Bak = O0 runtime** — retention hot ≤7g e/o incrementale (come da design) | C6 | Codice + prova LIVE (non solo env comment) |
 | **S3** | **Meter economia** — GB reali post-S2; conferma canoni vs Agency 300 GB + addon | C6 | Nota numeri FIRMATO Founder; listino fermo o revisione esplicita |
 | **S4** | **Una regola di visibilità** — stesso contratto pubblico portale / brand site | C4 | Spec + codice allineati LIVE |

@@ -1,7 +1,8 @@
 # 💰 OMNIA — Pricing Book (B2B agenzie)
 
 **Versione**: 3.0 (LISTINO UFFICIALE B2B)
-**Ultima revisione**: 5 Agosto 2026 — approvato dal Founder
+**Ultima revisione**: 5 Agosto 2026 — approvato dal Founder  
+**Storage (D-085 / S3 10-Ott-2026):** quote 30/100/300 GB + addon +100 GB @ €15 — operativamente invariato; meter in `OMNIA_S3_METER_ECONOMIA.md`; **firma Founder rimandata** (deepen S3.1 — non dimenticare)
 **Stato**: 🟢 ATTIVO · sincronizzato con `backend/apps/billing/plans.py` + catalog Stripe sandbox
 **Sovrascrive**: v2.0 (bozza superata) e ogni listino Founders 50 precedente
 

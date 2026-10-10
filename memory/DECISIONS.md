@@ -1722,8 +1722,8 @@ Registro di tutte le decisioni di business e tecniche prese durante il progetto.
   4. **Non** capability commerciale di “restore garantito” finché non ci sono tempi/limiti operativi definiti.
   5. Linguaggio onesto (P21 CT-03): bak esistente ≠ verificato ≠ restore disponibile ≠ restore testato.
 - **Correlato P23 / K-AD-02**: FS + 1 replica = baseline GTM deliberata; anticipare object storage/CDN solo se **fallisce lo smoke media** (confidence gate **K-SC-01** / GTM-01) — non “1 replica ⇒ object storage”.
-- **Implementazione**: ✅ docs O3b (`docs/ops/RESTORE_MANUAL.md`); run firmata non-prod ⏳.
-- **Stato**: ✅ **DECISIONE OPERATIVA REGISTRATA** (docs 30-Set-2026 · P23 CHIUSO) · codice/docs ⏳
+- **Implementazione**: ✅ docs O3b (`docs/ops/RESTORE_MANUAL.md`); ✅ run firmata non-prod 2026-10-10 (`demo-agency-001` · bak `2026-10-10` · `scripts/restore_agency_nonprod.py` · `docs/ops/runs/s1-restore-o3b-2026-10-10.log`).
+- **Stato**: ✅ **DECISIONE OPERATIVA REGISTRATA** (docs 30-Set-2026 · P23 CHIUSO) · run firmata ✅ 10-Ott-2026
 
 ### D-114 — Sostenibilità bak/media = priorità pre-attivazione · 30-Set-2026
 - **Data**: 30 Settembre 2026
@@ -1735,8 +1735,8 @@ Registro di tutte le decisioni di business e tecniche prese durante il progetto.
   4. **Listino fermo** finché i numeri esistono; poi eventuale revisione.
   5. Non eleva automaticamente a P0–P3 in audit; entra nel set da chiudere prima di accettare clienti paganti.
 - **O0 (K-PA-01):** deliverable = numeri + **design vincolante** scritto (retention, scope, full/incrementale, restore agency-first, costo, “questo implementeremo”); **non** refactoring obbligatorio del bak dentro O0.
-- **Implementazione:** design O0 ⏳ al «vai»; codice bak nuovo = fase successiva al design.
-- **Stato**: ✅ **DECISIONE DI DOMINIO REGISTRATA** (docs 30-Set-2026 · K-PA-01) · design/codice ⏳
+- **Implementazione:** ✅ design O0 (`OMNIA_O0_BAK_MEDIA_DESIGN.md`); ✅ runtime **S2** 10-Ott-2026 — `BACKUP_RETENTION_DAYS` default **7** + media incrementale hardlink (`backup_job.py`); ✅ meter **S3** numeri 10-Ott-2026 — `OMNIA_S3_METER_ECONOMIA.md` ancorato a listini pubblici (R2/S3/Hetzner). Founder: **non firmare ora** — approfondire dopo; promemoria `NEXT_SESSION` (S3.1). Listino codice invariato.
+- **Stato**: ✅ **DECISIONE DI DOMINIO REGISTRATA** (docs 30-Set-2026 · K-PA-01) · design ✅ · runtime S2 ✅ · meter S3 numeri ✅ · firma listino ⏳ (rimandata)
 
 ### D-115 — Programma pre-attivazione approvato · no self-serve prima di O6 · 30-Set-2026
 - **Data**: 30 Settembre 2026 · **«vai» O0∥O1**: 30-Set-2026

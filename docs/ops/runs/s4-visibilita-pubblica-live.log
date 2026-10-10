@@ -1,0 +1,15 @@
+=== S4 LIVE 2026-10-10T08:44:32.587237+00:00 ===
+agency_slug=agenzia-demo-omnia
+count_old_brand_filter=4
+count_new_brand_filter=4
+count_portal_same_agency=4
+inserted_sentinel=s4-vis-test-0dbf01ee
+sentinel_in_old_filter=1 (expect 1)
+sentinel_in_new_filter=0 (expect 0)
+http_brand_index=200 contains_sentinel=False
+http_brand_detail_sentinel=404 (expect 404)
+http_cloud_search=200 body_has_sentinel=False
+sentinel_deleted=True
+checks={'new_lte_old': True, 'sentinel_excluded_mongo': True, 'http_index_ok': True, 'http_detail_404': True, 'http_index_no_sentinel': True, 'portal_no_sentinel': True}
+ESITO=PASS failed=[]
+LIMITI: delta intenzionali restano (listing ImmobilCloud, L3/L4 su brand); foto /public/property resta status=active only.
