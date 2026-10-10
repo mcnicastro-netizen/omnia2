@@ -1,0 +1,23 @@
+=== PRE-DEMO-8 LIVE 2026-10-10T10:41:44.842982+00:00 ===
+founder_login status=200 role=super_admin
+backup_run status=200 bak_status=OK offbox_ok=True day=2026-10-10
+restore_dry_run exit=0
+  dry|  "failed": [],
+  dry|  "ok": true,
+  dry|  "notes": [
+  dry|    "status=OK",
+  dry|    "agency_docs=1 props=4 label=offbox"
+  dry|  ]
+  dry|}
+  dry|ESITO=PASS
+preflight status=200 esito=PASS failed=[] soft=[]
+gtm01_smoke exit=0
+  gtm|media_cover SKIP no cover_url in portal page
+  gtm|checkout_origin=https://poll-cents-excitement-second.trycloudflare.com
+  gtm|smoke_concurrent={"workers": 20, "ok": 20, "fail": 0, "error_rate": 0.0, "wall_ms": 123.1, "p50_ms": 101.0, "p95_ms": 115.8, "by_op": {"properties": {"n": 4, "ok": 4, "fail_status": []}, "matches": {"n": 4, "ok": 4, "fail_status": []}, "search": {"n": 4, "ok": 4, "fail_status": []}, "upload_tmp": {"n": 4, "ok": 4, "fail_status": []}, "health+search": {"n": 4, "ok": 4, "fail_status": []}}}
+  gtm|checks={'preview_home_ok': True, 'api_health_200': True, 'self_serve_on': True, 'portal_search_ok': True, 'demo_login': True, 'crm_properties_page': True, 'crm_matches_ok': True, 'demo_status_200': True, 'self_serve_gate_open': True, 'checkout_past_self_serve_gate': True, 'checkout_session': True, 'smoke_workers_ge_20': True, 'smoke_error_rate_le_10pct': True, 'smoke_ok_ratio_ge_80pct': True, 'smoke_p95_lt_15s': True, 'smoke_upload_attempted': True, 'smoke_upload_ok_ge_1': True, 'media_serve_or_skip': True}
+  gtm|ESITO=PASS failed=[]
+  gtm|LIMITI: smoke ~20 ≠ stress 5k; Stripe mode=test; outreach ~5k solo dopo PASS; object storage solo se smoke media fallisce (K-AD-02).
+checks={'founder_login': True, 'backup_run_ok': True, 'offbox_ok': True, 'restore_dry_run': True, 'preflight_pass': True, 'gtm01_pass': True}
+ESITO=PASS failed=[]
+LIMITI: off-box default=/tmp (Cloud); in prod punta OFFBOX_BACKUP_ROOT a volume esterno. Stripe resta test. Outreach solo con «vai».

@@ -318,9 +318,31 @@ async def run_daily_backup() -> Dict[str, Any]:
                 severity="error" if status == "FAILED" else "warning",
                 message=f"Backup giornaliero {status} ({day})",
                 meta={"day": day, "status": status, "path": str(dest)},
+                dedupe_hours=6,
             )
         except Exception:  # noqa: BLE001
             logger.exception("backup ops_alert failed")
+
+    # Pre-demo — second copy off-box (disk/NFS/volume). Failures alert but do not flip hot status.
+    if status in ("OK", "PARTIAL"):
+        try:
+            from apps.immoweb.offbox_backup import sync_day_to_offbox
+
+            off = sync_day_to_offbox(day)
+            report["offbox"] = off
+            if not off.get("ok"):
+                from shared.ops_alerts import record_alert
+
+                await record_alert(
+                    kind="backup_offbox",
+                    severity="warning",
+                    message=f"Off-box bak fallito ({day}): {off.get('error')}",
+                    meta=off,
+                    dedupe_hours=6,
+                )
+        except Exception:  # noqa: BLE001
+            logger.exception("offbox sync failed")
+            report["offbox"] = {"ok": False, "error": "exception"}
 
     return report
 

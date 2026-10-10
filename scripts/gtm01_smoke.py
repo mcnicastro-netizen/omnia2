@@ -133,7 +133,7 @@ class ApiClient:
                 ms = (time.perf_counter() - t0) * 1000
                 try:
                     parsed = json.loads(raw.decode()) if raw else {}
-                except json.JSONDecodeError:
+                except (json.JSONDecodeError, UnicodeDecodeError):
                     parsed = {"_bytes": len(raw)}
                 return r.status, parsed, ms
         except urllib.error.HTTPError as e:
@@ -142,8 +142,8 @@ class ApiClient:
             ms = (time.perf_counter() - t0) * 1000
             try:
                 parsed = json.loads(raw.decode()) if raw else {}
-            except json.JSONDecodeError:
-                parsed = {"raw": raw[:200].decode(errors="replace")}
+            except (json.JSONDecodeError, UnicodeDecodeError):
+                parsed = {"raw": raw[:200].decode(errors="replace"), "_bytes": len(raw)}
             return e.code, parsed, ms
         except Exception as e:
             ms = (time.perf_counter() - t0) * 1000
