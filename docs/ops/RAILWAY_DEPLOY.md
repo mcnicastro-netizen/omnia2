@@ -11,9 +11,9 @@
 Sei già loggato con GitHub. Poi:
 
 ### A. Token per l’agent (obbligatorio E2E)
-1. https://railway.app/account/tokens → **Create Token**
-2. Incolla in Cursor Secrets (env omnia2) come `RAILWAY_TOKEN`  
-   Link env: https://cursor.com/dashboard/cloud-agents/environments/e/b80b635c-b592-11f1-bb68-864e54d14197
+1. https://railway.app/account/tokens → **Create Token** (scope **Account**)
+2. Incolla in Cursor Secrets (env omnia2, scope **Environment**) come `RAILWAY_TOKEN`  
+   (`scripts/railway-deploy.sh` lo rimappa a `RAILWAY_API_TOKEN` per la CLI: se lasci un Account token anche in `RAILWAY_TOKEN` process env, la CLI lo tratta come *project* token → Unauthorized.)
 3. Nuovo agent + messaggio **«vai Railway»**
 
 ### B. Oppure crea il progetto a mano (se preferisci UI)

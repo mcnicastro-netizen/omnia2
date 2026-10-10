@@ -116,3 +116,6 @@ backend/.media/
 
 # D-085 local backups
 backend/.backups/
+
+# Railway CLI local link (never commit)
+.railway/
