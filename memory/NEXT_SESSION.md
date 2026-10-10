@@ -22,6 +22,7 @@ Sequenza: S1–S5 (PR) · **S6 ✅ narrativa 2 prodotti** → **S7 demo story** 
 | **S3.1** | Firma/deepen meter storage — non chiudere listino senza Founder |
 | **S9** | Rubinetto `OMNIA_SELF_SERVE_ENABLED=true` solo dopo O6 PASS |
 | D-075 vs P-036 | HAL Legal “incluso” vs 12 crediti — SoT ancora da firmare |
+| **D-038 APE partner** | ⏳ ordine certificazione APE **non attivo** — accordo commerciale. Bottone “Ordina APE” solo dopo. D-039: no calcolatore in-house. ≠ compliance classe APE publishing. |
 
 ---
 
@@ -42,3 +43,4 @@ Sequenza: S1–S5 (PR) · **S6 ✅ narrativa 2 prodotti** → **S7 demo story** 
 | S5 soldi onesti | ✅ `OMNIA_SELF_SERVE_ENABLED` default OFF (PR #19) |
 | O6 self-serve | OFF (hard-gate codice; firma Founder ancora aperta) |
 | Fascicolo portale | `docs/audit/OMNIA_PORTALE_AUDIT_FASCICOLO.md` |
+| D-038 APE ordine | ⏳ accordo commerciale — non attivo |

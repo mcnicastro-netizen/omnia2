@@ -98,6 +98,14 @@ Ordine di **coerenza**, non di feature. Niente monoblocco; ogni step ha artefatt
 
 ---
 
+## 4bis. Dipendenze commerciali aperte (segnalare sempre)
+
+Non sono contraddizioni codice↔promessa della freccia S1–S10, ma **restano aperti** e vanno ricordati a ogni handoff:
+
+| Voce | Stato | Nota |
+|------|-------|------|
+| **D-038 — ordine APE ufficiale** | ⏳ accordo commerciale | Nessun bottone “Ordina APE” finché partner (APEFACILE / Certificato-Energetico.it) non firma. D-039: niente calcolatore in-house. Compliance *classe APE* in publishing ≠ servizio certificazione. |
+
 ## 5. Cosa *non* riesaminare da zero
 
 - Finding D-118 già in codice su `main` (CSRF, Stripe fallback, rate limit, ecc.): **ri-verificare LIVE**, non riscrivere.  
