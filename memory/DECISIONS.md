@@ -1317,11 +1317,13 @@ Registro di tutte le decisioni di business e tecniche prese durante il progetto.
 - Reindex batch a fine Cap. 22–26 + dopo ogni milestone che cambia superficie API pubblica.
 
 ## D-074 — Deploy Vercel · 2026-09-14
-**Status**: ✅ ATTIVA
+**Status**: ✅ DECISIONE ATTIVA · ⏳ **deploy ancora NON eseguito** (10-Ott-2026)
 
-- Frontend React (CRA/build) pubblicato su Vercel (`vercel.json` in `/frontend` o root monorepo).
-- Backend FastAPI: processo ASGI dedicato (stesso progetto git), env su host API; FE punta all'API pubblica.
-- Preview sessione Cursor resta per sviluppo; produzione/staging = Vercel FE + API deployata.
+- Frontend React (CRA/build) → Vercel (`frontend/vercel.json`).
+- Backend FastAPI: processo ASGI dedicato; FE punta all'API pubblica (`api.omniarealestateecosystem.it` a regime).
+- Preview / Cloud Agent = tunnel `*.trycloudflare.com` per sviluppo/demo.
+- DNS SoT: `memory/DNS_SETUP_GUIDE.md` (Cloudflare; Emergent CNAME = legacy).
+- **Go-live dominio** solo dopo: Vercel + API host + record CF aggiornati.
 
 ## D-075 — AI in-app (HAL / Guida / Legal chat) inclusa, senza crediti · 2026-09-14
 **Status**: ✅ ATTIVA · **confermata D-119** (10-Ott-2026) anche per HAL Legal CRM
