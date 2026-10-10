@@ -1618,8 +1618,8 @@ Registro di tutte le decisioni di business e tecniche prese durante il progetto.
   5. **Non** dimensionare per 5000 utenti contemporanei; verificare picco (2 / 50 / 200; ~20 concurrent) + processo commerciale + lead non persi.
   6. Prima delle 5000 email: **demo sotto stress** sul percorso prospect reale.
   7. Capacità tecnica **e** qualità demo (UI, 500, tenant, D-100, scaffold, upload, job).
-- **Implementazione**: ❌ analisi GTM-01 ⏳ post-audit tecnico · codice/fix solo con «vai».
-- **Stato**: ✅ **ACQUISITO** Founder (30-Set-2026) · in coda · vincolo pre-~5000 email
+- **Implementazione**: ✅ **S10 10-Ott-2026** — `scripts/gtm01_smoke.py` · LIVE PASS · `OMNIA_S10_GTM_01.md` · **D-121**.
+- **Stato**: ✅ **ESEGUITO** (S10) · vincolo pre-~5000 email soddisfatto (outreach non auto-lanciato)
 
 ### D-105 — Backup health minimo in Founder Ops · 30-Set-2026
 - **Data**: 30 Settembre 2026
@@ -1797,5 +1797,16 @@ Registro di tutte le decisioni di business e tecniche prese durante il progetto.
   5. **Non** apre GTM outreach / Stripe live / S10.
 - **Implementazione**: `OMNIA_S9_O6_SELF_SERVE.md` · O6 checklist firma · `cloud-agent-start.sh` · `.env.example` · test LIVE.
 - **Stato**: ✅ **DECISIONE OPERATIVA REGISTRATA** · rubinetto aperto
+
+### D-121 — S10 GTM-01 Demo Readiness PASS · 10-Ott-2026
+- **Data**: 10 Ottobre 2026
+- **Contesto**: D-104 vincolo hard prima di ~5k email. Founder: «S10». Prerequisiti S1–S9 ✅.
+- **Decisione**:
+  1. Eseguire checkpoint **GTM-01** (percorso prospect + smoke ~20 concurrent).
+  2. PASS se error_rate ≤10%, p95 < 15s, upload+serve OK, checkout oltre gate self-serve.
+  3. Smoke media OK → **non** anticipare object storage (K-AD-02).
+  4. **Non** invia outreach ~5k né attiva Stripe live — solo sblocca il gate.
+- **Implementazione**: `scripts/gtm01_smoke.py` · `OMNIA_S10_GTM_01.md` · log LIVE.
+- **Stato**: ✅ **ESEGUITO PASS** 10-Ott-2026
 
 

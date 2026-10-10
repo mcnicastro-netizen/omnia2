@@ -66,5 +66,5 @@ Non cancellati: restano memoria. **Non** usarli per decidere il prossimo step.
 | **D-038** | APE ordine — accordo commerciale |
 | **D-119** | ✅ Legal CRM incluso (chiude D-075 vs P-036) — merged main |
 | **S9** | ✅ O6 PASS · `OMNIA_SELF_SERVE_ENABLED=true` (D-120) |
-| **S10** | GTM-01 smoke + percorso prospect |
+| **S10** | ✅ GTM-01 PASS (`gtm01_smoke.py` · D-121) |
 | **C5** | Trash non ovunque (fuori freccia S1–S10 finché non ripriorizzato) |
