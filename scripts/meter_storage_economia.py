@@ -23,8 +23,14 @@ QUOTA_GB = {"starter": 30, "pro": 100, "agency": 300}
 ADDON_GB = 100
 ADDON_EUR = 15.0
 
-# Sensitivity €/GB/mese ops (non confermato da fattura cloud — D-114)
-EUR_PER_GB = (0.02, 0.04, 0.08)
+# Ancore listino pubblico (10-Ott-2026) + legacy O0 claim
+# R2 $0.015≈€0.014 · S3~$0.023≈€0.021 · Hetzner Volume €0.0572 · legacy 0.04
+EUR_PER_GB = (
+    ("r2_public", 0.014),
+    ("s3_storage_only", 0.021),
+    ("hetzner_volume", 0.057),
+    ("legacy_o0_claim", 0.04),
+)
 
 # Multiplicatori disco ops post-S2 (hardlink + retention 7)
 # base = live; bak unique ≈ live * (1 + churn*6) circa; JSONL trascurabile vs media
@@ -58,11 +64,11 @@ def scenario_rows() -> list[dict]:
                 "mult_x": mult,
                 "ops_gb": round(ops_gb, 1),
             }
-            for rate in EUR_PER_GB:
+            for name, rate in EUR_PER_GB:
                 cost = ops_gb * rate
-                cell[f"cost_at_{rate}"] = round(cost, 2)
-                cell[f"margin_disk_at_{rate}"] = round(canon - cost, 2)
-                cell[f"disk_pct_canone_at_{rate}"] = round(100.0 * cost / canon, 1)
+                cell[f"cost_{name}"] = round(cost, 2)
+                cell[f"margin_disk_{name}"] = round(canon - cost, 2)
+                cell[f"disk_pct_canone_{name}"] = round(100.0 * cost / canon, 1)
             rows.append(cell)
     # Addon unit economics (incremental 100 GB live → ops × mid)
     ops = ADDON_GB * MULTIPLIERS["mid_churn"]
@@ -74,11 +80,11 @@ def scenario_rows() -> list[dict]:
         "mult_x": MULTIPLIERS["mid_churn"],
         "ops_gb": round(ops, 1),
     }
-    for rate in EUR_PER_GB:
+    for name, rate in EUR_PER_GB:
         cost = ops * rate
-        addon[f"cost_at_{rate}"] = round(cost, 2)
-        addon[f"margin_disk_at_{rate}"] = round(ADDON_EUR - cost, 2)
-        addon[f"disk_pct_canone_at_{rate}"] = round(100.0 * cost / ADDON_EUR, 1)
+        addon[f"cost_{name}"] = round(cost, 2)
+        addon[f"margin_disk_{name}"] = round(ADDON_EUR - cost, 2)
+        addon[f"disk_pct_canone_{name}"] = round(100.0 * cost / ADDON_EUR, 1)
     rows.append(addon)
     return rows
 
@@ -132,42 +138,38 @@ def main() -> int:
     rows = scenario_rows()
     both("scenario_table_json=" + json.dumps(rows, ensure_ascii=False))
 
-    # Verdict helpers at reference 0.04 mid
-    both("--- reference €0.04/GB · mid_churn 2.5× ---")
-    for tier in ("starter", "pro", "agency"):
-        live = QUOTA_GB[tier]
-        ops = live * MULTIPLIERS["mid_churn"]
-        cost = ops * 0.04
+    both("--- public list mid_churn 2.5× (Agency ops=750) ---")
+    for name, rate in EUR_PER_GB:
+        cost = 750 * rate
         both(
-            f"{tier}: live={live}GB ops≈{ops:.0f}GB cost≈€{cost:.2f} "
-            f"vs canone €{CANONI[tier]:.0f} → disk={100*cost/CANONI[tier]:.1f}% canone"
+            f"agency_mid_{name}: €/GB={rate} cost≈€{cost:.2f} "
+            f"({100 * cost / 299:.1f}% of €299)"
         )
-    addon_ops = ADDON_GB * MULTIPLIERS["mid_churn"]
-    addon_cost = addon_ops * 0.04
-    both(
-        f"addon +100GB: ops≈{addon_ops:.0f}GB cost≈€{addon_cost:.2f} "
-        f"vs €{ADDON_EUR:.0f} → margin_disk≈€{ADDON_EUR-addon_cost:.2f}"
-    )
-
-    # Contrast as-is 32× (pre-S2)
-    both("--- contrast pre-S2 full×30 (~31× bak tree ≈32× live+bak) @ €0.04 ---")
-    for tier in ("starter", "pro", "agency"):
-        live = QUOTA_GB[tier]
-        ops = live * 32
-        cost = ops * 0.04
+    both("--- addon mid 250GB ---")
+    for name, rate in EUR_PER_GB:
+        cost = 250 * rate
         both(
-            f"{tier}_preS2: ops≈{ops}GB cost≈€{cost:.2f} vs €{CANONI[tier]:.0f} "
-            f"({'FAIL margin' if cost > CANONI[tier] else 'ok'})"
+            f"addon_mid_{name}: cost≈€{cost:.2f} vs €{ADDON_EUR:.0f} "
+            f"margin≈€{ADDON_EUR - cost:.2f}"
+        )
+
+    both("--- contrast pre-S2 ×32 @ Hetzner Volume €0.057 ---")
+    for tier in ("starter", "pro", "agency"):
+        ops = QUOTA_GB[tier] * 32
+        cost = ops * 0.057
+        both(
+            f"{tier}_preS2_hetzner_vol: ops≈{ops}GB cost≈€{cost:.2f} vs €{CANONI[tier]:.0f} "
+            f"({'FAIL' if cost > CANONI[tier] else 'ok'})"
         )
 
     both(
-        "VERDICT_PROPOSED=LISTINO_FERMO — post-S2 mid@0.04 Agency disk≈€30 "
-        f"({100*30/299:.1f}% canone); addon mid@0.04 ancora positivo; "
-        "€/GB fattura cloud ancora NON confermato — ricalibrare quando c’è bill reale."
+        "VERDICT_PROPOSED=LISTINO_FERMO — ancore pubbliche: Agency mid "
+        "R2≈€10.5 (3.5%) · Hetzner Vol≈€42.8 (14%); addon stretto solo su Volume; "
+        "listino pubblico ≠ bill nostra ma decision-grade pre-GTM."
     )
     both(
-        "LIMITI: sandbox Cloud media≈0; scenari = modello post-S2 hardlink+7g; "
-        "non firma Founder automatica; non revisione prezzi in questo script."
+        "LIMITI: sandbox media≈0; ops R2/egress AWS non in tabella storage-only; "
+        "prezzi provider al 10-Ott-2026."
     )
 
     text = "\n".join(lines) + "\n"
