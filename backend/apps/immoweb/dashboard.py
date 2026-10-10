@@ -5,6 +5,7 @@ from typing import Any, Dict, List, Optional
 
 from shared.db.connection import Database
 from shared.auth.dependencies import get_current_user
+from shared.db.trash import with_not_trashed
 from shared.models.agency import DashboardKPI
 
 router = APIRouter(prefix="/dashboard", tags=["dashboard"])
@@ -83,17 +84,21 @@ async def get_kpis(user: dict = Depends(get_current_user)):
             {"agency_id": agency_id, "status": "pending"}
         )
         properties_active = await db.properties.count_documents(
-            {"agency_id": agency_id, "status": "active"}
+            with_not_trashed({"agency_id": agency_id, "status": "active"})
         )
         # Coda lavoro: richieste aperte (preferite); fallback lead grezzi
         requests_open = await db.client_requests.count_documents(
-            {
-                "agency_id": agency_id,
-                "status": {"$in": ["open", "matched", "negotiating"]},
-            }
+            with_not_trashed(
+                {
+                    "agency_id": agency_id,
+                    "status": {"$in": ["open", "matched", "negotiating"]},
+                }
+            )
         )
         leads_raw = await db.leads.count_documents(
-            {"agency_id": agency_id, "status": {"$in": ["new", "contacted"]}}
+            with_not_trashed(
+                {"agency_id": agency_id, "status": {"$in": ["new", "contacted"]}}
+            )
         )
         leads_open = requests_open if requests_open else leads_raw
         # M2.S3 matches: computed on-read, so we look at the audit log of last 7 days.

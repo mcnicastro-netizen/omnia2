@@ -1809,4 +1809,17 @@ Registro di tutte le decisioni di business e tecniche prese durante il progetto.
 - **Implementazione**: `scripts/gtm01_smoke.py` · `OMNIA_S10_GTM_01.md` · log LIVE.
 - **Stato**: ✅ **ESEGUITO PASS** 10-Ott-2026
 
+### D-122 — Pre-demo hardening ≥8/10 · 10-Ott-2026
+- **Data**: 10 Ottobre 2026
+- **Contesto**: Founder vuole ≥8/10 prima di inviare demo. «vai pre-demo».
+- **Decisione**:
+  1. Seconda copia bak **off-box** (`OFFBOX_BACKUP_ROOT`) dopo ogni bak OK/PARTIAL.
+  2. Restore **dry-run** obbligatorio nel probe (nessuna write Mongo).
+  3. `GET /app/ops/preflight` = gate operativo (bak fresco, off-box, self-serve, alert).
+  4. C5: KPI + MLS filtrano trash (`deleted_at`).
+  5. Checklist + `pre_demo_probe.py` = rituale pre-invio demo.
+  6. **Non** include Stripe live / outreach / firma legale.
+- **Implementazione**: `OMNIA_PRE_DEMO_8.md` · `PRE_DEMO_CHECKLIST.md` · offbox + preflight + probe.
+- **Stato**: ✅ **DECISIONE OPERATIVA REGISTRATA** · codice in ship
+
 

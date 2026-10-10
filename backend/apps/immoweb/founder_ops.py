@@ -602,6 +602,8 @@ async def run_ops_backup(
 ) -> Dict[str, Any]:
     """P-029 — trigger archive backup now (Cloud / demo when MISSING)."""
     from apps.immoweb.backup_job import run_daily_backup, read_latest_backup_health
+    from apps.immoweb.offbox_backup import read_offbox_health
+
     report = await run_daily_backup()
     health = read_latest_backup_health()
     return {
@@ -610,4 +612,78 @@ async def run_ops_backup(
         "day": report.get("day") or health.get("day"),
         "path": report.get("path") or health.get("path"),
         "backup": health,
+        "offbox": report.get("offbox") or read_offbox_health(),
+    }
+
+
+@router.get("/preflight")
+async def ops_preflight(
+    user: dict = Depends(require_roles("super_admin")),
+) -> Dict[str, Any]:
+    """Pre-demo readiness gate (API / bak / off-box / self-serve / Stripe / alerts)."""
+    from apps.immoweb.backup_job import read_latest_backup_health
+    from apps.immoweb.offbox_backup import read_offbox_health
+    from shared.billing.self_serve import is_self_serve_enabled
+
+    db = Database.get()
+    bak = read_latest_backup_health()
+    off = read_offbox_health()
+    unacked = await db.ops_alerts.count_documents({"acked": False})
+    stripe_on = (os.environ.get("STRIPE_ENABLED") or "").strip().lower() == "true"
+    stripe_mode = os.environ.get("STRIPE_MODE") or "test"
+    webhook = bool((os.environ.get("STRIPE_WEBHOOK_SECRET") or "").strip())
+    self_serve = is_self_serve_enabled()
+
+    # Freshness: bak created today or MANIFEST created_at within 36h
+    bak_fresh = False
+    created = bak.get("created_at") or ""
+    if bak.get("status") in ("OK", "PARTIAL") and created:
+        try:
+            ts = datetime.fromisoformat(created.replace("Z", "+00:00"))
+            age_h = (datetime.now(timezone.utc) - ts).total_seconds() / 3600.0
+            bak_fresh = age_h <= 36
+        except Exception:  # noqa: BLE001
+            bak_fresh = bak.get("day") == datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    elif bak.get("status") in ("OK", "PARTIAL"):
+        bak_fresh = bak.get("day") == datetime.now(timezone.utc).strftime("%Y-%m-%d")
+
+    checks = {
+        "backup_ok": bak.get("status") in ("OK", "PARTIAL"),
+        "backup_fresh_36h": bak_fresh,
+        "offbox_present": off.get("status") not in (None, "MISSING"),
+        "self_serve_on": self_serve,
+        "stripe_enabled": stripe_on,
+        "stripe_webhook_configured": webhook,
+        "unacked_alerts_lt_20": unacked < 20,
+    }
+    # Soft warn if bak stale
+    if checks["backup_ok"] and not bak_fresh:
+        try:
+            from shared.ops_alerts import record_alert
+
+            await record_alert(
+                kind="backup_stale",
+                severity="warning",
+                message=f"Backup non fresco (>{36}h) — day={bak.get('day')}",
+                meta={"backup": bak},
+                dedupe_hours=12,
+            )
+        except Exception:  # noqa: BLE001
+            logger.exception("backup_stale alert failed")
+
+    failed = [k for k, v in checks.items() if not v]
+    # Stripe webhook optional in pure dogfood; mark as soft
+    hard_failed = [k for k in failed if k != "stripe_webhook_configured"]
+    return {
+        "ok": len(hard_failed) == 0,
+        "esito": "PASS" if not hard_failed else "FAIL",
+        "failed": hard_failed,
+        "soft_failed": [k for k in failed if k == "stripe_webhook_configured"],
+        "checks": checks,
+        "backup": bak,
+        "offbox": off,
+        "stripe": {"enabled": stripe_on, "mode": stripe_mode, "webhook": webhook},
+        "self_serve_enabled": self_serve,
+        "alerts_unacked": unacked,
+        "generated_at": datetime.now(timezone.utc).isoformat(),
     }

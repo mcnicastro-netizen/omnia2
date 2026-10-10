@@ -62,7 +62,7 @@ Più: Founder Ops, Cloud Agent (seed demo GTM + Nicastro dogfood), corpus `memor
 | C2 | **Self-serve ≠ Stripe** — S5 gate · **S9 ON** (`OMNIA_SELF_SERVE_ENABLED=true`) | Kill-switch resta; rubinetto aperto D-120 |
 | C3 | **Rail monetari** — valuator onesto; Legal edge chiuso; **D-119** Legal CRM incluso | Narrativa vs wallet allineata |
 | C4 | **Visibilità pubblica** — mitigato S4 | Portale/brand allineati LIVE |
-| C5 | **Trash non ovunque** | Integrità dominio quasi-una (fuori freccia S* finché ripriorizzato) |
+| C5 | **Trash non ovunque** — mitigato pre-demo: KPI + MLS filtrano `deleted_at` | Residui possibili fuori KPI/MLS |
 | C6 | **Bak economia** — S2 ✅ runtime 7g+hardlink; S3 numeri ✅; **S3.1 firma listino ⏳** | Economia modellata; chiusura commerciale meter aperta |
 | C7 | **Restore** — S1 run firmata ✅; non = DR piattaforma | O3b pre-GTM chiuso |
 | C8 | **Demo story** — mitigato S7 (`demo-agency-001`) | Una storia GTM ripetibile |

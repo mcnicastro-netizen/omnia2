@@ -18,6 +18,7 @@ from pydantic import BaseModel, Field
 from shared.auth.dependencies import get_current_user, require_roles
 from shared.auth.tenant import optional_agency_id
 from shared.db.connection import Database
+from shared.db.trash import with_not_trashed
 
 logger = logging.getLogger("omnia.mls")
 router = APIRouter(prefix="/mls", tags=["mls"])
@@ -27,12 +28,14 @@ PartnerStatus = Literal["pending", "active", "revoked"]
 
 
 def _shareable_listing_clause() -> Dict[str, Any]:
-    """Immobili visibili in inventario MLS (Cap. 27 + flag mls_shared)."""
-    return {
-        "visibility": {"$in": ["public", "mls_only"]},
-        "mls_shared": {"$ne": False},
-        "status": {"$ne": "deleted"},
-    }
+    """Immobili visibili in inventario MLS (Cap. 27 + flag mls_shared). C5: no trash."""
+    return with_not_trashed(
+        {
+            "visibility": {"$in": ["public", "mls_only"]},
+            "mls_shared": {"$ne": False},
+            "status": {"$ne": "deleted"},
+        }
+    )
 
 
 class JoinMlsBody(BaseModel):
@@ -147,18 +150,33 @@ async def mls_dashboard(user: dict = Depends(require_roles("agency_admin", "agen
         raise HTTPException(status_code=404, detail="agency_not_found")
 
     my_shared = await db.properties.count_documents(
-        {"agency_id": aid, "visibility": {"$in": ["public", "mls_only"]}, "mls_shared": {"$ne": False}, "status": {"$ne": "deleted"}}
+        with_not_trashed(
+            {
+                "agency_id": aid,
+                "visibility": {"$in": ["public", "mls_only"]},
+                "mls_shared": {"$ne": False},
+                "status": {"$ne": "deleted"},
+            }
+        )
     )
     my_exclusive = await db.properties.count_documents(
-        {"agency_id": aid, "visibility": "private", "status": {"$ne": "deleted"}}
+        with_not_trashed(
+            {"agency_id": aid, "visibility": "private", "status": {"$ne": "deleted"}}
+        )
     )
     with_photos = await db.properties.count_documents(
-        {
-            "agency_id": aid,
-            "visibility": {"$in": ["public", "mls_only"]}, "mls_shared": {"$ne": False},
-            "status": {"$ne": "deleted"},
-            "$or": [{"cover_url": {"$exists": True, "$ne": None}}, {"photos.0": {"$exists": True}}],
-        }
+        with_not_trashed(
+            {
+                "agency_id": aid,
+                "visibility": {"$in": ["public", "mls_only"]},
+                "mls_shared": {"$ne": False},
+                "status": {"$ne": "deleted"},
+                "$or": [
+                    {"cover_url": {"$exists": True, "$ne": None}},
+                    {"photos.0": {"$exists": True}},
+                ],
+            }
+        )
     )
 
     province = (agency.get("mls_province") or agency.get("province_sigla") or "").upper()
@@ -170,13 +188,16 @@ async def mls_dashboard(user: dict = Depends(require_roles("agency_admin", "agen
     }
     if province:
         local_q["province_sigla"] = province
-    local_listings = await db.properties.count_documents(local_q)
+    local_listings = await db.properties.count_documents(with_not_trashed(local_q))
     national_listings = await db.properties.count_documents(
-        {
-            "visibility": {"$in": ["public", "mls_only"]}, "mls_shared": {"$ne": False},
-            "status": {"$ne": "deleted"},
-            "agency_id": {"$ne": aid},
-        }
+        with_not_trashed(
+            {
+                "visibility": {"$in": ["public", "mls_only"]},
+                "mls_shared": {"$ne": False},
+                "status": {"$ne": "deleted"},
+                "agency_id": {"$ne": aid},
+            }
+        )
     )
     network_agencies = await db.agencies.count_documents({"mls_enabled": True, "id": {"$ne": aid}})
 
@@ -274,6 +295,7 @@ async def my_mls_inventory(
             q["province_sigla"] = province
     else:
         q["agency_id"] = {"$ne": aid}
+    q = with_not_trashed(q)
 
     total = await db.properties.count_documents(q)
     cursor = (
@@ -489,6 +511,7 @@ async def public_network_search(
             price_q["$lte"] = price_max
         q["price"] = price_q
 
+    q = with_not_trashed(q)
     total = await db.properties.count_documents(q)
     agencies_in_mls = await db.agencies.count_documents({"mls_enabled": True})
     items = []
