@@ -56,10 +56,16 @@ Opzionale: volume off-box path via `OFFBOX_BACKUP_ROOT`
 
 ## Flusso agent (dopo `RAILWAY_TOKEN`)
 
+Il valore in vault deve essere un **account token** (Railway → Account → Tokens → workspace **No workspace**).  
+La CLI 5 tratta `RAILWAY_TOKEN` come token di progetto: lo script promuove l’account token a `RAILWAY_API_TOKEN` solo dopo averlo verificato.  
+Un token di workspace, o un project id al posto del token, viene rifiutato (`me` Not Authorized + `projectToken` not found).
+
 ```bash
 bash scripts/railway-prep-check.sh
-bash scripts/railway-deploy.sh   # richiede RAILWAY_TOKEN
+bash scripts/railway-deploy.sh   # richiede RAILWAY_TOKEN (account)
 ```
+
+Lo script: classifica il token → `railway init` → MongoDB → variabili (senza stamparle) → volumi `/app/.media` e `/app/.backups` → `railway up` → dominio → smoke `/api/health`.
 
 Poi DNS: `memory/DNS_SETUP_GUIDE.md` §4b (`api` → Railway).
 
@@ -72,7 +78,7 @@ Hobby **$5/mese** + usage → tipico API+Mongo piccolo **≈ $15–35/mese**.
 
 ## Checklist Founder
 - [x] Account Railway (GitHub)
-- [ ] `RAILWAY_TOKEN` in vault omnia2
+- [ ] `RAILWAY_TOKEN` in vault omnia2 = **account token** (No workspace). Tentativo 10-Ott-2026: valore presente rifiutato da Railway.
 - [ ] Progetto + Mongo + variables
 - [ ] Domain Railway + health OK
 - [ ] `OMNIA_API_PUBLIC_URL` in vault

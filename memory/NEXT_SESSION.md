@@ -21,7 +21,7 @@
 
 | Voce | Nota |
 |------|------|
-| **«vai Railway»** | Prima API: vault `RAILWAY_TOKEN` → deploy API (Hetzner skip) |
+| **«vai Railway»** | 10-Ott: token in vault rifiutato (né account né project). Serve account token «No workspace», poi di nuovo «vai Railway» |
 | **«vai Vercel»** | Dopo API live: `OMNIA_API_PUBLIC_URL` + `VERCEL_TOKEN` |
 | **Pre-demo probe** | `python scripts/pre_demo_probe.py` prima di ogni invio demo |
 | **OFFBOX_BACKUP_ROOT** | In prod = volume esterno (Cloud default `/tmp`) |
@@ -34,7 +34,7 @@
 
 ## Prossimo passo tipico
 
-1. Founder: `RAILWAY_TOKEN` in vault → **«vai Railway»**  
+1. Founder: sostituire `RAILWAY_TOKEN` con un **account token** (workspace «No workspace») → **«vai Railway»**  
 2. Poi `OMNIA_API_PUBLIC_URL` + **«vai Vercel»**  
 3. Demo: tunnel finché dominio non è live  
 
