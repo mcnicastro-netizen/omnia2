@@ -13,6 +13,34 @@ MONGO_URL = os.environ.get("MONGO_URL", "mongodb://127.0.0.1:27017")
 DB_NAME = os.environ.get("DB_NAME", "omnia")
 
 
+class SecureCookieSession(requests.Session):
+    """Keep Secure/SameSite=None cookies on http://127.0.0.1 (Cloud)."""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self._forced: dict[str, str] = {}
+        self.csrf: str | None = None
+
+    def request(self, method, url, **kwargs):  # type: ignore[override]
+        headers = dict(kwargs.get("headers") or {})
+        if self._forced:
+            headers["Cookie"] = "; ".join(f"{k}={v}" for k, v in self._forced.items())
+        if self.csrf and method.upper() in ("POST", "PUT", "PATCH", "DELETE"):
+            headers["X-CSRF-Token"] = self.csrf
+        kwargs["headers"] = headers
+        r = super().request(method, url, **kwargs)
+        for h in r.raw.headers.getlist("Set-Cookie"):
+            part = h.split(";", 1)[0]
+            if "=" not in part:
+                continue
+            name, val = part.split("=", 1)
+            name, val = name.strip(), val.strip()
+            self._forced[name] = val
+            if name == "omnia_csrf":
+                self.csrf = val
+        return r
+
+
 @pytest.fixture(scope="module")
 def mongo():
     from pymongo import MongoClient
@@ -22,11 +50,11 @@ def mongo():
 
 @pytest.fixture(scope="module")
 def founder_session():
-    email = os.environ.get("ADMIN_EMAIL")
-    password = os.environ.get("ADMIN_PASSWORD")
+    email = os.environ.get("ADMIN_EMAIL") or os.environ.get("OMNIA_ADMIN_EMAIL")
+    password = os.environ.get("ADMIN_PASSWORD") or os.environ.get("OMNIA_ADMIN_PASSWORD")
     if not email or not password:
         pytest.skip("ADMIN_EMAIL/ADMIN_PASSWORD missing")
-    s = requests.Session()
+    s = SecureCookieSession()
     r = s.post(f"{API}/auth/login", json={"email": email, "password": password}, timeout=30)
     if r.status_code != 200:
         pytest.skip(f"founder login {r.status_code}")
@@ -37,7 +65,7 @@ def founder_session():
 def demo_session(mongo):
     email = "demo.admin@omniaecosystem.it"
     password = os.environ.get("DEMO_ADMIN_PASSWORD") or "DemoAdmin2026!"
-    s = requests.Session()
+    s = SecureCookieSession()
     r = s.post(f"{API}/auth/login", json={"email": email, "password": password}, timeout=30)
     if r.status_code != 200:
         pytest.skip(f"demo login {r.status_code}")
@@ -47,6 +75,16 @@ def demo_session(mongo):
         {"$set": {"balance": 100, "updated_at": now}, "$setOnInsert": {"created_at": now}},
         upsert=True,
     )
+    # Ensure active tenant for Legal gate
+    me = s.get(f"{API}/auth/me", timeout=15)
+    if me.status_code == 200:
+        body = me.json()
+        if not body.get("active_agency_id"):
+            s.post(
+                f"{API}/auth/active-agency",
+                json={"agency_id": "demo-agency-001"},
+                timeout=15,
+            )
     return s
 
 
@@ -86,16 +124,6 @@ def test_d119_agency_legal_included_no_debit(demo_session, mongo):
     bal_after = int((after or {}).get("balance") or 0)
     assert bal_after == bal_before
 
-    ledger = mongo.credit_ledger.find_one(
-        {"agency_id": "demo-agency-001", "reason": "hal_legal_query"},
-        sort=[("created_at", -1)],
-    )
-    # Nessun nuovo debit post-D-119; ledger storico eventuale ok se created_at < now
-    if ledger is not None:
-        created = str(ledger.get("created_at") or "")
-        # Se c'è una riga fresca (stesso secondo), fallirebbe il balance assert sopra
-        assert created  # presence only; balance is the hard check
-
 
 def test_d119_low_wallet_still_ok(demo_session, mongo):
     """Wallet < 12 non blocca più Legal CRM (incluso)."""
@@ -110,6 +138,7 @@ def test_d119_low_wallet_still_ok(demo_session, mongo):
     )
     assert r.status_code == 200, r.text[:300]
     assert (r.json().get("credits_charged") or 0) == 0
+    assert r.json().get("payment_rail") == "agency_included"
     mongo.credit_wallets.update_one(
         {"agency_id": "demo-agency-001"},
         {"$set": {"balance": 100}},
