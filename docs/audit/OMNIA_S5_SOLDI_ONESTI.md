@@ -11,7 +11,7 @@
 | Flag | Significato | Default |
 |------|-------------|---------|
 | `STRIPE_ENABLED` | Infrastruttura pagamenti (test/live) | sandbox Cloud: spesso `true` |
-| `OMNIA_SELF_SERVE_ENABLED` | Rubinetto checkout **B2B** (O6 / D-115) | **`false`** |
+| `OMNIA_SELF_SERVE_ENABLED` | Rubinetto checkout **B2B** (O6 / D-115) | default codice OFF · **S9 ON** (`true`, D-120) |
 
 Endpoint B2B bloccati se self-serve OFF (503 `self_serve_blocked`):
 
@@ -45,9 +45,9 @@ Endpoint B2B bloccati se self-serve OFF (503 `self_serve_blocked`):
 
 ## Aperto (non S5)
 
-- Firma Founder O6 → `OMNIA_SELF_SERVE_ENABLED=true` (S9)
 - Debit reale valuator agenzia (se Founder vuole listino crediti invece di incluso)
 
 ## Chiuso dopo S5
 
 - **D-119** (10-Ott-2026): D-075 vs P-036 — HAL Legal CRM **incluso**; B2C €1 e API crediti restano
+- **S9 / D-120** (10-Ott-2026): O6 PASS · `OMNIA_SELF_SERVE_ENABLED=true`

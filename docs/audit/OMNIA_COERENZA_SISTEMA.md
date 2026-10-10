@@ -59,7 +59,7 @@ Più: Founder Ops, Cloud Agent (seed demo GTM + Nicastro dogfood), corpus `memor
 | # | Contraddizione | Effetto |
 |---|----------------|---------|
 | C1 | **Messaggio 3→2** — mitigato S6 | Pitch GTM allineato |
-| C2 | **Self-serve ≠ Stripe** — mitigato S5 (`OMNIA_SELF_SERVE_ENABLED`) | Kill-switch B2B; apre a S9 |
+| C2 | **Self-serve ≠ Stripe** — S5 gate · **S9 ON** (`OMNIA_SELF_SERVE_ENABLED=true`) | Kill-switch resta; rubinetto aperto D-120 |
 | C3 | **Rail monetari** — valuator onesto; Legal edge chiuso; **D-119** Legal CRM incluso | Narrativa vs wallet allineata |
 | C4 | **Visibilità pubblica** — mitigato S4 | Portale/brand allineati LIVE |
 | C5 | **Trash non ovunque** | Integrità dominio quasi-una (fuori freccia S* finché ripriorizzato) |
@@ -85,12 +85,12 @@ Più: Founder Ops, Cloud Agent (seed demo GTM + Nicastro dogfood), corpus `memor
 | **S6** | Narrativa 2 prodotti | C1 | ✅ **DONE 2026-10-10** |
 | **S7** | Demo story unica | C8 | ✅ **DONE 2026-10-10** |
 | **S8** | SoT unico | C9, C10 | ✅ **DONE 2026-10-10** — `OMNIA_S8_SOT_UNICO.md` |
-| **S9** | O6 PASS + firma Founder self-serve | C2, C7 | Rubinetto ON solo qui |
+| **S9** | O6 PASS + firma Founder self-serve | C2, C7 | ✅ **DONE 2026-10-10** — `OMNIA_S9_O6_SELF_SERVE.md` · D-120 |
 | **S10** | GTM-01 smoke + percorso prospect | — | Gate D-104 |
 
-**Fuori sequenza finché S9 non è verde:** redesign UI, A-038 fatture, Stripe live, outreach di massa, O6 ON “perché prima o poi”.
+**Fuori sequenza finché S10 non è verde:** redesign UI, A-038 fatture, Stripe live keys, outreach di massa.
 
-**Demo funnel (Founder 10 Ott):** richiesta → sandbox a tempo → a scadenza CTA acquista — **senza call**. Checkout solo post-**S9**.
+**Demo funnel (Founder 10 Ott):** richiesta → sandbox a tempo → a scadenza CTA acquista — **senza call**. Checkout B2B **aperto** (S9).
 
 ---
 
@@ -119,7 +119,7 @@ Più: Founder Ops, Cloud Agent (seed demo GTM + Nicastro dogfood), corpus `memor
 Il repo **non** è un pasticcio casuale: è un ecosistema dual-product con spina dorsale solida.  
 Il rischio di fallimento non è “manca un modulo magico”: è **raccontare o vendere una storia più chiusa** di quanto il sistema sia logicamente allineato.
 
-**Prossimo «vai» consigliato:** **S9** (O6 PASS — firma Founder self-serve). Reminder: S3.1 · D-038. D-119 ✅.
+**Prossimo «vai» consigliato:** **S10** (GTM-01). Reminder: S3.1 · D-038. S9/D-119 ✅.
 
 ---
 

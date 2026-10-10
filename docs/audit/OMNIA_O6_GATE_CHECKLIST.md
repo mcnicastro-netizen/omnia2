@@ -1,9 +1,8 @@
 # O6 — Gate attivazione account (checklist)
 
-**Aggiornato:** 10 Ottobre 2026 (S8 — allineato a coerenza / S1)  
+**Aggiornato:** 10 Ottobre 2026 (**S9 PASS**)  
 **Regola (D-115):** nessun pagamento self-serve finché questa checklist ≠ **PASS** *e* Founder non firma il rubinetto (S9).  
-**Durante FAIL / CONDITIONAL:** solo provisioning assistito dichiarato (SLA interno ≤5 gg lav. provvisorio).  
-**SoT freccia:** `OMNIA_COERENZA_SISTEMA.md` · puntatore `memory/NEXT_SESSION.md`.
+**SoT freccia:** `OMNIA_COERENZA_SISTEMA.md` · puntatore `memory/NEXT_SESSION.md` · artefatto S9: `OMNIA_S9_O6_SELF_SERVE.md`.
 
 | # | Onda / decisione | Criterio | Esito |
 |---|------------------|----------|-------|
@@ -17,18 +16,19 @@
 | 8 | **O4a** D-109 | Landing prezzi da `GET /billing/plans` | ✅ PASS |
 | 9 | **O4b** D-110 | `localStorage` ≠ entitlement; piano attivo solo server | ✅ PASS |
 | 10 | **O5** D-104/107/108/112 | Upload stati+retry; pagination; APScheduler; seed demo | ✅ PASS (minimi) · demo story = S7 |
-| 11 | Self-serve Stripe | Checkout B2B pubblico solo dopo PASS + firma Founder | ❌ **BLOCCATO** in codice: `OMNIA_SELF_SERVE_ENABLED` default OFF (S5) — apre a **S9** |
+| 11 | Self-serve Stripe | Checkout B2B pubblico solo dopo PASS + firma Founder | ✅ **APERTO S9** — `OMNIA_SELF_SERVE_ENABLED=true` (D-120) |
 
 ## Verdetto corrente
 
-**Gate O6: CONDITIONAL PASS** — prerequisiti tecnici O0–O5 + restore firmata OK; self-serve **hard OFF** finché Founder non firma (S9).  
-Stripe sandbox può restare ON per probe B2C. Rubinetto B2B = solo S9.
+**Gate O6: PASS** — prerequisiti O0–O5 + restore firmata + firma Founder self-serve (S9 / D-120).  
+Stripe Cloud resta `mode=test` finché non si decide live (fuori S9).
 
-## Firma Founder (quando si apre self-serve) — S9
+## Firma Founder — S9 ✅
 
 | Campo | Valore |
 |-------|--------|
-| Data | |
-| Restore run rif. | `s1-restore-o3b-2026-10-10` (già FIRMATO) |
-| Note | |
-| Decisione | self-serve ON / resta assistito |
+| Data | 10 Ottobre 2026 |
+| Restore run rif. | `s1-restore-o3b-2026-10-10` (FIRMATO) |
+| Note | Ordine Founder: merge #26 → #25 → S9. Rubinetto B2B ON; Stripe test. |
+| Decisione | **self-serve ON** |
+| Firma | Founder (chat 10-Ott-2026 · «segui il tuo ordine») |
