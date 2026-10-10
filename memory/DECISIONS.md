@@ -1786,4 +1786,16 @@ Registro di tutte le decisioni di business e tecniche prese durante il progetto.
 - **Implementazione**: `al_legal/router.py` `_ensure_legal_payment` · test `test_s5_soldi_onesti` + `test_p035_p036_legal_ops` · SoT NEXT/coerenza/S5/PRICING.
 - **Stato**: ✅ **DECISIONE OPERATIVA REGISTRATA** · codice in ship
 
+### D-120 — S9 O6 PASS: self-serve B2B ON · 10-Ott-2026
+- **Data**: 10 Ottobre 2026
+- **Contesto**: Sequenza S1–S8 ✅ su main (#26 D-119, #25 S8). O6 checklist O0–O5 + restore firmata già OK; riga #11 self-serve era l’unico blocco. Founder: «segui il tuo ordine» (merge → S9).
+- **Decisione**:
+  1. **Gate O6 = PASS** con firma Founder.
+  2. Rubinetto **`OMNIA_SELF_SERVE_ENABLED=true`** (checkout/crediti/storage B2B).
+  3. `STRIPE_ENABLED` / `STRIPE_MODE=test` in Cloud restano indipendenti (live keys ≠ S9).
+  4. Default codice senza env resta OFF (kill-switch); Cloud start materializza `true` post-S9.
+  5. **Non** apre GTM outreach / Stripe live / S10.
+- **Implementazione**: `OMNIA_S9_O6_SELF_SERVE.md` · O6 checklist firma · `cloud-agent-start.sh` · `.env.example` · test LIVE.
+- **Stato**: ✅ **DECISIONE OPERATIVA REGISTRATA** · rubinetto aperto
+
 

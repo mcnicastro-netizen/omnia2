@@ -57,6 +57,14 @@ _default_demo_password="${DEMO_ADMIN_PASSWORD:-OmniaDemo2026!}"
 [[ -n "$_default_admin_email" ]] && append_if_missing "$ENV_FILE" "ADMIN_EMAIL" "$_default_admin_email"
 append_if_missing "$ENV_FILE" "ADMIN_PASSWORD" "$_default_admin_password"
 append_if_missing "$ENV_FILE" "DEMO_ADMIN_PASSWORD" "$_default_demo_password"
+# S9 / D-120 — O6 PASS: rubinetto B2B ON (Stripe mode resta indipendente)
+if [[ -f "$ENV_FILE" && -w "$ENV_FILE" ]]; then
+  if grep -qE '^OMNIA_SELF_SERVE_ENABLED=' "$ENV_FILE"; then
+    sed -i 's/^OMNIA_SELF_SERVE_ENABLED=.*/OMNIA_SELF_SERVE_ENABLED=true/' "$ENV_FILE"
+  else
+    append_if_missing "$ENV_FILE" "OMNIA_SELF_SERVE_ENABLED" "true"
+  fi
+fi
 
 # Vault → .env (Stripe test prefer + OPENAPI_* + AI mail keys; never echo values)
 if [[ -x "$ROOT/backend/.venv/bin/python" ]]; then

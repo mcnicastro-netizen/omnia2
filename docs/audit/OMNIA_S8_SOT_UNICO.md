@@ -65,5 +65,6 @@ Non cancellati: restano memoria. **Non** usarli per decidere il prossimo step.
 | **S3.1** | Firma Founder meter storage |
 | **D-038** | APE ordine — accordo commerciale |
 | **D-119** | ✅ Legal CRM incluso (chiude D-075 vs P-036) — merged main |
-| **S9** | Firma Founder → `OMNIA_SELF_SERVE_ENABLED=true` |
+| **S9** | ✅ O6 PASS · `OMNIA_SELF_SERVE_ENABLED=true` (D-120) |
+| **S10** | GTM-01 smoke + percorso prospect |
 | **C5** | Trash non ovunque (fuori freccia S1–S10 finché non ripriorizzato) |

@@ -1,0 +1,9 @@
+=== S9 LIVE 2026-10-10T10:15:16.445966+00:00 ===
+env_OMNIA_SELF_SERVE_ENABLED='true'
+env_from_dotenv='true'
+plans_status=200 self_serve_enabled=True enabled=True mode=test
+login_status=200
+checkout_status=200 detail=None
+checks={'plans_self_serve_true': True, 'checkout_not_self_serve_blocked': True, 'checkout_not_503_gate': True, 'checkout_session_ok': True}
+ESITO=PASS failed=[]
+LIMITI: Stripe resta mode=test; S10 = GTM-01 / live keys separati.
