@@ -62,7 +62,7 @@ Non è una lista infinita di bug: sono **tensioni** che impediscono di firmare �
 | C1 | **Messaggio a 3 pilastri / prodotto a 2** — mitigato S6: pitch = ImmobilCloud + ImmoWeb; `/learn` solo coming soon | Pitch GTM allineato; Academy resta roadmap M6 |
 | C2 | **D-115 self-serve** — mitigato S5: `OMNIA_SELF_SERVE_ENABLED` (default OFF) ≠ `STRIPE_ENABLED` | Kill-switch B2B reale; Stripe sandbox resta |
 | C3 | **Rail monetari** — valuator copy onesta; Legal edge gratis **chiuso**; D-075 vs P-036 ancora aperto | Narrativa vs wallet più onesta; SoT Legal da firmare dopo |
-| C4 | **Due verità pubbliche** — feed ImmobilCloud ≠ sito brand `/p/{slug}` sullo stesso immobile | Pitch portale+gestionale debole |
+| C4 | **Due verità pubbliche** — mitigato S4: contratto pubblico unico portale/brand | Allineato LIVE; residuali fuori S4 |
 | C5 | **Trash non ovunque** — KPI / alcuni MLS senza soft-delete uniforme | Integrità dominio quasi-una |
 | C6 | **O0 PASS design / bak as-is** — ancora `copytree` × retention **30** (~32× disco) | Agency ∞ economicamente finta al tetto GB |
 | C7 | **Restore: docs sì, run firmata sì (S1 2026-10-10)** — ancora manuale, non RTO commerciale | Chiuso per pre-GTM O3b; non = DR piattaforma |
@@ -82,9 +82,9 @@ Ordine di **coerenza**, non di feature. Niente monoblocco; ogni step ha artefatt
 | Step | Cosa chiudere | Contraddizioni | Done quando |
 |------|---------------|----------------|-------------|
 | **S1** | **O3b** — una restore firmata non-prod (agency + perimetro B2C rilevante) | C7 | ✅ **DONE 2026-10-10** — firma in `RESTORE_MANUAL` §6 + `docs/ops/runs/s1-restore-o3b-2026-10-10.log` |
-| **S2** | **Bak = O0 runtime** — retention hot ≤7g e/o incrementale (come da design) | C6 | Codice + prova LIVE (non solo env comment) |
-| **S3** | **Meter economia** — GB reali post-S2; conferma canoni vs Agency 300 GB + addon | C6 | Nota numeri FIRMATO Founder; listino fermo o revisione esplicita |
-| **S4** | **Una regola di visibilità** — stesso contratto pubblico portale / brand site | C4 | Spec + codice allineati LIVE |
+| **S2** | **Bak = O0 runtime** — retention hot ≤7g e/o incrementale (come da design) | C6 | ✅ **DONE 2026-10-10** — default 7 + hardlink; `docs/ops/runs/s2-bak-o0-runtime-live.log` |
+| **S3** | **Meter economia** — GB reali post-S2; conferma canoni vs Agency 300 GB + addon | C6 | ✅ numeri 10-Ott (`OMNIA_S3_METER_ECONOMIA.md`) · ⏳ **firma Founder rimandata** → S3.1 |
+| **S4** | **Una regola di visibilità** — stesso contratto pubblico portale / brand site | C4 | ✅ **DONE 2026-10-10** — `public_visibility` + LIVE |
 | **S5** | **Soldi onesti** — addebito reale o UI onesta; opz. hard-gate self-serve distinto da Stripe test | C2, C3 | ✅ **DONE 2026-10-10** — `OMNIA_S5_SOLDI_ONESTI.md` + LIVE |
 | **S6** | **Narrativa 2 prodotti** — Academy fuori pitch finché non esiste | C1 | ✅ **DONE 2026-10-10** — `OMNIA_S6_NARRATIVA_2_PRODOTTI.md` + LIVE |
 | **S7** | **Una demo story** — un seed; percorso admin→portale; giorni prova; scadenza → **Acquista pacchetto** (post-O6) | C8 | Script demo ripetibile ×2 senza agent “al volo” |
