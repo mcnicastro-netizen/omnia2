@@ -1324,8 +1324,18 @@ Registro di tutte le decisioni di business e tecniche prese durante il progetto.
 - Preview / Cloud Agent = tunnel `*.trycloudflare.com` per sviluppo/demo.
 - DNS SoT: `memory/DNS_SETUP_GUIDE.md` (Cloudflare; Emergent CNAME = legacy).
 - **Prep E2E**: `docs/ops/VERCEL_DEPLOY.md` + `scripts/vercel-prep-check.sh` + `scripts/vercel-deploy.sh`.
-- Vault post-pausa: `VERCEL_TOKEN`, `OMNIA_API_PUBLIC_URL`, (+ `VERCEL_ORG_ID`/`VERCEL_PROJECT_ID`, CF token/zone).
+- Vault: `VERCEL_TOKEN`, `OMNIA_API_PUBLIC_URL`, (+ org/project, CF).
 - **Go-live dominio** solo dopo: Vercel + API host + record CF aggiornati · trigger Founder: **«vai Vercel»**.
+
+## D-123 — Host API produzione = Railway (Plan B; Hetzner bloccato) · 2026-10-10
+**Status**: ✅ DECISIONE ATTIVA · ⏳ deploy pending · ✅ prep repo
+
+- Founder: account Hetzner bloccato (P.IVA / reset mail non arrivata) → **non attendere**.
+- **API prod target**: Railway (`railway.toml` + `Dockerfile.railway` + Mongo plugin).
+- Runbook: `docs/ops/RAILWAY_DEPLOY.md` · script `railway-prep-check.sh` / `railway-deploy.sh`.
+- Vault: `RAILWAY_TOKEN` (+ `RAILWAY_PROJECT_ID`); dopo domain: `OMNIA_API_PUBLIC_URL`.
+- Ordine: Railway API → Cloudflare `api` → Vercel FE (D-074).
+- Hetzner resta opzione costi a regime se l’account si sblocca; non bloccante.
 
 ## D-075 — AI in-app (HAL / Guida / Legal chat) inclusa, senza crediti · 2026-09-14
 **Status**: ✅ ATTIVA · **confermata D-119** (10-Ott-2026) anche per HAL Legal CRM

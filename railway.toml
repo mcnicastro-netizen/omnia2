@@ -1,0 +1,14 @@
+# OMNIA API on Railway (Hetzner blocked — Plan B).
+# SoT runbook: docs/ops/RAILWAY_DEPLOY.md
+# Deploy service = backend only (FE stays on Vercel).
+
+[build]
+builder = "DOCKERFILE"
+dockerfilePath = "Dockerfile.railway"
+watchPatterns = ["backend/**", "Dockerfile.railway", "railway.toml"]
+
+[deploy]
+healthcheckPath = "/api/health"
+healthcheckTimeout = 120
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 5

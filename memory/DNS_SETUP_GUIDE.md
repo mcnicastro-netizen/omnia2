@@ -16,7 +16,7 @@
 | **Email transazionale** | Resend (`info@omniarealestateecosystem.it`) |
 | **Email casella** | Aruba mail (record MX `@` invariati) |
 | **FE produzione (target)** | Vercel — progetto `frontend/` + `vercel.json` — **⏳ non deployato** |
-| **API produzione (target)** | Host ASGI dedicato (non Emergent) — URL tipico `api.omniarealestateecosystem.it` |
+| **API produzione (target)** | **Railway** (D-123) → `api.omniarealestateecosystem.it` · runbook `docs/ops/RAILWAY_DEPLOY.md` |
 | **Dev / demo Cloud** | Tunnel `*.trycloudflare.com` via `scripts/omnia-stack.sh` — **non** è produzione |
 
 **Storico (non usare più come target prod):** Emergent `*.emergent.host` / `audit-tool-12.emergent.host`.  
@@ -98,11 +98,13 @@ Quando fai «vai Vercel» + hai URL Vercel + URL API prod
 - CNAME `cloud` → `audit-tool-12.emergent.host`
 - eventuali A apex verso IP Emergent morti
 
-### 4c. API
+### 4c. API (Railway · D-123)
 
 | Tipo | Nome | Valore | Proxy |
 |------|------|--------|-------|
-| A o CNAME | `api` | host del backend prod (IP/VPS/Railway/Fly/…) | ☁️ o 🟠 secondo TLS |
+| CNAME | `api` | target Railway (Settings → Domains / custom domain) | ☁️ DNS only se TLS su Railway, o come da wizard Railway |
+
+Runbook: [`docs/ops/RAILWAY_DEPLOY.md`](../docs/ops/RAILWAY_DEPLOY.md).
 
 Poi env API:
 

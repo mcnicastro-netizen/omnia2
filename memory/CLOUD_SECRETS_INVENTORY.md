@@ -61,11 +61,14 @@ Dopo il Save, **riavvia un nuovo agent** sullo stesso environment (i secret non 
 | `VERCEL_TOKEN` | **Sì** per deploy FE (D-074) | [Vercel → Tokens](https://vercel.com/account/tokens) | `scripts/vercel-deploy.sh` |
 | `VERCEL_ORG_ID` | Consigliato | Vercel Team/Account Settings | Scope CLI |
 | `VERCEL_PROJECT_ID` | Dopo 1° link progetto | Vercel Project Settings | Redeploy non-interattivo |
-| `OMNIA_API_PUBLIC_URL` | **Sì** per build prod FE | URL HTTPS API (es. `https://api.omniarealestateecosystem.it`) | `REACT_APP_BACKEND_URL` a build |
-| `CLOUDFLARE_API_TOKEN` | Consigliato E2E DNS | CF → API Tokens (Zone.DNS Edit) | Aggiornare CNAME post-Vercel |
+| `RAILWAY_TOKEN` | **Sì** per deploy API (Plan B) | [Railway → Account → Tokens](https://railway.app/account/tokens) | `scripts/railway-deploy.sh` |
+| `RAILWAY_PROJECT_ID` | Dopo 1° progetto | Railway Project Settings | Link CLI |
+| `OMNIA_API_PUBLIC_URL` | **Sì** per build prod FE | URL HTTPS API (Railway `*.up.railway.app` poi `https://api.omniarealestateecosystem.it`) | `REACT_APP_BACKEND_URL` a build |
+| `CLOUDFLARE_API_TOKEN` | Consigliato E2E DNS | CF → API Tokens (Zone.DNS Edit) | Aggiornare CNAME post-Vercel/API |
 | `CLOUDFLARE_ZONE_ID` | Consigliato E2E DNS | CF → dominio → Overview | API DNS |
 
-**Go-live FE**: dopo pausa → vault + messaggio **«vai Vercel»**. Runbook: `docs/ops/VERCEL_DEPLOY.md`.
+**Ordine go-live**: 1) API Railway (`docs/ops/RAILWAY_DEPLOY.md` · **«vai Railway»**) → 2) FE Vercel (`docs/ops/VERCEL_DEPLOY.md` · **«vai Vercel»**).  
+Hetzner = bloccato (account/mail); ripresa opzionale dopo.
 
 Alias legacy accettati dal backend (se li avevi): `GOOGLE_API_KEY`, `EMERGENT_LLM_KEY` (mirror Gemini).
 

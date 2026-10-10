@@ -194,9 +194,17 @@ if [[ -n "${STRIPE_SECRET_KEY:-}" && "${STRIPE_ENABLED:-}" != "true" ]]; then
   echo "           Fix: vault STRIPE_ENABLED=true OR rely on cloud-agent-start auto-enable for sk_test_"
 fi
 
-# D-074 Vercel go-live (optional until «vai Vercel»)
-echo "  --- Vercel E2E (D-074; not required for dogfood) ---"
-for k in VERCEL_TOKEN OMNIA_API_PUBLIC_URL VERCEL_ORG_ID VERCEL_PROJECT_ID CLOUDFLARE_API_TOKEN CLOUDFLARE_ZONE_ID; do
+# D-123 Railway API + D-074 Vercel FE (optional until go-live)
+echo "  --- Railway API (D-123; not required for dogfood) ---"
+for k in RAILWAY_TOKEN RAILWAY_PROJECT_ID OMNIA_API_PUBLIC_URL; do
+  if [[ -n "${!k:-}" ]]; then
+    echo "  PRESENT  $k"
+  else
+    echo "  WAIT     $k (see docs/ops/RAILWAY_DEPLOY.md)"
+  fi
+done
+echo "  --- Vercel FE (D-074; after API URL) ---"
+for k in VERCEL_TOKEN VERCEL_ORG_ID VERCEL_PROJECT_ID CLOUDFLARE_API_TOKEN CLOUDFLARE_ZONE_ID; do
   if [[ -n "${!k:-}" ]]; then
     echo "  PRESENT  $k"
   else
