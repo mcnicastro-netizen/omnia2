@@ -39,7 +39,7 @@ def admin_session() -> requests.Session:
     s = requests.Session()
     r = s.post(f"{API}/auth/login", json={"email": ADMIN_EMAIL, "password": ADMIN_PWD}, timeout=30)
     assert r.status_code == 200, f"admin login failed: {r.status_code} {r.text[:300]}"
-    # P-036 — chat CRM addebita 12 crediti; seed wallet agenzia attiva Founder
+    # D-119 — HAL Legal CRM incluso (niente debit); wallet seed opzionale per altri path
     try:
         from pymongo import MongoClient
         from datetime import datetime, timezone

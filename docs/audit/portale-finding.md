@@ -40,7 +40,7 @@
 | P-033 | P2 | G | Search lista card L3/L4 anche se detail anon = 404 | **CHIUSO** |
 | P-034 | P2 | G | Sito brand `/api/p/{slug}` ignora visibility/listing/privacy/moderation | **CHIUSO S4** — `brand_site_filter` = surface pubblica condivisa; delta intenzionali in `public_visibility.py` |
 | P-035 | P2 | G | Ops `saved_searches_active` query `active` ≠ schema `is_active` | **CHIUSO** |
-| P-036 | P3 | G | HAL Legal CRM non addebita listino 12 crediti | **CHIUSO** |
+| P-036 | P3 | G | HAL Legal CRM non addebita listino 12 crediti | **SUPERSEDED D-119** (incluso piano) |
 | P-037 | P1 | H | Informativa privacy senza sub-responsabili / transfer extra-UE / no-train | **CHIUSO** |
 | P-038 | P2 | H | DSAR B2C: export 404 + rettifica anagrafica assente | **CHIUSO** |
 | P-039 | P2 | H | `marketing_consent` dedicato assente (privacy lo cita) | **CHIUSO** |
@@ -181,12 +181,12 @@
 - **Fix**: `founder_ops.py` conta `{"is_active": True}`
 - **Verifica**: `test_p035_p036_legal_ops.py` · overview = mongo count
 
-## P-036 — dettaglio (CHIUSO · vai Founder)
+## P-036 — dettaglio (SUPERSEDED · D-119)
 
-- **Fix**: `_ensure_legal_payment` — B2C Stripe €1 invariato; CRM con `active_agency_id` → `debit_credits(..., 12, reason=hal_legal_query)` su chat + analyze-pdf
-- Response/audit: `payment_rail`, `credits_charged`
-- **402** `insufficient_credits` se wallet < 12
-- **Verifica**: pytest debit 100→88 · insufficient 402
+- **Fix originale**: CRM debit 12 crediti — in tensione con D-075
+- **10-Ott-2026 D-119**: Founder conferma Legal CRM **incluso**; gate = `agency_included` / 0 crediti; B2C €1 e API Track B invariati
+- Response/audit: `payment_rail=agency_included`, `credits_charged=0`
+- **Verifica**: `test_d119_agency_legal_included_no_debit` · `test_legal_agency_included_no_debit`
 
 ## P-037 — dettaglio (CHIUSO · vai Founder)
 

@@ -1,6 +1,6 @@
 # Prossima sessione — programma passi
 
-**Aggiornato**: 10 Ottobre 2026 (S8)  
+**Aggiornato**: 10 Ottobre 2026 (S8 + D-119)  
 **Repo**: https://github.com/mcnicastro-netizen/omnia2 ✅  
 **Branch**: `main`
 
@@ -25,8 +25,7 @@ Sequenza: **S1–S8 ✅** → **S9 O6 / self-serve** → S10 GTM-01.
 |------|------|
 | **S3.1** | Firma/deepen meter storage — non chiudere listino senza Founder |
 | **S9** | Rubinetto `OMNIA_SELF_SERVE_ENABLED=true` solo dopo firma Founder O6 |
-| D-075 vs P-036 | HAL Legal “incluso” vs 12 crediti — SoT ancora da firmare |
-| **D-038 APE partner** | ⏳ ordine certificazione APE **non attivo** — accordo commerciale |
+| **D-038 APE partner** | ⏳ ordine certificazione APE **non attivo** — accordo commerciale. Bottone “Ordina APE” solo dopo. D-039: no calcolatore in-house. ≠ compliance classe APE publishing. |
 
 ---
 
@@ -44,5 +43,6 @@ Sequenza: **S1–S8 ✅** → **S9 O6 / self-serve** → S10 GTM-01.
 | Voce | Esito |
 |--|--|
 | S1–S8 | ✅ restore · bak O0 · meter (firma ⏳ S3.1) · visibilità · soldi · narrativa · demo story · **SoT unico** |
+| D-119 Legal CRM | ✅ incluso piano (chiude D-075 vs P-036) |
 | O6 self-serve | OFF (hard-gate; firma Founder = S9) |
 | D-038 APE ordine | ⏳ accordo commerciale — non attivo |

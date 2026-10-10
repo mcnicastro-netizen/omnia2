@@ -157,7 +157,7 @@ CREDIT_COSTS: Dict[str, int] = {
     "visura_catastale": 24,        # Visura catastale
     "ape_search": 60,              # Ricerca APE regionale (partner)
     "sms_notification": 4,         # SMS al cliente
-    "hal_legal_query": 12,         # Query HAL Legal (con citazioni)
+    "hal_legal_query": 12,         # HAL Legal API/Track B; in-app CRM = incluso (D-075/D-119)
     "hal_agents_query": 4,         # Query HAL Agents (assistente CRM)
     "virtual_staging_render": 18,  # Render staging AI (pipeline 3-stage)
     "micro_tour_render": 60,       # Video micro-tour 10s (Kling Pro)

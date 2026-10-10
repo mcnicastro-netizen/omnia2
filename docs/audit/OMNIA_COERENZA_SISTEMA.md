@@ -60,7 +60,7 @@ Più: Founder Ops, Cloud Agent (seed demo GTM + Nicastro dogfood), corpus `memor
 |---|----------------|---------|
 | C1 | **Messaggio 3→2** — mitigato S6 | Pitch GTM allineato |
 | C2 | **Self-serve ≠ Stripe** — mitigato S5 (`OMNIA_SELF_SERVE_ENABLED`) | Kill-switch B2B; apre a S9 |
-| C3 | **Rail monetari** — valuator onesto; Legal edge chiuso; D-075 vs P-036 aperto | SoT Legal da firmare |
+| C3 | **Rail monetari** — valuator onesto; Legal edge chiuso; **D-119** Legal CRM incluso | Narrativa vs wallet allineata |
 | C4 | **Visibilità pubblica** — mitigato S4 | Portale/brand allineati LIVE |
 | C5 | **Trash non ovunque** | Integrità dominio quasi-una (fuori freccia S* finché ripriorizzato) |
 | C6 | **Bak economia** — S2 ✅ runtime 7g+hardlink; S3 numeri ✅; **S3.1 firma listino ⏳** | Economia modellata; chiusura commerciale meter aperta |
@@ -100,7 +100,7 @@ Più: Founder Ops, Cloud Agent (seed demo GTM + Nicastro dogfood), corpus `memor
 |------|-------|------|
 | **D-038 — ordine APE ufficiale** | ⏳ accordo commerciale | ≠ compliance classe APE in publishing |
 | **S3.1 — firma meter** | ⏳ | Non chiudere listino senza Founder |
-| **D-075 vs P-036** | ⏳ | HAL Legal “incluso” vs 12 crediti |
+| **D-119 — Legal CRM incluso** | ✅ | Chiude D-075 vs P-036 |
 
 ---
 
@@ -119,7 +119,7 @@ Più: Founder Ops, Cloud Agent (seed demo GTM + Nicastro dogfood), corpus `memor
 Il repo **non** è un pasticcio casuale: è un ecosistema dual-product con spina dorsale solida.  
 Il rischio di fallimento non è “manca un modulo magico”: è **raccontare o vendere una storia più chiusa** di quanto il sistema sia logicamente allineato.
 
-**Prossimo «vai» consigliato:** **S9** (O6 PASS — firma Founder self-serve). Reminder: S3.1 · D-038.
+**Prossimo «vai» consigliato:** **S9** (O6 PASS — firma Founder self-serve). Reminder: S3.1 · D-038. D-119 ✅.
 
 ---
 
