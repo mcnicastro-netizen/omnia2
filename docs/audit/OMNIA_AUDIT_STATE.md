@@ -1,13 +1,15 @@
 # OMNIA — MASTER AUDIT STATE
 
-**Purpose:** stato operativo compatto dell'audit logico, architetturale e funzionale di OMNIA.
+> ### ❄️ FROZEN (S8 · 10 Ott 2026) — non è più la freccia di sessione
+> **SoT freccia:** [`OMNIA_COERENZA_SISTEMA.md`](./OMNIA_COERENZA_SISTEMA.md) · [`NEXT_SESSION.md`](../../memory/NEXT_SESSION.md) · registro [`OMNIA_S8_SOT_UNICO.md`](./OMNIA_S8_SOT_UNICO.md).  
+> Questo file resta **memoria audit** (P1–P24, D-115, storico). Non usarlo per “Next / vai”.
 
-**Usage rule:** questo documento è la fonte di continuità dell'audit.
-Prima di analizzare un nuovo punto, leggere questo file. Non riaprire decisioni già fissate salvo nuove evidenze. Non inventare informazioni mancanti.
+**Purpose:** stato operativo compatto dell'audit logico, architetturale e funzionale di OMNIA (storico).
 
-**Current status:** P1–P24 **chiusi** · programma **APPROVATO** (**D-115**) · **«vai» O0 ∥ O1 in esecuzione**. Listino fermo. SoT: questo file.
+**Usage rule (storico):** utile per decisioni già fissate in audit. Non riaprire salvo nuove evidenze. Non inventare informazioni mancanti.
 
-**Next:** **D-118 Audit Portale** — **analisi + residuo codice CHIUSI** (9-Ott) · fascicolo aggiornato · residui P-021 opz. / P-026 MITIGATO · **MERGED su main** (PR #12 · 9-Ott). SoT: `OMNIA_PORTALE_AUDIT_FASCICOLO.md`. Poi: O3b restore → **A-037** → self-serve. O6 CONDITIONAL. **no self-serve finché O6 ≠ PASS**. §23 Priorità **CLOSED**.
+**Current status (storico):** P1–P24 **chiusi** · programma **APPROVATO** (**D-115**) · D-118 CHIUSO su main.  
+**Freccia attuale:** S1–S8 ✅ → **S9** (vedi coerenza / NEXT). O6 CONDITIONAL · self-serve OFF.
 
 ---
 

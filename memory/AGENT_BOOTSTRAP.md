@@ -10,12 +10,13 @@
 
 ### Step 1 — Leggi questi file PRIMA di parlare
 ```
-1. /workspace/memory/DECISIONS.md                              ← Decisioni vincolanti
-2. /workspace/docs/audit/OMNIA_AUDIT_STATE.md                   ← Master State audit / pre-attivazione
-3. /workspace/docs/audit/OMNIA_PROGRAMMA_PRE_ATTIVAZIONE.md     ← Programma O0–O6
-4. /workspace/memory/NEXT_SESSION.md                            ← Prossimi passi (+ A-037)
-5. /workspace/memory/ROADMAP.md · PRD.md                        ← Contesto storico
+1. /workspace/docs/audit/OMNIA_COERENZA_SISTEMA.md              ← Freccia S1–S10 (SoT sessione)
+2. /workspace/memory/NEXT_SESSION.md                            ← Prossimo «vai»
+3. /workspace/docs/audit/OMNIA_S8_SOT_UNICO.md                  ← LIVE vs FROZEN
+4. /workspace/docs/audit/OMNIA_O6_GATE_CHECKLIST.md             ← Cancello self-serve
+5. /workspace/memory/DECISIONS.md                               ← Decisioni vincolanti product
 ```
+Storico (FROZEN — non freccia): `OMNIA_AUDIT_STATE.md`, `OMNIA_PROGRAMMA_PRE_ATTIVAZIONE.md`, `HANDOFF_*`.  
 Workspace Cloud = `/workspace` (non `/app` Emergent). HAL corpus = `memory/manuale/hal/` (+ `OMNIA_MEMORY_ROOT`).
 
 ### Step 2 — Verifica lo stato

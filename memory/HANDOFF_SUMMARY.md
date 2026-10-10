@@ -1,5 +1,8 @@
 # 🎯 OMNIA — HANDOFF SUMMARY (per prossimo agente)
 
+> ### ❄️ FROZEN (S8 · 10 Ott 2026)
+> Freccia sessione = `NEXT_SESSION.md` + `docs/audit/OMNIA_COERENZA_SISTEMA.md` (vedi `OMNIA_S8_SOT_UNICO.md`). Questo summary è memoria storica.
+
 **Ultimo aggiornamento**: 03 Luglio 2026
 **Founder**: Marco Nicastro (`mcnicastro@gmail.com`)
 **Lingua di comunicazione con il Founder**: 🇮🇹 **ITALIANO** (obbligatorio)

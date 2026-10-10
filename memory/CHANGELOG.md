@@ -1,3 +1,10 @@
+## 2026-10-10 — S8 SoT unico (C9/C10)
+
+- Freccia = coerenza + O6 checklist + NEXT; registro `OMNIA_S8_SOT_UNICO.md`
+- FROZEN banner: AUDIT_STATE · PROGRAMMA_PRE_ATTIVAZIONE · HANDOFF_*
+- Allineati: C6/S2, O6 O3b restore firmata S1, NEXT → S9
+- AGENT_BOOTSTRAP punta a coerenza (non più AUDIT_STATE come freccia)
+
 ## 2026-10-10 — S7 demo story unica (C8)
 
 - Canonical GTM sandbox = `demo-agency-001` (Nicastro = dogfood, fuori pitch)
