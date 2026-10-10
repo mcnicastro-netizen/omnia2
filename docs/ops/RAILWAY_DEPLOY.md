@@ -11,10 +11,14 @@
 Sei già loggato con GitHub. Poi:
 
 ### A. Token per l’agent (obbligatorio E2E)
-1. https://railway.app/account/tokens → **Create Token**
-2. Incolla in Cursor Secrets (env omnia2) come `RAILWAY_TOKEN`  
+1. https://railway.com/account/tokens → **Create Token**
+2. Workspace: **No workspace** (account token — non un token di workspace)
+3. Incolla in Cursor Secrets (env omnia2) come `RAILWAY_API_TOKEN`  
    Link env: https://cursor.com/dashboard/cloud-agents/environments/e/b80b635c-b592-11f1-bb68-864e54d14197
-3. Nuovo agent + messaggio **«vai Railway»**
+4. Nuovo agent + messaggio **«vai Railway»**
+
+> Nome vault = `RAILWAY_API_TOKEN` (quello che legge la CLI 5 per creare progetti).  
+> `RAILWAY_TOKEN` è il project token e **non** basta per `railway init`.
 
 ### B. Oppure crea il progetto a mano (se preferisci UI)
 1. **New Project** → **Deploy from GitHub repo** → `mcnicastro-netizen/omnia2`
@@ -54,12 +58,18 @@ Opzionale: volume off-box path via `OFFBOX_BACKUP_ROOT`
 
 ---
 
-## Flusso agent (dopo `RAILWAY_TOKEN`)
+## Flusso agent (dopo `RAILWAY_API_TOKEN`)
+
+Vault obbligatorio: **`RAILWAY_API_TOKEN`** = account token (Railway → Account → Tokens → workspace **No workspace**).  
+La CLI 5 usa `RAILWAY_API_TOKEN` per create/link; `RAILWAY_TOKEN` è solo project-scoped.  
+Un valore sbagliato (workspace token, project id, secret vuoto) viene rifiutato (`me` Not Authorized).
 
 ```bash
 bash scripts/railway-prep-check.sh
-bash scripts/railway-deploy.sh   # richiede RAILWAY_TOKEN
+bash scripts/railway-deploy.sh   # richiede RAILWAY_API_TOKEN
 ```
+
+Lo script: classifica il token → `railway init` → MongoDB → variabili (senza stamparle) → volumi `/app/.media` e `/app/.backups` → `railway up` → dominio → smoke `/api/health`.
 
 Poi DNS: `memory/DNS_SETUP_GUIDE.md` §4b (`api` → Railway).
 
@@ -72,7 +82,7 @@ Hobby **$5/mese** + usage → tipico API+Mongo piccolo **≈ $15–35/mese**.
 
 ## Checklist Founder
 - [x] Account Railway (GitHub)
-- [ ] `RAILWAY_TOKEN` in vault omnia2
+- [ ] `RAILWAY_API_TOKEN` in vault omnia2 = **account token** (No workspace). 10-Ott-2026: in pod c’era solo `RAILWAY_TOKEN` (rifiutato); `RAILWAY_API_TOKEN` **unset**.
 - [ ] Progetto + Mongo + variables
 - [ ] Domain Railway + health OK
 - [ ] `OMNIA_API_PUBLIC_URL` in vault

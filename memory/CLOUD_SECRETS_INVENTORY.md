@@ -61,7 +61,8 @@ Dopo il Save, **riavvia un nuovo agent** sullo stesso environment (i secret non 
 | `VERCEL_TOKEN` | **Sì** per deploy FE (D-074) | [Vercel → Tokens](https://vercel.com/account/tokens) | `scripts/vercel-deploy.sh` |
 | `VERCEL_ORG_ID` | Consigliato | Vercel Team/Account Settings | Scope CLI |
 | `VERCEL_PROJECT_ID` | Dopo 1° link progetto | Vercel Project Settings | Redeploy non-interattivo |
-| `RAILWAY_TOKEN` | **Sì** per deploy API (Plan B) | [Railway → Account → Tokens](https://railway.app/account/tokens) | `scripts/railway-deploy.sh` |
+| `RAILWAY_API_TOKEN` | **Sì** per deploy API (Plan B) | [Railway → Account → Tokens](https://railway.com/account/tokens) — **account token, workspace «No workspace»** | `scripts/railway-deploy.sh` / CLI `railway init` |
+| `RAILWAY_TOKEN` | Solo dopo 1° progetto (opz.) | Project Settings → Tokens | Redeploy scoped; **non** sostituisce `RAILWAY_API_TOKEN` |
 | `RAILWAY_PROJECT_ID` | Dopo 1° progetto | Railway Project Settings | Link CLI |
 | `OMNIA_API_PUBLIC_URL` | **Sì** per build prod FE | URL HTTPS API (Railway `*.up.railway.app` poi `https://api.omniarealestateecosystem.it`) | `REACT_APP_BACKEND_URL` a build |
 | `CLOUDFLARE_API_TOKEN` | Consigliato E2E DNS | CF → API Tokens (Zone.DNS Edit) | Aggiornare CNAME post-Vercel/API |
