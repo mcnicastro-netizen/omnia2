@@ -1,0 +1,3 @@
+=== S8 VERIFY 2026-10-10 ===
+checks= {'coer_s8_done': True, 'coer_c6_not_x30': True, 'coer_next_s9': True, 'o6_restore_firmata': True, 'o6_no_pending_restore': True, 'next_points_s9': True, 'frozen_OMNIA_AUDIT_STATE.md': True, 'frozen_OMNIA_PROGRAMMA_PRE_ATTIVAZIONE.md': True, 'frozen_handoff': True, 'bootstrap_coerenza': True, 'registry_exists': True}
+ESITO= PASS failed= []
