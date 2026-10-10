@@ -1,6 +1,6 @@
 # Prossima sessione — programma passi
 
-**Aggiornato**: 10 Ottobre 2026 (Vercel prep · post-pausa E2E)  
+**Aggiornato**: 10 Ottobre 2026 (Railway go-live blocco trial/token)  
 **Repo**: https://github.com/mcnicastro-netizen/omnia2 ✅  
 **Branch**: `main`
 
@@ -12,7 +12,7 @@
 |-------|-----|
 | Freccia | [`docs/audit/OMNIA_COERENZA_SISTEMA.md`](../docs/audit/OMNIA_COERENZA_SISTEMA.md) — S1–S10 ✅ |
 | Pre-demo | [`docs/ops/PRE_DEMO_CHECKLIST.md`](../docs/ops/PRE_DEMO_CHECKLIST.md) · [`OMNIA_PRE_DEMO_8.md`](../docs/audit/OMNIA_PRE_DEMO_8.md) |
-| **API Railway** | [`docs/ops/RAILWAY_DEPLOY.md`](../docs/ops/RAILWAY_DEPLOY.md) — D-123 · prep ✅ · **prossimo** |
+| **API Railway** | [`docs/ops/RAILWAY_DEPLOY.md`](../docs/ops/RAILWAY_DEPLOY.md) — D-123 · ⛔ trial scaduto + serve `RAILWAY_API_TOKEN` |
 | **Vercel go-live** | [`docs/ops/VERCEL_DEPLOY.md`](../docs/ops/VERCEL_DEPLOY.md) — dopo API |
 
 ---
@@ -21,7 +21,7 @@
 
 | Voce | Nota |
 |------|------|
-| **«vai Railway»** | Prima API: vault `RAILWAY_TOKEN` → deploy API (Hetzner skip) |
+| **«vai Railway»** | 1) Upgrade piano Railway 2) vault `RAILWAY_API_TOKEN` (Account) 3) ritenta |
 | **«vai Vercel»** | Dopo API live: `OMNIA_API_PUBLIC_URL` + `VERCEL_TOKEN` |
 | **Pre-demo probe** | `python scripts/pre_demo_probe.py` prima di ogni invio demo |
 | **OFFBOX_BACKUP_ROOT** | In prod = volume esterno (Cloud default `/tmp`) |
@@ -34,7 +34,7 @@
 
 ## Prossimo passo tipico
 
-1. Founder: `RAILWAY_TOKEN` in vault → **«vai Railway»**  
+1. Founder: Upgrade Railway + `RAILWAY_API_TOKEN` in vault → **«vai Railway»**  
 2. Poi `OMNIA_API_PUBLIC_URL` + **«vai Vercel»**  
 3. Demo: tunnel finché dominio non è live  
 

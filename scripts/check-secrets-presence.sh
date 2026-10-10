@@ -196,7 +196,7 @@ fi
 
 # D-123 Railway API + D-074 Vercel FE (optional until go-live)
 echo "  --- Railway API (D-123; not required for dogfood) ---"
-for k in RAILWAY_TOKEN RAILWAY_PROJECT_ID OMNIA_API_PUBLIC_URL; do
+for k in RAILWAY_API_TOKEN RAILWAY_TOKEN RAILWAY_PROJECT_ID OMNIA_API_PUBLIC_URL; do
   if [[ -n "${!k:-}" ]]; then
     echo "  PRESENT  $k"
   else

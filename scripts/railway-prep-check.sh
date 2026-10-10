@@ -20,13 +20,16 @@ grep -q 'uvicorn server:app' "$ROOT/Dockerfile.railway" && ok "CMD uvicorn serve
 grep -q 'COPY backend/' "$ROOT/Dockerfile.railway" && ok "build context copies backend/" || bad "COPY backend missing"
 
 echo "--- vault (presence only) ---"
-for k in RAILWAY_TOKEN RAILWAY_PROJECT_ID OMNIA_API_PUBLIC_URL; do
+for k in RAILWAY_API_TOKEN RAILWAY_TOKEN RAILWAY_PROJECT_ID OMNIA_API_PUBLIC_URL; do
   if [[ -n "${!k:-}" ]]; then ok "env $k is set"; else echo "WAIT $k not set (ok for prep)"; fi
 done
+if [[ -n "${RAILWAY_TOKEN:-}" && -z "${RAILWAY_API_TOKEN:-}" ]]; then
+  echo "HINT RAILWAY_TOKEN alone = Project Token path; bootstrap vuole RAILWAY_API_TOKEN"
+fi
 
 echo "---"
 if [[ "$fail" -eq 0 ]]; then
-  echo "ESITO=PASS — dopo RAILWAY_TOKEN in vault → «vai Railway»"
+  echo "ESITO=PASS — go-live: bash scripts/railway-golive-probe.sh poi «vai Railway»"
   exit 0
 fi
 echo "ESITO=FAIL"

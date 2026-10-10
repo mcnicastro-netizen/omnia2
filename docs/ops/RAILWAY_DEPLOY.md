@@ -1,67 +1,72 @@
 # Deploy API OMNIA su Railway (Plan B — Hetzner bloccato)
 
-**Stato:** ✅ prep repo · ⏳ deploy in attesa Founder  
+**Stato:** ✅ prep repo · ⛔ go-live bloccato (trial scaduto + token CLI) · ⏳ ripresa dopo Founder  
 **Dominio target:** `https://api.omniarealestateecosystem.it` → servizio Railway  
 **FE:** Vercel (dopo API live) · runbook: [`VERCEL_DEPLOY.md`](./VERCEL_DEPLOY.md)
 
 ---
 
-## Cosa fai tu ora (UI Railway — 5 minuti)
+## Blocco attuale (2026-10-10 · «vai Railway»)
 
-Sei già loggato con GitHub. Poi:
+Probe agent (`scripts/railway-golive-probe.sh`):
 
-### A. Token per l’agent (obbligatorio E2E)
-1. https://railway.app/account/tokens → **Create Token**
-2. Incolla in Cursor Secrets (env omnia2) come `RAILWAY_TOKEN`  
-   Link env: https://cursor.com/dashboard/cloud-agents/environments/e/b80b635c-b592-11f1-bb68-864e54d14197
-3. Nuovo agent + messaggio **«vai Railway»**
+1. **Trial scaduto** — GraphQL: `Your trial has expired. Please select a plan`. Progetti legacy Immocloud ancora `subscriptionType: trial`.
+2. **Token vault sbagliato per CLI** — `RAILWAY_TOKEN` presente ma CLI: `Unauthorized` / `Invalid RAILWAY_TOKEN`. Per bootstrap serve **Account Token** in `RAILWAY_API_TOKEN` (non Project Token in `RAILWAY_TOKEN`).
 
-### B. Oppure crea il progetto a mano (se preferisci UI)
-1. **New Project** → **Deploy from GitHub repo** → `mcnicastro-netizen/omnia2`
-2. **Add Plugin / Database** → **MongoDB**
-3. Nel service API (non Mongo):
-   - Root Directory = repo root (usa `railway.toml` + `Dockerfile.railway`)
-4. **Variables** (service API) — copia da vault / `.env` (valori, non in chat):
+### Cosa fai tu (5 minuti)
 
-| Variabile | Note |
-|-----------|------|
-| `MONGO_URL` | Reference Railway: `${{ MongoDB.MONGO_URL }}` (o nome plugin) |
-| `DB_NAME` | `omnia` |
-| `JWT_SECRET` | nuovo lungo (`openssl rand -hex 32`) |
-| `COOKIE_SECURE` | `true` |
-| `CORS_ORIGINS` | `https://www.omniarealestateecosystem.it,https://app.omniarealestateecosystem.it,https://cloud.omniarealestateecosystem.it` (+ URL Vercel preview se serve) |
-| `FRONTEND_URL` / `FRONTEND_BASE_URL` / `OMNIA_PUBLIC_URL` | `https://www.omniarealestateecosystem.it` (o URL Vercel finché DNS non è pronto) |
-| `ADMIN_EMAIL` / `ADMIN_PASSWORD` | seed Founder (stessi del vault) |
-| `DEMO_ADMIN_PASSWORD` | seed demo |
-| `GEMINI_API_KEY` | vault |
-| `RESEND_API_KEY` | vault |
-| `SENDER_EMAIL` | `OMNIA <info@omniarealestateecosystem.it>` |
-| `STRIPE_*` / `OMNIA_SELF_SERVE_ENABLED` | come sandbox Cloud |
-| `STORAGE_BACKEND` | `local` (poi volume) |
-| `PUBLIC_BASE_URL` | URL pubblico API (dopo generate domain) |
+1. https://railway.app → **Upgrade / Billing** → piano **Hobby** (o superiore)
+2. https://railway.app/account/tokens → **Create Token** (Account / Workspace)
+3. Vault env omnia2:  
+   - aggiungi `RAILWAY_API_TOKEN` = token account  
+   - **rimuovi o svuota** `RAILWAY_TOKEN` finché non hai un Project Token post-progetto  
+   Link: https://cursor.com/dashboard/cloud-agents/environments/e/b80b635c-b592-11f1-bb68-864e54d14197
+4. Nuovo agent → **«vai Railway»**
 
-5. **Settings → Networking → Generate Domain** → ottieni `https://….up.railway.app`
-6. Imposta `PUBLIC_BASE_URL` = quell’URL (senza `/api`)
-7. Smoke: `curl -sS https://….up.railway.app/api/health`
-8. In Cursor vault: `OMNIA_API_PUBLIC_URL=https://….up.railway.app`  
-   (poi, con CNAME Cloudflare `api` → Railway, diventa `https://api.omniarealestateecosystem.it`)
+Token types (Railway CLI):
 
-### C. Volume (media + backup)
-Railway → service API → **Volumes**:
-- mount `/app/.media` (foto)
-- mount `/app/.backups` (hot backup)  
-Opzionale: volume off-box path via `OFFBOX_BACKUP_ROOT`
+| Env | Scope | Uso |
+|-----|--------|-----|
+| `RAILWAY_API_TOKEN` | Account / workspace | `init`, link, add Mongo, variables, bootstrap |
+| `RAILWAY_TOKEN` | Project + environment | solo `railway up` / logs su progetto già creato |
+
+Non settare entrambi durante il bootstrap (il project token vince e spegne l’account token).
 
 ---
 
-## Flusso agent (dopo `RAILWAY_TOKEN`)
+## Flusso agent (dopo piano + `RAILWAY_API_TOKEN`)
 
 ```bash
-bash scripts/railway-prep-check.sh
-bash scripts/railway-deploy.sh   # richiede RAILWAY_TOKEN
+bash scripts/railway-golive-probe.sh   # ESITO=READY
+bash scripts/railway-deploy.sh
 ```
 
 Poi DNS: `memory/DNS_SETUP_GUIDE.md` §4b (`api` → Railway).
+
+---
+
+## Variables servizio API
+
+| Variabile | Note |
+|-----------|------|
+| `MONGO_URL` | Reference plugin: `${{MongoDB.MONGO_URL}}` (nome può variare) |
+| `DB_NAME` | `omnia` |
+| `JWT_SECRET` | vault |
+| `COOKIE_SECURE` | `true` |
+| `CORS_ORIGINS` | domini FE prod (+ preview Vercel se serve) |
+| `FRONTEND_URL` / `FRONTEND_BASE_URL` / `OMNIA_PUBLIC_URL` | FE pubblico |
+| `ADMIN_EMAIL` / `ADMIN_PASSWORD` | seed Founder |
+| `DEMO_ADMIN_PASSWORD` | seed demo |
+| `GEMINI_API_KEY` / `RESEND_API_KEY` | vault |
+| `SENDER_EMAIL` | `OMNIA <info@omniarealestateecosystem.it>` |
+| `STRIPE_*` / `OMNIA_SELF_SERVE_ENABLED` | come sandbox Cloud |
+| `STORAGE_BACKEND` | `local` (+ volume) |
+| `PUBLIC_BASE_URL` | URL API pubblico (dopo Generate Domain) |
+
+Volumes: `/app/.media`, `/app/.backups`.
+
+Smoke: `curl -sS https://….up.railway.app/api/health`  
+Vault: `OMNIA_API_PUBLIC_URL=https://….up.railway.app`
 
 ---
 
@@ -72,8 +77,10 @@ Hobby **$5/mese** + usage → tipico API+Mongo piccolo **≈ $15–35/mese**.
 
 ## Checklist Founder
 - [x] Account Railway (GitHub)
-- [ ] `RAILWAY_TOKEN` in vault omnia2
-- [ ] Progetto + Mongo + variables
+- [x] Prep repo (D-123 · `Dockerfile.railway` / `railway.toml`)
+- [ ] **Upgrade piano** (trial scaduto)
+- [ ] `RAILWAY_API_TOKEN` (Account) in vault — non Project Token in `RAILWAY_TOKEN`
+- [ ] Progetto `omnia-api` + Mongo + variables
 - [ ] Domain Railway + health OK
 - [ ] `OMNIA_API_PUBLIC_URL` in vault
 - [ ] Cloudflare CNAME `api`
