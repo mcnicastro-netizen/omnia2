@@ -1,3 +1,11 @@
+## 2026-10-10 — S3 meter economia storage (listino FERMO)
+
+- Nota `docs/audit/OMNIA_S3_METER_ECONOMIA.md` + script `scripts/meter_storage_economia.py`
+- Post-S2 mid@€0,04: Agency ops ≈750 GB → ~€30 (10% canone); addon +100 ancora ≥0
+- Pre-S2 ×32: Pro/Agency disco > canone (conferma perché S2 era obbligatorio)
+- Proposta Founder: **LISTINO FERMO**; €/GB bill ancora non confermato
+- Coerenza C6/S3 · NEXT → S4
+
 ## 2026-10-10 — S2 bak O0 runtime (retention 7 + hardlink)
 
 - `backup_job.py`: default `BACKUP_RETENTION_DAYS=7`; media incrementale hardlink da giorno precedente

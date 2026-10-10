@@ -11,18 +11,19 @@
 **Coerenza di sistema:** [`docs/audit/OMNIA_COERENZA_SISTEMA.md`](../docs/audit/OMNIA_COERENZA_SISTEMA.md)
 
 Scala verità: DECISO → CODICE → LIVE → FIRMATO.  
-Sequenza: S1 (PR) → S2 ✅ → **S3 meter economia** → … → S9 O6 → S10 GTM-01.
+Sequenza: S1 (PR) → S2 (PR) → S3 ✅ → **S4 visibilità** → … → S9 O6 → S10 GTM-01.
 
 ---
 
 ## Prossimo passo tipico
 
-1. **S1** — O3b restore firmata (branch/PR dedicata; non-prod)  
-2. ~~**S2** — Bak runtime = O0~~ ✅ 2026-10-10 (retention 7 + media hardlink)  
-3. **S3** — Meter GB reali post-S2; listino fermo o revisione esplicita  
-4. Solo dopo: demo story unica + O6 PASS + GTM-01  
+1. **S1** — O3b restore firmata (PR dedicata)  
+2. **S2** — Bak O0 runtime (PR dedicata)  
+3. ~~**S3** — Meter economia~~ ✅ 2026-10-10 — proposta **LISTINO FERMO** (`OMNIA_S3_METER_ECONOMIA.md`)  
+4. **S4** — Una regola di visibilità portale / brand site  
+5. Solo dopo: demo story · O6 PASS · GTM-01  
 
-**Non:** monoblocco “chiudi tutto” · self-serve ON prima di S9 · outreach ~5k email prima di GTM-01.
+**Non:** monoblocco · self-serve ON prima di S9 · outreach ~5k prima di GTM-01 · revisione prezzi senza firma Founder.
 
 ---
 
@@ -30,8 +31,7 @@ Sequenza: S1 (PR) → S2 ✅ → **S3 meter economia** → … → S9 O6 → S10
 
 | Voce | Esito |
 |--|--|
-| D-118 A–J + residuo codice | su `main` — ri-verificare LIVE, non rifare |
-| Bak O0 runtime (S2) | ✅ default `BACKUP_RETENTION_DAYS=7` + incrementale hardlink |
-| O6 self-serve | OFF (CONDITIONAL; S1 restore + S9 Founder) |
-| Bak economia | Design O0 ✅ · runtime S2 ✅ · **meter → S3** |
+| Bak O0 runtime (S2) | ✅ retention 7 + hardlink |
+| Meter economia (S3) | ✅ mid@€0,04 Agency ~10% canone · **listino FERMO** (attende firma Founder in nota) |
+| O6 self-serve | OFF |
 | Fascicolo portale | `docs/audit/OMNIA_PORTALE_AUDIT_FASCICOLO.md` |

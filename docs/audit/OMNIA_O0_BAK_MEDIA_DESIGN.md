@@ -3,7 +3,7 @@
 **Stato:** ✅ deciso (fase O0 · «vai» 30-Set-2026) · **runtime S2:** ✅ 10-Ott-2026  
 **Scope O0:** numeri + modello target **scritto**.  
 **Implementazione del modello:** ✅ S2 — `BACKUP_RETENTION_DAYS` default **7** + media **incrementale hardlink** (`backup_job.py`).  
-**Listino:** fermo finché non si decide esplicitamente una revisione (meter → **S3**).
+**Listino:** **FERMO** post-S3 (10-Ott-2026) — vedi `OMNIA_S3_METER_ECONOMIA.md`; revisione solo con firma Founder.
 
 ---
 
@@ -17,7 +17,7 @@
 | Moltiplicatore disco | ~31–32× | hot ≤7g + hardlink ≈ **~1× + delta** (prova LIVE `docs/ops/runs/s2-bak-o0-runtime-live.log`) |
 | Restore | procedura D-113 | S1 firmata (PR separata) + procedura |
 | Quote piano (D-085) | Starter 30 / Pro 100 / Agency 300 GB | invariato · listino fermo |
-| €/GB ops | non confermato | meter reale → **S3** |
+| €/GB ops | non confermato (no bill) | S3: sensitivity 0,02/0,04/0,08 · proposta listino FERMO |
 
 ### Stima ordine di grandezza (worst-case piano pieno + bak 30g)
 
@@ -99,7 +99,7 @@ Listino €49/€99/€299 e quote GB restano **fermi** fino a decisione commerc
 * Checksum contenuto (oggi size+mtime_ns)  
 * Object storage/CDN (solo se smoke media o costi D-114 lo impongono)  
 * DR piattaforma / restore self-service  
-* Revisione prezzi (dopo **S3** meter) 
+* ~~Revisione prezzi (dopo S3 meter)~~ → S3 proposta **LISTINO FERMO** (firma Founder in `OMNIA_S3_METER_ECONOMIA.md`) 
 
 ---
 

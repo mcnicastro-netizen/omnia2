@@ -1735,8 +1735,8 @@ Registro di tutte le decisioni di business e tecniche prese durante il progetto.
   4. **Listino fermo** finché i numeri esistono; poi eventuale revisione.
   5. Non eleva automaticamente a P0–P3 in audit; entra nel set da chiudere prima di accettare clienti paganti.
 - **O0 (K-PA-01):** deliverable = numeri + **design vincolante** scritto (retention, scope, full/incrementale, restore agency-first, costo, “questo implementeremo”); **non** refactoring obbligatorio del bak dentro O0.
-- **Implementazione:** ✅ design O0 (`OMNIA_O0_BAK_MEDIA_DESIGN.md`); ✅ runtime **S2** 10-Ott-2026 — `BACKUP_RETENTION_DAYS` default **7** + media incrementale hardlink (`backup_job.py`); artefatto `docs/ops/runs/s2-bak-o0-runtime-live.log`. Meter costi reali → **S3**.
-- **Stato**: ✅ **DECISIONE DI DOMINIO REGISTRATA** (docs 30-Set-2026 · K-PA-01) · design ✅ · runtime S2 ✅ · meter S3 ⏳
+- **Implementazione:** ✅ design O0 (`OMNIA_O0_BAK_MEDIA_DESIGN.md`); ✅ runtime **S2** 10-Ott-2026 — `BACKUP_RETENTION_DAYS` default **7** + media incrementale hardlink (`backup_job.py`); ✅ meter **S3** 10-Ott-2026 — `OMNIA_S3_METER_ECONOMIA.md` · proposta **LISTINO FERMO** (Agency mid@€0,04 ≈ €30 / 10% canone; pre-S2 ×32 rompeva Pro/Agency).
+- **Stato**: ✅ **DECISIONE DI DOMINIO REGISTRATA** (docs 30-Set-2026 · K-PA-01) · design ✅ · runtime S2 ✅ · meter S3 ✅ · listino FERMO (attende firma Founder in nota S3)
 
 ### D-115 — Programma pre-attivazione approvato · no self-serve prima di O6 · 30-Set-2026
 - **Data**: 30 Settembre 2026 · **«vai» O0∥O1**: 30-Set-2026
