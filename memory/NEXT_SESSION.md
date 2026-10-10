@@ -11,7 +11,7 @@
 **Coerenza di sistema:** [`docs/audit/OMNIA_COERENZA_SISTEMA.md`](../docs/audit/OMNIA_COERENZA_SISTEMA.md)
 
 Scala verità: DECISO → CODICE → LIVE → FIRMATO.  
-Sequenza: S1 (PR) → S2 (PR) → S3 numeri ✅ / firma ⏳ → **S4 visibilità** → … → S9 O6 → S10 GTM-01.
+Sequenza: S1 ✅ → S2 ✅ → S3 numeri ✅ / firma ⏳ → **S4 visibilità** → … → S9 O6 → S10 GTM-01.
 
 ---
 
@@ -44,6 +44,7 @@ Listino in codice resta invariato finché non c’è firma.
 
 | Voce | Esito |
 |--|--|
+| O3b restore firmata | ✅ PASS 2026-10-10 · `demo-agency-001` |
 | Bak O0 runtime (S2) | ✅ retention 7 + hardlink |
 | Meter economia (S3) | ✅ numeri + listini pubblici · ⏳ firma rimandata (deepen dopo) |
 | O6 self-serve | OFF |

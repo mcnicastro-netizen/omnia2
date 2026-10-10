@@ -1722,8 +1722,8 @@ Registro di tutte le decisioni di business e tecniche prese durante il progetto.
   4. **Non** capability commerciale di “restore garantito” finché non ci sono tempi/limiti operativi definiti.
   5. Linguaggio onesto (P21 CT-03): bak esistente ≠ verificato ≠ restore disponibile ≠ restore testato.
 - **Correlato P23 / K-AD-02**: FS + 1 replica = baseline GTM deliberata; anticipare object storage/CDN solo se **fallisce lo smoke media** (confidence gate **K-SC-01** / GTM-01) — non “1 replica ⇒ object storage”.
-- **Implementazione**: ✅ docs O3b (`docs/ops/RESTORE_MANUAL.md`); run firmata non-prod ⏳.
-- **Stato**: ✅ **DECISIONE OPERATIVA REGISTRATA** (docs 30-Set-2026 · P23 CHIUSO) · codice/docs ⏳
+- **Implementazione**: ✅ docs O3b (`docs/ops/RESTORE_MANUAL.md`); ✅ run firmata non-prod 2026-10-10 (`demo-agency-001` · bak `2026-10-10` · `scripts/restore_agency_nonprod.py` · `docs/ops/runs/s1-restore-o3b-2026-10-10.log`).
+- **Stato**: ✅ **DECISIONE OPERATIVA REGISTRATA** (docs 30-Set-2026 · P23 CHIUSO) · run firmata ✅ 10-Ott-2026
 
 ### D-114 — Sostenibilità bak/media = priorità pre-attivazione · 30-Set-2026
 - **Data**: 30 Settembre 2026
