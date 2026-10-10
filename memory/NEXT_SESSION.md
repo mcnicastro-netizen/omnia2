@@ -11,7 +11,7 @@
 **Coerenza di sistema:** [`docs/audit/OMNIA_COERENZA_SISTEMA.md`](../docs/audit/OMNIA_COERENZA_SISTEMA.md)
 
 Scala verità: DECISO → CODICE → LIVE → FIRMATO.  
-Sequenza: S1–S5 (PR) · **S6 ✅ narrativa 2 prodotti** → **S7 demo story** → … → S9 O6 → S10 GTM-01.
+Sequenza: **S1–S6 ✅ su main** → **S7 demo story** → … → S9 O6 → S10 GTM-01.
 
 ---
 
@@ -39,6 +39,7 @@ Sequenza: S1–S5 (PR) · **S6 ✅ narrativa 2 prodotti** → **S7 demo story** 
 
 | Voce | Esito |
 |--|--|
+| S1–S4 | ✅ restore · bak O0 · meter (firma ⏳ S3.1) · visibilità |
 | S6 narrativa 2 prodotti | ✅ pitch ImmobilCloud + ImmoWeb; `/learn` coming soon |
 | S5 soldi onesti | ✅ `OMNIA_SELF_SERVE_ENABLED` default OFF (PR #19) |
 | O6 self-serve | OFF (hard-gate codice; firma Founder ancora aperta) |
