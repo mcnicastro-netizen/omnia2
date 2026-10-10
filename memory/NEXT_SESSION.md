@@ -11,7 +11,7 @@
 **Coerenza di sistema:** [`docs/audit/OMNIA_COERENZA_SISTEMA.md`](../docs/audit/OMNIA_COERENZA_SISTEMA.md)
 
 Scala verità: DECISO → CODICE → LIVE → FIRMATO.  
-Sequenza: **S1–S6 ✅ su main** → **S7 demo story** → … → S9 O6 → S10 GTM-01.
+Sequenza: **S1–S7 ✅ su main** → **S8 SoT unico** → S9 O6 → S10 GTM-01.
 
 ---
 
@@ -28,10 +28,10 @@ Sequenza: **S1–S6 ✅ su main** → **S7 demo story** → … → S9 O6 → S1
 
 ## Prossimo passo tipico
 
-1. **S7** — Una demo story (un seed; percorso admin→portale; scadenza → Acquista)  
-2. Solo dopo: SoT unico · O6 · GTM-01  
+1. **S8** — SoT unico (questo doc + O6 + NEXT; resto frozen)  
+2. Solo dopo: O6 PASS · GTM-01  
 
-**Non:** monoblocco · self-serve ON prima di S9 · outreach ~5k prima di GTM-01 · Academy nel pitch (chiuso S6).
+**Non:** monoblocco · self-serve ON prima di S9 · outreach ~5k prima di GTM-01 · Academy nel pitch · Nicastro come demo GTM.
 
 ---
 
@@ -39,9 +39,7 @@ Sequenza: **S1–S6 ✅ su main** → **S7 demo story** → … → S9 O6 → S1
 
 | Voce | Esito |
 |--|--|
-| S1–S4 | ✅ restore · bak O0 · meter (firma ⏳ S3.1) · visibilità |
-| S6 narrativa 2 prodotti | ✅ pitch ImmobilCloud + ImmoWeb; `/learn` coming soon |
-| S5 soldi onesti | ✅ `OMNIA_SELF_SERVE_ENABLED` default OFF (PR #19) |
-| O6 self-serve | OFF (hard-gate codice; firma Founder ancora aperta) |
-| Fascicolo portale | `docs/audit/OMNIA_PORTALE_AUDIT_FASCICOLO.md` |
+| S1–S6 | ✅ restore · bak · meter (firma ⏳) · visibilità · soldi · narrativa |
+| S7 demo story | ✅ `demo-agency-001` · sandbox 7g · probe ×2 PASS |
+| O6 self-serve | OFF (hard-gate; firma Founder aperta) |
 | D-038 APE ordine | ⏳ accordo commerciale — non attivo |

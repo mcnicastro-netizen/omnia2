@@ -1,6 +1,6 @@
 # OMNIA — Coerenza di sistema (SoT Founder)
 
-**Data**: 9 Ottobre 2026 · **agg. S6**: 10 Ottobre 2026  
+**Data**: 9 Ottobre 2026 · **agg. S7**: 10 Ottobre 2026  
 **Repo**: `mcnicastro-netizen/omnia2` · branch di lavoro tipico = `main`  
 **Scopo**: una sola freccia — *cosa è il sistema oggi, dove la logica si spezza, in che ordine chiudere prima di demo definitiva / O6 / GTM*.  
 **Non sostituisce**: fascicolo D-118, O6 checklist, O0 design, DECISIONS. Li **ordina**.
@@ -66,7 +66,7 @@ Non è una lista infinita di bug: sono **tensioni** che impediscono di firmare �
 | C5 | **Trash non ovunque** — KPI / alcuni MLS senza soft-delete uniforme | Integrità dominio quasi-una |
 | C6 | **O0 PASS design / bak as-is** — ancora `copytree` × retention **30** (~32× disco) | Agency ∞ economicamente finta al tetto GB |
 | C7 | **Restore: docs sì, run firmata sì (S1 2026-10-10)** — ancora manuale, non RTO commerciale | Chiuso per pre-GTM O3b; non = DR piattaforma |
-| C8 | **Due seed = due storie demo** (demo-agency + Nicastro) | Nessuna “demo definitiva” unica |
+| C8 | **Due seed = due storie demo** — mitigato S7: GTM = solo `demo-agency-001` (Nicastro = dogfood) | Una demo story ripetibile |
 | C9 | **SoT documentali in conflitto temporale** (AUDIT_STATE / GTM freeze / fascicolo / NEXT) | Founder e agent leggono più futuri |
 | C10 | **CHIUSO/PASS/GREEN spesso = DECISO o CODICE**, raramente FIRMATO | Falsa chiusura (caso bak) |
 
@@ -87,7 +87,7 @@ Ordine di **coerenza**, non di feature. Niente monoblocco; ogni step ha artefatt
 | **S4** | **Una regola di visibilità** — stesso contratto pubblico portale / brand site | C4 | ✅ **DONE 2026-10-10** — `public_visibility` + LIVE |
 | **S5** | **Soldi onesti** — addebito reale o UI onesta; opz. hard-gate self-serve distinto da Stripe test | C2, C3 | ✅ **DONE 2026-10-10** — `OMNIA_S5_SOLDI_ONESTI.md` + LIVE |
 | **S6** | **Narrativa 2 prodotti** — Academy fuori pitch finché non esiste | C1 | ✅ **DONE 2026-10-10** — `OMNIA_S6_NARRATIVA_2_PRODOTTI.md` + LIVE |
-| **S7** | **Una demo story** — un seed; percorso admin→portale; giorni prova; scadenza → **Acquista pacchetto** (post-O6) | C8 | Script demo ripetibile ×2 senza agent “al volo” |
+| **S7** | **Una demo story** — un seed; percorso admin→portale; giorni prova; scadenza → **Acquista pacchetto** (post-O6) | C8 | ✅ **DONE 2026-10-10** — `OMNIA_S7_DEMO_STORY.md` + LIVE ×2 |
 | **S8** | **SoT unico** — questo doc + O6 + NEXT; resto frozen/archiviato | C9, C10 | Header stati allineati |
 | **S9** | **O6 PASS** — checklist senza ⏳ su restore; firma Founder self-serve | C2, C7 | Rubinetto ON solo qui |
 | **S10** | **GTM-01** — smoke ~20 concurrent + percorso prospect **prima** di ~5k email | — | Gate D-104 |
@@ -120,7 +120,7 @@ Non sono contraddizioni codice↔promessa della freccia S1–S10, ma **restano a
 Il repo **non** è un pasticcio casuale: è un ecosistema dual-product con spina dorsale solida.  
 Il rischio di fallimento non è “manca un modulo magico”: è **raccontare o vendere una storia più chiusa** di quanto il sistema sia logicamente allineato (soldi, restore, storage, messaggio, una sola demo).
 
-**Prossimo «vai» consigliato:** **S7** (una demo story). Reminder: S3.1 firma meter; S9 = `OMNIA_SELF_SERVE_ENABLED=true`.
+**Prossimo «vai» consigliato:** **S8** (SoT unico). Reminder: S3.1 firma meter; D-038 APE; S9 = `OMNIA_SELF_SERVE_ENABLED=true`.
 
 ---
 

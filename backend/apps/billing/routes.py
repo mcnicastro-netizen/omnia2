@@ -104,13 +104,36 @@ async def get_subscription(user: dict = Depends(get_current_user)):
     db = Database.get()
     aid = optional_agency_id(user)
     if not aid:
-        return {"subscription": None, "wallet": {"balance": 0}}
+        return {"subscription": None, "wallet": {"balance": 0}, "demo": None}
     sub = await db.subscriptions.find_one({"agency_id": aid}, {"_id": 0})
     wallet = await db.credit_wallets.find_one({"agency_id": aid}, {"_id": 0})
+    agency = await db.agencies.find_one({"id": aid}, {"_id": 0})
+    from shared.billing.self_serve import is_self_serve_enabled
+    from shared.demo_story import build_demo_status
+
     return {
         "subscription": sub,
         "wallet": wallet or {"agency_id": aid, "balance": 0},
+        "demo": build_demo_status(agency, self_serve_enabled=is_self_serve_enabled()),
     }
+
+
+@router.get("/demo-status")
+async def demo_status(user: dict = Depends(get_current_user)):
+    """S7 — stato sandbox demo story (giorni prova / scadenza → Acquista)."""
+    db = Database.get()
+    aid = optional_agency_id(user)
+    if not aid:
+        raise HTTPException(
+            status_code=400,
+            detail={"error": "agency_required", "code": "agency_required",
+                    "message": "Serve un'agenzia attiva."},
+        )
+    agency = await db.agencies.find_one({"id": aid}, {"_id": 0})
+    from shared.billing.self_serve import is_self_serve_enabled
+    from shared.demo_story import build_demo_status
+
+    return build_demo_status(agency, self_serve_enabled=is_self_serve_enabled())
 
 
 @router.post("/checkout")
