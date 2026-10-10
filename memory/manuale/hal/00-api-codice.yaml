@@ -765,8 +765,8 @@ voci:
     widget: null
     pubblico: [super_admin]
     livello: avanzato
-    tags: [codice, secrets, vault, cursor, cloud-agent, stripe, resend, gemini, openapi, d-116, onda-c]
-    correlati: [api.stripe-sandbox-cloud, api.visura-openapi-catasto, api.portale-audit-program, settings.billing-pagina-separata]
+    tags: [codice, secrets, vault, cursor, cloud-agent, stripe, resend, gemini, openapi, railway, d-116, d-123, onda-c]
+    correlati: [api.stripe-sandbox-cloud, api.visura-openapi-catasto, api.portale-audit-program, api.railway-api-deploy, settings.billing-pagina-separata]
     domanda_naturale: "Dove metto le API key su Cloud Agent? Perché l'agent non vede Stripe anche se le ho salvate?"
     contenuto:
       a_cosa_serve: >
@@ -776,10 +776,14 @@ voci:
         Nomi env var esatti. Scope Environment preferito; evitare doppioni
         Personal+Environment (live+test insieme). Boot auto (8 Ott 2026):
         materialize vault→.env (+OPENAPI_*), sync FRONTEND_* dal tunnel,
-        sync webhook Stripe test sul trycloudflare.
+        sync webhook Stripe test sul trycloudflare. Env id omnia2:
+        b80b635c-b592-11f1-bb68-864e54d14197. In chat desktop il pannello
+        Add secrets spesso apre solo Personal o non appare — usare
+        Secrets UI Environment.
       quando_si_usa: >
         Agent dice secret missing/live; New Project vault vuoto;
-        billing 503; mail in [EMAIL MOCK]; dopo Save Secrets UI.
+        billing 503; mail in [EMAIL MOCK]; dopo Save Secrets UI;
+        deploy Railway/Vercel.
       passi:
         - "Avvia sempre agent su github.com/mcnicastro-netizen/omnia2
           (mai New Project / Origin-tmp)."
@@ -787,6 +791,8 @@ voci:
           STRIPE_SECRET_KEY=sk_test_…, STRIPE_PUBLISHABLE_KEY=pk_test_…,
           STRIPE_ENABLED=true, STRIPE_WEBHOOK_SECRET=whsec_…,
           OPENAPI_ENABLED / OPENAPI_EMAIL / OPENAPI_API_KEY (Visura se Catasto attivo)."
+        - "Go-live API: RAILWAY_TOKEN (Account), RAILWAY_PROJECT_ID,
+          OMNIA_API_PUBLIC_URL — vedi api.railway-api-deploy."
         - "STRIPE_MODE non obbligatorio in vault: con sk_test_ lo stack
           imposta mode=test da solo."
         - "Dopo Save: apri agent NUOVO — le chat vecchie tengono l'inject
@@ -808,6 +814,60 @@ voci:
         - problema: "Ho messo Chiave pubblicabile come nome secret"
           soluzione: >
             Nome invalido. Usa STRIPE_PUBLISHABLE_KEY / STRIPE_SECRET_KEY.
+        - problema: "Il pannello Add secrets a destra mostra solo Personal"
+          soluzione: >
+            Bug/limitazione Cursor in chat desktop. Ignora quel pannello;
+            salva in Environments → omnia2 → Secrets → Environment.
+      permessi:
+        - super_admin / Founder
+      screenshot: []
+
+  - id: api.railway-api-deploy
+    titolo: Deploy API OMNIA su Railway (D-123)
+    modulo: Codice API
+    widget: null
+    pubblico: [super_admin]
+    livello: avanzato
+    tags: [codice, railway, deploy, api, d-123, mongo, health, vercel, dns]
+    correlati: [api.cloud-secrets-vault, api.cloud-environment-builds]
+    domanda_naturale: "Dov'è l'API di produzione? Come si fa il deploy su Railway?"
+    contenuto:
+      a_cosa_serve: >
+        Host API produzione = Railway (Hetzner bloccato). Repo:
+        railway.toml + Dockerfile.railway + scripts/railway-deploy.sh.
+        Live 10-Ott-2026: progetto omnia-api
+        (1b31e62e-7ba7-4082-b643-72d221ee7fbe), URL
+        https://omnia-api-production-2cec.up.railway.app,
+        GET /api/health → status=ok db=ok. Mongo plugin + volume
+        /app/.media e /app/.backups. Dominio target
+        api.omniarealestateecosystem.it (CNAME Cloudflare dopo).
+      quando_si_usa: >
+        Redeploy API; salvare OMNIA_API_PUBLIC_URL; go-live Vercel;
+        health check produzione.
+      passi:
+        - "Vault Environment: RAILWAY_TOKEN (Account token fresco),
+          RAILWAY_PROJECT_ID=1b31e62e-7ba7-4082-b643-72d221ee7fbe,
+          OMNIA_API_PUBLIC_URL=https://omnia-api-production-2cec.up.railway.app."
+        - "Revoca token Railway esposti in chat prima di salvarne uno nuovo."
+        - "bash scripts/railway-prep-check.sh && bash scripts/railway-deploy.sh
+          (rimappa RAILWAY_TOKEN→RAILWAY_API_TOKEN, pin Dockerfile.railway)."
+        - "Smoke: curl -sS $OMNIA_API_PUBLIC_URL/api/health."
+        - "DNS: memory/DNS_SETUP_GUIDE.md §4c CNAME api → Railway."
+        - "Poi «vai Vercel» (D-074) con REACT_APP_BACKEND_URL = URL API."
+      errori_comuni:
+        - problema: "railway whoami → Unauthorized con token Account in vault"
+          soluzione: >
+            Se RAILWAY_TOKEN resta nel process env, la CLI lo tratta come
+            project token. Lo script unsetta RAILWAY_TOKEN ed esporta
+            RAILWAY_API_TOKEN. Non mettere il token Account anche come
+            RAILWAY_API_TOKEN nel vault (nome canonico = RAILWAY_TOKEN).
+        - problema: "Build usa Dockerfile Cloud Agent invece di Dockerfile.railway"
+          soluzione: >
+            Pin dockerfilePath=Dockerfile.railway via GraphQL
+            serviceInstanceUpdate (Builder enum senza DOCKERFILE).
+        - problema: "Add secrets in chat non appare / solo Personal"
+          soluzione: >
+            Usare Secrets UI Environment omnia2. Nuovo agent dopo Save.
       permessi:
         - super_admin / Founder
       screenshot: []
