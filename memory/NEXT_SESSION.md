@@ -1,6 +1,6 @@
 # Prossima sessione — programma passi
 
-**Aggiornato**: 9 Ottobre 2026  
+**Aggiornato**: 10 Ottobre 2026  
 **Repo**: https://github.com/mcnicastro-netizen/omnia2 ✅  
 **Branch**: `main`
 
@@ -11,17 +11,24 @@
 **Coerenza di sistema:** [`docs/audit/OMNIA_COERENZA_SISTEMA.md`](../docs/audit/OMNIA_COERENZA_SISTEMA.md)
 
 Scala verità: DECISO → CODICE → LIVE → FIRMATO.  
-Sequenza chiusura: **S1 restore firmata → S2 bak O0 runtime → … → S9 O6 → S10 GTM-01**.
+Sequenza: S1–S3 (PR) · S4 ✅ → **S5 soldi onesti** → … → S9 O6 → S10 GTM-01.
+
+---
+
+## ⚠️ Non dimenticare — S3.1 firma / deepen meter
+
+Founder: non chiudere listino storage ora; approfondire dopo.  
+Vedi `docs/audit/OMNIA_S3_METER_ECONOMIA.md` (su branch S3 se non ancora in main) · firma §6 APERTA.
 
 ---
 
 ## Prossimo passo tipico
 
-1. **S1** — O3b restore firmata non-prod (tabella in `docs/ops/RESTORE_MANUAL.md`)  
-2. **S2** — Bak runtime = O0 (≤7g / incrementale; oggi ancora full×30)  
-3. Solo dopo: demo story unica + O6 PASS + GTM-01  
+1. **S5** — Soldi onesti (addebito reale o UI onesta; gate self-serve ≠ Stripe test)  
+2. (quando tocca) **S3.1** — deepen + firma meter storage  
+3. Solo dopo: demo story · O6 · GTM-01  
 
-**Non:** monoblocco “chiudi tutto” · self-serve ON prima di S9 · outreach ~5k email prima di GTM-01.
+**Non:** monoblocco · self-serve ON prima di S9 · outreach ~5k prima di GTM-01.
 
 ---
 
@@ -29,7 +36,6 @@ Sequenza chiusura: **S1 restore firmata → S2 bak O0 runtime → … → S9 O6 
 
 | Voce | Esito |
 |--|--|
-| D-118 A–J + residuo codice | su `main` — ri-verificare LIVE, non rifare |
-| O6 self-serve | OFF (CONDITIONAL; manca restore firmata) |
-| Bak economia | Design O0 ✅ · runtime ancora as-is (~32×) |
+| S4 visibilità pubblica | ✅ surface condivisa portale/brand · `OMNIA_S4_VISIBILITA_PUBBLICA.md` |
+| O6 self-serve | OFF |
 | Fascicolo portale | `docs/audit/OMNIA_PORTALE_AUDIT_FASCICOLO.md` |

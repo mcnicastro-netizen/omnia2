@@ -1,3 +1,11 @@
+## 2026-10-10 — S4 visibilità pubblica unica (portale / brand)
+
+- SoT `shared/db/public_visibility.py` — surface: active + visibility=public + moderation OK
+- Brand `/p/{slug}` usa `brand_site_filter` (non più solo status=active)
+- Portale resta su `portal_listing_filter` (listing cloud + no L3/L4)
+- P-034 CHIUSO · spec `OMNIA_S4_VISIBILITA_PUBBLICA.md` · LIVE PASS
+- NEXT → S5 (+ reminder S3.1)
+
 ## 2026-10-09 — D-118 residuo codice CHIUSO (vai Founder)
 
 - Fix: P-051 CSRF/COOKIE_SECURE · P-049 B2C Stripe fallback · P-046/047 backup+restore B2C · P-050 RL · P-033 L3/L4 search · P-048 soft-delete · P-054 i18n · P-055 SEO · P-057 UGC notify · P-052/053/056/058/032/024 · P-026 MITIGATO

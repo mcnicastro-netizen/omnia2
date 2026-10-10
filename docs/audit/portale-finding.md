@@ -38,7 +38,7 @@
 | P-031 | P0 | F | Regressione inventory: demo props `visibility=null` → search total=0 (P-001) | **CHIUSO** |
 | P-032 | P3 | F | Route solo `/cloud/valutatore`; `/cloud/valuator` shell vuota | **CHIUSO** |
 | P-033 | P2 | G | Search lista card L3/L4 anche se detail anon = 404 | **CHIUSO** |
-| P-034 | P2 | G | Sito brand `/api/p/{slug}` ignora visibility/listing/privacy/moderation | **WONTFIX** (by design) |
+| P-034 | P2 | G | Sito brand `/api/p/{slug}` ignora visibility/listing/privacy/moderation | **CHIUSO S4** — `brand_site_filter` = surface pubblica condivisa; delta intenzionali in `public_visibility.py` |
 | P-035 | P2 | G | Ops `saved_searches_active` query `active` ≠ schema `is_active` | **CHIUSO** |
 | P-036 | P3 | G | HAL Legal CRM non addebita listino 12 crediti | **CHIUSO** |
 | P-037 | P1 | H | Informativa privacy senza sub-responsabili / transfer extra-UE / no-train | **CHIUSO** |
