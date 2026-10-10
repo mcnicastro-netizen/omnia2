@@ -76,3 +76,7 @@ Hobby **$5/mese** + usage → tipico API+Mongo piccolo **≈ $15–35/mese**.
 - [x] Cloudflare CNAME `api` + TXT verify + cert VALID
 - [x] `OMNIA_API_PUBLIC_URL=`OMNIA_API_PUBLIC_URL`` (solo URL)
 - [x] Vercel FE + DNS apex/www/app/cloud (smoke 200)
+
+## Probe go-live (diagnostica)
+
+Prima di «vai Railway»: `bash scripts/railway-golive-probe.sh` (token + trial/plan).
