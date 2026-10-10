@@ -55,3 +55,24 @@ def test_legal_edge_requires_agency():
         assert ei.value.detail["code"] == "active_agency_required"
 
     asyncio.run(_run())
+
+
+def test_legal_agency_included_no_debit():
+    """D-119 — CRM con agency: incluso, zero crediti."""
+    from apps.immoweb.al_legal import router as legal
+
+    user = {
+        "id": "u-agency",
+        "role": "admin",
+        "account_type": "b2b",
+        "agency_ids": ["demo-agency-001"],
+        "active_agency_id": "demo-agency-001",
+    }
+
+    async def _run():
+        out = await legal._ensure_legal_payment(user)
+        assert out["rail"] == "agency_included"
+        assert out["credits_charged"] == 0
+        assert out["agency_id"] == "demo-agency-001"
+
+    asyncio.run(_run())

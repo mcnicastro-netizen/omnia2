@@ -61,7 +61,7 @@ I crediti inclusi nel piano si sommano ai pacchetti ricarica acquistati.
 | Query **HAL Agents** (assistente CRM) | 4 | €0,20 | 75% |
 | **Valuator base** | 6 | €0,30 | 85% |
 | **Valuator UNI 10750 + PDF** | 12 | €0,60 | 82% |
-| Query **HAL Legal** (con citazioni) | 12 | €0,60 | 90% |
+| Query **HAL Legal** (API/Track B) | 12 | €0,60 | 90% — **in-app CRM incluso** (D-119) |
 | **Virtual Staging** (pipeline 3-stage) | 18 | €0,90 | 88% |
 | **Visura catastale** | 24 | €1,20 | 40-60% (dipende dal partner) |
 | **APE search** regionale | 60 | €3,00 | 30% (fee partner) |

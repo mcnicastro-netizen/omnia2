@@ -1,4 +1,4 @@
-"""P-035 Ops saved_searches is_active · P-036 HAL Legal CRM debit 12 crediti."""
+"""P-035 Ops saved_searches is_active · D-119 HAL Legal CRM incluso (ex P-036 debit)."""
 from __future__ import annotations
 
 import os
@@ -41,7 +41,6 @@ def demo_session(mongo):
     r = s.post(f"{API}/auth/login", json={"email": email, "password": password}, timeout=30)
     if r.status_code != 200:
         pytest.skip(f"demo login {r.status_code}")
-    # Seed wallet for debit tests
     now = datetime.now(timezone.utc).isoformat()
     mongo.credit_wallets.update_one(
         {"agency_id": "demo-agency-001"},
@@ -68,10 +67,10 @@ def test_p035_ops_counts_is_active(founder_session, mongo):
     assert int(portal.get("saved_searches_active") or 0) >= 1
 
 
-def test_p036_agency_legal_debits_12(demo_session, mongo):
+def test_d119_agency_legal_included_no_debit(demo_session, mongo):
+    """CRM HAL Legal = incluso piano: wallet invariato, rail agency_included."""
     before = mongo.credit_wallets.find_one({"agency_id": "demo-agency-001"}, {"_id": 0, "balance": 1})
     bal_before = int((before or {}).get("balance") or 0)
-    assert bal_before >= 12, "wallet must have credits for debit test"
 
     r = demo_session.post(
         f"{API}/app/legal/chat",
@@ -80,36 +79,37 @@ def test_p036_agency_legal_debits_12(demo_session, mongo):
     )
     assert r.status_code == 200, r.text[:400]
     body = r.json()
-    assert body.get("credits_charged") == 12
-    assert body.get("payment_rail") == "agency_credits"
+    assert body.get("credits_charged") in (0, None)
+    assert body.get("payment_rail") == "agency_included"
 
     after = mongo.credit_wallets.find_one({"agency_id": "demo-agency-001"}, {"_id": 0, "balance": 1})
     bal_after = int((after or {}).get("balance") or 0)
-    assert bal_after == bal_before - 12
+    assert bal_after == bal_before
 
     ledger = mongo.credit_ledger.find_one(
         {"agency_id": "demo-agency-001", "reason": "hal_legal_query"},
         sort=[("created_at", -1)],
     )
-    assert ledger is not None
-    assert ledger.get("delta") == -12
+    # Nessun nuovo debit post-D-119; ledger storico eventuale ok se created_at < now
+    if ledger is not None:
+        created = str(ledger.get("created_at") or "")
+        # Se c'è una riga fresca (stesso secondo), fallirebbe il balance assert sopra
+        assert created  # presence only; balance is the hard check
 
 
-def test_p036_insufficient_credits_402(demo_session, mongo):
+def test_d119_low_wallet_still_ok(demo_session, mongo):
+    """Wallet < 12 non blocca più Legal CRM (incluso)."""
     mongo.credit_wallets.update_one(
         {"agency_id": "demo-agency-001"},
         {"$set": {"balance": 5, "updated_at": datetime.now(timezone.utc).isoformat()}},
     )
     r = demo_session.post(
         f"{API}/app/legal/chat",
-        json={"message": "Test crediti insufficienti HAL Legal"},
-        timeout=30,
+        json={"message": "Test Legal incluso con pochi crediti"},
+        timeout=120,
     )
-    assert r.status_code == 402, r.text[:300]
-    detail = r.json().get("detail") or {}
-    if isinstance(detail, dict):
-        assert detail.get("error") == "insufficient_credits" or detail.get("required") == 12
-    # restore for other tests / dogfood
+    assert r.status_code == 200, r.text[:300]
+    assert (r.json().get("credits_charged") or 0) == 0
     mongo.credit_wallets.update_one(
         {"agency_id": "demo-agency-001"},
         {"$set": {"balance": 100}},

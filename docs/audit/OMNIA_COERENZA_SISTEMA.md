@@ -61,7 +61,7 @@ Non è una lista infinita di bug: sono **tensioni** che impediscono di firmare �
 |---|----------------|---------|
 | C1 | **Messaggio a 3 pilastri / prodotto a 2** — mitigato S6: pitch = ImmobilCloud + ImmoWeb; `/learn` solo coming soon | Pitch GTM allineato; Academy resta roadmap M6 |
 | C2 | **D-115 self-serve** — mitigato S5: `OMNIA_SELF_SERVE_ENABLED` (default OFF) ≠ `STRIPE_ENABLED` | Kill-switch B2B reale; Stripe sandbox resta |
-| C3 | **Rail monetari** — valuator copy onesta; Legal edge gratis **chiuso**; D-075 vs P-036 ancora aperto | Narrativa vs wallet più onesta; SoT Legal da firmare dopo |
+| C3 | **Rail monetari** — valuator onesto; Legal edge chiuso; **D-119** Legal CRM incluso (chiude D-075 vs P-036) | Narrativa vs wallet allineata |
 | C4 | **Due verità pubbliche** — mitigato S4: contratto pubblico unico portale/brand | Allineato LIVE; residuali fuori S4 |
 | C5 | **Trash non ovunque** — KPI / alcuni MLS senza soft-delete uniforme | Integrità dominio quasi-una |
 | C6 | **O0 PASS design / bak as-is** — ancora `copytree` × retention **30** (~32× disco) | Agency ∞ economicamente finta al tetto GB |
@@ -120,7 +120,7 @@ Non sono contraddizioni codice↔promessa della freccia S1–S10, ma **restano a
 Il repo **non** è un pasticcio casuale: è un ecosistema dual-product con spina dorsale solida.  
 Il rischio di fallimento non è “manca un modulo magico”: è **raccontare o vendere una storia più chiusa** di quanto il sistema sia logicamente allineato (soldi, restore, storage, messaggio, una sola demo).
 
-**Prossimo «vai» consigliato:** **S8** (SoT unico). Reminder: S3.1 firma meter; D-038 APE; S9 = `OMNIA_SELF_SERVE_ENABLED=true`.
+**Prossimo «vai» consigliato:** **S8** (SoT unico). Reminder: S3.1 firma meter; D-038 APE; S9 = `OMNIA_SELF_SERVE_ENABLED=true`. D-075/P-036 ✅ D-119.
 
 ---
 
