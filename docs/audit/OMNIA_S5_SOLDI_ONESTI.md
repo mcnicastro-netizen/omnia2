@@ -31,7 +31,7 @@ Endpoint B2B bloccati se self-serve OFF (503 `self_serve_blocked`):
 |------|-------|----------|
 | Valuator agenzia | Copy “12 crediti / Usa crediti” senza debit | Copy **incluso piano v1** (nessun addebito) |
 | HAL Legal senza `active_agency_id` | Gratis silenzioso (`rail: none`) | **403** `active_agency_required` |
-| HAL Legal con agency | Debit 12 crediti (P-036) | invariato |
+| HAL Legal con agency | Debit 12 crediti (P-036) | **incluso piano** (D-119 · `agency_included`) |
 | HAL Legal B2C | Stripe €1 | invariato |
 
 ---
@@ -46,5 +46,8 @@ Endpoint B2B bloccati se self-serve OFF (503 `self_serve_blocked`):
 ## Aperto (non S5)
 
 - Firma Founder O6 → `OMNIA_SELF_SERVE_ENABLED=true` (S9)
-- Allineare D-075 vs P-036 (Legal incluso vs 12 crediti) — SoT ancora in tensione, edge gratis chiuso
 - Debit reale valuator agenzia (se Founder vuole listino crediti invece di incluso)
+
+## Chiuso dopo S5
+
+- **D-119** (10-Ott-2026): D-075 vs P-036 — HAL Legal CRM **incluso**; B2C €1 e API crediti restano

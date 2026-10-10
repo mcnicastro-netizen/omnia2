@@ -321,7 +321,7 @@ async def ops_overview(
             list_credits_unit=12,
             revenue_eur=legal_revenue,
             revenue_source="api_crediti+b2c",
-            note="In-app incluso; incassi = API legal + B2C legal",
+            note="In-app CRM incluso (D-119); incassi = API legal + B2C €1",
         ),
         _money_row(
             key="virtual_staging",

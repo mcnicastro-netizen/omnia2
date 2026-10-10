@@ -21,7 +21,6 @@ Sequenza: **S1–S7 ✅ su main** → **S8 SoT unico** → S9 O6 → S10 GTM-01.
 |------|------|
 | **S3.1** | Firma/deepen meter storage — non chiudere listino senza Founder |
 | **S9** | Rubinetto `OMNIA_SELF_SERVE_ENABLED=true` solo dopo O6 PASS |
-| D-075 vs P-036 | HAL Legal “incluso” vs 12 crediti — SoT ancora da firmare |
 | **D-038 APE partner** | ⏳ ordine certificazione APE **non attivo** — accordo commerciale. Bottone “Ordina APE” solo dopo. D-039: no calcolatore in-house. ≠ compliance classe APE publishing. |
 
 ---
@@ -41,5 +40,6 @@ Sequenza: **S1–S7 ✅ su main** → **S8 SoT unico** → S9 O6 → S10 GTM-01.
 |--|--|
 | S1–S6 | ✅ restore · bak · meter (firma ⏳) · visibilità · soldi · narrativa |
 | S7 demo story | ✅ `demo-agency-001` · sandbox 7g · probe ×2 PASS |
+| D-119 Legal CRM | ✅ incluso piano (chiude D-075 vs P-036) |
 | O6 self-serve | OFF (hard-gate; firma Founder aperta) |
 | D-038 APE ordine | ⏳ accordo commerciale — non attivo |

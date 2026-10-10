@@ -1324,12 +1324,13 @@ Registro di tutte le decisioni di business e tecniche prese durante il progetto.
 - Preview sessione Cursor resta per sviluppo; produzione/staging = Vercel FE + API deployata.
 
 ## D-075 — AI in-app (HAL / Guida / Legal chat) inclusa, senza crediti · 2026-09-14
-**Status**: ✅ ATTIVA
+**Status**: ✅ ATTIVA · **confermata D-119** (10-Ott-2026) anche per HAL Legal CRM
 
 - **Founder**: HAL, Guida HAL e chat AI dentro ImmoWeb devono essere **gratuiti per l’agenzia** (inclusi nel prodotto), non scalati da wallet crediti.
 - Chiave LLM = piattaforma OMNIA (`GEMINI_API_KEY`), non budget Emergent né crediti agenzia.
 - I **crediti** restano solo per consumi a pagamento esterni (API Gateway Track B, video premium, top-up, ecc.).
 - Messaggi UI: mai «budget esaurito» per questi servizi; in caso di guasto: «HAL non risponde adesso».
+- **Nota 10-Ott-2026**: il debit CRM 12 cr (P-036) era in tensione con questa regola; chiuso da **D-119**.
 
 ## D-076 — Cruscotto Founder Ops Legal (super_admin) · 2026-09-14
 **Status**: ✅ ATTIVA
@@ -1772,5 +1773,17 @@ Registro di tutte le decisioni di business e tecniche prese durante il progetto.
   4. Ambito = ImmobilCloud B2C + Legal B2C; gestionale solo ai ponti.
   5. Fascicolo finale obbligatorio a chiusura Onda J → `docs/audit/OMNIA_PORTALE_AUDIT_FASCICOLO.md`.
 - **Stato**: ✅ **MERGED su main** (PR #12 · 9-Ott-2026 · A–J GREEN · vai P-033/046…058) · fascicolo su main · residui P-021 opz. / P-026 MITIGATO
+
+### D-119 — HAL Legal CRM incluso nel piano (chiude tensione D-075 vs P-036) · 10-Ott-2026
+- **Data**: 10 Ottobre 2026
+- **Contesto**: P-036 aveva imposto debit 12 crediti su chat/analyze-pdf CRM; D-075 dice AI in-app inclusa. COGS stimato ~€0,025/query (Gemini ~€0,01 + Tavily ~€0,015; Tavily free fino a ~500 query/mese). Founder accetta consiglio agent: **incluso**.
+- **Decisione**:
+  1. **In-app CRM** (agency attiva): HAL Legal **incluso** — `payment_rail=agency_included`, `credits_charged=0`. Nessun `debit_credits`.
+  2. **Senza `active_agency_id`**: resta **403** `active_agency_required` (S5 — no edge gratis).
+  3. **B2C**: Stripe €1 invariato (`b2c_hal_legal_query`).
+  4. **API Track B**: resta a crediti (`CREDIT_COSTS['hal_legal_query']=12` / gateway).
+  5. Anti-abuso: rate limit Legal esistente (30/ora); non serve paywall crediti in-app.
+- **Implementazione**: `al_legal/router.py` `_ensure_legal_payment` · test `test_s5_soldi_onesti` + `test_p035_p036_legal_ops` · SoT NEXT/coerenza/S5/PRICING.
+- **Stato**: ✅ **DECISIONE OPERATIVA REGISTRATA** · codice in ship
 
 

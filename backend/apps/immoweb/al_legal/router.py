@@ -149,18 +149,17 @@ async def _call_llm(system_prompt: str, user_msg: str, session_id: str) -> str:
 
 
 async def _ensure_legal_payment(user: dict) -> Dict[str, Any]:
-    """Gate pagamento HAL Legal (P-010 B2C + P-036 CRM crediti).
+    """Gate pagamento HAL Legal (P-010 B2C + D-075/D-119 CRM incluso).
 
     - B2C client → consuma 1 acquisto Stripe `b2c_hal_legal_query` (€1)
-    - Utente CRM con agency attiva → addebita CREDIT_COSTS['hal_legal_query'] (12)
+    - Utente CRM con agency attiva → incluso nel piano (0 crediti; COGS ~€0,025)
     - CRM senza active_agency_id → 403 (S5: niente edge gratis silenzioso)
+    - API Track B resta a crediti (`CREDIT_COSTS` / gateway) — fuori da questo gate
     """
     from apps.billing.b2c_entitlements import (
         consume_hal_legal_query,
         user_requires_b2c_legal_paywall,
     )
-    from apps.billing.plans import CREDIT_COSTS
-    from apps.billing.routes import debit_credits
 
     if user_requires_b2c_legal_paywall(user):
         ok = await consume_hal_legal_query(user["id"])
@@ -183,24 +182,15 @@ async def _ensure_legal_payment(user: dict) -> Dict[str, Any]:
                 "code": "active_agency_required",
                 "message": (
                     "Seleziona un'agenzia attiva per usare HAL Legal "
-                    "(addebito crediti piano). Nessun uso gratuito senza tenant."
+                    "(incluso nel piano). Nessun uso senza tenant."
                 ),
             },
         )
 
-    cost = int(CREDIT_COSTS.get("hal_legal_query") or LIST_PRICE_CREDITS)
-    balance_after = await debit_credits(
-        agency_id,
-        cost,
-        reason="hal_legal_query",
-        ref_id=user.get("id"),
-        ref_type="al_legal_user",
-    )
     return {
-        "rail": "agency_credits",
-        "credits_charged": cost,
+        "rail": "agency_included",
+        "credits_charged": 0,
         "agency_id": agency_id,
-        "credits_balance_after": balance_after,
     }
 
 
