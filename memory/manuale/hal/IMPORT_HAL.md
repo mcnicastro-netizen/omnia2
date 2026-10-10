@@ -267,6 +267,7 @@ Prima di dichiarare il cold start "attivo", eseguire manualmente queste 5 query 
 
 | Data | Versione | Note |
 |------|:-:|------|
+| 10-Ott-2026 sera | **v0.35-railway** | HAL Cap.00: +`api.railway-api-deploy` · update `api.cloud-secrets-vault` (Railway + Personal UI bug). Cap.00/19 MD · D-123 API live. Reindex Founder post-merge. |
 | 09-Ott-2026 sera | **v0.34-d118-merged** | HAL Cap.00: D-118 MERGED su main (PR #12) · P-021/P-026 residui. Fascicolo su main. |
 | 09-Ott-2026 sera | **v0.34-d118-close** | HAL Cap.00: D-118 residuo codice CHIUSO · pronto merge main · P-021/P-026 residui. Fascicolo aggiornato. |
 | 09-Ott-2026 | **v0.33-onda-j** | HAL Cap.00: A–J GREEN · fascicolo D-118 · P-046…P-058 · coda «vai». Matrice `2026-10-09-onda-j.md` · `OMNIA_PORTALE_AUDIT_FASCICOLO.md`. |

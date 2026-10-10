@@ -61,14 +61,17 @@ Dopo il Save, **riavvia un nuovo agent** sullo stesso environment (i secret non 
 | `VERCEL_TOKEN` | **Sì** per deploy FE (D-074) | [Vercel → Tokens](https://vercel.com/account/tokens) | `scripts/vercel-deploy.sh` |
 | `VERCEL_ORG_ID` | Consigliato | Vercel Team/Account Settings | Scope CLI |
 | `VERCEL_PROJECT_ID` | Dopo 1° link progetto | Vercel Project Settings | Redeploy non-interattivo |
-| `RAILWAY_TOKEN` | **Sì** per deploy API (Plan B) | [Railway → Account → Tokens](https://railway.app/account/tokens) | `scripts/railway-deploy.sh` |
-| `RAILWAY_PROJECT_ID` | Dopo 1° progetto | Railway Project Settings | Link CLI |
-| `OMNIA_API_PUBLIC_URL` | **Sì** per build prod FE | URL HTTPS API (Railway `*.up.railway.app` poi `https://api.omniarealestateecosystem.it`) | `REACT_APP_BACKEND_URL` a build |
+| `RAILWAY_TOKEN` | **Sì** per redeploy API (D-123) | [Railway → Account → Tokens](https://railway.app/account/tokens) (scope Account) | Vault name canonico; `railway-deploy.sh` → `RAILWAY_API_TOKEN` + unset `RAILWAY_TOKEN` |
+| `RAILWAY_PROJECT_ID` | **Sì** (live) | `1b31e62e-7ba7-4082-b643-72d221ee7fbe` (progetto `omnia-api`) | Link CLI / redeploy |
+| `OMNIA_API_PUBLIC_URL` | **Sì** (live temp) | `https://omnia-api-production-2cec.up.railway.app` (poi `https://api.omniarealestateecosystem.it`) | `REACT_APP_BACKEND_URL` a build FE |
 | `CLOUDFLARE_API_TOKEN` | Consigliato E2E DNS | CF → API Tokens (Zone.DNS Edit) | Aggiornare CNAME post-Vercel/API |
 | `CLOUDFLARE_ZONE_ID` | Consigliato E2E DNS | CF → dominio → Overview | API DNS |
 
-**Ordine go-live**: 1) API Railway (`docs/ops/RAILWAY_DEPLOY.md` · **«vai Railway»**) → 2) FE Vercel (`docs/ops/VERCEL_DEPLOY.md` · **«vai Vercel»**).  
+**Ordine go-live**: 1) API Railway ✅ live (`docs/ops/RAILWAY_DEPLOY.md`) → vault Environment + DNS `api` → 2) FE Vercel (`docs/ops/VERCEL_DEPLOY.md` · **«vai Vercel»**).  
 Hetzner = bloccato (account/mail); ripresa opzionale dopo.
+
+**Env Cursor omnia2**: `environmentPublicId=b80b635c-b592-11f1-bb68-864e54d14197`.  
+`request-environment-setup-actions` / Add secrets in chat desktop: spesso **nessun card** o solo **Personal** — salvare sempre nello scope **Environment**.
 
 Alias legacy accettati dal backend (se li avevi): `GOOGLE_API_KEY`, `EMERGENT_LLM_KEY` (mirror Gemini).
 

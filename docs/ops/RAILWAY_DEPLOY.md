@@ -1,67 +1,47 @@
 # Deploy API OMNIA su Railway (Plan B — Hetzner bloccato)
 
-**Stato:** ✅ prep repo · ⏳ deploy in attesa Founder  
+**Stato:** ✅ prep repo · ✅ API live (10-Ott-2026) · ⏳ vault Environment + DNS `api` + Vercel  
+**API live (temporanea):** `https://omnia-api-production-2cec.up.railway.app`  
 **Dominio target:** `https://api.omniarealestateecosystem.it` → servizio Railway  
-**FE:** Vercel (dopo API live) · runbook: [`VERCEL_DEPLOY.md`](./VERCEL_DEPLOY.md)
+**Progetto Railway:** `omnia-api` · id `1b31e62e-7ba7-4082-b643-72d221ee7fbe`  
+**FE:** Vercel (dopo vault + DNS) · runbook: [`VERCEL_DEPLOY.md`](./VERCEL_DEPLOY.md)
+
+Smoke verificato: `GET /api/health` → `status=ok` · `db=ok`.
 
 ---
 
-## Cosa fai tu ora (UI Railway — 5 minuti)
+## Cosa fai tu (domani — vault Environment)
 
-Sei già loggato con GitHub. Poi:
+### A. Token + URL in vault omnia2 (scope **Environment**)
+1. https://railway.app/account/tokens → **revoca** token esposti in chat → **Create Token** (scope **Account**)
+2. Cursor → Environments → **omnia2** (`b80b635c-b592-11f1-bb68-864e54d14197`) → Secrets → scope **Environment** (non Personal):
+   - `RAILWAY_TOKEN` = token Account nuovo
+   - `RAILWAY_PROJECT_ID=1b31e62e-7ba7-4082-b643-72d221ee7fbe`
+   - `OMNIA_API_PUBLIC_URL=https://omnia-api-production-2cec.up.railway.app`
+3. **Nuovo agent** (le chat vecchie non rileggono il vault)
 
-### A. Token per l’agent (obbligatorio E2E)
-1. https://railway.app/account/tokens → **Create Token**
-2. Incolla in Cursor Secrets (env omnia2) come `RAILWAY_TOKEN`  
-   Link env: https://cursor.com/dashboard/cloud-agents/environments/e/b80b635c-b592-11f1-bb68-864e54d14197
-3. Nuovo agent + messaggio **«vai Railway»**
+**CLI quirk:** il nome vault resta `RAILWAY_TOKEN`. `scripts/railway-deploy.sh` lo rimappa a `RAILWAY_API_TOKEN` e unsetta `RAILWAY_TOKEN` (altrimenti Unauthorized).
 
-### B. Oppure crea il progetto a mano (se preferisci UI)
-1. **New Project** → **Deploy from GitHub repo** → `mcnicastro-netizen/omnia2`
-2. **Add Plugin / Database** → **MongoDB**
-3. Nel service API (non Mongo):
-   - Root Directory = repo root (usa `railway.toml` + `Dockerfile.railway`)
-4. **Variables** (service API) — copia da vault / `.env` (valori, non in chat):
+**UI Cursor:** in chat normale `add_secrets` spesso non mostra «Agent is blocked» / apre solo Personal — bug prodotto. Usare Secrets UI Environment.
 
-| Variabile | Note |
-|-----------|------|
-| `MONGO_URL` | Reference Railway: `${{ MongoDB.MONGO_URL }}` (o nome plugin) |
-| `DB_NAME` | `omnia` |
-| `JWT_SECRET` | nuovo lungo (`openssl rand -hex 32`) |
-| `COOKIE_SECURE` | `true` |
-| `CORS_ORIGINS` | `https://www.omniarealestateecosystem.it,https://app.omniarealestateecosystem.it,https://cloud.omniarealestateecosystem.it` (+ URL Vercel preview se serve) |
-| `FRONTEND_URL` / `FRONTEND_BASE_URL` / `OMNIA_PUBLIC_URL` | `https://www.omniarealestateecosystem.it` (o URL Vercel finché DNS non è pronto) |
-| `ADMIN_EMAIL` / `ADMIN_PASSWORD` | seed Founder (stessi del vault) |
-| `DEMO_ADMIN_PASSWORD` | seed demo |
-| `GEMINI_API_KEY` | vault |
-| `RESEND_API_KEY` | vault |
-| `SENDER_EMAIL` | `OMNIA <info@omniarealestateecosystem.it>` |
-| `STRIPE_*` / `OMNIA_SELF_SERVE_ENABLED` | come sandbox Cloud |
-| `STORAGE_BACKEND` | `local` (poi volume) |
-| `PUBLIC_BASE_URL` | URL pubblico API (dopo generate domain) |
+### B. Progetto (già creato — riferimento)
+1. Progetto `omnia-api` + servizio `omnia-api` + plugin **MongoDB**
+2. Root = repo root · `Dockerfile.railway` (pin via GraphQL `dockerfilePath`)
+3. Variables già impostate in deploy (MONGO_URL reference `${{MongoDB.MONGO_URL}}`, JWT, CORS, Stripe test, OpenAPI, …)
+4. Domain: `omnia-api-production-2cec.up.railway.app` · `PUBLIC_BASE_URL` settata
+5. Volumes: `/app/.media` · `/app/.backups`
 
-5. **Settings → Networking → Generate Domain** → ottieni `https://….up.railway.app`
-6. Imposta `PUBLIC_BASE_URL` = quell’URL (senza `/api`)
-7. Smoke: `curl -sS https://….up.railway.app/api/health`
-8. In Cursor vault: `OMNIA_API_PUBLIC_URL=https://….up.railway.app`  
-   (poi, con CNAME Cloudflare `api` → Railway, diventa `https://api.omniarealestateecosystem.it`)
-
-### C. Volume (media + backup)
-Railway → service API → **Volumes**:
-- mount `/app/.media` (foto)
-- mount `/app/.backups` (hot backup)  
-Opzionale: volume off-box path via `OFFBOX_BACKUP_ROOT`
+### C. DNS (dopo vault)
+Vedi `memory/DNS_SETUP_GUIDE.md` §4c — CNAME `api` → Railway. Poi aggiorna `OMNIA_API_PUBLIC_URL` a `https://api.omniarealestateecosystem.it`.
 
 ---
 
-## Flusso agent (dopo `RAILWAY_TOKEN`)
+## Flusso agent (redeploy)
 
 ```bash
 bash scripts/railway-prep-check.sh
-bash scripts/railway-deploy.sh   # richiede RAILWAY_TOKEN
+bash scripts/railway-deploy.sh   # richiede RAILWAY_TOKEN in vault
 ```
-
-Poi DNS: `memory/DNS_SETUP_GUIDE.md` §4b (`api` → Railway).
 
 ---
 
@@ -72,9 +52,8 @@ Hobby **$5/mese** + usage → tipico API+Mongo piccolo **≈ $15–35/mese**.
 
 ## Checklist Founder
 - [x] Account Railway (GitHub)
-- [ ] `RAILWAY_TOKEN` in vault omnia2
-- [ ] Progetto + Mongo + variables
-- [ ] Domain Railway + health OK
-- [ ] `OMNIA_API_PUBLIC_URL` in vault
+- [x] Progetto + Mongo + variables + domain + health OK
+- [ ] `RAILWAY_TOKEN` fresco in vault **Environment** omnia2 (revoca esposti)
+- [ ] `RAILWAY_PROJECT_ID` + `OMNIA_API_PUBLIC_URL` in vault Environment
 - [ ] Cloudflare CNAME `api`
 - [ ] Poi **«vai Vercel»**

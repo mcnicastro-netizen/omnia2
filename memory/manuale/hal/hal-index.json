@@ -1,12 +1,12 @@
 {
-  "version": "0.29-stripe-sandbox",
-  "updated": "2026-10-09",
-  "voices_total": 370,
+  "version": "0.35-railway",
+  "updated": "2026-10-10",
+  "voices_total": 371,
   "source_files": [
     {
       "file": "00-api-codice.yaml",
-      "voices": 32,
-      "md5": "dcb36806fc44b71c317179e24499797f"
+      "voices": 33,
+      "md5": "9eb59adc95ca66bf23d397492ae96f78"
     },
     {
       "file": "01-primo-accesso.yaml",
@@ -101,7 +101,7 @@
     {
       "file": "19-impostazioni-agenzia.yaml",
       "voices": 15,
-      "md5": "7dcc821e17ff499bf9d3c1a809919cd1"
+      "md5": "981533d6167fc185384ba50cf827eae8"
     },
     {
       "file": "20-api-keys-integrazioni.yaml",
@@ -150,8 +150,8 @@
       "file": "00-api-codice",
       "title": "Corpus codice/API",
       "yaml": "00-api-codice.yaml",
-      "voices": 32,
-      "md5": "dcb36806fc44b71c317179e24499797f"
+      "voices": 33,
+      "md5": "9eb59adc95ca66bf23d397492ae96f78"
     },
     {
       "id": 22,
@@ -202,5 +202,5 @@
       "md5": "5e88370cdf2c070dc30c7c3f036b85db"
     }
   ],
-  "notes": "Fingerprints regenerated from YAML on disk. Live RAG reindex: POST /api/app/hal/knowledge/reindex?force=true (super_admin). 2026-10-06: Stripe sandbox Cloud · api.cloud-secrets-vault · api.stripe-sandbox-cloud · Cap.19 billing. 2026-09-24: A-028g/h/i · Cap.2 Attività · Cap.10 Conferma e applica · Cap.18 distinzione. 2026-09-21: hub import A–E · HAL import.tutte-le-forme. 2026-09-19: D-085 storage quota · Cestino · Cap.20 Ruota."
+  "notes": "Fingerprints regenerated from YAML on disk. Live RAG reindex: POST /api/app/hal/knowledge/reindex?force=true (super_admin). 2026-10-10: D-123 Railway API live · api.railway-api-deploy · cloud-secrets-vault Personal UI note. 2026-10-06: Stripe sandbox Cloud · api.cloud-secrets-vault · api.stripe-sandbox-cloud · Cap.19 billing. 2026-09-24: A-028g/h/i · Cap.2 Attività · Cap.10 Conferma e applica · Cap.18 distinzione. 2026-09-21: hub import A–E · HAL import.tutte-le-forme. 2026-09-19: D-085 storage quota · Cestino · Cap.20 Ruota."
 }

@@ -100,6 +100,9 @@ Quando fai «vai Vercel» + hai URL Vercel + URL API prod
 
 ### 4c. API (Railway · D-123)
 
+**Stato 10-Ott-2026:** API già live su `https://omnia-api-production-2cec.up.railway.app` (health ok).  
+Target pubblico: `api.omniarealestateecosystem.it` → CNAME al dominio Railway del service `omnia-api` (o custom domain Railway).
+
 | Tipo | Nome | Valore | Proxy |
 |------|------|--------|-------|
 | CNAME | `api` | target Railway (Settings → Domains / custom domain) | ☁️ DNS only se TLS su Railway, o come da wizard Railway |

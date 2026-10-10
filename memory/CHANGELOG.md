@@ -1,3 +1,13 @@
+## 2026-10-10 sera — D-123 Railway API live + CLI token remap
+
+- API prod su Railway: progetto `omnia-api` · URL `https://omnia-api-production-2cec.up.railway.app` · health `ok`/`db=ok`
+- Mongo plugin + volume `/app/.media` + `/app/.backups` · `PUBLIC_BASE_URL` settata
+- Fix CLI: Account token vault `RAILWAY_TOKEN` → export `RAILWAY_API_TOKEN` + unset `RAILWAY_TOKEN` (`scripts/railway-deploy.sh`); pin `Dockerfile.railway` via GraphQL
+- Docs: `RAILWAY_DEPLOY.md` · `DECISIONS` D-123 · `NEXT_SESSION` · `CLOUD_SECRETS_INVENTORY`
+- HAL Cap.00: +`api.railway-api-deploy` · update `api.cloud-secrets-vault` · Cap.00/19 MD · `IMPORT_HAL` v0.35-railway
+- Pending Founder: vault Environment (token fresco + project id + URL) · CNAME `api` · «vai Vercel»
+- Nota Cursor: `add_secrets` in chat desktop spesso senza card / scope Personal — usare Secrets UI Environment
+
 ## 2026-10-10 — S8 SoT unico (C9/C10)
 
 - Freccia = coerenza + O6 checklist + NEXT; registro `OMNIA_S8_SOT_UNICO.md`
