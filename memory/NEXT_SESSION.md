@@ -11,18 +11,32 @@
 **Coerenza di sistema:** [`docs/audit/OMNIA_COERENZA_SISTEMA.md`](../docs/audit/OMNIA_COERENZA_SISTEMA.md)
 
 Scala verità: DECISO → CODICE → LIVE → FIRMATO.  
-Sequenza: S1 ✅ → S2 ✅ → **S3 meter economia** → … → S9 O6 → S10 GTM-01.
+Sequenza: S1 ✅ → S2 ✅ → S3 numeri ✅ / firma ⏳ → **S4 visibilità** → … → S9 O6 → S10 GTM-01.
+
+---
+
+## ⚠️ Non dimenticare — S3 firma / deepen
+
+Founder 10-Ott-2026: **non chiudere ora** il listino storage; **approfondire dopo**.
+
+| Voce | Dove |
+|------|------|
+| Nota + listini pubblici | `docs/audit/OMNIA_S3_METER_ECONOMIA.md` |
+| Firma §6 | **APERTA** (rimandata) |
+| Script | `scripts/meter_storage_economia.py` |
+| Prima di O6 / GTM | rieseguire deepen (path R2 vs Volume, addon, bill se c’è) → poi firma FERMO o revisione |
+
+Listino in codice resta invariato finché non c’è firma.
 
 ---
 
 ## Prossimo passo tipico
 
-1. ~~**S1** — O3b restore firmata non-prod~~ ✅ 2026-10-10 (`docs/ops/RESTORE_MANUAL.md` §6)  
-2. ~~**S2** — Bak runtime = O0~~ ✅ 2026-10-10 (retention 7 + media hardlink)  
-3. **S3** — Meter GB reali post-S2; listino fermo o revisione esplicita  
-4. Solo dopo: demo story unica + O6 PASS + GTM-01  
+1. **S4** — Una regola di visibilità portale / brand site  
+2. (quando tocca) **S3.1** — deepen + firma Founder su meter storage  
+3. Solo dopo: demo story · O6 PASS · GTM-01  
 
-**Non:** monoblocco “chiudi tutto” · self-serve ON prima di S9 · outreach ~5k email prima di GTM-01.
+**Non:** monoblocco · self-serve ON prima di S9 · outreach ~5k prima di GTM-01 · revisione prezzi senza firma.
 
 ---
 
@@ -30,9 +44,8 @@ Sequenza: S1 ✅ → S2 ✅ → **S3 meter economia** → … → S9 O6 → S10 
 
 | Voce | Esito |
 |--|--|
-| D-118 A–J + residuo codice | su `main` — ri-verificare LIVE, non rifare |
-| O3b restore firmata | ✅ PASS 2026-10-10 · `demo-agency-001` · bak `2026-10-10` |
-| Bak O0 runtime (S2) | ✅ default `BACKUP_RETENTION_DAYS=7` + incrementale hardlink |
-| O6 self-serve | OFF (CONDITIONAL; O3b ok — manca firma Founder S9) |
-| Bak economia | Design O0 ✅ · runtime S2 ✅ · **meter → S3** |
+| O3b restore firmata | ✅ PASS 2026-10-10 · `demo-agency-001` |
+| Bak O0 runtime (S2) | ✅ retention 7 + hardlink |
+| Meter economia (S3) | ✅ numeri + listini pubblici · ⏳ firma rimandata (deepen dopo) |
+| O6 self-serve | OFF |
 | Fascicolo portale | `docs/audit/OMNIA_PORTALE_AUDIT_FASCICOLO.md` |
