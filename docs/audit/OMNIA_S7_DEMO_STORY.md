@@ -39,4 +39,4 @@ Checkout reale solo post-**S9** (`OMNIA_SELF_SERVE_ENABLED`).
 
 ## Aperto (non S7)
 
-- S3.1 firma meter · D-038 APE · S8 SoT unico · S9 rubinetto self-serve
+- S3.1 firma meter · D-038 APE · S9 rubinetto self-serve (S8 SoT unico ✅)

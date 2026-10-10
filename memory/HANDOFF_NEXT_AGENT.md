@@ -1,7 +1,11 @@
 # 🚨 HANDOFF AL NUOVO AGENTE — LEGGI PRIMA DI FARE QUALSIASI COSA
 
+> ### ❄️ FROZEN (S8 · 10 Ott 2026) — non è il puntatore di sessione
+> **Prima leggi:** [`NEXT_SESSION.md`](./NEXT_SESSION.md) + [`../docs/audit/OMNIA_COERENZA_SISTEMA.md`](../docs/audit/OMNIA_COERENZA_SISTEMA.md) + [`../docs/audit/OMNIA_S8_SOT_UNICO.md`](../docs/audit/OMNIA_S8_SOT_UNICO.md).  
+> Questo handoff (feb/set 2026) resta utile per regole d’oro / errori ricorrenti; **non** per “prossimo step”.
+
 **Aggiornamento 15-Sep-2026**: scope Sprint 1→4 **chiuso formalmente** (`PROGRAMMA_CONCLUSIONE.md`).  
-Non ripartire da «NEXT = Sprint 2». Item aperti = solo fuori scope / A-xxx / post-società.
+Non ripartire da «NEXT = Sprint 2». Item aperti = solo fuori scope / A-xxx / post-società / freccia S9+.
 
 **Fork da**: sessione E1 chiusa il **26-Feb-2026 (evening — Sprint 4 chiuso + privacy gate fix)**
 **Motivo fork**: passaggio pulito post Sprint 4 completo. Codebase pronto al deploy.

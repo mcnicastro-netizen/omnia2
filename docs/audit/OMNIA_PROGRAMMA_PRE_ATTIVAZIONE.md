@@ -1,11 +1,12 @@
 # OMNIA — Programma attuativo pre-attivazione commerciale
 
-**Stato:** ✅ **APPROVATO Founder** · **«vai» O0 ∥ O1** (30-Set-2026) · K-PA-01…03 · **D-115**  
-**SoT continuità:** `docs/audit/OMNIA_AUDIT_STATE.md` (§25bis · D-094…D-115)  
-**Regola commerciale:** **nessun pagamento self-serve finché O6 non è PASS.**  
-**Provisioning assistito (SLA interno provvisorio):** ≤ **5 giorni lavorativi** dall’accordo — da raffinare, non scappatoia permanente.  
-**Obiettivo:** prima OMNIA attivabile senza sorprese, poi rubinetto commerciale — non corsa outreach ~5k email.  
-**Esecuzione:** O0–O5 codice/docs shippati · **O6 checklist** `OMNIA_O6_GATE_CHECKLIST.md` · self-serve **OFF** finché restore run firmata + Founder ON.
+> ### ❄️ FROZEN (S8 · 10 Ott 2026) — non è più la freccia di sessione
+> Le onde O0–O6 qui sono **storiche**. Freccia attuale = step **S1–S10** in [`OMNIA_COERENZA_SISTEMA.md`](./OMNIA_COERENZA_SISTEMA.md) · [`NEXT_SESSION.md`](../../memory/NEXT_SESSION.md) · [`OMNIA_S8_SOT_UNICO.md`](./OMNIA_S8_SOT_UNICO.md).  
+> Cancello self-serve resta [`OMNIA_O6_GATE_CHECKLIST.md`](./OMNIA_O6_GATE_CHECKLIST.md).
+
+**Stato (storico):** ✅ **APPROVATO Founder** · O0–O5 shippati · restore firmata S1 · self-serve OFF fino a S9 · **D-115**  
+**Regola commerciale (ancora valida):** **nessun pagamento self-serve finché O6 non è PASS + firma Founder (S9).**  
+**Provisioning assistito (SLA interno provvisorio):** ≤ **5 giorni lavorativi** dall’accordo.
 
 ### Priorità Founder (ordine di senso)
 
