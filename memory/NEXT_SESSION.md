@@ -11,22 +11,24 @@
 **Coerenza di sistema:** [`docs/audit/OMNIA_COERENZA_SISTEMA.md`](../docs/audit/OMNIA_COERENZA_SISTEMA.md)
 
 Scala verità: DECISO → CODICE → LIVE → FIRMATO.  
-Sequenza: S1–S3 (PR) · S4 ✅ → **S5 soldi onesti** → … → S9 O6 → S10 GTM-01.
+Sequenza: S1–S3 (PR) · S4 ✅ · S5 ✅ → **S6 narrativa 2 prodotti** → … → S9 O6 → S10 GTM-01.
 
 ---
 
-## ⚠️ Non dimenticare — S3.1 firma / deepen meter
+## ⚠️ Non dimenticare
 
-Founder: non chiudere listino storage ora; approfondire dopo.  
-Vedi `docs/audit/OMNIA_S3_METER_ECONOMIA.md` (su branch S3 se non ancora in main) · firma §6 APERTA.
+| Voce | Nota |
+|------|------|
+| **S3.1** | Firma/deepen meter storage — non chiudere listino senza Founder |
+| **S9** | Rubinetto `OMNIA_SELF_SERVE_ENABLED=true` solo dopo O6 PASS |
+| D-075 vs P-036 | HAL Legal “incluso” vs 12 crediti — SoT ancora da firmare |
 
 ---
 
 ## Prossimo passo tipico
 
-1. **S5** — Soldi onesti (addebito reale o UI onesta; gate self-serve ≠ Stripe test)  
-2. (quando tocca) **S3.1** — deepen + firma meter storage  
-3. Solo dopo: demo story · O6 · GTM-01  
+1. **S6** — Narrativa 2 prodotti (Academy fuori pitch finché non esiste)  
+2. Solo dopo: demo story · O6 · GTM-01  
 
 **Non:** monoblocco · self-serve ON prima di S9 · outreach ~5k prima di GTM-01.
 
@@ -36,6 +38,6 @@ Vedi `docs/audit/OMNIA_S3_METER_ECONOMIA.md` (su branch S3 se non ancora in main
 
 | Voce | Esito |
 |--|--|
-| S4 visibilità pubblica | ✅ surface condivisa portale/brand · `OMNIA_S4_VISIBILITA_PUBBLICA.md` |
-| O6 self-serve | OFF |
+| S5 soldi onesti | ✅ `OMNIA_SELF_SERVE_ENABLED` default OFF · valuator copy onesta · Legal edge 403 |
+| O6 self-serve | OFF (hard-gate codice; firma Founder ancora aperta) |
 | Fascicolo portale | `docs/audit/OMNIA_PORTALE_AUDIT_FASCICOLO.md` |

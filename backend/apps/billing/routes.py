@@ -54,6 +54,13 @@ def _guard_enabled() -> None:
         )
 
 
+def _guard_self_serve() -> None:
+    """S5 / D-115 — checkout B2B solo se rubinetto O6 aperto (≠ Stripe sandbox)."""
+    from shared.billing.self_serve import guard_self_serve
+
+    guard_self_serve()
+
+
 def _build_success_url(origin: str) -> str:
     origin = origin.rstrip("/")
     return f"{origin}/it/app/settings/billing?session_id={{CHECKOUT_SESSION_ID}}&ok=1"
@@ -81,6 +88,9 @@ async def list_plans():
         "demo_contact_email": (os.environ.get("DEMO_CONTACT_EMAIL") or "mcnicastro@gmail.com").strip(),
         "currency": "eur",
         "enabled": _is_enabled(),
+        "self_serve_enabled": (
+            (os.environ.get("OMNIA_SELF_SERVE_ENABLED") or "").strip().lower() == "true"
+        ),
         "mode": os.environ.get("STRIPE_MODE", "test"),
         "publishable_key": os.environ.get("STRIPE_PUBLISHABLE_KEY", ""),
     }
@@ -111,6 +121,7 @@ async def create_checkout(
 ):
     """Create a Stripe Checkout session for a subscription tier."""
     _guard_enabled()
+    _guard_self_serve()
     plan = get_plan(payload.plan_tier)  # type: ignore[arg-type]
     if not plan:
         raise HTTPException(status_code=400, detail="unknown_plan_tier")
@@ -179,6 +190,7 @@ async def buy_credits(
 ):
     """Buy a credit package (one-off payment)."""
     _guard_enabled()
+    _guard_self_serve()
     pkg = next((p for p in CREDIT_PACKAGES if p.key == payload.package_key), None)
     if not pkg:
         raise HTTPException(status_code=400, detail="unknown_package")
@@ -255,6 +267,21 @@ async def buy_storage(
             ),
             "addon": addon.model_dump(),
             "demo_contact_email": (os.environ.get("DEMO_CONTACT_EMAIL") or "mcnicastro@gmail.com").strip(),
+        }
+
+    # S5: Stripe ON ma self-serve OFF → assistito (non checkout silenzioso)
+    from shared.billing.self_serve import is_self_serve_enabled
+
+    if not is_self_serve_enabled():
+        return {
+            "ok": False,
+            "self_serve_blocked": True,
+            "message": (
+                f"Self-serve non aperto (D-115 / O6). Per +{addon.gb} GB "
+                f"(€{addon.price_eur:.0f}/mese) richiedi provisioning assistito."
+            ),
+            "addon": addon.model_dump(),
+            "demo_contact_email": (os.environ.get("DEMO_CONTACT_EMAIL") or "[REDACTED]").strip(),
         }
 
     lookup = f"{addon.key}_monthly"

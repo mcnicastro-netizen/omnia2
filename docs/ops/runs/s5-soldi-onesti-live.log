@@ -1,0 +1,14 @@
+=== S5 LIVE 2026-10-10T08:54:05.987508+00:00 ===
+env_OMNIA_SELF_SERVE_ENABLED=None
+env_STRIPE_ENABLED='true'
+is_self_serve_enabled=False
+plans enabled=True self_serve_enabled=False mode=test
+login_role=agency_admin
+csrf_present=True access_present=True
+checkout_status=503 detail={'error': 'self_serve_blocked', 'code': 'self_serve_blocked', 'message': 'Attivazione self-serve non aperta (D-115 / gate O6). Richiedi provisioning assistito dopo la demo guidata.'}
+credits_status=503 detail={'error': 'self_serve_blocked', 'code': 'self_serve_blocked', 'message': 'Attivazione self-serve non aperta (D-115 / gate O6). Richiedi provisioning assistito dopo la demo guidata.'}
+valuator_copy_dishonest=False valuator_copy_honest=True
+legal_edge=403:active_agency_required
+checks={'self_serve_flag_false': True, 'checkout_503': True, 'checkout_blocked_code': True, 'credits_503': True, 'credits_blocked_code': True, 'valuator_honest': True, 'legal_edge_403': True, 'stripe_on_self_serve_blocks': True}
+ESITO=PASS failed=[]
+LIMITI: B2C one-shot (Visura/valuator €) resta su Stripe sandbox; gate self-serve = B2B abbonamento/crediti/storage; O6 firma Founder ancora aperta.

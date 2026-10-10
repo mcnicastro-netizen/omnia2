@@ -11,22 +11,22 @@
 | 4 | **O1c** D-106 | `active_agency_id` SoT, no fallback `agency_ids[0]` | ✅ PASS |
 | 5 | **O2** D-094/D-111 | Trash uniforme nei job; client trash → richieste `frozen`; update bloccato | ✅ PASS (codice) |
 | 6 | **O3a** D-105 | Founder Ops: bak OK/PARTIAL/FAILED + alert | ✅ PASS (codice) |
-| 7 | **O3b** D-113 | Procedura restore manuale documentata non-prod | ✅ PASS docs (`docs/ops/RESTORE_MANUAL.md`) · **run firmata:** ✅ PASS 2026-10-10 (`demo-agency-001` · bak `2026-10-10` · artefatto `s1-restore-o3b-2026-10-10.log`) |
+| 7 | **O3b** D-113 | Procedura restore manuale documentata non-prod | ✅ PASS docs (`docs/ops/RESTORE_MANUAL.md`) · **run firmata:** ⏳ da eseguire su non-prod |
 | 8 | **O4a** D-109 | Landing prezzi da `GET /billing/plans` | ✅ PASS |
 | 9 | **O4b** D-110 | `localStorage` ≠ entitlement; piano attivo solo server | ✅ PASS |
 | 10 | **O5** D-104/107/108/112 | Upload stati+retry; pagination properties; owner APScheduler; seed demo | ✅ PASS (minimi) |
-| 11 | Self-serve Stripe | Abilitare checkout pubblico solo dopo PASS completo incluso run restore | ❌ **BLOCCATO** — O3b run firmata ✅; manca ancora firma Founder rubinetto (S9) |
+| 11 | Self-serve Stripe | Abilitare checkout pubblico solo dopo PASS completo incluso run restore | ❌ **BLOCCATO** in codice: `OMNIA_SELF_SERVE_ENABLED` default OFF (S5) — Founder apre rubinetto a S9 |
 
 ## Verdetto corrente
 
-**Gate O6: CONDITIONAL PASS (codice+docs+O3b LIVE)** — self-serve resta **OFF**.  
-O3b operativo **FIRMATO** (2026-10-10). Rubinetto self-serve solo con firma Founder sotto (S9). Provisioning assistito ammesso.
+**Gate O6: CONDITIONAL PASS** — self-serve **hard OFF** (`OMNIA_SELF_SERVE_ENABLED`, S5).  
+Stripe sandbox può restare ON per probe B2C. Rubinetto B2B solo con firma Founder (S9) + restore firmata.
 
 ## Firma Founder (quando si apre self-serve)
 
 | Campo | Valore |
 |-------|--------|
 | Data | |
-| Restore run rif. | 2026-10-10 · `docs/ops/RESTORE_MANUAL.md` §6 · artefatto `s1-restore-o3b-2026-10-10.log` |
+| Restore run rif. | |
 | Note | |
 | Decisione | self-serve ON / resta assistito |

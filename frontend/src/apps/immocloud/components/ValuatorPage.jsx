@@ -5,7 +5,8 @@
  * TIER BASE (lead magnet): stima rapida GRATIS · 1×/12 mesi · richiede login + email verificata · NO PDF · NO merito UNI
  * TIER UNI 10750 + PDF: €2,99 one-shot Stripe · include superficie commerciale + coefficienti di merito + report PDF
  *
- * Agenti B2B (con agency_id): pass-through — copy "Usa crediti agenzia" invece di €2,99.
+ * Agenti B2B (con agency_id): pass-through gratis in v1 — copy onesta (S5):
+ *   incluso nel piano, nessun addebito crediti automatico (non "12 crediti").
  *
  * Query params pre-fill supportati: ?tier=base|uni&city=...&property_type=...&surface_sqm=...
  */
@@ -86,7 +87,9 @@ export default function ValuatorPage() {
 
   const isAgent = !!(user && (user.agency_id || (user.agency_ids && user.agency_ids.length)));
   const isB2C = !!(user && !isAgent);
-  const priceLabel = isAgent ? t("valuator.tier_uni_price_agent", "12 crediti agenzia") : (t("valuator.tier_uni_price", "€2,99 · report professionale"));
+  const priceLabel = isAgent
+    ? t("valuator.tier_uni_price_agent", "Incluso nel piano agenzia (v1 · nessun addebito crediti)")
+    : (t("valuator.tier_uni_price", "€2,99 · report professionale"));
 
   function pickPrefill(q) {
     const p = {};
@@ -315,7 +318,7 @@ export default function ValuatorPage() {
               </button>
             ) : (
               <button type="submit" disabled={!canSubmit || busy} className="px-6 py-3 bg-[#C19A6B] text-white rounded-lg disabled:opacity-40 hover:bg-[#0B1E3F] transition" data-testid="valuator-submit-uni">
-                {busy ? "..." : (isAgent ? t("valuator.submit_uni_agent", "Calcola UNI (crediti agenzia)") : t("valuator.submit_uni_b2c", "Calcola UNI · €2,99"))}
+                {busy ? "..." : (isAgent ? t("valuator.submit_uni_agent", "Calcola UNI (incluso piano)") : t("valuator.submit_uni_b2c", "Calcola UNI · €2,99"))}
               </button>
             )}
             {tier === "base" && (
@@ -336,7 +339,7 @@ export default function ValuatorPage() {
             )}
             {(error.code === "payment_required" || error.upsell_product_key) && (
               <button onClick={() => handleCheckout("upsell")} disabled={checkoutBusy} className="mt-3 px-4 py-2 bg-[#0B1E3F] text-white rounded-lg hover:bg-[#C19A6B]" data-testid="valuator-checkout-cta">
-                {checkoutBusy ? "..." : (isAgent ? t("valuator.use_agency_credits", "Usa crediti agenzia") : t("valuator.pay_and_unlock", "Paga €2,99 e sblocca"))}
+                {checkoutBusy ? "..." : (isAgent ? t("valuator.use_agency_credits", "Continua (incluso piano)") : t("valuator.pay_and_unlock", "Paga €2,99 e sblocca"))}
               </button>
             )}
           </div>
@@ -366,7 +369,7 @@ export default function ValuatorPage() {
                 <div className="font-medium text-[#0B1E3F]">{t("valuator.upsell_uni_cta", "Vuoi una valutazione UNI 10750 con report PDF professionale?")}</div>
                 <div className="text-sm text-stone-600 mt-1">{t("valuator.upsell_uni_details", "Superficie commerciale ponderata + coefficienti di merito + PDF brandizzato scaricabile.")}</div>
                 <button onClick={() => { setTier("uni"); window.scrollTo({ top: 0, behavior: "smooth" }); }} className="mt-3 px-4 py-2 bg-[#C19A6B] text-white rounded-lg hover:bg-[#0B1E3F] transition" data-testid="upsell-goto-uni">
-                  {isAgent ? t("valuator.upsell_agent_cta", "Passa a UNI (crediti agenzia)") : t("valuator.upsell_b2c_cta", "Passa a UNI · €2,99")}
+                  {isAgent ? t("valuator.upsell_agent_cta", "Passa a UNI (incluso piano)") : t("valuator.upsell_b2c_cta", "Passa a UNI · €2,99")}
                 </button>
               </div>
             )}
