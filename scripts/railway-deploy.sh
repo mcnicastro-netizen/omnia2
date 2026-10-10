@@ -10,9 +10,9 @@ PROJECT_NAME="${RAILWAY_PROJECT_NAME:-omnia-api}"
 echo "=== railway-deploy ==="
 bash "$ROOT/scripts/railway-prep-check.sh"
 
-if [[ -z "${RAILWAY_TOKEN:-}${RAILWAY_API_TOKEN:-}" ]]; then
-  echo "BLOCKED: RAILWAY_TOKEN missing."
-  echo "Founder: Railway → Account → Tokens → workspace «No workspace» → vault omnia2 come RAILWAY_TOKEN → nuovo agent → «vai Railway»."
+if [[ -z "${RAILWAY_API_TOKEN:-}${RAILWAY_TOKEN:-}" ]]; then
+  echo "BLOCKED: RAILWAY_API_TOKEN missing."
+  echo "Founder: Railway → Account → Tokens → workspace «No workspace» → vault omnia2 come RAILWAY_API_TOKEN → nuovo agent → «vai Railway»."
   exit 2
 fi
 
@@ -24,10 +24,10 @@ kind_line="$(cat /tmp/railway-kind.out)"
 rm -f /tmp/railway-kind.out
 
 if [[ "$kind_rc" -ne 0 || "${kind_line%% *}" == "invalid" || -z "$kind_line" ]]; then
-  echo "BLOCKED: RAILWAY_TOKEN presente ma Railway non lo accetta."
-  echo "Crea un account token: https://railway.com/account/tokens → workspace «No workspace»."
-  echo "Sostituisci il valore nel vault omnia2 (nome RAILWAY_TOKEN) e riavvia l'agent con «vai Railway»."
-  echo "Non usare un token di workspace, né un project id."
+  echo "BLOCKED: token Railway presente ma non accettato."
+  echo "Vault richiesto: RAILWAY_API_TOKEN = account token (https://railway.com/account/tokens → workspace «No workspace»)."
+  echo "RAILWAY_TOKEN (project token) serve solo dopo il primo progetto, non per creare il progetto."
+  echo "Salva il secret e riavvia l'agent con «vai Railway»."
   exit 2
 fi
 

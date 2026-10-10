@@ -1333,8 +1333,8 @@ Registro di tutte le decisioni di business e tecniche prese durante il progetto.
 - Founder: account Hetzner bloccato (P.IVA / reset mail non arrivata) → **non attendere**.
 - **API prod target**: Railway (`railway.toml` + `Dockerfile.railway` + Mongo plugin).
 - Runbook: `docs/ops/RAILWAY_DEPLOY.md` · script `railway-prep-check.sh` / `railway-deploy.sh`.
-- Vault: `RAILWAY_TOKEN` = **account token** (UI: workspace «No workspace»; la CLI lo vuole come `RAILWAY_API_TOKEN` — lo script fa la promozione). Dopo domain: `OMNIA_API_PUBLIC_URL`.
-- **10-Ott-2026 «vai Railway»**: valore già in vault rifiutato dall’API (`me` Not Authorized, `projectToken` not found). Deploy non eseguito.
+- Vault: **`RAILWAY_API_TOKEN`** = account token (UI: workspace «No workspace»). `RAILWAY_TOKEN` = solo project token (opzionale dopo il 1° progetto). Dopo domain: `OMNIA_API_PUBLIC_URL`.
+- **10-Ott-2026 «vai Railway»**: in pod solo `RAILWAY_TOKEN` (rifiutato); `RAILWAY_API_TOKEN` **unset**. Deploy non eseguito.
 - Ordine: Railway API → Cloudflare `api` → Vercel FE (D-074).
 - Hetzner resta opzione costi a regime se l’account si sblocca; non bloccante.
 

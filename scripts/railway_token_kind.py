@@ -58,7 +58,7 @@ def main() -> int:
     candidates = _candidates()
     if not candidates:
         print("invalid")
-        print("RAILWAY_TOKEN missing", file=sys.stderr)
+        print("RAILWAY_API_TOKEN missing", file=sys.stderr)
         return 2
 
     for var, token in candidates:
