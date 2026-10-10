@@ -86,9 +86,9 @@ Più: Founder Ops, Cloud Agent (seed demo GTM + Nicastro dogfood), corpus `memor
 | **S7** | Demo story unica | C8 | ✅ **DONE 2026-10-10** |
 | **S8** | SoT unico | C9, C10 | ✅ **DONE 2026-10-10** — `OMNIA_S8_SOT_UNICO.md` |
 | **S9** | O6 PASS + firma Founder self-serve | C2, C7 | ✅ **DONE 2026-10-10** — `OMNIA_S9_O6_SELF_SERVE.md` · D-120 |
-| **S10** | GTM-01 smoke + percorso prospect | — | Gate D-104 |
+| **S10** | GTM-01 smoke + percorso prospect | — | ✅ **DONE 2026-10-10** — `OMNIA_S10_GTM_01.md` · D-121 |
 
-**Fuori sequenza finché S10 non è verde:** redesign UI, A-038 fatture, Stripe live keys, outreach di massa.
+**Fuori sequenza senza «vai» Founder:** redesign UI, A-038 fatture, Stripe live keys, outreach di massa (gate tecnico S10 OK).
 
 **Demo funnel (Founder 10 Ott):** richiesta → sandbox a tempo → a scadenza CTA acquista — **senza call**. Checkout B2B **aperto** (S9).
 
@@ -119,7 +119,7 @@ Più: Founder Ops, Cloud Agent (seed demo GTM + Nicastro dogfood), corpus `memor
 Il repo **non** è un pasticcio casuale: è un ecosistema dual-product con spina dorsale solida.  
 Il rischio di fallimento non è “manca un modulo magico”: è **raccontare o vendere una storia più chiusa** di quanto il sistema sia logicamente allineato.
 
-**Prossimo «vai» consigliato:** **S10** (GTM-01). Reminder: S3.1 · D-038. S9/D-119 ✅.
+**Freccia S1–S10 ✅.** Prossimo tipico: outreach solo con «vai» · oppure S3.1 / D-038.
 
 ---
 

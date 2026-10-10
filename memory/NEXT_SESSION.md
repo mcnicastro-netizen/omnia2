@@ -1,6 +1,6 @@
 # Prossima sessione — programma passi
 
-**Aggiornato**: 10 Ottobre 2026 (S9)  
+**Aggiornato**: 10 Ottobre 2026 (S10)  
 **Repo**: https://github.com/mcnicastro-netizen/omnia2 ✅  
 **Branch**: `main`
 
@@ -11,12 +11,12 @@
 | Ruolo | Doc |
 |-------|-----|
 | Freccia | [`docs/audit/OMNIA_COERENZA_SISTEMA.md`](../docs/audit/OMNIA_COERENZA_SISTEMA.md) |
-| Cancello | [`docs/audit/OMNIA_O6_GATE_CHECKLIST.md`](../docs/audit/OMNIA_O6_GATE_CHECKLIST.md) — **PASS** |
-| Registro LIVE/FROZEN | [`docs/audit/OMNIA_S8_SOT_UNICO.md`](../docs/audit/OMNIA_S8_SOT_UNICO.md) |
-| Self-serve | [`docs/audit/OMNIA_S9_O6_SELF_SERVE.md`](../docs/audit/OMNIA_S9_O6_SELF_SERVE.md) |
+| Cancello O6 | [`docs/audit/OMNIA_O6_GATE_CHECKLIST.md`](../docs/audit/OMNIA_O6_GATE_CHECKLIST.md) — **PASS** |
+| GTM-01 | [`docs/audit/OMNIA_S10_GTM_01.md`](../docs/audit/OMNIA_S10_GTM_01.md) — **PASS** |
+| Registro | [`docs/audit/OMNIA_S8_SOT_UNICO.md`](../docs/audit/OMNIA_S8_SOT_UNICO.md) |
 
 Scala verità: DECISO → CODICE → LIVE → FIRMATO.  
-Sequenza: **S1–S9 ✅** → **S10 GTM-01**.
+Sequenza: **S1–S10 ✅** — freccia coerenza chiusa.
 
 ---
 
@@ -25,17 +25,19 @@ Sequenza: **S1–S9 ✅** → **S10 GTM-01**.
 | Voce | Nota |
 |------|------|
 | **S3.1** | Firma/deepen meter storage — non chiudere listino senza Founder |
-| **S10** | GTM-01 smoke ~20 concurrent + percorso prospect **prima** di outreach ~5k |
-| **D-038 APE partner** | ⏳ ordine certificazione APE **non attivo** — accordo commerciale |
+| **D-038 APE partner** | ⏳ accordo commerciale — bottone Ordina APE solo dopo |
+| Outreach ~5k | Gate GTM-01 PASS — **non auto**; solo con «vai» Founder esplicito |
+| Stripe live | Separato da S9/S10 test |
 
 ---
 
 ## Prossimo passo tipico
 
-1. **S10** — GTM-01 (smoke + percorso prospect)  
-2. Solo dopo: outreach / Stripe live se firmato  
+1. **Outreach / GTM email** — solo con «vai» esplicito Founder (gate tecnico OK)  
+2. Oppure deepen **S3.1** / **D-038**  
+3. Stripe live keys solo se firmato  
 
-**Non:** outreach ~5k prima di GTM-01 · usare AUDIT_STATE/HANDOFF come freccia (sono FROZEN) · Academy nel pitch.
+**Non:** usare AUDIT_STATE/HANDOFF come freccia (FROZEN) · Academy nel pitch · Nicastro come demo GTM.
 
 ---
 
@@ -43,7 +45,7 @@ Sequenza: **S1–S9 ✅** → **S10 GTM-01**.
 
 | Voce | Esito |
 |--|--|
-| S1–S8 | ✅ restore · bak · meter (firma ⏳ S3.1) · visibilità · soldi · narrativa · demo · SoT |
-| D-119 Legal CRM | ✅ incluso |
-| **S9 O6 self-serve** | ✅ **ON** (`OMNIA_SELF_SERVE_ENABLED=true` · D-120) |
-| D-038 APE ordine | ⏳ accordo commerciale — non attivo |
+| S1–S9 | ✅ restore · bak · meter (⏳ S3.1) · visibilità · soldi · narrativa · demo · SoT · self-serve |
+| D-119 Legal | ✅ incluso |
+| **S10 GTM-01** | ✅ PASS (`gtm01_smoke.py` · 20 workers · D-121) |
+| D-038 APE | ⏳ commerciale |

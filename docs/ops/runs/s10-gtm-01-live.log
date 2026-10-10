@@ -1,0 +1,17 @@
+=== S10 GTM-01 LIVE 2026-10-10T10:18:15.047145+00:00 ===
+api=http://127.0.0.1:43121/api preview_candidates=['https://poll-cents-excitement-second.trycloudflare.com', 'http://127.0.0.1:43123'] workers=20
+preview_home status=200 bytes~=3656 base=https://poll-cents-excitement-second.trycloudflare.com
+api_health status=200 ms=5
+plans status=200 self_serve=True enabled=True ms=3
+portal_search status=200 total=4 ms=12
+demo_login status=200 role=agency_admin ms=223
+crm_properties status=200 total=4 ms=6
+crm_matches status=200 ms=7
+demo_status status=200 cta=use_sandbox checkout_available=False ms=5
+checkout status=200 code=None ms=520 keys=['checkout_url', 'session_id']
+media_cover SKIP no cover_url in portal page
+checkout_origin=https://poll-cents-excitement-second.trycloudflare.com
+smoke_concurrent={"workers": 20, "ok": 20, "fail": 0, "error_rate": 0.0, "wall_ms": 223.1, "p50_ms": 185.6, "p95_ms": 215.8, "by_op": {"matches": {"n": 4, "ok": 4, "fail_status": []}, "properties": {"n": 4, "ok": 4, "fail_status": []}, "upload_tmp": {"n": 4, "ok": 4, "fail_status": []}, "search": {"n": 4, "ok": 4, "fail_status": []}, "health+search": {"n": 4, "ok": 4, "fail_status": []}}}
+checks={'preview_home_ok': True, 'api_health_200': True, 'self_serve_on': True, 'portal_search_ok': True, 'demo_login': True, 'crm_properties_page': True, 'crm_matches_ok': True, 'demo_status_200': True, 'self_serve_gate_open': True, 'checkout_past_self_serve_gate': True, 'checkout_session': True, 'smoke_workers_ge_20': True, 'smoke_error_rate_le_10pct': True, 'smoke_ok_ratio_ge_80pct': True, 'smoke_p95_lt_15s': True, 'smoke_upload_attempted': True, 'smoke_upload_ok_ge_1': True, 'media_serve_or_skip': True}
+ESITO=PASS failed=[]
+LIMITI: smoke ~20 ≠ stress 5k; Stripe mode=test; outreach ~5k solo dopo PASS; object storage solo se smoke media fallisce (K-AD-02).
