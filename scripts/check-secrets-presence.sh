@@ -194,6 +194,16 @@ if [[ -n "${STRIPE_SECRET_KEY:-}" && "${STRIPE_ENABLED:-}" != "true" ]]; then
   echo "           Fix: vault STRIPE_ENABLED=true OR rely on cloud-agent-start auto-enable for sk_test_"
 fi
 
+# D-074 Vercel go-live (optional until «vai Vercel»)
+echo "  --- Vercel E2E (D-074; not required for dogfood) ---"
+for k in VERCEL_TOKEN OMNIA_API_PUBLIC_URL VERCEL_ORG_ID VERCEL_PROJECT_ID CLOUDFLARE_API_TOKEN CLOUDFLARE_ZONE_ID; do
+  if [[ -n "${!k:-}" ]]; then
+    echo "  PRESENT  $k"
+  else
+    echo "  WAIT     $k (see docs/ops/VERCEL_DEPLOY.md)"
+  fi
+done
+
 if [[ "$missing" -ne 0 ]]; then
   echo "[check-secrets] FAIL — required secrets missing."
   echo "  SoT keys = password manager + provider consoles (see memory/INTEGRITY_AND_SECRETS.md)."

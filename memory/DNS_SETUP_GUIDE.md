@@ -2,7 +2,7 @@
 
 **Aggiornato:** 10 Ottobre 2026  
 **Repo:** `mcnicastro-netizen/omnia2`  
-**Stato deploy FE:** ⏳ **Vercel NON ancora fatto** (D-074 deciso, deploy pending)  
+**Stato deploy FE:** ⏳ **Vercel NON ancora fatto** (D-074) · ✅ prep repo: [`docs/ops/VERCEL_DEPLOY.md`](../docs/ops/VERCEL_DEPLOY.md)  
 **Stato DNS email:** ✅ Resend VERIFIED — vedi [`RESEND_DOMAIN_GUIDE.md`](./RESEND_DOMAIN_GUIDE.md)
 
 ---
@@ -67,7 +67,8 @@ Dettaglio valori in [`RESEND_DOMAIN_GUIDE.md`](./RESEND_DOMAIN_GUIDE.md). Sintes
 
 ## 4. Record FE/API — **dopo** deploy Vercel (checklist)
 
-Quando fai «vai Vercel» + hai URL Vercel + URL API prod:
+Quando fai «vai Vercel» + hai URL Vercel + URL API prod  
+(runbook completo: [`docs/ops/VERCEL_DEPLOY.md`](../docs/ops/VERCEL_DEPLOY.md)):
 
 ### 4a. Vercel (frontend)
 

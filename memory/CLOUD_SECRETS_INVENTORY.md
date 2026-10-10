@@ -58,6 +58,14 @@ Dopo il Save, **riavvia un nuovo agent** sullo stesso environment (i secret non 
 | `ADMIN_EMAIL` / `ADMIN_PASSWORD` | Bootstrap | Non secret “API”: seed Founder; già in `.env.example` per Cloud | Utente super_admin (+ fallback OAuth OpenAPI D-116) |
 | `DEMO_ADMIN_PASSWORD` | Bootstrap | `.env.example` | Demo agency_admin |
 | `GITHUB_TOKEN` | Auto | Lo mette Cursor — **non** è il vault OMNIA | Push git |
+| `VERCEL_TOKEN` | **Sì** per deploy FE (D-074) | [Vercel → Tokens](https://vercel.com/account/tokens) | `scripts/vercel-deploy.sh` |
+| `VERCEL_ORG_ID` | Consigliato | Vercel Team/Account Settings | Scope CLI |
+| `VERCEL_PROJECT_ID` | Dopo 1° link progetto | Vercel Project Settings | Redeploy non-interattivo |
+| `OMNIA_API_PUBLIC_URL` | **Sì** per build prod FE | URL HTTPS API (es. `https://api.omniarealestateecosystem.it`) | `REACT_APP_BACKEND_URL` a build |
+| `CLOUDFLARE_API_TOKEN` | Consigliato E2E DNS | CF → API Tokens (Zone.DNS Edit) | Aggiornare CNAME post-Vercel |
+| `CLOUDFLARE_ZONE_ID` | Consigliato E2E DNS | CF → dominio → Overview | API DNS |
+
+**Go-live FE**: dopo pausa → vault + messaggio **«vai Vercel»**. Runbook: `docs/ops/VERCEL_DEPLOY.md`.
 
 Alias legacy accettati dal backend (se li avevi): `GOOGLE_API_KEY`, `EMERGENT_LLM_KEY` (mirror Gemini).
 
