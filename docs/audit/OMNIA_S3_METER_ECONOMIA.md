@@ -1,10 +1,11 @@
 # S3 — Meter economia storage (post-S2)
 
 **Data:** 10 Ottobre 2026 · **agg. listini pubblici** stesso giorno  
-**Stato:** ✅ numeri su **listini pubblici** + modello post-S2 · **proposta Founder: LISTINO FERMO**  
+**Stato:** ✅ numeri pronti (listini pubblici + modello post-S2) · ⏳ **firma Founder RIMANDATA** — non chiudere ora; approfondire dopo · **non dimenticare**  
 **Dipende da:** S2 bak O0 runtime · D-085 · D-114 · O0 design  
 **Artefatto live:** `docs/ops/runs/s3-meter-economia.log`  
-**Script:** `scripts/meter_storage_economia.py`
+**Script:** `scripts/meter_storage_economia.py`  
+**Promemoria SoT:** `memory/NEXT_SESSION.md` → voce *S3 firma / deepen*
 
 ---
 
@@ -113,29 +114,37 @@ R2: egress **$0** sul listino pubblico → listino OMNIA più difendibile su pat
 
 ---
 
-## 5. Verdetto proposto (Founder)
+## 5. Verdetto proposto (non firmato)
 
-**LISTINO FERMO** — €49/€99/€299 · quote 30/100/300 · addon €15/100 GB.
+**Ipotesi di lavoro: LISTINO FERMO** — €49/€99/€299 · quote 30/100/300 · addon €15/100 GB.
 
-Motivi aggiornati (listini pubblici):
+Motivi (listini pubblici) — utili, **non** chiusi:
 
 1. Post-S2, anche sul path **caro** (Hetzner Volume €0,057), Agency mid resta ~14% del canone.  
 2. Sul path **target object (R2)** il disco è ~3–4% del canone Agency.  
 3. Pre-S2 ×32 resta economicamente rotto su Volume (e pesante anche su R2).  
-4. Unico punto stretto: **addon @ Volume €0,057 mid** (~€14 su €15) → se restiamo a lungo su solo volume locale, monitorare; su R2 l’addon è comodo (€3,50).  
-5. Non è ancora la *nostra* fattura, ma è **abbastanza attendibile per non rivedere i prezzi oggi**.
+4. Unico punto stretto: **addon @ Volume €0,057 mid** (~€14 su €15).  
+5. Founder 10-Ott-2026: *non chiudere ora; approfondire dopo; non dimenticare*.
+
+**Approfondimenti aperti (S3.1 / prima di firma):**
+
+- Path storage deciso (Volume vs R2) + ops/egress nel modello  
+- Bill o quote reali non-prod se disponibili  
+- Addon economics se restiamo su Volume a lungo  
+
+Fino ad allora: listino **operativamente fermo** (nessuna revisione in codice), firma commerciale **aperta**.
 
 ---
 
-## 6. Firma Founder
+## 6. Firma Founder — APERTA (rimandata)
 
 | Campo | Valore |
 |-------|--------|
-| Data | |
-| Ha letto §0–§4 (listini pubblici) | sì / no |
-| Decisione listino | **FERMO** / revisione (specificare) |
+| Data | *rimandata — Founder: approfondire dopo* |
+| Ha letto §0–§4 (listini pubblici) | |
+| Decisione listino | **FERMO** / revisione (specificare) — *da compilare al deepen* |
 | Path storage assunto | Volume Hetzner / R2 / altro |
-| Note | |
+| Note | Non chiudere ora. Promemoria in `NEXT_SESSION`. |
 | Firma | |
 
 ---

@@ -64,7 +64,7 @@ Non è una lista infinita di bug: sono **tensioni** che impediscono di firmare �
 | C3 | **Rail monetari spezzati** — valuator “crediti” a tratti narrativo; HAL Legal edge gratis senza agency | Listino ≠ contabilità |
 | C4 | **Due verità pubbliche** — feed ImmobilCloud ≠ sito brand `/p/{slug}` sullo stesso immobile | Pitch portale+gestionale debole |
 | C5 | **Trash non ovunque** — KPI / alcuni MLS senza soft-delete uniforme | Integrità dominio quasi-una |
-| C6 | **O0 ✅ / S2 ✅ / S3 ✅** — retention 7 + hardlink; meter mid@€0,04 ok; **listino FERMO** (proposta) | Economia disco chiusa per pre-GTM; bill €/GB reale = follow-up |
+| C6 | **O0 ✅ / S2 ✅ / S3 numeri ✅** — firma listino **rimandata** (approfondire; non dimenticare) | Economia modellata; chiusura commerciale = S3.1 / firma Founder |
 | C7 | **Restore: docs sì, run firmata no** | “Sappiamo recuperare?” aperto |
 | C8 | **Due seed = due storie demo** (demo-agency + Nicastro) | Nessuna “demo definitiva” unica |
 | C9 | **SoT documentali in conflitto temporale** (AUDIT_STATE / GTM freeze / fascicolo / NEXT) | Founder e agent leggono più futuri |
@@ -83,7 +83,7 @@ Ordine di **coerenza**, non di feature. Niente monoblocco; ogni step ha artefatt
 |------|---------------|----------------|-------------|
 | **S1** | **O3b** — una restore firmata non-prod (agency + perimetro B2C rilevante) | C7 | Tabella firma in `RESTORE_MANUAL` compilata + artefatto |
 | **S2** | **Bak = O0 runtime** — retention hot ≤7g e/o incrementale (come da design) | C6 | ✅ **DONE 2026-10-10** — default 7 + hardlink; artefatto `docs/ops/runs/s2-bak-o0-runtime-live.log` |
-| **S3** | **Meter economia** — GB reali post-S2; conferma canoni vs Agency 300 GB + addon | C6 | ✅ **DONE 2026-10-10** — `OMNIA_S3_METER_ECONOMIA.md` · proposta **LISTINO FERMO** · artefatto `docs/ops/runs/s3-meter-economia.log` |
+| **S3** | **Meter economia** — GB reali post-S2; conferma canoni vs Agency 300 GB + addon | C6 | ✅ numeri 10-Ott (`OMNIA_S3_METER_ECONOMIA.md` + listini pubblici) · ⏳ **firma Founder rimandata** → deepen S3.1 · promemoria `NEXT_SESSION` |
 | **S4** | **Una regola di visibilità** — stesso contratto pubblico portale / brand site | C4 | Spec + codice allineati LIVE |
 | **S5** | **Soldi onesti** — addebito reale o UI onesta; opz. hard-gate self-serve distinto da Stripe test | C2, C3 | Probe LIVE |
 | **S6** | **Narrativa 2 prodotti** — Academy fuori pitch finché non esiste | C1 | Landing/agenzie allineate |
@@ -112,7 +112,7 @@ Ordine di **coerenza**, non di feature. Niente monoblocco; ogni step ha artefatt
 Il repo **non** è un pasticcio casuale: è un ecosistema dual-product con spina dorsale solida.  
 Il rischio di fallimento non è “manca un modulo magico”: è **raccontare o vendere una storia più chiusa** di quanto il sistema sia logicamente allineato (soldi, restore, storage, messaggio, una sola demo).
 
-**Prossimo «vai» consigliato:** **S4** (una regola di visibilità portale/brand) — mai un nuovo monoblocco “chiudi tutto”.
+**Prossimo «vai» consigliato:** **S4** (visibilità portale/brand). Parallel reminder: **S3.1 firma/deepen storage** — non dimenticare prima di O6/GTM.
 
 ---
 
