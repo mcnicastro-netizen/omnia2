@@ -88,8 +88,12 @@ export default function BillingPage() {
   };
 
   const checkoutSubscription = async (tier) => {
-    if (!state.data?.enabled) {
-      toast.message("Checkout non disponibile — contattaci per provisioning assistito.");
+    if (!state.data?.enabled || !state.data?.self_serve_enabled) {
+      toast.message(
+        state.data?.enabled
+          ? "Self-serve non aperto (O6) — contattaci per provisioning assistito."
+          : "Checkout non disponibile — contattaci per provisioning assistito."
+      );
       openDemo();
       return;
     }
@@ -120,6 +124,11 @@ export default function BillingPage() {
   };
 
   const checkoutCredits = async (packageKey) => {
+    if (!state.data?.self_serve_enabled) {
+      toast.message("Self-serve non aperto (O6) — contattaci per provisioning assistito.");
+      openDemo();
+      return;
+    }
     setBusy(true);
     try {
       const { data } = await api.post("/billing/credits/purchase", {
@@ -129,7 +138,8 @@ export default function BillingPage() {
       });
       window.location.href = data.checkout_url;
     } catch (e) {
-      toast.error("Errore checkout crediti");
+      const d = e?.response?.data?.detail;
+      toast.error(typeof d === "string" ? d : d?.message || "Errore checkout crediti");
       setBusy(false);
     }
   };
@@ -183,9 +193,11 @@ export default function BillingPage() {
   const wallet = sub?.wallet || { balance: 0 };
   const plans = data?.plans || [];
   const packages = data?.credit_packages || [];
-  // D-110 — CTA checkout solo se Stripe enabled; "Piano attivo" solo con activeSub
+  // D-110 + S5 — Stripe sandbox ≠ self-serve O6
   const stripeEnabled = Boolean(data?.enabled);
-  const canCheckoutDirect = stripeEnabled && (Boolean(activeSub) || demoRequested);
+  const selfServeEnabled = Boolean(data?.self_serve_enabled);
+  const canCheckoutDirect =
+    stripeEnabled && selfServeEnabled && (Boolean(activeSub) || demoRequested);
 
   return (
     <AgencyShell current="settings">
@@ -245,7 +257,7 @@ export default function BillingPage() {
               {wallet.balance || 0} crediti
             </div>
             <div className="text-sm text-stone-500 mt-1">
-              Consumati per valutatore, staging, video, ecc.
+              Consumati per staging, video, HAL Legal, ecc. (valutatore agenzia: incluso v1, non addebitato qui).
             </div>
           </div>
           <div

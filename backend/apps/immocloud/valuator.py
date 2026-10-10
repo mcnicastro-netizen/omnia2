@@ -301,7 +301,7 @@ async def estimate_value(
     - B2C senza email verificata → 403
     - B2C base, quota esaurita → 429
     - Payload UNI (commercial_surfaces o merit) senza pagamento → 402
-    - Agente B2B → passa senza Stripe (crediti agenzia scalati altrove — TODO)
+    - Agente B2B → passa senza Stripe (S5: incluso piano v1 — nessun debit crediti qui)
     - Fascicolo agenzia → bypass tramite `bypass_gate=True` (chiamata Python interna)
     - Header `X-Omnia-Caller: agency_fascicolo` bypass gate se agente
     """
@@ -342,7 +342,7 @@ async def estimate_value(
                         "upsell_product_key": "b2c_valuator_uni_pdf",
                         "upsell_price_eur": 2.99,
                     })
-            # agents: base senza gate (crediti B2B scalati dal caller applicativo, non qui)
+            # agents: base senza gate (S5: incluso piano v1 — nessun debit qui)
         # --- Gate UNI (commercial_surfaces or merit present) ---
         else:
             if not user:
@@ -361,7 +361,7 @@ async def estimate_value(
                         "price_eur": 2.99,
                         "payload_hash": payload_hash,
                     })
-            # agents: crediti B2B scalati dal caller applicativo (out-of-scope questo endpoint)
+            # agents: S5 incluso piano v1 — nessun debit crediti su questo endpoint
 
     result = await _estimate_value_core(payload)
 
