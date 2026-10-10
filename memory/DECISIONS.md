@@ -1317,13 +1317,15 @@ Registro di tutte le decisioni di business e tecniche prese durante il progetto.
 - Reindex batch a fine Cap. 22–26 + dopo ogni milestone che cambia superficie API pubblica.
 
 ## D-074 — Deploy Vercel · 2026-09-14
-**Status**: ✅ DECISIONE ATTIVA · ⏳ **deploy ancora NON eseguito** (10-Ott-2026)
+**Status**: ✅ DECISIONE ATTIVA · ⏳ **deploy ancora NON eseguito** · ✅ **prep repo pronto** (10-Ott-2026)
 
 - Frontend React (CRA/build) → Vercel (`frontend/vercel.json`).
 - Backend FastAPI: processo ASGI dedicato; FE punta all'API pubblica (`api.omniarealestateecosystem.it` a regime).
 - Preview / Cloud Agent = tunnel `*.trycloudflare.com` per sviluppo/demo.
 - DNS SoT: `memory/DNS_SETUP_GUIDE.md` (Cloudflare; Emergent CNAME = legacy).
-- **Go-live dominio** solo dopo: Vercel + API host + record CF aggiornati.
+- **Prep E2E**: `docs/ops/VERCEL_DEPLOY.md` + `scripts/vercel-prep-check.sh` + `scripts/vercel-deploy.sh`.
+- Vault post-pausa: `VERCEL_TOKEN`, `OMNIA_API_PUBLIC_URL`, (+ `VERCEL_ORG_ID`/`VERCEL_PROJECT_ID`, CF token/zone).
+- **Go-live dominio** solo dopo: Vercel + API host + record CF aggiornati · trigger Founder: **«vai Vercel»**.
 
 ## D-075 — AI in-app (HAL / Guida / Legal chat) inclusa, senza crediti · 2026-09-14
 **Status**: ✅ ATTIVA · **confermata D-119** (10-Ott-2026) anche per HAL Legal CRM
