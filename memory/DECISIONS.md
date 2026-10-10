@@ -1328,12 +1328,13 @@ Registro di tutte le decisioni di business e tecniche prese durante il progetto.
 - **Go-live dominio** solo dopo: Vercel + API host + record CF aggiornati · trigger Founder: **«vai Vercel»**.
 
 ## D-123 — Host API produzione = Railway (Plan B; Hetzner bloccato) · 2026-10-10
-**Status**: ✅ DECISIONE ATTIVA · ⏳ deploy pending · ✅ prep repo
+**Status**: ✅ DECISIONE ATTIVA · ⛔ go-live bloccato (trial + token) · ✅ prep repo
 
 - Founder: account Hetzner bloccato (P.IVA / reset mail non arrivata) → **non attendere**.
 - **API prod target**: Railway (`railway.toml` + `Dockerfile.railway` + Mongo plugin).
-- Runbook: `docs/ops/RAILWAY_DEPLOY.md` · script `railway-prep-check.sh` / `railway-deploy.sh`.
-- Vault: `RAILWAY_TOKEN` (+ `RAILWAY_PROJECT_ID`); dopo domain: `OMNIA_API_PUBLIC_URL`.
+- Runbook: `docs/ops/RAILWAY_DEPLOY.md` · script `railway-prep-check.sh` / `railway-golive-probe.sh` / `railway-deploy.sh`.
+- Vault bootstrap: **`RAILWAY_API_TOKEN`** (Account Token). `RAILWAY_TOKEN` = solo Project Token post-progetto (+ `RAILWAY_PROJECT_ID`). Dopo domain: `OMNIA_API_PUBLIC_URL`.
+- **Blocco 2026-10-10 («vai Railway»)**: trial scaduto (`subscriptionType: trial` + mutation *trial has expired*); token in `RAILWAY_TOKEN` rifiutato dalla CLI. Founder: Upgrade Hobby+ → Account Token in `RAILWAY_API_TOKEN` → ritentare «vai Railway».
 - Ordine: Railway API → Cloudflare `api` → Vercel FE (D-074).
 - Hetzner resta opzione costi a regime se l’account si sblocca; non bloccante.
 
