@@ -80,3 +80,5 @@ Hobby **$5/mese** + usage → tipico API+Mongo piccolo **≈ $15–35/mese**.
 ## Probe go-live (diagnostica)
 
 Prima di «vai Railway»: `bash scripts/railway-golive-probe.sh` (token + trial/plan).
+
+Classifica token: `python3 scripts/railway_token_kind.py` (account vs project vs invalid).
