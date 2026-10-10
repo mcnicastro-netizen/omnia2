@@ -24,14 +24,14 @@
   },
   "landing": {
     "hero_title": "The integrated real estate ecosystem",
-    "hero_subtitle": "More value. More efficiency. More results.",
+    "hero_subtitle": "B2C portal and AI CRM for agencies — two products, one system.",
     "hero_cta": "Discover OMNIA",
     "pillar_cloud_title": "ImmobilCloud",
     "pillar_cloud_desc": "The real estate portal for private clients.",
     "pillar_app_title": "ImmoWeb",
     "pillar_app_desc": "AI agency CRM: today’s priorities, explained matches, HAL with confirm. North star: agency OS.",
     "pillar_learn_title": "Omnia Academy",
-    "pillar_learn_desc": "The certified training platform for real estate agents."
+    "pillar_learn_desc": "Agent training — coming soon. Not part of the current commercial offer."
   },
   "immocloud": {
     "title": "ImmobilCloud",
@@ -43,8 +43,9 @@
   },
   "academy": {
     "title": "Omnia Academy",
-    "tagline": "Shape your future"
+    "tagline": "Coming soon — not in the commercial offer yet"
   },
+
   "health": {
     "checking": "Checking service…",
     "ok": "Service operational",

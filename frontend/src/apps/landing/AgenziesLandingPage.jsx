@@ -204,7 +204,7 @@ export default function AgenziesLandingPage() {
           </h1>
           <p className="text-base sm:text-lg text-white/80 mt-8 max-w-2xl mx-auto leading-relaxed"
             data-testid="agenzie-hero-sub">
-            ImmobilCloud (portale B2C) · ImmoWeb (gestionale AI) · Omnia Academy.
+            Due prodotti: ImmobilCloud (portale B2C) e ImmoWeb (gestionale AI).
             Priorità di oggi, match spiegati, HAL che propone e tu confermi.
             Un ecosistema — nord: sistema operativo dell&apos;agenzia. White-label. Prezzo bloccato 24 mesi.
           </p>
@@ -237,7 +237,7 @@ export default function AgenziesLandingPage() {
           OMNIA — sistema operativo dell&apos;agenzia
         </h2>
         <p className="text-stone-600 text-sm sm:text-base leading-relaxed">
-          Uniamo gestionale AI, portale B2C e Academy in un unico ecosistema white-label.
+          Uniamo gestionale AI e portale B2C in un unico ecosistema white-label.
           HAL ti assiste nel quotidiano; tu resti al comando. Nati per agenzie italiane che
           vogliono lavorare meglio — non per accumulare software inutili.
         </p>
@@ -248,7 +248,7 @@ export default function AgenziesLandingPage() {
         <p className="text-xs uppercase tracking-[0.3em] text-stone-500 mb-3 text-center">Prodotti</p>
         <h2 className="text-3xl sm:text-4xl text-stone-900 text-center mb-16 font-light"
           style={{ fontFamily: "'Fraunces', Georgia, serif" }}>
-          3 strumenti AI che cambiano la giornata di un agente
+          Strumenti AI che cambiano la giornata di un agente
         </h2>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8" data-testid="agenzie-wow-grid">

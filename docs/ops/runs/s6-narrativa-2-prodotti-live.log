@@ -1,0 +1,35 @@
+S6 LIVE — narrativa 2 prodotti
+UTC: 2026-10-10
+method: headless chrome dump-dom + screenshot (isolated profile)
+
+## http://127.0.0.1:43123/it
+pillars=['cloud', 'app']
+topnav-cloud=True topnav-app=True topnav-learn=False
+  MUST 'data-testid="pillar-cloud"': PASS
+  MUST 'data-testid="pillar-app"': PASS
+  MUST 'due prodotti, un sistema': PASS
+  MUST_NOT 'data-testid="pillar-learn"': PASS
+  MUST_NOT 'data-testid="topnav-learn"': PASS
+  MUST_NOT 'ImmobilCloud (portale B2C) · ImmoWeb (gestionale AI) · Omnia Academy': PASS
+## http://127.0.0.1:43123/it/agenzie
+pillars=[]
+topnav-cloud=False topnav-app=False topnav-learn=False
+  MUST 'Due prodotti: ImmobilCloud': PASS
+  MUST 'gestionale AI e portale B2C': PASS
+  MUST_NOT '· Omnia Academy.': PASS
+  MUST_NOT 'gestionale AI, portale B2C e Academy': PASS
+  MUST_NOT '3 strumenti AI che cambiano': PASS
+## http://127.0.0.1:43123/it/learn
+pillars=[]
+topnav-cloud=True topnav-app=True topnav-learn=False
+  MUST 'Coming soon': PASS
+  MUST "Non fa parte dell'offerta commerciale attuale": PASS
+  MUST 'data-testid="academy-cta-cloud"': PASS
+  MUST 'data-testid="academy-cta-app"': PASS
+
+OVERALL: PASS
+
+## build greps
+old certified platform string absent: PASS (pre-checked)
+new commercial offer string present in main.*.js: PASS (pre-checked)
+AGENZIE Due prodotti present: PASS (pre-checked)

@@ -1,10 +1,9 @@
-## 2026-10-10 — S5 soldi onesti (self-serve ≠ Stripe)
+## 2026-10-10 — S6 narrativa 2 prodotti (C1)
 
-- Flag `OMNIA_SELF_SERVE_ENABLED` (default OFF) blocca checkout/crediti/storage B2B anche con Stripe ON
-- `GET /billing/plans` → `self_serve_enabled`; BillingPage rispetta il flag
-- Valuator agenzia: copy “incluso piano v1” (niente “12 crediti” senza debit)
-- HAL Legal senza `active_agency_id` → 403 (niente edge gratis)
-- Spec `OMNIA_S5_SOLDI_ONESTI.md` · LIVE PASS · NEXT → S6
+- Pitch GTM = ImmobilCloud + ImmoWeb; Academy fuori nav/landing/agenzie
+- `/learn` resta coming soon (M6) con copy onesta + CTA ai 2 prodotti
+- i18n it/en/es allineati; TopNav senza Formazione
+- Spec `OMNIA_S6_NARRATIVA_2_PRODOTTI.md` · LIVE · NEXT → S7
 
 ## 2026-10-09 — D-118 residuo codice CHIUSO (vai Founder)
 

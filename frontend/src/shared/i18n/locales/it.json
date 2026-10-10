@@ -24,14 +24,14 @@
   },
   "landing": {
     "hero_title": "L'ecosistema immobiliare integrato",
-    "hero_subtitle": "Più valore. Più efficienza. Più risultati.",
+    "hero_subtitle": "Portale B2C e gestionale AI per agenzie — due prodotti, un sistema.",
     "hero_cta": "Scopri OMNIA",
     "pillar_cloud_title": "ImmobilCloud",
     "pillar_cloud_desc": "Il portale immobiliare per privati e clienti.",
     "pillar_app_title": "ImmoWeb",
     "pillar_app_desc": "Gestionale AI per agenzie: priorità di oggi, match, HAL con conferma. Nord: sistema operativo dell'agenzia.",
     "pillar_learn_title": "Omnia Academy",
-    "pillar_learn_desc": "La piattaforma di formazione per agenti certificati."
+    "pillar_learn_desc": "Formazione agenti — in arrivo. Non fa parte dell'offerta commerciale attuale."
   },
   "immocloud": {
     "title": "ImmobilCloud",
@@ -43,8 +43,9 @@
   },
   "academy": {
     "title": "Omnia Academy",
-    "tagline": "Forma il tuo futuro"
+    "tagline": "In arrivo — non fa parte dell'offerta commerciale attuale"
   },
+
   "health": {
     "checking": "Verifica del servizio in corso…",
     "ok": "Servizio operativo",
