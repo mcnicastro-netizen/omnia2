@@ -153,7 +153,7 @@ async def _ensure_legal_payment(user: dict) -> Dict[str, Any]:
 
     - B2C client → consuma 1 acquisto Stripe `b2c_hal_legal_query` (€1)
     - Utente CRM con agency attiva → addebita CREDIT_COSTS['hal_legal_query'] (12)
-    - Nessuna agency (edge) → passa senza addebito
+    - CRM senza active_agency_id → 403 (S5: niente edge gratis silenzioso)
     """
     from apps.billing.b2c_entitlements import (
         consume_hal_legal_query,
@@ -177,7 +177,16 @@ async def _ensure_legal_payment(user: dict) -> Dict[str, Any]:
 
     agency_id = _agency_id_of(user)
     if not agency_id:
-        return {"rail": "none", "credits_charged": 0, "agency_id": None}
+        raise HTTPException(
+            status_code=403,
+            detail={
+                "code": "active_agency_required",
+                "message": (
+                    "Seleziona un'agenzia attiva per usare HAL Legal "
+                    "(addebito crediti piano). Nessun uso gratuito senza tenant."
+                ),
+            },
+        )
 
     cost = int(CREDIT_COSTS.get("hal_legal_query") or LIST_PRICE_CREDITS)
     balance_after = await debit_credits(

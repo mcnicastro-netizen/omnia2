@@ -767,9 +767,11 @@ async def preview_theme(
     }
     transient["website"] = transient_website
 
+    from shared.db.public_visibility import brand_site_filter
+
     db = Database.get()
     props = await db.properties.find(
-        {"agency_id": agency["id"], "status": "active"}, {"_id": 0},
+        brand_site_filter(agency["id"]), {"_id": 0},
     ).sort("updated_at", -1).to_list(length=24)
 
     html = render_index(transient, props, agency.get("slug") or "preview")

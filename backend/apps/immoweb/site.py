@@ -22,6 +22,7 @@ from fastapi import APIRouter, HTTPException, Response
 from fastapi.responses import RedirectResponse
 
 from shared.db.trash import with_not_trashed
+from shared.db.public_visibility import brand_site_filter
 from shared.db.connection import Database
 from shared.storage import get_object, ObjStoreError
 from apps.immoweb.themes import render_index, render_property
@@ -97,7 +98,7 @@ async def site_sitemap(slug: str):
     agency = await _resolve(slug)
     db = Database.get()
     props = await db.properties.find(
-        with_not_trashed({"agency_id": agency["id"], "status": "active"}),
+        brand_site_filter(agency["id"]),
         {"_id": 0, "id": 1, "updated_at": 1},
     ).to_list(length=5000)
     urls = []
@@ -125,7 +126,7 @@ async def site_index(slug: str):
     agency = await _resolve(slug)
     db = Database.get()
     props = await db.properties.find(
-        with_not_trashed({"agency_id": agency["id"], "status": "active"}), {"_id": 0},
+        brand_site_filter(agency["id"]), {"_id": 0},
     ).sort("updated_at", -1).to_list(length=200)
     html = render_index(agency, props, slug)
     return Response(content=html, media_type="text/html; charset=utf-8")
@@ -138,7 +139,7 @@ async def site_property(slug: str, pid: str):
     agency = await _resolve(slug)
     db = Database.get()
     p = await db.properties.find_one(
-        with_not_trashed({"id": pid, "agency_id": agency["id"], "status": "active"}),
+        brand_site_filter(agency["id"], {"id": pid}),
         {"_id": 0, "owner": 0},
     )
     if not p:

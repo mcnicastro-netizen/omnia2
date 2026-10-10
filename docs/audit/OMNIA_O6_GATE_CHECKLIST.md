@@ -15,12 +15,12 @@
 | 8 | **O4a** D-109 | Landing prezzi da `GET /billing/plans` | ✅ PASS |
 | 9 | **O4b** D-110 | `localStorage` ≠ entitlement; piano attivo solo server | ✅ PASS |
 | 10 | **O5** D-104/107/108/112 | Upload stati+retry; pagination properties; owner APScheduler; seed demo | ✅ PASS (minimi) |
-| 11 | Self-serve Stripe | Abilitare checkout pubblico solo dopo PASS completo incluso run restore | ❌ **BLOCCATO** finché riga 7 run ≠ firmata e Founder non apre rubinetto |
+| 11 | Self-serve Stripe | Abilitare checkout pubblico solo dopo PASS completo incluso run restore | ❌ **BLOCCATO** in codice: `OMNIA_SELF_SERVE_ENABLED` default OFF (S5) — Founder apre rubinetto a S9 |
 
 ## Verdetto corrente
 
-**Gate O6: CONDITIONAL PASS (codice+docs)** — self-serve resta **OFF**.  
-Manca la **run restore firmata** su non-prod (O3b operativo). Provisioning assistito ammesso.
+**Gate O6: CONDITIONAL PASS** — self-serve **hard OFF** (`OMNIA_SELF_SERVE_ENABLED`, S5).  
+Stripe sandbox può restare ON per probe B2C. Rubinetto B2B solo con firma Founder (S9) + restore firmata.
 
 ## Firma Founder (quando si apre self-serve)
 

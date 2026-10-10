@@ -117,19 +117,13 @@ LIST_FIELDS = {
 
 
 def _base_filter() -> Dict[str, Any]:
-    """Common visibility filter applied to every public query.
+    """S4 — stesso contratto pubblico del brand (surface base) + delta portale.
 
-    P-033: exclude privacy L3/L4 from list/map/search — detail already 404s
-    for viewers below the property privacy level (anon sees ghost cards).
+    Portale-only: is_listed_on_immobilcloud ≠ false · privacy ∉ L3/L4 (P-033).
+    SoT: `shared.db.public_visibility`.
     """
-    from shared.db.trash import with_not_trashed
-    return with_not_trashed({
-        "status": "active",
-        "visibility": "public",
-        "is_listed_on_immobilcloud": {"$ne": False},
-        "moderation_status": {"$nin": ["pending", "rejected"]},
-        "privacy_level": {"$nin": ["L3", "L4"]},
-    })
+    from shared.db.public_visibility import portal_listing_filter
+    return portal_listing_filter()
 
 
 def _cover_photo(photos: Optional[List[dict]]) -> Optional[str]:

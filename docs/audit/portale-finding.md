@@ -38,7 +38,7 @@
 | P-031 | P0 | F | Regressione inventory: demo props `visibility=null` → search total=0 (P-001) | **CHIUSO** |
 | P-032 | P3 | F | Route solo `/cloud/valutatore`; `/cloud/valuator` shell vuota | **CHIUSO** |
 | P-033 | P2 | G | Search lista card L3/L4 anche se detail anon = 404 | **CHIUSO** |
-| P-034 | P2 | G | Sito brand `/api/p/{slug}` ignora visibility/listing/privacy/moderation | **WONTFIX** (by design) |
+| P-034 | P2 | G | Sito brand `/api/p/{slug}` ignora visibility/listing/privacy/moderation | **CHIUSO S4** — `brand_site_filter` = surface pubblica condivisa; delta intenzionali in `public_visibility.py` |
 | P-035 | P2 | G | Ops `saved_searches_active` query `active` ≠ schema `is_active` | **CHIUSO** |
 | P-036 | P3 | G | HAL Legal CRM non addebita listino 12 crediti | **CHIUSO** |
 | P-037 | P1 | H | Informativa privacy senza sub-responsabili / transfer extra-UE / no-train | **CHIUSO** |
@@ -168,10 +168,13 @@
 - **Evidenza**: `demo-prop-roma-01` L3 · in_search Roma=True · anon detail 404
 - **Fix** (solo con «vai»): escludere L3/L4 da search anon, oppure mostrare card “richiede accesso”
 
-## P-034 — dettaglio (WONTFIX · Founder 9-Ott)
+## P-034 — dettaglio (CHIUSO S4 · 10-Ott — supersede WONTFIX 9-Ott)
 
-- Brand SSR filtra solo `agency_id` + `status=active` — vetrina CRM distinta da ImmobilCloud
-- Decisione Founder: **no** allineare ai flags cloud
+- Prima: brand SSR solo `agency_id` + `status=active` (WONTFIX 9-Ott)
+- **S4** (sequenza coerenza, vai Founder): surface pubblica condivisa
+  `active` + `visibility=public` + moderation OK — SoT `public_visibility.py`
+- Delta intenzionali restano: opt-out ImmobilCloud e L3/L4 ammessi sul brand
+- Spec: `OMNIA_S4_VISIBILITA_PUBBLICA.md`
 
 ## P-035 — dettaglio (CHIUSO · vai Founder)
 

@@ -1,23 +1,23 @@
 # O0 — Design vincolante bak/media · D-114
 
-**Stato:** ✅ deciso (fase O0 · «vai» 30-Set-2026)  
-**Scope O0:** numeri + modello target **scritto**. **Non** include il refactoring del backup in questo deliverable.  
-**Implementazione del modello:** fase successiva post-O0.  
-**Listino:** fermo finché non si decide esplicitamente una revisione.
+**Stato:** ✅ deciso (fase O0 · «vai» 30-Set-2026) · **runtime S2:** ✅ 10-Ott-2026  
+**Scope O0:** numeri + modello target **scritto**.  
+**Implementazione del modello:** ✅ S2 — `BACKUP_RETENTION_DAYS` default **7** + media **incrementale hardlink** (`backup_job.py`).  
+**Listino:** **FERMO** post-S3 (10-Ott-2026) — vedi `OMNIA_S3_METER_ECONOMIA.md`; revisione solo con firma Founder.
 
 ---
 
-## 1. Situazione attuale (as-is)
+## 1. Situazione (as-is storico → runtime S2)
 
-| Voce | Valore |
-|------|--------|
-| Media live | FS locale `LOCAL_STORAGE_ROOT` (default `.media`) |
-| Bak | `shutil.copytree` giornaliero di **tutto** `MEDIA_ROOT` + dump JSONL Mongo (subset) |
-| Retention bak | `BACKUP_RETENTION_DAYS` default **30** |
-| Moltiplicatore disco | live + ~30 copie ≈ **~31–32×** sul volume media |
-| Restore applicativo | assente (solo procedura futura · **D-113**) |
-| Quote piano (D-085) | Starter 30 GB · Pro 100 GB · Agency 300 GB |
-| €/GB ops | **non confermato** (range grezzo audit ~0,02–0,08; claim 0,04 **non** adottato) |
+| Voce | Prima (as-is) | Runtime S2 (10-Ott-2026) |
+|------|---------------|--------------------------|
+| Media live | FS locale `LOCAL_STORAGE_ROOT` | invariato |
+| Bak media | `shutil.copytree` full ogni giorno | **incrementale hardlink** da giorno precedente + full al primo giorno |
+| Retention bak | default **30** | default **7** (`BACKUP_RETENTION_DAYS`) |
+| Moltiplicatore disco | ~31–32× | hot ≤7g + hardlink ≈ **~1× + delta** (prova LIVE `docs/ops/runs/s2-bak-o0-runtime-live.log`) |
+| Restore | procedura D-113 | S1 firmata (PR separata) + procedura |
+| Quote piano (D-085) | Starter 30 / Pro 100 / Agency 300 GB | invariato · listino fermo |
+| €/GB ops | non confermato (no bill) | S3: sensitivity 0,02/0,04/0,08 · proposta listino FERMO |
 
 ### Stima ordine di grandezza (worst-case piano pieno + bak 30g)
 
@@ -92,12 +92,14 @@ Listino €49/€99/€299 e quote GB restano **fermi** fino a decisione commerc
 
 ---
 
-## 3. Fuori da O0
+## 3. Fuori da O0 / ancora aperti post-S2
 
-* Codice refactor bak (onda successiva)  
+* ~~Codice refactor bak~~ → **fatto in S2** (retention 7 + incrementale)  
+* Cold monthly 90g (V1.1 opzionale)  
+* Checksum contenuto (oggi size+mtime_ns)  
 * Object storage/CDN (solo se smoke media o costi D-114 lo impongono)  
 * DR piattaforma / restore self-service  
-* Revisione prezzi  
+* ~~Revisione prezzi (dopo S3 meter)~~ → S3 proposta **LISTINO FERMO** (firma Founder in `OMNIA_S3_METER_ECONOMIA.md`) 
 
 ---
 

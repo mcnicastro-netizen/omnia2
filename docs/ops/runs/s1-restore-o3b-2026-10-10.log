@@ -1,0 +1,16 @@
+=== S1 O3b restore run 2026-10-10T08:11:57.891192+00:00 ===
+DAY=2026-10-10 AGENCY_ID=demo-agency-001 BACKUP_ROOT=/workspace/backend/.backups
+manifest_status=OK
+baseline_live={'agencies': 1, 'properties': 4, 'clients': 4, 'client_requests': 0, 'activities': 0, 'users_membership': 2, 'b2c_purchases': 0, 'favorites': 0, 'consent_events': 0}
+other_before={'other_agencies': 1, 'nicastro_props': 4}
+extracted={'agencies': 1, 'users': 2, 'properties': 4, 'clients': 4, 'client_requests': 0, 'activities': 0, 'leads': 0, 'subscriptions': 0, 'credit_wallets': 0, 'publishing_connections': 0, 'b2c_purchases': 0, 'b2c_visura_orders': 0, 'consent_events': 0, 'favorites': 0, 'saved_searches': 0, 'al_legal_audit': 0, 'listing_inquiries': 0}
+after_loss={'agencies': 0, 'properties': 0, 'clients': 0, 'client_requests': 0, 'activities': 0, 'users_membership': 2, 'b2c_purchases': 0, 'favorites': 0, 'consent_events': 0}
+media=copied files=0
+after_restore={'agencies': 1, 'properties': 4, 'clients': 4, 'client_requests': 0, 'activities': 0, 'users_membership': 2, 'b2c_purchases': 0, 'favorites': 0, 'consent_events': 0}
+other_after={'other_agencies': 1, 'nicastro_props': 4}
+checks={'agency_present': True, 'properties_match_extract': True, 'clients_match_extract': True, 'users_membership_ge1': True, 'other_agencies_unchanged': True, 'other_props_unchanged': True, 'b2c_purchases_match': True, 'favorites_match': True}
+login_demo_ok=True role=agency_admin
+sample_prop_photos=0 (seed may be empty)
+NOTE: nessuna foto sul seed demo — check media N/A (non FAIL)
+ESITO=PASS failed=[]
+LIMITI: restore manuale; B2C collections vuote in questo bak; media seed vuoto; non-prod Cloud Agent; RTO non commerciale
