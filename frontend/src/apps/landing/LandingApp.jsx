@@ -13,6 +13,7 @@ export default function LandingApp() {
   const { t, i18n } = useTranslation();
   const lang = (i18n.language || "it").slice(0, 2);
 
+  // S6 — narrativa GTM = 2 prodotti (ImmobilCloud + ImmoWeb). Academy fuori pitch.
   const pillars = [
     {
       key: "cloud",
@@ -27,13 +28,6 @@ export default function LandingApp() {
       desc: t("landing.pillar_app_desc"),
       to: `/${lang}/app`,
       tag: "B2B",
-    },
-    {
-      key: "learn",
-      title: t("landing.pillar_learn_title"),
-      desc: t("landing.pillar_learn_desc"),
-      to: `/${lang}/learn`,
-      tag: "LMS",
     },
   ];
 
@@ -76,13 +70,12 @@ export default function LandingApp() {
             <HealthBadge app="global" label="API" />
             <HealthBadge app="cloud" label="ImmobilCloud" />
             <HealthBadge app="app" label="ImmoWeb" />
-            <HealthBadge app="learn" label="Academy" />
           </div>
         </aside>
       </section>
 
-      {/* Pillars */}
-      <section className="px-5 sm:px-8 md:px-12 lg:px-16 pb-20 md:pb-24 lg:pb-32 max-w-screen-2xl mx-auto grid md:grid-cols-3 gap-6 md:gap-8 lg:gap-12">
+      {/* Pillars — 2 prodotti */}
+      <section className="px-5 sm:px-8 md:px-12 lg:px-16 pb-20 md:pb-24 lg:pb-32 max-w-screen-2xl mx-auto grid md:grid-cols-2 gap-6 md:gap-8 lg:gap-12">
         {pillars.map((p) => (
           <Link
             key={p.key}

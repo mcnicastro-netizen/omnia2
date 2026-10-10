@@ -1,3 +1,10 @@
+## 2026-10-10 — S6 narrativa 2 prodotti (C1)
+
+- Pitch GTM = ImmobilCloud + ImmoWeb; Academy fuori nav/landing/agenzie
+- `/learn` resta coming soon (M6) con copy onesta + CTA ai 2 prodotti
+- i18n it/en/es allineati; TopNav senza Formazione
+- Spec `OMNIA_S6_NARRATIVA_2_PRODOTTI.md` · LIVE · NEXT → S7
+
 ## 2026-10-09 — D-118 residuo codice CHIUSO (vai Founder)
 
 - Fix: P-051 CSRF/COOKIE_SECURE · P-049 B2C Stripe fallback · P-046/047 backup+restore B2C · P-050 RL · P-033 L3/L4 search · P-048 soft-delete · P-054 i18n · P-055 SEO · P-057 UGC notify · P-052/053/056/058/032/024 · P-026 MITIGATO

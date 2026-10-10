@@ -51,10 +51,10 @@ export default function TopNav({ current = "landing", theme = "light", suffix = 
   };
   const c = themes[theme] || themes.light;
 
+  // S6 — nav pubblica = 2 prodotti. /learn resta raggiungibile ma fuori pitch.
   const navItems = [
     { key: "cloud", to: `/${lang}/cloud`, label: t("nav.immocloud") },
     { key: "app", to: `/${lang}/app`, label: t("nav.immoweb") },
-    { key: "learn", to: `/${lang}/learn`, label: t("nav.academy") },
   ];
 
   // For mobile menu — include all items + back if internal
