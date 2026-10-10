@@ -14,7 +14,7 @@
 | Dogfood Founder | Nicastro | Fuori pitch GTM — non sostituisce la demo |
 
 Funnel (Founder): richiesta → **sandbox a tempo** (gestionale + annunci portale) → a scadenza **Acquista pacchetto** — senza call.  
-Checkout reale solo post-**S9** (`OMNIA_SELF_SERVE_ENABLED`).
+Checkout B2B aperto da **S9** (`OMNIA_SELF_SERVE_ENABLED=true` · D-120).
 
 ---
 

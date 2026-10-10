@@ -209,7 +209,7 @@ def run_round(round_n: int) -> bool:
     _log(f"checks={checks}", lines)
     _log(f"ESITO={esito} failed={failed}", lines)
     _log(
-        "LIMITI: checkout acquisto solo post-S9 (OMNIA_SELF_SERVE_ENABLED); "
+        "LIMITI: checkout B2B aperto da S9 (OMNIA_SELF_SERVE_ENABLED); "
         "Nicastro ≠ percorso GTM; trial default 7g (OMNIA_DEMO_TRIAL_DAYS).",
         lines,
     )
