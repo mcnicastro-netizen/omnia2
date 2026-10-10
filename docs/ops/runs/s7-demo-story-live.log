@@ -1,0 +1,28 @@
+=== S7 LIVE round=1 2026-10-10T09:48:49.032807+00:00 ===
+api=http://127.0.0.1:43121/api
+seed_active={"is_demo_story": true, "agency_id": "demo-agency-001", "trial_days": 7, "started_at": "2026-10-10T09:48:49.319166+00:00", "expires_at": "2026-10-17T09:48:49.319166+00:00", "days_remaining": 7, "expired": false, "cta": "use_sandbox", "checkout_available": false, "self_serve_enabled": false, "message": "Sandbox attiva — 7 giorno/i rimanenti (trial 7g). Percorso: gestionale → annunci sul portale.", "canonical_seed": "demo-agency-001", "note": "Nicastro = dogfood Founder, fuori percorso GTM (C8)."}
+login_status=200 role=agency_admin access=True csrf=True
+crm_properties status=200 total=4
+portal_search status=200 total=4
+demo_status_active status=200 body={"is_demo_story": true, "agency_id": "demo-agency-001", "trial_days": 7, "started_at": "2026-10-10T09:48:49.319166+00:00", "expires_at": "2026-10-17T09:48:49.319166+00:00", "days_remaining": 7, "expired": false, "cta": "use_sandbox", "checkout_available": false, "self_serve_enabled": false, "message": "Sandbox attiva — 7 giorno/i rimanenti (trial 7g). Percorso: gestionale → annunci sul portale.", "canonical_seed": "demo-agency-001", "note": "Nicastro = dogfood Founder, fuori percorso GTM (C8)."}
+force_expired={"is_demo_story": true, "agency_id": "demo-agency-001", "trial_days": 7, "started_at": "2026-10-10T09:48:49.586235+00:00", "expires_at": "2026-10-10T09:48:48.586235+00:00", "days_remaining": 0, "expired": true, "cta": "acquista_pacchetto", "checkout_available": false, "self_serve_enabled": false, "message": "Sandbox scaduta — Acquista pacchetto (provisioning assistito fino a O6 / S9; self-serve OFF).", "canonical_seed": "demo-agency-001", "note": "Nicastro = dogfood Founder, fuori percorso GTM (C8)."}
+demo_status_expired status=200 cta=acquista_pacchetto checkout=False
+checkout_status=503 code=self_serve_blocked
+restored_active expired=False
+checks={'seed_demo_story': True, 'seed_not_expired': True, 'cta_use_sandbox': True, 'login_demo_admin': True, 'session_cookie': True, 'crm_properties_ge1': True, 'portal_listings_ge1': True, 'demo_status_200': True, 'demo_status_active': True, 'force_expired': True, 'cta_acquista': True, 'checkout_blocked_pre_s9': True, 'checkout_503_self_serve': True, 'restored_active': True}
+ESITO=PASS failed=[]
+LIMITI: checkout acquisto solo post-S9 (OMNIA_SELF_SERVE_ENABLED); Nicastro ≠ percorso GTM; trial default 7g (OMNIA_DEMO_TRIAL_DAYS).
+=== S7 LIVE round=2 2026-10-10T09:48:49.606173+00:00 ===
+api=http://127.0.0.1:43121/api
+seed_active={"is_demo_story": true, "agency_id": "demo-agency-001", "trial_days": 7, "started_at": "2026-10-10T09:48:49.615530+00:00", "expires_at": "2026-10-17T09:48:49.615530+00:00", "days_remaining": 7, "expired": false, "cta": "use_sandbox", "checkout_available": false, "self_serve_enabled": false, "message": "Sandbox attiva — 7 giorno/i rimanenti (trial 7g). Percorso: gestionale → annunci sul portale.", "canonical_seed": "demo-agency-001", "note": "Nicastro = dogfood Founder, fuori percorso GTM (C8)."}
+login_status=200 role=agency_admin access=True csrf=True
+crm_properties status=200 total=4
+portal_search status=200 total=4
+demo_status_active status=200 body={"is_demo_story": true, "agency_id": "demo-agency-001", "trial_days": 7, "started_at": "2026-10-10T09:48:49.615530+00:00", "expires_at": "2026-10-17T09:48:49.615530+00:00", "days_remaining": 7, "expired": false, "cta": "use_sandbox", "checkout_available": false, "self_serve_enabled": false, "message": "Sandbox attiva — 7 giorno/i rimanenti (trial 7g). Percorso: gestionale → annunci sul portale.", "canonical_seed": "demo-agency-001", "note": "Nicastro = dogfood Founder, fuori percorso GTM (C8)."}
+force_expired={"is_demo_story": true, "agency_id": "demo-agency-001", "trial_days": 7, "started_at": "2026-10-10T09:48:49.864027+00:00", "expires_at": "2026-10-10T09:48:48.864027+00:00", "days_remaining": 0, "expired": true, "cta": "acquista_pacchetto", "checkout_available": false, "self_serve_enabled": false, "message": "Sandbox scaduta — Acquista pacchetto (provisioning assistito fino a O6 / S9; self-serve OFF).", "canonical_seed": "demo-agency-001", "note": "Nicastro = dogfood Founder, fuori percorso GTM (C8)."}
+demo_status_expired status=200 cta=acquista_pacchetto checkout=False
+checkout_status=503 code=self_serve_blocked
+restored_active expired=False
+checks={'seed_demo_story': True, 'seed_not_expired': True, 'cta_use_sandbox': True, 'login_demo_admin': True, 'session_cookie': True, 'crm_properties_ge1': True, 'portal_listings_ge1': True, 'demo_status_200': True, 'demo_status_active': True, 'force_expired': True, 'cta_acquista': True, 'checkout_blocked_pre_s9': True, 'checkout_503_self_serve': True, 'restored_active': True}
+ESITO=PASS failed=[]
+LIMITI: checkout acquisto solo post-S9 (OMNIA_SELF_SERVE_ENABLED); Nicastro ≠ percorso GTM; trial default 7g (OMNIA_DEMO_TRIAL_DAYS).

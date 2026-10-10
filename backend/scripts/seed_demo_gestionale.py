@@ -26,6 +26,7 @@ from apps.core.seed import (  # noqa: E402
     _ensure_demo_admin,
     _ensure_demo_agency,
 )
+from shared.demo_story import demo_window_fields  # noqa: E402
 
 NOW = datetime.now(timezone.utc).isoformat()
 
@@ -220,6 +221,8 @@ async def main() -> None:
     db = client[db_name]
 
     await _ensure_demo_agency(db)
+    # S7 — canonical GTM demo story: refresh sandbox window on every seed
+    demo_fields = demo_window_fields()
     await db.agencies.update_one(
         {"id": DEMO_AGENCY_ID},
         {"$set": {
@@ -228,7 +231,7 @@ async def main() -> None:
             "display_name": "Agenzia Demo OMNIA",
             "name": "Agenzia Demo OMNIA",
             "is_active": True,
-            "updated_at": NOW,
+            **demo_fields,
         }},
     )
     await _ensure_demo_admin(db)
@@ -242,10 +245,13 @@ async def main() -> None:
         c_ok += 1
 
     admin = await db.users.find_one({"email": DEMO_ADMIN_EMAIL.lower()})
+    agency = await db.agencies.find_one({"id": DEMO_AGENCY_ID})
     print(
         f"demo seed OK agency={DEMO_AGENCY_ID} "
         f"properties={p_ok} clients={c_ok} "
-        f"demo_admin={'yes' if admin else 'no'}"
+        f"demo_admin={'yes' if admin else 'no'} "
+        f"demo_story={bool(agency and agency.get('demo_story'))} "
+        f"expires={agency.get('demo_expires_at') if agency else None}"
     )
     client.close()
 

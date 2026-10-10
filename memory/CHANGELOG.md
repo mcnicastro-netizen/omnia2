@@ -1,3 +1,10 @@
+## 2026-10-10 — S7 demo story unica (C8)
+
+- Canonical GTM sandbox = `demo-agency-001` (Nicastro = dogfood, fuori pitch)
+- Finestra prova `demo_expires_at` (default 7g) · `GET /billing/demo-status`
+- BillingPage: banner sandbox → a scadenza CTA Acquista pacchetto (assistito pre-S9)
+- Probe `scripts/demo_story_probe.py` LIVE ×2 PASS · `OMNIA_S7_DEMO_STORY.md`
+
 ## 2026-10-10 — S6 narrativa 2 prodotti (C1)
 
 - Pitch GTM = ImmobilCloud + ImmoWeb; Academy fuori nav/landing/agenzie

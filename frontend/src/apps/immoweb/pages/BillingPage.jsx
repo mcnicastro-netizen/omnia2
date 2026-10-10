@@ -191,13 +191,14 @@ export default function BillingPage() {
   const { data, sub } = state;
   const activeSub = sub?.subscription;
   const wallet = sub?.wallet || { balance: 0 };
+  const demo = sub?.demo;
   const plans = data?.plans || [];
   const packages = data?.credit_packages || [];
   // D-110 + S5 — Stripe sandbox ≠ self-serve O6
   const stripeEnabled = Boolean(data?.enabled);
   const selfServeEnabled = Boolean(data?.self_serve_enabled);
   const canCheckoutDirect =
-    stripeEnabled && selfServeEnabled && (Boolean(activeSub) || demoRequested);
+    stripeEnabled && selfServeEnabled && (Boolean(activeSub) || demoRequested || demo?.expired);
 
   return (
     <AgencyShell current="settings">
@@ -211,7 +212,53 @@ export default function BillingPage() {
           )}
         </p>
 
-        {!activeSub && (
+        {/* S7 — sandbox time-boxed → Acquista */}
+        {demo?.is_demo_story && (
+          <div
+            className={`mb-8 border p-5 flex flex-col md:flex-row md:items-center gap-4 ${
+              demo.expired
+                ? "border-rose-300 bg-rose-50"
+                : "border-amber-300/60 bg-amber-50/80"
+            }`}
+            data-testid="demo-sandbox-banner"
+          >
+            <div className="flex-1">
+              <div className="text-xs uppercase tracking-widest text-stone-500 mb-1">
+                {demo.expired ? "Sandbox scaduta" : "Sandbox attiva"}
+              </div>
+              <div className="font-serif text-xl text-[#0B1E3F]" data-testid="demo-sandbox-title">
+                {demo.expired
+                  ? "Acquista pacchetto"
+                  : `${demo.days_remaining} giorno/i rimanenti`}
+              </div>
+              <p className="text-sm text-stone-600 mt-1" data-testid="demo-sandbox-msg">
+                {demo.message}
+              </p>
+            </div>
+            {demo.expired && (
+              <Button
+                className="bg-[#0B1E3F] hover:bg-[#16305a] text-white shrink-0"
+                onClick={() => {
+                  if (canCheckoutDirect && plans[0]) {
+                    checkoutSubscription(plans[0].tier);
+                  } else {
+                    toast.message(
+                      selfServeEnabled
+                        ? "Scegli un piano sotto per acquistare."
+                        : "Self-serve chiuso (O6) — provisioning assistito. Contattaci per attivare."
+                    );
+                    if (!selfServeEnabled) openDemo();
+                  }
+                }}
+                data-testid="demo-acquista-cta"
+              >
+                Acquista pacchetto
+              </Button>
+            )}
+          </div>
+        )}
+
+        {!activeSub && !demo?.is_demo_story && (
           <div className="mb-8 border border-[#0F6B5B]/30 bg-[#0F6B5B]/5 p-5 flex flex-col md:flex-row md:items-center gap-4">
             <div className="flex-1">
               <div className="text-xs uppercase tracking-widest text-[#0F6B5B] mb-1">Passo 1</div>
@@ -353,15 +400,22 @@ export default function BillingPage() {
                   disabled={busy}
                   data-testid={`checkout-${p.tier}-btn`}
                 >
-                  Attiva
+                  {demo?.expired ? "Acquista" : "Attiva"}
                 </Button>
               ) : (
                 <Button
                   className="mt-5 bg-[#0B1E3F] hover:bg-[#16305a] text-white"
-                  onClick={openDemo}
+                  onClick={() => {
+                    if (demo?.expired && !selfServeEnabled) {
+                      toast.message(
+                        "Self-serve chiuso (O6) — provisioning assistito dopo Acquista."
+                      );
+                    }
+                    openDemo();
+                  }}
                   data-testid={`checkout-${p.tier}-btn`}
                 >
-                  Prima la demo
+                  {demo?.expired ? "Acquista pacchetto" : "Prima la demo"}
                 </Button>
               )}
             </div>
