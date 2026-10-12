@@ -50,14 +50,15 @@ Un blocco alla volta · niente fix senza «vai» · no P0–P3 prematuri · **li
 Nella UI chat può comparire un ID tipo `bld-20261007-…`: è lo **snapshot Environment Build** (install già fatto), **non** un secret.  
 Cursor lo tiene in Dashboard → Environments → Builds. **Non serve** salvarlo nel password manager; annotalo solo se vuoi pin/debug di quello snapshot. I secret restano nel vault (`CLOUD_SECRETS_INVENTORY.md`). HAL: `api.cloud-environment-builds`.
 
-### D-123 — API produzione Railway (10-Ott-2026 · webhook 12-Ott)
+### D-123 / D-074 — Go-live produzione (12-Ott-2026)
 
-**Host API live**: `https://omnia-api-production-2cec.up.railway.app` (`GET /api/health` → ok).  
-Progetto Railway `omnia-api` id `1b31e62e-7ba7-4082-b643-72d221ee7fbe`.  
-Dominio target: `https://api.omniarealestateecosystem.it` (CNAME Cloudflare § DNS_SETUP_GUIDE).  
-**Stripe Test webhook**: destinazione `omnia-railway-api` → `…/api/billing/webhook` · `whsec` su Variables Railway · smoke consegna **200 OK**.  
-Env Cursor omnia2: `b80b635c-b592-11f1-bb68-864e54d14197` — secret Railway nello scope **Environment**.  
-Runbook: `docs/ops/RAILWAY_DEPLOY.md` · `memory/STRIPE_ONBOARDING.md`. HAL: `api.railway-api-deploy` · `api.stripe-sandbox-cloud` · `api.cloud-secrets-vault`.
+**API pubblica**: `OMNIA_API_PUBLIC_URL` (`GET /api/health` → ok/db=ok).  
+Alias Railway: `https://omnia-api-production-2cec.up.railway.app`. Progetto `omnia-api`.  
+**FE Vercel**: progetto `omnia-frontend` · alias `https://omnia-frontend-kappa.vercel.app` · domini `omniarealestateecosystem.it` / `www` / `app` / `cloud`.  
+**Stripe Test webhook**: ``OMNIA_API_PUBLIC_URL` + `/api/billing/webhook`` (descrizione `OMNIA Railway API (sandbox)`) · `whsec` su Variables Railway.  
+DNS SoT: `memory/DNS_SETUP_GUIDE.md`. Runbook: `docs/ops/RAILWAY_DEPLOY.md` · `docs/ops/VERCEL_DEPLOY.md` · `memory/STRIPE_ONBOARDING.md`.  
+HAL: `api.railway-api-deploy` · `api.vercel-fe-deploy` · `api.stripe-sandbox-cloud` · `api.cloud-secrets-vault`.
+
 
 ### D-118 — stato (aggiornato 9-Ott-2026 sera)
 

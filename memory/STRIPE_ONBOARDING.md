@@ -3,7 +3,7 @@
 **Stato**: ✅ Account Stripe **test** OMNIA collegato.  
 **Modalità attiva OMNIA**: `test` — pagamenti simulati, nessun addebito reale.  
 **Catalogo**: creato via `python -m apps.billing.setup_stripe` (idempotente).  
-**Webhook sandbox → API Railway**: ✅ (12-Ott-2026) — vedi sotto.
+**Webhook sandbox → `api.omnia…`**: ✅ (12-Ott-2026) — vedi sotto.
 
 ### Decisione Founder 15-Sep-2026 (+ update 12-Ott-2026)
 - **Live + webhook live**: solo dopo FE Vercel + DNS `api.` a regime.
@@ -16,7 +16,7 @@
 
 | Campo | Valore |
 |-------|--------|
-| Destinazione | `omnia-railway-api` (`we_1UOE9jQD7QSuOlmnP5YMVNIY`) |
+| Destinazione | `OMNIA Railway API (sandbox)` (`we_1UPksi5fTeVVWdDf21htElsf`) |
 | Descrizione | `OMNIA Railway API (sandbox)` |
 | URL | `https://omnia-api-production-2cec.up.railway.app/api/billing/webhook` |
 | Secret | Variable Railway `STRIPE_WEBHOOK_SECRET` = `whsec_…` di **questa** destinazione |
@@ -28,8 +28,7 @@
 
 Ogni destinazione ha il **suo** `whsec_`. Railway Variables ≠ vault Cloud se gli endpoint sono due.
 
-Quando DNS `api.` è live: aggiorna URL Railway (o nuova destinazione) a  
-`https://api.omniarealestateecosystem.it/api/billing/webhook` + nuovo `whsec_` sulla Variable Railway.
+DNS `api.` live (12-Ott-2026): URL aggiornato a ``OMNIA_API_PUBLIC_URL` + `/api/billing/webhook`` + `whsec_` su Variable Railway.
 
 ---
 
@@ -53,7 +52,7 @@ Senza webhook, il frontend può comunque attivare il pagamento via polling `GET 
 2. In Dashboard passa a **Live** e copia le chiavi live.
 3. API già su Railway + DNS `api.` (+ FE Vercel).
 4. Crea Webhook endpoint **Live** → URL  
-   `https://api.omniarealestateecosystem.it/api/billing/webhook` → copia `whsec_…`.
+   ``OMNIA_API_PUBLIC_URL` + `/api/billing/webhook`` → copia `whsec_…`.
 5. Env produzione Railway: `pk_live_…`, `sk_live_…`, `whsec_…` (e spegni test-only dove serve).
 6. Rilancia `python -m apps.billing.setup_stripe` sul catalogo live.
 7. Solo allora «vai» su **A-014** se serve UI/listino residuo.

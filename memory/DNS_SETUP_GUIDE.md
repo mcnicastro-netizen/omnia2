@@ -2,7 +2,7 @@
 
 **Aggiornato:** 10 Ottobre 2026  
 **Repo:** `mcnicastro-netizen/omnia2`  
-**Stato deploy FE:** ⏳ **Vercel NON ancora fatto** (D-074) · ✅ prep repo: [`docs/ops/VERCEL_DEPLOY.md`](../docs/ops/VERCEL_DEPLOY.md)  
+**Stato deploy FE:** ✅ **Vercel live** (D-074 · 12-Ott-2026) · progetto `omnia-frontend` · runbook [`docs/ops/VERCEL_DEPLOY.md`](../docs/ops/VERCEL_DEPLOY.md)  
 **Stato DNS email:** ✅ Resend VERIFIED — vedi [`RESEND_DOMAIN_GUIDE.md`](./RESEND_DOMAIN_GUIDE.md)
 
 ---
@@ -46,9 +46,9 @@ Fallback codice: `backend/shared/public_base.py` → `https://omniarealestateeco
 | NS Cloudflare | ✅ delegati (Aruba → brit/jose) |
 | Resend DKIM/SPF/MX/DMARC | ✅ VERIFIED |
 | Apex / www risolvono | ✅ Cloudflare anycast |
-| HTTP home pubblica | ⚠️ spesso **403** — nessun origin Vercel collegato |
-| Deploy Vercel | ⏳ **non fatto** |
-| API su `api.` | ⏳ pending host prod |
+| HTTP home pubblica | ✅ Vercel FE |
+| Deploy Vercel | ✅ `omnia-frontend` |
+| API su `api.` | ✅ Railway custom domain + TLS |
 | Dev demo | Tunnel Cloud Agent (cambia a ogni sessione) |
 
 **Non promettere** `www.omniarealestateecosystem.it` come demo finché Vercel non è collegato.
@@ -73,7 +73,7 @@ Quando fai «vai Vercel» + hai URL Vercel + URL API prod
 ### 4a. Vercel (frontend)
 
 1. Import repo `omnia2` → root directory **`frontend`** (usa `frontend/vercel.json`).
-2. Env: `REACT_APP_BACKEND_URL=https://api.omniarealestateecosystem.it` (o URL API temporaneo HTTPS).
+2. Env: `REACT_APP_BACKEND_URL=`OMNIA_API_PUBLIC_URL`` (o URL API temporaneo HTTPS).
 3. In Vercel → Project → Domains, aggiungi in ordine:
    - `omniarealestateecosystem.it`
    - `www.omniarealestateecosystem.it`
@@ -118,9 +118,9 @@ FRONTEND_BASE_URL=https://omniarealestateecosystem.it
 OMNIA_PUBLIC_URL=https://omniarealestateecosystem.it
 ```
 
-Webhook Stripe **Test → Railway** (12-Ott-2026):  
-`https://omnia-api-production-2cec.up.railway.app/api/billing/webhook` · destinazione `omnia-railway-api` · smoke 200 OK.  
-Webhook Stripe **post-live** (dopo CNAME `api`): `https://api.omniarealestateecosystem.it/api/billing/webhook` — vedi `STRIPE_ONBOARDING.md`.
+Webhook Stripe **Test → `api.`** (12-Ott-2026):  
+``OMNIA_API_PUBLIC_URL` + `/api/billing/webhook`` · descrizione `OMNIA Railway API (sandbox)` · smoke route 400 senza firma (atteso).  
+Webhook Stripe **Live**: solo dopo KYC / chiavi live — vedi `STRIPE_ONBOARDING.md`.
 
 ### 4d. Custom domain agenzie
 
@@ -129,15 +129,16 @@ Invariato: CNAME cliente → `agencies.omniarealestateecosystem.it`
 
 ---
 
-## 5. Finché Vercel non c’è — cosa usare
+## 5. Produzione vs Cloud dogfood
 
 | Uso | URL |
 |-----|-----|
+| **Produzione FE** | `https://www.omniarealestateecosystem.it` · `https://app.…` · `https://cloud.…` |
+| **Produzione API** | `OMNIA_API_PUBLIC_URL` |
 | Demo / dogfood Cloud | tunnel da `bash scripts/omnia-stack.sh ensure` → `/tmp/omnia-stack/SHARE_URL.txt` |
-| Login demo | `{SHARE_URL}/it/login` · `demo.admin@omniaecosystem.it` |
-| Non pubblicare | apex/www come “sito ufficiale” (403 / origin assente) |
+| Login demo prod | `https://app.omniarealestateecosystem.it/it/login` · `demo.admin@omniaecosystem.it` |
 
-Tunnel runbook: [`docs/ops/TUNNEL_RUNBOOK.md`](../docs/ops/TUNNEL_RUNBOOK.md).
+Tunnel runbook (solo Cloud): [`docs/ops/TUNNEL_RUNBOOK.md`](../docs/ops/TUNNEL_RUNBOOK.md).
 
 ---
 
@@ -152,21 +153,21 @@ dig +short NS omniarealestateecosystem.it
 dig +short omniarealestateecosystem.it A
 curl -sI https://www.omniarealestateecosystem.it/ | head -5
 
-# Dopo Vercel: deve essere 200 (non 403)
+# Produzione: deve essere 200
 ```
 
 ---
 
 ## 7. Checklist go-live dominio (ordine)
 
-- [ ] Deploy Vercel FE (`frontend/`) — **pending**
-- [ ] Host API HTTPS stabile
-- [ ] Domini aggiunti in Vercel + record CF aggiornati (no Emergent)
-- [ ] `api.` punta all’API
-- [ ] CORS + `FRONTEND_*` + `REACT_APP_BACKEND_URL`
-- [ ] Resend ancora VERIFIED (non toccare MX mail Aruba)
-- [ ] Smoke: landing / login demo / billing plans
-- [ ] Solo dopo: Stripe live webhook su `api.`
+- [x] Deploy Vercel FE (`frontend/` · `omnia-frontend`) — **12-Ott-2026**
+- [x] Host API HTTPS stabile (Railway + `api.`)
+- [x] Domini in Vercel + record CF (no Emergent su app/cloud)
+- [x] `api.` punta all’API Railway
+- [x] CORS + `REACT_APP_BACKEND_URL=`OMNIA_API_PUBLIC_URL``
+- [x] Resend VERIFIED (MX mail Aruba non toccati)
+- [x] Smoke: apex/www/app/cloud/login + `/api/health` → 200
+- [ ] Solo dopo: Stripe **live** webhook su `api.` (ancora Test)
 
 ---
 
@@ -180,4 +181,4 @@ curl -sI https://www.omniarealestateecosystem.it/ | head -5
 | `STRIPE_ONBOARDING.md` | Webhook su `api.` |
 | `frontend/vercel.json` | Config build FE |
 
-*Founder 10-Ott-2026: aggiornare guide; deploy Vercel ancora da fare.*
+*Founder 12-Ott-2026: go-live DNS+API+Vercel smoke 200.*
