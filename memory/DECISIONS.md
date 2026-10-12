@@ -1328,7 +1328,7 @@ Registro di tutte le decisioni di business e tecniche prese durante il progetto.
 - **Go-live dominio** solo dopo: Vercel + API host + record CF aggiornati · trigger Founder: **«vai Vercel»**.
 
 ## D-123 — Host API produzione = Railway (Plan B; Hetzner bloccato) · 2026-10-10
-**Status**: ✅ DECISIONE ATTIVA · ✅ API live · ✅ DNS `api.` + TLS · ✅ Stripe Test → `api.` · ⏳ vault `OMNIA_API_PUBLIC_URL` + Vercel (D-074)
+**Status**: ✅ DECISIONE ATTIVA · ✅ API live · ✅ DNS `api.` + TLS · ✅ Stripe Test → `api.` · ✅ Vercel FE progetto live · ⏳ DNS CF apex/www/app/cloud → Vercel
 
 - Founder: account Hetzner bloccato (P.IVA / reset mail non arrivata) → **non attendere**.
 - **API prod target**: Railway (`railway.toml` + `Dockerfile.railway` + Mongo plugin).
@@ -1337,7 +1337,8 @@ Registro di tutte le decisioni di business e tecniche prese durante il progetto.
 - **Stripe webhook Test (12-Ott-2026)**: destinazione `omnia-railway-api` → `…railway.app/api/billing/webhook` · descrizione `OMNIA Railway API (sandbox)` · `STRIPE_WEBHOOK_SECRET` su Variables Railway · smoke `checkout.session.completed` **200 OK**. Non riusare Emergent; non usare descrizione `…auto-sync` sull’endpoint Railway (conflitto con `sync-stripe-webhook-url.py`).
 - **CLI quirk**: vault name = `RAILWAY_TOKEN` (Account token); `railway-deploy.sh` lo esporta come `RAILWAY_API_TOKEN` e **unset** `RAILWAY_TOKEN` (altrimenti CLI tratta il valore come *project* token → Unauthorized). Pin `dockerfilePath=Dockerfile.railway` via GraphQL (Builder enum senza `DOCKERFILE`).
 - Vault Environment omnia2 (id `b80b635c-b592-11f1-bb68-864e54d14197`): `RAILWAY_TOKEN` fresco (revocare token esposti in chat), `RAILWAY_PROJECT_ID`, `OMNIA_API_PUBLIC_URL`. Scope **Environment** (non Personal). Chat normali: `add_secrets` spesso non mostra card / apre Personal — bug Cursor; usare Secrets UI Environment.
-- Ordine residuo: vault `OMNIA_API_PUBLIC_URL=https://api.omniarealestateecosystem.it` → **«vai Vercel»** (D-074).
+- Ordine residuo: DNS Cloudflare apex/www/app/cloud → Vercel (rimuovere Emergent) · vault `VERCEL_PROJECT_ID`.
+- **Vercel (12-Ott-2026)**: progetto `omnia-frontend` (`prj_rNhqc0mKgQoLF9fIjohMCJVkCXjS`) · prod `https://omnia-frontend-kappa.vercel.app` · `REACT_APP_BACKEND_URL=https://api.omniarealestateecosystem.it` · `CI=false` in build.
 - **DNS `api.` (12-Ott-2026)**: CNAME Cloudflare → Railway `d13di0kp.up.railway.app` · TXT `_railway-verify.api` · cert VALID · smoke `GET /api/health` → `ok`/`db=ok`.
 - **Stripe Test post-DNS**: destinazione `OMNIA Railway API (sandbox)` → `https://api.omniarealestateecosystem.it/api/billing/webhook` (`we_1UPksi5fTeVVWdDf21htElsf`) · `STRIPE_WEBHOOK_SECRET` aggiornato su Variables Railway · `PUBLIC_BASE_URL` = `api.`.
 - Hetzner resta opzione costi a regime se l’account si sblocca; non bloccante.

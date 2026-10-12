@@ -20,9 +20,19 @@ if [[ -z "${OMNIA_API_PUBLIC_URL:-}" ]]; then
   exit 2
 fi
 
-API_URL="${OMNIA_API_PUBLIC_URL%/}"
-# strip trailing /api if Founder pasted full API root with /api
+# Normalize: Founder may paste KEY=value or host-only
+API_URL="${OMNIA_API_PUBLIC_URL}"
+API_URL="${API_URL#OMNIA_API_PUBLIC_URL=}"
+API_URL="${API_URL%/}"
 API_URL="${API_URL%/api}"
+if [[ "$API_URL" != https://* ]]; then
+  if [[ "$API_URL" == api.omniarealestateecosystem.it* ]]; then
+    API_URL="https://${API_URL}"
+  else
+    echo "BLOCKED: OMNIA_API_PUBLIC_URL must be https://… (got non-https)."
+    exit 2
+  fi
+fi
 
 export REACT_APP_BACKEND_URL="$API_URL"
 echo "REACT_APP_BACKEND_URL=$REACT_APP_BACKEND_URL"

@@ -1,7 +1,7 @@
 # Deploy Vercel FE — prep + go-live (D-074)
 
 **Stato prep:** ✅ repo pronto (10-Ott-2026)  
-**Stato deploy:** ⏳ in attesa token Founder (pausa)  
+**Stato deploy:** ✅ progetto `omnia-frontend` live (`https://omnia-frontend-kappa.vercel.app`) · ⏳ DNS CF custom (apex/www/app/cloud)  
 **DNS SoT:** [`memory/DNS_SETUP_GUIDE.md`](../../memory/DNS_SETUP_GUIDE.md)
 
 ---
