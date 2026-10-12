@@ -118,7 +118,9 @@ FRONTEND_BASE_URL=https://omniarealestateecosystem.it
 OMNIA_PUBLIC_URL=https://omniarealestateecosystem.it
 ```
 
-Webhook Stripe (post-live): `https://api.omniarealestateecosystem.it/api/billing/webhook` — vedi `STRIPE_ONBOARDING.md`.
+Webhook Stripe **Test → Railway** (12-Ott-2026):  
+`https://omnia-api-production-2cec.up.railway.app/api/billing/webhook` · destinazione `omnia-railway-api` · smoke 200 OK.  
+Webhook Stripe **post-live** (dopo CNAME `api`): `https://api.omniarealestateecosystem.it/api/billing/webhook` — vedi `STRIPE_ONBOARDING.md`.
 
 ### 4d. Custom domain agenzie
 

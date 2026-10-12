@@ -1,32 +1,47 @@
 # 💳 Stripe — Onboarding & Test Mode
 
-**Stato**: ✅ Account Stripe **test** OMNIA collegato (chiavi in `backend/.env`, gitignored).  
+**Stato**: ✅ Account Stripe **test** OMNIA collegato.  
 **Modalità attiva OMNIA**: `test` — pagamenti simulati, nessun addebito reale.  
-**Catalogo**: creato via `python -m apps.billing.setup_stripe` (idempotente).
+**Catalogo**: creato via `python -m apps.billing.setup_stripe` (idempotente).  
+**Webhook sandbox → API Railway**: ✅ (12-Ott-2026) — vedi sotto.
 
-### Decisione Founder 15-Sep-2026
-- **Live + webhook**: configurare **solo dopo deploy su Vercel** (fine percorso).
-- **Non** usare più Emergent come URL webhook / host produzione.
-- Chiavi `pk_live` / `sk_live` (se già generate): restano dal Founder in password manager — **mai in chat / mai in git**.
-- `whsec` live: si crea in Dashboard → Webhooks → endpoint pubblico post-Vercel  
-  Target a regime: `https://api.omniarealestateecosystem.it/api/billing/webhook`  
-  (oggi `api.` non up — non creare endpoint “a vuoto”).
-- Fino ad allora: lasciare `STRIPE_MODE=test` e chiavi `*_test_*` in `.env` di sviluppo.
+### Decisione Founder 15-Sep-2026 (+ update 12-Ott-2026)
+- **Live + webhook live**: solo dopo FE Vercel + DNS `api.` a regime.
+- **Non** usare Emergent come URL webhook / host (`…emergentagent.com/api/stripe/webhook` = morto; path errato oltre tutto).
+- Path webhook OMNIA (sempre): `/api/billing/webhook` (mai `/api/stripe/webhook`).
+- Chiavi `pk_live` / `sk_live`: password manager — **mai in chat / mai in git**.
+- Fino al live: `sk_test_` / `pk_test_` + webhook **Test**.
+
+### Webhook Test → Railway (12-Ott-2026)
+
+| Campo | Valore |
+|-------|--------|
+| Destinazione | `omnia-railway-api` (`we_1UOE9jQD7QSuOlmnP5YMVNIY`) |
+| Descrizione | `OMNIA Railway API (sandbox)` |
+| URL | `https://omnia-api-production-2cec.up.railway.app/api/billing/webhook` |
+| Secret | Variable Railway `STRIPE_WEBHOOK_SECRET` = `whsec_…` di **questa** destinazione |
+| Smoke | `stripe trigger checkout.session.completed` → consegna **200 OK** |
+
+**Due destinazioni Test possibili:**
+1. **Railway** (stabile) — descrizione `OMNIA Railway API (sandbox)` — **non** toccare da `sync-stripe-webhook-url.py`.
+2. **Cloud tunnel** (efimero) — descrizione esatta `OMNIA Cloud Agent portal (auto-sync)` — aggiornata dal boot Cloud verso `*.trycloudflare.com`.
+
+Ogni destinazione ha il **suo** `whsec_`. Railway Variables ≠ vault Cloud se gli endpoint sono due.
+
+Quando DNS `api.` è live: aggiorna URL Railway (o nuova destinazione) a  
+`https://api.omniarealestateecosystem.it/api/billing/webhook` + nuovo `whsec_` sulla Variable Railway.
 
 ---
 
-## Variabili `.env` (non committare)
+## Variabili `.env` / vault (non committare)
 
 ```
 STRIPE_ENABLED=true
 STRIPE_MODE=test
 STRIPE_PUBLISHABLE_KEY=pk_test_…
 STRIPE_SECRET_KEY=sk_test_…
-STRIPE_WEBHOOK_SECRET=whsec_…   # test / tunnel locale se serve
+STRIPE_WEBHOOK_SECRET=whsec_…   # matching dell'endpoint che riceve (Railway o tunnel)
 ```
-
-Webhook storico (dev tunnel Cloudflare — **obsoleto**, non riusare Emergent):  
-documentato solo come riferimento; ricrea endpoint se serve di nuovo un tunnel di sviluppo.
 
 Senza webhook, il frontend può comunque attivare il pagamento via polling `GET /api/billing/status/{session_id}` (fallback Stripe retrieve).
 
@@ -36,11 +51,10 @@ Senza webhook, il frontend può comunque attivare il pagamento via polling `GET 
 
 1. Completa KYC / onboarding Stripe (dati, IBAN, documento) se non già fatto.
 2. In Dashboard passa a **Live** e copia le chiavi live.
-3. Deploy API su Vercel (+ DNS `api.` se previsto).
-4. Crea Webhook endpoint → URL  
-   `https://api.omniarealestateecosystem.it/api/billing/webhook`  
-   (o URL Vercel API equivalente) → copia `whsec_…`.
-5. Env produzione: `pk_live_…`, `sk_live_…`, `whsec_…`, `STRIPE_MODE=live`.
+3. API già su Railway + DNS `api.` (+ FE Vercel).
+4. Crea Webhook endpoint **Live** → URL  
+   `https://api.omniarealestateecosystem.it/api/billing/webhook` → copia `whsec_…`.
+5. Env produzione Railway: `pk_live_…`, `sk_live_…`, `whsec_…` (e spegni test-only dove serve).
 6. Rilancia `python -m apps.billing.setup_stripe` sul catalogo live.
 7. Solo allora «vai» su **A-014** se serve UI/listino residuo.
 

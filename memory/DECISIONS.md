@@ -1328,12 +1328,13 @@ Registro di tutte le decisioni di business e tecniche prese durante il progetto.
 - **Go-live dominio** solo dopo: Vercel + API host + record CF aggiornati · trigger Founder: **«vai Vercel»**.
 
 ## D-123 — Host API produzione = Railway (Plan B; Hetzner bloccato) · 2026-10-10
-**Status**: ✅ DECISIONE ATTIVA · ✅ API live (health OK) · ⏳ vault Environment + DNS `api` + Vercel
+**Status**: ✅ DECISIONE ATTIVA · ✅ API live · ✅ Stripe webhook Test → Railway · ⏳ vault Environment + DNS `api` + Vercel
 
 - Founder: account Hetzner bloccato (P.IVA / reset mail non arrivata) → **non attendere**.
 - **API prod target**: Railway (`railway.toml` + `Dockerfile.railway` + Mongo plugin).
 - Runbook: `docs/ops/RAILWAY_DEPLOY.md` · script `railway-prep-check.sh` / `railway-deploy.sh`.
 - **Live (10-Ott-2026)**: progetto `omnia-api` id `1b31e62e-7ba7-4082-b643-72d221ee7fbe` · URL `https://omnia-api-production-2cec.up.railway.app` · `GET /api/health` → `ok`/`db=ok` · Mongo + volume `/app/.media` + `/app/.backups`.
+- **Stripe webhook Test (12-Ott-2026)**: destinazione `omnia-railway-api` → `…railway.app/api/billing/webhook` · descrizione `OMNIA Railway API (sandbox)` · `STRIPE_WEBHOOK_SECRET` su Variables Railway · smoke `checkout.session.completed` **200 OK**. Non riusare Emergent; non usare descrizione `…auto-sync` sull’endpoint Railway (conflitto con `sync-stripe-webhook-url.py`).
 - **CLI quirk**: vault name = `RAILWAY_TOKEN` (Account token); `railway-deploy.sh` lo esporta come `RAILWAY_API_TOKEN` e **unset** `RAILWAY_TOKEN` (altrimenti CLI tratta il valore come *project* token → Unauthorized). Pin `dockerfilePath=Dockerfile.railway` via GraphQL (Builder enum senza `DOCKERFILE`).
 - Vault Environment omnia2 (id `b80b635c-b592-11f1-bb68-864e54d14197`): `RAILWAY_TOKEN` fresco (revocare token esposti in chat), `RAILWAY_PROJECT_ID`, `OMNIA_API_PUBLIC_URL`. Scope **Environment** (non Personal). Chat normali: `add_secrets` spesso non mostra card / apre Personal — bug Cursor; usare Secrets UI Environment.
 - Ordine residuo: vault Environment → Cloudflare CNAME `api` → **«vai Vercel»** (D-074).

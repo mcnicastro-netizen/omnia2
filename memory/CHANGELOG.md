@@ -1,3 +1,11 @@
+## 2026-10-12 — Stripe webhook sandbox → Railway (D-123)
+
+- Stripe Test destinazione `omnia-railway-api` → `https://omnia-api-production-2cec.up.railway.app/api/billing/webhook`
+- Descrizione `OMNIA Railway API (sandbox)` (evita rewrite `sync-stripe-webhook-url` / auto-sync)
+- `STRIPE_WEBHOOK_SECRET` su Variables Railway · smoke `stripe trigger checkout.session.completed` → **200 OK**
+- Emergent `…/api/stripe/webhook` = obsoleto (mail 404); path canonico sempre `/api/billing/webhook`
+- Docs: `STRIPE_ONBOARDING.md` · `RAILWAY_DEPLOY.md` · DNS · DECISIONS D-123 · NEXT · HAL Cap.00/19
+
 ## 2026-10-10 sera — D-123 Railway API live + CLI token remap
 
 - API prod su Railway: progetto `omnia-api` · URL `https://omnia-api-production-2cec.up.railway.app` · health `ok`/`db=ok`
