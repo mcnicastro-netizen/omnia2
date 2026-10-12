@@ -48,7 +48,7 @@ Fallback codice: `backend/shared/public_base.py` → `https://omniarealestateeco
 | Apex / www risolvono | ✅ Cloudflare anycast |
 | HTTP home pubblica | ⚠️ spesso **403** — nessun origin Vercel collegato |
 | Deploy Vercel | ⏳ **non fatto** |
-| API su `api.` | ⏳ pending host prod |
+| API su `api.` | ✅ Railway custom domain + TLS |
 | Dev demo | Tunnel Cloud Agent (cambia a ogni sessione) |
 
 **Non promettere** `www.omniarealestateecosystem.it` come demo finché Vercel non è collegato.

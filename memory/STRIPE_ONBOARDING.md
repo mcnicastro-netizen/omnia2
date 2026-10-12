@@ -16,7 +16,7 @@
 
 | Campo | Valore |
 |-------|--------|
-| Destinazione | `omnia-railway-api` (`we_1UOE9jQD7QSuOlmnP5YMVNIY`) |
+| Destinazione | `OMNIA Railway API (sandbox)` (`we_1UPksi5fTeVVWdDf21htElsf`) |
 | Descrizione | `OMNIA Railway API (sandbox)` |
 | URL | `https://omnia-api-production-2cec.up.railway.app/api/billing/webhook` |
 | Secret | Variable Railway `STRIPE_WEBHOOK_SECRET` = `whsec_…` di **questa** destinazione |
@@ -28,8 +28,7 @@
 
 Ogni destinazione ha il **suo** `whsec_`. Railway Variables ≠ vault Cloud se gli endpoint sono due.
 
-Quando DNS `api.` è live: aggiorna URL Railway (o nuova destinazione) a  
-`https://api.omniarealestateecosystem.it/api/billing/webhook` + nuovo `whsec_` sulla Variable Railway.
+DNS `api.` live (12-Ott-2026): URL aggiornato a `https://api.omniarealestateecosystem.it/api/billing/webhook` + `whsec_` su Variable Railway.
 
 ---
 
