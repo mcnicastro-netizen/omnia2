@@ -1,3 +1,13 @@
+## 2026-10-12 — Go-live D-123 DNS api + D-074 Vercel
+
+- DNS Cloudflare: CNAME `api` → Railway `d13di0kp.up.railway.app` + TXT `_railway-verify.api` · cert VALID
+- API pubblica: ``OMNIA_API_PUBLIC_URL` + `/api/health`` → ok/db=ok
+- Stripe Test webhook → ``OMNIA_API_PUBLIC_URL` + `/api/billing/webhook`` (`we_1UPksi5fTeVVWdDf21htElsf`) · whsec Variables Railway · `PUBLIC_BASE_URL` + CORS
+- Vercel progetto `omnia-frontend` (``VERCEL_PROJECT_ID` (vault)`) · prod `https://omnia-frontend-kappa.vercel.app`
+- DNS FE: apex A Vercel · www/app/cloud → `cname.vercel-dns.com` (Emergent rimosso) · smoke 200
+- `frontend/vercel.json`: `CI=false yarn build` · `scripts/vercel-deploy.sh` normalizza `OMNIA_API_PUBLIC_URL`
+- Docs/HAL Cap.00/19 · DNS_SETUP · RAILWAY/VERCEL_DEPLOY · DECISIONS D-074/D-123 · NEXT
+
 ## 2026-10-12 — Stripe webhook sandbox → Railway (D-123)
 
 - Stripe Test destinazione `omnia-railway-api` → `https://omnia-api-production-2cec.up.railway.app/api/billing/webhook`

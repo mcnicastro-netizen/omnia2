@@ -60,10 +60,10 @@ Dopo il Save, **riavvia un nuovo agent** sullo stesso environment (i secret non 
 | `GITHUB_TOKEN` | Auto | Lo mette Cursor — **non** è il vault OMNIA | Push git |
 | `VERCEL_TOKEN` | **Sì** per deploy FE (D-074) | [Vercel → Tokens](https://vercel.com/account/tokens) | `scripts/vercel-deploy.sh` |
 | `VERCEL_ORG_ID` | Consigliato | Vercel Team/Account Settings | Scope CLI |
-| `VERCEL_PROJECT_ID` | Dopo 1° link progetto | Vercel Project Settings | Redeploy non-interattivo |
+| `VERCEL_PROJECT_ID` (``VERCEL_PROJECT_ID` (vault)`) | Dopo 1° link progetto | Vercel Project Settings | Redeploy non-interattivo |
 | `RAILWAY_TOKEN` | **Sì** per redeploy API (D-123) | [Railway → Account → Tokens](https://railway.app/account/tokens) (scope Account) | Vault name canonico; `railway-deploy.sh` → `RAILWAY_API_TOKEN` + unset `RAILWAY_TOKEN` |
-| `RAILWAY_PROJECT_ID` | **Sì** (live) | `1b31e62e-7ba7-4082-b643-72d221ee7fbe` (progetto `omnia-api`) | Link CLI / redeploy |
-| `OMNIA_API_PUBLIC_URL` | **Sì** (live temp) | `https://omnia-api-production-2cec.up.railway.app` (poi `https://api.omniarealestateecosystem.it`) | `REACT_APP_BACKEND_URL` a build FE |
+| `RAILWAY_PROJECT_ID` | **Sì** (live) | ``RAILWAY_PROJECT_ID` (vault)` (progetto `omnia-api`) | Link CLI / redeploy |
+| `OMNIA_API_PUBLIC_URL` | **Sì** | `OMNIA_API_PUBLIC_URL` (solo URL) | `REACT_APP_BACKEND_URL` a build FE |
 | `CLOUDFLARE_API_TOKEN` | Consigliato E2E DNS | CF → API Tokens (Zone.DNS Edit) | Aggiornare CNAME post-Vercel/API |
 | `CLOUDFLARE_ZONE_ID` | Consigliato E2E DNS | CF → dominio → Overview | API DNS |
 

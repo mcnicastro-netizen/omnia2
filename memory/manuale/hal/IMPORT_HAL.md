@@ -1,6 +1,6 @@
 # 📚 HAL Knowledge — Import & Cold Start (v0.33-onda-j)
 
-**Ultimo aggiornamento**: 9-Ott-2026 sera (D-118 MERGED su main · Cap. 00/19)  
+**Ultimo aggiornamento**: 12-Ott-2026 (go-live D-123/D-074 · Cap. 00/19)  
 **Corpus**: YAML in `memory/manuale/hal/*.yaml` (Cap. 1–27 + `00-api-codice`) · MD esclusi dal RAG ingest  
 **Motore**: `hal_knowledge.py` · reindex: `POST /api/app/hal/knowledge/reindex?force=true` (super_admin)  
 **Regola Founder D-084**: ogni ship aggiorna MD+YAML nello stesso giro — vedi `memory/MANUAL_SYNC.md`.
@@ -267,6 +267,7 @@ Prima di dichiarare il cold start "attivo", eseguire manualmente queste 5 query 
 
 | Data | Versione | Note |
 |------|:-:|------|
+| 12-Ott-2026 | **v0.37-golive-vercel** | HAL Cap.00: +`api.vercel-fe-deploy` · update `api.railway-api-deploy` / `api.stripe-sandbox-cloud` (API `api.` + Vercel FE + DNS). Cap.00/19 MD · DNS/RAILWAY/VERCEL · DECISIONS D-074/D-123. Reindex Founder post-merge. |
 | 12-Ott-2026 | **v0.36-stripe-railway-webhook** | HAL Cap.00: `api.railway-api-deploy` + `api.stripe-sandbox-cloud` webhook Railway (`omnia-railway-api` · 200 OK). Cap.00/19 MD · STRIPE_ONBOARDING. Reindex Founder post-merge. |
 | 10-Ott-2026 sera | **v0.35-railway** | HAL Cap.00: +`api.railway-api-deploy` · update `api.cloud-secrets-vault` (Railway + Personal UI bug). Cap.00/19 MD · D-123 API live. Reindex Founder post-merge. |
 | 09-Ott-2026 sera | **v0.34-d118-merged** | HAL Cap.00: D-118 MERGED su main (PR #12) · P-021/P-026 residui. Fascicolo su main. |

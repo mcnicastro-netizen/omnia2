@@ -791,8 +791,10 @@ voci:
           STRIPE_SECRET_KEY=sk_test_…, STRIPE_PUBLISHABLE_KEY=pk_test_…,
           STRIPE_ENABLED=true, STRIPE_WEBHOOK_SECRET=whsec_…,
           OPENAPI_ENABLED / OPENAPI_EMAIL / OPENAPI_API_KEY (Visura se Catasto attivo)."
-        - "Go-live API: RAILWAY_TOKEN (Account), RAILWAY_PROJECT_ID,
-          OMNIA_API_PUBLIC_URL — vedi api.railway-api-deploy."
+        - "Go-live: RAILWAY_TOKEN, RAILWAY_PROJECT_ID,
+          OMNIA_API_PUBLIC_URL=`OMNIA_API_PUBLIC_URL`,
+          VERCEL_TOKEN/ORG/PROJECT_ID — vedi api.railway-api-deploy /
+          api.vercel-fe-deploy."
         - "STRIPE_MODE non obbligatorio in vault: con sk_test_ lo stack
           imposta mode=test da solo."
         - "Dopo Save: apri agent NUOVO — le chat vecchie tengono l'inject
@@ -829,26 +831,24 @@ voci:
     pubblico: [super_admin]
     livello: avanzato
     tags: [codice, railway, deploy, api, d-123, mongo, health, vercel, dns, stripe, webhook]
-    correlati: [api.cloud-secrets-vault, api.cloud-environment-builds, api.stripe-sandbox-cloud]
+    correlati: [api.cloud-secrets-vault, api.cloud-environment-builds, api.stripe-sandbox-cloud, api.vercel-fe-deploy]
     domanda_naturale: "Dov'è l'API di produzione? Come si fa il deploy su Railway?"
     contenuto:
       a_cosa_serve: >
         Host API produzione = Railway (Hetzner bloccato). Repo:
         railway.toml + Dockerfile.railway + scripts/railway-deploy.sh.
-        Live 10-Ott-2026: progetto omnia-api
-        (1b31e62e-7ba7-4082-b643-72d221ee7fbe), URL
-        https://omnia-api-production-2cec.up.railway.app,
-        GET /api/health → status=ok db=ok. Mongo plugin + volume
-        /app/.media e /app/.backups. Stripe Test webhook (12-Ott):
-        destinazione omnia-railway-api → /api/billing/webhook · 200 OK.
-        Dominio target api.omniarealestateecosystem.it (CNAME dopo).
+        Go-live 12-Ott-2026: API pubblica
+        `OMNIA_API_PUBLIC_URL`. Alias
+        https://omnia-api-production-2cec.up.railway.app.
+        GET /api/health → status=ok db=ok. Stripe Test su api./billing/webhook.
+        FE Vercel: api.vercel-fe-deploy.
       quando_si_usa: >
         Redeploy API; salvare OMNIA_API_PUBLIC_URL; webhook Stripe;
         go-live Vercel; health check produzione.
       passi:
         - "Vault Environment: RAILWAY_TOKEN (Account token fresco),
-          RAILWAY_PROJECT_ID=1b31e62e-7ba7-4082-b643-72d221ee7fbe,
-          OMNIA_API_PUBLIC_URL=https://omnia-api-production-2cec.up.railway.app."
+          RAILWAY_PROJECT_ID=`RAILWAY_PROJECT_ID` (vault),
+          OMNIA_API_PUBLIC_URL=`OMNIA_API_PUBLIC_URL`."
         - "Revoca token Railway esposti in chat prima di salvarne uno nuovo."
         - "bash scripts/railway-prep-check.sh && bash scripts/railway-deploy.sh
           (rimappa RAILWAY_TOKEN→RAILWAY_API_TOKEN, pin Dockerfile.railway)."
@@ -856,8 +856,8 @@ voci:
         - "Stripe Test: destinazione omnia-railway-api (descrizione
           OMNIA Railway API (sandbox)) + STRIPE_WEBHOOK_SECRET su
           Variables Railway; stripe trigger checkout.session.completed."
-        - "DNS: memory/DNS_SETUP_GUIDE.md §4c CNAME api → Railway."
-        - "Poi «vai Vercel» (D-074) con REACT_APP_BACKEND_URL = URL API."
+        - "DNS api: già live (DNS_SETUP_GUIDE §4c)."
+        - "FE: api.vercel-fe-deploy (D-074)."
       errori_comuni:
         - problema: "railway whoami → Unauthorized con token Account in vault"
           soluzione: >
@@ -880,6 +880,56 @@ voci:
         - super_admin / Founder
       screenshot: []
 
+
+  - id: api.vercel-fe-deploy
+    titolo: Deploy FE OMNIA su Vercel (D-074)
+    modulo: Codice API
+    widget: null
+    pubblico: [super_admin]
+    livello: avanzato
+    tags: [codice, vercel, deploy, frontend, d-074, dns, cloudflare, cra]
+    correlati: [api.railway-api-deploy, api.cloud-secrets-vault, api.stripe-sandbox-cloud]
+    domanda_naturale: "Dov'è il frontend di produzione? Come si fa il deploy su Vercel?"
+    contenuto:
+      a_cosa_serve: >
+        Frontend produzione = Vercel (CRA in frontend/). Go-live 12-Ott-2026:
+        progetto omnia-frontend (`VERCEL_PROJECT_ID` (vault)),
+        alias https://omnia-frontend-kappa.vercel.app. Domini custom
+        omniarealestateecosystem.it / www / app / cloud. Build usa
+        REACT_APP_BACKEND_URL=`OMNIA_API_PUBLIC_URL`.
+        vercel.json: CI=false yarn build (evita fail ESLint warnings in CI).
+      quando_si_usa: >
+        Redeploy FE; aggiungere domini; allineare DNS Cloudflare;
+        verificare login demo su apex/app.
+      passi:
+        - "Vault: VERCEL_TOKEN, VERCEL_ORG_ID, VERCEL_PROJECT_ID,
+          OMNIA_API_PUBLIC_URL=`OMNIA_API_PUBLIC_URL`."
+        - "bash scripts/vercel-prep-check.sh && bash scripts/vercel-deploy.sh."
+        - "DNS CF: apex A 216.198.79.1 / 64.29.17.1; www/app/cloud CNAME
+          cname.vercel-dns.com. Non toccare api (Railway) né MX Resend."
+        - "SSL Cloudflare Full; se 525 su apex/www prova DNS only (nuvola grigia)."
+        - "Smoke: https://www…/ https://app…/it/login → 200."
+      errori_comuni:
+        - problema: "Deploy Vercel fallisce per eslint react-hooks"
+          soluzione: >
+            CI=true tratta warning come errori. vercel.json deve avere
+            buildCommand CI=false yarn build (già in repo).
+        - problema: "VERCEL_ORG_ID senza VERCEL_PROJECT_ID → errore CLI"
+          soluzione: >
+            Creare/link progetto omnia-frontend e salvare VERCEL_PROJECT_ID
+            in vault Environment.
+        - problema: "apex/www 525 Cloudflare"
+          soluzione: >
+            SSL Full + origin Vercel; spesso serve DNS only (grigio) su
+            apex/www mentre app/cloud già DNS only funzionano.
+        - problema: "OMNIA_API_PUBLIC_URL in vault include KEY="
+          soluzione: >
+            Risalvare solo `OMNIA_API_PUBLIC_URL`
+            (scripts/vercel-deploy.sh ora strippa il prefisso).
+      permessi:
+        - super_admin / Founder
+      screenshot: []
+
   - id: api.stripe-sandbox-cloud
     titolo: Stripe sandbox su Cloud Agent — attivazione test
     modulo: Codice API
@@ -897,8 +947,8 @@ voci:
         bash scripts/activate-stripe-sandbox.sh
         (materialize + setup + restart stack + GET /billing/plans).
         sk_live_ non auto-abilita (anti-soldi-veri). Webhook Test:
-        destinazione stabile Railway omnia-railway-api
-        (/api/billing/webhook, 200 OK 12-Ott-2026) e opzionale tunnel
+        destinazione stabile su api.omniarealestateecosystem.it
+        (/api/billing/webhook, go-live 12-Ott-2026) e opzionale tunnel
         Cloud con descrizione OMNIA Cloud Agent portal (auto-sync).
       quando_si_usa: >
         Dogfood billing, checkout piani Founders, crediti, B2C Stripe;
@@ -909,10 +959,10 @@ voci:
         - "bash scripts/check-secrets-presence.sh → class=sk_test / pk_test."
         - "bash scripts/activate-stripe-sandbox.sh → exit 0 e
           GET /api/billing/plans enabled=true mode=test."
-        - "Webhook Railway: Stripe Test → omnia-railway-api →
-          https://omnia-api-production-2cec.up.railway.app/api/billing/webhook
-          · descrizione OMNIA Railway API (sandbox) · whsec su Variables
-          Railway STRIPE_WEBHOOK_SECRET."
+        - "Webhook Railway: Stripe Test → descrizione
+          OMNIA Railway API (sandbox) →
+          `OMNIA_API_PUBLIC_URL` + `/api/billing/webhook`
+          · whsec su Variables Railway STRIPE_WEBHOOK_SECRET."
         - "Verifica: stripe trigger checkout.session.completed → consegna 200."
         - "Tunnel Cloud: sync-stripe-webhook-url aggiorna solo destinazioni
           con descrizione auto-sync (non toccare omnia-railway-api)."

@@ -1,7 +1,7 @@
 # Deploy Vercel FE — prep + go-live (D-074)
 
 **Stato prep:** ✅ repo pronto (10-Ott-2026)  
-**Stato deploy:** ✅ progetto `omnia-frontend` live (`https://omnia-frontend-kappa.vercel.app`) · ⏳ DNS CF custom (apex/www/app/cloud)  
+**Stato deploy:** ✅ progetto `omnia-frontend` live · ✅ DNS CF apex/www/app/cloud (smoke 200 · 12-Ott-2026)  
 **DNS SoT:** [`memory/DNS_SETUP_GUIDE.md`](../../memory/DNS_SETUP_GUIDE.md)
 
 ---
@@ -17,7 +17,7 @@ Dashboard Cursor → env **omnia2** → Secrets (poi **nuovo** agent boot):
 | `VERCEL_PROJECT_ID` | Dopo primo link progetto (o crealo a mano una volta) | Redeploy |
 | `CLOUDFLARE_API_TOKEN` | CF → My Profile → API Tokens (Zone.DNS Edit) | Aggiornare CNAME |
 | `CLOUDFLARE_ZONE_ID` | CF → dominio → Overview (Zone ID) | API DNS |
-| `OMNIA_API_PUBLIC_URL` | URL HTTPS stabile dell’API prod (es. `https://api.omniarealestateecosystem.it`) | Build FE `REACT_APP_BACKEND_URL` |
+| `OMNIA_API_PUBLIC_URL` | URL HTTPS stabile dell’API prod (es. `OMNIA_API_PUBLIC_URL`) | Build FE `REACT_APP_BACKEND_URL` |
 
 Opzionale (se deploy API nello stesso flusso): host già raggiungibile; questo runbook = **FE Vercel**.
 
@@ -64,12 +64,12 @@ Finché manca `OMNIA_API_PUBLIC_URL`, il FE in Vercel non può chiamare l’API 
 
 ## Checklist Founder (pausa → resume)
 
-- [ ] Account Vercel collegato a GitHub `mcnicastro-netizen/omnia2` (o token)  
-- [ ] `VERCEL_TOKEN` (+ org/project id se già creato) in vault omnia2  
-- [ ] Deciso host API HTTPS (anche temporaneo) → `OMNIA_API_PUBLIC_URL`  
-- [ ] (Consigliato) `CLOUDFLARE_API_TOKEN` + `CLOUDFLARE_ZONE_ID`  
-- [ ] Nuovo Cloud Agent su omnia2  
-- [ ] Messaggio: **«vai Vercel»**
+- [x] Account Vercel + progetto `omnia-frontend`  
+- [x] `VERCEL_TOKEN` + `VERCEL_ORG_ID` · project id ``VERCEL_PROJECT_ID` (vault)` (salvare in vault)  
+- [x] `OMNIA_API_PUBLIC_URL=`OMNIA_API_PUBLIC_URL``  
+- [ ] (Opz.) `CLOUDFLARE_API_TOKEN` + `CLOUDFLARE_ZONE_ID` — DNS FE fatto a mano  
+- [x] Go-live eseguito da Cloud Agent omnia2  
+- [x] Deploy production + domini custom
 
 ---
 
