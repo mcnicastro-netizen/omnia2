@@ -42,7 +42,7 @@ Dopo il Save, **riavvia un nuovo agent** sullo stesso environment (i secret non 
 | `TAVILY_API_KEY` | Opzionale | Tavily dashboard | AL Legal search |
 | `STRIPE_SECRET_KEY` | **Sì** se billing ON | Stripe Dashboard → API keys (**test** in Cloud) | Pagamenti B2B/B2C |
 | `STRIPE_PUBLISHABLE_KEY` | **Sì** se billing ON | Stripe | Plans API / Stripe.js |
-| `STRIPE_WEBHOOK_SECRET` | **Sì** se webhook | Stripe → Webhooks (endpoint = tunnel + `/api/billing/webhook`) | Eventi Stripe |
+| `STRIPE_WEBHOOK_SECRET` | **Sì** se webhook | Stripe Test → destinazione matching | `whsec_` Railway (`omnia-railway-api`) nelle Variables del service; Cloud tunnel = altro `whsec_` (auto-sync) |
 | `STRIPE_ENABLED` | **Sì** `=true` sandbox | Vault / env | Gate billing |
 | `OPENAPI_ENABLED` | **Sì** Visura PDF | `true` | Feature flag; host default sandbox finché `OPENAPI_MODE≠live` |
 | `OPENAPI_API_KEY` | **Sì** Visura sandbox | Console OpenAPI.it (Sandbox) | OAuth; **basta questa key** + enabled (D-116); email = `OPENAPI_EMAIL` o `ADMIN_EMAIL` |

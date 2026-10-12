@@ -1,6 +1,6 @@
 # Prossima sessione — programma passi
 
-**Aggiornato**: 10 Ottobre 2026 (sera) — API Railway live · pausa Founder  
+**Aggiornato**: 12 Ottobre 2026 — Stripe webhook Railway OK · vault/DNS/Vercel pending  
 **Repo**: https://github.com/mcnicastro-netizen/omnia2 ✅  
 **Branch**: `main`
 
@@ -12,20 +12,20 @@
 |-------|-----|
 | Freccia | [`docs/audit/OMNIA_COERENZA_SISTEMA.md`](../docs/audit/OMNIA_COERENZA_SISTEMA.md) — S1–S10 ✅ |
 | Pre-demo | [`docs/ops/PRE_DEMO_CHECKLIST.md`](../docs/ops/PRE_DEMO_CHECKLIST.md) · [`OMNIA_PRE_DEMO_8.md`](../docs/audit/OMNIA_PRE_DEMO_8.md) |
-| **API Railway** | [`docs/ops/RAILWAY_DEPLOY.md`](../docs/ops/RAILWAY_DEPLOY.md) — D-123 · **API live** · vault/DNS pending |
+| **API Railway** | [`docs/ops/RAILWAY_DEPLOY.md`](../docs/ops/RAILWAY_DEPLOY.md) — D-123 · API + webhook Stripe Test ✅ |
+| **Stripe** | [`memory/STRIPE_ONBOARDING.md`](./STRIPE_ONBOARDING.md) — destinazione `omnia-railway-api` |
 | **Vercel go-live** | [`docs/ops/VERCEL_DEPLOY.md`](../docs/ops/VERCEL_DEPLOY.md) — dopo vault + DNS `api` |
 
 ---
 
-## ⚠️ Non dimenticare (domani)
+## ⚠️ Non dimenticare
 
 | Voce | Nota |
 |------|------|
 | **Vault Environment omnia2** | id `b80b635c-b592-11f1-bb68-864e54d14197` — **non** Personal |
-| **Revoca token Railway** | `omnia-cursor` (e qualsiasi token finito in chat) → Create nuovo Account token |
+| **Revoca token Railway** | token esposti in chat → Create Account token nuovo come `RAILWAY_TOKEN` |
 | **Salva in Environment** | `RAILWAY_TOKEN` · `RAILWAY_PROJECT_ID=1b31e62e-7ba7-4082-b643-72d221ee7fbe` · `OMNIA_API_PUBLIC_URL=https://omnia-api-production-2cec.up.railway.app` |
-| **CLI quirk** | Account token in `RAILWAY_TOKEN` process env → Unauthorized; script rimappa a `RAILWAY_API_TOKEN` |
-| **add_secrets UI** | In chat desktop spesso **non** mostra «Agent is blocked» / apre Personal — usare Secrets UI Environment |
+| **Stripe webhook Railway** | ✅ Test · `omnia-railway-api` · `whsec` su Variables Railway (non mescolare col tunnel Cloud) |
 | **«vai Vercel»** | Dopo CNAME `api` (o con URL `*.up.railway.app` temporaneo) |
 | **Pre-demo probe** | `python scripts/pre_demo_probe.py` prima di ogni invio demo |
 
@@ -33,10 +33,10 @@
 
 ## Prossimo passo tipico
 
-1. Founder: vault Environment (3 secret sopra) → **nuovo agent**  
+1. Founder: vault Environment (Railway token + project id + API URL) → **nuovo agent**  
 2. Cloudflare CNAME `api` → Railway (`memory/DNS_SETUP_GUIDE.md` §4c)  
-3. **«vai Vercel»** (D-074)  
-4. Demo: tunnel finché dominio FE non è live  
+3. Aggiorna webhook Stripe URL a `https://api.omniarealestateecosystem.it/api/billing/webhook` quando DNS è pronto  
+4. **«vai Vercel»** (D-074)  
 
 ---
 
@@ -45,7 +45,8 @@
 | Voce | Esito |
 |--|--|
 | S1–S10 | ✅ |
-| **D-123 Railway API** | ✅ live `omnia-api-production-2cec.up.railway.app` · health ok |
+| **D-123 Railway API** | ✅ live · health ok |
+| **Stripe webhook Test → Railway** | ✅ `checkout.session.completed` 200 OK |
 | Vault Railway / DNS `api` | ⏳ |
 | **D-122 pre-demo ≥8** | ✅ |
 | Vercel FE (D-074) | ⏳ |

@@ -1,12 +1,12 @@
 {
-  "version": "0.35-railway",
-  "updated": "2026-10-10",
+  "version": "0.36-stripe-railway-webhook",
+  "updated": "2026-10-12",
   "voices_total": 371,
   "source_files": [
     {
       "file": "00-api-codice.yaml",
       "voices": 33,
-      "md5": "9eb59adc95ca66bf23d397492ae96f78"
+      "md5": "bd2f011a86ed339c4ad6523b1c4f226e"
     },
     {
       "file": "01-primo-accesso.yaml",
@@ -151,7 +151,7 @@
       "title": "Corpus codice/API",
       "yaml": "00-api-codice.yaml",
       "voices": 33,
-      "md5": "9eb59adc95ca66bf23d397492ae96f78"
+      "md5": "bd2f011a86ed339c4ad6523b1c4f226e"
     },
     {
       "id": 22,
@@ -202,5 +202,5 @@
       "md5": "5e88370cdf2c070dc30c7c3f036b85db"
     }
   ],
-  "notes": "Fingerprints regenerated from YAML on disk. Live RAG reindex: POST /api/app/hal/knowledge/reindex?force=true (super_admin). 2026-10-10: D-123 Railway API live · api.railway-api-deploy · cloud-secrets-vault Personal UI note. 2026-10-06: Stripe sandbox Cloud · api.cloud-secrets-vault · api.stripe-sandbox-cloud · Cap.19 billing. 2026-09-24: A-028g/h/i · Cap.2 Attività · Cap.10 Conferma e applica · Cap.18 distinzione. 2026-09-21: hub import A–E · HAL import.tutte-le-forme. 2026-09-19: D-085 storage quota · Cestino · Cap.20 Ruota."
+  "notes": "Fingerprints regenerated from YAML on disk. Live RAG reindex: POST /api/app/hal/knowledge/reindex?force=true (super_admin). 2026-10-12: Stripe webhook Railway omnia-railway-api 200 OK · api.stripe-sandbox-cloud / api.railway-api-deploy. 2026-10-10: D-123 Railway API live · api.railway-api-deploy · cloud-secrets-vault Personal UI note. 2026-10-06: Stripe sandbox Cloud · api.cloud-secrets-vault · api.stripe-sandbox-cloud · Cap.19 billing. 2026-09-24: A-028g/h/i · Cap.2 Attività · Cap.10 Conferma e applica · Cap.18 distinzione. 2026-09-21: hub import A–E · HAL import.tutte-le-forme. 2026-09-19: D-085 storage quota · Cestino · Cap.20 Ruota."
 }

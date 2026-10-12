@@ -1,16 +1,33 @@
 # Deploy API OMNIA su Railway (Plan B — Hetzner bloccato)
 
-**Stato:** ✅ prep repo · ✅ API live (10-Ott-2026) · ⏳ vault Environment + DNS `api` + Vercel  
+**Stato:** ✅ prep repo · ✅ API live · ✅ Stripe webhook sandbox → Railway (12-Ott-2026) · ⏳ vault Environment + DNS `api` + Vercel  
 **API live (temporanea):** `https://omnia-api-production-2cec.up.railway.app`  
 **Dominio target:** `https://api.omniarealestateecosystem.it` → servizio Railway  
 **Progetto Railway:** `omnia-api` · id `1b31e62e-7ba7-4082-b643-72d221ee7fbe`  
 **FE:** Vercel (dopo vault + DNS) · runbook: [`VERCEL_DEPLOY.md`](./VERCEL_DEPLOY.md)
 
-Smoke verificato: `GET /api/health` → `status=ok` · `db=ok`.
+Smoke: `GET /api/health` → `status=ok` · `db=ok`.  
+Stripe Test: destinazione `omnia-railway-api` → `/api/billing/webhook` · consegna `checkout.session.completed` **200 OK**.
 
 ---
 
-## Cosa fai tu (domani — vault Environment)
+## Stripe webhook (sandbox → Railway) — fatto 12-Ott-2026
+
+| Voce | Valore |
+|------|--------|
+| Dashboard | Stripe **Test / Sandbox** |
+| Destinazione | `omnia-railway-api` · id `we_1UOE9jQD7QSuOlmnP5YMVNIY` |
+| Descrizione | `OMNIA Railway API (sandbox)` — **non** usare `…auto-sync` (lo riscriverebbe `sync-stripe-webhook-url.py` sul tunnel) |
+| URL | `https://omnia-api-production-2cec.up.railway.app/api/billing/webhook` |
+| Secret | `whsec_…` → Variable Railway service `omnia-api` = `STRIPE_WEBHOOK_SECRET` |
+| Verifica | Workbench Shell: `stripe trigger checkout.session.completed` → consegna **200 OK** |
+
+Endpoint Emergent `…emergentagent.com/api/stripe/webhook` = **obsoleto** (mail Stripe 404); non ricreare.  
+Cloud dogfood può avere un **secondo** endpoint trycloudflare con descrizione `OMNIA Cloud Agent portal (auto-sync)` — vault Cloud vs Variable Railway = `whsec` diversi.
+
+---
+
+## Cosa fai tu (vault Environment + DNS)
 
 ### A. Token + URL in vault omnia2 (scope **Environment**)
 1. https://railway.app/account/tokens → **revoca** token esposti in chat → **Create Token** (scope **Account**)
@@ -53,6 +70,7 @@ Hobby **$5/mese** + usage → tipico API+Mongo piccolo **≈ $15–35/mese**.
 ## Checklist Founder
 - [x] Account Railway (GitHub)
 - [x] Progetto + Mongo + variables + domain + health OK
+- [x] Stripe sandbox webhook → Railway (`omnia-railway-api` · 200 OK)
 - [ ] `RAILWAY_TOKEN` fresco in vault **Environment** omnia2 (revoca esposti)
 - [ ] `RAILWAY_PROJECT_ID` + `OMNIA_API_PUBLIC_URL` in vault Environment
 - [ ] Cloudflare CNAME `api`

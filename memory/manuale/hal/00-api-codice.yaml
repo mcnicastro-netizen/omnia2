@@ -828,8 +828,8 @@ voci:
     widget: null
     pubblico: [super_admin]
     livello: avanzato
-    tags: [codice, railway, deploy, api, d-123, mongo, health, vercel, dns]
-    correlati: [api.cloud-secrets-vault, api.cloud-environment-builds]
+    tags: [codice, railway, deploy, api, d-123, mongo, health, vercel, dns, stripe, webhook]
+    correlati: [api.cloud-secrets-vault, api.cloud-environment-builds, api.stripe-sandbox-cloud]
     domanda_naturale: "Dov'è l'API di produzione? Come si fa il deploy su Railway?"
     contenuto:
       a_cosa_serve: >
@@ -839,11 +839,12 @@ voci:
         (1b31e62e-7ba7-4082-b643-72d221ee7fbe), URL
         https://omnia-api-production-2cec.up.railway.app,
         GET /api/health → status=ok db=ok. Mongo plugin + volume
-        /app/.media e /app/.backups. Dominio target
-        api.omniarealestateecosystem.it (CNAME Cloudflare dopo).
+        /app/.media e /app/.backups. Stripe Test webhook (12-Ott):
+        destinazione omnia-railway-api → /api/billing/webhook · 200 OK.
+        Dominio target api.omniarealestateecosystem.it (CNAME dopo).
       quando_si_usa: >
-        Redeploy API; salvare OMNIA_API_PUBLIC_URL; go-live Vercel;
-        health check produzione.
+        Redeploy API; salvare OMNIA_API_PUBLIC_URL; webhook Stripe;
+        go-live Vercel; health check produzione.
       passi:
         - "Vault Environment: RAILWAY_TOKEN (Account token fresco),
           RAILWAY_PROJECT_ID=1b31e62e-7ba7-4082-b643-72d221ee7fbe,
@@ -852,6 +853,9 @@ voci:
         - "bash scripts/railway-prep-check.sh && bash scripts/railway-deploy.sh
           (rimappa RAILWAY_TOKEN→RAILWAY_API_TOKEN, pin Dockerfile.railway)."
         - "Smoke: curl -sS $OMNIA_API_PUBLIC_URL/api/health."
+        - "Stripe Test: destinazione omnia-railway-api (descrizione
+          OMNIA Railway API (sandbox)) + STRIPE_WEBHOOK_SECRET su
+          Variables Railway; stripe trigger checkout.session.completed."
         - "DNS: memory/DNS_SETUP_GUIDE.md §4c CNAME api → Railway."
         - "Poi «vai Vercel» (D-074) con REACT_APP_BACKEND_URL = URL API."
       errori_comuni:
@@ -868,6 +872,10 @@ voci:
         - problema: "Add secrets in chat non appare / solo Personal"
           soluzione: >
             Usare Secrets UI Environment omnia2. Nuovo agent dopo Save.
+        - problema: "Stripe mail 404 su emergentagent.com/api/stripe/webhook"
+          soluzione: >
+            Endpoint Emergent obsoleto. Usare Railway /api/billing/webhook
+            (omnia-railway-api). Non ricreare path /api/stripe/webhook.
       permessi:
         - super_admin / Founder
       screenshot: []
@@ -878,8 +886,8 @@ voci:
     widget: null
     pubblico: [super_admin]
     livello: avanzato
-    tags: [codice, stripe, sandbox, billing, sk-test, setup-stripe, cloud-agent]
-    correlati: [api.cloud-secrets-vault, settings.billing-pagina-separata]
+    tags: [codice, stripe, sandbox, billing, sk-test, setup-stripe, cloud-agent, webhook, railway]
+    correlati: [api.cloud-secrets-vault, api.railway-api-deploy, settings.billing-pagina-separata]
     domanda_naturale: "Come attivo Stripe sandbox su OMNIA Cloud? Perché billing resta disabilitato?"
     contenuto:
       a_cosa_serve: >
@@ -888,17 +896,26 @@ voci:
         (idempotente, lookup_key). One-shot:
         bash scripts/activate-stripe-sandbox.sh
         (materialize + setup + restart stack + GET /billing/plans).
-        sk_live_ non auto-abilita (anti-soldi-veri).
+        sk_live_ non auto-abilita (anti-soldi-veri). Webhook Test:
+        destinazione stabile Railway omnia-railway-api
+        (/api/billing/webhook, 200 OK 12-Ott-2026) e opzionale tunnel
+        Cloud con descrizione OMNIA Cloud Agent portal (auto-sync).
       quando_si_usa: >
-        Dogfood billing, checkout piani Founders, crediti, B2C Stripe.
+        Dogfood billing, checkout piani Founders, crediti, B2C Stripe;
+        sistemare webhook dopo mail Stripe 404 Emergent.
       passi:
         - "Vault: STRIPE_SECRET_KEY=sk_test_… STRIPE_PUBLISHABLE_KEY=pk_test_…
           STRIPE_ENABLED=true (scope Environment su omnia2)."
         - "bash scripts/check-secrets-presence.sh → class=sk_test / pk_test."
         - "bash scripts/activate-stripe-sandbox.sh → exit 0 e
           GET /api/billing/plans enabled=true mode=test."
-        - "Se API già up senza Stripe: riavvia listener :43121 poi
-          omnia-stack ensure (adopt non ricarica .env da solo)."
+        - "Webhook Railway: Stripe Test → omnia-railway-api →
+          https://omnia-api-production-2cec.up.railway.app/api/billing/webhook
+          · descrizione OMNIA Railway API (sandbox) · whsec su Variables
+          Railway STRIPE_WEBHOOK_SECRET."
+        - "Verifica: stripe trigger checkout.session.completed → consegna 200."
+        - "Tunnel Cloud: sync-stripe-webhook-url aggiorna solo destinazioni
+          con descrizione auto-sync (non toccare omnia-railway-api)."
         - "Verifica UI: /it/app/settings/billing."
       errori_comuni:
         - problema: "activate exit 2 class sk_live / check-secrets class=sk_live"
@@ -913,6 +930,15 @@ voci:
           soluzione: >
             STRIPE_ENABLED!=true o secret key assente nel process
             (non solo nel file .env commentato).
+        - problema: "Webhook invalid_signature / 400 su Railway"
+          soluzione: >
+            whsec della destinazione omnia-railway-api deve essere
+            uguale a STRIPE_WEBHOOK_SECRET sulle Variables del service
+            omnia-api (redeploy dopo cambio).
+        - problema: "Lo sync Cloud ha riscritto l'URL Railway sul tunnel"
+          soluzione: >
+            Descrizione destinazione Railway deve essere
+            OMNIA Railway API (sandbox), non …auto-sync.
       permessi:
         - super_admin / Founder
       screenshot: []
