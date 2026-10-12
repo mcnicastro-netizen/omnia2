@@ -23,6 +23,10 @@ RUN pip install --upgrade pip \
 
 COPY backend/ .
 
+# HAL corpus (D-084 / go-live): YAML+MD under OMNIA_MEMORY_ROOT
+COPY memory/ /app/memory/
+ENV OMNIA_MEMORY_ROOT=/app/memory
+
 ENV PORT=8080
 EXPOSE 8080
 
