@@ -90,12 +90,27 @@ export default function LandingApp() {
                   "linear-gradient(180deg, rgba(11,30,63,0.15) 0%, rgba(11,30,63,0.25) 40%, rgba(11,30,63,0.78) 100%)",
               }}
             />
-            <div className="absolute bottom-0 left-0 right-0 p-5 sm:p-6">
-              <p className="font-sans text-[10px] uppercase tracking-[0.28em] text-[#C8A653] mb-2">
-                Catania · Lab
+            <div className="absolute bottom-0 left-0 right-0 p-6 sm:p-8 text-center">
+              <p
+                className="text-[#F5F1E8] text-xl sm:text-2xl md:text-3xl tracking-tight leading-none mb-2"
+                style={{
+                  fontFamily: "'Fraunces', Georgia, serif",
+                  fontWeight: 600,
+                  textShadow: "0 2px 18px rgba(0,0,0,0.55)",
+                }}
+              >
+                Omnia Real Estate Lab
               </p>
-              <p className="text-[#F5F1E8] text-lg sm:text-xl leading-snug max-w-[18ch]">
-                Radicati in Italia. Proiettati avanti.
+              <p
+                className="text-[#F5F1E8] text-base sm:text-lg md:text-xl tracking-[0.04em] leading-snug"
+                style={{
+                  fontFamily: "'Fraunces', Georgia, serif",
+                  fontWeight: 500,
+                  fontStyle: "italic",
+                  textShadow: "0 2px 14px rgba(0,0,0,0.5)",
+                }}
+              >
+                Vivi il Futuro
               </p>
             </div>
           </div>
