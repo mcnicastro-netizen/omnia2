@@ -172,6 +172,7 @@ export default function LandingApp() {
           return (
             <div
               key={p.key}
+              id={p.key === "academy" ? "pillar-academy" : undefined}
               data-testid={`pillar-${p.key}`}
               className={className}
               style={style}

@@ -9,7 +9,7 @@ import OmniaLogo from "./OmniaLogo";
 /**
  * Shared top navigation across Landing, App, Learn.
  *
- * Home (landing): logo + Cerca casa · Vendi casa · Area riservata
+ * Home (landing): logo + Cerca casa · Vendi casa · Academy · Area riservata
  * App / Learn: logo + prodotti (+ suffix opzionale)
  */
 export default function TopNav({ current = "landing", theme = "light", suffix = null }) {
@@ -61,6 +61,13 @@ export default function TopNav({ current = "landing", theme = "light", suffix = 
       to: `/${lang}/cloud/register?intent=sell`,
       label: t("cloud.nav_sell"),
       testid: "topnav-sell",
+    },
+    {
+      key: "academy",
+      // destinazione prodotto da definire — scroll al box in home
+      to: `/${lang}#pillar-academy`,
+      label: t("cloud.nav_academy"),
+      testid: "topnav-academy",
     },
   ];
 
