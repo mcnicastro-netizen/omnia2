@@ -26,11 +26,36 @@ const PDF_URL = `${BACKEND_URL}/api/cloud/valuator/report-pdf`;
 
 const PROPERTY_TYPES = ["appartamento", "attico", "loft", "villa", "monolocale", "rustico_casale", "ufficio", "negozio", "garage_box"];
 const CONDITIONS = ["nuovo", "ristrutturato", "ottimo", "buono", "abitabile", "da_ristrutturare", "ruderi_da_demolire"];
-const FLOOR_CLASSES = ["seminterrato", "piano_terra", "piano_1", "piano_intermedio", "ultimo_no_asc", "ultimo_con_asc", "attico_panoramico"];
+/** Una sola scelta piano (obbligatoria) → floor numerico + floor_class UNI. */
+const FLOOR_OPTIONS = [
+  { value: "s-1", label: "S-1", floor: -1, floor_class: "seminterrato" },
+  { value: "t", label: "T", floor: 0, floor_class: "piano_terra" },
+  { value: "1", label: "1", floor: 1, floor_class: "piano_1" },
+  { value: "2", label: "2", floor: 2, floor_class: "piano_intermedio" },
+  { value: "3", label: "3", floor: 3, floor_class: "piano_intermedio" },
+  { value: "4", label: "4", floor: 4, floor_class: "piano_intermedio" },
+  { value: "5", label: "5", floor: 5, floor_class: "piano_intermedio" },
+  { value: "6", label: "6", floor: 6, floor_class: "piano_intermedio" },
+  { value: "gt6", label: ">6", floor: 7, floor_class: "piano_intermedio" },
+  { value: "ultimo", label: "Ultimo", floor: 8, floor_class: "ultimo_con_asc" },
+  { value: "attico", label: "Attico", floor: 9, floor_class: "attico_panoramico" },
+];
 const EXPOSURES = ["sud", "sud_est", "sud_ovest", "est", "ovest", "nord_est", "nord_ovest", "nord", "cieca", "doppia_esp"];
 const VIEWS = ["interno", "cortile", "strada", "verde", "panoramico", "mare", "lago_montagna"];
 const HEATINGS = ["autonomo", "centralizzato", "pompa_calore", "assente"];
 const ELEVATORS = ["presente", "presente_piano_alto", "assente_piano_basso", "assente_piano_alto"];
+
+function resolveFloorOption(value) {
+  return FLOOR_OPTIONS.find((o) => o.value === value) || null;
+}
+
+/** Ultimo piano: ascensore presente → +; assente → penalità. */
+function resolveUltimoFloorClass(elevator) {
+  if (elevator === "assente_piano_alto" || elevator === "assente_piano_basso") {
+    return "ultimo_no_asc";
+  }
+  return "ultimo_con_asc";
+}
 /** Suggerimenti città (datalist) — copertura tipica dataset + capoluoghi. */
 const CITY_SUGGESTIONS = [
   "Milano", "Roma", "Napoli", "Torino", "Palermo", "Genova", "Bologna", "Firenze",
@@ -82,7 +107,7 @@ const emptyPro = {
   veranda_mq: "", terrazzo_mq: "", balcone_mq: "", cantina_mq: "", soffitta_mq: "",
   box_auto_mq: "", posto_auto_scoperto_mq: "", giardino_villa_mq: "", giardino_condom_mq: "",
   taverna_mq: "", mansarda_abitabile_mq: "",
-  floor_class: "", exposure: "", view: "", heating: "", elevator: "", year_built: "",
+  exposure: "", view: "", heating: "", elevator: "", year_built: "",
   vincolo_storico: false, vincolo_paesag: false, locazione_libera_breve: false, locazione_lunga: false, nuda_proprieta: false,
 };
 
@@ -184,6 +209,7 @@ export default function ValuatorPage() {
     if (form.energy_class && !String(form.energy_class).startsWith("EXEMPT")) {
       p.energy_class = form.energy_class;
     }
+    const floorOpt = resolveFloorOption(form.floor);
     if (includePro) {
       const cs = {};
       ["veranda_mq", "terrazzo_mq", "balcone_mq", "cantina_mq", "soffitta_mq", "box_auto_mq", "posto_auto_scoperto_mq", "giardino_villa_mq", "giardino_condom_mq", "taverna_mq", "mansarda_abitabile_mq"].forEach(k => {
@@ -191,16 +217,18 @@ export default function ValuatorPage() {
       });
       if (Object.keys(cs).length) p.commercial_surfaces = cs;
       const merit = {};
-      ["floor_class", "exposure", "view", "heating", "elevator"].forEach(k => { if (pro[k]) merit[k] = pro[k]; });
+      ["exposure", "view", "heating", "elevator"].forEach(k => { if (pro[k]) merit[k] = pro[k]; });
+      if (floorOpt) {
+        merit.floor_class = floorOpt.value === "ultimo"
+          ? resolveUltimoFloorClass(pro.elevator)
+          : floorOpt.floor_class;
+      }
       if (pro.year_built && Number(pro.year_built) > 1700) merit.year_built = Number(pro.year_built);
       ["vincolo_storico", "vincolo_paesag", "locazione_libera_breve", "locazione_lunga", "nuda_proprieta"].forEach(k => { if (pro[k]) merit[k] = true; });
       if (Object.keys(merit).length) p.merit = merit;
-      // Piano numerico solo se non c'è floor_class UNI (evita doppio conteggio)
-      if (!merit.floor_class && form.floor !== "" && form.floor !== null) {
-        p.floor = Number(form.floor);
-      }
-    } else if (form.floor !== "" && form.floor !== null) {
-      p.floor = Number(form.floor);
+      // floor_class UNI vince: non inviare piano numerico (niente doppio conteggio)
+    } else if (floorOpt) {
+      p.floor = floorOpt.floor;
     }
     return p;
   }
@@ -297,7 +325,8 @@ export default function ValuatorPage() {
     form.city &&
     form.surface_sqm &&
     Number(form.surface_sqm) >= 10 &&
-    Boolean(form.energy_class);
+    Boolean(form.energy_class) &&
+    Boolean(form.floor);
 
   return (
     <div data-testid="valuator-page">
@@ -482,7 +511,28 @@ export default function ValuatorPage() {
               </select>
             </div>
 
-            <input type="number" min="-2" max="80" className="w-full border border-stone-200 rounded-lg p-2.5 text-sm" placeholder={t("valuator.floor", "Piano (opzionale)")} value={form.floor} onChange={e => setForm(f => ({ ...f, floor: e.target.value }))} data-testid="valuator-floor" />
+            <div>
+              <label htmlFor="valuator-floor" className={labelClass}>
+                {t("valuator.f_floor", "Piano")} *
+              </label>
+              <select
+                id="valuator-floor"
+                className={fieldClass}
+                value={form.floor}
+                onChange={(e) => setForm((f) => ({ ...f, floor: e.target.value }))}
+                data-testid="valuator-floor"
+                required
+              >
+                <option value="">
+                  {t("valuator.f_floor_pick", "Seleziona piano…")}
+                </option>
+                {FLOOR_OPTIONS.map((o) => (
+                  <option key={o.value} value={o.value}>
+                    {o.label}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
 
           {/* Pro section — only UNI tier */}
@@ -496,7 +546,6 @@ export default function ValuatorPage() {
               </div>
               <h3 className="text-lg text-[#0B1E3F] font-light mt-6 mb-3" style={{ fontFamily: "'Fraunces', Georgia, serif" }}>{t("valuator.pro_merit_title", "Coefficienti di merito")}</h3>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-3 text-sm">
-                <Sel label="Piano" opts={FLOOR_CLASSES} v={pro.floor_class} on={v => setPro(p => ({ ...p, floor_class: v }))} tid="pro-floor-class" />
                 <Sel label="Esposizione" opts={EXPOSURES} v={pro.exposure} on={v => setPro(p => ({ ...p, exposure: v }))} tid="pro-exposure" />
                 <Sel label="Vista" opts={VIEWS} v={pro.view} on={v => setPro(p => ({ ...p, view: v }))} tid="pro-view" />
                 <Sel label="Riscaldamento" opts={HEATINGS} v={pro.heating} on={v => setPro(p => ({ ...p, heating: v }))} tid="pro-heating" />
