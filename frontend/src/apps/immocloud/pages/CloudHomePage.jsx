@@ -255,37 +255,46 @@ export default function CloudHomePage() {
         </section>
       )}
 
-      {/* Scout — plain Italian, inviting, no competitors */}
+      {/* Scout — prima le parole, poi l'atmosfera (la foto da sola non spiega lo strumento) */}
+      <section className="px-5 sm:px-8 md:px-16 pt-14 pb-6 bg-white" data-testid="cloud-scout-intro">
+        <div className="max-w-2xl">
+          <p className="text-[11px] uppercase tracking-[0.28em] text-[#C19A6B] mb-2">
+            Cosa fa Scout
+          </p>
+          <h2
+            className="text-3xl md:text-4xl font-light tracking-tight text-[#0B1E3F] mb-4"
+            style={{ fontFamily: "'Fraunces', Georgia, serif" }}
+          >
+            Non è una casa. È chi legge l&apos;annuncio con te.
+          </h2>
+          <p className="text-stone-600 text-base md:text-lg leading-relaxed">
+            Scout è lo strumento di ImmobilCloud sull&apos;annuncio: ti dice se i dati bastano,
+            se il prezzo ha senso in zona e quali domande fare al venditore — prima della visita.
+            Sotto, un assaggio di atmosfera; Scout lo trovi dentro ogni scheda immobile.
+          </p>
+        </div>
+      </section>
+
       <section
         className="relative overflow-hidden"
         data-testid="cloud-scout-strip"
       >
         <div className="grid grid-cols-1 lg:grid-cols-2 min-h-[420px]">
-          <div className="relative min-h-[280px] lg:min-h-full">
-            <img
-              src="/cloud/scout.jpg"
-              alt="Interno luminoso"
-              className="absolute inset-0 w-full h-full object-cover"
-            />
-            <div className="absolute inset-0 bg-[#0B1E3F]/25" />
-          </div>
-          <div className="flex items-center bg-[#0B1E3F] px-8 sm:px-12 py-14 text-white">
+          <div className="flex items-center bg-[#0B1E3F] px-8 sm:px-12 py-14 text-white order-1">
             <div className="max-w-md">
-              <p className="text-[11px] uppercase tracking-[0.3em] text-[#C19A6B] mb-3">Il tuo alleato in visita</p>
-              <h2
-                className="text-3xl md:text-4xl font-light mb-4"
+              <p className="text-[11px] uppercase tracking-[0.3em] text-[#C19A6B] mb-3">
+                In pratica, su ogni annuncio
+              </p>
+              <h3
+                className="text-2xl md:text-3xl font-light mb-4"
                 style={{ fontFamily: "'Fraunces', Georgia, serif" }}
               >
-                Scout
-              </h2>
-              <p className="text-white/80 text-base leading-relaxed mb-6">
-                Un amico saggio che legge l&apos;annuncio con te: ti dice se manca qualcosa,
-                se il prezzo ha senso in zona e quali domande fare — senza spoilerare la magia della casa.
-              </p>
-              <ul className="space-y-2 text-sm text-white/70 mb-8">
-                <li>· Quanto è completo l&apos;annuncio, in un colpo d&apos;occhio</li>
-                <li>· Se il prezzo balla rispetto alla zona</li>
-                <li>· Le domande giuste, pronte per la chiamata</li>
+                Completo? Prezzo in zona? Cosa chiedere?
+              </h3>
+              <ul className="space-y-2 text-sm text-white/75 mb-8">
+                <li>· Completezza dell&apos;annuncio, in un colpo d&apos;occhio</li>
+                <li>· Segnale sul prezzo rispetto alla zona</li>
+                <li>· Domande pronte per la chiamata o la visita</li>
               </ul>
               <Link
                 to={`/${lang}/cloud/search`}
@@ -294,6 +303,24 @@ export default function CloudHomePage() {
                 Trova un annuncio e prova Scout
               </Link>
             </div>
+          </div>
+          <div className="relative min-h-[240px] lg:min-h-full order-2">
+            <img
+              src="/cloud/scout.jpg"
+              alt=""
+              className="absolute inset-0 w-full h-full object-cover"
+            />
+            <div className="absolute inset-0 bg-[#0B1E3F]/35" />
+            <p
+              className="absolute bottom-0 left-0 right-0 p-5 sm:p-6 text-white/90 text-sm sm:text-base leading-snug"
+              style={{
+                fontFamily: "'Fraunces', Georgia, serif",
+                background:
+                  "linear-gradient(180deg, transparent, rgba(11,30,63,0.85))",
+              }}
+            >
+              L&apos;atmosfera della ricerca — Scout lavora sul testo e i numeri dell&apos;annuncio, non sulla foto.
+            </p>
           </div>
         </div>
       </section>
