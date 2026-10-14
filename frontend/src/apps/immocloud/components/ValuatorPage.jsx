@@ -32,8 +32,22 @@ const EXPOSURES = ["sud", "sud_est", "sud_ovest", "est", "ovest", "nord_est", "n
 const VIEWS = ["interno", "cortile", "strada", "verde", "panoramico", "mare", "lago_montagna"];
 const HEATINGS = ["autonomo", "centralizzato", "pompa_calore", "assente"];
 const ELEVATORS = ["presente", "presente_piano_alto", "assente_piano_basso", "assente_piano_alto"];
+/** Zone tier SoT del valutatore (backend CITY_PRICES). */
+const ZONE_TIERS = ["centro", "semicentro", "periferia"];
+/** Suggerimenti città (datalist) — copertura tipica dataset + capoluoghi. */
+const CITY_SUGGESTIONS = [
+  "Milano", "Roma", "Napoli", "Torino", "Palermo", "Genova", "Bologna", "Firenze",
+  "Bari", "Catania", "Venezia", "Verona", "Messina", "Padova", "Trieste", "Brescia",
+  "Parma", "Modena", "Reggio Emilia", "Prato", "Perugia", "Livorno", "Ravenna",
+  "Cagliari", "Foggia", "Rimini", "Salerno", "Ferrara", "Sassari", "Monza",
+  "Bergamo", "Trento", "Vicenza", "Bolzano", "Pisa", "Novara", "Ancona", "Udine",
+  "Siracusa", "Pescara", "Lecce", "La Spezia", "Como", "Treviso", "Taranto",
+];
 
 const emptyForm = { city: "", zone: "", address: "", property_type: "appartamento", surface_sqm: "", condition: "buono", energy_class: "", floor: "" };
+const fieldClass =
+  "w-full border border-stone-200 rounded-lg p-2.5 text-sm focus:border-[#0B1E3F] outline-none bg-white";
+const labelClass = "block text-xs font-medium text-stone-600 mb-1";
 const emptyPro = {
   veranda_mq: "", terrazzo_mq: "", balcone_mq: "", cantina_mq: "", soffitta_mq: "",
   box_auto_mq: "", posto_auto_scoperto_mq: "", giardino_villa_mq: "", giardino_condom_mq: "",
@@ -265,14 +279,82 @@ export default function ValuatorPage() {
           {/* Left: base fields */}
           <div className="space-y-4">
             <h3 className="text-lg text-[#0B1E3F] font-light" style={{ fontFamily: "'Fraunces', Georgia, serif" }}>{t("valuator.section_location", "Ubicazione")}</h3>
-            <AddressAutocomplete
-              value={form.address}
-              onSelect={({ address, city, zone }) => setForm(f => ({ ...f, address: address || "", city: city || f.city, zone: zone || f.zone }))}
-              placeholder={t("valuator.address_placeholder", "Indirizzo o via")}
-              data-testid="valuator-address"
-            />
-            <input className="w-full border border-stone-200 rounded-lg p-2.5 text-sm focus:border-[#0B1E3F] outline-none" placeholder={t("valuator.city", "Città")} value={form.city} onChange={e => setForm(f => ({ ...f, city: e.target.value }))} data-testid="valuator-city" />
-            <input className="w-full border border-stone-200 rounded-lg p-2.5 text-sm focus:border-[#0B1E3F] outline-none" placeholder={t("valuator.zone", "Zona")} value={form.zone} onChange={e => setForm(f => ({ ...f, zone: e.target.value }))} data-testid="valuator-zone" />
+
+            <div>
+              <label htmlFor="valuator-address" className={labelClass}>
+                {t("valuator.f_address", "Indirizzo (opzionale)")}
+              </label>
+              <AddressAutocomplete
+                id="valuator-address"
+                value={form.address}
+                onChange={(text) => setForm((f) => ({ ...f, address: text }))}
+                onSelect={(rec) =>
+                  setForm((f) => ({
+                    ...f,
+                    address: rec.normalized || f.address,
+                    city: rec.comune || f.city,
+                    // zona: tier OMI via select — non inventiamo quartieri dall'indirizzo
+                  }))
+                }
+                placeholder={t("valuator.f_address_ph", "Es. Via Roma 12, Milano")}
+                testid="valuator-address"
+                inputClassName={fieldClass}
+              />
+              <p className="mt-1 text-[11px] text-stone-500">
+                {t(
+                  "valuator.address_hint",
+                  "Inizia a digitare: scegli un suggerimento per compilare anche la città."
+                )}
+              </p>
+            </div>
+
+            <div>
+              <label htmlFor="valuator-city" className={labelClass}>
+                {t("valuator.f_city", "Città")}
+              </label>
+              <input
+                id="valuator-city"
+                className={fieldClass}
+                placeholder={t("valuator.f_city_ph", "Es. Milano, Roma, Napoli…")}
+                value={form.city}
+                list="valuator-city-suggest"
+                autoComplete="address-level2"
+                onChange={(e) => setForm((f) => ({ ...f, city: e.target.value }))}
+                data-testid="valuator-city"
+                required
+              />
+              <datalist id="valuator-city-suggest">
+                {CITY_SUGGESTIONS.map((c) => (
+                  <option key={c} value={c} />
+                ))}
+              </datalist>
+            </div>
+
+            <div>
+              <label htmlFor="valuator-zone" className={labelClass}>
+                {t("valuator.f_zone", "Zona")}
+              </label>
+              <select
+                id="valuator-zone"
+                className={fieldClass}
+                value={form.zone}
+                onChange={(e) => setForm((f) => ({ ...f, zone: e.target.value }))}
+                data-testid="valuator-zone"
+              >
+                <option value="">{t("valuator.f_zone_auto", "Automatica (da indirizzo)")}</option>
+                {ZONE_TIERS.map((z) => (
+                  <option key={z} value={z}>
+                    {t(`valuator.zone_${z}`, z)}
+                  </option>
+                ))}
+              </select>
+              <p className="mt-1 text-[11px] text-stone-500">
+                {t(
+                  "valuator.zone_hint",
+                  "Centro, semicentro o periferia — le fasce usate dalla stima. Se lasci «automatica», la deduciamo dall’indirizzo."
+                )}
+              </p>
+            </div>
           </div>
           <div className="space-y-4">
             <h3 className="text-lg text-[#0B1E3F] font-light" style={{ fontFamily: "'Fraunces', Georgia, serif" }}>{t("valuator.section_property", "Immobile")}</h3>

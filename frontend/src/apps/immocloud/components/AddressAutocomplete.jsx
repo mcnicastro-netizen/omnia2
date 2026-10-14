@@ -31,6 +31,7 @@ export default function AddressAutocomplete({
   className = "",
   testid = "address-autocomplete",
   inputClassName = "",
+  id,
 }) {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -120,6 +121,7 @@ export default function AddressAutocomplete({
   return (
     <div ref={wrapRef} className={`relative ${className}`}>
       <input
+        id={id || testid}
         type="text"
         data-testid={testid}
         value={value}
