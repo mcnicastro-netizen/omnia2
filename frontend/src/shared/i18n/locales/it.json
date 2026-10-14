@@ -31,18 +31,7 @@
     "pillar_app_title": "ImmoWeb",
     "pillar_app_desc": "Gestionale per agenzie: priorità di oggi, match e workflow quotidiano — il sistema operativo della tua agenzia.",
     "pillar_learn_title": "Omnia Academy",
-    "pillar_learn_desc": "Formi i collaboratori in agenzia. Oggi preparazione professionale; domani, riconoscimento.",
-    "promo_rail_label": "Servizi per chi vende",
-    "promo_soon": "Presto disponibile",
-    "promo_ape_tag": "Obbligo di legge",
-    "promo_ape_title": "Attestato APE",
-    "promo_ape_desc": "Certificazione energetica per pubblicare e vendere in regola, senza blocchi in trattativa.",
-    "promo_plan_tag": "Documentazione",
-    "promo_plan_title": "Planimetria catastale",
-    "promo_plan_desc": "Planimetria aggiornata per visite, proposte e conformità catastale dell'immobile.",
-    "promo_atti_tag": "Ricerca atti",
-    "promo_atti_title": "Accesso agli atti",
-    "promo_atti_desc": "Recupera titoli e documenti non più nella disponibilità del proprietario che mette in vendita."
+    "pillar_learn_desc": "Formi i collaboratori in agenzia. Oggi preparazione professionale; domani, riconoscimento."
   },
   "immocloud": {
     "title": "ImmobilCloud",
@@ -1343,7 +1332,18 @@
       "stats_leads": "contatti ricevuti",
       "stats_views_30": "view ultimi 30 giorni",
       "stats_rate": "tasso contatto (30g)",
-      "stats_note": "Visualizzazione = apertura della scheda. Contatto = messaggio inviato. Non sono impressioni nel feed di ricerca."
+      "stats_note": "Visualizzazione = apertura della scheda. Contatto = messaggio inviato. Non sono impressioni nel feed di ricerca.",
+      "promo_rail_label": "Documenti utili per pubblicare",
+      "promo_soon": "Presto disponibile",
+      "promo_ape_tag": "Obbligo di legge",
+      "promo_ape_title": "Attestato APE",
+      "promo_ape_desc": "Certificazione energetica per pubblicare e vendere in regola, senza blocchi in trattativa.",
+      "promo_plan_tag": "Documentazione",
+      "promo_plan_title": "Planimetria catastale",
+      "promo_plan_desc": "Planimetria aggiornata per visite, proposte e conformità catastale dell'immobile.",
+      "promo_atti_tag": "Ricerca atti",
+      "promo_atti_title": "Accesso agli atti",
+      "promo_atti_desc": "Recupera titoli e documenti non più nella disponibilità del proprietario che mette in vendita."
     },
     "save_search": {
       "cta": "Salva questa ricerca",

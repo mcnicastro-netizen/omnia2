@@ -31,18 +31,7 @@
     "pillar_app_title": "ImmoWeb",
     "pillar_app_desc": "CRM para agencias: prioridades de hoy, matches y flujo diario — el sistema operativo de tu agencia.",
     "pillar_learn_title": "Omnia Academy",
-    "pillar_learn_desc": "Forma a tus colaboradores en la agencia. Preparación profesional hoy; reconocimiento después.",
-    "promo_rail_label": "Servicios para quien vende",
-    "promo_soon": "Pronto disponible",
-    "promo_ape_tag": "Obligación legal",
-    "promo_ape_title": "Certificado energético (APE)",
-    "promo_ape_desc": "Certificación energética para publicar y vender en regla, sin bloqueos en la negociación.",
-    "promo_plan_tag": "Documentación",
-    "promo_plan_title": "Plano catastral",
-    "promo_plan_desc": "Plano actualizado para visitas, ofertas y conformidad catastral del inmueble.",
-    "promo_atti_tag": "Búsqueda de actos",
-    "promo_atti_title": "Acceso a los actos",
-    "promo_atti_desc": "Recupera títulos y documentos que el propietario ya no tiene al poner en venta el inmueble."
+    "pillar_learn_desc": "Forma a tus colaboradores en la agencia. Preparación profesional hoy; reconocimiento después."
   },
   "immocloud": {
     "title": "ImmobilCloud",
@@ -1073,7 +1062,18 @@
       "staging_done": "Staging listo",
       "staging_failed": "El staging ha fallado. Inténtalo de nuevo.",
       "staging_payment_pending": "Esperando confirmación del pago…",
-      "staging_timeout": "Tiempo de espera agotado. Recarga la página."
+      "staging_timeout": "Tiempo de espera agotado. Recarga la página.",
+      "promo_rail_label": "Documentos útiles para publicar",
+      "promo_soon": "Pronto disponible",
+      "promo_ape_tag": "Obligación legal",
+      "promo_ape_title": "Certificado energético (APE)",
+      "promo_ape_desc": "Certificación energética para publicar y vender en regla, sin bloqueos en la negociación.",
+      "promo_plan_tag": "Documentación",
+      "promo_plan_title": "Plano catastral",
+      "promo_plan_desc": "Plano actualizado para visitas, ofertas y conformidad catastral del inmueble.",
+      "promo_atti_tag": "Búsqueda de actos",
+      "promo_atti_title": "Acceso a los actos",
+      "promo_atti_desc": "Recupera títulos y documentos que el propietario ya no tiene al poner en venta el inmueble."
     },
     "save_search": {
       "cta": "Guardar esta búsqueda",

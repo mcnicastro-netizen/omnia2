@@ -31,18 +31,7 @@
     "pillar_app_title": "ImmoWeb",
     "pillar_app_desc": "Agency CRM: today’s priorities, matches and daily workflow — the operating system for your agency.",
     "pillar_learn_title": "Omnia Academy",
-    "pillar_learn_desc": "Train collaborators in-house. Professional prep today; recognition ahead.",
-    "promo_rail_label": "Services for sellers",
-    "promo_soon": "Coming soon",
-    "promo_ape_tag": "Legal requirement",
-    "promo_ape_title": "Energy certificate (APE)",
-    "promo_ape_desc": "Energy performance certificate so you can list and sell compliant, without deal blockers.",
-    "promo_plan_tag": "Documentation",
-    "promo_plan_title": "Cadastral floor plan",
-    "promo_plan_desc": "Up-to-date floor plan for viewings, offers and cadastral compliance.",
-    "promo_atti_tag": "Records search",
-    "promo_atti_title": "Access to deeds",
-    "promo_atti_desc": "Recover titles and documents no longer available to the owner putting the property on sale."
+    "pillar_learn_desc": "Train collaborators in-house. Professional prep today; recognition ahead."
   },
   "immocloud": {
     "title": "ImmobilCloud",
@@ -1127,7 +1116,18 @@
       "stats_leads": "contacts received",
       "stats_views_30": "views last 30 days",
       "stats_rate": "contact rate (30d)",
-      "stats_note": "A view is a detail-page open. A contact is a message sent. These are not search-feed impressions."
+      "stats_note": "A view is a detail-page open. A contact is a message sent. These are not search-feed impressions.",
+      "promo_rail_label": "Documents useful when listing",
+      "promo_soon": "Coming soon",
+      "promo_ape_tag": "Legal requirement",
+      "promo_ape_title": "Energy certificate (APE)",
+      "promo_ape_desc": "Energy performance certificate so you can list and sell compliant, without deal blockers.",
+      "promo_plan_tag": "Documentation",
+      "promo_plan_title": "Cadastral floor plan",
+      "promo_plan_desc": "Up-to-date floor plan for viewings, offers and cadastral compliance.",
+      "promo_atti_tag": "Records search",
+      "promo_atti_title": "Access to deeds",
+      "promo_atti_desc": "Recover titles and documents no longer available to the owner putting the property on sale."
     },
     "save_search": {
       "cta": "Save this search",

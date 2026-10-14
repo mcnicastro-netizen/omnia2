@@ -14,6 +14,7 @@ import { useAuth, formatApiErrorDetail } from "../../../shared/lib/auth";
 import AlImproveButton from "../../../shared/components/AlImproveButton";
 import PhotoUploader from "../../immoweb/components/PhotoUploader";
 import CloudPageHero from "./CloudPageHero";
+import SellDocPromoRail from "./SellDocPromoRail";
 
 const STAGING_PENDING_KEY = "omnia_staging_pending";
 
@@ -441,7 +442,9 @@ export default function SellPage() {
         image="/cloud/intent-sell.jpg"
       />
 
-      <div className="max-w-4xl mx-auto px-5 sm:px-8 md:px-16 py-10">
+      <div className="max-w-6xl mx-auto px-5 sm:px-8 md:px-12 lg:px-16 py-10">
+      <div className="lg:grid lg:grid-cols-12 lg:gap-8 lg:items-start">
+      <div className="lg:col-span-8 min-w-0">
       {error && (
         <div data-testid="sell-error" className="mb-4 text-xs text-rose-700 bg-rose-50 border border-rose-200 rounded-xl px-4 py-3">
           {error}
@@ -793,6 +796,10 @@ export default function SellPage() {
           </div>
         </form>
       )}
+      </div>
+
+      <SellDocPromoRail className="mt-8 lg:mt-0 lg:col-span-4 lg:sticky lg:top-24" />
+      </div>
       </div>
     </div>
   );
