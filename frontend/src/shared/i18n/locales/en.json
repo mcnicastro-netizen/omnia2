@@ -31,7 +31,7 @@
     "pillar_app_title": "ImmoWeb",
     "pillar_app_desc": "Agency CRM: today’s priorities, matches and daily workflow — the operating system for your agency.",
     "pillar_learn_title": "Omnia Academy",
-    "pillar_learn_desc": "Training for agents and teams — coming soon."
+    "pillar_learn_desc": "Train collaborators in-house. Professional prep today; recognition ahead."
   },
   "immocloud": {
     "title": "ImmobilCloud",
@@ -43,7 +43,85 @@
   },
   "academy": {
     "title": "Omnia Academy",
-    "tagline": "Coming soon — not in the commercial offer yet"
+    "tagline": "Training for agency collaborators and teams",
+    "eyebrow": "Omnia Academy · Agency training",
+    "hero_title": "Qualified collaborators: train them in your agency.",
+    "hero_lead": "We prepare and keep your team up to date with current regulations — with clarity about what we are today and what we are building.",
+    "cta_info": "Request information",
+    "cta_honesty": "Read the real status",
+    "cta_legal": "Open HAL Legal",
+    "honesty_badge": "Transparency · current status",
+    "honesty_title": "Not enabling today. It will be soon.",
+    "honesty_body": "Right now Omnia Academy does not issue a preparatory certificate valid for Chamber of Commerce exam registration. We are working through every step required for recognition. Until then, this remains a professional preparation path: a syllabus aligned with recognised training providers, the same reference textbooks, and exam simulations based on tests previously used by Chambers of Commerce. We say this plainly, without ambiguity.",
+    "problem_title": "The problem we address",
+    "problem_body": "Finding already-qualified collaborators is hard and expensive. Many agencies spend months hiring, then start from scratch on operational and regulatory training. Academy exists to train people in-house — and keep them current over time.",
+    "offer_items": [
+      {
+        "title": "In-agency training",
+        "body": "A structured path for new team members: legal, technical and craft foundations built for daily brokerage work."
+      },
+      {
+        "title": "Regulatory updates",
+        "body": "An initial course is not enough. We keep collaborators aligned with current rules and practices that matter in deals and in the office."
+      },
+      {
+        "title": "Toward recognition",
+        "body": "The goal is clear: become a recognised path. Until then, no false claims — only serious preparation and a transparent method."
+      }
+    ],
+    "method_title": "How we work (pending recognition)",
+    "method_body": "In practice, the content follows the same framework used by recognised training providers. We do not invent a parallel syllabus: we align with what the profession — and, tomorrow, the exam — actually requires.",
+    "method_texts_label": "Textbooks",
+    "method_texts": "We use the same reference texts adopted in recognised paths, so study stays consistent with industry standards.",
+    "method_exams_label": "Exam simulations",
+    "method_exams": "We simulate exams with tests previously administered by Chambers of Commerce for licensing — concrete practice, not abstract theory.",
+    "path_title": "How to become a real-estate agent in Italy",
+    "path_intro": "Regulatory reference framework (Law 39/1989, Ministerial Decree 300/1990 and later updates): the official path, distinct from what Academy can certify today.",
+    "path_note": "This is the official path — not yet our certificate.",
+    "path_steps": [
+      {
+        "title": "Course at a recognised provider",
+        "body": "Attend a preparatory course at a centre accredited by an Italian Region."
+      },
+      {
+        "title": "Chamber of Commerce exam",
+        "body": "Pass the Chamber exam (written papers and oral) in the competent Chamber."
+      },
+      {
+        "title": "Licence",
+        "body": "A pass grants the licence to act as a business broker / real-estate agent."
+      }
+    ],
+    "program_title": "Reference syllabus",
+    "program_intro": "Orientative structure aligned with recognised providers. Module detail, hours and delivery mode (asynchronous / live) will be published with the official calendar.",
+    "program_legal_title": "Legal subjects",
+    "program_legal": [
+      "Brokerage and mandate",
+      "Property and real rights",
+      "Possession and usucapion",
+      "Co-ownership, timeshare and condominium",
+      "Obligations and security",
+      "Contracts, sale and lease",
+      "Mortgage and other contracts",
+      "Business, company and insolvency",
+      "Family law and succession",
+      "Publicity, registration and property tax law"
+    ],
+    "program_tech_title": "Technical subjects",
+    "program_tech": [
+      "Planning and building law",
+      "Property finance and credit",
+      "Land registry and registration offices",
+      "Property valuation",
+      "Business valuation",
+      "Chamber exam simulations"
+    ],
+    "hal_title": "Regulatory updates with HAL Legal",
+    "hal_body": "Day to day, alongside Academy, the OMNIA ecosystem offers HAL Legal: informational support on Italian real-estate law for clarifications and updates — not a substitute for the course or for professional legal advice.",
+    "hal_disclaimer": "HAL Legal is not a lawyer and does not replace legal advice. Answers are informational only.",
+    "closing_title": "First draft, open dialogue",
+    "closing_body": "This page is an honest draft. If you run an agency and want to train or update your team, write to us: we will build the path together, without promises we cannot yet sign.",
+    "footer_note": "Informational draft · not enabling at present"
   },
 
   "health": {

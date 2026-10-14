@@ -33,7 +33,7 @@ export default function LandingApp() {
       key: "academy",
       title: t("landing.pillar_learn_title"),
       desc: t("landing.pillar_learn_desc"),
-      to: null, // destinazione da definire
+      to: `/${lang}/learn`,
       tag: "Academy",
       accent: "#0B1E3F",
     },
@@ -161,6 +161,7 @@ export default function LandingApp() {
               <Link
                 key={p.key}
                 to={p.to}
+                id={p.key === "academy" ? "pillar-academy" : undefined}
                 data-testid={`pillar-${p.key}`}
                 className={className}
                 style={style}

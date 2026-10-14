@@ -529,6 +529,14 @@ function App() {
                       </ErrorBoundary>
                     }
                   />
+                  <Route
+                    path="academy/*"
+                    element={
+                      <ErrorBoundary name="academy">
+                        <AcademyApp />
+                      </ErrorBoundary>
+                    }
+                  />
 
                   {/* AL Legal (M5.S3) — accessible to all authenticated users (agents + B2C) */}
                   <Route

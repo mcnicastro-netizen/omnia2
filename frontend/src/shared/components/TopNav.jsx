@@ -9,14 +9,14 @@ import OmniaLogo from "./OmniaLogo";
 /**
  * Shared top navigation across Landing, App, Learn.
  *
- * Home (landing): logo + Cerca casa · Vendi casa · Academy · Area riservata
- * App / Learn: logo + prodotti (+ suffix opzionale)
+ * Home / Academy: logo + Cerca casa · Vendi casa · Academy · Area riservata
+ * App: logo + prodotti (+ suffix opzionale)
  */
 export default function TopNav({ current = "landing", theme = "light", suffix = null }) {
   const { t, i18n } = useTranslation();
   const lang = (i18n.language || "it").slice(0, 2);
 
-  const isLanding = current === "landing";
+  const isPublicNav = current === "landing" || current === "academy";
 
   const themes = {
     light: {
@@ -64,8 +64,7 @@ export default function TopNav({ current = "landing", theme = "light", suffix = 
     },
     {
       key: "academy",
-      // destinazione prodotto da definire — scroll al box in home
-      to: `/${lang}#pillar-academy`,
+      to: `/${lang}/learn`,
       label: t("cloud.nav_academy"),
       testid: "topnav-academy",
     },
@@ -76,13 +75,13 @@ export default function TopNav({ current = "landing", theme = "light", suffix = 
     { key: "app", to: `/${lang}/app`, label: t("nav.immoweb"), testid: "topnav-app" },
   ];
 
-  const navItems = isLanding ? landingItems : productItems;
-  const ctaTo = isLanding ? `/${lang}/cloud/register` : `/${lang}/login`;
-  const ctaLabel = isLanding ? t("cloud.nav_area") : t("nav.login");
-  const ctaTestId = isLanding ? "topnav-area" : "topnav-login";
+  const navItems = isPublicNav ? landingItems : productItems;
+  const ctaTo = isPublicNav ? `/${lang}/cloud/register` : `/${lang}/login`;
+  const ctaLabel = isPublicNav ? t("cloud.nav_area") : t("nav.login");
+  const ctaTestId = isPublicNav ? "topnav-area" : "topnav-login";
 
   const mobileLinks = [
-    ...(isLanding ? [] : [{ to: `/${lang}`, label: t("nav.back_to_home") }]),
+    ...(isPublicNav ? [] : [{ to: `/${lang}`, label: t("nav.back_to_home") }]),
     ...navItems.map((n) => ({ to: n.to, label: n.label })),
     { to: ctaTo, label: ctaLabel },
   ];
@@ -91,7 +90,7 @@ export default function TopNav({ current = "landing", theme = "light", suffix = 
     <header className={`sticky top-0 z-40 backdrop-blur ${c.wrapper}`}>
       <div className="flex items-center justify-between px-5 sm:px-8 md:px-12 lg:px-16 py-3 max-w-screen-2xl mx-auto gap-4 min-h-[132px]">
         <div className="flex items-center gap-4 md:gap-6 min-w-0">
-          {!isLanding && (
+          {!isPublicNav && (
             <Link
               to={`/${lang}`}
               data-testid="topnav-back"
