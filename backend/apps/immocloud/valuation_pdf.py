@@ -32,6 +32,7 @@ from reportlab.platypus import (
     Flowable,
     HRFlowable,
     Image,
+    KeepTogether,
     Paragraph,
     SimpleDocTemplate,
     Spacer,
@@ -92,8 +93,8 @@ def _register_fonts() -> None:
     candidates = [
         (
             "ValSans", "ValSans-Bold", "ValSerif", "ValSerif-Bold",
-            "/usr/share/fonts/truetype/macos/Inter-Regular.ttf",
-            "/usr/share/fonts/truetype/macos/Inter-Bold.ttf",
+            "/usr/share/fonts/truetype/noto/NotoSans-Regular.ttf",
+            "/usr/share/fonts/truetype/noto/NotoSans-Bold.ttf",
             "/usr/share/fonts/truetype/noto/NotoSerif-Regular.ttf",
             "/usr/share/fonts/truetype/noto/NotoSerif-Bold.ttf",
         ),
@@ -197,15 +198,24 @@ def _fetch_logo(url: Optional[str], max_h_mm: float = 14.0) -> Optional[Image]:
         return None
 
 
-class AccentRule(Flowable):
-    """Thin full-width accent rule under brand header."""
+# Soft palette (navy + bronze, no cream/purple)
+_PAGE_WASH = colors.HexColor("#F5F8FC")
+_CARD_BG = colors.HexColor("#EEF3F9")
+_ROW_ALT = colors.HexColor("#F3F7FB")
+_INK = colors.HexColor("#1A2740")
+_MUTED = colors.HexColor("#5B6B82")
 
-    def __init__(self, color: colors.Color, thickness: float = 1.2):
+
+class AccentRule(Flowable):
+    """Short bronze bar + optional hairline — used under section titles."""
+
+    def __init__(self, color: colors.Color, thickness: float = 2.2, short: bool = True):
         super().__init__()
         self._color = color
         self._thickness = thickness
+        self._short = short
         self.width = 0
-        self.height = thickness + 2
+        self.height = thickness + 3
 
     def wrap(self, availWidth, availHeight):
         self.width = availWidth
@@ -213,14 +223,45 @@ class AccentRule(Flowable):
 
     def draw(self):
         self.canv.setStrokeColor(self._color)
+        self.canv.setFillColor(self._color)
         self.canv.setLineWidth(self._thickness)
-        self.canv.line(0, 1, self.width, 1)
+        bar_w = min(28 * mm, self.width * 0.22) if self._short else self.width
+        y = 1.5
+        self.canv.roundRect(0, y - self._thickness / 2, bar_w, self._thickness, 0.6, stroke=0, fill=1)
+        if self._short and self.width > bar_w + 4:
+            self.canv.setStrokeColor(colors.HexColor("#D5DEEA"))
+            self.canv.setLineWidth(0.5)
+            self.canv.line(bar_w + 3 * mm, y, self.width, y)
+
+
+class SectionTitle(Flowable):
+    """Serif section title with bronze mark on the left."""
+
+    def __init__(self, text: str, primary: colors.Color, accent: colors.Color):
+        super().__init__()
+        self._text = text
+        self._primary = primary
+        self._accent = accent
+        self.width = 0
+        self.height = 13
+
+    def wrap(self, availWidth, availHeight):
+        self.width = availWidth
+        return self.width, self.height
+
+    def draw(self):
+        c = self.canv
+        c.setFillColor(self._accent)
+        c.roundRect(0, 2.5, 2.0 * mm, 8.5, 0.7, stroke=0, fill=1)
+        c.setFillColor(self._primary)
+        c.setFont(FONT_SERIF_BOLD, 10.5)
+        c.drawString(4.5 * mm, 4.5, self._text)
 
 
 def _styles(primary: colors.Color, accent: colors.Color, muted: colors.Color) -> Dict[str, ParagraphStyle]:
     return {
         "brand": ParagraphStyle(
-            "v_brand", fontName=FONT_SERIF_BOLD, fontSize=20, leading=24,
+            "v_brand", fontName=FONT_SERIF_BOLD, fontSize=22, leading=26,
             textColor=primary, spaceAfter=1, alignment=TA_LEFT,
         ),
         "tagline": ParagraphStyle(
@@ -228,95 +269,105 @@ def _styles(primary: colors.Color, accent: colors.Color, muted: colors.Color) ->
             textColor=accent, spaceAfter=1, alignment=TA_LEFT,
         ),
         "doc_title": ParagraphStyle(
-            "v_title", fontName=FONT_SANS, fontSize=9.5, leading=12,
-            textColor=muted, spaceBefore=5, spaceAfter=1, alignment=TA_LEFT,
+            "v_title", fontName=FONT_SERIF_BOLD, fontSize=12.5, leading=16,
+            textColor=primary, spaceBefore=5, spaceAfter=1, alignment=TA_LEFT,
         ),
         "meta": ParagraphStyle(
             "v_meta", fontName=FONT_SANS, fontSize=7.5, leading=10,
-            textColor=muted, spaceAfter=6,
+            textColor=muted, spaceAfter=5,
         ),
         "section": ParagraphStyle(
             "v_sec", fontName=FONT_SERIF_BOLD, fontSize=10.5, leading=13,
-            textColor=primary, spaceBefore=10, spaceAfter=4,
+            textColor=primary, spaceBefore=8, spaceAfter=2,
         ),
         "body": ParagraphStyle(
             "v_body", fontName=FONT_SANS, fontSize=8.5, leading=12,
-            textColor=colors.HexColor("#292524"),
+            textColor=_INK,
         ),
         "label": ParagraphStyle(
-            "v_label", fontName=FONT_SANS, fontSize=7, leading=9,
+            "v_label", fontName=FONT_SANS, fontSize=6.5, leading=8,
             textColor=muted, alignment=TA_LEFT,
         ),
         "value": ParagraphStyle(
-            "v_val", fontName=FONT_SANS_BOLD, fontSize=9, leading=11,
-            textColor=colors.HexColor("#1c1917"), alignment=TA_LEFT,
+            "v_val", fontName=FONT_SANS_BOLD, fontSize=9.5, leading=12,
+            textColor=_INK, alignment=TA_LEFT,
         ),
         "hero_label": ParagraphStyle(
-            "v_hl", fontName=FONT_SANS, fontSize=7.5, leading=9,
-            textColor=colors.white, alignment=TA_CENTER,
+            "v_hl", fontName=FONT_SANS, fontSize=8, leading=10,
+            textColor=colors.HexColor("#D8E2F0"), alignment=TA_CENTER,
+            spaceBefore=0, spaceAfter=0,
         ),
         "hero_num": ParagraphStyle(
-            "v_hn", fontName=FONT_SERIF_BOLD, fontSize=26, leading=30,
+            "v_hn", fontName=FONT_SERIF_BOLD, fontSize=27, leading=30,
             textColor=colors.white, alignment=TA_CENTER,
         ),
         "hero_range": ParagraphStyle(
-            "v_hr", fontName=FONT_SANS, fontSize=8.5, leading=11,
-            textColor=colors.HexColor("#e7e5e4"), alignment=TA_CENTER,
+            "v_hr", fontName=FONT_SANS, fontSize=9, leading=12,
+            textColor=colors.HexColor("#E8D5B5"), alignment=TA_CENTER,
         ),
         "cell": ParagraphStyle(
-            "v_cell", fontName=FONT_SANS, fontSize=8, leading=10,
-            textColor=colors.HexColor("#292524"),
+            "v_cell", fontName=FONT_SANS, fontSize=8.2, leading=11,
+            textColor=_INK,
         ),
         "cell_head": ParagraphStyle(
             "v_ch", fontName=FONT_SANS_BOLD, fontSize=7.5, leading=9,
-            textColor=primary,
+            textColor=colors.white,
         ),
         "disc": ParagraphStyle(
-            "v_disc", fontName=FONT_SANS, fontSize=7, leading=9.5,
+            "v_disc", fontName=FONT_SANS, fontSize=7.2, leading=10,
             textColor=muted, spaceBefore=1,
         ),
         "footer": ParagraphStyle(
-            "v_foot", fontName=FONT_SANS, fontSize=6.5, leading=8,
-            textColor=colors.HexColor("#a8a29e"), alignment=TA_CENTER,
+            "v_foot", fontName=FONT_SANS, fontSize=7, leading=9,
+            textColor=_MUTED, alignment=TA_CENTER,
         ),
         "conf": ParagraphStyle(
             "v_conf", fontName=FONT_SANS_BOLD, fontSize=8.5, leading=11,
-            textColor=primary, alignment=TA_LEFT,
+            textColor=primary, alignment=TA_CENTER,
+        ),
+        "stat_label": ParagraphStyle(
+            "v_sl", fontName=FONT_SANS, fontSize=7, leading=9,
+            textColor=muted, alignment=TA_CENTER,
+        ),
+        "stat_value": ParagraphStyle(
+            "v_sv", fontName=FONT_SANS_BOLD, fontSize=9, leading=11,
+            textColor=primary, alignment=TA_CENTER,
         ),
     }
 
 
 def _kv_table(pairs: List[Tuple[str, str]], styles: Dict[str, ParagraphStyle], cols: int = 2) -> Table:
-    """Render label/value pairs in a light grid (2 columns of pairs by default)."""
-    # Flatten into rows of [lab, val, lab, val]
+    """Soft card grid of label/value pairs."""
     cells: List[List[Any]] = []
     row: List[Any] = []
     for label, value in pairs:
-        row.append(Paragraph(_esc(label).upper(), styles["label"]))
-        row.append(Paragraph(_esc(value), styles["value"]))
-        if len(row) >= cols * 2:
+        cell = [
+            Paragraph(_esc(label).upper(), styles["label"]),
+            Spacer(1, 1.5),
+            Paragraph(_esc(value), styles["value"]),
+        ]
+        row.append(cell)
+        if len(row) >= cols:
             cells.append(row)
             row = []
     if row:
-        while len(row) < cols * 2:
+        while len(row) < cols:
             row.append("")
         cells.append(row)
 
-    usable = 174 * mm
-    if cols == 2:
-        widths = [28 * mm, 59 * mm, 28 * mm, 59 * mm]
-    else:
-        widths = [usable / (cols * 2)] * (cols * 2)
-
+    widths = [87 * mm, 87 * mm] if cols == 2 else [174 * mm / cols] * cols
     t = Table(cells, colWidths=widths)
-    t.setStyle(TableStyle([
+    style_cmds = [
+        ("BACKGROUND", (0, 0), (-1, -1), _CARD_BG),
+        ("BOX", (0, 0), (-1, -1), 0.6, colors.HexColor("#D5DEEA")),
+        ("INNERGRID", (0, 0), (-1, -1), 0.4, colors.HexColor("#DDE5F0")),
         ("VALIGN", (0, 0), (-1, -1), "TOP"),
-        ("TOPPADDING", (0, 0), (-1, -1), 3),
+        ("TOPPADDING", (0, 0), (-1, -1), 5),
         ("BOTTOMPADDING", (0, 0), (-1, -1), 5),
-        ("LEFTPADDING", (0, 0), (-1, -1), 0),
-        ("RIGHTPADDING", (0, 0), (-1, -1), 6),
-        ("LINEBELOW", (0, 0), (-1, -2), 0.35, colors.HexColor("#e7e5e4")),
-    ]))
+        ("LEFTPADDING", (0, 0), (-1, -1), 7),
+        ("RIGHTPADDING", (0, 0), (-1, -1), 7),
+    ]
+    t.setStyle(TableStyle(style_cmds))
     return t
 
 
@@ -324,15 +375,80 @@ def _data_table(headers: List[str], rows: List[List[str]], styles: Dict[str, Par
                 widths: List[float], primary: colors.Color) -> Table:
     head = [Paragraph(_esc(h), styles["cell_head"]) for h in headers]
     body = [[Paragraph(_esc(c), styles["cell"]) for c in r] for r in rows]
-    t = Table([head] + body, colWidths=widths)
+    t = Table([head] + body, colWidths=widths, repeatRows=1)
+    cmds = [
+        ("BACKGROUND", (0, 0), (-1, 0), primary),
+        ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
+        ("TOPPADDING", (0, 0), (-1, -1), 4),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 4),
+        ("LEFTPADDING", (0, 0), (-1, -1), 4),
+        ("RIGHTPADDING", (0, 0), (-1, -1), 4),
+        ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+        ("BOX", (0, 0), (-1, -1), 0.5, colors.HexColor("#D5DEEA")),
+        ("LINEBELOW", (0, 1), (-1, -2), 0.35, colors.HexColor("#E2EAF3")),
+    ]
+    for i in range(1, len(body) + 1):
+        if i % 2 == 0:
+            cmds.append(("BACKGROUND", (0, i), (-1, i), _ROW_ALT))
+    t.setStyle(TableStyle(cmds))
+    return t
+
+
+def _hero_block(est: Dict[str, Any], styles: Dict[str, ParagraphStyle],
+                primary: colors.Color, accent: colors.Color) -> Table:
+    """Market-value hero: navy panel + bronze top edge + warm range."""
+    inner = Table(
+        [
+            [Paragraph("VALORE DI MERCATO STIMATO", styles["hero_label"])],
+            [Paragraph(_esc(_eur(est.get("avg"))), styles["hero_num"])],
+            [Paragraph(
+                f"Range {_esc(_eur(est.get('min')))}  —  {_esc(_eur(est.get('max')))}",
+                styles["hero_range"],
+            )],
+        ],
+        colWidths=[174 * mm],
+    )
+    inner.setStyle(TableStyle([
+        ("BACKGROUND", (0, 0), (-1, -1), primary),
+        ("TOPPADDING", (0, 0), (-1, 0), 8),
+        ("BOTTOMPADDING", (0, 0), (0, 0), 1),
+        ("TOPPADDING", (0, 1), (0, 1), 1),
+        ("BOTTOMPADDING", (0, 1), (0, 1), 1),
+        ("TOPPADDING", (0, 2), (0, 2), 1),
+        ("BOTTOMPADDING", (0, 2), (-1, -1), 9),
+        ("ALIGN", (0, 0), (-1, -1), "CENTER"),
+        ("BOX", (0, 0), (-1, -1), 0, primary),
+        ("LINEABOVE", (0, 0), (-1, 0), 3.0, accent),
+    ]))
+    return inner
+
+
+def _stats_row(psm: Dict[str, Any], conf: str, score: Any,
+               styles: Dict[str, ParagraphStyle], accent: colors.Color) -> Table:
+    left = [
+        Paragraph("PREZZO AL M² (COMMERCIALE)", styles["stat_label"]),
+        Spacer(1, 2),
+        Paragraph(
+            f"{_esc(_eur(psm.get('min')))} — {_esc(_eur(psm.get('max')))}",
+            styles["stat_value"],
+        ),
+        Paragraph(f"media {_esc(_eur(psm.get('avg')))}", styles["stat_label"]),
+    ]
+    right = [
+        Paragraph("AFFIDABILITÀ", styles["stat_label"]),
+        Spacer(1, 2),
+        Paragraph(f"{_esc(conf)}", styles["stat_value"]),
+        Paragraph(f"{_esc(score)}/110", styles["stat_label"]),
+    ]
+    t = Table([[left, right]], colWidths=[100 * mm, 74 * mm])
     t.setStyle(TableStyle([
-        ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#fafaf9")),
-        ("LINEBELOW", (0, 0), (-1, 0), 0.8, primary),
-        ("LINEBELOW", (0, 1), (-1, -1), 0.3, colors.HexColor("#e7e5e4")),
-        ("TOPPADDING", (0, 0), (-1, -1), 3.5),
-        ("BOTTOMPADDING", (0, 0), (-1, -1), 3.5),
-        ("LEFTPADDING", (0, 0), (-1, -1), 3),
-        ("RIGHTPADDING", (0, 0), (-1, -1), 3),
+        ("BACKGROUND", (0, 0), (-1, -1), _CARD_BG),
+        ("BOX", (0, 0), (-1, -1), 0.6, colors.HexColor("#D5DEEA")),
+        ("LINEBEFORE", (1, 0), (1, 0), 1.2, accent),
+        ("TOPPADDING", (0, 0), (-1, -1), 6),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 6),
+        ("LEFTPADDING", (0, 0), (-1, -1), 7),
+        ("RIGHTPADDING", (0, 0), (-1, -1), 7),
         ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
     ]))
     return t
@@ -367,7 +483,7 @@ def build_valuation_pdf(
 
     primary = _color(branding.get("primary_color"), OMNIA_BRAND["primary_color"])
     accent = _color(branding.get("accent_color"), OMNIA_BRAND["accent_color"])
-    muted = colors.HexColor("#78716c")
+    muted = _MUTED
     styles = _styles(primary, accent, muted)
     whitelabel = _is_whitelabel(branding)
     agency_name = (branding.get("name") or OMNIA_BRAND["name"]).strip()
@@ -377,8 +493,8 @@ def build_valuation_pdf(
     buf = io.BytesIO()
     doc = SimpleDocTemplate(
         buf, pagesize=A4,
-        leftMargin=18 * mm, rightMargin=18 * mm,
-        topMargin=18 * mm, bottomMargin=18 * mm,
+        leftMargin=16 * mm, rightMargin=16 * mm,
+        topMargin=14 * mm, bottomMargin=16 * mm,
         title="Rapporto di Valutazione Immobiliare",
         author=agency_name,
     )
@@ -395,7 +511,7 @@ def build_valuation_pdf(
         brand_block.append(Spacer(1, 2))
 
     if logo:
-        header = Table([[brand_block, logo]], colWidths=[126 * mm, 48 * mm])
+        header = Table([[brand_block, logo]], colWidths=[126 * mm, 52 * mm])
         header.setStyle(TableStyle([
             ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
             ("ALIGN", (1, 0), (1, 0), "RIGHT"),
@@ -406,8 +522,8 @@ def build_valuation_pdf(
     else:
         story.extend(brand_block)
 
-    story.append(Spacer(1, 4))
-    story.append(AccentRule(accent, thickness=1.4))
+    story.append(Spacer(1, 3))
+    story.append(AccentRule(accent, thickness=2.4, short=False))
     story.append(Paragraph("Rapporto di valutazione immobiliare", styles["doc_title"]))
     story.append(Paragraph(
         f"Emesso il {today} · Metodo UNI 10750:1998 / DPR 138/1998",
@@ -415,9 +531,6 @@ def build_valuation_pdf(
     ))
 
     # —— Immobile ——
-    story.append(Paragraph("Immobile", styles["section"]))
-    story.append(AccentRule(colors.HexColor("#e7e5e4"), thickness=0.5))
-    story.append(Spacer(1, 4))
     surface = result.get("surface") or {}
     zone_txt = payload.zone or payload.address or "—"
     pairs = [
@@ -430,53 +543,26 @@ def build_valuation_pdf(
         ("Stato", (payload.condition or "—").replace("_", " ").title()),
         ("Classe energetica", payload.energy_class or "n.d."),
     ]
-    story.append(_kv_table(pairs, styles))
+    story.append(KeepTogether([
+        SectionTitle("Immobile", primary, accent),
+        Spacer(1, 3),
+        _kv_table(pairs, styles),
+    ]))
 
     # —— Valore hero ——
-    story.append(Spacer(1, 8))
     est = result.get("estimated_value") or {}
-    hero = Table(
-        [
-            [Paragraph("VALORE DI MERCATO STIMATO", styles["hero_label"])],
-            [Paragraph(_esc(_eur(est.get("avg"))), styles["hero_num"])],
-            [Paragraph(
-                f"Range {_esc(_eur(est.get('min')))}  —  {_esc(_eur(est.get('max')))}",
-                styles["hero_range"],
-            )],
-        ],
-        colWidths=[174 * mm],
-    )
-    hero.setStyle(TableStyle([
-        ("BACKGROUND", (0, 0), (-1, -1), primary),
-        ("TOPPADDING", (0, 0), (-1, 0), 9),
-        ("BOTTOMPADDING", (0, 0), (0, 0), 1),
-        ("TOPPADDING", (0, 1), (0, 1), 1),
-        ("BOTTOMPADDING", (0, 1), (0, 1), 1),
-        ("TOPPADDING", (0, 2), (0, 2), 1),
-        ("BOTTOMPADDING", (0, 2), (-1, -1), 9),
-        ("ALIGN", (0, 0), (-1, -1), "CENTER"),
-    ]))
-    story.append(hero)
-
     psm = result.get("price_per_sqm") or {}
     conf = CONFIDENCE_LABELS.get(result.get("confidence"), "—")
-    story.append(Spacer(1, 6))
-    story.append(Paragraph(
-        f"Prezzo al m² (commerciale): {_esc(_eur(psm.get('min')))} — {_esc(_eur(psm.get('max')))} "
-        f"(media {_esc(_eur(psm.get('avg')))})",
-        styles["body"],
-    ))
-    story.append(Paragraph(
-        f"Affidabilità della stima: {conf} · {result.get('confidence_score', 0)}/110",
-        styles["conf"],
-    ))
+    story.append(Spacer(1, 7))
+    story.append(KeepTogether([
+        _hero_block(est, styles, primary, accent),
+        Spacer(1, 5),
+        _stats_row(psm, conf, result.get("confidence_score", 0), styles, accent),
+    ]))
 
     # —— Superfici UNI ——
     breakdown = surface.get("breakdown") or {}
     if len(breakdown) > 1:
-        story.append(Paragraph("Superficie commerciale ponderata", styles["section"]))
-        story.append(AccentRule(colors.HexColor("#e7e5e4"), thickness=0.5))
-        story.append(Spacer(1, 4))
         srows = []
         for k, v in breakdown.items():
             label = k.replace("_mq", "").replace("_", " ").title()
@@ -498,21 +584,22 @@ def build_valuation_pdf(
                     w_txt = str(weighted)
                 srows.append([label, mq_txt, coeff_txt, w_txt])
             else:
-                # Legacy float = already weighted only (pre-fix payloads)
                 srows.append([label, "—", "—", str(v)])
-        story.append(_data_table(
-            ["Componente", "m² reali", "Coeff.", "m² ponderati"],
-            srows, styles,
-            [70 * mm, 34 * mm, 30 * mm, 40 * mm],
-            primary,
-        ))
+        story.append(Spacer(1, 6))
+        story.append(KeepTogether([
+            SectionTitle("Superficie commerciale ponderata", primary, accent),
+            Spacer(1, 3),
+            _data_table(
+                ["Componente", "m² reali", "Coeff.", "m² ponderati"],
+                srows, styles,
+                [70 * mm, 34 * mm, 30 * mm, 40 * mm],
+                primary,
+            ),
+        ]))
 
     # —— Merito ——
     merit = result.get("merit_breakdown") or {}
     if merit:
-        story.append(Paragraph("Coefficienti di merito", styles["section"]))
-        story.append(AccentRule(colors.HexColor("#e7e5e4"), thickness=0.5))
-        story.append(Spacer(1, 4))
         mrows = []
         for k, v in merit.items():
             pct = v.get("pct") if isinstance(v, dict) else v
@@ -520,22 +607,31 @@ def build_valuation_pdf(
                 pct_txt = f"{float(pct) * 100:+.1f}%"
             except (TypeError, ValueError):
                 pct_txt = str(pct)
+            # Skip neutral 0% lines to keep the report airy and on one page
+            try:
+                if abs(float(pct)) < 1e-9:
+                    continue
+            except (TypeError, ValueError):
+                pass
             mrows.append([MERIT_LABELS.get(k, k.replace("_", " ").title()), pct_txt])
-        story.append(_data_table(
-            ["Fattore", "Impatto"],
-            mrows, styles,
-            [120 * mm, 54 * mm],
-            primary,
-        ))
+        if mrows:
+            story.append(Spacer(1, 6))
+            story.append(KeepTogether([
+                SectionTitle("Coefficienti di merito", primary, accent),
+                Spacer(1, 3),
+                _data_table(
+                    ["Fattore", "Impatto"],
+                    mrows, styles,
+                    [120 * mm, 54 * mm],
+                    primary,
+                ),
+            ]))
 
     # —— Comparabili ——
     comps = result.get("comparables") or []
     if comps:
-        story.append(Paragraph("Immobili comparabili", styles["section"]))
-        story.append(AccentRule(colors.HexColor("#e7e5e4"), thickness=0.5))
-        story.append(Spacer(1, 4))
         crows = []
-        for c in comps[:4]:
+        for c in comps[:3]:
             crows.append([
                 str(c.get("title", ""))[:40],
                 str(c.get("zone") or c.get("city") or "")[:22],
@@ -543,80 +639,93 @@ def build_valuation_pdf(
                 _eur(c.get("price")),
                 _eur(c.get("price_per_sqm")),
             ])
-        story.append(_data_table(
-            ["Immobile", "Zona", "m²", "Prezzo", "€/m²"],
-            crows, styles,
-            [62 * mm, 36 * mm, 16 * mm, 32 * mm, 28 * mm],
-            primary,
-        ))
+        story.append(Spacer(1, 6))
+        story.append(KeepTogether([
+            SectionTitle("Immobili comparabili", primary, accent),
+            Spacer(1, 3),
+            _data_table(
+                ["Immobile", "Zona", "m²", "Prezzo", "€/m²"],
+                crows, styles,
+                [62 * mm, 36 * mm, 16 * mm, 32 * mm, 28 * mm],
+                primary,
+            ),
+        ]))
 
-    # —— Metodologia + disclaimer ——
-    story.append(Paragraph("Metodologia e fonti", styles["section"]))
-    story.append(AccentRule(colors.HexColor("#e7e5e4"), thickness=0.5))
-    story.append(Spacer(1, 3))
-    methodology = result.get("methodology") or ""
+    # —— Metodologia + disclaimer (one compact band, stay on page 1) ——
     if whitelabel:
-        methodology = re.sub(r"Pipeline professionale OMNIA:\s*", "Metodo di stima: ", methodology, flags=re.I)
-        methodology = re.sub(r"\bOMNIA\b", "", methodology, flags=re.I)
-        methodology = re.sub(r"\s{2,}", " ", methodology).strip()
-    story.append(Paragraph(_esc(methodology), styles["disc"]))
-    story.append(Spacer(1, 3))
-    story.append(Paragraph(
-        f"Fonte dati: {_esc(result.get('data_source', '—'))}",
-        styles["disc"],
-    ))
-    updated = result.get("prices_updated_to")
-    base_as_of = result.get("dataset_as_of")
-    if updated or base_as_of:
-        story.append(Spacer(1, 2))
-        bits = []
-        if base_as_of:
-            bits.append(f"Snapshot base: {_esc(base_as_of)}")
-        if updated:
-            bits.append(f"Aggiornato a: {_esc(updated)}")
-        foi = result.get("foi_factor")
-        if foi:
-            bits.append(f"FOI×{_esc(foi)}")
-        story.append(Paragraph(" · ".join(bits), styles["disc"]))
-    story.append(Spacer(1, 8))
-    story.append(HRFlowable(width="100%", thickness=0.5, color=colors.HexColor("#e7e5e4")))
-    story.append(Spacer(1, 4))
-    story.append(Paragraph(
-        f"<i>{_esc(_sanitize_disclaimer(result.get('disclaimer', ''), branding))}</i>",
-        styles["disc"],
-    ))
-
-    # —— Footer brand line ——
-    contact_bits = [b for b in [branding.get("email"), branding.get("phone"), branding.get("website")] if b]
-    footer_bits = []
-    if contact_bits:
-        footer_bits.append(" · ".join(contact_bits))
-    if whitelabel:
-        footer_bits.append(f"Documento emesso da {agency_name}")
+        meth_line = (
+            "Metodo: prezzi OMI/Borsino rivalutati (FOI + trend), superficie UNI 10750, "
+            "moltiplicatori tipologici e coefficienti di merito."
+        )
     else:
-        if branding.get("plan_type") == "omnia" or not branding.get("plan_type"):
-            footer_bits.append("Report generato da ImmobilCloud · OMNIA")
-        else:
-            # hybrid / turnkey agency: agency first, soft OMNIA credit
-            footer_bits.append(f"Emesso da {agency_name} · Generato con OMNIA ImmobilCloud")
-    story.append(Spacer(1, 6))
-    story.append(Paragraph(_esc(" · ".join(footer_bits)), styles["footer"]))
+        meth_line = (
+            "Metodo OMNIA: prezzi OMI/Borsino rivalutati (FOI + trend regionale), "
+            "superficie UNI 10750, moltiplicatori tipologici e coefficienti di merito."
+        )
+    fonte = result.get("data_source") or "—"
+    if len(str(fonte)) > 110:
+        fonte = str(fonte)[:107] + "…"
+    contact_bits = [b for b in [branding.get("email"), branding.get("phone"), branding.get("website")] if b]
+    if whitelabel:
+        brand_line = f"Documento emesso da {agency_name}"
+    elif branding.get("plan_type") == "omnia" or not branding.get("plan_type"):
+        brand_line = "Report generato da ImmobilCloud · OMNIA"
+    else:
+        brand_line = f"Emesso da {agency_name} · Generato con OMNIA ImmobilCloud"
+    if contact_bits:
+        brand_line = f"{' · '.join(contact_bits)} · {brand_line}"
+
+    foot_card = Table(
+        [[
+            [
+                Paragraph(f"<b>Metodologia</b> — {_esc(meth_line)}", styles["disc"]),
+                Spacer(1, 2),
+                Paragraph(f"Fonte: {_esc(fonte)}", styles["disc"]),
+                Spacer(1, 2),
+                Paragraph(
+                    f"<i>{_esc(_sanitize_disclaimer(result.get('disclaimer', ''), branding))}</i>",
+                    styles["disc"],
+                ),
+                Spacer(1, 3),
+                Paragraph(_esc(brand_line), styles["footer"]),
+            ]
+        ]],
+        colWidths=[174 * mm],
+    )
+    foot_card.setStyle(TableStyle([
+        ("BACKGROUND", (0, 0), (-1, -1), _CARD_BG),
+        ("BOX", (0, 0), (-1, -1), 0.5, colors.HexColor("#D5DEEA")),
+        ("LINEBEFORE", (0, 0), (0, 0), 2.4, accent),
+        ("TOPPADDING", (0, 0), (-1, -1), 6),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 6),
+        ("LEFTPADDING", (0, 0), (-1, -1), 8),
+        ("RIGHTPADDING", (0, 0), (-1, -1), 7),
+    ]))
+    story.append(Spacer(1, 7))
+    story.append(foot_card)
 
     page_w, page_h = A4
     accent_for_page = accent
+    primary_for_page = primary
 
     def _on_page(canvas, _doc):
         canvas.saveState()
-        # Top accent bar
+        # Soft page wash
+        canvas.setFillColor(_PAGE_WASH)
+        canvas.rect(0, 0, page_w, page_h, stroke=0, fill=1)
+        # Dual top bar: navy + bronze
+        canvas.setFillColor(primary_for_page)
+        canvas.rect(0, page_h - 4.5 * mm, page_w, 4.5 * mm, stroke=0, fill=1)
         canvas.setFillColor(accent_for_page)
-        canvas.rect(0, page_h - 3.2 * mm, page_w, 3.2 * mm, stroke=0, fill=1)
-        # Bottom thin rule + page number
-        canvas.setStrokeColor(colors.HexColor("#e7e5e4"))
-        canvas.setLineWidth(0.4)
-        canvas.line(18 * mm, 11 * mm, page_w - 18 * mm, 11 * mm)
-        canvas.setFont(FONT_SANS, 7)
-        canvas.setFillColor(colors.HexColor("#a8a29e"))
-        canvas.drawCentredString(page_w / 2, 6.5 * mm, f"{_doc.page}")
+        canvas.rect(0, page_h - 6.2 * mm, page_w, 1.7 * mm, stroke=0, fill=1)
+        # Bottom footer band
+        canvas.setFillColor(primary_for_page)
+        canvas.rect(0, 0, page_w, 10 * mm, stroke=0, fill=1)
+        canvas.setFillColor(accent_for_page)
+        canvas.rect(0, 10 * mm, page_w, 0.9 * mm, stroke=0, fill=1)
+        canvas.setFillColor(colors.HexColor("#D8E2F0"))
+        canvas.setFont(FONT_SANS, 7.5)
+        canvas.drawCentredString(page_w / 2, 4 * mm, f"{_doc.page}")
         canvas.restoreState()
 
     doc.build(story, onFirstPage=_on_page, onLaterPages=_on_page)
