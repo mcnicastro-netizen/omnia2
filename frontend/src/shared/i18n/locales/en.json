@@ -24,14 +24,14 @@
   },
   "landing": {
     "hero_title": "The integrated real estate ecosystem",
-    "hero_subtitle": "B2C portal and AI CRM for agencies — two products, one system.",
+    "hero_subtitle": "Website, CRM, advertising portal and Academy — every tool you need to work better.",
     "hero_cta": "Discover OMNIA",
     "pillar_cloud_title": "ImmobilCloud",
     "pillar_cloud_desc": "The real estate portal for private clients.",
     "pillar_app_title": "ImmoWeb",
-    "pillar_app_desc": "AI agency CRM: today’s priorities, explained matches, HAL with confirm. North star: agency OS.",
+    "pillar_app_desc": "Agency CRM: today’s priorities, matches and daily workflow — the operating system for your agency.",
     "pillar_learn_title": "Omnia Academy",
-    "pillar_learn_desc": "Agent training — coming soon. Not part of the current commercial offer."
+    "pillar_learn_desc": "Train collaborators in-house. Professional prep today; recognition ahead."
   },
   "immocloud": {
     "title": "ImmobilCloud",
@@ -39,11 +39,94 @@
   },
   "immoweb": {
     "title": "ImmoWeb",
-    "tagline": "AI CRM — toward the agency OS"
+    "tagline": "CRM — toward the agency OS"
   },
   "academy": {
     "title": "Omnia Academy",
-    "tagline": "Coming soon — not in the commercial offer yet"
+    "tagline": "Training for agency collaborators and teams",
+    "eyebrow": "Omnia Academy · Agency training",
+    "hero_title": "Qualified collaborators: train them in your agency.",
+    "hero_lead": "We prepare and keep your team up to date with current regulations — with clarity about what we are today and what we are building.",
+    "cta_info": "Request information",
+    "cta_honesty": "Read the real status",
+    "cta_legal": "Open HAL Legal",
+    "honesty_badge": "Transparency · current status",
+    "honesty_title": "Not enabling today. It will be soon.",
+    "honesty_body": "Right now Omnia Academy does not issue a preparatory certificate valid for Chamber of Commerce exam registration. We are working through every step required for recognition. Until then, this remains a professional preparation path: a syllabus aligned with recognised training providers, the same reference textbooks, and exam simulations based on tests previously used by Chambers of Commerce. We say this plainly, without ambiguity.",
+    "problem_title": "The problem we address",
+    "problem_body": "Finding already-qualified collaborators is hard and expensive. Many agencies spend months hiring, then start from scratch on operational and regulatory training. Academy exists to train people in-house — and keep them current over time.",
+    "offer_items": [
+      {
+        "title": "In-agency training",
+        "body": "A structured path for new team members: legal, technical and craft foundations built for daily brokerage work."
+      },
+      {
+        "title": "Regulatory updates",
+        "body": "An initial course is not enough. We keep collaborators aligned with current rules and practices that matter in deals and in the office."
+      },
+      {
+        "title": "Toward recognition",
+        "body": "The goal is clear: become a recognised path. Until then, no false claims — only serious preparation and a transparent method."
+      }
+    ],
+    "method_title": "How we work (pending recognition)",
+    "method_body": "In practice, the content follows the same framework used by recognised training providers. We do not invent a parallel syllabus: we align with what the profession — and, tomorrow, the exam — actually requires.",
+    "method_texts_label": "Textbooks",
+    "method_texts": "We use the same reference texts adopted in recognised paths, so study stays consistent with industry standards.",
+    "method_exams_label": "Exam simulations",
+    "method_exams": "We simulate exams with tests previously administered by Chambers of Commerce for licensing — concrete practice, not abstract theory.",
+    "path_title": "How to become a real-estate agent in Italy",
+    "path_intro": "Regulatory reference framework (Law 39/1989, Ministerial Decree 300/1990 and later updates): the official path, distinct from what Academy can certify today.",
+    "path_note": "This is the official path — not yet our certificate.",
+    "path_steps": [
+      {
+        "title": "Course at a recognised provider",
+        "body": "Attend a preparatory course at a centre accredited by an Italian Region."
+      },
+      {
+        "title": "Chamber of Commerce exam",
+        "body": "Pass the Chamber exam (written papers and oral) in the competent Chamber."
+      },
+      {
+        "title": "Licence",
+        "body": "A pass grants the licence to act as a business broker / real-estate agent."
+      }
+    ],
+    "program_title": "Reference syllabus",
+    "program_intro": "Orientative structure aligned with recognised providers. Module detail, hours and delivery mode (asynchronous / live) will be published with the official calendar.",
+    "program_legal_title": "Legal subjects",
+    "program_legal": [
+      "Brokerage and mandate",
+      "Property and real rights",
+      "Possession and usucapion",
+      "Co-ownership, timeshare and condominium",
+      "Obligations and security",
+      "Contracts, sale and lease",
+      "Mortgage and other contracts",
+      "Business, company and insolvency",
+      "Family law and succession",
+      "Publicity, registration and property tax law"
+    ],
+    "program_tech_title": "Technical subjects",
+    "program_tech": [
+      "Planning and building law",
+      "Property finance and credit",
+      "Land registry and registration offices",
+      "Property valuation",
+      "Business valuation",
+      "Chamber exam simulations"
+    ],
+    "hal_title": "Regulatory updates with HAL Legal",
+    "hal_body": "Day to day, alongside Academy, the OMNIA ecosystem offers HAL Legal: informational support on Italian real-estate law for clarifications and updates — not a substitute for the course or for professional legal advice.",
+    "hal_disclaimer": "HAL Legal is not a lawyer and does not replace legal advice. Answers are informational only.",
+    "closing_title": "First draft, open dialogue",
+    "closing_body": "This page is an honest draft. If you run an agency and want to train or update your team, write to us: we will build the path together, without promises we cannot yet sign.",
+    "footer_note": "Informational draft · not enabling at present",
+    "img_hero_alt": "Residential interior — Omnia Academy professional context",
+    "img_hero_caption": "Training for people who work in the field",
+    "img_problem_alt": "Contemporary home at dusk",
+    "img_strip_caption": "One profession, nationwide",
+    "img_closing_alt": "Residence with pool — Omnia Real Estate Lab"
   },
 
   "health": {
@@ -838,9 +921,10 @@
     "rooms_short": "rms",
     "baths_short": "baths",
     "footer_tagline": "OMNIA portal · Private sellers & agencies · Italy",
-    "nav_search": "Search",
-    "nav_sell": "Sell",
-    "nav_area": "Account",
+    "nav_search": "Find a home",
+    "nav_sell": "Sell your home",
+    "nav_academy": "Academy",
+    "nav_area": "Private area",
     "card_cerca_title": "Search a home",
     "card_cerca_text": "Thousands of properties for sale or rent from agencies and private sellers.",
     "card_cerca_cta": "Start searching",
@@ -1032,7 +1116,18 @@
       "stats_leads": "contacts received",
       "stats_views_30": "views last 30 days",
       "stats_rate": "contact rate (30d)",
-      "stats_note": "A view is a detail-page open. A contact is a message sent. These are not search-feed impressions."
+      "stats_note": "A view is a detail-page open. A contact is a message sent. These are not search-feed impressions.",
+      "promo_rail_label": "Documents useful when listing",
+      "promo_soon": "Coming soon",
+      "promo_ape_tag": "Legal requirement",
+      "promo_ape_title": "Energy certificate (APE)",
+      "promo_ape_desc": "Energy performance certificate so you can list and sell compliant, without deal blockers.",
+      "promo_plan_tag": "Documentation",
+      "promo_plan_title": "Cadastral floor plan",
+      "promo_plan_desc": "Up-to-date floor plan for viewings, offers and cadastral compliance.",
+      "promo_atti_tag": "Records search",
+      "promo_atti_title": "Access to deeds",
+      "promo_atti_desc": "Recover titles and documents no longer available to the owner putting the property on sale."
     },
     "save_search": {
       "cta": "Save this search",
@@ -1138,6 +1233,18 @@
     "f_floor": "Floor",
     "f_condition": "Condition",
     "f_energy": "Energy class",
+    "f_energy_pick": "Select class…",
+    "f_ape_status": "EPC / APE status",
+    "f_ape_status_pick": "Select APE status…",
+    "ape_status_in_atto": "Issued (certificate in force)",
+    "ape_status_in_definizione": "Being prepared",
+    "ape_status_esente": "Not applicable / Exempt",
+    "ape_status_hint": "As on major portals: issued, being prepared, or exempt (Legislative Decree 192/2005).",
+    "energy_scale_2015": "Current APE — Ministerial Decree 26/06/2015 (A4→G)",
+    "energy_scale_legacy": "Previous ACE scale / pre-2015 (A+ / A)",
+    "energy_scale_hint": "Two references: 2015 APE guidelines (A4–G) and earlier certificates still valid (A+/A).",
+    "ape_pending_note": "APE being prepared: valuation runs without an energy-class adjustment (like Idealista/Immobiliare «in progress»).",
+    "ape_exempt_note": "APE exempt only in statutory cases (garages, cellars, ruins, isolated buildings under 50 m², etc. — Guidelines Appendix A).",
     "unknown": "Unknown",
     "f_name_ph": "Your name",
     "f_email_ph": "Your email",

@@ -380,21 +380,43 @@ function rewriteAppSpaHtml(html, req) {
   return out;
 }
 
+function isLandingRoot(req) {
+  const p = (req.path || "").toLowerCase();
+  return p === "/" || p === "" || p === "/index.html" || /^\/(it|en|es)\/?$/.test(p);
+}
+
 function shouldServeCloudSnapshot(req) {
   const p = (req.path || "").toLowerCase();
   if (isAppRoute(req)) return false;
-  if (p === "/" || p === "" || p === "/index.html") return true;
-  if (/^\/(it|en|es)\/?$/.test(p)) return true;
+  // Landing OMNIA ha shell proprio — non iniettare ImmobilCloud su /it/
+  if (isLandingRoot(req)) return false;
   if (/^\/(it|en|es)\/cloud(\/|$)/.test(p)) return true;
   if (p === "/cloud" || p === "/cloud/") return true;
   return false;
+}
+
+/** Compact OMNIA ecosystem home shell (avoids mid-page jump when React mounts). */
+function landingRootInnerHtml(origin) {
+  return `
+  <div id="omnia-ssr-shell" data-omnia-ssr="1" data-omnia-surface="landing" style="min-height:100vh;background:linear-gradient(180deg,#F5F1E8 0%,#eef3f1 55%,#e8eef5 100%);color:#0B1E3F;font-family:Georgia,'Fraunces',serif">
+    <div style="max-width:1100px;margin:0 auto;padding:40px 24px 56px">
+      <p style="letter-spacing:.3em;text-transform:uppercase;font-size:11px;color:#1F6B5C;font-family:system-ui,sans-serif;margin:0 0 16px">OMNIA · Real estate · Ecosystem</p>
+      <h1 style="font-weight:500;font-size:clamp(2rem,4vw,3.2rem);line-height:1.08;margin:0 0 16px;letter-spacing:-0.02em">L'ecosistema immobiliare integrato</h1>
+      <p style="font-family:system-ui,sans-serif;color:rgba(11,30,63,.72);line-height:1.55;font-size:1.05rem;max-width:36rem;margin:0 0 28px">Portale privati, gestionale agenzie e Academy — un solo brand, tre porte di ingresso.</p>
+      <p style="font-family:system-ui,sans-serif;display:flex;flex-wrap:wrap;gap:12px 18px;margin:0">
+        <a href="${escapeHtml(origin)}/it/cloud" style="color:#1F6B5C;font-weight:600;text-decoration:none">ImmobilCloud →</a>
+        <a href="${escapeHtml(origin)}/it/app" style="color:#0B1E3F;font-weight:600;text-decoration:none">ImmoWeb →</a>
+        <a href="${escapeHtml(origin)}/it/learn" style="color:#0B1E3F;font-weight:600;text-decoration:none">Academy →</a>
+      </p>
+    </div>
+  </div>`;
 }
 
 function cloudRootInnerHtml(origin) {
   const description =
     "Cerca immobili in Italia. Scout ti dice se l'annuncio è completo, se il prezzo ha senso e cosa chiedere — prima della visita.";
   return `
-  <div id="omnia-ssr-shell" data-omnia-ssr="1" style="min-height:70vh;background:#0B1E3F;color:#fff;font-family:Georgia,'Fraunces',serif">
+  <div id="omnia-ssr-shell" data-omnia-ssr="1" data-omnia-surface="immocloud" style="min-height:70vh;background:#0B1E3F;color:#fff;font-family:Georgia,'Fraunces',serif">
     <div style="max-width:720px;margin:0 auto;padding:48px 24px">
       <p style="letter-spacing:.28em;text-transform:uppercase;font-size:11px;color:#C19A6B;font-family:system-ui,sans-serif">ImmobilCloud™</p>
       <h1 style="font-weight:400;font-size:2.2rem;line-height:1.15;margin:12px 0 16px">La casa giusta, senza farsi raccontare storie.</h1>
@@ -414,10 +436,15 @@ function cloudRootInnerHtml(origin) {
 function rewriteSpaHtml(html, req, propMeta) {
   const origin = publicOrigin(req);
   const url = `${origin}${req.originalUrl || req.path || "/"}`;
-  let title = "ImmobilCloud — La casa giusta, senza farsi raccontare storie";
-  let description =
-    "Cerca immobili in Italia. Scout ti dice se l'annuncio è completo, se il prezzo ha senso e cosa chiedere — prima della visita.";
+  const landing = isLandingRoot(req);
+  let title = landing
+    ? "OMNIA — Ecosistema immobiliare integrato"
+    : "ImmobilCloud — La casa giusta, senza farsi raccontare storie";
+  let description = landing
+    ? "Portale privati, gestionale agenzie e Academy: l'ecosistema immobiliare OMNIA."
+    : "Cerca immobili in Italia. Scout ti dice se l'annuncio è completo, se il prezzo ha senso e cosa chiedere — prima della visita.";
   let image = `${origin}/cloud/hero.jpg`;
+  const siteName = landing ? "OMNIA" : "ImmobilCloud";
   if (propMeta) {
     if (propMeta.title) title = propMeta.title;
     if (propMeta.description) description = propMeta.description;
@@ -434,7 +461,7 @@ function rewriteSpaHtml(html, req, propMeta) {
     [/<meta property="og:description" content="[^"]*"\s*\/?>/i, `<meta property="og:description" content="${escapeHtml(description)}" />`],
     [/<meta property="og:url" content="[^"]*"\s*\/?>/i, `<meta property="og:url" content="${escapeHtml(url)}" />`],
     [/<meta property="og:image" content="[^"]*"\s*\/?>/i, `<meta property="og:image" content="${escapeHtml(image)}" />`],
-    [/<meta property="og:site_name" content="[^"]*"\s*\/?>/i, `<meta property="og:site_name" content="ImmobilCloud" />`],
+    [/<meta property="og:site_name" content="[^"]*"\s*\/?>/i, `<meta property="og:site_name" content="${escapeHtml(siteName)}" />`],
     [/<meta name="twitter:title" content="[^"]*"\s*\/?>/i, `<meta name="twitter:title" content="${escapeHtml(title)}" />`],
     [/<meta name="twitter:description" content="[^"]*"\s*\/?>/i, `<meta name="twitter:description" content="${escapeHtml(description)}" />`],
     [/<meta name="twitter:image" content="[^"]*"\s*\/?>/i, `<meta name="twitter:image" content="${escapeHtml(image)}" />`],
@@ -446,7 +473,8 @@ function rewriteSpaHtml(html, req, propMeta) {
 
   // Critical: populate #root in the static HTML so non-JS fetchers never see an empty body.
   // React replaces this on client mount.
-  const rootFilled = `<div id="root">${cloudRootInnerHtml(origin)}</div>`;
+  const shell = isLandingRoot(req) ? landingRootInnerHtml(origin) : cloudRootInnerHtml(origin);
+  const rootFilled = `<div id="root">${shell}</div>`;
   if (/<div id="root"><\/div>/i.test(out)) {
     out = out.replace(/<div id="root"><\/div>/i, rootFilled);
   } else if (/<div id="root">\s*<\/div>/i.test(out)) {
@@ -455,7 +483,7 @@ function rewriteSpaHtml(html, req, propMeta) {
 
   out = out.replace(
     /<noscript>[\s\S]*?<\/noscript>/i,
-    `<noscript>${cloudRootInnerHtml(origin)}</noscript>`
+    `<noscript>${shell}</noscript>`
   );
   return out;
 }
@@ -479,19 +507,27 @@ function extractSpaAssets(indexHtml) {
  */
 function cloudSsrDocument(req, indexHtml, propMeta) {
   const origin = publicOrigin(req);
-  let title = "ImmobilCloud — La casa giusta, senza farsi raccontare storie";
-  let description =
-    "Cerca immobili in Italia. Scout ti dice se l'annuncio è completo, se il prezzo ha senso e cosa chiedere — prima della visita.";
+  const landing = isLandingRoot(req);
+  let title = landing
+    ? "OMNIA — Ecosistema immobiliare integrato"
+    : "ImmobilCloud — La casa giusta, senza farsi raccontare storie";
+  let description = landing
+    ? "Portale privati, gestionale agenzie e Academy: l'ecosistema immobiliare OMNIA."
+    : "Cerca immobili in Italia. Scout ti dice se l'annuncio è completo, se il prezzo ha senso e cosa chiedere — prima della visita.";
   let image = `${origin}/cloud/hero.jpg`;
+  let siteName = landing ? "OMNIA" : "ImmobilCloud";
   // P-055 — per-property title/OG when available
   if (propMeta) {
     if (propMeta.title) title = propMeta.title;
     if (propMeta.description) description = propMeta.description;
     if (propMeta.image) image = propMeta.image;
   }
-  const url = `${origin}${req.originalUrl || req.path || "/it/cloud"}`;
+  const url = `${origin}${req.originalUrl || req.path || (landing ? "/it/" : "/it/cloud")}`;
   const assets = extractSpaAssets(indexHtml || "");
-  const inner = cloudRootInnerHtml(origin);
+  const inner = landing ? landingRootInnerHtml(origin) : cloudRootInnerHtml(origin);
+  const marker = landing
+    ? "SSR_MARKER ecosistema OMNIA landing"
+    : "SSR_MARKER casa giusta ImmobilCloud";
 
   return `<!doctype html>
 <html lang="it">
@@ -504,7 +540,7 @@ function cloudSsrDocument(req, indexHtml, propMeta) {
   <link rel="canonical" href="${escapeHtml(url)}" />
   <link rel="icon" type="image/png" href="/favicon.png" />
   <meta property="og:type" content="website" />
-  <meta property="og:site_name" content="ImmobilCloud" />
+  <meta property="og:site_name" content="${escapeHtml(siteName)}" />
   <meta property="og:title" content="${escapeHtml(title)}" />
   <meta property="og:description" content="${escapeHtml(description)}" />
   <meta property="og:url" content="${escapeHtml(url)}" />
@@ -518,7 +554,7 @@ function cloudSsrDocument(req, indexHtml, propMeta) {
   ${assets}
 </head>
 <body>
-  <!-- SSR_MARKER casa giusta ImmobilCloud -->
+  <!-- ${marker} -->
   <div id="root">${inner}</div>
 </body>
 </html>`;

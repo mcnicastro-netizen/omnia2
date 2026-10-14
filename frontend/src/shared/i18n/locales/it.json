@@ -24,14 +24,14 @@
   },
   "landing": {
     "hero_title": "L'ecosistema immobiliare integrato",
-    "hero_subtitle": "Portale B2C e gestionale AI per agenzie — due prodotti, un sistema.",
+    "hero_subtitle": "Sito web, gestionale, portale pubblicitario e Academy: tutti gli strumenti per ottimizzare il tuo lavoro.",
     "hero_cta": "Scopri OMNIA",
     "pillar_cloud_title": "ImmobilCloud",
     "pillar_cloud_desc": "Il portale immobiliare per privati e clienti.",
     "pillar_app_title": "ImmoWeb",
-    "pillar_app_desc": "Gestionale AI per agenzie: priorità di oggi, match, HAL con conferma. Nord: sistema operativo dell'agenzia.",
+    "pillar_app_desc": "Gestionale per agenzie: priorità di oggi, match e workflow quotidiano — il sistema operativo della tua agenzia.",
     "pillar_learn_title": "Omnia Academy",
-    "pillar_learn_desc": "Formazione agenti — in arrivo. Non fa parte dell'offerta commerciale attuale."
+    "pillar_learn_desc": "Formi i collaboratori in agenzia. Oggi preparazione professionale; domani, riconoscimento."
   },
   "immocloud": {
     "title": "ImmobilCloud",
@@ -39,11 +39,94 @@
   },
   "immoweb": {
     "title": "ImmoWeb",
-    "tagline": "Gestionale AI — verso l'OS dell'agenzia"
+    "tagline": "Gestionale — verso l'OS dell'agenzia"
   },
   "academy": {
     "title": "Omnia Academy",
-    "tagline": "In arrivo — non fa parte dell'offerta commerciale attuale"
+    "tagline": "Formazione per collaboratori e team di agenzia",
+    "eyebrow": "Omnia Academy · Formazione agenzie",
+    "hero_title": "Collaboratori qualificati: li formi in agenzia.",
+    "hero_lead": "Prepariamo e teniamo aggiornati i vostri collaboratori secondo la normativa vigente — con chiarezza su cosa siamo oggi e cosa stiamo costruendo.",
+    "cta_info": "Richiedi informazioni",
+    "cta_honesty": "Leggi lo stato reale",
+    "cta_legal": "Apri HAL Legal",
+    "honesty_badge": "Trasparenza · stato attuale",
+    "honesty_title": "Oggi non è abilitante. Presto lo diventerà.",
+    "honesty_body": "In questo momento Omnia Academy non rilascia un attestato propedeutico valido per l'iscrizione all'esame camerale. Stiamo lavorando per superare tutti i passaggi necessari al riconoscimento. Finché non lo otterremo, il percorso resta di preparazione professionale: programma allineato a quello degli enti di formazione riconosciuti, stessi testi di riferimento e simulazioni d'esame con prove già utilizzate in passato dalle Camere di Commercio. Ve lo diciamo così, senza ambiguità.",
+    "problem_title": "Il problema che affrontiamo",
+    "problem_body": "Trovare collaboratori già qualificati è difficile e costoso. Molte agenzie perdono mesi in selezione e poi ripartono da zero sulla formazione operativa e normativa. Academy nasce per formare le persone in casa — e per tenerle aggiornate nel tempo.",
+    "offer_items": [
+      {
+        "title": "Formazione in agenzia",
+        "body": "Percorso strutturato per chi entra nel team: basi giuridiche, tecniche e di mestiere, pensato per il lavoro quotidiano in mediazione."
+      },
+      {
+        "title": "Aggiornamento normativo",
+        "body": "Non basta il corso iniziale. Teniamo i collaboratori allineati alla normativa vigente e alle prassi che contano in trattativa e in ufficio."
+      },
+      {
+        "title": "Verso il riconoscimento",
+        "body": "L'obiettivo è chiaro: diventare percorso riconosciuto. Fino ad allora, nessun claim falso — solo preparazione seria e metodo trasparente."
+      }
+    ],
+    "method_title": "Come lavoriamo (in attesa del riconoscimento)",
+    "method_body": "Il contenuto segue, in pratica, lo stesso impianto previsto dagli enti di formazione riconosciuti. Non inventiamo un programma parallelo: ci allineiamo a quello che serve davvero per affrontare la professione e, un domani, l'esame.",
+    "method_texts_label": "Testi",
+    "method_texts": "Utilizziamo gli stessi testi di riferimento adottati nei percorsi riconosciuti, così lo studio resta coerente con lo standard del settore.",
+    "method_exams_label": "Simulazioni d'esame",
+    "method_exams": "Simuliamo le prove con test già somministrati in passato dalle Camere di Commercio per il rilascio dell'abilitazione — allenamento concreto, non teoria astratta.",
+    "path_title": "Come si diventa agente immobiliare in Italia",
+    "path_intro": "Quadro normativo di riferimento (L. 39/1989, D.M. 300/1990 e successive): percorso ufficiale distinto da ciò che Academy può certificare oggi.",
+    "path_note": "Questo è il percorso ufficiale — non ancora il nostro attestato.",
+    "path_steps": [
+      {
+        "title": "Corso presso ente riconosciuto",
+        "body": "Frequenza di un corso propedeutico presso un centro accreditato da una Regione italiana."
+      },
+      {
+        "title": "Esame in Camera di Commercio",
+        "body": "Superamento dell'esame camerale (prove scritte e orale) nella Camera di competenza."
+      },
+      {
+        "title": "Abilitazione",
+        "body": "Con l'esito positivo si ottiene l'abilitazione all'attività di agente d'affari in mediazione."
+      }
+    ],
+    "program_title": "Programma di riferimento",
+    "program_intro": "Struttura orientativa allineata ai programmi degli enti riconosciuti. Dettaglio moduli, orari e modalità (FAD / live) saranno pubblicati con il calendario ufficiale.",
+    "program_legal_title": "Discipline giuridiche",
+    "program_legal": [
+      "Mediazione e mandato",
+      "Proprietà e diritti reali",
+      "Possesso e usucapione",
+      "Comunione, multiproprietà e condominio",
+      "Obbligazioni e garanzie",
+      "Contratto, compravendita, locazione",
+      "Mutuo e altri contratti",
+      "Impresa, azienda e procedure concorsuali",
+      "Diritto di famiglia e successioni",
+      "Pubblicità, trascrizione e diritto tributario immobiliare"
+    ],
+    "program_tech_title": "Discipline tecniche",
+    "program_tech": [
+      "Disciplina urbanistica ed edilizia",
+      "Finanziamenti e credito immobiliare",
+      "Catasto e uffici di registrazione",
+      "Estimo dei beni immobili",
+      "Stime aziendali",
+      "Simulazioni prove d'esame camerale"
+    ],
+    "hal_title": "Aggiornamento normativo con HAL Legal",
+    "hal_body": "Nel quotidiano dell'agenzia, accanto al percorso Academy, l'ecosistema OMNIA mette a disposizione HAL Legal: supporto informativo su temi di diritto immobiliare italiano, utile per chiarimenti e aggiornamento — non come sostituto del corso né del parere del professionista.",
+    "hal_disclaimer": "HAL Legal non è un avvocato e non sostituisce un parere legale. Le risposte hanno carattere informativo.",
+    "closing_title": "Prima bozza, dialogo aperto",
+    "closing_body": "Questa pagina è una bozza onesta. Se gestisci un'agenzia e vuoi formare o aggiornare il team, scrivici: costruiamo il percorso insieme, senza promesse che non possiamo ancora firmare.",
+    "footer_note": "Bozza informativa · non abilitante allo stato attuale",
+    "img_hero_alt": "Interno residenziale — contesto professionale Omnia Academy",
+    "img_hero_caption": "Formazione per chi lavora sul campo",
+    "img_problem_alt": "Immobile contemporaneo al crepuscolo",
+    "img_strip_caption": "Una professione, tutto il territorio",
+    "img_closing_alt": "Residenza con piscina — Omnia Real Estate Lab"
   },
 
   "health": {
@@ -1115,6 +1198,7 @@
     "footer_terms": "Termini",
     "nav_search": "Cerca casa",
     "nav_sell": "Vendi casa",
+    "nav_academy": "Academy",
     "nav_valuator": "Valuta gratis",
     "nav_legal": "HAL Legal",
     "nav_area": "Area riservata",
@@ -1248,7 +1332,18 @@
       "stats_leads": "contatti ricevuti",
       "stats_views_30": "view ultimi 30 giorni",
       "stats_rate": "tasso contatto (30g)",
-      "stats_note": "Visualizzazione = apertura della scheda. Contatto = messaggio inviato. Non sono impressioni nel feed di ricerca."
+      "stats_note": "Visualizzazione = apertura della scheda. Contatto = messaggio inviato. Non sono impressioni nel feed di ricerca.",
+      "promo_rail_label": "Documenti utili per pubblicare",
+      "promo_soon": "Presto disponibile",
+      "promo_ape_tag": "Obbligo di legge",
+      "promo_ape_title": "Attestato APE",
+      "promo_ape_desc": "Certificazione energetica per pubblicare e vendere in regola, senza blocchi in trattativa.",
+      "promo_plan_tag": "Documentazione",
+      "promo_plan_title": "Planimetria catastale",
+      "promo_plan_desc": "Planimetria aggiornata per visite, proposte e conformità catastale dell'immobile.",
+      "promo_atti_tag": "Ricerca atti",
+      "promo_atti_title": "Accesso agli atti",
+      "promo_atti_desc": "Recupera titoli e documenti non più nella disponibilità del proprietario che mette in vendita."
     },
     "save_search": {
       "cta": "Salva questa ricerca",
@@ -1331,6 +1426,18 @@
     "f_floor": "Piano",
     "f_condition": "Condizione",
     "f_energy": "Classe energetica",
+    "f_energy_pick": "Seleziona classe…",
+    "f_ape_status": "Stato APE",
+    "f_ape_status_pick": "Seleziona stato APE…",
+    "ape_status_in_atto": "In atto (attestato rilasciato)",
+    "ape_status_in_definizione": "In via di definizione",
+    "ape_status_esente": "Non soggetto / Esente",
+    "ape_status_hint": "Come sui portali: APE in atto, in corso di definizione, oppure esente (D.Lgs. 192/2005).",
+    "energy_scale_2015": "APE vigente — DM 26/06/2015 (A4→G)",
+    "energy_scale_legacy": "Scala precedente ACE / ante-2015 (A+ / A)",
+    "energy_scale_hint": "A4–G e A+/A subito in elenco, più «In via di definizione» e «Non soggetto / Esente» (come Idealista/Immobiliare).",
+    "ape_pending_note": "APE in via di definizione: la stima procede senza correttivo di classe (come «In corso» su Idealista/Immobiliare).",
+    "ape_exempt_note": "Esente da APE solo nei casi di legge (box, cantine, ruderi, fabbricati isolati sotto 50 m², ecc. — Appendice A Linee guida).",
     "unknown": "Sconosciuta",
     "f_name_ph": "Il tuo nome",
     "f_email_ph": "La tua email",

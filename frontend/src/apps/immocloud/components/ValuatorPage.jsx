@@ -15,7 +15,7 @@ import { Link, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import AddressAutocomplete from "./AddressAutocomplete";
 import CloudPageHero from "./CloudPageHero";
-import { ENERGY_CLASS_LETTER_OPTIONS } from "../../../shared/lib/energyClasses";
+import { ENERGY_CLASS_OPTIONS } from "../../../shared/lib/energyClasses";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api/cloud/valuator`;
@@ -26,19 +26,88 @@ const PDF_URL = `${BACKEND_URL}/api/cloud/valuator/report-pdf`;
 
 const PROPERTY_TYPES = ["appartamento", "attico", "loft", "villa", "monolocale", "rustico_casale", "ufficio", "negozio", "garage_box"];
 const CONDITIONS = ["nuovo", "ristrutturato", "ottimo", "buono", "abitabile", "da_ristrutturare", "ruderi_da_demolire"];
-const ENERGY_CLASSES = ENERGY_CLASS_LETTER_OPTIONS;
-const FLOOR_CLASSES = ["seminterrato", "piano_terra", "piano_1", "piano_intermedio", "ultimo_no_asc", "ultimo_con_asc", "attico_panoramico"];
+/** Una sola scelta piano (obbligatoria) → floor numerico + floor_class UNI. */
+const FLOOR_OPTIONS = [
+  { value: "s-1", label: "S-1", floor: -1, floor_class: "seminterrato" },
+  { value: "t", label: "T", floor: 0, floor_class: "piano_terra" },
+  { value: "1", label: "1", floor: 1, floor_class: "piano_1" },
+  { value: "2", label: "2", floor: 2, floor_class: "piano_intermedio" },
+  { value: "3", label: "3", floor: 3, floor_class: "piano_intermedio" },
+  { value: "4", label: "4", floor: 4, floor_class: "piano_intermedio" },
+  { value: "5", label: "5", floor: 5, floor_class: "piano_intermedio" },
+  { value: "6", label: "6", floor: 6, floor_class: "piano_intermedio" },
+  { value: "gt6", label: ">6", floor: 7, floor_class: "piano_intermedio" },
+  { value: "ultimo", label: "Ultimo", floor: 8, floor_class: "ultimo_con_asc" },
+  { value: "attico", label: "Attico", floor: 9, floor_class: "attico_panoramico" },
+];
 const EXPOSURES = ["sud", "sud_est", "sud_ovest", "est", "ovest", "nord_est", "nord_ovest", "nord", "cieca", "doppia_esp"];
 const VIEWS = ["interno", "cortile", "strada", "verde", "panoramico", "mare", "lago_montagna"];
 const HEATINGS = ["autonomo", "centralizzato", "pompa_calore", "assente"];
 const ELEVATORS = ["presente", "presente_piano_alto", "assente_piano_basso", "assente_piano_alto"];
 
-const emptyForm = { city: "", zone: "", address: "", property_type: "appartamento", surface_sqm: "", condition: "buono", energy_class: "", floor: "" };
+function resolveFloorOption(value) {
+  return FLOOR_OPTIONS.find((o) => o.value === value) || null;
+}
+
+/** Ultimo piano: ascensore presente → +; assente → penalità. */
+function resolveUltimoFloorClass(elevator) {
+  if (elevator === "assente_piano_alto" || elevator === "assente_piano_basso") {
+    return "ultimo_no_asc";
+  }
+  return "ultimo_con_asc";
+}
+/** Suggerimenti città (datalist) — copertura tipica dataset + capoluoghi. */
+const CITY_SUGGESTIONS = [
+  "Milano", "Roma", "Napoli", "Torino", "Palermo", "Genova", "Bologna", "Firenze",
+  "Bari", "Catania", "Venezia", "Verona", "Messina", "Padova", "Trieste", "Brescia",
+  "Parma", "Modena", "Reggio Emilia", "Prato", "Perugia", "Livorno", "Ravenna",
+  "Cagliari", "Foggia", "Rimini", "Salerno", "Ferrara", "Sassari", "Monza",
+  "Bergamo", "Trento", "Vicenza", "Bolzano", "Pisa", "Novara", "Ancona", "Udine",
+  "Siracusa", "Pescara", "Lecce", "La Spezia", "Como", "Treviso", "Taranto",
+];
+
+const emptyForm = {
+  city: "",
+  zone: "",
+  address: "",
+  property_type: "appartamento",
+  surface_sqm: "",
+  condition: "buono",
+  energy_class: "",
+  floor: "",
+};
+const fieldClass =
+  "w-full border border-stone-200 rounded-lg p-2.5 text-sm focus:border-[#0B1E3F] outline-none bg-white";
+const labelClass = "block text-xs font-medium text-stone-600 mb-1";
+
+function matchZoneOption(zones, candidate) {
+  if (!candidate || !zones?.length) return "";
+  const n = (s) =>
+    String(s)
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .trim();
+  const c = n(candidate);
+  const exact = zones.find((z) => n(z) === c);
+  if (exact) return exact;
+  // "Picanello-Ognina-Barriera-Canalicchio" → primo pezzo noto (Picanello)
+  for (const part of String(candidate).split(/[-,/]/)) {
+    const p = n(part);
+    if (!p) continue;
+    const hit = zones.find((z) => {
+      const zn = n(z);
+      return zn === p || zn.startsWith(`${p} `) || zn.endsWith(` ${p}`);
+    });
+    if (hit) return hit;
+  }
+  return "";
+}
 const emptyPro = {
   veranda_mq: "", terrazzo_mq: "", balcone_mq: "", cantina_mq: "", soffitta_mq: "",
   box_auto_mq: "", posto_auto_scoperto_mq: "", giardino_villa_mq: "", giardino_condom_mq: "",
   taverna_mq: "", mansarda_abitabile_mq: "",
-  floor_class: "", exposure: "", view: "", heating: "", elevator: "", year_built: "",
+  exposure: "", view: "", heating: "", elevator: "", year_built: "",
   vincolo_storico: false, vincolo_paesag: false, locazione_libera_breve: false, locazione_lunga: false, nuda_proprieta: false,
 };
 
@@ -71,6 +140,7 @@ export default function ValuatorPage() {
   const [result, setResult] = useState(null);
   const [payloadHash, setPayloadHash] = useState(null);
   const [error, setError] = useState(null);
+  const [cityZones, setCityZones] = useState([]);
   const resultRef = useRef(null);
 
   // Load user + billing status
@@ -84,6 +154,34 @@ export default function ValuatorPage() {
       }
     })();
   }, []);
+
+  // Quartieri per città (dropdown Zona)
+  useEffect(() => {
+    const city = (form.city || "").trim();
+    if (!city || city.length < 2) {
+      setCityZones([]);
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      const r = await fetchJson(`${API}/zones?city=${encodeURIComponent(city)}`);
+      if (cancelled) return;
+      const zones = Array.isArray(r.body?.zones) ? r.body.zones : [];
+      setCityZones(zones);
+      if (form.zone && zones.length) {
+        const matched = matchZoneOption(zones, form.zone);
+        if (matched && matched !== form.zone) {
+          setForm((f) => ({ ...f, zone: matched }));
+        } else if (!matched && !zones.includes(form.zone)) {
+          // zona libera non in elenco: lascia; utente può riscegliere
+        }
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [form.city]);
 
   const isAgent = !!(user && (user.agency_id || (user.agency_ids && user.agency_ids.length)));
   const isB2C = !!(user && !isAgent);
@@ -107,8 +205,11 @@ export default function ValuatorPage() {
     if (form.zone) p.zone = form.zone;
     if (form.address) p.address = form.address;
     if (form.condition) p.condition = form.condition;
-    if (form.energy_class) p.energy_class = form.energy_class;
-    if (form.floor !== "" && form.floor !== null) p.floor = Number(form.floor);
+    // Solo lettere A4…G / A+ verso il motore; in definizione / esente → nessun moltiplicatore
+    if (form.energy_class && !String(form.energy_class).startsWith("EXEMPT")) {
+      p.energy_class = form.energy_class;
+    }
+    const floorOpt = resolveFloorOption(form.floor);
     if (includePro) {
       const cs = {};
       ["veranda_mq", "terrazzo_mq", "balcone_mq", "cantina_mq", "soffitta_mq", "box_auto_mq", "posto_auto_scoperto_mq", "giardino_villa_mq", "giardino_condom_mq", "taverna_mq", "mansarda_abitabile_mq"].forEach(k => {
@@ -116,10 +217,18 @@ export default function ValuatorPage() {
       });
       if (Object.keys(cs).length) p.commercial_surfaces = cs;
       const merit = {};
-      ["floor_class", "exposure", "view", "heating", "elevator"].forEach(k => { if (pro[k]) merit[k] = pro[k]; });
+      ["exposure", "view", "heating", "elevator"].forEach(k => { if (pro[k]) merit[k] = pro[k]; });
+      if (floorOpt) {
+        merit.floor_class = floorOpt.value === "ultimo"
+          ? resolveUltimoFloorClass(pro.elevator)
+          : floorOpt.floor_class;
+      }
       if (pro.year_built && Number(pro.year_built) > 1700) merit.year_built = Number(pro.year_built);
       ["vincolo_storico", "vincolo_paesag", "locazione_libera_breve", "locazione_lunga", "nuda_proprieta"].forEach(k => { if (pro[k]) merit[k] = true; });
       if (Object.keys(merit).length) p.merit = merit;
+      // floor_class UNI vince: non inviare piano numerico (niente doppio conteggio)
+    } else if (floorOpt) {
+      p.floor = floorOpt.floor;
     }
     return p;
   }
@@ -212,7 +321,12 @@ export default function ValuatorPage() {
     setPdfBusy(false);
   }
 
-  const canSubmit = form.city && form.surface_sqm && Number(form.surface_sqm) >= 10;
+  const canSubmit =
+    form.city &&
+    form.surface_sqm &&
+    Number(form.surface_sqm) >= 10 &&
+    Boolean(form.energy_class) &&
+    Boolean(form.floor);
 
   return (
     <div data-testid="valuator-page">
@@ -254,7 +368,7 @@ export default function ValuatorPage() {
             testid="tier-uni-card"
             active={tier === "uni"}
             title={t("valuator.tier_uni_title", "UNI 10750 + PDF")}
-            subtitle={t("valuator.tier_uni_subtitle", "Superficie commerciale · merito · report brandizzato")}
+            subtitle={t("valuator.tier_uni_subtitle", "Superficie commerciale · merito · report PDF")}
             price={priceLabel}
             onClick={() => setTier("uni")}
             highlight
@@ -265,14 +379,102 @@ export default function ValuatorPage() {
           {/* Left: base fields */}
           <div className="space-y-4">
             <h3 className="text-lg text-[#0B1E3F] font-light" style={{ fontFamily: "'Fraunces', Georgia, serif" }}>{t("valuator.section_location", "Ubicazione")}</h3>
-            <AddressAutocomplete
-              value={form.address}
-              onSelect={({ address, city, zone }) => setForm(f => ({ ...f, address: address || "", city: city || f.city, zone: zone || f.zone }))}
-              placeholder={t("valuator.address_placeholder", "Indirizzo o via")}
-              data-testid="valuator-address"
-            />
-            <input className="w-full border border-stone-200 rounded-lg p-2.5 text-sm focus:border-[#0B1E3F] outline-none" placeholder={t("valuator.city", "Città")} value={form.city} onChange={e => setForm(f => ({ ...f, city: e.target.value }))} data-testid="valuator-city" />
-            <input className="w-full border border-stone-200 rounded-lg p-2.5 text-sm focus:border-[#0B1E3F] outline-none" placeholder={t("valuator.zone", "Zona")} value={form.zone} onChange={e => setForm(f => ({ ...f, zone: e.target.value }))} data-testid="valuator-zone" />
+
+            <div>
+              <label htmlFor="valuator-city" className={labelClass}>
+                {t("valuator.f_city", "Città")}
+              </label>
+              <input
+                id="valuator-city"
+                className={fieldClass}
+                placeholder={t("valuator.f_city_ph", "Es. Milano, Roma, Napoli…")}
+                value={form.city}
+                list="valuator-city-suggest"
+                autoComplete="address-level2"
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, city: e.target.value, zone: "" }))
+                }
+                data-testid="valuator-city"
+                required
+              />
+              <datalist id="valuator-city-suggest">
+                {CITY_SUGGESTIONS.map((c) => (
+                  <option key={c} value={c} />
+                ))}
+              </datalist>
+            </div>
+
+            <div>
+              <label htmlFor="valuator-address" className={labelClass}>
+                {t("valuator.f_address", "Indirizzo (opzionale)")}
+              </label>
+              <AddressAutocomplete
+                id="valuator-address"
+                value={form.address}
+                onChange={(text) => setForm((f) => ({ ...f, address: text }))}
+                onSelect={(rec) => {
+                  const city = rec.comune || "";
+                  const rawZone = rec.zone || "";
+                  setForm((f) => {
+                    const zones = cityZones.length ? cityZones : [];
+                    const matched = matchZoneOption(zones, rawZone) || rawZone;
+                    return {
+                      ...f,
+                      address: rec.normalized || f.address,
+                      city: city || f.city,
+                      zone: matched || f.zone,
+                    };
+                  });
+                }}
+                placeholder={t("valuator.f_address_ph", "Es. Via Roma 12, Catania")}
+                testid="valuator-address"
+                inputClassName={fieldClass}
+              />
+              <p className="mt-1 text-[11px] text-stone-500">
+                {t(
+                  "valuator.address_hint",
+                  "Scegli un suggerimento: compilano città e quartiere (es. Picanello)."
+                )}
+              </p>
+            </div>
+
+            <div>
+              <label htmlFor="valuator-zone" className={labelClass}>
+                {t("valuator.f_zone", "Zona / Quartiere")}
+              </label>
+              <select
+                id="valuator-zone"
+                className={fieldClass}
+                value={form.zone}
+                onChange={(e) => setForm((f) => ({ ...f, zone: e.target.value }))}
+                data-testid="valuator-zone"
+                disabled={!form.city}
+              >
+                <option value="">
+                  {cityZones.length
+                    ? t("valuator.f_zone_pick", "Seleziona quartiere…")
+                    : form.city
+                      ? t("valuator.f_zone_none", "Nessun elenco zone per questa città — digita via indirizzo")
+                      : t("valuator.f_zone_need_city", "Prima scegli la città")}
+                </option>
+                {form.zone &&
+                  cityZones.length > 0 &&
+                  !cityZones.includes(form.zone) && (
+                    <option value={form.zone}>{form.zone}</option>
+                  )}
+                {cityZones.map((z) => (
+                  <option key={z} value={z}>
+                    {z}
+                  </option>
+                ))}
+              </select>
+              <p className="mt-1 text-[11px] text-stone-500">
+                {t(
+                  "valuator.zone_hint",
+                  "Elenco quartieri della città. Con l’indirizzo autocompletato, il quartiere si seleziona da solo quando possibile."
+                )}
+              </p>
+            </div>
           </div>
           <div className="space-y-4">
             <h3 className="text-lg text-[#0B1E3F] font-light" style={{ fontFamily: "'Fraunces', Georgia, serif" }}>{t("valuator.section_property", "Immobile")}</h3>
@@ -283,11 +485,54 @@ export default function ValuatorPage() {
             <select className="w-full border border-stone-200 rounded-lg p-2.5 text-sm" value={form.condition} onChange={e => setForm(f => ({ ...f, condition: e.target.value }))} data-testid="valuator-condition">
               {CONDITIONS.map(o => <option key={o} value={o}>{o}</option>)}
             </select>
-            <select className="w-full border border-stone-200 rounded-lg p-2.5 text-sm" value={form.energy_class} onChange={e => setForm(f => ({ ...f, energy_class: e.target.value }))} data-testid="valuator-energy">
-              <option value="">{t("valuator.energy_none", "Classe energetica (opzionale)")}</option>
-              {ENERGY_CLASSES.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
-            </select>
-            <input type="number" min="-2" max="80" className="w-full border border-stone-200 rounded-lg p-2.5 text-sm" placeholder={t("valuator.floor", "Piano (opzionale)")} value={form.floor} onChange={e => setForm(f => ({ ...f, floor: e.target.value }))} data-testid="valuator-floor" />
+
+            <div>
+              <label htmlFor="valuator-energy" className={labelClass}>
+                {t("valuator.f_energy", "Classe energetica")} *
+              </label>
+              <select
+                id="valuator-energy"
+                className={fieldClass}
+                value={form.energy_class}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, energy_class: e.target.value }))
+                }
+                data-testid="valuator-energy"
+                required
+              >
+                <option value="">
+                  {t("valuator.f_energy_pick", "Seleziona classe…")}
+                </option>
+                {ENERGY_CLASS_OPTIONS.map((o) => (
+                  <option key={o.value} value={o.value}>
+                    {o.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label htmlFor="valuator-floor" className={labelClass}>
+                {t("valuator.f_floor", "Piano")} *
+              </label>
+              <select
+                id="valuator-floor"
+                className={fieldClass}
+                value={form.floor}
+                onChange={(e) => setForm((f) => ({ ...f, floor: e.target.value }))}
+                data-testid="valuator-floor"
+                required
+              >
+                <option value="">
+                  {t("valuator.f_floor_pick", "Seleziona piano…")}
+                </option>
+                {FLOOR_OPTIONS.map((o) => (
+                  <option key={o.value} value={o.value}>
+                    {o.label}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
 
           {/* Pro section — only UNI tier */}
@@ -301,7 +546,6 @@ export default function ValuatorPage() {
               </div>
               <h3 className="text-lg text-[#0B1E3F] font-light mt-6 mb-3" style={{ fontFamily: "'Fraunces', Georgia, serif" }}>{t("valuator.pro_merit_title", "Coefficienti di merito")}</h3>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-3 text-sm">
-                <Sel label="Piano" opts={FLOOR_CLASSES} v={pro.floor_class} on={v => setPro(p => ({ ...p, floor_class: v }))} tid="pro-floor-class" />
                 <Sel label="Esposizione" opts={EXPOSURES} v={pro.exposure} on={v => setPro(p => ({ ...p, exposure: v }))} tid="pro-exposure" />
                 <Sel label="Vista" opts={VIEWS} v={pro.view} on={v => setPro(p => ({ ...p, view: v }))} tid="pro-view" />
                 <Sel label="Riscaldamento" opts={HEATINGS} v={pro.heating} on={v => setPro(p => ({ ...p, heating: v }))} tid="pro-heating" />
@@ -367,7 +611,7 @@ export default function ValuatorPage() {
             {result._tier === "base" && (
               <div className="p-5 rounded-2xl border border-[#C19A6B]/40 bg-white" data-testid="valuator-upsell">
                 <div className="font-medium text-[#0B1E3F]">{t("valuator.upsell_uni_cta", "Vuoi una valutazione UNI 10750 con report PDF professionale?")}</div>
-                <div className="text-sm text-stone-600 mt-1">{t("valuator.upsell_uni_details", "Superficie commerciale ponderata + coefficienti di merito + PDF brandizzato scaricabile.")}</div>
+                <div className="text-sm text-stone-600 mt-1">{t("valuator.upsell_uni_details", "Superficie commerciale ponderata + coefficienti di merito + PDF scaricabile.")}</div>
                 <button onClick={() => { setTier("uni"); window.scrollTo({ top: 0, behavior: "smooth" }); }} className="mt-3 px-4 py-2 bg-[#C19A6B] text-white rounded-lg hover:bg-[#0B1E3F] transition" data-testid="upsell-goto-uni">
                   {isAgent ? t("valuator.upsell_agent_cta", "Passa a UNI (incluso piano)") : t("valuator.upsell_b2c_cta", "Passa a UNI · €2,99")}
                 </button>

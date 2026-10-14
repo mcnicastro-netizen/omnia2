@@ -57,9 +57,11 @@ Capire in pochi minuti l'**ordine di grandezza** del valore di un immobile senza
 - Account ImmobilCloud **loggato**.
 - **Email verificata** (`email_verified = true`). Senza → errore *"Verifica l'email per usare la stima gratuita"*.
 
-**Campi del form (7 input base)**
-- Ubicazione: indirizzo (autocomplete), città, zona (opzionale).
-- Immobile: tipologia (9 valori: appartamento, attico, loft, villa, monolocale, rustico/casale, ufficio, negozio, garage/box), **mq calpestabili** (min 10), stato conservativo (7 valori), classe energetica (opzionale), piano (opzionale).
+**Campi del form (input base)**
+- Ubicazione: **città** (prima), **indirizzo** con autocomplete (suggerisce città), **zona/quartiere** a tendina (quartieri reali quando noti).
+- Immobile: tipologia (9 valori: appartamento, attico, loft, villa, monolocale, rustico/casale, ufficio, negozio, garage/box), **mq calpestabili** (min 10), stato conservativo (7 valori).
+- **APE obbligatorio**: un solo menu con classi **A4 A3 A2 A1 A+ A B C D E F G** + stati **in definizione** / **esente** (non più opzionale).
+- **Piano obbligatorio** (anche sul tier base): unica tendina **S-1 … Attico** (`floor_class` UNI); non si invia un piano numerico separato se c’è `floor_class`.
 
 **Cosa calcola il motore (base)**
 1. Prezzo base €/m² da snapshot **OMI/Borsino 2025-Q1** per città + fascia zona (centro / semicentro / periferia).
@@ -89,7 +91,7 @@ Footer form base: *"1 valutazione ogni 12 mesi · nessun PDF"*.
 ## 21.3 · Valutazione UNI 10750 + PDF (tier UNI — a pagamento B2C)
 
 **A cosa serve**
-Stima più vicina a una **perizia light** da banca: superficie commerciale normata + merito immobile + **report PDF** brandizzato.
+Stima più vicina a una **perizia light** da banca: superficie commerciale normata + merito immobile + **report PDF** professionale (layout OMNIA; copy UNI senza «brandizzazione»).
 
 **Prezzo B2C privati**: **€2,99** one-shot **Stripe** (carta).
 **Prezzo agenti** sul portale cloud: copy **12 crediti agenzia** (rail B2B, no carta).
@@ -115,8 +117,8 @@ Ponderazione esemplificativa (UNI 10750 / DPR 138/1998):
 | Mansarda abitabile | 80% |
 | Taverna | 60% |
 
-### Coefficienti di merito (opzionali)
-- **Piano**: da seminterrato (−15%) ad attico panoramico (+10%).
+### Coefficienti di merito
+- **Piano (`floor_class`)**: obbligatorio — unica tendina S-1…Attico (stesso controllo del form base; nessun doppio campo piano numerico).
 - **Esposizione**: da nord (−4%) a sud (+5%).
 - **Vista/affaccio**: da interno (−4%) a mare (+12%).
 - **Riscaldamento**: da assente (−8%) a pompa calore (+4%).
@@ -126,6 +128,8 @@ Ponderazione esemplificativa (UNI 10750 / DPR 138/1998):
 - **Locazione in essere**: breve −5%, lunga −15%, nuda proprietà −30%.
 
 Totale merito **cappato** tra −40% e +30%.
+
+**Breakdown superfici in UI/PDF**: ogni riga mostra **mq · coefficiente · mq ponderati** (niente riga fittizia coeff 1,00 senza mq).
 
 **Pagamento e entitlement**
 1. Compili form UNI → click **Calcola UNI · €2,99** (o equivalente agente).
@@ -166,7 +170,7 @@ Totale merito **cappato** tra −40% e +30%.
 1. Vai su **ImmobilCloud → Valutatore** (`/it/cloud/valutatore`) o clicca **Stima gratuita** da scheda annuncio.
 2. Se non loggato → **Accedi** o **Registrati** (redirect con `?next=` alla pagina valutatore).
 3. Seleziona card **Stima rapida GRATIS** (tab sinistra).
-4. Compila: città, tipologia, mq (obbligatori), zona/indirizzo/stato/energia/piano (consigliati).
+4. Compila: città, tipologia, mq, **APE**, **piano** (obbligatori); indirizzo/zona/stato (consigliati).
 5. Click **Ottieni la stima gratuita**.
 6. Leggi risultato: valore, range, €/m², affidabilità.
 7. Se ti serve di più → banner verde **"Passa a UNI · €2,99"** (upsell).
@@ -181,14 +185,14 @@ Totale merito **cappato** tra −40% e +30%.
 ## 21.6 · Come ottenere il report UNI (passi UI)
 
 1. Seleziona card **UNI 10750 + PDF** (tab destra) — oppure upsell da risultato base.
-2. Compila campi base + superfici accessorie + merito (consigliato per stima accurata).
+2. Compila campi base (APE + piano obbligatori) + superfici accessorie + merito.
 3. Click **Calcola UNI · €2,99** (privato) o **Calcola UNI (crediti agenzia)** (agente).
-4. **Privato senza entitlement** → redirect Stripe → paga €2,99 → torna su `/checkout/success`.
+4. **Privato senza entitlement** → redirect Stripe → paga €2,99 → torna su `/checkout/success` (header `X-CSRF-Token` sul checkout).
 5. Ricalcola o scarica: **Scarica report PDF**.
-6. Il PDF include: dati immobile, valore + range, breakdown UNI, merito, comparabili (se presenti), metodologia, disclaimer.
-   - **Privato / ImmobilCloud**: brand ImmobilCloud · OMNIA (navy + accento bronzo), tipografia serif+sans, hero valore a piena larghezza.
+6. Il PDF (tipicamente **1 pagina**): tipografia Noto, wash pagina, hero navy+bronzo, card immobile, tabella superfici con mq/coeff/ponderati, banda metodologia compatta, disclaimer.
+   - **Privato / ImmobilCloud**: brand ImmobilCloud · OMNIA (navy + accento bronzo).
    - **Agente hybrid/turnkey**: nome/colori/logo/tagline agenzia + nota footer «Generato con OMNIA ImmobilCloud».
-   - **Agente `plan_type=whitelabel`**: stesso layout elegante, **zero menzione OMNIA/ImmobilCloud** (disclaimer e metodologia neutralizzati).
+   - **Agente `plan_type=whitelabel`**: stesso layout, **zero menzione OMNIA/ImmobilCloud**.
    - Logo agenzia (`branding.logo_url`) incluso se raggiungibile.
 
 **Stripe non configurato**
@@ -299,4 +303,4 @@ Totale merito **cappato** tra −40% e +30%.
 
 ---
 
-**Versione**: v1.2 · 18-Set-2026 (dual-tier B2C-VAL-01 + PDF elegante OMNIA/white-label + roll-forward FOI/trend prezzi · D-084 allineato)
+**Versione**: v1.3 · 14-Ott-2026 (APE + piano obbligatori · zone/quartieri · PDF 1p restyle · breakdown superfici reali · D-124)

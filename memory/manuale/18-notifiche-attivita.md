@@ -208,6 +208,18 @@ PATCH /api/auth/me/notification-preferences
 
 ---
 
+## 18.7c · Documenti utili in pubblicazione (SellPage · rail promo)
+
+Su **`/it/cloud/account/sell`** (area **Vendi** B2C) compare a destra un rail verticale **Documenti utili per pubblicare** (componente `SellDocPromoRail`):
+
+1. **Attestato APE** — obbligo di legge per pubblicare/vendere in regola.
+2. **Planimetria catastale** — documentazione per visite e conformità.
+3. **Accesso agli atti** — recupero titoli/documenti non più nella disponibilità del proprietario venditore.
+
+**Stato 14-Ott-2026 (D-124)**: solo UI (etichetta «Presto disponibile») — **nessun link** alle pagine servizio ancora. Non compare sulla home ecosistema OMNIA (`/it/`).
+
+---
+
 ## 18.8 · Template dettaglio · saved_search_alert (B2C ricerche salvate)
 
 **`saved_search_alert`** [SCREEN: cap18-email-saved-search]
@@ -429,6 +441,7 @@ db.al_audit.find({user_id: "..."}).sort({created_at: -1}).limit(50)
 - **A-017 e A-021 shippati** (15-Sep-2026): campanella + preferenze UI — capitolo allineato 16-Sep (D-084).
 - **17-Sep-2026**: contatto annuncio **privato** documentato (§18.7b): `listing_inquiries` + `listing_inquiry` ≠ CRM lead agenzia.
 - **24-Sep-2026 · D-093 P0**: **A-029** stats privato (view/lead + serie 30g su SellPage); **A-030** alert preferiti su sold/rented/withdrawn (+ ribasso già live). Backlog A-031…A-033.
+- **14-Ott-2026 · D-124**: rail promo documenti (APE / planimetria / accesso atti) su SellPage §18.7c — UI only.
 - **A-018 activity feed** ancora assente: dashboard = KPI, non timeline.
 - **`push` schema / non implementato** (A-033 futuro).
 - Cron saved-searches: frequenza rispettata (A-019) + **scheduler interno** (A-020) + pass preferiti ribasso/ended.
@@ -451,4 +464,5 @@ Backlog residuo Cap. 18: **A-018**, **A-022**, **A-023** + emitter residuali A-0
 - `[SCREEN: cap18-toast-success]` — toast success
 - `[SCREEN: cap18-dashboard-kpi]` — dashboard KPI (non activity feed)
 - `[SCREEN: cap18-sell-stats]` — SellPage pannello Prestazioni (A-029)
+- `[SCREEN: cap18-sell-doc-promo]` — SellPage rail Documenti utili (APE / planimetria / atti)
 - `[SCREEN: cap18-fav-ended-badge]` — Account preferiti con badge Venduto/Ritirato (A-030)

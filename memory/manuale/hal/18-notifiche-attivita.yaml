@@ -689,6 +689,35 @@ voci:
         - "Stats solo owner B2C dell'annuncio privato."
     screenshot: [cap18-sell-stats, cap18-fav-ended-badge]
 
+  - id: notifiche.sell-doc-promo
+    titolo: Documenti utili in pubblicazione (APE, planimetria, accesso atti)
+    modulo: Notifiche
+    widget: null
+    pubblico: [b2c_client]
+    livello: base
+    tags: [sellpage, ape, planimetria, accesso-atti, documenti, privato, promo, d-124]
+    correlati: [notifiche.inquiry-annuncio-privato, notifiche.d093-preferiti-stats]
+    domanda_naturale: >
+      Dove trovo i suggerimenti per APE, planimetria e accesso agli atti
+      quando pubblico un annuncio privato?
+    contenuto:
+      a_cosa_serve: >
+        Aiuta il privato che pubblica su ImmobilCloud a ricordare i documenti
+        tipici per vendere in regola (APE, planimetria, ricerca atti).
+      quando_si_usa: >
+        Dopo login B2C → ImmobilCloud → Vendi (/it/cloud/account/sell).
+      passi:
+        - "UI · rail destro SellDocPromoRail: Attestato APE, Planimetria catastale, Accesso agli atti."
+        - "Stato 14-Ott-2026 · solo box UI (Presto disponibile) — link alle pagine servizio in arrivo."
+        - "NON compare sulla home ecosistema OMNIA (/it/)."
+      errori_comuni:
+        - problema: "Clicco il box e non succede nulla"
+          soluzione: >
+            Atteso: i box non sono ancora collegati. Torna domani per i link servizio.
+      permessi:
+        - "Solo account B2C autenticato sulla SellPage"
+    screenshot: [cap18-sell-doc-promo]
+
   # ---------- 18.15 · limitazioni v1 ----------
 
   - id: notifiche.limitazioni-v1

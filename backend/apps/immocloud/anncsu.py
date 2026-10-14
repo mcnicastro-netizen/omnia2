@@ -82,6 +82,25 @@ async def _suggest_anncsu(address: str, limit: int) -> list[Dict[str, Any]]:
         return []
 
 
+def _zone_from_address(addr: Dict[str, Any]) -> str:
+    """Quartiere preferito: quarter > neighbourhood > suburb (non la circoscrizione intera se abbiamo quarter)."""
+    return (
+        (addr.get("quarter") or "").strip()
+        or (addr.get("neighbourhood") or "").strip()
+        or (addr.get("suburb") or "").strip()
+        or (addr.get("city_district") or "").strip()
+        or ""
+    )
+
+
+def _short_address_label(addr: Dict[str, Any], zone: str, comune: str, fallback: str) -> str:
+    road = (addr.get("road") or addr.get("pedestrian") or addr.get("square") or "").strip()
+    house = (addr.get("house_number") or "").strip()
+    street = f"{road} {house}".strip() if road else ""
+    parts = [p for p in [street, zone, comune] if p]
+    return _normalize(", ".join(parts) if parts else fallback)
+
+
 async def _suggest_nominatim(address: str, limit: int) -> list[Dict[str, Any]]:
     """Nominatim OSM suggest fallback."""
     try:
@@ -115,9 +134,14 @@ async def _suggest_nominatim(address: str, limit: int) -> list[Dict[str, Any]]:
             )
             if not sigla and comune:
                 sigla = _COMUNE_INDEX.get(comune.lower())
+            zone = _zone_from_address(addr)
+            display = item.get("display_name") or address
             out.append({
                 "source": "nominatim",
-                "normalized": _normalize(item.get("display_name") or address),
+                "normalized": _short_address_label(addr, zone, comune, display),
+                "display_name": _normalize(display),
+                "road": (addr.get("road") or "").strip(),
+                "zone": zone,
                 "comune": comune,
                 "provincia_sigla": sigla,
                 "regione": addr.get("state") or "",
@@ -235,9 +259,14 @@ async def _try_nominatim(address: str) -> Optional[Dict[str, Any]]:
             sigla = _COMUNE_INDEX.get(comune.lower())
 
         regione = addr.get("state") or ""
+        zone = _zone_from_address(addr)
+        display = item.get("display_name") or address
         return {
             "source": "nominatim",
-            "normalized": _normalize(item.get("display_name") or address),
+            "normalized": _short_address_label(addr, zone, comune, display),
+            "display_name": _normalize(display),
+            "road": (addr.get("road") or "").strip(),
+            "zone": zone,
             "comune": comune,
             "provincia_sigla": sigla,
             "provincia_name": PROVINCE_NAMES.get(sigla) if sigla else None,

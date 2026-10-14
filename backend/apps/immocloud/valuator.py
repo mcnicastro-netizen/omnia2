@@ -153,10 +153,15 @@ ZONE_TIER_KEYWORDS = {
 
 def _infer_zone_tier(zone_text: Optional[str], address: Optional[str]) -> Tuple[ZoneTier, bool]:
     """Return (tier, explicit_user_input). If we can't infer, default 'semicentro'."""
+    from apps.immocloud.data.city_zones import tier_for_zone
+
     if zone_text:
         z = zone_text.lower().strip()
         if z in ("centro", "semicentro", "periferia"):
-            return z, True
+            return z, True  # type: ignore[return-value]
+        mapped = tier_for_zone(zone_text)
+        if mapped in ("centro", "semicentro", "periferia"):
+            return mapped, True  # type: ignore[return-value]
     haystack = " ".join(filter(None, [zone_text, address])).lower()
     for tier, keywords in ZONE_TIER_KEYWORDS.items():
         for kw in keywords:
@@ -440,14 +445,25 @@ async def _estimate_value_core(payload: ValuationPayload) -> Dict[str, Any]:
         commercial_mq, surface_breakdown = compute_commercial_surface(surf_dict)
     else:
         commercial_mq = float(payload.surface_sqm)
-        surface_breakdown = {"principale_mq": float(payload.surface_sqm)}
+        surface_breakdown = {
+            "principale_mq": {
+                "mq": float(payload.surface_sqm),
+                "coeff": 1.0,
+                "weighted": float(payload.surface_sqm),
+            }
+        }
 
     # 3. Base multipliers
     ptype_mult = PROPERTY_TYPE_MULTIPLIER.get(payload.property_type, 0.90)
     cond_mult = CONDITION_MULTIPLIER.get(payload.condition or "buono", 1.00)
     energy_mult = ENERGY_CLASS_MULTIPLIER.get(payload.energy_class, 1.00) if payload.energy_class else 1.00
+    # Piano: se c'è floor_class nel merito UNI, quello vince (niente doppio conteggio
+    # con il moltiplicatore grezzo sul piano numerico del form base).
+    merit_has_floor_class = bool(
+        payload.merit and getattr(payload.merit, "floor_class", None)
+    )
     floor_mult = 1.00
-    if payload.floor is not None:
+    if not merit_has_floor_class and payload.floor is not None:
         if payload.floor >= 5:
             floor_mult = 1.04
         elif payload.floor <= 0:
@@ -637,6 +653,21 @@ async def _estimate_value_core(payload: ValuationPayload) -> Dict[str, Any]:
             "Per una valutazione vincolante richiedi una perizia ufficiale a un agente OMNIA "
             "certificato o un perito iscritto all'Albo."
         ),
+    }
+
+
+@router.get("/zones")
+async def city_zones(city: str = ""):
+    """Quartieri / zone immobiliari per città (dropdown Valutatore)."""
+    from apps.immocloud.data.city_zones import CITY_ZONES, zones_for_city
+
+    city = (city or "").strip()
+    zones = zones_for_city(city) if city else []
+    return {
+        "ok": True,
+        "city": city,
+        "zones": zones,
+        "cities_with_zones": sorted(CITY_ZONES.keys()),
     }
 
 

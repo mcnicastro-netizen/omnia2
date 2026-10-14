@@ -5,7 +5,7 @@ import LanguageSwitcher from "../../../shared/components/LanguageSwitcher";
 import NotificationBell from "../../../shared/components/NotificationBell";
 import { useAuth } from "../../../shared/lib/auth";
 
-/* CloudTopNav — B2C-specific nav: Cerca casa · Valutatore · Mutui · Vendi · Area riservata */
+/* CloudTopNav — B2C: Cerca · Vendi · Valuta · Visura · HAL Legal · Mutui · Area riservata */
 export default function CloudTopNav() {
   const { t, i18n } = useTranslation();
   const lang = (i18n.language || "it").slice(0, 2);
@@ -17,11 +17,11 @@ export default function CloudTopNav() {
     : `/${lang}/cloud/register?intent=sell`;
   const links = [
     { to: `/${lang}/cloud/search`, testid: "cloud-nav-search", label: t("cloud.nav_search") },
-    { to: `/${lang}/cloud/valutatore`, testid: "cloud-nav-valuator", label: t("cloud.nav_valuator") },
-    { to: `/${lang}/cloud/mutui`, testid: "cloud-nav-mutui", label: t("cloud.nav_mutui") },
-    { to: `/${lang}/cloud/visura`, testid: "cloud-nav-visura", label: t("cloud.nav_visura") },
     { to: sellTo, testid: "cloud-nav-sell", label: t("cloud.nav_sell") },
+    { to: `/${lang}/cloud/valutatore`, testid: "cloud-nav-valuator", label: t("cloud.nav_valuator") },
+    { to: `/${lang}/cloud/visura`, testid: "cloud-nav-visura", label: t("cloud.nav_visura") },
     { to: `/${lang}/legal`, testid: "cloud-nav-legal", label: t("cloud.nav_legal") },
+    { to: `/${lang}/cloud/mutui`, testid: "cloud-nav-mutui", label: t("cloud.nav_mutui") },
   ];
   return (
     <header className="sticky top-0 z-40 backdrop-blur-md bg-[#fbf9f5]/90 border-b border-stone-200/80">

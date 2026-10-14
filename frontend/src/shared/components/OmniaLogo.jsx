@@ -8,16 +8,16 @@
  *
  * Props:
  * - variant: "full" (default, logo + wordmark) | "mark" (solo simbolo)
- * - size: "sm" (24px) | "md" (40px) | "lg" (72px) | "xl" (120px)
+ * - size: "sm" (24) | "md" (40) | "nav" (64) | "lg" (72) | "xl" (120)
  * - inverted: bool — su sfondi scuri applica filtro invert
- * - showTagline: bool — mostra tagline "Real Estate Lab" sotto (solo variant=full)
  * - className: string per override wrapper
  */
 import React from "react";
 
-const SIZE_MAP = {
+const HEIGHT_MAP = {
   sm: 24,
   md: 40,
+  nav: 96,
   lg: 72,
   xl: 120,
 };
@@ -29,8 +29,9 @@ export default function OmniaLogo({
   className = "",
   alt = "OMNIA Real Estate Lab",
 }) {
-  const px = SIZE_MAP[size] || SIZE_MAP.md;
   const src = variant === "mark" ? "/omnia-mark.png" : "/omnia-logo.png";
+  const px = HEIGHT_MAP[size] || HEIGHT_MAP.md;
+
   return (
     <img
       src={src}

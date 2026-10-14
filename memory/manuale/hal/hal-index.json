@@ -1,12 +1,12 @@
 {
-  "version": "0.36-stripe-railway-webhook",
-  "updated": "2026-10-12",
-  "voices_total": 371,
+  "version": "0.38-d124-home-valuator-sell",
+  "updated": "2026-10-14",
+  "voices_total": 373,
   "source_files": [
     {
       "file": "00-api-codice.yaml",
-      "voices": 33,
-      "md5": "bd2f011a86ed339c4ad6523b1c4f226e"
+      "voices": 34,
+      "md5": "dc7d0b2b30de394f2a69cbb0feccfb8e"
     },
     {
       "file": "01-primo-accesso.yaml",
@@ -95,13 +95,13 @@
     },
     {
       "file": "18-notifiche-attivita.yaml",
-      "voices": 18,
-      "md5": "ae80997a3aae0b3712996208755c5d03"
+      "voices": 19,
+      "md5": "126aea38826955ccb05633436ab668b6"
     },
     {
       "file": "19-impostazioni-agenzia.yaml",
       "voices": 15,
-      "md5": "981533d6167fc185384ba50cf827eae8"
+      "md5": "71d3a10647dbb7ee707b1ae78b9a1e7e"
     },
     {
       "file": "20-api-keys-integrazioni.yaml",
@@ -111,7 +111,7 @@
     {
       "file": "21-valutatore-immobiliare.yaml",
       "voices": 12,
-      "md5": "28b2f20060bacc990882b00d51e5da4b"
+      "md5": "6731d8387e63903d7c13a562b5020d81"
     },
     {
       "file": "22-hal-legal.yaml",
@@ -150,8 +150,8 @@
       "file": "00-api-codice",
       "title": "Corpus codice/API",
       "yaml": "00-api-codice.yaml",
-      "voices": 33,
-      "md5": "bd2f011a86ed339c4ad6523b1c4f226e"
+      "voices": 34,
+      "md5": "dc7d0b2b30de394f2a69cbb0feccfb8e"
     },
     {
       "id": 22,
@@ -202,5 +202,5 @@
       "md5": "5e88370cdf2c070dc30c7c3f036b85db"
     }
   ],
-  "notes": "Fingerprints regenerated from YAML on disk. Live RAG reindex: POST /api/app/hal/knowledge/reindex?force=true (super_admin). 2026-10-12: Stripe webhook Railway omnia-railway-api 200 OK · api.stripe-sandbox-cloud / api.railway-api-deploy. 2026-10-10: D-123 Railway API live · api.railway-api-deploy · cloud-secrets-vault Personal UI note. 2026-10-06: Stripe sandbox Cloud · api.cloud-secrets-vault · api.stripe-sandbox-cloud · Cap.19 billing. 2026-09-24: A-028g/h/i · Cap.2 Attività · Cap.10 Conferma e applica · Cap.18 distinzione. 2026-09-21: hub import A–E · HAL import.tutte-le-forme. 2026-09-19: D-085 storage quota · Cestino · Cap.20 Ruota."
+  "notes": "Fingerprints regenerated from YAML on disk. Live RAG reindex: POST /api/app/hal/knowledge/reindex?force=true (super_admin). 2026-10-14: D-124 Cap.21 APE/piano/PDF · Cap.18 sell-doc-promo · PR #40. 2026-10-12: Stripe webhook Railway omnia-railway-api 200 OK · api.stripe-sandbox-cloud / api.railway-api-deploy. 2026-10-10: D-123 Railway API live · api.railway-api-deploy · cloud-secrets-vault Personal UI note. 2026-10-06: Stripe sandbox Cloud · api.cloud-secrets-vault · api.stripe-sandbox-cloud · Cap.19 billing. 2026-09-24: A-028g/h/i · Cap.2 Attività · Cap.10 Conferma e applica · Cap.18 distinzione. 2026-09-21: hub import A–E · HAL import.tutte-le-forme. 2026-09-19: D-085 storage quota · Cestino · Cap.20 Ruota."
 }
