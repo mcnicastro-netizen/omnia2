@@ -51,6 +51,34 @@ export default function LandingApp() {
     },
   ];
 
+  // Promo rail — visual only for now; routes wired tomorrow
+  const promoBoxes = [
+    {
+      key: "ape",
+      tag: t("landing.promo_ape_tag"),
+      title: t("landing.promo_ape_title"),
+      desc: t("landing.promo_ape_desc"),
+      accent: "#1F6B5C",
+      wash: "linear-gradient(145deg, rgba(31,107,92,0.14) 0%, rgba(245,241,232,0.92) 55%, #F5F1E8 100%)",
+    },
+    {
+      key: "planimetria",
+      tag: t("landing.promo_plan_tag"),
+      title: t("landing.promo_plan_title"),
+      desc: t("landing.promo_plan_desc"),
+      accent: "#C8A653",
+      wash: "linear-gradient(145deg, rgba(200,166,83,0.18) 0%, rgba(245,241,232,0.94) 55%, #F5F1E8 100%)",
+    },
+    {
+      key: "atti",
+      tag: t("landing.promo_atti_tag"),
+      title: t("landing.promo_atti_title"),
+      desc: t("landing.promo_atti_desc"),
+      accent: "#0B1E3F",
+      wash: "linear-gradient(145deg, rgba(11,30,63,0.12) 0%, rgba(245,241,232,0.94) 55%, #F5F1E8 100%)",
+    },
+  ];
+
   return (
     <div
       data-testid="landing-app"
@@ -65,15 +93,15 @@ export default function LandingApp() {
     >
       <TopNav current="landing" theme="light" />
 
-      <section className="px-5 sm:px-8 md:px-12 lg:px-16 py-14 md:py-18 lg:py-20 max-w-screen-2xl mx-auto grid md:grid-cols-12 gap-10 md:gap-12 items-center">
-        <div className="md:col-span-6 min-w-0 animate-[landingRise_0.7s_ease_both]">
+      <section className="px-5 sm:px-8 md:px-12 lg:px-16 py-14 md:py-18 lg:py-20 max-w-screen-2xl mx-auto grid lg:grid-cols-12 gap-8 md:gap-10 lg:gap-8 xl:gap-10 items-stretch">
+        <div className="lg:col-span-5 min-w-0 flex flex-col justify-center animate-[landingRise_0.7s_ease_both]">
           <p
             className="text-[10px] sm:text-xs font-sans uppercase tracking-[0.3em] mb-4 md:mb-6"
             style={{ color: "#1F6B5C" }}
           >
             <Brand>Real estate · Ecosystem · 2026</Brand>
           </p>
-          <h1 className="text-4xl sm:text-5xl md:text-5xl lg:text-6xl leading-[1.05] tracking-tight mb-6 md:mb-8 break-words text-[#0B1E3F]">
+          <h1 className="text-4xl sm:text-5xl md:text-5xl lg:text-[2.75rem] xl:text-6xl leading-[1.05] tracking-tight mb-6 md:mb-8 break-words text-[#0B1E3F]">
             {t("landing.hero_title")}
           </h1>
           <p className="text-lg sm:text-xl md:text-xl font-light text-[#0B1E3F]/75 max-w-xl font-sans">
@@ -81,10 +109,10 @@ export default function LandingApp() {
           </p>
         </div>
 
-        <aside className="md:col-span-6 min-w-0 animate-[landingRise_0.85s_ease_both]">
+        <aside className="lg:col-span-4 min-w-0 animate-[landingRise_0.85s_ease_both]">
           <div
             data-testid="landing-hero-visual"
-            className="relative overflow-hidden rounded-3xl border border-[#C8A653]/35 shadow-[0_24px_60px_rgba(11,30,63,0.18)] aspect-[4/3] md:aspect-[5/4] group"
+            className="relative overflow-hidden rounded-3xl border border-[#C8A653]/35 shadow-[0_24px_60px_rgba(11,30,63,0.18)] aspect-[4/3] lg:aspect-auto lg:h-full lg:min-h-[340px] group"
           >
             <img
               src="/cloud/hero.jpg"
@@ -125,6 +153,49 @@ export default function LandingApp() {
               </p>
             </div>
           </div>
+        </aside>
+
+        <aside
+          data-testid="landing-promo-rail"
+          className="lg:col-span-3 min-w-0 flex flex-col gap-3 sm:gap-3.5 animate-[landingRise_1s_ease_both]"
+          aria-label={t("landing.promo_rail_label")}
+        >
+          {promoBoxes.map((box, i) => (
+            <div
+              key={box.key}
+              data-testid={`landing-promo-${box.key}`}
+              className="group relative flex-1 overflow-hidden rounded-2xl border px-4 py-4 sm:px-5 sm:py-5 transition duration-300 hover:-translate-y-0.5 hover:shadow-[0_16px_36px_rgba(11,30,63,0.12)]"
+              style={{
+                borderColor: `${box.accent}40`,
+                background: box.wash,
+                animationDelay: `${0.12 + i * 0.08}s`,
+              }}
+            >
+              <div
+                className="pointer-events-none absolute inset-y-3 left-0 w-[3px] rounded-r-full opacity-90 transition group-hover:opacity-100"
+                style={{ background: box.accent }}
+                aria-hidden
+              />
+              <p
+                className="pl-2 text-[10px] font-sans uppercase tracking-[0.28em] mb-1.5"
+                style={{ color: box.accent }}
+              >
+                {box.tag}
+              </p>
+              <h2 className="pl-2 text-lg sm:text-xl tracking-tight text-[#0B1E3F] mb-1.5 leading-snug">
+                {box.title}
+              </h2>
+              <p className="pl-2 text-[13px] sm:text-sm font-sans leading-relaxed text-[#0B1E3F]/68">
+                {box.desc}
+              </p>
+              <p
+                className="pl-2 mt-3 text-[10px] font-sans uppercase tracking-[0.22em] opacity-70 group-hover:opacity-100 transition"
+                style={{ color: box.accent }}
+              >
+                {t("landing.promo_soon")}
+              </p>
+            </div>
+          ))}
         </aside>
       </section>
 
