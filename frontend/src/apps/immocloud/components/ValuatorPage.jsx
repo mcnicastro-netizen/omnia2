@@ -15,7 +15,11 @@ import { Link, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import AddressAutocomplete from "./AddressAutocomplete";
 import CloudPageHero from "./CloudPageHero";
-import { ENERGY_CLASS_LETTER_OPTIONS } from "../../../shared/lib/energyClasses";
+import {
+  APE_STATUS_OPTIONS,
+  ENERGY_CLASS_ACE_LEGACY,
+  ENERGY_CLASS_APE_2015,
+} from "../../../shared/lib/energyClasses";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api/cloud/valuator`;
@@ -26,7 +30,6 @@ const PDF_URL = `${BACKEND_URL}/api/cloud/valuator/report-pdf`;
 
 const PROPERTY_TYPES = ["appartamento", "attico", "loft", "villa", "monolocale", "rustico_casale", "ufficio", "negozio", "garage_box"];
 const CONDITIONS = ["nuovo", "ristrutturato", "ottimo", "buono", "abitabile", "da_ristrutturare", "ruderi_da_demolire"];
-const ENERGY_CLASSES = ENERGY_CLASS_LETTER_OPTIONS;
 const FLOOR_CLASSES = ["seminterrato", "piano_terra", "piano_1", "piano_intermedio", "ultimo_no_asc", "ultimo_con_asc", "attico_panoramico"];
 const EXPOSURES = ["sud", "sud_est", "sud_ovest", "est", "ovest", "nord_est", "nord_ovest", "nord", "cieca", "doppia_esp"];
 const VIEWS = ["interno", "cortile", "strada", "verde", "panoramico", "mare", "lago_montagna"];
@@ -42,7 +45,17 @@ const CITY_SUGGESTIONS = [
   "Siracusa", "Pescara", "Lecce", "La Spezia", "Como", "Treviso", "Taranto",
 ];
 
-const emptyForm = { city: "", zone: "", address: "", property_type: "appartamento", surface_sqm: "", condition: "buono", energy_class: "", floor: "" };
+const emptyForm = {
+  city: "",
+  zone: "",
+  address: "",
+  property_type: "appartamento",
+  surface_sqm: "",
+  condition: "buono",
+  ape_status: "",
+  energy_class: "",
+  floor: "",
+};
 const fieldClass =
   "w-full border border-stone-200 rounded-lg p-2.5 text-sm focus:border-[#0B1E3F] outline-none bg-white";
 const labelClass = "block text-xs font-medium text-stone-600 mb-1";
@@ -172,7 +185,10 @@ export default function ValuatorPage() {
     if (form.zone) p.zone = form.zone;
     if (form.address) p.address = form.address;
     if (form.condition) p.condition = form.condition;
-    if (form.energy_class) p.energy_class = form.energy_class;
+    // Solo lettere APE/ACE verso il motore; in definizione / esente → nessun moltiplicatore
+    if (form.ape_status === "in_atto" && form.energy_class) {
+      p.energy_class = form.energy_class;
+    }
     if (form.floor !== "" && form.floor !== null) p.floor = Number(form.floor);
     if (includePro) {
       const cs = {};
@@ -277,7 +293,12 @@ export default function ValuatorPage() {
     setPdfBusy(false);
   }
 
-  const canSubmit = form.city && form.surface_sqm && Number(form.surface_sqm) >= 10;
+  const apeOk =
+    form.ape_status === "in_atto"
+      ? Boolean(form.energy_class)
+      : form.ape_status === "in_definizione" || form.ape_status === "esente";
+  const canSubmit =
+    form.city && form.surface_sqm && Number(form.surface_sqm) >= 10 && apeOk;
 
   return (
     <div data-testid="valuator-page">
@@ -436,10 +457,127 @@ export default function ValuatorPage() {
             <select className="w-full border border-stone-200 rounded-lg p-2.5 text-sm" value={form.condition} onChange={e => setForm(f => ({ ...f, condition: e.target.value }))} data-testid="valuator-condition">
               {CONDITIONS.map(o => <option key={o} value={o}>{o}</option>)}
             </select>
-            <select className="w-full border border-stone-200 rounded-lg p-2.5 text-sm" value={form.energy_class} onChange={e => setForm(f => ({ ...f, energy_class: e.target.value }))} data-testid="valuator-energy">
-              <option value="">{t("valuator.energy_none", "Classe energetica (opzionale)")}</option>
-              {ENERGY_CLASSES.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
-            </select>
+
+            <div>
+              <label htmlFor="valuator-ape-status" className={labelClass}>
+                {t("valuator.f_ape_status", "Stato APE")} *
+              </label>
+              <select
+                id="valuator-ape-status"
+                className={fieldClass}
+                value={form.ape_status}
+                onChange={(e) => {
+                  const ape_status = e.target.value;
+                  setForm((f) => ({
+                    ...f,
+                    ape_status,
+                    energy_class:
+                      ape_status === "in_atto" ? f.energy_class : "",
+                  }));
+                }}
+                data-testid="valuator-ape-status"
+                required
+              >
+                <option value="">
+                  {t("valuator.f_ape_status_pick", "Seleziona stato APE…")}
+                </option>
+                {APE_STATUS_OPTIONS.map((o) => (
+                  <option key={o.value} value={o.value}>
+                    {t(
+                      o.labelKey,
+                      o.value === "in_atto"
+                        ? "In atto (attestato rilasciato)"
+                        : o.value === "in_definizione"
+                          ? "In via di definizione"
+                          : "Non soggetto / Esente"
+                    )}
+                  </option>
+                ))}
+              </select>
+              <p className="mt-1 text-[11px] text-stone-500">
+                {t(
+                  "valuator.ape_status_hint",
+                  "Come sui portali: APE in atto, in corso di definizione, oppure esente (D.Lgs. 192/2005)."
+                )}
+              </p>
+            </div>
+
+            {form.ape_status === "in_atto" && (
+              <div>
+                <label htmlFor="valuator-energy" className={labelClass}>
+                  {t("valuator.f_energy", "Classe energetica")} *
+                </label>
+                <select
+                  id="valuator-energy"
+                  className={fieldClass}
+                  value={form.energy_class}
+                  onChange={(e) =>
+                    setForm((f) => ({ ...f, energy_class: e.target.value }))
+                  }
+                  data-testid="valuator-energy"
+                  required
+                >
+                  <option value="">
+                    {t("valuator.f_energy_pick", "Seleziona classe…")}
+                  </option>
+                  <optgroup
+                    label={t(
+                      "valuator.energy_scale_2015",
+                      "APE vigente — DM 26/06/2015 (A4→G)"
+                    )}
+                  >
+                    {ENERGY_CLASS_APE_2015.map((o) => (
+                      <option key={`2015-${o.value}`} value={o.value}>
+                        {o.label}
+                      </option>
+                    ))}
+                  </optgroup>
+                  <optgroup
+                    label={t(
+                      "valuator.energy_scale_legacy",
+                      "Scala precedente ACE / ante-2015 (A+→G)"
+                    )}
+                  >
+                    {ENERGY_CLASS_ACE_LEGACY.map((o) => (
+                      <option key={`ace-${o.value}`} value={o.value}>
+                        {o.label}
+                      </option>
+                    ))}
+                  </optgroup>
+                </select>
+                <p className="mt-1 text-[11px] text-stone-500">
+                  {t(
+                    "valuator.energy_scale_hint",
+                    "Due riferimenti: Linee guida APE 2015 (A4–G) e attestati precedenti ancora validi (A+/A–G)."
+                  )}
+                </p>
+              </div>
+            )}
+
+            {form.ape_status === "in_definizione" && (
+              <p
+                className="text-[11px] text-amber-800 bg-amber-50 border border-amber-100 rounded-lg px-3 py-2"
+                data-testid="valuator-ape-pending-note"
+              >
+                {t(
+                  "valuator.ape_pending_note",
+                  "APE in via di definizione: la stima procede senza correttivo di classe (come «In corso» su Idealista/Immobiliare)."
+                )}
+              </p>
+            )}
+
+            {form.ape_status === "esente" && (
+              <p
+                className="text-[11px] text-stone-600 bg-stone-50 border border-stone-200 rounded-lg px-3 py-2"
+                data-testid="valuator-ape-exempt-note"
+              >
+                {t(
+                  "valuator.ape_exempt_note",
+                  "Esente da APE solo nei casi di legge (box, cantine, ruderi, fabbricati isolati sotto 50 m², ecc. — Appendice A Linee guida)."
+                )}
+              </p>
+            )}
+
             <input type="number" min="-2" max="80" className="w-full border border-stone-200 rounded-lg p-2.5 text-sm" placeholder={t("valuator.floor", "Piano (opzionale)")} value={form.floor} onChange={e => setForm(f => ({ ...f, floor: e.target.value }))} data-testid="valuator-floor" />
           </div>
 
