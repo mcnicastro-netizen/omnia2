@@ -519,35 +519,16 @@ export default function ValuatorPage() {
                   <option value="">
                     {t("valuator.f_energy_pick", "Seleziona classe…")}
                   </option>
-                  <optgroup
-                    label={t(
-                      "valuator.energy_scale_2015",
-                      "APE vigente — DM 26/06/2015 (A4→G)"
-                    )}
-                  >
-                    {ENERGY_CLASS_APE_2015.map((o) => (
-                      <option key={`2015-${o.value}`} value={o.value}>
-                        {o.label}
-                      </option>
-                    ))}
-                  </optgroup>
-                  <optgroup
-                    label={t(
-                      "valuator.energy_scale_legacy",
-                      "Scala precedente ACE / ante-2015 (A+→G)"
-                    )}
-                  >
-                    {ENERGY_CLASS_ACE_LEGACY.map((o) => (
-                      <option key={`ace-${o.value}`} value={o.value}>
-                        {o.label}
-                      </option>
-                    ))}
-                  </optgroup>
+                  {ENERGY_CLASS_LETTER_OPTIONS.map((o) => (
+                    <option key={o.value} value={o.value}>
+                      {o.label}
+                    </option>
+                  ))}
                 </select>
                 <p className="mt-1 text-[11px] text-stone-500">
                   {t(
                     "valuator.energy_scale_hint",
-                    "Due riferimenti: Linee guida APE 2015 (A4–G) e attestati precedenti ancora validi (A+/A–G)."
+                    "Elenco completo A4–G (APE DM 26/06/2015) e A+/A (attestati ACE / ante-2015 ancora validi)."
                   )}
                 </p>
               </div>
