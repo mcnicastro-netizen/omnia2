@@ -118,7 +118,8 @@ export default function CloudHomePage() {
             La casa giusta,<br className="hidden sm:block" /> senza farsi raccontare storie.
           </h1>
           <p className="ic-rise-delay text-base md:text-lg text-white/80 max-w-xl mb-8">
-            Cerca. Guarda. Lascia che Scout ti sussurri cosa chiedere — prima della visita.
+            Cerca casa. Apri un annuncio. Scout — il nostro strumento sull&apos;annuncio — ti dice
+            cosa manca e cosa chiedere, prima della visita.
           </p>
 
           <form
