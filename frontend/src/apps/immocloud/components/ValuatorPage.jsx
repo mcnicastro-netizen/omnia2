@@ -184,7 +184,6 @@ export default function ValuatorPage() {
     if (form.energy_class && !String(form.energy_class).startsWith("EXEMPT")) {
       p.energy_class = form.energy_class;
     }
-    if (form.floor !== "" && form.floor !== null) p.floor = Number(form.floor);
     if (includePro) {
       const cs = {};
       ["veranda_mq", "terrazzo_mq", "balcone_mq", "cantina_mq", "soffitta_mq", "box_auto_mq", "posto_auto_scoperto_mq", "giardino_villa_mq", "giardino_condom_mq", "taverna_mq", "mansarda_abitabile_mq"].forEach(k => {
@@ -196,6 +195,12 @@ export default function ValuatorPage() {
       if (pro.year_built && Number(pro.year_built) > 1700) merit.year_built = Number(pro.year_built);
       ["vincolo_storico", "vincolo_paesag", "locazione_libera_breve", "locazione_lunga", "nuda_proprieta"].forEach(k => { if (pro[k]) merit[k] = true; });
       if (Object.keys(merit).length) p.merit = merit;
+      // Piano numerico solo se non c'è floor_class UNI (evita doppio conteggio)
+      if (!merit.floor_class && form.floor !== "" && form.floor !== null) {
+        p.floor = Number(form.floor);
+      }
+    } else if (form.floor !== "" && form.floor !== null) {
+      p.floor = Number(form.floor);
     }
     return p;
   }
