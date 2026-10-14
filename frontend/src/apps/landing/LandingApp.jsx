@@ -64,20 +64,9 @@ export default function LandingApp() {
           <h1 className="text-4xl sm:text-5xl md:text-5xl lg:text-6xl leading-[1.05] tracking-tight mb-6 md:mb-8 break-words text-[#0B1E3F]">
             {t("landing.hero_title")}
           </h1>
-          <p className="text-lg sm:text-xl md:text-xl font-light text-[#0B1E3F]/75 mb-8 md:mb-10 max-w-xl font-sans">
+          <p className="text-lg sm:text-xl md:text-xl font-light text-[#0B1E3F]/75 max-w-xl font-sans">
             {t("landing.hero_subtitle")}
           </p>
-          <a
-            data-testid="landing-cta"
-            href="#omnia-pillars"
-            className="inline-block px-6 md:px-8 py-3 md:py-4 text-xs sm:text-sm font-sans uppercase tracking-widest text-[#0B1E3F] transition hover:brightness-105"
-            style={{
-              background: "linear-gradient(180deg, #d4b56a, #C8A653)",
-              boxShadow: "0 14px 36px rgba(200,166,83,0.35)",
-            }}
-          >
-            {t("landing.hero_cta")} →
-          </a>
         </div>
 
         <aside className="md:col-span-6 min-w-0 animate-[landingRise_0.85s_ease_both]">
