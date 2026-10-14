@@ -36,23 +36,28 @@ class TestUNI10750:
     def test_only_principale(self):
         total, breakdown = compute_commercial_surface({"principale_mq": 90.0})
         assert total == 90.0
-        assert breakdown == {"principale_mq": 90.0}
+        assert breakdown == {"principale_mq": {"mq": 90.0, "coeff": 1.0, "weighted": 90.0}}
 
     def test_balcone_under_threshold(self):
         # 10mq balcone × 30% = 3mq
         total, breakdown = compute_commercial_surface({"principale_mq": 80, "balcone_mq": 10})
-        assert breakdown["balcone_mq"] == 3.0
+        assert breakdown["balcone_mq"]["weighted"] == 3.0
+        assert breakdown["balcone_mq"]["mq"] == 10.0
+        assert breakdown["balcone_mq"]["coeff"] == pytest.approx(0.30, abs=0.001)
         assert total == 83.0
 
     def test_terrazzo_progressive(self):
         # 50mq terrazzo: primi 25 @ 30% = 7.5, restanti 25 @ 10% = 2.5 → 10mq totali
         total, breakdown = compute_commercial_surface({"principale_mq": 100, "terrazzo_mq": 50})
-        assert breakdown["terrazzo_mq"] == 10.0
+        assert breakdown["terrazzo_mq"]["weighted"] == 10.0
+        assert breakdown["terrazzo_mq"]["mq"] == 50.0
+        assert breakdown["terrazzo_mq"]["coeff"] == pytest.approx(0.20, abs=0.001)  # effective 10/50
         assert total == 110.0
 
     def test_box_at_50pct(self):
-        total, _ = compute_commercial_surface({"principale_mq": 80, "box_auto_mq": 18})
+        total, bd = compute_commercial_surface({"principale_mq": 80, "box_auto_mq": 18})
         assert total == 80 + 9.0  # 18 × 0.50
+        assert bd["box_auto_mq"] == {"mq": 18.0, "coeff": 0.50, "weighted": 9.0}
 
     def test_cantina_at_25pct(self):
         total, _ = compute_commercial_surface({"principale_mq": 80, "cantina_mq": 12})
@@ -126,6 +131,35 @@ class TestMeritAdjustment:
         assert age_adjustment(2020, 2026) == 0.0
         # None input
         assert age_adjustment(None) == 0.0
+
+    def test_floor_class_suppresses_numeric_floor_multiplier(self):
+        """Merit floor_class must not stack with crude payload.floor multiplier."""
+        import asyncio
+        from apps.immocloud.valuator import ValuationPayload, _estimate_value_core
+        from shared.db.connection import Database
+
+        async def _run():
+            Database.connect()
+            r = await _estimate_value_core(ValuationPayload(
+                city="Milano",
+                property_type="appartamento",
+                surface_sqm=80,
+                condition="buono",
+                floor=5,
+                merit={"floor_class": "attico_panoramico", "exposure": "sud"},
+            ))
+            assert r["multipliers_applied"]["floor"] == 1.0
+            assert r["merit_breakdown"]["floor"] == 0.10
+            r2 = await _estimate_value_core(ValuationPayload(
+                city="Milano",
+                property_type="appartamento",
+                surface_sqm=80,
+                condition="buono",
+                floor=5,
+            ))
+            assert r2["multipliers_applied"]["floor"] == 1.04
+
+        asyncio.run(_run())
 
 
 # ──────────────────────────────────────────────────────────────

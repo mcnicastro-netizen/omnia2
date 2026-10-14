@@ -70,7 +70,8 @@ ZONE_LABELS = {
     "centro": "Centro", "semicentro": "Semicentro", "periferia": "Periferia",
 }
 MERIT_LABELS = {
-    "floor_class": "Piano", "exposure": "Esposizione", "view": "Vista",
+    "floor": "Piano", "floor_class": "Piano",
+    "exposure": "Esposizione", "view": "Vista",
     "heating": "Riscaldamento", "elevator": "Ascensore", "age": "Vetustà",
     "year_built": "Anno di costruzione", "vincolo_storico": "Vincolo storico",
     "vincolo_paesag": "Vincolo paesaggistico", "locazione_libera_breve": "Locazione breve",
@@ -480,14 +481,25 @@ def build_valuation_pdf(
         for k, v in breakdown.items():
             label = k.replace("_mq", "").replace("_", " ").title()
             if isinstance(v, dict):
-                srows.append([
-                    label,
-                    f"{v.get('mq', '')}",
-                    f"{v.get('coeff', '')}",
-                    f"{v.get('weighted', '')}",
-                ])
+                mq = v.get("mq", "")
+                coeff = v.get("coeff", "")
+                weighted = v.get("weighted", "")
+                try:
+                    coeff_txt = f"{float(coeff):.0%}".replace(".", ",")
+                except (TypeError, ValueError):
+                    coeff_txt = str(coeff)
+                try:
+                    mq_txt = f"{float(mq):.1f}".rstrip("0").rstrip(".")
+                except (TypeError, ValueError):
+                    mq_txt = str(mq)
+                try:
+                    w_txt = f"{float(weighted):.1f}".rstrip("0").rstrip(".")
+                except (TypeError, ValueError):
+                    w_txt = str(weighted)
+                srows.append([label, mq_txt, coeff_txt, w_txt])
             else:
-                srows.append([label, str(v), "1,00", str(v)])
+                # Legacy float = already weighted only (pre-fix payloads)
+                srows.append([label, "—", "—", str(v)])
         story.append(_data_table(
             ["Componente", "m² reali", "Coeff.", "m² ponderati"],
             srows, styles,

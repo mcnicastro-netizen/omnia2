@@ -445,14 +445,25 @@ async def _estimate_value_core(payload: ValuationPayload) -> Dict[str, Any]:
         commercial_mq, surface_breakdown = compute_commercial_surface(surf_dict)
     else:
         commercial_mq = float(payload.surface_sqm)
-        surface_breakdown = {"principale_mq": float(payload.surface_sqm)}
+        surface_breakdown = {
+            "principale_mq": {
+                "mq": float(payload.surface_sqm),
+                "coeff": 1.0,
+                "weighted": float(payload.surface_sqm),
+            }
+        }
 
     # 3. Base multipliers
     ptype_mult = PROPERTY_TYPE_MULTIPLIER.get(payload.property_type, 0.90)
     cond_mult = CONDITION_MULTIPLIER.get(payload.condition or "buono", 1.00)
     energy_mult = ENERGY_CLASS_MULTIPLIER.get(payload.energy_class, 1.00) if payload.energy_class else 1.00
+    # Piano: se c'è floor_class nel merito UNI, quello vince (niente doppio conteggio
+    # con il moltiplicatore grezzo sul piano numerico del form base).
+    merit_has_floor_class = bool(
+        payload.merit and getattr(payload.merit, "floor_class", None)
+    )
     floor_mult = 1.00
-    if payload.floor is not None:
+    if not merit_has_floor_class and payload.floor is not None:
         if payload.floor >= 5:
             floor_mult = 1.04
         elif payload.floor <= 0:

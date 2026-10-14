@@ -41,16 +41,22 @@ PROGRESSIVE_THRESHOLDS = {
 }
 
 
-def compute_commercial_surface(surfaces: Dict[str, float]) -> Tuple[float, Dict[str, float]]:
-    """Return (total_commercial_mq, breakdown_per_component)."""
-    breakdown: Dict[str, float] = {}
+def compute_commercial_surface(
+    surfaces: Dict[str, float],
+) -> Tuple[float, Dict[str, Dict[str, float]]]:
+    """Return (total_commercial_mq, breakdown_per_component).
+
+    Each breakdown entry is ``{mq, coeff, weighted}`` so PDF/API can show
+    real m² vs UNI weight (effective coeff = weighted/mq for progressive bands).
+    """
+    breakdown: Dict[str, Dict[str, float]] = {}
     total = 0.0
     for key, raw in surfaces.items():
         if not raw or raw <= 0:
             continue
+        mq = float(raw)
         if key in PROGRESSIVE_THRESHOLDS:
-            # Progressive bands
-            remaining = float(raw)
+            remaining = mq
             weighted = 0.0
             prev = 0.0
             for threshold, weight in PROGRESSIVE_THRESHOLDS[key]:
@@ -62,15 +68,17 @@ def compute_commercial_surface(surfaces: Dict[str, float]) -> Tuple[float, Dict[
                 prev = threshold
                 if remaining <= 0:
                     break
-            breakdown[key] = round(weighted, 2)
+            weighted = round(weighted, 2)
+            eff = round(weighted / mq, 4) if mq else 0.0
+            breakdown[key] = {"mq": mq, "coeff": eff, "weighted": weighted}
             total += weighted
         else:
             w = SURFACE_WEIGHTS.get(key, 0.0)
             if w == 0.0:
                 continue
-            v = round(raw * w, 2)
-            breakdown[key] = v
-            total += v
+            weighted = round(mq * w, 2)
+            breakdown[key] = {"mq": mq, "coeff": w, "weighted": weighted}
+            total += weighted
     return round(total, 2), breakdown
 
 
