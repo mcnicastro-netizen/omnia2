@@ -4,14 +4,13 @@ import { useTranslation } from "react-i18next";
 import LanguageSwitcher from "./LanguageSwitcher";
 import MobileNav from "./MobileNav";
 import Brand from "./Brand";
+import OmniaLogo from "./OmniaLogo";
 
 /**
- * Shared top navigation across all 4 OMNIA apps (Landing, Cloud, App, Learn).
+ * Shared top navigation across Landing, App, Learn.
  *
- * Props:
- * - current: "landing" | "cloud" | "app" | "learn" — highlights active page
- * - theme:   "light"   | "dark"  | "cream"          — color scheme variant
- * - suffix:  optional label appended to OMNIA logo (e.g. "cloud", "app", "learn")
+ * Home (landing): logo + Cerca casa · Vendi casa · Area riservata
+ * App / Learn: logo + prodotti (+ suffix opzionale)
  */
 export default function TopNav({ current = "landing", theme = "light", suffix = null }) {
   const { t, i18n } = useTranslation();
@@ -19,7 +18,6 @@ export default function TopNav({ current = "landing", theme = "light", suffix = 
 
   const isLanding = current === "landing";
 
-  // Color variants per theme
   const themes = {
     light: {
       wrapper: "border-b border-stone-200 bg-stone-50/95",
@@ -51,23 +49,40 @@ export default function TopNav({ current = "landing", theme = "light", suffix = 
   };
   const c = themes[theme] || themes.light;
 
-  // S6 — nav pubblica = 2 prodotti. /learn resta raggiungibile ma fuori pitch.
-  const navItems = [
-    { key: "cloud", to: `/${lang}/cloud`, label: t("nav.immocloud") },
-    { key: "app", to: `/${lang}/app`, label: t("nav.immoweb") },
+  const landingItems = [
+    {
+      key: "search",
+      to: `/${lang}/cloud/search`,
+      label: t("cloud.nav_search"),
+      testid: "topnav-search",
+    },
+    {
+      key: "sell",
+      to: `/${lang}/cloud/register?intent=sell`,
+      label: t("cloud.nav_sell"),
+      testid: "topnav-sell",
+    },
   ];
 
-  // For mobile menu — include all items + back if internal
+  const productItems = [
+    { key: "cloud", to: `/${lang}/cloud`, label: t("nav.immocloud"), testid: "topnav-cloud" },
+    { key: "app", to: `/${lang}/app`, label: t("nav.immoweb"), testid: "topnav-app" },
+  ];
+
+  const navItems = isLanding ? landingItems : productItems;
+  const ctaTo = isLanding ? `/${lang}/cloud/register` : `/${lang}/login`;
+  const ctaLabel = isLanding ? t("cloud.nav_area") : t("nav.login");
+  const ctaTestId = isLanding ? "topnav-area" : "topnav-login";
+
   const mobileLinks = [
     ...(isLanding ? [] : [{ to: `/${lang}`, label: t("nav.back_to_home") }]),
     ...navItems.map((n) => ({ to: n.to, label: n.label })),
-    { to: `/${lang}/login`, label: t("nav.login") },
+    { to: ctaTo, label: ctaLabel },
   ];
 
   return (
     <header className={`sticky top-0 z-40 backdrop-blur ${c.wrapper}`}>
       <div className="flex items-center justify-between px-5 sm:px-8 md:px-12 lg:px-16 py-4 md:py-5 max-w-screen-2xl mx-auto gap-4">
-        {/* LEFT — Logo + optional back arrow */}
         <div className="flex items-center gap-4 md:gap-6 min-w-0">
           {!isLanding && (
             <Link
@@ -84,26 +99,32 @@ export default function TopNav({ current = "landing", theme = "light", suffix = 
           <Link
             to={`/${lang}`}
             data-testid="topnav-logo"
-            className={`text-xl md:text-2xl tracking-tight font-medium truncate ${c.brand}`}
-            style={{ fontFamily: "'Fraunces', Georgia, serif" }}
+            className={`inline-flex items-center gap-2 min-w-0 ${c.brand}`}
+            aria-label="OMNIA"
           >
-            <Brand>OMNIA</Brand>
+            <OmniaLogo
+              variant="full"
+              size="md"
+              inverted={theme === "dark"}
+            />
             {suffix && (
-              <>
-                <span className={c.suffix}>·</span>
+              <span
+                className={`hidden sm:inline text-sm font-sans tracking-widest uppercase ${c.suffix}`}
+                style={{ fontFamily: "'Fraunces', Georgia, serif" }}
+              >
+                <span className={c.suffix}>·</span>{" "}
                 <Brand className={`font-light ${c.suffix}`}>{suffix}</Brand>
-              </>
+              </span>
             )}
           </Link>
         </div>
 
-        {/* CENTER — Cross-app nav (desktop only) */}
         <nav className="hidden lg:flex items-center gap-6 text-sm font-sans uppercase tracking-widest">
           {navItems.map((n) => (
             <Link
               key={n.key}
               to={n.to}
-              data-testid={`topnav-${n.key}`}
+              data-testid={n.testid}
               className={`transition ${current === n.key ? c.linkActive : c.link}`}
             >
               {n.label}
@@ -111,19 +132,17 @@ export default function TopNav({ current = "landing", theme = "light", suffix = 
           ))}
         </nav>
 
-        {/* RIGHT — Login CTA + lang switcher (desktop) */}
         <div className="hidden md:flex items-center gap-3 md:gap-4">
           <Link
-            to={`/${lang}/login`}
-            data-testid="topnav-login"
+            to={ctaTo}
+            data-testid={ctaTestId}
             className={`px-4 py-2 text-xs font-sans uppercase tracking-widest transition ${c.cta}`}
           >
-            {t("nav.login")}
+            {ctaLabel}
           </Link>
           <LanguageSwitcher />
         </div>
 
-        {/* MOBILE hamburger */}
         <MobileNav lang={lang} links={mobileLinks} theme={theme} />
       </div>
     </header>
