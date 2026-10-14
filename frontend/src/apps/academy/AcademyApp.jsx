@@ -41,8 +41,8 @@ export default function AcademyApp() {
       <TopNav current="academy" theme="light" />
 
       {/* Hero */}
-      <section className="px-5 sm:px-8 md:px-12 lg:px-16 pt-14 md:pt-18 pb-10 md:pb-14 max-w-screen-2xl mx-auto">
-        <div className="max-w-3xl animate-[academyRise_0.7s_ease_both]">
+      <section className="px-5 sm:px-8 md:px-12 lg:px-16 pt-14 md:pt-18 pb-10 md:pb-14 max-w-screen-2xl mx-auto grid md:grid-cols-12 gap-10 md:gap-12 items-center">
+        <div className="md:col-span-6 min-w-0 animate-[academyRise_0.7s_ease_both]">
           <p
             className="text-[10px] sm:text-xs font-sans uppercase tracking-[0.3em] mb-4 md:mb-5"
             style={{ color: "#1F6B5C" }}
@@ -82,13 +82,45 @@ export default function AcademyApp() {
             </a>
           </div>
         </div>
+
+        <aside className="md:col-span-6 min-w-0 animate-[academyRise_0.85s_ease_both]">
+          <div
+            data-testid="academy-hero-visual"
+            className="relative overflow-hidden rounded-3xl border border-[#C8A653]/35 shadow-[0_24px_60px_rgba(11,30,63,0.18)] aspect-[4/3] md:aspect-[5/4] group"
+          >
+            <img
+              src="/cloud/living.jpg"
+              alt={t("academy.img_hero_alt")}
+              className="absolute inset-0 h-full w-full object-cover transition duration-700 group-hover:scale-[1.03]"
+              loading="eager"
+            />
+            <div
+              className="absolute inset-0"
+              style={{
+                background:
+                  "linear-gradient(180deg, rgba(11,30,63,0.05) 0%, rgba(11,30,63,0.2) 55%, rgba(11,30,63,0.55) 100%)",
+              }}
+            />
+            <p
+              className="absolute bottom-0 left-0 right-0 p-5 sm:p-6 text-center text-white text-xl sm:text-2xl md:text-3xl leading-tight"
+              style={{
+                fontFamily: "'Cormorant Garamond', Georgia, serif",
+                fontStyle: "italic",
+                fontWeight: 600,
+                textShadow: "0 2px 18px rgba(0,0,0,0.75)",
+              }}
+            >
+              {t("academy.img_hero_caption")}
+            </p>
+          </div>
+        </aside>
       </section>
 
       {/* Onestà — banner chiaro */}
       <section
         id="academy-honesty"
         data-testid="academy-honesty"
-        className="px-5 sm:px-8 md:px-12 lg:px-16 pb-12 md:pb-16 max-w-screen-2xl mx-auto animate-[academyRise_0.85s_ease_both]"
+        className="px-5 sm:px-8 md:px-12 lg:px-16 pb-12 md:pb-16 max-w-screen-2xl mx-auto animate-[academyRise_0.9s_ease_both]"
       >
         <div
           className="relative overflow-hidden rounded-3xl px-6 py-7 md:px-10 md:py-9 text-[#F5F1E8]"
@@ -109,29 +141,48 @@ export default function AcademyApp() {
         </div>
       </section>
 
-      {/* Problema */}
-      <section className="px-5 sm:px-8 md:px-12 lg:px-16 pb-14 md:pb-18 max-w-screen-2xl mx-auto grid md:grid-cols-12 gap-8 md:gap-12 items-start">
-        <div className="md:col-span-5">
-          <h2 className="text-2xl md:text-3xl tracking-tight mb-3">
-            {t("academy.problem_title")}
-          </h2>
-          <p className="font-sans text-[#0B1E3F]/70 leading-relaxed text-sm md:text-base">
-            {t("academy.problem_body")}
-          </p>
-        </div>
-        <div className="md:col-span-7 space-y-5 md:space-y-6">
-          {offerList.map((item, idx) => (
+      {/* Problema + visual */}
+      <section className="px-5 sm:px-8 md:px-12 lg:px-16 pb-14 md:pb-18 max-w-screen-2xl mx-auto grid md:grid-cols-12 gap-8 md:gap-12 items-center">
+        <div className="md:col-span-5 order-2 md:order-1">
+          <div className="relative overflow-hidden rounded-3xl border border-[#1F6B5C]/25 shadow-[0_18px_44px_rgba(11,30,63,0.12)] aspect-[4/5] max-h-[520px] group">
+            <img
+              src="/cloud/scout.jpg"
+              alt={t("academy.img_problem_alt")}
+              className="absolute inset-0 h-full w-full object-cover transition duration-700 group-hover:scale-[1.03]"
+              loading="lazy"
+            />
             <div
-              key={idx}
-              className="border-l-2 pl-5 md:pl-6"
-              style={{ borderColor: idx === 0 ? "#1F6B5C" : "#C8A653" }}
-            >
-              <h3 className="text-lg md:text-xl tracking-tight mb-1.5">{item.title}</h3>
-              <p className="font-sans text-sm text-[#0B1E3F]/70 leading-relaxed">
-                {item.body}
-              </p>
-            </div>
-          ))}
+              className="absolute inset-0"
+              style={{
+                background:
+                  "linear-gradient(180deg, transparent 40%, rgba(11,30,63,0.55) 100%)",
+              }}
+            />
+          </div>
+        </div>
+        <div className="md:col-span-7 order-1 md:order-2 space-y-6">
+          <div>
+            <h2 className="text-2xl md:text-3xl tracking-tight mb-3">
+              {t("academy.problem_title")}
+            </h2>
+            <p className="font-sans text-[#0B1E3F]/70 leading-relaxed text-sm md:text-base">
+              {t("academy.problem_body")}
+            </p>
+          </div>
+          <div className="space-y-5 md:space-y-6">
+            {offerList.map((item, idx) => (
+              <div
+                key={idx}
+                className="border-l-2 pl-5 md:pl-6"
+                style={{ borderColor: idx === 0 ? "#1F6B5C" : "#C8A653" }}
+              >
+                <h3 className="text-lg md:text-xl tracking-tight mb-1.5">{item.title}</h3>
+                <p className="font-sans text-sm text-[#0B1E3F]/70 leading-relaxed">
+                  {item.body}
+                </p>
+              </div>
+            ))}
+          </div>
         </div>
       </section>
 
@@ -168,6 +219,49 @@ export default function AcademyApp() {
               {t("academy.method_exams")}
             </p>
           </div>
+        </div>
+      </section>
+
+      {/* Fascia atmosfera città */}
+      <section
+        className="relative mb-14 md:mb-18 overflow-hidden"
+        aria-hidden="true"
+      >
+        <div className="grid grid-cols-2 md:grid-cols-4 min-h-[160px] md:min-h-[220px]">
+          {[
+            "/cloud/city-milano.jpg",
+            "/cloud/city-roma.jpg",
+            "/cloud/city-torino.jpg",
+            "/cloud/city-napoli.jpg",
+          ].map((src) => (
+            <div key={src} className="relative overflow-hidden">
+              <img
+                src={src}
+                alt=""
+                className="absolute inset-0 h-full w-full object-cover"
+                loading="lazy"
+              />
+            </div>
+          ))}
+        </div>
+        <div
+          className="absolute inset-0 flex items-center justify-center px-6"
+          style={{
+            background:
+              "linear-gradient(90deg, rgba(11,30,63,0.72) 0%, rgba(11,30,63,0.45) 50%, rgba(31,107,92,0.55) 100%)",
+          }}
+        >
+          <p
+            className="text-center text-white text-2xl sm:text-3xl md:text-4xl leading-tight"
+            style={{
+              fontFamily: "'Cormorant Garamond', Georgia, serif",
+              fontStyle: "italic",
+              fontWeight: 600,
+              textShadow: "0 2px 20px rgba(0,0,0,0.55)",
+            }}
+          >
+            {t("academy.img_strip_caption")}
+          </p>
         </div>
       </section>
 
@@ -287,26 +381,41 @@ export default function AcademyApp() {
         </div>
       </section>
 
-      {/* CTA finale */}
+      {/* CTA finale con foto */}
       <section className="px-5 sm:px-8 md:px-12 lg:px-16 pb-16 md:pb-20 max-w-screen-2xl mx-auto">
-        <div className="rounded-3xl border border-[#C8A653]/35 bg-[#F5F1E8]/70 px-6 py-8 md:px-10 md:py-10 text-center">
-          <h2 className="text-2xl md:text-3xl tracking-tight mb-3">
-            {t("academy.closing_title")}
-          </h2>
-          <p className="font-sans text-sm md:text-base text-[#0B1E3F]/70 max-w-xl mx-auto mb-6 leading-relaxed">
-            {t("academy.closing_body")}
-          </p>
-          <a
-            href={mailto}
-            data-testid="academy-cta-closing"
-            className="inline-block px-6 py-3 text-xs sm:text-sm font-sans uppercase tracking-widest text-[#0B1E3F] transition hover:brightness-105"
+        <div className="relative overflow-hidden rounded-3xl border border-[#C8A653]/35 min-h-[280px] md:min-h-[320px] flex items-center justify-center text-center">
+          <img
+            src="/cloud/hero.jpg"
+            alt={t("academy.img_closing_alt")}
+            className="absolute inset-0 h-full w-full object-cover"
+            loading="lazy"
+          />
+          <div
+            className="absolute inset-0"
             style={{
-              background: "linear-gradient(180deg, #d4b56a, #C8A653)",
-              boxShadow: "0 14px 36px rgba(200,166,83,0.3)",
+              background:
+                "linear-gradient(180deg, rgba(11,30,63,0.55) 0%, rgba(11,30,63,0.78) 100%)",
             }}
-          >
-            {t("academy.cta_info")} →
-          </a>
+          />
+          <div className="relative z-10 px-6 py-10 md:px-10 md:py-12 max-w-xl">
+            <h2 className="text-2xl md:text-3xl tracking-tight mb-3 text-white">
+              {t("academy.closing_title")}
+            </h2>
+            <p className="font-sans text-sm md:text-base text-white/85 mx-auto mb-6 leading-relaxed">
+              {t("academy.closing_body")}
+            </p>
+            <a
+              href={mailto}
+              data-testid="academy-cta-closing"
+              className="inline-block px-6 py-3 text-xs sm:text-sm font-sans uppercase tracking-widest text-[#0B1E3F] transition hover:brightness-105"
+              style={{
+                background: "linear-gradient(180deg, #d4b56a, #C8A653)",
+                boxShadow: "0 14px 36px rgba(200,166,83,0.3)",
+              }}
+            >
+              {t("academy.cta_info")} →
+            </a>
+          </div>
         </div>
       </section>
 

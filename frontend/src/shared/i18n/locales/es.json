@@ -121,7 +121,12 @@
     "hal_disclaimer": "HAL Legal no es un abogado y no sustituye un dictamen legal. Las respuestas son informativas.",
     "closing_title": "Primera versión, diálogo abierto",
     "closing_body": "Esta página es un borrador honesto. Si gestionas una agencia y quieres formar o actualizar al equipo, escríbenos: construiremos el recorrido juntos, sin promesas que aún no podemos firmar.",
-    "footer_note": "Borrador informativo · no habilitante en este momento"
+    "footer_note": "Borrador informativo · no habilitante en este momento",
+    "img_hero_alt": "Interior residencial — contexto profesional Omnia Academy",
+    "img_hero_caption": "Formación para quien trabaja sobre el terreno",
+    "img_problem_alt": "Vivienda contemporánea al atardecer",
+    "img_strip_caption": "Una profesión, todo el territorio",
+    "img_closing_alt": "Residencia con piscina — Omnia Real Estate Lab"
   },
 
   "health": {

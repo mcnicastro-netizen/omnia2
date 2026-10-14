@@ -121,7 +121,12 @@
     "hal_disclaimer": "HAL Legal is not a lawyer and does not replace legal advice. Answers are informational only.",
     "closing_title": "First draft, open dialogue",
     "closing_body": "This page is an honest draft. If you run an agency and want to train or update your team, write to us: we will build the path together, without promises we cannot yet sign.",
-    "footer_note": "Informational draft · not enabling at present"
+    "footer_note": "Informational draft · not enabling at present",
+    "img_hero_alt": "Residential interior — Omnia Academy professional context",
+    "img_hero_caption": "Training for people who work in the field",
+    "img_problem_alt": "Contemporary home at dusk",
+    "img_strip_caption": "One profession, nationwide",
+    "img_closing_alt": "Residence with pool — Omnia Real Estate Lab"
   },
 
   "health": {
