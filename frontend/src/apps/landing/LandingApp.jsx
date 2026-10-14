@@ -69,7 +69,7 @@ export default function LandingApp() {
           </p>
           <a
             data-testid="landing-cta"
-            href={`/${lang}/cloud`}
+            href="#omnia-pillars"
             className="inline-block px-6 md:px-8 py-3 md:py-4 text-xs sm:text-sm font-sans uppercase tracking-widest text-[#0B1E3F] transition hover:brightness-105"
             style={{
               background: "linear-gradient(180deg, #d4b56a, #C8A653)",
@@ -127,7 +127,10 @@ export default function LandingApp() {
         </aside>
       </section>
 
-      <section className="px-5 sm:px-8 md:px-12 lg:px-16 pb-16 md:pb-20 lg:pb-24 max-w-screen-2xl mx-auto grid sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-5 lg:gap-6">
+      <section
+        id="omnia-pillars"
+        className="px-5 sm:px-8 md:px-12 lg:px-16 pb-16 md:pb-20 lg:pb-24 max-w-screen-2xl mx-auto grid sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-5 lg:gap-6 scroll-mt-28"
+      >
         {pillars.map((p) => {
           const className =
             "group block p-5 md:p-6 rounded-2xl border bg-[#F5F1E8]/80 backdrop-blur transition hover:-translate-y-0.5 hover:shadow-[0_18px_40px_rgba(11,30,63,0.12)] h-full";
