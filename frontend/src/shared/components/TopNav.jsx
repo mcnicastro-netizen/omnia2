@@ -103,7 +103,7 @@ export default function TopNav({ current = "landing", theme = "light", suffix = 
             aria-label="OMNIA"
           >
             <OmniaLogo
-              variant="full"
+              variant="mark"
               size="nav"
               inverted={theme === "dark"}
             />

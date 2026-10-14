@@ -8,15 +8,12 @@
  *
  * Props:
  * - variant: "full" (default, logo + wordmark) | "mark" (solo simbolo)
- * - size: "sm" | "md" | "nav" | "lg" | "xl"
- *   - nav (full): larghezza ~168px (il PNG stacked resta leggibile in header)
- *   - altri: altezza in px
+ * - size: "sm" (24) | "md" (40) | "nav" (64) | "lg" (72) | "xl" (120)
  * - inverted: bool — su sfondi scuri applica filtro invert
  * - className: string per override wrapper
  */
 import React from "react";
 
-/** Altezze (px) — size "nav" usa WIDTH_NAV se variant=full */
 const HEIGHT_MAP = {
   sm: 24,
   md: 40,
@@ -24,8 +21,6 @@ const HEIGHT_MAP = {
   lg: 72,
   xl: 120,
 };
-
-const WIDTH_NAV_FULL = 168;
 
 export default function OmniaLogo({
   variant = "full",
@@ -35,7 +30,6 @@ export default function OmniaLogo({
   alt = "OMNIA Real Estate Lab",
 }) {
   const src = variant === "mark" ? "/omnia-mark.png" : "/omnia-logo.png";
-  const useWidth = size === "nav" && variant === "full";
   const px = HEIGHT_MAP[size] || HEIGHT_MAP.md;
 
   return (
@@ -47,9 +41,8 @@ export default function OmniaLogo({
       data-testid={`omnia-logo-${variant}`}
       className={`select-none ${className}`}
       style={{
-        ...(useWidth
-          ? { width: `${WIDTH_NAV_FULL}px`, height: "auto", maxHeight: "88px" }
-          : { height: `${px}px`, width: "auto" }),
+        height: `${px}px`,
+        width: "auto",
         filter: inverted ? "invert(1)" : undefined,
       }}
     />
