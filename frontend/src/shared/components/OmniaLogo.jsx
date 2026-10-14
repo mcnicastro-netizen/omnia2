@@ -17,7 +17,7 @@ import React from "react";
 const HEIGHT_MAP = {
   sm: 24,
   md: 40,
-  nav: 72,
+  nav: 96,
   lg: 72,
   xl: 120,
 };
