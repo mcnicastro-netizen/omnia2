@@ -24,14 +24,14 @@
   },
   "landing": {
     "hero_title": "El ecosistema inmobiliario integrado",
-    "hero_subtitle": "Portal B2C y CRM con IA para agencias — dos productos, un sistema.",
+    "hero_subtitle": "Sitio web, software de gestión, portal publicitario y Academy: todas las herramientas para optimizar tu trabajo.",
     "hero_cta": "Descubre OMNIA",
     "pillar_cloud_title": "ImmobilCloud",
     "pillar_cloud_desc": "El portal inmobiliario para clientes privados.",
     "pillar_app_title": "ImmoWeb",
-    "pillar_app_desc": "CRM con IA para agencias: prioridades de hoy, matches, HAL con confirmación. Norte: SO de la agencia.",
+    "pillar_app_desc": "CRM para agencias: prioridades de hoy, matches y flujo diario — el sistema operativo de tu agencia.",
     "pillar_learn_title": "Omnia Academy",
-    "pillar_learn_desc": "Formación para agentes — próximamente. No forma parte de la oferta comercial actual."
+    "pillar_learn_desc": "Formación para agentes y equipos — próximamente."
   },
   "immocloud": {
     "title": "ImmobilCloud",
@@ -39,7 +39,7 @@
   },
   "immoweb": {
     "title": "ImmoWeb",
-    "tagline": "CRM con IA — hacia el SO de la agencia"
+    "tagline": "CRM — hacia el SO de la agencia"
   },
   "academy": {
     "title": "Omnia Academy",
