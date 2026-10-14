@@ -475,12 +475,6 @@ export default function ValuatorPage() {
                   </option>
                 ))}
               </select>
-              <p className="mt-1 text-[11px] text-stone-500">
-                {t(
-                  "valuator.energy_scale_hint",
-                  "A4–G e A+/A subito in elenco, più «In via di definizione» e «Non soggetto / Esente» (come Idealista/Immobiliare)."
-                )}
-              </p>
             </div>
 
             <input type="number" min="-2" max="80" className="w-full border border-stone-200 rounded-lg p-2.5 text-sm" placeholder={t("valuator.floor", "Piano (opzionale)")} value={form.floor} onChange={e => setForm(f => ({ ...f, floor: e.target.value }))} data-testid="valuator-floor" />
