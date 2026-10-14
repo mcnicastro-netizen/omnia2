@@ -82,7 +82,7 @@ export default function TopNav({ current = "landing", theme = "light", suffix = 
 
   return (
     <header className={`sticky top-0 z-40 backdrop-blur ${c.wrapper}`}>
-      <div className="flex items-center justify-between px-5 sm:px-8 md:px-12 lg:px-16 py-4 md:py-5 max-w-screen-2xl mx-auto gap-4">
+      <div className="flex items-center justify-between px-5 sm:px-8 md:px-12 lg:px-16 py-3 md:py-4 max-w-screen-2xl mx-auto gap-4">
         <div className="flex items-center gap-4 md:gap-6 min-w-0">
           {!isLanding && (
             <Link
@@ -104,7 +104,7 @@ export default function TopNav({ current = "landing", theme = "light", suffix = 
           >
             <OmniaLogo
               variant="full"
-              size="md"
+              size="nav"
               inverted={theme === "dark"}
             />
             {suffix && (
