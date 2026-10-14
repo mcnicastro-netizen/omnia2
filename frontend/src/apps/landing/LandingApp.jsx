@@ -92,22 +92,24 @@ export default function LandingApp() {
             />
             <div className="absolute bottom-0 left-0 right-0 p-6 sm:p-8 text-center">
               <p
-                className="text-white text-xl sm:text-2xl md:text-[1.75rem] tracking-tight leading-none mb-2.5"
+                className="text-white text-3xl sm:text-4xl md:text-5xl leading-[1.05] mb-3"
                 style={{
-                  fontFamily: "'Fraunces', Georgia, serif",
-                  fontWeight: 700,
-                  textShadow: "0 2px 20px rgba(0,0,0,0.75)",
+                  fontFamily: "'Cormorant Garamond', 'Times New Roman', serif",
+                  fontStyle: "italic",
+                  fontWeight: 600,
+                  textShadow: "0 2px 22px rgba(0,0,0,0.8)",
                 }}
               >
                 Omnia Real Estate Lab
               </p>
               <p
-                className="text-white text-lg sm:text-xl md:text-2xl tracking-wide leading-snug uppercase"
+                className="text-white/95 text-base sm:text-lg md:text-xl leading-snug"
                 style={{
-                  fontFamily: "'Fraunces', Georgia, serif",
-                  fontWeight: 600,
-                  letterSpacing: "0.06em",
-                  textShadow: "0 2px 16px rgba(0,0,0,0.7)",
+                  fontFamily: "'Cormorant Garamond', 'Times New Roman', serif",
+                  fontStyle: "italic",
+                  fontWeight: 500,
+                  letterSpacing: "0.02em",
+                  textShadow: "0 2px 16px rgba(0,0,0,0.75)",
                 }}
               >
                 Vivi il Futuro
