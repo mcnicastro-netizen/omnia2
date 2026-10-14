@@ -1843,4 +1843,15 @@ Registro di tutte le decisioni di business e tecniche prese durante il progetto.
 - **Implementazione**: `OMNIA_PRE_DEMO_8.md` · `PRE_DEMO_CHECKLIST.md` · offbox + preflight + probe.
 - **Stato**: ✅ **DECISIONE OPERATIVA REGISTRATA** · codice in ship
 
+### D-124 — Home ecosistema + Valutatore UNI + promo documenti SellPage · 14-Ott-2026
+- **Data**: 14 Ottobre 2026
+- **Contesto**: Sessione prodotto su PR #40 — home OMNIA, Academy vetrina, Valutatore B2C, chiusura giornata «mergera tutto».
+- **Decisione**:
+  1. **Home `/it/`**: composizione Brand Lab (logo TopNav, tre pillar ImmobiCloud/ImmoWeb/Academy); SSR shell dedicato ecosistema (non ImmobilCloud); `ScrollToTop` + scroll 0 al mount.
+  2. **Valutatore**: APE obbligatorio (classi A4–G + in definizione/esente); piano obbligatorio unica tendina `floor_class` S-1…Attico (anche Pro); zone/quartieri; Stripe UNI €2,99; PDF 1p restyle; breakdown superfici con mq/coeff reali; copy UNI senza «brandizzato».
+  3. **Promo documenti** (APE / planimetria / accesso atti): rail su **SellPage** `/cloud/account/sell` — **solo UI**; link pagine servizio = sessione successiva. Non sulla home.
+  4. Sync manuale Cap. 18/21 + HAL YAML + reindex (D-084).
+- **Implementazione**: PR #40 `cursor/home-nav-logo-links-8e9b` → merge `main`.
+- **Stato**: ✅ **DECISIONE OPERATIVA REGISTRATA** · merge ordinato Founder
+
 

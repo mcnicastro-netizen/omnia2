@@ -267,6 +267,7 @@ Prima di dichiarare il cold start "attivo", eseguire manualmente queste 5 query 
 
 | Data | Versione | Note |
 |------|:-:|------|
+| 14-Ott-2026 | **v0.38-d124-home-valuator-sell** | Cap.21 Valutatore: APE+piano obbligatori, PDF 1p, superfici reali. Cap.18: +`notifiche.sell-doc-promo` (rail SellPage). DECISIONS D-124 · PR #40 merge. Reindex post-merge. |
 | 12-Ott-2026 | **v0.37-golive-vercel** | HAL Cap.00: +`api.vercel-fe-deploy` · update `api.railway-api-deploy` / `api.stripe-sandbox-cloud` (API `api.` + Vercel FE + DNS). Cap.00/19 MD · DNS/RAILWAY/VERCEL · DECISIONS D-074/D-123. Reindex Founder post-merge. |
 | 12-Ott-2026 | **v0.36-stripe-railway-webhook** | HAL Cap.00: `api.railway-api-deploy` + `api.stripe-sandbox-cloud` webhook Railway (`omnia-railway-api` · 200 OK). Cap.00/19 MD · STRIPE_ONBOARDING. Reindex Founder post-merge. |
 | 10-Ott-2026 sera | **v0.35-railway** | HAL Cap.00: +`api.railway-api-deploy` · update `api.cloud-secrets-vault` (Railway + Personal UI bug). Cap.00/19 MD · D-123 API live. Reindex Founder post-merge. |

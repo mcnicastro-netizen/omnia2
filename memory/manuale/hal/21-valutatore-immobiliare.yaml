@@ -57,8 +57,9 @@ voci:
         il report UNI a pagamento.
       passi:
         - "Seleziona card Stima rapida GRATIS su /it/cloud/valutatore."
-        - "Campi: citta', tipologia, mq calpestabili (min 10), zona,
-        indirizzo, stato, energia, piano."
+        - "Campi obbligatori: citta', tipologia, mq calpestabili (min 10),
+        APE (A4–G / in definizione / esente), piano floor_class S-1…Attico."
+        - "Consigliati: indirizzo autocomplete, zona/quartiere a tendina, stato."
         - "Superficie usata = calpestabile (NO UNI, NO merito, NO PDF)."
         - "Server traccia uso in b2c_valuation_usage → 429 se limite."
         - "Footer form: '1 valutazione ogni 12 mesi · nessun PDF'."
@@ -161,10 +162,10 @@ voci:
         - "1. Vai su /it/cloud/valutatore (o CTA Stima gratuita da annuncio)."
         - "2. Accedi/Registrati se non loggato (banner ambra)."
         - "3. Seleziona card Stima rapida GRATIS."
-        - "4. Compila citta' + tipologia + mq (obbligatori)."
-        - "5. Click Ottieni la stima gratuita."
-        - "6. Leggi valore, range, €/m², affidabilita'."
-        - "7. Opzionale: upsell Passa a UNI · €2,99."
+        - "4. Compila citta' + tipologia + mq + APE (A4–G / in definizione / esente) + piano S-1…Attico (obbligatori)."
+        - "5. Indirizzo autocomplete + zona/quartiere a tendina (consigliati)."
+        - "6. Click Ottieni la stima gratuita."
+        - "7. Leggi valore, range, €/m², affidabilita'; upsell opzionale Passa a UNI · €2,99."
         - "Pre-fill query: ?tier=base&city=&property_type=&surface_sqm="
       errori_comuni:
         - problema: "401 login_required"
@@ -190,15 +191,16 @@ voci:
         Quando serve report professionale a pagamento.
       passi:
         - "1. Card UNI 10750 + PDF o upsell da risultato base."
-        - "2. Compila superfici UNI + coefficienti merito."
-        - "3. Click Calcola UNI · €2,99."
+        - "2. Compila APE + piano floor_class obbligatori + superfici UNI + merito."
+        - "3. Click Calcola UNI · €2,99 (CSRF header sul checkout)."
         - "4. Redirect Stripe Checkout (success/cancel pages)."
-        - "5. Post-pagamento: entitlement 24h per stesso immobile."
-        - "6. Click Scarica report PDF (layout elegante 1 pagina)."
+        - "5. Post-pagamento: entitlement 24h per stesso immobile (payload_hash)."
+        - "6. Scarica report PDF 1 pagina (Noto, hero navy+bronzo, tabella mq/coeff/ponderati)."
         - "7. Branding PDF: ImmobilCloud se privato; agenzia se agente;
         white-label (plan_type=whitelabel) = zero menzione OMNIA."
         - "8. Polling /checkout/success su session_id se necessario."
         - "Pre-fill: ?tier=uni&city=&property_type=&surface_sqm="
+        - "Copy UNI B2C: senza linguaggio 'brandizzato'; breakdown superfici con mq/coeff reali."
       errori_comuni:
         - problema: "PDF 402 senza entitlement"
           soluzione: >

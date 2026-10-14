@@ -1,3 +1,10 @@
+## 2026-10-14 — D-124 Home + Valutatore + promo SellPage (merge PR #40)
+
+- Home OMNIA: logo TopNav, pillar ImmobiCloud/ImmoWeb/Academy, SSR landing dedicato, scroll in cima
+- Valutatore B2C: APE + piano `floor_class` obbligatori, zone/quartieri, Stripe UNI €2,99, PDF 1p, breakdown superfici reali
+- SellPage: rail promo Documenti utili (APE / planimetria / accesso atti) — UI only, link domani
+- Manuale Cap. 18/21 + HAL YAML · `IMPORT_HAL` · `DECISIONS` D-124 · `NEXT_SESSION`
+
 ## 2026-10-12 — Go-live D-123 DNS api + D-074 Vercel
 
 - DNS Cloudflare: CNAME `api` → Railway `d13di0kp.up.railway.app` + TXT `_railway-verify.api` · cert VALID
