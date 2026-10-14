@@ -8,7 +8,7 @@
  *
  * Props:
  * - variant: "full" (default, logo + wordmark) | "mark" (solo simbolo)
- * - size: "sm" (24px) | "md" (40px) | "nav" (56px) | "lg" (72px) | "xl" (120px)
+ * - size: "sm" (24px) | "md" (40px) | "nav" (72px) | "lg" (72px) | "xl" (120px)
  * - inverted: bool — su sfondi scuri applica filtro invert
  * - showTagline: bool — mostra tagline "Real Estate Lab" sotto (solo variant=full)
  * - className: string per override wrapper
@@ -18,7 +18,7 @@ import React from "react";
 const SIZE_MAP = {
   sm: 24,
   md: 40,
-  nav: 56,
+  nav: 72,
   lg: 72,
   xl: 120,
 };
