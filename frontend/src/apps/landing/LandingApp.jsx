@@ -78,8 +78,8 @@ export default function LandingApp() {
             className="relative overflow-hidden rounded-3xl border border-[#C8A653]/35 shadow-[0_24px_60px_rgba(11,30,63,0.18)] aspect-[4/3] md:aspect-[5/4] group"
           >
             <img
-              src="/omnia-northstar.png"
-              alt="OMNIA Real Estate Lab — Mediterranean Future"
+              src="/cloud/hero.jpg"
+              alt="Immobile residenziale — OMNIA Real Estate Lab"
               className="absolute inset-0 h-full w-full object-cover transition duration-700 group-hover:scale-[1.03]"
               loading="eager"
             />
@@ -87,7 +87,7 @@ export default function LandingApp() {
               className="absolute inset-0"
               style={{
                 background:
-                  "linear-gradient(120deg, rgba(11,30,63,0.55) 0%, rgba(11,30,63,0.12) 48%, rgba(31,107,92,0.25) 100%)",
+                  "linear-gradient(180deg, rgba(11,30,63,0.15) 0%, rgba(11,30,63,0.25) 40%, rgba(11,30,63,0.78) 100%)",
               }}
             />
             <div className="absolute bottom-0 left-0 right-0 p-5 sm:p-6">
