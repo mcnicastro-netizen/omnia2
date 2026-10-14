@@ -347,6 +347,30 @@ export default function ValuatorPage() {
             <h3 className="text-lg text-[#0B1E3F] font-light" style={{ fontFamily: "'Fraunces', Georgia, serif" }}>{t("valuator.section_location", "Ubicazione")}</h3>
 
             <div>
+              <label htmlFor="valuator-city" className={labelClass}>
+                {t("valuator.f_city", "Città")}
+              </label>
+              <input
+                id="valuator-city"
+                className={fieldClass}
+                placeholder={t("valuator.f_city_ph", "Es. Milano, Roma, Napoli…")}
+                value={form.city}
+                list="valuator-city-suggest"
+                autoComplete="address-level2"
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, city: e.target.value, zone: "" }))
+                }
+                data-testid="valuator-city"
+                required
+              />
+              <datalist id="valuator-city-suggest">
+                {CITY_SUGGESTIONS.map((c) => (
+                  <option key={c} value={c} />
+                ))}
+              </datalist>
+            </div>
+
+            <div>
               <label htmlFor="valuator-address" className={labelClass}>
                 {t("valuator.f_address", "Indirizzo (opzionale)")}
               </label>
@@ -378,30 +402,6 @@ export default function ValuatorPage() {
                   "Scegli un suggerimento: compilano città e quartiere (es. Picanello)."
                 )}
               </p>
-            </div>
-
-            <div>
-              <label htmlFor="valuator-city" className={labelClass}>
-                {t("valuator.f_city", "Città")}
-              </label>
-              <input
-                id="valuator-city"
-                className={fieldClass}
-                placeholder={t("valuator.f_city_ph", "Es. Milano, Roma, Napoli…")}
-                value={form.city}
-                list="valuator-city-suggest"
-                autoComplete="address-level2"
-                onChange={(e) =>
-                  setForm((f) => ({ ...f, city: e.target.value, zone: "" }))
-                }
-                data-testid="valuator-city"
-                required
-              />
-              <datalist id="valuator-city-suggest">
-                {CITY_SUGGESTIONS.map((c) => (
-                  <option key={c} value={c} />
-                ))}
-              </datalist>
             </div>
 
             <div>
