@@ -334,7 +334,7 @@ export default function ValuatorPage() {
             testid="tier-uni-card"
             active={tier === "uni"}
             title={t("valuator.tier_uni_title", "UNI 10750 + PDF")}
-            subtitle={t("valuator.tier_uni_subtitle", "Superficie commerciale · merito · report brandizzato")}
+            subtitle={t("valuator.tier_uni_subtitle", "Superficie commerciale · merito · report PDF")}
             price={priceLabel}
             onClick={() => setTier("uni")}
             highlight
@@ -557,7 +557,7 @@ export default function ValuatorPage() {
             {result._tier === "base" && (
               <div className="p-5 rounded-2xl border border-[#C19A6B]/40 bg-white" data-testid="valuator-upsell">
                 <div className="font-medium text-[#0B1E3F]">{t("valuator.upsell_uni_cta", "Vuoi una valutazione UNI 10750 con report PDF professionale?")}</div>
-                <div className="text-sm text-stone-600 mt-1">{t("valuator.upsell_uni_details", "Superficie commerciale ponderata + coefficienti di merito + PDF brandizzato scaricabile.")}</div>
+                <div className="text-sm text-stone-600 mt-1">{t("valuator.upsell_uni_details", "Superficie commerciale ponderata + coefficienti di merito + PDF scaricabile.")}</div>
                 <button onClick={() => { setTier("uni"); window.scrollTo({ top: 0, behavior: "smooth" }); }} className="mt-3 px-4 py-2 bg-[#C19A6B] text-white rounded-lg hover:bg-[#0B1E3F] transition" data-testid="upsell-goto-uni">
                   {isAgent ? t("valuator.upsell_agent_cta", "Passa a UNI (incluso piano)") : t("valuator.upsell_b2c_cta", "Passa a UNI · €2,99")}
                 </button>
