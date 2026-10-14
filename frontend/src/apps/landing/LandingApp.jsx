@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 import HealthBadge from "../../shared/components/HealthBadge";
 import TopNav from "../../shared/components/TopNav";
 import Brand from "../../shared/components/Brand";
-import OmniaLogo from "../../shared/components/OmniaLogo"; // footer mark
+import OmniaLogo from "../../shared/components/OmniaLogo";
 
 /**
  * OMNIA Landing — fully responsive (mobile/tablet/desktop).
