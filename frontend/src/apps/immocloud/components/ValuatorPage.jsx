@@ -17,8 +17,7 @@ import AddressAutocomplete from "./AddressAutocomplete";
 import CloudPageHero from "./CloudPageHero";
 import {
   APE_STATUS_OPTIONS,
-  ENERGY_CLASS_ACE_LEGACY,
-  ENERGY_CLASS_APE_2015,
+  ENERGY_CLASS_LETTER_OPTIONS,
 } from "../../../shared/lib/energyClasses";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
