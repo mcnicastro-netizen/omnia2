@@ -84,6 +84,24 @@ function RouteFallback() {
 }
 
 
+function ScrollToTop() {
+  const { pathname, hash } = useLocation();
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      if ("scrollRestoration" in window.history) {
+        window.history.scrollRestoration = "manual";
+      }
+    } catch {
+      /* ignore */
+    }
+    // Hash destinations (e.g. #omnia-pillars) keep native anchor scroll
+    if (hash) return;
+    window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+  }, [pathname, hash]);
+  return null;
+}
+
 function LangSync({ children }) {
   const { lang } = useParams();
   const location = useLocation();
@@ -140,6 +158,7 @@ function App() {
   return (
     <AuthProvider>
       <BrowserRouter>
+        <ScrollToTop />
         <ErrorBoundary>
         <Suspense fallback={<RouteFallback />}>
         <Routes>

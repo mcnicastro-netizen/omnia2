@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import TopNav from "../../shared/components/TopNav";
@@ -11,6 +11,18 @@ import OmniaLogo from "../../shared/components/OmniaLogo";
 export default function LandingApp() {
   const { t, i18n } = useTranslation();
   const lang = (i18n.language || "it").slice(0, 2);
+
+  // After SSR shell → React swap, force top (preview used to leave scroll mid-page)
+  useEffect(() => {
+    try {
+      if ("scrollRestoration" in window.history) {
+        window.history.scrollRestoration = "manual";
+      }
+    } catch {
+      /* ignore */
+    }
+    window.scrollTo(0, 0);
+  }, []);
 
   const pillars = [
     {
