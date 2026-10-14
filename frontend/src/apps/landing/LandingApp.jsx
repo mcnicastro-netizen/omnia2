@@ -29,6 +29,14 @@ export default function LandingApp() {
       tag: "B2B",
       accent: "#C8A653",
     },
+    {
+      key: "academy",
+      title: t("landing.pillar_learn_title"),
+      desc: t("landing.pillar_learn_desc"),
+      to: null, // destinazione da definire
+      tag: "Academy",
+      accent: "#0B1E3F",
+    },
   ];
 
   return (
@@ -119,35 +127,59 @@ export default function LandingApp() {
         </aside>
       </section>
 
-      <section className="px-5 sm:px-8 md:px-12 lg:px-16 pb-20 md:pb-24 lg:pb-28 max-w-screen-2xl mx-auto grid md:grid-cols-2 gap-6 md:gap-8 lg:gap-10">
-        {pillars.map((p) => (
-          <Link
-            key={p.key}
-            to={p.to}
-            data-testid={`pillar-${p.key}`}
-            className="group block p-6 md:p-7 lg:p-8 rounded-2xl border bg-[#F5F1E8]/80 backdrop-blur transition hover:-translate-y-0.5 hover:shadow-[0_18px_40px_rgba(11,30,63,0.12)]"
-            style={{ borderColor: `${p.accent}55` }}
-          >
-            <p
-              className="text-xs font-sans uppercase tracking-[0.3em] mb-3 md:mb-4"
-              style={{ color: p.accent }}
+      <section className="px-5 sm:px-8 md:px-12 lg:px-16 pb-16 md:pb-20 lg:pb-24 max-w-screen-2xl mx-auto grid sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-5 lg:gap-6">
+        {pillars.map((p) => {
+          const className =
+            "group block p-5 md:p-6 rounded-2xl border bg-[#F5F1E8]/80 backdrop-blur transition hover:-translate-y-0.5 hover:shadow-[0_18px_40px_rgba(11,30,63,0.12)] h-full";
+          const style = { borderColor: `${p.accent}55` };
+          const body = (
+            <>
+              <p
+                className="text-[10px] sm:text-xs font-sans uppercase tracking-[0.3em] mb-2.5 md:mb-3"
+                style={{ color: p.accent }}
+              >
+                <Brand>{p.tag}</Brand>
+              </p>
+              <h2 className="text-xl md:text-2xl tracking-tight mb-2 text-[#0B1E3F] group-hover:translate-x-1 transition-transform">
+                <Brand>{p.title}</Brand>
+              </h2>
+              <p className="text-[#0B1E3F]/70 leading-relaxed font-sans text-sm">
+                {p.desc}
+              </p>
+              {p.to ? (
+                <span
+                  className="inline-block mt-4 md:mt-5 text-[10px] sm:text-xs font-sans uppercase tracking-widest"
+                  style={{ color: p.accent }}
+                >
+                  {t("common.next")} →
+                </span>
+              ) : null}
+            </>
+          );
+          if (p.to) {
+            return (
+              <Link
+                key={p.key}
+                to={p.to}
+                data-testid={`pillar-${p.key}`}
+                className={className}
+                style={style}
+              >
+                {body}
+              </Link>
+            );
+          }
+          return (
+            <div
+              key={p.key}
+              data-testid={`pillar-${p.key}`}
+              className={className}
+              style={style}
             >
-              <Brand>{p.tag}</Brand>
-            </p>
-            <h2 className="text-2xl md:text-2xl lg:text-3xl tracking-tight mb-3 text-[#0B1E3F] group-hover:translate-x-1 transition-transform">
-              <Brand>{p.title}</Brand>
-            </h2>
-            <p className="text-[#0B1E3F]/70 leading-relaxed font-sans text-sm md:text-base">
-              {p.desc}
-            </p>
-            <span
-              className="inline-block mt-5 md:mt-6 text-xs sm:text-sm font-sans uppercase tracking-widest"
-              style={{ color: p.accent }}
-            >
-              {t("common.next")} →
-            </span>
-          </Link>
-        ))}
+              {body}
+            </div>
+          );
+        })}
       </section>
 
       <footer className="border-t border-[#0B1E3F]/10 bg-[#0B1E3F] text-[#F5F1E8]">
