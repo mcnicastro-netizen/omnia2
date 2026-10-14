@@ -32,8 +32,6 @@ const EXPOSURES = ["sud", "sud_est", "sud_ovest", "est", "ovest", "nord_est", "n
 const VIEWS = ["interno", "cortile", "strada", "verde", "panoramico", "mare", "lago_montagna"];
 const HEATINGS = ["autonomo", "centralizzato", "pompa_calore", "assente"];
 const ELEVATORS = ["presente", "presente_piano_alto", "assente_piano_basso", "assente_piano_alto"];
-/** Zone tier SoT del valutatore (backend CITY_PRICES). */
-const ZONE_TIERS = ["centro", "semicentro", "periferia"];
 /** Suggerimenti città (datalist) — copertura tipica dataset + capoluoghi. */
 const CITY_SUGGESTIONS = [
   "Milano", "Roma", "Napoli", "Torino", "Palermo", "Genova", "Bologna", "Firenze",
@@ -48,6 +46,30 @@ const emptyForm = { city: "", zone: "", address: "", property_type: "appartament
 const fieldClass =
   "w-full border border-stone-200 rounded-lg p-2.5 text-sm focus:border-[#0B1E3F] outline-none bg-white";
 const labelClass = "block text-xs font-medium text-stone-600 mb-1";
+
+function matchZoneOption(zones, candidate) {
+  if (!candidate || !zones?.length) return "";
+  const n = (s) =>
+    String(s)
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .trim();
+  const c = n(candidate);
+  const exact = zones.find((z) => n(z) === c);
+  if (exact) return exact;
+  // "Picanello-Ognina-Barriera-Canalicchio" → primo pezzo noto (Picanello)
+  for (const part of String(candidate).split(/[-,/]/)) {
+    const p = n(part);
+    if (!p) continue;
+    const hit = zones.find((z) => {
+      const zn = n(z);
+      return zn === p || zn.startsWith(`${p} `) || zn.endsWith(` ${p}`);
+    });
+    if (hit) return hit;
+  }
+  return "";
+}
 const emptyPro = {
   veranda_mq: "", terrazzo_mq: "", balcone_mq: "", cantina_mq: "", soffitta_mq: "",
   box_auto_mq: "", posto_auto_scoperto_mq: "", giardino_villa_mq: "", giardino_condom_mq: "",
@@ -85,6 +107,7 @@ export default function ValuatorPage() {
   const [result, setResult] = useState(null);
   const [payloadHash, setPayloadHash] = useState(null);
   const [error, setError] = useState(null);
+  const [cityZones, setCityZones] = useState([]);
   const resultRef = useRef(null);
 
   // Load user + billing status
@@ -98,6 +121,34 @@ export default function ValuatorPage() {
       }
     })();
   }, []);
+
+  // Quartieri per città (dropdown Zona)
+  useEffect(() => {
+    const city = (form.city || "").trim();
+    if (!city || city.length < 2) {
+      setCityZones([]);
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      const r = await fetchJson(`${API}/zones?city=${encodeURIComponent(city)}`);
+      if (cancelled) return;
+      const zones = Array.isArray(r.body?.zones) ? r.body.zones : [];
+      setCityZones(zones);
+      if (form.zone && zones.length) {
+        const matched = matchZoneOption(zones, form.zone);
+        if (matched && matched !== form.zone) {
+          setForm((f) => ({ ...f, zone: matched }));
+        } else if (!matched && !zones.includes(form.zone)) {
+          // zona libera non in elenco: lascia; utente può riscegliere
+        }
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [form.city]);
 
   const isAgent = !!(user && (user.agency_id || (user.agency_ids && user.agency_ids.length)));
   const isB2C = !!(user && !isAgent);
@@ -288,22 +339,28 @@ export default function ValuatorPage() {
                 id="valuator-address"
                 value={form.address}
                 onChange={(text) => setForm((f) => ({ ...f, address: text }))}
-                onSelect={(rec) =>
-                  setForm((f) => ({
-                    ...f,
-                    address: rec.normalized || f.address,
-                    city: rec.comune || f.city,
-                    // zona: tier OMI via select — non inventiamo quartieri dall'indirizzo
-                  }))
-                }
-                placeholder={t("valuator.f_address_ph", "Es. Via Roma 12, Milano")}
+                onSelect={(rec) => {
+                  const city = rec.comune || "";
+                  const rawZone = rec.zone || "";
+                  setForm((f) => {
+                    const zones = cityZones.length ? cityZones : [];
+                    const matched = matchZoneOption(zones, rawZone) || rawZone;
+                    return {
+                      ...f,
+                      address: rec.normalized || f.address,
+                      city: city || f.city,
+                      zone: matched || f.zone,
+                    };
+                  });
+                }}
+                placeholder={t("valuator.f_address_ph", "Es. Via Roma 12, Catania")}
                 testid="valuator-address"
                 inputClassName={fieldClass}
               />
               <p className="mt-1 text-[11px] text-stone-500">
                 {t(
                   "valuator.address_hint",
-                  "Inizia a digitare: scegli un suggerimento per compilare anche la città."
+                  "Scegli un suggerimento: compilano città e quartiere (es. Picanello)."
                 )}
               </p>
             </div>
@@ -319,7 +376,9 @@ export default function ValuatorPage() {
                 value={form.city}
                 list="valuator-city-suggest"
                 autoComplete="address-level2"
-                onChange={(e) => setForm((f) => ({ ...f, city: e.target.value }))}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, city: e.target.value, zone: "" }))
+                }
                 data-testid="valuator-city"
                 required
               />
@@ -332,7 +391,7 @@ export default function ValuatorPage() {
 
             <div>
               <label htmlFor="valuator-zone" className={labelClass}>
-                {t("valuator.f_zone", "Zona")}
+                {t("valuator.f_zone", "Zona / Quartiere")}
               </label>
               <select
                 id="valuator-zone"
@@ -340,18 +399,30 @@ export default function ValuatorPage() {
                 value={form.zone}
                 onChange={(e) => setForm((f) => ({ ...f, zone: e.target.value }))}
                 data-testid="valuator-zone"
+                disabled={!form.city}
               >
-                <option value="">{t("valuator.f_zone_auto", "Automatica (da indirizzo)")}</option>
-                {ZONE_TIERS.map((z) => (
+                <option value="">
+                  {cityZones.length
+                    ? t("valuator.f_zone_pick", "Seleziona quartiere…")
+                    : form.city
+                      ? t("valuator.f_zone_none", "Nessun elenco zone per questa città — digita via indirizzo")
+                      : t("valuator.f_zone_need_city", "Prima scegli la città")}
+                </option>
+                {form.zone &&
+                  cityZones.length > 0 &&
+                  !cityZones.includes(form.zone) && (
+                    <option value={form.zone}>{form.zone}</option>
+                  )}
+                {cityZones.map((z) => (
                   <option key={z} value={z}>
-                    {t(`valuator.zone_${z}`, z)}
+                    {z}
                   </option>
                 ))}
               </select>
               <p className="mt-1 text-[11px] text-stone-500">
                 {t(
                   "valuator.zone_hint",
-                  "Centro, semicentro o periferia — le fasce usate dalla stima. Se lasci «automatica», la deduciamo dall’indirizzo."
+                  "Elenco quartieri della città. Con l’indirizzo autocompletato, il quartiere si seleziona da solo quando possibile."
                 )}
               </p>
             </div>

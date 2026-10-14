@@ -162,6 +162,7 @@ export default function AddressAutocomplete({
                 {c.normalized}
               </div>
               <div className="text-[11px] text-stone-500 mt-0.5 flex flex-wrap gap-x-2">
+                {c.zone && <span className="text-[#0B1E3F] font-medium">{c.zone}</span>}
                 {c.comune && <span>{c.comune}</span>}
                 {c.provincia_sigla && <span>({c.provincia_sigla})</span>}
                 {c.cap && <span>· {c.cap}</span>}

@@ -153,10 +153,15 @@ ZONE_TIER_KEYWORDS = {
 
 def _infer_zone_tier(zone_text: Optional[str], address: Optional[str]) -> Tuple[ZoneTier, bool]:
     """Return (tier, explicit_user_input). If we can't infer, default 'semicentro'."""
+    from apps.immocloud.data.city_zones import tier_for_zone
+
     if zone_text:
         z = zone_text.lower().strip()
         if z in ("centro", "semicentro", "periferia"):
-            return z, True
+            return z, True  # type: ignore[return-value]
+        mapped = tier_for_zone(zone_text)
+        if mapped in ("centro", "semicentro", "periferia"):
+            return mapped, True  # type: ignore[return-value]
     haystack = " ".join(filter(None, [zone_text, address])).lower()
     for tier, keywords in ZONE_TIER_KEYWORDS.items():
         for kw in keywords:
@@ -637,6 +642,21 @@ async def _estimate_value_core(payload: ValuationPayload) -> Dict[str, Any]:
             "Per una valutazione vincolante richiedi una perizia ufficiale a un agente OMNIA "
             "certificato o un perito iscritto all'Albo."
         ),
+    }
+
+
+@router.get("/zones")
+async def city_zones(city: str = ""):
+    """Quartieri / zone immobiliari per città (dropdown Valutatore)."""
+    from apps.immocloud.data.city_zones import CITY_ZONES, zones_for_city
+
+    city = (city or "").strip()
+    zones = zones_for_city(city) if city else []
+    return {
+        "ok": True,
+        "city": city,
+        "zones": zones,
+        "cities_with_zones": sorted(CITY_ZONES.keys()),
     }
 
 
