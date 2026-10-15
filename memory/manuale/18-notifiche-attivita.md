@@ -219,6 +219,7 @@ Su **`/it/cloud/account/sell`** (area **Vendi** B2C) compare a destra un rail ve
 **Stato**:
 - **14-Ott-2026 (D-124)**: rail UI su SellPage (etichetta «Presto disponibile») — link pagine servizio ancora da collegare. Non sulla home `/it/`.
 - **15-Ott-2026 (D-125)**: Accesso agli atti = progetto comunale; **niente wallet €1k+**; box resta spento finché partner (Pratiche.it / PraticheCasa.it) conferma accordo a consumo.
+**Stato 15-Ott-2026**: **Planimetria collegata** → `/it/cloud/planimetria` (Stripe **€12,00** → OpenAPI.it `elaborato_planimetrico` sandbox/prod). APE e Accesso atti restano «Presto disponibile». Non compare sulla home ecosistema OMNIA (`/it/`).
 
 ---
 
