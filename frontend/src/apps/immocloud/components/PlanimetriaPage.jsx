@@ -182,12 +182,7 @@ export default function PlanimetriaPage() {
 
         {!sessionId && (
           <form onSubmit={pay} className="mt-8 border border-stone-200 bg-white rounded-2xl p-6 space-y-4" data-testid="cloud-planimetria-form">
-            <div className="flex items-baseline justify-between gap-3">
-              <p className="text-sm font-medium text-stone-800">{t("cloud.planimetria.form_legend")}</p>
-              <p className="text-lg text-[#0B1E3F]" data-testid="cloud-planimetria-price">
-                € {priceLabel}
-              </p>
-            </div>
+            <p className="text-sm font-medium text-stone-800">{t("cloud.planimetria.form_legend")}</p>
             <div className="grid grid-cols-2 gap-3">
               <label className="text-xs text-stone-600 space-y-1">
                 <span>{t("cloud.planimetria.f_provincia")}</span>
