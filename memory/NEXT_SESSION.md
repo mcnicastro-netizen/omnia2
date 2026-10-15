@@ -1,6 +1,6 @@
 # Prossima sessione — programma passi
 
-**Aggiornato**: 14 Ottobre 2026 — **D-124 merged** (home + valutatore + promo SellPage)  
+**Aggiornato**: 15 Ottobre 2026 — webhook Stripe Emergent eliminati; ripresa programma D-124  
 **Repo**: https://github.com/mcnicastro-netizen/omnia2 ✅  
 **Branch**: `main`
 
@@ -12,6 +12,7 @@
 |-------|-----|
 | Freccia | [`docs/audit/OMNIA_COERENZA_SISTEMA.md`](../docs/audit/OMNIA_COERENZA_SISTEMA.md) — S1–S10 ✅ |
 | **Ultimo ship** | **D-124** — home ecosistema · Valutatore UNI · promo documenti SellPage |
+| **Stripe Test** | Solo Railway `/api/billing/webhook` + Cloud auto-sync · **no Emergent** |
 | **API Railway** | [`docs/ops/RAILWAY_DEPLOY.md`](../docs/ops/RAILWAY_DEPLOY.md) — D-123 · `OMNIA_API_PUBLIC_URL` |
 | **Vercel FE** | [`docs/ops/VERCEL_DEPLOY.md`](./VERCEL_DEPLOY.md) — D-074 · `omnia-frontend` live |
 | **DNS** | [`memory/DNS_SETUP_GUIDE.md`](./DNS_SETUP_GUIDE.md) — apex/www/app/cloud → Vercel · `api` → Railway |
@@ -19,7 +20,7 @@
 
 ---
 
-## ⏭️ Primo passo tipico (domani)
+## ⏭️ Primo passo tipico (oggi)
 
 1. **Collegare i 3 box** SellPage (`SellDocPromoRail`) alle pagine servizio:
    - Attestato APE
