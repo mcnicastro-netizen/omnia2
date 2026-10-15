@@ -52,6 +52,7 @@
 | **D-074 Vercel + DNS FE** | ✅ |
 | **D-122 pre-demo ≥8** | ✅ |
 | **D-124 home + valutatore + Sell promo** | ✅ merge PR #40 |
-| Link box APE/planimetria/atti | ⏳ sessione successiva |
+| Link box APE / planimetria | ⏳ |
+| Accesso atti (D-125) | ⏳ partner a consumo (no wallet) · box spento |
 | Stripe Live | ⏳ |
 | D-038 / S3.1 | ⏳ |
