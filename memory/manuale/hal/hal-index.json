@@ -1,6 +1,6 @@
 {
   "version": "0.38-d124-home-valuator-sell",
-  "updated": "2026-10-14",
+  "updated": "2026-10-15",
   "voices_total": 373,
   "source_files": [
     {
@@ -96,7 +96,7 @@
     {
       "file": "18-notifiche-attivita.yaml",
       "voices": 19,
-      "md5": "126aea38826955ccb05633436ab668b6"
+      "md5": "15baca8cc1f5491f3b30bfcba33520f5"
     },
     {
       "file": "19-impostazioni-agenzia.yaml",

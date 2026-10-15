@@ -708,12 +708,13 @@ voci:
         Dopo login B2C → ImmobilCloud → Vendi (/it/cloud/account/sell).
       passi:
         - "UI · rail destro SellDocPromoRail: Attestato APE, Planimetria catastale, Accesso agli atti."
-        - "Stato 14-Ott-2026 · solo box UI (Presto disponibile) — link alle pagine servizio in arrivo."
+        - "Planimetria LIVE 15-Ott-2026 · Link → /it/cloud/planimetria · Stripe €12 · OpenAPI elaborato_planimetrico."
+        - "APE e Accesso atti · ancora Presto disponibile (link in arrivo)."
         - "NON compare sulla home ecosistema OMNIA (/it/)."
       errori_comuni:
-        - problema: "Clicco il box e non succede nulla"
+        - problema: "Clicco APE o Accesso atti e non succede nulla"
           soluzione: >
-            Atteso: i box non sono ancora collegati. Torna domani per i link servizio.
+            Atteso: solo Planimetria è collegata. APE e atti restano in arrivo.
       permessi:
         - "Solo account B2C autenticato sulla SellPage"
     screenshot: [cap18-sell-doc-promo]

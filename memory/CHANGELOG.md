@@ -1,3 +1,10 @@
+## 2026-10-15 — B2C Planimetria catastale €12 (OpenAPI + Stripe)
+
+- SKU `b2c_planimetria_catastale` €12,00 (costo partner ~€6,90+IVA da verificare console OpenAPI)
+- API `/cloud/planimetria/*` · webhook fulfill → `elaborato_planimetrico` → PDF
+- UI `/it/cloud/planimetria` + box SellPage collegato
+- Smoke: catalog ON · checkout `cs_test_` · sandbox PDF 152 KB
+
 ## 2026-10-14 — D-124 Home + Valutatore + promo SellPage (merge PR #40)
 
 - Home OMNIA: logo TopNav, pillar ImmobiCloud/ImmoWeb/Academy, SSR landing dedicato, scroll in cima
