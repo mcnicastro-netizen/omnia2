@@ -1854,4 +1854,15 @@ Registro di tutte le decisioni di business e tecniche prese durante il progetto.
 - **Implementazione**: PR #40 `cursor/home-nav-logo-links-8e9b` → merge `main`.
 - **Stato**: ✅ **DECISIONE OPERATIVA REGISTRATA** · merge ordinato Founder
 
+### D-125 — Accesso agli atti = copia progetto comunale · no wallet · box spento finché accordo a consumo
+- **Data**: 15 Ottobre 2026
+- **Contesto**: Ricerca fornitori per box SellPage «Accesso agli atti». Founder chiarisce SKU = **copia del progetto originario depositato in Comune** (non conformità, non titoli Conservatoria). Non vuole wallet/ricariche da migliaia di euro. Sceglie percorso **«Presto disponibile» + trattativa**.
+- **Decisione**:
+  1. SKU target: recupero elaborati/progetto + titolo abilitativo (opz. fascicolo); output PDF; no sopralluogo/conformità in v1.
+  2. **Niente wallet €1k+** in fase 1. Solo accordo a consumo / ordine singolo / fattura posticipata.
+  3. Box resta **«Presto disponibile»** finché un partner conferma per iscritto condizioni senza anticipo.
+  4. Outreach prioritario: **Pratiche.it** e **PraticheCasa.it**. Privot scartato. Wallet volume solo dopo domanda stabile.
+  5. UI: mai nomi fornitori (allineato copy planimetria).
+- **Stato**: ✅ **DECISIONE OPERATIVA REGISTRATA** · prodotto non shippato; attesa risposta commerciali
+
 

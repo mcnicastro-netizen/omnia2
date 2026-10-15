@@ -214,9 +214,9 @@ Su **`/it/cloud/account/sell`** (area **Vendi** B2C) compare a destra un rail ve
 
 1. **Attestato APE** — obbligo di legge per pubblicare/vendere in regola.
 2. **Planimetria catastale** — documentazione per visite e conformità.
-3. **Accesso agli atti** — recupero titoli/documenti non più nella disponibilità del proprietario venditore.
+3. **Accesso agli atti** — **copia del progetto originario depositato in Comune** (elaborati + titolo abilitativo; opz. fascicolo). Non è attestazione di conformità né titolo di Conservatoria.
 
-**Stato 14-Ott-2026 (D-124)**: solo UI (etichetta «Presto disponibile») — **nessun link** alle pagine servizio ancora. Non compare sulla home ecosistema OMNIA (`/it/`).
+**Stato 15-Ott-2026**: APE e planimetria ancora da collegare dove non già fatto. **Accesso atti** resta «Presto disponibile» per **D-125**: niente wallet/ricariche da migliaia di €; ship solo dopo accordo partner **a consumo / ordine singolo**. Non compare sulla home ecosistema OMNIA (`/it/`).
 
 ---
 

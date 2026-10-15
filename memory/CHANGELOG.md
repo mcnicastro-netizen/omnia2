@@ -1,3 +1,9 @@
+## 2026-10-15 — D-125 Accesso agli atti (no wallet)
+
+- SKU = copia progetto originario in Comune (non conformità)
+- Box SellPage resta «Presto disponibile» finché accordo partner a consumo senza ricarica
+- Outreach: Pratiche.it + PraticheCasa.it · Privot scartato
+
 ## 2026-10-14 — D-124 Home + Valutatore + promo SellPage (merge PR #40)
 
 - Home OMNIA: logo TopNav, pillar ImmobiCloud/ImmoWeb/Academy, SSR landing dedicato, scroll in cima
