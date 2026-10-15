@@ -216,7 +216,7 @@ Su **`/it/cloud/account/sell`** (area **Vendi** B2C) compare a destra un rail ve
 2. **Planimetria catastale** — documentazione per visite e conformità.
 3. **Accesso agli atti** — recupero titoli/documenti non più nella disponibilità del proprietario venditore.
 
-**Stato 14-Ott-2026 (D-124)**: solo UI (etichetta «Presto disponibile») — **nessun link** alle pagine servizio ancora. Non compare sulla home ecosistema OMNIA (`/it/`).
+**Stato 15-Ott-2026**: **Planimetria collegata** → `/it/cloud/planimetria` (Stripe **€12,00** → OpenAPI.it `elaborato_planimetrico` sandbox/prod). APE e Accesso atti restano «Presto disponibile». Non compare sulla home ecosistema OMNIA (`/it/`).
 
 ---
 

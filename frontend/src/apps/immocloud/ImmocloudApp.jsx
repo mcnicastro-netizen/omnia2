@@ -13,6 +13,7 @@ import CheckoutSuccessPage from "./components/CheckoutSuccessPage";
 import CheckoutCancelPage from "./components/CheckoutCancelPage";
 import MutuiPage from "./components/MutuiPage";
 import VisuraPage from "./components/VisuraPage";
+import PlanimetriaPage from "./components/PlanimetriaPage";
 import AccountDashboard from "./components/AccountDashboard";
 import ErrorBoundary from "@/shared/components/ErrorBoundary";
 
@@ -60,6 +61,7 @@ export default function ImmocloudApp() {
           <Route path="valutatore" element={<ValuatorPage />} />
           <Route path="valuator" element={<ValuatorPage />} />
           <Route path="visura" element={<VisuraPage />} />
+          <Route path="planimetria" element={<PlanimetriaPage />} />
           <Route path="checkout/success" element={<CheckoutSuccessPage />} />
           <Route path="checkout/cancel" element={<CheckoutCancelPage />} />
           <Route path="mutui" element={<MutuiPage />} />

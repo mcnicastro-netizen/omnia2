@@ -369,7 +369,7 @@ async def apply_b2c_purchase_side_effects(session: dict) -> None:
         )
         return
 
-    if product_key in ("b2c_valuator_uni_pdf", "b2c_visura_catastale"):
+    if product_key in ("b2c_valuator_uni_pdf", "b2c_visura_catastale", "b2c_planimetria_catastale"):
         updated = await mark_uni_purchase_paid(session_id, amount_eur=amount_eur)
         if updated:
             logger.info(
@@ -379,6 +379,9 @@ async def apply_b2c_purchase_side_effects(session: dict) -> None:
             if product_key == "b2c_visura_catastale":
                 from apps.immocloud.visura_b2c import fulfill_paid_visura_order
                 await fulfill_paid_visura_order(session_id)
+            elif product_key == "b2c_planimetria_catastale":
+                from apps.immocloud.planimetria_b2c import fulfill_paid_planimetria_order
+                await fulfill_paid_planimetria_order(session_id)
         else:
             logger.warning("b2c_purchase webhook: no local record for session=%s", session_id)
         return

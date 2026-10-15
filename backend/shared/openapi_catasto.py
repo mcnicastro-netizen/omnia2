@@ -266,6 +266,64 @@ async def download_visura_document(request_id: str) -> bytes:
         return r.content
 
 
+async def request_elaborato_planimetrico(
+    *,
+    provincia: str,
+    comune: str,
+    foglio: str,
+    particella: str,
+    sezione: Optional[str] = None,
+    sezione_urbana: Optional[str] = None,
+    callback_url: Optional[str] = None,
+) -> Dict[str, Any]:
+    """Create elaborato planimetrico request. Returns unwrapped data (id, stato)."""
+    body: Dict[str, Any] = {
+        "provincia": provincia.strip().upper()[:2],
+        "comune": comune.strip(),
+        "foglio": str(foglio).strip(),
+        "particella": str(particella).strip(),
+    }
+    if sezione:
+        body["sezione"] = sezione
+    if sezione_urbana:
+        body["sezione_urbana"] = sezione_urbana
+    if callback_url:
+        body["callback"] = {"url": callback_url}
+
+    async with httpx.AsyncClient(timeout=60.0) as client:
+        r = await client.post(
+            f"{_base()}/elaborato_planimetrico",
+            headers=await _headers(),
+            json=body,
+        )
+        if r.status_code >= 400:
+            logger.warning("OpenAPI planimetria create failed: %s %s", r.status_code, r.text[:400])
+            raise RuntimeError(f"openapi_planimetria_create_failed:{r.status_code}:{r.text[:300]}")
+        return _unwrap(r.json())
+
+
+async def get_elaborato_planimetrico_status(request_id: str) -> Dict[str, Any]:
+    async with httpx.AsyncClient(timeout=30.0) as client:
+        r = await client.get(
+            f"{_base()}/elaborato_planimetrico/{request_id}",
+            headers=await _headers(),
+        )
+        if r.status_code >= 400:
+            raise RuntimeError(f"openapi_planimetria_status_failed:{r.status_code}:{r.text[:300]}")
+        return _unwrap(r.json())
+
+
+async def download_elaborato_planimetrico_document(request_id: str) -> bytes:
+    async with httpx.AsyncClient(timeout=60.0) as client:
+        r = await client.get(
+            f"{_base()}/elaborato_planimetrico/{request_id}/documento",
+            headers=await _headers(),
+        )
+        if r.status_code >= 400:
+            raise RuntimeError(f"openapi_planimetria_download_failed:{r.status_code}:{r.text[:300]}")
+        return r.content
+
+
 async def ping() -> Dict[str, Any]:
     """Mint token + list visure — proves OAuth + Catasto auth."""
     async with httpx.AsyncClient(timeout=20.0) as client:

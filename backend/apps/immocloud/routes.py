@@ -14,6 +14,7 @@ from apps.immocloud.mutui import router as mutui_router
 from apps.immocloud.anncsu import router as anncsu_router
 from apps.immocloud.saved_searches import router as saved_searches_router
 from apps.immocloud.visura_b2c import router as visura_b2c_router
+from apps.immocloud.planimetria_b2c import router as planimetria_b2c_router
 from apps.immocloud.favorites import router as favorites_router
 from apps.immocloud.buyer_brief import router as scout_router
 from apps.immocloud.market_pulse import router as pulse_router
@@ -44,6 +45,7 @@ router.include_router(anncsu_router)
 router.include_router(saved_searches_router)
 router.include_router(favorites_router)
 router.include_router(visura_b2c_router)
+router.include_router(planimetria_b2c_router)
 router.include_router(scout_router)
 router.include_router(pulse_router)
 router.include_router(push_router)
