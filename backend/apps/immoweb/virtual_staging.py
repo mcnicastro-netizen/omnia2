@@ -48,6 +48,9 @@ router = APIRouter(prefix="/staging", tags=["virtual-staging"])
 STAGING_CREDIT_COST = int(CREDIT_COSTS.get("virtual_staging_render") or 18)
 
 MODEL_SAM2 = "fal-ai/sam2/auto-segment"
+MODEL_SAM2_BOX = "fal-ai/sam2/image"
+MODEL_FLORENCE_DET = "fal-ai/florence-2-large/open-vocabulary-detection"
+MODEL_BRIA_ERASER = "fal-ai/bria/eraser"
 MODEL_FLUX_INPAINT = "fal-ai/flux-lora/inpainting"
 MODEL_UPSCALE = "fal-ai/esrgan"
 
@@ -60,8 +63,30 @@ STALE_JOB_MINUTES = 10
 MAX_PHOTO_WIDTH = 1600
 
 COST_SAM2 = 0.001
+COST_FLORENCE = 0.001
+COST_BRIA = 0.04
 COST_FLUX = 0.05
 COST_UPSCALE = 0.005
+
+# Florence open-vocab labels for lived-in Italian interiors (empty/reverse).
+FURNITURE_DETECT_LABELS = (
+    "gym machine",
+    "exercise equipment",
+    "wardrobe",
+    "closet",
+    "bed",
+    "sofa",
+    "rug",
+    "carpet",
+    "nightstand",
+    "shelf",
+    "table",
+    "chair",
+    "lamp",
+    "picture frame",
+    "dresser",
+    "desk",
+)
 
 # ─── Style catalog (prompts calibrated for real-estate rooms) ───
 STYLES: Dict[str, Dict[str, str]] = {
@@ -109,14 +134,24 @@ ROOM_LABELS = {
 
 NEGATIVE_PROMPT = (
     "people, humans, faces, text, watermark, logo, distorted furniture, "
-    "blurry, low quality, deformed walls, weird perspective"
+    "blurry, low quality, deformed walls, weird perspective, "
+    "invented architecture, new walls, new windows, melted objects, "
+    "glitch, smear, warped geometry, floating fragments"
 )
 
+# Region-focused: describe only what replaces the masked furniture area.
+# Avoid "bare walls / redesign room" — that causes Flux to invent architecture.
 EMPTY_ROOM_PROMPT = (
-    "completely empty room, bare walls, clean bare floor, no furniture, "
-    "no objects, no decorations, no rugs, no lamps, vacant apartment, "
-    "natural light, photorealistic, architectural photography"
+    "seamless continuation of the existing floor and wall surfaces only, "
+    "empty space with no furniture no objects no rugs no lamps no decorations, "
+    "same tiles paint lighting and perspective as the surrounding room, "
+    "photorealistic interior photograph, no architectural changes"
 )
+
+# Mid-sized SAM segments ≈ furniture/objects (exclude wall/floor-sized + noise).
+_MASK_AREA_MIN = 0.008
+_MASK_AREA_MAX = 0.38
+_MASK_MERGE_CAP = 40
 
 
 # ─── Schemas ─────────────────────────────────────────────────────
@@ -143,6 +178,8 @@ class StagingStages(BaseModel):
     duration_ms: Optional[int] = None
     cost_usd: Optional[float] = None
     error: Optional[str] = None
+    note: Optional[str] = None
+    engine: Optional[str] = None
 
 
 class StagingJobOut(BaseModel):
@@ -641,25 +678,293 @@ async def fulfill_paid_staging_render(session_id: str) -> Optional[dict]:
 
 
 # ─── Pipeline stages ─────────────────────────────────────────────
-async def _stage_sam2_mask(image_url: str) -> str:
+def _mask_url_from_entry(entry: Any) -> Optional[str]:
+    if isinstance(entry, dict):
+        u = entry.get("url")
+        return str(u) if u else None
+    if isinstance(entry, str) and entry.strip():
+        return entry.strip()
+    return None
+
+
+def _white_ratio(mask_l: Image.Image) -> float:
+    """Fraction of pixels that are 'inpaint' (near-white) in an L mask."""
+    hist = mask_l.histogram()
+    # L histogram length 256; count bins > 127 as white
+    white = sum(hist[128:])
+    total = mask_l.size[0] * mask_l.size[1]
+    return (white / total) if total else 0.0
+
+
+def merge_furniture_masks_from_images(masks: List[Image.Image]) -> Image.Image:
+    """OR mid-sized SAM masks into one furniture mask (pure helper, unit-tested)."""
+    if not masks:
+        raise RuntimeError("no masks to merge")
+    w, h = masks[0].size
+    scored: List[tuple[Image.Image, float]] = []
+    for im in masks:
+        if im.mode != "L":
+            im = im.convert("L")
+        if im.size != (w, h):
+            im = im.resize((w, h), Image.Resampling.NEAREST)
+        scored.append((im, _white_ratio(im)))
+
+    keep = [im for im, a in scored if _MASK_AREA_MIN <= a <= _MASK_AREA_MAX]
+    if not keep:
+        # Fallback: drop wall-sized (>45%) then take largest remaining up to 8
+        ranked = sorted(
+            [(im, a) for im, a in scored if a <= 0.45],
+            key=lambda x: x[1],
+            reverse=True,
+        )
+        keep = [im for im, _ in ranked[:8]]
+    if not keep:
+        keep = [im for im, _ in sorted(scored, key=lambda x: x[1], reverse=True)[:5]]
+
+    from PIL import ImageChops, ImageFilter
+
+    merged = Image.new("L", (w, h), 0)
+    for im in keep:
+        bw = im.point(lambda p: 255 if p > 127 else 0)
+        merged = ImageChops.lighter(merged, bw)
+    # Soft edge so Flux covers furniture silhouettes cleanly
+    merged = merged.filter(ImageFilter.MaxFilter(5))
+    return merged
+
+
+async def _upload_pil_mask(mask: Image.Image) -> str:
+    import tempfile
+
+    with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as tmp:
+        mask.save(tmp, format="PNG")
+        tmp_path = tmp.name
+    try:
+        return await asyncio.to_thread(fal_client.upload_file, tmp_path)
+    finally:
+        try:
+            os.unlink(tmp_path)
+        except OSError:
+            pass
+
+
+async def _merge_furniture_mask_urls(individuals: List[Any]) -> str:
+    """Download individual SAM masks, merge mid-sized ones, re-upload to fal."""
+    urls = []
+    for entry in individuals[:_MASK_MERGE_CAP]:
+        u = _mask_url_from_entry(entry)
+        if u:
+            urls.append(u)
+    if len(urls) < 2:
+        raise RuntimeError("need ≥2 individual masks to merge")
+
+    images: List[Image.Image] = []
+    async with httpx.AsyncClient(timeout=60.0) as client:
+        for u in urls:
+            resp = await client.get(u)
+            resp.raise_for_status()
+            images.append(Image.open(io.BytesIO(resp.content)).convert("L"))
+
+    merged = merge_furniture_masks_from_images(images)
+    return await _upload_pil_mask(merged)
+
+
+def _bbox_iou(a: tuple[float, float, float, float], b: tuple[float, float, float, float]) -> float:
+    ax1, ay1, ax2, ay2 = a
+    bx1, by1, bx2, by2 = b
+    ix1, iy1 = max(ax1, bx1), max(ay1, by1)
+    ix2, iy2 = min(ax2, bx2), min(ay2, by2)
+    inter = max(0.0, ix2 - ix1) * max(0.0, iy2 - iy1)
+    if inter <= 0:
+        return 0.0
+    area_a = max(0.0, ax2 - ax1) * max(0.0, ay2 - ay1)
+    area_b = max(0.0, bx2 - bx1) * max(0.0, by2 - by1)
+    den = area_a + area_b - inter
+    return inter / den if den else 0.0
+
+
+def nms_bboxes(
+    items: List[tuple[float, tuple[float, float, float, float], str]],
+    iou_thresh: float = 0.45,
+) -> List[tuple[float, tuple[float, float, float, float], str]]:
+    """NMS on (area_ratio, abs_box, label) sorted by area desc — unit-tested."""
+    ranked = sorted(items, key=lambda x: -x[0])
+    kept: List[tuple[float, tuple[float, float, float, float], str]] = []
+    for it in ranked:
+        if any(_bbox_iou(it[1], k[1]) > iou_thresh for k in kept):
+            continue
+        kept.append(it)
+    return kept
+
+
+async def _florence_furniture_boxes(image_url: str) -> List[dict]:
+    """Detect furniture via Florence-2 (one label per call, then NMS)."""
+    async def _one(label: str) -> List[tuple[dict, str]]:
+        handler = await fal_client.submit_async(
+            MODEL_FLORENCE_DET,
+            arguments={"image_url": image_url, "text_input": label},
+        )
+        det = await handler.get()
+        boxes = ((det.get("results") or {}).get("bboxes") or [])
+        return [(b, label) for b in boxes if isinstance(b, dict)]
+
+    batches = await asyncio.gather(*[_one(lab) for lab in FURNITURE_DETECT_LABELS], return_exceptions=True)
+    raw: List[tuple[dict, str]] = []
+    for batch in batches:
+        if isinstance(batch, Exception):
+            logger.warning("Florence label failed: %s", batch)
+            continue
+        raw.extend(batch)
+    if not raw:
+        return []
+
+    # Need image size for area filter — fetch once
+    async with httpx.AsyncClient(timeout=60.0) as client:
+        resp = await client.get(image_url)
+        resp.raise_for_status()
+        w, h = Image.open(io.BytesIO(resp.content)).size
+    total = float(w * h) or 1.0
+
+    items: List[tuple[float, tuple[float, float, float, float], str]] = []
+    for b, lab in raw:
+        x, y, bw, bh = float(b.get("x", 0)), float(b.get("y", 0)), float(b.get("w", 0)), float(b.get("h", 0))
+        if bw <= 1 or bh <= 1:
+            continue
+        area = (bw * bh) / total
+        if area < 0.008:
+            continue
+        items.append((area, (x, y, x + bw, y + bh), lab))
+
+    kept = nms_bboxes(items, iou_thresh=0.45)
+    out = []
+    for area, (x1, y1, x2, y2), lab in kept:
+        out.append({
+            "label": lab,
+            "area": area,
+            "x_min": int(max(0, x1)),
+            "y_min": int(max(0, y1)),
+            "x_max": int(min(w - 1, x2)),
+            "y_max": int(min(h - 1, y2)),
+        })
+    return out
+
+
+async def _sam2_mask_from_boxes(image_url: str, boxes: List[dict]) -> str:
+    """SAM2 box prompts → binary furniture mask uploaded to fal."""
+    if not boxes:
+        raise RuntimeError("no boxes for SAM2")
+    box_prompts = [
+        {
+            "x_min": b["x_min"],
+            "y_min": b["y_min"],
+            "x_max": b["x_max"],
+            "y_max": b["y_max"],
+        }
+        for b in boxes
+    ]
     handler = await fal_client.submit_async(
-        MODEL_SAM2,
-        arguments={"image_url": image_url, "points_per_side": 32, "output_format": "png"},
+        MODEL_SAM2_BOX,
+        arguments={
+            "image_url": image_url,
+            "box_prompts": box_prompts,
+            "output_format": "png",
+            "apply_mask": False,
+        },
     )
     result = await handler.get()
-    masks = result.get("individual_masks") or result.get("combined_mask") or []
-    if isinstance(masks, list) and masks:
-        mask_url = masks[0].get("url") if isinstance(masks[0], dict) else masks[0]
-    elif isinstance(masks, dict):
-        mask_url = masks.get("url")
-    else:
-        mask_url = result.get("combined_mask", {}).get("url") if isinstance(result.get("combined_mask"), dict) else None
+    img = result.get("image") or {}
+    url = img.get("url") if isinstance(img, dict) else None
+    if not url:
+        raise RuntimeError(f"SAM2 box mask missing (keys: {list(result.keys())})")
+    async with httpx.AsyncClient(timeout=60.0) as client:
+        resp = await client.get(url)
+        resp.raise_for_status()
+        gray = Image.open(io.BytesIO(resp.content)).convert("L")
+    mask = gray.point(lambda p: 255 if p > 20 else 0)
+    if _white_ratio(mask) > 0.85:
+        mask = Image.eval(mask, lambda p: 255 - p)
+    from PIL import ImageFilter
+
+    mask = mask.filter(ImageFilter.MaxFilter(7))
+    if _white_ratio(mask) < 0.02:
+        raise RuntimeError("SAM2 box mask nearly empty")
+    return await _upload_pil_mask(mask)
+
+
+async def _stage_sam2_mask(image_url: str, *, for_furniture: bool = True) -> str:
+    """Build inpaint/erase mask.
+
+    For furniture removal (empty/reverse): Florence-2 detect → SAM2 boxes → mask.
+    Fallback: auto-segment mid-sized merge (never individual_masks[0] alone).
+    For standard furnish: prefer combined_mask from auto-segment.
+    """
+    if for_furniture:
+        try:
+            boxes = await _florence_furniture_boxes(image_url)
+            if boxes:
+                logger.info("Florence furniture boxes=%s labels=%s", len(boxes), [b["label"] for b in boxes])
+                return await _sam2_mask_from_boxes(image_url, boxes)
+            logger.warning("Florence returned no furniture boxes — SAM2 auto-segment fallback")
+        except Exception as e:
+            logger.warning("Florence+SAM2 box mask failed, falling back: %s", e)
+
+    handler = await fal_client.submit_async(
+        MODEL_SAM2,
+        arguments={
+            "image_url": image_url,
+            "points_per_side": 48,
+            "pred_iou_thresh": 0.7,
+            "stability_score_thresh": 0.85,
+            "output_format": "png",
+            "min_mask_region_area": 50,
+        },
+    )
+    result = await handler.get()
+    individuals = result.get("individual_masks") or []
+    combined = result.get("combined_mask")
+
+    if for_furniture and isinstance(individuals, list) and len(individuals) >= 2:
+        try:
+            return await _merge_furniture_mask_urls(individuals)
+        except Exception as e:
+            logger.warning("SAM2 furniture-mask merge failed, falling back: %s", e)
+
+    mask_url = _mask_url_from_entry(combined)
+    if not mask_url and isinstance(individuals, list) and individuals:
+        mask_url = _mask_url_from_entry(individuals[0])
     if not mask_url:
         raise RuntimeError(f"SAM2 returned no mask (keys: {list(result.keys())})")
     return mask_url
 
 
-async def _flux_inpaint(image_url: str, mask_url: str, prompt: str, num_images: int = 1) -> List[str]:
+async def _bria_erase(image_url: str, mask_url: str) -> str:
+    """Bria eraser — purpose-built object removal (far fewer architecture hallucinations than Flux)."""
+    handler = await fal_client.submit_async(
+        MODEL_BRIA_ERASER,
+        arguments={
+            "image_url": image_url,
+            "mask_url": mask_url,
+            "mask_type": "automatic",
+        },
+    )
+    result = await handler.get()
+    image = result.get("image")
+    if isinstance(image, dict) and image.get("url"):
+        return image["url"]
+    if isinstance(image, str) and image:
+        return image
+    raise RuntimeError(f"Bria eraser returned no image (keys: {list(result.keys())})")
+
+
+async def _flux_inpaint(
+    image_url: str,
+    mask_url: str,
+    prompt: str,
+    num_images: int = 1,
+    *,
+    strength: float = 0.85,
+    guidance_scale: float = 3.5,
+    num_inference_steps: int = 28,
+) -> List[str]:
     handler = await fal_client.submit_async(
         MODEL_FLUX_INPAINT,
         arguments={
@@ -667,8 +972,9 @@ async def _flux_inpaint(image_url: str, mask_url: str, prompt: str, num_images: 
             "mask_url": mask_url,
             "prompt": prompt,
             "negative_prompt": NEGATIVE_PROMPT,
-            "num_inference_steps": 28,
-            "guidance_scale": 3.5,
+            "num_inference_steps": num_inference_steps,
+            "guidance_scale": guidance_scale,
+            "strength": strength,
             "num_images": num_images,
             "enable_safety_checker": True,
         },
@@ -678,6 +984,48 @@ async def _flux_inpaint(image_url: str, mask_url: str, prompt: str, num_images: 
     if not images:
         raise RuntimeError(f"Flux returned no images (keys: {list(result.keys())})")
     return [im.get("url") for im in images if im.get("url")]
+
+
+async def _persist_b2c_preview_variants(job_id: str, db, variants: List[dict]) -> List[dict]:
+    """Copy fal preview URLs into private media so the Sell UI loads same-origin."""
+    doc = await db.virtual_staging_jobs.find_one(
+        {"id": job_id},
+        {"user_id": 1, "payment_rail": 1},
+    )
+    if not doc or doc.get("payment_rail") != "b2c_preview":
+        return variants
+    user_id = doc.get("user_id") or "anon"
+    from shared.storage import put_object
+
+    out: List[dict] = []
+    async with httpx.AsyncClient(timeout=90.0) as client:
+        for i, v in enumerate(variants):
+            url = v.get("url")
+            if not url or str(url).startswith("/api/media/"):
+                out.append(v)
+                continue
+            try:
+                resp = await client.get(url)
+                resp.raise_for_status()
+                data = resp.content
+                ct = (resp.headers.get("content-type") or "image/jpeg").split(";")[0].strip()
+                ext = "png" if "png" in ct else "jpg"
+                # Downscale huge ESRGAN outputs for fast preview in the browser
+                im = Image.open(io.BytesIO(data)).convert("RGB")
+                if im.width > 1600:
+                    im.thumbnail((1600, 1600), Image.Resampling.LANCZOS)
+                buf = io.BytesIO()
+                im.save(buf, format="JPEG", quality=88, optimize=True)
+                data = buf.getvalue()
+                ct = "image/jpeg"
+                ext = "jpg"
+                path = f"omnia/private/{user_id}/staging-preview/{job_id}-{i}.{ext}"
+                await asyncio.to_thread(put_object, path, data, ct)
+                out.append({**v, "url": f"/api/media/{path}", "fal_url": url})
+            except Exception as e:
+                logger.warning("persist preview variant failed job=%s i=%s: %s", job_id, i, e)
+                out.append(v)
+    return out
 
 
 async def _stage_upscale(image_url: str) -> str:
@@ -739,31 +1087,56 @@ async def _run_pipeline(job_id: str, db) -> None:
         if crm_summary:
             await _mark_root({"crm_context": crm_summary})
 
-    # Stage 1: SAM 2 mask
+    # Stage 1: furniture/room mask (Florence+SAM boxes for empty/reverse; auto-segment for standard)
     try:
         t0 = monotonic()
         await _mark_stage("sam2_mask", {"status": "running"})
-        mask_url = await _stage_sam2_mask(src)
+        want_furniture = mode in ("reverse", "empty")
+        mask_url = await _stage_sam2_mask(src, for_furniture=want_furniture)
+        await _mark_root({"mask_url": mask_url})
+        mask_cost = (COST_SAM2 + COST_FLORENCE) if want_furniture else COST_SAM2
         await _mark_stage("sam2_mask", {
-            "status": "done", "duration_ms": int((monotonic() - t0) * 1000), "cost_usd": COST_SAM2,
+            "status": "done",
+            "duration_ms": int((monotonic() - t0) * 1000),
+            "cost_usd": mask_cost,
         })
-        total_cost += COST_SAM2
+        total_cost += mask_cost
     except Exception as e:
         await _fail("sam2_mask", "SAM2", e)
         return
 
-    # Stage 1b (reverse / empty): furniture removal
+    # Stage 1b (reverse / empty): Bria eraser on Florence+SAM furniture mask
+    # (Flux EMPTY_ROOM_PROMPT was inventing walls/layouts → allucinazioni Founder)
     base_image = src
     if mode in ("reverse", "empty"):
         try:
             t0 = monotonic()
             await _mark_stage("furniture_removal", {"status": "running"})
-            emptied = await _flux_inpaint(src, mask_url, EMPTY_ROOM_PROMPT, num_images=1)
-            base_image = emptied[0]
+            try:
+                base_image = await _bria_erase(src, mask_url)
+                removal_cost = COST_BRIA
+                removal_engine = "bria_eraser"
+            except Exception as bria_err:
+                logger.warning("Bria eraser failed (%s) — Flux empty fallback", bria_err)
+                emptied = await _flux_inpaint(
+                    src,
+                    mask_url,
+                    EMPTY_ROOM_PROMPT,
+                    num_images=1,
+                    strength=0.85,
+                    guidance_scale=2.5,
+                    num_inference_steps=32,
+                )
+                base_image = emptied[0]
+                removal_cost = COST_FLUX
+                removal_engine = "flux_fallback"
             await _mark_stage("furniture_removal", {
-                "status": "done", "duration_ms": int((monotonic() - t0) * 1000), "cost_usd": COST_FLUX,
+                "status": "done",
+                "duration_ms": int((monotonic() - t0) * 1000),
+                "cost_usd": removal_cost,
+                "engine": removal_engine,
             })
-            total_cost += COST_FLUX
+            total_cost += removal_cost
         except Exception as e:
             await _fail("furniture_removal", "Rimozione arredo", e)
             return
@@ -810,27 +1183,39 @@ async def _run_pipeline(job_id: str, db) -> None:
             await _fail("flux_inpaint", "Flux", e)
             return
 
-    # Stage 3: parallel upscale (non-fatal per variant)
+    # Stage 3: upscale — skipped for empty mode (ESRGAN 4x amplifies erase leftovers
+    # into floor "hallucinations"; Bria output is already presentation-ready).
     t0 = monotonic()
     await _mark_stage("upscale", {"status": "running"})
+    if mode == "empty":
+        await _mark_stage("upscale", {
+            "status": "done", "duration_ms": 0, "cost_usd": 0,
+            "note": "skipped_empty_mode",
+        })
+    else:
+        async def _up(v: dict) -> dict:
+            try:
+                url = await _stage_upscale(v["url"])
+                return {**v, "url": url or v["url"], "upscaled": bool(url)}
+            except Exception as e:
+                logger.warning("Upscale failed for a variant: %s", e)
+                return v
 
-    async def _up(v: dict) -> dict:
-        try:
-            url = await _stage_upscale(v["url"])
-            return {**v, "url": url or v["url"], "upscaled": bool(url)}
-        except Exception as e:
-            logger.warning("Upscale failed for a variant: %s", e)
-            return v
+        variants = list(await asyncio.gather(*[_up(v) for v in variants]))
+        upscaled_n = sum(1 for v in variants if v.get("upscaled"))
+        up_cost = COST_UPSCALE * upscaled_n
+        await _mark_stage("upscale", {
+            "status": "done" if upscaled_n else "failed",
+            "duration_ms": int((monotonic() - t0) * 1000),
+            "cost_usd": round(up_cost, 4),
+        })
+        total_cost += up_cost
 
-    variants = list(await asyncio.gather(*[_up(v) for v in variants]))
-    upscaled_n = sum(1 for v in variants if v.get("upscaled"))
-    up_cost = COST_UPSCALE * upscaled_n
-    await _mark_stage("upscale", {
-        "status": "done" if upscaled_n else "failed",
-        "duration_ms": int((monotonic() - t0) * 1000),
-        "cost_usd": round(up_cost, 4),
-    })
-    total_cost += up_cost
+    # B2C free preview: persist to /api/media so SellPage img is same-origin + smaller
+    try:
+        variants = await _persist_b2c_preview_variants(job_id, db, variants)
+    except Exception:
+        logger.exception("b2c preview persist failed job=%s", job_id)
 
     await _mark_root({
         "status": "done",
@@ -938,8 +1323,20 @@ async def _fetch_variant_bytes(doc: dict, variant_index: int) -> tuple[bytes, st
     if variant_index >= len(variants):
         raise HTTPException(404, f"Variante {variant_index} non trovata")
     v = variants[variant_index]
+    # Prefer original fal URL (full-res) when preview was persisted as /api/media
+    url = (v.get("fal_url") or v.get("url") or "").strip()
+    if not url:
+        raise HTTPException(404, "URL variante mancante")
+    if url.startswith("/api/media/"):
+        from shared.storage import get_object, ObjStoreError
+
+        try:
+            data, _ct = get_object(url[len("/api/media/"):])
+        except ObjStoreError as e:
+            raise HTTPException(404, f"Media variante non leggibile: {e}") from e
+        return data, v.get("style", "modern")
     async with httpx.AsyncClient(timeout=60) as client:
-        r = await client.get(v["url"])
+        r = await client.get(url)
         r.raise_for_status()
     return r.content, v.get("style", "modern")
 
@@ -1082,7 +1479,7 @@ async def generate_staging(
             raise HTTPException(404, "Immobile non trovato")
 
     stages = [{"name": "sam2_mask", "status": "queued"}]
-    if body.mode == "reverse":
+    if body.mode in ("reverse", "empty"):
         stages.append({"name": "furniture_removal", "status": "queued"})
     stages.append({"name": "flux_inpaint", "status": "queued"})
     stages.append({"name": "upscale", "status": "queued"})

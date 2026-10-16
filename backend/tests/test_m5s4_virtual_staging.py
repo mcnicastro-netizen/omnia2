@@ -120,6 +120,40 @@ def test_build_prompt_fallbacks():
 def test_empty_room_prompt_exists():
     vs = _import_module()
     assert "no furniture" in vs.EMPTY_ROOM_PROMPT
+    assert "architectural changes" in vs.EMPTY_ROOM_PROMPT or "no architectural" in vs.EMPTY_ROOM_PROMPT
+
+
+def test_merge_furniture_masks_prefers_mid_sized():
+    """Wall-sized + tiny noise masks must not dominate the furniture OR-mask."""
+    vs = _import_module()
+    # 100x100 canvas
+    wall = Image.new("L", (100, 100), 0)
+    # wall/floor ~50% white
+    for y in range(50):
+        for x in range(100):
+            wall.putpixel((x, y), 255)
+    sofa = Image.new("L", (100, 100), 0)
+    for y in range(60, 85):
+        for x in range(20, 70):
+            sofa.putpixel((x, y), 255)  # ~12.5%
+    noise = Image.new("L", (100, 100), 0)
+    noise.putpixel((5, 5), 255)
+    merged = vs.merge_furniture_masks_from_images([wall, sofa, noise])
+    # Sofa region should be white; upper wall region should stay mostly black
+    assert merged.getpixel((40, 70)) > 200
+    assert merged.getpixel((50, 10)) < 40
+
+
+def test_nms_bboxes_drops_overlaps():
+    vs = _import_module()
+    items = [
+        (0.20, (0, 0, 100, 100), "gym"),
+        (0.19, (10, 10, 110, 110), "exercise"),  # heavy overlap with gym
+        (0.10, (200, 200, 300, 300), "bed"),
+    ]
+    kept = vs.nms_bboxes(items, iou_thresh=0.45)
+    labels = [k[2] for k in kept]
+    assert labels == ["gym", "bed"]
 
 
 def test_default_multi_styles_valid():

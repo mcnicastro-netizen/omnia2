@@ -25,15 +25,30 @@ export default function B2CStagingPanel({
     [photos],
   );
   const [photoId, setPhotoId] = useState(usable[0]?.id || "");
-  const [mode, setMode] = useState("standard"); // standard | empty
+  // reverse = svuota+ri-arreda (case reale: foto già arredate). empty = solo svuota.
+  // Non usare "standard" (assume stanza già vuota) — è la causa tipica di "Arreda non funziona".
+  const [mode, setMode] = useState("reverse"); // reverse | empty
   const [preview, setPreview] = useState(null); // { jobId, url, photoId, photoIndex, mode }
   const [localBusy, setLocalBusy] = useState(false);
+  const [stageHint, setStageHint] = useState("");
 
   const selected = usable.find((p) => p.id === photoId) || usable[0];
   const selectedIndex = selected?._idx ?? 0;
   const selectedLabel = t("cloud.sell.staging_photo_n", { n: selectedIndex + 1 });
   const modeLabel =
     mode === "empty" ? t("cloud.sell.staging_mode_empty") : t("cloud.sell.staging_mode_furnish");
+
+  const stageLabel = (stages) => {
+    const running = (stages || []).find((s) => s.status === "running");
+    if (!running) return "";
+    const map = {
+      sam2_mask: t("cloud.sell.staging_stage_mask", { defaultValue: "Analisi stanza…" }),
+      furniture_removal: t("cloud.sell.staging_stage_empty", { defaultValue: "Rimozione arredo…" }),
+      flux_inpaint: t("cloud.sell.staging_stage_furnish", { defaultValue: "Arredamento virtuale…" }),
+      upscale: t("cloud.sell.staging_stage_upscale", { defaultValue: "Rifinitura…" }),
+    };
+    return map[running.name] || "";
+  };
 
   const runBusy = busy || localBusy;
 
@@ -52,6 +67,7 @@ export default function B2CStagingPanel({
       }),
     );
     setPreview(null);
+    setStageHint("");
     try {
       const { data } = await api.post(`/cloud/me/properties/${listingId}/staging/preview`, {
         photo_id: selected.id,
@@ -60,7 +76,7 @@ export default function B2CStagingPanel({
       const jobId = data?.job?.id;
       if (!jobId) throw new Error("no_job");
       let done = null;
-      for (let i = 0; i < 60; i += 1) {
+      for (let i = 0; i < 72; i += 1) {
         const jr = await api.get(`/cloud/me/properties/${listingId}/staging/${jobId}`);
         if (jr.data?.status === "done") {
           done = jr.data;
@@ -69,20 +85,27 @@ export default function B2CStagingPanel({
         if (jr.data?.status === "failed") {
           throw new Error(jr.data?.error || "staging_failed");
         }
+        const hint = stageLabel(jr.data?.stages);
+        setStageHint(hint);
         onStatus?.(
-          t("cloud.sell.staging_preview_processing", {
-            photo: selectedLabel,
-            mode: modeLabel,
-          }),
+          hint ||
+            t("cloud.sell.staging_preview_processing", {
+              photo: selectedLabel,
+              mode: modeLabel,
+            }),
         );
         await new Promise((r) => setTimeout(r, 2500));
       }
       if (!done) {
         onError?.(t("cloud.sell.staging_timeout"));
         onStatus?.("");
+        setStageHint("");
         return;
       }
       const url = done.variant_url || done.variants?.[0]?.url;
+      if (!url) {
+        throw new Error(t("cloud.sell.staging_checkout_error"));
+      }
       setPreview({
         jobId,
         url,
@@ -91,6 +114,7 @@ export default function B2CStagingPanel({
         mode: done.mode || mode,
         sourceUrl: done.source_url || selected.url,
       });
+      setStageHint("");
       onStatus?.(
         t("cloud.sell.staging_preview_ready", {
           photo: t("cloud.sell.staging_photo_n", {
@@ -106,6 +130,7 @@ export default function B2CStagingPanel({
           t("cloud.sell.staging_checkout_error"),
       );
       onStatus?.("");
+      setStageHint("");
     } finally {
       setLocalBusy(false);
       setBusy?.(false);
@@ -211,9 +236,9 @@ export default function B2CStagingPanel({
         <button
           type="button"
           data-testid={`${testIdPrefix}-mode-standard`}
-          onClick={() => setMode("standard")}
+          onClick={() => setMode("reverse")}
           className={`px-3 py-1.5 text-[11px] uppercase tracking-widest rounded border ${
-            mode === "standard"
+            mode === "reverse"
               ? "bg-[#0B1E3F] text-white border-[#0B1E3F]"
               : "border-stone-300 text-stone-700 hover:bg-stone-50"
           }`}
@@ -235,15 +260,22 @@ export default function B2CStagingPanel({
       </div>
 
       {!preview?.url ? (
-        <button
-          type="button"
-          data-testid={`${testIdPrefix}-preview-btn`}
-          disabled={runBusy || !listingId}
-          onClick={startPreview}
-          className="px-4 py-2 text-xs uppercase tracking-widest border border-[#0B1E3F] text-[#0B1E3F] rounded hover:bg-[#0B1E3F] hover:text-white disabled:opacity-40 transition"
-        >
-          {runBusy ? t("common.saving") : t("cloud.sell.staging_preview_cta")}
-        </button>
+        <div className="space-y-2">
+          <button
+            type="button"
+            data-testid={`${testIdPrefix}-preview-btn`}
+            disabled={runBusy || !listingId}
+            onClick={startPreview}
+            className="px-4 py-2 text-xs uppercase tracking-widest border border-[#0B1E3F] text-[#0B1E3F] rounded hover:bg-[#0B1E3F] hover:text-white disabled:opacity-40 transition"
+          >
+            {runBusy ? t("common.saving") : t("cloud.sell.staging_preview_cta")}
+          </button>
+          {runBusy && stageHint ? (
+            <p className="text-[11px] text-stone-500" data-testid={`${testIdPrefix}-stage-hint`}>
+              {stageHint}
+            </p>
+          ) : null}
+        </div>
       ) : (
         <div className="space-y-3" data-testid={`${testIdPrefix}-preview-result`}>
           <p className="text-xs text-stone-700 font-medium">
