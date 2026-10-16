@@ -5,8 +5,8 @@ through an agency. Properties created here have:
   - agency_id = "_private_listings"     # sentinel (no real agency)
   - is_private_listing = True
   - owner_user_id = current user id
-  - status = "draft" until user submits
-  - moderation_status = "pending"       # admin must approve
+  - status = "draft" until approved live
+  - moderation_status = "none" until user submits → then "pending"
 
 Endpoints (B2C auth required):
   POST   /api/cloud/me/properties        — create new private ad
@@ -172,7 +172,7 @@ async def create_private_listing(
         "is_private_listing": True,
         "owner_user_id": user["id"],
         "status": "draft",
-        "moderation_status": "pending",
+        "moderation_status": "none",  # bozza locale — pending solo dopo /submit
         "moderation_notes": None,
         "moderation_reviewed_at": None,
         "moderation_reviewed_by": None,
@@ -376,6 +376,53 @@ class B2CStagingStartBody(BaseModel):
     session_id: str = Field(..., min_length=8, max_length=200)
 
 
+class B2CStagingPreviewBody(BaseModel):
+    """Free anteprima before payment — user chooses photo + mode."""
+    photo_id: str | None = Field(default=None, max_length=80)
+    mode: Literal["standard", "empty", "reverse"] = "standard"
+    style: str = Field(default="modern", max_length=40)
+    room_type: str = Field(default="living", max_length=40)
+
+
+@router.post("/{pid}/staging/preview")
+async def start_b2c_staging_preview(
+    pid: str,
+    body: B2CStagingPreviewBody,
+    user: dict = Depends(get_current_user),
+):
+    """Generate a free staging/empty preview for a chosen photo (max 3/day)."""
+    await _ensure_b2c(user)
+    db = Database.get()
+    listing = await db.properties.find_one(
+        {"id": pid, "owner_user_id": user["id"], "is_private_listing": True},
+        {"_id": 0, "id": 1, "photos": 1},
+    )
+    if not listing:
+        raise HTTPException(status_code=404, detail="listing_not_found")
+    if not (listing.get("photos") or []):
+        raise HTTPException(status_code=400, detail="listing_has_no_photos")
+
+    from apps.immoweb.virtual_staging import start_b2c_preview_job, _job_to_out
+
+    job = await start_b2c_preview_job(
+        user_id=user["id"],
+        listing_id=pid,
+        photo_id=body.photo_id,
+        mode=body.mode,
+        style=body.style,
+        room_type=body.room_type,
+    )
+    out = _job_to_out(job)
+    return {
+        "ok": True,
+        "job": out.model_dump(),
+        "listing_id": pid,
+        "photo_id": job.get("source_photo_id"),
+        "photo_index": job.get("source_photo_index"),
+        "mode": job.get("mode"),
+    }
+
+
 @router.post("/{pid}/staging")
 async def start_b2c_staging(
     pid: str,
@@ -439,6 +486,10 @@ async def start_b2c_staging(
         "job": out.model_dump(),
         "session_id": body.session_id,
         "listing_id": pid,
+        "photo_id": job.get("source_photo_id"),
+        "photo_index": job.get("source_photo_index"),
+        "mode": job.get("mode"),
+        "saved_photo_id": job.get("saved_photo_id"),
     }
 
 
@@ -448,7 +499,7 @@ async def get_b2c_staging_job(
     job_id: str,
     user: dict = Depends(get_current_user),
 ):
-    """Poll B2C staging job bound to one of the caller's private listings."""
+    """Poll B2C staging job (paid or free preview) for caller's listing."""
     await _ensure_b2c(user)
     db = Database.get()
     listing = await db.properties.find_one(
@@ -463,11 +514,16 @@ async def get_b2c_staging_job(
         "id": job_id,
         "user_id": user["id"],
         "property_id": pid,
-        "payment_rail": "b2c_stripe",
+        "payment_rail": {"$in": ["b2c_stripe", "b2c_preview"]},
     })
     if not job:
         raise HTTPException(status_code=404, detail="job_not_found")
-    return _job_to_out(job).model_dump()
+    out = _job_to_out(job).model_dump()
+    out["source_photo_id"] = job.get("source_photo_id")
+    out["source_photo_index"] = job.get("source_photo_index")
+    out["payment_rail"] = job.get("payment_rail")
+    out["saved_photo_id"] = job.get("saved_photo_id")
+    return out
 
 
 @router.delete("/{pid}", status_code=204)

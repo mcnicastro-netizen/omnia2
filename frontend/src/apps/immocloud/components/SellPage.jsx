@@ -15,6 +15,7 @@ import AlImproveButton from "../../../shared/components/AlImproveButton";
 import PhotoUploader from "../../immoweb/components/PhotoUploader";
 import CloudPageHero from "./CloudPageHero";
 import SellDocPromoRail from "./SellDocPromoRail";
+import B2CStagingPanel from "./B2CStagingPanel";
 
 const STAGING_PENDING_KEY = "omnia_staging_pending";
 
@@ -149,6 +150,11 @@ export default function SellPage() {
       pending = null;
     }
     const listingId = pending?.listingId || "";
+    const pendingPhotoN = (pending?.photoIndex ?? 0) + 1;
+    const pendingModeLabel =
+      pending?.mode === "empty"
+        ? t("cloud.sell.staging_mode_empty")
+        : t("cloud.sell.staging_mode_furnish");
     if (sid) {
       try {
         sessionStorage.setItem("omnia_b2c_checkout_sid", sid);
@@ -164,17 +170,32 @@ export default function SellPage() {
 
     let cancelled = false;
     setStagingBusy(true);
-    setStagingStatus(t("cloud.sell.staging_processing"));
+    setStagingStatus(
+      t("cloud.sell.staging_processing_named", {
+        photo: t("cloud.sell.staging_photo_n", { n: pendingPhotoN }),
+        mode: pendingModeLabel,
+      }),
+    );
     setError("");
 
-    const finishOk = async () => {
+    const finishOk = async (job) => {
       try {
         sessionStorage.removeItem(STAGING_PENDING_KEY);
       } catch {
         /* ignore */
       }
       await reloadListings().catch(() => {});
-      setStagingStatus(t("cloud.sell.staging_done"));
+      const n = (job?.source_photo_index ?? pending?.photoIndex ?? 0) + 1;
+      const modeLab =
+        (job?.mode || pending?.mode) === "empty"
+          ? t("cloud.sell.staging_mode_empty")
+          : t("cloud.sell.staging_mode_furnish");
+      setStagingStatus(
+        t("cloud.sell.staging_done_named", {
+          photo: t("cloud.sell.staging_photo_n", { n }),
+          mode: modeLab,
+        }),
+      );
       setStagingBusy(false);
     };
 
@@ -211,19 +232,34 @@ export default function SellPage() {
           fail(t("cloud.sell.staging_checkout_error"));
           return;
         }
+        // Preview already generated + attached on pay — no second wait
+        if (start.data?.job?.status === "done" || start.data?.saved_photo_id) {
+          await finishOk(start.data.job);
+          return;
+        }
 
         for (let i = 0; i < 60 && !cancelled; i += 1) {
           const jr = await api.get(`/cloud/me/properties/${listingId}/staging/${jobId}`);
           const status = jr.data?.status;
           if (status === "done") {
-            await finishOk();
+            await finishOk(jr.data);
             return;
           }
           if (status === "failed") {
             fail(jr.data?.error || t("cloud.sell.staging_failed"));
             return;
           }
-          setStagingStatus(t("cloud.sell.staging_processing"));
+          // Already saved from preview promote — job may already be done on first poll
+          if (jr.data?.saved_photo_id) {
+            await finishOk(jr.data);
+            return;
+          }
+          setStagingStatus(
+            t("cloud.sell.staging_processing_named", {
+              photo: t("cloud.sell.staging_photo_n", { n: pendingPhotoN }),
+              mode: pendingModeLabel,
+            }),
+          );
           await new Promise((r) => {
             stagingPollRef.current = setTimeout(r, 2500);
           });
@@ -265,46 +301,6 @@ export default function SellPage() {
       setError(formatApiErrorDetail(e?.response?.data?.detail) || t("cloud.sell.boost_checkout_error"));
     } finally {
       setBoostBusy(null);
-    }
-  };
-
-  const buyStaging = async (listingId) => {
-    if (!listingId) {
-      setError(t("cloud.sell.staging_need_listing"));
-      return;
-    }
-    setStagingBusy(true);
-    setError("");
-    setStagingStatus("");
-    try {
-      try {
-        sessionStorage.setItem(STAGING_PENDING_KEY, JSON.stringify({ listingId }));
-      } catch {
-        /* ignore */
-      }
-      const origin = window.location.origin;
-      const { data } = await api.post("/billing/b2c/checkout", {
-        product_key: "b2c_staging_render",
-        listing_id: listingId,
-        success_url: `${origin}/${lang}/cloud/account/sell?staging=ok`,
-        cancel_url: `${origin}/${lang}/cloud/account/sell?staging=cancel`,
-      });
-      if (data?.checkout_url) {
-        if (data.session_id) {
-          try {
-            sessionStorage.setItem("omnia_b2c_checkout_sid", data.session_id);
-          } catch {
-            /* ignore */
-          }
-        }
-        window.location.href = data.checkout_url;
-        return;
-      }
-      setError(t("cloud.sell.staging_checkout_error"));
-    } catch (e) {
-      setError(formatApiErrorDetail(e?.response?.data?.detail) || t("cloud.sell.staging_checkout_error"));
-    } finally {
-      setStagingBusy(false);
     }
   };
 
@@ -355,6 +351,10 @@ export default function SellPage() {
     });
     setShowForm(true);
     setError("");
+    // Scroll form into view so "Modifica" is never a no-op
+    requestAnimationFrame(() => {
+      document.querySelector('[data-testid="sell-form"]')?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
   };
 
   const save = async (e) => {
@@ -493,23 +493,28 @@ export default function SellPage() {
                 </div>
                 <div className="flex gap-2 flex-wrap">
                   <button
+                    type="button"
                     data-testid={`edit-${l.id}`}
                     onClick={() => startEdit(l)}
                     className="px-3 py-1.5 text-[11px] uppercase tracking-widest border border-stone-300 rounded hover:bg-stone-50"
                   >
                     {t("common.edit")}
                   </button>
-                  {l.moderation_status !== "pending" && (
+                  {!(l.moderation_status === "approved" && l.status === "active") && (
                     <button
+                      type="button"
                       data-testid={`submit-${l.id}`}
                       onClick={() => submitForReview(l.id)}
                       disabled={busy}
                       className="px-3 py-1.5 text-[11px] uppercase tracking-widest bg-[#0B1E3F] text-white rounded hover:bg-[#C19A6B] disabled:opacity-50"
                     >
-                      {l.moderation_status === "rejected" ? t("cloud.sell.resubmit") : t("cloud.sell.submit_review")}
+                      {l.moderation_status === "rejected"
+                        ? t("cloud.sell.resubmit")
+                        : t("cloud.sell.submit_review")}
                     </button>
                   )}
                   <button
+                    type="button"
                     data-testid={`delete-${l.id}`}
                     onClick={() => deleteListing(l.id)}
                     className="px-3 py-1.5 text-[11px] uppercase tracking-widest text-rose-700 border border-rose-200 rounded hover:bg-rose-50"
@@ -546,24 +551,16 @@ export default function SellPage() {
                   </div>
                 </div>
               )}
-              <div className="mt-4 pt-4 border-t border-stone-100" data-testid={`staging-panel-${l.id}`}>
-                <p className="text-[11px] uppercase tracking-widest text-stone-500 mb-2">
-                  {t("cloud.sell.staging_title")}
-                </p>
-                <p className="text-xs text-stone-600 mb-3">{t("cloud.sell.staging_subtitle")}</p>
-                <button
-                  type="button"
-                  data-testid={`staging-buy-${l.id}`}
-                  disabled={stagingBusy || !(l.photos?.length > 0)}
-                  onClick={() => buyStaging(l.id)}
-                  className="px-4 py-2 text-xs uppercase tracking-widest border border-[#0B1E3F] text-[#0B1E3F] rounded hover:bg-[#0B1E3F] hover:text-white disabled:opacity-40 transition"
-                >
-                  {stagingBusy ? t("common.saving") : t("cloud.sell.staging_cta")}
-                </button>
-                {!(l.photos?.length > 0) && (
-                  <p className="text-[11px] text-stone-500 mt-2">Carica almeno una foto per attivare lo staging.</p>
-                )}
-              </div>
+              <B2CStagingPanel
+                listingId={l.id}
+                photos={l.photos || []}
+                busy={stagingBusy}
+                setBusy={setStagingBusy}
+                onStatus={setStagingStatus}
+                onError={setError}
+                onPaidAttached={() => reloadListings().catch(() => {})}
+                testIdPrefix={`staging-${l.id}`}
+              />
             </article>
           ))}
         </section>
@@ -593,17 +590,8 @@ export default function SellPage() {
           </h2>
 
           <Field label={t("cloud.sell.f_title")} required>
-            <div className="flex items-start gap-2">
-              <input data-testid="sell-f-title" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })}
-                required minLength={3} maxLength={200} className={`${inputCls} flex-1`} />
-              <AlImproveButton
-                field="title"
-                value={form.title}
-                propertyData={form}
-                onApply={(text) => setForm({ ...form, title: text })}
-                testId="sell-al-improve-title"
-              />
-            </div>
+            <input data-testid="sell-f-title" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })}
+              required minLength={3} maxLength={200} className={inputCls} />
           </Field>
 
           <div className="grid grid-cols-2 gap-3">
@@ -757,22 +745,25 @@ export default function SellPage() {
               uploadUrl={B2C_MEDIA_UPLOAD}
               uploadExtraFields={{ kind: "photo" }}
             />
-            {(form.photos || []).length > 0 && (
-              <div className="mt-3 p-3 border border-stone-200 rounded bg-stone-50" data-testid="sell-staging-hint">
-                <p className="text-xs text-stone-700 mb-2">{t("cloud.sell.staging_subtitle")}</p>
-                <button
-                  type="button"
-                  data-testid="sell-staging-cta"
-                  disabled={stagingBusy || !editing?.id}
-                  onClick={() => buyStaging(editing?.id)}
-                  className="px-3 py-1.5 text-[11px] uppercase tracking-widest bg-[#0B1E3F] text-white rounded hover:bg-[#C19A6B] disabled:opacity-40"
-                >
-                  {stagingBusy ? t("common.saving") : t("cloud.sell.staging_cta")}
-                </button>
-                {!editing?.id && (
-                  <p className="text-[11px] text-stone-500 mt-2">Salva l&apos;annuncio, poi attiva lo staging dal pannello.</p>
-                )}
-              </div>
+            {editing?.id ? (
+              <B2CStagingPanel
+                listingId={editing.id}
+                photos={form.photos || []}
+                busy={stagingBusy}
+                setBusy={setStagingBusy}
+                onStatus={setStagingStatus}
+                onError={setError}
+                onPaidAttached={async () => {
+                  const items = await reloadListings().catch(() => []);
+                  const fresh = (items || []).find((x) => x.id === editing.id);
+                  if (fresh?.photos) setForm((f) => ({ ...f, photos: fresh.photos }));
+                }}
+                testIdPrefix="sell-staging"
+              />
+            ) : (
+              <p className="text-[11px] text-stone-500 mt-2" data-testid="sell-staging-hint">
+                {t("cloud.sell.staging_need_listing")}
+              </p>
             )}
           </Field>
 
@@ -990,14 +981,16 @@ function ListingStatsPanel({ stats, t }) {
 
 function StatusBadge({ status, listingStatus, notes }) {
   const { t } = useTranslation();
+  const key = status || "none";
   const config = {
+    none: { cls: "bg-stone-100 text-stone-800 border-stone-200", label: t("cloud.sell.status_draft") },
     pending: { cls: "bg-amber-100 text-amber-800 border-amber-200", label: t("cloud.sell.status_pending") },
     approved: { cls: "bg-emerald-100 text-emerald-800 border-emerald-200", label: t("cloud.sell.status_approved") },
     rejected: { cls: "bg-rose-100 text-rose-800 border-rose-200", label: t("cloud.sell.status_rejected") },
-  }[status] || { cls: "bg-stone-100 text-stone-800 border-stone-200", label: status };
+  }[key] || { cls: "bg-stone-100 text-stone-800 border-stone-200", label: key };
   return (
     <div className="mt-2 flex items-center gap-2 flex-wrap">
-      <span data-testid={`status-${status}`}
+      <span data-testid={`status-${key}`}
         className={`inline-block text-[10px] uppercase tracking-widest px-2 py-1 rounded border ${config.cls}`}>
         {config.label}
       </span>

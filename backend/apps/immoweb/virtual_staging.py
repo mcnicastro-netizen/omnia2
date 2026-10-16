@@ -125,7 +125,7 @@ class StagingGenerateBody(BaseModel):
     style: str = Field(default="modern")
     room_type: str = Field(default="living")
     property_id: Optional[str] = None
-    mode: str = Field(default="standard", description="standard | reverse")
+    mode: str = Field(default="standard", description="standard | reverse | empty")
     num_variants: int = Field(default=1, ge=1, le=4)
     variant_mode: str = Field(default="same_style", description="same_style | multi_style")
     styles: Optional[List[str]] = Field(default=None, description="Styles for multi_style mode")
@@ -343,31 +343,151 @@ async def _auto_save_b2c_variant(job_id: str, db) -> None:
         logger.warning("b2c staging auto-save: listing missing job=%s pid=%s", job_id, property_id)
         return
     source_bytes, style_key = await _fetch_variant_bytes(doc, 0)
+    wm = "Svuotamento virtuale OMNIA" if doc.get("mode") == "empty" else "Render virtuale OMNIA"
     processed = await asyncio.to_thread(
-        _apply_watermark, source_bytes, "Render virtuale OMNIA", MAX_PHOTO_WIDTH,
+        _apply_watermark, source_bytes, wm, MAX_PHOTO_WIDTH,
     )
     b64 = base64.b64encode(processed).decode("ascii")
     photos = prop.get("photos") or []
+    caption = (
+        "Svuotamento virtuale OMNIA · stanza svuotata"
+        if doc.get("mode") == "empty"
+        else _photo_caption(style_key, doc.get("room_type", "living"))
+    )
+    source_photo_id = doc.get("source_photo_id")
+    source_index = None
+    if source_photo_id:
+        for i, ph in enumerate(photos):
+            if isinstance(ph, dict) and ph.get("id") == source_photo_id:
+                source_index = i
+                break
     new_photo = {
         "id": str(uuid4()),
         "url": f"data:image/jpeg;base64,{b64}",
-        "caption": _photo_caption(style_key, doc.get("room_type", "living")),
+        "caption": caption,
         "order": len(photos),
         "is_cover": False,
         "is_virtual_staging": True,
+        "source_photo_id": source_photo_id,
+        "staging_mode": doc.get("mode") or "standard",
     }
     await db.properties.update_one(
         {"id": property_id},
         {"$push": {"photos": new_photo}, "$set": {"updated_at": datetime.now(timezone.utc).isoformat()}},
     )
     await db.virtual_staging_jobs.update_one(
-        {"id": job_id}, {"$set": {"saved_to_property_id": property_id}},
+        {"id": job_id},
+        {"$set": {
+            "saved_to_property_id": property_id,
+            "saved_photo_id": new_photo["id"],
+            "source_photo_index": source_index,
+        }},
     )
     logger.info("b2c staging auto-saved job=%s → property=%s photo=%s", job_id, property_id, new_photo["id"])
 
 
+def _pick_listing_photo(photos: list, photo_id: Optional[str] = None) -> tuple[str, Optional[str], Optional[int]]:
+    """Return (url, photo_id, index). Prefer explicit photo_id, else first usable."""
+    if not photos:
+        return "", None, None
+    if photo_id:
+        for i, ph in enumerate(photos):
+            if isinstance(ph, dict) and ph.get("id") == photo_id:
+                u = _listing_photo_url(ph)
+                if u:
+                    return u, photo_id, i
+    for i, ph in enumerate(photos):
+        u = _listing_photo_url(ph)
+        if u:
+            pid = ph.get("id") if isinstance(ph, dict) else None
+            return u, pid, i
+    return "", None, None
+
+
+async def start_b2c_preview_job(
+    *,
+    user_id: str,
+    listing_id: str,
+    photo_id: Optional[str] = None,
+    mode: str = "standard",
+    style: str = "modern",
+    room_type: str = "living",
+) -> dict:
+    """Free preview render (rate-limited). Does not attach to listing until paid."""
+    if mode not in ("standard", "reverse", "empty"):
+        raise HTTPException(status_code=400, detail="unsupported_staging_mode")
+    db = Database.get()
+    listing = await db.properties.find_one(
+        {"id": listing_id, "owner_user_id": user_id, "is_private_listing": True},
+        {"_id": 0, "id": 1, "photos": 1},
+    )
+    if not listing:
+        raise HTTPException(status_code=404, detail="listing_not_found")
+    photos = listing.get("photos") or []
+    source_url, resolved_photo_id, source_index = _pick_listing_photo(photos, photo_id)
+    if not source_url:
+        raise HTTPException(status_code=400, detail="listing_has_no_photos")
+
+    start = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
+    used = await db.virtual_staging_jobs.count_documents({
+        "user_id": user_id,
+        "payment_rail": "b2c_preview",
+        "created_at": {"$gte": start.isoformat()},
+    })
+    if used >= 3:
+        raise HTTPException(status_code=429, detail={
+            "error": "preview_daily_cap",
+            "message": "Hai raggiunto il limite di 3 anteprime staging al giorno.",
+        })
+
+    job_id = str(uuid4())
+    now = datetime.now(timezone.utc).isoformat()
+    stages = [{"name": "sam2_mask", "status": "queued"}]
+    if mode in ("reverse", "empty"):
+        stages.append({"name": "furniture_removal", "status": "queued"})
+    stages.extend([
+        {"name": "flux_inpaint", "status": "queued"},
+        {"name": "upscale", "status": "queued"},
+    ])
+    doc = {
+        "id": job_id,
+        "user_id": user_id,
+        "agency_id": None,
+        "property_id": listing_id,
+        "source_url": source_url,
+        "source_photo_id": resolved_photo_id,
+        "source_photo_index": source_index,
+        "style": style if mode != "empty" else "empty",
+        "room_type": room_type,
+        "mode": mode,
+        "num_variants": 1,
+        "variant_mode": "same_style",
+        "styles_list": None,
+        "status": "pending",
+        "stages": stages,
+        "variants": [],
+        "variant_url": None,
+        "crm_context": None,
+        "cost_total_usd": None,
+        "error": None,
+        "created_at": now,
+        "completed_at": None,
+        "payment_rail": "b2c_preview",
+    }
+    await db.virtual_staging_jobs.insert_one(doc)
+    try:
+        asyncio.create_task(_run_pipeline(job_id, db))
+    except RuntimeError:
+        logger.warning("b2c preview: no event loop to schedule job=%s", job_id)
+    logger.info(
+        "b2c staging preview job=%s listing=%s photo=%s mode=%s",
+        job_id, listing_id, resolved_photo_id, mode,
+    )
+    return doc
+
+
 async def fulfill_paid_staging_render(session_id: str) -> Optional[dict]:
-    """Idempotent webhook/API fulfill: consume purchase + start B2C staging job (P-011)."""
+    """Idempotent webhook/API fulfill: consume purchase + start/attach B2C staging job (P-011)."""
     if not session_id:
         return None
     db = Database.get()
@@ -401,13 +521,52 @@ async def fulfill_paid_staging_render(session_id: str) -> Optional[dict]:
     if not listing:
         logger.error("staging fulfill: listing not found session=%s listing=%s", session_id, listing_id)
         return purchase
+
+    preview_job_id = (purchase.get("preview_job_id") or "").strip() or None
+    photo_id = (purchase.get("photo_id") or "").strip() or None
+    mode = (purchase.get("staging_mode") or "standard").strip() or "standard"
+    if mode not in ("standard", "reverse", "empty"):
+        mode = "standard"
+
+    # Path A — promote an already-generated free preview (no second AI run)
+    if preview_job_id:
+        preview = await db.virtual_staging_jobs.find_one({
+            "id": preview_job_id,
+            "user_id": user_id,
+            "property_id": listing_id,
+            "payment_rail": "b2c_preview",
+        })
+        if preview and preview.get("status") == "done" and not preview.get("saved_to_property_id"):
+            from apps.billing.b2c_entitlements import consume_b2c_staging_render
+            claimed = await consume_b2c_staging_render(
+                user_id,
+                listing_id=listing_id,
+                stripe_session_id=session_id,
+                job_id=preview_job_id,
+            )
+            if not claimed:
+                purchase = await db.b2c_purchases.find_one({"stripe_session_id": session_id}) or purchase
+                if purchase.get("job_id"):
+                    job = await db.virtual_staging_jobs.find_one({"id": purchase["job_id"]}, {"_id": 0})
+                    return {"purchase": purchase, "job": job}
+                return purchase
+            await db.virtual_staging_jobs.update_one(
+                {"id": preview_job_id},
+                {"$set": {
+                    "payment_rail": "b2c_stripe",
+                    "b2c_stripe_session_id": session_id,
+                    "b2c_purchase_id": claimed.get("id"),
+                }},
+            )
+            try:
+                await _auto_save_b2c_variant(preview_job_id, db)
+            except Exception:
+                logger.exception("b2c staging promote-preview save failed job=%s", preview_job_id)
+            job = await db.virtual_staging_jobs.find_one({"id": preview_job_id}, {"_id": 0})
+            return {"purchase": claimed, "job": job}
+
     photos = listing.get("photos") or []
-    source_url = ""
-    for ph in photos:
-        u = _listing_photo_url(ph)
-        if u:
-            source_url = u
-            break
+    source_url, resolved_photo_id, source_index = _pick_listing_photo(photos, photo_id)
     if not source_url:
         await db.b2c_purchases.update_one(
             {"stripe_session_id": session_id},
@@ -434,20 +593,24 @@ async def fulfill_paid_staging_render(session_id: str) -> Optional[dict]:
         return purchase
 
     now = datetime.now(timezone.utc).isoformat()
-    stages = [
-        {"name": "sam2_mask", "status": "queued"},
+    stages = [{"name": "sam2_mask", "status": "queued"}]
+    if mode in ("reverse", "empty"):
+        stages.append({"name": "furniture_removal", "status": "queued"})
+    stages.extend([
         {"name": "flux_inpaint", "status": "queued"},
         {"name": "upscale", "status": "queued"},
-    ]
+    ])
     doc = {
         "id": job_id,
         "user_id": user_id,
         "agency_id": None,
         "property_id": listing_id,
         "source_url": source_url,
-        "style": "modern",
+        "source_photo_id": resolved_photo_id,
+        "source_photo_index": source_index,
+        "style": "modern" if mode != "empty" else "empty",
         "room_type": "living",
-        "mode": "standard",
+        "mode": mode,
         "num_variants": 1,
         "variant_mode": "same_style",
         "styles_list": None,
@@ -471,8 +634,8 @@ async def fulfill_paid_staging_render(session_id: str) -> Optional[dict]:
         # No running loop (sync test harness) — caller may invoke pipeline later
         logger.warning("staging fulfill: no event loop to schedule job=%s", job_id)
     logger.info(
-        "b2c staging job started job=%s session=%s listing=%s",
-        job_id, session_id, listing_id,
+        "b2c staging job started job=%s session=%s listing=%s photo=%s mode=%s",
+        job_id, session_id, listing_id, resolved_photo_id, mode,
     )
     return {"purchase": claimed, "job": doc}
 
@@ -589,9 +752,9 @@ async def _run_pipeline(job_id: str, db) -> None:
         await _fail("sam2_mask", "SAM2", e)
         return
 
-    # Stage 1b (reverse): furniture removal
+    # Stage 1b (reverse / empty): furniture removal
     base_image = src
-    if mode == "reverse":
+    if mode in ("reverse", "empty"):
         try:
             t0 = monotonic()
             await _mark_stage("furniture_removal", {"status": "running"})
@@ -605,40 +768,47 @@ async def _run_pipeline(job_id: str, db) -> None:
             await _fail("furniture_removal", "Rimozione arredo", e)
             return
 
-    # Stage 2: Flux furnish — parallel variants
-    try:
-        t0 = monotonic()
-        await _mark_stage("flux_inpaint", {"status": "running"})
-        if variant_mode == "multi_style":
-            style_keys = (doc.get("styles_list") or DEFAULT_MULTI_STYLES)[:num_variants]
-            tasks = [
-                _flux_inpaint(base_image, mask_url, _build_prompt(sk, doc["room_type"], crm_fragment), 1)
-                for sk in style_keys
-            ]
-            results = await asyncio.gather(*tasks, return_exceptions=True)
-            variants: List[dict] = []
-            for sk, res in zip(style_keys, results):
-                if isinstance(res, Exception):
-                    logger.warning("Variant %s failed: %s", sk, res)
-                    continue
-                variants.extend({"url": u, "style": sk, "upscaled": False} for u in res)
-            if not variants:
-                raise RuntimeError("Tutte le varianti multi-style sono fallite")
-        else:
-            urls = await _flux_inpaint(
-                base_image, mask_url,
-                _build_prompt(doc["style"], doc["room_type"], crm_fragment),
-                num_images=num_variants,
-            )
-            variants = [{"url": u, "style": doc["style"], "upscaled": False} for u in urls]
-        flux_cost = COST_FLUX * len(variants)
+    # Stage 2: Flux furnish — skipped for mode=empty (solo svuota stanza)
+    if mode == "empty":
+        variants = [{"url": base_image, "style": "empty", "upscaled": False}]
         await _mark_stage("flux_inpaint", {
-            "status": "done", "duration_ms": int((monotonic() - t0) * 1000), "cost_usd": round(flux_cost, 4),
+            "status": "done", "duration_ms": 0, "cost_usd": 0,
+            "note": "skipped_empty_mode",
         })
-        total_cost += flux_cost
-    except Exception as e:
-        await _fail("flux_inpaint", "Flux", e)
-        return
+    else:
+        try:
+            t0 = monotonic()
+            await _mark_stage("flux_inpaint", {"status": "running"})
+            if variant_mode == "multi_style":
+                style_keys = (doc.get("styles_list") or DEFAULT_MULTI_STYLES)[:num_variants]
+                tasks = [
+                    _flux_inpaint(base_image, mask_url, _build_prompt(sk, doc["room_type"], crm_fragment), 1)
+                    for sk in style_keys
+                ]
+                results = await asyncio.gather(*tasks, return_exceptions=True)
+                variants: List[dict] = []
+                for sk, res in zip(style_keys, results):
+                    if isinstance(res, Exception):
+                        logger.warning("Variant %s failed: %s", sk, res)
+                        continue
+                    variants.extend({"url": u, "style": sk, "upscaled": False} for u in res)
+                if not variants:
+                    raise RuntimeError("Tutte le varianti multi-style sono fallite")
+            else:
+                urls = await _flux_inpaint(
+                    base_image, mask_url,
+                    _build_prompt(doc["style"], doc["room_type"], crm_fragment),
+                    num_images=num_variants,
+                )
+                variants = [{"url": u, "style": doc["style"], "upscaled": False} for u in urls]
+            flux_cost = COST_FLUX * len(variants)
+            await _mark_stage("flux_inpaint", {
+                "status": "done", "duration_ms": int((monotonic() - t0) * 1000), "cost_usd": round(flux_cost, 4),
+            })
+            total_cost += flux_cost
+        except Exception as e:
+            await _fail("flux_inpaint", "Flux", e)
+            return
 
     # Stage 3: parallel upscale (non-fatal per variant)
     t0 = monotonic()
@@ -787,8 +957,9 @@ async def list_styles() -> Dict[str, Any]:
         "styles": [{"key": k, "label": v["label"]} for k, v in STYLES.items()],
         "room_types": [{"key": k, "label": ROOM_LABELS.get(k, k.capitalize())} for k in ROOM_TYPES.keys()],
         "modes": [
-            {"key": "standard", "label": "Stanza vuota"},
-            {"key": "reverse", "label": "Svuota e ri-arreda (Reverse)"},
+            {"key": "standard", "label": "Arreda (staging)"},
+            {"key": "empty", "label": "Svuota stanza"},
+            {"key": "reverse", "label": "Svuota e ri-arreda"},
         ],
         "credit_cost_per_variant": STAGING_CREDIT_COST,
     }
@@ -861,7 +1032,7 @@ async def generate_staging(
         raise HTTPException(400, f"Stile non supportato: {body.style}")
     if body.room_type not in ROOM_TYPES:
         raise HTTPException(400, f"Tipo stanza non supportato: {body.room_type}")
-    if body.mode not in ("standard", "reverse"):
+    if body.mode not in ("standard", "reverse", "empty"):
         raise HTTPException(400, f"Modalità non supportata: {body.mode}")
     if body.variant_mode not in ("same_style", "multi_style"):
         raise HTTPException(400, f"variant_mode non supportato: {body.variant_mode}")

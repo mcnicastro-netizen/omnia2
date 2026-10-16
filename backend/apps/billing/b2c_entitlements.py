@@ -125,6 +125,9 @@ async def record_uni_purchase(
     product_key: str = "b2c_valuator_uni_pdf",
     status: str = "pending",
     listing_id: Optional[str] = None,
+    preview_job_id: Optional[str] = None,
+    photo_id: Optional[str] = None,
+    staging_mode: Optional[str] = None,
 ) -> str:
     """Create a b2c_purchases record. Returns internal id."""
     db = Database.get()
@@ -143,6 +146,12 @@ async def record_uni_purchase(
         # P-041 — Mongo TTL field (BSON datetime); pending abandoned checkout
         "expire_at": now + timedelta(days=B2C_PURCHASE_PENDING_TTL_DAYS),
     }
+    if preview_job_id:
+        doc["preview_job_id"] = preview_job_id
+    if photo_id:
+        doc["photo_id"] = photo_id
+    if staging_mode:
+        doc["staging_mode"] = staging_mode
     await db.b2c_purchases.insert_one(doc)
     return doc_id
 

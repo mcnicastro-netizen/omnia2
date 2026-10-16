@@ -103,7 +103,7 @@ def listing_a(b2c_a):
     assert r.status_code == 201, f"create failed: {r.status_code} {r.text}"
     data = r.json()
     assert data["status"] == "draft"
-    assert data["moderation_status"] == "pending"
+    assert data["moderation_status"] == "none"
     assert data["is_private_listing"] is True
     assert data["agency_id"] == "_private_listings"
     assert data["owner_user_id"]

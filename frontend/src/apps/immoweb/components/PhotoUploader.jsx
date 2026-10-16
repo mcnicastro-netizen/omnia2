@@ -131,6 +131,7 @@ export default function PhotoUploader({
   const fileInput = useRef(null);
   const [uploading, setUploading] = useState(false);
   const [batchHint, setBatchHint] = useState("");
+  const [dragIdx, setDragIdx] = useState(null);
 
   const uploadBlob = async (blob, name) => {
     const fd = new FormData();
@@ -317,6 +318,15 @@ export default function PhotoUploader({
     onChange(newPhotos.map((p, i) => ({ ...p, order: i })));
   };
 
+  const reorder = (from, to) => {
+    if (from == null || to == null || from === to) return;
+    if (from < 0 || to < 0 || from >= photos.length || to >= photos.length) return;
+    const next = [...photos];
+    const [item] = next.splice(from, 1);
+    next.splice(to, 0, item);
+    onChange(next.map((p, i) => ({ ...p, order: i })));
+  };
+
   return (
     <div data-testid="photo-uploader" className="space-y-4">
       <div
@@ -372,7 +382,27 @@ export default function PhotoUploader({
             <div
               key={p.id || idx}
               data-testid={`photo-thumb-${idx}`}
-              className={`relative group rounded-lg overflow-hidden border-2 ${
+              draggable={!uploading && p.upload_status !== "pending"}
+              onDragStart={(e) => {
+                setDragIdx(idx);
+                e.dataTransfer.effectAllowed = "move";
+                e.dataTransfer.setData("text/plain", String(idx));
+              }}
+              onDragOver={(e) => {
+                e.preventDefault();
+                e.dataTransfer.dropEffect = "move";
+              }}
+              onDrop={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                const from = dragIdx != null ? dragIdx : Number(e.dataTransfer.getData("text/plain"));
+                reorder(from, idx);
+                setDragIdx(null);
+              }}
+              onDragEnd={() => setDragIdx(null)}
+              className={`relative group rounded-lg overflow-hidden border-2 cursor-grab active:cursor-grabbing ${
+                dragIdx === idx ? "opacity-60" : ""
+              } ${
                 p.upload_status === "error"
                   ? "border-rose-400"
                   : p.is_cover
@@ -381,7 +411,7 @@ export default function PhotoUploader({
               }`}
             >
               <div className="aspect-[4/3] bg-stone-100">
-                <img src={p.url} alt={p.caption || `Foto immobile ${p.order + 1}`} className="w-full h-full object-cover" />
+                <img src={p.url} alt={p.caption || `Foto immobile ${p.order + 1}`} className="w-full h-full object-cover pointer-events-none" />
               </div>
               {p.upload_status === "pending" && (
                 <span
@@ -464,7 +494,7 @@ export default function PhotoUploader({
 
       {photos.length > 0 && (
         <p className="text-xs text-stone-500">
-          {photos.length} / {max} foto · La prima con la stella ★ è la copertina (mostrata in lista immobili)
+          {photos.length} / {max} foto · Trascina le miniature per riordinarle · La stella ★ è la copertina
           {photos.some((p) => p.upload_status === "error")
             ? " · Una o più foto in errore: usa Riprova"
             : ""}
