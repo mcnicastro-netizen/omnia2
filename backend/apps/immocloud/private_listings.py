@@ -97,6 +97,19 @@ def _strip(doc: dict) -> dict:
     return doc
 
 
+def _compose_street(address: str | None, street_number: str | None) -> str | None:
+    """Via + civico (o 'snc') for geocoding / display helpers."""
+    street = (address or "").strip()
+    num = (street_number or "").strip()
+    if not street and not num:
+        return None
+    if not num:
+        return street or None
+    if not street:
+        return num
+    return f"{street} {num}"
+
+
 def _validate_photos_limit(photos) -> None:
     if photos is not None and len(photos) > B2C_MAX_PHOTOS:
         raise HTTPException(status_code=400, detail="photos_limit_exceeded")
@@ -193,8 +206,10 @@ async def create_private_listing(
 
     if not data.get("lat") and not data.get("lng"):
         schedule_geocode(db, data["id"], {
-            "address": data.get("address"), "city": data.get("city"),
-            "province": data.get("province"), "postal_code": data.get("postal_code"),
+            "address": _compose_street(data.get("address"), data.get("street_number")),
+            "city": data.get("city"),
+            "province": data.get("province"),
+            "postal_code": data.get("postal_code"),
         })
 
     logger.info("private listing created: id=%s user=%s", data["id"], user["id"])
@@ -298,8 +313,10 @@ async def update_my_private_listing(
     # If previously rejected/approved and substantive edit → back to pending
     substantive = any(k in update_doc for k in
                       ("title", "description", "price", "rent_monthly", "address",
-                       "city", "surface_sqm", "rooms", "photos", "floor_plan_url",
-                       "contact_public"))
+                       "street_number", "city", "zone", "surface_sqm", "rooms",
+                       "bedrooms", "bathrooms", "floor", "total_floors", "year_built",
+                       "condition", "features", "energy", "condo_fees", "furnished",
+                       "photos", "floor_plan_url", "contact_public"))
     if substantive and existing.get("moderation_status") in ("approved", "rejected"):
         update_doc["moderation_status"] = "pending"
         update_doc["status"] = "draft"
@@ -321,11 +338,13 @@ async def update_my_private_listing(
 
     await db.properties.update_one({"id": pid}, {"$set": update_doc})
 
-    if any(k in update_doc for k in ("address", "city", "province", "postal_code")):
+    if any(k in update_doc for k in ("address", "street_number", "city", "province", "postal_code")):
         full = await db.properties.find_one({"id": pid}, {"_id": 0})
         schedule_geocode(db, pid, {
-            "address": full.get("address"), "city": full.get("city"),
-            "province": full.get("province"), "postal_code": full.get("postal_code"),
+            "address": _compose_street(full.get("address"), full.get("street_number")),
+            "city": full.get("city"),
+            "province": full.get("province"),
+            "postal_code": full.get("postal_code"),
         })
 
     updated = await db.properties.find_one({"id": pid}, {"_id": 0})

@@ -13,14 +13,25 @@ import { api } from "../../../shared/lib/api";
 import { useAuth, formatApiErrorDetail } from "../../../shared/lib/auth";
 import AlImproveButton from "../../../shared/components/AlImproveButton";
 import PhotoUploader from "../../immoweb/components/PhotoUploader";
+import { ENERGY_CLASS_OPTIONS } from "../../../shared/lib/energyClasses";
 import CloudPageHero from "./CloudPageHero";
 import SellDocPromoRail from "./SellDocPromoRail";
 import B2CStagingPanel from "./B2CStagingPanel";
+import ListingPreviewModal from "./ListingPreviewModal";
 
 const STAGING_PENDING_KEY = "omnia_staging_pending";
 
 const B2C_MEDIA_UPLOAD = "/cloud/me/properties/media/upload-tmp";
 const B2C_MAX_PHOTOS = 30;
+
+const B2C_FEATURES = [
+  "balcone", "terrazza", "giardino", "ascensore", "aria_condizionata",
+  "posto_auto", "box_auto", "cantina", "arredato", "cucina_abitabile",
+  "luminoso", "vista_panoramica", "pannelli_solari",
+];
+
+const CONDITIONS = ["nuovo", "ottime", "buone", "da_ristrutturare", "ristrutturato"];
+const HEATING = ["autonomo", "centralizzato", "assente"];
 
 const empty = {
   title: "",
@@ -28,14 +39,23 @@ const empty = {
   property_type: "appartamento",
   operation: "sale",
   city: "",
+  zone: "",
   address: "",
+  street_number: "",
   postal_code: "",
   price: "",
   rent_monthly: "",
+  condo_fees: "",
   surface_sqm: "",
   rooms: "",
   bedrooms: "",
   bathrooms: "",
+  floor: "",
+  total_floors: "",
+  year_built: "",
+  condition: "",
+  energy: { energy_class: "", heating: "" },
+  features: Object.fromEntries(B2C_FEATURES.map((k) => [k, false])),
   photos: [],
   floor_plan_url: "",
   contact_display_name: "",
@@ -51,6 +71,57 @@ const PROPERTY_TYPES = [
   "rustico_casale", "ufficio", "negozio", "magazzino",
   "garage_box", "terreno_agricolo", "terreno_edificabile", "altro",
 ];
+
+/** HAL description needs enough structured data to avoid inventing facts. */
+function halDescriptionReady(form) {
+  const hasCity = Boolean((form.city || "").trim());
+  const hasType = Boolean(form.property_type);
+  const hasSize = Boolean(form.surface_sqm) || Boolean(form.rooms);
+  return hasCity && hasType && hasSize;
+}
+
+function buildListingPayload(form) {
+  const payload = { ...form };
+  ["price", "rent_monthly", "condo_fees", "surface_sqm", "rooms", "bedrooms", "bathrooms", "floor", "total_floors", "year_built"].forEach((k) => {
+    if (payload[k] === "" || payload[k] == null) delete payload[k];
+    else payload[k] = Number(payload[k]);
+  });
+  if (!payload.floor_plan_url) payload.floor_plan_url = null;
+  if (!payload.condition) delete payload.condition;
+  if (!payload.zone) delete payload.zone;
+  const sn = (payload.street_number || "").trim();
+  payload.street_number = sn || null;
+  if (!Array.isArray(payload.photos)) payload.photos = [];
+
+  const energy = { ...(payload.energy || {}) };
+  if (!energy.energy_class) delete energy.energy_class;
+  if (!energy.heating) delete energy.heating;
+  if (Object.keys(energy).length) payload.energy = energy;
+  else delete payload.energy;
+
+  const feats = {};
+  B2C_FEATURES.forEach((k) => {
+    if (payload.features?.[k]) feats[k] = true;
+  });
+  if (Object.keys(feats).length) payload.features = feats;
+  else delete payload.features;
+
+  payload.contact_public = {
+    display_name: payload.contact_display_name || undefined,
+    show_email: Boolean(payload.contact_show_email),
+    show_phone: Boolean(payload.contact_show_phone),
+    show_whatsapp: Boolean(payload.contact_show_whatsapp),
+    phone: payload.contact_phone || null,
+    whatsapp: payload.contact_whatsapp || null,
+  };
+  delete payload.contact_display_name;
+  delete payload.contact_show_email;
+  delete payload.contact_show_phone;
+  delete payload.contact_show_whatsapp;
+  delete payload.contact_phone;
+  delete payload.contact_whatsapp;
+  return payload;
+}
 
 export default function SellPage() {
   const { t, i18n } = useTranslation();
@@ -69,6 +140,7 @@ export default function SellPage() {
   const [stagingBusy, setStagingBusy] = useState(false);
   const [stagingStatus, setStagingStatus] = useState(""); // progress message after Stripe return
   const [statsById, setStatsById] = useState({}); // pid → stats payload
+  const [previewListing, setPreviewListing] = useState(null); // listing opened in anteprima
   const stagingPollRef = useRef(null);
   const stagingResumeRef = useRef(false);
 
@@ -326,20 +398,34 @@ export default function SellPage() {
   const startEdit = (listing) => {
     setEditing(listing);
     const cp = listing.contact_public || {};
+    const feats = listing.features || {};
     setForm({
+      ...empty,
       title: listing.title || "",
       description: listing.description || "",
       property_type: listing.property_type || "appartamento",
       operation: listing.operation || "sale",
       city: listing.city || "",
+      zone: listing.zone || "",
       address: listing.address || "",
+      street_number: listing.street_number || "",
       postal_code: listing.postal_code || "",
-      price: listing.price || "",
-      rent_monthly: listing.rent_monthly || "",
-      surface_sqm: listing.surface_sqm || "",
-      rooms: listing.rooms || "",
-      bedrooms: listing.bedrooms || "",
-      bathrooms: listing.bathrooms || "",
+      price: listing.price ?? "",
+      rent_monthly: listing.rent_monthly ?? "",
+      condo_fees: listing.condo_fees ?? "",
+      surface_sqm: listing.surface_sqm ?? "",
+      rooms: listing.rooms ?? "",
+      bedrooms: listing.bedrooms ?? "",
+      bathrooms: listing.bathrooms ?? "",
+      floor: listing.floor ?? "",
+      total_floors: listing.total_floors ?? "",
+      year_built: listing.year_built ?? "",
+      condition: listing.condition || "",
+      energy: {
+        energy_class: listing.energy?.energy_class || "",
+        heating: listing.energy?.heating || "",
+      },
+      features: Object.fromEntries(B2C_FEATURES.map((k) => [k, Boolean(feats[k])])),
       photos: Array.isArray(listing.photos) ? listing.photos : [],
       floor_plan_url: listing.floor_plan_url || "",
       contact_display_name: cp.display_name || user?.name?.split?.(" ")?.[0] || "",
@@ -361,32 +447,12 @@ export default function SellPage() {
     e.preventDefault();
     setBusy(true); setError("");
     try {
-      const payload = { ...form };
-      ["price", "rent_monthly", "surface_sqm", "rooms", "bedrooms", "bathrooms"].forEach((k) => {
-        if (payload[k] === "" || payload[k] == null) delete payload[k];
-        else payload[k] = Number(payload[k]);
-      });
-      if (!payload.floor_plan_url) payload.floor_plan_url = null;
-      if (!Array.isArray(payload.photos)) payload.photos = [];
+      const payload = buildListingPayload(form);
       if (payload.photos.length > B2C_MAX_PHOTOS) {
         setError(t("cloud.sell.err_photos_limit"));
         setBusy(false);
         return;
       }
-      payload.contact_public = {
-        display_name: payload.contact_display_name || undefined,
-        show_email: Boolean(payload.contact_show_email),
-        show_phone: Boolean(payload.contact_show_phone),
-        show_whatsapp: Boolean(payload.contact_show_whatsapp),
-        phone: payload.contact_phone || null,
-        whatsapp: payload.contact_whatsapp || null,
-      };
-      delete payload.contact_display_name;
-      delete payload.contact_show_email;
-      delete payload.contact_show_phone;
-      delete payload.contact_show_whatsapp;
-      delete payload.contact_phone;
-      delete payload.contact_whatsapp;
 
       if (editing) {
         await api.patch(`/cloud/me/properties/${editing.id}`, payload);
@@ -402,10 +468,17 @@ export default function SellPage() {
     } finally { setBusy(false); }
   };
 
-  const submitForReview = async (pid) => {
+  const openPreview = (listing) => {
+    setPreviewListing(listing);
+    setError("");
+  };
+
+  const confirmSubmitFromPreview = async () => {
+    if (!previewListing?.id) return;
     setBusy(true); setError("");
     try {
-      await api.post(`/cloud/me/properties/${pid}/submit`);
+      await api.post(`/cloud/me/properties/${previewListing.id}/submit`);
+      setPreviewListing(null);
       const r = await api.get("/cloud/me/properties");
       setListings(r.data.items || []);
     } catch (e) {
@@ -500,11 +573,19 @@ export default function SellPage() {
                   >
                     {t("common.edit")}
                   </button>
+                  <button
+                    type="button"
+                    data-testid={`preview-${l.id}`}
+                    onClick={() => openPreview(l)}
+                    className="px-3 py-1.5 text-[11px] uppercase tracking-widest border border-stone-300 rounded hover:bg-stone-50"
+                  >
+                    {t("cloud.sell.preview_btn")}
+                  </button>
                   {!(l.moderation_status === "approved" && l.status === "active") && (
                     <button
                       type="button"
                       data-testid={`submit-${l.id}`}
-                      onClick={() => submitForReview(l.id)}
+                      onClick={() => openPreview(l)}
                       disabled={busy}
                       className="px-3 py-1.5 text-[11px] uppercase tracking-widest bg-[#0B1E3F] text-white rounded hover:bg-[#C19A6B] disabled:opacity-50"
                     >
@@ -617,9 +698,27 @@ export default function SellPage() {
             </Field>
           </div>
 
-          <Field label={t("cloud.sell.f_address")}>
-            <input data-testid="sell-f-address" value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} className={inputCls} />
+          <Field label={t("cloud.sell.f_zone")}>
+            <input data-testid="sell-f-zone" value={form.zone} onChange={(e) => setForm({ ...form, zone: e.target.value })} className={inputCls} placeholder={t("cloud.sell.f_zone_ph")} />
           </Field>
+
+          <div className="grid grid-cols-3 gap-3">
+            <div className="col-span-2">
+              <Field label={t("cloud.sell.f_address")}>
+                <input data-testid="sell-f-address" value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} className={inputCls} placeholder={t("cloud.sell.f_address_ph")} />
+              </Field>
+            </div>
+            <Field label={t("cloud.sell.f_street_number")}>
+              <input
+                data-testid="sell-f-street-number"
+                value={form.street_number}
+                onChange={(e) => setForm({ ...form, street_number: e.target.value })}
+                className={inputCls}
+                placeholder={t("cloud.sell.f_street_number_ph")}
+              />
+            </Field>
+          </div>
+          <p className="text-[11px] text-stone-500 -mt-2">{t("cloud.sell.f_street_number_hint")}</p>
 
           <div className="grid grid-cols-2 gap-3">
             {form.operation === "sale" ? (
@@ -636,6 +735,10 @@ export default function SellPage() {
             </Field>
           </div>
 
+          <Field label={t("cloud.sell.f_condo_fees")}>
+            <input data-testid="sell-f-condo-fees" type="number" min="0" value={form.condo_fees} onChange={(e) => setForm({ ...form, condo_fees: e.target.value })} className={inputCls} />
+          </Field>
+
           <div className="grid grid-cols-3 gap-3">
             <Field label={t("cloud.sell.f_rooms")}>
               <input data-testid="sell-f-rooms" type="number" min="0" value={form.rooms} onChange={(e) => setForm({ ...form, rooms: e.target.value })} className={inputCls} />
@@ -648,8 +751,79 @@ export default function SellPage() {
             </Field>
           </div>
 
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <Field label={t("cloud.sell.f_floor")}>
+              <input data-testid="sell-f-floor" type="number" value={form.floor} onChange={(e) => setForm({ ...form, floor: e.target.value })} className={inputCls} />
+            </Field>
+            <Field label={t("cloud.sell.f_total_floors")}>
+              <input data-testid="sell-f-total-floors" type="number" min="0" value={form.total_floors} onChange={(e) => setForm({ ...form, total_floors: e.target.value })} className={inputCls} />
+            </Field>
+            <Field label={t("cloud.sell.f_year_built")}>
+              <input data-testid="sell-f-year" type="number" min="1800" max="2100" value={form.year_built} onChange={(e) => setForm({ ...form, year_built: e.target.value })} className={inputCls} />
+            </Field>
+            <Field label={t("cloud.sell.f_condition")}>
+              <select data-testid="sell-f-condition" value={form.condition} onChange={(e) => setForm({ ...form, condition: e.target.value })} className={inputCls}>
+                <option value="">—</option>
+                {CONDITIONS.map((c) => (
+                  <option key={c} value={c}>{t(`cloud.sell.condition_${c}`)}</option>
+                ))}
+              </select>
+            </Field>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <Field label={t("cloud.sell.f_energy")}>
+              <select
+                data-testid="sell-f-energy"
+                value={form.energy.energy_class}
+                onChange={(e) => setForm({ ...form, energy: { ...form.energy, energy_class: e.target.value } })}
+                className={inputCls}
+              >
+                <option value="">—</option>
+                {ENERGY_CLASS_OPTIONS.map((o) => (
+                  <option key={o.value} value={o.value}>{o.label}</option>
+                ))}
+              </select>
+            </Field>
+            <Field label={t("cloud.sell.f_heating")}>
+              <select
+                data-testid="sell-f-heating"
+                value={form.energy.heating}
+                onChange={(e) => setForm({ ...form, energy: { ...form.energy, heating: e.target.value } })}
+                className={inputCls}
+              >
+                <option value="">—</option>
+                {HEATING.map((h) => (
+                  <option key={h} value={h}>{t(`cloud.sell.heating_${h}`)}</option>
+                ))}
+              </select>
+            </Field>
+          </div>
+
+          <fieldset data-testid="sell-features" className="border border-stone-200 rounded-xl p-4">
+            <legend className="text-[10px] uppercase tracking-widest text-stone-500 px-1">{t("cloud.sell.f_features")}</legend>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mt-1">
+              {B2C_FEATURES.map((k) => (
+                <label key={k} className="flex items-center gap-2 text-sm text-stone-700 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    data-testid={`sell-feat-${k}`}
+                    checked={!!form.features[k]}
+                    onChange={(e) => setForm({
+                      ...form,
+                      features: { ...form.features, [k]: e.target.checked },
+                    })}
+                    className="h-4 w-4 rounded border-stone-300 text-[#0B1E3F]"
+                  />
+                  {t(`cloud.sell.feat_${k}`)}
+                </label>
+              ))}
+            </div>
+          </fieldset>
+
           <Field label={t("cloud.sell.f_description")}>
             <div className="space-y-2">
+              <p className="text-xs text-stone-500">{t("cloud.sell.f_description_hal_hint")}</p>
               <textarea data-testid="sell-f-description" rows={4} maxLength={10000}
                 value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })}
                 className={inputCls} />
@@ -660,6 +834,8 @@ export default function SellPage() {
                   propertyData={form}
                   onApply={(text) => setForm({ ...form, description: text })}
                   testId="sell-al-improve-description"
+                  ready={halDescriptionReady(form)}
+                  notReadyMessage={t("cloud.sell.hal_need_fields")}
                 />
               </div>
             </div>
@@ -792,6 +968,20 @@ export default function SellPage() {
       <SellDocPromoRail className="mt-8 lg:mt-0 lg:col-span-4 lg:sticky lg:top-24" />
       </div>
       </div>
+
+      <ListingPreviewModal
+        open={!!previewListing}
+        listing={previewListing}
+        busy={busy}
+        onClose={() => setPreviewListing(null)}
+        onConfirm={confirmSubmitFromPreview}
+        showConfirm={!(previewListing?.moderation_status === "approved" && previewListing?.status === "active")}
+        confirmLabel={
+          previewListing?.moderation_status === "rejected"
+            ? t("cloud.sell.resubmit")
+            : t("cloud.sell.preview_confirm")
+        }
+      />
     </div>
   );
 }
