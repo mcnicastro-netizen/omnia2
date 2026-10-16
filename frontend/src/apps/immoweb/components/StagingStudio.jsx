@@ -95,9 +95,7 @@ export default function StagingStudio({ propertyId = null, initialImage = null, 
           const blob = dataUrlToBlob(initialImage);
           const fd = new FormData();
           fd.append("file", blob, "photo.jpg");
-          const r = await api.post("/app/staging/upload", fd, {
-            headers: { "Content-Type": "multipart/form-data" },
-          });
+          const r = await api.post("/app/staging/upload", fd);
           setSourceUrl(r.data.url);
         } catch (e) {
           setError("Upload fallito: " + (e.response?.data?.detail || e.message));
@@ -148,9 +146,7 @@ export default function StagingStudio({ propertyId = null, initialImage = null, 
     try {
       const fd = new FormData();
       fd.append("file", file);
-      const r = await api.post("/app/staging/upload", fd, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
+      const r = await api.post("/app/staging/upload", fd);
       setSourceUrl(r.data.url);
     } catch (e) {
       setError("Upload fallito: " + (e.response?.data?.detail || e.message));
