@@ -848,7 +848,16 @@ function FloorPlanUploader({ url, onChange }) {
   });
 
   const handleFile = async (file) => {
-    if (!file || !file.type.startsWith("image/")) return;
+    if (!file) return;
+    const mime = (file.type || "").toLowerCase();
+    const name = file.name || "";
+    if (mime === "image/heic" || mime === "image/heif" || /\.hei[cf]$/i.test(name)) {
+      setErr(t("cloud.sell.err_floor_plan_upload") + " (HEIC non supportato — usa JPEG/PNG)");
+      return;
+    }
+    const okMime = mime.startsWith("image/");
+    const okExt = /\.(jpe?g|png|webp)$/i.test(name);
+    if (!okMime && !okExt) return;
     setUploading(true);
     setErr("");
     try {
@@ -856,10 +865,8 @@ function FloorPlanUploader({ url, onChange }) {
       const fd = new FormData();
       fd.append("file", blob, (file.name || "planimetria").replace(/\.[^.]+$/, "") + ".jpg");
       fd.append("kind", "floor_plan");
-      const { data } = await api.post(B2C_MEDIA_UPLOAD, fd, {
-        headers: { "Content-Type": "multipart/form-data" },
-        timeout: 45000,
-      });
+      // Do NOT set Content-Type: axios/browser must add the multipart boundary.
+      const { data } = await api.post(B2C_MEDIA_UPLOAD, fd, { timeout: 45000 });
       onChange(data.url);
     } catch (e) {
       setErr(formatApiErrorDetail(e?.response?.data?.detail) || t("cloud.sell.err_floor_plan_upload"));
