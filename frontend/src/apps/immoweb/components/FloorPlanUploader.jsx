@@ -102,10 +102,8 @@ export default function FloorPlanUploader({
           }
           const fd = new FormData();
           fd.append("file", uploadBlob, uploadName);
-          const { data } = await api.post(uploadUrl, fd, {
-            headers: { "Content-Type": "multipart/form-data" },
-            timeout: 60000,
-          });
+          // Do NOT set Content-Type: axios/browser must add the multipart boundary.
+          const { data } = await api.post(uploadUrl, fd, { timeout: 60000 });
           next.push({
             id: data.id || (crypto.randomUUID ? crypto.randomUUID() : String(Math.random()).slice(2)),
             url: data.url,
