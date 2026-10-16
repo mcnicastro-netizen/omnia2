@@ -39,7 +39,6 @@ function ChecklistItem({ item, propertyId, onChanged }) {
       fd.append("file", file, file.name);
       fd.append("doc_type", item.key);
       await api.post(`/app/fascicolo/${propertyId}/documents/upload`, fd, {
-        headers: { "Content-Type": "multipart/form-data" },
         timeout: 60000,
       });
       onChanged();

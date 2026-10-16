@@ -7,6 +7,7 @@ through an agency. Properties created here have:
   - owner_user_id = current user id
   - status = "draft" until user submits
   - moderation_status = "pending"       # admin must approve
+    (sandbox: OMNIA_B2C_SANDBOX_AUTO_APPROVE=true → approve on submit)
 
 Endpoints (B2C auth required):
   POST   /api/cloud/me/properties        — create new private ad
@@ -20,6 +21,7 @@ Endpoints (B2C auth required):
 A free B2C user can keep at most 1 *active* private listing (limit_count below).
 """
 import logging
+import os
 from datetime import datetime, timezone
 from typing import Literal
 from uuid import uuid4
@@ -332,10 +334,19 @@ async def update_my_private_listing(
     return updated
 
 
+def _sandbox_auto_approve_enabled() -> bool:
+    """Cloud/local sandbox: skip human moderation so Founder can dogfood B2C end-to-end."""
+    return (os.environ.get("OMNIA_B2C_SANDBOX_AUTO_APPROVE") or "").strip().lower() in (
+        "1", "true", "yes", "on",
+    )
+
+
 @router.post("/{pid}/submit")
 async def submit_for_moderation(pid: str, user: dict = Depends(get_current_user)):
     """Move a draft listing into the moderation queue. Status stays 'draft'
-    until admin approves (then becomes 'active'), or 'rejected'."""
+    until admin approves (then becomes 'active'), or 'rejected'.
+
+    If OMNIA_B2C_SANDBOX_AUTO_APPROVE is on, publish immediately (sandbox only)."""
     await _ensure_b2c(user)
     db = Database.get()
     p = await db.properties.find_one(
@@ -359,12 +370,39 @@ async def submit_for_moderation(pid: str, user: dict = Depends(get_current_user)
     if not p.get("contact_public"):
         await db.properties.update_one({"id": pid}, {"$set": {"contact_public": contact}})
 
+    now = datetime.now(timezone.utc).isoformat()
+    if _sandbox_auto_approve_enabled():
+        await db.properties.update_one(
+            {"id": pid},
+            {"$set": {
+                "moderation_status": "approved",
+                "status": "active",
+                "visibility": "public",
+                "moderation_notes": "sandbox_auto_approve",
+                "moderation_reviewed_at": now,
+                "moderation_reviewed_by": "sandbox_auto",
+                "updated_at": now,
+            }},
+        )
+        logger.info("private listing sandbox auto-approved: id=%s user=%s", pid, user["id"])
+        try:
+            from apps.immocloud.alert_fanout import fanout_listing_event
+            await fanout_listing_event(pid, event="new")
+        except Exception as e:
+            logger.warning("fanout after sandbox auto-approve failed: %s", e)
+        return {
+            "ok": True,
+            "moderation_status": "approved",
+            "status": "active",
+            "sandbox_auto_approve": True,
+        }
+
     await db.properties.update_one(
         {"id": pid},
         {"$set": {
             "moderation_status": "pending",
             "moderation_notes": None,
-            "updated_at": datetime.now(timezone.utc).isoformat(),
+            "updated_at": now,
         }},
     )
     logger.info("private listing submitted: id=%s user=%s", pid, user["id"])
