@@ -232,8 +232,10 @@ def _format_property_context(data: dict) -> str:
     add("Operazione", "operation")
     add("Città", "city")
     add("Provincia", "province")
+    add("CAP", "postal_code")
     add("Zona/Quartiere", "zone")
-    add("Indirizzo", "address")
+    add("Indirizzo (via)", "address")
+    add("Numero civico", "street_number")
     add("Superficie", "surface_sqm", lambda v: f"{v} mq")
     add("Locali", "rooms")
     add("Camere", "bedrooms")
@@ -290,9 +292,10 @@ def _build_improve_prompt(req: ImproveRequest) -> str:
     else:
         target_rules = (
             "Genera una DESCRIZIONE professionale per l'annuncio immobiliare, 600-1200 caratteri. "
-            "Struttura: 1) attacco con punti di forza, 2) descrizione locali/finiture, 3) zona/servizi, "
-            "4) classe energetica e info pratiche. Niente bullet point, paragrafi fluidi. "
-            "Niente prezzo nel testo. Niente emoji. Niente claim invented (non inventare dati assenti)."
+            "Struttura: 1) attacco con punti di forza dai DATI, 2) locali/piano/stato se presenti, "
+            "3) dotazioni (ascensore, balcone…) e zona, 4) classe energetica/riscaldamento SOLO se nei dati. "
+            "Niente bullet point, paragrafi fluidi. Niente prezzo. Niente emoji. "
+            "Se un dato manca (es. piano, APE, anno) NON inventarlo e non alludervi."
         )
         max_len = "1200 caratteri"
 

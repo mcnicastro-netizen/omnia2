@@ -82,6 +82,10 @@ class B2CCheckoutRequest(BaseModel):
     cancel_url: HttpUrl
     payload_hash: Optional[str] = Field(default=None, max_length=128)
     listing_id: Optional[str] = Field(default=None, max_length=80)
+    # Virtual staging: attach a free preview / chosen photo after pay
+    preview_job_id: Optional[str] = Field(default=None, max_length=80)
+    photo_id: Optional[str] = Field(default=None, max_length=80)
+    staging_mode: Optional[str] = Field(default=None, max_length=20)
 
 
 def _get_or_create_stripe_price(product_key: str) -> str:
@@ -199,6 +203,16 @@ async def b2c_checkout(
                 "message": f"Hai raggiunto il limite giornaliero di {daily_cap} acquisti.",
             })
 
+    staging_mode = None
+    preview_job_id = None
+    photo_id = None
+    if payload.product_key == "b2c_staging_render":
+        staging_mode = (payload.staging_mode or "standard").strip() or "standard"
+        if staging_mode not in ("standard", "reverse", "empty"):
+            raise HTTPException(status_code=400, detail="unsupported_staging_mode")
+        preview_job_id = (payload.preview_job_id or "").strip() or None
+        photo_id = (payload.photo_id or "").strip() or None
+
     meta = {
         "b2c_product_key": payload.product_key,
         "user_id": user["id"],
@@ -208,6 +222,10 @@ async def b2c_checkout(
     if is_b2c_boost_product(payload.product_key):
         meta["boost_tier"] = str(catalog.get("boost_tier") or "")
         meta["duration_days"] = str(catalog.get("duration_days") or "")
+    if payload.product_key == "b2c_staging_render":
+        meta["staging_mode"] = staging_mode or "standard"
+        meta["preview_job_id"] = preview_job_id or ""
+        meta["photo_id"] = photo_id or ""
 
     try:
         price_id = _get_or_create_stripe_price(payload.product_key)
@@ -233,6 +251,9 @@ async def b2c_checkout(
         product_key=payload.product_key,
         status="pending",
         listing_id=listing_id,
+        preview_job_id=preview_job_id,
+        photo_id=photo_id,
+        staging_mode=staging_mode,
     )
 
     return {

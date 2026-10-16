@@ -85,7 +85,6 @@ function AISmartImport({ t, lang }) {
     const form = new FormData();
     form.append("file", f);
     api.post("/app/clients/import/ai", form, {
-      headers: { "Content-Type": "multipart/form-data" },
       timeout: 120000,
     })
       .then(({ data }) => { setDraft(data); setPhase("preview"); })

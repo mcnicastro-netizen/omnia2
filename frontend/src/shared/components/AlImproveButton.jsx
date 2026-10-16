@@ -24,6 +24,8 @@ export default function AlImproveButton({
   propertyData,     // entire form snapshot
   onApply,          // (newText) => void
   testId,           // base test id prefix
+  ready = true,     // if false, block generate until form has enough fields
+  notReadyMessage,  // shown when !ready
 }) {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
@@ -37,6 +39,10 @@ export default function AlImproveButton({
   const propertyId = propertyData?.id || null;
 
   const generate = async (targetLang = lang) => {
+    if (!ready) {
+      setError(notReadyMessage || t("al_improve.need_fields"));
+      return;
+    }
     setLoading(true);
     setError(null);
     setSuggestion("");
@@ -71,6 +77,10 @@ export default function AlImproveButton({
     setProposalId(null);
     setError(null);
     setLang("it");
+    if (!ready) {
+      setError(notReadyMessage || t("al_improve.need_fields"));
+      return;
+    }
     generate("it");
   };
 
@@ -102,8 +112,12 @@ export default function AlImproveButton({
         type="button"
         data-testid={`${tid}-trigger`}
         onClick={openModal}
-        className="inline-flex items-center gap-1.5 text-[11px] uppercase tracking-widest text-[#C19A6B] hover:text-[#0B1E3F] font-medium border border-[#C19A6B]/40 hover:border-[#0B1E3F] px-2.5 py-1 rounded transition"
-        title={t("al_improve.tooltip")}
+        className={`inline-flex items-center gap-1.5 text-[11px] uppercase tracking-widest font-medium border px-2.5 py-1 rounded transition ${
+          ready
+            ? "text-[#C19A6B] hover:text-[#0B1E3F] border-[#C19A6B]/40 hover:border-[#0B1E3F]"
+            : "text-stone-400 border-stone-200"
+        }`}
+        title={ready ? t("al_improve.tooltip") : (notReadyMessage || t("al_improve.need_fields"))}
       >
         <span aria-hidden>✨</span>
         {t("al_improve.button")}

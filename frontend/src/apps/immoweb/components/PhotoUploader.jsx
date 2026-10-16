@@ -1,9 +1,8 @@
 import React, { useRef, useState } from "react";
-import { useTranslation } from "react-i18next";
 import { api } from "../../../shared/lib/api";
 
 /**
- * PhotoUploader — drag&drop JPEG/PNG upload with client-side resize.
+ * PhotoUploader — drag&drop JPEG/PNG/WebP upload with client-side resize.
  *
  * O5 / D-104 — stati espliciti pending → success | error + retry.
  * H10 — upload Object Storage; base64 solo fallback blob piccoli.
@@ -16,6 +15,111 @@ import { api } from "../../../shared/lib/api";
  *   uploadExtraFields: optional FormData fields
  *   onStage: optional virtual-staging callback
  */
+
+const UPLOAD_CONCURRENCY = 4;
+const MAX_W = 1600;
+const JPEG_QUALITY = 0.82;
+
+function isHeicLike(file) {
+  const t = (file.type || "").toLowerCase();
+  if (t === "image/heic" || t === "image/heif") return true;
+  return /\.hei[cf]$/i.test(file.name || "");
+}
+
+function isLikelyRasterImage(file) {
+  if (isHeicLike(file)) return false;
+  const t = (file.type || "").toLowerCase();
+  if (t === "image/jpeg" || t === "image/png" || t === "image/webp" || t === "image/jpg") {
+    return true;
+  }
+  // Desktop folders often yield empty MIME — fall back to extension.
+  if (!t || t === "application/octet-stream") {
+    return /\.(jpe?g|png|webp)$/i.test(file.name || "");
+  }
+  return t.startsWith("image/") && !t.includes("svg");
+}
+
+async function resizeToBlob(file) {
+  let bitmap = null;
+  if (typeof createImageBitmap === "function") {
+    try {
+      bitmap = await createImageBitmap(file);
+    } catch {
+      bitmap = null;
+    }
+  }
+  if (bitmap) {
+    let { width, height } = bitmap;
+    if (width > MAX_W) {
+      height = Math.round((height * MAX_W) / width);
+      width = MAX_W;
+    }
+    const canvas = document.createElement("canvas");
+    canvas.width = width;
+    canvas.height = height;
+    canvas.getContext("2d").drawImage(bitmap, 0, 0, width, height);
+    bitmap.close?.();
+    const blob = await new Promise((resolve, reject) => {
+      canvas.toBlob(
+        (b) => (b ? resolve(b) : reject(new Error("toBlob failed"))),
+        "image/jpeg",
+        JPEG_QUALITY
+      );
+    });
+    return blob;
+  }
+
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        let { width, height } = img;
+        if (width > MAX_W) {
+          height = Math.round((height * MAX_W) / width);
+          width = MAX_W;
+        }
+        const canvas = document.createElement("canvas");
+        canvas.width = width;
+        canvas.height = height;
+        canvas.getContext("2d").drawImage(img, 0, 0, width, height);
+        canvas.toBlob(
+          (blob) => (blob ? resolve(blob) : reject(new Error("toBlob failed"))),
+          "image/jpeg",
+          JPEG_QUALITY
+        );
+      };
+      img.onerror = () => reject(new Error("decode_failed"));
+    };
+    reader.onerror = () => reject(new Error("read_failed"));
+    reader.readAsDataURL(file);
+  });
+}
+
+function blobToDataUrl(blob) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = reject;
+    reader.readAsDataURL(blob);
+  });
+}
+
+/** Run async work over items with a concurrency cap. */
+async function mapPool(items, limit, worker) {
+  const results = new Array(items.length);
+  let next = 0;
+  const runners = Array.from({ length: Math.min(limit, items.length) }, async () => {
+    while (next < items.length) {
+      const i = next;
+      next += 1;
+      results[i] = await worker(items[i], i);
+    }
+  });
+  await Promise.all(runners);
+  return results;
+}
+
 export default function PhotoUploader({
   photos = [],
   onChange,
@@ -24,40 +128,10 @@ export default function PhotoUploader({
   uploadUrl = "/app/properties/photos/upload-tmp",
   uploadExtraFields = null,
 }) {
-  const { t } = useTranslation();
   const fileInput = useRef(null);
   const [uploading, setUploading] = useState(false);
-
-  const resizeToBlob = (file) => new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const img = new Image();
-      img.onload = () => {
-        const maxW = 1600;
-        let { width, height } = img;
-        if (width > maxW) {
-          height = Math.round((height * maxW) / width);
-          width = maxW;
-        }
-        const canvas = document.createElement("canvas");
-        canvas.width = width;
-        canvas.height = height;
-        const ctx = canvas.getContext("2d");
-        ctx.drawImage(img, 0, 0, width, height);
-        canvas.toBlob((blob) => (blob ? resolve(blob) : reject(new Error("toBlob failed"))), "image/jpeg", 0.82);
-      };
-      img.onerror = reject;
-    };
-    reader.onerror = reject;
-    reader.readAsDataURL(file);
-  });
-
-  const blobToDataUrl = (blob) => new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result);
-    reader.onerror = reject;
-    reader.readAsDataURL(blob);
-  });
+  const [batchHint, setBatchHint] = useState("");
+  const [dragIdx, setDragIdx] = useState(null);
 
   const uploadBlob = async (blob, name) => {
     const fd = new FormData();
@@ -67,10 +141,8 @@ export default function PhotoUploader({
         if (v != null) fd.append(k, String(v));
       });
     }
-    const { data } = await api.post(uploadUrl, fd, {
-      headers: { "Content-Type": "multipart/form-data" },
-      timeout: 45000,
-    });
+    // Do NOT set Content-Type: axios/browser must add the multipart boundary.
+    const { data } = await api.post(uploadUrl, fd, { timeout: 45000 });
     return data.url;
   };
 
@@ -111,9 +183,20 @@ export default function PhotoUploader({
     const filesArr = Array.from(files).slice(0, remaining);
     if (!filesArr.length) return;
     setUploading(true);
+    setBatchHint("");
+
+    const skipped = [];
     const staged = [];
+
     for (const file of filesArr) {
-      if (!file.type.startsWith("image/")) continue;
+      if (isHeicLike(file)) {
+        skipped.push(`«${file.name}» (HEIC non supportato — esporta JPEG/PNG)`);
+        continue;
+      }
+      if (!isLikelyRasterImage(file)) {
+        skipped.push(`«${file.name}» (formato non supportato)`);
+        continue;
+      }
       try {
         const blob = await resizeToBlob(file);
         const preview = await blobToDataUrl(blob);
@@ -130,12 +213,29 @@ export default function PhotoUploader({
           _fileName: file.name,
         });
       } catch {
-        // skip unreadable file
+        skipped.push(`«${file.name}» (non leggibile — prova JPEG/PNG)`);
       }
     }
+
+    if (skipped.length) {
+      setBatchHint(
+        skipped.length === 1
+          ? `Saltata: ${skipped[0]}`
+          : `${skipped.length} file saltati: ${skipped.slice(0, 3).join("; ")}${
+              skipped.length > 3 ? "…" : ""
+            }`
+      );
+    }
+
+    if (!staged.length) {
+      setUploading(false);
+      return;
+    }
+
     const next = [...photos, ...staged];
     onChange(next);
-    for (const item of staged) {
+
+    await mapPool(staged, UPLOAD_CONCURRENCY, async (item) => {
       try {
         let url;
         try {
@@ -168,7 +268,8 @@ export default function PhotoUploader({
         }
         onChange([...next]);
       }
-    }
+    });
+
     setUploading(false);
   };
 
@@ -177,7 +278,6 @@ export default function PhotoUploader({
     if (!photo) return;
     setUploading(true);
     try {
-      // re-fetch blob from current url if data URL, else mark error
       let blob = photo._blob;
       if (!blob && typeof photo.url === "string" && photo.url.startsWith("data:")) {
         const res = await fetch(photo.url);
@@ -218,37 +318,63 @@ export default function PhotoUploader({
     onChange(newPhotos.map((p, i) => ({ ...p, order: i })));
   };
 
+  const reorder = (from, to) => {
+    if (from == null || to == null || from === to) return;
+    if (from < 0 || to < 0 || from >= photos.length || to >= photos.length) return;
+    const next = [...photos];
+    const [item] = next.splice(from, 1);
+    next.splice(to, 0, item);
+    onChange(next.map((p, i) => ({ ...p, order: i })));
+  };
+
   return (
     <div data-testid="photo-uploader" className="space-y-4">
       <div
         data-testid="photo-dropzone"
         role="button"
         tabIndex={0}
-        aria-label="Carica foto: trascina qui i file JPEG o PNG, oppure premi Invio per selezionarli"
+        aria-label="Carica foto: trascina qui i file JPEG, PNG o WebP, oppure premi Invio per selezionarli"
         onClick={() => !uploading && fileInput.current?.click()}
-        onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); fileInput.current?.click(); } }}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            fileInput.current?.click();
+          }
+        }}
         onDragOver={(e) => e.preventDefault()}
         onDrop={onDrop}
         className="border-2 border-dashed border-stone-300 rounded-lg p-6 text-center cursor-pointer hover:border-stone-500 hover:bg-stone-50 transition focus:outline-none focus:border-stone-700"
       >
         <p className="text-sm text-stone-700 font-medium">
-          Trascina qui le foto JPEG / PNG
+          Trascina qui le foto JPEG / PNG / WebP
         </p>
         <p className="text-xs text-stone-500 mt-1">
           {uploading
             ? "Caricamento in corso…"
             : `oppure clicca per selezionarle (max ${max} foto, ridotte automaticamente a 1600px)`}
         </p>
+        <p className="text-[11px] text-stone-400 mt-2">
+          HEIC (iPhone) non supportato: esporta o converti in JPEG prima di caricare.
+        </p>
       </div>
       <input
         ref={fileInput}
         type="file"
-        accept="image/jpeg,image/png,image/webp"
+        accept="image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp"
         multiple
         data-testid="photo-file-input"
-        onChange={(e) => e.target.files?.length && handleFiles(e.target.files)}
+        onChange={(e) => {
+          if (e.target.files?.length) handleFiles(e.target.files);
+          e.target.value = "";
+        }}
         className="hidden"
       />
+
+      {batchHint ? (
+        <p data-testid="photo-batch-hint" className="text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded px-3 py-2">
+          {batchHint}
+        </p>
+      ) : null}
 
       {photos.length > 0 && (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
@@ -256,7 +382,27 @@ export default function PhotoUploader({
             <div
               key={p.id || idx}
               data-testid={`photo-thumb-${idx}`}
-              className={`relative group rounded-lg overflow-hidden border-2 ${
+              draggable={!uploading && p.upload_status !== "pending"}
+              onDragStart={(e) => {
+                setDragIdx(idx);
+                e.dataTransfer.effectAllowed = "move";
+                e.dataTransfer.setData("text/plain", String(idx));
+              }}
+              onDragOver={(e) => {
+                e.preventDefault();
+                e.dataTransfer.dropEffect = "move";
+              }}
+              onDrop={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                const from = dragIdx != null ? dragIdx : Number(e.dataTransfer.getData("text/plain"));
+                reorder(from, idx);
+                setDragIdx(null);
+              }}
+              onDragEnd={() => setDragIdx(null)}
+              className={`relative group rounded-lg overflow-hidden border-2 cursor-grab active:cursor-grabbing ${
+                dragIdx === idx ? "opacity-60" : ""
+              } ${
                 p.upload_status === "error"
                   ? "border-rose-400"
                   : p.is_cover
@@ -265,7 +411,7 @@ export default function PhotoUploader({
               }`}
             >
               <div className="aspect-[4/3] bg-stone-100">
-                <img src={p.url} alt={p.caption || `Foto immobile ${p.order + 1}`} className="w-full h-full object-cover" />
+                <img src={p.url} alt={p.caption || `Foto immobile ${p.order + 1}`} className="w-full h-full object-cover pointer-events-none" />
               </div>
               {p.upload_status === "pending" && (
                 <span
@@ -348,7 +494,7 @@ export default function PhotoUploader({
 
       {photos.length > 0 && (
         <p className="text-xs text-stone-500">
-          {photos.length} / {max} foto · La prima con la stella ★ è la copertina (mostrata in lista immobili)
+          {photos.length} / {max} foto · Trascina le miniature per riordinarle · La stella ★ è la copertina
           {photos.some((p) => p.upload_status === "error")
             ? " · Una o più foto in errore: usa Riprova"
             : ""}

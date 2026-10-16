@@ -81,9 +81,7 @@ export default function ImportXmlPage() {
     try {
       const fd = new FormData();
       fd.append("file", file);
-      const r = await api.post("/app/import/xml/preview", fd, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
+      const r = await api.post("/app/import/xml/preview", fd);
       setPreview(r.data);
     } catch (e) {
       setError(e?.response?.data?.detail || "upload_error");
