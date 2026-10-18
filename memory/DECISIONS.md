@@ -1891,6 +1891,17 @@ Registro di tutte le decisioni di business e tecniche prese durante il progetto.
 - **Implementazione**: `OMNIA_PRE_DEMO_8.md` · `PRE_DEMO_CHECKLIST.md` · offbox + preflight + probe.
 - **Stato**: ✅ **DECISIONE OPERATIVA REGISTRATA** · codice in ship
 
+### D-125 — StagingAgent nativo (no SaaS staging embed) · 18-Ott-2026
+- **Data**: 18 Ottobre 2026
+- **Contesto**: Founder boccia qualità corrente ~2/10 (look vecchio/triste, allucinazioni, residui) e vieta di embeddare prodotti staging costosi da rivendere — serve scalabilità a ~€0.90/img (D-033).
+- **Decisione**:
+  1. **Agente specializzato OMNIA** `StagingAgent` (`staging_agent.py`): plan → erase → furnish → critique → retry sotto **hard USD cap** (soft/hard per mode; reverse hard ≈ $0.32/variante).
+  2. **Nessun embed** di SaaS staging terzi (Virtual Staging AI, Remodel, ecc.): solo primitive fal già in stack (EVF-SAM, Ideogram erase, apartment-staging LoRA).
+  3. **Quality gates euristici** (zero vision-LLM per evitare 429 Gemini image): residuali gym/sad, wall-invention telemetry, fallback Flux → retry LoRA se budget lo consente.
+  4. Best-effort delivery anche sotto soglia (warning in `agent_summary`) — niente blocco B2C preview.
+- **Implementazione**: `backend/apps/immoweb/staging_agent.py` · wiring in `_run_pipeline` · test unit plan/critic/budget.
+- **Stato**: ✅ **DECISIONE OPERATIVA REGISTRATA** · scaffold in ship
+
 ### D-124 — Home ecosistema + Valutatore UNI + promo documenti SellPage · 14-Ott-2026
 - **Data**: 14 Ottobre 2026
 - **Contesto**: Sessione prodotto su PR #40 — home OMNIA, Academy vetrina, Valutatore B2C, chiusura giornata «mergera tutto».
