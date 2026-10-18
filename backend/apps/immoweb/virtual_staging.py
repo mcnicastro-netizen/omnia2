@@ -1414,10 +1414,10 @@ async def _sequential_furniture_erase(image_url: str) -> tuple[str, float, dict]
                     return url
         return new_url
 
-    boxes = await _florence_furniture_boxes(image_url)
+    # Remnant detection on post-EVF image (do not reset url — keep semantic erase)
+    boxes = await _florence_furniture_boxes(url)
     cost += COST_FLORENCE
     boxes = _sort_erase_boxes(boxes)[:_ERASE_PASS1_MAX]
-    url = image_url
     for box in boxes:
         url = await _erase_box(url, box, pad=6, tag="")
 
@@ -1456,6 +1456,7 @@ async def _sequential_furniture_erase(image_url: str) -> tuple[str, float, dict]
     meta = {
         "engine": "+".join(dict.fromkeys(engines)) or "none",
         "erased": erased_labels,
+        "evf_ratio": round(evf_ratio, 3),
         "pass1": len(boxes),
         "pass2": len(boxes2),
         "pass3": len(boxes3),
