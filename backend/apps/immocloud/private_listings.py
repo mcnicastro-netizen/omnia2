@@ -401,6 +401,9 @@ class B2CStagingPreviewBody(BaseModel):
     mode: Literal["standard", "empty", "reverse"] = "standard"
     style: str = Field(default="modern", max_length=40)
     room_type: str = Field(default="living", max_length=40)
+    variant_mode: Literal["same_style", "multi_style"] = "same_style"
+    num_variants: int = Field(default=1, ge=1, le=4)
+    styles: list[str] | None = Field(default=None, max_length=4)
 
 
 @router.post("/{pid}/staging/preview")
@@ -430,6 +433,9 @@ async def start_b2c_staging_preview(
         mode=body.mode,
         style=body.style,
         room_type=body.room_type,
+        variant_mode=body.variant_mode,
+        num_variants=body.num_variants,
+        styles=body.styles,
     )
     out = _job_to_out(job)
     return {

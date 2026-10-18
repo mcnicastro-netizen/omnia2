@@ -30,7 +30,8 @@ export default function B2CStagingPanel({
   const [mode, setMode] = useState("reverse"); // reverse | empty
   const [roomType, setRoomType] = useState("bedroom");
   const [style, setStyle] = useState("modern");
-  const [preview, setPreview] = useState(null); // { jobId, url, photoId, photoIndex, mode }
+  const [multiStyle, setMultiStyle] = useState(true);
+  const [preview, setPreview] = useState(null); // { jobId, url, photoId, photoIndex, mode, variants }
   const [localBusy, setLocalBusy] = useState(false);
   const [stageHint, setStageHint] = useState("");
 
@@ -86,17 +87,21 @@ export default function B2CStagingPanel({
     setPreview(null);
     setStageHint("");
     try {
+      const wantMulti = mode === "reverse" && multiStyle;
       const { data } = await api.post(`/cloud/me/properties/${listingId}/staging/preview`, {
         photo_id: selected.id,
         mode,
         room_type: roomType,
         style,
+        variant_mode: wantMulti ? "multi_style" : "same_style",
+        num_variants: wantMulti ? 4 : 1,
+        styles: wantMulti ? ["modern", "scandi", "classic", "luxury"] : undefined,
       });
       const jobId = data?.job?.id;
       if (!jobId) throw new Error("no_job");
       let done = null;
-      // Sequential erase can take 3–5 minutes — poll ~7.5 min
-      for (let i = 0; i < 180; i += 1) {
+      // Sequential erase + multi-style can take 5–10 minutes — poll ~10 min
+      for (let i = 0; i < 240; i += 1) {
         const jr = await api.get(`/cloud/me/properties/${listingId}/staging/${jobId}`);
         if (jr.data?.status === "done") {
           done = jr.data;
@@ -122,7 +127,8 @@ export default function B2CStagingPanel({
         setStageHint("");
         return;
       }
-      const url = done.variant_url || done.variants?.[0]?.url;
+      const variants = (done.variants || []).filter((v) => v?.url);
+      const url = done.variant_url || variants[0]?.url;
       if (!url) {
         throw new Error(t("cloud.sell.staging_checkout_error"));
       }
@@ -133,6 +139,8 @@ export default function B2CStagingPanel({
         photoIndex: done.source_photo_index ?? selectedIndex,
         mode: done.mode || mode,
         sourceUrl: done.source_url || selected.url,
+        variants,
+        selectedStyle: variants[0]?.style || style,
       });
       setStageHint("");
       onStatus?.(
@@ -280,40 +288,57 @@ export default function B2CStagingPanel({
       </div>
 
       {mode === "reverse" ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3" data-testid={`${testIdPrefix}-options`}>
-          <label className="block">
-            <span className="text-[10px] uppercase tracking-widest text-stone-500">
-              {t("cloud.sell.staging_room_label", { defaultValue: "Tipo stanza" })}
+        <div className="space-y-3" data-testid={`${testIdPrefix}-options`}>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <label className="block">
+              <span className="text-[10px] uppercase tracking-widest text-stone-500">
+                {t("cloud.sell.staging_room_label", { defaultValue: "Tipo stanza" })}
+              </span>
+              <select
+                data-testid={`${testIdPrefix}-room`}
+                value={roomType}
+                onChange={(e) => setRoomType(e.target.value)}
+                className="mt-1 w-full text-xs border border-stone-300 rounded px-2 py-1.5 bg-white"
+              >
+                {roomOptions.map((o) => (
+                  <option key={o.key} value={o.key}>
+                    {o.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="block">
+              <span className="text-[10px] uppercase tracking-widest text-stone-500">
+                {t("cloud.sell.staging_style_label", { defaultValue: "Stile" })}
+              </span>
+              <select
+                data-testid={`${testIdPrefix}-style`}
+                value={style}
+                onChange={(e) => setStyle(e.target.value)}
+                disabled={multiStyle}
+                className="mt-1 w-full text-xs border border-stone-300 rounded px-2 py-1.5 bg-white disabled:opacity-50"
+              >
+                {styleOptions.map((o) => (
+                  <option key={o.key} value={o.key}>
+                    {o.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
+          <label className="flex items-start gap-2 text-xs text-stone-700 cursor-pointer">
+            <input
+              type="checkbox"
+              data-testid={`${testIdPrefix}-multi-style`}
+              checked={multiStyle}
+              onChange={(e) => setMultiStyle(e.target.checked)}
+              className="mt-0.5"
+            />
+            <span>
+              {t("cloud.sell.staging_multi_style", {
+                defaultValue: "Mostra 4 stili (moderno, scandi, classico, luxury) e scegli quello che preferisci",
+              })}
             </span>
-            <select
-              data-testid={`${testIdPrefix}-room`}
-              value={roomType}
-              onChange={(e) => setRoomType(e.target.value)}
-              className="mt-1 w-full text-xs border border-stone-300 rounded px-2 py-1.5 bg-white"
-            >
-              {roomOptions.map((o) => (
-                <option key={o.key} value={o.key}>
-                  {o.label}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="block">
-            <span className="text-[10px] uppercase tracking-widest text-stone-500">
-              {t("cloud.sell.staging_style_label", { defaultValue: "Stile" })}
-            </span>
-            <select
-              data-testid={`${testIdPrefix}-style`}
-              value={style}
-              onChange={(e) => setStyle(e.target.value)}
-              className="mt-1 w-full text-xs border border-stone-300 rounded px-2 py-1.5 bg-white"
-            >
-              {styleOptions.map((o) => (
-                <option key={o.key} value={o.key}>
-                  {o.label}
-                </option>
-              ))}
-            </select>
           </label>
         </div>
       ) : null}
@@ -369,6 +394,40 @@ export default function B2CStagingPanel({
               />
             </div>
           </div>
+          {preview.variants?.length > 1 ? (
+            <div data-testid={`${testIdPrefix}-variants`}>
+              <p className="text-[10px] uppercase tracking-widest text-stone-500 mb-2">
+                {t("cloud.sell.staging_pick_style", { defaultValue: "Scegli lo stile" })}
+              </p>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                {preview.variants.map((v) => {
+                  const active = preview.url === v.url;
+                  const label =
+                    styleOptions.find((o) => o.key === v.style)?.label || v.style || "—";
+                  return (
+                    <button
+                      key={`${v.style}-${v.url}`}
+                      type="button"
+                      data-testid={`${testIdPrefix}-variant-${v.style || "x"}`}
+                      onClick={() =>
+                        setPreview((p) =>
+                          p ? { ...p, url: v.url, selectedStyle: v.style || p.selectedStyle } : p,
+                        )
+                      }
+                      className={`text-left rounded border overflow-hidden ${
+                        active ? "border-[#0B1E3F] ring-1 ring-[#0B1E3F]" : "border-stone-200"
+                      }`}
+                    >
+                      <img src={v.url} alt="" className="w-full aspect-[4/3] object-cover" />
+                      <span className="block px-1.5 py-1 text-[10px] uppercase tracking-widest text-stone-600">
+                        {label}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          ) : null}
           <div className="flex flex-wrap gap-2">
             <button
               type="button"

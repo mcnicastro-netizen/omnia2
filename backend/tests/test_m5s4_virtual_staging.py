@@ -176,6 +176,13 @@ def test_staging_lora_prompt_includes_architecture_guard():
     assert vs.MODEL_IDEOGRAM_ERASE.startswith("fal-ai/ideogram")
 
 
+def test_architecture_keep_labels_cover_openings():
+    vs = _import_module()
+    labs = set(vs.ARCHITECTURE_KEEP_LABELS)
+    assert {"door", "doorway", "window"} <= labs
+    assert vs.MODEL_FAL_OBJECT_REMOVAL.startswith("fal-ai/object-removal")
+
+
 def test_default_multi_styles_valid():
     vs = _import_module()
     assert all(s in vs.STYLES for s in vs.DEFAULT_MULTI_STYLES)

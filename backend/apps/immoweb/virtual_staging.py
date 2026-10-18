@@ -52,9 +52,19 @@ MODEL_SAM2_BOX = "fal-ai/sam2/image"
 MODEL_FLORENCE_DET = "fal-ai/florence-2-large/open-vocabulary-detection"
 MODEL_BRIA_ERASER = "fal-ai/bria/eraser"
 MODEL_IDEOGRAM_ERASE = "fal-ai/ideogram/object-removal"
+MODEL_FAL_OBJECT_REMOVAL = "fal-ai/object-removal/mask"
 MODEL_APARTMENT_STAGING = "fal-ai/flux-2-lora-gallery/apartment-staging"
 MODEL_FLUX_INPAINT = "fal-ai/flux-lora/inpainting"
 MODEL_UPSCALE = "fal-ai/esrgan"
+
+# Openings / built-ins that must not be painted over during erase (anti wall-invention).
+ARCHITECTURE_KEEP_LABELS = (
+    "door",
+    "doorway",
+    "open door",
+    "window",
+    "sliding door",
+)
 
 MAX_UPLOAD_MB = 12
 ALLOWED_MIME = {"image/jpeg", "image/jpg", "image/png", "image/webp"}
@@ -512,10 +522,15 @@ async def start_b2c_preview_job(
     mode: str = "standard",
     style: str = "modern",
     room_type: str = "living",
+    variant_mode: str = "same_style",
+    num_variants: int = 1,
+    styles: Optional[List[str]] = None,
 ) -> dict:
     """Free preview render (rate-limited). Does not attach to listing until paid."""
     if mode not in ("standard", "reverse", "empty"):
         raise HTTPException(status_code=400, detail="unsupported_staging_mode")
+    if variant_mode not in ("same_style", "multi_style"):
+        raise HTTPException(status_code=400, detail="unsupported_variant_mode")
     db = Database.get()
     listing = await db.properties.find_one(
         {"id": listing_id, "owner_user_id": user_id, "is_private_listing": True},
@@ -540,6 +555,18 @@ async def start_b2c_preview_job(
             "message": "Hai raggiunto il limite di 3 anteprime staging al giorno.",
         })
 
+    n_var = max(1, min(int(num_variants or 1), 4))
+    styles_list: Optional[List[str]] = None
+    if mode != "empty" and variant_mode == "multi_style":
+        styles_list = [s for s in (styles or DEFAULT_MULTI_STYLES) if s in STYLES][:n_var]
+        if not styles_list:
+            raise HTTPException(status_code=400, detail="no_valid_styles")
+        n_var = len(styles_list)
+        style = styles_list[0]
+    else:
+        variant_mode = "same_style"
+        n_var = 1
+
     job_id = str(uuid4())
     now = datetime.now(timezone.utc).isoformat()
     stages = [{"name": "sam2_mask", "status": "queued"}]
@@ -560,9 +587,9 @@ async def start_b2c_preview_job(
         "style": style if mode != "empty" else "empty",
         "room_type": room_type,
         "mode": mode,
-        "num_variants": 1,
-        "variant_mode": "same_style",
-        "styles_list": None,
+        "num_variants": n_var,
+        "variant_mode": variant_mode,
+        "styles_list": styles_list,
         "status": "pending",
         "stages": stages,
         "variants": [],
@@ -1040,13 +1067,81 @@ async def _ideogram_erase(image_url: str, mask_url: str) -> str:
     raise RuntimeError(f"Ideogram erase returned no image (keys: {list(result.keys())})")
 
 
+async def _fal_object_removal(image_url: str, mask_url: str) -> str:
+    """fal-ai/object-removal/mask — alternative eraser when Ideogram invents walls."""
+    handler = await fal_client.submit_async(
+        MODEL_FAL_OBJECT_REMOVAL,
+        arguments={
+            "image_url": image_url,
+            "mask_url": mask_url,
+            "model": "best_quality",
+            "mask_expansion": 5,
+        },
+    )
+    result = await handler.get()
+    images = result.get("images") or []
+    if images and isinstance(images[0], dict) and images[0].get("url"):
+        return images[0]["url"]
+    raise RuntimeError(f"fal object-removal returned no image (keys: {list(result.keys())})")
+
+
 async def _erase_once(image_url: str, mask_url: str) -> tuple[str, str, float]:
-    """Prefer Ideogram, fall back to Bria. Returns (url, engine, cost)."""
+    """Prefer Ideogram, then fal object-removal, then Bria. Returns (url, engine, cost)."""
     try:
         return await _ideogram_erase(image_url, mask_url), "ideogram", COST_IDEOGRAM
-    except Exception as e:
-        logger.warning("Ideogram erase failed (%s) — Bria fallback", e)
-        return await _bria_erase(image_url, mask_url), "bria", COST_BRIA
+    except Exception as e1:
+        logger.warning("Ideogram erase failed (%s) — fal object-removal", e1)
+        try:
+            return await _fal_object_removal(image_url, mask_url), "fal_orm", COST_IDEOGRAM
+        except Exception as e2:
+            logger.warning("fal object-removal failed (%s) — Bria fallback", e2)
+            return await _bria_erase(image_url, mask_url), "bria", COST_BRIA
+
+
+async def _architecture_keep_mask(image_url: str) -> Image.Image:
+    """Binary mask of doors/windows that must stay (prevents inventing walls over openings)."""
+    async def _one(label: str) -> List[dict]:
+        handler = await fal_client.submit_async(
+            MODEL_FLORENCE_DET,
+            arguments={"image_url": image_url, "text_input": label},
+        )
+        det = await handler.get()
+        return ((det.get("results") or {}).get("bboxes") or [])
+
+    batches = await asyncio.gather(
+        *[_one(lab) for lab in ARCHITECTURE_KEEP_LABELS],
+        return_exceptions=True,
+    )
+    async with httpx.AsyncClient(timeout=60.0) as client:
+        resp = await client.get(image_url)
+        resp.raise_for_status()
+        w, h = Image.open(io.BytesIO(resp.content)).size
+    keep = Image.new("L", (w, h), 0)
+    draw = ImageDraw.Draw(keep)
+    total = float(w * h) or 1.0
+    for batch in batches:
+        if isinstance(batch, Exception):
+            continue
+        for b in batch:
+            if not isinstance(b, dict):
+                continue
+            x, y, bw, bh = float(b.get("x", 0)), float(b.get("y", 0)), float(b.get("w", 0)), float(b.get("h", 0))
+            if bw <= 1 or bh <= 1:
+                continue
+            area = (bw * bh) / total
+            if area < 0.015 or area > 0.45:
+                continue
+            pad = 4
+            draw.rectangle(
+                [max(0, x - pad), max(0, y - pad), min(w - 1, x + bw + pad), min(h - 1, y + bh + pad)],
+                fill=255,
+            )
+    from PIL import ImageFilter
+
+    # Soft keep: erode so furniture overlapping a door frame can still be erased.
+    if keep.getbbox():
+        keep = keep.filter(ImageFilter.MinFilter(9))
+    return keep
 
 
 async def _padded_box_mask_url(box: dict, image_url: str, *, pad: int = 12) -> str:
@@ -1072,6 +1167,94 @@ async def _padded_box_mask_url(box: dict, image_url: str, *, pad: int = 12) -> s
     return await _upload_pil_mask(mask)
 
 
+async def _erase_mask_url(
+    box: dict,
+    image_url: str,
+    *,
+    keep: Optional[Image.Image] = None,
+    pad: int = 6,
+) -> str:
+    """SAM2 silhouette mask (preferred) with architecture keep subtracted; box fallback."""
+    from PIL import ImageChops, ImageFilter, ImageOps
+
+    mask: Optional[Image.Image] = None
+    try:
+        sam_url = await _sam2_mask_from_boxes(image_url, [box])
+        async with httpx.AsyncClient(timeout=60.0) as client:
+            resp = await client.get(sam_url)
+            resp.raise_for_status()
+            gray = Image.open(io.BytesIO(resp.content)).convert("L")
+        async with httpx.AsyncClient(timeout=60.0) as client:
+            resp = await client.get(image_url)
+            resp.raise_for_status()
+            w, h = Image.open(io.BytesIO(resp.content)).size
+        if gray.size != (w, h):
+            gray = gray.resize((w, h))
+        mask = gray.point(lambda p: 255 if p > 20 else 0)
+        if _white_ratio(mask) > 0.85:
+            mask = ImageOps.invert(mask)
+        mask = mask.filter(ImageFilter.MaxFilter(5))
+    except Exception as e:
+        logger.warning("SAM2 erase mask failed (%s) — padded box", e)
+        # Fall through to padded box below
+        mask = None
+
+    if mask is None:
+        async with httpx.AsyncClient(timeout=60.0) as client:
+            resp = await client.get(image_url)
+            resp.raise_for_status()
+            w, h = Image.open(io.BytesIO(resp.content)).size
+        mask = Image.new("L", (w, h), 0)
+        draw = ImageDraw.Draw(mask)
+        draw.rectangle(
+            [
+                max(0, int(box["x_min"]) - pad),
+                max(0, int(box["y_min"]) - pad),
+                min(w - 1, int(box["x_max"]) + pad),
+                min(h - 1, int(box["y_max"]) + pad),
+            ],
+            fill=255,
+        )
+        mask = mask.filter(ImageFilter.MaxFilter(5))
+
+    if keep is not None and keep.size == mask.size and keep.getbbox():
+        mask = ImageChops.subtract(mask, keep)
+    if _white_ratio(mask) < 0.002:
+        # Keep ate the whole mask — fall back to tiny padded core without keep
+        async with httpx.AsyncClient(timeout=60.0) as client:
+            resp = await client.get(image_url)
+            resp.raise_for_status()
+            w, h = Image.open(io.BytesIO(resp.content)).size
+        mask = Image.new("L", (w, h), 0)
+        draw = ImageDraw.Draw(mask)
+        cx1 = int(box["x_min"]) + max(2, (int(box["x_max"]) - int(box["x_min"])) // 8)
+        cy1 = int(box["y_min"]) + max(2, (int(box["y_max"]) - int(box["y_min"])) // 8)
+        cx2 = int(box["x_max"]) - max(2, (int(box["x_max"]) - int(box["x_min"])) // 8)
+        cy2 = int(box["y_max"]) - max(2, (int(box["y_max"]) - int(box["y_min"])) // 8)
+        draw.rectangle([cx1, cy1, cx2, cy2], fill=255)
+
+    return await _upload_pil_mask(mask)
+
+
+async def _doorway_brightness(image_url: str, keep: Image.Image) -> Optional[float]:
+    """Mean luminance inside architecture-keep region (used to detect wall invention)."""
+    if keep is None or not keep.getbbox():
+        return None
+    async with httpx.AsyncClient(timeout=60.0) as client:
+        resp = await client.get(image_url)
+        resp.raise_for_status()
+        im = Image.open(io.BytesIO(resp.content)).convert("L")
+    if im.size != keep.size:
+        im = im.resize(keep.size)
+    import numpy as np
+
+    arr = np.asarray(im, dtype=np.float32)
+    m = np.asarray(keep) > 127
+    if not m.any():
+        return None
+    return float(arr[m].mean())
+
+
 def _sort_erase_boxes(boxes: List[dict]) -> List[dict]:
     order = {lab: i for i, lab in enumerate(ERASE_LABEL_ORDER)}
 
@@ -1082,30 +1265,62 @@ def _sort_erase_boxes(boxes: List[dict]) -> List[dict]:
 
 
 async def _sequential_furniture_erase(image_url: str) -> tuple[str, float, dict]:
-    """Multi-pass erase: Florence → Ideogram/Bria per object → remnant pass.
+    """Multi-pass erase: Florence → SAM2 mask → Ideogram (+fal/Bria), arch-protected.
 
-    A/B on Founder photo showed this beats single-shot Bria/FLUX Erase for empty rooms.
+    Box-padded masks were inventing walls over doorways (Founder photo). SAM2
+    silhouettes + soft door/window keep masks fix that failure mode.
     """
     cost = 0.0
     engines: List[str] = []
     erased_labels: List[str] = []
+    wall_retries = 0
+
+    keep = await _architecture_keep_mask(image_url)
+    cost += COST_FLORENCE  # billed roughly as one Florence batch
+    bright0 = await _doorway_brightness(image_url, keep)
+
+    async def _erase_box(url: str, box: dict, *, pad: int, tag: str) -> str:
+        nonlocal cost, wall_retries
+        mask_url = await _erase_mask_url(box, url, keep=keep, pad=pad)
+        new_url, eng, c = await _erase_once(url, mask_url)
+        cost += c
+        engines.append(f"{eng}{tag}")
+        erased_labels.append(f"{box.get('label') or '?'}{tag}")
+        # Detect wall-invention: doorway region got much darker / filled in
+        if bright0 is not None and float(box.get("area") or 0) >= 0.08:
+            bright1 = await _doorway_brightness(new_url, keep)
+            if bright1 is not None and bright1 < bright0 * 0.82:
+                wall_retries += 1
+                logger.warning(
+                    "erase wall-invention suspected label=%s bright %.1f→%.1f — retry fal_orm",
+                    box.get("label"), bright0, bright1,
+                )
+                try:
+                    alt = await _fal_object_removal(url, mask_url)
+                    cost += COST_IDEOGRAM
+                    engines.append("fal_orm_retry")
+                    bright2 = await _doorway_brightness(alt, keep)
+                    if bright2 is not None and bright2 >= (bright1 if bright1 else 0):
+                        return alt
+                except Exception as e:
+                    logger.warning("fal_orm retry failed: %s", e)
+                # Prefer original over invented wall
+                erased_labels[-1] = f"{box.get('label')}:skip_wall"
+                return url
+        return new_url
 
     boxes = await _florence_furniture_boxes(image_url)
     cost += COST_FLORENCE
     boxes = _sort_erase_boxes(boxes)[:_ERASE_PASS1_MAX]
     url = image_url
     for box in boxes:
-        mask_url = await _padded_box_mask_url(box, url, pad=12)
-        url, eng, c = await _erase_once(url, mask_url)
-        cost += c
-        engines.append(eng)
-        erased_labels.append(str(box.get("label") or "?"))
+        url = await _erase_box(url, box, pad=6, tag="")
 
     # Pass 2/3 — remnants (strict area band avoids whole-frame false positives)
     boxes2: List[dict] = []
     boxes3: List[dict] = []
     for pass_idx, (cap, pad, store) in enumerate(
-        ((_ERASE_PASS2_MAX, 14, "boxes2"), (_ERASE_PASS3_MAX, 16, "boxes3")),
+        ((_ERASE_PASS2_MAX, 8, "boxes2"), (_ERASE_PASS3_MAX, 10, "boxes3")),
         start=2,
     ):
         found = await _florence_furniture_boxes(url)
@@ -1119,11 +1334,7 @@ async def _sequential_furniture_erase(image_url: str) -> tuple[str, float, dict]
         if not found:
             break
         for box in found:
-            mask_url = await _padded_box_mask_url(box, url, pad=pad)
-            url, eng, c = await _erase_once(url, mask_url)
-            cost += c
-            engines.append(f"{eng}_p{pass_idx}")
-            erased_labels.append(f"{box.get('label')}:p{pass_idx}")
+            url = await _erase_box(url, box, pad=pad, tag=f":p{pass_idx}")
 
     # Final sweep — soft clutter Florence often leaves after big furniture is gone
     leftover = await _florence_furniture_boxes(url)
@@ -1135,11 +1346,7 @@ async def _sequential_furniture_erase(image_url: str) -> tuple[str, float, dict]
     ]
     leftover = _sort_erase_boxes(leftover)[:4]
     for box in leftover:
-        mask_url = await _padded_box_mask_url(box, url, pad=18)
-        url, eng, c = await _erase_once(url, mask_url)
-        cost += c
-        engines.append(f"{eng}_sweep")
-        erased_labels.append(f"{box.get('label')}:sweep")
+        url = await _erase_box(url, box, pad=12, tag=":sweep")
 
     meta = {
         "engine": "+".join(dict.fromkeys(engines)) or "none",
@@ -1148,6 +1355,8 @@ async def _sequential_furniture_erase(image_url: str) -> tuple[str, float, dict]
         "pass2": len(boxes2),
         "pass3": len(boxes3),
         "sweep": len(leftover),
+        "wall_retries": wall_retries,
+        "arch_keep": bool(keep.getbbox()),
     }
     return url, cost, meta
 

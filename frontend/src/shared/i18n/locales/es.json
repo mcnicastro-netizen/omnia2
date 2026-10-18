@@ -1113,6 +1113,8 @@
       "staging_style_scandi": "Scandi",
       "staging_style_classic": "Clásico",
       "staging_style_luxury": "Luxury",
+      "staging_multi_style": "Mostrar 4 estilos (moderno, scandi, clásico, luxury) y elige el que prefieras",
+      "staging_pick_style": "Elige el estilo",
       "staging_stage_mask": "Analizando habitación…",
       "staging_stage_empty": "Vaciado preciso (puede tardar unos minutos)…",
       "staging_stage_furnish": "Amueblado virtual…",
