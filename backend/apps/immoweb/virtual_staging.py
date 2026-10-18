@@ -1,15 +1,17 @@
-"""OMNIA — M5.S4 Virtual Staging (quality v2).
+"""OMNIA — M5.S4 Virtual Staging (quality v2 + StagingAgent D-125).
 
-Reference: DECISIONS.md D-033.
+Reference: DECISIONS.md D-033, D-125.
 
-Pipeline (empty / reverse):
+Pipeline (empty / reverse) under StagingAgent cost/quality loop:
   Stage 1 — EVF-SAM semantic furniture mask (multi-prompt union) + arch keep
   Stage 1b — Ideogram erase on union mask, then Florence/SAM2 remnant passes
   Stage 2 — Flux 2 apartment-staging LoRA (skipped for mode=empty)
   Stage 3 — ESRGAN only on Flux-inpaint fallback
+  Critic — heuristic quality gates; retry erase/furnish only under hard USD cap
 
 Standard (already-empty room): apartment-staging LoRA directly.
 CRM-aware prompt fragment (Gemini) + watermark "Render virtuale OMNIA".
+No third-party staging SaaS embed — OMNIA owns the agent + fal primitives.
 """
 from __future__ import annotations
 
@@ -41,6 +43,13 @@ from shared.db.connection import Database
 from shared.utils.net_guard import assert_public_url
 from apps.billing.plans import CREDIT_COSTS
 from apps.billing.routes import debit_credits
+from apps.immoweb.staging_agent import (
+    StagingAgent,
+    critique_empty_from_meta,
+    critique_furnished_heuristic,
+    decide_accept,
+    plan_staging,
+)
 
 logger = logging.getLogger("omnia.staging")
 router = APIRouter(prefix="/staging", tags=["virtual-staging"])
@@ -1720,7 +1729,16 @@ async def _run_pipeline(job_id: str, db) -> None:
     mode = doc.get("mode", "standard")
     variant_mode = doc.get("variant_mode", "same_style")
     num_variants = doc.get("num_variants", 1)
-    total_cost = 0.0
+
+    agent = StagingAgent(plan_staging(
+        mode=mode,
+        style=doc.get("style") or "modern",
+        room_type=doc.get("room_type") or "living",
+        num_variants=num_variants,
+        variant_mode=variant_mode,
+        styles_list=doc.get("styles_list") or DEFAULT_MULTI_STYLES,
+    ))
+    await _mark_root({"agent_plan": agent.plan.to_dict()})
 
     try:
         src = await _resolve_image_url_for_fal(src_raw)
@@ -1743,7 +1761,7 @@ async def _run_pipeline(job_id: str, db) -> None:
     try:
         t0 = monotonic()
         await _mark_stage("sam2_mask", {"status": "running"})
-        if mode in ("reverse", "empty"):
+        if agent.plan.need_erase:
             await _mark_stage("sam2_mask", {
                 "status": "done",
                 "duration_ms": int((monotonic() - t0) * 1000),
@@ -1758,76 +1776,178 @@ async def _run_pipeline(job_id: str, db) -> None:
                 "duration_ms": int((monotonic() - t0) * 1000),
                 "cost_usd": COST_SAM2,
             })
-            total_cost += COST_SAM2
+            agent.charge(COST_SAM2, "sam2_mask")
     except Exception as e:
         await _fail("sam2_mask", "SAM2", e)
         return
 
-    # Stage 1b — sequential Ideogram/Bria erase (empty / reverse only)
+    # Stage 1b — sequential Ideogram/Bria erase (empty / reverse only) + critic retry
     base_image = src
-    if mode in ("reverse", "empty"):
+    erase_meta: Dict[str, Any] = {}
+    if agent.plan.need_erase:
         try:
             t0 = monotonic()
             await _mark_stage("furniture_removal", {"status": "running"})
             base_image, removal_cost, erase_meta = await _sequential_furniture_erase(src)
-            await _mark_root({"erase_meta": erase_meta})
+            agent.charge(removal_cost, "furniture_removal", engine=erase_meta.get("engine"))
+
+            empty_q = critique_empty_from_meta(erase_meta)
+            decision = decide_accept(
+                empty_q,
+                retries_left=agent.plan.max_erase_retries - agent.erase_retries,
+                can_afford=agent.can_spend(COST_IDEOGRAM + COST_FLORENCE * 2),
+            )
+            if decision == "retry" and (
+                "re_erase" in empty_q.retry_actions
+                or "re_erase_remnants" in empty_q.retry_actions
+            ):
+                if (
+                    agent.can_spend(COST_IDEOGRAM * 2 + COST_EVF_SAM)
+                    and agent.erase_retries < agent.plan.max_erase_retries
+                ):
+                    agent.erase_retries += 1
+                    logger.info(
+                        "staging_agent re-erase retry=%s score=%.2f",
+                        agent.erase_retries, empty_q.score,
+                    )
+                    base2, cost2, meta2 = await _sequential_furniture_erase(base_image)
+                    agent.charge(cost2, "furniture_removal_retry")
+                    # Keep better attempt (more erased labels).
+                    if len(meta2.get("erased") or []) >= len(erase_meta.get("erased") or []):
+                        base_image, erase_meta = base2, meta2
+                        removal_cost += cost2
+                    empty_q = critique_empty_from_meta(erase_meta)
+                    decision = decide_accept(empty_q, retries_left=0, can_afford=False)
+            agent.record_quality("empty", empty_q, decision)
+
+            await _mark_root({"erase_meta": erase_meta, "agent_quality": agent.quality})
             await _mark_stage("furniture_removal", {
                 "status": "done",
                 "duration_ms": int((monotonic() - t0) * 1000),
                 "cost_usd": round(removal_cost, 4),
                 "engine": erase_meta.get("engine"),
-                "note": f"erased={','.join(erase_meta.get('erased') or [])}"[:280],
+                "note": (
+                    f"erased={','.join(erase_meta.get('erased') or [])}"
+                    f"|q={empty_q.score:.2f}|{decision}"
+                )[:280],
             })
-            total_cost += removal_cost
         except Exception as e:
             await _fail("furniture_removal", "Rimozione arredo", e)
             return
 
     # Stage 2 — apartment-staging LoRA (furnish). Skipped for empty-only mode.
-    if mode == "empty":
+    variants: List[dict] = []
+    engine_used = "none"
+    if not agent.plan.need_furnish:
         variants = [{"url": base_image, "style": "empty", "upscaled": False}]
         await _mark_stage("flux_inpaint", {
             "status": "done", "duration_ms": 0, "cost_usd": 0,
             "note": "skipped_empty_mode",
             "engine": "none",
         })
+        empty_done = critique_empty_from_meta(erase_meta)
+        agent.record_quality("final", empty_done, decide_accept(empty_done, retries_left=0, can_afford=False))
     else:
         try:
             t0 = monotonic()
             await _mark_stage("flux_inpaint", {"status": "running"})
-            style_keys = (
-                (doc.get("styles_list") or DEFAULT_MULTI_STYLES)[:num_variants]
-                if variant_mode == "multi_style"
-                else [doc.get("style") or "modern"]
-            )
-            variants = []
+            style_keys = agent.plan.styles[: agent.plan.num_variants]
             engine_used = "apartment_staging_lora"
-            for sk in style_keys:
-                prompt = _staging_lora_prompt(sk, doc.get("room_type") or "living", crm_fragment)
-                try:
-                    urls = await _apartment_stage(base_image, prompt, num_images=1 if variant_mode == "multi_style" else num_variants)
-                except Exception as lora_err:
-                    logger.warning("Apartment staging LoRA failed (%s) — Flux inpaint fallback", lora_err)
-                    engine_used = "flux_inpaint_fallback"
-                    if not mask_url:
-                        mask_url = await _stage_sam2_mask(base_image, for_furniture=True)
-                    urls = await _flux_inpaint(
-                        base_image, mask_url, _build_prompt(sk, doc.get("room_type") or "living", crm_fragment),
-                        num_images=1 if variant_mode == "multi_style" else num_variants,
-                    )
-                variants.extend({"url": u, "style": sk, "upscaled": False} for u in urls)
-                if variant_mode != "multi_style":
-                    break
+
+            async def _furnish_once(lora_scale: float = 0.95) -> List[dict]:
+                nonlocal engine_used, mask_url
+                out: List[dict] = []
+                for sk in style_keys:
+                    prompt = _staging_lora_prompt(sk, agent.plan.room_type, crm_fragment)
+                    try:
+                        urls = await _apartment_stage(
+                            base_image,
+                            prompt,
+                            num_images=1 if variant_mode == "multi_style" else agent.plan.num_variants,
+                            lora_scale=lora_scale,
+                        )
+                    except Exception as lora_err:
+                        logger.warning("Apartment staging LoRA failed (%s) — Flux inpaint fallback", lora_err)
+                        engine_used = "flux_inpaint_fallback"
+                        if not mask_url:
+                            mask_url = await _stage_sam2_mask(base_image, for_furniture=True)
+                            agent.charge(COST_SAM2, "sam2_mask_fallback")
+                        urls = await _flux_inpaint(
+                            base_image,
+                            mask_url,
+                            _build_prompt(sk, agent.plan.room_type, crm_fragment),
+                            num_images=1 if variant_mode == "multi_style" else agent.plan.num_variants,
+                        )
+                    out.extend({"url": u, "style": sk, "upscaled": False} for u in urls)
+                    if variant_mode != "multi_style":
+                        break
+                return out
+
+            variants = await _furnish_once()
             if not variants:
                 raise RuntimeError("Nessuna variante staging generata")
             stage_cost = (COST_STAGING_LORA if engine_used.startswith("apartment") else COST_FLUX) * len(variants)
+            agent.charge(stage_cost, "furnish", engine=engine_used)
+
+            # Cheap remnant probe only if under soft budget (Florence ≈ $0.001).
+            remnant_labels: List[str] = []
+            if agent.can_spend(COST_FLORENCE) and not agent.over_soft():
+                try:
+                    boxes = await _florence_furniture_boxes(variants[0]["url"])
+                    agent.charge(COST_FLORENCE, "furnish_remnant_probe")
+                    # After furnish, gym/exercise leftover = sad listing look (Founder 2/10).
+                    remnant_labels = [
+                        b.get("label") or ""
+                        for b in boxes
+                        if (b.get("label") or "") in {
+                            "gym machine", "exercise equipment", "weight bench", "bench",
+                        }
+                    ]
+                except Exception as probe_err:
+                    logger.warning("furnish remnant probe skipped: %s", probe_err)
+
+            furn_q = critique_furnished_heuristic(
+                style=style_keys[0],
+                engine=engine_used,
+                erase_meta=erase_meta,
+                remnant_labels=remnant_labels,
+            )
+            decision = decide_accept(
+                furn_q,
+                retries_left=agent.plan.max_furnish_retries - agent.furnish_retries,
+                can_afford=agent.can_spend(COST_STAGING_LORA),
+            )
+            if decision == "retry" and agent.furnish_retries < agent.plan.max_furnish_retries:
+                if "re_erase_remnants" in furn_q.retry_actions and agent.plan.need_erase and agent.can_spend(COST_IDEOGRAM):
+                    agent.erase_retries += 1
+                    base2, cost2, meta2 = await _sequential_furniture_erase(base_image)
+                    agent.charge(cost2, "pre_furnish_re_erase")
+                    base_image, erase_meta = base2, meta2
+                if agent.can_spend(COST_STAGING_LORA):
+                    agent.furnish_retries += 1
+                    engine_used = "apartment_staging_lora"
+                    variants2 = await _furnish_once(lora_scale=1.0)
+                    if variants2:
+                        retry_cost = COST_STAGING_LORA * len(variants2)
+                        agent.charge(retry_cost, "furnish_retry")
+                        variants = variants2
+                        stage_cost += retry_cost
+                        furn_q = critique_furnished_heuristic(
+                            style=style_keys[0],
+                            engine=engine_used,
+                            erase_meta=erase_meta,
+                            remnant_labels=[],
+                        )
+                        decision = decide_accept(furn_q, retries_left=0, can_afford=False)
+            agent.record_quality("furnish", furn_q, decision)
+
             await _mark_stage("flux_inpaint", {
                 "status": "done",
                 "duration_ms": int((monotonic() - t0) * 1000),
                 "cost_usd": round(stage_cost, 4),
                 "engine": engine_used,
+                "note": f"q={furn_q.score:.2f}|{decision}|retries={agent.furnish_retries}"[:280],
             })
-            total_cost += stage_cost
         except Exception as e:
             await _fail("flux_inpaint", "Staging", e)
             return
@@ -1835,20 +1955,11 @@ async def _run_pipeline(job_id: str, db) -> None:
     # Stage 3 — upscale only for Flux-inpaint fallback (ESRGAN amplifies erase seams).
     t0 = monotonic()
     await _mark_stage("upscale", {"status": "running"})
-    furn_engine = ""
-    try:
-        stage_doc = await db.virtual_staging_jobs.find_one({"id": job_id}, {"stages": 1})
-        furn_stage = next(
-            (s for s in (stage_doc or {}).get("stages") or [] if s.get("name") == "flux_inpaint"),
-            {},
-        )
-        furn_engine = furn_stage.get("engine") or ""
-    except Exception:
-        furn_engine = ""
-    if mode == "empty" or not furn_engine.startswith("flux_inpaint"):
+    furn_engine = engine_used
+    if not agent.plan.need_furnish or not furn_engine.startswith("flux_inpaint"):
         await _mark_stage("upscale", {
             "status": "done", "duration_ms": 0, "cost_usd": 0,
-            "note": "skipped_empty_mode" if mode == "empty" else "skipped_apartment_lora",
+            "note": "skipped_empty_mode" if not agent.plan.need_furnish else "skipped_apartment_lora",
         })
     else:
         async def _up(v: dict) -> dict:
@@ -1862,12 +1973,12 @@ async def _run_pipeline(job_id: str, db) -> None:
         variants = list(await asyncio.gather(*[_up(v) for v in variants]))
         upscaled_n = sum(1 for v in variants if v.get("upscaled"))
         up_cost = COST_UPSCALE * upscaled_n
+        agent.charge(up_cost, "upscale")
         await _mark_stage("upscale", {
             "status": "done" if upscaled_n else "failed",
             "duration_ms": int((monotonic() - t0) * 1000),
             "cost_usd": round(up_cost, 4),
         })
-        total_cost += up_cost
 
     # B2C free preview: persist to /api/media so SellPage img is same-origin + smaller
     try:
@@ -1875,11 +1986,13 @@ async def _run_pipeline(job_id: str, db) -> None:
     except Exception:
         logger.exception("b2c preview persist failed job=%s", job_id)
 
+    total_cost = agent.ledger.spent_usd
     await _mark_root({
         "status": "done",
         "variants": variants,
         "variant_url": variants[0]["url"] if variants else None,
         "cost_total_usd": round(total_cost, 4),
+        "agent_summary": agent.summary(),
         "completed_at": datetime.now(timezone.utc).isoformat(),
     })
 
