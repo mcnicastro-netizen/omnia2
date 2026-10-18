@@ -1286,27 +1286,30 @@ async def _sequential_furniture_erase(image_url: str) -> tuple[str, float, dict]
         cost += c
         engines.append(f"{eng}{tag}")
         erased_labels.append(f"{box.get('label') or '?'}{tag}")
-        # Detect wall-invention: doorway region got much darker / filled in
+        # Detect wall-invention over openings: keep-region luminance swings hard
+        # (dark hallway→bright wall OR bright doorway→filled wall).
         if bright0 is not None and float(box.get("area") or 0) >= 0.08:
             bright1 = await _doorway_brightness(new_url, keep)
-            if bright1 is not None and bright1 < bright0 * 0.82:
-                wall_retries += 1
-                logger.warning(
-                    "erase wall-invention suspected label=%s bright %.1f→%.1f — retry fal_orm",
-                    box.get("label"), bright0, bright1,
-                )
-                try:
-                    alt = await _fal_object_removal(url, mask_url)
-                    cost += COST_IDEOGRAM
-                    engines.append("fal_orm_retry")
-                    bright2 = await _doorway_brightness(alt, keep)
-                    if bright2 is not None and bright2 >= (bright1 if bright1 else 0):
-                        return alt
-                except Exception as e:
-                    logger.warning("fal_orm retry failed: %s", e)
-                # Prefer original over invented wall
-                erased_labels[-1] = f"{box.get('label')}:skip_wall"
-                return url
+            if bright1 is not None:
+                delta = abs(bright1 - bright0) / max(bright0, 1.0)
+                if delta > 0.18:
+                    wall_retries += 1
+                    logger.warning(
+                        "erase wall-invention suspected label=%s bright %.1f→%.1f (Δ=%.0f%%) — retry fal_orm",
+                        box.get("label"), bright0, bright1, delta * 100,
+                    )
+                    try:
+                        alt = await _fal_object_removal(url, mask_url)
+                        cost += COST_IDEOGRAM
+                        engines.append("fal_orm_retry")
+                        bright2 = await _doorway_brightness(alt, keep)
+                        if bright2 is not None and abs(bright2 - bright0) < abs(bright1 - bright0):
+                            return alt
+                    except Exception as e:
+                        logger.warning("fal_orm retry failed: %s", e)
+                    # Prefer original over invented wall
+                    erased_labels[-1] = f"{box.get('label')}:skip_wall"
+                    return url
         return new_url
 
     boxes = await _florence_furniture_boxes(image_url)
