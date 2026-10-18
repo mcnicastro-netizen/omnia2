@@ -3,8 +3,8 @@
 Reference: DECISIONS.md D-033.
 
 Pipeline (empty / reverse):
-  Stage 1 — Florence-2 open-vocab furniture detect
-  Stage 1b — sequential Ideogram object-removal (+ Bria fallback), pass-2 remnants
+  Stage 1 — EVF-SAM semantic furniture mask (multi-prompt union) + arch keep
+  Stage 1b — Ideogram erase on union mask, then Florence/SAM2 remnant passes
   Stage 2 — Flux 2 apartment-staging LoRA (skipped for mode=empty)
   Stage 3 — ESRGAN only on Flux-inpaint fallback
 
@@ -53,6 +53,7 @@ MODEL_FLORENCE_DET = "fal-ai/florence-2-large/open-vocabulary-detection"
 MODEL_BRIA_ERASER = "fal-ai/bria/eraser"
 MODEL_IDEOGRAM_ERASE = "fal-ai/ideogram/object-removal"
 MODEL_FAL_OBJECT_REMOVAL = "fal-ai/object-removal/mask"
+MODEL_EVF_SAM = "fal-ai/evf-sam"
 MODEL_APARTMENT_STAGING = "fal-ai/flux-2-lora-gallery/apartment-staging"
 MODEL_FLUX_INPAINT = "fal-ai/flux-lora/inpainting"
 MODEL_UPSCALE = "fal-ai/esrgan"
@@ -66,6 +67,16 @@ ARCHITECTURE_KEEP_LABELS = (
     "sliding door",
 )
 
+# EVF-SAM text prompts — unioned into one furniture mask (casalimpia-style semantic split).
+EVF_FURNITURE_PROMPTS = (
+    "gym machine, exercise equipment, weight bench, weights",
+    "bed, mattress, bedding, pillows, nightstand",
+    "wardrobe, closet, dresser, cupboard",
+    "rug, carpet, mat",
+    "shelf, table, chair, lamp, picture frame, hanging decoration",
+)
+EVF_ARCHITECTURE_NEGATIVE = "walls, floor, ceiling, doors, doorways, windows, baseboards, built-in fixtures"
+
 MAX_UPLOAD_MB = 12
 ALLOWED_MIME = {"image/jpeg", "image/jpg", "image/png", "image/webp"}
 SOFT_RATE_LIMIT_USER_HOUR = 20   # renders/ora/utente
@@ -76,6 +87,7 @@ MAX_PHOTO_WIDTH = 1600
 
 COST_SAM2 = 0.001
 COST_FLORENCE = 0.001
+COST_EVF_SAM = 0.01
 COST_BRIA = 0.04
 COST_IDEOGRAM = 0.03
 COST_STAGING_LORA = 0.06
@@ -1264,20 +1276,110 @@ def _sort_erase_boxes(boxes: List[dict]) -> List[dict]:
     return sorted(boxes, key=_key)
 
 
-async def _sequential_furniture_erase(image_url: str) -> tuple[str, float, dict]:
-    """Multi-pass erase: Florence → SAM2 mask → Ideogram (+fal/Bria), arch-protected.
+async def _evf_furniture_union_mask(
+    image_url: str,
+    *,
+    keep: Optional[Image.Image] = None,
+) -> tuple[Optional[str], float, float]:
+    """Build furniture mask via EVF-SAM multi-prompt union (architecture subtracted).
 
-    Box-padded masks were inventing walls over doorways (Founder photo). SAM2
-    silhouettes + soft door/window keep masks fix that failure mode.
+    Returns (mask_url_or_None, cost_usd, white_ratio).
+    """
+    from PIL import ImageChops, ImageFilter
+    import numpy as np
+
+    async def _one(prompt: str) -> Optional[Image.Image]:
+        try:
+            handler = await fal_client.submit_async(
+                MODEL_EVF_SAM,
+                arguments={
+                    "prompt": prompt,
+                    "negative_prompt": EVF_ARCHITECTURE_NEGATIVE,
+                    "image_url": image_url,
+                    "mask_only": True,
+                    "semantic_type": True,
+                    "fill_holes": True,
+                    "expand_mask": 3,
+                },
+            )
+            result = await handler.get()
+            img = result.get("image") or {}
+            u = img.get("url") if isinstance(img, dict) else None
+            if not u:
+                return None
+            async with httpx.AsyncClient(timeout=60.0) as client:
+                resp = await client.get(u)
+                resp.raise_for_status()
+                return Image.open(io.BytesIO(resp.content)).convert("L")
+        except Exception as e:
+            logger.warning("EVF-SAM prompt failed (%s): %s", prompt[:40], e)
+            return None
+
+    masks = await asyncio.gather(*[_one(p) for p in EVF_FURNITURE_PROMPTS])
+    cost = COST_EVF_SAM * len(EVF_FURNITURE_PROMPTS)
+    valid = [m for m in masks if isinstance(m, Image.Image)]
+    if not valid:
+        return None, cost, 0.0
+
+    async with httpx.AsyncClient(timeout=60.0) as client:
+        resp = await client.get(image_url)
+        resp.raise_for_status()
+        w, h = Image.open(io.BytesIO(resp.content)).size
+
+    union = Image.new("L", (w, h), 0)
+    for m in valid:
+        if m.size != (w, h):
+            m = m.resize((w, h))
+        m = m.point(lambda p: 255 if p > 127 else 0)
+        union = ImageChops.lighter(union, m)
+    union = union.filter(ImageFilter.MaxFilter(5))
+    if keep is not None and keep.size == union.size and keep.getbbox():
+        union = ImageChops.subtract(union, keep)
+    wr = float((np.asarray(union) > 127).mean())
+    if wr < 0.02:
+        return None, cost, wr
+    return await _upload_pil_mask(union), cost, wr
+
+
+async def _sequential_furniture_erase(image_url: str) -> tuple[str, float, dict]:
+    """Semantic EVF-SAM pass + Florence/SAM2 remnant erase, arch-protected.
+
+    Inspired by casalimpia (furniture vs architecture split) but via fal EVF-SAM
+    instead of self-hosted OneFormer — no local GPU required.
     """
     cost = 0.0
     engines: List[str] = []
     erased_labels: List[str] = []
     wall_retries = 0
+    evf_ratio = 0.0
 
     keep = await _architecture_keep_mask(image_url)
     cost += COST_FLORENCE  # billed roughly as one Florence batch
     bright0 = await _doorway_brightness(image_url, keep)
+
+    url = image_url
+    # Pass 0 — semantic furniture union (one Ideogram erase on whole mask)
+    try:
+        evf_mask_url, evf_cost, evf_ratio = await _evf_furniture_union_mask(image_url, keep=keep)
+        cost += evf_cost
+        if evf_mask_url:
+            new_url, eng, c = await _erase_once(url, evf_mask_url)
+            cost += c
+            engines.append(f"{eng}_evf")
+            erased_labels.append(f"evf_union:{evf_ratio:.2f}")
+            if bright0 is not None:
+                bright1 = await _doorway_brightness(new_url, keep)
+                if bright1 is not None and abs(bright1 - bright0) / max(bright0, 1.0) > 0.18:
+                    wall_retries += 1
+                    logger.warning(
+                        "EVF erase wall-invention suspected bright %.1f→%.1f — keep prior",
+                        bright0, bright1,
+                    )
+                    erased_labels[-1] = "evf_union:skip_wall"
+                else:
+                    url = new_url
+    except Exception as e:
+        logger.warning("EVF semantic erase skipped: %s", e)
 
     async def _erase_box(url: str, box: dict, *, pad: int, tag: str) -> str:
         nonlocal cost, wall_retries

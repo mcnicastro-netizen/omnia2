@@ -183,6 +183,13 @@ def test_architecture_keep_labels_cover_openings():
     assert vs.MODEL_FAL_OBJECT_REMOVAL.startswith("fal-ai/object-removal")
 
 
+def test_evf_semantic_mask_constants():
+    vs = _import_module()
+    assert vs.MODEL_EVF_SAM == "fal-ai/evf-sam"
+    assert len(vs.EVF_FURNITURE_PROMPTS) >= 4
+    assert "walls" in vs.EVF_ARCHITECTURE_NEGATIVE
+
+
 def test_default_multi_styles_valid():
     vs = _import_module()
     assert all(s in vs.STYLES for s in vs.DEFAULT_MULTI_STYLES)
