@@ -69,13 +69,18 @@ ARCHITECTURE_KEEP_LABELS = (
 
 # EVF-SAM text prompts — unioned into one furniture mask (casalimpia-style semantic split).
 EVF_FURNITURE_PROMPTS = (
-    "gym machine, exercise equipment, weight bench, weights",
+    "gym machine, exercise equipment, weight bench, weights, cables",
     "bed, mattress, bedding, pillows, nightstand",
-    "wardrobe, closet, dresser, cupboard",
-    "rug, carpet, mat",
-    "shelf, table, chair, lamp, picture frame, hanging decoration",
+    "wardrobe, closet, dresser, cupboard, armoire",
+    "desk, shelf, shelving unit, cabinet, console, sideboard",
+    "rug, carpet, mat, runner",
+    "picture frame, hanging decoration, wind chime, mobile, freestanding lamp, sailboat, plant pot",
+    "bench, stool, chair, pedestal, pillar object, column remnant",
 )
-EVF_ARCHITECTURE_NEGATIVE = "walls, floor, ceiling, doors, doorways, windows, baseboards, built-in fixtures"
+EVF_ARCHITECTURE_NEGATIVE = (
+    "walls, floor tiles, ceiling, door frames, doorways, open doorways, windows, "
+    "baseboards, built-in fixtures, structural beams"
+)
 
 MAX_UPLOAD_MB = 12
 ALLOWED_MIME = {"image/jpeg", "image/jpg", "image/png", "image/webp"}
@@ -1267,6 +1272,42 @@ async def _doorway_brightness(image_url: str, keep: Image.Image) -> Optional[flo
     return float(arr[m].mean())
 
 
+async def _opening_brightness_map(image_url: str, keep: Image.Image) -> Optional[dict]:
+    """Per-component luminance for door/window keep regions (avoid false wall-skips)."""
+    if keep is None or not keep.getbbox():
+        return None
+    from PIL import ImageFilter
+    import numpy as np
+
+    async with httpx.AsyncClient(timeout=60.0) as client:
+        resp = await client.get(image_url)
+        resp.raise_for_status()
+        im = Image.open(io.BytesIO(resp.content)).convert("L")
+    if im.size != keep.size:
+        im = im.resize(keep.size)
+    arr = np.asarray(im, dtype=np.float32)
+    mask = (np.asarray(keep) > 127).astype(np.uint8) * 255
+    # Connected components via simple flood — use scipy if available, else global fallback
+    try:
+        from scipy import ndimage  # type: ignore
+
+        labeled, n = ndimage.label(mask)
+        out: dict = {"n": int(n), "means": []}
+        for i in range(1, n + 1):
+            sel = labeled == i
+            if sel.sum() < 80:
+                continue
+            out["means"].append(float(arr[sel].mean()))
+        if not out["means"]:
+            return None
+        return out
+    except Exception:
+        m = mask > 127
+        if not m.any():
+            return None
+        return {"n": 1, "means": [float(arr[m].mean())]}
+
+
 def _sort_erase_boxes(boxes: List[dict]) -> List[dict]:
     order = {lab: i for i, lab in enumerate(ERASE_LABEL_ORDER)}
 
@@ -1355,7 +1396,29 @@ async def _sequential_furniture_erase(image_url: str) -> tuple[str, float, dict]
 
     keep = await _architecture_keep_mask(image_url)
     cost += COST_FLORENCE  # billed roughly as one Florence batch
-    bright0 = await _doorway_brightness(image_url, keep)
+    open0 = await _opening_brightness_map(image_url, keep)
+
+    def _opening_delta(before: Optional[dict], after: Optional[dict]) -> float:
+        if not before or not after:
+            return 0.0
+        a, b = before.get("means") or [], after.get("means") or []
+        if not a or not b:
+            return 0.0
+        # Compare sorted means pairwise (same # openings assumed)
+        n = min(len(a), len(b))
+        if n == 0:
+            return 0.0
+        deltas = [abs(b[i] - a[i]) / max(a[i], 1.0) for i in range(n)]
+        return max(deltas)
+
+    def _box_overlaps_keep(box: dict) -> bool:
+        if keep is None or not keep.getbbox():
+            return False
+        import numpy as np
+        x1, y1 = int(box["x_min"]), int(box["y_min"])
+        x2, y2 = int(box["x_max"]), int(box["y_max"])
+        crop = keep.crop((x1, y1, max(x1 + 1, x2), max(y1 + 1, y2)))
+        return float((np.asarray(crop) > 127).mean()) > 0.12
 
     url = image_url
     # Pass 0 — semantic furniture union (one Ideogram erase on whole mask)
@@ -1367,51 +1430,47 @@ async def _sequential_furniture_erase(image_url: str) -> tuple[str, float, dict]
             cost += c
             engines.append(f"{eng}_evf")
             erased_labels.append(f"evf_union:{evf_ratio:.2f}")
-            if bright0 is not None:
-                bright1 = await _doorway_brightness(new_url, keep)
-                if bright1 is not None and abs(bright1 - bright0) / max(bright0, 1.0) > 0.18:
-                    wall_retries += 1
-                    logger.warning(
-                        "EVF erase wall-invention suspected bright %.1f→%.1f — keep prior",
-                        bright0, bright1,
-                    )
-                    erased_labels[-1] = "evf_union:skip_wall"
-                else:
-                    url = new_url
+            open1 = await _opening_brightness_map(new_url, keep)
+            if _opening_delta(open0, open1) > 0.35:
+                wall_retries += 1
+                logger.warning("EVF erase wall-invention suspected — keep prior")
+                erased_labels[-1] = "evf_union:skip_wall"
+            else:
+                url = new_url
+                open0 = open1 or open0
     except Exception as e:
         logger.warning("EVF semantic erase skipped: %s", e)
 
     async def _erase_box(url: str, box: dict, *, pad: int, tag: str) -> str:
-        nonlocal cost, wall_retries
+        nonlocal cost, wall_retries, open0
         mask_url = await _erase_mask_url(box, url, keep=keep, pad=pad)
         new_url, eng, c = await _erase_once(url, mask_url)
         cost += c
         engines.append(f"{eng}{tag}")
         erased_labels.append(f"{box.get('label') or '?'}{tag}")
-        # Detect wall-invention over openings: keep-region luminance swings hard
-        # (dark hallway→bright wall OR bright doorway→filled wall).
-        if bright0 is not None and float(box.get("area") or 0) >= 0.08:
-            bright1 = await _doorway_brightness(new_url, keep)
-            if bright1 is not None:
-                delta = abs(bright1 - bright0) / max(bright0, 1.0)
-                if delta > 0.18:
-                    wall_retries += 1
-                    logger.warning(
-                        "erase wall-invention suspected label=%s bright %.1f→%.1f (Δ=%.0f%%) — retry fal_orm",
-                        box.get("label"), bright0, bright1, delta * 100,
-                    )
-                    try:
-                        alt = await _fal_object_removal(url, mask_url)
-                        cost += COST_IDEOGRAM
-                        engines.append("fal_orm_retry")
-                        bright2 = await _doorway_brightness(alt, keep)
-                        if bright2 is not None and abs(bright2 - bright0) < abs(bright1 - bright0):
-                            return alt
-                    except Exception as e:
-                        logger.warning("fal_orm retry failed: %s", e)
-                    # Prefer original over invented wall
-                    erased_labels[-1] = f"{box.get('label')}:skip_wall"
-                    return url
+        # Only gate erases that heavily overlap openings (avoids false skip on wardrobe).
+        if open0 is not None and _box_overlaps_keep(box) and float(box.get("area") or 0) >= 0.08:
+            open1 = await _opening_brightness_map(new_url, keep)
+            delta = _opening_delta(open0, open1)
+            if delta > 0.35:
+                wall_retries += 1
+                logger.warning(
+                    "erase wall-invention suspected label=%s openingΔ=%.0f%% — retry fal_orm",
+                    box.get("label"), delta * 100,
+                )
+                try:
+                    alt = await _fal_object_removal(url, mask_url)
+                    cost += COST_IDEOGRAM
+                    engines.append("fal_orm_retry")
+                    open2 = await _opening_brightness_map(alt, keep)
+                    if _opening_delta(open0, open2) < delta:
+                        open0 = open2 or open0
+                        return alt
+                except Exception as e:
+                    logger.warning("fal_orm retry failed: %s", e)
+                erased_labels[-1] = f"{box.get('label')}:skip_wall"
+                return url
+            open0 = open1 or open0
         return new_url
 
     # Remnant detection on post-EVF image (do not reset url — keep semantic erase)
@@ -1468,11 +1527,26 @@ async def _sequential_furniture_erase(image_url: str) -> tuple[str, float, dict]
 
 
 _STYLE_EN = {
-    "modern": "modern minimalist",
-    "classic": "classic elegant Italian",
-    "scandi": "scandinavian",
-    "industrial": "industrial loft",
-    "luxury": "luxury designer",
+    "modern": (
+        "bright modern hotel-apartment style, crisp white linens, light oak, "
+        "closed wardrobe doors, soft daylight, airy"
+    ),
+    "classic": (
+        "refined Italian classic but bright and fresh (not heavy or dark), "
+        "cream upholstery, warm wood accents, inviting daylight"
+    ),
+    "scandi": (
+        "bright Scandinavian, light wood, white textiles, soft greenery, "
+        "cool daylight, clean and airy"
+    ),
+    "industrial": (
+        "bright industrial loft, metal and leather accents, lots of daylight, "
+        "not gloomy"
+    ),
+    "luxury": (
+        "boutique luxury listing, plush neutrals, designer lamps, closed tall wardrobe, "
+        "aspirational daylight"
+    ),
 }
 
 
@@ -1488,12 +1562,14 @@ def _staging_lora_prompt(style: str, room_type: str, crm_fragment: Optional[str]
         "office": "home office",
     }.get(rt, "living room")
     room_bits = ROOM_TYPES.get(rt, ROOM_TYPES["living"])
-    style_en = _STYLE_EN.get(sk, "modern")
+    style_en = _STYLE_EN.get(sk, _STYLE_EN["modern"])
     base = (
-        f"Furnish this empty {room_en} with {style_en} furniture and decor: {room_bits}. "
-        "Keep existing walls, doors, windows, floor material and ceiling completely unchanged. "
-        "No surreal objects, no melting furniture, no distorted geometry. "
-        "Photorealistic real estate listing photograph, natural light, sharp details."
+        f"Furnish this empty {room_en} for a 2025 Italian real-estate listing photo. "
+        f"Style: {style_en}. Furniture: {room_bits}. "
+        "Keep walls, door frames, open doorways, windows, floor material and camera angle identical. "
+        "Do not invent new doors or walls. Do not leave wardrobe doors open. "
+        "No pedestals, no gym remnants, no hanging wind chimes, no clutter, no yellow color cast. "
+        "Cool natural daylight, sharp details, aspirational MLS hero photograph."
     )
     if crm_fragment:
         return f"{base} {crm_fragment}"

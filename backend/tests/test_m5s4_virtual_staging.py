@@ -170,8 +170,9 @@ def test_sort_erase_boxes_prefers_gym_then_bed():
 def test_staging_lora_prompt_includes_architecture_guard():
     vs = _import_module()
     p = vs._staging_lora_prompt("modern", "bedroom")
-    assert "Furnish" in p and "unchanged" in p
-    assert "bedroom" in p and "modern minimalist" in p
+    assert "Furnish" in p and "listing" in p
+    assert "bedroom" in p and "hotel-apartment" in p
+    assert "Do not invent new doors" in p
     assert "apartment" in vs.MODEL_APARTMENT_STAGING
     assert vs.MODEL_IDEOGRAM_ERASE.startswith("fal-ai/ideogram")
 
