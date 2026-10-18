@@ -156,6 +156,26 @@ def test_nms_bboxes_drops_overlaps():
     assert labels == ["gym", "bed"]
 
 
+def test_sort_erase_boxes_prefers_gym_then_bed():
+    vs = _import_module()
+    boxes = [
+        {"label": "rug", "area": 0.05, "x_min": 0, "y_min": 0, "x_max": 1, "y_max": 1},
+        {"label": "bed", "area": 0.12, "x_min": 0, "y_min": 0, "x_max": 1, "y_max": 1},
+        {"label": "gym machine", "area": 0.20, "x_min": 0, "y_min": 0, "x_max": 1, "y_max": 1},
+    ]
+    ordered = vs._sort_erase_boxes(boxes)
+    assert [b["label"] for b in ordered] == ["gym machine", "bed", "rug"]
+
+
+def test_staging_lora_prompt_includes_architecture_guard():
+    vs = _import_module()
+    p = vs._staging_lora_prompt("modern", "bedroom")
+    assert "Furnish" in p and "unchanged" in p
+    assert "bedroom" in p and "modern minimalist" in p
+    assert "apartment" in vs.MODEL_APARTMENT_STAGING
+    assert vs.MODEL_IDEOGRAM_ERASE.startswith("fal-ai/ideogram")
+
+
 def test_default_multi_styles_valid():
     vs = _import_module()
     assert all(s in vs.STYLES for s in vs.DEFAULT_MULTI_STYLES)

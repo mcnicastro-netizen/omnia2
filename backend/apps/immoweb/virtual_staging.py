@@ -1,15 +1,15 @@
-"""OMNIA — M5.S4 Virtual Staging (Sprint 2: reverse staging + varianti parallele + CRM-aware).
+"""OMNIA — M5.S4 Virtual Staging (quality v2).
 
 Reference: DECISIONS.md D-033.
 
-Pipeline:
-  Stage 1 — SAM 2 segmentation → maschera stanza (fal-ai/sam2/auto-segment)
-  Stage 1b (reverse) — Flux inpaint "empty room" → rimozione arredo esistente
-  Stage 2 — Flux inpainting → arredamento (1-4 varianti parallele, same-style o multi-style)
-  Stage 3 — Real-ESRGAN 4x upscale (parallelo per variante)
+Pipeline (empty / reverse):
+  Stage 1 — Florence-2 open-vocab furniture detect
+  Stage 1b — sequential Ideogram object-removal (+ Bria fallback), pass-2 remnants
+  Stage 2 — Flux 2 apartment-staging LoRA (skipped for mode=empty)
+  Stage 3 — ESRGAN only on Flux-inpaint fallback
 
-Prompt CRM-aware: se il job è collegato a un immobile, Gemini arricchisce il prompt
-con zona/prezzo/target buyer. Watermark "Render virtuale OMNIA" server-side.
+Standard (already-empty room): apartment-staging LoRA directly.
+CRM-aware prompt fragment (Gemini) + watermark "Render virtuale OMNIA".
 """
 from __future__ import annotations
 
@@ -51,6 +51,8 @@ MODEL_SAM2 = "fal-ai/sam2/auto-segment"
 MODEL_SAM2_BOX = "fal-ai/sam2/image"
 MODEL_FLORENCE_DET = "fal-ai/florence-2-large/open-vocabulary-detection"
 MODEL_BRIA_ERASER = "fal-ai/bria/eraser"
+MODEL_IDEOGRAM_ERASE = "fal-ai/ideogram/object-removal"
+MODEL_APARTMENT_STAGING = "fal-ai/flux-2-lora-gallery/apartment-staging"
 MODEL_FLUX_INPAINT = "fal-ai/flux-lora/inpainting"
 MODEL_UPSCALE = "fal-ai/esrgan"
 
@@ -65,6 +67,8 @@ MAX_PHOTO_WIDTH = 1600
 COST_SAM2 = 0.001
 COST_FLORENCE = 0.001
 COST_BRIA = 0.04
+COST_IDEOGRAM = 0.03
+COST_STAGING_LORA = 0.06
 COST_FLUX = 0.05
 COST_UPSCALE = 0.005
 
@@ -72,6 +76,8 @@ COST_UPSCALE = 0.005
 FURNITURE_DETECT_LABELS = (
     "gym machine",
     "exercise equipment",
+    "weight bench",
+    "bench",
     "wardrobe",
     "closet",
     "bed",
@@ -86,29 +92,86 @@ FURNITURE_DETECT_LABELS = (
     "picture frame",
     "dresser",
     "desk",
+    "hanging decoration",
+    "curtain",
+    "plant",
+    "mirror",
 )
+
+# Erase largest / most disruptive objects first.
+ERASE_LABEL_ORDER = (
+    "gym machine",
+    "exercise equipment",
+    "weight bench",
+    "bench",
+    "wardrobe",
+    "closet",
+    "dresser",
+    "bed",
+    "sofa",
+    "desk",
+    "table",
+    "shelf",
+    "rug",
+    "carpet",
+    "nightstand",
+    "chair",
+    "curtain",
+    "lamp",
+    "picture frame",
+    "hanging decoration",
+    "plant",
+    "mirror",
+)
+
+# Reject Florence false-positives that cover nearly the whole frame.
+_MASK_BOX_AREA_MAX = 0.35
+_ERASE_PASS1_MAX = 8
+_ERASE_PASS2_MAX = 5
+_ERASE_PASS3_MAX = 4
 
 # ─── Style catalog (prompts calibrated for real-estate rooms) ───
 STYLES: Dict[str, Dict[str, str]] = {
     "modern": {
         "label": "Moderno",
         "prompt": "modern minimalist interior, neutral colors, clean lines, natural light, high-end contemporary furniture, wooden floor, professional interior photography",
+        "staging_prompt": (
+            "Furnish this empty room with modern minimalist furniture and decor, "
+            "keep existing walls doors windows floor and ceiling unchanged, "
+            "photorealistic real estate listing photo"
+        ),
     },
     "classic": {
         "label": "Classico",
         "prompt": "classic elegant italian interior, warm colors, traditional wooden furniture, curtains, chandelier, parquet flooring, refined atmosphere",
+        "staging_prompt": (
+            "Furnish this empty room with classic elegant Italian furniture, warm wood, "
+            "keep architecture unchanged, photorealistic real estate listing photo"
+        ),
     },
     "scandi": {
         "label": "Scandinavo",
         "prompt": "scandinavian interior design, white walls, light wooden floor, minimalist furniture, cozy textiles, natural light, hygge atmosphere",
+        "staging_prompt": (
+            "Furnish this empty room with scandinavian furniture, light wood, soft textiles, "
+            "bright and airy, keep architecture unchanged, photorealistic real estate photo"
+        ),
     },
     "industrial": {
         "label": "Industriale",
         "prompt": "industrial loft style, exposed brick, metal fixtures, concrete floor, leather sofa, edison bulbs, urban chic",
+        "staging_prompt": (
+            "Furnish this empty room with industrial loft furniture, leather and metal accents, "
+            "keep architecture unchanged, photorealistic real estate listing photo"
+        ),
     },
     "luxury": {
         "label": "Luxury",
         "prompt": "luxury interior design, marble floor, designer furniture, gold accents, high ceilings, large windows, premium finishes",
+        "staging_prompt": (
+            "Furnish this empty room with luxury designer furniture and premium finishes, "
+            "keep architecture unchanged, photorealistic real estate listing photo"
+        ),
     },
 }
 
@@ -630,6 +693,12 @@ async def fulfill_paid_staging_render(session_id: str) -> Optional[dict]:
         return purchase
 
     now = datetime.now(timezone.utc).isoformat()
+    pay_style = (purchase.get("style") or "modern").strip() or "modern"
+    pay_room = (purchase.get("room_type") or "bedroom").strip() or "bedroom"
+    if pay_style not in STYLES:
+        pay_style = "modern"
+    if pay_room not in ROOM_TYPES:
+        pay_room = "bedroom"
     stages = [{"name": "sam2_mask", "status": "queued"}]
     if mode in ("reverse", "empty"):
         stages.append({"name": "furniture_removal", "status": "queued"})
@@ -645,8 +714,8 @@ async def fulfill_paid_staging_render(session_id: str) -> Optional[dict]:
         "source_url": source_url,
         "source_photo_id": resolved_photo_id,
         "source_photo_index": source_index,
-        "style": "modern" if mode != "empty" else "empty",
-        "room_type": "living",
+        "style": pay_style if mode != "empty" else "empty",
+        "room_type": pay_room,
         "mode": mode,
         "num_variants": 1,
         "variant_mode": "same_style",
@@ -830,7 +899,8 @@ async def _florence_furniture_boxes(image_url: str) -> List[dict]:
         if bw <= 1 or bh <= 1:
             continue
         area = (bw * bh) / total
-        if area < 0.008:
+        # Drop noise + whole-frame false positives (seen as "gym machine" @ 0.99)
+        if area < 0.008 or area > _MASK_BOX_AREA_MAX:
             continue
         items.append((area, (x, y, x + bw, y + bh), lab))
 
@@ -953,6 +1023,195 @@ async def _bria_erase(image_url: str, mask_url: str) -> str:
     if isinstance(image, str) and image:
         return image
     raise RuntimeError(f"Bria eraser returned no image (keys: {list(result.keys())})")
+
+
+async def _ideogram_erase(image_url: str, mask_url: str) -> str:
+    """Ideogram object removal — best clean empty results in OMNIA A/B on cluttered rooms."""
+    handler = await fal_client.submit_async(
+        MODEL_IDEOGRAM_ERASE,
+        arguments={"image_url": image_url, "mask_url": mask_url},
+    )
+    result = await handler.get()
+    image = result.get("image")
+    if isinstance(image, dict) and image.get("url"):
+        return image["url"]
+    if isinstance(image, str) and image:
+        return image
+    raise RuntimeError(f"Ideogram erase returned no image (keys: {list(result.keys())})")
+
+
+async def _erase_once(image_url: str, mask_url: str) -> tuple[str, str, float]:
+    """Prefer Ideogram, fall back to Bria. Returns (url, engine, cost)."""
+    try:
+        return await _ideogram_erase(image_url, mask_url), "ideogram", COST_IDEOGRAM
+    except Exception as e:
+        logger.warning("Ideogram erase failed (%s) — Bria fallback", e)
+        return await _bria_erase(image_url, mask_url), "bria", COST_BRIA
+
+
+async def _padded_box_mask_url(box: dict, image_url: str, *, pad: int = 12) -> str:
+    """Build a padded rectangular erase mask matching the current image size."""
+    from PIL import ImageFilter
+
+    async with httpx.AsyncClient(timeout=60.0) as client:
+        resp = await client.get(image_url)
+        resp.raise_for_status()
+        w, h = Image.open(io.BytesIO(resp.content)).size
+    mask = Image.new("L", (w, h), 0)
+    draw = ImageDraw.Draw(mask)
+    draw.rectangle(
+        [
+            max(0, int(box["x_min"]) - pad),
+            max(0, int(box["y_min"]) - pad),
+            min(w - 1, int(box["x_max"]) + pad),
+            min(h - 1, int(box["y_max"]) + pad),
+        ],
+        fill=255,
+    )
+    mask = mask.filter(ImageFilter.MaxFilter(5))
+    return await _upload_pil_mask(mask)
+
+
+def _sort_erase_boxes(boxes: List[dict]) -> List[dict]:
+    order = {lab: i for i, lab in enumerate(ERASE_LABEL_ORDER)}
+
+    def _key(b: dict) -> tuple:
+        return (order.get(b.get("label") or "", 99), -float(b.get("area") or 0))
+
+    return sorted(boxes, key=_key)
+
+
+async def _sequential_furniture_erase(image_url: str) -> tuple[str, float, dict]:
+    """Multi-pass erase: Florence → Ideogram/Bria per object → remnant pass.
+
+    A/B on Founder photo showed this beats single-shot Bria/FLUX Erase for empty rooms.
+    """
+    cost = 0.0
+    engines: List[str] = []
+    erased_labels: List[str] = []
+
+    boxes = await _florence_furniture_boxes(image_url)
+    cost += COST_FLORENCE
+    boxes = _sort_erase_boxes(boxes)[:_ERASE_PASS1_MAX]
+    url = image_url
+    for box in boxes:
+        mask_url = await _padded_box_mask_url(box, url, pad=12)
+        url, eng, c = await _erase_once(url, mask_url)
+        cost += c
+        engines.append(eng)
+        erased_labels.append(str(box.get("label") or "?"))
+
+    # Pass 2/3 — remnants (strict area band avoids whole-frame false positives)
+    boxes2: List[dict] = []
+    boxes3: List[dict] = []
+    for pass_idx, (cap, pad, store) in enumerate(
+        ((_ERASE_PASS2_MAX, 14, "boxes2"), (_ERASE_PASS3_MAX, 16, "boxes3")),
+        start=2,
+    ):
+        found = await _florence_furniture_boxes(url)
+        cost += COST_FLORENCE
+        found = [b for b in found if 0.008 <= float(b.get("area") or 0) <= 0.30]
+        found = _sort_erase_boxes(found)[:cap]
+        if store == "boxes2":
+            boxes2 = found
+        else:
+            boxes3 = found
+        if not found:
+            break
+        for box in found:
+            mask_url = await _padded_box_mask_url(box, url, pad=pad)
+            url, eng, c = await _erase_once(url, mask_url)
+            cost += c
+            engines.append(f"{eng}_p{pass_idx}")
+            erased_labels.append(f"{box.get('label')}:p{pass_idx}")
+
+    # Final sweep — soft clutter Florence often leaves after big furniture is gone
+    leftover = await _florence_furniture_boxes(url)
+    cost += COST_FLORENCE
+    soft = {"rug", "carpet", "picture frame", "hanging decoration", "plant", "curtain"}
+    leftover = [
+        b for b in leftover
+        if (b.get("label") in soft) and 0.005 <= float(b.get("area") or 0) <= 0.25
+    ]
+    leftover = _sort_erase_boxes(leftover)[:4]
+    for box in leftover:
+        mask_url = await _padded_box_mask_url(box, url, pad=18)
+        url, eng, c = await _erase_once(url, mask_url)
+        cost += c
+        engines.append(f"{eng}_sweep")
+        erased_labels.append(f"{box.get('label')}:sweep")
+
+    meta = {
+        "engine": "+".join(dict.fromkeys(engines)) or "none",
+        "erased": erased_labels,
+        "pass1": len(boxes),
+        "pass2": len(boxes2),
+        "pass3": len(boxes3),
+        "sweep": len(leftover),
+    }
+    return url, cost, meta
+
+
+_STYLE_EN = {
+    "modern": "modern minimalist",
+    "classic": "classic elegant Italian",
+    "scandi": "scandinavian",
+    "industrial": "industrial loft",
+    "luxury": "luxury designer",
+}
+
+
+def _staging_lora_prompt(style: str, room_type: str, crm_fragment: Optional[str] = None) -> str:
+    sk = style if style in STYLES else "modern"
+    rt = room_type if room_type in ROOM_TYPES else "living"
+    room_en = {
+        "living": "living room",
+        "bedroom": "bedroom",
+        "kitchen": "kitchen",
+        "dining": "dining room",
+        "bathroom": "bathroom",
+        "office": "home office",
+    }.get(rt, "living room")
+    room_bits = ROOM_TYPES.get(rt, ROOM_TYPES["living"])
+    style_en = _STYLE_EN.get(sk, "modern")
+    base = (
+        f"Furnish this empty {room_en} with {style_en} furniture and decor: {room_bits}. "
+        "Keep existing walls, doors, windows, floor material and ceiling completely unchanged. "
+        "No surreal objects, no melting furniture, no distorted geometry. "
+        "Photorealistic real estate listing photograph, natural light, sharp details."
+    )
+    if crm_fragment:
+        return f"{base} {crm_fragment}"
+    return base
+
+
+async def _apartment_stage(
+    image_url: str,
+    prompt: str,
+    *,
+    num_images: int = 1,
+    lora_scale: float = 0.95,
+) -> List[str]:
+    """Purpose-built Flux 2 apartment-staging LoRA (preserves room geometry)."""
+    handler = await fal_client.submit_async(
+        MODEL_APARTMENT_STAGING,
+        arguments={
+            "image_urls": [image_url],
+            "prompt": prompt,
+            "guidance_scale": 2.5,
+            "num_inference_steps": 40,
+            "lora_scale": lora_scale,
+            "output_format": "png",
+            "num_images": max(1, min(int(num_images), 4)),
+            "enable_safety_checker": True,
+        },
+    )
+    result = await handler.get()
+    images = result.get("images") or []
+    urls = [im.get("url") for im in images if isinstance(im, dict) and im.get("url")]
+    if not urls:
+        raise RuntimeError(f"Apartment staging returned no images (keys: {list(result.keys())})")
+    return urls
 
 
 async def _flux_inpaint(
@@ -1087,110 +1346,118 @@ async def _run_pipeline(job_id: str, db) -> None:
         if crm_summary:
             await _mark_root({"crm_context": crm_summary})
 
-    # Stage 1: furniture/room mask (Florence+SAM boxes for empty/reverse; auto-segment for standard)
+    # Stage 1 — detect. Empty/reverse: Florence is billed inside sequential erase.
+    # Standard: SAM auto-segment kept for Flux fallback path only.
+    mask_url: Optional[str] = None
     try:
         t0 = monotonic()
         await _mark_stage("sam2_mask", {"status": "running"})
-        want_furniture = mode in ("reverse", "empty")
-        mask_url = await _stage_sam2_mask(src, for_furniture=want_furniture)
-        await _mark_root({"mask_url": mask_url})
-        mask_cost = (COST_SAM2 + COST_FLORENCE) if want_furniture else COST_SAM2
-        await _mark_stage("sam2_mask", {
-            "status": "done",
-            "duration_ms": int((monotonic() - t0) * 1000),
-            "cost_usd": mask_cost,
-        })
-        total_cost += mask_cost
+        if mode in ("reverse", "empty"):
+            await _mark_stage("sam2_mask", {
+                "status": "done",
+                "duration_ms": int((monotonic() - t0) * 1000),
+                "cost_usd": 0,
+                "note": "florence_detect_inside_erase",
+            })
+        else:
+            mask_url = await _stage_sam2_mask(src, for_furniture=False)
+            await _mark_root({"mask_url": mask_url})
+            await _mark_stage("sam2_mask", {
+                "status": "done",
+                "duration_ms": int((monotonic() - t0) * 1000),
+                "cost_usd": COST_SAM2,
+            })
+            total_cost += COST_SAM2
     except Exception as e:
         await _fail("sam2_mask", "SAM2", e)
         return
 
-    # Stage 1b (reverse / empty): Bria eraser on Florence+SAM furniture mask
-    # (Flux EMPTY_ROOM_PROMPT was inventing walls/layouts → allucinazioni Founder)
+    # Stage 1b — sequential Ideogram/Bria erase (empty / reverse only)
     base_image = src
     if mode in ("reverse", "empty"):
         try:
             t0 = monotonic()
             await _mark_stage("furniture_removal", {"status": "running"})
-            try:
-                base_image = await _bria_erase(src, mask_url)
-                removal_cost = COST_BRIA
-                removal_engine = "bria_eraser"
-            except Exception as bria_err:
-                logger.warning("Bria eraser failed (%s) — Flux empty fallback", bria_err)
-                emptied = await _flux_inpaint(
-                    src,
-                    mask_url,
-                    EMPTY_ROOM_PROMPT,
-                    num_images=1,
-                    strength=0.85,
-                    guidance_scale=2.5,
-                    num_inference_steps=32,
-                )
-                base_image = emptied[0]
-                removal_cost = COST_FLUX
-                removal_engine = "flux_fallback"
+            base_image, removal_cost, erase_meta = await _sequential_furniture_erase(src)
+            await _mark_root({"erase_meta": erase_meta})
             await _mark_stage("furniture_removal", {
                 "status": "done",
                 "duration_ms": int((monotonic() - t0) * 1000),
-                "cost_usd": removal_cost,
-                "engine": removal_engine,
+                "cost_usd": round(removal_cost, 4),
+                "engine": erase_meta.get("engine"),
+                "note": f"erased={','.join(erase_meta.get('erased') or [])}"[:280],
             })
             total_cost += removal_cost
         except Exception as e:
             await _fail("furniture_removal", "Rimozione arredo", e)
             return
 
-    # Stage 2: Flux furnish — skipped for mode=empty (solo svuota stanza)
+    # Stage 2 — apartment-staging LoRA (furnish). Skipped for empty-only mode.
     if mode == "empty":
         variants = [{"url": base_image, "style": "empty", "upscaled": False}]
         await _mark_stage("flux_inpaint", {
             "status": "done", "duration_ms": 0, "cost_usd": 0,
             "note": "skipped_empty_mode",
+            "engine": "none",
         })
     else:
         try:
             t0 = monotonic()
             await _mark_stage("flux_inpaint", {"status": "running"})
-            if variant_mode == "multi_style":
-                style_keys = (doc.get("styles_list") or DEFAULT_MULTI_STYLES)[:num_variants]
-                tasks = [
-                    _flux_inpaint(base_image, mask_url, _build_prompt(sk, doc["room_type"], crm_fragment), 1)
-                    for sk in style_keys
-                ]
-                results = await asyncio.gather(*tasks, return_exceptions=True)
-                variants: List[dict] = []
-                for sk, res in zip(style_keys, results):
-                    if isinstance(res, Exception):
-                        logger.warning("Variant %s failed: %s", sk, res)
-                        continue
-                    variants.extend({"url": u, "style": sk, "upscaled": False} for u in res)
-                if not variants:
-                    raise RuntimeError("Tutte le varianti multi-style sono fallite")
-            else:
-                urls = await _flux_inpaint(
-                    base_image, mask_url,
-                    _build_prompt(doc["style"], doc["room_type"], crm_fragment),
-                    num_images=num_variants,
-                )
-                variants = [{"url": u, "style": doc["style"], "upscaled": False} for u in urls]
-            flux_cost = COST_FLUX * len(variants)
+            style_keys = (
+                (doc.get("styles_list") or DEFAULT_MULTI_STYLES)[:num_variants]
+                if variant_mode == "multi_style"
+                else [doc.get("style") or "modern"]
+            )
+            variants = []
+            engine_used = "apartment_staging_lora"
+            for sk in style_keys:
+                prompt = _staging_lora_prompt(sk, doc.get("room_type") or "living", crm_fragment)
+                try:
+                    urls = await _apartment_stage(base_image, prompt, num_images=1 if variant_mode == "multi_style" else num_variants)
+                except Exception as lora_err:
+                    logger.warning("Apartment staging LoRA failed (%s) — Flux inpaint fallback", lora_err)
+                    engine_used = "flux_inpaint_fallback"
+                    if not mask_url:
+                        mask_url = await _stage_sam2_mask(base_image, for_furniture=True)
+                    urls = await _flux_inpaint(
+                        base_image, mask_url, _build_prompt(sk, doc.get("room_type") or "living", crm_fragment),
+                        num_images=1 if variant_mode == "multi_style" else num_variants,
+                    )
+                variants.extend({"url": u, "style": sk, "upscaled": False} for u in urls)
+                if variant_mode != "multi_style":
+                    break
+            if not variants:
+                raise RuntimeError("Nessuna variante staging generata")
+            stage_cost = (COST_STAGING_LORA if engine_used.startswith("apartment") else COST_FLUX) * len(variants)
             await _mark_stage("flux_inpaint", {
-                "status": "done", "duration_ms": int((monotonic() - t0) * 1000), "cost_usd": round(flux_cost, 4),
+                "status": "done",
+                "duration_ms": int((monotonic() - t0) * 1000),
+                "cost_usd": round(stage_cost, 4),
+                "engine": engine_used,
             })
-            total_cost += flux_cost
+            total_cost += stage_cost
         except Exception as e:
-            await _fail("flux_inpaint", "Flux", e)
+            await _fail("flux_inpaint", "Staging", e)
             return
 
-    # Stage 3: upscale — skipped for empty mode (ESRGAN 4x amplifies erase leftovers
-    # into floor "hallucinations"; Bria output is already presentation-ready).
+    # Stage 3 — upscale only for Flux-inpaint fallback (ESRGAN amplifies erase seams).
     t0 = monotonic()
     await _mark_stage("upscale", {"status": "running"})
-    if mode == "empty":
+    furn_engine = ""
+    try:
+        stage_doc = await db.virtual_staging_jobs.find_one({"id": job_id}, {"stages": 1})
+        furn_stage = next(
+            (s for s in (stage_doc or {}).get("stages") or [] if s.get("name") == "flux_inpaint"),
+            {},
+        )
+        furn_engine = furn_stage.get("engine") or ""
+    except Exception:
+        furn_engine = ""
+    if mode == "empty" or not furn_engine.startswith("flux_inpaint"):
         await _mark_stage("upscale", {
             "status": "done", "duration_ms": 0, "cost_usd": 0,
-            "note": "skipped_empty_mode",
+            "note": "skipped_empty_mode" if mode == "empty" else "skipped_apartment_lora",
         })
     else:
         async def _up(v: dict) -> dict:

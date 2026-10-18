@@ -28,6 +28,8 @@ export default function B2CStagingPanel({
   // reverse = svuota+ri-arreda (case reale: foto già arredate). empty = solo svuota.
   // Non usare "standard" (assume stanza già vuota) — è la causa tipica di "Arreda non funziona".
   const [mode, setMode] = useState("reverse"); // reverse | empty
+  const [roomType, setRoomType] = useState("bedroom");
+  const [style, setStyle] = useState("modern");
   const [preview, setPreview] = useState(null); // { jobId, url, photoId, photoIndex, mode }
   const [localBusy, setLocalBusy] = useState(false);
   const [stageHint, setStageHint] = useState("");
@@ -38,12 +40,27 @@ export default function B2CStagingPanel({
   const modeLabel =
     mode === "empty" ? t("cloud.sell.staging_mode_empty") : t("cloud.sell.staging_mode_furnish");
 
+  const roomOptions = [
+    { key: "bedroom", label: t("cloud.sell.staging_room_bedroom", { defaultValue: "Camera" }) },
+    { key: "living", label: t("cloud.sell.staging_room_living", { defaultValue: "Soggiorno" }) },
+    { key: "kitchen", label: t("cloud.sell.staging_room_kitchen", { defaultValue: "Cucina" }) },
+    { key: "dining", label: t("cloud.sell.staging_room_dining", { defaultValue: "Pranzo" }) },
+  ];
+  const styleOptions = [
+    { key: "modern", label: t("cloud.sell.staging_style_modern", { defaultValue: "Moderno" }) },
+    { key: "scandi", label: t("cloud.sell.staging_style_scandi", { defaultValue: "Scandi" }) },
+    { key: "classic", label: t("cloud.sell.staging_style_classic", { defaultValue: "Classico" }) },
+    { key: "luxury", label: t("cloud.sell.staging_style_luxury", { defaultValue: "Luxury" }) },
+  ];
+
   const stageLabel = (stages) => {
     const running = (stages || []).find((s) => s.status === "running");
     if (!running) return "";
     const map = {
       sam2_mask: t("cloud.sell.staging_stage_mask", { defaultValue: "Analisi stanza…" }),
-      furniture_removal: t("cloud.sell.staging_stage_empty", { defaultValue: "Rimozione arredo…" }),
+      furniture_removal: t("cloud.sell.staging_stage_empty", {
+        defaultValue: "Svuotamento accurato (può richiedere qualche minuto)…",
+      }),
       flux_inpaint: t("cloud.sell.staging_stage_furnish", { defaultValue: "Arredamento virtuale…" }),
       upscale: t("cloud.sell.staging_stage_upscale", { defaultValue: "Rifinitura…" }),
     };
@@ -72,11 +89,14 @@ export default function B2CStagingPanel({
       const { data } = await api.post(`/cloud/me/properties/${listingId}/staging/preview`, {
         photo_id: selected.id,
         mode,
+        room_type: roomType,
+        style,
       });
       const jobId = data?.job?.id;
       if (!jobId) throw new Error("no_job");
       let done = null;
-      for (let i = 0; i < 72; i += 1) {
+      // Sequential erase can take 3–5 minutes — poll ~7.5 min
+      for (let i = 0; i < 180; i += 1) {
         const jr = await api.get(`/cloud/me/properties/${listingId}/staging/${jobId}`);
         if (jr.data?.status === "done") {
           done = jr.data;
@@ -258,6 +278,45 @@ export default function B2CStagingPanel({
           {t("cloud.sell.staging_mode_empty")}
         </button>
       </div>
+
+      {mode === "reverse" ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3" data-testid={`${testIdPrefix}-options`}>
+          <label className="block">
+            <span className="text-[10px] uppercase tracking-widest text-stone-500">
+              {t("cloud.sell.staging_room_label", { defaultValue: "Tipo stanza" })}
+            </span>
+            <select
+              data-testid={`${testIdPrefix}-room`}
+              value={roomType}
+              onChange={(e) => setRoomType(e.target.value)}
+              className="mt-1 w-full text-xs border border-stone-300 rounded px-2 py-1.5 bg-white"
+            >
+              {roomOptions.map((o) => (
+                <option key={o.key} value={o.key}>
+                  {o.label}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="block">
+            <span className="text-[10px] uppercase tracking-widest text-stone-500">
+              {t("cloud.sell.staging_style_label", { defaultValue: "Stile" })}
+            </span>
+            <select
+              data-testid={`${testIdPrefix}-style`}
+              value={style}
+              onChange={(e) => setStyle(e.target.value)}
+              className="mt-1 w-full text-xs border border-stone-300 rounded px-2 py-1.5 bg-white"
+            >
+              {styleOptions.map((o) => (
+                <option key={o.key} value={o.key}>
+                  {o.label}
+                </option>
+              ))}
+            </select>
+          </label>
+        </div>
+      ) : null}
 
       {!preview?.url ? (
         <div className="space-y-2">
