@@ -299,7 +299,7 @@ Totale merito **cappato** tra −40% e +30%.
 - **Cap. 11 · Mutui comparatore** — dopo la stima, simula la rata per l'acquirente (box mutui anche su scheda annuncio).
 - **Cap. 19 · Impostazioni** — verifica email, profilo account ImmobilCloud.
 - **Cap. 20 · API Keys / Track B** — widget valutatore partner (`POST /api/v1/valuator`, 5 cr).
-- **PRICING_B2C.md** — listino €2,99 UNI + regole anti-abuso.
+- **PRICING_B2C.md** v1.4 — listino €2,99 UNI · staging B2C **€1,49** (D-128) · regole anti-abuso.
 
 ---
 

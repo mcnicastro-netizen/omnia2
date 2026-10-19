@@ -212,8 +212,11 @@ Vedere in un solo job più risultati e scegliere il migliore, o mostrare al clie
 - Costo vivo fal.ai ~$0,056 (0,051 €) per render → margine ~94% a €0,90.
 - Il servizio è pensato come **strumento di acquisizione mandato**, non revenue center.
 
-**Costo B2C ImmobilCloud**
-- Modulo Virtual Staging pubblico non implementato in v1 (previsto **€0,90/foto max 3 per annuncio UGC** — vedi `PRICING_B2C.md`, non attivo in checkout).
+**Costo B2C ImmobilCloud (D-128 · listino v1.4)**
+- **€1,49 / foto** one-shot Stripe (carta) — max 3 foto per annuncio UGC.
+- Anteprima gratis; pagamento solo al salvataggio sull’annuncio.
+- Motore target: **Nano Banana 2** one-shot + 4 stili + critico vision (max 1 retry); COGS tipico ~$0,33/run. Fallback legacy EVF+Ideogram+LoRA se nano fallisce.
+- SoT prezzi: `PRICING_B2C.md` v1.4 · `b2c_products.py` (`b2c_staging_render`).
 
 **Quando parte l'addebito crediti**
 - Al `POST /generate` viene fatto **hard-gate** sul saldo (**A-013**): se i crediti non bastano → **402** e il job non parte.
