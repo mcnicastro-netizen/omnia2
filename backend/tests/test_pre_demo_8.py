@@ -41,6 +41,20 @@ def test_mls_shareable_excludes_trash_shape():
     assert "deleted_at" in blob
 
 
+def test_mls_shareable_excludes_private_listings():
+    """Annunci B2C non devono entrare in matching/inventario MLS."""
+    from apps.immoweb.mls import _shareable_listing_clause, _shareable_listing_filters
+
+    filters = _shareable_listing_filters()
+    assert filters["is_private_listing"] == {"$ne": True}
+    assert filters["agency_id"] == {"$ne": "_private_listings"}
+    assert filters["mls_shared"] == {"$ne": False}
+
+    blob = json.dumps(_shareable_listing_clause())
+    assert "is_private_listing" in blob
+    assert "_private_listings" in blob
+
+
 def test_dashboard_kpi_uses_trash_helper():
     import inspect
     from apps.immoweb import dashboard as d

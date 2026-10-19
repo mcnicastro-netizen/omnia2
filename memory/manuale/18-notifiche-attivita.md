@@ -214,9 +214,11 @@ Su **`/it/cloud/account/sell`** (area **Vendi** B2C) compare a destra un rail ve
 
 1. **Attestato APE** — obbligo di legge per pubblicare/vendere in regola.
 2. **Planimetria catastale** — documentazione per visite e conformità.
-3. **Accesso agli atti** — recupero titoli/documenti non più nella disponibilità del proprietario venditore.
+3. **Accesso agli atti** — **copia del progetto originario depositato in Comune** (+ titolo abilitativo opz.; no conformità / no Conservatoria in v1) — **D-125**.
 
-**Stato 14-Ott-2026 (D-124)**: solo UI (etichetta «Presto disponibile») — **nessun link** alle pagine servizio ancora. Non compare sulla home ecosistema OMNIA (`/it/`).
+**Stato**:
+- **14-Ott-2026 (D-124)**: rail UI su SellPage (etichetta «Presto disponibile») — link pagine servizio ancora da collegare. Non sulla home `/it/`.
+- **15-Ott-2026 (D-125)**: Accesso agli atti = progetto comunale; **niente wallet €1k+**; box resta spento finché partner (Pratiche.it / PraticheCasa.it) conferma accordo a consumo.
 
 ---
 
@@ -442,6 +444,7 @@ db.al_audit.find({user_id: "..."}).sort({created_at: -1}).limit(50)
 - **17-Sep-2026**: contatto annuncio **privato** documentato (§18.7b): `listing_inquiries` + `listing_inquiry` ≠ CRM lead agenzia.
 - **24-Sep-2026 · D-093 P0**: **A-029** stats privato (view/lead + serie 30g su SellPage); **A-030** alert preferiti su sold/rented/withdrawn (+ ribasso già live). Backlog A-031…A-033.
 - **14-Ott-2026 · D-124**: rail promo documenti (APE / planimetria / accesso atti) su SellPage §18.7c — UI only.
+- **15-Ott-2026 · D-125**: Accesso agli atti = copia progetto comunale; no wallet; box «Presto disponibile» fino ad accordo a consumo.
 - **A-018 activity feed** ancora assente: dashboard = KPI, non timeline.
 - **`push` schema / non implementato** (A-033 futuro).
 - Cron saved-searches: frequenza rispettata (A-019) + **scheduler interno** (A-020) + pass preferiti ribasso/ended.

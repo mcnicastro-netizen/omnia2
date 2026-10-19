@@ -120,6 +120,75 @@ def test_build_prompt_fallbacks():
 def test_empty_room_prompt_exists():
     vs = _import_module()
     assert "no furniture" in vs.EMPTY_ROOM_PROMPT
+    assert "architectural changes" in vs.EMPTY_ROOM_PROMPT or "no architectural" in vs.EMPTY_ROOM_PROMPT
+
+
+def test_merge_furniture_masks_prefers_mid_sized():
+    """Wall-sized + tiny noise masks must not dominate the furniture OR-mask."""
+    vs = _import_module()
+    # 100x100 canvas
+    wall = Image.new("L", (100, 100), 0)
+    # wall/floor ~50% white
+    for y in range(50):
+        for x in range(100):
+            wall.putpixel((x, y), 255)
+    sofa = Image.new("L", (100, 100), 0)
+    for y in range(60, 85):
+        for x in range(20, 70):
+            sofa.putpixel((x, y), 255)  # ~12.5%
+    noise = Image.new("L", (100, 100), 0)
+    noise.putpixel((5, 5), 255)
+    merged = vs.merge_furniture_masks_from_images([wall, sofa, noise])
+    # Sofa region should be white; upper wall region should stay mostly black
+    assert merged.getpixel((40, 70)) > 200
+    assert merged.getpixel((50, 10)) < 40
+
+
+def test_nms_bboxes_drops_overlaps():
+    vs = _import_module()
+    items = [
+        (0.20, (0, 0, 100, 100), "gym"),
+        (0.19, (10, 10, 110, 110), "exercise"),  # heavy overlap with gym
+        (0.10, (200, 200, 300, 300), "bed"),
+    ]
+    kept = vs.nms_bboxes(items, iou_thresh=0.45)
+    labels = [k[2] for k in kept]
+    assert labels == ["gym", "bed"]
+
+
+def test_sort_erase_boxes_prefers_gym_then_bed():
+    vs = _import_module()
+    boxes = [
+        {"label": "rug", "area": 0.05, "x_min": 0, "y_min": 0, "x_max": 1, "y_max": 1},
+        {"label": "bed", "area": 0.12, "x_min": 0, "y_min": 0, "x_max": 1, "y_max": 1},
+        {"label": "gym machine", "area": 0.20, "x_min": 0, "y_min": 0, "x_max": 1, "y_max": 1},
+    ]
+    ordered = vs._sort_erase_boxes(boxes)
+    assert [b["label"] for b in ordered] == ["gym machine", "bed", "rug"]
+
+
+def test_staging_lora_prompt_includes_architecture_guard():
+    vs = _import_module()
+    p = vs._staging_lora_prompt("modern", "bedroom")
+    assert "Furnish" in p and "listing" in p
+    assert "bedroom" in p and "hotel-apartment" in p
+    assert "Do not invent new doors" in p
+    assert "apartment" in vs.MODEL_APARTMENT_STAGING
+    assert vs.MODEL_IDEOGRAM_ERASE.startswith("fal-ai/ideogram")
+
+
+def test_architecture_keep_labels_cover_openings():
+    vs = _import_module()
+    labs = set(vs.ARCHITECTURE_KEEP_LABELS)
+    assert {"door", "doorway", "window"} <= labs
+    assert vs.MODEL_FAL_OBJECT_REMOVAL.startswith("fal-ai/object-removal")
+
+
+def test_evf_semantic_mask_constants():
+    vs = _import_module()
+    assert vs.MODEL_EVF_SAM == "fal-ai/evf-sam"
+    assert len(vs.EVF_FURNITURE_PROMPTS) >= 4
+    assert "walls" in vs.EVF_ARCHITECTURE_NEGATIVE
 
 
 def test_default_multi_styles_valid():

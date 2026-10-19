@@ -48,10 +48,7 @@ export default function VideoUploader({
         try {
           const fd = new FormData();
           fd.append("file", file, file.name);
-          const { data } = await api.post(uploadUrl, fd, {
-            headers: { "Content-Type": "multipart/form-data" },
-            timeout: 180000,
-          });
+          const { data } = await api.post(uploadUrl, fd, { timeout: 180000 });
           next.push({
             id: data.id || (crypto.randomUUID ? crypto.randomUUID() : String(Math.random()).slice(2)),
             url: data.url,

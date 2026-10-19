@@ -695,25 +695,29 @@ voci:
     widget: null
     pubblico: [b2c_client]
     livello: base
-    tags: [sellpage, ape, planimetria, accesso-atti, documenti, privato, promo, d-124]
+    tags: [sellpage, ape, planimetria, accesso-atti, documenti, privato, promo, d-124, d-125, presto-disponibile, progetto-comunale]
     correlati: [notifiche.inquiry-annuncio-privato, notifiche.d093-preferiti-stats]
     domanda_naturale: >
       Dove trovo i suggerimenti per APE, planimetria e accesso agli atti
-      quando pubblico un annuncio privato?
+      quando pubblico un annuncio privato? Cos'è l'accesso agli atti?
     contenuto:
       a_cosa_serve: >
         Aiuta il privato che pubblica su ImmobilCloud a ricordare i documenti
-        tipici per vendere in regola (APE, planimetria, ricerca atti).
+        tipici per vendere in regola (APE, planimetria, accesso atti).
       quando_si_usa: >
         Dopo login B2C → ImmobilCloud → Vendi (/it/cloud/account/sell).
       passi:
         - "UI · rail destro SellDocPromoRail: Attestato APE, Planimetria catastale, Accesso agli atti."
-        - "Stato 14-Ott-2026 · solo box UI (Presto disponibile) — link alle pagine servizio in arrivo."
+        - "D-124 · rail UI (Presto disponibile); link pagine servizio ancora da collegare."
+        - "D-125 · Accesso agli atti = copia del progetto originario in Comune
+          (+ titolo abilitativo opz.). Niente wallet anticipo; box spento finché
+          partner conferma accordo a consumo (Pratiche.it / PraticheCasa.it)."
         - "NON compare sulla home ecosistema OMNIA (/it/)."
       errori_comuni:
         - problema: "Clicco il box e non succede nulla"
           soluzione: >
-            Atteso: i box non sono ancora collegati. Torna domani per i link servizio.
+            Atteso: i box non sono ancora collegati al checkout/servizio.
+            Accesso atti resta Presto disponibile (D-125) finché c'è accordo partner.
       permessi:
         - "Solo account B2C autenticato sulla SellPage"
     screenshot: [cap18-sell-doc-promo]

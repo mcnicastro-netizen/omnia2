@@ -50,7 +50,11 @@ _PROP_PROJ = {
     "status": 1,
     "visibility": 1,
     "mls_shared": 1,
+    "is_private_listing": 1,
+    "moderation_status": 1,
 }
+
+PORTAL_SCAN_CAP = 150
 
 
 def _now() -> str:
@@ -408,6 +412,34 @@ async def score_properties(
     return scored, best
 
 
+async def _score_portal_private_listings(
+    db,
+    criteria: Dict[str, Any],
+    *,
+    threshold: int,
+    price_pct: float,
+    surface_pct: float,
+) -> Tuple[List[Dict[str, Any]], Optional[int]]:
+    """Annunci privati attivi sul portale (canale parallelo all'MLS)."""
+    from shared.db.trash import with_not_trashed
+    portal_q = with_not_trashed({
+        "is_private_listing": True,
+        "status": "active",
+        "moderation_status": "approved",
+    })
+    portal_props = await db.properties.find(portal_q, _PROP_PROJ).sort(
+        "updated_at", -1,
+    ).to_list(length=PORTAL_SCAN_CAP)
+    hits, best = await score_properties(
+        portal_props, criteria, threshold=threshold,
+        price_pct=price_pct, surface_pct=surface_pct,
+    )
+    for h in hits:
+        h["scope"] = "portal"
+        h["is_private_listing"] = True
+    return hits, best
+
+
 async def match_request(
     db,
     agency_id: str,
@@ -415,7 +447,10 @@ async def match_request(
     *,
     min_score: Optional[int] = None,
 ) -> Dict[str, Any]:
-    """Portfolio first; if no useful match, fall through to MLS shareable inventory."""
+    """Portfolio first; MLS shareable + portale privati (scope portal) in parallelo al fall-through.
+
+    Founder: gli annunci privati matchano le richieste agenzia indipendentemente da mls_shared.
+    """
     tol = resolve_tolerances(req.get("match_tolerances"))
     threshold = int(min_score if min_score is not None else tol["min_score"])
     criteria = req.get("criteria") or {}
@@ -429,7 +464,12 @@ async def match_request(
                 score = 100 if prop.get("agency_id") == agency_id else 70
             else:
                 score = compute_match_score_fast(p, prefs)
-            scope = "portfolio" if prop.get("agency_id") == agency_id else "mls"
+            if prop.get("is_private_listing") or prop.get("agency_id") == "_private_listings":
+                scope = "portal"
+            elif prop.get("agency_id") == agency_id:
+                scope = "portfolio"
+            else:
+                scope = "mls"
             item = {
                 "property_id": p.get("id"),
                 "agency_id": p.get("agency_id"),
@@ -441,41 +481,57 @@ async def match_request(
                 "price": p.get("price") or p.get("rent_monthly"),
                 "score": score,
                 "scope": scope,
+                "is_private_listing": bool(prop.get("is_private_listing")),
             }
+            ok = score >= threshold
             return {
-                "scope_used": scope,
+                "scope_used": scope if ok else "none",
                 "best_score": score,
                 "tolerances": tol,
-                "portfolio_matches": [item] if scope == "portfolio" and score >= threshold else [],
-                "mls_matches": [item] if scope == "mls" and score >= threshold else [],
-                "items": [item] if score >= threshold else [],
+                "portfolio_matches": [item] if scope == "portfolio" and ok else [],
+                "mls_matches": [item] if scope == "mls" and ok else [],
+                "portal_matches": [item] if scope == "portal" and ok else [],
+                "items": [item] if ok else [],
             }
 
     from shared.db.trash import with_not_trashed
     own = await db.properties.find(
-        with_not_trashed({"agency_id": agency_id, "status": "active"}),
+        with_not_trashed({"agency_id": agency_id, "status": "active", "is_private_listing": {"$ne": True}}),
         _PROP_PROJ,
     ).sort("updated_at", -1).to_list(length=PORTFOLIO_SCAN_CAP)
     portfolio_hits, best_own = await score_properties(
         own, criteria, threshold=threshold,
         price_pct=tol["price_pct"], surface_pct=tol["surface_pct"],
     )
+    for h in portfolio_hits:
+        h["scope"] = "portfolio"
+
+    # Sempre: match anche annunci privati del portale (tutte le richieste, MLS o no)
+    portal_hits, best_portal = await _score_portal_private_listings(
+        db, criteria,
+        threshold=threshold,
+        price_pct=tol["price_pct"],
+        surface_pct=tol["surface_pct"],
+    )
 
     if portfolio_hits:
-        for h in portfolio_hits:
-            h["scope"] = "portfolio"
+        items = list(portfolio_hits) + list(portal_hits)
+        items.sort(key=lambda x: x.get("score") or 0, reverse=True)
+        best = best_own
+        if best_portal is not None and (best is None or best_portal > best):
+            best = best_portal
         return {
             "scope_used": "portfolio",
-            "best_score": best_own,
+            "best_score": best,
             "tolerances": tol,
             "portfolio_matches": portfolio_hits,
             "mls_matches": [],
-            "items": portfolio_hits,
+            "portal_matches": portal_hits,
+            "items": items,
         }
 
-    # Fall through to MLS (other agencies, shareable)
+    # Fall through to MLS (other agencies, shareable) — privati esclusi dalla clause MLS
     clause = _shareable_listing_clause()
-    from shared.db.trash import with_not_trashed
     mls_q = with_not_trashed({
         **clause,
         "agency_id": {"$ne": agency_id},
@@ -491,13 +547,19 @@ async def match_request(
     best = best_own if best_own is not None else best_mls
     if best_mls is not None and (best is None or best_mls > best):
         best = best_mls
+    if best_portal is not None and (best is None or best_portal > best):
+        best = best_portal
+    items = list(mls_hits) + list(portal_hits)
+    items.sort(key=lambda x: x.get("score") or 0, reverse=True)
+    scope_used = "mls" if mls_hits else ("portal" if portal_hits else "none")
     return {
-        "scope_used": "mls" if mls_hits else "none",
+        "scope_used": scope_used,
         "best_score": best,
         "tolerances": tol,
         "portfolio_matches": [],
         "mls_matches": mls_hits,
-        "items": mls_hits,
+        "portal_matches": portal_hits,
+        "items": items,
     }
 
 

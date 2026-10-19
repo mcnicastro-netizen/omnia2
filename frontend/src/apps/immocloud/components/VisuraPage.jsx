@@ -166,7 +166,30 @@ export default function VisuraPage() {
               </button>
             )}
             {order?.payment_status === "paid" && !order?.download_ready && order?.status !== "failed" && (
-              <p className="text-xs text-stone-500">{t("cloud.visura.preparing")}</p>
+              <div
+                className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-3"
+                data-testid="cloud-visura-preparing"
+                role="status"
+                aria-live="polite"
+              >
+                <p className="text-sm font-medium text-stone-800">{t("cloud.visura.preparing")}</p>
+                <p className="mt-1.5 text-xs text-stone-600 leading-relaxed">
+                  {t("cloud.visura.preparing_tip")}
+                </p>
+              </div>
+            )}
+            {sessionId && (!order || (order.payment_status !== "paid" && order.status !== "failed")) && (
+              <div
+                className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-3"
+                data-testid="cloud-visura-confirming"
+                role="status"
+                aria-live="polite"
+              >
+                <p className="text-sm font-medium text-stone-800">{t("checkout.success_pending")}</p>
+                <p className="mt-1.5 text-xs text-stone-600 leading-relaxed">
+                  {t("checkout.success_pending_tip")}
+                </p>
+              </div>
             )}
           </div>
         )}

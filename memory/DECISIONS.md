@@ -7,6 +7,54 @@ Registro di tutte le decisioni di business e tecniche prese durante il progetto.
 
 ## Decisioni prese
 
+### D-128 — StagingAgent nativo + Nano Banana one-shot (no SaaS staging embed) · 18/19-Ott-2026
+- **Data**: 18–19 Ottobre 2026
+- **Contesto**: Founder boccia qualità ~2/10; vieta embed SaaS staging costosi; dopo demo live Nano Banana 2 (via fal) approva cablaggio **one-shot + 4 stili + critico vision**.
+- **Decisione**:
+  1. **Motore primario**: `fal-ai/nano-banana-2/edit` (= Gemini 3.1 Flash Image) **one-shot** (svuota+arreda in un pass per `reverse`; solo svuota per `empty`; solo arreda per `standard`).
+  2. **4 stili** multi-style: modern / classic / scandi / luxury in parallelo (~$0.08/stile @1K → ~$0,33/run).
+  3. **Critico vision** Gemini Flash su originale vs risultato (rubric listing); **max 1 retry** per job (anti-aperture inventate); hard cap ~$0,50 per 4 stili.
+  4. **Listino B2C** privati: **€1,49**/foto (ex €0,90) — anteprima gratis, pagamento solo al salvataggio. B2B crediti (18 cr ≈ €0,90) invariato finché non riallineato.
+  5. **Fallback legacy** EVF+Ideogram+apartment LoRA solo se nano fallisce o `OMNIA_STAGING_ENGINE=legacy`.
+  6. Nessun embed SaaS staging terzi (Decor8/Roomagen/ecc.). Best-effort delivery anche sotto soglia.
+- **Implementazione**: `staging_agent.py` · `_oneshot_prompt` / `_nano_banana_edit` / `_vision_critique_staging` in `virtual_staging.py` · `b2c_products.py` €1,49 · Stripe price transfer su mismatch. Pipeline completa su branch `cursor/staging-agent-specialized-8e9b`; listino €1,49 già in catalogo SoT.
+- **Rinumero**: in bozza era citata come «D-125» — **rinumerata D-128** il 19-Ott-2026 perché **D-125** è già **Accesso agli atti** (15-Ott).
+- **Stato**: ✅ **DECISIONE OPERATIVA REGISTRATA** · listino SoT allineato; cablaggio Nano Banana in merge da branch staging
+
+### D-127 — Boost Vetrina/Premium/TOP: ranking tipo portali + rotazione equa + densità
+- **Data**: 19 Ottobre 2026
+- **Contesto**: Founder chiede parere critico e miglioramento allineato ai concorrenti (Idealista Top/Premium/Subidón; Immobiliare.it TOP>Premium, a parità qualità/data). Poi: cap densità per città.
+- **Decisione**:
+  1. **Tutti i sort** (recente/prezzo/superficie): prima `_eff_boost` (TOP>Premium>Vetrina>0).
+  2. **A parità di tier**: rotazione equa su `boost_last_shown_at` ASC (non più `updated_at` — anti-gaming).
+  3. **Impressioni lista**: `boost_impression_count` + `boost_last_shown_at` aggiornati a ogni apparizione in `/cloud/search`; UI venditore mostra le apparizioni.
+  4. Nuovo acquisto boost: reset rotazione (mai mostrato) + contatore a 0.
+  5. **Cap densità**: max 50% slot per pagina riservati ai boostati; resto organico. Con filtro `city` i pool sono scoped → densità locale. Se un pool è scarso si riempie dall’altro.
+  6. Listino prezzi invariato in questa decisione.
+- **Stato**: ✅ Implementata
+
+### D-126 — Match annunci privati → richieste CRM (tutte le agenzie)
+- **Data**: 19 Ottobre 2026
+- **Contesto**: Founder — l’annuncio del privato deve matchare le richieste delle agenzie **sia MLS sia non MLS**, con alert di compatibilità.
+- **Decisione**:
+  1. Canale `scope=portal`: immobili `is_private_listing` attivi/approvati matchano `client_requests` di **tutte** le agenzie (`mls_shared` irrilevante).
+  2. Alert: inbox agenzia/agente (dedup `request_match_notifications`). **Nessuna** email al cliente CRM sull’UGC privato.
+  3. Trigger: approve moderazione + job `private_listing_request_matching` 02:45 UTC + `POST /cron/listings/match-private`.
+  4. I privati restano **fuori** dall’inventario MLS generico (`mls_shared=false` + clause shareable).
+- **Stato**: ✅ Implementata
+
+### D-125 — Accesso agli atti = copia progetto comunale · no wallet · box spento finché accordo a consumo
+- **Data**: 15 Ottobre 2026
+- **Contesto**: Ricerca fornitori per box SellPage «Accesso agli atti». Founder chiarisce SKU = **copia del progetto originario depositato in Comune** (non conformità, non titoli Conservatoria). Non vuole wallet/ricariche da migliaia di euro. Sceglie percorso **«Presto disponibile» + trattativa**.
+- **Decisione**:
+  1. SKU target: recupero elaborati/progetto + titolo abilitativo (opz. fascicolo); output PDF; no sopralluogo/conformità in v1.
+  2. **Niente wallet €1k+** in fase 1. Solo accordo a consumo / ordine singolo / fattura posticipata.
+  3. Box resta **«Presto disponibile»** finché un partner conferma per iscritto condizioni senza anticipo.
+  4. Outreach prioritario: **Pratiche.it** e **PraticheCasa.it**. Privot scartato. Wallet volume solo dopo domanda stabile.
+  5. UI: mai nomi fornitori (allineato copy planimetria).
+- **Nota numerazione**: questa è la **D-125 canonica**. La bozza staging Nano Banana che usava lo stesso ID è stata rinumerata **D-128** (19-Ott-2026).
+- **Stato**: ✅ **DECISIONE OPERATIVA REGISTRATA** · prodotto non shippato; attesa risposta commerciali
+
 ### D-093 — Gap Idealista/Immobiliare · preferiti alert + stats privato (P0)
 - **Data**: 24 Settembre 2026
 - **Contesto**: Founder chiede come colmare il gap B2C vs Idealista/Immobiliare su preferiti, alert modifiche, stats per chi pubblica come privato. Dice «vai» sul piano proposto.

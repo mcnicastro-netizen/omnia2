@@ -127,6 +127,10 @@ class PropertyInDB(TenantModel):
 
     # Location
     address: Optional[str] = Field(default=None, max_length=300)
+    street_number: Optional[str] = Field(
+        default=None, max_length=20,
+        description="Numero civico; usare 'snc' se senza numero",
+    )
     city: str = Field(min_length=1, max_length=100)
     province: Optional[str] = Field(default=None, max_length=10)
     postal_code: Optional[str] = Field(default=None, max_length=10)
@@ -198,7 +202,8 @@ class PropertyInDB(TenantModel):
     is_private_listing: bool = False
     owner_user_id: Optional[str] = None  # link to users.id (B2C account)
     contact_public: Optional[PrivateContactPublic] = None  # private seller reachability
-    moderation_status: Literal["approved", "pending", "rejected"] = "approved"
+    # none = bozza B2C non ancora inviata in revisione
+    moderation_status: Literal["approved", "pending", "rejected", "none"] = "approved"
     moderation_notes: Optional[str] = Field(default=None, max_length=2000)
     moderation_reviewed_at: Optional[str] = None
     moderation_reviewed_by: Optional[str] = None
@@ -215,6 +220,7 @@ class PropertyCreate(OmniaBaseModel):
     operation: PropertyOperation = "sale"
     city: str = Field(min_length=1, max_length=100)
     address: Optional[str] = None
+    street_number: Optional[str] = Field(default=None, max_length=20)
     province: Optional[str] = None
     postal_code: Optional[str] = None
     zone: Optional[str] = None
@@ -265,6 +271,7 @@ class PropertyUpdate(OmniaBaseModel):
     condition: Optional[PropertyCondition] = None
     city: Optional[str] = None
     address: Optional[str] = None
+    street_number: Optional[str] = Field(default=None, max_length=20)
     province: Optional[str] = None
     postal_code: Optional[str] = None
     zone: Optional[str] = None

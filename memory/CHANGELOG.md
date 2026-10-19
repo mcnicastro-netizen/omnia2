@@ -1,3 +1,12 @@
+## 2026-10-19 — D-125/D-128 + privati B2C (listino, boost, match, HAL)
+
+- **D-125** Accesso agli atti = copia progetto comunale · no wallet · box spento (canonica)
+- **D-128** Staging Nano Banana + listino B2C **€1,49** (ex citazione errata D-125)
+- **D-126** match annunci privati → richieste CRM tutte le agenzie
+- **D-127** boost ranking + rotazione + cap densità 50%/città
+- Slot 2 gratis + Stripe dal 3° + cron scadenza · messaggi attesa post-pay
+- Manuale Cap.9/18 + HAL YAML · `IMPORT_HAL` v0.39 · `PRICING_B2C` v1.4 · `NEXT_SESSION`
+
 ## 2026-10-14 — D-124 Home + Valutatore + promo SellPage (merge PR #40)
 
 - Home OMNIA: logo TopNav, pillar ImmobiCloud/ImmoWeb/Academy, SSR landing dedicato, scroll in cima

@@ -5,8 +5,8 @@ through an agency. Properties created here have:
   - agency_id = "_private_listings"     # sentinel (no real agency)
   - is_private_listing = True
   - owner_user_id = current user id
-  - status = "draft" until user submits
-  - moderation_status = "pending"       # admin must approve
+  - status = "draft" until approved live
+  - moderation_status = "none" until user submits → then "pending"
 
 Endpoints (B2C auth required):
   POST   /api/cloud/me/properties        — create new private ad
@@ -17,7 +17,8 @@ Endpoints (B2C auth required):
   DELETE /api/cloud/me/properties/{pid}  — delete
   POST   /api/cloud/me/properties/media/upload-tmp — upload photo or floor plan (max 30 photos)
 
-A free B2C user can keep at most 1 *active* private listing (limit_count below).
+Free tier: 2 annunci (bozza/attivo) senza scadenza. Dal 3° serve slot Stripe
+(b2c_listing_extra_90 / b2c_listing_premium) — credito consumato alla create.
 """
 import logging
 from datetime import datetime, timezone
@@ -32,13 +33,23 @@ from shared.db.connection import Database
 from shared.models.property import PropertyCreate, PropertyUpdate, PrivateContactPublic
 from shared.storage import put_object, ObjStoreError
 from apps.immocloud.geocoding import schedule_geocode
+from apps.billing.b2c_listing_publish import (
+    BASE_PHOTO_LIMIT,
+    FREE_TIER_MAX_ACTIVE,
+    HARD_PHOTO_CAP,
+    consume_listing_slot_credit,
+    count_slot_usage,
+    count_unused_slot_credits,
+    listing_requires_premium_sku,
+    photo_limit_for,
+    slot_fields_from_purchase,
+)
 
 logger = logging.getLogger("omnia.private_listings")
 router = APIRouter(prefix="/me/properties", tags=["cloud-private-listings"])
 
 PRIVATE_AGENCY_SENTINEL = "_private_listings"
-FREE_TIER_MAX_ACTIVE = 1  # one free ad per user
-B2C_MAX_PHOTOS = 30
+B2C_MAX_PHOTOS = HARD_PHOTO_CAP
 _ALLOWED_PHOTO_MIME = {"image/jpeg", "image/png", "image/webp"}
 _MAX_PHOTO_BYTES = 8 * 1024 * 1024  # 8MB
 
@@ -97,8 +108,21 @@ def _strip(doc: dict) -> dict:
     return doc
 
 
-def _validate_photos_limit(photos) -> None:
-    if photos is not None and len(photos) > B2C_MAX_PHOTOS:
+def _compose_street(address: str | None, street_number: str | None) -> str | None:
+    """Via + civico (o 'snc') for geocoding / display helpers."""
+    street = (address or "").strip()
+    num = (street_number or "").strip()
+    if not street and not num:
+        return None
+    if not num:
+        return street or None
+    if not street:
+        return num
+    return f"{street} {num}"
+
+
+def _validate_photos_limit(photos, *, limit: int = BASE_PHOTO_LIMIT) -> None:
+    if photos is not None and len(photos) > limit:
         raise HTTPException(status_code=400, detail="photos_limit_exceeded")
 
 
@@ -144,16 +168,40 @@ async def create_private_listing(
     await _ensure_b2c(user)
     db = Database.get()
 
-    # Free-tier limit: max 1 active listing
-    active_count = await db.properties.count_documents({
-        "owner_user_id": user["id"],
-        "is_private_listing": True,
-        "status": {"$in": ["draft", "active"]},
-    })
+    # Free tier: 2 senza scadenza. Dal 3° consuma credito Stripe (slot).
+    active_count = await count_slot_usage(user["id"])
+    paid_slot_fields = None
     if active_count >= FREE_TIER_MAX_ACTIVE:
-        raise HTTPException(status_code=409, detail="free_tier_listing_limit_reached")
+        credit = await consume_listing_slot_credit(user["id"])
+        if not credit:
+            credits_left = await count_unused_slot_credits(user["id"])
+            raise HTTPException(status_code=409, detail={
+                "code": "free_tier_listing_limit_reached",
+                "free_max": FREE_TIER_MAX_ACTIVE,
+                "active_count": active_count,
+                "unused_credits": credits_left,
+                "message": (
+                    f"Hai raggiunto i {FREE_TIER_MAX_ACTIVE} annunci gratuiti. "
+                    "Acquista uno slot (dal 3°) per continuare."
+                ),
+                "products": ["b2c_listing_extra_90", "b2c_listing_premium"],
+            })
+        # Premium property must use premium SKU
+        draft_probe = payload.model_dump()
+        if listing_requires_premium_sku(draft_probe) and credit.get("product_key") != "b2c_listing_premium":
+            # restore credit — wrong SKU
+            await db.b2c_purchases.update_one(
+                {"id": credit.get("id")},
+                {"$set": {"slot_consumed": False}, "$unset": {"slot_consumed_at": ""}},
+            )
+            raise HTTPException(status_code=409, detail={
+                "code": "premium_listing_sku_required",
+                "message": "Per immobili >€1M o affitti >€2.500/mese serve lo slot premium.",
+                "products": ["b2c_listing_premium"],
+            })
+        paid_slot_fields = slot_fields_from_purchase(credit)
 
-    _validate_photos_limit(payload.photos)
+    _validate_photos_limit(payload.photos, limit=BASE_PHOTO_LIMIT)
 
     now = datetime.now(timezone.utc).isoformat()
     data = payload.model_dump()
@@ -172,16 +220,22 @@ async def create_private_listing(
         "is_private_listing": True,
         "owner_user_id": user["id"],
         "status": "draft",
-        "moderation_status": "pending",
+        # MLS / matching CRM = B2B only (PRICING_B2C §3)
+        "mls_shared": False,
+        "visibility": "private",
+        "moderation_status": "none",  # bozza locale — pending solo dopo /submit
         "moderation_notes": None,
         "moderation_reviewed_at": None,
         "moderation_reviewed_by": None,
         "view_count": 0,
         "lead_count": 0,
+        "photo_pack_extra": 0,
         "created_at": now,
         "updated_at": now,
         "contact_public": contact_public,
     })
+    if paid_slot_fields:
+        data.update(paid_slot_fields)
     # Owner contact pre-populated from user profile (private/internal field)
     data["owner"] = {
         "name": user.get("name"),
@@ -193,8 +247,10 @@ async def create_private_listing(
 
     if not data.get("lat") and not data.get("lng"):
         schedule_geocode(db, data["id"], {
-            "address": data.get("address"), "city": data.get("city"),
-            "province": data.get("province"), "postal_code": data.get("postal_code"),
+            "address": _compose_street(data.get("address"), data.get("street_number")),
+            "city": data.get("city"),
+            "province": data.get("province"),
+            "postal_code": data.get("postal_code"),
         })
 
     logger.info("private listing created: id=%s user=%s", data["id"], user["id"])
@@ -278,7 +334,10 @@ async def update_my_private_listing(
     if "status" in update_doc:
         # Users can only set status to draft (we expose /submit for active)
         update_doc.pop("status", None)
-    _validate_photos_limit(update_doc.get("photos"))
+    _validate_photos_limit(
+        update_doc.get("photos"),
+        limit=photo_limit_for(existing),
+    )
 
     if "contact_public" in update_doc:
         merged = _default_contact_public(
@@ -298,8 +357,10 @@ async def update_my_private_listing(
     # If previously rejected/approved and substantive edit → back to pending
     substantive = any(k in update_doc for k in
                       ("title", "description", "price", "rent_monthly", "address",
-                       "city", "surface_sqm", "rooms", "photos", "floor_plan_url",
-                       "contact_public"))
+                       "street_number", "city", "zone", "surface_sqm", "rooms",
+                       "bedrooms", "bathrooms", "floor", "total_floors", "year_built",
+                       "condition", "features", "energy", "condo_fees", "furnished",
+                       "photos", "floor_plan_url", "contact_public"))
     if substantive and existing.get("moderation_status") in ("approved", "rejected"):
         update_doc["moderation_status"] = "pending"
         update_doc["status"] = "draft"
@@ -321,11 +382,13 @@ async def update_my_private_listing(
 
     await db.properties.update_one({"id": pid}, {"$set": update_doc})
 
-    if any(k in update_doc for k in ("address", "city", "province", "postal_code")):
+    if any(k in update_doc for k in ("address", "street_number", "city", "province", "postal_code")):
         full = await db.properties.find_one({"id": pid}, {"_id": 0})
         schedule_geocode(db, pid, {
-            "address": full.get("address"), "city": full.get("city"),
-            "province": full.get("province"), "postal_code": full.get("postal_code"),
+            "address": _compose_street(full.get("address"), full.get("street_number")),
+            "city": full.get("city"),
+            "province": full.get("province"),
+            "postal_code": full.get("postal_code"),
         })
 
     updated = await db.properties.find_one({"id": pid}, {"_id": 0})
@@ -374,6 +437,59 @@ async def submit_for_moderation(pid: str, user: dict = Depends(get_current_user)
 class B2CStagingStartBody(BaseModel):
     """Kick (or re-kick) B2C staging fulfill after Stripe return (P-011)."""
     session_id: str = Field(..., min_length=8, max_length=200)
+
+
+class B2CStagingPreviewBody(BaseModel):
+    """Free anteprima before payment — user chooses photo + mode."""
+    photo_id: str | None = Field(default=None, max_length=80)
+    mode: Literal["standard", "empty", "reverse"] = "standard"
+    style: str = Field(default="modern", max_length=40)
+    room_type: str = Field(default="living", max_length=40)
+    variant_mode: Literal["same_style", "multi_style"] = "same_style"
+    num_variants: int = Field(default=1, ge=1, le=4)
+    styles: list[str] | None = Field(default=None, max_length=4)
+
+
+@router.post("/{pid}/staging/preview")
+async def start_b2c_staging_preview(
+    pid: str,
+    body: B2CStagingPreviewBody,
+    user: dict = Depends(get_current_user),
+):
+    """Generate a free staging/empty preview for a chosen photo (max 3/day)."""
+    await _ensure_b2c(user)
+    db = Database.get()
+    listing = await db.properties.find_one(
+        {"id": pid, "owner_user_id": user["id"], "is_private_listing": True},
+        {"_id": 0, "id": 1, "photos": 1},
+    )
+    if not listing:
+        raise HTTPException(status_code=404, detail="listing_not_found")
+    if not (listing.get("photos") or []):
+        raise HTTPException(status_code=400, detail="listing_has_no_photos")
+
+    from apps.immoweb.virtual_staging import start_b2c_preview_job, _job_to_out
+
+    job = await start_b2c_preview_job(
+        user_id=user["id"],
+        listing_id=pid,
+        photo_id=body.photo_id,
+        mode=body.mode,
+        style=body.style,
+        room_type=body.room_type,
+        variant_mode=body.variant_mode,
+        num_variants=body.num_variants,
+        styles=body.styles,
+    )
+    out = _job_to_out(job)
+    return {
+        "ok": True,
+        "job": out.model_dump(),
+        "listing_id": pid,
+        "photo_id": job.get("source_photo_id"),
+        "photo_index": job.get("source_photo_index"),
+        "mode": job.get("mode"),
+    }
 
 
 @router.post("/{pid}/staging")
@@ -439,6 +555,10 @@ async def start_b2c_staging(
         "job": out.model_dump(),
         "session_id": body.session_id,
         "listing_id": pid,
+        "photo_id": job.get("source_photo_id"),
+        "photo_index": job.get("source_photo_index"),
+        "mode": job.get("mode"),
+        "saved_photo_id": job.get("saved_photo_id"),
     }
 
 
@@ -448,7 +568,7 @@ async def get_b2c_staging_job(
     job_id: str,
     user: dict = Depends(get_current_user),
 ):
-    """Poll B2C staging job bound to one of the caller's private listings."""
+    """Poll B2C staging job (paid or free preview) for caller's listing."""
     await _ensure_b2c(user)
     db = Database.get()
     listing = await db.properties.find_one(
@@ -463,11 +583,16 @@ async def get_b2c_staging_job(
         "id": job_id,
         "user_id": user["id"],
         "property_id": pid,
-        "payment_rail": "b2c_stripe",
+        "payment_rail": {"$in": ["b2c_stripe", "b2c_preview"]},
     })
     if not job:
         raise HTTPException(status_code=404, detail="job_not_found")
-    return _job_to_out(job).model_dump()
+    out = _job_to_out(job).model_dump()
+    out["source_photo_id"] = job.get("source_photo_id")
+    out["source_photo_index"] = job.get("source_photo_index")
+    out["payment_rail"] = job.get("payment_rail")
+    out["saved_photo_id"] = job.get("saved_photo_id")
+    return out
 
 
 @router.delete("/{pid}", status_code=204)

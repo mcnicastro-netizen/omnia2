@@ -364,10 +364,7 @@ function PdfTab() {
       const fd = new FormData();
       fd.append("file", file);
       fd.append("question", question);
-      const r = await api.post("/app/legal/analyze-pdf", fd, {
-        headers: { "Content-Type": "multipart/form-data" },
-        timeout: 120000,
-      });
+      const r = await api.post("/app/legal/analyze-pdf", fd, { timeout: 120000 });
       setResult(r.data);
     } catch (err) {
       const d = err?.response?.data?.detail;

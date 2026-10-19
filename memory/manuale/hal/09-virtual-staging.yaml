@@ -323,54 +323,54 @@ voci:
     screenshot: []
 
   - id: staging.crediti-costo
-    titolo: Crediti e costo per render (18 crediti = 0.90 euro)
+    titolo: Crediti B2B e listino B2C staging (18 cr = 0.90 / privati 1.49)
     modulo: Virtual Staging
     widget: null
-    pubblico: [titolare, agente]
+    pubblico: [titolare, agente, b2c_client]
     livello: intermedio
-    tags: [staging, crediti, costo, prezzo, fal-ai, pricing, prezzo-render, quanto-costa, costo-render, 18-crediti, "0-90-euro", euro, listino, virtual-staging-costo]
+    tags: [staging, crediti, costo, prezzo, fal-ai, pricing, prezzo-render, quanto-costa, costo-render, 18-crediti, "0-90-euro", "1-49-euro", euro, listino, virtual-staging-costo, b2c, nano-banana, d-128]
     correlati:
       - staging.modalita
       - staging.varianti-parallele
       - staging.cos-e
-    domanda_naturale: "Quanto costa un render Virtual Staging? Quanto spendo in crediti per lo staging?"
+    domanda_naturale: "Quanto costa un render Virtual Staging? Quanto spendo in crediti per lo staging? Quanto costa lo staging per i privati?"
     contenuto:
       a_cosa_serve: >
         Prezzo render Virtual Staging. Sapere quanto costa un render in
-        crediti B2B (18 crediti = 0,90 euro lordi), capire il margine
-        per definire il posizionamento. Voce di riferimento per tutte
-        le domande su "quanto costa lo staging", "costo staging",
-        "prezzo render virtuale", "listino Virtual Staging".
+        crediti B2B (18 crediti = 0,90 euro lordi) e il listino B2C
+        privati (1,49 euro/foto · D-128). Voce di riferimento per
+        "quanto costa lo staging", "costo staging", "prezzo render",
+        "listino Virtual Staging", "1,49".
       quando_si_usa: >
-        Quando lanci un job (per pianificare il consumo crediti),
-        quando confronti prezzi listino, o per formazione staff.
+        Quando lanci un job (pianificare crediti), confronti listino,
+        forma lo staff, o un privato chiede il prezzo staging su /cloud.
       passi:
         - "Consumo crediti B2B: 1 render Virtual Staging = 18 crediti
           (vedi plans.py CREDIT_COSTS)."
         - "Con 1 credito = 0.05 euro: 18 crediti = 0.90 euro lordi per
-          render."
+          render B2B."
         - "1 job = N varianti = N x 18 crediti. Multi_style 4 varianti
-          costa 72 crediti (~3.60 euro)."
-        - "Costo vivo fal.ai standard: ~0.056 USD (0.051 EUR) per variante
-          (SAM2 0.001 + Flux 0.05 + Upscale 0.005). Reverse ~0.106 USD
-          per variante (+0.05 svuotamento). Margine agenzia ~94%."
-        - "In v1 c'e' HARD-GATE crediti (A-013) prima del lancio:
+          costa 72 crediti (~3.60 euro) lato agenzia."
+        - "B2C ImmobilCloud (D-128): 1,49 EUR/foto carta Stripe, max 3
+          foto per annuncio UGC. Anteprima gratis; pagamento al salvataggio."
+        - "Pipeline target B2C: Nano Banana 2 one-shot + 4 stili + critico
+          vision (max 1 retry). COGS tipico ~0.33 USD/run. Fallback legacy
+          se nano fallisce."
+        - "In v1 c'e' HARD-GATE crediti (A-013) prima del lancio B2B:
           saldo insufficiente → 402, job non parte. Addebito a
           successo sul ledger."
-        - "Costo B2C ImmobilCloud (privati): 0.90 EUR/foto max 3 per
-          annuncio UGC. NON attivo in checkout v1."
       errori_comuni:
         - problema: "Ottengo 402 quando genero lo staging"
           soluzione: >
-            Crediti insufficienti. Ricarica da Piano e Crediti, poi
-            riprova.
+            Crediti insufficienti (B2B). Ricarica da Piano e Crediti, poi
+            riprova. In B2C serve checkout Stripe €1,49.
         - problema: "Job fallito a meta' pipeline: mi vengono scalati crediti?"
           soluzione: >
-            L'addebito v1 e' al successo del job; costi fal.ai gia'
+            L'addebito B2B v1 e' al successo del job; costi fal.ai gia'
             avviati restano costo piattaforma. Segnala assistenza se
             necessario.
       permessi:
-        - Titolare, agente (info operativa/finanziaria)
+        - Titolare, agente (info operativa/finanziaria); B2C solo info listino €1,49
     screenshot: []
 
   - id: staging.watermark

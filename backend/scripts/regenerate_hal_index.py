@@ -51,7 +51,7 @@ def main() -> None:
         new_chapters.append(entry)
 
     out = {
-        "version": "0.38-d124-home-valuator-sell",
+        "version": "0.39-d125-d128-pricing",
         "updated": date.today().isoformat(),
         "voices_total": total,
         "source_files": source_files,
@@ -59,6 +59,7 @@ def main() -> None:
         "notes": (
             "Fingerprints regenerated from YAML on disk. "
             "Live RAG reindex: POST /api/app/hal/knowledge/reindex?force=true (super_admin). "
+            "2026-10-19: D-125 atti · D-128 staging €1,49 · Cap.9 crediti-costo · Cap.18 sell-doc-promo. "
             "2026-10-14: D-124 Cap.21 APE/piano/PDF · Cap.18 sell-doc-promo · PR #40. "
             "2026-10-12: Stripe webhook Railway omnia-railway-api 200 OK · api.stripe-sandbox-cloud / api.railway-api-deploy. "
             "2026-10-10: D-123 Railway API live · api.railway-api-deploy · cloud-secrets-vault Personal UI note. "
