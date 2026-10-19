@@ -17,7 +17,8 @@ Endpoints (B2C auth required):
   DELETE /api/cloud/me/properties/{pid}  — delete
   POST   /api/cloud/me/properties/media/upload-tmp — upload photo or floor plan (max 30 photos)
 
-A free B2C user can keep at most 1 *active* private listing (limit_count below).
+Free tier: 2 annunci (bozza/attivo) senza scadenza. Dal 3° serve slot Stripe
+(b2c_listing_extra_90 / b2c_listing_premium) — credito consumato alla create.
 """
 import logging
 from datetime import datetime, timezone
@@ -32,13 +33,23 @@ from shared.db.connection import Database
 from shared.models.property import PropertyCreate, PropertyUpdate, PrivateContactPublic
 from shared.storage import put_object, ObjStoreError
 from apps.immocloud.geocoding import schedule_geocode
+from apps.billing.b2c_listing_publish import (
+    BASE_PHOTO_LIMIT,
+    FREE_TIER_MAX_ACTIVE,
+    HARD_PHOTO_CAP,
+    consume_listing_slot_credit,
+    count_slot_usage,
+    count_unused_slot_credits,
+    listing_requires_premium_sku,
+    photo_limit_for,
+    slot_fields_from_purchase,
+)
 
 logger = logging.getLogger("omnia.private_listings")
 router = APIRouter(prefix="/me/properties", tags=["cloud-private-listings"])
 
 PRIVATE_AGENCY_SENTINEL = "_private_listings"
-FREE_TIER_MAX_ACTIVE = 1  # one free ad per user
-B2C_MAX_PHOTOS = 30
+B2C_MAX_PHOTOS = HARD_PHOTO_CAP
 _ALLOWED_PHOTO_MIME = {"image/jpeg", "image/png", "image/webp"}
 _MAX_PHOTO_BYTES = 8 * 1024 * 1024  # 8MB
 
@@ -110,8 +121,8 @@ def _compose_street(address: str | None, street_number: str | None) -> str | Non
     return f"{street} {num}"
 
 
-def _validate_photos_limit(photos) -> None:
-    if photos is not None and len(photos) > B2C_MAX_PHOTOS:
+def _validate_photos_limit(photos, *, limit: int = BASE_PHOTO_LIMIT) -> None:
+    if photos is not None and len(photos) > limit:
         raise HTTPException(status_code=400, detail="photos_limit_exceeded")
 
 
@@ -157,16 +168,40 @@ async def create_private_listing(
     await _ensure_b2c(user)
     db = Database.get()
 
-    # Free-tier limit: max 1 active listing
-    active_count = await db.properties.count_documents({
-        "owner_user_id": user["id"],
-        "is_private_listing": True,
-        "status": {"$in": ["draft", "active"]},
-    })
+    # Free tier: 2 senza scadenza. Dal 3° consuma credito Stripe (slot).
+    active_count = await count_slot_usage(user["id"])
+    paid_slot_fields = None
     if active_count >= FREE_TIER_MAX_ACTIVE:
-        raise HTTPException(status_code=409, detail="free_tier_listing_limit_reached")
+        credit = await consume_listing_slot_credit(user["id"])
+        if not credit:
+            credits_left = await count_unused_slot_credits(user["id"])
+            raise HTTPException(status_code=409, detail={
+                "code": "free_tier_listing_limit_reached",
+                "free_max": FREE_TIER_MAX_ACTIVE,
+                "active_count": active_count,
+                "unused_credits": credits_left,
+                "message": (
+                    f"Hai raggiunto i {FREE_TIER_MAX_ACTIVE} annunci gratuiti. "
+                    "Acquista uno slot (dal 3°) per continuare."
+                ),
+                "products": ["b2c_listing_extra_90", "b2c_listing_premium"],
+            })
+        # Premium property must use premium SKU
+        draft_probe = payload.model_dump()
+        if listing_requires_premium_sku(draft_probe) and credit.get("product_key") != "b2c_listing_premium":
+            # restore credit — wrong SKU
+            await db.b2c_purchases.update_one(
+                {"id": credit.get("id")},
+                {"$set": {"slot_consumed": False}, "$unset": {"slot_consumed_at": ""}},
+            )
+            raise HTTPException(status_code=409, detail={
+                "code": "premium_listing_sku_required",
+                "message": "Per immobili >€1M o affitti >€2.500/mese serve lo slot premium.",
+                "products": ["b2c_listing_premium"],
+            })
+        paid_slot_fields = slot_fields_from_purchase(credit)
 
-    _validate_photos_limit(payload.photos)
+    _validate_photos_limit(payload.photos, limit=BASE_PHOTO_LIMIT)
 
     now = datetime.now(timezone.utc).isoformat()
     data = payload.model_dump()
@@ -185,16 +220,22 @@ async def create_private_listing(
         "is_private_listing": True,
         "owner_user_id": user["id"],
         "status": "draft",
+        # MLS / matching CRM = B2B only (PRICING_B2C §3)
+        "mls_shared": False,
+        "visibility": "private",
         "moderation_status": "none",  # bozza locale — pending solo dopo /submit
         "moderation_notes": None,
         "moderation_reviewed_at": None,
         "moderation_reviewed_by": None,
         "view_count": 0,
         "lead_count": 0,
+        "photo_pack_extra": 0,
         "created_at": now,
         "updated_at": now,
         "contact_public": contact_public,
     })
+    if paid_slot_fields:
+        data.update(paid_slot_fields)
     # Owner contact pre-populated from user profile (private/internal field)
     data["owner"] = {
         "name": user.get("name"),
@@ -293,7 +334,10 @@ async def update_my_private_listing(
     if "status" in update_doc:
         # Users can only set status to draft (we expose /submit for active)
         update_doc.pop("status", None)
-    _validate_photos_limit(update_doc.get("photos"))
+    _validate_photos_limit(
+        update_doc.get("photos"),
+        limit=photo_limit_for(existing),
+    )
 
     if "contact_public" in update_doc:
         merged = _default_contact_public(

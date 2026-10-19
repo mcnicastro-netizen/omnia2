@@ -44,10 +44,20 @@ export default function CheckoutSuccessPage() {
         <p className="mt-3 text-stone-600">
           {status?.status === "paid"
             ? (status?.product_key === "b2c_visura_catastale"
-              ? t("checkout.success_paid_visura", "Pagamento confermato. Torna alla pagina Visura per scaricare il PDF.")
-              : t("checkout.success_paid", "Il tuo entitlement UNI 10750 è attivo per 24 ore. Torna al valutatore per scaricare il report PDF."))
-            : t("checkout.success_pending", "Stiamo confermando il pagamento con Stripe…")}
+              ? t("checkout.success_paid_visura")
+              : t("checkout.success_paid"))
+            : t("checkout.success_pending")}
         </p>
+        {status?.status !== "paid" ? (
+          <p className="mt-2 text-sm text-stone-500" data-testid="checkout-pending-tip">
+            {t("checkout.success_pending_tip")}
+          </p>
+        ) : null}
+        {status?.status === "paid" && status?.product_key === "b2c_visura_catastale" ? (
+          <p className="mt-2 text-sm text-stone-500" data-testid="checkout-visura-tip">
+            {t("checkout.success_paid_visura_tip")}
+          </p>
+        ) : null}
         <div className="mt-6 flex flex-wrap gap-3 justify-center">
           {status?.product_key === "b2c_visura_catastale" ? (
             <Link to={`/${lang}/cloud/visura`} className="px-4 py-2 bg-stone-900 text-white rounded" data-testid="checkout-success-visura">

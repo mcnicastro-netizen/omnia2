@@ -88,17 +88,29 @@ async def process_request(db, req: Dict[str, Any]) -> Dict[str, Any]:
     agency_id = req["agency_id"]
     result = await svc.match_request(db, agency_id, req)
     portfolio = result.get("portfolio_matches") or []
-    # Nightly digest stays on portfolio (own inventory) — MLS fall-through is agent-driven
-    fresh = []
+    portal = result.get("portal_matches") or []
+    # Email cliente solo su portafoglio agenzia (non annunci privati UGC).
+    # Inbox agenzia: portafoglio + portale privati.
+    fresh_portfolio = []
     for m in portfolio:
         pid = m.get("property_id")
         if not pid:
             continue
         if await _already_notified(db, req["id"], pid):
             continue
-        fresh.append(m)
+        fresh_portfolio.append(m)
 
-    if not fresh:
+    fresh_portal = []
+    for m in portal:
+        pid = m.get("property_id")
+        if not pid:
+            continue
+        if await _already_notified(db, req["id"], pid):
+            continue
+        fresh_portal.append(m)
+
+    fresh_all = fresh_portfolio + fresh_portal
+    if not fresh_all:
         return {"request_id": req["id"], "new": 0, "emailed": False}
 
     from shared.db.trash import with_not_trashed
@@ -109,11 +121,11 @@ async def process_request(db, req: Dict[str, Any]) -> Dict[str, Any]:
         with_not_trashed({"id": req["client_id"]}),
         {"_id": 0, "id": 1, "name": 1, "surname": 1, "email": 1, "gdpr_consent": 1, "lang": 1, "deleted_at": 1},
     )
-    if not client:
+    if not client and not fresh_portal:
         return {"request_id": req["id"], "new": 0, "emailed": False, "skipped": "client_trashed"}
     emailed = False
     to_email = (client or {}).get("email")
-    if to_email and (client or {}).get("gdpr_consent"):
+    if fresh_portfolio and to_email and (client or {}).get("gdpr_consent"):
         try:
             from shared.email.client import send_email
             name = f"{(client or {}).get('name') or ''}".strip() or "Ciao"
@@ -124,9 +136,9 @@ async def process_request(db, req: Dict[str, Any]) -> Dict[str, Any]:
                 lang=lang,
                 vars={
                     "user_name": name,
-                    "match_count": str(len(fresh)),
+                    "match_count": str(len(fresh_portfolio)),
                     "request_title": req.get("title") or "la tua richiesta",
-                    "matches_html": _matches_html(fresh),
+                    "matches_html": _matches_html(fresh_portfolio),
                     "cta_url": "https://omniarealestateecosystem.it/it/cloud",
                 },
             )
@@ -134,7 +146,7 @@ async def process_request(db, req: Dict[str, Any]) -> Dict[str, Any]:
         except Exception as e:  # noqa: BLE001
             logger.warning("request match email failed req=%s: %s", req.get("id"), e)
 
-    # In-app notify agent / admins
+    # In-app notify agent / admins (portfolio + portale)
     try:
         from shared.notifications.center import (
             TYPE_LEAD_NEW,
@@ -144,20 +156,27 @@ async def process_request(db, req: Dict[str, Any]) -> Dict[str, Any]:
         recipients = await resolve_agency_owner_and_admins(agency_id)
         if req.get("assigned_agent_id"):
             recipients = list({*recipients, req["assigned_agent_id"]})
+        portal_n = len(fresh_portal)
+        body_bits = [f"Nuovi match per «{req.get('title') or req.get('id')}»."]
+        if portal_n:
+            body_bits.append(f"Di cui {portal_n} da annunci privati sul portale.")
         await notify_users(
             recipients,
             type=TYPE_LEAD_NEW,
-            title=f"Match richieste · {len(fresh)} immobili",
-            body=f"Nuovi match per «{req.get('title') or req.get('id')}».",
+            title=f"Match richieste · {len(fresh_all)} immobili",
+            body=" ".join(body_bits),
             link="/app/requests/" + req["id"],
             agency_id=agency_id,
-            meta={"request_id": req["id"], "new_matches": len(fresh)},
+            meta={
+                "request_id": req["id"],
+                "new_matches": len(fresh_all),
+                "portal_matches": portal_n,
+            },
         )
     except Exception as e:  # noqa: BLE001
         logger.warning("request match inbox failed: %s", e)
 
-    channel = "email+inbox" if emailed else "inbox"
-    for m in fresh:
+    for m in fresh_portfolio:
         await _mark_notified(
             db,
             agency_id=agency_id,
@@ -165,17 +184,32 @@ async def process_request(db, req: Dict[str, Any]) -> Dict[str, Any]:
             property_id=m["property_id"],
             client_id=req["client_id"],
             score=int(m.get("score") or 0),
-            channel=channel,
+            channel="email+inbox" if emailed else "inbox",
+        )
+    for m in fresh_portal:
+        await _mark_notified(
+            db,
+            agency_id=agency_id,
+            request_id=req["id"],
+            property_id=m["property_id"],
+            client_id=req["client_id"],
+            score=int(m.get("score") or 0),
+            channel="inbox_portal",
         )
 
     # Promote status if still open
-    if req.get("status") == "open" and fresh:
+    if req.get("status") == "open" and fresh_all:
         await db[svc.COLLECTION].update_one(
             {"id": req["id"]},
             {"$set": {"status": "matched", "updated_at": _now()}},
         )
 
-    return {"request_id": req["id"], "new": len(fresh), "emailed": emailed}
+    return {
+        "request_id": req["id"],
+        "new": len(fresh_all),
+        "portal_new": len(fresh_portal),
+        "emailed": emailed,
+    }
 
 
 async def run_all_request_matching(*, agency_id: Optional[str] = None) -> Dict[str, Any]:

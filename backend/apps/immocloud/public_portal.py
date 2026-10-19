@@ -112,6 +112,7 @@ LIST_FIELDS = {
     "updated_at": 1, "created_at": 1,
     "reference_code": 1,
     "boost_tier": 1, "boost_rank": 1, "boost_until": 1,
+    "boost_last_shown_at": 1, "boost_impression_count": 1,
     "floor_plan_url": 1, "address": 1,
 }
 
@@ -263,42 +264,26 @@ async def public_search(
             {"zone": {"$regex": q, "$options": "i"}},
         ]
 
-    # Sort — default "recent" promotes active Vetrina/Premium/TOP first
-    sort_map = {
-        "recent": [("updated_at", -1)],
-        "price_asc": [("price", 1), ("rent_monthly", 1)],
-        "price_desc": [("price", -1), ("rent_monthly", -1)],
-        "surface_desc": [("surface_sqm", -1)],
-    }
-    sort_spec = sort_map[sort]
+    # D-127 — boost su tutti i sort + rotazione + cap densità per pagina
+    # (con filtro city i pool sono scoped → densità locale città)
+    from apps.billing.boost_ranking import (
+        fetch_search_page_with_density_cap,
+        schedule_boost_impressions,
+    )
 
     total = await db.properties.count_documents(flt)
     skip = (page - 1) * page_size
-    if sort == "recent":
-        now_iso = datetime.now(timezone.utc).isoformat()
-        pipeline = [
-            {"$match": flt},
-            {"$addFields": {
-                "_eff_boost": {
-                    "$cond": [
-                        {"$and": [
-                            {"$gt": [{"$ifNull": ["$boost_until", ""]}, now_iso]},
-                            {"$gt": [{"$ifNull": ["$boost_rank", 0]}, 0]},
-                        ]},
-                        "$boost_rank",
-                        0,
-                    ]
-                }
-            }},
-            {"$sort": {"_eff_boost": -1, "updated_at": -1}},
-            {"$skip": skip},
-            {"$limit": page_size},
-            {"$project": {**{k: v for k, v in LIST_FIELDS.items() if k != "_id"}, "_id": 0}},
-        ]
-        props = await db.properties.aggregate(pipeline).to_list(length=page_size)
-    else:
-        cursor = db.properties.find(flt, LIST_FIELDS).sort(sort_spec).skip(skip).limit(page_size)
-        props = await cursor.to_list(length=page_size)
+    props, density = await fetch_search_page_with_density_cap(
+        db,
+        flt,
+        sort=sort,
+        page=page,
+        page_size=page_size,
+        project_fields=LIST_FIELDS,
+    )
+
+    # Impressioni boost (async): alimenta la rotazione equa
+    schedule_boost_impressions([p.get("id") for p in props if _active_boost_tier(p)])
 
     # Batch-resolve agencies
     agency_ids = list({p.get("agency_id") for p in props if p.get("agency_id")})
@@ -317,6 +302,7 @@ async def public_search(
         "page_size": page_size,
         "has_next": skip + page_size < total,
         "sort": sort,
+        "boost_density": density,
     }
 
 

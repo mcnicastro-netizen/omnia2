@@ -1,8 +1,8 @@
 # Prossima sessione — programma passi
 
-**Aggiornato**: 14 Ottobre 2026 — **D-124 merged** (home + valutatore + promo SellPage)  
+**Aggiornato**: 19 Ottobre 2026 — **D-125/D-128 + listino B2C v1.4 + privati/boost**  
 **Repo**: https://github.com/mcnicastro-netizen/omnia2 ✅  
-**Branch**: `main`
+**Branch merge**: `cursor/private-listings-audit-8e9b` → `cursor/staging-quality-v2-8e9b` → `main` (Founder «mergera»)
 
 ---
 
@@ -11,23 +11,21 @@
 | Ruolo | Doc |
 |-------|-----|
 | Freccia | [`docs/audit/OMNIA_COERENZA_SISTEMA.md`](../docs/audit/OMNIA_COERENZA_SISTEMA.md) — S1–S10 ✅ |
-| **Ultimo ship** | **D-124** — home ecosistema · Valutatore UNI · promo documenti SellPage |
-| **API Railway** | [`docs/ops/RAILWAY_DEPLOY.md`](../docs/ops/RAILWAY_DEPLOY.md) — D-123 · `OMNIA_API_PUBLIC_URL` |
-| **Vercel FE** | [`docs/ops/VERCEL_DEPLOY.md`](./VERCEL_DEPLOY.md) — D-074 · `omnia-frontend` live |
-| **DNS** | [`memory/DNS_SETUP_GUIDE.md`](./DNS_SETUP_GUIDE.md) — apex/www/app/cloud → Vercel · `api` → Railway |
-| **Stripe** | [`memory/STRIPE_ONBOARDING.md`](./STRIPE_ONBOARDING.md) — Test → `api.…/billing/webhook` |
+| **Ultimo ship** | **D-125** Accesso atti · **D-126** match privati · **D-127** boost densità · **D-128** staging €1,49 Nano Banana |
+| Listino B2C | [`memory/PRICING_B2C.md`](./PRICING_B2C.md) **v1.4** |
+| **API Railway** | [`docs/ops/RAILWAY_DEPLOY.md`](../docs/ops/RAILWAY_DEPLOY.md) — D-123 |
+| **Vercel FE** | [`docs/ops/VERCEL_DEPLOY.md`](./VERCEL_DEPLOY.md) — D-074 |
+| **Stripe** | [`memory/STRIPE_ONBOARDING.md`](./STRIPE_ONBOARDING.md) — Test webhook |
 
 ---
 
-## ⏭️ Primo passo tipico (domani)
+## ⏭️ Primo passo tipico
 
-1. **Collegare i 3 box** SellPage (`SellDocPromoRail`) alle pagine servizio:
-   - Attestato APE
-   - Planimetria catastale
-   - Accesso agli atti  
-2. Smoke Founder su `/it/` + `/it/cloud/account/sell` + `/it/cloud/valutatore`
-3. (Opz.) redeploy Vercel FE dopo merge main
-4. Quando pronto: Stripe **Live** webhook (non Test)
+1. **HAL reindex** post-merge: `POST /api/app/hal/knowledge/reindex?force=true` (super_admin)
+2. Collegare i 3 box SellPage alle pagine servizio (APE / planimetria / atti) — atti resta «Presto disponibile» finché partner D-125
+3. Merge/cablaggio Nano Banana da `cursor/staging-agent-specialized-8e9b` se non già in main
+4. Smoke Founder: Sell staging €1,49 · boost · slot dal 3° · messaggi di attesa
+5. Quando pronto: Stripe **Live** webhook (non Test)
 
 ---
 
@@ -35,12 +33,11 @@
 
 | Voce | Nota |
 |------|------|
-| **Vault Environment omnia2** | `RAILWAY_TOKEN` · `RAILWAY_PROJECT_ID` · `OMNIA_API_PUBLIC_URL` · `VERCEL_PROJECT_ID` |
-| **Stripe webhook Test** | URL `OMNIA_API_PUBLIC_URL` + `/api/billing/webhook` · `whsec` su Variables Railway |
-| **Non toccare** | MX/TXT Resend · CNAME `api` Railway |
-| **Stripe Live** | Solo dopo KYC + chiavi live (non ora) |
-| **Pre-demo probe** | `python scripts/pre_demo_probe.py` prima di ogni invio demo |
-| **HAL reindex** | Post-merge: `POST /api/app/hal/knowledge/reindex?force=true` (super_admin) se non già fatto |
+| **D-125** | Accesso atti = progetto comunale · no wallet |
+| **D-128** | Staging B2C €1,49 (ex citazione errata «D-125») |
+| **HAL reindex** | Obbligatorio dopo merge Cap.9/18 |
+| **Stripe Live** | Solo dopo KYC |
+| **Pre-demo probe** | `python scripts/pre_demo_probe.py` |
 
 ---
 
@@ -49,10 +46,11 @@
 | Voce | Esito |
 |--|--|
 | S1–S10 | ✅ |
-| **D-123 Railway API + DNS `api.`** | ✅ |
-| **D-074 Vercel + DNS FE** | ✅ |
-| **D-122 pre-demo ≥8** | ✅ |
-| **D-124 home + valutatore + Sell promo** | ✅ merge PR #40 |
-| Link box APE/planimetria/atti | ⏳ sessione successiva |
+| D-124 home + valuator + Sell promo | ✅ |
+| D-125 Accesso atti (decisione) | ✅ registrata · prodotto ⏳ partner |
+| D-126 match privati → CRM | ✅ |
+| D-127 boost + densità 50% | ✅ |
+| D-128 staging €1,49 Nano Banana | ✅ listino SoT · pipeline branch staging-agent |
+| PRICING_B2C v1.4 | ✅ |
+| Link box APE/planimetria/atti | ⏳ |
 | Stripe Live | ⏳ |
-| D-038 / S3.1 | ⏳ |
