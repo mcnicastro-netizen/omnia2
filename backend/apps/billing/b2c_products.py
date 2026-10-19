@@ -66,7 +66,7 @@ B2C_ONE_SHOT_PRODUCTS: Dict[str, B2CProduct] = {
         "requires_listing": True,
         "notes": (
             "Max 3 foto per annuncio UGC del cliente. "
-            "Listino B2C €1,49 (D-125 · 19-Ott-2026). "
+            "Listino B2C €1,49 (D-128 · 19-Ott-2026). "
             "P-011: listing_id obbligatorio; consume + job post-pagamento."
         ),
     },
