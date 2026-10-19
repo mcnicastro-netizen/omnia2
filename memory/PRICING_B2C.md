@@ -54,6 +54,8 @@ Checkout: `POST /api/billing/b2c/checkout`. Slot dal 3°: `listing_id` opzionale
 
 **Scadenza slot a pagamento**: cron APScheduler `b2c_paid_listing_expire` (04:00 UTC) + `POST /api/app/cron/listings/expire-paid-slots` ritira gli annunci con `listing_paid_until` scaduto (`status=withdrawn`, fuori portale). I 2 gratis non scadono.
 
+**Erogazione boost (D-127)**: in ricerca pubblica, su **tutti** i sort, ordine = tier (TOP>Premium>Vetrina>organico) → rotazione equa a parità di tier (`boost_last_shown_at`) → criterio utente. Impressioni lista contate per il venditore. Allineato al modello Idealista/Immobiliare.it (evidenza in cima listato; a parità non vince chi edita di più).
+
 **Strategia**: sconto aggressivo 25-45% sotto Idealista in **Fase 1 acquisition**. Da Fase 2 (12+ mesi) allinearsi a -15%.
 
 #### Confronto concorrenti (settembre 2026 — fonti pubbliche / listini citati)
