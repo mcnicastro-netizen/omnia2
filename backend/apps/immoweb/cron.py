@@ -13,6 +13,7 @@ from apps.immoweb.trash import run_trash_purge
 from apps.immoweb.backup_job import run_daily_backup
 from apps.immoweb.request_matching_job import run_all_request_matching
 from apps.billing.b2c_listing_publish import run_expire_paid_listing_slots
+from apps.immoweb.private_listing_matching import run_private_listing_request_matching
 
 router = APIRouter(prefix="/cron", tags=["cron"])
 
@@ -61,4 +62,13 @@ async def cron_expire_paid_listing_slots(user: dict = Depends(get_current_user))
     if user.get("role") not in ALLOWED_ROLES:
         raise HTTPException(status_code=403, detail="cron_forbidden")
     report = await run_expire_paid_listing_slots()
+    return {"ok": True, "trigger": "manual", "owner": "apscheduler", **report}
+
+
+@router.post("/listings/match-private")
+async def cron_match_private_listings(user: dict = Depends(get_current_user)):
+    """Match annunci privati → richieste CRM tutte le agenzie. Trigger manuale (D-108)."""
+    if user.get("role") not in ALLOWED_ROLES:
+        raise HTTPException(status_code=403, detail="cron_forbidden")
+    report = await run_private_listing_request_matching()
     return {"ok": True, "trigger": "manual", "owner": "apscheduler", **report}

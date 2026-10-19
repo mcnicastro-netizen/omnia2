@@ -146,6 +146,16 @@ async def approve_listing(pid: str, user: dict = Depends(get_current_user)):
         await fanout_listing_event(pid, event="new")
     except Exception as e:
         logger.warning("fanout after approve failed: %s", e)
+    # Match → richieste CRM di tutte le agenzie (mls_shared true/false) + alert inbox
+    try:
+        from apps.immoweb.private_listing_matching import run_private_listing_request_matching
+        match_report = await run_private_listing_request_matching(property_id=pid)
+        logger.info(
+            "private listing match after approve id=%s new=%s notified=%s",
+            pid, match_report.get("with_new_matches"), match_report.get("notified"),
+        )
+    except Exception as e:
+        logger.warning("private listing→requests match after approve failed: %s", e)
     await _notify_listing_owner(db, p, approved=True)
     return {"ok": True, "moderation_status": "approved", "status": "active"}
 

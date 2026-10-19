@@ -7,6 +7,16 @@ Registro di tutte le decisioni di business e tecniche prese durante il progetto.
 
 ## Decisioni prese
 
+### D-126 — Match annunci privati → richieste CRM (tutte le agenzie)
+- **Data**: 19 Ottobre 2026
+- **Contesto**: Founder — l’annuncio del privato deve matchare le richieste delle agenzie **sia MLS sia non MLS**, con alert di compatibilità.
+- **Decisione**:
+  1. Canale `scope=portal`: immobili `is_private_listing` attivi/approvati matchano `client_requests` di **tutte** le agenzie (`mls_shared` irrilevante).
+  2. Alert: inbox agenzia/agente (dedup `request_match_notifications`). **Nessuna** email al cliente CRM sull’UGC privato.
+  3. Trigger: approve moderazione + job `private_listing_request_matching` 02:45 UTC + `POST /cron/listings/match-private`.
+  4. I privati restano **fuori** dall’inventario MLS generico (`mls_shared=false` + clause shareable).
+- **Stato**: ✅ Implementata
+
 ### D-093 — Gap Idealista/Immobiliare · preferiti alert + stats privato (P0)
 - **Data**: 24 Settembre 2026
 - **Contesto**: Founder chiede come colmare il gap B2C vs Idealista/Immobiliare su preferiti, alert modifiche, stats per chi pubblica come privato. Dice «vai» sul piano proposto.
