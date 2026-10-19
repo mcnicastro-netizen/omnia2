@@ -150,15 +150,22 @@ def test_04_list_mine_only(b2c_a, b2c_b, listing_a):
     assert any(i["id"] == listing_a["id"] for i in items)
 
 
-# ---------- 5. Free-tier limit ----------
+# ---------- 5. Free-tier limit (2 gratis → 409 al 3°) ----------
 
 def test_05_free_tier_limit(b2c_a, listing_a):
-    r = b2c_a.post(f"{BASE_URL}/api/cloud/me/properties", json={
+    # 2° gratis OK
+    r2 = b2c_a.post(f"{BASE_URL}/api/cloud/me/properties", json={
         "title": "TEST_Second", "city": "Milano", "operation": "sale",
         "property_type": "appartamento", "price": 100000,
     })
-    assert r.status_code == 409, f"expected 409 got {r.status_code} {r.text}"
-    assert "free_tier_listing_limit_reached" in r.text
+    assert r2.status_code == 201, f"2nd free should succeed: {r2.status_code} {r2.text}"
+    # 3° senza credito Stripe → 409
+    r3 = b2c_a.post(f"{BASE_URL}/api/cloud/me/properties", json={
+        "title": "TEST_Third", "city": "Torino", "operation": "sale",
+        "property_type": "appartamento", "price": 120000,
+    })
+    assert r3.status_code == 409, f"expected 409 got {r3.status_code} {r3.text}"
+    assert "free_tier_listing_limit_reached" in r3.text
 
 
 # ---------- 6/7. PATCH ownership ----------

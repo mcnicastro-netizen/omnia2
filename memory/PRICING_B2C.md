@@ -1,8 +1,8 @@
 # 💳 OMNIA — Pricing B2C (ImmobilCloud privati)
 
 **Stato**: 🟢 ATTIVO · backend in `backend/apps/billing/b2c_products.py` · checkout Stripe one-shot operativo (`POST /api/billing/b2c/checkout`) · boost Vetrina/Premium/TOP B2C dal 16-Set-2026
-**Ultima revisione**: 16 Settembre 2026 — boost privati + confronto concorrenti
-**Versione**: 1.2**Sovrascrive**: la sezione ImmobilCloud B2C di `PRICING_OMNIA.md` v2.0 (ripristinata qui)
+**Ultima revisione**: 19 Ottobre 2026 — free tier 2 senza scadenza + SKU pubblicazione Stripe
+**Versione**: 1.3 · Sovrascrive: sezione ImmobilCloud B2C di `PRICING_OMNIA.md` v2.0
 
 > 📌 **Rail separato**: questo listino è **solo B2C** su portale `/cloud`.
 > Rail = **Stripe one-shot con carta**. Nessun credito, nessun pacchetto minimo €20, nessun abbonamento.
@@ -16,7 +16,7 @@
 2. **Nessun servizio B2C sotto €0,99** (tranne lead magnet espliciti come Valutatore base gratuito e Comparatore mutui gratuito).
 3. **Prezzi retail > prezzi B2B** (l'agenzia deve avere un margine se rivende).
 4. **Anti-abuso**: email verificata + rate limit sui lead magnet.
-5. **Ricchezza percepita**: annunci privati con logica generosa iniziale (2 gratis, prezzi aggressivi -25/-45% vs Idealista).
+5. **Ricchezza percepita**: 2 annunci gratis **senza scadenza**; dal 3° a pagamento; boost aggressivi −25/−45% vs Idealista (Fase 1).
 
 ---
 
@@ -28,11 +28,11 @@ Ripristinati dalla sezione ImmobilCloud B2C di `PRICING_OMNIA.md` v2.0.
 
 | Servizio | Prezzo B2C | Note |
 |---|:-:|------|
-| **Primi 2 annunci attivi** | **GRATIS** | Include foto standard, geolocalizzazione, contatto in-portale |
-| **Annuncio extra** (dal 3°, 90gg di visibilità) | **€14,90** | -25% vs Idealista |
-| **Immobili premium** (>€1M) / **Affitti alti** (>€2.500/mese) | **€19,90** | Tariffa speciale unica |
-| **Nascondi indirizzo esatto** | **€5,90** | -40% vs Idealista (€9,90). Add-on per annuncio |
-| **Foto extra** (pacchetto 10 foto oltre il base) | **€3,90** | Bundle unico |
+| **Primi 2 annunci** (bozza/attivo) | **GRATIS** | **Senza scadenza**. Foto base 20, geolocalizzazione, contatto in-portale |
+| **Annuncio extra** (dal 3°, 90gg di visibilità) | **€14,90** | SKU `b2c_listing_extra_90` · Stripe · −25% vs Idealista |
+| **Immobili premium** (>€1M) / **Affitti alti** (>€2.500/mese) | **€19,90** | SKU `b2c_listing_premium` · obbligatorio se soglia superata |
+| **Nascondi indirizzo esatto** | **€5,90** | SKU `b2c_hide_address` · −40% vs Idealista (€9,90) |
+| **Foto extra** (pacchetto +10 oltre le 20 base) | **€3,90** | SKU `b2c_photo_pack` · fino a 30 foto |
 
 ### Boost visibilità (Vetrina / Premium / TOP)
 
@@ -46,8 +46,11 @@ Ripristinati dalla sezione ImmobilCloud B2C di `PRICING_OMNIA.md` v2.0.
 | **TOP** | 90 gg | **€79,90** | n/a | vs ~€99,95 | — |
 | **TOP** | 180 gg | **€149,90** | n/a | vs ~€179,95 | — |
 
-**SKU Stripe** (`b2c_products.py`): `b2c_vetrina_30`, `b2c_premium_{30,90,180}`, `b2c_top_{30,90,180}`.
-Checkout: `POST /api/billing/b2c/checkout` con `listing_id` obbligatorio.
+**SKU Stripe** (`b2c_products.py`):
+- Pubblicazione: `b2c_listing_extra_90`, `b2c_listing_premium`, `b2c_hide_address`, `b2c_photo_pack`
+- Boost: `b2c_vetrina_30`, `b2c_premium_{30,90,180}`, `b2c_top_{30,90,180}`
+
+Checkout: `POST /api/billing/b2c/checkout`. Slot dal 3°: `listing_id` opzionale (credito consumato alla create). Boost/add-on: `listing_id` obbligatorio.
 
 **Strategia**: sconto aggressivo 25-45% sotto Idealista in **Fase 1 acquisition**. Da Fase 2 (12+ mesi) allinearsi a -15%.
 
@@ -71,7 +74,7 @@ Servizi che un privato può usare senza agenzia, pagando con carta al momento (o
 | **Valutatore base** | **GRATIS** | 1 valutazione per account/email verificato ogni 12 mesi | ~€0,04-0,10 | Lead magnet + upsell UNI. Anti-abuso: email verify + cap |
 | **Valutatore UNI 10750 + PDF brandizzato** | **€2,99** carta | per report | ~€0,10-0,15 | Stripe checkout prima del download. Retail > B2B (€0,60) |
 | **Comparatore mutui** | **GRATIS** | illimitato | ~€0,01 | Lead → agenzia partner / mediatore |
-| **Virtual Staging** | **€0,90 / foto** | max 3 foto per annuncio UGC | ~€0,056 | Stesso € agenzia, rail carta. Anti-abuso: legato all'annuncio |
+| **Virtual Staging** | **€1,49 / foto** | max 3 foto per annuncio UGC | ~$0,33 / 4 stili | Listino D-125 · Nano Banana + critic · rail carta |
 | **HAL Legal — 1 domanda** | **€1,00 / query** | per query | ~€0,04 | Portale B2C. Disclaimer obbligatorio prima della risposta |
 | **Visura catastale** | **€4,90** carta | per documento | ~€0,40 | Stripe Checkout → OpenAPI.it PDF. Mai crediti. Cap 10/giorno. Founder 15-Sep-2026. **8-Ott-2026**: Catasto OpenAPI.it *sospeso dal provider* → dogfood Visura SKIP finché riattivano (HAL `api.visura-openapi-catasto`) |
 | 🔒 **Planimetria catastale** | **in arrivo** | — | ~€6,90 | Checkout NON implementato. Margine da validare fase 2 |

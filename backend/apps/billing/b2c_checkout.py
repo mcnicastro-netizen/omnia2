@@ -35,8 +35,11 @@ from shared.db.connection import Database
 from apps.billing.b2c_products import (
     B2C_ONE_SHOT_PRODUCTS,
     is_b2c_boost_product,
+    is_b2c_listing_addon_product,
+    is_b2c_listing_slot_product,
     list_b2c_catalog,
     list_boost_products,
+    list_listing_publish_products,
     product_requires_listing,
 )
 from apps.billing.b2c_entitlements import (
@@ -48,6 +51,13 @@ from apps.billing.b2c_boosts import (
     apply_boost_to_listing,
     boost_duration_days,
     effective_boost,
+)
+from apps.billing.b2c_listing_publish import (
+    FREE_TIER_MAX_ACTIVE,
+    count_slot_usage,
+    count_unused_slot_credits,
+    fulfill_listing_publish_purchase,
+    listing_requires_premium_sku,
 )
 
 logger = logging.getLogger("omnia.billing.b2c")
@@ -125,7 +135,10 @@ async def _assert_listing_owned(user_id: str, listing_id: str) -> dict:
             "is_private_listing": True,
         },
         {"_id": 0, "id": 1, "title": 1, "status": 1, "moderation_status": 1,
-         "boost_tier": 1, "boost_until": 1, "boost_rank": 1, "boost_product_key": 1},
+         "price": 1, "rent_monthly": 1,
+         "boost_tier": 1, "boost_until": 1, "boost_rank": 1, "boost_product_key": 1,
+         "hide_address": 1, "hide_address_paid": 1,
+         "photo_pack_extra": 1, "listing_paid_until": 1, "listing_publish_tier": 1},
     )
     if not listing:
         raise HTTPException(status_code=404, detail="listing_not_found")
@@ -134,12 +147,14 @@ async def _assert_listing_owned(user_id: str, listing_id: str) -> dict:
 
 @router.get("/catalog")
 async def b2c_catalog():
-    """Public listino B2C (strumenti + boost). No auth required."""
+    """Public listino B2C (strumenti + boost + pubblicazione). No auth required."""
     return {
         "currency": "eur",
         "rail": "stripe_one_shot",
         "products": list_b2c_catalog(include_boosts=True),
         "boosts": list_boost_products(),
+        "listing_publish": list_listing_publish_products(),
+        "free_listing_slots": FREE_TIER_MAX_ACTIVE,
         "stripe_enabled": _is_enabled(),
     }
 
@@ -150,6 +165,21 @@ async def b2c_boost_catalog():
     return {
         "currency": "eur",
         "products": list_boost_products(),
+        "stripe_enabled": _is_enabled(),
+    }
+
+
+@router.get("/listing-publish")
+async def b2c_listing_publish_catalog(user: dict = Depends(get_current_user)):
+    """Slot dal 3° + add-on (hide address / foto pack) + usage corrente."""
+    used = await count_slot_usage(user["id"])
+    credits = await count_unused_slot_credits(user["id"])
+    return {
+        "currency": "eur",
+        "free_max": FREE_TIER_MAX_ACTIVE,
+        "used_slots": used,
+        "unused_credits": credits,
+        "products": list_listing_publish_products(),
         "stripe_enabled": _is_enabled(),
     }
 
@@ -184,8 +214,20 @@ async def b2c_checkout(
     if product_requires_listing(payload.product_key):
         if not payload.listing_id:
             raise HTTPException(status_code=400, detail="listing_id_required")
-        await _assert_listing_owned(user["id"], payload.listing_id)
+        listing = await _assert_listing_owned(user["id"], payload.listing_id)
         listing_id = payload.listing_id
+    elif payload.listing_id and is_b2c_listing_slot_product(payload.product_key):
+        listing = await _assert_listing_owned(user["id"], payload.listing_id)
+        listing_id = payload.listing_id
+    else:
+        listing = None
+
+    if is_b2c_listing_slot_product(payload.product_key) and listing is not None:
+        if listing_requires_premium_sku(listing) and payload.product_key != "b2c_listing_premium":
+            raise HTTPException(status_code=400, detail={
+                "code": "premium_listing_sku_required",
+                "message": "Per immobili >€1M o affitti >€2.500/mese serve lo slot premium (€19,90).",
+            })
 
     daily_cap = catalog.get("daily_limit_per_user")
     if daily_cap:
@@ -222,6 +264,11 @@ async def b2c_checkout(
     if is_b2c_boost_product(payload.product_key):
         meta["boost_tier"] = str(catalog.get("boost_tier") or "")
         meta["duration_days"] = str(catalog.get("duration_days") or "")
+    if is_b2c_listing_slot_product(payload.product_key):
+        meta["listing_tier"] = str(catalog.get("listing_tier") or "standard")
+        meta["duration_days"] = str(catalog.get("duration_days") or "90")
+    if is_b2c_listing_addon_product(payload.product_key):
+        meta["listing_addon"] = str(catalog.get("listing_addon") or "")
     if payload.product_key == "b2c_staging_render":
         meta["staging_mode"] = staging_mode or "standard"
         meta["preview_job_id"] = preview_job_id or ""
@@ -386,6 +433,35 @@ async def apply_b2c_purchase_side_effects(session: dict) -> None:
             )
         logger.info(
             "b2c_purchase paid (boost): session=%s product=%s user=%s listing=%s",
+            session_id, product_key, user_id, listing_id,
+        )
+        return
+
+    if is_b2c_listing_slot_product(product_key) or is_b2c_listing_addon_product(product_key):
+        now = datetime.now(timezone.utc)
+        days = int((B2C_ONE_SHOT_PRODUCTS.get(product_key) or {}).get("duration_days") or 90)
+        expires = now + timedelta(days=days) if is_b2c_listing_slot_product(product_key) else None
+        updated = await mark_uni_purchase_paid(
+            session_id, expires_at=expires, amount_eur=amount_eur,
+        )
+        if not updated:
+            logger.warning("b2c_purchase webhook: no local record for session=%s", session_id)
+            return
+        listing_id = md.get("listing_id") or updated.get("listing_id") or None
+        user_id = md.get("user_id") or updated.get("user_id")
+        if not user_id:
+            logger.error("listing publish paid without user session=%s", session_id)
+            return
+        await fulfill_listing_publish_purchase(
+            session_id=session_id,
+            product_key=product_key,
+            user_id=user_id,
+            listing_id=listing_id or None,
+            purchase=updated,
+            paid_at=now,
+        )
+        logger.info(
+            "b2c_purchase paid (listing_publish): session=%s product=%s user=%s listing=%s",
             session_id, product_key, user_id, listing_id,
         )
         return

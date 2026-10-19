@@ -136,7 +136,11 @@ export default function SellPage() {
   const [showForm, setShowForm] = useState(false);
 
   const [boostCatalog, setBoostCatalog] = useState([]);
+  const [publishCatalog, setPublishCatalog] = useState([]);
+  const [publishMeta, setPublishMeta] = useState({ free_max: 2, used_slots: 0, unused_credits: 0 });
   const [boostBusy, setBoostBusy] = useState(null); // product_key being purchased
+  const [publishBusy, setPublishBusy] = useState(null);
+  const [showSlotPaywall, setShowSlotPaywall] = useState(false);
   const [stagingBusy, setStagingBusy] = useState(false);
   const [stagingStatus, setStagingStatus] = useState(""); // progress message after Stripe return
   const [statsById, setStatsById] = useState({}); // pid → stats payload
@@ -182,13 +186,28 @@ export default function SellPage() {
     return items;
   };
 
-  // Load listings + boost catalog + per-listing stats (D-093 / A-029)
+  const reloadPublishMeta = async () => {
+    try {
+      const r = await api.get("/billing/b2c/listing-publish");
+      setPublishCatalog(r.data.products || []);
+      setPublishMeta({
+        free_max: r.data.free_max ?? 2,
+        used_slots: r.data.used_slots ?? 0,
+        unused_credits: r.data.unused_credits ?? 0,
+      });
+    } catch {
+      /* catalog optional offline */
+    }
+  };
+
+  // Load listings + boost/publish catalog + per-listing stats (D-093 / A-029)
   useEffect(() => {
     if (user && user.account_type === "b2c") {
       reloadListings().catch(() => {});
       api.get("/billing/b2c/boosts")
         .then((r) => setBoostCatalog(r.data.products || []))
         .catch(() => {});
+      reloadPublishMeta();
     }
   }, [user]);
 
@@ -376,6 +395,30 @@ export default function SellPage() {
     }
   };
 
+  const buyPublishProduct = async (productKey, listingId = null) => {
+    setPublishBusy(productKey);
+    setError("");
+    try {
+      const origin = window.location.origin;
+      const body = {
+        product_key: productKey,
+        success_url: `${origin}/${lang}/cloud/account/sell?publish=ok`,
+        cancel_url: `${origin}/${lang}/cloud/account/sell?publish=cancel`,
+      };
+      if (listingId) body.listing_id = listingId;
+      const { data } = await api.post("/billing/b2c/checkout", body);
+      if (data?.checkout_url) {
+        window.location.href = data.checkout_url;
+        return;
+      }
+      setError(t("cloud.sell.publish_checkout_error"));
+    } catch (e) {
+      setError(formatApiErrorDetail(e?.response?.data?.detail) || t("cloud.sell.publish_checkout_error"));
+    } finally {
+      setPublishBusy(null);
+    }
+  };
+
   const boostActive = (l) => {
     if (!l?.boost_tier || !l?.boost_until) return null;
     const until = Date.parse(l.boost_until);
@@ -461,10 +504,18 @@ export default function SellPage() {
       }
       setShowForm(false);
       setEditing(null);
-      const r = await api.get("/cloud/me/properties");
-      setListings(r.data.items || []);
+      setShowSlotPaywall(false);
+      await reloadListings();
+      await reloadPublishMeta();
     } catch (e) {
-      setError(formatApiErrorDetail(e?.response?.data?.detail));
+      const detail = e?.response?.data?.detail;
+      const code = typeof detail === "object" ? detail?.code : detail;
+      if (code === "free_tier_listing_limit_reached" || code === "premium_listing_sku_required") {
+        setShowSlotPaywall(true);
+        setShowForm(false);
+        await reloadPublishMeta();
+      }
+      setError(formatApiErrorDetail(detail));
     } finally { setBusy(false); }
   };
 
@@ -504,7 +555,15 @@ export default function SellPage() {
     return null; // redirecting
   }
 
-  const hasActive = listings.some((l) => l.status !== "withdrawn" && l.moderation_status !== "rejected");
+  const slotListings = listings.filter(
+    (l) => l.status !== "withdrawn" && l.moderation_status !== "rejected",
+  );
+  const freeMax = publishMeta.free_max || 2;
+  const usedSlots = publishMeta.used_slots ?? slotListings.length;
+  const unusedCredits = publishMeta.unused_credits || 0;
+  const canCreateFree = usedSlots < freeMax || unusedCredits > 0;
+  const slotProducts = publishCatalog.filter((p) => p.listing_slot);
+  const addonProducts = publishCatalog.filter((p) => p.listing_addon);
 
   return (
     <div data-testid="sell-page">
@@ -604,6 +663,42 @@ export default function SellPage() {
                   </button>
                 </div>
               </div>
+              {addonProducts.length > 0 && (
+                <div className="mt-4 pt-4 border-t border-stone-100" data-testid={`addon-panel-${l.id}`}>
+                  <p className="text-[11px] uppercase tracking-widest text-stone-500 mb-2">
+                    {t("cloud.sell.addon_title")}
+                  </p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    {addonProducts.map((p) => {
+                      const bought =
+                        (p.listing_addon === "hide_address" && l.hide_address_paid) ||
+                        (p.listing_addon === "photo_pack" && (l.photo_pack_extra || 0) >= 10);
+                      return (
+                        <button
+                          key={p.key}
+                          type="button"
+                          data-testid={`addon-buy-${p.key}`}
+                          disabled={!!publishBusy || bought}
+                          onClick={() => buyPublishProduct(p.key, l.id)}
+                          className="text-left px-3 py-2.5 border border-stone-200 rounded hover:border-[#0B1E3F] hover:bg-stone-50 disabled:opacity-50 transition"
+                        >
+                          <div className="text-xs font-medium text-stone-900">{p.label_it}</div>
+                          <div className="text-sm text-[#0B1E3F] mt-0.5">
+                            € {Number(p.price_eur).toLocaleString("it-IT", { minimumFractionDigits: 2 })}
+                          </div>
+                          <div className="text-[10px] uppercase tracking-widest text-stone-500 mt-1">
+                            {bought
+                              ? t("cloud.sell.addon_owned")
+                              : publishBusy === p.key
+                                ? t("common.saving")
+                                : t("cloud.sell.boost_cta")}
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
               {boostCatalog.length > 0 && (
                 <div className="mt-4 pt-4 border-t border-stone-100" data-testid={`boost-panel-${l.id}`}>
                   <p className="text-[11px] uppercase tracking-widest text-stone-500 mb-2">
@@ -647,8 +742,8 @@ export default function SellPage() {
         </section>
       )}
 
-      {/* CTA new listing */}
-      {!showForm && !hasActive && (
+      {/* CTA new listing — fino a 2 gratis; oltre: paywall slot */}
+      {!showForm && canCreateFree && (
         <button
           data-testid="sell-new-btn"
           onClick={startNew}
@@ -657,9 +752,44 @@ export default function SellPage() {
           + {t("cloud.sell.create_listing")}
         </button>
       )}
-      {!showForm && hasActive && (
-        <p data-testid="sell-limit-notice" className="text-xs text-stone-500 italic">
-          {t("cloud.sell.free_limit_notice")}
+      {!showForm && (!canCreateFree || showSlotPaywall) && slotProducts.length > 0 && (
+        <div
+          data-testid="sell-slot-paywall"
+          className="mt-4 mb-6 border border-stone-200 rounded-2xl p-5 bg-stone-50"
+        >
+          <p className="text-sm font-medium text-stone-900">{t("cloud.sell.slot_paywall_title")}</p>
+          <p className="text-xs text-stone-600 mt-1 mb-3">
+            {t("cloud.sell.slot_paywall_subtitle", { free: freeMax })}
+          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            {slotProducts.map((p) => (
+              <button
+                key={p.key}
+                type="button"
+                data-testid={`slot-buy-${p.key}`}
+                disabled={!!publishBusy}
+                onClick={() => buyPublishProduct(p.key)}
+                className="text-left px-3 py-2.5 border border-stone-200 bg-white rounded hover:border-[#0B1E3F] disabled:opacity-50"
+              >
+                <div className="text-xs font-medium text-stone-900">{p.label_it}</div>
+                <div className="text-sm text-[#0B1E3F] mt-0.5">
+                  € {Number(p.price_eur).toLocaleString("it-IT", { minimumFractionDigits: 2 })}
+                </div>
+                <div className="text-[10px] uppercase tracking-widest text-stone-500 mt-1">
+                  {publishBusy === p.key ? t("common.saving") : t("cloud.sell.boost_cta")}
+                </div>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+      {!showForm && usedSlots > 0 && (
+        <p data-testid="sell-limit-notice" className="text-xs text-stone-500 italic mt-2">
+          {t("cloud.sell.free_limit_notice", {
+            used: usedSlots,
+            free: freeMax,
+            credits: unusedCredits,
+          })}
         </p>
       )}
 

@@ -28,6 +28,10 @@ class B2CProduct(TypedDict, total=False):
     boost_tier: str                # "vetrina" | "premium" | "top"
     duration_days: int
     requires_listing: bool
+    # Pubblicazione annuncio (slot dal 3° / add-on)
+    listing_slot: bool             # True = slot pubblicazione a pagamento
+    listing_tier: str              # "standard" | "premium"
+    listing_addon: str             # "hide_address" | "photo_pack"
 
 
 # Sort weight used by public search (higher = shown first while active)
@@ -55,16 +59,70 @@ B2C_ONE_SHOT_PRODUCTS: Dict[str, B2CProduct] = {
     "b2c_staging_render": {
         "key": "b2c_staging_render",
         "label_it": "Virtual Staging (per foto)",
-        "price_eur": 0.90,
+        "price_eur": 1.49,
         "stripe_lookup_key": "b2c_staging_render",
         "unit": "per_photo",
         "daily_limit_per_user": 3,
         "requires_listing": True,
         "notes": (
             "Max 3 foto per annuncio UGC del cliente. "
-            "Stesso € del prezzo B2B agenzia. Margine ~65% netto Stripe. "
+            "Listino B2C €1,49 (D-125 · 19-Ott-2026). "
             "P-011: listing_id obbligatorio; consume + job post-pagamento."
         ),
+    },
+    "b2c_listing_extra_90": {
+        "key": "b2c_listing_extra_90",
+        "label_it": "Annuncio extra — 90 giorni",
+        "price_eur": 14.90,
+        "stripe_lookup_key": "b2c_listing_extra_90",
+        "unit": "per_listing_slot",
+        "daily_limit_per_user": 10,
+        "duration_days": 90,
+        "requires_listing": False,
+        "listing_slot": True,
+        "listing_tier": "standard",
+        "notes": (
+            "Dal 3° annuncio (bozza/attivo). 2 gratis senza scadenza. "
+            "90gg di visibilità sul portale. -25% vs Idealista."
+        ),
+    },
+    "b2c_listing_premium": {
+        "key": "b2c_listing_premium",
+        "label_it": "Annuncio premium / affitto alto — 90 giorni",
+        "price_eur": 19.90,
+        "stripe_lookup_key": "b2c_listing_premium",
+        "unit": "per_listing_slot",
+        "daily_limit_per_user": 10,
+        "duration_days": 90,
+        "requires_listing": False,
+        "listing_slot": True,
+        "listing_tier": "premium",
+        "notes": (
+            "Obbligatorio se vendita >€1M oppure affitto >€2.500/mese. "
+            "Altrimenti usabile al posto dell'extra standard."
+        ),
+    },
+    "b2c_hide_address": {
+        "key": "b2c_hide_address",
+        "label_it": "Nascondi indirizzo esatto",
+        "price_eur": 5.90,
+        "stripe_lookup_key": "b2c_hide_address",
+        "unit": "per_listing_addon",
+        "daily_limit_per_user": 20,
+        "requires_listing": True,
+        "listing_addon": "hide_address",
+        "notes": "Add-on per annuncio. -40% vs Idealista (€9,90).",
+    },
+    "b2c_photo_pack": {
+        "key": "b2c_photo_pack",
+        "label_it": "Foto extra — pacchetto +10",
+        "price_eur": 3.90,
+        "stripe_lookup_key": "b2c_photo_pack",
+        "unit": "per_listing_addon",
+        "daily_limit_per_user": 20,
+        "requires_listing": True,
+        "listing_addon": "photo_pack",
+        "notes": "Oltre le 20 foto base → fino a 30.",
     },
     "b2c_hal_legal_query": {
         "key": "b2c_hal_legal_query",
@@ -239,8 +297,20 @@ def is_b2c_boost_product(key: str) -> bool:
     return bool(p and p.get("requires_listing") and p.get("boost_tier"))
 
 
+def is_b2c_listing_slot_product(key: str) -> bool:
+    """True when the product grants a paid private-listing slot (3rd+)."""
+    p = B2C_ONE_SHOT_PRODUCTS.get(key)
+    return bool(p and p.get("listing_slot"))
+
+
+def is_b2c_listing_addon_product(key: str) -> bool:
+    """True when the product is a per-listing add-on (hide address / photo pack)."""
+    p = B2C_ONE_SHOT_PRODUCTS.get(key)
+    return bool(p and p.get("listing_addon") and p.get("requires_listing"))
+
+
 def product_requires_listing(key: str) -> bool:
-    """True when checkout must bind a private listing (boosts + staging)."""
+    """True when checkout must bind a private listing (boosts + staging + add-on)."""
     p = B2C_ONE_SHOT_PRODUCTS.get(key)
     return bool(p and p.get("requires_listing"))
 
@@ -260,6 +330,9 @@ def list_b2c_catalog(*, include_boosts: bool = True) -> List[dict]:
             "boost_tier": p.get("boost_tier"),
             "duration_days": p.get("duration_days"),
             "requires_listing": bool(p.get("requires_listing")),
+            "listing_slot": bool(p.get("listing_slot")),
+            "listing_tier": p.get("listing_tier"),
+            "listing_addon": p.get("listing_addon"),
             "daily_limit_per_user": p.get("daily_limit_per_user"),
         })
     return rows
@@ -270,4 +343,20 @@ def list_boost_products() -> List[dict]:
     tier_order = {"vetrina": 0, "premium": 1, "top": 2}
     rows = [r for r in list_b2c_catalog(include_boosts=True) if r.get("boost_tier")]
     rows.sort(key=lambda r: (tier_order.get(r.get("boost_tier") or "", 9), r.get("duration_days") or 0))
+    return rows
+
+
+def list_listing_publish_products() -> List[dict]:
+    """Slot pubblicazione + add-on (hide address / foto pack)."""
+    rows = [
+        r for r in list_b2c_catalog(include_boosts=True)
+        if r.get("listing_slot") or r.get("listing_addon")
+    ]
+    order = {
+        "b2c_listing_extra_90": 0,
+        "b2c_listing_premium": 1,
+        "b2c_hide_address": 2,
+        "b2c_photo_pack": 3,
+    }
+    rows.sort(key=lambda r: order.get(r["key"], 99))
     return rows
