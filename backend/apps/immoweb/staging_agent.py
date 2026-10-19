@@ -24,13 +24,13 @@ BUDGET_SOFT_USD = {
     "reverse": 0.10,
 }
 BUDGET_HARD_USD = {
-    "standard": 0.20,
-    "empty": 0.18,
-    "reverse": 0.20,
+    "standard": 0.24,  # oneshot + up to 2 arch retries
+    "empty": 0.20,
+    "reverse": 0.24,
 }
 # Extra per additional style variant (multi_style).
 BUDGET_PER_EXTRA_STYLE = 0.08
-BUDGET_HARD_PER_EXTRA_STYLE = 0.10
+BUDGET_HARD_PER_EXTRA_STYLE = 0.12  # room for arch retries on multi-style
 
 # Critic: accept if score >= 7/10 (mapped to 0.70).
 QUALITY_ACCEPT = 0.70
@@ -314,11 +314,24 @@ def parse_vision_critique(raw: str) -> QualityReport:
         if flag in parsed and parsed.get(flag) is False:
             issues.append(label)
 
+    invented = parsed.get("invented_openings")
+    try:
+        win_o = int(parsed.get("windows_original") or 0)
+        win_r = int(parsed.get("windows_result") or 0)
+    except Exception:
+        win_o, win_r = 0, 0
+    if invented is True or (win_r > win_o):
+        issues.append("invented_windows")
+        issues.append("architecture_fail")
+        # Hard fail — invented openings are never listing-safe
+        score = min(score, 0.40)
+
     verdict = str(parsed.get("verdict") or "").lower()
     retries: List[str] = []
-    if verdict == "retry" or score < QUALITY_ACCEPT:
-        retries.append("re_furnish")
-    if "architecture_fail" in issues or "geometry_fail" in issues:
+    if "invented_windows" in issues or "architecture_fail" in issues:
+        retries.append("re_furnish_no_new_windows")
+        verdict = "retry"
+    elif verdict == "retry" or score < QUALITY_ACCEPT:
         retries.append("re_furnish")
 
     rationale = str(parsed.get("rationale") or "")[:300]
@@ -330,6 +343,9 @@ def parse_vision_critique(raw: str) -> QualityReport:
             "verdict": verdict or ("accept" if score >= QUALITY_ACCEPT else "retry"),
             "rationale": rationale,
             "score_10": round(score * 10, 1),
+            "windows_original": win_o,
+            "windows_result": win_r,
+            "invented_openings": bool(invented) or win_r > win_o,
         },
     )
 

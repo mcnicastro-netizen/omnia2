@@ -1634,8 +1634,11 @@ def _oneshot_prompt(
     lock = (
         "Edit THIS photo only. Do not create a different room. "
         "Lock: camera angle, crop, perspective, walls, ceiling, floor material and pattern, "
-        "door frames, open doorways, windows, built-in fixtures, lighting direction. "
-        "No renovation, no new windows, no invented walls, no people, no text, no logos. "
+        "door frames, open doorways, existing windows only, built-in fixtures, lighting direction. "
+        "CRITICAL ARCHITECTURE: do NOT add any new windows, skylights, glass panels, or openings. "
+        "If a wall has no window in the source photo, keep it as a solid blank wall. "
+        "Do NOT invent daylight sources through new openings — use existing light only. "
+        "No renovation, no invented walls, no closed-over real doorways, no people, no text, no logos. "
     )
     if mode == "empty":
         body = (
@@ -1719,12 +1722,16 @@ async def _vision_critique_staging(
         "Restituisci SOLO JSON valido (no markdown):\n"
         '{"score":0-10,"architecture_ok":true|false,"geometry_ok":true|false,'
         '"scale_ok":true|false,"lighting_ok":true|false,'
+        '"windows_original":N,"windows_result":N,'
+        '"invented_openings":true|false,'
         '"artifacts":["..."],"verdict":"accept"|"retry",'
         '"rationale":"1-2 frasi in italiano"}\n'
-        "Boccia (verdict=retry, score<=6) se: porte/finestre/muri inventati o chiusi, "
-        "residui arredo vecchio/gym, look triste/vecchio/giallo, prospettiva rotta, "
-        "mobili che bloccano passaggi. "
-        "Accetta (score>=7) solo se listing-ready."
+        "REGOLA DURA aperture: conta finestre/lucernari visibili nell'ORIGINALE vs RISULTATO. "
+        "Se il risultato ha PIÙ finestre/aperture/vetri a muro → invented_openings=true, "
+        "architecture_ok=false, verdict=retry, score<=4. "
+        "Boccia anche se: porte chiuse/inventate, muri nuovi, residui gym/arredo vecchio, "
+        "look triste/giallo, prospettiva rotta. "
+        "Accetta (score>=7) solo se listing-ready E zero aperture inventate."
     )
     try:
         from google import genai
@@ -1992,23 +1999,39 @@ async def _run_pipeline(job_id: str, db) -> None:
                 v["quality_decision"] = decision
                 agent.record_quality(f"style:{v['style']}", q, decision)
 
-            # One retry for the worst failing style (budget-capped)
-            retry_idx = None
-            worst = -1.0
+            # Retry styles that invent openings / fail architecture (budget-capped, max 2).
+            retry_idxs = []
             for i, v in enumerate(variants):
-                if v.get("quality_decision") == "retry" and agent.can_spend(COST_NANO_BANANA):
-                    sc = float(v.get("quality_score") or 0)
-                    if retry_idx is None or sc < worst:
-                        retry_idx, worst = i, sc
-            if retry_idx is not None and agent.furnish_retries < agent.plan.max_furnish_retries:
+                if v.get("quality_decision") != "retry":
+                    continue
+                qphase = agent.quality.get(f"style:{v['style']}") or {}
+                issues = qphase.get("issues") or []
+                # Prefer invented_windows / architecture first
+                pri = 0 if ("invented_windows" in issues or "architecture_fail" in issues) else 1
+                retry_idxs.append((pri, float(v.get("quality_score") or 0), i))
+            retry_idxs.sort()  # architecture fails first, then lowest score
+            retries_done = 0
+            for _, _, retry_idx in retry_idxs:
+                if retries_done >= 2 or not agent.can_spend(COST_NANO_BANANA):
+                    break
+                if agent.furnish_retries >= max(2, agent.plan.max_furnish_retries + 1):
+                    break
                 agent.furnish_retries += 1
+                retries_done += 1
                 sk = variants[retry_idx]["style"]
-                logger.info("nano retry style=%s score=%.2f", sk, worst)
+                logger.info(
+                    "nano retry style=%s score=%.2f issues=%s",
+                    sk, variants[retry_idx].get("quality_score"),
+                    (agent.quality.get(f"style:{sk}") or {}).get("issues"),
+                )
                 prompt = _oneshot_prompt(mode, sk, agent.plan.room_type, crm_fragment)
-                # Stronger architecture lock on retry
                 prompt = (
-                    prompt + " CRITICAL: preserve every door opening and window exactly; "
-                    "no yellow cast; no leftover gym or old furniture."
+                    prompt
+                    + " RETRY FIX: the previous edit illegally invented windows. "
+                    "Keep EVERY wall blank where the source has no window. "
+                    "ZERO new windows, ZERO skylights, ZERO glass wall panels. "
+                    "Preserve only the existing door openings on the left. "
+                    "No yellow cast; no leftover gym or old furniture."
                 )
                 try:
                     new_url = await _nano_banana_edit(src, prompt, resolution="1K")
@@ -2016,8 +2039,18 @@ async def _run_pipeline(job_id: str, db) -> None:
                     q2 = await _vision_critique_staging(src, new_url, style=sk, mode=mode)
                     agent.charge(COST_VISION_CRITIC, f"vision_critic_retry:{sk}")
                     d2 = decide_accept(q2, retries_left=0, can_afford=False)
-                    # Keep better score
-                    if q2.score >= float(variants[retry_idx].get("quality_score") or 0):
+                    # Prefer non-invented architecture even if score similar
+                    old_inv = bool(
+                        (agent.quality.get(f"style:{sk}") or {})
+                        .get("signals", {})
+                        .get("invented_openings")
+                    )
+                    new_inv = bool(q2.signals.get("invented_openings"))
+                    take = (not new_inv and old_inv) or (
+                        q2.score >= float(variants[retry_idx].get("quality_score") or 0)
+                        and not new_inv
+                    )
+                    if take or (not new_inv and q2.score >= 0.55):
                         variants[retry_idx] = {
                             **variants[retry_idx],
                             "url": new_url,

@@ -85,6 +85,21 @@ def test_parse_vision_critique_retry():
     assert decide_accept(r, retries_left=1, can_afford=True) == "retry"
 
 
+def test_parse_vision_critique_invented_windows_hard_fail():
+    raw = (
+        '{"score":8,"architecture_ok":true,"geometry_ok":true,"scale_ok":true,'
+        '"lighting_ok":true,"windows_original":0,"windows_result":2,'
+        '"invented_openings":true,"artifacts":["due finestre nuove"],'
+        '"verdict":"accept","rationale":"bello ma finestre inventate"}'
+    )
+    r = parse_vision_critique(raw)
+    assert "invented_windows" in r.issues
+    assert r.score <= 0.40
+    assert r.signals.get("invented_openings") is True
+    assert "re_furnish_no_new_windows" in r.retry_actions
+    assert decide_accept(r, retries_left=1, can_afford=True) == "retry"
+
+
 def test_parse_vision_critique_markdown_fence():
     raw = '```json\n{"score":7.5,"architecture_ok":true,"geometry_ok":true,'
     raw += '"scale_ok":true,"lighting_ok":true,"artifacts":[],"verdict":"accept"}\n```'
@@ -93,9 +108,10 @@ def test_parse_vision_critique_markdown_fence():
 
 def test_ledger_hard_cap_blocks_spend():
     agent = StagingAgent(plan_staging(mode="standard", style="modern", room_type="living"))
-    agent.charge(0.19, "almost_full")
-    assert agent.can_spend(0.005) is True
-    assert agent.can_spend(0.02) is False
+    hard = agent.plan.budget_hard_usd
+    agent.charge(hard - 0.001, "almost_full")
+    assert agent.can_spend(0.0005) is True
+    assert agent.can_spend(0.01) is False
 
 
 def test_agent_summary_shape():
@@ -115,7 +131,8 @@ def test_oneshot_prompt_helpers():
     rev = vs._oneshot_prompt("reverse", "luxury", "bedroom")
     assert "Remove ALL existing furniture" in rev
     assert "luxury" in rev.lower() or "boutique" in rev
-    assert "Lock:" in rev
+    assert "do NOT add any new windows" in rev
+    assert "solid blank wall" in rev
     empty = vs._oneshot_prompt("empty", "modern", "living")
     assert "Remove ALL furniture" in empty
     assert vs.MODEL_NANO_BANANA_EDIT == "fal-ai/nano-banana-2/edit"
