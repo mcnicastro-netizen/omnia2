@@ -1,39 +1,42 @@
 """OMNIA StagingAgent — specialized virtual-staging controller (D-125).
 
-Not a black-box embed of a third-party staging SaaS. Owns the plan → erase →
-furnish → critique → retry loop on top of fal primitives already in
-`virtual_staging.py`, with a hard USD cost cap so B2C resale at ~€0.90/img
-stays profitable (D-033 unit economics).
+Primary engine (Founder OK 19-Ott-2026): fal Nano Banana 2 one-shot
+(= Gemini 3.1 Flash Image) × up to 4 styles + vision critic (Gemini Flash).
 
-Pattern mirrors HAL Legal (router + validator): a planner/critic wraps the
-execution engines; quality gates decide retry vs accept vs fail-soft.
+Legacy EVF/Ideogram/LoRA remains fallback only. Hard USD cap keeps B2C
+resale at ~€0.90/img profitable (D-033).
 """
 from __future__ import annotations
 
+import json
 import logging
+import re
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional, Sequence
 
 logger = logging.getLogger("omnia.staging_agent")
 
-# Soft target (D-033) vs hard cap that still leaves margin at €0.90 (~$1).
+# Nano Banana 2 edit = $0.08/img @ 1K (fal listino). Soft = N styles; hard allows 1 retry.
+COST_NANO_BANANA_1K = 0.08
 BUDGET_SOFT_USD = {
-    "standard": 0.08,
-    "empty": 0.18,
-    "reverse": 0.24,
+    "standard": 0.10,
+    "empty": 0.10,
+    "reverse": 0.10,
 }
 BUDGET_HARD_USD = {
-    "standard": 0.14,
-    "empty": 0.28,
-    "reverse": 0.32,
+    "standard": 0.20,
+    "empty": 0.18,
+    "reverse": 0.20,
 }
+# Extra per additional style variant (multi_style).
+BUDGET_PER_EXTRA_STYLE = 0.08
+BUDGET_HARD_PER_EXTRA_STYLE = 0.10
 
-# Minimum critic score (0–1) to accept without retry.
-QUALITY_ACCEPT = 0.72
-# Below this after retries → mark job warning (still deliver best attempt).
+# Critic: accept if score >= 7/10 (mapped to 0.70).
+QUALITY_ACCEPT = 0.70
 QUALITY_WARN = 0.55
 MAX_FURNISH_RETRIES = 1
-MAX_ERASE_RETRIES = 1
+MAX_ERASE_RETRIES = 0  # oneshot: no separate erase loop
 
 
 @dataclass
@@ -46,6 +49,7 @@ class StagingPlan:
     room_type: str
     budget_soft_usd: float
     budget_hard_usd: float
+    engine: str = "nano_banana"
     max_erase_retries: int = MAX_ERASE_RETRIES
     max_furnish_retries: int = MAX_FURNISH_RETRIES
     notes: List[str] = field(default_factory=list)
@@ -60,6 +64,7 @@ class StagingPlan:
             "room_type": self.room_type,
             "budget_soft_usd": self.budget_soft_usd,
             "budget_hard_usd": self.budget_hard_usd,
+            "engine": self.engine,
             "max_erase_retries": self.max_erase_retries,
             "max_furnish_retries": self.max_furnish_retries,
             "notes": list(self.notes),
@@ -109,31 +114,52 @@ def plan_staging(
     num_variants: int = 1,
     variant_mode: str = "same_style",
     styles_list: Optional[Sequence[str]] = None,
+    engine: str = "nano_banana",
 ) -> StagingPlan:
     """Build an execution plan with mode-aware cost caps (no network)."""
     m = mode if mode in ("standard", "reverse", "empty") else "standard"
+    eng = engine if engine in ("nano_banana", "legacy") else "nano_banana"
     n = max(1, min(int(num_variants or 1), 4))
-    if variant_mode == "multi_style" and styles_list:
+    if m == "empty":
+        styles = ["empty"]
+        n = 1
+    elif variant_mode == "multi_style" and styles_list:
         styles = [s for s in styles_list if s][:n] or [style or "modern"]
+        n = len(styles)
     else:
         styles = [style or "modern"]
-    soft = BUDGET_SOFT_USD[m] + max(0, n - 1) * 0.06
-    hard = BUDGET_HARD_USD[m] + max(0, n - 1) * 0.07
-    notes: List[str] = []
-    if m in ("reverse", "empty"):
-        notes.append("semantic_erase_evf_then_florence_remnants")
-    if m != "empty":
-        notes.append("apartment_staging_lora_primary")
-    notes.append("no_third_party_staging_saas_embed")
+        n = 1
+
+    soft = BUDGET_SOFT_USD[m] + max(0, n - 1) * BUDGET_PER_EXTRA_STYLE
+    hard = BUDGET_HARD_USD[m] + max(0, n - 1) * BUDGET_HARD_PER_EXTRA_STYLE
+    notes: List[str] = ["no_third_party_staging_saas_embed"]
+    if eng == "nano_banana":
+        notes.append("nano_banana_2_oneshot")
+        notes.append("vision_critic_gemini_flash")
+        if m == "reverse":
+            notes.append("oneshot_remove_and_furnish")
+        elif m == "empty":
+            notes.append("oneshot_empty_only")
+        else:
+            notes.append("oneshot_furnish_only")
+    else:
+        if m in ("reverse", "empty"):
+            notes.append("semantic_erase_evf_then_florence_remnants")
+        if m != "empty":
+            notes.append("apartment_staging_lora_primary")
+
     return StagingPlan(
         mode=m,
         need_erase=m in ("reverse", "empty"),
         need_furnish=m != "empty",
-        num_variants=n if m != "empty" else 1,
-        styles=styles if m != "empty" else ["empty"],
+        num_variants=n,
+        styles=styles,
         room_type=room_type or "living",
         budget_soft_usd=round(soft, 4),
         budget_hard_usd=round(hard, 4),
+        engine=eng,
+        max_erase_retries=0 if eng == "nano_banana" else MAX_ERASE_RETRIES,
+        max_furnish_retries=MAX_FURNISH_RETRIES,
         notes=notes,
     )
 
@@ -154,26 +180,22 @@ def critique_empty_from_meta(erase_meta: Optional[dict]) -> QualityReport:
     if skip_wall:
         issues.append(f"wall_invention_guard_fired:{skip_wall}")
         score -= 0.08 * min(skip_wall, 3)
-        # Do not retry erase over openings — that invents walls.
     if wall_retries >= 3:
         issues.append("many_wall_retries")
         score -= 0.12
 
     if evf_ratio < 0.02 and pass1 == 0 and sweep == 0:
         issues.append("no_furniture_detected")
-        # Empty-looking source: high score for empty mode.
         score = max(score, 0.85)
     elif evf_ratio >= 0.02 and not erased:
         issues.append("mask_built_but_nothing_erased")
         score -= 0.35
         retries.append("re_erase")
     elif pass1 + sweep >= 6:
-        # Still finding many boxes after EVF → likely remnants remain.
         issues.append("high_remnant_box_count")
         score -= 0.18
         retries.append("re_erase_remnants")
 
-    # Soft clutter left after big pieces.
     soft_left = sum(1 for e in erased if any(x in str(e) for x in (":sweep", "rug", "carpet")))
     if soft_left == 0 and pass1 >= 3:
         issues.append("no_soft_clutter_pass")
@@ -204,7 +226,7 @@ def critique_furnished_heuristic(
     erase_meta: Optional[dict] = None,
     remnant_labels: Optional[Sequence[str]] = None,
 ) -> QualityReport:
-    """Heuristic critic for furnished output (no vision LLM — avoids Gemini image 429)."""
+    """Heuristic critic for furnished output (legacy path)."""
     issues: List[str] = []
     retries: List[str] = []
     score = 0.88
@@ -233,10 +255,9 @@ def critique_furnished_heuristic(
         issues.append("geometry_risk_from_erase")
         score -= 0.08
 
-    # Style-agnostic listing look: classic historically drifts "old/sad".
     if style == "classic":
         issues.append("classic_needs_bright_guard")
-        score -= 0.03  # prompt already brightened; soft signal only
+        score -= 0.03
 
     score = max(0.0, min(1.0, score))
     return QualityReport(
@@ -247,15 +268,79 @@ def critique_furnished_heuristic(
     )
 
 
+def parse_vision_critique(raw: str) -> QualityReport:
+    """Parse critic JSON → QualityReport (score normalized 0–1)."""
+    cleaned = (raw or "").strip()
+    cleaned = re.sub(r"^```(?:json)?\s*\n?", "", cleaned, flags=re.IGNORECASE)
+    cleaned = re.sub(r"\n?```\s*$", "", cleaned)
+    parsed: Dict[str, Any] = {}
+    try:
+        parsed = json.loads(cleaned)
+    except Exception:
+        m = re.search(r"\{.*\}", cleaned, flags=re.DOTALL)
+        if m:
+            try:
+                parsed = json.loads(m.group(0))
+            except Exception:
+                parsed = {}
+    if not parsed:
+        return QualityReport(
+            score=0.65,
+            issues=["critic_parse_error"],
+            retry_actions=["re_furnish"],
+            signals={"raw": cleaned[:300]},
+        )
+
+    raw_score = parsed.get("score", 7)
+    try:
+        s = float(raw_score)
+        # Accept 0–10 or 0–1
+        score = s / 10.0 if s > 1.0 else s
+        score = max(0.0, min(1.0, score))
+    except Exception:
+        score = 0.65
+
+    issues: List[str] = []
+    for key in ("artifacts", "issues", "problems"):
+        v = parsed.get(key)
+        if isinstance(v, list):
+            issues.extend(str(x)[:120] for x in v if x)
+    for flag, label in (
+        ("architecture_ok", "architecture_fail"),
+        ("geometry_ok", "geometry_fail"),
+        ("scale_ok", "scale_fail"),
+        ("lighting_ok", "lighting_fail"),
+    ):
+        if flag in parsed and parsed.get(flag) is False:
+            issues.append(label)
+
+    verdict = str(parsed.get("verdict") or "").lower()
+    retries: List[str] = []
+    if verdict == "retry" or score < QUALITY_ACCEPT:
+        retries.append("re_furnish")
+    if "architecture_fail" in issues or "geometry_fail" in issues:
+        retries.append("re_furnish")
+
+    rationale = str(parsed.get("rationale") or "")[:300]
+    return QualityReport(
+        score=score,
+        issues=list(dict.fromkeys(issues))[:12],
+        retry_actions=list(dict.fromkeys(retries)),
+        signals={
+            "verdict": verdict or ("accept" if score >= QUALITY_ACCEPT else "retry"),
+            "rationale": rationale,
+            "score_10": round(score * 10, 1),
+        },
+    )
+
+
 def decide_accept(report: QualityReport, *, retries_left: int, can_afford: bool) -> str:
     """Return accept | retry | accept_with_warning."""
     if report.score >= QUALITY_ACCEPT:
         return "accept"
     if retries_left > 0 and can_afford and report.retry_actions:
         return "retry"
-    if report.score >= QUALITY_WARN:
-        return "accept_with_warning"
-    return "accept_with_warning"  # still deliver best effort for B2C UX
+    return "accept_with_warning"
 
 
 class StagingAgent:
