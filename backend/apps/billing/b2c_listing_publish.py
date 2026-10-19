@@ -231,3 +231,131 @@ async def fulfill_listing_publish_purchase(
             user_id=user_id,
             product_key=product_key,
         )
+
+
+# --- Scadenza slot a pagamento (cron) ------------------------------------
+
+EXPIRE_BATCH_CAP = 200
+
+
+def expired_paid_slot_query(now_iso: str) -> Dict[str, Any]:
+    """Annunci privati con slot pagato scaduto, ancora bozza/attivi, non già scaduti."""
+    from shared.db.trash import with_not_trashed
+    return with_not_trashed({
+        "is_private_listing": True,
+        "listing_paid_until": {"$exists": True, "$ne": None, "$lte": now_iso},
+        "status": {"$in": ["draft", "active"]},
+        "listing_slot_expired_at": {"$exists": False},
+    })
+
+
+async def _notify_owner_slot_expired(db, listing: Dict[str, Any]) -> None:
+    owner_id = listing.get("owner_user_id")
+    if not owner_id:
+        return
+    title = listing.get("title") or "Annuncio"
+    try:
+        from shared.notifications.center import TYPE_LISTING_SLOT_EXPIRED, notify_users
+        await notify_users(
+            [owner_id],
+            type=TYPE_LISTING_SLOT_EXPIRED,
+            title=f"Slot scaduto · {title}",
+            body="I 90 giorni di pubblicazione a pagamento sono terminati. L'annuncio non è più online.",
+            link="/cloud/account/sell",
+            agency_id=None,
+            meta={"property_id": listing.get("id"), "reason": "listing_slot_expired"},
+        )
+    except Exception as e:  # noqa: BLE001
+        logger.warning("slot expire in-app notify failed listing=%s: %s", listing.get("id"), e)
+
+    try:
+        owner = await db.users.find_one(
+            {"id": owner_id},
+            {"_id": 0, "email": 1, "lang": 1},
+        )
+        email = (owner or {}).get("email") or (listing.get("owner") or {}).get("email")
+        if not email:
+            return
+        from shared.email.client import send_email
+        await send_email(
+            to=email,
+            template="listing_moderation",
+            lang=(owner or {}).get("lang") or "it",
+            subject=f"ImmobilCloud — slot scaduto · {title}",
+            variables={
+                "title": title,
+                "body": (
+                    "Il periodo di 90 giorni dello slot a pagamento è terminato. "
+                    "L'annuncio non è più visibile sul portale. "
+                    "Puoi acquistare un nuovo slot da Area venditore."
+                ),
+                "listing_id": listing.get("id") or "",
+            },
+        )
+    except Exception as e:  # noqa: BLE001
+        logger.warning("slot expire email failed listing=%s: %s", listing.get("id"), e)
+
+
+async def expire_one_paid_listing(db, listing: Dict[str, Any], *, now_iso: str) -> bool:
+    """Ritira un annuncio con slot scaduto. Idempotente. Returns True se modificato."""
+    pid = listing.get("id")
+    if not pid:
+        return False
+    update = {
+        "status": "withdrawn",
+        "visibility": "private",
+        "is_listed_on_immobilcloud": False,
+        "listing_slot_expired_at": now_iso,
+        "listing_slot_expire_reason": "paid_slot_90d",
+        "updated_at": now_iso,
+    }
+    r = await db.properties.update_one(
+        {
+            "id": pid,
+            "is_private_listing": True,
+            "status": {"$in": ["draft", "active"]},
+            "listing_slot_expired_at": {"$exists": False},
+        },
+        {"$set": update},
+    )
+    if r.modified_count == 0:
+        return False
+
+    try:
+        from apps.immocloud.favorite_watch import record_listing_ended
+        await record_listing_ended(
+            db,
+            property_id=pid,
+            existing=listing,
+            new_status="withdrawn",
+        )
+    except Exception as e:  # noqa: BLE001
+        logger.warning("favorite_watch on slot expire failed listing=%s: %s", pid, e)
+
+    await _notify_owner_slot_expired(db, listing)
+    logger.info("paid listing slot expired listing=%s owner=%s", pid, listing.get("owner_user_id"))
+    return True
+
+
+async def run_expire_paid_listing_slots(*, limit: int = EXPIRE_BATCH_CAP) -> Dict[str, Any]:
+    """Cron: ritira annunci privati con listing_paid_until scaduto."""
+    db = Database.get()
+    now_iso = datetime.now(timezone.utc).isoformat()
+    q = expired_paid_slot_query(now_iso)
+    cursor = db.properties.find(
+        q,
+        {"_id": 0, "id": 1, "title": 1, "owner_user_id": 1, "owner": 1,
+         "status": 1, "listing_paid_until": 1},
+    ).sort("listing_paid_until", 1).limit(max(1, min(int(limit), EXPIRE_BATCH_CAP)))
+    scanned = 0
+    expired = 0
+    async for listing in cursor:
+        scanned += 1
+        if await expire_one_paid_listing(db, listing, now_iso=now_iso):
+            expired += 1
+    return {
+        "ok": True,
+        "scanned": scanned,
+        "expired": expired,
+        "now": now_iso,
+    }

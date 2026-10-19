@@ -388,10 +388,40 @@ def start_scheduler() -> None:
         max_instances=1,
         coalesce=True,
     )
+
+    async def _expire_paid_listing_slots_tick():
+        from apps.billing.b2c_listing_publish import run_expire_paid_listing_slots
+        try:
+            report = await run_expire_paid_listing_slots()
+            _mark_job(
+                "b2c_paid_listing_expire",
+                ok=True,
+                detail=f"scanned={report.get('scanned')} expired={report.get('expired')}",
+            )
+            logger.info(
+                "b2c paid listing expire scanned=%s expired=%s",
+                report.get("scanned"),
+                report.get("expired"),
+            )
+        except Exception as e:  # noqa: BLE001
+            _mark_job("b2c_paid_listing_expire", ok=False, detail=str(e))
+            logger.warning("b2c paid listing expire failed: %s", e)
+
+    sched.add_job(
+        _expire_paid_listing_slots_tick,
+        CronTrigger(hour=4, minute=0),
+        id="b2c_paid_listing_expire",
+        replace_existing=True,
+        max_instances=1,
+        coalesce=True,
+    )
+
     sched.start()
     _scheduler = sched
     logger.info(
-        "Publishing scheduler started (D-108 owner=apscheduler; daily sync %02d:%02d UTC + saved-searches every 5m + backup 03:15 UTC + request-matching 02:30 UTC)",
+        "Publishing scheduler started (D-108 owner=apscheduler; daily sync %02d:%02d UTC + "
+        "saved-searches every 5m + backup 03:15 UTC + request-matching 02:30 UTC + "
+        "b2c paid-listing expire 04:00 UTC)",
         DAILY_SYNC_HOUR_UTC, DAILY_SYNC_MINUTE_UTC,
     )
 

@@ -52,6 +52,8 @@ Ripristinati dalla sezione ImmobilCloud B2C di `PRICING_OMNIA.md` v2.0.
 
 Checkout: `POST /api/billing/b2c/checkout`. Slot dal 3°: `listing_id` opzionale (credito consumato alla create). Boost/add-on: `listing_id` obbligatorio.
 
+**Scadenza slot a pagamento**: cron APScheduler `b2c_paid_listing_expire` (04:00 UTC) + `POST /api/app/cron/listings/expire-paid-slots` ritira gli annunci con `listing_paid_until` scaduto (`status=withdrawn`, fuori portale). I 2 gratis non scadono.
+
 **Strategia**: sconto aggressivo 25-45% sotto Idealista in **Fase 1 acquisition**. Da Fase 2 (12+ mesi) allinearsi a -15%.
 
 #### Confronto concorrenti (settembre 2026 — fonti pubbliche / listini citati)

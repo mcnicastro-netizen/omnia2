@@ -68,3 +68,24 @@ def test_prices_match_listino():
     assert B2C_ONE_SHOT_PRODUCTS["b2c_listing_premium"]["price_eur"] == 19.90
     assert B2C_ONE_SHOT_PRODUCTS["b2c_hide_address"]["price_eur"] == 5.90
     assert B2C_ONE_SHOT_PRODUCTS["b2c_photo_pack"]["price_eur"] == 3.90
+
+
+def test_expired_paid_slot_query_shape():
+    from apps.billing.b2c_listing_publish import expired_paid_slot_query
+    import json
+
+    q = expired_paid_slot_query("2026-10-19T00:00:00+00:00")
+    blob = json.dumps(q)
+    assert "listing_paid_until" in blob
+    assert "is_private_listing" in blob
+    assert "listing_slot_expired_at" in blob
+    assert "$and" in q  # with_not_trashed wrapper
+
+
+def test_expire_job_wired_in_scheduler_and_cron():
+    import inspect
+    from apps.immoweb import sync_engine, cron
+
+    assert "b2c_paid_listing_expire" in inspect.getsource(sync_engine.start_scheduler)
+    assert "run_expire_paid_listing_slots" in inspect.getsource(cron)
+    assert "expire-paid-slots" in inspect.getsource(cron)

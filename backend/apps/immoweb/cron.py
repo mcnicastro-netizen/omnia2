@@ -12,6 +12,7 @@ from apps.immocloud.saved_searches import run_all_active_saved_searches
 from apps.immoweb.trash import run_trash_purge
 from apps.immoweb.backup_job import run_daily_backup
 from apps.immoweb.request_matching_job import run_all_request_matching
+from apps.billing.b2c_listing_publish import run_expire_paid_listing_slots
 
 router = APIRouter(prefix="/cron", tags=["cron"])
 
@@ -51,4 +52,13 @@ async def cron_daily_backup(user: dict = Depends(get_current_user)):
     if user.get("role") not in ALLOWED_ROLES:
         raise HTTPException(status_code=403, detail="cron_forbidden")
     report = await run_daily_backup()
+    return {"ok": True, "trigger": "manual", "owner": "apscheduler", **report}
+
+
+@router.post("/listings/expire-paid-slots")
+async def cron_expire_paid_listing_slots(user: dict = Depends(get_current_user)):
+    """Ritira annunci privati con slot Stripe 90gg scaduto. Trigger manuale (D-108)."""
+    if user.get("role") not in ALLOWED_ROLES:
+        raise HTTPException(status_code=403, detail="cron_forbidden")
+    report = await run_expire_paid_listing_slots()
     return {"ok": True, "trigger": "manual", "owner": "apscheduler", **report}
