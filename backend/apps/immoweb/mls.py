@@ -27,15 +27,24 @@ OfferStatus = Literal["pending", "accepted", "rejected", "expired", "revoked"]
 PartnerStatus = Literal["pending", "active", "revoked"]
 
 
+def _shareable_listing_filters() -> Dict[str, Any]:
+    """Filtri inventario MLS (Cap. 27 + flag mls_shared).
+
+    Annunci B2C privati sono esclusi: matching/MLS = dominio B2B
+    (PRICING_B2C §3 · sentinel agency_id `_private_listings`).
+    """
+    return {
+        "visibility": {"$in": ["public", "mls_only"]},
+        "mls_shared": {"$ne": False},
+        "status": {"$ne": "deleted"},
+        "is_private_listing": {"$ne": True},
+        "agency_id": {"$ne": "_private_listings"},
+    }
+
+
 def _shareable_listing_clause() -> Dict[str, Any]:
-    """Immobili visibili in inventario MLS (Cap. 27 + flag mls_shared). C5: no trash."""
-    return with_not_trashed(
-        {
-            "visibility": {"$in": ["public", "mls_only"]},
-            "mls_shared": {"$ne": False},
-            "status": {"$ne": "deleted"},
-        }
-    )
+    """Immobili visibili in inventario MLS. C5: no trash."""
+    return with_not_trashed(_shareable_listing_filters())
 
 
 class JoinMlsBody(BaseModel):
@@ -150,14 +159,7 @@ async def mls_dashboard(user: dict = Depends(require_roles("agency_admin", "agen
         raise HTTPException(status_code=404, detail="agency_not_found")
 
     my_shared = await db.properties.count_documents(
-        with_not_trashed(
-            {
-                "agency_id": aid,
-                "visibility": {"$in": ["public", "mls_only"]},
-                "mls_shared": {"$ne": False},
-                "status": {"$ne": "deleted"},
-            }
-        )
+        with_not_trashed({**_shareable_listing_filters(), "agency_id": aid})
     )
     my_exclusive = await db.properties.count_documents(
         with_not_trashed(
@@ -167,10 +169,8 @@ async def mls_dashboard(user: dict = Depends(require_roles("agency_admin", "agen
     with_photos = await db.properties.count_documents(
         with_not_trashed(
             {
+                **_shareable_listing_filters(),
                 "agency_id": aid,
-                "visibility": {"$in": ["public", "mls_only"]},
-                "mls_shared": {"$ne": False},
-                "status": {"$ne": "deleted"},
                 "$or": [
                     {"cover_url": {"$exists": True, "$ne": None}},
                     {"photos.0": {"$exists": True}},
@@ -180,24 +180,12 @@ async def mls_dashboard(user: dict = Depends(require_roles("agency_admin", "agen
     )
 
     province = (agency.get("mls_province") or agency.get("province_sigla") or "").upper()
-    local_q: Dict[str, Any] = {
-        "visibility": {"$in": ["public", "mls_only"]},
-        "mls_shared": {"$ne": False},
-        "status": {"$ne": "deleted"},
-        "agency_id": {"$ne": aid},
-    }
+    local_q: Dict[str, Any] = {**_shareable_listing_filters(), "agency_id": {"$ne": aid}}
     if province:
         local_q["province_sigla"] = province
     local_listings = await db.properties.count_documents(with_not_trashed(local_q))
     national_listings = await db.properties.count_documents(
-        with_not_trashed(
-            {
-                "visibility": {"$in": ["public", "mls_only"]},
-                "mls_shared": {"$ne": False},
-                "status": {"$ne": "deleted"},
-                "agency_id": {"$ne": aid},
-            }
-        )
+        with_not_trashed({**_shareable_listing_filters(), "agency_id": {"$ne": aid}})
     )
     network_agencies = await db.agencies.count_documents({"mls_enabled": True, "id": {"$ne": aid}})
 
@@ -282,11 +270,7 @@ async def my_mls_inventory(
     agency = await db.agencies.find_one({"id": aid}, {"_id": 0, "mls_province": 1, "province_sigla": 1})
     province = ((agency or {}).get("mls_province") or (agency or {}).get("province_sigla") or "").upper()
 
-    q: Dict[str, Any] = {
-        "visibility": {"$in": ["public", "mls_only"]},
-        "mls_shared": {"$ne": False},
-        "status": {"$ne": "deleted"},
-    }
+    q: Dict[str, Any] = dict(_shareable_listing_filters())
     if scope == "mine":
         q["agency_id"] = aid
     elif scope == "local":
@@ -492,11 +476,7 @@ async def public_network_search(
 ):
     """Public dual-box: network-wide MLS search (no auth)."""
     db = Database.get()
-    q: Dict[str, Any] = {
-        "visibility": {"$in": ["public", "mls_only"]},
-        "mls_shared": {"$ne": False},
-        "status": {"$ne": "deleted"},
-    }
+    q: Dict[str, Any] = dict(_shareable_listing_filters())
     if province:
         q["province_sigla"] = province.upper()[:2]
     if city:
@@ -637,9 +617,7 @@ async def seed_mls_network(
                 )
 
     total_mls = await db.agencies.count_documents({"mls_enabled": True})
-    total_listings = await db.properties.count_documents(
-        {"visibility": {"$in": ["public", "mls_only"]}, "mls_shared": {"$ne": False}, "status": {"$ne": "deleted"}}
-    )
+    total_listings = await db.properties.count_documents(_shareable_listing_filters())
     return {
         "created_agencies": created_agencies,
         "created_properties": created_props,

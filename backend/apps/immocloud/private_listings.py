@@ -185,6 +185,9 @@ async def create_private_listing(
         "is_private_listing": True,
         "owner_user_id": user["id"],
         "status": "draft",
+        # MLS / matching CRM = B2B only (PRICING_B2C §3)
+        "mls_shared": False,
+        "visibility": "private",
         "moderation_status": "none",  # bozza locale — pending solo dopo /submit
         "moderation_notes": None,
         "moderation_reviewed_at": None,

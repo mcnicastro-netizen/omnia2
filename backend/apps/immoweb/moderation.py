@@ -131,7 +131,9 @@ async def approve_listing(pid: str, user: dict = Depends(get_current_user)):
         {"$set": {
             "moderation_status": "approved",
             "status": "active",
+            # Portale B2C pubblico sì; rete MLS / matching agenzie no
             "visibility": "public",
+            "mls_shared": False,
             "moderation_notes": None,
             "moderation_reviewed_at": now,
             "moderation_reviewed_by": user["id"],
