@@ -40,6 +40,7 @@ const ClientImportPage = lazy(() => import("@/apps/immoweb/ClientImportPage"));
 const RequestsPage = lazy(() => import("@/apps/immoweb/RequestsPage"));
 const RequestFormPage = lazy(() => import("@/apps/immoweb/RequestFormPage"));
 const MatchesPage = lazy(() => import("@/apps/immoweb/MatchesPage"));
+const MandateOpportunitiesPage = lazy(() => import("@/apps/immoweb/MandateOpportunitiesPage"));
 const ActivitiesPage = lazy(() => import("@/apps/immoweb/ActivitiesPage"));
 const MatchLeadScorePage = lazy(() => import("@/apps/immoweb/MatchLeadScorePage"));
 const WebsitePage = lazy(() => import("@/apps/immoweb/WebsitePage"));
@@ -488,6 +489,15 @@ function App() {
                     element={
                       <ProtectedRoute allowedRoles={["super_admin", "agency_admin", "agent"]}>
                         <MatchesPage />
+                      </ProtectedRoute>
+                    }
+                  />
+                  {/* D-129 — Opportunità mandati esclusiva */}
+                  <Route
+                    path="app/mandate-opportunities"
+                    element={
+                      <ProtectedRoute allowedRoles={["super_admin", "agency_admin", "agent"]}>
+                        <MandateOpportunitiesPage />
                       </ProtectedRoute>
                     }
                   />

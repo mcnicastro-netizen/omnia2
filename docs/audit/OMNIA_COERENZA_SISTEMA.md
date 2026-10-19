@@ -37,6 +37,12 @@ Più: Founder Ops, Cloud Agent (seed demo GTM + Nicastro dogfood), corpus `memor
 **Promessa da chiudere (una frase):**  
 *Prospect apre demo → usa il gestionale → vede gli annunci sul portale → a scadenza acquista → i dati sono recuperabili → il canone regge lo storage.*
 
+**Tre promesse strutturali (D-129 — messaggio commerciale primario):**  
+1. Portale = domanda propria / meno dipendenza dai portali terzi (prova: contatti ImmobilCloud).  
+2. Academy = collaboratori formati e produttivi (prova: non ancora — M6).  
+3. Matching → mandati in esclusiva (prova: funnel `mandate_opportunities`).  
+Gestionale/white-label/paperless = necessari, non il pitch.
+
 ---
 
 ## 2. Cosa tiene (non buttare)

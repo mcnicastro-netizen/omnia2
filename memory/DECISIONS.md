@@ -7,6 +7,18 @@ Registro di tutte le decisioni di business e tecniche prese durante il progetto.
 
 ## Decisioni prese
 
+### D-129 — Tre promesse strutturali + prove misurabili (no appiattimento vs Arcanis)
+- **Data**: 19 Ottobre 2026
+- **Contesto**: Rivalutazione strategica Founder: OMNIA non compete come “CRM con più funzioni” (Arcanis.it / Arcanis Immobiliare dichiarano già matching, MLS, automazioni). OMNIA risolve **tre problemi economici/operativi** delle agenzie. Basta analisi senza chiusura; ogni promessa deve essere dimostrabile.
+- **Decisione (posizionamento vincolante)**:
+  1. **Portale (ImmobilCloud)** — ridurre dipendenza/costo dai portali terzi con **domanda propria** e contatti qualificati verso il CRM. Metrica prova: `leads/requests source=ImmobilCloud` + costo/contatto (quando c’è spend esterno).
+  2. **Academy** — formare collaboratori e renderli produttivi in agenzia (non vetrina corsi). Metrica prova: completamento → inserimento → permanenza. **Oggi non dimostrabile** (M6 landing-only): vietato claimare fino a codice LMS.
+  3. **Matching → mandati in esclusiva** — non solo buyer↔stock: individuare inventario privato/portale con domanda in portafoglio e funnel **new → contacted → appointment → mandate_won**. Metrica prova: tassi funnel + confronto baseline mandati fuori sistema.
+- **Regola anti-appiattimento**: nessuna feature shippata come “ecosistema” senza mappare a una delle tre prove. Gestionale / white-label / paperless = necessari ma **non** messaggio commerciale primario.
+- **Prima prova di mercato**: pilastro **mandati** (codice su D-126 + coda `mandate_opportunities`), perché è il differenziale più vicino a end-to-end; portale già misurabile; Academy dopo sblocco M6.
+- **Implementazione v1**: `mandate_opportunities.py` · hook in `private_listing_matching` · UI `/app/mandate-opportunities` · KPI dashboard · `GET /app/mandate-opportunities/proof`.
+- **Stato**: ✅ DECISO · CODICE v1 mandati+proof · LIVE ⏳ pilota agenzia
+
 ### D-128 — StagingAgent nativo + Nano Banana one-shot (no SaaS staging embed) · 18/19-Ott-2026
 - **Data**: 18–19 Ottobre 2026
 - **Contesto**: Founder boccia qualità ~2/10; vieta embed SaaS staging costosi; dopo demo live Nano Banana 2 (via fal) approva cablaggio **one-shot + 4 stili + critico vision**.

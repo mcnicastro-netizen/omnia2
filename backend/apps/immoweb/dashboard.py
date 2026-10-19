@@ -115,6 +115,23 @@ async def get_kpis(user: dict = Depends(get_current_user)):
              "start_at": {"$gte": now_iso, "$lte": soon}}
         )
 
+    mandate_open = 0
+    portal_leads_7d = 0
+    if agency_id:
+        try:
+            from apps.immoweb.mandate_opportunities import count_open_for_agency
+            mandate_open = await count_open_for_agency(db, agency_id)
+        except Exception:
+            mandate_open = 0
+        since_7d = (datetime.now(timezone.utc) - timedelta(days=7)).isoformat()
+        portal_leads_7d = await db.leads.count_documents(
+            {
+                "agency_id": agency_id,
+                "source": "ImmobilCloud",
+                "created_at": {"$gte": since_7d},
+            }
+        )
+
     kpis: List[DashboardKPI] = [
         DashboardKPI(
             key="properties_active",
@@ -128,6 +145,20 @@ async def get_kpis(user: dict = Depends(get_current_user)):
             label="Richieste aperte",
             value=leads_open,
             icon="user-plus",
+            locked=False,
+        ),
+        DashboardKPI(
+            key="mandate_opportunities",
+            label="Opportunità mandati",
+            value=mandate_open,
+            icon="sparkles",
+            locked=False,
+        ),
+        DashboardKPI(
+            key="portal_leads_7d",
+            label="Contatti portale (7gg)",
+            value=portal_leads_7d,
+            icon="globe",
             locked=False,
         ),
         DashboardKPI(
@@ -287,6 +318,45 @@ async def get_today(user: dict = Depends(get_current_user)) -> Dict[str, Any]:
                 ],
             }
         )
+
+    # —— D-129: Opportunità mandati dal portale ——
+    try:
+        from apps.immoweb.mandate_opportunities import (
+            count_open_for_agency,
+            sample_open_for_agency,
+        )
+        n_mandates = await count_open_for_agency(db, agency_id)
+        if n_mandates:
+            samples = await sample_open_for_agency(db, agency_id, limit=5)
+            actions.append(
+                {
+                    "id": "mandate_opportunities",
+                    "kind": "mandate",
+                    "priority": 0,
+                    "title_key": "dashboard.today_mandates",
+                    "title": "Opportunità mandati (portale)",
+                    "count": n_mandates,
+                    "href": "/app/mandate-opportunities",
+                    "cta_key": "dashboard.today_cta_mandates",
+                    "cta": "Apri coda mandati",
+                    "items": [
+                        {
+                            "id": d.get("id"),
+                            "label": (d.get("listing") or {}).get("title")
+                            or (d.get("listing") or {}).get("city")
+                            or "Annuncio privato",
+                            "meta": f"score {(d.get('demand_score') or 0)}/100 · {d.get('status')}",
+                            "href": "/app/mandate-opportunities",
+                            "reason_key": "dashboard.today_reason_mandate",
+                            "reason": "Domanda in portafoglio → acquisisci incarico",
+                        }
+                        for d in samples
+                        if d.get("id")
+                    ],
+                }
+            )
+    except Exception:
+        pass
 
     # —— Clienti da riprendere (searchers recent / new) — no match fan-out ——
     q_clients = {

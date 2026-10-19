@@ -166,18 +166,19 @@ async def _notify_agency_portal_match(
         await notify_users(
             recipients,
             type=TYPE_LEAD_NEW,
-            title=f"Match portale · {title}",
+            title=f"Opportunità mandato · {title}",
             body=(
-                f"Annuncio privato compatibile con «{req.get('title') or req.get('id')}»"
-                f"{f' · {city}' if city else ''} · score {score}/100."
+                f"Annuncio privato con domanda compatibile («{req.get('title') or req.get('id')}»)"
+                f"{f' · {city}' if city else ''} · score {score}/100. Apri la coda Mandati."
             ),
-            link="/app/requests/" + str(req.get("id") or ""),
+            link="/app/mandate-opportunities",
             agency_id=agency_id,
             meta={
                 "request_id": req.get("id"),
                 "property_id": hit.get("property_id"),
                 "score": score,
                 "scope": "portal",
+                "purpose": "exclusive_mandate",
             },
         )
     except Exception as e:  # noqa: BLE001
@@ -190,7 +191,10 @@ async def process_private_listing_matches(
     *,
     min_score: Optional[int] = None,
 ) -> Dict[str, Any]:
-    """Match + alert agenzie (dedup). Nessuna email al cliente CRM sul privato."""
+    """Match + alert agenzie (dedup) + opportunità mandato (D-129).
+
+    Nessuna email al cliente CRM sul privato.
+    """
     hits = await match_private_listing_to_requests(db, prop, min_score=min_score)
     fresh = 0
     notified = 0
@@ -223,11 +227,22 @@ async def process_private_listing_matches(
             {"id": rid, "status": "open"},
             {"$set": {"status": "matched", "updated_at": _now()}},
         )
+
+    # D-129: ogni hit (anche già notificati) aggiorna la coda mandati
+    opportunities = 0
+    if hits:
+        try:
+            from apps.immoweb.mandate_opportunities import sync_opportunities_from_hits
+            opportunities = await sync_opportunities_from_hits(db, prop, hits)
+        except Exception as e:  # noqa: BLE001
+            logger.warning("mandate opportunities sync failed %s: %s", prop.get("id"), e)
+
     return {
         "property_id": prop.get("id"),
         "hits": len(hits),
         "new": fresh,
         "notified": notified,
+        "mandate_opportunities": opportunities,
     }
 
 
@@ -248,7 +263,15 @@ async def run_private_listing_request_matching(
 
     props = await db.properties.find(
         q,
-        {**svc._PROP_PROJ, "is_private_listing": 1, "owner_user_id": 1, "moderation_status": 1},
+        {
+            **svc._PROP_PROJ,
+            "is_private_listing": 1,
+            "owner_user_id": 1,
+            "moderation_status": 1,
+            "contact_public": 1,
+            "email": 1,
+            "photos": 1,
+        },
     ).sort("updated_at", -1).to_list(length=MAX_LISTINGS_PER_RUN)
 
     processed = 0

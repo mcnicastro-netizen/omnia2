@@ -572,6 +572,7 @@
     "nav_requests": "Richieste",
     "nav_activities": "Attività",
     "nav_matches": "Match",
+    "nav_mandates": "Mandati",
     "nav_portals": "Pubblicità su portali",
     "nav_members": "Collaboratori",
     "nav_settings": "Impostazioni",
@@ -818,6 +819,12 @@
     "carried_empty": "Questo cliente non ha ancora immobili in carico. Vai in Immobili → Nuovo e selezionalo come proprietario.",
     "op_sale": "Vendita",
     "op_rent": "Affitto"
+  },
+  "mandates": {
+    "title": "Opportunità mandati",
+    "subtitle": "Annunci privati sul portale con domanda nel tuo portafoglio: lavora il proprietario per l’incarico in esclusiva.",
+    "empty_title": "Nessuna opportunità aperta",
+    "empty_subtitle": "Quando un annuncio privato sul portale matcha una tua richiesta, compare qui come candidata per un mandato."
   },
   "matches": {
     "title": "Match",
