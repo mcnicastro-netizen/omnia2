@@ -264,23 +264,23 @@ async def public_search(
             {"zone": {"$regex": q, "$options": "i"}},
         ]
 
-    # D-127 — boost su tutti i sort: tier → rotazione equa → criterio utente
-    # (modello Idealista/Immobiliare.it: TOP/Premium sopra organico; a parità rotazione)
+    # D-127 — boost su tutti i sort + rotazione + cap densità per pagina
+    # (con filtro city i pool sono scoped → densità locale città)
     from apps.billing.boost_ranking import (
-        build_boosted_search_pipeline,
+        fetch_search_page_with_density_cap,
         schedule_boost_impressions,
     )
 
     total = await db.properties.count_documents(flt)
     skip = (page - 1) * page_size
-    pipeline = build_boosted_search_pipeline(
+    props, density = await fetch_search_page_with_density_cap(
+        db,
         flt,
         sort=sort,
-        skip=skip,
-        limit=page_size,
+        page=page,
+        page_size=page_size,
         project_fields=LIST_FIELDS,
     )
-    props = await db.properties.aggregate(pipeline).to_list(length=page_size)
 
     # Impressioni boost (async): alimenta la rotazione equa
     schedule_boost_impressions([p.get("id") for p in props if _active_boost_tier(p)])
@@ -302,6 +302,7 @@ async def public_search(
         "page_size": page_size,
         "has_next": skip + page_size < total,
         "sort": sort,
+        "boost_density": density,
     }
 
 

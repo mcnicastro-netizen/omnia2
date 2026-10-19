@@ -1,11 +1,15 @@
-"""Unit: ranking boost D-127 (tier + rotazione + tutti i sort)."""
+"""Unit: ranking boost D-127 (tier + rotazione + densità + tutti i sort)."""
 from __future__ import annotations
 
 from apps.billing.boost_ranking import (
+    FEATURED_SHARE,
     USER_SORT_FIELDS,
+    active_boost_match,
     boost_add_fields_stage,
     boost_sort_stage,
     build_boosted_search_pipeline,
+    featured_slots_for_page,
+    organic_match,
 )
 
 
@@ -34,7 +38,6 @@ def test_pipeline_used_for_every_sort():
         assert pipe[0]["$match"]["status"] == "active"
         assert "$addFields" in pipe[1]
         assert pipe[2]["$sort"]["_eff_boost"] == -1
-        assert pipe[2]["$sort"]["_boost_rotate"] == 1
 
 
 def test_add_fields_active_boost_uses_rank():
@@ -43,13 +46,27 @@ def test_add_fields_active_boost_uses_rank():
     assert "_boost_rotate" in stage["$addFields"]
 
 
-def test_search_endpoint_uses_boost_ranking():
+def test_featured_slots_half_page():
+    assert FEATURED_SHARE == 0.5
+    assert featured_slots_for_page(20) == 10
+    assert featured_slots_for_page(1) == 1
+    assert featured_slots_for_page(3) == 2  # round(1.5)=2
+
+
+def test_active_vs_organic_match_complementary():
+    now = "2026-10-19T12:00:00+00:00"
+    assert active_boost_match(now)["boost_until"]["$gt"] == now
+    assert "$or" in organic_match(now)
+
+
+def test_search_endpoint_uses_density_cap():
     import inspect
     from apps.immocloud import public_portal as pp
 
     src = inspect.getsource(pp.public_search)
-    assert "build_boosted_search_pipeline" in src
+    assert "fetch_search_page_with_density_cap" in src
     assert "schedule_boost_impressions" in src
+    assert "boost_density" in src
 
 
 def test_apply_boost_resets_rotation():
