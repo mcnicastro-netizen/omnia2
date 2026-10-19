@@ -7,6 +7,17 @@ Registro di tutte le decisioni di business e tecniche prese durante il progetto.
 
 ## Decisioni prese
 
+### D-127 — Boost Vetrina/Premium/TOP: ranking tipo portali + rotazione equa
+- **Data**: 19 Ottobre 2026
+- **Contesto**: Founder chiede parere critico e miglioramento allineato ai concorrenti (Idealista Top/Premium/Subidón; Immobiliare.it TOP>Premium, a parità qualità/data).
+- **Decisione**:
+  1. **Tutti i sort** (recente/prezzo/superficie): prima `_eff_boost` (TOP>Premium>Vetrina>0).
+  2. **A parità di tier**: rotazione equa su `boost_last_shown_at` ASC (non più `updated_at` — anti-gaming).
+  3. **Impressioni lista**: `boost_impression_count` + `boost_last_shown_at` aggiornati a ogni apparizione in `/cloud/search`; UI venditore mostra le apparizioni.
+  4. Nuovo acquisto boost: reset rotazione (mai mostrato) + contatore a 0.
+  5. Listino prezzi invariato in questa decisione.
+- **Stato**: ✅ Implementata
+
 ### D-126 — Match annunci privati → richieste CRM (tutte le agenzie)
 - **Data**: 19 Ottobre 2026
 - **Contesto**: Founder — l’annuncio del privato deve matchare le richieste delle agenzie **sia MLS sia non MLS**, con alert di compatibilità.

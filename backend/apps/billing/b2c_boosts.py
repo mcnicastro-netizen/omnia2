@@ -93,15 +93,23 @@ async def apply_boost_to_listing(
         )
         return None
 
+    from apps.billing.boost_ranking import apply_boost_rotation_reset_fields
     update = {
         "boost_tier": tier,
         "boost_rank": rank,
         "boost_until": until.isoformat(),
         "boost_product_key": product_key,
-        "boost_activated_at": paid_at.isoformat(),
         "updated_at": datetime.now(timezone.utc).isoformat(),
+        **apply_boost_rotation_reset_fields(paid_at),
     }
-    await db.properties.update_one({"id": listing_id}, {"$set": update})
+    # Unset last_shown so Mongo treats as "never shown" in rotation ASC
+    await db.properties.update_one(
+        {"id": listing_id},
+        {
+            "$set": {k: v for k, v in update.items() if v is not None},
+            "$unset": {"boost_last_shown_at": ""},
+        },
+    )
     logger.info(
         "boost applied listing=%s tier=%s days=%s until=%s product=%s",
         listing_id, tier, days, until.isoformat(), product_key,

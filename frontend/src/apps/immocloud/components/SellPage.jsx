@@ -620,6 +620,9 @@ export default function SellPage() {
                         tier: String(boostActive(l)).toUpperCase(),
                         until: new Date(l.boost_until).toLocaleDateString(lang),
                       })}
+                      {(l.boost_impression_count || 0) > 0
+                        ? ` · ${t("cloud.sell.boost_impressions", { n: l.boost_impression_count })}`
+                        : ""}
                     </p>
                   )}
                 </div>
