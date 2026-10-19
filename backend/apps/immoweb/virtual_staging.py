@@ -1,15 +1,14 @@
-"""OMNIA — M5.S4 Virtual Staging (quality v2).
+"""OMNIA — M5.S4 Virtual Staging (D-033 + D-125).
 
-Reference: DECISIONS.md D-033.
+Primary pipeline (Founder OK 19-Ott-2026):
+  Nano Banana 2 one-shot (fal = Gemini 3.1 Flash Image) × up to 4 styles
+  + vision critic (Gemini Flash) → optional single retry per failed style
 
-Pipeline (empty / reverse):
-  Stage 1 — EVF-SAM semantic furniture mask (multi-prompt union) + arch keep
-  Stage 1b — Ideogram erase on union mask, then Florence/SAM2 remnant passes
-  Stage 2 — Flux 2 apartment-staging LoRA (skipped for mode=empty)
-  Stage 3 — ESRGAN only on Flux-inpaint fallback
+Legacy fallback (EVF-SAM + Ideogram + apartment LoRA) if nano engine fails
+or OMNIA_STAGING_ENGINE=legacy.
 
-Standard (already-empty room): apartment-staging LoRA directly.
-CRM-aware prompt fragment (Gemini) + watermark "Render virtuale OMNIA".
+CRM-aware prompt fragment + watermark "Render virtuale OMNIA".
+No third-party staging SaaS embed.
 """
 from __future__ import annotations
 
@@ -41,6 +40,15 @@ from shared.db.connection import Database
 from shared.utils.net_guard import assert_public_url
 from apps.billing.plans import CREDIT_COSTS
 from apps.billing.routes import debit_credits
+from apps.immoweb.staging_agent import (
+    COST_NANO_BANANA_1K,
+    StagingAgent,
+    critique_empty_from_meta,
+    critique_furnished_heuristic,
+    decide_accept,
+    parse_vision_critique,
+    plan_staging,
+)
 
 logger = logging.getLogger("omnia.staging")
 router = APIRouter(prefix="/staging", tags=["virtual-staging"])
@@ -57,6 +65,10 @@ MODEL_EVF_SAM = "fal-ai/evf-sam"
 MODEL_APARTMENT_STAGING = "fal-ai/flux-2-lora-gallery/apartment-staging"
 MODEL_FLUX_INPAINT = "fal-ai/flux-lora/inpainting"
 MODEL_UPSCALE = "fal-ai/esrgan"
+MODEL_NANO_BANANA_EDIT = "fal-ai/nano-banana-2/edit"
+VISION_CRITIC_MODEL = os.environ.get("OMNIA_STAGING_CRITIC_MODEL", "gemini-3-flash-preview")
+# Default primary engine — set OMNIA_STAGING_ENGINE=legacy to force EVF+LoRA.
+STAGING_ENGINE = (os.environ.get("OMNIA_STAGING_ENGINE") or "nano_banana").strip().lower()
 
 # Openings / built-ins that must not be painted over during erase (anti wall-invention).
 ARCHITECTURE_KEEP_LABELS = (
@@ -98,6 +110,30 @@ COST_IDEOGRAM = 0.03
 COST_STAGING_LORA = 0.06
 COST_FLUX = 0.05
 COST_UPSCALE = 0.005
+COST_NANO_BANANA = COST_NANO_BANANA_1K  # $0.08 @ 1K
+COST_VISION_CRITIC = 0.002
+
+_STYLE_ONESHOT_EN = {
+    "modern": (
+        "bright modern hotel-apartment style, crisp white linens, light oak, "
+        "closed wardrobe doors, soft daylight, airy, aspirational MLS photo"
+    ),
+    "classic": (
+        "refined Italian classic but bright and fresh (not heavy or dark), "
+        "cream upholstery, warm wood accents, inviting daylight"
+    ),
+    "scandi": (
+        "bright Scandinavian, light wood, white textiles, soft greenery, "
+        "cool daylight, clean and airy"
+    ),
+    "industrial": (
+        "bright industrial loft, metal and leather accents, lots of daylight, not gloomy"
+    ),
+    "luxury": (
+        "boutique luxury listing, plush neutrals, designer lamps, closed tall wardrobe, "
+        "aspirational daylight"
+    ),
+}
 
 # Florence open-vocab labels for lived-in Italian interiors (empty/reverse).
 FURNITURE_DETECT_LABELS = (
@@ -1576,6 +1612,165 @@ def _staging_lora_prompt(style: str, room_type: str, crm_fragment: Optional[str]
     return base
 
 
+def _oneshot_prompt(
+    mode: str,
+    style: str,
+    room_type: str,
+    crm_fragment: Optional[str] = None,
+) -> str:
+    """Nano Banana one-shot prompt — lock architecture, then empty and/or furnish."""
+    sk = style if style in STYLES else "modern"
+    rt = room_type if room_type in ROOM_TYPES else "living"
+    room_en = {
+        "living": "living room",
+        "bedroom": "bedroom",
+        "kitchen": "kitchen",
+        "dining": "dining room",
+        "bathroom": "bathroom",
+        "office": "home office",
+    }.get(rt, "living room")
+    style_en = _STYLE_ONESHOT_EN.get(sk, _STYLE_ONESHOT_EN["modern"])
+    room_bits = ROOM_TYPES.get(rt, ROOM_TYPES["living"])
+    lock = (
+        "Edit THIS photo only. Do not create a different room. "
+        "Lock: camera angle, crop, perspective, walls, ceiling, floor material and pattern, "
+        "door frames, open doorways, existing windows only, built-in fixtures, lighting direction. "
+        "CRITICAL ARCHITECTURE: do NOT add any new windows, skylights, glass panels, or openings. "
+        "If a wall has no window in the source photo, keep it as a solid blank wall. "
+        "Do NOT invent daylight sources through new openings — use existing light only. "
+        "No renovation, no invented walls, no closed-over real doorways, no people, no text, no logos. "
+    )
+    if mode == "empty":
+        body = (
+            "Remove ALL furniture and objects (gym equipment, bed, wardrobe, rugs, clutter, "
+            "decorations). Fill erased areas with seamless continuation of existing floor and walls. "
+            "Photoreal empty Italian room ready for real-estate listing photography."
+        )
+    elif mode == "reverse":
+        body = (
+            f"Remove ALL existing furniture and clutter, then furnish this {room_en} as a "
+            f"2025 Italian real-estate listing photo. Style: {style_en}. Furniture: {room_bits}. "
+            "Cool natural daylight, sharp details, aspirational MLS hero photograph. "
+            "No gym remnants, no open wardrobe doors, no yellow color cast, no clutter."
+        )
+    else:
+        body = (
+            f"Furnish this empty {room_en} for a 2025 Italian real-estate listing photo. "
+            f"Style: {style_en}. Furniture: {room_bits}. "
+            "Cool natural daylight, sharp details, aspirational MLS hero photograph. "
+            "Do not invent new doors or walls. No open wardrobe doors, no clutter."
+        )
+    out = lock + body
+    if crm_fragment:
+        out = f"{out} {crm_fragment}"
+    return out
+
+
+async def _nano_banana_edit(
+    image_url: str,
+    prompt: str,
+    *,
+    resolution: str = "1K",
+) -> str:
+    """fal Nano Banana 2 edit (= Gemini 3.1 Flash Image). Returns result image URL."""
+    handler = await fal_client.submit_async(
+        MODEL_NANO_BANANA_EDIT,
+        arguments={
+            "prompt": prompt,
+            "image_urls": [image_url],
+            "num_images": 1,
+            "output_format": "jpeg",
+            "resolution": resolution if resolution in ("0.5K", "1K", "2K", "4K") else "1K",
+        },
+    )
+    result = await handler.get()
+    images = result.get("images") or []
+    if images and isinstance(images[0], dict) and images[0].get("url"):
+        return images[0]["url"]
+    raise RuntimeError(f"Nano Banana returned no image (keys: {list(result.keys())})")
+
+
+async def _vision_critique_staging(
+    source_url: str,
+    result_url: str,
+    *,
+    style: str,
+    mode: str,
+):
+    """Gemini Flash vision critic — listing rubric. Best-effort on quota errors."""
+    from apps.immoweb.staging_agent import QualityReport
+
+    try:
+        async with httpx.AsyncClient(timeout=90.0) as client:
+            src_b, res_b = await asyncio.gather(
+                client.get(source_url),
+                client.get(result_url),
+            )
+            src_b.raise_for_status()
+            res_b.raise_for_status()
+            src_bytes, res_bytes = src_b.content, res_b.content
+    except Exception as e:
+        logger.warning("vision critic download failed: %s", e)
+        return QualityReport(
+            score=0.68, issues=["critic_download_failed"], retry_actions=[],
+            signals={"error": str(e)[:120]},
+        )
+
+    prompt = (
+        "Sei un revisore staging immobiliare per annunci italiani. "
+        f"Mode={mode} style={style}. Confronta ORIGINALE e RISULTATO. "
+        "Restituisci SOLO JSON valido (no markdown):\n"
+        '{"score":0-10,"architecture_ok":true|false,"geometry_ok":true|false,'
+        '"scale_ok":true|false,"lighting_ok":true|false,'
+        '"windows_original":N,"windows_result":N,'
+        '"invented_openings":true|false,'
+        '"artifacts":["..."],"verdict":"accept"|"retry",'
+        '"rationale":"1-2 frasi in italiano"}\n'
+        "REGOLA DURA aperture: conta finestre/lucernari visibili nell'ORIGINALE vs RISULTATO. "
+        "Se il risultato ha PIÙ finestre/aperture/vetri a muro → invented_openings=true, "
+        "architecture_ok=false, verdict=retry, score<=4. "
+        "Boccia anche se: porte chiuse/inventate, muri nuovi, residui gym/arredo vecchio, "
+        "look triste/giallo, prospettiva rotta. "
+        "Accetta (score>=7) solo se listing-ready E zero aperture inventate."
+    )
+    try:
+        from google import genai
+        from google.genai import types
+        from shared.llm import try_resolve_api_key
+
+        api_key = try_resolve_api_key()
+        if not api_key:
+            return QualityReport(
+                score=0.68, issues=["critic_no_key"], retry_actions=[],
+                signals={},
+            )
+        gclient = genai.Client(api_key=api_key)
+        resp = await asyncio.to_thread(
+            gclient.models.generate_content,
+            model=VISION_CRITIC_MODEL,
+            contents=[
+                types.Content(
+                    role="user",
+                    parts=[
+                        types.Part.from_text(text="ORIGINALE:"),
+                        types.Part.from_bytes(data=src_bytes, mime_type="image/jpeg"),
+                        types.Part.from_text(text="RISULTATO:"),
+                        types.Part.from_bytes(data=res_bytes, mime_type="image/jpeg"),
+                        types.Part.from_text(text=prompt),
+                    ],
+                )
+            ],
+        )
+        raw = (getattr(resp, "text", None) or "").strip()
+        return parse_vision_critique(raw)
+    except Exception as e:
+        logger.warning("vision critic LLM failed: %s", e)
+        return QualityReport(
+            score=0.68, issues=["critic_llm_failed"], retry_actions=[],
+            signals={"error": str(e)[:160]},
+        )
+
+
 async def _apartment_stage(
     image_url: str,
     prompt: str,
@@ -1720,7 +1915,18 @@ async def _run_pipeline(job_id: str, db) -> None:
     mode = doc.get("mode", "standard")
     variant_mode = doc.get("variant_mode", "same_style")
     num_variants = doc.get("num_variants", 1)
-    total_cost = 0.0
+    engine_pref = STAGING_ENGINE if STAGING_ENGINE in ("nano_banana", "legacy") else "nano_banana"
+
+    agent = StagingAgent(plan_staging(
+        mode=mode,
+        style=doc.get("style") or "modern",
+        room_type=doc.get("room_type") or "living",
+        num_variants=num_variants,
+        variant_mode=variant_mode,
+        styles_list=doc.get("styles_list") or DEFAULT_MULTI_STYLES,
+        engine=engine_pref,
+    ))
+    await _mark_root({"agent_plan": agent.plan.to_dict()})
 
     try:
         src = await _resolve_image_url_for_fal(src_raw)
@@ -1737,137 +1943,288 @@ async def _run_pipeline(job_id: str, db) -> None:
         if crm_summary:
             await _mark_root({"crm_context": crm_summary})
 
-    # Stage 1 — detect. Empty/reverse: Florence is billed inside sequential erase.
-    # Standard: SAM auto-segment kept for Flux fallback path only.
-    mask_url: Optional[str] = None
-    try:
-        t0 = monotonic()
-        await _mark_stage("sam2_mask", {"status": "running"})
-        if mode in ("reverse", "empty"):
-            await _mark_stage("sam2_mask", {
-                "status": "done",
-                "duration_ms": int((monotonic() - t0) * 1000),
-                "cost_usd": 0,
-                "note": "florence_detect_inside_erase",
-            })
-        else:
-            mask_url = await _stage_sam2_mask(src, for_furniture=False)
-            await _mark_root({"mask_url": mask_url})
-            await _mark_stage("sam2_mask", {
-                "status": "done",
-                "duration_ms": int((monotonic() - t0) * 1000),
-                "cost_usd": COST_SAM2,
-            })
-            total_cost += COST_SAM2
-    except Exception as e:
-        await _fail("sam2_mask", "SAM2", e)
-        return
+    variants: List[dict] = []
+    engine_used = "none"
+    nano_ok = False
 
-    # Stage 1b — sequential Ideogram/Bria erase (empty / reverse only)
-    base_image = src
-    if mode in ("reverse", "empty"):
+    # ── Primary: Nano Banana one-shot × styles + vision critic ─────────────
+    if agent.plan.engine == "nano_banana":
         try:
             t0 = monotonic()
-            await _mark_stage("furniture_removal", {"status": "running"})
-            base_image, removal_cost, erase_meta = await _sequential_furniture_erase(src)
-            await _mark_root({"erase_meta": erase_meta})
+            await _mark_stage("sam2_mask", {
+                "status": "done", "duration_ms": 0, "cost_usd": 0,
+                "note": "skipped_nano_banana_oneshot",
+            })
             await _mark_stage("furniture_removal", {
-                "status": "done",
-                "duration_ms": int((monotonic() - t0) * 1000),
-                "cost_usd": round(removal_cost, 4),
-                "engine": erase_meta.get("engine"),
-                "note": f"erased={','.join(erase_meta.get('erased') or [])}"[:280],
+                "status": "done", "duration_ms": 0, "cost_usd": 0,
+                "note": "oneshot_includes_erase" if agent.plan.need_erase else "skipped_standard",
+                "engine": "nano_banana_2",
             })
-            total_cost += removal_cost
-        except Exception as e:
-            await _fail("furniture_removal", "Rimozione arredo", e)
-            return
-
-    # Stage 2 — apartment-staging LoRA (furnish). Skipped for empty-only mode.
-    if mode == "empty":
-        variants = [{"url": base_image, "style": "empty", "upscaled": False}]
-        await _mark_stage("flux_inpaint", {
-            "status": "done", "duration_ms": 0, "cost_usd": 0,
-            "note": "skipped_empty_mode",
-            "engine": "none",
-        })
-    else:
-        try:
-            t0 = monotonic()
             await _mark_stage("flux_inpaint", {"status": "running"})
-            style_keys = (
-                (doc.get("styles_list") or DEFAULT_MULTI_STYLES)[:num_variants]
-                if variant_mode == "multi_style"
-                else [doc.get("style") or "modern"]
-            )
+
+            style_keys = agent.plan.styles[: agent.plan.num_variants]
+
+            async def _gen_style(sk: str) -> dict:
+                prompt = _oneshot_prompt(mode, sk, agent.plan.room_type, crm_fragment)
+                url = await _nano_banana_edit(src, prompt, resolution="1K")
+                return {"url": url, "style": sk, "upscaled": False, "engine": "nano_banana_2"}
+
+            raw_variants = list(await asyncio.gather(
+                *[_gen_style(sk) for sk in style_keys],
+                return_exceptions=True,
+            ))
             variants = []
-            engine_used = "apartment_staging_lora"
-            for sk in style_keys:
-                prompt = _staging_lora_prompt(sk, doc.get("room_type") or "living", crm_fragment)
-                try:
-                    urls = await _apartment_stage(base_image, prompt, num_images=1 if variant_mode == "multi_style" else num_variants)
-                except Exception as lora_err:
-                    logger.warning("Apartment staging LoRA failed (%s) — Flux inpaint fallback", lora_err)
-                    engine_used = "flux_inpaint_fallback"
-                    if not mask_url:
-                        mask_url = await _stage_sam2_mask(base_image, for_furniture=True)
-                    urls = await _flux_inpaint(
-                        base_image, mask_url, _build_prompt(sk, doc.get("room_type") or "living", crm_fragment),
-                        num_images=1 if variant_mode == "multi_style" else num_variants,
-                    )
-                variants.extend({"url": u, "style": sk, "upscaled": False} for u in urls)
-                if variant_mode != "multi_style":
-                    break
+            for sk, item in zip(style_keys, raw_variants):
+                if isinstance(item, Exception):
+                    logger.warning("nano oneshot failed style=%s: %s", sk, item)
+                    continue
+                agent.charge(COST_NANO_BANANA, f"nano_oneshot:{sk}")
+                variants.append(item)
             if not variants:
-                raise RuntimeError("Nessuna variante staging generata")
-            stage_cost = (COST_STAGING_LORA if engine_used.startswith("apartment") else COST_FLUX) * len(variants)
+                raise RuntimeError("Nano Banana: nessuna variante generata")
+
+            # Vision critic per variant (parallel)
+            critiques = list(await asyncio.gather(*[
+                _vision_critique_staging(src, v["url"], style=v["style"], mode=mode)
+                for v in variants
+            ]))
+            for v, q in zip(variants, critiques):
+                agent.charge(COST_VISION_CRITIC, f"vision_critic:{v['style']}")
+                decision = decide_accept(
+                    q,
+                    retries_left=1 if agent.can_spend(COST_NANO_BANANA) else 0,
+                    can_afford=agent.can_spend(COST_NANO_BANANA),
+                )
+                v["quality_score"] = round(q.score, 3)
+                v["quality_decision"] = decision
+                agent.record_quality(f"style:{v['style']}", q, decision)
+
+            # Retry styles that invent openings / fail architecture (budget-capped, max 2).
+            retry_idxs = []
+            for i, v in enumerate(variants):
+                if v.get("quality_decision") != "retry":
+                    continue
+                qphase = agent.quality.get(f"style:{v['style']}") or {}
+                issues = qphase.get("issues") or []
+                # Prefer invented_windows / architecture first
+                pri = 0 if ("invented_windows" in issues or "architecture_fail" in issues) else 1
+                retry_idxs.append((pri, float(v.get("quality_score") or 0), i))
+            retry_idxs.sort()  # architecture fails first, then lowest score
+            # Founder: max 1 retry per job (anti-aperture / qualità).
+            retries_done = 0
+            for _, _, retry_idx in retry_idxs:
+                if retries_done >= 1 or not agent.can_spend(COST_NANO_BANANA):
+                    break
+                if agent.furnish_retries >= 1:
+                    break
+                agent.furnish_retries += 1
+                retries_done += 1
+                sk = variants[retry_idx]["style"]
+                logger.info(
+                    "nano retry style=%s score=%.2f issues=%s",
+                    sk, variants[retry_idx].get("quality_score"),
+                    (agent.quality.get(f"style:{sk}") or {}).get("issues"),
+                )
+                prompt = _oneshot_prompt(mode, sk, agent.plan.room_type, crm_fragment)
+                prompt = (
+                    prompt
+                    + " RETRY FIX: the previous edit illegally invented windows. "
+                    "Keep EVERY wall blank where the source has no window. "
+                    "ZERO new windows, ZERO skylights, ZERO glass wall panels. "
+                    "Preserve only the existing door openings on the left. "
+                    "No yellow cast; no leftover gym or old furniture."
+                )
+                try:
+                    new_url = await _nano_banana_edit(src, prompt, resolution="1K")
+                    agent.charge(COST_NANO_BANANA, f"nano_retry:{sk}")
+                    q2 = await _vision_critique_staging(src, new_url, style=sk, mode=mode)
+                    agent.charge(COST_VISION_CRITIC, f"vision_critic_retry:{sk}")
+                    d2 = decide_accept(q2, retries_left=0, can_afford=False)
+                    # Prefer non-invented architecture even if score similar
+                    old_inv = bool(
+                        (agent.quality.get(f"style:{sk}") or {})
+                        .get("signals", {})
+                        .get("invented_openings")
+                    )
+                    new_inv = bool(q2.signals.get("invented_openings"))
+                    take = (not new_inv and old_inv) or (
+                        q2.score >= float(variants[retry_idx].get("quality_score") or 0)
+                        and not new_inv
+                    )
+                    if take or (not new_inv and q2.score >= 0.55):
+                        variants[retry_idx] = {
+                            **variants[retry_idx],
+                            "url": new_url,
+                            "quality_score": round(q2.score, 3),
+                            "quality_decision": d2,
+                        }
+                    agent.record_quality(f"style:{sk}:retry", q2, d2)
+                except Exception as retry_err:
+                    logger.warning("nano retry failed style=%s: %s", sk, retry_err)
+
+            # Prefer highest critic score first (B2C default selection)
+            variants.sort(key=lambda v: float(v.get("quality_score") or 0), reverse=True)
+            engine_used = "nano_banana_2_oneshot"
+            stage_cost = COST_NANO_BANANA * len(style_keys) + (
+                COST_NANO_BANANA if agent.furnish_retries else 0
+            )
             await _mark_stage("flux_inpaint", {
                 "status": "done",
                 "duration_ms": int((monotonic() - t0) * 1000),
                 "cost_usd": round(stage_cost, 4),
                 "engine": engine_used,
+                "note": (
+                    "styles=" + ",".join(v["style"] for v in variants)
+                    + "|scores=" + ",".join(f"{v.get('quality_score', 0):.2f}" for v in variants)
+                )[:280],
             })
-            total_cost += stage_cost
+            await _mark_stage("upscale", {
+                "status": "done", "duration_ms": 0, "cost_usd": 0,
+                "note": "skipped_nano_banana",
+            })
+            await _mark_root({"agent_quality": agent.quality, "erase_meta": {"engine": "nano_oneshot"}})
+            nano_ok = True
         except Exception as e:
-            await _fail("flux_inpaint", "Staging", e)
+            logger.exception("nano_banana primary path failed — legacy fallback: %s", e)
+            await _mark_root({"nano_fallback_error": str(e)[:300]})
+            # Rebuild agent plan for legacy budgets
+            agent = StagingAgent(plan_staging(
+                mode=mode,
+                style=doc.get("style") or "modern",
+                room_type=doc.get("room_type") or "living",
+                num_variants=num_variants,
+                variant_mode=variant_mode,
+                styles_list=doc.get("styles_list") or DEFAULT_MULTI_STYLES,
+                engine="legacy",
+            ))
+            await _mark_root({"agent_plan": agent.plan.to_dict()})
+
+    # ── Legacy: EVF erase + apartment LoRA ─────────────────────────────────
+    if not nano_ok:
+        mask_url: Optional[str] = None
+        try:
+            t0 = monotonic()
+            await _mark_stage("sam2_mask", {"status": "running"})
+            if agent.plan.need_erase:
+                await _mark_stage("sam2_mask", {
+                    "status": "done",
+                    "duration_ms": int((monotonic() - t0) * 1000),
+                    "cost_usd": 0,
+                    "note": "florence_detect_inside_erase",
+                })
+            else:
+                mask_url = await _stage_sam2_mask(src, for_furniture=False)
+                await _mark_root({"mask_url": mask_url})
+                await _mark_stage("sam2_mask", {
+                    "status": "done",
+                    "duration_ms": int((monotonic() - t0) * 1000),
+                    "cost_usd": COST_SAM2,
+                })
+                agent.charge(COST_SAM2, "sam2_mask")
+        except Exception as e:
+            await _fail("sam2_mask", "SAM2", e)
             return
 
-    # Stage 3 — upscale only for Flux-inpaint fallback (ESRGAN amplifies erase seams).
-    t0 = monotonic()
-    await _mark_stage("upscale", {"status": "running"})
-    furn_engine = ""
-    try:
-        stage_doc = await db.virtual_staging_jobs.find_one({"id": job_id}, {"stages": 1})
-        furn_stage = next(
-            (s for s in (stage_doc or {}).get("stages") or [] if s.get("name") == "flux_inpaint"),
-            {},
-        )
-        furn_engine = furn_stage.get("engine") or ""
-    except Exception:
-        furn_engine = ""
-    if mode == "empty" or not furn_engine.startswith("flux_inpaint"):
-        await _mark_stage("upscale", {
-            "status": "done", "duration_ms": 0, "cost_usd": 0,
-            "note": "skipped_empty_mode" if mode == "empty" else "skipped_apartment_lora",
-        })
-    else:
-        async def _up(v: dict) -> dict:
+        base_image = src
+        erase_meta: Dict[str, Any] = {}
+        if agent.plan.need_erase:
             try:
-                url = await _stage_upscale(v["url"])
-                return {**v, "url": url or v["url"], "upscaled": bool(url)}
+                t0 = monotonic()
+                await _mark_stage("furniture_removal", {"status": "running"})
+                base_image, removal_cost, erase_meta = await _sequential_furniture_erase(src)
+                agent.charge(removal_cost, "furniture_removal", engine=erase_meta.get("engine"))
+                empty_q = critique_empty_from_meta(erase_meta)
+                decision = decide_accept(empty_q, retries_left=0, can_afford=False)
+                agent.record_quality("empty", empty_q, decision)
+                await _mark_root({"erase_meta": erase_meta, "agent_quality": agent.quality})
+                await _mark_stage("furniture_removal", {
+                    "status": "done",
+                    "duration_ms": int((monotonic() - t0) * 1000),
+                    "cost_usd": round(removal_cost, 4),
+                    "engine": erase_meta.get("engine"),
+                    "note": f"erased={','.join(erase_meta.get('erased') or [])}"[:280],
+                })
             except Exception as e:
-                logger.warning("Upscale failed for a variant: %s", e)
-                return v
+                await _fail("furniture_removal", "Rimozione arredo", e)
+                return
 
-        variants = list(await asyncio.gather(*[_up(v) for v in variants]))
-        upscaled_n = sum(1 for v in variants if v.get("upscaled"))
-        up_cost = COST_UPSCALE * upscaled_n
-        await _mark_stage("upscale", {
-            "status": "done" if upscaled_n else "failed",
-            "duration_ms": int((monotonic() - t0) * 1000),
-            "cost_usd": round(up_cost, 4),
-        })
-        total_cost += up_cost
+        if not agent.plan.need_furnish:
+            variants = [{"url": base_image, "style": "empty", "upscaled": False}]
+            await _mark_stage("flux_inpaint", {
+                "status": "done", "duration_ms": 0, "cost_usd": 0,
+                "note": "skipped_empty_mode", "engine": "none",
+            })
+        else:
+            try:
+                t0 = monotonic()
+                await _mark_stage("flux_inpaint", {"status": "running"})
+                style_keys = agent.plan.styles[: agent.plan.num_variants]
+                engine_used = "apartment_staging_lora"
+                for sk in style_keys:
+                    prompt = _staging_lora_prompt(sk, agent.plan.room_type, crm_fragment)
+                    try:
+                        urls = await _apartment_stage(
+                            base_image, prompt,
+                            num_images=1 if variant_mode == "multi_style" else agent.plan.num_variants,
+                        )
+                    except Exception as lora_err:
+                        logger.warning("Apartment staging LoRA failed (%s) — Flux fallback", lora_err)
+                        engine_used = "flux_inpaint_fallback"
+                        if not mask_url:
+                            mask_url = await _stage_sam2_mask(base_image, for_furniture=True)
+                            agent.charge(COST_SAM2, "sam2_mask_fallback")
+                        urls = await _flux_inpaint(
+                            base_image, mask_url,
+                            _build_prompt(sk, agent.plan.room_type, crm_fragment),
+                            num_images=1 if variant_mode == "multi_style" else agent.plan.num_variants,
+                        )
+                    variants.extend({"url": u, "style": sk, "upscaled": False} for u in urls)
+                    if variant_mode != "multi_style":
+                        break
+                if not variants:
+                    raise RuntimeError("Nessuna variante staging generata")
+                stage_cost = (
+                    COST_STAGING_LORA if engine_used.startswith("apartment") else COST_FLUX
+                ) * len(variants)
+                agent.charge(stage_cost, "furnish", engine=engine_used)
+                furn_q = critique_furnished_heuristic(
+                    style=style_keys[0], engine=engine_used, erase_meta=erase_meta,
+                )
+                agent.record_quality("furnish", furn_q, decide_accept(furn_q, retries_left=0, can_afford=False))
+                await _mark_stage("flux_inpaint", {
+                    "status": "done",
+                    "duration_ms": int((monotonic() - t0) * 1000),
+                    "cost_usd": round(stage_cost, 4),
+                    "engine": engine_used,
+                })
+            except Exception as e:
+                await _fail("flux_inpaint", "Staging", e)
+                return
+
+        t0 = monotonic()
+        await _mark_stage("upscale", {"status": "running"})
+        if not agent.plan.need_furnish or not engine_used.startswith("flux_inpaint"):
+            await _mark_stage("upscale", {
+                "status": "done", "duration_ms": 0, "cost_usd": 0,
+                "note": "skipped",
+            })
+        else:
+            async def _up(v: dict) -> dict:
+                try:
+                    url = await _stage_upscale(v["url"])
+                    return {**v, "url": url or v["url"], "upscaled": bool(url)}
+                except Exception as e:
+                    logger.warning("Upscale failed: %s", e)
+                    return v
+            variants = list(await asyncio.gather(*[_up(v) for v in variants]))
+            upscaled_n = sum(1 for v in variants if v.get("upscaled"))
+            up_cost = COST_UPSCALE * upscaled_n
+            agent.charge(up_cost, "upscale")
+            await _mark_stage("upscale", {
+                "status": "done" if upscaled_n else "failed",
+                "duration_ms": int((monotonic() - t0) * 1000),
+                "cost_usd": round(up_cost, 4),
+            })
 
     # B2C free preview: persist to /api/media so SellPage img is same-origin + smaller
     try:
@@ -1875,11 +2232,13 @@ async def _run_pipeline(job_id: str, db) -> None:
     except Exception:
         logger.exception("b2c preview persist failed job=%s", job_id)
 
+    total_cost = agent.ledger.spent_usd
     await _mark_root({
         "status": "done",
         "variants": variants,
         "variant_url": variants[0]["url"] if variants else None,
         "cost_total_usd": round(total_cost, 4),
+        "agent_summary": agent.summary(),
         "completed_at": datetime.now(timezone.utc).isoformat(),
     })
 

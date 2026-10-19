@@ -1002,8 +1002,6 @@ Registro di tutte le decisioni di business e tecniche prese durante il progetto.
 - **Stato**: ✅ APPLICATA — 20/20 pytest specifici, 93/93 regressione totale, smoke E2E verificato con screenshot compliance modal (lista dettagli + motivi frequenti + link "Correggi").
 
 
-
-
 ### D-054 — M2.5.4b Domain Ownership Checker scope + White Label / No Paper constraints (05-Feb-2026) 🔍
 
 - **Contesto**: dopo M2.6b (Sync Engine), il Founder ha chiesto di riprendere la scaletta con **due vincoli permanenti** attivi da qui in avanti su ogni nuova feature:
@@ -1031,8 +1029,6 @@ Registro di tutte le decisioni di business e tecniche prese durante il progetto.
   - Integrazione con registrar (transfer automatico, generazione Auth-Info Code) → non pianificato, richiederebbe partnership con registrar Aruba/Register.it
   - Verifica DNS/hosting oltre RDAP → non pianificato per MVP
 - **Stato**: ✅ APPLICATA — 24/24 pytest specifici, 117/117 regressione totale, smoke E2E screenshot verificato (query `google.com` → verdict `redacted` corretto con registrar MarkMonitor + expiry visualizzati).
-
-
 
 
 ### D-055 — M2.5.4c Legal Templates Pack scope + 3 modalità + no paper (23-Feb-2026) 📄
@@ -1066,8 +1062,6 @@ Registro di tutte le decisioni di business e tecniche prese durante il progetto.
 - **Modello architetturale riusabile**: pattern `shared/legal_kit/templates.py` (metadata + Jinja2 body) + `pdf_generator.py` (ReportLab renderer) può essere replicato per altri PDF futuri (contratti mandati, procure, ecc.) senza rifare l'infrastruttura.
 - **Stato**: ✅ APPLICATA — 15/15 pytest specifici, 132/132 regressione totale, smoke E2E screenshot verificato con flow completo landing → check → download ZIP.
 
-
-
 ### D-056 — M2.5.5 Domain Vault scope (23-Feb-2026) 🛡️
 
 - **Contesto**: Sprint 1 · Item #1 del `PIANO_ESECUZIONE.md`. Punto finale di chiusura M2.5. Il Founder ha esplicitamente richiesto che il signup contenga la promessa contrattuale "OMNIA non registra mai domini a proprio nome" — leva anti-lock-in fondamentale per l'ICP "agenzia strutturata già col proprio dominio" (Track B) e differenziatore forte vs competitor legacy.
@@ -1090,8 +1084,6 @@ Registro di tutte le decisioni di business e tecniche prese durante il progetto.
 - **Modalità Track B** (D-041): la Domain Vault è per ora una policy contrattuale visualizzata solo dentro OMNIA (UI signup + landing pubblica). Le modalità **API v1** e **widget** sono deliberatamente escluse dallo Sprint 1 perché la conferma è specifica dell'agenzia OMNIA — non è una feature vendibile a partner terzi. Deroga giustificata dal Founder come "componente del branding, non prodotto Track B".
 - **Test coverage**: 11/11 pytest (`test_m2s5_5_domain_vault.py`): signup capture (3) + endpoint idempotency + timestamp preservation + invalid format 400 + auth boundary anonymous (2) + audit trail count. Regressione totale: 151/151 (132 originali + 11 nuovi + 8 immobilcloud auth).
 - **Stato**: ✅ APPLICATA (23-Feb-2026). Prossimo Sprint 1 item: **M2.6c Social Publisher** (⚠️ Founder deve fornire Meta Developer App ID/Secret).
-
-
 
 ### D-057 — M2.6d Universal Portal Wizard scope (23-Feb-2026) 🧙
 
@@ -1325,8 +1317,6 @@ Registro di tutte le decisioni di business e tecniche prese durante il progetto.
 - **Warning residuo (non blocker)**: `shared/email/client.py` ha 2 fallback URL letterali (logo + public base). Non impatta il deploy, sistemabile in un futuro sprint di cleanup.
 - **Risultato**: 🟢 **READY FOR DEPLOYMENT**.
 - **Stato**: ✅ APPLICATA (26-Feb-2026).
-
-
 
 ### D-070 — Privacy Gate Fix · L1/L2 pubblicamente accessibili (26-Feb-2026) 🛡️
 
@@ -1890,6 +1880,7 @@ Registro di tutte le decisioni di business e tecniche prese durante il progetto.
   6. **Non** include Stripe live / outreach / firma legale.
 - **Implementazione**: `OMNIA_PRE_DEMO_8.md` · `PRE_DEMO_CHECKLIST.md` · offbox + preflight + probe.
 - **Stato**: ✅ **DECISIONE OPERATIVA REGISTRATA** · codice in ship
+
 
 ### D-124 — Home ecosistema + Valutatore UNI + promo documenti SellPage · 14-Ott-2026
 - **Data**: 14 Ottobre 2026

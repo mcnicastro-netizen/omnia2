@@ -58,12 +58,16 @@ export default function B2CStagingPanel({
     const running = (stages || []).find((s) => s.status === "running");
     if (!running) return "";
     const map = {
-      sam2_mask: t("cloud.sell.staging_stage_mask", { defaultValue: "Analisi stanza…" }),
+      sam2_mask: t("cloud.sell.staging_stage_mask", { defaultValue: "Preparazione…" }),
       furniture_removal: t("cloud.sell.staging_stage_empty", {
-        defaultValue: "Svuotamento accurato (può richiedere qualche minuto)…",
+        defaultValue: "Svuotamento…",
       }),
-      flux_inpaint: t("cloud.sell.staging_stage_furnish", { defaultValue: "Arredamento virtuale…" }),
-      upscale: t("cloud.sell.staging_stage_upscale", { defaultValue: "Rifinitura…" }),
+      flux_inpaint: t("cloud.sell.staging_stage_furnish", {
+        defaultValue: multiStyle
+          ? "Arredamento AI — 4 stili in parallelo…"
+          : "Arredamento virtuale AI…",
+      }),
+      upscale: t("cloud.sell.staging_stage_upscale", { defaultValue: "Controllo qualità…" }),
     };
     return map[running.name] || "";
   };
@@ -100,8 +104,8 @@ export default function B2CStagingPanel({
       const jobId = data?.job?.id;
       if (!jobId) throw new Error("no_job");
       let done = null;
-      // Sequential erase + multi-style can take 5–10 minutes — poll ~10 min
-      for (let i = 0; i < 240; i += 1) {
+      // Nano Banana 4-style oneshot ~1–3 min; poll up to ~8 min
+      for (let i = 0; i < 200; i += 1) {
         const jr = await api.get(`/cloud/me/properties/${listingId}/staging/${jobId}`);
         if (jr.data?.status === "done") {
           done = jr.data;
