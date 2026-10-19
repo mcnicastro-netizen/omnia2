@@ -6,7 +6,7 @@ import { formatApiErrorDetail } from "../../../shared/lib/auth";
 const STAGING_PENDING_KEY = "omnia_staging_pending";
 
 /**
- * B2C Virtual Staging — choose photo + mode, free preview, then pay €0,90 to save.
+ * B2C Virtual Staging — choose photo + mode, free preview, then pay €1,49 to save.
  */
 export default function B2CStagingPanel({
   listingId,
@@ -354,10 +354,22 @@ export default function B2CStagingPanel({
           >
             {runBusy ? t("common.saving") : t("cloud.sell.staging_preview_cta")}
           </button>
-          {runBusy && stageHint ? (
-            <p className="text-[11px] text-stone-500" data-testid={`${testIdPrefix}-stage-hint`}>
-              {stageHint}
-            </p>
+          {runBusy ? (
+            <div
+              className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2.5"
+              data-testid={`${testIdPrefix}-wait`}
+              role="status"
+              aria-live="polite"
+            >
+              {stageHint ? (
+                <p className="text-[11px] font-medium text-stone-800" data-testid={`${testIdPrefix}-stage-hint`}>
+                  {stageHint}
+                </p>
+              ) : null}
+              <p className={`text-[11px] text-stone-600 leading-relaxed ${stageHint ? "mt-1" : ""}`}>
+                {t("cloud.sell.staging_preview_wait_tip")}
+              </p>
+            </div>
           ) : null}
         </div>
       ) : (

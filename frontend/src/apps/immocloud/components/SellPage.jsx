@@ -142,11 +142,13 @@ export default function SellPage() {
   const [publishBusy, setPublishBusy] = useState(null);
   const [showSlotPaywall, setShowSlotPaywall] = useState(false);
   const [stagingBusy, setStagingBusy] = useState(false);
-  const [stagingStatus, setStagingStatus] = useState(""); // progress message after Stripe return
+  const [stagingStatus, setStagingStatus] = useState(""); // progress / wait message after Stripe return
+  const [waitTipKey, setWaitTipKey] = useState("cloud.sell.staging_wait_tip");
   const [statsById, setStatsById] = useState({}); // pid → stats payload
   const [previewListing, setPreviewListing] = useState(null); // listing opened in anteprima
   const stagingPollRef = useRef(null);
   const stagingResumeRef = useRef(false);
+  const payReturnRef = useRef(false);
 
   // Redirect if not logged in or not a B2C user
   useEffect(() => {
@@ -261,6 +263,7 @@ export default function SellPage() {
 
     let cancelled = false;
     setStagingBusy(true);
+    setWaitTipKey("cloud.sell.staging_wait_tip");
     setStagingStatus(
       t("cloud.sell.staging_processing_named", {
         photo: t("cloud.sell.staging_photo_n", { n: pendingPhotoN }),
@@ -362,6 +365,73 @@ export default function SellPage() {
             formatApiErrorDetail(e?.response?.data?.detail) ||
               t("cloud.sell.staging_checkout_error"),
           );
+        }
+      }
+    }
+    run();
+    return () => {
+      cancelled = true;
+      if (stagingPollRef.current) clearTimeout(stagingPollRef.current);
+    };
+  }, [user, lang, nav, t]);
+
+  // Boost / publish return from Stripe — short wait copy + status poll (webhook fallback)
+  useEffect(() => {
+    if (!user || user.account_type !== "b2c") return undefined;
+    if (payReturnRef.current) return undefined;
+    const params = new URLSearchParams(window.location.search);
+    const kind = params.get("boost") === "ok"
+      ? "boost"
+      : params.get("publish") === "ok"
+        ? "publish"
+        : null;
+    if (!kind) return undefined;
+    payReturnRef.current = true;
+    const sid =
+      params.get("session_id") ||
+      (() => {
+        try {
+          return sessionStorage.getItem("omnia_b2c_checkout_sid") || "";
+        } catch {
+          return "";
+        }
+      })();
+    nav(`/${lang}/cloud/account/sell`, { replace: true });
+
+    let cancelled = false;
+    setError("");
+    setWaitTipKey("cloud.sell.fulfillment_confirming_tip");
+    setStagingBusy(true);
+    setStagingStatus(t("cloud.sell.fulfillment_confirming"));
+
+    async function run() {
+      try {
+        if (sid) {
+          for (let i = 0; i < 20 && !cancelled; i += 1) {
+            const st = await api.get(`/billing/b2c/status/${sid}`);
+            if (st.data?.status === "paid") break;
+            await new Promise((r) => {
+              stagingPollRef.current = setTimeout(r, 1200);
+            });
+          }
+        } else {
+          await new Promise((r) => {
+            stagingPollRef.current = setTimeout(r, 1500);
+          });
+        }
+        if (cancelled) return;
+        await reloadListings().catch(() => {});
+        await reloadPublishMeta().catch(() => {});
+        setStagingBusy(false);
+        setStagingStatus(
+          kind === "boost"
+            ? t("cloud.sell.fulfillment_boost_ready")
+            : t("cloud.sell.fulfillment_publish_ready"),
+        );
+      } catch {
+        if (!cancelled) {
+          setStagingBusy(false);
+          setStagingStatus(t("cloud.sell.fulfillment_pending_reload"));
         }
       }
     }
@@ -583,8 +653,22 @@ export default function SellPage() {
         </div>
       )}
       {stagingStatus && (
-        <div data-testid="sell-staging-status" className="mb-4 text-xs text-stone-800 bg-stone-50 border border-stone-200 rounded-xl px-4 py-3">
-          {stagingStatus}
+        <div
+          data-testid="sell-staging-status"
+          className={`mb-4 text-xs rounded-xl px-4 py-3 border ${
+            stagingBusy
+              ? "text-stone-800 bg-amber-50 border-amber-200"
+              : "text-stone-800 bg-stone-50 border-stone-200"
+          }`}
+          role="status"
+          aria-live="polite"
+        >
+          <p className="font-medium">{stagingStatus}</p>
+          {stagingBusy ? (
+            <p className="mt-1.5 text-stone-600 leading-relaxed" data-testid="sell-staging-wait-tip">
+              {t(waitTipKey)}
+            </p>
+          ) : null}
         </div>
       )}
 
