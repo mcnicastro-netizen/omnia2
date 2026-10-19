@@ -359,6 +359,12 @@ voci:
         - "In v1 c'e' HARD-GATE crediti (A-013) prima del lancio B2B:
           saldo insufficiente → 402, job non parte. Addebito a
           successo sul ledger."
+<<<<<<< HEAD
+=======
+        - "Costo B2C ImmobilCloud (privati): 1.49 EUR/foto max 3 per
+          annuncio UGC (listino 19-Ott-2026). Anteprima gratis, pagamento
+          solo per salvare il render scelto."
+>>>>>>> 6d5c786 (feat(staging): listino B2C €1,49 + max 1 retry)
       errori_comuni:
         - problema: "Ottengo 402 quando genero lo staging"
           soluzione: >

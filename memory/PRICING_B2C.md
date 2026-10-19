@@ -187,7 +187,11 @@ Molti servizi esistono **sia lato agenzia (a crediti)** sia **lato privato (a ca
 | CTA Valutatore su `PropertyDetailPage.jsx` (base + UNI) | ✅ (16-Ago-2026) | Attuale |
 | ActionCard "Valutatore immobiliare" su `CloudHomePage.jsx` | ✅ (16-Ago-2026) | Attuale |
 | Pytest `test_b2c_valuator_gates.py` (10/10 verdi) | ✅ (16-Ago-2026) | Attuale |
+<<<<<<< HEAD
 | Checkout staging €1,49 (D-128 · ex B2C-CHECKOUT-02) | ✅ (catalog + Stripe lazy price) | Attuale |
+=======
+| Checkout staging €1,49 (ex €0,90 · 19-Ott-2026) | ✅ (catalog + Stripe lazy price riallinea) | Attuale |
+>>>>>>> 6d5c786 (feat(staging): listino B2C €1,49 + max 1 retry)
 | Checkout HAL Legal €1,00 (B2C-CHECKOUT-02) | ✅ (catalog + Stripe lazy price) | Attuale |
 | Boost Vetrina / Premium / TOP B2C (carta + badge + sort) | ✅ (16-Set-2026) | Attuale |
 | Cap. 21 manuale HAL YAML | ❌ (post-merge · Cursor) | Prossimo |

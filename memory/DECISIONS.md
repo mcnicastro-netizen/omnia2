@@ -1897,10 +1897,11 @@ Registro di tutte le decisioni di business e tecniche prese durante il progetto.
 - **Decisione**:
   1. **Motore primario**: `fal-ai/nano-banana-2/edit` (= Gemini 3.1 Flash Image) **one-shot** (svuota+arreda in un pass per `reverse`; solo svuota per `empty`; solo arreda per `standard`).
   2. **4 stili** multi-style: modern / classic / scandi / luxury in parallelo (~$0.08/stile @1K).
-  3. **Critico vision** Gemini Flash su originale vs risultato (rubric listing); 1 retry sul peggior stile sotto budget.
-  4. **Fallback legacy** EVF+Ideogram+apartment LoRA solo se nano fallisce o `OMNIA_STAGING_ENGINE=legacy`.
-  5. Nessun embed SaaS staging terzi (Decor8/Roomagen/ecc.). Best-effort delivery anche sotto soglia.
-- **Implementazione**: `staging_agent.py` · `_oneshot_prompt` / `_nano_banana_edit` / `_vision_critique_staging` in `virtual_staging.py` · B2C preview già multi_style×4.
+  3. **Critico vision** Gemini Flash su originale vs risultato (rubric listing); **max 1 retry** per job (anti-aperture inventate).
+  4. **Listino B2C** privati: **€1,49**/foto (ex €0,90) — anteprima gratis, pagamento solo al salvataggio. B2B crediti (18 cr ≈ €0,90) invariato finché non riallineato.
+  5. **Fallback legacy** EVF+Ideogram+apartment LoRA solo se nano fallisce o `OMNIA_STAGING_ENGINE=legacy`.
+  6. Nessun embed SaaS staging terzi (Decor8/Roomagen/ecc.). Best-effort delivery anche sotto soglia.
+- **Implementazione**: `staging_agent.py` · `_oneshot_prompt` / `_nano_banana_edit` / `_vision_critique_staging` in `virtual_staging.py` · `b2c_products.py` €1,49 · Stripe price transfer su mismatch.
 - **Stato**: ✅ **DECISIONE OPERATIVA REGISTRATA** · cablaggio in ship
 
 ### D-124 — Home ecosistema + Valutatore UNI + promo documenti SellPage · 14-Ott-2026

@@ -2010,11 +2010,12 @@ async def _run_pipeline(job_id: str, db) -> None:
                 pri = 0 if ("invented_windows" in issues or "architecture_fail" in issues) else 1
                 retry_idxs.append((pri, float(v.get("quality_score") or 0), i))
             retry_idxs.sort()  # architecture fails first, then lowest score
+            # Founder: max 1 retry per job (anti-aperture / qualità).
             retries_done = 0
             for _, _, retry_idx in retry_idxs:
-                if retries_done >= 2 or not agent.can_spend(COST_NANO_BANANA):
+                if retries_done >= 1 or not agent.can_spend(COST_NANO_BANANA):
                     break
-                if agent.furnish_retries >= max(2, agent.plan.max_furnish_retries + 1):
+                if agent.furnish_retries >= 1:
                     break
                 agent.furnish_retries += 1
                 retries_done += 1

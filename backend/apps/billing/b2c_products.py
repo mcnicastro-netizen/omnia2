@@ -66,8 +66,14 @@ B2C_ONE_SHOT_PRODUCTS: Dict[str, B2CProduct] = {
         "requires_listing": True,
         "notes": (
             "Max 3 foto per annuncio UGC del cliente. "
+<<<<<<< HEAD
             "Listino B2C €1,49 (D-128 · 19-Ott-2026). "
             "P-011: listing_id obbligatorio; consume + job post-pagamento."
+=======
+            "Listino B2C €1,49 (D-125 · 19-Ott-2026). COGS nano ~$0.33/4 stili. "
+            "P-011: listing_id obbligatorio; consume + job post-pagamento. "
+            "Stripe lazy price: nuovo unit_amount al prossimo checkout."
+>>>>>>> 6d5c786 (feat(staging): listino B2C €1,49 + max 1 retry)
         ),
     },
     "b2c_listing_extra_90": {

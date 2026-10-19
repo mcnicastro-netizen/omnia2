@@ -101,15 +101,34 @@ class B2CCheckoutRequest(BaseModel):
 def _get_or_create_stripe_price(product_key: str) -> str:
     """Return Stripe Price ID for a b2c product, creating on-the-fly if missing.
 
-    Uses `lookup_key` so re-runs are idempotent.
+    Uses `lookup_key` so re-runs are idempotent. If catalog `price_eur` changed,
+    creates a new Price and transfers the lookup_key (old price stays for history).
     """
     catalog = B2C_ONE_SHOT_PRODUCTS.get(product_key)
     if not catalog:
         raise HTTPException(status_code=400, detail=f"unknown_product:{product_key}")
     lookup = catalog["stripe_lookup_key"]
+    wanted_cents = int(round(float(catalog["price_eur"]) * 100))
     prices = stripe.Price.list(lookup_keys=[lookup], active=True, limit=1).data
     if prices:
-        return prices[0].id
+        existing = prices[0]
+        if int(existing.unit_amount or 0) == wanted_cents and (existing.currency or "") == "eur":
+            return existing.id
+        # Price mismatch (e.g. staging 0.90 → 1.49): mint new Price + transfer lookup.
+        product_id = existing.product if isinstance(existing.product, str) else existing.product.id
+        price = stripe.Price.create(
+            product=product_id,
+            unit_amount=wanted_cents,
+            currency="eur",
+            lookup_key=lookup,
+            transfer_lookup_key=True,
+            metadata={"b2c_product_key": product_key},
+        )
+        try:
+            stripe.Price.modify(existing.id, active=False)
+        except Exception:
+            pass
+        return price.id
 
     product = stripe.Product.create(
         name=catalog["label_it"],
@@ -117,7 +136,7 @@ def _get_or_create_stripe_price(product_key: str) -> str:
     )
     price = stripe.Price.create(
         product=product.id,
-        unit_amount=int(round(float(catalog["price_eur"]) * 100)),
+        unit_amount=wanted_cents,
         currency="eur",
         lookup_key=lookup,
         transfer_lookup_key=True,

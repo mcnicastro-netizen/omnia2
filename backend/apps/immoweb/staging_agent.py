@@ -4,7 +4,7 @@ Primary engine (Founder OK 19-Ott-2026): fal Nano Banana 2 one-shot
 (= Gemini 3.1 Flash Image) × up to 4 styles + vision critic (Gemini Flash).
 
 Legacy EVF/Ideogram/LoRA remains fallback only. Hard USD cap keeps B2C
-resale at ~€0.90/img profitable (D-033).
+resale at €1.49/img B2C (D-125) with max 1 quality retry.
 """
 from __future__ import annotations
 
