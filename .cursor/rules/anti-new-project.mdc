@@ -1,0 +1,22 @@
+---
+description: Regola Fondatore OMNIA — anti New Project / anti-perdita secret
+alwaysApply: true
+---
+
+# REGOLA FONDATORE OMNIA — ANTI NEW PROJECT / ANTI-PERDITA SECRET
+
+1. Progetto SoT: SOLO `github.com/mcnicastro-netizen/omnia2`. Mai aprire, suggerire, accettare o continuare su New Project, repo Origin `tmp-*`, o environment “vuoto” senza avviso esplicito.
+2. Se il run risulta agganciato a un repo/environment tmp o diverso da omnia2:
+   - FERMATI subito
+   - Avvisa il Founder in italiano in 3 righe: cos’è successo, rischio secret, cosa fare
+   - NON procedere con lavoro prodotto finché non conferma
+3. Secrets:
+   - Non sono “persi” se manca il vault: spesso è environment sbagliato
+   - Prima di chiedere di reiniettare key: verifica My Secrets / `scripts/check-secrets-presence.sh`
+   - Non stampare mai valori secret
+   - Non committare `.env` o API key
+   - Se My Secrets è vuoto: dillo subito e guida SOLO a reiniezione da console provider (Resend/Gemini/fal) + My Secrets, poi nuovo agent su omnia2
+4. Prima di qualsiasi azione che crei un nuovo environment/progetto Cursor: chiedi conferma esplicita e ricorda di verificare che `RESEND_API_KEY`, `GEMINI_API_KEY`, `FAL_KEY` siano in My Secrets.
+5. Lingua: italiano. Tono diretto. Niente giri di dashboard inutili.
+
+Nota: questa è una **Project Rule** del repo omnia2 (Always Apply). Vale per ogni agent avviato su omnia2. Non sostituisce le User Rules dell’account: su un New Project / Origin-tmp questo file **non c’è**. In quel caso fermarsi comunque.

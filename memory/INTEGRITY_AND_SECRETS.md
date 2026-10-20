@@ -72,9 +72,13 @@ Inventario **solo nomi** + dove recuperarli: `memory/CLOUD_SECRETS_INVENTORY.md`
 
 ---
 
-## 5. Stato verificato (questo pod, 5-Ott-2026)
+## 5. Stato verificato (pod **omnia2**, 5-Ott-2026)
 
-- Locale `HEAD` == `github/main` == `841a0f6` (allineati, 0 divergenti).  
-- `backend/.env` è **gitignored** (non nel repo).  
+- Repo SoT: `github.com/mcnicastro-netizen/omnia2` (non Origin-tmp / New Project).  
+- Locale `HEAD` allineato a `origin/main` al momento della verifica.  
+- `backend/.env` è **gitignored** (non nel repo); i placeholder `# GEMINI_API_KEY=` restano commentati — corretto.  
 - Valori API **non** sono nel codice SoT (corretto).  
-- Vault Secrets di *questo* environment tmp: solo `GITHUB_TOKEN` → conferma della regola §2, non perdita del codice.
+- Vault Secrets di **questo** environment omnia2 (presence only, `scripts/check-secrets-presence.sh`):  
+  **PRESENT** `RESEND_API_KEY`, `GEMINI_API_KEY`, `FAL_KEY`.  
+- Alias Gemini (`GOOGLE_API_KEY`, `EMERGENT_LLM_KEY`) non necessari se `GEMINI_API_KEY` è già iniettata.  
+- Se un agent futuro mostra solo `GITHUB_TOKEN` → sei sull’environment sbagliato o nuovo, **non** le chiavi sono state cancellate dalle console.

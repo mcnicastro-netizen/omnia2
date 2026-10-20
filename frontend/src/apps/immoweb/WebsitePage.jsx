@@ -30,9 +30,56 @@ export default function WebsitePage() {
   const [selectedTheme, setSelectedTheme] = useState(null);
   const [applying, setApplying] = useState(false);
 
+  const [previewHtml, setPreviewHtml] = useState("");
+  const [previewLoading, setPreviewLoading] = useState(false);
+  const [previewTick, setPreviewTick] = useState(0);
+
   const iframeRef = useRef(null);
 
   const showToast = (msg) => { setToast(msg); setTimeout(() => setToast(""), 4500); };
+
+  const apiError = (err) => {
+    const detail = err?.response?.data?.detail;
+    const code = typeof detail === "string" ? detail : "";
+    if (code) {
+      const key = `website.err_${code}`;
+      const translated = t(key);
+      if (translated && translated !== key) return translated;
+    }
+    return String(detail || err.message);
+  };
+
+  const publicPath = current?.public_url
+    ? `${BACKEND_URL || ""}${current.public_url}`
+    : null;
+
+  const loadPreviewHtml = async () => {
+    if (!publicPath) {
+      setPreviewHtml("");
+      return;
+    }
+    setPreviewLoading(true);
+    try {
+      // Fetch + srcdoc: Cloudflare quick-tunnels force X-Frame-Options: DENY on
+      // navigated iframe documents, which broke Brand Studio live preview.
+      const r = await fetch(`${publicPath}${publicPath.includes("?") ? "&" : "?"}t=${Date.now()}`, {
+        credentials: "same-origin",
+        headers: { Accept: "text/html" },
+      });
+      if (!r.ok) throw new Error(`preview_http_${r.status}`);
+      const html = await r.text();
+      setPreviewHtml(html);
+    } catch (e) {
+      setPreviewHtml(
+        `<!doctype html><html><body style="font-family:system-ui;padding:2rem;color:#7f1d1d">`
+        + `<p>Anteprima non disponibile (${String(e.message || e)}).</p>`
+        + `<p><a href="${publicPath}" target="_blank" rel="noreferrer">Apri sito pubblico</a></p>`
+        + `</body></html>`
+      );
+    } finally {
+      setPreviewLoading(false);
+    }
+  };
 
   const loadAll = async () => {
     setLoading(true);
@@ -53,13 +100,21 @@ export default function WebsitePage() {
 
   useEffect(() => { loadAll(); }, []);
 
-  const refreshIframe = () => {
-    if (iframeRef.current) {
-      // bust cache so preview reloads
-      const src = iframeRef.current.src.split("?")[0];
-      iframeRef.current.src = `${src}?t=${Date.now()}`;
-    }
-  };
+  useEffect(() => {
+    if (extractUrl) return;
+    const fromExtracted =
+      current?.extracted_profile?.extracted_from
+      || current?.extracted_profile?.source_url;
+    if (fromExtracted) setExtractUrl(fromExtracted);
+  }, [current, extractUrl]);
+
+  useEffect(() => {
+    if (loading) return;
+    loadPreviewHtml();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loading, publicPath, selectedTheme, previewTick]);
+
+  const refreshIframe = () => setPreviewTick((n) => n + 1);
 
   const extractBrand = async (e) => {
     e?.preventDefault?.();
@@ -73,7 +128,7 @@ export default function WebsitePage() {
       setCurrent(r2.data);
       showToast(t("website.extract_success"));
     } catch (err) {
-      setError(String(err?.response?.data?.detail || err.message));
+      setError(apiError(err));
     } finally {
       setExtracting(false);
     }
@@ -89,7 +144,7 @@ export default function WebsitePage() {
       showToast(t("website.auto_success", { theme: data.theme_id }));
       refreshIframe();
     } catch (err) {
-      setError(String(err?.response?.data?.detail || err.message));
+      setError(apiError(err));
     } finally {
       setApplying(false);
     }
@@ -99,10 +154,11 @@ export default function WebsitePage() {
     setApplying(true); setError("");
     try {
       // preserve any extracted palette/logo from current extracted_profile
-      const bp = current?.extracted_profile?.brand_profile || {};
-      const palette = bp.palette || {};
-      const logo = current?.extracted_profile?.logo_hint?.url;
-      const tagline = bp.voice?.tagline_guess;
+      const extracted = current?.extracted_profile || {};
+      const bp = extracted.brand_profile || (extracted.palette ? extracted : {});
+      const palette = bp.palette || extracted.palette || {};
+      const logo = extracted.logo_hint?.url || bp.logo_hint?.url;
+      const tagline = bp.voice?.tagline_guess || extracted.voice?.tagline_guess;
       await api.post("/app/website/theme/apply", {
         theme_id: themeId,
         palette: {
@@ -120,7 +176,7 @@ export default function WebsitePage() {
       showToast(t("website.apply_success", { theme: themeId }));
       refreshIframe();
     } catch (err) {
-      setError(String(err?.response?.data?.detail || err.message));
+      setError(apiError(err));
     } finally {
       setApplying(false);
     }
@@ -136,12 +192,7 @@ export default function WebsitePage() {
 
   const extracted = current?.extracted_profile;
   const resolved = current?.resolved;
-  const publicUrl = current?.public_url
-    ? `${BACKEND_URL}${current.public_url}`
-    : null;
-  const previewSrc = publicUrl
-    ? `${publicUrl}?t=${Date.now()}`
-    : "about:blank";
+  const publicUrl = publicPath;
 
   return (
     <AgencyShell current="website">
@@ -288,12 +339,17 @@ export default function WebsitePage() {
             </div>
           </div>
 
-          <div className="border border-stone-300 rounded-md overflow-hidden bg-stone-50"
+          <div className="border border-stone-300 rounded-md overflow-hidden bg-stone-50 relative"
                style={{ height: "640px" }}>
+            {previewLoading && (
+              <p className="absolute inset-x-0 top-0 z-10 text-xs text-stone-500 bg-stone-100/90 px-3 py-1">
+                {t("common.loading")}
+              </p>
+            )}
             <iframe
               ref={iframeRef}
               data-testid="website-preview-iframe"
-              src={previewSrc}
+              srcDoc={previewHtml || undefined}
               title="Site preview"
               className="w-full h-full bg-white"
               sandbox="allow-same-origin allow-scripts"
@@ -496,12 +552,17 @@ function DNSRow({ label, host, value, onCopy }) {
 
 
 function ExtractedSummary({ data, onAutoConfigure, autoBtnDisabled, t }) {
-  const bp = data?.brand_profile || data?.extracted_profile?.brand_profile || {};
-  const logoHint = data?.summary?.logo_found ? "✓" : (data?.logo_hint?.url ? "✓" : "—");
-  const palette = bp.palette || {};
-  const voice = bp.voice || {};
-  const structure = bp.structure || {};
-  const confidence = bp.confidence ?? 0;
+  const nested = data?.brand_profile || data?.extracted_profile?.brand_profile;
+  const bp = (nested && (nested.palette || nested.voice || nested.confidence))
+    ? nested
+    : (data?.palette ? data : {});
+  const logoHint = data?.summary?.logo_found
+    ? "✓"
+    : ((data?.logo_hint?.url || bp?.logo_hint?.url) ? "✓" : "—");
+  const palette = bp.palette || data?.palette || {};
+  const voice = bp.voice || data?.voice || {};
+  const structure = bp.structure || data?.structure || {};
+  const confidence = bp.confidence ?? data?.confidence ?? 0;
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-3 flex-wrap">
