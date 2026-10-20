@@ -100,6 +100,9 @@ uplift music. Mediterranean-FUTURE not Generic-Future.
 | **Pitch deck investitori** | Copertina slide 1 |
 | **Founders50 landing** | Hero background |
 | **Video promo 15sec** | Reference visiva per prompt (vedi `omnia_2035_video_prompt.md`) |
+| **Brief marketing ecosistema** | Kit completo video/slide: `OMNIA_ECOSYSTEM_MARKETING_BRIEF.md` |
+| **Script VO** | Solo parlato/caption: `OMNIA_VO_SCRIPTS.md` |
+| **Deck slide-by-slide** | 18 slide + varianti: `OMNIA_SLIDE_DECK.md` |
 
 ---
 
