@@ -22,6 +22,33 @@ class TestModulisticaCatalog:
             assert "sections" not in t
             assert "fields" in t
 
+    def test_esign_policy_and_signers(self):
+        from shared.modulistica.catalog import TEMPLATES, list_templates
+
+        required = {
+            "proposta_acquisto": ["buyer", "seller"],
+            "mandato_vendita": ["seller", "agency"],
+            "mandato_locazione": ["landlord", "agency"],
+        }
+        recommended = {
+            "preliminare": ["buyer", "seller"],
+            "informativa_privacy": ["client"],
+            "scheda_aml": ["client", "agency"],
+        }
+        for slug, roles in required.items():
+            assert TEMPLATES[slug]["esign"] == "required"
+            assert TEMPLATES[slug]["signers"] == roles
+        for slug, roles in recommended.items():
+            assert TEMPLATES[slug]["esign"] == "recommended"
+            assert TEMPLATES[slug]["signers"] == roles
+        assert TEMPLATES["lettera_condomini"]["esign"] == "none"
+
+        public = {t["slug"]: t for t in list_templates()}
+        for slug in required:
+            assert public[slug]["esign"] == "required"
+            assert public[slug]["signers"] == required[slug]
+        assert public["lettera_condomini"]["esign"] == "none"
+
 
 class TestModulisticaPDF:
     def test_render_pdf_magic(self):
@@ -79,6 +106,24 @@ class TestESignAdapter:
         assert result.status == "sent"
         assert result.external_id.startswith("mock_")
         assert result.sign_url
+
+    def test_mock_send_multi_signer(self):
+        from shared.modulistica.esign import MockESignProvider
+        provider = MockESignProvider()
+        signers = [
+            {"name": "Mario Rossi", "email": "mario@example.com", "role": "buyer"},
+            {"name": "Luigi Bianchi", "email": "luigi@example.com", "role": "seller"},
+        ]
+        result = asyncio.run(
+            provider.create_signature_request(
+                pdf_bytes=b"%PDF-1.4 mock",
+                filename="proposta.pdf",
+                document_name="Proposta irrevocabile",
+                signers=signers,
+            )
+        )
+        assert result.ok
+        assert result.raw["signers"] == signers
 
     def test_yousign_falls_back_without_key(self, monkeypatch):
         monkeypatch.setenv("ESIGN_PROVIDER", "yousign")

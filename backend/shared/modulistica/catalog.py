@@ -16,6 +16,8 @@ from __future__ import annotations
 from typing import Any, Dict, List, Optional
 
 
+# esign: required = va inviato in firma YouTrust; recommended = fortemente consigliato;
+# optional = firma utile ma non obbligatoria nel flusso; none = solo PDF/comunicazione.
 TEMPLATES: Dict[str, Dict[str, Any]] = {
 
     "proposta_acquisto": {
@@ -23,11 +25,12 @@ TEMPLATES: Dict[str, Dict[str, Any]] = {
         "name": "Proposta irrevocabile di acquisto",
         "category": "compravendita",
         "when_to_use": "Quando un acquirente formalizza un'offerta sull'immobile.",
+        "esign": "required",
         "signers": ["buyer", "seller"],
         "fields": [
             "agency_name", "agency_piva", "agency_address", "agency_rea",
             "buyer_name", "buyer_cf", "buyer_address", "buyer_email",
-            "seller_name", "seller_cf", "seller_address",
+            "seller_name", "seller_cf", "seller_address", "seller_email",
             "property_address", "property_city", "property_cadastral",
             "offer_price", "deposit_amount", "validity_days", "commission_pct",
             "today",
@@ -69,9 +72,10 @@ TEMPLATES: Dict[str, Dict[str, Any]] = {
         "name": "Incarico / mandato di vendita",
         "category": "mandati",
         "when_to_use": "All'acquisizione dell'incarico di mediazione per la vendita.",
+        "esign": "required",
         "signers": ["seller", "agency"],
         "fields": [
-            "agency_name", "agency_piva", "agency_address", "agency_rea", "agency_pec",
+            "agency_name", "agency_piva", "agency_address", "agency_rea", "agency_pec", "agency_email",
             "seller_name", "seller_cf", "seller_address", "seller_email", "seller_phone",
             "property_address", "property_city", "property_type", "asking_price",
             "exclusive", "duration_months", "commission_pct", "today",
@@ -110,10 +114,11 @@ TEMPLATES: Dict[str, Dict[str, Any]] = {
         "name": "Incarico / mandato di locazione",
         "category": "mandati",
         "when_to_use": "All'acquisizione dell'incarico di mediazione per la locazione.",
+        "esign": "required",
         "signers": ["landlord", "agency"],
         "fields": [
-            "agency_name", "agency_piva", "agency_address", "agency_rea",
-            "landlord_name", "landlord_cf", "landlord_address",
+            "agency_name", "agency_piva", "agency_address", "agency_rea", "agency_email",
+            "landlord_name", "landlord_cf", "landlord_address", "landlord_email",
             "property_address", "property_city", "property_type",
             "rent_monthly", "duration_months", "commission_months", "exclusive", "today",
         ],
@@ -144,11 +149,12 @@ TEMPLATES: Dict[str, Dict[str, Any]] = {
         "name": "Preliminare di compravendita (bozza)",
         "category": "compravendita",
         "when_to_use": "Bozza di compromesso tra venditore e acquirente (da validare con legale/notaio).",
+        "esign": "recommended",
         "signers": ["buyer", "seller"],
         "fields": [
             "agency_name", "agency_piva",
-            "buyer_name", "buyer_cf", "buyer_address",
-            "seller_name", "seller_cf", "seller_address",
+            "buyer_name", "buyer_cf", "buyer_address", "buyer_email",
+            "seller_name", "seller_cf", "seller_address", "seller_email",
             "property_address", "property_city", "property_cadastral",
             "sale_price", "deposit_amount", "deed_deadline", "today",
         ],
@@ -186,6 +192,7 @@ TEMPLATES: Dict[str, Dict[str, Any]] = {
         "name": "Lettera informativa ai condòmini",
         "category": "comunicazioni",
         "when_to_use": "Per informare il condominio di visite / vendita / lavori correlati all'incarico.",
+        "esign": "none",
         "signers": ["agency"],
         "fields": [
             "agency_name", "agency_address", "agency_phone", "agency_email",
@@ -219,6 +226,7 @@ TEMPLATES: Dict[str, Dict[str, Any]] = {
         "name": "Informativa privacy clienti (GDPR)",
         "category": "compliance",
         "when_to_use": "All'acquisizione di un nuovo cliente / lead / firmatario.",
+        "esign": "recommended",
         "signers": ["client"],
         "fields": [
             "agency_name", "agency_piva", "agency_address", "agency_email", "agency_pec",
@@ -249,6 +257,7 @@ TEMPLATES: Dict[str, Dict[str, Any]] = {
         "name": "Scheda adeguata verifica clientela (AML)",
         "category": "compliance",
         "when_to_use": "Identificazione antiriciclaggio del cliente in mediazione.",
+        "esign": "recommended",
         "signers": ["client", "agency"],
         "fields": [
             "agency_name", "agency_piva",
@@ -284,6 +293,7 @@ def list_templates() -> List[Dict[str, Any]]:
             "name": t["name"],
             "category": t["category"],
             "when_to_use": t["when_to_use"],
+            "esign": t.get("esign") or "optional",
             "signers": t["signers"],
             "fields": t["fields"],
         })

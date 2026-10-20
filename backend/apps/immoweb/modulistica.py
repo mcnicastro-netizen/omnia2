@@ -123,6 +123,7 @@ async def _autofill_context(
                 ctx.setdefault("seller_cf", owner.get("fiscal_code") or "")
                 ctx.setdefault("seller_address", owner.get("address") or "")
                 ctx.setdefault("seller_email", owner.get("email") or "")
+                ctx.setdefault("landlord_email", owner.get("email") or "")
                 ctx.setdefault("seller_phone", owner.get("phone") or "")
 
     if client_id:
@@ -132,11 +133,13 @@ async def _autofill_context(
         if client:
             full = f"{client.get('name', '')} {client.get('surname', '')}".strip()
             ctype = (client.get("client_type") or "").lower()
+            email = client.get("email") or ""
             ctx.update({
                 "client_name": full,
                 "client_cf": client.get("fiscal_code") or client.get("cf") or "",
                 "client_address": client.get("address") or "",
-                "buyer_email": client.get("email") or "",
+                "client_email": email,
+                "buyer_email": email,
             })
             if ctype in ("buyer", "acquirente", "tenant", "conduttore"):
                 ctx["buyer_name"] = full
@@ -149,6 +152,8 @@ async def _autofill_context(
                 ctx["seller_address"] = ctx["client_address"]
                 ctx["landlord_cf"] = ctx["client_cf"]
                 ctx["landlord_address"] = ctx["client_address"]
+                ctx["seller_email"] = email
+                ctx["landlord_email"] = email
             else:
                 ctx.setdefault("buyer_name", full)
                 ctx.setdefault("buyer_cf", ctx["client_cf"])
@@ -271,6 +276,8 @@ async def generate_document(
         "status": "draft",  # draft | sent | signed | void
         "storage_path": storage_path,
         "context": ctx,
+        "esign_policy": (tpl or {}).get("esign") or "optional",
+        "expected_signers": list((tpl or {}).get("signers") or []),
         "branding_snapshot": {
             "primary_color": branding["primary_color"],
             "accent_color": branding["accent_color"],
@@ -332,6 +339,20 @@ async def send_for_signature(
     )
     if not doc:
         raise HTTPException(404, "Documento non trovato")
+    tpl = get_template(doc.get("slug") or "")
+    policy = doc.get("esign_policy") or (tpl or {}).get("esign") or "optional"
+    if policy == "none":
+        raise HTTPException(
+            400,
+            "Questo template è solo PDF/comunicazione: non si invia in firma elettronica.",
+        )
+    expected = doc.get("expected_signers") or list((tpl or {}).get("signers") or [])
+    if expected and len(body.signers) < len(expected):
+        raise HTTPException(
+            400,
+            f"Servono {len(expected)} firmatari ({', '.join(expected)}), "
+            f"ne sono stati inviati {len(body.signers)}.",
+        )
     try:
         pdf_bytes, _ = get_object(doc["storage_path"])
     except ObjStoreError as e:
@@ -339,6 +360,10 @@ async def send_for_signature(
 
     provider = get_esign_provider()
     signers = [s.model_dump() for s in body.signers]
+    # Fill role from template order when client omits it
+    for i, s in enumerate(signers):
+        if not s.get("role") and i < len(expected):
+            s["role"] = expected[i]
     result = await provider.create_signature_request(
         pdf_bytes=pdf_bytes,
         filename=f"{doc.get('slug', 'doc')}.pdf",

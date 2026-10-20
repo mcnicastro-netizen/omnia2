@@ -211,14 +211,14 @@ class YousignProvider(BaseESignProvider):
                         "signature_level": "electronic_signature",
                         "signature_authentication_mode": "otp_email",
                         # Yousign v3: origin = top-left of page (A4 ≈ 595×842 pt).
-                        # Signature block bottom-right (margin ~36pt from edges).
+                        # Multi-signer: stack upward from bottom-right so blocks stay on-page.
                         "fields": [
                             {
                                 "document_id": doc_id,
                                 "type": "signature",
                                 "page": max(1, page_count),
                                 "x": 360,
-                                "y": 760 + (idx * 56),
+                                "y": max(36, 760 - (idx * 56)),
                                 "width": 200,
                                 "height": 50,
                             }
