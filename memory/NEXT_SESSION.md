@@ -1,8 +1,10 @@
 # Prossima sessione — programma passi
 
-**Aggiornato**: 19 Ottobre 2026 — **D-129 tre promesse + coda mandati**  
+**Aggiornato**: 20 Ottobre 2026 — **YouTrust sandbox reiniettata** (+ D-129/mandati in main)  
 **Repo**: https://github.com/mcnicastro-netizen/omnia2 ✅  
-**Branch**: `cursor/tre-promesse-mandati-8e9b`
+**Branch**: `main`
+
+**YouTrust / Yousign**: vault Environment `YOUSIGN_API_KEY` + `ESIGN_PROVIDER=yousign` · smoke OTP **OK** 20-Ott · **scadenza key 25/10/2026** — rinnovare in console prima di quella data.
 
 ---
 
