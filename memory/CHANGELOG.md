@@ -1,3 +1,9 @@
+## 2026-10-20 — Dogfood results (fix tunnel/B2C) su main
+
+- Merge selettivo da branch dogfood E2E: `omnia-stack` tunnel già su main;
+  portati fix auto-merged (visura sync Stripe, LoginPage, AccountDashboard, HAL improve).
+- Conflitti FE/paywall/i18n risolti a favore di main (già più avanti: planimetria, paywall Legal, slot).
+
 ## 2026-10-20 — Dogfood prep (E2E) su main
 
 - Preflight E2E + `grant_agency_plan` + wipe Nicastro operativo
