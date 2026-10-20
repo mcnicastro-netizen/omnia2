@@ -314,7 +314,12 @@ async def create_request(
         assigned_agent_id=user.get("id"),
         status=payload.status or "open",
     )
-    return await svc.create_request(db, doc)
+    # Auto-match solo se criteri completi (città + prezzo + mq); altrimenti spegne il flag
+    if payload.request_type != "property_interest" and not svc.auto_match_ready(criteria):
+        doc["auto_match"] = False
+        doc["auto_match_blocked_reason"] = "incomplete_criteria_need_city_price_surface"
+    created = await svc.create_request(db, doc)
+    return created
 
 
 @router.get("/{request_id}")
@@ -356,6 +361,17 @@ async def update_request(
     if "criteria" in data and data["criteria"] is not None:
         if hasattr(data["criteria"], "model_dump"):
             data["criteria"] = data["criteria"].model_dump()
+    criteria = data.get("criteria", existing.get("criteria") or {})
+    want_auto = data.get("auto_match", existing.get("auto_match", True))
+    if (
+        existing.get("request_type") != "property_interest"
+        and want_auto
+        and not svc.auto_match_ready(criteria)
+    ):
+        data["auto_match"] = False
+        data["auto_match_blocked_reason"] = "incomplete_criteria_need_city_price_surface"
+    elif want_auto and svc.auto_match_ready(criteria):
+        data["auto_match_blocked_reason"] = None
     data["updated_at"] = _now()
     await db[svc.COLLECTION].update_one(
         {"id": request_id, "agency_id": agency_id},

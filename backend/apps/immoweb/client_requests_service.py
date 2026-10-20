@@ -81,6 +81,12 @@ def _prefs_nonempty(prefs: Optional[Dict[str, Any]]) -> bool:
     return False
 
 
+def auto_match_ready(criteria: Optional[Dict[str, Any]]) -> bool:
+    """Città + prezzo + mq — vedi matching.is_auto_match_ready."""
+    from apps.immoweb.matching import is_auto_match_ready
+    return is_auto_match_ready(criteria)
+
+
 def _normalize_prop_for_match(p: Dict[str, Any]) -> Dict[str, Any]:
     """Align MLS/legacy field names with matching engine expectations."""
     out = dict(p)
@@ -384,6 +390,8 @@ async def score_properties(
     surface_pct: float = 0.10,
 ) -> Tuple[List[Dict[str, Any]], Optional[int]]:
     """Return matches >= threshold sorted by score desc, plus best score (any)."""
+    if not auto_match_ready(criteria if isinstance(criteria, dict) else {}):
+        return [], None
     scored: List[Dict[str, Any]] = []
     best: Optional[int] = None
     prefs = prefs_with_tolerance(

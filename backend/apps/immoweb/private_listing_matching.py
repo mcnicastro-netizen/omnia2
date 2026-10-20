@@ -16,6 +16,7 @@ from shared.db.connection import Database
 from apps.immoweb import client_requests_service as svc
 from apps.immoweb.matching import (
     compute_match_score_fast,
+    is_auto_match_ready,
     prefs_with_tolerance,
     resolve_tolerances,
 )
@@ -76,9 +77,12 @@ async def match_private_listing_to_requests(
                 continue
             score = 90
         else:
+            criteria = req.get("criteria") or {}
+            if not is_auto_match_ready(criteria):
+                continue
             tol = resolve_tolerances(req.get("match_tolerances"))
             prefs = prefs_with_tolerance(
-                req.get("criteria") or {},
+                criteria,
                 price_pct=tol["price_pct"],
                 surface_pct=tol["surface_pct"],
             )

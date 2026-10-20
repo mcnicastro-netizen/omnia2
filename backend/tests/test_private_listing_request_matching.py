@@ -33,7 +33,9 @@ def test_approve_triggers_private_match():
 def test_scheduler_and_cron_wired():
     from apps.immoweb import sync_engine, cron
 
-    assert "private_listing_request_matching" in inspect.getsource(sync_engine.start_scheduler)
+    src = inspect.getsource(sync_engine.start_scheduler)
+    assert "private_listing_request_matching" in src
+    assert "IntervalTrigger" in src
     assert "match-private" in inspect.getsource(cron)
     assert "run_private_listing_request_matching" in inspect.getsource(cron)
 
@@ -47,3 +49,22 @@ def test_match_private_ignores_mls_shared_flag_on_requests():
     assert '"mls_shared": True' not in src and "'mls_shared': True" not in src
     assert "auto_match" in src
     assert "open" in src
+    assert "is_auto_match_ready" in src
+
+
+def test_auto_match_ready_gate():
+    from apps.immoweb.matching import is_auto_match_ready
+
+    assert is_auto_match_ready({}) is False
+    assert is_auto_match_ready({"cities": ["Catania"]}) is False
+    assert is_auto_match_ready({"cities": ["Catania"], "price_max": 200000}) is False
+    assert is_auto_match_ready({
+        "cities": ["Catania"],
+        "price_max": 200000,
+        "surface_min": 60,
+    }) is True
+    assert is_auto_match_ready({
+        "cities": "  ",
+        "price_min": 1,
+        "surface_max": 90,
+    }) is False

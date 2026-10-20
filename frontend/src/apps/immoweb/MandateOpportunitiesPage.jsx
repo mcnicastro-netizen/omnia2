@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 import AgencyShell from "./components/AgencyShell";
 import { api } from "../../shared/lib/api";
 
@@ -12,6 +13,16 @@ const STATUSES = [
   { value: "mandate_won", label: "Mandato acquisito" },
   { value: "lost", label: "Persa" },
   { value: "dismissed", label: "Scartata" },
+];
+
+const DISMISS_REASONS = [
+  { value: "no_response", label: "Nessuna risposta" },
+  { value: "already_mandated", label: "Già con altro mandato" },
+  { value: "price_unrealistic", label: "Prezzo irrealistico" },
+  { value: "out_of_area", label: "Fuori zona" },
+  { value: "low_demand_quality", label: "Domanda debole / non qualificata" },
+  { value: "duplicate", label: "Duplicato" },
+  { value: "other", label: "Altro" },
 ];
 
 const NEXT = {
@@ -36,14 +47,26 @@ function scoreTone(score) {
   return "text-stone-600 bg-stone-100 border-stone-200";
 }
 
+function actionLabel(st) {
+  if (st === "contacted") return "Contatta";
+  if (st === "appointment") return "Appuntamento";
+  if (st === "mandate_won") return "Mandato acquisito";
+  if (st === "lost") return "Persa";
+  if (st === "dismissed") return "Scarta";
+  return st;
+}
+
 export default function MandateOpportunitiesPage() {
   const { t, i18n } = useTranslation();
   const lang = (i18n.language || "it").slice(0, 2);
+  const navigate = useNavigate();
   const [status, setStatus] = useState("");
   const [items, setItems] = useState([]);
   const [proof, setProof] = useState(null);
   const [loading, setLoading] = useState(true);
   const [busyId, setBusyId] = useState(null);
+  const [dismissFor, setDismissFor] = useState(null);
+  const [dismissReason, setDismissReason] = useState("no_response");
 
   const load = async (st = status) => {
     setLoading(true);
@@ -66,10 +89,58 @@ export default function MandateOpportunitiesPage() {
   }, []);
 
   const advance = async (id, nextStatus) => {
+    if (nextStatus === "dismissed") {
+      setDismissFor(id);
+      setDismissReason("no_response");
+      return;
+    }
     setBusyId(id);
     try {
       await api.patch(`/app/mandate-opportunities/${id}`, { status: nextStatus });
+      toast.success(
+        nextStatus === "contacted"
+          ? "Segnato come contattato — chiudi il cerchio con telefono/WA"
+          : "Stato aggiornato",
+      );
       await load(status);
+    } catch (err) {
+      toast.error(err?.response?.data?.detail || "Aggiornamento fallito");
+    } finally {
+      setBusyId(null);
+    }
+  };
+
+  const confirmDismiss = async () => {
+    if (!dismissFor) return;
+    setBusyId(dismissFor);
+    try {
+      await api.patch(`/app/mandate-opportunities/${dismissFor}`, {
+        status: "dismissed",
+        dismiss_reason: dismissReason,
+      });
+      toast.message("Opportunità scartata");
+      setDismissFor(null);
+      await load(status);
+    } catch (err) {
+      toast.error(err?.response?.data?.detail || "Scarto fallito");
+    } finally {
+      setBusyId(null);
+    }
+  };
+
+  const createMandate = async (id) => {
+    setBusyId(id);
+    try {
+      const { data } = await api.post(`/app/mandate-opportunities/${id}/create-mandate`);
+      toast.success("Bozza immobile + venditore create");
+      const propId = data.property_id;
+      if (propId) {
+        navigate(`/${lang}/app/properties/${propId}`);
+        return;
+      }
+      await load(status);
+    } catch (err) {
+      toast.error(err?.response?.data?.detail || "Creazione bozza fallita");
     } finally {
       setBusyId(null);
     }
@@ -91,7 +162,7 @@ export default function MandateOpportunitiesPage() {
             </h1>
             <p className="text-stone-600 mt-1 max-w-2xl">
               {t("mandates.subtitle") ||
-                "Annunci privati sul portale con domanda nel tuo portafoglio: lavora il proprietario per l’incarico in esclusiva."}
+                "Annunci privati sul portale con domanda nel tuo portafoglio: contatta, scarta con motivo, o crea la bozza incarico."}
             </p>
           </div>
           <select
@@ -153,6 +224,45 @@ export default function MandateOpportunitiesPage() {
           </p>
         )}
 
+        {dismissFor && (
+          <div
+            data-testid="mandate-dismiss-panel"
+            className="bg-white border border-stone-300 rounded-lg p-4 space-y-3 max-w-lg"
+          >
+            <p className="text-sm font-medium text-stone-800">Motivo scarto</p>
+            <select
+              data-testid="mandate-dismiss-reason"
+              className="w-full border border-stone-300 px-3 py-2 text-sm"
+              value={dismissReason}
+              onChange={(e) => setDismissReason(e.target.value)}
+            >
+              {DISMISS_REASONS.map((r) => (
+                <option key={r.value} value={r.value}>
+                  {r.label}
+                </option>
+              ))}
+            </select>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                data-testid="mandate-dismiss-confirm"
+                className="bg-stone-900 text-white text-xs uppercase tracking-widest px-3 py-2"
+                onClick={confirmDismiss}
+                disabled={busyId === dismissFor}
+              >
+                Conferma scarto
+              </button>
+              <button
+                type="button"
+                className="border border-stone-300 text-xs uppercase tracking-widest px-3 py-2"
+                onClick={() => setDismissFor(null)}
+              >
+                Annulla
+              </button>
+            </div>
+          </div>
+        )}
+
         {loading ? (
           <p className="text-stone-500 text-sm">{t("common.loading") || "Caricamento…"}</p>
         ) : items.length === 0 ? (
@@ -168,7 +278,7 @@ export default function MandateOpportunitiesPage() {
             </p>
             <p className="text-stone-500 max-w-md mx-auto">
               {t("mandates.empty_subtitle") ||
-                "Quando un annuncio privato sul portale matcha una tua richiesta, compare qui come candidata per un mandato."}
+                "Quando un annuncio privato sul portale matcha una tua richiesta completa (città + prezzo + mq), compare qui."}
             </p>
           </div>
         ) : (
@@ -178,6 +288,7 @@ export default function MandateOpportunitiesPage() {
               const contact = listing.contact_public || {};
               const tone = scoreTone(item.demand_score || 0);
               const next = NEXT[item.status] || [];
+              const phone = contact.phone || contact.whatsapp;
               return (
                 <li
                   key={item.id}
@@ -195,6 +306,11 @@ export default function MandateOpportunitiesPage() {
                         <span className="text-[10px] uppercase tracking-widest text-stone-500">
                           {item.status}
                         </span>
+                        {item.dismiss_reason && (
+                          <span className="text-[10px] text-stone-400">
+                            scarto: {item.dismiss_reason}
+                          </span>
+                        )}
                       </div>
                       <h2
                         className="text-xl text-stone-900 truncate"
@@ -225,7 +341,7 @@ export default function MandateOpportunitiesPage() {
                         </Link>
                       )}
                     </div>
-                    <div className="flex flex-col gap-2 items-stretch min-w-[10rem]">
+                    <div className="flex flex-col gap-2 items-stretch min-w-[11rem]">
                       {listing.cloud_path && (
                         <a
                           href={`/${lang}${listing.cloud_path}`}
@@ -236,6 +352,33 @@ export default function MandateOpportunitiesPage() {
                           Vedi su portale
                         </a>
                       )}
+                      {phone && item.status === "new" && (
+                        <a
+                          href={
+                            contact.whatsapp
+                              ? `https://wa.me/${String(contact.whatsapp).replace(/\D/g, "")}`
+                              : `tel:${phone}`
+                          }
+                          target="_blank"
+                          rel="noreferrer"
+                          data-testid="mandate-contact-link"
+                          className="text-center text-xs uppercase tracking-widest px-3 py-2 border border-emerald-700 text-emerald-800 rounded-md"
+                          onClick={() => advance(item.id, "contacted")}
+                        >
+                          Chiama / WhatsApp
+                        </a>
+                      )}
+                      {["new", "contacted", "appointment"].includes(item.status) && (
+                        <button
+                          type="button"
+                          disabled={busyId === item.id}
+                          data-testid="mandate-create-draft"
+                          onClick={() => createMandate(item.id)}
+                          className="text-xs uppercase tracking-widest px-3 py-2 bg-[#1F6B5C] text-white rounded-md hover:opacity-90 disabled:opacity-50"
+                        >
+                          Crea bozza incarico
+                        </button>
+                      )}
                       {next.map((st) => (
                         <button
                           key={st}
@@ -243,13 +386,13 @@ export default function MandateOpportunitiesPage() {
                           disabled={busyId === item.id}
                           data-testid={`mandate-advance-${st}`}
                           onClick={() => advance(item.id, st)}
-                          className="text-xs uppercase tracking-widest px-3 py-2 bg-stone-900 text-white rounded-md hover:bg-stone-700 disabled:opacity-50"
+                          className={
+                            st === "dismissed"
+                              ? "text-xs uppercase tracking-widest px-3 py-2 border border-stone-300 text-stone-600 rounded-md disabled:opacity-50"
+                              : "text-xs uppercase tracking-widest px-3 py-2 bg-stone-900 text-white rounded-md hover:bg-stone-700 disabled:opacity-50"
+                          }
                         >
-                          {st === "contacted" && "Segna contattato"}
-                          {st === "appointment" && "Appuntamento fissato"}
-                          {st === "mandate_won" && "Mandato acquisito"}
-                          {st === "lost" && "Persa"}
-                          {st === "dismissed" && "Scarta"}
+                          {actionLabel(st)}
                         </button>
                       ))}
                     </div>

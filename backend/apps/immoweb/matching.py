@@ -6,6 +6,23 @@ Hard incompatibilities (operation mismatch, budget completely out of range) → 
 from typing import Any, Dict, List, Optional, Tuple
 
 
+def is_auto_match_ready(criteria: Optional[Dict[str, Any]]) -> bool:
+    """Gate anti-rumore: auto-match solo con città + fascia prezzo + mq.
+
+    Preferenze vuote o solo note producono falsi positivi (wildcards nello score).
+    """
+    if not criteria or not isinstance(criteria, dict):
+        return False
+    cities = criteria.get("cities") or []
+    if isinstance(cities, str):
+        cities = [c.strip() for c in cities.split(",") if c.strip()]
+    if not isinstance(cities, list) or not any(str(c).strip() for c in cities):
+        return False
+    has_price = criteria.get("price_min") is not None or criteria.get("price_max") is not None
+    has_surface = criteria.get("surface_min") is not None or criteria.get("surface_max") is not None
+    return bool(has_price and has_surface)
+
+
 # Weights — total = 100 (exact); tuned for Italian real-estate market signals.
 W = {
     "operation": 14,       # mandatory match
