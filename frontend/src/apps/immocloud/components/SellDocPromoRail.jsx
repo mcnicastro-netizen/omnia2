@@ -1,12 +1,14 @@
 import React from "react";
+import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 
 /**
  * Vertical promo rail for B2C sell / publish flow.
- * Visual only for now — routes wired later.
+ * Planimetria → /cloud/planimetria (Stripe + OpenAPI). APE/atti still coming soon.
  */
 export default function SellDocPromoRail({ className = "" }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const lang = (i18n.language || "it").slice(0, 2);
 
   const boxes = [
     {
@@ -16,6 +18,7 @@ export default function SellDocPromoRail({ className = "" }) {
       desc: t("cloud.sell.promo_ape_desc"),
       accent: "#1F6B5C",
       wash: "linear-gradient(145deg, rgba(31,107,92,0.14) 0%, rgba(245,241,232,0.92) 55%, #F5F1E8 100%)",
+      to: null,
     },
     {
       key: "planimetria",
@@ -24,6 +27,8 @@ export default function SellDocPromoRail({ className = "" }) {
       desc: t("cloud.sell.promo_plan_desc"),
       accent: "#C8A653",
       wash: "linear-gradient(145deg, rgba(200,166,83,0.18) 0%, rgba(245,241,232,0.94) 55%, #F5F1E8 100%)",
+      to: `/${lang}/cloud/planimetria`,
+      cta: t("cloud.sell.promo_plan_cta"),
     },
     {
       key: "atti",
@@ -32,6 +37,7 @@ export default function SellDocPromoRail({ className = "" }) {
       desc: t("cloud.sell.promo_atti_desc"),
       accent: "#0B1E3F",
       wash: "linear-gradient(145deg, rgba(11,30,63,0.12) 0%, rgba(245,241,232,0.94) 55%, #F5F1E8 100%)",
+      to: null,
     },
   ];
 
@@ -44,44 +50,68 @@ export default function SellDocPromoRail({ className = "" }) {
       <p className="text-[10px] font-sans uppercase tracking-[0.28em] text-[#0B1E3F]/55 px-0.5">
         {t("cloud.sell.promo_rail_label")}
       </p>
-      {boxes.map((box) => (
-        <div
-          key={box.key}
-          data-testid={`sell-promo-${box.key}`}
-          className="group relative overflow-hidden rounded-2xl border px-4 py-4 sm:px-5 sm:py-5 transition duration-300 hover:-translate-y-0.5 hover:shadow-[0_16px_36px_rgba(11,30,63,0.12)]"
-          style={{
-            borderColor: `${box.accent}40`,
-            background: box.wash,
-          }}
-        >
+      {boxes.map((box) => {
+        const inner = (
+          <>
+            <div
+              className="pointer-events-none absolute inset-y-3 left-0 w-[3px] rounded-r-full opacity-90 transition group-hover:opacity-100"
+              style={{ background: box.accent }}
+              aria-hidden
+            />
+            <p
+              className="pl-2 text-[10px] font-sans uppercase tracking-[0.28em] mb-1.5"
+              style={{ color: box.accent }}
+            >
+              {box.tag}
+            </p>
+            <h2
+              className="pl-2 text-lg tracking-tight text-[#0B1E3F] mb-1.5 leading-snug"
+              style={{ fontFamily: "'Fraunces', Georgia, serif" }}
+            >
+              {box.title}
+            </h2>
+            <p className="pl-2 text-[13px] sm:text-sm font-sans leading-relaxed text-[#0B1E3F]/68">
+              {box.desc}
+            </p>
+            <p
+              className="pl-2 mt-3 text-[10px] font-sans uppercase tracking-[0.22em] opacity-70 group-hover:opacity-100 transition"
+              style={{ color: box.accent }}
+            >
+              {box.to ? (box.cta || t("common.next")) : t("cloud.sell.promo_soon")}
+              {box.to ? " →" : ""}
+            </p>
+          </>
+        );
+        const classNameBox =
+          "group relative overflow-hidden rounded-2xl border px-4 py-4 sm:px-5 sm:py-5 transition duration-300 hover:-translate-y-0.5 hover:shadow-[0_16px_36px_rgba(11,30,63,0.12)] block";
+        const style = {
+          borderColor: `${box.accent}40`,
+          background: box.wash,
+        };
+        if (box.to) {
+          return (
+            <Link
+              key={box.key}
+              to={box.to}
+              data-testid={`sell-promo-${box.key}`}
+              className={classNameBox}
+              style={style}
+            >
+              {inner}
+            </Link>
+          );
+        }
+        return (
           <div
-            className="pointer-events-none absolute inset-y-3 left-0 w-[3px] rounded-r-full opacity-90 transition group-hover:opacity-100"
-            style={{ background: box.accent }}
-            aria-hidden
-          />
-          <p
-            className="pl-2 text-[10px] font-sans uppercase tracking-[0.28em] mb-1.5"
-            style={{ color: box.accent }}
+            key={box.key}
+            data-testid={`sell-promo-${box.key}`}
+            className={classNameBox}
+            style={style}
           >
-            {box.tag}
-          </p>
-          <h2
-            className="pl-2 text-lg tracking-tight text-[#0B1E3F] mb-1.5 leading-snug"
-            style={{ fontFamily: "'Fraunces', Georgia, serif" }}
-          >
-            {box.title}
-          </h2>
-          <p className="pl-2 text-[13px] sm:text-sm font-sans leading-relaxed text-[#0B1E3F]/68">
-            {box.desc}
-          </p>
-          <p
-            className="pl-2 mt-3 text-[10px] font-sans uppercase tracking-[0.22em] opacity-70 group-hover:opacity-100 transition"
-            style={{ color: box.accent }}
-          >
-            {t("cloud.sell.promo_soon")}
-          </p>
-        </div>
-      ))}
+            {inner}
+          </div>
+        );
+      })}
     </aside>
   );
 }

@@ -150,6 +150,20 @@ B2C_ONE_SHOT_PRODUCTS: Dict[str, B2CProduct] = {
             "Costo vivo sandbox/listino partner ~€0,40 — retail Founder 15-Sep-2026."
         ),
     },
+    "b2c_planimetria_catastale": {
+        "key": "b2c_planimetria_catastale",
+        "label_it": "Planimetria catastale (elaborato planimetrico)",
+        "price_eur": 12.00,
+        "stripe_lookup_key": "b2c_planimetria_catastale",
+        "unit": "per_document",
+        "daily_limit_per_user": 10,
+        "notes": (
+            "Retail Founder 15-Ott-2026: €12,00 carta Stripe one-shot. "
+            "Fulfillment OpenAPI.it POST /elaborato_planimetrico → PDF. "
+            "Costo vivo partner ~€6,90 + IVA (listino OpenAPI — verificare in console). "
+            "Sandbox: test.catasto.openapi.it (sincrono, credit sandbox)."
+        ),
+    },
     # --- Boost visibilità annuncio privato (carta one-shot) -------------
     "b2c_vetrina_30": {
         "key": "b2c_vetrina_30",
@@ -265,15 +279,7 @@ B2C_FREE_LEAD_MAGNETS: Dict[str, dict] = {
 
 # --- Prodotti "in arrivo" (fase 2 — NON esporre come acquistabili) -----
 B2C_COMING_SOON: Dict[str, dict] = {
-    "b2c_planimetria_catastale": {
-        "label_it": "Planimetria catastale",
-        "planned_price_eur": None,
-        "cost_ref_eur": 6.90,
-        "notes": (
-            "Margine da validare. Serve accordo commerciale con partner "
-            "per ridurre il costo vivo o accettare margine minimo."
-        ),
-    },
+    # planimetria spostata in B2C_ONE_SHOT_PRODUCTS (15-Ott-2026 · €12)
 }
 
 

@@ -1,3 +1,9 @@
+## 2026-10-15 — Planimetria catastale B2C €12 (OpenAPI + Stripe)
+
+- SKU `b2c_planimetria_catastale` + checkout/webhook fulfill
+- UI PlanimetriaPage + promo SellPage
+- Manuale Cap.18 / HAL + PRICING_B2C
+
 ## 2026-10-15 — Stripe: eliminati webhook Emergent 404
 
 - Mail Stripe Test: 404 su `…emergentagent.com/api/stripe/webhook` (host morto + path errato)

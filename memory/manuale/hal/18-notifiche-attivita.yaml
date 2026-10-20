@@ -712,12 +712,15 @@ voci:
         - "D-125 · Accesso agli atti = copia del progetto originario in Comune
           (+ titolo abilitativo opz.). Niente wallet anticipo; box spento finché
           partner conferma accordo a consumo (Pratiche.it / PraticheCasa.it)."
+        - "Planimetria LIVE 15-Ott-2026 · Link → /it/cloud/planimetria · Stripe €12 · OpenAPI elaborato_planimetrico."
+        - "APE e Accesso atti · ancora Presto disponibile (link in arrivo)."
         - "NON compare sulla home ecosistema OMNIA (/it/)."
       errori_comuni:
-        - problema: "Clicco il box e non succede nulla"
+        - problema: "Clicco APE o Accesso atti e non succede nulla"
           soluzione: >
             Atteso: i box non sono ancora collegati al checkout/servizio.
             Accesso atti resta Presto disponibile (D-125) finché c'è accordo partner.
+            Atteso: solo Planimetria è collegata. APE e atti restano in arrivo.
       permessi:
         - "Solo account B2C autenticato sulla SellPage"
     screenshot: [cap18-sell-doc-promo]
