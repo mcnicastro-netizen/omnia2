@@ -1,7 +1,7 @@
 {
-  "version": "0.39-d125-d128-pricing",
-  "updated": "2026-10-19",
-  "voices_total": 373,
+  "version": "0.40-d130-clone-p0",
+  "updated": "2026-10-20",
+  "voices_total": 374,
   "source_files": [
     {
       "file": "00-api-codice.yaml",
@@ -45,8 +45,8 @@
     },
     {
       "file": "08-sito-web.yaml",
-      "voices": 13,
-      "md5": "e9fe1eecba34edd1b39a7e75a63a9f90"
+      "voices": 14,
+      "md5": "b214265e0ba072e8b39c1e72425efa4d"
     },
     {
       "file": "09-virtual-staging.yaml",

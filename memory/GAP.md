@@ -1,6 +1,6 @@
 # 🕳️ GAP.md — Discrepanze codice ↔ UI ↔ Manuale
 
-**Ultimo aggiornamento**: Feb 2026 (post-H-bis · fix onestà Cap. 11 8 banche/9 Consap)
+**Ultimo aggiornamento**: 20-Ott-2026 (D-130 clone P0) · base Feb 2026
 **Scope**: elenco funzioni backend senza UI, moduli deprecati/in transizione, duplicati da consolidare, elementi esclusi dal manuale per scelta.
 **Come si aggiorna**: ogni volta che scrivi un nuovo capitolo del manuale, aggiungi qui i gap intercettati. Il file cresce col progetto e serve come "verità operativa" per il prossimo agente.
 
@@ -16,6 +16,18 @@
 | 📖 **Manuale** | Impatta solo la documentazione |
 | 🔧 **Code** | Impatta il codice |
 | 🎨 **UX** | Impatta la user experience |
+
+---
+
+## 🔴 P0 · Clone-from-URL (D-023 / D-130) — 20-Ott-2026
+
+| Gap | Codice oggi | Mancante | Priorità | Manuale |
+|-----|-------------|----------|:-:|---------|
+| **Clone sito da URL** | `brand_extractor.py` + `themes.py` (4 temi) | Crawl multi-pagina, Vision, bundle per-agenzia, preview visitabile home/lista/scheda | 🔴 P0 Code | Cap.8 §8.12 · HAL `sito.clone-d023-d130` |
+| **Demo URL→tema vestito** | Extract + theme apply parziale | Loop automatico demo pubblica (A-037) | 🟠 P1 sotto P0 clone | Cap.8 §8.11 |
+| **SKU solo sito** | — | Non esiste (scelta D-130, non gap codice) | 🟢 Listino | `PRICING_OMNIA.md` |
+
+Founder: stesso livello di gravità del gap Visual Staging. Vietato pitch «trasferisci il sito uguale» senza preview clone.
 
 ---
 

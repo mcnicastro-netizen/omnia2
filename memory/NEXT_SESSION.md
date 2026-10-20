@@ -1,8 +1,8 @@
 # Prossima sessione — programma passi
 
-**Aggiornato**: 19 Ottobre 2026 — **D-129 tre promesse + coda mandati**  
+**Aggiornato**: 20 Ottobre 2026 — **D-130 clone P0 + listino no «solo sito»**  
 **Repo**: https://github.com/mcnicastro-netizen/omnia2 ✅  
-**Branch**: `cursor/tre-promesse-mandati-8e9b`
+**Branch docs**: `cursor/clone-gap-p0-docs-8e9b`
 
 ---
 
@@ -11,8 +11,9 @@
 | Ruolo | Doc |
 |-------|-----|
 | Freccia | [`docs/audit/OMNIA_COERENZA_SISTEMA.md`](../docs/audit/OMNIA_COERENZA_SISTEMA.md) — S1–S10 ✅ |
-| **Posizionamento** | **D-129** — Portale · Academy · Mandati (prove misurabili; no appiattimento) |
-| **Ultimo ship** | Coda **Opportunità mandati** + `GET …/proof` · D-125…D-128 invariati |
+| **Posizionamento** | **D-129** — Portale · Academy · Mandati |
+| **P0 sito** | **D-130 / D-023** — Clone-from-URL (pari gravità VS) · A-037 = rampa demo |
+| Listino B2B | [`memory/PRICING_OMNIA.md`](./PRICING_OMNIA.md) — **no SKU solo sito** |
 | Listino B2C | [`memory/PRICING_B2C.md`](./PRICING_B2C.md) **v1.4** |
 | **API Railway** | [`docs/ops/RAILWAY_DEPLOY.md`](../docs/ops/RAILWAY_DEPLOY.md) — D-123 |
 | **Vercel FE** | [`docs/ops/VERCEL_DEPLOY.md`](./VERCEL_DEPLOY.md) — D-074 |
@@ -20,12 +21,12 @@
 
 ---
 
-## ⏭️ Primo passo tipico (prove, non pitch)
+## ⏭️ Primo passo tipico
 
-1. **Pilota mandati** su `demo-agency-001`: annuncio privato approvato → match richiesta → UI `/app/mandate-opportunities` → avanzare funnel → leggere `/proof`
-2. **Portale**: verificare KPI «Contatti portale (7gg)» + `pillars.portal` in proof
-3. **Academy**: non claimare; solo sblocco M6 quando Founder riapre
-4. Smoke B2C invariato: staging €1,49 · boost · slot · Stripe Test
+1. **Clone P0 (D-130)**: progettare/implementare pipeline URL → crawl → preview visitabile (home+lista+scheda) — non raffinare i 4 temi
+2. **A-037 rampa**: chiudere almeno URL → demo vestita (tema + brand) se clone full slitta
+3. Pilota mandati D-129 invariato su `demo-agency-001`
+4. Smoke B2C: staging €1,49 · boost · slot · Stripe Test
 5. Quando pronto: Stripe **Live** webhook (non Test)
 
 ---
@@ -34,9 +35,11 @@
 
 | Voce | Nota |
 |------|------|
+| **D-130** | Vietato promettere «cloniamo il sito» finché preview clone non esiste |
+| **D-023** | Decisione clone ancora valida; codice incompleto (solo Brand Extractor) |
 | **D-125** | Accesso atti = progetto comunale · no wallet |
-| **D-128** | Staging B2C €1,49 (ex citazione errata «D-125») |
-| **HAL reindex** | Obbligatorio dopo merge Cap.9/18 |
+| **D-128** | Staging B2C €1,49 |
+| **HAL reindex** | Dopo merge Cap.8 / YAML sito |
 | **Stripe Live** | Solo dopo KYC |
 | **Pre-demo probe** | `python scripts/pre_demo_probe.py` |
 
@@ -47,11 +50,8 @@
 | Voce | Esito |
 |--|--|
 | S1–S10 | ✅ |
-| D-124 home + valuator + Sell promo | ✅ |
-| D-125 Accesso atti (decisione) | ✅ registrata · prodotto ⏳ partner |
-| D-126 match privati → CRM | ✅ |
-| D-127 boost + densità 50% | ✅ |
-| D-128 staging €1,49 Nano Banana | ✅ listino SoT · pipeline branch staging-agent |
-| PRICING_B2C v1.4 | ✅ |
+| D-124…D-129 | ✅ registrati |
+| D-130 clone P0 + no solo-sito | ✅ decisione · codice ⏳ |
+| A-037 demo da sito | 🟠 aperta (sotto D-130) |
 | Link box APE/planimetria/atti | ⏳ |
 | Stripe Live | ⏳ |
