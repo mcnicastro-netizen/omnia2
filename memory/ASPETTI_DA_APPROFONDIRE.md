@@ -1319,7 +1319,7 @@ La personalizzazione della demo dal sito dell’agenzia **ci doveva già essere*
 
 `/it/verifica-dominio` è nato da queste considerazioni.
 
-### Stato attuale (onesto)
+### Stato attuale (onesto) — aggiornato 20-Ott-2026 (D-130)
 | Pezzo | Stato |
 |-------|--------|
 | Lead «hai un sito?» + URL | ✅ |
@@ -1328,14 +1328,16 @@ La personalizzazione della demo dal sito dell’agenzia **ci doveva già essere*
 | Verifica dominio + Legal Kit | ✅ D-054/D-055 |
 | Pipeline automatica demo col look cliente | ❌ |
 | Template pack commerciale (no-sito / restyling / recovery dominio) | ❌ |
+| **Clone-from-URL D-023** (home+lista+scheda look-alike) | ❌ **P0** (D-130) — gap pari gravità Visual Staging |
 
 ### Done quando
-1. Con sito: URL → brand applicato a tema demo visitabile.  
+1. Con sito: URL → brand applicato a tema demo visitabile (**A-037 minimo demo**).  
 2. Senza sito / restyling / non-proprietario: scelta template pack + percorso verifica/recupero dominio.  
-3. Cap. 8/17 + checklist demo aggiornati; niente promessa «clone automatico» finché (1) non è PASS.
+3. Cap. 8/17 + checklist demo aggiornati; niente promessa «clone automatico» finché (1) non è PASS.  
+4. **Clone full (D-023 / D-130)**: preview visitabile best-effort (home + lista + scheda) alimentata da API OMNIA — distinto da (1).
 
 ### Stato
-🟠 **PRIORITÀ APERTA** — Founder 30-Set-2026 · dopo/in parallelo a O6 operativo (restore firmato), **prima** di outreach large-scale.
+🔴 **P0 APERTA** — Founder 20-Ott-2026: clone = blocco commerciale migrazione sito (es. Nicastro). A-037 resta rampa demo; D-023 resta target clone.
 
 ---
 

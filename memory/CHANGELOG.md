@@ -1,3 +1,12 @@
+## 2026-10-20 — D-130 Clone-from-URL P0 + no SKU «solo sito» (docs/HAL)
+
+- **D-130**: clone sito = blocco commerciale pari gravità Visual Staging; Brand Extractor ≠ clone
+- D-023 aggiornato: decisione valida, implementazione incompleta (solo Phase 1)
+- A-037 riallineato sotto D-130 (rampa demo ≠ clone full)
+- Listino B2B: esplicitato **nessuno SKU «solo sito»** (`PRICING_OMNIA.md`)
+- Manuale Cap.8 §8.12 · HAL `sito.clone-d023-d130` · NEXT_SESSION · ASPETTI A-037
+- Contesto commerciale: scenari Nicastro (trasferimento / solo sito / annuale+migrazione / nuovo agente)
+
 ## 2026-10-19 — D-129 tre promesse + opportunità mandati (codice)
 
 - **D-129** posizionamento vincolante: Portale · Academy · Mandati in esclusiva — prove misurabili, anti-appiattimento vs Arcanis

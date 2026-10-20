@@ -7,6 +7,17 @@ Registro di tutte le decisioni di business e tecniche prese durante il progetto.
 
 ## Decisioni prese
 
+### D-130 — Clone-from-URL = P0 commerciale (pari gravità Visual Staging) · no SKU «solo sito»
+- **Data**: 20 Ottobre 2026
+- **Contesto**: Simulazione commerciale Nicastro Immobiliare (trasferimento `www.nicastroimmobiliare.it`, acquisto solo sito, pacchetto annuale + migrazione portafoglio, nuovo agente turnkey). Founder boccia il percorso «Brand Extractor + 4 temi» come sostituto del trasferimento sito: **stesso livello di gravità del gap Visual Staging**. D-023 (clone identico) era già deciso; in produzione c’è solo Phase 1 (estrazione brand → tema).
+- **Decisione**:
+  1. **Clone-from-URL (D-023) è P0** per vendere migrazione sito / Track A turnkey. Soglia minima: home + lista + scheda visitabili, look riconoscibile come il sito cliente, dati da API OMNIA. Non basta «applica palette al tema Classic».
+  2. **A-037 resta obbligatorio** come rampa demo (URL → demo vestita + template pack no-sito/restyling/non-proprietario). A-037 non sostituisce il clone; è il minimo per demo onesta. Clone full = D-023.
+  3. **Nessuno SKU «solo sito»** in `PRICING_OMNIA.md` / Stripe B2B. Il sito è feature del piano ImmoWeb (Starter/Pro/Agency). Chi chiede solo sito: o Starter usato come sito, o trattativa custom fuori listino. Track B = sito esterno + OMNIA a crediti/widget (opposto di «solo sito»).
+  4. **Promessa commerciale**: vietato dire «cloniamo il tuo sito» / «trasferisci senza cambiare look» finché D-023 non ha preview visitabile best-effort. Ritocco designer pixel-perfect resta tier Premium opzionale (come in D-023).
+- **Stato implementazione onesto** (20-Ott-2026): Brand Extractor + 4 temi ✅ · crawl multi-pagina / Vision / bundle per-agenzia / preview clone ❌ · seed Nicastro locale = tema colorato, non clone.
+- **Stato**: ✅ DECISO · CODICE clone ⏳ · listino «solo sito» ❌ consapevole
+
 ### D-129 — Tre promesse strutturali + prove misurabili (no appiattimento vs Arcanis)
 - **Data**: 19 Ottobre 2026
 - **Contesto**: Rivalutazione strategica Founder: OMNIA non compete come “CRM con più funzioni” (Arcanis.it / Arcanis Immobiliare dichiarano già matching, MLS, automazioni). OMNIA risolve **tre problemi economici/operativi** delle agenzie. Basta analisi senza chiusura; ogni promessa deve essere dimostrabile.
@@ -347,7 +358,7 @@ Registro di tutte le decisioni di business e tecniche prese durante il progetto.
   - **Premium**: revisione designer in 2-3 giorni per pixel perfection (€XX una tantum)
 - **Razionale**: Migration friction → ZERO. Demo killer in fase commerciale ("Inserisci URL → 60 sec → ecco il tuo sito dentro OMNIA"). Eradica completamente la resistenza al cambio gestionale.
 - **Quando**: M2.S5 (anticipa la fase di multiposting con questa feature distintiva).
-- **Stato**: ✅ Confermata.
+- **Stato**: ✅ Confermata · ⚠️ **implementazione incompleta** (20-Ott-2026): solo Brand Extractor Phase 1 + Theme Registry 4 temi. Pipeline Playwright → Vision → bundle Next.js **non** shippata. Escalation Founder → **D-130** (P0, pari gravità VS).
 
 ### D-024 — Pricing aggressivo fase lancio + listino trasparente ✅
 - **Data**: 16 Giugno 2026 (post analisi competitiva)

@@ -557,6 +557,7 @@ voci:
     correlati:
       - sito.brand-extractor
       - sito.temi-disponibili
+      - sito.clone-d023-d130
       - domain.non-proprietario-a037
     domanda_naturale: "Possiamo personalizzare la demo col look del mio sito attuale?"
     contenuto:
@@ -564,6 +565,7 @@ voci:
         Chiarire lo stato onesto del percorso demo commerciale: URL del
         sito cliente → brand → tema OMNIA visitabile, più template per chi
         non ha sito, vuole restyling o non è proprietario del dominio.
+        A-037 è la rampa demo; il clone pieno è D-023/D-130 (voce separata).
       quando_si_usa: >
         Quando un prospect chiede una demo vestita come il suo sito, o
         quando dichiara di non avere sito / non controllare il dominio.
@@ -574,12 +576,53 @@ voci:
           pubblica vestita (A-037 aperto)."
         - "I 4 temi backend ci sono; UI template pack commerciale ancora
           stub — A-037 deve chiuderlo per no-sito/restyling/non-proprietario."
-        - "Non promettere clone automatico del sito finché A-037 non è PASS."
+        - "Non promettere clone automatico del sito finché A-037 e D-130
+          non hanno preview visitabile (vedi sito.clone-d023-d130)."
       errori_comuni:
         - problema: "Ho dato l'URL ma la demo non ha il mio look"
           soluzione: >
             Atteso finché A-037 non chiude il loop. Oggi l'URL serve come
-            brief; setup branding/tema è assistito.
+            brief; setup branding/tema è assistito. Non è un clone del sito.
       permessi:
         - Titolare / Founder Ops (prep demo)
+    screenshot: []
+
+  - id: sito.clone-d023-d130
+    titolo: Clone-from-URL P0 (D-023 / D-130) — non ancora disponibile
+    modulo: Sito web
+    widget: null
+    pubblico: [titolare, super_admin]
+    livello: avanzato
+    tags: [sito-web, clone, d-023, d-130, migrazione, p0, brand-extractor]
+    correlati:
+      - sito.brand-extractor
+      - sito.demo-a037
+      - sito.temi-disponibili
+    domanda_naturale: "Potete clonare il mio sito attuale dentro OMNIA?"
+    contenuto:
+      a_cosa_serve: >
+        Trasferire il sito dell'agenzia su OMNIA con look riconoscibile
+        (home, lista immobili, scheda), dati dal gestionale. Decisione
+        D-023; escalation Founder 20-Ott-2026 D-130 = P0 pari al Visual Staging.
+      quando_si_usa: >
+        Prospect con sito proprio che vuole migrare senza perdere identità
+        visiva (es. nicastroimmobiliare.it). NON per chi chiede solo un
+        restyling leggero (usa temi + Brand Extractor).
+      passi:
+        - "OGGI NON DISPONIBILE: solo Brand Extractor + 4 temi OMNIA."
+        - "Target: URL → crawl pagine chiave → preview visitabile → dominio."
+        - "Soglia minima vendita: home + lista + scheda look-alike, API OMNIA."
+        - "SKU «solo sito» NON esiste in listino B2B (D-130) — serve piano ImmoWeb."
+        - "Vietato promettere clone in call finché non c'è preview visitabile."
+      errori_comuni:
+        - problema: "Ho applicato il Brand Extractor ma il sito non è uguale al mio"
+          soluzione: >
+            Corretto: l'estrattore cambia colori/logo su un tema OMNIA.
+            Non è il clone D-023. Gap aperto (D-130).
+        - problema: "Voglio comprare solo il sito senza gestionale"
+          soluzione: >
+            Non c'è SKU solo sito. Opzioni: piano Starter (sito incluso)
+            oppure trattativa custom fuori listino.
+      permessi:
+        - Titolare / Founder Ops (promessa commerciale)
     screenshot: []

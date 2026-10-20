@@ -160,6 +160,7 @@ Formato lookup key Stripe: `{tier}_{cycle}` per abbonamenti (es. `pro_monthly`) 
 | Algoritmo boost granulare | 🟡 Fase 2 (post 30 clienti) |
 | Sconto volume sui pacchetti crediti | ❌ NO — ratio fisso 20 cr/€ |
 | Planimetria/Ipoteca come servizio v1 | ❌ Rimossi (margini) |
+| **SKU «solo sito web»** | ❌ **Non in listino** (D-130, 20-Ott-2026) — sito = feature piano ImmoWeb; custom fuori catalogo |
 
 ---
 

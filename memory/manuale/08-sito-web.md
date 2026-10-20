@@ -401,7 +401,37 @@ Puoi rimuovere il custom domain in qualsiasi momento con **Elimina dominio**. At
 Chi scopre di non essere proprietario del dominio (es. registrato da un fornitore IT) usa `/it/verifica-dominio` (Cap. 17) e il percorso A-037 (template + recovery dominio).
 
 ### Promessa commerciale
-Non promettere «cloniamo il tuo sito in automatico» finché A-037 non è PASS sul loop URL→demo.
+Non promettere «cloniamo il tuo sito in automatico» finché A-037 non è PASS sul loop URL→demo **e** finché il clone D-023/D-130 non ha preview visitabile (vedi §8.12).
+
+---
+
+## 8.12 · Clone-from-URL · **D-023 / D-130** (20-Ott-2026) 🔴 P0
+
+**Decisione Founder (D-130)**: il trasferimento sito con look riconoscibile è un blocco commerciale **pari gravità al Visual Staging**. Brand Extractor + 4 temi **non** bastano.
+
+### Cosa doveva esserci (D-023)
+1. Agenzia inserisce URL del sito attuale.
+2. Crawl pagine chiave (home, lista, scheda, contatti) + screenshot.
+3. AI ricostruisce layout/colori/componenti.
+4. Preview visitabile alimentata dalle API OMNIA (immobili, lead).
+5. Deploy su dominio agenzia (CNAME).
+
+### Cosa c’è oggi
+| Pezzo | Stato |
+|-------|--------|
+| Brand Extractor (palette/tono/logo) | ✅ Phase 1 |
+| Theme Registry 4 temi HTML | ✅ non è un clone |
+| Crawl multi-pagina + Vision | ❌ |
+| Bundle per-agenzia (headless D-022) | ❌ |
+| Preview «ecco il tuo sito ricostruito» | ❌ |
+| SKU listino «solo sito» | ❌ consapevole (sito = feature piano ImmoWeb) |
+
+### Soglia minima per vendere il trasferimento
+Home + lista immobili + scheda dettaglio **visitabili**, look riconoscibile dal cliente, dati da portafoglio OMNIA. Ritocco designer pixel-perfect = tier Premium opzionale (D-023).
+
+### Cosa NON promettere in call
+- «Trasferisci il sito e resta uguale» senza preview clone.
+- «Compri solo il sito» come voce di listino (non esiste in `PRICING_OMNIA.md`).
 
 ---
 
@@ -416,4 +446,4 @@ Non promettere «cloniamo il tuo sito in automatico» finché A-037 non è PASS 
 
 ---
 
-**Versione**: v1.1 · 30-Set-2026 (+ §8.11 A-037) · base v1.0 Feb 2026
+**Versione**: v1.2 · 20-Ott-2026 (+ §8.12 D-130 clone P0) · v1.1 30-Set-2026 (+ §8.11 A-037) · base v1.0 Feb 2026

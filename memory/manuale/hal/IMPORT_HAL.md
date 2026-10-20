@@ -267,6 +267,7 @@ Prima di dichiarare il cold start "attivo", eseguire manualmente queste 5 query 
 
 | Data | Versione | Note |
 |------|:-:|------|
+| 20-Ott-2026 | **v0.40-d130-clone-p0** | Cap.8 `sito.clone-d023-d130` + aggiornamento `sito.demo-a037`: clone = P0 (D-130), Brand Extractor ≠ clone, no SKU solo sito. Manuale §8.12 · DECISIONS D-130 · ASPETTI A-037. Reindex post-merge. |
 | 19-Ott-2026 | **v0.39-d125-d128-pricing** | Cap.9 `staging.crediti-costo`: B2C **€1,49** (D-128) + Nano Banana; Cap.18 `notifiche.sell-doc-promo` + MD §18.7c **D-125** accesso atti. DECISIONS D-125/D-128 · PRICING_B2C v1.4. Reindex post-merge. |
 | 14-Ott-2026 | **v0.38-d124-home-valuator-sell** | Cap.21 Valutatore: APE+piano obbligatori, PDF 1p, superfici reali. Cap.18: +`notifiche.sell-doc-promo` (rail SellPage). DECISIONS D-124 · PR #40 merge. Reindex post-merge. |
 | 12-Ott-2026 | **v0.37-golive-vercel** | HAL Cap.00: +`api.vercel-fe-deploy` · update `api.railway-api-deploy` / `api.stripe-sandbox-cloud` (API `api.` + Vercel FE + DNS). Cap.00/19 MD · DNS/RAILWAY/VERCEL · DECISIONS D-074/D-123. Reindex Founder post-merge. |
