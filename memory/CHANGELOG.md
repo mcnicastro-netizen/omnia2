@@ -1,3 +1,9 @@
+## 2026-10-20 — Dogfood prep (E2E) su main
+
+- Preflight E2E + `grant_agency_plan` + wipe Nicastro operativo
+- Regola anti-New-Project · Brand Studio preview srcDoc · home Track A / hero
+- Seed Nicastro: skip fixtures in dogfood (`dogfood_skip_fixtures`)
+
 ## 2026-10-07 — A-038 post-test fattura Stripe + dati fiscali
 
 - Priorità ops: completare dati fiscali / fattura dopo test Stripe (vedi ASPETTI A-038)
