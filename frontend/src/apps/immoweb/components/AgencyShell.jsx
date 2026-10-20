@@ -99,6 +99,7 @@ export default function AgencyShell({ children, current = "dashboard", showBack 
       ? [{ key: "trash", to: `/${lang}/app/trash`, label: t("immoweb_app.nav_trash") || "Cestino", icon: "🗑", cluster: "amministrazione" }]
       : []),
     { key: "matches", to: `/${lang}/app/matches`, label: t("immoweb_app.nav_matches"), icon: "✦", cluster: "operativo" },
+    { key: "mandates", to: `/${lang}/app/mandate-opportunities`, label: t("immoweb_app.nav_mandates") || "Mandati", icon: "◆", cluster: "operativo" },
     // A-034 R4 — Analytics A/B fuori nav primaria (link in Impostazioni)
     { key: "mls", to: `/${lang}/app/mls`, label: "MLS", icon: "⧉", cluster: "pubblicazione" },
     ...(isAgencyAdmin
