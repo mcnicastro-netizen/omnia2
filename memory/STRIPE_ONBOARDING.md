@@ -30,6 +30,15 @@ Ogni destinazione ha il **suo** `whsec_`. Railway Variables ≠ vault Cloud se g
 
 DNS `api.` live (12-Ott-2026): URL aggiornato a ``OMNIA_API_PUBLIC_URL` + `/api/billing/webhook`` + `whsec_` su Variable Railway.
 
+### Cleanup Emergent (15-Ott-2026)
+
+Stripe ha segnalato 404 su endpoint legacy:
+- `https://omnia-real-estate-1.preview.emergentagent.com/api/stripe/webhook`
+- (gemello) `https://omnia-crm-docs.preview.emergentagent.com/api/stripe/webhook`
+
+**Azione**: eliminati dalla Dashboard Test. Path sbagliato (`/api/stripe/webhook`) + host Emergent morto.  
+`scripts/sync-stripe-webhook-url.py` ora **prune** automatico di URL `emergentagent.com` o path `/api/stripe/webhook` a ogni sync Cloud.
+
 ---
 
 ## Variabili `.env` / vault (non committare)

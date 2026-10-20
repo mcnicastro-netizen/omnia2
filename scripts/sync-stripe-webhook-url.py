@@ -77,6 +77,23 @@ def main() -> int:
         print(f"[sync-stripe-webhook] list failed: {type(e).__name__}")
         return 1
 
+    # Prune obsolete Emergent preview endpoints (wrong path /api/stripe/webhook + dead hosts).
+    # Stripe emails 404 delivery failures until these are deleted (see D-124 / 15-Ott-2026).
+    for ep in list(existing):
+        url = (ep.get("url") or "").lower()
+        if "emergentagent.com" in url or url.rstrip("/").endswith("/api/stripe/webhook"):
+            eid = ep.get("id") or ""
+            try:
+                stripe.WebhookEndpoint.delete(eid)
+                print(f"[sync-stripe-webhook] DELETED obsolete endpoint {eid} ({url[:72]})")
+            except Exception as e:
+                print(f"[sync-stripe-webhook] DELETE obsolete failed {eid}: {type(e).__name__}")
+    try:
+        existing = stripe.WebhookEndpoint.list(limit=100).data
+    except Exception as e:
+        print(f"[sync-stripe-webhook] re-list failed: {type(e).__name__}")
+        return 1
+
     ours = [ep for ep in existing if (ep.get("description") or "") == ENDPOINT_DESC]
     # also match by path if description missing from older manual endpoints
     by_url = [ep for ep in existing if (ep.get("url") or "").endswith("/api/billing/webhook")]

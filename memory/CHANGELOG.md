@@ -1,3 +1,11 @@
+## 2026-10-15 — Stripe: eliminati webhook Emergent 404
+
+- Mail Stripe Test: 404 su `…emergentagent.com/api/stripe/webhook` (host morto + path errato)
+- Eliminati endpoint `we_1TyYUD…` (omnia-real-estate-1) e `we_1U1Ou2…` (omnia-crm-docs)
+- Restano: `OMNIA Railway API (sandbox)` → `/api/billing/webhook` + Cloud auto-sync tunnel
+- `sync-stripe-webhook-url.py`: prune automatico Emergent / path `/api/stripe/webhook`
+- Docs: `STRIPE_ONBOARDING.md` · `NEXT_SESSION.md`
+
 ## 2026-10-20 — D-130 Clone-from-URL P0 + no SKU «solo sito» (docs/HAL)
 
 - **D-130**: clone sito = blocco commerciale pari gravità Visual Staging; Brand Extractor ≠ clone
