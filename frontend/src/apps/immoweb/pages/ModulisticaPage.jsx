@@ -177,19 +177,48 @@ export default function ModulisticaPage() {
     }
   };
 
-  const download = async (id) => {
+  const download = async (id, { signed = false } = {}) => {
     try {
       const r = await api.get(`/app/modulistica/documents/${id}/download`, {
+        params: signed ? { signed: true } : undefined,
         responseType: "blob",
       });
       const url = URL.createObjectURL(r.data);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `modulistica_${id.slice(0, 8)}.pdf`;
+      a.download = `modulistica_${id.slice(0, 8)}${signed ? "_firmato" : ""}.pdf`;
       a.click();
       URL.revokeObjectURL(url);
     } catch {
       toast.error("Download non disponibile");
+    }
+  };
+
+  const syncEsign = async (id) => {
+    setBusy(true);
+    try {
+      const { data } = await api.post(`/app/modulistica/documents/${id}/sync-esign`);
+      if (data.status === "signed") {
+        toast.success(
+          data.downloaded
+            ? "Firmato — PDF YouTrust salvato in CRM"
+            : "Firmato — PDF firmato non ancora disponibile",
+        );
+      } else if (data.status === "void") {
+        toast.message("Richiesta firma chiusa", { description: data.esign?.message });
+      } else {
+        toast.message("Ancora in firma", { description: "YouTrust non ha completato tutti i firmatari." });
+      }
+      setSelectedDoc((prev) =>
+        prev?.id === id
+          ? { ...prev, status: data.status, esign: data.esign, signed_storage_path: data.signed_storage_path }
+          : prev,
+      );
+      await load();
+    } catch (err) {
+      toast.error(err?.response?.data?.detail || "Sync firma fallito");
+    } finally {
+      setBusy(false);
     }
   };
 
@@ -449,11 +478,15 @@ export default function ModulisticaPage() {
                         type="button"
                         data-testid="modulistica-download-selected"
                         className="border border-stone-300 px-3 py-2 text-xs uppercase tracking-widest"
-                        onClick={() => download(selectedDoc.id)}
+                        onClick={() =>
+                          download(selectedDoc.id, {
+                            signed: selectedDoc.status === "signed",
+                          })
+                        }
                       >
-                        Scarica PDF
+                        {selectedDoc.status === "signed" ? "Scarica PDF firmato" : "Scarica PDF"}
                       </button>
-                      {showSignPanel && (
+                      {showSignPanel && selectedDoc.status === "draft" && (
                         <button
                           type="button"
                           data-testid="modulistica-send-sign"
@@ -462,6 +495,17 @@ export default function ModulisticaPage() {
                           onClick={() => sendSign(selectedDoc.id)}
                         >
                           Invia firma
+                        </button>
+                      )}
+                      {selectedDoc.status === "sent" && (
+                        <button
+                          type="button"
+                          data-testid="modulistica-sync-esign"
+                          disabled={busy}
+                          className="border border-[#0B1E3F] text-[#0B1E3F] px-3 py-2 text-xs uppercase tracking-widest disabled:opacity-50"
+                          onClick={() => syncEsign(selectedDoc.id)}
+                        >
+                          Aggiorna stato firma
                         </button>
                       )}
                       {selectedDoc.status === "sent" && esign?.provider === "mock" && (

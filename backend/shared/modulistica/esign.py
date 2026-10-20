@@ -12,19 +12,37 @@ Env:
   ESIGN_PROVIDER=mock|yousign|docusign
   YOUSIGN_API_KEY=
   YOUSIGN_API_BASE=https://api-sandbox.yousign.app/v3
+  YOUSIGN_WEBHOOK_SECRET=   # 32-char HMAC secret for x-yousign-signature-256
   DOCUSIGN_ACCESS_TOKEN=
   DOCUSIGN_ACCOUNT_ID=
   DOCUSIGN_BASE_URL=https://demo.docusign.net/restapi
 """
 from __future__ import annotations
+import hashlib
+import hmac
 import logging
 import os
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
 from uuid import uuid4
 
 logger = logging.getLogger("omnia.esign")
+
+
+def verify_yousign_webhook_signature(
+    raw_body: bytes,
+    signature_header: Optional[str],
+    secret: Optional[str] = None,
+) -> bool:
+    """Validate YouTrust `x-yousign-signature-256` (HMAC-SHA256 of raw body)."""
+    secret = (secret if secret is not None else os.environ.get("YOUSIGN_WEBHOOK_SECRET") or "").strip()
+    header = (signature_header or "").strip()
+    if not secret or not header or not raw_body:
+        return False
+    digest = hmac.new(secret.encode("utf-8"), raw_body, hashlib.sha256).hexdigest()
+    expected = f"sha256={digest}"
+    return hmac.compare_digest(expected, header)
 
 
 @dataclass
@@ -100,6 +118,12 @@ class MockESignProvider(BaseESignProvider):
             message="Documento contrassegnato come firmato (mock).",
         )
 
+    async def download_completed_documents(self, external_id: str) -> Optional[bytes]:
+        return None
+
+    async def fetch_signature_status(self, external_id: str) -> Tuple[str, Dict[str, Any]]:
+        return "sent", {}
+
 
 class YousignProvider(BaseESignProvider):
     """Yousign API v3 — sandbox/production via YOUSIGN_API_BASE."""
@@ -111,6 +135,71 @@ class YousignProvider(BaseESignProvider):
         self.base = (os.environ.get("YOUSIGN_API_BASE") or "https://api-sandbox.yousign.app/v3").rstrip("/")
         if not self.api_key:
             raise RuntimeError("YOUSIGN_API_KEY missing")
+
+    def _headers(self) -> Dict[str, str]:
+        return {
+            "Authorization": f"Bearer {self.api_key}",
+            "Accept": "application/json",
+        }
+
+    async def fetch_signature_status(self, external_id: str) -> Tuple[str, Dict[str, Any]]:
+        """Map YouTrust SR status → OMNIA status (sent|signed|failed|void)."""
+        import httpx
+
+        if not external_id:
+            return "failed", {}
+        try:
+            async with httpx.AsyncClient(timeout=30.0) as client:
+                r = await client.get(
+                    f"{self.base}/signature_requests/{external_id}",
+                    headers=self._headers(),
+                )
+            if r.status_code >= 400:
+                return "failed", {"error": r.text[:300], "http": r.status_code}
+            data = r.json() if r.content else {}
+            ys = (data.get("status") or "").lower()
+            if ys == "done":
+                return "signed", data
+            if ys in ("declined", "canceled", "cancelled", "expired", "rejected"):
+                return "void", data
+            if ys in ("ongoing", "approval", "draft"):
+                return "sent", data
+            return "sent", data
+        except Exception as e:
+            logger.exception("Yousign status fetch failed")
+            return "failed", {"error": str(e)[:300]}
+
+    async def download_completed_documents(self, external_id: str) -> Optional[bytes]:
+        """Download completed (signed) PDF for a done signature request."""
+        import httpx
+
+        if not external_id:
+            return None
+        try:
+            async with httpx.AsyncClient(timeout=60.0) as client:
+                r = await client.get(
+                    f"{self.base}/signature_requests/{external_id}/documents/download",
+                    headers={
+                        "Authorization": f"Bearer {self.api_key}",
+                        "Accept": "application/pdf",
+                    },
+                    params={"version": "completed"},
+                )
+            if r.status_code >= 400:
+                logger.warning(
+                    "Yousign download failed %s: %s",
+                    r.status_code,
+                    (r.text or "")[:300],
+                )
+                return None
+            if not r.content or not r.content.startswith(b"%PDF"):
+                # zip or unexpected — try without Accept override
+                logger.warning("Yousign download: unexpected content-type/body")
+                return None
+            return r.content
+        except Exception:
+            logger.exception("Yousign download exception")
+            return None
 
     @staticmethod
     def _clean_person_name(value: str, fallback: str) -> str:

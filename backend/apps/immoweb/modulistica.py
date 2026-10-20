@@ -7,8 +7,13 @@ Endpoints under /api/app/modulistica:
   GET    /documents/{id}
   GET    /documents/{id}/download
   POST   /documents/{id}/send-sign
-  POST   /documents/{id}/mark-signed   (mock / webhook helper)
+  POST   /documents/{id}/sync-esign
+  POST   /documents/{id}/mark-signed   (mock / manual helper)
+  POST   /esign/webhook                (YouTrust — no auth, HMAC)
   GET    /esign/status
+
+PDF branding: hybrid/turnkey show OMNIA footer note; plan_type=whitelabel omits it
+(agency brand only — D-041). Same templates + e-sign for both.
 """
 from __future__ import annotations
 
@@ -17,7 +22,7 @@ from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 from uuid import uuid4
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Response
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response
 from pydantic import BaseModel, EmailStr, Field
 
 from shared.auth.dependencies import get_current_user, require_roles
@@ -25,7 +30,12 @@ from shared.auth.tenant import arequire_agency
 from shared.db.connection import Database
 from shared.modulistica.catalog import TEMPLATES, list_templates, get_template
 from shared.modulistica.pdf import render_modulistica_pdf
-from shared.modulistica.esign import get_esign_provider, MockESignProvider
+from shared.modulistica.esign import (
+    get_esign_provider,
+    MockESignProvider,
+    YousignProvider,
+    verify_yousign_webhook_signature,
+)
 from shared.storage import put_object, get_object, ObjStoreError
 
 logger = logging.getLogger("omnia.modulistica")
@@ -194,15 +204,71 @@ async def get_templates(user: dict = Depends(get_current_user)):
 async def esign_status(user: dict = Depends(get_current_user)):
     await arequire_agency(user)
     provider = get_esign_provider()
+    import os
+    whsec = bool((os.environ.get("YOUSIGN_WEBHOOK_SECRET") or "").strip())
     return {
         "provider": provider.name,
         "ready": True,
+        "webhook_configured": whsec if provider.name == "yousign" else provider.name == "mock",
         "note": (
             "Mock: demo locale senza account paid."
             if provider.name == "mock"
-            else f"Provider reale attivo: {provider.name}"
+            else (
+                f"Provider reale attivo: {provider.name}"
+                + (" · webhook OK" if whsec else " · webhook secret assente (usa sync-esign)")
+            )
         ),
+        "branding": "hybrid_and_whitelabel",
     }
+
+
+async def _store_signed_pdf(doc: dict, pdf_bytes: bytes) -> Optional[str]:
+    """Persist signed PDF next to draft; return storage path or None."""
+    if not pdf_bytes or not pdf_bytes.startswith(b"%PDF"):
+        return None
+    agency_id = doc.get("agency_id") or "unknown"
+    doc_id = doc.get("id") or uuid4().hex
+    path = f"omnia/modulistica/{agency_id}/{doc_id}.signed.pdf"
+    try:
+        put_object(path, pdf_bytes, "application/pdf")
+        return path
+    except ObjStoreError as e:
+        logger.warning("signed pdf store failed: %s", e)
+        return None
+
+
+async def _mark_document_signed(
+    db,
+    doc: dict,
+    *,
+    message: str,
+    event_id: Optional[str] = None,
+    signed_pdf: Optional[bytes] = None,
+) -> dict:
+    now = datetime.now(timezone.utc).isoformat()
+    esign = dict(doc.get("esign") or {})
+    esign["status"] = "signed"
+    esign["message"] = message
+    esign["updated_at"] = now
+    if event_id:
+        esign["last_event_id"] = event_id
+    updates: Dict[str, Any] = {
+        "esign": esign,
+        "status": "signed",
+        "updated_at": now,
+        "signed_at": now,
+    }
+    if signed_pdf:
+        path = await _store_signed_pdf(doc, signed_pdf)
+        if path:
+            updates["signed_storage_path"] = path
+            esign["signed_storage_path"] = path
+            updates["esign"] = esign
+    await db.modulistica_documents.update_one(
+        {"id": doc["id"]},
+        {"$set": updates},
+    )
+    return {**doc, **updates}
 
 
 @router.get("/documents")
@@ -306,7 +372,11 @@ async def get_document(doc_id: str, user: dict = Depends(get_current_user)):
 
 
 @router.get("/documents/{doc_id}/download")
-async def download_document(doc_id: str, user: dict = Depends(get_current_user)):
+async def download_document(
+    doc_id: str,
+    signed: bool = Query(False, description="Preferisci PDF firmato se disponibile"),
+    user: dict = Depends(get_current_user),
+):
     agency_id = await arequire_agency(user)
     db = Database.get()
     doc = await db.modulistica_documents.find_one(
@@ -314,11 +384,17 @@ async def download_document(doc_id: str, user: dict = Depends(get_current_user))
     )
     if not doc:
         raise HTTPException(404, "Documento non trovato")
+    prefer_signed = signed or doc.get("status") == "signed"
+    path = None
+    if prefer_signed:
+        path = doc.get("signed_storage_path") or (doc.get("esign") or {}).get("signed_storage_path")
+    path = path or doc.get("storage_path")
     try:
-        data, _mime = get_object(doc["storage_path"])
+        data, _mime = get_object(path)
     except ObjStoreError as e:
         raise HTTPException(404, f"file_missing: {e}") from e
-    filename = f"{doc.get('slug', 'documento')}_{doc_id[:8]}.pdf"
+    suffix = "firmato" if path and path.endswith(".signed.pdf") else "bozza"
+    filename = f"{doc.get('slug', 'documento')}_{doc_id[:8]}_{suffix}.pdf"
     return Response(
         content=data,
         media_type="application/pdf",
@@ -390,12 +466,98 @@ async def send_for_signature(
     return {"ok": True, "document_id": doc_id, "esign": esign_meta}
 
 
+@router.post("/documents/{doc_id}/sync-esign")
+async def sync_esign_status(
+    doc_id: str,
+    user: dict = Depends(require_roles("agency_admin", "agent", "super_admin", "branch_admin", "group_admin")),
+):
+    """Poll YouTrust status; if done, download signed PDF into CRM storage."""
+    agency_id = await arequire_agency(user)
+    db = Database.get()
+    doc = await db.modulistica_documents.find_one(
+        {"id": doc_id, "agency_id": agency_id}, {"_id": 0}
+    )
+    if not doc:
+        raise HTTPException(404, "Documento non trovato")
+    esign = doc.get("esign") or {}
+    external_id = esign.get("external_id") or ""
+    if not external_id:
+        raise HTTPException(400, "Nessuna richiesta firma collegata a questo documento.")
+    provider = get_esign_provider()
+    if not isinstance(provider, (YousignProvider, MockESignProvider)):
+        raise HTTPException(501, "sync_esign non supportato per questo provider")
+
+    if isinstance(provider, MockESignProvider):
+        updated = await _mark_document_signed(
+            db, doc, message="Firmato (mock sync).",
+        )
+        return {"ok": True, "status": "signed", "esign": updated.get("esign"), "downloaded": False}
+
+    # Already signed but missing PDF — retry download
+    if doc.get("status") == "signed" and not doc.get("signed_storage_path"):
+        if isinstance(provider, YousignProvider):
+            pdf = await provider.download_completed_documents(external_id)
+            if pdf:
+                path = await _store_signed_pdf(doc, pdf)
+                if path:
+                    esign = {**(doc.get("esign") or {}), "signed_storage_path": path}
+                    await db.modulistica_documents.update_one(
+                        {"id": doc_id, "agency_id": agency_id},
+                        {"$set": {"signed_storage_path": path, "esign": esign}},
+                    )
+                    return {
+                        "ok": True,
+                        "status": "signed",
+                        "esign": esign,
+                        "downloaded": True,
+                        "signed_storage_path": path,
+                    }
+        return {
+            "ok": True,
+            "status": "signed",
+            "esign": doc.get("esign"),
+            "downloaded": False,
+            "signed_storage_path": doc.get("signed_storage_path"),
+        }
+
+    status, raw = await provider.fetch_signature_status(external_id)
+    now = datetime.now(timezone.utc).isoformat()
+    if status == "signed":
+        pdf = await provider.download_completed_documents(external_id)
+        updated = await _mark_document_signed(
+            db,
+            doc,
+            message="Firma YouTrust completata (sync).",
+            signed_pdf=pdf,
+        )
+        return {
+            "ok": True,
+            "status": "signed",
+            "esign": updated.get("esign"),
+            "downloaded": bool(pdf),
+            "signed_storage_path": updated.get("signed_storage_path"),
+        }
+    if status == "void":
+        esign = {**esign, "status": "void", "message": "Richiesta firma annullata/scaduta/rifiutata.", "updated_at": now, "raw_status": (raw or {}).get("status")}
+        await db.modulistica_documents.update_one(
+            {"id": doc_id, "agency_id": agency_id},
+            {"$set": {"esign": esign, "status": "void", "updated_at": now}},
+        )
+        return {"ok": True, "status": "void", "esign": esign, "downloaded": False}
+    esign = {**esign, "status": "sent", "updated_at": now, "raw_status": (raw or {}).get("status")}
+    await db.modulistica_documents.update_one(
+        {"id": doc_id, "agency_id": agency_id},
+        {"$set": {"esign": esign, "updated_at": now}},
+    )
+    return {"ok": True, "status": "sent", "esign": esign, "downloaded": False}
+
+
 @router.post("/documents/{doc_id}/mark-signed")
 async def mark_signed(
     doc_id: str,
     user: dict = Depends(require_roles("agency_admin", "super_admin", "branch_admin", "group_admin")),
 ):
-    """Complete mock signature / manual confirmation after external webhook."""
+    """Complete mock signature / manual confirmation (fallback se webhook assente)."""
     agency_id = await arequire_agency(user)
     db = Database.get()
     doc = await db.modulistica_documents.find_one(
@@ -404,18 +566,129 @@ async def mark_signed(
     if not doc:
         raise HTTPException(404, "Documento non trovato")
     provider = get_esign_provider()
-    now = datetime.now(timezone.utc).isoformat()
     esign = doc.get("esign") or {}
+    signed_pdf = None
+    message = "Contrassegnato come firmato."
     if isinstance(provider, MockESignProvider) and esign.get("external_id"):
         result = await provider.mark_signed(esign["external_id"])
-        esign["status"] = result.status
-        esign["message"] = result.message
-    else:
-        esign["status"] = "signed"
-        esign["message"] = "Contrassegnato come firmato."
-    esign["updated_at"] = now
-    await db.modulistica_documents.update_one(
-        {"id": doc_id, "agency_id": agency_id},
-        {"$set": {"esign": esign, "status": "signed", "updated_at": now}},
+        message = result.message
+    elif isinstance(provider, YousignProvider) and esign.get("external_id"):
+        st, _ = await provider.fetch_signature_status(esign["external_id"])
+        if st == "signed":
+            signed_pdf = await provider.download_completed_documents(esign["external_id"])
+            message = "Firma YouTrust completata."
+        else:
+            message = "Contrassegnato come firmato (manuale — YouTrust non ancora done)."
+    updated = await _mark_document_signed(db, doc, message=message, signed_pdf=signed_pdf)
+    return {
+        "ok": True,
+        "status": "signed",
+        "esign": updated.get("esign"),
+        "downloaded": bool(signed_pdf),
+    }
+
+
+@router.post("/esign/webhook")
+async def yousign_esign_webhook(request: Request):
+    """YouTrust webhook: signature_request.done → status signed + PDF firmato.
+
+    Auth: HMAC `x-yousign-signature-256` with YOUSIGN_WEBHOOK_SECRET (required in prod).
+    Idempotent on event_id.
+    """
+    raw = await request.body()
+    sig = (
+        request.headers.get("x-yousign-signature-256")
+        or request.headers.get("X-Yousign-Signature-256")
+        or ""
     )
-    return {"ok": True, "status": "signed", "esign": esign}
+    import os
+    secret = (os.environ.get("YOUSIGN_WEBHOOK_SECRET") or "").strip()
+    if not secret:
+        logger.error("YOUSIGN_WEBHOOK_SECRET missing — rejecting webhook")
+        raise HTTPException(503, "webhook_secret_missing")
+    if not verify_yousign_webhook_signature(raw, sig, secret):
+        logger.warning("YouTrust webhook invalid signature")
+        raise HTTPException(400, "invalid_signature")
+
+    try:
+        import json
+        payload = json.loads(raw.decode("utf-8") or "{}")
+    except Exception as e:
+        raise HTTPException(400, f"invalid_json: {e}") from e
+
+    event_name = (payload.get("event_name") or "").strip()
+    event_id = (payload.get("event_id") or "").strip()
+    data = payload.get("data") or {}
+    sr = data.get("signature_request") or {}
+    external_id = (sr.get("id") or "").strip()
+
+    db = Database.get()
+    # Dedup
+    if event_id:
+        seen = await db.modulistica_esign_events.find_one({"event_id": event_id}, {"_id": 0, "event_id": 1})
+        if seen:
+            return {"ok": True, "duplicate": True}
+
+    if not external_id:
+        return {"ok": True, "ignored": True, "reason": "no_signature_request_id"}
+
+    doc = await db.modulistica_documents.find_one(
+        {"esign.external_id": external_id}, {"_id": 0}
+    )
+    if not doc:
+        logger.info("YouTrust webhook: unknown external_id=%s event=%s", external_id[:12], event_name)
+        if event_id:
+            await db.modulistica_esign_events.insert_one({
+                "event_id": event_id,
+                "event_name": event_name,
+                "external_id": external_id,
+                "handled": False,
+                "reason": "document_not_found",
+                "created_at": datetime.now(timezone.utc).isoformat(),
+            })
+        return {"ok": True, "ignored": True, "reason": "document_not_found"}
+
+    now = datetime.now(timezone.utc).isoformat()
+    handled = False
+    if event_name == "signature_request.done":
+        provider = get_esign_provider()
+        pdf = None
+        if isinstance(provider, YousignProvider):
+            pdf = await provider.download_completed_documents(external_id)
+        await _mark_document_signed(
+            db,
+            doc,
+            message="Firma YouTrust completata (webhook).",
+            event_id=event_id or None,
+            signed_pdf=pdf,
+        )
+        handled = True
+    elif event_name in (
+        "signature_request.declined",
+        "signature_request.canceled",
+        "signature_request.expired",
+        "signature_request.rejected",
+    ):
+        esign = dict(doc.get("esign") or {})
+        esign.update({
+            "status": "void",
+            "message": f"YouTrust: {event_name}",
+            "updated_at": now,
+            "last_event_id": event_id,
+        })
+        await db.modulistica_documents.update_one(
+            {"id": doc["id"]},
+            {"$set": {"esign": esign, "status": "void", "updated_at": now}},
+        )
+        handled = True
+
+    if event_id:
+        await db.modulistica_esign_events.insert_one({
+            "event_id": event_id,
+            "event_name": event_name,
+            "external_id": external_id,
+            "document_id": doc.get("id"),
+            "handled": handled,
+            "created_at": now,
+        })
+    return {"ok": True, "handled": handled, "event_name": event_name, "document_id": doc.get("id")}

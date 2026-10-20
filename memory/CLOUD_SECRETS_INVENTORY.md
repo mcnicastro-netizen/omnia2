@@ -69,9 +69,16 @@ Dopo il Save, **riavvia un nuovo agent** sullo stesso environment (i secret non 
 | `YOUSIGN_API_KEY` | **Sì** per firma sandbox/prod | YouTrust (ex Yousign) → API keys | Modulistica e-sign (`ESIGN_PROVIDER=yousign`) |
 | `ESIGN_PROVIDER` | Consigliato | `yousign` / `mock` / `docusign` | Default codice `mock`; con key sandbox usare `yousign` |
 | `YOUSIGN_API_BASE` | Opz. | default `https://api-sandbox.yousign.app/v3` | Host sandbox YouTrust |
+| `YOUSIGN_WEBHOOK_SECRET` | **Sì** se webhook | 32 char HMAC (`sync-yousign-webhook.py`) | `POST /api/app/modulistica/esign/webhook` |
 
 **YouTrust / Yousign sandbox (Environment omnia2)** — reiniettato Founder **20-Ott-2026** · **scadenza key 25/10/2026**.  
 Dopo il 25/10 rinnovare la key in console YouTrust o il provider tornerà a fallire / fallback mock.
+
+**Webhook YouTrust (modulistica)**: endpoint  
+``$OMNIA_API_PUBLIC_URL` + `/api/app/modulistica/esign/webhook``  
+(Cloud tunnel: stesso path sul SHARE_URL). Eventi: `signature_request.done|declined|canceled|expired`.  
+Sync: `python scripts/sync-yousign-webhook.py` (tunnel) o `--railway` (API pubblica).  
+Railway Variables: copiare `YOUSIGN_API_KEY` + `ESIGN_PROVIDER=yousign` + `YOUSIGN_WEBHOOK_SECRET` (stesso secret della subscription).
 
 **Ordine go-live**: 1) API Railway ✅ live (`docs/ops/RAILWAY_DEPLOY.md`) → vault Environment + DNS `api` → 2) FE Vercel (`docs/ops/VERCEL_DEPLOY.md` · **«vai Vercel»**).  
 Hetzner = bloccato (account/mail); ripresa opzionale dopo.

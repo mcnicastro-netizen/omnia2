@@ -130,6 +130,8 @@ if [[ -x "$ROOT/backend/.venv/bin/python" && -f /tmp/omnia-stack/SHARE_URL.txt ]
     --share-file /tmp/omnia-stack/SHARE_URL.txt --env "$ENV_FILE" || true
   "$ROOT/backend/.venv/bin/python" "$ROOT/scripts/sync-stripe-webhook-url.py" \
     --share-file /tmp/omnia-stack/SHARE_URL.txt || true
+  "$ROOT/backend/.venv/bin/python" "$ROOT/scripts/sync-yousign-webhook.py" \
+    --share-file /tmp/omnia-stack/SHARE_URL.txt || true
   set -e
 fi
 
