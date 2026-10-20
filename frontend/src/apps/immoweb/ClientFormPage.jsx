@@ -10,7 +10,10 @@ import { ENERGY_CLASS_LETTER_OPTIONS } from "../../shared/lib/energyClasses";
 const SEARCHER_TYPES = ["buyer", "tenant", "investor"];
 const SELLER_TYPES = ["seller", "landlord"];
 const CLIENT_TYPES = [...SEARCHER_TYPES, ...SELLER_TYPES];
-const CLIENT_STATUSES = ["new", "contacted", "qualified", "negotiating", "closed_won", "closed_lost", "archived"];
+const CLIENT_STATUSES = [
+  "new", "contacted", "qualified", "active", "hot",
+  "negotiating", "closed_won", "closed_lost", "archived",
+];
 
 const OPERATIONS = ["", "sale", "rent", "rent_to_buy", "auction"];
 const PROPERTY_TYPES = [
