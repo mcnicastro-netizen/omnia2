@@ -12,16 +12,30 @@ from shared.db.connection import Database
 from shared.auth.dependencies import get_current_user, require_roles
 from shared.models.client import (
     ClientInDB, ClientCreate, ClientUpdate, ClientListResponse,
-    ClientCSVPayload, SearchPreferences,
+    ClientCSVPayload, SearchPreferences, CLIENT_STATUS_ALIASES,
 )
 from shared.db.trash import soft_delete_fields, with_not_trashed
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/clients", tags=["clients"])
 
+_ALLOWED_CLIENT_STATUS = {
+    "new", "contacted", "qualified", "active", "hot",
+    "negotiating", "closed_won", "closed_lost", "archived",
+}
+
 
 def _strip(doc: dict) -> dict:
     return {k: v for k, v in doc.items() if k != "_id"}
+
+
+def _normalize_client_list_item(doc: dict) -> dict:
+    """Evita 500 ResponseValidationError su status legacy/sporchi in Mongo."""
+    out = dict(doc)
+    st = out.get("status")
+    if st not in _ALLOWED_CLIENT_STATUS:
+        out["status"] = CLIENT_STATUS_ALIASES.get(st, "new")
+    return out
 
 
 from shared.auth.tenant import arequire_agency as _agency
@@ -62,7 +76,10 @@ async def list_clients(
     total = await db.clients.count_documents(query)
     docs = await db.clients.find(query, {"_id": 0}).sort("created_at", -1).skip((page - 1) * page_size).limit(page_size).to_list(page_size)
     return {
-        "items": docs, "total": total, "page": page, "page_size": page_size,
+        "items": [_normalize_client_list_item(d) for d in docs],
+        "total": total,
+        "page": page,
+        "page_size": page_size,
     }
 
 

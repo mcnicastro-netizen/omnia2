@@ -1,6 +1,6 @@
 /**
- * OMNIA — Modulistica CRM (M5.S7) + firma elettronica (M5.S8)
- * Libreria template, generazione PDF white-label, invio firma (Yousign/DocuSign/mock).
+ * OMNIA — Modulistica CRM (M5.S7) + firma elettronica (M5.S8 / YouTrust)
+ * Template italiani, PDF white-label, invio firma multi-firmatario dove richiesto.
  */
 import { useEffect, useMemo, useState } from "react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
@@ -14,6 +14,63 @@ const STATUS_LABEL = {
   signed: "Firmato",
   void: "Annullato",
 };
+
+const ESIGN_LABEL = {
+  required: "Firma obbligatoria",
+  recommended: "Firma consigliata",
+  optional: "Firma opzionale",
+  none: "Solo PDF",
+};
+
+const ROLE_LABEL = {
+  buyer: "Acquirente",
+  seller: "Venditore",
+  landlord: "Locatore",
+  agency: "Agenzia / Mediatore",
+  client: "Cliente",
+};
+
+function emptySigner(role) {
+  return { role, first_name: "", last_name: "", email: "" };
+}
+
+function splitName(full) {
+  const parts = String(full || "")
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean);
+  if (!parts.length) return { first_name: "", last_name: "" };
+  if (parts.length === 1) return { first_name: parts[0], last_name: parts[0] };
+  return { first_name: parts[0], last_name: parts.slice(1).join(" ") };
+}
+
+/** Prefill firmatari da contesto PDF (cliente/immobile/agenzia) quando disponibile. */
+function buildSignersForTemplate(tpl, ctx = {}) {
+  const roles = tpl?.signers?.length ? tpl.signers : ["client"];
+  return roles.map((role) => {
+    const base = emptySigner(role);
+    let name = "";
+    let email = "";
+    if (role === "buyer") {
+      name = ctx.buyer_name || ctx.client_name || "";
+      email = ctx.buyer_email || ctx.client_email || "";
+    } else if (role === "seller") {
+      name = ctx.seller_name || "";
+      email = ctx.seller_email || "";
+    } else if (role === "landlord") {
+      name = ctx.landlord_name || ctx.seller_name || "";
+      email = ctx.landlord_email || ctx.seller_email || "";
+    } else if (role === "agency") {
+      name = ctx.agency_name || "";
+      email = ctx.agency_email || ctx.agency_pec || "";
+    } else if (role === "client") {
+      name = ctx.client_name || ctx.buyer_name || "";
+      email = ctx.client_email || ctx.buyer_email || "";
+    }
+    const { first_name, last_name } = splitName(name);
+    return { ...base, first_name, last_name, email };
+  });
+}
 
 export default function ModulisticaPage() {
   const { lang = "it" } = useParams();
@@ -29,11 +86,14 @@ export default function ModulisticaPage() {
   const [slug, setSlug] = useState("");
   const [propertyId, setPropertyId] = useState(preProperty);
   const [clientId, setClientId] = useState(preClient);
-  const [signEmail, setSignEmail] = useState("");
-  const [signFirstName, setSignFirstName] = useState("");
-  const [signLastName, setSignLastName] = useState("");
+  const [signers, setSigners] = useState([emptySigner("client")]);
   const [selectedDoc, setSelectedDoc] = useState(null);
   const [category, setCategory] = useState("all");
+
+  const selectedTpl = useMemo(
+    () => templates.find((t) => t.slug === slug) || null,
+    [templates, slug],
+  );
 
   const load = async () => {
     setLoading(true);
@@ -43,10 +103,14 @@ export default function ModulisticaPage() {
         api.get("/app/modulistica/documents", { params: { page_size: 50 } }),
         api.get("/app/modulistica/esign/status"),
       ]);
-      setTemplates(t.data.items || []);
+      const items = t.data.items || [];
+      setTemplates(items);
       setDocs(d.data.items || []);
       setEsign(e.data);
-      if (!slug && t.data.items?.[0]) setSlug(t.data.items[0].slug);
+      if (!slug && items[0]) {
+        setSlug(items[0].slug);
+        setSigners(buildSignersForTemplate(items[0], {}));
+      }
     } catch (err) {
       toast.error(err?.response?.data?.detail || "Impossibile caricare la modulistica");
     } finally {
@@ -59,6 +123,55 @@ export default function ModulisticaPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  useEffect(() => {
+    if (selectedTpl) {
+      setSigners(buildSignersForTemplate(selectedTpl, selectedDoc?.context || {}));
+    }
+  }, [selectedTpl?.slug]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    if (selectedDoc?.context && selectedTpl) {
+      setSigners(buildSignersForTemplate(selectedTpl, selectedDoc.context));
+    }
+  }, [selectedDoc?.id]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Sandbox YouTrust: niente webhook → poll periodico mentre il doc è «In firma»
+  useEffect(() => {
+    if (!selectedDoc?.id || selectedDoc.status !== "sent") return undefined;
+    if (esign?.completion_mode === "webhook") return undefined;
+    const id = selectedDoc.id;
+    const tick = async () => {
+      try {
+        const { data } = await api.post(`/app/modulistica/documents/${id}/sync-esign`);
+        if (data.status === "signed" || data.status === "void") {
+          setSelectedDoc((prev) =>
+            prev?.id === id
+              ? {
+                  ...prev,
+                  status: data.status,
+                  esign: data.esign,
+                  signed_storage_path: data.signed_storage_path,
+                }
+              : prev,
+          );
+          if (data.status === "signed") {
+            toast.success(
+              data.downloaded
+                ? "Firmato — PDF salvato in CRM"
+                : "Firmato su YouTrust",
+            );
+          }
+          await load();
+        }
+      } catch {
+        /* silent poll */
+      }
+    };
+    const t = setInterval(tick, 20000);
+    return () => clearInterval(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedDoc?.id, selectedDoc?.status, esign?.completion_mode]);
+
   const filtered = useMemo(() => {
     if (category === "all") return templates;
     return templates.filter((t) => t.category === category);
@@ -68,6 +181,12 @@ export default function ModulisticaPage() {
     const set = new Set(templates.map((t) => t.category));
     return ["all", ...Array.from(set)];
   }, [templates]);
+
+  const updateSigner = (idx, field, value) => {
+    setSigners((prev) =>
+      prev.map((s, i) => (i === idx ? { ...s, [field]: value } : s)),
+    );
+  };
 
   const generate = async () => {
     if (!slug) return;
@@ -81,7 +200,13 @@ export default function ModulisticaPage() {
       });
       toast.success("PDF generato — white-label agenzia");
       setSelectedDoc(data);
+      if (selectedTpl?.esign === "required" || selectedTpl?.esign === "recommended") {
+        toast.message("Prossimo passo: invia in firma YouTrust", {
+          description: ESIGN_LABEL[selectedTpl.esign],
+        });
+      }
       await load();
+      setSelectedDoc(data);
     } catch (err) {
       toast.error(err?.response?.data?.detail || "Generazione fallita");
     } finally {
@@ -89,15 +214,16 @@ export default function ModulisticaPage() {
     }
   };
 
-  const download = async (id) => {
+  const download = async (id, { signed = false } = {}) => {
     try {
       const r = await api.get(`/app/modulistica/documents/${id}/download`, {
+        params: signed ? { signed: true } : undefined,
         responseType: "blob",
       });
       const url = URL.createObjectURL(r.data);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `modulistica_${id.slice(0, 8)}.pdf`;
+      a.download = `modulistica_${id.slice(0, 8)}${signed ? "_firmato" : ""}.pdf`;
       a.click();
       URL.revokeObjectURL(url);
     } catch {
@@ -105,35 +231,68 @@ export default function ModulisticaPage() {
     }
   };
 
-  const sendSign = async (id) => {
-    if (!signEmail.trim()) {
-      toast.error("Inserisci l'email del firmatario");
-      return;
+  const syncEsign = async (id) => {
+    setBusy(true);
+    try {
+      const { data } = await api.post(`/app/modulistica/documents/${id}/sync-esign`);
+      if (data.status === "signed") {
+        toast.success(
+          data.downloaded
+            ? "Firmato — PDF YouTrust salvato in CRM"
+            : "Firmato — PDF firmato non ancora disponibile",
+        );
+      } else if (data.status === "void") {
+        toast.message("Richiesta firma chiusa", { description: data.esign?.message });
+      } else {
+        toast.message("Ancora in firma", { description: "YouTrust non ha completato tutti i firmatari." });
+      }
+      setSelectedDoc((prev) =>
+        prev?.id === id
+          ? { ...prev, status: data.status, esign: data.esign, signed_storage_path: data.signed_storage_path }
+          : prev,
+      );
+      await load();
+    } catch (err) {
+      toast.error(err?.response?.data?.detail || "Sync firma fallito");
+    } finally {
+      setBusy(false);
     }
-    const first = signFirstName.trim();
-    const last = signLastName.trim();
-    if (!first || !last) {
-      toast.error("Inserisci nome e cognome del firmatario");
-      return;
+  };
+
+  const sendSign = async (id) => {
+    const payload = [];
+    for (const s of signers) {
+      const first = (s.first_name || "").trim();
+      const last = (s.last_name || "").trim();
+      const email = (s.email || "").trim();
+      if (!email || !first || !last) {
+        toast.error(
+          `Completa nome, cognome ed email per: ${ROLE_LABEL[s.role] || s.role}`,
+        );
+        return;
+      }
+      payload.push({
+        name: `${first} ${last}`,
+        first_name: first,
+        last_name: last,
+        email,
+        role: s.role || "client",
+      });
     }
     setBusy(true);
     try {
       const { data } = await api.post(`/app/modulistica/documents/${id}/send-sign`, {
-        signers: [
-          {
-            name: `${first} ${last}`,
-            first_name: first,
-            last_name: last,
-            email: signEmail.trim(),
-            role: "client",
-          },
-        ],
+        signers: payload,
       });
       toast.success(data.esign?.message || "Richiesta firma inviata");
       if (data.esign?.sign_url) {
-        toast.message("Link firma (mock/provider)", { description: data.esign.sign_url });
+        toast.message("Link firma YouTrust", { description: data.esign.sign_url });
       }
-      setSelectedDoc((prev) => (prev?.id === id ? { ...prev, ...data, status: "sent", esign: data.esign } : prev));
+      setSelectedDoc((prev) =>
+        prev?.id === id
+          ? { ...prev, status: "sent", esign: data.esign }
+          : prev,
+      );
       await load();
     } catch (err) {
       toast.error(err?.response?.data?.detail || "Invio firma fallito");
@@ -155,6 +314,13 @@ export default function ModulisticaPage() {
     }
   };
 
+  const esignMode = selectedTpl?.esign || "optional";
+  const showSignPanel = esignMode !== "none";
+  const providerLabel =
+    esign?.provider === "yousign"
+      ? "YouTrust (Yousign)"
+      : esign?.provider || "—";
+
   return (
     <AgencyShell current="modulistica">
       <section data-testid="modulistica-page" className="max-w-5xl space-y-8">
@@ -168,12 +334,13 @@ export default function ModulisticaPage() {
             Modulistica white-label
           </h1>
           <p className="text-sm text-stone-600 max-w-2xl">
-            Template italiani auto-compilati da CRM, PDF brandizzati con i colori dell&apos;agenzia,
-            firma digitale via Yousign/DocuSign (mock in locale). Bozze operative — non parere legale.
+            Template italiani auto-compilati da CRM. Mandati, proposte e compliance si inviano in firma
+            elettronica YouTrust (OTP email). Bozze operative — non parere legale.
           </p>
           {esign && (
             <p className="text-xs text-stone-500" data-testid="modulistica-esign-status">
-              Firma: <span className="font-medium text-stone-800">{esign.provider}</span> — {esign.note}
+              Firma: <span className="font-medium text-stone-800">{providerLabel}</span>
+              {esign.ready ? " · pronto" : " · non pronto"} — {esign.note}
             </p>
           )}
         </header>
@@ -213,14 +380,33 @@ export default function ModulisticaPage() {
                     {filtered.map((t) => (
                       <option key={t.slug} value={t.slug}>
                         {t.name}
+                        {t.esign === "required" ? " · firma" : ""}
                       </option>
                     ))}
                   </select>
                 </label>
-                {filtered.find((t) => t.slug === slug)?.when_to_use && (
-                  <p className="text-xs text-stone-500">
-                    {filtered.find((t) => t.slug === slug).when_to_use}
-                  </p>
+                {selectedTpl && (
+                  <div className="text-xs text-stone-500 space-y-1" data-testid="modulistica-template-meta">
+                    <p>{selectedTpl.when_to_use}</p>
+                    <p>
+                      <span
+                        className={
+                          esignMode === "required"
+                            ? "text-rose-700 font-medium"
+                            : esignMode === "recommended"
+                              ? "text-amber-800 font-medium"
+                              : "text-stone-500"
+                        }
+                      >
+                        {ESIGN_LABEL[esignMode] || esignMode}
+                      </span>
+                      {" · "}
+                      Firmatari:{" "}
+                      {(selectedTpl.signers || [])
+                        .map((r) => ROLE_LABEL[r] || r)
+                        .join(" + ")}
+                    </p>
+                  </div>
                 )}
                 <label className="block text-sm space-y-1">
                   <span className="text-stone-600">ID immobile (opzionale)</span>
@@ -258,65 +444,116 @@ export default function ModulisticaPage() {
 
               <div className="space-y-4 border border-stone-200 bg-white p-5" data-testid="modulistica-sign-panel">
                 <h2 className="text-sm uppercase tracking-widest text-stone-500">Invia in firma</h2>
-                <p className="text-xs text-stone-500">
-                  Provider: <strong>{esign?.provider || "—"}</strong>. Nessuna firma qualificata proprietaria
-                  (D-042): usiamo Yousign/DocuSign.
-                </p>
-                <label className="block text-sm space-y-1">
-                  <span className="text-stone-600">Nome firmatario</span>
-                  <input
-                    data-testid="modulistica-signer-first"
-                    className="w-full border border-stone-300 px-3 py-2 text-sm"
-                    value={signFirstName}
-                    onChange={(e) => setSignFirstName(e.target.value)}
-                    placeholder="Marco"
-                  />
-                </label>
-                <label className="block text-sm space-y-1">
-                  <span className="text-stone-600">Cognome firmatario</span>
-                  <input
-                    data-testid="modulistica-signer-last"
-                    className="w-full border border-stone-300 px-3 py-2 text-sm"
-                    value={signLastName}
-                    onChange={(e) => setSignLastName(e.target.value)}
-                    placeholder="Nicastro"
-                  />
-                </label>
-                <label className="block text-sm space-y-1">
-                  <span className="text-stone-600">Email firmatario</span>
-                  <input
-                    data-testid="modulistica-signer-email"
-                    type="email"
-                    className="w-full border border-stone-300 px-3 py-2 text-sm"
-                    value={signEmail}
-                    onChange={(e) => setSignEmail(e.target.value)}
-                  />
-                </label>
+                {!showSignPanel ? (
+                  <p className="text-xs text-stone-500" data-testid="modulistica-esign-none">
+                    Questo template è una comunicazione PDF: non richiede firma elettronica.
+                  </p>
+                ) : (
+                  <>
+                    <p className="text-xs text-stone-500">
+                      Provider: <strong>{providerLabel}</strong>. OTP via email (YouTrust).
+                      Nessuna firma qualificata proprietaria (D-042).
+                      {esignMode === "required" && (
+                        <span className="block mt-1 text-rose-700">
+                          Per mandati e proposte completa tutti i firmatari sotto.
+                        </span>
+                      )}
+                    </p>
+                    {signers.map((s, idx) => (
+                      <div
+                        key={`${s.role}-${idx}`}
+                        className="space-y-2 border border-stone-100 p-3"
+                        data-testid={`modulistica-signer-${idx}`}
+                      >
+                        <p className="text-[10px] uppercase tracking-widest text-stone-500">
+                          {ROLE_LABEL[s.role] || s.role}
+                        </p>
+                        <div className="grid grid-cols-2 gap-2">
+                          <label className="block text-sm space-y-1">
+                            <span className="text-stone-600">Nome</span>
+                            <input
+                              data-testid={`modulistica-signer-first-${idx}`}
+                              className="w-full border border-stone-300 px-3 py-2 text-sm"
+                              value={s.first_name}
+                              onChange={(e) => updateSigner(idx, "first_name", e.target.value)}
+                            />
+                          </label>
+                          <label className="block text-sm space-y-1">
+                            <span className="text-stone-600">Cognome</span>
+                            <input
+                              data-testid={`modulistica-signer-last-${idx}`}
+                              className="w-full border border-stone-300 px-3 py-2 text-sm"
+                              value={s.last_name}
+                              onChange={(e) => updateSigner(idx, "last_name", e.target.value)}
+                            />
+                          </label>
+                        </div>
+                        <label className="block text-sm space-y-1">
+                          <span className="text-stone-600">Email</span>
+                          <input
+                            data-testid={`modulistica-signer-email-${idx}`}
+                            type="email"
+                            className="w-full border border-stone-300 px-3 py-2 text-sm"
+                            value={s.email}
+                            onChange={(e) => updateSigner(idx, "email", e.target.value)}
+                          />
+                        </label>
+                      </div>
+                    ))}
+                  </>
+                )}
                 {selectedDoc ? (
                   <div className="space-y-2 text-sm">
                     <p className="text-stone-700">
                       Selezionato: <strong>{selectedDoc.title}</strong>{" "}
-                      <span className="text-stone-400">({STATUS_LABEL[selectedDoc.status] || selectedDoc.status})</span>
+                      <span className="text-stone-400">
+                        ({STATUS_LABEL[selectedDoc.status] || selectedDoc.status})
+                      </span>
                     </p>
                     <div className="flex flex-wrap gap-2">
                       <button
                         type="button"
                         data-testid="modulistica-download-selected"
                         className="border border-stone-300 px-3 py-2 text-xs uppercase tracking-widest"
-                        onClick={() => download(selectedDoc.id)}
+                        onClick={() =>
+                          download(selectedDoc.id, {
+                            signed: selectedDoc.status === "signed",
+                          })
+                        }
                       >
-                        Scarica PDF
+                        {selectedDoc.status === "signed" ? "Scarica PDF firmato" : "Scarica PDF"}
                       </button>
-                      <button
-                        type="button"
-                        data-testid="modulistica-send-sign"
-                        disabled={busy}
-                        className="bg-[#0B1E3F] text-white px-3 py-2 text-xs uppercase tracking-widest disabled:opacity-50"
-                        onClick={() => sendSign(selectedDoc.id)}
-                      >
-                        Invia firma
-                      </button>
+                      {showSignPanel && selectedDoc.status === "draft" && (
+                        <button
+                          type="button"
+                          data-testid="modulistica-send-sign"
+                          disabled={busy || !esign?.ready}
+                          className="bg-[#0B1E3F] text-white px-3 py-2 text-xs uppercase tracking-widest disabled:opacity-50"
+                          onClick={() => sendSign(selectedDoc.id)}
+                        >
+                          Invia firma
+                        </button>
+                      )}
                       {selectedDoc.status === "sent" && (
+                        <>
+                          <button
+                            type="button"
+                            data-testid="modulistica-sync-esign"
+                            disabled={busy}
+                            className="bg-[#0B1E3F] text-white px-3 py-2 text-xs uppercase tracking-widest disabled:opacity-50"
+                            onClick={() => syncEsign(selectedDoc.id)}
+                          >
+                            Aggiorna stato firma
+                          </button>
+                          {esign?.sandbox || esign?.completion_mode === "poll" ? (
+                            <p className="w-full text-[11px] text-stone-500" data-testid="modulistica-poll-hint">
+                              Sandbox YouTrust: niente webhook. Dopo l&apos;OTP clicca qui
+                              (o attendi il controllo automatico ogni 20s).
+                            </p>
+                          ) : null}
+                        </>
+                      )}
+                      {selectedDoc.status === "sent" && esign?.provider === "mock" && (
                         <button
                           type="button"
                           data-testid="modulistica-mark-signed"
@@ -324,7 +561,7 @@ export default function ModulisticaPage() {
                           className="border border-emerald-700 text-emerald-800 px-3 py-2 text-xs uppercase tracking-widest"
                           onClick={() => markSigned(selectedDoc.id)}
                         >
-                          Segna firmato
+                          Segna firmato (mock)
                         </button>
                       )}
                     </div>
@@ -341,51 +578,64 @@ export default function ModulisticaPage() {
                 <p className="text-sm text-stone-500">Nessun documento ancora. Genera il primo template.</p>
               ) : (
                 <ul className="divide-y divide-stone-200 border border-stone-200 bg-white">
-                  {docs.map((d) => (
-                    <li
-                      key={d.id}
-                      className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 px-4 py-3"
-                      data-testid={`modulistica-doc-${d.id}`}
-                    >
-                      <div>
+                  {docs.map((d) => {
+                    const tpl = templates.find((t) => t.slug === d.slug);
+                    return (
+                      <li
+                        key={d.id}
+                        className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 px-4 py-3"
+                        data-testid={`modulistica-doc-${d.id}`}
+                      >
+                        <div>
+                          <button
+                            type="button"
+                            className="text-left text-sm font-medium text-stone-900 hover:underline"
+                            onClick={() => {
+                              setSelectedDoc(d);
+                              if (d.slug) setSlug(d.slug);
+                            }}
+                          >
+                            {d.title}
+                          </button>
+                          <p className="text-xs text-stone-500">
+                            {d.slug} · {STATUS_LABEL[d.status] || d.status}
+                            {tpl?.esign ? ` · ${ESIGN_LABEL[tpl.esign] || tpl.esign}` : ""}
+                            {d.esign?.provider ? ` · ${d.esign.provider}` : ""}
+                            {d.property_id ? (
+                              <>
+                                {" · "}
+                                <Link
+                                  className="text-emerald-800 hover:underline"
+                                  to={`/${lang}/app/properties/${d.property_id}/fascicolo`}
+                                >
+                                  Fascicolo
+                                </Link>
+                              </>
+                            ) : null}
+                          </p>
+                        </div>
                         <button
                           type="button"
-                          className="text-left text-sm font-medium text-stone-900 hover:underline"
-                          onClick={() => setSelectedDoc(d)}
+                          className="text-xs uppercase tracking-widest border border-stone-300 px-3 py-1.5 self-start"
+                          onClick={() => download(d.id)}
                         >
-                          {d.title}
+                          PDF
                         </button>
-                        <p className="text-xs text-stone-500">
-                          {d.slug} · {STATUS_LABEL[d.status] || d.status}
-                          {d.property_id ? (
-                            <>
-                              {" · "}
-                              <Link
-                                className="text-emerald-800 hover:underline"
-                                to={`/${lang}/app/properties/${d.property_id}/fascicolo`}
-                              >
-                                Fascicolo
-                              </Link>
-                            </>
-                          ) : null}
-                        </p>
-                      </div>
-                      <button
-                        type="button"
-                        className="text-xs uppercase tracking-widest border border-stone-300 px-3 py-1.5 self-start"
-                        onClick={() => download(d.id)}
-                      >
-                        PDF
-                      </button>
-                    </li>
-                  ))}
+                      </li>
+                    );
+                  })}
                 </ul>
               )}
             </div>
 
             <div className="text-xs text-stone-500 space-y-1 border-t border-stone-200 pt-4">
-              <p>API white-label: <code>GET /api/v1/modulistica/templates</code> · <code>POST /api/v1/modulistica/render</code> (2 crediti)</p>
-              <p>Env firma: <code>ESIGN_PROVIDER=mock|yousign|docusign</code></p>
+              <p>
+                Firma richiesta: mandato vendita/locazione, proposta acquisto. Consigliata: preliminare,
+                privacy, AML. Solo PDF: lettera condòmini.
+              </p>
+              <p>
+                YouTrust sandbox = OTP email + «Aggiorna stato firma» (poll). Webhook solo in produzione.
+              </p>
             </div>
           </>
         )}

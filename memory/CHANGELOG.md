@@ -1,3 +1,11 @@
+## 2026-10-19 — D-129 tre promesse + opportunità mandati (codice)
+
+- **D-129** posizionamento vincolante: Portale · Academy · Mandati in esclusiva — prove misurabili, anti-appiattimento vs Arcanis
+- Coda CRM `mandate_opportunities`: upsert da match privati (D-126), funnel new→contacted→appointment→mandate_won
+- API `GET/PATCH /app/mandate-opportunities` + `GET …/proof` (tre pilastri; Academy = not_implemented onesto)
+- UI `/app/mandate-opportunities`, nav Mandati, KPI dashboard + coda «Oggi»
+- Inbox match portale punta alla coda mandati (non solo richiesta)
+
 ## 2026-10-19 — D-125/D-128 + privati B2C (listino, boost, match, HAL)
 
 - **D-125** Accesso agli atti = copia progetto comunale · no wallet · box spento (canonica)

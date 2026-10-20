@@ -6,8 +6,30 @@ from uuid import uuid4
 from shared.models.base import TenantModel, OmniaBaseModel
 
 ClientType = Literal["buyer", "seller", "tenant", "landlord", "investor"]
-ClientStatus = Literal["new", "contacted", "qualified", "negotiating", "closed_won", "closed_lost", "archived"]
+# `active` / `hot` usati da seed, AI import e filtri smart/dashboard — devono restare
+# ammessi in response model altrimenti GET /clients esplode (ResponseValidationError).
+ClientStatus = Literal[
+    "new",
+    "contacted",
+    "qualified",
+    "active",
+    "hot",
+    "negotiating",
+    "closed_won",
+    "closed_lost",
+    "archived",
+]
 LeadStatus = Literal["new", "contacted", "visit_scheduled", "visited", "offer_made", "won", "lost"]
+
+# Status legacy/sporchi → canonicali in lettura lista (difesa in profondità)
+CLIENT_STATUS_ALIASES = {
+    "in_progress": "active",
+    "working": "active",
+    "warm": "hot",
+    "cold": "contacted",
+    "won": "closed_won",
+    "lost": "closed_lost",
+}
 
 
 class SearchPreferences(OmniaBaseModel):

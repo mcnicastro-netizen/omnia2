@@ -70,6 +70,15 @@ sync_runtime_public_urls() {
     "$py" "$ROOT/scripts/sync-stripe-webhook-url.py" --url "$public_url" 2>&1 \
       | sed 's/^/[omnia-stack] /' >&2 || true
   fi
+  if [[ -f "$ROOT/scripts/sync-yousign-webhook.py" ]]; then
+    local ys_out
+    ys_out="$("$py" "$ROOT/scripts/sync-yousign-webhook.py" --url "$public_url" 2>&1 || true)"
+    echo "$ys_out" | sed 's/^/[omnia-stack] /' >&2 || true
+    # Bounce API only when a *new* webhook secret was written to .env
+    if echo "$ys_out" | grep -q 'YOUSIGN_WEBHOOK_SECRET persisted'; then
+      changed=1
+    fi
+  fi
   # Uvicorn --reload does not re-read env; bounce API only when public base URL changed
   if [[ "$changed" == "1" ]]; then
     echo "[omnia-stack] public base URL changed — restarting API so FRONTEND_* take effect" >&2

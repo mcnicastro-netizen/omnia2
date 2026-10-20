@@ -1,8 +1,12 @@
 # Prossima sessione — programma passi
 
-**Aggiornato**: 19 Ottobre 2026 — **D-125/D-128 + listino B2C v1.4 + privati/boost**  
+**Aggiornato**: 20 Ottobre 2026 — **YouTrust sandbox reiniettata** (+ D-129/mandati in main)  
 **Repo**: https://github.com/mcnicastro-netizen/omnia2 ✅  
-**Branch merge**: `cursor/private-listings-audit-8e9b` → `cursor/staging-quality-v2-8e9b` → `main` (Founder «mergera»)
+**Branch**: `main`
+
+**YouTrust / Yousign**: vault `YOUSIGN_API_KEY` + `ESIGN_PROVIDER=yousign` · smoke OTP **OK** 20-Ott · **scadenza key 25/10/2026**.  
+**Sandbox: niente webhook** → completion con `sync-esign` / «Aggiorna stato firma» (+ poll UI 20s). Webhook solo in produzione.  
+PDF firmato: `sync-esign` quando YouTrust è `done` → `signed_storage_path`.
 
 ---
 
@@ -11,7 +15,8 @@
 | Ruolo | Doc |
 |-------|-----|
 | Freccia | [`docs/audit/OMNIA_COERENZA_SISTEMA.md`](../docs/audit/OMNIA_COERENZA_SISTEMA.md) — S1–S10 ✅ |
-| **Ultimo ship** | **D-125** Accesso atti · **D-126** match privati · **D-127** boost densità · **D-128** staging €1,49 Nano Banana |
+| **Posizionamento** | **D-129** — Portale · Academy · Mandati (prove misurabili; no appiattimento) |
+| **Ultimo ship** | Coda **Opportunità mandati** + `GET …/proof` · D-125…D-128 invariati |
 | Listino B2C | [`memory/PRICING_B2C.md`](./PRICING_B2C.md) **v1.4** |
 | **API Railway** | [`docs/ops/RAILWAY_DEPLOY.md`](../docs/ops/RAILWAY_DEPLOY.md) — D-123 |
 | **Vercel FE** | [`docs/ops/VERCEL_DEPLOY.md`](./VERCEL_DEPLOY.md) — D-074 |
@@ -19,12 +24,12 @@
 
 ---
 
-## ⏭️ Primo passo tipico
+## ⏭️ Primo passo tipico (prove, non pitch)
 
-1. **HAL reindex** post-merge: `POST /api/app/hal/knowledge/reindex?force=true` (super_admin)
-2. Collegare i 3 box SellPage alle pagine servizio (APE / planimetria / atti) — atti resta «Presto disponibile» finché partner D-125
-3. Merge/cablaggio Nano Banana da `cursor/staging-agent-specialized-8e9b` se non già in main
-4. Smoke Founder: Sell staging €1,49 · boost · slot dal 3° · messaggi di attesa
+1. **Pilota mandati** su `demo-agency-001`: annuncio privato approvato → match richiesta → UI `/app/mandate-opportunities` → avanzare funnel → leggere `/proof`
+2. **Portale**: verificare KPI «Contatti portale (7gg)» + `pillars.portal` in proof
+3. **Academy**: non claimare; solo sblocco M6 quando Founder riapre
+4. Smoke B2C invariato: staging €1,49 · boost · slot · Stripe Test
 5. Quando pronto: Stripe **Live** webhook (non Test)
 
 ---

@@ -5,6 +5,8 @@ import { useTranslation } from "react-i18next";
 const KPI_HREF = {
   properties_active: "properties",
   leads_open: "requests",
+  mandate_opportunities: "mandate-opportunities",
+  portal_leads_7d: "requests",
   matches_week: "matches",
   visits_week: "properties",
   members_active: "members",
