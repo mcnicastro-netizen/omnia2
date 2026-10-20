@@ -6,6 +6,10 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 export PATH="${HOME}/.railway/bin:${PATH}"
 
 echo "=== railway-golive-probe ==="
+if [[ -x "$ROOT/scripts/railway_token_kind.py" ]] || [[ -f "$ROOT/scripts/railway_token_kind.py" ]]; then
+  echo "--- token kind ---"
+  python3 "$ROOT/scripts/railway_token_kind.py" || true
+fi
 bash "$ROOT/scripts/railway-prep-check.sh"
 
 API_TOKEN="${RAILWAY_API_TOKEN:-}"
