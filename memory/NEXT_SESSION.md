@@ -1,8 +1,10 @@
 # Prossima sessione — programma passi
 
-**Aggiornato**: 20 Ottobre 2026 — **D-130 clone P0 + listino no «solo sito»**  
+**Aggiornato**: 20 Ottobre 2026 — **D-130 clone P0** + YouTrust sandbox (scadenza key **25/10/2026**)  
 **Repo**: https://github.com/mcnicastro-netizen/omnia2 ✅  
-**Branch docs**: `cursor/clone-gap-p0-docs-8e9b`
+**Branch docs**: `main` (D-130 merged)
+
+**YouTrust / Yousign**: vault Environment `YOUSIGN_API_KEY` + `ESIGN_PROVIDER=yousign` · smoke OTP OK 20-Ott · **scadenza key 25/10/2026** — rinnovare in console prima di quella data.
 
 ---
 
@@ -37,6 +39,7 @@
 |------|------|
 | **D-130** | Vietato promettere «cloniamo il sito» finché preview clone non esiste |
 | **D-023** | Decisione clone ancora valida; codice incompleto (solo Brand Extractor) |
+| **YouTrust key** | Scadenza sandbox **25/10/2026** — rinnovare o firma torna mock |
 | **D-125** | Accesso atti = progetto comunale · no wallet |
 | **D-128** | Staging B2C €1,49 |
 | **HAL reindex** | Dopo merge Cap.8 / YAML sito |
@@ -53,5 +56,6 @@
 | D-124…D-129 | ✅ registrati |
 | D-130 clone P0 + no solo-sito | ✅ decisione · codice ⏳ |
 | A-037 demo da sito | 🟠 aperta (sotto D-130) |
+| YouTrust sandbox vault | ⚠️ key fino al 25/10 |
 | Link box APE/planimetria/atti | ⏳ |
 | Stripe Live | ⏳ |

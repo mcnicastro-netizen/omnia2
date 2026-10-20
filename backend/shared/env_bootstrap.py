@@ -55,6 +55,12 @@ _VAULT_PROTECTED: frozenset[str] = frozenset(
         "OPENAPI_MODE",
         "OPENAPI_CATASTO_BASE",
         "OPENAPI_OAUTH_BASE",
+        "YOUSIGN_API_KEY",
+        "YOUSIGN_API_BASE",
+        "ESIGN_PROVIDER",
+        "DOCUSIGN_ACCESS_TOKEN",
+        "DOCUSIGN_ACCOUNT_ID",
+        "DOCUSIGN_BASE_URL",
     }
 )
 

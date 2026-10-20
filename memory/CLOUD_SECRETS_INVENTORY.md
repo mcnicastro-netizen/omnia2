@@ -66,6 +66,12 @@ Dopo il Save, **riavvia un nuovo agent** sullo stesso environment (i secret non 
 | `OMNIA_API_PUBLIC_URL` | **Sì** | `OMNIA_API_PUBLIC_URL` (solo URL) | `REACT_APP_BACKEND_URL` a build FE |
 | `CLOUDFLARE_API_TOKEN` | Consigliato E2E DNS | CF → API Tokens (Zone.DNS Edit) | Aggiornare CNAME post-Vercel/API |
 | `CLOUDFLARE_ZONE_ID` | Consigliato E2E DNS | CF → dominio → Overview | API DNS |
+| `YOUSIGN_API_KEY` | **Sì** per firma sandbox/prod | YouTrust (ex Yousign) → API keys | Modulistica e-sign (`ESIGN_PROVIDER=yousign`) |
+| `ESIGN_PROVIDER` | Consigliato | `yousign` / `mock` / `docusign` | Default codice `mock`; con key sandbox usare `yousign` |
+| `YOUSIGN_API_BASE` | Opz. | default `https://api-sandbox.yousign.app/v3` | Host sandbox YouTrust |
+
+**YouTrust / Yousign sandbox (Environment omnia2)** — reiniettato Founder **20-Ott-2026** · **scadenza key 25/10/2026**.  
+Dopo il 25/10 rinnovare la key in console YouTrust o il provider tornerà a fallire / fallback mock.
 
 **Ordine go-live**: 1) API Railway ✅ live (`docs/ops/RAILWAY_DEPLOY.md`) → vault Environment + DNS `api` → 2) FE Vercel (`docs/ops/VERCEL_DEPLOY.md` · **«vai Vercel»**).  
 Hetzner = bloccato (account/mail); ripresa opzionale dopo.
