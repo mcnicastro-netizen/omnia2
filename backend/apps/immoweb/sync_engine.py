@@ -288,6 +288,8 @@ def start_scheduler() -> None:
     try:
         from apscheduler.schedulers.asyncio import AsyncIOScheduler
         from apscheduler.triggers.cron import CronTrigger
+        from apscheduler.triggers.interval import IntervalTrigger
+        from datetime import datetime as _dt, timezone as _tz
     except ImportError:
         logger.warning("APScheduler not installed — daily sync disabled")
         return
@@ -439,14 +441,15 @@ def start_scheduler() -> None:
             _mark_job("private_listing_request_matching", ok=False, detail=str(e))
             logger.warning("private listing→requests matching failed: %s", e)
 
-    # Dopo matching CRM agenzia (02:30): privati → richieste (tutte, anche non MLS)
+    # Privati → richieste / mandati: ogni ora (non solo 02:45) + catch-up immediato
     sched.add_job(
         _private_listing_match_tick,
-        CronTrigger(hour=2, minute=45),
+        IntervalTrigger(hours=1),
         id="private_listing_request_matching",
         replace_existing=True,
         max_instances=1,
         coalesce=True,
+        next_run_time=_dt.now(_tz.utc),
     )
 
     sched.start()
@@ -454,7 +457,7 @@ def start_scheduler() -> None:
     logger.info(
         "Publishing scheduler started (D-108 owner=apscheduler; daily sync %02d:%02d UTC + "
         "saved-searches every 5m + backup 03:15 UTC + request-matching 02:30 UTC + "
-        "private-listing→requests 02:45 UTC + b2c paid-listing expire 04:00 UTC)",
+        "private-listing→requests hourly(+boot catch-up) + b2c paid-listing expire 04:00 UTC)",
         DAILY_SYNC_HOUR_UTC, DAILY_SYNC_MINUTE_UTC,
     )
 

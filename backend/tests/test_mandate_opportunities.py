@@ -59,8 +59,28 @@ def test_public_contact_strips_hidden_channels():
 
 
 def test_statuses_and_funnel_constants():
-    from apps.immoweb.mandate_opportunities import STATUSES, OPEN_STATUSES
+    from apps.immoweb.mandate_opportunities import STATUSES, OPEN_STATUSES, DISMISS_REASONS
 
     assert "mandate_won" in STATUSES
     assert "new" in OPEN_STATUSES
     assert "mandate_won" not in OPEN_STATUSES
+    assert "no_response" in DISMISS_REASONS
+
+
+def test_dismiss_requires_reason_in_patch_signature():
+    from apps.immoweb.mandate_opportunities import StatusPatch, patch_opportunity
+    import inspect
+
+    fields = StatusPatch.model_fields
+    assert "dismiss_reason" in fields
+    src = inspect.getsource(patch_opportunity)
+    assert "dismiss_reason_required" in src
+
+
+def test_create_mandate_endpoint_exists():
+    from apps.immoweb import mandate_opportunities as mo
+    import inspect
+
+    src = inspect.getsource(mo)
+    assert "create_mandate_from_opportunity" in src
+    assert "created_property_id" in src

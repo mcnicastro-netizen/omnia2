@@ -357,6 +357,24 @@ export default function RequestFormPage() {
             />
             <span>{t("requests.field_auto_match")}</span>
           </label>
+          {!!form.auto_match && (() => {
+            const cities = Array.isArray(form.criteria.cities)
+              ? form.criteria.cities
+              : String(form.criteria.cities || "").split(",").map((x) => x.trim()).filter(Boolean);
+            const hasCity = cities.length > 0;
+            const hasPrice = form.criteria.price_min !== "" || form.criteria.price_max !== "";
+            const hasSurface = form.criteria.surface_min !== "" || form.criteria.surface_max !== "";
+            if (hasCity && hasPrice && hasSurface) return null;
+            return (
+              <p
+                data-testid="request-auto-match-gate"
+                className="text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded px-3 py-2"
+              >
+                Auto-match attivo solo con città + fascia prezzo + mq.
+                Senza questi campi resta spento (niente rumore sul portale).
+              </p>
+            );
+          })()}
 
           <fieldset className="border border-stone-200 rounded-md p-4 space-y-3">
             <legend className="text-xs uppercase tracking-widest text-stone-500 px-1">{t("requests.section_tolerances")}</legend>

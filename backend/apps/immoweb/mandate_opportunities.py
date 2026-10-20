@@ -27,6 +27,15 @@ logger = logging.getLogger("omnia.mandate_opportunities")
 COLLECTION = "mandate_opportunities"
 STATUSES = ("new", "contacted", "appointment", "mandate_won", "lost", "dismissed")
 OPEN_STATUSES = ("new", "contacted", "appointment")
+DISMISS_REASONS = (
+    "no_response",
+    "already_mandated",
+    "price_unrealistic",
+    "out_of_area",
+    "low_demand_quality",
+    "duplicate",
+    "other",
+)
 
 router = APIRouter(prefix="/mandate-opportunities", tags=["mandate-opportunities"])
 
@@ -177,6 +186,10 @@ class StatusPatch(BaseModel):
     status: str = Field(..., description="new|contacted|appointment|mandate_won|lost|dismissed")
     notes: Optional[str] = None
     assigned_agent_id: Optional[str] = None
+    dismiss_reason: Optional[str] = Field(
+        default=None,
+        description="Obbligatorio se status=dismissed: " + "|".join(DISMISS_REASONS),
+    )
 
 
 @router.get("/proof")
@@ -322,6 +335,13 @@ async def patch_opportunity(
     """Avanza il funnel acquisizione (contatto → appuntamento → mandato)."""
     if body.status not in STATUSES:
         raise HTTPException(status_code=400, detail="invalid_status")
+    if body.status == "dismissed":
+        reason = (body.dismiss_reason or "").strip()
+        if reason not in DISMISS_REASONS:
+            raise HTTPException(
+                status_code=400,
+                detail=f"dismiss_reason_required ({'|'.join(DISMISS_REASONS)})",
+            )
     agency_id = await _agency(user)
     db = Database.get()
     doc = await db[COLLECTION].find_one(
@@ -341,24 +361,146 @@ async def patch_opportunity(
         update["notes"] = body.notes[:2000]
     if body.assigned_agent_id is not None:
         update["assigned_agent_id"] = body.assigned_agent_id
+    if body.status == "dismissed":
+        update["dismiss_reason"] = body.dismiss_reason
+
+    history: Dict[str, Any] = {
+        "status": body.status,
+        "at": now,
+        "by": user.get("id"),
+    }
+    if body.status == "dismissed":
+        history["dismiss_reason"] = body.dismiss_reason
 
     await db[COLLECTION].update_one(
         {"id": opportunity_id, "agency_id": agency_id},
         {
             "$set": update,
-            "$push": {
-                "status_history": {
-                    "status": body.status,
-                    "at": now,
-                    "by": user.get("id"),
-                }
-            },
+            "$push": {"status_history": history},
         },
     )
     updated = await db[COLLECTION].find_one(
         {"id": opportunity_id}, {"_id": 0},
     )
     return {"ok": True, "item": updated}
+
+
+@router.post("/{opportunity_id}/create-mandate")
+async def create_mandate_from_opportunity(
+    opportunity_id: str,
+    user: dict = Depends(get_current_user),
+):
+    """Crea bozza cliente venditore + immobile da contatto pubblico, marca mandate_won.
+
+    Non genera PDF modulistica: apre il fascicolo CRM da lavorare (mandato YouTrust).
+    """
+    agency_id = await _agency(user)
+    db = Database.get()
+    doc = await db[COLLECTION].find_one(
+        {"id": opportunity_id, "agency_id": agency_id},
+        {"_id": 0},
+    )
+    if not doc:
+        raise HTTPException(status_code=404, detail="opportunity_not_found")
+    if doc.get("created_property_id"):
+        return {
+            "ok": True,
+            "already": True,
+            "client_id": doc.get("created_client_id"),
+            "property_id": doc.get("created_property_id"),
+            "item": doc,
+        }
+
+    listing = doc.get("listing") or {}
+    contact = listing.get("contact_public") or {}
+    now = _now()
+    client_id = str(uuid4())
+    prop_id = str(uuid4())
+
+    display = (contact.get("display_name") or "Proprietario portale").strip()
+    parts = [p for p in display.split() if p]
+    name = parts[0] if parts else "Proprietario"
+    surname = " ".join(parts[1:]) if len(parts) > 1 else "Portale"
+
+    client_doc = {
+        "id": client_id,
+        "agency_id": agency_id,
+        "name": name,
+        "surname": surname,
+        "client_type": "seller",
+        "status": "new",
+        "email": contact.get("email"),
+        "phone": contact.get("phone") or contact.get("whatsapp"),
+        "notes": f"Da opportunità mandato portale {opportunity_id}",
+        "source": "ImmobilCloud",
+        "created_by": user.get("id"),
+        "created_at": now,
+        "updated_at": now,
+    }
+    await db.clients.insert_one(client_doc)
+
+    operation = listing.get("operation") or "sale"
+    prop_doc = {
+        "id": prop_id,
+        "agency_id": agency_id,
+        "listing_agent_id": user.get("id"),
+        "seller_client_id": client_id,
+        "title": listing.get("title") or f"Incarico · {listing.get('city') or 'da portale'}",
+        "status": "draft",
+        "operation": operation,
+        "property_type": listing.get("property_type") or "apartment",
+        "city": listing.get("city"),
+        "zone": listing.get("zone"),
+        "price": listing.get("price") if operation == "sale" else None,
+        "rent_monthly": listing.get("price") if operation != "sale" else None,
+        "surface_sqm": listing.get("surface_sqm"),
+        "rooms": listing.get("rooms"),
+        "photos": [],
+        "source_private_listing_id": listing.get("property_id") or doc.get("property_id"),
+        "mandate_opportunity_id": opportunity_id,
+        "notes": "Bozza da match portale — completare fascicolo e mandato.",
+        "created_at": now,
+        "updated_at": now,
+    }
+    await db.properties.insert_one(prop_doc)
+
+    update = {
+        "status": "mandate_won",
+        "updated_at": now,
+        "timestamps.mandate_won": now,
+        "created_client_id": client_id,
+        "created_property_id": prop_id,
+        "notes": (doc.get("notes") or "")[:1800]
+        + ("\n" if doc.get("notes") else "")
+        + f"Bozza immobile {prop_id} + cliente {client_id}",
+    }
+    await db[COLLECTION].update_one(
+        {"id": opportunity_id, "agency_id": agency_id},
+        {
+            "$set": update,
+            "$push": {
+                "status_history": {
+                    "status": "mandate_won",
+                    "at": now,
+                    "by": user.get("id"),
+                    "action": "create_mandate",
+                    "property_id": prop_id,
+                    "client_id": client_id,
+                }
+            },
+        },
+    )
+    updated = await db[COLLECTION].find_one({"id": opportunity_id}, {"_id": 0})
+    return {
+        "ok": True,
+        "client_id": client_id,
+        "property_id": prop_id,
+        "item": updated,
+        "next": {
+            "property_path": f"/app/properties/{prop_id}",
+            "modulistica_hint": "Genera mandato_vendita / mandato_locazione da Modulistica",
+        },
+    }
 
 
 async def count_open_for_agency(db, agency_id: str) -> int:
