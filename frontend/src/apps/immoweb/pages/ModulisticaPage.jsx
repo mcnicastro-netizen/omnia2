@@ -135,6 +135,43 @@ export default function ModulisticaPage() {
     }
   }, [selectedDoc?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Sandbox YouTrust: niente webhook → poll periodico mentre il doc è «In firma»
+  useEffect(() => {
+    if (!selectedDoc?.id || selectedDoc.status !== "sent") return undefined;
+    if (esign?.completion_mode === "webhook") return undefined;
+    const id = selectedDoc.id;
+    const tick = async () => {
+      try {
+        const { data } = await api.post(`/app/modulistica/documents/${id}/sync-esign`);
+        if (data.status === "signed" || data.status === "void") {
+          setSelectedDoc((prev) =>
+            prev?.id === id
+              ? {
+                  ...prev,
+                  status: data.status,
+                  esign: data.esign,
+                  signed_storage_path: data.signed_storage_path,
+                }
+              : prev,
+          );
+          if (data.status === "signed") {
+            toast.success(
+              data.downloaded
+                ? "Firmato — PDF salvato in CRM"
+                : "Firmato su YouTrust",
+            );
+          }
+          await load();
+        }
+      } catch {
+        /* silent poll */
+      }
+    };
+    const t = setInterval(tick, 20000);
+    return () => clearInterval(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedDoc?.id, selectedDoc?.status, esign?.completion_mode]);
+
   const filtered = useMemo(() => {
     if (category === "all") return templates;
     return templates.filter((t) => t.category === category);
@@ -498,15 +535,23 @@ export default function ModulisticaPage() {
                         </button>
                       )}
                       {selectedDoc.status === "sent" && (
-                        <button
-                          type="button"
-                          data-testid="modulistica-sync-esign"
-                          disabled={busy}
-                          className="border border-[#0B1E3F] text-[#0B1E3F] px-3 py-2 text-xs uppercase tracking-widest disabled:opacity-50"
-                          onClick={() => syncEsign(selectedDoc.id)}
-                        >
-                          Aggiorna stato firma
-                        </button>
+                        <>
+                          <button
+                            type="button"
+                            data-testid="modulistica-sync-esign"
+                            disabled={busy}
+                            className="bg-[#0B1E3F] text-white px-3 py-2 text-xs uppercase tracking-widest disabled:opacity-50"
+                            onClick={() => syncEsign(selectedDoc.id)}
+                          >
+                            Aggiorna stato firma
+                          </button>
+                          {esign?.sandbox || esign?.completion_mode === "poll" ? (
+                            <p className="w-full text-[11px] text-stone-500" data-testid="modulistica-poll-hint">
+                              Sandbox YouTrust: niente webhook. Dopo l&apos;OTP clicca qui
+                              (o attendi il controllo automatico ogni 20s).
+                            </p>
+                          ) : null}
+                        </>
                       )}
                       {selectedDoc.status === "sent" && esign?.provider === "mock" && (
                         <button
@@ -589,7 +634,7 @@ export default function ModulisticaPage() {
                 privacy, AML. Solo PDF: lettera condòmini.
               </p>
               <p>
-                Env: <code>ESIGN_PROVIDER=yousign</code> · YouTrust sandbox OTP email
+                YouTrust sandbox = OTP email + «Aggiorna stato firma» (poll). Webhook solo in produzione.
               </p>
             </div>
           </>

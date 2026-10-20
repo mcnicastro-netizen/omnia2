@@ -205,19 +205,30 @@ async def esign_status(user: dict = Depends(get_current_user)):
     await arequire_agency(user)
     provider = get_esign_provider()
     import os
+    base = (os.environ.get("YOUSIGN_API_BASE") or "https://api-sandbox.yousign.app/v3").lower()
+    sandbox = "sandbox" in base
     whsec = bool((os.environ.get("YOUSIGN_WEBHOOK_SECRET") or "").strip())
+    # Sandbox YouTrust: webhook non disponibili → completion via sync-esign (poll).
+    # Webhook HMAC resta per produzione quando la console YouTrust lo consente.
+    if provider.name == "mock":
+        note = "Mock: demo locale senza account paid."
+        mode = "mock"
+    elif sandbox:
+        note = "YouTrust sandbox · dopo OTP usa «Aggiorna stato firma» (niente webhook in sandbox)"
+        mode = "poll"
+    elif whsec:
+        note = f"Provider reale attivo: {provider.name} · webhook OK"
+        mode = "webhook"
+    else:
+        note = f"Provider reale attivo: {provider.name} · completion via sync-esign"
+        mode = "poll"
     return {
         "provider": provider.name,
         "ready": True,
-        "webhook_configured": whsec if provider.name == "yousign" else provider.name == "mock",
-        "note": (
-            "Mock: demo locale senza account paid."
-            if provider.name == "mock"
-            else (
-                f"Provider reale attivo: {provider.name}"
-                + (" · webhook OK" if whsec else " · webhook secret assente (usa sync-esign)")
-            )
-        ),
+        "sandbox": sandbox if provider.name == "yousign" else False,
+        "completion_mode": mode,
+        "webhook_configured": (not sandbox) and whsec if provider.name == "yousign" else provider.name == "mock",
+        "note": note,
         "branding": "hybrid_and_whitelabel",
     }
 
@@ -590,18 +601,26 @@ async def mark_signed(
 
 @router.post("/esign/webhook")
 async def yousign_esign_webhook(request: Request):
-    """YouTrust webhook: signature_request.done → status signed + PDF firmato.
+    """YouTrust webhook (produzione): signature_request.done → signed + PDF.
 
-    Auth: HMAC `x-yousign-signature-256` with YOUSIGN_WEBHOOK_SECRET (required in prod).
+    Sandbox YouTrust non espone webhook → usare sync-esign.
+    Auth: HMAC `x-yousign-signature-256` con YOUSIGN_WEBHOOK_SECRET.
     Idempotent on event_id.
     """
+    import os
+    base = (os.environ.get("YOUSIGN_API_BASE") or "").lower()
+    if "sandbox" in base:
+        # Explicit: sandbox has no reliable webhook delivery — clients must poll.
+        raise HTTPException(
+            501,
+            "yousign_sandbox_no_webhook — usa POST …/sync-esign dopo la firma OTP",
+        )
     raw = await request.body()
     sig = (
         request.headers.get("x-yousign-signature-256")
         or request.headers.get("X-Yousign-Signature-256")
         or ""
     )
-    import os
     secret = (os.environ.get("YOUSIGN_WEBHOOK_SECRET") or "").strip()
     if not secret:
         logger.error("YOUSIGN_WEBHOOK_SECRET missing — rejecting webhook")

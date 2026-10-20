@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-"""Register / update YouTrust webhook → OMNIA modulistica esign endpoint.
+"""YouTrust webhook helper — produzione only.
 
-Creates (or patches) a sandbox webhook subscription:
-  {public_base}/api/app/modulistica/esign/webhook
-Events: signature_request.done|declined|canceled|expired
+Sandbox YouTrust: webhook non disponibili (né API né App). In sandbox OMNIA usa
+polling `POST /api/app/modulistica/documents/{id}/sync-esign`.
 
-Persists YOUSIGN_WEBHOOK_SECRET into backend/.env (never prints the secret).
-Idempotent by description «OMNIA modulistica esign».
+Questo script:
+  - se YOUSIGN_API_BASE contiene «sandbox» → SKIP (exit 0) con messaggio chiaro
+  - altrimenti prova a creare/aggiornare la subscription webhook di produzione
 """
 from __future__ import annotations
 
@@ -54,7 +54,7 @@ def _write_env(key: str, value: str) -> None:
     if not found:
         if out and out[-1].strip():
             out.append("")
-        out.append(f"# YouTrust webhook HMAC (auto — sync-yousign-webhook.py)")
+        out.append("# YouTrust webhook HMAC (produzione — sync-yousign-webhook.py)")
         out.append(f"{key}={value}")
     path.write_text("\n".join(out) + "\n", encoding="utf-8")
 
@@ -67,7 +67,6 @@ def _public_base(arg: str | None, share_file: str, prefer_api: bool) -> str:
         api = api.removeprefix("OMNIA_API_PUBLIC_URL=")
         if api.startswith("https://"):
             return api
-    # Cloud tunnel (portal + same-origin /api)
     for path in (share_file, "/tmp/omnia-stack/PUBLIC_BASE_URL.txt", "/tmp/omnia-stack/SHARE_URL.txt"):
         p = Path(path)
         if p.is_file():
@@ -79,9 +78,10 @@ def _public_base(arg: str | None, share_file: str, prefer_api: bool) -> str:
 
 def main() -> int:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--url", help="Public HTTPS base (tunnel or OMNIA_API_PUBLIC_URL)")
+    ap.add_argument("--url")
     ap.add_argument("--share-file", default="/tmp/omnia-stack/SHARE_URL.txt")
-    ap.add_argument("--railway", action="store_true", help="Prefer OMNIA_API_PUBLIC_URL (prod API)")
+    ap.add_argument("--railway", action="store_true")
+    ap.add_argument("--force-prod", action="store_true", help="Skip sandbox guard (prod API key)")
     ap.add_argument("--dry-run", action="store_true")
     args = ap.parse_args()
 
@@ -95,29 +95,30 @@ def main() -> int:
         print("[sync-yousign-webhook] SKIP YOUSIGN_API_KEY missing")
         return 0
 
-    public = _public_base(args.url, args.share_file, prefer_api=args.railway)
+    if "sandbox" in base_api.lower() and not args.force_prod:
+        print(
+            "[sync-yousign-webhook] SKIP sandbox — YouTrust non espone webhook in sandbox. "
+            "Completion = POST …/sync-esign (poll). Webhook solo con key/API produzione."
+        )
+        return 0
+
+    public = _public_base(args.url, args.share_file, prefer_api=args.railway or True)
     if not public:
         print("[sync-yousign-webhook] SKIP no public HTTPS base")
         return 0
     endpoint = f"{public}/api/app/modulistica/esign/webhook"
-    sandbox = "sandbox" in base_api or args.railway is False
-    # Railway prod API can still receive sandbox YouTrust events (sandbox=true on subscription)
-    if args.railway:
-        sandbox = True  # keep sandbox until go-live YouTrust prod key
 
-    existing_secret = (os.environ.get("YOUSIGN_WEBHOOK_SECRET") or _read_env("YOUSIGN_WEBHOOK_SECRET") or "").strip()
-    secret_was_new = False
-    if existing_secret and len(existing_secret) != 32:
+    secret = (os.environ.get("YOUSIGN_WEBHOOK_SECRET") or _read_env("YOUSIGN_WEBHOOK_SECRET") or "").strip()
+    if secret and len(secret) != 32:
         print("[sync-yousign-webhook] WARN existing secret len != 32 — regenerating")
-        existing_secret = ""
-    if existing_secret:
-        secret = existing_secret
-    else:
-        secret = secrets.token_hex(16)  # 32 chars
+        secret = ""
+    secret_was_new = False
+    if not secret:
+        secret = secrets.token_hex(16)
         secret_was_new = True
 
     if args.dry_run:
-        print(f"[sync-yousign-webhook] DRY endpoint={endpoint} sandbox={sandbox}")
+        print(f"[sync-yousign-webhook] DRY endpoint={endpoint}")
         return 0
 
     try:
@@ -134,7 +135,7 @@ def main() -> int:
     body = {
         "endpoint": endpoint,
         "description": DESC,
-        "sandbox": sandbox,
+        "sandbox": False,
         "subscribed_events": EVENTS,
         "scopes": ["*"],
         "workspaces": ["*"],
@@ -168,55 +169,26 @@ def main() -> int:
             r2 = client.patch(f"{base_api}/webhooks/{wid}", headers=headers, json=patch)
             if r2.status_code >= 400:
                 print(f"[sync-yousign-webhook] PATCH failed http={r2.status_code} body={r2.text[:200]}")
-                # Fall through to UI setup path
-            else:
-                print(f"[sync-yousign-webhook] UPDATED id={wid} endpoint={endpoint}")
-                if secret_was_new or not existing_secret:
-                    _write_env("YOUSIGN_WEBHOOK_SECRET", secret)
-                    os.environ["YOUSIGN_WEBHOOK_SECRET"] = secret
-                    print("[sync-yousign-webhook] YOUSIGN_WEBHOOK_SECRET persisted to backend/.env (not printed)")
-                else:
-                    print("[sync-yousign-webhook] secret unchanged")
-                return 0
+                return 1
+            print(f"[sync-yousign-webhook] UPDATED id={wid} endpoint={endpoint}")
         else:
             r2 = client.post(f"{base_api}/webhooks", headers=headers, json=body)
-            if r2.status_code < 400:
-                created = r2.json() if r2.content else {}
-                returned = (created.get("secret_key") or "").strip()
-                if returned and len(returned) == 32:
-                    secret = returned
-                    secret_was_new = True
-                print(f"[sync-yousign-webhook] CREATED id={created.get('id')} endpoint={endpoint}")
-                _write_env("YOUSIGN_WEBHOOK_SECRET", secret)
-                os.environ["YOUSIGN_WEBHOOK_SECRET"] = secret
-                print("[sync-yousign-webhook] YOUSIGN_WEBHOOK_SECRET persisted to backend/.env (not printed)")
-                return 0
-            print(f"[sync-yousign-webhook] CREATE via API not available http={r2.status_code}")
-            if r2.status_code == 403:
-                print(
-                    "[sync-yousign-webhook] SETUP_UI: YouTrust sandbox webhooks "
-                    "si creano solo dall'app (non via API)."
-                )
+            if r2.status_code >= 400:
+                print(f"[sync-yousign-webhook] CREATE failed http={r2.status_code} body={r2.text[:300]}")
+                return 1
+            created = r2.json() if r2.content else {}
+            returned = (created.get("secret_key") or "").strip()
+            if returned and len(returned) == 32:
+                secret = returned
+                secret_was_new = True
+            print(f"[sync-yousign-webhook] CREATED id={created.get('id')} endpoint={endpoint}")
 
-    # Persist secret so CRM can verify once Founder configures the App webhook.
     if secret_was_new or not _read_env("YOUSIGN_WEBHOOK_SECRET"):
         _write_env("YOUSIGN_WEBHOOK_SECRET", secret)
         os.environ["YOUSIGN_WEBHOOK_SECRET"] = secret
         print("[sync-yousign-webhook] YOUSIGN_WEBHOOK_SECRET persisted to backend/.env (not printed)")
     else:
         print("[sync-yousign-webhook] secret unchanged")
-    print(f"[sync-yousign-webhook] SETUP_UI endpoint={endpoint}")
-    print(
-        "[sync-yousign-webhook] SETUP_UI events="
-        + ",".join(EVENTS)
-        + " · sandbox=true · description='"
-        + DESC
-        + "'"
-    )
-    print(
-        "[sync-yousign-webhook] SETUP_UI: in YouTrust App → Webhooks → crea con endpoint sopra; "
-        "imposta secret = YOUSIGN_WEBHOOK_SECRET (o copia il secret autogenerato in vault + Railway)."
-    )
     return 0
 
 

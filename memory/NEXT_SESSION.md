@@ -4,9 +4,9 @@
 **Repo**: https://github.com/mcnicastro-netizen/omnia2 ✅  
 **Branch**: `main`
 
-**YouTrust / Yousign**: vault Environment `YOUSIGN_API_KEY` + `ESIGN_PROVIDER=yousign` · smoke OTP **OK** 20-Ott · **scadenza key 25/10/2026** — rinnovare in console prima di quella data.  
-Webhook modulistica: `scripts/sync-yousign-webhook.py` → `/api/app/modulistica/esign/webhook` · secret `YOUSIGN_WEBHOOK_SECRET` anche su Railway Variables.  
-PDF firmato: webhook `signature_request.done` o `POST …/sync-esign` → `signed_storage_path`.
+**YouTrust / Yousign**: vault `YOUSIGN_API_KEY` + `ESIGN_PROVIDER=yousign` · smoke OTP **OK** 20-Ott · **scadenza key 25/10/2026**.  
+**Sandbox: niente webhook** → completion con `sync-esign` / «Aggiorna stato firma» (+ poll UI 20s). Webhook solo in produzione.  
+PDF firmato: `sync-esign` quando YouTrust è `done` → `signed_storage_path`.
 
 ---
 
