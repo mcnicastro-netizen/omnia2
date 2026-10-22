@@ -824,6 +824,50 @@ voci:
         - super_admin / Founder
       screenshot: []
 
+  - id: api.railway-security-rotation
+    titolo: Rotazione credenziali dopo disclosure Railway (22-Ott-2026)
+    modulo: Codice API
+    widget: null
+    pubblico: [super_admin]
+    livello: avanzato
+    tags: [codice, railway, security, rotazione, secrets, stripe, jwt, p0]
+    correlati: [api.railway-api-deploy, api.cloud-secrets-vault, api.stripe-sandbox-cloud]
+    domanda_naturale: "Railway ha segnalato un leak delle Variables. Cosa dobbiamo ruotare?"
+    contenuto:
+      a_cosa_serve: >
+        Incident Railway 22-Ott-2026: possibile accesso a env Variables.
+        Progetto omnia-api va trattato come esposto. Runbook
+        docs/ops/RAILWAY_SECURITY_ROTATION_2026-10-22.md.
+      quando_si_usa: >
+        Dopo mail disclosure Railway; prima di feature; dopo Save vault
+        (nuovo agent); se Founder chiede stato rotazione.
+      passi:
+        - "Revoca/crea key presso provider (Stripe, Gemini, fal, Resend,
+          OpenAPI, YouTrust, JWT, RAILWAY_TOKEN) — Founder."
+        - "Aggiorna Variables service omnia-api + vault Cursor Environment
+          omnia2 (stessi nomi). UI Cursor non mostra i valori: sovrascrivi."
+        - "Applicare/Distribuire modifiche Variables → smoke GET /api/health."
+        - "Stato 22-Ott sera: CORE DONE. Residui: YouTrust ticket
+          (ESIGN_PROVIDER=mock), Mongo rotate saltato, eventuale secondo
+          giro se valori finiti in screenshot (mai foto secret)."
+        - "Prompt nuovo agent:
+          docs/ops/NEW_AGENT_PROMPT_POST_RAILWAY_ROTATION.md."
+      errori_comuni:
+        - problema: "Non vedo le key nel vault Cursor"
+          soluzione: >
+            Normale. I secret sono write-only dopo Save. Sovrascrivi il
+            valore e Salva; poi apri un nuovo agent.
+        - problema: "YouTrust non permette nuova API key dopo revoke"
+          soluzione: >
+            Ticket supporto inviato. Finché no key: ESIGN_PROVIDER=mock.
+        - problema: "Ho mandato uno screenshot delle Variables con valori"
+          soluzione: >
+            Tratta quelle key come riesposte: ruota di nuovo senza nuove
+            foto. Non incollare secret in chat.
+      permessi:
+        - super_admin / Founder
+      screenshot: []
+
   - id: api.railway-api-deploy
     titolo: Deploy API OMNIA su Railway (D-123)
     modulo: Codice API
@@ -831,7 +875,7 @@ voci:
     pubblico: [super_admin]
     livello: avanzato
     tags: [codice, railway, deploy, api, d-123, mongo, health, vercel, dns, stripe, webhook]
-    correlati: [api.cloud-secrets-vault, api.cloud-environment-builds, api.stripe-sandbox-cloud, api.vercel-fe-deploy]
+    correlati: [api.cloud-secrets-vault, api.cloud-environment-builds, api.stripe-sandbox-cloud, api.vercel-fe-deploy, api.railway-security-rotation]
     domanda_naturale: "Dov'è l'API di produzione? Come si fa il deploy su Railway?"
     contenuto:
       a_cosa_serve: >
