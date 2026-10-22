@@ -17,6 +17,8 @@ Non usare New Project per continuare lavoro prodotto.
 Dashboard Cursor → **Cloud Agents** → Environments → env **omnia2** → **Secrets**  
 (preferire scope **Environment**; evitare doppioni con My Secrets / Personal sullo stesso nome)
 
+Link env: https://cursor.com/dashboard/cloud-agents/environments/e/b80b635c-b592-11f1-bb68-864e54d14197 · per repo: https://cursor.com/dashboard/cloud-agents/environments/r/github.com/mcnicastro-netizen/omnia2
+
 Nomi obbligatori (env var, niente italiano/spazi):
 `STRIPE_SECRET_KEY`, `STRIPE_PUBLISHABLE_KEY`, `STRIPE_ENABLED=true` (+ opzionale `STRIPE_WEBHOOK_SECRET`).
 
@@ -83,6 +85,29 @@ Alias legacy accettati dal backend (se li avevi): `GOOGLE_API_KEY`, `EMERGENT_LL
 
 ---
 
+## Scope Cursor: Environment vs Personal (22-Ott-2026)
+
+Due vault distinti — **non** è un bug OMNIA:
+
+| Scope | Dove | Uso OMNIA |
+|-------|------|-----------|
+| **Environment** | Dashboard → Environments → **omnia2** → Secrets | SoT preferito per Cloud Agent su questo env |
+| **Personal** | My Secrets / card «Add secrets» in chat | Secret utente Founder; la UI chat/setup **spesso scrive solo qui** |
+
+**Trappola**: `RESEND_API_KEY`, `GEMINI_API_KEY`, `STRIPE_ENABLED` (e a volte `FAL_KEY`) finiscono in Personal o come doppione sopra Environment. Stesso nome ≠ stesso scope.
+
+**Ideale (quando UI Environment risponde)**: risalvare i nomi in scope Environment (stesso valore, senza foto) → eliminare i doppioni Personal → nuovo agent. `STRIPE_ENABLED=true` non è critico come API key, ma meglio Environment come le altre.
+
+**Nota Founder 22-Ott (UI Environments glitch)**:
+- Dashboard può mostrare «Failed to load environment» / «No environment is currently active» anche se **omnia2 esiste** (agent bootano, build SUCCEEDED).
+- **NON** consigliare «Start Setup Agent → Start Fresh» (rischio env/vault nuovo vuoto).
+- Se Founder chiede update env: solo **Update Existing Env** / Edit / pin build.
+- **NON** cancellare secret da My Secrets finché la pagina Secrets Environment non torna usabile.
+- **Personal va bene per ora**: i secret Personal del Founder vengono iniettati nei suoi Cloud Agent. Preferibile Environment a lungo termine, non bloccante oggi.
+- My Secrets = Personal: **non** si cambia scope da lì.
+
+---
+
 ## 🔴 Incident Railway Variables (22-Ott-2026)
 
 Se le stesse key sono (o erano) anche su **Railway Variables** del service `omnia-api`, trattale come **compromesse**: revoca presso il provider e riemetti.  
@@ -91,7 +116,8 @@ Aggiorna poi sia Railway Variables sia questo vault Environment omnia2.
 
 **Stato Founder 22-Ott sera**: rotazione **core DONE** (Stripe/Gemini/fal/Resend/OpenAPI/JWT/RAILWAY_TOKEN + deploy).  
 Residui: YouTrust ticket · Mongo rotate · eventuale re-rotate se valori finiti in screenshot.  
-Dopo Save vault → **nuovo agent**. UI Secrets non mostra i valori (normale).
+Dopo Save vault → **nuovo agent**. UI Secrets non mostra i valori (normale).  
+Scope: alcuni nomi possono risultare **Personal** (vedi sezione sopra) — OK oggi; non Start Fresh.
 
 ---
 

@@ -40,7 +40,9 @@ URL pubblici (`OMNIA_API_PUBLIC_URL`, `PUBLIC_BASE_URL`, CORS) **non** sono segr
 ### 3) Vault Cursor Environment **omnia2** (in parallelo)
 
 Stesse key usate in Cloud Agent: aggiornale nello scope **Environment** (non Personal), poi **nuovo agent**.  
-Vedi `memory/CLOUD_SECRETS_INVENTORY.md`.
+Vedi `memory/CLOUD_SECRETS_INVENTORY.md` (sezione **Environment vs Personal**).
+
+Se la UI Environments glitcha («Failed to load» / «No environment active») ma gli agent bootano: **non** Start Fresh. Personal del Founder inietta comunque → OK temporaneo; non cancellare My Secrets finché Secrets Environment non è usabile.
 
 ### 4) Verifiche post-rotazione
 
@@ -91,7 +93,7 @@ Controlla log: Stripe, Resend, fal, Google AI, OpenAPI.it, YouTrust — attivit�
 | `JWT_SECRET` | ✅ nuovo · login da rifare |
 | Deploy Variables Railway | ✅ «Distribuire i cambiamenti» · `omnia-api` Online |
 | Smoke `GET /api/health` | ✅ `status=ok` `db=ok` (22-Ott) |
-| Vault Cursor omnia2 | ✅ sovrascrittura valori (UI non mostra i secret — normale) |
+| Vault Cursor omnia2 | ✅ valori aggiornati · UI può mostrare alcuni nomi in **Personal** (Add secrets) — OK oggi; Environment preferibile a lungo termine · no Start Fresh |
 | YouTrust `YOUSIGN_API_KEY` | 🟠 ticket inviato — non crea key dopo revoke · `ESIGN_PROVIDER=mock` |
 | MongoDB plugin rotate | 🟠 saltato (no rotate sicuro in UI / outage) |
 | Re-rotate post-screenshot | 🟠 consigliato: Stripe+Resend+OpenAPI erano in chiaro in foto apply-diff — **senza** nuove foto valori |

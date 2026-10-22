@@ -34,6 +34,12 @@
 - `sync-stripe-webhook-url.py`: prune automatico Emergent / path `/api/stripe/webhook`
 - Docs: `STRIPE_ONBOARDING.md` · `NEXT_SESSION.md`
 
+## 2026-10-22 — Vault Cursor: Environment vs Personal (nota Founder)
+
+- Documentato: Add secrets / My Secrets → spesso solo **Personal**; Environment = SoT omnia2
+- UI Environments può glitchare senza cancellare l’env — **no Start Fresh**; Personal OK oggi
+- SoT: `CLOUD_SECRETS_INVENTORY.md` · runbook rotazione · `NEXT_SESSION` filo prodotto pre-Railway
+
 ## 2026-10-22 — Rotazione Railway core DONE + prompt nuovo agent
 
 - Founder: ruotati Railway token, Stripe(+whsec), Gemini, fal, Resend, OpenAPI, JWT; deploy Variables; health ok/db=ok
