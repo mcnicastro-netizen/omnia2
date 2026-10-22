@@ -83,6 +83,14 @@ Alias legacy accettati dal backend (se li avevi): `GOOGLE_API_KEY`, `EMERGENT_LL
 
 ---
 
+## 🔴 Incident Railway Variables (22-Ott-2026)
+
+Se le stesse key sono (o erano) anche su **Railway Variables** del service `omnia-api`, trattale come **compromesse**: revoca presso il provider e riemetti.  
+Runbook: [`docs/ops/RAILWAY_SECURITY_ROTATION_2026-10-22.md`](../docs/ops/RAILWAY_SECURITY_ROTATION_2026-10-22.md).  
+Aggiorna poi sia Railway Variables sia questo vault Environment omnia2.
+
+---
+
 ## Cosa NON fare
 
 - Non committare valori in `backend/.env`, script, PR, chat  

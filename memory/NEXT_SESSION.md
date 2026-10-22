@@ -1,10 +1,13 @@
 # Prossima sessione — programma passi
 
-**Aggiornato**: 20 Ottobre 2026 — **D-130 clone P0** + YouTrust sandbox (scadenza key **25/10/2026**)  
+**Aggiornato**: 22 Ottobre 2026 — **P0 Railway security: rotazione credenziali**  
 **Repo**: https://github.com/mcnicastro-netizen/omnia2 ✅  
-**Branch docs**: `main` (D-130 merged)
+**Branch docs**: `main`
 
-**YouTrust / Yousign**: vault Environment `YOUSIGN_API_KEY` + `ESIGN_PROVIDER=yousign` · smoke OTP OK 20-Ott · **scadenza key 25/10/2026** — rinnovare in console prima di quella data.
+**🔴 P0 sicurezza**: mail Railway 22-Ott — possibile leak Variables. Runbook: [`docs/ops/RAILWAY_SECURITY_ROTATION_2026-10-22.md`](../docs/ops/RAILWAY_SECURITY_ROTATION_2026-10-22.md).  
+Ruotare prima di ogni altra feature. Build Railway possono essere bloccate (status.railway.com).
+
+**YouTrust / Yousign**: ruotare `YOUSIGN_API_KEY` **ora** (incidente + scadenza ~25/10).
 
 ---
 
@@ -25,11 +28,8 @@
 
 ## ⏭️ Primo passo tipico
 
-1. **Clone P0 (D-130)**: progettare/implementare pipeline URL → crawl → preview visitabile (home+lista+scheda) — non raffinare i 4 temi
-2. **A-037 rampa**: chiudere almeno URL → demo vestita (tema + brand) se clone full slitta
-3. Pilota mandati D-129 invariato su `demo-agency-001`
-4. Smoke B2C: staging €1,49 · boost · slot · Stripe Test
-5. Quando pronto: Stripe **Live** webhook (non Test)
+1. **Rotazione Railway** (P0): revoca key provider → Variables `omnia-api` → vault Cursor omnia2 → smoke health/webhook
+2. Solo dopo: Clone P0 (D-130) / A-037 / pilota mandati / Stripe Live
 
 ---
 
@@ -37,9 +37,10 @@
 
 | Voce | Nota |
 |------|------|
+| **Railway leak** | Rotare Stripe/Gemini/fal/Resend/OpenAPI/YouTrust/JWT/Mongo/RAILWAY_TOKEN |
 | **D-130** | Vietato promettere «cloniamo il sito» finché preview clone non esiste |
 | **D-023** | Decisione clone ancora valida; codice incompleto (solo Brand Extractor) |
-| **YouTrust key** | Scadenza sandbox **25/10/2026** — rinnovare o firma torna mock |
+| **YouTrust key** | Ruotare ora (incidente Railway + scadenza ~25/10) |
 | **D-125** | Accesso atti = progetto comunale · no wallet |
 | **D-128** | Staging B2C €1,49 |
 | **HAL reindex** | Dopo merge Cap.8 / YAML sito |
