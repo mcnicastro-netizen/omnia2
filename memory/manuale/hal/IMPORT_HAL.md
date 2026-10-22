@@ -1,6 +1,6 @@
-# 📚 HAL Knowledge — Import & Cold Start (v0.33-onda-j)
+# 📚 HAL Knowledge — Import & Cold Start (v0.41-railway-security-rotation)
 
-**Ultimo aggiornamento**: 12-Ott-2026 (go-live D-123/D-074 · Cap. 00/19)  
+**Ultimo aggiornamento**: 22-Ott-2026 (rotazione Railway · Cap.00 `api.railway-security-rotation`)  
 **Corpus**: YAML in `memory/manuale/hal/*.yaml` (Cap. 1–27 + `00-api-codice`) · MD esclusi dal RAG ingest  
 **Motore**: `hal_knowledge.py` · reindex: `POST /api/app/hal/knowledge/reindex?force=true` (super_admin)  
 **Regola Founder D-084**: ogni ship aggiorna MD+YAML nello stesso giro — vedi `memory/MANUAL_SYNC.md`.
