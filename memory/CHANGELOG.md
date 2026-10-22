@@ -34,6 +34,12 @@
 - `sync-stripe-webhook-url.py`: prune automatico Emergent / path `/api/stripe/webhook`
 - Docs: `STRIPE_ONBOARDING.md` · `NEXT_SESSION.md`
 
+## 2026-10-22 — P0 Railway security disclosure (rotazione credenziali)
+
+- Mail Railway: possibile accesso a Variables (env crittografate / in alcuni casi decrittografate)
+- Runbook Founder: `docs/ops/RAILWAY_SECURITY_ROTATION_2026-10-22.md`
+- `NEXT_SESSION`: rotazione prima di ogni feature; build Railway possono essere in pausa
+
 ## 2026-10-20 — D-130 Clone-from-URL P0 + no SKU «solo sito» (docs/HAL)
 
 - **D-130**: clone sito = blocco commerciale pari gravità Visual Staging; Brand Extractor ≠ clone
