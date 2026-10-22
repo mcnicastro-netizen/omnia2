@@ -59,6 +59,13 @@ Alias Railway: `https://omnia-api-production-2cec.up.railway.app`. Progetto `omn
 DNS SoT: `memory/DNS_SETUP_GUIDE.md`. Runbook: `docs/ops/RAILWAY_DEPLOY.md` · `docs/ops/VERCEL_DEPLOY.md` · `memory/STRIPE_ONBOARDING.md`.  
 HAL: `api.railway-api-deploy` · `api.vercel-fe-deploy` · `api.stripe-sandbox-cloud` · `api.cloud-secrets-vault`.
 
+### Incident Railway Variables (22-Ott-2026)
+
+Mail Railway: possibile leak Variables. OMNIA `omnia-api` → rotazione credenziali.  
+Runbook: `docs/ops/RAILWAY_SECURITY_ROTATION_2026-10-22.md`.  
+**Core DONE** Founder 22-Ott (Stripe, Gemini, fal, Resend, OpenAPI, JWT, RAILWAY_TOKEN + deploy; health ok).  
+Residui: YouTrust (ticket / `ESIGN_PROVIDER=mock`) · Mongo rotate · no screenshot valori.  
+HAL: `api.railway-security-rotation`. Prompt nuovo agent: `docs/ops/NEW_AGENT_PROMPT_POST_RAILWAY_ROTATION.md`.
 
 ### D-118 — stato (aggiornato 9-Ott-2026 sera)
 

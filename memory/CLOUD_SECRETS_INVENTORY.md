@@ -89,6 +89,10 @@ Se le stesse key sono (o erano) anche su **Railway Variables** del service `omni
 Runbook: [`docs/ops/RAILWAY_SECURITY_ROTATION_2026-10-22.md`](../docs/ops/RAILWAY_SECURITY_ROTATION_2026-10-22.md).  
 Aggiorna poi sia Railway Variables sia questo vault Environment omnia2.
 
+**Stato Founder 22-Ott sera**: rotazione **core DONE** (Stripe/Gemini/fal/Resend/OpenAPI/JWT/RAILWAY_TOKEN + deploy).  
+Residui: YouTrust ticket · Mongo rotate · eventuale re-rotate se valori finiti in screenshot.  
+Dopo Save vault → **nuovo agent**. UI Secrets non mostra i valori (normale).
+
 ---
 
 ## Cosa NON fare

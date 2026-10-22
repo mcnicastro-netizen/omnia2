@@ -34,6 +34,13 @@
 - `sync-stripe-webhook-url.py`: prune automatico Emergent / path `/api/stripe/webhook`
 - Docs: `STRIPE_ONBOARDING.md` · `NEXT_SESSION.md`
 
+## 2026-10-22 — Rotazione Railway core DONE + prompt nuovo agent
+
+- Founder: ruotati Railway token, Stripe(+whsec), Gemini, fal, Resend, OpenAPI, JWT; deploy Variables; health ok/db=ok
+- Residui: YouTrust (ticket), Mongo rotate, eventuale secondo giro post-screenshot valori
+- Runbook aggiornato stato · `NEW_AGENT_PROMPT_POST_RAILWAY_ROTATION.md` · HAL `api.railway-security-rotation`
+- `ESIGN_PROVIDER=mock` finché YouTrust non emette key
+
 ## 2026-10-22 — P0 Railway security disclosure (rotazione credenziali)
 
 - Mail Railway: possibile accesso a Variables (env crittografate / in alcuni casi decrittografate)

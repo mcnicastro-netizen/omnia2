@@ -1,12 +1,12 @@
 {
-  "version": "0.40-d130-clone-p0",
-  "updated": "2026-10-20",
-  "voices_total": 374,
+  "version": "0.41-railway-security-rotation",
+  "updated": "2026-10-22",
+  "voices_total": 380,
   "source_files": [
     {
       "file": "00-api-codice.yaml",
-      "voices": 34,
-      "md5": "dc7d0b2b30de394f2a69cbb0feccfb8e"
+      "voices": 38,
+      "md5": "ad5b07f71ce9a84dd9a43fb2d701e8ce"
     },
     {
       "file": "01-primo-accesso.yaml",
@@ -66,7 +66,7 @@
     {
       "file": "12-hal-knowledge.yaml",
       "voices": 13,
-      "md5": "a142cd1bf277f91800ca7e82326ab6e2"
+      "md5": "74820d1c227ee2b8a004a8755e28abea"
     },
     {
       "file": "13-team-ruoli.yaml",
@@ -95,8 +95,8 @@
     },
     {
       "file": "18-notifiche-attivita.yaml",
-      "voices": 19,
-      "md5": "bc69d964b590cde055b0b8d8edbd4279"
+      "voices": 20,
+      "md5": "1297705d0e548d44a03dd702ac0c2d29"
     },
     {
       "file": "19-impostazioni-agenzia.yaml",
@@ -115,8 +115,8 @@
     },
     {
       "file": "22-hal-legal.yaml",
-      "voices": 8,
-      "md5": "d71332b7c64bc1b459bf114b3e80242e"
+      "voices": 9,
+      "md5": "0ea791712a7a4f5a721f66117b1af580"
     },
     {
       "file": "23-video-ab-testing.yaml",
@@ -150,16 +150,16 @@
       "file": "00-api-codice",
       "title": "Corpus codice/API",
       "yaml": "00-api-codice.yaml",
-      "voices": 34,
-      "md5": "dc7d0b2b30de394f2a69cbb0feccfb8e"
+      "voices": 38,
+      "md5": "ad5b07f71ce9a84dd9a43fb2d701e8ce"
     },
     {
       "id": 22,
       "file": "22-hal-legal",
       "title": "HAL Legal",
       "yaml": "22-hal-legal.yaml",
-      "voices": 8,
-      "md5": "d71332b7c64bc1b459bf114b3e80242e"
+      "voices": 9,
+      "md5": "0ea791712a7a4f5a721f66117b1af580"
     },
     {
       "id": 23,

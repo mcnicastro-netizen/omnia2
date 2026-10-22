@@ -75,4 +75,25 @@ Controlla log: Stripe, Resend, fal, Google AI, OpenAPI.it, YouTrust — attivit�
 | **Founder** | Revoca/crea key nei dashboard provider + aggiorna Variables Railway + vault Cursor |
 | **Agent** | Dopo inject: smoke health/webhook, aggiornare inventario se cambiano *nomi* (non valori) |
 
-**Stato**: 🟠 APERTO — Founder in esecuzione rotazione · 22-Ott-2026
+---
+
+## Stato esecuzione Founder (22-Ott-2026 sera)
+
+| Voce | Esito |
+|------|--------|
+| `RAILWAY_TOKEN` (Account) | ✅ revocati vecchi · creato `omnia2-env-cursor` · vault Cursor |
+| Stripe `sk`/`pk` + `whsec` | ✅ nuove · Variables Railway + vault · deploy applicato |
+| `STRIPE_ENABLED=true` | ✅ invariato (non è secret) |
+| `GEMINI_API_KEY` | ✅ |
+| `FAL_KEY` | ✅ (vecchie fal non cancellabili UI — usare solo la nuova) |
+| `RESEND_API_KEY` (`omnia-prod`) | ✅ |
+| `OPENAPI_API_KEY` | ✅ · `OPENAPI_EMAIL` non ruotata (non secret) |
+| `JWT_SECRET` | ✅ nuovo · login da rifare |
+| Deploy Variables Railway | ✅ «Distribuire i cambiamenti» · `omnia-api` Online |
+| Smoke `GET /api/health` | ✅ `status=ok` `db=ok` (22-Ott) |
+| Vault Cursor omnia2 | ✅ sovrascrittura valori (UI non mostra i secret — normale) |
+| YouTrust `YOUSIGN_API_KEY` | 🟠 ticket inviato — non crea key dopo revoke · `ESIGN_PROVIDER=mock` |
+| MongoDB plugin rotate | 🟠 saltato (no rotate sicuro in UI / outage) |
+| Re-rotate post-screenshot | 🟠 consigliato: Stripe+Resend+OpenAPI erano in chiaro in foto apply-diff — **senza** nuove foto valori |
+
+**Stato**: 🟡 **ROTATION CORE DONE** · residui YouTrust + Mongo + eventuale secondo giro post-screenshot

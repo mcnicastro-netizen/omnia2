@@ -1,6 +1,6 @@
-# 📚 HAL Knowledge — Import & Cold Start (v0.33-onda-j)
+# 📚 HAL Knowledge — Import & Cold Start (v0.41-railway-security-rotation)
 
-**Ultimo aggiornamento**: 12-Ott-2026 (go-live D-123/D-074 · Cap. 00/19)  
+**Ultimo aggiornamento**: 22-Ott-2026 (rotazione Railway · Cap.00 `api.railway-security-rotation`)  
 **Corpus**: YAML in `memory/manuale/hal/*.yaml` (Cap. 1–27 + `00-api-codice`) · MD esclusi dal RAG ingest  
 **Motore**: `hal_knowledge.py` · reindex: `POST /api/app/hal/knowledge/reindex?force=true` (super_admin)  
 **Regola Founder D-084**: ogni ship aggiorna MD+YAML nello stesso giro — vedi `memory/MANUAL_SYNC.md`.
@@ -267,6 +267,7 @@ Prima di dichiarare il cold start "attivo", eseguire manualmente queste 5 query 
 
 | Data | Versione | Note |
 |------|:-:|------|
+| 22-Ott-2026 | **v0.41-railway-security-rotation** | Cap.00 `api.railway-security-rotation`: disclosure Railway Variables, stato core DONE, residui YouTrust/Mongo, no screenshot secret. Runbook + NEW_AGENT_PROMPT · Cap.00 MD. Reindex post-merge. |
 | 20-Ott-2026 | **v0.40-d130-clone-p0** | Cap.8 `sito.clone-d023-d130` + aggiornamento `sito.demo-a037`: clone = P0 (D-130), Brand Extractor ≠ clone, no SKU solo sito. Manuale §8.12 · DECISIONS D-130 · ASPETTI A-037. Reindex post-merge. |
 | 19-Ott-2026 | **v0.39-d125-d128-pricing** | Cap.9 `staging.crediti-costo`: B2C **€1,49** (D-128) + Nano Banana; Cap.18 `notifiche.sell-doc-promo` + MD §18.7c **D-125** accesso atti. DECISIONS D-125/D-128 · PRICING_B2C v1.4. Reindex post-merge. |
 | 14-Ott-2026 | **v0.38-d124-home-valuator-sell** | Cap.21 Valutatore: APE+piano obbligatori, PDF 1p, superfici reali. Cap.18: +`notifiche.sell-doc-promo` (rail SellPage). DECISIONS D-124 · PR #40 merge. Reindex post-merge. |
