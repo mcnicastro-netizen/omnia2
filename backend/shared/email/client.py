@@ -154,8 +154,18 @@ async def send_email(
         )
         return {"id": "mock", "status": "mock"}
 
+    sender = SENDER
+    if _sender_is_dev_sandbox(sender):
+        # Auto-heal misconfigured prod/env: sandbox from= blocks arbitrary `to`.
+        logger.error(
+            "[EMAIL SENDER] refusing sandbox from=%s — using %s (set SENDER_EMAIL)",
+            sender,
+            _DEFAULT_SENDER,
+        )
+        sender = _DEFAULT_SENDER
+
     params = {
-        "from": SENDER,
+        "from": sender,
         "to": [to],
         "subject": subject,
         "html": html,
