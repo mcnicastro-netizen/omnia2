@@ -107,7 +107,16 @@ export default function CloudSearchPage() {
       const run = (near) => {
         if (near) body.near_me = near;
         api.post("/cloud/search/advanced", body)
-          .then((r) => setData({ ...r.data, source: "advanced" }))
+          .then((r) => {
+            const payload = r?.data && typeof r.data === "object" && !Array.isArray(r.data) ? r.data : {};
+            setData({
+              items: Array.isArray(payload.items) ? payload.items : [],
+              total: Number(payload.total) || 0,
+              page: Number(payload.page) || page,
+              has_next: Boolean(payload.has_next),
+              source: "advanced",
+            });
+          })
           .catch(() => setData({ items: [], total: 0, has_next: false, page: 1 }))
           .finally(() => setLoading(false));
       };
@@ -142,8 +151,18 @@ export default function CloudSearchPage() {
     });
     qs.set("page_size", "20");
     api.get(`/cloud/search?${qs.toString()}`)
-      .then((r) => setData({ ...r.data, source: "cloud" }))
-      .catch(() => {})
+      .then((r) => {
+        const payload = r?.data && typeof r.data === "object" && !Array.isArray(r.data) ? r.data : {};
+        setData({
+          items: Array.isArray(payload.items) ? payload.items : [],
+          total: Number(payload.total) || 0,
+          page: Number(payload.page) || page,
+          has_next: Boolean(payload.has_next),
+          sort: payload.sort,
+          source: "cloud",
+        });
+      })
+      .catch(() => setData({ items: [], total: 0, has_next: false, page: 1 }))
       .finally(() => setLoading(false));
   }, [filters]);
 
@@ -415,7 +434,7 @@ export default function CloudSearchPage() {
               >
                 <p className="text-stone-500 text-sm">{t("common.loading")}</p>
               </div>
-            ) : data.items.length === 0 ? (
+            ) : !(data.items || []).length ? (
               <div
                 className="rounded-2xl bg-[#f7f4ef] border border-stone-200 px-6 py-16 text-center"
                 data-testid="search-empty"
@@ -433,7 +452,7 @@ export default function CloudSearchPage() {
             ) : (
               <>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6" data-testid="search-results-list">
-                  {data.items.map((p) => <PropertyCard key={p.id} p={p} />)}
+                  {(data.items || []).map((p) => <PropertyCard key={p.id} p={p} />)}
                 </div>
                 {(data.has_next || data.page > 1) && (
                   <div className="flex justify-center gap-2 mt-10" data-testid="pagination">
