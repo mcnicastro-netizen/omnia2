@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { api } from "../../../shared/lib/api";
-import { useAuth, formatApiErrorDetail } from "../../../shared/lib/auth";
+import { useAuth, formatApiErrorDetail, isEmailAlreadyRegistered } from "../../../shared/lib/auth";
 import CloudPageHero from "../components/CloudPageHero";
 
 export default function CloudRegisterPage() {
@@ -17,7 +17,8 @@ export default function CloudRegisterPage() {
     nextCandidate.startsWith("/")
     && !nextCandidate.startsWith("//")
     && !nextCandidate.includes("://")
-  ) ? nextCandidate : "";
+  ) ? nextCandidate : `/${lang}/cloud/account`;
+  const loginHref = `/${lang}/login?from=cloud&next=${encodeURIComponent(nextPath)}`;
   const [form, setForm] = useState({
     name: "", email: "", password: "",
     intents: presetIntent ? [presetIntent] : [],
@@ -41,18 +42,21 @@ export default function CloudRegisterPage() {
     try {
       const { data } = await api.post("/cloud/auth/register", { ...form, lang });
       await refresh();
-      if (nextPath) {
-        nav(nextPath.startsWith("/") ? nextPath : `/${lang}/${nextPath}`, { replace: true });
+      if (presetIntent === "sell") {
+        nav(`/${lang}/cloud/account/sell`, { replace: true });
+        return;
+      }
+      if (nextPath && nextPath !== `/${lang}/cloud/account`) {
+        nav(nextPath, { replace: true });
         return;
       }
       setDone(data.user);
     } catch (e) {
-      const detail = e?.response?.data?.detail;
-      if (e?.response?.status === 409 || detail === "email_already_registered") {
+      if (isEmailAlreadyRegistered(e)) {
         setDupEmail(true);
         setErr(t("cloud.reg_email_exists"));
       } else {
-        setErr(formatApiErrorDetail(detail) || String(e.message || e));
+        setErr(formatApiErrorDetail(e?.response?.data?.detail) || String(e.message || e));
       }
     } finally { setBusy(false); }
   };
@@ -69,9 +73,9 @@ export default function CloudRegisterPage() {
           <p className="text-sm text-stone-600 mb-6">
             {t("cloud.reg_done_text", { name: done.name })}
           </p>
-          <button onClick={() => nav(`/${lang}/cloud`)}
+          <button onClick={() => nav(`/${lang}/cloud/account`)}
             className="px-5 py-2.5 bg-[#0B1E3F] text-white text-xs uppercase tracking-widest rounded-lg hover:bg-[#C19A6B]">
-            {t("cloud.reg_back_home")}
+            {t("cloud.reg_go_account")}
           </button>
         </div>
       </section>
@@ -95,7 +99,7 @@ export default function CloudRegisterPage() {
               {dupEmail && (
                 <p className="mt-2">
                   <Link
-                    to={`/${lang}/login`}
+                    to={loginHref}
                     data-testid="reg-login-link"
                     className="underline font-medium text-[#0B1E3F] hover:text-[#C19A6B]"
                   >
@@ -192,6 +196,13 @@ export default function CloudRegisterPage() {
             className="w-full bg-[#0B1E3F] text-white px-6 py-3 rounded-lg font-medium text-sm uppercase tracking-widest hover:bg-[#C19A6B] transition disabled:opacity-50">
             {busy ? t("cloud.reg_submitting") : t("cloud.reg_submit_btn")}
           </button>
+
+          <p className="text-sm text-center text-stone-600 pt-2">
+            {t("auth.have_account")}{" "}
+            <Link to={loginHref} data-testid="reg-have-account-login" className="underline text-[#0B1E3F] font-medium">
+              {t("auth.login_now")}
+            </Link>
+          </p>
         </form>
       </section>
     </div>

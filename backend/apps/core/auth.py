@@ -124,7 +124,8 @@ async def register(req: RegisterRequest, request: Request, response: Response,
 
     existing = await db.users.find_one({"email": email})
     if existing:
-        raise HTTPException(status_code=400, detail=t("auth.email_taken", lang=lang))
+        # Same machine code as B2C cloud register — FE shows localized copy + login CTA
+        raise HTTPException(status_code=409, detail="email_already_registered")
 
     # C1/S2 — public registration can never grant privileged roles.
     # agency_admin viene assegnato SOLO al completamento dell'onboarding (creazione agenzia);

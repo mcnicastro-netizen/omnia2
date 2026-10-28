@@ -154,7 +154,7 @@ export default function SellPage() {
   useEffect(() => {
     if (user === null) return; // still loading
     if (!user || user.account_type !== "b2c") {
-      nav(`/${lang}/cloud/register?intent=sell`, { replace: true });
+      nav(`/${lang}/cloud/area?intent=sell&next=${encodeURIComponent(`/${lang}/cloud/account/sell`)}`, { replace: true });
     }
   }, [user, lang, nav]);
 
