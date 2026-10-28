@@ -55,12 +55,27 @@ if [[ -n "${VERCEL_PROJECT_ID:-}" ]]; then
   export VERCEL_PROJECT_ID
 fi
 
-# Build locally first (catch CRA errors before upload)
+# Build locally first (catch CRA errors before upload).
+# Do NOT blank REACT_APP_BACKEND_URL here — package.json "build" respects the export
+# (Cloud preview same-origin uses: REACT_APP_BACKEND_URL= yarn build:same-origin / omnia-stack).
 yarn build
+
+# Guard: production FE must call absolute API, not Vercel same-origin /api (SPA HTML → crash).
+MAIN_JS="$(ls -1 "$FE"/build/static/js/main.*.js 2>/dev/null | head -1 || true)"
+if [[ -z "$MAIN_JS" ]] || ! grep -q "$API_URL" "$MAIN_JS"; then
+  echo "BLOCKED: built bundle missing REACT_APP_BACKEND_URL=$API_URL"
+  echo "Check frontend/package.json build script is not forcing REACT_APP_BACKEND_URL= empty."
+  exit 3
+fi
+if grep -q 'baseURL:"/api"' "$MAIN_JS"; then
+  echo "BLOCKED: bundle still has same-origin baseURL /api (prod would break cloud search)."
+  exit 3
+fi
+echo "OK  bundle embeds API host"
 
 echo "Deploying to Vercel…"
 npx --yes vercel@latest deploy --prebuilt "${ARGS[@]}" 2>/dev/null \
   || npx --yes vercel@latest --prod "${ARGS[@]}"
 
 echo "DONE — next: attach custom domains in Vercel + update Cloudflare (DNS_SETUP_GUIDE §4)."
-echo "Log tip: save deployment URL; smoke www + /it/login."
+echo "Log tip: save deployment URL; smoke www + /it/login + /it/cloud/search."

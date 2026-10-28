@@ -64,7 +64,30 @@ api.interceptors.request.use((config) => {
 });
 
 api.interceptors.response.use(
-  (r) => r,
+  (r) => {
+    // Vercel SPA rewrite can return index.html with 200 for /api/* when
+    // REACT_APP_BACKEND_URL was empty at build — treat as unreachable API.
+    const ct = String(r?.headers?.["content-type"] || "");
+    const data = r?.data;
+    const looksHtml =
+      ct.includes("text/html") ||
+      (typeof data === "string" && /^\s*<(!doctype|html)\b/i.test(data));
+    if (looksHtml) {
+      const err = new Error("API returned HTML instead of JSON (check REACT_APP_BACKEND_URL)");
+      err.response = r;
+      err.config = r.config;
+      err.code = "ERR_API_HTML";
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(
+          new CustomEvent("omnia:api-unreachable", {
+            detail: { status: r.status, url: r.config?.url, message: err.message },
+          }),
+        );
+      }
+      return Promise.reject(err);
+    }
+    return r;
+  },
   async (error) => {
     if (process.env.NODE_ENV !== "production") {
       console.error("[OMNIA API]", error?.response?.status, error?.message);
