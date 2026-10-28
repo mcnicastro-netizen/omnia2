@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Trans, useTranslation } from "react-i18next";
 import { Link, useNavigate } from "react-router-dom";
-import { useAuth, formatApiErrorDetail } from "../../shared/lib/auth";
+import { useAuth, formatApiErrorDetail, isEmailAlreadyRegistered } from "../../shared/lib/auth";
 import LanguageSwitcher from "../../shared/components/LanguageSwitcher";
 import Brand from "../../shared/components/Brand";
 import OmniaLogo from "../../shared/components/OmniaLogo";
@@ -22,7 +22,9 @@ export default function RegisterPage() {
   });
   const [policyAccepted, setPolicyAccepted] = useState(false);
   const [error, setError] = useState("");
+  const [dupEmail, setDupEmail] = useState(false);
   const [loading, setLoading] = useState(false);
+  const loginHref = `/${lang}/login?from=app&next=${encodeURIComponent(`/${lang}/app/dashboard`)}`;
 
   const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }));
 
@@ -31,6 +33,7 @@ export default function RegisterPage() {
   const submit = async (e) => {
     e.preventDefault();
     setError("");
+    setDupEmail(false);
     if (isAgencyRole && !policyAccepted) {
       setError(t("domain_vault.policy_required_error"));
       return;
@@ -58,10 +61,15 @@ export default function RegisterPage() {
       } else if (form.account_type === "student") {
         nav(`/${lang}/academy`, { replace: true });
       } else {
-        nav(`/${lang}/cloud`, { replace: true });
+        nav(`/${lang}/cloud/account`, { replace: true });
       }
     } catch (err) {
-      setError(formatApiErrorDetail(err.response?.data?.detail) || err.message);
+      if (isEmailAlreadyRegistered(err)) {
+        setDupEmail(true);
+        setError(t("auth.email_already_registered"));
+      } else {
+        setError(formatApiErrorDetail(err.response?.data?.detail) || err.message);
+      }
     } finally {
       setLoading(false);
     }
@@ -228,7 +236,14 @@ export default function RegisterPage() {
 
           {error && (
             <div data-testid="register-error" className="mb-5 p-3 border border-red-300 bg-red-50 text-red-700 text-sm font-sans">
-              {error}
+              <p>{error}</p>
+              {dupEmail && (
+                <p className="mt-2">
+                  <Link to={loginHref} data-testid="register-login-link" className="underline font-medium text-stone-900">
+                    {t("auth.login_now")} →
+                  </Link>
+                </p>
+              )}
             </div>
           )}
 
@@ -250,7 +265,7 @@ export default function RegisterPage() {
 
           <p className="mt-8 pt-6 border-t border-stone-200 text-sm font-sans text-stone-600">
             {t("auth.have_account")}{" "}
-            <Link to={`/${lang}/login`} className="text-stone-900 underline">
+            <Link to={loginHref} data-testid="register-have-account-login" className="text-stone-900 underline">
               {t("auth.login_now")}
             </Link>
           </p>

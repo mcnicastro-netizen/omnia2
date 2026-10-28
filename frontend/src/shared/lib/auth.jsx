@@ -21,6 +21,20 @@ export function formatApiErrorDetail(detail) {
   return String(detail);
 }
 
+/** True when register rejected because the email is already in use (B2C or B2B). */
+export function isEmailAlreadyRegistered(err) {
+  const status = err?.response?.status;
+  const detail = err?.response?.data?.detail;
+  if (status === 409 || detail === "email_already_registered") return true;
+  if (typeof detail === "string") {
+    const d = detail.toLowerCase();
+    if (d.includes("già registrat") || d.includes("already registered") || d.includes("ya está registrad")) {
+      return true;
+    }
+  }
+  return false;
+}
+
 async function loadSessionUser() {
   try {
     const { data } = await api.get("/auth/me");

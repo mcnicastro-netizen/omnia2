@@ -6,6 +6,7 @@ import FooterB2C from "./components/FooterB2C";
 import CloudHomePage from "./pages/CloudHomePage";
 import CloudSearchPage from "./pages/CloudSearchPage";
 import CloudRegisterPage from "./pages/CloudRegisterPage";
+import CloudAreaPage from "./pages/CloudAreaPage";
 import PropertyDetailPage from "./components/PropertyDetailPage";
 import SellPage from "./components/SellPage";
 import ValuatorPage from "./components/ValuatorPage";
@@ -54,6 +55,7 @@ export default function ImmocloudApp() {
         <Routes>
           <Route index element={<CloudHomePage />} />
           <Route path="search" element={<CloudSearchPage />} />
+          <Route path="area" element={<CloudAreaPage />} />
           <Route path="register" element={<CloudRegisterPage />} />
           <Route path="property/:pid" element={<PropertyDetailPage />} />
           <Route path="account/sell" element={<SellPage />} />

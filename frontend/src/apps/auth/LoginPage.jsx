@@ -8,6 +8,14 @@ import Brand from "../../shared/components/Brand";
 import OmniaLogo from "../../shared/components/OmniaLogo";
 import GoogleSignInButton from "../../shared/components/GoogleSignInButton";
 
+function resolvePortal(search, nextPath) {
+  const from = new URLSearchParams(search).get("from");
+  if (from === "cloud" || from === "app") return from;
+  if (nextPath.includes("/cloud")) return "cloud";
+  if (nextPath.includes("/app")) return "app";
+  return "cloud";
+}
+
 function EyeIcon({ open }) {
   // Minimal inline icons — no extra icon dependency
   if (open) {
@@ -33,10 +41,30 @@ export default function LoginPage() {
   const { login, loginWithGoogle, verifyMfa } = useAuth();
   const nav = useNavigate();
   const location = useLocation();
-  const next = sanitizeNextParam(
-    new URLSearchParams(location.search).get("next"),
-    `/${lang}/cloud`
-  );
+  const nextParam = new URLSearchParams(location.search).get("next");
+  const portalHint = new URLSearchParams(location.search).get("from");
+  const defaultNext = portalHint === "app" ? `/${lang}/app/dashboard` : `/${lang}/cloud/account`;
+  const next = sanitizeNextParam(nextParam, defaultNext);
+  const portal = resolvePortal(location.search, next);
+  const isCloud = portal === "cloud";
+  const registerHref = isCloud
+    ? `/${lang}/cloud/register?next=${encodeURIComponent(next)}`
+    : `/${lang}/register`;
+  const brandEyebrow = isCloud ? "ImmobilCloud — Area riservata" : "ImmoWeb — Gestionale agenzie";
+  const brandTitle = isCloud ? t("auth.login_title_cloud") : t("auth.login_title");
+
+  const resolvePostLoginPath = (data) => {
+    if (data?.account_type === "b2c") {
+      if (next.includes("/cloud")) return next;
+      return `/${lang}/cloud/account`;
+    }
+    if ((data?.agency_ids || []).length) {
+      if (next.includes("/app")) return next;
+      return `/${lang}/app/dashboard`;
+    }
+    if (next.includes("/app")) return next.includes("onboarding") ? next : `/${lang}/app/onboarding`;
+    return next;
+  };
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -88,7 +116,7 @@ export default function LoginPage() {
         setMfaToken(data.mfa_token);
         return;
       }
-      nav(next, { replace: true });
+      nav(resolvePostLoginPath(data), { replace: true });
     } catch (err) {
       const detail = err.response?.data?.detail;
       wipePassword();
@@ -109,8 +137,8 @@ export default function LoginPage() {
     setLoading(true);
     setError("");
     try {
-      await verifyMfa(mfaToken, mfaCode);
-      nav(next, { replace: true });
+      const data = await verifyMfa(mfaToken, mfaCode);
+      nav(resolvePostLoginPath(data), { replace: true });
     } catch (err) {
       clearMfaOnError.current = true;
       setMfaCode("");
@@ -128,7 +156,7 @@ export default function LoginPage() {
         setMfaToken(data.mfa_token);
         return;
       }
-      nav(next, { replace: true });
+      nav(resolvePostLoginPath(data), { replace: true });
     } catch (err) {
       setError(formatApiErrorDetail(err?.response?.data?.detail) || err.message);
     }
@@ -141,10 +169,19 @@ export default function LoginPage() {
       style={{ fontFamily: "'Fraunces', Georgia, serif" }}
     >
       <header className="flex items-center justify-between px-5 sm:px-8 md:px-12 py-5 border-b border-stone-300 bg-white">
-        <Link to={`/${lang}`} className="flex items-center gap-3 text-xl md:text-2xl tracking-tight font-medium">
+        <Link
+          to={isCloud ? `/${lang}/cloud` : `/${lang}`}
+          className="flex items-center gap-3 text-xl md:text-2xl tracking-tight font-medium"
+        >
           <OmniaLogo variant="mark" size="md" data-testid="login-logo" />
-          <span><Brand>OMNIA</Brand><span className="text-stone-400">·</span>
-          <Brand className="font-light">app</Brand></span>
+          {isCloud ? (
+            <span style={{ fontFamily: "'Fraunces', Georgia, serif" }}>
+              ImmobilCloud<sup className="text-[10px] text-[#C19A6B] ml-0.5">™</sup>
+            </span>
+          ) : (
+            <span><Brand>OMNIA</Brand><span className="text-stone-400">·</span>
+            <Brand className="font-light">app</Brand></span>
+          )}
         </Link>
         <LanguageSwitcher />
       </header>
@@ -205,9 +242,11 @@ export default function LoginPage() {
             className="w-full max-w-md bg-white border border-stone-300 p-8 md:p-10"
           >
             <p className="text-xs font-sans uppercase tracking-[0.3em] text-amber-700 mb-3">
-              <Brand>ImmoWeb — Agency CRM</Brand>
+              <Brand>{brandEyebrow}</Brand>
             </p>
-            <h1 className="text-3xl md:text-4xl tracking-tight mb-8">{t("auth.login_title")}</h1>
+            <h1 className="text-3xl md:text-4xl tracking-tight mb-8" data-testid="login-title">
+              {brandTitle}
+            </h1>
 
             <label className="block mb-5">
               <span className="block text-xs font-sans uppercase tracking-widest text-stone-500 mb-2">
@@ -292,16 +331,33 @@ export default function LoginPage() {
 
             <p className="text-sm font-sans text-stone-500 text-center">
               {t("auth.no_account")}{" "}
-              <Link to={`/${lang}/cloud/register`} className="text-stone-900 underline">
+              <Link to={registerHref} data-testid="login-register-link" className="text-stone-900 underline">
                 {t("auth.register_now")}
               </Link>
             </p>
-            <p className="text-xs font-sans text-stone-400 text-center mt-2">
-              {t("auth.register_agency_hint")}{" "}
-              <Link to={`/${lang}/register`} className="underline">
-                {t("auth.register_agency_link")}
-              </Link>
-            </p>
+            {isCloud ? (
+              <p className="text-xs font-sans text-stone-400 text-center mt-2">
+                {t("auth.register_agency_hint")}{" "}
+                <Link
+                  to={`/${lang}/login?from=app&next=${encodeURIComponent(`/${lang}/app/dashboard`)}`}
+                  className="underline"
+                  data-testid="login-switch-agency"
+                >
+                  {t("auth.register_agency_link")}
+                </Link>
+              </p>
+            ) : (
+              <p className="text-xs font-sans text-stone-400 text-center mt-2">
+                {t("auth.login_cloud_hint")}{" "}
+                <Link
+                  to={`/${lang}/login?from=cloud&next=${encodeURIComponent(`/${lang}/cloud/account`)}`}
+                  className="underline"
+                  data-testid="login-switch-cloud"
+                >
+                  {t("auth.login_cloud_link")}
+                </Link>
+              </p>
+            )}
           </form>
         )}
       </main>

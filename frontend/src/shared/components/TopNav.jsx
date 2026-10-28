@@ -5,6 +5,7 @@ import LanguageSwitcher from "./LanguageSwitcher";
 import MobileNav from "./MobileNav";
 import Brand from "./Brand";
 import OmniaLogo from "./OmniaLogo";
+import { useAuth } from "../lib/auth";
 
 /**
  * Shared top navigation across Landing, App, Learn.
@@ -15,6 +16,8 @@ import OmniaLogo from "./OmniaLogo";
 export default function TopNav({ current = "landing", theme = "light", suffix = null }) {
   const { t, i18n } = useTranslation();
   const lang = (i18n.language || "it").slice(0, 2);
+  const { user } = useAuth();
+  const b2cLoggedIn = Boolean(user && user.id && user.account_type === "b2c");
 
   const isPublicNav = current === "landing" || current === "academy";
 
@@ -58,7 +61,9 @@ export default function TopNav({ current = "landing", theme = "light", suffix = 
     },
     {
       key: "sell",
-      to: `/${lang}/cloud/register?intent=sell`,
+      to: b2cLoggedIn
+        ? `/${lang}/cloud/account/sell`
+        : `/${lang}/cloud/area?intent=sell&next=${encodeURIComponent(`/${lang}/cloud/account/sell`)}`,
       label: t("cloud.nav_sell"),
       testid: "topnav-sell",
     },
@@ -76,8 +81,12 @@ export default function TopNav({ current = "landing", theme = "light", suffix = 
   ];
 
   const navItems = isPublicNav ? landingItems : productItems;
-  const ctaTo = isPublicNav ? `/${lang}/cloud/register` : `/${lang}/login`;
-  const ctaLabel = isPublicNav ? t("cloud.nav_area") : t("nav.login");
+  const ctaTo = isPublicNav
+    ? (b2cLoggedIn ? `/${lang}/cloud/account` : `/${lang}/cloud/area`)
+    : `/${lang}/login?from=app&next=${encodeURIComponent(`/${lang}/app/dashboard`)}`;
+  const ctaLabel = isPublicNav
+    ? (b2cLoggedIn ? t("cloud.nav_account") : t("cloud.nav_area"))
+    : t("nav.login");
   const ctaTestId = isPublicNav ? "topnav-area" : "topnav-login";
 
   const mobileLinks = [

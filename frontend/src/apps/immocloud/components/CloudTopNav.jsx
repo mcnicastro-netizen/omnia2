@@ -14,7 +14,10 @@ export default function CloudTopNav() {
   const [open, setOpen] = useState(false);
   const sellTo = loggedIn && user?.account_type === "b2c"
     ? `/${lang}/cloud/account/sell`
-    : `/${lang}/cloud/register?intent=sell`;
+    : `/${lang}/cloud/area?intent=sell&next=${encodeURIComponent(`/${lang}/cloud/account/sell`)}`;
+  const areaTo = loggedIn
+    ? `/${lang}/cloud/account`
+    : `/${lang}/cloud/area`;
   const links = [
     { to: `/${lang}/cloud/search`, testid: "cloud-nav-search", label: t("cloud.nav_search") },
     { to: sellTo, testid: "cloud-nav-sell", label: t("cloud.nav_sell") },
@@ -44,7 +47,7 @@ export default function CloudTopNav() {
         <div className="flex items-center gap-3">
           {loggedIn && <NotificationBell />}
           <Link
-            to={loggedIn ? `/${lang}/cloud/account` : `/${lang}/cloud/register`}
+            to={areaTo}
             data-testid="cloud-nav-area"
             className="px-4 py-2 text-[11px] uppercase tracking-[0.18em] bg-[#0B1E3F] text-white rounded-lg hover:bg-[#C19A6B] transition"
           >

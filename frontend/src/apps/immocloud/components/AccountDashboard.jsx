@@ -34,7 +34,7 @@ export default function AccountDashboard() {
   useEffect(() => {
     if (user === null) return;
     if (!user || user.account_type !== "b2c") {
-      nav(`/${lang}/cloud/register`, { replace: true });
+      nav(`/${lang}/cloud/area?next=${encodeURIComponent(`/${lang}/cloud/account`)}`, { replace: true });
       return;
     }
     Promise.all([
