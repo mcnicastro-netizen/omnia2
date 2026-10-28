@@ -149,6 +149,11 @@ voci:
           fallback su 'it'."
         - "Mock mode: se RESEND_API_KEY assente nel process env, l'email
           NON viene spedita, solo loggata con prefix `[EMAIL MOCK]`."
+        - "D-132 mittente SoT: env SENDER_EMAIL =
+          OMNIA <info@omniarealestateecosystem.it>. Mai
+          onboarding@resend.dev in prod (sandbox blocca to= arbitrari).
+          client.py auto-heala se trova sandbox. Non usare EMAIL_FROM
+          (legacy docs)."
         - "D-116: SoT chiave = console Resend + password manager.
           Cloud omnia2 = vault Secrets, non backend/.env committato.
           Verifica: scripts/check-secrets-presence.sh (mai valori).
@@ -164,6 +169,10 @@ voci:
             Reinietta da console Resend nel vault omnia2 e avvia un
             NUOVO agent. Non stampare il valore. Dev locale: .env
             gitignored + riavvio backend.
+        - problema: "password_reset non arriva / solo inbox Resend"
+          soluzione: >
+            SENDER_EMAIL sandbox. Imposta production su Railway +
+            redeploy (D-132). Log [EMAIL SENDER] refusing sandbox.
       permessi:
         - "Fire-and-forget (fallimenti solo loggati, no retry queue)"
     screenshot:
@@ -672,7 +681,10 @@ voci:
         - "E1 Non ricevo welcome/password_reset. Causa 1: RESEND_API_KEY
           assente nel process env → mock. Fix: check-secrets-presence.sh.
           Cloud: vault omnia2 (D-116), non .env git. 5-Ott omnia2 PRESENT."
-        - "E1 Causa 2: email in spam. Fix: whitelist EMAIL_FROM."
+        - "E1 Causa 2: email in spam. Fix: whitelist SENDER_EMAIL
+          (info@omniarealestateecosystem.it)."
+        - "E1 Causa 4 D-132: SENDER_EMAIL=onboarding@resend.dev →
+          set production + auto-heal client.py."
         - "E1 Causa 3: Resend rifiuta (rate limit / dominio non
           verificato). Fix: log backend cerca `[EMAIL ERROR]`."
         - "E2 Ho invitato un collega ma non riceve email. Vedi Cap. 13

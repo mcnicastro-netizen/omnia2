@@ -970,6 +970,11 @@ voci:
           soluzione: >
             Risalvare solo `OMNIA_API_PUBLIC_URL`
             (scripts/vercel-deploy.sh ora strippa il prefisso).
+        - problema: "Academy → Cerca casa crash / API undefined (D-133)"
+          soluzione: >
+            Build Vercel senza REACT_APP_BACKEND_URL. Redeploy con
+            vercel-deploy.sh che bake OMNIA_API_PUBLIC_URL. Non
+            blankare BACKEND_URL in package.json build script.
       permessi:
         - super_admin / Founder
       screenshot: []

@@ -113,7 +113,7 @@ PATCH /api/auth/me/notification-preferences
 
 ## 18.4 · Email transazionali · panoramica 7 template
 
-**Provider**: Resend (via `resend-py`, chiamata `resend.Emails.send`). Chiave in env `RESEND_API_KEY`. Sender in env `EMAIL_FROM`. Se `RESEND_API_KEY` non è configurata → **mock mode**: nessun invio, log a stdout con prefix `[EMAIL MOCK]`.
+**Provider**: Resend (via `resend-py`, chiamata `resend.Emails.send`). Chiave in env `RESEND_API_KEY`. Mittente in env **`SENDER_EMAIL`** (SoT · D-132): `OMNIA <info@omniarealestateecosystem.it>`. **Non** usare `EMAIL_FROM` (legacy docs) né `onboarding@resend.dev` (sandbox: blocca destinatari arbitrari; il client auto-heala in produzione). Se `RESEND_API_KEY` non è configurata → **mock mode**: nessun invio, log a stdout con prefix `[EMAIL MOCK]`.
 
 **Lingua**: derivata da user (o parametro esplicito). Default `it`. Fallback su `it` se lingua richiesta non ha template.
 
@@ -366,8 +366,9 @@ db.al_audit.find({user_id: "..."}).sort({created_at: -1}).limit(50)
 - **Causa 1**: `RESEND_API_KEY` non configurata in `.env` backend → mock mode, l'email è **solo loggata**, non spedita.
   - Fix (dev): controlla i log backend, cerca `[EMAIL MOCK]`.
   - Fix (prod): configura `RESEND_API_KEY` nel deploy env.
-- **Causa 2**: email finita in spam. Fix: whitelist mittente Resend (env `EMAIL_FROM`).
+- **Causa 2**: email finita in spam. Fix: whitelist mittente `OMNIA <info@omniarealestateecosystem.it>` (`SENDER_EMAIL`).
 - **Causa 3**: Resend rifiuta (rate limit, dominio non verificato). Fix: log backend cerca `[EMAIL ERROR]`.
+- **Causa 4 (D-132)**: `SENDER_EMAIL` ancora sandbox `onboarding@resend.dev` → Resend accetta solo inbox account. Fix: Variables Railway + default codice production; log `[EMAIL SENDER] refusing sandbox`.
 
 ### E2 · "Ho invitato un collega ma non riceve l'email"
 - Vedi Cap. 13 §13.11.
@@ -446,6 +447,7 @@ db.al_audit.find({user_id: "..."}).sort({created_at: -1}).limit(50)
 - **24-Sep-2026 · D-093 P0**: **A-029** stats privato (view/lead + serie 30g su SellPage); **A-030** alert preferiti su sold/rented/withdrawn (+ ribasso già live). Backlog A-031…A-033.
 - **14-Ott-2026 · D-124**: rail promo documenti (APE / planimetria / accesso atti) su SellPage §18.7c — UI only.
 - **15-Ott-2026 · D-125**: Accesso agli atti = copia progetto comunale; no wallet; box «Presto disponibile» fino ad accordo a consumo.
+- **28-Ott-2026 · D-132**: mittente SoT = `SENDER_EMAIL` production; anti-sandbox; recovery password unica per tutti i ruoli.
 - **A-018 activity feed** ancora assente: dashboard = KPI, non timeline.
 - **`push` schema / non implementato** (A-033 futuro).
 - Cron saved-searches: frequenza rispettata (A-019) + **scheduler interno** (A-020) + pass preferiti ribasso/ended.

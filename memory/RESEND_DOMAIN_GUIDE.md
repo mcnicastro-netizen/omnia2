@@ -2,7 +2,7 @@
 
 **Stato email:** ✅ **VERIFIED** (dal 26-Giu-2026)  
 **DNS:** Cloudflare (delegato da Aruba) — vedi anche [`DNS_SETUP_GUIDE.md`](./DNS_SETUP_GUIDE.md)  
-**Ultimo aggiornamento:** 10 Ottobre 2026 (allineamento stack omnia2; **Vercel ancora pending**)
+**Ultimo aggiornamento:** 28 Ottobre 2026 (D-132 mittente production live; Vercel FE già go-live)
 
 > **SoT sito/API/DNS FE:** `DNS_SETUP_GUIDE.md` (non Emergent).  
 > Questo file resta SoT per **email Resend** + storia migrazione DNS.
@@ -111,8 +111,10 @@ Test invio: `SENDER_EMAIL` deve essere `OMNIA <info@omniarealestateecosystem.it>
 | Mail casella Aruba KO | MX/`mx` con proxy 🟠 | DNS only ☁️ |
 | Resend pending | NS non CF / record incompleti | Verifica NS + record § Resend |
 | Spam | DMARC `p=none` | OK in monitor; poi `quarantine` |
-| Sito 403 | Vercel non collegato | Deploy Vercel + aggiorna CNAME (DNS_SETUP_GUIDE) |
-| Demo non apre su dominio | Domino prod non ready | Usa tunnel `SHARE_URL.txt` |
+| Password reset non arriva / solo account Resend | `SENDER_EMAIL=onboarding@resend.dev` (sandbox) | Railway Variables → `OMNIA <info@omniarealestateecosystem.it>` · codice auto-heal (D-132) |
+| `[EMAIL MOCK]` nei log | `RESEND_API_KEY` assente nel processo | Vault omnia2 / `.env` · `check-secrets-presence.sh` |
+| Sito 403 | DNS/origin | `DNS_SETUP_GUIDE` · Vercel alias |
+| Demo non apre su dominio | Origin/tunnel | Tunnel `omnia-stack.sh` / `SHARE_URL.txt` |
 
 ---
 
@@ -120,4 +122,5 @@ Test invio: `SENDER_EMAIL` deve essere `OMNIA <info@omniarealestateecosystem.it>
 
 - **25-Giu-2026**: migrazione DNS Aruba → Cloudflare per sbloccare Resend. Aruba = registrar.
 - **26-Giu-2026**: Resend VERIFIED · primo invio ufficiale.
-- **10-Ott-2026**: guide allineate a omnia2; **deploy Vercel ancora pending**; Emergent CNAME = legacy.
+- **10-Ott-2026**: guide allineate a omnia2; Emergent CNAME = legacy.
+- **28-Ott-2026 · D-132**: default + Railway `SENDER_EMAIL` = `OMNIA <info@omniarealestateecosystem.it>`; rifiuto sandbox `onboarding@resend.dev`; smoke `password_reset` **delivered**.

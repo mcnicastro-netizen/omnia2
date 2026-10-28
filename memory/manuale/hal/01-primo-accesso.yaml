@@ -98,20 +98,55 @@ voci:
     screenshot:
       - "[SCREEN: cap1-login-form]"
 
+  - id: primo-accesso.area-riservata-cloud
+    titolo: Area riservata ImmobilCloud — Accedi o Crea account (D-131)
+    modulo: Primo accesso
+    widget: null
+    pubblico: [titolare, agente, segreteria, privato]
+    livello: base
+    tags: [login, registrazione, cloud, area-riservata, d-131, b2c]
+    correlati:
+      - primo-accesso.login-primo-ingresso
+      - primo-accesso.password-dimenticata
+    domanda_naturale: "Dove faccio login sul portale? Cos'è Area riservata?"
+    contenuto:
+      a_cosa_serve: >
+        Hub /cloud/area: scelta esplicita Accedi vs Crea account per
+        ImmobilCloud B2C (D-131). Anti-duplicati: email già registrata
+        → 409 email_already_registered + CTA Accedi.
+      quando_si_usa: >
+        Click Area riservata in nav portale; primo ingresso privato;
+        tentativo di registrarsi con email già usata (B2C o B2B).
+      passi:
+        - "Apri Area riservata → /cloud/area."
+        - "Scegli Accedi (login) oppure Crea account (register)."
+        - "Se 409 email già registrata: usa Accedi, non creare un secondo account."
+      errori_comuni:
+        - problema: "Mi mandava solo a registrazione"
+          soluzione: >
+            Fix D-131: hub con entrambe le azioni. Redeploy FE Vercel
+            se vedi ancora il vecchio comportamento.
+      permessi:
+        - Pubblico portale / account esistenti
+    screenshot: []
+
   - id: primo-accesso.password-dimenticata
     titolo: Recuperare la password dimenticata
     modulo: Primo accesso
     widget: null
-    pubblico: [titolare, agente, segreteria]
+    pubblico: [titolare, agente, segreteria, privato]
     livello: base
-    tags: [password, recupero, sicurezza]
+    tags: [password, recupero, sicurezza, resend, d-132]
     correlati:
       - primo-accesso.login-primo-ingresso
       - primo-accesso.cambiare-password
+      - notifiche.template-welcome-password
     domanda_naturale: "Ho dimenticato la password, come faccio?"
     contenuto:
       a_cosa_serve: >
-        Rientrare in ImmoWeb quando non ricordi la password.
+        Recovery unica per tutti i ruoli (privato, agente, admin,
+        Founder) via POST /api/auth/forgot-password. Email da
+        OMNIA <info@omniarealestateecosystem.it> (D-132).
       quando_si_usa: >
         Ogni volta che il login fallisce e non ricordi la password
         corretta.
@@ -119,8 +154,8 @@ voci:
         - Dalla schermata di accesso clicca "Password dimenticata".
         - Scrivi la tua email.
         - Clicca "Invia link di recupero".
-        - Controlla la posta (arriva entro un paio di minuti, guarda
-          anche in Spam).
+        - Controlla la posta (mittente info@omniarealestateecosystem.it;
+          arriva entro un paio di minuti, guarda anche in Spam).
         - Apri la mail e clicca il link.
         - Imposta una nuova password (almeno 8 caratteri, con una
           maiuscola e un numero).
@@ -128,9 +163,8 @@ voci:
       errori_comuni:
         - problema: "Non arriva la mail di recupero"
           soluzione: >
-            Controlla Spam e Promozioni. Se non arriva dopo 5 minuti, la
-            tua email potrebbe essere diversa da quella registrata.
-            Chiedi al titolare di verificarla nella sezione Collaboratori.
+            Controlla Spam. Ops: SENDER_EMAIL non deve essere
+            onboarding@resend.dev (sandbox). Vedi Cap.18 / D-132.
         - problema: "Il link nella mail non funziona"
           soluzione: >
             I link di recupero scadono dopo un'ora. Rifai la procedura

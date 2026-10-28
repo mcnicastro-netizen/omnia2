@@ -1,7 +1,7 @@
 # Capitolo 1 · Primo accesso
 
-**Versione manuale**: v1.1 · **Ultima revisione**: Set 2026
-**Chi lo legge**: titolari, agenti, segreteria (chiunque debba iniziare a usare ImmoWeb)
+**Versione manuale**: v1.2 · **Ultima revisione**: 28-Ott-2026 (D-131 Area riservata · D-132 Resend)
+**Chi lo legge**: titolari, agenti, segreteria (chiunque debba iniziare a usare ImmoWeb); privatamente anche utenti ImmobilCloud
 **Prerequisiti**: aver ricevuto le credenziali (email + password) o un invito da un collega
 
 ---
@@ -54,13 +54,23 @@ Il tuo titolare (o il servizio OMNIA se ti sei registrato tu stesso) ti ha invia
 - *"Il link scade dopo 7 giorni"*: se hai ricevuto un invito e non l'hai aperto in tempo, chiedi al titolare di re-inviarlo dalla sezione **Collaboratori** (Cap. 13).
 - *Login che sembra riuscito ma resti fuori / “non funziona” su URL pubblico (tunnel Cloudflare)*: fai un **hard refresh** (Safari: Cmd+Option+R; Firefox: Ctrl+Shift+R). I cookie di sessione sul dominio HTTPS devono avere il flag **Secure** — il preview OMNIA li aggiunge automaticamente. Vale per Safari, Firefox ed Edge, non solo Chrome. Demo Cloud: `demo.admin@omniaecosystem.it` / password in `DEMO_ADMIN_PASSWORD`.
 
+### 1.2.1b Area riservata ImmobilCloud (B2C · D-131)
+
+Sul portale, **Area riservata** apre l'hub `/cloud/area` con due scelte chiare:
+- **Accedi** → login esistente
+- **Crea account** → registrazione privato
+
+Se l'email è già registrata (B2C o B2B), la registrazione risponde **409** con messaggio e link ad Accedi — niente account doppi.
+
 ### 1.2.2 Ho dimenticato la password
+
+Vale per **tutti i ruoli** (privato, agente, admin, Founder): stesso endpoint `POST /api/auth/forgot-password`.
 
 **Passi**
 1. Dalla schermata di accesso clicca **Password dimenticata**.
 2. Scrivi la tua email.
 3. Clicca **Invia link di recupero**.
-4. Apri la mail (arriva in genere entro 2 minuti; controlla anche lo spam).
+4. Apri la mail (mittente `OMNIA <info@omniarealestateecosystem.it>` · D-132; entro ~2 minuti; controlla anche lo spam).
 5. Clicca il link nella mail.
 6. Imposta una **nuova password** (almeno 8 caratteri, con una maiuscola e un numero).
 7. Torna alla schermata di accesso ed entra con la nuova password.
@@ -68,7 +78,7 @@ Il tuo titolare (o il servizio OMNIA se ti sei registrato tu stesso) ti ha invia
 [SCREEN: cap1-forgot-password]
 
 **Errori comuni**
-- *"Non arriva la mail"*: controlla la cartella Spam/Promozioni. Se non c'è dopo 5 minuti, la tua email potrebbe non essere quella collegata all'account: chiedi al titolare di verificare dalle **Collaboratori**.
+- *"Non arriva la mail"*: controlla Spam/Promozioni. Se non arriva dopo 5 minuti, verifica l'email in **Collaboratori** (B2B) o riprova. Founder/ops: `SENDER_EMAIL` non deve essere sandbox Resend (D-132 · Cap. 18).
 
 ### 1.2.3 Cambiare la password in un secondo momento
 

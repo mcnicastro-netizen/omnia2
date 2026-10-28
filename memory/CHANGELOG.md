@@ -1,3 +1,12 @@
+## 2026-10-28 — Ops merge: Area auth + Cerca casa + Resend + vault note
+
+- **D-131** Area riservata `/cloud/area` (Accedi/Crea account) + 409 anti-duplicati B2C/B2B
+- **D-132** Resend `SENDER_EMAIL` production + anti-sandbox; smoke password_reset delivered
+- **D-133** Vercel bake `REACT_APP_BACKEND_URL` (fix Academy→Cerca casa)
+- Docs vault Personal vs Environment (#61)
+- Manuale Cap.00/01/18 + HAL YAML · `RESEND_DOMAIN_GUIDE` · `NEXT_SESSION`
+- PR merge: #61 #62 #63 #64 → `main`
+
 ## 2026-10-20 — Dogfood results (fix tunnel/B2C) su main
 
 - Merge selettivo da branch dogfood E2E: `omnia-stack` tunnel già su main;

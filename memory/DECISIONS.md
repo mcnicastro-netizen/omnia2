@@ -7,6 +7,38 @@ Registro di tutte le decisioni di business e tecniche prese durante il progetto.
 
 ## Decisioni prese
 
+### D-133 — Vercel FE: `REACT_APP_BACKEND_URL` obbligatorio al build (Academy → Cerca casa) · 28-Ott-2026
+- **Data**: 28 Ottobre 2026
+- **Contesto**: Live: da Academy → Cerca casa crashava perché il build Vercel lasciava l’API URL vuota (CRA bake-time).
+- **Decisione**:
+  1. `scripts/vercel-deploy.sh` + `frontend/package.json` **devono** iniettare `REACT_APP_BACKEND_URL` da `OMNIA_API_PUBLIC_URL` (strip prefisso `KEY=` se presente).
+  2. `api.js` / CloudSearch: fail-soft con messaggio chiaro se base URL assente — mai chiamare `undefined/api/...`.
+  3. Redeploy Vercel obbligatorio dopo cambio URL API.
+- **Implementazione**: PR #62 · incluso in merge ops 28-Ott.
+- **Stato**: ✅ **DECISIONE OPERATIVA REGISTRATA** · shippata
+
+### D-132 — Resend mittente production + anti-sandbox · 28-Ott-2026
+- **Data**: 28 Ottobre 2026
+- **Contesto**: Recovery password “rotta”: Railway inviava da `onboarding@resend.dev` (sandbox) → Resend rifiuta destinatari arbitrari. Dominio `omniarealestateecosystem.it` già VERIFIED.
+- **Decisione**:
+  1. SoT mittente = `SENDER_EMAIL=OMNIA <info@omniarealestateecosystem.it>` (non `EMAIL_FROM`).
+  2. Default codice = stesso mittente production; **mai** default sandbox.
+  3. Auto-heal: se `SENDER_EMAIL` è ancora `@resend.dev`, log error e forza mittente production.
+  4. Recovery password è **unica** per tutti i ruoli (privato / agente / admin / Founder) via `POST /api/auth/forgot-password`.
+- **Implementazione**: `shared/email/client.py` · `.env.example` · Variables Railway · PR #64 · smoke delivered 28-Ott.
+- **Stato**: ✅ **DECISIONE OPERATIVA REGISTRATA** · live Railway OK
+
+### D-131 — Area riservata Accedi/Crea account + anti-duplicati B2C/B2B · 28-Ott-2026
+- **Data**: 28 Ottobre 2026
+- **Contesto**: Nav «Area riservata» mandava solo a register; login/register confusi tra portale e CRM; email già registrata senza feedback chiaro.
+- **Decisione**:
+  1. Hub **`/cloud/area`**: scelta esplicita **Accedi** vs **Crea account** (B2C ImmobilCloud).
+  2. Login/register B2C e B2B restano flussi distinti ma con UX coerente (link crociati Accedi ↔ Crea account).
+  3. Email già presente → **409** `email_already_registered` + CTA Accedi (FE i18n it/en/es).
+  4. Non reintrodurre area MyAgency-like (D-091 resta: no area riservata *cliente* tipo portale terzi).
+- **Implementazione**: `CloudAreaPage` · Login/Register · `auth.py` 409 · PR #63.
+- **Stato**: ✅ **DECISIONE OPERATIVA REGISTRATA** · shippata
+
 ### D-117 — Founder Ops: incassi per voce + fatture + scheda mensile · 07-Ott-2026
 - **Data**: 7 Ottobre 2026
 - **Contesto**: dopo dogfood Visura il Founder non vedeva l’incasso sul cruscotto super_admin (`amount_eur` assente; nessuna riga B2C dedicata; zero UI fatture).
