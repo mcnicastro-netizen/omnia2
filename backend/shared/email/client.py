@@ -13,7 +13,11 @@ import resend
 
 logger = logging.getLogger(__name__)
 
-SENDER = os.environ.get("SENDER_EMAIL", "onboarding@resend.dev")
+# Production SoT: verified Resend domain omniarealestateecosystem.it
+# (memory/RESEND_DOMAIN_GUIDE.md). onboarding@resend.dev only accepts the
+# Resend account inbox — never use it for arbitrary recipients.
+_DEFAULT_SENDER = "OMNIA <info@omniarealestateecosystem.it>"
+SENDER = (os.environ.get("SENDER_EMAIL") or _DEFAULT_SENDER).strip() or _DEFAULT_SENDER
 TEMPLATES_DIR = Path(__file__).resolve().parent / "templates"
 
 
@@ -23,6 +27,11 @@ def _configure_resend() -> bool:
         return False
     resend.api_key = key
     return True
+
+
+def _sender_is_dev_sandbox(sender: str) -> bool:
+    s = (sender or "").lower()
+    return "onboarding@resend.dev" in s or s.endswith("@resend.dev>")
 
 
 def _read_template(name: str, lang: str) -> str:
