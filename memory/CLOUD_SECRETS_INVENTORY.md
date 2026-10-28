@@ -52,7 +52,7 @@ Dopo il Save, **riavvia un nuovo agent** sullo stesso environment (i secret non 
 | `OPENAPI_TOKEN` | Opz. alt. a email+key | Console OpenAPI.it | Bearer statico |
 | `OPENAPI_CATASTO_BASE` | Consigliato sandbox | es. `https://test.catasto.openapi.it` | Host Catasto |
 | `OPENAPI_OAUTH_BASE` | Consigliato sandbox | es. `https://test.oauth.openapi.com` | Host OAuth |
-| `GOOGLE_CLIENT_ID` | Opzionale | Google Cloud Console → OAuth | Login Google |
+| `GOOGLE_CLIENT_ID` | **Sì (live D-134)** | Google Cloud Console → OAuth **Web** Client ID (`…apps.googleusercontent.com`) | Login Google · mai placeholder · Railway + Environment |
 | `JWT_SECRET` | Consigliato (prod) | Genera nuovo se perso (`openssl rand -hex 32`) | Sessioni; se cambi, tutti i login scadono |
 | `FRONTEND_BASE_URL` | Dogfood tunnel | URL pubblico preview/tunnel (non `127.0.0.1`) | Link in email alert/lead |
 | `FRONTEND_URL` | Dogfood tunnel | idem | Welcome / reset password |

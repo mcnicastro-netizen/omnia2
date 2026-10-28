@@ -62,6 +62,12 @@ Sul portale, **Area riservata** apre l'hub `/cloud/area` con due scelte chiare:
 
 Se l'email è già registrata (B2C o B2B), la registrazione risponde **409** con messaggio e link ad Accedi — niente account doppi.
 
+### 1.2.1c Continua con Google (D-134)
+
+Su login/registrazione compare **Continua con Google** se l’API ha `GOOGLE_CLIENT_ID` valido (Client ID Web Console Google).  
+Ops: Railway Variables + vault Cursor · vedi `memory/GOOGLE_AUTH.md`.  
+Errore tipico `401: invalid_client` = Client ID placeholder o assente — non un bug del form password.
+
 ### 1.2.2 Ho dimenticato la password
 
 Vale per **tutti i ruoli** (privato, agente, admin, Founder): stesso endpoint `POST /api/auth/forgot-password`.

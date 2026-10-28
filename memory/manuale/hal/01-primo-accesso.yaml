@@ -98,6 +98,42 @@ voci:
     screenshot:
       - "[SCREEN: cap1-login-form]"
 
+  - id: primo-accesso.google-sign-in
+    titolo: Continua con Google (D-134)
+    modulo: Primo accesso
+    widget: null
+    pubblico: [titolare, agente, segreteria, privato]
+    livello: base
+    tags: [login, google, oauth, d-134, gsi]
+    correlati:
+      - primo-accesso.login-primo-ingresso
+      - primo-accesso.area-riservata-cloud
+    domanda_naturale: "Come funziona Continua con Google? Perché invalid_client?"
+    contenuto:
+      a_cosa_serve: >
+        Login/registrazione con Google Identity Services. Richiede
+        GOOGLE_CLIENT_ID = OAuth Web Client ID reale su Railway e vault.
+      quando_si_usa: >
+        Pulsante Continua con Google su /it/login e register cloud.
+      passi:
+        - "Console Google: consenso External + client Applicazione Web."
+        - "Origini JS: apex/www/app/cloud + alias Vercel."
+        - "Imposta GOOGLE_CLIENT_ID (…apps.googleusercontent.com) su
+          Railway Variables e Cursor Environment; Deploy Railway."
+        - "Smoke: GET /api/auth/google/config → enabled true."
+      errori_comuni:
+        - problema: "401 invalid_client"
+          soluzione: >
+            Client ID placeholder o non Web. Ricrea client e aggiorna
+            Railway+vault (D-134). Vedi GOOGLE_AUTH.md.
+        - problema: "Origin non autorizzata"
+          soluzione: >
+            Aggiungi l'URL esatto della pagina (https, senza path) alle
+            origini JavaScript del client OAuth.
+      permessi:
+        - Pubblico login
+    screenshot: []
+
   - id: primo-accesso.area-riservata-cloud
     titolo: Area riservata ImmobilCloud — Accedi o Crea account (D-131)
     modulo: Primo accesso

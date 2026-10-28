@@ -7,6 +7,17 @@ Registro di tutte le decisioni di business e tecniche prese durante il progetto.
 
 ## Decisioni prese
 
+### D-134 — Google Sign-In live: Client ID Web reale (no placeholder) · 28-Ott-2026
+- **Data**: 28 Ottobre 2026
+- **Contesto**: «Continua con Google» → `401: invalid_client`. In vault/Railway c’era un placeholder (13 char), non un OAuth Web Client ID. Console Google: zero client + consenso da configurare. P-021 (Google opz. OFF) chiuso operativamente.
+- **Decisione**:
+  1. `GOOGLE_CLIENT_ID` SoT = Client ID **Web application** da Google Cloud Console (`…apps.googleusercontent.com`, tipicamente ~70+ char). Mai placeholder.
+  2. Deve essere in **Railway Variables** (login live) **e** vault Cursor Environment omnia2 (agent). Personal OK se Environment glitcha.
+  3. Origini JS autorizzate: apex / www / app / cloud + alias Vercel. Nessun Client Secret per flusso GIS (ID token).
+  4. Consent screen External + test user Founder finché app in Testing.
+- **Implementazione**: Console OAuth Web · vault Environment · Railway set + deploy · smoke `/api/auth/google/config` enabled+valid · guide `GOOGLE_AUTH.md`.
+- **Stato**: ✅ **DECISIONE OPERATIVA REGISTRATA** · live OK 28-Ott
+
 ### D-133 — Vercel FE: `REACT_APP_BACKEND_URL` obbligatorio al build (Academy → Cerca casa) · 28-Ott-2026
 - **Data**: 28 Ottobre 2026
 - **Contesto**: Live: da Academy → Cerca casa crashava perché il build Vercel lasciava l’API URL vuota (CRA bake-time).

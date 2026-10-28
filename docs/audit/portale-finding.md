@@ -25,7 +25,7 @@
 | P-018 | P1 | C | Vault Cloud incompleto vs runtime (Stripe/OPENAPI solo `.env`) | MITIGATO |
 | P-019 | P2 | C | `FRONTEND_*` / `OMNIA_PUBLIC_URL` = localhost:43122 | CHIUSO |
 | P-020 | P3 | C | `check-secrets` non copre `OPENAPI_*` / Stripe dogfood | CHIUSO |
-| P-021 | P3 | C | `GOOGLE_CLIENT_ID` absent — login Google OFF | APERTO (opz.) |
+| P-021 | P3 | C | `GOOGLE_CLIENT_ID` absent — login Google OFF | **CHIUSO** 28-Ott (D-134 live) |
 | P-022 | P0 | D | Stripe **live** in Cloud (`sk_live`/`pk_live`, plans `mode=live`) | **CHIUSO** |
 | P-023 | P1 | D | OpenAPI key OK ma product `openapi_visure_enabled=false` (manca email / D-116) | **CHIUSO** |
 | P-024 | P3 | D | Env/docs citano `gemini-2.0-flash` deprecato; product HAL OK | **CHIUSO** |

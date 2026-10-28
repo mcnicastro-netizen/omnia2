@@ -59,11 +59,12 @@ Alias Railway: `https://omnia-api-production-2cec.up.railway.app`. Progetto `omn
 DNS SoT: `memory/DNS_SETUP_GUIDE.md`. Runbook: `docs/ops/RAILWAY_DEPLOY.md` · `docs/ops/VERCEL_DEPLOY.md` · `memory/STRIPE_ONBOARDING.md`.  
 HAL: `api.railway-api-deploy` · `api.vercel-fe-deploy` · `api.stripe-sandbox-cloud` · `api.cloud-secrets-vault`.
 
-### D-131 / D-132 / D-133 — Ops live (28-Ott-2026)
+### D-131 / D-132 / D-133 / D-134 — Ops live (28-Ott-2026)
 
 - **D-131 Auth area**: hub B2C `/cloud/area` (Accedi / Crea account); 409 `email_already_registered` su duplicati. Recovery password unica (`forgot-password`) per tutti i ruoli.
 - **D-132 Resend**: `SENDER_EMAIL=OMNIA <info@omniarealestateecosystem.it>` (non `EMAIL_FROM` / non sandbox `onboarding@resend.dev`). Auto-heal in `shared/email/client.py`. Guide: `RESEND_DOMAIN_GUIDE.md`.
 - **D-133 Vercel bake**: build FE **deve** impostare `REACT_APP_BACKEND_URL` da `OMNIA_API_PUBLIC_URL` (`vercel-deploy.sh`) — altrimenti Academy→Cerca casa crasha.
+- **D-134 Google Sign-In**: `GOOGLE_CLIENT_ID` = OAuth **Web** reale (`…apps.googleusercontent.com`) su Railway + vault Environment. Placeholder → `401: invalid_client`. Guide: `GOOGLE_AUTH.md`. P-021 chiuso.
 
 ### Incident Railway Variables (22-Ott-2026)
 

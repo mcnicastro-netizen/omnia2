@@ -1,6 +1,6 @@
-# 📚 HAL Knowledge — Import & Cold Start (v0.42-d131-d133-ops)
+# 📚 HAL Knowledge — Import & Cold Start (v0.43-d134-google-oauth)
 
-**Ultimo aggiornamento**: 28-Ott-2026 (D-131 Area auth · D-132 Resend sender · D-133 Vercel API URL)  
+**Ultimo aggiornamento**: 28-Ott-2026 (D-134 Google Sign-In live · D-131…133)  
 **Corpus**: YAML in `memory/manuale/hal/*.yaml` (Cap. 1–27 + `00-api-codice`) · MD esclusi dal RAG ingest  
 **Motore**: `hal_knowledge.py` · reindex: `POST /api/app/hal/knowledge/reindex?force=true` (super_admin)  
 **Regola Founder D-084**: ogni ship aggiorna MD+YAML nello stesso giro — vedi `memory/MANUAL_SYNC.md`.
@@ -267,6 +267,7 @@ Prima di dichiarare il cold start "attivo", eseguire manualmente queste 5 query 
 
 | Data | Versione | Note |
 |------|:-:|------|
+| 28-Ott-2026 | **v0.43-d134-google-oauth** | Cap.01 `primo-accesso.google-sign-in` · D-134 Client ID Web live · P-021 chiuso · `GOOGLE_AUTH.md`. Reindex post-merge. |
 | 28-Ott-2026 | **v0.42-d131-d133-ops** | Cap.01 `primo-accesso.area-riservata-cloud` + password_reset D-132. Cap.18 SENDER_EMAIL production anti-sandbox. Cap.00 Vercel D-133 bake API URL. DECISIONS D-131/132/133 · merge #61–#64. Reindex post-merge. |
 | 22-Ott-2026 | **v0.41-railway-security-rotation** | Cap.00 `api.railway-security-rotation`: disclosure Railway Variables, stato core DONE, residui YouTrust/Mongo, no screenshot secret. Runbook + NEW_AGENT_PROMPT · Cap.00 MD. Reindex post-merge. |
 | 20-Ott-2026 | **v0.40-d130-clone-p0** | Cap.8 `sito.clone-d023-d130` + aggiornamento `sito.demo-a037`: clone = P0 (D-130), Brand Extractor ≠ clone, no SKU solo sito. Manuale §8.12 · DECISIONS D-130 · ASPETTI A-037. Reindex post-merge. |

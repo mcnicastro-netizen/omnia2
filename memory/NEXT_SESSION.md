@@ -1,13 +1,14 @@
 # Prossima sessione — programma passi
 
-**Aggiornato**: 28 Ottobre 2026 — ops merge D-131/132/133 su main · Resend OK  
+**Aggiornato**: 28 Ottobre 2026 — D-131…D-134 (auth · Resend · Vercel · Google)  
 **Repo**: https://github.com/mcnicastro-netizen/omnia2 ✅  
 **Environment**: omnia2 (esiste; UI Dashboard può glitchare — non Start Fresh)
 
 **Sicurezza Railway**: runbook [`docs/ops/RAILWAY_SECURITY_ROTATION_2026-10-22.md`](../docs/ops/RAILWAY_SECURITY_ROTATION_2026-10-22.md) · stato 🟡 core done.  
 Smoke: `GET $OMNIA_API_PUBLIC_URL/api/health` → ok/db=ok.  
 Vault scope: [`memory/CLOUD_SECRETS_INVENTORY.md`](./CLOUD_SECRETS_INVENTORY.md) — Personal vs Environment.  
-**Email**: [`memory/RESEND_DOMAIN_GUIDE.md`](./RESEND_DOMAIN_GUIDE.md) — D-132 mittente `info@omniarealestateecosystem.it` live.
+**Email**: [`memory/RESEND_DOMAIN_GUIDE.md`](./RESEND_DOMAIN_GUIDE.md) — D-132 mittente `info@omniarealestateecosystem.it` live.  
+**Google**: [`memory/GOOGLE_AUTH.md`](./GOOGLE_AUTH.md) — D-134 Client ID Web live.
 
 **Prompt primo messaggio nuovo agent**: vedi [`docs/ops/NEW_AGENT_PROMPT_POST_RAILWAY_ROTATION.md`](../docs/ops/NEW_AGENT_PROMPT_POST_RAILWAY_ROTATION.md).
 
@@ -27,15 +28,16 @@ Vault scope: [`memory/CLOUD_SECRETS_INVENTORY.md`](./CLOUD_SECRETS_INVENTORY.md)
 | **Vercel FE** | [`docs/ops/VERCEL_DEPLOY.md`](./VERCEL_DEPLOY.md) — D-074 / **D-133** bake API URL |
 | **Stripe** | [`memory/STRIPE_ONBOARDING.md`](./STRIPE_ONBOARDING.md) |
 | **Auth area** | **D-131** `/cloud/area` Accedi/Crea account |
+| **Google login** | **D-134** `GOOGLE_CLIENT_ID` Web reale |
 
 ---
 
 ## Filo prodotto
 
-1. Ops 28-Ott chiusi: Area auth · Cerca casa Vercel · Resend production · vault note.
+1. Ops 28-Ott chiusi: Area auth · Cerca casa · Resend · Google Sign-In · vault note.
 2. **Prossimo (solo se Founder dice vai):** P0 Clone-from-URL (D-130) con preview reale, **oppure** pilota mandati D-129.
 3. Residui sicurezza: YouTrust → `ESIGN_PROVIDER=mock`; Mongo rotate saltato.
-4. HAL reindex post-merge Cap.00/01/18 YAML.
+4. HAL reindex dopo docs Cap.00/01.
 
 ---
 
@@ -74,6 +76,7 @@ Vault scope: [`memory/CLOUD_SECRETS_INVENTORY.md`](./CLOUD_SECRETS_INVENTORY.md)
 | D-131 Area auth | ✅ 28-Ott |
 | D-132 Resend sender | ✅ live delivered |
 | D-133 Vercel API URL | ✅ |
+| D-134 Google Sign-In | ✅ live |
 | Rotazione Railway core | ✅ 22-Ott |
 | YouTrust / Mongo rotate | 🟠 residui |
 | A-037 demo da sito | 🟠 |

@@ -1,3 +1,10 @@
+## 2026-10-28 — D-134 Google Sign-In live (Client ID Web reale)
+
+- Console: consenso OAuth + client Web; `GOOGLE_CLIENT_ID` valido (~72 char)
+- Vault Cursor Environment + Railway Variables allineati (niente placeholder)
+- Smoke: `/api/auth/google/config` enabled+valid · P-021 chiuso operativamente
+- Guide: `GOOGLE_AUTH.md` · HAL Cap.00/01
+
 ## 2026-10-28 — Ops merge: Area auth + Cerca casa + Resend + vault note
 
 - **D-131** Area riservata `/cloud/area` (Accedi/Crea account) + 409 anti-duplicati B2C/B2B
