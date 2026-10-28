@@ -97,9 +97,10 @@
 
 - `check-secrets-presence.sh`: JWT required; Stripe/OpenAPI dogfood condizionali; FRONTEND tunnel vs localhost; WARN nomi vault mancanti
 
-## P-021 — dettaglio (APERTO opz.)
+## P-021 — dettaglio (**CHIUSO** 28-Ott-2026 · D-134)
 
-- `GOOGLE_CLIENT_ID` absent → Google Sign-In OFF (fail-soft). Opzionale dogfood.
+- Prima: `GOOGLE_CLIENT_ID` absent / placeholder → Google OFF o `401: invalid_client`.
+- Ora: Client ID Web reale su Railway + vault Environment · `/api/auth/google/config` enabled · guide `GOOGLE_AUTH.md`.
 
 ## P-022 — dettaglio (CHIUSO · Onda D ripresa)
 
@@ -326,7 +327,7 @@
 | P-056 | `noindex` su trycloudflare |
 | P-058 | `docs/ops/TUNNEL_RUNBOOK.md` |
 | P-026 | WARN sync whsec + runbook · vault Save resta Founder |
-| P-021 | APERTO(opz.) — `GOOGLE_CLIENT_ID` assente in vault |
+| P-021 | **CHIUSO** D-134 — `GOOGLE_CLIENT_ID` Web live |
 
 ## P-012…P-017 — fix breve
 
