@@ -2,7 +2,7 @@
 
 > File di appoggio per **temi strategici/tecnici** che il Founder ha esplicitamente segnalato come "da rivedere più avanti", **senza essere ancora decisioni**. Ogni voce va promossa in `DECISIONS.md` o `ROADMAP.md` quando si decide di procedere.
 
-**Ultimo aggiornamento**: 7-Ott-2026 (dogfood Visura · **A-038** fattura/dati fiscali post-test)
+**Ultimo aggiornamento**: 29-Ott-2026 (**A-039** debito SEO canonical/noindex — audit OpenSEO, non priorità ora)
 
 > **Backlog qualità prodotto (A-006+)**: voci tracciate durante lo sprint manuale Cap. 1-18. Priorità assegnata da Cursor (P1=alto ROI/costo basso, P3=futuro). Decisione Founder post-manuale — **NON implementare senza "vai" esplicito**.
 

@@ -1,3 +1,8 @@
+## 2026-10-29 — A-039 debito SEO (audit OpenSEO) — solo docs
+
+- Segnato in `ASPETTI_DA_APPROFONDIRE.md`: canonical sospetto → `/it/cloud`, policy noindex auth/app, hreflang IT-first
+- Ignorare thin content / H1 / depth finché non c’è traffico; **no sprint SEO ora** (Founder: a tempo debito)
+
 ## 2026-10-28 — D-134 Google Sign-In live (Client ID Web reale)
 
 - Console: consenso OAuth + client Web; `GOOGLE_CLIENT_ID` valido (~72 char)

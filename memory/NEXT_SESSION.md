@@ -64,6 +64,7 @@ Vault scope: [`memory/CLOUD_SECRETS_INVENTORY.md`](./CLOUD_SECRETS_INVENTORY.md)
 | **D-125 / D-128** | Accesso atti · staging B2C €1,49 |
 | **Stripe Live** | Solo dopo KYC |
 | **HAL reindex** | Dopo merge docs Cap.00 / YAML |
+| **A-039 SEO** | Canonical/noindex/hreflang — **dopo dogfood**, no sprint ora |
 
 ---
 
@@ -80,4 +81,5 @@ Vault scope: [`memory/CLOUD_SECRETS_INVENTORY.md`](./CLOUD_SECRETS_INVENTORY.md)
 | Rotazione Railway core | ✅ 22-Ott |
 | YouTrust / Mongo rotate | 🟠 residui |
 | A-037 demo da sito | 🟠 |
+| **A-039 SEO strutturale** | 🟠 documentato · post-dogfood |
 | Stripe Live | ⏳ |
