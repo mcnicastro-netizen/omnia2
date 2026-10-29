@@ -1369,6 +1369,32 @@ Oggi i Checkout B2C one-shot (Visura, HAL Legal, boost, …) generano pagamento/
 
 ---
 
+## 🟠 A-039 — Debito SEO strutturale (canonical / noindex / hreflang) · post-dogfood
+
+**Data inserimento**: 29-Ott-2026  
+**Segnalato da**: Founder (audit OpenSEO `audit-issues.pdf` su `omniarealestateecosystem.it`)  
+**Contesto**: export crawler con molti *info/warning*. Founder: segnare l’utile, affrontare a tempo debito. **Nessun sprint SEO ora** (priorità dogfood prodotto).
+
+### Cosa tenere (utile)
+1. **Canonical sospetto**: molte URL (soprattutto `/en/…`, login, search con query) risultano canonicalizzate verso `https://omniarealestateecosystem.it/it/cloud`. Da verificare in codice FE/meta: o **canonical self** sulle pagine pubbliche che devono rankare, o **noindex** su auth/app/shell (non “tutto → /it/cloud”).
+2. **Policy noindex** per superfici non-SEO: `/login`, `/register`, `/forgot-password`, `/cloud/area`, `/app/*`, query effimere `?next=`, `?intent=`. Thin content su queste pagine = atteso; non gonfiare copy.
+3. **hreflang / locale**: campione audit era `/en/` mentre mercato primario è **IT** — allineare SoT lingua + alternate quando si fa SEO serio.
+4. **Pagine pubbliche da curare dopo**: home ecosistema, hub cloud search (URL pulite), schede annuncio, siti agenzia `/api/p/{slug}/`, eventuali landing città — lì sì contenuto + canonical self + sitemap Search Console.
+
+### Cosa ignorare (rumore)
+- Thin content su login/cookie/termini/search filtrata.
+- Multiple H1 / heading skip / crawl depth 5 — cosmetico finché non c’è traffico organico reale.
+- OpenSEO come progetto continuo: non necessario finché inventory/dogfood non sono stabili.
+
+### Timing
+**Dopo** dogfood privato→agenzia e contenuti reali da indicizzare. Prima: prodotto.  
+Implementazione solo con «vai» Founder → poi eventuale decisione in `DECISIONS.md`.
+
+### Stato
+🟠 **APERTO — debito documentato** · 29-Ott-2026 · **NON implementare senza «vai»**
+
+---
+
 ## ✅ A-024 — CTA «Richiedi demo» via email (onboarding commerciale D-080)
 
 **Data inserimento**: 15-Sep-2026  
