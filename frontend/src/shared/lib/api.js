@@ -3,6 +3,7 @@
  * - Reads REACT_APP_BACKEND_URL from .env
  * - Automatically sends Accept-Language header from current i18n lang
  * - Silent session refresh on 401 (access cookie TTL is short; refresh cookie lasts days)
+ * - CSRF: prefer sessionStorage mirror of X-CSRF-Token (cross-site FE cannot read api.* cookie)
  */
 import axios from "axios";
 import i18n from "../i18n/config";
@@ -10,6 +11,8 @@ import i18n from "../i18n/config";
 const BACKEND_URL = (process.env.REACT_APP_BACKEND_URL || "").replace(/\/$/, "");
 // Empty BACKEND_URL → same-origin /api (dev proxy or reverse proxy / tunnel)
 export const API_BASE = BACKEND_URL ? `${BACKEND_URL}/api` : "/api";
+
+const CSRF_STORAGE_KEY = "omnia_csrf_token";
 
 export const api = axios.create({
   baseURL: API_BASE,
@@ -31,12 +34,58 @@ function isAuthPath(url = "") {
   );
 }
 
+function readCsrfFromDocumentCookie() {
+  try {
+    if (typeof document === "undefined") return "";
+    const m = document.cookie.match(/(?:^|;\s*)omnia_csrf=([^;]+)/);
+    return m && m[1] ? decodeURIComponent(m[1]) : "";
+  } catch {
+    return "";
+  }
+}
+
+function readCsrfToken() {
+  try {
+    if (typeof sessionStorage !== "undefined") {
+      const stored = sessionStorage.getItem(CSRF_STORAGE_KEY);
+      if (stored) return stored;
+    }
+  } catch {
+    /* private mode */
+  }
+  return readCsrfFromDocumentCookie();
+}
+
+function storeCsrfToken(token) {
+  if (!token) return;
+  try {
+    if (typeof sessionStorage !== "undefined") {
+      sessionStorage.setItem(CSRF_STORAGE_KEY, token);
+    }
+  } catch {
+    /* ignore */
+  }
+}
+
+function captureCsrfFromResponse(response) {
+  const h = response?.headers;
+  if (!h) return;
+  const token =
+    (typeof h.get === "function" ? h.get("x-csrf-token") : null) ||
+    h["x-csrf-token"] ||
+    h["X-CSRF-Token"];
+  if (token) storeCsrfToken(String(token));
+}
+
 /** Single-flight refresh so parallel 401s don't stampede. */
 export function refreshSession() {
   if (!refreshPromise) {
     refreshPromise = api
       .post("/auth/refresh")
-      .then((r) => r.data)
+      .then((r) => {
+        captureCsrfFromResponse(r);
+        return r.data;
+      })
       .finally(() => {
         refreshPromise = null;
       });
@@ -48,14 +97,12 @@ api.interceptors.request.use((config) => {
   config.headers["Accept-Language"] = i18n.language || "it";
   // Always send cookies (for httpOnly auth cookies)
   config.withCredentials = true;
-  // CSRF double-submit when SameSite=None (prod): mirror omnia_csrf cookie → header
+  // CSRF double-submit: sessionStorage mirror (cross-site) → document.cookie fallback
   try {
     const method = (config.method || "get").toUpperCase();
-    if (["POST", "PUT", "PATCH", "DELETE"].includes(method) && typeof document !== "undefined") {
-      const m = document.cookie.match(/(?:^|;\s*)omnia_csrf=([^;]+)/);
-      if (m && m[1]) {
-        config.headers["X-CSRF-Token"] = decodeURIComponent(m[1]);
-      }
+    if (["POST", "PUT", "PATCH", "DELETE"].includes(method)) {
+      const tok = readCsrfToken();
+      if (tok) config.headers["X-CSRF-Token"] = tok;
     }
   } catch {
     /* ignore */
@@ -65,6 +112,7 @@ api.interceptors.request.use((config) => {
 
 api.interceptors.response.use(
   (r) => {
+    captureCsrfFromResponse(r);
     // Vercel SPA rewrite can return index.html with 200 for /api/* when
     // REACT_APP_BACKEND_URL was empty at build — treat as unreachable API.
     const ct = String(r?.headers?.["content-type"] || "");
@@ -99,6 +147,7 @@ api.interceptors.response.use(
     const status = error?.response?.status;
     const config = error?.config || {};
     const url = config.url || "";
+    captureCsrfFromResponse(error?.response);
 
     // Access expired → try refresh once, then retry the original call
     if (status === 401 && !config.__isRetry && !isAuthPath(url)) {
@@ -117,13 +166,21 @@ api.interceptors.response.use(
     }
 
     // P-052 — network / gateway down (no spinner forever without signal)
+    // Do NOT treat CSRF 403 as unreachable — that is a client token issue.
+    const detail = error?.response?.data?.detail;
+    const csrfFail =
+      status === 403 &&
+      detail &&
+      typeof detail === "object" &&
+      detail.error === "csrf_failed";
     const unreachable =
-      !error.response ||
-      status === 502 ||
-      status === 503 ||
-      status === 504 ||
-      error.code === "ECONNABORTED" ||
-      error.message === "Network Error";
+      !csrfFail &&
+      (!error.response ||
+        status === 502 ||
+        status === 503 ||
+        status === 504 ||
+        error.code === "ECONNABORTED" ||
+        error.message === "Network Error");
     if (unreachable && typeof window !== "undefined") {
       window.dispatchEvent(
         new CustomEvent("omnia:api-unreachable", {

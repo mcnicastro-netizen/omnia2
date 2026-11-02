@@ -5,6 +5,7 @@ import { api } from "../../../shared/lib/api";
 import { useAuth, formatApiErrorDetail, isEmailAlreadyRegistered } from "../../../shared/lib/auth";
 import PasswordField from "../../../shared/components/PasswordField";
 import CloudPageHero from "../components/CloudPageHero";
+import { onInvalidItalian, onInputClearCustomValidity } from "../../../shared/lib/itHtmlValidity";
 
 export default function CloudRegisterPage() {
   const { t, i18n } = useTranslation();

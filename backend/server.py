@@ -146,6 +146,7 @@ app.add_middleware(
     allow_origins=[o.strip() for o in allowed if o.strip()],
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["X-CSRF-Token"],
 )
 
 # Host-based routing for verified custom domains (M2.S6)

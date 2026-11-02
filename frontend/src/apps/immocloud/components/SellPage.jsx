@@ -19,6 +19,7 @@ import SellDocPromoRail from "./SellDocPromoRail";
 import B2CStagingPanel from "./B2CStagingPanel";
 import ListingPreviewModal from "./ListingPreviewModal";
 import AddressAutocomplete from "./AddressAutocomplete";
+import { onInvalidItalian, onInputClearCustomValidity } from "../../../shared/lib/itHtmlValidity";
 
 /** Suggerimenti città (datalist) — allineati a ValuatorPage. */
 const CITY_SUGGESTIONS = [
@@ -901,7 +902,13 @@ export default function SellPage() {
 
       {/* Form */}
       {showForm && (
-        <form data-testid="sell-form" onSubmit={save} className="bg-white border border-stone-200 rounded-lg p-6 space-y-4">
+        <form
+          data-testid="sell-form"
+          onSubmit={save}
+          onInvalid={onInvalidItalian}
+          onInput={onInputClearCustomValidity}
+          className="bg-white border border-stone-200 rounded-lg p-6 space-y-4"
+        >
           <h2 className="text-xl font-light mb-2" style={{ fontFamily: "'Fraunces', Georgia, serif" }}>
             {editing ? t("cloud.sell.form_edit_title") : t("cloud.sell.form_new_title")}
           </h2>
@@ -960,12 +967,22 @@ export default function SellPage() {
                   value={form.address}
                   onChange={(text) => setForm((f) => ({ ...f, address: text }))}
                   onSelect={(rec) => {
+                    // Non sovrascrivere città/CAP già scelti dall'utente (Idealista-like).
+                    // Preferisci solo il nome via; evita "Via X, Comune" nel campo indirizzo.
+                    const road =
+                      (rec.road || "").trim() ||
+                      String(rec.normalized || "")
+                        .split(",")[0]
+                        .trim() ||
+                      rec.normalized;
                     setForm((f) => ({
                       ...f,
-                      address: rec.normalized || f.address,
-                      city: rec.comune || f.city,
-                      postal_code: rec.cap || f.postal_code,
-                      zone: rec.zone || f.zone,
+                      address: road || f.address,
+                      city: (f.city || "").trim() ? f.city : (rec.comune || f.city),
+                      postal_code: (f.postal_code || "").trim()
+                        ? f.postal_code
+                        : (rec.cap || f.postal_code),
+                      zone: (f.zone || "").trim() ? f.zone : (rec.zone || f.zone),
                     }));
                   }}
                   placeholder={t("cloud.sell.f_address_ph")}

@@ -29,6 +29,7 @@ _EXEMPT_PREFIXES = (
     "/api/health",
     "/api/auth/login",
     "/api/auth/register",
+    "/api/auth/refresh",  # HttpOnly refresh cookie is the proof; FE often cannot read cross-site CSRF cookie
     "/api/auth/forgot-password",
     "/api/auth/reset-password",
     "/api/auth/google",
@@ -56,18 +57,30 @@ def new_csrf_token() -> str:
     return secrets.token_urlsafe(32)
 
 
+def _cookie_domain() -> Optional[str]:
+    """Optional parent domain so FE on cloud./www. can read omnia_csrf via document.cookie."""
+    raw = (os.environ.get("COOKIE_DOMAIN") or "").strip()
+    return raw or None
+
+
 def set_csrf_cookie(response: Response, token: Optional[str] = None) -> str:
     token = token or new_csrf_token()
     secure = csrf_enabled()
-    response.set_cookie(
-        CSRF_COOKIE,
-        token,
+    kwargs = dict(
         max_age=7 * 24 * 3600,
         httponly=False,
         secure=secure,
         samesite="none" if secure else "lax",
         path="/",
     )
+    domain = _cookie_domain()
+    if domain:
+        kwargs["domain"] = domain
+    response.set_cookie(CSRF_COOKIE, token, **kwargs)
+    # Cross-origin SPAs cannot always read the cookie; mirror for axios/sessionStorage.
+    response.headers["X-CSRF-Token"] = token
+    # Expose to browser JS on cross-origin XHR
+    response.headers["Access-Control-Expose-Headers"] = "X-CSRF-Token"
     return token
 
 
@@ -87,6 +100,10 @@ class CsrfMiddleware(BaseHTTPMiddleware):
             response = await call_next(request)
             if not request.cookies.get(CSRF_COOKIE):
                 set_csrf_cookie(response)
+            else:
+                # Keep header mirror so cross-site FE can store token
+                response.headers.setdefault("X-CSRF-Token", request.cookies.get(CSRF_COOKIE) or "")
+                response.headers.setdefault("Access-Control-Expose-Headers", "X-CSRF-Token")
             return response
 
         if any(path.startswith(p) for p in _EXEMPT_PREFIXES):
@@ -94,6 +111,9 @@ class CsrfMiddleware(BaseHTTPMiddleware):
             # After login-like flows, ensure cookie exists
             if not request.cookies.get(CSRF_COOKIE):
                 set_csrf_cookie(response)
+            else:
+                response.headers.setdefault("X-CSRF-Token", request.cookies.get(CSRF_COOKIE) or "")
+                response.headers.setdefault("Access-Control-Expose-Headers", "X-CSRF-Token")
             return response
 
         # Bearer API keys are not cookie sessions — skip
