@@ -94,7 +94,12 @@ export default function CloudRegisterPage() {
         compact
       />
       <section className="max-w-xl mx-auto py-10 px-5">
-        <form onSubmit={submit} className="bg-white border border-stone-200 rounded-2xl p-7 space-y-5">
+        <form
+          onSubmit={submit}
+          onInvalid={onInvalidItalian}
+          onInput={onInputClearCustomValidity}
+          className="bg-white border border-stone-200 rounded-2xl p-7 space-y-5"
+        >
           {err && (
             <div data-testid="reg-error" className="text-sm text-red-700 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
               <p>{err}</p>
