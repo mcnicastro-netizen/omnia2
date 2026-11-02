@@ -1,17 +1,17 @@
 {
-  "version": "0.41-railway-security-rotation",
-  "updated": "2026-10-22",
-  "voices_total": 380,
+  "version": "0.44-d135-b2c-vendi",
+  "updated": "2026-11-02",
+  "voices_total": 383,
   "source_files": [
     {
       "file": "00-api-codice.yaml",
       "voices": 38,
-      "md5": "ad5b07f71ce9a84dd9a43fb2d701e8ce"
+      "md5": "e588752dd3402155bf797fa3e4fa8f4e"
     },
     {
       "file": "01-primo-accesso.yaml",
-      "voices": 10,
-      "md5": "ba9810daa2a8853c895e2ce994438870"
+      "voices": 12,
+      "md5": "dc053d3e8660946a23f29754fa1de49f"
     },
     {
       "file": "02-dashboard.yaml",
@@ -56,7 +56,7 @@
     {
       "file": "10-hal-agent-crm.yaml",
       "voices": 14,
-      "md5": "63ca3d61373064d1ead7de42b72f8080"
+      "md5": "9d2661ca82e9042b0c91078003df570b"
     },
     {
       "file": "11-mutui-comparatore.yaml",
@@ -95,8 +95,8 @@
     },
     {
       "file": "18-notifiche-attivita.yaml",
-      "voices": 20,
-      "md5": "1297705d0e548d44a03dd702ac0c2d29"
+      "voices": 21,
+      "md5": "dabb62264a5e6d643bb65c83d2201777"
     },
     {
       "file": "19-impostazioni-agenzia.yaml",
@@ -151,7 +151,7 @@
       "title": "Corpus codice/API",
       "yaml": "00-api-codice.yaml",
       "voices": 38,
-      "md5": "ad5b07f71ce9a84dd9a43fb2d701e8ce"
+      "md5": "e588752dd3402155bf797fa3e4fa8f4e"
     },
     {
       "id": 22,
@@ -202,5 +202,5 @@
       "md5": "5e88370cdf2c070dc30c7c3f036b85db"
     }
   ],
-  "notes": "Fingerprints regenerated from YAML on disk. Live RAG reindex: POST /api/app/hal/knowledge/reindex?force=true (super_admin). 2026-10-19: D-125 atti · D-128 staging €1,49 · Cap.9 crediti-costo · Cap.18 sell-doc-promo. 2026-10-14: D-124 Cap.21 APE/piano/PDF · Cap.18 sell-doc-promo · PR #40. 2026-10-12: Stripe webhook Railway omnia-railway-api 200 OK · api.stripe-sandbox-cloud / api.railway-api-deploy. 2026-10-10: D-123 Railway API live · api.railway-api-deploy · cloud-secrets-vault Personal UI note. 2026-10-06: Stripe sandbox Cloud · api.cloud-secrets-vault · api.stripe-sandbox-cloud · Cap.19 billing. 2026-09-24: A-028g/h/i · Cap.2 Attività · Cap.10 Conferma e applica · Cap.18 distinzione. 2026-09-21: hub import A–E · HAL import.tutte-le-forme. 2026-09-19: D-085 storage quota · Cestino · Cap.20 Ruota."
+  "notes": "2026-11-02: D-135 B2C Vendi CSRF/HAL improve/account · Cap.00/01/10/18 YAML · reindex prod 973 chunks. Fingerprints regenerated from YAML on disk. Live RAG reindex: POST /api/app/hal/knowledge/reindex?force=true (super_admin). 2026-10-19: D-125 atti · D-128 staging €1,49 · Cap.9 crediti-costo · Cap.18 sell-doc-promo. 2026-10-14: D-124 Cap.21 APE/piano/PDF · Cap.18 sell-doc-promo · PR #40. 2026-10-12: Stripe webhook Railway omnia-railway-api 200 OK · api.stripe-sandbox-cloud / api.railway-api-deploy. 2026-10-10: D-123 Railway API live · api.railway-api-deploy · cloud-secrets-vault Personal UI note. 2026-10-06: Stripe sandbox Cloud · api.cloud-secrets-vault · api.stripe-sandbox-cloud · Cap.19 billing. 2026-09-24: A-028g/h/i · Cap.2 Attività · Cap.10 Conferma e applica · Cap.18 distinzione. 2026-09-21: hub import A–E · HAL import.tutte-le-forme. 2026-09-19: D-085 storage quota · Cestino · Cap.20 Ruota."
 }

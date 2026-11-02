@@ -36,9 +36,9 @@ Vault scope: [`memory/CLOUD_SECRETS_INVENTORY.md`](./CLOUD_SECRETS_INVENTORY.md)
 ## Filo prodotto
 
 1. **02-Nov chiuso:** dogfood Privato Vendi live (città, HAL, salva, sessione CSRF, nav account). Founder pubblica da account B2C (anonima se sessione CRM).
-2. **Prossimo (solo se Founder dice vai):** moderazione Founder degli annunci `pending` · oppure P0 Clone-from-URL (D-130) · oppure pilota mandati D-129.
-3. Residui sicurezza: YouTrust → `ESIGN_PROVIDER=mock`; Mongo rotate saltato.
-4. HAL reindex dopo docs Cap.00/01/10/18 (D-135).
+2. **Docs+HAL chiusi:** D-135 su `main` · Cap.00/01/10/18 MD+YAML · `hal-index` v0.44 · **reindex prod OK** (`chunks_indexed≈973`, `manual_hal≈382+`).
+3. **Prossimo (solo se Founder dice vai):** moderazione Founder degli annunci `pending` · oppure P0 Clone-from-URL (D-130) · oppure pilota mandati D-129.
+4. Residui sicurezza: YouTrust → `ESIGN_PROVIDER=mock`; Mongo rotate saltato.
 
 ---
 

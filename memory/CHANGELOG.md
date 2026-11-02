@@ -6,7 +6,8 @@
 - CSRF cross-site: `/auth/refresh` esente; `X-CSRF-Token` + sessionStorage FE
 - Nav: «Il mio account» solo B2C; banner sessione agenzia su `/cloud/area`
 - Deploy Railway + Vercel; QA UI PASS → **IN REVISIONE**
-- Docs: DECISIONS D-135 · Cap.00/01/10/18 + HAL YAML · IMPORT_HAL
+- Docs: DECISIONS D-135 · Cap.00/01/10/18 MD+YAML · IMPORT_HAL v0.44 · `hal-index` v0.44-d135
+- HAL reindex prod (super_admin `force=true`): **973 chunks** · manual HAL ~382+ · status 200
 
 ## 2026-10-29 — A-039 debito SEO (audit OpenSEO) — solo docs
 

@@ -66,6 +66,13 @@ HAL: `api.railway-api-deploy` · `api.vercel-fe-deploy` · `api.stripe-sandbox-c
 - **D-133 Vercel bake**: build FE **deve** impostare `REACT_APP_BACKEND_URL` da `OMNIA_API_PUBLIC_URL` (`vercel-deploy.sh`) — altrimenti Academy→Cerca casa crasha.
 - **D-134 Google Sign-In**: `GOOGLE_CLIENT_ID` = OAuth **Web** reale (`…apps.googleusercontent.com`) su Railway + vault Environment. Placeholder → `401: invalid_client`. Guide: `GOOGLE_AUTH.md`. P-021 chiuso.
 
+### D-135 — Dogfood B2C Vendi (02-Nov-2026)
+
+- **CSRF cross-site** (`cloud.*` / `www.*` → `api.*`): `/api/auth/refresh` **esente**; header `X-CSRF-Token` + mirror `sessionStorage` FE; CORS `expose_headers`. Sintomo tipico: logout ~1 min / `csrf_failed` sul salva.
+- **HAL improve**: pin `gemini-3.5-flash` (+ timeout/fallback); i18n `al_improve.err_*`.
+- **Nav account**: «Il mio account» **solo** `account_type=b2c`; sessione agenzia/Founder → «Area riservata» + banner. Vendi = account Privato (finestra anonima OK).
+- HAL YAML Cap.00/01/10/18 · reindex prod ~973 chunks · SoT `DECISIONS` D-135.
+
 ### Incident Railway Variables (22-Ott-2026)
 
 Mail Railway: possibile leak Variables. OMNIA `omnia-api` → rotazione credenziali.  

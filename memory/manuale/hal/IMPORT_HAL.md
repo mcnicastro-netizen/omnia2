@@ -267,7 +267,7 @@ Prima di dichiarare il cold start "attivo", eseguire manualmente queste 5 query 
 
 | Data | Versione | Note |
 |------|:-:|------|
-| 02-Nov-2026 | **v0.44-d135-b2c-vendi** | Cap.01 area B2C + D-135 account/agenzia. Cap.00 CSRF cross-site. Cap.10 HAL improve modello+timeout. Cap.18 flusso Vendi→moderazione. DECISIONS D-135 · main `a755560`+. Reindex post-merge. |
+| 02-Nov-2026 | **v0.44-d135-b2c-vendi** | Cap.01 area B2C + D-135 account/agenzia. Cap.00 CSRF cross-site. Cap.10 HAL improve modello+timeout. Cap.18 flusso Vendi→moderazione. DECISIONS D-135 · main `a755560`+. **Reindex prod OK** (~973 chunks, manual HAL ~382+, `hal-index` v0.44). |
 | 28-Ott-2026 | **v0.43-d134-google-oauth** | Cap.01 `primo-accesso.google-sign-in` · D-134 Client ID Web live · P-021 chiuso · `GOOGLE_AUTH.md`. Reindex post-merge. |
 | 28-Ott-2026 | **v0.42-d131-d133-ops** | Cap.01 `primo-accesso.area-riservata-cloud` + password_reset D-132. Cap.18 SENDER_EMAIL production anti-sandbox. Cap.00 Vercel D-133 bake API URL. DECISIONS D-131/132/133 · merge #61–#64. Reindex post-merge. |
 | 22-Ott-2026 | **v0.41-railway-security-rotation** | Cap.00 `api.railway-security-rotation`: disclosure Railway Variables, stato core DONE, residui YouTrust/Mongo, no screenshot secret. Runbook + NEW_AGENT_PROMPT · Cap.00 MD. Reindex post-merge. |

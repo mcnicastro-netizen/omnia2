@@ -17,8 +17,8 @@ Registro di tutte le decisioni di business e tecniche prese durante il progetto.
   4. **CSRF cross-site** (FE `cloud.*` / `www.*` → API `api.*`): `/api/auth/refresh` **esente** CSRF (prova = cookie HttpOnly refresh); header `X-CSRF-Token` esposto + mirror in `sessionStorage` su FE; CORS `expose_headers`.
   5. **Nav account**: label/link «Il mio account» **solo** se `account_type=b2c`; altrimenti «Area riservata» → `/cloud/area` con banner se sessione agenzia/Founder. Auth failsafe 12s su `user===null`.
   6. Percorso Privato dogfood SoT: register `?intent=sell` → `/cloud/account/sell` → submit → `moderation_status=pending` (non live).
-- **Implementazione**: commit `724ab41`…`a755560` su `main` · deploy Railway + Vercel 02-Nov · QA UI PASS (IN REVISIONE).
-- **Stato**: ✅ **DECISIONE OPERATIVA REGISTRATA** · live
+- **Implementazione**: commit `724ab41`…`a755560` (+ docs `c3aba8a`+) su `main` · deploy Railway + Vercel 02-Nov · QA UI PASS (IN REVISIONE) · HAL reindex prod 973 chunks.
+- **Stato**: ✅ **DECISIONE OPERATIVA REGISTRATA** · live · docs/HAL syncati
 
 ### D-134 — Google Sign-In live: Client ID Web reale (no placeholder) · 28-Ott-2026
 - **Data**: 28 Ottobre 2026
