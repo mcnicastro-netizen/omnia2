@@ -1227,8 +1227,10 @@
     "area_register_title": "Crea account",
     "area_register_desc": "Registrazione gratuita. Niente doppioni: se l'email esiste già ti invitiamo ad accedere.",
     "area_agency_hint": "Agenzia / gestionale ImmoWeb?",
-    "area_agency_login": "Accedi",
+    "area_agency_login": "Vai al gestionale",
     "area_agency_register": "Crea account agenzia",
+    "area_agency_session_title": "Sei connesso come agenzia / Founder",
+    "area_agency_session_desc": "Per pubblicare da privato serve un account ImmobilCloud (B2C), non la sessione gestionale. Crea o accedi con un account privato qui sotto (anche in finestra anonima).",
     "legal_privacy_title": "Informativa privacy",
     "legal_privacy_body": [
       "Titolare del trattamento: OMNIA Real Estate Ecosystem (ImmobilCloud).",

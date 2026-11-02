@@ -75,18 +75,24 @@ export function AuthProvider({ children }) {
 
   useEffect(() => {
     let mounted = true;
+    const failSafe = setTimeout(() => {
+      // Non restare eternamente su user===null (loading) se /auth/me o refresh appendono.
+      if (mounted) setUser((u) => (u === null ? false : u));
+    }, 12000);
     loadSessionUser()
       .then((data) => {
         if (mounted) setUser(data);
       })
       .catch(() => {
         if (mounted) setUser(false);
-      });
+      })
+      .finally(() => clearTimeout(failSafe));
     // M9 — 401 after failed refresh → drop the local session (ProtectedRoute → login)
     const onUnauthorized = () => setUser((u) => (u ? false : u));
     window.addEventListener("omnia:unauthorized", onUnauthorized);
     return () => {
       mounted = false;
+      clearTimeout(failSafe);
       window.removeEventListener("omnia:unauthorized", onUnauthorized);
     };
   }, []);

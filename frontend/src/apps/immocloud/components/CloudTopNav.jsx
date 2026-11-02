@@ -11,13 +11,16 @@ export default function CloudTopNav() {
   const lang = (i18n.language || "it").slice(0, 2);
   const { user } = useAuth();
   const loggedIn = Boolean(user && user.id);
+  const isB2c = loggedIn && user?.account_type === "b2c";
   const [open, setOpen] = useState(false);
-  const sellTo = loggedIn && user?.account_type === "b2c"
+  const sellTo = isB2c
     ? `/${lang}/cloud/account/sell`
     : `/${lang}/cloud/area?intent=sell&next=${encodeURIComponent(`/${lang}/cloud/account/sell`)}`;
-  const areaTo = loggedIn
+  // Solo B2C → account cloud. Agenzia/Founder non vanno a /cloud/account (rimbalzo silenzioso).
+  const areaTo = isB2c
     ? `/${lang}/cloud/account`
     : `/${lang}/cloud/area`;
+  const areaLabel = isB2c ? t("cloud.nav_account") : t("cloud.nav_area");
   const links = [
     { to: `/${lang}/cloud/search`, testid: "cloud-nav-search", label: t("cloud.nav_search") },
     { to: sellTo, testid: "cloud-nav-sell", label: t("cloud.nav_sell") },
@@ -51,7 +54,7 @@ export default function CloudTopNav() {
             data-testid="cloud-nav-area"
             className="px-4 py-2 text-[11px] uppercase tracking-[0.18em] bg-[#0B1E3F] text-white rounded-lg hover:bg-[#C19A6B] transition"
           >
-            {loggedIn ? t("cloud.nav_account") : t("cloud.nav_area")}
+            {areaLabel}
           </Link>
           <LanguageSwitcher />
           <button
