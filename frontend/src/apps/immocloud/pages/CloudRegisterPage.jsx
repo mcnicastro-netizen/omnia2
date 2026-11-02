@@ -3,6 +3,7 @@ import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { api } from "../../../shared/lib/api";
 import { useAuth, formatApiErrorDetail, isEmailAlreadyRegistered } from "../../../shared/lib/auth";
+import PasswordField from "../../../shared/components/PasswordField";
 import CloudPageHero from "../components/CloudPageHero";
 
 export default function CloudRegisterPage() {
@@ -123,9 +124,14 @@ export default function CloudRegisterPage() {
           </Field>
 
           <Field label={t("cloud.reg_password")}>
-            <input data-testid="reg-password" required type="password" minLength={8} value={form.password}
+            <PasswordField
+              data-testid="reg-password"
+              required
+              minLength={8}
+              value={form.password}
+              autoComplete="new-password"
               onChange={(e) => setForm({ ...form, password: e.target.value })}
-              className="w-full px-3 py-2.5 border border-stone-200 rounded-lg text-sm focus:border-[#0B1E3F] outline-none" />
+            />
             <p className="text-xs text-stone-500 mt-1">{t("cloud.reg_password_hint")}</p>
           </Field>
 
@@ -191,11 +197,44 @@ export default function CloudRegisterPage() {
             <span>{t("cloud.reg_marketing_text", "Acconsento a ricevere comunicazioni commerciali e novità su ImmobilCloud (facoltativo).")}</span>
           </label>
 
-          <button type="submit" disabled={busy || form.intents.length === 0 || !form.gdpr_consent || !form.age_confirmed}
-            data-testid="reg-submit-btn"
-            className="w-full bg-[#0B1E3F] text-white px-6 py-3 rounded-lg font-medium text-sm uppercase tracking-widest hover:bg-[#C19A6B] transition disabled:opacity-50">
-            {busy ? t("cloud.reg_submitting") : t("cloud.reg_submit_btn")}
-          </button>
+          {(() => {
+            const canSubmit =
+              !busy
+              && form.intents.length > 0
+              && form.gdpr_consent
+              && form.age_confirmed
+              && form.password.length >= 8
+              && Boolean(form.name.trim())
+              && Boolean(form.email.trim());
+            const missing = [];
+            if (form.intents.length === 0) missing.push(t("cloud.reg_need_intent"));
+            if (!form.age_confirmed) missing.push(t("cloud.reg_need_age"));
+            if (!form.gdpr_consent) missing.push(t("cloud.reg_need_gdpr"));
+            if (form.password.length > 0 && form.password.length < 8) {
+              missing.push(t("cloud.reg_password_hint"));
+            }
+            return (
+              <>
+                {!canSubmit && missing.length > 0 && (
+                  <p
+                    data-testid="reg-submit-hint"
+                    className="text-xs text-amber-900 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2"
+                  >
+                    {t("cloud.reg_submit_hint")}{" "}
+                    {missing.join(" · ")}
+                  </p>
+                )}
+                <button
+                  type="submit"
+                  disabled={!canSubmit}
+                  data-testid="reg-submit-btn"
+                  className="w-full bg-[#0B1E3F] text-white px-6 py-3 rounded-lg font-medium text-sm uppercase tracking-widest hover:bg-[#C19A6B] transition disabled:opacity-50"
+                >
+                  {busy ? t("cloud.reg_submitting") : t("cloud.reg_submit_btn")}
+                </button>
+              </>
+            );
+          })()}
 
           <p className="text-sm text-center text-stone-600 pt-2">
             {t("auth.have_account")}{" "}

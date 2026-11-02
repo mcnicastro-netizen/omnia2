@@ -25,9 +25,16 @@ export default function ImmocloudApp() {
     const onDown = () => setApiDown(true);
     const onUp = () => setApiDown(false);
     window.addEventListener("omnia:api-unreachable", onDown);
+    window.addEventListener("omnia:api-reachable", onUp);
     window.addEventListener("online", onUp);
+    // Probe: clear sticky banner if API is actually healthy (transient 502 / cold start).
+    import("../../shared/lib/api")
+      .then(({ api }) => api.get("/health", { timeout: 8000 }))
+      .then(() => setApiDown(false))
+      .catch(() => { /* keep banner if already down */ });
     return () => {
       window.removeEventListener("omnia:api-unreachable", onDown);
+      window.removeEventListener("omnia:api-reachable", onUp);
       window.removeEventListener("online", onUp);
     };
   }, []);

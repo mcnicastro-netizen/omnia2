@@ -86,6 +86,9 @@ api.interceptors.response.use(
       }
       return Promise.reject(err);
     }
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent("omnia:api-reachable"));
+    }
     return r;
   },
   async (error) => {
