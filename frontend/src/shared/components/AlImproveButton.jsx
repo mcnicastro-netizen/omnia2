@@ -63,11 +63,12 @@ export default function AlImproveButton({
       setProposalId(r.data.proposal_id || null);
     } catch (e) {
       const d = e?.response?.data?.detail;
+      const timedOut = e?.code === "ECONNABORTED" || /timeout/i.test(e?.message || "");
       if (!e?.response) {
-        setError(t("al_improve.err_timeout"));
+        setError(timedOut ? t("al_improve.err_timeout") : t("al_improve.err_network"));
       } else {
         setError(
-          d === "llm_budget_exceeded" || d === "llm_unavailable" || d === "llm_busy"
+          d === "llm_budget_exceeded" || d === "llm_unavailable" || d === "llm_busy" || d === "llm_key_not_configured"
             ? t("al_improve.err_llm_busy")
             : d === "rate_limit_exceeded"
             ? t("al.err_rate_limit")

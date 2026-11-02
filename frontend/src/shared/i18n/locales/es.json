@@ -1041,6 +1041,7 @@
       "f_type": "Tipo de inmueble",
       "f_operation": "Operación",
       "f_city": "Ciudad",
+      "f_city_ph": "Ej. Milán, Roma, Catania, Mascalucia…",
       "f_postal": "Código postal",
       "f_zone": "Zona / barrio",
       "f_zone_ph": "p. ej. Centro…",
@@ -1113,6 +1114,9 @@
       "has_floor_plan": "plano adjunto",
       "err_photos_limit": "Puede subir como máximo 30 fotos.",
       "err_floor_plan_upload": "Error al subir el plano. Inténtelo de nuevo.",
+      "err_save": "No se pudo guardar el anuncio. Revisa los datos e inténtalo de nuevo.",
+      "err_save_network": "Conexión interrumpida o API no disponible. Recarga e inténtalo de nuevo.",
+      "err_save_csrf": "Sesión caducada por seguridad. Recarga la página e inténtalo de nuevo.",
       "op_sale": "Venta",
       "op_rent": "Alquiler",
       "status_draft": "Borrador",
@@ -1604,7 +1608,10 @@
     "regenerate": "Regenerar",
     "apply": "Confirmar y aplicar",
     "confirm_hint": "HAL propone; tú confirmas. Sin cambios automáticos sin tu OK (auditoría).",
-    "cancel": "Cancelar"
+    "cancel": "Cancelar",
+    "err_timeout": "HAL está tardando demasiado. Inténtalo de nuevo en un momento.",
+    "err_network": "Conexión interrumpida. Comprueba la red e inténtalo de nuevo.",
+    "err_llm_busy": "El servicio de IA está saturado. Reinténtalo en un minuto."
   },
   "moderation": {
     "title": "Moderación de anuncios particulares",

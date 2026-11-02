@@ -18,8 +18,9 @@
  */
 import React, { useEffect, useRef, useState } from "react";
 
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
-const API = `${BACKEND_URL}/api/cloud/anncsu/suggest`;
+const BACKEND_URL = (process.env.REACT_APP_BACKEND_URL || "").replace(/\/$/, "");
+// Empty → same-origin /api (preview/tunnel/Vercel rewrite)
+const API = BACKEND_URL ? `${BACKEND_URL}/api/cloud/anncsu/suggest` : "/api/cloud/anncsu/suggest";
 const DEBOUNCE_MS = 350;
 const MIN_CHARS = 3;
 

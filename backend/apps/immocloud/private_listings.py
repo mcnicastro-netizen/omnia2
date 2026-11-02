@@ -5,14 +5,9 @@ through an agency. Properties created here have:
   - agency_id = "_private_listings"     # sentinel (no real agency)
   - is_private_listing = True
   - owner_user_id = current user id
-<<<<<<< HEAD
   - status = "draft" until approved live
   - moderation_status = "none" until user submits → then "pending"
-=======
-  - status = "draft" until user submits
-  - moderation_status = "pending"       # admin must approve
     (sandbox: OMNIA_B2C_SANDBOX_AUTO_APPROVE=true → approve on submit)
->>>>>>> b6d2079 (feat(b2c): sandbox Founder — auto-approve annunci privati)
 
 Endpoints (B2C auth required):
   POST   /api/cloud/me/properties        — create new private ad

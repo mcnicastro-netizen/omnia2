@@ -1095,6 +1095,7 @@
       "f_type": "Property type",
       "f_operation": "Transaction type",
       "f_city": "City",
+      "f_city_ph": "e.g. Milan, Rome, Catania, Mascalucia…",
       "f_postal": "Postal code",
       "f_zone": "Area / neighbourhood",
       "f_zone_ph": "e.g. Centre…",
@@ -1167,6 +1168,9 @@
       "has_floor_plan": "floor plan attached",
       "err_photos_limit": "You can upload at most 30 photos.",
       "err_floor_plan_upload": "Floor plan upload failed. Please try again.",
+      "err_save": "Could not save the listing. Check the fields and try again.",
+      "err_save_network": "Connection lost or API unreachable. Reload and try again.",
+      "err_save_csrf": "Session expired for security. Reload the page and try again.",
       "op_sale": "For sale",
       "op_rent": "For rent",
       "status_draft": "Draft",
@@ -1520,7 +1524,10 @@
     "regenerate": "Regenerate",
     "apply": "Confirm and apply",
     "confirm_hint": "HAL proposes; you confirm. No automatic edits without your OK (audit).",
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "err_timeout": "HAL is taking too long. Please try again in a moment.",
+    "err_network": "Connection lost. Check your network and try again.",
+    "err_llm_busy": "The AI service is temporarily busy. Please try again in a minute."
   },
   "moderation": {
     "title": "Private listing moderation",

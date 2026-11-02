@@ -18,6 +18,18 @@ import CloudPageHero from "./CloudPageHero";
 import SellDocPromoRail from "./SellDocPromoRail";
 import B2CStagingPanel from "./B2CStagingPanel";
 import ListingPreviewModal from "./ListingPreviewModal";
+import AddressAutocomplete from "./AddressAutocomplete";
+
+/** Suggerimenti città (datalist) — allineati a ValuatorPage. */
+const CITY_SUGGESTIONS = [
+  "Milano", "Roma", "Napoli", "Torino", "Palermo", "Genova", "Bologna", "Firenze",
+  "Bari", "Catania", "Venezia", "Verona", "Messina", "Padova", "Trieste", "Brescia",
+  "Parma", "Modena", "Reggio Emilia", "Prato", "Perugia", "Livorno", "Ravenna",
+  "Cagliari", "Foggia", "Rimini", "Salerno", "Ferrara", "Sassari", "Monza",
+  "Bergamo", "Trento", "Vicenza", "Bolzano", "Pisa", "Novara", "Ancona", "Udine",
+  "Siracusa", "Pescara", "Lecce", "La Spezia", "Como", "Treviso", "Taranto",
+  "Mascalucia", "Acireale", "Misterbianco", "Gravina di Catania", "San Giovanni la Punta",
+];
 
 const STAGING_PENDING_KEY = "omnia_staging_pending";
 
@@ -585,7 +597,14 @@ export default function SellPage() {
         setShowForm(false);
         await reloadPublishMeta();
       }
-      setError(formatApiErrorDetail(detail));
+      const formatted = formatApiErrorDetail(detail);
+      if (!e?.response) {
+        setError(t("cloud.sell.err_save_network"));
+      } else if (formatted === "csrf_failed") {
+        setError(t("cloud.sell.err_save_csrf"));
+      } else {
+        setError(formatted || t("cloud.sell.err_save"));
+      }
     } finally { setBusy(false); }
   };
 
@@ -908,7 +927,21 @@ export default function SellPage() {
 
           <div className="grid grid-cols-2 gap-3">
             <Field label={t("cloud.sell.f_city")} required>
-              <input data-testid="sell-f-city" value={form.city} required onChange={(e) => setForm({ ...form, city: e.target.value })} className={inputCls} />
+              <input
+                data-testid="sell-f-city"
+                value={form.city}
+                required
+                list="sell-city-suggest"
+                autoComplete="address-level2"
+                placeholder={t("cloud.sell.f_city_ph")}
+                onChange={(e) => setForm({ ...form, city: e.target.value })}
+                className={inputCls}
+              />
+              <datalist id="sell-city-suggest">
+                {CITY_SUGGESTIONS.map((c) => (
+                  <option key={c} value={c} />
+                ))}
+              </datalist>
             </Field>
             <Field label={t("cloud.sell.f_postal")}>
               <input data-testid="sell-f-postal" value={form.postal_code} onChange={(e) => setForm({ ...form, postal_code: e.target.value })} className={inputCls} />
@@ -922,7 +955,22 @@ export default function SellPage() {
           <div className="grid grid-cols-3 gap-3">
             <div className="col-span-2">
               <Field label={t("cloud.sell.f_address")}>
-                <input data-testid="sell-f-address" value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} className={inputCls} placeholder={t("cloud.sell.f_address_ph")} />
+                <AddressAutocomplete
+                  testid="sell-f-address"
+                  value={form.address}
+                  onChange={(text) => setForm((f) => ({ ...f, address: text }))}
+                  onSelect={(rec) => {
+                    setForm((f) => ({
+                      ...f,
+                      address: rec.normalized || f.address,
+                      city: rec.comune || f.city,
+                      postal_code: rec.cap || f.postal_code,
+                      zone: rec.zone || f.zone,
+                    }));
+                  }}
+                  placeholder={t("cloud.sell.f_address_ph")}
+                  inputClassName={inputCls}
+                />
               </Field>
             </div>
             <Field label={t("cloud.sell.f_street_number")}>

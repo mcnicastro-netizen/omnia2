@@ -21,17 +21,19 @@ from shared.llm.chat import LlmChat, UserMessage, TextDelta  # noqa: E402
 
 DEFAULT_MODEL = os.environ.get("GEMINI_MODEL", "gemini-3.5-flash")
 
-# Tried in order on 404/503 (high demand / retired model ids).
+# Tried in order on 404/503/timeout (high demand / retired / hanging aliases).
 _MODEL_FALLBACKS = (
     "gemini-3.5-flash",
-    "gemini-flash-latest",
     "gemini-3.5-flash-lite",
     "gemini-flash-lite-latest",
     "gemini-3.1-flash-lite",
+    "gemini-flash-latest",  # last: known to hang on some keys — only after timed attempts
 )
 
 # Brief pause before trying the next model on transient overload.
 _RETRY_PAUSE_SEC = 0.9
+# Per-model hard cap so a hanging alias (e.g. gemini-flash-latest) cannot block HAL.
+_MODEL_ATTEMPT_TIMEOUT_SEC = float(os.environ.get("GEMINI_ATTEMPT_TIMEOUT_SEC", "25"))
 
 
 class LlmNotConfigured(RuntimeError):
@@ -80,6 +82,8 @@ def _normalize_model(provider: Optional[str], model: Optional[str]) -> str:
         "gemini-1.5-flash": "gemini-3.5-flash",
         "gemini-2.5-flash-lite": "gemini-3.5-flash-lite",
         "gemini-2.0-flash-lite": "gemini-3.5-flash-lite",
+        # Prefer pin over floating alias (alias can hang without 404).
+        "gemini-flash-latest": "gemini-3.5-flash",
     }
     return aliases.get(name, name)
 
@@ -94,6 +98,8 @@ def _model_candidates(preferred: Optional[str] = None) -> list[str]:
 
 
 def _is_retryable_model_error(exc: BaseException) -> bool:
+    if isinstance(exc, (asyncio.TimeoutError, TimeoutError)):
+        return True
     msg = str(exc).lower()
     code = getattr(exc, "code", None) or getattr(exc, "status_code", None)
     if code in (404, 429, 503):
@@ -110,6 +116,8 @@ def _is_retryable_model_error(exc: BaseException) -> bool:
             "no longer available",
             "is not found",
             "resource_exhausted",
+            "timed out",
+            "timeout",
         )
     )
 
@@ -161,25 +169,31 @@ async def generate_text(
         candidates = _model_candidates(model)
         for i, model_id in enumerate(candidates):
             try:
-                try:
-                    resp = await client.aio.models.generate_content(
-                        model=model_id,
-                        contents=contents,
-                        config=config,
-                    )
-                except Exception as aio_err:
-                    if _is_retryable_model_error(aio_err):
-                        raise aio_err
-                    logger.warning(
-                        "aio generate_content failed on %s (%s); trying sync",
-                        model_id,
-                        aio_err,
-                    )
-                    resp = client.models.generate_content(
-                        model=model_id,
-                        contents=contents,
-                        config=config,
-                    )
+                async def _once() -> Any:
+                    try:
+                        return await client.aio.models.generate_content(
+                            model=model_id,
+                            contents=contents,
+                            config=config,
+                        )
+                    except Exception as aio_err:
+                        if _is_retryable_model_error(aio_err):
+                            raise aio_err
+                        logger.warning(
+                            "aio generate_content failed on %s (%s); trying sync",
+                            model_id,
+                            aio_err,
+                        )
+                        return await asyncio.to_thread(
+                            client.models.generate_content,
+                            model=model_id,
+                            contents=contents,
+                            config=config,
+                        )
+
+                resp = await asyncio.wait_for(
+                    _once(), timeout=_MODEL_ATTEMPT_TIMEOUT_SEC
+                )
                 return _extract_text(resp)
             except Exception as e:
                 last_err = e
@@ -187,12 +201,12 @@ async def generate_text(
                     logger.warning(
                         "LLM model %s unavailable (%s); trying fallback", model_id, e
                     )
-                    if _is_busy_error(e) and i < len(candidates) - 1:
+                    if (_is_busy_error(e) or isinstance(e, (asyncio.TimeoutError, TimeoutError))) and i < len(candidates) - 1:
                         await asyncio.sleep(_RETRY_PAUSE_SEC)
                     continue
                 raise
         assert last_err is not None
-        if _is_busy_error(last_err):
+        if _is_busy_error(last_err) or isinstance(last_err, (asyncio.TimeoutError, TimeoutError)):
             raise LlmBusy(str(last_err)) from last_err
         raise last_err
 

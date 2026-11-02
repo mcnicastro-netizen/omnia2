@@ -1315,6 +1315,7 @@
       "f_type": "Tipologia",
       "f_operation": "Operazione",
       "f_city": "Città",
+      "f_city_ph": "Es. Milano, Roma, Catania, Mascalucia…",
       "f_postal": "CAP",
       "f_zone": "Zona / quartiere",
       "f_zone_ph": "es. Centro, Parioli…",
@@ -1387,6 +1388,9 @@
       "has_floor_plan": "planimetria allegata",
       "err_photos_limit": "Puoi caricare al massimo 30 foto.",
       "err_floor_plan_upload": "Caricamento planimetria non riuscito. Riprova.",
+      "err_save": "Salvataggio non riuscito. Controlla i dati e riprova.",
+      "err_save_network": "Connessione interrotta o API non raggiungibile. Ricarica e riprova.",
+      "err_save_csrf": "Sessione scaduta per sicurezza. Ricarica la pagina e riprova.",
       "op_sale": "Vendita",
       "op_rent": "Affitto",
       "status_draft": "Bozza",
@@ -1718,7 +1722,10 @@
     "regenerate": "Rigenera",
     "apply": "Conferma e applica",
     "confirm_hint": "HAL propone il testo: tu confermi prima di applicarlo.",
-    "cancel": "Annulla"
+    "cancel": "Annulla",
+    "err_timeout": "HAL sta impiegando troppo. Riprova tra un momento.",
+    "err_network": "Connessione interrotta. Controlla la rete e riprova.",
+    "err_llm_busy": "Il servizio AI è momentaneamente saturo. Riprova tra un minuto."
   },
   "moderation": {
     "title": "Moderazione annunci privati",

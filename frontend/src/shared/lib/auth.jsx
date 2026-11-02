@@ -10,15 +10,27 @@ import { api, refreshSession } from "./api";
 const AuthContext = createContext(null);
 
 export function formatApiErrorDetail(detail) {
-  if (detail == null) return "Something went wrong. Please try again.";
+  // Default IT — avoid opaque English fallback that hid real API codes.
+  if (detail == null) return "Operazione non riuscita. Riprova.";
   if (typeof detail === "string") return detail;
   if (Array.isArray(detail))
-    return detail
-      .map((e) => (e && typeof e.msg === "string" ? e.msg : JSON.stringify(e)))
-      .filter(Boolean)
-      .join(" ");
-  if (detail && typeof detail.msg === "string") return detail.msg;
-  return String(detail);
+    return (
+      detail
+        .map((e) => (e && typeof e.msg === "string" ? e.msg : JSON.stringify(e)))
+        .filter(Boolean)
+        .join(" ") || "Operazione non riuscita. Riprova."
+    );
+  if (detail && typeof detail === "object") {
+    if (typeof detail.message === "string" && detail.message.trim()) return detail.message;
+    if (typeof detail.msg === "string" && detail.msg.trim()) return detail.msg;
+    if (detail.error === "csrf_failed") return "csrf_failed";
+    if (typeof detail.code === "string" && detail.code.trim()) return detail.code;
+  }
+  try {
+    return JSON.stringify(detail);
+  } catch {
+    return String(detail);
+  }
 }
 
 /** True when register rejected because the email is already in use (B2C or B2B). */
