@@ -1,5 +1,5 @@
 import React, { useRef, useState } from "react";
-import { api } from "../../../shared/lib/api";
+import { api, resolveMediaUrl } from "../../../shared/lib/api";
 
 /**
  * FloorPlanUploader — planimetrie JPEG / PNG / WebP / PDF.
@@ -198,9 +198,9 @@ export default function FloorPlanUploader({
                   PDF
                 </a>
               ) : (
-                <a href={p.url} target="_blank" rel="noreferrer" className="shrink-0">
+                <a href={resolveMediaUrl(p.url)} target="_blank" rel="noreferrer" className="shrink-0">
                   <img
-                    src={p.url}
+                    src={resolveMediaUrl(p.url)}
                     alt={p.caption || `Planimetria ${idx + 1}`}
                     className="w-14 h-14 object-cover rounded"
                   />
