@@ -5,7 +5,9 @@
 [build]
 builder = "DOCKERFILE"
 dockerfilePath = "Dockerfile.railway"
-watchPatterns = ["backend/**", "Dockerfile.railway", "railway.toml"]
+# memory/** incluso: corpus HAL (D-084/D-135) è COPY in Dockerfile.railway —
+# senza questo i soli push docs non aggiornano l'immagine e il reindex rilegge YAML vecchi.
+watchPatterns = ["backend/**", "memory/**", "Dockerfile.railway", "railway.toml"]
 
 [deploy]
 healthcheckPath = "/api/health"
