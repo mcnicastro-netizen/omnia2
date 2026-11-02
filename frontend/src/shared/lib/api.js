@@ -12,6 +12,26 @@ const BACKEND_URL = (process.env.REACT_APP_BACKEND_URL || "").replace(/\/$/, "")
 // Empty BACKEND_URL → same-origin /api (dev proxy or reverse proxy / tunnel)
 export const API_BASE = BACKEND_URL ? `${BACKEND_URL}/api` : "/api";
 
+/**
+ * Absolute URL for img/a against Object Storage paths.
+ * DB keeps relative /api/media/... ; on cloud/www FE host that path 404s and thumbs vanish.
+ * data:/blob:/http(s) pass through unchanged.
+ */
+export function resolveMediaUrl(url) {
+  if (!url || typeof url !== "string") return "";
+  if (
+    url.startsWith("data:") ||
+    url.startsWith("blob:") ||
+    /^https?:\/\//i.test(url)
+  ) {
+    return url;
+  }
+  if (url.startsWith("/") && BACKEND_URL) {
+    return `${BACKEND_URL}${url}`;
+  }
+  return url;
+}
+
 const CSRF_STORAGE_KEY = "omnia_csrf_token";
 
 export const api = axios.create({

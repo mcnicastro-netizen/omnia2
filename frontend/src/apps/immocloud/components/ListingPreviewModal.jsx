@@ -1,6 +1,7 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
 import { ENERGY_CLASS_OPTIONS } from "../../../shared/lib/energyClasses";
+import { resolveMediaUrl } from "../../../shared/lib/api";
 
 const FEATURE_KEYS = [
   "balcone", "terrazza", "giardino", "ascensore", "aria_condizionata",
@@ -11,7 +12,7 @@ const FEATURE_KEYS = [
 function coverUrl(listing) {
   const photos = listing?.photos || [];
   const cover = photos.find((p) => p.is_cover) || photos[0];
-  return cover?.url || null;
+  return resolveMediaUrl(cover?.url || "") || null;
 }
 
 function energyLabel(code) {
@@ -195,7 +196,7 @@ export default function ListingPreviewModal({
               <div className="grid grid-cols-4 gap-2">
                 {(listing.photos || []).slice(0, 8).map((p, i) => (
                   <div key={p.id || i} className="aspect-[4/3] rounded overflow-hidden bg-stone-100">
-                    <img src={p.url} alt="" className="w-full h-full object-cover" />
+                    <img src={resolveMediaUrl(p.url)} alt="" className="w-full h-full object-cover" />
                   </div>
                 ))}
               </div>

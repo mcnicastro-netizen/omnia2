@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { api } from "../../../shared/lib/api";
+import { api, resolveMediaUrl } from "../../../shared/lib/api";
 import { formatApiErrorDetail } from "../../../shared/lib/auth";
 
 const STAGING_PENDING_KEY = "omnia_staging_pending";
@@ -254,7 +254,7 @@ export default function B2CStagingPanel({
                   active ? "border-[#0B1E3F]" : "border-stone-200"
                 }`}
               >
-                <img src={p.url} alt="" className="w-full h-full object-cover" />
+                <img src={resolveMediaUrl(p.url)} alt="" className="w-full h-full object-cover" />
                 <span className="absolute bottom-1 left-1 bg-black/70 text-white text-[9px] px-1.5 py-0.5 rounded">
                   {t("cloud.sell.staging_photo_n", { n: p._idx + 1 })}
                 </span>
@@ -403,7 +403,7 @@ export default function B2CStagingPanel({
                 {t("cloud.sell.staging_after")}
               </p>
               <img
-                src={preview.url}
+                src={resolveMediaUrl(preview.url)}
                 alt=""
                 data-testid={`${testIdPrefix}-preview-img`}
                 className="w-full aspect-[4/3] object-cover rounded border border-stone-200"
@@ -434,7 +434,7 @@ export default function B2CStagingPanel({
                         active ? "border-[#0B1E3F] ring-1 ring-[#0B1E3F]" : "border-stone-200"
                       }`}
                     >
-                      <img src={v.url} alt="" className="w-full aspect-[4/3] object-cover" />
+                      <img src={resolveMediaUrl(v.url)} alt="" className="w-full aspect-[4/3] object-cover" />
                       <span className="block px-1.5 py-1 text-[10px] uppercase tracking-widest text-stone-600">
                         {label}
                       </span>

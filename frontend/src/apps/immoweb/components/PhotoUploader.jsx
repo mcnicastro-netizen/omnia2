@@ -1,11 +1,13 @@
-import React, { useRef, useState } from "react";
-import { api } from "../../../shared/lib/api";
+import React, { useEffect, useRef, useState } from "react";
+import { api, resolveMediaUrl } from "../../../shared/lib/api";
 
 /**
  * PhotoUploader — drag&drop JPEG/PNG/WebP upload with client-side resize.
  *
  * O5 / D-104 — stati espliciti pending → success | error + retry.
  * H10 — upload Object Storage; base64 solo fallback blob piccoli.
+ * B2C — resolveMediaUrl so thumbs survive cross-site cloud.* → api.*.
+ * Cover — scelta esplicita utente (bottone sempre visibile, anche mobile).
  *
  * Props:
  *   photos: [{ id, url, caption?, order, is_cover, upload_status?, upload_error? }]
@@ -129,9 +131,14 @@ export default function PhotoUploader({
   uploadExtraFields = null,
 }) {
   const fileInput = useRef(null);
+  const photosRef = useRef(photos);
   const [uploading, setUploading] = useState(false);
   const [batchHint, setBatchHint] = useState("");
   const [dragIdx, setDragIdx] = useState(null);
+
+  useEffect(() => {
+    photosRef.current = photos;
+  }, [photos]);
 
   const uploadBlob = async (blob, name) => {
     const fd = new FormData();
@@ -147,7 +154,10 @@ export default function PhotoUploader({
   };
 
   const patchPhoto = (id, patch) => {
-    onChange(photos.map((p) => (p.id === id ? { ...p, ...patch } : p)));
+    const base = photosRef.current || [];
+    const next = base.map((p) => (p.id === id ? { ...p, ...patch } : p));
+    photosRef.current = next;
+    onChange(next);
   };
 
   const uploadOne = async (photo, blob, fileName) => {
@@ -179,7 +189,7 @@ export default function PhotoUploader({
   };
 
   const handleFiles = async (files) => {
-    const remaining = max - photos.length;
+    const remaining = max - photosRef.current.length;
     const filesArr = Array.from(files).slice(0, remaining);
     if (!filesArr.length) return;
     setUploading(true);
@@ -187,6 +197,7 @@ export default function PhotoUploader({
 
     const skipped = [];
     const staged = [];
+    const baseLen = photosRef.current.length;
 
     for (const file of filesArr) {
       if (isHeicLike(file)) {
@@ -204,9 +215,11 @@ export default function PhotoUploader({
         staged.push({
           id,
           url: preview,
+          _preview: preview,
           caption: file.name.replace(/\.[^.]+$/, ""),
-          order: photos.length + staged.length,
-          is_cover: photos.length + staged.length === 0,
+          order: baseLen + staged.length,
+          // Copertina solo se non c’è ancora nessuna foto (e nessuna cover già scelta).
+          is_cover: baseLen + staged.length === 0,
           upload_status: "pending",
           upload_error: null,
           _blob: blob,
@@ -232,7 +245,8 @@ export default function PhotoUploader({
       return;
     }
 
-    const next = [...photos, ...staged];
+    const next = [...photosRef.current, ...staged];
+    photosRef.current = next;
     onChange(next);
 
     await mapPool(staged, UPLOAD_CONCURRENCY, async (item) => {
@@ -244,29 +258,36 @@ export default function PhotoUploader({
           if (item._blob.size > 600 * 1024) throw err;
           url = item.url;
         }
-        const idx = next.findIndex((p) => p.id === item.id);
+        const cur = photosRef.current;
+        const idx = cur.findIndex((p) => p.id === item.id);
         if (idx >= 0) {
-          next[idx] = {
-            ...next[idx],
+          const updated = [...cur];
+          updated[idx] = {
+            ...updated[idx],
             url,
+            _preview: updated[idx]._preview || item._preview || item.url,
             upload_status: "success",
             upload_error: null,
           };
-          delete next[idx]._blob;
-          delete next[idx]._fileName;
+          delete updated[idx]._blob;
+          delete updated[idx]._fileName;
+          photosRef.current = updated;
+          onChange(updated);
         }
-        onChange([...next]);
       } catch (err) {
         const msg = err?.response?.data?.detail || err?.message || "upload_failed";
-        const idx = next.findIndex((p) => p.id === item.id);
+        const cur = photosRef.current;
+        const idx = cur.findIndex((p) => p.id === item.id);
         if (idx >= 0) {
-          next[idx] = {
-            ...next[idx],
+          const updated = [...cur];
+          updated[idx] = {
+            ...updated[idx],
             upload_status: "error",
             upload_error: typeof msg === "string" ? msg : "upload_failed",
           };
+          photosRef.current = updated;
+          onChange(updated);
         }
-        onChange([...next]);
       }
     });
 
@@ -274,13 +295,17 @@ export default function PhotoUploader({
   };
 
   const retryUpload = async (idx) => {
-    const photo = photos[idx];
+    const photo = photosRef.current[idx];
     if (!photo) return;
     setUploading(true);
     try {
       let blob = photo._blob;
       if (!blob && typeof photo.url === "string" && photo.url.startsWith("data:")) {
         const res = await fetch(photo.url);
+        blob = await res.blob();
+      }
+      if (!blob && typeof photo._preview === "string" && photo._preview.startsWith("data:")) {
+        const res = await fetch(photo._preview);
         blob = await res.blob();
       }
       if (!blob) {
@@ -299,32 +324,65 @@ export default function PhotoUploader({
   };
 
   const removePhoto = (idx) => {
-    const newPhotos = photos.filter((_, i) => i !== idx).map((p, i) => ({ ...p, order: i }));
+    const newPhotos = photosRef.current
+      .filter((_, i) => i !== idx)
+      .map((p, i) => ({ ...p, order: i }));
     if (newPhotos.length > 0 && !newPhotos.some((p) => p.is_cover)) {
       newPhotos[0].is_cover = true;
     }
+    photosRef.current = newPhotos;
     onChange(newPhotos);
   };
 
   const setCover = (idx) => {
-    onChange(photos.map((p, i) => ({ ...p, is_cover: i === idx })));
+    const next = photosRef.current.map((p, i) => ({ ...p, is_cover: i === idx }));
+    photosRef.current = next;
+    onChange(next);
   };
 
   const move = (idx, dir) => {
     const newIdx = idx + dir;
-    if (newIdx < 0 || newIdx >= photos.length) return;
-    const newPhotos = [...photos];
+    if (newIdx < 0 || newIdx >= photosRef.current.length) return;
+    const newPhotos = [...photosRef.current];
     [newPhotos[idx], newPhotos[newIdx]] = [newPhotos[newIdx], newPhotos[idx]];
-    onChange(newPhotos.map((p, i) => ({ ...p, order: i })));
+    const ordered = newPhotos.map((p, i) => ({ ...p, order: i }));
+    photosRef.current = ordered;
+    onChange(ordered);
   };
 
   const reorder = (from, to) => {
     if (from == null || to == null || from === to) return;
-    if (from < 0 || to < 0 || from >= photos.length || to >= photos.length) return;
-    const next = [...photos];
+    if (from < 0 || to < 0 || from >= photosRef.current.length || to >= photosRef.current.length) {
+      return;
+    }
+    const next = [...photosRef.current];
     const [item] = next.splice(from, 1);
     next.splice(to, 0, item);
-    onChange(next.map((p, i) => ({ ...p, order: i })));
+    const ordered = next.map((p, i) => ({ ...p, order: i }));
+    photosRef.current = ordered;
+    onChange(ordered);
+  };
+
+  const thumbSrc = (p) => {
+    // Keep local data-URL preview while present so thumbs never flash-to-blank
+    // when /api/media is cross-site or briefly unauthorized.
+    if (typeof p._preview === "string" && p._preview) {
+      return p._preview.startsWith("data:") || p._preview.startsWith("blob:")
+        ? p._preview
+        : resolveMediaUrl(p._preview);
+    }
+    return resolveMediaUrl(p.url) || "";
+  };
+
+  const onThumbError = (e, p) => {
+    const fallback = p._preview || (typeof p.url === "string" && p.url.startsWith("data:") ? p.url : "");
+    if (fallback && e.currentTarget.dataset.fallback !== "1") {
+      e.currentTarget.dataset.fallback = "1";
+      e.currentTarget.src =
+        fallback.startsWith("data:") || fallback.startsWith("blob:")
+          ? fallback
+          : resolveMediaUrl(fallback);
+    }
   };
 
   return (
@@ -371,7 +429,10 @@ export default function PhotoUploader({
       />
 
       {batchHint ? (
-        <p data-testid="photo-batch-hint" className="text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded px-3 py-2">
+        <p
+          data-testid="photo-batch-hint"
+          className="text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded px-3 py-2"
+        >
           {batchHint}
         </p>
       ) : null}
@@ -400,7 +461,7 @@ export default function PhotoUploader({
                 setDragIdx(null);
               }}
               onDragEnd={() => setDragIdx(null)}
-              className={`relative group rounded-lg overflow-hidden border-2 cursor-grab active:cursor-grabbing ${
+              className={`relative rounded-lg overflow-hidden border-2 bg-white ${
                 dragIdx === idx ? "opacity-60" : ""
               } ${
                 p.upload_status === "error"
@@ -411,7 +472,12 @@ export default function PhotoUploader({
               }`}
             >
               <div className="aspect-[4/3] bg-stone-100">
-                <img src={p.url} alt={p.caption || `Foto immobile ${p.order + 1}`} className="w-full h-full object-cover pointer-events-none" />
+                <img
+                  src={thumbSrc(p)}
+                  alt={p.caption || `Foto immobile ${(p.order ?? idx) + 1}`}
+                  className="w-full h-full object-cover pointer-events-none"
+                  onError={(e) => onThumbError(e, p)}
+                />
               </div>
               {p.upload_status === "pending" && (
                 <span
@@ -421,32 +487,40 @@ export default function PhotoUploader({
                   Pending
                 </span>
               )}
+              {p.is_cover && p.upload_status !== "error" && (
+                <span
+                  data-testid={`photo-cover-badge-${idx}`}
+                  className="absolute top-1 left-1 bg-amber-500 text-white text-[9px] uppercase tracking-widest px-1.5 py-0.5 rounded"
+                >
+                  ★ Copertina
+                </span>
+              )}
               {p.upload_status === "error" && (
                 <button
                   type="button"
                   data-testid={`photo-retry-${idx}`}
                   onClick={() => retryUpload(idx)}
-                  className="absolute inset-x-1 bottom-1 bg-rose-600 text-white text-[10px] uppercase tracking-widest px-2 py-1 rounded"
+                  className="absolute inset-x-1 top-1 bg-rose-600 text-white text-[10px] uppercase tracking-widest px-2 py-1 rounded"
                 >
                   Riprova
                 </button>
               )}
-              {p.is_cover && p.upload_status !== "error" && (
-                <span className="absolute top-1 left-1 bg-amber-500 text-white text-[9px] uppercase tracking-widest px-1.5 py-0.5 rounded">
-                  ★ Cover
-                </span>
-              )}
-              <div className="absolute inset-0 bg-stone-900/0 group-hover:bg-stone-900/60 transition opacity-0 group-hover:opacity-100 flex items-center justify-center gap-1">
-                {!p.is_cover && (
+              {/* Azioni sempre visibili (mobile non ha hover) */}
+              <div className="flex flex-wrap items-center gap-1 p-1.5 border-t border-stone-100 bg-stone-50">
+                {!p.is_cover ? (
                   <button
                     type="button"
                     onClick={() => setCover(idx)}
                     data-testid={`photo-set-cover-${idx}`}
                     title="Imposta come copertina"
-                    className="bg-amber-500 text-white text-xs px-2 py-1 rounded hover:bg-amber-600"
+                    className="flex-1 min-w-[4.5rem] bg-amber-500 text-white text-[10px] uppercase tracking-widest px-2 py-1 rounded hover:bg-amber-600"
                   >
-                    ★
+                    ★ Copertina
                   </button>
+                ) : (
+                  <span className="flex-1 min-w-[4.5rem] text-center text-[10px] uppercase tracking-widest text-amber-700 px-1 py-1">
+                    In copertina
+                  </span>
                 )}
                 <button
                   type="button"
@@ -494,7 +568,8 @@ export default function PhotoUploader({
 
       {photos.length > 0 && (
         <p className="text-xs text-stone-500">
-          {photos.length} / {max} foto · Trascina le miniature per riordinarle · La stella ★ è la copertina
+          {photos.length} / {max} foto · Trascina per riordinare · Tocca ★ Copertina sulla foto che
+          vuoi in evidenza
           {photos.some((p) => p.upload_status === "error")
             ? " · Una o più foto in errore: usa Riprova"
             : ""}

@@ -1161,7 +1161,7 @@
       "f_phone": "Phone",
       "f_whatsapp": "WhatsApp number",
       "f_photos": "Property photos",
-      "f_photos_hint": "Up to 20 photos included (30 with the extra pack). The starred one is the cover image.",
+      "f_photos_hint": "Up to 20 photos included (30 with the extra pack). Tap ★ Cover under a thumbnail to choose the cover photo.",
       "f_floor_plan": "Floor plan",
       "f_floor_plan_hint": "Upload a floor plan (JPEG, PNG or WebP). Shown to qualified users.",
       "floor_plan_drop": "Drop your floor plan here",

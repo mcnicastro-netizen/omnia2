@@ -9,7 +9,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { api } from "../../../shared/lib/api";
+import { api, resolveMediaUrl } from "../../../shared/lib/api";
 import { useAuth, formatApiErrorDetail } from "../../../shared/lib/auth";
 import AlImproveButton from "../../../shared/components/AlImproveButton";
 import PhotoUploader from "../../immoweb/components/PhotoUploader";
@@ -105,6 +105,19 @@ function buildListingPayload(form) {
   const sn = (payload.street_number || "").trim();
   payload.street_number = sn || null;
   if (!Array.isArray(payload.photos)) payload.photos = [];
+  // Persist only Object Storage URLs + cover flag (drop local preview / upload bookkeeping).
+  payload.photos = payload.photos
+    .filter((p) => p && typeof p.url === "string" && !p.url.startsWith("data:") && p.upload_status !== "error")
+    .map((p, i) => ({
+      id: p.id,
+      url: p.url,
+      caption: p.caption || "",
+      order: p.order != null ? p.order : i,
+      is_cover: Boolean(p.is_cover),
+    }));
+  if (payload.photos.length && !payload.photos.some((p) => p.is_cover)) {
+    payload.photos[0].is_cover = true;
+  }
 
   const energy = { ...(payload.energy || {}) };
   if (!energy.energy_class) delete energy.energy_class;
@@ -1198,7 +1211,7 @@ export default function SellPage() {
             <p className="text-xs text-stone-500 mb-2">{t("cloud.sell.f_photos_hint")}</p>
             <PhotoUploader
               photos={form.photos || []}
-              onChange={(photos) => setForm({ ...form, photos })}
+              onChange={(photos) => setForm((f) => ({ ...f, photos }))}
               max={B2C_MAX_PHOTOS}
               uploadUrl={B2C_MEDIA_UPLOAD}
               uploadExtraFields={{ kind: "photo" }}
@@ -1362,7 +1375,7 @@ function FloorPlanUploader({ url, onChange }) {
       ) : (
         <div className="relative border border-stone-200 rounded-lg overflow-hidden bg-stone-50 max-w-md">
           <img
-            src={url}
+            src={resolveMediaUrl(url)}
             alt={t("cloud.sell.f_floor_plan")}
             data-testid="floor-plan-preview"
             className="w-full max-h-64 object-contain bg-white"
