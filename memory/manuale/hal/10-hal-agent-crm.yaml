@@ -245,22 +245,24 @@ voci:
     titolo: Pulsante 'Migliora con HAL' - titolo e descrizione
     modulo: HAL Agent
     widget: null
-    pubblico: [titolare, agente]
+    pubblico: [titolare, agente, privato]
     livello: base
-    tags: [hal, improve, migliora, titolo, descrizione, copywriting, form]
+    tags: [hal, improve, migliora, titolo, descrizione, copywriting, form, d-135, b2c]
     correlati:
       - hal.improve-lingue-toni
       - hal.rate-limit-improve
       - hal.improve-conferma-applica
       - immobili.creazione-manuale
       - immobili.hal-conferma-applica
-    domanda_naturale: "A cosa serve il pulsante 'Migliora con HAL' nei form?"
+    domanda_naturale: "A cosa serve il pulsante 'Migliora con HAL' nei form? Perché da timeout su Vendi?"
     contenuto:
       a_cosa_serve: >
         Rigenerare o migliorare in un click il titolo o la descrizione
         di un annuncio immobiliare, coerente coi dati del form. Endpoint
         dedicato /api/app/al/improve (separato dalla chat). A-028g:
         la proposta non scrive da sola — serve Conferma e applica.
+        D-135: modello default gemini-3.5-flash + timeout/fallback
+        (alias flash-latest poteva appendere).
       quando_si_usa: >
         Ogni volta che stai creando/modificando un immobile in
         PropertyForm (ImmoWeb) o SellPage (B2C privati) e vuoi un
@@ -268,7 +270,7 @@ voci:
       passi:
         - "Compila prima possibile i dati dell'immobile (tipologia,
           citta', superficie, locali, features): piu' dati -> migliore
-          l'output."
+          l'output. Su SellPage servono almeno città + tipologia + mq/locali."
         - "Clicca ✨ 'Migliora con HAL' accanto al campo Titolo o
           Descrizione (test-id al-improve-{title|description}-trigger)."
         - "Si apre una modale con: testo attuale a sinistra, selettore
@@ -292,8 +294,12 @@ voci:
           soluzione: >
             Il system prompt vieta prezzi/telefoni/email/URL. Se
             appaiono e' un bug: segnala all'assistenza con screenshot.
+        - problema: "Vedo al_improve.err_timeout o resta appeso"
+          soluzione: >
+            D-135: modello pin + i18n errori. Se ancora timeout: saturazione
+            Gemini — riprova; verifica GEMINI_API_KEY su Railway.
       permessi:
-        - Titolare, agente (chi puo' modificare l'immobile)
+        - Titolare, agente, privato B2C (SellPage)
     screenshot:
       - "[SCREEN: cap10-hal-improve-modal]"
 

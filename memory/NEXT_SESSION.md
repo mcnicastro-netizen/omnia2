@@ -1,6 +1,6 @@
 # Prossima sessione — programma passi
 
-**Aggiornato**: 28 Ottobre 2026 — D-131…D-134 (auth · Resend · Vercel · Google)  
+**Aggiornato**: 02 Novembre 2026 — **D-135** dogfood B2C Vendi (CSRF · HAL · account)  
 **Repo**: https://github.com/mcnicastro-netizen/omnia2 ✅  
 **Environment**: omnia2 (esiste; UI Dashboard può glitchare — non Start Fresh)
 
@@ -27,59 +27,25 @@ Vault scope: [`memory/CLOUD_SECRETS_INVENTORY.md`](./CLOUD_SECRETS_INVENTORY.md)
 | **API Railway** | [`docs/ops/RAILWAY_DEPLOY.md`](../docs/ops/RAILWAY_DEPLOY.md) — D-123 |
 | **Vercel FE** | [`docs/ops/VERCEL_DEPLOY.md`](./VERCEL_DEPLOY.md) — D-074 / **D-133** bake API URL |
 | **Stripe** | [`memory/STRIPE_ONBOARDING.md`](./STRIPE_ONBOARDING.md) |
-| **Auth area** | **D-131** `/cloud/area` Accedi/Crea account |
+| **Auth area** | **D-131** `/cloud/area` · **D-135** account solo B2C |
 | **Google login** | **D-134** `GOOGLE_CLIENT_ID` Web reale |
+| **Vendi B2C** | **D-135** CSRF · HAL improve · moderazione pending |
 
 ---
 
 ## Filo prodotto
 
-1. Ops 28-Ott chiusi: Area auth · Cerca casa · Resend · Google Sign-In · vault note.
-2. **Prossimo (solo se Founder dice vai):** P0 Clone-from-URL (D-130) con preview reale, **oppure** pilota mandati D-129.
+1. **02-Nov chiuso:** dogfood Privato Vendi live (città, HAL, salva, sessione CSRF, nav account). Founder pubblica da account B2C (anonima se sessione CRM).
+2. **Prossimo (solo se Founder dice vai):** moderazione Founder degli annunci `pending` · oppure P0 Clone-from-URL (D-130) · oppure pilota mandati D-129.
 3. Residui sicurezza: YouTrust → `ESIGN_PROVIDER=mock`; Mongo rotate saltato.
-4. HAL reindex dopo docs Cap.00/01.
+4. HAL reindex dopo docs Cap.00/01/10/18 (D-135).
 
 ---
 
-## ⏭️ Primo passo tipico (nuovo agent)
+## Link dogfood Privato (Founder)
 
-1. `bash scripts/check-secrets-presence.sh` + smoke health API
-2. Vault: Personal OK; no Start Fresh; no delete My Secrets finché UI Environment non risponde
-3. Residui sicurezza solo se Founder chiede: YouTrust key / Mongo rotate
-4. Altrimenti ripresa prodotto su ok Founder: Clone P0 (D-130) o pilota mandati D-129
+- Area: https://cloud.omniarealestateecosystem.it/it/cloud/area  
+- Register sell: https://cloud.omniarealestateecosystem.it/it/cloud/register?intent=sell  
+- Vendi: https://cloud.omniarealestateecosystem.it/it/cloud/account/sell  
 
----
-
-## ⚠️ Non dimenticare
-
-| Voce | Nota |
-|------|------|
-| **YouTrust** | Ticket inviato 22-Ott · finché no key → `ESIGN_PROVIDER=mock` |
-| **Mongo rotate** | Saltato — riprendere a outage/UI rotate disponibile |
-| **Vault Personal** | Add secrets → Personal; Environment preferibile; UI env può glitchare — **no Start Fresh** |
-| **No screenshot secret** | Mai foto di Variables Railway con valori in chiaro |
-| **SENDER_EMAIL** | Mai `onboarding@resend.dev` in prod (D-132) |
-| **Vercel bake** | `REACT_APP_BACKEND_URL` obbligatorio al build (D-133) |
-| **D-130** | Vietato promettere clone sito senza preview |
-| **D-125 / D-128** | Accesso atti · staging B2C €1,49 |
-| **Stripe Live** | Solo dopo KYC |
-| **HAL reindex** | Dopo merge docs Cap.00 / YAML |
-| **A-039 SEO** | Canonical/noindex/hreflang — **dopo dogfood**, no sprint ora |
-
----
-
-## Stato rapido
-
-| Voce | Esito |
-|--|--|
-| S1–S10 | ✅ |
-| D-124…D-130 | ✅ registrati (clone codice ⏳) |
-| D-131 Area auth | ✅ 28-Ott |
-| D-132 Resend sender | ✅ live delivered |
-| D-133 Vercel API URL | ✅ |
-| D-134 Google Sign-In | ✅ live |
-| Rotazione Railway core | ✅ 22-Ott |
-| YouTrust / Mongo rotate | 🟠 residui |
-| A-037 demo da sito | 🟠 |
-| **A-039 SEO strutturale** | 🟠 documentato · post-dogfood |
-| Stripe Live | ⏳ |
+**Regola**: sessione gestionale/Founder ≠ account Privato. Per Vendi usa B2C (finestra anonima OK).

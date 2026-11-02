@@ -135,33 +135,49 @@ voci:
     screenshot: []
 
   - id: primo-accesso.area-riservata-cloud
-    titolo: Area riservata ImmobilCloud — Accedi o Crea account (D-131)
+    titolo: Area riservata ImmobilCloud — Accedi o Crea account (D-131 / D-135)
     modulo: Primo accesso
     widget: null
     pubblico: [titolare, agente, segreteria, privato]
     livello: base
-    tags: [login, registrazione, cloud, area-riservata, d-131, b2c]
+    tags: [login, registrazione, cloud, area-riservata, d-131, d-135, b2c, vendi]
     correlati:
       - primo-accesso.login-primo-ingresso
       - primo-accesso.password-dimenticata
-    domanda_naturale: "Dove faccio login sul portale? Cos'è Area riservata?"
+      - notifiche.inquiry-annuncio-privato
+    domanda_naturale: "Dove faccio login sul portale? Cos'è Area riservata? Perché Il mio account non apre nulla?"
     contenuto:
       a_cosa_serve: >
         Hub /cloud/area: scelta esplicita Accedi vs Crea account per
         ImmobilCloud B2C (D-131). Anti-duplicati: email già registrata
-        → 409 email_already_registered + CTA Accedi.
+        → 409 email_already_registered + CTA Accedi. D-135: nav
+        «Il mio account» solo per account_type=b2c; sessione agenzia
+        vede Area riservata + banner (serve account Privato).
       quando_si_usa: >
-        Click Area riservata in nav portale; primo ingresso privato;
-        tentativo di registrarsi con email già usata (B2C o B2B).
+        Click Area riservata / Il mio account; primo ingresso privato;
+        tentativo di registrarsi con email già usata (B2C o B2B);
+        Founder loggato in CRM che vuole vendere da privato.
       passi:
         - "Apri Area riservata → /cloud/area."
         - "Scegli Accedi (login) oppure Crea account (register)."
+        - "Per pubblicare: /cloud/register?intent=sell → /cloud/account/sell
+          → Invia per la revisione → IN REVISIONE."
         - "Se 409 email già registrata: usa Accedi, non creare un secondo account."
+        - "Se sei Founder/agenzia: finestra anonima + account B2C (D-135)."
       errori_comuni:
         - problema: "Mi mandava solo a registrazione"
           soluzione: >
             Fix D-131: hub con entrambe le azioni. Redeploy FE Vercel
             se vedi ancora il vecchio comportamento.
+        - problema: "Il mio account non risponde / mi rimbalza"
+          soluzione: >
+            D-135: con sessione gestionale il link non apre la dashboard
+            B2C. Usa Area riservata → Crea/Accedi account Privato
+            (anonima OK). Hard refresh se cache vecchia.
+        - problema: "Mi slogga mentre compilo Vendi"
+          soluzione: >
+            D-135 CSRF cross-site: refresh esente + header X-CSRF-Token.
+            Se ancora succede: hard refresh e ri-login B2C.
       permessi:
         - Pubblico portale / account esistenti
     screenshot: []

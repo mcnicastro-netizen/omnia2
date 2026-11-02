@@ -459,16 +459,22 @@ voci:
       a_cosa_serve: >
         Mappa AuthN/AuthZ post audit Punto 4: cookie HttpOnly access
         ~15m + refresh ~7g con jti; CSRF in prod; brute-force login;
-        MFA TOTP; API key omk_live hash + crediti. Gap acquisiti senza fix.
+        MFA TOTP; API key omk_live hash + crediti. D-135: CSRF
+        cross-site cloud.*→api.* (refresh esente; X-CSRF-Token header
+        + sessionStorage FE).
       quando_si_usa: >
         Domande su sessione, logout, MFA, invite password, ruoli,
-        API key.
+        API key, sloggout su Vendi.
       passi:
         - "AuthN: apps/core/auth.py + shared/auth/* . Ruolo effettivo
           dal DB user, non solo claim JWT."
         - "Tre piani: /api/app JWT+ruoli; /api/cloud JWT/anon; /api/v1
           Bearer API key."
         - "MFA: shared/auth/mfa.py + /api/auth/mfa/* — TOTP + backup."
+        - "CSRF prod (COOKIE_SECURE): double-submit omnia_csrf + header
+          X-CSRF-Token. /api/auth/refresh esente (D-135). FE salva
+          token da header in sessionStorage se cookie non leggibile
+          cross-site."
         - "Finding (NO fix senza «vai»): fascicolo senza agency_ids;
           invite riscrive password → **D-100** fix-needed (utente
           esistente = link agency, mai overwrite password_hash);
@@ -480,6 +486,10 @@ voci:
           soluzione: >
             Brute-force: max 5 tentativi, lock ~15 minuti su ip+email.
             Aspetta o reset password.
+        - problema: "Mi slogga su cloud.* dopo 1 minuto / csrf_failed"
+          soluzione: >
+            D-135: refresh senza header CSRF; redeploy API+FE. Hard
+            refresh e ri-login. Cookie Secure+SameSite=None obbligatori.
         - problema: "Ho accettato un invito e non riesco più a entrare
           con la vecchia password"
           soluzione: >

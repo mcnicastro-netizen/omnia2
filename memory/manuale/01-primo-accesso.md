@@ -1,6 +1,6 @@
 # Capitolo 1 · Primo accesso
 
-**Versione manuale**: v1.2 · **Ultima revisione**: 28-Ott-2026 (D-131 Area riservata · D-132 Resend)
+**Versione manuale**: v1.3 · **Ultima revisione**: 02-Nov-2026 (D-135 Vendi B2C · account solo Privato)
 **Chi lo legge**: titolari, agenti, segreteria (chiunque debba iniziare a usare ImmoWeb); privatamente anche utenti ImmobilCloud
 **Prerequisiti**: aver ricevuto le credenziali (email + password) o un invito da un collega
 
@@ -54,13 +54,18 @@ Il tuo titolare (o il servizio OMNIA se ti sei registrato tu stesso) ti ha invia
 - *"Il link scade dopo 7 giorni"*: se hai ricevuto un invito e non l'hai aperto in tempo, chiedi al titolare di re-inviarlo dalla sezione **Collaboratori** (Cap. 13).
 - *Login che sembra riuscito ma resti fuori / “non funziona” su URL pubblico (tunnel Cloudflare)*: fai un **hard refresh** (Safari: Cmd+Option+R; Firefox: Ctrl+Shift+R). I cookie di sessione sul dominio HTTPS devono avere il flag **Secure** — il preview OMNIA li aggiunge automaticamente. Vale per Safari, Firefox ed Edge, non solo Chrome. Demo Cloud: `demo.admin@omniaecosystem.it` / password in `DEMO_ADMIN_PASSWORD`.
 
-### 1.2.1b Area riservata ImmobilCloud (B2C · D-131)
+### 1.2.1b Area riservata ImmobilCloud (B2C · D-131 / D-135)
 
 Sul portale, **Area riservata** apre l'hub `/cloud/area` con due scelte chiare:
 - **Accedi** → login esistente
 - **Crea account** → registrazione privato
 
 Se l'email è già registrata (B2C o B2B), la registrazione risponde **409** con messaggio e link ad Accedi — niente account doppi.
+
+**D-135 — sessione agenzia / Founder**: il bottone nav mostra **«Il mio account» solo se sei B2C**. Se sei loggato nel gestionale (agenzia/Founder) vedi **Area riservata** e, su `/cloud/area`, un banner che spiega di usare un account Privato (finestra anonima OK). Non usare la sessione CRM per pubblicare da privato.
+
+**Pubblicare annuncio (Privato)**:  
+`/it/cloud/register?intent=sell` → `/it/cloud/account/sell` → salva → **Invia per la revisione** → stato **IN REVISIONE** (`moderation_status=pending`).
 
 ### 1.2.1c Continua con Google (D-134)
 

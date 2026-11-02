@@ -7,6 +7,19 @@ Registro di tutte le decisioni di business e tecniche prese durante il progetto.
 
 ## Decisioni prese
 
+### D-135 — Dogfood B2C Vendi: CSRF cross-site, HAL improve stabile, account solo Privato · 02-Nov-2026
+- **Data**: 2 Novembre 2026
+- **Contesto**: Dogfood produzione ImmobilCloud dopo wipe: città senza suggerimenti; Migliora con HAL timeout/chiave i18n grezza; salva con errore inglese; sessione che “scadeva” in ~1 minuto su `cloud.*`; bottone «Il mio account» percepito morto se loggati come Founder/agenzia.
+- **Decisione**:
+  1. **SellPage**: datalist città (come Valutatore) + AddressAutocomplete sulla via che **non** sovrascrive città/CAP già compilati.
+  2. **HAL improve**: modello default `gemini-3.5-flash` (non alias `gemini-flash-latest` che può appendere); timeout per tentativo + fallback; i18n `al_improve.err_*` obbligatorie.
+  3. **Errori API FE**: `formatApiErrorDetail` legge `message`/`code`/`csrf`; niente fallback inglese opaco su salva.
+  4. **CSRF cross-site** (FE `cloud.*` / `www.*` → API `api.*`): `/api/auth/refresh` **esente** CSRF (prova = cookie HttpOnly refresh); header `X-CSRF-Token` esposto + mirror in `sessionStorage` su FE; CORS `expose_headers`.
+  5. **Nav account**: label/link «Il mio account» **solo** se `account_type=b2c`; altrimenti «Area riservata» → `/cloud/area` con banner se sessione agenzia/Founder. Auth failsafe 12s su `user===null`.
+  6. Percorso Privato dogfood SoT: register `?intent=sell` → `/cloud/account/sell` → submit → `moderation_status=pending` (non live).
+- **Implementazione**: commit `724ab41`…`a755560` su `main` · deploy Railway + Vercel 02-Nov · QA UI PASS (IN REVISIONE).
+- **Stato**: ✅ **DECISIONE OPERATIVA REGISTRATA** · live
+
 ### D-134 — Google Sign-In live: Client ID Web reale (no placeholder) · 28-Ott-2026
 - **Data**: 28 Ottobre 2026
 - **Contesto**: «Continua con Google» → `401: invalid_client`. In vault/Railway c’era un placeholder (13 char), non un OAuth Web Client ID. Console Google: zero client + consenso da configurare. P-021 (Google opz. OFF) chiuso operativamente.

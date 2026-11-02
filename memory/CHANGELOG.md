@@ -1,3 +1,13 @@
+## 2026-11-02 — D-135 Dogfood B2C Vendi (CSRF · HAL · account)
+
+- SellPage: datalist città + AddressAutocomplete senza overwrite città/CAP
+- HAL improve: `gemini-3.5-flash` + timeout/fallback; i18n `al_improve.err_*`
+- Errori salva IT (`formatApiErrorDetail` + `message`/`csrf`)
+- CSRF cross-site: `/auth/refresh` esente; `X-CSRF-Token` + sessionStorage FE
+- Nav: «Il mio account» solo B2C; banner sessione agenzia su `/cloud/area`
+- Deploy Railway + Vercel; QA UI PASS → **IN REVISIONE**
+- Docs: DECISIONS D-135 · Cap.00/01/10/18 + HAL YAML · IMPORT_HAL
+
 ## 2026-10-29 — A-039 debito SEO (audit OpenSEO) — solo docs
 
 - Segnato in `ASPETTI_DA_APPROFONDIRE.md`: canonical sospetto → `/it/cloud`, policy noindex auth/app, hreflang IT-first

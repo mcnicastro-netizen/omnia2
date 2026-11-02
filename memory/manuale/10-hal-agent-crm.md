@@ -25,7 +25,7 @@ HAL Agent è una chat AI accessibile da ogni pagina del CRM (bottone flottante) 
 - Al click si apre un pannello di chat 380×580 px con storico messaggi e area input.
 - Icone: `al-widget`, `al-messages`, `al-input`, `al-send`, `al-stop`, `al-new-session`.
 
-### B) Pulsante *"Migliora con HAL"* (`AlImproveButton`)
+### B) Pulsante *"Migliora con HAL"* (`AlImproveButton`) · D-135
 - Bottoncino **inline** nel form immobile, accanto ai campi:
   - **Titolo annuncio** (ImmoWeb PropertyForm)
   - **Descrizione annuncio** (ImmoWeb PropertyForm)
@@ -244,10 +244,12 @@ Nella stessa pagina Vendi il privato configura `contact_public`: nome pubblico +
 
 | Codice | Perché | Cosa fare |
 |--------|--------|-----------|
-| **503 `llm_key_not_configured`** | La chiave Emergent LLM non è nel `.env` di questo ambiente | Contatta l'assistenza |
-| **503 `llm_budget_exceeded`** | Budget Emergent esaurito (`budget`, `quota`, `credit`, `402` nel messaggio d'errore) | Ricarica il budget (Piano & Crediti) |
-| **503 `llm_unavailable`** | Errore transitorio Gemini o rete | Riprova tra qualche secondo |
+| **503 `llm_key_not_configured`** | `GEMINI_API_KEY` assente su Railway/env | Contatta ops / vault |
+| **503 `llm_busy` / `llm_unavailable`** | Saturazione Gemini o timeout modello | Riprova; D-135 pin `gemini-3.5-flash` + fallback |
+| **UI `al_improve.err_timeout`** | Nessuna risposta HTTP entro timeout FE (~90s) | Riprova; se chiave grezza → redeploy FE (i18n) |
 | **429 `rate_limit_exceeded`** | Superato 60/ora improve | Attendi la finestra scorrevole |
+
+**Modello (D-135)**: default `GEMINI_MODEL` / improve = `gemini-3.5-flash`. Non usare alias `gemini-flash-latest` come unico modello (può appendere senza 404).
 
 [SCREEN: cap10-hal-improve-modal]
 

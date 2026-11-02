@@ -749,6 +749,49 @@ voci:
         - "Stats solo owner B2C dell'annuncio privato."
     screenshot: [cap18-sell-stats, cap18-fav-ended-badge]
 
+  - id: notifiche.sell-flusso-moderazione
+    titolo: Vendi B2C — salva, HAL, invio in revisione (D-135)
+    modulo: Notifiche
+    widget: null
+    pubblico: [b2c_client, super_admin]
+    livello: base
+    tags: [sellpage, vendi, moderazione, pending, d-135, csrf, hal, improve, b2c]
+    correlati:
+      - notifiche.inquiry-annuncio-privato
+      - notifiche.sell-doc-promo
+      - primo-accesso.area-riservata-cloud
+      - hal.improve-titolo-descrizione
+    domanda_naturale: >
+      Come pubblico un annuncio da privato? Perché resta In revisione?
+      Perché mi sloggava mentre compilavo Vendi?
+    contenuto:
+      a_cosa_serve: >
+        Percorso SoT Privato: register intent=sell → SellPage → salva
+        bozza → Invia per la revisione → moderation_status=pending
+        (non live). D-135: CSRF cross-site, HAL improve stabile,
+        città/via UX, account solo B2C.
+      quando_si_usa: >
+        Dogfood o utente reale ImmobilCloud che vuole vendere senza
+        agenzia.
+      passi:
+        - "Register /cloud/register?intent=sell (o Accedi da /cloud/area)."
+        - "Apri /cloud/account/sell → Nuovo annuncio."
+        - "Città: datalist; via: autocomplete senza overwrite città/CAP."
+        - "Foto fino a 30; Migliora con HAL sulla descrizione (conferma)."
+        - "Salva → Invia per la revisione → badge IN REVISIONE."
+      errori_comuni:
+        - problema: "Sessione scaduta / Connessione non disponibile a metà form"
+          soluzione: >
+            D-135 CSRF: refresh esente + X-CSRF-Token. Hard refresh,
+            ri-login B2C. Non usare sessione CRM Founder.
+        - problema: "Il mio account non apre la dashboard Vendi"
+          soluzione: >
+            Serve account_type=b2c. Con sessione agenzia: Area riservata
+            + account Privato (anonima OK).
+      permessi:
+        - "Solo B2C autenticato; moderazione admin su coda pending."
+    screenshot: [qa-final-s5-pending]
+
   - id: notifiche.sell-doc-promo
     titolo: Documenti utili in pubblicazione (APE, planimetria, accesso atti)
     modulo: Notifiche

@@ -208,6 +208,14 @@ PATCH /api/auth/me/notification-preferences
 
 ---
 
+## 18.7b2 · Flusso Vendi → moderazione (D-135)
+
+Percorso Privato dogfood SoT (02-Nov-2026):
+1. Register B2C `?intent=sell` oppure Accedi da `/cloud/area`.
+2. Compila **Vendi** (`/cloud/account/sell`): città con suggerimenti, via ANNCSU senza sovrascrivere città, foto, HAL improve.
+3. **Salva** (bozza) → **Invia per la revisione** → `moderation_status=pending` (badge **IN REVISIONE**). Non va live senza moderazione.
+4. Sessione: CSRF cross-site sistemato (refresh esente + header). Nav «Il mio account» solo B2C.
+
 ## 18.7c · Documenti utili in pubblicazione (SellPage · rail promo)
 
 Su **`/it/cloud/account/sell`** (area **Vendi** B2C) compare a destra un rail verticale **Documenti utili per pubblicare** (componente `SellDocPromoRail`):
