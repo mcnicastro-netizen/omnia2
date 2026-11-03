@@ -82,7 +82,7 @@ Se il render è collegato a un immobile, HAL invia i dati CRM (tipologia, città
 | `classic` | Classico | eleganza italiana tradizionale, colori caldi, mobili in legno, tende, lampadari, parquet |
 | `scandi` | Scandinavo | pareti bianche, legno chiaro, mobili minimal, tessili cozy, atmosfera *hygge* |
 | `industrial` | Industriale | mattoni a vista, metalli, pavimento in cemento, divano in pelle, lampadine Edison, urban chic |
-| `luxury` | Luxury | pavimento in marmo, mobili di design, dettagli oro, soffitti alti, finiture premium |
+| `luxury` | Luxury | arredi mobili premium e tessuti; **non** inventa marmo/porte/armadi a muro/LED architettonici (D-136) |
 
 Ogni stile ha un **prompt calibrato** per stanze reali (nessun modello di fashion o styling non abitativo).
 
@@ -212,11 +212,17 @@ Vedere in un solo job più risultati e scegliere il migliore, o mostrare al clie
 - Costo vivo fal.ai ~$0,056 (0,051 €) per render → margine ~94% a €0,90.
 - Il servizio è pensato come **strumento di acquisizione mandato**, non revenue center.
 
-**Costo B2C ImmobilCloud (D-128 · listino v1.4)**
+**Costo B2C ImmobilCloud (D-128 / D-136 · listino v1.4)**
 - **€1,49 / foto** one-shot Stripe (carta) — max 3 foto per annuncio UGC.
 - Anteprima gratis; pagamento solo al salvataggio sull’annuncio.
-- Motore target: **Nano Banana 2** one-shot + 4 stili + critico vision (max 1 retry); COGS tipico ~$0,33/run. Fallback legacy EVF+Ideogram+LoRA se nano fallisce.
-- SoT prezzi: `PRICING_B2C.md` v1.4 · `b2c_products.py` (`b2c_staging_render`).
+- Motore target default: **Nano Banana 2** one-shot + analisi stanza + hard gate architettonico (D-136); COGS tipico ~$0,08–0,50/run. Fallback legacy EVF+Ideogram+LoRA se nano fallisce.
+- Pipeline **professional** (flag `OMNIA_STAGING_PIPELINE=professional`): erase mascherato + furnish + gate HARD — non default finché A/B Founder non OK.
+- SoT prezzi: `PRICING_B2C.md` v1.4 · `b2c_products.py` (`b2c_staging_render`) · ops `docs/STAGING_PROFESSIONAL_D136.md`.
+
+**Principio D-136 (non negoziabile)**
+- L’AI modifica **solo gli arredi**, non l’immobile.
+- Un soggiorno Luxury resta un **soggiorno** — non diventa camera, non inventa porte/finestre/armadi a muro.
+- Varianti con hard-fail architettonico **non** sono pubblicabili e **non** passano al pagamento/salvataggio.
 
 **Quando parte l'addebito crediti**
 - Al `POST /generate` viene fatto **hard-gate** sul saldo (**A-013**): se i crediti non bastano → **402** e il job non parte.
@@ -351,4 +357,25 @@ Portare direttamente il render nel Fascicolo/annuncio senza download + re-upload
 
 ---
 
-**Versione**: v1.0 · Feb 2026 (TASK F · Cap. 9 Virtual Staging)
+## 9.13 · B2C ImmobilCloud — Vendi (D-136)
+
+**Dove**: `/it/cloud/account/sell` → pannello Virtual Staging sull’annuncio.
+
+**Modalità**
+- **Sostituisci arredi** (`reverse`) — default dogfood: rinnova mobili senza cambiare funzione stanza.
+- **Svuota** (`empty`) — rimuove solo arredi mobili.
+- **Arreda stanza vuota** (`standard`) — solo se la foto è già vuota.
+
+**Stili ImmobilCloud**: Moderno · Scandi · Classico · Luxury (bottoni; default Luxury). Opzione «genera tutti e 4» opzionale (OFF di default).
+
+**Tipo stanza**: default **Rileva automaticamente** (Gemini). Conferma utente se confidenza bassa. **Mai** default silenzioso `bedroom`.
+
+**Anteprima gratis**
+- Cap giornaliero anti-abuso (default 3). Dogfood: `OMNIA_B2C_STAGING_PREVIEW_DAILY_CAP=0` (illimitato) + domini esenti (`virgilio.it`, `omniaecosystem.it`, …).
+- Progresso: stage + tempo trascorso. Errore architettonico = scarto, nessun addebito.
+
+**Pagamento**: Stripe Checkout €1,49 solo su variante **publishable** (ACCEPT).
+
+---
+
+**Versione**: v1.1 · 3-Nov-2026 (D-136 fedeltà architettonica · B2C Vendi)

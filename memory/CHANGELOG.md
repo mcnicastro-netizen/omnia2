@@ -1,3 +1,12 @@
+## 2026-11-03 — D-136 Virtual Staging professionale (fedeltà) + dogfood B2C
+
+- Pipeline flaggata `OMNIA_STAGING_PIPELINE=professional` + room analysis + hard gate ACCEPT/REJECT
+- Blocco promote/fulfill su varianti non publishable; no default `bedroom`
+- FE B2C: 3 modalità, bottoni stile (default Luxury), compare, report non fedele
+- Cap anteprime dogfood `=0` · esenti `virgilio.it` / test domains (PR #72–#74)
+- Docs: Cap.9 MD+YAML · `docs/STAGING_PROFESSIONAL_D136.md` · IMPORT_HAL v0.45 · `hal-index`
+- Deploy Railway + Vercel · Founder riprende QA visiva domani
+
 ## 2026-11-02 — D-135 Dogfood B2C Vendi (CSRF · HAL · account)
 
 - SellPage: datalist città + AddressAutocomplete senza overwrite città/CAP

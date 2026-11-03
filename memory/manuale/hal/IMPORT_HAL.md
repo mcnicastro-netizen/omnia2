@@ -1,6 +1,6 @@
-# 📚 HAL Knowledge — Import & Cold Start (v0.44-d135-b2c-vendi)
+# 📚 HAL Knowledge — Import & Cold Start (v0.45-d136-staging-fedelta)
 
-**Ultimo aggiornamento**: 02-Nov-2026 (D-135 dogfood B2C Vendi · CSRF · HAL improve · account solo Privato)  
+**Ultimo aggiornamento**: 03-Nov-2026 (D-136 Virtual Staging fedeltà architettonica · B2C Vendi)  
 **Corpus**: YAML in `memory/manuale/hal/*.yaml` (Cap. 1–27 + `00-api-codice`) · MD esclusi dal RAG ingest  
 **Motore**: `hal_knowledge.py` · reindex: `POST /api/app/hal/knowledge/reindex?force=true` (super_admin)  
 **Regola Founder D-084**: ogni ship aggiorna MD+YAML nello stesso giro — vedi `memory/MANUAL_SYNC.md`.
@@ -452,9 +452,11 @@ Confidence attesa ≥ 0.15.
 
 ## 🚦 Smoke Cap. 9 — 3 query attese dopo reindex
 
-1. **"Come faccio un render Virtual Staging?"** → top-1 atteso `09-virtual-staging.yaml::staging.lanciare-render` (o `staging.cos-e`)
+1. **"Come faccio un render Virtual Staging?"** → top-1 atteso `09-virtual-staging.yaml::staging.lanciare-render` (o `staging.cos-e` / `staging.b2c-vendi`)
 2. **"Quanto costa un render Virtual Staging?"** → top-1 atteso `09-virtual-staging.yaml::staging.crediti-costo`
 3. **"Posso rimuovere il watermark 'Render virtuale OMNIA'?"** → top-1 atteso `09-virtual-staging.yaml::staging.watermark` (risposta: **no**, obbligatorio AGCM + Art. 21)
+4. **"Perché lo staging non deve inventare porte?"** → top-1 atteso `09-virtual-staging.yaml::staging.fedelta-architettonica`
+5. **"Come faccio lo staging da Vendi su ImmobilCloud?"** → top-1 atteso `09-virtual-staging.yaml::staging.b2c-vendi`
 
 Confidence attesa ≥ 0.15 su tutte e 3.
 

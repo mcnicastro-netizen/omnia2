@@ -1,6 +1,6 @@
 # Prossima sessione — programma passi
 
-**Aggiornato**: 02 Novembre 2026 — **D-135** dogfood B2C Vendi (CSRF · HAL · account)  
+**Aggiornato**: 3 Novembre 2026 — **D-136** Virtual Staging professionale (fedeltà) + dogfood B2C  
 **Repo**: https://github.com/mcnicastro-netizen/omnia2 ✅  
 **Environment**: omnia2 (esiste; UI Dashboard può glitchare — non Start Fresh)
 
@@ -8,7 +8,8 @@
 Smoke: `GET $OMNIA_API_PUBLIC_URL/api/health` → ok/db=ok.  
 Vault scope: [`memory/CLOUD_SECRETS_INVENTORY.md`](./CLOUD_SECRETS_INVENTORY.md) — Personal vs Environment.  
 **Email**: [`memory/RESEND_DOMAIN_GUIDE.md`](./RESEND_DOMAIN_GUIDE.md) — D-132 mittente `info@omniarealestateecosystem.it` live.  
-**Google**: [`memory/GOOGLE_AUTH.md`](./GOOGLE_AUTH.md) — D-134 Client ID Web live.
+**Google**: [`memory/GOOGLE_AUTH.md`](./GOOGLE_AUTH.md) — D-134 Client ID Web live.  
+**Staging ops**: [`docs/STAGING_PROFESSIONAL_D136.md`](../docs/STAGING_PROFESSIONAL_D136.md).
 
 **Prompt primo messaggio nuovo agent**: vedi [`docs/ops/NEW_AGENT_PROMPT_POST_RAILWAY_ROTATION.md`](../docs/ops/NEW_AGENT_PROMPT_POST_RAILWAY_ROTATION.md).
 
@@ -29,16 +30,17 @@ Vault scope: [`memory/CLOUD_SECRETS_INVENTORY.md`](./CLOUD_SECRETS_INVENTORY.md)
 | **Stripe** | [`memory/STRIPE_ONBOARDING.md`](./STRIPE_ONBOARDING.md) |
 | **Auth area** | **D-131** `/cloud/area` · **D-135** account solo B2C |
 | **Google login** | **D-134** `GOOGLE_CLIENT_ID` Web reale |
-| **Vendi B2C** | **D-135** CSRF · HAL improve · moderazione pending |
+| **Vendi B2C** | **D-135** CSRF · HAL · **D-136** staging fedeltà |
 
 ---
 
 ## Filo prodotto
 
-1. **02-Nov chiuso:** dogfood Privato Vendi live (città, HAL, salva, sessione CSRF, nav account). Founder pubblica da account B2C (anonima se sessione CRM).
-2. **Docs+HAL chiusi:** D-135 su `main` · Cap.00/01/10/18 MD+YAML · `hal-index` v0.44 · Railway `memory/**` watch · **reindex prod OK** (`chunks≈975`, `manual_hal=383`, smoke D-135 OK).
-3. **Prossimo (solo se Founder dice vai):** moderazione Founder degli annunci `pending` · oppure P0 Clone-from-URL (D-130) · oppure pilota mandati D-129.
-4. Residui sicurezza: YouTrust → `ESIGN_PROVIDER=mock`; Mongo rotate saltato.
+1. **03-Nov chiuso (codice):** D-136 pipeline professionale (flag) + room detect + hard gate + blocco promote · FE stili/modi · cap dogfood (`CAP=0`, esente `@virgilio.it`) · PR #71–#74 su `main` · Railway+Vercel live.
+2. **03-Nov docs/HAL:** Cap.9 MD+YAML · voci `staging.fedelta-architettonica` + `staging.b2c-vendi` · `hal-index` v0.45 · reindex prod.
+3. **Prossimo (Founder domani):** dogfood visivo account `@virgilio.it` — soggiorno → **Sostituisci arredi** → **Luxury** → deve restare soggiorno (no porte/armadi inventati). Poi decidere shadow `OMNIA_STAGING_PIPELINE=professional`.
+4. **Non fare finché Founder non dice vai:** flip default `professional` · merge PR #70 (wait-ux) — **superseded**/conflitto, UX già in FE D-136.
+5. Residui sicurezza: YouTrust → `ESIGN_PROVIDER=mock`; Mongo rotate saltato.
 
 ---
 
@@ -48,4 +50,4 @@ Vault scope: [`memory/CLOUD_SECRETS_INVENTORY.md`](./CLOUD_SECRETS_INVENTORY.md)
 - Register sell: https://cloud.omniarealestateecosystem.it/it/cloud/register?intent=sell  
 - Vendi: https://cloud.omniarealestateecosystem.it/it/cloud/account/sell  
 
-**Regola**: sessione gestionale/Founder ≠ account Privato. Per Vendi usa B2C (finestra anonima OK).
+**Regola**: sessione gestionale/Founder ≠ account Privato. Per Vendi usa B2C (`@virgilio.it` OK). Hard refresh dopo deploy.
