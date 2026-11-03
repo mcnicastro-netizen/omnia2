@@ -449,10 +449,15 @@ async def _crm_prompt_fragment(db, agency_id: Optional[str], property_id: str) -
 # ─── Source URL helpers (B2C private media → fal) ─────────────────
 def _listing_photo_url(photo: Any) -> str:
     if isinstance(photo, str):
-        return photo.strip()
-    if isinstance(photo, dict):
-        return str(photo.get("url") or "").strip()
-    return ""
+        u = photo.strip()
+    elif isinstance(photo, dict):
+        u = str(photo.get("url") or "").strip()
+    else:
+        return ""
+    # Local/draft data-URLs are not fetchable by fal — treat as missing.
+    if not u or u.startswith("data:"):
+        return ""
+    return u
 
 
 async def _resolve_image_url_for_fal(src: str) -> str:
@@ -594,7 +599,14 @@ async def start_b2c_preview_job(
     photos = listing.get("photos") or []
     source_url, resolved_photo_id, source_index = _pick_listing_photo(photos, photo_id)
     if not source_url:
-        raise HTTPException(status_code=400, detail="listing_has_no_photos")
+        raise HTTPException(status_code=400, detail={
+            "error": "listing_has_no_photos",
+            "code": "listing_has_no_photos",
+            "message": (
+                "Salva l'annuncio con almeno una foto caricata "
+                "prima di generare l'anteprima Virtual Staging."
+            ),
+        })
 
     start = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
     used = await db.virtual_staging_jobs.count_documents({
@@ -1955,12 +1967,26 @@ async def _run_pipeline(job_id: str, db) -> None:
                 "status": "done", "duration_ms": 0, "cost_usd": 0,
                 "note": "skipped_nano_banana_oneshot",
             })
-            await _mark_stage("furniture_removal", {
-                "status": "done", "duration_ms": 0, "cost_usd": 0,
-                "note": "oneshot_includes_erase" if agent.plan.need_erase else "skipped_standard",
-                "engine": "nano_banana_2",
-            })
-            await _mark_stage("flux_inpaint", {"status": "running"})
+            # Keep furniture_removal RUNNING during empty/reverse oneshot so the FE
+            # progress label shows "Svuotamento…" instead of jumping to "Arredamento…".
+            # standard mode has no furniture_removal stage — skip.
+            if "furniture_removal" in stage_idx:
+                if agent.plan.need_erase:
+                    await _mark_stage("furniture_removal", {
+                        "status": "running",
+                        "engine": "nano_banana_2",
+                        "note": "oneshot_erase_in_progress",
+                    })
+                else:
+                    await _mark_stage("furniture_removal", {
+                        "status": "done", "duration_ms": 0, "cost_usd": 0,
+                        "note": "skipped_standard",
+                        "engine": "nano_banana_2",
+                    })
+            # Empty mode: generation is the erase itself — keep flux_inpaint queued
+            # until erase oneshot finishes, then mark done. Furnish modes run flux as running.
+            if mode != "empty":
+                await _mark_stage("flux_inpaint", {"status": "running"})
 
             style_keys = agent.plan.styles[: agent.plan.num_variants]
 
@@ -1982,6 +2008,23 @@ async def _run_pipeline(job_id: str, db) -> None:
                 variants.append(item)
             if not variants:
                 raise RuntimeError("Nano Banana: nessuna variante generata")
+
+            if agent.plan.need_erase and "furniture_removal" in stage_idx:
+                await _mark_stage("furniture_removal", {
+                    "status": "done",
+                    "duration_ms": int((monotonic() - t0) * 1000) if mode == "empty" else 0,
+                    "cost_usd": round(COST_NANO_BANANA, 4) if mode == "empty" else 0,
+                    "note": "oneshot_includes_erase",
+                    "engine": "nano_banana_2",
+                })
+            if mode == "empty":
+                await _mark_stage("flux_inpaint", {
+                    "status": "done", "duration_ms": 0, "cost_usd": 0,
+                    "note": "skipped_empty_oneshot",
+                    "engine": "nano_banana_2",
+                })
+            else:
+                await _mark_stage("flux_inpaint", {"status": "running"})
 
             # Vision critic per variant (parallel)
             critiques = list(await asyncio.gather(*[
@@ -2068,16 +2111,17 @@ async def _run_pipeline(job_id: str, db) -> None:
             stage_cost = COST_NANO_BANANA * len(style_keys) + (
                 COST_NANO_BANANA if agent.furnish_retries else 0
             )
-            await _mark_stage("flux_inpaint", {
-                "status": "done",
-                "duration_ms": int((monotonic() - t0) * 1000),
-                "cost_usd": round(stage_cost, 4),
-                "engine": engine_used,
-                "note": (
-                    "styles=" + ",".join(v["style"] for v in variants)
-                    + "|scores=" + ",".join(f"{v.get('quality_score', 0):.2f}" for v in variants)
-                )[:280],
-            })
+            if mode != "empty":
+                await _mark_stage("flux_inpaint", {
+                    "status": "done",
+                    "duration_ms": int((monotonic() - t0) * 1000),
+                    "cost_usd": round(stage_cost, 4),
+                    "engine": engine_used,
+                    "note": (
+                        "styles=" + ",".join(v["style"] for v in variants)
+                        + "|scores=" + ",".join(f"{v.get('quality_score', 0):.2f}" for v in variants)
+                    )[:280],
+                })
             await _mark_stage("upscale", {
                 "status": "done", "duration_ms": 0, "cost_usd": 0,
                 "note": "skipped_nano_banana",
