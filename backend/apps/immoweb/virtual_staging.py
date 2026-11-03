@@ -656,17 +656,46 @@ async def start_b2c_preview_job(
             ),
         })
 
-    start = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
-    used = await db.virtual_staging_jobs.count_documents({
-        "user_id": user_id,
-        "payment_rail": "b2c_preview",
-        "created_at": {"$gte": start.isoformat()},
-    })
-    if used >= 3:
-        raise HTTPException(status_code=429, detail={
-            "error": "preview_daily_cap",
-            "message": "Hai raggiunto il limite di 3 anteprime staging al giorno.",
+    # Daily free-preview cap (anti-abuse).
+    # Override: OMNIA_B2C_STAGING_PREVIEW_DAILY_CAP (default 3).
+    # Exempt: ADMIN/OMNIA_ADMIN/SUPER_ADMIN + OMNIA_B2C_STAGING_PREVIEW_CAP_EXEMPT_EMAILS
+    # + internal dogfood *@omniaecosystem.it (Founder B2C accounts).
+    try:
+        daily_cap = max(0, int(os.environ.get("OMNIA_B2C_STAGING_PREVIEW_DAILY_CAP") or "3"))
+    except Exception:
+        daily_cap = 3
+    exempt = {
+        (os.environ.get("ADMIN_EMAIL") or "").strip().lower(),
+        (os.environ.get("OMNIA_ADMIN_EMAIL") or "").strip().lower(),
+        (os.environ.get("SUPER_ADMIN_EMAIL") or "").strip().lower(),
+    }
+    for part in (os.environ.get("OMNIA_B2C_STAGING_PREVIEW_CAP_EXEMPT_EMAILS") or "").split(","):
+        p = part.strip().lower()
+        if p:
+            exempt.add(p)
+    exempt.discard("")
+    skip_cap = False
+    u = await db.users.find_one({"id": user_id}, {"_id": 0, "email": 1, "role": 1})
+    email = ((u or {}).get("email") or "").strip().lower()
+    role = ((u or {}).get("role") or "").strip().lower()
+    if email in exempt or role in ("super_admin", "founder"):
+        skip_cap = True
+    elif email.endswith("@omniaecosystem.it"):
+        # Founder / internal dogfood B2C accounts (e.g. vs*@omniaecosystem.it)
+        skip_cap = True
+    if not skip_cap and daily_cap > 0:
+        start = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
+        used = await db.virtual_staging_jobs.count_documents({
+            "user_id": user_id,
+            "payment_rail": "b2c_preview",
+            "created_at": {"$gte": start.isoformat()},
         })
+        if used >= daily_cap:
+            raise HTTPException(status_code=429, detail={
+                "error": "preview_daily_cap",
+                "code": "preview_daily_cap",
+                "message": f"Hai raggiunto il limite di {daily_cap} anteprime staging al giorno.",
+            })
 
     n_var = max(1, min(int(num_variants or 1), 4))
     styles_list: Optional[List[str]] = None
