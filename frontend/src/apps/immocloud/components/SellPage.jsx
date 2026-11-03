@@ -169,7 +169,8 @@ export default function SellPage() {
   const [showSlotPaywall, setShowSlotPaywall] = useState(false);
   const [stagingBusy, setStagingBusy] = useState(false);
   const [stagingStatus, setStagingStatus] = useState(""); // progress / wait message after Stripe return
-  const [waitTipKey, setWaitTipKey] = useState("cloud.sell.staging_wait_tip");
+  // Tip under top banner: ONLY for post-Stripe fulfill. Free preview tip lives in B2CStagingPanel.
+  const [waitTipKey, setWaitTipKey] = useState("");
   const [statsById, setStatsById] = useState({}); // pid → stats payload
   const [previewListing, setPreviewListing] = useState(null); // listing opened in anteprima
   const stagingPollRef = useRef(null);
@@ -697,7 +698,7 @@ export default function SellPage() {
           aria-live="polite"
         >
           <p className="font-medium">{stagingStatus}</p>
-          {stagingBusy ? (
+          {stagingBusy && waitTipKey ? (
             <p className="mt-1.5 text-stone-600 leading-relaxed" data-testid="sell-staging-wait-tip">
               {t(waitTipKey)}
             </p>
@@ -1222,7 +1223,11 @@ export default function SellPage() {
                 photos={form.photos || []}
                 busy={stagingBusy}
                 setBusy={setStagingBusy}
-                onStatus={setStagingStatus}
+                onStatus={(msg) => {
+                  // Free-preview path: tip lives in the panel (avoid paid tip contradiction).
+                  setWaitTipKey("");
+                  setStagingStatus(msg || "");
+                }}
                 onError={setError}
                 onEnsurePhotosSaved={async () => {
                   const payload = buildListingPayload(form);

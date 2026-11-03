@@ -1,9 +1,18 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { api, resolveMediaUrl } from "../../../shared/lib/api";
 import { formatApiErrorDetail } from "../../../shared/lib/auth";
 
 const STAGING_PENDING_KEY = "omnia_staging_pending";
+
+const STAGE_ORDER = ["sam2_mask", "furniture_removal", "flux_inpaint", "upscale"];
+
+function formatElapsed(sec) {
+  const s = Math.max(0, Math.floor(sec || 0));
+  const m = Math.floor(s / 60);
+  const r = s % 60;
+  return `${m}:${String(r).padStart(2, "0")}`;
+}
 
 /**
  * B2C Virtual Staging — choose photo + mode, free preview, then pay €1,49 to save.
@@ -36,6 +45,9 @@ export default function B2CStagingPanel({
   const [preview, setPreview] = useState(null); // { jobId, url, photoId, photoIndex, mode, variants }
   const [localBusy, setLocalBusy] = useState(false);
   const [stageHint, setStageHint] = useState("");
+  const [stageRows, setStageRows] = useState([]); // [{name,status}]
+  const [elapsedSec, setElapsedSec] = useState(0);
+  const [startedAt, setStartedAt] = useState(null);
 
   const selected = usable.find((p) => p.id === photoId) || usable[0];
   const selectedIndex = selected?._idx ?? 0;
@@ -55,6 +67,29 @@ export default function B2CStagingPanel({
     { key: "classic", label: t("cloud.sell.staging_style_classic", { defaultValue: "Classico" }) },
     { key: "luxury", label: t("cloud.sell.staging_style_luxury", { defaultValue: "Luxury" }) },
   ];
+
+  const stageNameLabel = (name) => {
+    if (name === "sam2_mask") {
+      return t("cloud.sell.staging_stage_mask", { defaultValue: "Preparazione" });
+    }
+    if (name === "furniture_removal") {
+      return t("cloud.sell.staging_stage_empty_short", {
+        defaultValue: "Svuotamento",
+      });
+    }
+    if (name === "flux_inpaint") {
+      if (mode === "empty") {
+        return t("cloud.sell.staging_stage_empty_short", { defaultValue: "Svuotamento" });
+      }
+      return t("cloud.sell.staging_stage_furnish_short", {
+        defaultValue: multiStyle ? "Arredamento (4 stili)" : "Arredamento",
+      });
+    }
+    if (name === "upscale") {
+      return t("cloud.sell.staging_stage_upscale_short", { defaultValue: "Controllo qualità" });
+    }
+    return name;
+  };
 
   const stageLabel = (stages) => {
     const running = (stages || []).find((s) => s.status === "running");
@@ -86,6 +121,14 @@ export default function B2CStagingPanel({
     }
     return "";
   };
+
+  useEffect(() => {
+    if (!localBusy || !startedAt) return undefined;
+    const tick = () => setElapsedSec(Math.floor((Date.now() - startedAt) / 1000));
+    tick();
+    const id = setInterval(tick, 1000);
+    return () => clearInterval(id);
+  }, [localBusy, startedAt]);
 
   const stagingErrorMessage = (err) => {
     const detail = err?.response?.data?.detail;
@@ -131,6 +174,9 @@ export default function B2CStagingPanel({
     setLocalBusy(true);
     setBusy?.(true);
     onError?.("");
+    setStartedAt(Date.now());
+    setElapsedSec(0);
+    setStageRows([]);
     onStatus?.(
       t("cloud.sell.staging_preview_processing", {
         photo: selectedLabel,
@@ -166,12 +212,21 @@ export default function B2CStagingPanel({
         const jr = await api.get(`/cloud/me/properties/${listingId}/staging/${jobId}`);
         if (jr.data?.status === "done") {
           done = jr.data;
+          setStageRows(jr.data?.stages || []);
           break;
         }
         if (jr.data?.status === "failed") {
-          throw new Error(jr.data?.error || t("cloud.sell.staging_failed"));
+          setStageRows(jr.data?.stages || []);
+          throw new Error(
+            jr.data?.error ||
+              t("cloud.sell.staging_preview_failed", {
+                defaultValue: "Anteprima fallita. Nessun addebito: puoi riprovare gratis.",
+              }),
+          );
         }
-        const hint = stageLabel(jr.data?.stages);
+        const stages = jr.data?.stages || [];
+        setStageRows(stages);
+        const hint = stageLabel(stages);
         setStageHint(hint);
         onStatus?.(
           hint ||
@@ -183,7 +238,12 @@ export default function B2CStagingPanel({
         await new Promise((r) => setTimeout(r, 2500));
       }
       if (!done) {
-        onError?.(t("cloud.sell.staging_timeout"));
+        onError?.(
+          t("cloud.sell.staging_preview_timeout", {
+            defaultValue:
+              "L'anteprima sta impiegando troppo. Nessun pagamento in corso: riprova tra un minuto o su un'altra foto.",
+          }),
+        );
         onStatus?.("");
         setStageHint("");
         return;
@@ -191,7 +251,11 @@ export default function B2CStagingPanel({
       const variants = (done.variants || []).filter((v) => v?.url);
       const url = done.variant_url || variants[0]?.url;
       if (!url) {
-        throw new Error(t("cloud.sell.staging_checkout_error"));
+        throw new Error(
+          t("cloud.sell.staging_preview_failed", {
+            defaultValue: "Anteprima fallita. Nessun addebito: puoi riprovare gratis.",
+          }),
+        );
       }
       setPreview({
         jobId,
@@ -204,6 +268,7 @@ export default function B2CStagingPanel({
         selectedStyle: variants[0]?.style || style,
       });
       setStageHint("");
+      setStageRows([]);
       onStatus?.(
         t("cloud.sell.staging_preview_ready", {
           photo: t("cloud.sell.staging_photo_n", {
@@ -219,6 +284,7 @@ export default function B2CStagingPanel({
     } finally {
       setLocalBusy(false);
       setBusy?.(false);
+      setStartedAt(null);
     }
   };
 
@@ -415,17 +481,67 @@ export default function B2CStagingPanel({
           </button>
           {runBusy ? (
             <div
-              className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2.5"
+              className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2.5 space-y-2"
               data-testid={`${testIdPrefix}-wait`}
               role="status"
               aria-live="polite"
             >
-              {stageHint ? (
+              <div className="flex items-center gap-2">
+                <span
+                  className="inline-block h-3.5 w-3.5 shrink-0 rounded-full border-2 border-amber-500 border-t-transparent animate-spin"
+                  aria-hidden
+                  data-testid={`${testIdPrefix}-spinner`}
+                />
                 <p className="text-[11px] font-medium text-stone-800" data-testid={`${testIdPrefix}-stage-hint`}>
-                  {stageHint}
+                  {stageHint ||
+                    t("cloud.sell.staging_preview_processing", {
+                      photo: selectedLabel,
+                      mode: modeLabel,
+                    })}
                 </p>
+                <span
+                  className="ml-auto text-[10px] tabular-nums text-stone-500"
+                  data-testid={`${testIdPrefix}-elapsed`}
+                >
+                  {formatElapsed(elapsedSec)}
+                </span>
+              </div>
+              {stageRows.length > 0 ? (
+                <ul className="space-y-1" data-testid={`${testIdPrefix}-stage-list`}>
+                  {STAGE_ORDER.filter((name) => stageRows.some((s) => s.name === name)).map((name) => {
+                    const row = stageRows.find((s) => s.name === name) || {};
+                    const st = row.status || "queued";
+                    const mark =
+                      st === "done" ? "✓" : st === "running" ? "●" : st === "failed" ? "✗" : "○";
+                    const color =
+                      st === "done"
+                        ? "text-emerald-700"
+                        : st === "running"
+                          ? "text-amber-800"
+                          : st === "failed"
+                            ? "text-rose-700"
+                            : "text-stone-400";
+                    return (
+                      <li key={name} className={`text-[10px] ${color} flex gap-1.5`}>
+                        <span className="w-3 text-center" aria-hidden>
+                          {mark}
+                        </span>
+                        <span>
+                          {stageNameLabel(name)}
+                          {st === "running"
+                            ? ` — ${t("cloud.sell.staging_stage_running", { defaultValue: "in corso" })}`
+                            : st === "failed"
+                              ? ` — ${t("cloud.sell.staging_stage_failed", { defaultValue: "fallito" })}`
+                              : st === "done"
+                                ? ""
+                                : ` — ${t("cloud.sell.staging_stage_queued", { defaultValue: "in coda" })}`}
+                        </span>
+                      </li>
+                    );
+                  })}
+                </ul>
               ) : null}
-              <p className={`text-[11px] text-stone-600 leading-relaxed ${stageHint ? "mt-1" : ""}`}>
+              <p className="text-[11px] text-stone-600 leading-relaxed">
                 {t("cloud.sell.staging_preview_wait_tip")}
               </p>
             </div>

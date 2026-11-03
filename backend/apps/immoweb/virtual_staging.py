@@ -1654,8 +1654,14 @@ def _oneshot_prompt(
     )
     if mode == "empty":
         body = (
-            "Remove ALL furniture and objects (gym equipment, bed, wardrobe, rugs, clutter, "
-            "decorations). Fill erased areas with seamless continuation of existing floor and walls. "
+            "Remove ALL movable furniture and objects: gym equipment, bed, wardrobe, sofas, chairs, "
+            "tables, rugs, clutter, decorations, curtains, plants, TVs on stands, lamps on floors/tables, "
+            "AND ceiling pendants / chandeliers / hanging light fixtures (leave only flush recessed cans "
+            "or bare ceiling if that matches the source architecture). "
+            "Do NOT invent new doors, door frames, archways, or openings that are not clearly in the source. "
+            "If a doorway is only faintly suggested or hallucinated, keep the wall continuous and blank. "
+            "Preserve real existing open doorways exactly as in the source. "
+            "Fill erased areas with seamless continuation of existing floor, walls, and ceiling. "
             "Photoreal empty Italian room ready for real-estate listing photography."
         )
     elif mode == "reverse":
