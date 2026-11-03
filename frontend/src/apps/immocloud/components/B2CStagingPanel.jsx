@@ -63,8 +63,9 @@ export default function B2CStagingPanel({
   const [roomType, setRoomType] = useState("auto");
   const [roomConfirmed, setRoomConfirmed] = useState(false);
   const [detectedRoom, setDetectedRoom] = useState(null);
-  const [style, setStyle] = useState("modern");
-  const [multiStyle, setMultiStyle] = useState(true);
+  const [style, setStyle] = useState("luxury");
+  // Default OFF so the user can pick one style (e.g. Luxury) before preview.
+  const [multiStyle, setMultiStyle] = useState(false);
   const [preview, setPreview] = useState(null);
   const [localBusy, setLocalBusy] = useState(false);
   const [stageHint, setStageHint] = useState("");
@@ -487,7 +488,11 @@ export default function B2CStagingPanel({
               type="button"
               data-testid={`${testIdPrefix}-mode-${opt.key}`}
               title={opt.hint}
-              onClick={() => setMode(opt.key)}
+              onClick={() => {
+                setMode(opt.key);
+                onError?.("");
+                setArchError("");
+              }}
               className={`px-3 py-1.5 text-[11px] uppercase tracking-widest rounded border ${
                 mode === opt.key
                   ? "bg-[#0B1E3F] text-white border-[#0B1E3F]"
@@ -504,48 +509,28 @@ export default function B2CStagingPanel({
       </div>
 
       <div className="space-y-3" data-testid={`${testIdPrefix}-options`}>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <label className="block">
-            <span className="text-[10px] uppercase tracking-widest text-stone-500">
-              {t("cloud.sell.staging_room_label", { defaultValue: "Tipo stanza" })}
-            </span>
-            <select
-              data-testid={`${testIdPrefix}-room`}
-              value={roomType}
-              onChange={(e) => {
-                setRoomType(e.target.value);
-                setRoomConfirmed(e.target.value !== "auto");
-              }}
-              className="mt-1 w-full text-xs border border-stone-300 rounded px-2 py-1.5 bg-white"
-            >
-              {roomOptions.map((o) => (
-                <option key={o.key} value={o.key}>
-                  {o.label}
-                </option>
-              ))}
-            </select>
-          </label>
-          {mode !== "empty" ? (
-            <label className="block">
-              <span className="text-[10px] uppercase tracking-widest text-stone-500">
-                {t("cloud.sell.staging_style_label", { defaultValue: "Stile" })}
-              </span>
-              <select
-                data-testid={`${testIdPrefix}-style`}
-                value={style}
-                onChange={(e) => setStyle(e.target.value)}
-                disabled={mode === "reverse" && multiStyle}
-                className="mt-1 w-full text-xs border border-stone-300 rounded px-2 py-1.5 bg-white disabled:opacity-50"
-              >
-                {styleOptions.map((o) => (
-                  <option key={o.key} value={o.key}>
-                    {o.label}
-                  </option>
-                ))}
-              </select>
-            </label>
-          ) : null}
-        </div>
+        <label className="block">
+          <span className="text-[10px] uppercase tracking-widest text-stone-500">
+            {t("cloud.sell.staging_room_label", { defaultValue: "Tipo stanza" })}
+          </span>
+          <select
+            data-testid={`${testIdPrefix}-room`}
+            value={roomType}
+            onChange={(e) => {
+              setRoomType(e.target.value);
+              setRoomConfirmed(e.target.value !== "auto");
+              onError?.("");
+              setArchError("");
+            }}
+            className="mt-1 w-full text-xs border border-stone-300 rounded px-2 py-1.5 bg-white"
+          >
+            {roomOptions.map((o) => (
+              <option key={o.key} value={o.key}>
+                {o.label}
+              </option>
+            ))}
+          </select>
+        </label>
         {roomType !== "auto" ? (
           <label className="flex items-start gap-2 text-xs text-stone-700 cursor-pointer">
             <input
@@ -562,21 +547,56 @@ export default function B2CStagingPanel({
             </span>
           </label>
         ) : null}
-        {mode === "reverse" ? (
-          <label className="flex items-start gap-2 text-xs text-stone-700 cursor-pointer">
-            <input
-              type="checkbox"
-              data-testid={`${testIdPrefix}-multi-style`}
-              checked={multiStyle}
-              onChange={(e) => setMultiStyle(e.target.checked)}
-              className="mt-0.5"
-            />
-            <span>
-              {t("cloud.sell.staging_multi_style", {
-                defaultValue: "Mostra 4 stili (moderno, scandi, classico, luxury) e scegli quello che preferisci",
-              })}
-            </span>
-          </label>
+        {mode !== "empty" ? (
+          <div data-testid={`${testIdPrefix}-style`}>
+            <p className="text-[10px] uppercase tracking-widest text-stone-500 mb-2">
+              {t("cloud.sell.staging_style_label", { defaultValue: "Stile" })}
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {styleOptions.map((o) => (
+                <button
+                  key={o.key}
+                  type="button"
+                  data-testid={`${testIdPrefix}-style-${o.key}`}
+                  disabled={multiStyle}
+                  onClick={() => {
+                    setStyle(o.key);
+                    setMultiStyle(false);
+                    onError?.("");
+                    setArchError("");
+                  }}
+                  className={`px-3 py-1.5 text-[11px] uppercase tracking-widest rounded border ${
+                    !multiStyle && style === o.key
+                      ? "bg-[#0B1E3F] text-white border-[#0B1E3F]"
+                      : "border-stone-300 text-stone-700 hover:bg-stone-50"
+                  } disabled:opacity-40`}
+                >
+                  {o.label}
+                </button>
+              ))}
+            </div>
+            {mode === "reverse" ? (
+              <label className="mt-2 flex items-start gap-2 text-xs text-stone-700 cursor-pointer">
+                <input
+                  type="checkbox"
+                  data-testid={`${testIdPrefix}-multi-style`}
+                  checked={multiStyle}
+                  onChange={(e) => {
+                    setMultiStyle(e.target.checked);
+                    onError?.("");
+                    setArchError("");
+                  }}
+                  className="mt-0.5"
+                />
+                <span>
+                  {t("cloud.sell.staging_multi_style", {
+                    defaultValue:
+                      "Genera tutti e 4 gli stili (poi scegli in anteprima). Lascia spento per uno stile solo.",
+                  })}
+                </span>
+              </label>
+            ) : null}
+          </div>
         ) : null}
       </div>
 
