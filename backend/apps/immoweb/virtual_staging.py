@@ -657,9 +657,8 @@ async def start_b2c_preview_job(
         })
 
     # Daily free-preview cap (anti-abuse).
-    # Override: OMNIA_B2C_STAGING_PREVIEW_DAILY_CAP (default 3).
-    # Exempt: ADMIN/OMNIA_ADMIN/SUPER_ADMIN + OMNIA_B2C_STAGING_PREVIEW_CAP_EXEMPT_EMAILS
-    # + internal dogfood *@omniaecosystem.it (Founder B2C accounts).
+    # OMNIA_B2C_STAGING_PREVIEW_DAILY_CAP: default 3; 0 = unlimited (dogfood).
+    # Exempt: admin/founder + env list + *@omniaecosystem.it + common test domains.
     try:
         daily_cap = max(0, int(os.environ.get("OMNIA_B2C_STAGING_PREVIEW_DAILY_CAP") or "3"))
     except Exception:
@@ -674,14 +673,14 @@ async def start_b2c_preview_job(
         if p:
             exempt.add(p)
     exempt.discard("")
-    skip_cap = False
+    skip_cap = daily_cap == 0
     u = await db.users.find_one({"id": user_id}, {"_id": 0, "email": 1, "role": 1})
     email = ((u or {}).get("email") or "").strip().lower()
     role = ((u or {}).get("role") or "").strip().lower()
     if email in exempt or role in ("super_admin", "founder"):
         skip_cap = True
-    elif email.endswith("@omniaecosystem.it"):
-        # Founder / internal dogfood B2C accounts (e.g. vs*@omniaecosystem.it)
+    elif email.endswith(("@omniaecosystem.it", "@example.com", "@test.com", "@localhost")):
+        # Founder / QA / account di prova B2C
         skip_cap = True
     if not skip_cap and daily_cap > 0:
         start = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
