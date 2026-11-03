@@ -503,8 +503,21 @@ async def start_b2c_staging_preview(
     )
     if not listing:
         raise HTTPException(status_code=404, detail="listing_not_found")
-    if not (listing.get("photos") or []):
-        raise HTTPException(status_code=400, detail="listing_has_no_photos")
+    photos = listing.get("photos") or []
+    usable = [
+        p for p in photos
+        if isinstance(p, dict) and isinstance(p.get("url"), str) and p["url"].strip()
+        and not p["url"].startswith("data:")
+    ]
+    if not usable:
+        raise HTTPException(status_code=400, detail={
+            "error": "listing_has_no_photos",
+            "code": "listing_has_no_photos",
+            "message": (
+                "Salva l'annuncio con almeno una foto caricata (non solo in bozza locale) "
+                "prima di generare l'anteprima Virtual Staging."
+            ),
+        })
 
     from apps.immoweb.virtual_staging import start_b2c_preview_job, _job_to_out
 

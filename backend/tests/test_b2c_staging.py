@@ -204,3 +204,106 @@ def test_consume_b2c_staging_render_unit(mongo, b2c_user, listing_with_photo):
 
     assert first and first.get("job_id") == "job-1"
     assert second is None
+
+
+def test_preview_rejects_listing_without_photos(mongo, b2c_user):
+    from shared.db.connection import Database
+    from fastapi import HTTPException
+
+    Database._client = None
+    Database._db = None
+    Database._tenant_db = None
+    Database.connect()
+
+    pid = uuid4().hex
+    now = datetime.now(timezone.utc).isoformat()
+    mongo.properties.insert_one({
+        "id": pid,
+        "agency_id": "_private_listings",
+        "is_private_listing": True,
+        "owner_user_id": b2c_user["id"],
+        "title": "No photos",
+        "photos": [{"id": "blob", "url": "data:image/jpeg;base64,xxx"}],
+        "created_at": now,
+        "updated_at": now,
+    })
+
+    async def _run():
+        from apps.immoweb.virtual_staging import start_b2c_preview_job
+        return await start_b2c_preview_job(
+            user_id=b2c_user["id"], listing_id=pid, mode="empty",
+        )
+
+    loop = asyncio.new_event_loop()
+    try:
+        with pytest.raises(HTTPException) as ei:
+            loop.run_until_complete(_run())
+    finally:
+        loop.close()
+        mongo.properties.delete_one({"id": pid})
+
+    assert ei.value.status_code == 400
+    detail = ei.value.detail
+    assert isinstance(detail, dict)
+    assert detail.get("code") == "listing_has_no_photos"
+
+
+def test_empty_pipeline_stage_labels(mongo, b2c_user, listing_with_photo):
+    """Empty oneshot keeps furniture_removal running until done; flux marked skipped."""
+    from shared.db.connection import Database
+    from apps.immoweb.staging_agent import QualityReport
+
+    Database._client = None
+    Database._db = None
+    Database._tenant_db = None
+    Database.connect()
+
+    async def _run():
+        from apps.immoweb import virtual_staging as vs
+
+        with patch("apps.immoweb.virtual_staging.asyncio.create_task", return_value=None):
+            job = await vs.start_b2c_preview_job(
+                user_id=b2c_user["id"],
+                listing_id=listing_with_photo,
+                photo_id="ph1",
+                mode="empty",
+                room_type="living",
+            )
+        job_id = job["id"]
+
+        async def fake_resolve(url):
+            return "https://example.com/room.jpg"
+
+        async def fake_nano(src, prompt, resolution="1K"):
+            assert "Remove ALL furniture" in prompt
+            return "https://example.com/empty-out.jpg"
+
+        async def fake_critique(src, out, style="empty", mode="empty"):
+            return QualityReport(score=0.9, issues=[], retry_actions=[], signals={})
+
+        async def fake_persist(jid, db, variants):
+            return variants
+
+        with patch.object(vs, "_resolve_image_url_for_fal", side_effect=fake_resolve), \
+             patch.object(vs, "_nano_banana_edit", side_effect=fake_nano), \
+             patch.object(vs, "_vision_critique_staging", side_effect=fake_critique), \
+             patch.object(vs, "_persist_b2c_preview_variants", side_effect=fake_persist), \
+             patch.object(vs, "_crm_prompt_fragment", new_callable=AsyncMock, return_value=(None, None)):
+            await vs._run_pipeline(job_id, Database.get())
+
+        return await Database.get().virtual_staging_jobs.find_one({"id": job_id}, {"_id": 0})
+
+    loop = asyncio.new_event_loop()
+    try:
+        doc = loop.run_until_complete(_run())
+    finally:
+        loop.close()
+
+    assert doc["status"] == "done", doc.get("error")
+    assert doc["mode"] == "empty"
+    assert doc.get("variant_url") or (doc.get("variants") or [])
+    by_name = {s["name"]: s for s in doc["stages"]}
+    assert by_name["furniture_removal"]["status"] == "done"
+    assert by_name["furniture_removal"].get("note") == "oneshot_includes_erase"
+    assert by_name["flux_inpaint"]["status"] == "done"
+    assert by_name["flux_inpaint"].get("note") == "skipped_empty_oneshot"

@@ -1433,6 +1433,8 @@
       "staging_photo_n": "Foto {{n}}",
       "staging_mode_furnish": "Arreda",
       "staging_mode_empty": "Svuota stanza",
+      "staging_err_no_photos": "Salva l'annuncio con le foto caricate, poi riprova Genera anteprima.",
+      "staging_err_daily_cap": "Hai raggiunto il limite di 3 anteprime staging al giorno.",
       "staging_preview_cta": "Genera anteprima (gratis)",
       "staging_preview_processing": "Anteprima in corso — {{photo}} ({{mode}})…",
       "staging_preview_wait_tip": "Di solito 2–5 minuti (fino a ~10 con 4 stili). Puoi restare su questa pagina: non c’è nessun pagamento in corso.",

@@ -1224,6 +1224,28 @@ export default function SellPage() {
                 setBusy={setStagingBusy}
                 onStatus={setStagingStatus}
                 onError={setError}
+                onEnsurePhotosSaved={async () => {
+                  const payload = buildListingPayload(form);
+                  if (!payload.photos.length) {
+                    const err = new Error("listing_has_no_photos");
+                    err.response = {
+                      data: {
+                        detail: {
+                          error: "listing_has_no_photos",
+                          code: "listing_has_no_photos",
+                          message:
+                            "Carica almeno una foto e aspetta che finisca l'upload prima dello staging.",
+                        },
+                      },
+                    };
+                    throw err;
+                  }
+                  // Sync photos (and light fields) so preview API sees them on the listing.
+                  await api.patch(`/cloud/me/properties/${editing.id}`, {
+                    photos: payload.photos,
+                    floor_plan_url: payload.floor_plan_url || null,
+                  });
+                }}
                 onPaidAttached={async () => {
                   const items = await reloadListings().catch(() => []);
                   const fresh = (items || []).find((x) => x.id === editing.id);

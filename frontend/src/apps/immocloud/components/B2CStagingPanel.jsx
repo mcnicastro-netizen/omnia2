@@ -16,6 +16,8 @@ export default function B2CStagingPanel({
   onStatus,
   onError,
   onPaidAttached,
+  /** Optional: persist current form photos to the listing before preview (avoids listing_has_no_photos). */
+  onEnsurePhotosSaved = null,
   testIdPrefix = "staging",
 }) {
   const { t, i18n } = useTranslation();
@@ -57,26 +59,73 @@ export default function B2CStagingPanel({
   const stageLabel = (stages) => {
     const running = (stages || []).find((s) => s.status === "running");
     if (!running) return "";
-    const map = {
-      sam2_mask: t("cloud.sell.staging_stage_mask", { defaultValue: "Preparazione…" }),
-      furniture_removal: t("cloud.sell.staging_stage_empty", {
-        defaultValue: "Svuotamento…",
-      }),
-      flux_inpaint: t("cloud.sell.staging_stage_furnish", {
+    if (running.name === "sam2_mask") {
+      return t("cloud.sell.staging_stage_mask", { defaultValue: "Preparazione…" });
+    }
+    if (running.name === "furniture_removal") {
+      return t("cloud.sell.staging_stage_empty", {
+        defaultValue: "Svuotamento accurato (può richiedere qualche minuto)…",
+      });
+    }
+    if (running.name === "flux_inpaint") {
+      // Empty oneshot uses furniture_removal as the live stage; if flux is running
+      // while mode is empty, still show svuotamento (legacy path).
+      if (mode === "empty") {
+        return t("cloud.sell.staging_stage_empty", {
+          defaultValue: "Svuotamento accurato (può richiedere qualche minuto)…",
+        });
+      }
+      return t("cloud.sell.staging_stage_furnish", {
         defaultValue: multiStyle
           ? "Arredamento AI — 4 stili in parallelo…"
           : "Arredamento virtuale AI…",
-      }),
-      upscale: t("cloud.sell.staging_stage_upscale", { defaultValue: "Controllo qualità…" }),
-    };
-    return map[running.name] || "";
+      });
+    }
+    if (running.name === "upscale") {
+      return t("cloud.sell.staging_stage_upscale", { defaultValue: "Controllo qualità…" });
+    }
+    return "";
+  };
+
+  const stagingErrorMessage = (err) => {
+    const detail = err?.response?.data?.detail;
+    const code =
+      (detail && typeof detail === "object" && (detail.error || detail.code)) ||
+      (typeof detail === "string" ? detail : null);
+    if (code === "listing_has_no_photos") {
+      return t("cloud.sell.staging_err_no_photos", {
+        defaultValue:
+          "Salva l'annuncio con le foto caricate, poi riprova Genera anteprima.",
+      });
+    }
+    if (code === "preview_daily_cap") {
+      return (
+        (detail && typeof detail === "object" && detail.message) ||
+        t("cloud.sell.staging_err_daily_cap", {
+          defaultValue: "Hai raggiunto il limite di 3 anteprime staging al giorno.",
+        })
+      );
+    }
+    return (
+      formatApiErrorDetail(detail) ||
+      err?.message ||
+      t("cloud.sell.staging_checkout_error")
+    );
   };
 
   const runBusy = busy || localBusy;
 
   const startPreview = async () => {
-    if (!listingId || !selected?.id) {
+    if (!listingId) {
       onError?.(t("cloud.sell.staging_need_listing"));
+      return;
+    }
+    if (!selected?.url) {
+      onError?.(
+        t("cloud.sell.staging_err_no_photos", {
+          defaultValue: "Seleziona una foto caricata prima di generare l'anteprima.",
+        }),
+      );
       return;
     }
     setLocalBusy(true);
@@ -91,9 +140,17 @@ export default function B2CStagingPanel({
     setPreview(null);
     setStageHint("");
     try {
+      // Persist form photos → listing so API does not 400 listing_has_no_photos
+      // when the user uploaded thumbs but never clicked Salva.
+      if (typeof onEnsurePhotosSaved === "function") {
+        setStageHint(
+          t("cloud.sell.staging_stage_mask", { defaultValue: "Salvataggio foto…" }),
+        );
+        await onEnsurePhotosSaved();
+      }
       const wantMulti = mode === "reverse" && multiStyle;
       const { data } = await api.post(`/cloud/me/properties/${listingId}/staging/preview`, {
-        photo_id: selected.id,
+        photo_id: selected.id || undefined,
         mode,
         room_type: roomType,
         style,
@@ -112,7 +169,7 @@ export default function B2CStagingPanel({
           break;
         }
         if (jr.data?.status === "failed") {
-          throw new Error(jr.data?.error || "staging_failed");
+          throw new Error(jr.data?.error || t("cloud.sell.staging_failed"));
         }
         const hint = stageLabel(jr.data?.stages);
         setStageHint(hint);
@@ -156,11 +213,7 @@ export default function B2CStagingPanel({
         }),
       );
     } catch (e) {
-      onError?.(
-        formatApiErrorDetail(e?.response?.data?.detail) ||
-          e?.message ||
-          t("cloud.sell.staging_checkout_error"),
-      );
+      onError?.(stagingErrorMessage(e));
       onStatus?.("");
       setStageHint("");
     } finally {
@@ -393,7 +446,7 @@ export default function B2CStagingPanel({
                 {t("cloud.sell.staging_before")}
               </p>
               <img
-                src={preview.sourceUrl}
+                src={resolveMediaUrl(preview.sourceUrl)}
                 alt=""
                 className="w-full aspect-[4/3] object-cover rounded border border-stone-200"
               />

@@ -1166,6 +1166,8 @@
       "staging_photo_n": "Foto {{n}}",
       "staging_mode_furnish": "Amueblar",
       "staging_mode_empty": "Vaciar habitación",
+      "staging_err_no_photos": "Guarda el anuncio con las fotos subidas y vuelve a Generar vista previa.",
+      "staging_err_daily_cap": "Has alcanzado el límite de 3 vistas previas de staging al día.",
       "staging_preview_cta": "Generar vista previa (gratis)",
       "staging_preview_processing": "Vista previa en curso — {{photo}} ({{mode}})…",
       "staging_preview_wait_tip": "Suele tardar 2–5 minutos (hasta ~10 con 4 estilos). Puedes quedarte en esta página: aún no hay ningún pago en curso.",
