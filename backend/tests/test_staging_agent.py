@@ -129,11 +129,13 @@ def test_agent_summary_shape():
 def test_oneshot_prompt_helpers():
     from apps.immoweb import virtual_staging as vs
     rev = vs._oneshot_prompt("reverse", "luxury", "bedroom")
-    assert "Remove ALL existing furniture" in rev
+    assert "Remove ONLY movable furniture" in rev
+    assert "must remain a bedroom" in rev.lower()
     assert "luxury" in rev.lower() or "boutique" in rev
     assert "do NOT add any new windows" in rev
     assert "solid blank wall" in rev
     empty = vs._oneshot_prompt("empty", "modern", "living")
-    assert "Remove ALL furniture" in empty
+    assert "Remove ONLY movable furniture" in empty
+    assert "Do NOT add any new furniture" in empty
     assert vs.MODEL_NANO_BANANA_EDIT == "fal-ai/nano-banana-2/edit"
     assert vs.COST_NANO_BANANA == 0.08

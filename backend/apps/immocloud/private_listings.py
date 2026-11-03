@@ -482,7 +482,9 @@ class B2CStagingPreviewBody(BaseModel):
     photo_id: str | None = Field(default=None, max_length=80)
     mode: Literal["standard", "empty", "reverse"] = "standard"
     style: str = Field(default="modern", max_length=40)
-    room_type: str = Field(default="living", max_length=40)
+    # auto|detect → vision analysis binds room (never silent bedroom default)
+    room_type: str = Field(default="auto", max_length=40)
+    room_type_confirmed: bool = False
     variant_mode: Literal["same_style", "multi_style"] = "same_style"
     num_variants: int = Field(default=1, ge=1, le=4)
     styles: list[str] | None = Field(default=None, max_length=4)
@@ -528,6 +530,7 @@ async def start_b2c_staging_preview(
         mode=body.mode,
         style=body.style,
         room_type=body.room_type,
+        room_type_confirmed=body.room_type_confirmed,
         variant_mode=body.variant_mode,
         num_variants=body.num_variants,
         styles=body.styles,
@@ -643,7 +646,54 @@ async def get_b2c_staging_job(
     out["source_photo_index"] = job.get("source_photo_index")
     out["payment_rail"] = job.get("payment_rail")
     out["saved_photo_id"] = job.get("saved_photo_id")
+    out["room_analysis"] = job.get("room_analysis")
+    out["qa_summary"] = job.get("qa_summary")
+    out["pipeline_id"] = job.get("pipeline_id")
+    out["qa_verdict"] = job.get("qa_verdict")
+    out["room_confirm_recommended"] = job.get("room_confirm_recommended")
     return out
+
+
+class B2CStagingReportBody(BaseModel):
+    reason: str = Field(default="architecture_unfaithful", max_length=80)
+    note: str = Field(default="", max_length=500)
+
+
+@router.post("/{pid}/staging/{job_id}/report")
+async def report_b2c_staging_result(
+    pid: str,
+    job_id: str,
+    body: B2CStagingReportBody,
+    user: dict = Depends(get_current_user),
+):
+    """User reports an unfaithful / architecturally wrong staging result (QA feedback)."""
+    await _ensure_b2c(user)
+    db = Database.get()
+    listing = await db.properties.find_one(
+        {"id": pid, "owner_user_id": user["id"], "is_private_listing": True},
+        {"_id": 1},
+    )
+    if not listing:
+        raise HTTPException(status_code=404, detail="listing_not_found")
+    job = await db.virtual_staging_jobs.find_one({
+        "id": job_id,
+        "user_id": user["id"],
+        "property_id": pid,
+    })
+    if not job:
+        raise HTTPException(status_code=404, detail="job_not_found")
+    from datetime import datetime, timezone
+    report = {
+        "at": datetime.now(timezone.utc).isoformat(),
+        "user_id": user["id"],
+        "reason": (body.reason or "architecture_unfaithful")[:80],
+        "note": (body.note or "")[:500],
+    }
+    await db.virtual_staging_jobs.update_one(
+        {"id": job_id},
+        {"$push": {"user_reports": report}, "$set": {"user_reported_unfaithful": True}},
+    )
+    return {"ok": True, "job_id": job_id}
 
 
 @router.delete("/{pid}", status_code=204)
