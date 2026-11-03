@@ -100,6 +100,21 @@ Registro di tutte le decisioni di business e tecniche prese durante il progetto.
 - **Implementazione v1**: `mandate_opportunities.py` · hook in `private_listing_matching` · UI `/app/mandate-opportunities` · KPI dashboard · `GET /app/mandate-opportunities/proof`.
 - **Stato**: ✅ DECISO · CODICE v1 mandati+proof · LIVE ⏳ pilota agenzia
 
+### D-136 — Virtual Staging professionale (fedeltà architettonica) · 3-Nov-2026
+- **Data**: 3 Novembre 2026
+- **Contesto**: Caso Founder — soggiorno → Luxury restyle oneshot diventa camera con porta/armadio inventati. D-128 (Nano Banana oneshot) resta motore creativo, ma **non** garanzia di fedeltà geometrica.
+- **Principio**: l'AI modifica gli arredi, non l'immobile. Estetica non può compensare hard-fail architettonico.
+- **Decisione**:
+  1. **Pipeline professionale** (feature flag `OMNIA_STAGING_PIPELINE=professional`): Stage 0 analysis → structure/depth → selective erase (maschere) → empty QA → furnish (LoRA/inpaint) → hard gate → delivery solo ACCEPT.
+  2. **Default produzione**: `OMNIA_STAGING_PIPELINE=nano` (D-128) finché A/B/shadow non supera criteri; rollback = rimuovere/settare `nano`.
+  3. **Room detect** su tutti i job: Gemini vision; `room_type=auto`; **vietato** default silenzioso `bedroom`. Confidenza bassa → conferma utente.
+  4. **Modi**: `empty` / `standard` (furnish) / `reverse` (restyle) — restyle non può cambiare funzione stanza.
+  5. **Hard gate** (ACCEPT|RETRY|REJECT|MANUAL_REVIEW): room function, aperture, built-in, geometria. Soft score estetico separato. Varianti non ACCEPT **non** promuovibili / non pagabili verso listing.
+  6. Stili ImmobilCloud (Moderno/Scandi/Classico/Luxury) = solo linguaggio arredi; Luxury ≠ armadi a muro / porte / LED architettonici.
+  7. Stripe €1,49 e crediti B2B **invariati**; nessun cambio contratto pagamento.
+- **Moduli**: `staging_room_analysis.py` · `staging_structure.py` · `staging_qa_gate.py` · `staging_professional.py` · hook in `virtual_staging.py` · FE `B2CStagingPanel.jsx`.
+- **Stato**: ✅ CODICE + flag · ⏳ A/B produzione (shadow prima di default professional)
+
 ### D-128 — StagingAgent nativo + Nano Banana one-shot (no SaaS staging embed) · 18/19-Ott-2026
 - **Data**: 18–19 Ottobre 2026
 - **Contesto**: Founder boccia qualità ~2/10; vieta embed SaaS staging costosi; dopo demo live Nano Banana 2 (via fal) approva cablaggio **one-shot + 4 stili + critico vision**.
@@ -112,7 +127,7 @@ Registro di tutte le decisioni di business e tecniche prese durante il progetto.
   6. Nessun embed SaaS staging terzi (Decor8/Roomagen/ecc.). Best-effort delivery anche sotto soglia.
 - **Implementazione**: `staging_agent.py` · `_oneshot_prompt` / `_nano_banana_edit` / `_vision_critique_staging` in `virtual_staging.py` · `b2c_products.py` €1,49 · Stripe price transfer su mismatch. Pipeline completa su branch `cursor/staging-agent-specialized-8e9b`; listino €1,49 già in catalogo SoT.
 - **Rinumero**: in bozza era citata come «D-125» — **rinumerata D-128** il 19-Ott-2026 perché **D-125** è già **Accesso agli atti** (15-Ott).
-- **Stato**: ✅ **DECISIONE OPERATIVA REGISTRATA** · listino SoT allineato; cablaggio Nano Banana in merge da branch staging
+- **Stato**: ✅ **DECISIONE OPERATIVA REGISTRATA** · listino SoT allineato; cablaggio Nano Banana in merge da branch staging · **superseded in parte da D-136** per fedeltà architettonica (Nano resta fallback creativo)
 
 ### D-127 — Boost Vetrina/Premium/TOP: ranking tipo portali + rotazione equa + densità
 - **Data**: 19 Ottobre 2026

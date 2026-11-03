@@ -130,8 +130,8 @@ _STYLE_ONESHOT_EN = {
         "bright industrial loft, metal and leather accents, lots of daylight, not gloomy"
     ),
     "luxury": (
-        "boutique luxury listing, plush neutrals, designer lamps, closed tall wardrobe, "
-        "aspirational daylight"
+        "boutique luxury movable furnishings only: plush neutrals, designer floor/table lamps, "
+        "premium textiles — never invent tall built-in wardrobes, doors, LED coves, or new walls"
     ),
 }
 
@@ -230,10 +230,13 @@ STYLES: Dict[str, Dict[str, str]] = {
     },
     "luxury": {
         "label": "Luxury",
-        "prompt": "luxury interior design, marble floor, designer furniture, gold accents, high ceilings, large windows, premium finishes",
+        "prompt": (
+            "luxury movable furnishings and premium textiles only, designer seating and lamps, "
+            "preserve existing floor/walls/windows/doors exactly, no new openings or built-ins"
+        ),
         "staging_prompt": (
-            "Furnish this empty room with luxury designer furniture and premium finishes, "
-            "keep architecture unchanged, photorealistic real estate listing photo"
+            "Furnish this empty room with luxury movable furniture and premium textiles only, "
+            "keep architecture, floor, doors and windows unchanged, photorealistic real estate listing photo"
         ),
     },
 }
@@ -241,11 +244,11 @@ STYLES: Dict[str, Dict[str, str]] = {
 DEFAULT_MULTI_STYLES = ["modern", "classic", "scandi", "luxury"]
 
 ROOM_TYPES: Dict[str, str] = {
-    "living": "spacious living room with sofa, coffee table, TV area, decorative plants",
-    "bedroom": "bedroom with double bed, nightstands, wardrobe, soft ambient lighting",
-    "kitchen": "modern kitchen with island, appliances, dining area, pendant lights",
-    "dining": "dining room with table for 6, chairs, sideboard, elegant lighting",
-    "bathroom": "bathroom with modern fixtures, shower, vanity, towels, plants",
+    "living": "spacious living room with sofa, coffee table, optional armchair, decorative plants",
+    "bedroom": "bedroom with double bed, nightstands, optional freestanding dresser, soft ambient lighting",
+    "kitchen": "kitchen movable accents only (stools/small table) — never redesign fixed cabinets",
+    "dining": "dining room with table and chairs scaled to the room, sideboard if space allows",
+    "bathroom": "bathroom accessories only (towels/small decor) — never move fixtures",
     "office": "home office with desk, ergonomic chair, bookshelf, natural light",
 }
 
@@ -296,6 +299,11 @@ class StagingVariantOut(BaseModel):
     url: str
     style: str
     upscaled: bool = True
+    qa_verdict: Optional[str] = None
+    hard_issues: Optional[List[str]] = None
+    room_type: Optional[str] = None
+    quality_score: Optional[float] = None
+    publishable: Optional[bool] = None
 
 
 class StagingStages(BaseModel):
@@ -326,6 +334,10 @@ class StagingJobOut(BaseModel):
     error: Optional[str] = None
     created_at: str
     completed_at: Optional[str] = None
+    pipeline_id: Optional[str] = None
+    qa_verdict: Optional[str] = None
+    room_analysis: Optional[Dict[str, Any]] = None
+    qa_summary: Optional[Dict[str, Any]] = None
 
 
 class SaveToPropertyBody(BaseModel):
@@ -368,24 +380,42 @@ def _job_to_out(doc: dict) -> StagingJobOut:
     variants = doc.get("variants") or []
     if not variants and doc.get("variant_url"):
         variants = [{"url": doc["variant_url"], "style": doc.get("style", "modern"), "upscaled": True}]
+    out_variants: List[StagingVariantOut] = []
+    for v in variants:
+        if not isinstance(v, dict) or not v.get("url"):
+            continue
+        out_variants.append(StagingVariantOut(
+            url=v["url"],
+            style=v.get("style") or doc.get("style") or "modern",
+            upscaled=bool(v.get("upscaled", True)),
+            qa_verdict=v.get("qa_verdict"),
+            hard_issues=v.get("hard_issues"),
+            room_type=v.get("room_type"),
+            quality_score=v.get("quality_score"),
+            publishable=v.get("publishable"),
+        ))
     return StagingJobOut(
         id=doc["id"],
         status=doc["status"],
         source_url=doc["source_url"],
         style=doc["style"],
-        room_type=doc["room_type"],
+        room_type=doc.get("room_type") or "living",
         property_id=doc.get("property_id"),
         mode=doc.get("mode", "standard"),
         variant_mode=doc.get("variant_mode", "same_style"),
         num_variants=doc.get("num_variants", 1),
-        stages=[StagingStages(**s) for s in doc.get("stages", [])],
-        variants=[StagingVariantOut(**v) for v in variants],
+        stages=[StagingStages(**{k: s.get(k) for k in ("name", "status", "duration_ms", "cost_usd", "error", "note", "engine")}) for s in doc.get("stages", [])],
+        variants=out_variants,
         variant_url=doc.get("variant_url"),
         crm_context=doc.get("crm_context"),
         cost_total_usd=doc.get("cost_total_usd"),
         error=doc.get("error"),
         created_at=doc["created_at"],
         completed_at=doc.get("completed_at"),
+        pipeline_id=doc.get("pipeline_id"),
+        qa_verdict=doc.get("qa_verdict"),
+        room_analysis=doc.get("room_analysis"),
+        qa_summary=doc.get("qa_summary"),
     )
 
 
@@ -510,7 +540,24 @@ async def _auto_save_b2c_variant(job_id: str, db) -> None:
     if prop is None:
         logger.warning("b2c staging auto-save: listing missing job=%s pid=%s", job_id, property_id)
         return
-    source_bytes, style_key = await _fetch_variant_bytes(doc, 0)
+    from apps.immoweb.staging_qa_gate import variant_is_publishable
+
+    variants = doc.get("variants") or []
+    publishable_idx = next((i for i, v in enumerate(variants) if variant_is_publishable(v)), None)
+    if publishable_idx is None and variants:
+        # Legacy jobs without qa_verdict: allow index 0 only if no hard reject markers
+        if not variant_is_publishable({**variants[0], "qa_verdict": variants[0].get("qa_verdict") or "ACCEPT"}):
+            logger.warning("b2c staging auto-save blocked — no publishable variant job=%s", job_id)
+            await db.virtual_staging_jobs.update_one(
+                {"id": job_id},
+                {"$set": {"fulfillment_error": "architecture_reject_no_publishable_variant"}},
+            )
+            return
+        publishable_idx = 0
+    if publishable_idx is None:
+        logger.warning("b2c staging auto-save blocked — empty variants job=%s", job_id)
+        return
+    source_bytes, style_key = await _fetch_variant_bytes(doc, publishable_idx)
     wm = "Svuotamento virtuale OMNIA" if doc.get("mode") == "empty" else "Render virtuale OMNIA"
     processed = await asyncio.to_thread(
         _apply_watermark, source_bytes, wm, MAX_PHOTO_WIDTH,
@@ -579,7 +626,8 @@ async def start_b2c_preview_job(
     photo_id: Optional[str] = None,
     mode: str = "standard",
     style: str = "modern",
-    room_type: str = "living",
+    room_type: str = "auto",
+    room_type_confirmed: bool = False,
     variant_mode: str = "same_style",
     num_variants: int = 1,
     styles: Optional[List[str]] = None,
@@ -650,7 +698,8 @@ async def start_b2c_preview_job(
         "source_photo_id": resolved_photo_id,
         "source_photo_index": source_index,
         "style": style if mode != "empty" else "empty",
-        "room_type": room_type,
+        "room_type": room_type or "auto",
+        "room_type_confirmed": bool(room_type_confirmed),
         "mode": mode,
         "num_variants": n_var,
         "variant_mode": variant_mode,
@@ -729,6 +778,17 @@ async def fulfill_paid_staging_render(session_id: str) -> Optional[dict]:
             "payment_rail": "b2c_preview",
         })
         if preview and preview.get("status") == "done" and not preview.get("saved_to_property_id"):
+            from apps.immoweb.staging_qa_gate import variant_is_publishable
+            preview_variants = preview.get("variants") or []
+            if preview_variants and not any(variant_is_publishable(v) for v in preview_variants):
+                logger.warning(
+                    "staging fulfill blocked — preview not publishable job=%s", preview_job_id,
+                )
+                await db.b2c_purchases.update_one(
+                    {"stripe_session_id": session_id},
+                    {"$set": {"fulfillment_error": "architecture_reject_preview"}},
+                )
+                return purchase
             from apps.billing.b2c_entitlements import consume_b2c_staging_render
             claimed = await consume_b2c_staging_render(
                 user_id,
@@ -786,11 +846,13 @@ async def fulfill_paid_staging_render(session_id: str) -> Optional[dict]:
 
     now = datetime.now(timezone.utc).isoformat()
     pay_style = (purchase.get("style") or "modern").strip() or "modern"
-    pay_room = (purchase.get("room_type") or "bedroom").strip() or "bedroom"
+    pay_room = (purchase.get("room_type") or "living").strip() or "living"
+    if pay_room in ("auto", "detect", "empty"):
+        pay_room = "living"
     if pay_style not in STYLES:
         pay_style = "modern"
     if pay_room not in ROOM_TYPES:
-        pay_room = "bedroom"
+        pay_room = "living"
     stages = [{"name": "sam2_mask", "status": "queued"}]
     if mode in ("reverse", "empty"):
         stages.append({"name": "furniture_removal", "status": "queued"})
@@ -1592,8 +1654,8 @@ _STYLE_EN = {
         "not gloomy"
     ),
     "luxury": (
-        "boutique luxury listing, plush neutrals, designer lamps, closed tall wardrobe, "
-        "aspirational daylight"
+        "boutique luxury movable furnishings only: plush neutrals, designer lamps, "
+        "premium textiles — no invented built-in wardrobes or architectural LED strips"
     ),
 }
 
@@ -1645,22 +1707,25 @@ def _oneshot_prompt(
     room_bits = ROOM_TYPES.get(rt, ROOM_TYPES["living"])
     lock = (
         "Edit THIS photo only. Do not create a different room. "
+        f"The room function is and MUST remain a {room_en} — never turn it into another room type. "
         "Lock: camera angle, crop, perspective, walls, ceiling, floor material and pattern, "
         "door frames, open doorways, existing windows only, built-in fixtures, lighting direction. "
-        "CRITICAL ARCHITECTURE: do NOT add any new windows, skylights, glass panels, or openings. "
+        "CRITICAL ARCHITECTURE: do NOT add any new windows, skylights, glass panels, doors, or openings. "
         "If a wall has no window in the source photo, keep it as a solid blank wall. "
+        "Do NOT invent built-in wardrobes, wall niches, LED coves, or structural changes. "
         "Do NOT invent daylight sources through new openings — use existing light only. "
         "No renovation, no invented walls, no closed-over real doorways, no people, no text, no logos. "
     )
     if mode == "empty":
         body = (
-            "Remove ALL furniture and objects (gym equipment, bed, wardrobe, rugs, clutter, "
-            "decorations). Fill erased areas with seamless continuation of existing floor and walls. "
-            "Photoreal empty Italian room ready for real-estate listing photography."
+            "Remove ONLY movable furniture and objects (sofas, beds, freestanding wardrobes, rugs, clutter, "
+            "decorations, gym equipment). Preserve built-in cabinets, fixed kitchens, bathrooms fixtures, "
+            "doors and windows. Fill erased areas with seamless continuation of existing floor and walls. "
+            "Do NOT add any new furniture. Photoreal empty Italian room ready for listing photography."
         )
     elif mode == "reverse":
         body = (
-            f"Remove ALL existing furniture and clutter, then furnish this {room_en} as a "
+            f"Remove ONLY movable furniture and clutter, then re-furnish this same {room_en} as a "
             f"2025 Italian real-estate listing photo. Style: {style_en}. Furniture: {room_bits}. "
             "Cool natural daylight, sharp details, aspirational MLS hero photograph. "
             "No gym remnants, no open wardrobe doors, no yellow color cast, no clutter."
@@ -1670,7 +1735,7 @@ def _oneshot_prompt(
             f"Furnish this empty {room_en} for a 2025 Italian real-estate listing photo. "
             f"Style: {style_en}. Furniture: {room_bits}. "
             "Cool natural daylight, sharp details, aspirational MLS hero photograph. "
-            "Do not invent new doors or walls. No open wardrobe doors, no clutter."
+            "Do not invent new doors, windows, or walls. No open wardrobe doors, no clutter."
         )
     out = lock + body
     if crm_fragment:
@@ -1929,17 +1994,6 @@ async def _run_pipeline(job_id: str, db) -> None:
     num_variants = doc.get("num_variants", 1)
     engine_pref = STAGING_ENGINE if STAGING_ENGINE in ("nano_banana", "legacy") else "nano_banana"
 
-    agent = StagingAgent(plan_staging(
-        mode=mode,
-        style=doc.get("style") or "modern",
-        room_type=doc.get("room_type") or "living",
-        num_variants=num_variants,
-        variant_mode=variant_mode,
-        styles_list=doc.get("styles_list") or DEFAULT_MULTI_STYLES,
-        engine=engine_pref,
-    ))
-    await _mark_root({"agent_plan": agent.plan.to_dict()})
-
     try:
         src = await _resolve_image_url_for_fal(src_raw)
         if src != src_raw:
@@ -1947,6 +2001,34 @@ async def _run_pipeline(job_id: str, db) -> None:
     except Exception as e:
         await _fail("sam2_mask", "Resolve source", e)
         return
+
+    # Stage 0 (all engines): bind room type via vision — never silent bedroom default
+    from apps.immoweb.staging_room_analysis import analyze_room_image, resolve_room_type
+
+    room_analysis = await analyze_room_image(src)
+    bound_room = resolve_room_type(
+        analysis=room_analysis,
+        user_room_type=doc.get("room_type"),
+        user_confirmed=bool(doc.get("room_type_confirmed")),
+    )
+    doc["room_analysis"] = room_analysis
+    doc["room_type"] = bound_room
+    await _mark_root({
+        "room_analysis": room_analysis,
+        "room_type": bound_room,
+        "room_confirm_recommended": bool(room_analysis.get("needs_user_confirm")),
+    })
+
+    agent = StagingAgent(plan_staging(
+        mode=mode,
+        style=doc.get("style") or "modern",
+        room_type=bound_room,
+        num_variants=num_variants,
+        variant_mode=variant_mode,
+        styles_list=doc.get("styles_list") or DEFAULT_MULTI_STYLES,
+        engine=engine_pref,
+    ))
+    await _mark_root({"agent_plan": agent.plan.to_dict()})
 
     # CRM-aware prompt (best-effort, silent)
     crm_fragment = None
@@ -1959,8 +2041,47 @@ async def _run_pipeline(job_id: str, db) -> None:
     engine_used = "none"
     nano_ok = False
 
+    # ── Professional pipeline (D-136) — geometry-first, feature-flagged ────
+    from apps.immoweb.staging_professional import pipeline_enabled, run_professional_pipeline
+
+    if pipeline_enabled():
+        accepted = await run_professional_pipeline(
+            job_id=job_id,
+            db=db,
+            doc=doc,
+            src=src,
+            agent=agent,
+            mark_stage=_mark_stage,
+            mark_root=_mark_root,
+            fail=_fail,
+            sequential_furniture_erase=_sequential_furniture_erase,
+            apartment_stage=_apartment_stage,
+            flux_inpaint=_flux_inpaint,
+            stage_sam2_mask=_stage_sam2_mask,
+            oneshot_prompt=_oneshot_prompt,
+            nano_banana_edit=_nano_banana_edit,
+            resolve_image_url_for_fal=_resolve_image_url_for_fal,
+            cost_nano=COST_NANO_BANANA,
+            cost_lora=COST_STAGING_LORA,
+            cost_flux=COST_FLUX,
+        )
+        if accepted is None:
+            return  # hard fail already marked
+        variants = accepted
+        engine_used = "professional_v1"
+        nano_ok = True  # skip nano/legacy paths
+        if not variants:
+            await _mark_root({
+                "status": "failed",
+                "error": "architecture_reject: nessuna variante ha superato i controlli architettonici",
+                "qa_verdict": "REJECT",
+                "completed_at": datetime.now(timezone.utc).isoformat(),
+                "agent_summary": agent.summary(),
+            })
+            return
+
     # ── Primary: Nano Banana one-shot × styles + vision critic ─────────────
-    if agent.plan.engine == "nano_banana":
+    if (not nano_ok) and agent.plan.engine == "nano_banana":
         try:
             t0 = monotonic()
             await _mark_stage("sam2_mask", {
@@ -2038,9 +2159,27 @@ async def _run_pipeline(job_id: str, db) -> None:
                     retries_left=1 if agent.can_spend(COST_NANO_BANANA) else 0,
                     can_afford=agent.can_spend(COST_NANO_BANANA),
                 )
+                hard = [i for i in (q.issues or []) if i in (
+                    "invented_windows", "architecture_fail", "room_function_changed",
+                    "invented_door", "invented_built_in", "geometry_broken",
+                )]
                 v["quality_score"] = round(q.score, 3)
                 v["quality_decision"] = decision
-                agent.record_quality(f"style:{v['style']}", q, decision)
+                v["qa_verdict"] = {
+                    "accept": "ACCEPT",
+                    "accept_with_warning": "ACCEPT",
+                    "retry": "RETRY",
+                    "reject": "REJECT",
+                }.get(decision, "MANUAL_REVIEW")
+                v["hard_issues"] = hard
+                v["room_type"] = bound_room
+                v["publishable"] = decision in ("accept", "accept_with_warning") and not hard
+                if hard and decision == "accept":
+                    # Aesthetic score cannot override architectural hard fail
+                    v["quality_decision"] = "reject"
+                    v["qa_verdict"] = "REJECT"
+                    v["publishable"] = False
+                agent.record_quality(f"style:{v['style']}", q, v["quality_decision"])
 
             # Retry styles that invent openings / fail architecture (budget-capped, max 2).
             retry_idxs = []
@@ -2094,19 +2233,41 @@ async def _run_pipeline(job_id: str, db) -> None:
                         q2.score >= float(variants[retry_idx].get("quality_score") or 0)
                         and not new_inv
                     )
+                    hard2 = [i for i in (q2.issues or []) if i in (
+                        "invented_windows", "architecture_fail", "room_function_changed",
+                        "invented_door", "invented_built_in", "geometry_broken",
+                    )]
                     if take or (not new_inv and q2.score >= 0.55):
+                        pub = d2 in ("accept", "accept_with_warning") and not hard2
                         variants[retry_idx] = {
                             **variants[retry_idx],
                             "url": new_url,
                             "quality_score": round(q2.score, 3),
-                            "quality_decision": d2,
+                            "quality_decision": "reject" if hard2 else d2,
+                            "qa_verdict": "REJECT" if hard2 else {
+                                "accept": "ACCEPT",
+                                "accept_with_warning": "ACCEPT",
+                                "retry": "RETRY",
+                                "reject": "REJECT",
+                            }.get(d2, "MANUAL_REVIEW"),
+                            "hard_issues": hard2,
+                            "room_type": bound_room,
+                            "publishable": pub,
                         }
-                    agent.record_quality(f"style:{sk}:retry", q2, d2)
+                    agent.record_quality(f"style:{sk}:retry", q2, variants[retry_idx].get("quality_decision") or d2)
                 except Exception as retry_err:
                     logger.warning("nano retry failed style=%s: %s", sk, retry_err)
 
-            # Prefer highest critic score first (B2C default selection)
-            variants.sort(key=lambda v: float(v.get("quality_score") or 0), reverse=True)
+            # Prefer highest critic score among publishable first; keep rejects for audit
+            from apps.immoweb.staging_qa_gate import variant_is_publishable as _vip
+            variants.sort(
+                key=lambda v: (
+                    1 if _vip(v) else 0,
+                    float(v.get("quality_score") or 0),
+                ),
+                reverse=True,
+            )
+            publishable = [v for v in variants if _vip(v)]
             engine_used = "nano_banana_2_oneshot"
             stage_cost = COST_NANO_BANANA * len(style_keys) + (
                 COST_NANO_BANANA if agent.furnish_retries else 0
@@ -2126,7 +2287,28 @@ async def _run_pipeline(job_id: str, db) -> None:
                 "status": "done", "duration_ms": 0, "cost_usd": 0,
                 "note": "skipped_nano_banana",
             })
-            await _mark_root({"agent_quality": agent.quality, "erase_meta": {"engine": "nano_oneshot"}})
+            await _mark_root({
+                "agent_quality": agent.quality,
+                "erase_meta": {"engine": "nano_oneshot"},
+                "qa_summary": {
+                    "accepted": len(publishable),
+                    "total": len(variants),
+                    "room_type": bound_room,
+                    "pipeline_id": "nano_oneshot",
+                },
+                "variants_all": variants,
+            })
+            if not publishable:
+                await _mark_root({
+                    "status": "failed",
+                    "error": "architecture_reject: nessuna variante ha superato i controlli architettonici",
+                    "qa_verdict": "REJECT",
+                    "variants": variants,
+                    "completed_at": datetime.now(timezone.utc).isoformat(),
+                    "agent_summary": agent.summary(),
+                })
+                return
+            variants = publishable
             nano_ok = True
         except Exception as e:
             logger.exception("nano_banana primary path failed — legacy fallback: %s", e)
@@ -2135,7 +2317,7 @@ async def _run_pipeline(job_id: str, db) -> None:
             agent = StagingAgent(plan_staging(
                 mode=mode,
                 style=doc.get("style") or "modern",
-                room_type=doc.get("room_type") or "living",
+                room_type=bound_room,
                 num_variants=num_variants,
                 variant_mode=variant_mode,
                 styles_list=doc.get("styles_list") or DEFAULT_MULTI_STYLES,
