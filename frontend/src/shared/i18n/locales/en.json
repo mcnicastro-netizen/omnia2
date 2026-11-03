@@ -1216,6 +1216,7 @@
       "staging_err_no_photos": "Save the listing with uploaded photos, then try Generate preview again.",
       "staging_err_daily_cap": "You reached the limit of 3 free staging previews per day.",
       "staging_preview_cta": "Generate free preview",
+      "staging_preview_busy": "Preview in progress…",
       "staging_preview_processing": "Preview in progress — {{photo}} ({{mode}})…",
       "staging_preview_wait_tip": "Usually 2–5 minutes (up to ~10 with 4 styles). Stay on this page — no payment is running yet.",
       "staging_preview_ready": "Preview ready — {{photo}} · {{mode}}",

@@ -409,7 +409,9 @@ export default function B2CStagingPanel({
             onClick={startPreview}
             className="px-4 py-2 text-xs uppercase tracking-widest border border-[#0B1E3F] text-[#0B1E3F] rounded hover:bg-[#0B1E3F] hover:text-white disabled:opacity-40 transition"
           >
-            {runBusy ? t("common.saving") : t("cloud.sell.staging_preview_cta")}
+            {runBusy
+              ? t("cloud.sell.staging_preview_busy", { defaultValue: "Anteprima in corso…" })
+              : t("cloud.sell.staging_preview_cta")}
           </button>
           {runBusy ? (
             <div
