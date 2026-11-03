@@ -113,7 +113,8 @@ Registro di tutte le decisioni di business e tecniche prese durante il progetto.
   6. Stili ImmobilCloud (Moderno/Scandi/Classico/Luxury) = solo linguaggio arredi; Luxury ≠ armadi a muro / porte / LED architettonici.
   7. Stripe €1,49 e crediti B2B **invariati**; nessun cambio contratto pagamento.
 - **Moduli**: `staging_room_analysis.py` · `staging_structure.py` · `staging_qa_gate.py` · `staging_professional.py` · hook in `virtual_staging.py` · FE `B2CStagingPanel.jsx`.
-- **Stato**: ✅ CODICE + flag · ⏳ A/B produzione (shadow prima di default professional)
+- **Ops dogfood (3-Nov)**: live su `main` (PR #71–#74) · Railway+Vercel · cap anteprime dogfood `OMNIA_B2C_STAGING_PREVIEW_DAILY_CAP=0` · esenti `virgilio.it` / `omniaecosystem.it` / … · stile Luxury selezionabile (multi OFF) · Founder riprende QA visiva soggiorno→Luxury **domani**.
+- **Stato**: ✅ CODICE + flag + docs Cap.9/HAL · ⏳ dogfood Founder / A/B `professional` prima del default
 
 ### D-128 — StagingAgent nativo + Nano Banana one-shot (no SaaS staging embed) · 18/19-Ott-2026
 - **Data**: 18–19 Ottobre 2026

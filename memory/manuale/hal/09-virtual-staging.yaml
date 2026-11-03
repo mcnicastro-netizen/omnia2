@@ -132,15 +132,20 @@ voci:
         - "INDUSTRIAL - mattoni a vista, metalli, cemento, divano pelle,
           Edison bulbs, urban chic. Target: creativi, remote worker,
           loft e ex uffici convertiti."
-        - "LUXURY - marmo, mobili design, dettagli oro, soffitti alti,
-          finiture premium. Target: alto spendente, ville/attici sopra
-          500k euro."
+        - "LUXURY - arredi mobili premium e tessuti (D-136). NON inventa
+          marmo/porte/armadi a muro/LED architettonici. Target alto
+          spendente; stile estetico senza alterare l'immobile."
       errori_comuni:
         - problema: "Non c'e' uno stile che mi convince, voglio custom"
           soluzione: >
             Custom style non supportato in v1. Puoi variare tipo stanza
             o usare multi_style per generare 4 varianti su stili
             diversi in parallelo.
+        - problema: "Luxury mi ha inventato una porta o un armadio a muro"
+          soluzione: >
+            Violazione D-136. Scarta il risultato (hard gate). Riprova
+            con room type confermato (soggiorno) e luxury. Se ripete,
+            segnala: pipeline professional in A/B.
       permessi:
         - Titolare, agente, segreteria
     screenshot: []
@@ -351,11 +356,12 @@ voci:
           render B2B."
         - "1 job = N varianti = N x 18 crediti. Multi_style 4 varianti
           costa 72 crediti (~3.60 euro) lato agenzia."
-        - "B2C ImmobilCloud (D-128): 1,49 EUR/foto carta Stripe, max 3
-          foto per annuncio UGC. Anteprima gratis; pagamento al salvataggio."
-        - "Pipeline target B2C: Nano Banana 2 one-shot + 4 stili + critico
-          vision (max 1 retry). COGS tipico ~0.33 USD/run. Fallback legacy
-          se nano fallisce."
+        - "B2C ImmobilCloud (D-128/D-136): 1,49 EUR/foto carta Stripe,
+          max 3 foto per annuncio UGC. Anteprima gratis; pagamento al
+          salvataggio solo se la variante e' ACCEPT (publishable)."
+        - "Pipeline B2C default: Nano Banana 2 + analisi stanza + hard
+          gate architettonico. Flag professional (OMNIA_STAGING_PIPELINE)
+          per erase/furnish mascherato — A/B prima del default."
         - "In v1 c'e' HARD-GATE crediti (A-013) prima del lancio B2B:
           saldo insufficiente → 402, job non parte. Addebito a
           successo sul ledger."
@@ -369,6 +375,11 @@ voci:
             L'addebito B2B v1 e' al successo del job; costi fal.ai gia'
             avviati restano costo piattaforma. Segnala assistenza se
             necessario.
+        - problema: "Hai raggiunto il limite di 3 anteprime staging al giorno"
+          soluzione: >
+            Cap anti-abuso B2C. Dogfood Founder: CAP=0 illimitato e
+            domini esenti (virgilio.it, omniaecosystem.it). Hard refresh
+            e riprova; se resta, segnala ops.
       permessi:
         - Titolare, agente (info operativa/finanziaria); B2C solo info listino €1,49
     screenshot: []
@@ -561,4 +572,91 @@ voci:
             render (costa 18 crediti).
       permessi:
         - Titolare, agente, segreteria (solo sui propri job)
+    screenshot: []
+
+  - id: staging.fedelta-architettonica
+    titolo: Fedelta' architettonica D-136 (arredi si', immobile no)
+    modulo: Virtual Staging
+    widget: null
+    pubblico: [titolare, agente, b2c_client]
+    livello: intermedio
+    tags: [staging, d-136, fedelta, architettura, hard-gate, porte, finestre, soggiorno, luxury, reject]
+    correlati:
+      - staging.crediti-costo
+      - staging.b2c-vendi
+      - staging.stili
+    domanda_naturale: "Perche' lo staging non deve inventare porte o trasformare un soggiorno in camera? Cos'e' il quality gate D-136?"
+    contenuto:
+      a_cosa_serve: >
+        Garantire che il Virtual Staging ImmobilCloud arredi la foto
+        reale dell'immobile senza inventare geometria, aperture o
+        destinazione della stanza.
+      quando_si_usa: >
+        Sempre su B2C Vendi e su pipeline professionale. Priorita':
+        fedelta' architettonica > estetica.
+      passi:
+        - "Principio: l'AI modifica solo arredi mobili, non muri/porte/
+          finestre/pavimenti/armadi a muro."
+        - "Analisi stanza automatica (room_type=auto). Mai default
+          silenzioso bedroom."
+        - "Hard gate: ACCEPT / RETRY / REJECT / MANUAL_REVIEW. Un score
+          estetico alto non salva un hard-fail."
+        - "Hard-fail tipici: cambio funzione stanza, porta/finestra
+          inventata o rimossa, built-in inventati, geometria rotta."
+        - "Solo varianti ACCEPT sono publishable: niente Stripe/salvataggio
+          su immagini false."
+        - "Flag OMNIA_STAGING_PIPELINE=professional per pipeline
+          mascherata (A/B). Default nano con gate."
+      errori_comuni:
+        - problema: "Soggiorno Luxury e' diventato una camera da letto"
+          soluzione: >
+            Caso Founder D-136. Scarta. Conferma tipo soggiorno e
+            riprova. Segnala 'non fedele' se ripete.
+        - problema: "Anteprima scartata per architecture_reject"
+          soluzione: >
+            Comportamento corretto. Nessun addebito. Rigenera o cambia
+            stile/foto. Non forzare la promozione.
+      permessi:
+        - Titolare, agente; B2C Privato su /cloud/account/sell
+    screenshot: []
+
+  - id: staging.b2c-vendi
+    titolo: Virtual Staging su ImmobilCloud Vendi (privati)
+    modulo: Virtual Staging
+    widget: null
+    pubblico: [b2c_client, titolare]
+    livello: base
+    tags: [staging, b2c, vendi, immobilcloud, anteprima, stripe, 1-49, luxury, reverse, empty]
+    correlati:
+      - staging.fedelta-architettonica
+      - staging.crediti-costo
+      - staging.watermark
+    domanda_naturale: "Come faccio lo staging virtuale da Vendi su ImmobilCloud? Posso scegliere Luxury?"
+    contenuto:
+      a_cosa_serve: >
+        Far arredare virtualmente una foto dell'annuncio privato
+        (anteprima gratis, poi 1,49 euro al salvataggio).
+      quando_si_usa: >
+        Su /cloud/account/sell, con foto gia' salvate sull'annuncio.
+      passi:
+        - "Apri Vendi → Modifica annuncio (o pannello sotto l'annuncio)."
+        - "Scegli la foto, la modalita' (Sostituisci arredi / Svuota /
+          Arreda vuota) e lo stile (bottoni Moderno/Scandi/Classico/Luxury)."
+        - "Tipo stanza: Rileva automaticamente, oppure conferma a mano."
+        - "Genera anteprima (gratis). Attendi stage + timer."
+        - "Confronta prima/dopo. Se ACCEPT, paga 1,49 euro per salvare
+          sull'annuncio (watermark obbligatorio)."
+        - "Se architecture reject o limite anteprime: nessun addebito;
+          riprova o segnala non fedele."
+      errori_comuni:
+        - problema: "Non posso scegliere lo stile"
+          soluzione: >
+            Usa i bottoni stile (non il vecchio select grigio). Lascia
+            spento 'genera tutti e 4' se vuoi un solo stile (es. Luxury).
+        - problema: "listing_has_no_photos"
+          soluzione: >
+            Salva prima l'annuncio con foto caricate (non data-URL), poi
+            genera anteprima.
+      permessi:
+        - Account Privato B2C (sessione cloud); non confondere con login agenzia
     screenshot: []

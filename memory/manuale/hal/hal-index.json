@@ -1,7 +1,7 @@
 {
-  "version": "0.44-d135-b2c-vendi",
-  "updated": "2026-11-02",
-  "voices_total": 383,
+  "version": "0.45-d136-staging-fedelta",
+  "updated": "2026-11-03",
+  "voices_total": 385,
   "source_files": [
     {
       "file": "00-api-codice.yaml",
@@ -50,8 +50,8 @@
     },
     {
       "file": "09-virtual-staging.yaml",
-      "voices": 12,
-      "md5": "aed3dbeccef7dc80dac5f7aeb838e984"
+      "voices": 14,
+      "md5": "1dde543d61e7df43045440435a633df2"
     },
     {
       "file": "10-hal-agent-crm.yaml",
@@ -202,5 +202,5 @@
       "md5": "5e88370cdf2c070dc30c7c3f036b85db"
     }
   ],
-  "notes": "2026-11-02: D-135 B2C Vendi CSRF/HAL improve/account · Cap.00/01/10/18 YAML · reindex prod 973 chunks. Fingerprints regenerated from YAML on disk. Live RAG reindex: POST /api/app/hal/knowledge/reindex?force=true (super_admin). 2026-10-19: D-125 atti · D-128 staging €1,49 · Cap.9 crediti-costo · Cap.18 sell-doc-promo. 2026-10-14: D-124 Cap.21 APE/piano/PDF · Cap.18 sell-doc-promo · PR #40. 2026-10-12: Stripe webhook Railway omnia-railway-api 200 OK · api.stripe-sandbox-cloud / api.railway-api-deploy. 2026-10-10: D-123 Railway API live · api.railway-api-deploy · cloud-secrets-vault Personal UI note. 2026-10-06: Stripe sandbox Cloud · api.cloud-secrets-vault · api.stripe-sandbox-cloud · Cap.19 billing. 2026-09-24: A-028g/h/i · Cap.2 Attività · Cap.10 Conferma e applica · Cap.18 distinzione. 2026-09-21: hub import A–E · HAL import.tutte-le-forme. 2026-09-19: D-085 storage quota · Cestino · Cap.20 Ruota."
+  "notes": "2026-11-03: D-136 staging fedeltà · Cap.9 +2 voci · reindex. 2026-11-02: D-135 B2C Vendi CSRF/HAL improve/account · Cap.00/01/10/18 YAML · reindex prod 973 chunks. Fingerprints regenerated from YAML on disk. Live RAG reindex: POST /api/app/hal/knowledge/reindex?force=true (super_admin). 2026-10-19: D-125 atti · D-128 staging €1,49 · Cap.9 crediti-costo · Cap.18 sell-doc-promo. 2026-10-14: D-124 Cap.21 APE/piano/PDF · Cap.18 sell-doc-promo · PR #40. 2026-10-12: Stripe webhook Railway omnia-railway-api 200 OK · api.stripe-sandbox-cloud / api.railway-api-deploy. 2026-10-10: D-123 Railway API live · api.railway-api-deploy · cloud-secrets-vault Personal UI note. 2026-10-06: Stripe sandbox Cloud · api.cloud-secrets-vault · api.stripe-sandbox-cloud · Cap.19 billing. 2026-09-24: A-028g/h/i · Cap.2 Attività · Cap.10 Conferma e applica · Cap.18 distinzione. 2026-09-21: hub import A–E · HAL import.tutte-le-forme. 2026-09-19: D-085 storage quota · Cestino · Cap.20 Ruota."
 }
