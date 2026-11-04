@@ -376,6 +376,12 @@ Portare direttamente il render nel Fascicolo/annuncio senza download + re-upload
 
 **Pagamento**: Stripe Checkout €1,49 solo su variante **publishable** (ACCEPT).
 
+**Multi-stile (4 stili)**  
+Il job può generare Moderno/Scandi/Classico/Luxury, ma l’anteprima elenca **solo le varianti ACCEPT**. Se vedi 2 miniature su 4, le altre sono state scartate dal hard gate (non pagabili). Comportamento voluto (D-136).
+
+**Dogfood Founder 4-Nov-2026**  
+Soggiorno → Sostituisci arredi → controlli architettonici PASS · Checkout Stripe €1,49 OK.
+
 ---
 
-**Versione**: v1.1 · 3-Nov-2026 (D-136 fedeltà architettonica · B2C Vendi)
+**Versione**: v1.2 · 4-Nov-2026 (D-136 dogfood fedeltà + Stripe)

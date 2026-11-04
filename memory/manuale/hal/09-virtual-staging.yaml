@@ -653,10 +653,20 @@ voci:
           soluzione: >
             Usa i bottoni stile (non il vecchio select grigio). Lascia
             spento 'genera tutti e 4' se vuoi un solo stile (es. Luxury).
+        - problema: "Ho chiesto 4 stili ma ne vedo solo 2"
+          soluzione: >
+            Normale con D-136: anteprima mostra solo varianti ACCEPT.
+            Scandi/Luxury (o altri) possono essere scartati dal hard
+            gate e non sono pagabili. Riprova singolo stile o Rigenera.
         - problema: "listing_has_no_photos"
           soluzione: >
             Salva prima l'annuncio con foto caricate (non data-URL), poi
             genera anteprima.
+        - problema: "Dopo Stripe non vedo la foto sull'annuncio"
+          soluzione: >
+            Attendi webhook/fulfill (pochi secondi) e ricarica Vendi.
+            Solo varianti ACCEPT vengono salvate. Se fulfillment_error
+            architecture_reject, il pagamento non promuove immagini false.
       permessi:
         - Account Privato B2C (sessione cloud); non confondere con login agenzia
     screenshot: []

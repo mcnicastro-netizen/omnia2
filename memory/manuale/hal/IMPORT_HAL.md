@@ -1,6 +1,6 @@
-# 📚 HAL Knowledge — Import & Cold Start (v0.45-d136-staging-fedelta)
+# 📚 HAL Knowledge — Import & Cold Start (v0.46-d136-stripe-dogfood)
 
-**Ultimo aggiornamento**: 03-Nov-2026 (D-136 Virtual Staging fedeltà architettonica · B2C Vendi)  
+**Ultimo aggiornamento**: 04-Nov-2026 (D-136 dogfood fedeltà + Stripe €1,49 OK)  
 **Corpus**: YAML in `memory/manuale/hal/*.yaml` (Cap. 1–27 + `00-api-codice`) · MD esclusi dal RAG ingest  
 **Motore**: `hal_knowledge.py` · reindex: `POST /api/app/hal/knowledge/reindex?force=true` (super_admin)  
 **Regola Founder D-084**: ogni ship aggiorna MD+YAML nello stesso giro — vedi `memory/MANUAL_SYNC.md`.
