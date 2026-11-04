@@ -525,13 +525,38 @@ async def _resolve_image_url_for_fal(src: str) -> str:
             pass
 
 
+async def _persist_staging_jpeg(
+    user_id: str,
+    job_id: str,
+    jpeg_bytes: bytes,
+    *,
+    suffix: str = "render",
+) -> str:
+    """Store watermarked staging JPEG in private Object Storage; return /api/media URL.
+
+    SellPage intentionally drops `data:` photo URLs on save — staging must never
+    persist as base64 or a later cover/edit wipe removes the AI photo.
+    """
+    from shared.storage import put_object
+
+    safe_uid = (user_id or "anon").replace("/", "_")
+    safe_suffix = "".join(c for c in suffix if c.isalnum() or c in "-_")[:48] or "render"
+    path = f"omnia/private/{safe_uid}/staging/{job_id}-{safe_suffix}.jpg"
+    await asyncio.to_thread(put_object, path, jpeg_bytes, "image/jpeg")
+    return f"/api/media/{path}"
+
+
 async def _auto_save_b2c_variant(job_id: str, db) -> None:
-    """Attach watermarked variant #0 to the private listing after a paid B2C job."""
+    """Attach watermarked publishable variant to the private listing after paid B2C job.
+
+    Re-attaches if a previous save used a data: URL that SellPage later stripped,
+    or if saved_photo_id is no longer on the listing.
+    """
     doc = await db.virtual_staging_jobs.find_one({"id": job_id})
     if not doc or doc.get("payment_rail") != "b2c_stripe":
         return
     property_id = doc.get("property_id")
-    if not property_id or doc.get("saved_to_property_id"):
+    if not property_id:
         return
     prop = await db.properties.find_one(
         {"id": property_id, "is_private_listing": True, "owner_user_id": doc.get("user_id")},
@@ -540,6 +565,28 @@ async def _auto_save_b2c_variant(job_id: str, db) -> None:
     if prop is None:
         logger.warning("b2c staging auto-save: listing missing job=%s pid=%s", job_id, property_id)
         return
+
+    photos = list(prop.get("photos") or [])
+    saved_photo_id = doc.get("saved_photo_id")
+    migrate_idx = None
+    if saved_photo_id:
+        for i, ph in enumerate(photos):
+            if not isinstance(ph, dict) or ph.get("id") != saved_photo_id:
+                continue
+            url = str(ph.get("url") or "")
+            if url.startswith("/api/media/") or url.startswith("https://"):
+                return  # already durable
+            if url.startswith("data:"):
+                migrate_idx = i
+                break
+            return
+        else:
+            # saved_photo_id wiped by SellPage data: filter — re-attach below
+            logger.warning(
+                "b2c staging photo missing on listing — re-attach job=%s pid=%s photo=%s",
+                job_id, property_id, saved_photo_id,
+            )
+
     from apps.immoweb.staging_qa_gate import variant_is_publishable
 
     variants = doc.get("variants") or []
@@ -562,8 +609,12 @@ async def _auto_save_b2c_variant(job_id: str, db) -> None:
     processed = await asyncio.to_thread(
         _apply_watermark, source_bytes, wm, MAX_PHOTO_WIDTH,
     )
-    b64 = base64.b64encode(processed).decode("ascii")
-    photos = prop.get("photos") or []
+    media_url = await _persist_staging_jpeg(
+        doc.get("user_id") or "anon",
+        job_id,
+        processed,
+        suffix=f"v{publishable_idx}",
+    )
     caption = (
         "Svuotamento virtuale OMNIA · stanza svuotata"
         if doc.get("mode") == "empty"
@@ -576,9 +627,29 @@ async def _auto_save_b2c_variant(job_id: str, db) -> None:
             if isinstance(ph, dict) and ph.get("id") == source_photo_id:
                 source_index = i
                 break
+
+    if migrate_idx is not None:
+        ph = photos[migrate_idx]
+        photos[migrate_idx] = {
+            **ph,
+            "url": media_url,
+            "caption": caption or ph.get("caption"),
+            "is_virtual_staging": True,
+            "source_photo_id": source_photo_id or ph.get("source_photo_id"),
+            "staging_mode": doc.get("mode") or ph.get("staging_mode") or "standard",
+        }
+        await db.properties.update_one(
+            {"id": property_id},
+            {"$set": {"photos": photos, "updated_at": datetime.now(timezone.utc).isoformat()}},
+        )
+        logger.info(
+            "b2c staging migrated data:→media job=%s photo=%s", job_id, saved_photo_id,
+        )
+        return
+
     new_photo = {
         "id": str(uuid4()),
-        "url": f"data:image/jpeg;base64,{b64}",
+        "url": media_url,
         "caption": caption,
         "order": len(photos),
         "is_cover": False,
@@ -598,7 +669,10 @@ async def _auto_save_b2c_variant(job_id: str, db) -> None:
             "source_photo_index": source_index,
         }},
     )
-    logger.info("b2c staging auto-saved job=%s → property=%s photo=%s", job_id, property_id, new_photo["id"])
+    logger.info(
+        "b2c staging auto-saved job=%s → property=%s photo=%s url=%s",
+        job_id, property_id, new_photo["id"], media_url,
+    )
 
 
 def _pick_listing_photo(photos: list, photo_id: Optional[str] = None) -> tuple[str, Optional[str], Optional[int]]:
@@ -2834,17 +2908,25 @@ async def download_watermarked(job_id: str, variant: int = 0, user=Depends(get_c
 
 @router.get("/jobs/{job_id}/variants/{variant_index}/dataurl")
 async def variant_as_dataurl(job_id: str, variant_index: int, user=Depends(get_current_user)) -> Dict[str, str]:
-    """Watermarked + resized (≤1600px) base64 data URL — used to persist the render as property photo."""
+    """Watermarked + resized (≤1600px) Object Storage URL for property photo persistence.
+
+    Historically returned a `data:` URL; SellPage drops those on save, so we now
+    persist to private media and return `/api/media/…` (also as `data_url` alias).
+    """
     db = Database.get()
     doc = await db.virtual_staging_jobs.find_one({"id": job_id, "user_id": user["id"]})
     if not doc:
         raise HTTPException(404, "Job non trovato")
     source_bytes, style_key = await _fetch_variant_bytes(doc, variant_index)
     processed = await asyncio.to_thread(_apply_watermark, source_bytes, "Render virtuale OMNIA", MAX_PHOTO_WIDTH)
-    b64 = base64.b64encode(processed).decode("ascii")
+    media_url = await _persist_staging_jpeg(
+        user["id"], job_id, processed, suffix=f"add-v{variant_index}",
+    )
+    caption = _photo_caption(style_key, doc.get("room_type", "living"))
     return {
-        "data_url": f"data:image/jpeg;base64,{b64}",
-        "caption": _photo_caption(style_key, doc.get("room_type", "living")),
+        "url": media_url,
+        "data_url": media_url,  # alias — FE StagingStudio historically read data_url
+        "caption": caption,
     }
 
 
@@ -2854,7 +2936,7 @@ async def save_variant_to_property(
     body: SaveToPropertyBody,
     user=Depends(get_current_user),
 ) -> Dict[str, Any]:
-    """Persists a variant as a new photo of the linked property (base64, watermarked)."""
+    """Persists a variant as a new photo of the linked property (Object Storage, watermarked)."""
     db = Database.get()
     doc = await db.virtual_staging_jobs.find_one({"id": job_id, "user_id": user["id"]})
     if not doc:
@@ -2874,24 +2956,33 @@ async def save_variant_to_property(
 
     source_bytes, style_key = await _fetch_variant_bytes(doc, body.variant_index)
     processed = await asyncio.to_thread(_apply_watermark, source_bytes, "Render virtuale OMNIA", MAX_PHOTO_WIDTH)
-    b64 = base64.b64encode(processed).decode("ascii")
+    media_url = await _persist_staging_jpeg(
+        user["id"], job_id, processed, suffix=f"prop-v{body.variant_index}",
+    )
 
     photos = prop.get("photos") or []
     new_photo = {
         "id": str(uuid4()),
-        "url": f"data:image/jpeg;base64,{b64}",
+        "url": media_url,
         "caption": _photo_caption(style_key, doc.get("room_type", "living")),
         "order": len(photos),
         "is_cover": len(photos) == 0,
+        "is_virtual_staging": True,
+        "staging_mode": doc.get("mode") or "standard",
+        "source_photo_id": doc.get("source_photo_id"),
     }
     await db.properties.update_one(
         {"id": property_id},
         {"$push": {"photos": new_photo}, "$set": {"updated_at": datetime.now(timezone.utc).isoformat()}},
     )
     await db.virtual_staging_jobs.update_one(
-        {"id": job_id}, {"$set": {"saved_to_property_id": property_id}}
+        {"id": job_id},
+        {"$set": {
+            "saved_to_property_id": property_id,
+            "saved_photo_id": new_photo["id"],
+        }},
     )
-    return {"ok": True, "photo_id": new_photo["id"], "photo_count": len(photos) + 1}
+    return {"ok": True, "photo_id": new_photo["id"], "photo_count": len(photos) + 1, "url": media_url}
 
 
 @router.delete("/jobs/{job_id}")

@@ -105,16 +105,25 @@ function buildListingPayload(form) {
   const sn = (payload.street_number || "").trim();
   payload.street_number = sn || null;
   if (!Array.isArray(payload.photos)) payload.photos = [];
-  // Persist only Object Storage URLs + cover flag (drop local preview / upload bookkeeping).
+  // Persist only Object Storage / remote URLs + cover flag (drop local preview / upload bookkeeping).
+  // Staging must be saved as /api/media/… — data: URLs are stripped and would wipe AI photos.
   payload.photos = payload.photos
     .filter((p) => p && typeof p.url === "string" && !p.url.startsWith("data:") && p.upload_status !== "error")
-    .map((p, i) => ({
-      id: p.id,
-      url: p.url,
-      caption: p.caption || "",
-      order: p.order != null ? p.order : i,
-      is_cover: Boolean(p.is_cover),
-    }));
+    .map((p, i) => {
+      const out = {
+        id: p.id,
+        url: p.url,
+        caption: p.caption || "",
+        order: p.order != null ? p.order : i,
+        is_cover: Boolean(p.is_cover),
+      };
+      if (p.is_virtual_staging) {
+        out.is_virtual_staging = true;
+        if (p.source_photo_id) out.source_photo_id = p.source_photo_id;
+        if (p.staging_mode) out.staging_mode = p.staging_mode;
+      }
+      return out;
+    });
   if (payload.photos.length && !payload.photos.some((p) => p.is_cover)) {
     payload.photos[0].is_cover = true;
   }
