@@ -16,7 +16,7 @@ Registro di tutte le decisioni di business e tecniche prese durante il progetto.
   3. **Telefono/WhatsApp** opzionali in registrazione B2C + editabili in profilo Account; default per `contact_public` in Vendi (opt-in pubblico resta).
   4. Notifica in-app + email inquiry puntano all’inbox (non solo Vendi / URL CRM).
 - **Fuori scope v1**: calendario slot condiviso, chat in-app thread, SMS/WhatsApp Cloud API outbound, MyAgency acquirente (resta D-091).
-- **Stato**: ✅ IN IMPLEMENTAZIONE
+- **Stato**: ✅ APPLICATA (branch `cursor/feat-b2c-idealista-inbox-1433`)
 
 ### D-137 — B2C Idealista-like: safety gate + auto-publish condizionato, codici, ricevute · 04-Nov-2026
 - **Data**: 4 Novembre 2026 (chiarito stesso giorno: non «publish cieco»)
