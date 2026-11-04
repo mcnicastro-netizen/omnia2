@@ -273,6 +273,40 @@ async def b2c_checkout(
             raise HTTPException(status_code=400, detail="unsupported_staging_mode")
         preview_job_id = (payload.preview_job_id or "").strip() or None
         photo_id = (payload.photo_id or "").strip() or None
+        # Anti double-pay: same listing+photo+mode already paid in last 24h
+        if listing_id and photo_id:
+            db = Database.get()
+            since = (datetime.now(timezone.utc) - timedelta(hours=24)).isoformat()
+            dup = await db.b2c_purchases.find_one({
+                "user_id": user["id"],
+                "product_key": "b2c_staging_render",
+                "listing_id": listing_id,
+                "photo_id": photo_id,
+                "staging_mode": staging_mode,
+                "status": "paid",
+                "paid_at": {"$gte": since},
+            }, {"_id": 0, "id": 1, "stripe_session_id": 1})
+            if not dup:
+                # Fallback if paid_at missing on legacy rows
+                dup = await db.b2c_purchases.find_one({
+                    "user_id": user["id"],
+                    "product_key": "b2c_staging_render",
+                    "listing_id": listing_id,
+                    "photo_id": photo_id,
+                    "staging_mode": staging_mode,
+                    "status": "paid",
+                    "created_at": {"$gte": since},
+                }, {"_id": 0, "id": 1, "stripe_session_id": 1})
+            if dup:
+                raise HTTPException(status_code=409, detail={
+                    "code": "staging_already_paid_recently",
+                    "message": (
+                        "Hai già pagato lo staging per questa foto nelle ultime 24 ore. "
+                        "Ricarica l'annuncio: il render dovrebbe già essere tra le foto. "
+                        "Per un altro stile scegli un'altra foto o attendi 24 ore."
+                    ),
+                    "prior_session_id": dup.get("stripe_session_id"),
+                })
 
     meta = {
         "b2c_product_key": payload.product_key,
@@ -293,6 +327,12 @@ async def b2c_checkout(
         meta["preview_job_id"] = preview_job_id or ""
         meta["photo_id"] = photo_id or ""
 
+    customer_email = (user.get("email") or "").strip() or None
+    pi_data = {"metadata": meta}
+    if customer_email:
+        # Stripe Receipt email (Dashboard «Successful payments» + this field)
+        pi_data["receipt_email"] = customer_email
+
     try:
         price_id = _get_or_create_stripe_price(payload.product_key)
         success = str(payload.success_url)
@@ -302,9 +342,9 @@ async def b2c_checkout(
             line_items=[{"price": price_id, "quantity": 1}],
             success_url=f"{success}{sep}session_id={{CHECKOUT_SESSION_ID}}",
             cancel_url=str(payload.cancel_url),
-            customer_email=user.get("email"),
+            customer_email=customer_email,
             metadata=meta,
-            payment_intent_data={"metadata": meta},
+            payment_intent_data=pi_data,
         )
     except stripe.error.StripeError as e:
         logger.error("b2c_checkout stripe error: %s", e)
@@ -423,8 +463,29 @@ async def apply_b2c_purchase_side_effects(session: dict) -> None:
         return
 
     from apps.billing.b2c_entitlements import mark_uni_purchase_paid
+    from apps.billing.b2c_payment_alerts import notify_b2c_payment
 
     amount_eur = _session_amount_eur(session)
+    paid_doc = None
+    alerted = False
+
+    async def _alert(doc: Optional[dict]) -> None:
+        nonlocal alerted
+        if alerted or not doc:
+            return
+        # Only first transition to paid should alert (idempotent re-delivery skip)
+        if doc.get("_payment_alert_sent"):
+            alerted = True
+            return
+        try:
+            await notify_b2c_payment(session=session, purchase=doc)
+            await Database.get().b2c_purchases.update_one(
+                {"stripe_session_id": session_id},
+                {"$set": {"_payment_alert_sent": True}},
+            )
+            alerted = True
+        except Exception:
+            logger.exception("b2c payment alert failed session=%s", session_id)
 
     if is_b2c_boost_product(product_key):
         days = boost_duration_days(product_key) or 30
@@ -436,6 +497,7 @@ async def apply_b2c_purchase_side_effects(session: dict) -> None:
         if not updated:
             logger.warning("b2c_purchase webhook: no local record for session=%s", session_id)
             return
+        paid_doc = updated
         listing_id = md.get("listing_id") or updated.get("listing_id")
         user_id = md.get("user_id") or updated.get("user_id")
         if listing_id and user_id:
@@ -454,6 +516,7 @@ async def apply_b2c_purchase_side_effects(session: dict) -> None:
             "b2c_purchase paid (boost): session=%s product=%s user=%s listing=%s",
             session_id, product_key, user_id, listing_id,
         )
+        await _alert(paid_doc)
         return
 
     if is_b2c_listing_slot_product(product_key) or is_b2c_listing_addon_product(product_key):
@@ -466,6 +529,7 @@ async def apply_b2c_purchase_side_effects(session: dict) -> None:
         if not updated:
             logger.warning("b2c_purchase webhook: no local record for session=%s", session_id)
             return
+        paid_doc = updated
         listing_id = md.get("listing_id") or updated.get("listing_id") or None
         user_id = md.get("user_id") or updated.get("user_id")
         if not user_id:
@@ -483,11 +547,13 @@ async def apply_b2c_purchase_side_effects(session: dict) -> None:
             "b2c_purchase paid (listing_publish): session=%s product=%s user=%s listing=%s",
             session_id, product_key, user_id, listing_id,
         )
+        await _alert(paid_doc)
         return
 
     if product_key in ("b2c_valuator_uni_pdf", "b2c_visura_catastale", "b2c_planimetria_catastale"):
         updated = await mark_uni_purchase_paid(session_id, amount_eur=amount_eur)
         if updated:
+            paid_doc = updated
             logger.info(
                 "b2c_purchase paid: session=%s product=%s user=%s amount_eur=%s",
                 session_id, product_key, updated.get("user_id"), updated.get("amount_eur"),
@@ -498,6 +564,7 @@ async def apply_b2c_purchase_side_effects(session: dict) -> None:
             elif product_key == "b2c_planimetria_catastale":
                 from apps.immocloud.planimetria_b2c import fulfill_paid_planimetria_order
                 await fulfill_paid_planimetria_order(session_id)
+            await _alert(paid_doc)
         else:
             logger.warning("b2c_purchase webhook: no local record for session=%s", session_id)
         return
@@ -505,6 +572,7 @@ async def apply_b2c_purchase_side_effects(session: dict) -> None:
     if product_key == "b2c_staging_render":
         updated = await mark_uni_purchase_paid(session_id, amount_eur=amount_eur)
         if updated:
+            paid_doc = updated
             logger.info(
                 "b2c_purchase paid (staging): session=%s user=%s listing=%s amount_eur=%s",
                 session_id, updated.get("user_id"), updated.get("listing_id"),
@@ -512,6 +580,7 @@ async def apply_b2c_purchase_side_effects(session: dict) -> None:
             )
             from apps.immoweb.virtual_staging import fulfill_paid_staging_render
             await fulfill_paid_staging_render(session_id)
+            await _alert(paid_doc)
         else:
             logger.warning("b2c_purchase webhook: no local record for session=%s", session_id)
         return
@@ -521,10 +590,12 @@ async def apply_b2c_purchase_side_effects(session: dict) -> None:
     if product_key in B2C_ONE_SHOT_PRODUCTS:
         updated = await mark_uni_purchase_paid(session_id, amount_eur=amount_eur)
         if updated:
+            paid_doc = updated
             logger.info(
                 "b2c_purchase paid: session=%s product=%s user=%s amount_eur=%s",
                 session_id, product_key, updated.get("user_id"), updated.get("amount_eur"),
             )
+            await _alert(paid_doc)
         else:
             logger.warning("b2c_purchase webhook: no local record for session=%s", session_id)
         return

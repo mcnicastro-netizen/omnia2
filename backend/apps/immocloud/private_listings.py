@@ -216,6 +216,13 @@ async def create_private_listing(
     if contact_public.get("show_whatsapp") and not (contact_public.get("whatsapp") or "").strip():
         contact_public["show_whatsapp"] = False
 
+    from shared.ids import ensure_client_code, ensure_unique_code
+
+    listing_code = (data.get("reference_code") or "").strip() or await ensure_unique_code(
+        db, collection="properties", field="reference_code", kind="listing",
+    )
+    client_code = await ensure_client_code(db, user["id"])
+
     data.update({
         "id": str(uuid4()),
         "agency_id": PRIVATE_AGENCY_SENTINEL,
@@ -225,10 +232,11 @@ async def create_private_listing(
         # MLS / matching CRM = B2B only (PRICING_B2C §3)
         "mls_shared": False,
         "visibility": "private",
-        "moderation_status": "none",  # bozza locale — pending solo dopo /submit
+        "moderation_status": "none",  # bozza locale — live dopo /submit (auto-publish D-137)
         "moderation_notes": None,
         "moderation_reviewed_at": None,
         "moderation_reviewed_by": None,
+        "reference_code": listing_code,
         "view_count": 0,
         "lead_count": 0,
         "photo_pack_extra": 0,
@@ -244,6 +252,7 @@ async def create_private_listing(
         "phone": contact_public.get("phone") or user.get("phone"),
         "email": owner_email,
         "notes": None,
+        "client_code": client_code,
     }
     await db.properties.insert_one(data)
 
@@ -263,19 +272,35 @@ async def create_private_listing(
 async def list_my_private_listings(user: dict = Depends(get_current_user)):
     await _ensure_b2c(user)
     from shared.db.trash import with_not_trashed
+    from shared.ids import ensure_client_code, ensure_listing_code
     db = Database.get()
     cursor = db.properties.find(
         with_not_trashed({"owner_user_id": user["id"], "is_private_listing": True}),
         {"_id": 0, "owner": 0},
     ).sort("created_at", -1)
     items = await cursor.to_list(length=50)
-    return {"items": items, "total": len(items)}
+    client_code = None
+    try:
+        client_code = await ensure_client_code(db, user["id"])
+    except Exception:
+        logger.exception("ensure client_code on list failed user=%s", user.get("id"))
+    for it in items:
+        try:
+            code = await ensure_listing_code(db, it.get("id"))
+            if code:
+                it["reference_code"] = code
+        except Exception:
+            logger.exception("ensure listing_code on list failed id=%s", it.get("id"))
+        if client_code:
+            it["client_code"] = client_code
+    return {"items": items, "total": len(items), "client_code": client_code}
 
 
 @router.get("/{pid}")
 async def get_my_private_listing(pid: str, user: dict = Depends(get_current_user)):
     await _ensure_b2c(user)
     from shared.db.trash import with_not_trashed
+    from shared.ids import ensure_client_code, ensure_listing_code
     db = Database.get()
     p = await db.properties.find_one(
         with_not_trashed({
@@ -317,6 +342,15 @@ async def get_my_private_listing(pid: str, user: dict = Depends(get_current_user
             ) or p
     except Exception:
         logger.exception("b2c staging ensure-on-listing wrapper failed pid=%s", pid)
+    try:
+        listing_code = await ensure_listing_code(db, pid)
+        client_code = await ensure_client_code(db, user["id"])
+        if listing_code:
+            p["reference_code"] = listing_code
+        if client_code:
+            p["client_code"] = client_code
+    except Exception:
+        logger.exception("ensure codes on listing get failed pid=%s", pid)
     return p
 
 
@@ -427,25 +461,43 @@ async def update_my_private_listing(
     return updated
 
 
+def _b2c_auto_publish_enabled() -> bool:
+    """D-137 Idealista-like: publish on submit by default.
+
+    Opt-out only: OMNIA_B2C_AUTO_PUBLISH=false → classic pending queue.
+    Legacy OMNIA_B2C_SANDBOX_AUTO_APPROVE=true still forces publish.
+    """
+    raw = (os.environ.get("OMNIA_B2C_AUTO_PUBLISH") or "").strip().lower()
+    if raw in ("0", "false", "no", "off"):
+        return False
+    if raw in ("1", "true", "yes", "on"):
+        return True
+    # Default ON (Idealista model). Sandbox flag remains a force-on alias.
+    sandbox = (os.environ.get("OMNIA_B2C_SANDBOX_AUTO_APPROVE") or "").strip().lower()
+    if sandbox in ("1", "true", "yes", "on"):
+        return True
+    return True  # default publish
+
+
 def _sandbox_auto_approve_enabled() -> bool:
-    """Cloud/local sandbox: skip human moderation so Founder can dogfood B2C end-to-end."""
-    return (os.environ.get("OMNIA_B2C_SANDBOX_AUTO_APPROVE") or "").strip().lower() in (
-        "1", "true", "yes", "on",
-    )
+    """Deprecated alias — use _b2c_auto_publish_enabled (D-137)."""
+    return _b2c_auto_publish_enabled()
 
 
 @router.post("/{pid}/submit")
 async def submit_for_moderation(pid: str, user: dict = Depends(get_current_user)):
-    """Move a draft listing into the moderation queue. Status stays 'draft'
-    until admin approves (then becomes 'active'), or 'rejected'.
+    """Publish a private listing (D-137 auto-publish) or queue if auto-publish off.
 
-    If OMNIA_B2C_SANDBOX_AUTO_APPROVE is on, publish immediately (sandbox only)."""
+    Default: goes live immediately (approved + active + public). Founder can
+    still unpublish/reject later from /app/moderation. Matching runs on publish.
+    """
     await _ensure_b2c(user)
     db = Database.get()
     p = await db.properties.find_one(
         {"id": pid, "owner_user_id": user["id"], "is_private_listing": True},
         {"_id": 0, "id": 1, "title": 1, "city": 1, "price": 1, "rent_monthly": 1,
-         "moderation_status": 1, "status": 1, "contact_public": 1, "owner": 1},
+         "moderation_status": 1, "status": 1, "contact_public": 1, "owner": 1,
+         "reference_code": 1},
     )
     if not p:
         raise HTTPException(status_code=404, detail="listing_not_found")
@@ -463,31 +515,46 @@ async def submit_for_moderation(pid: str, user: dict = Depends(get_current_user)
     if not p.get("contact_public"):
         await db.properties.update_one({"id": pid}, {"$set": {"contact_public": contact}})
 
+    from shared.ids import ensure_client_code, ensure_listing_code
+    listing_code = await ensure_listing_code(db, pid)
+    client_code = await ensure_client_code(db, user["id"])
+
     now = datetime.now(timezone.utc).isoformat()
-    if _sandbox_auto_approve_enabled():
+    if _b2c_auto_publish_enabled():
         await db.properties.update_one(
             {"id": pid},
             {"$set": {
                 "moderation_status": "approved",
                 "status": "active",
                 "visibility": "public",
-                "moderation_notes": "sandbox_auto_approve",
+                "moderation_notes": "auto_publish_d137",
                 "moderation_reviewed_at": now,
-                "moderation_reviewed_by": "sandbox_auto",
+                "moderation_reviewed_by": "auto_publish",
                 "updated_at": now,
+                "reference_code": listing_code or p.get("reference_code"),
             }},
         )
-        logger.info("private listing sandbox auto-approved: id=%s user=%s", pid, user["id"])
+        logger.info(
+            "private listing auto-published: id=%s code=%s client=%s user=%s",
+            pid, listing_code, client_code, user["id"],
+        )
         try:
             from apps.immocloud.alert_fanout import fanout_listing_event
             await fanout_listing_event(pid, event="new")
         except Exception as e:
-            logger.warning("fanout after sandbox auto-approve failed: %s", e)
+            logger.warning("fanout after auto-publish failed: %s", e)
+        try:
+            from apps.immoweb.private_listing_matching import run_private_listing_request_matching
+            await run_private_listing_request_matching(property_id=pid)
+        except Exception as e:
+            logger.warning("matching after auto-publish failed: %s", e)
         return {
             "ok": True,
             "moderation_status": "approved",
             "status": "active",
-            "sandbox_auto_approve": True,
+            "auto_publish": True,
+            "reference_code": listing_code,
+            "client_code": client_code,
         }
 
     await db.properties.update_one(
@@ -496,10 +563,16 @@ async def submit_for_moderation(pid: str, user: dict = Depends(get_current_user)
             "moderation_status": "pending",
             "moderation_notes": None,
             "updated_at": now,
+            "reference_code": listing_code or p.get("reference_code"),
         }},
     )
-    logger.info("private listing submitted: id=%s user=%s", pid, user["id"])
-    return {"ok": True, "moderation_status": "pending"}
+    logger.info("private listing submitted (manual queue): id=%s user=%s", pid, user["id"])
+    return {
+        "ok": True,
+        "moderation_status": "pending",
+        "reference_code": listing_code,
+        "client_code": client_code,
+    }
 
 
 class B2CStagingStartBody(BaseModel):

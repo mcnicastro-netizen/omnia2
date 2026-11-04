@@ -46,6 +46,7 @@ class UserInDB(TimestampedModel):
     is_active: bool = True
     # M3.S5 v1 — B2C account fields
     account_type: Literal["b2b", "b2c"] = "b2b"
+    client_code: Optional[str] = Field(default=None, max_length=24)  # OM-C-XXXXXX (D-137)
     intents: List[Literal["sell", "rent_out", "get_alerts"]] = Field(default_factory=list)
     notification_channels: List[Literal["email", "push"]] = Field(default_factory=lambda: ["email"])
     notification_email_types: Optional[List[Literal[

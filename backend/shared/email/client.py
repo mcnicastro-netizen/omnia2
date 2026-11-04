@@ -96,6 +96,16 @@ SUBJECTS = {
         "en": "OMNIA Founders 50 — New lead #{{position}}/50: {{agency}}",
         "es": "OMNIA Founders 50 — Nuevo lead #{{position}}/50: {{agency}}",
     },
+    "b2c_payment_receipt": {
+        "it": "Ricevuta pagamento ImmobilCloud — {{product_label}} · {{amount}}",
+        "en": "ImmobilCloud payment receipt — {{product_label}} · {{amount}}",
+        "es": "Recibo de pago ImmobilCloud — {{product_label}} · {{amount}}",
+    },
+    "b2c_payment_founder": {
+        "it": "Incasso B2C {{amount}} — {{product_label}} · {{client_code}}",
+        "en": "B2C payment {{amount}} — {{product_label}} · {{client_code}}",
+        "es": "Cobro B2C {{amount}} — {{product_label}} · {{client_code}}",
+    },
 }
 
 

@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="it">
+<head><meta charset="UTF-8"></head>
+<body style="margin:0;padding:0;background:#f5f5f4;font-family:Georgia,'Times New Roman',serif;color:#1c1917;">
+  <table width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#f5f5f4">
+    <tr><td align="center" style="padding:40px 20px;">
+      <table width="540" cellpadding="0" cellspacing="0" border="0" bgcolor="#ffffff" style="border:1px solid #e7e5e4;">
+        <tr><td style="padding:32px 32px 16px 32px;border-bottom:1px solid #e7e5e4;">
+          <img src="{{logo_url}}" alt="OMNIA" width="36" height="36" style="display:inline-block;vertical-align:middle;margin-right:10px;" /><span style="font-size:24px;letter-spacing:-0.5px;font-weight:500;vertical-align:middle;">OMNIA</span>
+        </td></tr>
+        <tr><td style="padding:32px;">
+          <h1 style="margin:0 0 16px 0;font-size:26px;font-weight:500;line-height:1.2;">Ricevuta di pagamento</h1>
+          <p style="font-size:16px;line-height:1.6;color:#44403c;margin:0 0 16px 0;">
+            Ciao {{client_name}}, abbiamo ricevuto il tuo pagamento su ImmobilCloud.
+          </p>
+          <table width="100%" cellpadding="0" cellspacing="0" style="font-family:Arial,sans-serif;font-size:14px;color:#1c1917;margin:0 0 20px 0;">
+            <tr><td style="padding:8px 0;border-bottom:1px solid #e7e5e4;">Servizio</td><td align="right" style="padding:8px 0;border-bottom:1px solid #e7e5e4;"><strong>{{product_label}}</strong></td></tr>
+            <tr><td style="padding:8px 0;border-bottom:1px solid #e7e5e4;">Importo</td><td align="right" style="padding:8px 0;border-bottom:1px solid #e7e5e4;"><strong>{{amount}}</strong></td></tr>
+            <tr><td style="padding:8px 0;border-bottom:1px solid #e7e5e4;">Codice cliente</td><td align="right" style="padding:8px 0;border-bottom:1px solid #e7e5e4;">{{client_code}}</td></tr>
+            <tr><td style="padding:8px 0;border-bottom:1px solid #e7e5e4;">Codice annuncio</td><td align="right" style="padding:8px 0;border-bottom:1px solid #e7e5e4;">{{listing_code}}</td></tr>
+            <tr><td style="padding:8px 0;">Riferimento Stripe</td><td align="right" style="padding:8px 0;font-size:12px;color:#78716c;">{{session_id}}</td></tr>
+          </table>
+          <p style="font-size:13px;line-height:1.5;color:#78716c;margin:0;">
+            Conserva questa email come ricevuta. Stripe può inviarti anche la propria ricevuta ufficiale sulla stessa casella.
+          </p>
+        </td></tr>
+        <tr><td style="padding:24px 32px;background:#fafaf9;border-top:1px solid #e7e5e4;font-family:Arial,sans-serif;font-size:11px;color:#78716c;letter-spacing:1px;text-transform:uppercase;">
+          © 2026 OMNIA Real Estate Ecosystem
+        </td></tr>
+      </table>
+    </td></tr>
+  </table>
+</body></html>
