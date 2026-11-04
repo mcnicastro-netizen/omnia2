@@ -7,15 +7,15 @@ Registro di tutte le decisioni di business e tecniche prese durante il progetto.
 
 ## Decisioni prese
 
-### D-137 — B2C Idealista-like: auto-publish, codici, ricevuta+alert Founder · 04-Nov-2026
-- **Data**: 4 Novembre 2026
-- **Contesto**: Con volume annunci il Founder non può approvare a mano; dogfood: 2 checkout staging (€1,49) sulla stessa foto; ricevuta Stripe assente; Founder senza messaggio su ogni incasso; UUID poco usabili come riferimento.
+### D-137 — B2C Idealista-like: safety gate + auto-publish condizionato, codici, ricevute · 04-Nov-2026
+- **Data**: 4 Novembre 2026 (chiarito stesso giorno: non «publish cieco»)
+- **Contesto**: Volume annunci → Founder non può approvare a mano; serve tutela reputazione (offese, scam, discriminazione) anche su annunci già live. Dogfood: 2× staging, ricevute, codici.
 - **Decisione**:
-  1. **Auto-publish** su «Invia per approvazione»: default `OMNIA_B2C_AUTO_PUBLISH=true` (opt-out solo con `false`). Moderazione resta per unpublish/reject post-hoc. Matching portal parte al publish.
-  2. **Codici pubblici**: cliente `OM-C-XXXXXX`, annuncio `OM-L-XXXXXX` (`reference_code` / `client_code`), mostrati in Sell.
-  3. **Ogni pagamento B2C**: Stripe `payment_intent_data.receipt_email` + email Resend ricevuta cliente + email/inbox Founder (idempotente `_payment_alert_sent`).
-  4. **Anti doppio staging**: 409 se stesso listing+photo+mode già `paid` nelle ultime 24h (i 2× dogfood erano due Checkout distinti, non un doppio addebito dello stesso session).
-- **Stato**: ✅ DECISIONE OPERATIVA · implementazione PR su branch feat-b2c-autopublish-codes-receipts
+  1. **Safety gate** (`listing_safety_gate`): blocklist+heuristics (+ Gemini opzionale) → `ACCEPT` auto-publish, `REVIEW` coda `/app/moderation`, `REJECT` bozza rifiutata. Rescan orario degli annunci live; re-check su edit sostanziale.
+  2. **Auto-publish solo se ACCEPT** (`OMNIA_B2C_AUTO_PUBLISH` default on). Opt-out `false` = sempre coda umana (gate comunque marca note).
+  3. **Codici** `OM-C-…` / `OM-L-…` in Sell.
+  4. **Pagamenti**: Stripe `receipt_email` + Resend cliente + alert Founder; anti doppio staging 24h stessa foto+mode.
+- **Stato**: ✅ DECISIONE OPERATIVA
 
 ### D-135 — Dogfood B2C Vendi: CSRF cross-site, HAL improve stabile, account solo Privato · 02-Nov-2026
 - **Data**: 2 Novembre 2026

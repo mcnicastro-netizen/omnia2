@@ -418,6 +418,33 @@ def start_scheduler() -> None:
         coalesce=True,
     )
 
+    async def _b2c_safety_rescan_tick():
+        """D-137b — pull live private ads that fail reputation/safety gate."""
+        from apps.immocloud.listing_safety_gate import rescan_live_private_listings
+        try:
+            report = await rescan_live_private_listings(limit=100)
+            _mark_job(
+                "b2c_listing_safety_rescan",
+                ok=True,
+                detail=f"scanned={report.get('scanned')} held={report.get('held')}",
+            )
+            logger.info(
+                "b2c safety rescan scanned=%s held=%s",
+                report.get("scanned"), report.get("held"),
+            )
+        except Exception as e:  # noqa: BLE001
+            _mark_job("b2c_listing_safety_rescan", ok=False, detail=str(e))
+            logger.warning("b2c safety rescan failed: %s", e)
+
+    sched.add_job(
+        _b2c_safety_rescan_tick,
+        IntervalTrigger(hours=1),
+        id="b2c_listing_safety_rescan",
+        replace_existing=True,
+        max_instances=1,
+        coalesce=True,
+    )
+
     async def _private_listing_match_tick():
         from apps.immoweb.private_listing_matching import run_private_listing_request_matching
         try:

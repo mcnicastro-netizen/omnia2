@@ -420,16 +420,58 @@ async def update_my_private_listing(
         update_doc["owner"] = owner
 
     update_doc["updated_at"] = datetime.now(timezone.utc).isoformat()
-    # If previously rejected/approved and substantive edit → back to pending
+    # Substantive edit: re-run safety gate (Idealista-like reputation protection)
     substantive = any(k in update_doc for k in
                       ("title", "description", "price", "rent_monthly", "address",
                        "street_number", "city", "zone", "surface_sqm", "rooms",
                        "bedrooms", "bathrooms", "floor", "total_floors", "year_built",
                        "condition", "features", "energy", "condo_fees", "furnished",
                        "photos", "floor_plan_url", "contact_public"))
-    if substantive and existing.get("moderation_status") in ("approved", "rejected"):
-        update_doc["moderation_status"] = "pending"
-        update_doc["status"] = "draft"
+    if substantive and existing.get("moderation_status") in ("approved", "rejected", "pending"):
+        try:
+            from apps.immocloud.listing_safety_gate import (
+                VERDICT_ACCEPT,
+                VERDICT_REJECT,
+                evaluate_listing_safety,
+                notify_founder_safety_flag,
+                safety_gate_enabled,
+            )
+            merged = {**existing, **update_doc}
+            if safety_gate_enabled():
+                report = await evaluate_listing_safety(merged)
+                update_doc["safety_gate"] = report.to_dict()
+                if report.verdict == VERDICT_ACCEPT and existing.get("moderation_status") == "approved":
+                    # Stay live if previously approved and still clean
+                    update_doc["moderation_status"] = "approved"
+                    update_doc["status"] = "active"
+                    update_doc["visibility"] = "public"
+                    update_doc["moderation_notes"] = "safety_gate_accept_on_edit"
+                elif report.verdict == VERDICT_REJECT:
+                    update_doc["moderation_status"] = "rejected"
+                    update_doc["status"] = "draft"
+                    update_doc["visibility"] = "private"
+                    update_doc["moderation_notes"] = (
+                        f"safety_gate:REJECT · " + "; ".join(report.reasons[:5])
+                    )[:500]
+                    update_doc["moderation_reviewed_by"] = "safety_gate"
+                    await notify_founder_safety_flag(merged, report, event="edit")
+                else:
+                    update_doc["moderation_status"] = "pending"
+                    update_doc["status"] = "draft"
+                    update_doc["visibility"] = "private"
+                    update_doc["moderation_notes"] = (
+                        f"safety_gate:{report.verdict} · " + "; ".join(report.reasons[:5])
+                    )[:500]
+                    if report.verdict != VERDICT_ACCEPT:
+                        await notify_founder_safety_flag(merged, report, event="edit")
+            else:
+                update_doc["moderation_status"] = "pending"
+                update_doc["status"] = "draft"
+        except Exception:
+            logger.exception("safety gate on edit failed pid=%s", pid)
+            if existing.get("moderation_status") in ("approved", "rejected"):
+                update_doc["moderation_status"] = "pending"
+                update_doc["status"] = "draft"
 
     if "price" in update_doc or "rent_monthly" in update_doc:
         try:
@@ -462,45 +504,46 @@ async def update_my_private_listing(
 
 
 def _b2c_auto_publish_enabled() -> bool:
-    """D-137 Idealista-like: publish on submit by default.
+    """D-137/D-137b: auto-publish only after safety gate ACCEPT.
 
-    Opt-out only: OMNIA_B2C_AUTO_PUBLISH=false → classic pending queue.
-    Legacy OMNIA_B2C_SANDBOX_AUTO_APPROVE=true still forces publish.
+    Opt-out: OMNIA_B2C_AUTO_PUBLISH=false → always human queue (gate still runs).
     """
     raw = (os.environ.get("OMNIA_B2C_AUTO_PUBLISH") or "").strip().lower()
     if raw in ("0", "false", "no", "off"):
         return False
     if raw in ("1", "true", "yes", "on"):
         return True
-    # Default ON (Idealista model). Sandbox flag remains a force-on alias.
     sandbox = (os.environ.get("OMNIA_B2C_SANDBOX_AUTO_APPROVE") or "").strip().lower()
     if sandbox in ("1", "true", "yes", "on"):
         return True
-    return True  # default publish
+    return True
 
 
 def _sandbox_auto_approve_enabled() -> bool:
-    """Deprecated alias — use _b2c_auto_publish_enabled (D-137)."""
+    """Deprecated alias — use _b2c_auto_publish_enabled."""
     return _b2c_auto_publish_enabled()
+
+
+async def _load_listing_for_safety(db, pid: str, user_id: str) -> dict:
+    p = await db.properties.find_one(
+        {"id": pid, "owner_user_id": user_id, "is_private_listing": True},
+        {"_id": 0},
+    )
+    if not p:
+        raise HTTPException(status_code=404, detail="listing_not_found")
+    return p
 
 
 @router.post("/{pid}/submit")
 async def submit_for_moderation(pid: str, user: dict = Depends(get_current_user)):
-    """Publish a private listing (D-137 auto-publish) or queue if auto-publish off.
+    """Submit private listing: safety gate → auto-publish OR Founder queue.
 
-    Default: goes live immediately (approved + active + public). Founder can
-    still unpublish/reject later from /app/moderation. Matching runs on publish.
+    Idealista-like: clean ads go live; offensive/scam/reputation risk → pending
+    (or rejected if hard block). Founder reviews only the flagged queue.
     """
     await _ensure_b2c(user)
     db = Database.get()
-    p = await db.properties.find_one(
-        {"id": pid, "owner_user_id": user["id"], "is_private_listing": True},
-        {"_id": 0, "id": 1, "title": 1, "city": 1, "price": 1, "rent_monthly": 1,
-         "moderation_status": 1, "status": 1, "contact_public": 1, "owner": 1,
-         "reference_code": 1},
-    )
-    if not p:
-        raise HTTPException(status_code=404, detail="listing_not_found")
+    p = await _load_listing_for_safety(db, pid, user["id"])
     if p.get("moderation_status") == "approved" and p.get("status") == "active":
         raise HTTPException(status_code=409, detail="already_approved_and_active")
 
@@ -511,32 +554,52 @@ async def submit_for_moderation(pid: str, user: dict = Depends(get_current_user)
     contact = p.get("contact_public") or _default_contact_public(user)
     owner_email = (p.get("owner") or {}).get("email") or user.get("email")
     _assert_contact_reachable(contact, owner_email)
-    # Persist defaults if listing was created before contact_public existed
     if not p.get("contact_public"):
         await db.properties.update_one({"id": pid}, {"$set": {"contact_public": contact}})
 
     from shared.ids import ensure_client_code, ensure_listing_code
+    from apps.immocloud.listing_safety_gate import (
+        VERDICT_ACCEPT,
+        VERDICT_REJECT,
+        evaluate_listing_safety,
+        notify_founder_safety_flag,
+        safety_gate_enabled,
+    )
+
     listing_code = await ensure_listing_code(db, pid)
     client_code = await ensure_client_code(db, user["id"])
+    p["reference_code"] = listing_code or p.get("reference_code")
 
     now = datetime.now(timezone.utc).isoformat()
-    if _b2c_auto_publish_enabled():
+    safety = None
+    if safety_gate_enabled():
+        safety = await evaluate_listing_safety(p)
+        await db.properties.update_one(
+            {"id": pid},
+            {"$set": {"safety_gate": safety.to_dict(), "updated_at": now}},
+        )
+
+    can_auto = _b2c_auto_publish_enabled() and (
+        safety is None or safety.verdict == VERDICT_ACCEPT
+    )
+
+    if can_auto:
         await db.properties.update_one(
             {"id": pid},
             {"$set": {
                 "moderation_status": "approved",
                 "status": "active",
                 "visibility": "public",
-                "moderation_notes": "auto_publish_d137",
+                "moderation_notes": "auto_publish_safety_accept",
                 "moderation_reviewed_at": now,
-                "moderation_reviewed_by": "auto_publish",
+                "moderation_reviewed_by": "safety_gate",
                 "updated_at": now,
                 "reference_code": listing_code or p.get("reference_code"),
             }},
         )
         logger.info(
-            "private listing auto-published: id=%s code=%s client=%s user=%s",
-            pid, listing_code, client_code, user["id"],
+            "private listing auto-published (safety ACCEPT): id=%s code=%s user=%s",
+            pid, listing_code, user["id"],
         )
         try:
             from apps.immocloud.alert_fanout import fanout_listing_event
@@ -553,23 +616,43 @@ async def submit_for_moderation(pid: str, user: dict = Depends(get_current_user)
             "moderation_status": "approved",
             "status": "active",
             "auto_publish": True,
+            "safety_verdict": (safety.verdict if safety else VERDICT_ACCEPT),
             "reference_code": listing_code,
             "client_code": client_code,
         }
 
+    # Held for Founder (REVIEW) or hard-rejected
+    reject = bool(safety and safety.verdict == VERDICT_REJECT)
+    notes = None
+    if safety:
+        notes = f"safety_gate:{safety.verdict} · " + "; ".join(safety.reasons[:5])
+        notes = notes[:500]
+        await notify_founder_safety_flag(p, safety, event="submit")
+
     await db.properties.update_one(
         {"id": pid},
         {"$set": {
-            "moderation_status": "pending",
-            "moderation_notes": None,
+            "moderation_status": "rejected" if reject else "pending",
+            "status": "draft",
+            "visibility": "private",
+            "moderation_notes": notes,
+            "moderation_reviewed_at": now if reject else None,
+            "moderation_reviewed_by": "safety_gate" if reject else None,
             "updated_at": now,
             "reference_code": listing_code or p.get("reference_code"),
         }},
     )
-    logger.info("private listing submitted (manual queue): id=%s user=%s", pid, user["id"])
+    logger.info(
+        "private listing held: id=%s verdict=%s reject=%s user=%s",
+        pid, (safety.verdict if safety else "n/a"), reject, user["id"],
+    )
     return {
         "ok": True,
-        "moderation_status": "pending",
+        "moderation_status": "rejected" if reject else "pending",
+        "status": "draft",
+        "auto_publish": False,
+        "safety_verdict": (safety.verdict if safety else None),
+        "safety_reasons": (safety.reasons if safety else []),
         "reference_code": listing_code,
         "client_code": client_code,
     }
