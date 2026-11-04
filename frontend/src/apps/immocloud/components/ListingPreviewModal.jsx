@@ -147,15 +147,26 @@ export default function ListingPreviewModal({
               {t("cloud.sell.preview_as_detail")}
             </p>
             {img && (
-              <div className="mt-3 relative w-full aspect-[16/10] bg-stone-900 overflow-hidden">
+              <div
+                className="mt-3 relative w-full overflow-hidden bg-stone-900"
+                style={{ aspectRatio: "16 / 10" }}
+              >
                 <img
                   src={img}
                   alt=""
                   data-testid="listing-preview-hero"
-                  className="absolute inset-0 w-full h-full object-cover object-center"
+                  className="block"
+                  style={{
+                    position: "absolute",
+                    inset: 0,
+                    width: "100%",
+                    height: "100%",
+                    objectFit: "cover",
+                    objectPosition: "center center",
+                  }}
                 />
                 {cover?.is_virtual_staging && (
-                  <span className="absolute top-3 left-3 text-[10px] uppercase tracking-widest text-white bg-black/60 px-2 py-1 rounded">
+                  <span className="absolute top-3 left-3 z-[1] text-[10px] uppercase tracking-widest text-white bg-black/60 px-2 py-1 rounded">
                     {t("cloud.staging_disclosure", "Render virtuale")}
                   </span>
                 )}
@@ -216,13 +227,25 @@ export default function ListingPreviewModal({
                 </div>
               )}
               {gallery.length > 1 && (
-                <div className="grid grid-cols-4 gap-2">
+                <div className="flex flex-wrap justify-center gap-2">
                   {gallery.map((p, i) => (
-                    <div key={p.id || i} className="aspect-[4/3] rounded overflow-hidden bg-stone-900 relative">
+                    <div
+                      key={p.id || i}
+                      className="relative overflow-hidden rounded bg-stone-900"
+                      style={{ width: "22%", aspectRatio: "4 / 3", minWidth: 72 }}
+                    >
                       <img
                         src={resolveMediaUrl(p.url)}
                         alt=""
-                        className="absolute inset-0 w-full h-full object-cover object-center"
+                        className="block"
+                        style={{
+                          position: "absolute",
+                          inset: 0,
+                          width: "100%",
+                          height: "100%",
+                          objectFit: "cover",
+                          objectPosition: "center center",
+                        }}
                       />
                     </div>
                   ))}

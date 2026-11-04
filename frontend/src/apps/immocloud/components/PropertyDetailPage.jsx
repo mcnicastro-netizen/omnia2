@@ -247,7 +247,7 @@ export default function PropertyDetailPage() {
             </div>
             {photos.length > 1 && (
               <div className="absolute bottom-4 left-0 right-0 px-5 sm:px-8 md:px-16">
-                <div className="max-w-6xl mx-auto flex gap-2 overflow-x-auto pb-1">
+                <div className="max-w-6xl mx-auto flex gap-2 overflow-x-auto pb-1 justify-center sm:justify-start">
                   {photos.map((ph, i) => (
                     <button
                       key={i}
