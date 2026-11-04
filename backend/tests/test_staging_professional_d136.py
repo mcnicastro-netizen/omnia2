@@ -271,20 +271,39 @@ def test_oneshot_does_not_default_bedroom_in_room_bits():
 
 def test_pipeline_flag_default_off():
     import os
-    from apps.immoweb.staging_professional import pipeline_enabled
+    from apps.immoweb.staging_professional import (
+        job_is_b2b_gestionale,
+        pipeline_enabled,
+        pipeline_enabled_for_job,
+    )
 
     old = os.environ.pop("OMNIA_STAGING_PIPELINE", None)
+    old_b2c = os.environ.pop("OMNIA_STAGING_PIPELINE_FORCE_B2C", None)
     try:
         assert pipeline_enabled() is False
         os.environ["OMNIA_STAGING_PIPELINE"] = "professional"
         assert pipeline_enabled() is True
+        # B2B gestionale → professional
+        assert pipeline_enabled_for_job({"agency_id": "ag1", "payment_rail": None}) is True
+        # B2C → stays nano even if flag on
+        assert job_is_b2b_gestionale({"agency_id": None, "payment_rail": "b2c_stripe"}) is False
+        assert pipeline_enabled_for_job({"agency_id": None, "payment_rail": "b2c_preview"}) is False
+        assert pipeline_enabled_for_job({"agency_id": None, "payment_rail": "b2c_stripe"}) is False
+        # Escape hatch
+        os.environ["OMNIA_STAGING_PIPELINE_FORCE_B2C"] = "true"
+        assert pipeline_enabled_for_job({"payment_rail": "b2c_stripe"}) is True
         os.environ["OMNIA_STAGING_PIPELINE"] = "nano"
         assert pipeline_enabled() is False
+        assert pipeline_enabled_for_job({"agency_id": "ag1"}) is False
     finally:
         if old is None:
             os.environ.pop("OMNIA_STAGING_PIPELINE", None)
         else:
             os.environ["OMNIA_STAGING_PIPELINE"] = old
+        if old_b2c is None:
+            os.environ.pop("OMNIA_STAGING_PIPELINE_FORCE_B2C", None)
+        else:
+            os.environ["OMNIA_STAGING_PIPELINE_FORCE_B2C"] = old_b2c
 
 
 def test_pay_room_fallback_is_living_not_bedroom():

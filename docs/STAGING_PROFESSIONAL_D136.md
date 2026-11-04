@@ -4,7 +4,7 @@
 
 Default sicuro: `OMNIA_STAGING_PIPELINE=nano` (D-128 oneshot).
 
-Per abilitare la pipeline geometrica (shadow / A/B / staging Railway):
+Per abilitare la pipeline geometrica **solo sul gestionale B2B** (ImmoWeb / crediti agenzia):
 
 ```bash
 OMNIA_STAGING_PIPELINE=professional
@@ -12,7 +12,14 @@ OMNIA_STAGING_PIPELINE=professional
 # OMNIA_STAGING_NANO_CREATIVE=true
 ```
 
-Riavviare il backend dopo il cambio env.
+ImmobilCloud B2C (anteprima / Stripe €1,49) resta su **nano** anche con il flag sopra.
+Per forzare professional anche sul B2C (sconsigliato):
+
+```bash
+OMNIA_STAGING_PIPELINE_FORCE_B2C=true
+```
+
+Riavviare / redeploy API dopo il cambio env.
 
 ## Rollback
 
