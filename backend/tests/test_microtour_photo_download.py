@@ -35,3 +35,19 @@ def test_property_photo_urls_prefers_media_and_public_fallback():
     assert urls[0] == "/api/media/omnia/private/u/photos/a.jpg"
     assert urls[1] == "https://api.example.com/api/public/property/pid-1/photo/1"
     assert urls[2] == "https://cdn.example/x.jpg"
+
+
+def test_select_best_frames_prefers_larger():
+    import tempfile
+    from pathlib import Path
+    from PIL import Image
+    from apps.immoweb.micro_tour_video import _select_best_frames
+
+    with tempfile.TemporaryDirectory() as td:
+        td = Path(td)
+        small = td / "s.jpg"
+        big = td / "b.jpg"
+        Image.new("RGB", (500, 400), color=(10, 10, 10)).save(small)
+        Image.new("RGB", (1600, 1200), color=(20, 20, 20)).save(big)
+        out = _select_best_frames([small, big], limit=1)
+        assert out == [big]

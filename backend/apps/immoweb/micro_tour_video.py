@@ -51,10 +51,15 @@ public_router = APIRouter(prefix="/videos", tags=["videos-public"])
 VIDEO_ROOT = Path("/tmp/omnia_videos")
 VIDEO_ROOT.mkdir(exist_ok=True, parents=True)
 DEFAULT_DURATION_S = 15
-DEFAULT_FPS = 24
-DEFAULT_W = 1280
-DEFAULT_H = 720
+DEFAULT_FPS = 30
+DEFAULT_W = 1920
+DEFAULT_H = 1080
+# Upscale canvas slightly above output so pan/crop stays sharp
+SCALE_W = 2200
+SCALE_H = 1240
 MAX_PHOTOS = 8
+# Prefer frames with at least this short side when larger shots exist
+MIN_PREFERRED_SIDE = 720
 WATERMARK_TEXT = "Powered by OMNIA"
 
 
@@ -132,38 +137,61 @@ async def _download_photo(url: str, dest: Path) -> bool:
         return False
 
 
-def _run_ken_burns_ffmpeg(images: List[Path], out_path: Path, duration_s: int) -> None:
-    """Build a video via ffmpeg with slow zoom-in + crossfade transitions.
+def _image_pixel_score(path: Path) -> tuple[int, int]:
+    """Return (pixels, min_side) for ranking; (0,0) if unreadable."""
+    try:
+        from PIL import Image
+        with Image.open(path) as im:
+            w, h = im.size
+        return (int(w) * int(h), min(int(w), int(h)))
+    except Exception:
+        return (0, 0)
 
-    Simpler & faster than zoompan-per-frame: uses `scale` with expressions
-    for a gentle zoom, then xfade transitions between clips.
-    Rendering ~1x realtime (15s video ≈ 15s render).
+
+def _select_best_frames(images: List[Path], *, limit: int = MAX_PHOTOS) -> List[Path]:
+    """Prefer sharper / larger shots so Ken Burns does not upscale soft phone thumbs."""
+    ranked = sorted(
+        ((_image_pixel_score(p), p) for p in images),
+        key=lambda t: (t[0][0], t[0][1]),
+        reverse=True,
+    )
+    preferred = [p for (px, mn), p in ranked if mn >= MIN_PREFERRED_SIDE]
+    pool = preferred if len(preferred) >= 2 else [p for _, p in ranked]
+    return pool[:limit]
+
+
+def _run_ken_burns_ffmpeg(images: List[Path], out_path: Path, duration_s: int) -> None:
+    """Build a video via ffmpeg with slow pan + crossfade (1080p, higher CRF quality).
+
+    Uses lanczos scale and a light pan (3%) so low-res sources are not
+    aggressively zoomed into noise. Encode: libx264 preset medium / CRF 18.
     """
     n = len(images)
     fade_dur = 1  # 1s crossfade between images
     # Total effective duration = n*per_image - (n-1)*fade → per_image = (dur + (n-1)*fade) / n
     per_image = max(3, (duration_s + (n - 1) * fade_dur + n - 1) // n)
     fps = DEFAULT_FPS
+    out_w, out_h = DEFAULT_W, DEFAULT_H
+    scale_w, scale_h = SCALE_W, SCALE_H
 
-    # Each input: loop image for per_image seconds, scale + very slow zoom pan.
-    inputs = []
     filter_parts = []
     for i in range(n):
-        # Simple pan: alternate directions per image, very light (5% shift)
+        # Gentle pan — 3% (was 5%): less “zoom into grain” on small uploads
         direction = ["e", "w", "n", "s"][i % 4]
-        pan_x = {"e": "'iw*0.05*t/{d}'", "w": "'iw*0.05*(1-t/{d})'",
-                 "n": "0", "s": "0"}[direction].format(d=per_image)
+        pan_x = {"e": f"'iw*0.03*t/{per_image}'", "w": f"'iw*0.03*(1-t/{per_image})'",
+                 "n": "0", "s": "0"}[direction]
         pan_y = {"e": "0", "w": "0",
-                 "n": "'ih*0.05*t/{d}'", "s": "'ih*0.05*(1-t/{d})'"}[direction].format(d=per_image)
+                 "n": f"'ih*0.03*t/{per_image}'", "s": f"'ih*0.03*(1-t/{per_image})'"}[direction]
         filter_parts.append(
-            f"[{i}:v]scale=1600:900:force_original_aspect_ratio=increase,"
-            f"crop=1280:720:x={pan_x}:y={pan_y},"
+            f"[{i}:v]scale={scale_w}:{scale_h}:force_original_aspect_ratio=increase:flags=lanczos,"
+            f"crop={out_w}:{out_h}:x={pan_x}:y={pan_y},"
+            f"unsharp=5:5:0.4:5:5:0.0,"
             f"setsar=1,fps={fps}[v{i}]"
         )
 
     # Concat with crossfades between consecutive clips
     if n == 1:
-        filter_parts.append(f"[v0]null[outv]")
+        filter_parts.append("[v0]null[outv]")
     else:
         current = "v0"
         cumulative_offset = per_image - fade_dur
@@ -184,17 +212,20 @@ def _run_ken_burns_ffmpeg(images: List[Path], out_path: Path, duration_s: int) -
         "-filter_complex", filter_complex,
         "-map", "[outv]",
         "-c:v", "libx264",
-        "-preset", "ultrafast",
-        "-crf", "26",
+        "-preset", "medium",
+        "-crf", "18",
         "-pix_fmt", "yuv420p",
         "-r", str(fps),
         "-t", str(duration_s),
         "-movflags", "+faststart",
         str(out_path),
     ])
-    logger.info("running ffmpeg ken burns: %s (images=%d, duration=%ds)",
-                " ".join(cmd[:6]) + " ...", n, duration_s)
-    result = subprocess.run(cmd, capture_output=True, timeout=120)
+    logger.info(
+        "running ffmpeg ken burns: images=%d duration=%ds out=%dx%d crf=18",
+        n, duration_s, out_w, out_h,
+    )
+    # 1080p medium preset can take longer than ultrafast 720p
+    result = subprocess.run(cmd, capture_output=True, timeout=240)
     if result.returncode != 0:
         stderr_text = result.stderr.decode(errors="replace")
         error_lines = [ln for ln in stderr_text.splitlines()
@@ -205,12 +236,12 @@ def _run_ken_burns_ffmpeg(images: List[Path], out_path: Path, duration_s: int) -
 
 async def _generate_ken_burns(video_id: str, property_id: Optional[str],
                               photo_urls: List[str], duration_s: int, db) -> None:
-    """Async task: download photos → run ffmpeg → update video doc."""
+    """Async task: download photos → pick sharpest → run ffmpeg → update video doc."""
     workdir = Path(tempfile.mkdtemp(prefix=f"kb_{video_id[:8]}_"))
     try:
-        # Download photos
+        # Download all candidates (cap above MAX so we can rank by resolution)
         images: List[Path] = []
-        for i, url in enumerate(photo_urls[:MAX_PHOTOS]):
+        for i, url in enumerate(photo_urls[: max(MAX_PHOTOS * 2, MAX_PHOTOS)]):
             dest = workdir / f"img_{i:02d}.jpg"
             if await _download_photo(url, dest):
                 images.append(dest)
@@ -220,6 +251,7 @@ async def _generate_ken_burns(video_id: str, property_id: Optional[str],
                 "updated_at": datetime.now(timezone.utc).isoformat(),
             }})
             return
+        images = _select_best_frames(images, limit=MAX_PHOTOS)
         # Render
         out_path = VIDEO_ROOT / f"{video_id}.mp4"
         await db.videos.update_one({"id": video_id}, {"$set": {"status": "processing"}})
