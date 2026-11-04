@@ -219,11 +219,11 @@ export default function PropertyDetailPage() {
       <section className="relative bg-[#0B1E3F]">
         {photos.length > 0 ? (
           <div data-testid="detail-gallery" className="relative">
-            <div className="aspect-[16/10] md:aspect-[21/9] max-h-[70vh] overflow-hidden bg-stone-900">
+            <div className="aspect-[16/10] md:aspect-[21/9] max-h-[70vh] overflow-hidden bg-stone-900 flex items-center justify-center">
               <img
                 src={`${BACKEND_URL}${cover.url}`}
                 alt={cover.caption || prop.title}
-                className={`w-full h-full ${cover?.is_virtual_staging ? "object-contain bg-stone-950" : "object-cover"}`}
+                className="w-full h-full object-cover object-center"
                 decoding="async"
               />
               <div
@@ -688,12 +688,15 @@ export default function PropertyDetailPage() {
                 <p className="text-sm text-rose-700 mb-2" data-testid="detail-video-error">{String(videoErr)}</p>
               )}
               {videoUrl ? (
-                <video
-                  data-testid="detail-video-player"
-                  src={videoUrl}
-                  controls
-                  className="w-full rounded-xl aspect-video bg-stone-900"
-                />
+                <div className="mx-auto w-full max-w-3xl rounded-xl overflow-hidden bg-stone-900">
+                  <video
+                    data-testid="detail-video-player"
+                    src={videoUrl}
+                    controls
+                    playsInline
+                    className="block w-full aspect-video object-contain object-center bg-stone-900"
+                  />
+                </div>
               ) : isLister ? (
                 <p className="text-sm text-stone-500">Nessun video ancora.</p>
               ) : null}
