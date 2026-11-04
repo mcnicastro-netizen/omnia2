@@ -87,16 +87,40 @@ class VideoDoc(BaseModel):
 # Ken Burns core (ffmpeg)
 # ---------------------------------------------------------------------------
 
+def _api_public_base() -> str:
+    """Absolute API origin for workers (Railway sets OMNIA_API_PUBLIC_URL)."""
+    return (
+        os.environ.get("OMNIA_API_PUBLIC_URL")
+        or os.environ.get("PUBLIC_BASE_URL")
+        or ""
+    ).rstrip("/") or "http://127.0.0.1:8001"
+
+
 async def _download_photo(url: str, dest: Path) -> bool:
-    """Fetch a photo URL to disk. Returns True on success."""
+    """Fetch a photo URL to disk. Returns True on success.
+
+    B2C listings store `/api/media/...` Object Storage paths — resolve those
+    in-process (HTTP loopback often fails in Railway workers → no_photos_downloaded).
+    """
     try:
-        if url.startswith("/api/public/property/"):
-            # Internal endpoint — resolve via backend base
-            base = os.environ.get("PUBLIC_BASE_URL", "").rstrip("/")
-            if not base:
-                # fallback to localhost:8001 in-container
-                base = "http://localhost:8001"
-            url = base + url
+        if url.startswith("/api/media/"):
+            from shared.storage.objstore import ObjStoreError, get_object
+            storage_path = url[len("/api/media/"):]
+            try:
+                binary, _mime = get_object(storage_path)
+            except ObjStoreError as e:
+                logger.warning("photo objstore miss: %s (%s)", storage_path, e)
+                return False
+            if len(binary) < 500:
+                return False
+            dest.write_bytes(binary)
+            return True
+
+        if url.startswith("/api/public/property/") or (
+            url.startswith("/") and not url.startswith("//")
+        ):
+            url = _api_public_base() + url
+
         async with httpx.AsyncClient(timeout=20.0, follow_redirects=True) as client:
             r = await client.get(url)
         if r.status_code >= 400 or len(r.content) < 500:
@@ -234,15 +258,26 @@ async def _load_property(db, pid: str, agency_id: Optional[str] = None) -> dict:
 
 
 def _property_photo_urls(prop: dict, base_url: str) -> List[str]:
+    """Prefer stored media/http URLs; fall back to public photo index.
+
+    Media paths (`/api/media/...`) are downloaded via objstore in `_download_photo`.
+    Public index URLs need an absolute `base_url` (OMNIA_API_PUBLIC_URL).
+    """
     photos = prop.get("photos") or []
     pid = prop["id"]
+    base = (base_url or "").rstrip("/")
     urls: List[str] = []
     for i, ph in enumerate(photos):
-        if ph.get("url"):
-            urls.append(ph["url"])
+        raw = (ph.get("url") or "").strip() if isinstance(ph, dict) else ""
+        if raw.startswith("/api/media/") or raw.startswith("http://") or raw.startswith("https://"):
+            urls.append(raw)
+        elif raw.startswith("data:"):
+            # Worker cannot stream data-URLs reliably — use public index
+            urls.append(f"{base}/api/public/property/{pid}/photo/{i}")
+        elif raw:
+            urls.append(raw if raw.startswith("http") else f"{base}{raw}" if raw.startswith("/") else raw)
         else:
-            # base64-stored photos → use the public serve endpoint
-            urls.append(f"{base_url}/api/public/property/{pid}/photo/{i}")
+            urls.append(f"{base}/api/public/property/{pid}/photo/{i}")
     return urls
 
 
@@ -289,7 +324,7 @@ async def kenburns_public(pid: str, body: KenBurnsRequest):
     })
     if not prop:
         raise HTTPException(status_code=404, detail="property_not_found")
-    base = os.environ.get("PUBLIC_BASE_URL", "").rstrip("/") or "http://localhost:8001"
+    base = _api_public_base()
     photo_urls = body.photo_urls or _property_photo_urls(prop, base)
     if not photo_urls:
         raise HTTPException(status_code=422, detail="no_photos_available")
