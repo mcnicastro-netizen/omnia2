@@ -68,22 +68,23 @@ export default function ListingPreviewModal({
       className="fixed inset-0 z-[70] flex items-center justify-center bg-black/45 p-3 sm:p-4"
       onClick={onClose}
     >
+      {/* Shell flex: header/footer fissi, solo il body scrolla → niente clip sul footer */}
       <div
-        className="bg-[#fbf9f5] rounded-2xl shadow-2xl w-full max-w-3xl max-h-[92vh] overflow-y-auto"
+        className="bg-[#fbf9f5] rounded-2xl shadow-2xl w-full max-w-3xl max-h-[92vh] flex flex-col overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="sticky top-0 z-10 bg-[#fbf9f5]/95 backdrop-blur border-b border-stone-200 px-5 py-4 flex items-start justify-between gap-3">
+        <div className="shrink-0 bg-[#fbf9f5] border-b border-stone-200 px-5 py-3 flex items-start justify-between gap-3">
           <div>
             <p className="text-[10px] uppercase tracking-[0.22em] text-[#C19A6B]">
               {t("cloud.sell.preview_eyebrow")}
             </p>
             <h2
-              className="text-xl text-[#0B1E3F] font-light mt-1"
+              className="text-xl text-[#0B1E3F] font-light mt-0.5"
               style={{ fontFamily: "'Fraunces', Georgia, serif" }}
             >
               {t("cloud.sell.preview_title")}
             </h2>
-            <p className="text-xs text-stone-600 mt-1">{t("cloud.sell.preview_subtitle")}</p>
+            <p className="text-xs text-stone-600 mt-0.5">{t("cloud.sell.preview_subtitle")}</p>
           </div>
           <button
             type="button"
@@ -95,25 +96,36 @@ export default function ListingPreviewModal({
           </button>
         </div>
 
-        <div className="p-5 space-y-6">
-          {/* Card stile ricerca — centrata */}
-          <section data-testid="listing-preview-card" className="text-center">
-            <p className="text-[10px] uppercase tracking-widest text-stone-500 mb-2">
+        <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain px-5 py-4 space-y-6">
+          {/* Card stile ricerca — centrata, intera (foto+prezzo) sempre visibile nello scroll */}
+          <section data-testid="listing-preview-card" className="flex flex-col items-center">
+            <p className="text-[10px] uppercase tracking-widest text-stone-500 mb-2 text-center w-full">
               {t("cloud.sell.preview_as_card")}
             </p>
-            <div className="bg-white rounded-2xl overflow-hidden border border-stone-200 max-w-sm mx-auto text-left shadow-sm">
-              <div className="aspect-[4/3] bg-stone-900 relative overflow-hidden">
+            <div className="bg-white rounded-2xl overflow-hidden border border-stone-200 w-full max-w-sm text-left shadow-sm">
+              <div
+                className="bg-stone-900 relative overflow-hidden"
+                style={{ aspectRatio: "4 / 3" }}
+              >
                 {img ? (
                   <img
                     src={img}
                     alt=""
-                    className="absolute inset-0 w-full h-full object-cover object-center"
+                    className="block"
+                    style={{
+                      position: "absolute",
+                      inset: 0,
+                      width: "100%",
+                      height: "100%",
+                      objectFit: "cover",
+                      objectPosition: "center center",
+                    }}
                   />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center text-stone-500 text-5xl">⌂</div>
                 )}
                 {energy && (
-                  <span className="absolute top-3 right-3 text-[10px] uppercase tracking-widest bg-white/90 px-2 py-1 rounded">
+                  <span className="absolute top-3 right-3 z-[1] text-[10px] uppercase tracking-widest bg-white/90 px-2 py-1 rounded">
                     {t("cloud.energy")}: {energyLabel(energy)}
                   </span>
                 )}
@@ -272,7 +284,7 @@ export default function ListingPreviewModal({
           )}
         </div>
 
-        <div className="sticky bottom-0 bg-white border-t border-stone-200 px-5 py-4 flex flex-wrap gap-3 justify-end">
+        <div className="shrink-0 bg-white border-t border-stone-200 px-5 py-3 flex flex-wrap gap-3 justify-center sm:justify-end">
           <button
             type="button"
             data-testid="listing-preview-edit"
