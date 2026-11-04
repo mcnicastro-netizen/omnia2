@@ -42,6 +42,38 @@ def _norm_city(name: Optional[str]) -> str:
     return s
 
 
+# Letter grades for listing completeness (shown next to score).
+GRADE_LABELS_IT = {
+    "A": "Ottima",
+    "B": "Buona",
+    "C": "Sufficiente",
+    "D": "Da completare",
+}
+
+# Comuni satellite → listino città madre (Scout sync, senza Nominatim).
+# Discount “paese” applicato in price_vs_zone come nel valuator.
+CITY_BENCH_ALIASES = {
+    # Hinterland Catania (dogfood Founder)
+    "mascalucia": "catania",
+    "gravina_di_catania": "catania",
+    "san_giovanni_la_punta": "catania",
+    "tremestieri_etneo": "catania",
+    "aci_castello": "catania",
+    "aci_catena": "catania",
+    "acireale": "catania",
+    "misterbianco": "catania",
+    "belpasso": "catania",
+    "paterno": "catania",
+    "adrano": "catania",
+    # Altri hinterland frequenti
+    "sesto_san_giovanni": "milano",
+    "cinisello_balsamo": "milano",
+    "rho": "milano",
+    "fiumicino": "roma",
+    "guidonia_montecelio": "roma",
+}
+
+
 def completeness_score(p: Dict[str, Any]) -> Dict[str, Any]:
     """Deterministic listing quality score buyers can trust."""
     checks = []
@@ -91,6 +123,7 @@ def completeness_score(p: Dict[str, Any]) -> Dict[str, Any]:
     return {
         "score": score,
         "grade": grade,
+        "grade_label_it": GRADE_LABELS_IT[grade],
         "checks": [
             {"key": k, "points": pts, "max": mx, "detail": detail}
             for k, pts, mx, detail in checks
@@ -98,13 +131,30 @@ def completeness_score(p: Dict[str, Any]) -> Dict[str, Any]:
     }
 
 
+def _province_sigla_from_listing(p: Dict[str, Any]) -> Optional[str]:
+    """Best-effort province code from listing fields (no network)."""
+    raw = (p.get("province_code") or p.get("province") or "").strip()
+    if not raw:
+        return None
+    if len(raw) == 2 and raw.isalpha():
+        return raw.upper()
+    from apps.immocloud.data.province_prices import PROVINCE_NAMES
+    want = raw.lower()
+    for sigla, name in PROVINCE_NAMES.items():
+        if name.lower() == want or _norm_city(name) == _norm_city(raw):
+            return sigla
+    return None
+
+
 def price_vs_zone(p: Dict[str, Any], *, completeness_score_val: Optional[int] = None) -> Dict[str, Any]:
     """Compare asking €/mq to curated CITY_PRICES — fascia + perché + confidenza.
 
     North star: prezzo come segnale + fascia stimata + perché + limiti,
-    mai come verità assoluta di mercato.
+    mai come verità assoluta di mercato. Mai esporre chiavi tecniche
+    (`regional_fallback`) all'utente.
     """
-    from apps.immocloud.data.italy_real_estate_prices_2025 import CITY_PRICES, REGIONAL_DEFAULTS
+    from apps.immocloud.data.italy_real_estate_prices_2025 import CITY_PRICES
+    from apps.immocloud.data.province_prices import PROVINCE_NAMES, PROVINCE_PRICES
 
     surface = float(p.get("surface_sqm") or 0)
     operation = p.get("operation") or "sale"
@@ -118,18 +168,89 @@ def price_vs_zone(p: Dict[str, Any], *, completeness_score_val: Optional[int] = 
 
     e_mq = trying / surface
     city_key = _norm_city(p.get("city"))
-    city = CITY_PRICES.get(city_key)
-    city_known = bool(city)
+    parent_key = CITY_BENCH_ALIASES.get(city_key)
+    lookup_key = parent_key or city_key
+    city = CITY_PRICES.get(lookup_key) if lookup_key else None
+    city_display = (p.get("city") or "questa zona").strip() or "questa zona"
+
+    source = "none"
+    zone_tier = "semicentro"
+    band_key = "semicentro"
+    lo = hi = 0
+    band_note = ""
+
     if city:
-        band_key = "semicentro"
         lo, hi = city.get("semicentro") or city.get("centro") or (0, 0)
-        source = city.get("source") or "CITY_PRICES"
+        source = "city_parent" if parent_key else "city_catalog"
         zone_tier = "semicentro"
+        band_key = "semicentro"
+        if parent_key:
+            # Comune satellite: listino area madre scontato (allineato valuator small-town)
+            lo, hi = int(round(lo * 0.88)), int(round(hi * 0.88))
+            parent_label = parent_key.replace("_", " ").title()
+            band_note = (
+                f"Riferimento area {parent_label} (comune satellite), non un listino civico di {city_display}."
+            )
+        else:
+            band_note = f"Riferimento semicentro catalogo per {city_display}."
     else:
-        lo, hi = REGIONAL_DEFAULTS["center"]
-        source = "regional_fallback"
-        zone_tier = "media_regionale"
-        band_key = "regional"
+        prov = _province_sigla_from_listing(p)
+        if prov and prov in PROVINCE_PRICES:
+            pdata = PROVINCE_PRICES[prov]
+            lo, hi = pdata.get("semicentro") or pdata.get("centro") or (0, 0)
+            lo, hi = int(round(lo * 0.88)), int(round(hi * 0.88))
+            source = "province"
+            zone_tier = "semicentro"
+            band_key = "province"
+            pname = PROVINCE_NAMES.get(prov, prov)
+            band_note = f"Riferimento provinciale ({pname}), non un listino del singolo comune."
+        else:
+            # Nessun listino locale affidabile → non inventare «media regionale centro Italia».
+            # Meglio indirizzare al Valutatore (prodotto dedicato) che a una fascia finta.
+            return {
+                "available": True,
+                "signal": "benchmark_assente",
+                "label_it": "Confronto di zona non disponibile per questo comune",
+                "asking_eur_mq": round(e_mq),
+                "asking_eur": int(round(trying)),
+                "zone_eur_mq_min": None,
+                "zone_eur_mq_max": None,
+                "zone_eur_mq_mid": None,
+                "zone_tier": None,
+                "delta_pct_vs_mid": None,
+                "estimated_band_eur": None,
+                "why": [
+                    {
+                        "key": "asking",
+                        "label_it": (
+                            f"La richiesta è circa € {int(round(e_mq)):,}/m² "
+                            f"({int(round(trying)):,} € su {int(surface)} m²)."
+                        ).replace(",", "."),
+                    },
+                    {
+                        "key": "band",
+                        "label_it": (
+                            f"Per {city_display} non abbiamo ancora un listino locale in Scout. "
+                            "Usa il Valutatore ImmobilCloud (stima gratuita o report UNI) per una "
+                            "fascia sull'immobile."
+                        ),
+                    },
+                ],
+                "confidence": {
+                    "level": "bassa",
+                    "score": 15,
+                    "label_it": "Senza listino locale il confronto di zona non è affidabile",
+                    "limits_it": [
+                        "Scout non inventa una media nazionale al posto dei dati locali.",
+                        "Il Valutatore usa catalogo città/provincia e coefficienti dedicati.",
+                    ],
+                    "comparables_n": None,
+                    "band_key": None,
+                },
+                "benchmark_source": "none",
+                "city_key": city_key or None,
+                "valuator_suggested": True,
+            }
 
     mid = (lo + hi) / 2 if lo and hi else 0
     if not mid:
@@ -138,13 +259,13 @@ def price_vs_zone(p: Dict[str, Any], *, completeness_score_val: Optional[int] = 
     delta_pct = round(100.0 * (e_mq - mid) / mid, 1)
     if e_mq < lo * 0.95:
         signal = "sotto_mercato"
-        label = "Sotto la fascia stimata di zona"
+        label = "Sotto la fascia di riferimento di zona"
     elif e_mq > hi * 1.05:
         signal = "sopra_mercato"
-        label = "Sopra la fascia stimata di zona"
+        label = "Sopra la fascia di riferimento di zona"
     else:
         signal = "in_linea"
-        label = "In linea con la fascia stimata"
+        label = "In linea con la fascia di riferimento"
 
     band_min = int(round(lo * surface))
     band_max = int(round(hi * surface))
@@ -153,12 +274,17 @@ def price_vs_zone(p: Dict[str, Any], *, completeness_score_val: Optional[int] = 
     # Confidence — honest without pretending we have street-level comps
     conf_pts = 0
     limits: List[str] = []
-    if city_known:
+    if source == "city_catalog":
         conf_pts += 40
+    elif source == "city_parent":
+        conf_pts += 28
+        limits.append(band_note)
+    elif source == "province":
+        conf_pts += 22
+        limits.append(band_note)
     else:
         conf_pts += 10
-        limits.append("Città non nel catalogo locale: usiamo una media regionale, meno precisa.")
-    if source != "regional_fallback":
+    if source in ("city_catalog", "city_parent", "province"):
         conf_pts += 15
     if 30 <= surface <= 250:
         conf_pts += 15
@@ -193,24 +319,28 @@ def price_vs_zone(p: Dict[str, Any], *, completeness_score_val: Optional[int] = 
         conf_label = "Confidenza bassa — trattala come indizio"
 
     limits.append(
-        "Fascia da €/m² di zona (zona semicentro), non da comparabili puntuali di questo civico."
+        "Fascia da €/m² di zona (semicentro), non da comparabili puntuali di questo civico."
     )
     limits.append("Non è una perizia né un valore OMI ufficiale per questo immobile.")
+
+    def _eur(n: int | float) -> str:
+        return f"{int(round(n)):,}".replace(",", ".")
 
     why: List[Dict[str, str]] = [
         {
             "key": "asking",
             "label_it": (
-                f"La richiesta è circa € {int(round(e_mq))}/m² "
-                f"({int(round(trying)):,} € su {int(surface)} m²).".replace(",", ".")
+                f"La richiesta è circa € {_eur(e_mq)}/m² "
+                f"({_eur(trying)} € su {int(surface)} m²)."
             ),
         },
         {
             "key": "band",
             "label_it": (
-                f"In {p.get('city') or 'zona'}, la fascia stimata {zone_tier.replace('_', ' ')} "
-                f"è € {lo}–{hi}/m² → per questi mq circa "
-                f"€ {band_min:,}–{band_max:,}.".replace(",", ".")
+                f"A {city_display}, la fascia di riferimento è circa € {lo}–{hi}/m² "
+                f"(per questi mq ≈ € {_eur(band_min)}–{_eur(band_max)}). "
+                f"{band_note} "
+                "Per una stima sull'immobile usa anche il Valutatore ImmobilCloud."
             ),
         },
     ]
@@ -218,27 +348,28 @@ def price_vs_zone(p: Dict[str, Any], *, completeness_score_val: Optional[int] = 
         why.append({
             "key": "signal",
             "label_it": (
-                "La richiesta sta sopra quella fascia: chiedi motivazione (vista, ristrutturazione, "
-                "piano) o margine di trattativa — non è automaticamente ‘caro’."
+                "La richiesta è sopra quella fascia: può dipendere da stato, posizione o lavori — "
+                "vale la pena chiedere motivazione o margine, senza etichettarla automaticamente «cara»."
             ),
         })
     elif signal == "sotto_mercato":
         why.append({
             "key": "signal",
             "label_it": (
-                "La richiesta sta sotto quella fascia: verifica urgenza, stato, vincoli o successione "
-                "prima di entusiasmarti."
+                "La richiesta è sotto quella fascia: non è automaticamente un affare. "
+                "Conviene leggere stato dell'immobile, documenti e contesto (non è un compito "
+                "del solo chi pubblica: è un indizio per chi valuta l'acquisto)."
             ),
         })
     else:
         why.append({
             "key": "signal",
-            "label_it": "La richiesta cade dentro la fascia stimata: buon punto di partenza, non una garanzia.",
+            "label_it": (
+                "La richiesta cade dentro la fascia di riferimento: buon punto di partenza, "
+                "non una garanzia di mercato."
+            ),
         })
-    why.append({
-        "key": "source",
-        "label_it": f"Fonte zona: {source}.",
-    })
+    # Mai appendere chiavi tecniche tipo «Fonte zona: regional_fallback».
 
     return {
         "available": True,
@@ -267,6 +398,7 @@ def price_vs_zone(p: Dict[str, Any], *, completeness_score_val: Optional[int] = 
         },
         "benchmark_source": source,
         "city_key": city_key or None,
+        "valuator_suggested": source != "city_catalog",
     }
 
 
@@ -305,15 +437,17 @@ def red_flags(p: Dict[str, Any], vs_zone: Dict[str, Any], completeness: Dict[str
     if vs_zone.get("signal") == "sopra_mercato" and (vs_zone.get("delta_pct_vs_mid") or 0) > 15:
         band = vs_zone.get("estimated_band_eur") or {}
         if band.get("max"):
+            max_s = f"{int(band['max']):,}".replace(",", ".")
             flags.append(
-                f"Richiesta sopra la fascia stimata (fino a circa € {int(band['max']):,}). "
-                "Chiedi giustificazione o margine di trattativa.".replace(",", ".")
+                f"Richiesta sopra la fascia di riferimento (fino a circa € {max_s}). "
+                "Chiedi giustificazione o margine di trattativa."
             )
         else:
             flags.append("Richiesta sopra la fascia stimata di zona — chiedi giustificazione o margine.")
     if vs_zone.get("signal") == "sotto_mercato" and (vs_zone.get("delta_pct_vs_mid") or 0) < -20:
         flags.append(
-            "Prezzo sotto la fascia stimata: verifica motivazione (urgenza, difetti, successione) prima di entusiasmarti."
+            "Richiesta sotto la fascia di riferimento: leggere stato, documenti e contesto — "
+            "non è automaticamente un affare."
         )
     energy = (p.get("energy") or {}).get("energy_class") if isinstance(p.get("energy"), dict) else None
     if energy in ("F", "G"):
@@ -511,12 +645,20 @@ def deterministic_insight(p: Dict[str, Any], vs_zone: Dict[str, Any], score: int
     if score < 60:
         return (
             f"Dati parziali su {city}. Completa le lacune (APE, foto, planimetria) "
-            "prima di fidarti del prezzo richiesto."
+            "prima di fidarti della richiesta di prezzo."
         )
     if vs_zone.get("available") and vs_zone.get("signal") == "sopra_mercato":
-        return f"Completezza ok, ma la richiesta è sopra la fascia stimata a {city}: chiedi margine o motivazione."
+        return f"Completezza ok, ma la richiesta è sopra la fascia di riferimento a {city}: chiedi margine o motivazione."
     if vs_zone.get("available") and vs_zone.get("signal") == "sotto_mercato":
-        return f"Richiesta sotto la fascia stimata a {city}: verifica motivazione e documentazione prima di accelerare."
+        return (
+            f"Richiesta sotto la fascia di riferimento a {city}: confronta stato e documenti "
+            "prima di accelerare."
+        )
+    if vs_zone.get("available") and vs_zone.get("signal") == "benchmark_assente":
+        return (
+            f"Annuncio leggibile a {city}, ma senza listino locale in Scout: "
+            "usa il Valutatore per la fascia sull'immobile."
+        )
     return f"Annuncio solido su {city}: usa Scout per le domande mirate in visita."
 
 

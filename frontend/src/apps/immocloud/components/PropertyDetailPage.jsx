@@ -61,6 +61,9 @@ export default function PropertyDetailPage() {
   const isB2c = Boolean(user && user.account_type === "b2c");
   const isLister = Boolean(prop?.viewer_is_lister);
 
+  const scoutGradeLabel = (grade) =>
+    ({ A: "Ottima", B: "Buona", C: "Sufficiente", D: "Da completare" }[grade] || "");
+
   const runScout = async () => {
     if (!pid || scoutBusy) return;
     setScoutBusy(true);
@@ -79,8 +82,25 @@ export default function PropertyDetailPage() {
     setLoading(true);
     setScout(null);
     setScoutErr("");
+    setActivePhoto(0);
     api.get(`/cloud/property/${pid}`)
-      .then((r) => setProp(r.data))
+      .then((r) => {
+        const data = r.data;
+        setProp(data);
+        // Prefer first real photo as hero — staging as cover often looks soft / misleading
+        const ph = data?.photos || [];
+        const coverIdx = ph.findIndex((p) => p?.is_cover);
+        const realIdx = ph.findIndex((p) => !p?.is_virtual_staging);
+        if (coverIdx >= 0 && !ph[coverIdx]?.is_virtual_staging) {
+          setActivePhoto(coverIdx);
+        } else if (realIdx >= 0) {
+          setActivePhoto(realIdx);
+        } else if (coverIdx >= 0) {
+          setActivePhoto(coverIdx);
+        } else {
+          setActivePhoto(0);
+        }
+      })
       .catch((e) => setError(e?.response?.status === 404 ? "not_found" : "fetch_error"))
       .finally(() => setLoading(false));
   }, [pid]);
@@ -205,10 +225,10 @@ export default function PropertyDetailPage() {
                     "linear-gradient(180deg, rgba(11,30,63,0.15) 0%, rgba(11,30,63,0.05) 40%, rgba(11,30,63,0.75) 100%)",
                 }}
               />
-              {(cover?.is_virtual_staging || photos.some((p) => p?.is_virtual_staging)) && (
+              {cover?.is_virtual_staging && (
                 <p
                   data-testid="staging-disclosure"
-                  className="absolute top-4 left-4 md:left-8 z-10 max-w-xs text-[11px] uppercase tracking-widest text-white bg-black/55 px-3 py-1.5 rounded"
+                  className="absolute top-4 left-4 md:left-8 z-10 max-w-sm text-[11px] uppercase tracking-widest text-white bg-black/60 px-3 py-1.5 rounded"
                 >
                   {t(
                     "cloud.staging_disclosure",
@@ -225,11 +245,16 @@ export default function PropertyDetailPage() {
                       key={i}
                       data-testid={`detail-thumb-${i}`}
                       onClick={() => setActivePhoto(i)}
-                      className={`shrink-0 w-16 h-16 md:w-20 md:h-20 rounded-lg overflow-hidden border-2 transition ${
+                      className={`relative shrink-0 w-16 h-16 md:w-20 md:h-20 rounded-lg overflow-hidden border-2 transition ${
                         i === activePhoto ? "border-white" : "border-white/30 opacity-80 hover:opacity-100"
                       }`}
                     >
                       <img src={`${BACKEND_URL}${ph.url}`} alt="" className="w-full h-full object-cover" />
+                      {ph?.is_virtual_staging && (
+                        <span className="absolute bottom-0 inset-x-0 text-[8px] uppercase tracking-wider text-white bg-black/65 text-center py-0.5">
+                          Render
+                        </span>
+                      )}
                     </button>
                   ))}
                 </div>
@@ -389,7 +414,7 @@ export default function PropertyDetailPage() {
                         {isLister
                           ? (scout.completeness?.score < 60
                               ? "Con i dati attuali Scout ha poco da raccontare a chi valuta casa. Qui sotto c'è cosa aggiungere — non è un voto sul tuo lavoro."
-                              : "Ecco come un acquirente legge il tuo annuncio oggi. La fascia prezzo è un indizio di zona, non un giudizio sul tuo chiesto.")
+                              : "Ecco come un acquirente legge il tuo annuncio oggi. La fascia prezzo è un indizio di zona, non un giudizio sulla tua richiesta.")
                           : scout.insight}
                       </p>
                       <div className="space-y-3">
@@ -402,6 +427,11 @@ export default function PropertyDetailPage() {
                           </span>
                           <div className="text-lg font-medium text-[#0B1E3F]">
                             {scout.completeness?.score}/100 · {scout.completeness?.grade}
+                            {(scout.completeness?.grade_label_it || scoutGradeLabel(scout.completeness?.grade)) && (
+                              <span className="text-sm font-normal text-stone-600">
+                                {" "}· {scout.completeness?.grade_label_it || scoutGradeLabel(scout.completeness?.grade)}
+                              </span>
+                            )}
                           </div>
                         </div>
                         {scout.price_vs_zone?.available && (
@@ -492,10 +522,12 @@ export default function PropertyDetailPage() {
                             {scout.price_vs_zone.why?.length > 0 && (
                               <div data-testid="scout-price-why">
                                 <p className="text-[10px] uppercase tracking-widest text-stone-500 mb-1">
-                                  {isLister ? "Come si colloca il chiesto" : "Perché lo diciamo"}
+                                  {isLister ? "Come si colloca la richiesta" : "Perché lo diciamo"}
                                 </p>
                                 <ul className="text-sm text-stone-800 space-y-1.5 list-disc pl-4 leading-relaxed">
-                                  {scout.price_vs_zone.why.map((w) => (
+                                  {scout.price_vs_zone.why
+                                    .filter((w) => w?.key !== "source" && !String(w?.label_it || "").toLowerCase().startsWith("fonte zona"))
+                                    .map((w) => (
                                     <li key={w.key || w.label_it}>{w.label_it}</li>
                                   ))}
                                 </ul>

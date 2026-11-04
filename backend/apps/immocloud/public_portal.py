@@ -190,7 +190,11 @@ def _scout_hint(p: Dict[str, Any]) -> Optional[Dict[str, Any]]:
     try:
         from apps.immocloud.buyer_brief import completeness_score
         c = completeness_score(p)
-        return {"score": c["score"], "grade": c["grade"]}
+        return {
+            "score": c["score"],
+            "grade": c["grade"],
+            "grade_label_it": c.get("grade_label_it"),
+        }
     except Exception:
         return None
 
@@ -710,6 +714,10 @@ async def public_property_detail(pid: str, request: Request):
     viewed.pop("contact_public", None)
     viewed.pop("owner", None)
     viewed.pop("owner_user_id", None)
+    # Internal moderation / safety never on public detail
+    viewed.pop("safety_gate", None)
+    viewed.pop("moderation_reviewed_by", None)
+    viewed.pop("moderation_notes", None)
     return {
         **viewed,
         "publisher": publisher,

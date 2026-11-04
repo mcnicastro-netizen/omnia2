@@ -86,9 +86,44 @@ def test_price_confidence_lower_on_unknown_city():
     }
     vs = price_vs_zone(p)
     assert vs["available"] is True
-    assert vs["benchmark_source"] == "regional_fallback"
-    assert vs["confidence"]["level"] in ("bassa", "media")
-    assert any("regionale" in lim.lower() for lim in vs["confidence"]["limits_it"])
+    assert vs["benchmark_source"] == "none"
+    assert vs["signal"] == "benchmark_assente"
+    assert vs["estimated_band_eur"] is None
+    assert vs["confidence"]["level"] == "bassa"
+    assert vs.get("valuator_suggested") is True
+    joined = " ".join(w["label_it"] for w in vs["why"]).lower()
+    assert "regional_fallback" not in joined
+    assert "fonte zona" not in joined
+    assert "valutatore" in joined
+
+
+def test_price_mascalucia_uses_catania_parent_not_center_italy():
+    """Dogfood: Mascalucia must not get fake «media regionale» centro Italia."""
+    p = {
+        "city": "Mascalucia",
+        "operation": "sale",
+        "price": 200000,
+        "surface_sqm": 160,
+        "photos": [{"url": "/x.jpg"}] * 5,
+        "description": "Villetta con giardino e garage doppio, ambienti luminosi e zona servita.",
+        "address": "via del bosco 1",
+        "lat": 37.57,
+        "lng": 15.05,
+        "rooms": 5,
+    }
+    vs = price_vs_zone(p)
+    assert vs["available"] is True
+    assert vs["benchmark_source"] == "city_parent"
+    assert vs["zone_eur_mq_min"] and vs["zone_eur_mq_max"]
+    # Catania semicentro ~1200–1700 × 0.88 → ~1056–1496 (not 1900–2800 centro IT)
+    assert vs["zone_eur_mq_max"] < 1900
+    joined = " ".join(w["label_it"] for w in vs["why"]).lower()
+    assert "regional_fallback" not in joined
+    assert "fonte zona" not in joined
+    assert "entusiasmarti" not in joined
+    assert "chiesto" not in joined
+    comp = completeness_score(p)
+    assert comp["grade_label_it"] in ("Ottima", "Buona", "Sufficiente", "Da completare")
 
 
 def test_visit_checklist_and_documents_sale():

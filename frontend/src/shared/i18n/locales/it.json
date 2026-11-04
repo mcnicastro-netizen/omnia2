@@ -1245,7 +1245,7 @@
     ],
     "reg_age_text": "Dichiaro di avere almeno 18 anni.",
     "reg_marketing_text": "Acconsento a ricevere comunicazioni commerciali e novità su ImmobilCloud (facoltativo).",
-    "staging_disclosure": "Render virtuale — immagine generata, non fotografia reale",
+    "staging_disclosure": "Render virtuale — immagine generata con AI, non è una fotografia reale",
     "legal_cookie_title": "Cookie",
     "legal_cookie_body": [
       "Usiamo cookie tecnici essenziali per autenticazione (sessioni httpOnly), protezione CSRF e preferenze di lingua. Questi cookie sono necessari al funzionamento del sito.",

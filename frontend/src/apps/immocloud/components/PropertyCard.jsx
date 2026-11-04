@@ -57,9 +57,10 @@ export default function PropertyCard({ p }) {
           <span
             data-testid="scout-hint-badge"
             className="absolute bottom-3 right-3 text-[10px] uppercase tracking-widest bg-white/95 text-[#0B1E3F] px-2 py-1 rounded border border-stone-200"
-            title="Scout — quanto è chiaro l'annuncio"
+            title={`Scout — completezza annuncio ${p.scout_hint.grade_label_it || p.scout_hint.grade || ""}`.trim()}
           >
             Scout {p.scout_hint.grade}
+            {p.scout_hint.grade_label_it ? ` · ${p.scout_hint.grade_label_it}` : ""}
           </span>
         )}
       </div>
