@@ -25,11 +25,25 @@ export default function AccountDashboard() {
   const { t, i18n } = useTranslation();
   const lang = (i18n.language || "it").slice(0, 2);
   const nav = useNavigate();
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const [searches, setSearches] = useState([]);
   const [favorites, setFavorites] = useState([]);
+  const [inqSummary, setInqSummary] = useState({ unread: 0, visits_pending: 0 });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [loggingOut, setLoggingOut] = useState(false);
+
+  const onLogout = async () => {
+    if (loggingOut) return;
+    setLoggingOut(true);
+    try {
+      await logout();
+      // Area riservata: Accedi | Registrati (stesso landing del gate non autenticato).
+      nav(`/${lang}/cloud/area`, { replace: true });
+    } finally {
+      setLoggingOut(false);
+    }
+  };
 
   useEffect(() => {
     if (user === null) return;
@@ -41,6 +55,7 @@ export default function AccountDashboard() {
     Promise.all([
       api.get("/cloud/me/saved-searches").then((r) => setSearches(r.data.items || [])),
       api.get("/cloud/me/favorites").then((r) => setFavorites(r.data.items || [])).catch(() => setFavorites([])),
+      api.get("/cloud/me/inquiries/summary").then((r) => setInqSummary(r.data || {})).catch(() => {}),
     ])
       .catch((e) => setError(formatApiErrorDetail(e?.response?.data?.detail)))
       .finally(() => setLoading(false));
@@ -95,6 +110,21 @@ export default function AccountDashboard() {
       />
 
       <div className="max-w-5xl mx-auto px-5 sm:px-8 md:px-16 py-10">
+        <div className="mb-8 flex flex-wrap items-center justify-between gap-3">
+          <p className="text-sm text-stone-600">
+            {user?.email}
+          </p>
+          <button
+            type="button"
+            data-testid="account-logout"
+            disabled={loggingOut}
+            onClick={onLogout}
+            className="px-4 py-2 text-[11px] uppercase tracking-[0.18em] border border-stone-300 text-stone-700 rounded-lg hover:border-[#0B1E3F] hover:text-[#0B1E3F] transition disabled:opacity-60"
+          >
+            {t("cloud.account.logout")}
+          </button>
+        </div>
+
         {error && (
           <div data-testid="account-error" className="mb-6 text-xs text-rose-700 bg-rose-50 border border-rose-200 rounded-xl px-4 py-3">
             {error}
@@ -120,7 +150,27 @@ export default function AccountDashboard() {
               {t("cloud.account.sell_cta_btn")}
             </Link>
           </div>
-          <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div className="mt-3 grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <Link
+              to={`/${lang}/cloud/account/messages`}
+              data-testid="account-goto-messages"
+              className="rounded-xl border border-stone-200 bg-white px-4 py-3 text-sm text-[#0B1E3F] hover:border-[#C19A6B]"
+            >
+              <span className="text-[10px] uppercase tracking-widest text-[#C19A6B] block mb-1">
+                {t("cloud.account.messages_tag")}
+              </span>
+              {t("cloud.account.messages_cta")}
+              {(inqSummary.unread > 0 || inqSummary.visits_pending > 0) && (
+                <span
+                  data-testid="account-messages-badge"
+                  className="ml-2 inline-block text-[10px] uppercase tracking-widest bg-[#0B1E3F] text-white rounded px-1.5 py-0.5"
+                >
+                  {inqSummary.unread > 0
+                    ? t("cloud.account.messages_unread", { n: inqSummary.unread })
+                    : t("cloud.account.messages_visits", { n: inqSummary.visits_pending })}
+                </span>
+              )}
+            </Link>
             <Link
               to={`/${lang}/legal`}
               data-testid="account-goto-hal-legal"

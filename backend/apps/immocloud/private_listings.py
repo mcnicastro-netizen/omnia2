@@ -64,9 +64,9 @@ def _default_contact_public(user: dict, override: dict | None = None) -> dict:
         "display_name": display,
         "show_email": True,
         "show_phone": bool(user.get("phone")),
-        "show_whatsapp": False,
+        "show_whatsapp": bool(user.get("whatsapp")),
         "phone": user.get("phone"),
-        "whatsapp": None,
+        "whatsapp": user.get("whatsapp"),
     }
     if override:
         # Accept dict or PrivateContactPublic

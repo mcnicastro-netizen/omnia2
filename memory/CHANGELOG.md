@@ -1,3 +1,12 @@
+## 2026-11-04 — D-138 Idealista+ inbox · Esci B2C · probe API · D-139 news backlog
+
+- Inbox venditore `/cloud/account/messages` (visite, note, reply email/tel/WA)
+- Telefono/WhatsApp opzionali in register + profilo Account
+- Esci sul portale B2C (nav + account)
+- Probe sandbox: Stripe/OpenAPI/Resend/Gemini/fal OK; Tavily+Yousign 401
+- Docs: Cap.01/18 MD · HAL Cap.00/18 · DECISIONS D-138/D-139 · IMPORT_HAL v0.46
+- Merge PR #82 (logout) + #83 (inbox) → main
+
 ## 2026-11-04 — D-136 dogfood Founder: fedeltà soggiorno + Stripe €1,49 OK
 
 - Account `@virgilio.it`: room detect Soggiorno ~95% · hard gate PASS · anteprima solo stili ACCEPT
