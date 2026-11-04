@@ -370,21 +370,84 @@ voci:
           attivo se ha email account."
         - "Sul dettaglio: publisher.kind=private, canali visibili solo
           se opt-in; form → POST /property/{pid}/contact."
-        - "Backend: insert listing_inquiries; email con template
-          lead_notification; in-app type=listing_inquiry al owner_user_id."
+        - "Backend: insert listing_inquiries (visit_status requested|none,
+          archived false); email lead_notification con link inbox;
+          in-app listing_inquiry → /cloud/account/messages?id=…"
         - "Risposta API: { ok, inquiry_id, kind: 'private' }."
         - "Se stai guardando il tuo annuncio (viewer_is_lister): niente form."
+        - "D-138: venditore apre /cloud/account/messages — filtri, nota,
+          Accetta/Rifiuta/Fatta visita, reply mailto/tel/wa.me."
       errori_comuni:
         - problema: "Mi aspettavo di vedere il contatto nei Clienti CRM"
           soluzione: >
-            Gli annunci privati non creano lead agenzia. Cerca nella
-            campanella (listing_inquiry) o nell'email del venditore.
+            Gli annunci privati non creano lead agenzia. Apri Messaggi
+            in Account (/cloud/account/messages) o la campanella.
         - problema: "Telefono/WhatsApp non compaiono sull'annuncio"
           soluzione: >
             Devono essere attivati in Vendi (toggle + numero valorizzato)
-            e l'annuncio ripubblicato/salvato.
+            e l'annuncio ripubblicato/salvato. Opzionale: compilarli già
+            in registrazione/profilo (default contact_public).
       permessi:
         - "Solo il owner_user_id dell'annuncio privato riceve inquiry"
+    screenshot: []
+
+  - id: notifiche.inbox-venditore-idealista
+    titolo: Inbox messaggi e visite venditore privato (D-138 Idealista+)
+    modulo: Notifiche
+    widget: null
+    pubblico: [b2c_client, super_admin]
+    livello: base
+    tags: [notifiche, inbox, b2c, visite, idealista, d-138, messaggi, listing-inquiry]
+    correlati: [notifiche.inquiry-annuncio-privato, notifiche.email-panoramica]
+    domanda_naturale: "Dove vedo i messaggi su i miei annunci privati? Come gestisco le richieste di visita?"
+    contenuto:
+      a_cosa_serve: >
+        Area venditore stile Idealista (e oltre): lista inquiry, stati visita
+        strutturati, note private, risposta rapida email/telefono/WhatsApp.
+      quando_si_usa: >
+        Dopo contatti su annunci Vendi; dalla card Messaggi in Account o
+        dal link in Vendi / campanella.
+      passi:
+        - "Apri /it/cloud/account/messages (o Account → Messaggi)."
+        - "Filtra: Aperti / Non letti / Visite / Archivio / Tutti."
+        - "Apri il messaggio: rispondi con Rispondi email / Chiama / WhatsApp."
+        - "Se c'è visita: Accetta, Rifiuta o Fatta; salva nota privata."
+        - "API: GET /api/cloud/me/inquiries, PATCH …/inquiries/{id}, summary."
+      errori_comuni:
+        - problema: "Non trovo l'inbox"
+          soluzione: "Serve account B2C. Agenzia/Founder usano Area riservata, non Il mio account."
+        - problema: "Visita solo come testo nell'email"
+          soluzione: "Con D-138 lo stato è gestibile in UI; legacy senza visit_status contano come requested."
+      permessi:
+        - "Solo account_type=b2c (role client)"
+    screenshot: []
+
+  - id: notifiche.logout-b2c-portale
+    titolo: Esci / logout sul portale ImmobilCloud (B2C)
+    modulo: Notifiche
+    widget: null
+    pubblico: [b2c_client, super_admin]
+    livello: base
+    tags: [auth, logout, b2c, esci, sessione, cookie, jwt]
+    correlati: [api.auth, notifiche.inbox-venditore-idealista]
+    domanda_naturale: "Come faccio logout su ImmobilCloud? Perché entro in area riservata senza password?"
+    contenuto:
+      a_cosa_serve: >
+        Chiudere la sessione cookie JWT sul portale privato. Senza Esci
+        il refresh token (~7 giorni) mantiene l'accesso — comportamento atteso.
+      quando_si_usa: >
+        Fine sessione su dispositivo condiviso; test login; cambio account.
+      passi:
+        - "Nav ImmobilCloud (desktop) o menu mobile: Esci (solo se B2C loggato)."
+        - "Oppure /cloud/account → Esci accanto all'email."
+        - "Chiama POST /api/auth/logout e torna a home/area cloud."
+      errori_comuni:
+        - problema: "Non vedo Esci"
+          soluzione: >
+            Visibile solo con account_type=b2c. In CRM usa Esci nella sidebar
+            ImmobilWeb. Oppure cancella cookie / finestra anonima.
+      permessi:
+        - "B2C autenticato"
     screenshot: []
 
   # ---------- 18.8 · saved_search_alert ----------

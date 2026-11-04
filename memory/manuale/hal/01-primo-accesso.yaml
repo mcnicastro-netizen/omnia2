@@ -135,17 +135,19 @@ voci:
     screenshot: []
 
   - id: primo-accesso.area-riservata-cloud
-    titolo: Area riservata ImmobilCloud — Accedi o Crea account (D-131 / D-135)
+    titolo: Area riservata ImmobilCloud — Accedi o Crea account (D-131 / D-135 / D-138)
     modulo: Primo accesso
     widget: null
     pubblico: [titolare, agente, segreteria, privato]
     livello: base
-    tags: [login, registrazione, cloud, area-riservata, d-131, d-135, b2c, vendi]
+    tags: [login, registrazione, cloud, area-riservata, d-131, d-135, d-138, b2c, vendi, logout, telefono, whatsapp]
     correlati:
       - primo-accesso.login-primo-ingresso
       - primo-accesso.password-dimenticata
       - notifiche.inquiry-annuncio-privato
-    domanda_naturale: "Dove faccio login sul portale? Cos'è Area riservata? Perché Il mio account non apre nulla?"
+      - notifiche.inbox-venditore-idealista
+      - notifiche.logout-b2c-portale
+    domanda_naturale: "Dove faccio login sul portale? Cos'è Area riservata? Perché Il mio account non apre nulla? Come esco?"
     contenuto:
       a_cosa_serve: >
         Hub /cloud/area: scelta esplicita Accedi vs Crea account per
@@ -153,15 +155,20 @@ voci:
         → 409 email_already_registered + CTA Accedi. D-135: nav
         «Il mio account» solo per account_type=b2c; sessione agenzia
         vede Area riservata + banner (serve account Privato).
+        D-138: tel/WA opzionali in register; Esci in nav/account;
+        Messaggi e visite in /cloud/account/messages.
       quando_si_usa: >
         Click Area riservata / Il mio account; primo ingresso privato;
         tentativo di registrarsi con email già usata (B2C o B2B);
-        Founder loggato in CRM che vuole vendere da privato.
+        Founder loggato in CRM che vuole vendere da privato; logout.
       passi:
         - "Apri Area riservata → /cloud/area."
         - "Scegli Accedi (login) oppure Crea account (register)."
+        - "Opzionale: telefono e WhatsApp in registrazione (D-138)."
         - "Per pubblicare: /cloud/register?intent=sell → /cloud/account/sell
           → Invia per la revisione → IN REVISIONE."
+        - "Messaggi inquiry: Account → Messaggi oppure /cloud/account/messages."
+        - "Esci: bottone Esci in nav o in Account (solo B2C)."
         - "Se 409 email già registrata: usa Accedi, non creare un secondo account."
         - "Se sei Founder/agenzia: finestra anonima + account B2C (D-135)."
       errori_comuni:
@@ -178,6 +185,10 @@ voci:
           soluzione: >
             D-135 CSRF cross-site: refresh esente + header X-CSRF-Token.
             Se ancora succede: hard refresh e ri-login B2C.
+        - problema: "Entro in area senza password"
+          soluzione: >
+            Sessione cookie ancora valida (refresh ~7gg). Usa Esci o
+            finestra anonima.
       permessi:
         - Pubblico portale / account esistenti
     screenshot: []

@@ -7,6 +7,12 @@ Registro di tutte le decisioni di business e tecniche prese durante il progetto.
 
 ## Decisioni prese
 
+### D-139 — News box dinamico portale (backlog) · 04-Nov-2026
+- **Data**: 4 Novembre 2026
+- **Contesto**: Founder chiede se è possibile un box news dinamico (immobiliare, mutui, arredo) con fonti gratuite; farà in seguito «in un’unica soluzione».
+- **Decisione**: **Sì, fattibile** — aggregatore RSS server-side + UI box (home/account), cache, link esterni. Nessuna API a pagamento obbligatoria. Fonti candidate gratuite: Casa24 / Idealista News / Immobiliare Magazine; MutuiOnline / Facile.it / Banca d’Italia; Domus / Interni / Elle Decor; AdE / ISTAT. v1 = 5–8 titoli da 2–3 feed curati, refresh orario.
+- **Stato**: ⏳ BACKLOG (non implementato in questo merge)
+
 ### D-138 — B2C Idealista+ inbox messaggi/visite + telefono/WA profilo · 04-Nov-2026
 - **Data**: 4 Novembre 2026
 - **Contesto**: Founder chiede flusso portale privato «Idealista model ed anche meglio»: telefono/WA in registrazione, follow-up richieste info, appuntamenti visite.

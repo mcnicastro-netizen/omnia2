@@ -1,6 +1,6 @@
 # Capitolo 1 · Primo accesso
 
-**Versione manuale**: v1.3 · **Ultima revisione**: 02-Nov-2026 (D-135 Vendi B2C · account solo Privato)
+**Versione manuale**: v1.4 · **Ultima revisione**: 04-Nov-2026 (D-138 inbox Idealista+ · Esci B2C · tel/WA register)
 **Chi lo legge**: titolari, agenti, segreteria (chiunque debba iniziare a usare ImmoWeb); privatamente anche utenti ImmobilCloud
 **Prerequisiti**: aver ricevuto le credenziali (email + password) o un invito da un collega
 
@@ -66,6 +66,12 @@ Se l'email è già registrata (B2C o B2B), la registrazione risponde **409** con
 
 **Pubblicare annuncio (Privato)**:  
 `/it/cloud/register?intent=sell` → `/it/cloud/account/sell` → salva → **Invia per la revisione** → stato **IN REVISIONE** (`moderation_status=pending`).
+
+**Registrazione — telefono / WhatsApp (D-138)**: campi **opzionali** in `/cloud/register`. Restano editabili in Account → Sicurezza & privacy. Servono come default per i canali pubblici in **Vendi** (opt-in `show_phone` / `show_whatsapp`).
+
+**Esci (logout B2C)**: se sei loggato come Privato, in nav ImmobilCloud e in `/cloud/account` c’è **Esci** → `POST /auth/logout` → Area riservata / home cloud. Sessione cookie JWT (access ~15 min, refresh ~7 giorni): senza Esci resti autenticato — è normale, non un bug.
+
+**Messaggi e visite (D-138 Idealista+)**: da Account o Vendi → `/cloud/account/messages`. Inbox delle `listing_inquiries` (filtri, nota privata, Accetta/Rifiuta/Fatta visita, reply email/tel/WhatsApp). Dettaglio Cap. 18 §18.7b.
 
 ### 1.2.1c Continua con Google (D-134)
 

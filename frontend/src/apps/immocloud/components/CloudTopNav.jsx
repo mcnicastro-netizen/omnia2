@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import LanguageSwitcher from "../../../shared/components/LanguageSwitcher";
 import NotificationBell from "../../../shared/components/NotificationBell";
@@ -9,10 +9,12 @@ import { useAuth } from "../../../shared/lib/auth";
 export default function CloudTopNav() {
   const { t, i18n } = useTranslation();
   const lang = (i18n.language || "it").slice(0, 2);
-  const { user } = useAuth();
+  const nav = useNavigate();
+  const { user, logout } = useAuth();
   const loggedIn = Boolean(user && user.id);
   const isB2c = loggedIn && user?.account_type === "b2c";
   const [open, setOpen] = useState(false);
+  const [loggingOut, setLoggingOut] = useState(false);
   const sellTo = isB2c
     ? `/${lang}/cloud/account/sell`
     : `/${lang}/cloud/area?intent=sell&next=${encodeURIComponent(`/${lang}/cloud/account/sell`)}`;
@@ -29,6 +31,19 @@ export default function CloudTopNav() {
     { to: `/${lang}/legal`, testid: "cloud-nav-legal", label: t("cloud.nav_legal") },
     { to: `/${lang}/cloud/mutui`, testid: "cloud-nav-mutui", label: t("cloud.nav_mutui") },
   ];
+
+  const onLogout = async () => {
+    if (loggingOut) return;
+    setLoggingOut(true);
+    try {
+      await logout();
+      setOpen(false);
+      nav(`/${lang}/cloud`, { replace: true });
+    } finally {
+      setLoggingOut(false);
+    }
+  };
+
   return (
     <header className="sticky top-0 z-40 backdrop-blur-md bg-[#fbf9f5]/90 border-b border-stone-200/80">
       <div className="flex items-center justify-between px-5 sm:px-8 md:px-12 lg:px-16 py-4 max-w-screen-2xl mx-auto gap-4">
@@ -56,6 +71,17 @@ export default function CloudTopNav() {
           >
             {areaLabel}
           </Link>
+          {isB2c && (
+            <button
+              type="button"
+              data-testid="cloud-nav-logout"
+              disabled={loggingOut}
+              onClick={onLogout}
+              className="hidden md:inline-flex px-3 py-2 text-[11px] uppercase tracking-[0.18em] border border-stone-300 text-stone-700 rounded-lg hover:border-[#0B1E3F] hover:text-[#0B1E3F] transition disabled:opacity-60"
+            >
+              {t("cloud.nav_logout")}
+            </button>
+          )}
           <LanguageSwitcher />
           <button
             type="button"
@@ -85,6 +111,17 @@ export default function CloudTopNav() {
               {l.label}
             </Link>
           ))}
+          {isB2c && (
+            <button
+              type="button"
+              data-testid="cloud-nav-logout-mobile"
+              disabled={loggingOut}
+              onClick={onLogout}
+              className="text-left text-stone-700 py-1 disabled:opacity-60"
+            >
+              {t("cloud.nav_logout")}
+            </button>
+          )}
         </nav>
       )}
     </header>

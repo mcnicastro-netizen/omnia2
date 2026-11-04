@@ -75,6 +75,8 @@ Dopo il Save, **riavvia un nuovo agent** sullo stesso environment (i secret non 
 **YouTrust / Yousign sandbox (Environment omnia2)** — reiniettato Founder **20-Ott-2026** · **scadenza key 25/10/2026**.  
 Dopo il 25/10 rinnovare la key in console YouTrust o il provider tornerà a fallire / fallback mock.
 
+**Probe portale 04-Nov-2026 (Cloud Agent, no valori)**: Stripe test / OpenAPI sandbox / Resend / Gemini / fal / ANNCSU+Nominatim **OK**. **Tavily 401** (rinnovare key). **Yousign sandbox 401** → lasciare `ESIGN_PROVIDER=mock` (firma CRM; non blocca ImmobilCloud). Live-only a go-live: Stripe `sk_live`, OpenAPI `OPENAPI_MODE=live`, YouTrust prod.
+
 **Ordine go-live**: 1) API Railway ✅ live (`docs/ops/RAILWAY_DEPLOY.md`) → vault Environment + DNS `api` → 2) FE Vercel (`docs/ops/VERCEL_DEPLOY.md` · **«vai Vercel»**).  
 Hetzner = bloccato (account/mail); ripresa opzionale dopo.
 

@@ -204,7 +204,14 @@ PATCH /api/auth/me/notification-preferences
 - **UI**: `ContactPanel` unificato (header navy Privato/Agenzia + canali + form). Se `viewer_is_lister`, niente form: messaggio «questo è il tuo annuncio».
 - **API**: stesso `POST /api/cloud/property/{pid}/contact`; risposta privata `{ ok, inquiry_id, kind: "private" }`.
 
-**D-138 Idealista+**: UI inbox dedicata `/cloud/account/messages` (lista + dettaglio, filtri, archivio, `visit_status`, note private, reply email/tel/`wa.me`). Campanella + email puntano all’inbox. WhatsApp sul dettaglio resta link `wa.me`, non un canale OMNIA outbound. Fuori scope: chat thread in-app, SMS, Cloud API WA.
+**D-138 Idealista+** (04-Nov-2026):
+- UI inbox dedicata `/cloud/account/messages` (lista + dettaglio, filtri aperti/non letti/visite/archivio/tutti).
+- API venditore: `GET/PATCH /api/cloud/me/inquiries` (+ `/summary`).
+- `visit_status`: `none` | `requested` | `accepted` | `declined` | `completed` + `seller_note` privata.
+- Reply one-click: `mailto` / `tel` / `wa.me` (non outbound OMNIA).
+- Campanella + email inquiry → link inbox (`?id=`), non CRM.
+- Telefono/WA opzionali in register + profilo Account (default `contact_public` in Vendi).
+- Fuori scope v1: chat thread in-app, SMS, Cloud API WA, calendario slot (D-091).
 
 ---
 
@@ -456,6 +463,7 @@ db.al_audit.find({user_id: "..."}).sort({created_at: -1}).limit(50)
 - **14-Ott-2026 · D-124**: rail promo documenti (APE / planimetria / accesso atti) su SellPage §18.7c — UI only.
 - **15-Ott-2026 · D-125**: Accesso agli atti = copia progetto comunale; no wallet; box «Presto disponibile» fino ad accordo a consumo.
 - **28-Ott-2026 · D-132**: mittente SoT = `SENDER_EMAIL` production; anti-sandbox; recovery password unica per tutti i ruoli.
+- **04-Nov-2026 · D-138**: inbox venditore `/cloud/account/messages` + visit_status + tel/WA register/profilo; campanella/email → inbox.
 - **A-018 activity feed** ancora assente: dashboard = KPI, non timeline.
 - **`push` schema / non implementato** (A-033 futuro).
 - Cron saved-searches: frequenza rispettata (A-019) + **scheduler interno** (A-020) + pass preferiti ribasso/ended.

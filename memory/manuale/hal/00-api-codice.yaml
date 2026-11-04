@@ -1098,7 +1098,7 @@ voci:
     pubblico: [super_admin]
     livello: avanzato
     tags: [codice, visura, openapi, catasto, b2c, provider, dogfood, d-118, d-116]
-    correlati: [api.cloud-secrets-vault, api.portale-audit-program, api.stripe-sandbox-cloud, api.founder-ops-portale]
+    correlati: [api.cloud-secrets-vault, api.portale-audit-program, api.stripe-sandbox-cloud, api.founder-ops-portale, api.portal-providers-sandbox]
     domanda_naturale: "Come attivo Visura con una sola API key? Serve OPENAPI_EMAIL?"
     contenuto:
       a_cosa_serve: >
@@ -1126,6 +1126,38 @@ voci:
         - problema: "Ho la key ma Catasto provider sospeso"
           soluzione: >
             Gap provider. SKIP dogfood Visura; non bloccare Stripe test.
+      permessi:
+        - super_admin / Founder
+      screenshot: []
+
+  - id: api.portal-providers-sandbox
+    titolo: Stato sandbox provider del portale (probe 04-Nov-2026)
+    modulo: Codice API
+    widget: null
+    pubblico: [super_admin]
+    livello: avanzato
+    tags: [codice, sandbox, stripe, openapi, resend, gemini, fal, tavily, yousign, dogfood, d-138]
+    correlati: [api.cloud-secrets-vault, api.visura-openapi-catasto, api.stripe-sandbox-cloud]
+    domanda_naturale: "Quali API del portale funzionano in sandbox? Quali sono scadute?"
+    contenuto:
+      a_cosa_serve: >
+        Mappa dogfood ImmobilCloud: cosa è OK in sandbox vs scaduto vs solo prod.
+        Probe 04-Nov-2026 (Cloud Agent, senza stampare valori).
+      quando_si_usa: >
+        Prima di un giro dogfood unico; dopo rotazione secret; go-live checklist.
+      passi:
+        - "bash scripts/check-secrets-presence.sh (PRESENT/MISSING only)."
+        - "OK sandbox: Stripe sk_test, OpenAPI test.catasto, Resend, Gemini, fal,
+          ANNCSU/Nominatim; catalog visura/planimetria enabled."
+        - "KO: Tavily 401 (rinnovare key — HAL Legal search)."
+        - "KO: Yousign sandbox 401 (scaduta 25/10; ESIGN_PROVIDER=mock).
+          Non blocca portale B2C (è CRM firma)."
+        - "Solo produzione: Stripe live, OPENAPI_MODE=live, YouTrust prod."
+      errori_comuni:
+        - problema: "Visura non parte"
+          soluzione: "Verifica STRIPE_ENABLED + OPENAPI_ENABLED e ping OpenAPI."
+        - problema: "HAL Legal senza risultati web"
+          soluzione: "Tavily 401 — nuova key in console → vault → nuovo agent."
       permessi:
         - super_admin / Founder
       screenshot: []
