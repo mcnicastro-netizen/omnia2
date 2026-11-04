@@ -62,6 +62,10 @@ class PropertyPhoto(OmniaBaseModel):
     order: int = 0
     is_cover: bool = False
     size_bytes: Optional[int] = None
+    # Virtual staging metadata (B2C Stripe / B2B save-to-property)
+    is_virtual_staging: bool = False
+    source_photo_id: Optional[str] = None
+    staging_mode: Optional[str] = Field(default=None, max_length=32)
 
 
 class PropertyVideo(OmniaBaseModel):

@@ -287,6 +287,36 @@ async def get_my_private_listing(pid: str, user: dict = Depends(get_current_user
     )
     if not p:
         raise HTTPException(status_code=404, detail="listing_not_found")
+    # Repair wiped/legacy data: staging photos so cover edit does not lose AI renders
+    try:
+        from apps.immoweb.virtual_staging import _auto_save_b2c_variant
+        jobs = await db.virtual_staging_jobs.find(
+            {
+                "user_id": user["id"],
+                "property_id": pid,
+                "payment_rail": "b2c_stripe",
+                "status": "done",
+            },
+            {"_id": 0, "id": 1},
+        ).sort("completed_at", -1).to_list(length=3)
+        repaired = False
+        for j in jobs:
+            try:
+                await _auto_save_b2c_variant(j["id"], db)
+                repaired = True
+            except Exception:
+                logger.exception("b2c staging ensure-on-listing failed job=%s", j.get("id"))
+        if repaired:
+            p = await db.properties.find_one(
+                with_not_trashed({
+                    "id": pid,
+                    "owner_user_id": user["id"],
+                    "is_private_listing": True,
+                }),
+                {"_id": 0},
+            ) or p
+    except Exception:
+        logger.exception("b2c staging ensure-on-listing wrapper failed pid=%s", pid)
     return p
 
 
@@ -631,7 +661,7 @@ async def get_b2c_staging_job(
     )
     if not listing:
         raise HTTPException(status_code=404, detail="listing_not_found")
-    from apps.immoweb.virtual_staging import _job_to_out
+    from apps.immoweb.virtual_staging import _job_to_out, _auto_save_b2c_variant
 
     job = await db.virtual_staging_jobs.find_one({
         "id": job_id,
@@ -641,6 +671,13 @@ async def get_b2c_staging_job(
     })
     if not job:
         raise HTTPException(status_code=404, detail="job_not_found")
+    # Repair: re-attach / migrate data:→media if SellPage wiped the AI photo
+    if job.get("payment_rail") == "b2c_stripe" and job.get("status") == "done":
+        try:
+            await _auto_save_b2c_variant(job_id, db)
+            job = await db.virtual_staging_jobs.find_one({"id": job_id}) or job
+        except Exception:
+            logger.exception("b2c staging ensure-on-poll failed job=%s", job_id)
     out = _job_to_out(job).model_dump()
     out["source_photo_id"] = job.get("source_photo_id")
     out["source_photo_index"] = job.get("source_photo_index")

@@ -153,7 +153,7 @@ def test_save_variant_to_property_full_lifecycle(admin_session):
         photos = prop.get("photos") or []
         assert len(photos) >= 1
         p0 = photos[0]
-        assert p0["url"].startswith("data:image/jpeg;base64,")
+        assert p0["url"].startswith("/api/media/") or p0["url"].startswith("data:image/jpeg;base64,"), p0["url"][:80]
         assert "Render virtuale OMNIA" in p0["caption"]
     finally:
         # 4) Cleanup

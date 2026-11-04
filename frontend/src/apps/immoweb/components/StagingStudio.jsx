@@ -231,7 +231,8 @@ export default function StagingStudio({ propertyId = null, initialImage = null, 
     try {
       if (onAddPhoto) {
         const r = await api.get(`/app/staging/jobs/${currentJob.id}/variants/${variantIdx}/dataurl`);
-        onAddPhoto({ url: r.data.data_url, caption: r.data.caption });
+        // Prefer Object Storage URL (data_url is now an alias — never embed base64)
+        onAddPhoto({ url: r.data.url || r.data.data_url, caption: r.data.caption });
       } else if (propertyId) {
         await api.post(`/app/staging/jobs/${currentJob.id}/save-to-property`, {
           variant_index: variantIdx,

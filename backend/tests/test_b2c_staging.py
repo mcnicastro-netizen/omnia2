@@ -307,3 +307,227 @@ def test_empty_pipeline_stage_labels(mongo, b2c_user, listing_with_photo):
     assert by_name["furniture_removal"].get("note") == "oneshot_includes_erase"
     assert by_name["flux_inpaint"]["status"] == "done"
     assert by_name["flux_inpaint"].get("note") == "skipped_empty_oneshot"
+
+
+def test_auto_save_b2c_variant_persists_object_storage_not_data_url(mongo, b2c_user, listing_with_photo):
+    """Paid staging must land as /api/media URL — SellPage drops data: on edit/cover save."""
+    from shared.db.connection import Database
+    from PIL import Image
+    import io
+
+    Database._client = None
+    Database._db = None
+    Database._tenant_db = None
+    Database.connect()
+
+    job_id = uuid4().hex
+    now = datetime.now(timezone.utc).isoformat()
+    buf = io.BytesIO()
+    Image.new("RGB", (64, 48), (180, 120, 80)).save(buf, format="JPEG")
+    jpeg = buf.getvalue()
+
+    mongo.virtual_staging_jobs.insert_one({
+        "id": job_id,
+        "user_id": b2c_user["id"],
+        "property_id": listing_with_photo,
+        "payment_rail": "b2c_stripe",
+        "status": "done",
+        "mode": "standard",
+        "room_type": "living",
+        "source_photo_id": "ph1",
+        "variants": [
+            {"url": "https://example.com/staged.jpg", "style": "modern", "qa_verdict": "ACCEPT"},
+        ],
+        "created_at": now,
+        "completed_at": now,
+    })
+
+    async def _run():
+        from apps.immoweb import virtual_staging as vs
+
+        async def fake_fetch(doc, idx):
+            return jpeg, "modern"
+
+        with patch.object(vs, "_fetch_variant_bytes", side_effect=fake_fetch), \
+             patch("shared.storage.put_object", return_value={"path": "ok", "size": len(jpeg)}):
+            await vs._auto_save_b2c_variant(job_id, Database.get())
+
+        # Second call must be no-op when media URL already present
+        with patch.object(vs, "_fetch_variant_bytes", side_effect=fake_fetch) as fetch2, \
+             patch("shared.storage.put_object", return_value={"path": "ok", "size": len(jpeg)}) as put2:
+            await vs._auto_save_b2c_variant(job_id, Database.get())
+            assert fetch2.await_count == 0
+            assert put2.call_count == 0
+
+    loop = asyncio.new_event_loop()
+    try:
+        loop.run_until_complete(_run())
+    finally:
+        loop.close()
+
+    prop = mongo.properties.find_one({"id": listing_with_photo})
+    photos = prop["photos"]
+    staging = [p for p in photos if p.get("is_virtual_staging")]
+    assert len(staging) == 1, photos
+    assert staging[0]["url"].startswith("/api/media/omnia/private/")
+    assert not staging[0]["url"].startswith("data:")
+    assert staging[0]["is_cover"] is False
+    job = mongo.virtual_staging_jobs.find_one({"id": job_id})
+    assert job["saved_photo_id"] == staging[0]["id"]
+    assert job["saved_to_property_id"] == listing_with_photo
+
+
+def test_auto_save_reattaches_after_data_url_wipe(mongo, b2c_user, listing_with_photo):
+    """Simulate SellPage filter wiping data: staging photo, then ensure re-attach."""
+    from shared.db.connection import Database
+    from PIL import Image
+    import io
+
+    Database._client = None
+    Database._db = None
+    Database._tenant_db = None
+    Database.connect()
+
+    job_id = uuid4().hex
+    wiped_photo_id = uuid4().hex
+    now = datetime.now(timezone.utc).isoformat()
+    buf = io.BytesIO()
+    Image.new("RGB", (40, 30), (10, 20, 30)).save(buf, format="JPEG")
+    jpeg = buf.getvalue()
+
+    mongo.virtual_staging_jobs.insert_one({
+        "id": job_id,
+        "user_id": b2c_user["id"],
+        "property_id": listing_with_photo,
+        "payment_rail": "b2c_stripe",
+        "status": "done",
+        "mode": "standard",
+        "room_type": "living",
+        "source_photo_id": "ph1",
+        "saved_to_property_id": listing_with_photo,
+        "saved_photo_id": wiped_photo_id,
+        "variants": [
+            {"url": "https://example.com/staged2.jpg", "style": "modern", "qa_verdict": "ACCEPT"},
+        ],
+        "created_at": now,
+        "completed_at": now,
+    })
+    # Listing no longer has the staging photo (wiped)
+    mongo.properties.update_one(
+        {"id": listing_with_photo},
+        {"$set": {"photos": [
+            {"id": "ph1", "url": "/api/media/omnia/private/x/photos/a.jpg", "order": 0, "is_cover": True},
+        ]}},
+    )
+
+    async def _run():
+        from apps.immoweb import virtual_staging as vs
+
+        async def fake_fetch(doc, idx):
+            return jpeg, "modern"
+
+        with patch.object(vs, "_fetch_variant_bytes", side_effect=fake_fetch), \
+             patch("shared.storage.put_object", return_value={"path": "ok", "size": len(jpeg)}):
+            await vs._auto_save_b2c_variant(job_id, Database.get())
+
+    loop = asyncio.new_event_loop()
+    try:
+        loop.run_until_complete(_run())
+    finally:
+        loop.close()
+
+    prop = mongo.properties.find_one({"id": listing_with_photo})
+    staging = [p for p in prop["photos"] if p.get("is_virtual_staging")]
+    assert len(staging) == 1
+    assert staging[0]["url"].startswith("/api/media/")
+    assert staging[0]["id"] != wiped_photo_id
+    job = mongo.virtual_staging_jobs.find_one({"id": job_id})
+    assert job["saved_photo_id"] == staging[0]["id"]
+
+
+def test_property_photo_keeps_staging_flags():
+    from shared.models.property import PropertyPhoto, PropertyUpdate
+
+    p = PropertyPhoto(
+        id="x",
+        url="/api/media/omnia/private/u/staging/j-v0.jpg",
+        is_cover=True,
+        is_virtual_staging=True,
+        source_photo_id="ph1",
+        staging_mode="standard",
+    )
+    d = p.model_dump()
+    assert d["is_virtual_staging"] is True
+    assert d["source_photo_id"] == "ph1"
+    assert d["staging_mode"] == "standard"
+
+    u = PropertyUpdate(photos=[p])
+    dumped = u.model_dump(exclude_unset=True)["photos"][0]
+    assert dumped["is_virtual_staging"] is True
+    assert dumped["is_cover"] is True
+
+
+def test_auto_save_migrates_legacy_data_url_in_place(mongo, b2c_user, listing_with_photo):
+    from shared.db.connection import Database
+    from PIL import Image
+    import io
+
+    Database._client = None
+    Database._db = None
+    Database._tenant_db = None
+    Database.connect()
+
+    job_id = uuid4().hex
+    photo_id = uuid4().hex
+    now = datetime.now(timezone.utc).isoformat()
+    buf = io.BytesIO()
+    Image.new("RGB", (40, 30), (90, 40, 10)).save(buf, format="JPEG")
+    jpeg = buf.getvalue()
+
+    mongo.properties.update_one(
+        {"id": listing_with_photo},
+        {"$push": {"photos": {
+            "id": photo_id,
+            "url": "data:image/jpeg;base64,AAAA",
+            "order": 1,
+            "is_cover": False,
+            "is_virtual_staging": True,
+        }}},
+    )
+    mongo.virtual_staging_jobs.insert_one({
+        "id": job_id,
+        "user_id": b2c_user["id"],
+        "property_id": listing_with_photo,
+        "payment_rail": "b2c_stripe",
+        "status": "done",
+        "mode": "empty",
+        "room_type": "living",
+        "saved_to_property_id": listing_with_photo,
+        "saved_photo_id": photo_id,
+        "variants": [
+            {"url": "https://example.com/empty.jpg", "style": "empty", "qa_verdict": "ACCEPT"},
+        ],
+        "created_at": now,
+        "completed_at": now,
+    })
+
+    async def _run():
+        from apps.immoweb import virtual_staging as vs
+
+        async def fake_fetch(doc, idx):
+            return jpeg, "empty"
+
+        with patch.object(vs, "_fetch_variant_bytes", side_effect=fake_fetch), \
+             patch("shared.storage.put_object", return_value={"path": "ok", "size": len(jpeg)}):
+            await vs._auto_save_b2c_variant(job_id, Database.get())
+
+    loop = asyncio.new_event_loop()
+    try:
+        loop.run_until_complete(_run())
+    finally:
+        loop.close()
+
+    prop = mongo.properties.find_one({"id": listing_with_photo})
+    staging = next(p for p in prop["photos"] if p["id"] == photo_id)
+    assert staging["url"].startswith("/api/media/")
+    assert staging["is_virtual_staging"] is True
