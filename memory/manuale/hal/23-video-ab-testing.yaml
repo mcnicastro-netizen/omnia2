@@ -54,39 +54,43 @@ voci:
       screenshot: []
 
   - id: video.kenburns
-    titolo: Esiste Ken Burns? Funziona in agenzia?
+    titolo: Esiste Ken Burns? Dove lo genero su ImmobilCloud?
     modulo: Video & Analytics
     widget: null
     pubblico: [titolare, agente, segreteria, b2c_client]
     livello: base
-    tags: [501, limiti, video, cap23, ken-burns, b2c, kling, d-064, a-026]
-    correlati: [video.cos-e, video.crediti, video.limitazioni-v1]
-    domanda_naturale: "Esiste Ken Burns? Perché in agenzia dà 501? Dove è gratis?"
+    tags: [501, limiti, video, cap23, ken-burns, b2c, kling, d-064, d-140, a-026, vendi]
+    correlati: [video.cos-e, video.crediti, video.limitazioni-v1, notifiche.sell-flusso-moderazione]
+    domanda_naturale: >
+      Esiste Ken Burns? Perché in agenzia dà 501? Dove genero il video
+      tour da privato? Come miglioro la definizione?
     contenuto:
       a_cosa_serve: >
-        Chiarire lo split D-064: Ken Burns ffmpeg gratis SOLO sul
-        portale B2C (/api/cloud/videos/kenburns/...). Nel gestionale
-        agenzia l'endpoint kenburns torna 501 e si usa Kling Pro a
-        crediti (D-065/D-066).
+        Split D-064 + UX D-140: Ken Burns ffmpeg gratis SOLO B2C.
+        SoT generazione = Vendi dopo le foto (owner kenburns anche
+        bozza). Gestionale agenzia → 501, usa Kling Pro a crediti.
       quando_si_usa: >
-        Quando un agente chiede il video gratis nel CRM, o un privato
-        genera micro-tour sulla scheda ImmobilCloud.
+        Privato in Vendi dopo upload foto; oppure play su scheda
+        pubblica se già ready. Agente CRM → Kling.
       passi:
-        - "Agenzia ImmoWeb: POST /api/app/videos/kling/property/{pid}
-          (crediti + FAL_KEY). Ken Burns app → 501."
-        - "Portale B2C ImmobilCloud: Ken Burns cloud gratuito dalle foto."
-        - "Non riaprire Ken Burns free in agenzia senza decisione Founder
-          (A-026)."
+        - "B2C Vendi: salva annuncio con foto → Genera video 15s
+          (POST /api/cloud/me/properties/{pid}/kenburns)."
+        - "Scheda pubblica: play se ready; genera residuale solo lister."
+        - "Qualità D-140: 1080p CRF18, foto HD preferite; ffmpeg in Railway."
+        - "Agenzia: POST /api/app/videos/kling/property/{pid}. Ken Burns app → 501."
       errori_comuni:
         - problema: "kenburns_disabled_in_agency / 501"
           soluzione: >
-            Atteso. Usa Kling a crediti oppure genera video dal portale
-            cloud se l'annuncio è sul B2C.
+            Atteso. Usa Kling a crediti oppure genera da Vendi B2C.
+        - problema: "Video fallisce / no_photos_downloaded"
+          soluzione: >
+            Salva foto su listing; media via Object Storage; verifica
+            ffmpeg sul container Railway.
         - problema: "402 crediti insufficienti su Kling"
           soluzione: "Ricarica crediti / verifica piano (Cap. 19)."
       permessi:
         - "Kling: utenti agenzia autenticati con crediti"
-        - "Ken Burns cloud: flusso portale B2C"
+        - "Ken Burns cloud: owner B2C (Vendi) + pubblico live"
     screenshot: []
 
   - id: video.crediti

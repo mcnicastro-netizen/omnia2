@@ -7,6 +7,19 @@ Registro di tutte le decisioni di business e tecniche prese durante il progetto.
 
 ## Decisioni prese
 
+### D-140 — Dogfood Vendi sera 04-Nov: safety soft, Scout, video tour, layout · 04-Nov-2026
+- **Data**: 4 Novembre 2026 (sera · chiusura giornata)
+- **Contesto**: Dogfood produzione su annuncio `provaprova` (Mascalucia): scheda Scout con copy/benchmark errati; rescan orario toglieva live su solo `llm_review`; hero/video tour; UX Vendi disordinata; flash Immocloud; anteprima card a sinistra su laptop.
+- **Decisione**:
+  1. **Safety rescan (D-137b)**: rescan orario **non** un-publish se solo soft Gemini `REVIEW` senza hit euristici — flag Founder, annuncio resta `active`/`approved`.
+  2. **Scout (`buyer_brief`)**: «la richiesta» (mai «chiesto»); grade A–D in chiaro; alias città satellite (es. Mascalucia→Catania −12%); niente leak `regional_fallback` / «Fonte zona»; tono neutrale.
+  3. **Video tour Ken Burns B2C**: strumento **venditore** in Vendi dopo le foto (`POST/GET /cloud/me/properties/{pid}/kenburns|video`, anche bozza); scheda pubblica = play (genera residuale solo lister). Qualità 1080p CRF18 + prefer foto HD; `ffmpeg` in `Dockerfile.railway`.
+  4. **Ordine form Vendi**: titolo → descrizione → foto+video → staging → planimetria → dettagli/opzioni; sulle card listing boost **in fondo** (dopo staging).
+  5. **Flash Immocloud**: Suspense locale cream + prefetch chunk sul pillar; non è bug del laptop.
+  6. **Anteprima**: card cover `mx-auto` + `object-center` — su viewport larghi sembrava «foto non centrata».
+- **Ship**: merge `main` PR #84–#90 (sera) · Railway + Vercel redeploy · health/sell 200.
+- **Stato**: ✅ **DECISIONE OPERATIVA REGISTRATA** · live · docs/HAL syncati stessa sera
+
 ### D-139 — News box dinamico portale (backlog) · 04-Nov-2026
 - **Data**: 4 Novembre 2026
 - **Contesto**: Founder chiede se è possibile un box news dinamico (immobiliare, mutui, arredo) con fonti gratuite; farà in seguito «in un’unica soluzione».

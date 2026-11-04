@@ -813,46 +813,55 @@ voci:
     screenshot: [cap18-sell-stats, cap18-fav-ended-badge]
 
   - id: notifiche.sell-flusso-moderazione
-    titolo: Vendi B2C — salva, HAL, invio in revisione (D-135)
+    titolo: Vendi B2C — ordine form, video tour, safety, publish (D-135/137/140)
     modulo: Notifiche
     widget: null
     pubblico: [b2c_client, super_admin]
     livello: base
-    tags: [sellpage, vendi, moderazione, pending, d-135, csrf, hal, improve, b2c]
+    tags: [sellpage, vendi, moderazione, pending, d-135, d-137, d-140, csrf, hal, improve, b2c, video-tour, staging]
     correlati:
       - notifiche.inquiry-annuncio-privato
       - notifiche.sell-doc-promo
       - primo-accesso.area-riservata-cloud
       - hal.improve-titolo-descrizione
+      - video.kenburns
     domanda_naturale: >
-      Come pubblico un annuncio da privato? Perché resta In revisione?
-      Perché mi sloggava mentre compilavo Vendi?
+      Come pubblico un annuncio da privato? In che ordine compilo Vendi?
+      Dove genero il video tour? Perché tornava In verifica dopo l'ok?
     contenuto:
       a_cosa_serve: >
-        Percorso SoT Privato: register intent=sell → SellPage → salva
-        bozza → Invia per la revisione → moderation_status=pending
-        (non live). D-135: CSRF cross-site, HAL improve stabile,
-        città/via UX, account solo B2C.
+        Percorso SoT Privato aggiornato D-140: titolo → descrizione →
+        foto + video tour → staging → dettagli → salva/invia. Safety
+        gate auto-publish se ACCEPT; rescan soft non un-publish.
       quando_si_usa: >
         Dogfood o utente reale ImmobilCloud che vuole vendere senza
         agenzia.
       passi:
         - "Register /cloud/register?intent=sell (o Accedi da /cloud/area)."
         - "Apri /cloud/account/sell → Nuovo annuncio."
-        - "Città: datalist; via: autocomplete senza overwrite città/CAP."
-        - "Foto fino a 30; Migliora con HAL sulla descrizione (conferma)."
-        - "Salva → Invia per la revisione → badge IN REVISIONE."
+        - "Ordine: Titolo → Descrizione (HAL) → Foto → Video tour 15s → Staging → dettagli."
+        - "Salva bozza (serve per video/staging) → Anteprima → Invia."
+        - "ACCEPT = live; REVIEW = coda Founder. Vedi online se approved+active."
+        - "Boost/aumenta visibilità: in fondo alla card annuncio."
       errori_comuni:
         - problema: "Sessione scaduta / Connessione non disponibile a metà form"
           soluzione: >
             D-135 CSRF: refresh esente + X-CSRF-Token. Hard refresh,
             ri-login B2C. Non usare sessione CRM Founder.
+        - problema: "Annuncio tornato In verifica dopo essere online"
+          soluzione: >
+            Prima del fix D-137b il rescan LLM soft un-publishava.
+            Ora soft REVIEW senza euristiche = resta live + flag Founder.
+        - problema: "Video tour non parte / foto sgranate"
+          soluzione: >
+            Salva prima (bozza). Railway ha ffmpeg. Qualità 1080p CRF18
+            (D-140). Genera da Vendi dopo le foto, non solo dalla scheda.
         - problema: "Il mio account non apre la dashboard Vendi"
           soluzione: >
             Serve account_type=b2c. Con sessione agenzia: Area riservata
             + account Privato (anonima OK).
       permessi:
-        - "Solo B2C autenticato; moderazione admin su coda pending."
+        - "Solo B2C autenticato; moderazione admin su coda REVIEW."
     screenshot: [qa-final-s5-pending]
 
   - id: notifiche.sell-doc-promo

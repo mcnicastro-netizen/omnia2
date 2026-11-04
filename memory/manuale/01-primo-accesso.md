@@ -1,6 +1,6 @@
 # Capitolo 1 · Primo accesso
 
-**Versione manuale**: v1.4 · **Ultima revisione**: 04-Nov-2026 (D-138 inbox Idealista+ · Esci B2C · tel/WA register)
+**Versione manuale**: v1.5 · **Ultima revisione**: 04-Nov-2026 sera (D-140 Vendi video/layout · D-138 inbox)
 **Chi lo legge**: titolari, agenti, segreteria (chiunque debba iniziare a usare ImmoWeb); privatamente anche utenti ImmobilCloud
 **Prerequisiti**: aver ricevuto le credenziali (email + password) o un invito da un collega
 

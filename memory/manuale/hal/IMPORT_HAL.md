@@ -267,6 +267,7 @@ Prima di dichiarare il cold start "attivo", eseguire manualmente queste 5 query 
 
 | Data | Versione | Note |
 |------|:-:|------|
+| 04-Nov-2026 sera | **v0.47-d140-vendi-video** | Cap.18 flusso Vendi ordine+safety+video. Cap.23 Ken Burns in Vendi 1080p. HAL Cap.18/23 aggiornati. DECISIONS D-140 · CHANGELOG/NEXT_SESSION. Reindex post-merge. |
 | 04-Nov-2026 | **v0.46-d138-idealista-inbox** | Cap.01 Esci B2C + tel/WA + messaggi. Cap.18 D-138 inbox/visite. Cap.00 `api.portal-providers-sandbox` (probe Tavily/Yousign). HAL Cap.18 +2 voci inbox/logout. DECISIONS D-138/D-139 (news backlog). Reindex post-merge. |
 | 02-Nov-2026 | **v0.44-d135-b2c-vendi** | Cap.01 area B2C + D-135 account/agenzia. Cap.00 CSRF cross-site. Cap.10 HAL improve modello+timeout. Cap.18 flusso Vendi→moderazione. DECISIONS D-135 · main `a755560`+. **Reindex prod OK** (~973 chunks, manual HAL ~382+, `hal-index` v0.44). |
 | 28-Ott-2026 | **v0.43-d134-google-oauth** | Cap.01 `primo-accesso.google-sign-in` · D-134 Client ID Web live · P-021 chiuso · `GOOGLE_AUTH.md`. Reindex post-merge. |

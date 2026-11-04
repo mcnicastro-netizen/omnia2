@@ -9,7 +9,8 @@
 > - `backend/apps/core/auth.py` (welcome + password_reset + `GET/PATCH /auth/me/notification-preferences`)
 > - `backend/apps/immoweb/invites.py` (agency_invite + in-app invite_accepted)
 > - `backend/apps/immocloud/public_portal.py` (contatto **agenzia** → CRM lead + `lead_new`; contatto **privato** → `listing_inquiries` + `listing_inquiry`; bump view/lead + **A-029** daily buckets)
-> - `backend/apps/immocloud/private_listings.py` (`contact_public` · **`GET .../stats` A-029**)
+> - `backend/apps/immocloud/private_listings.py` (`contact_public` · **`GET .../stats` A-029** · owner kenburns D-140)
+> - Ultima revisione flusso Vendi: **04-Nov-2026 sera · D-140**
 > - `backend/apps/immocloud/listing_stats.py` · `favorite_watch.py` (**D-093**)
 > - `backend/apps/immocloud/saved_searches.py` (saved_search_alert + ribasso preferiti + **cron ended preferiti**)
 > - `backend/apps/v1/gateway.py` (widget lead → in-app)
@@ -215,13 +216,17 @@ PATCH /api/auth/me/notification-preferences
 
 ---
 
-## 18.7b2 · Flusso Vendi → moderazione (D-135)
+## 18.7b2 · Flusso Vendi → moderazione (D-135 · aggiornato D-137/D-140)
 
-Percorso Privato dogfood SoT (02-Nov-2026):
+Percorso Privato dogfood SoT (02–04-Nov-2026):
 1. Register B2C `?intent=sell` oppure Accedi da `/cloud/area`.
-2. Compila **Vendi** (`/cloud/account/sell`): città con suggerimenti, via ANNCSU senza sovrascrivere città, foto, HAL improve.
-3. **Salva** (bozza) → **Invia per la revisione** → `moderation_status=pending` (badge **IN REVISIONE**). Non va live senza moderazione.
-4. Sessione: CSRF cross-site sistemato (refresh esente + header). Nav «Il mio account» solo B2C.
+2. Compila **Vendi** (`/cloud/account/sell`) nell’ordine **D-140**:
+   - **Titolo** → **Descrizione** (HAL improve) → **Foto** → **Video tour** (Ken Burns 15s, anche in bozza dopo salvataggio) → **Virtual staging** (scegli quale foto) → planimetria → **Dettagli e opzioni** (tipo, città, prezzo, contatti…).
+   - Sulle card annuncio già salvate: staging prima, **Aumenta visibilità (boost)** in fondo.
+3. **Salva** (bozza) → Anteprima (card centrata) → **Invia** → safety gate (**D-137**): `ACCEPT` = auto-publish live; `REVIEW`/`REJECT` = coda Founder / bozza. Badge **IN VERIFICA** solo se in coda.
+4. Annuncio già **live**: il rescan orario **non** lo toglie per solo soft LLM `REVIEW` senza hit euristici (**D-137b** / D-140) — resta online, flag Founder.
+5. **Vedi online** se `approved`+`active`. Prestazioni su card: views / leads / contact rate (oneste: aperture scheda e messaggi, non impressioni feed).
+6. Sessione: CSRF cross-site (D-135). Nav «Il mio account» solo B2C. Flash Immocloud = Suspense cream (non bug laptop).
 
 ## 18.7c · Documenti utili in pubblicazione (SellPage · rail promo)
 
