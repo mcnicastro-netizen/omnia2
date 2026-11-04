@@ -182,6 +182,7 @@ export default function SellPage() {
   const [waitTipKey, setWaitTipKey] = useState("cloud.sell.staging_wait_tip");
   const [statsById, setStatsById] = useState({}); // pid → stats payload
   const [previewListing, setPreviewListing] = useState(null); // listing opened in anteprima
+  const [previewVideoUrl, setPreviewVideoUrl] = useState(null);
   const stagingPollRef = useRef(null);
   const stagingResumeRef = useRef(false);
   const payReturnRef = useRef(false);
@@ -632,8 +633,18 @@ export default function SellPage() {
     } finally { setBusy(false); }
   };
 
-  const openPreview = (listing) => {
+  const openPreview = async (listing) => {
     setPreviewListing(listing);
+    setPreviewVideoUrl(null);
+    if (!listing?.id) return;
+    try {
+      const { data } = await api.get(`/cloud/me/properties/${listing.id}/video`);
+      if (data?.status === "ready" && data?.id) {
+        setPreviewVideoUrl(`${process.env.REACT_APP_BACKEND_URL}/api/app/videos/${data.id}/download`);
+      }
+    } catch {
+      /* nessun video */
+    }
     setError("");
   };
 
@@ -1351,8 +1362,9 @@ export default function SellPage() {
       <ListingPreviewModal
         open={!!previewListing}
         listing={previewListing}
+        videoUrl={previewVideoUrl}
         busy={busy}
-        onClose={() => setPreviewListing(null)}
+        onClose={() => { setPreviewListing(null); setPreviewVideoUrl(null); }}
         onConfirm={confirmSubmitFromPreview}
         showConfirm={!(previewListing?.moderation_status === "approved" && previewListing?.status === "active")}
         confirmLabel={
