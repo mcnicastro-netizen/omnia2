@@ -1,3 +1,10 @@
+## 2026-11-04 — D-136 dogfood Founder: fedeltà soggiorno + Stripe €1,49 OK
+
+- Account `@virgilio.it`: room detect Soggiorno ~95% · hard gate PASS · anteprima solo stili ACCEPT
+- Flusso Checkout Stripe staging €1,49 provato end-to-end OK
+- Docs Cap.9 / HAL / NEXT_SESSION aggiornati · reindex HAL
+- A/B `professional` ancora non default (attende OK Founder)
+
 ## 2026-11-03 — D-136 Virtual Staging professionale (fedeltà) + dogfood B2C
 
 - Pipeline flaggata `OMNIA_STAGING_PIPELINE=professional` + room analysis + hard gate ACCEPT/REJECT
