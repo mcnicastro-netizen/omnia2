@@ -1164,6 +1164,7 @@
       "video_timeout": "Generation is taking too long. Try again.",
       "video_no_photos": "We could not read the photos. Save the listing and retry.",
       "video_failed": "Video not generated. Try again.",
+      "options_section": "Details and options",
       "preview_eyebrow": "How it will look online",
       "preview_title": "Listing preview",
       "preview_subtitle": "Review the card and detail page before submitting. You can still edit.",

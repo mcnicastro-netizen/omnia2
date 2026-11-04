@@ -24,6 +24,11 @@ export default function LandingApp() {
     window.scrollTo(0, 0);
   }, []);
 
+  const prefetchCloud = () => {
+    // Prefetch chunk ImmobilCloud → riduce flash Suspense all’ingresso
+    import("../immocloud/ImmocloudApp").catch(() => {});
+  };
+
   const pillars = [
     {
       key: "cloud",
@@ -32,6 +37,7 @@ export default function LandingApp() {
       to: `/${lang}/cloud`,
       tag: "B2C",
       accent: "#1F6B5C",
+      onIntent: prefetchCloud,
     },
     {
       key: "app",
@@ -169,6 +175,9 @@ export default function LandingApp() {
                 data-testid={`pillar-${p.key}`}
                 className={className}
                 style={style}
+                onMouseEnter={p.onIntent}
+                onFocus={p.onIntent}
+                onTouchStart={p.onIntent}
               >
                 {body}
               </Link>

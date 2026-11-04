@@ -98,10 +98,14 @@ export default function ListingPreviewModal({
             <p className="text-[10px] uppercase tracking-widest text-stone-500 mb-2">
               {t("cloud.sell.preview_as_card")}
             </p>
-            <div className="bg-white rounded-2xl overflow-hidden border border-stone-200 max-w-sm">
-              <div className="aspect-[4/3] bg-stone-100 relative">
+            <div className="bg-white rounded-2xl overflow-hidden border border-stone-200 max-w-sm mx-auto">
+              <div className="aspect-[4/3] bg-stone-100 relative overflow-hidden">
                 {img ? (
-                  <img src={img} alt="" className="w-full h-full object-cover" />
+                  <img
+                    src={img}
+                    alt=""
+                    className="absolute inset-0 w-full h-full object-cover object-center"
+                  />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center text-stone-300 text-5xl">⌂</div>
                 )}
@@ -195,8 +199,12 @@ export default function ListingPreviewModal({
             {(listing.photos || []).length > 1 && (
               <div className="grid grid-cols-4 gap-2">
                 {(listing.photos || []).slice(0, 8).map((p, i) => (
-                  <div key={p.id || i} className="aspect-[4/3] rounded overflow-hidden bg-stone-100">
-                    <img src={resolveMediaUrl(p.url)} alt="" className="w-full h-full object-cover" />
+                  <div key={p.id || i} className="aspect-[4/3] rounded overflow-hidden bg-stone-100 relative">
+                    <img
+                      src={resolveMediaUrl(p.url)}
+                      alt=""
+                      className="absolute inset-0 w-full h-full object-cover object-center"
+                    />
                   </div>
                 ))}
               </div>
