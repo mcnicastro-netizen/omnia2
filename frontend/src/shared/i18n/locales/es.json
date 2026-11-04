@@ -1036,7 +1036,7 @@
       "publish_checkout_error": "No se pudo iniciar el pago del slot. Inténtelo de nuevo.",
       "form_new_title": "Nuevo anuncio",
       "form_edit_title": "Editar anuncio",
-      "submit_review": "Enviar para revisión",
+      "submit_review": "Enviar para aprobación",
       "resubmit": "Reenviar tras modificaciones",
       "confirm_delete": "¿Eliminar definitivamente este anuncio?",
       "f_title": "Título del anuncio",

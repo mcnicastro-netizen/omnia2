@@ -1090,7 +1090,7 @@
       "publish_checkout_error": "Could not start slot checkout. Please try again.",
       "form_new_title": "New listing",
       "form_edit_title": "Edit listing",
-      "submit_review": "Submit for review",
+      "submit_review": "Submit for approval",
       "resubmit": "Resubmit after changes",
       "confirm_delete": "Permanently delete this listing?",
       "f_title": "Listing title",
