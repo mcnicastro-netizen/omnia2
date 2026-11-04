@@ -792,6 +792,15 @@ export default function SellPage() {
                   >
                     {t("cloud.sell.preview_btn")}
                   </button>
+                  {l.moderation_status === "approved" && l.status === "active" && (
+                    <Link
+                      to={`/${lang}/cloud/property/${l.id}`}
+                      data-testid={`view-live-${l.id}`}
+                      className="px-3 py-1.5 text-[11px] uppercase tracking-widest bg-[#0B1E3F] text-white rounded hover:bg-[#C19A6B]"
+                    >
+                      {t("cloud.sell.view_live_btn", "Vedi online")}
+                    </Link>
+                  )}
                   {!(l.moderation_status === "approved" && l.status === "active") && (
                     <button
                       type="button"

@@ -54,6 +54,7 @@ export default function PropertyDetailPage() {
   const [fav, setFav] = useState(false);
   const [videoUrl, setVideoUrl] = useState(null);
   const [videoBusy, setVideoBusy] = useState(false);
+  const [videoErr, setVideoErr] = useState("");
   const [scout, setScout] = useState(null);
   const [scoutBusy, setScoutBusy] = useState(false);
   const [scoutErr, setScoutErr] = useState("");
@@ -87,19 +88,12 @@ export default function PropertyDetailPage() {
       .then((r) => {
         const data = r.data;
         setProp(data);
-        // Prefer first real photo as hero — staging as cover often looks soft / misleading
+        // Hero = cover scelta dal venditore (anche render). Evitare di forzare
+        // la prima foto «reale»: spesso è uno scatto basso (~600px) che in header
+        // full-bleed diventa sfocato; il render cover è tipicamente più definito.
         const ph = data?.photos || [];
         const coverIdx = ph.findIndex((p) => p?.is_cover);
-        const realIdx = ph.findIndex((p) => !p?.is_virtual_staging);
-        if (coverIdx >= 0 && !ph[coverIdx]?.is_virtual_staging) {
-          setActivePhoto(coverIdx);
-        } else if (realIdx >= 0) {
-          setActivePhoto(realIdx);
-        } else if (coverIdx >= 0) {
-          setActivePhoto(coverIdx);
-        } else {
-          setActivePhoto(0);
-        }
+        setActivePhoto(coverIdx >= 0 ? coverIdx : 0);
       })
       .catch((e) => setError(e?.response?.status === 404 ? "not_found" : "fetch_error"))
       .finally(() => setLoading(false));
@@ -147,22 +141,35 @@ export default function PropertyDetailPage() {
 
   const generateVideo = async () => {
     setVideoBusy(true);
+    setVideoErr("");
     try {
       const { data } = await api.post(`/cloud/videos/kenburns/property/${pid}`, { duration_s: 15 });
       const poll = async (n = 0) => {
-        if (n > 40) return;
+        if (n > 40) {
+          setVideoErr("Generazione troppo lenta. Riprova tra un minuto.");
+          return;
+        }
         const st = await api.get(`/cloud/videos/${data.video_id}`);
         if (st.data.status === "ready") {
           setVideoUrl(`${BACKEND_URL}/api/app/videos/${data.video_id}/download`);
           return;
         }
-        if (st.data.status === "failed") return;
+        if (st.data.status === "failed") {
+          const detail = st.data.error || "generation_failed";
+          setVideoErr(
+            detail === "no_photos_downloaded"
+              ? "Non siamo riusciti a leggere le foto per il video. Riprova o ricarica le immagini."
+              : `Video non generato (${detail}). Riprova.`
+          );
+          return;
+        }
         await new Promise((r) => setTimeout(r, 1500));
         return poll(n + 1);
       };
       await poll();
     } catch (e) {
       console.error(e);
+      setVideoErr(e?.response?.data?.detail || "Video tour non disponibile. Riprova.");
     } finally {
       setVideoBusy(false);
     }
@@ -216,7 +223,8 @@ export default function PropertyDetailPage() {
               <img
                 src={`${BACKEND_URL}${cover.url}`}
                 alt={cover.caption || prop.title}
-                className="w-full h-full object-cover"
+                className={`w-full h-full ${cover?.is_virtual_staging ? "object-contain bg-stone-950" : "object-cover"}`}
+                decoding="async"
               />
               <div
                 className="absolute inset-0 pointer-events-none"
@@ -668,6 +676,9 @@ export default function PropertyDetailPage() {
                   </button>
                 )}
               </div>
+              {videoErr && (
+                <p className="text-sm text-rose-700 mb-2" data-testid="detail-video-error">{String(videoErr)}</p>
+              )}
               {videoUrl ? (
                 <video
                   data-testid="detail-video-player"
