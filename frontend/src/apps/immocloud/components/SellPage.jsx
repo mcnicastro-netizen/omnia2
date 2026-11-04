@@ -1523,6 +1523,11 @@ function StatusBadge({ status, listingStatus, notes }) {
       {status === "rejected" && notes && (
         <span data-testid="rejection-notes" className="text-[11px] text-rose-700 italic">&ldquo;{notes}&rdquo;</span>
       )}
+      {status === "pending" && String(notes || "").startsWith("safety_gate:") && (
+        <span data-testid="safety-held-hint" className="text-[11px] text-amber-800">
+          {t("cloud.sell.safety_held_hint")}
+        </span>
+      )}
     </div>
   );
 }
