@@ -21,7 +21,7 @@ export default function PropertyCard({ p }) {
     >
       <div className="aspect-[4/3] bg-stone-100 relative">
         {cover ? (
-          <img src={cover} alt={p.title} className="w-full h-full object-cover" loading="lazy" />
+          <img src={cover} alt={p.title} className="w-full h-full object-cover object-center" loading="lazy" />
         ) : (
           <div className="w-full h-full flex items-center justify-center text-stone-300 text-5xl">⌂</div>
         )}

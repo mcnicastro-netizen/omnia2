@@ -162,12 +162,15 @@ export default function B2CVideoTourPanel({
       )}
       {videoUrl && (
         <div className="space-y-2">
-          <video
-            data-testid={`${testIdPrefix}-player`}
-            src={videoUrl}
-            controls
-            className="w-full rounded-lg aspect-video bg-stone-900"
-          />
+          <div className="mx-auto w-full max-w-2xl rounded-lg overflow-hidden bg-stone-900">
+            <video
+              data-testid={`${testIdPrefix}-player`}
+              src={videoUrl}
+              controls
+              playsInline
+              className="block w-full aspect-video object-contain object-center bg-stone-900"
+            />
+          </div>
           <button
             type="button"
             data-testid={`${testIdPrefix}-regen`}
