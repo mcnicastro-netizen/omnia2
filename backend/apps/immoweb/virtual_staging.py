@@ -2155,10 +2155,13 @@ async def _run_pipeline(job_id: str, db) -> None:
     engine_used = "none"
     nano_ok = False
 
-    # ── Professional pipeline (D-136) — geometry-first, feature-flagged ────
-    from apps.immoweb.staging_professional import pipeline_enabled, run_professional_pipeline
+    # ── Professional pipeline (D-136) — gestionale B2B only by default ────
+    from apps.immoweb.staging_professional import (
+        pipeline_enabled_for_job,
+        run_professional_pipeline,
+    )
 
-    if pipeline_enabled():
+    if pipeline_enabled_for_job(doc):
         accepted = await run_professional_pipeline(
             job_id=job_id,
             db=db,

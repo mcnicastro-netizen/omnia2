@@ -2,6 +2,10 @@
 
 Feature flag: OMNIA_STAGING_PIPELINE=professional
 
+Default scope (Founder 4-Nov-2026): **gestionale B2B only**.
+ImmobilCloud B2C (preview/Stripe) stays on Nano oneshot unless
+OMNIA_STAGING_PIPELINE_FORCE_B2C=true.
+
 Stages:
   0 analysis → 1 structure lock → 2 selective erase → 3 empty QA →
   4 furnish (masked / LoRA) → 5 final gate → 6 deliver only ACCEPT
@@ -31,10 +35,46 @@ logger = logging.getLogger("omnia.staging_professional")
 
 PIPELINE_ID = "professional_v1"
 
+_B2C_RAILS = frozenset({"b2c_preview", "b2c_stripe"})
 
-def pipeline_enabled() -> bool:
+
+def pipeline_flag_on() -> bool:
+    """Raw env flag — does not mean every job uses professional."""
     v = (os.environ.get("OMNIA_STAGING_PIPELINE") or "nano").strip().lower()
     return v in ("professional", "pro", "geom", "masked")
+
+
+def pipeline_enabled() -> bool:
+    """Backward-compatible alias of pipeline_flag_on()."""
+    return pipeline_flag_on()
+
+
+def _force_b2c_professional() -> bool:
+    return (os.environ.get("OMNIA_STAGING_PIPELINE_FORCE_B2C") or "").strip().lower() in (
+        "1", "true", "yes", "on",
+    )
+
+
+def job_is_b2b_gestionale(doc: Optional[dict]) -> bool:
+    """Agency credit jobs (ImmoWeb gestionale), not ImmobilCloud B2C."""
+    if not doc:
+        return False
+    rail = (doc.get("payment_rail") or "").strip().lower()
+    if rail in _B2C_RAILS:
+        return False
+    agency_id = doc.get("agency_id")
+    return bool(agency_id)
+
+
+def pipeline_enabled_for_job(doc: Optional[dict]) -> bool:
+    """Professional path only when flag ON and job is gestionale (unless FORCE_B2C)."""
+    if not pipeline_flag_on():
+        return False
+    if job_is_b2b_gestionale(doc):
+        return True
+    if _force_b2c_professional():
+        return True
+    return False
 
 
 async def run_professional_pipeline(
