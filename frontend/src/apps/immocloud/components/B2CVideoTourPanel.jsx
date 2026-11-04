@@ -20,22 +20,41 @@ export default function B2CVideoTourPanel({
   const [status, setStatus] = useState("");
   const [err, setErr] = useState("");
 
+  const resolvePlayUrl = (data) => {
+    if (!data?.id) return null;
+    const rel =
+      (data.download_url && String(data.download_url)) ||
+      `/api/app/videos/${data.id}/download`;
+    if (rel.startsWith("http://") || rel.startsWith("https://")) return rel;
+    return `${BACKEND_URL}${rel.startsWith("/") ? rel : `/${rel}`}`;
+  };
+
   const loadExisting = useCallback(async () => {
     if (!listingId) return;
     try {
       const { data } = await api.get(`/cloud/me/properties/${listingId}/video`);
       if (data?.status === "ready" && data?.id) {
-        setVideoUrl(`${BACKEND_URL}/api/app/videos/${data.id}/download`);
+        setVideoUrl(resolvePlayUrl(data));
         setStatus("ready");
+        setErr("");
       } else if (data?.status === "pending" || data?.status === "processing") {
         setStatus(data.status);
       } else if (data?.status === "failed") {
         setStatus("failed");
+        setVideoUrl(null);
+        if (data?.error === "video_expired") {
+          setErr(
+            t(
+              "cloud.sell.video_expired",
+              "Il video precedente non è più disponibile (redeploy). Rigeneralo dalle foto."
+            )
+          );
+        }
       }
     } catch {
       /* 404 = nessun video ancora */
     }
-  }, [listingId]);
+  }, [listingId, t]);
 
   useEffect(() => {
     loadExisting();
@@ -68,7 +87,7 @@ export default function B2CVideoTourPanel({
         }
         const st = await api.get(`/cloud/videos/${vid}`);
         if (st.data.status === "ready") {
-          setVideoUrl(`${BACKEND_URL}/api/app/videos/${vid}/download`);
+          setVideoUrl(resolvePlayUrl(st.data));
           setStatus("ready");
           return;
         }
@@ -80,7 +99,12 @@ export default function B2CVideoTourPanel({
                   "cloud.sell.video_no_photos",
                   "Non siamo riusciti a leggere le foto. Salva l'annuncio e riprova."
                 )
-              : t("cloud.sell.video_failed", "Video non generato. Riprova.");
+              : detail === "video_expired"
+                ? t(
+                    "cloud.sell.video_expired",
+                    "Il video precedente non è più disponibile. Rigeneralo dalle foto."
+                  )
+                : t("cloud.sell.video_failed", "Video non generato. Riprova.");
           setErr(msg);
           setStatus("failed");
           onError?.(msg);
@@ -168,6 +192,17 @@ export default function B2CVideoTourPanel({
               src={videoUrl}
               controls
               playsInline
+              preload="metadata"
+              onError={() => {
+                setVideoUrl(null);
+                setStatus("failed");
+                setErr(
+                  t(
+                    "cloud.sell.video_expired",
+                    "Il video non si riproduce. Rigeneralo dalle foto."
+                  )
+                );
+              }}
               className="block w-full aspect-video object-contain object-center bg-stone-900"
             />
           </div>
@@ -184,6 +219,17 @@ export default function B2CVideoTourPanel({
             {t("cloud.sell.video_regen", "Rigenera video")}
           </button>
         </div>
+      )}
+      {!videoUrl && status === "failed" && (
+        <button
+          type="button"
+          data-testid={`${testIdPrefix}-regen-failed`}
+          disabled={busy || photoCount < 1}
+          onClick={generate}
+          className="text-[11px] uppercase tracking-widest text-[#C19A6B] hover:text-[#0B1E3F] disabled:opacity-50"
+        >
+          {t("cloud.sell.video_regen", "Rigenera video")}
+        </button>
       )}
     </div>
   );
