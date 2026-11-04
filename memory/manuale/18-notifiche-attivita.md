@@ -204,7 +204,7 @@ PATCH /api/auth/me/notification-preferences
 - **UI**: `ContactPanel` unificato (header navy Privato/Agenzia + canali + form). Se `viewer_is_lister`, niente form: messaggio «questo è il tuo annuncio».
 - **API**: stesso `POST /api/cloud/property/{pid}/contact`; risposta privata `{ ok, inquiry_id, kind: "private" }`.
 
-**Onestà D-051**: non c'è ancora una UI inbox dedicata alle inquiry lato venditore (solo campanella + email). WhatsApp sul dettaglio è link `wa.me`, non un canale OMNIA outbound.
+**D-138 Idealista+**: UI inbox dedicata `/cloud/account/messages` (lista + dettaglio, filtri, archivio, `visit_status`, note private, reply email/tel/`wa.me`). Campanella + email puntano all’inbox. WhatsApp sul dettaglio resta link `wa.me`, non un canale OMNIA outbound. Fuori scope: chat thread in-app, SMS, Cloud API WA.
 
 ---
 

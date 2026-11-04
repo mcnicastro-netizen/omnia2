@@ -37,6 +37,9 @@ class CloudRegisterRequest(BaseModel):
     # P-040 — conferma maggiorenne; P-039 — opt-in marketing distinto dal GDPR servizio
     age_confirmed: bool = False
     marketing_consent: bool = False
+    # D-138 — canali contatto Idealista+ (opzionali in registrazione)
+    phone: Optional[str] = Field(default=None, max_length=40)
+    whatsapp: Optional[str] = Field(default=None, max_length=40)
 
 
 @router.post("/register")
@@ -84,6 +87,8 @@ async def cloud_register(
         "email_verified": False,
         "age_confirmed": True,
         "marketing_consent": bool(payload.marketing_consent),
+        "phone": (payload.phone or "").strip() or None,
+        "whatsapp": (payload.whatsapp or "").strip() or None,
         "created_at": now,
         "updated_at": now,
     }
@@ -136,5 +141,7 @@ async def cloud_register(
             "client_code": client_code,
             "intents": doc["intents"],
             "notification_channels": doc["notification_channels"],
+            "phone": doc.get("phone"),
+            "whatsapp": doc.get("whatsapp"),
         },
     }

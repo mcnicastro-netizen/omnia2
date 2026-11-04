@@ -16,6 +16,8 @@ export default function SecuritySettingsPanel({ variant = "crm" }) {
   const [eraseConfirm, setEraseConfirm] = useState("");
   const [erasePassword, setErasePassword] = useState("");
   const [profileName, setProfileName] = useState(user?.name || "");
+  const [profilePhone, setProfilePhone] = useState(user?.phone || "");
+  const [profileWhatsapp, setProfileWhatsapp] = useState(user?.whatsapp || "");
   const [marketingOptIn, setMarketingOptIn] = useState(Boolean(user?.marketing_consent));
   const [msg, setMsg] = useState("");
   const [err, setErr] = useState("");
@@ -23,8 +25,10 @@ export default function SecuritySettingsPanel({ variant = "crm" }) {
 
   useEffect(() => {
     setProfileName(user?.name || "");
+    setProfilePhone(user?.phone || "");
+    setProfileWhatsapp(user?.whatsapp || "");
     setMarketingOptIn(Boolean(user?.marketing_consent));
-  }, [user?.name, user?.marketing_consent]);
+  }, [user?.name, user?.phone, user?.whatsapp, user?.marketing_consent]);
 
   const load = async () => {
     try {
@@ -135,6 +139,35 @@ export default function SecuritySettingsPanel({ variant = "crm" }) {
               className="mt-1 w-full px-3 py-2 border border-stone-300 rounded-md text-sm"
             />
           </label>
+          {variant === "cloud" && (
+            <>
+              <label className="block max-w-md">
+                <span className="text-xs uppercase tracking-widest text-stone-500">Telefono</span>
+                <input
+                  data-testid="profile-phone"
+                  type="tel"
+                  value={profilePhone}
+                  onChange={(e) => setProfilePhone(e.target.value)}
+                  placeholder="+39 …"
+                  className="mt-1 w-full px-3 py-2 border border-stone-300 rounded-md text-sm"
+                />
+              </label>
+              <label className="block max-w-md">
+                <span className="text-xs uppercase tracking-widest text-stone-500">WhatsApp</span>
+                <input
+                  data-testid="profile-whatsapp"
+                  type="tel"
+                  value={profileWhatsapp}
+                  onChange={(e) => setProfileWhatsapp(e.target.value)}
+                  placeholder="+39 …"
+                  className="mt-1 w-full px-3 py-2 border border-stone-300 rounded-md text-sm"
+                />
+                <span className="text-[11px] text-stone-500 mt-1 block">
+                  Usati come default in Vendi (puoi comunque scegliere cosa mostrare in pubblico).
+                </span>
+              </label>
+            </>
+          )}
           <label className="flex items-start gap-2 text-xs text-stone-600 max-w-md">
             <input
               type="checkbox"
@@ -153,10 +186,15 @@ export default function SecuritySettingsPanel({ variant = "crm" }) {
                 setErr("");
                 setBusy(true);
                 try {
-                  await api.patch("/auth/me", {
+                  const payload = {
                     name: profileName.trim(),
                     marketing_consent: marketingOptIn,
-                  });
+                  };
+                  if (variant === "cloud") {
+                    payload.phone = profilePhone.trim();
+                    payload.whatsapp = profileWhatsapp.trim();
+                  }
+                  await api.patch("/auth/me", payload);
                   setMsg("Profilo aggiornato.");
                   await refresh();
                 } catch (e) {

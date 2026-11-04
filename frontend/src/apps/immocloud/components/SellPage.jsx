@@ -7,7 +7,7 @@
  * Media: up to 30 photos + optional floor plan (planimetria) via B2C upload-tmp.
  */
 import React, { useEffect, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { api, resolveMediaUrl } from "../../../shared/lib/api";
 import { useAuth, formatApiErrorDetail } from "../../../shared/lib/auth";
@@ -689,6 +689,22 @@ export default function SellPage() {
       <div className="max-w-6xl mx-auto px-5 sm:px-8 md:px-12 lg:px-16 py-10">
       <div className="lg:grid lg:grid-cols-12 lg:gap-8 lg:items-start">
       <div className="lg:col-span-8 min-w-0">
+      <div className="mb-5 flex flex-wrap gap-2">
+        <Link
+          to={`/${lang}/cloud/account/messages`}
+          data-testid="sell-goto-messages"
+          className="px-4 py-2 text-[11px] uppercase tracking-widest border border-stone-300 rounded-lg text-stone-700 hover:border-[#0B1E3F] hover:text-[#0B1E3F]"
+        >
+          {t("cloud.sell.goto_messages")}
+        </Link>
+        <Link
+          to={`/${lang}/cloud/account`}
+          data-testid="sell-goto-account"
+          className="px-4 py-2 text-[11px] uppercase tracking-widest border border-stone-300 rounded-lg text-stone-700 hover:border-[#0B1E3F]"
+        >
+          {t("cloud.sell.goto_account")}
+        </Link>
+      </div>
       {error && (
         <div data-testid="sell-error" className="mb-4 text-xs text-rose-700 bg-rose-50 border border-rose-200 rounded-xl px-4 py-3">
           {error}

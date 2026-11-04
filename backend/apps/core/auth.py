@@ -98,6 +98,7 @@ def _public(user: dict) -> dict:
         "saved_search_frequency_default": prefs["saved_search_frequency_default"],
         "email_verified": bool(user.get("email_verified")),
         "phone": user.get("phone"),
+        "whatsapp": user.get("whatsapp"),
         "group_id": user.get("group_id"),
         "mfa_enabled": bool(user.get("mfa_enabled")),
         "marketing_consent": bool(user.get("marketing_consent")),
@@ -241,9 +242,11 @@ async def me(user: dict = Depends(get_current_user)):
 
 
 class PatchMeBody(OmniaBaseModel):
-    """P-038 — rettifica anagrafica (nome); marketing opt-in/out."""
+    """P-038 — rettifica anagrafica (nome); marketing opt-in/out; D-138 phone/WA B2C."""
     name: Optional[str] = Field(default=None, min_length=1, max_length=120)
     marketing_consent: Optional[bool] = None
+    phone: Optional[str] = Field(default=None, max_length=40)
+    whatsapp: Optional[str] = Field(default=None, max_length=40)
 
 
 @router.patch("/me")
@@ -257,6 +260,12 @@ async def patch_me(
         updates["name"] = body.name.strip()
     if body.marketing_consent is not None:
         updates["marketing_consent"] = bool(body.marketing_consent)
+    if body.phone is not None:
+        phone = body.phone.strip()
+        updates["phone"] = phone or None
+    if body.whatsapp is not None:
+        wa = body.whatsapp.strip()
+        updates["whatsapp"] = wa or None
     if len(updates) == 1:
         return _public(user)
     db = Database.get()

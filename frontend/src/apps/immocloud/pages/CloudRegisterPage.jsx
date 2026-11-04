@@ -23,6 +23,8 @@ export default function CloudRegisterPage() {
   const loginHref = `/${lang}/login?from=cloud&next=${encodeURIComponent(nextPath)}`;
   const [form, setForm] = useState({
     name: "", email: "", password: "",
+    phone: "",
+    whatsapp: "",
     intents: presetIntent ? [presetIntent] : [],
     notification_channels: ["email"],
     gdpr_consent: false,
@@ -140,6 +142,30 @@ export default function CloudRegisterPage() {
             />
             <p className="text-xs text-stone-500 mt-1">{t("cloud.reg_password_hint")}</p>
           </Field>
+
+          <div className="grid sm:grid-cols-2 gap-4">
+            <Field label={t("cloud.reg_phone")}>
+              <input
+                data-testid="reg-phone"
+                type="tel"
+                value={form.phone}
+                onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                placeholder="+39 …"
+                className="w-full px-3 py-2.5 border border-stone-200 rounded-lg text-sm focus:border-[#0B1E3F] outline-none"
+              />
+            </Field>
+            <Field label={t("cloud.reg_whatsapp")}>
+              <input
+                data-testid="reg-whatsapp"
+                type="tel"
+                value={form.whatsapp}
+                onChange={(e) => setForm({ ...form, whatsapp: e.target.value })}
+                placeholder="+39 …"
+                className="w-full px-3 py-2.5 border border-stone-200 rounded-lg text-sm focus:border-[#0B1E3F] outline-none"
+              />
+            </Field>
+          </div>
+          <p className="text-xs text-stone-500 -mt-2">{t("cloud.reg_phone_hint")}</p>
 
           <Field label={t("cloud.reg_intents_title")}>
             <div className="space-y-2">

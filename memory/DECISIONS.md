@@ -7,6 +7,17 @@ Registro di tutte le decisioni di business e tecniche prese durante il progetto.
 
 ## Decisioni prese
 
+### D-138 — B2C Idealista+ inbox messaggi/visite + telefono/WA profilo · 04-Nov-2026
+- **Data**: 4 Novembre 2026
+- **Contesto**: Founder chiede flusso portale privato «Idealista model ed anche meglio»: telefono/WA in registrazione, follow-up richieste info, appuntamenti visite.
+- **Decisione**:
+  1. **Inbox venditore** `/cloud/account/messages`: lista `listing_inquiries` con filtri (aperti/non letti/visite/archivio), dettaglio messaggio, reply one-click email/tel/WhatsApp (link, non outbound OMNIA).
+  2. **Visite strutturate** meglio di Idealista: `visit_status` requested → accepted / declined / completed + nota privata venditore.
+  3. **Telefono/WhatsApp** opzionali in registrazione B2C + editabili in profilo Account; default per `contact_public` in Vendi (opt-in pubblico resta).
+  4. Notifica in-app + email inquiry puntano all’inbox (non solo Vendi / URL CRM).
+- **Fuori scope v1**: calendario slot condiviso, chat in-app thread, SMS/WhatsApp Cloud API outbound, MyAgency acquirente (resta D-091).
+- **Stato**: ✅ IN IMPLEMENTAZIONE
+
 ### D-137 — B2C Idealista-like: safety gate + auto-publish condizionato, codici, ricevute · 04-Nov-2026
 - **Data**: 4 Novembre 2026 (chiarito stesso giorno: non «publish cieco»)
 - **Contesto**: Volume annunci → Founder non può approvare a mano; serve tutela reputazione (offese, scam, discriminazione) anche su annunci già live. Dogfood: 2× staging, ricevute, codici.

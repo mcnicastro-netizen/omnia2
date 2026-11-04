@@ -28,6 +28,7 @@ export default function AccountDashboard() {
   const { user } = useAuth();
   const [searches, setSearches] = useState([]);
   const [favorites, setFavorites] = useState([]);
+  const [inqSummary, setInqSummary] = useState({ unread: 0, visits_pending: 0 });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -41,6 +42,7 @@ export default function AccountDashboard() {
     Promise.all([
       api.get("/cloud/me/saved-searches").then((r) => setSearches(r.data.items || [])),
       api.get("/cloud/me/favorites").then((r) => setFavorites(r.data.items || [])).catch(() => setFavorites([])),
+      api.get("/cloud/me/inquiries/summary").then((r) => setInqSummary(r.data || {})).catch(() => {}),
     ])
       .catch((e) => setError(formatApiErrorDetail(e?.response?.data?.detail)))
       .finally(() => setLoading(false));
@@ -120,7 +122,27 @@ export default function AccountDashboard() {
               {t("cloud.account.sell_cta_btn")}
             </Link>
           </div>
-          <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div className="mt-3 grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <Link
+              to={`/${lang}/cloud/account/messages`}
+              data-testid="account-goto-messages"
+              className="rounded-xl border border-stone-200 bg-white px-4 py-3 text-sm text-[#0B1E3F] hover:border-[#C19A6B]"
+            >
+              <span className="text-[10px] uppercase tracking-widest text-[#C19A6B] block mb-1">
+                {t("cloud.account.messages_tag")}
+              </span>
+              {t("cloud.account.messages_cta")}
+              {(inqSummary.unread > 0 || inqSummary.visits_pending > 0) && (
+                <span
+                  data-testid="account-messages-badge"
+                  className="ml-2 inline-block text-[10px] uppercase tracking-widest bg-[#0B1E3F] text-white rounded px-1.5 py-0.5"
+                >
+                  {inqSummary.unread > 0
+                    ? t("cloud.account.messages_unread", { n: inqSummary.unread })
+                    : t("cloud.account.messages_visits", { n: inqSummary.visits_pending })}
+                </span>
+              )}
+            </Link>
             <Link
               to={`/${lang}/legal`}
               data-testid="account-goto-hal-legal"

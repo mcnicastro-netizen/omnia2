@@ -970,6 +970,7 @@ async def _private_listing_contact(db, prop: Dict[str, Any], payload: PropertyCo
     note_lines = [payload.message.strip()]
     if payload.visit_requested:
         note_lines.append("[richiesta visita immobile]")
+    visit_requested = bool(payload.visit_requested)
     doc = {
         "id": inquiry_id,
         "property_id": prop["id"],
@@ -979,10 +980,19 @@ async def _private_listing_contact(db, prop: Dict[str, Any], payload: PropertyCo
         "email": payload.email.lower(),
         "phone": payload.phone,
         "message": "\n".join(note_lines),
-        "visit_requested": bool(payload.visit_requested),
+        "visit_requested": visit_requested,
+        # D-138 Idealista+ inbox fields
+        "visit_status": "requested" if visit_requested else "none",
+        "archived": False,
+        "read_at": None,
+        "seller_note": "",
+        "property_title": prop.get("title") or "Immobile",
+        "property_city": prop.get("city"),
+        "listing_code": prop.get("listing_code"),
         "gdpr_consent": True,
         "source": "ImmobilCloud",
         "created_at": now,
+        "updated_at": now,
     }
     await db.listing_inquiries.insert_one(doc)
 
@@ -994,6 +1004,11 @@ async def _private_listing_contact(db, prop: Dict[str, Any], payload: PropertyCo
         pass
 
     notify_lang = (owner_user or {}).get("lang") or "it"
+    from shared.public_base import get_public_base_url
+    _lang = notify_lang if notify_lang in ("it", "en", "es") else "it"
+    inbox_url = (
+        f"{get_public_base_url()}/{_lang}/cloud/account/messages?id={inquiry_id}"
+    )
     _schedule_lead_email(
         to=owner_email,
         lang=notify_lang,
@@ -1004,6 +1019,7 @@ async def _private_listing_contact(db, prop: Dict[str, Any], payload: PropertyCo
         lead_message="\n".join(note_lines),
         agency_id="_private_listings",
         property_id=prop["id"],
+        action_url=inbox_url,
     )
 
     try:
@@ -1015,7 +1031,7 @@ async def _private_listing_contact(db, prop: Dict[str, Any], payload: PropertyCo
             type=TYPE_LISTING_INQUIRY,
             title=f"Nuovo messaggio · {prop_title}",
             body=f"{lead_name} ti ha contattato da ImmobilCloud.",
-            link="/cloud/account/sell",
+            link=f"/cloud/account/messages?id={inquiry_id}",
             agency_id=None,
             meta={"inquiry_id": inquiry_id, "property_id": prop["id"]},
         )
@@ -1032,15 +1048,17 @@ async def _private_listing_contact(db, prop: Dict[str, Any], payload: PropertyCo
 def _schedule_lead_email(*, to: str, lang: str, property_title: str,
                         lead_name: str, lead_email: str,
                         lead_phone: Optional[str], lead_message: str,
-                        agency_id: str, property_id: str) -> None:
-    """Fire-and-forget Resend notification to listing agent / agency."""
+                        agency_id: str, property_id: str,
+                        action_url: Optional[str] = None) -> None:
+    """Fire-and-forget Resend notification to listing agent / agency / private seller."""
     import asyncio
-    import os
     from shared.email.client import send_email
 
     from shared.public_base import get_public_base_url
     base = get_public_base_url()
-    crm_url = f"{base}/{lang if lang in ('it', 'en', 'es') else 'it'}/app/properties/{property_id}"
+    crm_url = action_url or (
+        f"{base}/{lang if lang in ('it', 'en', 'es') else 'it'}/app/properties/{property_id}"
+    )
     phone_block = (
         f'<p style="margin:4px 0 0 0; font-size:14px; color:#0E1419;">📞 '
         f'<a href="tel:{lead_phone}" style="color:#0B1E3F;">{lead_phone}</a></p>'
