@@ -24,6 +24,7 @@ TYPE_FAVORITE_ENDED = "favorite_listing_ended"  # D-093 / A-030 sold|rented|with
 TYPE_LISTING_INQUIRY = "listing_inquiry"  # B2C private seller contact form
 TYPE_LISTING_MODERATION = "listing_moderation"  # P-057 UGC approve/reject → owner
 TYPE_LISTING_SLOT_EXPIRED = "listing_slot_expired"  # slot a pagamento 90gg scaduto
+TYPE_BILLING_PAYMENT = "billing_payment"  # D-137 every B2C Stripe incasso → Founder inbox
 
 KNOWN_TYPES = (
     TYPE_LEAD_NEW,
@@ -35,6 +36,7 @@ KNOWN_TYPES = (
     TYPE_LISTING_INQUIRY,
     TYPE_LISTING_MODERATION,
     TYPE_LISTING_SLOT_EXPIRED,
+    TYPE_BILLING_PAYMENT,
 )
 
 

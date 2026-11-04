@@ -731,6 +731,13 @@ export default function SellPage() {
                     {l.operation === "rent" && l.rent_monthly ? ` · € ${l.rent_monthly.toLocaleString("it-IT")}/mese` :
                      l.price ? ` · € ${l.price.toLocaleString("it-IT")}` : ""}
                   </p>
+                  {(l.reference_code || l.client_code) && (
+                    <p className="text-[11px] text-stone-500 mt-1 font-mono" data-testid={`listing-codes-${l.id}`}>
+                      {l.reference_code ? `${t("cloud.sell.listing_code")}: ${l.reference_code}` : null}
+                      {l.reference_code && l.client_code ? " · " : null}
+                      {l.client_code ? `${t("cloud.sell.client_code")}: ${l.client_code}` : null}
+                    </p>
+                  )}
                   {(l.photos?.length > 0 || l.floor_plan_url) && (
                     <p className="text-[11px] text-stone-500 mt-1" data-testid={`listing-media-${l.id}`}>
                       {l.photos?.length > 0 ? `${l.photos.length} ${t("cloud.sell.photos_count")}` : null}

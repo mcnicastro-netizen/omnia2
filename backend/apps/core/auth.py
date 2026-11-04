@@ -91,6 +91,7 @@ def _public(user: dict) -> dict:
         "active_agency_id": user.get("active_agency_id"),
         "is_active": user.get("is_active", True),
         "account_type": user.get("account_type", "agent"),
+        "client_code": user.get("client_code"),
         "intents": user.get("intents", []),
         "notification_channels": prefs["notification_channels"],
         "notification_email_types": prefs["notification_email_types"],

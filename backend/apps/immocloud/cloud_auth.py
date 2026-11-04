@@ -66,6 +66,8 @@ async def cloud_register(
 
     now = datetime.now(timezone.utc).isoformat()
     user_id = str(uuid4())
+    from shared.ids import ensure_unique_code
+    client_code = await ensure_unique_code(db, collection="users", field="client_code", kind="client")
     doc = {
         "id": user_id,
         "email": payload.email.lower(),
@@ -76,6 +78,7 @@ async def cloud_register(
         "agency_ids": [],
         "is_active": True,
         "account_type": "b2c",
+        "client_code": client_code,
         "intents": payload.intents,
         "notification_channels": payload.notification_channels or ["email"],
         "email_verified": False,
@@ -130,6 +133,7 @@ async def cloud_register(
         "user": {
             "id": user_id, "email": doc["email"], "name": doc["name"],
             "role": "client", "account_type": "b2c",
+            "client_code": client_code,
             "intents": doc["intents"],
             "notification_channels": doc["notification_channels"],
         },

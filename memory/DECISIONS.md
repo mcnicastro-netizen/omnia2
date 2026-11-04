@@ -7,6 +7,16 @@ Registro di tutte le decisioni di business e tecniche prese durante il progetto.
 
 ## Decisioni prese
 
+### D-137 — B2C Idealista-like: auto-publish, codici, ricevuta+alert Founder · 04-Nov-2026
+- **Data**: 4 Novembre 2026
+- **Contesto**: Con volume annunci il Founder non può approvare a mano; dogfood: 2 checkout staging (€1,49) sulla stessa foto; ricevuta Stripe assente; Founder senza messaggio su ogni incasso; UUID poco usabili come riferimento.
+- **Decisione**:
+  1. **Auto-publish** su «Invia per approvazione»: default `OMNIA_B2C_AUTO_PUBLISH=true` (opt-out solo con `false`). Moderazione resta per unpublish/reject post-hoc. Matching portal parte al publish.
+  2. **Codici pubblici**: cliente `OM-C-XXXXXX`, annuncio `OM-L-XXXXXX` (`reference_code` / `client_code`), mostrati in Sell.
+  3. **Ogni pagamento B2C**: Stripe `payment_intent_data.receipt_email` + email Resend ricevuta cliente + email/inbox Founder (idempotente `_payment_alert_sent`).
+  4. **Anti doppio staging**: 409 se stesso listing+photo+mode già `paid` nelle ultime 24h (i 2× dogfood erano due Checkout distinti, non un doppio addebito dello stesso session).
+- **Stato**: ✅ DECISIONE OPERATIVA · implementazione PR su branch feat-b2c-autopublish-codes-receipts
+
 ### D-135 — Dogfood B2C Vendi: CSRF cross-site, HAL improve stabile, account solo Privato · 02-Nov-2026
 - **Data**: 2 Novembre 2026
 - **Contesto**: Dogfood produzione ImmobilCloud dopo wipe: città senza suggerimenti; Migliora con HAL timeout/chiave i18n grezza; salva con errore inglese; sessione che “scadeva” in ~1 minuto su `cloud.*`; bottone «Il mio account» percepito morto se loggati come Founder/agenzia.
