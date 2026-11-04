@@ -344,9 +344,40 @@ async def kenburns_from_property_gated(
     )
 
 
+async def enqueue_ken_burns_for_property(
+    prop: dict,
+    *,
+    duration_s: int = DEFAULT_DURATION_S,
+    photo_urls: Optional[List[str]] = None,
+) -> Dict[str, Any]:
+    """Shared enqueue for public scheda + B2C owner (Sell flow)."""
+    db = Database.get()
+    pid = prop.get("id")
+    if not pid:
+        raise HTTPException(status_code=422, detail="property_id_missing")
+    base = _api_public_base()
+    urls = photo_urls or _property_photo_urls(prop, base)
+    if not urls:
+        raise HTTPException(status_code=422, detail="no_photos_available")
+    doc = VideoDoc(
+        property_id=pid,
+        mode="ken_burns",
+        status="pending",
+        duration_s=duration_s,
+        photos_count=len(urls),
+    ).model_dump()
+    await db.videos.insert_one(doc)
+    asyncio.create_task(_generate_ken_burns(doc["id"], pid, urls, duration_s, db))
+    return {
+        "video_id": doc["id"],
+        "status": "pending",
+        "poll_url": f"/api/cloud/videos/{doc['id']}",
+    }
+
+
 @public_router.post("/kenburns/property/{pid}", status_code=202)
 async def kenburns_public(pid: str, body: KenBurnsRequest):
-    """Public Ken Burns generation for private listings (M3.S5 UGC)."""
+    """Public Ken Burns generation for live private listings (M3.S5 UGC)."""
     db = Database.get()
     prop = await db.properties.find_one({
         "id": pid,
@@ -356,17 +387,9 @@ async def kenburns_public(pid: str, body: KenBurnsRequest):
     })
     if not prop:
         raise HTTPException(status_code=404, detail="property_not_found")
-    base = _api_public_base()
-    photo_urls = body.photo_urls or _property_photo_urls(prop, base)
-    if not photo_urls:
-        raise HTTPException(status_code=422, detail="no_photos_available")
-    doc = VideoDoc(
-        property_id=pid, mode="ken_burns", status="pending",
-        duration_s=body.duration_s, photos_count=len(photo_urls),
-    ).model_dump()
-    await db.videos.insert_one(doc)
-    asyncio.create_task(_generate_ken_burns(doc["id"], pid, photo_urls, body.duration_s, db))
-    return {"video_id": doc["id"], "status": "pending", "poll_url": f"/api/cloud/videos/{doc['id']}"}
+    return await enqueue_ken_burns_for_property(
+        prop, duration_s=body.duration_s, photo_urls=body.photo_urls,
+    )
 
 
 @router.get("/{video_id}")

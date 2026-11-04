@@ -534,6 +534,45 @@ async def _load_listing_for_safety(db, pid: str, user_id: str) -> dict:
     return p
 
 
+class KenBurnsOwnerBody(BaseModel):
+    duration_s: int = Field(default=15, ge=5, le=30)
+
+
+@router.post("/{pid}/kenburns", status_code=202)
+async def owner_generate_kenburns(
+    pid: str,
+    body: KenBurnsOwnerBody = KenBurnsOwnerBody(),
+    user: dict = Depends(get_current_user),
+):
+    """B2C owner: genera micro-tour dalle foto dell'annuncio (anche in bozza).
+
+    Ideale nel flusso Vendi subito dopo le immagini — non richiede annuncio già live.
+    """
+    await _ensure_b2c(user)
+    p = await _load_listing_for_safety(Database.get(), pid, user["id"])
+    photos = p.get("photos") or []
+    if len(photos) < 1:
+        raise HTTPException(status_code=422, detail="no_photos_available")
+    from apps.immoweb.micro_tour_video import enqueue_ken_burns_for_property
+    return await enqueue_ken_burns_for_property(p, duration_s=body.duration_s)
+
+
+@router.get("/{pid}/video")
+async def owner_listing_video(pid: str, user: dict = Depends(get_current_user)):
+    """Latest Ken Burns job for this owner listing (any status)."""
+    await _ensure_b2c(user)
+    db = Database.get()
+    await _load_listing_for_safety(db, pid, user["id"])
+    doc = await db.videos.find_one(
+        {"property_id": pid, "mode": "ken_burns", "agency_id": None},
+        {"_id": 0},
+        sort=[("created_at", -1)],
+    )
+    if not doc:
+        raise HTTPException(status_code=404, detail="video_not_found")
+    return doc
+
+
 @router.post("/{pid}/submit")
 async def submit_for_moderation(pid: str, user: dict = Depends(get_current_user)):
     """Submit private listing: safety gate → auto-publish OR Founder queue.

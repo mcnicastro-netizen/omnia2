@@ -660,11 +660,19 @@ export default function PropertyDetailPage() {
               </div>
             </section>
 
-            {/* Micro-tour Ken Burns */}
+            {/* Micro-tour — play pubblico; genera soprattutto da Vendi (proprietario) */}
+            {(videoUrl || isLister) && (
             <div data-testid="detail-micro-tour" className="border border-stone-200 rounded-2xl p-5 bg-white">
               <div className="flex items-center justify-between gap-3 mb-3">
-                <h2 className="text-[11px] uppercase tracking-[0.28em] text-[#C19A6B]">Micro-tour</h2>
-                {!videoUrl && photos.length > 0 && (
+                <div>
+                  <h2 className="text-[11px] uppercase tracking-[0.28em] text-[#C19A6B]">Micro-tour</h2>
+                  {isLister && !videoUrl && (
+                    <p className="text-xs text-stone-500 mt-1">
+                      Genera il video da Area riservata → Vendi, subito dopo le foto.
+                    </p>
+                  )}
+                </div>
+                {isLister && !videoUrl && photos.length > 0 && (
                   <button
                     type="button"
                     data-testid="detail-generate-video"
@@ -686,10 +694,11 @@ export default function PropertyDetailPage() {
                   controls
                   className="w-full rounded-xl aspect-video bg-stone-900"
                 />
-              ) : (
-                <p className="text-sm text-stone-500">Nessun video ancora. Generane uno dalle foto dell&apos;annuncio.</p>
-              )}
+              ) : isLister ? (
+                <p className="text-sm text-stone-500">Nessun video ancora.</p>
+              ) : null}
             </div>
+            )}
 
             {/* Key info grid */}
             <div data-testid="detail-key-info" className="grid grid-cols-2 md:grid-cols-4 gap-4 bg-[#f7f4ef] border border-stone-200 rounded-2xl p-5">

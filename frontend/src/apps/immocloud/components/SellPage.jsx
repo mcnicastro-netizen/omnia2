@@ -17,6 +17,7 @@ import { ENERGY_CLASS_OPTIONS } from "../../../shared/lib/energyClasses";
 import CloudPageHero from "./CloudPageHero";
 import SellDocPromoRail from "./SellDocPromoRail";
 import B2CStagingPanel from "./B2CStagingPanel";
+import B2CVideoTourPanel from "./B2CVideoTourPanel";
 import ListingPreviewModal from "./ListingPreviewModal";
 import AddressAutocomplete from "./AddressAutocomplete";
 import { onInvalidItalian, onInputClearCustomValidity } from "../../../shared/lib/itHtmlValidity";
@@ -1299,6 +1300,12 @@ export default function SellPage() {
                 {t("cloud.sell.staging_need_listing")}
               </p>
             )}
+            <B2CVideoTourPanel
+              listingId={editing?.id || null}
+              photoCount={(form.photos || []).length}
+              onError={(msg) => setError(msg)}
+              testIdPrefix="sell-video"
+            />
           </Field>
 
           <Field label={t("cloud.sell.f_floor_plan")}>
