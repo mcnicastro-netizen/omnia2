@@ -319,7 +319,16 @@ async def apply_safety_hold(
 
 
 async def rescan_live_private_listings(*, limit: int = 80) -> Dict[str, Any]:
-    """Pull live ads that now fail the gate (reputation protection)."""
+    """Reputation protection on already-live private ads.
+
+    Policy (D-137b, dogfood 4-Nov):
+      · ACCEPT → refresh safety_gate only
+      · REJECT → unpublish (hard block)
+      · REVIEW with heuristic soft/hard hits → unpublish to Founder queue
+      · REVIEW only from LLM (no heuristic hits) → stay live + alert Founder
+        (Gemini alone must not yank a human-approved / auto-published ad —
+         titles like «provaprova» were false-positives that re-hid live ads)
+    """
     if not safety_gate_enabled():
         return {"ok": True, "skipped": True, "reason": "gate_disabled"}
     from shared.db.connection import Database
@@ -336,6 +345,7 @@ async def rescan_live_private_listings(*, limit: int = 80) -> Dict[str, Any]:
     ).sort("updated_at", -1).limit(limit)
     items = await cur.to_list(length=limit)
     held = 0
+    flagged = 0
     scanned = 0
     for listing in items:
         scanned += 1
@@ -347,8 +357,30 @@ async def rescan_live_private_listings(*, limit: int = 80) -> Dict[str, Any]:
                     {"$set": {"safety_gate": report.to_dict()}},
                 )
                 continue
+
+            reject = report.verdict == VERDICT_REJECT
+            heuristic_hit = bool(report.hard_hits or report.soft_hits)
+            # Pure LLM REVIEW on an already-live ad: alert, do not auto-unpublish
+            if report.verdict == VERDICT_REVIEW and not heuristic_hit and not reject:
+                await db.properties.update_one(
+                    {"id": listing["id"]},
+                    {"$set": {
+                        "safety_gate": report.to_dict(),
+                        "updated_at": datetime.now(timezone.utc).isoformat(),
+                    }},
+                )
+                await notify_founder_safety_flag(
+                    listing, report, event="rescan_live_soft",
+                )
+                flagged += 1
+                logger.info(
+                    "safety rescan soft-flag (stay live) listing=%s verdict=%s reasons=%s",
+                    listing.get("id"), report.verdict, report.reasons[:3],
+                )
+                continue
+
             await apply_safety_hold(
-                db, listing["id"], report, reject=(report.verdict == VERDICT_REJECT),
+                db, listing["id"], report, reject=reject,
             )
             await notify_founder_safety_flag(listing, report, event="rescan_live")
             held += 1
@@ -357,4 +389,4 @@ async def rescan_live_private_listings(*, limit: int = 80) -> Dict[str, Any]:
             )
         except Exception:
             logger.exception("safety rescan failed listing=%s", listing.get("id"))
-    return {"ok": True, "scanned": scanned, "held": held}
+    return {"ok": True, "scanned": scanned, "held": held, "flagged_soft": flagged}

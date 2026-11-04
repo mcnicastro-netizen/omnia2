@@ -125,3 +125,71 @@ def test_submit_holds_offensive(mongo, monkeypatch):
     assert out["auto_publish"] is False
     assert out["moderation_status"] == "pending"
     assert out["safety_verdict"] == "REVIEW"
+
+
+def test_rescan_llm_review_without_heuristics_stays_live(mongo):
+    """Live ads must not be yanked by pure Gemini REVIEW (no soft/hard hits)."""
+    from shared.db.connection import Database
+    from apps.immocloud.listing_safety_gate import (
+        SafetyReport,
+        VERDICT_REVIEW,
+        rescan_live_private_listings,
+    )
+
+    Database._client = None
+    Database._db = None
+    Database._tenant_db = None
+    Database.connect()
+
+    pid = uuid4().hex
+    now = datetime.now(timezone.utc).isoformat()
+    mongo.properties.insert_one({
+        "id": pid,
+        "agency_id": "_private_listings",
+        "is_private_listing": True,
+        "owner_user_id": "u1",
+        "title": "provaprova",
+        "city": "Mascalucia",
+        "price": 200000,
+        "description": "Villetta con giardino",
+        "status": "active",
+        "moderation_status": "approved",
+        "visibility": "public",
+        "created_at": now,
+        "updated_at": now,
+    })
+
+    soft = SafetyReport(
+        verdict=VERDICT_REVIEW,
+        reasons=["llm_review"],
+        hard_hits=[],
+        soft_hits=[],
+        llm_used=True,
+        llm_verdict="REVIEW",
+    )
+
+    async def _run():
+        with patch(
+            "apps.immocloud.listing_safety_gate.evaluate_listing_safety",
+            new_callable=AsyncMock,
+            return_value=soft,
+        ), patch(
+            "apps.immocloud.listing_safety_gate.notify_founder_safety_flag",
+            new_callable=AsyncMock,
+        ) as notify:
+            out = await rescan_live_private_listings(limit=20)
+            return out, notify
+
+    loop = asyncio.new_event_loop()
+    try:
+        out, notify = loop.run_until_complete(_run())
+    finally:
+        loop.close()
+        doc = mongo.properties.find_one({"id": pid}, {"_id": 0, "status": 1, "moderation_status": 1})
+        mongo.properties.delete_one({"id": pid})
+
+    assert out["held"] == 0
+    assert out.get("flagged_soft", 0) >= 1
+    assert doc["status"] == "active"
+    assert doc["moderation_status"] == "approved"
+    assert notify.await_count >= 1
