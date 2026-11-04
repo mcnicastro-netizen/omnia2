@@ -1,3 +1,11 @@
+## 2026-11-04 sera — D-140 dogfood Vendi: safety soft · Scout · video tour · layout
+
+- Safety rescan: no un-publish su solo `llm_review` soft (PR #85)
+- Scout copy/benchmark: richiesta, grade A–D, alias Mascalucia→Catania (PR #84)
+- Video tour in Vendi dopo foto + Ken Burns 1080p + ffmpeg Railway (PR #86–#89)
+- Ordine Vendi titolo→desc→foto/video→staging→opzioni; boost in fondo; flash Immocloud; anteprima centrata (PR #90)
+- Redeploy Railway+Vercel · DECISIONS D-140 · Cap.18/23 MD+YAML · IMPORT_HAL v0.47 · NEXT_SESSION
+
 ## 2026-11-04 — D-138 Idealista+ inbox · Esci B2C · probe API · D-139 news backlog
 
 - Inbox venditore `/cloud/account/messages` (visite, note, reply email/tel/WA)
