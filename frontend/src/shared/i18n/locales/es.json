@@ -1110,6 +1110,7 @@
       "video_timeout": "La generación tarda demasiado. Inténtalo de nuevo.",
       "video_no_photos": "No pudimos leer las fotos. Guarda el anuncio e inténtalo de nuevo.",
       "video_failed": "Vídeo no generado. Inténtalo de nuevo.",
+      "options_section": "Detalles y opciones",
       "preview_eyebrow": "Cómo se verá online",
       "preview_title": "Vista previa del anuncio",
       "preview_subtitle": "Revisa ficha y detalle antes de enviar a revisión. Aún puedes editar.",

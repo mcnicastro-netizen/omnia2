@@ -825,6 +825,16 @@ export default function SellPage() {
                   </button>
                 </div>
               </div>
+              <B2CStagingPanel
+                listingId={l.id}
+                photos={l.photos || []}
+                busy={stagingBusy}
+                setBusy={setStagingBusy}
+                onStatus={setStagingStatus}
+                onError={setError}
+                onPaidAttached={() => reloadListings().catch(() => {})}
+                testIdPrefix={`staging-${l.id}`}
+              />
               {addonProducts.length > 0 && (
                 <div className="mt-4 pt-4 border-t border-stone-100" data-testid={`addon-panel-${l.id}`}>
                   <p className="text-[11px] uppercase tracking-widest text-stone-500 mb-2">
@@ -889,16 +899,6 @@ export default function SellPage() {
                   </div>
                 </div>
               )}
-              <B2CStagingPanel
-                listingId={l.id}
-                photos={l.photos || []}
-                busy={stagingBusy}
-                setBusy={setStagingBusy}
-                onStatus={setStagingStatus}
-                onError={setError}
-                onPaidAttached={() => reloadListings().catch(() => {})}
-                testIdPrefix={`staging-${l.id}`}
-              />
             </article>
           ))}
         </section>
@@ -968,10 +968,112 @@ export default function SellPage() {
             {editing ? t("cloud.sell.form_edit_title") : t("cloud.sell.form_new_title")}
           </h2>
 
+          {/* 1 · Titolo */}
           <Field label={t("cloud.sell.f_title")} required>
             <input data-testid="sell-f-title" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })}
               required minLength={3} maxLength={200} className={inputCls} />
           </Field>
+
+          {/* 2 · Descrizione */}
+          <Field label={t("cloud.sell.f_description")}>
+            <div className="space-y-2">
+              <p className="text-xs text-stone-500">{t("cloud.sell.f_description_hal_hint")}</p>
+              <textarea data-testid="sell-f-description" rows={4} maxLength={10000}
+                value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })}
+                className={inputCls} />
+              <div className="flex justify-end">
+                <AlImproveButton
+                  field="description"
+                  value={form.description}
+                  propertyData={form}
+                  onApply={(text) => setForm({ ...form, description: text })}
+                  testId="sell-al-improve-description"
+                  ready={halDescriptionReady(form)}
+                  notReadyMessage={t("cloud.sell.hal_need_fields")}
+                />
+              </div>
+            </div>
+          </Field>
+
+          {/* 3 · Foto + video tour */}
+          <Field label={t("cloud.sell.f_photos")}>
+            <p className="text-xs text-stone-500 mb-2">{t("cloud.sell.f_photos_hint")}</p>
+            <PhotoUploader
+              photos={form.photos || []}
+              onChange={(photos) => setForm((f) => ({ ...f, photos }))}
+              max={B2C_MAX_PHOTOS}
+              uploadUrl={B2C_MEDIA_UPLOAD}
+              uploadExtraFields={{ kind: "photo" }}
+            />
+            <B2CVideoTourPanel
+              listingId={editing?.id || null}
+              photoCount={(form.photos || []).length}
+              onError={(msg) => setError(msg)}
+              testIdPrefix="sell-video"
+            />
+          </Field>
+
+          {/* 4 · Virtual staging (scegli foto da modificare) */}
+          <div data-testid="sell-staging-block">
+            {editing?.id ? (
+              <B2CStagingPanel
+                listingId={editing.id}
+                photos={form.photos || []}
+                busy={stagingBusy}
+                setBusy={setStagingBusy}
+                onStatus={setStagingStatus}
+                onError={setError}
+                onEnsurePhotosSaved={async () => {
+                  const payload = buildListingPayload(form);
+                  if (!payload.photos.length) {
+                    const err = new Error("listing_has_no_photos");
+                    err.response = {
+                      data: {
+                        detail: {
+                          error: "listing_has_no_photos",
+                          code: "listing_has_no_photos",
+                          message:
+                            "Carica almeno una foto e aspetta che finisca l'upload prima dello staging.",
+                        },
+                      },
+                    };
+                    throw err;
+                  }
+                  await api.patch(`/cloud/me/properties/${editing.id}`, {
+                    photos: payload.photos,
+                    floor_plan_url: payload.floor_plan_url || null,
+                  });
+                }}
+                onPaidAttached={async () => {
+                  const items = await reloadListings().catch(() => []);
+                  const fresh = (items || []).find((x) => x.id === editing.id);
+                  if (fresh?.photos) setForm((f) => ({ ...f, photos: fresh.photos }));
+                }}
+                testIdPrefix="sell-staging"
+              />
+            ) : (
+              <p className="text-[11px] text-stone-500" data-testid="sell-staging-hint">
+                {t("cloud.sell.staging_need_listing")}
+              </p>
+            )}
+          </div>
+
+          <Field label={t("cloud.sell.f_floor_plan")}>
+            <p className="text-xs text-stone-500 mb-2">{t("cloud.sell.f_floor_plan_hint")}</p>
+            <FloorPlanUploader
+              url={form.floor_plan_url}
+              onChange={(url) => setForm({ ...form, floor_plan_url: url || "" })}
+            />
+          </Field>
+
+          {/* 5 · Dettagli immobile + contatto */}
+          <div
+            data-testid="sell-options-block"
+            className="space-y-4 pt-2 border-t border-stone-100"
+          >
+            <p className="text-[10px] uppercase tracking-[0.22em] text-stone-500">
+              {t("cloud.sell.options_section", "Dettagli e opzioni")}
+            </p>
 
           <div className="grid grid-cols-2 gap-3">
             <Field label={t("cloud.sell.f_type")}>
@@ -1022,8 +1124,6 @@ export default function SellPage() {
                   value={form.address}
                   onChange={(text) => setForm((f) => ({ ...f, address: text }))}
                   onSelect={(rec) => {
-                    // Non sovrascrivere città/CAP già scelti dall'utente (Idealista-like).
-                    // Preferisci solo il nome via; evita "Via X, Comune" nel campo indirizzo.
                     const road =
                       (rec.road || "").trim() ||
                       String(rec.normalized || "")
@@ -1158,26 +1258,6 @@ export default function SellPage() {
             </div>
           </fieldset>
 
-          <Field label={t("cloud.sell.f_description")}>
-            <div className="space-y-2">
-              <p className="text-xs text-stone-500">{t("cloud.sell.f_description_hal_hint")}</p>
-              <textarea data-testid="sell-f-description" rows={4} maxLength={10000}
-                value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })}
-                className={inputCls} />
-              <div className="flex justify-end">
-                <AlImproveButton
-                  field="description"
-                  value={form.description}
-                  propertyData={form}
-                  onApply={(text) => setForm({ ...form, description: text })}
-                  testId="sell-al-improve-description"
-                  ready={halDescriptionReady(form)}
-                  notReadyMessage={t("cloud.sell.hal_need_fields")}
-                />
-              </div>
-            </div>
-          </Field>
-
           <fieldset
             data-testid="sell-contact-channels"
             className="relative overflow-hidden rounded-2xl border border-stone-200/80 bg-gradient-to-br from-[#fbf8f3] to-white p-5 space-y-4"
@@ -1248,73 +1328,7 @@ export default function SellPage() {
               </Field>
             )}
           </fieldset>
-
-          <Field label={t("cloud.sell.f_photos")}>
-            <p className="text-xs text-stone-500 mb-2">{t("cloud.sell.f_photos_hint")}</p>
-            <PhotoUploader
-              photos={form.photos || []}
-              onChange={(photos) => setForm((f) => ({ ...f, photos }))}
-              max={B2C_MAX_PHOTOS}
-              uploadUrl={B2C_MEDIA_UPLOAD}
-              uploadExtraFields={{ kind: "photo" }}
-            />
-            {editing?.id ? (
-              <B2CStagingPanel
-                listingId={editing.id}
-                photos={form.photos || []}
-                busy={stagingBusy}
-                setBusy={setStagingBusy}
-                onStatus={setStagingStatus}
-                onError={setError}
-                onEnsurePhotosSaved={async () => {
-                  const payload = buildListingPayload(form);
-                  if (!payload.photos.length) {
-                    const err = new Error("listing_has_no_photos");
-                    err.response = {
-                      data: {
-                        detail: {
-                          error: "listing_has_no_photos",
-                          code: "listing_has_no_photos",
-                          message:
-                            "Carica almeno una foto e aspetta che finisca l'upload prima dello staging.",
-                        },
-                      },
-                    };
-                    throw err;
-                  }
-                  // Sync photos (and light fields) so preview API sees them on the listing.
-                  await api.patch(`/cloud/me/properties/${editing.id}`, {
-                    photos: payload.photos,
-                    floor_plan_url: payload.floor_plan_url || null,
-                  });
-                }}
-                onPaidAttached={async () => {
-                  const items = await reloadListings().catch(() => []);
-                  const fresh = (items || []).find((x) => x.id === editing.id);
-                  if (fresh?.photos) setForm((f) => ({ ...f, photos: fresh.photos }));
-                }}
-                testIdPrefix="sell-staging"
-              />
-            ) : (
-              <p className="text-[11px] text-stone-500 mt-2" data-testid="sell-staging-hint">
-                {t("cloud.sell.staging_need_listing")}
-              </p>
-            )}
-            <B2CVideoTourPanel
-              listingId={editing?.id || null}
-              photoCount={(form.photos || []).length}
-              onError={(msg) => setError(msg)}
-              testIdPrefix="sell-video"
-            />
-          </Field>
-
-          <Field label={t("cloud.sell.f_floor_plan")}>
-            <p className="text-xs text-stone-500 mb-2">{t("cloud.sell.f_floor_plan_hint")}</p>
-            <FloorPlanUploader
-              url={form.floor_plan_url}
-              onChange={(url) => setForm({ ...form, floor_plan_url: url || "" })}
-            />
-          </Field>
+          </div>
 
           <div className="flex gap-3 pt-2">
             <button type="submit" disabled={busy} data-testid="sell-save-btn"

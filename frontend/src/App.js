@@ -84,6 +84,28 @@ function RouteFallback() {
   );
 }
 
+/** Evita il flash grigio “altra pagina” aprendo ImmobilCloud (lazy chunk). */
+function CloudRouteFallback() {
+  return (
+    <div
+      data-testid="cloud-route-loading"
+      className="min-h-screen flex flex-col bg-[#fbf9f5] text-[#0B1E3F]"
+    >
+      <div className="sticky top-0 z-40 border-b border-stone-200/80 bg-[#fbf9f5]/90 px-5 sm:px-8 md:px-12 lg:px-16 py-4">
+        <p
+          className="text-xl md:text-2xl tracking-tight font-medium"
+          style={{ fontFamily: "'Fraunces', Georgia, serif" }}
+        >
+          ImmobilCloud<sup className="text-[10px] text-[#C19A6B] ml-0.5">™</sup>
+        </p>
+      </div>
+      <div className="flex-1 flex items-center justify-center text-stone-500 font-sans text-sm uppercase tracking-widest">
+        …
+      </div>
+    </div>
+  );
+}
+
 
 function ScrollToTop() {
   const { pathname, hash } = useLocation();
@@ -195,8 +217,15 @@ function App() {
                   <Route path="cookie" element={<LegalDocPage />} />
                   <Route path="termini" element={<LegalDocPage />} />
 
-                  {/* B2C portal — nested boundary isolates portal crashes from CRM */}
-                  <Route path="cloud/*" element={<ImmocloudApp />} />
+                  {/* B2C portal — Suspense locale: niente unmount verso fallback grigio globale */}
+                  <Route
+                    path="cloud/*"
+                    element={
+                      <Suspense fallback={<CloudRouteFallback />}>
+                        <ImmocloudApp />
+                      </Suspense>
+                    }
+                  />
 
                   {/* B2B agency CRM — one boundary for all /app/* surfaces */}
                   <Route
