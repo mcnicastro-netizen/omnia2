@@ -25,11 +25,24 @@ export default function AccountDashboard() {
   const { t, i18n } = useTranslation();
   const lang = (i18n.language || "it").slice(0, 2);
   const nav = useNavigate();
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const [searches, setSearches] = useState([]);
   const [favorites, setFavorites] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [loggingOut, setLoggingOut] = useState(false);
+
+  const onLogout = async () => {
+    if (loggingOut) return;
+    setLoggingOut(true);
+    try {
+      await logout();
+      // Area riservata: Accedi | Registrati (stesso landing del gate non autenticato).
+      nav(`/${lang}/cloud/area`, { replace: true });
+    } finally {
+      setLoggingOut(false);
+    }
+  };
 
   useEffect(() => {
     if (user === null) return;
@@ -95,6 +108,21 @@ export default function AccountDashboard() {
       />
 
       <div className="max-w-5xl mx-auto px-5 sm:px-8 md:px-16 py-10">
+        <div className="mb-8 flex flex-wrap items-center justify-between gap-3">
+          <p className="text-sm text-stone-600">
+            {user?.email}
+          </p>
+          <button
+            type="button"
+            data-testid="account-logout"
+            disabled={loggingOut}
+            onClick={onLogout}
+            className="px-4 py-2 text-[11px] uppercase tracking-[0.18em] border border-stone-300 text-stone-700 rounded-lg hover:border-[#0B1E3F] hover:text-[#0B1E3F] transition disabled:opacity-60"
+          >
+            {t("cloud.account.logout")}
+          </button>
+        </div>
+
         {error && (
           <div data-testid="account-error" className="mb-6 text-xs text-rose-700 bg-rose-50 border border-rose-200 rounded-xl px-4 py-3">
             {error}

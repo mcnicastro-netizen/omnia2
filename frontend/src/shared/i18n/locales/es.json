@@ -913,6 +913,7 @@
     "nav_academy": "Academy",
     "nav_area": "Área reservada",
     "nav_account": "Mi cuenta",
+    "nav_logout": "Salir",
     "area_title": "Área reservada",
     "area_subtitle": "Accede si ya tienes cuenta, o crea una gratis en segundos.",
     "area_login_tag": "Ya registrado",
@@ -1233,7 +1234,8 @@
       "freq_daily": "Diario",
       "freq_weekly": "Semanal",
       "active": "Activa",
-      "confirm_delete": "¿Eliminar esta búsqueda guardada?"
+      "confirm_delete": "¿Eliminar esta búsqueda guardada?",
+      "logout": "Salir"
     },
     "nav_mutui": "Hipotecas",
     "nav_visura": "Visura",
