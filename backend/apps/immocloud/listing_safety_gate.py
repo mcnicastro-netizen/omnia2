@@ -57,7 +57,11 @@ def soft_alert_in_cooldown(listing: Dict[str, Any], *, now: Optional[datetime] =
             sg.get("verdict") == VERDICT_REVIEW
             and not (sg.get("hard_hits") or sg.get("soft_hits"))
         ):
-            last = _parse_iso(sg.get("checked_at")) or _parse_iso(listing.get("updated_at"))
+            last = (
+                _parse_iso(sg.get("scanned_at"))
+                or _parse_iso(sg.get("checked_at"))
+                or _parse_iso(listing.get("updated_at"))
+            )
     if not last:
         return False
     if last.tzinfo is None:
