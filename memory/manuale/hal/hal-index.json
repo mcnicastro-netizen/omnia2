@@ -1,5 +1,5 @@
 {
-  "version": "0.49-d142-pwa-scout",
+  "version": "0.50-d143-pwa-qr-area",
   "updated": "2026-11-05",
   "voices_total": 391,
   "source_files": [
@@ -11,7 +11,7 @@
     {
       "file": "01-primo-accesso.yaml",
       "voices": 13,
-      "md5": "3ed43035cab1393c2bafdd6266df6b1a"
+      "md5": "260e73ca751bd190584fdba1804c07c4"
     },
     {
       "file": "02-dashboard.yaml",
@@ -202,5 +202,5 @@
       "md5": "5e88370cdf2c070dc30c7c3f036b85db"
     }
   ],
-  "notes": "2026-11-05: D-141 mappa Idealista + home 4 tile · D-139 news · Cap.00/01/21. Fingerprints regenerated from YAML on disk. Live RAG reindex: POST /api/app/hal/knowledge/reindex?force=true (super_admin). 2026-11-04: D-140 Vendi/video · D-136 Stripe dogfood · D-135 B2C CSRF. 2026-10-19: D-125 atti · D-128 staging €1,49 · Cap.9 crediti-costo · Cap.18 sell-doc-promo. 2026-10-14: D-124 Cap.21 APE/piano/PDF · Cap.18 sell-doc-promo · PR #40. 2026-10-12: Stripe webhook Railway omnia-railway-api 200 OK · api.stripe-sandbox-cloud / api.railway-api-deploy. 2026-10-10: D-123 Railway API live · api.railway-api-deploy · cloud-secrets-vault Personal UI note. 2026-10-06: Stripe sandbox Cloud · api.cloud-secrets-vault · api.stripe-sandbox-cloud · Cap.19 billing. 2026-09-24: A-028g/h/i · Cap.2 Attività · Cap.10 Conferma e applica · Cap.18 distinzione. 2026-09-21: hub import A–E · HAL import.tutte-le-forme. 2026-09-19: D-085 storage quota · Cestino · Cap.20 Ruota."
+  "notes": "2026-11-05: D-143 PWA QR→Area + nav opaca · D-142 Scout · D-141 mappa · Cap.00/01. Fingerprints regenerated from YAML on disk. Live RAG reindex: POST /api/app/hal/knowledge/reindex?force=true (super_admin). 2026-11-04: D-140 Vendi/video · D-136 Stripe dogfood · D-135 B2C CSRF. 2026-10-19: D-125 atti · D-128 staging €1,49 · Cap.9 crediti-costo · Cap.18 sell-doc-promo. 2026-10-14: D-124 Cap.21 APE/piano/PDF · Cap.18 sell-doc-promo · PR #40. 2026-10-12: Stripe webhook Railway omnia-railway-api 200 OK · api.stripe-sandbox-cloud / api.railway-api-deploy. 2026-10-10: D-123 Railway API live · api.railway-api-deploy · cloud-secrets-vault Personal UI note. 2026-10-06: Stripe sandbox Cloud · api.cloud-secrets-vault · api.stripe-sandbox-cloud · Cap.19 billing. 2026-09-24: A-028g/h/i · Cap.2 Attività · Cap.10 Conferma e applica · Cap.18 distinzione. 2026-09-21: hub import A–E · HAL import.tutte-le-forme. 2026-09-19: D-085 storage quota · Cestino · Cap.20 Ruota."
 }

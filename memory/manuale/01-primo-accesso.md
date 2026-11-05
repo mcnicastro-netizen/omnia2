@@ -73,7 +73,7 @@ Se l'email è già registrata (B2C o B2B), la registrazione risponde **409** con
 
 **Messaggi e visite (D-138 Idealista+)**: da Account o Vendi → `/cloud/account/messages`. Inbox delle `listing_inquiries` (filtri, nota privata, Accetta/Rifiuta/Fatta visita, reply email/tel/WhatsApp). Dettaglio Cap. 18 §18.7b.
 
-### 1.2.1b2 Home ImmobilCloud — 4 riquadri + Cerca casa / mappa (D-139 / D-141)
+### 1.2.1b2 Home ImmobilCloud — 4 riquadri + Cerca casa / mappa / app (D-139…D-143)
 
 **Home** (`/it/cloud`): sotto l’hero con form ricerca, griglia **4 riquadri** (`cloud-tools`):
 
@@ -81,10 +81,16 @@ Se l'email è già registrata (B2C o B2B), la registrazione risponde **409** con
 |------|----------------|------|
 | **Scout** | `/cloud/search` | Fiore all’occhiello: completezza, prezzo, domande (D-142) |
 | **Cerca su mappa** | `/cloud/search?view=map` | Flusso mappa stile Idealista (D-141) |
-| **Scarica app** | `/{lang}/cloud/app` | QR → **Area** Accedi/Crea (`/cloud/area?from=pwa`) + Installa (D-143); iOS: Condividi → Home |
+| **Scarica app** | `/{lang}/cloud/app` | Guida + QR (D-143) |
 | **News** | ticker RSS | Casa24 · mutui · arredo; `GET /api/cloud/news` (D-139) |
 
 **Visura** e **HAL Legal** restano in **nav** (non nei tile home).
+
+**Scarica app / QR (D-143)**  
+1. Tile home → `/cloud/app` (QR grande + istruzioni Android/iOS).  
+2. Il **QR** apre `/{lang}/cloud/area?from=pwa` → **Accedi** | **Crea account**.  
+3. Su Area con `from=pwa`: striscia **Installa** (Android dialog nativo; iOS link alla guida).  
+4. Nav sticky **opaca** (cream pieno): niente testo hero in trasparenza sulla barra.
 
 **Cerca / Vendi**: banner Scout in evidenza (copy «fiore all’occhiello»).
 

@@ -1,7 +1,13 @@
+## 2026-11-05 — D-143 chiusura: QR→Area · nav opaca · sync HAL v0.50
+
+- QR atterra su `/cloud/area?from=pwa` (Accedi | Crea) + striscia Installa (PR #105)
+- Nav sticky **opaca** — stop testo hero in trasparenza (PR #106)
+- Docs completi Cap.01 MD/YAML · IMPORT_HAL **v0.50** · CHANGELOG · NEXT_SESSION · diario · reindex HAL
+
 ## 2026-11-05 — D-143 Scarica app via QR (flusso Idealista)
 
-- Pagina `/{lang}/cloud/app`: QR desktop → telefonino + CTA Installa
-- Tile home punta alla pagina QR; prompt PWA catturato early
+- Pagina `/{lang}/cloud/app`: QR desktop → telefonino + CTA Installa (PR #104)
+- Tile home punta alla pagina guida; prompt PWA catturato early
 - Onestà iOS: Condividi → Aggiungi a Home (no silent install Apple)
 - DECISIONS D-143 · Cap.01 HAL · dep `qrcode`
 

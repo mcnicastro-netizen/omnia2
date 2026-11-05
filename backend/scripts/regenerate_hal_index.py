@@ -51,13 +51,13 @@ def main() -> None:
         new_chapters.append(entry)
 
     out = {
-        "version": "0.49-d142-pwa-scout",
+        "version": "0.50-d143-pwa-qr-area",
         "updated": date.today().isoformat(),
         "voices_total": total,
         "source_files": source_files,
         "new_chapters_m3": new_chapters,
         "notes": (
-            "2026-11-05: D-141 mappa Idealista + home 4 tile · D-139 news · Cap.00/01/21. "
+            "2026-11-05: D-143 PWA QR→Area + nav opaca · D-142 Scout · D-141 mappa · Cap.00/01. "
             "Fingerprints regenerated from YAML on disk. "
             "Live RAG reindex: POST /api/app/hal/knowledge/reindex?force=true (super_admin). "
             "2026-11-04: D-140 Vendi/video · D-136 Stripe dogfood · D-135 B2C CSRF. "
