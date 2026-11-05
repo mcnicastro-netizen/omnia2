@@ -566,13 +566,53 @@ export default function CloudSearchPage() {
 
       <section className="px-5 sm:px-8 md:px-16 py-10 max-w-6xl mx-auto">
         <div className="flex flex-col lg:flex-row gap-8 lg:gap-10">
-          <aside className="lg:w-72 flex-shrink-0">
-            <div className="rounded-2xl bg-[#f7f4ef] border border-stone-200/80 p-5 space-y-5 lg:sticky lg:top-24">
+          <aside className="lg:w-72 flex-shrink-0 space-y-4 lg:sticky lg:top-24">
+            <div className="rounded-2xl bg-[#f7f4ef] border border-stone-200/80 p-5 space-y-5">
               <h2 className="text-[11px] uppercase tracking-[0.28em] text-[#C19A6B]">
                 {t("cloud.filters")}
               </h2>
               {filterSidebar}
             </div>
+            <Link
+              to={(() => {
+                const q = new URLSearchParams();
+                q.set("view", "map");
+                if (filters.operation) q.set("operation", filters.operation);
+                if (filters.city) q.set("city", filters.city);
+                if (filters.property_type) q.set("property_type", filters.property_type);
+                if (filters.price_min) q.set("price_min", filters.price_min);
+                if (filters.price_max) q.set("price_max", filters.price_max);
+                if (filters.rooms_min) q.set("rooms_min", filters.rooms_min);
+                if (filters.bedrooms_min) q.set("bedrooms_min", filters.bedrooms_min);
+                if (filters.energy_class) q.set("energy_class", filters.energy_class);
+                return `/${lang}/cloud/search?${q.toString()}`;
+              })()}
+              data-testid="search-map-box"
+              className="block rounded-2xl overflow-hidden border border-stone-200 bg-[#0B1E3F] text-white hover:border-[#C19A6B] transition group"
+            >
+              <div className="relative aspect-[16/10]">
+                <img
+                  src="/cloud/living.jpg"
+                  alt=""
+                  className="absolute inset-0 w-full h-full object-cover opacity-50 group-hover:scale-105 transition duration-700"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-[#0B1E3F] via-[#0B1E3F]/70 to-transparent" />
+                <div className="absolute inset-x-0 bottom-0 p-4">
+                  <p className="text-[10px] uppercase tracking-[0.28em] text-[#C19A6B] mb-1">
+                    {t("cloud.map_box_eyebrow", "Esplora")}
+                  </p>
+                  <p
+                    className="text-xl font-light"
+                    style={{ fontFamily: "'Fraunces', Georgia, serif" }}
+                  >
+                    {t("cloud.map_box_title", "Cerca su mappa")}
+                  </p>
+                  <p className="text-xs text-white/70 mt-1">
+                    {t("cloud.map_box_text", "Lista e pin insieme — sposta la mappa e cerca in zona.")}
+                  </p>
+                </div>
+              </div>
+            </Link>
           </aside>
 
           <main className="flex-1 min-w-0">

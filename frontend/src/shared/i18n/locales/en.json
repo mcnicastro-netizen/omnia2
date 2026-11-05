@@ -1434,8 +1434,9 @@
     "map_search_area": "Search this area",
     "map_area_active": "Searching the map area",
     "map_no_in_area": "No homes in this area",
-    "nav_map": "Map search",
-    "hero_map_cta": "Search on map"
+    "map_box_eyebrow": "Explore",
+    "map_box_title": "Search on map",
+    "map_box_text": "List and pins together — move the map and search this area."
   },
   "portali": {
     "available": "Available portals",
