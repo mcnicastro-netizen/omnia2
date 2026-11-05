@@ -1,3 +1,9 @@
+## 2026-11-05 — D-144 fix domain check .it (falso NOT REGISTERED)
+
+- Causa: rdap.org 404 su `.it` (no RDAP IANA) trattato come dominio libero
+- Fix: WHOIS `whois.nic.it` + mai «libero» se DNS risolve; tolto fallback pubtest
+- Dogfood: `nicastroimmobiliare.it` → registrante Nicastro Immobiliare / Aruba
+
 ## 2026-11-05 — D-143 chiusura: QR→Area · nav opaca · sync HAL v0.50
 
 - QR atterra su `/cloud/area?from=pwa` (Accedi | Crea) + striscia Installa (PR #105)

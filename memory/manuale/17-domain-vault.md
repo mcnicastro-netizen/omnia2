@@ -7,7 +7,7 @@
 - Non è un **registrar**. OMNIA **non registra** domini al posto tuo, **non paga la rinnovo**, **non gestisce** il pannello DNS al tuo posto (a meno che tu ce lo chieda esplicitamente e ne firmi mandato — flusso separato e manuale, non v1).
 - Non è un **DNS provider**. Il tuo dominio resta al tuo registrar (Register, GoDaddy, Aruba, ecc.). OMNIA fornisce solo un **target CNAME/ALIAS** verso cui puntare il tuo dominio.
 - Non è un **transfer di dominio**. Il flusso "help-to-connect" collega il tuo dominio esistente al sito OMNIA — **non trasferisce ownership**. Se domani lasci OMNIA, ripunti il DNS altrove e il dominio è ancora tuo.
-- Non è un **WHOIS lookup**. Il checker pubblico usa **RDAP** (Registration Data Access Protocol) — il successore del WHOIS. Se il TLD del dominio non supporta ancora RDAP, il check fallisce con messaggio dedicato.
+- Il checker pubblico usa **RDAP** dove il TLD è in bootstrap IANA; per **`.it`** (D-144) usa **WHOIS Registro.it** (`whois.nic.it`) perché `.it` non ha RDAP pubblico IANA. Mai dichiarare «dominio libero» se il DNS risolve.
 
 ---
 
@@ -184,7 +184,7 @@ Uno strumento **pubblico** (accessibile senza login) che permette a un titolare 
 
 **Come funziona (`domain_check.py`)**
 1. L'utente inserisce il dominio (es. `agenziaesempio.it`) + nome agenzia (opzionale).
-2. Il backend fa una **query RDAP** (successore standard del WHOIS).
+2. Il backend interroga **RDAP** (se disponibile) oppure **WHOIS `.it`** (D-144).
 3. Analizza il registrant:
    - **Corrisponde al nome agenzia?** → ok
    - **È redatto/privacy-proxy?** → warning (GDPR privacy proxy comune)
@@ -196,8 +196,7 @@ Uno strumento **pubblico** (accessibile senza login) che permette a un titolare 
 Il checker ha un rate limit per IP (`_check_rate_limit`). Se superi la soglia in poco tempo → response 429 (Too Many Requests). Non ti bannano — riprova dopo qualche minuto.
 
 **Se il TLD non supporta RDAP**
-Alcuni TLD nazionali (es. certi ccTLD) **non hanno ancora endpoint RDAP**. In quel caso il check restituisce:
-> *"Il TLD non supporta ancora RDAP. Riprova più tardi o contattaci per un check manuale."*
+Alcuni ccTLD non sono in bootstrap IANA. Per **`.it`** c’è fallback WHOIS ufficiale (D-144). Altri TLD senza RDAP/WHOIS configurato: messaggio di retry / check manuale — **non** «dominio libero».
 
 **Lead generation opzionale**
 Dopo il check, l'utente può cliccare **"Richiedi consulenza"** → `POST /api/marketing/domain/lead` crea un lead marketing nell'agenda OMNIA. Utile per catturare interesse commerciale prima del signup vero.
@@ -209,9 +208,9 @@ Dopo il check, l'utente può cliccare **"Richiedi consulenza"** → `POST /api/m
 ## 17.8 · RDAP vs WHOIS · perché usiamo RDAP
 
 **Contesto**
-Il WHOIS è il protocollo storico (RFC 3912, 2004) per interrogare i dati di registrazione dominio. **RDAP** (Registration Data Access Protocol, RFC 7480-7484) è il suo successore standardizzato — output JSON strutturato, supporto internazionalizzazione, controllo accessi granulare.
+Il WHOIS è il protocollo storico (RFC 3912, 2004). **RDAP** (RFC 7480-7484) è il successore JSON. Preferiamo RDAP dove esiste; **`.it` non è in IANA RDAP** → WHOIS `whois.nic.it` (**D-144**, evita falsi «NOT REGISTERED»).
 
-**Perché OMNIA usa RDAP e non WHOIS**
+**Perché OMNIA preferisce RDAP dove disponibile**
 - **JSON strutturato**: parsing affidabile (no scraping di testo libero).
 - **GDPR ready**: il redacted (anonimizzazione registrant) è nativo.
 - **Standard aperto**: tutti i TLD europei stanno migrando.
@@ -269,7 +268,7 @@ Non c'è UI dedicata v1 — solo accesso via API/DB (super_admin OMNIA per dispu
 - ❌ **Nessuna registrazione domini** al posto tuo (**è la promessa D-054**, non un limite tecnico).
 - ❌ **Nessun rinnovo automatico**. Il rinnovo del dominio è tua responsabilità.
 - ❌ **Nessun DNS panel** in OMNIA. Non gestisci i record dal nostro pannello — apri il tuo registrar.
-- ❌ **Nessun WHOIS query fallback**. Se il TLD non supporta RDAP, il checker non prova WHOIS legacy.
+- ✅ **WHOIS fallback per `.it`** (D-144). Altri TLD: solo RDAP + prova DNS (mai «libero» se DNS risolve).
 - ❌ **Nessuna UI per l'audit trail**. `domain_vault_events` esiste solo lato DB — no pagina *"Storico conferme Domain Vault"*.
 - ❌ **Nessuna notifica scadenza dominio**. Il checker pubblico avvisa "scade fra 90 giorni" solo se lo lanci — non c'è cron che monitora automaticamente i domini delle agenzie iscritte.
 - ❌ **Nessun supporto multi-dominio per agenzia**. Il campo `existing_domain` è **singolare** — un dominio per agenzia. Se hai `agenziaesempio.it` + `esempio-immobili.com`, ne dichiari uno solo.

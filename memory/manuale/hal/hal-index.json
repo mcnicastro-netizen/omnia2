@@ -1,5 +1,5 @@
 {
-  "version": "0.50-d143-pwa-qr-area",
+  "version": "0.51-d144-domain-whois",
   "updated": "2026-11-05",
   "voices_total": 391,
   "source_files": [
@@ -91,7 +91,7 @@
     {
       "file": "17-domain-vault.yaml",
       "voices": 16,
-      "md5": "63e9f2df14b151f27ccbd65ef700b438"
+      "md5": "d35ed4597e2e296a506d669d5da8ce88"
     },
     {
       "file": "18-notifiche-attivita.yaml",
