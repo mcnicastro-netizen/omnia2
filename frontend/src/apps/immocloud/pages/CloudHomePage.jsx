@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { api } from "../../../shared/lib/api";
 import PropertyCard from "../components/PropertyCard";
+import PortalNewsBox from "../components/PortalNewsBox";
 
 const PROPERTY_TYPES = [
   { v: "", label: "Qualsiasi" },
@@ -325,6 +326,8 @@ export default function CloudHomePage() {
           </div>
         </div>
       </section>
+
+      <PortalNewsBox />
 
       {/* Intent mosaic with photography */}
       <section className="px-5 sm:px-8 md:px-16 py-14" data-testid="cloud-intents">

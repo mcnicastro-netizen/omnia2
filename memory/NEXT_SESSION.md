@@ -1,6 +1,6 @@
 # Prossima sessione — programma passi
 
-**Aggiornato**: 4 Novembre 2026 sera — **D-140** dogfood Vendi chiuso (safety soft · Scout · video · layout)  
+**Aggiornato**: 5 Novembre 2026 — **D-139** news box portale attivato (+ D-140 già live)  
 **Repo**: https://github.com/mcnicastro-netizen/omnia2 ✅  
 **Environment**: omnia2 (esiste; UI Dashboard può glitchare — non Start Fresh)
 
@@ -26,10 +26,10 @@ Vault: [`memory/CLOUD_SECRETS_INVENTORY.md`](./CLOUD_SECRETS_INVENTORY.md).
 
 ## Filo prodotto
 
-1. **04-Nov sera chiuso:** D-140 live (PR #84–#90) · Vendi ordine + video tour · Scout · safety soft rescan · docs/HAL v0.47.
-2. **Backlog Founder:** D-139 news box RSS (unica soluzione); riprove E2E portale a mente fresca.
+1. **05-Nov:** D-139 news box RSS **live** — `GET /api/cloud/news` + box home/account (`OMNIA_PORTAL_NEWS` default on).
+2. **04-Nov sera chiuso:** D-140 live (PR #84–#90) · Vendi ordine + video tour · Scout · safety soft rescan · docs/HAL v0.47.
 3. **Ops:** hard refresh FE se cache chunk; reindex HAL post-merge docs se non già fatto in sessione.
-4. **Opzionale:** shadow staging `professional` su Railway; renew Tavily se serve HAL Legal search.
+4. **Riprove E2E** portale a mente fresca (dogfood Privato).
 
 ---
 

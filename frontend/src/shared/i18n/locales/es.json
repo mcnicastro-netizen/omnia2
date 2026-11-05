@@ -128,7 +128,6 @@
     "img_strip_caption": "Una profesión, todo el territorio",
     "img_closing_alt": "Residencia con piscina — Omnia Real Estate Lab"
   },
-
   "health": {
     "checking": "Comprobando el servicio…",
     "ok": "Servicio operativo",
@@ -953,7 +952,7 @@
     "reg_intent_rent_out_desc": "Encuentra inquilinos",
     "reg_intent_alerts": "🔔 Quiero alertas de nuevos anuncios",
     "reg_intent_alerts_desc": "Te avisamos cuando aparezca un inmueble compatible",
-    "reg_email_exists": "Este email ya está registrado. Accede con tu contraseña.",
+    "reg_email_exists": "Este correo ya está registrado. Accede con tu contraseña.",
     "reg_go_login": "Ir al login →",
     "reg_channels_title": "¿Cómo contactarte?",
     "reg_channel_push_coming": "Notificaciones browser (próximamente)",
@@ -968,8 +967,6 @@
     "reg_done_text": "Hola {{name}}, tu cuenta está lista.",
     "reg_back_home": "Volver al inicio",
     "reg_go_account": "Ir al área reservada",
-    "reg_email_exists": "Este correo ya está registrado. Accede con tu contraseña.",
-    "reg_go_login": "Ir al login →",
     "f_bedrooms_min": "Dormitorios mínimos",
     "f_energy_class": "Clase energética",
     "view_list": "Lista",
@@ -1359,6 +1356,19 @@
       "err_checkout": "Checkout no disponible",
       "err_pay_start": "No se pudo iniciar el pago",
       "err_download": "Error al descargar el PDF"
+    },
+    "news": {
+      "eyebrow": "Del mercado",
+      "title": "Noticias útiles, sin ruido",
+      "subtitle": "Vivienda, hipotecas e interiores de fuentes abiertas. Abre el artículo en el sitio original.",
+      "filter_label": "Categorías",
+      "filter_all": "Todas",
+      "cat_immobiliare": "Inmobiliario",
+      "cat_mutui": "Hipotecas",
+      "cat_arredo": "Interiores",
+      "empty": "No hay noticias en esta categoría por ahora.",
+      "open_external": "Abrir ↗",
+      "disclaimer": "Fuentes de terceros · el contenido pertenece a los editores. OMNIA no modifica el texto."
     }
   },
   "properties": {

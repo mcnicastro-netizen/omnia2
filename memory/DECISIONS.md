@@ -20,11 +20,12 @@ Registro di tutte le decisioni di business e tecniche prese durante il progetto.
 - **Ship**: merge `main` PR #84–#90 (sera) · Railway + Vercel redeploy · health/sell 200.
 - **Stato**: ✅ **DECISIONE OPERATIVA REGISTRATA** · live · docs/HAL syncati stessa sera
 
-### D-139 — News box dinamico portale (backlog) · 04-Nov-2026
-- **Data**: 4 Novembre 2026
+### D-139 — News box dinamico portale · 04-Nov-2026 (attivato 05-Nov)
+- **Data**: 4 Novembre 2026 · **attivazione**: 5 Novembre 2026
 - **Contesto**: Founder chiede se è possibile un box news dinamico (immobiliare, mutui, arredo) con fonti gratuite; farà in seguito «in un’unica soluzione».
-- **Decisione**: **Sì, fattibile** — aggregatore RSS server-side + UI box (home/account), cache, link esterni. Nessuna API a pagamento obbligatoria. Fonti candidate gratuite: Casa24 / Idealista News / Immobiliare Magazine; MutuiOnline / Facile.it / Banca d’Italia; Domus / Interni / Elle Decor; AdE / ISTAT. v1 = 5–8 titoli da 2–3 feed curati, refresh orario.
-- **Stato**: ⏳ BACKLOG (non implementato in questo merge)
+- **Decisione**: **Sì** — aggregatore RSS server-side + UI box (home/account), cache ~1h, link esterni. Nessuna API a pagamento. Flag `OMNIA_PORTAL_NEWS` (default on).
+- **v1 live**: 3 feed curati → Casa24 (Sole 24 Ore), rassegna mutui (Google News RSS), Interni Magazine. Endpoint pubblico `GET /api/cloud/news`. UI `PortalNewsBox` su home ImmobilCloud + account (compact). Idealista/MutuiOnline/BdI RSS non raggiungibili → sostituiti con fonti gratuite equivalenti.
+- **Stato**: ✅ APPLICATA
 
 ### D-138 — B2C Idealista+ inbox messaggi/visite + telefono/WA profilo · 04-Nov-2026
 - **Data**: 4 Novembre 2026

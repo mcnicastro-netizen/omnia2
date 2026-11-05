@@ -14,6 +14,7 @@ import { useAuth, formatApiErrorDetail } from "../../../shared/lib/auth";
 import NotificationPreferencesPanel from "../../../shared/components/NotificationPreferencesPanel";
 import SecuritySettingsPanel from "../../../shared/components/SecuritySettingsPanel";
 import CloudPageHero from "./CloudPageHero";
+import PortalNewsBox from "./PortalNewsBox";
 
 const FREQ_OPTIONS = [
   { v: "instant", k: "cloud.account.freq_instant" },
@@ -353,6 +354,8 @@ export default function AccountDashboard() {
         <div className="mt-10">
           <SecuritySettingsPanel variant="cloud" />
         </div>
+
+        <PortalNewsBox compact />
       </div>
     </div>
   );

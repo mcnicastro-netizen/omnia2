@@ -128,7 +128,6 @@
     "img_strip_caption": "One profession, nationwide",
     "img_closing_alt": "Residence with pool — Omnia Real Estate Lab"
   },
-
   "health": {
     "checking": "Checking service…",
     "ok": "Service operational",
@@ -1008,7 +1007,7 @@
     "reg_intent_alerts": "🔔 I want alerts on new matching listings",
     "reg_intent_alerts_desc": "We notify you when a property matches your search",
     "reg_email_exists": "This email is already registered. Sign in with your password.",
-    "reg_go_login": "Go to login →",
+    "reg_go_login": "Go to sign in →",
     "reg_channels_title": "How should we reach you?",
     "reg_channel_push_coming": "Browser push (coming soon)",
     "reg_gdpr_text": "I consent to the processing of my personal data (GDPR).",
@@ -1022,8 +1021,6 @@
     "reg_done_text": "Hi {{name}}, your account is ready.",
     "reg_back_home": "Back to home",
     "reg_go_account": "Go to private area",
-    "reg_email_exists": "This email is already registered. Sign in with your password.",
-    "reg_go_login": "Go to sign in →",
     "f_bedrooms_min": "Minimum bedrooms",
     "f_energy_class": "Energy rating",
     "view_list": "List",
@@ -1413,6 +1410,19 @@
       "err_checkout": "Checkout unavailable",
       "err_pay_start": "Payment could not start",
       "err_download": "PDF download failed"
+    },
+    "news": {
+      "eyebrow": "From the market",
+      "title": "Useful news, without the noise",
+      "subtitle": "Homes, mortgages and interiors from open sources. Open the article on the publisher’s site.",
+      "filter_label": "Categories",
+      "filter_all": "All",
+      "cat_immobiliare": "Property",
+      "cat_mutui": "Mortgages",
+      "cat_arredo": "Interiors",
+      "empty": "No stories in this category right now.",
+      "open_external": "Open ↗",
+      "disclaimer": "Third-party sources · content belongs to the publishers. OMNIA does not edit the text."
     }
   },
   "portali": {

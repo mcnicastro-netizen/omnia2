@@ -128,7 +128,6 @@
     "img_strip_caption": "Una professione, tutto il territorio",
     "img_closing_alt": "Residenza con piscina — Omnia Real Estate Lab"
   },
-
   "health": {
     "checking": "Verifica del servizio in corso…",
     "ok": "Servizio operativo",
@@ -1634,6 +1633,19 @@
       "err_checkout": "Checkout non disponibile",
       "err_pay_start": "Pagamento non avviato",
       "err_download": "Download PDF non riuscito"
+    },
+    "news": {
+      "eyebrow": "Dal mercato",
+      "title": "Notizie utili, senza rumore",
+      "subtitle": "Casa, mutui e arredo da fonti aperte. Apri l’articolo sul sito originale.",
+      "filter_label": "Categorie",
+      "filter_all": "Tutte",
+      "cat_immobiliare": "Immobiliare",
+      "cat_mutui": "Mutui",
+      "cat_arredo": "Arredo",
+      "empty": "Nessuna notizia in questa categoria al momento.",
+      "open_external": "Apri ↗",
+      "disclaimer": "Fonti terze · i contenuti restano dei rispettivi editori. OMNIA non ne modifica il testo."
     }
   },
   "valuator": {
