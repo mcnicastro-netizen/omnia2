@@ -1,3 +1,10 @@
+## 2026-11-05 — D-142 PWA Scarica app · Scout in evidenza Cerca/Vendi
+
+- Home: tile HAL Legal → **Scarica app** (manifest + SW PWA); Legal resta in nav
+- 4 tile: Scout · Mappa · Scarica app · News
+- Cerca / Vendi: banner + copy Scout «fiore all’occhiello»
+- DECISIONS D-142 · Cap.01 MD/YAML · CHANGELOG
+
 ## 2026-11-05 — D-141 mappa Idealista + home 4 tile · D-139 news live · docs/HAL
 
 - Home ImmobilCloud: Scout · **Cerca su mappa** · HAL Legal · News (Visura solo nav)

@@ -51,7 +51,7 @@ def main() -> None:
         new_chapters.append(entry)
 
     out = {
-        "version": "0.48-d141-map-news",
+        "version": "0.49-d142-pwa-scout",
         "updated": date.today().isoformat(),
         "voices_total": total,
         "source_files": source_files,

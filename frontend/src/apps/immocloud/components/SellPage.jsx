@@ -694,11 +694,37 @@ export default function SellPage() {
       <CloudPageHero
         eyebrow="ImmobilCloud · Vendi"
         title={t("cloud.sell.title")}
-        subtitle={t("cloud.sell.subtitle")}
-        image="/cloud/intent-sell.jpg"
+        subtitle={t(
+          "cloud.sell.subtitle_scout",
+          "Pubblica su ImmobilCloud. Completa l’annuncio: Scout — il nostro fiore all’occhiello — lo legge come un acquirente e ti dice cosa manca."
+        )}
+        image="/cloud/scout.jpg"
       />
 
       <div className="max-w-6xl mx-auto px-5 sm:px-8 md:px-12 lg:px-16 py-10">
+      <div
+        data-testid="sell-scout-banner"
+        className="mb-8 rounded-2xl border border-[#C19A6B]/35 bg-[#f7f4ef] px-5 py-4 sm:px-6 sm:py-5"
+      >
+        <p className="text-[10px] uppercase tracking-[0.28em] text-[#C19A6B] mb-1">
+          {t("cloud.sell.scout_eyebrow", "Scout · venditore")}
+        </p>
+        <p
+          className="text-lg sm:text-xl font-light text-[#0B1E3F] leading-snug"
+          style={{ fontFamily: "'Fraunces', Georgia, serif" }}
+        >
+          {t(
+            "cloud.sell.scout_title",
+            "Più l’annuncio è completo, più Scout convince chi cerca casa."
+          )}
+        </p>
+        <p className="text-sm text-stone-600 mt-1.5 max-w-3xl">
+          {t(
+            "cloud.sell.scout_text",
+            "Foto chiare, APE, metri, prezzo onesto: in scheda pubblica puoi «Guardare con gli occhi di Scout» e vedere cosa migliora prima della visita."
+          )}
+        </p>
+      </div>
       <div className="lg:grid lg:grid-cols-12 lg:gap-8 lg:items-start">
       <div className="lg:col-span-8 min-w-0">
       <div className="mb-5 flex flex-wrap gap-2">

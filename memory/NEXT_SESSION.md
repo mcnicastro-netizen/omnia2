@@ -1,6 +1,6 @@
 # Prossima sessione — programma passi
 
-**Aggiornato**: 5 Novembre 2026 — **D-141** mappa Idealista + home 4 tile · **D-139** news live · docs/HAL sync  
+**Aggiornato**: 5 Novembre 2026 — **D-142** PWA Scarica app + Scout in evidenza · D-141/D-139 live  
 **Repo**: https://github.com/mcnicastro-netizen/omnia2 ✅  
 **Environment**: omnia2 (esiste; UI Dashboard può glitchare — non Start Fresh)
 
@@ -19,7 +19,7 @@ Vault: [`memory/CLOUD_SECRETS_INVENTORY.md`](./CLOUD_SECRETS_INVENTORY.md).
 |-------|-----|
 | Freccia | [`docs/audit/OMNIA_COERENZA_SISTEMA.md`](../docs/audit/OMNIA_COERENZA_SISTEMA.md) |
 | **Vendi B2C** | **D-135** + **D-136** staging + **D-137/b** safety + **D-138** inbox + **D-140** video/layout ✅ |
-| **Home / Cerca** | **D-139** news + **D-141** mappa Idealista + 4 tile ✅ |
+| **Home / Cerca** | **D-139** news + **D-141** mappa + **D-142** PWA/Scout ✅ |
 | Listino B2C | [`memory/PRICING_B2C.md`](./PRICING_B2C.md) v1.4 |
 | API / FE | Railway D-123 · Vercel D-074/D-133 |
 
@@ -27,7 +27,8 @@ Vault: [`memory/CLOUD_SECRETS_INVENTORY.md`](./CLOUD_SECRETS_INVENTORY.md).
 
 ## Filo prodotto
 
-1. **05-Nov chiuso:** D-141 live (PR #99/#101) — home Scout·Mappa·Legal·News; Cerca casa box mappa + `view=map` bbox; D-139 news RSS; docs/HAL v0.48.
+1. **05-Nov:** D-142 — home Scout·Mappa·**Scarica app**·News; Scout banner in Cerca/Vendi; PWA manifest+SW.
+2. **05-Nov:** D-141 mappa Idealista (PR #99/#101) + D-139 news; docs/HAL v0.48+.
 2. **04-Nov sera:** D-140 (PR #84–#90) · Vendi + video tour · Scout · safety soft.
 3. **Ops:** hard refresh FE se cache chunk; reindex HAL post-merge docs se non già fatto.
 4. **Riprove E2E** portale a mente fresca (dogfood Privato).

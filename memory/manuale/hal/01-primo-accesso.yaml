@@ -194,47 +194,46 @@ voci:
     screenshot: []
 
   - id: primo-accesso.home-cloud-tools-mappa
-    titolo: Home ImmobilCloud — 4 riquadri e Cerca su mappa (D-139 / D-141)
+    titolo: Home ImmobilCloud — 4 riquadri, PWA e Cerca su mappa (D-139 / D-141 / D-142)
     modulo: Primo accesso
     widget: null
     pubblico: [privato, titolare, agente, segreteria]
     livello: base
-    tags: [immobilcloud, home, mappa, cerca-casa, news, scout, hal-legal, d-139, d-141, bbox, idealista]
+    tags: [immobilcloud, home, mappa, cerca-casa, news, scout, pwa, scarica-app, d-139, d-141, d-142, bbox, idealista]
     correlati:
       - primo-accesso.area-riservata-cloud
       - api.portal-news-rss
       - api.cloud-search-bbox-map
-    domanda_naturale: "Dove trovo Cerca su mappa? Cosa ci sono nei box della home ImmobilCloud? Come funziona la ricerca sulla mappa?"
+    domanda_naturale: "Dove trovo Cerca su mappa? Come scarico l'app ImmobilCloud? Cosa ci sono nei box della home? Dove è Scout in Cerca e Vendi?"
     contenuto:
       a_cosa_serve: >
-        Orientarsi sulla home ImmobilCloud dopo il redesign 05-Nov:
-        4 riquadri Scout · Cerca su mappa · HAL Legal · News (ticker RSS).
-        Visura resta in nav, non nei tile. Cerca casa ha box mappa sotto
-        i filtri e modalità Idealista-like con bbox.
+        Orientarsi sulla home ImmobilCloud: 4 riquadri Scout · Cerca su
+        mappa · Scarica app (PWA) · News. Visura e HAL Legal restano in nav.
+        Scout è in evidenza anche in Cerca e Vendi (D-142).
       quando_si_usa: >
-        Visitatore su /cloud; chi cerca «Cerca su mappa»; chi vuole
-        news immobiliare/mutui/arredo senza lasciare il portale.
+        Visitatore su /cloud; installazione icona telefonino; ricerca mappa;
+        chi vuole capire Scout prima di una visita o mentre pubblica.
       passi:
         - "Home /it/cloud → griglia cloud-tools sotto l'hero."
+        - "Tile Scarica app: Chrome/Android Installa; iPhone Condividi→Home."
         - "Tile Cerca su mappa → /cloud/search?view=map."
-        - "In lista Cerca casa: box «Cerca su mappa» sotto i filtri."
+        - "Cerca casa / Vendi: banner Scout in evidenza."
         - "In mappa: pan/zoom → «Cerca in questa zona» → bbox in URL."
-        - "Tile News: titoli RSS a scorrimento (Casa24, mutui, Interni)."
-        - "Visura: voce nav /cloud/visura (non tile home)."
+        - "Tile News: titoli RSS a scorrimento."
+        - "HAL Legal e Visura: voci nav (non tile home)."
       errori_comuni:
-        - problema: "Non trovo Visura nei 4 box"
+        - problema: "Non trovo HAL Legal / Visura nei 4 box"
           soluzione: >
-            Voluto (D-141): Visura è in nav. I 4 box sono Scout, Mappa,
-            HAL Legal, News.
+            Voluto (D-141/D-142): sono in nav. I 4 box sono Scout, Mappa,
+            Scarica app, News.
+        - problema: "Su iPhone non appare Installa"
+          soluzione: >
+            Safari non espone beforeinstallprompt. Usa Condividi →
+            Aggiungi a Home. Serve HTTPS.
         - problema: "Non vedo Cerca su mappa"
           soluzione: >
-            Hard refresh FE. Home tile «Cerca su mappa» oppure, in
-            Cerca casa lista, box sotto i filtri. URL diretto
-            /it/cloud/search?view=map.
-        - problema: "Muovo la mappa e non cambia nulla"
-          soluzione: >
-            Dopo pan/zoom appare «Cerca in questa zona» — cliccalo.
-            Altrimenti i pin restano sulla ricerca precedente.
+            Hard refresh FE. Home tile oppure box sotto i filtri in lista.
+            URL /it/cloud/search?view=map.
       permessi:
         - Pubblico portale
     screenshot: []

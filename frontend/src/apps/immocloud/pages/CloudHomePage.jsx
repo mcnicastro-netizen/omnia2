@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { api } from "../../../shared/lib/api";
 import { PortalNewsTile } from "../components/PortalNewsBox";
+import usePwaInstall from "../../../shared/hooks/usePwaInstall";
 
 const PROPERTY_TYPES = [
   { v: "", label: "Qualsiasi" },
@@ -13,14 +14,14 @@ const PROPERTY_TYPES = [
   { v: "monolocale", label: "Monolocale" },
 ];
 
-/** Tre strumenti che NON ripetono Vendi/Valuta/Mutuo della nav + news. */
+/** Tre strumenti + tile PWA; il quarto slot è News a scorrimento. */
 const TOOL_TILES = [
   {
     key: "scout",
     to: (lang) => `/${lang}/cloud/search`,
     img: "/cloud/scout.jpg",
     title: "Scout",
-    text: "Prima della visita: completezza, prezzo in zona, domande da fare.",
+    text: "Il fiore all'occhiello: completezza, prezzo in zona, domande da fare — prima della visita.",
     testid: "tool-scout",
   },
   {
@@ -30,14 +31,6 @@ const TOOL_TILES = [
     title: "Cerca su mappa",
     text: "Lista e pin insieme — sposta la mappa e cerca in questa zona.",
     testid: "tool-map",
-  },
-  {
-    key: "legal",
-    to: (lang) => `/${lang}/legal`,
-    img: "/cloud/living.jpg",
-    title: "HAL Legal",
-    text: "Domande di diritto immobiliare, risposte orientative con fonti.",
-    testid: "tool-legal",
   },
 ];
 
@@ -235,7 +228,7 @@ export default function CloudHomePage() {
         </div>
       </section>
 
-      {/* Quattro riquadri: Scout · Visura · HAL Legal · News a scorrimento */}
+      {/* Quattro riquadri: Scout · Mappa · Scarica app · News */}
       <section className="px-5 sm:px-8 md:px-16 py-14 bg-[#f7f4ef]" data-testid="cloud-tools">
         <div className="max-w-6xl mx-auto mb-8">
           <p className="text-[11px] uppercase tracking-[0.28em] text-[#C19A6B] mb-2">
@@ -250,7 +243,7 @@ export default function CloudHomePage() {
           <p className="text-stone-600 mt-2 max-w-2xl">
             {t(
               "cloud.tools.subtitle",
-              "Cosa fare sull’annuncio, sui documenti e sul diritto — più le notizie del mercato, senza rumore."
+              "Scout sull’annuncio, mappa, app sul telefonino e notizie del mercato — senza rumore."
             )}
           </p>
         </div>
@@ -265,6 +258,7 @@ export default function CloudHomePage() {
               testid={tile.testid}
             />
           ))}
+          <PwaInstallTile />
           <PortalNewsTile />
         </div>
       </section>
@@ -337,5 +331,83 @@ function ToolTile({ to, img, title, text, testid }) {
         <p className="text-sm text-white/75 leading-relaxed">{text}</p>
       </div>
     </Link>
+  );
+}
+
+function PwaInstallTile() {
+  const { t } = useTranslation();
+  const { installed, canPrompt, iosHint, promptInstall } = usePwaInstall();
+  const [msg, setMsg] = useState("");
+
+  const onClick = async () => {
+    setMsg("");
+    if (installed) {
+      setMsg(t("cloud.pwa.already", "Già installata: aprila dall’icona sul telefonino."));
+      return;
+    }
+    const res = await promptInstall();
+    if (res.ok) {
+      setMsg(t("cloud.pwa.done", "Installazione avviata."));
+      return;
+    }
+    if (iosHint || res.reason === "ios") {
+      setMsg(
+        t(
+          "cloud.pwa.ios_hint",
+          "Su iPhone: tocca Condividi → Aggiungi a Home."
+        )
+      );
+      return;
+    }
+    setMsg(
+      t(
+        "cloud.pwa.browser_hint",
+        "Nel menu del browser scegli Installa app / Aggiungi a schermata Home."
+      )
+    );
+  };
+
+  return (
+    <button
+      type="button"
+      data-testid="tool-pwa"
+      onClick={onClick}
+      className="group relative block w-full text-left min-h-[280px] sm:min-h-0 sm:aspect-[4/5] overflow-hidden rounded-2xl"
+    >
+      <img
+        src="/cloud/living.jpg"
+        alt=""
+        className="absolute inset-0 w-full h-full object-cover transition duration-700 group-hover:scale-105"
+      />
+      <div className="absolute inset-0 bg-gradient-to-t from-[#0B1E3F]/95 via-[#0B1E3F]/45 to-transparent" />
+      <div className="absolute inset-x-0 bottom-0 p-5 text-white">
+        <p className="text-[10px] uppercase tracking-[0.28em] text-[#C19A6B] mb-1">
+          {t("cloud.pwa.eyebrow", "Telefonino")}
+        </p>
+        <h3
+          className="text-2xl mb-2"
+          style={{ fontFamily: "'Fraunces', Georgia, serif" }}
+        >
+          {installed
+            ? t("cloud.pwa.title_installed", "App installata")
+            : t("cloud.pwa.title", "Scarica app")}
+        </h3>
+        <p className="text-sm text-white/75 leading-relaxed">
+          {installed
+            ? t("cloud.pwa.text_installed", "ImmobilCloud è già sulla Home del tuo dispositivo.")
+            : canPrompt
+              ? t("cloud.pwa.text", "Un tap: icona sulla Home, come le altre app. Zero store.")
+              : t(
+                  "cloud.pwa.text_fallback",
+                  "Aggiungi ImmobilCloud alla Home del telefonino (PWA)."
+                )}
+        </p>
+        {msg ? (
+          <p className="mt-3 text-xs text-[#E8D5B5]" data-testid="tool-pwa-hint">
+            {msg}
+          </p>
+        ) : null}
+      </div>
+    </button>
   );
 }

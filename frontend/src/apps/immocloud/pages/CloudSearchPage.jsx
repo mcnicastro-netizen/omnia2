@@ -441,6 +441,12 @@ export default function CloudSearchPage() {
         {/* Toolbar */}
         <div className="shrink-0 border-b border-stone-200 bg-white px-4 sm:px-6 py-3 flex flex-wrap items-center gap-3 justify-between z-20">
           <div className="flex items-center gap-3 min-w-0">
+            <p
+              className="hidden sm:inline text-[10px] uppercase tracking-[0.22em] text-[#C19A6B] shrink-0"
+              data-testid="map-scout-chip"
+            >
+              {t("cloud.scout_banner_eyebrow", "Scout")}
+            </p>
             <p className="text-sm text-stone-700 truncate" data-testid="results-count">
               {loading || mapLoading
                 ? t("common.loading")
@@ -559,12 +565,40 @@ export default function CloudSearchPage() {
       <CloudPageHero
         eyebrow="ImmobilCloud · Cerca"
         title={heroTitle}
-        subtitle="Affina i filtri. Apri un annuncio. Lascia che Scout ti sussurri cosa chiedere."
-        image="/cloud/living.jpg"
+        subtitle={t(
+          "cloud.search_scout_subtitle",
+          "Scout è il nostro fiore all’occhiello: apri un annuncio e scopri completezza, prezzo in zona e cosa chiedere — prima della visita."
+        )}
+        image="/cloud/scout.jpg"
         compact
       />
 
       <section className="px-5 sm:px-8 md:px-16 py-10 max-w-6xl mx-auto">
+        <div
+          data-testid="search-scout-banner"
+          className="mb-8 rounded-2xl border border-[#C19A6B]/40 bg-[#0B1E3F] text-white px-5 py-4 sm:px-6 sm:py-5 flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-6"
+        >
+          <div className="min-w-0 flex-1">
+            <p className="text-[10px] uppercase tracking-[0.28em] text-[#C19A6B] mb-1">
+              {t("cloud.scout_banner_eyebrow", "Scout")}
+            </p>
+            <p
+              className="text-lg sm:text-xl font-light leading-snug"
+              style={{ fontFamily: "'Fraunces', Georgia, serif" }}
+            >
+              {t(
+                "cloud.scout_banner_title",
+                "Il voto Scout sulle card — poi, in scheda, le domande da fare."
+              )}
+            </p>
+            <p className="text-sm text-white/70 mt-1.5">
+              {t(
+                "cloud.scout_banner_text",
+                "Non è un annuncio in più: è lo strumento che ti dice se l’annuncio è completo e se il prezzo ha senso in zona."
+              )}
+            </p>
+          </div>
+        </div>
         <div className="flex flex-col lg:flex-row gap-8 lg:gap-10">
           <aside className="lg:w-72 flex-shrink-0 space-y-4 lg:sticky lg:top-24">
             <div className="rounded-2xl bg-[#f7f4ef] border border-stone-200/80 p-5 space-y-5">

@@ -7,6 +7,16 @@ Registro di tutte le decisioni di business e tecniche prese durante il progetto.
 
 ## Decisioni prese
 
+### D-142 — PWA «Scarica app» al posto di HAL Legal in home · Scout in evidenza Cerca/Vendi · 05-Nov-2026
+- **Data**: 5 Novembre 2026
+- **Contesto**: Founder vuole modello Immobiliare.it (icona telefonino) via PWA; in home sostituire tile HAL Legal con **Scarica app**; dare maggiore risalto a Scout in Cerca e Vendi (fiore all’occhiello).
+- **Decisione**:
+  1. **PWA v1**: `manifest.webmanifest` + service worker (`sw-push.js` con precache shell) + tile home **Scarica app** (`beforeinstallprompt` / hint iOS Condividi→Home). HAL Legal resta in **nav**.
+  2. **Home 4 tile**: Scout · Cerca su mappa · Scarica app · News.
+  3. **Cerca / Vendi**: banner + copy Scout in evidenza (hero/immagine Scout); non è un nuovo prodotto, è positioning del tool esistente.
+- **Fuori scope v1**: app store native (Capacitor), push install obbligatorio, A/B store listing.
+- **Stato**: ✅ DECISIONE OPERATIVA · ship FE
+
 ### D-141 — Ricerca mappa stile Idealista + home 4 tile (Scout/Mappa/Legal/News) · 05-Nov-2026
 - **Data**: 5 Novembre 2026
 - **Contesto**: Dopo D-139 (news) e redesign home, Founder chiede flusso mappa come Idealista e dove trovare «Cerca su mappa». Correzione: in home sostituire il tile **Visura** (non la CTA hero) con **Cerca su mappa**.
