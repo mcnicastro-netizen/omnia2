@@ -1646,7 +1646,10 @@
       "empty": "Nessuna notizia in questa categoria al momento.",
       "open_external": "Apri ↗",
       "disclaimer": "Fonti terze · i contenuti restano dei rispettivi editori. OMNIA non ne modifica il testo."
-    }
+    },
+    "map_search_area": "Cerca in questa zona",
+    "map_area_active": "Ricerca sull’area della mappa",
+    "map_no_in_area": "Nessuna casa in quest’area"
   },
   "valuator": {
     "eyebrow": "Valutatore GIS · Gratis",
