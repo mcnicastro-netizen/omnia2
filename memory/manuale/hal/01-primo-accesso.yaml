@@ -193,6 +193,52 @@ voci:
         - Pubblico portale / account esistenti
     screenshot: []
 
+  - id: primo-accesso.home-cloud-tools-mappa
+    titolo: Home ImmobilCloud — 4 riquadri e Cerca su mappa (D-139 / D-141)
+    modulo: Primo accesso
+    widget: null
+    pubblico: [privato, titolare, agente, segreteria]
+    livello: base
+    tags: [immobilcloud, home, mappa, cerca-casa, news, scout, hal-legal, d-139, d-141, bbox, idealista]
+    correlati:
+      - primo-accesso.area-riservata-cloud
+      - api.portal-news-rss
+      - api.cloud-search-bbox-map
+    domanda_naturale: "Dove trovo Cerca su mappa? Cosa ci sono nei box della home ImmobilCloud? Come funziona la ricerca sulla mappa?"
+    contenuto:
+      a_cosa_serve: >
+        Orientarsi sulla home ImmobilCloud dopo il redesign 05-Nov:
+        4 riquadri Scout · Cerca su mappa · HAL Legal · News (ticker RSS).
+        Visura resta in nav, non nei tile. Cerca casa ha box mappa sotto
+        i filtri e modalità Idealista-like con bbox.
+      quando_si_usa: >
+        Visitatore su /cloud; chi cerca «Cerca su mappa»; chi vuole
+        news immobiliare/mutui/arredo senza lasciare il portale.
+      passi:
+        - "Home /it/cloud → griglia cloud-tools sotto l'hero."
+        - "Tile Cerca su mappa → /cloud/search?view=map."
+        - "In lista Cerca casa: box «Cerca su mappa» sotto i filtri."
+        - "In mappa: pan/zoom → «Cerca in questa zona» → bbox in URL."
+        - "Tile News: titoli RSS a scorrimento (Casa24, mutui, Interni)."
+        - "Visura: voce nav /cloud/visura (non tile home)."
+      errori_comuni:
+        - problema: "Non trovo Visura nei 4 box"
+          soluzione: >
+            Voluto (D-141): Visura è in nav. I 4 box sono Scout, Mappa,
+            HAL Legal, News.
+        - problema: "Non vedo Cerca su mappa"
+          soluzione: >
+            Hard refresh FE. Home tile «Cerca su mappa» oppure, in
+            Cerca casa lista, box sotto i filtri. URL diretto
+            /it/cloud/search?view=map.
+        - problema: "Muovo la mappa e non cambia nulla"
+          soluzione: >
+            Dopo pan/zoom appare «Cerca in questa zona» — cliccalo.
+            Altrimenti i pin restano sulla ricerca precedente.
+      permessi:
+        - Pubblico portale
+    screenshot: []
+
   - id: primo-accesso.password-dimenticata
     titolo: Recuperare la password dimenticata
     modulo: Primo accesso

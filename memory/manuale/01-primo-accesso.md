@@ -73,6 +73,27 @@ Se l'email è già registrata (B2C o B2B), la registrazione risponde **409** con
 
 **Messaggi e visite (D-138 Idealista+)**: da Account o Vendi → `/cloud/account/messages`. Inbox delle `listing_inquiries` (filtri, nota privata, Accetta/Rifiuta/Fatta visita, reply email/tel/WhatsApp). Dettaglio Cap. 18 §18.7b.
 
+### 1.2.1b2 Home ImmobilCloud — 4 riquadri + Cerca casa / mappa (D-139 / D-141)
+
+**Home** (`/it/cloud`): sotto l’hero con form ricerca, griglia **4 riquadri** (`cloud-tools`):
+
+| Tile | Destinazione | Nota |
+|------|----------------|------|
+| **Scout** | `/cloud/search` | Preparazione visita / completezza annuncio |
+| **Cerca su mappa** | `/cloud/search?view=map` | Flusso mappa stile Idealista (D-141) |
+| **HAL Legal** | `/legal` | Risposte orientative con fonti (non consulenza formale) |
+| **News** | ticker RSS | Casa24 · mutui · arredo; `GET /api/cloud/news` (D-139) |
+
+**Visura** resta in **nav** (`/cloud/visura`), non è più un tile della griglia home.
+
+**Cerca casa — lista**: sotto i filtri laterali c’è il box **«Cerca su mappa»** (`search-map-box`) → stessa ricerca in `view=map`.
+
+**Cerca casa — mappa** (`?view=map`):
+1. Split a viewport pieno: lista sticky a sinistra + mappa Leaflet a destra.
+2. Pin con **pillola prezzo**.
+3. Dopo pan/zoom compare **«Cerca in questa zona»** → aggiorna URL con `bbox=south,west,north,east` e richiama search/map filtrati.
+4. API: `GET /api/cloud/search` e `GET /api/cloud/map` accettano `bbox`.
+
 ### 1.2.1c Continua con Google (D-134)
 
 Su login/registrazione compare **Continua con Google** se l’API ha `GOOGLE_CLIENT_ID` valido (Client ID Web Console Google).  

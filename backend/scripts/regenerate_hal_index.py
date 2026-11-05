@@ -51,14 +51,16 @@ def main() -> None:
         new_chapters.append(entry)
 
     out = {
-        "version": "0.39-d125-d128-pricing",
+        "version": "0.48-d141-map-news",
         "updated": date.today().isoformat(),
         "voices_total": total,
         "source_files": source_files,
         "new_chapters_m3": new_chapters,
         "notes": (
+            "2026-11-05: D-141 mappa Idealista + home 4 tile · D-139 news · Cap.00/01/21. "
             "Fingerprints regenerated from YAML on disk. "
             "Live RAG reindex: POST /api/app/hal/knowledge/reindex?force=true (super_admin). "
+            "2026-11-04: D-140 Vendi/video · D-136 Stripe dogfood · D-135 B2C CSRF. "
             "2026-10-19: D-125 atti · D-128 staging €1,49 · Cap.9 crediti-costo · Cap.18 sell-doc-promo. "
             "2026-10-14: D-124 Cap.21 APE/piano/PDF · Cap.18 sell-doc-promo · PR #40. "
             "2026-10-12: Stripe webhook Railway omnia-railway-api 200 OK · api.stripe-sandbox-cloud / api.railway-api-deploy. "
