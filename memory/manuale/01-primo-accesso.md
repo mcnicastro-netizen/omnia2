@@ -81,7 +81,7 @@ Se l'email è già registrata (B2C o B2B), la registrazione risponde **409** con
 |------|----------------|------|
 | **Scout** | `/cloud/search` | Fiore all’occhiello: completezza, prezzo, domande (D-142) |
 | **Cerca su mappa** | `/cloud/search?view=map` | Flusso mappa stile Idealista (D-141) |
-| **Scarica app** | `/{lang}/cloud/app` | QR da desktop + Installa su telefonino (D-142/D-143); iOS: Condividi → Home |
+| **Scarica app** | `/{lang}/cloud/app` | QR → **Area** Accedi/Crea (`/cloud/area?from=pwa`) + Installa (D-143); iOS: Condividi → Home |
 | **News** | ticker RSS | Casa24 · mutui · arredo; `GET /api/cloud/news` (D-139) |
 
 **Visura** e **HAL Legal** restano in **nav** (non nei tile home).

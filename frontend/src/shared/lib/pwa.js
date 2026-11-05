@@ -76,7 +76,28 @@ export function registerImmocloudPwa() {
   else window.addEventListener("load", run, { once: true });
 }
 
-export function pwaInstallUrl(lang = "it") {
-  const origin = typeof window !== "undefined" ? window.location.origin : "https://cloud.omniarealestateecosystem.it";
+/** Pagina tecnica Installa (guide + CTA). */
+export function pwaInstallPageUrl(lang = "it") {
+  const origin =
+    typeof window !== "undefined"
+      ? window.location.origin
+      : "https://cloud.omniarealestateecosystem.it";
   return `${origin}/${lang}/cloud/app`;
+}
+
+/**
+ * Destinazione QR: Area riservata (Accedi | Crea account).
+ * `from=pwa` attiva la striscia Installa sull’area.
+ */
+export function pwaQrLandingUrl(lang = "it") {
+  const origin =
+    typeof window !== "undefined"
+      ? window.location.origin
+      : "https://cloud.omniarealestateecosystem.it";
+  return `${origin}/${lang}/cloud/area?from=pwa`;
+}
+
+/** @deprecated usa pwaQrLandingUrl — QR atterra su Accedi/Crea account */
+export function pwaInstallUrl(lang = "it") {
+  return pwaQrLandingUrl(lang);
 }

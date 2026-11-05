@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import CloudPageHero from "../components/CloudPageHero";
 import PwaQrCode from "../components/PwaQrCode";
 import usePwaInstall from "../../../shared/hooks/usePwaInstall";
-import { pwaInstallUrl } from "../../../shared/lib/pwa";
+import { pwaQrLandingUrl } from "../../../shared/lib/pwa";
 
 /**
  * Flusso stile Idealista: da desktop inquadra il QR → sul telefonino
@@ -16,7 +16,7 @@ export default function CloudInstallAppPage() {
   const lang = (i18n.language || "it").slice(0, 2);
   const { installed, canPrompt, iosHint, isMobile, promptInstall } = usePwaInstall();
   const [status, setStatus] = useState("");
-  const installUrl = useMemo(() => pwaInstallUrl(lang), [lang]);
+  const qrLandingUrl = useMemo(() => pwaQrLandingUrl(lang), [lang]);
 
   useEffect(() => {
     document.title = t("cloud.pwa.page_title", "Scarica app ImmobilCloud");
@@ -58,7 +58,7 @@ export default function CloudInstallAppPage() {
         title={t("cloud.pwa.page_heading", "ImmobilCloud sul telefonino")}
         subtitle={t(
           "cloud.pwa.page_sub",
-          "Come Idealista: inquadra il QR, un tocco, e compare l’icona tra le tue app. Niente store."
+          "Inquadra il QR: atterri su Accedi o Crea account. Sul telefonino puoi anche installare l’icona tra le app."
         )}
         image="/cloud/living.jpg"
         compact
@@ -105,12 +105,12 @@ export default function CloudInstallAppPage() {
               <p className="text-sm text-stone-600 mb-5 max-w-sm">
                 {t(
                   "cloud.pwa.qr_text",
-                  "Apri la fotocamera, inquadra il QR e apri il link. Poi un tocco su Installa: nasce l’icona ImmobilCloud."
+                  "Apri la fotocamera, inquadra il QR: arrivi subito su Accedi al tuo account o Crea account. Da lì puoi anche installare l’app."
                 )}
               </p>
-              <PwaQrCode url={installUrl} size={220} />
+              <PwaQrCode url={qrLandingUrl} size={220} />
               <p className="mt-4 text-xs text-stone-500 break-all max-w-xs" data-testid="pwa-install-url">
-                {installUrl}
+                {qrLandingUrl}
               </p>
             </div>
 

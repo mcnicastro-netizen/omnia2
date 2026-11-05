@@ -1452,13 +1452,13 @@
       "done": "Done — ImmobilCloud is among your apps.",
       "ios_hint": "On iPhone: tap Share (□↑) → Add to Home Screen.",
       "browser_hint": "Open this page in Chrome on your phone, then tap Install.",
-      "text_qr": "Scan the QR with your phone: one tap and the icon joins your apps — like Idealista.",
+      "text_qr": "Scan the QR: Sign in or Create account on your phone — and add the app icon if you want.",
       "page_title": "Get the ImmobilCloud app",
       "page_heading": "ImmobilCloud on your phone",
-      "page_sub": "Like Idealista: scan the QR, one tap, and the icon appears among your apps. No store.",
+      "page_sub": "Scan the QR: you land on Sign in or Create account. On the phone you can also install the app icon.",
       "qr_eyebrow": "From your computer",
       "qr_title": "Scan with your phone",
-      "qr_text": "Open the camera, scan the QR and open the link. Then tap Install — ImmobilCloud’s icon appears.",
+      "qr_text": "Open the camera, scan the QR: you go straight to Sign in or Create account. From there you can also install the app.",
       "phone_eyebrow": "On your phone",
       "phone_title": "One tap → icon among apps",
       "phone_text_android": "On Android/Chrome the “Install app” dialog appears: confirm and ImmobilCloud sits next to your other apps, full screen.",
@@ -1471,12 +1471,15 @@
       "ios_step3": "Confirm — the ImmobilCloud icon appears.",
       "honest": "It’s a web app (PWA): the same ImmobilCloud, icon and full-screen. Not from App Store or Play Store.",
       "open_home": "Open ImmobilCloud",
-      "back_home": "Back to home"
+      "back_home": "Back to home",
+      "cta_ios_guide": "How to install"
     },
     "search_scout_subtitle": "Scout is our standout tool: open a listing to see completeness, area pricing and what to ask — before the visit.",
     "scout_banner_eyebrow": "Scout",
     "scout_banner_title": "Scout grade on cards — then, in the listing, questions to ask.",
-    "scout_banner_text": "Not another listing: the tool that tells you if the ad is complete and if the price makes sense nearby."
+    "scout_banner_text": "Not another listing: the tool that tells you if the ad is complete and if the price makes sense nearby.",
+    "area_subtitle_pwa": "Sign in or create your account. Then, if you want, install ImmobilCloud among your phone apps.",
+    "area_pwa_strip": "Want the icon among apps? Tap Install (on iPhone: guide on the Get the app page)."
   },
   "portali": {
     "available": "Available portals",

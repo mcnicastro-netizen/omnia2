@@ -1675,13 +1675,13 @@
       "done": "Perfetto — ImmobilCloud è tra le tue app.",
       "ios_hint": "Su iPhone: tocca Condividi (□↑) in basso → Aggiungi a Home.",
       "browser_hint": "Apri questa pagina in Chrome sul telefonino, poi tocca Installa.",
-      "text_qr": "Inquadra il QR col telefonino: un tocco e nasce l’icona tra le app — come Idealista.",
+      "text_qr": "Inquadra il QR: Accedi o Crea account sul telefonino — e se vuoi, l’icona tra le app.",
       "page_title": "Scarica app ImmobilCloud",
       "page_heading": "ImmobilCloud sul telefonino",
-      "page_sub": "Come Idealista: inquadra il QR, un tocco, e compare l’icona tra le tue app. Niente store.",
+      "page_sub": "Inquadra il QR: atterri su Accedi o Crea account. Sul telefonino puoi anche installare l’icona tra le app.",
       "qr_eyebrow": "Dal computer",
       "qr_title": "Inquadra col telefonino",
-      "qr_text": "Apri la fotocamera, inquadra il QR e apri il link. Poi un tocco su Installa: nasce l’icona ImmobilCloud.",
+      "qr_text": "Apri la fotocamera, inquadra il QR: arrivi subito su Accedi al tuo account o Crea account. Da lì puoi anche installare l’app.",
       "phone_eyebrow": "Sul telefonino",
       "phone_title": "Un tocco → icona tra le app",
       "phone_text_android": "Su Android/Chrome compare il dialog «Installa app»: conferma e ImmobilCloud si mette accanto alle altre app, a schermo intero.",
@@ -1694,12 +1694,15 @@
       "ios_step3": "Conferma: compare l’icona ImmobilCloud.",
       "honest": "È una web app (PWA): stessa ImmobilCloud, icona e apertura a tutto schermo. Non passa da App Store o Play Store.",
       "open_home": "Apri ImmobilCloud",
-      "back_home": "Torna alla home"
+      "back_home": "Torna alla home",
+      "cta_ios_guide": "Come installare"
     },
     "search_scout_subtitle": "Scout è il nostro fiore all’occhiello: apri un annuncio e scopri completezza, prezzo in zona e cosa chiedere — prima della visita.",
     "scout_banner_eyebrow": "Scout",
     "scout_banner_title": "Il voto Scout sulle card — poi, in scheda, le domande da fare.",
-    "scout_banner_text": "Non è un annuncio in più: è lo strumento che ti dice se l’annuncio è completo e se il prezzo ha senso in zona."
+    "scout_banner_text": "Non è un annuncio in più: è lo strumento che ti dice se l’annuncio è completo e se il prezzo ha senso in zona.",
+    "area_subtitle_pwa": "Accedi o crea il tuo account. Poi, se vuoi, installa ImmobilCloud tra le app del telefonino.",
+    "area_pwa_strip": "Vuoi l’icona tra le app? Un tocco su Installa (su iPhone: guida nella pagina Scarica app)."
   },
   "valuator": {
     "eyebrow": "Valutatore GIS · Gratis",

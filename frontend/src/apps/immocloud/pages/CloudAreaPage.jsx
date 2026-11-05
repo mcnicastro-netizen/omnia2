@@ -1,12 +1,14 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "../../../shared/lib/auth";
 import CloudPageHero from "../components/CloudPageHero";
+import usePwaInstall from "../../../shared/hooks/usePwaInstall";
 
 /**
  * Area riservata ImmobilCloud — ingresso chiaro: Accedi | Crea account.
  * Evita di mandare chi ha già un account dritto sul form di registrazione.
+ * QR «Scarica app» atterra qui (?from=pwa) con striscia Installa (D-143).
  */
 export default function CloudAreaPage() {
   const { t, i18n } = useTranslation();
@@ -15,6 +17,7 @@ export default function CloudAreaPage() {
   const { user } = useAuth();
   const [params] = useSearchParams();
   const intent = params.get("intent") || "";
+  const fromPwa = params.get("from") === "pwa";
   const nextRaw = params.get("next") || "";
   const nextPath = (
     nextRaw.startsWith("/")
@@ -48,10 +51,18 @@ export default function CloudAreaPage() {
       <CloudPageHero
         eyebrow="ImmobilCloud · Area riservata"
         title={t("cloud.area_title")}
-        subtitle={t("cloud.area_subtitle")}
+        subtitle={
+          fromPwa
+            ? t(
+                "cloud.area_subtitle_pwa",
+                "Accedi o crea il tuo account. Poi, se vuoi, installa ImmobilCloud tra le app del telefonino."
+              )
+            : t("cloud.area_subtitle")
+        }
         image="/cloud/scout.jpg"
         compact
       />
+      {fromPwa && !agencyLoggedIn ? <AreaPwaInstallStrip lang={lang} /> : null}
       {agencyLoggedIn && (
         <div
           data-testid="cloud-area-agency-session"
@@ -124,6 +135,84 @@ export default function CloudAreaPage() {
           {t("cloud.area_agency_register")}
         </Link>
       </p>
+    </div>
+  );
+}
+
+function AreaPwaInstallStrip({ lang }) {
+  const { t } = useTranslation();
+  const { installed, canPrompt, iosHint, promptInstall } = usePwaInstall();
+  const [msg, setMsg] = useState("");
+
+  if (installed) return null;
+
+  const onInstall = async () => {
+    setMsg("");
+    const res = await promptInstall();
+    if (res.ok) {
+      setMsg(t("cloud.pwa.done", "Perfetto — ImmobilCloud è tra le tue app."));
+      return;
+    }
+    if (iosHint || res.reason === "ios") {
+      setMsg(
+        t(
+          "cloud.pwa.ios_hint",
+          "Su iPhone: tocca Condividi (□↑) in basso → Aggiungi a Home."
+        )
+      );
+      return;
+    }
+    setMsg(
+      t(
+        "cloud.pwa.browser_hint",
+        "Apri questa pagina in Chrome sul telefonino, poi tocca Installa."
+      )
+    );
+  };
+
+  return (
+    <div
+      data-testid="cloud-area-pwa-strip"
+      className="max-w-2xl mx-auto px-5 mt-6 rounded-2xl border border-[#C19A6B]/35 bg-[#0B1E3F] text-white px-5 py-4 flex flex-col sm:flex-row sm:items-center gap-3"
+    >
+      <div className="min-w-0 flex-1">
+        <p className="text-[10px] uppercase tracking-[0.28em] text-[#C19A6B] mb-1">
+          {t("cloud.pwa.eyebrow", "Telefonino")}
+        </p>
+        <p className="text-sm text-white/90">
+          {t(
+            "cloud.area_pwa_strip",
+            "Vuoi l’icona tra le app? Un tocco su Installa (su iPhone: guida nella pagina Scarica app)."
+          )}
+        </p>
+        {msg ? (
+          <p className="mt-2 text-xs text-[#E8D5B5]" data-testid="cloud-area-pwa-msg">
+            {msg}
+          </p>
+        ) : null}
+      </div>
+      <div className="flex flex-wrap gap-2 shrink-0">
+        {iosHint ? (
+          <Link
+            to={`/${lang}/cloud/app`}
+            className="px-4 py-2 rounded-lg bg-[#C19A6B] text-[#0B1E3F] text-[11px] uppercase tracking-widest"
+            data-testid="cloud-area-pwa-ios-guide"
+          >
+            {t("cloud.pwa.cta_ios_guide", "Come installare")}
+          </Link>
+        ) : (
+          <button
+            type="button"
+            data-testid="cloud-area-pwa-install"
+            onClick={onInstall}
+            className="px-4 py-2 rounded-lg bg-[#C19A6B] text-[#0B1E3F] text-[11px] uppercase tracking-widest"
+          >
+            {canPrompt
+              ? t("cloud.pwa.cta_install", "Installa ImmobilCloud")
+              : t("cloud.pwa.cta_install", "Installa ImmobilCloud")}
+          </button>
+        )}
+      </div>
     </div>
   );
 }
