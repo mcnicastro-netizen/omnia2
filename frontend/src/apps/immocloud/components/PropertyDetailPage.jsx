@@ -175,6 +175,30 @@ export default function PropertyDetailPage() {
     }
   };
 
+  const deleteVideo = async () => {
+    if (!pid || videoBusy) return;
+    const ok = window.confirm(
+      t(
+        "cloud.sell.video_delete_confirm",
+        "Eliminare il video tour da questo annuncio? La scheda pubblica non lo mostrerà più. Potrai generarne uno nuovo quando vuoi."
+      )
+    );
+    if (!ok) return;
+    setVideoBusy(true);
+    setVideoErr("");
+    try {
+      await api.delete(`/cloud/me/properties/${pid}/video`);
+      setVideoUrl(null);
+    } catch (e) {
+      setVideoErr(
+        e?.response?.data?.detail ||
+          t("cloud.sell.video_delete_failed", "Non siamo riusciti a eliminare il video. Riprova.")
+      );
+    } finally {
+      setVideoBusy(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="max-w-5xl mx-auto px-5 sm:px-8 py-20" data-testid="property-detail-loading">
@@ -688,14 +712,27 @@ export default function PropertyDetailPage() {
                 <p className="text-sm text-rose-700 mb-2" data-testid="detail-video-error">{String(videoErr)}</p>
               )}
               {videoUrl ? (
-                <div className="mx-auto w-full max-w-3xl rounded-xl overflow-hidden bg-stone-900">
-                  <video
-                    data-testid="detail-video-player"
-                    src={videoUrl}
-                    controls
-                    playsInline
-                    className="block w-full aspect-video object-contain object-center bg-stone-900"
-                  />
+                <div className="space-y-2">
+                  <div className="mx-auto w-full max-w-3xl rounded-xl overflow-hidden bg-stone-900">
+                    <video
+                      data-testid="detail-video-player"
+                      src={videoUrl}
+                      controls
+                      playsInline
+                      className="block w-full aspect-video object-contain object-center bg-stone-900"
+                    />
+                  </div>
+                  {isLister && (
+                    <button
+                      type="button"
+                      data-testid="detail-delete-video"
+                      disabled={videoBusy}
+                      onClick={deleteVideo}
+                      className="text-xs uppercase tracking-widest text-rose-700 hover:text-rose-900 disabled:opacity-50"
+                    >
+                      {t("cloud.sell.video_delete", "Elimina video")}
+                    </button>
+                  )}
                 </div>
               ) : isLister ? (
                 <p className="text-sm text-stone-500">Nessun video ancora.</p>
