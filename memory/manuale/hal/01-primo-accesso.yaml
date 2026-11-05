@@ -194,29 +194,30 @@ voci:
     screenshot: []
 
   - id: primo-accesso.home-cloud-tools-mappa
-    titolo: Home ImmobilCloud — 4 riquadri, PWA e Cerca su mappa (D-139 / D-141 / D-142)
+    titolo: Home ImmobilCloud — 4 riquadri, PWA QR→Area e Cerca su mappa (D-139…D-143)
     modulo: Primo accesso
     widget: null
     pubblico: [privato, titolare, agente, segreteria]
     livello: base
-    tags: [immobilcloud, home, mappa, cerca-casa, news, scout, pwa, scarica-app, d-139, d-141, d-142, bbox, idealista]
+    tags: [immobilcloud, home, mappa, cerca-casa, news, scout, pwa, scarica-app, qr, area, d-139, d-141, d-142, d-143, bbox, idealista]
     correlati:
       - primo-accesso.area-riservata-cloud
       - api.portal-news-rss
       - api.cloud-search-bbox-map
-    domanda_naturale: "Dove trovo Cerca su mappa? Come scarico l'app ImmobilCloud con QR? Cosa ci sono nei box della home? Dove è Scout in Cerca e Vendi?"
+    domanda_naturale: "Dove trovo Cerca su mappa? Come scarico l'app ImmobilCloud con QR? Atterro su Accedi o Crea account? Cosa ci sono nei box della home? Perché vedo testo in trasparenza sulla nav?"
     contenuto:
       a_cosa_serve: >
         Orientarsi sulla home ImmobilCloud: 4 riquadri Scout · Cerca su
-        mappa · Scarica app (PWA via QR, D-143) · News. Visura e HAL Legal
-        restano in nav. Scout in evidenza in Cerca e Vendi (D-142).
+        mappa · Scarica app · News. QR → Area Accedi/Crea (?from=pwa) +
+        Installa (D-143). Scout in evidenza in Cerca e Vendi (D-142).
+        Visura e HAL Legal solo in nav. Nav sticky opaca (no bleed hero).
       quando_si_usa: >
-        Visitatore su /cloud; installazione icona telefonino da QR o CTA;
-        ricerca mappa; Scout prima di una visita o in Vendi.
+        Visitatore su /cloud; scan QR da computer; install icona telefonino;
+        ricerca mappa; Scout prima di visita o in Vendi.
       passi:
-        - "Home → tile Scarica app → /cloud/app."
-        - "Dal PC: inquadra il QR → atterri su /cloud/area (Accedi | Crea account)."
-        - "Su Area (?from=pwa): striscia Installa; Android dialog nativo."
+        - "Home → tile Scarica app → /cloud/app (guida + QR)."
+        - "Dal PC: inquadra il QR → /cloud/area?from=pwa (Accedi | Crea)."
+        - "Su Area: striscia Installa; Android dialog nativo."
         - "Su iPhone: Condividi → Aggiungi a Home (limite Apple)."
         - "Tile Cerca su mappa → /cloud/search?view=map."
         - "Cerca / Vendi: banner Scout in evidenza."
@@ -228,12 +229,16 @@ voci:
             Scarica app, News.
         - problema: "Su iPhone non appare Installa"
           soluzione: >
-            Apple non permette install silenziosa. Su /cloud/app segui
-            Condividi → Aggiungi a Home. Serve HTTPS.
-        - problema: "Il QR non apre ImmobilCloud"
+            Apple non permette install silenziosa. Su /cloud/app o dalla
+            striscia Area → guida Condividi → Aggiungi a Home. Serve HTTPS.
+        - problema: "Il QR non apre Accedi/Crea account"
           soluzione: >
-            Deve puntare a https://cloud…/it/cloud/app. Hard refresh;
-            fotocamera o app QR del telefono.
+            Deve puntare a …/it/cloud/area?from=pwa (non solo /cloud/app).
+            Hard refresh; fotocamera o app QR.
+        - problema: "Testo fantasma / trasparente sulla nav"
+          soluzione: >
+            Bug sticky nav semitrasparente (fix PR #106): hard refresh.
+            Nav ora cream opaca.
         - problema: "Non vedo Cerca su mappa"
           soluzione: >
             Hard refresh FE. Home tile oppure box sotto i filtri in lista.

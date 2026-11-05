@@ -9,14 +9,16 @@ Registro di tutte le decisioni di business e tecniche prese durante il progetto.
 
 ### D-143 — Scarica app via QR (flusso Idealista) · 05-Nov-2026
 - **Data**: 5 Novembre 2026
-- **Contesto**: Founder vuole UX più intuitiva: scaricare l’app da QR; Idealista «si installa da sola» creando l’icona.
+- **Contesto**: Founder vuole UX più intuitiva: scaricare l’app da QR; Idealista «si installa da sola» creando l’icona. Poi: QR deve atterrare su Accedi/Crea account.
 - **Decisione**:
-  1. Pagina dedicata `/{lang}/cloud/app`: **QR** + CTA **Installa**.
-  2. **QR atterra su** `/{lang}/cloud/area?from=pwa` (Accedi | Crea account) + striscia Installa; tile home → `/cloud/app`.
+  1. Pagina dedicata `/{lang}/cloud/app`: guida + **QR** + CTA **Installa** (tile home punta qui).
+  2. **QR atterra su** `/{lang}/cloud/area?from=pwa` (Accedi | Crea account) + striscia Installa sull’Area.
   3. Android/Chrome: dialog nativo `beforeinstallprompt` → icona tra le app (PWA standalone). Cattura prompt **early** in `pwa.js`.
   4. **Onestà iOS**: Apple non consente install silenziosa; guida Condividi → Aggiungi a Home (stesso esito icona).
+  5. **Nav sticky opaca** (cream pieno, no blur/90%): evita che il sottotitolo hero filtrasse in trasparenza sulla barra (bug dogfood Founder).
+- **Ship**: PR #104 (QR/app) · #105 (QR→Area) · #106 (nav opaca) · Vercel prod · docs/HAL v0.50.
 - **Fuori scope**: app store native; silent install iOS (impossibile).
-- **Stato**: ✅ DECISIONE OPERATIVA · ship FE
+- **Stato**: ✅ **DECISIONE OPERATIVA REGISTRATA** · live · docs/HAL syncati 05-Nov
 
 ### D-142 — PWA «Scarica app» al posto di HAL Legal in home · Scout in evidenza Cerca/Vendi · 05-Nov-2026
 - **Data**: 5 Novembre 2026
@@ -26,7 +28,8 @@ Registro di tutte le decisioni di business e tecniche prese durante il progetto.
   2. **Home 4 tile**: Scout · Cerca su mappa · Scarica app · News.
   3. **Cerca / Vendi**: banner + copy Scout in evidenza (hero/immagine Scout); non è un nuovo prodotto, è positioning del tool esistente.
 - **Fuori scope v1**: app store native (Capacitor), push install obbligatorio, A/B store listing.
-- **Stato**: ✅ DECISIONE OPERATIVA · ship FE
+- **Ship**: PR #103 · Vercel · follow-up UX install in **D-143**.
+- **Stato**: ✅ **DECISIONE OPERATIVA REGISTRATA** · live · docs/HAL syncati
 
 ### D-141 — Ricerca mappa stile Idealista + home 4 tile (Scout/Mappa/Legal/News) · 05-Nov-2026
 - **Data**: 5 Novembre 2026
