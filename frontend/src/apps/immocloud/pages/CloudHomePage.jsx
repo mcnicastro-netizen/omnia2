@@ -218,6 +218,15 @@ export default function CloudHomePage() {
                 {t("cloud.search_btn")}
               </button>
             </div>
+            <div className="flex flex-wrap gap-2 pt-1">
+              <Link
+                to={`/${lang}/cloud/search?view=map${city ? `&city=${encodeURIComponent(city)}` : ""}`}
+                data-testid="cloud-hero-map-cta"
+                className="inline-flex items-center justify-center px-5 py-2.5 rounded-lg border border-white/40 text-white text-sm tracking-wide hover:bg-white hover:text-[#0B1E3F] transition"
+              >
+                {t("cloud.hero_map_cta", "Cerca su mappa")}
+              </Link>
+            </div>
           </form>
 
           <div className="mt-5 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-white/70">
@@ -231,12 +240,6 @@ export default function CloudHomePage() {
                 {pulse.label_it}
               </span>
             )}
-            <Link
-              to={`/${lang}/cloud/search?view=map`}
-              className="text-white hover:text-[#E8D5B5] transition underline-offset-4 hover:underline"
-            >
-              Guarda sulla mappa →
-            </Link>
           </div>
         </div>
       </section>
