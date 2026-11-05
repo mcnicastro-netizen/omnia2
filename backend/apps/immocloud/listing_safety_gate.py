@@ -287,6 +287,135 @@ def safety_gate_enabled() -> bool:
     return raw not in ("0", "false", "no", "off")
 
 
+def _humanize_reason(code: str) -> str:
+    """Map internal reason tokens to Italian Founder-facing lines."""
+    raw = (code or "").strip()
+    key = raw.lower()
+    known = {
+        "llm_review": "L'intelligenza artificiale ha trovato il testo dubbio (titolo o descrizione poco chiari / sospetti).",
+        "llm_reject": "L'intelligenza artificiale ha indicato un contenuto da bloccare.",
+        "llm_accept_but_soft_hit_keeps_review": "Ci sono parole sensibili: resta da verificare a mano anche se l'AI non ha bloccato.",
+        "soft_hit": "Trovate parole sensibili o offensive.",
+        "hard_hit": "Trovato contenuto vietato (odio, scam, abuso).",
+    }
+    if key in known:
+        return known[key]
+    if key.startswith("llm_"):
+        return "Segnalazione automatica dall'intelligenza artificiale sul testo dell'annuncio."
+    if raw:
+        return f"Segnale automatico: {raw.replace('_', ' ')}."
+    return "Motivo non specificato."
+
+
+def founder_safety_alert_copy(
+    listing: Dict[str, Any],
+    report: SafetyReport,
+    *,
+    event: str = "submit",
+) -> Dict[str, str]:
+    """Plain-Italian copy for Founder email + in-app (no jargon)."""
+    code = listing.get("reference_code") or listing.get("id") or "—"
+    title = ((listing.get("title") or "Senza titolo").strip() or "Senza titolo")[:80]
+    city = (listing.get("city") or "").strip()
+    where = f"{title}" + (f" · {city}" if city else "")
+
+    event_line = {
+        "submit": "Un privato ha inviato un annuncio per la pubblicazione.",
+        "edit": "Un privato ha modificato un annuncio già pubblicato.",
+        "rescan_live_soft": (
+            "Controllo automatico orario: possibile problema di contenuto. "
+            "L'annuncio resta online per ora."
+        ),
+        "rescan_live": (
+            "Controllo automatico orario: l'annuncio è stato tolto dalla pubblicazione "
+            "in attesa del tuo controllo."
+        ),
+    }.get(event, "Segnalazione automatica sul contenuto di un annuncio.")
+
+    if report.verdict == VERDICT_REJECT:
+        severity = "Bloccato"
+        severity_line = "Esito: bloccato. Non è pubblicabile così com'è."
+        inbox_title = f"Annuncio bloccato · {code}"
+        subject = f"[OMNIA] Annuncio bloccato · {code}"
+        headline = f"Annuncio bloccato · {code}"
+    else:
+        severity = "Da controllare"
+        if event == "rescan_live_soft":
+            severity_line = (
+                "Esito: da controllare. Non è un'emergenza: l'annuncio resta visibile, "
+                "ma conviene darci un'occhiata."
+            )
+            inbox_title = f"Annuncio da controllare (resta online) · {code}"
+            subject = f"[OMNIA] Annuncio da controllare (resta online) · {code}"
+            headline = f"Annuncio da controllare · {code}"
+        elif event == "rescan_live":
+            severity_line = "Esito: da controllare. L'annuncio è stato nascosto finché non lo revisioni."
+            inbox_title = f"Annuncio nascosto — da revisionare · {code}"
+            subject = f"[OMNIA] Annuncio nascosto — da revisionare · {code}"
+            headline = f"Annuncio nascosto · {code}"
+        else:
+            severity_line = "Esito: da controllare prima di restare (o andare) online."
+            inbox_title = f"Annuncio da controllare · {code}"
+            subject = f"[OMNIA] Annuncio da controllare · {code}"
+            headline = f"Annuncio da controllare · {code}"
+
+    why_bits = [_humanize_reason(r) for r in (report.reasons or [])[:6]]
+    if report.hard_hits:
+        why_bits.append(
+            "Parole / schemi vietati trovati: " + ", ".join(report.hard_hits[:6]) + "."
+        )
+    if report.soft_hits:
+        why_bits.append(
+            "Parole sensibili trovate: " + ", ".join(report.soft_hits[:6]) + "."
+        )
+    if not why_bits:
+        why_bits.append("Il sistema di sicurezza ha chiesto una revisione umana.")
+
+    action = {
+        "rescan_live_soft": (
+            "Cosa fare: apri Moderazione, guarda titolo e descrizione. "
+            "Se è solo un test (es. «provaprova»), puoi ignorare o sistemare il testo. "
+            "Non serve ripubblicare: è già online."
+        ),
+        "rescan_live": (
+            "Cosa fare: apri Moderazione, verifica il contenuto e approva o rifiuta."
+        ),
+        "edit": (
+            "Cosa fare: apri Moderazione e verifica le modifiche prima che restino pubbliche."
+        ),
+        "submit": (
+            "Cosa fare: apri Moderazione e decidi se pubblicare o rifiutare."
+        ),
+    }.get(event, "Cosa fare: apri Moderazione e revisiona l'annuncio.")
+
+    why_text = " ".join(why_bits)
+    detail = "\n".join([
+        f"Annuncio: {where}",
+        f"Codice: {code}",
+        event_line,
+        severity_line,
+        f"Perché: {why_text}",
+        action,
+    ])
+    inbox_body = f"{where} — {severity}. {event_line}"
+
+    return {
+        "subject": subject,
+        "headline": headline,
+        "listing_label": where,
+        "code": code,
+        "severity": severity,
+        "event_line": event_line,
+        "severity_line": severity_line,
+        "why_line": why_text,
+        "action_line": action,
+        "detail": detail,
+        "inbox_title": inbox_title,
+        "inbox_body": inbox_body[:240],
+        "moderation_path": "/app/moderation",
+    }
+
+
 async def notify_founder_safety_flag(
     listing: Dict[str, Any],
     report: SafetyReport,
@@ -302,23 +431,23 @@ async def notify_founder_safety_flag(
         from shared.notifications.center import TYPE_LISTING_MODERATION, notify_users
         from shared.db.connection import Database
 
-        code = listing.get("reference_code") or listing.get("id") or "—"
-        title = (listing.get("title") or "")[:80]
-        body = (
-            f"Evento={event} · verdict={report.verdict} · {title}\n"
-            f"Codice={code} · motives={', '.join(report.reasons) or '—'}\n"
-            f"hits={', '.join(report.hard_hits + report.soft_hits) or '—'}"
-        )
+        copy = founder_safety_alert_copy(listing, report, event=event)
         for to in founder_alert_emails():
             await send_email(
                 to=to,
-                template="error_alert",
+                template="listing_safety_alert",
                 lang="it",
-                subject=f"[OMNIA] Moderazione auto {report.verdict} · {code}",
+                subject=copy["subject"],
                 variables={
-                    "title": f"Safety {report.verdict} · {code}",
-                    "path": f"/app/moderation · listing {listing.get('id')}",
-                    "detail": body,
+                    "headline": copy["headline"],
+                    "listing_label": copy["listing_label"],
+                    "code": copy["code"],
+                    "severity": copy["severity"],
+                    "event_line": copy["event_line"],
+                    "severity_line": copy["severity_line"],
+                    "why_line": copy["why_line"],
+                    "action_line": copy["action_line"],
+                    "moderation_path": copy["moderation_path"],
                 },
             )
         db = Database.get()
@@ -331,8 +460,8 @@ async def notify_founder_safety_flag(
             await notify_users(
                 ids,
                 type=TYPE_LISTING_MODERATION,
-                title=f"Annuncio in coda safety · {report.verdict}",
-                body=f"{code} · {title}",
+                title=copy["inbox_title"],
+                body=copy["inbox_body"],
                 link="/app/moderation",
                 meta={"listing_id": listing.get("id"), "verdict": report.verdict, "event": event},
             )

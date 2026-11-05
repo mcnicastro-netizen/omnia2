@@ -21,6 +21,44 @@ def mongo():
     return client[DB_NAME]
 
 
+def test_founder_safety_alert_copy_is_plain_italian():
+    from apps.immocloud.listing_safety_gate import (
+        SafetyReport,
+        VERDICT_REVIEW,
+        founder_safety_alert_copy,
+    )
+
+    copy = founder_safety_alert_copy(
+        {
+            "id": "abc",
+            "reference_code": "OM-L-N4KJN2",
+            "title": "provaprova",
+            "city": "Mascalucia",
+        },
+        SafetyReport(
+            verdict=VERDICT_REVIEW,
+            reasons=["llm_review"],
+            hard_hits=[],
+            soft_hits=[],
+            llm_used=True,
+            llm_verdict="REVIEW",
+        ),
+        event="rescan_live_soft",
+    )
+    blob = " ".join(copy.values()).lower()
+    assert "resta online" in blob
+    assert "da controllare" in blob
+    assert "provaprova" in blob
+    assert "om-l-n4kjn2" in blob
+    # no raw ops jargon in Founder-facing fields
+    for bad in ("verdict=", "motives=", "hits=", "rescan_live_soft", "llm_review"):
+        assert bad not in copy["subject"].lower()
+        assert bad not in copy["headline"].lower()
+        assert bad not in copy["event_line"].lower()
+        assert bad not in copy["why_line"].lower()
+        assert bad not in copy["inbox_title"].lower()
+
+
 def test_hard_block_rejects():
     from apps.immocloud.listing_safety_gate import VERDICT_REJECT, evaluate_listing_safety
 
