@@ -2,13 +2,14 @@
   "name": "ImmobilCloud",
   "short_name": "ImmobilCloud",
   "description": "Cerca casa con Scout: completezza, prezzo in zona, domande da fare — prima della visita.",
-  "start_url": "/it/cloud",
+  "start_url": "/it/cloud?utm_source=pwa",
   "scope": "/",
   "display": "standalone",
-  "orientation": "portrait-primary",
+  "orientation": "any",
   "background_color": "#0B1E3F",
   "theme_color": "#0B1E3F",
   "lang": "it",
+  "prefer_related_applications": false,
   "icons": [
     {
       "src": "/icons/pwa-192.png",

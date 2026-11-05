@@ -1,14 +1,19 @@
 import { useCallback, useEffect, useState } from "react";
+import {
+  getDeferredInstallPrompt,
+  promptPwaInstall,
+  subscribeInstallPrompt,
+} from "../lib/pwa";
 
 /**
- * Chrome/Edge: beforeinstallprompt → prompt().
- * iOS Safari: no event → show manual “Aggiungi a Home”.
- * Already standalone: installed.
+ * Chrome/Edge Android: beforeinstallprompt → dialog nativo «Installa».
+ * iOS Safari: istruzioni Condividi → Aggiungi a Home (Apple non permette auto-install).
  */
 export default function usePwaInstall() {
-  const [deferred, setDeferred] = useState(null);
+  const [canPrompt, setCanPrompt] = useState(!!getDeferredInstallPrompt());
   const [installed, setInstalled] = useState(false);
   const [iosHint, setIosHint] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
     if (typeof window === "undefined") return undefined;
@@ -18,43 +23,35 @@ export default function usePwaInstall() {
     setInstalled(!!standalone);
 
     const ua = window.navigator.userAgent || "";
-    const isIOS = /iPad|iPhone|iPod/.test(ua) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
-    const isSafari = /Safari/.test(ua) && !/CriOS|FxiOS|EdgiOS|Chrome/.test(ua);
-    setIosHint(isIOS && !standalone);
+    const ios =
+      /iPad|iPhone|iPod/.test(ua) ||
+      (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+    const mobile = ios || /Android|Mobile/i.test(ua);
+    setIsMobile(mobile);
+    setIosHint(ios && !standalone);
 
-    const onBip = (e) => {
-      e.preventDefault();
-      setDeferred(e);
-    };
+    const unsub = subscribeInstallPrompt((ev) => {
+      setCanPrompt(!!ev && !standalone);
+    });
     const onInstalled = () => {
       setInstalled(true);
-      setDeferred(null);
+      setCanPrompt(false);
     };
-    window.addEventListener("beforeinstallprompt", onBip);
+    window.addEventListener("omnia:pwa-installed", onInstalled);
     window.addEventListener("appinstalled", onInstalled);
     return () => {
-      window.removeEventListener("beforeinstallprompt", onBip);
+      unsub();
+      window.removeEventListener("omnia:pwa-installed", onInstalled);
       window.removeEventListener("appinstalled", onInstalled);
     };
   }, []);
 
-  const canPrompt = !!deferred && !installed;
-
   const promptInstall = useCallback(async () => {
-    if (!deferred) return { ok: false, reason: iosHint ? "ios" : "unavailable" };
-    try {
-      deferred.prompt();
-      const choice = await deferred.userChoice;
-      setDeferred(null);
-      if (choice?.outcome === "accepted") {
-        setInstalled(true);
-        return { ok: true };
-      }
-      return { ok: false, reason: "dismissed" };
-    } catch {
-      return { ok: false, reason: "error" };
-    }
-  }, [deferred, iosHint]);
+    const res = await promptPwaInstall();
+    if (res.ok && res.reason !== "already") setInstalled(true);
+    if (res.ok || res.reason === "dismissed") setCanPrompt(false);
+    return res;
+  }, []);
 
-  return { installed, canPrompt, iosHint, promptInstall };
+  return { installed, canPrompt, iosHint, isMobile, promptInstall };
 }

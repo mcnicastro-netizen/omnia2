@@ -17,6 +17,7 @@ import VisuraPage from "./components/VisuraPage";
 import PlanimetriaPage from "./components/PlanimetriaPage";
 import AccountDashboard from "./components/AccountDashboard";
 import SellerMessagesPage from "./components/SellerMessagesPage";
+import CloudInstallAppPage from "./pages/CloudInstallAppPage";
 import ErrorBoundary from "@/shared/components/ErrorBoundary";
 
 /* M17 — ImmocloudApp è ora solo il router B2C: le pagine vivono in pages/ e components/. */
@@ -81,6 +82,7 @@ export default function ImmocloudApp() {
           <Route path="checkout/success" element={<CheckoutSuccessPage />} />
           <Route path="checkout/cancel" element={<CheckoutCancelPage />} />
           <Route path="mutui" element={<MutuiPage />} />
+          <Route path="app" element={<CloudInstallAppPage />} />
         </Routes>
         {!hideFooter && <FooterB2C />}
       </div>

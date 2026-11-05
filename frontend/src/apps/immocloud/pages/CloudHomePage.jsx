@@ -3,7 +3,6 @@ import { Link, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { api } from "../../../shared/lib/api";
 import { PortalNewsTile } from "../components/PortalNewsBox";
-import usePwaInstall from "../../../shared/hooks/usePwaInstall";
 
 const PROPERTY_TYPES = [
   { v: "", label: "Qualsiasi" },
@@ -335,44 +334,13 @@ function ToolTile({ to, img, title, text, testid }) {
 }
 
 function PwaInstallTile() {
-  const { t } = useTranslation();
-  const { installed, canPrompt, iosHint, promptInstall } = usePwaInstall();
-  const [msg, setMsg] = useState("");
-
-  const onClick = async () => {
-    setMsg("");
-    if (installed) {
-      setMsg(t("cloud.pwa.already", "Già installata: aprila dall’icona sul telefonino."));
-      return;
-    }
-    const res = await promptInstall();
-    if (res.ok) {
-      setMsg(t("cloud.pwa.done", "Installazione avviata."));
-      return;
-    }
-    if (iosHint || res.reason === "ios") {
-      setMsg(
-        t(
-          "cloud.pwa.ios_hint",
-          "Su iPhone: tocca Condividi → Aggiungi a Home."
-        )
-      );
-      return;
-    }
-    setMsg(
-      t(
-        "cloud.pwa.browser_hint",
-        "Nel menu del browser scegli Installa app / Aggiungi a schermata Home."
-      )
-    );
-  };
-
+  const { t, i18n } = useTranslation();
+  const lang = (i18n.language || "it").slice(0, 2);
   return (
-    <button
-      type="button"
+    <Link
+      to={`/${lang}/cloud/app`}
       data-testid="tool-pwa"
-      onClick={onClick}
-      className="group relative block w-full text-left min-h-[280px] sm:min-h-0 sm:aspect-[4/5] overflow-hidden rounded-2xl"
+      className="group relative block min-h-[280px] sm:min-h-0 sm:aspect-[4/5] overflow-hidden rounded-2xl"
     >
       <img
         src="/cloud/living.jpg"
@@ -388,26 +356,15 @@ function PwaInstallTile() {
           className="text-2xl mb-2"
           style={{ fontFamily: "'Fraunces', Georgia, serif" }}
         >
-          {installed
-            ? t("cloud.pwa.title_installed", "App installata")
-            : t("cloud.pwa.title", "Scarica app")}
+          {t("cloud.pwa.title", "Scarica app")}
         </h3>
         <p className="text-sm text-white/75 leading-relaxed">
-          {installed
-            ? t("cloud.pwa.text_installed", "ImmobilCloud è già sulla Home del tuo dispositivo.")
-            : canPrompt
-              ? t("cloud.pwa.text", "Un tap: icona sulla Home, come le altre app. Zero store.")
-              : t(
-                  "cloud.pwa.text_fallback",
-                  "Aggiungi ImmobilCloud alla Home del telefonino (PWA)."
-                )}
+          {t(
+            "cloud.pwa.text_qr",
+            "Inquadra il QR col telefonino: un tocco e nasce l’icona tra le app — come Idealista."
+          )}
         </p>
-        {msg ? (
-          <p className="mt-3 text-xs text-[#E8D5B5]" data-testid="tool-pwa-hint">
-            {msg}
-          </p>
-        ) : null}
       </div>
-    </button>
+    </Link>
   );
 }
