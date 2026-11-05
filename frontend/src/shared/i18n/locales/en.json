@@ -1422,7 +1422,14 @@
       "cat_arredo": "Interiors",
       "empty": "No stories in this category right now.",
       "open_external": "Open ↗",
-      "disclaimer": "Third-party sources · content belongs to the publishers. OMNIA does not edit the text."
+      "disclaimer": "Third-party sources · content belongs to the publishers. OMNIA does not edit the text.",
+      "tile_title": "News",
+      "tile_hint": "Scroll · click to open the source"
+    },
+    "tools": {
+      "eyebrow": "Tools",
+      "title": "Beyond search",
+      "subtitle": "What to do on the listing, the paperwork and the law — plus market news, without the noise."
     },
     "map_search_area": "Search this area",
     "map_area_active": "Searching the map area",

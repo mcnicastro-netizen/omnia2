@@ -1368,7 +1368,14 @@
       "cat_arredo": "Interiores",
       "empty": "No hay noticias en esta categoría por ahora.",
       "open_external": "Abrir ↗",
-      "disclaimer": "Fuentes de terceros · el contenido pertenece a los editores. OMNIA no modifica el texto."
+      "disclaimer": "Fuentes de terceros · el contenido pertenece a los editores. OMNIA no modifica el texto.",
+      "tile_title": "Noticias",
+      "tile_hint": "Desliza · clic para abrir la fuente"
+    },
+    "tools": {
+      "eyebrow": "Herramientas",
+      "title": "Más allá de la búsqueda",
+      "subtitle": "Qué hacer con el anuncio, los documentos y el derecho — más noticias del mercado, sin ruido."
     },
     "map_search_area": "Buscar en esta zona",
     "map_area_active": "Búsqueda en el área del mapa",

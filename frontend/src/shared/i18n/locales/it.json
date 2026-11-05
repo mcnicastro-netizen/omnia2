@@ -1645,7 +1645,14 @@
       "cat_arredo": "Arredo",
       "empty": "Nessuna notizia in questa categoria al momento.",
       "open_external": "Apri ↗",
-      "disclaimer": "Fonti terze · i contenuti restano dei rispettivi editori. OMNIA non ne modifica il testo."
+      "disclaimer": "Fonti terze · i contenuti restano dei rispettivi editori. OMNIA non ne modifica il testo.",
+      "tile_title": "Notizie",
+      "tile_hint": "Scorri · clic per aprire la fonte"
+    },
+    "tools": {
+      "eyebrow": "Strumenti",
+      "title": "Oltre la ricerca",
+      "subtitle": "Cosa fare sull’annuncio, sui documenti e sul diritto — più le notizie del mercato, senza rumore."
     },
     "map_search_area": "Cerca in questa zona",
     "map_area_active": "Ricerca sull’area della mappa",
