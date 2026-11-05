@@ -1,3 +1,10 @@
+## 2026-11-05 — D-143 Scarica app via QR (flusso Idealista)
+
+- Pagina `/{lang}/cloud/app`: QR desktop → telefonino + CTA Installa
+- Tile home punta alla pagina QR; prompt PWA catturato early
+- Onestà iOS: Condividi → Aggiungi a Home (no silent install Apple)
+- DECISIONS D-143 · Cap.01 HAL · dep `qrcode`
+
 ## 2026-11-05 — D-142 PWA Scarica app · Scout in evidenza Cerca/Vendi
 
 - Home: tile HAL Legal → **Scarica app** (manifest + SW PWA); Legal resta in nav

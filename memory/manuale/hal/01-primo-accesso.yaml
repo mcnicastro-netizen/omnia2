@@ -204,22 +204,22 @@ voci:
       - primo-accesso.area-riservata-cloud
       - api.portal-news-rss
       - api.cloud-search-bbox-map
-    domanda_naturale: "Dove trovo Cerca su mappa? Come scarico l'app ImmobilCloud? Cosa ci sono nei box della home? Dove è Scout in Cerca e Vendi?"
+    domanda_naturale: "Dove trovo Cerca su mappa? Come scarico l'app ImmobilCloud con QR? Cosa ci sono nei box della home? Dove è Scout in Cerca e Vendi?"
     contenuto:
       a_cosa_serve: >
         Orientarsi sulla home ImmobilCloud: 4 riquadri Scout · Cerca su
-        mappa · Scarica app (PWA) · News. Visura e HAL Legal restano in nav.
-        Scout è in evidenza anche in Cerca e Vendi (D-142).
+        mappa · Scarica app (PWA via QR, D-143) · News. Visura e HAL Legal
+        restano in nav. Scout in evidenza in Cerca e Vendi (D-142).
       quando_si_usa: >
-        Visitatore su /cloud; installazione icona telefonino; ricerca mappa;
-        chi vuole capire Scout prima di una visita o mentre pubblica.
+        Visitatore su /cloud; installazione icona telefonino da QR o CTA;
+        ricerca mappa; Scout prima di una visita o in Vendi.
       passi:
-        - "Home /it/cloud → griglia cloud-tools sotto l'hero."
-        - "Tile Scarica app: Chrome/Android Installa; iPhone Condividi→Home."
+        - "Home → tile Scarica app → /cloud/app."
+        - "Dal PC: inquadra il QR col telefonino."
+        - "Su Android/Chrome: tocca Installa → icona tra le app."
+        - "Su iPhone: Condividi → Aggiungi a Home (limite Apple)."
         - "Tile Cerca su mappa → /cloud/search?view=map."
-        - "Cerca casa / Vendi: banner Scout in evidenza."
-        - "In mappa: pan/zoom → «Cerca in questa zona» → bbox in URL."
-        - "Tile News: titoli RSS a scorrimento."
+        - "Cerca / Vendi: banner Scout in evidenza."
         - "HAL Legal e Visura: voci nav (non tile home)."
       errori_comuni:
         - problema: "Non trovo HAL Legal / Visura nei 4 box"
@@ -228,8 +228,12 @@ voci:
             Scarica app, News.
         - problema: "Su iPhone non appare Installa"
           soluzione: >
-            Safari non espone beforeinstallprompt. Usa Condividi →
-            Aggiungi a Home. Serve HTTPS.
+            Apple non permette install silenziosa. Su /cloud/app segui
+            Condividi → Aggiungi a Home. Serve HTTPS.
+        - problema: "Il QR non apre ImmobilCloud"
+          soluzione: >
+            Deve puntare a https://cloud…/it/cloud/app. Hard refresh;
+            fotocamera o app QR del telefono.
         - problema: "Non vedo Cerca su mappa"
           soluzione: >
             Hard refresh FE. Home tile oppure box sotto i filtri in lista.

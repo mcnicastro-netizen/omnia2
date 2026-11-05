@@ -7,6 +7,17 @@ Registro di tutte le decisioni di business e tecniche prese durante il progetto.
 
 ## Decisioni prese
 
+### D-143 — Scarica app via QR (flusso Idealista) · 05-Nov-2026
+- **Data**: 5 Novembre 2026
+- **Contesto**: Founder vuole UX più intuitiva: scaricare l’app da QR; Idealista «si installa da sola» creando l’icona.
+- **Decisione**:
+  1. Pagina dedicata `/{lang}/cloud/app`: **QR** (dal computer → telefonino) + CTA **Installa** sul device.
+  2. Tile home «Scarica app» porta a quella pagina (non solo hint testuale).
+  3. Android/Chrome: dialog nativo `beforeinstallprompt` → icona tra le app (PWA standalone). Cattura prompt **early** in `pwa.js`.
+  4. **Onestà iOS**: Apple non consente install silenziosa; guida Condividi → Aggiungi a Home (stesso esito icona).
+- **Fuori scope**: app store native; silent install iOS (impossibile).
+- **Stato**: ✅ DECISIONE OPERATIVA · ship FE
+
 ### D-142 — PWA «Scarica app» al posto di HAL Legal in home · Scout in evidenza Cerca/Vendi · 05-Nov-2026
 - **Data**: 5 Novembre 2026
 - **Contesto**: Founder vuole modello Immobiliare.it (icona telefonino) via PWA; in home sostituire tile HAL Legal con **Scarica app**; dare maggiore risalto a Scout in Cerca e Vendi (fiore all’occhiello).
