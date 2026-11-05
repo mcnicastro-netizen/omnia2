@@ -168,14 +168,16 @@ Formato lookup key Stripe: `{tier}_{cycle}` per abbonamenti (es. `pro_monthly`) 
 
 ## ⚠️ Controllo perdite (05-Nov-2026)
 
+> **Gate pre-produzione (Founder):** prima del go-live commerciale rifare questo controllo con **fatture/fee reali** partner. Non dichiarare OK produzione se Visura/APE (o altri SKU a fee esterna) vendono sotto costo. Vedi anche `NEXT_SESSION.md` § «Prima di andare in produzione».
+
 | Voce | Prezzo | COGS stimato | Esito |
 |------|:-:|:-:|---|
 | **Kling** (prima del fix) codice a **10 cr = €0,50** | €0,50 | ~€0,88 | **PERDITA ~€0,38/video** — allineato a 30 cr |
 | **Kling** listino 30 cr | €1,50 | ~€0,88 | OK · netto ~€0,62 (~41%) |
 | Virtual Staging B2B 18 cr | €0,90 | ~€0,05–0,10 fal | OK |
 | Staging B2C €1,49 | €1,49 | ~€0,30 + Stripe | OK (sottile se preview gratis non converte) |
-| Visura B2B 24 cr | €1,20 | partner-dependent | 🟡 verificare fee OpenAPI ≤ ~€0,70 |
-| APE search 60 cr | €3,00 | fee partner | 🟡 margine listino 30% — perdita se fee > €3 |
+| Visura B2B 24 cr | €1,20 | partner-dependent | 🟡 **pre-prod:** fee OpenAPI ≤ ~€0,70 |
+| APE search 60 cr | €3,00 | fee partner | 🟡 **pre-prod:** fee ≤ €3 altrimenti alza prezzo / sospendi |
 | HAL / Valuator / SMS | listino | COGS << prezzo | OK |
 | Ken Burns B2C | €0 | CPU Railway | OK (lead / contenuto, non SKU a pagamento) |
 

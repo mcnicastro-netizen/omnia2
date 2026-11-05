@@ -1,6 +1,6 @@
 # Prossima sessione — programma passi
 
-**Aggiornato**: 4 Novembre 2026 sera — **D-140** dogfood Vendi chiuso (safety soft · Scout · video · layout)  
+**Aggiornato**: 5 Novembre 2026 — D-141 Kling 30 cr · gate **pre-produzione margini**  
 **Repo**: https://github.com/mcnicastro-netizen/omnia2 ✅  
 **Environment**: omnia2 (esiste; UI Dashboard può glitchare — non Start Fresh)
 
@@ -13,12 +13,25 @@ Vault: [`memory/CLOUD_SECRETS_INVENTORY.md`](./CLOUD_SECRETS_INVENTORY.md).
 
 ---
 
+## ⛔ Prima di andare in produzione (obbligatorio)
+
+Founder 05-Nov-2026: **controllare i margini prima del go-live**, non dopo.
+
+1. Riaprire [`PRICING_OMNIA.md`](./PRICING_OMNIA.md) § «Controllo perdite» + [`PRICING_B2C.md`](./PRICING_B2C.md).
+2. Allineare **codice** (`CREDIT_COSTS` / checkout B2C) ↔ listino: niente SKU sotto COGS (lezione Kling @ 10 cr).
+3. **Visura** e **APE**: verificare fee partner (OpenAPI / fatture) ≤ prezzo listino; se fee > prezzo → alzare prezzo o sospendere SKU.
+4. Smoke Founder Ops `/app/ops` (COGS vs crediti scalati) su ambiente staging/prod controllato.
+5. Solo dopo OK Founder su questa checklist → dichiarare go-live commerciale.
+
+---
+
 ## 🎯 SoT freccia
 
 | Ruolo | Doc |
 |-------|-----|
 | Freccia | [`docs/audit/OMNIA_COERENZA_SISTEMA.md`](../docs/audit/OMNIA_COERENZA_SISTEMA.md) |
 | **Vendi B2C** | **D-135** + **D-136** staging + **D-137/b** safety + **D-138** inbox + **D-140** video/layout ✅ |
+| Listino B2B | [`memory/PRICING_OMNIA.md`](./PRICING_OMNIA.md) **v3.2** (Kling 30 cr · D-141) |
 | Listino B2C | [`memory/PRICING_B2C.md`](./PRICING_B2C.md) v1.4 |
 | API / FE | Railway D-123 · Vercel D-074/D-133 |
 
@@ -26,10 +39,10 @@ Vault: [`memory/CLOUD_SECRETS_INVENTORY.md`](./CLOUD_SECRETS_INVENTORY.md).
 
 ## Filo prodotto
 
-1. **04-Nov sera chiuso:** D-140 live (PR #84–#90) · Vendi ordine + video tour · Scout · safety soft rescan · docs/HAL v0.47.
-2. **Backlog Founder:** D-139 news box RSS (unica soluzione); riprove E2E portale a mente fresca.
-3. **Ops:** hard refresh FE se cache chunk; reindex HAL post-merge docs se non già fatto in sessione.
-4. **Opzionale:** shadow staging `professional` su Railway; renew Tavily se serve HAL Legal search.
+1. **05-Nov:** D-141 Kling 30 cr live; **gate pre-prod margini** (Visura/APE fee) ancora da chiudere con fatture.
+2. **04-Nov sera chiuso:** D-140 · Vendi + video tour · Scout · safety soft · docs/HAL v0.47.
+3. **Backlog Founder:** D-139 news box RSS; riprove E2E portale a mente fresca.
+4. **Ops:** hard refresh FE; reindex HAL post-merge docs se serve.
 
 ---
 

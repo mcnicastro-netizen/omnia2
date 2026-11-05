@@ -195,6 +195,8 @@ Dettagli in `/app/memory/creatives/brand_lab_reference.md`.
 ### 💰 **PRICING_OMNIA.md v2.1 — VINCOLANTE**
 Il Founder è **estremamente rigoroso** sui prezzi. Verificare `PRICING_OMNIA.md` prima di proporre qualsiasi feature con impatto economico. Micro-tour Kling Pro = 10s / **30 crediti** (€1,50 · D-141; non 10 cr del vecchio D-066).
 
+**Prima del go-live produzione:** checklist margini in `NEXT_SESSION.md` (Visura/APE fee reali, codice ↔ listino). Founder 05-Nov: «ricordiamoci di controllare prima di andare in produzione».
+
 ---
 
 ## 🐙 REPO GITHUB — ATTENZIONE MASSIMA

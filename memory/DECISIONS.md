@@ -13,8 +13,9 @@ Registro di tutte le decisioni di business e tecniche prese durante il progetto.
   1. `CREDIT_COSTS["micro_tour_render"] = 30` (€1,50 a €0,05/cr) — SoT in `plans.py`; Kling legge da lì.
   2. Margine atteso: €1,50 − ~€0,88 ≈ **€0,62 (~41%)**.
   3. Ken Burns B2C resta gratis (nessun credito).
+  4. **Gate pre-produzione**: prima del go-live commerciale, ricontrollare margini (Visura/APE fee partner vs listino; codice ↔ `CREDIT_COSTS`). Non shippare SKU sotto COGS. Checklist in `NEXT_SESSION.md`.
 - **Docs**: `PRICING_OMNIA.md` v3.2 + audit perdite.
-- **Stato**: ✅ APPLICATA
+- **Stato**: ✅ APPLICATA (punto 4 = obbligo operativo aperto fino a verifica fatture)
 
 ### D-140 — Dogfood Vendi sera 04-Nov: safety soft, Scout, video tour, layout · 04-Nov-2026
 - **Data**: 4 Novembre 2026 (sera · chiusura giornata)
