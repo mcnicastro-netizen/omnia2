@@ -361,7 +361,7 @@ function PwaInstallTile() {
         <p className="text-sm text-white/75 leading-relaxed">
           {t(
             "cloud.pwa.text_qr",
-            "Inquadra il QR col telefonino: un tocco e nasce l’icona tra le app — come Idealista."
+            "Inquadra il QR: Accedi o Crea account sul telefonino — e se vuoi, l’icona tra le app."
           )}
         </p>
       </div>

@@ -215,8 +215,8 @@ voci:
         ricerca mappa; Scout prima di una visita o in Vendi.
       passi:
         - "Home → tile Scarica app → /cloud/app."
-        - "Dal PC: inquadra il QR col telefonino."
-        - "Su Android/Chrome: tocca Installa → icona tra le app."
+        - "Dal PC: inquadra il QR → atterri su /cloud/area (Accedi | Crea account)."
+        - "Su Area (?from=pwa): striscia Installa; Android dialog nativo."
         - "Su iPhone: Condividi → Aggiungi a Home (limite Apple)."
         - "Tile Cerca su mappa → /cloud/search?view=map."
         - "Cerca / Vendi: banner Scout in evidenza."

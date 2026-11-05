@@ -11,8 +11,8 @@ Registro di tutte le decisioni di business e tecniche prese durante il progetto.
 - **Data**: 5 Novembre 2026
 - **Contesto**: Founder vuole UX più intuitiva: scaricare l’app da QR; Idealista «si installa da sola» creando l’icona.
 - **Decisione**:
-  1. Pagina dedicata `/{lang}/cloud/app`: **QR** (dal computer → telefonino) + CTA **Installa** sul device.
-  2. Tile home «Scarica app» porta a quella pagina (non solo hint testuale).
+  1. Pagina dedicata `/{lang}/cloud/app`: **QR** + CTA **Installa**.
+  2. **QR atterra su** `/{lang}/cloud/area?from=pwa` (Accedi | Crea account) + striscia Installa; tile home → `/cloud/app`.
   3. Android/Chrome: dialog nativo `beforeinstallprompt` → icona tra le app (PWA standalone). Cattura prompt **early** in `pwa.js`.
   4. **Onestà iOS**: Apple non consente install silenziosa; guida Condividi → Aggiungi a Home (stesso esito icona).
 - **Fuori scope**: app store native; silent install iOS (impossibile).
