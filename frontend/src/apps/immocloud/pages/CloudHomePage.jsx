@@ -24,12 +24,12 @@ const TOOL_TILES = [
     testid: "tool-scout",
   },
   {
-    key: "visura",
-    to: (lang) => `/${lang}/cloud/visura`,
+    key: "map",
+    to: (lang) => `/${lang}/cloud/search?view=map`,
     img: "/cloud/intent-value.jpg",
-    title: "Visura",
-    text: "Il foglio catastale quando ti serve, senza giri di sportello.",
-    testid: "tool-visura",
+    title: "Cerca su mappa",
+    text: "Lista e pin insieme — sposta la mappa e cerca in questa zona.",
+    testid: "tool-map",
   },
   {
     key: "legal",
@@ -217,15 +217,6 @@ export default function CloudHomePage() {
               >
                 {t("cloud.search_btn")}
               </button>
-            </div>
-            <div className="flex flex-wrap gap-2 pt-1">
-              <Link
-                to={`/${lang}/cloud/search?view=map${city ? `&city=${encodeURIComponent(city)}` : ""}`}
-                data-testid="cloud-hero-map-cta"
-                className="inline-flex items-center justify-center px-5 py-2.5 rounded-lg border border-white/40 text-white text-sm tracking-wide hover:bg-white hover:text-[#0B1E3F] transition"
-              >
-                {t("cloud.hero_map_cta", "Cerca su mappa")}
-              </Link>
             </div>
           </form>
 

@@ -1657,8 +1657,9 @@
     "map_search_area": "Cerca in questa zona",
     "map_area_active": "Ricerca sull’area della mappa",
     "map_no_in_area": "Nessuna casa in quest’area",
-    "nav_map": "Cerca su mappa",
-    "hero_map_cta": "Cerca su mappa"
+    "map_box_eyebrow": "Esplora",
+    "map_box_title": "Cerca su mappa",
+    "map_box_text": "Lista e pin insieme — sposta la mappa e cerca in zona."
   },
   "valuator": {
     "eyebrow": "Valutatore GIS · Gratis",
