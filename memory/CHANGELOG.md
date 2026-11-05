@@ -1,3 +1,11 @@
+## 2026-11-05 — D-141 mappa Idealista + home 4 tile · D-139 news live · docs/HAL
+
+- Home ImmobilCloud: Scout · **Cerca su mappa** · HAL Legal · News (Visura solo nav)
+- Cerca casa: box «Cerca su mappa» sotto filtri; `view=map` split Idealista + CTA zona + `bbox`
+- News RSS live (`GET /api/cloud/news`) — D-139 attivato
+- Ship codice: PR #99 · #101 · Vercel prod
+- Docs: DECISIONS D-141 (+ nota D-139) · Cap.01/21 MD · HAL Cap.00/01/21 · IMPORT_HAL v0.48 · NEXT_SESSION · diario 05-Nov
+
 ## 2026-11-04 sera — D-140 dogfood Vendi: safety soft · Scout · video tour · layout
 
 - Safety rescan: no un-publish su solo `llm_review` soft (PR #85)

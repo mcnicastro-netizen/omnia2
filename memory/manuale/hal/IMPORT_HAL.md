@@ -1,6 +1,6 @@
-# 📚 HAL Knowledge — Import & Cold Start (v0.46-d136-stripe-dogfood)
+# 📚 HAL Knowledge — Import & Cold Start (v0.48-d141-map-news)
 
-**Ultimo aggiornamento**: 04-Nov-2026 (D-136 dogfood fedeltà + Stripe €1,49 OK)  
+**Ultimo aggiornamento**: 05-Nov-2026 (D-141 mappa Idealista + home 4 tile · D-139 news)  
 **Corpus**: YAML in `memory/manuale/hal/*.yaml` (Cap. 1–27 + `00-api-codice`) · MD esclusi dal RAG ingest  
 **Motore**: `hal_knowledge.py` · reindex: `POST /api/app/hal/knowledge/reindex?force=true` (super_admin)  
 **Regola Founder D-084**: ogni ship aggiorna MD+YAML nello stesso giro — vedi `memory/MANUAL_SYNC.md`.
@@ -267,6 +267,7 @@ Prima di dichiarare il cold start "attivo", eseguire manualmente queste 5 query 
 
 | Data | Versione | Note |
 |------|:-:|------|
+| 05-Nov-2026 | **v0.48-d141-map-news** | Cap.01 home 4 tile + mappa Idealista. Cap.00 `api.portal-news-rss` + `api.cloud-search-bbox-map`. Cap.21 home non più ActionCard Valutatore nei tile. DECISIONS D-141 · D-139 note · CHANGELOG/NEXT_SESSION/diario. Reindex post-merge. |
 | 04-Nov-2026 sera | **v0.47-d140-vendi-video** | Cap.18 flusso Vendi ordine+safety+video. Cap.23 Ken Burns in Vendi 1080p. HAL Cap.18/23 aggiornati. DECISIONS D-140 · CHANGELOG/NEXT_SESSION. Reindex post-merge. |
 | 04-Nov-2026 | **v0.46-d138-idealista-inbox** | Cap.01 Esci B2C + tel/WA + messaggi. Cap.18 D-138 inbox/visite. Cap.00 `api.portal-providers-sandbox` (probe Tavily/Yousign). HAL Cap.18 +2 voci inbox/logout. DECISIONS D-138/D-139 (news backlog). Reindex post-merge. |
 | 02-Nov-2026 | **v0.44-d135-b2c-vendi** | Cap.01 area B2C + D-135 account/agenzia. Cap.00 CSRF cross-site. Cap.10 HAL improve modello+timeout. Cap.18 flusso Vendi→moderazione. DECISIONS D-135 · main `a755560`+. **Reindex prod OK** (~973 chunks, manual HAL ~382+, `hal-index` v0.44). |

@@ -1130,6 +1130,65 @@ voci:
         - super_admin / Founder
       screenshot: []
 
+  - id: api.portal-news-rss
+    titolo: News box portale — aggregatore RSS (D-139)
+    modulo: Codice API
+    widget: null
+    pubblico: [privato, titolare, agente, segreteria, super_admin]
+    livello: base
+    tags: [codice, news, rss, immobilcloud, d-139, casa24, mutui, arredo]
+    correlati: [primo-accesso.home-cloud-tools-mappa, api.cloud-search-bbox-map]
+    domanda_naturale: "Come funzionano le news sul portale? Quali fonti? C'è un'API?"
+    contenuto:
+      a_cosa_serve: >
+        Aggregatore RSS server-side per ImmobilCloud: immobiliare, mutui,
+        arredo. Nessuna API a pagamento. Cache ~1h (Mongo portal_news_cache
+        + memoria). Flag OMNIA_PORTAL_NEWS (default on).
+      quando_si_usa: >
+        Home tile News a scorrimento; box compact in account; debug feed.
+      passi:
+        - "GET /api/cloud/news → items round-robin per categoria."
+        - "Feed v1: Casa24 (Sole 24 Ore), Google News mutui, Interni Magazine."
+        - "FE: PortalNewsTile (home) + PortalNewsBox (account)."
+        - "Idealista/MutuiOnline/BdI RSS non usati (non raggiungibili)."
+      errori_comuni:
+        - problema: "Tile News vuoto"
+          soluzione: >
+            Verifica OMNIA_PORTAL_NEWS e che i feed RSS rispondano.
+            Cache 1h: attendi o flush portal_news_cache in Mongo ops.
+      permessi:
+        - Pubblico (endpoint senza auth)
+      screenshot: []
+
+  - id: api.cloud-search-bbox-map
+    titolo: Cerca casa mappa — bbox e marker (D-141)
+    modulo: Codice API
+    widget: null
+    pubblico: [privato, titolare, agente, segreteria, super_admin]
+    livello: base
+    tags: [codice, search, mappa, bbox, leaflet, idealista, d-141, immobilcloud]
+    correlati: [primo-accesso.home-cloud-tools-mappa, api.portal-news-rss]
+    domanda_naturale: "Come funziona la ricerca su mappa? Cosa è bbox? Endpoint map?"
+    contenuto:
+      a_cosa_serve: >
+        Flusso stile Idealista: lista+mappa, pin con prezzo, «Cerca in
+        questa zona» dopo pan/zoom. Filtra annunci per rettangolo geografico.
+      quando_si_usa: >
+        UI /cloud/search?view=map; integrazione API search/map con area.
+      passi:
+        - "GET /api/cloud/search?bbox=south,west,north,east (+ filtri usuali)."
+        - "GET /api/cloud/map?bbox=... → marker lat/lng/prezzo."
+        - "FE: PropertyMapView (react-leaflet) + BoundsWatcher idle → CTA."
+        - "URL FE propaga bbox nei search params dopo click CTA."
+      errori_comuni:
+        - problema: "bbox ignorato"
+          soluzione: >
+            Formato esatto south,west,north,east (float). Proprietà senza
+            lat/lng non entrano nel filtro geografico.
+      permessi:
+        - Pubblico (search/map portale)
+      screenshot: []
+
   - id: api.portal-providers-sandbox
     titolo: Stato sandbox provider del portale (probe 04-Nov-2026)
     modulo: Codice API

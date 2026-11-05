@@ -7,6 +7,17 @@ Registro di tutte le decisioni di business e tecniche prese durante il progetto.
 
 ## Decisioni prese
 
+### D-141 — Ricerca mappa stile Idealista + home 4 tile (Scout/Mappa/Legal/News) · 05-Nov-2026
+- **Data**: 5 Novembre 2026
+- **Contesto**: Dopo D-139 (news) e redesign home, Founder chiede flusso mappa come Idealista e dove trovare «Cerca su mappa». Correzione: in home sostituire il tile **Visura** (non la CTA hero) con **Cerca su mappa**.
+- **Decisione**:
+  1. **Cerca casa mappa** (`/cloud/search?view=map`): split lista+mappa a viewport pieno; pin con pillola prezzo; bottone flottante **«Cerca in questa zona»** dopo pan/zoom → query `bbox=south,west,north,east` su `GET /api/cloud/search` e `GET /api/cloud/map`.
+  2. **Lista** (`view` assente/list): sotto i filtri, box **«Cerca su mappa»** che porta a `view=map` preservando filtri.
+  3. **Home ImmobilCloud** (`cloud-tools`): 4 riquadri — **Scout · Cerca su mappa · HAL Legal · News** (ticker D-139). Visura **non** è più un tile home; resta in **nav**.
+  4. Niente voce «Mappa» extra in top nav (evita ripetizione).
+- **Ship**: PR #99 (mappa Idealista) · PR #101 (box search + tile home) · merge `main` · Vercel FE live.
+- **Stato**: ✅ **DECISIONE OPERATIVA REGISTRATA** · live · docs/HAL syncati 05-Nov
+
 ### D-140 — Dogfood Vendi sera 04-Nov: safety soft, Scout, video tour, layout · 04-Nov-2026
 - **Data**: 4 Novembre 2026 (sera · chiusura giornata)
 - **Contesto**: Dogfood produzione su annuncio `provaprova` (Mascalucia): scheda Scout con copy/benchmark errati; rescan orario toglieva live su solo `llm_review`; hero/video tour; UX Vendi disordinata; flash Immocloud; anteprima card a sinistra su laptop.
@@ -24,8 +35,9 @@ Registro di tutte le decisioni di business e tecniche prese durante il progetto.
 - **Data**: 4 Novembre 2026 · **attivazione**: 5 Novembre 2026
 - **Contesto**: Founder chiede se è possibile un box news dinamico (immobiliare, mutui, arredo) con fonti gratuite; farà in seguito «in un’unica soluzione».
 - **Decisione**: **Sì** — aggregatore RSS server-side + UI box (home/account), cache ~1h, link esterni. Nessuna API a pagamento. Flag `OMNIA_PORTAL_NEWS` (default on).
-- **v1 live**: 3 feed curati → Casa24 (Sole 24 Ore), rassegna mutui (Google News RSS), Interni Magazine. Endpoint pubblico `GET /api/cloud/news`. UI `PortalNewsBox` su home ImmobilCloud + account (compact). Idealista/MutuiOnline/BdI RSS non raggiungibili → sostituiti con fonti gratuite equivalenti.
-- **Stato**: ✅ APPLICATA
+- **v1 live**: 3 feed curati → Casa24 (Sole 24 Ore), rassegna mutui (Google News RSS), Interni Magazine. Endpoint pubblico `GET /api/cloud/news`. UI: tile **News a scorrimento** nei 4 riquadri home (`PortalNewsTile`) + box compact in account. Idealista/MutuiOnline/BdI RSS non raggiungibili → fonti gratuite equivalenti.
+- **Follow-up UI (D-141)**: home = Scout · Cerca su mappa · HAL Legal · News (niente più tile Visura).
+- **Stato**: ✅ APPLICATA · live 05-Nov
 
 ### D-138 — B2C Idealista+ inbox messaggi/visite + telefono/WA profilo · 04-Nov-2026
 - **Data**: 4 Novembre 2026

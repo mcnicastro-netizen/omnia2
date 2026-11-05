@@ -25,7 +25,7 @@ voci:
       passi:
         - "Pagina dedicata /it/cloud/valutatore con due tier card."
         - "CTA su scheda annuncio (Stima gratuita + Report UNI €2,99)."
-        - "ActionCard Valutatore immobiliare su home ImmobilCloud."
+        - "Home: Valutatore via nav/intent (non nei 4 tile Scout/Mappa/Legal/News · D-141)."
         - "Motore: snapshot OMI/Borsino 2025-Q1 + roll-forward FOI/trend + UNI 10750 + merito + comparables."
         - "Login ImmobilCloud obbligatorio (no stima anonima illimitata v1)."
       errori_comuni:
