@@ -1430,7 +1430,10 @@
       "eyebrow": "Tools",
       "title": "Beyond search",
       "subtitle": "What to do on the listing, the paperwork and the law — plus market news, without the noise."
-    }
+    },
+    "map_search_area": "Search this area",
+    "map_area_active": "Searching the map area",
+    "map_no_in_area": "No homes in this area"
   },
   "portali": {
     "available": "Available portals",

@@ -1376,7 +1376,10 @@
       "eyebrow": "Herramientas",
       "title": "Más allá de la búsqueda",
       "subtitle": "Qué hacer con el anuncio, los documentos y el derecho — más noticias del mercado, sin ruido."
-    }
+    },
+    "map_search_area": "Buscar en esta zona",
+    "map_area_active": "Búsqueda en el área del mapa",
+    "map_no_in_area": "Ninguna vivienda en esta zona"
   },
   "properties": {
     "field_rooms": "Habitaciones / Estancias",

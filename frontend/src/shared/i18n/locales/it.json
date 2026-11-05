@@ -1653,7 +1653,10 @@
       "eyebrow": "Strumenti",
       "title": "Oltre la ricerca",
       "subtitle": "Cosa fare sull’annuncio, sui documenti e sul diritto — più le notizie del mercato, senza rumore."
-    }
+    },
+    "map_search_area": "Cerca in questa zona",
+    "map_area_active": "Ricerca sull’area della mappa",
+    "map_no_in_area": "Nessuna casa in quest’area"
   },
   "valuator": {
     "eyebrow": "Valutatore GIS · Gratis",

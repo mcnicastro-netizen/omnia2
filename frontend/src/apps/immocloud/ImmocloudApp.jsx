@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Route, Routes } from "react-router-dom";
+import { Route, Routes, useLocation, useSearchParams } from "react-router-dom";
 import { THEME } from "./cloudTheme";
 import CloudTopNav from "./components/CloudTopNav";
 import FooterB2C from "./components/FooterB2C";
@@ -22,6 +22,11 @@ import ErrorBoundary from "@/shared/components/ErrorBoundary";
 /* M17 — ImmocloudApp è ora solo il router B2C: le pagine vivono in pages/ e components/. */
 export default function ImmocloudApp() {
   const [apiDown, setApiDown] = useState(false);
+  const location = useLocation();
+  const [searchParams] = useSearchParams();
+  // Flusso Idealista: vista mappa a schermo pieno senza footer.
+  const hideFooter =
+    searchParams.get("view") === "map" && /\/cloud\/?search/.test(location.pathname);
   useEffect(() => {
     const onDown = () => setApiDown(true);
     const onUp = () => setApiDown(false);
@@ -77,7 +82,7 @@ export default function ImmocloudApp() {
           <Route path="checkout/cancel" element={<CheckoutCancelPage />} />
           <Route path="mutui" element={<MutuiPage />} />
         </Routes>
-        <FooterB2C />
+        {!hideFooter && <FooterB2C />}
       </div>
     </ErrorBoundary>
   );
