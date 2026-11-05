@@ -16,7 +16,7 @@ import logging
 import os
 import re
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, List, Optional
 
 logger = logging.getLogger("omnia.listing_safety_gate")
@@ -24,6 +24,47 @@ logger = logging.getLogger("omnia.listing_safety_gate")
 VERDICT_ACCEPT = "ACCEPT"
 VERDICT_REVIEW = "REVIEW"
 VERDICT_REJECT = "REJECT"
+
+# Soft LLM REVIEW on live ads: alert Founder at most once per cooldown
+# (hourly rescan otherwise re-mails the same «provaprova» false-positive every hour).
+def _soft_alert_cooldown_hours() -> int:
+    try:
+        return max(1, int(os.environ.get("OMNIA_SAFETY_SOFT_ALERT_COOLDOWN_H", "24")))
+    except ValueError:
+        return 24
+
+
+def _parse_iso(ts: Optional[str]) -> Optional[datetime]:
+    if not ts or not isinstance(ts, str):
+        return None
+    try:
+        return datetime.fromisoformat(ts.replace("Z", "+00:00"))
+    except ValueError:
+        return None
+
+
+def soft_alert_in_cooldown(listing: Dict[str, Any], *, now: Optional[datetime] = None) -> bool:
+    """True if we already emailed Founder for a soft live-flag within the cooldown window.
+
+    Also treats a recent soft REVIEW already stored on `safety_gate` (pre-dedupe
+    rows that spam-updated every hour) as already alerted — stops the mail flood
+    without waiting for a new stamp field.
+    """
+    last = _parse_iso(listing.get("safety_soft_alerted_at"))
+    if not last:
+        sg = listing.get("safety_gate") or {}
+        if (
+            sg.get("verdict") == VERDICT_REVIEW
+            and not (sg.get("hard_hits") or sg.get("soft_hits"))
+        ):
+            last = _parse_iso(sg.get("checked_at")) or _parse_iso(listing.get("updated_at"))
+    if not last:
+        return False
+    if last.tzinfo is None:
+        last = last.replace(tzinfo=timezone.utc)
+    ref = now or datetime.now(timezone.utc)
+    return (ref - last) < timedelta(hours=_soft_alert_cooldown_hours())
+
 
 # Severe / reputation-damaging (hard reject). Keep list maintainable; expand via env.
 _HARD_BLOCK_PATTERNS = [
@@ -362,13 +403,21 @@ async def rescan_live_private_listings(*, limit: int = 80) -> Dict[str, Any]:
             heuristic_hit = bool(report.hard_hits or report.soft_hits)
             # Pure LLM REVIEW on an already-live ad: alert, do not auto-unpublish
             if report.verdict == VERDICT_REVIEW and not heuristic_hit and not reject:
-                await db.properties.update_one(
-                    {"id": listing["id"]},
-                    {"$set": {
-                        "safety_gate": report.to_dict(),
-                        "updated_at": datetime.now(timezone.utc).isoformat(),
-                    }},
-                )
+                now_iso = datetime.now(timezone.utc).isoformat()
+                fields: Dict[str, Any] = {
+                    "safety_gate": report.to_dict(),
+                    "updated_at": now_iso,
+                }
+                # Dedupe Founder email: same soft false-positive must not mail every hour
+                if soft_alert_in_cooldown(listing):
+                    await db.properties.update_one({"id": listing["id"]}, {"$set": fields})
+                    logger.info(
+                        "safety rescan soft-flag cooldown (no email) listing=%s reasons=%s",
+                        listing.get("id"), report.reasons[:3],
+                    )
+                    continue
+                fields["safety_soft_alerted_at"] = now_iso
+                await db.properties.update_one({"id": listing["id"]}, {"$set": fields})
                 await notify_founder_safety_flag(
                     listing, report, event="rescan_live_soft",
                 )
