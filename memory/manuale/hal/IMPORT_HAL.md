@@ -1,6 +1,6 @@
-# 📚 HAL Knowledge — Import & Cold Start (v0.50-d143-pwa-qr-area)
+# 📚 HAL Knowledge — Import & Cold Start (v0.51-d144-domain-whois)
 
-**Ultimo aggiornamento**: 05-Nov-2026 (D-143 QR→Area + nav opaca · chiusura PWA giornata)  
+**Ultimo aggiornamento**: 05-Nov-2026 (D-144 domain check .it WHOIS)  
 **Corpus**: YAML in `memory/manuale/hal/*.yaml` (Cap. 1–27 + `00-api-codice`) · MD esclusi dal RAG ingest  
 **Motore**: `hal_knowledge.py` · reindex: `POST /api/app/hal/knowledge/reindex?force=true` (super_admin)  
 **Regola Founder D-084**: ogni ship aggiorna MD+YAML nello stesso giro — vedi `memory/MANUAL_SYNC.md`.
@@ -267,6 +267,7 @@ Prima di dichiarare il cold start "attivo", eseguire manualmente queste 5 query 
 
 | Data | Versione | Note |
 |------|:-:|------|
+| 05-Nov-2026 | **v0.51-d144-domain-whois** | Cap.17: WHOIS .it (D-144) anti falso NOT REGISTERED. DECISIONS/CHANGELOG. Reindex post-merge. |
 | 05-Nov-2026 | **v0.50-d143-pwa-qr-area** | Cap.01: QR→Area Accedi/Crea + Installa + nav opaca. DECISIONS D-143 chiusura PR #104–#106. CHANGELOG/NEXT_SESSION/diario. Reindex post-merge. |
 | 05-Nov-2026 | **v0.49-d142-pwa-scout** | Cap.01: tile Scarica app (PWA) al posto di HAL Legal; Scout in evidenza Cerca/Vendi. DECISIONS D-142. Reindex post-merge. |
 | 05-Nov-2026 | **v0.48-d141-map-news** | Cap.01 home 4 tile + mappa Idealista. Cap.00 `api.portal-news-rss` + `api.cloud-search-bbox-map`. Cap.21 home non più ActionCard Valutatore nei tile. DECISIONS D-141 · D-139 note · CHANGELOG/NEXT_SESSION/diario. Reindex post-merge. |

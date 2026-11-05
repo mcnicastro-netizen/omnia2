@@ -7,6 +7,16 @@ Registro di tutte le decisioni di business e tecniche prese durante il progetto.
 
 ## Decisioni prese
 
+### D-144 — Domain check .it: WHOIS Registro.it (no falso «NOT REGISTERED») · 05-Nov-2026
+- **Data**: 5 Novembre 2026
+- **Contesto**: Dogfood Founder su `nicastroimmobiliare.it` (sito live da anni): `/verifica-dominio` mostrava **NOT REGISTERED**. Causa: `.it` non ha RDAP in bootstrap IANA; `rdap.org` risponde 404 e il client concludeva «libero» senza fallback.
+- **Decisione**:
+  1. Per **`.it`**: sorgente autorevole = **WHOIS `whois.nic.it`** (non RDAP pubtest).
+  2. Non dichiarare mai «dominio libero» se DNS risolve (A/AAAA/NS).
+  3. Non fermarsi al primo 404 RDAP se esistono altri canali.
+- **Nota dogfood**: WHOIS attuale → registrante *NICASTRO IMMOBILIARE DI NICASTRO M.M.C.*, registrar *Aruba*; il gestionale/sito AgestaNET ≠ intestazione dominio.
+- **Stato**: ✅ DECISIONE OPERATIVA · fix FE/API
+
 ### D-143 — Scarica app via QR (flusso Idealista) · 05-Nov-2026
 - **Data**: 5 Novembre 2026
 - **Contesto**: Founder vuole UX più intuitiva: scaricare l’app da QR; Idealista «si installa da sola» creando l’icona. Poi: QR deve atterrare su Accedi/Crea account.

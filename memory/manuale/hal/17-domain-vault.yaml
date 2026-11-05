@@ -291,7 +291,7 @@ voci:
     screenshot: []
 
   - id: domain.domain-checker-pubblico
-    titolo: Domain Checker pubblico (RDAP pre-signup)
+    titolo: Domain Checker pubblico (RDAP + WHOIS .it · D-144)
     modulo: Domain Vault
     widget: null
     pubblico: [titolare, super_admin, prospect]
@@ -309,13 +309,13 @@ voci:
         - "URL pubblico (no login): /it/verifica-dominio."
         - "API: POST /api/marketing/domain/check con
           {domain, agency_name (opzionale)}."
-        - "Backend fa RDAP query, analizza registrant, ritorna
-          report interpretato: corrisponde/redatto/e' il provider/
-          scade fra <90 giorni."
-        - "Rate limit per IP: se superi la soglia -> 429 Too Many
-          Requests. Aspetta qualche minuto."
-        - "Se TLD non supporta RDAP -> messaggio 'contattaci per
-          check manuale'."
+        - "Backend: RDAP se TLD in bootstrap IANA; .it → WHOIS
+          whois.nic.it (D-144). Mai «libero» se DNS risolve."
+        - "Analizza registrant → report: tuo nome / redacted /
+          sembra fornitore / scade <90 giorni."
+        - "Rate limit per IP: soglia superata → 429. Attendi."
+        - "Altri TLD senza RDAP/WHOIS: retry o check manuale —
+          non «dominio libero»."
         - "Lead opzionale: dopo il check clic 'Richiedi consulenza'
           > POST /api/marketing/domain/lead > crea lead marketing."
       errori_comuni: []
@@ -324,36 +324,32 @@ voci:
     screenshot: ["[SCREEN: domain-checker-pubblico]"]
 
   - id: domain.rdap-vs-whois
-    titolo: RDAP vs WHOIS · perché OMNIA usa RDAP
+    titolo: RDAP vs WHOIS · preferenza RDAP + eccezione .it (D-144)
     modulo: Domain Vault
     widget: null
     pubblico: [titolare, super_admin]
     livello: intermedio
-    tags: [domain, rdap, whois, gdpr, redacted, privacy-proxy, registrant, protocol]
+    tags: [domain, rdap, whois, gdpr, redacted, privacy-proxy, registrant, protocol, d-144, it]
     correlati: [domain.domain-checker-pubblico]
-    domanda_naturale: "Che differenza c'è fra RDAP e WHOIS?"
+    domanda_naturale: "Che differenza c'è fra RDAP e WHOIS? Perché .it dava NOT REGISTERED?"
     contenuto:
       a_cosa_serve: >
-        Capire il protocollo usato per interrogare i dati di
-        registrazione dominio.
+        Capire i protocolli del checker e perché i .it usano WHOIS.
       quando_si_usa: >
-        Per interpretare i risultati del checker.
+        Interpretare i risultati; dogfood falsi «dominio libero».
       passi:
-        - "WHOIS: protocollo storico (RFC 3912, 2004). Testo libero,
-          parsing fragile."
-        - "RDAP: successore standardizzato (RFC 7480-7484). JSON
-          strutturato, GDPR ready, controllo accessi granulare."
-        - "OMNIA usa RDAP per: parsing affidabile, redacted
-          nativo, standard aperto (tutti i TLD europei in
-          migrazione)."
-        - "Redacted registrant = normale post-GDPR: molti registrar
-          redigono automaticamente i dati registrant delle persone
-          fisiche. Campi tipo 'REDACTED FOR PRIVACY'. Non e' un
-          problema."
-        - "Se registrant = 'Aruba S.p.A.' o 'OVH Hosting' -> il
-          dominio e' intestato al provider IT, non a te. Va
-          corretto con transfer registrant al tuo registrar."
-      errori_comuni: []
+        - "WHOIS: RFC 3912, testo libero. RDAP: JSON RFC 7480+."
+        - "Preferenza RDAP dove il TLD è in bootstrap IANA."
+        - ".it NON ha RDAP IANA: OMNIA usa whois.nic.it (D-144)."
+        - "Bug pre-D-144: rdap.org 404 su .it → falso NOT REGISTERED."
+        - "Redacted registrant = normale GDPR, non è un errore."
+        - "Registrant = provider hosting/software → trasferisci
+          intestazione al tuo nome (D-051: no brand competitor)."
+      errori_comuni:
+        - problema: "Il mio .it live risulta NOT REGISTERED"
+          soluzione: >
+            Serve build post D-144 (WHOIS). Hard refresh / redeploy API.
+            Riprova /it/verifica-dominio.
       permessi: []
     screenshot: []
 
@@ -410,7 +406,8 @@ voci:
         - "CNAME su apex fallito: usa ALIAS/ANAME oppure solo www."
         - "429 rate limit checker RDAP: troppi check dallo stesso
           IP. Aspetta qualche minuto."
-        - "TLD non supporta RDAP: contatta OMNIA per check manuale."
+        - ".it: usa WHOIS (D-144). Altri TLD senza RDAP: check manuale,
+          mai assumere «libero» se il sito risponde."
         - "Registrant redacted: normale GDPR privacy, non e' un
           problema."
         - "Registrant = provider: transfer registrant al tuo nome
@@ -438,7 +435,8 @@ voci:
           tecnico)."
         - "NO rinnovo automatico. Il rinnovo e' tua responsabilita'."
         - "NO DNS panel in OMNIA - gestisci al tuo registrar."
-        - "NO WHOIS fallback: se RDAP non funziona, no legacy whois."
+        - "WHOIS solo per .it (D-144); altri TLD senza RDAP → unknown,
+          non «libero» se DNS risolve."
         - "NO UI storico eventi (domain_vault_events accesso solo
           DB super_admin)."
         - "NO notifica scadenza dominio automatica (cron non attivo

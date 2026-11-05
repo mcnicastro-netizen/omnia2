@@ -1,35 +1,45 @@
-"""OMNIA — RDAP client for domain ownership lookup (M2.5.4b, D-054).
+"""OMNIA — Domain ownership lookup (M2.5.4b, D-054) · fix D-144.
 
-Uses `rdap.org` as the universal bootstrap frontend: it accepts any TLD and
-transparently proxies to the correct registry RDAP server. If it fails, we
-fall back to the IANA-published RDAP server list for the top Italian TLDs.
+Sources (in order):
+1. RDAP via rdap.org + TLD-specific servers (when the TLD is in IANA bootstrap).
+2. WHOIS for TLDs without production RDAP — notably **.it** (Registro.it has
+   WHOIS, not a public RDAP in the IANA dns.json bootstrap). Treating an
+   rdap.org 404 on .it as «domain free» was a false negative (dogfood Founder
+   05-Nov-2026: nicastroimmobiliare.it → NOT REGISTERED while live for years).
+3. DNS existence (NS/A/AAAA) as last resort: never claim «libero» if DNS answers.
 
 Design:
-- Pure httpx async, no external deps beyond what's already installed.
-- 5s connect + 8s read timeout — RDAP servers are usually fast but registry
-  can be slow at peak. We fail closed (return `ok=False`) rather than hang.
-- Result shape is normalized so downstream code doesn't need to know the
-  RDAP JSON quirks (each registry serializes contacts slightly differently).
+- Pure httpx/asyncio + stdlib socket whois — no new deps.
+- Fail closed to `error` / DNS-confirmed registered, never false «is_free».
 """
 from __future__ import annotations
+
+import asyncio
 import re
-from typing import Any, Dict, List, Optional
+import socket
+from typing import Any, Dict, List, Optional, Tuple
 
 import httpx
 
 _UNIVERSAL_RDAP = "https://rdap.org/domain/{domain}"
-# Fallback for IT/EU when rdap.org has hiccups
+# Only TLDs with known production RDAP. .it is intentionally absent (no IANA RDAP).
 _TLD_SERVERS = {
-    "it": "https://rdap.pubtest.nic.it/domain/{domain}",
     "eu": "https://rdap.eu/domain/{domain}",
     "com": "https://rdap.verisign.com/com/v1/domain/{domain}",
     "net": "https://rdap.verisign.com/net/v1/domain/{domain}",
     "org": "https://rdap.publicinterestregistry.org/rdap/domain/{domain}",
+    "fr": "https://rdap.nic.fr/domain/{domain}",
+}
+
+# Authoritative WHOIS hosts for TLDs without reliable public RDAP
+_WHOIS_HOSTS = {
+    "it": "whois.nic.it",
 }
 
 _TIMEOUT = httpx.Timeout(connect=5.0, read=8.0, write=5.0, pool=5.0)
-
-_ALLOWED_DOMAIN = re.compile(r"^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)+$")
+_ALLOWED_DOMAIN = re.compile(
+    r"^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)+$"
+)
 
 
 def normalize_domain(raw: str) -> Optional[str]:
@@ -52,7 +62,6 @@ def _tld(domain: str) -> str:
 
 
 def _extract_entities(entities: List[Dict[str, Any]], role: str) -> List[Dict[str, Any]]:
-    """RDAP entities have a `roles` array. Return entities matching `role`."""
     result = []
     for e in entities or []:
         roles = e.get("roles") or []
@@ -62,7 +71,6 @@ def _extract_entities(entities: List[Dict[str, Any]], role: str) -> List[Dict[st
 
 
 def _vcard_field(entity: Dict[str, Any], field: str) -> Optional[str]:
-    """Read a jCard property (fn, org, email, ...) — RDAP normal encoding."""
     vcard = entity.get("vcardArray")
     if not vcard or len(vcard) < 2:
         return None
@@ -82,7 +90,6 @@ def _entity_display_name(entity: Dict[str, Any]) -> Optional[str]:
 
 
 def _extract_event(rdap: Dict[str, Any], action: str) -> Optional[str]:
-    """RDAP events: registration, expiration, last changed, ..."""
     for ev in rdap.get("events") or []:
         if ev.get("eventAction") == action:
             return ev.get("eventDate")
@@ -90,7 +97,6 @@ def _extract_event(rdap: Dict[str, Any], action: str) -> Optional[str]:
 
 
 def _extract_nameservers(rdap: Dict[str, Any]) -> List[str]:
-    """Some registries hide NS behind different keys — try both."""
     out: List[str] = []
     for ns in rdap.get("nameservers") or []:
         n = ns.get("ldhName") or ns.get("unicodeName")
@@ -99,70 +105,166 @@ def _extract_nameservers(rdap: Dict[str, Any]) -> List[str]:
     return sorted(set(out))
 
 
-async def _fetch(url: str) -> Optional[Dict[str, Any]]:
-    """Return parsed JSON, or None on any transport/parsing failure."""
+async def _fetch_rdap(url: str) -> Tuple[str, Optional[Dict[str, Any]]]:
+    """Return (status, payload). status: ok | not_found | error."""
     try:
-        async with httpx.AsyncClient(timeout=_TIMEOUT, follow_redirects=True,
-                                     headers={"Accept": "application/rdap+json",
-                                              "User-Agent": "OMNIA-DomainChecker/1.0"}) as c:
+        async with httpx.AsyncClient(
+            timeout=_TIMEOUT,
+            follow_redirects=True,
+            headers={
+                "Accept": "application/rdap+json",
+                "User-Agent": "OMNIA-DomainChecker/1.1",
+            },
+        ) as c:
             r = await c.get(url)
         if r.status_code == 404:
-            return {"__notFound": True}
+            return "not_found", {"__notFound": True}
         if r.status_code >= 400:
-            return None
-        return r.json()
+            return "error", None
+        return "ok", r.json()
     except Exception:
+        return "error", None
+
+
+def _parse_whois_it(text: str) -> Optional[Dict[str, Any]]:
+    """Parse Registro.it WHOIS text into our normalized fields."""
+    if not text:
+        return None
+    low = text.lower()
+    if "status:" in low and re.search(r"status:\s*available", low):
+        return {"not_found": True}
+    if "domain:" not in low and "not found" in low:
+        return {"not_found": True}
+    if "domain:" not in low:
         return None
 
+    def _field(label: str) -> Optional[str]:
+        m = re.search(rf"^{re.escape(label)}:\s*(.+)$", text, re.I | re.M)
+        return m.group(1).strip() if m else None
 
-async def rdap_lookup(domain: str) -> Dict[str, Any]:
-    """Query RDAP for `domain` and return a normalized result.
+    # Registrant Organization is under the Registrant section
+    registrant = None
+    m_org = re.search(
+        r"Registrant\s*\n(?:.*\n)*?\s*Organization:\s*(.+)",
+        text,
+        re.I,
+    )
+    if m_org:
+        registrant = m_org.group(1).strip()
+    if not registrant:
+        m_name = re.search(
+            r"Registrant\s*\n(?:.*\n)*?\s*Name:\s*(.+)",
+            text,
+            re.I,
+        )
+        if m_name:
+            registrant = m_name.group(1).strip()
 
-    Returned shape (always):
-        {
-          "ok": bool,
-          "domain": str,
-          "not_found": bool,              # true if registry replied 404
-          "registrant": str | None,       # display name (fn or org)
-          "registrant_type": str | None,  # "kind" jCard field if present
-          "registrar": str | None,        # registrar entity fn/org
-          "nameservers": [str, ...],
-          "created_at": str | None,       # ISO 8601 event date
-          "expires_at": str | None,
-          "last_changed": str | None,
-          "raw_source": str,              # which RDAP URL succeeded
-          "error": str | None,
-        }
-    """
-    domain = domain.lower().strip()
-    result_base: Dict[str, Any] = {
-        "ok": False, "domain": domain, "not_found": False,
-        "registrant": None, "registrant_type": None,
-        "registrar": None, "nameservers": [],
-        "created_at": None, "expires_at": None, "last_changed": None,
-        "raw_source": None, "error": None,
+    registrar = None
+    m_reg = re.search(
+        r"Registrar\s*\n(?:.*\n)*?\s*Organization:\s*(.+)",
+        text,
+        re.I,
+    )
+    if m_reg:
+        registrar = m_reg.group(1).strip()
+    if not registrar:
+        registrar = _field("Registrar")
+
+    nameservers: List[str] = []
+    in_ns = False
+    for line in text.splitlines():
+        if re.match(r"^Nameservers\s*$", line.strip(), re.I):
+            in_ns = True
+            continue
+        if in_ns:
+            if not line.strip():
+                if nameservers:
+                    break
+                continue
+            if ":" in line and not line.strip().endswith(":"):
+                # new section
+                break
+            if re.match(r"^[A-Za-z0-9.-]+\.[A-Za-z]{2,}$", line.strip()):
+                nameservers.append(line.strip().lower())
+
+    def _it_date(label: str) -> Optional[str]:
+        raw = _field(label)
+        if not raw:
+            return None
+        # "2019-04-08 12:46:52" → ISO-ish
+        return raw.replace(" ", "T") + ("+00:00" if "T" in raw.replace(" ", "T") else "")
+
+    created = _it_date("Created")
+    # Prefer Expire Date for .it
+    expires = _field("Expire Date")
+    if expires:
+        expires = expires.strip() + "T00:00:00+00:00" if "T" not in expires else expires
+    last = _it_date("Last Update")
+
+    return {
+        "not_found": False,
+        "registrant": registrant,
+        "registrar": registrar,
+        "nameservers": sorted(set(nameservers)),
+        "created_at": created,
+        "expires_at": expires,
+        "last_changed": last,
     }
 
-    # Try rdap.org first (universal bootstrap), then TLD-specific fallback.
-    candidates = [_UNIVERSAL_RDAP.format(domain=domain)]
-    tld_srv = _TLD_SERVERS.get(_tld(domain))
-    if tld_srv:
-        candidates.append(tld_srv.format(domain=domain))
 
-    rdap: Optional[Dict[str, Any]] = None
-    used_url: Optional[str] = None
-    for url in candidates:
-        data = await _fetch(url)
-        if data and not data.get("__notFound"):
-            rdap = data
-            used_url = url
-            break
-        if data and data.get("__notFound"):
-            return {**result_base, "not_found": True, "raw_source": url, "ok": True}
+async def _whois_lookup(domain: str) -> Optional[Dict[str, Any]]:
+    host = _WHOIS_HOSTS.get(_tld(domain))
+    if not host:
+        return None
 
-    if not rdap:
-        return {**result_base, "error": "rdap_unreachable"}
+    def _sync() -> str:
+        with socket.create_connection((host, 43), timeout=10) as s:
+            s.sendall(f"{domain}\r\n".encode("ascii", "ignore"))
+            chunks: List[bytes] = []
+            while True:
+                buf = s.recv(4096)
+                if not buf:
+                    break
+                chunks.append(buf)
+            return b"".join(chunks).decode("utf-8", "replace")
 
+    try:
+        text = await asyncio.to_thread(_sync)
+    except Exception:
+        return None
+    if _tld(domain) == "it":
+        parsed = _parse_whois_it(text)
+        if parsed is None:
+            return None
+        return {**parsed, "raw_source": f"whois://{host}/{domain}"}
+    return None
+
+
+async def _dns_exists(domain: str) -> bool:
+    """True if the domain resolves NS or A/AAAA — strong signal it is registered."""
+
+    def _check() -> bool:
+        try:
+            socket.getaddrinfo(domain, None)
+            return True
+        except socket.gaierror:
+            pass
+        try:
+            # NS lookup via getaddrinfo on a common host pattern is weak;
+            # try resolving www as secondary evidence.
+            socket.getaddrinfo(f"www.{domain}", None)
+            return True
+        except socket.gaierror:
+            return False
+
+    try:
+        return await asyncio.to_thread(_check)
+    except Exception:
+        return False
+
+
+def _from_rdap_json(domain: str, rdap: Dict[str, Any], used_url: str) -> Dict[str, Any]:
     entities = rdap.get("entities") or []
     reg_entities = _extract_entities(entities, "registrant")
     registrar_entities = _extract_entities(entities, "registrar")
@@ -191,3 +293,93 @@ async def rdap_lookup(domain: str) -> Dict[str, Any]:
         "raw_source": used_url,
         "error": None,
     }
+
+
+async def rdap_lookup(domain: str) -> Dict[str, Any]:
+    """Lookup domain ownership data. Prefer RDAP; .it → WHOIS; never false «free»."""
+    domain = domain.lower().strip()
+    result_base: Dict[str, Any] = {
+        "ok": False,
+        "domain": domain,
+        "not_found": False,
+        "registrant": None,
+        "registrant_type": None,
+        "registrar": None,
+        "nameservers": [],
+        "created_at": None,
+        "expires_at": None,
+        "last_changed": None,
+        "raw_source": None,
+        "error": None,
+    }
+
+    candidates: List[str] = []
+    tld = _tld(domain)
+    # For TLDs without IANA RDAP (e.g. .it), skip universal bootstrap — it 404s
+    # and historically caused false «not_registered».
+    if tld not in _WHOIS_HOSTS:
+        candidates.append(_UNIVERSAL_RDAP.format(domain=domain))
+    tld_srv = _TLD_SERVERS.get(tld)
+    if tld_srv:
+        candidates.append(tld_srv.format(domain=domain))
+
+    saw_not_found = False
+    for url in candidates:
+        status, data = await _fetch_rdap(url)
+        if status == "ok" and data and not data.get("__notFound"):
+            return _from_rdap_json(domain, data, url)
+        if status == "not_found":
+            saw_not_found = True
+            # keep trying other candidates / whois — do NOT return early
+
+    # WHOIS fallback (authoritative for .it)
+    whois = await _whois_lookup(domain)
+    if whois is not None:
+        if whois.get("not_found"):
+            # Confirm with DNS before declaring free
+            if await _dns_exists(domain):
+                # Never claim «libero» if DNS answers — ownership unknown.
+                return {
+                    **result_base,
+                    "ok": True,
+                    "not_found": False,
+                    "raw_source": whois.get("raw_source") or "dns",
+                    "error": None,
+                    "registrar": None,
+                    "registrant": None,
+                }
+            return {
+                **result_base,
+                "ok": True,
+                "not_found": True,
+                "raw_source": whois.get("raw_source"),
+            }
+        return {
+            **result_base,
+            "ok": True,
+            "not_found": False,
+            "registrant": whois.get("registrant"),
+            "registrar": whois.get("registrar"),
+            "nameservers": whois.get("nameservers") or [],
+            "created_at": whois.get("created_at"),
+            "expires_at": whois.get("expires_at"),
+            "last_changed": whois.get("last_changed"),
+            "raw_source": whois.get("raw_source"),
+        }
+
+    # DNS last resort: registered but ownership unknown
+    if await _dns_exists(domain):
+        return {
+            **result_base,
+            "ok": True,
+            "not_found": False,
+            "raw_source": "dns",
+            "error": None,
+            "registrant": None,
+            "registrar": None,
+        }
+
+    if saw_not_found and tld not in _WHOIS_HOSTS:
+        return {**result_base, "ok": True, "not_found": True, "raw_source": "rdap"}
+
+    return {**result_base, "error": "rdap_unreachable"}

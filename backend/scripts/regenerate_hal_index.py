@@ -51,7 +51,7 @@ def main() -> None:
         new_chapters.append(entry)
 
     out = {
-        "version": "0.50-d143-pwa-qr-area",
+        "version": "0.51-d144-domain-whois",
         "updated": date.today().isoformat(),
         "voices_total": total,
         "source_files": source_files,
