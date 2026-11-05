@@ -488,32 +488,69 @@ voci:
     widget: null
     pubblico: [titolare, super_admin]
     livello: base
-    tags: [domain, verifica-dominio, non-proprietario, a-037, basic-soft, rdap]
+    tags: [domain, verifica-dominio, non-proprietario, a-037, basic-soft, rdap, d-144]
     correlati:
-      - domain.checker-pubblico
+      - domain.domain-checker-pubblico
+      - domain.tre-layer-dominio-sito-email
       - domain.d-054-promise
       - sito.demo-a037
     domanda_naturale: "Il mio sito è registrato dal webmaster, cosa faccio?"
     contenuto:
       a_cosa_serve: >
-        Spiegare perché esiste /it/verifica-dominio e come si collega al
-        percorso demo A-037 quando dominio/email sono intestati a un
-        fornitore (es. Basic Soft), non all'agenzia.
+        Spiegare /it/verifica-dominio e A-037 quando dominio/email sembrano
+        del fornitore, non dell'agenzia.
       quando_si_usa: >
-        Pre-signup o onboarding assistito, se sospetti che il dominio non
-        sia tuo.
+        Pre-signup o onboarding se sospetti che il dominio non sia tuo.
       passi:
-        - "Apri /it/verifica-dominio e lancia il check RDAP."
-        - "Se il registrant è un provider/webmaster → warning + Legal Kit."
-        - "OMNIA non trasferisce il dominio: ti guida a recuperarlo al
-          registrar o a registrarne uno nuovo (D-054)."
-        - "In parallelo: lead Founders con sito sì/no; template pack per
-          restyling/no-sito è A-037 (ancora da chiudere)."
+        - "Apri /it/verifica-dominio (RDAP o WHOIS .it · D-144)."
+        - "Se registrant = provider/webmaster → warning + Legal Kit."
+        - "OMNIA non trasferisce il dominio (D-054): recupera al registrar
+          o registrane uno nuovo; poi help-to-connect DNS."
+        - "Distingui dominio vs sito vs email (voce tre-layer)."
+        - "A-037: template pack restyling/no-sito ancora aperto."
       errori_comuni:
         - problema: "Voglio che OMNIA registri il dominio al posto mio"
           soluzione: >
-            Vietato da D-054. Compra/recupera tu il dominio; OMNIA fa
-            help-to-connect DNS.
+            Vietato da D-054. Compra/recupera tu; OMNIA fa DNS connect.
       permessi:
         - Pubblico (checker) · titolare/super_admin (onboarding)
+    screenshot: []
+
+  - id: domain.tre-layer-dominio-sito-email
+    titolo: Dominio ≠ sito ≠ email — perché chiami il gestionale per la password mail (D-144)
+    modulo: Domain Vault
+    widget: null
+    pubblico: [titolare, agente, super_admin, prospect]
+    livello: base
+    tags: [domain, email, sito, agestanet, aruba, sovranita, d-144, mx, pannello, dogfood]
+    correlati:
+      - domain.domain-checker-pubblico
+      - domain.d-054-promise
+      - domain.non-proprietario-a037
+    domanda_naturale: "Perché per resettare info@agenzia.it ho dovuto chiamare AgestaNET se il dominio è mio? Come risolve OMNIA nel caso Nicastro?"
+    contenuto:
+      a_cosa_serve: >
+        Chiarire i tre layer (dominio / sito / email) e cosa fa OMNIA
+        rispetto al gestionale che “tiene” sito e reset caselle.
+      quando_si_usa: >
+        Dogfood; onboarding agenzia con sito AgestaNET/Basic Soft e mail
+        sul registrar; domanda «il dominio è mio ma…».
+      passi:
+        - "Dominio = titolarità WHOIS (es. Nicastro Immobiliare / Aruba)."
+        - "Sito = CMS/hosting pagine (es. ancora AgestaNET)."
+        - "Email = chi ha il pannello caselle (anche se MX/SPF sono Aruba)."
+        - "OMNIA: checker + D-054 + DNS verso sito OMNIA. Non resetta mail."
+        - "Percorso Founder: DNS→OMNIA per il sito; credenziali Aruba proprie
+          per info@ senza intermediario gestionale."
+      errori_comuni:
+        - problema: "Il checker dice dominio OK ma chiamo ancora Agesta per la mail"
+          soluzione: >
+            Normale: checker guarda il registrant, non il pannello mail.
+            Riprendi accesso Aruba (titolare) o sposta MX sotto tuo controllo.
+        - problema: "OMNIA mi gestisce le caselle email?"
+          soluzione: >
+            No in v1. OMNIA non è mail host. Gestisci caselle al registrar
+            o su Google/Microsoft Workspace.
+      permessi:
+        - Pubblico / titolare
     screenshot: []

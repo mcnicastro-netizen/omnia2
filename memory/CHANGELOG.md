@@ -1,3 +1,10 @@
+## 2026-11-05 — D-144 docs: tre layer dominio/sito/email + caso Nicastro
+
+- Cap.17 §17.14 + HAL `domain.tre-layer-dominio-sito-email`
+- Chiarisce: dominio OK ≠ controllo caselle (reset `info@` via gestionale)
+- Percorso OMNIA Founder: DNS→sito OMNIA; Aruba proprio per mail
+- IMPORT_HAL v0.52 · DECISIONS D-144 ampliata · diario
+
 ## 2026-11-05 — D-144 fix domain check .it (falso NOT REGISTERED)
 
 - Causa: rdap.org 404 su `.it` (no RDAP IANA) trattato come dominio libero

@@ -1,6 +1,6 @@
-# 📚 HAL Knowledge — Import & Cold Start (v0.51-d144-domain-whois)
+# 📚 HAL Knowledge — Import & Cold Start (v0.52-d144-tre-layer)
 
-**Ultimo aggiornamento**: 05-Nov-2026 (D-144 domain check .it WHOIS)  
+**Ultimo aggiornamento**: 05-Nov-2026 (D-144 tre layer dominio/sito/email)  
 **Corpus**: YAML in `memory/manuale/hal/*.yaml` (Cap. 1–27 + `00-api-codice`) · MD esclusi dal RAG ingest  
 **Motore**: `hal_knowledge.py` · reindex: `POST /api/app/hal/knowledge/reindex?force=true` (super_admin)  
 **Regola Founder D-084**: ogni ship aggiorna MD+YAML nello stesso giro — vedi `memory/MANUAL_SYNC.md`.
