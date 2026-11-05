@@ -25,6 +25,7 @@ export default function CloudTopNav() {
   const areaLabel = isB2c ? t("cloud.nav_account") : t("cloud.nav_area");
   const links = [
     { to: `/${lang}/cloud/search`, testid: "cloud-nav-search", label: t("cloud.nav_search") },
+    { to: `/${lang}/cloud/search?view=map`, testid: "cloud-nav-map", label: t("cloud.nav_map", "Cerca su mappa") },
     { to: sellTo, testid: "cloud-nav-sell", label: t("cloud.nav_sell") },
     { to: `/${lang}/cloud/valutatore`, testid: "cloud-nav-valuator", label: t("cloud.nav_valuator") },
     { to: `/${lang}/cloud/visura`, testid: "cloud-nav-visura", label: t("cloud.nav_visura") },

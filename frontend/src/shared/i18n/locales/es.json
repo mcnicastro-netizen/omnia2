@@ -1379,7 +1379,9 @@
     },
     "map_search_area": "Buscar en esta zona",
     "map_area_active": "Búsqueda en el área del mapa",
-    "map_no_in_area": "Ninguna vivienda en esta zona"
+    "map_no_in_area": "Ninguna vivienda en esta zona",
+    "nav_map": "Buscar en mapa",
+    "hero_map_cta": "Buscar en mapa"
   },
   "properties": {
     "field_rooms": "Habitaciones / Estancias",

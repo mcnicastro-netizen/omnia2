@@ -1433,7 +1433,9 @@
     },
     "map_search_area": "Search this area",
     "map_area_active": "Searching the map area",
-    "map_no_in_area": "No homes in this area"
+    "map_no_in_area": "No homes in this area",
+    "nav_map": "Map search",
+    "hero_map_cta": "Search on map"
   },
   "portali": {
     "available": "Available portals",

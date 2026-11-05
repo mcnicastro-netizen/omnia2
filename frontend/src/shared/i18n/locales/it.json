@@ -1656,7 +1656,9 @@
     },
     "map_search_area": "Cerca in questa zona",
     "map_area_active": "Ricerca sull’area della mappa",
-    "map_no_in_area": "Nessuna casa in quest’area"
+    "map_no_in_area": "Nessuna casa in quest’area",
+    "nav_map": "Cerca su mappa",
+    "hero_map_cta": "Cerca su mappa"
   },
   "valuator": {
     "eyebrow": "Valutatore GIS · Gratis",
