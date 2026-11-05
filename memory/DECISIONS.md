@@ -7,6 +7,15 @@ Registro di tutte le decisioni di business e tecniche prese durante il progetto.
 
 ## Decisioni prese
 
+### D-141 — Kling micro-tour gestionale: 30 crediti (€1,50) · 05-Nov-2026
+- **Contesto**: listino MD aveva 60 cr (€3); codice addebitava ancora **10 cr (€0,50)** → **perdita ~€0,38/video** vs COGS fal.ai ~€0,88. Founder chiede allineamento a **30 crediti**.
+- **Decisione**:
+  1. `CREDIT_COSTS["micro_tour_render"] = 30` (€1,50 a €0,05/cr) — SoT in `plans.py`; Kling legge da lì.
+  2. Margine atteso: €1,50 − ~€0,88 ≈ **€0,62 (~41%)**.
+  3. Ken Burns B2C resta gratis (nessun credito).
+- **Docs**: `PRICING_OMNIA.md` v3.2 + audit perdite.
+- **Stato**: ✅ APPLICATA
+
 ### D-140 — Dogfood Vendi sera 04-Nov: safety soft, Scout, video tour, layout · 04-Nov-2026
 - **Data**: 4 Novembre 2026 (sera · chiusura giornata)
 - **Contesto**: Dogfood produzione su annuncio `provaprova` (Mascalucia): scheda Scout con copy/benchmark errati; rescan orario toglieva live su solo `llm_review`; hero/video tour; UX Vendi disordinata; flash Immocloud; anteprima card a sinistra su laptop.

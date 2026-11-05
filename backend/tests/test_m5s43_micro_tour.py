@@ -108,7 +108,9 @@ class TestKlingEndpoint:
         assert r.status_code in (401, 403)
 
     def test_kling_charges_credits_or_402(self, session, test_property_with_photos):
-        """Endpoint charges 10 crediti (D-066) — either 202 accepted or 402."""
+        """Endpoint charges listino micro_tour_render crediti — 202 o 402."""
+        from apps.billing.plans import CREDIT_COSTS
+        expected = int(CREDIT_COSTS.get("micro_tour_render") or 30)
         pid, _ = test_property_with_photos
         r = session.post(f"{BASE_URL}/api/app/videos/kling/property/{pid}")
         assert r.status_code in (202, 402, 422)
@@ -118,4 +120,4 @@ class TestKlingEndpoint:
             data = r.json()
             assert data["mode"] == "kling_1_6_pro"
             assert data["duration_s"] == 10
-            assert data["credits_charged"] == 10
+            assert data["credits_charged"] == expected

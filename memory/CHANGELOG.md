@@ -1,3 +1,9 @@
+## 2026-11-05 — D-141 Kling micro-tour 30 crediti + audit perdite
+
+- `CREDIT_COSTS.micro_tour_render` **30** (€1,50) — codice legge da `plans.py` (prima 10 cr = **perdita** vs COGS €0,88)
+- `PRICING_OMNIA` v3.2 · DECISIONS D-141 · Cap.23
+- Audit: unica perdita confermata era Kling sotto-prezzo; APE/Visura partner-dependent 🟡
+
 ## 2026-11-04 sera — D-140 dogfood Vendi: safety soft · Scout · video tour · layout
 
 - Safety rescan: no un-publish su solo `llm_review` soft (PR #85)

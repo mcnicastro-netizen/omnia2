@@ -466,10 +466,10 @@ async def ops_overview(
             events=videos,
             unit_cogs_eur=EUR_MICRO_TOUR,
             cogs_eur=videos * EUR_MICRO_TOUR,
-            list_credits_unit=10,
+            list_credits_unit=30,
             revenue_eur=video_revenue,
             revenue_source="crediti_scalati",
-            note="Incassi = crediti addebitati × €0,05",
+            note="Incassi = crediti addebitati × €0,05 (listino 30 cr / Kling 10s)",
         ),
         _money_row(
             key="api_gateway",

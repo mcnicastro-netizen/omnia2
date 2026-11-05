@@ -160,7 +160,7 @@ CREDIT_COSTS: Dict[str, int] = {
     "hal_legal_query": 12,         # HAL Legal API/Track B; in-app CRM = incluso (D-075/D-119)
     "hal_agents_query": 4,         # Query HAL Agents (assistente CRM)
     "virtual_staging_render": 18,  # Render staging AI (pipeline 3-stage)
-    "micro_tour_render": 60,       # Video micro-tour 10s (Kling Pro)
+    "micro_tour_render": 30,       # Video micro-tour 10s Kling Pro · €1,50 (05-Nov-2026)
     "top_promotion": 400,          # Promozione TOP 7 giorni
     "premium_promotion": 1000,     # Promozione Premium 15 giorni
     "featured_promotion": 2000,    # In Evidenza 30 giorni
