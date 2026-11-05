@@ -1221,7 +1221,11 @@
       "promo_plan_cta": "Solicitar · €12,00",
       "promo_atti_tag": "Búsqueda de actos",
       "promo_atti_title": "Acceso a los actos",
-      "promo_atti_desc": "Recupera títulos y documentos que el propietario ya no tiene al poner en venta el inmueble."
+      "promo_atti_desc": "Recupera títulos y documentos que el propietario ya no tiene al poner en venta el inmueble.",
+      "subtitle_scout": "Publica en ImmobilCloud. Completa el anuncio: Scout — nuestra joya — lo lee como un comprador y te dice qué falta.",
+      "scout_eyebrow": "Scout · vendedor",
+      "scout_title": "Cuanto más completo el anuncio, más Scout convence a quien busca.",
+      "scout_text": "Fotos claras, certificado energético, metros, precio honesto: en la ficha pública puedes «Mirar con los ojos de Scout» y mejorar antes de las visitas."
     },
     "save_search": {
       "cta": "Guardar esta búsqueda",
@@ -1375,14 +1379,30 @@
     "tools": {
       "eyebrow": "Herramientas",
       "title": "Más allá de la búsqueda",
-      "subtitle": "Qué hacer con el anuncio, los documentos y el derecho — más noticias del mercado, sin ruido."
+      "subtitle": "Scout en el anuncio, mapa, app en el móvil y noticias del mercado — sin ruido."
     },
     "map_search_area": "Buscar en esta zona",
     "map_area_active": "Búsqueda en el área del mapa",
     "map_no_in_area": "Ninguna vivienda en esta zona",
     "map_box_eyebrow": "Explorar",
     "map_box_title": "Buscar en mapa",
-    "map_box_text": "Lista y pins juntos — mueve el mapa y busca en la zona."
+    "map_box_text": "Lista y pins juntos — mueve el mapa y busca en la zona.",
+    "pwa": {
+      "eyebrow": "Móvil",
+      "title": "Descargar app",
+      "title_installed": "App instalada",
+      "text": "Un toque: icono en Inicio, como las demás apps. Sin tienda.",
+      "text_fallback": "Añade ImmobilCloud a la pantalla de inicio (PWA).",
+      "text_installed": "ImmobilCloud ya está en la pantalla de inicio.",
+      "already": "Ya instalada: ábrela desde el icono del móvil.",
+      "done": "Instalación iniciada.",
+      "ios_hint": "En iPhone: toca Compartir → Añadir a pantalla de inicio.",
+      "browser_hint": "En el menú del navegador elige Instalar app / Añadir a inicio."
+    },
+    "search_scout_subtitle": "Scout es nuestra joya: abre un anuncio y mira completitud, precio de zona y qué preguntar — antes de la visita.",
+    "scout_banner_eyebrow": "Scout",
+    "scout_banner_title": "La nota Scout en las tarjetas — luego, en la ficha, las preguntas.",
+    "scout_banner_text": "No es otro anuncio: es la herramienta que dice si está completo y si el precio tiene sentido en la zona."
   },
   "properties": {
     "field_rooms": "Habitaciones / Estancias",

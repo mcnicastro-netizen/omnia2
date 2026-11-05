@@ -1498,7 +1498,11 @@
       "promo_plan_cta": "Richiedi · €12,00",
       "promo_atti_tag": "Ricerca atti",
       "promo_atti_title": "Accesso agli atti",
-      "promo_atti_desc": "Recupera titoli e documenti non più nella disponibilità del proprietario che mette in vendita."
+      "promo_atti_desc": "Recupera titoli e documenti non più nella disponibilità del proprietario che mette in vendita.",
+      "subtitle_scout": "Pubblica su ImmobilCloud. Completa l’annuncio: Scout — il nostro fiore all’occhiello — lo legge come un acquirente e ti dice cosa manca.",
+      "scout_eyebrow": "Scout · venditore",
+      "scout_title": "Più l’annuncio è completo, più Scout convince chi cerca casa.",
+      "scout_text": "Foto chiare, APE, metri, prezzo onesto: in scheda pubblica puoi «Guardare con gli occhi di Scout» e vedere cosa migliora prima della visita."
     },
     "save_search": {
       "cta": "Salva questa ricerca",
@@ -1652,14 +1656,30 @@
     "tools": {
       "eyebrow": "Strumenti",
       "title": "Oltre la ricerca",
-      "subtitle": "Cosa fare sull’annuncio, sui documenti e sul diritto — più le notizie del mercato, senza rumore."
+      "subtitle": "Scout sull’annuncio, mappa, app sul telefonino e notizie del mercato — senza rumore."
     },
     "map_search_area": "Cerca in questa zona",
     "map_area_active": "Ricerca sull’area della mappa",
     "map_no_in_area": "Nessuna casa in quest’area",
     "map_box_eyebrow": "Esplora",
     "map_box_title": "Cerca su mappa",
-    "map_box_text": "Lista e pin insieme — sposta la mappa e cerca in zona."
+    "map_box_text": "Lista e pin insieme — sposta la mappa e cerca in zona.",
+    "pwa": {
+      "eyebrow": "Telefonino",
+      "title": "Scarica app",
+      "title_installed": "App installata",
+      "text": "Un tap: icona sulla Home, come le altre app. Zero store.",
+      "text_fallback": "Aggiungi ImmobilCloud alla Home del telefonino (PWA).",
+      "text_installed": "ImmobilCloud è già sulla Home del tuo dispositivo.",
+      "already": "Già installata: aprila dall’icona sul telefonino.",
+      "done": "Installazione avviata.",
+      "ios_hint": "Su iPhone: tocca Condividi → Aggiungi a Home.",
+      "browser_hint": "Nel menu del browser scegli Installa app / Aggiungi a schermata Home."
+    },
+    "search_scout_subtitle": "Scout è il nostro fiore all’occhiello: apri un annuncio e scopri completezza, prezzo in zona e cosa chiedere — prima della visita.",
+    "scout_banner_eyebrow": "Scout",
+    "scout_banner_title": "Il voto Scout sulle card — poi, in scheda, le domande da fare.",
+    "scout_banner_text": "Non è un annuncio in più: è lo strumento che ti dice se l’annuncio è completo e se il prezzo ha senso in zona."
   },
   "valuator": {
     "eyebrow": "Valutatore GIS · Gratis",

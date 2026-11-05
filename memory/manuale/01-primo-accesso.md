@@ -79,12 +79,14 @@ Se l'email è già registrata (B2C o B2B), la registrazione risponde **409** con
 
 | Tile | Destinazione | Nota |
 |------|----------------|------|
-| **Scout** | `/cloud/search` | Preparazione visita / completezza annuncio |
+| **Scout** | `/cloud/search` | Fiore all’occhiello: completezza, prezzo, domande (D-142) |
 | **Cerca su mappa** | `/cloud/search?view=map` | Flusso mappa stile Idealista (D-141) |
-| **HAL Legal** | `/legal` | Risposte orientative con fonti (non consulenza formale) |
+| **Scarica app** | PWA install | Manifest + SW; iOS: Condividi → Aggiungi a Home (D-142) |
 | **News** | ticker RSS | Casa24 · mutui · arredo; `GET /api/cloud/news` (D-139) |
 
-**Visura** resta in **nav** (`/cloud/visura`), non è più un tile della griglia home.
+**Visura** e **HAL Legal** restano in **nav** (non nei tile home).
+
+**Cerca / Vendi**: banner Scout in evidenza (copy «fiore all’occhiello»).
 
 **Cerca casa — lista**: sotto i filtri laterali c’è il box **«Cerca su mappa»** (`search-map-box`) → stessa ricerca in `view=map`.
 

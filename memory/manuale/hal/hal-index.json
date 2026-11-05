@@ -1,5 +1,5 @@
 {
-  "version": "0.48-d141-map-news",
+  "version": "0.49-d142-pwa-scout",
   "updated": "2026-11-05",
   "voices_total": 391,
   "source_files": [
@@ -11,7 +11,7 @@
     {
       "file": "01-primo-accesso.yaml",
       "voices": 13,
-      "md5": "a8445fa8e2ef7898fe1490cf2962da8c"
+      "md5": "8a20ae788dcd7270aef8b32f4fd756a8"
     },
     {
       "file": "02-dashboard.yaml",

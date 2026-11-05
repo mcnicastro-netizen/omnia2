@@ -1,0 +1,32 @@
+{
+  "name": "ImmobilCloud",
+  "short_name": "ImmobilCloud",
+  "description": "Cerca casa con Scout: completezza, prezzo in zona, domande da fare — prima della visita.",
+  "start_url": "/it/cloud",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#0B1E3F",
+  "theme_color": "#0B1E3F",
+  "lang": "it",
+  "icons": [
+    {
+      "src": "/icons/pwa-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/pwa-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/pwa-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}

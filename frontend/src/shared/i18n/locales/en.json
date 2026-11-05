@@ -1275,7 +1275,11 @@
       "promo_plan_cta": "Request · €12.00",
       "promo_atti_tag": "Records search",
       "promo_atti_title": "Access to deeds",
-      "promo_atti_desc": "Recover titles and documents no longer available to the owner putting the property on sale."
+      "promo_atti_desc": "Recover titles and documents no longer available to the owner putting the property on sale.",
+      "subtitle_scout": "Publish on ImmobilCloud. Complete the listing: Scout — our standout tool — reads it like a buyer and tells you what’s missing.",
+      "scout_eyebrow": "Scout · seller",
+      "scout_title": "The more complete the listing, the more Scout persuades buyers.",
+      "scout_text": "Clear photos, energy class, size, honest price: on the public page you can “See with Scout’s eyes” and improve before visits."
     },
     "save_search": {
       "cta": "Save this search",
@@ -1429,14 +1433,30 @@
     "tools": {
       "eyebrow": "Tools",
       "title": "Beyond search",
-      "subtitle": "What to do on the listing, the paperwork and the law — plus market news, without the noise."
+      "subtitle": "Scout on the listing, map, phone app and market news — without the noise."
     },
     "map_search_area": "Search this area",
     "map_area_active": "Searching the map area",
     "map_no_in_area": "No homes in this area",
     "map_box_eyebrow": "Explore",
     "map_box_title": "Search on map",
-    "map_box_text": "List and pins together — move the map and search this area."
+    "map_box_text": "List and pins together — move the map and search this area.",
+    "pwa": {
+      "eyebrow": "Phone",
+      "title": "Get the app",
+      "title_installed": "App installed",
+      "text": "One tap: Home screen icon, like other apps. No store.",
+      "text_fallback": "Add ImmobilCloud to your phone Home screen (PWA).",
+      "text_installed": "ImmobilCloud is already on your device Home screen.",
+      "already": "Already installed — open it from the Home icon.",
+      "done": "Install started.",
+      "ios_hint": "On iPhone: tap Share → Add to Home Screen.",
+      "browser_hint": "In the browser menu choose Install app / Add to Home screen."
+    },
+    "search_scout_subtitle": "Scout is our standout tool: open a listing to see completeness, area pricing and what to ask — before the visit.",
+    "scout_banner_eyebrow": "Scout",
+    "scout_banner_title": "Scout grade on cards — then, in the listing, questions to ask.",
+    "scout_banner_text": "Not another listing: the tool that tells you if the ad is complete and if the price makes sense nearby."
   },
   "portali": {
     "available": "Available portals",
