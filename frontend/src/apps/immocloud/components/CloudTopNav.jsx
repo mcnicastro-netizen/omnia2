@@ -45,7 +45,7 @@ export default function CloudTopNav() {
   };
 
   return (
-    <header className="sticky top-0 z-40 backdrop-blur-md bg-[#fbf9f5]/90 border-b border-stone-200/80">
+    <header className="sticky top-0 z-50 bg-[#fbf9f5] border-b border-stone-200/80">
       <div className="flex items-center justify-between px-5 sm:px-8 md:px-12 lg:px-16 py-4 max-w-screen-2xl mx-auto gap-4">
         <Link
           to={`/${lang}/cloud`}
