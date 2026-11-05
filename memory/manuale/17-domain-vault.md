@@ -295,10 +295,10 @@ Multi-dominio per agenzia, notifiche scadenza (cron), UI storico eventi, deep-li
 ## 17.13 · Non-proprietario del dominio · percorso demo **A-037** (30-Set-2026)
 
 **Perché esiste il checker**  
-Molte agenzie scoprono (come nel caso Founder: sito/email intestati a un fornitore tipo Basic Soft) di **non** controllare dominio e caselle. `/it/verifica-dominio` è nato da queste considerazioni.
+Molte agenzie scoprono di **non** controllare dominio e/o caselle (fornitore gestionale / webmaster). `/it/verifica-dominio` è nato da queste considerazioni.
 
 **Cosa fare oggi**
-1. Lanciare il check RDAP su `/it/verifica-dominio`.
+1. Lanciare il check su `/it/verifica-dominio` (RDAP o WHOIS `.it` · D-144).
 2. Se il registrant è un terzo → warning «webmaster/provider» → Legal Kit (D-055) + contatto assistito.
 3. In parallelo: lead Founders su `/it/agenzie` dichiara sito sì/no + URL (per demo). Il **pacchetto template** per chi non ha sito / vuole restyling / deve recuperare il dominio è **A-037** (aperto) — Cap. 8 §8.11.
 
@@ -307,5 +307,31 @@ Il checker informa e genera lead; **non** trasferisce il dominio né crea da sol
 
 ---
 
+## 17.14 · Tre layer: dominio · sito · email (D-144 · dogfood Founder 05-Nov-2026)
+
+**Problema tipico**  
+«Il dominio è mio, ma per resettare `info@agenzia.it` ho dovuto chiamare il gestionale.»  
+Non è contraddizione: sono **tre controlli diversi**.
+
+| Layer | Cosa misura | Chi di solito “tiene le chiavi” |
+|-------|-------------|----------------------------------|
+| **Dominio** | WHOIS / registrant (titolarità legale del nome) | Registrar (Aruba, Register, …) |
+| **Sito** | CMS / hosting pagine | Gestionale o web agency (es. AgestaNET) |
+| **Email** | Pannello caselle + record MX/SPF | Spesso lo stesso fornitore del sito, anche se MX punta al registrar |
+
+**Come risolve OMNIA**
+1. **Scoperta** — `/verifica-dominio` dice se il *dominio* è a tuo nome (non se controlli mail/sito).
+2. **Promessa** — D-054: OMNIA non registra domini a nome proprio.
+3. **Sito** — custom domain: punti DNS al sito OMNIA → il gestionale esce dalla catena delle pagine.
+4. **Email** — OMNIA **non** gestisce il reset password delle caselle. Devi avere (o riprendere) le credenziali del pannello mail/registrar. Poi puoi tenere MX su Aruba/Google/Microsoft sotto *tuo* controllo.
+
+**Caso Founder `nicastroimmobiliare.it` (05-Nov)**  
+- Dominio: già intestato a *Nicastro Immobiliare* · registrar Aruba.  
+- Sito: ancora AgestaNET.  
+- Email `info@…`: SPF/MX Aruba, ma reset password passato da AgestaNET = intermediario operativo.  
+- Percorso OMNIA: DNS → sito OMNIA; credenziali Aruba *proprie* per le caselle (senza passare dal gestionale).
+
+---
+
 **Progressione manuale**: 17/26 capitoli (65%).
-**Versione capitolo**: v1.1 · 30-Set-2026 (+ §17.13 A-037) · base v1.0 Feb 2026.
+**Versione capitolo**: v1.2 · 05-Nov-2026 (+ §17.14 tre layer · D-144) · v1.1 30-Set (+ §17.13 A-037) · base v1.0 Feb 2026.

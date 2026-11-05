@@ -1,6 +1,6 @@
 # Prossima sessione — programma passi
 
-**Aggiornato**: 5 Novembre 2026 — **D-143** QR→Area + nav opaca · PWA/Scout live · docs/HAL **v0.50**  
+**Aggiornato**: 5 Novembre 2026 — **D-144** domain .it WHOIS + tre layer dominio/sito/email · docs/HAL **v0.52**  
 **Repo**: https://github.com/mcnicastro-netizen/omnia2 ✅  
 **Environment**: omnia2 (esiste; UI Dashboard può glitchare — non Start Fresh)
 
@@ -20,6 +20,7 @@ Vault: [`memory/CLOUD_SECRETS_INVENTORY.md`](./CLOUD_SECRETS_INVENTORY.md).
 | Freccia | [`docs/audit/OMNIA_COERENZA_SISTEMA.md`](../docs/audit/OMNIA_COERENZA_SISTEMA.md) |
 | **Vendi B2C** | **D-135** + **D-136** staging + **D-137/b** safety + **D-138** inbox + **D-140** video/layout ✅ |
 | **Home / Cerca / App** | **D-139** news + **D-141** mappa + **D-142** Scout + **D-143** PWA QR→Area ✅ |
+| **Dominio** | **D-144** WHOIS `.it` + tre layer dominio/sito/email ✅ |
 | Listino B2C | [`memory/PRICING_B2C.md`](./PRICING_B2C.md) v1.4 |
 | API / FE | Railway D-123 · Vercel D-074/D-133 |
 
@@ -27,8 +28,8 @@ Vault: [`memory/CLOUD_SECRETS_INVENTORY.md`](./CLOUD_SECRETS_INVENTORY.md).
 
 ## Filo prodotto
 
-1. **05-Nov chiuso:** D-143 — QR → Area Accedi/Crea (`?from=pwa`) · Installa · nav opaca (PR #104–#106) · docs/HAL v0.50.
-2. **05-Nov:** D-142 Scout in evidenza Cerca/Vendi · tile Scarica app; D-141 mappa; D-139 news.
+1. **05-Nov chiuso:** D-144 — checker `.it` WHOIS + tre layer (dominio/sito/email) · caso Nicastro/Aruba/Agesta · Cap.17/HAL v0.52 (PR #108 + docs).
+2. **05-Nov:** D-143 PWA QR→Area · nav opaca (PR #104–#106); D-142 Scout; D-141 mappa; D-139 news.
 3. **04-Nov sera:** D-140 Vendi + video tour · Scout · safety soft.
 4. **Ops:** hard refresh FE; reindex HAL già fatto post-sync se chunk aggiornati.
 5. **Riprove E2E** portale a mente fresca (dogfood Privato + install PWA su Android reale).

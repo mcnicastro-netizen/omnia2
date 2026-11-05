@@ -1,7 +1,7 @@
 {
-  "version": "0.51-d144-domain-whois",
+  "version": "0.52-d144-tre-layer",
   "updated": "2026-11-05",
-  "voices_total": 391,
+  "voices_total": 392,
   "source_files": [
     {
       "file": "00-api-codice.yaml",
@@ -90,8 +90,8 @@
     },
     {
       "file": "17-domain-vault.yaml",
-      "voices": 16,
-      "md5": "d35ed4597e2e296a506d669d5da8ce88"
+      "voices": 17,
+      "md5": "c15e3dcd3aa831c0cedf5f17c860ef78"
     },
     {
       "file": "18-notifiche-attivita.yaml",

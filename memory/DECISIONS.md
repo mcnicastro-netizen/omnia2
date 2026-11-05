@@ -7,15 +7,20 @@ Registro di tutte le decisioni di business e tecniche prese durante il progetto.
 
 ## Decisioni prese
 
-### D-144 — Domain check .it: WHOIS Registro.it (no falso «NOT REGISTERED») · 05-Nov-2026
+### D-144 — Domain check .it + tre layer (dominio / sito / email) · 05-Nov-2026
 - **Data**: 5 Novembre 2026
-- **Contesto**: Dogfood Founder su `nicastroimmobiliare.it` (sito live da anni): `/verifica-dominio` mostrava **NOT REGISTERED**. Causa: `.it` non ha RDAP in bootstrap IANA; `rdap.org` risponde 404 e il client concludeva «libero» senza fallback.
-- **Decisione**:
-  1. Per **`.it`**: sorgente autorevole = **WHOIS `whois.nic.it`** (non RDAP pubtest).
-  2. Non dichiarare mai «dominio libero» se DNS risolve (A/AAAA/NS).
-  3. Non fermarsi al primo 404 RDAP se esistono altri canali.
-- **Nota dogfood**: WHOIS attuale → registrante *NICASTRO IMMOBILIARE DI NICASTRO M.M.C.*, registrar *Aruba*; il gestionale/sito AgestaNET ≠ intestazione dominio.
-- **Stato**: ✅ DECISIONE OPERATIVA · fix FE/API
+- **Contesto**: Dogfood Founder su `nicastroimmobiliare.it`: (a) checker mostrava **NOT REGISTERED** su dominio live; (b) Founder doveva chiamare AgestaNET per reset password di `info@nicastroimmobiliare.it` pur avendo il dominio «suo».
+- **Decisione tecnica (checker)**:
+  1. Per **`.it`**: sorgente autorevole = **WHOIS `whois.nic.it`** (`.it` non ha RDAP IANA; `rdap.org` 404 ≠ libero).
+  2. Non dichiarare mai «dominio libero» se DNS risolve.
+  3. Non fermarsi al primo 404 RDAP.
+- **Decisione prodotto (sovranità — tre layer)**:
+  1. **Dominio** (WHOIS) ≠ **sito** (CMS/gestionale) ≠ **email** (pannello caselle / MX).
+  2. OMNIA risolve: scoperta (`/verifica-dominio`) + promessa D-054 (mai registrar a nome OMNIA) + help-to-connect DNS al sito OMNIA. **Non** resetta caselle né gestisce pannello Aruba/Agesta al posto del titolare.
+  3. Percorso Founder Nicastro: dominio già intestato OK → collegare sito a OMNIA via DNS → riprendere **credenziali Aruba** (titolare) per `info@` senza intermediario gestionale.
+- **Dogfood WHOIS 05-Nov**: registrante *NICASTRO IMMOBILIARE DI NICASTRO M.M.C.* · registrar *Aruba* · NS Aruba/Technorail · SPF `_spf.aruba.it` · sito ancora AgestaNET.
+- **Ship**: PR #108 · Railway · Cap.17/HAL sync.
+- **Stato**: ✅ **DECISIONE OPERATIVA REGISTRATA** · live · docs/HAL syncati
 
 ### D-143 — Scarica app via QR (flusso Idealista) · 05-Nov-2026
 - **Data**: 5 Novembre 2026

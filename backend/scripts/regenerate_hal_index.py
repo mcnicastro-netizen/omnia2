@@ -51,7 +51,7 @@ def main() -> None:
         new_chapters.append(entry)
 
     out = {
-        "version": "0.51-d144-domain-whois",
+        "version": "0.52-d144-tre-layer",
         "updated": date.today().isoformat(),
         "voices_total": total,
         "source_files": source_files,
