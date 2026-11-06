@@ -42,6 +42,7 @@ Un blocco alla volta · niente fix senza «vai» · no P0–P3 prematuri · **li
 | **D-116** | OpenAPI Catasto sandbox: **una sola API key** (`OPENAPI_API_KEY` + fallback `ADMIN_EMAIL`) |
 | **D-145** | Primo cliente reale = **Nicastro Immobiliare** · seed demo **OFF** su Railway · retire `demo-agency-001` via Ops |
 | **D-146** | **Vetrina www** istituzionale: Chi siamo · Perché OMNIA · Il vero lavoro · Prezzi · **no Cerca casa** in nav/CTA finale |
+| **D-147** | Kling micro-tour gestionale **30 crediti / €1,50** (SoT `CREDIT_COSTS`; Ken Burns B2C gratis) · gate pre-prod margini Visura/APE |
 
 **SoT continuità:** `docs/audit/OMNIA_AUDIT_STATE.md` · `memory/NEXT_SESSION.md` · fascicolo D-118  
 

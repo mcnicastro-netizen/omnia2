@@ -1,6 +1,6 @@
-# 📚 HAL Knowledge — Import & Cold Start (v0.53-d146-www-vetrina)
+# 📚 HAL Knowledge — Import & Cold Start (v0.54-d147-kling-30cr)
 
-**Ultimo aggiornamento**: 06-Nov-2026 (D-146 vetrina www istituzionale)  
+**Ultimo aggiornamento**: 06-Nov-2026 (D-147 Kling 30 cr + coda #93–#96)  
 **Corpus**: YAML in `memory/manuale/hal/*.yaml` (Cap. 1–27 + `00-api-codice`) · MD esclusi dal RAG ingest  
 **Motore**: `hal_knowledge.py` · reindex: `POST /api/app/hal/knowledge/reindex?force=true` (super_admin)  
 **Regola Founder D-084**: ogni ship aggiorna MD+YAML nello stesso giro — vedi `memory/MANUAL_SYNC.md`.
@@ -267,6 +267,7 @@ Prima di dichiarare il cold start "attivo", eseguire manualmente queste 5 query 
 
 | Data | Versione | Note |
 |------|:-:|------|
+| 06-Nov-2026 | **v0.54-d147-kling-30cr** | Cap.23 listino Kling **D-147** 30 cr. Coda #93–#96 merged. Diario 06-Nov. Reindex post-merge. |
 | 06-Nov-2026 | **v0.53-d146-www-vetrina** | Cap.00 `api.www-vetrina-landing` + Cap.01 §1.1 www. D-146 nav/scroll/CTA no Cerca casa. CHANGELOG/NEXT/diario. Reindex post-merge. |
 | 05-Nov-2026 | **v0.52-d144-tre-layer** | Cap.17 tre layer dominio/sito/email + WHOIS .it. DECISIONS D-144. Reindex post-merge. |
 | 05-Nov-2026 | **v0.51-d144-domain-whois** | Cap.17: WHOIS .it (D-144) anti falso NOT REGISTERED. DECISIONS/CHANGELOG. Reindex post-merge. |
