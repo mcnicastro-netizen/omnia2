@@ -7,10 +7,6 @@ import Brand from "../../shared/components/Brand";
 import OmniaLogo from "../../shared/components/OmniaLogo";
 import { scrollToAnchor } from "../../shared/lib/scrollToAnchor";
 
-function scrollLandingHash(hash) {
-  return scrollToAnchor(hash, { behavior: "smooth" });
-}
-
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const BILLING_API = `${BACKEND_URL}/api/billing/plans`;
 
@@ -64,18 +60,19 @@ export default function LandingApp() {
     };
   }, [t]);
 
-  // Nav anchor (#chi-siamo / #offerta / #perche / #prezzi): RR aggiorna l'hash
-  // senza remount — bisogna ascoltare location.hash (e hashchange nativo).
+  // Nav anchor: ascolta hash; Chi siamo centra il blocco, altre sezioni sotto nav
   useEffect(() => {
     const hash = location.hash || window.location.hash || "";
     if (!hash) {
       window.scrollTo(0, 0);
       return undefined;
     }
+    const id = hash.replace(/^#/, "");
+    const align = id === "chi-siamo" ? "center" : "start";
     let tries = 0;
     let raf = 0;
     const run = () => {
-      if (scrollLandingHash(hash)) return;
+      if (scrollToAnchor(hash, { behavior: "smooth", align })) return;
       if (tries++ < 20) raf = requestAnimationFrame(run);
     };
     raf = requestAnimationFrame(run);
@@ -83,7 +80,12 @@ export default function LandingApp() {
   }, [location.hash, location.pathname]);
 
   useEffect(() => {
-    const onHash = () => scrollLandingHash(window.location.hash);
+    const onHash = () => {
+      const hash = window.location.hash || "";
+      const id = hash.replace(/^#/, "");
+      const align = id === "chi-siamo" ? "center" : "start";
+      scrollToAnchor(hash, { behavior: "smooth", align });
+    };
     window.addEventListener("hashchange", onHash);
     return () => window.removeEventListener("hashchange", onHash);
   }, []);
@@ -238,49 +240,49 @@ export default function LandingApp() {
       <section
         id="chi-siamo"
         data-testid="landing-about"
-        className="scroll-mt-[140px] relative overflow-hidden min-h-[520px] md:min-h-[600px] lg:min-h-[640px] bg-white"
+        className="scroll-mt-[140px] relative overflow-hidden bg-white"
       >
         <img
           src="/cloud/hero.jpg"
           alt=""
-          className="absolute inset-0 h-full w-full object-cover object-[25%_center]"
+          className="absolute inset-0 h-full w-full object-cover object-[28%_center]"
           loading="lazy"
         />
         <div
           className="absolute inset-0 pointer-events-none"
           style={{
             background:
-              "linear-gradient(90deg, rgba(255,255,255,0.55) 0%, rgba(255,255,255,0.22) 32%, rgba(255,255,255,0.08) 48%, rgba(255,255,255,0.85) 68%, #fff 82%)",
+              "linear-gradient(100deg, rgba(255,255,255,0.7) 0%, rgba(255,255,255,0.35) 38%, rgba(255,255,255,0.55) 58%, #fff 78%)",
           }}
         />
         <div
           aria-hidden
-          className="hidden md:block absolute -top-[30%] -bottom-[30%] right-[-20%] w-[66%] bg-white"
-          style={{ borderRadius: "50% 0 0 50%" }}
-        />
-        <div
-          aria-hidden
-          className="md:hidden absolute inset-x-0 top-[36%] bottom-0 bg-white"
+          className="hidden md:block absolute top-0 bottom-0 right-0 w-[58%] bg-white"
           style={{
-            borderTopLeftRadius: "42% 14%",
-            borderTopRightRadius: "42% 14%",
+            clipPath: "ellipse(90% 85% at 100% 50%)",
           }}
+        />
+        <div
+          aria-hidden
+          className="md:hidden absolute inset-x-0 bottom-0 h-[62%] bg-white rounded-t-[1.75rem]"
         />
 
-        <div className="relative z-10 max-w-screen-2xl mx-auto min-h-[520px] md:min-h-[600px] lg:min-h-[640px] px-5 sm:px-8 md:px-12 lg:px-16 py-12 md:py-16 grid md:grid-cols-2 gap-10 md:gap-8 items-center">
+        <div
+          data-scroll-focus
+          className="relative z-10 max-w-screen-2xl mx-auto px-5 sm:px-8 md:px-12 lg:px-16 py-16 md:py-20 lg:py-24 grid md:grid-cols-2 gap-10 md:gap-8 items-center"
+        >
           <div className="flex flex-col justify-center animate-[landingRise_0.8s_ease_both]">
             <div
               data-testid="landing-about-brand"
-              className="inline-flex flex-col items-start w-full max-w-md px-6 py-7 md:px-9 md:py-9 rounded-sm"
+              className="inline-flex flex-col items-start w-full max-w-md px-6 py-7 md:px-8 md:py-8 rounded-sm"
               style={{
-                background: "rgba(255,255,255,0.42)",
-                backdropFilter: "blur(20px) saturate(1.15)",
-                WebkitBackdropFilter: "blur(20px) saturate(1.15)",
-                boxShadow: "0 16px 48px rgba(11,30,63,0.08)",
-                border: "1px solid rgba(255,255,255,0.5)",
+                background: "rgba(255,255,255,0.92)",
+                backdropFilter: "blur(12px)",
+                WebkitBackdropFilter: "blur(12px)",
+                boxShadow: "0 18px 50px rgba(11,30,63,0.14)",
+                border: "1px solid rgba(11,30,63,0.06)",
               }}
             >
-              {/* mark @3x + wordmark testo = nitido su retina, niente PNG full sgranato */}
               <div
                 data-testid="landing-about-logo"
                 className="flex flex-col items-start mb-5"
@@ -290,26 +292,25 @@ export default function LandingApp() {
                   alt=""
                   width={768}
                   height={660}
-                  className="select-none mb-3 h-[132px] md:h-[148px] w-auto"
-                  style={{ imageRendering: "auto" }}
+                  className="select-none mb-3 h-[112px] md:h-[128px] w-auto"
                   draggable={false}
                 />
                 <p
-                  className="text-3xl md:text-4xl font-semibold tracking-[0.18em] text-[#0B1E3F] uppercase leading-none"
+                  className="text-3xl md:text-[2.35rem] font-bold tracking-[0.16em] text-[#0B1E3F] uppercase leading-none"
                   style={{ fontFamily: "'Montserrat', 'Inter', system-ui, sans-serif" }}
                 >
                   <Brand>OMNIA</Brand>
                 </p>
                 <p
-                  className="mt-1.5 text-[11px] md:text-xs font-medium tracking-[0.28em] text-[#0B1E3F]/80 uppercase"
+                  className="mt-2 text-xs md:text-[13px] font-semibold tracking-[0.26em] text-[#0B1E3F] uppercase"
                   style={{ fontFamily: "'Montserrat', 'Inter', system-ui, sans-serif" }}
                 >
                   Real Estate Lab
                 </p>
               </div>
-              <div className="w-16 h-px bg-[#0B1E3F]/45 mb-5" />
+              <div className="w-16 h-px bg-[#0B1E3F]/50 mb-5" />
               <p
-                className="w-full text-[12px] sm:text-[13px] uppercase tracking-[0.18em] text-[#0B1E3F] font-semibold flex flex-wrap items-center gap-x-2 gap-y-1"
+                className="w-full text-[13px] sm:text-sm uppercase tracking-[0.16em] text-[#0B1E3F] font-bold flex flex-wrap items-center gap-x-2 gap-y-1"
                 style={{ fontFamily: "'Montserrat', 'Inter', system-ui, sans-serif" }}
               >
                 {t("landing.about_tagline")
@@ -319,7 +320,7 @@ export default function LandingApp() {
                     <span key={word} className="inline-flex items-center gap-2">
                       <span className="whitespace-nowrap">{word}</span>
                       {i < arr.length - 1 ? (
-                        <span className="text-[#0B1E3F]/35" aria-hidden>
+                        <span className="text-[#0B1E3F]/40" aria-hidden>
                           ·
                         </span>
                       ) : null}
@@ -331,20 +332,20 @@ export default function LandingApp() {
 
           <div className="flex flex-col justify-center md:pl-8 lg:pl-14 xl:pl-20 animate-[landingRise_0.9s_ease_both]">
             <p
-              className="text-[11px] uppercase tracking-[0.28em] text-[#1F6B5C] mb-3 font-semibold"
+              className="text-[11px] uppercase tracking-[0.28em] text-[#1F6B5C] mb-3 font-bold"
               style={{ fontFamily: "'Montserrat', 'Inter', system-ui, sans-serif" }}
             >
               {t("landing.about_eyebrow")}
             </p>
             <h2
-              className="text-2xl sm:text-3xl lg:text-[2.35rem] font-semibold tracking-tight text-[#0B1E3F] leading-[1.2] mb-5 [&_strong]:font-bold"
+              className="text-2xl sm:text-3xl lg:text-[2.35rem] font-bold tracking-tight text-[#0B1E3F] leading-[1.2] mb-5 [&_strong]:font-extrabold"
               style={{ fontFamily: "'Montserrat', 'Inter', system-ui, sans-serif" }}
               dangerouslySetInnerHTML={{
                 __html: t("landing.about_headline_html"),
               }}
             />
             <p
-              className="text-[15px] sm:text-base text-[#0B1E3F]/80 leading-relaxed max-w-xl [&_strong]:text-[#0B1E3F] [&_strong]:font-semibold"
+              className="text-[15px] sm:text-base text-[#0B1E3F]/85 leading-relaxed max-w-xl [&_strong]:text-[#0B1E3F] [&_strong]:font-bold"
               style={{ fontFamily: "'Montserrat', 'Inter', system-ui, sans-serif" }}
               dangerouslySetInnerHTML={{
                 __html: t("landing.about_body_html"),
