@@ -6,11 +6,13 @@ import MobileNav from "./MobileNav";
 import Brand from "./Brand";
 import OmniaLogo from "./OmniaLogo";
 import { useAuth } from "../lib/auth";
+import { scrollToAnchor } from "../lib/scrollToAnchor";
 
 /**
  * Shared top navigation across Landing, App, Learn.
  *
- * Home / Academy: logo + Cerca casa · Vendi casa · Academy · Area riservata
+ * Landing: logo + Chi siamo · sezioni anchor · Registrati
+ * Academy: logo + Cerca casa · Vendi · Academy · Area riservata
  * App: logo + prodotti (+ suffix opzionale)
  */
 export default function TopNav({ current = "landing", theme = "light", suffix = null }) {
@@ -52,28 +54,66 @@ export default function TopNav({ current = "landing", theme = "light", suffix = 
   };
   const c = themes[theme] || themes.light;
 
-  const landingItems = [
-    {
-      key: "search",
-      to: `/${lang}/cloud/search`,
-      label: t("cloud.nav_search"),
-      testid: "topnav-search",
-    },
-    {
-      key: "sell",
-      to: b2cLoggedIn
-        ? `/${lang}/cloud/account/sell`
-        : `/${lang}/cloud/area?intent=sell&next=${encodeURIComponent(`/${lang}/cloud/account/sell`)}`,
-      label: t("cloud.nav_sell"),
-      testid: "topnav-sell",
-    },
-    {
-      key: "academy",
-      to: `/${lang}/learn`,
-      label: t("cloud.nav_academy"),
-      testid: "topnav-academy",
-    },
-  ];
+  // Solo click → scroll (niente hashchange/listener rivali)
+  const scrollToSection = (id) => {
+    scrollToAnchor(id);
+    try {
+      window.history.replaceState(null, "", `#${id}`);
+    } catch {
+      /* ignore */
+    }
+  };
+
+  const landingItems =
+    current === "landing"
+      ? [
+          {
+            key: "about",
+            hash: "chi-siamo",
+            label: t("landing.nav_about"),
+            testid: "topnav-about",
+          },
+          {
+            key: "offer",
+            hash: "offerta",
+            label: t("landing.nav_offer"),
+            testid: "topnav-offer",
+          },
+          {
+            key: "why",
+            hash: "perche",
+            label: t("landing.nav_why"),
+            testid: "topnav-why",
+          },
+          {
+            key: "pricing",
+            hash: "prezzi",
+            label: t("landing.nav_pricing"),
+            testid: "topnav-pricing",
+          },
+        ]
+      : [
+          {
+            key: "search",
+            to: `/${lang}/cloud/search`,
+            label: t("cloud.nav_search"),
+            testid: "topnav-search",
+          },
+          {
+            key: "sell",
+            to: b2cLoggedIn
+              ? `/${lang}/cloud/account/sell`
+              : `/${lang}/cloud/area?intent=sell&next=${encodeURIComponent(`/${lang}/cloud/account/sell`)}`,
+            label: t("cloud.nav_sell"),
+            testid: "topnav-sell",
+          },
+          {
+            key: "academy",
+            to: `/${lang}/learn`,
+            label: t("cloud.nav_academy"),
+            testid: "topnav-academy",
+          },
+        ];
 
   const productItems = [
     { key: "cloud", to: `/${lang}/cloud`, label: t("nav.immocloud"), testid: "topnav-cloud" },
@@ -81,23 +121,41 @@ export default function TopNav({ current = "landing", theme = "light", suffix = 
   ];
 
   const navItems = isPublicNav ? landingItems : productItems;
-  const ctaTo = isPublicNav
-    ? (b2cLoggedIn ? `/${lang}/cloud/account` : `/${lang}/cloud/area`)
-    : `/${lang}/login?from=app&next=${encodeURIComponent(`/${lang}/app/dashboard`)}`;
-  const ctaLabel = isPublicNav
-    ? (b2cLoggedIn ? t("cloud.nav_account") : t("cloud.nav_area"))
-    : t("nav.login");
-  const ctaTestId = isPublicNav ? "topnav-area" : "topnav-login";
+  const ctaTo =
+    current === "landing"
+      ? `/${lang}/register`
+      : isPublicNav
+        ? (b2cLoggedIn ? `/${lang}/cloud/account` : `/${lang}/cloud/area`)
+        : `/${lang}/login?from=app&next=${encodeURIComponent(`/${lang}/app/dashboard`)}`;
+  const ctaLabel =
+    current === "landing"
+      ? t("nav.register")
+      : isPublicNav
+        ? (b2cLoggedIn ? t("cloud.nav_account") : t("cloud.nav_area"))
+        : t("nav.login");
+  const ctaTestId =
+    current === "landing" ? "topnav-register" : isPublicNav ? "topnav-area" : "topnav-login";
 
   const mobileLinks = [
     ...(isPublicNav ? [] : [{ to: `/${lang}`, label: t("nav.back_to_home") }]),
-    ...navItems.map((n) => ({ to: n.to, label: n.label })),
+    ...navItems.map((n) =>
+      n.hash
+        ? { hash: n.hash, label: n.label }
+        : { to: n.to, label: n.label },
+    ),
     { to: ctaTo, label: ctaLabel },
   ];
 
+  // Vetrina: nav compatta (logo md) così Chi siamo atterra sotto la barra, non a metà
+  const logoSize = current === "landing" ? "md" : "xl";
+  const barMinH = current === "landing" ? "min-h-0" : "min-h-[132px]";
+  const barPadY = current === "landing" ? "py-2.5" : "py-3";
+
   return (
     <header className={`sticky top-0 z-40 backdrop-blur ${c.wrapper}`}>
-      <div className="flex items-center justify-between px-5 sm:px-8 md:px-12 lg:px-16 py-3 max-w-screen-2xl mx-auto gap-4 min-h-[132px]">
+      <div
+        className={`flex items-center justify-between px-5 sm:px-8 md:px-12 lg:px-16 ${barPadY} max-w-screen-2xl mx-auto gap-4 ${barMinH}`}
+      >
         <div className="flex items-center gap-4 md:gap-6 min-w-0">
           {!isPublicNav && (
             <Link
@@ -119,7 +177,7 @@ export default function TopNav({ current = "landing", theme = "light", suffix = 
           >
             <OmniaLogo
               variant="full"
-              size="xl"
+              size={logoSize}
               inverted={theme === "dark"}
             />
             {suffix && (
@@ -135,16 +193,31 @@ export default function TopNav({ current = "landing", theme = "light", suffix = 
         </div>
 
         <nav className="hidden lg:flex items-center gap-6 text-sm font-sans uppercase tracking-widest">
-          {navItems.map((n) => (
-            <Link
-              key={n.key}
-              to={n.to}
-              data-testid={n.testid}
-              className={`transition ${current === n.key ? c.linkActive : c.link}`}
-            >
-              {n.label}
-            </Link>
-          ))}
+          {navItems.map((n) =>
+            n.hash ? (
+              <a
+                key={n.key}
+                href={`#${n.hash}`}
+                data-testid={n.testid}
+                className={`transition ${current === n.key ? c.linkActive : c.link}`}
+                onClick={(e) => {
+                  e.preventDefault();
+                  scrollToSection(n.hash);
+                }}
+              >
+                {n.label}
+              </a>
+            ) : (
+              <Link
+                key={n.key}
+                to={n.to}
+                data-testid={n.testid}
+                className={`transition ${current === n.key ? c.linkActive : c.link}`}
+              >
+                {n.label}
+              </Link>
+            ),
+          )}
         </nav>
 
         <div className="hidden md:flex items-center gap-3 md:gap-4">

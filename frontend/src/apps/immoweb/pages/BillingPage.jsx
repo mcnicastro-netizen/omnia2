@@ -42,6 +42,22 @@ export default function BillingPage() {
     })();
   }, []);
 
+  // Piano scelto dalla vetrina (/register?plan=…) — evidenzia la card Billing
+  useEffect(() => {
+    if (state.loading) return;
+    let preferred = "";
+    try {
+      preferred = (sessionStorage.getItem("omnia_preferred_plan") || "").toLowerCase();
+    } catch {
+      preferred = "";
+    }
+    if (!preferred) return;
+    const el = document.querySelector(`[data-testid="plan-card-${preferred}"]`);
+    if (!el) return;
+    el.classList.add("ring-2", "ring-[#C8A653]");
+    el.scrollIntoView({ behavior: "smooth", block: "center" });
+  }, [state.loading, state.data]);
+
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     const sessionId = params.get("session_id");

@@ -28,7 +28,8 @@ Un motore di stima mercato che, a partire da città, tipologia, superficie e alt
 - Box sotto il comparatore mutui: **Stima gratuita** + **Report UNI €2,99** con pre-compilazione città/tipologia/mq dall'annuncio.
 
 ### C) Home ImmobilCloud (`CloudHomePage`)
-- ActionCard **"Valutatore immobiliare"** full-width sotto le tre card principali (Cerca / Vendi / Affitta).
+- Accesso al Valutatore dalla **nav** / intent Vendi–Valuta (non è uno dei 4 tile `cloud-tools`).
+- I **4 riquadri** home (D-141) sono: Scout · Cerca su mappa · HAL Legal · News — non includono il Valutatore né Visura.
 
 ### D) Agente loggato su `/cloud/valutatore`
 - Stessa UI, copy **"Usa crediti agenzia"** / **"12 crediti agenzia"** al posto di €2,99 sul tier UNI.

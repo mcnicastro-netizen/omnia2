@@ -1130,6 +1130,65 @@ voci:
         - super_admin / Founder
       screenshot: []
 
+  - id: api.portal-news-rss
+    titolo: News box portale — aggregatore RSS (D-139)
+    modulo: Codice API
+    widget: null
+    pubblico: [privato, titolare, agente, segreteria, super_admin]
+    livello: base
+    tags: [codice, news, rss, immobilcloud, d-139, casa24, mutui, arredo]
+    correlati: [primo-accesso.home-cloud-tools-mappa, api.cloud-search-bbox-map]
+    domanda_naturale: "Come funzionano le news sul portale? Quali fonti? C'è un'API?"
+    contenuto:
+      a_cosa_serve: >
+        Aggregatore RSS server-side per ImmobilCloud: immobiliare, mutui,
+        arredo. Nessuna API a pagamento. Cache ~1h (Mongo portal_news_cache
+        + memoria). Flag OMNIA_PORTAL_NEWS (default on).
+      quando_si_usa: >
+        Home tile News a scorrimento; box compact in account; debug feed.
+      passi:
+        - "GET /api/cloud/news → items round-robin per categoria."
+        - "Feed v1: Casa24 (Sole 24 Ore), Google News mutui, Interni Magazine."
+        - "FE: PortalNewsTile (home) + PortalNewsBox (account)."
+        - "Idealista/MutuiOnline/BdI RSS non usati (non raggiungibili)."
+      errori_comuni:
+        - problema: "Tile News vuoto"
+          soluzione: >
+            Verifica OMNIA_PORTAL_NEWS e che i feed RSS rispondano.
+            Cache 1h: attendi o flush portal_news_cache in Mongo ops.
+      permessi:
+        - Pubblico (endpoint senza auth)
+      screenshot: []
+
+  - id: api.cloud-search-bbox-map
+    titolo: Cerca casa mappa — bbox e marker (D-141)
+    modulo: Codice API
+    widget: null
+    pubblico: [privato, titolare, agente, segreteria, super_admin]
+    livello: base
+    tags: [codice, search, mappa, bbox, leaflet, idealista, d-141, immobilcloud]
+    correlati: [primo-accesso.home-cloud-tools-mappa, api.portal-news-rss]
+    domanda_naturale: "Come funziona la ricerca su mappa? Cosa è bbox? Endpoint map?"
+    contenuto:
+      a_cosa_serve: >
+        Flusso stile Idealista: lista+mappa, pin con prezzo, «Cerca in
+        questa zona» dopo pan/zoom. Filtra annunci per rettangolo geografico.
+      quando_si_usa: >
+        UI /cloud/search?view=map; integrazione API search/map con area.
+      passi:
+        - "GET /api/cloud/search?bbox=south,west,north,east (+ filtri usuali)."
+        - "GET /api/cloud/map?bbox=... → marker lat/lng/prezzo."
+        - "FE: PropertyMapView (react-leaflet) + BoundsWatcher idle → CTA."
+        - "URL FE propaga bbox nei search params dopo click CTA."
+      errori_comuni:
+        - problema: "bbox ignorato"
+          soluzione: >
+            Formato esatto south,west,north,east (float). Proprietà senza
+            lat/lng non entrano nel filtro geografico.
+      permessi:
+        - Pubblico (search/map portale)
+      screenshot: []
+
   - id: api.portal-providers-sandbox
     titolo: Stato sandbox provider del portale (probe 04-Nov-2026)
     modulo: Codice API
@@ -1327,6 +1386,55 @@ voci:
       errori_comuni:
         - problema: "Ho messo tvly-prod per sbaglio in demo"
           soluzione: "Per demo preferisci tvly-dev-; non loggare la chiave."
+      permessi:
+        - super_admin / Founder
+      screenshot: []
+
+  - id: api.www-vetrina-landing
+    titolo: Vetrina www istituzionale (D-146)
+    modulo: Codice API
+    widget: null
+    pubblico: [super_admin]
+    livello: intermedio
+    tags: [codice, landing, www, vetrina, d-146, vercel, topnav, chi-siamo]
+    correlati: [api.vercel-fe-deploy, api.stripe-sandbox-cloud]
+    domanda_naturale: >
+      Cos'è la home www di OMNIA? Dove sono Chi siamo e Perché OMNIA?
+      Perché non c'è Cerca casa nella nav del sito istituzionale?
+    contenuto:
+      a_cosa_serve: >
+        Landing istituzionale Lab+Ecosystem su omniarealestateecosystem.it
+        (LandingApp). Pitch commerciale Founders, non portale B2C.
+        Nav: Chi siamo, Le tre anime, Perché OMNIA, Prezzi, Registrati.
+        Niente Cerca casa in TopNav vetrina né nel CTA finale validazione.
+      quando_si_usa: >
+        Domande su home www, scroll nav, box ImmobilCloud/ImmoWeb/Academy,
+        prezzi Founders, deploy Vercel della vetrina.
+      passi:
+        - "URL: https://omniarealestateecosystem.it/it"
+        - "Codice: frontend/src/apps/landing/LandingApp.jsx + TopNav +
+          scrollToAnchor.js"
+        - "Anchor: #chi-siamo · #offerta · #perche (tratti Perché OMNIA) ·
+          #vero-lavoro (diagramma) · #prezzi"
+        - "Sticky: TopNav FUORI da overflow-x-hidden (altrimenti sticky
+          spezzato e atterraggio a metà viewport)"
+        - "Box anime: /it/cloud · /it/register · /it/learn"
+        - "Piani: /it/register?plan=starter|pro|agency da GET /billing/plans"
+        - "Deploy FE: bash scripts/vercel-deploy.sh"
+      errori_comuni:
+        - problema: "Click Chi siamo atterra a metà schermo"
+          soluzione: >
+            Verificare sticky (header top=0 dopo scroll) e che TopNav non
+            sia dentro overflow-x-hidden; nav landing compatta; contenuto
+            Chi siamo items-start sotto nav.
+        - problema: "Cerco Cerca casa sulla home www"
+          soluzione: >
+            D-146: non è in nav vetrina. Entrare da ImmobilCloud /it/cloud
+            (o Academy nav). CTA finale = solo Inizia ora.
+        - problema: "Box ImmoWeb non apre il gestionale"
+          soluzione: >
+            Destinazione intenzionale = /it/register (onboarding agenzia),
+            non /it/app finché non autenticato.
       permessi:
         - super_admin / Founder
       screenshot: []
