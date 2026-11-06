@@ -52,28 +52,63 @@ export default function TopNav({ current = "landing", theme = "light", suffix = 
   };
   const c = themes[theme] || themes.light;
 
-  const landingItems = [
-    {
-      key: "search",
-      to: `/${lang}/cloud/search`,
-      label: t("cloud.nav_search"),
-      testid: "topnav-search",
-    },
-    {
-      key: "sell",
-      to: b2cLoggedIn
-        ? `/${lang}/cloud/account/sell`
-        : `/${lang}/cloud/area?intent=sell&next=${encodeURIComponent(`/${lang}/cloud/account/sell`)}`,
-      label: t("cloud.nav_sell"),
-      testid: "topnav-sell",
-    },
-    {
-      key: "academy",
-      to: `/${lang}/learn`,
-      label: t("cloud.nav_academy"),
-      testid: "topnav-academy",
-    },
-  ];
+  // Vetrina commerciale (home): chi siamo / offerta / prezzi — non il portale B2C
+  const landingItems =
+    current === "landing"
+      ? [
+          {
+            key: "about",
+            to: `/${lang}#chi-siamo`,
+            label: t("landing.nav_about"),
+            testid: "topnav-about",
+          },
+          {
+            key: "why",
+            to: `/${lang}#perche`,
+            label: t("landing.nav_why"),
+            testid: "topnav-why",
+          },
+          {
+            key: "offer",
+            to: `/${lang}#offerta`,
+            label: t("landing.nav_offer"),
+            testid: "topnav-offer",
+          },
+          {
+            key: "pricing",
+            to: `/${lang}#prezzi`,
+            label: t("landing.nav_pricing"),
+            testid: "topnav-pricing",
+          },
+          {
+            key: "search",
+            to: `/${lang}/cloud`,
+            label: t("nav.immocloud"),
+            testid: "topnav-cloud",
+          },
+        ]
+      : [
+          {
+            key: "search",
+            to: `/${lang}/cloud/search`,
+            label: t("cloud.nav_search"),
+            testid: "topnav-search",
+          },
+          {
+            key: "sell",
+            to: b2cLoggedIn
+              ? `/${lang}/cloud/account/sell`
+              : `/${lang}/cloud/area?intent=sell&next=${encodeURIComponent(`/${lang}/cloud/account/sell`)}`,
+            label: t("cloud.nav_sell"),
+            testid: "topnav-sell",
+          },
+          {
+            key: "academy",
+            to: `/${lang}/learn`,
+            label: t("cloud.nav_academy"),
+            testid: "topnav-academy",
+          },
+        ];
 
   const productItems = [
     { key: "cloud", to: `/${lang}/cloud`, label: t("nav.immocloud"), testid: "topnav-cloud" },
@@ -81,13 +116,20 @@ export default function TopNav({ current = "landing", theme = "light", suffix = 
   ];
 
   const navItems = isPublicNav ? landingItems : productItems;
-  const ctaTo = isPublicNav
-    ? (b2cLoggedIn ? `/${lang}/cloud/account` : `/${lang}/cloud/area`)
-    : `/${lang}/login?from=app&next=${encodeURIComponent(`/${lang}/app/dashboard`)}`;
-  const ctaLabel = isPublicNav
-    ? (b2cLoggedIn ? t("cloud.nav_account") : t("cloud.nav_area"))
-    : t("nav.login");
-  const ctaTestId = isPublicNav ? "topnav-area" : "topnav-login";
+  const ctaTo =
+    current === "landing"
+      ? `/${lang}/register`
+      : isPublicNav
+        ? (b2cLoggedIn ? `/${lang}/cloud/account` : `/${lang}/cloud/area`)
+        : `/${lang}/login?from=app&next=${encodeURIComponent(`/${lang}/app/dashboard`)}`;
+  const ctaLabel =
+    current === "landing"
+      ? t("nav.register")
+      : isPublicNav
+        ? (b2cLoggedIn ? t("cloud.nav_account") : t("cloud.nav_area"))
+        : t("nav.login");
+  const ctaTestId =
+    current === "landing" ? "topnav-register" : isPublicNav ? "topnav-area" : "topnav-login";
 
   const mobileLinks = [
     ...(isPublicNav ? [] : [{ to: `/${lang}`, label: t("nav.back_to_home") }]),

@@ -1,3 +1,9 @@
+## 2026-11-06 — Vetrina home OMNIA (www) ripensata
+
+- `LandingApp`: chi siamo · perché · offerta · prezzi live da `/api/billing/plans`
+- TopNav commerciale (anchor + Registrati); SEO `index.html` OMNIA/`/it`
+- CTA piano → `/register?plan=` · preferenza in sessionStorage → evidenzia card Billing
+
 ## 2026-11-06 — D-145 primo cliente Nicastro Immobiliare · retire demo GTM
 
 - Agenzia **Nicastro Immobiliare** creata in produzione (slug `nicastro-immobiliare`, piano free → Pro via Ops)
