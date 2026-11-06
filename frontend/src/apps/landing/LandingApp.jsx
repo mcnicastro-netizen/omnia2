@@ -273,27 +273,62 @@ export default function LandingApp() {
 
         <div className="relative z-10 max-w-screen-2xl mx-auto min-h-[520px] md:min-h-[600px] lg:min-h-[640px] px-5 sm:px-8 md:px-12 lg:px-16 py-12 md:py-16 grid md:grid-cols-2 gap-10 md:gap-8 items-center">
           <div className="flex flex-col justify-center animate-[landingRise_0.8s_ease_both]">
-            <div className="inline-flex flex-col items-start bg-white/90 md:bg-transparent px-4 py-5 md:p-0">
-              <OmniaLogo variant="full" size="xl" className="mb-4" />
-              <div className="w-14 h-px bg-[#0B1E3F]/35 mb-4" />
-              <p className="font-sans text-[10px] sm:text-[11px] uppercase tracking-[0.32em] text-[#0B1E3F]">
-                {t("landing.about_tagline")}
+            <div
+              data-testid="landing-about-brand"
+              className="inline-flex flex-col items-start w-full max-w-md px-6 py-7 md:px-9 md:py-9 rounded-sm"
+              style={{
+                background: "rgba(255,255,255,0.82)",
+                backdropFilter: "blur(14px)",
+                WebkitBackdropFilter: "blur(14px)",
+                boxShadow: "0 16px 48px rgba(11,30,63,0.14)",
+              }}
+            >
+              <img
+                src="/landing/omnia-logo-transparent.png"
+                alt="OMNIA Real Estate Lab"
+                data-testid="landing-about-logo"
+                className="select-none mb-5 h-[100px] md:h-[112px] w-auto"
+                draggable={false}
+              />
+              <div className="w-16 h-px bg-[#0B1E3F]/45 mb-5" />
+              <p
+                className="w-full text-[12px] sm:text-[13px] uppercase tracking-[0.18em] text-[#0B1E3F] font-semibold flex flex-wrap items-center gap-x-2 gap-y-1"
+                style={{ fontFamily: "'Montserrat', 'Inter', system-ui, sans-serif" }}
+              >
+                {t("landing.about_tagline")
+                  .split(/\s*[·•|]\s*/)
+                  .filter(Boolean)
+                  .map((word, i, arr) => (
+                    <span key={word} className="inline-flex items-center gap-2">
+                      <span className="whitespace-nowrap">{word}</span>
+                      {i < arr.length - 1 ? (
+                        <span className="text-[#0B1E3F]/35" aria-hidden>
+                          ·
+                        </span>
+                      ) : null}
+                    </span>
+                  ))}
               </p>
             </div>
           </div>
 
           <div className="flex flex-col justify-center md:pl-8 lg:pl-14 xl:pl-20 animate-[landingRise_0.9s_ease_both]">
-            <p className="text-[10px] font-sans uppercase tracking-[0.3em] text-[#1F6B5C] mb-3">
+            <p
+              className="text-[11px] uppercase tracking-[0.28em] text-[#1F6B5C] mb-3 font-semibold"
+              style={{ fontFamily: "'Montserrat', 'Inter', system-ui, sans-serif" }}
+            >
               {t("landing.about_eyebrow")}
             </p>
             <h2
-              className="text-2xl sm:text-3xl lg:text-[2.1rem] font-sans font-semibold tracking-tight text-[#0B1E3F] leading-snug mb-5 [&_strong]:font-bold"
+              className="text-2xl sm:text-3xl lg:text-[2.35rem] font-semibold tracking-tight text-[#0B1E3F] leading-[1.2] mb-5 [&_strong]:font-bold"
+              style={{ fontFamily: "'Montserrat', 'Inter', system-ui, sans-serif" }}
               dangerouslySetInnerHTML={{
                 __html: t("landing.about_headline_html"),
               }}
             />
             <p
-              className="font-sans text-sm sm:text-base text-[#0B1E3F]/75 leading-relaxed max-w-xl [&_strong]:text-[#0B1E3F] [&_strong]:font-semibold"
+              className="text-[15px] sm:text-base text-[#0B1E3F]/80 leading-relaxed max-w-xl [&_strong]:text-[#0B1E3F] [&_strong]:font-semibold"
+              style={{ fontFamily: "'Montserrat', 'Inter', system-ui, sans-serif" }}
               dangerouslySetInnerHTML={{
                 __html: t("landing.about_body_html"),
               }}
