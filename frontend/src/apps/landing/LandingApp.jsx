@@ -273,19 +273,27 @@ export default function LandingApp() {
               data-testid="landing-about-brand"
               className="inline-flex flex-col items-start w-full max-w-md px-6 py-7 md:px-9 md:py-9 rounded-sm"
               style={{
-                background: "rgba(255,255,255,0.52)",
-                backdropFilter: "blur(18px) saturate(1.1)",
-                WebkitBackdropFilter: "blur(18px) saturate(1.1)",
-                boxShadow: "0 16px 48px rgba(11,30,63,0.1)",
-                border: "1px solid rgba(255,255,255,0.55)",
+                background: "rgba(255,255,255,0.42)",
+                backdropFilter: "blur(20px) saturate(1.15)",
+                WebkitBackdropFilter: "blur(20px) saturate(1.15)",
+                boxShadow: "0 16px 48px rgba(11,30,63,0.08)",
+                border: "1px solid rgba(255,255,255,0.5)",
               }}
             >
-              {/* mark vettoriale-like + wordmark testo = niente sgranatura del PNG full */}
+              {/* mark @3x + wordmark testo = nitido su retina, niente PNG full sgranato */}
               <div
                 data-testid="landing-about-logo"
                 className="flex flex-col items-start mb-5"
               >
-                <OmniaLogo variant="mark" size="hero" className="mb-3" />
+                <img
+                  src="/landing/omnia-mark-3x.png"
+                  alt=""
+                  width={768}
+                  height={660}
+                  className="select-none mb-3 h-[132px] md:h-[148px] w-auto"
+                  style={{ imageRendering: "auto" }}
+                  draggable={false}
+                />
                 <p
                   className="text-3xl md:text-4xl font-semibold tracking-[0.18em] text-[#0B1E3F] uppercase leading-none"
                   style={{ fontFamily: "'Montserrat', 'Inter', system-ui, sans-serif" }}
@@ -293,7 +301,7 @@ export default function LandingApp() {
                   <Brand>OMNIA</Brand>
                 </p>
                 <p
-                  className="mt-1.5 text-[11px] md:text-xs font-medium tracking-[0.28em] text-[#0B1E3F]/75 uppercase"
+                  className="mt-1.5 text-[11px] md:text-xs font-medium tracking-[0.28em] text-[#0B1E3F]/80 uppercase"
                   style={{ fontFamily: "'Montserrat', 'Inter', system-ui, sans-serif" }}
                 >
                   Real Estate Lab
