@@ -238,31 +238,180 @@ export default function LandingApp() {
         </div>
       </section>
 
-      {/* IL LAB */}
+      {/* IL LAB — banner istituzionale (IT plate) + ricreazione accessibile */}
       <section
         id="chi-siamo"
         data-testid="landing-about"
-        className="scroll-mt-28 relative overflow-hidden"
-        style={{
-          background:
-            "radial-gradient(1000px 480px at 100% 0%, rgba(200,166,83,0.12), transparent 55%), radial-gradient(800px 400px at 0% 100%, rgba(31,107,92,0.1), transparent 50%), #F5F1E8",
-        }}
+        className="scroll-mt-28 relative overflow-hidden bg-white"
       >
-        <div className="max-w-screen-2xl mx-auto px-5 sm:px-8 md:px-12 lg:px-16 py-20 md:py-28 grid lg:grid-cols-12 gap-12 lg:gap-16 items-center">
-          <div className="lg:col-span-5">
-            <p className="text-[10px] sm:text-xs font-sans uppercase tracking-[0.3em] text-[#1F6B5C] mb-3">
-              {t("landing.about_eyebrow")}
-            </p>
-            <h2 className="text-3xl md:text-5xl tracking-tight text-[#0B1E3F] mb-4">
-              <Brand>{t("landing.about_title")}</Brand>
-            </h2>
-            <p className="text-lg md:text-xl text-[#0B1E3F]/80 mb-0 font-sans font-light leading-relaxed">
-              {t("landing.about_lead")}
-            </p>
+        {/* Desktop/tablet IT: plate grafica ufficiale; altre lingue: layout equivalente */}
+        {lang === "it" ? (
+          <div className="relative hidden sm:block">
+            <img
+              src="/landing/lab-banner.png"
+              alt={t("landing.about_headline")}
+              className="w-full h-auto select-none"
+              loading="lazy"
+              draggable={false}
+            />
+            <div
+              data-testid="landing-about-minis"
+              className="absolute bottom-[6%] right-[4%] w-[48%] max-w-xl grid grid-cols-3 gap-1"
+            >
+              <Link
+                to={`/${lang}/cloud`}
+                data-testid="landing-about-mini-cloud"
+                className="block h-16 md:h-20 lg:h-24 rounded-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-[#C8A653]"
+                aria-label={`${t("landing.about_mini_cloud")} — ${t("landing.about_mini_cloud_motto")}`}
+              />
+              <Link
+                to={`/${lang}/register`}
+                data-testid="landing-about-mini-crm"
+                className="block h-16 md:h-20 lg:h-24 rounded-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-[#C8A653]"
+                aria-label={`${t("landing.about_mini_crm")} — ${t("landing.about_mini_crm_motto")}`}
+              />
+              <Link
+                to={`/${lang}/learn`}
+                data-testid="landing-about-mini-academy"
+                className="block h-16 md:h-20 lg:h-24 rounded-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-[#C8A653]"
+                aria-label={`${t("landing.about_mini_academy")} — ${t("landing.about_mini_academy_motto")}`}
+              />
+            </div>
           </div>
-          <div className="lg:col-span-7 space-y-5 font-sans text-[#0B1E3F]/80 text-base md:text-lg leading-relaxed border-l-2 border-[#C8A653] pl-6 md:pl-8">
-            <p>{t("landing.about_p1")}</p>
-            <p>{t("landing.about_p2")}</p>
+        ) : (
+          <div className="relative hidden sm:grid sm:grid-cols-2 min-h-[560px] overflow-hidden">
+            <div className="relative">
+              <img
+                src="/landing/lab-photo.jpg"
+                alt=""
+                className="absolute inset-0 h-full w-full object-cover"
+                loading="lazy"
+              />
+              <div className="relative z-10 p-10 lg:p-14 flex flex-col justify-center h-full bg-white/50">
+                <OmniaLogo variant="full" size="xl" className="mb-3" />
+                <div className="w-14 h-px bg-[#0B1E3F]/35 mb-3" />
+                <p className="font-sans text-[11px] uppercase tracking-[0.32em] text-[#0B1E3F]">
+                  {t("landing.about_tagline")}
+                </p>
+              </div>
+            </div>
+            <div className="relative bg-white flex flex-col justify-center p-10 lg:p-14">
+              <h2
+                className="text-3xl font-sans font-semibold text-[#0B1E3F] leading-snug mb-5 [&_strong]:font-bold"
+                dangerouslySetInnerHTML={{
+                  __html: t("landing.about_headline_html"),
+                }}
+              />
+              <p
+                className="font-sans text-[15px] text-[#0B1E3F]/70 leading-relaxed mb-10 max-w-lg [&_strong]:font-semibold"
+                dangerouslySetInnerHTML={{
+                  __html: t("landing.about_body_html"),
+                }}
+              />
+              <div
+                data-testid="landing-about-minis-en"
+                className="grid grid-cols-3 divide-x divide-[#0B1E3F]/12"
+              >
+                {[
+                  {
+                    key: "cloud",
+                    title: t("landing.about_mini_cloud"),
+                    motto: t("landing.about_mini_cloud_motto"),
+                    to: `/${lang}/cloud`,
+                  },
+                  {
+                    key: "crm",
+                    title: t("landing.about_mini_crm"),
+                    motto: t("landing.about_mini_crm_motto"),
+                    to: `/${lang}/register`,
+                  },
+                  {
+                    key: "academy",
+                    title: t("landing.about_mini_academy"),
+                    motto: t("landing.about_mini_academy_motto"),
+                    to: `/${lang}/learn`,
+                  },
+                ].map((m) => (
+                  <Link
+                    key={m.key}
+                    to={m.to}
+                    className="px-3 text-center font-sans"
+                  >
+                    <span className="block text-sm font-semibold text-[#0B1E3F]">
+                      <Brand>{m.title}</Brand>
+                    </span>
+                    <span className="block text-[11px] text-[#0B1E3F]/50 mt-1">
+                      {m.motto}
+                    </span>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Mobile: layout ricostruito (banner troppo denso) */}
+        <div className="sm:hidden relative min-h-[640px]">
+          <img
+            src="/landing/lab-photo.jpg"
+            alt=""
+            className="absolute inset-0 h-[42%] w-full object-cover object-center"
+            loading="lazy"
+          />
+          <div className="absolute inset-x-0 top-[34%] bottom-0 bg-white rounded-t-[2rem] px-5 pt-8 pb-10">
+            <OmniaLogo variant="full" size="lg" className="mb-3" />
+            <div className="w-12 h-px bg-[#0B1E3F]/30 mb-3" />
+            <p className="font-sans text-[10px] uppercase tracking-[0.28em] text-[#0B1E3F] mb-5">
+              {t("landing.about_tagline")}
+            </p>
+            <h2
+              className="text-2xl font-sans font-semibold text-[#0B1E3F] leading-snug mb-4 [&_strong]:font-bold"
+              dangerouslySetInnerHTML={{
+                __html: t("landing.about_headline_html"),
+              }}
+            />
+            <p
+              className="font-sans text-sm text-[#0B1E3F]/70 leading-relaxed mb-8 [&_strong]:font-semibold"
+              dangerouslySetInnerHTML={{
+                __html: t("landing.about_body_html"),
+              }}
+            />
+            <div className="space-y-4 border-t border-[#0B1E3F]/10 pt-5">
+              {[
+                {
+                  key: "cloud",
+                  title: t("landing.about_mini_cloud"),
+                  motto: t("landing.about_mini_cloud_motto"),
+                  to: `/${lang}/cloud`,
+                },
+                {
+                  key: "crm",
+                  title: t("landing.about_mini_crm"),
+                  motto: t("landing.about_mini_crm_motto"),
+                  to: `/${lang}/register`,
+                },
+                {
+                  key: "academy",
+                  title: t("landing.about_mini_academy"),
+                  motto: t("landing.about_mini_academy_motto"),
+                  to: `/${lang}/learn`,
+                },
+              ].map((m) => (
+                <Link
+                  key={m.key}
+                  to={m.to}
+                  className="block font-sans"
+                  data-testid={`landing-about-mini-m-${m.key}`}
+                >
+                  <span className="font-semibold text-[#0B1E3F] text-sm">
+                    <Brand>{m.title}</Brand>
+                  </span>
+                  <span className="block text-xs text-[#0B1E3F]/50">
+                    {m.motto}
+                  </span>
+                </Link>
+              ))}
+            </div>
           </div>
         </div>
       </section>
