@@ -1,3 +1,9 @@
+## 2026-11-06 — A-040 pin: paperless da evidenziare (filo domani)
+
+- Founder: paperless non è tra i pregi raccontati in vetrina/pitch
+- ASPETTI **A-040** · NEXT_SESSION · diario — tensione con D-129
+- Nessun codice prodotto stanotte; «vai» domani
+
 ## 2026-11-06 — D-147 Kling micro-tour 30 crediti + coda #93–#96 chiusa
 
 - `CREDIT_COSTS.micro_tour_render` **30** (€1,50) — codice legge da `plans.py` (prima 10 cr = **perdita** vs COGS €0,88)

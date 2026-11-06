@@ -2,7 +2,7 @@
 
 > File di appoggio per **temi strategici/tecnici** che il Founder ha esplicitamente segnalato come "da rivedere più avanti", **senza essere ancora decisioni**. Ogni voce va promossa in `DECISIONS.md` o `ROADMAP.md` quando si decide di procedere.
 
-**Ultimo aggiornamento**: 29-Ott-2026 (**A-039** debito SEO canonical/noindex — audit OpenSEO, non priorità ora)
+**Ultimo aggiornamento**: 6-Nov-2026 (**A-040** paperless da evidenziare in vetrina/posizionamento — filo domani)
 
 > **Backlog qualità prodotto (A-006+)**: voci tracciate durante lo sprint manuale Cap. 1-18. Priorità assegnata da Cursor (P1=alto ROI/costo basso, P3=futuro). Decisione Founder post-manuale — **NON implementare senza "vai" esplicito**.
 
@@ -1412,6 +1412,30 @@ Implementazione solo con «vai» Founder → poi eventuale decisione in `DECISIO
 ### Stato
 ✅ **CHIUSO** — non riprendere con integrazioni calendario esterne salvo richiesta esplicita Founder.
 
+---
+
+## 🟠 A-040 — Paperless come pregio OMNIA (non più sotto-traccia) · 06-Nov-2026
+
+**Data inserimento**: 6 Novembre 2026  
+**Segnalato da**: Founder (Marco Nicastro) · fine sessione vetrina www  
+**Priorità**: **ALTA — filo da domani** (posizionamento / www / pitch)  
+**Correlati**: Cap.7 Fascicolo · Domain Verify «zero carta» · **D-129** (oggi: paperless = necessario ma *non* messaggio primario) · D-146 vetrina
+
+### Contesto Founder
+OMNIA ha pezzi paperless reali (fascicolo digitale, kit legale digitale / PEC, niente cartaceo su verifica dominio) ma **non li stiamo evidenziando** tra i pregi del sistema — né in home www né nel pitch commerciale.
+
+### Tensione con D-129
+D-129 dice: gestionale / white-label / **paperless** = necessari ma **non** messaggio commerciale primario (anti-appiattimento vs Arcanis).  
+Founder 06-Nov: paperless va **rimesso in luce**. Domani: decidere se (a) eccezione/ampiezza a D-129, (b) quarto tratto in «Perché OMNIA», (c) sezione dedicata vetrina, (d) solo sales kit — **senza inventare feature** (D-051).
+
+### Cosa fare (quando «vai»)
+1. Inventario onesto di cosa è già paperless in prodotto (Fascicolo, documenti, firma/Yousign se live, kit dominio, email vs posta).
+2. Copy vetrina / Perché OMNIA / Lab: 1 claim misurabile, niente hype.
+3. Se serve: aggiornare D-129 o nuova D-14x «paperless in messaggio».
+4. Sync Cap.07 + HAL + i18n landing.
+
+### Stato
+🟠 **APERTO** — pin in `NEXT_SESSION` · **non implementare senza «vai»**
 
 ---
 
