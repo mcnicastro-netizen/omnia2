@@ -7,6 +7,80 @@ Registro di tutte le decisioni di business e tecniche prese durante il progetto.
 
 ## Decisioni prese
 
+### D-146 — Vetrina www istituzionale (Chi siamo · Perché OMNIA · no Cerca casa) · 06-Nov-2026
+- **Data**: 6 Novembre 2026
+- **Contesto**: Founder ripensa `www` come vetrina commerciale Lab+Ecosystem (non portale B2C). Nav/scroll Chi siamo ripetutamente “a metà”; poi cleanup CTA Cerca casa.
+- **Decisione**:
+  1. **Home www** = pitch istituzionale: Chi siamo (banner + logo OMNIA frosted) → Le tre anime → **Perché OMNIA** → **Il vero lavoro** (diagramma integrazione) → Prezzi → CTA finale.
+  2. **Nav landing**: Chi siamo · Le tre anime · Perché OMNIA · Prezzi · Registrati. **Niente** Cerca casa in TopNav vetrina (resta in ImmobilCloud / Academy).
+  3. **Scroll sticky**: TopNav **fuori** da `overflow-x-hidden` (altrimenti `position:sticky` si spezza); nav landing compatta; `#perche` = sezione tratti Perché OMNIA; `#vero-lavoro` = diagramma.
+  4. **Box tre anime**: ImmobilCloud → `/it/cloud` · ImmoWeb → `/it/register` · Academy → `/it/learn`.
+  5. **CTA finale** («Dalla visione alla validazione…»): solo **Inizia ora** → register; niente Cerco casa / ImmobilCloud nel lead.
+- **Ship**: PR #121 (sticky/resize) · #122 (drop Cerca casa nav) · #123 (Perché OMNIA order) · #124 (drop Cerco casa finale) · Vercel prod.
+- **Audit 06-Nov**: tutti i link box/nav/piani/footer PASS su `omniarealestateecosystem.it`.
+- **Stato**: ✅ **DECISIONE OPERATIVA REGISTRATA** · live · docs/HAL syncati 06-Nov
+
+### D-145 — Primo cliente reale = Nicastro Immobiliare · retire demo GTM · 06-Nov-2026
+- **Data**: 6 Novembre 2026
+- **Contesto**: Founder chiude la sandbox GTM `demo-agency-001` in produzione e apre **Nicastro Immobiliare** come primo cliente OMNIA (dogfood = produzione agenzia reale, non fixtures fake).
+- **Decisione**:
+  1. **Creare** agenzia Nicastro via onboarding B2B (slug `nicastro-immobiliare`) — inventario vuoto (nessun immobile/cliente seed).
+  2. **Cancellare** shell GTM: user `demo.admin@…` + documento `demo-agency-001` + satelliti `agency_id` (endpoint Ops `POST /app/ops/retire-demo-agency`).
+  3. **Seed demo OFF su Railway** di default (`should_seed_demo_agency`): non ricreare demo a ogni restart. Cloud/local restano ON salvo `OMNIA_SEED_DEMO_AGENCY`.
+  4. Founder `super_admin` si aggancia a Nicastro; grant assistito **Pro** + crediti (non Stripe live).
+  5. Login titolare dogfood: `titolare@nicastroimmobiliare.it` (password seed/docs — da ruotare a piacere Founder).
+- **Stato**: ✅ DECISO · Nicastro **live** su API · wipe demo shell via Ops dopo deploy codice D-145
+
+### D-144 — Domain check .it + tre layer (dominio / sito / email) · 05-Nov-2026
+- **Data**: 5 Novembre 2026
+- **Contesto**: Dogfood Founder su `nicastroimmobiliare.it`: (a) checker mostrava **NOT REGISTERED** su dominio live; (b) Founder doveva chiamare AgestaNET per reset password di `info@nicastroimmobiliare.it` pur avendo il dominio «suo».
+- **Decisione tecnica (checker)**:
+  1. Per **`.it`**: sorgente autorevole = **WHOIS `whois.nic.it`** (`.it` non ha RDAP IANA; `rdap.org` 404 ≠ libero).
+  2. Non dichiarare mai «dominio libero» se DNS risolve.
+  3. Non fermarsi al primo 404 RDAP.
+- **Decisione prodotto (sovranità — tre layer)**:
+  1. **Dominio** (WHOIS) ≠ **sito** (CMS/gestionale) ≠ **email** (pannello caselle / MX).
+  2. OMNIA risolve: scoperta (`/verifica-dominio`) + promessa D-054 (mai registrar a nome OMNIA) + help-to-connect DNS al sito OMNIA. **Non** resetta caselle né gestisce pannello Aruba/Agesta al posto del titolare.
+  3. Percorso Founder Nicastro: dominio già intestato OK → collegare sito a OMNIA via DNS → riprendere **credenziali Aruba** (titolare) per `info@` senza intermediario gestionale.
+- **Dogfood WHOIS 05-Nov**: registrante *NICASTRO IMMOBILIARE DI NICASTRO M.M.C.* · registrar *Aruba* · NS Aruba/Technorail · SPF `_spf.aruba.it` · sito ancora AgestaNET.
+- **Ship**: PR #108 · Railway · Cap.17/HAL sync.
+- **Stato**: ✅ **DECISIONE OPERATIVA REGISTRATA** · live · docs/HAL syncati
+
+### D-143 — Scarica app via QR (flusso Idealista) · 05-Nov-2026
+- **Data**: 5 Novembre 2026
+- **Contesto**: Founder vuole UX più intuitiva: scaricare l’app da QR; Idealista «si installa da sola» creando l’icona. Poi: QR deve atterrare su Accedi/Crea account.
+- **Decisione**:
+  1. Pagina dedicata `/{lang}/cloud/app`: guida + **QR** + CTA **Installa** (tile home punta qui).
+  2. **QR atterra su** `/{lang}/cloud/area?from=pwa` (Accedi | Crea account) + striscia Installa sull’Area.
+  3. Android/Chrome: dialog nativo `beforeinstallprompt` → icona tra le app (PWA standalone). Cattura prompt **early** in `pwa.js`.
+  4. **Onestà iOS**: Apple non consente install silenziosa; guida Condividi → Aggiungi a Home (stesso esito icona).
+  5. **Nav sticky opaca** (cream pieno, no blur/90%): evita che il sottotitolo hero filtrasse in trasparenza sulla barra (bug dogfood Founder).
+- **Ship**: PR #104 (QR/app) · #105 (QR→Area) · #106 (nav opaca) · Vercel prod · docs/HAL v0.50.
+- **Fuori scope**: app store native; silent install iOS (impossibile).
+- **Stato**: ✅ **DECISIONE OPERATIVA REGISTRATA** · live · docs/HAL syncati 05-Nov
+
+### D-142 — PWA «Scarica app» al posto di HAL Legal in home · Scout in evidenza Cerca/Vendi · 05-Nov-2026
+- **Data**: 5 Novembre 2026
+- **Contesto**: Founder vuole modello Immobiliare.it (icona telefonino) via PWA; in home sostituire tile HAL Legal con **Scarica app**; dare maggiore risalto a Scout in Cerca e Vendi (fiore all’occhiello).
+- **Decisione**:
+  1. **PWA v1**: `manifest.webmanifest` + service worker (`sw-push.js` con precache shell) + tile home **Scarica app** (`beforeinstallprompt` / hint iOS Condividi→Home). HAL Legal resta in **nav**.
+  2. **Home 4 tile**: Scout · Cerca su mappa · Scarica app · News.
+  3. **Cerca / Vendi**: banner + copy Scout in evidenza (hero/immagine Scout); non è un nuovo prodotto, è positioning del tool esistente.
+- **Fuori scope v1**: app store native (Capacitor), push install obbligatorio, A/B store listing.
+- **Ship**: PR #103 · Vercel · follow-up UX install in **D-143**.
+- **Stato**: ✅ **DECISIONE OPERATIVA REGISTRATA** · live · docs/HAL syncati
+
+### D-141 — Ricerca mappa stile Idealista + home 4 tile (Scout/Mappa/Legal/News) · 05-Nov-2026
+- **Data**: 5 Novembre 2026
+- **Contesto**: Dopo D-139 (news) e redesign home, Founder chiede flusso mappa come Idealista e dove trovare «Cerca su mappa». Correzione: in home sostituire il tile **Visura** (non la CTA hero) con **Cerca su mappa**.
+- **Decisione**:
+  1. **Cerca casa mappa** (`/cloud/search?view=map`): split lista+mappa a viewport pieno; pin con pillola prezzo; bottone flottante **«Cerca in questa zona»** dopo pan/zoom → query `bbox=south,west,north,east` su `GET /api/cloud/search` e `GET /api/cloud/map`.
+  2. **Lista** (`view` assente/list): sotto i filtri, box **«Cerca su mappa»** che porta a `view=map` preservando filtri.
+  3. **Home ImmobilCloud** (`cloud-tools`): 4 riquadri — **Scout · Cerca su mappa · HAL Legal · News** (ticker D-139). Visura **non** è più un tile home; resta in **nav**.
+  4. Niente voce «Mappa» extra in top nav (evita ripetizione).
+- **Ship**: PR #99 (mappa Idealista) · PR #101 (box search + tile home) · merge `main` · Vercel FE live.
+- **Stato**: ✅ **DECISIONE OPERATIVA REGISTRATA** · live · docs/HAL syncati 05-Nov
+
 ### D-140 — Dogfood Vendi sera 04-Nov: safety soft, Scout, video tour, layout · 04-Nov-2026
 - **Data**: 4 Novembre 2026 (sera · chiusura giornata)
 - **Contesto**: Dogfood produzione su annuncio `provaprova` (Mascalucia): scheda Scout con copy/benchmark errati; rescan orario toglieva live su solo `llm_review`; hero/video tour; UX Vendi disordinata; flash Immocloud; anteprima card a sinistra su laptop.
@@ -20,11 +94,13 @@ Registro di tutte le decisioni di business e tecniche prese durante il progetto.
 - **Ship**: merge `main` PR #84–#90 (sera) · Railway + Vercel redeploy · health/sell 200.
 - **Stato**: ✅ **DECISIONE OPERATIVA REGISTRATA** · live · docs/HAL syncati stessa sera
 
-### D-139 — News box dinamico portale (backlog) · 04-Nov-2026
-- **Data**: 4 Novembre 2026
+### D-139 — News box dinamico portale · 04-Nov-2026 (attivato 05-Nov)
+- **Data**: 4 Novembre 2026 · **attivazione**: 5 Novembre 2026
 - **Contesto**: Founder chiede se è possibile un box news dinamico (immobiliare, mutui, arredo) con fonti gratuite; farà in seguito «in un’unica soluzione».
-- **Decisione**: **Sì, fattibile** — aggregatore RSS server-side + UI box (home/account), cache, link esterni. Nessuna API a pagamento obbligatoria. Fonti candidate gratuite: Casa24 / Idealista News / Immobiliare Magazine; MutuiOnline / Facile.it / Banca d’Italia; Domus / Interni / Elle Decor; AdE / ISTAT. v1 = 5–8 titoli da 2–3 feed curati, refresh orario.
-- **Stato**: ⏳ BACKLOG (non implementato in questo merge)
+- **Decisione**: **Sì** — aggregatore RSS server-side + UI box (home/account), cache ~1h, link esterni. Nessuna API a pagamento. Flag `OMNIA_PORTAL_NEWS` (default on).
+- **v1 live**: 3 feed curati → Casa24 (Sole 24 Ore), rassegna mutui (Google News RSS), Interni Magazine. Endpoint pubblico `GET /api/cloud/news`. UI: tile **News a scorrimento** nei 4 riquadri home (`PortalNewsTile`) + box compact in account. Idealista/MutuiOnline/BdI RSS non raggiungibili → fonti gratuite equivalenti.
+- **Follow-up UI (D-141)**: home = Scout · Cerca su mappa · HAL Legal · News (niente più tile Visura).
+- **Stato**: ✅ APPLICATA · live 05-Nov
 
 ### D-138 — B2C Idealista+ inbox messaggi/visite + telefono/WA profilo · 04-Nov-2026
 - **Data**: 4 Novembre 2026

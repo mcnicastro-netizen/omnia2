@@ -183,6 +183,26 @@ class TestCloudMapEndpoint:
         r = requests.get(f"{BASE_URL}/api/cloud/map?bbox=41.0,12.0,42.5")  # only 3 parts
         assert r.status_code == 400
 
+    def test_search_bbox_idealista_area(self, seeded_properties):
+        """GET /cloud/search?bbox=… — lista allineata all’area mappa (flusso Idealista)."""
+        r = requests.get(
+            f"{BASE_URL}/api/cloud/search",
+            params={"bbox": TEST_BBOX, "operation": "sale", "page_size": 40},
+            timeout=20,
+        )
+        assert r.status_code == 200, r.text[:200]
+        d = r.json()
+        ids = {it["id"] for it in d.get("items") or []}
+        assert seeded_properties["inside_A"]["id"] in ids
+        assert seeded_properties["outside"]["id"] not in ids
+        for it in d.get("items") or []:
+            assert it.get("lat") is not None and it.get("lng") is not None
+            assert 41.0 <= it["lat"] <= 42.5
+            assert 12.0 <= it["lng"] <= 13.0
+
+        bad = requests.get(f"{BASE_URL}/api/cloud/search?bbox=broken", timeout=15)
+        assert bad.status_code == 400
+
     def test_map_filter_operation_and_price_range(self, seeded_properties):
         # operation=sale + price 100k..500k should include inside_A (250k) and outside (400k)
         r = requests.get(

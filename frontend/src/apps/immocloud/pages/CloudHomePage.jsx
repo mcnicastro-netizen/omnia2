@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { api } from "../../../shared/lib/api";
-import PropertyCard from "../components/PropertyCard";
+import { PortalNewsTile } from "../components/PortalNewsBox";
 
 const PROPERTY_TYPES = [
   { v: "", label: "Qualsiasi" },
@@ -13,21 +13,30 @@ const PROPERTY_TYPES = [
   { v: "monolocale", label: "Monolocale" },
 ];
 
-const CITY_PHOTOS = {
-  Milano: "/cloud/city-milano.jpg",
-  Roma: "/cloud/city-roma.jpg",
-  Napoli: "/cloud/city-napoli.jpg",
-  Torino: "/cloud/city-torino.jpg",
-  Firenze: "/cloud/city-roma.jpg",
-  Bologna: "/cloud/city-milano.jpg",
-  Catania: "/cloud/city-napoli.jpg",
-};
+/** Tre strumenti + tile PWA; il quarto slot è News a scorrimento. */
+const TOOL_TILES = [
+  {
+    key: "scout",
+    to: (lang) => `/${lang}/cloud/search`,
+    img: "/cloud/scout.jpg",
+    title: "Scout",
+    text: "Il fiore all'occhiello: completezza, prezzo in zona, domande da fare — prima della visita.",
+    testid: "tool-scout",
+  },
+  {
+    key: "map",
+    to: (lang) => `/${lang}/cloud/search?view=map`,
+    img: "/cloud/intent-value.jpg",
+    title: "Cerca su mappa",
+    text: "Lista e pin insieme — sposta la mappa e cerca in questa zona.",
+    testid: "tool-map",
+  },
+];
 
 export default function CloudHomePage() {
   const { t, i18n } = useTranslation();
   const lang = (i18n.language || "it").slice(0, 2);
   const [facets, setFacets] = useState(null);
-  const [featured, setFeatured] = useState([]);
   const [pulse, setPulse] = useState(null);
   const [operation, setOperation] = useState("sale");
   const [city, setCity] = useState("");
@@ -38,8 +47,6 @@ export default function CloudHomePage() {
 
   useEffect(() => {
     api.get(`/cloud/facets?operation=${operation}`).then((r) => setFacets(r.data)).catch(() => {});
-    api.get(`/cloud/search?operation=${operation}&page_size=6&sort=recent`)
-      .then((r) => setFeatured(r.data.items || [])).catch(() => {});
   }, [operation]);
 
   useEffect(() => {
@@ -77,7 +84,7 @@ export default function CloudHomePage() {
           from { opacity: 0; transform: translateY(18px); }
           to { opacity: 1; transform: translateY(0); }
         }
-        @keyframes ic- ken {
+        @keyframes ic-ken {
           from { transform: scale(1.06); }
           to { transform: scale(1); }
         }
@@ -216,197 +223,46 @@ export default function CloudHomePage() {
                 {pulse.label_it}
               </span>
             )}
-            <Link
-              to={`/${lang}/cloud/search?view=map`}
-              className="text-white hover:text-[#E8D5B5] transition underline-offset-4 hover:underline"
-            >
-              Guarda sulla mappa →
-            </Link>
           </div>
         </div>
       </section>
 
-      {/* Featured homes first — no ranking lecture */}
-      {featured.length > 0 && (
-        <section className="px-5 sm:px-8 md:px-16 py-14 bg-[#f7f4ef]" data-testid="cloud-featured">
-          <div className="max-w-5xl mx-auto">
-            <div className="flex items-end justify-between gap-4 mb-8">
-              <div>
-                <p className="text-[11px] uppercase tracking-[0.28em] text-[#C19A6B] mb-2">Oggi sulla vetrina</p>
-                <h2
-                  className="text-3xl md:text-4xl font-light tracking-tight text-[#0B1E3F]"
-                  style={{ fontFamily: "'Fraunces', Georgia, serif" }}
-                >
-                  Case da non lasciarsi scappare
-                </h2>
-              </div>
-              <Link
-                to={`search?operation=${operation}`}
-                className="shrink-0 text-xs uppercase tracking-widest text-[#0B1E3F] hover:text-[#C19A6B]"
-              >
-                {t("cloud.see_all")} →
-              </Link>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {featured.map((p) => (
-                <PropertyCard key={p.id} p={p} />
-              ))}
-            </div>
-          </div>
-        </section>
-      )}
-
-      {/* Scout — prima le parole, poi l'atmosfera (la foto da sola non spiega lo strumento) */}
-      <section className="px-5 sm:px-8 md:px-16 pt-14 pb-6 bg-white" data-testid="cloud-scout-intro">
-        <div className="max-w-2xl">
+      {/* Quattro riquadri: Scout · Mappa · Scarica app · News */}
+      <section className="px-5 sm:px-8 md:px-16 py-14 bg-[#f7f4ef]" data-testid="cloud-tools">
+        <div className="max-w-6xl mx-auto mb-8">
           <p className="text-[11px] uppercase tracking-[0.28em] text-[#C19A6B] mb-2">
-            Cosa fa Scout
+            {t("cloud.tools.eyebrow", "Strumenti")}
           </p>
           <h2
-            className="text-3xl md:text-4xl font-light tracking-tight text-[#0B1E3F] mb-4"
+            className="text-3xl md:text-4xl font-light tracking-tight text-[#0B1E3F]"
             style={{ fontFamily: "'Fraunces', Georgia, serif" }}
           >
-            Non è una casa. È chi legge l&apos;annuncio con te.
+            {t("cloud.tools.title", "Oltre la ricerca")}
           </h2>
-          <p className="text-stone-600 text-base md:text-lg leading-relaxed">
-            Scout è lo strumento di ImmobilCloud sull&apos;annuncio: ti dice se i dati bastano,
-            se il prezzo ha senso in zona e quali domande fare al venditore — prima della visita.
-            Sotto, un assaggio di atmosfera; Scout lo trovi dentro ogni scheda immobile.
+          <p className="text-stone-600 mt-2 max-w-2xl">
+            {t(
+              "cloud.tools.subtitle",
+              "Scout sull’annuncio, mappa, app sul telefonino e notizie del mercato — senza rumore."
+            )}
           </p>
         </div>
-      </section>
-
-      <section
-        className="relative overflow-hidden"
-        data-testid="cloud-scout-strip"
-      >
-        <div className="grid grid-cols-1 lg:grid-cols-2 min-h-[420px]">
-          <div className="flex items-center bg-[#0B1E3F] px-8 sm:px-12 py-14 text-white order-1">
-            <div className="max-w-md">
-              <p className="text-[11px] uppercase tracking-[0.3em] text-[#C19A6B] mb-3">
-                In pratica, su ogni annuncio
-              </p>
-              <h3
-                className="text-2xl md:text-3xl font-light mb-4"
-                style={{ fontFamily: "'Fraunces', Georgia, serif" }}
-              >
-                Completo? Prezzo in zona? Cosa chiedere?
-              </h3>
-              <ul className="space-y-2 text-sm text-white/75 mb-8">
-                <li>· Completezza dell&apos;annuncio, in un colpo d&apos;occhio</li>
-                <li>· Segnale sul prezzo rispetto alla zona</li>
-                <li>· Domande pronte per la chiamata o la visita</li>
-              </ul>
-              <Link
-                to={`/${lang}/cloud/search`}
-                className="inline-flex px-6 py-3 bg-[#C19A6B] text-white text-sm tracking-wide rounded-lg hover:bg-white hover:text-[#0B1E3F] transition"
-              >
-                Trova un annuncio e prova Scout
-              </Link>
-            </div>
-          </div>
-          <div className="relative min-h-[240px] lg:min-h-full order-2">
-            <img
-              src="/cloud/scout.jpg"
-              alt=""
-              className="absolute inset-0 w-full h-full object-cover"
+        <div className="max-w-6xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {TOOL_TILES.map((tile) => (
+            <ToolTile
+              key={tile.key}
+              to={tile.to(lang)}
+              img={tile.img}
+              title={tile.title}
+              text={tile.text}
+              testid={tile.testid}
             />
-            <div className="absolute inset-0 bg-[#0B1E3F]/35" />
-            <p
-              className="absolute bottom-0 left-0 right-0 p-5 sm:p-6 text-white/90 text-sm sm:text-base leading-snug"
-              style={{
-                fontFamily: "'Fraunces', Georgia, serif",
-                background:
-                  "linear-gradient(180deg, transparent, rgba(11,30,63,0.85))",
-              }}
-            >
-              L&apos;atmosfera della ricerca — Scout lavora sul testo e i numeri dell&apos;annuncio, non sulla foto.
-            </p>
-          </div>
+          ))}
+          <PwaInstallTile />
+          <PortalNewsTile />
         </div>
       </section>
 
-      {/* Intent mosaic with photography */}
-      <section className="px-5 sm:px-8 md:px-16 py-14" data-testid="cloud-intents">
-        <div className="max-w-5xl mx-auto mb-8">
-          <h2
-            className="text-3xl font-light text-[#0B1E3F]"
-            style={{ fontFamily: "'Fraunces', Georgia, serif" }}
-          >
-            Tre strade, stesso portale
-          </h2>
-          <p className="text-stone-600 mt-2">Scegli il ritmo: comprare, vendere o capire i numeri.</p>
-        </div>
-        <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-4">
-          <IntentTile
-            to={`/${lang}/cloud/register?intent=sell`}
-            img="/cloud/intent-sell.jpg"
-            title="Vendi"
-            text="Metti in vetrina la tua casa. Gratis per partire — e un po’ di luce in più, se vuoi farti notare."
-            testid="intent-sell"
-          />
-          <IntentTile
-            to={`/${lang}/cloud/valutatore`}
-            img="/cloud/intent-value.jpg"
-            title="Valuta"
-            text="Una stima onesta, senza appuntamenti. Il report serio resta a portata di carta."
-            testid="intent-valuator"
-          />
-          <IntentTile
-            to={`/${lang}/cloud/mutui`}
-            img="/cloud/intent-mortgage.jpg"
-            title="Mutuo"
-            text="La rata, chiara. Prima di innamorarti del parquet."
-            testid="intent-mutui"
-          />
-        </div>
-      </section>
-
-      {/* Cities as visual destinations */}
-      <section className="px-5 sm:px-8 md:px-16 py-14 bg-[#0B1E3F]" data-testid="cloud-cities-row">
-        <div className="max-w-5xl mx-auto">
-          <h2
-            className="text-3xl font-light text-white mb-2"
-            style={{ fontFamily: "'Fraunces', Georgia, serif" }}
-          >
-            Dove ti porta oggi?
-          </h2>
-          <p className="text-white/60 mb-8">Città vive, annunci freschi, Scout su ciascuno.</p>
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-            {cityTiles.map((c) => {
-              const photo = CITY_PHOTOS[c.city] || "/cloud/living.jpg";
-              return (
-                <Link
-                  key={c.city}
-                  to={`search?operation=${operation}&city=${encodeURIComponent(c.city)}`}
-                  data-testid={`cloud-city-pill-${c.city}`}
-                  className="group relative aspect-[4/3] overflow-hidden rounded-xl"
-                >
-                  <img
-                    src={photo}
-                    alt={c.city}
-                    className="absolute inset-0 w-full h-full object-cover transition duration-700 group-hover:scale-105"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-[#0B1E3F]/90 via-[#0B1E3F]/20 to-transparent" />
-                  <div className="absolute bottom-0 left-0 right-0 p-4">
-                    <p
-                      className="text-xl text-white"
-                      style={{ fontFamily: "'Fraunces', Georgia, serif" }}
-                    >
-                      {c.city}
-                    </p>
-                    {c.count != null && (
-                      <p className="text-xs text-white/60 mt-0.5">{c.count} annunci</p>
-                    )}
-                  </div>
-                </Link>
-              );
-            })}
-          </div>
-        </div>
-      </section>
-
-      {/* Quiet SEO foot — still crawlable, not the star */}
+      {/* Quiet SEO foot — crawlable, not the star */}
       <section className="px-5 sm:px-8 md:px-16 py-12 border-t border-stone-100" data-testid="cloud-seo-density">
         <div className="max-w-5xl mx-auto">
           <h2
@@ -451,20 +307,20 @@ export default function CloudHomePage() {
   );
 }
 
-function IntentTile({ to, img, title, text, testid }) {
+function ToolTile({ to, img, title, text, testid }) {
   return (
     <Link
       to={to}
       data-testid={testid}
-      className="group relative block aspect-[4/5] overflow-hidden rounded-2xl"
+      className="group relative block min-h-[280px] sm:min-h-0 sm:aspect-[4/5] overflow-hidden rounded-2xl"
     >
       <img
         src={img}
         alt=""
         className="absolute inset-0 w-full h-full object-cover transition duration-700 group-hover:scale-105"
       />
-      <div className="absolute inset-0 bg-gradient-to-t from-[#0B1E3F]/95 via-[#0B1E3F]/40 to-transparent" />
-      <div className="absolute inset-x-0 bottom-0 p-6 text-white">
+      <div className="absolute inset-0 bg-gradient-to-t from-[#0B1E3F]/95 via-[#0B1E3F]/45 to-transparent" />
+      <div className="absolute inset-x-0 bottom-0 p-5 text-white">
         <h3
           className="text-2xl mb-2"
           style={{ fontFamily: "'Fraunces', Georgia, serif" }}
@@ -472,6 +328,42 @@ function IntentTile({ to, img, title, text, testid }) {
           {title}
         </h3>
         <p className="text-sm text-white/75 leading-relaxed">{text}</p>
+      </div>
+    </Link>
+  );
+}
+
+function PwaInstallTile() {
+  const { t, i18n } = useTranslation();
+  const lang = (i18n.language || "it").slice(0, 2);
+  return (
+    <Link
+      to={`/${lang}/cloud/app`}
+      data-testid="tool-pwa"
+      className="group relative block min-h-[280px] sm:min-h-0 sm:aspect-[4/5] overflow-hidden rounded-2xl"
+    >
+      <img
+        src="/cloud/living.jpg"
+        alt=""
+        className="absolute inset-0 w-full h-full object-cover transition duration-700 group-hover:scale-105"
+      />
+      <div className="absolute inset-0 bg-gradient-to-t from-[#0B1E3F]/95 via-[#0B1E3F]/45 to-transparent" />
+      <div className="absolute inset-x-0 bottom-0 p-5 text-white">
+        <p className="text-[10px] uppercase tracking-[0.28em] text-[#C19A6B] mb-1">
+          {t("cloud.pwa.eyebrow", "Telefonino")}
+        </p>
+        <h3
+          className="text-2xl mb-2"
+          style={{ fontFamily: "'Fraunces', Georgia, serif" }}
+        >
+          {t("cloud.pwa.title", "Scarica app")}
+        </h3>
+        <p className="text-sm text-white/75 leading-relaxed">
+          {t(
+            "cloud.pwa.text_qr",
+            "Inquadra il QR: Accedi o Crea account sul telefonino — e se vuoi, l’icona tra le app."
+          )}
+        </p>
       </div>
     </Link>
   );

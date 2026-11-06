@@ -7,7 +7,7 @@
 - Non è un **registrar**. OMNIA **non registra** domini al posto tuo, **non paga la rinnovo**, **non gestisce** il pannello DNS al tuo posto (a meno che tu ce lo chieda esplicitamente e ne firmi mandato — flusso separato e manuale, non v1).
 - Non è un **DNS provider**. Il tuo dominio resta al tuo registrar (Register, GoDaddy, Aruba, ecc.). OMNIA fornisce solo un **target CNAME/ALIAS** verso cui puntare il tuo dominio.
 - Non è un **transfer di dominio**. Il flusso "help-to-connect" collega il tuo dominio esistente al sito OMNIA — **non trasferisce ownership**. Se domani lasci OMNIA, ripunti il DNS altrove e il dominio è ancora tuo.
-- Non è un **WHOIS lookup**. Il checker pubblico usa **RDAP** (Registration Data Access Protocol) — il successore del WHOIS. Se il TLD del dominio non supporta ancora RDAP, il check fallisce con messaggio dedicato.
+- Il checker pubblico usa **RDAP** dove il TLD è in bootstrap IANA; per **`.it`** (D-144) usa **WHOIS Registro.it** (`whois.nic.it`) perché `.it` non ha RDAP pubblico IANA. Mai dichiarare «dominio libero» se il DNS risolve.
 
 ---
 
@@ -184,7 +184,7 @@ Uno strumento **pubblico** (accessibile senza login) che permette a un titolare 
 
 **Come funziona (`domain_check.py`)**
 1. L'utente inserisce il dominio (es. `agenziaesempio.it`) + nome agenzia (opzionale).
-2. Il backend fa una **query RDAP** (successore standard del WHOIS).
+2. Il backend interroga **RDAP** (se disponibile) oppure **WHOIS `.it`** (D-144).
 3. Analizza il registrant:
    - **Corrisponde al nome agenzia?** → ok
    - **È redatto/privacy-proxy?** → warning (GDPR privacy proxy comune)
@@ -196,8 +196,7 @@ Uno strumento **pubblico** (accessibile senza login) che permette a un titolare 
 Il checker ha un rate limit per IP (`_check_rate_limit`). Se superi la soglia in poco tempo → response 429 (Too Many Requests). Non ti bannano — riprova dopo qualche minuto.
 
 **Se il TLD non supporta RDAP**
-Alcuni TLD nazionali (es. certi ccTLD) **non hanno ancora endpoint RDAP**. In quel caso il check restituisce:
-> *"Il TLD non supporta ancora RDAP. Riprova più tardi o contattaci per un check manuale."*
+Alcuni ccTLD non sono in bootstrap IANA. Per **`.it`** c’è fallback WHOIS ufficiale (D-144). Altri TLD senza RDAP/WHOIS configurato: messaggio di retry / check manuale — **non** «dominio libero».
 
 **Lead generation opzionale**
 Dopo il check, l'utente può cliccare **"Richiedi consulenza"** → `POST /api/marketing/domain/lead` crea un lead marketing nell'agenda OMNIA. Utile per catturare interesse commerciale prima del signup vero.
@@ -209,9 +208,9 @@ Dopo il check, l'utente può cliccare **"Richiedi consulenza"** → `POST /api/m
 ## 17.8 · RDAP vs WHOIS · perché usiamo RDAP
 
 **Contesto**
-Il WHOIS è il protocollo storico (RFC 3912, 2004) per interrogare i dati di registrazione dominio. **RDAP** (Registration Data Access Protocol, RFC 7480-7484) è il suo successore standardizzato — output JSON strutturato, supporto internazionalizzazione, controllo accessi granulare.
+Il WHOIS è il protocollo storico (RFC 3912, 2004). **RDAP** (RFC 7480-7484) è il successore JSON. Preferiamo RDAP dove esiste; **`.it` non è in IANA RDAP** → WHOIS `whois.nic.it` (**D-144**, evita falsi «NOT REGISTERED»).
 
-**Perché OMNIA usa RDAP e non WHOIS**
+**Perché OMNIA preferisce RDAP dove disponibile**
 - **JSON strutturato**: parsing affidabile (no scraping di testo libero).
 - **GDPR ready**: il redacted (anonimizzazione registrant) è nativo.
 - **Standard aperto**: tutti i TLD europei stanno migrando.
@@ -269,7 +268,7 @@ Non c'è UI dedicata v1 — solo accesso via API/DB (super_admin OMNIA per dispu
 - ❌ **Nessuna registrazione domini** al posto tuo (**è la promessa D-054**, non un limite tecnico).
 - ❌ **Nessun rinnovo automatico**. Il rinnovo del dominio è tua responsabilità.
 - ❌ **Nessun DNS panel** in OMNIA. Non gestisci i record dal nostro pannello — apri il tuo registrar.
-- ❌ **Nessun WHOIS query fallback**. Se il TLD non supporta RDAP, il checker non prova WHOIS legacy.
+- ✅ **WHOIS fallback per `.it`** (D-144). Altri TLD: solo RDAP + prova DNS (mai «libero» se DNS risolve).
 - ❌ **Nessuna UI per l'audit trail**. `domain_vault_events` esiste solo lato DB — no pagina *"Storico conferme Domain Vault"*.
 - ❌ **Nessuna notifica scadenza dominio**. Il checker pubblico avvisa "scade fra 90 giorni" solo se lo lanci — non c'è cron che monitora automaticamente i domini delle agenzie iscritte.
 - ❌ **Nessun supporto multi-dominio per agenzia**. Il campo `existing_domain` è **singolare** — un dominio per agenzia. Se hai `agenziaesempio.it` + `esempio-immobili.com`, ne dichiari uno solo.
@@ -296,10 +295,10 @@ Multi-dominio per agenzia, notifiche scadenza (cron), UI storico eventi, deep-li
 ## 17.13 · Non-proprietario del dominio · percorso demo **A-037** (30-Set-2026)
 
 **Perché esiste il checker**  
-Molte agenzie scoprono (come nel caso Founder: sito/email intestati a un fornitore tipo Basic Soft) di **non** controllare dominio e caselle. `/it/verifica-dominio` è nato da queste considerazioni.
+Molte agenzie scoprono di **non** controllare dominio e/o caselle (fornitore gestionale / webmaster). `/it/verifica-dominio` è nato da queste considerazioni.
 
 **Cosa fare oggi**
-1. Lanciare il check RDAP su `/it/verifica-dominio`.
+1. Lanciare il check su `/it/verifica-dominio` (RDAP o WHOIS `.it` · D-144).
 2. Se il registrant è un terzo → warning «webmaster/provider» → Legal Kit (D-055) + contatto assistito.
 3. In parallelo: lead Founders su `/it/agenzie` dichiara sito sì/no + URL (per demo). Il **pacchetto template** per chi non ha sito / vuole restyling / deve recuperare il dominio è **A-037** (aperto) — Cap. 8 §8.11.
 
@@ -308,5 +307,31 @@ Il checker informa e genera lead; **non** trasferisce il dominio né crea da sol
 
 ---
 
+## 17.14 · Tre layer: dominio · sito · email (D-144 · dogfood Founder 05-Nov-2026)
+
+**Problema tipico**  
+«Il dominio è mio, ma per resettare `info@agenzia.it` ho dovuto chiamare il gestionale.»  
+Non è contraddizione: sono **tre controlli diversi**.
+
+| Layer | Cosa misura | Chi di solito “tiene le chiavi” |
+|-------|-------------|----------------------------------|
+| **Dominio** | WHOIS / registrant (titolarità legale del nome) | Registrar (Aruba, Register, …) |
+| **Sito** | CMS / hosting pagine | Gestionale o web agency (es. AgestaNET) |
+| **Email** | Pannello caselle + record MX/SPF | Spesso lo stesso fornitore del sito, anche se MX punta al registrar |
+
+**Come risolve OMNIA**
+1. **Scoperta** — `/verifica-dominio` dice se il *dominio* è a tuo nome (non se controlli mail/sito).
+2. **Promessa** — D-054: OMNIA non registra domini a nome proprio.
+3. **Sito** — custom domain: punti DNS al sito OMNIA → il gestionale esce dalla catena delle pagine.
+4. **Email** — OMNIA **non** gestisce il reset password delle caselle. Devi avere (o riprendere) le credenziali del pannello mail/registrar. Poi puoi tenere MX su Aruba/Google/Microsoft sotto *tuo* controllo.
+
+**Caso Founder `nicastroimmobiliare.it` (05-Nov)**  
+- Dominio: già intestato a *Nicastro Immobiliare* · registrar Aruba.  
+- Sito: ancora AgestaNET.  
+- Email `info@…`: SPF/MX Aruba, ma reset password passato da AgestaNET = intermediario operativo.  
+- Percorso OMNIA: DNS → sito OMNIA; credenziali Aruba *proprie* per le caselle (senza passare dal gestionale).
+
+---
+
 **Progressione manuale**: 17/26 capitoli (65%).
-**Versione capitolo**: v1.1 · 30-Set-2026 (+ §17.13 A-037) · base v1.0 Feb 2026.
+**Versione capitolo**: v1.2 · 05-Nov-2026 (+ §17.14 tre layer · D-144) · v1.1 30-Set (+ §17.13 A-037) · base v1.0 Feb 2026.

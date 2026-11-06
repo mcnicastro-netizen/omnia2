@@ -43,6 +43,14 @@ export default function B2CVideoTourPanel({
       } else if (data?.status === "failed") {
         setStatus("failed");
         setVideoUrl(null);
+        if (data?.error === "video_expired") {
+          setErr(
+            t(
+              "cloud.sell.video_expired",
+              "Il video precedente non è più disponibile (redeploy). Rigeneralo dalle foto."
+            )
+          );
+        }
       } else {
         setVideoUrl(null);
         setStatus("");
@@ -52,7 +60,7 @@ export default function B2CVideoTourPanel({
       setVideoUrl(null);
       setStatus("");
     }
-  }, [listingId]);
+  }, [listingId, t]);
 
   useEffect(() => {
     loadExisting();
@@ -97,7 +105,12 @@ export default function B2CVideoTourPanel({
                   "cloud.sell.video_no_photos",
                   "Non siamo riusciti a leggere le foto. Salva l'annuncio e riprova."
                 )
-              : t("cloud.sell.video_failed", "Video non generato. Riprova.");
+              : detail === "video_expired"
+                ? t(
+                    "cloud.sell.video_expired",
+                    "Il video precedente non è più disponibile. Rigeneralo dalle foto."
+                  )
+                : t("cloud.sell.video_failed", "Video non generato. Riprova.");
           setErr(msg);
           setStatus("failed");
           onError?.(msg);
@@ -211,6 +224,17 @@ export default function B2CVideoTourPanel({
               src={videoUrl}
               controls
               playsInline
+              preload="metadata"
+              onError={() => {
+                setVideoUrl(null);
+                setStatus("failed");
+                setErr(
+                  t(
+                    "cloud.sell.video_expired",
+                    "Il video non si riproduce. Rigeneralo dalle foto."
+                  )
+                );
+              }}
               className="block w-full aspect-video object-contain object-center bg-stone-900"
             />
           </div>
@@ -238,6 +262,17 @@ export default function B2CVideoTourPanel({
             </button>
           </div>
         </div>
+      )}
+      {!videoUrl && status === "failed" && (
+        <button
+          type="button"
+          data-testid={`${testIdPrefix}-regen-failed`}
+          disabled={busy || photoCount < 1}
+          onClick={generate}
+          className="text-[11px] uppercase tracking-widest text-[#C19A6B] hover:text-[#0B1E3F] disabled:opacity-50"
+        >
+          {t("cloud.sell.video_regen", "Rigenera video")}
+        </button>
       )}
     </div>
   );

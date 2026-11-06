@@ -86,6 +86,12 @@ SUBJECTS = {
         "en": "[OMNIA] Alert: {{title}}",
         "es": "[OMNIA] Alerta: {{title}}",
     },
+    "listing_safety_alert": {
+        "it": "[OMNIA] {{headline}}",
+        "en": "[OMNIA] {{headline}}",
+        "es": "[OMNIA] {{headline}}",
+    },
+
     "founders_welcome": {
         "it": "Benvenuto in OMNIA Founders 50 — Posto #{{position}} confermato",
         "en": "Welcome to OMNIA Founders 50 — Seat #{{position}} confirmed",

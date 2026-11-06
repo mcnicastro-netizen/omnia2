@@ -291,7 +291,7 @@ voci:
     screenshot: []
 
   - id: domain.domain-checker-pubblico
-    titolo: Domain Checker pubblico (RDAP pre-signup)
+    titolo: Domain Checker pubblico (RDAP + WHOIS .it · D-144)
     modulo: Domain Vault
     widget: null
     pubblico: [titolare, super_admin, prospect]
@@ -309,13 +309,13 @@ voci:
         - "URL pubblico (no login): /it/verifica-dominio."
         - "API: POST /api/marketing/domain/check con
           {domain, agency_name (opzionale)}."
-        - "Backend fa RDAP query, analizza registrant, ritorna
-          report interpretato: corrisponde/redatto/e' il provider/
-          scade fra <90 giorni."
-        - "Rate limit per IP: se superi la soglia -> 429 Too Many
-          Requests. Aspetta qualche minuto."
-        - "Se TLD non supporta RDAP -> messaggio 'contattaci per
-          check manuale'."
+        - "Backend: RDAP se TLD in bootstrap IANA; .it → WHOIS
+          whois.nic.it (D-144). Mai «libero» se DNS risolve."
+        - "Analizza registrant → report: tuo nome / redacted /
+          sembra fornitore / scade <90 giorni."
+        - "Rate limit per IP: soglia superata → 429. Attendi."
+        - "Altri TLD senza RDAP/WHOIS: retry o check manuale —
+          non «dominio libero»."
         - "Lead opzionale: dopo il check clic 'Richiedi consulenza'
           > POST /api/marketing/domain/lead > crea lead marketing."
       errori_comuni: []
@@ -324,36 +324,32 @@ voci:
     screenshot: ["[SCREEN: domain-checker-pubblico]"]
 
   - id: domain.rdap-vs-whois
-    titolo: RDAP vs WHOIS · perché OMNIA usa RDAP
+    titolo: RDAP vs WHOIS · preferenza RDAP + eccezione .it (D-144)
     modulo: Domain Vault
     widget: null
     pubblico: [titolare, super_admin]
     livello: intermedio
-    tags: [domain, rdap, whois, gdpr, redacted, privacy-proxy, registrant, protocol]
+    tags: [domain, rdap, whois, gdpr, redacted, privacy-proxy, registrant, protocol, d-144, it]
     correlati: [domain.domain-checker-pubblico]
-    domanda_naturale: "Che differenza c'è fra RDAP e WHOIS?"
+    domanda_naturale: "Che differenza c'è fra RDAP e WHOIS? Perché .it dava NOT REGISTERED?"
     contenuto:
       a_cosa_serve: >
-        Capire il protocollo usato per interrogare i dati di
-        registrazione dominio.
+        Capire i protocolli del checker e perché i .it usano WHOIS.
       quando_si_usa: >
-        Per interpretare i risultati del checker.
+        Interpretare i risultati; dogfood falsi «dominio libero».
       passi:
-        - "WHOIS: protocollo storico (RFC 3912, 2004). Testo libero,
-          parsing fragile."
-        - "RDAP: successore standardizzato (RFC 7480-7484). JSON
-          strutturato, GDPR ready, controllo accessi granulare."
-        - "OMNIA usa RDAP per: parsing affidabile, redacted
-          nativo, standard aperto (tutti i TLD europei in
-          migrazione)."
-        - "Redacted registrant = normale post-GDPR: molti registrar
-          redigono automaticamente i dati registrant delle persone
-          fisiche. Campi tipo 'REDACTED FOR PRIVACY'. Non e' un
-          problema."
-        - "Se registrant = 'Aruba S.p.A.' o 'OVH Hosting' -> il
-          dominio e' intestato al provider IT, non a te. Va
-          corretto con transfer registrant al tuo registrar."
-      errori_comuni: []
+        - "WHOIS: RFC 3912, testo libero. RDAP: JSON RFC 7480+."
+        - "Preferenza RDAP dove il TLD è in bootstrap IANA."
+        - ".it NON ha RDAP IANA: OMNIA usa whois.nic.it (D-144)."
+        - "Bug pre-D-144: rdap.org 404 su .it → falso NOT REGISTERED."
+        - "Redacted registrant = normale GDPR, non è un errore."
+        - "Registrant = provider hosting/software → trasferisci
+          intestazione al tuo nome (D-051: no brand competitor)."
+      errori_comuni:
+        - problema: "Il mio .it live risulta NOT REGISTERED"
+          soluzione: >
+            Serve build post D-144 (WHOIS). Hard refresh / redeploy API.
+            Riprova /it/verifica-dominio.
       permessi: []
     screenshot: []
 
@@ -410,7 +406,8 @@ voci:
         - "CNAME su apex fallito: usa ALIAS/ANAME oppure solo www."
         - "429 rate limit checker RDAP: troppi check dallo stesso
           IP. Aspetta qualche minuto."
-        - "TLD non supporta RDAP: contatta OMNIA per check manuale."
+        - ".it: usa WHOIS (D-144). Altri TLD senza RDAP: check manuale,
+          mai assumere «libero» se il sito risponde."
         - "Registrant redacted: normale GDPR privacy, non e' un
           problema."
         - "Registrant = provider: transfer registrant al tuo nome
@@ -438,7 +435,8 @@ voci:
           tecnico)."
         - "NO rinnovo automatico. Il rinnovo e' tua responsabilita'."
         - "NO DNS panel in OMNIA - gestisci al tuo registrar."
-        - "NO WHOIS fallback: se RDAP non funziona, no legacy whois."
+        - "WHOIS solo per .it (D-144); altri TLD senza RDAP → unknown,
+          non «libero» se DNS risolve."
         - "NO UI storico eventi (domain_vault_events accesso solo
           DB super_admin)."
         - "NO notifica scadenza dominio automatica (cron non attivo
@@ -490,32 +488,69 @@ voci:
     widget: null
     pubblico: [titolare, super_admin]
     livello: base
-    tags: [domain, verifica-dominio, non-proprietario, a-037, basic-soft, rdap]
+    tags: [domain, verifica-dominio, non-proprietario, a-037, basic-soft, rdap, d-144]
     correlati:
-      - domain.checker-pubblico
+      - domain.domain-checker-pubblico
+      - domain.tre-layer-dominio-sito-email
       - domain.d-054-promise
       - sito.demo-a037
     domanda_naturale: "Il mio sito è registrato dal webmaster, cosa faccio?"
     contenuto:
       a_cosa_serve: >
-        Spiegare perché esiste /it/verifica-dominio e come si collega al
-        percorso demo A-037 quando dominio/email sono intestati a un
-        fornitore (es. Basic Soft), non all'agenzia.
+        Spiegare /it/verifica-dominio e A-037 quando dominio/email sembrano
+        del fornitore, non dell'agenzia.
       quando_si_usa: >
-        Pre-signup o onboarding assistito, se sospetti che il dominio non
-        sia tuo.
+        Pre-signup o onboarding se sospetti che il dominio non sia tuo.
       passi:
-        - "Apri /it/verifica-dominio e lancia il check RDAP."
-        - "Se il registrant è un provider/webmaster → warning + Legal Kit."
-        - "OMNIA non trasferisce il dominio: ti guida a recuperarlo al
-          registrar o a registrarne uno nuovo (D-054)."
-        - "In parallelo: lead Founders con sito sì/no; template pack per
-          restyling/no-sito è A-037 (ancora da chiudere)."
+        - "Apri /it/verifica-dominio (RDAP o WHOIS .it · D-144)."
+        - "Se registrant = provider/webmaster → warning + Legal Kit."
+        - "OMNIA non trasferisce il dominio (D-054): recupera al registrar
+          o registrane uno nuovo; poi help-to-connect DNS."
+        - "Distingui dominio vs sito vs email (voce tre-layer)."
+        - "A-037: template pack restyling/no-sito ancora aperto."
       errori_comuni:
         - problema: "Voglio che OMNIA registri il dominio al posto mio"
           soluzione: >
-            Vietato da D-054. Compra/recupera tu il dominio; OMNIA fa
-            help-to-connect DNS.
+            Vietato da D-054. Compra/recupera tu; OMNIA fa DNS connect.
       permessi:
         - Pubblico (checker) · titolare/super_admin (onboarding)
+    screenshot: []
+
+  - id: domain.tre-layer-dominio-sito-email
+    titolo: Dominio ≠ sito ≠ email — perché chiami il gestionale per la password mail (D-144)
+    modulo: Domain Vault
+    widget: null
+    pubblico: [titolare, agente, super_admin, prospect]
+    livello: base
+    tags: [domain, email, sito, agestanet, aruba, sovranita, d-144, mx, pannello, dogfood]
+    correlati:
+      - domain.domain-checker-pubblico
+      - domain.d-054-promise
+      - domain.non-proprietario-a037
+    domanda_naturale: "Perché per resettare info@agenzia.it ho dovuto chiamare AgestaNET se il dominio è mio? Come risolve OMNIA nel caso Nicastro?"
+    contenuto:
+      a_cosa_serve: >
+        Chiarire i tre layer (dominio / sito / email) e cosa fa OMNIA
+        rispetto al gestionale che “tiene” sito e reset caselle.
+      quando_si_usa: >
+        Dogfood; onboarding agenzia con sito AgestaNET/Basic Soft e mail
+        sul registrar; domanda «il dominio è mio ma…».
+      passi:
+        - "Dominio = titolarità WHOIS (es. Nicastro Immobiliare / Aruba)."
+        - "Sito = CMS/hosting pagine (es. ancora AgestaNET)."
+        - "Email = chi ha il pannello caselle (anche se MX/SPF sono Aruba)."
+        - "OMNIA: checker + D-054 + DNS verso sito OMNIA. Non resetta mail."
+        - "Percorso Founder: DNS→OMNIA per il sito; credenziali Aruba proprie
+          per info@ senza intermediario gestionale."
+      errori_comuni:
+        - problema: "Il checker dice dominio OK ma chiamo ancora Agesta per la mail"
+          soluzione: >
+            Normale: checker guarda il registrant, non il pannello mail.
+            Riprendi accesso Aruba (titolare) o sposta MX sotto tuo controllo.
+        - problema: "OMNIA mi gestisce le caselle email?"
+          soluzione: >
+            No in v1. OMNIA non è mail host. Gestisci caselle al registrar
+            o su Google/Microsoft Workspace.
+      permessi:
+        - Pubblico / titolare
     screenshot: []

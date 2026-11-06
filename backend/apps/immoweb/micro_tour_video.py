@@ -48,8 +48,26 @@ public_router = APIRouter(prefix="/videos", tags=["videos-public"])
 # Config
 # ---------------------------------------------------------------------------
 
-VIDEO_ROOT = Path("/tmp/omnia_videos")
-VIDEO_ROOT.mkdir(exist_ok=True, parents=True)
+def _video_root() -> Path:
+    """Durable cache dir — never rely on bare /tmp alone (Railway redeploy wipes it).
+
+    Prefer OMNIA_VIDEO_ROOT, else LOCAL_STORAGE_ROOT/omnia_videos_cache (same volume
+    as Object Storage local backend), else /tmp fallback for bare local runs.
+    """
+    raw = (os.environ.get("OMNIA_VIDEO_ROOT") or "").strip()
+    if raw:
+        root = Path(raw)
+    else:
+        try:
+            from shared.storage.objstore import _local_root
+            root = _local_root() / "omnia_videos_cache"
+        except Exception:
+            root = Path("/tmp/omnia_videos")
+    root.mkdir(exist_ok=True, parents=True)
+    return root
+
+
+VIDEO_ROOT = _video_root()
 DEFAULT_DURATION_S = 15
 DEFAULT_FPS = 30
 DEFAULT_W = 1920
@@ -61,6 +79,94 @@ MAX_PHOTOS = 8
 # Prefer frames with at least this short side when larger shots exist
 MIN_PREFERRED_SIDE = 720
 WATERMARK_TEXT = "Powered by OMNIA"
+
+
+def _video_storage_path(video_id: str) -> str:
+    return f"omnia/videos/{video_id}.mp4"
+
+
+def _video_media_url(video_id: str) -> str:
+    return f"/api/media/{_video_storage_path(video_id)}"
+
+
+def _persist_video_mp4(video_id: str, local_path: Path) -> dict:
+    """Copy MP4 into Object Storage (Railway volume / .media). Returns DB fields."""
+    from shared.storage.objstore import put_object
+
+    data = local_path.read_bytes()
+    if len(data) < 500:
+        raise RuntimeError("video_file_too_small")
+    storage_path = _video_storage_path(video_id)
+    put_object(storage_path, data, "video/mp4")
+    return {
+        "file_path": str(local_path),
+        "storage_path": storage_path,
+        "download_url": _video_media_url(video_id),
+    }
+
+
+def _video_bytes_available(doc: dict) -> bool:
+    """True if local cache or Object Storage still holds the MP4."""
+    fp = doc.get("file_path")
+    if fp and Path(fp).is_file() and Path(fp).stat().st_size > 500:
+        return True
+    storage_path = doc.get("storage_path")
+    if not storage_path:
+        # Legacy rows only had /tmp file_path — try media convention
+        vid = doc.get("id")
+        if vid:
+            storage_path = _video_storage_path(vid)
+    if not storage_path:
+        return False
+    try:
+        from shared.storage.objstore import _backend, _local_root, get_object
+        if _backend() == "local":
+            dest = _local_root() / storage_path.lstrip("/")
+            return dest.is_file() and dest.stat().st_size > 500
+        binary, _ct = get_object(storage_path)
+        return len(binary) > 500
+    except Exception:
+        return False
+
+
+
+async def _mark_video_expired(db, video_id: str) -> None:
+    await db.videos.update_one(
+        {"id": video_id},
+        {"$set": {
+            "status": "failed",
+            "error": "video_expired",
+            "updated_at": datetime.now(timezone.utc).isoformat(),
+        }},
+    )
+
+
+async def hydrate_ready_video(db, doc: Optional[dict]) -> Optional[dict]:
+    """If status=ready but bytes are gone (ephemeral /tmp), flip to failed/expired.
+
+    Returns the (possibly updated) doc, or None if missing.
+    """
+    if not doc:
+        return None
+    if doc.get("status") != "ready":
+        return doc
+    if _video_bytes_available(doc):
+        # Heal legacy download_url to media path when storage exists
+        if doc.get("storage_path") and not (doc.get("download_url") or "").startswith("/api/media/"):
+            healed = {
+                "download_url": _video_media_url(doc["id"]),
+                "updated_at": datetime.now(timezone.utc).isoformat(),
+            }
+            await db.videos.update_one({"id": doc["id"]}, {"$set": healed})
+            doc = {**doc, **healed}
+        return doc
+    await _mark_video_expired(db, doc["id"])
+    return {
+        **doc,
+        "status": "failed",
+        "error": "video_expired",
+        "updated_at": datetime.now(timezone.utc).isoformat(),
+    }
 
 
 # ---------------------------------------------------------------------------
@@ -252,16 +358,16 @@ async def _generate_ken_burns(video_id: str, property_id: Optional[str],
             }})
             return
         images = _select_best_frames(images, limit=MAX_PHOTOS)
-        # Render
-        out_path = VIDEO_ROOT / f"{video_id}.mp4"
+        # Render into durable cache, then Object Storage (survives Railway redeploy)
+        out_path = _video_root() / f"{video_id}.mp4"
         await db.videos.update_one({"id": video_id}, {"$set": {"status": "processing"}})
         await asyncio.to_thread(_run_ken_burns_ffmpeg, images, out_path, duration_s)
-        # Save
+        persisted = await asyncio.to_thread(_persist_video_mp4, video_id, out_path)
         await db.videos.update_one({"id": video_id}, {"$set": {
             "status": "ready",
-            "file_path": str(out_path),
-            "download_url": f"/api/app/videos/{video_id}/download",
+            **persisted,
             "photos_count": len(images),
+            "error": None,
             "updated_at": datetime.now(timezone.utc).isoformat(),
         }})
     except Exception as e:
@@ -457,21 +563,24 @@ async def video_status(
     doc = await db.videos.find_one(q, {"_id": 0})
     if not doc:
         raise HTTPException(status_code=404, detail="video_not_found")
-    return doc
+    return await hydrate_ready_video(db, doc)
 
 
 @public_router.get("/by-property/{pid}")
 async def video_by_property_public(pid: str):
-    """Latest ready Ken Burns video for a public listing (if any)."""
+    """Latest playable Ken Burns video for a public listing (if any)."""
     db = Database.get()
-    doc = await db.videos.find_one(
-        {"property_id": pid, "status": "ready", "mode": "ken_burns"},
+    # Walk recent jobs: hydrate flips ready→failed when /tmp bytes are gone
+    # so FE gets 404 and can regenerate instead of a black <video>.
+    cursor = db.videos.find(
+        {"property_id": pid, "mode": "ken_burns"},
         {"_id": 0},
-        sort=[("created_at", -1)],
-    )
-    if not doc:
-        raise HTTPException(status_code=404, detail="video_not_found")
-    return doc
+    ).sort("created_at", -1).limit(5)
+    async for raw in cursor:
+        doc = await hydrate_ready_video(db, raw)
+        if doc and doc.get("status") == "ready":
+            return doc
+    raise HTTPException(status_code=404, detail="video_not_found")
 
 
 @public_router.get("/{video_id}")
@@ -484,7 +593,7 @@ async def video_status_public(video_id: str):
         doc = await db.videos.find_one({"id": video_id, "status": "ready"}, {"_id": 0})
     if not doc:
         raise HTTPException(status_code=404, detail="video_not_found")
-    return doc
+    return await hydrate_ready_video(db, doc)
 
 
 @router.get("/{video_id}/download")
@@ -493,12 +602,14 @@ async def video_download(video_id: str, request: Request):
 
     M11 — agency-owned videos require auth (agency match or super_admin);
     public UGC videos (agency_id=None, private listings) stay public.
+
+    Prefer Object Storage (`/api/media/omnia/videos/...`) over ephemeral /tmp.
     """
+    from fastapi.responses import RedirectResponse
+
     db = Database.get()
     doc = await db.videos.find_one({"id": video_id})
-    if not doc or doc.get("status") in (None, "deleted") or doc.get("status") != "ready":
-        raise HTTPException(status_code=404, detail="video_not_ready")
-    if not doc.get("file_path") and not doc.get("storage_path"):
+    if not doc or doc.get("status") != "ready":
         raise HTTPException(status_code=404, detail="video_not_ready")
     if doc.get("agency_id"):
         user = await get_optional_user(request)
@@ -506,10 +617,24 @@ async def video_download(video_id: str, request: Request):
             raise HTTPException(status_code=401, detail="not_authenticated")
         if user.get("role") != "super_admin" and doc["agency_id"] not in (user.get("agency_ids") or []):
             raise HTTPException(status_code=403, detail="forbidden")
-    fp = Path(doc["file_path"])
-    if not fp.exists():
-        raise HTTPException(status_code=410, detail="video_expired")
-    return FileResponse(str(fp), media_type="video/mp4", filename=f"omnia-{video_id}.mp4")
+
+    storage_path = doc.get("storage_path") or _video_storage_path(video_id)
+    media_url = (
+        doc.get("download_url")
+        if (doc.get("download_url") or "").startswith("/api/media/")
+        else _video_media_url(video_id)
+    )
+    # Probe without loading whole file when local backend
+    probe_doc = {**doc, "storage_path": storage_path}
+    if _video_bytes_available(probe_doc):
+        fp_raw = doc.get("file_path")
+        if fp_raw and Path(fp_raw).is_file():
+            return FileResponse(str(fp_raw), media_type="video/mp4", filename=f"omnia-{video_id}.mp4")
+        # Durable media path (Range via /api/media)
+        return RedirectResponse(url=media_url, status_code=302)
+
+    await _mark_video_expired(db, video_id)
+    raise HTTPException(status_code=410, detail="video_expired")
 
 
 # ---------------------------------------------------------------------------
@@ -560,12 +685,13 @@ async def _generate_kling_video(video_id: str, property_id: str, image_url: str,
         if not video_url:
             raise RuntimeError(f"fal_response_missing_video_url: {result}")
         # Download output
-        raw_path = VIDEO_ROOT / f"{video_id}_raw.mp4"
+        root = _video_root()
+        raw_path = root / f"{video_id}_raw.mp4"
         async with httpx.AsyncClient(timeout=60.0, follow_redirects=True) as client:
             r = await client.get(video_url)
         raw_path.write_bytes(r.content)
         # Apply watermark via ffmpeg
-        final_path = VIDEO_ROOT / f"{video_id}.mp4"
+        final_path = root / f"{video_id}.mp4"
         cmd = [
             "ffmpeg", "-y", "-i", str(raw_path),
             "-vf",
@@ -579,12 +705,14 @@ async def _generate_kling_video(video_id: str, property_id: str, image_url: str,
         if result_ff.returncode != 0:
             raise RuntimeError(f"watermark_failed: {result_ff.stderr.decode()[-300:]}")
         raw_path.unlink(missing_ok=True)
+        persisted = await asyncio.to_thread(_persist_video_mp4, video_id, final_path)
         await db.videos.update_one({"id": video_id}, {"$set": {
             "status": "ready",
-            "file_path": str(final_path),
-            "download_url": f"/api/app/videos/{video_id}/download",
+            **persisted,
+            "error": None,
             "updated_at": datetime.now(timezone.utc).isoformat(),
         }})
+
     except Exception as e:
         logger.exception("kling video generation failed")
         await db.videos.update_one({"id": video_id}, {"$set": {
