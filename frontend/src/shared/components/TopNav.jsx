@@ -151,9 +151,16 @@ export default function TopNav({ current = "landing", theme = "light", suffix = 
     { to: ctaTo, label: ctaLabel },
   ];
 
+  // Vetrina: nav compatta (logo md) così Chi siamo atterra sotto la barra, non a metà
+  const logoSize = current === "landing" ? "md" : "xl";
+  const barMinH = current === "landing" ? "min-h-0" : "min-h-[132px]";
+  const barPadY = current === "landing" ? "py-2.5" : "py-3";
+
   return (
     <header className={`sticky top-0 z-40 backdrop-blur ${c.wrapper}`}>
-      <div className="flex items-center justify-between px-5 sm:px-8 md:px-12 lg:px-16 py-3 max-w-screen-2xl mx-auto gap-4 min-h-[132px]">
+      <div
+        className={`flex items-center justify-between px-5 sm:px-8 md:px-12 lg:px-16 ${barPadY} max-w-screen-2xl mx-auto gap-4 ${barMinH}`}
+      >
         <div className="flex items-center gap-4 md:gap-6 min-w-0">
           {!isPublicNav && (
             <Link
@@ -175,7 +182,7 @@ export default function TopNav({ current = "landing", theme = "light", suffix = 
           >
             <OmniaLogo
               variant="full"
-              size="xl"
+              size={logoSize}
               inverted={theme === "dark"}
             />
             {suffix && (

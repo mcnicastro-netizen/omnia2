@@ -3,10 +3,10 @@
  * Uses instant scroll (auto): reliable with rapid nav clicks; no race.
  */
 export function stickyHeaderOffsetPx() {
-  if (typeof document === "undefined") return 140;
+  if (typeof document === "undefined") return 72;
   const header = document.querySelector("header.sticky");
   const h = header?.offsetHeight || header?.getBoundingClientRect?.().height;
-  return Math.round(h && h > 0 ? h : 132);
+  return Math.round(h && h > 0 ? h : 72);
 }
 
 export function scrollToAnchor(idOrHash) {
