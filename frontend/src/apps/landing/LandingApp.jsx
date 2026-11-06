@@ -643,15 +643,10 @@ export default function LandingApp() {
           <div className="flex flex-wrap justify-center gap-3">
             <Link
               to={`/${lang}/register`}
+              data-testid="landing-final-start"
               className="inline-flex px-6 py-3 text-xs font-sans uppercase tracking-widest bg-[#C8A653] text-[#0B1E3F] hover:bg-[#d4b56a] transition"
             >
               {t("landing.cta_start")}
-            </Link>
-            <Link
-              to={`/${lang}/cloud`}
-              className="inline-flex px-6 py-3 text-xs font-sans uppercase tracking-widest border border-[#F5F1E8]/40 text-[#F5F1E8] hover:bg-white/10 transition"
-            >
-              {t("landing.cta_cloud")}
             </Link>
           </div>
         </div>
