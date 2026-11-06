@@ -11,7 +11,8 @@ import { scrollToAnchor } from "../lib/scrollToAnchor";
 /**
  * Shared top navigation across Landing, App, Learn.
  *
- * Home / Academy: logo + Cerca casa · Vendi casa · Academy · Area riservata
+ * Landing: logo + Chi siamo · sezioni anchor · Registrati
+ * Academy: logo + Cerca casa · Vendi · Academy · Area riservata
  * App: logo + prodotti (+ suffix opzionale)
  */
 export default function TopNav({ current = "landing", theme = "light", suffix = null }) {
@@ -89,12 +90,6 @@ export default function TopNav({ current = "landing", theme = "light", suffix = 
             hash: "prezzi",
             label: t("landing.nav_pricing"),
             testid: "topnav-pricing",
-          },
-          {
-            key: "search",
-            to: `/${lang}/cloud`,
-            label: t("nav.immocloud"),
-            testid: "topnav-cloud",
           },
         ]
       : [
