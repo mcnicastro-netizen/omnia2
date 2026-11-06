@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="it">
+<head><meta charset="UTF-8"></head>
+<body style="margin:0;padding:0;background:#f5f5f4;font-family:Georgia,'Times New Roman',serif;color:#1c1917;">
+  <table width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#f5f5f4">
+    <tr><td align="center" style="padding:40px 20px;">
+      <table width="540" cellpadding="0" cellspacing="0" border="0" bgcolor="#ffffff" style="border:1px solid #e7e5e4;">
+        <tr><td style="padding:28px 32px 16px 32px;border-bottom:1px solid #e7e5e4;">
+          <span style="font-size:20px;letter-spacing:-0.4px;font-weight:500;">OMNIA · Moderazione annunci</span>
+        </td></tr>
+        <tr><td style="padding:28px 32px 32px 32px;">
+          <h1 style="margin:0 0 8px 0;font-size:24px;font-weight:500;line-height:1.25;">{{headline}}</h1>
+          <p style="margin:0 0 20px 0;font-family:Arial,sans-serif;font-size:13px;color:#78716c;">
+            Livello: <strong style="color:#1c1917;">{{severity}}</strong>
+          </p>
+
+          <p style="margin:0 0 12px 0;font-family:Arial,sans-serif;font-size:15px;line-height:1.55;">
+            <strong>Annuncio:</strong> {{listing_label}}<br>
+            <strong>Codice:</strong> {{code}}
+          </p>
+
+          <p style="margin:0 0 12px 0;font-family:Arial,sans-serif;font-size:15px;line-height:1.55;">
+            {{event_line}}
+          </p>
+          <p style="margin:0 0 12px 0;font-family:Arial,sans-serif;font-size:15px;line-height:1.55;">
+            {{severity_line}}
+          </p>
+          <p style="margin:0 0 12px 0;font-family:Arial,sans-serif;font-size:15px;line-height:1.55;">
+            <strong>Perché:</strong> {{why_line}}
+          </p>
+          <p style="margin:0 0 24px 0;font-family:Arial,sans-serif;font-size:15px;line-height:1.55;">
+            {{action_line}}
+          </p>
+
+          <p style="margin:0;font-family:Arial,sans-serif;font-size:14px;">
+            Apri Moderazione: <a href="{{public_base}}{{moderation_path}}" style="color:#0B1E3F;">{{moderation_path}}</a>
+          </p>
+          <p style="margin:20px 0 0 0;font-family:Arial,sans-serif;font-size:12px;color:#a8a29e;">
+            Messaggio automatico — non rispondere a questa email.
+          </p>
+        </td></tr>
+      </table>
+    </td></tr>
+  </table>
+</body></html>

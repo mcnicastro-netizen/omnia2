@@ -21,6 +21,44 @@ def mongo():
     return client[DB_NAME]
 
 
+def test_founder_safety_alert_copy_is_plain_italian():
+    from apps.immocloud.listing_safety_gate import (
+        SafetyReport,
+        VERDICT_REVIEW,
+        founder_safety_alert_copy,
+    )
+
+    copy = founder_safety_alert_copy(
+        {
+            "id": "abc",
+            "reference_code": "OM-L-N4KJN2",
+            "title": "provaprova",
+            "city": "Mascalucia",
+        },
+        SafetyReport(
+            verdict=VERDICT_REVIEW,
+            reasons=["llm_review"],
+            hard_hits=[],
+            soft_hits=[],
+            llm_used=True,
+            llm_verdict="REVIEW",
+        ),
+        event="rescan_live_soft",
+    )
+    blob = " ".join(copy.values()).lower()
+    assert "resta online" in blob
+    assert "da controllare" in blob
+    assert "provaprova" in blob
+    assert "om-l-n4kjn2" in blob
+    # no raw ops jargon in Founder-facing fields
+    for bad in ("verdict=", "motives=", "hits=", "rescan_live_soft", "llm_review"):
+        assert bad not in copy["subject"].lower()
+        assert bad not in copy["headline"].lower()
+        assert bad not in copy["event_line"].lower()
+        assert bad not in copy["why_line"].lower()
+        assert bad not in copy["inbox_title"].lower()
+
+
 def test_hard_block_rejects():
     from apps.immocloud.listing_safety_gate import VERDICT_REJECT, evaluate_listing_safety
 
@@ -193,3 +231,81 @@ def test_rescan_llm_review_without_heuristics_stays_live(mongo):
     assert doc["status"] == "active"
     assert doc["moderation_status"] == "approved"
     assert notify.await_count >= 1
+
+
+def test_soft_alert_cooldown_skips_repeat_email(mongo):
+    """Hourly rescan must not re-mail Founder for the same soft LLM REVIEW."""
+    from shared.db.connection import Database
+    from apps.immocloud.listing_safety_gate import (
+        SafetyReport,
+        VERDICT_REVIEW,
+        rescan_live_private_listings,
+        soft_alert_in_cooldown,
+    )
+
+    Database._client = None
+    Database._db = None
+    Database._tenant_db = None
+    Database.connect()
+
+    pid = uuid4().hex
+    now = datetime.now(timezone.utc)
+    now_iso = now.isoformat()
+    mongo.properties.insert_one({
+        "id": pid,
+        "agency_id": "_private_listings",
+        "is_private_listing": True,
+        "owner_user_id": "u1",
+        "title": "provaprova",
+        "city": "Mascalucia",
+        "price": 200000,
+        "description": "Villetta con giardino",
+        "status": "active",
+        "moderation_status": "approved",
+        "visibility": "public",
+        "safety_soft_alerted_at": now_iso,
+        "safety_gate": {
+            "verdict": "REVIEW",
+            "reasons": ["llm_review"],
+            "hard_hits": [],
+            "soft_hits": [],
+            "checked_at": now_iso,
+        },
+        "created_at": now_iso,
+        "updated_at": now_iso,
+    })
+
+    soft = SafetyReport(
+        verdict=VERDICT_REVIEW,
+        reasons=["llm_review"],
+        hard_hits=[],
+        soft_hits=[],
+        llm_used=True,
+        llm_verdict="REVIEW",
+    )
+
+    listing = mongo.properties.find_one({"id": pid}, {"_id": 0})
+    assert soft_alert_in_cooldown(listing, now=now) is True
+
+    async def _run():
+        with patch(
+            "apps.immocloud.listing_safety_gate.evaluate_listing_safety",
+            new_callable=AsyncMock,
+            return_value=soft,
+        ), patch(
+            "apps.immocloud.listing_safety_gate.notify_founder_safety_flag",
+            new_callable=AsyncMock,
+        ) as notify:
+            out = await rescan_live_private_listings(limit=20)
+            return out, notify
+
+    loop = asyncio.new_event_loop()
+    try:
+        out, notify = loop.run_until_complete(_run())
+    finally:
+        loop.close()
+        mongo.properties.delete_one({"id": pid})
+
+    assert out["held"] == 0
+    assert out.get("flagged_soft", 0) == 0
+    assert notify.await_count == 0
