@@ -856,18 +856,27 @@ async def ops_retire_demo_agency(
 async def ops_purge_agency_shell(
     user: dict = Depends(require_roles("super_admin")),
     slug: str = "nicastro-immobiliare",
+    force: bool = False,
 ) -> Dict[str, Any]:
-    """Elimina uno shell agenzia orfano (0 membri) — ripartenza pulita Founder."""
+    """Elimina uno shell agenzia orfano — ripartenza pulita Founder.
+
+    ``force=true`` stacca i membri residui (es. super_admin riagganciato dal seed) poi cancella.
+    """
     from apps.immoweb.demo_retire import purge_agency_shell, wipe_demo_agency
 
     db = Database.get()
     demo = await wipe_demo_agency(db)
-    shell = await purge_agency_shell(db, slug=(slug or "").strip() or "nicastro-immobiliare")
+    shell = await purge_agency_shell(
+        db,
+        slug=(slug or "").strip() or "nicastro-immobiliare",
+        force=bool(force),
+    )
     logger.info(
-        "purge-agency-shell by=%s slug=%s ok=%s demo_deleted=%s",
+        "purge-agency-shell by=%s slug=%s ok=%s force=%s demo_deleted=%s",
         user.get("email"),
         shell.get("slug"),
         shell.get("ok"),
+        force,
         demo.get("agency_deleted"),
     )
     if not shell.get("ok"):

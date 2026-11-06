@@ -136,16 +136,30 @@ async def grant_assisted_pro(db, agency_id: str, credits: int = 500) -> Dict[str
     return {"ok": True, "plan": "pro", "credits_balance": bal}
 
 
-async def purge_agency_shell(db, *, slug: str) -> Dict[str, Any]:
+async def purge_agency_shell(db, *, slug: str, force: bool = False) -> Dict[str, Any]:
     """Elimina un'agenzia orfana (0 membri) e i suoi documenti agency_id.
 
     Usato per ripartire puliti dopo uno shortcut di seed/dogfood.
+    Con ``force=True`` stacca prima tutti i membri (reset Founder).
     """
     agency = await db.agencies.find_one({"slug": slug})
     if not agency:
         return {"ok": True, "slug": slug, "agency_deleted": 0, "note": "already_absent"}
     aid = agency["id"]
     members = await db.users.count_documents({"agency_ids": aid})
+    detached = 0
+    if members > 0 and force:
+        now = _now()
+        det = await db.users.update_many(
+            {"agency_ids": aid},
+            {"$pull": {"agency_ids": aid}, "$set": {"updated_at": now}},
+        )
+        detached = int(det.modified_count)
+        await db.users.update_many(
+            {"active_agency_id": aid},
+            {"$set": {"active_agency_id": None, "updated_at": now}},
+        )
+        members = 0
     if members > 0:
         return {
             "ok": False,
@@ -172,6 +186,7 @@ async def purge_agency_shell(db, *, slug: str) -> Dict[str, Any]:
         "slug": slug,
         "agency_id": aid,
         "agency_deleted": int(ag.deleted_count),
+        "members_detached": detached,
         "deleted": deleted,
     }
 
