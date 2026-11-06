@@ -401,9 +401,38 @@ export default function LandingApp() {
         </div>
       </section>
 
-      {/* INTEGRAZIONE — diagramma */}
+      {/* PERCHÉ OMNIA — prima del vero lavoro nello scroll */}
       <section
         id="perche"
+        data-testid="landing-why"
+        className="scroll-mt-[72px] bg-[#0B1E3F] text-[#F5F1E8] px-5 sm:px-8 md:px-12 lg:px-16 py-20 md:py-24"
+      >
+        <div className="max-w-screen-2xl mx-auto">
+          <p className="text-[10px] sm:text-xs font-sans uppercase tracking-[0.3em] text-[#C8A653] mb-3">
+            {t("landing.why_eyebrow")}
+          </p>
+          <h2 className="text-3xl md:text-4xl tracking-tight mb-12 md:mb-14 max-w-xl">
+            {t("landing.why_title")}
+          </h2>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8 md:gap-10">
+            {reasons.map((r, i) => (
+              <div key={r.key} data-testid={`landing-why-${r.key}`}>
+                <p className="text-[#C8A653] font-sans text-xs tracking-widest mb-3">
+                  0{i + 1}
+                </p>
+                <h3 className="text-xl mb-3 tracking-tight">{r.title}</h3>
+                <p className="font-sans text-sm text-[#F5F1E8]/70 leading-relaxed">
+                  {r.body}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* IL VERO LAVORO — diagramma integrazione */}
+      <section
+        id="vero-lavoro"
         data-testid="landing-integrate"
         className="scroll-mt-[72px] px-5 sm:px-8 md:px-12 lg:px-16 py-20 md:py-28"
         style={{
@@ -483,34 +512,6 @@ export default function LandingApp() {
                 </p>
                 <p className="text-sm sm:text-base tracking-tight">
                   <Brand>{node.sub}</Brand>
-                </p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* PERCHÉ */}
-      <section
-        data-testid="landing-why"
-        className="bg-[#0B1E3F] text-[#F5F1E8] px-5 sm:px-8 md:px-12 lg:px-16 py-20 md:py-24"
-      >
-        <div className="max-w-screen-2xl mx-auto">
-          <p className="text-[10px] sm:text-xs font-sans uppercase tracking-[0.3em] text-[#C8A653] mb-3">
-            {t("landing.why_eyebrow")}
-          </p>
-          <h2 className="text-3xl md:text-4xl tracking-tight mb-12 md:mb-14 max-w-xl">
-            {t("landing.why_title")}
-          </h2>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8 md:gap-10">
-            {reasons.map((r, i) => (
-              <div key={r.key} data-testid={`landing-why-${r.key}`}>
-                <p className="text-[#C8A653] font-sans text-xs tracking-widest mb-3">
-                  0{i + 1}
-                </p>
-                <h3 className="text-xl mb-3 tracking-tight">{r.title}</h3>
-                <p className="font-sans text-sm text-[#F5F1E8]/70 leading-relaxed">
-                  {r.body}
                 </p>
               </div>
             ))}
