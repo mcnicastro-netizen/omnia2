@@ -123,7 +123,7 @@ def resolve_room_type(
     user_confirmed: bool = False,
 ) -> str:
     """Pick binding room type. Never silently default to bedroom."""
-    from apps.immoweb.virtual_staging import ROOM_TYPES
+    from apps.immoweb.staging_catalog import ROOM_TYPES
 
     user = (user_room_type or "").strip().lower()
     if user in ("auto", "detect", ""):

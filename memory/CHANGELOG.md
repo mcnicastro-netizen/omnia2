@@ -1,3 +1,10 @@
+## 2026-11-06 — Staging split MOVE-ONLY (`virtual_staging` elefante)
+
+- Estratti `staging_catalog.py` · `staging_erase.py` · `staging_furnish.py`
+- `virtual_staging.py` 2997 → ~1831 LOC (orchestrator + B2C + API); re-export stabili
+- `staging_room_analysis` importa `ROOM_TYPES` da catalog (niente ciclo)
+- Zero feature nuove · test unit staging + empty pipeline B2C PASS
+
 ## 2026-11-06 — A-040 pin: paperless da evidenziare (filo domani)
 
 - Founder: paperless non è tra i pregi raccontati in vetrina/pitch
