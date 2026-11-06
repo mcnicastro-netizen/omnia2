@@ -238,180 +238,66 @@ export default function LandingApp() {
         </div>
       </section>
 
-      {/* IL LAB — banner istituzionale (IT plate) + ricreazione accessibile */}
+      {/* CHI SIAMO — foto nostra + logo OMNIA + copy (no ripetizione pilastri) */}
       <section
         id="chi-siamo"
         data-testid="landing-about"
-        className="scroll-mt-28 relative overflow-hidden bg-white"
+        className="scroll-mt-28 relative overflow-hidden min-h-[520px] md:min-h-[600px] lg:min-h-[640px] bg-white"
       >
-        {/* Desktop/tablet IT: plate grafica ufficiale; altre lingue: layout equivalente */}
-        {lang === "it" ? (
-          <div className="relative hidden sm:block">
-            <img
-              src="/landing/lab-banner.png"
-              alt={t("landing.about_headline")}
-              className="w-full h-auto select-none"
-              loading="lazy"
-              draggable={false}
-            />
-            <div
-              data-testid="landing-about-minis"
-              className="absolute bottom-[6%] right-[4%] w-[48%] max-w-xl grid grid-cols-3 gap-1"
-            >
-              <Link
-                to={`/${lang}/cloud`}
-                data-testid="landing-about-mini-cloud"
-                className="block h-16 md:h-20 lg:h-24 rounded-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-[#C8A653]"
-                aria-label={`${t("landing.about_mini_cloud")} — ${t("landing.about_mini_cloud_motto")}`}
-              />
-              <Link
-                to={`/${lang}/register`}
-                data-testid="landing-about-mini-crm"
-                className="block h-16 md:h-20 lg:h-24 rounded-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-[#C8A653]"
-                aria-label={`${t("landing.about_mini_crm")} — ${t("landing.about_mini_crm_motto")}`}
-              />
-              <Link
-                to={`/${lang}/learn`}
-                data-testid="landing-about-mini-academy"
-                className="block h-16 md:h-20 lg:h-24 rounded-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-[#C8A653]"
-                aria-label={`${t("landing.about_mini_academy")} — ${t("landing.about_mini_academy_motto")}`}
-              />
-            </div>
-          </div>
-        ) : (
-          <div className="relative hidden sm:grid sm:grid-cols-2 min-h-[560px] overflow-hidden">
-            <div className="relative">
-              <img
-                src="/landing/lab-photo.jpg"
-                alt=""
-                className="absolute inset-0 h-full w-full object-cover"
-                loading="lazy"
-              />
-              <div className="relative z-10 p-10 lg:p-14 flex flex-col justify-center h-full bg-white/50">
-                <OmniaLogo variant="full" size="xl" className="mb-3" />
-                <div className="w-14 h-px bg-[#0B1E3F]/35 mb-3" />
-                <p className="font-sans text-[11px] uppercase tracking-[0.32em] text-[#0B1E3F]">
-                  {t("landing.about_tagline")}
-                </p>
-              </div>
-            </div>
-            <div className="relative bg-white flex flex-col justify-center p-10 lg:p-14">
-              <h2
-                className="text-3xl font-sans font-semibold text-[#0B1E3F] leading-snug mb-5 [&_strong]:font-bold"
-                dangerouslySetInnerHTML={{
-                  __html: t("landing.about_headline_html"),
-                }}
-              />
-              <p
-                className="font-sans text-[15px] text-[#0B1E3F]/70 leading-relaxed mb-10 max-w-lg [&_strong]:font-semibold"
-                dangerouslySetInnerHTML={{
-                  __html: t("landing.about_body_html"),
-                }}
-              />
-              <div
-                data-testid="landing-about-minis-en"
-                className="grid grid-cols-3 divide-x divide-[#0B1E3F]/12"
-              >
-                {[
-                  {
-                    key: "cloud",
-                    title: t("landing.about_mini_cloud"),
-                    motto: t("landing.about_mini_cloud_motto"),
-                    to: `/${lang}/cloud`,
-                  },
-                  {
-                    key: "crm",
-                    title: t("landing.about_mini_crm"),
-                    motto: t("landing.about_mini_crm_motto"),
-                    to: `/${lang}/register`,
-                  },
-                  {
-                    key: "academy",
-                    title: t("landing.about_mini_academy"),
-                    motto: t("landing.about_mini_academy_motto"),
-                    to: `/${lang}/learn`,
-                  },
-                ].map((m) => (
-                  <Link
-                    key={m.key}
-                    to={m.to}
-                    className="px-3 text-center font-sans"
-                  >
-                    <span className="block text-sm font-semibold text-[#0B1E3F]">
-                      <Brand>{m.title}</Brand>
-                    </span>
-                    <span className="block text-[11px] text-[#0B1E3F]/50 mt-1">
-                      {m.motto}
-                    </span>
-                  </Link>
-                ))}
-              </div>
-            </div>
-          </div>
-        )}
+        <img
+          src="/cloud/hero.jpg"
+          alt=""
+          className="absolute inset-0 h-full w-full object-cover object-[25%_center]"
+          loading="lazy"
+        />
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{
+            background:
+              "linear-gradient(90deg, rgba(255,255,255,0.72) 0%, rgba(255,255,255,0.35) 32%, rgba(255,255,255,0.1) 48%, rgba(255,255,255,0.85) 68%, #fff 82%)",
+          }}
+        />
+        <div
+          aria-hidden
+          className="hidden md:block absolute -top-[30%] -bottom-[30%] right-[-20%] w-[66%] bg-white"
+          style={{ borderRadius: "50% 0 0 50%" }}
+        />
+        <div
+          aria-hidden
+          className="md:hidden absolute inset-x-0 top-[36%] bottom-0 bg-white"
+          style={{
+            borderTopLeftRadius: "42% 14%",
+            borderTopRightRadius: "42% 14%",
+          }}
+        />
 
-        {/* Mobile: layout ricostruito (banner troppo denso) */}
-        <div className="sm:hidden relative min-h-[640px]">
-          <img
-            src="/landing/lab-photo.jpg"
-            alt=""
-            className="absolute inset-0 h-[42%] w-full object-cover object-center"
-            loading="lazy"
-          />
-          <div className="absolute inset-x-0 top-[34%] bottom-0 bg-white rounded-t-[2rem] px-5 pt-8 pb-10">
-            <OmniaLogo variant="full" size="lg" className="mb-3" />
-            <div className="w-12 h-px bg-[#0B1E3F]/30 mb-3" />
-            <p className="font-sans text-[10px] uppercase tracking-[0.28em] text-[#0B1E3F] mb-5">
-              {t("landing.about_tagline")}
+        <div className="relative z-10 max-w-screen-2xl mx-auto min-h-[520px] md:min-h-[600px] lg:min-h-[640px] px-5 sm:px-8 md:px-12 lg:px-16 py-12 md:py-16 grid md:grid-cols-2 gap-10 md:gap-8 items-center">
+          <div className="flex flex-col justify-center animate-[landingRise_0.8s_ease_both]">
+            <div className="inline-flex flex-col items-start bg-white/90 md:bg-transparent px-4 py-5 md:p-0">
+              <OmniaLogo variant="full" size="xl" className="mb-4" />
+              <div className="w-14 h-px bg-[#0B1E3F]/35 mb-4" />
+              <p className="font-sans text-[10px] sm:text-[11px] uppercase tracking-[0.32em] text-[#0B1E3F]">
+                {t("landing.about_tagline")}
+              </p>
+            </div>
+          </div>
+
+          <div className="flex flex-col justify-center md:pl-8 lg:pl-14 xl:pl-20 animate-[landingRise_0.9s_ease_both]">
+            <p className="text-[10px] font-sans uppercase tracking-[0.3em] text-[#1F6B5C] mb-3">
+              {t("landing.about_eyebrow")}
             </p>
             <h2
-              className="text-2xl font-sans font-semibold text-[#0B1E3F] leading-snug mb-4 [&_strong]:font-bold"
+              className="text-2xl sm:text-3xl lg:text-[2.1rem] font-sans font-semibold tracking-tight text-[#0B1E3F] leading-snug mb-5 [&_strong]:font-bold"
               dangerouslySetInnerHTML={{
                 __html: t("landing.about_headline_html"),
               }}
             />
             <p
-              className="font-sans text-sm text-[#0B1E3F]/70 leading-relaxed mb-8 [&_strong]:font-semibold"
+              className="font-sans text-sm sm:text-base text-[#0B1E3F]/75 leading-relaxed max-w-xl [&_strong]:text-[#0B1E3F] [&_strong]:font-semibold"
               dangerouslySetInnerHTML={{
                 __html: t("landing.about_body_html"),
               }}
             />
-            <div className="space-y-4 border-t border-[#0B1E3F]/10 pt-5">
-              {[
-                {
-                  key: "cloud",
-                  title: t("landing.about_mini_cloud"),
-                  motto: t("landing.about_mini_cloud_motto"),
-                  to: `/${lang}/cloud`,
-                },
-                {
-                  key: "crm",
-                  title: t("landing.about_mini_crm"),
-                  motto: t("landing.about_mini_crm_motto"),
-                  to: `/${lang}/register`,
-                },
-                {
-                  key: "academy",
-                  title: t("landing.about_mini_academy"),
-                  motto: t("landing.about_mini_academy_motto"),
-                  to: `/${lang}/learn`,
-                },
-              ].map((m) => (
-                <Link
-                  key={m.key}
-                  to={m.to}
-                  className="block font-sans"
-                  data-testid={`landing-about-mini-m-${m.key}`}
-                >
-                  <span className="font-semibold text-[#0B1E3F] text-sm">
-                    <Brand>{m.title}</Brand>
-                  </span>
-                  <span className="block text-xs text-[#0B1E3F]/50">
-                    {m.motto}
-                  </span>
-                </Link>
-              ))}
-            </div>
           </div>
         </div>
       </section>

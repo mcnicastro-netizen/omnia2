@@ -24,7 +24,7 @@
   },
   "landing": {
     "doc_title": "OMNIA Real Estate Ecosystem — Sistema operativo per agenzie",
-    "nav_about": "Il Lab",
+    "nav_about": "Chi siamo",
     "nav_why": "Integrazione",
     "nav_offer": "Le tre anime",
     "nav_pricing": "Prezzi",
@@ -116,13 +116,7 @@
     "about_tagline": "Innovazione · Tecnologia · Competenze",
     "about_headline": "Un laboratorio di idee e soluzioni per il futuro del mercato immobiliare.",
     "about_headline_html": "Un laboratorio di idee e soluzioni per il <strong>futuro</strong> del <strong>mercato immobiliare</strong>.",
-    "about_body_html": "OMNIA Real Estate Lab è il cuore pulsante di un ecosistema integrato che unisce <strong>tecnologia, formazione</strong> e <strong>opportunità</strong> per creare valore nel real estate.",
-    "about_mini_cloud": "ImmobilCloud™",
-    "about_mini_cloud_motto": "Cerca. Conosci. Decidi.",
-    "about_mini_crm": "Gestionale",
-    "about_mini_crm_motto": "Organizza. Gestisci. Cresci.",
-    "about_mini_academy": "Academy",
-    "about_mini_academy_motto": "Impara. Aggiorna. Evolvi."
+    "about_body_html": "OMNIA Real Estate Lab è il cuore pulsante di un ecosistema integrato che unisce <strong>tecnologia, formazione</strong> e <strong>opportunità</strong> per creare valore nel real estate."
   },
   "immocloud": {
     "title": "ImmobilCloud",
