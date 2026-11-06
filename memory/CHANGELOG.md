@@ -1,3 +1,10 @@
+## 2026-11-06 — Staging split #2: media / B2C / API
+
+- Estratti `staging_media.py` · `staging_b2c.py` · `staging_api.py`
+- `virtual_staging.py` ~1831 → **~840** LOC (solo orchestrator `_run_pipeline` + CRM/URL + reaper)
+- Lazy schedule `_run_pipeline` da B2C/API (no ciclo import)
+- Test patch auto-save aggiornati su `staging_b2c._fetch_variant_bytes`
+
 ## 2026-11-06 — Staging split MOVE-ONLY (`virtual_staging` elefante)
 
 - Estratti `staging_catalog.py` · `staging_erase.py` · `staging_furnish.py`

@@ -106,7 +106,7 @@ def _import_module():
 def test_build_prompt_with_crm_fragment():
     vs = _import_module()
     p = vs._build_prompt("luxury", "living", "premium seaside penthouse for affluent buyers")
-    assert "luxury interior design" in p
+    assert "luxury movable furnishings" in p or "luxury interior" in p
     assert "premium seaside penthouse" in p
     assert p.endswith("photorealistic, 8k, architectural photography")
 

@@ -349,12 +349,13 @@ def test_auto_save_b2c_variant_persists_object_storage_not_data_url(mongo, b2c_u
         async def fake_fetch(doc, idx):
             return jpeg, "modern"
 
-        with patch.object(vs, "_fetch_variant_bytes", side_effect=fake_fetch), \
+        # _fetch_variant_bytes lives in staging_b2c after MOVE-ONLY split
+        with patch("apps.immoweb.staging_b2c._fetch_variant_bytes", side_effect=fake_fetch), \
              patch("shared.storage.put_object", return_value={"path": "ok", "size": len(jpeg)}):
             await vs._auto_save_b2c_variant(job_id, Database.get())
 
         # Second call must be no-op when media URL already present
-        with patch.object(vs, "_fetch_variant_bytes", side_effect=fake_fetch) as fetch2, \
+        with patch("apps.immoweb.staging_b2c._fetch_variant_bytes", side_effect=fake_fetch) as fetch2, \
              patch("shared.storage.put_object", return_value={"path": "ok", "size": len(jpeg)}) as put2:
             await vs._auto_save_b2c_variant(job_id, Database.get())
             assert fetch2.await_count == 0
@@ -427,7 +428,7 @@ def test_auto_save_reattaches_after_data_url_wipe(mongo, b2c_user, listing_with_
         async def fake_fetch(doc, idx):
             return jpeg, "modern"
 
-        with patch.object(vs, "_fetch_variant_bytes", side_effect=fake_fetch), \
+        with patch("apps.immoweb.staging_b2c._fetch_variant_bytes", side_effect=fake_fetch), \
              patch("shared.storage.put_object", return_value={"path": "ok", "size": len(jpeg)}):
             await vs._auto_save_b2c_variant(job_id, Database.get())
 
@@ -518,7 +519,7 @@ def test_auto_save_migrates_legacy_data_url_in_place(mongo, b2c_user, listing_wi
         async def fake_fetch(doc, idx):
             return jpeg, "empty"
 
-        with patch.object(vs, "_fetch_variant_bytes", side_effect=fake_fetch), \
+        with patch("apps.immoweb.staging_b2c._fetch_variant_bytes", side_effect=fake_fetch), \
              patch("shared.storage.put_object", return_value={"path": "ok", "size": len(jpeg)}):
             await vs._auto_save_b2c_variant(job_id, Database.get())
 
