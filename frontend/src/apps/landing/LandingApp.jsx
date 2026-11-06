@@ -150,11 +150,13 @@ export default function LandingApp() {
   return (
     <div
       data-testid="landing-app"
-      className="min-h-screen overflow-x-hidden text-[#0B1E3F]"
+      className="min-h-screen text-[#0B1E3F]"
       style={{ fontFamily: "'Fraunces', Georgia, serif" }}
     >
+      {/* TopNav FUORI da overflow-x-hidden: altrimenti position:sticky si spezza e Chi siamo “atterra a metà” */}
       <TopNav current="landing" theme="light" />
 
+      <div className="overflow-x-hidden">
       {/* HERO */}
       <section
         data-testid="landing-hero"
@@ -223,7 +225,7 @@ export default function LandingApp() {
       <section
         id="chi-siamo"
         data-testid="landing-about"
-        className="scroll-mt-[140px] relative overflow-hidden bg-white"
+        className="scroll-mt-[72px] relative overflow-hidden bg-white min-h-[calc(100svh-4.5rem)]"
       >
         <img
           src="/cloud/hero.jpg"
@@ -242,19 +244,21 @@ export default function LandingApp() {
           aria-hidden
           className="hidden md:block absolute top-0 bottom-0 right-0 w-[58%] bg-white"
           style={{
-            clipPath: "ellipse(90% 85% at 100% 50%)",
+            /* bulbo bianco allineato in alto col copy, non a metà altezza */
+            clipPath: "ellipse(92% 95% at 100% 28%)",
           }}
         />
         <div
           aria-hidden
-          className="md:hidden absolute inset-x-0 bottom-0 h-[62%] bg-white rounded-t-[1.75rem]"
+          className="md:hidden absolute inset-x-0 bottom-0 h-[52%] bg-white rounded-t-[1.75rem]"
         />
 
-        <div className="relative z-10 max-w-screen-2xl mx-auto min-h-[520px] md:min-h-[600px] lg:min-h-[640px] px-5 sm:px-8 md:px-12 lg:px-16 py-12 md:py-16 grid md:grid-cols-2 gap-10 md:gap-8 items-center">
-          <div className="flex flex-col justify-center animate-[landingRise_0.8s_ease_both]">
+        {/* Banner alto sotto nav, contenuto PINATO in alto (mai items-center) */}
+        <div className="relative z-10 max-w-screen-2xl mx-auto min-h-[calc(100svh-4.5rem)] px-5 sm:px-8 md:px-12 lg:px-16 pt-6 pb-10 md:pt-8 md:pb-12 grid md:grid-cols-2 gap-6 md:gap-8 items-start content-start">
+          <div className="flex flex-col justify-start animate-[landingRise_0.8s_ease_both]">
             <div
               data-testid="landing-about-brand"
-              className="inline-flex flex-col items-start w-full max-w-md px-6 py-7 md:px-9 md:py-9 rounded-sm"
+              className="inline-flex flex-col items-start w-full max-w-sm px-4 py-5 md:px-6 md:py-6 rounded-sm"
               style={{
                 background: "rgba(255,255,255,0.42)",
                 backdropFilter: "blur(20px) saturate(1.15)",
@@ -265,32 +269,32 @@ export default function LandingApp() {
             >
               <div
                 data-testid="landing-about-logo"
-                className="flex flex-col items-start mb-5"
+                className="flex flex-col items-start mb-3"
               >
                 <img
                   src="/landing/omnia-mark-3x.png"
                   alt=""
                   width={768}
                   height={660}
-                  className="select-none mb-3 h-[132px] md:h-[148px] w-auto"
+                  className="select-none mb-2 h-[72px] md:h-[88px] w-auto"
                   draggable={false}
                 />
                 <p
-                  className="text-3xl md:text-4xl font-semibold tracking-[0.18em] text-[#0B1E3F] uppercase leading-none"
+                  className="text-xl md:text-2xl font-semibold tracking-[0.18em] text-[#0B1E3F] uppercase leading-none"
                   style={{ fontFamily: "'Montserrat', 'Inter', system-ui, sans-serif" }}
                 >
                   <Brand>OMNIA</Brand>
                 </p>
                 <p
-                  className="mt-1.5 text-[11px] md:text-xs font-medium tracking-[0.28em] text-[#0B1E3F]/80 uppercase"
+                  className="mt-1.5 text-[10px] md:text-[11px] font-medium tracking-[0.28em] text-[#0B1E3F]/80 uppercase"
                   style={{ fontFamily: "'Montserrat', 'Inter', system-ui, sans-serif" }}
                 >
                   Real Estate Lab
                 </p>
               </div>
-              <div className="w-16 h-px bg-[#0B1E3F]/45 mb-5" />
+              <div className="w-14 h-px bg-[#0B1E3F]/45 mb-3" />
               <p
-                className="w-full text-[12px] sm:text-[13px] uppercase tracking-[0.18em] text-[#0B1E3F] font-semibold flex flex-wrap items-center gap-x-2 gap-y-1"
+                className="w-full text-[11px] sm:text-[12px] uppercase tracking-[0.16em] text-[#0B1E3F] font-semibold flex flex-wrap items-center gap-x-2 gap-y-1"
                 style={{ fontFamily: "'Montserrat', 'Inter', system-ui, sans-serif" }}
               >
                 {t("landing.about_tagline")
@@ -310,22 +314,22 @@ export default function LandingApp() {
             </div>
           </div>
 
-          <div className="flex flex-col justify-center md:pl-8 lg:pl-14 xl:pl-20 animate-[landingRise_0.9s_ease_both]">
+          <div className="flex flex-col justify-start md:pl-8 lg:pl-14 xl:pl-20 pt-0.5 animate-[landingRise_0.9s_ease_both]">
             <p
-              className="text-[11px] uppercase tracking-[0.28em] text-[#1F6B5C] mb-3 font-semibold"
+              className="text-[11px] uppercase tracking-[0.28em] text-[#1F6B5C] mb-2.5 font-semibold"
               style={{ fontFamily: "'Montserrat', 'Inter', system-ui, sans-serif" }}
             >
               {t("landing.about_eyebrow")}
             </p>
             <h2
-              className="text-2xl sm:text-3xl lg:text-[2.35rem] font-semibold tracking-tight text-[#0B1E3F] leading-[1.2] mb-5 [&_strong]:font-bold"
+              className="text-xl sm:text-2xl lg:text-[2rem] font-semibold tracking-tight text-[#0B1E3F] leading-[1.2] mb-3 [&_strong]:font-bold"
               style={{ fontFamily: "'Montserrat', 'Inter', system-ui, sans-serif" }}
               dangerouslySetInnerHTML={{
                 __html: t("landing.about_headline_html"),
               }}
             />
             <p
-              className="text-[15px] sm:text-base text-[#0B1E3F]/80 leading-relaxed max-w-xl [&_strong]:text-[#0B1E3F] [&_strong]:font-semibold"
+              className="text-[14px] sm:text-[15px] text-[#0B1E3F]/80 leading-relaxed max-w-xl [&_strong]:text-[#0B1E3F] [&_strong]:font-semibold"
               style={{ fontFamily: "'Montserrat', 'Inter', system-ui, sans-serif" }}
               dangerouslySetInnerHTML={{
                 __html: t("landing.about_body_html"),
@@ -339,7 +343,7 @@ export default function LandingApp() {
       <section
         id="offerta"
         data-testid="landing-pillars"
-        className="scroll-mt-[140px] bg-[#0B1E3F] text-[#F5F1E8] px-5 sm:px-8 md:px-12 lg:px-16 py-20 md:py-28"
+        className="scroll-mt-[72px] bg-[#0B1E3F] text-[#F5F1E8] px-5 sm:px-8 md:px-12 lg:px-16 py-20 md:py-28"
       >
         <div className="max-w-screen-2xl mx-auto">
           <p className="text-[10px] sm:text-xs font-sans uppercase tracking-[0.3em] text-[#C8A653] mb-3">
@@ -401,7 +405,7 @@ export default function LandingApp() {
       <section
         id="perche"
         data-testid="landing-integrate"
-        className="scroll-mt-[140px] px-5 sm:px-8 md:px-12 lg:px-16 py-20 md:py-28"
+        className="scroll-mt-[72px] px-5 sm:px-8 md:px-12 lg:px-16 py-20 md:py-28"
         style={{
           background:
             "linear-gradient(180deg, #eef3f1 0%, #F5F1E8 40%, #e8eef5 100%)",
@@ -518,7 +522,7 @@ export default function LandingApp() {
       <section
         id="prezzi"
         data-testid="landing-pricing"
-        className="scroll-mt-[140px] px-5 sm:px-8 md:px-12 lg:px-16 py-20 md:py-28 border-t border-[#0B1E3F]/10"
+        className="scroll-mt-[72px] px-5 sm:px-8 md:px-12 lg:px-16 py-20 md:py-28 border-t border-[#0B1E3F]/10"
         style={{
           background:
             "linear-gradient(180deg, #F5F1E8 0%, #eef3f1 55%, #F5F1E8 100%)",
@@ -698,6 +702,7 @@ export default function LandingApp() {
           50% { transform: scale(1.03); opacity: 0.85; }
         }
       `}</style>
+      </div>
     </div>
   );
 }
