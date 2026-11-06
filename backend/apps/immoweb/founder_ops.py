@@ -850,3 +850,26 @@ async def ops_retire_demo_agency(
     if not ok:
         raise HTTPException(status_code=400, detail=report)
     return {"ok": True, **report}
+
+
+@router.post("/purge-agency-shell")
+async def ops_purge_agency_shell(
+    user: dict = Depends(require_roles("super_admin")),
+    slug: str = "nicastro-immobiliare",
+) -> Dict[str, Any]:
+    """Elimina uno shell agenzia orfano (0 membri) — ripartenza pulita Founder."""
+    from apps.immoweb.demo_retire import purge_agency_shell, wipe_demo_agency
+
+    db = Database.get()
+    demo = await wipe_demo_agency(db)
+    shell = await purge_agency_shell(db, slug=(slug or "").strip() or "nicastro-immobiliare")
+    logger.info(
+        "purge-agency-shell by=%s slug=%s ok=%s demo_deleted=%s",
+        user.get("email"),
+        shell.get("slug"),
+        shell.get("ok"),
+        demo.get("agency_deleted"),
+    )
+    if not shell.get("ok"):
+        raise HTTPException(status_code=400, detail=shell)
+    return {"ok": True, "demo": demo, "shell": shell}

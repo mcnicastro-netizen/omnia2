@@ -136,6 +136,46 @@ async def grant_assisted_pro(db, agency_id: str, credits: int = 500) -> Dict[str
     return {"ok": True, "plan": "pro", "credits_balance": bal}
 
 
+async def purge_agency_shell(db, *, slug: str) -> Dict[str, Any]:
+    """Elimina un'agenzia orfana (0 membri) e i suoi documenti agency_id.
+
+    Usato per ripartire puliti dopo uno shortcut di seed/dogfood.
+    """
+    agency = await db.agencies.find_one({"slug": slug})
+    if not agency:
+        return {"ok": True, "slug": slug, "agency_deleted": 0, "note": "already_absent"}
+    aid = agency["id"]
+    members = await db.users.count_documents({"agency_ids": aid})
+    if members > 0:
+        return {
+            "ok": False,
+            "error": "agency_has_members",
+            "slug": slug,
+            "agency_id": aid,
+            "members": members,
+        }
+    deleted: Dict[str, int] = {}
+    names = await db.list_collection_names()
+    for name in sorted(names):
+        if name in KEEP_GLOBAL or name in {"agencies", "users"}:
+            continue
+        n = await db[name].count_documents({"agency_id": aid})
+        if n:
+            res = await db[name].delete_many({"agency_id": aid})
+            deleted[name] = res.deleted_count
+    inv = await db.agency_invites.delete_many({"agency_id": aid})
+    if inv.deleted_count:
+        deleted["agency_invites"] = int(inv.deleted_count)
+    ag = await db.agencies.delete_many({"id": aid})
+    return {
+        "ok": True,
+        "slug": slug,
+        "agency_id": aid,
+        "agency_deleted": int(ag.deleted_count),
+        "deleted": deleted,
+    }
+
+
 async def retire_demo_and_promote_first_client(
     db,
     *,
