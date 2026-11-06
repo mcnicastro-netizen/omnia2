@@ -7,6 +7,19 @@ Registro di tutte le decisioni di business e tecniche prese durante il progetto.
 
 ## Decisioni prese
 
+### D-146 — Vetrina www istituzionale (Chi siamo · Perché OMNIA · no Cerca casa) · 06-Nov-2026
+- **Data**: 6 Novembre 2026
+- **Contesto**: Founder ripensa `www` come vetrina commerciale Lab+Ecosystem (non portale B2C). Nav/scroll Chi siamo ripetutamente “a metà”; poi cleanup CTA Cerca casa.
+- **Decisione**:
+  1. **Home www** = pitch istituzionale: Chi siamo (banner + logo OMNIA frosted) → Le tre anime → **Perché OMNIA** → **Il vero lavoro** (diagramma integrazione) → Prezzi → CTA finale.
+  2. **Nav landing**: Chi siamo · Le tre anime · Perché OMNIA · Prezzi · Registrati. **Niente** Cerca casa in TopNav vetrina (resta in ImmobilCloud / Academy).
+  3. **Scroll sticky**: TopNav **fuori** da `overflow-x-hidden` (altrimenti `position:sticky` si spezza); nav landing compatta; `#perche` = sezione tratti Perché OMNIA; `#vero-lavoro` = diagramma.
+  4. **Box tre anime**: ImmobilCloud → `/it/cloud` · ImmoWeb → `/it/register` · Academy → `/it/learn`.
+  5. **CTA finale** («Dalla visione alla validazione…»): solo **Inizia ora** → register; niente Cerco casa / ImmobilCloud nel lead.
+- **Ship**: PR #121 (sticky/resize) · #122 (drop Cerca casa nav) · #123 (Perché OMNIA order) · #124 (drop Cerco casa finale) · Vercel prod.
+- **Audit 06-Nov**: tutti i link box/nav/piani/footer PASS su `omniarealestateecosystem.it`.
+- **Stato**: ✅ **DECISIONE OPERATIVA REGISTRATA** · live · docs/HAL syncati 06-Nov
+
 ### D-145 — Primo cliente reale = Nicastro Immobiliare · retire demo GTM · 06-Nov-2026
 - **Data**: 6 Novembre 2026
 - **Contesto**: Founder chiude la sandbox GTM `demo-agency-001` in produzione e apre **Nicastro Immobiliare** come primo cliente OMNIA (dogfood = produzione agenzia reale, non fixtures fake).

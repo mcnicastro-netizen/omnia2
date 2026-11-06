@@ -16,18 +16,20 @@ voci:
     widget: null
     pubblico: [titolare, agente, segreteria]
     livello: base
-    tags: [orientamento, primi-passi, panoramica]
+    tags: [orientamento, primi-passi, panoramica, www, d-146]
     correlati:
       - primo-accesso.tour-barra-sinistra
       - hal-agents.introduzione
       - dashboard.panoramica-iniziale
+      - api.www-vetrina-landing
     domanda_naturale: "Cos'è OMNIA e cosa ci posso fare?"
     contenuto:
       a_cosa_serve: >
         OMNIA è l'ecosistema che unisce il tuo gestionale ImmoWeb,
         l'assistente intelligente HAL e il portale pubblico ImmobilCloud.
         Da un unico posto gestisci immobili, clienti, portali e sito
-        dell'agenzia.
+        dell'agenzia. Il sito istituzionale www (D-146) spiega Lab +
+        Ecosystem; non sostituisce ImmobilCloud per cercare casa.
       quando_si_usa: >
         Ogni giorno per il lavoro operativo. Il primo giorno per
         orientarti. Il manuale ti guida modulo per modulo.
@@ -39,7 +41,13 @@ voci:
           e legali.
         - ImmobilCloud è il portale pubblico dove finiscono in vetrina
           gli annunci della tua agenzia; ci arrivano i clienti finali.
-      errori_comuni: []
+        - "www.omniarealestateecosystem.it = vetrina istituzionale (Chi siamo,
+          Perché OMNIA, prezzi). Nav www senza Cerca casa — per cercare casa
+          usa ImmobilCloud /it/cloud."
+      errori_comuni:
+        - problema: "Cerco Cerca casa sulla home www"
+          soluzione: >
+            D-146: non è in nav vetrina. Vai su ImmobilCloud (/it/cloud).
       permessi:
         - Tutti i ruoli
     screenshot:
