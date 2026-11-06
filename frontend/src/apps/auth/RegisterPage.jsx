@@ -1,17 +1,21 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Trans, useTranslation } from "react-i18next";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth, formatApiErrorDetail, isEmailAlreadyRegistered } from "../../shared/lib/auth";
 import LanguageSwitcher from "../../shared/components/LanguageSwitcher";
 import Brand from "../../shared/components/Brand";
 import OmniaLogo from "../../shared/components/OmniaLogo";
 import GoogleSignInButton from "../../shared/components/GoogleSignInButton";
 
+const PREFERRED_PLAN_KEY = "omnia_preferred_plan";
+const ALLOWED_PLANS = new Set(["starter", "pro", "agency"]);
+
 export default function RegisterPage() {
   const { t, i18n } = useTranslation();
   const lang = (i18n.language || "it").slice(0, 2);
   const { register, loginWithGoogle } = useAuth();
   const nav = useNavigate();
+  const [searchParams] = useSearchParams();
 
   const [form, setForm] = useState({
     name: "",
@@ -24,7 +28,19 @@ export default function RegisterPage() {
   const [error, setError] = useState("");
   const [dupEmail, setDupEmail] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [preferredPlan, setPreferredPlan] = useState("");
   const loginHref = `/${lang}/login?from=app&next=${encodeURIComponent(`/${lang}/app/dashboard`)}`;
+
+  useEffect(() => {
+    const raw = (searchParams.get("plan") || "").toLowerCase().trim();
+    if (!ALLOWED_PLANS.has(raw)) return;
+    try {
+      sessionStorage.setItem(PREFERRED_PLAN_KEY, raw);
+    } catch {
+      /* ignore */
+    }
+    setPreferredPlan(raw);
+  }, [searchParams]);
 
   const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }));
 
@@ -113,7 +129,19 @@ export default function RegisterPage() {
           <p className="text-xs font-sans uppercase tracking-[0.3em] text-amber-700 mb-3">
             <Brand>Join OMNIA</Brand>
           </p>
-          <h1 className="text-3xl md:text-4xl tracking-tight mb-8">{t("auth.register_title")}</h1>
+          <h1 className="text-3xl md:text-4xl tracking-tight mb-3">{t("auth.register_title")}</h1>
+          {preferredPlan ? (
+            <p
+              data-testid="register-preferred-plan"
+              className="mb-8 font-sans text-sm text-stone-600"
+            >
+              {t("landing.preferred_plan_hint", {
+                plan: preferredPlan.toUpperCase(),
+              })}
+            </p>
+          ) : (
+            <div className="mb-8" />
+          )}
 
           {["name", "email", "password"].map((f) => (
             <label key={f} className="block mb-5">

@@ -1,6 +1,6 @@
 # Capitolo 1 · Primo accesso
 
-**Versione manuale**: v1.5 · **Ultima revisione**: 04-Nov-2026 sera (D-140 Vendi video/layout · D-138 inbox)
+**Versione manuale**: v1.6 · **Ultima revisione**: 06-Nov-2026 (D-146 vetrina www · D-140/D-138)
 **Chi lo legge**: titolari, agenti, segreteria (chiunque debba iniziare a usare ImmoWeb); privatamente anche utenti ImmobilCloud
 **Prerequisiti**: aver ricevuto le credenziali (email + password) o un invito da un collega
 
@@ -14,6 +14,9 @@ OMNIA è un ecosistema per la tua agenzia immobiliare. Ti dà tre cose:
 1. **ImmoWeb** — il tuo gestionale in-app (immobili, clienti, portali, sito).
 2. **HAL** — l'assistente intelligente che ti aiuta a scrivere annunci, dare risposte legali e trovare informazioni dentro il gestionale.
 3. **ImmobilCloud** — il portale nazionale dove finiscono in vetrina gli annunci della tua agenzia.
+
+**Sito istituzionale (www · D-146)**  
+`https://omniarealestateecosystem.it/it` è la **vetrina Lab + Ecosystem** (Chi siamo, tre anime, Perché OMNIA, prezzi Founders). Non confonderla con ImmobilCloud: sulla nav www **non** c’è «Cerca casa» — per cercare casa si entra da ImmobilCloud (`/it/cloud`). I box «Le tre anime» portano a cloud / registrazione agenzia / Academy.
 
 **In pratica**
 Quando entri in OMNIA:
@@ -72,6 +75,35 @@ Se l'email è già registrata (B2C o B2B), la registrazione risponde **409** con
 **Esci (logout B2C)**: se sei loggato come Privato, in nav ImmobilCloud e in `/cloud/account` c’è **Esci** → `POST /auth/logout` → Area riservata / home cloud. Sessione cookie JWT (access ~15 min, refresh ~7 giorni): senza Esci resti autenticato — è normale, non un bug.
 
 **Messaggi e visite (D-138 Idealista+)**: da Account o Vendi → `/cloud/account/messages`. Inbox delle `listing_inquiries` (filtri, nota privata, Accetta/Rifiuta/Fatta visita, reply email/tel/WhatsApp). Dettaglio Cap. 18 §18.7b.
+
+### 1.2.1b2 Home ImmobilCloud — 4 riquadri + Cerca casa / mappa / app (D-139…D-143)
+
+**Home** (`/it/cloud`): sotto l’hero con form ricerca, griglia **4 riquadri** (`cloud-tools`):
+
+| Tile | Destinazione | Nota |
+|------|----------------|------|
+| **Scout** | `/cloud/search` | Fiore all’occhiello: completezza, prezzo, domande (D-142) |
+| **Cerca su mappa** | `/cloud/search?view=map` | Flusso mappa stile Idealista (D-141) |
+| **Scarica app** | `/{lang}/cloud/app` | Guida + QR (D-143) |
+| **News** | ticker RSS | Casa24 · mutui · arredo; `GET /api/cloud/news` (D-139) |
+
+**Visura** e **HAL Legal** restano in **nav** (non nei tile home).
+
+**Scarica app / QR (D-143)**  
+1. Tile home → `/cloud/app` (QR grande + istruzioni Android/iOS).  
+2. Il **QR** apre `/{lang}/cloud/area?from=pwa` → **Accedi** | **Crea account**.  
+3. Su Area con `from=pwa`: striscia **Installa** (Android dialog nativo; iOS link alla guida).  
+4. Nav sticky **opaca** (cream pieno): niente testo hero in trasparenza sulla barra.
+
+**Cerca / Vendi**: banner Scout in evidenza (copy «fiore all’occhiello»).
+
+**Cerca casa — lista**: sotto i filtri laterali c’è il box **«Cerca su mappa»** (`search-map-box`) → stessa ricerca in `view=map`.
+
+**Cerca casa — mappa** (`?view=map`):
+1. Split a viewport pieno: lista sticky a sinistra + mappa Leaflet a destra.
+2. Pin con **pillola prezzo**.
+3. Dopo pan/zoom compare **«Cerca in questa zona»** → aggiorna URL con `bbox=south,west,north,east` e richiama search/map filtrati.
+4. API: `GET /api/cloud/search` e `GET /api/cloud/map` accettano `bbox`.
 
 ### 1.2.1c Continua con Google (D-134)
 

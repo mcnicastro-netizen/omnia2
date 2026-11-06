@@ -1,3 +1,71 @@
+## 2026-11-06 — D-146 vetrina www chiusa (nav · scroll · no Cerca casa)
+
+- Nav: **Chi siamo · Le tre anime · Perché OMNIA · Prezzi · Registrati** (niente Cerca casa)
+- Scroll: sticky TopNav fuori da `overflow-x-hidden`; Chi siamo sotto nav; ordine **Perché OMNIA** → **Il vero lavoro**
+- Box: cloud→`/cloud` · ImmoWeb→`/register` · Academy→`/learn`
+- CTA finale validazione: solo **Inizia ora**
+- PR #121–#124 · Vercel · audit link PASS · Cap.00/01 + HAL `api.www-vetrina-landing` · IMPORT_HAL **v0.53** · diario
+
+## 2026-11-06 — Vetrina home: Lab + tre anime + integrazione
+
+- Home allineata al posizionamento istituzionale: Lab vs Ecosystem, tre pilastri, diagramma integrazione, domain sovereignty, Academy onesta
+- Nav storica (superseduta da D-146): Il Lab · Le tre anime · Integrazione · Prezzi
+
+## 2026-11-06 — Vetrina home OMNIA (www) ripensata
+
+- `LandingApp`: chi siamo · perché · offerta · prezzi live da `/api/billing/plans`
+- TopNav commerciale (anchor + Registrati); SEO `index.html` OMNIA/`/it`
+- CTA piano → `/register?plan=` · preferenza in sessionStorage → evidenzia card Billing
+
+## 2026-11-06 — D-145 primo cliente Nicastro Immobiliare · retire demo GTM
+
+- Agenzia **Nicastro Immobiliare** creata in produzione (slug `nicastro-immobiliare`, piano free → Pro via Ops)
+- Login titolare: `titolare@nicastroimmobiliare.it` / seed `NicastroDemo2026!` (ruotare)
+- `demo.admin@omniaecosystem.it` cancellato (GDPR erase) in prod
+- Codice: seed demo **OFF** su Railway di default · `POST /app/ops/retire-demo-agency` · `apps/immoweb/demo_retire.py` · script `wipe_demo_agency.py`
+- Docs: DECISIONS D-145 · NEXT_SESSION · diario 06-Nov
+
+## 2026-11-05 — D-144 docs: tre layer dominio/sito/email + caso Nicastro
+
+- Cap.17 §17.14 + HAL `domain.tre-layer-dominio-sito-email`
+- Chiarisce: dominio OK ≠ controllo caselle (reset `info@` via gestionale)
+- Percorso OMNIA Founder: DNS→sito OMNIA; Aruba proprio per mail
+- IMPORT_HAL v0.52 · DECISIONS D-144 ampliata · diario
+
+## 2026-11-05 — D-144 fix domain check .it (falso NOT REGISTERED)
+
+- Causa: rdap.org 404 su `.it` (no RDAP IANA) trattato come dominio libero
+- Fix: WHOIS `whois.nic.it` + mai «libero» se DNS risolve; tolto fallback pubtest
+- Dogfood: `nicastroimmobiliare.it` → registrante Nicastro Immobiliare / Aruba
+
+## 2026-11-05 — D-143 chiusura: QR→Area · nav opaca · sync HAL v0.50
+
+- QR atterra su `/cloud/area?from=pwa` (Accedi | Crea) + striscia Installa (PR #105)
+- Nav sticky **opaca** — stop testo hero in trasparenza (PR #106)
+- Docs completi Cap.01 MD/YAML · IMPORT_HAL **v0.50** · CHANGELOG · NEXT_SESSION · diario · reindex HAL
+
+## 2026-11-05 — D-143 Scarica app via QR (flusso Idealista)
+
+- Pagina `/{lang}/cloud/app`: QR desktop → telefonino + CTA Installa (PR #104)
+- Tile home punta alla pagina guida; prompt PWA catturato early
+- Onestà iOS: Condividi → Aggiungi a Home (no silent install Apple)
+- DECISIONS D-143 · Cap.01 HAL · dep `qrcode`
+
+## 2026-11-05 — D-142 PWA Scarica app · Scout in evidenza Cerca/Vendi
+
+- Home: tile HAL Legal → **Scarica app** (manifest + SW PWA); Legal resta in nav
+- 4 tile: Scout · Mappa · Scarica app · News
+- Cerca / Vendi: banner + copy Scout «fiore all’occhiello»
+- DECISIONS D-142 · Cap.01 MD/YAML · CHANGELOG
+
+## 2026-11-05 — D-141 mappa Idealista + home 4 tile · D-139 news live · docs/HAL
+
+- Home ImmobilCloud: Scout · **Cerca su mappa** · HAL Legal · News (Visura solo nav)
+- Cerca casa: box «Cerca su mappa» sotto filtri; `view=map` split Idealista + CTA zona + `bbox`
+- News RSS live (`GET /api/cloud/news`) — D-139 attivato
+- Ship codice: PR #99 · #101 · Vercel prod
+- Docs: DECISIONS D-141 (+ nota D-139) · Cap.01/21 MD · HAL Cap.00/01/21 · IMPORT_HAL v0.48 · NEXT_SESSION · diario 05-Nov
+
 ## 2026-11-04 sera — D-140 dogfood Vendi: safety soft · Scout · video tour · layout
 
 - Safety rescan: no un-publish su solo `llm_review` soft (PR #85)

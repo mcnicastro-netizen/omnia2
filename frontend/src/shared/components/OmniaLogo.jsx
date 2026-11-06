@@ -20,6 +20,7 @@ const HEIGHT_MAP = {
   nav: 96,
   lg: 72,
   xl: 120,
+  hero: 148,
 };
 
 export default function OmniaLogo({

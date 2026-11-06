@@ -218,6 +218,7 @@ async def public_search(
     bedrooms_min: Optional[int] = Query(None, ge=0),
     bathrooms_min: Optional[int] = Query(None, ge=0),
     energy_class: Optional[str] = Query(None, pattern="^(A4|A3|A2|A1|A\+|A|B|C|D|E|F|G)$"),
+    bbox: Optional[str] = Query(None, description="south,west,north,east — Idealista-like map area"),
     sort: str = Query("recent", pattern="^(recent|price_asc|price_desc|surface_desc)$"),
     page: int = Query(1, ge=1, le=500),
     page_size: int = Query(20, ge=1, le=60),
@@ -228,7 +229,15 @@ async def public_search(
     db = Database.get()
     flt: Dict[str, Any] = _base_filter()
 
-    if city:
+    # Area mappa: bbox ha priorità sulla città (flusso Idealista «cerca in questa zona»).
+    if bbox:
+        try:
+            south, west, north, east = (float(x) for x in bbox.split(","))
+            flt["lat"] = {"$gte": south, "$lte": north, "$ne": None, "$exists": True}
+            flt["lng"] = {"$gte": west, "$lte": east, "$ne": None, "$exists": True}
+        except (ValueError, AttributeError):
+            raise HTTPException(status_code=400, detail="invalid_bbox_format")
+    elif city:
         flt["city"] = {"$regex": f"^{city}", "$options": "i"}
     if property_type:
         flt["property_type"] = property_type
