@@ -94,28 +94,39 @@ voci:
     screenshot: []
 
   - id: video.crediti
-    titolo: Quanto costa un video?
+    titolo: Quanto costa un video Kling / micro-tour?
     modulo: Video & Analytics
     widget: null
     pubblico: [titolare, agente, segreteria]
     livello: base
-    tags: [crediti, costi, video, cap23]
-    correlati: []
-    domanda_naturale: "Quanto costa un video?"
+    tags: [crediti, costi, video, cap23, kling, d-147]
+    correlati: [video.cos-e, video.limitazioni-v1]
+    domanda_naturale: >
+      Quanto costa un video Kling nel gestionale? Quanti crediti
+      per il micro-tour? È ancora 10 crediti?
     contenuto:
       a_cosa_serve: >
-        Listino crediti (micro-tour Kling 30 cr / €1,50 · D-147) + FAL_KEY operativa.
+        Prezzo corrente micro-tour Kling Pro (solo gestionale):
+        **30 crediti = €1,50** (D-147, SoT CREDIT_COSTS.micro_tour_render).
+        Non è più 10 crediti (vecchio D-066, sotto COGS → perdita).
+        Ken Burns sul portale B2C resta gratis.
       quando_si_usa: >
-        Quando l'utente lavora sul modulo Video & Analytics in ImmoWeb/ImmobilCloud.
+        Domande su costo video, crediti Kling, listino micro-tour,
+        errore 402 insufficient_credits.
       passi:
-        - "Apri il modulo indicato nel capitolo 23."
-        - "Segui il flusso descritto nel manuale operativo."
-        - "In caso di errore leggi la sezione limitazioni/errori."
+        - "Gestionale: POST /api/app/videos/kling/property/{pid} addebita 30 cr."
+        - "Se 402: ricarica crediti / verifica piano (Cap. 19)."
+        - "B2C Vendi: Ken Burns gratuito — nessun credito."
+        - "Listino: PRICING_OMNIA v3.2 · plans.CREDIT_COSTS."
       errori_comuni:
-        - problema: "Funzione non trovata o 403"
-          soluzione: "Verifica ruolo (agency_admin/agent/super_admin) e piano."
+        - problema: "Qualcuno dice ancora 10 crediti / €3"
+          soluzione: >
+            Obsoleto (D-066). Dal 05-Nov-2026 / merge D-147 il costo
+            è 30 crediti (€1,50). Aggiorna materiali e UI se mostrano 10.
+        - problema: "402 crediti insufficienti su Kling"
+          soluzione: "Servono 30 crediti disponibili sul wallet agenzia."
       permessi:
-        - "Dipende dal modulo — vedi capitolo 23"
+        - "Kling: utenti agenzia autenticati con crediti"
       screenshot: []
 
   - id: ab.cos-e
