@@ -63,16 +63,16 @@ export default function TopNav({ current = "landing", theme = "light", suffix = 
             testid: "topnav-about",
           },
           {
-            key: "why",
-            to: `/${lang}#perche`,
-            label: t("landing.nav_why"),
-            testid: "topnav-why",
-          },
-          {
             key: "offer",
             to: `/${lang}#offerta`,
             label: t("landing.nav_offer"),
             testid: "topnav-offer",
+          },
+          {
+            key: "why",
+            to: `/${lang}#perche`,
+            label: t("landing.nav_why"),
+            testid: "topnav-why",
           },
           {
             key: "pricing",

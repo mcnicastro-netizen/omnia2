@@ -32,7 +32,7 @@ const PLAN_FEATURES = {
 
 /**
  * OMNIA vetrina — www.omniarealestateecosystem.it
- * Chi siamo · progetto · perché sceglierci · cosa vendiamo · prezzi.
+ * Lab + Ecosystem · tre anime · integrazione · prezzi.
  */
 export default function LandingApp() {
   const { t, i18n } = useTranslation();
@@ -51,13 +51,14 @@ export default function LandingApp() {
     const prev = document.title;
     document.title = t(
       "landing.doc_title",
-      "OMNIA — Ecosistema immobiliare per agenzie",
+      "OMNIA Real Estate Ecosystem — Sistema operativo per agenzie",
     );
     const hash = (window.location.hash || "").replace(/^#/, "");
     if (hash) {
-      // Nav anchor (#chi-siamo / #prezzi…): after paint, non azzerare lo scroll
       requestAnimationFrame(() => {
-        document.getElementById(hash)?.scrollIntoView({ behavior: "smooth", block: "start" });
+        document
+          .getElementById(hash)
+          ?.scrollIntoView({ behavior: "smooth", block: "start" });
       });
     } else {
       window.scrollTo(0, 0);
@@ -91,46 +92,54 @@ export default function LandingApp() {
       });
   }, [t]);
 
-  const reasons = [
-    {
-      key: "one",
-      title: t("landing.why_1_title"),
-      body: t("landing.why_1_body"),
-    },
-    {
-      key: "two",
-      title: t("landing.why_2_title"),
-      body: t("landing.why_2_body"),
-    },
-    {
-      key: "three",
-      title: t("landing.why_3_title"),
-      body: t("landing.why_3_body"),
-    },
-  ];
-
-  const products = [
-    {
-      key: "immoweb",
-      tag: "B2B",
-      title: t("landing.product_crm_title"),
-      body: t("landing.product_crm_body"),
-      to: `/${lang}/register`,
-    },
+  const pillars = [
     {
       key: "cloud",
-      tag: "B2C",
-      title: t("landing.product_cloud_title"),
-      body: t("landing.product_cloud_body"),
+      tag: t("landing.pillar_cloud_tag"),
+      title: t("landing.pillar_cloud_title"),
+      role: t("landing.pillar_cloud_role"),
+      body: t("landing.pillar_cloud_body"),
+      goal: t("landing.pillar_cloud_goal"),
       to: `/${lang}/cloud`,
+      accent: "#C8A653",
+      note: null,
+    },
+    {
+      key: "crm",
+      tag: t("landing.pillar_crm_tag"),
+      title: t("landing.pillar_crm_title"),
+      role: t("landing.pillar_crm_role"),
+      body: t("landing.pillar_crm_body"),
+      goal: t("landing.pillar_crm_goal"),
+      to: `/${lang}/register`,
+      accent: "#1F6B5C",
+      note: null,
     },
     {
       key: "academy",
-      tag: "Academy",
-      title: t("landing.product_academy_title"),
-      body: t("landing.product_academy_body"),
+      tag: t("landing.pillar_academy_tag"),
+      title: t("landing.pillar_academy_title"),
+      role: t("landing.pillar_academy_role"),
+      body: t("landing.pillar_academy_body"),
+      goal: t("landing.pillar_academy_goal"),
       to: `/${lang}/learn`,
+      accent: "#0B1E3F",
+      note: t("landing.pillar_academy_note"),
     },
+  ];
+
+  const reasons = [
+    { key: "one", title: t("landing.why_1_title"), body: t("landing.why_1_body") },
+    { key: "two", title: t("landing.why_2_title"), body: t("landing.why_2_body") },
+    { key: "three", title: t("landing.why_3_title"), body: t("landing.why_3_body") },
+    { key: "four", title: t("landing.why_4_title"), body: t("landing.why_4_body") },
+  ];
+
+  const loopItems = [
+    t("landing.integrate_1"),
+    t("landing.integrate_2"),
+    t("landing.integrate_3"),
+    t("landing.integrate_4"),
   ];
 
   return (
@@ -141,37 +150,50 @@ export default function LandingApp() {
     >
       <TopNav current="landing" theme="light" />
 
-      {/* HERO — full-bleed vetrina */}
+      {/* HERO */}
       <section
         data-testid="landing-hero"
-        className="relative min-h-[88vh] flex items-end md:items-center overflow-hidden"
+        className="relative min-h-[90vh] flex items-end md:items-center overflow-hidden"
       >
         <img
           src="/cloud/hero.jpg"
           alt=""
-          className="absolute inset-0 h-full w-full object-cover animate-[landingKen_18s_ease-in-out_infinite_alternate]"
+          className="absolute inset-0 h-full w-full object-cover animate-[landingKen_22s_ease-in-out_infinite_alternate]"
           loading="eager"
         />
         <div
           className="absolute inset-0"
           style={{
             background:
-              "linear-gradient(105deg, rgba(11,30,63,0.92) 0%, rgba(11,30,63,0.72) 42%, rgba(11,30,63,0.35) 70%, rgba(11,30,63,0.2) 100%)",
+              "linear-gradient(115deg, rgba(11,30,63,0.94) 0%, rgba(11,30,63,0.78) 38%, rgba(11,30,63,0.4) 68%, rgba(31,107,92,0.25) 100%)",
+          }}
+        />
+        <div className="absolute inset-0 opacity-[0.07] pointer-events-none"
+          style={{
+            backgroundImage:
+              "radial-gradient(circle at 1px 1px, #fff 1px, transparent 0)",
+            backgroundSize: "28px 28px",
           }}
         />
         <div className="relative z-10 w-full max-w-screen-2xl mx-auto px-5 sm:px-8 md:px-12 lg:px-16 py-16 md:py-24">
-          <div className="max-w-2xl animate-[landingRise_0.8s_ease_both]">
-            <p className="text-[#C8A653] text-sm sm:text-base md:text-lg tracking-[0.08em] mb-4 md:mb-5 font-medium">
-              <Brand>OMNIA Real Estate Ecosystem</Brand>
+          <div className="max-w-3xl animate-[landingRise_0.85s_ease_both]">
+            <p className="text-[#C8A653] text-sm sm:text-base tracking-[0.12em] mb-3 font-medium uppercase font-sans">
+              <Brand>{t("landing.hero_eyebrow")}</Brand>
             </p>
             <h1 className="text-white text-4xl sm:text-5xl md:text-6xl leading-[1.05] tracking-tight mb-5 md:mb-6">
               {t("landing.hero_title")}
             </h1>
-            <p
-              className="text-white/85 text-base sm:text-lg md:text-xl max-w-xl mb-8 md:mb-10 font-sans font-light leading-relaxed"
-            >
+            <p className="text-white/85 text-base sm:text-lg md:text-xl max-w-2xl mb-6 font-sans font-light leading-relaxed">
               {t("landing.hero_subtitle")}
             </p>
+            <div className="flex flex-wrap gap-2 mb-8 md:mb-10">
+              <span className="font-sans text-[10px] sm:text-xs uppercase tracking-[0.22em] px-3 py-1.5 border border-[#C8A653]/50 text-[#C8A653] bg-[#C8A653]/10">
+                {t("landing.hero_pill_lab")}
+              </span>
+              <span className="font-sans text-[10px] sm:text-xs uppercase tracking-[0.22em] px-3 py-1.5 border border-white/35 text-white/90 bg-white/5">
+                {t("landing.hero_pill_eco")}
+              </span>
+            </div>
             <div className="flex flex-wrap gap-3 sm:gap-4">
               <Link
                 to={`/${lang}/register`}
@@ -192,59 +214,179 @@ export default function LandingApp() {
         </div>
       </section>
 
-      {/* CHI SIAMO */}
+      {/* IL LAB */}
       <section
         id="chi-siamo"
         data-testid="landing-about"
-        className="scroll-mt-28 px-5 sm:px-8 md:px-12 lg:px-16 py-20 md:py-28 max-w-screen-2xl mx-auto"
+        className="scroll-mt-28 relative overflow-hidden"
         style={{
           background:
-            "radial-gradient(900px 400px at 0% 0%, rgba(31,107,92,0.08), transparent 60%), #F5F1E8",
+            "radial-gradient(1000px 480px at 100% 0%, rgba(200,166,83,0.12), transparent 55%), radial-gradient(800px 400px at 0% 100%, rgba(31,107,92,0.1), transparent 50%), #F5F1E8",
         }}
       >
-        <div className="grid md:grid-cols-12 gap-10 md:gap-16 items-start">
-          <div className="md:col-span-4">
+        <div className="max-w-screen-2xl mx-auto px-5 sm:px-8 md:px-12 lg:px-16 py-20 md:py-28 grid lg:grid-cols-12 gap-12 lg:gap-16 items-center">
+          <div className="lg:col-span-5">
             <p className="text-[10px] sm:text-xs font-sans uppercase tracking-[0.3em] text-[#1F6B5C] mb-3">
               {t("landing.about_eyebrow")}
             </p>
-            <h2 className="text-3xl md:text-4xl tracking-tight text-[#0B1E3F]">
-              {t("landing.about_title")}
+            <h2 className="text-3xl md:text-5xl tracking-tight text-[#0B1E3F] mb-4">
+              <Brand>{t("landing.about_title")}</Brand>
             </h2>
+            <p className="text-lg md:text-xl text-[#0B1E3F]/80 mb-0 font-sans font-light leading-relaxed">
+              {t("landing.about_lead")}
+            </p>
           </div>
-          <div className="md:col-span-8 space-y-5 font-sans text-[#0B1E3F]/80 text-base md:text-lg leading-relaxed">
+          <div className="lg:col-span-7 space-y-5 font-sans text-[#0B1E3F]/80 text-base md:text-lg leading-relaxed border-l-2 border-[#C8A653] pl-6 md:pl-8">
             <p>{t("landing.about_p1")}</p>
             <p>{t("landing.about_p2")}</p>
           </div>
         </div>
       </section>
 
-      {/* PERCHÉ SCEGLIERCI */}
+      {/* TRE ANIME */}
       <section
-        id="perche"
-        data-testid="landing-why"
+        id="offerta"
+        data-testid="landing-pillars"
         className="scroll-mt-28 bg-[#0B1E3F] text-[#F5F1E8] px-5 sm:px-8 md:px-12 lg:px-16 py-20 md:py-28"
       >
         <div className="max-w-screen-2xl mx-auto">
           <p className="text-[10px] sm:text-xs font-sans uppercase tracking-[0.3em] text-[#C8A653] mb-3">
-            {t("landing.why_eyebrow")}
+            {t("landing.pillars_eyebrow")}
           </p>
-          <h2 className="text-3xl md:text-4xl tracking-tight mb-12 md:mb-16 max-w-xl">
-            {t("landing.why_title")}
+          <h2 className="text-3xl md:text-4xl tracking-tight mb-3 max-w-2xl">
+            {t("landing.pillars_title")}
           </h2>
-          <div className="grid md:grid-cols-3 gap-10 md:gap-12">
-            {reasons.map((r, i) => (
-              <div
-                key={r.key}
-                data-testid={`landing-why-${r.key}`}
-                className="animate-[landingRise_0.7s_ease_both]"
-                style={{ animationDelay: `${0.1 * i}s` }}
+          <p className="font-sans text-[#F5F1E8]/70 max-w-2xl mb-12 md:mb-16 text-base md:text-lg">
+            {t("landing.pillars_lead")}
+          </p>
+
+          <div className="grid md:grid-cols-3 gap-6 md:gap-8">
+            {pillars.map((p, i) => (
+              <Link
+                key={p.key}
+                to={p.to}
+                data-testid={`landing-pillar-${p.key}`}
+                className="group relative flex flex-col min-h-[320px] p-7 md:p-8 bg-[#132848] border border-white/10 hover:border-[#C8A653]/60 transition animate-[landingRise_0.7s_ease_both]"
+                style={{ animationDelay: `${0.08 * i}s` }}
               >
-                <p className="text-[#C8A653] font-sans text-xs tracking-widest mb-4">
-                  0{i + 1}
+                <div
+                  className="absolute top-0 left-0 right-0 h-1 opacity-90"
+                  style={{ background: p.accent }}
+                />
+                <p
+                  className="text-[10px] font-sans uppercase tracking-[0.3em] mb-4"
+                  style={{ color: p.accent === "#0B1E3F" ? "#C8A653" : p.accent }}
+                >
+                  {p.tag}
                 </p>
-                <h3 className="text-xl md:text-2xl mb-3 tracking-tight">{r.title}</h3>
-                <p className="font-sans text-sm md:text-base text-[#F5F1E8]/75 leading-relaxed">
-                  {r.body}
+                <h3 className="text-2xl md:text-3xl tracking-tight mb-1">
+                  <Brand>{p.title}</Brand>
+                </h3>
+                <p className="font-sans text-sm text-[#F5F1E8]/55 mb-5 uppercase tracking-wider">
+                  {p.role}
+                </p>
+                <p className="font-sans text-sm md:text-base text-[#F5F1E8]/80 leading-relaxed flex-1">
+                  {p.body}
+                </p>
+                <p className="mt-5 font-sans text-xs text-[#C8A653] tracking-wide">
+                  → {p.goal}
+                </p>
+                {p.note ? (
+                  <p className="mt-4 font-sans text-[11px] leading-relaxed text-[#F5F1E8]/50 border-t border-white/10 pt-4">
+                    {p.note}
+                  </p>
+                ) : null}
+                <span className="mt-6 font-sans text-xs uppercase tracking-widest text-[#C8A653] group-hover:translate-x-1 transition-transform inline-block">
+                  {t("landing.pillar_cta")} →
+                </span>
+              </Link>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* INTEGRAZIONE — diagramma */}
+      <section
+        id="perche"
+        data-testid="landing-integrate"
+        className="scroll-mt-28 px-5 sm:px-8 md:px-12 lg:px-16 py-20 md:py-28"
+        style={{
+          background:
+            "linear-gradient(180deg, #eef3f1 0%, #F5F1E8 40%, #e8eef5 100%)",
+        }}
+      >
+        <div className="max-w-screen-2xl mx-auto grid lg:grid-cols-2 gap-14 lg:gap-20 items-center">
+          <div>
+            <p className="text-[10px] sm:text-xs font-sans uppercase tracking-[0.3em] text-[#1F6B5C] mb-3">
+              {t("landing.integrate_eyebrow")}
+            </p>
+            <h2 className="text-3xl md:text-4xl tracking-tight mb-4 max-w-lg">
+              {t("landing.integrate_title")}
+            </h2>
+            <p className="font-sans text-[#0B1E3F]/70 text-base md:text-lg leading-relaxed mb-8 max-w-xl">
+              {t("landing.integrate_lead")}
+            </p>
+            <ol className="space-y-4 font-sans">
+              {loopItems.map((item, idx) => (
+                <li key={idx} className="flex gap-4 items-start">
+                  <span className="shrink-0 w-8 h-8 flex items-center justify-center text-xs tracking-widest text-[#C8A653] border border-[#C8A653]/40 bg-white/60">
+                    0{idx + 1}
+                  </span>
+                  <span className="text-sm md:text-base text-[#0B1E3F]/80 pt-1.5 leading-relaxed">
+                    {item}
+                  </span>
+                </li>
+              ))}
+            </ol>
+          </div>
+
+          {/* Diagramma ecosistema */}
+          <div
+            data-testid="landing-ecosystem-diagram"
+            className="relative mx-auto w-full max-w-md aspect-square"
+          >
+            <div
+              className="absolute inset-[12%] rounded-full border border-[#0B1E3F]/15 animate-[landingPulse_6s_ease-in-out_infinite]"
+              style={{
+                background:
+                  "radial-gradient(circle at 50% 50%, rgba(200,166,83,0.2), transparent 65%)",
+              }}
+            />
+            <div className="absolute inset-[28%] rounded-full bg-[#0B1E3F] text-[#F5F1E8] flex items-center justify-center text-center shadow-[0_20px_60px_rgba(11,30,63,0.25)] animate-[landingRise_1s_ease_both]">
+              <p className="font-sans text-[10px] sm:text-xs uppercase tracking-[0.25em] leading-relaxed px-4 whitespace-pre-line">
+                {t("landing.integrate_diagram_center")}
+              </p>
+            </div>
+            {[
+              {
+                label: t("landing.integrate_diagram_market"),
+                sub: "ImmobilCloud",
+                pos: "top-0 left-1/2 -translate-x-1/2",
+                color: "#C8A653",
+              },
+              {
+                label: t("landing.integrate_diagram_ops"),
+                sub: "ImmoWeb",
+                pos: "bottom-[8%] left-0",
+                color: "#1F6B5C",
+              },
+              {
+                label: t("landing.integrate_diagram_skills"),
+                sub: "Academy",
+                pos: "bottom-[8%] right-0",
+                color: "#0B1E3F",
+              },
+            ].map((node) => (
+              <div
+                key={node.sub}
+                className={`absolute ${node.pos} w-[42%] sm:w-[38%] bg-white/95 border border-[#0B1E3F]/10 px-4 py-3 shadow-[0_12px_40px_rgba(11,30,63,0.08)]`}
+                style={{ borderTop: `3px solid ${node.color}` }}
+              >
+                <p className="font-sans text-[10px] uppercase tracking-[0.25em] text-[#0B1E3F]/50 mb-1">
+                  {node.label}
+                </p>
+                <p className="text-sm sm:text-base tracking-tight">
+                  <Brand>{node.sub}</Brand>
                 </p>
               </div>
             ))}
@@ -252,43 +394,31 @@ export default function LandingApp() {
         </div>
       </section>
 
-      {/* COSA VENDIAMO */}
+      {/* PERCHÉ */}
       <section
-        id="offerta"
-        data-testid="landing-offer"
-        className="scroll-mt-28 px-5 sm:px-8 md:px-12 lg:px-16 py-20 md:py-28 max-w-screen-2xl mx-auto bg-[#F5F1E8]"
+        data-testid="landing-why"
+        className="bg-[#0B1E3F] text-[#F5F1E8] px-5 sm:px-8 md:px-12 lg:px-16 py-20 md:py-24"
       >
-        <p className="text-[10px] sm:text-xs font-sans uppercase tracking-[0.3em] text-[#1F6B5C] mb-3">
-          {t("landing.offer_eyebrow")}
-        </p>
-        <h2 className="text-3xl md:text-4xl tracking-tight mb-4 max-w-2xl">
-          {t("landing.offer_title")}
-        </h2>
-        <p className="font-sans text-[#0B1E3F]/70 max-w-2xl mb-12 md:mb-16 text-base md:text-lg">
-          {t("landing.offer_lead")}
-        </p>
-        <div className="grid md:grid-cols-3 gap-8 md:gap-10">
-          {products.map((p) => (
-            <Link
-              key={p.key}
-              to={p.to}
-              data-testid={`landing-product-${p.key}`}
-              className="group block border-t border-[#0B1E3F]/20 pt-6 hover:border-[#C8A653] transition"
-            >
-              <p className="text-[10px] font-sans uppercase tracking-[0.3em] text-[#1F6B5C] mb-3">
-                {p.tag}
-              </p>
-              <h3 className="text-2xl mb-3 tracking-tight group-hover:translate-x-1 transition-transform">
-                <Brand>{p.title}</Brand>
-              </h3>
-              <p className="font-sans text-sm text-[#0B1E3F]/70 leading-relaxed mb-5">
-                {p.body}
-              </p>
-              <span className="font-sans text-xs uppercase tracking-widest text-[#C8A653]">
-                {t("common.next")} →
-              </span>
-            </Link>
-          ))}
+        <div className="max-w-screen-2xl mx-auto">
+          <p className="text-[10px] sm:text-xs font-sans uppercase tracking-[0.3em] text-[#C8A653] mb-3">
+            {t("landing.why_eyebrow")}
+          </p>
+          <h2 className="text-3xl md:text-4xl tracking-tight mb-12 md:mb-14 max-w-xl">
+            {t("landing.why_title")}
+          </h2>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8 md:gap-10">
+            {reasons.map((r, i) => (
+              <div key={r.key} data-testid={`landing-why-${r.key}`}>
+                <p className="text-[#C8A653] font-sans text-xs tracking-widest mb-3">
+                  0{i + 1}
+                </p>
+                <h3 className="text-xl mb-3 tracking-tight">{r.title}</h3>
+                <p className="font-sans text-sm text-[#F5F1E8]/70 leading-relaxed">
+                  {r.body}
+                </p>
+              </div>
+            ))}
+          </div>
         </div>
       </section>
 
@@ -299,7 +429,7 @@ export default function LandingApp() {
         className="scroll-mt-28 px-5 sm:px-8 md:px-12 lg:px-16 py-20 md:py-28 border-t border-[#0B1E3F]/10"
         style={{
           background:
-            "linear-gradient(180deg, #eef3f1 0%, #F5F1E8 55%, #e8eef5 100%)",
+            "linear-gradient(180deg, #F5F1E8 0%, #eef3f1 55%, #F5F1E8 100%)",
         }}
       >
         <div className="max-w-screen-2xl mx-auto">
@@ -397,27 +527,36 @@ export default function LandingApp() {
       {/* CTA FINALE */}
       <section
         data-testid="landing-final-cta"
-        className="px-5 sm:px-8 md:px-12 lg:px-16 py-16 md:py-20 bg-[#0B1E3F] text-center"
+        className="px-5 sm:px-8 md:px-12 lg:px-16 py-16 md:py-20 bg-[#0B1E3F] text-center relative overflow-hidden"
       >
-        <h2 className="text-[#F5F1E8] text-2xl md:text-3xl tracking-tight mb-4">
-          {t("landing.final_title")}
-        </h2>
-        <p className="font-sans text-[#F5F1E8]/70 mb-8 max-w-lg mx-auto">
-          {t("landing.final_lead")}
-        </p>
-        <div className="flex flex-wrap justify-center gap-3">
-          <Link
-            to={`/${lang}/register`}
-            className="inline-flex px-6 py-3 text-xs font-sans uppercase tracking-widest bg-[#C8A653] text-[#0B1E3F] hover:bg-[#d4b56a] transition"
-          >
-            {t("landing.cta_start")}
-          </Link>
-          <Link
-            to={`/${lang}/cloud`}
-            className="inline-flex px-6 py-3 text-xs font-sans uppercase tracking-widest border border-[#F5F1E8]/40 text-[#F5F1E8] hover:bg-white/10 transition"
-          >
-            {t("landing.cta_cloud")}
-          </Link>
+        <div
+          className="absolute inset-0 opacity-30 pointer-events-none"
+          style={{
+            background:
+              "radial-gradient(600px 200px at 50% 100%, rgba(200,166,83,0.35), transparent 70%)",
+          }}
+        />
+        <div className="relative">
+          <h2 className="text-[#F5F1E8] text-2xl md:text-3xl tracking-tight mb-4">
+            {t("landing.final_title")}
+          </h2>
+          <p className="font-sans text-[#F5F1E8]/70 mb-8 max-w-lg mx-auto">
+            {t("landing.final_lead")}
+          </p>
+          <div className="flex flex-wrap justify-center gap-3">
+            <Link
+              to={`/${lang}/register`}
+              className="inline-flex px-6 py-3 text-xs font-sans uppercase tracking-widest bg-[#C8A653] text-[#0B1E3F] hover:bg-[#d4b56a] transition"
+            >
+              {t("landing.cta_start")}
+            </Link>
+            <Link
+              to={`/${lang}/cloud`}
+              className="inline-flex px-6 py-3 text-xs font-sans uppercase tracking-widest border border-[#F5F1E8]/40 text-[#F5F1E8] hover:bg-white/10 transition"
+            >
+              {t("landing.cta_cloud")}
+            </Link>
+          </div>
         </div>
       </section>
 
@@ -461,6 +600,10 @@ export default function LandingApp() {
         @keyframes landingKen {
           from { transform: scale(1); }
           to { transform: scale(1.06); }
+        }
+        @keyframes landingPulse {
+          0%, 100% { transform: scale(1); opacity: 1; }
+          50% { transform: scale(1.03); opacity: 0.85; }
         }
       `}</style>
     </div>
