@@ -238,3 +238,41 @@ class TestWidgetAsset:
     def test_unknown_widget_404(self):
         r = requests.get(f"{BASE_URL}/api/widgets/v1/unknown-widget.html")
         assert r.status_code == 404
+
+
+class TestWhoisItParse:
+    """D-144 — .it has no IANA RDAP; WHOIS Registro.it must drive the verdict."""
+
+    SAMPLE = """
+Domain:             nicastroimmobiliare.it
+Status:             ok
+Created:            2019-04-08 12:46:52
+Last Update:        2026-07-16 00:43:00
+Expire Date:        2027-06-30
+
+Registrant
+  Organization:     NICASTRO IMMOBILIARE DI NICASTRO M.M.C.
+  Address:          Via Matteo Renato Imbriani, 222
+
+Registrar
+  Organization:     Aruba s.p.a.
+  Name:             ARUBA-REG
+
+Nameservers
+  dns.technorail.com
+  dns2.technorail.com
+"""
+
+    def test_parse_registrant_and_ns(self):
+        from shared.utils.rdap import _parse_whois_it
+        p = _parse_whois_it(self.SAMPLE)
+        assert p["not_found"] is False
+        assert "NICASTRO IMMOBILIARE" in p["registrant"]
+        assert p["registrar"].startswith("Aruba")
+        assert "dns.technorail.com" in p["nameservers"]
+        assert p["expires_at"].startswith("2027-06-30")
+
+    def test_parse_available(self):
+        from shared.utils.rdap import _parse_whois_it
+        p = _parse_whois_it("Domain: foo.it\nStatus:            available\n")
+        assert p["not_found"] is True

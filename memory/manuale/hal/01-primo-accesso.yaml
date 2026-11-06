@@ -16,18 +16,20 @@ voci:
     widget: null
     pubblico: [titolare, agente, segreteria]
     livello: base
-    tags: [orientamento, primi-passi, panoramica]
+    tags: [orientamento, primi-passi, panoramica, www, d-146]
     correlati:
       - primo-accesso.tour-barra-sinistra
       - hal-agents.introduzione
       - dashboard.panoramica-iniziale
+      - api.www-vetrina-landing
     domanda_naturale: "Cos'è OMNIA e cosa ci posso fare?"
     contenuto:
       a_cosa_serve: >
         OMNIA è l'ecosistema che unisce il tuo gestionale ImmoWeb,
         l'assistente intelligente HAL e il portale pubblico ImmobilCloud.
         Da un unico posto gestisci immobili, clienti, portali e sito
-        dell'agenzia.
+        dell'agenzia. Il sito istituzionale www (D-146) spiega Lab +
+        Ecosystem; non sostituisce ImmobilCloud per cercare casa.
       quando_si_usa: >
         Ogni giorno per il lavoro operativo. Il primo giorno per
         orientarti. Il manuale ti guida modulo per modulo.
@@ -39,7 +41,13 @@ voci:
           e legali.
         - ImmobilCloud è il portale pubblico dove finiscono in vetrina
           gli annunci della tua agenzia; ci arrivano i clienti finali.
-      errori_comuni: []
+        - "www.omniarealestateecosystem.it = vetrina istituzionale (Chi siamo,
+          Perché OMNIA, prezzi). Nav www senza Cerca casa — per cercare casa
+          usa ImmobilCloud /it/cloud."
+      errori_comuni:
+        - problema: "Cerco Cerca casa sulla home www"
+          soluzione: >
+            D-146: non è in nav vetrina. Vai su ImmobilCloud (/it/cloud).
       permessi:
         - Tutti i ruoli
     screenshot:
@@ -191,6 +199,60 @@ voci:
             finestra anonima.
       permessi:
         - Pubblico portale / account esistenti
+    screenshot: []
+
+  - id: primo-accesso.home-cloud-tools-mappa
+    titolo: Home ImmobilCloud — 4 riquadri, PWA QR→Area e Cerca su mappa (D-139…D-143)
+    modulo: Primo accesso
+    widget: null
+    pubblico: [privato, titolare, agente, segreteria]
+    livello: base
+    tags: [immobilcloud, home, mappa, cerca-casa, news, scout, pwa, scarica-app, qr, area, d-139, d-141, d-142, d-143, bbox, idealista]
+    correlati:
+      - primo-accesso.area-riservata-cloud
+      - api.portal-news-rss
+      - api.cloud-search-bbox-map
+    domanda_naturale: "Dove trovo Cerca su mappa? Come scarico l'app ImmobilCloud con QR? Atterro su Accedi o Crea account? Cosa ci sono nei box della home? Perché vedo testo in trasparenza sulla nav?"
+    contenuto:
+      a_cosa_serve: >
+        Orientarsi sulla home ImmobilCloud: 4 riquadri Scout · Cerca su
+        mappa · Scarica app · News. QR → Area Accedi/Crea (?from=pwa) +
+        Installa (D-143). Scout in evidenza in Cerca e Vendi (D-142).
+        Visura e HAL Legal solo in nav. Nav sticky opaca (no bleed hero).
+      quando_si_usa: >
+        Visitatore su /cloud; scan QR da computer; install icona telefonino;
+        ricerca mappa; Scout prima di visita o in Vendi.
+      passi:
+        - "Home → tile Scarica app → /cloud/app (guida + QR)."
+        - "Dal PC: inquadra il QR → /cloud/area?from=pwa (Accedi | Crea)."
+        - "Su Area: striscia Installa; Android dialog nativo."
+        - "Su iPhone: Condividi → Aggiungi a Home (limite Apple)."
+        - "Tile Cerca su mappa → /cloud/search?view=map."
+        - "Cerca / Vendi: banner Scout in evidenza."
+        - "HAL Legal e Visura: voci nav (non tile home)."
+      errori_comuni:
+        - problema: "Non trovo HAL Legal / Visura nei 4 box"
+          soluzione: >
+            Voluto (D-141/D-142): sono in nav. I 4 box sono Scout, Mappa,
+            Scarica app, News.
+        - problema: "Su iPhone non appare Installa"
+          soluzione: >
+            Apple non permette install silenziosa. Su /cloud/app o dalla
+            striscia Area → guida Condividi → Aggiungi a Home. Serve HTTPS.
+        - problema: "Il QR non apre Accedi/Crea account"
+          soluzione: >
+            Deve puntare a …/it/cloud/area?from=pwa (non solo /cloud/app).
+            Hard refresh; fotocamera o app QR.
+        - problema: "Testo fantasma / trasparente sulla nav"
+          soluzione: >
+            Bug sticky nav semitrasparente (fix PR #106): hard refresh.
+            Nav ora cream opaca.
+        - problema: "Non vedo Cerca su mappa"
+          soluzione: >
+            Hard refresh FE. Home tile oppure box sotto i filtri in lista.
+            URL /it/cloud/search?view=map.
+      permessi:
+        - Pubblico portale
     screenshot: []
 
   - id: primo-accesso.password-dimenticata

@@ -108,15 +108,26 @@ export default function PropertyDetailPage() {
     return () => { document.title = prev; };
   }, [prop]);
 
+  const resolveVideoPlayUrl = (data) => {
+    if (!data?.id) return null;
+    const rel =
+      (data.download_url && String(data.download_url)) ||
+      `/api/app/videos/${data.id}/download`;
+    if (rel.startsWith("http://") || rel.startsWith("https://")) return rel;
+    return `${BACKEND_URL}${rel.startsWith("/") ? rel : `/${rel}`}`;
+  };
+
   useEffect(() => {
     if (!pid) return;
     api.get(`/cloud/videos/by-property/${pid}`)
       .then((r) => {
-        if (r.data?.id) {
-          setVideoUrl(`${BACKEND_URL}/api/app/videos/${r.data.id}/download`);
+        if (r.data?.status === "ready" && r.data?.id) {
+          setVideoUrl(resolveVideoPlayUrl(r.data));
+        } else {
+          setVideoUrl(null);
         }
       })
-      .catch(() => {});
+      .catch(() => setVideoUrl(null));
     if (isB2c) {
       api.get("/cloud/me/favorites/ids")
         .then((r) => setFav((r.data.ids || []).includes(pid)))
@@ -151,7 +162,7 @@ export default function PropertyDetailPage() {
         }
         const st = await api.get(`/cloud/videos/${data.video_id}`);
         if (st.data.status === "ready") {
-          setVideoUrl(`${BACKEND_URL}/api/app/videos/${data.video_id}/download`);
+          setVideoUrl(resolveVideoPlayUrl(st.data));
           return;
         }
         if (st.data.status === "failed") {
@@ -159,7 +170,9 @@ export default function PropertyDetailPage() {
           setVideoErr(
             detail === "no_photos_downloaded"
               ? "Non siamo riusciti a leggere le foto per il video. Riprova o ricarica le immagini."
-              : `Video non generato (${detail}). Riprova.`
+              : detail === "video_expired"
+                ? "Il video precedente non è più disponibile. Rigeneralo."
+                : `Video non generato (${detail}). Riprova.`
           );
           return;
         }
@@ -170,6 +183,30 @@ export default function PropertyDetailPage() {
     } catch (e) {
       console.error(e);
       setVideoErr(e?.response?.data?.detail || "Video tour non disponibile. Riprova.");
+    } finally {
+      setVideoBusy(false);
+    }
+  };
+
+  const deleteVideo = async () => {
+    if (!pid || videoBusy) return;
+    const ok = window.confirm(
+      t(
+        "cloud.sell.video_delete_confirm",
+        "Eliminare il video tour da questo annuncio? La scheda pubblica non lo mostrerà più. Potrai generarne uno nuovo quando vuoi."
+      )
+    );
+    if (!ok) return;
+    setVideoBusy(true);
+    setVideoErr("");
+    try {
+      await api.delete(`/cloud/me/properties/${pid}/video`);
+      setVideoUrl(null);
+    } catch (e) {
+      setVideoErr(
+        e?.response?.data?.detail ||
+          t("cloud.sell.video_delete_failed", "Non siamo riusciti a eliminare il video. Riprova.")
+      );
     } finally {
       setVideoBusy(false);
     }
@@ -688,14 +725,36 @@ export default function PropertyDetailPage() {
                 <p className="text-sm text-rose-700 mb-2" data-testid="detail-video-error">{String(videoErr)}</p>
               )}
               {videoUrl ? (
-                <div className="mx-auto w-full max-w-3xl rounded-xl overflow-hidden bg-stone-900">
-                  <video
-                    data-testid="detail-video-player"
-                    src={videoUrl}
-                    controls
-                    playsInline
-                    className="block w-full aspect-video object-contain object-center bg-stone-900"
-                  />
+                <div className="space-y-2">
+                  <div className="mx-auto w-full max-w-3xl rounded-xl overflow-hidden bg-stone-900">
+                    <video
+                      data-testid="detail-video-player"
+                      src={videoUrl}
+                      controls
+                      playsInline
+                      preload="metadata"
+                      onError={() => {
+                        setVideoUrl(null);
+                        setVideoErr(
+                          isLister
+                            ? "Il video non si riproduce. Rigeneralo da Vendi o qui sotto."
+                            : "Video temporaneamente non disponibile."
+                        );
+                      }}
+                      className="block w-full aspect-video object-contain object-center bg-stone-900"
+                    />
+                  </div>
+                  {isLister && (
+                    <button
+                      type="button"
+                      data-testid="detail-delete-video"
+                      disabled={videoBusy}
+                      onClick={deleteVideo}
+                      className="text-xs uppercase tracking-widest text-rose-700 hover:text-rose-900 disabled:opacity-50"
+                    >
+                      {t("cloud.sell.video_delete", "Elimina video")}
+                    </button>
+                  )}
                 </div>
               ) : isLister ? (
                 <p className="text-sm text-stone-500">Nessun video ancora.</p>

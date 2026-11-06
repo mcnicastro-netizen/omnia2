@@ -171,14 +171,15 @@ def _analyze(rdap: Dict[str, Any], agency_name: Optional[str]) -> Dict[str, Any]
             "flags": {"is_free": True},
         }
 
-    if rdap.get("error"):
+    if rdap.get("error") and not rdap.get("ok"):
         return {
             "status": "unknown",
             "severity": "info",
             "headline": "Non siamo riusciti a leggere i dati del dominio",
             "explanation": (
                 "Il registro non ha risposto in tempo o il dominio è di un TLD che "
-                "non supporta ancora RDAP. Riprova più tardi o contattaci per un check manuale."
+                "non supporta ancora una lettura automatica. Riprova più tardi o "
+                "contattaci per un check manuale. (I domini .it usano WHOIS Registro.it.)"
             ),
             "actions": ["retry", "contact_support"],
             "flags": {"rdap_error": True},

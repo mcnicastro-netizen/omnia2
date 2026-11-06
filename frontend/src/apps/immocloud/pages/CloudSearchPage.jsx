@@ -1,26 +1,42 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { api } from "../../../shared/lib/api";
 import { useAuth } from "../../../shared/lib/auth";
-import PropertyMapView from "../components/PropertyMapView";
+import PropertyMapView, { boundsToBboxParam } from "../components/PropertyMapView";
 import PropertyCard from "../components/PropertyCard";
 import CloudPageHero from "../components/CloudPageHero";
-import { FIELD, BTN_PRIMARY } from "../cloudTheme";
+import { FIELD, BTN_PRIMARY, formatEUR } from "../cloudTheme";
 import { ENERGY_CLASS_LETTER_OPTIONS } from "../../../shared/lib/energyClasses";
 
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+
 export default function CloudSearchPage() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const lang = (i18n.language || "it").slice(0, 2);
   const [params, setParams] = useSearchParams();
   const [data, setData] = useState({ items: [], total: 0, has_next: false, page: 1 });
   const [loading, setLoading] = useState(false);
-  const viewMode = params.get("view") === "map" ? "map" : "list"; // deep-linkable
+  const viewMode = params.get("view") === "map" ? "map" : "list";
   const [mapMarkers, setMapMarkers] = useState([]);
+  const [mapLoading, setMapLoading] = useState(false);
+  const [selectedId, setSelectedId] = useState(null);
+  const [pendingBounds, setPendingBounds] = useState(null);
+  const [areaDirty, setAreaDirty] = useState(false);
+  const listRef = useRef(null);
+  const initialFitDone = useRef(false);
 
   const setViewMode = (mode) => {
     const next = new URLSearchParams(params);
-    if (mode === "map") next.set("view", "map"); else next.delete("view");
+    if (mode === "map") next.set("view", "map");
+    else {
+      next.delete("view");
+      next.delete("bbox");
+    }
     setParams(next, { replace: true });
+    setAreaDirty(false);
+    setPendingBounds(null);
+    initialFitDone.current = false;
   };
 
   const filters = useMemo(() => ({
@@ -36,20 +52,30 @@ export default function CloudSearchPage() {
     bedrooms_min: params.get("bedrooms_min") || "",
     energy_class: params.get("energy_class") || "",
     sort: params.get("sort") || "recent",
-    page: parseInt(params.get("page") || "1"),
+    page: parseInt(params.get("page") || "1", 10),
     mls: params.get("mls") === "1",
     near_me: params.get("near_me") === "1",
     radius_km: params.get("radius_km") || "5",
+    bbox: params.get("bbox") || "",
   }), [params]);
 
   const [advOpen, setAdvOpen] = useState(Boolean(filters.cities || filters.near_me));
   const [geoErr, setGeoErr] = useState("");
 
+  const appendCommonFilters = useCallback((qs, { includeCity = true, includeBbox = true } = {}) => {
+    ["operation", "property_type", "price_min", "price_max",
+      "rooms_min", "bedrooms_min", "energy_class", "surface_min"].forEach((k) => {
+      if (filters[k]) qs.set(k, filters[k]);
+    });
+    if (includeBbox && filters.bbox) qs.set("bbox", filters.bbox);
+    if (includeCity && !filters.bbox && filters.city) qs.set("city", filters.city);
+  }, [filters]);
+
+  // Lista (list mode + map mode con bbox/filtri)
   useEffect(() => {
     setLoading(true);
     const page = filters.page || 1;
 
-    // MLS network path (home dual-box)
     if (filters.mls) {
       const qs = new URLSearchParams();
       if (filters.operation) qs.set("operation", filters.operation);
@@ -81,12 +107,11 @@ export default function CloudSearchPage() {
       return;
     }
 
-    // Advanced: multi-city / near-me
     const cityList = (filters.cities || "")
       .split(",")
       .map((c) => c.trim())
       .filter(Boolean);
-    const useAdvanced = cityList.length > 1 || filters.near_me;
+    const useAdvanced = !filters.bbox && (cityList.length > 1 || filters.near_me);
 
     if (useAdvanced) {
       const body = {
@@ -100,7 +125,7 @@ export default function CloudSearchPage() {
         energy_class: filters.energy_class || undefined,
         sort: filters.sort || "recent",
         page,
-        page_size: 20,
+        page_size: viewMode === "map" ? 40 : 20,
         cities: cityList.length ? cityList : (filters.city ? [filters.city] : undefined),
         compare_prices: true,
       };
@@ -147,9 +172,10 @@ export default function CloudSearchPage() {
     const qs = new URLSearchParams();
     Object.entries(filters).forEach(([k, v]) => {
       if (["mls", "near_me", "radius_km", "cities", "province"].includes(k)) return;
+      if (k === "city" && filters.bbox) return;
       if (v) qs.set(k, v);
     });
-    qs.set("page_size", "20");
+    qs.set("page_size", viewMode === "map" ? "40" : "20");
     api.get(`/cloud/search?${qs.toString()}`)
       .then((r) => {
         const payload = r?.data && typeof r.data === "object" && !Array.isArray(r.data) ? r.data : {};
@@ -164,249 +190,472 @@ export default function CloudSearchPage() {
       })
       .catch(() => setData({ items: [], total: 0, has_next: false, page: 1 }))
       .finally(() => setLoading(false));
-  }, [filters]);
+  }, [filters, viewMode]);
 
-  // M3.S3 — fetch map markers when switching to map view or filters change
+  // Marker mappa
   useEffect(() => {
     if (viewMode !== "map") return;
+    setMapLoading(true);
     const qs = new URLSearchParams();
-    ["operation", "city", "property_type", "price_min", "price_max",
-     "rooms_min", "bedrooms_min", "energy_class"].forEach((k) => {
-      if (filters[k]) qs.set(k, filters[k]);
-    });
+    appendCommonFilters(qs, { includeCity: !filters.bbox, includeBbox: true });
     qs.set("limit", "500");
     api.get(`/cloud/map?${qs.toString()}`)
       .then((r) => setMapMarkers(r.data.items || []))
-      .catch(() => setMapMarkers([]));
-  }, [viewMode, filters]);
+      .catch(() => setMapMarkers([]))
+      .finally(() => setMapLoading(false));
+  }, [viewMode, filters, appendCommonFilters]);
+
+  // Scroll lista → card selezionata
+  useEffect(() => {
+    if (!selectedId || !listRef.current) return;
+    const el = listRef.current.querySelector(`[data-map-row="${selectedId}"]`);
+    if (el) el.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  }, [selectedId]);
 
   const updateFilter = (k, v) => {
     const next = new URLSearchParams(params);
     if (v) next.set(k, v); else next.delete(k);
     next.delete("page");
+    // Cambio filtri classici → reset area mappa
+    if (k !== "bbox" && k !== "sort" && k !== "page") {
+      next.delete("bbox");
+      setAreaDirty(false);
+      setPendingBounds(null);
+      initialFitDone.current = false;
+    }
     setParams(next);
+  };
+
+  const applyAreaSearch = () => {
+    if (!pendingBounds) return;
+    const bbox = boundsToBboxParam(pendingBounds);
+    const next = new URLSearchParams(params);
+    next.set("view", "map");
+    next.set("bbox", bbox);
+    next.delete("page");
+    // Area vince sulla città (come Idealista)
+    next.delete("city");
+    setParams(next);
+    setAreaDirty(false);
+    initialFitDone.current = true; // non rifare fitBounds dopo ricerca area
+  };
+
+  const onBoundsIdle = (b) => {
+    setPendingBounds(b);
+    if (initialFitDone.current || filters.bbox) {
+      setAreaDirty(true);
+    } else {
+      // Primo fit completato: memorizza bounds senza chiedere subito
+      initialFitDone.current = true;
+    }
   };
 
   const goToPage = (n) => {
     const next = new URLSearchParams(params);
     next.set("page", n);
     setParams(next);
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    if (viewMode !== "map") window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const heroTitle = filters.city
     ? t("cloud.results_in_city", { city: filters.city })
     : t("cloud.all_results");
 
+  const filterSidebar = (
+    <div className="space-y-4">
+      <FilterBlock label={t("cloud.f_operation")}>
+        <SegSelect
+          value={filters.operation}
+          onChange={(v) => updateFilter("operation", v)}
+          options={[
+            { v: "sale", l: t("cloud.op_sale") },
+            { v: "rent", l: t("cloud.op_rent") },
+          ]}
+        />
+      </FilterBlock>
+
+      {!filters.bbox && (
+        <FilterBlock label={t("cloud.f_city")}>
+          <input
+            data-testid="filter-city"
+            value={filters.city}
+            onChange={(e) => updateFilter("city", e.target.value)}
+            placeholder={t("cloud.search_placeholder")}
+            className={FIELD}
+          />
+        </FilterBlock>
+      )}
+      {filters.bbox && (
+        <p className="text-xs text-stone-500" data-testid="map-area-active">
+          {t("cloud.map_area_active", "Ricerca sull’area della mappa")}
+        </p>
+      )}
+
+      <button
+        type="button"
+        data-testid="toggle-advanced-search"
+        onClick={() => setAdvOpen((v) => !v)}
+        className="text-[10px] uppercase tracking-widest text-[#0B1E3F] hover:text-[#C19A6B]"
+      >
+        {advOpen ? "Nascondi avanzata" : "Ricerca avanzata"}
+      </button>
+
+      {advOpen && (
+        <div className="space-y-3 rounded-xl bg-white/80 border border-stone-200 p-3" data-testid="advanced-search-panel">
+          <FilterBlock label="Multi-città (virgola)">
+            <input
+              data-testid="filter-cities"
+              value={filters.cities}
+              onChange={(e) => updateFilter("cities", e.target.value)}
+              placeholder="Catania, Milano, Roma"
+              className={FIELD}
+            />
+          </FilterBlock>
+          <label className="flex items-center gap-2 text-sm text-stone-700">
+            <input
+              type="checkbox"
+              data-testid="filter-near-me"
+              checked={filters.near_me}
+              onChange={(e) => updateFilter("near_me", e.target.checked ? "1" : "")}
+            />
+            Vicino a me
+          </label>
+          {filters.near_me && (
+            <FilterBlock label="Raggio km">
+              <input
+                type="number"
+                min={1}
+                max={50}
+                value={filters.radius_km}
+                onChange={(e) => updateFilter("radius_km", e.target.value)}
+                className={FIELD}
+              />
+            </FilterBlock>
+          )}
+          {geoErr && <p className="text-xs text-red-600">{geoErr}</p>}
+        </div>
+      )}
+
+      <FilterBlock label={t("cloud.f_type")}>
+        <select
+          data-testid="filter-type"
+          value={filters.property_type}
+          onChange={(e) => updateFilter("property_type", e.target.value)}
+          className={FIELD}
+        >
+          <option value="">{t("cloud.any")}</option>
+          {["appartamento", "casa", "villa", "loft", "attico", "monolocale", "ufficio"].map((tp) => (
+            <option key={tp} value={tp}>{tp}</option>
+          ))}
+        </select>
+      </FilterBlock>
+
+      <FilterBlock label={t("cloud.f_price")}>
+        <div className="flex gap-2">
+          <input
+            data-testid="filter-price-min"
+            type="number"
+            placeholder={t("cloud.min")}
+            value={filters.price_min}
+            onChange={(e) => updateFilter("price_min", e.target.value)}
+            className={`w-1/2 ${FIELD}`}
+          />
+          <input
+            data-testid="filter-price-max"
+            type="number"
+            placeholder={t("cloud.max")}
+            value={filters.price_max}
+            onChange={(e) => updateFilter("price_max", e.target.value)}
+            className={`w-1/2 ${FIELD}`}
+          />
+        </div>
+      </FilterBlock>
+
+      <FilterBlock label={t("cloud.f_rooms_min")}>
+        <select
+          data-testid="filter-rooms-min"
+          value={filters.rooms_min}
+          onChange={(e) => updateFilter("rooms_min", e.target.value)}
+          className={FIELD}
+        >
+          <option value="">{t("cloud.any")}</option>
+          {[1, 2, 3, 4, 5].map((n) => <option key={n} value={n}>{n}+</option>)}
+        </select>
+      </FilterBlock>
+
+      <FilterBlock label={t("cloud.f_energy_class")}>
+        <select
+          data-testid="filter-energy-class"
+          value={filters.energy_class}
+          onChange={(e) => updateFilter("energy_class", e.target.value)}
+          className={FIELD}
+        >
+          <option value="">{t("cloud.any")}</option>
+          {ENERGY_CLASS_LETTER_OPTIONS.map((c) => (
+            <option key={c.value} value={c.value}>{c.label}</option>
+          ))}
+        </select>
+      </FilterBlock>
+    </div>
+  );
+
+  const viewToggle = (
+    <div
+      className="inline-flex bg-white border border-stone-200 rounded-lg overflow-hidden text-[10px] uppercase tracking-widest"
+      role="tablist"
+      aria-label="Vista risultati"
+    >
+      <button
+        data-testid="view-toggle-list"
+        role="tab"
+        aria-selected={viewMode === "list"}
+        onClick={() => setViewMode("list")}
+        className={`px-3 py-2 transition ${
+          viewMode === "list" ? "bg-[#0B1E3F] text-white" : "text-stone-600 hover:bg-stone-50"
+        }`}
+      >
+        {t("cloud.view_list")}
+      </button>
+      <button
+        data-testid="view-toggle-map"
+        role="tab"
+        aria-selected={viewMode === "map"}
+        onClick={() => setViewMode("map")}
+        className={`px-3 py-2 transition ${
+          viewMode === "map" ? "bg-[#0B1E3F] text-white" : "text-stone-600 hover:bg-stone-50"
+        }`}
+      >
+        {t("cloud.view_map")}
+      </button>
+    </div>
+  );
+
+  /* ——— Idealista-like map flow ——— */
+  if (viewMode === "map") {
+    return (
+      <div
+        data-testid="cloud-search-page"
+        className="bg-[#f7f4ef] flex flex-col"
+        style={{ height: "calc(100dvh - 4.5rem)", minHeight: 520 }}
+      >
+        {/* Toolbar */}
+        <div className="shrink-0 border-b border-stone-200 bg-white px-4 sm:px-6 py-3 flex flex-wrap items-center gap-3 justify-between z-20">
+          <div className="flex items-center gap-3 min-w-0">
+            <p
+              className="hidden sm:inline text-[10px] uppercase tracking-[0.22em] text-[#C19A6B] shrink-0"
+              data-testid="map-scout-chip"
+            >
+              {t("cloud.scout_banner_eyebrow", "Scout")}
+            </p>
+            <p className="text-sm text-stone-700 truncate" data-testid="results-count">
+              {loading || mapLoading
+                ? t("common.loading")
+                : t("cloud.total_results", { n: data.total })}
+            </p>
+            {viewToggle}
+          </div>
+          <div className="flex items-center gap-2">
+            <select
+              data-testid="filter-sort"
+              value={filters.sort}
+              onChange={(e) => updateFilter("sort", e.target.value)}
+              className="px-3 py-2 bg-white border border-stone-200 rounded-lg text-sm"
+            >
+              <option value="recent">{t("cloud.sort_recent")}</option>
+              <option value="price_asc">{t("cloud.sort_price_asc")}</option>
+              <option value="price_desc">{t("cloud.sort_price_desc")}</option>
+              <option value="surface_desc">{t("cloud.sort_surface_desc")}</option>
+            </select>
+            <SaveSearchButton filters={filters} compact />
+          </div>
+        </div>
+
+        <div className="flex-1 min-h-0 flex flex-col lg:flex-row">
+          {/* Left: filters + list */}
+          <aside
+            className="lg:w-[400px] xl:w-[440px] shrink-0 border-r border-stone-200 bg-white flex flex-col min-h-0 max-h-[42vh] lg:max-h-none"
+            data-testid="map-side-panel"
+          >
+            <div className="shrink-0 px-4 pt-4 pb-2 border-b border-stone-100">
+              <p className="text-[11px] uppercase tracking-[0.28em] text-[#C19A6B] mb-3">
+                {t("cloud.filters")}
+              </p>
+              <div className="max-h-40 overflow-y-auto pr-1">{filterSidebar}</div>
+            </div>
+            <div ref={listRef} className="flex-1 overflow-y-auto" data-testid="map-results-list">
+              {loading ? (
+                <p className="p-6 text-sm text-stone-500">{t("common.loading")}</p>
+              ) : !(data.items || []).length ? (
+                <div className="p-6 text-center" data-testid="search-empty">
+                  <p className="text-[#0B1E3F] font-light text-lg" style={{ fontFamily: "'Fraunces', Georgia, serif" }}>
+                    {t("cloud.map_no_in_area", "Nessuna casa in quest’area")}
+                  </p>
+                  <p className="text-sm text-stone-500 mt-2">{t("cloud.no_results")}</p>
+                </div>
+              ) : (
+                <ul className="divide-y divide-stone-100">
+                  {(data.items || []).map((p) => (
+                    <li key={p.id}>
+                      <MapListRow
+                        p={p}
+                        lang={lang}
+                        selected={selectedId === p.id}
+                        onSelect={() => setSelectedId(p.id)}
+                      />
+                    </li>
+                  ))}
+                </ul>
+              )}
+              {(data.has_next || data.page > 1) && (
+                <div className="flex justify-center gap-2 py-4 border-t border-stone-100" data-testid="pagination">
+                  <button
+                    type="button"
+                    onClick={() => goToPage(data.page - 1)}
+                    disabled={data.page <= 1}
+                    className="px-3 py-1.5 border border-stone-200 rounded-lg disabled:opacity-30 text-sm"
+                  >
+                    ←
+                  </button>
+                  <span className="px-2 py-1.5 text-xs text-stone-600">
+                    {data.page}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => goToPage(data.page + 1)}
+                    disabled={!data.has_next}
+                    className="px-3 py-1.5 border border-stone-200 rounded-lg disabled:opacity-30 text-sm"
+                  >
+                    →
+                  </button>
+                </div>
+              )}
+            </div>
+          </aside>
+
+          {/* Right: map */}
+          <div className="relative flex-1 min-h-[48vh] lg:min-h-0" data-testid="map-stage">
+            <PropertyMapView
+              markers={mapMarkers}
+              selectedId={selectedId}
+              onSelect={setSelectedId}
+              onBoundsIdle={onBoundsIdle}
+              fitOnLoad={!filters.bbox}
+              bbox={filters.bbox}
+              heightClass="h-full"
+            />
+            {areaDirty && (
+              <button
+                type="button"
+                data-testid="map-search-area"
+                onClick={applyAreaSearch}
+                className="absolute top-4 left-1/2 -translate-x-1/2 z-[500] px-5 py-2.5 rounded-full bg-[#0B1E3F] text-white text-xs uppercase tracking-widest shadow-lg hover:bg-[#C19A6B] transition"
+              >
+                {t("cloud.map_search_area", "Cerca in questa zona")}
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  /* ——— List mode (invariato nel layout) ——— */
   return (
     <div data-testid="cloud-search-page">
       <CloudPageHero
         eyebrow="ImmobilCloud · Cerca"
         title={heroTitle}
-        subtitle="Affina i filtri. Apri un annuncio. Lascia che Scout ti sussurri cosa chiedere."
-        image="/cloud/living.jpg"
+        subtitle={t(
+          "cloud.search_scout_subtitle",
+          "Scout è il nostro fiore all’occhiello: apri un annuncio e scopri completezza, prezzo in zona e cosa chiedere — prima della visita."
+        )}
+        image="/cloud/scout.jpg"
         compact
       />
 
       <section className="px-5 sm:px-8 md:px-16 py-10 max-w-6xl mx-auto">
+        <div
+          data-testid="search-scout-banner"
+          className="mb-8 rounded-2xl border border-[#C19A6B]/40 bg-[#0B1E3F] text-white px-5 py-4 sm:px-6 sm:py-5 flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-6"
+        >
+          <div className="min-w-0 flex-1">
+            <p className="text-[10px] uppercase tracking-[0.28em] text-[#C19A6B] mb-1">
+              {t("cloud.scout_banner_eyebrow", "Scout")}
+            </p>
+            <p
+              className="text-lg sm:text-xl font-light leading-snug"
+              style={{ fontFamily: "'Fraunces', Georgia, serif" }}
+            >
+              {t(
+                "cloud.scout_banner_title",
+                "Il voto Scout sulle card — poi, in scheda, le domande da fare."
+              )}
+            </p>
+            <p className="text-sm text-white/70 mt-1.5">
+              {t(
+                "cloud.scout_banner_text",
+                "Non è un annuncio in più: è lo strumento che ti dice se l’annuncio è completo e se il prezzo ha senso in zona."
+              )}
+            </p>
+          </div>
+        </div>
         <div className="flex flex-col lg:flex-row gap-8 lg:gap-10">
-          {/* Filters sidebar */}
-          <aside className="lg:w-72 flex-shrink-0">
-            <div className="rounded-2xl bg-[#f7f4ef] border border-stone-200/80 p-5 space-y-5 lg:sticky lg:top-24">
+          <aside className="lg:w-72 flex-shrink-0 space-y-4 lg:sticky lg:top-24">
+            <div className="rounded-2xl bg-[#f7f4ef] border border-stone-200/80 p-5 space-y-5">
               <h2 className="text-[11px] uppercase tracking-[0.28em] text-[#C19A6B]">
                 {t("cloud.filters")}
               </h2>
-
-              <FilterBlock label={t("cloud.f_operation")}>
-                <SegSelect
-                  value={filters.operation}
-                  onChange={(v) => updateFilter("operation", v)}
-                  options={[
-                    { v: "sale", l: t("cloud.op_sale") },
-                    { v: "rent", l: t("cloud.op_rent") },
-                  ]}
-                />
-              </FilterBlock>
-
-              <FilterBlock label={t("cloud.f_city")}>
-                <input
-                  data-testid="filter-city"
-                  value={filters.city}
-                  onChange={(e) => updateFilter("city", e.target.value)}
-                  placeholder={t("cloud.search_placeholder")}
-                  className={FIELD}
-                />
-              </FilterBlock>
-
-              <button
-                type="button"
-                data-testid="toggle-advanced-search"
-                onClick={() => setAdvOpen((v) => !v)}
-                className="text-[10px] uppercase tracking-widest text-[#0B1E3F] hover:text-[#C19A6B]"
-              >
-                {advOpen ? "Nascondi avanzata" : "Ricerca avanzata"}
-              </button>
-
-              {advOpen && (
-                <div className="space-y-4 rounded-xl bg-white/80 border border-stone-200 p-3" data-testid="advanced-search-panel">
-                  <FilterBlock label="Multi-città (virgola)">
-                    <input
-                      data-testid="filter-cities"
-                      value={filters.cities}
-                      onChange={(e) => updateFilter("cities", e.target.value)}
-                      placeholder="Catania, Milano, Roma"
-                      className={FIELD}
-                    />
-                  </FilterBlock>
-                  <label className="flex items-center gap-2 text-sm text-stone-700">
-                    <input
-                      type="checkbox"
-                      data-testid="filter-near-me"
-                      checked={filters.near_me}
-                      onChange={(e) => updateFilter("near_me", e.target.checked ? "1" : "")}
-                    />
-                    Vicino a me
-                  </label>
-                  {filters.near_me && (
-                    <FilterBlock label="Raggio km">
-                      <input
-                        type="number"
-                        min={1}
-                        max={50}
-                        value={filters.radius_km}
-                        onChange={(e) => updateFilter("radius_km", e.target.value)}
-                        className={FIELD}
-                      />
-                    </FilterBlock>
-                  )}
-                  {filters.mls && (
-                    <p className="text-xs text-emerald-800">Modalità MLS network attiva</p>
-                  )}
-                  {geoErr && <p className="text-xs text-red-600">{geoErr}</p>}
-                </div>
-              )}
-
-              <FilterBlock label={t("cloud.f_type")}>
-                <select
-                  data-testid="filter-type"
-                  value={filters.property_type}
-                  onChange={(e) => updateFilter("property_type", e.target.value)}
-                  className={FIELD}
-                >
-                  <option value="">{t("cloud.any")}</option>
-                  {["appartamento", "casa", "villa", "loft", "attico", "monolocale", "ufficio"].map((tp) => (
-                    <option key={tp} value={tp}>{tp}</option>
-                  ))}
-                </select>
-              </FilterBlock>
-
-              <FilterBlock label={t("cloud.f_price")}>
-                <div className="flex gap-2">
-                  <input
-                    data-testid="filter-price-min"
-                    type="number"
-                    placeholder={t("cloud.min")}
-                    value={filters.price_min}
-                    onChange={(e) => updateFilter("price_min", e.target.value)}
-                    className={`w-1/2 ${FIELD}`}
-                  />
-                  <input
-                    data-testid="filter-price-max"
-                    type="number"
-                    placeholder={t("cloud.max")}
-                    value={filters.price_max}
-                    onChange={(e) => updateFilter("price_max", e.target.value)}
-                    className={`w-1/2 ${FIELD}`}
-                  />
-                </div>
-              </FilterBlock>
-
-              <FilterBlock label={t("cloud.f_surface_min")}>
-                <input
-                  data-testid="filter-surface-min"
-                  type="number"
-                  placeholder="m²"
-                  value={filters.surface_min}
-                  onChange={(e) => updateFilter("surface_min", e.target.value)}
-                  className={FIELD}
-                />
-              </FilterBlock>
-
-              <FilterBlock label={t("cloud.f_rooms_min")}>
-                <select
-                  data-testid="filter-rooms-min"
-                  value={filters.rooms_min}
-                  onChange={(e) => updateFilter("rooms_min", e.target.value)}
-                  className={FIELD}
-                >
-                  <option value="">{t("cloud.any")}</option>
-                  {[1, 2, 3, 4, 5].map((n) => <option key={n} value={n}>{n}+</option>)}
-                </select>
-              </FilterBlock>
-
-              <FilterBlock label={t("cloud.f_bedrooms_min")}>
-                <select
-                  data-testid="filter-bedrooms-min"
-                  value={filters.bedrooms_min}
-                  onChange={(e) => updateFilter("bedrooms_min", e.target.value)}
-                  className={FIELD}
-                >
-                  <option value="">{t("cloud.any")}</option>
-                  {[1, 2, 3, 4, 5].map((n) => <option key={n} value={n}>{n}+</option>)}
-                </select>
-              </FilterBlock>
-
-              <FilterBlock label={t("cloud.f_energy_class")}>
-                <select
-                  data-testid="filter-energy-class"
-                  value={filters.energy_class}
-                  onChange={(e) => updateFilter("energy_class", e.target.value)}
-                  className={FIELD}
-                >
-                  <option value="">{t("cloud.any")}</option>
-                  {ENERGY_CLASS_LETTER_OPTIONS.map((c) => (
-                    <option key={c.value} value={c.value}>{c.label}</option>
-                  ))}
-                </select>
-              </FilterBlock>
+              {filterSidebar}
             </div>
+            <Link
+              to={(() => {
+                const q = new URLSearchParams();
+                q.set("view", "map");
+                if (filters.operation) q.set("operation", filters.operation);
+                if (filters.city) q.set("city", filters.city);
+                if (filters.property_type) q.set("property_type", filters.property_type);
+                if (filters.price_min) q.set("price_min", filters.price_min);
+                if (filters.price_max) q.set("price_max", filters.price_max);
+                if (filters.rooms_min) q.set("rooms_min", filters.rooms_min);
+                if (filters.bedrooms_min) q.set("bedrooms_min", filters.bedrooms_min);
+                if (filters.energy_class) q.set("energy_class", filters.energy_class);
+                return `/${lang}/cloud/search?${q.toString()}`;
+              })()}
+              data-testid="search-map-box"
+              className="block rounded-2xl overflow-hidden border border-stone-200 bg-[#0B1E3F] text-white hover:border-[#C19A6B] transition group"
+            >
+              <div className="relative aspect-[16/10]">
+                <img
+                  src="/cloud/living.jpg"
+                  alt=""
+                  className="absolute inset-0 w-full h-full object-cover opacity-50 group-hover:scale-105 transition duration-700"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-[#0B1E3F] via-[#0B1E3F]/70 to-transparent" />
+                <div className="absolute inset-x-0 bottom-0 p-4">
+                  <p className="text-[10px] uppercase tracking-[0.28em] text-[#C19A6B] mb-1">
+                    {t("cloud.map_box_eyebrow", "Esplora")}
+                  </p>
+                  <p
+                    className="text-xl font-light"
+                    style={{ fontFamily: "'Fraunces', Georgia, serif" }}
+                  >
+                    {t("cloud.map_box_title", "Cerca su mappa")}
+                  </p>
+                  <p className="text-xs text-white/70 mt-1">
+                    {t("cloud.map_box_text", "Lista e pin insieme — sposta la mappa e cerca in zona.")}
+                  </p>
+                </div>
+              </div>
+            </Link>
           </aside>
 
-          {/* Results */}
           <main className="flex-1 min-w-0">
             <div className="flex items-center justify-between flex-wrap gap-3 mb-5">
               <p className="text-sm text-stone-600" data-testid="results-count">
                 {t("cloud.total_results", { n: data.total })}
               </p>
               <div className="flex items-center gap-2">
-                <div
-                  className="inline-flex bg-white border border-stone-200 rounded-lg overflow-hidden text-[10px] uppercase tracking-widest"
-                  role="tablist"
-                  aria-label="Vista risultati"
-                >
-                  <button
-                    data-testid="view-toggle-list"
-                    role="tab"
-                    aria-selected={viewMode === "list"}
-                    onClick={() => setViewMode("list")}
-                    className={`px-3 py-2 transition ${
-                      viewMode === "list" ? "bg-[#0B1E3F] text-white" : "text-stone-600 hover:bg-stone-50"
-                    }`}
-                  >
-                    {t("cloud.view_list")}
-                  </button>
-                  <button
-                    data-testid="view-toggle-map"
-                    role="tab"
-                    aria-selected={viewMode === "map"}
-                    onClick={() => setViewMode("map")}
-                    className={`px-3 py-2 transition ${
-                      viewMode === "map" ? "bg-[#0B1E3F] text-white" : "text-stone-600 hover:bg-stone-50"
-                    }`}
-                  >
-                    {t("cloud.view_map")}
-                  </button>
-                </div>
+                {viewToggle}
                 <select
                   data-testid="filter-sort"
                   value={filters.sort}
@@ -423,11 +672,7 @@ export default function CloudSearchPage() {
 
             <SaveSearchButton filters={filters} />
 
-            {viewMode === "map" ? (
-              <div className="rounded-2xl overflow-hidden border border-stone-200">
-                <PropertyMapView markers={mapMarkers} />
-              </div>
-            ) : loading ? (
+            {loading ? (
               <div
                 className="rounded-2xl bg-[#f7f4ef] border border-stone-200 px-6 py-16 text-center"
                 data-testid="search-loading"
@@ -484,6 +729,54 @@ export default function CloudSearchPage() {
   );
 }
 
+function MapListRow({ p, lang, selected, onSelect }) {
+  const { t } = useTranslation();
+  const cover = p.cover_url ? `${BACKEND_URL}${p.cover_url}` : null;
+  const price = p.operation === "rent"
+    ? `${formatEUR(p.rent_monthly)}/mese`
+    : formatEUR(p.price);
+
+  return (
+    <div
+      data-map-row={p.id}
+      data-testid={`map-row-${p.id}`}
+      className={`flex gap-3 p-3 cursor-pointer transition ${
+        selected ? "bg-[#f7f4ef] ring-1 ring-inset ring-[#C19A6B]" : "hover:bg-stone-50"
+      }`}
+      onMouseEnter={onSelect}
+      onClick={onSelect}
+      onKeyDown={(e) => { if (e.key === "Enter") onSelect(); }}
+      role="button"
+      tabIndex={0}
+    >
+      <div className="w-24 h-20 shrink-0 rounded-lg overflow-hidden bg-stone-100">
+        {cover ? (
+          <img src={cover} alt="" className="w-full h-full object-cover" loading="lazy" />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center text-stone-300 text-2xl">⌂</div>
+        )}
+      </div>
+      <div className="min-w-0 flex-1">
+        <p className="text-base font-semibold text-[#0B1E3F]" style={{ fontFamily: "'Fraunces', Georgia, serif" }}>
+          {price}
+        </p>
+        <p className="text-sm text-stone-800 line-clamp-1">{p.title}</p>
+        <p className="text-xs text-stone-500 mt-0.5">
+          {p.city}{p.zone ? ` · ${p.zone}` : ""}
+          {p.surface_sqm ? ` · ${p.surface_sqm} m²` : ""}
+        </p>
+        <Link
+          to={`/${lang}/cloud/property/${p.id}`}
+          className="text-[10px] uppercase tracking-widest text-[#C19A6B] hover:underline mt-1 inline-block"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {t("cloud.view_detail")} →
+        </Link>
+      </div>
+    </div>
+  );
+}
+
 function FilterBlock({ label, children }) {
   return (
     <div>
@@ -515,7 +808,7 @@ function SegSelect({ value, onChange, options }) {
   );
 }
 
-function SaveSearchButton({ filters }) {
+function SaveSearchButton({ filters, compact = false }) {
   const { t, i18n } = useTranslation();
   const lang = (i18n.language || "it").slice(0, 2);
   const { user } = useAuth();
@@ -528,11 +821,8 @@ function SaveSearchButton({ filters }) {
 
   if (done) {
     return (
-      <div data-testid="save-search-done" className="mb-4 text-xs text-emerald-800 bg-emerald-50 border border-emerald-200 rounded-xl px-4 py-3">
-        ✓ {t("cloud.save_search.done")}{" "}
-        <Link to={`/${lang}/cloud/account`} className="underline">
-          {t("cloud.save_search.go_dashboard")}
-        </Link>
+      <div data-testid="save-search-done" className={`${compact ? "" : "mb-4"} text-xs text-emerald-800 bg-emerald-50 border border-emerald-200 rounded-xl px-3 py-2`}>
+        ✓ {t("cloud.save_search.done")}
       </div>
     );
   }
@@ -549,7 +839,7 @@ function SaveSearchButton({ filters }) {
           setOpen(true);
           setName(filters.city ? `${filters.city} — ${filters.operation === "rent" ? t("cloud.op_rent") : t("cloud.op_sale")}` : t("cloud.save_search.default_name"));
         }}
-        className="mb-5 inline-flex items-center gap-2 px-4 py-2.5 text-xs uppercase tracking-widest border border-[#0B1E3F] text-[#0B1E3F] rounded-lg hover:bg-[#0B1E3F] hover:text-white transition"
+        className={`${compact ? "" : "mb-5"} inline-flex items-center gap-2 px-3 py-2 text-[10px] uppercase tracking-widest border border-[#0B1E3F] text-[#0B1E3F] rounded-lg hover:bg-[#0B1E3F] hover:text-white transition`}
       >
         {t("cloud.save_search.cta")}
       </button>
@@ -560,7 +850,7 @@ function SaveSearchButton({ filters }) {
     e.preventDefault();
     setBusy(true); setError("");
     const apiFilters = { ...filters };
-    delete apiFilters.sort; delete apiFilters.page;
+    delete apiFilters.sort; delete apiFilters.page; delete apiFilters.bbox;
     Object.keys(apiFilters).forEach((k) => { if (!apiFilters[k]) delete apiFilters[k]; });
     ["price_min", "price_max", "surface_min", "rooms_min", "bedrooms_min", "bathrooms_min"].forEach((k) => {
       if (apiFilters[k]) apiFilters[k] = Number(apiFilters[k]);
@@ -568,15 +858,15 @@ function SaveSearchButton({ filters }) {
     try {
       await api.post("/cloud/me/saved-searches", { name, filters: apiFilters, frequency: freq });
       setDone(true);
-    } catch (e) {
-      setError(e?.response?.data?.detail === "saved_searches_limit_reached"
+    } catch (err) {
+      setError(err?.response?.data?.detail === "saved_searches_limit_reached"
         ? t("cloud.save_search.err_limit")
         : t("cloud.save_search.err_generic"));
     } finally { setBusy(false); }
   };
 
   return (
-    <form data-testid="save-search-form" onSubmit={submit} className="mb-5 bg-[#f7f4ef] border border-stone-200 rounded-2xl p-5 space-y-3">
+    <form data-testid="save-search-form" onSubmit={submit} className={`${compact ? "absolute right-4 top-14 z-[600] w-72 shadow-xl" : "mb-5"} bg-[#f7f4ef] border border-stone-200 rounded-2xl p-4 space-y-3`}>
       <h3 className="text-[11px] uppercase tracking-[0.28em] text-[#C19A6B] font-medium">
         {t("cloud.save_search.title")}
       </h3>

@@ -7,7 +7,7 @@
 
 - Route API gestionale: `POST /api/app/videos/kling/property/{pid}` (async **202** se crediti ok; **402** senza crediti).
 - Download/status: `GET /api/app/videos/{id}`, `/download`.
-- Richiede `FAL_KEY` e crediti piano (listino **D-141**: **30 crediti / 10s** Kling Pro = €1,50 — vedi `PRICING_OMNIA` v3.2).
+- Richiede `FAL_KEY` e crediti piano (listino **D-147**: **30 crediti / 10s** Kling Pro = €1,50 — vedi `PRICING_OMNIA` v3.2).
 - **Ken Burns gestionale** `POST /api/app/videos/kenburns/property/{pid}` → **501** (`kenburns_disabled_in_agency`). Non riaprire senza decisione Founder (A-026 / D-064).
 
 ## 23.1b · Ken Burns sul portale B2C (ImmobilCloud · D-140)

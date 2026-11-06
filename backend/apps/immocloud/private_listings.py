@@ -16,6 +16,8 @@ Endpoints (B2C auth required):
   PATCH  /api/cloud/me/properties/{pid}  — edit my own ad (resets to pending on substantive change)
   POST   /api/cloud/me/properties/{pid}/submit — submit for moderation
   DELETE /api/cloud/me/properties/{pid}  — delete
+  GET/DELETE /api/cloud/me/properties/{pid}/video — micro-tour status / remove
+  POST   /api/cloud/me/properties/{pid}/kenburns — genera micro-tour
   POST   /api/cloud/me/properties/media/upload-tmp — upload photo or floor plan (max 30 photos)
 
 Free tier: 2 annunci (bozza/attivo) senza scadenza. Dal 3° serve slot Stripe
@@ -559,18 +561,38 @@ async def owner_generate_kenburns(
 
 @router.get("/{pid}/video")
 async def owner_listing_video(pid: str, user: dict = Depends(get_current_user)):
-    """Latest Ken Burns job for this owner listing (any status)."""
+    """Latest Ken Burns job for this owner listing (any status except deleted).
+
+    Hydrates ready→failed when the MP4 was lost (ephemeral /tmp after redeploy)
+    so Vendi shows Rigenera instead of a black player.
+    """
     await _ensure_b2c(user)
     db = Database.get()
     await _load_listing_for_safety(db, pid, user["id"])
     doc = await db.videos.find_one(
-        {"property_id": pid, "mode": "ken_burns", "agency_id": None},
+        {
+            "property_id": pid,
+            "mode": "ken_burns",
+            "agency_id": None,
+            "status": {"$ne": "deleted"},
+        },
         {"_id": 0},
         sort=[("created_at", -1)],
     )
     if not doc:
         raise HTTPException(status_code=404, detail="video_not_found")
-    return doc
+    from apps.immoweb.micro_tour_video import hydrate_ready_video
+    return await hydrate_ready_video(db, doc)
+
+
+@router.delete("/{pid}/video")
+async def owner_delete_listing_video(pid: str, user: dict = Depends(get_current_user)):
+    """Remove micro-tour from this listing (scheda pubblica smette di mostrarlo)."""
+    await _ensure_b2c(user)
+    db = Database.get()
+    await _load_listing_for_safety(db, pid, user["id"])
+    from apps.immoweb.micro_tour_video import soft_delete_owner_ken_burns
+    return await soft_delete_owner_ken_burns(db, pid)
 
 
 @router.post("/{pid}/submit")

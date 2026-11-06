@@ -1081,7 +1081,7 @@ Confermato in sessione: **non esiste ancora una demo self-serve** per il cliente
 ### Stato attuale (già deciso, da non invertire alla leggera)
 - **Portale B2C** (`/api/cloud/videos/kenburns/...`): Ken Burns **gratuito** (ffmpeg) — contenuto video a costo zero.
 - **Gestionale agenzia** (`POST /api/app/videos/kenburns/property/{pid}`): **501** con detail tipo `kenburns_disabled_in_agency` → l’agente deve usare **Kling Pro (fal.ai) a crediti** (path ufficiale D-065/D-066). Endpoint Sora storico: stub/deprecato (410/501), non è il path prodotto.
-- Decisioni: **D-064** (Ken Burns solo B2C), **D-065** (Sora scartato → Kling), **D-066** (10s), **D-141** (**30 crediti** / €1,50 Kling Pro solo gestionale).
+- Decisioni: **D-064** (Ken Burns solo B2C), **D-065** (Sora scartato → Kling), **D-066** (10s), **D-147** (**30 crediti** / €1,50 Kling Pro solo gestionale).
 
 ### Cosa approfondire (quando si riprende)
 1. **UX agenzia**: oggi 501 è corretto economicamente ma grezzo — messaggio chiaro in UI («Video premium a crediti») vs errore tecnico; CTA verso acquisto crediti / Kling.

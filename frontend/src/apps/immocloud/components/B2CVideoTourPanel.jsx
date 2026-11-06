@@ -1,6 +1,6 @@
 /**
  * B2C micro-tour (Ken Burns) — destinato al flusso Vendi dopo le foto.
- * Genera / riproduce il video 15s dalle immagini dell'annuncio salvato.
+ * Genera / riproduce / elimina il video 15s dalle immagini dell'annuncio salvato.
  */
 import React, { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -20,22 +20,47 @@ export default function B2CVideoTourPanel({
   const [status, setStatus] = useState("");
   const [err, setErr] = useState("");
 
+  const resolvePlayUrl = (data) => {
+    if (!data?.id) return null;
+    const rel =
+      (data.download_url && String(data.download_url)) ||
+      `/api/app/videos/${data.id}/download`;
+    if (rel.startsWith("http://") || rel.startsWith("https://")) return rel;
+    return `${BACKEND_URL}${rel.startsWith("/") ? rel : `/${rel}`}`;
+  };
+
   const loadExisting = useCallback(async () => {
     if (!listingId) return;
     try {
       const { data } = await api.get(`/cloud/me/properties/${listingId}/video`);
       if (data?.status === "ready" && data?.id) {
-        setVideoUrl(`${BACKEND_URL}/api/app/videos/${data.id}/download`);
+        setVideoUrl(resolvePlayUrl(data));
         setStatus("ready");
+        setErr("");
       } else if (data?.status === "pending" || data?.status === "processing") {
         setStatus(data.status);
+        setVideoUrl(null);
       } else if (data?.status === "failed") {
         setStatus("failed");
+        setVideoUrl(null);
+        if (data?.error === "video_expired") {
+          setErr(
+            t(
+              "cloud.sell.video_expired",
+              "Il video precedente non è più disponibile (redeploy). Rigeneralo dalle foto."
+            )
+          );
+        }
+      } else {
+        setVideoUrl(null);
+        setStatus("");
       }
     } catch {
-      /* 404 = nessun video ancora */
+      /* 404 = nessun video (o eliminato) */
+      setVideoUrl(null);
+      setStatus("");
     }
-  }, [listingId]);
+  }, [listingId, t]);
 
   useEffect(() => {
     loadExisting();
@@ -68,11 +93,11 @@ export default function B2CVideoTourPanel({
         }
         const st = await api.get(`/cloud/videos/${vid}`);
         if (st.data.status === "ready") {
-          setVideoUrl(`${BACKEND_URL}/api/app/videos/${vid}/download`);
+          setVideoUrl(resolvePlayUrl(st.data));
           setStatus("ready");
           return;
         }
-        if (st.data.status === "failed") {
+        if (st.data.status === "failed" || st.data.status === "deleted") {
           const detail = st.data.error || "generation_failed";
           const msg =
             detail === "no_photos_downloaded"
@@ -80,7 +105,12 @@ export default function B2CVideoTourPanel({
                   "cloud.sell.video_no_photos",
                   "Non siamo riusciti a leggere le foto. Salva l'annuncio e riprova."
                 )
-              : t("cloud.sell.video_failed", "Video non generato. Riprova.");
+              : detail === "video_expired"
+                ? t(
+                    "cloud.sell.video_expired",
+                    "Il video precedente non è più disponibile. Rigeneralo dalle foto."
+                  )
+                : t("cloud.sell.video_failed", "Video non generato. Riprova.");
           setErr(msg);
           setStatus("failed");
           onError?.(msg);
@@ -98,6 +128,32 @@ export default function B2CVideoTourPanel({
       setErr(typeof msg === "string" ? msg : JSON.stringify(msg));
       setStatus("failed");
       onError?.(typeof msg === "string" ? msg : "video_failed");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const removeVideo = async () => {
+    if (!listingId || busy) return;
+    const ok = window.confirm(
+      t(
+        "cloud.sell.video_delete_confirm",
+        "Eliminare il video tour da questo annuncio? La scheda pubblica non lo mostrerà più. Potrai generarne uno nuovo quando vuoi."
+      )
+    );
+    if (!ok) return;
+    setBusy(true);
+    setErr("");
+    try {
+      await api.delete(`/cloud/me/properties/${listingId}/video`);
+      setVideoUrl(null);
+      setStatus("");
+    } catch (e) {
+      const msg =
+        e?.response?.data?.detail ||
+        t("cloud.sell.video_delete_failed", "Non siamo riusciti a eliminare il video. Riprova.");
+      setErr(typeof msg === "string" ? msg : JSON.stringify(msg));
+      onError?.(typeof msg === "string" ? msg : "video_delete_failed");
     } finally {
       setBusy(false);
     }
@@ -130,7 +186,7 @@ export default function B2CVideoTourPanel({
           <p className="text-xs text-stone-600 mt-1 leading-relaxed">
             {t(
               "cloud.sell.video_hint",
-              "Subito dopo le immagini: un video automatico per la scheda pubblica. Più foto nitide = risultato migliore."
+              "Opzionale: un video automatico per la scheda pubblica. Più foto nitide = risultato migliore. Puoi generarlo, sostituirlo o eliminarlo anche dopo la pubblicazione."
             )}
           </p>
         </div>
@@ -168,22 +224,55 @@ export default function B2CVideoTourPanel({
               src={videoUrl}
               controls
               playsInline
+              preload="metadata"
+              onError={() => {
+                setVideoUrl(null);
+                setStatus("failed");
+                setErr(
+                  t(
+                    "cloud.sell.video_expired",
+                    "Il video non si riproduce. Rigeneralo dalle foto."
+                  )
+                );
+              }}
               className="block w-full aspect-video object-contain object-center bg-stone-900"
             />
           </div>
-          <button
-            type="button"
-            data-testid={`${testIdPrefix}-regen`}
-            disabled={busy}
-            onClick={() => {
-              setVideoUrl(null);
-              generate();
-            }}
-            className="text-[11px] uppercase tracking-widest text-[#C19A6B] hover:text-[#0B1E3F]"
-          >
-            {t("cloud.sell.video_regen", "Rigenera video")}
-          </button>
+          <div className="flex flex-wrap items-center gap-4">
+            <button
+              type="button"
+              data-testid={`${testIdPrefix}-regen`}
+              disabled={busy}
+              onClick={() => {
+                setVideoUrl(null);
+                generate();
+              }}
+              className="text-[11px] uppercase tracking-widest text-[#C19A6B] hover:text-[#0B1E3F] disabled:opacity-50"
+            >
+              {t("cloud.sell.video_regen", "Rigenera video")}
+            </button>
+            <button
+              type="button"
+              data-testid={`${testIdPrefix}-delete`}
+              disabled={busy}
+              onClick={removeVideo}
+              className="text-[11px] uppercase tracking-widest text-rose-700 hover:text-rose-900 disabled:opacity-50"
+            >
+              {t("cloud.sell.video_delete", "Elimina video")}
+            </button>
+          </div>
         </div>
+      )}
+      {!videoUrl && status === "failed" && (
+        <button
+          type="button"
+          data-testid={`${testIdPrefix}-regen-failed`}
+          disabled={busy || photoCount < 1}
+          onClick={generate}
+          className="text-[11px] uppercase tracking-widest text-[#C19A6B] hover:text-[#0B1E3F] disabled:opacity-50"
+        >
+          {t("cloud.sell.video_regen", "Rigenera video")}
+        </button>
       )}
     </div>
   );

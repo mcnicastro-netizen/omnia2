@@ -1,17 +1,17 @@
 {
-  "version": "0.46-d136-stripe-dogfood",
-  "updated": "2026-11-04",
-  "voices_total": 385,
+  "version": "0.53-d146-www-vetrina",
+  "updated": "2026-11-06",
+  "voices_total": 393,
   "source_files": [
     {
       "file": "00-api-codice.yaml",
-      "voices": 38,
-      "md5": "e588752dd3402155bf797fa3e4fa8f4e"
+      "voices": 42,
+      "md5": "d2d9c3c8ffe138b0acb268fffa2fa86f"
     },
     {
       "file": "01-primo-accesso.yaml",
-      "voices": 12,
-      "md5": "dc053d3e8660946a23f29754fa1de49f"
+      "voices": 13,
+      "md5": "020425cf0ce014bfe9cb93840c8bed55"
     },
     {
       "file": "02-dashboard.yaml",
@@ -90,13 +90,13 @@
     },
     {
       "file": "17-domain-vault.yaml",
-      "voices": 16,
-      "md5": "63e9f2df14b151f27ccbd65ef700b438"
+      "voices": 17,
+      "md5": "c15e3dcd3aa831c0cedf5f17c860ef78"
     },
     {
       "file": "18-notifiche-attivita.yaml",
-      "voices": 21,
-      "md5": "dabb62264a5e6d643bb65c83d2201777"
+      "voices": 23,
+      "md5": "97864ec4c1a5ae4fcd056853f7365e28"
     },
     {
       "file": "19-impostazioni-agenzia.yaml",
@@ -111,7 +111,7 @@
     {
       "file": "21-valutatore-immobiliare.yaml",
       "voices": 12,
-      "md5": "6731d8387e63903d7c13a562b5020d81"
+      "md5": "b4d9a48ded20fb23a59cc995f3f54900"
     },
     {
       "file": "22-hal-legal.yaml",
@@ -121,7 +121,7 @@
     {
       "file": "23-video-ab-testing.yaml",
       "voices": 8,
-      "md5": "b1be888569a6972b0b031ad0707035a2"
+      "md5": "7c2205c4ecb40ba637ca3ed645de2117"
     },
     {
       "file": "24-gruppi-sedi.yaml",
@@ -150,8 +150,8 @@
       "file": "00-api-codice",
       "title": "Corpus codice/API",
       "yaml": "00-api-codice.yaml",
-      "voices": 38,
-      "md5": "e588752dd3402155bf797fa3e4fa8f4e"
+      "voices": 42,
+      "md5": "d2d9c3c8ffe138b0acb268fffa2fa86f"
     },
     {
       "id": 22,
@@ -167,7 +167,7 @@
       "title": "Micro-tour video e A/B testing",
       "yaml": "23-video-ab-testing.yaml",
       "voices": 8,
-      "md5": "b1be888569a6972b0b031ad0707035a2"
+      "md5": "7c2205c4ecb40ba637ca3ed645de2117"
     },
     {
       "id": 24,
@@ -202,5 +202,5 @@
       "md5": "5e88370cdf2c070dc30c7c3f036b85db"
     }
   ],
-  "notes": "2026-11-04: D-136 dogfood Stripe+fedeltà · Cap.9 FAQ multi-stile ACCEPT. 2026-11-03: D-136 staging fedeltà · Cap.9 +2 voci · reindex. 2026-11-02: D-135 B2C Vendi CSRF/HAL improve/account · Cap.00/01/10/18 YAML · reindex prod 973 chunks. Fingerprints regenerated from YAML on disk. Live RAG reindex: POST /api/app/hal/knowledge/reindex?force=true (super_admin). 2026-10-19: D-125 atti · D-128 staging €1,49 · Cap.9 crediti-costo · Cap.18 sell-doc-promo. 2026-10-14: D-124 Cap.21 APE/piano/PDF · Cap.18 sell-doc-promo · PR #40. 2026-10-12: Stripe webhook Railway omnia-railway-api 200 OK · api.stripe-sandbox-cloud / api.railway-api-deploy. 2026-10-10: D-123 Railway API live · api.railway-api-deploy · cloud-secrets-vault Personal UI note. 2026-10-06: Stripe sandbox Cloud · api.cloud-secrets-vault · api.stripe-sandbox-cloud · Cap.19 billing. 2026-09-24: A-028g/h/i · Cap.2 Attività · Cap.10 Conferma e applica · Cap.18 distinzione. 2026-09-21: hub import A–E · HAL import.tutte-le-forme. 2026-09-19: D-085 storage quota · Cestino · Cap.20 Ruota."
+  "notes": "2026-11-06: D-146 www vetrina · api.www-vetrina-landing · Cap.00/01. 2026-11-05: D-143 PWA QR→Area + nav opaca · D-142 Scout · D-141 mappa · Cap.00/01. Fingerprints regenerated from YAML on disk. Live RAG reindex: POST /api/app/hal/knowledge/reindex?force=true (super_admin). 2026-11-04: D-140 Vendi/video · D-136 Stripe dogfood · D-135 B2C CSRF. 2026-10-19: D-125 atti · D-128 staging €1,49 · Cap.9 crediti-costo · Cap.18 sell-doc-promo. 2026-10-14: D-124 Cap.21 APE/piano/PDF · Cap.18 sell-doc-promo · PR #40. 2026-10-12: Stripe webhook Railway omnia-railway-api 200 OK · api.stripe-sandbox-cloud / api.railway-api-deploy. 2026-10-10: D-123 Railway API live · api.railway-api-deploy · cloud-secrets-vault Personal UI note. 2026-10-06: Stripe sandbox Cloud · api.cloud-secrets-vault · api.stripe-sandbox-cloud · Cap.19 billing. 2026-09-24: A-028g/h/i · Cap.2 Attività · Cap.10 Conferma e applica · Cap.18 distinzione. 2026-09-21: hub import A–E · HAL import.tutte-le-forme. 2026-09-19: D-085 storage quota · Cestino · Cap.20 Ruota."
 }
