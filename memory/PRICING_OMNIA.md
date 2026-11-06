@@ -1,7 +1,9 @@
 # 💰 OMNIA — Pricing Book (B2B agenzie)
 
-**Versione**: 3.0 (LISTINO UFFICIALE B2B)
-**Ultima revisione**: 5 Agosto 2026 — approvato dal Founder  
+**Versione**: 3.2 (LISTINO UFFICIALE B2B)
+**Ultima revisione**: 5 Novembre 2026 — Kling micro-tour **30 crediti** (€1,50) · Founder  
+**Revisione precedente**: 5 Agosto 2026 — v3.0 approvato  
+
 **Storage (D-085 / S3 10-Ott-2026):** quote 30/100/300 GB + addon +100 GB @ €15 — operativamente invariato; meter in `OMNIA_S3_METER_ECONOMIA.md`; **firma Founder rimandata** (deepen S3.1 — non dimenticare)
 **Stato**: 🟢 ATTIVO · sincronizzato con `backend/apps/billing/plans.py` + catalog Stripe sandbox
 **Sovrascrive**: v2.0 (bozza superata) e ogni listino Founders 50 precedente
@@ -64,8 +66,8 @@ I crediti inclusi nel piano si sommano ai pacchetti ricarica acquistati.
 | Query **HAL Legal** (API/Track B) | 12 | €0,60 | 90% — **in-app CRM incluso** (D-119) |
 | **Virtual Staging** (pipeline 3-stage) | 18 | €0,90 | 88% |
 | **Visura catastale** | 24 | €1,20 | 40-60% (dipende dal partner) |
-| **APE search** regionale | 60 | €3,00 | 30% (fee partner) |
-| **Micro-tour video 10s** (Kling Pro) | 60 | €3,00 | 68% |
+| **APE search** regionale | 60 | €3,00 | 30% (fee partner) — **sottile**: se fee partner > €3 → perdita (verificare fattura) |
+| **Micro-tour video 10s** (Kling Pro) | **30** | **€1,50** | **~41%** (COGS fal.ai ~€0,88 → netto ~€0,62) |
 | **Promozione TOP** (7 giorni) | 400 | €20 | rev share |
 | **Promozione Premium** (15 giorni) | 1.000 | €50 | rev share |
 | **In Evidenza** (30 giorni) | 2.000 | €100 | rev share |
@@ -164,10 +166,26 @@ Formato lookup key Stripe: `{tier}_{cycle}` per abbonamenti (es. `pro_monthly`) 
 
 ---
 
+## ⚠️ Controllo perdite (05-Nov-2026)
+
+> **Gate pre-produzione (Founder):** prima del go-live commerciale rifare questo controllo con **fatture/fee reali** partner. Non dichiarare OK produzione se Visura/APE (o altri SKU a fee esterna) vendono sotto costo. Vedi anche `NEXT_SESSION.md` § «Prima di andare in produzione».
+
+| Voce | Prezzo | COGS stimato | Esito |
+|------|:-:|:-:|---|
+| **Kling** (prima del fix) codice a **10 cr = €0,50** | €0,50 | ~€0,88 | **PERDITA ~€0,38/video** — allineato a 30 cr |
+| **Kling** listino 30 cr | €1,50 | ~€0,88 | OK · netto ~€0,62 (~41%) |
+| Virtual Staging B2B 18 cr | €0,90 | ~€0,05–0,10 fal | OK |
+| Staging B2C €1,49 | €1,49 | ~€0,30 + Stripe | OK (sottile se preview gratis non converte) |
+| Visura B2B 24 cr | €1,20 | partner-dependent | 🟡 **pre-prod:** fee OpenAPI ≤ ~€0,70 |
+| APE search 60 cr | €3,00 | fee partner | 🟡 **pre-prod:** fee ≤ €3 altrimenti alza prezzo / sospendi |
+| HAL / Valuator / SMS | listino | COGS << prezzo | OK |
+| Ken Burns B2C | €0 | CPU Railway | OK (lead / contenuto, non SKU a pagamento) |
+
 ## 🗓️ Storico versioni
 
 | Data | Versione | Note |
 |------|----------|------|
+| 05-Nov-2026 | **v3.2** | Micro-tour Kling **30 crediti / €1,50** (ex 60 in MD / 10 in codice sotto-prezzo). Audit perdite. |
 | 14-Sep-2026 | **v3.1** | Annuale −1 mese (D-079); Enterprise ancora TBD |
 | 05-Ago-2026 | **v3.0** | LISTINO UFFICIALE approvato Founder. Founders 12m €49/99/249, Standard €79/179/349, pacchetti ratio 20 cr/€, planimetria/ipoteca rimossi |
 | 26-Giu-2026 | v2.0 (bozza superata) | Founders 50 24m €39/99/249 + sconto 50% a vita — non approvato |

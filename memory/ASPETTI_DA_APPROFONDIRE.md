@@ -1081,12 +1081,12 @@ Confermato in sessione: **non esiste ancora una demo self-serve** per il cliente
 ### Stato attuale (già deciso, da non invertire alla leggera)
 - **Portale B2C** (`/api/cloud/videos/kenburns/...`): Ken Burns **gratuito** (ffmpeg) — contenuto video a costo zero.
 - **Gestionale agenzia** (`POST /api/app/videos/kenburns/property/{pid}`): **501** con detail tipo `kenburns_disabled_in_agency` → l’agente deve usare **Kling Pro (fal.ai) a crediti** (path ufficiale D-065/D-066). Endpoint Sora storico: stub/deprecato (410/501), non è il path prodotto.
-- Decisioni: **D-064** (Ken Burns solo B2C), **D-065** (Sora scartato → Kling), **D-066** (10s / 10 crediti Kling Pro solo gestionale).
+- Decisioni: **D-064** (Ken Burns solo B2C), **D-065** (Sora scartato → Kling), **D-066** (10s), **D-147** (**30 crediti** / €1,50 Kling Pro solo gestionale).
 
 ### Cosa approfondire (quando si riprende)
 1. **UX agenzia**: oggi 501 è corretto economicamente ma grezzo — messaggio chiaro in UI («Video premium a crediti») vs errore tecnico; CTA verso acquisto crediti / Kling.
 2. **Completezza path Kling**: job async, stato rendering, embed in scheda/listing, errori 402 senza crediti, fallback se `FAL_KEY` assente.
-3. **Pricing/messaging**: allineare copy gestionale + Cap. 23 manuale + `PRICING_OMNIA` (Kling 10 crediti) senza far percepire Ken Burns come “mancante” nel gestionale.
+3. **Pricing/messaging**: copy gestionale + Cap. 23 + `PRICING_OMNIA` v3.2 (Kling **30** crediti) — non far percepire Ken Burns come “mancante” nel gestionale.
 4. **Cannibalizzazione**: conferma policy — niente Ken Burns free in agenzia anche se richiesto da demo/vendita (salvo revisione D-064 esplicita).
 
 ### Stato

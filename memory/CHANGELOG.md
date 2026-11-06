@@ -1,3 +1,10 @@
+## 2026-11-06 — D-147 Kling micro-tour 30 crediti + audit perdite (PR #96)
+
+- `CREDIT_COSTS.micro_tour_render` **30** (€1,50) — codice legge da `plans.py` (prima 10 cr = **perdita** vs COGS €0,88)
+- `PRICING_OMNIA` v3.2 · DECISIONS **D-147** (non D-141: quel numero è mappa) · Cap.23
+- Audit: unica perdita confermata era Kling sotto-prezzo; APE/Visura partner-dependent 🟡
+- Merge ritardato: PR aperta 05-Nov, conflitti docs con D-146; merge 06-Nov
+
 ## 2026-11-06 — D-146 vetrina www chiusa (nav · scroll · no Cerca casa)
 
 - Nav: **Chi siamo · Le tre anime · Perché OMNIA · Prezzi · Registrati** (niente Cerca casa)

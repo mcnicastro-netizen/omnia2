@@ -7,6 +7,17 @@ Registro di tutte le decisioni di business e tecniche prese durante il progetto.
 
 ## Decisioni prese
 
+### D-147 — Kling micro-tour gestionale: 30 crediti (€1,50) · 05-Nov-2026 (merge 06-Nov)
+- **Data**: 5 Novembre 2026 (aperta come PR #96; numerata **D-147** perché D-141 era già mappa Idealista)
+- **Contesto**: listino MD aveva 60 cr (€3); codice addebitava ancora **10 cr (€0,50)** → **perdita ~€0,38/video** vs COGS fal.ai ~€0,88. Founder chiede allineamento a **30 crediti**.
+- **Decisione**:
+  1. `CREDIT_COSTS["micro_tour_render"] = 30` (€1,50 a €0,05/cr) — SoT in `plans.py`; Kling legge da lì.
+  2. Margine atteso: €1,50 − ~€0,88 ≈ **€0,62 (~41%)**.
+  3. Ken Burns B2C resta gratis (nessun credito).
+  4. **Gate pre-produzione**: prima del go-live commerciale, ricontrollare margini (Visura/APE fee partner vs listino; codice ↔ `CREDIT_COSTS`). Non shippare SKU sotto COGS. Checklist in `NEXT_SESSION.md`.
+- **Docs**: `PRICING_OMNIA.md` v3.2 + Cap.23 · Ship PR #96.
+- **Stato**: ✅ APPLICATA (punto 4 = obbligo operativo aperto fino a verifica fatture)
+
 ### D-146 — Vetrina www istituzionale (Chi siamo · Perché OMNIA · no Cerca casa) · 06-Nov-2026
 - **Data**: 6 Novembre 2026
 - **Contesto**: Founder ripensa `www` come vetrina commerciale Lab+Ecosystem (non portale B2C). Nav/scroll Chi siamo ripetutamente “a metà”; poi cleanup CTA Cerca casa.

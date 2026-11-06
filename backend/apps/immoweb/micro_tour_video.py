@@ -39,6 +39,7 @@ from pydantic import BaseModel, Field
 
 from shared.auth.dependencies import require_roles, get_optional_user
 from shared.db.connection import Database
+from apps.billing.plans import CREDIT_COSTS
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/videos", tags=["videos"])
@@ -642,9 +643,10 @@ async def video_download(video_id: str, request: Request):
 # ---------------------------------------------------------------------------
 
 FAL_KLING_MODEL = "fal-ai/kling-video/v1.6/pro/image-to-video"
-KLING_DURATION_S = 10    # 10s Pro (D-066, upgrade da 5s originale)
-KLING_CREDIT_COST = 10   # 10 crediti (D-066) — corretto in PRICING_OMNIA v2.1
-KLING_COST_EUR_ESTIMATE = 0.88  # $0.95 per 10s ≈ €0.88 (margine 71% a €3.00)
+KLING_DURATION_S = 10    # 10s Pro (D-066)
+# SoT crediti: plans.CREDIT_COSTS["micro_tour_render"] (listino €0,05/cr)
+KLING_CREDIT_COST = int(CREDIT_COSTS.get("micro_tour_render") or 30)
+KLING_COST_EUR_ESTIMATE = 0.88  # fal.ai ~$0.95 / 10s ≈ €0.88 · a 30 cr (€1,50) margine ~41%
 
 
 def _build_kling_prompt(prop: dict) -> str:
@@ -731,10 +733,10 @@ async def kling_from_property(
     pid: str,
     user: dict = Depends(require_roles("agent", "agency_admin", "super_admin")),
 ):
-    """Genera micro-tour video 5s via fal.ai Kling 1.6 Pro image-to-video.
+    """Genera micro-tour video 10s via fal.ai Kling 1.6 Pro image-to-video.
 
-    Costo agente: 12 crediti (€3,60 a €0,30/credito).
-    Costo interno OMNIA: ~$0,475 (~€0,44), margine 88%.
+    Costo agente: CREDIT_COSTS['micro_tour_render'] (30 crediti = €1,50).
+    Costo interno OMNIA: ~€0,88 (fal.ai) → margine ~41%.
     """
     db = Database.get()
     aid = _agency_id(user)
