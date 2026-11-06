@@ -183,7 +183,7 @@ class VideoDoc(BaseModel):
     agency_id: Optional[str] = None
     property_id: Optional[str] = None
     mode: Literal["ken_burns", "sora2"]
-    status: Literal["pending", "processing", "ready", "failed"] = "pending"
+    status: Literal["pending", "processing", "ready", "failed", "deleted"] = "pending"
     file_path: Optional[str] = None
     download_url: Optional[str] = None
     duration_s: int = DEFAULT_DURATION_S
@@ -479,6 +479,58 @@ async def enqueue_ken_burns_for_property(
         "status": "pending",
         "poll_url": f"/api/cloud/videos/{doc['id']}",
     }
+
+
+def _best_effort_purge_video_bytes(doc: dict) -> None:
+    """Remove local/cache/objstore MP4 if present (never raise to caller)."""
+    try:
+        fp = doc.get("file_path")
+        if fp:
+            p = Path(fp)
+            if p.is_file():
+                p.unlink(missing_ok=True)
+    except Exception:
+        logger.debug("purge local video failed id=%s", doc.get("id"), exc_info=True)
+    storage_path = doc.get("storage_path")
+    if not storage_path and doc.get("id"):
+        storage_path = f"omnia/videos/{doc['id']}.mp4"
+    if storage_path:
+        try:
+            from shared.storage.objstore import delete_object
+            delete_object(storage_path)
+        except Exception:
+            logger.debug("purge storage video failed id=%s", doc.get("id"), exc_info=True)
+
+
+async def soft_delete_owner_ken_burns(db, property_id: str) -> Dict[str, Any]:
+    """Owner removes micro-tour from listing: hide from scheda + best-effort purge bytes."""
+    now = datetime.now(timezone.utc).isoformat()
+    cur = db.videos.find(
+        {
+            "property_id": property_id,
+            "mode": "ken_burns",
+            "agency_id": None,
+            "status": {"$ne": "deleted"},
+        },
+        {"_id": 0},
+    )
+    docs = await cur.to_list(length=50)
+    if not docs:
+        return {"ok": True, "deleted": 0}
+    ids = [d["id"] for d in docs if d.get("id")]
+    await db.videos.update_many(
+        {"id": {"$in": ids}},
+        {"$set": {
+            "status": "deleted",
+            "error": "owner_deleted",
+            "deleted_at": now,
+            "updated_at": now,
+            "download_url": None,
+        }},
+    )
+    for d in docs:
+        await asyncio.to_thread(_best_effort_purge_video_bytes, d)
+    return {"ok": True, "deleted": len(ids)}
 
 
 @public_router.post("/kenburns/property/{pid}", status_code=202)
