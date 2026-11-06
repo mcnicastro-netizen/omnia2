@@ -7,6 +7,17 @@ Registro di tutte le decisioni di business e tecniche prese durante il progetto.
 
 ## Decisioni prese
 
+### D-145 — Primo cliente reale = Nicastro Immobiliare · retire demo GTM · 06-Nov-2026
+- **Data**: 6 Novembre 2026
+- **Contesto**: Founder chiude la sandbox GTM `demo-agency-001` in produzione e apre **Nicastro Immobiliare** come primo cliente OMNIA (dogfood = produzione agenzia reale, non fixtures fake).
+- **Decisione**:
+  1. **Creare** agenzia Nicastro via onboarding B2B (slug `nicastro-immobiliare`) — inventario vuoto (nessun immobile/cliente seed).
+  2. **Cancellare** shell GTM: user `demo.admin@…` + documento `demo-agency-001` + satelliti `agency_id` (endpoint Ops `POST /app/ops/retire-demo-agency`).
+  3. **Seed demo OFF su Railway** di default (`should_seed_demo_agency`): non ricreare demo a ogni restart. Cloud/local restano ON salvo `OMNIA_SEED_DEMO_AGENCY`.
+  4. Founder `super_admin` si aggancia a Nicastro; grant assistito **Pro** + crediti (non Stripe live).
+  5. Login titolare dogfood: `titolare@nicastroimmobiliare.it` (password seed/docs — da ruotare a piacere Founder).
+- **Stato**: ✅ DECISO · Nicastro **live** su API · wipe demo shell via Ops dopo deploy codice D-145
+
 ### D-144 — Domain check .it + tre layer (dominio / sito / email) · 05-Nov-2026
 - **Data**: 5 Novembre 2026
 - **Contesto**: Dogfood Founder su `nicastroimmobiliare.it`: (a) checker mostrava **NOT REGISTERED** su dominio live; (b) Founder doveva chiamare AgestaNET per reset password di `info@nicastroimmobiliare.it` pur avendo il dominio «suo».

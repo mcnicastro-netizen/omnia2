@@ -40,6 +40,7 @@ Un blocco alla volta · niente fix senza «vai» · no P0–P3 prematuri · **li
 | **D-115** | Programma O0…O6 approvato · **no self-serve finché O6 ≠ PASS** |
 | **D-118** | **Audit Portale ImmobilCloud** · A–J GREEN + residuo codice CHIUSO · **MERGED su main** (PR #12 · 9-Ott-2026) · fascicolo `OMNIA_PORTALE_AUDIT_FASCICOLO.md` · residui P-021/P-026 |
 | **D-116** | OpenAPI Catasto sandbox: **una sola API key** (`OPENAPI_API_KEY` + fallback `ADMIN_EMAIL`) |
+| **D-145** | Primo cliente reale = **Nicastro Immobiliare** · seed demo **OFF** su Railway · retire `demo-agency-001` via Ops |
 
 **SoT continuità:** `docs/audit/OMNIA_AUDIT_STATE.md` · `memory/NEXT_SESSION.md` · fascicolo D-118  
 **Sequenza priorità (D-099):** fascicolo → orphan → Bak+Restore → retention → costi.  
