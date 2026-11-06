@@ -107,7 +107,8 @@ export default function MobileNav({ lang, links = [], theme = "light" }) {
                   onClick={(e) => {
                     e.preventDefault();
                     setOpen(false);
-                    if (scrollToAnchor(l.hash, { behavior: "smooth" })) {
+                    const align = l.hash === "chi-siamo" ? "center" : "start";
+                    if (scrollToAnchor(l.hash, { behavior: "smooth", align })) {
                       try {
                         window.history.pushState(null, "", `#${l.hash}`);
                       } catch {

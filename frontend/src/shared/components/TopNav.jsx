@@ -53,9 +53,10 @@ export default function TopNav({ current = "landing", theme = "light", suffix = 
   };
   const c = themes[theme] || themes.light;
 
-  // Vetrina: anchor in-page — offset sticky header (~132px)
+  // Vetrina: Chi siamo centra il blocco contenuto; altre sezioni sotto la nav
   const scrollToSection = (id) => {
-    if (!scrollToAnchor(id, { behavior: "smooth" })) return;
+    const align = id === "chi-siamo" ? "center" : "start";
+    if (!scrollToAnchor(id, { behavior: "smooth", align })) return;
     try {
       window.history.pushState(null, "", `#${id}`);
     } catch {
