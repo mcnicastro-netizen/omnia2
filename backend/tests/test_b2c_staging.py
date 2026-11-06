@@ -275,7 +275,8 @@ def test_empty_pipeline_stage_labels(mongo, b2c_user, listing_with_photo):
             return "https://example.com/room.jpg"
 
         async def fake_nano(src, prompt, resolution="1K"):
-            assert "Remove ALL furniture" in prompt
+            # empty oneshot locks architecture then removes movable furniture only
+            assert "Remove ONLY movable furniture" in prompt
             return "https://example.com/empty-out.jpg"
 
         async def fake_critique(src, out, style="empty", mode="empty"):
