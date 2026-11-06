@@ -1,7 +1,15 @@
+## 2026-11-06 — D-146 vetrina www chiusa (nav · scroll · no Cerca casa)
+
+- Nav: **Chi siamo · Le tre anime · Perché OMNIA · Prezzi · Registrati** (niente Cerca casa)
+- Scroll: sticky TopNav fuori da `overflow-x-hidden`; Chi siamo sotto nav; ordine **Perché OMNIA** → **Il vero lavoro**
+- Box: cloud→`/cloud` · ImmoWeb→`/register` · Academy→`/learn`
+- CTA finale validazione: solo **Inizia ora**
+- PR #121–#124 · Vercel · audit link PASS · Cap.00/01 + HAL `api.www-vetrina-landing` · IMPORT_HAL **v0.53** · diario
+
 ## 2026-11-06 — Vetrina home: Lab + tre anime + integrazione
 
 - Home allineata al posizionamento istituzionale: Lab vs Ecosystem, tre pilastri, diagramma integrazione, domain sovereignty, Academy onesta
-- Nav: Il Lab · Le tre anime · Integrazione · Prezzi
+- Nav storica (superseduta da D-146): Il Lab · Le tre anime · Integrazione · Prezzi
 
 ## 2026-11-06 — Vetrina home OMNIA (www) ripensata
 

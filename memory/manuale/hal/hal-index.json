@@ -1,17 +1,17 @@
 {
-  "version": "0.52-d144-tre-layer",
-  "updated": "2026-11-05",
-  "voices_total": 392,
+  "version": "0.53-d146-www-vetrina",
+  "updated": "2026-11-06",
+  "voices_total": 393,
   "source_files": [
     {
       "file": "00-api-codice.yaml",
-      "voices": 41,
-      "md5": "d934c77677ae08043949333e24fc045b"
+      "voices": 42,
+      "md5": "d2d9c3c8ffe138b0acb268fffa2fa86f"
     },
     {
       "file": "01-primo-accesso.yaml",
       "voices": 13,
-      "md5": "260e73ca751bd190584fdba1804c07c4"
+      "md5": "020425cf0ce014bfe9cb93840c8bed55"
     },
     {
       "file": "02-dashboard.yaml",
@@ -150,8 +150,8 @@
       "file": "00-api-codice",
       "title": "Corpus codice/API",
       "yaml": "00-api-codice.yaml",
-      "voices": 41,
-      "md5": "d934c77677ae08043949333e24fc045b"
+      "voices": 42,
+      "md5": "d2d9c3c8ffe138b0acb268fffa2fa86f"
     },
     {
       "id": 22,
@@ -202,5 +202,5 @@
       "md5": "5e88370cdf2c070dc30c7c3f036b85db"
     }
   ],
-  "notes": "2026-11-05: D-143 PWA QR→Area + nav opaca · D-142 Scout · D-141 mappa · Cap.00/01. Fingerprints regenerated from YAML on disk. Live RAG reindex: POST /api/app/hal/knowledge/reindex?force=true (super_admin). 2026-11-04: D-140 Vendi/video · D-136 Stripe dogfood · D-135 B2C CSRF. 2026-10-19: D-125 atti · D-128 staging €1,49 · Cap.9 crediti-costo · Cap.18 sell-doc-promo. 2026-10-14: D-124 Cap.21 APE/piano/PDF · Cap.18 sell-doc-promo · PR #40. 2026-10-12: Stripe webhook Railway omnia-railway-api 200 OK · api.stripe-sandbox-cloud / api.railway-api-deploy. 2026-10-10: D-123 Railway API live · api.railway-api-deploy · cloud-secrets-vault Personal UI note. 2026-10-06: Stripe sandbox Cloud · api.cloud-secrets-vault · api.stripe-sandbox-cloud · Cap.19 billing. 2026-09-24: A-028g/h/i · Cap.2 Attività · Cap.10 Conferma e applica · Cap.18 distinzione. 2026-09-21: hub import A–E · HAL import.tutte-le-forme. 2026-09-19: D-085 storage quota · Cestino · Cap.20 Ruota."
+  "notes": "2026-11-06: D-146 www vetrina · api.www-vetrina-landing · Cap.00/01. 2026-11-05: D-143 PWA QR→Area + nav opaca · D-142 Scout · D-141 mappa · Cap.00/01. Fingerprints regenerated from YAML on disk. Live RAG reindex: POST /api/app/hal/knowledge/reindex?force=true (super_admin). 2026-11-04: D-140 Vendi/video · D-136 Stripe dogfood · D-135 B2C CSRF. 2026-10-19: D-125 atti · D-128 staging €1,49 · Cap.9 crediti-costo · Cap.18 sell-doc-promo. 2026-10-14: D-124 Cap.21 APE/piano/PDF · Cap.18 sell-doc-promo · PR #40. 2026-10-12: Stripe webhook Railway omnia-railway-api 200 OK · api.stripe-sandbox-cloud / api.railway-api-deploy. 2026-10-10: D-123 Railway API live · api.railway-api-deploy · cloud-secrets-vault Personal UI note. 2026-10-06: Stripe sandbox Cloud · api.cloud-secrets-vault · api.stripe-sandbox-cloud · Cap.19 billing. 2026-09-24: A-028g/h/i · Cap.2 Attività · Cap.10 Conferma e applica · Cap.18 distinzione. 2026-09-21: hub import A–E · HAL import.tutte-le-forme. 2026-09-19: D-085 storage quota · Cestino · Cap.20 Ruota."
 }

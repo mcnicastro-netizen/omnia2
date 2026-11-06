@@ -1389,3 +1389,52 @@ voci:
       permessi:
         - super_admin / Founder
       screenshot: []
+
+  - id: api.www-vetrina-landing
+    titolo: Vetrina www istituzionale (D-146)
+    modulo: Codice API
+    widget: null
+    pubblico: [super_admin]
+    livello: intermedio
+    tags: [codice, landing, www, vetrina, d-146, vercel, topnav, chi-siamo]
+    correlati: [api.vercel-fe-deploy, api.stripe-sandbox-cloud]
+    domanda_naturale: >
+      Cos'è la home www di OMNIA? Dove sono Chi siamo e Perché OMNIA?
+      Perché non c'è Cerca casa nella nav del sito istituzionale?
+    contenuto:
+      a_cosa_serve: >
+        Landing istituzionale Lab+Ecosystem su omniarealestateecosystem.it
+        (LandingApp). Pitch commerciale Founders, non portale B2C.
+        Nav: Chi siamo, Le tre anime, Perché OMNIA, Prezzi, Registrati.
+        Niente Cerca casa in TopNav vetrina né nel CTA finale validazione.
+      quando_si_usa: >
+        Domande su home www, scroll nav, box ImmobilCloud/ImmoWeb/Academy,
+        prezzi Founders, deploy Vercel della vetrina.
+      passi:
+        - "URL: https://omniarealestateecosystem.it/it"
+        - "Codice: frontend/src/apps/landing/LandingApp.jsx + TopNav +
+          scrollToAnchor.js"
+        - "Anchor: #chi-siamo · #offerta · #perche (tratti Perché OMNIA) ·
+          #vero-lavoro (diagramma) · #prezzi"
+        - "Sticky: TopNav FUORI da overflow-x-hidden (altrimenti sticky
+          spezzato e atterraggio a metà viewport)"
+        - "Box anime: /it/cloud · /it/register · /it/learn"
+        - "Piani: /it/register?plan=starter|pro|agency da GET /billing/plans"
+        - "Deploy FE: bash scripts/vercel-deploy.sh"
+      errori_comuni:
+        - problema: "Click Chi siamo atterra a metà schermo"
+          soluzione: >
+            Verificare sticky (header top=0 dopo scroll) e che TopNav non
+            sia dentro overflow-x-hidden; nav landing compatta; contenuto
+            Chi siamo items-start sotto nav.
+        - problema: "Cerco Cerca casa sulla home www"
+          soluzione: >
+            D-146: non è in nav vetrina. Entrare da ImmobilCloud /it/cloud
+            (o Academy nav). CTA finale = solo Inizia ora.
+        - problema: "Box ImmoWeb non apre il gestionale"
+          soluzione: >
+            Destinazione intenzionale = /it/register (onboarding agenzia),
+            non /it/app finché non autenticato.
+      permessi:
+        - super_admin / Founder
+      screenshot: []

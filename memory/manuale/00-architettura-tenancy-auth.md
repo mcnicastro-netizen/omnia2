@@ -41,8 +41,20 @@ Un blocco alla volta · niente fix senza «vai» · no P0–P3 prematuri · **li
 | **D-118** | **Audit Portale ImmobilCloud** · A–J GREEN + residuo codice CHIUSO · **MERGED su main** (PR #12 · 9-Ott-2026) · fascicolo `OMNIA_PORTALE_AUDIT_FASCICOLO.md` · residui P-021/P-026 |
 | **D-116** | OpenAPI Catasto sandbox: **una sola API key** (`OPENAPI_API_KEY` + fallback `ADMIN_EMAIL`) |
 | **D-145** | Primo cliente reale = **Nicastro Immobiliare** · seed demo **OFF** su Railway · retire `demo-agency-001` via Ops |
+| **D-146** | **Vetrina www** istituzionale: Chi siamo · Perché OMNIA · Il vero lavoro · Prezzi · **no Cerca casa** in nav/CTA finale |
 
 **SoT continuità:** `docs/audit/OMNIA_AUDIT_STATE.md` · `memory/NEXT_SESSION.md` · fascicolo D-118  
+
+### Vetrina www (`LandingApp` · D-146 · 06-Nov-2026)
+
+- **URL**: `https://omniarealestateecosystem.it/it` (Vercel FE · `frontend/src/apps/landing/LandingApp.jsx`).
+- **Ruolo**: pitch Lab + Ecosystem (non è ImmobilCloud). Entry B2C ricerca casa = sotto-dominio/path cloud, non TopNav vetrina.
+- **Nav**: Chi siamo (`#chi-siamo`) · Le tre anime (`#offerta`) · Perché OMNIA (`#perche`) · Prezzi (`#prezzi`) · Registrati. Sticky TopNav **fuori** dal wrapper `overflow-x-hidden` (altrimenti sticky spezzato → scroll “a metà”).
+- **Ordine sezioni**: …anime → Perché OMNIA (tratti) → Il vero lavoro (`#vero-lavoro`, diagramma) → Prezzi → CTA «validazione» (solo Inizia ora).
+- **Box anime**: cloud→`/it/cloud` · crm→`/it/register` · academy→`/it/learn`.
+- **Deploy**: `bash scripts/vercel-deploy.sh` (D-074).
+- **HAL**: `api.www-vetrina-landing`.
+
 **Sequenza priorità (D-099):** fascicolo → orphan → Bak+Restore → retention → costi.  
 **Niente codice** senza «vai».
 

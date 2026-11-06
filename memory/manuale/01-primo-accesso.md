@@ -1,6 +1,6 @@
 # Capitolo 1 · Primo accesso
 
-**Versione manuale**: v1.5 · **Ultima revisione**: 04-Nov-2026 sera (D-140 Vendi video/layout · D-138 inbox)
+**Versione manuale**: v1.6 · **Ultima revisione**: 06-Nov-2026 (D-146 vetrina www · D-140/D-138)
 **Chi lo legge**: titolari, agenti, segreteria (chiunque debba iniziare a usare ImmoWeb); privatamente anche utenti ImmobilCloud
 **Prerequisiti**: aver ricevuto le credenziali (email + password) o un invito da un collega
 
@@ -14,6 +14,9 @@ OMNIA è un ecosistema per la tua agenzia immobiliare. Ti dà tre cose:
 1. **ImmoWeb** — il tuo gestionale in-app (immobili, clienti, portali, sito).
 2. **HAL** — l'assistente intelligente che ti aiuta a scrivere annunci, dare risposte legali e trovare informazioni dentro il gestionale.
 3. **ImmobilCloud** — il portale nazionale dove finiscono in vetrina gli annunci della tua agenzia.
+
+**Sito istituzionale (www · D-146)**  
+`https://omniarealestateecosystem.it/it` è la **vetrina Lab + Ecosystem** (Chi siamo, tre anime, Perché OMNIA, prezzi Founders). Non confonderla con ImmobilCloud: sulla nav www **non** c’è «Cerca casa» — per cercare casa si entra da ImmobilCloud (`/it/cloud`). I box «Le tre anime» portano a cloud / registrazione agenzia / Academy.
 
 **In pratica**
 Quando entri in OMNIA:

@@ -1,6 +1,6 @@
-# 📚 HAL Knowledge — Import & Cold Start (v0.52-d144-tre-layer)
+# 📚 HAL Knowledge — Import & Cold Start (v0.53-d146-www-vetrina)
 
-**Ultimo aggiornamento**: 05-Nov-2026 (D-144 tre layer dominio/sito/email)  
+**Ultimo aggiornamento**: 06-Nov-2026 (D-146 vetrina www istituzionale)  
 **Corpus**: YAML in `memory/manuale/hal/*.yaml` (Cap. 1–27 + `00-api-codice`) · MD esclusi dal RAG ingest  
 **Motore**: `hal_knowledge.py` · reindex: `POST /api/app/hal/knowledge/reindex?force=true` (super_admin)  
 **Regola Founder D-084**: ogni ship aggiorna MD+YAML nello stesso giro — vedi `memory/MANUAL_SYNC.md`.
@@ -267,6 +267,8 @@ Prima di dichiarare il cold start "attivo", eseguire manualmente queste 5 query 
 
 | Data | Versione | Note |
 |------|:-:|------|
+| 06-Nov-2026 | **v0.53-d146-www-vetrina** | Cap.00 `api.www-vetrina-landing` + Cap.01 §1.1 www. D-146 nav/scroll/CTA no Cerca casa. CHANGELOG/NEXT/diario. Reindex post-merge. |
+| 05-Nov-2026 | **v0.52-d144-tre-layer** | Cap.17 tre layer dominio/sito/email + WHOIS .it. DECISIONS D-144. Reindex post-merge. |
 | 05-Nov-2026 | **v0.51-d144-domain-whois** | Cap.17: WHOIS .it (D-144) anti falso NOT REGISTERED. DECISIONS/CHANGELOG. Reindex post-merge. |
 | 05-Nov-2026 | **v0.50-d143-pwa-qr-area** | Cap.01: QR→Area Accedi/Crea + Installa + nav opaca. DECISIONS D-143 chiusura PR #104–#106. CHANGELOG/NEXT_SESSION/diario. Reindex post-merge. |
 | 05-Nov-2026 | **v0.49-d142-pwa-scout** | Cap.01: tile Scarica app (PWA) al posto di HAL Legal; Scout in evidenza Cerca/Vendi. DECISIONS D-142. Reindex post-merge. |
