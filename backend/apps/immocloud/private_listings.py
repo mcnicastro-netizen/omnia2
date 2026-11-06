@@ -559,7 +559,11 @@ async def owner_generate_kenburns(
 
 @router.get("/{pid}/video")
 async def owner_listing_video(pid: str, user: dict = Depends(get_current_user)):
-    """Latest Ken Burns job for this owner listing (any status)."""
+    """Latest Ken Burns job for this owner listing (any status).
+
+    Hydrates ready→failed when the MP4 was lost (ephemeral /tmp after redeploy)
+    so Vendi shows Rigenera instead of a black player.
+    """
     await _ensure_b2c(user)
     db = Database.get()
     await _load_listing_for_safety(db, pid, user["id"])
@@ -570,7 +574,8 @@ async def owner_listing_video(pid: str, user: dict = Depends(get_current_user)):
     )
     if not doc:
         raise HTTPException(status_code=404, detail="video_not_found")
-    return doc
+    from apps.immoweb.micro_tour_video import hydrate_ready_video
+    return await hydrate_ready_video(db, doc)
 
 
 @router.post("/{pid}/submit")

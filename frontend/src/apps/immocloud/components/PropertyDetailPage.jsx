@@ -108,15 +108,26 @@ export default function PropertyDetailPage() {
     return () => { document.title = prev; };
   }, [prop]);
 
+  const resolveVideoPlayUrl = (data) => {
+    if (!data?.id) return null;
+    const rel =
+      (data.download_url && String(data.download_url)) ||
+      `/api/app/videos/${data.id}/download`;
+    if (rel.startsWith("http://") || rel.startsWith("https://")) return rel;
+    return `${BACKEND_URL}${rel.startsWith("/") ? rel : `/${rel}`}`;
+  };
+
   useEffect(() => {
     if (!pid) return;
     api.get(`/cloud/videos/by-property/${pid}`)
       .then((r) => {
-        if (r.data?.id) {
-          setVideoUrl(`${BACKEND_URL}/api/app/videos/${r.data.id}/download`);
+        if (r.data?.status === "ready" && r.data?.id) {
+          setVideoUrl(resolveVideoPlayUrl(r.data));
+        } else {
+          setVideoUrl(null);
         }
       })
-      .catch(() => {});
+      .catch(() => setVideoUrl(null));
     if (isB2c) {
       api.get("/cloud/me/favorites/ids")
         .then((r) => setFav((r.data.ids || []).includes(pid)))
@@ -151,7 +162,7 @@ export default function PropertyDetailPage() {
         }
         const st = await api.get(`/cloud/videos/${data.video_id}`);
         if (st.data.status === "ready") {
-          setVideoUrl(`${BACKEND_URL}/api/app/videos/${data.video_id}/download`);
+          setVideoUrl(resolveVideoPlayUrl(st.data));
           return;
         }
         if (st.data.status === "failed") {
@@ -159,7 +170,9 @@ export default function PropertyDetailPage() {
           setVideoErr(
             detail === "no_photos_downloaded"
               ? "Non siamo riusciti a leggere le foto per il video. Riprova o ricarica le immagini."
-              : `Video non generato (${detail}). Riprova.`
+              : detail === "video_expired"
+                ? "Il video precedente non è più disponibile. Rigeneralo."
+                : `Video non generato (${detail}). Riprova.`
           );
           return;
         }
@@ -694,6 +707,15 @@ export default function PropertyDetailPage() {
                     src={videoUrl}
                     controls
                     playsInline
+                    preload="metadata"
+                    onError={() => {
+                      setVideoUrl(null);
+                      setVideoErr(
+                        isLister
+                          ? "Il video non si riproduce. Rigeneralo da Vendi o qui sotto."
+                          : "Video temporaneamente non disponibile."
+                      );
+                    }}
                     className="block w-full aspect-video object-contain object-center bg-stone-900"
                   />
                 </div>

@@ -640,7 +640,15 @@ export default function SellPage() {
     try {
       const { data } = await api.get(`/cloud/me/properties/${listing.id}/video`);
       if (data?.status === "ready" && data?.id) {
-        setPreviewVideoUrl(`${process.env.REACT_APP_BACKEND_URL}/api/app/videos/${data.id}/download`);
+        const rel =
+          (data.download_url && String(data.download_url)) ||
+          `/api/app/videos/${data.id}/download`;
+        const base = process.env.REACT_APP_BACKEND_URL || "";
+        setPreviewVideoUrl(
+          rel.startsWith("http://") || rel.startsWith("https://")
+            ? rel
+            : `${base}${rel.startsWith("/") ? rel : `/${rel}`}`
+        );
       }
     } catch {
       /* nessun video */
