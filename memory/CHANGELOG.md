@@ -1,3 +1,11 @@
+## 2026-11-06 — D-145 primo cliente Nicastro Immobiliare · retire demo GTM
+
+- Agenzia **Nicastro Immobiliare** creata in produzione (slug `nicastro-immobiliare`, piano free → Pro via Ops)
+- Login titolare: `titolare@nicastroimmobiliare.it` / seed `NicastroDemo2026!` (ruotare)
+- `demo.admin@omniaecosystem.it` cancellato (GDPR erase) in prod
+- Codice: seed demo **OFF** su Railway di default · `POST /app/ops/retire-demo-agency` · `apps/immoweb/demo_retire.py` · script `wipe_demo_agency.py`
+- Docs: DECISIONS D-145 · NEXT_SESSION · diario 06-Nov
+
 ## 2026-11-05 — D-144 docs: tre layer dominio/sito/email + caso Nicastro
 
 - Cap.17 §17.14 + HAL `domain.tre-layer-dominio-sito-email`

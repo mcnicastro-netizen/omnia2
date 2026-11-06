@@ -820,3 +820,33 @@ async def ops_preflight(
         "alerts_unacked": unacked,
         "generated_at": datetime.now(timezone.utc).isoformat(),
     }
+
+
+@router.post("/retire-demo-agency")
+async def ops_retire_demo_agency(
+    user: dict = Depends(require_roles("super_admin")),
+) -> Dict[str, Any]:
+    """D-145 — elimina demo-agency-001, aggancia Founder a Nicastro, grant Pro.
+
+    Idempotente: se demo assente, procede comunque con attach/grant.
+    """
+    from apps.immoweb.demo_retire import retire_demo_and_promote_first_client
+
+    db = Database.get()
+    report = await retire_demo_and_promote_first_client(
+        db,
+        attach_slug="nicastro-immobiliare",
+        grant_pro=True,
+        credits=500,
+        founder_email=user.get("email"),
+    )
+    ok = bool((report.get("attach") or {}).get("ok"))
+    logger.info(
+        "retire-demo-agency by=%s ok=%s wipe_agency_deleted=%s",
+        user.get("email"),
+        ok,
+        (report.get("wipe") or {}).get("agency_deleted"),
+    )
+    if not ok:
+        raise HTTPException(status_code=400, detail=report)
+    return {"ok": True, **report}
