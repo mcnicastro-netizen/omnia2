@@ -5,14 +5,10 @@ import axios from "axios";
 import TopNav from "../../shared/components/TopNav";
 import Brand from "../../shared/components/Brand";
 import OmniaLogo from "../../shared/components/OmniaLogo";
+import { scrollToAnchor } from "../../shared/lib/scrollToAnchor";
 
 function scrollLandingHash(hash) {
-  const id = (hash || "").replace(/^#/, "");
-  if (!id) return false;
-  const el = document.getElementById(id);
-  if (!el) return false;
-  el.scrollIntoView({ behavior: "smooth", block: "start" });
-  return true;
+  return scrollToAnchor(hash, { behavior: "smooth" });
 }
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
@@ -242,7 +238,7 @@ export default function LandingApp() {
       <section
         id="chi-siamo"
         data-testid="landing-about"
-        className="scroll-mt-28 relative overflow-hidden min-h-[520px] md:min-h-[600px] lg:min-h-[640px] bg-white"
+        className="scroll-mt-[140px] relative overflow-hidden min-h-[520px] md:min-h-[600px] lg:min-h-[640px] bg-white"
       >
         <img
           src="/cloud/hero.jpg"
@@ -254,7 +250,7 @@ export default function LandingApp() {
           className="absolute inset-0 pointer-events-none"
           style={{
             background:
-              "linear-gradient(90deg, rgba(255,255,255,0.72) 0%, rgba(255,255,255,0.35) 32%, rgba(255,255,255,0.1) 48%, rgba(255,255,255,0.85) 68%, #fff 82%)",
+              "linear-gradient(90deg, rgba(255,255,255,0.55) 0%, rgba(255,255,255,0.22) 32%, rgba(255,255,255,0.08) 48%, rgba(255,255,255,0.85) 68%, #fff 82%)",
           }}
         />
         <div
@@ -277,19 +273,32 @@ export default function LandingApp() {
               data-testid="landing-about-brand"
               className="inline-flex flex-col items-start w-full max-w-md px-6 py-7 md:px-9 md:py-9 rounded-sm"
               style={{
-                background: "rgba(255,255,255,0.82)",
-                backdropFilter: "blur(14px)",
-                WebkitBackdropFilter: "blur(14px)",
-                boxShadow: "0 16px 48px rgba(11,30,63,0.14)",
+                background: "rgba(255,255,255,0.52)",
+                backdropFilter: "blur(18px) saturate(1.1)",
+                WebkitBackdropFilter: "blur(18px) saturate(1.1)",
+                boxShadow: "0 16px 48px rgba(11,30,63,0.1)",
+                border: "1px solid rgba(255,255,255,0.55)",
               }}
             >
-              <img
-                src="/landing/omnia-logo-transparent.png"
-                alt="OMNIA Real Estate Lab"
+              {/* mark vettoriale-like + wordmark testo = niente sgranatura del PNG full */}
+              <div
                 data-testid="landing-about-logo"
-                className="select-none mb-5 h-[100px] md:h-[112px] w-auto"
-                draggable={false}
-              />
+                className="flex flex-col items-start mb-5"
+              >
+                <OmniaLogo variant="mark" size="hero" className="mb-3" />
+                <p
+                  className="text-3xl md:text-4xl font-semibold tracking-[0.18em] text-[#0B1E3F] uppercase leading-none"
+                  style={{ fontFamily: "'Montserrat', 'Inter', system-ui, sans-serif" }}
+                >
+                  <Brand>OMNIA</Brand>
+                </p>
+                <p
+                  className="mt-1.5 text-[11px] md:text-xs font-medium tracking-[0.28em] text-[#0B1E3F]/75 uppercase"
+                  style={{ fontFamily: "'Montserrat', 'Inter', system-ui, sans-serif" }}
+                >
+                  Real Estate Lab
+                </p>
+              </div>
               <div className="w-16 h-px bg-[#0B1E3F]/45 mb-5" />
               <p
                 className="w-full text-[12px] sm:text-[13px] uppercase tracking-[0.18em] text-[#0B1E3F] font-semibold flex flex-wrap items-center gap-x-2 gap-y-1"
@@ -341,7 +350,7 @@ export default function LandingApp() {
       <section
         id="offerta"
         data-testid="landing-pillars"
-        className="scroll-mt-28 bg-[#0B1E3F] text-[#F5F1E8] px-5 sm:px-8 md:px-12 lg:px-16 py-20 md:py-28"
+        className="scroll-mt-[140px] bg-[#0B1E3F] text-[#F5F1E8] px-5 sm:px-8 md:px-12 lg:px-16 py-20 md:py-28"
       >
         <div className="max-w-screen-2xl mx-auto">
           <p className="text-[10px] sm:text-xs font-sans uppercase tracking-[0.3em] text-[#C8A653] mb-3">
@@ -403,7 +412,7 @@ export default function LandingApp() {
       <section
         id="perche"
         data-testid="landing-integrate"
-        className="scroll-mt-28 px-5 sm:px-8 md:px-12 lg:px-16 py-20 md:py-28"
+        className="scroll-mt-[140px] px-5 sm:px-8 md:px-12 lg:px-16 py-20 md:py-28"
         style={{
           background:
             "linear-gradient(180deg, #eef3f1 0%, #F5F1E8 40%, #e8eef5 100%)",
@@ -520,7 +529,7 @@ export default function LandingApp() {
       <section
         id="prezzi"
         data-testid="landing-pricing"
-        className="scroll-mt-28 px-5 sm:px-8 md:px-12 lg:px-16 py-20 md:py-28 border-t border-[#0B1E3F]/10"
+        className="scroll-mt-[140px] px-5 sm:px-8 md:px-12 lg:px-16 py-20 md:py-28 border-t border-[#0B1E3F]/10"
         style={{
           background:
             "linear-gradient(180deg, #F5F1E8 0%, #eef3f1 55%, #F5F1E8 100%)",
