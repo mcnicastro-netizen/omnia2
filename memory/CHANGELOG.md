@@ -1,3 +1,8 @@
+## 2026-11-06 — Vetrina home: Lab + tre anime + integrazione
+
+- Home allineata al posizionamento istituzionale: Lab vs Ecosystem, tre pilastri, diagramma integrazione, domain sovereignty, Academy onesta
+- Nav: Il Lab · Le tre anime · Integrazione · Prezzi
+
 ## 2026-11-06 — Vetrina home OMNIA (www) ripensata
 
 - `LandingApp`: chi siamo · perché · offerta · prezzi live da `/api/billing/plans`
