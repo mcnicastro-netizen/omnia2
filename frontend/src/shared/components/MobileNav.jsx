@@ -107,14 +107,15 @@ export default function MobileNav({ lang, links = [], theme = "light" }) {
                   onClick={(e) => {
                     e.preventDefault();
                     setOpen(false);
-                    const align = l.hash === "chi-siamo" ? "center" : "start";
-                    if (scrollToAnchor(l.hash, { behavior: "smooth", align })) {
+                    // chiudi drawer prima dello scroll (offset header stabile)
+                    requestAnimationFrame(() => {
+                      scrollToAnchor(l.hash);
                       try {
-                        window.history.pushState(null, "", `#${l.hash}`);
+                        window.history.replaceState(null, "", `#${l.hash}`);
                       } catch {
-                        window.location.hash = l.hash;
+                        /* ignore */
                       }
-                    }
+                    });
                   }}
                 >
                   {l.label}

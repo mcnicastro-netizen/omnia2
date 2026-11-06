@@ -53,14 +53,13 @@ export default function TopNav({ current = "landing", theme = "light", suffix = 
   };
   const c = themes[theme] || themes.light;
 
-  // Vetrina: Chi siamo centra il blocco contenuto; altre sezioni sotto la nav
+  // Solo click → scroll (niente hashchange/listener rivali)
   const scrollToSection = (id) => {
-    const align = id === "chi-siamo" ? "center" : "start";
-    if (!scrollToAnchor(id, { behavior: "smooth", align })) return;
+    scrollToAnchor(id);
     try {
-      window.history.pushState(null, "", `#${id}`);
+      window.history.replaceState(null, "", `#${id}`);
     } catch {
-      window.location.hash = id;
+      /* ignore */
     }
   };
 
