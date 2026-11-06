@@ -1,10 +1,19 @@
 import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import axios from "axios";
 import TopNav from "../../shared/components/TopNav";
 import Brand from "../../shared/components/Brand";
 import OmniaLogo from "../../shared/components/OmniaLogo";
+
+function scrollLandingHash(hash) {
+  const id = (hash || "").replace(/^#/, "");
+  if (!id) return false;
+  const el = document.getElementById(id);
+  if (!el) return false;
+  el.scrollIntoView({ behavior: "smooth", block: "start" });
+  return true;
+}
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const BILLING_API = `${BACKEND_URL}/api/billing/plans`;
@@ -36,6 +45,7 @@ const PLAN_FEATURES = {
  */
 export default function LandingApp() {
   const { t, i18n } = useTranslation();
+  const location = useLocation();
   const lang = (i18n.language || "it").slice(0, 2);
   const [plans, setPlans] = useState([]);
   const [plansError, setPlansError] = useState(null);
@@ -53,20 +63,34 @@ export default function LandingApp() {
       "landing.doc_title",
       "OMNIA Real Estate Ecosystem — Sistema operativo per agenzie",
     );
-    const hash = (window.location.hash || "").replace(/^#/, "");
-    if (hash) {
-      requestAnimationFrame(() => {
-        document
-          .getElementById(hash)
-          ?.scrollIntoView({ behavior: "smooth", block: "start" });
-      });
-    } else {
-      window.scrollTo(0, 0);
-    }
     return () => {
       document.title = prev;
     };
   }, [t]);
+
+  // Nav anchor (#chi-siamo / #offerta / #perche / #prezzi): RR aggiorna l'hash
+  // senza remount — bisogna ascoltare location.hash (e hashchange nativo).
+  useEffect(() => {
+    const hash = location.hash || window.location.hash || "";
+    if (!hash) {
+      window.scrollTo(0, 0);
+      return undefined;
+    }
+    let tries = 0;
+    let raf = 0;
+    const run = () => {
+      if (scrollLandingHash(hash)) return;
+      if (tries++ < 20) raf = requestAnimationFrame(run);
+    };
+    raf = requestAnimationFrame(run);
+    return () => cancelAnimationFrame(raf);
+  }, [location.hash, location.pathname]);
+
+  useEffect(() => {
+    const onHash = () => scrollLandingHash(window.location.hash);
+    window.addEventListener("hashchange", onHash);
+    return () => window.removeEventListener("hashchange", onHash);
+  }, []);
 
   useEffect(() => {
     axios

@@ -52,31 +52,42 @@ export default function TopNav({ current = "landing", theme = "light", suffix = 
   };
   const c = themes[theme] || themes.light;
 
-  // Vetrina commerciale (home): chi siamo / offerta / prezzi — non il portale B2C
+  // Vetrina: anchor in-page (hash) — non Link RR same-route (non scrolla)
+  const scrollToSection = (id) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.scrollIntoView({ behavior: "smooth", block: "start" });
+    try {
+      window.history.pushState(null, "", `#${id}`);
+    } catch {
+      window.location.hash = id;
+    }
+  };
+
   const landingItems =
     current === "landing"
       ? [
           {
             key: "about",
-            to: `/${lang}#chi-siamo`,
+            hash: "chi-siamo",
             label: t("landing.nav_about"),
             testid: "topnav-about",
           },
           {
             key: "offer",
-            to: `/${lang}#offerta`,
+            hash: "offerta",
             label: t("landing.nav_offer"),
             testid: "topnav-offer",
           },
           {
             key: "why",
-            to: `/${lang}#perche`,
+            hash: "perche",
             label: t("landing.nav_why"),
             testid: "topnav-why",
           },
           {
             key: "pricing",
-            to: `/${lang}#prezzi`,
+            hash: "prezzi",
             label: t("landing.nav_pricing"),
             testid: "topnav-pricing",
           },
@@ -133,7 +144,11 @@ export default function TopNav({ current = "landing", theme = "light", suffix = 
 
   const mobileLinks = [
     ...(isPublicNav ? [] : [{ to: `/${lang}`, label: t("nav.back_to_home") }]),
-    ...navItems.map((n) => ({ to: n.to, label: n.label })),
+    ...navItems.map((n) =>
+      n.hash
+        ? { hash: n.hash, label: n.label }
+        : { to: n.to, label: n.label },
+    ),
     { to: ctaTo, label: ctaLabel },
   ];
 
@@ -177,16 +192,31 @@ export default function TopNav({ current = "landing", theme = "light", suffix = 
         </div>
 
         <nav className="hidden lg:flex items-center gap-6 text-sm font-sans uppercase tracking-widest">
-          {navItems.map((n) => (
-            <Link
-              key={n.key}
-              to={n.to}
-              data-testid={n.testid}
-              className={`transition ${current === n.key ? c.linkActive : c.link}`}
-            >
-              {n.label}
-            </Link>
-          ))}
+          {navItems.map((n) =>
+            n.hash ? (
+              <a
+                key={n.key}
+                href={`#${n.hash}`}
+                data-testid={n.testid}
+                className={`transition ${current === n.key ? c.linkActive : c.link}`}
+                onClick={(e) => {
+                  e.preventDefault();
+                  scrollToSection(n.hash);
+                }}
+              >
+                {n.label}
+              </a>
+            ) : (
+              <Link
+                key={n.key}
+                to={n.to}
+                data-testid={n.testid}
+                className={`transition ${current === n.key ? c.linkActive : c.link}`}
+              >
+                {n.label}
+              </Link>
+            ),
+          )}
         </nav>
 
         <div className="hidden md:flex items-center gap-3 md:gap-4">

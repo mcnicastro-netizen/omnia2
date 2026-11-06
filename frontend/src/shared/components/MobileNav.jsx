@@ -97,16 +97,39 @@ export default function MobileNav({ lang, links = [], theme = "light" }) {
             </button>
           </div>
           <nav className="flex-1 px-5 py-10 flex flex-col gap-6 text-3xl tracking-tight">
-            {links.map((l) => (
-              <Link
-                key={l.to}
-                to={l.to}
-                onClick={() => setOpen(false)}
-                className={`transition ${T.hover}`}
-              >
-                {l.label}
-              </Link>
-            ))}
+            {links.map((l) =>
+              l.hash ? (
+                <a
+                  key={l.hash}
+                  href={`#${l.hash}`}
+                  className={`transition ${T.hover}`}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setOpen(false);
+                    const el = document.getElementById(l.hash);
+                    if (el) {
+                      el.scrollIntoView({ behavior: "smooth", block: "start" });
+                      try {
+                        window.history.pushState(null, "", `#${l.hash}`);
+                      } catch {
+                        window.location.hash = l.hash;
+                      }
+                    }
+                  }}
+                >
+                  {l.label}
+                </a>
+              ) : (
+                <Link
+                  key={l.to}
+                  to={l.to}
+                  onClick={() => setOpen(false)}
+                  className={`transition ${T.hover}`}
+                >
+                  {l.label}
+                </Link>
+              ),
+            )}
           </nav>
           <footer className={`px-5 py-6 border-t ${T.border} text-xs uppercase tracking-widest font-sans opacity-70`}>
             <span translate="no" className="notranslate">omniarealestateecosystem.it</span>
