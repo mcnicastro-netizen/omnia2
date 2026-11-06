@@ -51,12 +51,13 @@ def main() -> None:
         new_chapters.append(entry)
 
     out = {
-        "version": "0.53-d146-www-vetrina",
+        "version": "0.54-d147-kling-30cr",
         "updated": date.today().isoformat(),
         "voices_total": total,
         "source_files": source_files,
         "new_chapters_m3": new_chapters,
         "notes": (
+            "2026-11-06: D-147 Kling 30 cr · coda #93–#96 · Cap.23. "
             "2026-11-06: D-146 www vetrina · api.www-vetrina-landing · Cap.00/01. "
             "2026-11-05: D-143 PWA QR→Area + nav opaca · D-142 Scout · D-141 mappa · Cap.00/01. "
             "Fingerprints regenerated from YAML on disk. "

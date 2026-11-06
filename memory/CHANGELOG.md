@@ -1,9 +1,10 @@
-## 2026-11-06 — D-147 Kling micro-tour 30 crediti + audit perdite (PR #96)
+## 2026-11-06 — D-147 Kling micro-tour 30 crediti + coda #93–#96 chiusa
 
 - `CREDIT_COSTS.micro_tour_render` **30** (€1,50) — codice legge da `plans.py` (prima 10 cr = **perdita** vs COGS €0,88)
 - `PRICING_OMNIA` v3.2 · DECISIONS **D-147** (non D-141: quel numero è mappa) · Cap.23
+- Stesso giro: #93 persist video · #94 soft mail · #95 elimina video · Railway+Vercel
 - Audit: unica perdita confermata era Kling sotto-prezzo; APE/Visura partner-dependent 🟡
-- Merge ritardato: PR aperta 05-Nov, conflitti docs con D-146; merge 06-Nov
+- Merge ritardato: PR aperte 04–05-Nov, filo saltato a www; closeout docs/HAL v0.54
 
 ## 2026-11-06 — D-146 vetrina www chiusa (nav · scroll · no Cerca casa)
 
