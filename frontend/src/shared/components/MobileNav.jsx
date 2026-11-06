@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import LanguageSwitcher from "./LanguageSwitcher";
+import { scrollToAnchor } from "../lib/scrollToAnchor";
 
 /**
  * MobileNav — hamburger menu drawer for screens < md.
@@ -106,9 +107,7 @@ export default function MobileNav({ lang, links = [], theme = "light" }) {
                   onClick={(e) => {
                     e.preventDefault();
                     setOpen(false);
-                    const el = document.getElementById(l.hash);
-                    if (el) {
-                      el.scrollIntoView({ behavior: "smooth", block: "start" });
+                    if (scrollToAnchor(l.hash, { behavior: "smooth" })) {
                       try {
                         window.history.pushState(null, "", `#${l.hash}`);
                       } catch {

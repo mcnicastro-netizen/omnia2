@@ -6,6 +6,7 @@ import MobileNav from "./MobileNav";
 import Brand from "./Brand";
 import OmniaLogo from "./OmniaLogo";
 import { useAuth } from "../lib/auth";
+import { scrollToAnchor } from "../lib/scrollToAnchor";
 
 /**
  * Shared top navigation across Landing, App, Learn.
@@ -52,11 +53,9 @@ export default function TopNav({ current = "landing", theme = "light", suffix = 
   };
   const c = themes[theme] || themes.light;
 
-  // Vetrina: anchor in-page (hash) — non Link RR same-route (non scrolla)
+  // Vetrina: anchor in-page — offset sticky header (~132px)
   const scrollToSection = (id) => {
-    const el = document.getElementById(id);
-    if (!el) return;
-    el.scrollIntoView({ behavior: "smooth", block: "start" });
+    if (!scrollToAnchor(id, { behavior: "smooth" })) return;
     try {
       window.history.pushState(null, "", `#${id}`);
     } catch {
