@@ -1,3 +1,10 @@
+## 2026-11-09 — D-150 template pack prep (neo + restyling + MLS matrix)
+
+- Un solo pack per neo agenzia e restyling; ogni tema QA MLS on|off
+- Catalogo: metadata + `THEME_ROADMAP` (atelier, cinematic, editorial, mediterranean)
+- `GET /app/website/themes` → `roadmap` + `mls_matrix`
+- Docs: `memory/TEMPLATE_PACK.md` · `docs/design/motionsites-craft-omnia.md`
+
 ## 2026-11-09 — SaaS slice: trash purge → blob (D-095 T-02)
 
 - `purge_item_now` / `run_trash_purge`: prima di cancellare l’immobile, best-effort `delete_object` su foto/video/planimetrie/documenti

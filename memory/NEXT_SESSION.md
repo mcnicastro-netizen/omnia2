@@ -31,7 +31,8 @@ Founder 05-Nov-2026: **controllare i margini prima del go-live**, non dopo.
 | **Vetrina www** | **D-146** + **D-148** paperless in Perché OMNIA |
 | **Kling crediti** | **D-147** 30 cr / €1,50 · listino [`PRICING_OMNIA.md`](./PRICING_OMNIA.md) v3.2 |
 | Portale | D-139…D-144 ✅ |
-| Clone sito | D-023/D-130 + A-037 aperti (dopo dogfood gestionale) |
+| Clone sito | D-023/D-130 + A-037 · **D-150** template pack prep (neo+restyling, MLS matrix) · visual nuovi temi ⏳ |
+| Template pack | Live 4 · roadmap atelier/cinematic/editorial/mediterranean · Motionsites craft bar |
 | **Prossimo strutturale** | Orphan GC scanner (blob senza record) — trash→blob ✅ |
 
 ---
