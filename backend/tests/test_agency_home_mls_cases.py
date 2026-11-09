@@ -1,5 +1,5 @@
-"""D-149 — casi migrazione sito: MLS on (caso 1) vs off (caso 2)."""
-from apps.immoweb.theme_render import render_index
+"""D-149 — casi migrazione sito: MLS on (caso 1) vs off (caso 2) + listing."""
+from apps.immoweb.theme_render import render_index, render_listing, render_property
 
 
 def _agency(**over):
@@ -70,3 +70,14 @@ class TestAgencyHomeMlsCases:
         assert 'data-testid="agency-home-mls-network"' in html
         assert 'data-testid="agency-home-mls-empty"' in html
         assert "Nessun immobile di rete" in html
+
+    def test_listing_and_property_pages_for_clone_ready(self):
+        agency = _agency(mls_enabled=False)
+        props = [_prop(1), {**_prop(2), "operation": "rent"}]
+        listing = render_listing(agency, props, "agenzia-test", operation="sale")
+        assert 'data-testid="agency-listing"' in listing
+        assert "Immobili in vendita" in listing
+        assert "/api/p/agenzia-test/lista" in listing
+        scheda = render_property(agency, props[0], "agenzia-test")
+        assert "Appartamento 1" in scheda
+        assert "<h1>" in scheda

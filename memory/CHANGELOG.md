@@ -1,3 +1,10 @@
+## 2026-11-09 — D-149 clone_ready: preview home+lista+scheda
+
+- `POST /app/website/clone-capture` (build=true default) + `POST /clone-build`
+- Pubblico: `/api/p/{slug}/lista` · `/clone-scheda-preview` fallback
+- Brand Gemini o CSS fallback → theme_config → smoke 3 pagine → `website.clone_ready=true`
+- Prova target: `www.nicastroimmobiliare.it`
+
 ## 2026-11-09 — D-149 migrazione sito casi 1–2 (MLS on/off + clone capture A)
 
 - **Caso 1**: `mls_enabled` → box ricerca rete + sezione «Immobili dalla Rete MLS Partner» su `/api/p/{slug}/`

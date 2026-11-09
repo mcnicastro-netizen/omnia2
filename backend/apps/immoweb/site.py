@@ -25,7 +25,7 @@ from shared.db.trash import with_not_trashed
 from shared.db.public_visibility import brand_site_filter
 from shared.db.connection import Database
 from shared.storage import get_object, ObjStoreError
-from apps.immoweb.themes import render_index, render_property
+from apps.immoweb.themes import render_index, render_listing, render_property
 
 router = APIRouter(tags=["public-site"])
 
@@ -168,6 +168,58 @@ async def site_index(slug: str):
             agency["_mls_network_props"] = []
     html = render_index(agency, props, slug)
     return Response(content=html, media_type="text/html; charset=utf-8")
+
+
+@router.get("/p/{slug}/lista", response_class=Response)
+async def site_listing(slug: str, op: str = ""):
+    """Lista immobili — pezzo obbligatorio clone P0 (home + lista + scheda)."""
+    agency = await _resolve(slug)
+    db = Database.get()
+    props = await db.properties.find(
+        brand_site_filter(agency["id"]), {"_id": 0},
+    ).sort("updated_at", -1).to_list(length=200)
+    html = render_listing(agency, props, slug, operation=op or None)
+    return Response(content=html, media_type="text/html; charset=utf-8")
+
+
+@router.get("/p/{slug}/clone-scheda-preview", response_class=Response)
+async def site_clone_scheda_preview(slug: str):
+    """Scheda preview clone quando non c'è ancora un immobile reale in portafoglio."""
+    agency = await _resolve(slug)
+    website = agency.get("website") or {}
+    capture = website.get("clone_capture") or {}
+    sample = next(
+        (p for p in (capture.get("pages") or []) if p.get("role") == "property"),
+        None,
+    )
+    title = (sample or {}).get("h1") or (sample or {}).get("title") or "Scheda immobile (preview clone)"
+    stub = {
+        "id": "clone-preview",
+        "title": title,
+        "city": (agency.get("address") or {}).get("city") or "Catania",
+        "zone": "",
+        "operation": "sale",
+        "price": None,
+        "surface_sqm": None,
+        "rooms": None,
+        "bedrooms": None,
+        "bathrooms": None,
+        "description": (
+            "Anteprima scheda generata dal clone-from-URL. "
+            "I dati vivi arriveranno dal portafoglio OMNIA dell'agenzia."
+        ),
+        "photos": [],
+        "features": {},
+        "energy": {},
+        "reference_code": "CLONE-PREVIEW",
+        "property_type": "apartment",
+    }
+    html = render_property(agency, stub, slug)
+    return Response(
+        content=html,
+        media_type="text/html; charset=utf-8",
+        headers={"X-Robots-Tag": "noindex"},
+    )
 
 
 # ---------------- Single property page (themed) ----------------

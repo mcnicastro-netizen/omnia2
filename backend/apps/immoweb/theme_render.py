@@ -584,16 +584,16 @@ def render_index(agency: Dict[str, Any], props: List[Dict[str, Any]], slug: str)
     network_props = list(agency.get("_mls_network_props") or []) if mls_on else []
     mls_network_html = _mls_network_section(network_props) if mls_on else ""
 
-    nav = """
+    nav = f"""
       <nav class="ah-nav" aria-label="Principale">
         <a href="#contatti">Contatti</a>
         <a href="#links">Links</a>
-        <a href="/api/p/{slug}/">Home</a>
+        <a href="/api/p/{escape(slug)}/">Home</a>
         <a href="#chi-siamo">Chi siamo</a>
-        <a href="#ultimi">Vendita</a>
-        <a href="#ultimi">Affitto</a>
+        <a href="/api/p/{escape(slug)}/lista">Vendita</a>
+        <a href="/api/p/{escape(slug)}/lista?op=rent">Affitto</a>
       </nav>
-    """.format(slug=escape(slug))
+    """
 
     jsonld_obj = {
         "@context": "https://schema.org",
@@ -675,6 +675,97 @@ def render_index(agency: Dict[str, Any], props: List[Dict[str, Any]], slug: str)
   </footer>
 </body>
 </html>"""
+
+def render_listing(
+    agency: Dict[str, Any],
+    props: List[Dict[str, Any]],
+    slug: str,
+    *,
+    operation: Optional[str] = None,
+) -> str:
+    """Pagina lista immobili (clone P0 — home + lista + scheda)."""
+    cfg = _resolve_theme_config(agency)
+    base = _public_base_url()
+    canonical_rel = f"/api/p/{slug}/lista"
+    canonical = f"{base}{canonical_rel}" if base else canonical_rel
+    name = agency.get("display_name") or agency.get("name") or ""
+    op = (operation or "").lower().strip()
+    if op in ("rent", "affitto", "a"):
+        filtered = [p for p in props if (p.get("operation") or "").lower() in ("rent", "affitto")]
+        heading = "Immobili in affitto"
+        op_q = "rent"
+    elif op in ("sale", "vendita", "v"):
+        filtered = [p for p in props if (p.get("operation") or "").lower() in ("sale", "vendita")]
+        heading = "Immobili in vendita"
+        op_q = "sale"
+    else:
+        filtered = list(props)
+        heading = "Immobili"
+        op_q = ""
+    title = f"{heading} — {name}"
+    desc = f"{len(filtered)} annunci pubblicati da {name} su OMNIA."
+    logo = cfg.get("logo_url")
+    logo_html = (
+        f'<img src="{escape(logo)}" alt="{escape(name)}"/>'
+        if logo else ""
+    )
+    cards = "".join(_home_card(p, slug) for p in filtered[:48]) or (
+        '<div class="ah-empty">Nessun immobile in questa lista.</div>'
+    )
+    nav = f"""
+      <nav class="ah-nav" aria-label="Principale">
+        <a href="/api/p/{escape(slug)}/#contatti">Contatti</a>
+        <a href="/api/p/{escape(slug)}/">Home</a>
+        <a href="/api/p/{escape(slug)}/lista?op=sale">Vendita</a>
+        <a href="/api/p/{escape(slug)}/lista?op=rent">Affitto</a>
+      </nav>
+    """
+    tabs = f"""
+      <div class="ah-list-tabs" data-testid="agency-listing-tabs">
+        <a class="{'on' if not op_q else ''}" href="/api/p/{escape(slug)}/lista">Tutti</a>
+        <a class="{'on' if op_q == 'sale' else ''}" href="/api/p/{escape(slug)}/lista?op=sale">Vendita</a>
+        <a class="{'on' if op_q == 'rent' else ''}" href="/api/p/{escape(slug)}/lista?op=rent">Affitto</a>
+      </div>
+    """
+    return f"""<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>{escape(title)}</title>
+<meta name="description" content="{escape(desc)}"/>
+<link rel="canonical" href="{escape(canonical)}"/>
+<meta name="generator" content="OMNIA Real Estate Ecosystem"/>
+<style>{_theme_css(cfg)}
+{_home_css()}
+.ah-list-tabs{{display:flex;gap:8px;margin:12px 0 18px;flex-wrap:wrap}}
+.ah-list-tabs a{{padding:8px 14px;border:1px solid #ccc;background:#fff;font-size:.85rem;text-decoration:none}}
+.ah-list-tabs a.on{{background:var(--o-primary);color:#fff;border-color:var(--o-primary)}}
+</style>
+</head>
+<body class="agency-home" data-theme="{cfg['theme_id']}" data-testid="agency-listing">
+  <div class="ah-wrap">
+    <div class="ah-top">
+      <a class="ah-brand" href="/api/p/{escape(slug)}/">
+        {logo_html}
+        <span class="ah-brand-name">{escape(name)}</span>
+      </a>
+      {nav}
+    </div>
+    <section class="ah-section" id="lista">
+      <h2>{escape(heading)}</h2>
+      {tabs}
+      <div class="ah-cards" data-testid="agency-listing-cards">{cards}</div>
+    </section>
+  </div>
+  <footer class="ah-footer">
+    <div class="ah-footer-inner">
+      <div><h3>{escape(name)}</h3><p>Portafoglio su OMNIA · clone best-effort</p></div>
+    </div>
+  </footer>
+</body>
+</html>"""
+
 
 def render_property(agency: Dict[str, Any], p: Dict[str, Any], slug: str) -> str:
     cfg = _resolve_theme_config(agency)

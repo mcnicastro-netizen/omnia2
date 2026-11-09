@@ -1,5 +1,11 @@
-"""Unit tests — clone capture helpers (D-023 fase A / D-149)."""
-from apps.immoweb.site_clone import _classify, _page_summary, _discover_links
+"""Unit tests — clone capture helpers (D-023 / D-149)."""
+from apps.immoweb.site_clone import (
+    _classify,
+    _page_summary,
+    _discover_links,
+    _scrape_palette_from_html,
+    _smoke_ok,
+)
 
 
 class TestSiteCloneHelpers:
@@ -49,3 +55,9 @@ class TestSiteCloneHelpers:
         links = _discover_links("https://ex.it/", html)
         assert any("/immobili/vendita" in u for u in links)
         assert all("other.it" not in u for u in links)
+
+    def test_palette_scrape_and_smoke(self):
+        pal = _scrape_palette_from_html("body{color:#1A2B3C} .x{background:#C19A6B}")
+        assert pal.get("primary") == "#1A2B3C"
+        assert _smoke_ok('<div data-testid="agency-home">' + ("x" * 500), 'data-testid="agency-home"')
+        assert not _smoke_ok("short", "agency-home")

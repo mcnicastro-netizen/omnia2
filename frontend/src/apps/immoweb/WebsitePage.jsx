@@ -140,13 +140,18 @@ export default function WebsitePage() {
     if (!extractUrl) return;
     setCapturing(true); setError("");
     try {
-      const { data } = await api.post("/app/website/clone-capture", { url: extractUrl });
-      setCloneCapture(data.capture || data);
+      const { data } = await api.post("/app/website/clone-capture", {
+        url: extractUrl,
+        build: true,
+        max_pages: 10,
+      });
+      setCloneCapture({ ...(data.capture || {}), preview: data.preview, clone_ready: data.clone_ready });
       showToast(
         data.clone_ready
-          ? "Clone pronto"
-          : `Cattura sito OK (${(data.capture?.pages || []).length} pagine) — clone full ancora in corso`
+          ? "Clone ready: home + lista + scheda"
+          : `Cattura OK (${(data.capture?.pages || []).length} pagine) — build preview fallita`
       );
+      if (data.clone_ready) refreshIframe();
     } catch (err) {
       setError(apiError(err));
     } finally {
@@ -273,17 +278,24 @@ export default function WebsitePage() {
             </button>
           </form>
           <p className="text-xs text-stone-500">
-            Migrazione casi 1–2: cattura home/lista/scheda dal sito attuale. Non è ancora il clone full pixel-perfect.
-            Box MLS sì/no si gestisce da MLS (Entra / Esci rete).
+            Migrazione casi 1–2: cattura + genera preview visitabile (home/lista/scheda) best-effort.
+            Box MLS sì/no da pagina MLS. Pixel-perfect resta tier Premium.
           </p>
           {cloneCapture && (
-            <div data-testid="website-clone-capture-summary" className="bg-stone-50 border border-stone-200 rounded-lg p-4 text-sm text-stone-700">
+            <div data-testid="website-clone-capture-summary" className="bg-stone-50 border border-stone-200 rounded-lg p-4 text-sm text-stone-700 space-y-2">
               <p>
                 Pagine: {(cloneCapture.pages || []).length}
                 {" · "}ruoli: {(cloneCapture.roles_found || []).join(", ") || "—"}
-                {" · "}clone_ready: {String(!!cloneCapture.clone_ready)}
+                {" · "}clone_ready: <strong>{String(!!cloneCapture.clone_ready)}</strong>
               </p>
-              {cloneCapture.notes ? <p className="mt-1 text-stone-500">{cloneCapture.notes}</p> : null}
+              {cloneCapture.preview && (
+                <p className="flex flex-wrap gap-3" data-testid="website-clone-preview-links">
+                  <a className="underline" href={`${BACKEND_URL || ""}${cloneCapture.preview.home}`} target="_blank" rel="noreferrer">Home</a>
+                  <a className="underline" href={`${BACKEND_URL || ""}${cloneCapture.preview.listing}`} target="_blank" rel="noreferrer">Lista</a>
+                  <a className="underline" href={`${BACKEND_URL || ""}${cloneCapture.preview.property}`} target="_blank" rel="noreferrer">Scheda</a>
+                </p>
+              )}
+              {cloneCapture.notes ? <p className="text-stone-500">{cloneCapture.notes}</p> : null}
             </div>
           )}
 

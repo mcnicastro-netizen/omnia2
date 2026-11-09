@@ -31,6 +31,7 @@ from apps.immoweb.theme_catalog import (
 )
 from apps.immoweb.theme_render import (
     render_index,
+    render_listing,
     render_property,
 )
 
