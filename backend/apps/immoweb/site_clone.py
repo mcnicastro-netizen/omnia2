@@ -29,11 +29,11 @@ router = APIRouter(prefix="/website", tags=["website"])
 
 _UA = "OMNIA-CloneCapture/0.1 (+https://omniarealestateecosystem.it)"
 _LISTING_HINTS = re.compile(
-    r"(immobil|propert|listing|annunc|vendita|affitto|ricerca|search|catalog)",
+    r"(immobili\.asp|propert(?:y|ies)|listing|annunc[iy]|vendita|affitto|ricerca|search|catalog|/immobili/?)",
     re.I,
 )
 _DETAIL_HINTS = re.compile(
-    r"(dettagl|detail|scheda|property/|/id|rif[=/]|codice)",
+    r"(immobile_dettaglio|dettagl|detail|scheda|cod_annuncio|property/|/id[=/]|rif[=/]|codice)",
     re.I,
 )
 
@@ -63,15 +63,21 @@ def _same_host(base: str, candidate: str) -> bool:
 
 
 def _classify(url: str, text: str, is_seed: bool = False) -> str:
-    path = (urlparse(url).path or "/").lower()
-    blob = f"{path} {text[:400]}".lower()
-    if is_seed or path in ("", "/"):
+    parsed = urlparse(url)
+    path = (parsed.path or "/").lower()
+    query = (parsed.query or "").lower()
+    blob = f"{path}?{query} {text[:400]}".lower()
+    if is_seed or path in ("", "/", "/web", "/web/"):
         return "home"
-    if _DETAIL_HINTS.search(blob) and not _LISTING_HINTS.search(path):
-        # detail-ish path with id-like segment
-        if re.search(r"/\d{3,}(/)?$", path) or "scheda" in path or "detail" in path:
+    # Detail first: Nicastro uses immobile_dettaglio.asp?cod_annuncio=…
+    if (
+        "immobile_dettaglio" in path
+        or "cod_annuncio=" in query
+        or _DETAIL_HINTS.search(blob)
+    ):
+        if re.search(r"cod_annuncio=|immobile_dettaglio|scheda|detail|/\d{3,}(/)?$", blob):
             return "property"
-    if _LISTING_HINTS.search(blob):
+    if _LISTING_HINTS.search(blob) or path.endswith("immobili.asp"):
         return "listing"
     if _DETAIL_HINTS.search(blob):
         return "property"

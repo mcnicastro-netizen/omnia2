@@ -7,6 +7,21 @@ class TestSiteCloneHelpers:
         assert _classify("https://ex.it/", "", is_seed=True) == "home"
         assert _classify("https://ex.it/immobili-vendita", "lista annunci") == "listing"
         assert _classify("https://ex.it/scheda/12345", "dettaglio immobile") == "property"
+        # Nicastro / Agestanet-style
+        assert (
+            _classify(
+                "https://www.nicastroimmobiliare.it/web/immobili.asp?tipo_contratto=V",
+                "Immobili in vendita",
+            )
+            == "listing"
+        )
+        assert (
+            _classify(
+                "https://www.nicastroimmobiliare.it/web/immobile_dettaglio.asp?cod_annuncio=2428410",
+                "Appartamento in vendita",
+            )
+            == "property"
+        )
 
     def test_page_summary_extracts_title_and_nav(self):
         html = """
