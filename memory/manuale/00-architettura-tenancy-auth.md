@@ -42,6 +42,7 @@ Un blocco alla volta · niente fix senza «vai» · no P0–P3 prematuri · **li
 | **D-116** | OpenAPI Catasto sandbox: **una sola API key** (`OPENAPI_API_KEY` + fallback `ADMIN_EMAIL`) |
 | **D-145** | Primo cliente reale = **Nicastro Immobiliare** · seed demo **OFF** su Railway · retire `demo-agency-001` via Ops |
 | **D-146** | **Vetrina www** istituzionale: Chi siamo · Perché OMNIA · Il vero lavoro · Prezzi · **no Cerca casa** in nav/CTA finale |
+| **D-148** | **Paperless in Perché OMNIA** (4° tratto = documenti digitali): Fascicolo · modulistica PDF · kit dominio — **no** firma/PEC inventate; D-129 resta sulle 3 prove economiche |
 | **D-147** | Kling micro-tour gestionale **30 crediti / €1,50** (SoT `CREDIT_COSTS`; Ken Burns B2C gratis) · gate pre-prod margini Visura/APE |
 
 **SoT continuità:** `docs/audit/OMNIA_AUDIT_STATE.md` · `memory/NEXT_SESSION.md` · fascicolo D-118  
@@ -52,6 +53,7 @@ Un blocco alla volta · niente fix senza «vai» · no P0–P3 prematuri · **li
 - **Ruolo**: pitch Lab + Ecosystem (non è ImmobilCloud). Entry B2C ricerca casa = sotto-dominio/path cloud, non TopNav vetrina.
 - **Nav**: Chi siamo (`#chi-siamo`) · Le tre anime (`#offerta`) · Perché OMNIA (`#perche`) · Prezzi (`#prezzi`) · Registrati. Sticky TopNav **fuori** dal wrapper `overflow-x-hidden` (altrimenti sticky spezzato → scroll “a metà”).
 - **Ordine sezioni**: …anime → Perché OMNIA (tratti) → Il vero lavoro (`#vero-lavoro`, diagramma) → Prezzi → CTA «validazione» (solo Inizia ora).
+- **Perché OMNIA (D-148)**: 4 tratti — ecosistema · mestiere · domain sovereignty · **documenti digitali (non cartacei)**. Listino Founders solo in `#prezzi`. Claim paperless = solo pezzi reali (Fascicolo, modulistica PDF, kit dominio); vietato firma live / PEC OMNIA / «100% paperless».
 - **Box anime**: cloud→`/it/cloud` · crm→`/it/register` · academy→`/it/learn`.
 - **Deploy**: `bash scripts/vercel-deploy.sh` (D-074).
 - **HAL**: `api.www-vetrina-landing`.

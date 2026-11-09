@@ -1,6 +1,6 @@
 # Prossima sessione — programma passi
 
-**Aggiornato**: 6 Novembre 2026 — pin **A-040 paperless** (filo domani) · D-147/D-146/D-145  
+**Aggiornato**: 9 Novembre 2026 — **A-040/D-148 paperless chiuso** · priorità Founder: manutenibilità poi SaaS  
 **Repo**: https://github.com/mcnicastro-netizen/omnia2 ✅  
 **Environment**: omnia2 (esiste; UI Dashboard può glitchare — non Start Fresh)
 
@@ -28,11 +28,11 @@ Founder 05-Nov-2026: **controllare i margini prima del go-live**, non dopo.
 |-------|-----|
 | Freccia | [`docs/audit/OMNIA_COERENZA_SISTEMA.md`](../docs/audit/OMNIA_COERENZA_SISTEMA.md) |
 | **Primo cliente B2B** | **D-145** Nicastro Immobiliare (slug `nicastro-immobiliare`) |
-| **Vetrina www** | **D-146** ✅ live (Chi siamo · Perché OMNIA · no Cerca casa) |
+| **Vetrina www** | **D-146** + **D-148** paperless in Perché OMNIA |
 | **Kling crediti** | **D-147** 30 cr / €1,50 · listino [`PRICING_OMNIA.md`](./PRICING_OMNIA.md) v3.2 |
 | Portale | D-139…D-144 ✅ |
 | Clone sito | D-023/D-130 + A-037 aperti (dopo dogfood gestionale) |
-| **Domani · Paperless** | **A-040** — evidenziare paperless tra i pregi (tensione con D-129) |
+| **Prossimo strutturale** | **themes.py split** (MOVE-ONLY, stesso schema staging) |
 
 ---
 
@@ -46,15 +46,22 @@ Founder 05-Nov-2026: **controllare i margini prima del go-live**, non dopo.
 
 URL tipico ImmoWeb: `https://app.omniarealestateecosystem.it` (login B2B).  
 Sito white-label: `/api/p/nicastro-immobiliare/`.  
-Vetrina istituzionale: `https://omniarealestateecosystem.it/it` (**D-146**).
+Vetrina istituzionale: `https://omniarealestateecosystem.it/it` (**D-146** + paperless **D-148**).
 
 **Post-merge D-145**: Founder o agent → `POST /api/app/ops/retire-demo-agency` (cookie super_admin) per wipe shell demo + grant Pro.
 
 ---
 
+## Priorità (Founder 09-Nov: «stabilisci tu»)
+
+1. ✅ **A-040 / D-148 Paperless** — chiuso (inventario + 4° tratto Perché OMNIA + claim onesti).
+2. **Themes split** — MOVE-ONLY di `themes.py` (prossimo elefante), stesso schema staging.
+3. **Un cluster SaaS** — AuthZ E2E **oppure** media/blob lifecycle (audit), un pezzo per filo.
+4. In parallelo se c’è tempo: dogfood Nicastro · gate margini Visura/APE · clone sito A-037.
+
 ## Filo prodotto
 
-1. **Domani (07-Nov+):** **A-040 Paperless** — inventario onesto di cosa è già digitale (Fascicolo, kit dominio, …) e come evidenziarlo in www / Perché OMNIA / pitch **senza inventare** (D-051). Decidere se aggiornare D-129.
-2. **06-Nov chiuso:** Nicastro D-145 · www D-146 · coda #93–#96 / D-147 Kling 30 cr · docs/HAL.
-3. Dogfood gestionale ImmoWeb su Nicastro (loop mattina agente) in parallelo se c’è tempo.
-4. Poi: A-037 / D-130 clone sito · gate pre-prod margini Visura/APE.
+1. **09-Nov chiuso:** A-040 paperless → D-148 · i18n why_4 · HAL/Cap.00.
+2. **06-Nov chiuso:** Nicastro D-145 · www D-146 · coda #93–#96 / D-147 · staging split #129/#130.
+3. Prossimo codice strutturale: **themes split** (quando «vai» o continuo se priorità già autorizzata).
+4. Poi: A-037 / D-130 clone sito · finding SaaS scelto.

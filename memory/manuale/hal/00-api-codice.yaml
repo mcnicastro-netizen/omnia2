@@ -1391,35 +1391,41 @@ voci:
       screenshot: []
 
   - id: api.www-vetrina-landing
-    titolo: Vetrina www istituzionale (D-146)
+    titolo: Vetrina www istituzionale (D-146 + D-148 paperless)
     modulo: Codice API
     widget: null
     pubblico: [super_admin]
     livello: intermedio
-    tags: [codice, landing, www, vetrina, d-146, vercel, topnav, chi-siamo]
-    correlati: [api.vercel-fe-deploy, api.stripe-sandbox-cloud]
+    tags: [codice, landing, www, vetrina, d-146, d-148, paperless, vercel, topnav, chi-siamo]
+    correlati: [api.vercel-fe-deploy, api.stripe-sandbox-cloud, fascicolo.cos-e]
     domanda_naturale: >
       Cos'è la home www di OMNIA? Dove sono Chi siamo e Perché OMNIA?
       Perché non c'è Cerca casa nella nav del sito istituzionale?
+      OMNIA è paperless? Cosa possiamo dire in pitch senza inventare?
     contenuto:
       a_cosa_serve: >
         Landing istituzionale Lab+Ecosystem su omniarealestateecosystem.it
         (LandingApp). Pitch commerciale Founders, non portale B2C.
         Nav: Chi siamo, Le tre anime, Perché OMNIA, Prezzi, Registrati.
         Niente Cerca casa in TopNav vetrina né nel CTA finale validazione.
+        Perché OMNIA (D-148): 4 tratti — ecosistema · mestiere · domain
+        sovereignty · documenti digitali (non cartacei). Listino resta in
+        sezione Prezzi. D-129: paperless non è prova economica primaria.
       quando_si_usa: >
         Domande su home www, scroll nav, box ImmobilCloud/ImmoWeb/Academy,
-        prezzi Founders, deploy Vercel della vetrina.
+        prezzi Founders, paperless/fascicolo in pitch, deploy Vercel.
       passi:
         - "URL: https://omniarealestateecosystem.it/it"
         - "Codice: frontend/src/apps/landing/LandingApp.jsx + TopNav +
-          scrollToAnchor.js"
+          scrollToAnchor.js · i18n landing.why_4_*"
         - "Anchor: #chi-siamo · #offerta · #perche (tratti Perché OMNIA) ·
           #vero-lavoro (diagramma) · #prezzi"
         - "Sticky: TopNav FUORI da overflow-x-hidden (altrimenti sticky
           spezzato e atterraggio a metà viewport)"
         - "Box anime: /it/cloud · /it/register · /it/learn"
         - "Piani: /it/register?plan=starter|pro|agency da GET /billing/plans"
+        - "Paperless claim OK: Fascicolo · modulistica PDF · kit dominio.
+          VIETATO: firma Yousign live · PEC OMNIA · 100% paperless E2E"
         - "Deploy FE: bash scripts/vercel-deploy.sh"
       errori_comuni:
         - problema: "Click Chi siamo atterra a metà schermo"
@@ -1435,6 +1441,10 @@ voci:
           soluzione: >
             Destinazione intenzionale = /it/register (onboarding agenzia),
             non /it/app finché non autenticato.
+        - problema: "In pitch dico firma digitale / PEC OMNIA / 100% paperless"
+          soluzione: >
+            D-148: VIETATO. Dire solo Fascicolo, modulistica PDF, kit
+            dominio scaricabile. Yousign = mock; PEC la manda l'agenzia.
       permessi:
         - super_admin / Founder
       screenshot: []

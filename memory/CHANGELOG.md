@@ -1,3 +1,10 @@
+## 2026-11-09 — D-148 / A-040: paperless in Perché OMNIA
+
+- Inventario onesto: Fascicolo · modulistica PDF · kit dominio = reali; firma/PEC OMNIA = no
+- **D-148**: paperless = tratto operativo www (4° slot), D-129 resta sulle 3 prove economiche
+- i18n `landing.why_4_*` IT/EN · HAL `api.www-vetrina-landing` · Cap.00 · A-040 ✅
+- Priorità successive: themes split → un cluster SaaS audit
+
 ## 2026-11-06 — Staging split #2: media / B2C / API
 
 - Estratti `staging_media.py` · `staging_b2c.py` · `staging_api.py`
