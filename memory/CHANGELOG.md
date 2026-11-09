@@ -1,3 +1,9 @@
+## 2026-11-09 — GDPR Founders path (Onda 9 · D-099)
+
+- Runbook `docs/ops/GDPR_FOUNDERS.md` (DSAR email → export/erase)
+- Stub DPA `docs/legal/DPA_FOUNDERS_STUB.md`
+- Smoke `scripts/gdpr_founders_smoke.py` · unit erase · run in `docs/ops/runs/`
+
 ## 2026-11-09 — Backup scope + restore agency-first (Onda 8 · D-096)
 
 - `backup_scope.py`: SoT AGENCY + B2C collections (videos/modulistica/staging inclusi)

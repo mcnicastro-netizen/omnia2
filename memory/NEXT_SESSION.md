@@ -32,7 +32,7 @@ Founder 05-Nov-2026: **controllare i margini prima del go-live**, non dopo.
 | **Kling crediti** | **D-147** 30 cr / €1,50 · listino [`PRICING_OMNIA.md`](./PRICING_OMNIA.md) v3.2 |
 | Portale | D-139…D-144 ✅ |
 | Clone sito | D-023/D-130 + A-037 aperti (dopo dogfood gestionale) |
-| **Prossimo strutturale** | Orphan GC ✅ · Backup/restore agency-first ✅ (D-096) · poi GDPR D-099 · tenant helpers |
+| **Prossimo strutturale** | Orphan GC ✅ · bak/restore ✅ · GDPR Founders ✅ (D-099) · poi tenant helpers Onda 10 |
 
 ---
 
@@ -61,10 +61,11 @@ Vetrina istituzionale: `https://omniarealestateecosystem.it/it` (**D-146** + pap
 5. ✅ **Trash purge → blob** — hard-delete immobile pulisce Object Storage.
 6. ✅ **Orphan GC + trash purge schedulati** (D-102 / Onda 7).
 7. ✅ **Backup scope + restore agency-first** (D-096 / Onda 8).
-8. **Prossimo SaaS**: GDPR Founders (D-099 / Onda 9) · poi tenant helpers (Onda 10).
+8. ✅ **GDPR Founders** (D-099 / Onda 9) — DSAR/erase/DPA path.
+9. **Prossimo**: tenant helpers + chiusura voti (Onda 10).
 
 ## Filo prodotto
 
-1. **09-Nov chiuso:** A-040/D-148 · themes · AuthZ · blob · trash→blob · orphan GC · bak/restore D-096.
+1. **09-Nov chiuso:** A-040/D-148 · themes · AuthZ · blob · trash→blob · orphan GC · bak/restore · GDPR Founders.
 2. **06-Nov chiuso:** Nicastro · www · Kling · staging split.
 3. Prossimo prodotto consigliato: dogfood Nicastro / A-037 clone (SaaS media path chiuso per il filo corrente).
