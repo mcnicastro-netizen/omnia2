@@ -1,3 +1,8 @@
+## 2026-11-09 — SellPage split MOVE-ONLY (Onda 4)
+
+- Estratti `sellConstants` · `sellPayload` · `SellFormPrimitives` · `SellListingForm`
+- `SellPage.jsx` 1625 → **~910** · zero feature nuove · Babel parse OK
+
 ## 2026-11-09 — Themes render split MOVE-ONLY (Onda 3)
 
 - Estratti `theme_css` · `theme_common` · `theme_home` · `theme_render` (property + re-export)
