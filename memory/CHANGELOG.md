@@ -1,3 +1,9 @@
+## 2026-11-09 — Backup scope + restore agency-first (Onda 8 · D-096)
+
+- `backup_scope.py`: SoT AGENCY + B2C collections (videos/modulistica/staging inclusi)
+- `backup_job` dump allineato · `restore_dry_run` / `restore_agency_nonprod` usano extract condiviso
+- Test `test_backup_scope.py` · RESTORE_MANUAL aggiornato
+
 ## 2026-11-09 — Orphan GC + trash purge APScheduler (Onda 7 · D-102)
 
 - `list_object_keys` (local) in `shared/storage/objstore.py`

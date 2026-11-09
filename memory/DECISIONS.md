@@ -1829,8 +1829,8 @@ Registro di tutte le decisioni di business e tecniche prese durante il progetto.
   2. Sequenza: Backup → Restore → costi reali → **eventuale** revisione listino.
   3. Fino ad allora: canoni €49/€99/€299 **fermi**; quota storage **ferma**; €0,04/GB **non confermato**; nessun nuovo tetto video.
 - **Fuori scope ora**: orchestrazione APScheduler vs worker (rimane aperta da P8/P10).
-- **Implementazione**: ❌ codice ⏳ — solo post-audit / «vai» esplicito.
-- **Stato**: ✅ **DECISIONE DI DOMINIO REGISTRATA** (docs 29-Set-2026) · codice ⏳
+- **Implementazione**: ✅ Onda 8 — `backup_scope.py` SoT collection (agency + B2C + videos/modulistica/staging) · `backup_job` dump allineato · extract/restore agency-first via `scripts/restore_*` · dry-run `restore_dry_run.py`.
+- **Stato**: ✅ **DECISIONE DI DOMINIO REGISTRATA** (docs 29-Set-2026) · ✅ codice 09-Nov-2026
 
 ### D-097 — «Elimina per sempre» vs Backup · trash può restare nel bak · 29-Set-2026
 - **Data**: 29 Settembre 2026
