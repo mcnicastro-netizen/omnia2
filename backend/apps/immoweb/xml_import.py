@@ -51,10 +51,8 @@ def _cleanup_sessions() -> None:
 
 
 def _agency_id_of(user: dict) -> str:
-    agencies = user.get("agency_ids") or []
-    if not agencies:
-        raise HTTPException(status_code=404, detail="no_agency")
-    return agencies[0]
+    from shared.auth.tenant import require_agency_404
+    return require_agency_404(user)
 
 
 class CommitBody(BaseModel):

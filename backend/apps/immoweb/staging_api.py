@@ -21,6 +21,7 @@ from fastapi import (
 from pydantic import BaseModel, Field
 
 from shared.auth.dependencies import get_current_user
+from shared.auth.tenant import optional_agency_id, require_agency
 from shared.db.connection import Database
 from shared.utils.net_guard import assert_public_url
 from apps.billing.plans import CREDIT_COSTS
@@ -189,7 +190,7 @@ async def staging_credits_check(
     """A-013 — pre-check saldo before starting an expensive AI render."""
     n = max(1, min(int(num_variants or 1), 4))
     required = STAGING_CREDIT_COST * n
-    agency_id = user.get("agency_id") or (user.get("agency_ids") or [None])[0]
+    agency_id = optional_agency_id(user)
     balance = 0
     if agency_id:
         db = Database.get()
@@ -265,19 +266,20 @@ async def generate_staging(
             raise HTTPException(400, "Nessuno stile valido per multi_style")
         styles_list = styles_list[: body.num_variants]
 
-    agency_id = user.get("agency_id") or (user.get("agency_ids") or [None])[0]
+    try:
+        agency_id = require_agency(user)
+    except HTTPException:
+        raise HTTPException(status_code=402, detail={
+            "error": "insufficient_credits",
+            "message": "Serve un'agenzia attiva con wallet crediti per generare render.",
+            "required": STAGING_CREDIT_COST * max(1, min(int(body.num_variants or 1), 4)),
+            "balance": 0,
+        })
     await _rate_limit(db, user["id"], agency_id, body.num_variants)
 
     # A-013 — hard-gate crediti PRIMA di avviare SAM2/Flux
     n_var = max(1, min(int(body.num_variants or 1), 4))
     required = STAGING_CREDIT_COST * n_var
-    if not agency_id:
-        raise HTTPException(status_code=402, detail={
-            "error": "insufficient_credits",
-            "message": "Serve un'agenzia con wallet crediti per generare render.",
-            "required": required,
-            "balance": 0,
-        })
     wallet = await db.credit_wallets.find_one({"agency_id": agency_id}, {"_id": 0, "balance": 1})
     balance = int((wallet or {}).get("balance") or 0)
     if balance < required:
@@ -289,9 +291,7 @@ async def generate_staging(
         })
 
     if body.property_id:
-        q: Dict[str, Any] = {"id": body.property_id}
-        if agency_id:
-            q["agency_id"] = agency_id
+        q: Dict[str, Any] = {"id": body.property_id, "agency_id": agency_id}
         if not await db.properties.find_one(q, {"_id": 1}):
             raise HTTPException(404, "Immobile non trovato")
 
@@ -402,10 +402,8 @@ async def save_variant_to_property(
     if not property_id:
         raise HTTPException(400, "Nessun immobile collegato al job")
 
-    agency_id = user.get("agency_id") or (user.get("agency_ids") or [None])[0]
-    q: Dict[str, Any] = {"id": property_id}
-    if agency_id:
-        q["agency_id"] = agency_id
+    agency_id = require_agency(user)
+    q: Dict[str, Any] = {"id": property_id, "agency_id": agency_id}
     prop = await db.properties.find_one(q, {"_id": 0, "photos": 1})
     if prop is None:
         raise HTTPException(404, "Immobile non trovato")
