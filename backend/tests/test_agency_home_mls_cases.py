@@ -79,10 +79,21 @@ class TestAgencyHomeMlsCases:
         assert "Immobili in vendita" in listing
         assert 'data-testid="agency-listing-search-side"' in listing
         assert "Cerca il tuo immobile" in listing
+        # solo box bianco, niente box verde agenzia in lista
+        assert 'data-testid="agency-home-agency-search"' not in listing
+        assert 'data-testid="agency-home-mls-box"' in listing
         assert "/api/p/agenzia-test/lista" in listing
-        scheda = render_property(agency, props[0], "agenzia-test")
+        scheda = render_property(
+            agency,
+            {**props[0], "property_type": "apartment", "operation": "sale"},
+            "agenzia-test",
+        )
         assert "Appartamento 1" in scheda
         assert "<h1>" in scheda
+        assert "Appartamento" in scheda
+        assert "Vendita" in scheda
+        assert ">apartment<" not in scheda
+        assert ">sale<" not in scheda
         assert 'data-testid="agency-property-contact"' in scheda
         assert "Contattaci" in scheda
         assert "Invia il modulo" in scheda

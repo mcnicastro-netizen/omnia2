@@ -516,11 +516,34 @@ def _select(name: str, label: str, options: List[Tuple[str, str]], selected: str
     )
     return f'<div class="ah-field"><label>{escape(label)}</label><select name="{escape(name)}">{opts}</select></div>'
 
-def _mls_search_box(network_count: int) -> str:
+def _label_it(kind: str, value: Any) -> str:
+    """Etichette IT per valori DB spesso in inglese (scheda clone)."""
+    if value in (None, ""):
+        return ""
+    raw = str(value).strip()
+    key = raw.lower().replace(" ", "_").replace("-", "_")
+    maps = {
+        "operation": {
+            "sale": "Vendita", "vendita": "Vendita", "sell": "Vendita",
+            "rent": "Affitto", "affitto": "Affitto", "rental": "Affitto",
+        },
+        "property_type": {
+            "apartment": "Appartamento", "appartamento": "Appartamento", "flat": "Appartamento",
+            "house": "Casa/Villa", "villa": "Villa", "casa": "Casa",
+            "land": "Terreno", "terrain": "Terreno", "terreno": "Terreno",
+            "commercial": "Commerciale", "office": "Ufficio", "garage": "Garage",
+            "building": "Palazzo", "room": "Stanza",
+        },
+    }
+    return maps.get(kind, {}).get(key, raw)
+
+
+def _mls_search_box(network_count: int, *, title: Optional[str] = None) -> str:
     claim = f"{network_count:,}".replace(",", ".") if network_count else "Network"
+    head = title or f"{claim} immobili condivisi"
     return f"""
     <aside class="ah-box ah-mls" data-testid="agency-home-mls-box">
-      <div class="ah-mls-head"><h2>{escape(claim)} immobili condivisi</h2></div>
+      <div class="ah-mls-head"><h2>{escape(head)}</h2></div>
       <div class="ah-box-body">
         {_select("contratto", "Contratto", [("sale", "Vendita"), ("rent", "Affitto")], "sale")}
         {_select("categoria", "Categoria", [("", "Tutte"), ("residential", "Residenziale"), ("commercial", "Commerciale")], "residential")}
@@ -792,13 +815,9 @@ def render_listing(
         <a class="{'on' if op_q == 'rent' else ''}" href="/api/p/{escape(slug)}/lista?op=rent">Affitto</a>
       </nav>
     """
-    mls_on = bool(agency.get("mls_enabled"))
+    # Lista vendita/affitto: solo box bianco «Cerca il tuo immobile» (niente box verde).
     network_count = int(agency.get("_mls_network_count") or 0)
-    side_bits = []
-    if mls_on:
-        side_bits.append(_mls_search_box(network_count))
-    side_bits.append(_agency_search_box(f"/api/p/{escape(slug)}/lista"))
-    side_html = "".join(side_bits)
+    side_html = _mls_search_box(network_count, title="Cerca il tuo immobile")
     return f"""<!DOCTYPE html>
 <html lang="it">
 <head>
@@ -851,8 +870,10 @@ def render_property(agency: Dict[str, Any], p: Dict[str, Any], slug: str) -> str
     name = agency.get("display_name") or agency.get("name") or ""
     title = f"{p.get('title')} — {name}"
     price = _price_str(p)
+    tipo_it = _label_it("property_type", p.get("property_type"))
+    op_it = _label_it("operation", p.get("operation"))
     desc = (
-        f"{p.get('property_type','')} in {p.get('operation','')} a {p.get('city','')} · "
+        f"{tipo_it} in {op_it} a {p.get('city','')} · "
         f"{p.get('surface_sqm') or '—'} m² · {p.get('rooms') or '—'} locali · {price}"
     ).strip()
 
@@ -868,8 +889,8 @@ def render_property(agency: Dict[str, Any], p: Dict[str, Any], slug: str) -> str
         return f'<div><label>{escape(label)}</label><strong>{escape(str(value))}</strong></div>'
 
     cells = "".join([
-        cell("Tipologia", p.get("property_type")),
-        cell("Operazione", p.get("operation")),
+        cell("Tipologia", tipo_it),
+        cell("Operazione", op_it),
         cell("Città", p.get("city")),
         cell("Zona", p.get("zone")),
         cell("Superficie", f"{p.get('surface_sqm')} m²" if p.get("surface_sqm") else None),
