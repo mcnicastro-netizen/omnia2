@@ -311,6 +311,7 @@ def _home_css() -> str:
     return """
     body.agency-home{background:#f4f4f4;color:#222;font-family:Arial,Helvetica,sans-serif}
     body.agency-home a{color:inherit}
+    body.agency-home .ah-nav a{color:#fff !important}
     .ah-wrap{max-width:1100px;margin:0 auto;padding:0 12px 40px}
     .ah-top{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:14px 0 10px;flex-wrap:wrap}
     .ah-brand{display:flex;align-items:center;gap:12px;text-decoration:none;color:#222}
