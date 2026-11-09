@@ -72,10 +72,6 @@ THEME_CATALOG: List[Dict[str, Any]] = [
         "hero_image": "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=1600&q=80&auto=format&fit=crop",
         "craft_refs": ["velorah-hero", "aethera-hero"],
     },
-]
-
-# Roadmap D-019/D-150 — non selezionabili finché status!=live (fuori THEME_IDS).
-THEME_ROADMAP: List[Dict[str, Any]] = [
     {
         "id": "atelier",
         "name": "Atelier",
@@ -83,9 +79,12 @@ THEME_ROADMAP: List[Dict[str, Any]] = [
         "best_for": ["professionale", "familiare"],
         "segments": ["boutique", "neo", "restyle"],
         "mls_variants": ["on", "off"],
-        "status": "planned",
+        "status": "live",
         "price_tier": "premium",
         "preview_palette": {"primary": "#111111", "accent": "#F26522", "neutral_light": "#EFEFEF"},
+        "header_style": "minimal",
+        "card_style": "shadow_lift",
+        "hero_image": "https://images.unsplash.com/photo-1497366216548-37526070297c?w=1600&q=80&auto=format&fit=crop",
         "craft_refs": ["modern-agency", "creative-studio"],
     },
     {
@@ -95,9 +94,12 @@ THEME_ROADMAP: List[Dict[str, Any]] = [
         "best_for": ["lusso"],
         "segments": ["prestige", "restyle"],
         "mls_variants": ["on", "off"],
-        "status": "planned",
+        "status": "live",
         "price_tier": "premium",
-        "preview_palette": {"primary": "#0a1a26", "accent": "#ffffff", "neutral_light": "#0a1a26"},
+        "preview_palette": {"primary": "#0a1a26", "accent": "#c4a574", "neutral_light": "#061018"},
+        "header_style": "bold",
+        "card_style": "image_dominant",
+        "hero_image": "https://images.unsplash.com/photo-1600585154526-990dced4db0d?w=1600&q=80&auto=format&fit=crop",
         "craft_refs": ["velorah-hero", "portal-hero"],
     },
     {
@@ -107,9 +109,12 @@ THEME_ROADMAP: List[Dict[str, Any]] = [
         "best_for": ["familiare", "professionale"],
         "segments": ["boutique", "neo", "restyle"],
         "mls_variants": ["on", "off"],
-        "status": "planned",
+        "status": "live",
         "price_tier": "premium",
         "preview_palette": {"primary": "#1c1917", "accent": "#78716c", "neutral_light": "#fafaf9"},
+        "header_style": "minimal",
+        "card_style": "minimal_border",
+        "hero_image": "https://images.unsplash.com/photo-1480074568708-e7b720bb3f09?w=1600&q=80&auto=format&fit=crop",
         "craft_refs": ["stillmind", "neo-museum"],
     },
     {
@@ -119,12 +124,18 @@ THEME_ROADMAP: List[Dict[str, Any]] = [
         "best_for": ["familiare", "lusso"],
         "segments": ["vacation", "neo", "restyle"],
         "mls_variants": ["on", "off"],
-        "status": "planned",
+        "status": "live",
         "price_tier": "premium",
         "preview_palette": {"primary": "#3d4f5f", "accent": "#c4a574", "neutral_light": "#f7f3eb"},
+        "header_style": "classic",
+        "card_style": "shadow_lift",
+        "hero_image": "https://images.unsplash.com/photo-1566073771259-6a8506099945?w=1600&q=80&auto=format&fit=crop",
         "craft_refs": ["mostar-guide", "immersive-ocean"],
     },
 ]
+
+# Slot per future temi oltre i 8 (D-019 tetto 10). Vuoto = gallery completa.
+THEME_ROADMAP: List[Dict[str, Any]] = []
 
 THEME_IDS = {t["id"] for t in THEME_CATALOG}
 
@@ -145,6 +156,14 @@ DEFAULT_PALETTES = {
                 "neutral_dark": "#111111", "neutral_light": "#ffffff"},
     "luxury":  {"primary": "#0a0a0a", "accent": "#B89D5E",
                 "neutral_dark": "#0a0a0a", "neutral_light": "#fafafa"},
+    "atelier": {"primary": "#111111", "accent": "#F26522",
+                "neutral_dark": "#111111", "neutral_light": "#EFEFEF"},
+    "cinematic": {"primary": "#0a1a26", "accent": "#c4a574",
+                  "neutral_dark": "#061018", "neutral_light": "#0a1a26"},
+    "editorial": {"primary": "#1c1917", "accent": "#78716c",
+                  "neutral_dark": "#1c1917", "neutral_light": "#fafaf9"},
+    "mediterranean": {"primary": "#3d4f5f", "accent": "#c4a574",
+                      "neutral_dark": "#2a3340", "neutral_light": "#f7f3eb"},
 }
 
 DEFAULT_TYPOGRAPHY = {
@@ -152,6 +171,10 @@ DEFAULT_TYPOGRAPHY = {
     "classic": {"headings": "'Playfair Display', Georgia, serif", "body": "Georgia, 'Times New Roman', serif"},
     "bold":    {"headings": "'Inter', system-ui, sans-serif", "body": "'Inter', system-ui, sans-serif"},
     "luxury":  {"headings": "'Playfair Display', Georgia, serif", "body": "'Inter', system-ui, sans-serif"},
+    "atelier": {"headings": "'Instrument Serif', Georgia, serif", "body": "'Inter', system-ui, sans-serif"},
+    "cinematic": {"headings": "'Instrument Serif', Georgia, serif", "body": "'Inter', system-ui, sans-serif"},
+    "editorial": {"headings": "'Newsreader', Georgia, serif", "body": "'Inter', system-ui, sans-serif"},
+    "mediterranean": {"headings": "'Fraunces', Georgia, serif", "body": "'DM Sans', system-ui, sans-serif"},
 }
 
 def _resolve_theme_config(agency: Dict[str, Any]) -> Dict[str, Any]:

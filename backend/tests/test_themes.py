@@ -49,14 +49,19 @@ class TestThemeCatalog:
         data = r.json()
         assert "themes" in data
         ids = [t["id"] for t in data["themes"]]
-        assert set(ids) == {"minimal", "classic", "bold", "luxury"}
+        assert set(ids) == {
+            "minimal", "classic", "bold", "luxury",
+            "atelier", "cinematic", "editorial", "mediterranean",
+        }
         # metadata validation
         for t in data["themes"]:
             assert t.get("name")
             assert t.get("description")
             assert "preview_palette" in t
             assert "primary" in t["preview_palette"]
+            assert t.get("status") == "live"
         assert data.get("default_theme_id") == "minimal"
+        assert data.get("roadmap") == []
 
 
 # --- Get theme ---
@@ -68,7 +73,10 @@ class TestGetTheme:
         for k in ("agency_id", "agency_slug", "saved_theme_config", "resolved",
                   "extracted_profile", "public_url"):
             assert k in d, f"missing key {k}"
-        assert d["resolved"]["theme_id"] in {"minimal", "classic", "bold", "luxury"}
+        assert d["resolved"]["theme_id"] in {
+            "minimal", "classic", "bold", "luxury",
+            "atelier", "cinematic", "editorial", "mediterranean",
+        }
         # palette has 4 keys
         for pk in ("primary", "accent", "neutral_dark", "neutral_light"):
             assert pk in d["resolved"]["palette"]
@@ -115,7 +123,10 @@ class TestAutoConfigure:
         assert r.status_code == 200, r.text
         d = r.json()
         assert d["ok"] is True
-        assert d["theme_id"] in {"minimal", "classic", "bold", "luxury"}
+        assert d["theme_id"] in {
+            "minimal", "classic", "bold", "luxury",
+            "atelier", "cinematic", "editorial", "mediterranean",
+        }
         assert d["resolved"]["theme_id"] == d["theme_id"]
 
 

@@ -26,10 +26,10 @@ Adattato allo stack **SSR** `theme_render.py` (non React/Framer runtime).
 | classic | neo-museum |
 | bold | bold-studio, modern-agency |
 | luxury | velorah-hero, aethera-hero |
-| atelier (planned) | modern-agency, creative-studio |
-| cinematic (planned) | velorah-hero, portal-hero |
-| editorial (planned) | stillmind, neo-museum |
-| mediterranean (planned) | mostar-guide, immersive-ocean |
+| atelier | modern-agency, creative-studio |
+| cinematic | velorah-hero, portal-hero |
+| editorial | stillmind, neo-museum |
+| mediterranean | mostar-guide, immersive-ocean |
 
 ## Matrice QA
 

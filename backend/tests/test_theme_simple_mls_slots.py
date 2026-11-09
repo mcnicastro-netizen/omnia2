@@ -1,5 +1,10 @@
-"""D-151 — Minimal/Classic (€99): MLS on/off senza stravolgere il look del tema."""
+"""D-151 — gallery 8: MLS on/off senza spezzare il linguaggio del tema."""
+import pytest
+
+from apps.immoweb.theme_catalog import THEME_CATALOG
 from apps.immoweb.theme_render import render_index
+
+LIVE_IDS = [t["id"] for t in THEME_CATALOG]
 
 
 def _agency(theme_id: str, mls: bool):
@@ -41,33 +46,46 @@ def _props():
     ]
 
 
-class TestMinimalMlsSlots:
-    def test_mls_on_keeps_light_slot_not_full_primary_block(self):
+# Theme-specific CSS markers that prove MLS slot adopts the theme language
+MLS_SLOT_MARKERS = {
+    "minimal": 'body.agency-home[data-theme="minimal"] .ah-mls',
+    "classic": 'body.agency-home[data-theme="classic"] .ah-box',
+    "bold": 'body.agency-home[data-theme="bold"] .ah-mls',
+    "luxury": 'body.agency-home[data-theme="luxury"] .ah-box',
+    "atelier": 'body.agency-home[data-theme="atelier"] .ah-mls',
+    "cinematic": 'body.agency-home[data-theme="cinematic"] .ah-box',
+    "editorial": 'body.agency-home[data-theme="editorial"] .ah-mls',
+    "mediterranean": 'body.agency-home[data-theme="mediterranean"] .ah-mls',
+}
+
+
+@pytest.mark.parametrize("theme_id", LIVE_IDS)
+def test_mls_on_renders_network_box_and_theme_slot(theme_id):
+    html = render_index(_agency(theme_id, True), _props(), "agenzia-demo")
+    assert f'data-theme="{theme_id}"' in html
+    assert 'data-testid="agency-home-mls-box"' in html
+    assert "Powered by OMNIA" in html
+    assert "Cerca il tuo immobile" in html
+    assert MLS_SLOT_MARKERS[theme_id] in html
+
+
+@pytest.mark.parametrize("theme_id", LIVE_IDS)
+def test_mls_off_no_network_box_keeps_agency_search(theme_id):
+    html = render_index(_agency(theme_id, False), _props(), "agenzia-demo")
+    assert f'data-theme="{theme_id}"' in html
+    assert 'data-testid="agency-home-mls-box"' not in html
+    assert 'data-testid="agency-home-agency-search"' in html
+    assert "ah-search-row solo" in html
+    assert "Cerca il tuo immobile" in html
+
+
+class TestMinimalClassicLegacyMarkers:
+    """Keep explicit style markers for €99 fascia (D-151)."""
+
+    def test_minimal_light_accent_rule(self):
         html = render_index(_agency("minimal", True), _props(), "agenzia-demo")
-        assert 'data-theme="minimal"' in html
-        assert 'data-testid="agency-home-mls-box"' in html
-        assert "Powered by OMNIA" in html
-        assert "Cerca il tuo immobile" in html
-        # Theme-specific light MLS slot (not only generic solid primary)
-        assert 'body.agency-home[data-theme="minimal"] .ah-mls' in html
         assert "border-top:3px solid var(--o-accent" in html
 
-    def test_mls_off_no_network_box(self):
-        html = render_index(_agency("minimal", False), _props(), "agenzia-demo")
-        assert 'data-testid="agency-home-mls-box"' not in html
-        assert "ah-search-row solo" in html
-        assert "Cerca il tuo immobile" in html
-
-
-class TestClassicMlsSlots:
-    def test_mls_on_uses_classic_surface(self):
+    def test_classic_gold_nav_rule(self):
         html = render_index(_agency("classic", True), _props(), "agenzia-demo")
-        assert 'data-theme="classic"' in html
-        assert 'data-testid="agency-home-mls-box"' in html
-        assert 'body.agency-home[data-theme="classic"] .ah-box' in html
-        assert "border-bottom:3px solid var(--o-accent" in html  # classic nav gold rule
-
-    def test_mls_off_keeps_agency_search(self):
-        html = render_index(_agency("classic", False), _props(), "agenzia-demo")
-        assert 'data-testid="agency-home-mls-box"' not in html
-        assert 'data-testid="agency-home-agency-search"' in html
+        assert "border-bottom:3px solid var(--o-accent" in html

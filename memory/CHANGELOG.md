@@ -1,3 +1,9 @@
+## 2026-11-09 — D-151 gallery 8 live (€199 pack)
+
+- Live: `atelier` · `cinematic` · `editorial` · `mediterranean` (+ polish Bold/Luxury)
+- Palette/typography + `_theme_css` + home CSS MLS-aware per tutti e 8
+- `THEME_ROADMAP=[]` · test MLS on/off parametrizzati · TEMPLATE_PACK aggiornato
+
 ## 2026-11-09 — D-151 Minimal/Classic: slot MLS adotta il tema
 
 - Home CSS: `[data-theme=minimal|classic]` — box MLS/search chiari (no blocco primary pieno)

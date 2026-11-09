@@ -34,27 +34,20 @@ Ogni template, live o planned, deve passare QA su entrambe le varianti:
 
 Join/leave MLS non cambia template_id: cambia solo i pezzi condizionali in `theme_render`.
 
-## Live oggi (4)
+## Live (8) — gallery completa D-151
 
-| id | Segmento | Craft MotionSites (ispirazione, non copia) |
-|---|---|---|
-| `minimal` | boutique / neo | stillmind, equilibrium |
-| `classic` | mainstream | neo-museum |
-| `bold` | volume / moderno | bold-studio, modern-agency |
-| `luxury` | prestigio | velorah-hero, aethera-hero |
+| id | Fascia | Segmento | Craft MotionSites (ispirazione, non copia) |
+|---|---|---|---|
+| `minimal` | €99 | boutique / neo | stillmind, equilibrium |
+| `classic` | €99 | mainstream | neo-museum |
+| `bold` | €199 | volume / moderno | bold-studio, modern-agency |
+| `luxury` | €199 | prestigio | velorah-hero, aethera-hero |
+| `atelier` | €199 | boutique urbane | modern-agency, creative-studio |
+| `cinematic` | €199 | prestigio video | velorah-hero, portal-hero |
+| `editorial` | €199 | magazine / mono-quartiere | stillmind, neo-museum |
+| `mediterranean` | €199 | Sud / second home | mostar-guide, immersive-ocean |
 
-Default: `minimal`.
-
-## Roadmap arricchimento (→ 6–8 live, tetto D-019: 5–10)
-
-| id | Perché | Craft refs |
-|---|---|---|
-| `atelier` | Neo urbane, CTA forti, luce studio | modern-agency, creative-studio |
-| `cinematic` | Prestigio video full-bleed | velorah-hero, portal-hero |
-| `editorial` | Magazine / mono-quartiere | stillmind, neo-museum |
-| `mediterranean` | Sud / second home / vacanza | mostar-guide, immersive-ocean |
-
-Ordine di build consigliato: **atelier → mediterranean → cinematic → editorial**.
+Default: `minimal`. `THEME_ROADMAP` vuoto (tetto D-019: 5–10; nuovi slot solo se Founder chiede).
 
 ## MotionSites — come lo usiamo
 
