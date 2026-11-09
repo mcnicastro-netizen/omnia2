@@ -51,18 +51,27 @@ class DocumentUploadBody(BaseModel):
     file_data: str  # base64 (no data: prefix)
 
 
-from shared.auth.tenant import optional_agency_id as _agency_of
-
-
 async def _get_property(db, user: dict, property_id: str, projection: Optional[dict] = None) -> dict:
-    q: Dict[str, Any] = {"id": property_id}
-    agency_id = _agency_of(user)
-    if agency_id:
-        q["agency_id"] = agency_id
-    prop = await db.properties.find_one(q, projection or {"_id": 0})
+    """Load property scoped to active agency (D-095 / D-106 — no cross-tenant IDOR).
+
+    Requires `active_agency_id`. Without agency filter, a logged-in user could
+    open another agency's fascicolo by property id alone.
+    """
+    agency_id = await _require_agency(user)
+    prop = await db.properties.find_one(
+        {"id": property_id, "agency_id": agency_id},
+        projection or {"_id": 0},
+    )
     if not prop:
         raise HTTPException(404, "Immobile non trovato")
     return prop
+
+
+def _agency_property_filter(user: dict, property_id: str) -> Dict[str, Any]:
+    """Sync filter for update_one after `_get_property` already enforced AuthZ."""
+    from shared.auth.tenant import require_agency
+
+    return {"id": property_id, "agency_id": require_agency(user)}
 
 
 def _build_checklist(prop: dict) -> List[Dict[str, Any]]:
@@ -219,7 +228,7 @@ async def upload_document(
         "uploaded_at": datetime.now(timezone.utc).isoformat(),
     }
     await db.properties.update_one(
-        {"id": property_id},
+        _agency_property_filter(user, property_id),
         {"$push": {"documents": doc}, "$set": {"updated_at": datetime.now(timezone.utc).isoformat()}},
     )
     meta = {k: v for k, v in doc.items() if k != "file_data"}
@@ -267,7 +276,7 @@ async def upload_document_multipart(
         "uploaded_at": datetime.now(timezone.utc).isoformat(),
     }
     await db.properties.update_one(
-        {"id": property_id},
+        _agency_property_filter(user, property_id),
         {"$push": {"documents": doc}, "$set": {"updated_at": datetime.now(timezone.utc).isoformat()}},
     )
     return {"ok": True, "document": doc}
@@ -299,7 +308,7 @@ async def delete_document(property_id: str, doc_id: str, user=Depends(get_curren
     db = Database.get()
     await _get_property(db, user, property_id, {"_id": 1})
     res = await db.properties.update_one(
-        {"id": property_id},
+        _agency_property_filter(user, property_id),
         {"$pull": {"documents": {"id": doc_id}}},
     )
     if res.modified_count == 0:
@@ -361,5 +370,8 @@ async def analyze_fascicolo(property_id: str, user=Depends(get_current_user)) ->
             logger.warning("Fascicolo AL analysis failed, using rule-based: %s", e)
 
     analysis = {"text": text, "source": source, "at": datetime.now(timezone.utc).isoformat()}
-    await db.properties.update_one({"id": property_id}, {"$set": {"fascicolo_analysis": analysis}})
+    await db.properties.update_one(
+        _agency_property_filter(user, property_id),
+        {"$set": {"fascicolo_analysis": analysis}},
+    )
     return {"ok": True, "analysis": analysis}

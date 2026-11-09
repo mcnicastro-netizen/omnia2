@@ -1808,8 +1808,11 @@ Registro di tutte le decisioni di business e tecniche prese durante il progetto.
   2. S3/R2 **non** è prerequisito per correggere gli orphan.
   3. Target: cleanup **affidabile/idempotente** (record eliminato → blob da eliminare → job/cleanup → delete riuscito → marcato completato), non delete sincrono fragile che perde traccia se fallisce a metà.
   4. Emergent `delete_object` no-op resta debito finché il backend non supporta delete reale.
-- **Implementazione**: ❌ codice ⏳ — solo post-audit / priorità + «vai» esplicito.
-- **Stato**: ✅ **DECISIONE DI DOMINIO REGISTRATA** (docs 28-Set-2026) · codice ⏳
+- **Implementazione**:
+  1. ✅ **Accesso O1a** (30-Set): `/api/media` blocca `omnia/fascicolo/` e `omnia/modulistica/` (`_is_blocked_path`).
+  2. ✅ **AuthZ fascicolo E2E** (09-Nov Founder «vai» SaaS): `_get_property` richiede `active_agency_id` + filtro `agency_id` su get/update (anti-IDOR); update scoped; test O1 allineati.
+  3. ⏳ Lifecycle blob (delete Mongo → delete object / orphan GC) — pezzo successivo.
+- **Stato**: ✅ DOMINIO · ✅ AuthZ fascicolo E2E · ⏳ blob lifecycle
 
 ### D-096 — Backup + Restore progettati insieme · restore agency-first · 29-Set-2026
 - **Data**: 29 Settembre 2026

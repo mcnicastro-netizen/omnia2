@@ -1,3 +1,11 @@
+## 2026-11-09 — SaaS slice: AuthZ fascicolo E2E (D-095 / O1a)
+
+- Scelta vs media-blob: AuthZ prima (D-099) — IDOR su documenti Nicastro
+- `fascicolo._get_property`: `active_agency_id` obbligatorio + query `agency_id`
+- Update/delete/analyze scoped all’agenzia attiva
+- Test O1: `_is_blocked_path` + 3 case IDOR/agency · 6 passed
+- Blob lifecycle (delete_object) resta ⏳
+
 ## 2026-11-09 — Themes split MOVE-ONLY (`themes.py` elefante)
 
 - Estratti `theme_catalog.py` · `theme_render.py`
