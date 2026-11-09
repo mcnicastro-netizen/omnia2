@@ -19,6 +19,17 @@ from pathlib import Path
 
 from pymongo import MongoClient
 
+_ROOT = Path(__file__).resolve().parents[1]
+_BACKEND = _ROOT / "backend"
+if str(_BACKEND) not in sys.path:
+    sys.path.insert(0, str(_BACKEND))
+
+from apps.immoweb.backup_scope import (  # noqa: E402
+    AGENCY_COLLECTIONS,
+    B2C_COLLECTIONS,
+    extract_agency_docs,
+)
+
 DAY = os.environ.get("DAY", "2026-10-10")
 AGENCY_ID = os.environ.get("AGENCY_ID", "demo-agency-001")
 BACKUP_ROOT = Path(os.environ.get("BACKUP_ROOT", "/workspace/backend/.backups"))
@@ -27,27 +38,8 @@ SRC = BACKUP_ROOT / DAY
 STAGING = Path(f"/tmp/restore_{AGENCY_ID}")
 ARTIFACT = Path("/opt/cursor/artifacts/s1-restore-o3b-2026-10-10.log")
 
-AGENCY_COLLS = (
-    "agencies",
-    "users",
-    "properties",
-    "clients",
-    "client_requests",
-    "activities",
-    "leads",
-    "subscriptions",
-    "credit_wallets",
-    "publishing_connections",
-)
-B2C_COLLS = (
-    "b2c_purchases",
-    "b2c_visura_orders",
-    "consent_events",
-    "favorites",
-    "saved_searches",
-    "al_legal_audit",
-    "listing_inquiries",
-)
+AGENCY_COLLS = tuple(AGENCY_COLLECTIONS)
+B2C_COLLS = tuple(B2C_COLLECTIONS)
 
 
 def log(msg: str) -> None:
@@ -75,23 +67,7 @@ def extract() -> dict[str, int]:
             log(f"MISSING {coll}")
             counts[coll] = -1
             continue
-        kept = []
-        for doc in load_jsonl(path):
-            if coll in B2C_COLLS:
-                kept.append(doc)
-            elif coll == "agencies" and doc.get("id") == AGENCY_ID:
-                kept.append(doc)
-            elif coll == "users" and (
-                AGENCY_ID in (doc.get("agency_ids") or [])
-                or doc.get("account_type") == "b2c"
-            ):
-                kept.append(doc)
-            elif doc.get("agency_id") == AGENCY_ID:
-                kept.append(doc)
-            elif coll == "properties" and doc.get("is_private_listing") and doc.get(
-                "owner_user_id"
-            ):
-                kept.append(doc)
+        kept = extract_agency_docs(coll, load_jsonl(path), AGENCY_ID)
         out = STAGING / f"{coll}.jsonl"
         with out.open("w", encoding="utf-8") as w:
             for d in kept:
@@ -137,16 +113,12 @@ def simulate_loss(db) -> None:
 
 def restore_mongo(db, extracted: dict[str, int]) -> None:
     # Agency-scoped replace
-    for coll in (
-        "properties",
-        "clients",
-        "client_requests",
-        "activities",
-        "leads",
-        "subscriptions",
-        "credit_wallets",
-        "publishing_connections",
-    ):
+    agency_replace = [
+        c
+        for c in AGENCY_COLLS
+        if c not in ("agencies", "users") and c not in B2C_COLLS
+    ]
+    for coll in agency_replace:
         docs = load_jsonl(STAGING / f"{coll}.jsonl")
         db[coll].delete_many({"agency_id": AGENCY_ID})
         if docs:

@@ -18,6 +18,8 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
+from apps.immoweb.backup_scope import BACKUP_COLLECTIONS
+
 logger = logging.getLogger(__name__)
 
 BACKUP_ROOT = Path(os.environ.get("BACKUP_ROOT") or "/workspace/backend/.backups")
@@ -25,30 +27,8 @@ BACKUP_ROOT = Path(os.environ.get("BACKUP_ROOT") or "/workspace/backend/.backups
 BACKUP_RETENTION_DAYS = int(os.environ.get("BACKUP_RETENTION_DAYS") or "7")
 MEDIA_ROOT = Path(os.environ.get("LOCAL_STORAGE_ROOT") or "/workspace/backend/.media")
 
-# Collections that restore an agency archive + portale B2C (P-046)
-_COLLECTIONS = [
-    "agencies",
-    "users",
-    "properties",
-    "clients",
-    "client_requests",
-    "activities",
-    "leads",
-    "subscriptions",
-    "credit_wallets",
-    "credit_ledger",
-    "api_keys",
-    "groups",
-    "publishing_connections",
-    # Portale B2C / privacy / UGC (P-046)
-    "b2c_purchases",
-    "b2c_visura_orders",
-    "consent_events",
-    "favorites",
-    "saved_searches",
-    "al_legal_audit",
-    "listing_inquiries",
-]
+# Collections that restore an agency archive + portale B2C (P-046 / Onda 8).
+_COLLECTIONS = list(BACKUP_COLLECTIONS)
 
 
 def _status_from_report(report: Dict[str, Any]) -> str:
