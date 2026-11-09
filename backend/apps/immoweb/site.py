@@ -25,7 +25,7 @@ from shared.db.trash import with_not_trashed
 from shared.db.public_visibility import brand_site_filter
 from shared.db.connection import Database
 from shared.storage import get_object, ObjStoreError
-from apps.immoweb.themes import render_index, render_property
+from apps.immoweb.themes import render_index, render_listing, render_property
 
 router = APIRouter(tags=["public-site"])
 
@@ -128,25 +128,114 @@ async def site_index(slug: str):
     props = await db.properties.find(
         brand_site_filter(agency["id"]), {"_id": 0},
     ).sort("updated_at", -1).to_list(length=200)
-    # Claim box MLS (layout Track A): conteggio live agenzie in rete, se aderente.
+    # Caso 1 (mls_enabled): box ricerca rete + griglia immobili network.
+    # Caso 2 (!mls_enabled): nessun pezzo MLS sul sito white-label (D-149).
     if agency.get("mls_enabled"):
+        agency = dict(agency)
         try:
-            network_props = await db.properties.count_documents(
-                with_not_trashed({
-                    "status": "active",
-                    "mls_shared": True,
-                    "visibility": {"$in": ["public", "mls_only"]},
-                })
-            )
-            agency = dict(agency)
-            agency["_mls_network_count"] = int(network_props) or await db.properties.count_documents(
-                with_not_trashed({"status": "active", "visibility": {"$in": ["public", "mls_only"]}})
-            )
+            share_filter = with_not_trashed({
+                "status": "active",
+                "mls_shared": True,
+                "visibility": {"$in": ["public", "mls_only"]},
+                "agency_id": {"$ne": agency["id"]},
+                "is_private_listing": {"$ne": True},
+            })
+            network_count = await db.properties.count_documents(share_filter)
+            agency["_mls_network_count"] = int(network_count)
+            network_raw = await db.properties.find(
+                share_filter,
+                {
+                    "_id": 0, "id": 1, "title": 1, "city": 1, "zone": 1,
+                    "operation": 1, "price": 1, "rent_monthly": 1,
+                    "surface_sqm": 1, "rooms": 1, "bedrooms": 1, "photos": 1,
+                    "agency_id": 1,
+                },
+            ).sort("updated_at", -1).to_list(length=6)
+            # Resolve partner agency display names for Co-Agency chip.
+            partner_ids = list({p.get("agency_id") for p in network_raw if p.get("agency_id")})
+            names: Dict[str, str] = {}
+            if partner_ids:
+                async for ag in db.agencies.find(
+                    {"id": {"$in": partner_ids}},
+                    {"_id": 0, "id": 1, "display_name": 1, "name": 1},
+                ):
+                    names[ag["id"]] = ag.get("display_name") or ag.get("name") or ""
+            for p in network_raw:
+                p["_partner_name"] = names.get(p.get("agency_id") or "", "")
+            agency["_mls_network_props"] = network_raw
         except Exception:
-            agency = dict(agency)
             agency["_mls_network_count"] = 0
+            agency["_mls_network_props"] = []
     html = render_index(agency, props, slug)
     return Response(content=html, media_type="text/html; charset=utf-8")
+
+
+@router.get("/p/{slug}/lista", response_class=Response)
+async def site_listing(slug: str, op: str = ""):
+    """Lista immobili — pezzo obbligatorio clone P0 (home + lista + scheda)."""
+    agency = await _resolve(slug)
+    db = Database.get()
+    props = await db.properties.find(
+        brand_site_filter(agency["id"]), {"_id": 0},
+    ).sort("updated_at", -1).to_list(length=200)
+    if agency.get("mls_enabled"):
+        agency = dict(agency)
+        try:
+            agency["_mls_network_count"] = int(
+                await db.properties.count_documents(
+                    with_not_trashed({
+                        "status": "active",
+                        "mls_shared": True,
+                        "visibility": {"$in": ["public", "mls_only"]},
+                        "agency_id": {"$ne": agency["id"]},
+                        "is_private_listing": {"$ne": True},
+                    })
+                )
+            )
+        except Exception:
+            agency["_mls_network_count"] = 0
+    html = render_listing(agency, props, slug, operation=op or None)
+    return Response(content=html, media_type="text/html; charset=utf-8")
+
+
+@router.get("/p/{slug}/clone-scheda-preview", response_class=Response)
+async def site_clone_scheda_preview(slug: str):
+    """Scheda preview clone quando non c'è ancora un immobile reale in portafoglio."""
+    agency = await _resolve(slug)
+    website = agency.get("website") or {}
+    capture = website.get("clone_capture") or {}
+    sample = next(
+        (p for p in (capture.get("pages") or []) if p.get("role") == "property"),
+        None,
+    )
+    title = (sample or {}).get("h1") or (sample or {}).get("title") or "Scheda immobile (preview clone)"
+    stub = {
+        "id": "clone-preview",
+        "title": title,
+        "city": (agency.get("address") or {}).get("city") or "Catania",
+        "zone": "",
+        "operation": "sale",
+        "price": None,
+        "surface_sqm": None,
+        "rooms": None,
+        "bedrooms": None,
+        "bathrooms": None,
+        "description": (
+            "Anteprima scheda generata dal clone-from-URL. "
+            "I dati vivi arriveranno dal portafoglio OMNIA dell'agenzia."
+        ),
+        "photos": [],
+        "features": {},
+        "energy": {},
+        "reference_code": "CLONE-PREVIEW",
+        "property_type": "apartment",
+    }
+    html = render_property(agency, stub, slug)
+    return Response(
+        content=html,
+        media_type="text/html; charset=utf-8",
+        headers={"X-Robots-Tag": "noindex"},
+    )
 
 
 # ---------------- Single property page (themed) ----------------

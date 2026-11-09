@@ -81,10 +81,12 @@ def _clear_auth_cookies(response: Response) -> None:
 def _public(user: dict) -> dict:
     from shared.notifications.prefs import prefs_from_user
     prefs = prefs_from_user(user)
+    # name/created_at/updated_at: .get — un doc incompleto non deve far 500 il login
+    # (bug "biglietto d'ingresso": auth ok, poi crash su payload pubblico).
     return {
         "id": user["id"],
         "email": user["email"],
-        "name": user["name"],
+        "name": user.get("name") or user.get("full_name") or "",
         "role": user["role"],
         "lang": user.get("lang", "it"),
         "agency_ids": user.get("agency_ids", []),
@@ -103,8 +105,8 @@ def _public(user: dict) -> dict:
         "mfa_enabled": bool(user.get("mfa_enabled")),
         "marketing_consent": bool(user.get("marketing_consent")),
         "age_confirmed": bool(user.get("age_confirmed")),
-        "created_at": user["created_at"],
-        "updated_at": user["updated_at"],
+        "created_at": user.get("created_at"),
+        "updated_at": user.get("updated_at"),
     }
 
 

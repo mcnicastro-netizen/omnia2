@@ -30,6 +30,7 @@ from apps.immoweb.matches import router as matches_router
 from apps.immoweb.mandate_opportunities import router as mandate_opportunities_router
 from apps.immoweb.client_requests import router as client_requests_router
 from apps.immoweb.brand_extractor import router as brand_router
+from apps.immoweb.site_clone import router as site_clone_router
 from apps.immoweb.custom_domain import router as custom_domain_router
 from apps.immoweb.themes import router as themes_router
 from apps.immoweb.moderation import router as moderation_router
@@ -82,6 +83,7 @@ router.include_router(matches_router)
 router.include_router(mandate_opportunities_router)
 router.include_router(client_requests_router)
 router.include_router(brand_router)
+router.include_router(site_clone_router)
 router.include_router(custom_domain_router)
 router.include_router(themes_router)
 router.include_router(moderation_router)

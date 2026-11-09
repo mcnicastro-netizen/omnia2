@@ -1336,8 +1336,13 @@ La personalizzazione della demo dal sito dell’agenzia **ci doveva già essere*
 3. Cap. 8/17 + checklist demo aggiornati; niente promessa «clone automatico» finché (1) non è PASS.  
 4. **Clone full (D-023 / D-130)**: preview visitabile best-effort (home + lista + scheda) alimentata da API OMNIA — distinto da (1).
 
+### Aggiornamento 9-Nov-2026 (D-149)
+- Priorità prodotto: **casi 1–2** (migrazione look + MLS sì/no). **Restyling / template pack (caso 3) in coda** — non fare senza ridiscussione Founder.
+- Sito white-label: box + sezione rete solo se `mls_enabled`; leave MLS disponibile.
+- Clone: cattura multi-pagina (`/app/website/clone-capture`) = fase A; preview look-alike ancora aperta (D-023).
+
 ### Stato
-🔴 **P0 APERTA** — Founder 20-Ott-2026: clone = blocco commerciale migrazione sito (es. Nicastro). A-037 resta rampa demo; D-023 resta target clone.
+🔴 **P0 APERTA** — Founder 20-Ott-2026 / 9-Nov-2026 (D-149): clone full per casi 1–2; restyling in coda.
 
 ---
 

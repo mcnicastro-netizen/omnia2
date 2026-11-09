@@ -52,6 +52,21 @@ export default function MlsPage() {
     }
   };
 
+  const leave = async () => {
+    if (!window.confirm("Esci dalla rete MLS? Il sito resta su OMNIA ma senza box MLS.")) {
+      return;
+    }
+    setBusy(true);
+    try {
+      await api.post("/app/mls/leave");
+      await load();
+    } catch (e) {
+      setErr(e?.response?.data?.detail || "Uscita MLS fallita");
+    } finally {
+      setBusy(false);
+    }
+  };
+
   const respondOffer = async (id, action) => {
     try {
       await api.post(`/app/mls/offers/${id}/respond`, { action });
@@ -108,8 +123,22 @@ export default function MlsPage() {
           </section>
         ) : null}
 
-        {dash ? (
+        {dash && dash.mls_enabled ? (
           <>
+            <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-slate-200 bg-white px-4 py-3">
+              <p className="text-sm text-slate-600">
+                Caso 1 attivo: box MLS sul sito white-label. Puoi uscire e restare su OMNIA senza rete (caso 2).
+              </p>
+              <button
+                type="button"
+                disabled={busy}
+                onClick={leave}
+                className="px-4 py-2 rounded-md border border-slate-300 text-sm text-slate-800 hover:bg-slate-50 disabled:opacity-50"
+                data-testid="mls-leave"
+              >
+                {busy ? "Uscita…" : "Esci dalla rete MLS"}
+              </button>
+            </div>
             <section className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <StatCard
                 title="Il mio MLS"
@@ -244,9 +273,9 @@ export default function MlsPage() {
               </div>
             </section>
           </>
-        ) : (
-          <p className="text-slate-500 text-sm">Caricamento MLS…</p>
-        )}
+        ) : null}
+
+        {!dash ? <p className="text-slate-500 text-sm">Caricamento MLS…</p> : null}
       </div>
     </AgencyShell>
   );

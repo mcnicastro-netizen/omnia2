@@ -34,6 +34,7 @@ Founder 05-Nov-2026: **controllare i margini prima del go-live**, non dopo.
 | Clone sito | D-023/D-130 + A-037 · **D-150/D-151** pack+listino · restyling €199 · Stripe checkout template ⏳ |
 | Template pack | **D-151** gallery 8 live su main (#137) · Starter €99/€199 · restyling €199 |
 | **Prossimo strutturale** | Filo 2–10 + gallery 8 ✅ · **prossimo: dogfood Storia Nicastro** |
+| Migrazione sito | **D-149** casi 1–2 MLS on/off + clone capture |
 
 ---
 
@@ -70,5 +71,6 @@ Vetrina istituzionale: `https://omniarealestateecosystem.it/it` (**D-146** + pap
 ## Filo prodotto
 
 1. **09-Nov chiuso:** filo manut+SaaS verso-8 + gallery 8. Resta dogfood Storia.
+| Migrazione sito | **D-149** casi 1–2 MLS on/off + clone capture |
 2. **06-Nov chiuso:** Nicastro · www · Kling · staging split.
-3. Prossimo prodotto consigliato: dogfood Nicastro / A-037 clone (SaaS media path chiuso per il filo corrente).
+3. Prossimo: clone full home+lista+scheda (`clone_ready`) · restyling in coda.

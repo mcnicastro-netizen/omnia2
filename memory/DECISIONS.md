@@ -7,6 +7,16 @@ Registro di tutte le decisioni di business e tecniche prese durante il progetto.
 
 ## Decisioni prese
 
+### D-149 — Migrazione sito: casi 1–2 (clone + MLS on/off) · restyling in coda · 09-Nov-2026
+- **Data**: 9 Novembre 2026
+- **Contesto**: Founder chiarisce il bisogno commerciale. Agenzia con sito già pagato (es. Agestanet/altro gestionale) vuole trasferirsi in OMNIA **tenendo il look**. Restyling con template OMNIA rimandato a ridiscussione.
+- **Decisione**:
+  1. **Caso 1** — Trasferimento OMNIA + adesione MLS: sito white-label con **box ricerca rete** + sezione **Immobili dalla Rete MLS Partner**; flag `agency.mls_enabled=true` (`POST /app/mls/join`).
+  2. **Caso 2** — Trasferimento OMNIA **senza** MLS: stesso percorso sito, **zero** pezzi MLS (niente box, niente sezione rete, embed `/api/mls-box/*` → `mls_not_enabled`). Flag off di default o `POST /app/mls/leave`.
+  3. **Caso 3 (restyling / template pack)** — **IN CODA**. Non implementare finché Founder non ridiscute.
+  4. **Clone look (D-023/D-130)** P0 per casi 1–2. Pipeline: cattura → brand/tema → preview visitabile **home + `/lista` + scheda** → `website.clone_ready=true` (best-effort, non pixel-perfect).
+  5. Promessa commerciale: con `clone_ready=true` si può dire «preview del tuo sito su OMNIA (best-effort)». Pixel-perfect resta Premium. Vietato «identico al 100%» senza ritocco umano.
+- **Stato**: ✅ DECISO · caso 1/2 + leave MLS + clone preview path ✅ · restyling ❌ coda
 ### D-151 — Listino sito template: Starter one-shot €99/€199 · restyling €199 · Pro+ incluso · 09-Nov-2026
 - **Data**: 9 Novembre 2026
 - **Contesto**: Founder conferma gallery da **8** temi; gratis nel piano “prescelto”; su Starter a pagamento one-shot; restyling pure a €199.

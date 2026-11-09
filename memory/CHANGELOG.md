@@ -1,3 +1,25 @@
+## 2026-11-09 — Smoke migrazione dual-role + harden D-106 / login
+
+- Smoke E2E `agency_admin` + `super_admin`: clone_build → MLS leave/join (box sito) → XML preview/commit
+- Agent role: 403 su clone/MLS join-leave/XML import
+- Fix: `xml_import` + `api_keys` usano `active_agency_id` (D-106), non `agency_ids[0]`
+- Fix: `_public` login non 500 se manca `name`/timestamp (bug stile «biglietto d'ingresso»)
+- Test: `test_xml_import_active_agency.py` · `test_auth_public_payload.py`
+
+## 2026-11-09 — D-149 clone_ready: preview home+lista+scheda
+
+- `POST /app/website/clone-capture` (build=true default) + `POST /clone-build`
+- Pubblico: `/api/p/{slug}/lista` · `/clone-scheda-preview` fallback
+- Brand Gemini o CSS fallback → theme_config → smoke 3 pagine → `website.clone_ready=true`
+- Prova target: `www.nicastroimmobiliare.it`
+
+## 2026-11-09 — D-149 migrazione sito casi 1–2 (MLS on/off + clone capture A)
+
+- **Caso 1**: `mls_enabled` → box ricerca rete + sezione «Immobili dalla Rete MLS Partner» su `/api/p/{slug}/`
+- **Caso 2**: niente pezzi MLS; `POST /app/mls/leave`; embed `/api/mls-box/*` → `mls_not_enabled`
+- **Restyling (caso 3)**: esplicitamente in coda
+- Clone fase A: `POST/GET /app/website/clone-capture` · UI Brand Studio «Cattura sito»
+- Test: `test_agency_home_mls_cases.py` · `test_site_clone_capture.py`
 ## 2026-11-09 — Tenant helpers + chiusura filo 2–10 (Onda 10)
 
 - Alias `require_agency_id` · migrazione xml_import/api_keys/themes/custom_domain/staging/hal/valuation_pdf via `active_agency_id` (no `agency_ids[0]`)

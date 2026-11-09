@@ -33,11 +33,17 @@ def _cover_url(p: Dict[str, Any]) -> Optional[str]:
     cover_idx = next((i for i, ph in enumerate(photos) if ph.get("is_cover")), 0)
     return f"/api/public/property/{p['id']}/photo/{cover_idx}"
 
+def _brand_mark(logo: Optional[str], name: str, *, img_class: str = "brand-logo") -> str:
+    """Logo OR testo agenzia — mai entrambi (evita doppia scritta)."""
+    safe = escape(name or "")
+    if logo:
+        return f'<img src="{escape(logo)}" class="{escape(img_class)}" alt="{safe}"/>'
+    return f'<span class="brand-name ah-brand-name">{safe}</span>'
+
 def _render_header(cfg: Dict[str, Any], agency: Dict[str, Any]) -> str:
-    name = escape(agency.get("display_name") or "")
+    name = agency.get("display_name") or ""
     logo = cfg.get("logo_url")
     tagline = cfg.get("tagline")
-    logo_html = f'<img src="{escape(logo)}" class="brand-logo" alt="{name}"/>' if logo else ""
     tagline_html = (
         f'<div class="brand-tagline">{escape(tagline)}</div>'
         if tagline and cfg["theme_id"] == "luxury" else ""
@@ -45,8 +51,7 @@ def _render_header(cfg: Dict[str, Any], agency: Dict[str, Any]) -> str:
     return f"""
     <header>
       <div class="container">
-        {logo_html}
-        <span class="brand-name">{name}</span>
+        {_brand_mark(logo, name)}
         {tagline_html}
       </div>
     </header>"""
@@ -130,4 +135,55 @@ def _share_block(absolute_url: str, share_title: str, share_text: str) -> str:
         else{{var ta=document.createElement('textarea');ta.value=url;document.body.appendChild(ta);ta.select();try{{document.execCommand('copy');done();}}catch(_){{}}document.body.removeChild(ta);}}
       }});
     }})();</script>"""
+
+def _label_it(kind: str, value: Any) -> str:
+    """Etichette IT per valori DB spesso in inglese (scheda clone)."""
+    if value in (None, ""):
+        return ""
+    raw = str(value).strip()
+    key = raw.lower().replace(" ", "_").replace("-", "_")
+    maps = {
+        "operation": {
+            "sale": "Vendita", "vendita": "Vendita", "sell": "Vendita",
+            "rent": "Affitto", "affitto": "Affitto", "rental": "Affitto",
+        },
+        "property_type": {
+            "apartment": "Appartamento", "appartamento": "Appartamento", "flat": "Appartamento",
+            "house": "Casa/Villa", "villa": "Villa", "casa": "Casa",
+            "land": "Terreno", "terrain": "Terreno", "terreno": "Terreno",
+            "commercial": "Commerciale", "office": "Ufficio", "garage": "Garage",
+            "building": "Palazzo", "room": "Stanza",
+        },
+    }
+    return maps.get(kind, {}).get(key, raw)
+
+def _contact_form(agency: Dict[str, Any], property_ref: str = "") -> str:
+    """Form Contattaci laterale (scheda immobile — stile riferimento)."""
+    name = agency.get("display_name") or agency.get("name") or "agenzia"
+    rif = property_ref or ""
+    default_msg = (
+        f"Buongiorno, sono interessato all'immobile rif. {rif}. Vi prego di ricontattarmi. Grazie."
+        if rif else
+        f"Buongiorno, vorrei informazioni. Grazie."
+    )
+    return f"""
+    <aside class="ah-box ah-agency ah-contact-form" data-testid="agency-property-contact">
+      <div class="ah-box-body">
+        <h2>Contattaci</h2>
+        <form action="mailto:{(agency.get('contact') or {}).get('email') or ''}" method="get" enctype="text/plain">
+          <div class="ah-field"><label>Nominativo*</label><input type="text" name="nominativo" required/></div>
+          <div class="ah-field"><label>Telefono*</label><input type="tel" name="telefono" required/></div>
+          <div class="ah-field"><label>E-mail*</label><input type="email" name="email" required/></div>
+          <div class="ah-field"><label>Richiesta*</label>
+            <textarea name="body" required>{escape(default_msg)}</textarea>
+          </div>
+          <p class="ah-consent">Autorizzazione al trattamento dei dati personali
+            <label><input type="radio" name="privacy" value="si" required/> Sì</label>
+            <label><input type="radio" name="privacy" value="no"/> No</label>
+          </p>
+          <button type="submit" class="ah-btn black">Invia il modulo</button>
+        </form>
+        <p class="ah-contact-agency">{escape(name)}</p>
+      </div>
+    </aside>"""
 

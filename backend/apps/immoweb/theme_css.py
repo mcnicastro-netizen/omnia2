@@ -365,50 +365,69 @@ def _share_css() -> str:
     """
 
 def _home_css() -> str:
-    """Agency home structure + theme slots (D-151: MLS adotta il tema, non lo stravolge)."""
+    """Fixed structure CSS for the public agency home (chrome uses --o-primary)."""
     return """
-    body.agency-home{background:#f4f4f4;color:#222;font-family:var(--o-font-body,Arial,Helvetica,sans-serif)}
+    body.agency-home{background:#f4f4f4;color:#222;font-family:Arial,Helvetica,sans-serif}
     body.agency-home a{color:inherit}
+    body.agency-home .ah-nav a{color:#fff !important}
     .ah-wrap{max-width:1100px;margin:0 auto;padding:0 12px 40px}
     .ah-top{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:14px 0 10px;flex-wrap:wrap}
     .ah-brand{display:flex;align-items:center;gap:12px;text-decoration:none;color:#222}
-    .ah-brand img{height:52px;width:auto;object-fit:contain}
-    .ah-brand-name{font-family:var(--o-font-headings,inherit);font-size:1.15rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase}
-    .ah-nav{display:flex;flex-wrap:wrap;background:var(--o-primary);border-radius:2px;overflow:hidden}
-    .ah-nav a{color:#fff !important;text-decoration:none;padding:10px 14px;font-size:.85rem;font-weight:600;border-right:1px solid rgba(255,255,255,.18)}
+    .ah-brand img{height:56px;width:auto;object-fit:contain;display:block}
+    .ah-brand-name{font-size:1.05rem;font-weight:700;letter-spacing:.03em;text-transform:uppercase;font-family:Georgia,'Times New Roman',serif}
+    .ah-nav{display:flex;flex-wrap:wrap;background:var(--o-primary);border-radius:0;overflow:hidden;box-shadow:0 1px 0 rgba(0,0,0,.08)}
+    .ah-nav a{color:#fff;text-decoration:none;padding:12px 18px;font-size:.92rem;font-weight:600;letter-spacing:.02em;border-right:1px solid rgba(255,255,255,.28);line-height:1.2}
     .ah-nav a:last-child{border-right:0}
-    .ah-nav a:hover{background:rgba(0,0,0,.12)}
-    .ah-hero{margin:8px 0 16px;min-height:260px;border-radius:2px;position:relative;overflow:hidden;display:flex;align-items:flex-end;justify-content:center;background-color:var(--o-primary);background-size:cover;background-position:center center;background-repeat:no-repeat}
-    .ah-hero::before{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.15) 0%,rgba(0,0,0,.45) 100%);pointer-events:none}
-    .ah-hero-inner{position:relative;z-index:1;padding:28px 20px;color:#fff;text-align:center;width:100%}
-    .ah-hero-inner strong{display:block;font-family:var(--o-font-headings,inherit);font-size:1.35rem;letter-spacing:.06em;text-transform:uppercase;text-shadow:0 1px 3px rgba(0,0,0,.35)}
-    .ah-hero-dots{display:flex;gap:8px;justify-content:center;margin-top:12px}
+    .ah-nav a:hover,.ah-nav a.on{background:rgba(255,255,255,.16)}
+    .ah-hero{margin:8px 0 16px;min-height:280px;border-radius:0;position:relative;overflow:hidden;display:flex;align-items:flex-end;justify-content:center;background-color:var(--o-primary);background-size:cover;background-position:center center;background-repeat:no-repeat}
+    .ah-hero::before{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.08) 0%,rgba(0,0,0,.28) 100%);pointer-events:none}
+    .ah-hero-inner{position:relative;z-index:1;padding:18px 20px;color:#fff;text-align:center;width:100%}
+    .ah-hero-dots{display:flex;gap:8px;justify-content:center;margin-top:0}
     .ah-hero-dots span{width:10px;height:10px;border-radius:50%;background:rgba(255,255,255,.55);box-shadow:0 0 0 1px rgba(0,0,0,.15)}
     .ah-hero-dots span.on{background:#fff}
-    .ah-search-row{display:grid;grid-template-columns:260px 1fr;gap:14px;margin-bottom:28px}
+    .ah-search-row{display:grid;grid-template-columns:250px 1fr;gap:16px;margin-bottom:28px;align-items:start}
     .ah-search-row.solo{grid-template-columns:1fr}
-    /* Default (bold/luxury fallback): solid primary — Minimal/Classic override below */
-    .ah-box{background:var(--o-primary);color:#fff;border-radius:2px;padding:14px 14px 12px}
-    .ah-box h2{font-family:var(--o-font-headings,inherit);font-size:1rem;font-weight:700;margin:0 0 12px;color:#fff;letter-spacing:.02em}
+    .ah-box{border-radius:0;padding:0;overflow:hidden}
+    .ah-box h2{font-family:inherit;font-size:.98rem;font-weight:700;margin:0;letter-spacing:.01em}
+    .ah-box-body{padding:12px 12px 14px}
     .ah-field{margin-bottom:8px}
     .ah-field label{display:block;font-size:.72rem;margin-bottom:3px;opacity:.95}
-    .ah-field select,.ah-field input{width:100%;padding:7px 8px;border:0;border-radius:2px;font-size:.85rem;color:#222;background:#fff}
+    .ah-field select,.ah-field input,.ah-field textarea{width:100%;padding:8px 9px;border:1px solid #d0d0d0;border-radius:2px;font-size:.85rem;color:#222;background:#fff;box-sizing:border-box}
+    .ah-field textarea{min-height:88px;resize:vertical;font-family:inherit}
     .ah-range{display:grid;grid-template-columns:1fr 1fr;gap:6px}
-    .ah-btn{display:inline-block;width:100%;margin-top:8px;padding:10px 12px;border:0;border-radius:2px;background:#4a4a4a;color:#fff;font-weight:700;font-size:.9rem;cursor:pointer;text-align:center;text-decoration:none}
+    .ah-btn{display:inline-block;width:100%;margin-top:8px;padding:10px 12px;border:0;border-radius:2px;background:#5a5a5a;color:#fff;font-weight:700;font-size:.9rem;cursor:pointer;text-align:center;text-decoration:none}
     .ah-btn.black{background:#111}
     .ah-btn:hover{opacity:.92}
-    .ah-powered{margin-top:10px;text-align:center;font-size:.65rem;letter-spacing:.12em;text-transform:uppercase;opacity:.9}
+    .ah-powered{margin-top:10px;text-align:center;font-size:.68rem;letter-spacing:.08em;text-transform:uppercase}
+    .ah-powered strong{font-weight:800}
+    .ah-mls{background:#fff;color:#222;border:1px solid var(--o-primary);box-shadow:0 1px 3px rgba(0,0,0,.06)}
+    .ah-mls .ah-mls-head{background:var(--o-primary);color:#fff;padding:10px 12px}
+    .ah-mls .ah-mls-head h2{color:#fff;font-size:.92rem}
+    .ah-mls .ah-box-body{padding:12px}
+    .ah-mls .ah-field label{color:#444;opacity:1}
+    .ah-mls .ah-powered{color:#666}
+    .ah-mls .ah-powered strong{color:#c62828}
+    /* Box agenzia: verde pieno */
+    .ah-agency{background:var(--o-primary);color:#fff}
+    .ah-agency .ah-box-body{padding:14px 14px 16px}
+    .ah-agency h2{color:#fff;margin:0 0 12px;padding-bottom:6px;border-bottom:1px solid rgba(255,255,255,.35)}
+    .ah-agency .ah-field label{color:#fff}
     .ah-agency-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px 14px}
     .ah-agency-actions{grid-column:1 / -1;display:flex;justify-content:flex-end}
     .ah-agency-actions .ah-btn{width:auto;min-width:220px}
     .ah-section{margin:8px 0 28px}
-    .ah-section h2{font-family:var(--o-font-headings,inherit);font-size:1.25rem;font-weight:700;color:#333;margin:0 0 14px;padding-bottom:6px;border-bottom:2px solid var(--o-primary)}
+    .ah-section h2{font-family:inherit;font-size:1.25rem;font-weight:700;color:#333;margin:0 0 14px;padding-bottom:6px;border-bottom:2px solid var(--o-primary)}
     .ah-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
     .ah-card{display:block;background:#fff;border:1px solid #ddd;text-decoration:none;color:#222;overflow:hidden}
     .ah-card:hover{box-shadow:0 4px 14px rgba(0,0,0,.1)}
     .ah-card-img{position:relative;aspect-ratio:4/3;background:#e8e8e8;background-size:cover;background-position:center}
     .ah-card-op{position:absolute;top:0;left:0;background:var(--o-primary);color:#fff;font-size:.72rem;font-weight:700;padding:5px 10px;text-transform:uppercase}
     .ah-card-price{position:absolute;right:8px;bottom:8px;background:rgba(255,255,255,.95);color:#111;font-weight:700;font-size:.95rem;padding:4px 8px;border-radius:2px}
+    .ah-card-mls{position:absolute;left:8px;bottom:8px;background:#0f172a;color:#fff;font-size:.68rem;font-weight:700;padding:3px 7px;letter-spacing:.04em;text-transform:uppercase}
+    .ah-card-mls.ah-card,.ah-card.ah-card-mls{box-shadow:inset 0 0 0 2px #0f172a}
+    .ah-mls-network-head{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:10px}
+    .ah-mls-network-head h2{margin:0}
+    .ah-mls-badge{display:inline-block;background:#0f172a;color:#fff;font-size:.72rem;font-weight:700;padding:4px 10px;letter-spacing:.06em;text-transform:uppercase}
     .ah-card-body{padding:10px 12px 0}
     .ah-card-city{font-size:.85rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;margin-bottom:4px}
     .ah-card-title{font-size:.92rem;line-height:1.3;min-height:2.4em}
@@ -424,9 +443,36 @@ def _home_css() -> str:
     .ah-footer li{font-size:.82rem;color:#555;margin:4px 0}
     .ah-footer li:before{content:'› ';color:var(--o-primary);font-weight:700}
     .ah-footer-contact p{font-size:.85rem;color:#444;margin:4px 0;line-height:1.45}
+    .ah-list-layout{display:grid;grid-template-columns:1fr 280px;gap:18px;align-items:start}
+    .ah-list-main{min-width:0}
+    .ah-list-side .ah-agency,.ah-list-side .ah-mls{position:sticky;top:12px}
+    .ah-prop-layout{display:grid;grid-template-columns:1fr 280px;gap:20px;align-items:start;margin-top:12px}
+    .ah-prop-main{min-width:0}
+    .ah-prop-main .photos{display:grid;grid-template-columns:1fr;gap:10px;margin:1rem 0}
+    .ah-prop-main .photos img{width:100%;max-height:420px;object-fit:cover;display:block}
+    .ah-prop-main h1{font-size:1.45rem;margin:0 0 6px;color:#222}
+    .ah-prop-main .meta{color:#666;margin:0 0 4px}
+    .ah-prop-main .price{font-size:1.35rem;font-weight:700;margin:8px 0 14px}
+    .ah-prop-main .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin:12px 0}
+    .ah-prop-main .grid label{display:block;font-size:.68rem;color:#888;text-transform:uppercase;letter-spacing:.06em}
+    .ah-consent{font-size:.75rem;color:#fff;margin:10px 0;line-height:1.45}
+    .ah-consent label{margin-right:10px}
+    .ah-contact-agency{margin-top:14px;font-size:.8rem;opacity:.9}
+    @media (max-width:900px){
+      .ah-search-row,.ah-search-row.solo,.ah-list-layout,.ah-prop-layout{grid-template-columns:1fr}
+      .ah-agency-grid{grid-template-columns:1fr}
+      .ah-cards{grid-template-columns:1fr 1fr}
+      .ah-footer-inner{grid-template-columns:1fr}
+      .ah-list-side .ah-agency,.ah-list-side .ah-mls{position:static}
+    }
+    @media (max-width:560px){
+      .ah-cards{grid-template-columns:1fr}
+      .ah-nav{width:100%}
+      .ah-prop-main .grid{grid-template-columns:1fr}
+    }
 
-    /* —— Minimal (€99): MLS/search come superfici chiare, non blocco pieno primary —— */
-    body.agency-home[data-theme="minimal"]{background:var(--o-light,#fafaf9);color:var(--o-dark,#1c1917)}
+    /* D-151 theme slots (gallery 8) */
+[data-theme="minimal"]{background:var(--o-light,#fafaf9);color:var(--o-dark,#1c1917)}
     body.agency-home[data-theme="minimal"] .ah-brand-name{text-transform:none;letter-spacing:-.01em;font-weight:500;font-size:1.25rem}
     body.agency-home[data-theme="minimal"] .ah-nav{background:transparent;border:1px solid rgba(0,0,0,.1);border-radius:2px}
     body.agency-home[data-theme="minimal"] .ah-nav a{color:var(--o-dark,#1c1917) !important;border-right-color:rgba(0,0,0,.08);font-weight:500}
@@ -597,5 +643,5 @@ def _home_css() -> str:
       .ah-cards{grid-template-columns:1fr}
       .ah-nav{width:100%}
     }
-    """
+"""
 
