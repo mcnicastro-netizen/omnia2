@@ -1,3 +1,9 @@
+## 2026-11-09 — Themes split MOVE-ONLY (`themes.py` elefante)
+
+- Estratti `theme_catalog.py` · `theme_render.py`
+- `themes.py` 1156 → **~216** LOC (router `/website` + re-export)
+- Zero feature nuove · test `normalize_extracted_profile` PASS
+
 ## 2026-11-09 — D-148 / A-040: paperless in Perché OMNIA
 
 - Inventario onesto: Fascicolo · modulistica PDF · kit dominio = reali; firma/PEC OMNIA = no
