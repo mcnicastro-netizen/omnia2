@@ -61,7 +61,7 @@ SoT: [`PROGRAMMA_VERSO_8.md`](./PROGRAMMA_VERSO_8.md) — 11 onde (0…10).
 3. ✅ **AuthZ fascicolo E2E** (D-095) — anti-IDOR agency-scoped.
 4. ✅ **Fascicolo blob delete** — `delete_object` best-effort su delete documento.
 5. ✅ **Trash purge → blob** — hard-delete immobile pulisce Object Storage.
-6. **Prossima onda default**: **0** merge gallery 8 (#137) → **1** storia dogfood *oppure* **2** split `public_portal`.
+6. **Priorità locked**: manutenibilità → SaaS → storia. **In corso: Onda 2** split `public_portal`.
 
 ## Filo prodotto
 

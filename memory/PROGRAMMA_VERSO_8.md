@@ -13,6 +13,15 @@
 
 **Regola d’ordine**: un filo alla volta. Mai mischiare SaaS + elefante FE nello stesso PR. Ogni onda = merge su `main` + smoke + riga changelog.
 
+### Priorità Founder (locked 09-Nov — «stabilisci tu»)
+
+1. **Manutenibilità** (onde 2→5→10 helper) — primo filo codice.
+2. **SaaS** (onde 6→9) — subito dopo gli elefanti caldi.
+3. **Storia** (onde 0→1) — già ~7,5; chiude in parallelo solo via merge #137 + dogfood corto, **non** blocca 2–5.
+4. Velocità / Coerenza — non toccare (già 8).
+
+**Prossima esecuzione**: **Onda 2** — split MOVE-ONLY `public_portal.py`.
+
 ---
 
 ## Definizione di **8** (DoD per lente)
@@ -83,4 +92,5 @@ Niente file “cervello unico” sopra ~700 LOC nei path caldi, oppure moduli co
 ---
 
 ## Prossimo «vai»
-Default consigliato: **Onda 0** (merge gallery 8) → subito **Onda 1** (dogfood storia) *oppure* **Onda 2** (portal) se priorità resta manutenibilità.
+**Locked**: Onda **2** (`public_portal` split) → 3 `theme_render` → 4–5 FE → 6–9 SaaS.  
+Onda 0/1 storia: merge #137 quando Founder/CI ok, senza fermare il filo manut.
