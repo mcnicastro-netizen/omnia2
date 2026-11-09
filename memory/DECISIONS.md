@@ -7,6 +7,20 @@ Registro di tutte le decisioni di business e tecniche prese durante il progetto.
 
 ## Decisioni prese
 
+### D-151 — Listino sito template: Starter one-shot €99/€199 · restyling €199 · Pro+ incluso · 09-Nov-2026
+- **Data**: 9 Novembre 2026
+- **Contesto**: Founder conferma gallery da **8** temi; gratis nel piano “prescelto”; su Starter a pagamento one-shot; restyling pure a €199.
+- **Decisione**:
+  1. **Pro / Agency**: gallery 8 temi **inclusa** (neo + restyling + MLS on/off). Nessun fee extra.
+  2. **Starter — neo sito** (add-on one-shot, non SKU «solo sito» D-130):
+     - **€99** → scelta di **1** tema tra i 2 semplici: `minimal` | `classic`.
+     - **€199** → scelta di **1** tema tra gli altri 6: `bold` | `luxury` | `atelier` | `cinematic` | `editorial` | `mediterranean`.
+  3. **Restyling (caso 3)**: **€199** one-shot (qualunque tema della gallery). Path distinto dal clone keep-brand (casi 1–2).
+  4. **Regole**: un tema per pagamento; cambio tema successivo = nuovo one-shot (Starter) oppure incluso se upgrade a Pro/Agency. Testi/foto/logo/palette personalizzabili; box MLS condizionale senza stravolgere layout.
+  5. **COGS**: ~€0 a vendita post-build (solo fee Stripe). Build = tempo engineering una tantum.
+  6. Checkout Stripe / entitlement: da implementare (SKU B2B one-shot); listino SoT in `PRICING_OMNIA.md` + `plans.py`.
+- **Stato**: ✅ DECISO · Stripe checkout ⏳ · build temi €99 first (polish Minimal/Classic) poi €199
+
 ### D-150 — Template pack unico: neo + restyling · matrice MLS · craft MotionSites · 09-Nov-2026
 - **Data**: 9 Novembre 2026
 - **Contesto**: Founder conferma che il restyling (caso 3) dipende dai template; va previsto sia per agenzie MLS on sia MLS off; arricchire l’offerta studiando MotionSites (Cursor-ready).

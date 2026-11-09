@@ -11,6 +11,17 @@ Un solo pack template serve **due ingressi commerciali**:
 
 **Non** due cataloghi. Il look scelto è lo stesso pezzo di codice (`theme_catalog` + `theme_render`).
 
+## Listino (D-151)
+
+| Path | Prezzo |
+|---|:-:|
+| Pro / Agency | **incluso** (gallery 8) |
+| Starter neo — `minimal` \| `classic` | **€99** one-shot (1 tema) |
+| Starter neo — altri 6 | **€199** one-shot (1 tema) |
+| **Restyling** (caso 3) | **€199** one-shot (1 tema, qualunque) |
+
+Ordine build: prima fascia €99 (polish Minimal + Classic + slot MLS), poi i 6 da €199.
+
 ## Matrice MLS (obbligatoria)
 
 Ogni template, live o planned, deve passare QA su entrambe le varianti:

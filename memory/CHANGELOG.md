@@ -1,3 +1,9 @@
+## 2026-11-09 — D-151 listino sito template €99 / €199
+
+- Pro/Agency: gallery 8 inclusa · Starter neo: €99 (minimal|classic) / €199 (altri 6)
+- Restyling (caso 3): **€199** one-shot · SoT `SITE_THEME_PRICES_EUR` in `plans.py`
+- PRICING_OMNIA v3.3 · `price_tier` su catalogo temi
+
 ## 2026-11-09 — D-150 template pack prep (neo + restyling + MLS matrix)
 
 - Un solo pack per neo agenzia e restyling; ogni tema QA MLS on|off
