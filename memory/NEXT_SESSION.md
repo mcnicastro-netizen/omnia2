@@ -32,8 +32,8 @@ Founder 05-Nov-2026: **controllare i margini prima del go-live**, non dopo.
 | **Kling crediti** | **D-147** 30 cr / €1,50 · listino [`PRICING_OMNIA.md`](./PRICING_OMNIA.md) v3.2 |
 | Portale | D-139…D-144 ✅ |
 | Clone sito | D-023/D-130 + A-037 · **D-150/D-151** pack+listino · restyling €199 · Stripe checkout template ⏳ |
-| Template pack | **D-151** Pro+ incluso · Starter €99/€199 · restyling €199 · build: polish Minimal/Classic poi 6 premium |
-| **Prossimo strutturale** | Orphan GC scanner (blob senza record) — trash→blob ✅ |
+| Template pack | **D-151** gallery 8 live · Starter €99/€199 · restyling €199 |
+| **Prossimo strutturale** | Filo SaaS 7–9 ✅ · tenant helpers #147 · dogfood Storia post gallery 8 |
 
 ---
 
@@ -60,10 +60,13 @@ Vetrina istituzionale: `https://omniarealestateecosystem.it/it` (**D-146** + pap
 3. ✅ **AuthZ fascicolo E2E** (D-095) — anti-IDOR agency-scoped.
 4. ✅ **Fascicolo blob delete** — `delete_object` best-effort su delete documento.
 5. ✅ **Trash purge → blob** — hard-delete immobile pulisce Object Storage.
-6. **Prossimo SaaS (opz.)**: orphan GC scanner · oppure prodotto (clone A-037 / dogfood).
+6. ✅ **Orphan GC + trash purge schedulati** (D-102 / Onda 7).
+7. ✅ **Backup scope + restore agency-first** (D-096 / Onda 8).
+8. ✅ **GDPR Founders** (D-099 / Onda 9) — DSAR/erase/DPA path.
+9. **Prossimo**: tenant helpers + chiusura voti (Onda 10).
 
 ## Filo prodotto
 
-1. **09-Nov chiuso:** A-040/D-148 · themes · AuthZ fascicolo · blob delete · trash→blob.
+1. **09-Nov chiuso:** A-040/D-148 · themes · AuthZ · blob · trash→blob · orphan GC · bak/restore · GDPR Founders.
 2. **06-Nov chiuso:** Nicastro · www · Kling · staging split.
 3. Prossimo prodotto consigliato: dogfood Nicastro / A-037 clone (SaaS media path chiuso per il filo corrente).

@@ -65,9 +65,11 @@ day, aid = os.environ["DAY"], os.environ["AGENCY_ID"]
 src = os.path.join(os.environ["BACKUP_ROOT"], day)
 out = f"/tmp/restore_{aid}"
 os.makedirs(out, exist_ok=True)
+# SoT: apps.immoweb.backup_scope (AGENCY_COLLECTIONS + B2C_COLLECTIONS)
 agency_colls = (
     "agencies","users","properties","clients","client_requests","activities",
-    "leads","subscriptions","credit_wallets","publishing_connections",
+    "leads","subscriptions","credit_wallets","credit_ledger","api_keys","groups",
+    "publishing_connections","modulistica_documents","videos","virtual_staging_jobs",
 )
 # Portale B2C: di solito restore **globale** (non filtrato per agency) — copia intera collection
 b2c_colls = (
