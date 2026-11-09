@@ -68,5 +68,6 @@
 **Manutenibilità = 8** · **SaaS = 8** · Velocità/Coerenza = 8.  
 **Storia ~7,8** — gallery 8 + D-149 casi 1–2 su main; manca dogfood Onda 1.
 
-Prossimo «vai» storia: dogfood Nicastro (2 temi MLS on/off + paperless Perché OMNIA).  
-Closeout docs/HAL: Cap.00/08/27 + YAML + reindex (questo PR).
+Prossimo «vai» storia: **martedì 10-Nov** — dogfood Nicastro (2 temi MLS on/off + paperless).  
+Piano giorno: [`PROGRAMMA_2026-11-10.md`](./PROGRAMMA_2026-11-10.md).  
+Closeout docs/HAL: Cap.00/08/27 + YAML + reindex (#148).

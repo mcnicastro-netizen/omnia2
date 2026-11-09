@@ -1,3 +1,9 @@
+## 2026-11-09 — Programma 10-Nov (Onda 1 dogfood Nicastro)
+
+- SoT `memory/PROGRAMMA_2026-11-10.md`: Gate 0 → A temi/MLS → B clone → C paperless → D voti
+- Puntatori in `NEXT_SESSION` · `PROGRAMMA_VERSO_8` · diario 09-Nov
+- Fuori scope giorno: Stripe D-151 · Vision crawl · GTM-01
+
 ## 2026-11-09 — Closeout HAL + manuale + SoT (post #136/#137)
 
 - Cap.08: gallery 8 · D-149/150/151 · §8.13 MLS sito · clone_ready onesto
