@@ -290,8 +290,15 @@ async def download_document(property_id: str, doc_id: str, user=Depends(get_curr
     if not doc:
         raise HTTPException(404, "Documento non trovato")
     if doc.get("storage_path"):
+        from shared.auth.storage_paths import assert_storage_under_prefix, fascicolo_prefix
+
+        safe_path = assert_storage_under_prefix(
+            doc["storage_path"],
+            fascicolo_prefix(property_id),
+            detail="Documento non trovato",
+        )
         try:
-            raw, _ct = get_object(doc["storage_path"])
+            raw, _ct = get_object(safe_path)
         except ObjStoreError:
             raise HTTPException(410, "Documento non più disponibile")
     else:

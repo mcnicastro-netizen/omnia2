@@ -1,3 +1,9 @@
+## 2026-11-09 — AuthZ storage_path sweep (Onda 6 · D-095)
+
+- `shared/auth/storage_paths.py`: prefix fascicolo/modulistica obbligatorio al download
+- Modulistica download/send-sign + fascicolo download rifiutano path spoofed cross-tenant
+- Test `test_authz_storage_paths.py` + O1 regressione · 17 passed
+
 ## 2026-11-09 — PropertyDetail split MOVE-ONLY (Onda 5)
 
 - Estratti `propertyDetailUtils` · ShareBar · InfoCell · Contact · Schema
