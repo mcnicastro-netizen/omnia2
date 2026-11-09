@@ -32,7 +32,7 @@ Founder 05-Nov-2026: **controllare i margini prima del go-live**, non dopo.
 | **Kling crediti** | **D-147** 30 cr / €1,50 · listino [`PRICING_OMNIA.md`](./PRICING_OMNIA.md) v3.2 |
 | Portale | D-139…D-144 ✅ |
 | Clone sito | D-023/D-130 + A-037 aperti (dopo dogfood gestionale) |
-| **Prossimo strutturale** | Blob lifecycle fascicolo (`delete_object` su delete/purge) — AuthZ fascicolo ✅ |
+| **Prossimo strutturale** | Orphan GC / trash purge → blob (M-02/T-02) — fascicolo delete blob ✅ |
 
 ---
 
@@ -57,11 +57,12 @@ Vetrina istituzionale: `https://omniarealestateecosystem.it/it` (**D-146** + pap
 1. ✅ **A-040 / D-148 Paperless** — chiuso.
 2. ✅ **Themes split** — `themes.py` 1156 → ~216.
 3. ✅ **AuthZ fascicolo E2E** (D-095) — anti-IDOR agency-scoped.
-4. **Prossimo SaaS**: blob lifecycle su delete fascicolo / purge (M-02).
-5. In parallelo: dogfood Nicastro · gate margini · clone A-037.
+4. ✅ **Fascicolo blob delete** — `delete_object` best-effort su delete documento.
+5. **Prossimo SaaS**: orphan GC / trash purge → blob.
+6. In parallelo: dogfood Nicastro · gate margini · clone A-037.
 
 ## Filo prodotto
 
-1. **09-Nov chiuso:** A-040/D-148 · themes split · AuthZ fascicolo.
+1. **09-Nov chiuso:** A-040/D-148 · themes · AuthZ fascicolo · blob delete fascicolo.
 2. **06-Nov chiuso:** Nicastro · www · Kling · staging split.
-3. Prossimo: **delete_object** su fascicolo delete (quando «vai») · A-037 clone.
+3. Prossimo: orphan GC / trash→blob (quando «vai») · A-037 clone.
