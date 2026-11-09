@@ -5,7 +5,7 @@
 
 | Lente | Ora (stima) | Target | Note |
 |---|:-:|:-:|---|
-| Storia vendibile | **~7,5** | **8** | Pitch/paperless ok · **manca merge #137 gallery 8** + dogfood corto (Onda 0/1) |
+| Storia vendibile | **~7,8** | **8** | Gallery 8 su main (#137) ✅ · **manca dogfood corto Nicastro** (Onda 1) |
 | SaaS multi-tenant | **8** | **8** | AuthZ · orphan GC · bak/restore · GDPR Founders · tenant helpers ✅ |
 | Velocità evoluzione | **8** | **8** | Ritmo onde tenuto |
 | Manutenibilità 12m | **8** | **8** | Portal/theme/FE split + `require_agency_id` su router toccati ✅ |
@@ -17,7 +17,7 @@
 
 1. **Manutenibilità** (onde 2→5→10 helper) — ✅ chiuso.
 2. **SaaS** (onde 6→9 + helper 10) — ✅ chiuso.
-3. **Storia** (onde 0→1) — **ancora aperta**: merge #137 + dogfood.
+3. **Storia** (onde 0→1) — Onda 0 ✅ (#137) · Onda 1 dogfood ancora aperta.
 4. Velocità / Coerenza — 8.
 
 ---
@@ -47,7 +47,7 @@
 
 | Onda | Nome | Esito |
 |:-:|---|---|
-| **0** | Lock baseline / gallery #137 | ⏳ PR aperta |
+| **0** | Lock baseline / gallery #137 | ✅ |
 | **1** | Storia solida / dogfood | ⏳ dopo #137 |
 | **2** | Elefante portal | ✅ |
 | **3** | Elefante theme_render | ✅ |
@@ -66,6 +66,6 @@
 ## Dichiarazione fine filo 2–10
 
 **Manutenibilità = 8** · **SaaS = 8** · Velocità/Coerenza = 8.  
-**Storia non ancora 8** finché #137 non è su `main` e non c’è dogfood Onda 1.
+**Storia ~7,8** — gallery 8 live; manca dogfood Onda 1.
 
-Prossimo «vai» storia: **mergia 137** (o equivalente) poi dogfood Nicastro corto.
+Prossimo «vai» storia: dogfood Nicastro (2 temi MLS on/off + paperless).

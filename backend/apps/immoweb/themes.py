@@ -24,6 +24,7 @@ from apps.immoweb.theme_catalog import (
     THEME_CATALOG,
     THEME_HERO_IMAGES,
     THEME_IDS,
+    THEME_ROADMAP,
     _palette_from_brand_profile,
     _resolve_hero_image,
     _resolve_theme_config,
@@ -67,8 +68,14 @@ async def _agency_for(user: dict) -> Dict[str, Any]:
 
 @router.get("/themes")
 async def list_themes(_: dict = Depends(get_current_user)):
-    """Public list of available themes (for the picker UI)."""
-    return {"themes": THEME_CATALOG, "default_theme_id": DEFAULT_THEME_ID}
+    """Theme picker: live catalog + roadmap (D-150, non selezionabili)."""
+    return {
+        "themes": THEME_CATALOG,
+        "roadmap": THEME_ROADMAP,
+        "default_theme_id": DEFAULT_THEME_ID,
+        "mls_matrix": True,  # ogni tema live/roadmap prevede varianti MLS on|off
+        "target_live_count": {"min": 5, "max": 10},  # D-019
+    }
 
 @router.get("/theme")
 async def get_current_theme(user: dict = Depends(get_current_user)):

@@ -2,8 +2,32 @@
 
 - Alias `require_agency_id` · migrazione xml_import/api_keys/themes/custom_domain/staging/hal/valuation_pdf via `active_agency_id` (no `agency_ids[0]`)
 - Test `test_tenant_helpers_onda10.py`
-- Voti: **Manutenibilità 8** · **SaaS 8** · Storia ~7,5 (attende #137)
+- Voti: **Manutenibilità 8** · **SaaS 8** · Storia: gallery 8 ora su main (#137)
 - SoT `memory/PROGRAMMA_VERSO_8.md` aggiornato
+
+## 2026-11-09 — D-151 gallery 8 live (€199 pack)
+
+- Live: `atelier` · `cinematic` · `editorial` · `mediterranean` (+ polish Bold/Luxury)
+- Palette/typography + `_theme_css` / `_home_css` (post-split theme_css.py) MLS-aware ×8
+- `THEME_ROADMAP=[]` · test MLS on/off parametrizzati · TEMPLATE_PACK aggiornato
+
+## 2026-11-09 — D-151 Minimal/Classic: slot MLS adotta il tema
+
+- Home CSS: `[data-theme=minimal|classic]` — box MLS/search chiari (no blocco primary pieno)
+- MLS off → solo search agenzia · test `test_theme_simple_mls_slots.py`
+
+## 2026-11-09 — D-151 listino sito template €99 / €199
+
+- Pro/Agency: gallery 8 inclusa · Starter neo: €99 (minimal|classic) / €199 (altri 6)
+- Restyling (caso 3): **€199** one-shot · SoT `SITE_THEME_PRICES_EUR` in `plans.py`
+- PRICING_OMNIA v3.3 · `price_tier` su catalogo temi
+
+## 2026-11-09 — D-150 template pack prep (neo + restyling + MLS matrix)
+
+- Un solo pack per neo agenzia e restyling; ogni tema QA MLS on|off
+- Catalogo: metadata + `THEME_ROADMAP` (atelier, cinematic, editorial, mediterranean)
+- `GET /app/website/themes` → `roadmap` + `mls_matrix`
+- Docs: `memory/TEMPLATE_PACK.md` · `docs/design/motionsites-craft-omnia.md`
 
 ## 2026-11-09 — GDPR Founders path (Onda 9 · D-099)
 

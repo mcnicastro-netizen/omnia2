@@ -31,8 +31,9 @@ Founder 05-Nov-2026: **controllare i margini prima del go-live**, non dopo.
 | **Vetrina www** | **D-146** + **D-148** paperless in Perché OMNIA |
 | **Kling crediti** | **D-147** 30 cr / €1,50 · listino [`PRICING_OMNIA.md`](./PRICING_OMNIA.md) v3.2 |
 | Portale | D-139…D-144 ✅ |
-| Clone sito | D-023/D-130 + A-037 aperti (dopo dogfood gestionale) |
-| **Prossimo strutturale** | Filo 2–10 ✅ (Manut+SaaS=8) · **prossimo: merge #137 + dogfood Storia** |
+| Clone sito | D-023/D-130 + A-037 · **D-150/D-151** pack+listino · restyling €199 · Stripe checkout template ⏳ |
+| Template pack | **D-151** gallery 8 live su main (#137) · Starter €99/€199 · restyling €199 |
+| **Prossimo strutturale** | Filo 2–10 + gallery 8 ✅ · **prossimo: dogfood Storia Nicastro** |
 
 ---
 
@@ -63,10 +64,11 @@ Vetrina istituzionale: `https://omniarealestateecosystem.it/it` (**D-146** + pap
 7. ✅ **Backup scope + restore agency-first** (D-096 / Onda 8).
 8. ✅ **GDPR Founders** (D-099 / Onda 9).
 9. ✅ **Tenant helpers + voti** (Onda 10) — Manut/SaaS=8.
-10. **Prossimo Storia**: merge gallery **#137** · dogfood Nicastro (Onda 0/1).
+10. ✅ **Gallery 8** (#137) su main.
+11. **Prossimo Storia**: dogfood Nicastro (Onda 1) — temi MLS on/off.
 
 ## Filo prodotto
 
-1. **09-Nov chiuso:** filo manut+SaaS verso-8 (onde 2–10). Storia ancora ~7,5.
+1. **09-Nov chiuso:** filo manut+SaaS verso-8 + gallery 8. Resta dogfood Storia.
 2. **06-Nov chiuso:** Nicastro · www · Kling · staging split.
 3. Prossimo prodotto consigliato: dogfood Nicastro / A-037 clone (SaaS media path chiuso per il filo corrente).

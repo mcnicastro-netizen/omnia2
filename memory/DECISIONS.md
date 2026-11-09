@@ -7,6 +7,31 @@ Registro di tutte le decisioni di business e tecniche prese durante il progetto.
 
 ## Decisioni prese
 
+### D-151 — Listino sito template: Starter one-shot €99/€199 · restyling €199 · Pro+ incluso · 09-Nov-2026
+- **Data**: 9 Novembre 2026
+- **Contesto**: Founder conferma gallery da **8** temi; gratis nel piano “prescelto”; su Starter a pagamento one-shot; restyling pure a €199.
+- **Decisione**:
+  1. **Pro / Agency**: gallery 8 temi **inclusa** (neo + restyling + MLS on/off). Nessun fee extra.
+  2. **Starter — neo sito** (add-on one-shot, non SKU «solo sito» D-130):
+     - **€99** → scelta di **1** tema tra i 2 semplici: `minimal` | `classic`.
+     - **€199** → scelta di **1** tema tra gli altri 6: `bold` | `luxury` | `atelier` | `cinematic` | `editorial` | `mediterranean`.
+  3. **Restyling (caso 3)**: **€199** one-shot (qualunque tema della gallery). Path distinto dal clone keep-brand (casi 1–2).
+  4. **Regole**: un tema per pagamento; cambio tema successivo = nuovo one-shot (Starter) oppure incluso se upgrade a Pro/Agency. Testi/foto/logo/palette personalizzabili; box MLS condizionale senza stravolgere layout.
+  5. **COGS**: ~€0 a vendita post-build (solo fee Stripe). Build = tempo engineering una tantum.
+  6. Checkout Stripe / entitlement: da implementare (SKU B2B one-shot); listino SoT in `PRICING_OMNIA.md` + `plans.py`.
+- **Stato**: ✅ DECISO · Stripe checkout ⏳ · gallery 8 live (€99 + €199 CSS) · entitlement Stripe ancora ⏳
+
+### D-150 — Template pack unico: neo + restyling · matrice MLS · craft MotionSites · 09-Nov-2026
+- **Data**: 9 Novembre 2026
+- **Contesto**: Founder conferma che il restyling (caso 3) dipende dai template; va previsto sia per agenzie MLS on sia MLS off; arricchire l’offerta studiando MotionSites (Cursor-ready).
+- **Decisione**:
+  1. **Un solo pack** serve neo agenzia (D-018) e restyling (caso 3). Non due cataloghi.
+  2. **Matrice MLS obbligatoria**: ogni tema live deve QA con `mls_enabled` true e false (pezzi rete solo se on). Join/leave non cambia `theme_id`.
+  3. **Live**: 8 temi — `minimal` (default), `classic`, `bold`, `luxury`, `atelier`, `cinematic`, `editorial`, `mediterranean`. Target D-019 resta **5–10** di alta qualità (`THEME_ROADMAP=[]` finché non servono nuovi slot).
+  4. **MotionSites** ([Motionsites-AI/claude-skill](https://github.com/Motionsites-AI/claude-skill)): barra craft + loop screenshot/fix. **Non** runtime React/Framer sul sito agenzia (resta SSR `theme_render`). Non copiare brand/layout wholesale.
+  5. Caso 3 restyling: stesso pack; clone casi 1–2 resta path per chi tiene il look esistente.
+- **Stato**: ✅ DECISO · pack 8 live ✅ · Stripe one-shot ⏳
+
 ### D-148 — Paperless in messaggio vetrina (A-040) · senza spezzare D-129 · 09-Nov-2026
 - **Data**: 9 Novembre 2026
 - **Contesto**: Founder 06-Nov: paperless reale ma **non evidenziato** tra i pregi (A-040). D-129 lo classifica come necessario ma *non* messaggio primario (anti-appiattimento vs Arcanis).

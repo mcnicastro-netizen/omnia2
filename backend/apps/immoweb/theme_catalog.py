@@ -6,48 +6,136 @@ from typing import Any, Dict, List, Optional
 
 logger = logging.getLogger("omnia.themes")
 
+# Ogni tema live DEVE renderizzare correttamente con mls_enabled true|false
+# (box rete + sezione partner vs solo search agenzia). Stesso pack per:
+#   - neo agenzia (D-018)
+#   - restyling / caso 3 (D-150)
+# Craft bar: MotionSites (Motionsites-AI/claude-skill) → adattato a SSR theme_render, non React SPA.
 THEME_CATALOG: List[Dict[str, Any]] = [
     {
         "id": "minimal",
         "name": "Minimal",
         "description": "Sobrio, tipografia editoriale, molto spazio bianco. Ideale per agenzie boutique.",
         "best_for": ["familiare", "professionale"],
+        "segments": ["boutique", "neo"],
+        "mls_variants": ["on", "off"],
+        "status": "live",
+        "price_tier": "simple",  # Starter neo €99 (D-151)
         "preview_palette": {"primary": "#1c1917", "accent": "#1f6b5c", "neutral_light": "#fafaf9"},
         "header_style": "minimal",
         "card_style": "minimal_border",
         "hero_image": "https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?w=1600&q=80&auto=format&fit=crop",
+        "craft_refs": ["stillmind", "equilibrium"],
     },
     {
         "id": "classic",
         "name": "Classic",
         "description": "Layout tradizionale ben strutturato, ottimo per portafogli ampi e clientela mainstream.",
         "best_for": ["professionale", "familiare"],
+        "segments": ["mainstream", "neo", "restyle"],
+        "mls_variants": ["on", "off"],
+        "status": "live",
+        "price_tier": "simple",
         "preview_palette": {"primary": "#0B1E3F", "accent": "#C19A6B", "neutral_light": "#f5f3ee"},
         "header_style": "classic",
         "card_style": "shadow_lift",
         "hero_image": "https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=1600&q=80&auto=format&fit=crop",
+        "craft_refs": ["neo-museum"],
     },
     {
         "id": "bold",
         "name": "Bold",
         "description": "Tipografia grande e contrasti netti. Adatto ad agenzie moderne e ad alto volume.",
         "best_for": ["tecnico", "professionale"],
+        "segments": ["volume", "neo", "restyle"],
+        "mls_variants": ["on", "off"],
+        "status": "live",
+        "price_tier": "premium",  # Starter neo / restyling €199 (D-151)
         "preview_palette": {"primary": "#FF5A1F", "accent": "#111111", "neutral_light": "#ffffff"},
         "header_style": "bold",
         "card_style": "image_dominant",
         "hero_image": "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=1600&q=80&auto=format&fit=crop",
+        "craft_refs": ["bold-studio", "modern-agency"],
     },
     {
         "id": "luxury",
         "name": "Luxury",
         "description": "Toni scuri, oro, immagini protagoniste. Pensato per immobili di prestigio.",
         "best_for": ["lusso"],
+        "segments": ["prestige", "neo", "restyle"],
+        "mls_variants": ["on", "off"],
+        "status": "live",
+        "price_tier": "premium",
         "preview_palette": {"primary": "#0a0a0a", "accent": "#B89D5E", "neutral_light": "#fafafa"},
         "header_style": "bold",
         "card_style": "image_dominant",
         "hero_image": "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=1600&q=80&auto=format&fit=crop",
+        "craft_refs": ["velorah-hero", "aethera-hero"],
+    },
+    {
+        "id": "atelier",
+        "name": "Atelier",
+        "description": "Hero bottom-anchored, luce studio, CTA pill. Neo / restyling boutique urbane.",
+        "best_for": ["professionale", "familiare"],
+        "segments": ["boutique", "neo", "restyle"],
+        "mls_variants": ["on", "off"],
+        "status": "live",
+        "price_tier": "premium",
+        "preview_palette": {"primary": "#111111", "accent": "#F26522", "neutral_light": "#EFEFEF"},
+        "header_style": "minimal",
+        "card_style": "shadow_lift",
+        "hero_image": "https://images.unsplash.com/photo-1497366216548-37526070297c?w=1600&q=80&auto=format&fit=crop",
+        "craft_refs": ["modern-agency", "creative-studio"],
+    },
+    {
+        "id": "cinematic",
+        "name": "Cinematic",
+        "description": "Full-bleed media plane, serif display, glass nav. Prestigio + video hero.",
+        "best_for": ["lusso"],
+        "segments": ["prestige", "restyle"],
+        "mls_variants": ["on", "off"],
+        "status": "live",
+        "price_tier": "premium",
+        "preview_palette": {"primary": "#0a1a26", "accent": "#c4a574", "neutral_light": "#061018"},
+        "header_style": "bold",
+        "card_style": "image_dominant",
+        "hero_image": "https://images.unsplash.com/photo-1600585154526-990dced4db0d?w=1600&q=80&auto=format&fit=crop",
+        "craft_refs": ["velorah-hero", "portal-hero"],
+    },
+    {
+        "id": "editorial",
+        "name": "Editorial",
+        "description": "Quattro angoli / tipografia magazine, poco colore. Agenzie culturali o mono-quartiere.",
+        "best_for": ["familiare", "professionale"],
+        "segments": ["boutique", "neo", "restyle"],
+        "mls_variants": ["on", "off"],
+        "status": "live",
+        "price_tier": "premium",
+        "preview_palette": {"primary": "#1c1917", "accent": "#78716c", "neutral_light": "#fafaf9"},
+        "header_style": "minimal",
+        "card_style": "minimal_border",
+        "hero_image": "https://images.unsplash.com/photo-1480074568708-e7b720bb3f09?w=1600&q=80&auto=format&fit=crop",
+        "craft_refs": ["stillmind", "neo-museum"],
+    },
+    {
+        "id": "mediterranean",
+        "name": "Mediterranean",
+        "description": "Luce calda, pietra/calce, portafoglio vacanza e second home Sicilia/Sud.",
+        "best_for": ["familiare", "lusso"],
+        "segments": ["vacation", "neo", "restyle"],
+        "mls_variants": ["on", "off"],
+        "status": "live",
+        "price_tier": "premium",
+        "preview_palette": {"primary": "#3d4f5f", "accent": "#c4a574", "neutral_light": "#f7f3eb"},
+        "header_style": "classic",
+        "card_style": "shadow_lift",
+        "hero_image": "https://images.unsplash.com/photo-1566073771259-6a8506099945?w=1600&q=80&auto=format&fit=crop",
+        "craft_refs": ["mostar-guide", "immersive-ocean"],
     },
 ]
+
+# Slot per future temi oltre i 8 (D-019 tetto 10). Vuoto = gallery completa.
+THEME_ROADMAP: List[Dict[str, Any]] = []
 
 THEME_IDS = {t["id"] for t in THEME_CATALOG}
 
@@ -68,6 +156,14 @@ DEFAULT_PALETTES = {
                 "neutral_dark": "#111111", "neutral_light": "#ffffff"},
     "luxury":  {"primary": "#0a0a0a", "accent": "#B89D5E",
                 "neutral_dark": "#0a0a0a", "neutral_light": "#fafafa"},
+    "atelier": {"primary": "#111111", "accent": "#F26522",
+                "neutral_dark": "#111111", "neutral_light": "#EFEFEF"},
+    "cinematic": {"primary": "#0a1a26", "accent": "#c4a574",
+                  "neutral_dark": "#061018", "neutral_light": "#0a1a26"},
+    "editorial": {"primary": "#1c1917", "accent": "#78716c",
+                  "neutral_dark": "#1c1917", "neutral_light": "#fafaf9"},
+    "mediterranean": {"primary": "#3d4f5f", "accent": "#c4a574",
+                      "neutral_dark": "#2a3340", "neutral_light": "#f7f3eb"},
 }
 
 DEFAULT_TYPOGRAPHY = {
@@ -75,6 +171,10 @@ DEFAULT_TYPOGRAPHY = {
     "classic": {"headings": "'Playfair Display', Georgia, serif", "body": "Georgia, 'Times New Roman', serif"},
     "bold":    {"headings": "'Inter', system-ui, sans-serif", "body": "'Inter', system-ui, sans-serif"},
     "luxury":  {"headings": "'Playfair Display', Georgia, serif", "body": "'Inter', system-ui, sans-serif"},
+    "atelier": {"headings": "'Instrument Serif', Georgia, serif", "body": "'Inter', system-ui, sans-serif"},
+    "cinematic": {"headings": "'Instrument Serif', Georgia, serif", "body": "'Inter', system-ui, sans-serif"},
+    "editorial": {"headings": "'Newsreader', Georgia, serif", "body": "'Inter', system-ui, sans-serif"},
+    "mediterranean": {"headings": "'Fraunces', Georgia, serif", "body": "'DM Sans', system-ui, sans-serif"},
 }
 
 def _resolve_theme_config(agency: Dict[str, Any]) -> Dict[str, Any]:

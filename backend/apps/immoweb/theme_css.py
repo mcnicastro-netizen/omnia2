@@ -120,38 +120,136 @@ def _theme_css(cfg: Dict[str, Any]) -> str:
         .card strong{color:var(--o-primary);font-size:1.2rem}
         """
 
-    # luxury
-    return base + """
-    body{background:var(--o-light)}
-    header{background:transparent;padding:40px 0;border-bottom:1px solid rgba(0,0,0,.06)}
-    header .container{display:flex;align-items:center;justify-content:center;gap:16px;text-align:center;flex-direction:column}
-    .brand-logo{height:54px;width:auto}
-    .brand-name{font-family:var(--o-font-headings);font-size:1.8rem;font-weight:400;color:var(--o-dark);letter-spacing:.04em}
-    .brand-tagline{font-size:.7rem;letter-spacing:.5em;text-transform:uppercase;color:var(--o-accent);margin-top:6px;font-family:var(--o-font-body)}
-    h1{font-size:2.8rem;line-height:1.15;margin:2.5rem 0 .8rem;font-weight:400;letter-spacing:.01em}
-    h2{font-size:1.3rem;margin:2.5rem 0 1.2rem;font-weight:400;letter-spacing:.04em;color:var(--o-accent);text-transform:uppercase;font-size:.95rem}
-    .price{font-size:2.4rem;font-weight:300;color:var(--o-accent);letter-spacing:.01em}
-    .meta{color:#888;font-size:.78rem;text-transform:uppercase;letter-spacing:.2em;margin-bottom:1.4rem}
-    .listings{display:grid;grid-template-columns:repeat(auto-fit,minmax(360px,1fr));gap:32px;margin-top:2rem}
-    .listings a{background:transparent;overflow:hidden;transition:opacity .25s}
-    .listings a:hover{opacity:.85}
-    .listings img{height:300px;width:100%;object-fit:cover}
-    .listings .body{padding:18px 0;text-align:center}
-    .listings .body h3{font-size:1.2rem;color:var(--o-dark);margin-bottom:.4rem;font-weight:400}
-    .listings .body p{color:#888;font-size:.72rem;margin-bottom:.6rem;text-transform:uppercase;letter-spacing:.18em;font-family:var(--o-font-body)}
-    .listings .body strong{color:var(--o-accent);font-size:1.05rem;font-weight:400}
-    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px;margin:2rem 0}
-    .grid>div{background:transparent;border-top:1px solid var(--o-accent);padding:14px 4px}
-    .grid label{display:block;font-size:.62rem;text-transform:uppercase;letter-spacing:.2em;color:#999;margin-bottom:.4rem;font-family:var(--o-font-body)}
-    .grid strong{font-size:1rem;color:var(--o-dark);font-family:var(--o-font-body);font-weight:400}
-    .photos{display:grid;grid-template-columns:repeat(auto-fit,minmax(440px,1fr));gap:12px;margin:2rem 0}
-    .photos img{height:380px;object-fit:cover}
-    .description{background:transparent;padding:2rem 0;white-space:pre-wrap;margin:1.5rem 0;font-size:1.05rem;line-height:1.85;color:#444;text-align:center;max-width:720px;margin-left:auto;margin-right:auto}
-    .features{display:flex;flex-wrap:wrap;gap:8px;margin:1rem 0;justify-content:center}
-    .features span{background:transparent;border:1px solid var(--o-accent);color:var(--o-accent);padding:6px 16px;font-size:.72rem;letter-spacing:.15em;text-transform:uppercase}
-    .card{background:transparent;border-top:1px solid var(--o-accent);border-bottom:1px solid var(--o-accent);padding:32px 0;margin:2rem 0;text-align:center}
-    .card strong{color:var(--o-dark);font-family:var(--o-font-headings);font-size:1.5rem;font-weight:400;display:block;margin-bottom:.4rem}
-    """
+    if theme_id == "luxury":
+        return base + """
+        body{background:var(--o-light)}
+        header{background:transparent;padding:40px 0;border-bottom:1px solid rgba(0,0,0,.06)}
+        header .container{display:flex;align-items:center;justify-content:center;gap:16px;text-align:center;flex-direction:column}
+        .brand-logo{height:54px;width:auto}
+        .brand-name{font-family:var(--o-font-headings);font-size:1.8rem;font-weight:400;color:var(--o-dark);letter-spacing:.04em}
+        .brand-tagline{font-size:.7rem;letter-spacing:.5em;text-transform:uppercase;color:var(--o-accent);margin-top:6px;font-family:var(--o-font-body)}
+        h1{font-size:2.8rem;line-height:1.15;margin:2.5rem 0 .8rem;font-weight:400;letter-spacing:.01em}
+        h2{margin:2.5rem 0 1.2rem;font-weight:400;letter-spacing:.04em;color:var(--o-accent);text-transform:uppercase;font-size:.95rem}
+        .price{font-size:2.4rem;font-weight:300;color:var(--o-accent);letter-spacing:.01em}
+        .meta{color:#888;font-size:.78rem;text-transform:uppercase;letter-spacing:.2em;margin-bottom:1.4rem}
+        .listings{display:grid;grid-template-columns:repeat(auto-fit,minmax(360px,1fr));gap:32px;margin-top:2rem}
+        .listings a{background:transparent;overflow:hidden;transition:opacity .25s}
+        .listings a:hover{opacity:.85}
+        .listings img{height:300px;width:100%;object-fit:cover}
+        .listings .body{padding:18px 0;text-align:center}
+        .listings .body h3{font-size:1.2rem;color:var(--o-dark);margin-bottom:.4rem;font-weight:400}
+        .listings .body p{color:#888;font-size:.72rem;margin-bottom:.6rem;text-transform:uppercase;letter-spacing:.18em;font-family:var(--o-font-body)}
+        .listings .body strong{color:var(--o-accent);font-size:1.05rem;font-weight:400}
+        .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px;margin:2rem 0}
+        .grid>div{background:transparent;border-top:1px solid var(--o-accent);padding:14px 4px}
+        .grid label{display:block;font-size:.62rem;text-transform:uppercase;letter-spacing:.2em;color:#999;margin-bottom:.4rem;font-family:var(--o-font-body)}
+        .grid strong{font-size:1rem;color:var(--o-dark);font-family:var(--o-font-body);font-weight:400}
+        .photos{display:grid;grid-template-columns:repeat(auto-fit,minmax(440px,1fr));gap:12px;margin:2rem 0}
+        .photos img{height:380px;object-fit:cover}
+        .description{background:transparent;padding:2rem 0;white-space:pre-wrap;margin:1.5rem 0;font-size:1.05rem;line-height:1.85;color:#444;text-align:center;max-width:720px;margin-left:auto;margin-right:auto}
+        .features{display:flex;flex-wrap:wrap;gap:8px;margin:1rem 0;justify-content:center}
+        .features span{background:transparent;border:1px solid var(--o-accent);color:var(--o-accent);padding:6px 16px;font-size:.72rem;letter-spacing:.15em;text-transform:uppercase}
+        .card{background:transparent;border-top:1px solid var(--o-accent);border-bottom:1px solid var(--o-accent);padding:32px 0;margin:2rem 0;text-align:center}
+        .card strong{color:var(--o-dark);font-family:var(--o-font-headings);font-size:1.5rem;font-weight:400;display:block;margin-bottom:.4rem}
+        """
+
+    if theme_id == "atelier":
+        return base + """
+        body{background:var(--o-light)}
+        header{background:transparent;padding:20px 0}
+        header .container{display:flex;align-items:center;gap:14px}
+        .brand-logo{height:36px;width:auto}
+        .brand-name{font-family:var(--o-font-headings);font-size:1.35rem;font-weight:400;color:var(--o-dark)}
+        h1{font-size:2.8rem;line-height:1.08;margin:2rem 0 .8rem;font-weight:400;letter-spacing:-.02em}
+        h2{font-size:1.5rem;font-weight:500;margin:2rem 0 1rem;letter-spacing:-.02em}
+        .price{font-size:1.8rem;font-weight:500;color:var(--o-accent)}
+        .meta{color:#666;font-size:.9rem;margin-bottom:1.2rem}
+        .listings{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;margin-top:1.5rem}
+        .listings a{background:#fff;border-radius:16px;overflow:hidden}
+        .listings img{height:200px;width:100%;object-fit:cover}
+        .listings .body{padding:14px 16px}
+        .listings .body h3{font-size:1.05rem;margin-bottom:.4rem;font-weight:500}
+        .listings .body strong{color:var(--o-dark)}
+        .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin:1.5rem 0}
+        .grid>div{background:#fff;border-radius:12px;padding:14px}
+        .photos{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:10px;margin:1.5rem 0}
+        .photos img{height:240px;object-fit:cover;border-radius:16px}
+        .description{background:#fff;border-radius:16px;padding:1.5rem;white-space:pre-wrap;margin:1.5rem 0}
+        .features span{background:var(--o-dark);color:#fff;border-radius:999px;padding:6px 14px;font-size:.8rem;margin:0 6px 6px 0;display:inline-block}
+        .card{background:#fff;border-radius:16px;padding:22px;margin:1.5rem 0}
+        """
+
+    if theme_id == "cinematic":
+        return base + """
+        body{background:var(--o-light);color:#f5f5f5}
+        header{background:transparent;padding:28px 0;border-bottom:1px solid rgba(255,255,255,.1)}
+        header .container{display:flex;align-items:center;gap:16px}
+        .brand-name{font-family:var(--o-font-headings);font-size:1.6rem;font-weight:400;color:#fff}
+        h1{font-size:3rem;line-height:1;margin:2rem 0 .8rem;font-weight:400;color:#fff}
+        h2{font-family:var(--o-font-headings);font-size:1.6rem;font-weight:400;margin:2rem 0 1rem;color:#fff}
+        .price{font-size:2rem;font-weight:400;color:var(--o-accent)}
+        .meta{color:rgba(255,255,255,.55);font-size:.85rem;margin-bottom:1.2rem}
+        .listings{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px;margin-top:1.5rem}
+        .listings a{background:#0c1822;overflow:hidden;border-radius:4px}
+        .listings img{height:220px;width:100%;object-fit:cover}
+        .listings .body{padding:14px;color:#fff}
+        .listings .body h3{font-family:var(--o-font-headings);font-size:1.2rem;font-weight:400;color:#fff}
+        .listings .body strong{color:var(--o-accent)}
+        a{color:var(--o-accent)}
+        .grid>div{background:#0c1822;padding:14px;border-radius:4px}
+        .grid label{color:rgba(255,255,255,.45)}
+        .grid strong{color:#fff}
+        .description{background:#0c1822;padding:1.8rem;border-radius:4px;color:rgba(255,255,255,.85);white-space:pre-wrap}
+        .features span{border:1px solid var(--o-accent);color:var(--o-accent);padding:6px 14px;font-size:.75rem;letter-spacing:.1em;text-transform:uppercase;margin:0 6px 6px 0;display:inline-block}
+        .card{background:#0c1822;padding:22px;border-radius:4px;color:#fff}
+        footer{color:rgba(255,255,255,.45);border-top-color:rgba(255,255,255,.1)}
+        """
+
+    if theme_id == "editorial":
+        return base + """
+        body{background:var(--o-light)}
+        header{background:transparent;padding:24px 0;border-bottom:1px solid var(--o-dark)}
+        header .container{display:flex;align-items:center;justify-content:center}
+        .brand-name{font-family:var(--o-font-headings);font-size:1.5rem;font-weight:400;text-align:center}
+        h1{font-size:2.8rem;line-height:1.05;margin:2rem 0 .8rem;font-weight:400}
+        h2{font-size:1.4rem;font-weight:400;margin:2rem 0 1rem}
+        .price{font-size:1.6rem;font-weight:500}
+        .meta{color:#78716c;font-size:.85rem;margin-bottom:1.2rem}
+        .listings{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:0;border-top:1px solid #e7e5e4;margin-top:1.5rem}
+        .listings a{background:transparent;border-right:1px solid #e7e5e4;padding:16px 14px}
+        .listings a:last-child{border-right:0}
+        .listings img{height:160px;width:100%;object-fit:cover;filter:grayscale(.12);margin-bottom:12px}
+        .listings .body h3{font-family:var(--o-font-headings);font-size:1.15rem;font-weight:400}
+        .grid>div{border-top:1px solid #e7e5e4;padding:12px 0}
+        .description{border-top:1px solid #e7e5e4;border-bottom:1px solid #e7e5e4;padding:1.8rem 0;white-space:pre-wrap}
+        .features span{border:1px solid #e7e5e4;padding:5px 12px;font-size:.8rem;margin:0 6px 6px 0;display:inline-block}
+        .card{border-top:1px solid var(--o-dark);padding:24px 0;margin:1.5rem 0}
+        """
+
+    if theme_id == "mediterranean":
+        return base + """
+        body{background:var(--o-light);color:var(--o-primary)}
+        header{background:transparent;padding:22px 0}
+        header .container{display:flex;align-items:center;gap:14px}
+        .brand-name{font-family:var(--o-font-headings);font-size:1.45rem;font-weight:400;color:var(--o-primary)}
+        h1{font-size:2.6rem;line-height:1.1;margin:1.8rem 0 .8rem;font-weight:400;color:var(--o-primary)}
+        h2{font-family:var(--o-font-headings);font-size:1.5rem;font-weight:400;margin:1.8rem 0 1rem;color:var(--o-primary)}
+        .price{font-size:1.7rem;font-weight:500;color:var(--o-accent)}
+        .meta{color:rgba(61,79,95,.65);font-size:.88rem;margin-bottom:1.2rem}
+        .listings{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:18px;margin-top:1.5rem}
+        .listings a{background:#fff;border:1px solid #e8e0d4;border-radius:2px;overflow:hidden}
+        .listings img{height:200px;width:100%;object-fit:cover}
+        .listings .body{padding:14px 16px}
+        .listings .body h3{font-family:var(--o-font-headings);font-size:1.15rem;font-weight:400;color:var(--o-primary)}
+        .listings .body strong{color:var(--o-accent)}
+        .grid>div{background:#fff;border:1px solid #e8e0d4;padding:14px}
+        .description{background:#fff;border:1px solid #e8e0d4;padding:1.6rem;white-space:pre-wrap}
+        .features span{background:transparent;border:1px solid var(--o-accent);color:var(--o-primary);padding:5px 12px;font-size:.8rem;margin:0 6px 6px 0;display:inline-block}
+        .card{background:#fff;border:1px solid #e8e0d4;padding:20px;margin:1.5rem 0}
+        """
+
+    # fallback → minimal
+    return _theme_css({**cfg, "theme_id": "minimal"})
 
 def _render_header(cfg: Dict[str, Any], agency: Dict[str, Any]) -> str:
     name = escape(agency.get("display_name") or "")
@@ -267,33 +365,34 @@ def _share_css() -> str:
     """
 
 def _home_css() -> str:
-    """Fixed structure CSS for the public agency home (chrome uses --o-primary)."""
+    """Agency home structure + theme slots (D-151: MLS adotta il tema, non lo stravolge)."""
     return """
-    body.agency-home{background:#f4f4f4;color:#222;font-family:Arial,Helvetica,sans-serif}
+    body.agency-home{background:#f4f4f4;color:#222;font-family:var(--o-font-body,Arial,Helvetica,sans-serif)}
     body.agency-home a{color:inherit}
     .ah-wrap{max-width:1100px;margin:0 auto;padding:0 12px 40px}
     .ah-top{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:14px 0 10px;flex-wrap:wrap}
     .ah-brand{display:flex;align-items:center;gap:12px;text-decoration:none;color:#222}
     .ah-brand img{height:52px;width:auto;object-fit:contain}
-    .ah-brand-name{font-size:1.15rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase}
+    .ah-brand-name{font-family:var(--o-font-headings,inherit);font-size:1.15rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase}
     .ah-nav{display:flex;flex-wrap:wrap;background:var(--o-primary);border-radius:2px;overflow:hidden}
-    .ah-nav a{color:#fff;text-decoration:none;padding:10px 14px;font-size:.85rem;font-weight:600;border-right:1px solid rgba(255,255,255,.18)}
+    .ah-nav a{color:#fff !important;text-decoration:none;padding:10px 14px;font-size:.85rem;font-weight:600;border-right:1px solid rgba(255,255,255,.18)}
     .ah-nav a:last-child{border-right:0}
     .ah-nav a:hover{background:rgba(0,0,0,.12)}
     .ah-hero{margin:8px 0 16px;min-height:260px;border-radius:2px;position:relative;overflow:hidden;display:flex;align-items:flex-end;justify-content:center;background-color:var(--o-primary);background-size:cover;background-position:center center;background-repeat:no-repeat}
     .ah-hero::before{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.15) 0%,rgba(0,0,0,.45) 100%);pointer-events:none}
     .ah-hero-inner{position:relative;z-index:1;padding:28px 20px;color:#fff;text-align:center;width:100%}
-    .ah-hero-inner strong{display:block;font-size:1.35rem;letter-spacing:.06em;text-transform:uppercase;text-shadow:0 1px 3px rgba(0,0,0,.35)}
+    .ah-hero-inner strong{display:block;font-family:var(--o-font-headings,inherit);font-size:1.35rem;letter-spacing:.06em;text-transform:uppercase;text-shadow:0 1px 3px rgba(0,0,0,.35)}
     .ah-hero-dots{display:flex;gap:8px;justify-content:center;margin-top:12px}
     .ah-hero-dots span{width:10px;height:10px;border-radius:50%;background:rgba(255,255,255,.55);box-shadow:0 0 0 1px rgba(0,0,0,.15)}
     .ah-hero-dots span.on{background:#fff}
     .ah-search-row{display:grid;grid-template-columns:260px 1fr;gap:14px;margin-bottom:28px}
     .ah-search-row.solo{grid-template-columns:1fr}
+    /* Default (bold/luxury fallback): solid primary — Minimal/Classic override below */
     .ah-box{background:var(--o-primary);color:#fff;border-radius:2px;padding:14px 14px 12px}
-    .ah-box h2{font-family:inherit;font-size:1rem;font-weight:700;margin:0 0 12px;color:#fff;letter-spacing:.02em}
+    .ah-box h2{font-family:var(--o-font-headings,inherit);font-size:1rem;font-weight:700;margin:0 0 12px;color:#fff;letter-spacing:.02em}
     .ah-field{margin-bottom:8px}
     .ah-field label{display:block;font-size:.72rem;margin-bottom:3px;opacity:.95}
-    .ah-field select,.ah-field input{width:100%;padding:7px 8px;border:0;border-radius:2px;font-size:.85rem;color:#222}
+    .ah-field select,.ah-field input{width:100%;padding:7px 8px;border:0;border-radius:2px;font-size:.85rem;color:#222;background:#fff}
     .ah-range{display:grid;grid-template-columns:1fr 1fr;gap:6px}
     .ah-btn{display:inline-block;width:100%;margin-top:8px;padding:10px 12px;border:0;border-radius:2px;background:#4a4a4a;color:#fff;font-weight:700;font-size:.9rem;cursor:pointer;text-align:center;text-decoration:none}
     .ah-btn.black{background:#111}
@@ -303,7 +402,7 @@ def _home_css() -> str:
     .ah-agency-actions{grid-column:1 / -1;display:flex;justify-content:flex-end}
     .ah-agency-actions .ah-btn{width:auto;min-width:220px}
     .ah-section{margin:8px 0 28px}
-    .ah-section h2{font-family:inherit;font-size:1.25rem;font-weight:700;color:#333;margin:0 0 14px;padding-bottom:6px;border-bottom:2px solid var(--o-primary)}
+    .ah-section h2{font-family:var(--o-font-headings,inherit);font-size:1.25rem;font-weight:700;color:#333;margin:0 0 14px;padding-bottom:6px;border-bottom:2px solid var(--o-primary)}
     .ah-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
     .ah-card{display:block;background:#fff;border:1px solid #ddd;text-decoration:none;color:#222;overflow:hidden}
     .ah-card:hover{box-shadow:0 4px 14px rgba(0,0,0,.1)}
@@ -325,6 +424,169 @@ def _home_css() -> str:
     .ah-footer li{font-size:.82rem;color:#555;margin:4px 0}
     .ah-footer li:before{content:'› ';color:var(--o-primary);font-weight:700}
     .ah-footer-contact p{font-size:.85rem;color:#444;margin:4px 0;line-height:1.45}
+
+    /* —— Minimal (€99): MLS/search come superfici chiare, non blocco pieno primary —— */
+    body.agency-home[data-theme="minimal"]{background:var(--o-light,#fafaf9);color:var(--o-dark,#1c1917)}
+    body.agency-home[data-theme="minimal"] .ah-brand-name{text-transform:none;letter-spacing:-.01em;font-weight:500;font-size:1.25rem}
+    body.agency-home[data-theme="minimal"] .ah-nav{background:transparent;border:1px solid rgba(0,0,0,.1);border-radius:2px}
+    body.agency-home[data-theme="minimal"] .ah-nav a{color:var(--o-dark,#1c1917) !important;border-right-color:rgba(0,0,0,.08);font-weight:500}
+    body.agency-home[data-theme="minimal"] .ah-nav a:hover{background:rgba(0,0,0,.04)}
+    body.agency-home[data-theme="minimal"] .ah-hero{border-radius:2px;min-height:320px}
+    body.agency-home[data-theme="minimal"] .ah-box{background:#fff;color:var(--o-dark,#1c1917);border:1px solid rgba(0,0,0,.1);border-radius:2px}
+    body.agency-home[data-theme="minimal"] .ah-box h2{color:var(--o-dark,#1c1917);font-weight:500}
+    body.agency-home[data-theme="minimal"] .ah-mls{border-top:3px solid var(--o-accent,#1f6b5c)}
+    body.agency-home[data-theme="minimal"] .ah-agency{border-top:3px solid var(--o-dark,#1c1917)}
+    body.agency-home[data-theme="minimal"] .ah-field label{color:rgba(28,25,23,.65);opacity:1}
+    body.agency-home[data-theme="minimal"] .ah-field select,body.agency-home[data-theme="minimal"] .ah-field input{border:1px solid rgba(0,0,0,.12);background:#fafaf9}
+    body.agency-home[data-theme="minimal"] .ah-btn{background:var(--o-dark,#1c1917);border-radius:0}
+    body.agency-home[data-theme="minimal"] .ah-btn.black{background:var(--o-accent,#1f6b5c)}
+    body.agency-home[data-theme="minimal"] .ah-powered{color:var(--o-accent,#1f6b5c);opacity:.85}
+    body.agency-home[data-theme="minimal"] .ah-section h2{border-bottom-color:rgba(0,0,0,.12);font-weight:500}
+    body.agency-home[data-theme="minimal"] .ah-card{border:1px solid rgba(0,0,0,.08);box-shadow:none}
+    body.agency-home[data-theme="minimal"] .ah-card:hover{border-color:var(--o-primary)}
+    body.agency-home[data-theme="minimal"] .ah-card-op{background:var(--o-dark,#1c1917)}
+    body.agency-home[data-theme="minimal"] .ah-card-price{color:var(--o-accent,#1f6b5c)}
+
+    /* —— Classic (€99): MLS/search bianchi + accenti navy/oro —— */
+    body.agency-home[data-theme="classic"]{background:var(--o-light,#f5f3ee);color:var(--o-primary,#0B1E3F)}
+    body.agency-home[data-theme="classic"] .ah-brand-name{font-weight:600;letter-spacing:.02em}
+    body.agency-home[data-theme="classic"] .ah-nav{background:var(--o-primary,#0B1E3F);border-bottom:3px solid var(--o-accent,#C19A6B);border-radius:0}
+    body.agency-home[data-theme="classic"] .ah-hero{border-radius:0;min-height:300px}
+    body.agency-home[data-theme="classic"] .ah-box{background:#fff;color:var(--o-primary,#0B1E3F);border:1px solid rgba(11,30,63,.12);border-radius:6px;box-shadow:0 2px 10px rgba(11,30,63,.06)}
+    body.agency-home[data-theme="classic"] .ah-box h2{color:var(--o-primary,#0B1E3F);border-bottom:2px solid var(--o-accent,#C19A6B);padding-bottom:6px;display:inline-block}
+    body.agency-home[data-theme="classic"] .ah-mls .ah-powered{color:var(--o-accent,#C19A6B)}
+    body.agency-home[data-theme="classic"] .ah-field label{color:rgba(11,30,63,.65);opacity:1}
+    body.agency-home[data-theme="classic"] .ah-field select,body.agency-home[data-theme="classic"] .ah-field input{border:1px solid rgba(11,30,63,.15);background:#faf9f6}
+    body.agency-home[data-theme="classic"] .ah-btn{background:var(--o-accent,#C19A6B);color:var(--o-primary,#0B1E3F);border-radius:4px}
+    body.agency-home[data-theme="classic"] .ah-btn.black{background:var(--o-primary,#0B1E3F);color:#fff}
+    body.agency-home[data-theme="classic"] .ah-section h2{color:var(--o-primary,#0B1E3F);border-bottom-color:var(--o-accent,#C19A6B)}
+    body.agency-home[data-theme="classic"] .ah-card{border:0;border-radius:6px;box-shadow:0 2px 12px rgba(0,0,0,.08)}
+    body.agency-home[data-theme="classic"] .ah-card-op{background:var(--o-primary,#0B1E3F)}
+    body.agency-home[data-theme="classic"] .ah-card-price{color:var(--o-accent,#C19A6B)}
+    body.agency-home[data-theme="classic"] .ah-card-title{font-family:var(--o-font-headings,Georgia,serif);color:var(--o-primary,#0B1E3F)}
+
+    /* —— Bold (€199): search scuro + accent arancio —— */
+    body.agency-home[data-theme="bold"]{background:#fff;color:#111}
+    body.agency-home[data-theme="bold"] .ah-brand-name{text-transform:uppercase;font-weight:800;letter-spacing:-.02em}
+    body.agency-home[data-theme="bold"] .ah-nav{background:#111;border-bottom:4px solid var(--o-primary,#FF5A1F);border-radius:0}
+    body.agency-home[data-theme="bold"] .ah-box{background:#111;color:#fff;border-radius:0}
+    body.agency-home[data-theme="bold"] .ah-mls{border-left:4px solid var(--o-primary,#FF5A1F)}
+    body.agency-home[data-theme="bold"] .ah-box h2{color:#fff;text-transform:uppercase;letter-spacing:-.01em;font-weight:800}
+    body.agency-home[data-theme="bold"] .ah-field label{text-transform:uppercase;letter-spacing:.08em;font-size:.65rem;font-weight:700}
+    body.agency-home[data-theme="bold"] .ah-btn{background:var(--o-primary,#FF5A1F);text-transform:uppercase;font-weight:800;border-radius:0}
+    body.agency-home[data-theme="bold"] .ah-btn.black{background:#fff;color:#111}
+    body.agency-home[data-theme="bold"] .ah-powered{color:var(--o-primary,#FF5A1F)}
+    body.agency-home[data-theme="bold"] .ah-section h2{text-transform:uppercase;font-weight:800;border-bottom-color:var(--o-primary,#FF5A1F)}
+    body.agency-home[data-theme="bold"] .ah-card{border:0}
+    body.agency-home[data-theme="bold"] .ah-card-body{background:#111;color:#fff;padding:12px}
+    body.agency-home[data-theme="bold"] .ah-card-city,.ah-card-zone{color:#aaa}
+    body.agency-home[data-theme="bold"] .ah-card-title{color:#fff;text-transform:uppercase}
+    body.agency-home[data-theme="bold"] .ah-card-meta{background:#1a1a1a;border-top-color:#333}
+    body.agency-home[data-theme="bold"] .ah-card-meta span{color:#ccc;border-right-color:#333}
+    body.agency-home[data-theme="bold"] .ah-card-price{color:var(--o-primary,#FF5A1F)}
+
+    /* —— Luxury (€199): scuro/oro, box glass-dark —— */
+    body.agency-home[data-theme="luxury"]{background:#0a0a0a;color:#fafafa}
+    body.agency-home[data-theme="luxury"] .ah-brand{color:#fafafa;flex-direction:column;text-align:center;width:100%;justify-content:center}
+    body.agency-home[data-theme="luxury"] .ah-top{flex-direction:column;align-items:center}
+    body.agency-home[data-theme="luxury"] .ah-brand-name{font-weight:400;letter-spacing:.08em;text-transform:none;font-size:1.6rem}
+    body.agency-home[data-theme="luxury"] .ah-nav{background:transparent;border:1px solid rgba(184,157,94,.35);border-radius:0}
+    body.agency-home[data-theme="luxury"] .ah-nav a{color:rgba(250,250,250,.7) !important;font-size:.72rem;letter-spacing:.18em;text-transform:uppercase;font-weight:400;border-right-color:rgba(184,157,94,.2)}
+    body.agency-home[data-theme="luxury"] .ah-box{background:rgba(255,255,255,.04);color:#fafafa;border:1px solid rgba(184,157,94,.35);border-radius:0}
+    body.agency-home[data-theme="luxury"] .ah-box h2{color:var(--o-accent,#B89D5E);font-weight:400;letter-spacing:.2em;text-transform:uppercase;font-size:.78rem}
+    body.agency-home[data-theme="luxury"] .ah-field label{letter-spacing:.12em;text-transform:uppercase;font-size:.65rem;color:rgba(250,250,250,.55)}
+    body.agency-home[data-theme="luxury"] .ah-btn{background:transparent;border:1px solid var(--o-accent,#B89D5E);color:var(--o-accent,#B89D5E);letter-spacing:.14em;text-transform:uppercase;font-weight:400;font-size:.75rem}
+    body.agency-home[data-theme="luxury"] .ah-btn.black{border-color:#fff;color:#fff}
+    body.agency-home[data-theme="luxury"] .ah-powered{color:var(--o-accent,#B89D5E);letter-spacing:.2em}
+    body.agency-home[data-theme="luxury"] .ah-section h2{color:var(--o-accent,#B89D5E);border-bottom-color:rgba(184,157,94,.35);text-align:center;font-weight:400;letter-spacing:.25em;text-transform:uppercase;font-size:.85rem}
+    body.agency-home[data-theme="luxury"] .ah-card{background:transparent;border:0;text-align:center}
+    body.agency-home[data-theme="luxury"] .ah-card-op{background:transparent;border:1px solid var(--o-accent,#B89D5E);color:var(--o-accent,#B89D5E);font-weight:400;letter-spacing:.1em}
+    body.agency-home[data-theme="luxury"] .ah-card-title{font-weight:400;color:#fafafa}
+    body.agency-home[data-theme="luxury"] .ah-card-city,.ah-card-zone{color:rgba(250,250,250,.45);letter-spacing:.15em}
+    body.agency-home[data-theme="luxury"] .ah-card-meta{background:transparent;border-top:1px solid rgba(184,157,94,.25)}
+    body.agency-home[data-theme="luxury"] .ah-card-meta span{color:rgba(250,250,250,.55);border-right-color:rgba(184,157,94,.2)}
+    body.agency-home[data-theme="luxury"] .ah-card-price{background:transparent;color:var(--o-accent,#B89D5E);font-weight:300}
+    body.agency-home[data-theme="luxury"] .ah-footer{background:#050505;border-top-color:rgba(184,157,94,.2)}
+    body.agency-home[data-theme="luxury"] .ah-footer h3,body.agency-home[data-theme="luxury"] .ah-footer li,body.agency-home[data-theme="luxury"] .ah-footer-contact p{color:rgba(250,250,250,.65)}
+
+    /* —— Atelier (€199) —— */
+    body.agency-home[data-theme="atelier"]{background:var(--o-light,#EFEFEF);color:#111}
+    body.agency-home[data-theme="atelier"] .ah-brand-name{font-weight:400;text-transform:none;letter-spacing:-.01em}
+    body.agency-home[data-theme="atelier"] .ah-nav{background:#fff;border-radius:999px;padding:4px;box-shadow:0 1px 0 rgba(0,0,0,.04)}
+    body.agency-home[data-theme="atelier"] .ah-nav a{color:#111 !important;border-right:0;border-radius:999px;font-weight:500}
+    body.agency-home[data-theme="atelier"] .ah-nav a:hover{background:#111;color:#fff !important}
+    body.agency-home[data-theme="atelier"] .ah-hero{border-radius:20px;min-height:340px}
+    body.agency-home[data-theme="atelier"] .ah-box{background:#fff;color:#111;border-radius:16px;border:0;box-shadow:0 2px 12px rgba(0,0,0,.05)}
+    body.agency-home[data-theme="atelier"] .ah-box h2{color:#111;font-weight:500}
+    body.agency-home[data-theme="atelier"] .ah-mls{outline:2px solid var(--o-accent,#F26522);outline-offset:-2px}
+    body.agency-home[data-theme="atelier"] .ah-field select,body.agency-home[data-theme="atelier"] .ah-field input{border:1px solid #e5e5e5;border-radius:10px;background:#fafafa}
+    body.agency-home[data-theme="atelier"] .ah-btn{background:var(--o-accent,#F26522);border-radius:999px;font-weight:500}
+    body.agency-home[data-theme="atelier"] .ah-btn.black{background:#111}
+    body.agency-home[data-theme="atelier"] .ah-powered{color:var(--o-accent,#F26522)}
+    body.agency-home[data-theme="atelier"] .ah-section h2{border-bottom:0;font-weight:500;letter-spacing:-.02em}
+    body.agency-home[data-theme="atelier"] .ah-card{border:0;border-radius:16px;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,.05)}
+
+    /* —— Cinematic (€199) —— */
+    body.agency-home[data-theme="cinematic"]{background:#061018;color:#fff}
+    body.agency-home[data-theme="cinematic"] .ah-brand-name{font-weight:400;text-transform:none;letter-spacing:0;color:#fff}
+    body.agency-home[data-theme="cinematic"] .ah-nav{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:999px}
+    body.agency-home[data-theme="cinematic"] .ah-nav a{color:rgba(255,255,255,.75) !important;border-right:0;font-weight:400}
+    body.agency-home[data-theme="cinematic"] .ah-hero{border-radius:4px;min-height:380px}
+    body.agency-home[data-theme="cinematic"] .ah-box{background:#0c1822;color:#fff;border:1px solid rgba(255,255,255,.1);border-radius:4px}
+    body.agency-home[data-theme="cinematic"] .ah-box h2{color:#fff;font-weight:400}
+    body.agency-home[data-theme="cinematic"] .ah-field label{color:rgba(255,255,255,.5)}
+    body.agency-home[data-theme="cinematic"] .ah-btn{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.25);border-radius:999px;font-weight:500}
+    body.agency-home[data-theme="cinematic"] .ah-btn.black{background:var(--o-accent,#c4a574);color:#061018;border:0}
+    body.agency-home[data-theme="cinematic"] .ah-powered{color:var(--o-accent,#c4a574)}
+    body.agency-home[data-theme="cinematic"] .ah-section h2{color:#fff;border-bottom-color:rgba(255,255,255,.15);font-weight:400}
+    body.agency-home[data-theme="cinematic"] .ah-card{background:#0c1822;border:0;color:#fff}
+    body.agency-home[data-theme="cinematic"] .ah-card-title{color:#fff;font-weight:400}
+    body.agency-home[data-theme="cinematic"] .ah-card-city,.ah-card-zone{color:rgba(255,255,255,.45)}
+    body.agency-home[data-theme="cinematic"] .ah-card-meta{background:#061018;border-top-color:rgba(255,255,255,.1)}
+    body.agency-home[data-theme="cinematic"] .ah-card-meta span{color:rgba(255,255,255,.55);border-right-color:rgba(255,255,255,.08)}
+    body.agency-home[data-theme="cinematic"] .ah-card-price{color:var(--o-accent,#c4a574)}
+    body.agency-home[data-theme="cinematic"] .ah-footer{background:#040a10;border-top-color:rgba(255,255,255,.08)}
+    body.agency-home[data-theme="cinematic"] .ah-footer h3,body.agency-home[data-theme="cinematic"] .ah-footer li,body.agency-home[data-theme="cinematic"] .ah-footer-contact p{color:rgba(255,255,255,.55)}
+
+    /* —— Editorial (€199) —— */
+    body.agency-home[data-theme="editorial"]{background:#fafaf9;color:#1c1917}
+    body.agency-home[data-theme="editorial"] .ah-wrap{border-left:1px solid #e7e5e4;border-right:1px solid #e7e5e4;max-width:1080px}
+    body.agency-home[data-theme="editorial"] .ah-brand-name{font-weight:400;text-transform:none;letter-spacing:0;text-align:center}
+    body.agency-home[data-theme="editorial"] .ah-top{border-bottom:1px solid #1c1917;justify-content:center}
+    body.agency-home[data-theme="editorial"] .ah-nav{background:transparent;border:0}
+    body.agency-home[data-theme="editorial"] .ah-nav a{color:#1c1917 !important;border-right:0;font-size:11px;letter-spacing:.14em;text-transform:uppercase;font-weight:500;opacity:.55}
+    body.agency-home[data-theme="editorial"] .ah-hero{border-radius:0;min-height:340px}
+    body.agency-home[data-theme="editorial"] .ah-box{background:transparent;color:#1c1917;border:1px solid #e7e5e4;border-radius:0}
+    body.agency-home[data-theme="editorial"] .ah-box h2{color:#1c1917;font-weight:400}
+    body.agency-home[data-theme="editorial"] .ah-mls{border-top:1px solid #1c1917}
+    body.agency-home[data-theme="editorial"] .ah-field select,body.agency-home[data-theme="editorial"] .ah-field input{border:1px solid #e7e5e4;background:#fff;border-radius:0}
+    body.agency-home[data-theme="editorial"] .ah-btn{background:transparent;border-bottom:1px solid #1c1917;color:#1c1917;border-radius:0;font-size:12px;letter-spacing:.14em;text-transform:uppercase;font-weight:500;width:auto}
+    body.agency-home[data-theme="editorial"] .ah-btn.black{border:1px solid #1c1917}
+    body.agency-home[data-theme="editorial"] .ah-section h2{border-bottom-color:#e7e5e4;font-weight:400}
+    body.agency-home[data-theme="editorial"] .ah-card{border:0;border-right:1px solid #e7e5e4;border-radius:0;box-shadow:none}
+    body.agency-home[data-theme="editorial"] .ah-cards{gap:0;border-top:1px solid #e7e5e4}
+    body.agency-home[data-theme="editorial"] .ah-card:last-child{border-right:0}
+    body.agency-home[data-theme="editorial"] .ah-card-op{background:transparent;color:#1c1917;border:1px solid #e7e5e4;font-weight:500}
+
+    /* —— Mediterranean (€199) —— */
+    body.agency-home[data-theme="mediterranean"]{background:var(--o-light,#f7f3eb);color:var(--o-primary,#3d4f5f)}
+    body.agency-home[data-theme="mediterranean"] .ah-brand-name{font-weight:400;text-transform:none;letter-spacing:0;color:var(--o-primary,#3d4f5f)}
+    body.agency-home[data-theme="mediterranean"] .ah-nav{background:transparent;border:0}
+    body.agency-home[data-theme="mediterranean"] .ah-nav a{color:var(--o-primary,#3d4f5f) !important;border-right:0;opacity:.7;font-weight:500}
+    body.agency-home[data-theme="mediterranean"] .ah-hero{border-radius:4px;min-height:360px;border:1px solid #e8e0d4}
+    body.agency-home[data-theme="mediterranean"] .ah-box{background:#fff;color:var(--o-primary,#3d4f5f);border:1px solid #e8e0d4;border-radius:2px}
+    body.agency-home[data-theme="mediterranean"] .ah-box h2{color:var(--o-primary,#3d4f5f);font-weight:400}
+    body.agency-home[data-theme="mediterranean"] .ah-mls{border-top:3px solid var(--o-accent,#c4a574)}
+    body.agency-home[data-theme="mediterranean"] .ah-field select,body.agency-home[data-theme="mediterranean"] .ah-field input{border:1px solid #e8e0d4;background:#faf8f4}
+    body.agency-home[data-theme="mediterranean"] .ah-btn{background:var(--o-accent,#c4a574);color:#2a3340;border-radius:2px;font-weight:500}
+    body.agency-home[data-theme="mediterranean"] .ah-btn.black{background:var(--o-primary,#3d4f5f);color:#fff}
+    body.agency-home[data-theme="mediterranean"] .ah-powered{color:var(--o-accent,#c4a574)}
+    body.agency-home[data-theme="mediterranean"] .ah-section h2{border-bottom:0;font-weight:400;color:var(--o-primary,#3d4f5f)}
+    body.agency-home[data-theme="mediterranean"] .ah-card{border:1px solid #e8e0d4;border-radius:2px;box-shadow:none}
+    body.agency-home[data-theme="mediterranean"] .ah-card-op{background:var(--o-primary,#3d4f5f)}
+    body.agency-home[data-theme="mediterranean"] .ah-card-price{color:var(--o-accent,#c4a574)}
+    body.agency-home[data-theme="mediterranean"] .ah-card-title{font-family:var(--o-font-headings,Georgia,serif);color:var(--o-primary,#3d4f5f);font-weight:400}
+
     @media (max-width:900px){
       .ah-search-row,.ah-search-row.solo{grid-template-columns:1fr}
       .ah-agency-grid{grid-template-columns:1fr}
