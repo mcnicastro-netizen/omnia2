@@ -1,3 +1,8 @@
+## 2026-11-09 — D-151 Minimal/Classic: slot MLS adotta il tema
+
+- Home CSS: `[data-theme=minimal|classic]` — box MLS/search chiari (no blocco primary pieno)
+- MLS off → solo search agenzia · test `test_theme_simple_mls_slots.py`
+
 ## 2026-11-09 — D-151 listino sito template €99 / €199
 
 - Pro/Agency: gallery 8 inclusa · Starter neo: €99 (minimal|classic) / €199 (altri 6)
