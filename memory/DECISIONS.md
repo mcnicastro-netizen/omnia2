@@ -1873,8 +1873,8 @@ Registro di tutte le decisioni di business e tecniche prese durante il progetto.
   1. **AuthZ fascicolo / media sensibili prima del design Backup+Restore** (è accesso, non bak).
   2. Sequenza: proteggere fascicolo → orphan/delete → Bak+Restore → retention definitiva → costi.
   3. Il finding G-02 è **specifico** (path `/api/media` + fascicolo): non gonfiare a “tutto OMNIA esposto”.
-- **Implementazione**: ❌ codice ⏳ — post-audit / priorità + «vai».
-- **Stato**: ✅ **DECISIONE DI DOMINIO REGISTRATA** (docs 29-Set-2026) · codice ⏳
+- **Implementazione**: ✅ codice preesistente export/erase (P-038/E4) · ✅ Onda 9 docs `docs/ops/GDPR_FOUNDERS.md` + DPA stub `docs/legal/DPA_FOUNDERS_STUB.md` · smoke `scripts/gdpr_founders_smoke.py` · unit `test_erase_user_data.py`.
+- **Stato**: ✅ **DECISIONE DI DOMINIO REGISTRATA** (docs 29-Set-2026) · ✅ percorso Founders eseguibile 09-Nov-2026
 
 ### D-100 — Invite accept: mai overwrite password utente esistente · 29-Set-2026
 - **Data**: 29 Settembre 2026 · **rafforzamento**: 30-Set-2026 (P21 — trasversale)
