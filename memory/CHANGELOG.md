@@ -1,3 +1,8 @@
+## 2026-11-09 — Themes render split MOVE-ONLY (Onda 3)
+
+- Estratti `theme_css` · `theme_common` · `theme_home` · `theme_render` (property + re-export)
+- `theme_render.py` 726 → **~145** · zero feature nuove · `test_agency_home_layout` PASS
+
 ## 2026-11-09 — Portal split MOVE-ONLY (`public_portal` elefante · Onda 2)
 
 - Estratti `portal_common` · `portal_search` · `portal_detail` · `portal_contact`
