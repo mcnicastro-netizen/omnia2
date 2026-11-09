@@ -1,3 +1,9 @@
+## 2026-11-09 — Portal split MOVE-ONLY (`public_portal` elefante · Onda 2)
+
+- Estratti `portal_common` · `portal_search` · `portal_detail` · `portal_contact`
+- `public_portal.py` 1119 → **~70** (router aggregato + re-export)
+- Zero feature nuove · test portal-related 40 passed
+
 ## 2026-11-09 — SaaS slice: trash purge → blob (D-095 T-02)
 
 - `purge_item_now` / `run_trash_purge`: prima di cancellare l’immobile, best-effort `delete_object` su foto/video/planimetrie/documenti
