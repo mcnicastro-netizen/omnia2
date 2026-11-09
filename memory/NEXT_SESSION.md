@@ -31,8 +31,9 @@ Founder 05-Nov-2026: **controllare i margini prima del go-live**, non dopo.
 | **Vetrina www** | **D-146** + **D-148** paperless in Perché OMNIA |
 | **Kling crediti** | **D-147** 30 cr / €1,50 · listino [`PRICING_OMNIA.md`](./PRICING_OMNIA.md) v3.2 |
 | Portale | D-139…D-144 ✅ |
-| Clone sito | D-023/D-130 + A-037 aperti (dopo dogfood gestionale) |
-| **Prossimo strutturale** | Orphan GC ✅ · bak/restore ✅ · GDPR Founders ✅ (D-099) · poi tenant helpers Onda 10 |
+| Clone sito | D-023/D-130 + A-037 · **D-150/D-151** pack+listino · restyling €199 · Stripe checkout template ⏳ |
+| Template pack | **D-151** gallery 8 live · Starter €99/€199 · restyling €199 |
+| **Prossimo strutturale** | Filo SaaS 7–9 ✅ · tenant helpers #147 · dogfood Storia post gallery 8 |
 
 ---
 

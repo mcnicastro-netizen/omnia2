@@ -1,8 +1,8 @@
 # 💰 OMNIA — Pricing Book (B2B agenzie)
 
-**Versione**: 3.2 (LISTINO UFFICIALE B2B)
-**Ultima revisione**: 5 Novembre 2026 — Kling micro-tour **30 crediti** (€1,50) · Founder  
-**Revisione precedente**: 5 Agosto 2026 — v3.0 approvato  
+**Versione**: 3.3 (LISTINO UFFICIALE B2B)
+**Ultima revisione**: 9 Novembre 2026 — D-151 sito template one-shot Starter €99/€199 · restyling €199  
+**Revisione precedente**: 5 Novembre 2026 — Kling micro-tour **30 crediti** (€1,50)  
 
 **Storage (D-085 / S3 10-Ott-2026):** quote 30/100/300 GB + addon +100 GB @ €15 — operativamente invariato; meter in `OMNIA_S3_METER_ECONOMIA.md`; **firma Founder rimandata** (deepen S3.1 — non dimenticare)
 **Stato**: 🟢 ATTIVO · sincronizzato con `backend/apps/billing/plans.py` + catalog Stripe sandbox
@@ -94,6 +94,22 @@ Il "vantaggio" del pacchetto grande sta nell'evitare micro-transazioni ripetute 
 
 ---
 
+## 🌐 Sito agenzia — template pack (D-151)
+
+Gallery **8 temi** (MLS on/off, testi/foto/logo personalizzabili). Non è lo SKU «solo sito» (D-130): è feature ImmoWeb + add-on one-shot su Starter.
+
+| Piano / path | Prezzo | Cosa include |
+|---|:-:|---|
+| **Pro / Agency** | **incluso** | Gallery 8 · neo + restyling · MLS sì/no |
+| **Starter — neo** tema semplice | **€99** one-shot | **1** tra `minimal` \| `classic` |
+| **Starter — neo** tema premium | **€199** one-shot | **1** tra `bold` \| `luxury` \| `atelier` \| `cinematic` \| `editorial` \| `mediterranean` |
+| **Restyling** (caso 3, qualunque piano Starter; Pro+ già incluso) | **€199** one-shot | **1** tema gallery (sostituisce look esistente con template OMNIA) |
+
+**Regole**
+- Un tema per pagamento; cambio tema su Starter = nuovo one-shot (o upgrade a Pro/Agency → gallery inclusa).
+- Clone keep-brand (casi 1–2) ≠ restyling: il clone resta sul path migrazione white-label, non su questo listino one-shot.
+- SoT codice: `SITE_THEME_PRICES_EUR` in `backend/apps/billing/plans.py`. Checkout Stripe ⏳.
+
 ## 📢 Multiposting & Portali
 
 - **Multiposting standard** (Immobiliare.it, Casa.it, Idealista, Wikicasa, ecc.): **incluso in tutti i piani** — Starter, Pro, Agency, Enterprise.
@@ -162,7 +178,10 @@ Formato lookup key Stripe: `{tier}_{cycle}` per abbonamenti (es. `pro_monthly`) 
 | Algoritmo boost granulare | 🟡 Fase 2 (post 30 clienti) |
 | Sconto volume sui pacchetti crediti | ❌ NO — ratio fisso 20 cr/€ |
 | Planimetria/Ipoteca come servizio v1 | ❌ Rimossi (margini) |
-| **SKU «solo sito web»** | ❌ **Non in listino** (D-130, 20-Ott-2026) — sito = feature piano ImmoWeb; custom fuori catalogo |
+| **SKU «solo sito web»** | ❌ **Non in listino** (D-130) — sito = feature ImmoWeb; su Starter = add-on template one-shot (D-151), non prodotto stand-alone |
+| **Template gallery Pro+** | ✅ Inclusa (D-151) |
+| **Starter neo Minimal/Classic** | ✅ **€99** one-shot (D-151) |
+| **Starter neo altri 6 / Restyling** | ✅ **€199** one-shot (D-151) |
 
 ---
 
@@ -185,6 +204,7 @@ Formato lookup key Stripe: `{tier}_{cycle}` per abbonamenti (es. `pro_monthly`) 
 
 | Data | Versione | Note |
 |------|----------|------|
+| 09-Nov-2026 | **v3.3** | D-151: template pack 8 · Pro+ incluso · Starter €99/€199 one-shot · restyling €199 |
 | 05-Nov-2026 | **v3.2** | Micro-tour Kling **30 crediti / €1,50** (ex 60 in MD / 10 in codice sotto-prezzo). Audit perdite. |
 | 14-Sep-2026 | **v3.1** | Annuale −1 mese (D-079); Enterprise ancora TBD |
 | 05-Ago-2026 | **v3.0** | LISTINO UFFICIALE approvato Founder. Founders 12m €49/99/249, Standard €79/179/349, pacchetti ratio 20 cr/€, planimetria/ipoteca rimossi |
