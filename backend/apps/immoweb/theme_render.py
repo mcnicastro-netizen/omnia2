@@ -187,11 +187,18 @@ def _theme_css(cfg: Dict[str, Any]) -> str:
     .card strong{color:var(--o-dark);font-family:var(--o-font-headings);font-size:1.5rem;font-weight:400;display:block;margin-bottom:.4rem}
     """
 
+def _brand_mark(logo: Optional[str], name: str, *, img_class: str = "brand-logo") -> str:
+    """Logo OR testo agenzia — mai entrambi (evita doppia scritta)."""
+    safe = escape(name or "")
+    if logo:
+        return f'<img src="{escape(logo)}" class="{escape(img_class)}" alt="{safe}"/>'
+    return f'<span class="brand-name ah-brand-name">{safe}</span>'
+
+
 def _render_header(cfg: Dict[str, Any], agency: Dict[str, Any]) -> str:
-    name = escape(agency.get("display_name") or "")
+    name = agency.get("display_name") or ""
     logo = cfg.get("logo_url")
     tagline = cfg.get("tagline")
-    logo_html = f'<img src="{escape(logo)}" class="brand-logo" alt="{name}"/>' if logo else ""
     tagline_html = (
         f'<div class="brand-tagline">{escape(tagline)}</div>'
         if tagline and cfg["theme_id"] == "luxury" else ""
@@ -199,8 +206,7 @@ def _render_header(cfg: Dict[str, Any], agency: Dict[str, Any]) -> str:
     return f"""
     <header>
       <div class="container">
-        {logo_html}
-        <span class="brand-name">{name}</span>
+        {_brand_mark(logo, name)}
         {tagline_html}
       </div>
     </header>"""
@@ -308,31 +314,46 @@ def _home_css() -> str:
     .ah-wrap{max-width:1100px;margin:0 auto;padding:0 12px 40px}
     .ah-top{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:14px 0 10px;flex-wrap:wrap}
     .ah-brand{display:flex;align-items:center;gap:12px;text-decoration:none;color:#222}
-    .ah-brand img{height:52px;width:auto;object-fit:contain}
-    .ah-brand-name{font-size:1.15rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase}
-    .ah-nav{display:flex;flex-wrap:wrap;background:var(--o-primary);border-radius:2px;overflow:hidden}
-    .ah-nav a{color:#fff;text-decoration:none;padding:10px 14px;font-size:.85rem;font-weight:600;border-right:1px solid rgba(255,255,255,.18)}
+    .ah-brand img{height:56px;width:auto;object-fit:contain;display:block}
+    .ah-brand-name{font-size:1.05rem;font-weight:700;letter-spacing:.03em;text-transform:uppercase;font-family:Georgia,'Times New Roman',serif}
+    .ah-nav{display:flex;flex-wrap:wrap;background:var(--o-primary);border-radius:0;overflow:hidden;box-shadow:0 1px 0 rgba(0,0,0,.08)}
+    .ah-nav a{color:#fff;text-decoration:none;padding:12px 18px;font-size:.92rem;font-weight:600;letter-spacing:.02em;border-right:1px solid rgba(255,255,255,.28);line-height:1.2}
     .ah-nav a:last-child{border-right:0}
-    .ah-nav a:hover{background:rgba(0,0,0,.12)}
-    .ah-hero{margin:8px 0 16px;min-height:260px;border-radius:2px;position:relative;overflow:hidden;display:flex;align-items:flex-end;justify-content:center;background-color:var(--o-primary);background-size:cover;background-position:center center;background-repeat:no-repeat}
-    .ah-hero::before{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.15) 0%,rgba(0,0,0,.45) 100%);pointer-events:none}
-    .ah-hero-inner{position:relative;z-index:1;padding:28px 20px;color:#fff;text-align:center;width:100%}
-    .ah-hero-inner strong{display:block;font-size:1.35rem;letter-spacing:.06em;text-transform:uppercase;text-shadow:0 1px 3px rgba(0,0,0,.35)}
-    .ah-hero-dots{display:flex;gap:8px;justify-content:center;margin-top:12px}
+    .ah-nav a:hover,.ah-nav a.on{background:rgba(255,255,255,.16)}
+    .ah-hero{margin:8px 0 16px;min-height:280px;border-radius:0;position:relative;overflow:hidden;display:flex;align-items:flex-end;justify-content:center;background-color:var(--o-primary);background-size:cover;background-position:center center;background-repeat:no-repeat}
+    .ah-hero::before{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.08) 0%,rgba(0,0,0,.28) 100%);pointer-events:none}
+    .ah-hero-inner{position:relative;z-index:1;padding:18px 20px;color:#fff;text-align:center;width:100%}
+    .ah-hero-dots{display:flex;gap:8px;justify-content:center;margin-top:0}
     .ah-hero-dots span{width:10px;height:10px;border-radius:50%;background:rgba(255,255,255,.55);box-shadow:0 0 0 1px rgba(0,0,0,.15)}
     .ah-hero-dots span.on{background:#fff}
-    .ah-search-row{display:grid;grid-template-columns:260px 1fr;gap:14px;margin-bottom:28px}
+    .ah-search-row{display:grid;grid-template-columns:250px 1fr;gap:16px;margin-bottom:28px;align-items:start}
     .ah-search-row.solo{grid-template-columns:1fr}
-    .ah-box{background:var(--o-primary);color:#fff;border-radius:2px;padding:14px 14px 12px}
-    .ah-box h2{font-family:inherit;font-size:1rem;font-weight:700;margin:0 0 12px;color:#fff;letter-spacing:.02em}
+    .ah-box{border-radius:0;padding:0;overflow:hidden}
+    .ah-box h2{font-family:inherit;font-size:.98rem;font-weight:700;margin:0;letter-spacing:.01em}
+    .ah-box-body{padding:12px 12px 14px}
     .ah-field{margin-bottom:8px}
     .ah-field label{display:block;font-size:.72rem;margin-bottom:3px;opacity:.95}
-    .ah-field select,.ah-field input{width:100%;padding:7px 8px;border:0;border-radius:2px;font-size:.85rem;color:#222}
+    .ah-field select,.ah-field input,.ah-field textarea{width:100%;padding:8px 9px;border:1px solid #d0d0d0;border-radius:2px;font-size:.85rem;color:#222;background:#fff;box-sizing:border-box}
+    .ah-field textarea{min-height:88px;resize:vertical;font-family:inherit}
     .ah-range{display:grid;grid-template-columns:1fr 1fr;gap:6px}
-    .ah-btn{display:inline-block;width:100%;margin-top:8px;padding:10px 12px;border:0;border-radius:2px;background:#4a4a4a;color:#fff;font-weight:700;font-size:.9rem;cursor:pointer;text-align:center;text-decoration:none}
+    .ah-btn{display:inline-block;width:100%;margin-top:8px;padding:10px 12px;border:0;border-radius:2px;background:#5a5a5a;color:#fff;font-weight:700;font-size:.9rem;cursor:pointer;text-align:center;text-decoration:none}
     .ah-btn.black{background:#111}
     .ah-btn:hover{opacity:.92}
-    .ah-powered{margin-top:10px;text-align:center;font-size:.65rem;letter-spacing:.12em;text-transform:uppercase;opacity:.9}
+    .ah-powered{margin-top:10px;text-align:center;font-size:.68rem;letter-spacing:.08em;text-transform:uppercase}
+    .ah-powered strong{font-weight:800}
+    /* MLS box: bianco + header verde (stile riferimento Agestanet) */
+    .ah-mls{background:#fff;color:#222;border:1px solid var(--o-primary);box-shadow:0 1px 3px rgba(0,0,0,.06)}
+    .ah-mls .ah-mls-head{background:var(--o-primary);color:#fff;padding:10px 12px}
+    .ah-mls .ah-mls-head h2{color:#fff;font-size:.92rem}
+    .ah-mls .ah-box-body{padding:12px}
+    .ah-mls .ah-field label{color:#444;opacity:1}
+    .ah-mls .ah-powered{color:#666}
+    .ah-mls .ah-powered strong{color:#c62828}
+    /* Box agenzia: verde pieno */
+    .ah-agency{background:var(--o-primary);color:#fff}
+    .ah-agency .ah-box-body{padding:14px 14px 16px}
+    .ah-agency h2{color:#fff;margin:0 0 12px;padding-bottom:6px;border-bottom:1px solid rgba(255,255,255,.35)}
+    .ah-agency .ah-field label{color:#fff}
     .ah-agency-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px 14px}
     .ah-agency-actions{grid-column:1 / -1;display:flex;justify-content:flex-end}
     .ah-agency-actions .ah-btn{width:auto;min-width:220px}
@@ -364,15 +385,32 @@ def _home_css() -> str:
     .ah-footer li{font-size:.82rem;color:#555;margin:4px 0}
     .ah-footer li:before{content:'› ';color:var(--o-primary);font-weight:700}
     .ah-footer-contact p{font-size:.85rem;color:#444;margin:4px 0;line-height:1.45}
+    .ah-list-layout{display:grid;grid-template-columns:1fr 280px;gap:18px;align-items:start}
+    .ah-list-main{min-width:0}
+    .ah-list-side .ah-agency,.ah-list-side .ah-mls{position:sticky;top:12px}
+    .ah-prop-layout{display:grid;grid-template-columns:1fr 280px;gap:20px;align-items:start;margin-top:12px}
+    .ah-prop-main{min-width:0}
+    .ah-prop-main .photos{display:grid;grid-template-columns:1fr;gap:10px;margin:1rem 0}
+    .ah-prop-main .photos img{width:100%;max-height:420px;object-fit:cover;display:block}
+    .ah-prop-main h1{font-size:1.45rem;margin:0 0 6px;color:#222}
+    .ah-prop-main .meta{color:#666;margin:0 0 4px}
+    .ah-prop-main .price{font-size:1.35rem;font-weight:700;margin:8px 0 14px}
+    .ah-prop-main .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin:12px 0}
+    .ah-prop-main .grid label{display:block;font-size:.68rem;color:#888;text-transform:uppercase;letter-spacing:.06em}
+    .ah-consent{font-size:.75rem;color:#fff;margin:10px 0;line-height:1.45}
+    .ah-consent label{margin-right:10px}
+    .ah-contact-agency{margin-top:14px;font-size:.8rem;opacity:.9}
     @media (max-width:900px){
-      .ah-search-row,.ah-search-row.solo{grid-template-columns:1fr}
+      .ah-search-row,.ah-search-row.solo,.ah-list-layout,.ah-prop-layout{grid-template-columns:1fr}
       .ah-agency-grid{grid-template-columns:1fr}
       .ah-cards{grid-template-columns:1fr 1fr}
       .ah-footer-inner{grid-template-columns:1fr}
+      .ah-list-side .ah-agency,.ah-list-side .ah-mls{position:static}
     }
     @media (max-width:560px){
       .ah-cards{grid-template-columns:1fr}
       .ah-nav{width:100%}
+      .ah-prop-main .grid{grid-template-columns:1fr}
     }
     """
 
@@ -481,54 +519,89 @@ def _mls_search_box(network_count: int) -> str:
     claim = f"{network_count:,}".replace(",", ".") if network_count else "Network"
     return f"""
     <aside class="ah-box ah-mls" data-testid="agency-home-mls-box">
-      <h2>+ {escape(claim)} immobili condivisi</h2>
-      {_select("contratto", "Contratto", [("sale", "Vendita"), ("rent", "Affitto")], "sale")}
-      {_select("categoria", "Categoria", [("", "Tutte"), ("residential", "Residenziale"), ("commercial", "Commerciale")], "residential")}
-      {_select("provincia", "Provincia", [("", "Scegli"), ("CT", "CATANIA"), ("ME", "MESSINA"), ("PA", "PALERMO"), ("RG", "RAGUSA")])}
-      {_select("comune", "Comune", [("", "Scegli")])}
-      <div class="ah-field"><label>Prezzo</label>
-        <div class="ah-range">
-          <input type="number" name="price_min" placeholder="Min" min="0"/>
-          <input type="number" name="price_max" placeholder="Max" min="0"/>
+      <div class="ah-mls-head"><h2>{escape(claim)} immobili condivisi</h2></div>
+      <div class="ah-box-body">
+        {_select("contratto", "Contratto", [("sale", "Vendita"), ("rent", "Affitto")], "sale")}
+        {_select("categoria", "Categoria", [("", "Tutte"), ("residential", "Residenziale"), ("commercial", "Commerciale")], "residential")}
+        {_select("provincia", "Provincia", [("", "Scegli"), ("CT", "CATANIA"), ("ME", "MESSINA"), ("PA", "PALERMO"), ("RG", "RAGUSA")])}
+        {_select("comune", "Comune", [("", "Scegli")])}
+        <div class="ah-field"><label>Prezzo</label>
+          <div class="ah-range">
+            <input type="number" name="price_min" placeholder="Min" min="0"/>
+            <input type="number" name="price_max" placeholder="Max" min="0"/>
+          </div>
         </div>
+        <button type="button" class="ah-btn" onclick="location.href='/it/cloud?mls=1'">avvia la ricerca</button>
+        <div class="ah-powered">Powered by <strong>OMNIA</strong></div>
       </div>
-      <button type="button" class="ah-btn" onclick="location.href='/it/cloud?mls=1'">Avvia la ricerca</button>
-      <div class="ah-powered">Powered by OMNIA</div>
     </aside>"""
 
-def _agency_search_box() -> str:
+def _agency_search_box(lista_href: str = "#ultimi") -> str:
     return f"""
     <section class="ah-box ah-agency" data-testid="agency-home-agency-search">
-      <h2>Cerca il tuo immobile</h2>
-      <div class="ah-agency-grid">
-        {_select("contratto", "Contratto", [("", "Tutti"), ("sale", "Vendita"), ("rent", "Affitto")])}
-        {_select("categoria", "Categoria", [("", "Tutte"), ("residential", "Residenziale"), ("commercial", "Commerciale")])}
-        {_select("tipologia", "Tipologia", [("", "Tutte"), ("apartment", "Appartamento"), ("house", "Casa/Villa"), ("land", "Terreno")])}
-        {_select("provincia", "Provincia", [("", "Tutte"), ("CT", "CATANIA"), ("ME", "MESSINA"), ("PA", "PALERMO")])}
-        {_select("comune", "Comune", [("", "Tutti")])}
-        <div class="ah-field"><label>Prezzo (da — a)</label><div class="ah-range">
-          <input type="number" name="price_min" placeholder="da" min="0"/>
-          <input type="number" name="price_max" placeholder="a" min="0"/>
-        </div></div>
-        <div class="ah-field"><label>Mq (da — a)</label><div class="ah-range">
-          <input type="number" name="sqm_min" placeholder="da" min="0"/>
-          <input type="number" name="sqm_max" placeholder="a" min="0"/>
-        </div></div>
-        <div class="ah-field"><label>Vani (da — a)</label><div class="ah-range">
-          <input type="number" name="rooms_min" placeholder="da" min="0"/>
-          <input type="number" name="rooms_max" placeholder="a" min="0"/>
-        </div></div>
-        <div class="ah-field"><label>Camere (da — a)</label><div class="ah-range">
-          <input type="number" name="beds_min" placeholder="da" min="0"/>
-          <input type="number" name="beds_max" placeholder="a" min="0"/>
-        </div></div>
-        <div class="ah-field"><label>Riferimento</label><input type="text" name="rif" placeholder="es. 25002"/></div>
-        {_select("ordine", "Ordine", [("relevance", "Rilevanza"), ("price_asc", "Prezzo ↑"), ("price_desc", "Prezzo ↓"), ("date_desc", "Più recenti")])}
-        <div class="ah-agency-actions">
-          <button type="button" class="ah-btn black" onclick="location.href='#ultimi'">Avvia la ricerca</button>
+      <div class="ah-box-body">
+        <h2>Cerca il tuo immobile</h2>
+        <div class="ah-agency-grid">
+          {_select("contratto", "Contratto", [("", "Tutti"), ("sale", "Vendita"), ("rent", "Affitto")])}
+          {_select("categoria", "Categoria", [("", "Tutte"), ("residential", "Residenziale"), ("commercial", "Commerciale")])}
+          {_select("tipologia", "Tipologia", [("", "Tutte"), ("apartment", "Appartamento"), ("house", "Casa/Villa"), ("land", "Terreno")])}
+          {_select("provincia", "Provincia", [("", "Tutte"), ("CT", "CATANIA"), ("ME", "MESSINA"), ("PA", "PALERMO")])}
+          {_select("comune", "Comune", [("", "Tutti")])}
+          <div class="ah-field"><label>Prezzo (da — a)</label><div class="ah-range">
+            <input type="number" name="price_min" placeholder="da" min="0"/>
+            <input type="number" name="price_max" placeholder="a" min="0"/>
+          </div></div>
+          <div class="ah-field"><label>Mq (da — a)</label><div class="ah-range">
+            <input type="number" name="sqm_min" placeholder="da" min="0"/>
+            <input type="number" name="sqm_max" placeholder="a" min="0"/>
+          </div></div>
+          <div class="ah-field"><label>Vani (da — a)</label><div class="ah-range">
+            <input type="number" name="rooms_min" placeholder="da" min="0"/>
+            <input type="number" name="rooms_max" placeholder="a" min="0"/>
+          </div></div>
+          <div class="ah-field"><label>Camere (da — a)</label><div class="ah-range">
+            <input type="number" name="beds_min" placeholder="da" min="0"/>
+            <input type="number" name="beds_max" placeholder="a" min="0"/>
+          </div></div>
+          <div class="ah-field"><label>Riferimento</label><input type="text" name="rif" placeholder="es. 25002"/></div>
+          {_select("ordine", "Ordine", [("relevance", "Rilevanza"), ("price_asc", "Prezzo ↑"), ("price_desc", "Prezzo ↓"), ("date_desc", "Più recenti")])}
+          <div class="ah-agency-actions">
+            <button type="button" class="ah-btn black" onclick="location.href='{escape(lista_href)}'">Avvia la ricerca</button>
+          </div>
         </div>
       </div>
     </section>"""
+
+
+def _contact_form(agency: Dict[str, Any], property_ref: str = "") -> str:
+    """Form Contattaci laterale (scheda immobile — stile riferimento)."""
+    name = agency.get("display_name") or agency.get("name") or "agenzia"
+    rif = property_ref or ""
+    default_msg = (
+        f"Buongiorno, sono interessato all'immobile rif. {rif}. Vi prego di ricontattarmi. Grazie."
+        if rif else
+        f"Buongiorno, vorrei informazioni. Grazie."
+    )
+    return f"""
+    <aside class="ah-box ah-agency ah-contact-form" data-testid="agency-property-contact">
+      <div class="ah-box-body">
+        <h2>Contattaci</h2>
+        <form action="mailto:{(agency.get('contact') or {}).get('email') or ''}" method="get" enctype="text/plain">
+          <div class="ah-field"><label>Nominativo*</label><input type="text" name="nominativo" required/></div>
+          <div class="ah-field"><label>Telefono*</label><input type="tel" name="telefono" required/></div>
+          <div class="ah-field"><label>E-mail*</label><input type="email" name="email" required/></div>
+          <div class="ah-field"><label>Richiesta*</label>
+            <textarea name="body" required>{escape(default_msg)}</textarea>
+          </div>
+          <p class="ah-consent">Autorizzazione al trattamento dei dati personali
+            <label><input type="radio" name="privacy" value="si" required/> Sì</label>
+            <label><input type="radio" name="privacy" value="no"/> No</label>
+          </p>
+          <button type="submit" class="ah-btn black">Invia il modulo</button>
+        </form>
+        <p class="ah-contact-agency">{escape(name)}</p>
+      </div>
+    </aside>"""
 
 def _cards_section(title: str, section_id: str, cards_html: str) -> str:
     inner = cards_html or '<div class="ah-empty">Nessun immobile pubblicato al momento.</div>'
@@ -555,10 +628,7 @@ def render_index(agency: Dict[str, Any], props: List[Dict[str, Any]], slug: str)
         f"{len(props)} annunci attivi su OMNIA."
     )
     logo = cfg.get("logo_url")
-    logo_html = (
-        f'<img src="{escape(logo)}" alt="{escape(name)}"/>'
-        if logo else ""
-    )
+    brand_html = _brand_mark(logo, name)
     hero_url = _resolve_hero_image(agency, cfg)
     hero_style = f'style="background-image:url(\'{escape(hero_url)}\')"'
     contact = agency.get("contact") or {}
@@ -580,6 +650,7 @@ def render_index(agency: Dict[str, Any], props: List[Dict[str, Any]], slug: str)
     latest_html = "".join(_home_card(p, slug) for p in latest)
 
     search_row_cls = "ah-search-row" if mls_on else "ah-search-row solo"
+    lista_href = f"/api/p/{escape(slug)}/lista"
     mls_html = _mls_search_box(network_count) if mls_on else ""
     network_props = list(agency.get("_mls_network_props") or []) if mls_on else []
     mls_network_html = _mls_network_section(network_props) if mls_on else ""
@@ -588,9 +659,9 @@ def render_index(agency: Dict[str, Any], props: List[Dict[str, Any]], slug: str)
       <nav class="ah-nav" aria-label="Principale">
         <a href="#contatti">Contatti</a>
         <a href="#links">Links</a>
-        <a href="/api/p/{escape(slug)}/">Home</a>
+        <a class="on" href="/api/p/{escape(slug)}/">Home</a>
         <a href="#chi-siamo">Chi siamo</a>
-        <a href="/api/p/{escape(slug)}/lista">Vendita</a>
+        <a href="/api/p/{escape(slug)}/lista?op=sale">Vendita</a>
         <a href="/api/p/{escape(slug)}/lista?op=rent">Affitto</a>
       </nav>
     """
@@ -633,21 +704,19 @@ def render_index(agency: Dict[str, Any], props: List[Dict[str, Any]], slug: str)
 <body class="agency-home" data-theme="{cfg['theme_id']}" data-testid="agency-home">
   <div class="ah-wrap">
     <div class="ah-top">
-      <a class="ah-brand" href="/api/p/{escape(slug)}/">
-        {logo_html}
-        <span class="ah-brand-name">{escape(name)}</span>
+      <a class="ah-brand" href="/api/p/{escape(slug)}/" data-testid="agency-home-brand">
+        {brand_html}
       </a>
       {nav}
     </div>
     <div class="ah-hero" data-testid="agency-home-hero" {hero_style}>
       <div class="ah-hero-inner">
-        <strong>{escape(name)}</strong>
         <div class="ah-hero-dots" aria-hidden="true"><span class="on"></span><span></span><span></span></div>
       </div>
     </div>
     <div class="{search_row_cls}" data-testid="agency-home-search-row">
       {mls_html}
-      {_agency_search_box()}
+      {_agency_search_box(lista_href)}
     </div>
     {_cards_section("In evidenza", "evidenza", featured_html)}
     {_cards_section("Ultimi annunci inseriti", "ultimi", latest_html)}
@@ -704,29 +773,31 @@ def render_listing(
         op_q = ""
     title = f"{heading} — {name}"
     desc = f"{len(filtered)} annunci pubblicati da {name} su OMNIA."
-    logo = cfg.get("logo_url")
-    logo_html = (
-        f'<img src="{escape(logo)}" alt="{escape(name)}"/>'
-        if logo else ""
-    )
+    brand_html = _brand_mark(cfg.get("logo_url"), name)
     cards = "".join(_home_card(p, slug) for p in filtered[:48]) or (
         '<div class="ah-empty">Nessun immobile in questa lista.</div>'
+    )
+    count_line = (
+        f'<p class="ah-list-count">Sono stati trovati <strong>{len(filtered)}</strong> immobili.</p>'
+        if filtered else ""
     )
     nav = f"""
       <nav class="ah-nav" aria-label="Principale">
         <a href="/api/p/{escape(slug)}/#contatti">Contatti</a>
+        <a href="/api/p/{escape(slug)}/#links">Links</a>
         <a href="/api/p/{escape(slug)}/">Home</a>
-        <a href="/api/p/{escape(slug)}/lista?op=sale">Vendita</a>
-        <a href="/api/p/{escape(slug)}/lista?op=rent">Affitto</a>
-      </nav>
-    """
-    tabs = f"""
-      <div class="ah-list-tabs" data-testid="agency-listing-tabs">
-        <a class="{'on' if not op_q else ''}" href="/api/p/{escape(slug)}/lista">Tutti</a>
+        <a href="/api/p/{escape(slug)}/#chi-siamo">Chi siamo</a>
         <a class="{'on' if op_q == 'sale' else ''}" href="/api/p/{escape(slug)}/lista?op=sale">Vendita</a>
         <a class="{'on' if op_q == 'rent' else ''}" href="/api/p/{escape(slug)}/lista?op=rent">Affitto</a>
-      </div>
+      </nav>
     """
+    mls_on = bool(agency.get("mls_enabled"))
+    network_count = int(agency.get("_mls_network_count") or 0)
+    side_bits = []
+    if mls_on:
+        side_bits.append(_mls_search_box(network_count))
+    side_bits.append(_agency_search_box(f"/api/p/{escape(slug)}/lista"))
+    side_html = "".join(side_bits)
     return f"""<!DOCTYPE html>
 <html lang="it">
 <head>
@@ -738,29 +809,29 @@ def render_listing(
 <meta name="generator" content="OMNIA Real Estate Ecosystem"/>
 <style>{_theme_css(cfg)}
 {_home_css()}
-.ah-list-tabs{{display:flex;gap:8px;margin:12px 0 18px;flex-wrap:wrap}}
-.ah-list-tabs a{{padding:8px 14px;border:1px solid #ccc;background:#fff;font-size:.85rem;text-decoration:none}}
-.ah-list-tabs a.on{{background:var(--o-primary);color:#fff;border-color:var(--o-primary)}}
+.ah-list-count{{font-size:.9rem;color:#555;margin:0 0 14px}}
 </style>
 </head>
 <body class="agency-home" data-theme="{cfg['theme_id']}" data-testid="agency-listing">
   <div class="ah-wrap">
     <div class="ah-top">
-      <a class="ah-brand" href="/api/p/{escape(slug)}/">
-        {logo_html}
-        <span class="ah-brand-name">{escape(name)}</span>
-      </a>
+      <a class="ah-brand" href="/api/p/{escape(slug)}/" data-testid="agency-listing-brand">{brand_html}</a>
       {nav}
     </div>
-    <section class="ah-section" id="lista">
-      <h2>{escape(heading)}</h2>
-      {tabs}
-      <div class="ah-cards" data-testid="agency-listing-cards">{cards}</div>
-    </section>
+    <div class="ah-list-layout">
+      <section class="ah-section ah-list-main" id="lista">
+        <h2>{escape(heading)}</h2>
+        {count_line}
+        <div class="ah-cards" data-testid="agency-listing-cards">{cards}</div>
+      </section>
+      <aside class="ah-list-side" data-testid="agency-listing-search-side">
+        {side_html}
+      </aside>
+    </div>
   </div>
   <footer class="ah-footer">
     <div class="ah-footer-inner">
-      <div><h3>{escape(name)}</h3><p>Portafoglio su OMNIA · clone best-effort</p></div>
+      <div><h3>{escape(name)}</h3><p>Portafoglio su OMNIA</p></div>
     </div>
   </footer>
 </body>
@@ -776,7 +847,8 @@ def render_property(agency: Dict[str, Any], p: Dict[str, Any], slug: str) -> str
     cover_idx = next((i for i, ph in enumerate(photos) if ph.get("is_cover")), 0 if photos else None)
     og_image = f"/api/public/property/{p['id']}/photo/{cover_idx}" if cover_idx is not None else None
     og_image_abs = f"{base}{og_image}" if og_image and base else og_image
-    title = f"{p.get('title')} — {agency.get('display_name')}"
+    name = agency.get("display_name") or agency.get("name") or ""
+    title = f"{p.get('title')} — {name}"
     price = _price_str(p)
     desc = (
         f"{p.get('property_type','')} in {p.get('operation','')} a {p.get('city','')} · "
@@ -787,12 +859,6 @@ def render_property(agency: Dict[str, Any], p: Dict[str, Any], slug: str) -> str
         f'<img src="/api/public/property/{p["id"]}/photo/{i}" alt="{escape(p.get("title") or "")} foto {i+1}" loading="lazy"/>'
         for i in range(len(photos))
     )
-    feats = p.get("features") or {}
-    feats_keys = (
-        [k for k, v in feats.items() if v] if isinstance(feats, dict)
-        else (feats if isinstance(feats, list) else [])
-    )
-    feats_html = "".join(f"<span>{escape(k.replace('_', ' '))}</span>" for k in feats_keys)
     en = p.get("energy") or {}
 
     def cell(label: str, value: Any) -> str:
@@ -819,30 +885,19 @@ def render_property(agency: Dict[str, Any], p: Dict[str, Any], slug: str) -> str
         f'<h2>Descrizione</h2><div class="description">{escape(p.get("description") or "")}</div>'
         if p.get("description") else ""
     )
-    features_block = (
-        f'<h2>Caratteristiche</h2><div class="features">{feats_html}</div>' if feats_html else ""
-    )
-
-    share_title = f"{p.get('title') or ''} — {agency.get('display_name') or ''}".strip(" —")
+    share_title = f"{p.get('title') or ''} — {name}".strip(" —")
     share_text = f"{share_title} · {price}"
     share_html = _share_block(absolute_url, share_title, share_text)
-
-    body = f"""
-    <h1>{escape(p.get('title') or '—')}</h1>
-    <p class="meta">{escape(p.get('city') or '')}{(' · ' + escape(p.get('zone'))) if p.get('zone') else ''} · Rif. {escape(p.get('reference_code') or '—')}</p>
-    <p class="price">{escape(price)}</p>
-    {f'<div class="photos">{photo_html}</div>' if photos else ''}
-    <h2>Caratteristiche principali</h2>
-    <div class="grid">{cells}</div>
-    {description_block}
-    {features_block}
-    {share_html}
-    <div class="card">
-      <strong>Contatta {escape(agency.get('display_name') or '')}</strong>
-      <p class="meta" style="margin-top:.4rem">Per maggiori informazioni su questo immobile, contatta direttamente l'agenzia.</p>
-    </div>
+    brand_html = _brand_mark(cfg.get("logo_url"), name)
+    contact_html = _contact_form(agency, str(p.get("reference_code") or p.get("id") or ""))
+    nav = f"""
+      <nav class="ah-nav" aria-label="Principale">
+        <a href="/api/p/{escape(slug)}/#contatti">Contatti</a>
+        <a href="/api/p/{escape(slug)}/">Home</a>
+        <a href="/api/p/{escape(slug)}/lista?op=sale">Vendita</a>
+        <a href="/api/p/{escape(slug)}/lista?op=rent">Affitto</a>
+      </nav>
     """
-
     jsonld_obj = {
         "@context": "https://schema.org",
         "@type": "Product",
@@ -856,11 +911,53 @@ def render_property(agency: Dict[str, Any], p: Dict[str, Any], slug: str) -> str
             "priceCurrency": "EUR",
             "price": p.get("price") or p.get("rent_monthly"),
             "availability": "https://schema.org/InStock",
-            "seller": {"@type": "RealEstateAgent", "name": agency.get("display_name")},
+            "seller": {"@type": "RealEstateAgent", "name": name},
         },
         "areaServed": p.get("city"),
         "url": absolute_url,
     }
-    return _shell(cfg, agency, title, desc, absolute_url, og_image_abs,
-                  json.dumps(jsonld_obj, ensure_ascii=False), body)
+    og_img = f'<meta property="og:image" content="{escape(og_image_abs)}"/>' if og_image_abs else ""
+    return f"""<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>{escape(title)}</title>
+<meta name="description" content="{escape(desc)}"/>
+<link rel="canonical" href="{escape(absolute_url)}"/>
+<meta property="og:type" content="website"/>
+<meta property="og:title" content="{escape(title)}"/>
+<meta property="og:description" content="{escape(desc)}"/>
+<meta property="og:url" content="{escape(absolute_url)}"/>
+{og_img}
+<meta name="generator" content="OMNIA Real Estate Ecosystem"/>
+<style>{_theme_css(cfg)}
+{_home_css()}
+{_share_css()}</style>
+<script type="application/ld+json">{json.dumps(jsonld_obj, ensure_ascii=False)}</script>
+</head>
+<body class="agency-home" data-theme="{cfg['theme_id']}" data-testid="agency-property">
+  <div class="ah-wrap">
+    <div class="ah-top">
+      <a class="ah-brand" href="/api/p/{escape(slug)}/" data-testid="agency-property-brand">{brand_html}</a>
+      {nav}
+    </div>
+    <div class="ah-prop-layout">
+      <article class="ah-prop-main">
+        <h1>{escape(p.get('title') or '—')}</h1>
+        <p class="meta">{escape(p.get('city') or '')}{(' · ' + escape(p.get('zone'))) if p.get('zone') else ''} · Rif. {escape(p.get('reference_code') or '—')}</p>
+        <p class="price">{escape(price)}</p>
+        {f'<div class="photos">{photo_html}</div>' if photos else ''}
+        <h2>Caratteristiche principali</h2>
+        <div class="grid">{cells}</div>
+        {description_block}
+        {share_html}
+      </article>
+      <div class="ah-list-side">
+        {contact_html}
+      </div>
+    </div>
+  </div>
+</body>
+</html>"""
 

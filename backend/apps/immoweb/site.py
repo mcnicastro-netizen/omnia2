@@ -178,6 +178,22 @@ async def site_listing(slug: str, op: str = ""):
     props = await db.properties.find(
         brand_site_filter(agency["id"]), {"_id": 0},
     ).sort("updated_at", -1).to_list(length=200)
+    if agency.get("mls_enabled"):
+        agency = dict(agency)
+        try:
+            agency["_mls_network_count"] = int(
+                await db.properties.count_documents(
+                    with_not_trashed({
+                        "status": "active",
+                        "mls_shared": True,
+                        "visibility": {"$in": ["public", "mls_only"]},
+                        "agency_id": {"$ne": agency["id"]},
+                        "is_private_listing": {"$ne": True},
+                    })
+                )
+            )
+        except Exception:
+            agency["_mls_network_count"] = 0
     html = render_listing(agency, props, slug, operation=op or None)
     return Response(content=html, media_type="text/html; charset=utf-8")
 

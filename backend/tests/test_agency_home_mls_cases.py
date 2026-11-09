@@ -57,7 +57,7 @@ class TestAgencyHomeMlsCases:
         )
         html = render_index(agency, [_prop(1)], "agenzia-test")
         assert 'data-testid="agency-home-mls-box"' in html
-        assert "Powered by OMNIA" in html
+        assert "Powered by" in html and "OMNIA" in html
         assert 'data-testid="agency-home-mls-network"' in html
         assert "Immobili dalla Rete MLS Partner" in html
         assert 'data-testid="agency-home-mls-chip"' in html
@@ -77,7 +77,25 @@ class TestAgencyHomeMlsCases:
         listing = render_listing(agency, props, "agenzia-test", operation="sale")
         assert 'data-testid="agency-listing"' in listing
         assert "Immobili in vendita" in listing
+        assert 'data-testid="agency-listing-search-side"' in listing
+        assert "Cerca il tuo immobile" in listing
         assert "/api/p/agenzia-test/lista" in listing
         scheda = render_property(agency, props[0], "agenzia-test")
         assert "Appartamento 1" in scheda
         assert "<h1>" in scheda
+        assert 'data-testid="agency-property-contact"' in scheda
+        assert "Contattaci" in scheda
+        assert "Invia il modulo" in scheda
+
+    def test_logo_does_not_duplicate_agency_name_text(self):
+        agency = _agency(
+            mls_enabled=False,
+            website={"theme_config": {"theme_id": "classic", "logo_url": "https://cdn.example/logo.png"}},
+        )
+        html = render_index(agency, [_prop(1)], "agenzia-test")
+        assert 'src="https://cdn.example/logo.png"' in html
+        # brand mark = logo only (no second text span next to it)
+        assert 'data-testid="agency-home-brand"' in html
+        brand = html.split('data-testid="agency-home-brand"', 1)[1].split("</a>", 1)[0]
+        assert "ah-brand-name" not in brand
+        assert "<img" in brand
