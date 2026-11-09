@@ -52,17 +52,19 @@ Vetrina istituzionale: `https://omniarealestateecosystem.it/it` (**D-146** + pap
 
 ---
 
-## Priorità (Founder 09-Nov: «stabilisci tu»)
+## Priorità (Founder 09-Nov: «arrivare a 8 in tutto»)
+
+SoT: [`PROGRAMMA_VERSO_8.md`](./PROGRAMMA_VERSO_8.md) — 11 onde (0…10).
 
 1. ✅ **A-040 / D-148 Paperless** — chiuso.
 2. ✅ **Themes split** — `themes.py` 1156 → ~216.
 3. ✅ **AuthZ fascicolo E2E** (D-095) — anti-IDOR agency-scoped.
 4. ✅ **Fascicolo blob delete** — `delete_object` best-effort su delete documento.
 5. ✅ **Trash purge → blob** — hard-delete immobile pulisce Object Storage.
-6. **Prossimo SaaS (opz.)**: orphan GC scanner · oppure prodotto (clone A-037 / dogfood).
+6. **Prossima onda default**: **0** merge gallery 8 (#137) → **1** storia dogfood *oppure* **2** split `public_portal`.
 
 ## Filo prodotto
 
-1. **09-Nov chiuso:** A-040/D-148 · themes · AuthZ fascicolo · blob delete · trash→blob.
+1. **09-Nov chiuso:** A-040/D-148 · themes · AuthZ fascicolo · blob delete · trash→blob · pack 8 live (branch).
 2. **06-Nov chiuso:** Nicastro · www · Kling · staging split.
-3. Prossimo prodotto consigliato: dogfood Nicastro / A-037 clone (SaaS media path chiuso per il filo corrente).
+3. Verso 8: storia → elefanti portal/theme_render/FE → SaaS AuthZ/orphan/backup/GDPR.
