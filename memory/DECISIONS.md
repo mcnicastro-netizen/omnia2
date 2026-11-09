@@ -1814,7 +1814,7 @@ Registro di tutte le decisioni di business e tecniche prese durante il progetto.
   3. ✅ **Blob delete su fascicolo document delete** (09-Nov): dopo `$pull` Mongo → best-effort `delete_object(storage_path)` (legacy base64 senza path = no-op). Emergent backend resta no-op finché non supporta delete.
   4. ✅ **Trash purge → blob** (09-Nov T-02): `purge_item_now` / `run_trash_purge` su property raccolgono path da photos/videos/floor_plans/documents e `delete_object` best-effort **prima** del delete Mongo.
   5. ⏳ Orphan GC globale (blob senza record Mongo) — pezzo distinto, non in questo filo.
-- **Stato**: ✅ DOMINIO · ✅ AuthZ fascicolo · ✅ delete blob fascicolo · ✅ trash→blob · ⏳ orphan GC scanner
+- **Stato**: ✅ DOMINIO · ✅ AuthZ fascicolo · ✅ delete blob fascicolo · ✅ trash→blob · ✅ orphan GC scanner (D-102)
 
 ### D-096 — Backup + Restore progettati insieme · restore agency-first · 29-Set-2026
 - **Data**: 29 Settembre 2026
@@ -1908,8 +1908,8 @@ Registro di tutte le decisioni di business e tecniche prese durante il progetto.
   2. Convergenza graduale: **Cestino → purge → cleanup file orphan** nel ciclo automatico OMNIA (APScheduler, stessa istanza D-101).
   3. Non richiede subito un sistema sofisticato: richiede che una pulizia necessaria **non** resti senza processo automatico.
   4. Allinea D-098 (WHEN col bak) e D-095 (blob lifecycle).
-- **Implementazione**: ❌ codice ⏳ — post-audit / «vai» (job + eventuale osservabilità O-*).
-- **Stato**: ✅ **DECISIONE DI DOMINIO REGISTRATA** (docs 29-Set-2026) · codice ⏳
+- **Implementazione**: ✅ codice (Onda 7) — `orphan_gc.py` + `list_object_keys` local · APScheduler `trash_purge_daily` 04:15 UTC + `orphan_gc_daily` 04:30 UTC · cron manuale `POST /cron/storage/orphan-gc` · grace `ORPHAN_GC_MIN_AGE_HOURS` (default 48) · kill-switch `ORPHAN_GC_DRY_RUN=1`.
+- **Stato**: ✅ **DECISIONE DI DOMINIO REGISTRATA** (docs 29-Set-2026) · ✅ codice 09-Nov-2026
 
 ### D-103 — No worker dedicato ora; eventuale anti-duplicato minimo · 29-Set-2026
 - **Data**: 29 Settembre 2026

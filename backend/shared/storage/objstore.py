@@ -10,7 +10,7 @@ import mimetypes
 import os
 import threading
 from pathlib import Path
-from typing import Optional
+from typing import List, Optional, Tuple
 
 import requests
 
@@ -143,3 +143,30 @@ def delete_object(path: str) -> None:
             dest.unlink()
         return
     logger.info("delete_object no-op for emergent path=%s", path)
+
+
+def list_object_keys(prefix: str = "omnia/") -> List[Tuple[str, float]]:
+    """List object keys under prefix with mtime (epoch seconds).
+
+    Local backend: walk filesystem. Emergent: empty list (no list API wired).
+    Returns [(relative_path, mtime), ...].
+    """
+    prefix = (prefix or "").lstrip("/")
+    if _backend() != "local":
+        logger.warning("list_object_keys unsupported for backend=%s", _backend())
+        return []
+    root = _local_root()
+    base = root / prefix if prefix else root
+    if not base.exists():
+        return []
+    out: List[Tuple[str, float]] = []
+    for fp in base.rglob("*"):
+        if not fp.is_file():
+            continue
+        rel = fp.relative_to(root).as_posix()
+        try:
+            mtime = fp.stat().st_mtime
+        except OSError:
+            continue
+        out.append((rel, mtime))
+    return out
