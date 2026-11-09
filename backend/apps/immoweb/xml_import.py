@@ -30,6 +30,7 @@ from pydantic import BaseModel, Field
 
 from shared.db.connection import Database
 from shared.auth.dependencies import require_roles
+from shared.auth.tenant import require_agency_404
 from shared.importers.universal_xml import parse_xml_feed
 from shared.models.property import ImportJob
 
@@ -51,10 +52,8 @@ def _cleanup_sessions() -> None:
 
 
 def _agency_id_of(user: dict) -> str:
-    agencies = user.get("agency_ids") or []
-    if not agencies:
-        raise HTTPException(status_code=404, detail="no_agency")
-    return agencies[0]
+    """Agency attiva (D-106): mai agency_ids[0] — evita import sulla tenant sbagliata."""
+    return require_agency_404(user)
 
 
 class CommitBody(BaseModel):

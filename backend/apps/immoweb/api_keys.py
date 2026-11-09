@@ -35,10 +35,9 @@ def _to_public(doc: dict) -> dict:
 
 
 def _agency_id_of(user: dict) -> str:
-    agencies = user.get("agency_ids") or []
-    if not agencies:
-        raise HTTPException(status_code=404, detail="no_agency")
-    return agencies[0]
+    """Agency attiva (D-106): mai agency_ids[0]."""
+    from shared.auth.tenant import require_agency_404
+    return require_agency_404(user)
 
 
 # ---------------- LIST ----------------

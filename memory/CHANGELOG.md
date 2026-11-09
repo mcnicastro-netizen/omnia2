@@ -1,3 +1,11 @@
+## 2026-11-09 — Smoke migrazione dual-role + harden D-106 / login
+
+- Smoke E2E `agency_admin` + `super_admin`: clone_build → MLS leave/join (box sito) → XML preview/commit
+- Agent role: 403 su clone/MLS join-leave/XML import
+- Fix: `xml_import` + `api_keys` usano `active_agency_id` (D-106), non `agency_ids[0]`
+- Fix: `_public` login non 500 se manca `name`/timestamp (bug stile «biglietto d'ingresso»)
+- Test: `test_xml_import_active_agency.py` · `test_auth_public_payload.py`
+
 ## 2026-11-09 — D-149 clone_ready: preview home+lista+scheda
 
 - `POST /app/website/clone-capture` (build=true default) + `POST /clone-build`
