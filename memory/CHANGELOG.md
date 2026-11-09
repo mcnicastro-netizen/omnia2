@@ -1,3 +1,11 @@
+## 2026-11-09 — Orphan GC + trash purge APScheduler (Onda 7 · D-102)
+
+- `list_object_keys` (local) in `shared/storage/objstore.py`
+- `apps/immoweb/orphan_gc.py`: scan Mongo refs vs disk · grace 48h · max_delete · `ORPHAN_GC_DRY_RUN`
+- APScheduler: `trash_purge_daily` 04:15 UTC · `orphan_gc_daily` 04:30 UTC
+- Cron manuale `POST /cron/storage/orphan-gc`
+- Test `test_orphan_gc.py`
+
 ## 2026-11-09 — AuthZ storage_path sweep (Onda 6 · D-095)
 
 - `shared/auth/storage_paths.py`: prefix fascicolo/modulistica obbligatorio al download

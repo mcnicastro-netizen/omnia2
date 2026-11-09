@@ -10,6 +10,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from shared.auth.dependencies import get_current_user
 from apps.immocloud.saved_searches import run_all_active_saved_searches
 from apps.immoweb.trash import run_trash_purge
+from apps.immoweb.orphan_gc import run_orphan_gc
 from apps.immoweb.backup_job import run_daily_backup
 from apps.immoweb.request_matching_job import run_all_request_matching
 from apps.billing.b2c_listing_publish import run_expire_paid_listing_slots
@@ -45,6 +46,19 @@ async def cron_purge_trash(user: dict = Depends(get_current_user)):
         raise HTTPException(status_code=403, detail="cron_forbidden")
     result = await run_trash_purge()
     return {**(result if isinstance(result, dict) else {"result": result}), "trigger": "manual", "owner": "apscheduler"}
+
+
+@router.post("/storage/orphan-gc")
+async def cron_orphan_gc(
+    dry_run: bool = False,
+    max_delete: int = 500,
+    user: dict = Depends(get_current_user),
+):
+    """D-102 — scan/delete orphan Object Storage keys. Trigger manuale."""
+    if user.get("role") not in ALLOWED_ROLES:
+        raise HTTPException(status_code=403, detail="cron_forbidden")
+    result = await run_orphan_gc(dry_run=dry_run, max_delete=max_delete)
+    return {**result, "trigger": "manual", "owner": "apscheduler"}
 
 
 @router.post("/backup/daily")
