@@ -1,3 +1,8 @@
+## 2026-11-09 — PropertyDetail split MOVE-ONLY (Onda 5)
+
+- Estratti `propertyDetailUtils` · ShareBar · InfoCell · Contact · Schema
+- `PropertyDetailPage.jsx` 1276 → **~832** · Babel parse OK · zero feature nuove
+
 ## 2026-11-09 — SellPage split MOVE-ONLY (Onda 4)
 
 - Estratti `sellConstants` · `sellPayload` · `SellFormPrimitives` · `SellListingForm`
