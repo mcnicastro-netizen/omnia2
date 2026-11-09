@@ -1,6 +1,11 @@
-"""OMNIA — Cestino (trash): lista, ripristino, eliminazione definitiva, purge."""
+"""OMNIA — Cestino (trash): lista, ripristino, eliminazione definitiva, purge.
+
+D-095 / T-02: purge definitiva di un immobile elimina anche i blob Object Storage
+associati (foto/video/documenti fascicolo), best-effort.
+"""
 from __future__ import annotations
 
+import logging
 from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -15,10 +20,13 @@ from shared.db.trash import (
     purge_cutoff_iso,
     restore_update,
 )
+from shared.storage import delete_object
 
+logger = logging.getLogger("omnia.trash")
 router = APIRouter(prefix="/trash", tags=["trash"])
 
 _ADMIN = ("agency_admin", "super_admin")
+_MEDIA_PREFIX = "/api/media/"
 
 
 def _prop_item(doc: dict) -> dict:
@@ -54,6 +62,57 @@ def _client_item(doc: dict) -> dict:
         "deleted_at": doc.get("deleted_at"),
         "days_left": days_left_in_trash(doc.get("deleted_at")),
     }
+
+
+def _path_from_media_url(url: str) -> Optional[str]:
+    u = (url or "").strip()
+    if u.startswith(_MEDIA_PREFIX):
+        return u[len(_MEDIA_PREFIX):].lstrip("/")
+    return None
+
+
+def collect_property_blob_paths(prop: dict) -> List[str]:
+    """Gather Object Storage paths for a property about to be hard-deleted."""
+    paths: List[str] = []
+    seen = set()
+
+    def _add(path: Optional[str]) -> None:
+        if not path:
+            return
+        p = path.lstrip("/")
+        if p and p not in seen:
+            seen.add(p)
+            paths.append(p)
+
+    for key in ("photos", "videos", "floor_plans"):
+        for item in prop.get(key) or []:
+            if not isinstance(item, dict):
+                continue
+            _add(item.get("storage_path"))
+            _add(_path_from_media_url(str(item.get("url") or "")))
+
+    for doc in prop.get("documents") or []:
+        if isinstance(doc, dict):
+            _add(doc.get("storage_path"))
+
+    return paths
+
+
+def purge_property_blobs(prop: dict) -> int:
+    """Best-effort delete_object for property media. Returns attempted count."""
+    n = 0
+    for path in collect_property_blob_paths(prop):
+        try:
+            delete_object(path)
+            n += 1
+        except Exception:
+            logger.warning(
+                "trash blob purge failed prop=%s path=%s",
+                prop.get("id"),
+                path,
+                exc_info=True,
+            )
+    return n
 
 
 @router.get("")
@@ -133,12 +192,25 @@ async def purge_item_now(
     agency_id = await _require_agency(user)
     db = Database.get()
     coll = _collection(db, kind)
-    result = await coll.delete_one(
-        {"id": item_id, "agency_id": agency_id, **in_trash()}
-    )
+    flt = {"id": item_id, "agency_id": agency_id, **in_trash()}
+    doc = await coll.find_one(flt, {"_id": 0})
+    if not doc:
+        raise HTTPException(status_code=404, detail="trash_item_not_found")
+
+    blobs = 0
+    if kind == "property":
+        blobs = purge_property_blobs(doc)
+
+    result = await coll.delete_one(flt)
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="trash_item_not_found")
-    return {"status": "ok", "purged": True, "kind": kind, "id": item_id}
+    return {
+        "status": "ok",
+        "purged": True,
+        "kind": kind,
+        "id": item_id,
+        "blobs_purged": blobs,
+    }
 
 
 @router.post("/purge-expired")
@@ -155,14 +227,25 @@ async def run_trash_purge() -> Dict[str, Any]:
     db = Database.get()
     cutoff = purge_cutoff_iso()
     flt = {"deleted_at": {"$exists": True, "$nin": [None, ""], "$lte": cutoff}}
-    props = await db.properties.delete_many(flt)
+
+    # Find properties first so we can purge blobs before Mongo delete_many.
+    props = await db.properties.find(
+        flt,
+        {"_id": 0, "id": 1, "photos": 1, "videos": 1, "floor_plans": 1, "documents": 1},
+    ).to_list(length=5000)
+    blobs = 0
+    for p in props:
+        blobs += purge_property_blobs(p)
+
+    props_res = await db.properties.delete_many(flt)
     clients = await db.clients.delete_many(flt)
     return {
         "ok": True,
         "cutoff": cutoff,
         "retention_days": TRASH_RETENTION_DAYS,
-        "purged_properties": props.deleted_count,
+        "purged_properties": props_res.deleted_count,
         "purged_clients": clients.deleted_count,
+        "blobs_purged": blobs,
     }
 
 

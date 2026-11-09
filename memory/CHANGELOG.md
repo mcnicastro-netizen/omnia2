@@ -1,3 +1,9 @@
+## 2026-11-09 — SaaS slice: trash purge → blob (D-095 T-02)
+
+- `purge_item_now` / `run_trash_purge`: prima di cancellare l’immobile, best-effort `delete_object` su foto/video/planimetrie/documenti
+- Client purge = solo Mongo (nessun blob tipico)
+- Test `test_trash_blob_purge.py` · O1 regression · orphan GC scanner resta ⏳
+
 ## 2026-11-09 — SaaS slice: fascicolo blob delete (D-095 M-02)
 
 - `DELETE .../documents/{id}`: dopo pull Mongo → `delete_object(storage_path)` best-effort
