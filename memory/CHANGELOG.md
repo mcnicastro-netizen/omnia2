@@ -1,3 +1,10 @@
+## 2026-11-09 — Tenant helpers + chiusura filo 2–10 (Onda 10)
+
+- Alias `require_agency_id` · migrazione xml_import/api_keys/themes/custom_domain/staging/hal/valuation_pdf via `active_agency_id` (no `agency_ids[0]`)
+- Test `test_tenant_helpers_onda10.py`
+- Voti: **Manutenibilità 8** · **SaaS 8** · Storia: gallery 8 ora su main (#137)
+- SoT `memory/PROGRAMMA_VERSO_8.md` aggiornato
+
 ## 2026-11-09 — D-151 gallery 8 live (€199 pack)
 
 - Live: `atelier` · `cinematic` · `editorial` · `mediterranean` (+ polish Bold/Luxury)

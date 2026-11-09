@@ -58,11 +58,10 @@ class ApplyThemeRequest(BaseModel):
     hero_image_url: Optional[str] = Field(default=None, max_length=500)
 
 async def _agency_for(user: dict) -> Dict[str, Any]:
-    ag_ids = user.get("agency_ids") or []
-    if not ag_ids:
-        raise HTTPException(status_code=400, detail="no_agency")
+    from shared.auth.tenant import require_agency
+    aid = require_agency(user)
     db = Database.get()
-    a = await db.agencies.find_one({"id": ag_ids[0]})
+    a = await db.agencies.find_one({"id": aid})
     if not a:
         raise HTTPException(status_code=404, detail="agency_not_found")
     return a

@@ -772,7 +772,8 @@ async def valuation_report_pdf(
 
     branding: Dict[str, Any] = dict(OMNIA_BRAND)
     if user:
-        agency_id = user.get("agency_id") or (user.get("agency_ids") or [None])[0]
+        from shared.auth.tenant import optional_agency_id
+        agency_id = optional_agency_id(user)
         if agency_id:
             db = Database.get()
             ag = await db.agencies.find_one(

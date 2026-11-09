@@ -42,6 +42,7 @@ from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 
 from shared.auth.dependencies import require_roles
+from shared.auth.tenant import optional_agency_id
 from shared.db.connection import Database
 from shared.models.base import OmniaBaseModel, utcnow_iso
 
@@ -642,7 +643,7 @@ async def hal_ask(
         db = Database.get()
         await db.hal_knowledge_sessions.insert_one({
             "id": str(uuid4()),
-            "agency_id": (user.get("agency_ids") or [None])[0],
+            "agency_id": optional_agency_id(user),
             "user_id": user.get("id"),
             "question": question,
             "answer": None,
@@ -686,7 +687,7 @@ async def hal_ask(
     await db.hal_knowledge_sessions.insert_one({
         "id": str(uuid4()),
         "session_id": session_id,
-        "agency_id": (user.get("agency_ids") or [None])[0],
+        "agency_id": optional_agency_id(user),
         "user_id": user.get("id"),
         "question": question,
         "answer": gen["text"],
