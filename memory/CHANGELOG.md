@@ -1,3 +1,9 @@
+## 2026-11-09 — SaaS slice: fascicolo blob delete (D-095 M-02)
+
+- `DELETE .../documents/{id}`: dopo pull Mongo → `delete_object(storage_path)` best-effort
+- Legacy base64 (no path) = skip · errori storage non bloccano la delete UI
+- Test O1: 10 passed · orphan GC / trash purge resta ⏳
+
 ## 2026-11-09 — SaaS slice: AuthZ fascicolo E2E (D-095 / O1a)
 
 - Scelta vs media-blob: AuthZ prima (D-099) — IDOR su documenti Nicastro

@@ -87,3 +87,51 @@ def test_fascicolo_get_property_cross_tenant_404():
         assert q["agency_id"] == "agency-b"
 
     asyncio.run(_run())
+
+
+def test_best_effort_purge_doc_blob_calls_delete_object():
+    from apps.immoweb import fascicolo as fz
+    from unittest.mock import patch
+
+    with patch.object(fz, "delete_object") as dig:
+        fz._best_effort_purge_doc_blob({"id": "d1", "storage_path": "omnia/fascicolo/p1/d1"})
+        dig.assert_called_once_with("omnia/fascicolo/p1/d1")
+
+
+def test_best_effort_purge_skips_legacy_base64_docs():
+    from apps.immoweb import fascicolo as fz
+    from unittest.mock import patch
+
+    with patch.object(fz, "delete_object") as dig:
+        fz._best_effort_purge_doc_blob({"id": "d1", "file_data": "AAAA"})
+        dig.assert_not_called()
+
+
+def test_best_effort_purge_swallows_storage_errors():
+    from apps.immoweb import fascicolo as fz
+    from unittest.mock import patch
+
+    with patch.object(fz, "delete_object", side_effect=RuntimeError("boom")):
+        fz._best_effort_purge_doc_blob({"id": "d1", "storage_path": "omnia/fascicolo/p1/d1"})
+
+
+def test_delete_document_purges_blob_after_mongo_pull():
+    from apps.immoweb import fascicolo as fz
+    from unittest.mock import AsyncMock, MagicMock, patch
+
+    doc = {"id": "d1", "storage_path": "omnia/fascicolo/p1/d1", "name": "ape.pdf"}
+    db = MagicMock()
+    db.properties.find_one = AsyncMock(return_value={"id": "p1", "agency_id": "a1", "documents": [doc]})
+    db.properties.update_one = AsyncMock(return_value=MagicMock(modified_count=1))
+    user = {"id": "u1", "agency_ids": ["a1"], "active_agency_id": "a1"}
+
+    async def _run():
+        with patch.object(fz.Database, "get", return_value=db), \
+             patch.object(fz, "delete_object") as dig:
+            out = await fz.delete_document("p1", "d1", user=user)
+            assert out == {"ok": True}
+            dig.assert_called_once_with("omnia/fascicolo/p1/d1")
+            q = db.properties.update_one.await_args.args[0]
+            assert q == {"id": "p1", "agency_id": "a1"}
+
+    asyncio.run(_run())

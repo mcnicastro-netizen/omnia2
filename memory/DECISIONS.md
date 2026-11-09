@@ -1811,8 +1811,9 @@ Registro di tutte le decisioni di business e tecniche prese durante il progetto.
 - **Implementazione**:
   1. ✅ **Accesso O1a** (30-Set): `/api/media` blocca `omnia/fascicolo/` e `omnia/modulistica/` (`_is_blocked_path`).
   2. ✅ **AuthZ fascicolo E2E** (09-Nov Founder «vai» SaaS): `_get_property` richiede `active_agency_id` + filtro `agency_id` su get/update (anti-IDOR); update scoped; test O1 allineati.
-  3. ⏳ Lifecycle blob (delete Mongo → delete object / orphan GC) — pezzo successivo.
-- **Stato**: ✅ DOMINIO · ✅ AuthZ fascicolo E2E · ⏳ blob lifecycle
+  3. ✅ **Blob delete su fascicolo document delete** (09-Nov): dopo `$pull` Mongo → best-effort `delete_object(storage_path)` (legacy base64 senza path = no-op). Emergent backend resta no-op finché non supporta delete.
+  4. ⏳ Orphan GC globale / purge cestino → blob (M-02/T-02) — pezzo successivo.
+- **Stato**: ✅ DOMINIO · ✅ AuthZ fascicolo · ✅ delete blob fascicolo · ⏳ orphan GC / trash purge
 
 ### D-096 — Backup + Restore progettati insieme · restore agency-first · 29-Set-2026
 - **Data**: 29 Settembre 2026

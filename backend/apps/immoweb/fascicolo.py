@@ -17,7 +17,7 @@ from pydantic import BaseModel, Field
 
 from shared.auth.dependencies import get_current_user
 from shared.db.connection import Database
-from shared.storage import put_object, get_object, ObjStoreError
+from shared.storage import put_object, get_object, delete_object, ObjStoreError
 from shared.storage.quota import assert_can_upload
 from shared.auth.tenant import arequire_agency as _require_agency
 
@@ -303,16 +303,36 @@ async def download_document(property_id: str, doc_id: str, user=Depends(get_curr
     )
 
 
+def _best_effort_purge_doc_blob(doc: dict) -> None:
+    """D-095 M-02: remove Object Storage bytes after Mongo pull (never raise)."""
+    storage_path = (doc or {}).get("storage_path")
+    if not storage_path:
+        return  # legacy base64-only docs have no blob
+    try:
+        delete_object(storage_path)
+    except Exception:
+        logger.warning(
+            "fascicolo blob purge failed doc=%s path=%s",
+            doc.get("id"),
+            storage_path,
+            exc_info=True,
+        )
+
+
 @router.delete("/{property_id}/documents/{doc_id}")
 async def delete_document(property_id: str, doc_id: str, user=Depends(get_current_user)) -> Dict[str, bool]:
     db = Database.get()
-    await _get_property(db, user, property_id, {"_id": 1})
+    prop = await _get_property(db, user, property_id, {"_id": 0, "documents": 1})
+    doc = next((d for d in (prop.get("documents") or []) if d.get("id") == doc_id), None)
+    if not doc:
+        raise HTTPException(404, "Documento non trovato")
     res = await db.properties.update_one(
         _agency_property_filter(user, property_id),
         {"$pull": {"documents": {"id": doc_id}}},
     )
     if res.modified_count == 0:
         raise HTTPException(404, "Documento non trovato")
+    _best_effort_purge_doc_blob(doc)
     return {"ok": True}
 
 
