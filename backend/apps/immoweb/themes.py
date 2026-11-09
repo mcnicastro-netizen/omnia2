@@ -1,6 +1,7 @@
 """OMNIA — Theme Registry & Site Generation (M2.S5 Layer D Phase 2, D-022).
 
-MOVE-ONLY split: catalog → theme_catalog.py · HTML render → theme_render.py.
+MOVE-ONLY split: catalog → theme_catalog.py · CSS → theme_css.py ·
+shell/helpers → theme_common.py · home → theme_home.py · property → theme_render.py.
 This module keeps the FastAPI /website router and re-exports public symbols.
 """
 from __future__ import annotations
