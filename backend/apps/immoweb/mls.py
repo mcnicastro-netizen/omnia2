@@ -236,6 +236,7 @@ async def join_mls(
     body: JoinMlsBody,
     user: dict = Depends(require_roles("agency_admin", "super_admin")),
 ):
+    """Caso 1 migrazione: aderisce all'MLS OMNIA → box rete sul sito white-label."""
     if not body.accept_terms:
         raise HTTPException(status_code=400, detail="terms_required")
     db = Database.get()
@@ -251,11 +252,37 @@ async def join_mls(
                 "mls_enabled": True,
                 "mls_joined_at": _iso(),
                 "mls_province": province or None,
-            }
+            },
+            "$unset": {"mls_left_at": ""},
         },
     )
     await _log_event(db, aid, "join", {"province": province})
     return {"ok": True, "mls_enabled": True, "province_sigla": province or None}
+
+
+@router.post("/leave")
+async def leave_mls(
+    user: dict = Depends(require_roles("agency_admin", "super_admin")),
+):
+    """Caso 2: resta su OMNIA ma esce dalla rete — sito senza box MLS (D-149)."""
+    db = Database.get()
+    aid = _agency_id(user)
+    agency = await db.agencies.find_one({"id": aid}, {"_id": 0, "id": 1, "mls_enabled": 1})
+    if not agency:
+        raise HTTPException(status_code=404, detail="agency_not_found")
+    if not agency.get("mls_enabled"):
+        return {"ok": True, "mls_enabled": False, "already_left": True}
+    await db.agencies.update_one(
+        {"id": aid},
+        {
+            "$set": {
+                "mls_enabled": False,
+                "mls_left_at": _iso(),
+            }
+        },
+    )
+    await _log_event(db, aid, "leave", {})
+    return {"ok": True, "mls_enabled": False}
 
 
 @router.get("/inventory")

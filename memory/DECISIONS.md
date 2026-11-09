@@ -7,6 +7,17 @@ Registro di tutte le decisioni di business e tecniche prese durante il progetto.
 
 ## Decisioni prese
 
+### D-149 — Migrazione sito: casi 1–2 (clone + MLS on/off) · restyling in coda · 09-Nov-2026
+- **Data**: 9 Novembre 2026
+- **Contesto**: Founder chiarisce il bisogno commerciale. Agenzia con sito già pagato (es. Agestanet/altro gestionale) vuole trasferirsi in OMNIA **tenendo il look**. Restyling con template OMNIA rimandato a ridiscussione.
+- **Decisione**:
+  1. **Caso 1** — Trasferimento OMNIA + adesione MLS: sito white-label con **box ricerca rete** + sezione **Immobili dalla Rete MLS Partner**; flag `agency.mls_enabled=true` (`POST /app/mls/join`).
+  2. **Caso 2** — Trasferimento OMNIA **senza** MLS: stesso percorso sito, **zero** pezzi MLS (niente box, niente sezione rete, embed `/api/mls-box/*` → `mls_not_enabled`). Flag off di default o `POST /app/mls/leave`.
+  3. **Caso 3 (restyling / template pack)** — **IN CODA**. Non implementare finché Founder non ridiscute.
+  4. **Clone look (D-023/D-130)** resta P0 per casi 1–2 («sito uguale»). Fase A shippata: `POST /app/website/clone-capture` (cattura multi-pagina). `clone_ready=false` finché non esiste preview visitabile home+lista+scheda su API OMNIA.
+  5. Promessa commerciale: vietato dire «sito uguale / cloniamo» finché `clone_ready` non è true (conferma D-130).
+- **Stato**: ✅ DECISO · codice caso 1/2 sito + leave MLS + capture A ⏳ · clone full ⏳ · restyling ❌ coda
+
 ### D-148 — Paperless in messaggio vetrina (A-040) · senza spezzare D-129 · 09-Nov-2026
 - **Data**: 9 Novembre 2026
 - **Contesto**: Founder 06-Nov: paperless reale ma **non evidenziato** tra i pregi (A-040). D-129 lo classifica come necessario ma *non* messaggio primario (anti-appiattimento vs Arcanis).

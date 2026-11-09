@@ -128,23 +128,44 @@ async def site_index(slug: str):
     props = await db.properties.find(
         brand_site_filter(agency["id"]), {"_id": 0},
     ).sort("updated_at", -1).to_list(length=200)
-    # Claim box MLS (layout Track A): conteggio live agenzie in rete, se aderente.
+    # Caso 1 (mls_enabled): box ricerca rete + griglia immobili network.
+    # Caso 2 (!mls_enabled): nessun pezzo MLS sul sito white-label (D-149).
     if agency.get("mls_enabled"):
+        agency = dict(agency)
         try:
-            network_props = await db.properties.count_documents(
-                with_not_trashed({
-                    "status": "active",
-                    "mls_shared": True,
-                    "visibility": {"$in": ["public", "mls_only"]},
-                })
-            )
-            agency = dict(agency)
-            agency["_mls_network_count"] = int(network_props) or await db.properties.count_documents(
-                with_not_trashed({"status": "active", "visibility": {"$in": ["public", "mls_only"]}})
-            )
+            share_filter = with_not_trashed({
+                "status": "active",
+                "mls_shared": True,
+                "visibility": {"$in": ["public", "mls_only"]},
+                "agency_id": {"$ne": agency["id"]},
+                "is_private_listing": {"$ne": True},
+            })
+            network_count = await db.properties.count_documents(share_filter)
+            agency["_mls_network_count"] = int(network_count)
+            network_raw = await db.properties.find(
+                share_filter,
+                {
+                    "_id": 0, "id": 1, "title": 1, "city": 1, "zone": 1,
+                    "operation": 1, "price": 1, "rent_monthly": 1,
+                    "surface_sqm": 1, "rooms": 1, "bedrooms": 1, "photos": 1,
+                    "agency_id": 1,
+                },
+            ).sort("updated_at", -1).to_list(length=6)
+            # Resolve partner agency display names for Co-Agency chip.
+            partner_ids = list({p.get("agency_id") for p in network_raw if p.get("agency_id")})
+            names: Dict[str, str] = {}
+            if partner_ids:
+                async for ag in db.agencies.find(
+                    {"id": {"$in": partner_ids}},
+                    {"_id": 0, "id": 1, "display_name": 1, "name": 1},
+                ):
+                    names[ag["id"]] = ag.get("display_name") or ag.get("name") or ""
+            for p in network_raw:
+                p["_partner_name"] = names.get(p.get("agency_id") or "", "")
+            agency["_mls_network_props"] = network_raw
         except Exception:
-            agency = dict(agency)
             agency["_mls_network_count"] = 0
+            agency["_mls_network_props"] = []
     html = render_index(agency, props, slug)
     return Response(content=html, media_type="text/html; charset=utf-8")
 

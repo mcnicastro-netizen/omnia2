@@ -25,6 +25,8 @@ export default function WebsitePage() {
   const [extractUrl, setExtractUrl] = useState("");
   const [extracting, setExtracting] = useState(false);
   const [extractResult, setExtractResult] = useState(null);
+  const [capturing, setCapturing] = useState(false);
+  const [cloneCapture, setCloneCapture] = useState(null);
 
   // Picker state
   const [selectedTheme, setSelectedTheme] = useState(null);
@@ -131,6 +133,24 @@ export default function WebsitePage() {
       setError(apiError(err));
     } finally {
       setExtracting(false);
+    }
+  };
+
+  const captureClone = async () => {
+    if (!extractUrl) return;
+    setCapturing(true); setError("");
+    try {
+      const { data } = await api.post("/app/website/clone-capture", { url: extractUrl });
+      setCloneCapture(data.capture || data);
+      showToast(
+        data.clone_ready
+          ? "Clone pronto"
+          : `Cattura sito OK (${(data.capture?.pages || []).length} pagine) — clone full ancora in corso`
+      );
+    } catch (err) {
+      setError(apiError(err));
+    } finally {
+      setCapturing(false);
     }
   };
 
@@ -242,7 +262,30 @@ export default function WebsitePage() {
             >
               {extracting ? t("website.extracting") : t("website.extract_btn")}
             </button>
+            <button
+              type="button"
+              disabled={capturing || !extractUrl}
+              onClick={captureClone}
+              data-testid="website-clone-capture-btn"
+              className="px-5 py-2.5 bg-white border border-stone-300 text-stone-900 text-xs uppercase tracking-widest font-medium rounded-md hover:bg-stone-50 disabled:opacity-50 transition"
+            >
+              {capturing ? "Cattura…" : "Cattura sito (migrazione)"}
+            </button>
           </form>
+          <p className="text-xs text-stone-500">
+            Migrazione casi 1–2: cattura home/lista/scheda dal sito attuale. Non è ancora il clone full pixel-perfect.
+            Box MLS sì/no si gestisce da MLS (Entra / Esci rete).
+          </p>
+          {cloneCapture && (
+            <div data-testid="website-clone-capture-summary" className="bg-stone-50 border border-stone-200 rounded-lg p-4 text-sm text-stone-700">
+              <p>
+                Pagine: {(cloneCapture.pages || []).length}
+                {" · "}ruoli: {(cloneCapture.roles_found || []).join(", ") || "—"}
+                {" · "}clone_ready: {String(!!cloneCapture.clone_ready)}
+              </p>
+              {cloneCapture.notes ? <p className="mt-1 text-stone-500">{cloneCapture.notes}</p> : null}
+            </div>
+          )}
 
           {(extractResult || extracted) && (
             <div data-testid="website-extracted-summary" className="bg-stone-50 border border-stone-200 rounded-lg p-5">

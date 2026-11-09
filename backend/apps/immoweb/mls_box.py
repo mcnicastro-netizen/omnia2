@@ -80,6 +80,10 @@ async def mls_box_json(
     )
     if not agency:
         raise HTTPException(status_code=404, detail="agency_not_found")
+    # Caso 2 (D-149): senza adesione MLS il widget rete non è esposto.
+    # La vetrina white-label `/api/p/{slug}/` resta attiva senza box MLS.
+    if not agency.get("mls_enabled"):
+        raise HTTPException(status_code=404, detail="mls_not_enabled")
 
     aid = agency["id"]
     featured_cursor = db.properties.find(

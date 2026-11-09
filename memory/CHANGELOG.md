@@ -1,3 +1,11 @@
+## 2026-11-09 — D-149 migrazione sito casi 1–2 (MLS on/off + clone capture A)
+
+- **Caso 1**: `mls_enabled` → box ricerca rete + sezione «Immobili dalla Rete MLS Partner» su `/api/p/{slug}/`
+- **Caso 2**: niente pezzi MLS; `POST /app/mls/leave`; embed `/api/mls-box/*` → `mls_not_enabled`
+- **Restyling (caso 3)**: esplicitamente in coda
+- Clone fase A: `POST/GET /app/website/clone-capture` · UI Brand Studio «Cattura sito»
+- Test: `test_agency_home_mls_cases.py` · `test_site_clone_capture.py`
+
 ## 2026-11-09 — SaaS slice: trash purge → blob (D-095 T-02)
 
 - `purge_item_now` / `run_trash_purge`: prima di cancellare l’immobile, best-effort `delete_object` su foto/video/planimetrie/documenti

@@ -344,6 +344,11 @@ def _home_css() -> str:
     .ah-card-img{position:relative;aspect-ratio:4/3;background:#e8e8e8;background-size:cover;background-position:center}
     .ah-card-op{position:absolute;top:0;left:0;background:var(--o-primary);color:#fff;font-size:.72rem;font-weight:700;padding:5px 10px;text-transform:uppercase}
     .ah-card-price{position:absolute;right:8px;bottom:8px;background:rgba(255,255,255,.95);color:#111;font-weight:700;font-size:.95rem;padding:4px 8px;border-radius:2px}
+    .ah-card-mls{position:absolute;left:8px;bottom:8px;background:#0f172a;color:#fff;font-size:.68rem;font-weight:700;padding:3px 7px;letter-spacing:.04em;text-transform:uppercase}
+    .ah-card-mls.ah-card,.ah-card.ah-card-mls{box-shadow:inset 0 0 0 2px #0f172a}
+    .ah-mls-network-head{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:10px}
+    .ah-mls-network-head h2{margin:0}
+    .ah-mls-badge{display:inline-block;background:#0f172a;color:#fff;font-size:.72rem;font-weight:700;padding:4px 10px;letter-spacing:.06em;text-transform:uppercase}
     .ah-card-body{padding:10px 12px 0}
     .ah-card-city{font-size:.85rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;margin-bottom:4px}
     .ah-card-title{font-size:.92rem;line-height:1.3;min-height:2.4em}
@@ -393,7 +398,13 @@ def _split_featured_latest(props: List[Dict[str, Any]], featured_n: int = 3, lat
                 latest.append(p)
     return featured, latest
 
-def _home_card(p: Dict[str, Any], slug: str) -> str:
+def _home_card(
+    p: Dict[str, Any],
+    slug: str,
+    *,
+    mls: bool = False,
+    href: Optional[str] = None,
+) -> str:
     cover = _cover_url(p)
     price = _price_str(p)
     op = p.get("operation") or "sale"
@@ -405,11 +416,18 @@ def _home_card(p: Dict[str, Any], slug: str) -> str:
     rooms = p.get("rooms") or "—"
     beds = p.get("bedrooms") or "—"
     bg = f'style="background-image:url(\'{escape(cover)}\')"' if cover else ""
+    link = href or f"/api/p/{escape(slug)}/{escape(p.get('id') or '')}"
+    badge = ""
+    if mls:
+        partner = escape(p.get("_partner_name") or "Rete MLS")
+        badge = f'<span class="ah-card-mls" data-testid="agency-home-mls-chip">MLS · {partner}</span>'
+    card_cls = "ah-card ah-card-mls" if mls else "ah-card"
     return f"""
-    <a class="ah-card" href="/api/p/{escape(slug)}/{escape(p.get('id') or '')}">
+    <a class="{card_cls}" href="{escape(link)}"{" target=\"_blank\" rel=\"noopener\"" if mls else ""}>
       <div class="ah-card-img" {bg}>
         <span class="ah-card-op">{op_label}</span>
         <span class="ah-card-price">{escape(price)}</span>
+        {badge}
       </div>
       <div class="ah-card-body">
         <div class="ah-card-city">{city}</div>
@@ -422,6 +440,35 @@ def _home_card(p: Dict[str, Any], slug: str) -> str:
         <span>{escape(str(beds))} Cam.</span>
       </div>
     </a>"""
+
+
+def _mls_network_section(network_props: List[Dict[str, Any]]) -> str:
+    """Sezione immobili rete — solo caso 1 (mls_enabled)."""
+    if network_props:
+        cards = "".join(
+            _home_card(
+                p,
+                slug="",
+                mls=True,
+                href=f"/it/cloud/property/{escape(p.get('id') or '')}",
+            )
+            for p in network_props
+        )
+    else:
+        cards = (
+            '<div class="ah-empty" data-testid="agency-home-mls-empty">'
+            "Nessun immobile di rete disponibile al momento. "
+            "La sezione resta pronta per il network OMNIA."
+            "</div>"
+        )
+    return f"""
+    <section class="ah-section ah-mls-network" id="rete-mls" data-testid="agency-home-mls-network">
+      <div class="ah-mls-network-head">
+        <h2>Immobili dalla Rete MLS Partner</h2>
+        <span class="ah-mls-badge">Network OMNIA</span>
+      </div>
+      <div class="ah-cards">{cards}</div>
+    </section>"""
 
 def _select(name: str, label: str, options: List[Tuple[str, str]], selected: str = "") -> str:
     opts = "".join(
@@ -494,9 +541,8 @@ def _cards_section(title: str, section_id: str, cards_html: str) -> str:
 def render_index(agency: Dict[str, Any], props: List[Dict[str, Any]], slug: str) -> str:
     """Public agency home — struttura allineata al box MLS / vetrina di riferimento.
 
-    - Box MLS (sx) solo se `agency.mls_enabled`
-    - Box ricerca agenzia (dx) = portafoglio proprio
-    - In evidenza (3) + Ultimi annunci (6) da props agenzia
+    Caso 1 (`agency.mls_enabled`): box ricerca rete + sezione Immobili MLS.
+    Caso 2 (flag off): solo ricerca agenzia + portafoglio proprio (D-149).
     """
     cfg = _resolve_theme_config(agency)
     base = _public_base_url()
@@ -535,6 +581,8 @@ def render_index(agency: Dict[str, Any], props: List[Dict[str, Any]], slug: str)
 
     search_row_cls = "ah-search-row" if mls_on else "ah-search-row solo"
     mls_html = _mls_search_box(network_count) if mls_on else ""
+    network_props = list(agency.get("_mls_network_props") or []) if mls_on else []
+    mls_network_html = _mls_network_section(network_props) if mls_on else ""
 
     nav = """
       <nav class="ah-nav" aria-label="Principale">
@@ -603,6 +651,7 @@ def render_index(agency: Dict[str, Any], props: List[Dict[str, Any]], slug: str)
     </div>
     {_cards_section("In evidenza", "evidenza", featured_html)}
     {_cards_section("Ultimi annunci inseriti", "ultimi", latest_html)}
+    {mls_network_html}
   </div>
   <footer class="ah-footer" id="contatti">
     <div class="ah-footer-inner">
