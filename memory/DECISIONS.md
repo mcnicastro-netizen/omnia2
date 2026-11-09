@@ -7,6 +7,18 @@ Registro di tutte le decisioni di business e tecniche prese durante il progetto.
 
 ## Decisioni prese
 
+### D-148 — Paperless in messaggio vetrina (A-040) · senza spezzare D-129 · 09-Nov-2026
+- **Data**: 9 Novembre 2026
+- **Contesto**: Founder 06-Nov: paperless reale ma **non evidenziato** tra i pregi (A-040). D-129 lo classifica come necessario ma *non* messaggio primario (anti-appiattimento vs Arcanis).
+- **Decisione**:
+  1. **D-129 resta**: le tre promesse economiche (Portale · Academy · Matching→mandati) restano l’asse anti-appiattimento. Paperless **non** diventa quarta promessa economica.
+  2. **Vetrina www «Perché OMNIA»**: il 4° tratto passa da «Listino pubblico Founders» (già coperto dalla sezione Prezzi) a **documenti digitali / paperless di mestiere**.
+  3. **Claim ammessi (solo reale)**: Fascicolo Immobile digitale; modulistica PDF in gestionale; kit legale dominio scaricabile in-browser (zero carta sul processo OMNIA).
+  4. **Claim vietati**: firma digitale Yousign/DocuSign «live» (oggi `ESIGN_PROVIDER=mock`); invio PEC automatizzato da OMNIA; «agenzia 100% paperless end-to-end»; inventare feature (onestà).
+  5. Listino Founders resta messaggio nella sezione **Prezzi**, non come tratto Perché OMNIA.
+- **Prove**: `/app/properties/:id/fascicolo` · `/app/modulistica` · `/it/verifica-dominio` + `/api/legal/*`.
+- **Stato**: ✅ DECISO · copy i18n + HAL · A-040 chiuso
+
 ### D-147 — Kling micro-tour gestionale: 30 crediti (€1,50) · 05-Nov-2026 (merge 06-Nov)
 - **Data**: 5 Novembre 2026 (aperta come PR #96; numerata **D-147** perché D-141 era già mappa Idealista)
 - **Contesto**: listino MD aveva 60 cr (€3); codice addebitava ancora **10 cr (€0,50)** → **perdita ~€0,38/video** vs COGS fal.ai ~€0,88. Founder chiede allineamento a **30 crediti**.
@@ -222,10 +234,11 @@ Registro di tutte le decisioni di business e tecniche prese durante il progetto.
   1. **Portale (ImmobilCloud)** — ridurre dipendenza/costo dai portali terzi con **domanda propria** e contatti qualificati verso il CRM. Metrica prova: `leads/requests source=ImmobilCloud` + costo/contatto (quando c’è spend esterno).
   2. **Academy** — formare collaboratori e renderli produttivi in agenzia (non vetrina corsi). Metrica prova: completamento → inserimento → permanenza. **Oggi non dimostrabile** (M6 landing-only): vietato claimare fino a codice LMS.
   3. **Matching → mandati in esclusiva** — non solo buyer↔stock: individuare inventario privato/portale con domanda in portafoglio e funnel **new → contacted → appointment → mandate_won**. Metrica prova: tassi funnel + confronto baseline mandati fuori sistema.
-- **Regola anti-appiattimento**: nessuna feature shippata come “ecosistema” senza mappare a una delle tre prove. Gestionale / white-label / paperless = necessari ma **non** messaggio commerciale primario.
+- **Regola anti-appiattimento**: nessuna feature shippata come “ecosistema” senza mappare a una delle tre prove. Gestionale / white-label / paperless = necessari ma **non** messaggio commerciale primario (**economico**).
+- **Precisazione D-148 (09-Nov)**: paperless può comparire in vetrina come **tratto operativo** (Perché OMNIA), senza entrare nelle tre prove economiche. Vedi D-148 per claim ammessi/vietati.
 - **Prima prova di mercato**: pilastro **mandati** (codice su D-126 + coda `mandate_opportunities`), perché è il differenziale più vicino a end-to-end; portale già misurabile; Academy dopo sblocco M6.
 - **Implementazione v1**: `mandate_opportunities.py` · hook in `private_listing_matching` · UI `/app/mandate-opportunities` · KPI dashboard · `GET /app/mandate-opportunities/proof`.
-- **Stato**: ✅ DECISO · CODICE v1 mandati+proof · LIVE ⏳ pilota agenzia
+- **Stato**: ✅ DECISO · CODICE v1 mandati+proof · LIVE ⏳ pilota agenzia · messaggio paperless → **D-148**
 
 ### D-136 — Virtual Staging professionale (fedeltà architettonica) · 3-Nov-2026
 - **Data**: 3 Novembre 2026

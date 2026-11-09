@@ -2,7 +2,7 @@
 
 > File di appoggio per **temi strategici/tecnici** che il Founder ha esplicitamente segnalato come "da rivedere più avanti", **senza essere ancora decisioni**. Ogni voce va promossa in `DECISIONS.md` o `ROADMAP.md` quando si decide di procedere.
 
-**Ultimo aggiornamento**: 6-Nov-2026 (**A-040** paperless da evidenziare in vetrina/posizionamento — filo domani)
+**Ultimo aggiornamento**: 9-Nov-2026 (**A-040** paperless CHIUSO via **D-148**)
 
 > **Backlog qualità prodotto (A-006+)**: voci tracciate durante lo sprint manuale Cap. 1-18. Priorità assegnata da Cursor (P1=alto ROI/costo basso, P3=futuro). Decisione Founder post-manuale — **NON implementare senza "vai" esplicito**.
 
@@ -1414,28 +1414,33 @@ Implementazione solo con «vai» Founder → poi eventuale decisione in `DECISIO
 
 ---
 
-## 🟠 A-040 — Paperless come pregio OMNIA (non più sotto-traccia) · 06-Nov-2026
+## ✅ A-040 — Paperless come pregio OMNIA (non più sotto-traccia) · CHIUSO 09-Nov-2026
 
-**Data inserimento**: 6 Novembre 2026  
+**Data inserimento**: 6 Novembre 2026 · **Chiusura**: 9 Novembre 2026  
 **Segnalato da**: Founder (Marco Nicastro) · fine sessione vetrina www  
-**Priorità**: **ALTA — filo da domani** (posizionamento / www / pitch)  
-**Correlati**: Cap.7 Fascicolo · Domain Verify «zero carta» · **D-129** (oggi: paperless = necessario ma *non* messaggio primario) · D-146 vetrina
+**Correlati**: Cap.7 Fascicolo · Domain Verify «zero carta» · **D-129** + **D-148** · D-146 vetrina
 
 ### Contesto Founder
-OMNIA ha pezzi paperless reali (fascicolo digitale, kit legale digitale / PEC, niente cartaceo su verifica dominio) ma **non li stiamo evidenziando** tra i pregi del sistema — né in home www né nel pitch commerciale.
+OMNIA ha pezzi paperless reali ma **non li evidenziava** tra i pregi — né in home www né nel pitch.
 
-### Tensione con D-129
-D-129 dice: gestionale / white-label / **paperless** = necessari ma **non** messaggio commerciale primario (anti-appiattimento vs Arcanis).  
-Founder 06-Nov: paperless va **rimesso in luce**. Domani: decidere se (a) eccezione/ampiezza a D-129, (b) quarto tratto in «Perché OMNIA», (c) sezione dedicata vetrina, (d) solo sales kit — **senza inventare feature** (D-051).
+### Decisione (D-148)
+- D-129 resta sulle **tre prove economiche**; paperless = tratto operativo in «Perché OMNIA» (4° slot, al posto del listino già coperto da Prezzi).
+- Claim ammessi: Fascicolo · modulistica PDF · kit legale dominio downloadable.
+- Claim vietati: firma live · PEC OMNIA · «100% paperless end-to-end».
 
-### Cosa fare (quando «vai»)
-1. Inventario onesto di cosa è già paperless in prodotto (Fascicolo, documenti, firma/Yousign se live, kit dominio, email vs posta).
-2. Copy vetrina / Perché OMNIA / Lab: 1 claim misurabile, niente hype.
-3. Se serve: aggiornare D-129 o nuova D-14x «paperless in messaggio».
-4. Sync Cap.07 + HAL + i18n landing.
+### Inventario onesto (09-Nov)
+| Reale | Non live / non claimare |
+|-------|-------------------------|
+| Fascicolo Immobile (`/app/properties/:id/fascicolo`) | Yousign/DocuSign (`ESIGN_PROVIDER=mock`) |
+| Modulistica PDF CRM (`/app/modulistica`) | Invio PEC automatizzato |
+| Kit legale dominio PDF/ZIP (`/it/verifica-dominio`) | SPID/CIE/OTP Domain Vault fase 2 |
+| Copy «zero carta» su DomainVerifyPage | Santo Graal completo |
+
+### Ship
+- i18n `landing.why_4_*` IT/EN · DECISIONS D-148 · HAL `api.www-vetrina-landing` · Cap.00 · NEXT_SESSION
 
 ### Stato
-🟠 **APERTO** — pin in `NEXT_SESSION` · **non implementare senza «vai»**
+✅ **CHIUSO** — copy + decisione; nessun codice prodotto inventato
 
 ---
 

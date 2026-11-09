@@ -1,4 +1,4 @@
-# 📚 HAL Knowledge — Import & Cold Start (v0.54-d147-kling-30cr)
+# 📚 HAL Knowledge — Import & Cold Start (v0.55-d148-paperless)
 
 **Ultimo aggiornamento**: 06-Nov-2026 (D-147 Kling 30 cr + coda #93–#96)  
 **Corpus**: YAML in `memory/manuale/hal/*.yaml` (Cap. 1–27 + `00-api-codice`) · MD esclusi dal RAG ingest  
@@ -267,6 +267,7 @@ Prima di dichiarare il cold start "attivo", eseguire manualmente queste 5 query 
 
 | Data | Versione | Note |
 |------|:-:|------|
+| 09-Nov-2026 | **v0.55-d148-paperless** | D-148 / A-040: Perché OMNIA 4° tratto = documenti digitali. HAL `api.www-vetrina-landing` + Cap.00. Reindex post-merge. |
 | 06-Nov-2026 | **v0.54-d147-kling-30cr** | Cap.23 listino Kling **D-147** 30 cr. Coda #93–#96 merged. Diario 06-Nov. Reindex post-merge. |
 | 06-Nov-2026 | **v0.53-d146-www-vetrina** | Cap.00 `api.www-vetrina-landing` + Cap.01 §1.1 www. D-146 nav/scroll/CTA no Cerca casa. CHANGELOG/NEXT/diario. Reindex post-merge. |
 | 05-Nov-2026 | **v0.52-d144-tre-layer** | Cap.17 tre layer dominio/sito/email + WHOIS .it. DECISIONS D-144. Reindex post-merge. |
