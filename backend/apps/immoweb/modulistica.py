@@ -307,8 +307,15 @@ async def download_document(doc_id: str, user: dict = Depends(get_current_user))
     )
     if not doc:
         raise HTTPException(404, "Documento non trovato")
+    from shared.auth.storage_paths import assert_storage_under_prefix, modulistica_prefix
+
+    safe_path = assert_storage_under_prefix(
+        doc.get("storage_path") or "",
+        modulistica_prefix(agency_id),
+        detail="Documento non trovato",
+    )
     try:
-        data, _mime = get_object(doc["storage_path"])
+        data, _mime = get_object(safe_path)
     except ObjStoreError as e:
         raise HTTPException(404, f"file_missing: {e}") from e
     filename = f"{doc.get('slug', 'documento')}_{doc_id[:8]}.pdf"
@@ -332,8 +339,15 @@ async def send_for_signature(
     )
     if not doc:
         raise HTTPException(404, "Documento non trovato")
+    from shared.auth.storage_paths import assert_storage_under_prefix, modulistica_prefix
+
+    safe_path = assert_storage_under_prefix(
+        doc.get("storage_path") or "",
+        modulistica_prefix(agency_id),
+        detail="Documento non trovato",
+    )
     try:
-        pdf_bytes, _ = get_object(doc["storage_path"])
+        pdf_bytes, _ = get_object(safe_path)
     except ObjStoreError as e:
         raise HTTPException(404, f"file_missing: {e}") from e
 

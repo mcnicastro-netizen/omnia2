@@ -1,0 +1,9 @@
+=== Onda9 GDPR smoke 2026-11-09T15:39:59.816603+00:00 ===
+API=http://127.0.0.1:43121/api email=gdpr.smoke.65ada40b@example.com
+register status=200
+export status=200
+export_ok=True format=omnia_b2c_export_v1
+erase status=200
+erase_ok=True report_keys=['user_id', 'deleted', 'status', 'erased_at']
+post_erase_login status=401 blocked=True
+ESITO=PASS

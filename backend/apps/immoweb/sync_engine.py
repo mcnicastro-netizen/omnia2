@@ -479,12 +479,81 @@ def start_scheduler() -> None:
         next_run_time=_dt.now(_tz.utc),
     )
 
+    async def _trash_purge_tick():
+        """D-102 — hard-delete Cestino oltre retention + blob legati."""
+        from apps.immoweb.trash import run_trash_purge
+        try:
+            report = await run_trash_purge()
+            _mark_job(
+                "trash_purge_daily",
+                ok=True,
+                detail=(
+                    f"props={report.get('purged_properties')} "
+                    f"clients={report.get('purged_clients')} "
+                    f"blobs={report.get('blobs_purged')}"
+                ),
+            )
+            logger.info(
+                "trash purge scheduled props=%s clients=%s blobs=%s",
+                report.get("purged_properties"),
+                report.get("purged_clients"),
+                report.get("blobs_purged"),
+            )
+        except Exception as e:  # noqa: BLE001
+            _mark_job("trash_purge_daily", ok=False, detail=str(e))
+            logger.warning("trash purge scheduled run failed: %s", e)
+
+    sched.add_job(
+        _trash_purge_tick,
+        CronTrigger(hour=4, minute=15),
+        id="trash_purge_daily",
+        replace_existing=True,
+        max_instances=1,
+        coalesce=True,
+    )
+
+    async def _orphan_gc_tick():
+        """D-102 — orphan Object Storage GC (grace age + optional dry-run)."""
+        from apps.immoweb.orphan_gc import run_orphan_gc
+        try:
+            report = await run_orphan_gc()
+            _mark_job(
+                "orphan_gc_daily",
+                ok=bool(report.get("ok")),
+                detail=(
+                    f"scanned={report.get('objects_scanned')} "
+                    f"orphans={report.get('orphans_found')} "
+                    f"deleted={report.get('orphans_deleted')} "
+                    f"dry_run={report.get('dry_run')}"
+                ),
+            )
+            logger.info(
+                "orphan_gc scheduled scanned=%s orphans=%s deleted=%s dry_run=%s",
+                report.get("objects_scanned"),
+                report.get("orphans_found"),
+                report.get("orphans_deleted"),
+                report.get("dry_run"),
+            )
+        except Exception as e:  # noqa: BLE001
+            _mark_job("orphan_gc_daily", ok=False, detail=str(e))
+            logger.warning("orphan_gc scheduled run failed: %s", e)
+
+    sched.add_job(
+        _orphan_gc_tick,
+        CronTrigger(hour=4, minute=30),
+        id="orphan_gc_daily",
+        replace_existing=True,
+        max_instances=1,
+        coalesce=True,
+    )
+
     sched.start()
     _scheduler = sched
     logger.info(
         "Publishing scheduler started (D-108 owner=apscheduler; daily sync %02d:%02d UTC + "
         "saved-searches every 5m + backup 03:15 UTC + request-matching 02:30 UTC + "
-        "private-listing→requests hourly(+boot catch-up) + b2c paid-listing expire 04:00 UTC)",
+        "private-listing→requests hourly(+boot catch-up) + b2c paid-listing expire 04:00 UTC + "
+        "trash purge 04:15 UTC + orphan GC 04:30 UTC)",
         DAILY_SYNC_HOUR_UTC, DAILY_SYNC_MINUTE_UTC,
     )
 

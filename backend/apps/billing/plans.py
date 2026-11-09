@@ -141,6 +141,26 @@ STORAGE_ADDONS: List[StorageAddon] = [
     StorageAddon(key="storage_100gb", gb=100, price_eur=15.0),
 ]
 
+
+# --- Sito template pack (D-151) — one-shot B2B, non SKU «solo sito» -----
+# Pro/Agency: gallery inclusa. Starter: add-on one-shot. Restyling: €199.
+SITE_THEME_SIMPLE_IDS = ("minimal", "classic")  # fascia €99 neo Starter
+SITE_THEME_PREMIUM_IDS = (
+    "bold",
+    "luxury",
+    "atelier",
+    "cinematic",
+    "editorial",
+    "mediterranean",
+)
+
+SITE_THEME_PRICES_EUR = {
+    "starter_neo_simple": 99.0,      # 1 tema tra SITE_THEME_SIMPLE_IDS
+    "starter_neo_premium": 199.0,    # 1 tema tra SITE_THEME_PREMIUM_IDS
+    "restyling": 199.0,              # caso 3 — qualunque tema gallery
+    # Pro/Agency: 0 (incluso nel piano)
+}
+
 # Included media quota GB by commercial tier (D-085)
 STORAGE_INCLUDED_GB = {
     "starter": 30,

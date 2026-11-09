@@ -17,6 +17,30 @@ Registro di tutte le decisioni di business e tecniche prese durante il progetto.
   4. **Clone look (D-023/D-130)** P0 per casi 1–2. Pipeline: cattura → brand/tema → preview visitabile **home + `/lista` + scheda** → `website.clone_ready=true` (best-effort, non pixel-perfect).
   5. Promessa commerciale: con `clone_ready=true` si può dire «preview del tuo sito su OMNIA (best-effort)». Pixel-perfect resta Premium. Vietato «identico al 100%» senza ritocco umano.
 - **Stato**: ✅ DECISO · caso 1/2 + leave MLS + clone preview path ✅ · restyling ❌ coda
+### D-151 — Listino sito template: Starter one-shot €99/€199 · restyling €199 · Pro+ incluso · 09-Nov-2026
+- **Data**: 9 Novembre 2026
+- **Contesto**: Founder conferma gallery da **8** temi; gratis nel piano “prescelto”; su Starter a pagamento one-shot; restyling pure a €199.
+- **Decisione**:
+  1. **Pro / Agency**: gallery 8 temi **inclusa** (neo + restyling + MLS on/off). Nessun fee extra.
+  2. **Starter — neo sito** (add-on one-shot, non SKU «solo sito» D-130):
+     - **€99** → scelta di **1** tema tra i 2 semplici: `minimal` | `classic`.
+     - **€199** → scelta di **1** tema tra gli altri 6: `bold` | `luxury` | `atelier` | `cinematic` | `editorial` | `mediterranean`.
+  3. **Restyling (caso 3)**: **€199** one-shot (qualunque tema della gallery). Path distinto dal clone keep-brand (casi 1–2).
+  4. **Regole**: un tema per pagamento; cambio tema successivo = nuovo one-shot (Starter) oppure incluso se upgrade a Pro/Agency. Testi/foto/logo/palette personalizzabili; box MLS condizionale senza stravolgere layout.
+  5. **COGS**: ~€0 a vendita post-build (solo fee Stripe). Build = tempo engineering una tantum.
+  6. Checkout Stripe / entitlement: da implementare (SKU B2B one-shot); listino SoT in `PRICING_OMNIA.md` + `plans.py`.
+- **Stato**: ✅ DECISO · Stripe checkout ⏳ · gallery 8 live (€99 + €199 CSS) · entitlement Stripe ancora ⏳
+
+### D-150 — Template pack unico: neo + restyling · matrice MLS · craft MotionSites · 09-Nov-2026
+- **Data**: 9 Novembre 2026
+- **Contesto**: Founder conferma che il restyling (caso 3) dipende dai template; va previsto sia per agenzie MLS on sia MLS off; arricchire l’offerta studiando MotionSites (Cursor-ready).
+- **Decisione**:
+  1. **Un solo pack** serve neo agenzia (D-018) e restyling (caso 3). Non due cataloghi.
+  2. **Matrice MLS obbligatoria**: ogni tema live deve QA con `mls_enabled` true e false (pezzi rete solo se on). Join/leave non cambia `theme_id`.
+  3. **Live**: 8 temi — `minimal` (default), `classic`, `bold`, `luxury`, `atelier`, `cinematic`, `editorial`, `mediterranean`. Target D-019 resta **5–10** di alta qualità (`THEME_ROADMAP=[]` finché non servono nuovi slot).
+  4. **MotionSites** ([Motionsites-AI/claude-skill](https://github.com/Motionsites-AI/claude-skill)): barra craft + loop screenshot/fix. **Non** runtime React/Framer sul sito agenzia (resta SSR `theme_render`). Non copiare brand/layout wholesale.
+  5. Caso 3 restyling: stesso pack; clone casi 1–2 resta path per chi tiene il look esistente.
+- **Stato**: ✅ DECISO · pack 8 live ✅ · Stripe one-shot ⏳
 
 ### D-148 — Paperless in messaggio vetrina (A-040) · senza spezzare D-129 · 09-Nov-2026
 - **Data**: 9 Novembre 2026
@@ -1825,7 +1849,7 @@ Registro di tutte le decisioni di business e tecniche prese durante il progetto.
   3. ✅ **Blob delete su fascicolo document delete** (09-Nov): dopo `$pull` Mongo → best-effort `delete_object(storage_path)` (legacy base64 senza path = no-op). Emergent backend resta no-op finché non supporta delete.
   4. ✅ **Trash purge → blob** (09-Nov T-02): `purge_item_now` / `run_trash_purge` su property raccolgono path da photos/videos/floor_plans/documents e `delete_object` best-effort **prima** del delete Mongo.
   5. ⏳ Orphan GC globale (blob senza record Mongo) — pezzo distinto, non in questo filo.
-- **Stato**: ✅ DOMINIO · ✅ AuthZ fascicolo · ✅ delete blob fascicolo · ✅ trash→blob · ⏳ orphan GC scanner
+- **Stato**: ✅ DOMINIO · ✅ AuthZ fascicolo · ✅ delete blob fascicolo · ✅ trash→blob · ✅ orphan GC scanner (D-102)
 
 ### D-096 — Backup + Restore progettati insieme · restore agency-first · 29-Set-2026
 - **Data**: 29 Settembre 2026
@@ -1840,8 +1864,8 @@ Registro di tutte le decisioni di business e tecniche prese durante il progetto.
   2. Sequenza: Backup → Restore → costi reali → **eventuale** revisione listino.
   3. Fino ad allora: canoni €49/€99/€299 **fermi**; quota storage **ferma**; €0,04/GB **non confermato**; nessun nuovo tetto video.
 - **Fuori scope ora**: orchestrazione APScheduler vs worker (rimane aperta da P8/P10).
-- **Implementazione**: ❌ codice ⏳ — solo post-audit / «vai» esplicito.
-- **Stato**: ✅ **DECISIONE DI DOMINIO REGISTRATA** (docs 29-Set-2026) · codice ⏳
+- **Implementazione**: ✅ Onda 8 — `backup_scope.py` SoT collection (agency + B2C + videos/modulistica/staging) · `backup_job` dump allineato · extract/restore agency-first via `scripts/restore_*` · dry-run `restore_dry_run.py`.
+- **Stato**: ✅ **DECISIONE DI DOMINIO REGISTRATA** (docs 29-Set-2026) · ✅ codice 09-Nov-2026
 
 ### D-097 — «Elimina per sempre» vs Backup · trash può restare nel bak · 29-Set-2026
 - **Data**: 29 Settembre 2026
@@ -1884,8 +1908,8 @@ Registro di tutte le decisioni di business e tecniche prese durante il progetto.
   1. **AuthZ fascicolo / media sensibili prima del design Backup+Restore** (è accesso, non bak).
   2. Sequenza: proteggere fascicolo → orphan/delete → Bak+Restore → retention definitiva → costi.
   3. Il finding G-02 è **specifico** (path `/api/media` + fascicolo): non gonfiare a “tutto OMNIA esposto”.
-- **Implementazione**: ❌ codice ⏳ — post-audit / priorità + «vai».
-- **Stato**: ✅ **DECISIONE DI DOMINIO REGISTRATA** (docs 29-Set-2026) · codice ⏳
+- **Implementazione**: ✅ codice preesistente export/erase (P-038/E4) · ✅ Onda 9 docs `docs/ops/GDPR_FOUNDERS.md` + DPA stub `docs/legal/DPA_FOUNDERS_STUB.md` · smoke `scripts/gdpr_founders_smoke.py` · unit `test_erase_user_data.py`.
+- **Stato**: ✅ **DECISIONE DI DOMINIO REGISTRATA** (docs 29-Set-2026) · ✅ percorso Founders eseguibile 09-Nov-2026
 
 ### D-100 — Invite accept: mai overwrite password utente esistente · 29-Set-2026
 - **Data**: 29 Settembre 2026 · **rafforzamento**: 30-Set-2026 (P21 — trasversale)
@@ -1919,8 +1943,8 @@ Registro di tutte le decisioni di business e tecniche prese durante il progetto.
   2. Convergenza graduale: **Cestino → purge → cleanup file orphan** nel ciclo automatico OMNIA (APScheduler, stessa istanza D-101).
   3. Non richiede subito un sistema sofisticato: richiede che una pulizia necessaria **non** resti senza processo automatico.
   4. Allinea D-098 (WHEN col bak) e D-095 (blob lifecycle).
-- **Implementazione**: ❌ codice ⏳ — post-audit / «vai» (job + eventuale osservabilità O-*).
-- **Stato**: ✅ **DECISIONE DI DOMINIO REGISTRATA** (docs 29-Set-2026) · codice ⏳
+- **Implementazione**: ✅ codice (Onda 7) — `orphan_gc.py` + `list_object_keys` local · APScheduler `trash_purge_daily` 04:15 UTC + `orphan_gc_daily` 04:30 UTC · cron manuale `POST /cron/storage/orphan-gc` · grace `ORPHAN_GC_MIN_AGE_HOURS` (default 48) · kill-switch `ORPHAN_GC_DRY_RUN=1`.
+- **Stato**: ✅ **DECISIONE DI DOMINIO REGISTRATA** (docs 29-Set-2026) · ✅ codice 09-Nov-2026
 
 ### D-103 — No worker dedicato ora; eventuale anti-duplicato minimo · 29-Set-2026
 - **Data**: 29 Settembre 2026

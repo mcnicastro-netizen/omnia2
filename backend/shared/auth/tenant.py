@@ -32,6 +32,10 @@ def require_agency(user: dict) -> str:
     return active
 
 
+# Alias SoT (SUGGERIMENTI §1 / Onda 10) — stesso contratto di require_agency.
+require_agency_id = require_agency
+
+
 def require_agency_404(user: dict) -> str:
     ids = user.get("agency_ids") or []
     if not ids:

@@ -31,8 +31,10 @@ Founder 05-Nov-2026: **controllare i margini prima del go-live**, non dopo.
 | **Vetrina www** | **D-146** + **D-148** paperless in Perché OMNIA |
 | **Kling crediti** | **D-147** 30 cr / €1,50 · listino [`PRICING_OMNIA.md`](./PRICING_OMNIA.md) v3.2 |
 | Portale | D-139…D-144 ✅ |
-| Clone sito | **D-149** casi 1–2 (MLS on/off + capture A) · clone full D-023 ⏳ · restyling **coda** |
-| **Prossimo strutturale** | Clone fase B (Vision → preview home+lista+scheda) |
+| Clone sito | D-023/D-130 + A-037 · **D-150/D-151** pack+listino · restyling €199 · Stripe checkout template ⏳ |
+| Template pack | **D-151** gallery 8 live su main (#137) · Starter €99/€199 · restyling €199 |
+| **Prossimo strutturale** | Filo 2–10 + gallery 8 ✅ · **prossimo: dogfood Storia Nicastro** |
+| Migrazione sito | **D-149** casi 1–2 MLS on/off + clone capture |
 
 ---
 
@@ -59,11 +61,16 @@ Vetrina istituzionale: `https://omniarealestateecosystem.it/it` (**D-146** + pap
 3. ✅ **AuthZ fascicolo E2E** (D-095) — anti-IDOR agency-scoped.
 4. ✅ **Fascicolo blob delete** — `delete_object` best-effort su delete documento.
 5. ✅ **Trash purge → blob** — hard-delete immobile pulisce Object Storage.
-6. ✅ **D-149 casi 1–2**: leave MLS · box+sezione rete gated · clone-capture fase A.
-7. **Prossimo prodotto**: clone full preview (D-023 fase B) su cattura; restyling non toccare.
+6. ✅ **Orphan GC + trash purge schedulati** (D-102 / Onda 7).
+7. ✅ **Backup scope + restore agency-first** (D-096 / Onda 8).
+8. ✅ **GDPR Founders** (D-099 / Onda 9).
+9. ✅ **Tenant helpers + voti** (Onda 10) — Manut/SaaS=8.
+10. ✅ **Gallery 8** (#137) su main.
+11. **Prossimo Storia**: dogfood Nicastro (Onda 1) — temi MLS on/off.
 
 ## Filo prodotto
 
-1. **09-Nov chiuso:** A-040/D-148 · themes · AuthZ fascicolo · blob · trash→blob · **D-149 casi 1–2**.
+1. **09-Nov chiuso:** filo manut+SaaS verso-8 + gallery 8. Resta dogfood Storia.
+| Migrazione sito | **D-149** casi 1–2 MLS on/off + clone capture |
 2. **06-Nov chiuso:** Nicastro · www · Kling · staging split.
 3. Prossimo: clone full home+lista+scheda (`clone_ready`) · restyling in coda.

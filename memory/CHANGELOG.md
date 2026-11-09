@@ -20,6 +20,83 @@
 - **Restyling (caso 3)**: esplicitamente in coda
 - Clone fase A: `POST/GET /app/website/clone-capture` · UI Brand Studio «Cattura sito»
 - Test: `test_agency_home_mls_cases.py` · `test_site_clone_capture.py`
+## 2026-11-09 — Tenant helpers + chiusura filo 2–10 (Onda 10)
+
+- Alias `require_agency_id` · migrazione xml_import/api_keys/themes/custom_domain/staging/hal/valuation_pdf via `active_agency_id` (no `agency_ids[0]`)
+- Test `test_tenant_helpers_onda10.py`
+- Voti: **Manutenibilità 8** · **SaaS 8** · Storia: gallery 8 ora su main (#137)
+- SoT `memory/PROGRAMMA_VERSO_8.md` aggiornato
+
+## 2026-11-09 — D-151 gallery 8 live (€199 pack)
+
+- Live: `atelier` · `cinematic` · `editorial` · `mediterranean` (+ polish Bold/Luxury)
+- Palette/typography + `_theme_css` / `_home_css` (post-split theme_css.py) MLS-aware ×8
+- `THEME_ROADMAP=[]` · test MLS on/off parametrizzati · TEMPLATE_PACK aggiornato
+
+## 2026-11-09 — D-151 Minimal/Classic: slot MLS adotta il tema
+
+- Home CSS: `[data-theme=minimal|classic]` — box MLS/search chiari (no blocco primary pieno)
+- MLS off → solo search agenzia · test `test_theme_simple_mls_slots.py`
+
+## 2026-11-09 — D-151 listino sito template €99 / €199
+
+- Pro/Agency: gallery 8 inclusa · Starter neo: €99 (minimal|classic) / €199 (altri 6)
+- Restyling (caso 3): **€199** one-shot · SoT `SITE_THEME_PRICES_EUR` in `plans.py`
+- PRICING_OMNIA v3.3 · `price_tier` su catalogo temi
+
+## 2026-11-09 — D-150 template pack prep (neo + restyling + MLS matrix)
+
+- Un solo pack per neo agenzia e restyling; ogni tema QA MLS on|off
+- Catalogo: metadata + `THEME_ROADMAP` (atelier, cinematic, editorial, mediterranean)
+- `GET /app/website/themes` → `roadmap` + `mls_matrix`
+- Docs: `memory/TEMPLATE_PACK.md` · `docs/design/motionsites-craft-omnia.md`
+
+## 2026-11-09 — GDPR Founders path (Onda 9 · D-099)
+
+- Runbook `docs/ops/GDPR_FOUNDERS.md` (DSAR email → export/erase)
+- Stub DPA `docs/legal/DPA_FOUNDERS_STUB.md`
+- Smoke `scripts/gdpr_founders_smoke.py` · unit erase · run in `docs/ops/runs/`
+
+## 2026-11-09 — Backup scope + restore agency-first (Onda 8 · D-096)
+
+- `backup_scope.py`: SoT AGENCY + B2C collections (videos/modulistica/staging inclusi)
+- `backup_job` dump allineato · `restore_dry_run` / `restore_agency_nonprod` usano extract condiviso
+- Test `test_backup_scope.py` · RESTORE_MANUAL aggiornato
+
+## 2026-11-09 — Orphan GC + trash purge APScheduler (Onda 7 · D-102)
+
+- `list_object_keys` (local) in `shared/storage/objstore.py`
+- `apps/immoweb/orphan_gc.py`: scan Mongo refs vs disk · grace 48h · max_delete · `ORPHAN_GC_DRY_RUN`
+- APScheduler: `trash_purge_daily` 04:15 UTC · `orphan_gc_daily` 04:30 UTC
+- Cron manuale `POST /cron/storage/orphan-gc`
+- Test `test_orphan_gc.py`
+
+## 2026-11-09 — AuthZ storage_path sweep (Onda 6 · D-095)
+
+- `shared/auth/storage_paths.py`: prefix fascicolo/modulistica obbligatorio al download
+- Modulistica download/send-sign + fascicolo download rifiutano path spoofed cross-tenant
+- Test `test_authz_storage_paths.py` + O1 regressione · 17 passed
+
+## 2026-11-09 — PropertyDetail split MOVE-ONLY (Onda 5)
+
+- Estratti `propertyDetailUtils` · ShareBar · InfoCell · Contact · Schema
+- `PropertyDetailPage.jsx` 1276 → **~832** · Babel parse OK · zero feature nuove
+
+## 2026-11-09 — SellPage split MOVE-ONLY (Onda 4)
+
+- Estratti `sellConstants` · `sellPayload` · `SellFormPrimitives` · `SellListingForm`
+- `SellPage.jsx` 1625 → **~910** · zero feature nuove · Babel parse OK
+
+## 2026-11-09 — Themes render split MOVE-ONLY (Onda 3)
+
+- Estratti `theme_css` · `theme_common` · `theme_home` · `theme_render` (property + re-export)
+- `theme_render.py` 726 → **~145** · zero feature nuove · `test_agency_home_layout` PASS
+
+## 2026-11-09 — Portal split MOVE-ONLY (`public_portal` elefante · Onda 2)
+
+- Estratti `portal_common` · `portal_search` · `portal_detail` · `portal_contact`
+- `public_portal.py` 1119 → **~70** (router aggregato + re-export)
+- Zero feature nuove · test portal-related 40 passed
 
 ## 2026-11-09 — SaaS slice: trash purge → blob (D-095 T-02)
 

@@ -16,6 +16,7 @@ const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 export default function WebsitePage() {
   const { t } = useTranslation();
   const [themes, setThemes] = useState([]);
+  const [roadmap, setRoadmap] = useState([]);
   const [current, setCurrent] = useState(null); // GET /theme response
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -91,6 +92,7 @@ export default function WebsitePage() {
         api.get("/app/website/theme"),
       ]);
       setThemes(r1.data.themes || []);
+      setRoadmap(r1.data.roadmap || []);
       setCurrent(r2.data);
       setSelectedTheme(r2.data?.resolved?.theme_id || r1.data.default_theme_id || "minimal");
     } catch (e) {
@@ -354,10 +356,45 @@ export default function WebsitePage() {
                     ))}
                   </div>
                   <p className="text-sm text-stone-600">{th.description}</p>
+                  <p className="text-[10px] uppercase tracking-widest text-stone-400 mt-3">
+                    MLS on · MLS off
+                  </p>
                 </button>
               );
             })}
           </div>
+
+          {roadmap.length > 0 && (
+            <div className="space-y-3 pt-2">
+              <h3 className="text-xs uppercase tracking-widest text-stone-400">
+                {t("website.theme_roadmap", { defaultValue: "In arrivo" })}
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {roadmap.map((th) => (
+                  <div
+                    key={th.id}
+                    data-testid={`theme-roadmap-${th.id}`}
+                    className="text-left p-4 border border-dashed border-stone-300 rounded-lg bg-stone-50/80 opacity-90"
+                  >
+                    <div className="flex items-center justify-between mb-1">
+                      <p className="font-semibold text-stone-700">{th.name}</p>
+                      <span className="text-[10px] uppercase tracking-widest text-stone-400">
+                        {t("website.coming_soon", { defaultValue: "Presto" })}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2 mb-2">
+                      {Object.values(th.preview_palette || {}).map((c, i) => (
+                        <span key={i}
+                          className="inline-block w-5 h-5 rounded-full border border-stone-200"
+                          style={{ background: c }} />
+                      ))}
+                    </div>
+                    <p className="text-sm text-stone-500">{th.description}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </section>
 
         {/* ============ 3. LIVE PREVIEW ============ */}

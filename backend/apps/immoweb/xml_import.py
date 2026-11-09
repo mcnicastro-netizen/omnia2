@@ -53,6 +53,7 @@ def _cleanup_sessions() -> None:
 
 def _agency_id_of(user: dict) -> str:
     """Agency attiva (D-106): mai agency_ids[0] — evita import sulla tenant sbagliata."""
+    from shared.auth.tenant import require_agency_404
     return require_agency_404(user)
 
 

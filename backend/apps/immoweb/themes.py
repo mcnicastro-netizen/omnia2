@@ -1,6 +1,7 @@
 """OMNIA — Theme Registry & Site Generation (M2.S5 Layer D Phase 2, D-022).
 
-MOVE-ONLY split: catalog → theme_catalog.py · HTML render → theme_render.py.
+MOVE-ONLY split: catalog → theme_catalog.py · CSS → theme_css.py ·
+shell/helpers → theme_common.py · home → theme_home.py · property → theme_render.py.
 This module keeps the FastAPI /website router and re-exports public symbols.
 """
 from __future__ import annotations
@@ -23,6 +24,7 @@ from apps.immoweb.theme_catalog import (
     THEME_CATALOG,
     THEME_HERO_IMAGES,
     THEME_IDS,
+    THEME_ROADMAP,
     _palette_from_brand_profile,
     _resolve_hero_image,
     _resolve_theme_config,
@@ -57,19 +59,24 @@ class ApplyThemeRequest(BaseModel):
     hero_image_url: Optional[str] = Field(default=None, max_length=500)
 
 async def _agency_for(user: dict) -> Dict[str, Any]:
-    ag_ids = user.get("agency_ids") or []
-    if not ag_ids:
-        raise HTTPException(status_code=400, detail="no_agency")
+    from shared.auth.tenant import require_agency
+    aid = require_agency(user)
     db = Database.get()
-    a = await db.agencies.find_one({"id": ag_ids[0]})
+    a = await db.agencies.find_one({"id": aid})
     if not a:
         raise HTTPException(status_code=404, detail="agency_not_found")
     return a
 
 @router.get("/themes")
 async def list_themes(_: dict = Depends(get_current_user)):
-    """Public list of available themes (for the picker UI)."""
-    return {"themes": THEME_CATALOG, "default_theme_id": DEFAULT_THEME_ID}
+    """Theme picker: live catalog + roadmap (D-150, non selezionabili)."""
+    return {
+        "themes": THEME_CATALOG,
+        "roadmap": THEME_ROADMAP,
+        "default_theme_id": DEFAULT_THEME_ID,
+        "mls_matrix": True,  # ogni tema live/roadmap prevede varianti MLS on|off
+        "target_live_count": {"min": 5, "max": 10},  # D-019
+    }
 
 @router.get("/theme")
 async def get_current_theme(user: dict = Depends(get_current_user)):

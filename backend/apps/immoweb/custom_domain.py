@@ -75,11 +75,10 @@ def _normalize_domain(raw: str) -> str:
 
 
 async def _agency_for(user: dict) -> dict:
-    ag = user.get("agency_ids") or []
-    if not ag:
-        raise HTTPException(status_code=400, detail="no_agency")
+    from shared.auth.tenant import require_agency
+    aid = require_agency(user)
     db = Database.get()
-    a = await db.agencies.find_one({"id": ag[0]})
+    a = await db.agencies.find_one({"id": aid})
     if not a:
         raise HTTPException(status_code=404, detail="agency_not_found")
     return a
