@@ -12,40 +12,43 @@ Un blocco alla volta · niente fix senza «vai» · no P0–P3 prematuri · **li
 
 ---
 
-## Decisioni di dominio (codice ⏳)
+## Decisioni di dominio (stato 09-Nov-2026)
 
-| ID | Sintesi |
-|----|---------|
-| **D-094** | Trash ≠ status · filtro uniforme dominio (pre-GTM) · default non-trashed |
-| **D-095** | Media pubblici vs privati · cleanup blob |
-| **D-096** | Bak+Restore insieme · restore agency-first |
-| **D-097** | Elimina per sempre ≠ irrecuperabile assoluto · trash in bak OK |
-| **D-098** | Orphan → path a delete (WHEN col bak) · agency close V1 controllata |
-| **D-099** | Founders GDPR assistito · fascicolo AuthZ **prima** del bak |
-| **D-100** | Invite: utente esistente → link agency; **mai** overwrite password (**fix-needed** · **trasversale**) |
-| **D-101** | Job automatici: **single-instance** ora (non lock multi-pod); worker poi |
-| **D-102** | Purge + orphan cleanup: **automatizzare ora** nel ciclo APScheduler |
-| **D-103** | No worker dedicato ora; eventuale anti-dup minimo stesso-giorno |
-| **D-104** | **GTM-01 ACQUISITO** · in coda · **vincolo hard** pre-~5000 email |
-| **D-105** | Bak health minimo Founder Ops (OK/PARTIAL/FAILED + alert + last_run) |
-| **D-106** | `active_agency_id` = SoT; no fallback `agency_ids[0]`; missing = errore |
-| **D-107** | Errori API: `code` stabile BE + i18n FE; feedback se altera significato azione |
-| **D-108** | Scheduling: un solo owner di esecuzione (cron = trigger/fallback) |
-| **D-109** | Pricing SoT = `GET /billing/plans`; landing allineata o nascosta; legacy esplicito |
-| **D-110** | Demo mode esplicito; `localStorage` ≠ entitlement authority |
-| **D-111** | Cestino = stato non operativo (freeze); storico preservato |
-| **D-112** | Seed demo idempotente e deterministico |
-| **D-113** | Restore manuale testabile pre-GTM (non piattaforma DR) |
-| **D-114** | Sostenibilità bak/media = priorità pre-attivazione; O0 = numeri+design vincolante |
-| **D-115** | Programma O0…O6 approvato · **no self-serve finché O6 ≠ PASS** |
-| **D-118** | **Audit Portale ImmobilCloud** · A–J GREEN + residuo codice CHIUSO · **MERGED su main** (PR #12 · 9-Ott-2026) · fascicolo `OMNIA_PORTALE_AUDIT_FASCICOLO.md` · residui P-021/P-026 |
-| **D-116** | OpenAPI Catasto sandbox: **una sola API key** (`OPENAPI_API_KEY` + fallback `ADMIN_EMAIL`) |
-| **D-145** | Primo cliente reale = **Nicastro Immobiliare** · seed demo **OFF** su Railway · retire `demo-agency-001` via Ops |
-| **D-146** | **Vetrina www** istituzionale: Chi siamo · Perché OMNIA · Il vero lavoro · Prezzi · **no Cerca casa** in nav/CTA finale |
-| **D-148** | **Paperless in Perché OMNIA** (4° tratto = documenti digitali): Fascicolo · modulistica PDF · kit dominio — **no** firma/PEC inventate; D-129 resta sulle 3 prove economiche |
-| **D-147** | Kling micro-tour gestionale **30 crediti / €1,50** (SoT `CREDIT_COSTS`; Ken Burns B2C gratis) · gate pre-prod margini Visura/APE |
+| ID | Sintesi | Stato codice |
+|----|---------|--------------|
+| **D-094** | Trash ≠ status · filtro uniforme dominio · default non-trashed | ⏳ dominio pieno pre-GTM |
+| **D-095** | Media pubblici vs privati · cleanup blob | ✅ AuthZ fascicolo + blob delete + trash→blob |
+| **D-096** | Bak+Restore insieme · restore agency-first | ✅ scope B2C+media · dry-run agency-first (#145) |
+| **D-097** | Elimina per sempre ≠ irrecuperabile assoluto · trash in bak OK | ✅ policy |
+| **D-098** | Orphan → path a delete · agency close V1 | ✅ orphan GC APScheduler (#144) · close V1 ⏳ |
+| **D-099** | Founders GDPR assistito · fascicolo AuthZ prima del bak | ✅ export/erase + DSAR + DPA stub (#146) |
+| **D-100** | Invite: utente esistente → link agency; mai overwrite password | ⏳ fix-needed trasversale |
+| **D-101** | Job automatici: **single-instance** ora | ✅ ops single-replica |
+| **D-102** | Purge + orphan cleanup in APScheduler | ✅ (#144) |
+| **D-103** | No worker dedicato ora | ✅ |
+| **D-104** | **GTM-01 ACQUISITO** · vincolo hard pre-~5000 email | ⏳ coda |
+| **D-105** | Bak health minimo Founder Ops | ⏳ |
+| **D-106** | `active_agency_id` = SoT; no `agency_ids[0]` | ✅ path toccati + helper `require_agency_id` |
+| **D-107** | Errori API: `code` stabile BE + i18n FE | ⏳ |
+| **D-108** | Scheduling: un solo owner di esecuzione | ✅ |
+| **D-109** | Pricing SoT = `GET /billing/plans` | ✅ |
+| **D-110** | Demo mode esplicito; `localStorage` ≠ entitlement | ✅ |
+| **D-111** | Cestino = stato non operativo (freeze) | ✅ |
+| **D-112** | Seed demo idempotente | ✅ · demo OFF prod (D-145) |
+| **D-113** | Restore manuale testabile pre-GTM | ✅ dry-run agency-first |
+| **D-114** | Sostenibilità bak/media pre-attivazione | ⏳ numeri+design |
+| **D-115** | Programma O0…O6 · no self-serve finché O6 ≠ PASS | ⏳ |
+| **D-118** | Audit Portale ImmobilCloud · MERGED (#12) | ✅ |
+| **D-116** | OpenAPI Catasto sandbox: una sola API key | ✅ |
+| **D-145** | Primo cliente = Nicastro · seed demo OFF Railway | ✅ |
+| **D-146** | Vetrina www · no Cerca casa in nav/CTA | ✅ |
+| **D-147** | Kling 30 cr / €1,50 | ✅ |
+| **D-148** | Paperless in Perché OMNIA (4° tratto) | ✅ |
+| **D-149** | Migrazione sito casi 1–2 MLS on/off + clone capture | ✅ (#136) · restyling coda |
+| **D-150** | Template pack unico neo+restyling · matrice MLS | ✅ |
+| **D-151** | Listino template €99/€199 · gallery 8 | ✅ gallery (#137) · Stripe entitlement ⏳ |
 
-**SoT continuità:** `docs/audit/OMNIA_AUDIT_STATE.md` · `memory/NEXT_SESSION.md` · fascicolo D-118  
+**SoT continuità:** `docs/audit/OMNIA_AUDIT_STATE.md` · `memory/NEXT_SESSION.md` · `memory/PROGRAMMA_VERSO_8.md` · fascicolo D-118  
 
 ### Vetrina www (`LandingApp` · D-146 · 06-Nov-2026)
 
@@ -58,7 +61,8 @@ Un blocco alla volta · niente fix senza «vai» · no P0–P3 prematuri · **li
 - **Deploy**: `bash scripts/vercel-deploy.sh` (D-074).
 - **HAL**: `api.www-vetrina-landing`.
 
-**Sequenza priorità (D-099):** fascicolo → orphan → Bak+Restore → retention → costi.  
+**Sequenza D-099 (09-Nov):** fascicolo AuthZ ✅ · orphan GC ✅ · Bak+Restore ✅ · GDPR Founders ✅ · retention/costi residui.  
+**Filo verso-8:** Manut/SaaS = 8 · Storia ~7,8 (manca dogfood Nicastro Onda 1).  
 **Niente codice** senza «vai».
 
 ### Cloud Agent — ID `bld-…` (7-Ott-2026)

@@ -1,15 +1,15 @@
 # Programma → **8 su tutte le lenti**
 
 **Data**: 9 Novembre 2026 · Founder: «dobbiamo arrivare ad 8 in tutto»  
-**Aggiornamento chiusura filo 2–10**: 9 Novembre 2026 (sera)
+**Aggiornamento closeout HAL/manuale**: 9 Novembre 2026 (sera · post #136/#137)
 
 | Lente | Ora (stima) | Target | Note |
 |---|:-:|:-:|---|
-| Storia vendibile | **~7,8** | **8** | Gallery 8 su main (#137) ✅ · **manca dogfood corto Nicastro** (Onda 1) |
+| Storia vendibile | **~7,8** | **8** | Gallery 8 (#137) ✅ · MLS on/off + clone (#136) ✅ · **manca dogfood Nicastro** (Onda 1) |
 | SaaS multi-tenant | **8** | **8** | AuthZ · orphan GC · bak/restore · GDPR Founders · tenant helpers ✅ |
 | Velocità evoluzione | **8** | **8** | Ritmo onde tenuto |
 | Manutenibilità 12m | **8** | **8** | Portal/theme/FE split + `require_agency_id` su router toccati ✅ |
-| Coerenza codice↔decisioni | **8** | **8** | DECISIONS/CHANGELOG aggiornati per onda |
+| Coerenza codice↔decisioni | **8** | **8** | Cap.00/08/27 + HAL YAML allineati a D-149/150/151 |
 
 **Regola d’ordine**: un filo alla volta. Mai mischiare SaaS + elefante FE nello stesso PR. Ogni onda = merge su `main` + smoke + riga changelog.
 
@@ -48,7 +48,7 @@
 | Onda | Nome | Esito |
 |:-:|---|---|
 | **0** | Lock baseline / gallery #137 | ✅ |
-| **1** | Storia solida / dogfood | ⏳ dopo #137 |
+| **1** | Storia solida / dogfood | ⏳ dogfood Nicastro (post #136/#137) |
 | **2** | Elefante portal | ✅ |
 | **3** | Elefante theme_render | ✅ |
 | **4** | Elefante FE Sell | ✅ |
@@ -66,6 +66,7 @@
 ## Dichiarazione fine filo 2–10
 
 **Manutenibilità = 8** · **SaaS = 8** · Velocità/Coerenza = 8.  
-**Storia ~7,8** — gallery 8 live; manca dogfood Onda 1.
+**Storia ~7,8** — gallery 8 + D-149 casi 1–2 su main; manca dogfood Onda 1.
 
-Prossimo «vai» storia: dogfood Nicastro (2 temi MLS on/off + paperless).
+Prossimo «vai» storia: dogfood Nicastro (2 temi MLS on/off + paperless Perché OMNIA).  
+Closeout docs/HAL: Cap.00/08/27 + YAML + reindex (questo PR).

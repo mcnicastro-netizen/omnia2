@@ -1,3 +1,12 @@
+## 2026-11-09 — Closeout HAL + manuale + SoT (post #136/#137)
+
+- Cap.08: gallery 8 · D-149/150/151 · §8.13 MLS sito · clone_ready onesto
+- Cap.27: §27.5b MLS on/off white-label
+- Cap.00: stati decisioni D-095…D-151 (✅/⏳)
+- HAL YAML: `08-sito-web` · `27-mls-network` · `00-api-codice` (jobs/bak/restore/media)
+- SoT: `PROGRAMMA_VERSO_8` · `NEXT_SESSION` · diario · `IMPORT_HAL` v0.56
+- Corpus: +`PROGRAMMA_VERSO_8.md` · reindex HAL locale
+
 ## 2026-11-09 — Smoke migrazione dual-role + harden D-106 / login
 
 - Smoke E2E `agency_admin` + `super_admin`: clone_build → MLS leave/join (box sito) → XML preview/commit

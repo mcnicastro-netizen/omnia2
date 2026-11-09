@@ -32,12 +32,15 @@ voci:
         - "Vai in Sito web dalla barra a sinistra (solo titolare)."
         - "Sezione 1 - Brand Extractor: incolla URL del tuo sito attuale,
           HAL estrae colori/font/logo."
-        - "Sezione 2 - Theme Picker: scegli tra 4 temi (Minimal, Classic,
-          Bold, Luxury)."
+        - "Sezione 2 - Theme Picker / Brand Studio: gallery 8 temi
+          (Minimal, Classic, Bold, Luxury, Atelier, Cinematic,
+          Editorial, Mediterranean) — ciascuno QA MLS on|off."
         - "Sezione 3 - Live Preview: iframe con anteprima del sito
           pubblico corrente."
         - "Sezione 4 - Dominio personalizzato: richiedi il tuo
           www.tuoagenzia.it con 2 record DNS."
+        - "Opzionale - Cattura sito (D-149): URL → palette → preview
+          home+lista+scheda (clone_ready)."
       errori_comuni:
         - problema: "Non vedo la voce Sito web nella sidebar"
           soluzione: >
@@ -100,43 +103,43 @@ voci:
       - "[SCREEN: cap8-brand-extractor]"
 
   - id: sito.temi-disponibili
-    titolo: I 4 temi disponibili (Minimal, Classic, Bold, Luxury)
+    titolo: Gallery 8 temi (D-150 / D-151)
     modulo: Sito web
     widget: null
     pubblico: [titolare]
     livello: base
-    tags: [sito-web, temi, design, minimal, classic, bold, luxury]
+    tags: [sito-web, temi, design, gallery-8, d-150, d-151, minimal, classic, bold, luxury, atelier, cinematic, editorial, mediterranean]
     correlati:
       - sito.applicare-tema
       - sito.auto-configura
       - sito.brand-extractor
+      - sito.listino-template
+      - sito.mls-on-off
     domanda_naturale: "Quali temi posso scegliere per il sito?"
     contenuto:
       a_cosa_serve: >
         Sapere quale tema si adatta meglio alla tua agenzia. OMNIA
-        offre 4 layout gia' pronti, ognuno con palette + tipografia +
-        struttura specifiche.
+        offre 8 layout live (un solo pack per neo e restyling), ciascuno
+        con palette + tipografia + QA MLS on|off.
       quando_si_usa: >
         Alla prima configurazione del sito, o ogni volta che vuoi
         rinnovare l'immagine dell'agenzia (l'operazione e' reversibile).
       passi:
-        - "MINIMAL - agenzie boutique, tono familiare/professionale.
-          Palette default nero+verde bosco, tipografia Fraunces serif.
-          Layout con spazio bianco, header trasparente."
-        - "CLASSIC - agenzie generaliste, tono istituzionale. Blu notte
-          + ottone. Playfair Display serif. Header colorato con logo
-          invertito, cards con ombra."
-        - "BOLD - agenzie moderne ad alto volume. Arancio + nero.
-          Inter 700-800. Typo maiuscola enorme, card a piena immagine."
-        - "LUXURY - immobili di pregio. Nero puro + oro rosato.
-          Playfair Display + Inter. Header centrato con tagline
-          spaziata, foto grandi, features come pill outline."
+        - "MINIMAL (€99 Starter) - boutique, spazio bianco, Fraunces."
+        - "CLASSIC (€99 Starter) - mainstream, blu notte + ottone, Playfair."
+        - "BOLD (€199) - volume/moderno, arancio + nero, tipografia enorme."
+        - "LUXURY (€199) - pregio, nero + oro, foto grandi."
+        - "ATELIER (€199) - boutique urbana, CTA pill, luce studio."
+        - "CINEMATIC (€199) - full-bleed media, serif display, prestigio."
+        - "EDITORIAL (€199) - magazine / mono-quartiere, poco colore."
+        - "MEDITERRANEAN (€199) - Sud / second home, fondi caldi."
+        - "Pro/Agency: gallery 8 inclusa. Stripe entitlement Starter ⏳."
       errori_comuni:
-        - problema: "Nessuno dei 4 temi mi piace, voglio custom CSS"
+        - problema: "Nessuno degli 8 temi mi piace, voglio custom CSS"
           soluzione: >
-            In v1 non e' supportato custom CSS. Puoi comunque sovrascrivere
-            palette (4 hex), tipografia (font-family CSS), logo URL e
-            tagline entro il framework dei 4 temi.
+            In v1 non e' supportato custom CSS. Puoi sovrascrivere
+            palette (4 hex), tipografia, logo URL e tagline entro gli 8 temi.
+            Restyling caso 3 = stesso pack a €199 (D-151).
       permessi:
         - Titolare (agency_admin), super_admin
     screenshot:
@@ -162,20 +165,18 @@ voci:
         visiva.
       passi:
         - "Vai in Sito web -> sezione Tema."
-        - "Clicca sulla card del tema desiderato (Minimal/Classic/Bold/
-          Luxury)."
+        - "Clicca sulla card del tema (8 live: minimal/classic/bold/luxury/
+          atelier/cinematic/editorial/mediterranean)."
         - "OMNIA salva subito (POST /website/theme/apply) con palette
           default del tema. Timestamp applied_at aggiornato."
         - "Il badge Attivo compare sulla card scelta."
         - "La Live Preview iframe si aggiorna automaticamente."
-        - "Puoi sovrascrivere palette (4 colori hex #RRGGBB), tipografia
-          (font-family CSS), logo URL e tagline salvando via API - non
-          c'e' UI dedicata all'override in v1, chiedi all'assistenza."
+        - "Override palette/typography/logo/tagline via theme_config."
       errori_comuni:
         - problema: "invalid_theme_id (400)"
           soluzione: >
-            Il theme_id inviato non e' tra minimal/classic/bold/luxury.
-            Non capita da UI, se accade contatta assistenza.
+            theme_id fuori da THEME_IDS (8 live). Non capita da UI;
+            se accade contatta assistenza.
         - problema: "Ho cambiato tema ma il pubblico vede quello vecchio"
           soluzione: >
             Il tema e' applicato subito lato server. Se un utente vede la
@@ -548,81 +549,142 @@ voci:
     screenshot: []
 
   - id: sito.demo-a037
-    titolo: Demo da sito esistente e pacchetto template (A-037)
+    titolo: Demo e template pack (A-037 + D-150/D-151)
     modulo: Sito web
     widget: null
     pubblico: [titolare, super_admin]
     livello: avanzato
-    tags: [sito-web, demo, a-037, brand-extractor, template, restyling, founders]
+    tags: [sito-web, demo, a-037, brand-extractor, template, restyling, founders, d-150, d-151]
     correlati:
       - sito.brand-extractor
       - sito.temi-disponibili
       - sito.clone-d023-d130
+      - sito.listino-template
       - domain.non-proprietario-a037
     domanda_naturale: "Possiamo personalizzare la demo col look del mio sito attuale?"
     contenuto:
       a_cosa_serve: >
-        Chiarire lo stato onesto del percorso demo commerciale: URL del
-        sito cliente → brand → tema OMNIA visitabile, più template per chi
-        non ha sito, vuole restyling o non è proprietario del dominio.
-        A-037 è la rampa demo; il clone pieno è D-023/D-130 (voce separata).
+        Percorso demo commerciale: URL → brand → tema OMNIA visitabile,
+        più gallery 8 per chi non ha sito o vuole restyling. A-037 = rampa
+        demo; clone keep-brand = D-023/D-130/D-149.
       quando_si_usa: >
-        Quando un prospect chiede una demo vestita come il suo sito, o
-        quando dichiara di non avere sito / non controllare il dominio.
+        Prospect chiede demo vestita, oppure non ha sito / non controlla
+        il dominio.
       passi:
-        - "Lead /it/agenzie: campo Hai un sito? + URL (salvato sul lead)."
-        - "Brand Extractor esiste e può estrarre palette/font/logo da URL."
-        - "LIMITAZIONE OGGI: non c'è ancora il loop automatico URL → demo
-          pubblica vestita (A-037 aperto)."
-        - "I 4 temi backend ci sono; UI template pack commerciale ancora
-          stub — A-037 deve chiuderlo per no-sito/restyling/non-proprietario."
-        - "Non promettere clone automatico del sito finché A-037 e D-130
-          non hanno preview visitabile (vedi sito.clone-d023-d130)."
+        - "Lead /it/agenzie: Hai un sito? + URL."
+        - "Brand Extractor + gallery 8 live (D-150/D-151)."
+        - "Clone capture/build può produrre preview home+lista+scheda
+          (clone_ready) — non pixel-perfect automatico."
+        - "Restyling caso 3 = stesso pack a €199 (Stripe entitlement ⏳)."
+        - "Dominio non-proprietario → Cap. 17 Domain Vault."
       errori_comuni:
-        - problema: "Ho dato l'URL ma la demo non ha il mio look"
+        - problema: "Ho dato l'URL ma non è un clone pixel-perfect"
           soluzione: >
-            Atteso finché A-037 non chiude il loop. Oggi l'URL serve come
-            brief; setup branding/tema è assistito. Non è un clone del sito.
+            Atteso: capture+tema OMNIA, non Vision crawl multi-pagina.
+            Per keep-brand usa clone_ready (voce clone).
       permessi:
         - Titolare / Founder Ops (prep demo)
     screenshot: []
 
   - id: sito.clone-d023-d130
-    titolo: Clone-from-URL P0 (D-023 / D-130) — non ancora disponibile
+    titolo: Clone / migrazione sito (D-023 / D-130 / D-149)
     modulo: Sito web
     widget: null
     pubblico: [titolare, super_admin]
     livello: avanzato
-    tags: [sito-web, clone, d-023, d-130, migrazione, p0, brand-extractor]
+    tags: [sito-web, clone, d-023, d-130, d-149, migrazione, p0, brand-extractor, clone-ready]
     correlati:
       - sito.brand-extractor
       - sito.demo-a037
       - sito.temi-disponibili
+      - sito.mls-on-off
     domanda_naturale: "Potete clonare il mio sito attuale dentro OMNIA?"
     contenuto:
       a_cosa_serve: >
-        Trasferire il sito dell'agenzia su OMNIA con look riconoscibile
-        (home, lista immobili, scheda), dati dal gestionale. Decisione
-        D-023; escalation Founder 20-Ott-2026 D-130 = P0 pari al Visual Staging.
+        Trasferire il sito su OMNIA con look riconoscibile (home, lista,
+        scheda) e dati dal gestionale. D-130 = P0; D-149 shippa capture
+        + preview 3 pagine + casi MLS on/off.
       quando_si_usa: >
-        Prospect con sito proprio che vuole migrare senza perdere identità
-        visiva (es. nicastroimmobiliare.it). NON per chi chiede solo un
-        restyling leggero (usa temi + Brand Extractor).
+        Prospect con sito proprio (es. nicastroimmobiliare.it). Per solo
+        restyling leggero → gallery temi + Brand Extractor (€199 caso 3).
       passi:
-        - "OGGI NON DISPONIBILE: solo Brand Extractor + 4 temi OMNIA."
-        - "Target: URL → crawl pagine chiave → preview visitabile → dominio."
-        - "Soglia minima vendita: home + lista + scheda look-alike, API OMNIA."
-        - "SKU «solo sito» NON esiste in listino B2B (D-130) — serve piano ImmoWeb."
-        - "Vietato promettere clone in call finché non c'è preview visitabile."
+        - "POST /app/website/clone-capture (build=true) o UI Cattura sito."
+        - "Brand Gemini o CSS fallback → theme_config → smoke 3 pagine."
+        - "Preview: /api/p/{slug}/ · /lista · scheda; flag clone_ready."
+        - "Casi 1–2: MLS on/off sul white-label (vedi sito.mls-on-off)."
+        - "Gap residuo: crawl Vision multi-pagina / headless D-022."
+        - "SKU «solo sito» NON esiste — serve piano ImmoWeb."
       errori_comuni:
-        - problema: "Ho applicato il Brand Extractor ma il sito non è uguale al mio"
+        - problema: "Brand Extractor non clona il layout"
           soluzione: >
-            Corretto: l'estrattore cambia colori/logo su un tema OMNIA.
-            Non è il clone D-023. Gap aperto (D-130).
+            Corretto: cambia colori/logo su tema OMNIA. Per preview
+            keep-brand usa clone-capture/build (D-149).
         - problema: "Voglio comprare solo il sito senza gestionale"
           soluzione: >
-            Non c'è SKU solo sito. Opzioni: piano Starter (sito incluso)
-            oppure trattativa custom fuori listino.
+            Non c'è SKU solo sito. Starter/Pro con sito incluso, o
+            trattativa custom fuori listino.
       permessi:
         - Titolare / Founder Ops (promessa commerciale)
+    screenshot: []
+
+  - id: sito.listino-template
+    titolo: Listino template sito €99 / €199 (D-151)
+    modulo: Sito web
+    widget: null
+    pubblico: [titolare, super_admin]
+    livello: base
+    tags: [sito-web, listino, d-151, prezzi, starter, restyling]
+    correlati:
+      - sito.temi-disponibili
+      - sito.demo-a037
+    domanda_naturale: "Quanto costa un tema del sito?"
+    contenuto:
+      a_cosa_serve: >
+        Chiarire prezzi gallery: Pro/Agency incluso; Starter neo
+        minimal|classic €99, altri 6 €199; restyling caso 3 €199.
+      quando_si_usa: >
+        In call commerciale o in Brand Studio quando scegli un tema a pagamento.
+      passi:
+        - "Pro / Agency: gallery 8 inclusa."
+        - "Starter neo: €99 (minimal|classic) oppure €199 (altri 6)."
+        - "Restyling (caso 3): €199 one-shot qualunque tema."
+        - "Stripe checkout entitlement ancora in coda (SoT prezzi già in plans)."
+      errori_comuni:
+        - problema: "Posso comprare solo il sito?"
+          soluzione: "No SKU solo sito; il sito è feature del piano ImmoWeb."
+      permessi:
+        - Titolare / Founder Ops
+    screenshot: []
+
+  - id: sito.mls-on-off
+    titolo: MLS on/off sul sito white-label (D-149)
+    modulo: Sito web
+    widget: null
+    pubblico: [titolare, super_admin]
+    livello: base
+    tags: [sito-web, mls, d-149, white-label, mls-box]
+    correlati:
+      - sito.temi-disponibili
+      - sito.clone-d023-d130
+      - mls.join
+      - mls.pubblico
+    domanda_naturale: "Il sito dell'agenzia mostra anche gli immobili MLS?"
+    contenuto:
+      a_cosa_serve: >
+        Con mls_enabled=true la home mostra box ricerca rete + sezione
+        Immobili dalla Rete MLS Partner. Con false solo search portafoglio;
+        embed /api/mls-box/* risponde mls_not_enabled. Il theme_id non cambia.
+      quando_si_usa: >
+        Dopo join/leave MLS, o in migrazione casi 1–2 (D-149).
+      passi:
+        - "Caso 1: entra in MLS → home con pezzi rete."
+        - "Caso 2: POST /app/mls/leave → zero pezzi MLS sul sito."
+        - "Ogni tema gallery 8 deve passare QA on|off (D-150)."
+      errori_comuni:
+        - problema: "Ho lasciato MLS ma vedo ancora il box rete"
+          soluzione: >
+            Verifica mls_enabled false e hard-refresh; embed deve dare
+            mls_not_enabled.
+      permessi:
+        - Titolare (join/leave) · pubblico vede solo pezzi consentiti
     screenshot: []

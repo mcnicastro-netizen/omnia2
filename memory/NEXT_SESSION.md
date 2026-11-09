@@ -1,6 +1,6 @@
 # Prossima sessione — programma passi
 
-**Aggiornato**: 9 Novembre 2026 — **A-040/D-148 paperless chiuso** · priorità Founder: manutenibilità poi SaaS  
+**Aggiornato**: 9 Novembre 2026 — **closeout filo verso-8** · HAL/manuale allineati · prossimo = dogfood Storia  
 **Repo**: https://github.com/mcnicastro-netizen/omnia2 ✅  
 **Environment**: omnia2 (esiste; UI Dashboard può glitchare — non Start Fresh)
 
@@ -27,14 +27,14 @@ Founder 05-Nov-2026: **controllare i margini prima del go-live**, non dopo.
 | Ruolo | Doc |
 |-------|-----|
 | Freccia | [`docs/audit/OMNIA_COERENZA_SISTEMA.md`](../docs/audit/OMNIA_COERENZA_SISTEMA.md) |
+| **Verso-8** | [`PROGRAMMA_VERSO_8.md`](./PROGRAMMA_VERSO_8.md) — Manut/SaaS/Velocità/Coerenza = **8** · Storia **~7,8** |
 | **Primo cliente B2B** | **D-145** Nicastro Immobiliare (slug `nicastro-immobiliare`) |
 | **Vetrina www** | **D-146** + **D-148** paperless in Perché OMNIA |
 | **Kling crediti** | **D-147** 30 cr / €1,50 · listino [`PRICING_OMNIA.md`](./PRICING_OMNIA.md) v3.2 |
 | Portale | D-139…D-144 ✅ |
-| Clone sito | D-023/D-130 + A-037 · **D-150/D-151** pack+listino · restyling €199 · Stripe checkout template ⏳ |
-| Template pack | **D-151** gallery 8 live su main (#137) · Starter €99/€199 · restyling €199 |
-| **Prossimo strutturale** | Filo 2–10 + gallery 8 ✅ · **prossimo: dogfood Storia Nicastro** |
-| Migrazione sito | **D-149** casi 1–2 MLS on/off + clone capture |
+| Migrazione sito | **D-149** casi 1–2 ✅ (#136) · clone_ready · restyling coda |
+| Template pack | **D-150/D-151** gallery 8 (#137) · €99/€199 · Stripe entitlement ⏳ |
+| **Prossimo** | **Dogfood Storia Nicastro** (Onda 1) — 2 temi MLS on/off + paperless |
 
 ---
 
@@ -54,23 +54,15 @@ Vetrina istituzionale: `https://omniarealestateecosystem.it/it` (**D-146** + pap
 
 ---
 
-## Priorità (Founder 09-Nov: «stabilisci tu»)
+## Priorità (Founder 09-Nov)
 
-1. ✅ **A-040 / D-148 Paperless** — chiuso.
-2. ✅ **Themes split** — `themes.py` 1156 → ~216.
-3. ✅ **AuthZ fascicolo E2E** (D-095) — anti-IDOR agency-scoped.
-4. ✅ **Fascicolo blob delete** — `delete_object` best-effort su delete documento.
-5. ✅ **Trash purge → blob** — hard-delete immobile pulisce Object Storage.
-6. ✅ **Orphan GC + trash purge schedulati** (D-102 / Onda 7).
-7. ✅ **Backup scope + restore agency-first** (D-096 / Onda 8).
-8. ✅ **GDPR Founders** (D-099 / Onda 9).
-9. ✅ **Tenant helpers + voti** (Onda 10) — Manut/SaaS=8.
-10. ✅ **Gallery 8** (#137) su main.
-11. **Prossimo Storia**: dogfood Nicastro (Onda 1) — temi MLS on/off.
+1. ✅ Filo manut+SaaS onde 2–10 + gallery 8 + D-149.
+2. ✅ Closeout HAL/manuale Cap.00/08/27 + YAML + reindex.
+3. **Prossimo Storia**: dogfood Nicastro (Onda 1).
+4. Opz.: Stripe D-151 entitlement · clone Vision crawl · GTM-01.
 
 ## Filo prodotto
 
-1. **09-Nov chiuso:** filo manut+SaaS verso-8 + gallery 8. Resta dogfood Storia.
-| Migrazione sito | **D-149** casi 1–2 MLS on/off + clone capture |
-2. **06-Nov chiuso:** Nicastro · www · Kling · staging split.
-3. Prossimo: clone full home+lista+scheda (`clone_ready`) · restyling in coda.
+1. **09-Nov chiuso:** verso-8 Manut/SaaS · #136/#137 · docs/HAL closeout.
+2. **Prossimo:** dogfood Storia · clone full polish · restyling operativo.
+3. **06-Nov chiuso:** Nicastro · www · Kling · staging split.

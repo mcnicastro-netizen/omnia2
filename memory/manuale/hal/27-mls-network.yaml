@@ -208,18 +208,20 @@ voci:
     pubblico: [titolare, agente, segreteria]
     livello: base
     tags: [b2c, search, mls, cap27]
-    correlati: [mls.cos-e]
+    correlati: [mls.cos-e, mls.sito-white-label]
     domanda_naturale: "I clienti vedono il network MLS?"
     contenuto:
       a_cosa_serve: >
         Sul lato pubblico (ImmobilCloud) c'è una ricerca semplificata degli
-        immobili condivisi in rete, con filtri tipo zona e prezzo.
+        immobili condivisi in rete, con filtri tipo zona e prezzo. Sul sito
+        white-label dell'agenzia i pezzi MLS dipendono da mls_enabled (D-149).
       quando_si_usa: >
-        Quando spieghi a un cliente cosa trova sulla vetrina, o controlli
-        la presenza della rete all'esterno.
+        Quando spieghi a un cliente cosa trova sulla vetrina Cloud, o sul
+        sito /api/p/{slug}/ dell'agenzia.
       passi:
         - "Apri ImmobilCloud / Cloud."
         - "Usa il riquadro della rete o la ricerca pubblica collegata al MLS."
+        - "Sul sito agenzia: se MLS on → box rete + sezione partner; se off → solo portafoglio."
         - "Filtra per zona o prezzo se disponibili."
       errori_comuni:
         - problema: "I numeri sembrano alti ma non ho clienti reali"
@@ -228,6 +230,32 @@ voci:
             non arrivano molte agenzie reali.
       permessi:
         - "La ricerca pubblica è aperta; la gestione resta in area agenzia."
+      screenshot: []
+
+  - id: mls.sito-white-label
+    titolo: MLS on/off sul sito white-label (D-149)
+    modulo: MLS
+    widget: null
+    pubblico: [titolare, super_admin]
+    livello: base
+    tags: [mls, sito-web, d-149, white-label, mls-box, cap27]
+    correlati: [mls.join, mls.pubblico, sito.mls-on-off]
+    domanda_naturale: "Come attivo o disattivo il box MLS sul mio sito?"
+    contenuto:
+      a_cosa_serve: >
+        Join/leave MLS imposta mls_enabled e aggiorna i pezzi sul sito
+        pubblico senza cambiare il tema Brand Studio.
+      quando_si_usa: >
+        Dopo Entra nel network / Esci, o in migrazione casi 1–2.
+      passi:
+        - "MLS on: home con box ricerca rete + Immobili dalla Rete MLS Partner."
+        - "MLS off (leave): solo search agenzia; /api/mls-box/* → mls_not_enabled."
+        - "Gallery 8: ogni tema QA on|off (D-150)."
+      errori_comuni:
+        - problema: "Ho lasciato MLS ma il box resta"
+          soluzione: "Controlla mls_enabled e hard-refresh del sito pubblico."
+      permessi:
+        - Titolare (join/leave)
       screenshot: []
 
   - id: mls.limitazioni-v1

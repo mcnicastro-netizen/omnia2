@@ -73,6 +73,7 @@ CORPUS_FILES = [
     "DECISIONS.md",
     "AUDIT_M2.md",
     "PROGRAMMA_OMNIA.md",
+    "PROGRAMMA_VERSO_8.md",
     "ASPETTI_DA_APPROFONDIRE.md",
     "BUSINESS_MODEL.md",
     # CHANGELOG.md ESCLUSO dal corpus RAG (TASK B-ter, 6-Ago-2026):

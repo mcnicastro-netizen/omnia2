@@ -584,14 +584,14 @@ voci:
       passi:
         - "D-095 dominio: foto pubblicabili OK pubblici; fascicolo/
           modulistica con AuthZ o URL firmati (meccanismo dopo)."
-        - "Cluster: media-authorization = P3.1+P4.1+M-01; Mongo⟷blob
-          = M-02…M-04+L-05/L-06. Codice ⏳."
-        - "P8: nessun job cleanup blob (J-04); sync senza trash (J-01)."
+        - "09-Nov: AuthZ fascicolo agency-scoped ✅; delete documento →
+          delete_object best-effort; trash purge immobile → purge blob."
+        - "Orphan GC APScheduler (D-102/#144): blob senza record → path delete."
       errori_comuni:
         - problema: "Ho eliminato un documento dal Fascicolo ma il file?"
           soluzione: >
-            Oggi solo ref DB (M-03). D-095 richiede cleanup affidabile —
-            non implementato finché Founder non dà «vai» post-audit.
+            Delete documento tenta delete_object(storage_path) dopo pull
+            Mongo (best-effort). Orphan GC ripulisce residui.
       permessi:
         - Concetto: titolare / super_admin
       screenshot: []
@@ -607,28 +607,22 @@ voci:
     domanda_naturale: "Come funzionano i job notturni? Il cestino viene svuotato automaticamente?"
     contenuto:
       a_cosa_serve: >
-        Audit P8 + P16 ACQUISITO + P17 Osservabilità. APScheduler
-        in-process + cron HTTP. **D-101** single-instance; **D-102**
-        purge+blob da automatizzare (oggi ancora solo HTTP);
-        **D-103** no worker dedicato ora. Bak senza stato ops (O-01).
-        Finding JA-* · J-* · O-*.
+        Audit P8/P16/P17. APScheduler in-process + cron HTTP.
+        **D-101** single-instance; **D-102** purge+orphan **schedulati**
+        (#144); **D-103** no worker dedicato. Bak health Founder Ops
+        ancora minimo (D-105 ⏳).
       quando_si_usa: >
         Domande su cron, backup, matching notturno, purge cestino.
       passi:
-        - "4 job APSched (bak/sync/match/saved-search) + HTTP cron
-          parallelo senza lock → overlap HTTP↔sched anche a 1 istanza
-          (JA-01)."
-        - "Finding J-* / JA-* / O-* aperti — no fix senza vai."
-        - "D-101 ops single-replica; D-102 schedulare purge+orphan;
-          D-103 no worker ora (eventuale anti-dup minimo)."
-        - "Bak health: MANIFEST+log only (O-01); tick swallowa (O-02);
-          no last_run (O-05)."
+        - "Job APSched: bak/sync/match/saved-search + trash purge + orphan GC."
+        - "D-101 ops single-replica; D-103 no worker dedicato ora."
+        - "HTTP cron resta trigger/fallback (D-108 un solo owner)."
+        - "Bak health cruscotto (D-105) ancora gap osservabilità."
       errori_comuni:
         - problema: "Il cestino non si svuota da solo dopo 30 giorni"
           soluzione: >
-            Corretto oggi (J-03/JA-04): serve POST /cron/trash/purge.
-            Decisione D-102: va schedulato nel ciclo automatico
-            (codice ⏳ post-«vai»).
+            D-102: purge schedulato in APScheduler; HTTP
+            POST /cron/trash/purge resta fallback/manual.
       permessi:
         - super_admin / Founder
       screenshot: []
@@ -675,34 +669,32 @@ voci:
     domanda_naturale: "Come funziona il backup? Cosa viene salvato? Posso ripristinare un'agenzia?"
     contenuto:
       a_cosa_serve: >
-        Audit P10 + P17 Osservabilità: bak esiste ma ricopia tutto
-        (~31×). Esito solo in MANIFEST.json + log (O-01); tick
-        swallowa errori (O-02); no last_run (O-05). Restore assente
-        (D-096). Listino fermo. B-* · O-01…O-05.
+        Backup giornaliero + scope ampliato B2C/media (Onda 8 / D-096
+        #145). Restore agency-first dry-run testabile. Bak health
+        Founder Ops (D-105) ancora minimo. Listino storage fermo.
       quando_si_usa: >
         Domande su backup, retention, restore, costo disco ops,
         “il bak di ieri è andato a buon fine?”.
       passi:
-        - "backup_job.py: JSONL whitelist + copytree local + purge >R."
-        - "Osservabilità: nessuno stato Mongo/API/alert su esito bak
-          (O-01) — Founder Ops non mostra bak health (O-13)."
-        - "Restore: promessa D-085 via supporto — codice assente (D-096)."
-        - "Niente fix / niente listino senza design Backup+Restore."
+        - "backup_job.py: JSONL whitelist (scope B2C+media) + copytree + purge >R."
+        - "D-096: Bak+Restore insieme; restore agency-first dry-run ✅."
+        - "Osservabilità bak health (D-105) ancora gap cruscotto/alert."
+        - "POST /ops/backup/run disponibile a Founder Ops."
       errori_comuni:
-        - problema: "Ho lanciato il backup ma mancano le richieste clienti"
+        - problema: "Ho lanciato il backup ma mancano pezzi"
           soluzione: >
-            Atteso oggi (B-02): client_requests fuori whitelist.
-            Annotato in audit — non patchare senza priorità Founder.
+            Controlla scope whitelist aggiornato (#145). Se manca una
+            collection, apri ticket Founder — non patchare a caso.
         - problema: "Come so se il backup notturno è riuscito?"
           soluzione: >
-            Oggi solo MANIFEST sul filesystem + log stdout (O-01).
-            Gap acquisito in P17 — non c’è cruscotto/alert dedicato.
+            MANIFEST + log; cruscotto D-105 ancora ⏳. Ops può forzare
+            POST /ops/backup/run.
       permessi:
         - super_admin / Founder
       screenshot: []
 
   - id: api.restore-disaster
-    titolo: Ripristino da backup — cosa manca oggi
+    titolo: Ripristino da backup — agency-first (D-096)
     modulo: Codice API
     widget: null
     pubblico: [super_admin]
@@ -712,28 +704,27 @@ voci:
     domanda_naturale: "Se perdiamo database e file, possiamo rimettere OMNIA come ieri?"
     contenuto:
       a_cosa_serve: >
-        Audit P11 ACQUISITO + D-096 + P12: ripristino automatico = NO.
-        Target = singola agenzia via supporto (bak globale → extract);
-        piattaforma = emergenza interna. Bak+Restore insieme; listino
-        fermo. Cestino ≠ Backup (BC-*). R-01…R-12 · BC-01…BC-05.
+        D-096: restore automatico piattaforma = NO; restore **agency-first**
+        dry-run/testabile shippato (#145). Target supporto = singola
+        agenzia da bak. Cestino ≠ Backup. Listino storage fermo.
       quando_si_usa: >
         Domande su disaster recovery, ripristino agenzia, supporto,
         differenza cestino vs backup.
       passi:
-        - "D-096: Bak→Restore→costi→eventuale listino; agency-first."
-        - "Successo testabile: props+clients+requests+activities+docs+media."
-        - "Cestino = delete accidentale; Backup = guaio grave (P12)."
-        - "Niente fix senza «vai»; listino fermo."
+        - "Agency-first dry-run: props+clients+requests+activities+docs+media."
+        - "Piattaforma DR automatica: non in scope ora."
+        - "Cestino = delete accidentale; Backup = guaio grave."
+        - "GDPR erase/export Founders: path D-099 (#146), distinto dal restore."
       errori_comuni:
-        - problema: "Il manuale dice che il supporto ripristina"
+        - problema: "Posso self-serve restore da UI?"
           soluzione: >
-            Promessa documentata (R-02) ma oggi senza codice/tool.
-            Gap acquisito in audit — non improvvisare restore in prod.
+            No self-serve finché O6 ≠ PASS (D-115). Oggi tool/supporto
+            agency-first; non improvvisare restore in prod.
         - problema: "Ho svuotato il Cestino: è come un restore da backup?"
           soluzione: >
-            No (BC-02 / D-097). Cestino = undo delete utente.
-            «Elimina per sempre» = fuori area operativa; supporto può
-            valutare bak valido se ancora disponibile — non garantito.
+            No (D-097). Cestino = undo delete utente. «Elimina per sempre»
+            = fuori area operativa; bak può ancora avere copia fino a
+            scadenza retention — non garantito.
       permessi:
         - super_admin / Founder
       screenshot: []

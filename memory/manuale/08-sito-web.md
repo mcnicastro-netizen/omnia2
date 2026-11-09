@@ -1,13 +1,14 @@
 # Capitolo 8 · Sito web agenzia
 
 > **Cosa trovi in questo capitolo**
-> Il modulo **Sito web** ti dà un sito pubblico dell'agenzia — con vetrina immobili, SEO, share sociale — collegato al tuo portafoglio ImmoWeb e brandato coi tuoi colori/logo. Il capitolo copre: come funziona il sito pubblico, l'estrattore brand da URL, i 4 temi disponibili, l'auto-configurazione, la live preview e il custom domain (il tuo `www.tuoagenzia.it`).
+> Il modulo **Sito web** ti dà un sito pubblico dell'agenzia — con vetrina immobili, SEO, share sociale — collegato al tuo portafoglio ImmoWeb e brandato coi tuoi colori/logo. Il capitolo copre: brand extractor, **gallery 8 temi** (D-150/D-151), MLS on/off sul sito (D-149), clone capture → preview 3 pagine, live preview e custom domain.
 
 **Cosa NON è (D-051 onestà)**
 - Non è un **CMS pagine libere**: le pagine sono generate da OMNIA a partire dai tuoi immobili + brand config. Non scrivi HTML.
-- Non è un **editor visuale**: scegli 1 dei 4 temi predefiniti e applichi eventuali override su palette/typography/logo/tagline.
+- Non è un **editor visuale**: scegli 1 degli **8 temi** live e applichi eventuali override su palette/typography/logo/tagline.
 - Non abilita **automaticamente l'SSL sul tuo dominio custom**: c'è uno step manuale del super_admin su pannello di hosting (vedi §8.8).
-- **Custom CSS non supportato in v1**: la personalizzazione è entro il framework dei 4 temi + override.
+- **Custom CSS non supportato in v1**: la personalizzazione è entro il framework degli 8 temi + override.
+- **Restyling caso 3** e **Stripe checkout template** (D-151 entitlement): restyling €199 in listino · checkout Stripe ancora ⏳.
 
 ---
 
@@ -18,9 +19,10 @@ OMNIA pubblica per ogni agenzia un sito pubblico **autonomo, indicizzabile da Go
 
 **Cosa vedi dalla pagina Sito web (in CRM)**
 1. **Brand Extractor** — inserisci l'URL del tuo sito attuale, HAL estrae palette, tipografia, tono e logo.
-2. **Theme Picker** — 4 card con anteprima dei temi (Minimal, Classic, Bold, Luxury).
+2. **Theme Picker / Brand Studio** — gallery **8 temi live**: Minimal, Classic, Bold, Luxury, Atelier, Cinematic, Editorial, Mediterranean (ogni tema QA MLS on|off).
 3. **Live Preview** — iframe con l'anteprima del sito con le tue impostazioni correnti.
 4. **Custom Domain** — sezione per collegare il tuo dominio (es. `www.tuoagenzia.it`).
+5. **Cattura sito / clone** (D-149) — URL → palette → build preview home+lista+scheda (`clone_ready`).
 
 **Il sito pubblico** è servito da OMNIA su:
 - URL di default: `https://omniarealestateecosystem.it/api/p/{slug-agenzia}/`
@@ -90,58 +92,58 @@ Il risultato completo va in `agency.website.extracted_profile` (JSON con `brand_
 
 ---
 
-## 8.3 · I 4 temi disponibili
+## 8.3 · Gallery 8 temi (D-150 / D-151)
 
 **Filosofia**
-Ogni tema è una coppia di layout `render_index` (vetrina) + `render_property` (scheda dettaglio) generati server-side in HTML pulito. Nessun framework JS lato pubblico — solo un piccolo script per il pulsante "Copia link" nello share block.
+Ogni tema è layout SSR (`theme_render` + `theme_css`): home, lista, scheda. Nessun framework JS lato pubblico — solo script minimi (copia link, box MLS). Un solo pack per **neo agenzia** e **restyling** (D-150). Ogni tema deve passare QA con `mls_enabled` true|false (D-149).
 
-**Il catalogo**
+**Listino (D-151)**
+| Path | Prezzo |
+|---|:-:|
+| Pro / Agency | gallery 8 **inclusa** |
+| Starter neo — `minimal` \| `classic` | **€99** one-shot |
+| Starter neo — altri 6 | **€199** one-shot |
+| Restyling (caso 3) | **€199** one-shot |
+Stripe checkout entitlement ancora ⏳; SoT prezzi in `plans.py` / `PRICING_OMNIA.md`.
 
-### 1) Minimal
-- **Per chi**: agenzie boutique, tono familiare o professionale.
-- **Palette default**: primario `#1c1917` (nero pece) · accent `#1f6b5c` (verde bosco) · neutro chiaro `#fafaf9`.
-- **Tipografia**: heading `Fraunces` serif · body `system-ui` sans.
-- **Layout**: molto spazio bianco, header trasparente con logo piccolo, card con bordo sottile, hero tipografico.
-- **Ideale se**: hai poche immagini di alta qualità e vuoi far parlare il testo.
+**Il catalogo live**
 
-### 2) Classic
-- **Per chi**: agenzie generaliste con portafoglio ampio, clientela mainstream.
-- **Palette default**: primario `#0B1E3F` (blu notte) · accent `#C19A6B` (ottone/champagne) · neutro chiaro `#f5f3ee`.
-- **Tipografia**: heading `Playfair Display` serif · body `Georgia` serif.
-- **Layout**: header colorato con logo invertito, cards con ombra, titoli sottolineati dall'accent, prezzo in Playfair.
-- **Ideale se**: vuoi un'immagine "istituzionale" tradizionale ma non polverosa.
+### 1) Minimal (`simple` · €99)
+Boutique, spazio bianco, Fraunces + system. Slot MLS chiaro (no blocco primary pieno).
 
-### 3) Bold
-- **Per chi**: agenzie moderne, ad alto volume, tono tecnico o professionale.
-- **Palette default**: primario `#FF5A1F` (arancio brand) · accent `#111111` (nero) · neutro chiaro `#ffffff`.
-- **Tipografia**: heading + body `Inter` sans, pesi 700-800.
-- **Layout**: hero con typo maiuscolo enorme, card a piena immagine con body scuro, poca ombra, tanto contrasto.
-- **Ideale se**: hai molte foto professionali e vuoi comunicare energia.
+### 2) Classic (`simple` · €99)
+Mainstream istituzionale, blu notte + ottone, Playfair.
 
-### 4) Luxury
-- **Per chi**: agenzie di pregio, immobili di lusso.
-- **Palette default**: primario `#0a0a0a` (nero puro) · accent `#B89D5E` (oro rosato) · neutro chiaro `#fafafa`.
-- **Tipografia**: heading `Playfair Display` serif · body `Inter` sans, pesi leggeri.
-- **Layout**: header centrato con tagline in maiuscoletto spaziato, foto molto grandi (fino a 380px alte), card senza bordo, descrizione centrata max 720px, features come pill outline.
-- **Ideale se**: il tuo portafoglio ha immobili sopra €500k medio e vuoi trasmettere esclusività.
+### 3) Bold (`premium` · €199)
+Volume / moderno, arancio + nero, tipografia enorme, card image-dominant.
+
+### 4) Luxury (`premium` · €199)
+Pregio, nero + oro, foto grandi, header centrato.
+
+### 5) Atelier (`premium` · €199)
+Boutique urbana, CTA pill, luce studio, accent arancio.
+
+### 6) Cinematic (`premium` · €199)
+Full-bleed media, serif display, nav glass — prestigio + video hero.
+
+### 7) Editorial (`premium` · €199)
+Magazine / mono-quartiere, tipografia sobria, poco colore.
+
+### 8) Mediterranean (`premium` · €199)
+Sud / second home, fondi caldi, bordi sottili, accent champagne.
 
 [SCREEN: cap8-theme-picker]
 
 **Personalizzazione oltre il tema**
-Ogni tema accetta 4 override salvabili in `agency.website.theme_config`:
-- **Palette**: puoi sovrascrivere `primary`, `accent`, `neutral_dark`, `neutral_light` (hex `#RRGGBB` obbligatorio).
-- **Typography**: puoi sovrascrivere `headings` e `body` (stringa CSS `font-family`).
-- **Logo URL**: URL assoluto del tuo logo (max 500 caratteri).
-- **Tagline**: sottotitolo mostrato in header (visibile principalmente in Luxury; max 200 caratteri).
+Override in `agency.website.theme_config`: palette (4 hex), typography, logo URL, tagline.
 
 **Applicare un tema**
-1. Nella sezione **Tema**, clicca sulla card del tema desiderato.
-2. Il tema viene applicato immediatamente (POST `/website/theme/apply`) con la palette di default del tema.
-3. Vedi il badge *"✓ Attivo"* comparire sulla card.
-4. La **Live Preview** iframe si aggiorna automaticamente.
+1. Brand Studio / Tema → card del tema.
+2. `POST /website/theme/apply` (palette default del tema).
+3. Badge attivo + Live Preview si aggiornano.
 
-**Cambiare tema più volte**
-È un'operazione **idempotente e reversibile**: cambia quante volte vuoi, il pubblico vede sempre l'ultima versione salvata. Ogni cambio aggiorna `applied_at` con timestamp.
+**Cambiare tema**
+Idempotente e reversibile; il pubblico vede l'ultima versione (`applied_at`).
 
 ---
 
@@ -384,54 +386,62 @@ Puoi rimuovere il custom domain in qualsiasi momento con **Elimina dominio**. At
 
 ---
 
-## 8.11 · Demo da sito esistente + template pack · **A-037** (30-Set-2026)
-
-**Priorità Founder**: alta. La personalizzazione della demo a partire dal sito dell’agenzia + un pacchetto template per chi non ha sito / vuole restyling / non è proprietario del dominio **dovevano già esserci** come percorso commerciale.
+## 8.11 · Demo / template pack · **A-037** + **D-150/D-151** (agg. 09-Nov-2026)
 
 ### Cosa c’è oggi (onesto)
 | Pezzo | Stato |
 |-------|--------|
-| Brand Extractor (`POST` website extract) | ⚠️ estrae profilo brand; **non** chiude automaticamente «URL → demo vestita visitabile» |
-| 4 temi backend (minimal/classic/bold/luxury) | ⚠️ presenti in `themes.py` |
-| UI template / picker commerciale | ❌ stub «presto disponibile» in Settings (vedi anche Cap. 19) |
-| Lead landing `/it/agenzie`: «Hai un sito?» + URL | ✅ (30-Set-2026) |
-| Pacchetto template per no-sito / restyling / recovery dominio | ❌ **A-037 aperto** |
-
-### Relazione con Domain Vault
-Chi scopre di non essere proprietario del dominio (es. registrato da un fornitore IT) usa `/it/verifica-dominio` (Cap. 17) e il percorso A-037 (template + recovery dominio).
+| Brand Extractor | ✅ palette/tono/logo |
+| Gallery 8 temi + Brand Studio | ✅ live su main (#137) |
+| Matrice MLS on/off per tema | ✅ D-149 / D-150 |
+| Listino Starter €99/€199 · restyling €199 | ✅ SoT · Stripe entitlement ⏳ |
+| Lead `/it/agenzie` «Hai un sito?» | ✅ |
+| Loop automatico URL → demo pubblica vestita | ⚠️ assistito (capture+build), non fully auto |
+| Recovery dominio non-proprietario | Cap. 17 · A-037 residuo path dominio |
 
 ### Promessa commerciale
-Non promettere «cloniamo il tuo sito in automatico» finché A-037 non è PASS sul loop URL→demo **e** finché il clone D-023/D-130 non ha preview visitabile (vedi §8.12).
+Puoi promettere gallery 8 + MLS on/off + listino. Non promettere pixel-perfect clone né «solo sito» come SKU.
 
 ---
 
-## 8.12 · Clone-from-URL · **D-023 / D-130** (20-Ott-2026) 🔴 P0
+## 8.12 · Clone / migrazione sito · **D-023 / D-130 / D-149** (agg. 09-Nov-2026)
 
-**Decisione Founder (D-130)**: il trasferimento sito con look riconoscibile è un blocco commerciale **pari gravità al Visual Staging**. Brand Extractor + 4 temi **non** bastano.
-
-### Cosa doveva esserci (D-023)
-1. Agenzia inserisce URL del sito attuale.
-2. Crawl pagine chiave (home, lista, scheda, contatti) + screenshot.
-3. AI ricostruisce layout/colori/componenti.
-4. Preview visitabile alimentata dalle API OMNIA (immobili, lead).
-5. Deploy su dominio agenzia (CNAME).
+**D-130**: trasferimento look riconoscibile = P0 commerciale.  
+**D-149**: casi 1–2 (MLS on/off + clone capture) shippati; restyling caso 3 in coda listino €199.
 
 ### Cosa c’è oggi
 | Pezzo | Stato |
 |-------|--------|
-| Brand Extractor (palette/tono/logo) | ✅ Phase 1 |
-| Theme Registry 4 temi HTML | ✅ non è un clone |
-| Crawl multi-pagina + Vision | ❌ |
-| Bundle per-agenzia (headless D-022) | ❌ |
-| Preview «ecco il tuo sito ricostruito» | ❌ |
-| SKU listino «solo sito» | ❌ consapevole (sito = feature piano ImmoWeb) |
+| Brand Extractor | ✅ |
+| Gallery 8 | ✅ |
+| `POST /app/website/clone-capture` (+ build) | ✅ |
+| Preview `/api/p/{slug}/` · `/lista` · scheda | ✅ soglia home+lista+scheda |
+| `website.clone_ready` | ✅ dopo smoke 3 pagine |
+| Crawl Vision multi-pagina / headless D-022 | ❌ ancora gap vs clone «uguale al millimetro» |
+| SKU «solo sito» | ❌ (sito = feature piano ImmoWeb) |
 
-### Soglia minima per vendere il trasferimento
-Home + lista immobili + scheda dettaglio **visitabili**, look riconoscibile dal cliente, dati da portafoglio OMNIA. Ritocco designer pixel-perfect = tier Premium opzionale (D-023).
+### Casi migrazione (D-149)
+1. **MLS on** — box ricerca rete + sezione «Immobili dalla Rete MLS Partner» sulla home.
+2. **MLS off** — solo search portafoglio; embed `/api/mls-box/*` → `mls_not_enabled`; `POST /app/mls/leave`.
+3. **Restyling** — stesso pack temi, €199; in coda operativa rispetto a clone keep-brand.
 
-### Cosa NON promettere in call
-- «Trasferisci il sito e resta uguale» senza preview clone.
-- «Compri solo il sito» come voce di listino (non esiste in `PRICING_OMNIA.md`).
+### Cosa NON promettere
+- «Resta uguale al millimetro» senza preview clone_ready.
+- «Compri solo il sito» fuori listino ImmoWeb.
+
+---
+
+## 8.13 · MLS sul sito white-label (D-149)
+
+Flag agenzia `mls_enabled` (join/leave MLS). Non cambia `theme_id`: cambia solo pezzi condizionali in `theme_render` / CSS.
+
+| | MLS on | MLS off |
+|---|---|---|
+| Home | Box rete + sezione partner MLS | Solo search agenzia |
+| Lista | Sidebar ricerca (rete se on) | Search senza chip rete |
+| Embed mls-box | OK | `mls_not_enabled` |
+
+Dettaglio operativo network: Cap. 27.
 
 ---
 
@@ -446,4 +456,4 @@ Home + lista immobili + scheda dettaglio **visitabili**, look riconoscibile dal 
 
 ---
 
-**Versione**: v1.2 · 20-Ott-2026 (+ §8.12 D-130 clone P0) · v1.1 30-Set-2026 (+ §8.11 A-037) · base v1.0 Feb 2026
+**Versione**: v1.3 · 09-Nov-2026 (gallery 8 · D-149/150/151 · §8.13 MLS sito) · v1.2 20-Ott-2026 · v1.1 30-Set-2026 · base v1.0 Feb 2026
