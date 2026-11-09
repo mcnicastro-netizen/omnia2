@@ -1,17 +1,20 @@
 """O1 — D-095 fascicolo media · D-100 invite · D-106 active_agency_id (unit)."""
 from __future__ import annotations
 
+import asyncio
+from unittest.mock import AsyncMock, MagicMock
+
 import pytest
 from fastapi import HTTPException
 
-from apps.immoweb.media import _is_private_media_path
+from apps.immoweb.media import _is_blocked_path
 from shared.auth.tenant import optional_agency_id, require_agency
 
 
 def test_private_media_fascicolo_blocked():
-    assert _is_private_media_path("omnia/fascicolo/prop1/doc1") is True
-    assert _is_private_media_path("omnia/modulistica/agency/x.pdf") is True
-    assert _is_private_media_path("omnia/properties/prop1/photo.jpg") is False
+    assert _is_blocked_path("omnia/fascicolo/prop1/doc1") is True
+    assert _is_blocked_path("omnia/modulistica/agency/x.pdf") is True
+    assert _is_blocked_path("omnia/properties/prop1/photo.jpg") is False
 
 
 def test_optional_agency_no_fallback_to_first():
@@ -33,3 +36,54 @@ def test_require_agency_errors():
     assert ei2.value.detail == "active_agency_invalid"
 
     assert require_agency({"agency_ids": ["a1"], "active_agency_id": "a1"}) == "a1"
+
+
+def test_fascicolo_get_property_requires_active_agency():
+    """IDOR guard: without active_agency_id, fascicolo must not resolve by id alone."""
+    from apps.immoweb.fascicolo import _get_property
+
+    db = MagicMock()
+    db.properties.find_one = AsyncMock(return_value={"id": "p1", "agency_id": "a1"})
+    user = {"id": "u1", "agency_ids": ["a1"], "active_agency_id": None}
+
+    async def _run():
+        with pytest.raises(HTTPException) as ei:
+            await _get_property(db, user, "p1")
+        assert ei.value.detail == "active_agency_required"
+        db.properties.find_one.assert_not_called()
+
+    asyncio.run(_run())
+
+
+def test_fascicolo_get_property_scopes_to_agency():
+    from apps.immoweb.fascicolo import _get_property
+
+    db = MagicMock()
+    db.properties.find_one = AsyncMock(return_value={"id": "p1", "agency_id": "a1"})
+    user = {"id": "u1", "agency_ids": ["a1"], "active_agency_id": "a1"}
+
+    async def _run():
+        prop = await _get_property(db, user, "p1", {"_id": 0})
+        assert prop["id"] == "p1"
+        db.properties.find_one.assert_awaited_once()
+        q = db.properties.find_one.await_args.args[0]
+        assert q == {"id": "p1", "agency_id": "a1"}
+
+    asyncio.run(_run())
+
+
+def test_fascicolo_get_property_cross_tenant_404():
+    from apps.immoweb.fascicolo import _get_property
+
+    db = MagicMock()
+    db.properties.find_one = AsyncMock(return_value=None)
+    user = {"id": "u1", "agency_ids": ["agency-b"], "active_agency_id": "agency-b"}
+
+    async def _run():
+        with pytest.raises(HTTPException) as ei:
+            await _get_property(db, user, "prop-of-agency-a")
+        assert ei.value.status_code == 404
+        q = db.properties.find_one.await_args.args[0]
+        assert q["agency_id"] == "agency-b"
+
+    asyncio.run(_run())

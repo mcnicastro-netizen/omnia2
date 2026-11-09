@@ -32,7 +32,7 @@ Founder 05-Nov-2026: **controllare i margini prima del go-live**, non dopo.
 | **Kling crediti** | **D-147** 30 cr / €1,50 · listino [`PRICING_OMNIA.md`](./PRICING_OMNIA.md) v3.2 |
 | Portale | D-139…D-144 ✅ |
 | Clone sito | D-023/D-130 + A-037 aperti (dopo dogfood gestionale) |
-| **Prossimo strutturale** | Un cluster SaaS (AuthZ **oppure** media/blob) — themes ✅ |
+| **Prossimo strutturale** | Blob lifecycle fascicolo (`delete_object` su delete/purge) — AuthZ fascicolo ✅ |
 
 ---
 
@@ -55,12 +55,13 @@ Vetrina istituzionale: `https://omniarealestateecosystem.it/it` (**D-146** + pap
 ## Priorità (Founder 09-Nov: «stabilisci tu»)
 
 1. ✅ **A-040 / D-148 Paperless** — chiuso.
-2. ✅ **Themes split** — `themes.py` 1156 → ~216 (`theme_catalog` + `theme_render`).
-3. **Un cluster SaaS** — AuthZ E2E **oppure** media/blob lifecycle (audit), un pezzo per filo.
-4. In parallelo se c’è tempo: dogfood Nicastro · gate margini Visura/APE · clone sito A-037.
+2. ✅ **Themes split** — `themes.py` 1156 → ~216.
+3. ✅ **AuthZ fascicolo E2E** (D-095) — anti-IDOR agency-scoped.
+4. **Prossimo SaaS**: blob lifecycle su delete fascicolo / purge (M-02).
+5. In parallelo: dogfood Nicastro · gate margini · clone A-037.
 
 ## Filo prodotto
 
-1. **09-Nov chiuso:** A-040/D-148 · themes split.
-2. **06-Nov chiuso:** Nicastro D-145 · www D-146 · coda #93–#96 / D-147 · staging split #129/#130.
-3. Prossimo: **cluster SaaS** (quando «vai») · A-037 clone sito.
+1. **09-Nov chiuso:** A-040/D-148 · themes split · AuthZ fascicolo.
+2. **06-Nov chiuso:** Nicastro · www · Kling · staging split.
+3. Prossimo: **delete_object** su fascicolo delete (quando «vai») · A-037 clone.
