@@ -174,6 +174,36 @@ export default function FounderOpsPage() {
     }
   };
 
+  const runDetachFounder = async () => {
+    if (
+      !window.confirm(
+        "Scollegare il Founder da tutte le agenzie cliente? (Ops resta; sparisce Nicastro dalla shell)"
+      )
+    ) {
+      return;
+    }
+    setGrantBusy(true);
+    setGrantMsg(null);
+    try {
+      const r = await api.post(`/app/ops/detach-founder-agencies`);
+      setGrantMsg(
+        r.data?.ok
+          ? "Founder scollegato. Ricarico Ops…"
+          : "Detach non riuscito."
+      );
+      setTimeout(() => window.location.assign(`/${lang}/app/ops`), 600);
+    } catch (e) {
+      const detail = e?.response?.data?.detail;
+      setGrantMsg(
+        typeof detail === "string"
+          ? detail
+          : detail?.error || "Detach non riuscito."
+      );
+    } finally {
+      setGrantBusy(false);
+    }
+  };
+
   const runPurgeShell = async () => {
     if (
       !window.confirm(
@@ -272,8 +302,17 @@ export default function FounderOpsPage() {
             <p className="text-sm text-stone-700 mt-1 max-w-3xl">
               Dopo onboarding l’agenzia resta in <em>pending</em>. Qui sblocchi il gestionale,
               concedi Starter/Pro/Agency + crediti e invii l’email «account attivo» — senza carta
-              (Stripe B2B chiuso O6).
+              (Stripe B2B chiuso O6). Il Founder non viene più agganciato alle agenzie cliente.
             </p>
+            <button
+              type="button"
+              data-testid="ops-detach-founder"
+              disabled={grantBusy}
+              onClick={runDetachFounder}
+              className="mt-2 text-xs uppercase tracking-widest px-3 py-1.5 rounded border border-amber-700 text-amber-900 bg-amber-50 hover:bg-amber-100 disabled:opacity-50"
+            >
+              Scollega Founder da agenzie cliente
+            </button>
           </div>
           <div className="flex flex-wrap gap-2 items-end">
             <label className="text-xs space-y-1">

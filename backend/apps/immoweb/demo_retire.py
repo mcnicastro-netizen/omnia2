@@ -164,15 +164,26 @@ async def retire_demo_and_promote_first_client(
     grant_pro: bool = True,
     credits: int = 500,
     founder_email: Optional[str] = None,
+    attach_founder: bool = False,
 ) -> Dict[str, Any]:
-    """One-shot: wipe demo + attach Founder + grant Pro on first client."""
+    """One-shot: wipe demo + grant Pro on first client.
+
+    D-153: di default NON agganciare il Founder all'agenzia cliente
+    (Ops ≠ gestionale Nicastro). Passa attach_founder=True solo se esplicito.
+    """
     wipe = await wipe_demo_agency(db)
     email = (founder_email or os.environ.get("ADMIN_EMAIL") or "").lower().strip()
-    attach = await attach_user_to_agency_slug(db, email, attach_slug) if email else {
-        "ok": False,
-        "error": "ADMIN_EMAIL_missing",
-    }
+    attach = {"ok": False, "skipped": True, "reason": "attach_founder_disabled_d153"}
+    if attach_founder:
+        attach = await attach_user_to_agency_slug(db, email, attach_slug) if email else {
+            "ok": False,
+            "error": "ADMIN_EMAIL_missing",
+        }
     grant = None
-    if grant_pro and attach.get("ok"):
-        grant = await grant_assisted_pro(db, attach["agency_id"], credits)
+    agency = await db.agencies.find_one({"slug": attach_slug})
+    aid = (attach.get("agency_id") if attach.get("ok") else None) or (
+        (agency or {}).get("id")
+    )
+    if grant_pro and aid:
+        grant = await grant_assisted_pro(db, aid, credits)
     return {"wipe": wipe, "attach": attach, "grant": grant}
