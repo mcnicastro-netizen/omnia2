@@ -1,3 +1,10 @@
+## 2026-11-10 — D-153 Founder scollegato da Nicastro
+
+- Login/`/app` super_admin → `/app/ops` (non dashboard cliente)
+- AgencyShell: label «Founder · piattaforma» / «OMNIA · Ops»
+- `POST /app/ops/detach-founder-agencies` + bottone Ops
+- `retire-demo` non aggancia più Founder (attach_founder=False)
+
 ## 2026-11-10 — Gate attivazione CRM (pending → Ops)
 
 - Nuove agenzie: `activation_status=pending` finché Founder Ops non attiva

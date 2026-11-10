@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, Navigate, useParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import AgencyShell from "./components/AgencyShell";
 import KPICard from "./components/KPICard";
@@ -145,6 +145,8 @@ export default function DashboardPage() {
   const [todayError, setTodayError] = useState(false);
 
   useEffect(() => {
+    // Founder non “abita” il CRM di un cliente (D-153) — skip fetch
+    if (user?.role === "super_admin") return undefined;
     let mounted = true;
     api
       .get("/app/dashboard/kpis")
@@ -167,7 +169,11 @@ export default function DashboardPage() {
     return () => {
       mounted = false;
     };
-  }, []);
+  }, [user?.role]);
+
+  if (user?.role === "super_admin") {
+    return <Navigate to={`/${l}/app/ops`} replace />;
+  }
 
   const groups = today?.summary?.action_groups ?? 0;
 

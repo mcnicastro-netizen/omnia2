@@ -35,6 +35,10 @@ export default function ImmowebApp() {
   }
 
   if (user && CRM_ROLES.has(user.role)) {
+    // Founder → Ops (non dashboard di un'agenzia cliente)
+    if (user.role === "super_admin") {
+      return <Navigate to={`/${l}/app/ops`} replace />;
+    }
     return <Navigate to={`/${l}/app/dashboard`} replace />;
   }
 

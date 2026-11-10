@@ -58,6 +58,11 @@ export default function LoginPage() {
       if (next.includes("/cloud")) return next;
       return `/${lang}/cloud/account`;
     }
+    // Founder Ops ≠ gestionale cliente (D-153): mai atterrare su dashboard Nicastro/altro
+    if (data?.role === "super_admin") {
+      if (next.includes("/app/ops")) return next;
+      return `/${lang}/app/ops`;
+    }
     if ((data?.agency_ids || []).length) {
       if (next.includes("/app")) return next;
       return `/${lang}/app/dashboard`;

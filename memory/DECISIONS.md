@@ -7,6 +7,18 @@ Registro di tutte le decisioni di business e tecniche prese durante il progetto.
 
 ## Decisioni prese
 
+### D-153 — Founder ≠ agenzia cliente (no Nicastro in shell Ops) · 10-Nov-2026
+- **Data**: 10 Novembre 2026
+- **Contesto**: Founder entra in `/app/dashboard` e vede «AGENZIA Nicastro Immobiliare…» — confusione totale: area riservata Founder mescolata al CRM del primo cliente.
+- **Causa**: D-145 aveva agganciato `super_admin` a Nicastro (`active_agency_id`) per dogfood.
+- **Decisione**:
+  1. Login / entry `/app` per `super_admin` → **`/app/ops`**, mai dashboard cliente.
+  2. Shell Founder etichetta «OMNIA · Ops», non il nome agenzia.
+  3. `POST /app/ops/detach-founder-agencies` svuota `agency_ids` / `active_agency_id` del Founder.
+  4. `retire-demo` **non** riaggancia più il Founder (default `attach_founder=False`).
+  5. Dogfood Nicastro = login **titolare** (`titolare@…`), non sessione Founder.
+- **Stato**: ✅ DECISO · in implementazione
+
 ### D-152 — Gate attivazione CRM (pending → Ops) · 10-Nov-2026
 - **Data**: 10 Novembre 2026
 - **Contesto**: Dogfood Founder — dopo register + pochi dati onboarding si entrava già in dashboard gestionale (anche con KPI collaboratori «falsi» da `active_agency_id` stale). Nessuna email «account attivo / gestionale sbloccato».

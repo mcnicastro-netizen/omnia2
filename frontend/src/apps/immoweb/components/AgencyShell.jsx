@@ -198,12 +198,17 @@ export default function AgencyShell({ children, current = "dashboard", showBack 
               <Brand className="font-light text-stone-300">app</Brand>
             </span>
           </Link>
-          {agency && myAgencies.length < 2 && (
+          {user?.role === "super_admin" ? (
+            <p className="mt-2 text-xs text-[#C19A6B] truncate" data-testid="agency-name">
+              Founder · piattaforma
+            </p>
+          ) : null}
+          {user?.role !== "super_admin" && agency && myAgencies.length < 2 && (
             <p className="mt-2 text-xs text-stone-400 truncate" data-testid="agency-name">
               {agency.display_name}
             </p>
           )}
-          {myAgencies.length >= 2 && (
+          {user?.role !== "super_admin" && myAgencies.length >= 2 && (
             <select
               data-testid="agency-switcher"
               value={user?.active_agency_id || user?.agency_ids?.[0] || ""}
@@ -297,10 +302,14 @@ export default function AgencyShell({ children, current = "dashboard", showBack 
           </button>
           <div className="flex-1 min-w-0">
             <p className="text-[10px] uppercase tracking-widest text-stone-500">
-              {t("immoweb_app.agency_label")}
+              {user?.role === "super_admin"
+                ? "Area Founder"
+                : t("immoweb_app.agency_label")}
             </p>
-            <p className="text-sm font-semibold text-stone-900 truncate">
-              {agency?.display_name || "—"}
+            <p className="text-sm font-semibold text-stone-900 truncate" data-testid="shell-context-label">
+              {user?.role === "super_admin"
+                ? "OMNIA · Ops (non un’agenzia cliente)"
+                : agency?.display_name || "—"}
             </p>
           </div>
           <div className="flex items-center gap-2 shrink-0">

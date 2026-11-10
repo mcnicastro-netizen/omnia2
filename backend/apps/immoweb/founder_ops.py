@@ -1054,13 +1054,48 @@ async def ops_activate_agency(
     }
 
 
+@router.post("/detach-founder-agencies")
+async def ops_detach_founder_agencies(
+    user: dict = Depends(require_roles("super_admin")),
+) -> Dict[str, Any]:
+    """D-153 — scollega il Founder da ogni agenzia cliente (Ops ≠ CRM Nicastro)."""
+    db = Database.get()
+    prev_ids = list(user.get("agency_ids") or [])
+    prev_active = user.get("active_agency_id")
+    now = datetime.now(timezone.utc).isoformat()
+    await db.users.update_one(
+        {"id": user["id"]},
+        {
+            "$set": {
+                "agency_ids": [],
+                "active_agency_id": None,
+                "updated_at": now,
+            }
+        },
+    )
+    logger.info(
+        "detach-founder-agencies by=%s prev_active=%s prev_ids=%s",
+        user.get("email"),
+        prev_active,
+        prev_ids,
+    )
+    return {
+        "ok": True,
+        "previous_agency_ids": prev_ids,
+        "previous_active_agency_id": prev_active,
+        "agency_ids": [],
+        "active_agency_id": None,
+        "message": "Founder scollegato dalle agenzie. Ricarica /app/ops.",
+    }
+
+
 @router.post("/retire-demo-agency")
 async def ops_retire_demo_agency(
     user: dict = Depends(require_roles("super_admin")),
 ) -> Dict[str, Any]:
-    """D-145 — elimina demo-agency-001, aggancia Founder a Nicastro, grant Pro.
+    """D-145/D-153 — elimina demo-agency-001, grant Pro su Nicastro (senza agganciare Founder).
 
-    Idempotente: se demo assente, procede comunque con attach/grant.
+    Idempotente: se demo assente, procede comunque con grant.
     Slug seed reale: nicastroimmobiliare (fallback nicastro-immobiliare).
     """
     from apps.immoweb.demo_retire import retire_demo_and_promote_first_client
@@ -1077,8 +1112,11 @@ async def ops_retire_demo_agency(
         grant_pro=True,
         credits=2000,
         founder_email=user.get("email"),
+        attach_founder=False,
     )
-    ok = bool((report.get("attach") or {}).get("ok"))
+    ok = bool((report.get("grant") or {}).get("ok")) or bool(
+        (report.get("wipe") or {}).get("ok", True)
+    )
     logger.info(
         "retire-demo-agency by=%s ok=%s slug=%s wipe_agency_deleted=%s",
         user.get("email"),
