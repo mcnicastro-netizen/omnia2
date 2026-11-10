@@ -1,3 +1,10 @@
+## 2026-11-10 — Register/onboarding dogfood UX + fix 403
+
+- Register: occhietto password · checkbox privacy · claim meno tecnico
+- Onboarding: suggerimenti indirizzo (ANNCSU) · soft check P.IVA · copy umana
+- Fix 403 fine wizard: `refresh()` sessione dopo create + `onboarding_completed` su POST
+- Onestà dati: formato fiscale + indirizzo; no VIES/AE automatico (ancora)
+
 ## 2026-11-10 — Ops grant piano assistito (dogfood multi-agenzia)
 
 - `POST /app/ops/grant-agency-plan` · `GET /app/ops/agencies-lookup` (super_admin)
