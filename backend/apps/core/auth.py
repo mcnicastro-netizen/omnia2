@@ -106,6 +106,7 @@ def _public(user: dict) -> dict:
         "marketing_consent": bool(user.get("marketing_consent")),
         "age_confirmed": bool(user.get("age_confirmed")),
         "ops_impersonation": user.get("ops_impersonation"),
+        "must_change_password": bool(user.get("must_change_password")),
         "created_at": user.get("created_at"),
         "updated_at": user.get("updated_at"),
     }
@@ -144,15 +145,25 @@ async def register(req: RegisterRequest, request: Request, response: Response,
     # B2B agency path: Domain Vault confirm = intent agenzia (non mandare «Benvenuto» prematuro)
     agency_intent = bool(req.domain_sovereignty_confirmed)
 
+    # D-157: B2B senza password scelta → temp random (sostituita da API key a Ops Attiva)
+    import secrets as _secrets
+
+    raw_password = (req.password or "").strip()
+    if agency_intent:
+        raw_password = _secrets.token_urlsafe(32)
+    elif len(raw_password) < 8:
+        raise HTTPException(status_code=400, detail="password_required")
+
     user = UserInDB(
         email=email,
-        password_hash=hash_password(req.password),
+        password_hash=hash_password(raw_password),
         name=req.name.strip(),
         role=safe_role,
         lang=lang,
         signup_domain_sovereignty_confirmed=agency_intent,
         signup_existing_domain=(req.existing_domain or "").strip().lower() or None,
         signup_preferred_plan=preferred,
+        must_change_password=False,
     )
     doc = user.model_dump()
     await db.users.insert_one(doc)

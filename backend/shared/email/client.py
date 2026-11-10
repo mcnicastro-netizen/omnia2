@@ -66,6 +66,16 @@ SUBJECTS = {
         "en": "Request received — {{agency_name}} under review",
         "es": "Solicitud recibida — {{agency_name}} en verificación",
     },
+    "agency_credentials": {
+        "it": "OMNIA attivo — chiave di accesso per {{agency_name}}",
+        "en": "OMNIA active — access key for {{agency_name}}",
+        "es": "OMNIA activo — clave de acceso para {{agency_name}}",
+    },
+    "agency_member_credentials": {
+        "it": "Invito OMNIA — chiave di accesso per {{agency_name}}",
+        "en": "OMNIA invite — access key for {{agency_name}}",
+        "es": "Invitación OMNIA — clave de acceso para {{agency_name}}",
+    },
     "password_reset": {
         "it": "Reimposta la tua password OMNIA",
         "en": "Reset your OMNIA password",

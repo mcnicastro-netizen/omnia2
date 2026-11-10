@@ -109,10 +109,13 @@ export default function RegisterPage() {
       const payload = {
         name: form.name,
         email: form.email,
-        password: form.password,
         role: form.account_type === "student" ? "student" : "client",
         lang,
       };
+      // D-157 B2B: niente password scelta — Ops invierà API key = password iniziale
+      if (!isAgencyRole) {
+        payload.password = form.password;
+      }
       if (isAgencyRole) {
         payload.domain_sovereignty_confirmed = policyAccepted;
         if (form.existing_domain.trim()) {
@@ -257,20 +260,32 @@ export default function RegisterPage() {
               />
             </label>
           ))}
-          <label className="block mb-5">
-            <span className="block text-xs font-sans uppercase tracking-widest text-stone-500 mb-2">
-              {t("auth.password")}
-            </span>
-            <PasswordField
-              data-testid="register-password"
-              required
-              minLength={8}
-              value={form.password}
-              onChange={set("password")}
-              autoComplete="new-password"
-              className="w-full px-4 py-3 pr-12 border border-stone-300 bg-stone-50 font-sans text-base focus:outline-none focus:border-stone-900"
-            />
-          </label>
+          {!isAgencyRole ? (
+            <label className="block mb-5">
+              <span className="block text-xs font-sans uppercase tracking-widest text-stone-500 mb-2">
+                {t("auth.password")}
+              </span>
+              <PasswordField
+                data-testid="register-password"
+                required
+                minLength={8}
+                value={form.password}
+                onChange={set("password")}
+                autoComplete="new-password"
+                className="w-full px-4 py-3 pr-12 border border-stone-300 bg-stone-50 font-sans text-base focus:outline-none focus:border-stone-900"
+              />
+            </label>
+          ) : (
+            <p
+              data-testid="register-no-password-hint"
+              className="mb-5 font-sans text-sm text-stone-600 bg-stone-50 border border-stone-200 px-3 py-2"
+            >
+              {t(
+                "auth.agency_password_hint",
+                "Non scegli la password ora: dopo verifica e pagamento, OMNIA ti invia una chiave API da usare come password iniziale (poi la cambi tu)."
+              )}
+            </p>
+          )}
 
           <label className="block mb-6">
             <span className="block text-xs font-sans uppercase tracking-widest text-stone-500 mb-2">

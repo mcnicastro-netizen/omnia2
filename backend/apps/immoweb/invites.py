@@ -51,6 +51,36 @@ async def create_invite(
     if not agency:
         raise HTTPException(status_code=404, detail="agency_not_found")
 
+    # D-157 — tetto collaboratori da piano (starter 3 / pro 10 / agency ∞)
+    from apps.billing.plans import get_plan
+
+    tier = (
+        agency.get("preferred_plan_tier")
+        or agency.get("billing_assisted_tier")
+        or agency.get("plan")
+        or "pro"
+    )
+    if tier == "free":
+        tier = "starter"
+    plan = get_plan(str(tier).lower())  # type: ignore[arg-type]
+    max_agents = int(getattr(plan, "max_agents", -1) if plan else -1)
+    if max_agents >= 0:
+        members_n = await db.users.count_documents({"agency_ids": agency_id})
+        pending_n = await db.agency_invites.count_documents(
+            {"agency_id": agency_id, "status": "pending"}
+        )
+        if members_n + pending_n >= max_agents:
+            raise HTTPException(
+                status_code=400,
+                detail={
+                    "error": "max_agents_reached",
+                    "max_agents": max_agents,
+                    "members": members_n,
+                    "pending_invites": pending_n,
+                    "hint": f"Piano {tier}: massimo {max_agents} profili",
+                },
+            )
+
     email = payload.email.lower().strip()
 
     # Block if user already in this agency
@@ -239,6 +269,8 @@ async def accept_invite(
     role = invite["role"]
     now = datetime.now(timezone.utc).isoformat()
 
+    credential_plaintext = None
+    member_name = (payload.name or "").strip()
     user = await db.users.find_one({"email": email})
     if user:
         # D-100 — link membership only; NEVER overwrite password_hash
@@ -246,9 +278,8 @@ async def accept_invite(
             "active_agency_id": agency_id,
             "updated_at": now,
         }
-        name = (payload.name or "").strip()
-        if name:
-            set_fields["name"] = name
+        if member_name:
+            set_fields["name"] = member_name
         if user.get("role") == "client":
             set_fields["role"] = role
         await db.users.update_one(
@@ -260,17 +291,21 @@ async def accept_invite(
         )
         user_id = user["id"]
         user_role = role if user.get("role") == "client" else user["role"]
+        member_name = member_name or user.get("name") or email
     else:
-        password = payload.password or ""
-        if len(password) < 8:
-            raise HTTPException(status_code=400, detail="password_required")
-        name = (payload.name or "").strip()
-        if not name:
+        # D-157 — nuovo collaboratore: API key = password iniziale (password form opzionale)
+        member_name = (
+            member_name or (invite.get("name_hint") or "").strip() or email.split("@")[0]
+        ).strip()
+        if not member_name:
             raise HTTPException(status_code=400, detail="name_required")
+        import secrets as _secrets
+
+        bootstrap = (payload.password or "").strip() or _secrets.token_urlsafe(24)
         new_user = UserInDB(
             email=email,
-            password_hash=hash_password(password),
-            name=name,
+            password_hash=hash_password(bootstrap),
+            name=member_name,
             role=role,
             lang=lang,
             agency_ids=[agency_id],
@@ -280,6 +315,15 @@ async def accept_invite(
         await db.users.insert_one(doc)
         user_id = new_user.id
         user_role = role
+        from shared.auth.agency_credentials import issue_login_api_credential
+
+        cred = await issue_login_api_credential(
+            user_id=user_id,
+            agency_id=agency_id,
+            name=f"Collaboratore · {member_name}",
+            issued_by=invite.get("invited_by"),
+        )
+        credential_plaintext = cred.get("key")
 
     # Mark invite as accepted
     await db.agency_invites.update_one(
@@ -291,6 +335,29 @@ async def accept_invite(
             }
         },
     )
+
+    if credential_plaintext:
+        try:
+            agency_doc = await db.agencies.find_one(
+                {"id": agency_id}, {"_id": 0, "display_name": 1, "slug": 1}
+            )
+            fe = (os.environ.get("FRONTEND_URL") or "https://www.omniarealestateecosystem.it").rstrip("/")
+            await send_email(
+                to=email,
+                template="agency_member_credentials",
+                lang=lang if lang in ("it", "en", "es") else "it",
+                variables={
+                    "name": member_name,
+                    "agency_name": (agency_doc or {}).get("display_name")
+                    or (agency_doc or {}).get("slug")
+                    or "OMNIA",
+                    "api_key": credential_plaintext,
+                    "login_url": f"{fe}/{lang}/login",
+                    "dashboard_url": f"{fe}/{lang}/app/dashboard",
+                },
+            )
+        except Exception as e:  # noqa: BLE001
+            logger.warning("member credentials email failed: %s", e)
 
     # A-017 — notify inviter (and owner fallback) that invite was accepted
     try:

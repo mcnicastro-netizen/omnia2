@@ -120,6 +120,10 @@ export default function OnboardingWizard() {
       setStep(1);
       return;
     }
+    if (!(form.branding.logo_url || "").trim()) {
+      setError(t("onboarding.logo_required", "Carica il file del marchio/logo prima di continuare."));
+      return;
+    }
     setSubmitting(true);
     try {
       const cleanGroup = (obj) => {

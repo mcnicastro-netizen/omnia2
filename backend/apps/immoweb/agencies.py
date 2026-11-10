@@ -90,6 +90,21 @@ async def create_agency(
     if preferred not in ("starter", "pro", "agency"):
         preferred = None
 
+    # D-157 — logo obbligatorio (file già caricato → branding.logo_url)
+    branding_in = payload.branding
+    logo_url = None
+    if branding_in is not None:
+        logo_url = (
+            branding_in.get("logo_url")
+            if isinstance(branding_in, dict)
+            else getattr(branding_in, "logo_url", None)
+        )
+    if not (logo_url or "").strip():
+        raise HTTPException(
+            status_code=400,
+            detail={"error": "logo_required", "hint": "Carica il file marchio/logo prima di creare l'agenzia"},
+        )
+
     contact_pec = None
     if payload.contact is not None:
         if isinstance(payload.contact, dict):

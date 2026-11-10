@@ -1041,6 +1041,14 @@ class ActivateAgencyBody(BaseModel):
         default=True,
         description="Blocca Attiva se dossier KYC non verified (D-156)",
     )
+    require_payment: bool = Field(
+        default=True,
+        description="Blocca Attiva se abbonamento/pagamento non ok (D-157)",
+    )
+    issue_login_credential: bool = Field(
+        default=True,
+        description="Emette API key = password iniziale e la invia via email (D-157)",
+    )
 
 
 @router.post("/activate-agency")
@@ -1078,6 +1086,18 @@ async def ops_activate_agency(
                     "error": "kyc_not_verified",
                     "kyc_status": kyc_st,
                     "hint": "Verifica dossier identificazione clientela in cabina prima di Attiva",
+                },
+            )
+
+    if body.require_payment:
+        from shared.auth.agency_credentials import agency_payment_ok
+
+        if not await agency_payment_ok(db, agency_id):
+            raise HTTPException(
+                status_code=400,
+                detail={
+                    "error": "payment_required",
+                    "hint": "Pagamento abbonamento non trovato — il cliente deve completare Stripe prima",
                 },
             )
 
@@ -1122,38 +1142,64 @@ async def ops_activate_agency(
         if not grant.get("ok"):
             raise HTTPException(status_code=400, detail=grant)
 
+    credential = None
     email_result = None
-    if body.send_email:
-        owner = await db.users.find_one(
-            {"id": agency.get("owner_id")},
-            {"_id": 0, "email": 1, "name": 1, "lang": 1},
+    owner = await db.users.find_one(
+        {"id": agency.get("owner_id")},
+        {"_id": 0, "id": 1, "email": 1, "name": 1, "lang": 1},
+    )
+    if body.issue_login_credential and owner and owner.get("id"):
+        from shared.auth.agency_credentials import issue_login_api_credential
+
+        credential = await issue_login_api_credential(
+            user_id=owner["id"],
+            agency_id=agency_id,
+            name=f"Accesso · {agency.get('display_name') or agency.get('slug') or 'agenzia'}",
+            issued_by=user.get("email"),
         )
+
+    if body.send_email:
         to = (owner or {}).get("email") or (agency.get("contact") or {}).get("email")
         if to:
             lang = ((owner or {}).get("lang") or "it")[:2]
             try:
-                email_result = await send_email(
-                    to=to,
-                    template="agency_activated",
-                    lang=lang if lang in ("it", "en", "es") else "it",
-                    variables={
-                        "name": (owner or {}).get("name") or "Colleague",
-                        "agency_name": agency.get("display_name") or agency.get("slug") or "",
-                        "login_url": "https://www.omniarealestateecosystem.it/it/login",
-                        "dashboard_url": "https://www.omniarealestateecosystem.it/it/app/dashboard",
-                    },
-                )
+                if credential and credential.get("key"):
+                    email_result = await send_email(
+                        to=to,
+                        template="agency_credentials",
+                        lang=lang if lang in ("it", "en", "es") else "it",
+                        variables={
+                            "name": (owner or {}).get("name") or "Colleague",
+                            "agency_name": agency.get("display_name") or agency.get("slug") or "",
+                            "api_key": credential["key"],
+                            "login_url": "https://www.omniarealestateecosystem.it/it/login",
+                            "dashboard_url": "https://www.omniarealestateecosystem.it/it/app/dashboard",
+                        },
+                    )
+                else:
+                    email_result = await send_email(
+                        to=to,
+                        template="agency_activated",
+                        lang=lang if lang in ("it", "en", "es") else "it",
+                        variables={
+                            "name": (owner or {}).get("name") or "Colleague",
+                            "agency_name": agency.get("display_name") or agency.get("slug") or "",
+                            "login_url": "https://www.omniarealestateecosystem.it/it/login",
+                            "dashboard_url": "https://www.omniarealestateecosystem.it/it/app/dashboard",
+                        },
+                    )
             except Exception as exc:  # noqa: BLE001 — Ops must not fail on mail
                 logger.warning("activate-agency email failed: %s", exc)
                 email_result = {"ok": False, "error": str(exc)[:200]}
 
     logger.info(
-        "activate-agency by=%s agency=%s prev=%s wipe=%s grant=%s",
+        "activate-agency by=%s agency=%s prev=%s wipe=%s grant=%s credential=%s",
         user.get("email"),
         agency_id,
         prev,
         (wipe or {}).get("total_deleted"),
         bool(grant and grant.get("ok")),
+        bool(credential and credential.get("ok")),
     )
     return {
         "ok": True,
@@ -1166,6 +1212,9 @@ async def ops_activate_agency(
         "wipe": wipe,
         "grant": grant,
         "email": email_result,
+        # Mai restituire plaintext key nella risposta API Ops (solo email)
+        "credential_issued": bool(credential and credential.get("ok")),
+        "credential_prefix": (credential or {}).get("key_prefix"),
     }
 
 

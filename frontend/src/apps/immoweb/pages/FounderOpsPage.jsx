@@ -108,9 +108,13 @@ export default function FounderOpsPage() {
         wipe_crm: true,
         note: "coda_attivazione",
         require_kyc_verified: true,
+        require_payment: true,
+        issue_login_credential: true,
       });
       setOpsMsg(
-        `Attivata «${r.data?.display_name || row.display_name}» · email ${r.data?.email?.status || "inviata"} · piano ok`
+        `Attivata «${r.data?.display_name || row.display_name}» · credential ${
+          r.data?.credential_issued ? "ok" : r.data?.email?.status || "email"
+        }`
       );
       await loadQueue();
       await load(days);

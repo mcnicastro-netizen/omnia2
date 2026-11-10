@@ -79,6 +79,8 @@ export default function BridgeHomePage() {
         wipe_crm: true,
         note: "cabina_ingresso",
         require_kyc_verified: true,
+        require_payment: true,
+        issue_login_credential: true,
       });
       setMsg(`Attivata · ${r.data?.display_name || row.display_name}`);
       await load();
@@ -87,7 +89,7 @@ export default function BridgeHomePage() {
       setMsg(
         (typeof d === "object" && (d.hint || d.error)) ||
           d ||
-          "Errore attivazione — apri la scheda e completa KYC"
+          "Errore — apri scheda: KYC + pagamento"
       );
     } finally {
       setAttivaId(null);

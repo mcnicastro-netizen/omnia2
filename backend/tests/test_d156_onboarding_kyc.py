@@ -114,6 +114,8 @@ def test_activate_uses_preferred_plan(monkeypatch):
                     send_email=False,
                     wipe_crm=False,
                     require_kyc_verified=True,
+                    require_payment=False,
+                    issue_login_credential=False,
                     credits=10,
                 ),
                 user={"id": "founder", "email": "f@x.it", "role": "super_admin"},

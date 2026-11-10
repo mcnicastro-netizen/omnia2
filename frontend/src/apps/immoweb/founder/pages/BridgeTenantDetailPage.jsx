@@ -35,39 +35,63 @@ export default function BridgeTenantDetailPage() {
     const a0 = data?.agency || {};
     const kycSt = (a0.kyc?.status || "incomplete").toLowerCase();
     const tier = a0.preferred_plan_tier || "pro";
-    if (kycSt !== "verified") {
-      const force = window.confirm(
-        `Dossier KYC non verificato (stato: ${kycSt}).\n` +
-          "Per GDPR/identificazione clientela conviene verificare prima.\n\n" +
-          "OK = attiva comunque (bypass), Annulla = resta qui."
-      );
-      if (!force) return;
-    } else if (
+    if (
       !window.confirm(
-        `Attivare questa agenzia (wipe CRM + piano ${String(tier).toUpperCase()} + email)?`
+        `Attivare «${a0.display_name}»?\nPiano ${String(tier).toUpperCase()}.\n` +
+          "Invia email con API key = password iniziale.\n" +
+          `KYC attuale: ${kycSt}.`
       )
     ) {
       return;
     }
+    let requireKyc = true;
+    if (kycSt !== "verified") {
+      if (!window.confirm("KYC non verificato. Bypass emergenza?")) return;
+      requireKyc = false;
+    }
     setActionMsg(null);
+    const body = {
+      agency_id: agencyId,
+      grant_plan: true,
+      tier,
+      credits: 2000,
+      send_email: true,
+      wipe_crm: true,
+      note: "cabina_scheda",
+      require_kyc_verified: requireKyc,
+      require_payment: true,
+      issue_login_credential: true,
+    };
     try {
-      await api.post("/app/ops/activate-agency", {
-        agency_id: agencyId,
-        grant_plan: true,
-        tier,
-        credits: 2000,
-        send_email: true,
-        wipe_crm: true,
-        note: "cabina_scheda",
-        require_kyc_verified: kycSt === "verified",
-      });
-      setActionMsg(`Attivata · piano ${String(tier).toUpperCase()}.`);
+      await api.post("/app/ops/activate-agency", body);
+      setActionMsg(`Attivata · ${String(tier).toUpperCase()} · credential email inviata.`);
       await load();
     } catch (e) {
       const d = e?.response?.data?.detail;
-      setActionMsg(
-        (typeof d === "object" && (d.error || d.hint)) || d || "Attivazione fallita"
-      );
+      if (d?.error === "payment_required") {
+        if (
+          window.confirm(
+            "Pagamento non trovato. Bypass pagamento (emergenza Ops)?"
+          )
+        ) {
+          try {
+            await api.post("/app/ops/activate-agency", {
+              ...body,
+              require_payment: false,
+            });
+            setActionMsg(`Attivata (bypass pay) · credential email.`);
+            await load();
+            return;
+          } catch (e2) {
+            const d2 = e2?.response?.data?.detail;
+            setActionMsg(
+              (typeof d2 === "object" && (d2.hint || d2.error)) || d2 || "Attivazione fallita"
+            );
+            return;
+          }
+        }
+      }
+      setActionMsg((typeof d === "object" && (d.hint || d.error)) || d || "Attivazione fallita");
     }
   };
 

@@ -7,6 +7,15 @@ Registro di tutte le decisioni di business e tecniche prese durante il progetto.
 
 ## Decisioni prese
 
+### D-157 — Flusso gestionale B2B (piano → paga → KYC → API=password) · 10-Nov-2026
+- **Contesto**: Founder conferma flusso simile agli altri gestionali: pacchetto → form (logo + CI + visura) → pagamento Stripe prima di Ops → Super Admin verifica → chiave API = password iniziale; collaboratori stessa logica; tetti 3/10/∞.
+- **Decisione**:
+  1. Register B2B **senza** password scelta (temp server-side).
+  2. Onboarding: **logo obbligatorio**; waiting: upload visura+CI + checkout Stripe (anche se self-serve OFF, se `activation_status=pending`).
+  3. Ops Attiva richiede KYC verified + pagamento; emette API key, la setta come `password_hash`, email `agency_credentials` (plaintext una volta).
+  4. Invite nuovi membri: emette credential + email; enforce `max_agents` del piano.
+- **Stato**: ✅ in codice (stesso PR D-156/D-157).
+
 ### D-156 — Identificazione clientela B2B in cabina + onboarding onesto · 10-Nov-2026
 - **Contesto**: Founder — obbligo Super Admin di identificare la clientela (privacy/GDPR); FIAIP ancora in wizard; welcome email prematura; piano non chiaro in register; «Controlla di nuovo» tornava a onboarding; logo solo URL.
 - **Decisione**:

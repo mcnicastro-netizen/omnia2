@@ -1,3 +1,10 @@
+## 2026-11-10 — D-157 Flusso gestionale (API=password)
+
+- Register B2B senza password; logo obbligatorio; waiting = KYC PDF + Stripe
+- Checkout onboarding anche con self-serve OFF se agency pending
+- Ops Attiva: gate pagamento + emette API key come password (email credentials)
+- Invite: tetto max_agents piano; nuovi membri ricevono API=password
+
 ## 2026-11-10 — D-156 Onboarding + KYC cabina
 
 - Tolto FIAIP dall’onboarding; PEC + upload logo file
