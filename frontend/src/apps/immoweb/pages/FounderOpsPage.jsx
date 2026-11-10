@@ -20,7 +20,6 @@ export default function FounderOpsPage() {
   const [queueBusy, setQueueBusy] = useState(false);
   const [attivaBusyId, setAttivaBusyId] = useState(null);
   const [opsMsg, setOpsMsg] = useState(null);
-  const [blankBusy, setBlankBusy] = useState(false);
 
   const loadQueue = async () => {
     setQueueBusy(true);
@@ -126,38 +125,6 @@ export default function FounderOpsPage() {
     }
   };
 
-  const runBlankSlate = async () => {
-    const phrase = window.prompt(
-      "Lavagna bianca: cancella TUTTE le agenzie e i dati di prova.\nDigita CANCELLA_TUTTO per confermare."
-    );
-    if (phrase !== "CANCELLA_TUTTO") {
-      setOpsMsg("Annullato — nessuna cancellazione.");
-      return;
-    }
-    setBlankBusy(true);
-    setOpsMsg(null);
-    try {
-      const r = await api.post(`/app/ops/blank-slate`, null, {
-        params: { confirm: "CANCELLA_TUTTO" },
-      });
-      const rep = r.data?.report || {};
-      setOpsMsg(
-        `Lavagna bianca ok · agenzie rimosse ${rep.agencies_deleted ?? 0} · utenti B2B ${rep.users_deleted ?? 0} · documenti ${rep.total_docs_deleted ?? 0}`
-      );
-      await loadQueue();
-      await load(days);
-    } catch (e) {
-      const detail = e?.response?.data?.detail;
-      setOpsMsg(
-        typeof detail === "string"
-          ? detail
-          : detail?.error || "Lavagna bianca non riuscita."
-      );
-    } finally {
-      setBlankBusy(false);
-    }
-  };
-
   const t = data?.totals || {};
   const finance = data?.finance || {};
   const monthly = finance.monthly || null;
@@ -227,26 +194,15 @@ export default function FounderOpsPage() {
                 Nome agenzia ed email titolare sono già in elenco — un click su Attiva.
               </p>
             </div>
-            <div className="flex flex-wrap gap-2">
-              <button
-                type="button"
-                data-testid="ops-queue-refresh"
-                onClick={loadQueue}
-                disabled={queueBusy}
-                className="text-xs uppercase tracking-widest px-3 py-2 rounded border border-stone-300 bg-white hover:bg-stone-50 disabled:opacity-50"
-              >
-                Aggiorna coda
-              </button>
-              <button
-                type="button"
-                data-testid="ops-blank-slate"
-                onClick={runBlankSlate}
-                disabled={blankBusy}
-                className="text-xs uppercase tracking-widest px-3 py-2 rounded border border-stone-400 text-stone-700 bg-white hover:bg-stone-100 disabled:opacity-50"
-              >
-                {blankBusy ? "Pulisco…" : "Lavagna bianca"}
-              </button>
-            </div>
+            <button
+              type="button"
+              data-testid="ops-queue-refresh"
+              onClick={loadQueue}
+              disabled={queueBusy}
+              className="text-xs uppercase tracking-widest px-3 py-2 rounded border border-stone-300 bg-white hover:bg-stone-50 disabled:opacity-50"
+            >
+              Aggiorna coda
+            </button>
           </div>
 
           {queueBusy && !queue.length ? (

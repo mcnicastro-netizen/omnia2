@@ -70,11 +70,23 @@ async def list_clients(
                     {"surname": {"$regex": q_safe, "$options": "i"}},
                     {"email": {"$regex": q_safe, "$options": "i"}},
                     {"phone": {"$regex": q_safe, "$options": "i"}},
+                    {"client_code": {"$regex": q_safe, "$options": "i"}},
                 ]},
             ]
         }
     total = await db.clients.count_documents(query)
     docs = await db.clients.find(query, {"_id": 0}).sort("created_at", -1).skip((page - 1) * page_size).limit(page_size).to_list(page_size)
+    # Backfill codici mancanti (elenco leggibile, non UUID)
+    try:
+        from shared.ids import ensure_crm_client_code
+
+        for d in docs:
+            if not (d.get("client_code") or "").strip() and d.get("id"):
+                code = await ensure_crm_client_code(db, d["id"], agency_id=agency_id)
+                if code:
+                    d["client_code"] = code
+    except Exception:
+        logger.exception("crm client_code backfill failed agency=%s", agency_id)
     return {
         "items": [_normalize_client_list_item(d) for d in docs],
         "total": total,
@@ -96,6 +108,14 @@ async def create_client(
     client = ClientInDB(agency_id=agency_id, assigned_agent_id=user["id"], **data)
     doc = client.model_dump()
     await db.clients.insert_one(doc)
+    try:
+        from shared.ids import ensure_crm_client_code
+
+        code = await ensure_crm_client_code(db, doc["id"], agency_id=agency_id)
+        if code:
+            doc["client_code"] = code
+    except Exception:
+        logger.exception("crm client_code alloc failed id=%s", doc.get("id"))
     # D-089 — se acquirente con preferenze, crea richiesta search_brief
     try:
         from apps.immoweb.client_requests_service import (

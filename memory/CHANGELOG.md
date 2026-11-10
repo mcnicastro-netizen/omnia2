@@ -1,3 +1,12 @@
+## 2026-11-10 — Onboarding serio + Accedi in nav + logo file
+
+- Home nav: **Accedi** (agenzie già registrate) + Registrati
+- Onboarding: PEC + telefono obbligatori; rimosso FIAIP; upload logo da file
+- Ops: tolto bottone «Lavagna bianca» (API resta per script)
+- blank-slate azzera anche telemetry Ops residua
+- Clienti CRM: codice `OM-K-XXXXXX` (create + backfill elenco)
+- Gap aperti (prossima onda): filtri attivi vs KPI, deep-audit login paths, codice in scheda dettaglio
+
 ## 2026-11-10 — Coda attivazione Founder + lavagna bianca
 
 - Ops: inbox «Richieste di attivazione» (agenzia + email titolare + Attiva)

@@ -69,6 +69,7 @@ class ClientInDB(TenantModel):
     phone: Optional[str] = Field(default=None, max_length=30)
     whatsapp: Optional[str] = Field(default=None, max_length=30)
     fiscal_code: Optional[str] = Field(default=None, max_length=20)
+    client_code: Optional[str] = Field(default=None, max_length=24)  # OM-K-XXXXXX
     client_type: ClientType = "buyer"
     status: ClientStatus = "new"
     source: Optional[str] = Field(default=None, max_length=100)  # "Idealista", "Walk-in", "Referral", ...
@@ -114,6 +115,7 @@ class ClientListItem(OmniaBaseModel):
     surname: Optional[str] = None
     email: Optional[str] = None
     phone: Optional[str] = None
+    client_code: Optional[str] = None
     client_type: ClientType
     status: ClientStatus
     source: Optional[str] = None

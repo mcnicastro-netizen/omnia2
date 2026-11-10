@@ -179,6 +179,29 @@ async def blank_slate_platform(db, *, keep_user_id: Optional[str] = None) -> Dic
     ag = await db.agencies.delete_many({})
     report["agencies_deleted"] = int(ag.deleted_count)
 
+    # Ops cruscotto: azzera anche code/telemetry senza agency_id (lavagna davvero bianca)
+    for name in (
+        "ops_alerts",
+        "ops_cost_events",
+        "founder_ops_events",
+        "ai_usage_events",
+        "credit_transactions",
+        "credit_wallets",
+        "subscriptions",
+        "match_audit",
+        "notifications",
+        "virtual_staging_jobs",
+        "videos",
+        "al_audit",
+    ):
+        if name not in names:
+            continue
+        res = await db[name].delete_many({})
+        if res.deleted_count:
+            report["collections"][name] = report["collections"].get(name, 0) + int(
+                res.deleted_count
+            )
+
     # 2) Users: keep super_admin + B2C; delete B2B agency staff
     keep_id = (keep_user_id or "").strip() or None
     cursor = db.users.find({}, {"_id": 0, "id": 1, "role": 1, "account_type": 1, "email": 1})

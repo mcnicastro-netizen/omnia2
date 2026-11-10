@@ -48,3 +48,20 @@ export function validateFiscalCodeSoft(raw) {
   if (/^[A-Z0-9]{16}$/.test(s)) return { ok: true };
   return { ok: false, reason: "format" };
 }
+
+/** Italian mobile/landline soft check (digits, optional +39). */
+export function validateItalianPhone(raw) {
+  const s = String(raw || "").trim();
+  if (!s) return { ok: false, reason: "required" };
+  const digits = s.replace(/[\s./()-]/g, "").replace(/^\+39/, "").replace(/^0039/, "");
+  if (!/^\d{8,12}$/.test(digits)) return { ok: false, reason: "format" };
+  return { ok: true, normalized: digits };
+}
+
+/** PEC: email with typical Italian PEC domains preferred; any email format accepted if has @. */
+export function validatePecEmail(raw) {
+  const s = String(raw || "").trim().toLowerCase();
+  if (!s) return { ok: false, reason: "required" };
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s)) return { ok: false, reason: "format" };
+  return { ok: true, normalized: s };
+}

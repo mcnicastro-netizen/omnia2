@@ -55,6 +55,7 @@ class AgencyAddress(OmniaBaseModel):
 class AgencyContact(OmniaBaseModel):
     email: Optional[EmailStr] = None
     phone: Optional[str] = Field(default=None, max_length=30)
+    pec: Optional[EmailStr] = None  # obbligatoria in onboarding (validata in route)
     website: Optional[str] = Field(default=None, max_length=200)
 
 

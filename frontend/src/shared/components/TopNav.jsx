@@ -120,7 +120,22 @@ export default function TopNav({ current = "landing", theme = "light", suffix = 
     { key: "app", to: `/${lang}/app`, label: t("nav.immoweb"), testid: "topnav-app" },
   ];
 
-  const navItems = isPublicNav ? landingItems : productItems;
+  const navItems = isPublicNav
+    ? [
+        ...landingItems,
+        // Agenzie già registrate → login gestionale
+        ...(current === "landing"
+          ? [
+              {
+                key: "agency-login",
+                to: `/${lang}/login?from=app&next=${encodeURIComponent(`/${lang}/app/dashboard`)}`,
+                label: t("nav.login", "Accedi"),
+                testid: "topnav-agency-login",
+              },
+            ]
+          : []),
+      ]
+    : productItems;
   const ctaTo =
     current === "landing"
       ? `/${lang}/register`

@@ -75,6 +75,7 @@ _CLIENT_PROJ = {
     "email": 1,
     "phone": 1,
     "whatsapp": 1,
+    "client_code": 1,
     "client_type": 1,
     "status": 1,
     "source": 1,

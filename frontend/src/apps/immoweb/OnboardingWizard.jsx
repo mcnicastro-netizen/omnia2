@@ -3,7 +3,12 @@ import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { api } from "../../shared/lib/api";
 import { useAuth, formatApiErrorDetail } from "../../shared/lib/auth";
-import { validateItalianVat, validateFiscalCodeSoft } from "../../shared/lib/italianFiscal";
+import {
+  validateItalianVat,
+  validateFiscalCodeSoft,
+  validateItalianPhone,
+  validatePecEmail,
+} from "../../shared/lib/italianFiscal";
 import Brand from "../../shared/components/Brand";
 import OmniaLogo from "../../shared/components/OmniaLogo";
 import LanguageSwitcher from "../../shared/components/LanguageSwitcher";
@@ -21,6 +26,9 @@ export default function OnboardingWizard() {
   const [error, setError] = useState("");
   const [vatHint, setVatHint] = useState("");
   const [cfHint, setCfHint] = useState("");
+  const [phoneHint, setPhoneHint] = useState("");
+  const [pecHint, setPecHint] = useState("");
+  const [logoBusy, setLogoBusy] = useState(false);
 
   const [form, setForm] = useState({
     display_name: "",
@@ -29,7 +37,6 @@ export default function OnboardingWizard() {
       vat_number: "",
       fiscal_code: "",
       rea: "",
-      fiaip_code: "",
     },
     address: {
       street: "",
@@ -41,6 +48,7 @@ export default function OnboardingWizard() {
     contact: {
       email: "",
       phone: "",
+      pec: "",
       website: "",
     },
     branding: {
@@ -76,13 +84,21 @@ export default function OnboardingWizard() {
 
   const canContinue = () => {
     if (step === 0) return form.display_name.trim().length >= 2;
-    if (step === 1) return form.fiscal.legal_name.trim().length >= 2;
+    if (step === 1) {
+      return (
+        form.fiscal.legal_name.trim().length >= 2 &&
+        form.contact.phone.trim().length >= 8 &&
+        form.contact.pec.trim().includes("@")
+      );
+    }
     return true;
   };
 
   const validateFiscalStep = () => {
     setVatHint("");
     setCfHint("");
+    setPhoneHint("");
+    setPecHint("");
     const vat = validateItalianVat(form.fiscal.vat_number);
     if (!vat.ok) {
       setVatHint(t("onboarding.vat_soft_error"));
@@ -93,7 +109,42 @@ export default function OnboardingWizard() {
       setCfHint(t("onboarding.cf_soft_error"));
       return false;
     }
+    const phone = validateItalianPhone(form.contact.phone);
+    if (!phone.ok) {
+      setPhoneHint(t("onboarding.phone_required", "Telefono obbligatorio (8–12 cifre)."));
+      return false;
+    }
+    const pec = validatePecEmail(form.contact.pec);
+    if (!pec.ok) {
+      setPecHint(t("onboarding.pec_required", "PEC obbligatoria (email valida)."));
+      return false;
+    }
     return true;
+  };
+
+  const onLogoFile = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setLogoBusy(true);
+    setError("");
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      const r = await api.post("/app/agencies/logo-upload", fd, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      if (r.data?.url) {
+        update("branding", "logo_url", r.data.url);
+      }
+    } catch (err) {
+      setError(
+        formatApiErrorDetail(err?.response?.data?.detail) ||
+          t("onboarding.logo_upload_error", "Caricamento logo non riuscito.")
+      );
+    } finally {
+      setLogoBusy(false);
+      e.target.value = "";
+    }
   };
 
   const goNext = () => {
@@ -254,14 +305,6 @@ export default function OnboardingWizard() {
                   className="form-input"
                 />
               </Field>
-              <Field label={t("onboarding.fiaip_code")}>
-                <input
-                  data-testid="onb-fiaip"
-                  value={form.fiscal.fiaip_code}
-                  onChange={(e) => update("fiscal", "fiaip_code", e.target.value)}
-                  className="form-input"
-                />
-              </Field>
             </div>
             <hr className="border-stone-200 my-2" />
             <Field label={t("onboarding.address_street")} hint={t("onboarding.address_hint")}>
@@ -313,12 +356,31 @@ export default function OnboardingWizard() {
                   className="form-input"
                 />
               </Field>
-              <Field label={t("onboarding.contact_phone")}>
+              <Field
+                label={`${t("onboarding.contact_phone")} *`}
+                hint={phoneHint || undefined}
+              >
                 <input
                   data-testid="onb-phone"
                   value={form.contact.phone}
                   onChange={(e) => update("contact", "phone", e.target.value)}
                   className="form-input"
+                  required
+                  placeholder="+39 …"
+                />
+              </Field>
+              <Field
+                label={`${t("onboarding.contact_pec", "PEC")} *`}
+                hint={pecHint || t("onboarding.pec_hint", "Casella PEC dell’agenzia.")}
+              >
+                <input
+                  type="email"
+                  data-testid="onb-pec"
+                  value={form.contact.pec}
+                  onChange={(e) => update("contact", "pec", e.target.value)}
+                  className="form-input"
+                  required
+                  placeholder="agenzia@pec.it"
                 />
               </Field>
             </div>
@@ -336,15 +398,45 @@ export default function OnboardingWizard() {
 
         {step === 2 && (
           <div data-testid="step-branding" className="space-y-5">
-            <Field label={t("onboarding.logo_url")} hint={t("onboarding.logo_hint")}>
+            <Field
+              label={t("onboarding.logo_url")}
+              hint={t(
+                "onboarding.logo_hint",
+                "Se non estraiamo il logo dal sito, caricalo come file (PNG/JPEG/WebP)."
+              )}
+            >
               <input
                 data-testid="onb-logo"
                 value={form.branding.logo_url}
                 onChange={(e) => update("branding", "logo_url", e.target.value)}
                 className="form-input"
-                placeholder="https://..."
+                placeholder="https://… oppure carica sotto"
               />
             </Field>
+            <div className="flex flex-wrap items-center gap-3">
+              <label className="text-xs uppercase tracking-widest text-stone-600 cursor-pointer">
+                <span className="inline-block px-3 py-2 border border-stone-300 rounded bg-white hover:bg-stone-50">
+                  {logoBusy
+                    ? t("onboarding.logo_uploading", "Carico…")
+                    : t("onboarding.logo_upload", "Carica logo da file")}
+                </span>
+                <input
+                  type="file"
+                  accept="image/png,image/jpeg,image/webp,image/svg+xml"
+                  className="hidden"
+                  data-testid="onb-logo-file"
+                  disabled={logoBusy}
+                  onChange={onLogoFile}
+                />
+              </label>
+              {form.branding.logo_url ? (
+                <img
+                  src={form.branding.logo_url}
+                  alt=""
+                  className="h-10 w-auto max-w-[120px] object-contain border border-stone-200 rounded bg-white"
+                />
+              ) : null}
+            </div>
             <Field label={t("onboarding.tagline")} hint={t("onboarding.tagline_hint")}>
               <input
                 data-testid="onb-tagline"

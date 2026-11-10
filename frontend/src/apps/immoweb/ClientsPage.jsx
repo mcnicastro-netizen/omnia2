@@ -567,6 +567,14 @@ function ClientRow({ c, lang, t, segment, onOpen }) {
       <div className="min-w-0">
         <div className="flex items-center gap-3 flex-wrap">
           <span className="font-medium text-stone-900 text-base">{fullName}</span>
+          {c.client_code ? (
+            <span
+              data-testid={`client-code-${c.id}`}
+              className="font-mono text-[11px] tracking-wide text-stone-500 border border-stone-200 rounded px-1.5 py-0.5"
+            >
+              {c.client_code}
+            </span>
+          ) : null}
           {!isSeller && <TempPill temp={c.temperature} t={t} />}
           <span className="text-[10px] uppercase tracking-widest text-stone-400">
             {t(`clients.type_${c.client_type}`)}

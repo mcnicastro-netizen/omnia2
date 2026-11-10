@@ -1,9 +1,11 @@
 """OMNIA — ImmoWeb / Agencies routes (create, read, update, members)."""
 import logging
+import re
 from typing import List, Optional
 from datetime import datetime, timezone
+from uuid import uuid4
 
-from fastapi import APIRouter, HTTPException, Depends, status
+from fastapi import APIRouter, HTTPException, Depends, status, File, UploadFile
 from shared.db.connection import Database
 from shared.auth.dependencies import get_current_user, require_roles
 from shared.auth.tenant import require_agency
@@ -14,6 +16,7 @@ from shared.models.agency import (
     AgencyUpdate,
     make_slug,
 )
+from shared.storage import put_object, ObjStoreError
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/agencies", tags=["agencies"])
@@ -56,6 +59,22 @@ async def _attach_user_to_agency(
     )
 
 
+_EMAIL_RE = re.compile(r"^[^\s@]+@[^\s@]+\.[^\s@]+$")
+
+
+def _validate_onboarding_contact(contact) -> None:
+    """PEC + telefono obbligatori — non scaricare sul Founder dati incompleti."""
+    c = contact.model_dump() if hasattr(contact, "model_dump") else (contact or {})
+    phone = str(c.get("phone") or "").strip()
+    digits = re.sub(r"[\s./()-]", "", phone)
+    digits = re.sub(r"^(?:\+39|0039)", "", digits)
+    if not re.fullmatch(r"\d{8,12}", digits or ""):
+        raise HTTPException(status_code=400, detail="phone_required_or_invalid")
+    pec = str(c.get("pec") or "").strip().lower()
+    if not pec or not _EMAIL_RE.match(pec):
+        raise HTTPException(status_code=400, detail="pec_required_or_invalid")
+
+
 # -------------------- CREATE (during onboarding) --------------------
 
 @router.post("", status_code=201)
@@ -79,6 +98,8 @@ async def create_agency(
             status_code=400,
             detail="agency_already_exists",
         )
+
+    _validate_onboarding_contact(payload.contact)
 
     base_slug = make_slug(payload.display_name)
     slug = await _ensure_unique_slug(db, base_slug)
@@ -180,6 +201,41 @@ async def update_my_agency(
     await db.agencies.update_one({"id": agency_id}, {"$set": update_doc})
     updated = await db.agencies.find_one({"id": agency_id})
     return _public(updated)
+
+
+# -------------------- LOGO UPLOAD (onboarding / settings) --------------------
+
+@router.post("/logo-upload")
+async def upload_agency_logo(
+    file: UploadFile = File(...),
+    user: dict = Depends(get_current_user),
+):
+    """Carica logo agenzia (PNG/JPEG/WebP/SVG) → Object Storage → URL /api/media/…
+
+    Usabile in onboarding (prima della create) o da agency_admin.
+    """
+    ct = (file.content_type or "").lower().split(";")[0].strip()
+    allowed = {
+        "image/png": "png",
+        "image/jpeg": "jpg",
+        "image/jpg": "jpg",
+        "image/webp": "webp",
+        "image/svg+xml": "svg",
+    }
+    if ct not in allowed:
+        raise HTTPException(status_code=400, detail="logo_type_unsupported")
+    raw = await file.read()
+    if not raw or len(raw) > 3 * 1024 * 1024:
+        raise HTTPException(status_code=400, detail="logo_too_large")
+    ext = allowed[ct]
+    path = f"agency-logos/{user['id']}/{uuid4().hex}.{ext}"
+    try:
+        put_object(path, raw, ct)
+    except ObjStoreError as e:
+        logger.error("logo upload failed: %s", e)
+        raise HTTPException(status_code=500, detail="logo_upload_failed") from e
+    url = f"/api/media/{path}"
+    return {"ok": True, "url": url, "content_type": ct, "size": len(raw)}
 
 
 # -------------------- MEMBERS LIST --------------------

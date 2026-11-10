@@ -93,6 +93,11 @@ def test_create_agency_pending_blocks_kpis_and_activate_unlocks():
             "display_name": name,
             "fiscal": {"legal_name": f"{name} SRL"},
             "address": {"street": "Via Test 1", "city": "Roma", "province": "RM", "postal_code": "00100"},
+            "contact": {
+                "email": email,
+                "phone": "3331234567",
+                "pec": f"pec-{uuid.uuid4().hex[:8]}@pec.it",
+            },
         },
         timeout=30,
     )

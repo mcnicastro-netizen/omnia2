@@ -50,6 +50,11 @@ def test_create_agency_promotes_and_completes_onboarding():
             "display_name": name,
             "fiscal": {"legal_name": f"{name} SRL"},
             "address": {"street": "Via Test 1", "city": "Roma", "province": "RM", "postal_code": "00100"},
+            "contact": {
+                "email": email,
+                "phone": "+39 06 12345678",
+                "pec": f"pec-{uuid.uuid4().hex[:8]}@pec.it",
+            },
         },
         timeout=30,
     )
