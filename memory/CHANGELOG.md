@@ -1,3 +1,9 @@
+## 2026-11-10 — Ops Attiva semplice + wipe CRM
+
+- Founder Ops: un solo bottone **Attiva** (email → wipe dati prova + sblocco + Pro + email)
+- Rimossi da UI: purge shell, solo piano, detach, crediti/nota
+- `wipe_crm` default su `activate-agency` · `POST /wipe-agency-crm`
+
 ## 2026-11-10 — D-153 Founder scollegato da Nicastro
 
 - Login/`/app` super_admin → `/app/ops` (non dashboard cliente)

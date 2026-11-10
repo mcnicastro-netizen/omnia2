@@ -16,16 +16,11 @@ export default function FounderOpsPage() {
   const [error, setError] = useState(null);
   const [busy, setBusy] = useState(true);
   const [backupBusy, setBackupBusy] = useState(false);
-  const [grantLookup, setGrantLookup] = useState("");
-  const [grantHits, setGrantHits] = useState([]);
-  const [grantTarget, setGrantTarget] = useState({ agency_id: "", slug: "", email: "" });
-  const [grantTier, setGrantTier] = useState("pro");
-  const [grantCredits, setGrantCredits] = useState(2000);
-  const [grantNote, setGrantNote] = useState("dogfood_assistito");
-  const [grantBusy, setGrantBusy] = useState(false);
-  const [grantMsg, setGrantMsg] = useState(null);
-  const [purgeSlug, setPurgeSlug] = useState("nicastroimmobiliare");
-  const [purgeBusy, setPurgeBusy] = useState(false);
+  const [attivaEmail, setAttivaEmail] = useState("");
+  const [attivaHits, setAttivaHits] = useState([]);
+  const [attivaTarget, setAttivaTarget] = useState({ agency_id: "", slug: "", email: "" });
+  const [attivaBusy, setAttivaBusy] = useState(false);
+  const [attivaMsg, setAttivaMsg] = useState(null);
 
   const load = async (d = days) => {
     setBusy(true);
@@ -81,158 +76,69 @@ export default function FounderOpsPage() {
   };
 
   const searchAgencies = async () => {
-    setGrantMsg(null);
+    setAttivaMsg(null);
+    const q = (attivaEmail || "").trim() || (attivaTarget.slug || "");
     try {
       const r = await api.get(`/app/ops/agencies-lookup`, {
-        params: { q: grantLookup || "", limit: 15 },
+        params: { q, limit: 10 },
       });
-      setGrantHits(r.data?.items || []);
+      const items = r.data?.items || [];
+      setAttivaHits(items);
+      if (items.length === 1) {
+        setAttivaTarget({ agency_id: items[0].id, slug: items[0].slug, email: attivaEmail.trim() });
+      }
     } catch {
-      setGrantMsg("Ricerca agenzie non riuscita.");
-      setGrantHits([]);
+      setAttivaMsg("Ricerca non riuscita. Riprova.");
+      setAttivaHits([]);
     }
   };
 
-  const buildGrantTargetPayload = () => {
-    const payload = {};
-    if (grantTarget.agency_id) payload.agency_id = grantTarget.agency_id;
-    else if (grantTarget.slug) payload.slug = grantTarget.slug;
-    else if (grantTarget.email) payload.email = grantTarget.email;
-    return payload;
-  };
-
-  const runGrant = async () => {
-    setGrantBusy(true);
-    setGrantMsg(null);
+  const runAttiva = async () => {
+    setAttivaBusy(true);
+    setAttivaMsg(null);
     try {
-      const target = buildGrantTargetPayload();
-      if (!target.agency_id && !target.slug && !target.email) {
-        setGrantMsg("Seleziona un’agenzia o inserisci email/slug.");
-        setGrantBusy(false);
-        return;
-      }
+      const email = (attivaEmail || attivaTarget.email || "").trim();
       const payload = {
-        ...target,
-        tier: grantTier,
-        credits: Number(grantCredits) || 0,
-        note: grantNote || "dogfood_assistito",
-      };
-      const r = await api.post(`/app/ops/grant-agency-plan`, payload);
-      const g = r.data?.grant || {};
-      setGrantMsg(
-        `OK · ${g.display_name || g.slug} → ${g.plan_tier} · wallet ${g.credits_balance} (+${g.credits_added})`
-      );
-      await load(days);
-    } catch (e) {
-      const detail = e?.response?.data?.detail;
-      setGrantMsg(
-        typeof detail === "string"
-          ? detail
-          : detail?.error || "Concessione non riuscita."
-      );
-    } finally {
-      setGrantBusy(false);
-    }
-  };
-
-  const runActivate = async () => {
-    setGrantBusy(true);
-    setGrantMsg(null);
-    try {
-      const target = buildGrantTargetPayload();
-      if (!target.agency_id && !target.slug && !target.email) {
-        setGrantMsg("Seleziona un’agenzia o inserisci email/slug.");
-        setGrantBusy(false);
-        return;
-      }
-      const payload = {
-        ...target,
         grant_plan: true,
-        tier: grantTier,
-        credits: Number(grantCredits) || 0,
-        note: grantNote || "ops_activate_agency",
+        tier: "pro",
+        credits: 2000,
         send_email: true,
+        wipe_crm: true,
+        note: "attiva_semplice",
       };
+      if (attivaTarget.agency_id) payload.agency_id = attivaTarget.agency_id;
+      else if (attivaTarget.slug) payload.slug = attivaTarget.slug;
+      else if (email) payload.email = email;
+      else {
+        setAttivaMsg("Inserisci l’email del titolare (o cerca e seleziona l’agenzia).");
+        setAttivaBusy(false);
+        return;
+      }
+      if (
+        !window.confirm(
+          "Attivare l’agenzia? Svuota i dati di prova, sblocca il gestionale, assegna Pro e invia l’email di benvenuto."
+        )
+      ) {
+        setAttivaBusy(false);
+        return;
+      }
       const r = await api.post(`/app/ops/activate-agency`, payload);
+      const wiped = r.data?.wipe?.total_deleted ?? 0;
       const g = r.data?.grant || {};
-      setGrantMsg(
-        `ATTIVATA · ${r.data?.display_name || r.data?.slug} · CRM unlocked` +
-          (g?.plan_tier ? ` · ${g.plan_tier} · cr ${g.credits_balance}` : "") +
-          (r.data?.email?.status ? ` · email ${r.data.email.status}` : "")
+      setAttivaMsg(
+        `Attivata «${r.data?.display_name || r.data?.slug}». Dashboard ripulita (${wiped} record). Piano ${g.plan_tier || "pro"}. Email: ${r.data?.email?.status || "—"}.`
       );
       await searchAgencies();
       await load(days);
     } catch (e) {
       const detail = e?.response?.data?.detail;
-      setGrantMsg(
+      setAttivaMsg(
         typeof detail === "string"
           ? detail
           : detail?.error || "Attivazione non riuscita."
       );
     } finally {
-      setGrantBusy(false);
-    }
-  };
-
-  const runDetachFounder = async () => {
-    if (
-      !window.confirm(
-        "Scollegare il Founder da tutte le agenzie cliente? (Ops resta; sparisce Nicastro dalla shell)"
-      )
-    ) {
-      return;
-    }
-    setGrantBusy(true);
-    setGrantMsg(null);
-    try {
-      const r = await api.post(`/app/ops/detach-founder-agencies`);
-      setGrantMsg(
-        r.data?.ok
-          ? "Founder scollegato. Ricarico Ops…"
-          : "Detach non riuscito."
-      );
-      setTimeout(() => window.location.assign(`/${lang}/app/ops`), 600);
-    } catch (e) {
-      const detail = e?.response?.data?.detail;
-      setGrantMsg(
-        typeof detail === "string"
-          ? detail
-          : detail?.error || "Detach non riuscito."
-      );
-    } finally {
-      setGrantBusy(false);
-    }
-  };
-
-  const runPurgeShell = async () => {
-    if (
-      !window.confirm(
-        `Eliminare lo shell «${purgeSlug}» (force)? Usa prima di registrare l’agenzia reale se il seed occupa lo slug.`
-      )
-    ) {
-      return;
-    }
-    setPurgeBusy(true);
-    setGrantMsg(null);
-    try {
-      const r = await api.post(`/app/ops/purge-agency-shell`, null, {
-        params: { slug: purgeSlug || "nicastroimmobiliare", force: true },
-      });
-      setGrantMsg(
-        r.data?.shell?.ok
-          ? `Shell ${purgeSlug} rimosso (demo wipe incluso).`
-          : "Purge completato con warning — vedi risposta API."
-      );
-      await searchAgencies();
-    } catch (e) {
-      const detail = e?.response?.data?.detail;
-      setGrantMsg(
-        typeof detail === "string"
-          ? detail
-          : detail?.error || "Purge shell non riuscito."
-      );
-    } finally {
-      setPurgeBusy(false);
+      setAttivaBusy(false);
     }
   };
 
@@ -292,164 +198,83 @@ export default function FounderOpsPage() {
         ) : null}
 
         <div
-          className="rounded-lg border border-[#0B1E3F]/25 bg-[#f7f4ef] px-4 py-4 space-y-3"
-          data-testid="ops-grant-plan"
+          className="rounded-lg border border-[#0B1E3F]/25 bg-[#f7f4ef] px-4 py-5 space-y-4"
+          data-testid="ops-attiva"
         >
           <div>
-            <h2 className="text-xs uppercase tracking-widest text-[#C19A6B]">
-              Dogfood · attiva CRM + piano (gratis)
-            </h2>
-            <p className="text-sm text-stone-700 mt-1 max-w-3xl">
-              Dopo onboarding l’agenzia resta in <em>pending</em>. Qui sblocchi il gestionale,
-              concedi Starter/Pro/Agency + crediti e invii l’email «account attivo» — senza carta
-              (Stripe B2B chiuso O6). Il Founder non viene più agganciato alle agenzie cliente.
+            <h2 className="text-xs uppercase tracking-widest text-[#C19A6B]">Attiva agenzia</h2>
+            <p className="text-sm text-stone-700 mt-1 max-w-2xl">
+              Un solo passo: email del titolare → <strong>Attiva</strong>. Svuota i dati di prova,
+              sblocca il gestionale, assegna Pro e manda l’email di benvenuto.
             </p>
-            <button
-              type="button"
-              data-testid="ops-detach-founder"
-              disabled={grantBusy}
-              onClick={runDetachFounder}
-              className="mt-2 text-xs uppercase tracking-widest px-3 py-1.5 rounded border border-amber-700 text-amber-900 bg-amber-50 hover:bg-amber-100 disabled:opacity-50"
-            >
-              Scollega Founder da agenzie cliente
-            </button>
           </div>
           <div className="flex flex-wrap gap-2 items-end">
-            <label className="text-xs space-y-1">
-              <span className="uppercase tracking-widest text-stone-500">Cerca</span>
+            <label className="text-xs space-y-1 flex-1 min-w-[240px]">
+              <span className="uppercase tracking-widest text-stone-500">Email titolare</span>
               <input
-                data-testid="ops-grant-lookup"
-                value={grantLookup}
-                onChange={(e) => setGrantLookup(e.target.value)}
-                placeholder="slug, nome, email…"
-                className="block min-w-[220px] rounded border border-stone-300 px-2 py-1.5 text-sm bg-white"
+                data-testid="ops-attiva-email"
+                value={attivaEmail}
+                onChange={(e) => {
+                  setAttivaEmail(e.target.value);
+                  setAttivaTarget((t) => ({ ...t, email: e.target.value, agency_id: "", slug: "" }));
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") searchAgencies();
+                }}
+                placeholder="titolare@agenzia.it"
+                className="block w-full rounded border border-stone-300 px-3 py-2 text-sm bg-white"
               />
             </label>
             <button
               type="button"
-              data-testid="ops-grant-search"
+              data-testid="ops-attiva-search"
               onClick={searchAgencies}
-              className="text-xs uppercase tracking-widest px-3 py-1.5 rounded border border-stone-300 bg-white hover:bg-stone-50"
+              className="text-xs uppercase tracking-widest px-3 py-2 rounded border border-stone-300 bg-white hover:bg-stone-50"
             >
               Cerca
             </button>
-            <label className="text-xs space-y-1">
-              <span className="uppercase tracking-widest text-stone-500">Email titolare</span>
-              <input
-                data-testid="ops-grant-email"
-                value={grantTarget.email}
-                onChange={(e) =>
-                  setGrantTarget((t) => ({ ...t, email: e.target.value, agency_id: "", slug: "" }))
-                }
-                placeholder="titolare@…"
-                className="block min-w-[200px] rounded border border-stone-300 px-2 py-1.5 text-sm bg-white"
-              />
-            </label>
-            <label className="text-xs space-y-1">
-              <span className="uppercase tracking-widest text-stone-500">Piano</span>
-              <select
-                data-testid="ops-grant-tier"
-                value={grantTier}
-                onChange={(e) => setGrantTier(e.target.value)}
-                className="block rounded border border-stone-300 px-2 py-1.5 text-sm bg-white"
-              >
-                <option value="starter">Starter</option>
-                <option value="pro">Pro (consigliato dogfood)</option>
-                <option value="agency">Agency</option>
-              </select>
-            </label>
-            <label className="text-xs space-y-1">
-              <span className="uppercase tracking-widest text-stone-500">Crediti +</span>
-              <input
-                data-testid="ops-grant-credits"
-                type="number"
-                min={0}
-                value={grantCredits}
-                onChange={(e) => setGrantCredits(e.target.value)}
-                className="block w-28 rounded border border-stone-300 px-2 py-1.5 text-sm bg-white"
-              />
-            </label>
-            <label className="text-xs space-y-1 flex-1 min-w-[160px]">
-              <span className="uppercase tracking-widest text-stone-500">Nota</span>
-              <input
-                value={grantNote}
-                onChange={(e) => setGrantNote(e.target.value)}
-                className="block w-full rounded border border-stone-300 px-2 py-1.5 text-sm bg-white"
-              />
-            </label>
             <button
               type="button"
-              data-testid="ops-activate-submit"
-              disabled={grantBusy}
-              onClick={runActivate}
-              className="text-xs uppercase tracking-widest px-3 py-1.5 rounded bg-[#0B1E3F] text-white disabled:opacity-50"
+              data-testid="ops-attiva-submit"
+              disabled={attivaBusy}
+              onClick={runAttiva}
+              className="text-sm uppercase tracking-widest px-6 py-2.5 rounded bg-[#0B1E3F] text-white disabled:opacity-50 font-medium"
             >
-              {grantBusy ? "Attivo…" : "Attiva CRM + piano"}
-            </button>
-            <button
-              type="button"
-              data-testid="ops-grant-submit"
-              disabled={grantBusy}
-              onClick={runGrant}
-              className="text-xs uppercase tracking-widest px-3 py-1.5 rounded border border-[#0B1E3F] text-[#0B1E3F] bg-white disabled:opacity-50"
-            >
-              Solo piano
+              {attivaBusy ? "Attivo…" : "Attiva"}
             </button>
           </div>
-          {grantHits.length > 0 ? (
-            <ul className="text-sm divide-y divide-stone-200 border border-stone-200 rounded bg-white max-h-48 overflow-y-auto">
-              {grantHits.map((a) => (
-                <li key={a.id} className="px-3 py-2 flex flex-wrap items-center justify-between gap-2">
+          {attivaHits.length > 0 ? (
+            <ul className="text-sm divide-y divide-stone-200 border border-stone-200 rounded bg-white max-h-40 overflow-y-auto">
+              {attivaHits.map((a) => (
+                <li key={a.id} className="px-3 py-2 flex items-center justify-between gap-2">
                   <div className="min-w-0">
                     <p className="font-medium truncate">{a.display_name}</p>
                     <p className="text-[11px] text-stone-500 truncate">
-                      {a.slug} · {a.activation_status || "active"} · plan {a.plan}
-                      {a.subscription?.plan_tier ? ` · sub ${a.subscription.plan_tier}` : ""}
-                      {` · cr ${a.credits_balance ?? 0}`}
+                      {(a.activation_status || "active") === "pending" ? "in attesa" : "già attiva"}
+                      {` · ${a.slug}`}
                     </p>
                   </div>
                   <button
                     type="button"
                     className="text-[10px] uppercase tracking-widest underline shrink-0"
                     onClick={() =>
-                      setGrantTarget({ agency_id: a.id, slug: a.slug, email: "" })
+                      setAttivaTarget({ agency_id: a.id, slug: a.slug, email: attivaEmail })
                     }
                   >
-                    Seleziona
+                    Scegli
                   </button>
                 </li>
               ))}
             </ul>
           ) : null}
-          {grantTarget.agency_id || grantTarget.slug ? (
+          {attivaTarget.agency_id || attivaTarget.slug ? (
             <p className="text-xs text-stone-600">
-              Target: {grantTarget.slug || grantTarget.agency_id}
+              Selezionata: {attivaTarget.slug || attivaTarget.agency_id}
             </p>
           ) : null}
-          <div className="flex flex-wrap gap-2 items-end border-t border-stone-200/80 pt-3">
-            <label className="text-xs space-y-1">
-              <span className="uppercase tracking-widest text-stone-500">
-                Purge shell seed (prima di registrare slug)
-              </span>
-              <input
-                value={purgeSlug}
-                onChange={(e) => setPurgeSlug(e.target.value)}
-                className="block min-w-[200px] rounded border border-stone-300 px-2 py-1.5 text-sm bg-white"
-              />
-            </label>
-            <button
-              type="button"
-              data-testid="ops-purge-shell"
-              disabled={purgeBusy}
-              onClick={runPurgeShell}
-              className="text-xs uppercase tracking-widest px-3 py-1.5 rounded border border-rose-300 text-rose-800 bg-white hover:bg-rose-50 disabled:opacity-50"
-            >
-              {purgeBusy ? "Purge…" : "Purge shell force"}
-            </button>
-          </div>
-          {grantMsg ? (
-            <p className="text-sm text-[#0B1E3F]" data-testid="ops-grant-msg">
-              {grantMsg}
+          {attivaMsg ? (
+            <p className="text-sm text-[#0B1E3F]" data-testid="ops-attiva-msg">
+              {attivaMsg}
             </p>
           ) : null}
         </div>

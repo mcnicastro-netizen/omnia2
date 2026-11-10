@@ -102,6 +102,45 @@ async def grant_assisted_pro(db, agency_id: str, credits: int = 500) -> Dict[str
     return out
 
 
+# Collections to keep when wiping CRM data (agency shell + billing stay)
+KEEP_ON_CRM_WIPE = KEEP_GLOBAL | {
+    "agencies",
+    "users",
+    "subscriptions",
+    "credit_wallets",
+    "credit_transactions",
+}
+
+
+async def wipe_agency_crm_data(db, agency_id: str) -> Dict[str, Any]:
+    """Svuota immobili/clienti/code operative; tiene agenzia, utenti, piano/crediti."""
+    aid = (agency_id or "").strip()
+    if not aid:
+        return {"ok": False, "error": "agency_id_required"}
+    agency = await db.agencies.find_one({"id": aid}, {"_id": 0, "id": 1, "slug": 1})
+    if not agency:
+        return {"ok": False, "error": "agency_not_found", "agency_id": aid}
+    deleted: Dict[str, int] = {}
+    names = await db.list_collection_names()
+    for name in sorted(names):
+        if name in KEEP_ON_CRM_WIPE:
+            continue
+        n = await db[name].count_documents({"agency_id": aid})
+        if n:
+            res = await db[name].delete_many({"agency_id": aid})
+            deleted[name] = int(res.deleted_count)
+    inv = await db.agency_invites.delete_many({"agency_id": aid})
+    if inv.deleted_count:
+        deleted["agency_invites"] = int(inv.deleted_count)
+    return {
+        "ok": True,
+        "agency_id": aid,
+        "slug": agency.get("slug"),
+        "deleted": deleted,
+        "total_deleted": sum(deleted.values()),
+    }
+
+
 async def purge_agency_shell(db, *, slug: str, force: bool = False) -> Dict[str, Any]:
     """Elimina un'agenzia orfana (0 membri) e i suoi documenti agency_id.
 
