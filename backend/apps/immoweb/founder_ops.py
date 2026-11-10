@@ -951,6 +951,8 @@ class ActivateAgencyBody(BaseModel):
     credits: int = Field(default=2000, ge=0, le=100_000)
     note: Optional[str] = Field(default=None, max_length=200)
     send_email: bool = True
+    # Default True: Attiva = dashboard vuota + sblocco + piano + email (no jargon Ops)
+    wipe_crm: bool = True
 
 
 @router.post("/activate-agency")
@@ -958,8 +960,9 @@ async def ops_activate_agency(
     body: ActivateAgencyBody,
     user: dict = Depends(require_roles("super_admin")),
 ) -> Dict[str, Any]:
-    """Sblocca CRM (activation_status=active), opzionale grant piano + email benvenuto gestionale."""
+    """Un bottone Attiva: (opz.) svuota CRM + sblocca + piano + email."""
     from apps.immoweb.assisted_billing import grant_assisted_plan, resolve_agency
+    from apps.immoweb.demo_retire import wipe_agency_crm_data
     from shared.auth.agency_activation import resolve_activation_status
     from shared.email.client import send_email
 
@@ -977,6 +980,12 @@ async def ops_activate_agency(
     agency = resolved.get("agency") or await db.agencies.find_one({"id": agency_id})
     if not agency:
         raise HTTPException(status_code=404, detail="agency_not_found")
+
+    wipe = None
+    if body.wipe_crm:
+        wipe = await wipe_agency_crm_data(db, agency_id)
+        if not wipe.get("ok"):
+            raise HTTPException(status_code=400, detail=wipe)
 
     now = datetime.now(timezone.utc).isoformat()
     prev = resolve_activation_status(agency)
@@ -1035,10 +1044,11 @@ async def ops_activate_agency(
                 email_result = {"ok": False, "error": str(exc)[:200]}
 
     logger.info(
-        "activate-agency by=%s agency=%s prev=%s grant=%s",
+        "activate-agency by=%s agency=%s prev=%s wipe=%s grant=%s",
         user.get("email"),
         agency_id,
         prev,
+        (wipe or {}).get("total_deleted"),
         bool(grant and grant.get("ok")),
     )
     return {
@@ -1049,9 +1059,40 @@ async def ops_activate_agency(
         "previous_status": prev,
         "activation_status": "active",
         "activated_at": now,
+        "wipe": wipe,
         "grant": grant,
         "email": email_result,
     }
+
+
+@router.post("/wipe-agency-crm")
+async def ops_wipe_agency_crm(
+    body: ActivateAgencyBody,
+    user: dict = Depends(require_roles("super_admin")),
+) -> Dict[str, Any]:
+    """Svuota solo i dati CRM (immobili/clienti/code) senza toccare utenti/piano."""
+    from apps.immoweb.assisted_billing import resolve_agency
+    from apps.immoweb.demo_retire import wipe_agency_crm_data
+
+    db = Database.get()
+    resolved = await resolve_agency(
+        db,
+        agency_id=body.agency_id,
+        slug=body.slug,
+        email=body.email,
+    )
+    if not resolved.get("ok"):
+        raise HTTPException(status_code=404, detail=resolved)
+    wipe = await wipe_agency_crm_data(db, resolved["agency_id"])
+    if not wipe.get("ok"):
+        raise HTTPException(status_code=400, detail=wipe)
+    logger.info(
+        "wipe-agency-crm by=%s agency=%s deleted=%s",
+        user.get("email"),
+        wipe.get("agency_id"),
+        wipe.get("total_deleted"),
+    )
+    return {"ok": True, "wipe": wipe}
 
 
 @router.post("/detach-founder-agencies")
