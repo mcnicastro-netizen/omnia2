@@ -255,7 +255,9 @@ _PROVIDER_ENV = [
 
 @router.get("/bridge/providers")
 async def bridge_providers(user: dict = Depends(require_roles("super_admin"))) -> Dict[str, Any]:
-    """Stato fornitori esterni: presenza chiave + circuit breaker (mai il valore)."""
+    """Stato fornitori esterni: presenza chiave + circuit + kill-switch (mai il valore)."""
+    from shared.ops.provider_flags import list_flags
+
     circuits: Dict[str, Any] = {}
     try:
         from shared.security.circuit import snapshot
@@ -264,10 +266,13 @@ async def bridge_providers(user: dict = Depends(require_roles("super_admin"))) -
     except Exception:  # noqa: BLE001
         logger.exception("circuit snapshot")
 
+    flags = {f["id"]: f for f in await list_flags()}
+
     items = []
     for key, env_name, label in _PROVIDER_ENV:
         raw = (os.environ.get(env_name) or "").strip()
         circ = circuits.get(key) or circuits.get(env_name.lower()) or {}
+        fl = flags.get(key) or {}
         items.append(
             {
                 "id": key,
@@ -278,6 +283,10 @@ async def bridge_providers(user: dict = Depends(require_roles("super_admin"))) -
                 "circuit_open": bool(circ.get("open")),
                 "circuit_failures": circ.get("failures"),
                 "last_error": (circ.get("last_error") or "")[:120] or None,
+                "killed": bool(fl.get("killed")),
+                "held": bool(fl.get("held") or circ.get("held")),
+                "kill_note": fl.get("note") or "",
+                "kill_updated_at": fl.get("updated_at"),
             }
         )
 
@@ -290,6 +299,40 @@ async def bridge_providers(user: dict = Depends(require_roles("super_admin"))) -
         "items": items,
         "circuits": circuits,
     }
+
+
+class ProviderKillBody(BaseModel):
+    note: str = Field(default="", max_length=500)
+
+
+@router.post("/bridge/providers/{provider_id}/kill")
+async def bridge_provider_kill(
+    provider_id: str,
+    body: ProviderKillBody = ProviderKillBody(),
+    user: dict = Depends(require_roles("super_admin")),
+) -> Dict[str, Any]:
+    from shared.ops.provider_flags import set_killed
+
+    try:
+        doc = await set_killed(provider_id, killed=True, user=user, note=body.note)
+    except ValueError:
+        raise HTTPException(404, detail="unknown_provider") from None
+    return {"ok": True, "flag": doc}
+
+
+@router.post("/bridge/providers/{provider_id}/revive")
+async def bridge_provider_revive(
+    provider_id: str,
+    body: ProviderKillBody = ProviderKillBody(),
+    user: dict = Depends(require_roles("super_admin")),
+) -> Dict[str, Any]:
+    from shared.ops.provider_flags import set_killed
+
+    try:
+        doc = await set_killed(provider_id, killed=False, user=user, note=body.note)
+    except ValueError:
+        raise HTTPException(404, detail="unknown_provider") from None
+    return {"ok": True, "flag": doc}
 
 
 # -------------------- API CLIENTI (piattaforma) --------------------
@@ -437,22 +480,29 @@ async def bridge_catalog(user: dict = Depends(require_roles("super_admin"))) -> 
         row["override_at"] = ov.get("updated_at")
         b2c.append(row)
 
-    plans_launch = [
-        {
-            "tier": t,
-            "phase": "founders",
-            **p.model_dump(),
+    def _b2b_row(phase: str, tier: str, plan) -> dict:
+        key = f"b2b_{phase}_{tier}"
+        ov = overrides.get(key) or {}
+        base = plan.model_dump()
+        pm = float(ov.get("price_monthly") if ov.get("price_monthly") is not None else base["price_monthly"])
+        py = float(ov.get("price_yearly") if ov.get("price_yearly") is not None else base["price_yearly"])
+        cr = int(ov.get("credits_included_monthly") if ov.get("credits_included_monthly") is not None else base["credits_included_monthly"])
+        return {
+            "tier": tier,
+            "phase": phase,
+            **base,
+            "price_monthly": pm,
+            "price_yearly": py,
+            "credits_included_monthly": cr,
+            "override": bool(ov),
+            "override_key": key,
+            "override_note": ov.get("note"),
+            "stripe_lookup_monthly": f"{tier}_monthly",
+            "stripe_lookup_yearly": f"{tier}_yearly",
         }
-        for t, p in LAUNCH_PLANS.items()
-    ]
-    plans_std = [
-        {
-            "tier": t,
-            "phase": "standard",
-            **p.model_dump(),
-        }
-        for t, p in POST_TRACTION_PLANS.items()
-    ]
+
+    plans_launch = [_b2b_row("founders", t, p) for t, p in LAUNCH_PLANS.items()]
+    plans_std = [_b2b_row("standard", t, p) for t, p in POST_TRACTION_PLANS.items()]
 
     return {
         "ok": True,
@@ -462,8 +512,8 @@ async def bridge_catalog(user: dict = Depends(require_roles("super_admin"))) -> 
         "credit_costs": CREDIT_COSTS,
         "b2c": b2c,
         "note": (
-            "Piani B2B restano SoT in codice/Stripe lookup_key. "
-            "Override prezzo B2C salvati in Mongo (pricing_overrides) senza toccare secret."
+            "Override B2B/B2C in Mongo (pricing_overrides). "
+            "Patch B2B può sincronizzare Stripe lookup_key {tier}_monthly/yearly."
         ),
     }
 
@@ -496,3 +546,277 @@ async def bridge_patch_b2c_price(
         user.get("email"),
     )
     return {"ok": True, "override": doc}
+
+
+class B2BPlanPatch(BaseModel):
+    price_monthly: Optional[float] = Field(default=None, gt=0, le=99999)
+    price_yearly: Optional[float] = Field(default=None, gt=0, le=999999)
+    credits_included_monthly: Optional[int] = Field(default=None, ge=0, le=1_000_000)
+    note: str = Field(default="", max_length=500)
+    sync_stripe: bool = True
+
+
+@router.patch("/bridge/catalog/b2b/{phase}/{tier}")
+async def bridge_patch_b2b_plan(
+    phase: str,
+    tier: str,
+    body: B2BPlanPatch,
+    user: dict = Depends(require_roles("super_admin")),
+) -> Dict[str, Any]:
+    """Override prezzi piano B2B + sync Stripe lookup_key (best-effort)."""
+    from apps.billing.plans import LAUNCH_PLANS, POST_TRACTION_PLANS
+
+    phase_n = (phase or "").strip().lower()
+    tier_n = (tier or "").strip().lower()
+    catalog = LAUNCH_PLANS if phase_n in ("founders", "launch") else POST_TRACTION_PLANS
+    if phase_n not in ("founders", "launch", "standard", "post_traction"):
+        raise HTTPException(400, detail="phase_invalid")
+    if tier_n not in catalog:
+        raise HTTPException(404, detail="tier_not_found")
+    plan = catalog[tier_n]
+    key = f"b2b_{'founders' if phase_n in ('founders', 'launch') else 'standard'}_{tier_n}"
+    db = Database.get()
+    now = _now()
+    doc = {
+        "key": key,
+        "phase": "founders" if phase_n in ("founders", "launch") else "standard",
+        "tier": tier_n,
+        "price_monthly": float(
+            body.price_monthly if body.price_monthly is not None else plan.price_monthly
+        ),
+        "price_yearly": float(
+            body.price_yearly if body.price_yearly is not None else plan.price_yearly
+        ),
+        "credits_included_monthly": int(
+            body.credits_included_monthly
+            if body.credits_included_monthly is not None
+            else plan.credits_included_monthly
+        ),
+        "note": (body.note or "").strip(),
+        "updated_at": now,
+        "updated_by": user.get("id"),
+        "updated_by_email": user.get("email"),
+    }
+    await db.pricing_overrides.update_one({"key": key}, {"$set": doc}, upsert=True)
+
+    stripe_report: Dict[str, Any] = {"skipped": True}
+    if body.sync_stripe:
+        stripe_report = _sync_b2b_stripe_prices(
+            tier_n, doc["price_monthly"], doc["price_yearly"]
+        )
+
+    logger.warning(
+        "b2b plan override key=%s monthly=%s yearly=%s stripe=%s by=%s",
+        key,
+        doc["price_monthly"],
+        doc["price_yearly"],
+        stripe_report.get("ok"),
+        user.get("email"),
+    )
+    return {"ok": True, "override": doc, "stripe": stripe_report}
+
+
+def _sync_b2b_stripe_prices(tier: str, monthly: float, yearly: float) -> Dict[str, Any]:
+    """Crea/ruota Price Stripe su lookup {tier}_monthly / {tier}_yearly."""
+    if (os.environ.get("STRIPE_ENABLED") or "").strip().lower() != "true":
+        return {"ok": False, "skipped": True, "reason": "stripe_disabled"}
+    key = (os.environ.get("STRIPE_SECRET_KEY") or "").strip()
+    if not key:
+        return {"ok": False, "skipped": True, "reason": "no_stripe_key"}
+    try:
+        import stripe
+        from apps.billing.setup_stripe import _ensure_price, _get_or_create_product
+
+        stripe.api_key = key
+        product = _get_or_create_product(f"plan_{tier}", f"OMNIA {tier.title()}")
+        m = _ensure_price(product.id, f"{tier}_monthly", monthly, interval="month")
+        y = _ensure_price(product.id, f"{tier}_yearly", yearly, interval="year")
+        return {
+            "ok": True,
+            "monthly_price_id": getattr(m, "id", None),
+            "yearly_price_id": getattr(y, "id", None),
+        }
+    except Exception as e:  # noqa: BLE001
+        logger.exception("stripe b2b sync failed tier=%s", tier)
+        return {"ok": False, "error": str(e)[:200]}
+
+
+# -------------------- IMPERSONATION CRM --------------------
+
+
+class ImpersonateBody(BaseModel):
+    agency_id: str = Field(min_length=8, max_length=80)
+
+
+@router.post("/bridge/impersonate")
+async def bridge_impersonate(
+    body: ImpersonateBody,
+    user: dict = Depends(require_roles("super_admin")),
+) -> Dict[str, Any]:
+    """Entra nel CRM di un'agenzia in modo esplicito (D-153-safe)."""
+    db = Database.get()
+    aid = body.agency_id.strip()
+    agency = await db.agencies.find_one({"id": aid}, {"_id": 0, "id": 1, "display_name": 1, "slug": 1})
+    if not agency:
+        raise HTTPException(404, detail="agency_not_found")
+
+    prev_ids = list(user.get("agency_ids") or [])
+    prev_active = user.get("active_agency_id")
+    stamp = {
+        "agency_id": aid,
+        "agency_name": agency.get("display_name") or agency.get("slug"),
+        "started_at": _now(),
+        "previous_agency_ids": prev_ids,
+        "previous_active_agency_id": prev_active,
+    }
+    new_ids = list(dict.fromkeys(prev_ids + [aid]))
+    await db.users.update_one(
+        {"id": user["id"]},
+        {
+            "$set": {
+                "agency_ids": new_ids,
+                "active_agency_id": aid,
+                "ops_impersonation": stamp,
+                "updated_at": _now(),
+            }
+        },
+    )
+    logger.warning(
+        "impersonate start by=%s agency=%s slug=%s",
+        user.get("email"),
+        aid,
+        agency.get("slug"),
+    )
+    return {"ok": True, "impersonation": stamp, "redirect": "/app/dashboard"}
+
+
+@router.post("/bridge/impersonate/exit")
+async def bridge_impersonate_exit(
+    user: dict = Depends(require_roles("super_admin")),
+) -> Dict[str, Any]:
+    """Esce dall'impersonation e ripristina membership precedente (di solito vuota)."""
+    db = Database.get()
+    full = await db.users.find_one({"id": user["id"]}, {"_id": 0})
+    if not full:
+        raise HTTPException(404, detail="user_not_found")
+    stamp = full.get("ops_impersonation") or {}
+    prev_ids = list(stamp.get("previous_agency_ids") or [])
+    prev_active = stamp.get("previous_active_agency_id")
+    # Se non c'era stamp, stacca tutto (allinea D-153)
+    await db.users.update_one(
+        {"id": user["id"]},
+        {
+            "$set": {
+                "agency_ids": prev_ids,
+                "active_agency_id": prev_active if prev_active in prev_ids else None,
+                "updated_at": _now(),
+            },
+            "$unset": {"ops_impersonation": ""},
+        },
+    )
+    logger.warning("impersonate exit by=%s was=%s", user.get("email"), stamp.get("agency_id"))
+    return {"ok": True, "restored_agency_ids": prev_ids, "redirect": "/app/ops"}
+
+
+@router.get("/bridge/impersonate/status")
+async def bridge_impersonate_status(
+    user: dict = Depends(require_roles("super_admin")),
+) -> Dict[str, Any]:
+    db = Database.get()
+    full = await db.users.find_one({"id": user["id"]}, {"_id": 0, "ops_impersonation": 1})
+    return {"ok": True, "impersonation": (full or {}).get("ops_impersonation")}
+
+
+# -------------------- GDPR ERASE (cabina) --------------------
+
+
+class EraseUserBody(BaseModel):
+    confirm: str = Field(min_length=3, max_length=40)
+
+
+@router.post("/bridge/users/{user_id}/erase")
+async def bridge_erase_user(
+    user_id: str,
+    body: EraseUserBody,
+    user: dict = Depends(require_roles("super_admin")),
+) -> Dict[str, Any]:
+    """GDPR erase assistito (stesso motore di POST /auth/me/erase)."""
+    if (body.confirm or "").strip() != "CANCELLA_UTENTE":
+        raise HTTPException(
+            400,
+            detail={"error": "confirm_required", "hint": "Passa confirm=CANCELLA_UTENTE"},
+        )
+    if user_id == user.get("id"):
+        raise HTTPException(400, detail="cannot_erase_self_via_ops")
+    db = Database.get()
+    target = await db.users.find_one({"id": user_id}, {"_id": 0})
+    if not target:
+        raise HTTPException(404, detail="user_not_found")
+    if target.get("role") == "super_admin":
+        raise HTTPException(403, detail="cannot_erase_super_admin")
+    from shared.privacy.erasure import erase_user_data
+
+    report = await erase_user_data(target)
+    logger.warning(
+        "ops erase user target=%s by=%s",
+        target.get("email"),
+        user.get("email"),
+    )
+    return {"ok": True, "status": "erased", "report": report}
+
+
+class OffboardAgencyBody(BaseModel):
+    confirm: str = Field(min_length=3, max_length=40)
+    erase_members: bool = False
+
+
+@router.post("/bridge/tenants/{agency_id}/offboard")
+async def bridge_offboard_agency(
+    agency_id: str,
+    body: OffboardAgencyBody,
+    user: dict = Depends(require_roles("super_admin")),
+) -> Dict[str, Any]:
+    """Chiude agenzia: wipe CRM + purge shell (force). Opzionale erase membri."""
+    if (body.confirm or "").strip() != "CHIUDI_AGENZIA":
+        raise HTTPException(
+            400,
+            detail={"error": "confirm_required", "hint": "Passa confirm=CHIUDI_AGENZIA"},
+        )
+    db = Database.get()
+    agency = await db.agencies.find_one({"id": agency_id}, {"_id": 0})
+    if not agency:
+        raise HTTPException(404, detail="agency_not_found")
+
+    from apps.immoweb.demo_retire import purge_agency_shell, wipe_agency_crm_data
+    from shared.privacy.erasure import erase_user_data
+
+    wipe = await wipe_agency_crm_data(db, agency_id)
+    members = await db.users.find(
+        {"agency_ids": agency_id},
+        {"_id": 0, "id": 1, "email": 1, "role": 1},
+    ).to_list(length=200)
+    erased = []
+    if body.erase_members:
+        for m in members:
+            if m.get("role") == "super_admin" or m.get("id") == user.get("id"):
+                continue
+            full = await db.users.find_one({"id": m["id"]}, {"_id": 0})
+            if full:
+                await erase_user_data(full)
+                erased.append(m.get("id"))
+
+    shell = await purge_agency_shell(db, slug=agency.get("slug") or "", force=True)
+    logger.warning(
+        "ops offboard agency=%s slug=%s erase_members=%s by=%s",
+        agency_id,
+        agency.get("slug"),
+        len(erased),
+        user.get("email"),
+    )
+    return {
+        "ok": True,
+        "wipe": wipe,
+        "shell": shell,
+        "members_erased": erased,
+        "members_seen": len(members),
+    }

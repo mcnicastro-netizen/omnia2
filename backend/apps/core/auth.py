@@ -105,6 +105,7 @@ def _public(user: dict) -> dict:
         "mfa_enabled": bool(user.get("mfa_enabled")),
         "marketing_consent": bool(user.get("marketing_consent")),
         "age_confirmed": bool(user.get("age_confirmed")),
+        "ops_impersonation": user.get("ops_impersonation"),
         "created_at": user.get("created_at"),
         "updated_at": user.get("updated_at"),
     }

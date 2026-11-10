@@ -143,16 +143,41 @@ export default function BridgeClientsPage() {
       ) : tab === "b2c" ? (
         <ul className="bg-white border border-stone-200 rounded-lg divide-y divide-stone-100" data-testid="bridge-b2c-list">
           {items.map((u) => (
-            <li key={u.id} className="px-4 py-3 flex flex-wrap gap-3 justify-between">
+            <li key={u.id} className="px-4 py-3 flex flex-wrap gap-3 justify-between items-center">
               <div>
                 <p className="font-medium text-stone-900">{u.name || u.email}</p>
                 <p className="text-sm text-stone-600">{u.email}</p>
               </div>
-              <div className="text-right text-xs text-stone-500">
+              <div className="text-right text-xs text-stone-500 space-y-1">
                 {u.client_code ? (
                   <span className="font-mono text-stone-700 block">{u.client_code}</span>
                 ) : null}
-                <span>{(u.created_at || "").slice(0, 10)}</span>
+                <span className="block">{(u.created_at || "").slice(0, 10)}</span>
+                {u.erased_at || String(u.email || "").includes("@erased.") ? (
+                  <span className="text-stone-400 uppercase tracking-widest">già erased</span>
+                ) : (
+                  <button
+                    type="button"
+                    className="text-[10px] uppercase tracking-widest text-rose-700 hover:underline"
+                    data-testid={`bridge-erase-b2c-${u.id}`}
+                    onClick={async () => {
+                      const conf = window.prompt(
+                        `Anonimizzare ${u.email}? Digita CANCELLA_UTENTE`
+                      );
+                      if (conf !== "CANCELLA_UTENTE") return;
+                      try {
+                        await api.post(`/app/ops/bridge/users/${u.id}/erase`, {
+                          confirm: "CANCELLA_UTENTE",
+                        });
+                        await load();
+                      } catch {
+                        setErr("Erase non riuscito.");
+                      }
+                    }}
+                  >
+                    GDPR erase
+                  </button>
+                )}
               </div>
             </li>
           ))}
