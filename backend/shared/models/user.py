@@ -60,17 +60,21 @@ class UserInDB(TimestampedModel):
     # the agency doc when the user creates their agency (onboarding).
     signup_domain_sovereignty_confirmed: bool = False
     signup_existing_domain: Optional[str] = None
+    signup_preferred_plan: Optional[str] = None  # starter|pro|agency (B2B)
+    must_change_password: bool = False  # D-157 — dopo API-as-password
 
 
 class RegisterRequest(OmniaBaseModel):
     email: EmailStr
-    password: str = Field(min_length=8, max_length=128)
+    # D-157 B2B gestionale: password omessa → server genera temp (poi Ops emette API=password)
+    password: Optional[str] = Field(default=None, min_length=8, max_length=128)
     name: str = Field(min_length=1, max_length=120)
     role: Optional[UserRole] = "client"
     lang: Optional[UserLang] = "it"
     # M2.5.5 — Domain Vault (optional at signup)
     domain_sovereignty_confirmed: Optional[bool] = False
     existing_domain: Optional[str] = Field(default=None, max_length=253)
+    preferred_plan: Optional[str] = Field(default=None, max_length=20)
 
 
 class LoginRequest(OmniaBaseModel):

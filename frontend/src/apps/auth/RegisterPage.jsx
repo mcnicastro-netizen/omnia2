@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Trans, useTranslation } from "react-i18next";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth, formatApiErrorDetail, isEmailAlreadyRegistered } from "../../shared/lib/auth";
+import { api } from "../../shared/lib/api";
 import LanguageSwitcher from "../../shared/components/LanguageSwitcher";
 import Brand from "../../shared/components/Brand";
 import OmniaLogo from "../../shared/components/OmniaLogo";
@@ -31,18 +32,55 @@ export default function RegisterPage() {
   const [dupEmail, setDupEmail] = useState(false);
   const [loading, setLoading] = useState(false);
   const [preferredPlan, setPreferredPlan] = useState("");
+  const [planCatalog, setPlanCatalog] = useState([]);
   const loginHref = `/${lang}/login?from=app&next=${encodeURIComponent(`/${lang}/app/dashboard`)}`;
 
   useEffect(() => {
     const raw = (searchParams.get("plan") || "").toLowerCase().trim();
-    if (!ALLOWED_PLANS.has(raw)) return;
+    let initial = ALLOWED_PLANS.has(raw) ? raw : "";
+    if (!initial) {
+      try {
+        const stored = (sessionStorage.getItem(PREFERRED_PLAN_KEY) || "").toLowerCase();
+        if (ALLOWED_PLANS.has(stored)) initial = stored;
+      } catch {
+        /* ignore */
+      }
+    }
+    if (initial) {
+      try {
+        sessionStorage.setItem(PREFERRED_PLAN_KEY, initial);
+      } catch {
+        /* ignore */
+      }
+      setPreferredPlan(initial);
+    }
+  }, [searchParams]);
+
+  useEffect(() => {
+    let mounted = true;
+    api
+      .get("/billing/plans")
+      .then((r) => {
+        if (!mounted) return;
+        setPlanCatalog(r.data?.plans || []);
+      })
+      .catch(() => {
+        if (mounted) setPlanCatalog([]);
+      });
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  const pickPlan = (tier) => {
+    if (!ALLOWED_PLANS.has(tier)) return;
+    setPreferredPlan(tier);
     try {
-      sessionStorage.setItem(PREFERRED_PLAN_KEY, raw);
+      sessionStorage.setItem(PREFERRED_PLAN_KEY, tier);
     } catch {
       /* ignore */
     }
-    setPreferredPlan(raw);
-  }, [searchParams]);
+  };
 
   const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }));
 
@@ -60,6 +98,10 @@ export default function RegisterPage() {
       setError(t("domain_vault.policy_required_error"));
       return;
     }
+    if (isAgencyRole && !preferredPlan) {
+      setError(t("auth.plan_required_error", "Scegli il pacchetto prima di registrarti."));
+      return;
+    }
     setLoading(true);
     try {
       // S2 — il backend accetta solo client/student: agency_admin arriva
@@ -67,15 +109,19 @@ export default function RegisterPage() {
       const payload = {
         name: form.name,
         email: form.email,
-        password: form.password,
         role: form.account_type === "student" ? "student" : "client",
         lang,
       };
+      // D-157 B2B: niente password scelta — Ops invierà API key = password iniziale
+      if (!isAgencyRole) {
+        payload.password = form.password;
+      }
       if (isAgencyRole) {
         payload.domain_sovereignty_confirmed = policyAccepted;
         if (form.existing_domain.trim()) {
           payload.existing_domain = form.existing_domain.trim();
         }
+        if (preferredPlan) payload.preferred_plan = preferredPlan;
       }
       await register(payload);
       if (isAgencyRole) {
@@ -141,18 +187,63 @@ export default function RegisterPage() {
           </p>
           <h1 className="text-3xl md:text-4xl tracking-tight mb-3">{t("auth.register_title")}</h1>
           <p className="mb-6 font-sans text-sm text-stone-600">{t("auth.register_lead")}</p>
-          {preferredPlan ? (
-            <p
-              data-testid="register-preferred-plan"
-              className="mb-8 font-sans text-sm text-stone-600"
-            >
-              {t("landing.preferred_plan_hint", {
-                plan: preferredPlan.toUpperCase(),
-              })}
-            </p>
-          ) : (
-            <div className="mb-4" />
-          )}
+          {isAgencyRole ? (
+            <div className="mb-8" data-testid="register-plan-picker">
+              <p className="text-xs font-sans uppercase tracking-widest text-stone-500 mb-3">
+                {t("auth.choose_plan", "Scegli il pacchetto")}
+              </p>
+              <p className="mb-4 font-sans text-sm text-stone-600">
+                {t(
+                  "auth.choose_plan_hint",
+                  "Prima di creare l’account, vedi cosa stai acquistando. Il piano si attiva dopo la verifica OMNIA."
+                )}
+              </p>
+              <div className="grid gap-2">
+                {(planCatalog.length
+                  ? planCatalog
+                  : [
+                      { tier: "starter", name: "Starter", price_monthly: 49 },
+                      { tier: "pro", name: "Pro", price_monthly: 99 },
+                      { tier: "agency", name: "Agency", price_monthly: 299 },
+                    ]
+                ).map((p) => {
+                  const tier = (p.tier || "").toLowerCase();
+                  if (!ALLOWED_PLANS.has(tier)) return null;
+                  const selected = preferredPlan === tier;
+                  return (
+                    <button
+                      key={tier}
+                      type="button"
+                      data-testid={`register-plan-${tier}`}
+                      onClick={() => pickPlan(tier)}
+                      className={`text-left px-4 py-3 border font-sans text-sm transition ${
+                        selected
+                          ? "border-[#0B1E3F] bg-[#0B1E3F]/5 ring-1 ring-[#0B1E3F]"
+                          : "border-stone-300 bg-stone-50 hover:border-stone-500"
+                      }`}
+                    >
+                      <span className="font-medium text-stone-900">{p.name || tier}</span>
+                      <span className="text-stone-600">
+                        {" "}
+                        · €{Math.round(p.price_monthly)}
+                        {t("auth.per_month", "/mese")}
+                      </span>
+                      {selected ? (
+                        <span className="ml-2 text-[10px] uppercase tracking-widest text-[#1F6B5C]">
+                          {t("auth.plan_selected", "selezionato")}
+                        </span>
+                      ) : null}
+                    </button>
+                  );
+                })}
+              </div>
+              {!preferredPlan ? (
+                <p className="mt-2 text-xs font-sans text-amber-800">
+                  {t("auth.plan_required_hint", "Seleziona un pacchetto per continuare come agenzia.")}
+                </p>
+              ) : null}
+            </div>
+          ) : null}
 
           {["name", "email"].map((f) => (
             <label key={f} className="block mb-5">
@@ -169,20 +260,32 @@ export default function RegisterPage() {
               />
             </label>
           ))}
-          <label className="block mb-5">
-            <span className="block text-xs font-sans uppercase tracking-widest text-stone-500 mb-2">
-              {t("auth.password")}
-            </span>
-            <PasswordField
-              data-testid="register-password"
-              required
-              minLength={8}
-              value={form.password}
-              onChange={set("password")}
-              autoComplete="new-password"
-              className="w-full px-4 py-3 pr-12 border border-stone-300 bg-stone-50 font-sans text-base focus:outline-none focus:border-stone-900"
-            />
-          </label>
+          {!isAgencyRole ? (
+            <label className="block mb-5">
+              <span className="block text-xs font-sans uppercase tracking-widest text-stone-500 mb-2">
+                {t("auth.password")}
+              </span>
+              <PasswordField
+                data-testid="register-password"
+                required
+                minLength={8}
+                value={form.password}
+                onChange={set("password")}
+                autoComplete="new-password"
+                className="w-full px-4 py-3 pr-12 border border-stone-300 bg-stone-50 font-sans text-base focus:outline-none focus:border-stone-900"
+              />
+            </label>
+          ) : (
+            <p
+              data-testid="register-no-password-hint"
+              className="mb-5 font-sans text-sm text-stone-600 bg-stone-50 border border-stone-200 px-3 py-2"
+            >
+              {t(
+                "auth.agency_password_hint",
+                "Non scegli la password ora: dopo verifica e pagamento, OMNIA ti invia una chiave API da usare come password iniziale (poi la cambi tu)."
+              )}
+            </p>
+          )}
 
           <label className="block mb-6">
             <span className="block text-xs font-sans uppercase tracking-widest text-stone-500 mb-2">

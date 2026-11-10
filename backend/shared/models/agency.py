@@ -56,6 +56,7 @@ class AgencyContact(OmniaBaseModel):
     email: Optional[EmailStr] = None
     phone: Optional[str] = Field(default=None, max_length=30)
     website: Optional[str] = Field(default=None, max_length=200)
+    pec: Optional[EmailStr] = None  # PEC titolare / agenzia (identificazione clientela)
 
 
 class AgencyBranding(OmniaBaseModel):
@@ -120,6 +121,10 @@ class AgencyInDB(TimestampedModel):
     domain_sovereignty_confirmed: bool = False
     domain_sovereignty_confirmed_at: Optional[str] = None
     existing_domain: Optional[str] = Field(default=None, max_length=253)
+    # Piano scelto in registrazione (Ops attiva con questo tier se presente)
+    preferred_plan_tier: Optional[Literal["starter", "pro", "agency"]] = None
+    # D-156 — dossier identificazione clientela (GDPR / privacy) per Super Admin
+    kyc: Optional[dict] = None
 
 
 class AgencyPublic(OmniaBaseModel):
@@ -149,6 +154,8 @@ class AgencyPublic(OmniaBaseModel):
     domain_sovereignty_confirmed: bool = False
     domain_sovereignty_confirmed_at: Optional[str] = None
     existing_domain: Optional[str] = None
+    preferred_plan_tier: Optional[Literal["starter", "pro", "agency"]] = None
+    kyc: Optional[dict] = None
 
 
 class AgencyCreate(OmniaBaseModel):
@@ -157,6 +164,7 @@ class AgencyCreate(OmniaBaseModel):
     address: Optional[AgencyAddress] = None
     contact: Optional[AgencyContact] = None
     branding: Optional[AgencyBranding] = None
+    preferred_plan_tier: Optional[Literal["starter", "pro", "agency"]] = None
 
 
 class AgencyUpdate(OmniaBaseModel):

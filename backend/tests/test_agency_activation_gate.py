@@ -134,6 +134,9 @@ def test_create_agency_pending_blocks_kpis_and_activate_unlocks():
                 "grant_plan": False,
                 "send_email": False,
                 "credits": 0,
+                "require_kyc_verified": False,
+                "require_payment": False,
+                "issue_login_credential": False,
             },
             timeout=30,
         )

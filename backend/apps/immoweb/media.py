@@ -35,6 +35,7 @@ _RANGE_RE = re.compile(r"bytes=(\d*)-(\d*)")
 _BLOCKED_PREFIXES = (
     "omnia/fascicolo/",
     "omnia/modulistica/",
+    "omnia/ops-kyc/",
 )
 
 # P-009 — owner-scoped private B2C uploads

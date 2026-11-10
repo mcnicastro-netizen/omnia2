@@ -61,14 +61,33 @@ def _guard_self_serve() -> None:
     guard_self_serve()
 
 
+def _frontend_origin(origin: str) -> str:
+    """Normalize FE origin (strip path noise)."""
+    o = (origin or "").strip().rstrip("/")
+    if "/it/" in o:
+        o = o.split("/it/")[0]
+    return o.rstrip("/") or "https://www.omniarealestateecosystem.it"
+
+
 def _build_success_url(origin: str) -> str:
-    origin = origin.rstrip("/")
-    return f"{origin}/it/app/settings/billing?session_id={{CHECKOUT_SESSION_ID}}&ok=1"
+    base = _frontend_origin(origin)
+    return f"{base}/it/app/settings/billing?session_id={{CHECKOUT_SESSION_ID}}&ok=1"
 
 
 def _build_cancel_url(origin: str) -> str:
-    origin = origin.rstrip("/")
-    return f"{origin}/it/app/settings/billing?cancel=1"
+    base = _frontend_origin(origin)
+    return f"{base}/it/app/settings/billing?cancel=1"
+
+
+def _build_waiting_success_url(origin: str) -> str:
+    """D-157 — post-pagamento onboarding → sala d'attesa."""
+    base = _frontend_origin(origin)
+    return f"{base}/it/app/waiting-activation?session_id={{CHECKOUT_SESSION_ID}}&paid=1"
+
+
+def _build_waiting_cancel_url(origin: str) -> str:
+    base = _frontend_origin(origin)
+    return f"{base}/it/app/waiting-activation?cancel=1"
 
 
 # --------------- Public: plan catalog (no auth) --------------------
@@ -144,8 +163,17 @@ async def create_checkout(
 ):
     """Create a Stripe Checkout session for a subscription tier."""
     _guard_enabled()
-    _guard_self_serve()
-    plan = get_plan(payload.plan_tier)  # type: ignore[arg-type]
+    agency_id = require_agency(user)
+    db = Database.get()
+    agency = await db.agencies.find_one(
+        {"id": agency_id}, {"_id": 0, "activation_status": 1, "preferred_plan_tier": 1}
+    )
+    # D-157: primo abbonamento mentre CRM pending = checkout onboarding (anche se self-serve OFF)
+    pending_onboarding = (agency or {}).get("activation_status") == "pending"
+    if not pending_onboarding:
+        _guard_self_serve()
+    plan_tier = (payload.plan_tier or (agency or {}).get("preferred_plan_tier") or "pro").strip().lower()
+    plan = get_plan(plan_tier)  # type: ignore[arg-type]
     if not plan:
         raise HTTPException(status_code=400, detail="unknown_plan_tier")
 
@@ -158,15 +186,20 @@ async def create_checkout(
         )
     price = prices[0]
 
-    origin = payload.success_url or str(request.base_url)
-    agency_id = require_agency(user)
+    fe_origin = payload.success_url or os.environ.get("FRONTEND_URL") or str(request.base_url)
+    if pending_onboarding:
+        success_url = _build_waiting_success_url(fe_origin)
+        cancel_url = payload.cancel_url or _build_waiting_cancel_url(fe_origin)
+    else:
+        success_url = _build_success_url(fe_origin)
+        cancel_url = payload.cancel_url or _build_cancel_url(fe_origin)
 
     try:
         session_kwargs = dict(
             line_items=[{"price": price.id, "quantity": 1}],
             mode="subscription",
-            success_url=_build_success_url(origin),
-            cancel_url=payload.cancel_url or _build_cancel_url(origin),
+            success_url=success_url,
+            cancel_url=cancel_url,
             customer_email=user["email"],
             metadata={
                 "agency_id": agency_id or "",
@@ -174,6 +207,7 @@ async def create_checkout(
                 "tier": plan.tier,
                 "billing_cycle": payload.billing_cycle,
                 "kind": "subscription",
+                "onboarding": "1" if pending_onboarding else "0",
             },
         )
         # D-080: no self-serve trial — demo guidata prima dell'abbonamento

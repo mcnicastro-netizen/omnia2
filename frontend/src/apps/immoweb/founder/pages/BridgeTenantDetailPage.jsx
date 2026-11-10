@@ -10,6 +10,7 @@ export default function BridgeTenantDetailPage() {
   const [err, setErr] = useState(null);
   const [busy, setBusy] = useState(true);
   const [actionMsg, setActionMsg] = useState(null);
+  const [kycBusy, setKycBusy] = useState(false);
 
   const load = async () => {
     setBusy(true);
@@ -31,22 +32,123 @@ export default function BridgeTenantDetailPage() {
   }, [agencyId]);
 
   const attiva = async () => {
-    if (!window.confirm("Attivare questa agenzia (wipe CRM + Pro + email)?")) return;
+    const a0 = data?.agency || {};
+    const kycSt = (a0.kyc?.status || "incomplete").toLowerCase();
+    const tier = a0.preferred_plan_tier || "pro";
+    if (
+      !window.confirm(
+        `Attivare «${a0.display_name}»?\nPiano ${String(tier).toUpperCase()}.\n` +
+          "Invia email con API key = password iniziale.\n" +
+          `KYC attuale: ${kycSt}.`
+      )
+    ) {
+      return;
+    }
+    let requireKyc = true;
+    if (kycSt !== "verified") {
+      if (!window.confirm("KYC non verificato. Bypass emergenza?")) return;
+      requireKyc = false;
+    }
     setActionMsg(null);
+    const body = {
+      agency_id: agencyId,
+      grant_plan: true,
+      tier,
+      credits: 2000,
+      send_email: true,
+      wipe_crm: true,
+      note: "cabina_scheda",
+      require_kyc_verified: requireKyc,
+      require_payment: true,
+      issue_login_credential: true,
+    };
     try {
-      await api.post("/app/ops/activate-agency", {
-        agency_id: agencyId,
-        grant_plan: true,
-        tier: "pro",
-        credits: 2000,
-        send_email: true,
-        wipe_crm: true,
-        note: "cabina_scheda",
-      });
-      setActionMsg("Attivata.");
+      await api.post("/app/ops/activate-agency", body);
+      setActionMsg(`Attivata · ${String(tier).toUpperCase()} · credential email inviata.`);
       await load();
     } catch (e) {
-      setActionMsg(e?.response?.data?.detail?.error || "Attivazione fallita");
+      const d = e?.response?.data?.detail;
+      if (d?.error === "payment_required") {
+        if (
+          window.confirm(
+            "Pagamento non trovato. Bypass pagamento (emergenza Ops)?"
+          )
+        ) {
+          try {
+            await api.post("/app/ops/activate-agency", {
+              ...body,
+              require_payment: false,
+            });
+            setActionMsg(`Attivata (bypass pay) · credential email.`);
+            await load();
+            return;
+          } catch (e2) {
+            const d2 = e2?.response?.data?.detail;
+            setActionMsg(
+              (typeof d2 === "object" && (d2.hint || d2.error)) || d2 || "Attivazione fallita"
+            );
+            return;
+          }
+        }
+      }
+      setActionMsg((typeof d === "object" && (d.hint || d.error)) || d || "Attivazione fallita");
+    }
+  };
+
+  const setKycStatus = async (status) => {
+    const notes =
+      status === "rejected"
+        ? window.prompt("Motivo rifiuto (nota Ops):") || ""
+        : window.prompt("Nota Ops (facoltativa):") || "";
+    setKycBusy(true);
+    setActionMsg(null);
+    try {
+      await api.patch(`/app/ops/bridge/tenants/${agencyId}/kyc`, { status, notes });
+      setActionMsg(`KYC → ${status}`);
+      await load();
+    } catch (e) {
+      setActionMsg(e?.response?.data?.detail || "Aggiornamento KYC fallito");
+    } finally {
+      setKycBusy(false);
+    }
+  };
+
+  const uploadKyc = async (docType, file) => {
+    if (!file) return;
+    setKycBusy(true);
+    setActionMsg(null);
+    try {
+      const fd = new FormData();
+      fd.append("file", file, file.name);
+      fd.append("doc_type", docType);
+      await api.post(`/app/ops/bridge/tenants/${agencyId}/kyc/documents`, fd, {
+        timeout: 60000,
+      });
+      setActionMsg(`Caricato: ${docType}`);
+      await load();
+    } catch (e) {
+      setActionMsg(e?.response?.data?.detail || "Upload KYC fallito");
+    } finally {
+      setKycBusy(false);
+    }
+  };
+
+  const downloadKyc = async (docId, name) => {
+    try {
+      const r = await api.get(
+        `/app/ops/bridge/tenants/${agencyId}/kyc/documents/${docId}/download`,
+        { responseType: "blob" }
+      );
+      const url = window.URL.createObjectURL(new Blob([r.data]));
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", name || "documento");
+      document.body.appendChild(link);
+      link.click();
+      link.parentNode.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } catch {
+      setActionMsg("Download fallito");
     }
   };
 
@@ -123,7 +225,9 @@ export default function BridgeTenantDetailPage() {
           {a.display_name}
         </h1>
         <p className="text-sm text-stone-600 mt-1">
-          {a.slug} · {a.activation_status || "active"} · piano {a.plan || a.billing_assisted_tier || "—"}
+          {a.slug} · {a.activation_status || "active"} · piano{" "}
+          {a.preferred_plan_tier || a.plan || a.billing_assisted_tier || "—"}
+          {a.kyc?.status ? ` · KYC ${a.kyc.status}` : ""}
         </p>
       </div>
 
@@ -198,7 +302,129 @@ export default function BridgeTenantDetailPage() {
           <Row k="Sito" v={a.contact?.website || "—"} />
           <Row k="Città" v={[a.address?.city, a.address?.province].filter(Boolean).join(" ") || "—"} />
           <Row k="P.IVA" v={a.fiscal?.vat_number || "—"} />
+          <Row k="CF" v={a.fiscal?.fiscal_code || "—"} />
+          <Row k="REA" v={a.fiscal?.rea || "—"} />
         </Card>
+      </section>
+
+      <section
+        data-testid="bridge-kyc"
+        className="bg-white border border-stone-200 rounded-lg px-4 py-4 space-y-4"
+      >
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <h2 className="text-xs uppercase tracking-widest text-stone-500">
+              Identificazione clientela (GDPR)
+            </h2>
+            <p className="text-sm text-stone-600 mt-1 max-w-2xl">
+              Dossier Ops: visura camerale + documento titolare + PEC/P.IVA. Verifica prima di
+              Attiva. Ricerca imprese esterna utile come controllo crociato.
+            </p>
+          </div>
+          <span className="text-[10px] uppercase tracking-widest px-2 py-1 border border-stone-300">
+            {(a.kyc?.status || "incomplete").toUpperCase()}
+          </span>
+        </div>
+        <div className="grid sm:grid-cols-2 gap-2 text-sm">
+          <Row
+            k="Visura camerale"
+            v={a.kyc?.checklist?.visura_camerale ? "presente" : "manca"}
+          />
+          <Row
+            k="Documento titolare"
+            v={a.kyc?.checklist?.id_titolare ? "presente" : "manca"}
+          />
+          <Row k="PEC" v={a.kyc?.checklist?.pec || a.contact?.pec ? "ok" : "manca"} />
+          <Row k="P.IVA" v={a.kyc?.checklist?.piva_ok || a.fiscal?.vat_number ? "ok" : "manca"} />
+        </div>
+        {a.fiscal?.vat_number ? (
+          <p className="text-xs text-stone-500">
+            Ricerca imprese:{" "}
+            <a
+              className="underline text-[#0B1E3F]"
+              href={`https://www.registroimprese.it/ricerca-libera?q=${encodeURIComponent(
+                a.fiscal.vat_number
+              )}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              data-testid="bridge-kyc-registry-link"
+            >
+              Registro Imprese · P.IVA {a.fiscal.vat_number}
+            </a>
+          </p>
+        ) : null}
+        <ul className="divide-y divide-stone-100 border border-stone-100 rounded">
+          {(a.kyc?.documents || []).map((d) => (
+            <li key={d.id} className="px-3 py-2 flex justify-between gap-3 text-sm">
+              <span>
+                <span className="text-[10px] uppercase tracking-widest text-stone-500 mr-2">
+                  {d.doc_type}
+                </span>
+                {d.filename}
+              </span>
+              <button
+                type="button"
+                className="text-[10px] uppercase tracking-widest text-[#0B1E3F] underline"
+                onClick={() => downloadKyc(d.id, d.filename)}
+              >
+                Scarica
+              </button>
+            </li>
+          ))}
+          {(a.kyc?.documents || []).length === 0 ? (
+            <li className="px-3 py-2 text-sm text-stone-500">Nessun PDF ancora.</li>
+          ) : null}
+        </ul>
+        <div className="flex flex-wrap gap-3 items-center">
+          <label className="text-xs uppercase tracking-widest text-stone-600">
+            Carica visura
+            <input
+              type="file"
+              accept="application/pdf,image/*"
+              className="block mt-1 text-xs"
+              disabled={kycBusy}
+              data-testid="bridge-kyc-upload-visura"
+              onChange={(e) => {
+                uploadKyc("visura_camerale", e.target.files?.[0]);
+                e.target.value = "";
+              }}
+            />
+          </label>
+          <label className="text-xs uppercase tracking-widest text-stone-600">
+            Carica CI titolare
+            <input
+              type="file"
+              accept="application/pdf,image/*"
+              className="block mt-1 text-xs"
+              disabled={kycBusy}
+              data-testid="bridge-kyc-upload-id"
+              onChange={(e) => {
+                uploadKyc("documento_identita", e.target.files?.[0]);
+                e.target.value = "";
+              }}
+            />
+          </label>
+          <button
+            type="button"
+            disabled={kycBusy}
+            className="text-xs uppercase tracking-widest px-3 py-2 rounded bg-emerald-800 text-white"
+            data-testid="bridge-kyc-verify"
+            onClick={() => setKycStatus("verified")}
+          >
+            Segna verificato
+          </button>
+          <button
+            type="button"
+            disabled={kycBusy}
+            className="text-xs uppercase tracking-widest px-3 py-2 rounded border border-rose-300 text-rose-800"
+            onClick={() => setKycStatus("rejected")}
+          >
+            Rifiuta
+          </button>
+        </div>
+        {a.kyc?.notes ? (
+          <p className="text-xs text-stone-500">Nota: {a.kyc.notes}</p>
+        ) : null}
       </section>
 
       <section>

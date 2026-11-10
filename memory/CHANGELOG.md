@@ -1,3 +1,17 @@
+## 2026-11-10 — D-157 Flusso gestionale (API=password)
+
+- Register B2B senza password; logo obbligatorio; waiting = KYC PDF + Stripe
+- Checkout onboarding anche con self-serve OFF se agency pending
+- Ops Attiva: gate pagamento + emette API key come password (email credentials)
+- Invite: tetto max_agents piano; nuovi membri ricevono API=password
+
+## 2026-11-10 — D-156 Onboarding + KYC cabina
+
+- Tolto FIAIP dall’onboarding; PEC + upload logo file
+- Register B2B: scelta pacchetto obbligatoria; niente welcome prematura; `agency_pending` a fine wizard
+- Waiting: «Controlla di nuovo» soft (niente ritorno a onboarding)
+- Cabina: dossier identificazione clientela (visura/CI PDF) + gate Attiva se KYC non verified
+
 ## 2026-11-10 — D-155 Cabina onda 2 (poteri piattaforma)
 
 - Kill-switch fornitori: `provider_flags` + circuit hold persistente (kill/revive UI)

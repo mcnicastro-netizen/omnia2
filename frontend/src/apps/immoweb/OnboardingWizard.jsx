@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { api } from "../../shared/lib/api";
@@ -10,6 +10,7 @@ import LanguageSwitcher from "../../shared/components/LanguageSwitcher";
 import AddressAutocomplete from "../immocloud/components/AddressAutocomplete";
 
 const STEPS = ["identity", "fiscal", "branding", "done"];
+const PREFERRED_PLAN_KEY = "omnia_preferred_plan";
 
 export default function OnboardingWizard() {
   const { t, i18n } = useTranslation();
@@ -21,6 +22,18 @@ export default function OnboardingWizard() {
   const [error, setError] = useState("");
   const [vatHint, setVatHint] = useState("");
   const [cfHint, setCfHint] = useState("");
+  const [logoUploading, setLogoUploading] = useState(false);
+  const [logoName, setLogoName] = useState("");
+  const logoInputRef = useRef(null);
+
+  const preferredPlan = (() => {
+    try {
+      const p = (sessionStorage.getItem(PREFERRED_PLAN_KEY) || "").toLowerCase();
+      return ["starter", "pro", "agency"].includes(p) ? p : "";
+    } catch {
+      return "";
+    }
+  })();
 
   const [form, setForm] = useState({
     display_name: "",
@@ -29,7 +42,6 @@ export default function OnboardingWizard() {
       vat_number: "",
       fiscal_code: "",
       rea: "",
-      fiaip_code: "",
     },
     address: {
       street: "",
@@ -42,6 +54,7 @@ export default function OnboardingWizard() {
       email: "",
       phone: "",
       website: "",
+      pec: "",
     },
     branding: {
       logo_url: "",
@@ -107,6 +120,10 @@ export default function OnboardingWizard() {
       setStep(1);
       return;
     }
+    if (!(form.branding.logo_url || "").trim()) {
+      setError(t("onboarding.logo_required", "Carica il file del marchio/logo prima di continuare."));
+      return;
+    }
     setSubmitting(true);
     try {
       const cleanGroup = (obj) => {
@@ -124,6 +141,7 @@ export default function OnboardingWizard() {
         contact: cleanGroup(form.contact),
         branding: cleanGroup(form.branding),
       };
+      if (preferredPlan) payload.preferred_plan_tier = preferredPlan;
       await api.post("/app/agencies", payload);
       // Critico: refresh sessione → ruolo agency_admin (altrimenti dashboard = 403 FE)
       if (typeof refresh === "function") {
@@ -254,14 +272,6 @@ export default function OnboardingWizard() {
                   className="form-input"
                 />
               </Field>
-              <Field label={t("onboarding.fiaip_code")}>
-                <input
-                  data-testid="onb-fiaip"
-                  value={form.fiscal.fiaip_code}
-                  onChange={(e) => update("fiscal", "fiaip_code", e.target.value)}
-                  className="form-input"
-                />
-              </Field>
             </div>
             <hr className="border-stone-200 my-2" />
             <Field label={t("onboarding.address_street")} hint={t("onboarding.address_hint")}>
@@ -322,6 +332,19 @@ export default function OnboardingWizard() {
                 />
               </Field>
             </div>
+            <Field
+              label={t("onboarding.contact_pec", "PEC")}
+              hint={t("onboarding.pec_hint", "Serve all’identificazione clientela (GDPR).")}
+            >
+              <input
+                type="email"
+                data-testid="onb-pec"
+                value={form.contact.pec}
+                onChange={(e) => update("contact", "pec", e.target.value)}
+                className="form-input"
+                placeholder="pec@agenzia.it"
+              />
+            </Field>
             <Field label={t("onboarding.contact_website")}>
               <input
                 data-testid="onb-website"
@@ -336,14 +359,61 @@ export default function OnboardingWizard() {
 
         {step === 2 && (
           <div data-testid="step-branding" className="space-y-5">
-            <Field label={t("onboarding.logo_url")} hint={t("onboarding.logo_hint")}>
+            {preferredPlan ? (
+              <p className="text-sm text-stone-600 bg-white border border-stone-200 rounded-md px-3 py-2">
+                {t("onboarding.preferred_plan", "Piano scelto")}:{" "}
+                <span className="font-medium uppercase">{preferredPlan}</span>
+              </p>
+            ) : null}
+            <Field
+              label={t("onboarding.logo_file", "Marchio / logo")}
+              hint={t(
+                "onboarding.logo_hint",
+                "Carica il file del logo (PNG/JPG/WebP/SVG, max 2 MB). Lo usiamo per sito e materiali."
+              )}
+            >
               <input
-                data-testid="onb-logo"
-                value={form.branding.logo_url}
-                onChange={(e) => update("branding", "logo_url", e.target.value)}
-                className="form-input"
-                placeholder="https://..."
+                ref={logoInputRef}
+                type="file"
+                accept="image/png,image/jpeg,image/webp,image/svg+xml"
+                data-testid="onb-logo-file"
+                className="block w-full text-sm text-stone-600"
+                onChange={async (e) => {
+                  const file = e.target.files?.[0];
+                  if (!file) return;
+                  setLogoUploading(true);
+                  setError("");
+                  try {
+                    const fd = new FormData();
+                    fd.append("file", file, file.name);
+                    const r = await api.post("/app/agencies/onboarding/logo", fd, {
+                      timeout: 60000,
+                    });
+                    update("branding", "logo_url", r.data.url);
+                    setLogoName(file.name);
+                  } catch (err) {
+                    setError(
+                      formatApiErrorDetail(err?.response?.data?.detail) ||
+                        t("onboarding.logo_upload_error", "Upload logo non riuscito.")
+                    );
+                  } finally {
+                    setLogoUploading(false);
+                  }
+                }}
               />
+              {logoUploading ? (
+                <p className="text-xs text-stone-500 mt-1">{t("common.loading")}</p>
+              ) : null}
+              {form.branding.logo_url ? (
+                <div className="mt-3 flex items-center gap-3">
+                  <img
+                    src={form.branding.logo_url}
+                    alt=""
+                    className="h-12 w-12 object-contain border border-stone-200 bg-white rounded"
+                  />
+                  <span className="text-xs text-stone-600">{logoName || "logo"}</span>
+                </div>
+              ) : null}
             </Field>
             <Field label={t("onboarding.tagline")} hint={t("onboarding.tagline_hint")}>
               <input

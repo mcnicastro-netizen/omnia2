@@ -11,7 +11,7 @@ import re
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, UploadFile
 from pydantic import BaseModel, Field
 
 from shared.auth.dependencies import require_roles
@@ -820,3 +820,140 @@ async def bridge_offboard_agency(
         "members_erased": erased,
         "members_seen": len(members),
     }
+
+
+# -------------------- KYC / IDENTIFICAZIONE CLIENTELA (D-156) --------------------
+
+
+class KycStatusBody(BaseModel):
+    status: str = Field(description="incomplete|submitted|verified|rejected")
+    notes: str = Field(default="", max_length=2000)
+
+
+@router.patch("/bridge/tenants/{agency_id}/kyc")
+async def bridge_patch_kyc(
+    agency_id: str,
+    body: KycStatusBody,
+    user: dict = Depends(require_roles("super_admin")),
+) -> Dict[str, Any]:
+    """Marca dossier identificazione verificato / rifiutato."""
+    st = (body.status or "").strip().lower()
+    if st not in ("incomplete", "submitted", "verified", "rejected"):
+        raise HTTPException(400, detail="invalid_kyc_status")
+    db = Database.get()
+    agency = await db.agencies.find_one({"id": agency_id}, {"_id": 0})
+    if not agency:
+        raise HTTPException(404, detail="agency_not_found")
+    kyc = dict(agency.get("kyc") or {"documents": [], "checklist": {}})
+    kyc["status"] = st
+    kyc["notes"] = (body.notes or "").strip()
+    if st == "verified":
+        kyc["verified_at"] = _now()
+        kyc["verified_by"] = user.get("email") or user.get("id")
+    elif st == "rejected":
+        kyc["verified_at"] = None
+        kyc["verified_by"] = None
+    await db.agencies.update_one(
+        {"id": agency_id},
+        {"$set": {"kyc": kyc, "updated_at": _now()}},
+    )
+    logger.warning("kyc status=%s agency=%s by=%s", st, agency_id, user.get("email"))
+    return {"ok": True, "kyc": kyc}
+
+
+@router.post("/bridge/tenants/{agency_id}/kyc/documents")
+async def bridge_upload_kyc_document(
+    agency_id: str,
+    file: UploadFile = File(...),
+    doc_type: str = Form("altro"),
+    user: dict = Depends(require_roles("super_admin")),
+) -> Dict[str, Any]:
+    """Ops carica visura / documento titolare nel dossier."""
+    from uuid import uuid4
+
+    from shared.storage import put_object, ObjStoreError
+
+    dt = (doc_type or "altro").strip().lower()
+    if dt not in ("visura_camerale", "documento_identita", "altro"):
+        raise HTTPException(400, detail="invalid_doc_type")
+    ct = (file.content_type or "").lower()
+    allowed = {"application/pdf", "image/png", "image/jpeg", "image/webp"}
+    if ct not in allowed:
+        raise HTTPException(415, detail="unsupported_media_type")
+    data = await file.read()
+    if not data or len(data) > 8 * 1024 * 1024:
+        raise HTTPException(413 if data else 400, detail="file_invalid")
+    db = Database.get()
+    agency = await db.agencies.find_one({"id": agency_id}, {"_id": 0})
+    if not agency:
+        raise HTTPException(404, detail="agency_not_found")
+    ext = {"application/pdf": "pdf", "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp"}[ct]
+    storage_path = f"omnia/ops-kyc/{agency_id}/{dt}-{uuid4().hex[:10]}.{ext}"
+    try:
+        put_object(storage_path, data, ct)
+    except ObjStoreError as e:
+        raise HTTPException(502, detail="storage_upload_failed") from e
+    entry = {
+        "id": str(uuid4()),
+        "doc_type": dt,
+        "filename": (file.filename or f"{dt}.{ext}")[:180],
+        "storage_path": storage_path,
+        "uploaded_at": _now(),
+        "uploaded_by": user.get("id"),
+        "uploaded_by_email": user.get("email"),
+    }
+    kyc = dict(agency.get("kyc") or {"status": "incomplete", "documents": [], "checklist": {}})
+    docs = list(kyc.get("documents") or [])
+    docs.append(entry)
+    kyc["documents"] = docs
+    types = {d.get("doc_type") for d in docs}
+    cl = dict(kyc.get("checklist") or {})
+    cl["visura_camerale"] = "visura_camerale" in types
+    cl["id_titolare"] = "documento_identita" in types
+    contact = agency.get("contact") or {}
+    fiscal = agency.get("fiscal") or {}
+    cl["pec"] = bool(contact.get("pec"))
+    cl["piva_ok"] = bool(fiscal.get("vat_number"))
+    kyc["checklist"] = cl
+    if kyc.get("status") in (None, "incomplete") and cl.get("visura_camerale") and cl.get("id_titolare"):
+        kyc["status"] = "submitted"
+    await db.agencies.update_one(
+        {"id": agency_id},
+        {"$set": {"kyc": kyc, "updated_at": _now()}},
+    )
+    return {"ok": True, "document": entry, "kyc": kyc}
+
+
+@router.get("/bridge/tenants/{agency_id}/kyc/documents/{doc_id}/download")
+async def bridge_download_kyc_document(
+    agency_id: str,
+    doc_id: str,
+    user: dict = Depends(require_roles("super_admin")),
+):
+    """Download autenticato documento KYC (non pubblico)."""
+    from fastapi.responses import Response
+
+    from shared.storage import get_object, ObjStoreError
+
+    db = Database.get()
+    agency = await db.agencies.find_one({"id": agency_id}, {"_id": 0, "kyc": 1})
+    if not agency:
+        raise HTTPException(404, detail="agency_not_found")
+    docs = (agency.get("kyc") or {}).get("documents") or []
+    entry = next((d for d in docs if d.get("id") == doc_id), None)
+    if not entry:
+        raise HTTPException(404, detail="document_not_found")
+    path = entry.get("storage_path") or ""
+    if not path.startswith(f"omnia/ops-kyc/{agency_id}/"):
+        raise HTTPException(400, detail="invalid_path")
+    try:
+        data, ct = get_object(path)
+    except ObjStoreError as e:
+        raise HTTPException(404, detail="not_found") from e
+    return Response(
+        content=data,
+        media_type=ct or "application/octet-stream",
+        headers={
+            "Content-Disposition": f'attachment; filename="{entry.get("filename") or "documento"}"'
+        },
+    )
