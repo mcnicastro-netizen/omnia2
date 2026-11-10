@@ -141,6 +141,108 @@ async def wipe_agency_crm_data(db, agency_id: str) -> Dict[str, Any]:
     }
 
 
+async def blank_slate_platform(db, *, keep_user_id: Optional[str] = None) -> Dict[str, Any]:
+    """Lavagna bianca B2B: elimina TUTTE le agenzie + dati legati; tiene solo Founder.
+
+    - Cancella ogni documento con ``agency_id`` (tranne corpus HAL globale)
+    - Cancella ``agencies``, invites, wallet/sub per agency
+    - Utenti non-super_admin con ruolo B2B: eliminati
+    - B2C (account_type=b2c / role client senza agency): conservati
+    - ``super_admin`` (keep_user_id): agency_ids svuotati
+    """
+    report: Dict[str, Any] = {
+        "ok": True,
+        "agencies_deleted": 0,
+        "users_deleted": 0,
+        "collections": {},
+        "founder_cleared": False,
+    }
+    now = _now()
+    names = await db.list_collection_names()
+
+    # 1) Drop all agency-scoped docs (any agency_id present)
+    for name in sorted(names):
+        if name in KEEP_GLOBAL or name in {"agencies", "users"}:
+            continue
+        # Only touch collections that use agency_id
+        sample = await db[name].find_one({"agency_id": {"$exists": True}}, {"_id": 1})
+        if not sample:
+            continue
+        res = await db[name].delete_many({"agency_id": {"$exists": True}})
+        if res.deleted_count:
+            report["collections"][name] = int(res.deleted_count)
+
+    inv = await db.agency_invites.delete_many({})
+    if inv.deleted_count:
+        report["collections"]["agency_invites"] = int(inv.deleted_count)
+
+    ag = await db.agencies.delete_many({})
+    report["agencies_deleted"] = int(ag.deleted_count)
+
+    # 2) Users: keep super_admin + B2C; delete B2B agency staff
+    keep_id = (keep_user_id or "").strip() or None
+    cursor = db.users.find({}, {"_id": 0, "id": 1, "role": 1, "account_type": 1, "email": 1})
+    users = await cursor.to_list(length=50_000)
+    to_delete: list[str] = []
+    for u in users:
+        uid = u.get("id")
+        role = u.get("role") or ""
+        acct = (u.get("account_type") or "").lower()
+        if keep_id and uid == keep_id:
+            continue
+        if role == "super_admin":
+            continue
+        if acct == "b2c" or role == "client":
+            # private portal — keep, but clear any stray agency link
+            await db.users.update_one(
+                {"id": uid},
+                {
+                    "$set": {
+                        "agency_ids": [],
+                        "active_agency_id": None,
+                        "updated_at": now,
+                    }
+                },
+            )
+            continue
+        # agency_admin / agent / group_* / branch_* → delete for blank slate
+        to_delete.append(uid)
+
+    if to_delete:
+        del_u = await db.users.delete_many({"id": {"$in": to_delete}})
+        report["users_deleted"] = int(del_u.deleted_count)
+
+    if keep_id:
+        await db.users.update_one(
+            {"id": keep_id},
+            {
+                "$set": {
+                    "agency_ids": [],
+                    "active_agency_id": None,
+                    "updated_at": now,
+                }
+            },
+        )
+        report["founder_cleared"] = True
+    else:
+        await db.users.update_many(
+            {"role": "super_admin"},
+            {
+                "$set": {
+                    "agency_ids": [],
+                    "active_agency_id": None,
+                    "updated_at": now,
+                }
+            },
+        )
+        report["founder_cleared"] = True
+
+    report["total_docs_deleted"] = sum(report["collections"].values()) + report[
+        "agencies_deleted"
+    ]
+    return report
+
+
 async def purge_agency_shell(db, *, slug: str, force: bool = False) -> Dict[str, Any]:
     """Elimina un'agenzia orfana (0 membri) e i suoi documenti agency_id.
 

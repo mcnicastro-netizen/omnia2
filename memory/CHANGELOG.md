@@ -1,3 +1,9 @@
+## 2026-11-10 — Coda attivazione Founder + lavagna bianca
+
+- Ops: inbox «Richieste di attivazione» (agenzia + email titolare + Attiva)
+- `GET /app/ops/activation-queue` · `POST /app/ops/blank-slate` (confirm=CANCELLA_TUTTO)
+- Niente più caccia all’email del richiedente
+
 ## 2026-11-10 — Ops Attiva semplice + wipe CRM
 
 - Founder Ops: un solo bottone **Attiva** (email → wipe dati prova + sblocco + Pro + email)

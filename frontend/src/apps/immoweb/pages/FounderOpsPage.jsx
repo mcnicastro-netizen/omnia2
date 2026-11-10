@@ -16,11 +16,23 @@ export default function FounderOpsPage() {
   const [error, setError] = useState(null);
   const [busy, setBusy] = useState(true);
   const [backupBusy, setBackupBusy] = useState(false);
-  const [attivaEmail, setAttivaEmail] = useState("");
-  const [attivaHits, setAttivaHits] = useState([]);
-  const [attivaTarget, setAttivaTarget] = useState({ agency_id: "", slug: "", email: "" });
-  const [attivaBusy, setAttivaBusy] = useState(false);
-  const [attivaMsg, setAttivaMsg] = useState(null);
+  const [queue, setQueue] = useState([]);
+  const [queueBusy, setQueueBusy] = useState(false);
+  const [attivaBusyId, setAttivaBusyId] = useState(null);
+  const [opsMsg, setOpsMsg] = useState(null);
+  const [blankBusy, setBlankBusy] = useState(false);
+
+  const loadQueue = async () => {
+    setQueueBusy(true);
+    try {
+      const r = await api.get(`/app/ops/activation-queue`);
+      setQueue(r.data?.items || []);
+    } catch {
+      setQueue([]);
+    } finally {
+      setQueueBusy(false);
+    }
+  };
 
   const load = async (d = days) => {
     setBusy(true);
@@ -42,6 +54,7 @@ export default function FounderOpsPage() {
 
   useEffect(() => {
     load(days);
+    loadQueue();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [days]);
 
@@ -75,70 +88,73 @@ export default function FounderOpsPage() {
     }
   };
 
-  const searchAgencies = async () => {
-    setAttivaMsg(null);
-    const q = (attivaEmail || "").trim() || (attivaTarget.slug || "");
-    try {
-      const r = await api.get(`/app/ops/agencies-lookup`, {
-        params: { q, limit: 10 },
-      });
-      const items = r.data?.items || [];
-      setAttivaHits(items);
-      if (items.length === 1) {
-        setAttivaTarget({ agency_id: items[0].id, slug: items[0].slug, email: attivaEmail.trim() });
-      }
-    } catch {
-      setAttivaMsg("Ricerca non riuscita. Riprova.");
-      setAttivaHits([]);
+  const runAttivaRow = async (row) => {
+    if (!row?.agency_id) return;
+    if (
+      !window.confirm(
+        `Attivare «${row.display_name || row.slug}»?\nTitolare: ${row.owner_email || "—"}\nSblocca gestionale, assegna Pro e invia email.`
+      )
+    ) {
+      return;
     }
-  };
-
-  const runAttiva = async () => {
-    setAttivaBusy(true);
-    setAttivaMsg(null);
+    setAttivaBusyId(row.agency_id);
+    setOpsMsg(null);
     try {
-      const email = (attivaEmail || attivaTarget.email || "").trim();
-      const payload = {
+      const r = await api.post(`/app/ops/activate-agency`, {
+        agency_id: row.agency_id,
         grant_plan: true,
         tier: "pro",
         credits: 2000,
         send_email: true,
         wipe_crm: true,
-        note: "attiva_semplice",
-      };
-      if (attivaTarget.agency_id) payload.agency_id = attivaTarget.agency_id;
-      else if (attivaTarget.slug) payload.slug = attivaTarget.slug;
-      else if (email) payload.email = email;
-      else {
-        setAttivaMsg("Inserisci l’email del titolare (o cerca e seleziona l’agenzia).");
-        setAttivaBusy(false);
-        return;
-      }
-      if (
-        !window.confirm(
-          "Attivare l’agenzia? Svuota i dati di prova, sblocca il gestionale, assegna Pro e invia l’email di benvenuto."
-        )
-      ) {
-        setAttivaBusy(false);
-        return;
-      }
-      const r = await api.post(`/app/ops/activate-agency`, payload);
-      const wiped = r.data?.wipe?.total_deleted ?? 0;
-      const g = r.data?.grant || {};
-      setAttivaMsg(
-        `Attivata «${r.data?.display_name || r.data?.slug}». Dashboard ripulita (${wiped} record). Piano ${g.plan_tier || "pro"}. Email: ${r.data?.email?.status || "—"}.`
+        note: "coda_attivazione",
+      });
+      setOpsMsg(
+        `Attivata «${r.data?.display_name || row.display_name}» · email ${r.data?.email?.status || "inviata"} · Pro ok`
       );
-      await searchAgencies();
+      await loadQueue();
       await load(days);
     } catch (e) {
       const detail = e?.response?.data?.detail;
-      setAttivaMsg(
+      setOpsMsg(
         typeof detail === "string"
           ? detail
           : detail?.error || "Attivazione non riuscita."
       );
     } finally {
-      setAttivaBusy(false);
+      setAttivaBusyId(null);
+    }
+  };
+
+  const runBlankSlate = async () => {
+    const phrase = window.prompt(
+      "Lavagna bianca: cancella TUTTE le agenzie e i dati di prova.\nDigita CANCELLA_TUTTO per confermare."
+    );
+    if (phrase !== "CANCELLA_TUTTO") {
+      setOpsMsg("Annullato — nessuna cancellazione.");
+      return;
+    }
+    setBlankBusy(true);
+    setOpsMsg(null);
+    try {
+      const r = await api.post(`/app/ops/blank-slate`, null, {
+        params: { confirm: "CANCELLA_TUTTO" },
+      });
+      const rep = r.data?.report || {};
+      setOpsMsg(
+        `Lavagna bianca ok · agenzie rimosse ${rep.agencies_deleted ?? 0} · utenti B2B ${rep.users_deleted ?? 0} · documenti ${rep.total_docs_deleted ?? 0}`
+      );
+      await loadQueue();
+      await load(days);
+    } catch (e) {
+      const detail = e?.response?.data?.detail;
+      setOpsMsg(
+        typeof detail === "string"
+          ? detail
+          : detail?.error || "Lavagna bianca non riuscita."
+      );
+    } finally {
+      setBlankBusy(false);
     }
   };
 
@@ -159,10 +175,10 @@ export default function FounderOpsPage() {
               className="text-3xl md:text-4xl tracking-tight text-[#0B1E3F]"
               style={{ fontFamily: "'Fraunces', Georgia, serif" }}
             >
-              Cruscotto costi e incassi
+              Area Founder
             </h1>
             <p className="text-sm text-stone-600 mt-2 max-w-2xl">
-              Incassi per voce, fatture Stripe, riepilogo mensile e consumi AI/ops.
+              Prima le richieste di attivazione. Sotto: costi, incassi e alert.
             </p>
           </div>
           <div className="flex items-center gap-2">
@@ -199,82 +215,95 @@ export default function FounderOpsPage() {
 
         <div
           className="rounded-lg border border-[#0B1E3F]/25 bg-[#f7f4ef] px-4 py-5 space-y-4"
-          data-testid="ops-attiva"
+          data-testid="ops-activation-queue"
         >
-          <div>
-            <h2 className="text-xs uppercase tracking-widest text-[#C19A6B]">Attiva agenzia</h2>
-            <p className="text-sm text-stone-700 mt-1 max-w-2xl">
-              Un solo passo: email del titolare → <strong>Attiva</strong>. Svuota i dati di prova,
-              sblocca il gestionale, assegna Pro e manda l’email di benvenuto.
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <h2 className="text-xs uppercase tracking-widest text-[#C19A6B]">
+                Richieste di attivazione
+              </h2>
+              <p className="text-sm text-stone-700 mt-1 max-w-2xl">
+                Qui vedi chi ha completato l’onboarding e aspetta il via libera.
+                Nome agenzia ed email titolare sono già in elenco — un click su Attiva.
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <button
+                type="button"
+                data-testid="ops-queue-refresh"
+                onClick={loadQueue}
+                disabled={queueBusy}
+                className="text-xs uppercase tracking-widest px-3 py-2 rounded border border-stone-300 bg-white hover:bg-stone-50 disabled:opacity-50"
+              >
+                Aggiorna coda
+              </button>
+              <button
+                type="button"
+                data-testid="ops-blank-slate"
+                onClick={runBlankSlate}
+                disabled={blankBusy}
+                className="text-xs uppercase tracking-widest px-3 py-2 rounded border border-stone-400 text-stone-700 bg-white hover:bg-stone-100 disabled:opacity-50"
+              >
+                {blankBusy ? "Pulisco…" : "Lavagna bianca"}
+              </button>
+            </div>
+          </div>
+
+          {queueBusy && !queue.length ? (
+            <p className="text-sm text-stone-500">Carico richieste…</p>
+          ) : null}
+
+          {!queueBusy && queue.length === 0 ? (
+            <p
+              className="text-sm text-stone-600 bg-white/70 border border-stone-200 rounded px-3 py-3"
+              data-testid="ops-queue-empty"
+            >
+              Nessuna richiesta in coda. Quando un’agenzia completa l’onboarding, compare qui
+              con email del titolare.
             </p>
-          </div>
-          <div className="flex flex-wrap gap-2 items-end">
-            <label className="text-xs space-y-1 flex-1 min-w-[240px]">
-              <span className="uppercase tracking-widest text-stone-500">Email titolare</span>
-              <input
-                data-testid="ops-attiva-email"
-                value={attivaEmail}
-                onChange={(e) => {
-                  setAttivaEmail(e.target.value);
-                  setAttivaTarget((t) => ({ ...t, email: e.target.value, agency_id: "", slug: "" }));
-                }}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") searchAgencies();
-                }}
-                placeholder="titolare@agenzia.it"
-                className="block w-full rounded border border-stone-300 px-3 py-2 text-sm bg-white"
-              />
-            </label>
-            <button
-              type="button"
-              data-testid="ops-attiva-search"
-              onClick={searchAgencies}
-              className="text-xs uppercase tracking-widest px-3 py-2 rounded border border-stone-300 bg-white hover:bg-stone-50"
+          ) : null}
+
+          {queue.length > 0 ? (
+            <ul
+              className="divide-y divide-stone-200 border border-stone-200 rounded bg-white overflow-hidden"
+              data-testid="ops-queue-list"
             >
-              Cerca
-            </button>
-            <button
-              type="button"
-              data-testid="ops-attiva-submit"
-              disabled={attivaBusy}
-              onClick={runAttiva}
-              className="text-sm uppercase tracking-widest px-6 py-2.5 rounded bg-[#0B1E3F] text-white disabled:opacity-50 font-medium"
-            >
-              {attivaBusy ? "Attivo…" : "Attiva"}
-            </button>
-          </div>
-          {attivaHits.length > 0 ? (
-            <ul className="text-sm divide-y divide-stone-200 border border-stone-200 rounded bg-white max-h-40 overflow-y-auto">
-              {attivaHits.map((a) => (
-                <li key={a.id} className="px-3 py-2 flex items-center justify-between gap-2">
-                  <div className="min-w-0">
-                    <p className="font-medium truncate">{a.display_name}</p>
-                    <p className="text-[11px] text-stone-500 truncate">
-                      {(a.activation_status || "active") === "pending" ? "in attesa" : "già attiva"}
-                      {` · ${a.slug}`}
+              {queue.map((row) => (
+                <li
+                  key={row.agency_id}
+                  className="px-4 py-3 flex flex-wrap items-center justify-between gap-3"
+                  data-testid={`ops-queue-row-${row.agency_id}`}
+                >
+                  <div className="min-w-0 space-y-0.5">
+                    <p className="font-medium text-[#0B1E3F] truncate">
+                      {row.display_name || row.slug}
+                    </p>
+                    <p className="text-sm text-stone-700 truncate">
+                      {row.owner_email || "email non disponibile"}
+                      {row.owner_name ? ` · ${row.owner_name}` : ""}
+                    </p>
+                    <p className="text-[11px] text-stone-500">
+                      {(row.created_at || "").slice(0, 16).replace("T", " ") || "—"}
+                      {row.slug ? ` · ${row.slug}` : ""}
                     </p>
                   </div>
                   <button
                     type="button"
-                    className="text-[10px] uppercase tracking-widest underline shrink-0"
-                    onClick={() =>
-                      setAttivaTarget({ agency_id: a.id, slug: a.slug, email: attivaEmail })
-                    }
+                    data-testid={`ops-queue-attiva-${row.agency_id}`}
+                    disabled={attivaBusyId === row.agency_id}
+                    onClick={() => runAttivaRow(row)}
+                    className="shrink-0 text-sm uppercase tracking-widest px-5 py-2.5 rounded bg-[#0B1E3F] text-white disabled:opacity-50"
                   >
-                    Scegli
+                    {attivaBusyId === row.agency_id ? "Attivo…" : "Attiva"}
                   </button>
                 </li>
               ))}
             </ul>
           ) : null}
-          {attivaTarget.agency_id || attivaTarget.slug ? (
-            <p className="text-xs text-stone-600">
-              Selezionata: {attivaTarget.slug || attivaTarget.agency_id}
-            </p>
-          ) : null}
-          {attivaMsg ? (
-            <p className="text-sm text-[#0B1E3F]" data-testid="ops-attiva-msg">
-              {attivaMsg}
+
+          {opsMsg ? (
+            <p className="text-sm text-[#0B1E3F]" data-testid="ops-queue-msg">
+              {opsMsg}
             </p>
           ) : null}
         </div>
