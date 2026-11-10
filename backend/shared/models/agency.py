@@ -8,6 +8,8 @@ from shared.models.base import TimestampedModel, OmniaBaseModel, utcnow_iso
 
 AgencyPlan = Literal["free", "starter", "pro", "enterprise"]
 InviteStatus = Literal["pending", "accepted", "revoked", "expired"]
+# Dogfood / Founders: CRM JWT gated until Ops activates (missing → treat as active for legacy)
+AgencyActivationStatus = Literal["pending", "active", "suspended"]
 
 # M2.5.1 — Doppio Binario (D-041)
 # Each agency declares how it consumes OMNIA:
@@ -103,6 +105,10 @@ class AgencyInDB(TimestampedModel):
     owner_id: str  # user_id of the agency_admin who created it
     is_active: bool = True
     onboarding_completed: bool = False
+    # New self-serve create sets pending in route. Default active = legacy/seeds/tests.
+    activation_status: AgencyActivationStatus = "active"
+    activated_at: Optional[str] = None
+    activated_by: Optional[str] = None
     # D-085 — extra archive GB purchased (+100 packs)
     storage_extra_gb: int = 0
     # M2.5.1 — Franchising / Multi-branch layer (D-041)
@@ -130,6 +136,9 @@ class AgencyPublic(OmniaBaseModel):
     owner_id: str
     is_active: bool
     onboarding_completed: bool
+    activation_status: AgencyActivationStatus = "active"
+    activated_at: Optional[str] = None
+    activated_by: Optional[str] = None
     created_at: str
     updated_at: str
     # M2.5.1 — Franchising fields

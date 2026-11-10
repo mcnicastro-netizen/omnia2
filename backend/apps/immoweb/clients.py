@@ -38,7 +38,7 @@ def _normalize_client_list_item(doc: dict) -> dict:
     return out
 
 
-from shared.auth.tenant import arequire_agency as _agency
+from shared.auth.tenant import arequire_crm_agency as _agency
 
 
 @router.get("", response_model=ClientListResponse)

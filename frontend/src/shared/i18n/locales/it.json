@@ -766,8 +766,8 @@
     "review_title": "Pronto per partire",
     "review_subtitle": "Verifica le informazioni inserite, poi clicca \"Crea agenzia\".",
     "creating": "Creazione in corso…",
-    "success_title": "Agenzia creata!",
-    "success_subtitle": "Ti portiamo nella tua area di lavoro…",
+    "success_title": "Richiesta ricevuta",
+    "success_subtitle": "Il gestionale si sblocca dopo verifica OMNIA. Ti portiamo nella sala d’attesa…",
     "error_already_exists": "Hai già un'agenzia configurata.",
     "eyebrow": "La tua agenzia",
     "tagline_hint": "Una riga semplice che racconti l'agenzia ai clienti.",
@@ -780,6 +780,15 @@
     "vat_soft_error": "Partita IVA non valida (controlla le 11 cifre).",
     "cf_soft_error": "Codice fiscale non riconosciuto (16 caratteri o 11 cifre).",
     "error_forbidden": "Sessione non aggiornata. Ricarica la pagina e riprova, oppure esci e rientra."
+  },
+  "waiting_activation": {
+    "eyebrow": "Attivazione in corso",
+    "title": "Il gestionale non è ancora sbloccato",
+    "body": "Abbiamo ricevuto i dati di {{name}}. Un operatore OMNIA verifica l’agenzia, attiva il piano e ti invia una email di benvenuto con l’accesso al CRM. Non serve altro da parte tua.",
+    "ref": "Riferimento",
+    "cta_cloud": "Vai a ImmobilCloud",
+    "refresh": "Controlla di nuovo",
+    "load_error": "Non riesco a caricare lo stato agenzia."
   },
   "members": {
     "title": "Collaboratori",

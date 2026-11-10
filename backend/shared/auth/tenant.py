@@ -63,3 +63,17 @@ def require_agency_membership(user: dict) -> str:
 async def arequire_agency(user: dict) -> str:
     """Variante awaitable per i call-site legacy `await _agency(user)`."""
     return require_agency(user)
+
+
+async def arequire_crm_agency(user: dict) -> str:
+    """Agency attiva + CRM sbloccato (Ops activation). super_admin bypass."""
+    from shared.db.connection import Database
+    from shared.auth.agency_activation import assert_agency_crm_unlocked
+
+    agency_id = require_agency(user)
+    db = Database.get()
+    agency = await db.agencies.find_one(
+        {"id": agency_id}, {"_id": 0, "activation_status": 1}
+    )
+    assert_agency_crm_unlocked(agency, user=user)
+    return agency_id

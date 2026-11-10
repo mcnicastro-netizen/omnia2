@@ -34,15 +34,21 @@ async def _ensure_unique_slug(db, base_slug: str) -> str:
     return slug
 
 
-async def _attach_user_to_agency(db, user_id: str, agency_id: str) -> None:
-    """Add agency_id to membership; set active_agency_id if missing/invalid (D-106 init)."""
+async def _attach_user_to_agency(
+    db, user_id: str, agency_id: str, *, force_active: bool = False
+) -> None:
+    """Add agency_id to membership; set active_agency_id if missing/invalid (D-106).
+
+    force_active=True (create onboarding): always switch to the new agency so the
+    owner never stays on a stale seed/demo tenant (false «collaboratori»).
+    """
     user = await db.users.find_one(
         {"id": user_id}, {"_id": 0, "agency_ids": 1, "active_agency_id": 1}
     )
     ids = list((user or {}).get("agency_ids") or [])
     active = (user or {}).get("active_agency_id")
     set_fields = {"updated_at": datetime.now(timezone.utc).isoformat()}
-    if not active or active not in (ids + [agency_id]):
+    if force_active or not active or active not in (ids + [agency_id]):
         set_fields["active_agency_id"] = agency_id
     await db.users.update_one(
         {"id": user_id},
@@ -96,8 +102,12 @@ async def create_agency(
     doc = agency.model_dump()
     # Wizard «Crea agenzia» = onboarding chiuso (evita PATCH /me prima del refresh sessione)
     doc["onboarding_completed"] = True
+    # CRM locked until Founder Ops activates (email + optional plan grant)
+    doc["activation_status"] = "pending"
+    doc["activated_at"] = None
+    doc["activated_by"] = None
     await db.agencies.insert_one(doc)
-    await _attach_user_to_agency(db, user["id"], agency.id)
+    await _attach_user_to_agency(db, user["id"], agency.id, force_active=True)
 
     # S2 — promozione controllata: il creatore diventa agency_admin
     if user.get("role") not in ("super_admin", "agency_admin"):
@@ -106,7 +116,12 @@ async def create_agency(
             {"$set": {"role": "agency_admin", "updated_at": datetime.now(timezone.utc).isoformat()}},
         )
 
-    logger.info("Agency created: id=%s slug=%s owner=%s", agency.id, slug, user["email"])
+    logger.info(
+        "Agency created (pending activation): id=%s slug=%s owner=%s",
+        agency.id,
+        slug,
+        user["email"],
+    )
     # Rileggi dopo promote/attach così il client può allineare la sessione
     fresh = await db.agencies.find_one({"id": agency.id}, {"_id": 0})
     return _public(fresh or doc)

@@ -56,12 +56,14 @@ def test_create_agency_promotes_and_completes_onboarding():
     assert create.status_code == 201, create.text
     body = create.json()
     assert body.get("onboarding_completed") is True
+    assert body.get("activation_status") == "pending"
     aid = body.get("id")
 
     me2 = s.get(f"{API}/auth/me", timeout=30)
     assert me2.status_code == 200
     assert me2.json().get("role") == "agency_admin"
     assert aid in (me2.json().get("agency_ids") or [])
+    assert me2.json().get("active_agency_id") == aid
 
     # cleanup
     db = MongoClient(os.environ.get("MONGO_URL", "mongodb://127.0.0.1:27017"))[
