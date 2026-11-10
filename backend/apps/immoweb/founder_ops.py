@@ -823,6 +823,87 @@ async def ops_preflight(
     }
 
 
+@router.get("/activation-queue")
+async def ops_activation_queue(
+    user: dict = Depends(require_roles("super_admin")),
+) -> Dict[str, Any]:
+    """Coda Founder: agenzie in attesa di attivazione + email titolare (niente caccia)."""
+    db = Database.get()
+    cur = (
+        db.agencies.find(
+            {"activation_status": "pending"},
+            {
+                "_id": 0,
+                "id": 1,
+                "slug": 1,
+                "display_name": 1,
+                "owner_id": 1,
+                "contact": 1,
+                "created_at": 1,
+                "plan": 1,
+                "activation_status": 1,
+            },
+        )
+        .sort("created_at", -1)
+        .limit(100)
+    )
+    rows = await cur.to_list(100)
+    items: List[Dict[str, Any]] = []
+    for a in rows:
+        owner = None
+        if a.get("owner_id"):
+            owner = await db.users.find_one(
+                {"id": a["owner_id"]},
+                {"_id": 0, "email": 1, "name": 1, "phone": 1},
+            )
+        contact_email = ((a.get("contact") or {}).get("email") or "").strip()
+        items.append(
+            {
+                "agency_id": a.get("id"),
+                "slug": a.get("slug"),
+                "display_name": a.get("display_name"),
+                "created_at": a.get("created_at"),
+                "plan": a.get("plan") or "free",
+                "activation_status": "pending",
+                "owner_email": (owner or {}).get("email") or contact_email or None,
+                "owner_name": (owner or {}).get("name") or None,
+                "owner_phone": (owner or {}).get("phone") or None,
+            }
+        )
+    return {"ok": True, "count": len(items), "items": items}
+
+
+@router.post("/blank-slate")
+async def ops_blank_slate(
+    user: dict = Depends(require_roles("super_admin")),
+    confirm: str = "",
+) -> Dict[str, Any]:
+    """Lavagna bianca: cancella tutte le agenzie e i dati B2B. Irreversibile.
+
+    Richiede ``confirm=CANCELLA_TUTTO`` (query o body form).
+    """
+    from apps.immoweb.demo_retire import blank_slate_platform
+
+    if (confirm or "").strip() != "CANCELLA_TUTTO":
+        raise HTTPException(
+            status_code=400,
+            detail={
+                "error": "confirm_required",
+                "hint": "Passa confirm=CANCELLA_TUTTO",
+            },
+        )
+    db = Database.get()
+    report = await blank_slate_platform(db, keep_user_id=user.get("id"))
+    logger.warning(
+        "blank-slate by=%s agencies=%s users_deleted=%s docs=%s",
+        user.get("email"),
+        report.get("agencies_deleted"),
+        report.get("users_deleted"),
+        report.get("total_docs_deleted"),
+    )
+    return {"ok": True, "report": report}
+
+
 @router.get("/agencies-lookup")
 async def ops_agencies_lookup(
     q: str = "",
