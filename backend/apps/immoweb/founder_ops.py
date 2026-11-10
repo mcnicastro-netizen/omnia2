@@ -1028,12 +1028,19 @@ class ActivateAgencyBody(BaseModel):
     slug: Optional[str] = None
     email: Optional[str] = None
     grant_plan: bool = True
-    tier: str = Field(default="pro", description="starter | pro | agency")
+    tier: Optional[str] = Field(
+        default=None,
+        description="starter | pro | agency — se omesso usa preferred_plan_tier agenzia o pro",
+    )
     credits: int = Field(default=2000, ge=0, le=100_000)
     note: Optional[str] = Field(default=None, max_length=200)
     send_email: bool = True
     # Default True: Attiva = dashboard vuota + sblocco + piano + email (no jargon Ops)
     wipe_crm: bool = True
+    require_kyc_verified: bool = Field(
+        default=True,
+        description="Blocca Attiva se dossier KYC non verified (D-156)",
+    )
 
 
 @router.post("/activate-agency")
@@ -1062,6 +1069,18 @@ async def ops_activate_agency(
     if not agency:
         raise HTTPException(status_code=404, detail="agency_not_found")
 
+    if body.require_kyc_verified:
+        kyc_st = ((agency.get("kyc") or {}).get("status") or "incomplete").lower()
+        if kyc_st != "verified":
+            raise HTTPException(
+                status_code=400,
+                detail={
+                    "error": "kyc_not_verified",
+                    "kyc_status": kyc_st,
+                    "hint": "Verifica dossier identificazione clientela in cabina prima di Attiva",
+                },
+            )
+
     wipe = None
     if body.wipe_crm:
         wipe = await wipe_agency_crm_data(db, agency_id)
@@ -1084,7 +1103,11 @@ async def ops_activate_agency(
 
     grant = None
     if body.grant_plan:
-        tier = (body.tier or "pro").strip().lower()
+        preferred = (agency.get("preferred_plan_tier") or "").strip().lower()
+        tier = (body.tier or "").strip().lower()
+        # Cabina può omettere tier → usa piano scelto in registrazione
+        if not tier:
+            tier = preferred or "pro"
         if tier not in ("starter", "pro", "agency"):
             raise HTTPException(status_code=400, detail="invalid_tier")
         note = (body.note or "ops_activate_agency").strip()[:200]

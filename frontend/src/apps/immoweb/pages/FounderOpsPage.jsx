@@ -103,14 +103,14 @@ export default function FounderOpsPage() {
       const r = await api.post(`/app/ops/activate-agency`, {
         agency_id: row.agency_id,
         grant_plan: true,
-        tier: "pro",
         credits: 2000,
         send_email: true,
         wipe_crm: true,
         note: "coda_attivazione",
+        require_kyc_verified: true,
       });
       setOpsMsg(
-        `Attivata «${r.data?.display_name || row.display_name}» · email ${r.data?.email?.status || "inviata"} · Pro ok`
+        `Attivata «${r.data?.display_name || row.display_name}» · email ${r.data?.email?.status || "inviata"} · piano ok`
       );
       await loadQueue();
       await load(days);
@@ -119,7 +119,7 @@ export default function FounderOpsPage() {
       setOpsMsg(
         typeof detail === "string"
           ? detail
-          : detail?.error || "Attivazione non riuscita."
+          : detail?.hint || detail?.error || "Attivazione non riuscita (verifica KYC in scheda tenant)."
       );
     } finally {
       setAttivaBusyId(null);

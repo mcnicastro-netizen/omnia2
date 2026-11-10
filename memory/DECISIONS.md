@@ -7,6 +7,17 @@ Registro di tutte le decisioni di business e tecniche prese durante il progetto.
 
 ## Decisioni prese
 
+### D-156 — Identificazione clientela B2B in cabina + onboarding onesto · 10-Nov-2026
+- **Contesto**: Founder — obbligo Super Admin di identificare la clientela (privacy/GDPR); FIAIP ancora in wizard; welcome email prematura; piano non chiaro in register; «Controlla di nuovo» tornava a onboarding; logo solo URL.
+- **Decisione**:
+  1. **KYC dossier** su agenzia (`kyc` + PDF visura/CI) in cabina scheda tenant; Attiva richiede `kyc.status=verified` (bypass esplicito solo da scheda).
+  2. **Niente FIAIP** in onboarding UI (campo schema resta).
+  3. **Email**: niente `welcome` su register B2B; `agency_pending` a fine onboarding; CRM unlock resta `agency_activated`.
+  4. **Piano** obbligatorio in register agenzia → `preferred_plan_tier` → Attiva.
+  5. **Logo**: upload file in onboarding (`POST /agencies/onboarding/logo`).
+  6. **Waiting**: refresh soft, mai redirect automatico a onboarding su 404.
+- **Stato**: ✅ in codice (PR fix-reg-onboarding-gdpr).
+
 ### D-155 — Cabina onda 2: poteri piattaforma (kill / impersonate / listino B2B / GDPR) · 10-Nov-2026
 - **Contesto**: Dopo D-154 la cabina leggeva archivi ma non poteva ancora: spegnere fornitori, entrare/uscire dal CRM tenant, editare piani B2B (+ Stripe), cancellare utenti/chiudere agenzie.
 - **Decisione**:

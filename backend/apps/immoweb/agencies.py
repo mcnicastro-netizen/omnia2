@@ -2,8 +2,10 @@
 import logging
 from typing import List, Optional
 from datetime import datetime, timezone
+from uuid import uuid4
 
-from fastapi import APIRouter, HTTPException, Depends, status
+from fastapi import APIRouter, File, Form, HTTPException, Depends, UploadFile, status
+from fastapi.responses import Response
 from shared.db.connection import Database
 from shared.auth.dependencies import get_current_user, require_roles
 from shared.auth.tenant import require_agency
@@ -14,6 +16,7 @@ from shared.models.agency import (
     AgencyUpdate,
     make_slug,
 )
+from shared.storage import put_object, get_object, ObjStoreError
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/agencies", tags=["agencies"])
@@ -83,6 +86,18 @@ async def create_agency(
     base_slug = make_slug(payload.display_name)
     slug = await _ensure_unique_slug(db, base_slug)
 
+    preferred = (payload.preferred_plan_tier or user.get("signup_preferred_plan") or "").strip().lower()
+    if preferred not in ("starter", "pro", "agency"):
+        preferred = None
+
+    contact_pec = None
+    if payload.contact is not None:
+        if isinstance(payload.contact, dict):
+            contact_pec = payload.contact.get("pec")
+        else:
+            contact_pec = getattr(payload.contact, "pec", None)
+    vat = getattr(payload.fiscal, "vat_number", None) if payload.fiscal else None
+
     agency = AgencyInDB(
         slug=slug,
         display_name=payload.display_name,
@@ -98,7 +113,22 @@ async def create_agency(
             if user.get("signup_domain_sovereignty_confirmed") else None
         ),
         existing_domain=user.get("signup_existing_domain") or None,
+        preferred_plan_tier=preferred,
+        kyc={
+            "status": "incomplete",
+            "notes": "",
+            "verified_at": None,
+            "verified_by": None,
+            "documents": [],
+            "checklist": {
+                "visura_camerale": False,
+                "id_titolare": False,
+                "pec": bool(contact_pec),
+                "piva_ok": bool(vat),
+            },
+        },
     )
+
     doc = agency.model_dump()
     # Wizard «Crea agenzia» = onboarding chiuso (evita PATCH /me prima del refresh sessione)
     doc["onboarding_completed"] = True
@@ -122,6 +152,28 @@ async def create_agency(
         slug,
         user["email"],
     )
+
+    # Email «richiesta ricevuta» (non è lo sblocco CRM)
+    try:
+        from shared.email.client import send_email
+        from shared.public_base import get_public_base_url
+
+        frontend = get_public_base_url()
+        lang = (user.get("lang") or "it")[:2]
+        await send_email(
+            to=user.get("email"),
+            template="agency_pending",
+            lang=lang if lang in ("it", "en", "es") else "it",
+            variables={
+                "name": user.get("name") or "Colleague",
+                "agency_name": payload.display_name,
+                "plan_tier": (preferred or "pro").upper(),
+                "login_url": f"{frontend}/{lang}/login",
+            },
+        )
+    except Exception as exc:  # noqa: BLE001
+        logger.warning("agency_pending email failed: %s", exc)
+
     # Rileggi dopo promote/attach così il client può allineare la sessione
     fresh = await db.agencies.find_one({"id": agency.id}, {"_id": 0})
     return _public(fresh or doc)
@@ -252,3 +304,123 @@ async def remove_member(
     )
 
     return {"ok": True, "removed_user_id": member_id, "agency_id": agency_id}
+
+
+# -------------------- ONBOARDING LOGO (pre-agency) --------------------
+
+_ALLOWED_LOGO_MIME = {"image/png", "image/jpeg", "image/webp", "image/svg+xml"}
+_MAX_LOGO_BYTES = 2 * 1024 * 1024
+_KYC_DOC_TYPES = {"visura_camerale", "documento_identita", "altro"}
+_ALLOWED_KYC_MIME = {
+    "application/pdf",
+    "image/png",
+    "image/jpeg",
+    "image/webp",
+}
+_MAX_KYC_BYTES = 8 * 1024 * 1024
+
+
+@router.post("/onboarding/logo")
+async def upload_onboarding_logo(
+    file: UploadFile = File(...),
+    user: dict = Depends(get_current_user),
+):
+    """Upload marchio/logo prima della create agency (path privato user)."""
+    ct = (file.content_type or "").lower()
+    if ct not in _ALLOWED_LOGO_MIME:
+        raise HTTPException(status_code=415, detail="unsupported_media_type")
+    data = await file.read()
+    if not data:
+        raise HTTPException(status_code=400, detail="empty_file")
+    if len(data) > _MAX_LOGO_BYTES:
+        raise HTTPException(status_code=413, detail="file_too_large")
+    ext = {
+        "image/jpeg": "jpg",
+        "image/png": "png",
+        "image/webp": "webp",
+        "image/svg+xml": "svg",
+    }[ct]
+    uid = user["id"]
+    storage_path = f"omnia/private/{uid}/branding/logo-{uuid4().hex[:10]}.{ext}"
+    try:
+        put_object(storage_path, data, ct)
+    except ObjStoreError as e:
+        logger.exception("onboarding logo upload failed user=%s", uid)
+        raise HTTPException(status_code=502, detail="storage_upload_failed") from e
+    return {"ok": True, "url": f"/api/media/{storage_path}", "size_bytes": len(data)}
+
+
+# -------------------- KYC (owner upload during waiting) --------------------
+
+def _kyc_doc_entry(*, doc_type: str, filename: str, storage_path: str, user: dict) -> dict:
+    return {
+        "id": str(uuid4()),
+        "doc_type": doc_type,
+        "filename": filename[:180],
+        "storage_path": storage_path,
+        "uploaded_at": datetime.now(timezone.utc).isoformat(),
+        "uploaded_by": user.get("id"),
+        "uploaded_by_email": user.get("email"),
+    }
+
+
+def _refresh_kyc_checklist(kyc: dict) -> dict:
+    docs = kyc.get("documents") or []
+    types = {d.get("doc_type") for d in docs}
+    cl = dict(kyc.get("checklist") or {})
+    cl["visura_camerale"] = "visura_camerale" in types
+    cl["id_titolare"] = "documento_identita" in types
+    kyc["checklist"] = cl
+    if kyc.get("status") in (None, "incomplete") and cl.get("visura_camerale") and cl.get("id_titolare"):
+        kyc["status"] = "submitted"
+    return kyc
+
+
+@router.post("/me/kyc/documents")
+async def upload_my_kyc_document(
+    file: UploadFile = File(...),
+    doc_type: str = Form("altro"),
+    user: dict = Depends(require_roles("agency_admin", "super_admin")),
+):
+    """Owner carica PDF/visura per identificazione clientela (pre-attivazione)."""
+    dt = (doc_type or "altro").strip().lower()
+    if dt not in _KYC_DOC_TYPES:
+        raise HTTPException(400, detail="invalid_doc_type")
+    ct = (file.content_type or "").lower()
+    if ct not in _ALLOWED_KYC_MIME:
+        raise HTTPException(415, detail="unsupported_media_type")
+    data = await file.read()
+    if not data or len(data) > _MAX_KYC_BYTES:
+        raise HTTPException(413 if data else 400, detail="file_invalid")
+
+    db = Database.get()
+    agency_id = require_agency(user)
+    agency = await db.agencies.find_one({"id": agency_id}, {"_id": 0})
+    if not agency:
+        raise HTTPException(404, detail="agency_not_found")
+    if agency.get("owner_id") != user["id"] and user.get("role") != "super_admin":
+        raise HTTPException(403, detail="not_owner")
+
+    ext = {"application/pdf": "pdf", "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp"}[ct]
+    storage_path = f"omnia/ops-kyc/{agency_id}/{dt}-{uuid4().hex[:10]}.{ext}"
+    try:
+        put_object(storage_path, data, ct)
+    except ObjStoreError as e:
+        raise HTTPException(502, detail="storage_upload_failed") from e
+
+    kyc = dict(agency.get("kyc") or {"status": "incomplete", "documents": [], "checklist": {}})
+    docs = list(kyc.get("documents") or [])
+    entry = _kyc_doc_entry(
+        doc_type=dt,
+        filename=file.filename or f"{dt}.{ext}",
+        storage_path=storage_path,
+        user=user,
+    )
+    docs.append(entry)
+    kyc["documents"] = docs
+    kyc = _refresh_kyc_checklist(kyc)
+    await db.agencies.update_one(
+        {"id": agency_id},
+        {"$set": {"kyc": kyc, "updated_at": datetime.now(timezone.utc).isoformat()}},
+    )
+    return {"ok": True, "document": entry, "kyc": kyc}

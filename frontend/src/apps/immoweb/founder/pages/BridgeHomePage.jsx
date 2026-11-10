@@ -74,16 +74,21 @@ export default function BridgeHomePage() {
       const r = await api.post("/app/ops/activate-agency", {
         agency_id: row.agency_id,
         grant_plan: true,
-        tier: "pro",
         credits: 2000,
         send_email: true,
         wipe_crm: true,
         note: "cabina_ingresso",
+        require_kyc_verified: true,
       });
       setMsg(`Attivata · ${r.data?.display_name || row.display_name}`);
       await load();
     } catch (e) {
-      setMsg(e?.response?.data?.detail?.error || e?.response?.data?.detail || "Errore attivazione");
+      const d = e?.response?.data?.detail;
+      setMsg(
+        (typeof d === "object" && (d.hint || d.error)) ||
+          d ||
+          "Errore attivazione — apri la scheda e completa KYC"
+      );
     } finally {
       setAttivaId(null);
     }

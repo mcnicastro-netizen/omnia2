@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "../../shared/lib/auth";
@@ -7,40 +7,60 @@ import Brand from "../../shared/components/Brand";
 
 /**
  * Sala d'attesa CRM — agenzia creata ma non ancora attivata da Ops.
+ * «Controlla di nuovo» NON deve riportare all'onboarding/registrazione.
  */
 export default function WaitingActivationPage() {
   const { t, i18n } = useTranslation();
   const lang = (i18n.language || "it").slice(0, 2);
-  const { user, logout } = useAuth();
+  const { user, logout, refresh } = useAuth();
   const nav = useNavigate();
   const [agency, setAgency] = useState(null);
   const [err, setErr] = useState("");
+  const [checking, setChecking] = useState(false);
+
+  const loadStatus = useCallback(async () => {
+    setErr("");
+    try {
+      if (typeof refresh === "function") {
+        await refresh();
+      }
+      const r = await api.get("/app/agencies/me");
+      const a = r.data;
+      setAgency(a);
+      const st = a?.activation_status || "active";
+      if (st === "active" || user?.role === "super_admin") {
+        nav(`/${lang}/app/dashboard`, { replace: true });
+      }
+      return a;
+    } catch (e) {
+      const code = e?.response?.status;
+      if (code === 404) {
+        // Resta in sala: non rimandare al wizard (bug «Controlla di nuovo → registrazione»)
+        setErr(
+          t(
+            "waiting_activation.still_pending",
+            "Agenzia ancora in verifica oppure sessione non allineata. Riprova tra un minuto o esci e rientra."
+          )
+        );
+        return null;
+      }
+      setErr(t("waiting_activation.load_error", "Non riesco a caricare lo stato agenzia."));
+      return null;
+    }
+  }, [lang, nav, refresh, t, user?.role]);
 
   useEffect(() => {
-    let mounted = true;
-    api
-      .get("/app/agencies/me")
-      .then((r) => {
-        if (!mounted) return;
-        const a = r.data;
-        setAgency(a);
-        const st = a?.activation_status || "active";
-        if (st === "active" || user?.role === "super_admin") {
-          nav(`/${lang}/app/dashboard`, { replace: true });
-        }
-      })
-      .catch((e) => {
-        if (!mounted) return;
-        if (e?.response?.status === 404) {
-          nav(`/${lang}/app/onboarding`, { replace: true });
-        } else {
-          setErr(t("waiting_activation.load_error", "Non riesco a caricare lo stato agenzia."));
-        }
-      });
-    return () => {
-      mounted = false;
-    };
-  }, [lang, nav, t, user?.role]);
+    loadStatus();
+  }, [loadStatus]);
+
+  const onCheckAgain = async () => {
+    setChecking(true);
+    try {
+      await loadStatus();
+    } finally {
+      setChecking(false);
+    }
+  };
 
   const onLogout = async () => {
     await logout();
@@ -79,16 +99,24 @@ export default function WaitingActivationPage() {
           <p className="text-stone-600 text-sm md:text-base leading-relaxed">
             {t(
               "waiting_activation.body",
-              "Abbiamo ricevuto i dati di {{name}}. Un operatore OMNIA verifica l’agenzia, attiva il piano e ti invia una email di benvenuto con l’accesso al CRM. Non serve altro da parte tua."
+              "Abbiamo ricevuto i dati di {{name}}. Un operatore OMNIA verifica l’identità dell’agenzia (documenti / visura), attiva il piano e ti invia l’email di sblocco CRM. Non serve altro da parte tua."
             ).replace("{{name}}", agency?.display_name || "…")}
           </p>
+          {agency?.preferred_plan_tier ? (
+            <p className="text-sm text-stone-700">
+              {t("waiting_activation.plan", "Piano richiesto")}:{" "}
+              <span className="font-medium uppercase">{agency.preferred_plan_tier}</span>
+            </p>
+          ) : null}
           {agency?.slug ? (
             <p className="text-xs text-stone-500 font-mono">
               {t("waiting_activation.ref", "Riferimento")}: {agency.slug}
             </p>
           ) : null}
           {err ? (
-            <p className="text-sm text-red-800 bg-red-50 border border-red-200 rounded px-3 py-2">{err}</p>
+            <p className="text-sm text-amber-900 bg-amber-50 border border-amber-200 rounded px-3 py-2">
+              {err}
+            </p>
           ) : null}
           <div className="flex flex-wrap gap-3 justify-center pt-2">
             <Link
@@ -100,10 +128,13 @@ export default function WaitingActivationPage() {
             <button
               type="button"
               data-testid="waiting-refresh"
-              onClick={() => window.location.reload()}
-              className="text-xs uppercase tracking-widest px-4 py-2.5 rounded border border-stone-300 bg-white text-stone-700"
+              disabled={checking}
+              onClick={onCheckAgain}
+              className="text-xs uppercase tracking-widest px-4 py-2.5 rounded border border-stone-300 bg-white text-stone-700 disabled:opacity-50"
             >
-              {t("waiting_activation.refresh", "Controlla di nuovo")}
+              {checking
+                ? t("common.loading", "Caricamento…")
+                : t("waiting_activation.refresh", "Controlla di nuovo")}
             </button>
           </div>
         </div>

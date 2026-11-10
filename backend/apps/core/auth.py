@@ -138,14 +138,21 @@ async def register(req: RegisterRequest, request: Request, response: Response,
     _PUBLIC_ROLES = {"client", "student"}
     safe_role = req.role if req.role in _PUBLIC_ROLES else "client"
 
+    preferred = (req.preferred_plan or "").strip().lower()
+    if preferred not in ("starter", "pro", "agency"):
+        preferred = None
+    # B2B agency path: Domain Vault confirm = intent agenzia (non mandare «Benvenuto» prematuro)
+    agency_intent = bool(req.domain_sovereignty_confirmed)
+
     user = UserInDB(
         email=email,
         password_hash=hash_password(req.password),
         name=req.name.strip(),
         role=safe_role,
         lang=lang,
-        signup_domain_sovereignty_confirmed=bool(req.domain_sovereignty_confirmed),
+        signup_domain_sovereignty_confirmed=agency_intent,
         signup_existing_domain=(req.existing_domain or "").strip().lower() or None,
+        signup_preferred_plan=preferred,
     )
     doc = user.model_dump()
     await db.users.insert_one(doc)
@@ -161,23 +168,28 @@ async def register(req: RegisterRequest, request: Request, response: Response,
             user_id=user.id,
             source="auth.register",
             ip=_client_ip(request),
-            meta={"role": user.role, "domain_sovereignty": bool(req.domain_sovereignty_confirmed)},
+            meta={
+                "role": user.role,
+                "domain_sovereignty": agency_intent,
+                "preferred_plan": preferred,
+            },
         )
     except Exception:
         pass
 
-    # Send welcome email (non-blocking; ignore failures)
-    from shared.public_base import get_public_base_url
-    frontend = get_public_base_url()
-    try:
-        await send_email(
-            to=email,
-            template="welcome",
-            lang=lang,
-            variables={"name": user.name, "role": user.role, "login_url": f"{frontend}/{lang}/login"},
-        )
-    except Exception as e:
-        logger.warning("Welcome email failed: %s", e)
+    # Welcome solo per B2C/student. B2B: email dopo onboarding (agency_pending) + CRM a Ops.
+    if not agency_intent:
+        from shared.public_base import get_public_base_url
+        frontend = get_public_base_url()
+        try:
+            await send_email(
+                to=email,
+                template="welcome",
+                lang=lang,
+                variables={"name": user.name, "role": user.role, "login_url": f"{frontend}/{lang}/login"},
+            )
+        except Exception as e:
+            logger.warning("Welcome email failed: %s", e)
 
     return _public(doc)
 
