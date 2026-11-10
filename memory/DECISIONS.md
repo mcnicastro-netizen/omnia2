@@ -7,6 +7,15 @@ Registro di tutte le decisioni di business e tecniche prese durante il progetto.
 
 ## Decisioni prese
 
+### D-154 — Cabina di regia Super Admin (non CRM tenant) · 10-Nov-2026
+- **Contesto**: Founder — `/app/ops` era telemetria costi + menu CRM fuori posto; servono archivi clienti/fornitori, API, listino, piattaforma.
+- **Decisione**:
+  1. Console dedicata `FounderBridgeShell` su `/app/ops/*` (Ingresso, Clienti, Fornitori, API, Listino, Finanze, Contenuti, Piattaforma).
+  2. API bridge `GET/POST /app/ops/bridge/*` (summary, tenants, b2c, providers, api-keys revoke/rotate, catalog + override B2C).
+  3. Nessun secret in chiaro (solo presenza/circuiti). Blank-slate resta script, non bottone UI.
+  4. Shell CRM agenzia: Super Admin punta a «Cabina di regia», non ai tool tenant come home.
+- **Stato**: ✅ in codice (PR cabina-regia).
+
 ### D-153 — Founder ≠ agenzia cliente (no Nicastro in shell Ops) · 10-Nov-2026
 - **Data**: 10 Novembre 2026
 - **Contesto**: Founder entra in `/app/dashboard` e vede «AGENZIA Nicastro Immobiliare…» — confusione totale: area riservata Founder mescolata al CRM del primo cliente.

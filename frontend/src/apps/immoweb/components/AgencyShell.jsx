@@ -130,13 +130,11 @@ export default function AgencyShell({ children, current = "dashboard", showBack 
       ? [{ key: "settings", to: `/${lang}/app/settings`, label: t("immoweb_app.nav_settings"), icon: "⚙", cluster: "amministrazione" }]
       : []),
     ...(user?.role === "super_admin"
-      ? [{ key: "brand-lab", to: `/${lang}/app/brand-lab`, label: "Brand Lab", icon: "◈", cluster: "amministrazione" }]
-      : []),
-    ...(user?.role === "super_admin"
       ? [
-          { key: "ops", to: `/${lang}/app/ops`, label: "Ops Costi", icon: "◎", cluster: "amministrazione" },
+          { key: "ops", to: `/${lang}/app/ops`, label: "Cabina di regia", icon: "◎", cluster: "amministrazione" },
           { key: "ops-legal", to: `/${lang}/app/ops/legal`, label: "Ops Legal", icon: "⚖", cluster: "amministrazione" },
           { key: "moderation", to: `/${lang}/app/moderation`, label: "Moderazione", icon: "✓", cluster: "amministrazione" },
+          { key: "brand-lab", to: `/${lang}/app/brand-lab`, label: "Brand Lab", icon: "◈", cluster: "amministrazione" },
         ]
       : []),
   ];

@@ -1,3 +1,9 @@
+## 2026-11-10 — D-154 Cabina di regia Super Admin
+
+- Shell `/app/ops` dedicata: Ingresso, Clienti, Fornitori, API, Listino, Finanze, Contenuti, Piattaforma
+- API `/app/ops/bridge/*` (archivi, providers, revoke/rotate keys, catalog B2C override)
+- Blank-slate resta solo API/script (niente bottone)
+
 ## 2026-11-10 — Coda attivazione Founder + lavagna bianca
 
 - Ops: inbox «Richieste di attivazione» (agenzia + email titolare + Attiva)
