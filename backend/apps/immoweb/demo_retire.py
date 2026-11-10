@@ -82,58 +82,24 @@ async def attach_user_to_agency_slug(db, email: str, slug: str) -> Dict[str, Any
 
 
 async def grant_assisted_pro(db, agency_id: str, credits: int = 500) -> Dict[str, Any]:
-    now = _now()
-    await db.agencies.update_one(
-        {"id": agency_id},
-        {
-            "$set": {
-                "plan": "pro",
-                "plan_type": "turnkey",
-                "billing_assisted_at": now,
-                "billing_assisted_tier": "pro",
-                "updated_at": now,
-            }
-        },
+    """Compat D-145 — wrapper su grant_assisted_plan (Pro)."""
+    from apps.immoweb.assisted_billing import grant_assisted_plan
+
+    out = await grant_assisted_plan(
+        db,
+        agency_id,
+        tier="pro",
+        credits=credits,
+        reason="first_client_nicastro",
+        granted_by="demo_retire",
     )
-    await db.subscriptions.update_one(
-        {"agency_id": agency_id},
-        {
-            "$set": {
-                "agency_id": agency_id,
-                "plan_tier": "pro",
-                "status": "active",
-                "billing_cycle": "monthly",
-                "source": "assisted_provisioning",
-                "updated_at": now,
-                "activated_at": now,
-            },
-            "$setOnInsert": {"created_at": now},
-        },
-        upsert=True,
-    )
-    wallet = await db.credit_wallets.find_one_and_update(
-        {"agency_id": agency_id},
-        {
-            "$inc": {"balance": max(0, credits)},
-            "$set": {"updated_at": now, "last_topup_at": now},
-            "$setOnInsert": {"agency_id": agency_id, "created_at": now},
-        },
-        upsert=True,
-        return_document=True,
-    )
-    bal = (wallet or {}).get("balance")
-    await db.credit_transactions.insert_one(
-        {
-            "agency_id": agency_id,
-            "kind": "assisted_topup",
-            "credits": credits,
-            "balance_after": bal,
-            "reason": "first_client_nicastro",
-            "created_at": now,
-            "ref_type": "demo_retire",
-        }
-    )
-    return {"ok": True, "plan": "pro", "credits_balance": bal}
+    # plan_type turnkey storico Nicastro seed
+    if out.get("ok"):
+        await db.agencies.update_one(
+            {"id": agency_id},
+            {"$set": {"plan_type": "turnkey", "updated_at": _now()}},
+        )
+    return out
 
 
 async def purge_agency_shell(db, *, slug: str, force: bool = False) -> Dict[str, Any]:
