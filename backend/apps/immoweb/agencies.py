@@ -90,7 +90,7 @@ async def create_agency(
     if preferred not in ("starter", "pro", "agency"):
         preferred = None
 
-    # D-157 — logo obbligatorio (file già caricato → branding.logo_url)
+    # D-158 — logo file opzionale se c'è già un sito/dominio (brand recuperabile dopo).
     branding_in = payload.branding
     logo_url = None
     if branding_in is not None:
@@ -99,18 +99,25 @@ async def create_agency(
             if isinstance(branding_in, dict)
             else getattr(branding_in, "logo_url", None)
         )
-    if not (logo_url or "").strip():
-        raise HTTPException(
-            status_code=400,
-            detail={"error": "logo_required", "hint": "Carica il file marchio/logo prima di creare l'agenzia"},
-        )
-
+    contact_website = None
     contact_pec = None
     if payload.contact is not None:
         if isinstance(payload.contact, dict):
+            contact_website = payload.contact.get("website")
             contact_pec = payload.contact.get("pec")
         else:
+            contact_website = getattr(payload.contact, "website", None)
             contact_pec = getattr(payload.contact, "pec", None)
+    existing_domain = (user.get("signup_existing_domain") or "").strip()
+    has_web_brand = bool((contact_website or "").strip() or existing_domain)
+    if not (logo_url or "").strip() and not has_web_brand:
+        raise HTTPException(
+            status_code=400,
+            detail={
+                "error": "logo_required",
+                "hint": "Carica il file marchio/logo oppure indica il sito web dell'agenzia",
+            },
+        )
     vat = getattr(payload.fiscal, "vat_number", None) if payload.fiscal else None
 
     agency = AgencyInDB(
@@ -341,7 +348,18 @@ async def upload_onboarding_logo(
     user: dict = Depends(get_current_user),
 ):
     """Upload marchio/logo prima della create agency (path privato user)."""
-    ct = (file.content_type or "").lower()
+    ct = (file.content_type or "").lower().split(";")[0].strip()
+    # Alcuni browser (Safari/iOS) mandano application/octet-stream: sniffinamo l'estensione.
+    if ct not in _ALLOWED_LOGO_MIME:
+        name = (file.filename or "").lower()
+        if name.endswith(".png"):
+            ct = "image/png"
+        elif name.endswith((".jpg", ".jpeg")):
+            ct = "image/jpeg"
+        elif name.endswith(".webp"):
+            ct = "image/webp"
+        elif name.endswith(".svg"):
+            ct = "image/svg+xml"
     if ct not in _ALLOWED_LOGO_MIME:
         raise HTTPException(status_code=415, detail="unsupported_media_type")
     data = await file.read()
@@ -401,7 +419,17 @@ async def upload_my_kyc_document(
     dt = (doc_type or "altro").strip().lower()
     if dt not in _KYC_DOC_TYPES:
         raise HTTPException(400, detail="invalid_doc_type")
-    ct = (file.content_type or "").lower()
+    ct = (file.content_type or "").lower().split(";")[0].strip()
+    if ct not in _ALLOWED_KYC_MIME:
+        name = (file.filename or "").lower()
+        if name.endswith(".pdf"):
+            ct = "application/pdf"
+        elif name.endswith(".png"):
+            ct = "image/png"
+        elif name.endswith((".jpg", ".jpeg")):
+            ct = "image/jpeg"
+        elif name.endswith(".webp"):
+            ct = "image/webp"
     if ct not in _ALLOWED_KYC_MIME:
         raise HTTPException(415, detail="unsupported_media_type")
     data = await file.read()

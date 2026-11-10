@@ -12,7 +12,21 @@ const AuthContext = createContext(null);
 export function formatApiErrorDetail(detail) {
   // Default IT — avoid opaque English fallback that hid real API codes.
   if (detail == null) return "Operazione non riuscita. Riprova.";
-  if (typeof detail === "string") return detail;
+  if (typeof detail === "string") {
+    if (detail === "unsupported_media_type") {
+      return "Formato file non supportato. Usa PNG, JPG, WebP, SVG (logo) o PDF/PNG/JPG (documenti).";
+    }
+    if (detail === "file_too_large" || detail === "file_invalid") {
+      return "File troppo grande o vuoto (logo max 2 MB, documenti max 8 MB).";
+    }
+    if (detail === "storage_upload_failed") {
+      return "Archiviazione non disponibile. Riprova tra un minuto.";
+    }
+    if (detail === "csrf_failed") {
+      return "Sessione di sicurezza scaduta. Ricarica la pagina e riprova.";
+    }
+    return detail;
+  }
   if (Array.isArray(detail))
     return (
       detail
@@ -22,8 +36,17 @@ export function formatApiErrorDetail(detail) {
     );
   if (detail && typeof detail === "object") {
     if (typeof detail.message === "string" && detail.message.trim()) return detail.message;
+    if (typeof detail.hint === "string" && detail.hint.trim() && detail.error) {
+      return `${detail.hint}`;
+    }
     if (typeof detail.msg === "string" && detail.msg.trim()) return detail.msg;
-    if (detail.error === "csrf_failed") return "csrf_failed";
+    if (detail.error === "csrf_failed") {
+      return "Sessione di sicurezza scaduta. Ricarica la pagina e riprova.";
+    }
+    if (detail.error === "logo_required") {
+      return detail.hint || "Carica il logo oppure indica il sito web dell'agenzia.";
+    }
+    if (typeof detail.error === "string" && detail.error.trim()) return detail.error;
     if (typeof detail.code === "string" && detail.code.trim()) return detail.code;
   }
   try {

@@ -117,6 +117,20 @@ api.interceptors.request.use((config) => {
   config.headers["Accept-Language"] = i18n.language || "it";
   // Always send cookies (for httpOnly auth cookies)
   config.withCredentials = true;
+  // FormData: leave Content-Type unset so the browser sets multipart boundary.
+  // A stale application/json header breaks logo/KYC uploads.
+  try {
+    if (typeof FormData !== "undefined" && config.data instanceof FormData) {
+      if (config.headers && typeof config.headers.delete === "function") {
+        config.headers.delete("Content-Type");
+      } else if (config.headers) {
+        delete config.headers["Content-Type"];
+        delete config.headers["content-type"];
+      }
+    }
+  } catch {
+    /* ignore */
+  }
   // CSRF double-submit: sessionStorage mirror (cross-site) → document.cookie fallback
   try {
     const method = (config.method || "get").toUpperCase();

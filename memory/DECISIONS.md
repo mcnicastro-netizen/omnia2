@@ -7,6 +7,14 @@ Registro di tutte le decisioni di business e tecniche prese durante il progetto.
 
 ## Decisioni prese
 
+### D-158 — Registrazione B2B: logo vs sito + upload onesto + rientro sessione · 10-Nov-2026
+- **Contesto**: Dogfood Nicastro — giornata persa: logo obbligatorio anche con sito già online; upload logo/visura/CI sembravano fallire (preview `/api/media` su host Vercel); login impossibile perché B2B non sceglie password fino a Ops Attiva.
+- **Decisione**:
+  1. **Logo file opzionale** se `contact.website` o `signup_existing_domain` sono presenti; altrimenti resta richiesto.
+  2. Upload: preview **blob locale**; `resolveMediaUrl` se serve; MIME sniff da filename; errori CSRF/415/413 in italiano; FormData senza `Content-Type` forzato.
+  3. Register B2B invia email `agency_onboarding_resume` (link reset 48h) per rientrare in onboarding; login gestionale spiega «Password dimenticata?».
+- **Stato**: ✅ in codice (PR fix-reg-upload-logo-optional).
+
 ### D-157 — Flusso gestionale B2B (piano → paga → KYC → API=password) · 10-Nov-2026
 - **Contesto**: Founder conferma flusso simile agli altri gestionali: pacchetto → form (logo + CI + visura) → pagamento Stripe prima di Ops → Super Admin verifica → chiave API = password iniziale; collaboratori stessa logica; tetti 3/10/∞.
 - **Decisione**:
@@ -14,6 +22,7 @@ Registro di tutte le decisioni di business e tecniche prese durante il progetto.
   2. Onboarding: **logo obbligatorio**; waiting: upload visura+CI + checkout Stripe (anche se self-serve OFF, se `activation_status=pending`).
   3. Ops Attiva richiede KYC verified + pagamento; emette API key, la setta come `password_hash`, email `agency_credentials` (plaintext una volta).
   4. Invite nuovi membri: emette credential + email; enforce `max_agents` del piano.
+- **Nota**: D-158 ammorbidisce il punto logo se c’è già il sito web.
 - **Stato**: ✅ in codice (stesso PR D-156/D-157).
 
 ### D-156 — Identificazione clientela B2B in cabina + onboarding onesto · 10-Nov-2026

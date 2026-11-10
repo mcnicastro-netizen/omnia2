@@ -188,10 +188,11 @@ async def register(req: RegisterRequest, request: Request, response: Response,
     except Exception:
         pass
 
-    # Welcome solo per B2C/student. B2B: email dopo onboarding (agency_pending) + CRM a Ops.
+    from shared.public_base import get_public_base_url
+    frontend = get_public_base_url()
+
+    # Welcome solo per B2C/student. B2B: niente «Benvenuto» prematuro.
     if not agency_intent:
-        from shared.public_base import get_public_base_url
-        frontend = get_public_base_url()
         try:
             await send_email(
                 to=email,
@@ -201,6 +202,33 @@ async def register(req: RegisterRequest, request: Request, response: Response,
             )
         except Exception as e:
             logger.warning("Welcome email failed: %s", e)
+    else:
+        # D-158 — B2B non sceglie password: se la sessione cade a metà onboarding
+        # deve poter rientrare via link (reset) prima della API key Ops.
+        try:
+            token = secrets.token_urlsafe(32)
+            expires_at = datetime.now(timezone.utc) + timedelta(hours=48)
+            await db.password_reset_tokens.insert_one({
+                "token": token,
+                "user_id": user.id,
+                "expires_at": expires_at,
+                "used": False,
+                "purpose": "agency_onboarding_resume",
+                "created_at": datetime.now(timezone.utc).isoformat(),
+            })
+            resume_url = f"{frontend}/{lang}/reset-password?token={token}&next=/{lang}/app/onboarding"
+            await send_email(
+                to=email,
+                template="agency_onboarding_resume",
+                lang=lang,
+                variables={
+                    "name": user.name,
+                    "resume_url": resume_url,
+                    "login_url": f"{frontend}/{lang}/login?from=app",
+                },
+            )
+        except Exception as e:
+            logger.warning("Agency onboarding resume email failed: %s", e)
 
     return _public(doc)
 

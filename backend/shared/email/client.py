@@ -66,6 +66,11 @@ SUBJECTS = {
         "en": "Request received — {{agency_name}} under review",
         "es": "Solicitud recibida — {{agency_name}} en verificación",
     },
+    "agency_onboarding_resume": {
+        "it": "OMNIA — continua la registrazione agenzia",
+        "en": "OMNIA — continue agency registration",
+        "es": "OMNIA — continúa el registro de agencia",
+    },
     "agency_credentials": {
         "it": "OMNIA attivo — chiave di accesso per {{agency_name}}",
         "en": "OMNIA active — access key for {{agency_name}}",
