@@ -1,3 +1,10 @@
+## 2026-11-10 sera — chiusura giornata + ripresa 11-Nov
+
+- Docs: Cap.01 v1.7 (registrazione B2B / sala d’attesa) · HAL Cap.01 + Cap.00 ponte D-153…D-158
+- `RIPRENDI_2026-11-11.md` · `NEXT_SESSION.md` aggiornati
+- Chiuse PR obsolete conflittuali #148 / #155 / #156
+- Prod: tenant `nicastro-immobiliare` ancora **pending** (non wipe serale)
+
 ## 2026-11-10 — D-158 Registrazione: logo vs sito + upload + rientro
 
 - Logo file **opzionale** se website/dominio già indicato

@@ -267,6 +267,7 @@ Prima di dichiarare il cold start "attivo", eseguire manualmente queste 5 query 
 
 | Data | Versione | Note |
 |------|:-:|------|
+| 10-Nov-2026 | **v0.56-d158-reg-b2b** | Cap.01 registrazione gestionale D-157/D-158 (piano, KYC, API=password, logo vs sito, resume login). Cap.00 ponte D-153…D-158. `RIPRENDI_2026-11-11` · NEXT_SESSION. Reindex post-merge. |
 | 09-Nov-2026 | **v0.55-d148-paperless** | D-148 / A-040: Perché OMNIA 4° tratto = documenti digitali. HAL `api.www-vetrina-landing` + Cap.00. Reindex post-merge. |
 | 06-Nov-2026 | **v0.54-d147-kling-30cr** | Cap.23 listino Kling **D-147** 30 cr. Coda #93–#96 merged. Diario 06-Nov. Reindex post-merge. |
 | 06-Nov-2026 | **v0.53-d146-www-vetrina** | Cap.00 `api.www-vetrina-landing` + Cap.01 §1.1 www. D-146 nav/scroll/CTA no Cerca casa. CHANGELOG/NEXT/diario. Reindex post-merge. |
