@@ -38,6 +38,7 @@ from apps.immoweb.cron import router as cron_router
 from apps.immoweb.al_agent import router as al_agent_router
 from apps.immoweb.al_legal.router import router as al_legal_router
 from apps.immoweb.founder_ops import router as founder_ops_router
+from apps.immoweb.founder_bridge import router as founder_bridge_router
 from apps.immoweb.virtual_staging import router as virtual_staging_router
 from apps.immoweb.fascicolo import router as fascicolo_router
 from apps.immoweb.mls import router as mls_router
@@ -91,6 +92,7 @@ router.include_router(cron_router)
 router.include_router(al_agent_router)
 router.include_router(al_legal_router)
 router.include_router(founder_ops_router)
+router.include_router(founder_bridge_router)
 router.include_router(virtual_staging_router)
 router.include_router(fascicolo_router)
 router.include_router(mls_router)

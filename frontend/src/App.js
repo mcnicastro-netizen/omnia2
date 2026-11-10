@@ -62,7 +62,16 @@ const SocialPublisherPage = lazy(() => import("@/apps/immoweb/pages/SocialPublis
 const HalKnowledgePage = lazy(() => import("@/apps/immoweb/pages/HalKnowledgePage"));
 const MlsPage = lazy(() => import("@/apps/immoweb/pages/MlsPage"));
 const BrandLabPage = lazy(() => import("@/apps/immoweb/pages/BrandLabPage"));
-const FounderOpsPage = lazy(() => import("@/apps/immoweb/pages/FounderOpsPage"));
+const FounderBridgeShell = lazy(() => import("@/apps/immoweb/founder/FounderBridgeShell"));
+const BridgeHomePage = lazy(() => import("@/apps/immoweb/founder/pages/BridgeHomePage"));
+const BridgeClientsPage = lazy(() => import("@/apps/immoweb/founder/pages/BridgeClientsPage"));
+const BridgeTenantDetailPage = lazy(() => import("@/apps/immoweb/founder/pages/BridgeTenantDetailPage"));
+const BridgeSuppliersPage = lazy(() => import("@/apps/immoweb/founder/pages/BridgeSuppliersPage"));
+const BridgeApisPage = lazy(() => import("@/apps/immoweb/founder/pages/BridgeApisPage"));
+const BridgeCatalogPage = lazy(() => import("@/apps/immoweb/founder/pages/BridgeCatalogPage"));
+const BridgeFinancePage = lazy(() => import("@/apps/immoweb/founder/pages/BridgeFinancePage"));
+const BridgeContentPage = lazy(() => import("@/apps/immoweb/founder/pages/BridgeContentPage"));
+const BridgePlatformPage = lazy(() => import("@/apps/immoweb/founder/pages/BridgePlatformPage"));
 const FounderLegalOpsPage = lazy(() => import("@/apps/immoweb/pages/FounderLegalOpsPage"));
 const AnalyticsPage = lazy(() => import("@/apps/immoweb/pages/AnalyticsPage"));
 const AcademyApp = lazy(() => import("@/apps/academy/AcademyApp"));
@@ -353,15 +362,25 @@ function App() {
                       </ProtectedRoute>
                     }
                   />
-                  {/* Founder Ops — costi/consumi (super_admin only) */}
+                  {/* Cabina di regia Super Admin */}
                   <Route
                     path="app/ops"
                     element={
                       <ProtectedRoute allowedRoles={["super_admin"]}>
-                        <FounderOpsPage />
+                        <FounderBridgeShell />
                       </ProtectedRoute>
                     }
-                  />
+                  >
+                    <Route index element={<BridgeHomePage />} />
+                    <Route path="clienti" element={<BridgeClientsPage />} />
+                    <Route path="clienti/:agencyId" element={<BridgeTenantDetailPage />} />
+                    <Route path="fornitori" element={<BridgeSuppliersPage />} />
+                    <Route path="api" element={<BridgeApisPage />} />
+                    <Route path="listino" element={<BridgeCatalogPage />} />
+                    <Route path="finanze" element={<BridgeFinancePage />} />
+                    <Route path="contenuti" element={<BridgeContentPage />} />
+                    <Route path="piattaforma" element={<BridgePlatformPage />} />
+                  </Route>
                   <Route
                     path="app/ops/legal"
                     element={
