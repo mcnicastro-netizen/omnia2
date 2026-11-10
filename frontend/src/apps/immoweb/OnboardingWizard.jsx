@@ -2,10 +2,12 @@ import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { api } from "../../shared/lib/api";
-import { formatApiErrorDetail } from "../../shared/lib/auth";
+import { useAuth, formatApiErrorDetail } from "../../shared/lib/auth";
+import { validateItalianVat, validateFiscalCodeSoft } from "../../shared/lib/italianFiscal";
 import Brand from "../../shared/components/Brand";
 import OmniaLogo from "../../shared/components/OmniaLogo";
 import LanguageSwitcher from "../../shared/components/LanguageSwitcher";
+import AddressAutocomplete from "../immocloud/components/AddressAutocomplete";
 
 const STEPS = ["identity", "fiscal", "branding", "done"];
 
@@ -13,9 +15,12 @@ export default function OnboardingWizard() {
   const { t, i18n } = useTranslation();
   const lang = (i18n.language || "it").slice(0, 2);
   const nav = useNavigate();
+  const { refresh } = useAuth();
   const [step, setStep] = useState(0);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
+  const [vatHint, setVatHint] = useState("");
+  const [cfHint, setCfHint] = useState("");
 
   const [form, setForm] = useState({
     display_name: "",
@@ -54,17 +59,56 @@ export default function OnboardingWizard() {
     }
   };
 
+  const onAddressSelect = (rec) => {
+    if (!rec) return;
+    setForm((prev) => ({
+      ...prev,
+      address: {
+        ...prev.address,
+        street: rec.normalized || prev.address.street,
+        city: rec.comune || prev.address.city,
+        province: (rec.provincia_sigla || prev.address.province || "").toUpperCase().slice(0, 2),
+        postal_code: rec.cap || prev.address.postal_code,
+        country: "IT",
+      },
+    }));
+  };
+
   const canContinue = () => {
     if (step === 0) return form.display_name.trim().length >= 2;
     if (step === 1) return form.fiscal.legal_name.trim().length >= 2;
     return true;
   };
 
+  const validateFiscalStep = () => {
+    setVatHint("");
+    setCfHint("");
+    const vat = validateItalianVat(form.fiscal.vat_number);
+    if (!vat.ok) {
+      setVatHint(t("onboarding.vat_soft_error"));
+      return false;
+    }
+    const cf = validateFiscalCodeSoft(form.fiscal.fiscal_code);
+    if (!cf.ok) {
+      setCfHint(t("onboarding.cf_soft_error"));
+      return false;
+    }
+    return true;
+  };
+
+  const goNext = () => {
+    if (step === 1 && !validateFiscalStep()) return;
+    setStep(step + 1);
+  };
+
   const submitFinal = async () => {
     setError("");
+    if (!validateFiscalStep()) {
+      setStep(1);
+      return;
+    }
     setSubmitting(true);
     try {
-      // Strip empty strings from optional groups so Pydantic Optional[EmailStr] etc. accept them
       const cleanGroup = (obj) => {
         const out = {};
         for (const [k, v] of Object.entries(obj || {})) {
@@ -81,14 +125,18 @@ export default function OnboardingWizard() {
         branding: cleanGroup(form.branding),
       };
       await api.post("/app/agencies", payload);
-      // mark onboarding completed
-      await api.patch("/app/agencies/me", { onboarding_completed: true });
+      // Critico: refresh sessione → ruolo agency_admin (altrimenti dashboard = 403 FE)
+      if (typeof refresh === "function") {
+        await refresh();
+      }
       setStep(3);
-      setTimeout(() => nav(`/${lang}/app/dashboard`, { replace: true }), 1500);
+      setTimeout(() => nav(`/${lang}/app/dashboard`, { replace: true }), 1200);
     } catch (err) {
       const detail = err?.response?.data?.detail;
       if (detail === "agency_already_exists") {
         setError(t("onboarding.error_already_exists"));
+      } else if (err?.response?.status === 403) {
+        setError(t("onboarding.error_forbidden"));
       } else {
         setError(formatApiErrorDetail(detail) || t("common.error"));
       }
@@ -122,7 +170,7 @@ export default function OnboardingWizard() {
 
       <main className="max-w-3xl mx-auto px-5 sm:px-8 py-10 md:py-16">
         <p className="text-[10px] uppercase tracking-[0.3em] text-stone-500 mb-3">
-          <Brand>ImmoWeb · Onboarding</Brand>
+          <Brand>{t("onboarding.eyebrow")}</Brand>
         </p>
         <h1
           className="text-3xl sm:text-4xl md:text-5xl tracking-tight mb-3"
@@ -132,7 +180,6 @@ export default function OnboardingWizard() {
         </h1>
         <p className="text-stone-600 mb-10 max-w-xl">{t("onboarding.subtitle")}</p>
 
-        {/* Progress */}
         <ol className="flex items-center gap-2 mb-10 text-xs uppercase tracking-widest text-stone-500">
           {STEPS.map((s, i) => (
             <li key={s} className="flex items-center gap-2" data-testid={`step-indicator-${s}`}>
@@ -153,7 +200,6 @@ export default function OnboardingWizard() {
           ))}
         </ol>
 
-        {/* STEP 0 — Identity */}
         {step === 0 && (
           <div data-testid="step-identity" className="space-y-5">
             <Field label={t("onboarding.display_name")} hint={t("onboarding.display_name_hint")} required>
@@ -168,9 +214,11 @@ export default function OnboardingWizard() {
           </div>
         )}
 
-        {/* STEP 1 — Fiscal */}
         {step === 1 && (
           <div data-testid="step-fiscal" className="space-y-5">
+            <p className="text-sm text-stone-600 bg-white border border-stone-200 rounded-md px-3 py-2">
+              {t("onboarding.data_honesty")}
+            </p>
             <Field label={t("onboarding.legal_name")} hint={t("onboarding.legal_name_hint")} required>
               <input
                 data-testid="onb-legal-name"
@@ -180,15 +228,16 @@ export default function OnboardingWizard() {
               />
             </Field>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Field label={t("onboarding.vat_number")}>
+              <Field label={t("onboarding.vat_number")} hint={vatHint || t("onboarding.vat_hint")}>
                 <input
                   data-testid="onb-vat"
                   value={form.fiscal.vat_number}
                   onChange={(e) => update("fiscal", "vat_number", e.target.value)}
                   className="form-input"
+                  placeholder="11 cifre"
                 />
               </Field>
-              <Field label={t("onboarding.fiscal_code")}>
+              <Field label={t("onboarding.fiscal_code")} hint={cfHint || undefined}>
                 <input
                   data-testid="onb-fiscal-code"
                   value={form.fiscal.fiscal_code}
@@ -214,12 +263,15 @@ export default function OnboardingWizard() {
               </Field>
             </div>
             <hr className="border-stone-200 my-2" />
-            <Field label={t("onboarding.address_street")}>
-              <input
-                data-testid="onb-street"
+            <Field label={t("onboarding.address_street")} hint={t("onboarding.address_hint")}>
+              <AddressAutocomplete
                 value={form.address.street}
-                onChange={(e) => update("address", "street", e.target.value)}
-                className="form-input"
+                onChange={(text) => update("address", "street", text)}
+                onSelect={onAddressSelect}
+                placeholder={t("onboarding.address_placeholder")}
+                testid="onb-street"
+                inputClassName="form-input"
+                className="w-full"
               />
             </Field>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -281,10 +333,9 @@ export default function OnboardingWizard() {
           </div>
         )}
 
-        {/* STEP 2 — Branding */}
         {step === 2 && (
           <div data-testid="step-branding" className="space-y-5">
-            <Field label={t("onboarding.logo_url")}>
+            <Field label={t("onboarding.logo_url")} hint={t("onboarding.logo_hint")}>
               <input
                 data-testid="onb-logo"
                 value={form.branding.logo_url}
@@ -293,12 +344,13 @@ export default function OnboardingWizard() {
                 placeholder="https://..."
               />
             </Field>
-            <Field label={t("onboarding.tagline")}>
+            <Field label={t("onboarding.tagline")} hint={t("onboarding.tagline_hint")}>
               <input
                 data-testid="onb-tagline"
                 value={form.branding.tagline}
                 onChange={(e) => update("branding", "tagline", e.target.value)}
                 className="form-input"
+                placeholder={t("onboarding.tagline_placeholder")}
               />
             </Field>
             <div className="grid grid-cols-2 gap-4">
@@ -336,7 +388,6 @@ export default function OnboardingWizard() {
               </Field>
             </div>
 
-            {/* Review summary */}
             <div className="mt-6 p-5 bg-white border border-stone-200 rounded-lg">
               <p className="text-xs uppercase tracking-widest text-stone-500 mb-3">
                 {t("onboarding.review_title")}
@@ -365,7 +416,6 @@ export default function OnboardingWizard() {
           </div>
         )}
 
-        {/* STEP 3 — Done */}
         {step === 3 && (
           <div data-testid="step-done" className="text-center py-12">
             <div className="text-5xl mb-4">✓</div>
@@ -385,7 +435,6 @@ export default function OnboardingWizard() {
           </p>
         )}
 
-        {/* Actions */}
         {step < 3 && (
           <div className="flex items-center justify-between mt-10 pt-6 border-t border-stone-200">
             <button
@@ -401,7 +450,7 @@ export default function OnboardingWizard() {
               <button
                 data-testid="onb-next-btn"
                 type="button"
-                onClick={() => setStep(step + 1)}
+                onClick={goNext}
                 disabled={!canContinue() || submitting}
                 className="px-6 py-3 bg-stone-900 text-stone-50 text-xs uppercase tracking-widest font-medium rounded-md hover:bg-stone-700 disabled:opacity-50 transition"
               >

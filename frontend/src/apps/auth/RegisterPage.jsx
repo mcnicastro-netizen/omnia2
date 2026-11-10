@@ -6,6 +6,7 @@ import LanguageSwitcher from "../../shared/components/LanguageSwitcher";
 import Brand from "../../shared/components/Brand";
 import OmniaLogo from "../../shared/components/OmniaLogo";
 import GoogleSignInButton from "../../shared/components/GoogleSignInButton";
+import PasswordField from "../../shared/components/PasswordField";
 
 const PREFERRED_PLAN_KEY = "omnia_preferred_plan";
 const ALLOWED_PLANS = new Set(["starter", "pro", "agency"]);
@@ -25,6 +26,7 @@ export default function RegisterPage() {
     existing_domain: "",
   });
   const [policyAccepted, setPolicyAccepted] = useState(false);
+  const [privacyAccepted, setPrivacyAccepted] = useState(false);
   const [error, setError] = useState("");
   const [dupEmail, setDupEmail] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -50,6 +52,10 @@ export default function RegisterPage() {
     e.preventDefault();
     setError("");
     setDupEmail(false);
+    if (!privacyAccepted) {
+      setError(t("auth.privacy_required_error"));
+      return;
+    }
     if (isAgencyRole && !policyAccepted) {
       setError(t("domain_vault.policy_required_error"));
       return;
@@ -93,6 +99,10 @@ export default function RegisterPage() {
 
   const onGoogle = async (credential) => {
     setError("");
+    if (!privacyAccepted) {
+      setError(t("auth.privacy_required_error"));
+      throw new Error("privacy");
+    }
     if (isAgencyRole && !policyAccepted) {
       setError(t("domain_vault.policy_required_error"));
       throw new Error("policy");
@@ -127,9 +137,10 @@ export default function RegisterPage() {
           className="w-full max-w-md bg-white border border-stone-300 p-8 md:p-10"
         >
           <p className="text-xs font-sans uppercase tracking-[0.3em] text-amber-700 mb-3">
-            <Brand>Join OMNIA</Brand>
+            <Brand>{t("auth.register_eyebrow")}</Brand>
           </p>
           <h1 className="text-3xl md:text-4xl tracking-tight mb-3">{t("auth.register_title")}</h1>
+          <p className="mb-6 font-sans text-sm text-stone-600">{t("auth.register_lead")}</p>
           {preferredPlan ? (
             <p
               data-testid="register-preferred-plan"
@@ -140,17 +151,17 @@ export default function RegisterPage() {
               })}
             </p>
           ) : (
-            <div className="mb-8" />
+            <div className="mb-4" />
           )}
 
-          {["name", "email", "password"].map((f) => (
+          {["name", "email"].map((f) => (
             <label key={f} className="block mb-5">
               <span className="block text-xs font-sans uppercase tracking-widest text-stone-500 mb-2">
                 {t(`auth.${f}`)}
               </span>
               <input
                 data-testid={`register-${f}`}
-                type={f === "email" ? "email" : f === "password" ? "password" : "text"}
+                type={f === "email" ? "email" : "text"}
                 required
                 value={form[f]}
                 onChange={set(f)}
@@ -158,6 +169,20 @@ export default function RegisterPage() {
               />
             </label>
           ))}
+          <label className="block mb-5">
+            <span className="block text-xs font-sans uppercase tracking-widest text-stone-500 mb-2">
+              {t("auth.password")}
+            </span>
+            <PasswordField
+              data-testid="register-password"
+              required
+              minLength={8}
+              value={form.password}
+              onChange={set("password")}
+              autoComplete="new-password"
+              className="w-full px-4 py-3 pr-12 border border-stone-300 bg-stone-50 font-sans text-base focus:outline-none focus:border-stone-900"
+            />
+          </label>
 
           <label className="block mb-6">
             <span className="block text-xs font-sans uppercase tracking-widest text-stone-500 mb-2">
@@ -178,6 +203,35 @@ export default function RegisterPage() {
                 {t("auth.acct_agency_hint")}
               </span>
             )}
+          </label>
+
+          <label
+            className="flex items-start gap-3 mb-6 cursor-pointer"
+            data-testid="register-privacy-label"
+          >
+            <input
+              type="checkbox"
+              data-testid="register-privacy-checkbox"
+              checked={privacyAccepted}
+              onChange={(e) => setPrivacyAccepted(e.target.checked)}
+              className="mt-1 w-4 h-4 accent-[#1F6B5C]"
+            />
+            <span className="text-xs font-sans text-stone-700 leading-relaxed">
+              <Trans
+                i18nKey="auth.privacy_checkbox"
+                components={{
+                  privacy: (
+                    <Link
+                      to={`/${lang}/privacy`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="underline text-[#0B1E3F] hover:text-[#1F6B5C]"
+                      data-testid="register-privacy-link"
+                    />
+                  ),
+                }}
+              />
+            </span>
           </label>
 
           {isAgencyRole && (

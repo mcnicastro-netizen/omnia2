@@ -94,6 +94,8 @@ async def create_agency(
         existing_domain=user.get("signup_existing_domain") or None,
     )
     doc = agency.model_dump()
+    # Wizard «Crea agenzia» = onboarding chiuso (evita PATCH /me prima del refresh sessione)
+    doc["onboarding_completed"] = True
     await db.agencies.insert_one(doc)
     await _attach_user_to_agency(db, user["id"], agency.id)
 
@@ -105,7 +107,9 @@ async def create_agency(
         )
 
     logger.info("Agency created: id=%s slug=%s owner=%s", agency.id, slug, user["email"])
-    return _public(doc)
+    # Rileggi dopo promote/attach così il client può allineare la sessione
+    fresh = await db.agencies.find_one({"id": agency.id}, {"_id": 0})
+    return _public(fresh or doc)
 
 
 # -------------------- GET MINE --------------------
