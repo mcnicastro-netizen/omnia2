@@ -7,6 +7,15 @@ Registro di tutte le decisioni di business e tecniche prese durante il progetto.
 
 ## Decisioni prese
 
+### D-155 — Cabina onda 2: poteri piattaforma (kill / impersonate / listino B2B / GDPR) · 10-Nov-2026
+- **Contesto**: Dopo D-154 la cabina leggeva archivi ma non poteva ancora: spegnere fornitori, entrare/uscire dal CRM tenant, editare piani B2B (+ Stripe), cancellare utenti/chiudere agenzie.
+- **Decisione**:
+  1. **Kill-switch fornitori**: Mongo `provider_flags` + `circuit.force_hold` (persiste al restart via lifespan); UI Fornitori kill/revive.
+  2. **Impersonation CRM**: `POST /bridge/impersonate` + `/exit` con stamp `ops_impersonation` (ripristino membership — allinea D-153); badge «Torna alla cabina» in AgencyShell.
+  3. **Listino B2B**: `PATCH /bridge/catalog/b2b/{phase}/{tier}` → `pricing_overrides` + sync Stripe lookup `{tier}_monthly|_yearly` best-effort.
+  4. **GDPR cabina**: `POST /bridge/users/{id}/erase` (confirm `CANCELLA_UTENTE`) e `POST /bridge/tenants/{id}/offboard` (confirm `CHIUDI_AGENZIA`, wipe+purge, erase membri opzionale).
+- **Stato**: ✅ in codice (PR cabina-onda2).
+
 ### D-154 — Cabina di regia Super Admin (non CRM tenant) · 10-Nov-2026
 - **Contesto**: Founder — `/app/ops` era telemetria costi + menu CRM fuori posto; servono archivi clienti/fornitori, API, listino, piattaforma.
 - **Decisione**:

@@ -161,6 +161,16 @@ export default function AgencyShell({ children, current = "dashboard", showBack 
     );
   }
 
+  const imp = user?.ops_impersonation;
+  const exitImpersonation = async () => {
+    try {
+      await api.post("/app/ops/bridge/impersonate/exit");
+      window.location.href = `/${lang}/app/ops`;
+    } catch {
+      nav(`/${lang}/app/ops`);
+    }
+  };
+
   return (
     <div
       data-testid="agency-shell"
@@ -196,7 +206,22 @@ export default function AgencyShell({ children, current = "dashboard", showBack 
               <Brand className="font-light text-stone-300">app</Brand>
             </span>
           </Link>
-          {user?.role === "super_admin" ? (
+          {user?.role === "super_admin" && imp ? (
+            <div className="mt-2 space-y-1" data-testid="impersonation-badge">
+              <p className="text-xs text-amber-300 truncate">
+                Vista CRM · {imp.agency_name || agency?.display_name || "agenzia"}
+              </p>
+              <button
+                type="button"
+                onClick={exitImpersonation}
+                className="text-[10px] uppercase tracking-widest text-[#C19A6B] hover:text-white underline"
+                data-testid="impersonation-exit"
+              >
+                Torna alla cabina
+              </button>
+            </div>
+          ) : null}
+          {user?.role === "super_admin" && !imp ? (
             <p className="mt-2 text-xs text-[#C19A6B] truncate" data-testid="agency-name">
               Founder · piattaforma
             </p>

@@ -1,3 +1,11 @@
+## 2026-11-10 — D-155 Cabina onda 2 (poteri piattaforma)
+
+- Kill-switch fornitori: `provider_flags` + circuit hold persistente (kill/revive UI)
+- Impersonation CRM: enter/exit con `ops_impersonation` + badge «Torna alla cabina»
+- Listino B2B: PATCH piani + override Mongo + sync Stripe lookup best-effort
+- GDPR cabina: erase utente B2C + offboard agenzia (wipe/purge ± erase membri)
+- Test: `backend/tests/test_cabina_onda2.py`
+
 ## 2026-11-10 — D-154 Cabina di regia Super Admin
 
 - Shell `/app/ops` dedicata: Ingresso, Clienti, Fornitori, API, Listino, Finanze, Contenuti, Piattaforma

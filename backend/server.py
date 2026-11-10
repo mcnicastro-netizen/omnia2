@@ -64,6 +64,14 @@ async def lifespan(app: FastAPI):
     _load_locales()
     await seed_admin()
     try:
+        from shared.ops.provider_flags import load_holds_into_circuit
+
+        n_hold = await load_holds_into_circuit()
+        if n_hold:
+            logger.warning("Restored %s provider kill-switches", n_hold)
+    except Exception as e:
+        logger.warning("provider kill-switch restore failed: %s", e)
+    try:
         from apps.immoweb.publishing import seed_publishing_catalog
         await seed_publishing_catalog()
     except Exception as e:

@@ -4,9 +4,12 @@ import { api } from "../../../../shared/lib/api";
 export default function BridgeCatalogPage() {
   const [data, setData] = useState(null);
   const [err, setErr] = useState(null);
-  const [editKey, setEditKey] = useState(null);
+  const [edit, setEdit] = useState(null); // { kind:'b2c'|'b2b', ... }
   const [price, setPrice] = useState("");
+  const [yearly, setYearly] = useState("");
+  const [credits, setCredits] = useState("");
   const [note, setNote] = useState("");
+  const [syncStripe, setSyncStripe] = useState(true);
   const [msg, setMsg] = useState(null);
 
   const load = async () => {
@@ -22,21 +25,58 @@ export default function BridgeCatalogPage() {
     load();
   }, []);
 
+  const openB2c = (p) => {
+    setEdit({ kind: "b2c", key: p.key });
+    setPrice(String(p.price_eur_effective));
+    setNote(p.override_note || "");
+  };
+
+  const openB2b = (p) => {
+    setEdit({ kind: "b2b", phase: p.phase, tier: p.tier, name: p.name });
+    setPrice(String(p.price_monthly));
+    setYearly(String(p.price_yearly));
+    setCredits(String(p.credits_included_monthly));
+    setNote(p.override_note || "");
+    setSyncStripe(true);
+  };
+
   const save = async () => {
-    if (!editKey) return;
-    const n = Number(price);
-    if (!(n > 0)) {
-      setMsg("Prezzo non valido.");
-      return;
-    }
+    if (!edit) return;
     setMsg(null);
     try {
-      await api.patch(`/app/ops/bridge/catalog/b2c/${editKey}`, {
-        price_eur: n,
-        note,
-      });
-      setMsg(`Aggiornato ${editKey}`);
-      setEditKey(null);
+      if (edit.kind === "b2c") {
+        const n = Number(price);
+        if (!(n > 0)) {
+          setMsg("Prezzo non valido.");
+          return;
+        }
+        await api.patch(`/app/ops/bridge/catalog/b2c/${edit.key}`, {
+          price_eur: n,
+          note,
+        });
+        setMsg(`B2C aggiornato · ${edit.key}`);
+      } else {
+        const pm = Number(price);
+        const py = Number(yearly);
+        const cr = Number(credits);
+        if (!(pm > 0) || !(py > 0)) {
+          setMsg("Prezzi B2B non validi.");
+          return;
+        }
+        const r = await api.patch(`/app/ops/bridge/catalog/b2b/${edit.phase}/${edit.tier}`, {
+          price_monthly: pm,
+          price_yearly: py,
+          credits_included_monthly: Number.isFinite(cr) ? cr : undefined,
+          note,
+          sync_stripe: syncStripe,
+        });
+        const st = r.data?.stripe || {};
+        setMsg(
+          `B2B ${edit.tier} aggiornato` +
+            (st.ok ? " · Stripe sync ok" : st.skipped ? " · Stripe saltato" : ` · Stripe: ${st.error || "ko"}`)
+        );
+      }
+      setEdit(null);
       await load();
     } catch {
       setMsg("Salvataggio non riuscito.");
@@ -53,13 +93,13 @@ export default function BridgeCatalogPage() {
           Listino
         </h1>
         <p className="mt-2 text-sm text-stone-600 max-w-2xl">
-          Piani B2B (SoT codice/Stripe) e prodotti B2C. Puoi correggere i prezzi B2C con override
-          auditati — i piani abbonamento restano allineati a Stripe lookup_key.
+          Override auditati B2B e B2C. Per i piani abbonamento puoi sincronizzare i lookup Stripe
+          tipizzati come tier_monthly / tier_yearly.
         </p>
       </header>
 
       {err ? <p className="text-sm text-red-700">{err}</p> : null}
-      {msg ? <p className="text-sm text-[#0B1E3F]">{msg}</p> : null}
+      {msg ? <p className="text-sm text-[#0B1E3F]" data-testid="bridge-catalog-msg">{msg}</p> : null}
 
       {!data ? (
         !err && <p className="text-sm text-stone-500">Caricamento…</p>
@@ -69,14 +109,14 @@ export default function BridgeCatalogPage() {
             <h2 className="text-xs uppercase tracking-widest text-stone-500 mb-3">
               B2B · fase Founders
             </h2>
-            <PlanGrid plans={data.b2b_founders || []} />
+            <PlanGrid plans={data.b2b_founders || []} onEdit={openB2b} />
           </section>
 
           <section>
             <h2 className="text-xs uppercase tracking-widest text-stone-500 mb-3">
               B2B · fase Standard
             </h2>
-            <PlanGrid plans={data.b2b_standard || []} />
+            <PlanGrid plans={data.b2b_standard || []} onEdit={openB2b} />
           </section>
 
           <section>
@@ -90,24 +130,6 @@ export default function BridgeCatalogPage() {
                   <p className="text-stone-600">€ {Number(p.price_eur).toFixed(2)}</p>
                 </div>
               ))}
-            </div>
-          </section>
-
-          <section>
-            <h2 className="text-xs uppercase tracking-widest text-stone-500 mb-3">
-              Consumi crediti (B2B)
-            </h2>
-            <div className="bg-white border border-stone-200 rounded-lg overflow-hidden">
-              <table className="w-full text-sm">
-                <tbody>
-                  {Object.entries(data.credit_costs || {}).map(([k, v]) => (
-                    <tr key={k} className="border-b border-stone-100 last:border-0">
-                      <td className="px-3 py-2 font-mono text-xs">{k}</td>
-                      <td className="px-3 py-2 text-right">{v} cr</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
             </div>
           </section>
 
@@ -136,11 +158,7 @@ export default function BridgeCatalogPage() {
                     </span>
                     <button
                       type="button"
-                      onClick={() => {
-                        setEditKey(p.key);
-                        setPrice(String(p.price_eur_effective));
-                        setNote(p.override_note || "");
-                      }}
+                      onClick={() => openB2c(p)}
                       className="text-[10px] uppercase tracking-widest border border-stone-300 rounded px-2 py-1 hover:bg-stone-50"
                     >
                       Modifica
@@ -151,18 +169,20 @@ export default function BridgeCatalogPage() {
             </ul>
           </section>
 
-          {editKey ? (
+          {edit ? (
             <div
               className="fixed inset-0 z-50 bg-stone-900/40 flex items-center justify-center p-4"
               data-testid="bridge-price-modal"
             >
               <div className="bg-white rounded-lg max-w-md w-full p-5 space-y-4 shadow-xl">
                 <h3 className="text-lg text-[#0B1E3F]" style={{ fontFamily: "'Fraunces', Georgia, serif" }}>
-                  Override B2C
+                  {edit.kind === "b2c" ? "Override B2C" : `Override B2B · ${edit.name || edit.tier}`}
                 </h3>
-                <p className="text-xs font-mono text-stone-500">{editKey}</p>
+                <p className="text-xs font-mono text-stone-500">
+                  {edit.kind === "b2c" ? edit.key : `${edit.phase}/${edit.tier}`}
+                </p>
                 <label className="block text-xs uppercase tracking-widest text-stone-500">
-                  Prezzo €
+                  {edit.kind === "b2c" ? "Prezzo €" : "Mensile €"}
                   <input
                     type="number"
                     step="0.01"
@@ -172,6 +192,39 @@ export default function BridgeCatalogPage() {
                     className="mt-1 w-full border border-stone-300 rounded px-3 py-2 text-sm"
                   />
                 </label>
+                {edit.kind === "b2b" ? (
+                  <>
+                    <label className="block text-xs uppercase tracking-widest text-stone-500">
+                      Annuale €
+                      <input
+                        type="number"
+                        step="0.01"
+                        min="0.01"
+                        value={yearly}
+                        onChange={(e) => setYearly(e.target.value)}
+                        className="mt-1 w-full border border-stone-300 rounded px-3 py-2 text-sm"
+                      />
+                    </label>
+                    <label className="block text-xs uppercase tracking-widest text-stone-500">
+                      Crediti / mese
+                      <input
+                        type="number"
+                        min="0"
+                        value={credits}
+                        onChange={(e) => setCredits(e.target.value)}
+                        className="mt-1 w-full border border-stone-300 rounded px-3 py-2 text-sm"
+                      />
+                    </label>
+                    <label className="flex items-center gap-2 text-xs text-stone-600">
+                      <input
+                        type="checkbox"
+                        checked={syncStripe}
+                        onChange={(e) => setSyncStripe(e.target.checked)}
+                      />
+                      Sincronizza Stripe (lookup {edit.tier}_monthly / _yearly)
+                    </label>
+                  </>
+                ) : null}
                 <label className="block text-xs uppercase tracking-widest text-stone-500">
                   Nota
                   <input
@@ -183,7 +236,7 @@ export default function BridgeCatalogPage() {
                 <div className="flex justify-end gap-2">
                   <button
                     type="button"
-                    onClick={() => setEditKey(null)}
+                    onClick={() => setEdit(null)}
                     className="text-xs uppercase tracking-widest px-3 py-2"
                   >
                     Annulla
@@ -209,7 +262,7 @@ export default function BridgeCatalogPage() {
   );
 }
 
-function PlanGrid({ plans }) {
+function PlanGrid({ plans, onEdit }) {
   return (
     <div className="grid md:grid-cols-3 gap-3">
       {plans.map((p) => (
@@ -222,6 +275,17 @@ function PlanGrid({ plans }) {
             € {p.price_monthly}/mese · € {p.price_yearly}/anno
           </p>
           <p className="text-xs text-stone-500 mt-1">{p.credits_included_monthly} crediti/mese</p>
+          {p.override ? (
+            <p className="text-[10px] uppercase tracking-widest text-amber-700 mt-2">override</p>
+          ) : null}
+          <button
+            type="button"
+            onClick={() => onEdit(p)}
+            className="mt-3 text-[10px] uppercase tracking-widest border border-stone-300 rounded px-2 py-1 hover:bg-stone-50"
+            data-testid={`bridge-edit-b2b-${p.phase}-${p.tier}`}
+          >
+            Modifica
+          </button>
         </div>
       ))}
     </div>

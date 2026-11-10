@@ -50,6 +50,46 @@ export default function BridgeTenantDetailPage() {
     }
   };
 
+  const openAsCrm = async () => {
+    if (
+      !window.confirm(
+        "Aprire il gestionale di questa agenzia?\nEntri in modalità vista esplicita; poi «Torna alla cabina»."
+      )
+    ) {
+      return;
+    }
+    setActionMsg(null);
+    try {
+      await api.post("/app/ops/bridge/impersonate", { agency_id: agencyId });
+      window.location.href = `/${lang}/app/dashboard`;
+    } catch (e) {
+      setActionMsg(e?.response?.data?.detail || "Impersonation non riuscita");
+    }
+  };
+
+  const offboard = async () => {
+    const conf = window.prompt(
+      'Chiudere agenzia (wipe + purge)? Digita CHIUDI_AGENZIA per confermare.'
+    );
+    if (conf !== "CHIUDI_AGENZIA") return;
+    const eraseMembers = window.confirm(
+      "Cancellare anche gli account membri (GDPR erase)? OK = sì, Annulla = solo chiusura tenant."
+    );
+    setActionMsg(null);
+    try {
+      const r = await api.post(`/app/ops/bridge/tenants/${agencyId}/offboard`, {
+        confirm: "CHIUDI_AGENZIA",
+        erase_members: eraseMembers,
+      });
+      setActionMsg(
+        `Chiusa. Membri anonimizzati: ${(r.data?.members_erased || []).length}`
+      );
+      window.location.href = `${base}/clienti`;
+    } catch (e) {
+      setActionMsg(e?.response?.data?.detail?.error || "Offboard fallito");
+    }
+  };
+
   if (busy && !data) {
     return <p className="text-sm text-stone-500">Caricamento…</p>;
   }
@@ -97,12 +137,52 @@ export default function BridgeTenantDetailPage() {
             Attiva
           </button>
         ) : null}
+        <button
+          type="button"
+          data-testid="bridge-impersonate"
+          onClick={openAsCrm}
+          className="text-xs uppercase tracking-widest px-4 py-2 rounded bg-[#0B1E3F] text-white"
+        >
+          Apri come CRM
+        </button>
         <Link
           to={`${base}/api?q=${encodeURIComponent(a.slug || a.id)}`}
           className="text-xs uppercase tracking-widest px-4 py-2 rounded border border-stone-300 bg-white"
         >
           API di questa agenzia
         </Link>
+        {owner?.id ? (
+          <button
+            type="button"
+            data-testid="bridge-erase-owner"
+            onClick={async () => {
+              const conf = window.prompt(
+                `Anonimizzare titolare ${owner.email}? Digita CANCELLA_UTENTE`
+              );
+              if (conf !== "CANCELLA_UTENTE") return;
+              try {
+                await api.post(`/app/ops/bridge/users/${owner.id}/erase`, {
+                  confirm: "CANCELLA_UTENTE",
+                });
+                setActionMsg("Titolare anonimizzato.");
+                await load();
+              } catch (e) {
+                setActionMsg(e?.response?.data?.detail || "Erase fallito");
+              }
+            }}
+            className="text-xs uppercase tracking-widest px-4 py-2 rounded border border-rose-300 text-rose-800 bg-white"
+          >
+            GDPR titolare
+          </button>
+        ) : null}
+        <button
+          type="button"
+          data-testid="bridge-offboard"
+          onClick={offboard}
+          className="text-xs uppercase tracking-widest px-4 py-2 rounded border border-rose-400 text-rose-900 bg-rose-50"
+        >
+          Chiudi agenzia
+        </button>
       </div>
       {actionMsg ? <p className="text-sm text-[#0B1E3F]">{actionMsg}</p> : null}
 

@@ -23,6 +23,8 @@ class _BreakerState:
 
 
 _states: Dict[str, _BreakerState] = {}
+# Kill-switch manuale (Cabina): resta aperto finché clear_hold — non auto-recovery
+_manual_holds: Dict[str, str] = {}
 
 
 @dataclass
@@ -38,7 +40,37 @@ def _state(name: str) -> _BreakerState:
     return _states[name]
 
 
+def force_hold(name: str, reason: str = "ops_kill_switch") -> None:
+    n = (name or "").strip()
+    if not n:
+        return
+    _manual_holds[n] = (reason or "ops_kill_switch")[:120]
+    st = _state(n)
+    st.failures = max(st.failures, 5)
+    st.opened_at = time.monotonic()
+    st.last_error = _manual_holds[n]
+    logger.warning("circuit HOLD name=%s reason=%s", n, _manual_holds[n])
+
+
+def clear_hold(name: str) -> None:
+    n = (name or "").strip()
+    if not n:
+        return
+    _manual_holds.pop(n, None)
+    st = _state(n)
+    st.failures = 0
+    st.opened_at = 0.0
+    st.last_error = ""
+    logger.warning("circuit HOLD cleared name=%s", n)
+
+
+def is_held(name: str) -> bool:
+    return (name or "").strip() in _manual_holds
+
+
 def circuit_open(name: str) -> bool:
+    if is_held(name):
+        return True
     st = _state(name)
     if st.failures <= 0:
         return False
@@ -50,6 +82,8 @@ def circuit_open(name: str) -> bool:
 
 
 def record_success(name: str) -> None:
+    if is_held(name):
+        return  # hold manuale: non chiudere automaticamente
     st = _state(name)
     st.failures = 0
     st.opened_at = 0.0
@@ -74,6 +108,11 @@ async def call_with_circuit(
     recovery_seconds: float = 60.0,
 ) -> T:
     """Run awaitable under circuit. If open, return fallback or raise soft error."""
+    if is_held(name):
+        logger.info("circuit hold short-circuit name=%s", name)
+        if fallback is not None:
+            return fallback
+        raise RuntimeError(f"circuit_held:{name}")
     st = _state(name)
     if st.failures >= threshold:
         elapsed = time.monotonic() - (st.opened_at or 0.0)
@@ -96,10 +135,14 @@ async def call_with_circuit(
 
 def snapshot() -> Dict[str, Any]:
     out = {}
-    for k, st in _states.items():
+    names = set(_states.keys()) | set(_manual_holds.keys())
+    for k in names:
+        st = _state(k)
         out[k] = {
             "failures": st.failures,
             "open": circuit_open(k),
+            "held": is_held(k),
+            "hold_reason": _manual_holds.get(k),
             "last_error": st.last_error,
         }
     return out
