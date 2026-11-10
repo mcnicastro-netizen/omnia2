@@ -41,7 +41,7 @@ def _strip(doc: dict) -> dict:
     return {k: v for k, v in doc.items() if k != "_id"}
 
 
-from shared.auth.tenant import arequire_agency as _require_agency
+from shared.auth.tenant import arequire_crm_agency as _require_agency
 
 
 _VALID_PROPERTY_TYPES = {

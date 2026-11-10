@@ -1,3 +1,12 @@
+## 2026-11-10 — Gate attivazione CRM (pending → Ops)
+
+- Nuove agenzie: `activation_status=pending` finché Founder Ops non attiva
+- `POST /app/ops/activate-agency` (sblocco + grant piano opzionale + email `agency_activated`)
+- FE: `/app/waiting-activation` · AgencyShell redirect · onboarding non apre più dashboard
+- Fix leak collaboratori: create forza `active_agency_id` sulla nuova agenzia
+- BE gate: dashboard / properties / clients / emit API key
+- Legacy senza campo = active (grandfather)
+
 ## 2026-11-10 — Register/onboarding dogfood UX + fix 403
 
 - Register: occhietto password · checkbox privacy · claim meno tecnico

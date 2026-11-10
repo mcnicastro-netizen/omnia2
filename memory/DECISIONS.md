@@ -7,6 +7,17 @@ Registro di tutte le decisioni di business e tecniche prese durante il progetto.
 
 ## Decisioni prese
 
+### D-152 — Gate attivazione CRM (pending → Ops) · 10-Nov-2026
+- **Data**: 10 Novembre 2026
+- **Contesto**: Dogfood Founder — dopo register + pochi dati onboarding si entrava già in dashboard gestionale (anche con KPI collaboratori «falsi» da `active_agency_id` stale). Nessuna email «account attivo / gestionale sbloccato».
+- **Decisione**:
+  1. Nuova agenzia self-serve = `activation_status=pending`. CRM (dashboard, properties, clients, API keys) **bloccato** finché Ops non attiva.
+  2. Ops: `POST /app/ops/activate-agency` → `active` + grant piano opzionale + email `agency_activated`.
+  3. FE: sala d’attesa `/app/waiting-activation`; onboarding non apre più dashboard.
+  4. Create forza `active_agency_id` sulla nuova agenzia (no leak seed/demo).
+  5. Documenti legacy **senza** campo = `active` (grandfather). `super_admin` bypass.
+- **Stato**: ✅ DECISO · implementato su branch gate
+
 ### D-149 — Migrazione sito: casi 1–2 (clone + MLS on/off) · restyling in coda · 09-Nov-2026
 - **Data**: 9 Novembre 2026
 - **Contesto**: Founder chiarisce il bisogno commerciale. Agenzia con sito già pagato (es. Agestanet/altro gestionale) vuole trasferirsi in OMNIA **tenendo il look**. Restyling con template OMNIA rimandato a ridiscussione.

@@ -130,7 +130,8 @@ export default function OnboardingWizard() {
         await refresh();
       }
       setStep(3);
-      setTimeout(() => nav(`/${lang}/app/dashboard`, { replace: true }), 1200);
+      // CRM locked until Ops activate — sala d'attesa, non dashboard
+      setTimeout(() => nav(`/${lang}/app/waiting-activation`, { replace: true }), 1200);
     } catch (err) {
       const detail = err?.response?.data?.detail;
       if (detail === "agency_already_exists") {

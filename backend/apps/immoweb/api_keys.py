@@ -71,8 +71,14 @@ async def create_api_key(
     user: dict = Depends(require_roles("agency_admin", "super_admin")),
 ):
     """Issue a new API key. **Plaintext returned once, never stored plaintext.**"""
+    from shared.auth.agency_activation import assert_agency_crm_unlocked
+
     db = Database.get()
     agency_id = _agency_id_of(user)
+    agency = await db.agencies.find_one(
+        {"id": agency_id}, {"_id": 0, "activation_status": 1}
+    )
+    assert_agency_crm_unlocked(agency, user=user)
 
     plaintext = generate_plaintext_key()
     doc = ApiKeyInDB(

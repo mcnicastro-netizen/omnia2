@@ -51,6 +51,15 @@ def _agency_id(user: dict) -> Optional[str]:
     return optional_agency_id(user)
 
 
+async def _assert_crm_unlocked(db, user: dict, agency_id: Optional[str]) -> None:
+    if not agency_id:
+        return
+    from shared.auth.agency_activation import assert_agency_crm_unlocked
+
+    agency = await db.agencies.find_one({"id": agency_id}, {"_id": 0, "activation_status": 1})
+    assert_agency_crm_unlocked(agency, user=user)
+
+
 def _prop_label(doc: dict) -> str:
     return (doc.get("title") or doc.get("reference_code") or doc.get("id") or "Immobile")[:80]
 
@@ -68,6 +77,7 @@ async def get_kpis(user: dict = Depends(get_current_user)):
     """
     db = Database.get()
     agency_id = _agency_id(user)
+    await _assert_crm_unlocked(db, user, agency_id)
 
     members_count = 0
     invites_count = 0
@@ -201,6 +211,7 @@ async def get_today(user: dict = Depends(get_current_user)) -> Dict[str, Any]:
     """
     db = Database.get()
     agency_id = _agency_id(user)
+    await _assert_crm_unlocked(db, user, agency_id)
     now = datetime.now(timezone.utc)
     now_iso = now.isoformat()
     day_end = (now + timedelta(days=1)).isoformat()

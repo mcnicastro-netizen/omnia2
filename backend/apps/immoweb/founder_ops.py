@@ -854,6 +854,7 @@ async def ops_agencies_lookup(
                 "plan": 1,
                 "billing_assisted_tier": 1,
                 "is_active": 1,
+                "activation_status": 1,
                 "created_at": 1,
             },
         )
@@ -938,6 +939,118 @@ async def ops_grant_agency_plan(
         "ok": True,
         "grant": grant,
         "resolved": {k: resolved[k] for k in resolved if k != "agency"},
+    }
+
+
+class ActivateAgencyBody(BaseModel):
+    agency_id: Optional[str] = None
+    slug: Optional[str] = None
+    email: Optional[str] = None
+    grant_plan: bool = True
+    tier: str = Field(default="pro", description="starter | pro | agency")
+    credits: int = Field(default=2000, ge=0, le=100_000)
+    note: Optional[str] = Field(default=None, max_length=200)
+    send_email: bool = True
+
+
+@router.post("/activate-agency")
+async def ops_activate_agency(
+    body: ActivateAgencyBody,
+    user: dict = Depends(require_roles("super_admin")),
+) -> Dict[str, Any]:
+    """Sblocca CRM (activation_status=active), opzionale grant piano + email benvenuto gestionale."""
+    from apps.immoweb.assisted_billing import grant_assisted_plan, resolve_agency
+    from shared.auth.agency_activation import resolve_activation_status
+    from shared.email.client import send_email
+
+    db = Database.get()
+    resolved = await resolve_agency(
+        db,
+        agency_id=body.agency_id,
+        slug=body.slug,
+        email=body.email,
+    )
+    if not resolved.get("ok"):
+        raise HTTPException(status_code=404, detail=resolved)
+
+    agency_id = resolved["agency_id"]
+    agency = resolved.get("agency") or await db.agencies.find_one({"id": agency_id})
+    if not agency:
+        raise HTTPException(status_code=404, detail="agency_not_found")
+
+    now = datetime.now(timezone.utc).isoformat()
+    prev = resolve_activation_status(agency)
+    await db.agencies.update_one(
+        {"id": agency_id},
+        {
+            "$set": {
+                "activation_status": "active",
+                "activated_at": now,
+                "activated_by": user.get("email") or user.get("id"),
+                "updated_at": now,
+            }
+        },
+    )
+
+    grant = None
+    if body.grant_plan:
+        tier = (body.tier or "pro").strip().lower()
+        if tier not in ("starter", "pro", "agency"):
+            raise HTTPException(status_code=400, detail="invalid_tier")
+        note = (body.note or "ops_activate_agency").strip()[:200]
+        grant = await grant_assisted_plan(
+            db,
+            agency_id,
+            tier=tier,  # type: ignore[arg-type]
+            credits=body.credits,
+            reason=note,
+            granted_by=user.get("email"),
+        )
+        if not grant.get("ok"):
+            raise HTTPException(status_code=400, detail=grant)
+
+    email_result = None
+    if body.send_email:
+        owner = await db.users.find_one(
+            {"id": agency.get("owner_id")},
+            {"_id": 0, "email": 1, "name": 1, "lang": 1},
+        )
+        to = (owner or {}).get("email") or (agency.get("contact") or {}).get("email")
+        if to:
+            lang = ((owner or {}).get("lang") or "it")[:2]
+            try:
+                email_result = await send_email(
+                    to=to,
+                    template="agency_activated",
+                    lang=lang if lang in ("it", "en", "es") else "it",
+                    variables={
+                        "name": (owner or {}).get("name") or "Colleague",
+                        "agency_name": agency.get("display_name") or agency.get("slug") or "",
+                        "login_url": "https://www.omniarealestateecosystem.it/it/login",
+                        "dashboard_url": "https://www.omniarealestateecosystem.it/it/app/dashboard",
+                    },
+                )
+            except Exception as exc:  # noqa: BLE001 — Ops must not fail on mail
+                logger.warning("activate-agency email failed: %s", exc)
+                email_result = {"ok": False, "error": str(exc)[:200]}
+
+    logger.info(
+        "activate-agency by=%s agency=%s prev=%s grant=%s",
+        user.get("email"),
+        agency_id,
+        prev,
+        bool(grant and grant.get("ok")),
+    )
+    return {
+        "ok": True,
+        "agency_id": agency_id,
+        "slug": agency.get("slug"),
+        "display_name": agency.get("display_name"),
+        "previous_status": prev,
+        "activation_status": "active",
+        "activated_at": now,
+        "grant": grant,
+        "email": email_result,
     }
 
 

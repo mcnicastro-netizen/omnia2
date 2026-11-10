@@ -56,6 +56,11 @@ SUBJECTS = {
         "en": "Welcome to OMNIA",
         "es": "Bienvenido a OMNIA",
     },
+    "agency_activated": {
+        "it": "Il gestionale OMNIA di {{agency_name}} è attivo",
+        "en": "{{agency_name}} — your OMNIA CRM is now active",
+        "es": "{{agency_name}} — tu CRM OMNIA ya está activo",
+    },
     "password_reset": {
         "it": "Reimposta la tua password OMNIA",
         "en": "Reset your OMNIA password",

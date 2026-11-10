@@ -93,23 +93,30 @@ export default function FounderOpsPage() {
     }
   };
 
+  const buildGrantTargetPayload = () => {
+    const payload = {};
+    if (grantTarget.agency_id) payload.agency_id = grantTarget.agency_id;
+    else if (grantTarget.slug) payload.slug = grantTarget.slug;
+    else if (grantTarget.email) payload.email = grantTarget.email;
+    return payload;
+  };
+
   const runGrant = async () => {
     setGrantBusy(true);
     setGrantMsg(null);
     try {
-      const payload = {
-        tier: grantTier,
-        credits: Number(grantCredits) || 0,
-        note: grantNote || "dogfood_assistito",
-      };
-      if (grantTarget.agency_id) payload.agency_id = grantTarget.agency_id;
-      else if (grantTarget.slug) payload.slug = grantTarget.slug;
-      else if (grantTarget.email) payload.email = grantTarget.email;
-      else {
+      const target = buildGrantTargetPayload();
+      if (!target.agency_id && !target.slug && !target.email) {
         setGrantMsg("Seleziona un’agenzia o inserisci email/slug.");
         setGrantBusy(false);
         return;
       }
+      const payload = {
+        ...target,
+        tier: grantTier,
+        credits: Number(grantCredits) || 0,
+        note: grantNote || "dogfood_assistito",
+      };
       const r = await api.post(`/app/ops/grant-agency-plan`, payload);
       const g = r.data?.grant || {};
       setGrantMsg(
@@ -122,6 +129,45 @@ export default function FounderOpsPage() {
         typeof detail === "string"
           ? detail
           : detail?.error || "Concessione non riuscita."
+      );
+    } finally {
+      setGrantBusy(false);
+    }
+  };
+
+  const runActivate = async () => {
+    setGrantBusy(true);
+    setGrantMsg(null);
+    try {
+      const target = buildGrantTargetPayload();
+      if (!target.agency_id && !target.slug && !target.email) {
+        setGrantMsg("Seleziona un’agenzia o inserisci email/slug.");
+        setGrantBusy(false);
+        return;
+      }
+      const payload = {
+        ...target,
+        grant_plan: true,
+        tier: grantTier,
+        credits: Number(grantCredits) || 0,
+        note: grantNote || "ops_activate_agency",
+        send_email: true,
+      };
+      const r = await api.post(`/app/ops/activate-agency`, payload);
+      const g = r.data?.grant || {};
+      setGrantMsg(
+        `ATTIVATA · ${r.data?.display_name || r.data?.slug} · CRM unlocked` +
+          (g?.plan_tier ? ` · ${g.plan_tier} · cr ${g.credits_balance}` : "") +
+          (r.data?.email?.status ? ` · email ${r.data.email.status}` : "")
+      );
+      await searchAgencies();
+      await load(days);
+    } catch (e) {
+      const detail = e?.response?.data?.detail;
+      setGrantMsg(
+        typeof detail === "string"
+          ? detail
+          : detail?.error || "Attivazione non riuscita."
       );
     } finally {
       setGrantBusy(false);
@@ -221,11 +267,12 @@ export default function FounderOpsPage() {
         >
           <div>
             <h2 className="text-xs uppercase tracking-widest text-[#C19A6B]">
-              Dogfood · concessione piano (gratis)
+              Dogfood · attiva CRM + piano (gratis)
             </h2>
             <p className="text-sm text-stone-700 mt-1 max-w-3xl">
-              Self-serve Stripe B2B è chiuso (O6). Da qui concedi Starter/Pro/Agency + crediti
-              a Nicastro o ad altre agenzie dopo la registrazione reale — senza carta.
+              Dopo onboarding l’agenzia resta in <em>pending</em>. Qui sblocchi il gestionale,
+              concedi Starter/Pro/Agency + crediti e invii l’email «account attivo» — senza carta
+              (Stripe B2B chiuso O6).
             </p>
           </div>
           <div className="flex flex-wrap gap-2 items-end">
@@ -293,12 +340,21 @@ export default function FounderOpsPage() {
             </label>
             <button
               type="button"
+              data-testid="ops-activate-submit"
+              disabled={grantBusy}
+              onClick={runActivate}
+              className="text-xs uppercase tracking-widest px-3 py-1.5 rounded bg-[#0B1E3F] text-white disabled:opacity-50"
+            >
+              {grantBusy ? "Attivo…" : "Attiva CRM + piano"}
+            </button>
+            <button
+              type="button"
               data-testid="ops-grant-submit"
               disabled={grantBusy}
               onClick={runGrant}
-              className="text-xs uppercase tracking-widest px-3 py-1.5 rounded bg-[#0B1E3F] text-white disabled:opacity-50"
+              className="text-xs uppercase tracking-widest px-3 py-1.5 rounded border border-[#0B1E3F] text-[#0B1E3F] bg-white disabled:opacity-50"
             >
-              {grantBusy ? "Concedo…" : "Concedi piano"}
+              Solo piano
             </button>
           </div>
           {grantHits.length > 0 ? (
@@ -308,7 +364,7 @@ export default function FounderOpsPage() {
                   <div className="min-w-0">
                     <p className="font-medium truncate">{a.display_name}</p>
                     <p className="text-[11px] text-stone-500 truncate">
-                      {a.slug} · plan {a.plan}
+                      {a.slug} · {a.activation_status || "active"} · plan {a.plan}
                       {a.subscription?.plan_tier ? ` · sub ${a.subscription.plan_tier}` : ""}
                       {` · cr ${a.credits_balance ?? 0}`}
                     </p>

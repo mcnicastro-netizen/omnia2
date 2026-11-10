@@ -49,7 +49,19 @@ export default function AgencyShell({ children, current = "dashboard", showBack 
     api
       .get("/app/agencies/me")
       .then((r) => {
-        if (mounted) setAgency(r.data);
+        if (!mounted) return;
+        const a = r.data;
+        setAgency(a);
+        // Pending CRM: sala d'attesa (super_admin può sempre entrare)
+        const st = a?.activation_status || "active";
+        const onWaiting = (location.pathname || "").includes("/app/waiting-activation");
+        if (
+          st === "pending" &&
+          user?.role !== "super_admin" &&
+          !onWaiting
+        ) {
+          nav(`/${lang}/app/waiting-activation`, { replace: true });
+        }
       })
       .catch((err) => {
         if (!mounted) return;
@@ -68,7 +80,7 @@ export default function AgencyShell({ children, current = "dashboard", showBack 
       mounted = false;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [lang, user?.role]);
+  }, [lang, user?.role, location.pathname]);
 
   const onLogout = async () => {
     await logout();
