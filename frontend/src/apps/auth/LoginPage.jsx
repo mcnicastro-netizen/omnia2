@@ -307,10 +307,23 @@ export default function LoginPage() {
 
             <Link
               to={`/${lang}/forgot-password`}
-              className="block text-xs font-sans text-stone-500 hover:text-stone-900 mb-6"
+              className="block text-xs font-sans text-stone-500 hover:text-stone-900 mb-3"
             >
               {t("auth.forgot_password")} →
             </Link>
+            {!isCloud ? (
+              <p
+                className="text-xs font-sans text-stone-500 mb-6 leading-relaxed"
+                data-testid="login-agency-resume-hint"
+              >
+                {t(
+                  "auth.agency_resume_hint",
+                  "Agenzia in registrazione (senza chiave API ancora)? Usa «Password dimenticata?» o il link «Continua registrazione» ricevuto via email."
+                )}
+              </p>
+            ) : (
+              <div className="mb-6" />
+            )}
 
             {error && (
               <div

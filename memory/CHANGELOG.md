@@ -1,3 +1,10 @@
+## 2026-11-10 — D-158 Registrazione: logo vs sito + upload + rientro
+
+- Logo file **opzionale** se website/dominio già indicato
+- Fix UX upload: preview blob, MIME sniff, errori chiari, FormData senza Content-Type forzato
+- Email `agency_onboarding_resume` + hint login per rientrare prima della API key Ops
+- Test: `backend/tests/test_d158_logo_optional_website.py`
+
 ## 2026-11-10 — D-157 Flusso gestionale (API=password)
 
 - Register B2B senza password; logo obbligatorio; waiting = KYC PDF + Stripe

@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { useAuth } from "../../shared/lib/auth";
+import { useAuth, formatApiErrorDetail } from "../../shared/lib/auth";
 import { api } from "../../shared/lib/api";
 import Brand from "../../shared/components/Brand";
 
@@ -76,6 +76,23 @@ export default function WaitingActivationPage() {
     if (!file) return;
     setUpBusy(true);
     setMsg("");
+    const ct = (file.type || "").toLowerCase();
+    const okTypes = ["application/pdf", "image/png", "image/jpeg", "image/webp"];
+    if (ct && !okTypes.includes(ct)) {
+      setMsg(
+        t(
+          "waiting_activation.doc_type_error",
+          "Formato non supportato. Usa PDF, PNG, JPG o WebP (niente HEIC/GIF)."
+        )
+      );
+      setUpBusy(false);
+      return;
+    }
+    if (file.size > 8 * 1024 * 1024) {
+      setMsg(t("waiting_activation.doc_size_error", "File troppo grande (max 8 MB)."));
+      setUpBusy(false);
+      return;
+    }
     try {
       const fd = new FormData();
       fd.append("file", file, file.name);
@@ -84,7 +101,7 @@ export default function WaitingActivationPage() {
       setMsg(t("waiting_activation.doc_ok", "Documento caricato."));
       await loadStatus();
     } catch (e) {
-      setMsg(e?.response?.data?.detail?.error || e?.response?.data?.detail || "Upload fallito");
+      setMsg(formatApiErrorDetail(e?.response?.data?.detail) || "Upload fallito");
     } finally {
       setUpBusy(false);
     }
@@ -170,7 +187,7 @@ export default function WaitingActivationPage() {
               Visura camerale
               <input
                 type="file"
-                accept="application/pdf,image/*"
+                accept="application/pdf,image/png,image/jpeg,image/webp,.pdf,.png,.jpg,.jpeg,.webp"
                 disabled={upBusy}
                 data-testid="waiting-upload-visura"
                 className="block mt-1 text-xs normal-case tracking-normal"
@@ -184,7 +201,7 @@ export default function WaitingActivationPage() {
               Documento identità titolare
               <input
                 type="file"
-                accept="application/pdf,image/*"
+                accept="application/pdf,image/png,image/jpeg,image/webp,.pdf,.png,.jpg,.jpeg,.webp"
                 disabled={upBusy}
                 data-testid="waiting-upload-id"
                 className="block mt-1 text-xs normal-case tracking-normal"

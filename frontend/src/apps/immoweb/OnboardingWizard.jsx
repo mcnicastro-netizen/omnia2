@@ -1,7 +1,7 @@
 import React, { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
-import { api } from "../../shared/lib/api";
+import { api, resolveMediaUrl } from "../../shared/lib/api";
 import { useAuth, formatApiErrorDetail } from "../../shared/lib/auth";
 import { validateItalianVat, validateFiscalCodeSoft } from "../../shared/lib/italianFiscal";
 import Brand from "../../shared/components/Brand";
@@ -24,6 +24,8 @@ export default function OnboardingWizard() {
   const [cfHint, setCfHint] = useState("");
   const [logoUploading, setLogoUploading] = useState(false);
   const [logoName, setLogoName] = useState("");
+  const [logoPreview, setLogoPreview] = useState("");
+  const [logoOk, setLogoOk] = useState(false);
   const logoInputRef = useRef(null);
 
   const preferredPlan = (() => {
@@ -35,33 +37,46 @@ export default function OnboardingWizard() {
     }
   })();
 
-  const [form, setForm] = useState({
-    display_name: "",
-    fiscal: {
-      legal_name: "",
-      vat_number: "",
-      fiscal_code: "",
-      rea: "",
-    },
-    address: {
-      street: "",
-      city: "",
-      province: "",
-      postal_code: "",
-      country: "IT",
-    },
-    contact: {
-      email: "",
-      phone: "",
-      website: "",
-      pec: "",
-    },
-    branding: {
-      logo_url: "",
-      primary_color: "#0B1E3F",
-      accent_color: "#1F6B5C",
-      tagline: "",
-    },
+  const [form, setForm] = useState(() => {
+    let domain = "";
+    try {
+      domain = (sessionStorage.getItem("omnia_existing_domain") || "").trim();
+    } catch {
+      domain = "";
+    }
+    const website = domain
+      ? domain.startsWith("http")
+        ? domain
+        : `https://${domain}`
+      : "";
+    return {
+      display_name: "",
+      fiscal: {
+        legal_name: "",
+        vat_number: "",
+        fiscal_code: "",
+        rea: "",
+      },
+      address: {
+        street: "",
+        city: "",
+        province: "",
+        postal_code: "",
+        country: "IT",
+      },
+      contact: {
+        email: "",
+        phone: "",
+        website,
+        pec: "",
+      },
+      branding: {
+        logo_url: "",
+        primary_color: "#0B1E3F",
+        accent_color: "#1F6B5C",
+        tagline: "",
+      },
+    };
   });
 
   const update = (group, key, value) => {
@@ -114,14 +129,31 @@ export default function OnboardingWizard() {
     setStep(step + 1);
   };
 
+  const hasWebBrand = () => {
+    const site = (form.contact.website || "").trim();
+    let domain = "";
+    try {
+      domain = (sessionStorage.getItem("omnia_existing_domain") || "").trim();
+    } catch {
+      domain = "";
+    }
+    return Boolean(site || domain);
+  };
+
   const submitFinal = async () => {
     setError("");
     if (!validateFiscalStep()) {
       setStep(1);
       return;
     }
-    if (!(form.branding.logo_url || "").trim()) {
-      setError(t("onboarding.logo_required", "Carica il file del marchio/logo prima di continuare."));
+    // D-158: logo file non obbligatorio se c'è già il sito/dominio
+    if (!(form.branding.logo_url || "").trim() && !hasWebBrand()) {
+      setError(
+        t(
+          "onboarding.logo_or_website_required",
+          "Carica il logo oppure indica il sito web dell'agenzia (passo dati fiscali)."
+        )
+      );
       return;
     }
     setSubmitting(true);
@@ -369,20 +401,30 @@ export default function OnboardingWizard() {
               label={t("onboarding.logo_file", "Marchio / logo")}
               hint={t(
                 "onboarding.logo_hint",
-                "Carica il file del logo (PNG/JPG/WebP/SVG, max 2 MB). Lo usiamo per sito e materiali."
+                "Facoltativo se hai già indicato il sito web. Altrimenti carica PNG/JPG/WebP/SVG (max 2 MB)."
               )}
             >
               <input
                 ref={logoInputRef}
                 type="file"
-                accept="image/png,image/jpeg,image/webp,image/svg+xml"
+                accept="image/png,image/jpeg,image/webp,image/svg+xml,.png,.jpg,.jpeg,.webp,.svg"
                 data-testid="onb-logo-file"
                 className="block w-full text-sm text-stone-600"
                 onChange={async (e) => {
                   const file = e.target.files?.[0];
                   if (!file) return;
                   setLogoUploading(true);
+                  setLogoOk(false);
                   setError("");
+                  // Preview locale subito (il path /api/media su Vercel non funziona)
+                  try {
+                    if (logoPreview) URL.revokeObjectURL(logoPreview);
+                  } catch {
+                    /* ignore */
+                  }
+                  const localUrl = URL.createObjectURL(file);
+                  setLogoPreview(localUrl);
+                  setLogoName(file.name);
                   try {
                     const fd = new FormData();
                     fd.append("file", file, file.name);
@@ -390,8 +432,10 @@ export default function OnboardingWizard() {
                       timeout: 60000,
                     });
                     update("branding", "logo_url", r.data.url);
-                    setLogoName(file.name);
+                    setLogoOk(true);
                   } catch (err) {
+                    setLogoOk(false);
+                    update("branding", "logo_url", "");
                     setError(
                       formatApiErrorDetail(err?.response?.data?.detail) ||
                         t("onboarding.logo_upload_error", "Upload logo non riuscito.")
@@ -404,15 +448,28 @@ export default function OnboardingWizard() {
               {logoUploading ? (
                 <p className="text-xs text-stone-500 mt-1">{t("common.loading")}</p>
               ) : null}
-              {form.branding.logo_url ? (
+              {logoOk ? (
+                <p className="text-xs text-emerald-700 mt-1" data-testid="onb-logo-ok">
+                  {t("onboarding.logo_upload_ok", "Logo caricato.")}
+                </p>
+              ) : null}
+              {(logoPreview || form.branding.logo_url) ? (
                 <div className="mt-3 flex items-center gap-3">
                   <img
-                    src={form.branding.logo_url}
+                    src={logoPreview || resolveMediaUrl(form.branding.logo_url)}
                     alt=""
                     className="h-12 w-12 object-contain border border-stone-200 bg-white rounded"
                   />
                   <span className="text-xs text-stone-600">{logoName || "logo"}</span>
                 </div>
+              ) : null}
+              {hasWebBrand() && !form.branding.logo_url ? (
+                <p className="text-xs text-stone-500 mt-2" data-testid="onb-logo-skip-hint">
+                  {t(
+                    "onboarding.logo_skip_website",
+                    "Hai già un sito/dominio: puoi continuare senza caricare il file logo ora."
+                  )}
+                </p>
               ) : null}
             </Field>
             <Field label={t("onboarding.tagline")} hint={t("onboarding.tagline_hint")}>

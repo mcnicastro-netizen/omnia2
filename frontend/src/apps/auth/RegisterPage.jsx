@@ -120,6 +120,11 @@ export default function RegisterPage() {
         payload.domain_sovereignty_confirmed = policyAccepted;
         if (form.existing_domain.trim()) {
           payload.existing_domain = form.existing_domain.trim();
+          try {
+            sessionStorage.setItem("omnia_existing_domain", form.existing_domain.trim());
+          } catch {
+            /* ignore */
+          }
         }
         if (preferredPlan) payload.preferred_plan = preferredPlan;
       }
