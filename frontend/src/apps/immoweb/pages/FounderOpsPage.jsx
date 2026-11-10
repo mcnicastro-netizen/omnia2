@@ -16,6 +16,16 @@ export default function FounderOpsPage() {
   const [error, setError] = useState(null);
   const [busy, setBusy] = useState(true);
   const [backupBusy, setBackupBusy] = useState(false);
+  const [grantLookup, setGrantLookup] = useState("");
+  const [grantHits, setGrantHits] = useState([]);
+  const [grantTarget, setGrantTarget] = useState({ agency_id: "", slug: "", email: "" });
+  const [grantTier, setGrantTier] = useState("pro");
+  const [grantCredits, setGrantCredits] = useState(2000);
+  const [grantNote, setGrantNote] = useState("dogfood_assistito");
+  const [grantBusy, setGrantBusy] = useState(false);
+  const [grantMsg, setGrantMsg] = useState(null);
+  const [purgeSlug, setPurgeSlug] = useState("nicastroimmobiliare");
+  const [purgeBusy, setPurgeBusy] = useState(false);
 
   const load = async (d = days) => {
     setBusy(true);
@@ -67,6 +77,86 @@ export default function FounderOpsPage() {
       setError("Backup non riuscito. Riprova o controlla i log.");
     } finally {
       setBackupBusy(false);
+    }
+  };
+
+  const searchAgencies = async () => {
+    setGrantMsg(null);
+    try {
+      const r = await api.get(`/app/ops/agencies-lookup`, {
+        params: { q: grantLookup || "", limit: 15 },
+      });
+      setGrantHits(r.data?.items || []);
+    } catch {
+      setGrantMsg("Ricerca agenzie non riuscita.");
+      setGrantHits([]);
+    }
+  };
+
+  const runGrant = async () => {
+    setGrantBusy(true);
+    setGrantMsg(null);
+    try {
+      const payload = {
+        tier: grantTier,
+        credits: Number(grantCredits) || 0,
+        note: grantNote || "dogfood_assistito",
+      };
+      if (grantTarget.agency_id) payload.agency_id = grantTarget.agency_id;
+      else if (grantTarget.slug) payload.slug = grantTarget.slug;
+      else if (grantTarget.email) payload.email = grantTarget.email;
+      else {
+        setGrantMsg("Seleziona un’agenzia o inserisci email/slug.");
+        setGrantBusy(false);
+        return;
+      }
+      const r = await api.post(`/app/ops/grant-agency-plan`, payload);
+      const g = r.data?.grant || {};
+      setGrantMsg(
+        `OK · ${g.display_name || g.slug} → ${g.plan_tier} · wallet ${g.credits_balance} (+${g.credits_added})`
+      );
+      await load(days);
+    } catch (e) {
+      const detail = e?.response?.data?.detail;
+      setGrantMsg(
+        typeof detail === "string"
+          ? detail
+          : detail?.error || "Concessione non riuscita."
+      );
+    } finally {
+      setGrantBusy(false);
+    }
+  };
+
+  const runPurgeShell = async () => {
+    if (
+      !window.confirm(
+        `Eliminare lo shell «${purgeSlug}» (force)? Usa prima di registrare l’agenzia reale se il seed occupa lo slug.`
+      )
+    ) {
+      return;
+    }
+    setPurgeBusy(true);
+    setGrantMsg(null);
+    try {
+      const r = await api.post(`/app/ops/purge-agency-shell`, null, {
+        params: { slug: purgeSlug || "nicastroimmobiliare", force: true },
+      });
+      setGrantMsg(
+        r.data?.shell?.ok
+          ? `Shell ${purgeSlug} rimosso (demo wipe incluso).`
+          : "Purge completato con warning — vedi risposta API."
+      );
+      await searchAgencies();
+    } catch (e) {
+      const detail = e?.response?.data?.detail;
+      setGrantMsg(
+        typeof detail === "string"
+          ? detail
+          : detail?.error || "Purge shell non riuscito."
+      );
+    } finally {
+      setPurgeBusy(false);
     }
   };
 
@@ -124,6 +214,150 @@ export default function FounderOpsPage() {
         {error ? (
           <div className="text-sm text-red-800 bg-red-50 border border-red-200 rounded p-3">{error}</div>
         ) : null}
+
+        <div
+          className="rounded-lg border border-[#0B1E3F]/25 bg-[#f7f4ef] px-4 py-4 space-y-3"
+          data-testid="ops-grant-plan"
+        >
+          <div>
+            <h2 className="text-xs uppercase tracking-widest text-[#C19A6B]">
+              Dogfood · concessione piano (gratis)
+            </h2>
+            <p className="text-sm text-stone-700 mt-1 max-w-3xl">
+              Self-serve Stripe B2B è chiuso (O6). Da qui concedi Starter/Pro/Agency + crediti
+              a Nicastro o ad altre agenzie dopo la registrazione reale — senza carta.
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-2 items-end">
+            <label className="text-xs space-y-1">
+              <span className="uppercase tracking-widest text-stone-500">Cerca</span>
+              <input
+                data-testid="ops-grant-lookup"
+                value={grantLookup}
+                onChange={(e) => setGrantLookup(e.target.value)}
+                placeholder="slug, nome, email…"
+                className="block min-w-[220px] rounded border border-stone-300 px-2 py-1.5 text-sm bg-white"
+              />
+            </label>
+            <button
+              type="button"
+              data-testid="ops-grant-search"
+              onClick={searchAgencies}
+              className="text-xs uppercase tracking-widest px-3 py-1.5 rounded border border-stone-300 bg-white hover:bg-stone-50"
+            >
+              Cerca
+            </button>
+            <label className="text-xs space-y-1">
+              <span className="uppercase tracking-widest text-stone-500">Email titolare</span>
+              <input
+                data-testid="ops-grant-email"
+                value={grantTarget.email}
+                onChange={(e) =>
+                  setGrantTarget((t) => ({ ...t, email: e.target.value, agency_id: "", slug: "" }))
+                }
+                placeholder="titolare@…"
+                className="block min-w-[200px] rounded border border-stone-300 px-2 py-1.5 text-sm bg-white"
+              />
+            </label>
+            <label className="text-xs space-y-1">
+              <span className="uppercase tracking-widest text-stone-500">Piano</span>
+              <select
+                data-testid="ops-grant-tier"
+                value={grantTier}
+                onChange={(e) => setGrantTier(e.target.value)}
+                className="block rounded border border-stone-300 px-2 py-1.5 text-sm bg-white"
+              >
+                <option value="starter">Starter</option>
+                <option value="pro">Pro (consigliato dogfood)</option>
+                <option value="agency">Agency</option>
+              </select>
+            </label>
+            <label className="text-xs space-y-1">
+              <span className="uppercase tracking-widest text-stone-500">Crediti +</span>
+              <input
+                data-testid="ops-grant-credits"
+                type="number"
+                min={0}
+                value={grantCredits}
+                onChange={(e) => setGrantCredits(e.target.value)}
+                className="block w-28 rounded border border-stone-300 px-2 py-1.5 text-sm bg-white"
+              />
+            </label>
+            <label className="text-xs space-y-1 flex-1 min-w-[160px]">
+              <span className="uppercase tracking-widest text-stone-500">Nota</span>
+              <input
+                value={grantNote}
+                onChange={(e) => setGrantNote(e.target.value)}
+                className="block w-full rounded border border-stone-300 px-2 py-1.5 text-sm bg-white"
+              />
+            </label>
+            <button
+              type="button"
+              data-testid="ops-grant-submit"
+              disabled={grantBusy}
+              onClick={runGrant}
+              className="text-xs uppercase tracking-widest px-3 py-1.5 rounded bg-[#0B1E3F] text-white disabled:opacity-50"
+            >
+              {grantBusy ? "Concedo…" : "Concedi piano"}
+            </button>
+          </div>
+          {grantHits.length > 0 ? (
+            <ul className="text-sm divide-y divide-stone-200 border border-stone-200 rounded bg-white max-h-48 overflow-y-auto">
+              {grantHits.map((a) => (
+                <li key={a.id} className="px-3 py-2 flex flex-wrap items-center justify-between gap-2">
+                  <div className="min-w-0">
+                    <p className="font-medium truncate">{a.display_name}</p>
+                    <p className="text-[11px] text-stone-500 truncate">
+                      {a.slug} · plan {a.plan}
+                      {a.subscription?.plan_tier ? ` · sub ${a.subscription.plan_tier}` : ""}
+                      {` · cr ${a.credits_balance ?? 0}`}
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    className="text-[10px] uppercase tracking-widest underline shrink-0"
+                    onClick={() =>
+                      setGrantTarget({ agency_id: a.id, slug: a.slug, email: "" })
+                    }
+                  >
+                    Seleziona
+                  </button>
+                </li>
+              ))}
+            </ul>
+          ) : null}
+          {grantTarget.agency_id || grantTarget.slug ? (
+            <p className="text-xs text-stone-600">
+              Target: {grantTarget.slug || grantTarget.agency_id}
+            </p>
+          ) : null}
+          <div className="flex flex-wrap gap-2 items-end border-t border-stone-200/80 pt-3">
+            <label className="text-xs space-y-1">
+              <span className="uppercase tracking-widest text-stone-500">
+                Purge shell seed (prima di registrare slug)
+              </span>
+              <input
+                value={purgeSlug}
+                onChange={(e) => setPurgeSlug(e.target.value)}
+                className="block min-w-[200px] rounded border border-stone-300 px-2 py-1.5 text-sm bg-white"
+              />
+            </label>
+            <button
+              type="button"
+              data-testid="ops-purge-shell"
+              disabled={purgeBusy}
+              onClick={runPurgeShell}
+              className="text-xs uppercase tracking-widest px-3 py-1.5 rounded border border-rose-300 text-rose-800 bg-white hover:bg-rose-50 disabled:opacity-50"
+            >
+              {purgeBusy ? "Purge…" : "Purge shell force"}
+            </button>
+          </div>
+          {grantMsg ? (
+            <p className="text-sm text-[#0B1E3F]" data-testid="ops-grant-msg">
+              {grantMsg}
+            </p>
+          ) : null}
+        </div>
 
         {data?.backup ? (
           <div

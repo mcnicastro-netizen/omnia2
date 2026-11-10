@@ -1,3 +1,11 @@
+## 2026-11-10 — Ops grant piano assistito (dogfood multi-agenzia)
+
+- `POST /app/ops/grant-agency-plan` · `GET /app/ops/agencies-lookup` (super_admin)
+- `assisted_billing.py` · CLI `grant_agency_plan.py` · default Pro + 2000 cr
+- UI Founder Ops: cerca / concedi / purge shell seed
+- Quota `resolve_tier` legge anche `plan_tier`
+- Programma 10-Nov: registrazione Nicastro reale + grant gratis
+
 ## 2026-11-09 — Smoke migrazione dual-role + harden D-106 / login
 
 - Smoke E2E `agency_admin` + `super_admin`: clone_build → MLS leave/join (box sito) → XML preview/commit

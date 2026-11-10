@@ -15,6 +15,7 @@ from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException
+from pydantic import BaseModel, Field
 
 from shared.auth.dependencies import require_roles
 from shared.db.connection import Database
@@ -822,6 +823,124 @@ async def ops_preflight(
     }
 
 
+@router.get("/agencies-lookup")
+async def ops_agencies_lookup(
+    q: str = "",
+    limit: int = 20,
+    user: dict = Depends(require_roles("super_admin")),
+) -> Dict[str, Any]:
+    """Cerca agenzie per slug / nome / id (dogfood grant)."""
+    db = Database.get()
+    lim = max(1, min(int(limit or 20), 50))
+    query = (q or "").strip()
+    filt: Dict[str, Any] = {}
+    if query:
+        filt = {
+            "$or": [
+                {"slug": {"$regex": query, "$options": "i"}},
+                {"display_name": {"$regex": query, "$options": "i"}},
+                {"id": query},
+                {"contact.email": {"$regex": query, "$options": "i"}},
+            ]
+        }
+    cur = (
+        db.agencies.find(
+            filt,
+            {
+                "_id": 0,
+                "id": 1,
+                "slug": 1,
+                "display_name": 1,
+                "plan": 1,
+                "billing_assisted_tier": 1,
+                "is_active": 1,
+                "created_at": 1,
+            },
+        )
+        .sort("created_at", -1)
+        .limit(lim)
+    )
+    items = await cur.to_list(lim)
+    # wallet balances
+    out = []
+    for a in items:
+        aid = a.get("id")
+        wallet = await db.credit_wallets.find_one({"agency_id": aid}, {"_id": 0, "balance": 1})
+        sub = await db.subscriptions.find_one(
+            {"agency_id": aid},
+            {"_id": 0, "plan_tier": 1, "status": 1, "source": 1},
+        )
+        out.append(
+            {
+                **a,
+                "credits_balance": (wallet or {}).get("balance") or 0,
+                "subscription": sub,
+            }
+        )
+    return {"ok": True, "items": out, "q": query}
+
+
+class GrantAgencyPlanBody(BaseModel):
+    agency_id: Optional[str] = None
+    slug: Optional[str] = None
+    email: Optional[str] = None
+    tier: str = Field(default="pro", description="starter | pro | agency")
+    credits: int = Field(default=2000, ge=0, le=100_000)
+    note: Optional[str] = Field(default=None, max_length=200)
+
+
+@router.post("/grant-agency-plan")
+async def ops_grant_agency_plan(
+    body: GrantAgencyPlanBody,
+    user: dict = Depends(require_roles("super_admin")),
+) -> Dict[str, Any]:
+    """Concedi piano + crediti gratis (provisioning assistito, no Stripe).
+
+    Body: agency_id | slug | email · tier=starter|pro|agency · credits · note
+    Default dogfood: Pro + 2000 crediti.
+    """
+    from apps.immoweb.assisted_billing import grant_assisted_plan, resolve_agency
+
+    db = Database.get()
+    tier = (body.tier or "pro").strip().lower()
+    if tier not in ("starter", "pro", "agency"):
+        raise HTTPException(status_code=400, detail="invalid_tier")
+    note = (body.note or "ops_dogfood_grant").strip()[:200]
+
+    resolved = await resolve_agency(
+        db,
+        agency_id=body.agency_id,
+        slug=body.slug,
+        email=body.email,
+    )
+    if not resolved.get("ok"):
+        raise HTTPException(status_code=404, detail=resolved)
+
+    grant = await grant_assisted_plan(
+        db,
+        resolved["agency_id"],
+        tier=tier,  # type: ignore[arg-type]
+        credits=body.credits,
+        reason=note,
+        granted_by=user.get("email"),
+    )
+    if not grant.get("ok"):
+        raise HTTPException(status_code=400, detail=grant)
+
+    logger.info(
+        "grant-agency-plan by=%s agency=%s tier=%s credits=%s",
+        user.get("email"),
+        grant.get("agency_id"),
+        tier,
+        body.credits,
+    )
+    return {
+        "ok": True,
+        "grant": grant,
+        "resolved": {k: resolved[k] for k in resolved if k != "agency"},
+    }
+
+
 @router.post("/retire-demo-agency")
 async def ops_retire_demo_agency(
     user: dict = Depends(require_roles("super_admin")),
@@ -829,38 +948,46 @@ async def ops_retire_demo_agency(
     """D-145 — elimina demo-agency-001, aggancia Founder a Nicastro, grant Pro.
 
     Idempotente: se demo assente, procede comunque con attach/grant.
+    Slug seed reale: nicastroimmobiliare (fallback nicastro-immobiliare).
     """
     from apps.immoweb.demo_retire import retire_demo_and_promote_first_client
 
     db = Database.get()
+    # Prefer seed slug used by seed_nicastro_agency.py
+    preferred = "nicastroimmobiliare"
+    alt = "nicastro-immobiliare"
+    exists = await db.agencies.find_one({"slug": preferred}, {"id": 1})
+    attach_slug = preferred if exists else alt
     report = await retire_demo_and_promote_first_client(
         db,
-        attach_slug="nicastro-immobiliare",
+        attach_slug=attach_slug,
         grant_pro=True,
-        credits=500,
+        credits=2000,
         founder_email=user.get("email"),
     )
     ok = bool((report.get("attach") or {}).get("ok"))
     logger.info(
-        "retire-demo-agency by=%s ok=%s wipe_agency_deleted=%s",
+        "retire-demo-agency by=%s ok=%s slug=%s wipe_agency_deleted=%s",
         user.get("email"),
         ok,
+        attach_slug,
         (report.get("wipe") or {}).get("agency_deleted"),
     )
     if not ok:
         raise HTTPException(status_code=400, detail=report)
-    return {"ok": True, **report}
+    return {"ok": True, "attach_slug": attach_slug, **report}
 
 
 @router.post("/purge-agency-shell")
 async def ops_purge_agency_shell(
     user: dict = Depends(require_roles("super_admin")),
-    slug: str = "nicastro-immobiliare",
+    slug: str = "nicastroimmobiliare",
     force: bool = False,
 ) -> Dict[str, Any]:
     """Elimina uno shell agenzia orfano — ripartenza pulita Founder.
 
     ``force=true`` stacca i membri residui (es. super_admin riagganciato dal seed) poi cancella.
+    Default slug = seed Nicastro (`nicastroimmobiliare`).
     """
     from apps.immoweb.demo_retire import purge_agency_shell, wipe_demo_agency
 
@@ -868,7 +995,7 @@ async def ops_purge_agency_shell(
     demo = await wipe_demo_agency(db)
     shell = await purge_agency_shell(
         db,
-        slug=(slug or "").strip() or "nicastro-immobiliare",
+        slug=(slug or "").strip() or "nicastroimmobiliare",
         force=bool(force),
     )
     logger.info(

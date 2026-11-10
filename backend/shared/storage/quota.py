@@ -46,10 +46,11 @@ def gb_to_bytes(gb: float) -> int:
 async def resolve_tier(db, agency_id: str, agency: Optional[dict] = None) -> Optional[str]:
     sub = await db.subscriptions.find_one(
         {"agency_id": agency_id, "status": {"$in": ["active", "trialing", "past_due"]}},
-        {"_id": 0, "tier": 1, "status": 1},
+        {"_id": 0, "tier": 1, "plan_tier": 1, "status": 1},
     )
-    if sub and sub.get("tier") in TIER_QUOTA_GB:
-        return sub["tier"]
+    sub_tier = (sub or {}).get("tier") or (sub or {}).get("plan_tier")
+    if sub_tier in TIER_QUOTA_GB:
+        return sub_tier
     if agency is None:
         agency = await db.agencies.find_one(
             {"id": agency_id}, {"_id": 0, "plan": 1, "plan_type": 1}

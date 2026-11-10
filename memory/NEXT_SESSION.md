@@ -1,6 +1,7 @@
 # Prossima sessione — programma passi
 
-**Aggiornato**: 9 Novembre 2026 — **A-040/D-148 paperless chiuso** · priorità Founder: manutenibilità poi SaaS  
+**Aggiornato**: 10 Novembre 2026 — **dogfood Nicastro reale** + Ops grant piano gratis  
+**Programma giorno**: [`PROGRAMMA_2026-11-10.md`](./PROGRAMMA_2026-11-10.md)  
 **Repo**: https://github.com/mcnicastro-netizen/omnia2 ✅  
 **Environment**: omnia2 (esiste; UI Dashboard può glitchare — non Start Fresh)
 
@@ -15,10 +16,10 @@ Vault: [`memory/CLOUD_SECRETS_INVENTORY.md`](./CLOUD_SECRETS_INVENTORY.md).
 Founder 05-Nov-2026: **controllare i margini prima del go-live**, non dopo.
 
 1. Riaprire [`PRICING_OMNIA.md`](./PRICING_OMNIA.md) § «Controllo perdite» + [`PRICING_B2C.md`](./PRICING_B2C.md).
-2. Allineare **codice** (`CREDIT_COSTS` / checkout B2C) ↔ listino: niente SKU sotto COGS (lezione Kling @ 10 cr → **D-147** a 30 cr).
-3. **Visura** e **APE**: verificare fee partner (OpenAPI / fatture) ≤ prezzo listino; se fee > prezzo → alzare prezzo o sospendere SKU.
-4. Smoke Founder Ops `/app/ops` (COGS vs crediti scalati) su ambiente staging/prod controllato.
-5. Solo dopo OK Founder su questa checklist → dichiarare go-live commerciale.
+2. Allineare **codice** (`CREDIT_COSTS` / checkout B2C) ↔ listino.
+3. **Visura** e **APE**: fee partner ≤ listino.
+4. Smoke Founder Ops `/app/ops`.
+5. Solo dopo OK Founder → go-live commerciale.
 
 ---
 
@@ -27,50 +28,31 @@ Founder 05-Nov-2026: **controllare i margini prima del go-live**, non dopo.
 | Ruolo | Doc |
 |-------|-----|
 | Freccia | [`docs/audit/OMNIA_COERENZA_SISTEMA.md`](../docs/audit/OMNIA_COERENZA_SISTEMA.md) |
-| **Primo cliente B2B** | **D-145** Nicastro Immobiliare (slug `nicastro-immobiliare`) |
-| **Vetrina www** | **D-146** + **D-148** paperless in Perché OMNIA |
-| **Kling crediti** | **D-147** 30 cr / €1,50 · listino [`PRICING_OMNIA.md`](./PRICING_OMNIA.md) v3.2 |
-| Portale | D-139…D-144 ✅ |
-| Clone sito | D-023/D-130 + A-037 · **D-150/D-151** pack+listino · restyling €199 · Stripe checkout template ⏳ |
-| Template pack | **D-151** gallery 8 live su main (#137) · Starter €99/€199 · restyling €199 |
-| **Prossimo strutturale** | Filo 2–10 + gallery 8 ✅ · **prossimo: dogfood Storia Nicastro** |
-| Migrazione sito | **D-149** casi 1–2 MLS on/off + clone capture |
+| **Verso-8** | [`PROGRAMMA_VERSO_8.md`](./PROGRAMMA_VERSO_8.md) — Manut/SaaS=8 · Storia dogfood oggi |
+| **Primo cliente B2B** | **D-145** Nicastro Immobiliare (slug seed `nicastroimmobiliare`) |
+| **Grant assistito** | Ops `POST /app/ops/grant-agency-plan` · UI `/it/app/ops` · CLI `scripts/grant_agency_plan.py` |
+| **Vetrina www** | **D-146** + **D-148** paperless |
+| Template / migrazione | D-149…D-151 · gallery 8 · Pro include temi |
 
 ---
 
-## Login gestionale (produzione)
+## Oggi 10-Nov — dogfood reale
+
+1. Ops: **Purge shell** se slug seed occupato → registra Nicastro con credenziali **reali**  
+2. Super_admin: **Concedi Pro + ≥2000 crediti** (stesso tool per altre agenzie)  
+3. Import immobili · restyling gallery 8 · clone opz. · tool marathon  
+4. Paperless www · diario · voto Storia  
+
+Self-serve Stripe B2B resta **OFF** (O6) — il grant Ops è il percorso corretto.
+
+---
+
+## Login
 
 | Chi | Email | Note |
 |-----|-------|------|
-| **Titolare Nicastro** | `titolare@nicastroimmobiliare.it` | password seed `NicastroDemo2026!` — **cambia subito** |
-| Founder Ops | `ADMIN_EMAIL` (vault) | `super_admin` — dopo deploy D-145 membership → Nicastro |
-| Demo GTM | ~~`demo.admin@…`~~ | **cancellato** 06-Nov · shell `demo-agency-001` da retire Ops post-deploy |
+| Founder Ops | `ADMIN_EMAIL` (vault) | `super_admin` → pannello Ops grant |
+| Seed Nicastro (vecchio) | `titolare@nicastroimmobiliare.it` | solo se non purged |
+| Nicastro reale | email Founder | dopo registrazione + grant |
 
-URL tipico ImmoWeb: `https://app.omniarealestateecosystem.it` (login B2B).  
-Sito white-label: `/api/p/nicastro-immobiliare/`.  
-Vetrina istituzionale: `https://omniarealestateecosystem.it/it` (**D-146** + paperless **D-148**).
-
-**Post-merge D-145**: Founder o agent → `POST /api/app/ops/retire-demo-agency` (cookie super_admin) per wipe shell demo + grant Pro.
-
----
-
-## Priorità (Founder 09-Nov: «stabilisci tu»)
-
-1. ✅ **A-040 / D-148 Paperless** — chiuso.
-2. ✅ **Themes split** — `themes.py` 1156 → ~216.
-3. ✅ **AuthZ fascicolo E2E** (D-095) — anti-IDOR agency-scoped.
-4. ✅ **Fascicolo blob delete** — `delete_object` best-effort su delete documento.
-5. ✅ **Trash purge → blob** — hard-delete immobile pulisce Object Storage.
-6. ✅ **Orphan GC + trash purge schedulati** (D-102 / Onda 7).
-7. ✅ **Backup scope + restore agency-first** (D-096 / Onda 8).
-8. ✅ **GDPR Founders** (D-099 / Onda 9).
-9. ✅ **Tenant helpers + voti** (Onda 10) — Manut/SaaS=8.
-10. ✅ **Gallery 8** (#137) su main.
-11. **Prossimo Storia**: dogfood Nicastro (Onda 1) — temi MLS on/off.
-
-## Filo prodotto
-
-1. **09-Nov chiuso:** filo manut+SaaS verso-8 + gallery 8. Resta dogfood Storia.
-| Migrazione sito | **D-149** casi 1–2 MLS on/off + clone capture |
-2. **06-Nov chiuso:** Nicastro · www · Kling · staging split.
-3. Prossimo: clone full home+lista+scheda (`clone_ready`) · restyling in coda.
+URL: `https://app.omniarealestateecosystem.it` · sito `/api/p/{slug}/` · www `/it`.
