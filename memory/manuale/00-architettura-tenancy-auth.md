@@ -89,6 +89,14 @@ HAL: `api.railway-api-deploy` · `api.vercel-fe-deploy` · `api.stripe-sandbox-c
 - **Nav account**: «Il mio account» **solo** `account_type=b2c`; sessione agenzia/Founder → «Area riservata» + banner. Vendi = account Privato (finestra anonima OK).
 - HAL YAML Cap.00/01/10/18 · reindex prod ~973 chunks · SoT `DECISIONS` D-135.
 
+### D-153…D-158 — Cabina + registrazione gestionale (10-Nov-2026)
+
+- **D-153**: Founder Ops ≠ CRM Nicastro (`active_agency_id` scollegato).
+- **D-154/D-155**: Cabina di regia `/app/ops` + kill-switch, impersonation, listino B2B, GDPR erase/offboard.
+- **D-156/D-157**: Register B2B senza password scelta → onboarding → waiting KYC+Stripe → Attiva emette **API key = password**.
+- **D-158**: Logo file **opzionale** se sito/dominio presente; resume email + forgot-password per rientrare a metà; upload con preview blob.
+- SoT: `DECISIONS.md` · Cap.01 §1.2.0/§1.3 · `RIPRENDI_2026-11-11.md`.
+
 ### Incident Railway Variables (22-Ott-2026)
 
 Mail Railway: possibile leak Variables. OMNIA `omnia-api` → rotazione credenziali.  

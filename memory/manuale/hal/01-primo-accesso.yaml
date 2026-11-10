@@ -336,49 +336,84 @@ voci:
 
   # ---------- 1.3 · Onboarding agenzia ----------
 
-  - id: primo-accesso.onboarding-agenzia
-    titolo: Configurare l'agenzia al primo accesso (wizard 4 passi)
+  - id: primo-accesso.registrazione-b2b-gestionale
+    titolo: Registrare una nuova agenzia (pacchetto, KYC, API=password)
     modulo: Primo accesso
     widget: null
     pubblico: [titolare]
     livello: base
-    tags: [onboarding, configurazione, agenzia, primi-passi]
+    tags: [registrazione, b2b, d-157, d-158, kyc, stripe, api-key]
     correlati:
+      - primo-accesso.onboarding-agenzia
+      - primo-accesso.password-dimenticata
+      - api-keys.emissione-show-once
+    domanda_naturale: "Come registro la mia agenzia su OMNIA senza password iniziale?"
+    contenuto:
+      a_cosa_serve: >
+        Aprire un account gestionale B2B: scegli pacchetto, completi
+        anagrafica e documenti, paghi, poi Ops attiva e ti invia la
+        chiave API usata come password iniziale.
+      quando_si_usa: >
+        Prima apertura agenzia su OMNIA (flusso D-157/D-158).
+      passi:
+        - "Scegli Starter / Pro / Agency su /it/register (niente password)."
+        - "Completa onboarding: identità, fiscale+PEC+sito, branding."
+        - "Logo file facoltativo se hai già indicato sito/dominio (D-158)."
+        - "In sala d'attesa carica visura + documento identità, poi Stripe."
+        - "Dopo Attiva Ops ricevi email con API key = password iniziale."
+        - "Se chiudi a metà: email 'Continua registrazione' o Password dimenticata."
+      errori_comuni:
+        - problema: "Non riesco a fare login appena registrato"
+          soluzione: >
+            Normale: non hai ancora la chiave API. Usa Password dimenticata
+            o il link resume ricevuto via email.
+        - problema: "L'upload logo/documenti sembra fallire"
+          soluzione: >
+            Usa PDF/PNG/JPG/WebP. Se compare 'Logo caricato' o 'Documento
+            caricato' l'upload è ok anche se la preview è strana.
+      permessi:
+        - Nuovo titolare in registrazione
+    screenshot: []
+
+  - id: primo-accesso.onboarding-agenzia
+    titolo: Configurare l'agenzia al primo accesso (wizard + sala d'attesa)
+    modulo: Primo accesso
+    widget: null
+    pubblico: [titolare]
+    livello: base
+    tags: [onboarding, configurazione, agenzia, primi-passi, d-157, d-158]
+    correlati:
+      - primo-accesso.registrazione-b2b-gestionale
       - impostazioni.dati-fiscali
       - sito-web.brand-studio
       - primo-accesso.tour-barra-sinistra
     domanda_naturale: "Come configuro la mia agenzia la prima volta?"
     contenuto:
       a_cosa_serve: >
-        Impostare i dati di base dell'agenzia: nome pubblico, dati fiscali
-        per le fatture, logo e colori del sito. Serve una volta sola.
+        Impostare anagrafica agenzia e arrivare alla sala d'attesa KYC/pagamento.
+        Il CRM si sblocca solo dopo Attiva Ops.
       quando_si_usa: >
-        Al primo login del titolare, subito dopo aver creato l'account.
-        Tutti i dati sono modificabili in seguito dalle Impostazioni.
+        Subito dopo la registrazione B2B del titolare.
       passi:
-        - "Passo 1 · Identità: inserisci il nome commerciale (es.
-          'Immobiliare Rossi'). È il nome che compare sui portali."
-        - "Passo 2 · Dati fiscali: ragione sociale, Partita IVA, codice
-          fiscale, REA (facoltativo), FIAIP (facoltativo), indirizzo,
-          email pubblica, telefono."
-        - "Passo 3 · Branding: URL o file del logo, colore primario,
-          colore d'accento, tagline."
-        - "Passo 4 · Conferma: vedi l'anteprima dei colori e clicca
-          'Crea agenzia'."
+        - "Passo 1 · Identità: nome commerciale."
+        - "Passo 2 · Fiscale/contatti: ragione sociale, P.IVA, CF, REA,
+          indirizzo, email, telefono, PEC, sito web. Niente FIAIP in UI."
+        - "Passo 3 · Branding: logo file opzionale se c'è già il sito;
+          colori; tagline."
+        - "Invio → agenzia pending → sala d'attesa (visura, CI, Stripe)."
       errori_comuni:
         - problema: "Partita IVA non valida"
           soluzione: >
             Deve essere 11 cifre senza spazi né trattini.
-        - problema: "Non ho ancora una P.IVA"
+        - problema: "Mi chiede il logo ma ho già il sito"
           soluzione: >
-            Puoi comunque procedere con la registrazione come "cliente" e
-            configurare l'agenzia dopo. Contatta il supporto se hai dubbi.
+            D-158: con sito/dominio indicato puoi continuare senza file logo.
         - problema: "Ho sbagliato la ragione sociale"
           soluzione: >
             Correggibile in qualsiasi momento da Impostazioni → Dati
-            fiscali.
+            fiscali (dopo attivazione).
       permessi:
-        - Solo titolare (agency_admin)
+        - Solo titolare (agency_admin dopo create)
     screenshot:
       - "[SCREEN: cap1-onboarding-step4-conferma]"
 

@@ -1,8 +1,8 @@
 # Capitolo 1 · Primo accesso
 
-**Versione manuale**: v1.6 · **Ultima revisione**: 06-Nov-2026 (D-146 vetrina www · D-140/D-138)
+**Versione manuale**: v1.7 · **Ultima revisione**: 10-Nov-2026 (D-157/D-158 registrazione gestionale)
 **Chi lo legge**: titolari, agenti, segreteria (chiunque debba iniziare a usare ImmoWeb); privatamente anche utenti ImmobilCloud
-**Prerequisiti**: aver ricevuto le credenziali (email + password) o un invito da un collega
+**Prerequisiti**: aver scelto un pacchetto e completato la registrazione agenzia, oppure aver ricevuto un invito / chiave API
 
 ---
 
@@ -34,28 +34,44 @@ Non è necessario capire tutto subito. Il manuale ti guida modulo per modulo. Il
 
 ## 1.2 · Login e cambio password
 
-### 1.2.1 Entrare la prima volta
+### 1.2.0 Registrazione nuova agenzia (D-157 / D-158)
 
-Il tuo titolare (o il servizio OMNIA se ti sei registrato tu stesso) ti ha inviato **due cose per email**:
-- Un indirizzo del tipo `https://tua-agenzia.omniarealestateecosystem.it` (o simile).
-- La tua email e una **password provvisoria**.
+Flusso gestionale B2B (simile agli altri CRM immobiliari):
 
-> **Sei stato invitato da un titolare?** Usa direttamente il link nell'email di invito: entri in un'agenzia già configurata, salti il wizard di onboarding e cominci a lavorare. L'onboarding descritto al paragrafo 1.3 riguarda **solo il titolare** che apre l'agenzia per la prima volta.
+1. Scegli il **pacchetto** (Starter / Pro / Agency) su `/it/register`.
+2. Compila nome + email. **Non** scegli la password ora.
+3. Completa l’onboarding (identità, fiscale, branding) → sala d’attesa.
+4. In sala d’attesa: carica **visura** + **documento identità** (PDF/PNG/JPG/WebP), poi paga con Stripe.
+5. Il Super Admin verifica KYC + pagamento e **Attiva**: ricevi per email la **chiave API = password iniziale** (poi la cambi tu).
+6. I collaboratori invitati ricevono la stessa logica (API key = password iniziale), con tetti posti a sedere per piano (Starter 3 · Pro 10 · Agency illimitato).
+
+**Logo (D-158)**  
+Se hai già indicato il **sito web / dominio**, il file logo è **facoltativo** in onboarding (puoi caricarlo dopo). Altrimenti carica PNG/JPG/WebP/SVG (max 2 MB). Dopo l’upload vedi anteprima locale e conferma «Logo caricato».
+
+**Se chiudi il browser a metà**  
+Non hai ancora la chiave API: usa il link **«Continua registrazione»** ricevuto via email, oppure su login gestionale **Password dimenticata?** per impostare una password temporanea e riprendere onboarding / sala d’attesa.
+
+### 1.2.1 Entrare dopo l’attivazione (o con invito)
+
+Dopo l’Attiva Ops (o se sei stato invitato) hai ricevuto per email:
+- Link di accesso al gestionale.
+- La tua email e la **chiave API / password iniziale**.
+
+> **Sei stato invitato da un titolare?** Usa il link nell’email di invito: entri in un’agenzia già attiva, salti il wizard e inizi a lavorare.
 
 **Passi**
-1. Apri il link ricevuto per email.
-2. Clicca **Accedi** (in alto a destra).
-3. Scrivi la tua email.
-4. Scrivi la password provvisoria.
-5. Clicca **Entra**.
-6. Se è il tuo primo accesso, ti viene chiesto di **cambiare la password**.
+1. Apri il link ricevuto per email (o `/it/login?from=app`).
+2. Scrivi email + chiave API / password iniziale.
+3. Clicca **Entra**.
+4. Al primo accesso ti verrà chiesto di **cambiare la password**.
 
 [SCREEN: cap1-login-form]
 
 **Errori comuni**
-- *"Email o password sbagliata"*: controlla di avere copiato la password senza spazi iniziali/finali. Se hai fatto copia-incolla dalla mail, spesso viene copiato uno spazio in più.
-- *"Il link scade dopo 7 giorni"*: se hai ricevuto un invito e non l'hai aperto in tempo, chiedi al titolare di re-inviarlo dalla sezione **Collaboratori** (Cap. 13).
-- *Login che sembra riuscito ma resti fuori / “non funziona” su URL pubblico (tunnel Cloudflare)*: fai un **hard refresh** (Safari: Cmd+Option+R; Firefox: Ctrl+Shift+R). I cookie di sessione sul dominio HTTPS devono avere il flag **Secure** — il preview OMNIA li aggiunge automaticamente. Vale per Safari, Firefox ed Edge, non solo Chrome. Demo Cloud: `demo.admin@omniaecosystem.it` / password in `DEMO_ADMIN_PASSWORD`.
+- *"Email o password sbagliata"* e ti sei appena registrato **senza** chiave API ancora: non è un bug — usa **Password dimenticata?** o il link resume (D-158).
+- *"Email o password sbagliata"* con chiave già ricevuta: controlla spazi in copia-incolla.
+- *"Il link scade dopo 7 giorni"* (invito collaboratore): chiedi al titolare di re-inviarlo da **Collaboratori** (Cap. 13).
+- *Login che sembra riuscito ma resti fuori su URL pubblico*: hard refresh (Safari Cmd+Option+R; Firefox Ctrl+Shift+R). Cookie Secure su HTTPS.
 
 ### 1.2.1b Area riservata ImmobilCloud (B2C · D-131 / D-135)
 
@@ -141,55 +157,37 @@ Vale per **tutti i ruoli** (privato, agente, admin, Founder): stesso endpoint `P
 
 ---
 
-## 1.3 · Onboarding agenzia (wizard 4 passi)
+## 1.3 · Onboarding agenzia + sala d’attesa (D-157 / D-158)
 
-> Questo paragrafo serve solo al **titolare** che apre l'agenzia per la prima volta. Agenti e segreteria non lo vedono: entrano già in un'agenzia esistente e possono saltare direttamente al 1.4.
+> Solo il **titolare** che apre l’agenzia. Collaboratori invitati saltano questo passo.
 
-**A cosa serve**
-Configurare i dati di base della tua agenzia una volta sola: nome pubblico, dati fiscali per le fatture, logo e colori del sito.
+**A cosa serve**  
+Anagrafica agenzia + identificazione clientela (visura/CI) + pagamento pacchetto. Il CRM resta bloccato finché Ops non attiva.
 
-**Quando si usa**
-Al primo login del titolare, se non è stata configurata prima. Puoi comunque modificare tutto in seguito dalle **Impostazioni**.
+### Wizard (dopo register)
 
-**I 4 passi**
+1. **Identità** — nome commerciale.
+2. **Dati fiscali / contatti** — ragione sociale, P.IVA, CF, REA (facoltativo), indirizzo, email, telefono, **PEC**, **sito web**. (Niente codice FIAIP in UI.)
+3. **Branding** — logo file (opzionale se hai già il sito), colori, tagline.
+4. **Invio** — crea agenzia in stato `pending` → redirect sala d’attesa.
 
-### Passo 1 · Identità
+### Sala d’attesa (`/it/app/waiting-activation`)
 
-Compili il **nome commerciale** dell'agenzia (quello che compare sui portali e sui volantini).
-Esempio: *"Immobiliare Rossi"*.
+1. Carica **visura camerale** e **documento identità** (PDF/PNG/JPG/WebP, max 8 MB).
+2. Paga il pacchetto (Stripe).
+3. Attendi Super Admin → email con **chiave API = password iniziale**.
 
-### Passo 2 · Dati fiscali
-
-Compili i dati che finiranno sulle fatture e sui contratti:
-- **Ragione sociale** (es. *"Immobiliare Rossi S.r.l."*)
-- **Partita IVA**
-- **Codice fiscale**
-- **Numero REA** (facoltativo, ma consigliato)
-- **Codice FIAIP** (facoltativo)
-- Indirizzo completo (via, CAP, città, provincia)
-- Email pubblica, telefono, sito (se ne hai già uno)
-
-### Passo 3 · Branding
-
-Personalizzi l'aspetto del sito che OMNIA ti darà:
-- **URL del logo** (o carichi il file)
-- **Colore primario** (quello dominante)
-- **Colore d'accento** (per pulsanti e dettagli)
-- **Tagline** (una frase corta, es. *"Casa tua, dal 1985."*)
-
-### Passo 4 · Conferma
-
-Vedi un'anteprima dei colori scelti. Clicca **Crea agenzia** e sei dentro.
+«Controlla di nuovo» aggiorna lo stato senza riportarti al register.
 
 [SCREEN: cap1-onboarding-step4-conferma]
 
 **Errori comuni**
-- *"Partita IVA non valida"*: verifica di aver messo 11 cifre senza spazi.
-- *"Il colore non si vede bene sul mio logo"*: puoi cambiarlo in qualsiasi momento dalle **Impostazioni → Branding**.
-- *"Ho sbagliato la ragione sociale"*: correggibile da **Impostazioni → Dati fiscali**.
+- *"Partita IVA non valida"*: 11 cifre senza spazi.
+- *Upload logo/documenti che «non va»*: usa PNG/JPG/WebP/PDF (niente HEIC/GIF); se la preview non si vede ma compare «Logo caricato» / «Documento caricato», l’upload è ok.
+- *Non riesco a fare login a metà procedura*: vedi §1.2.0 (Password dimenticata / link resume).
 
-**Chi può farlo**
-Solo il titolare (ruolo *agency_admin*). Se un agente prova ad accedere prima che l'agenzia sia configurata, vede un messaggio *"L'agenzia non è ancora attiva"*.
+**Chi può farlo**  
+Titolare in registrazione → diventa `agency_admin` a fine wizard. CRM operativo solo dopo Attiva Ops.
 
 ---
 
