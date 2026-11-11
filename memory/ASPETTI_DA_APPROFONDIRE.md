@@ -1346,31 +1346,40 @@ La personalizzazione della demo dal sito dell’agenzia **ci doveva già essere*
 
 ---
 
-## 🟠 A-038 — Fattura Stripe + dati fiscali su ogni incasso (B2C/B2B) · post dogfood
+## 🟠 A-038 — Fattura / dati fiscali su ogni incasso (B2C/B2B) · prima del go-live pagamenti
 
 **Data inserimento**: 7-Ott-2026  
-**Segnalato da**: Founder (Marco Nicastro) · dopo dogfood Visura + D-117 Ops finance  
-**Priorità**: **ALTA post-test** — non blocca il dogfood in corso; da risolvere prima del go-live pagamenti  
-**Correlati**: D-117 · Cap. 19 billing · `b2c_checkout` · Stripe Invoice · fatturazione IT / SDI
+**Riapertura / conferma**: 11-Nov-2026 — Founder dopo pagamento **sandbox Stripe B2B** (Nicastro / attivazione): *«abbiamo previsto tutto il flusso e i dati necessari per fatturare l’incasso?»* → risposta onesta: **no** per FE italiana.  
+**Segnalato da**: Founder (Marco Nicastro) · dogfood Visura + D-117 · ripreso post-sandbox B2B  
+**Priorità**: **ALTA** — non blocca dogfood/sandbox; **obbligatoria prima di Stripe live / go-live commerciale**  
+**Correlati**: D-117 · D-157 · Cap. 19 billing · `billing/routes` checkout · Stripe Invoice · fatturazione IT / SDI · Cabina Clienti (P.IVA/PEC già in tenant)
 
 ### Contesto Founder
-Oggi i Checkout B2C one-shot (Visura, HAL Legal, boost, …) generano pagamento/ricevuta, non Invoice Stripe automatica. Le fatture Billing compaiono in Ops solo per abbonamenti. Domanda Founder: *Stripe può emettere fattura per ogni incasso?* + *da dove arrivano i dati fiscali?*
+- Checkout B2C one-shot → pagamento/ricevuta, non Invoice Stripe automatica.
+- Checkout B2B abbonamento → `payment_transactions` + webhook + (spesso) Invoice PDF Stripe in Ops; **non** = fattura elettronica SDI.
+- Dati fiscali agenzia (P.IVA, PEC, sede) restano sul tenant Mongo; al checkout Stripe passa soprattutto **email** → Invoice senza anagrafica fiscale completa.
+- Domanda Founder: *incasso ok, ma possiamo fatturare?*
+
+### Gap verificato (11-Nov-2026)
+1. Nessun push P.IVA / PEC / codice SDI / indirizzo fiscale su **Stripe Customer** al checkout B2B.
+2. Stripe Invoice PDF ≠ XML SDI verso Agenzia Entrate.
+3. Percorso FE (OMNIA in-app vs Fatture in Cloud / commercialista) **non deciso**.
 
 ### Cosa fare (quando «vai»)
-1. **Raccolta dati fiscali** dal cliente al momento giusto:
-   - B2B: già in Impostazioni agenzia (P.IVA, PEC/SDI) → riuso su Customer Stripe  
-   - B2C: form CF/P.IVA + indirizzo (e SDI/PEC se azienda) prima o subito dopo il pagamento, oppure campi custom Checkout
-2. **Invoice Stripe** su ogni Checkout one-shot (`invoice_creation` / Customer + Invoice) → finiscono in Ops «Fatture emesse»
-3. **Percorso fattura elettronica IT (SDI)** — chiarire chi emette (OMNIA / commercialista / Fatture in Cloud); Stripe Invoice PDF ≠ XML SDI
-4. Documentare onestamente in Cap. 19 / Ops cosa è ricevuta vs Invoice vs FE
+1. **Raccolta / riuso dati fiscali** al momento giusto:
+   - B2B: P.IVA + PEC/SDI + sede da onboarding/Impostazioni → Customer Stripe (tax_id + address)
+   - B2C: form CF/P.IVA + indirizzo (e SDI/PEC se azienda) prima o subito dopo il pagamento, oppure campi Checkout
+2. **Invoice Stripe** su ogni Checkout one-shot (`invoice_creation` / Customer + Invoice) → Ops «Fatture emesse»
+3. **Percorso fattura elettronica IT (SDI)** — chi emette; sync da Stripe/ledger → FE
+4. Documentare in Cap. 19 / Ops: ricevuta vs Invoice Stripe vs FE
 
 ### Done quando
-- Ogni incasso carta ha documento Stripe (Invoice o ricevuta esplicita) collegato in Founder Ops  
-- Dati fiscali richiesti quando serve fattura; non inventati da carta/email  
-- Decisione scritta su FE italiana (in-scope OMNIA vs esterno)
+- Ogni incasso carta ha documento collegato in Ops (Invoice o ricevuta esplicita)  
+- Dati fiscali sul documento = quelli del cliente (non inventati da carta/email)  
+- Decisione scritta su FE italiana (in-scope OMNIA vs esterno) in DECISIONS
 
 ### Stato
-🟠 **PRIORITÀ APERTA — post test / post dogfood** · Founder 7-Ott-2026 · **NON implementare senza «vai»**
+🟠 **APERTA — da approfondire** · Founder 7-Ott-2026 · **ribadita 11-Nov-2026 post-sandbox** · **NON implementare senza «vai»**
 
 ---
 

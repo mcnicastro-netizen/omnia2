@@ -1,3 +1,8 @@
+## 2026-11-11 — A-038 ribadita (fattura incasso post-sandbox)
+
+- Founder conferma gap dopo pagamento Stripe sandbox B2B
+- `ASPETTI_DA_APPROFONDIRE` A-038 aggiornata: Customer senza P.IVA/SDI, FE italiana non in scope finché «vai»
+
 ## 2026-11-11 — D-160 email/credenziali/elenco clienti
 
 - Niente mail B2B a register (solo pending a fine onboarding + credentials a Attiva)
