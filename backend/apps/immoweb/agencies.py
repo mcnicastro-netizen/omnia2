@@ -528,3 +528,40 @@ async def upload_my_kyc_document(
         {"$set": {"kyc": kyc, "updated_at": datetime.now(timezone.utc).isoformat()}},
     )
     return {"ok": True, "document": entry, "kyc": kyc}
+
+
+@router.get("/me/kyc/documents/{doc_id}/file")
+async def download_my_kyc_document(
+    doc_id: str,
+    user: dict = Depends(require_roles("agency_admin", "super_admin")),
+):
+    """Anteprima/download documento KYC per il titolare (ops-kyc non è su /api/media pubblico)."""
+    db = Database.get()
+    agency = None
+    try:
+        agency_id = require_agency(user)
+        agency = await db.agencies.find_one({"id": agency_id}, {"_id": 0})
+    except HTTPException:
+        agency = await db.agencies.find_one({"owner_id": user["id"]}, {"_id": 0})
+    if not agency:
+        raise HTTPException(404, detail="agency_not_found")
+    if agency.get("owner_id") != user["id"] and user.get("role") != "super_admin":
+        raise HTTPException(403, detail="not_owner")
+
+    docs = list((agency.get("kyc") or {}).get("documents") or [])
+    doc = next((d for d in docs if d.get("id") == doc_id), None)
+    if not doc or not doc.get("storage_path"):
+        raise HTTPException(404, detail="document_not_found")
+    try:
+        data, ct = get_object(doc["storage_path"])
+    except ObjStoreError as e:
+        raise HTTPException(404, detail="document_missing") from e
+    filename = (doc.get("filename") or "documento").replace('"', "")
+    return Response(
+        content=data,
+        media_type=ct or "application/octet-stream",
+        headers={
+            "Content-Disposition": f'inline; filename="{filename}"',
+            "Cache-Control": "private, max-age=60",
+        },
+    )

@@ -1,3 +1,8 @@
+## 2026-11-11 — Anteprima documenti KYC in sala d’attesa
+
+- Dopo upload: anteprima immediata (blob) + persistente via `GET /app/agencies/me/kyc/documents/{id}/file`
+- Logo onboarding: preview più grande con ✓ filename
+
 ## 2026-11-11 — Upload logo/KYC: HEIC chiaro + stato «caricato» in sala d’attesa
 
 - Logo onboarding: stesso hint iPhone HEIC del KYC (niente `unsupported_media_type` opaco)
