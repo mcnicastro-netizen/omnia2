@@ -233,7 +233,6 @@ def compare_declared(
 async def _perform_activation(db, agency: dict, *, activated_by: str) -> Dict[str, Any]:
     from apps.immoweb.assisted_billing import grant_assisted_plan
     from shared.email.client import send_email
-    from shared.public_base import get_public_base_url
 
     agency_id = agency["id"]
     now = datetime.now(timezone.utc).isoformat()
@@ -264,13 +263,38 @@ async def _perform_activation(db, agency: dict, *, activated_by: str) -> Dict[st
 
     owner = await db.users.find_one(
         {"id": agency.get("owner_id")},
-        {"_id": 0, "email": 1, "name": 1, "lang": 1},
+        {"_id": 0, "id": 1, "email": 1, "name": 1, "lang": 1, "role": 1},
     )
+    # Garantisci ruolo CRM + tenant attivo sul titolare (aggancio post-Attiva)
+    if owner and owner.get("id"):
+        oid = owner["id"]
+        role_set = {}
+        if owner.get("role") not in (
+            "agency_admin",
+            "super_admin",
+            "group_admin",
+            "branch_admin",
+        ):
+            role_set["role"] = "agency_admin"
+        await db.users.update_one(
+            {"id": oid},
+            {
+                "$set": {
+                    **role_set,
+                    "active_agency_id": agency_id,
+                    "account_type": "b2b",
+                    "updated_at": now,
+                },
+                "$addToSet": {"agency_ids": agency_id},
+            },
+        )
     email_result = None
     to = (owner or {}).get("email") or ((agency.get("contact") or {}).get("email"))
     if to:
         lang = ((owner or {}).get("lang") or "it")[:2]
-        base = get_public_base_url().rstrip("/")
+        from shared.email.portal_links import gestionale_enter_urls
+
+        links = gestionale_enter_urls(lang)
         try:
             raw = await send_email(
                 to=to,
@@ -279,8 +303,7 @@ async def _perform_activation(db, agency: dict, *, activated_by: str) -> Dict[st
                 variables={
                     "name": (owner or {}).get("name") or "Colleague",
                     "agency_name": agency.get("display_name") or agency.get("slug") or "",
-                    "login_url": f"{base}/{lang}/login",
-                    "dashboard_url": f"{base}/{lang}/app/dashboard",
+                    **links,
                 },
             )
             st = (raw or {}).get("status")

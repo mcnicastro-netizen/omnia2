@@ -7,6 +7,12 @@ Registro di tutte le decisioni di business e tecniche prese durante il progetto.
 
 ## Decisioni prese
 
+### D-165 — Email Attiva → enter_url login gestionale (anti-403) · 11-Nov-2026
+- **Contesto**: Bottone «Apri gestionale» andava a `/app/dashboard` a freddo; sessione cloud/client o mismatch ruolo → **403** FE.
+- **Decisione**: CTA email `agency_activated` / credentials usa `enter_url` = login `?from=app&next=/…/app/dashboard`. Auto-Attiva riallinea ruolo `agency_admin` + `active_agency_id`. ProtectedRoute su `/app` con ruolo non-CRM manda al login gestionale.
+- **Domani**: contatori scadenza abbonamento + crediti (NEXT_SESSION) — no controllo a mano.
+- **Stato**: ✅ in codice.
+
 ### D-164 — Stripe period su items + reconcile waiting-activation · 11-Nov-2026
 - **Contesto**: Dogfood Nicastro — checkout `paid` su Stripe ma CRM resta pending; Ops chiede verifica manuale. Crash `AttributeError: current_period_start` in `_apply_session_side_effects` (Stripe API 2025: period sugli items). Waiting page non chiamava `/billing/status/{session_id}`.
 - **Decisione**:
