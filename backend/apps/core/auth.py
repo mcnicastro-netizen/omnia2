@@ -169,7 +169,8 @@ async def register(req: RegisterRequest, request: Request, response: Response,
         signup_domain_sovereignty_confirmed=agency_intent,
         signup_existing_domain=(req.existing_domain or "").strip().lower() or None,
         signup_preferred_plan=preferred,
-        must_change_password=bool(agency_intent),
+        # D-160: flag solo dopo Ops Attiva (API key). In register ha già scelto la temp.
+        must_change_password=False,
     )
     doc = user.model_dump()
     await db.users.insert_one(doc)
@@ -197,7 +198,9 @@ async def register(req: RegisterRequest, request: Request, response: Response,
     from shared.public_base import get_public_base_url
     frontend = get_public_base_url()
 
-    # Welcome solo per B2C/student. B2B: niente «Benvenuto» prematuro.
+    # Welcome solo B2C/student. B2B: niente mail a register (D-156/D-160).
+    # Email «richiesta ricevuta» parte a fine onboarding (agency_pending).
+    # Credenziali definitive solo a Ops Attiva (agency_credentials).
     if not agency_intent:
         try:
             await send_email(
@@ -208,33 +211,6 @@ async def register(req: RegisterRequest, request: Request, response: Response,
             )
         except Exception as e:
             logger.warning("Welcome email failed: %s", e)
-    else:
-        # D-158 — B2B non sceglie password: se la sessione cade a metà onboarding
-        # deve poter rientrare via link (reset) prima della API key Ops.
-        try:
-            token = secrets.token_urlsafe(32)
-            expires_at = datetime.now(timezone.utc) + timedelta(hours=48)
-            await db.password_reset_tokens.insert_one({
-                "token": token,
-                "user_id": user.id,
-                "expires_at": expires_at,
-                "used": False,
-                "purpose": "agency_onboarding_resume",
-                "created_at": datetime.now(timezone.utc).isoformat(),
-            })
-            resume_url = f"{frontend}/{lang}/reset-password?token={token}&next=/{lang}/app/onboarding"
-            await send_email(
-                to=email,
-                template="agency_onboarding_resume",
-                lang=lang,
-                variables={
-                    "name": user.name,
-                    "resume_url": resume_url,
-                    "login_url": f"{frontend}/{lang}/login?from=app",
-                },
-            )
-        except Exception as e:
-            logger.warning("Agency onboarding resume email failed: %s", e)
 
     return _public(doc)
 
@@ -576,9 +552,64 @@ async def reset_password(req: ResetPasswordRequest,
     new_hash = hash_password(req.new_password)
     await db.users.update_one(
         {"id": token_doc["user_id"]},
-        {"$set": {"password_hash": new_hash, "updated_at": datetime.now(timezone.utc).isoformat()}},
+        {
+            "$set": {
+                "password_hash": new_hash,
+                "must_change_password": False,
+                "updated_at": datetime.now(timezone.utc).isoformat(),
+            }
+        },
     )
     await db.password_reset_tokens.update_one(
         {"token": req.token}, {"$set": {"used": True}}
     )
     return {"status": "ok", "message": t("auth.password_updated", lang=lang)}
+
+
+# ---------------- CHANGE PASSWORD (logged-in) ----------------
+
+class ChangePasswordBody(OmniaBaseModel):
+    current_password: str = Field(min_length=1, max_length=200)
+    new_password: str = Field(min_length=8, max_length=200)
+
+
+@router.post("/me/change-password")
+async def change_password(
+    body: ChangePasswordBody,
+    user: dict = Depends(get_current_user),
+):
+    """D-160 — dopo Attiva (API=password) il titolare sceglie la propria password."""
+    db = Database.get()
+    full = await db.users.find_one({"id": user["id"]})
+    if not full:
+        raise HTTPException(status_code=404, detail="user_not_found")
+    pw_hash = full.get("password_hash") or ""
+    if pw_hash.startswith("!oauth:"):
+        raise HTTPException(
+            status_code=400,
+            detail={
+                "error": "oauth_account",
+                "hint": "Account Google: gestisci l'accesso dal provider",
+            },
+        )
+    if not verify_password(body.current_password, pw_hash):
+        raise HTTPException(status_code=400, detail="current_password_wrong")
+    new_pw = (body.new_password or "").strip()
+    if len(new_pw) < 8:
+        raise HTTPException(status_code=400, detail="password_too_short")
+    if body.current_password == new_pw:
+        raise HTTPException(status_code=400, detail="password_unchanged")
+    now = datetime.now(timezone.utc).isoformat()
+    await db.users.update_one(
+        {"id": user["id"]},
+        {
+            "$set": {
+                "password_hash": hash_password(new_pw),
+                "must_change_password": False,
+                "password_changed_at": now,
+                "updated_at": now,
+            }
+        },
+    )
+    fresh = await db.users.find_one({"id": user["id"]}) or {**full, "must_change_password": False}
+    return _public(fresh)

@@ -1,3 +1,11 @@
+## 2026-11-11 — D-160 email/credenziali/elenco clienti
+
+- Niente mail B2B a register (solo pending a fine onboarding + credentials a Attiva)
+- Copia chiave show-once in cabina + istruzioni in email
+- Modal obbligatoria cambio password al primo ingresso gestionale
+- Export CSV elenco agenzie (P.IVA/PEC/KYC) in Cabina → Clienti
+- Azioni pericolose con spiegazione in italiano
+
 ## 2026-11-11 — Cabina Ops: scheda attivazione semplificata
 
 - Checklist 3 passi: documenti → pagamento → attiva
