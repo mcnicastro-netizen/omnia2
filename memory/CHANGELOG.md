@@ -1,3 +1,9 @@
+## 2026-11-11 — Register: tre box pacchetto → form
+
+- `/it/register` agenzia: prima i **tre box** Founders (prezzo, limiti, feature), non solo i nomi
+- Click sul box → apre form registrazione con chip «Pacchetto scelto» + Cambia
+- `?plan=` da landing apre subito il form; privato/studente saltano i box
+
 ## 2026-11-11 — D-159 UX registrazione (password temp + upload KYC)
 
 - Register B2B: password **temporanea** obbligatoria (login fino ad Attiva → API key)
