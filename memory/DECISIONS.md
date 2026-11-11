@@ -7,6 +7,14 @@ Registro di tutte le decisioni di business e tecniche prese durante il progetto.
 
 ## Decisioni prese
 
+### D-164 — Stripe period su items + reconcile waiting-activation · 11-Nov-2026
+- **Contesto**: Dogfood Nicastro — checkout `paid` su Stripe ma CRM resta pending; Ops chiede verifica manuale. Crash `AttributeError: current_period_start` in `_apply_session_side_effects` (Stripe API 2025: period sugli items). Waiting page non chiamava `/billing/status/{session_id}`.
+- **Decisione**:
+  1. Period da root **o** `items.data[0]` (helper `_stripe_sub_period_iso`).
+  2. Se tx `paid` ma senza `applied_at` → riprova apply su GET status.
+  3. Waiting-activation polla status dopo return Stripe (come BillingPage).
+- **Stato**: ✅ in codice.
+
 ### D-163 — Auto-lettura KYC (Gemini) + match onboarding → auto-Attiva · 11-Nov-2026
 - **Contesto**: Founder — Ops legge a mano allegati; chiede se il sistema può leggerli, confrontarli e attivare da solo.
 - **Decisione**:

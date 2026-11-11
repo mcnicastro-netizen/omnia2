@@ -383,6 +383,34 @@ async def buy_storage(
     return {"checkout_url": session.url, "session_id": session.id}
 
 
+def _stripe_sub_period_iso(sub_obj) -> tuple:
+    """Stripe API 2025+: period lives on subscription items, not root.
+
+    Returns (current_period_start_iso|None, current_period_end_iso|None).
+    """
+    start = None
+    end = None
+    try:
+        raw = sub_obj.to_dict() if hasattr(sub_obj, "to_dict") else dict(sub_obj)
+    except Exception:
+        raw = {}
+    start = raw.get("current_period_start")
+    end = raw.get("current_period_end")
+    if start is None or end is None:
+        items = ((raw.get("items") or {}) if isinstance(raw, dict) else {}).get("data") or []
+        if items:
+            start = start if start is not None else items[0].get("current_period_start")
+            end = end if end is not None else items[0].get("current_period_end")
+    def _iso(ts):
+        if not ts:
+            return None
+        try:
+            return datetime.fromtimestamp(int(ts), tz=timezone.utc).isoformat()
+        except Exception:
+            return None
+    return _iso(start), _iso(end)
+
+
 @router.get("/status/{session_id}")
 async def get_session_status(session_id: str, user: dict = Depends(get_current_user)):
     """Frontend polling on success page. Auth-bound (H15): only the initiating
@@ -391,7 +419,8 @@ async def get_session_status(session_id: str, user: dict = Depends(get_current_u
     record = await db.payment_transactions.find_one(
         {"session_id": session_id},
         {"_id": 0, "session_id": 1, "status": 1, "payment_status": 1, "kind": 1,
-         "tier": 1, "credits": 1, "user_id": 1, "agency_id": 1},
+         "tier": 1, "credits": 1, "user_id": 1, "agency_id": 1, "applied_at": 1,
+         "stripe_subscription_id": 1},
     )
     if not record:
         raise HTTPException(status_code=404, detail="transaction_not_found")
@@ -414,15 +443,22 @@ async def get_session_status(session_id: str, user: dict = Depends(get_current_u
                               "stripe_payment_intent_id": s.payment_intent,
                               "updated_at": now}},
                 )
-                # Apply side-effect (grant credits or activate sub)
                 await _apply_session_side_effects(session_id)
                 record = await db.payment_transactions.find_one(
                     {"session_id": session_id},
                     {"_id": 0, "session_id": 1, "status": 1, "payment_status": 1,
-                     "kind": 1, "tier": 1, "credits": 1},
+                     "kind": 1, "tier": 1, "credits": 1, "applied_at": 1},
                 )
         except stripe.error.StripeError:
             pass
+    elif not record.get("applied_at"):
+        # Paid ma side-effect fallito (es. Stripe period fields) → riprova
+        await _apply_session_side_effects(session_id)
+        record = await db.payment_transactions.find_one(
+            {"session_id": session_id},
+            {"_id": 0, "session_id": 1, "status": 1, "payment_status": 1,
+             "kind": 1, "tier": 1, "credits": 1, "applied_at": 1},
+        )
     return record
 
 
@@ -493,12 +529,13 @@ async def _apply_session_side_effects(session_id: str) -> None:
         if stripe_sub_id:
             try:
                 s = stripe.Subscription.retrieve(stripe_sub_id)
-                stripe_customer_id = s.customer
-                status = s.status
-                current_period_start = datetime.fromtimestamp(s.current_period_start, tz=timezone.utc).isoformat() if s.current_period_start else None
-                current_period_end = datetime.fromtimestamp(s.current_period_end, tz=timezone.utc).isoformat() if s.current_period_end else None
+                stripe_customer_id = getattr(s, "customer", None)
+                status = getattr(s, "status", None) or "active"
+                current_period_start, current_period_end = _stripe_sub_period_iso(s)
             except stripe.error.StripeError:
                 pass
+            except Exception as exc:  # noqa: BLE001 — non bloccare grant/finalize
+                logger.warning("stripe sub period parse failed: %s", exc)
         await db.subscriptions.update_one(
             {"agency_id": agency_id},
             {"$set": {
@@ -589,8 +626,7 @@ async def stripe_webhook(request: Request):
 
     elif etype == "customer.subscription.updated":
         agency_id = (obj.get("metadata") or {}).get("agency_id")
-        current_period_start = datetime.fromtimestamp(obj["current_period_start"], tz=timezone.utc).isoformat() if obj.get("current_period_start") else None
-        current_period_end = datetime.fromtimestamp(obj["current_period_end"], tz=timezone.utc).isoformat() if obj.get("current_period_end") else None
+        current_period_start, current_period_end = _stripe_sub_period_iso(obj)
         upd = {
             "status": obj.get("status"),
             "current_period_start": current_period_start,
