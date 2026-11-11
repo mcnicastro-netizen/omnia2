@@ -102,15 +102,37 @@ export default function OnboardingWizard() {
     }));
   };
 
+  const fiscalFilled = () =>
+    form.fiscal.legal_name.trim().length >= 2 &&
+    form.fiscal.vat_number.trim().length >= 11 &&
+    form.fiscal.fiscal_code.trim().length >= 11 &&
+    form.fiscal.rea.trim().length >= 2 &&
+    form.address.street.trim().length >= 3 &&
+    form.address.city.trim().length >= 2 &&
+    form.address.province.trim().length === 2 &&
+    form.address.postal_code.trim().length >= 4 &&
+    form.contact.email.trim().length >= 5 &&
+    form.contact.phone.trim().length >= 6 &&
+    form.contact.pec.trim().length >= 5;
+
   const canContinue = () => {
     if (step === 0) return form.display_name.trim().length >= 2;
-    if (step === 1) return form.fiscal.legal_name.trim().length >= 2;
+    if (step === 1) return fiscalFilled();
     return true;
   };
 
   const validateFiscalStep = () => {
     setVatHint("");
     setCfHint("");
+    if (!fiscalFilled()) {
+      setError(
+        t(
+          "onboarding.fiscal_all_required",
+          "Compila tutti i dati fiscali, sede e contatti (inclusa PEC)."
+        )
+      );
+      return false;
+    }
     const vat = validateItalianVat(form.fiscal.vat_number);
     if (!vat.ok) {
       setVatHint(t("onboarding.vat_soft_error"));
@@ -125,6 +147,7 @@ export default function OnboardingWizard() {
   };
 
   const goNext = () => {
+    setError("");
     if (step === 1 && !validateFiscalStep()) return;
     setStep(step + 1);
   };
@@ -267,9 +290,6 @@ export default function OnboardingWizard() {
 
         {step === 1 && (
           <div data-testid="step-fiscal" className="space-y-5">
-            <p className="text-sm text-stone-600 bg-white border border-stone-200 rounded-md px-3 py-2">
-              {t("onboarding.data_honesty")}
-            </p>
             <Field label={t("onboarding.legal_name")} hint={t("onboarding.legal_name_hint")} required>
               <input
                 data-testid="onb-legal-name"
@@ -279,7 +299,7 @@ export default function OnboardingWizard() {
               />
             </Field>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Field label={t("onboarding.vat_number")} hint={vatHint || t("onboarding.vat_hint")}>
+              <Field label={t("onboarding.vat_number")} hint={vatHint || t("onboarding.vat_hint")} required>
                 <input
                   data-testid="onb-vat"
                   value={form.fiscal.vat_number}
@@ -288,7 +308,7 @@ export default function OnboardingWizard() {
                   placeholder="11 cifre"
                 />
               </Field>
-              <Field label={t("onboarding.fiscal_code")} hint={cfHint || undefined}>
+              <Field label={t("onboarding.fiscal_code")} hint={cfHint || undefined} required>
                 <input
                   data-testid="onb-fiscal-code"
                   value={form.fiscal.fiscal_code}
@@ -296,7 +316,7 @@ export default function OnboardingWizard() {
                   className="form-input"
                 />
               </Field>
-              <Field label={t("onboarding.rea")}>
+              <Field label={t("onboarding.rea")} required>
                 <input
                   data-testid="onb-rea"
                   value={form.fiscal.rea}
@@ -306,7 +326,7 @@ export default function OnboardingWizard() {
               </Field>
             </div>
             <hr className="border-stone-200 my-2" />
-            <Field label={t("onboarding.address_street")} hint={t("onboarding.address_hint")}>
+            <Field label={t("onboarding.address_street")} hint={t("onboarding.address_hint")} required>
               <AddressAutocomplete
                 value={form.address.street}
                 onChange={(text) => update("address", "street", text)}
@@ -318,7 +338,7 @@ export default function OnboardingWizard() {
               />
             </Field>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <Field label={t("onboarding.address_city")}>
+              <Field label={t("onboarding.address_city")} required>
                 <input
                   data-testid="onb-city"
                   value={form.address.city}
@@ -326,7 +346,7 @@ export default function OnboardingWizard() {
                   className="form-input"
                 />
               </Field>
-              <Field label={t("onboarding.address_province")}>
+              <Field label={t("onboarding.address_province")} required>
                 <input
                   data-testid="onb-province"
                   value={form.address.province}
@@ -335,7 +355,7 @@ export default function OnboardingWizard() {
                   className="form-input"
                 />
               </Field>
-              <Field label={t("onboarding.address_postal_code")}>
+              <Field label={t("onboarding.address_postal_code")} required>
                 <input
                   data-testid="onb-postal"
                   value={form.address.postal_code}
@@ -346,7 +366,7 @@ export default function OnboardingWizard() {
             </div>
             <hr className="border-stone-200 my-2" />
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Field label={t("onboarding.contact_email")}>
+              <Field label={t("onboarding.contact_email")} required>
                 <input
                   type="email"
                   data-testid="onb-contact-email"
@@ -355,7 +375,7 @@ export default function OnboardingWizard() {
                   className="form-input"
                 />
               </Field>
-              <Field label={t("onboarding.contact_phone")}>
+              <Field label={t("onboarding.contact_phone")} required>
                 <input
                   data-testid="onb-phone"
                   value={form.contact.phone}
@@ -367,6 +387,7 @@ export default function OnboardingWizard() {
             <Field
               label={t("onboarding.contact_pec", "PEC")}
               hint={t("onboarding.pec_hint", "Serve all’identificazione clientela (GDPR).")}
+              required
             >
               <input
                 type="email"
@@ -377,13 +398,24 @@ export default function OnboardingWizard() {
                 placeholder="pec@agenzia.it"
               />
             </Field>
-            <Field label={t("onboarding.contact_website")}>
+            <Field
+              label={t("onboarding.contact_website")}
+              hint={
+                hasWebBrand()
+                  ? t(
+                      "onboarding.website_from_register",
+                      "Dichiarato in registrazione — non serve ricaricare logo o palette."
+                    )
+                  : undefined
+              }
+            >
               <input
                 data-testid="onb-website"
                 value={form.contact.website}
                 onChange={(e) => update("contact", "website", e.target.value)}
                 className="form-input"
                 placeholder="https://"
+                readOnly={hasWebBrand()}
               />
             </Field>
           </div>
@@ -397,150 +429,175 @@ export default function OnboardingWizard() {
                 <span className="font-medium uppercase">{preferredPlan}</span>
               </p>
             ) : null}
-            <Field
-              label={t("onboarding.logo_file", "Marchio / logo")}
-              hint={t(
-                "onboarding.logo_hint",
-                "Facoltativo se hai già indicato il sito web. Altrimenti carica PNG/JPG/WebP/SVG (max 2 MB)."
-              )}
-            >
-              <input
-                ref={logoInputRef}
-                type="file"
-                accept="image/png,image/jpeg,image/webp,image/svg+xml,.png,.jpg,.jpeg,.webp,.svg"
-                data-testid="onb-logo-file"
-                className="block w-full text-sm text-stone-600"
-                onChange={async (e) => {
-                  const file = e.target.files?.[0];
-                  if (!file) return;
-                  setLogoUploading(true);
-                  setLogoOk(false);
-                  setError("");
-                  const fname = (file.name || "").toLowerCase();
-                  const ftype = (file.type || "").toLowerCase();
-                  if (
-                    fname.endsWith(".heic") ||
-                    fname.endsWith(".heif") ||
-                    ftype.includes("heic") ||
-                    ftype.includes("heif")
-                  ) {
-                    setLogoUploading(false);
-                    setLogoOk(false);
-                    setError(
-                      t(
-                        "onboarding.logo_heic_error",
-                        "HEIC non supportato. Su iPhone: Impostazioni → Fotocamera → Formati → Compatibilità massima (JPG), oppure esporta PNG/JPG."
-                      )
-                    );
-                    e.target.value = "";
-                    return;
-                  }
-                  // Preview locale subito (il path /api/media su Vercel non funziona)
-                  try {
-                    if (logoPreview) URL.revokeObjectURL(logoPreview);
-                  } catch {
-                    /* ignore */
-                  }
-                  const localUrl = URL.createObjectURL(file);
-                  setLogoPreview(localUrl);
-                  setLogoName(file.name);
-                  try {
-                    const fd = new FormData();
-                    fd.append("file", file, file.name);
-                    const r = await api.post("/app/agencies/onboarding/logo", fd, {
-                      timeout: 60000,
-                    });
-                    update("branding", "logo_url", r.data.url);
-                    setLogoOk(true);
-                  } catch (err) {
-                    setLogoOk(false);
-                    update("branding", "logo_url", "");
-                    setError(
-                      formatApiErrorDetail(err?.response?.data?.detail) ||
-                        t("onboarding.logo_upload_error", "Upload logo non riuscito.")
-                    );
-                  } finally {
-                    setLogoUploading(false);
-                    e.target.value = "";
-                  }
-                }}
-              />
-              {logoUploading ? (
-                <p className="text-xs text-stone-500 mt-1">{t("common.loading")}</p>
-              ) : null}
-              {logoOk ? (
-                <p className="text-xs text-emerald-700 mt-1" data-testid="onb-logo-ok">
-                  {t("onboarding.logo_upload_ok", "Logo caricato.")}
-                </p>
-              ) : null}
-              {(logoPreview || form.branding.logo_url) ? (
-                <div
-                  className="mt-3 border border-stone-200 bg-white overflow-hidden"
-                  data-testid="onb-logo-preview"
-                >
-                  <img
-                    src={logoPreview || resolveMediaUrl(form.branding.logo_url)}
-                    alt={logoName || "logo"}
-                    className="w-full max-h-40 object-contain bg-stone-50"
-                  />
-                  <div className="px-3 py-2 border-t border-stone-100 text-xs text-stone-600">
-                    {logoOk ? "✓ " : ""}
-                    {logoName || "logo"}
-                  </div>
-                </div>
-              ) : null}
-              {hasWebBrand() && !form.branding.logo_url ? (
-                <p className="text-xs text-stone-500 mt-2" data-testid="onb-logo-skip-hint">
+
+            {hasWebBrand() ? (
+              <div
+                className="bg-white border border-stone-200 rounded-md px-4 py-4 space-y-2"
+                data-testid="onb-existing-site-brand"
+              >
+                <p className="text-sm text-stone-800 font-medium">
                   {t(
-                    "onboarding.logo_skip_website",
-                    "Hai già un sito/dominio: puoi continuare senza caricare il file logo ora."
+                    "onboarding.existing_site_title",
+                    "Hai già un sito: saltiamo logo e colori"
                   )}
                 </p>
-              ) : null}
-            </Field>
-            <Field label={t("onboarding.tagline")} hint={t("onboarding.tagline_hint")}>
-              <input
-                data-testid="onb-tagline"
-                value={form.branding.tagline}
-                onChange={(e) => update("branding", "tagline", e.target.value)}
-                className="form-input"
-                placeholder={t("onboarding.tagline_placeholder")}
-              />
-            </Field>
-            <div className="grid grid-cols-2 gap-4">
-              <Field label={t("onboarding.primary_color")}>
-                <div className="flex gap-2">
+                <p className="text-sm text-stone-600 leading-relaxed">
+                  {t(
+                    "onboarding.existing_site_body",
+                    "In registrazione hai dichiarato un sito web. Non chiediamo logo/palette qui: evitiamo di sovrascrivere il brand esistente. Eventuale collegamento feed/DNS dopo l’attivazione, in Impostazioni → Dominio."
+                  )}
+                </p>
+                <p className="text-xs text-stone-500 break-all" data-testid="onb-existing-site-url">
+                  {form.contact.website ||
+                    (() => {
+                      try {
+                        return sessionStorage.getItem("omnia_existing_domain") || "";
+                      } catch {
+                        return "";
+                      }
+                    })()}
+                </p>
+              </div>
+            ) : (
+              <>
+                <Field
+                  label={t("onboarding.logo_file", "Marchio / logo")}
+                  hint={t(
+                    "onboarding.logo_hint_required",
+                    "Carica PNG/JPG/WebP/SVG (max 2 MB)."
+                  )}
+                  required
+                >
                   <input
-                    type="color"
-                    data-testid="onb-primary-color"
-                    value={form.branding.primary_color}
-                    onChange={(e) => update("branding", "primary_color", e.target.value)}
-                    className="h-10 w-14 cursor-pointer border border-stone-300 rounded"
+                    ref={logoInputRef}
+                    type="file"
+                    accept="image/png,image/jpeg,image/webp,image/svg+xml,.png,.jpg,.jpeg,.webp,.svg"
+                    data-testid="onb-logo-file"
+                    className="block w-full text-sm text-stone-600"
+                    onChange={async (e) => {
+                      const file = e.target.files?.[0];
+                      if (!file) return;
+                      setLogoUploading(true);
+                      setLogoOk(false);
+                      setError("");
+                      const fname = (file.name || "").toLowerCase();
+                      const ftype = (file.type || "").toLowerCase();
+                      if (
+                        fname.endsWith(".heic") ||
+                        fname.endsWith(".heif") ||
+                        ftype.includes("heic") ||
+                        ftype.includes("heif")
+                      ) {
+                        setLogoUploading(false);
+                        setLogoOk(false);
+                        setError(
+                          t(
+                            "onboarding.logo_heic_error",
+                            "HEIC non supportato. Su iPhone: Impostazioni → Fotocamera → Formati → Compatibilità massima (JPG), oppure esporta PNG/JPG."
+                          )
+                        );
+                        e.target.value = "";
+                        return;
+                      }
+                      try {
+                        if (logoPreview) URL.revokeObjectURL(logoPreview);
+                      } catch {
+                        /* ignore */
+                      }
+                      const localUrl = URL.createObjectURL(file);
+                      setLogoPreview(localUrl);
+                      setLogoName(file.name);
+                      try {
+                        const fd = new FormData();
+                        fd.append("file", file, file.name);
+                        const r = await api.post("/app/agencies/onboarding/logo", fd, {
+                          timeout: 60000,
+                        });
+                        update("branding", "logo_url", r.data.url);
+                        setLogoOk(true);
+                      } catch (err) {
+                        setLogoOk(false);
+                        update("branding", "logo_url", "");
+                        setError(
+                          formatApiErrorDetail(err?.response?.data?.detail) ||
+                            t("onboarding.logo_upload_error", "Upload logo non riuscito.")
+                        );
+                      } finally {
+                        setLogoUploading(false);
+                        e.target.value = "";
+                      }
+                    }}
                   />
+                  {logoUploading ? (
+                    <p className="text-xs text-stone-500 mt-1">{t("common.loading")}</p>
+                  ) : null}
+                  {logoOk ? (
+                    <p className="text-xs text-emerald-700 mt-1" data-testid="onb-logo-ok">
+                      {t("onboarding.logo_upload_ok", "Logo caricato.")}
+                    </p>
+                  ) : null}
+                  {(logoPreview || form.branding.logo_url) ? (
+                    <div
+                      className="mt-3 border border-stone-200 bg-white overflow-hidden"
+                      data-testid="onb-logo-preview"
+                    >
+                      <img
+                        src={logoPreview || resolveMediaUrl(form.branding.logo_url)}
+                        alt={logoName || "logo"}
+                        className="w-full max-h-40 object-contain bg-stone-50"
+                      />
+                      <div className="px-3 py-2 border-t border-stone-100 text-xs text-stone-600">
+                        {logoOk ? "✓ " : ""}
+                        {logoName || "logo"}
+                      </div>
+                    </div>
+                  ) : null}
+                </Field>
+                <Field label={t("onboarding.tagline")} hint={t("onboarding.tagline_hint")}>
                   <input
-                    value={form.branding.primary_color}
-                    onChange={(e) => update("branding", "primary_color", e.target.value)}
-                    className="form-input flex-1"
+                    data-testid="onb-tagline"
+                    value={form.branding.tagline}
+                    onChange={(e) => update("branding", "tagline", e.target.value)}
+                    className="form-input"
+                    placeholder={t("onboarding.tagline_placeholder")}
                   />
+                </Field>
+                <div className="grid grid-cols-2 gap-4">
+                  <Field label={t("onboarding.primary_color")}>
+                    <div className="flex gap-2">
+                      <input
+                        type="color"
+                        data-testid="onb-primary-color"
+                        value={form.branding.primary_color}
+                        onChange={(e) => update("branding", "primary_color", e.target.value)}
+                        className="h-10 w-14 cursor-pointer border border-stone-300 rounded"
+                      />
+                      <input
+                        value={form.branding.primary_color}
+                        onChange={(e) => update("branding", "primary_color", e.target.value)}
+                        className="form-input flex-1"
+                      />
+                    </div>
+                  </Field>
+                  <Field label={t("onboarding.accent_color")}>
+                    <div className="flex gap-2">
+                      <input
+                        type="color"
+                        data-testid="onb-accent-color"
+                        value={form.branding.accent_color}
+                        onChange={(e) => update("branding", "accent_color", e.target.value)}
+                        className="h-10 w-14 cursor-pointer border border-stone-300 rounded"
+                      />
+                      <input
+                        value={form.branding.accent_color}
+                        onChange={(e) => update("branding", "accent_color", e.target.value)}
+                        className="form-input flex-1"
+                      />
+                    </div>
+                  </Field>
                 </div>
-              </Field>
-              <Field label={t("onboarding.accent_color")}>
-                <div className="flex gap-2">
-                  <input
-                    type="color"
-                    data-testid="onb-accent-color"
-                    value={form.branding.accent_color}
-                    onChange={(e) => update("branding", "accent_color", e.target.value)}
-                    className="h-10 w-14 cursor-pointer border border-stone-300 rounded"
-                  />
-                  <input
-                    value={form.branding.accent_color}
-                    onChange={(e) => update("branding", "accent_color", e.target.value)}
-                    className="form-input flex-1"
-                  />
-                </div>
-              </Field>
-            </div>
+              </>
+            )}
 
             <div className="mt-6 p-5 bg-white border border-stone-200 rounded-lg">
               <p className="text-xs uppercase tracking-widest text-stone-500 mb-3">
@@ -548,23 +605,15 @@ export default function OnboardingWizard() {
               </p>
               <h3
                 className="text-2xl mb-1"
-                style={{ fontFamily: "'Fraunces', Georgia, serif", color: form.branding.primary_color }}
+                style={{ fontFamily: "'Fraunces', Georgia, serif", color: "#0B1E3F" }}
               >
                 {form.display_name || "—"}
               </h3>
-              <p className="text-sm text-stone-600">{form.branding.tagline || form.fiscal.legal_name}</p>
-              <div className="mt-3 flex gap-2">
-                <span
-                  className="inline-block w-6 h-6 rounded border border-stone-300"
-                  style={{ background: form.branding.primary_color }}
-                  title="Primary"
-                />
-                <span
-                  className="inline-block w-6 h-6 rounded border border-stone-300"
-                  style={{ background: form.branding.accent_color }}
-                  title="Accent"
-                />
-              </div>
+              <p className="text-sm text-stone-600">{form.fiscal.legal_name}</p>
+              <p className="text-xs text-stone-500 mt-2">
+                P.IVA {form.fiscal.vat_number || "—"} · {form.address.city || "—"} (
+                {form.address.province || "—"})
+              </p>
             </div>
             <p className="text-sm text-stone-500">{t("onboarding.review_subtitle")}</p>
           </div>

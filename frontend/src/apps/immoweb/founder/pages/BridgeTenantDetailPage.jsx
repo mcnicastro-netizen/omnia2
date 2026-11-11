@@ -90,11 +90,19 @@ export default function BridgeTenantDetailPage() {
       });
       const once = r?.data?.credential_key;
       if (once) setIssuedKey(once);
-      setActionMsg(
-        once
-          ? "Attivata. Copia la chiave qui sotto (anche via email al titolare)."
-          : "Attivata. Email inviata — entra con la password di registrazione."
-      );
+      const mail = r?.data?.email;
+      const mailOk = mail?.ok === true || mail?.status === "sent" || mail?.status === "mock";
+      if (once) {
+        setActionMsg("Attivata. Copia la chiave qui sotto (anche via email al titolare).");
+      } else if (mailOk) {
+        setActionMsg(
+          `Attivata. Email di conferma inviata a ${mail?.to || "titolare"} — entra con la password di registrazione.`
+        );
+      } else {
+        setActionMsg(
+          `Attivata, ma email non partita (${mail?.status || mail?.error || "sconosciuto"}). Controlla Resend / email titolare.`
+        );
+      }
       await load();
     } catch (e) {
       const d = e?.response?.data?.detail;

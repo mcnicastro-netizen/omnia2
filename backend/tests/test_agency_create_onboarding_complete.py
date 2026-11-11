@@ -48,8 +48,25 @@ def test_create_agency_promotes_and_completes_onboarding():
         f"{API}/app/agencies",
         json={
             "display_name": name,
-            "fiscal": {"legal_name": f"{name} SRL"},
-            "address": {"street": "Via Test 1", "city": "Roma", "province": "RM", "postal_code": "00100"},
+            "fiscal": {
+                "legal_name": f"{name} SRL",
+                "vat_number": "12345678901",
+                "fiscal_code": "12345678901",
+                "rea": "RM-999",
+            },
+            "address": {
+                "street": "Via Test 1",
+                "city": "Roma",
+                "province": "RM",
+                "postal_code": "00100",
+            },
+            "contact": {
+                "email": email,
+                "phone": "+390612345678",
+                "pec": f"pec-{email}",
+                "website": "https://example-onb.it",
+            },
+            "branding": {"primary_color": "#0B1E3F", "accent_color": "#1F6B5C"},
         },
         timeout=30,
     )

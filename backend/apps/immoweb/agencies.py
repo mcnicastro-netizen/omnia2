@@ -118,7 +118,60 @@ async def create_agency(
                 "hint": "Carica il file marchio/logo oppure indica il sito web dell'agenzia",
             },
         )
-    vat = getattr(payload.fiscal, "vat_number", None) if payload.fiscal else None
+    def _field(obj, key):
+        if obj is None:
+            return None
+        if isinstance(obj, dict):
+            return obj.get(key)
+        return getattr(obj, key, None)
+
+    vat = _field(payload.fiscal, "vat_number")
+    fiscal_code = _field(payload.fiscal, "fiscal_code")
+    rea = _field(payload.fiscal, "rea")
+    # D-162 — dati fiscali obbligatori in onboarding
+    missing_fiscal = []
+    if not (vat or "").strip():
+        missing_fiscal.append("vat_number")
+    if not (fiscal_code or "").strip():
+        missing_fiscal.append("fiscal_code")
+    if not (rea or "").strip():
+        missing_fiscal.append("rea")
+    street = _field(payload.address, "street")
+    city = _field(payload.address, "city")
+    province = _field(payload.address, "province")
+    postal = _field(payload.address, "postal_code")
+    for label, val in (
+        ("street", street),
+        ("city", city),
+        ("province", province),
+        ("postal_code", postal),
+    ):
+        if not (val or "").strip():
+            missing_fiscal.append(label)
+    contact_email = _field(payload.contact, "email")
+    contact_phone = _field(payload.contact, "phone")
+    if not (contact_email or "").strip():
+        missing_fiscal.append("contact_email")
+    if not (contact_phone or "").strip():
+        missing_fiscal.append("contact_phone")
+    if not (contact_pec or "").strip():
+        missing_fiscal.append("pec")
+    if missing_fiscal:
+        raise HTTPException(
+            status_code=400,
+            detail={"error": "fiscal_fields_required", "missing": missing_fiscal},
+        )
+
+    website_payload = {}
+    if has_web_brand:
+        ext = (contact_website or "").strip()
+        if not ext and existing_domain:
+            ext = (
+                existing_domain
+                if existing_domain.startswith("http")
+                else f"https://{existing_domain}"
+            )
+        website_payload = {"mode": "external", "external_url": ext or None}
 
     agency = AgencyInDB(
         slug=slug,
@@ -127,6 +180,7 @@ async def create_agency(
         address=payload.address or {},
         contact=payload.contact or {},
         branding=payload.branding or {},
+        website=website_payload or {},
         owner_id=user["id"],
         # M2.5.5 — Transfer Domain Vault preferences captured at signup
         domain_sovereignty_confirmed=bool(user.get("signup_domain_sovereignty_confirmed")),
@@ -158,10 +212,13 @@ async def create_agency(
     doc["activation_status"] = "pending"
     doc["activated_at"] = None
     doc["activated_by"] = None
+    # D-162 — pending email solo dopo KYC + pagamento (non qui)
+    doc["pending_notify_sent_at"] = None
     await db.agencies.insert_one(doc)
     await _attach_user_to_agency(db, user["id"], agency.id, force_active=True)
 
     # S2 — promozione controllata: il creatore diventa agency_admin
+    # Super Admin non crea agenzie dogfood: resta in cabina (niente promote a agency_admin).
     if user.get("role") not in ("super_admin", "agency_admin"):
         await db.users.update_one(
             {"id": user["id"]},
@@ -174,27 +231,6 @@ async def create_agency(
         slug,
         user["email"],
     )
-
-    # Email «richiesta ricevuta» (non è lo sblocco CRM)
-    try:
-        from shared.email.client import send_email
-        from shared.public_base import get_public_base_url
-
-        frontend = get_public_base_url()
-        lang = (user.get("lang") or "it")[:2]
-        await send_email(
-            to=user.get("email"),
-            template="agency_pending",
-            lang=lang if lang in ("it", "en", "es") else "it",
-            variables={
-                "name": user.get("name") or "Colleague",
-                "agency_name": payload.display_name,
-                "plan_tier": (preferred or "pro").upper(),
-                "login_url": f"{frontend}/{lang}/login",
-            },
-        )
-    except Exception as exc:  # noqa: BLE001
-        logger.warning("agency_pending email failed: %s", exc)
 
     # Rileggi dopo promote/attach così il client può allineare la sessione
     fresh = await db.agencies.find_one({"id": agency.id}, {"_id": 0})
@@ -527,7 +563,15 @@ async def upload_my_kyc_document(
         {"id": agency_id},
         {"$set": {"kyc": kyc, "updated_at": datetime.now(timezone.utc).isoformat()}},
     )
-    return {"ok": True, "document": entry, "kyc": kyc}
+    # D-162 — se anche il pagamento è ok, manda «richiesta ricevuta»
+    notify = None
+    try:
+        from shared.auth.agency_pending_notify import maybe_send_agency_pending_ready
+
+        notify = await maybe_send_agency_pending_ready(db, agency_id)
+    except Exception as exc:  # noqa: BLE001
+        logger.warning("pending notify after kyc failed: %s", exc)
+    return {"ok": True, "document": entry, "kyc": kyc, "pending_notify": notify}
 
 
 @router.get("/me/kyc/documents/{doc_id}/file")

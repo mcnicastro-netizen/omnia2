@@ -63,23 +63,6 @@ export default function CloudAreaPage() {
         compact
       />
       {fromPwa && !agencyLoggedIn ? <AreaPwaInstallStrip lang={lang} /> : null}
-      {agencyLoggedIn && (
-        <div
-          data-testid="cloud-area-agency-session"
-          className="max-w-2xl mx-auto px-5 mt-6 rounded-xl border border-amber-200 bg-amber-50 text-amber-950 text-sm p-4"
-        >
-          <p className="font-medium mb-1">{t("cloud.area_agency_session_title")}</p>
-          <p className="text-amber-900/90 mb-3">{t("cloud.area_agency_session_desc")}</p>
-          <div className="flex flex-wrap gap-3 text-[11px] uppercase tracking-widest">
-            <Link to={`/${lang}/app/dashboard`} className="underline text-[#0B1E3F]">
-              {t("cloud.area_agency_login")}
-            </Link>
-            <Link to={registerTo} className="underline text-[#0B1E3F]">
-              {t("cloud.area_register_title")}
-            </Link>
-          </div>
-        </div>
-      )}
       <section className="max-w-2xl mx-auto px-5 py-10 grid sm:grid-cols-2 gap-4">
         <Link
           to={loginTo}

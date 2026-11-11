@@ -87,9 +87,24 @@ def test_create_agency_allows_missing_logo_when_website_present(monkeypatch):
 
     payload = SimpleNamespace(
         display_name="Nicastro Immobiliare",
-        fiscal={"legal_name": "Nicastro SRL", "vat_number": "12345678901"},
-        address={"city": "Roma"},
-        contact={"website": "https://www.nicastroimmobiliare.it", "email": "a@example.com"},
+        fiscal={
+            "legal_name": "Nicastro SRL",
+            "vat_number": "12345678901",
+            "fiscal_code": "12345678901",
+            "rea": "CT-123456",
+        },
+        address={
+            "street": "Via Etnea 1",
+            "city": "Catania",
+            "province": "CT",
+            "postal_code": "95131",
+        },
+        contact={
+            "website": "https://www.nicastroimmobiliare.it",
+            "email": "a@example.com",
+            "phone": "+39095123456",
+            "pec": "pec@example.com",
+        },
         branding={"primary_color": "#0B1E3F"},  # no logo_url
         preferred_plan_tier="pro",
     )
@@ -119,9 +134,23 @@ def test_create_agency_rejects_without_logo_and_without_website(monkeypatch):
 
     payload = SimpleNamespace(
         display_name="No Brand Agency",
-        fiscal={"legal_name": "No Brand SRL", "vat_number": "12345678901"},
-        address={"city": "Roma"},
-        contact={"email": "b@example.com"},
+        fiscal={
+            "legal_name": "No Brand SRL",
+            "vat_number": "12345678901",
+            "fiscal_code": "12345678901",
+            "rea": "RM-1",
+        },
+        address={
+            "street": "Via Roma 1",
+            "city": "Roma",
+            "province": "RM",
+            "postal_code": "00100",
+        },
+        contact={
+            "email": "b@example.com",
+            "phone": "+3906123456",
+            "pec": "pecb@example.com",
+        },
         branding={},
         preferred_plan_tier="starter",
     )

@@ -219,8 +219,13 @@ export default function WaitingActivationPage() {
       const r = await api.get("/app/agencies/me");
       const a = r.data;
       setAgency(a);
+      // Super Admin puro → cabina (niente sala d'attesa cliente)
+      if (user?.role === "super_admin" && !user?.ops_impersonation) {
+        nav(`/${lang}/app/ops`, { replace: true });
+        return a;
+      }
       const st = a?.activation_status || "active";
-      if (st === "active" || user?.role === "super_admin") {
+      if (st === "active") {
         nav(`/${lang}/app/dashboard`, { replace: true });
         return a;
       }
@@ -409,7 +414,7 @@ export default function WaitingActivationPage() {
             <p className="text-stone-600 text-sm leading-relaxed">
               {t(
                 "waiting_activation.body_gestionale",
-                "Per {{name}}: carica visura e documento, paga il pacchetto, poi il Super Admin verifica e ti invia la password per il gestionale."
+                "Per {{name}}: carica visura e documento, completa il pagamento. Solo allora OMNIA riceve la richiesta e, dopo verifica Ops, ti arriva l’email di attivazione. Entri con la password scelta in registrazione."
               ).replace("{{name}}", agency?.display_name || "…")}
             </p>
             {agency?.preferred_plan_tier ? (

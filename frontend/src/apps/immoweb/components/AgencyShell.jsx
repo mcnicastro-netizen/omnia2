@@ -45,7 +45,29 @@ export default function AgencyShell({ children, current = "dashboard", showBack 
     }
   };
 
+  // D-162 — Super Admin fuori CRM salvo impersonazione cabina
+  // Eccezioni interne (non CRM cliente): brand-lab
+  const path = location.pathname || "";
+  const superAdminInternal =
+    path.includes("/app/brand-lab") || path.includes("/app/ops");
   useEffect(() => {
+    if (
+      user?.role === "super_admin" &&
+      !user?.ops_impersonation &&
+      !superAdminInternal
+    ) {
+      nav(`/${lang}/app/ops`, { replace: true });
+    }
+  }, [user?.role, user?.ops_impersonation, lang, nav, superAdminInternal]);
+
+  useEffect(() => {
+    // Super Admin in pagina interna (brand-lab): niente CRM / waiting
+    if (user?.role === "super_admin" && !user?.ops_impersonation) {
+      if (superAdminInternal) {
+        setAgency(false);
+      }
+      return;
+    }
     let mounted = true;
     api
       .get("/app/agencies/me")
@@ -53,14 +75,10 @@ export default function AgencyShell({ children, current = "dashboard", showBack 
         if (!mounted) return;
         const a = r.data;
         setAgency(a);
-        // Pending CRM: sala d'attesa (super_admin può sempre entrare)
+        // Pending CRM: sala d'attesa (titolare / agent)
         const st = a?.activation_status || "active";
         const onWaiting = (location.pathname || "").includes("/app/waiting-activation");
-        if (
-          st === "pending" &&
-          user?.role !== "super_admin" &&
-          !onWaiting
-        ) {
+        if (st === "pending" && !onWaiting) {
           nav(`/${lang}/app/waiting-activation`, { replace: true });
         }
       })
@@ -81,18 +99,20 @@ export default function AgencyShell({ children, current = "dashboard", showBack 
       mounted = false;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [lang, user?.role, location.pathname]);
+  }, [lang, user?.role, user?.ops_impersonation, location.pathname, superAdminInternal]);
 
   const onLogout = async () => {
     await logout();
     nav(`/${lang}/login`, { replace: true });
   };
 
-  const isGroupAdmin = user?.role === "group_admin" || user?.role === "super_admin";
+  const impersonating = Boolean(user?.ops_impersonation);
+  const isGroupAdmin = user?.role === "group_admin" || (user?.role === "super_admin" && impersonating);
   const isAgencyAdmin =
     user?.role === "agency_admin" ||
     user?.role === "branch_admin" ||
-    isGroupAdmin;
+    isGroupAdmin ||
+    (user?.role === "super_admin" && impersonating);
   const navItems = [
     { key: "dashboard", to: `/${lang}/app/dashboard`, label: t("immoweb_app.nav_dashboard"), icon: "▦", cluster: "operativo" },
     ...(isGroupAdmin
@@ -130,14 +150,7 @@ export default function AgencyShell({ children, current = "dashboard", showBack 
     ...(isAgencyAdmin
       ? [{ key: "settings", to: `/${lang}/app/settings`, label: t("immoweb_app.nav_settings"), icon: "⚙", cluster: "amministrazione" }]
       : []),
-    ...(user?.role === "super_admin"
-      ? [
-          { key: "ops", to: `/${lang}/app/ops`, label: "Cabina di regia", icon: "◎", cluster: "amministrazione" },
-          { key: "ops-legal", to: `/${lang}/app/ops/legal`, label: "Ops Legal", icon: "⚖", cluster: "amministrazione" },
-          { key: "moderation", to: `/${lang}/app/moderation`, label: "Moderazione", icon: "✓", cluster: "amministrazione" },
-          { key: "brand-lab", to: `/${lang}/app/brand-lab`, label: "Brand Lab", icon: "◈", cluster: "amministrazione" },
-        ]
-      : []),
+    // Cabina / Brand Lab NON nel menu CRM — solo shell Ops dedicata (+ exit impersonazione in header)
   ];
 
   const NAV_CLUSTERS = [
