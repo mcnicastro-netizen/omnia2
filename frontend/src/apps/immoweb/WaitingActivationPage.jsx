@@ -178,6 +178,8 @@ export default function WaitingActivationPage() {
   const [checking, setChecking] = useState(false);
   const [payBusy, setPayBusy] = useState(false);
   const [upBusy, setUpBusy] = useState(false);
+  const [billingCycle, setBillingCycle] = useState("monthly"); // monthly | yearly
+  const [planPrices, setPlanPrices] = useState(null);
   const [localPreviews, setLocalPreviews] = useState({});
 
   const revokeLocal = useCallback((docType) => {
@@ -290,6 +292,27 @@ export default function WaitingActivationPage() {
   useEffect(() => {
     loadStatus();
   }, [loadStatus]);
+
+  // Prezzi piano scelto in registrazione (mensile / annuale −1 mese)
+  useEffect(() => {
+    let cancel = false;
+    (async () => {
+      try {
+        const { data } = await api.get("/billing/plans");
+        const tier = (agency?.preferred_plan_tier || "pro").toLowerCase();
+        const plans = data?.plans || data || [];
+        const list = Array.isArray(plans) ? plans : Object.values(plans);
+        const hit =
+          list.find((p) => String(p?.tier || "").toLowerCase() === tier) || null;
+        if (!cancel) setPlanPrices(hit);
+      } catch {
+        if (!cancel) setPlanPrices(null);
+      }
+    })();
+    return () => {
+      cancel = true;
+    };
+  }, [agency?.preferred_plan_tier]);
 
   const kyc = agency?.kyc || {};
   const kycDocs = Array.isArray(kyc?.documents) ? kyc.documents : [];
@@ -405,9 +428,10 @@ export default function WaitingActivationPage() {
     setMsg("");
     try {
       const tier = agency?.preferred_plan_tier || "pro";
+      const cycle = billingCycle === "yearly" ? "yearly" : "monthly";
       const r = await api.post("/billing/checkout", {
         plan_tier: tier,
-        billing_cycle: "monthly",
+        billing_cycle: cycle,
       });
       const url = r.data?.checkout_url;
       if (!url) throw new Error("no_checkout_url");
@@ -422,6 +446,21 @@ export default function WaitingActivationPage() {
       setPayBusy(false);
     }
   };
+
+  const priceMonthly = Number(planPrices?.price_monthly || 0);
+  const priceYearly = Number(planPrices?.price_yearly || 0);
+  const payLabel =
+    billingCycle === "yearly" && priceYearly > 0
+      ? t(
+          "waiting_activation.pay_cta_yearly",
+          "Paga annuale €{{amount}} (−1 mese)"
+        ).replace("{{amount}}", String(Math.round(priceYearly)))
+      : priceMonthly > 0
+        ? t("waiting_activation.pay_cta_monthly", "Paga mensile €{{amount}}").replace(
+            "{{amount}}",
+            String(Math.round(priceMonthly))
+          )
+        : t("waiting_activation.pay_cta", "Paga e invia richiesta");
 
   const onLogout = async () => {
     await logout();
@@ -525,20 +564,68 @@ export default function WaitingActivationPage() {
             <p className="text-sm text-stone-600">
               {paid
                 ? t("waiting_activation.paid_ok", "Pagamento ricevuto.")
-                : t("waiting_activation.paid_need", "Completa il checkout Stripe prima della verifica Ops.")}
+                : t(
+                    "waiting_activation.paid_need",
+                    "Scegli mensile o annuale, poi completa il checkout Stripe."
+                  )}
             </p>
             {!paid ? (
-              <button
-                type="button"
-                data-testid="waiting-pay"
-                disabled={payBusy || !kycReady}
-                onClick={startPay}
-                className="w-full text-xs uppercase tracking-widest px-4 py-3 rounded bg-[#0B1E3F] text-white disabled:opacity-40"
-              >
-                {payBusy
-                  ? t("common.loading")
-                  : t("waiting_activation.pay_cta", "Paga e invia richiesta")}
-              </button>
+              <>
+                <div
+                  className="flex gap-2"
+                  role="group"
+                  aria-label={t("waiting_activation.cycle_label", "Ciclo fatturazione")}
+                >
+                  <button
+                    type="button"
+                    data-testid="waiting-cycle-monthly"
+                    disabled={payBusy}
+                    onClick={() => setBillingCycle("monthly")}
+                    className={`flex-1 text-xs uppercase tracking-widest px-3 py-2 border ${
+                      billingCycle === "monthly"
+                        ? "bg-[#0B1E3F] text-white border-[#0B1E3F]"
+                        : "bg-white text-stone-600 border-stone-300"
+                    }`}
+                  >
+                    {t("waiting_activation.cycle_monthly", "Mensile")}
+                    {priceMonthly > 0 ? ` · €${Math.round(priceMonthly)}` : ""}
+                  </button>
+                  <button
+                    type="button"
+                    data-testid="waiting-cycle-yearly"
+                    disabled={payBusy}
+                    onClick={() => setBillingCycle("yearly")}
+                    className={`flex-1 text-xs uppercase tracking-widest px-3 py-2 border ${
+                      billingCycle === "yearly"
+                        ? "bg-[#0B1E3F] text-white border-[#0B1E3F]"
+                        : "bg-white text-stone-600 border-stone-300"
+                    }`}
+                  >
+                    {t("waiting_activation.cycle_yearly", "Annuale")}
+                    {priceYearly > 0 ? ` · €${Math.round(priceYearly)}` : ""}
+                    <span className="block normal-case tracking-normal text-[10px] opacity-80 mt-0.5">
+                      {t("waiting_activation.cycle_yearly_hint", "−1 mese · D-079")}
+                    </span>
+                  </button>
+                </div>
+                {billingCycle === "yearly" && priceYearly > 0 ? (
+                  <p className="text-xs text-stone-500">
+                    {t(
+                      "waiting_activation.yearly_equiv",
+                      "Equivale a ~€{{m}}/mese, addebito unico annuale."
+                    ).replace("{{m}}", String(Math.round(priceYearly / 12)))}
+                  </p>
+                ) : null}
+                <button
+                  type="button"
+                  data-testid="waiting-pay"
+                  disabled={payBusy || !kycReady}
+                  onClick={startPay}
+                  className="w-full text-xs uppercase tracking-widest px-4 py-3 rounded bg-[#0B1E3F] text-white disabled:opacity-40"
+                >
+                  {payBusy ? t("common.loading") : payLabel}
+                </button>
+              </>
             ) : null}
             {!kycReady && !paid ? (
               <p className="text-xs text-amber-800">

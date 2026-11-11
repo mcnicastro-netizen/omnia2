@@ -1,3 +1,8 @@
+## 2026-11-11 — Waiting-activation: mensile / annuale
+
+- Toggle ciclo fatturazione prima di Stripe (lookup `tier_yearly`, D-079 −1 mese)
+- CTA mostra importo piano scelto in registrazione
+
 ## 2026-11-11 — D-163 KYC auto-read + match → auto-Attiva
 
 - Gemini legge visura/CI; se coincidono con onboarding + pagamento → attiva + email `agency_activated`
