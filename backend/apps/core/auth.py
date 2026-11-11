@@ -145,12 +145,18 @@ async def register(req: RegisterRequest, request: Request, response: Response,
     # B2B agency path: Domain Vault confirm = intent agenzia (non mandare «Benvenuto» prematuro)
     agency_intent = bool(req.domain_sovereignty_confirmed)
 
-    # D-157: B2B senza password scelta → temp random (sostituita da API key a Ops Attiva)
-    import secrets as _secrets
-
+    # D-159: B2B sceglie password TEMPORANEA per onboarding/login;
+    # a Ops Attiva viene sostituita dalla API key (D-157).
     raw_password = (req.password or "").strip()
     if agency_intent:
-        raw_password = _secrets.token_urlsafe(32)
+        if len(raw_password) < 8:
+            raise HTTPException(
+                status_code=400,
+                detail={
+                    "error": "password_required",
+                    "hint": "Scegli una password temporanea (min 8) per accedere durante la registrazione",
+                },
+            )
     elif len(raw_password) < 8:
         raise HTTPException(status_code=400, detail="password_required")
 
@@ -163,7 +169,7 @@ async def register(req: RegisterRequest, request: Request, response: Response,
         signup_domain_sovereignty_confirmed=agency_intent,
         signup_existing_domain=(req.existing_domain or "").strip().lower() or None,
         signup_preferred_plan=preferred,
-        must_change_password=False,
+        must_change_password=bool(agency_intent),
     )
     doc = user.model_dump()
     await db.users.insert_one(doc)

@@ -318,7 +318,7 @@ export default function LoginPage() {
               >
                 {t(
                   "auth.agency_resume_hint",
-                  "Agenzia in registrazione (senza chiave API ancora)? Usa «Password dimenticata?» o il link «Continua registrazione» ricevuto via email."
+                  "In registrazione: entra con la password temporanea scelta al signup. Dopo l’attivazione Ops userai la chiave API ricevuta via email. Se non ricordi la temporanea → «Password dimenticata?»."
                 )}
               </p>
             ) : (
