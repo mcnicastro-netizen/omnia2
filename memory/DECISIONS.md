@@ -7,6 +7,16 @@ Registro di tutte le decisioni di business e tecniche prese durante il progetto.
 
 ## Decisioni prese
 
+### D-162 — Onboarding snello + email pending solo a dossier completo + shell Ops netta · 11-Nov-2026
+- **Contesto**: Dogfood Founder — procedura farraginosa: fiscali opachi, branding fuorviante se già c’è un sito, email «abbiamo ricevuto» prematura, email attivazione poco affidabile, mix pericoloso Super Admin ↔ CRM agenzia, banner Area riservata B2C.
+- **Decisione**:
+  1. **Dati fiscali obbligatori** in onboarding (P.IVA, CF, REA, sede, email, telefono, PEC). Tolta la didascalia «non verifichiamo ancora…».
+  2. Se in register è dichiarato un **sito/dominio**: niente logo/palette/tagline nel passo branding (mode `website.external`); review solo anagrafica.
+  3. Email `agency_pending` **solo** quando visura+CI caricati **e** pagamento ok (flag `pending_notify_sent_at`). Niente mail a create agenzia.
+  4. Attiva: URL login/dashboard da `get_public_base_url`; cabina mostra se email ok o errore; Super Admin **non** entra nel CRM senza impersonazione (shell cabina dedicata).
+  5. Area riservata ImmobilCloud: **tolto** il box «Sei connesso come agenzia / Founder».
+- **Stato**: ✅ in codice.
+
 ### D-161 — Login semplice: password register = definitiva · 11-Nov-2026
 - **Contesto**: Founder — «per questo login abbiamo creato un elefante?» → sì. Tre password (temp → API key → cambio forzato) troppe solo per entrare.
 - **Decisione**:

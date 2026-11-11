@@ -515,6 +515,13 @@ async def _apply_session_side_effects(session_id: str) -> None:
             upsert=True,
         )
         logger.info("Subscription applied: agency=%s tier=%s", agency_id, tx.get("tier"))
+        # D-162 — «richiesta ricevuta» solo dopo docs KYC + pagamento
+        try:
+            from shared.auth.agency_pending_notify import maybe_send_agency_pending_ready
+
+            await maybe_send_agency_pending_ready(db, agency_id)
+        except Exception as exc:  # noqa: BLE001
+            logger.warning("pending notify after subscription failed: %s", exc)
 
     elif tx["kind"] == "storage_addon":
         agency_id = tx.get("agency_id")

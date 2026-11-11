@@ -1,3 +1,11 @@
+## 2026-11-11 — D-162 onboarding snello + pending post KYC/pay + shell Ops
+
+- Fiscali onboarding tutti obbligatori; tolta didascalia «non verifichiamo…»
+- Con sito dichiarato in register: niente logo/palette nel wizard
+- `agency_pending` solo post KYC+Stripe (`pending_notify_sent_at`)
+- Attiva: URL pubblici + feedback email in cabina; Super Admin fuori CRM senza impersonate
+- Area riservata: rimosso banner «connesso come agenzia/Founder»
+
 ## 2026-11-11 — Sync HAL/manuale D-161 (forgot-password)
 
 - Cap.00/01 + YAML: login = password register; recovery = Password dimenticata

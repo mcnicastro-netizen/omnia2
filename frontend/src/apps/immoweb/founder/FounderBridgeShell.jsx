@@ -14,8 +14,12 @@ const NAV = [
   { to: "api", label: "API", hint: "Chiavi e circuiti" },
   { to: "listino", label: "Listino", hint: "Prezzi B2B/B2C" },
   { to: "finanze", label: "Finanze", hint: "Costi e incassi" },
-  { to: "contenuti", label: "Contenuti", hint: "Moderazione e Legal" },
+  { to: "contenuti", label: "Contenuti", hint: "Moderazione" },
   { to: "piattaforma", label: "Piattaforma", hint: "Backup e gate" },
+];
+
+const EXTRA_LINKS = [
+  { toSuffix: "/legal", label: "Ops Legal", hint: "HAL Legal costi" },
 ];
 
 export default function FounderBridgeShell() {
@@ -69,6 +73,19 @@ export default function FounderBridgeShell() {
                 {item.hint}
               </span>
             </NavLink>
+          ))}
+          {EXTRA_LINKS.map((item) => (
+            <Link
+              key={item.toSuffix}
+              to={`${base}${item.toSuffix}`}
+              data-testid={`bridge-nav-extra${item.toSuffix.replace("/", "-")}`}
+              className="block rounded-md px-3 py-2.5 text-stone-300 hover:bg-white/5 hover:text-white transition"
+            >
+              <span className="block text-sm font-medium">{item.label}</span>
+              <span className="block text-[10px] uppercase tracking-widest text-stone-500 mt-0.5">
+                {item.hint}
+              </span>
+            </Link>
           ))}
         </nav>
 

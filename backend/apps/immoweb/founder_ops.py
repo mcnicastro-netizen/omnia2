@@ -1159,9 +1159,17 @@ async def ops_activate_agency(
         )
 
     if body.send_email:
+        from shared.public_base import get_public_base_url
+
         to = (owner or {}).get("email") or (agency.get("contact") or {}).get("email")
-        if to:
+        if not to:
+            email_result = {"ok": False, "status": "no_recipient", "error": "owner_email_missing"}
+            logger.warning("activate-agency email skipped: no recipient agency=%s", agency_id)
+        else:
             lang = ((owner or {}).get("lang") or "it")[:2]
+            base = get_public_base_url().rstrip("/")
+            login_url = f"{base}/{lang}/login"
+            dashboard_url = f"{base}/{lang}/app/dashboard"
             try:
                 if credential and credential.get("key"):
                     email_result = await send_email(
@@ -1172,8 +1180,8 @@ async def ops_activate_agency(
                             "name": (owner or {}).get("name") or "Colleague",
                             "agency_name": agency.get("display_name") or agency.get("slug") or "",
                             "api_key": credential["key"],
-                            "login_url": "https://www.omniarealestateecosystem.it/it/login",
-                            "dashboard_url": "https://www.omniarealestateecosystem.it/it/app/dashboard",
+                            "login_url": login_url,
+                            "dashboard_url": dashboard_url,
                         },
                     )
                 else:
@@ -1184,13 +1192,19 @@ async def ops_activate_agency(
                         variables={
                             "name": (owner or {}).get("name") or "Colleague",
                             "agency_name": agency.get("display_name") or agency.get("slug") or "",
-                            "login_url": "https://www.omniarealestateecosystem.it/it/login",
-                            "dashboard_url": "https://www.omniarealestateecosystem.it/it/app/dashboard",
+                            "login_url": login_url,
+                            "dashboard_url": dashboard_url,
                         },
                     )
+                st = (email_result or {}).get("status")
+                email_result = {
+                    **(email_result or {}),
+                    "ok": st in ("sent", "mock"),
+                    "to": to,
+                }
             except Exception as exc:  # noqa: BLE001 — Ops must not fail on mail
                 logger.warning("activate-agency email failed: %s", exc)
-                email_result = {"ok": False, "error": str(exc)[:200]}
+                email_result = {"ok": False, "status": "error", "error": str(exc)[:200], "to": to}
 
     logger.info(
         "activate-agency by=%s agency=%s prev=%s wipe=%s grant=%s credential=%s",

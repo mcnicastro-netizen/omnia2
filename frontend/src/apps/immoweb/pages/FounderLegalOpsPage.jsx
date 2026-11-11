@@ -2,12 +2,12 @@ import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { api } from "../../../shared/lib/api";
-import AgencyShell from "../components/AgencyShell";
 import Brand from "../../../shared/components/Brand";
+import OmniaLogo from "../../../shared/components/OmniaLogo";
 
 /**
  * Cruscotto Founder (super_admin) — monitoraggio HAL Legal / costi.
- * Route: /:lang/app/ops/legal
+ * Route: /:lang/app/ops/legal — shell Ops dedicata (non CRM agenzia).
  */
 export default function FounderLegalOpsPage() {
   const { i18n } = useTranslation();
@@ -47,7 +47,31 @@ export default function FounderLegalOpsPage() {
   const maxDay = Math.max(1, ...(data?.by_day || []).map((d) => d.queries));
 
   return (
-    <AgencyShell current="ops">
+    <div
+      data-testid="founder-legal-ops-shell"
+      className="min-h-screen bg-[#f4f1ec] text-stone-900"
+      style={{ fontFamily: "'Inter', system-ui, sans-serif" }}
+    >
+      <header className="border-b border-stone-200 bg-white/80">
+        <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between gap-4">
+          <Link to={`/${lang}/app/ops`} className="flex items-center gap-2 text-[#0B1E3F]">
+            <OmniaLogo variant="mark" size="sm" />
+            <span style={{ fontFamily: "'Fraunces', Georgia, serif" }} className="text-lg tracking-tight">
+              <Brand>OMNIA</Brand>
+            </span>
+            <span className="text-[10px] uppercase tracking-[0.25em] text-[#C19A6B] ml-2">
+              Cabina · Legal
+            </span>
+          </Link>
+          <Link
+            to={`/${lang}/app/ops`}
+            className="text-[10px] uppercase tracking-widest text-stone-600 hover:text-[#0B1E3F]"
+          >
+            ← Cabina di regia
+          </Link>
+        </div>
+      </header>
+      <div className="max-w-6xl mx-auto px-6 md:px-10 py-8 md:py-10">
       <section data-testid="founder-legal-ops" className="space-y-8">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
@@ -230,7 +254,8 @@ export default function FounderLegalOpsPage() {
           </>
         ) : null}
       </section>
-    </AgencyShell>
+      </div>
+    </div>
   );
 }
 
