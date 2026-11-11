@@ -357,31 +357,29 @@ voci:
     domanda_naturale: "Come registro la mia agenzia su OMNIA? Che password uso?"
     contenuto:
       a_cosa_serve: >
-        Aprire un account gestionale B2B: pacchetto, password temporanea,
-        anagrafica e documenti, pagamento, Attiva Ops → chiave API come
-        password iniziale, poi cambio obbligatorio al primo ingresso.
+        Aprire un account gestionale B2B: pacchetto, una password,
+        anagrafica e documenti, pagamento, Attiva Ops sblocca il CRM.
+        Stessa password dal register al login (D-161).
       quando_si_usa: >
-        Prima apertura agenzia su OMNIA (D-157…D-160).
+        Prima apertura agenzia su OMNIA (D-157…D-161).
       passi:
         - "Scegli Starter / Pro / Agency (3 box) su /it/register → form."
-        - "Nome, email e password temporanea (min 8) — D-159."
+        - "Nome, email e password (min 8) — resta quella di login (D-161)."
         - "Completa onboarding; email 'richiesta ricevuta' solo a fine
-          wizard (D-160: niente mail a metà register)."
+          wizard (D-160)."
         - "Logo file facoltativo se hai già sito/dominio (D-158)."
         - "Sala d'attesa: visura + CI (anteprima) + Stripe."
-        - "Ops Attiva (3 passi) → email con API key; al primo ingresso
-          schermata obbligatoria per scegliere la password tua."
-        - "Se chiudi a metà: login con password temporanea o Password
-          dimenticata."
+        - "Ops Attiva (3 passi) → email 'gestionale attivo'; login con
+          la stessa password. API keys solo da Impostazioni se servono."
+        - "Se chiudi a metà: login con la password o Password dimenticata."
       errori_comuni:
         - problema: "Non riesco a fare login appena registrato"
           soluzione: >
-            Usa la password temporanea scelta in register, non la chiave
-            API (ancora non esiste).
+            Usa la password scelta in register.
         - problema: "Mi arrivano email troppo presto"
           soluzione: >
-            D-160: a register non parte più mail. Solo pending a fine
-            onboarding e credentials a Attiva.
+            D-160: a register non parte mail. Solo pending a fine
+            onboarding e activated a Attiva.
         - problema: "L'upload logo/documenti sembra fallire"
           soluzione: >
             Usa PDF/PNG/JPG/WebP (no HEIC iPhone). Anteprima dopo upload.

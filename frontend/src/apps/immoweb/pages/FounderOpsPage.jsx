@@ -109,7 +109,7 @@ export default function FounderOpsPage() {
         note: "coda_attivazione",
         require_kyc_verified: true,
         require_payment: true,
-        issue_login_credential: true,
+        issue_login_credential: false,
       });
       setOpsMsg(
         `Attivata «${r.data?.display_name || row.display_name}» · credential ${

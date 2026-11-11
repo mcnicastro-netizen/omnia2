@@ -1046,8 +1046,8 @@ class ActivateAgencyBody(BaseModel):
         description="Blocca Attiva se abbonamento/pagamento non ok (D-157)",
     )
     issue_login_credential: bool = Field(
-        default=True,
-        description="Emette API key = password iniziale e la invia via email (D-157)",
+        default=False,
+        description="D-161: default OFF. Password = quella del register. API key solo da /app/api-keys.",
     )
 
 

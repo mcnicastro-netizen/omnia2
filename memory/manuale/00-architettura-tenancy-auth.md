@@ -96,7 +96,8 @@ HAL: `api.railway-api-deploy` · `api.vercel-fe-deploy` · `api.stripe-sandbox-c
 - **D-156/D-157**: Piano → onboarding → waiting KYC+Stripe → Attiva → **API key = password**.
 - **D-158**: Logo opzionale se sito/dominio; upload con preview blob.
 - **D-159**: Register B2B con **password temporanea** (min 8); Attiva sostituisce con API key.
-- **D-160**: Niente mail a register; `agency_pending` a fine onboarding; credentials a Attiva; **Copia chiave** show-once in cabina; modal obbligatoria cambio password al primo ingresso CRM.
+- **D-160**: Niente mail a register; `agency_pending` a fine onboarding.
+- **D-161**: Password register = login definitivo; Attiva non emette più API=password; API keys solo da Impostazioni.
 - **Cabina scheda**: checklist 3 passi (documenti → pagamento → attiva); upload Ops rimossi dalla scheda.
 - **A-038** (aperta): Stripe sandbox ≠ fattura elettronica IT; Customer senza P.IVA/SDI finché «vai».
 - SoT: `DECISIONS.md` · Cap.01 §1.2.0 · `ASPETTI_DA_APPROFONDIRE` A-038 · `RIPRENDI_2026-11-11.md`.

@@ -43,8 +43,8 @@ Flusso gestionale B2B:
 3. Completa l’onboarding (identità, fiscale, branding) → sala d’attesa.  
    Email «richiesta ricevuta» (`agency_pending`) parte **solo a fine onboarding** (D-160: niente mail a metà register).
 4. In sala d’attesa: carica **visura** + **documento identità** (PDF/PNG/JPG/WebP; anteprima dopo upload), poi paga con Stripe.
-5. Il Super Admin in Cabina fa la checklist a **3 passi** (documenti → pagamento → Attiva). Ricevi email con **chiave API = password iniziale** (e Ops può **Copia chiave** show-once).
-6. Collaboratori invitati: stessa logica API key = password iniziale; tetti posti a sedere (Starter 3 · Pro 10 · Agency ∞).
+5. Il Super Admin in Cabina fa la checklist a **3 passi** (documenti → pagamento → Attiva). Ricevi email «gestionale attivo»: entra con la **stessa password** del register (D-161).
+6. Collaboratori invitati: scelgono la password nell’invito. API keys solo da Impostazioni se servono integrazioni. Tetti posti (Starter 3 · Pro 10 · Agency ∞).
 
 **Logo (D-158)**  
 Con **sito web / dominio** già indicato, il file logo è **facoltativo**. Altrimenti PNG/JPG/WebP/SVG (max 2 MB) con anteprima locale.
@@ -54,23 +54,19 @@ Hai già la password temporanea del register: entra da `/it/login?from=app`. Se 
 
 ### 1.2.1 Entrare dopo l’attivazione (o con invito)
 
-Dopo Attiva Ops (o invito) hai ricevuto per email:
-- Link di accesso al gestionale.
-- La **chiave API / password iniziale** (seleziona il riquadro → Ctrl+C / tieni premuto → Copia).
+Dopo Attiva Ops ricevi email di conferma. Entri con **email + password di registrazione** (D-161).
 
-> **Sei stato invitato da un titolare?** Usa il link nell’email di invito: entri in un’agenzia già attiva.
+> **Sei stato invitato?** Link nell’email → scegli nome + password → entri nell’agenzia.
 
 **Passi**
-1. Apri il link (o `/it/login?from=app`).
-2. Email + chiave API / password iniziale.
-3. **Entra**.
-4. Al **primo ingresso** compare una schermata obbligatoria: incolli la chiave come password attuale e scegli la **tua** password (`POST /auth/me/change-password`, D-160). La chiave resta in Impostazioni → API keys per integrazioni.
+1. `/it/login?from=app` (o link in email).
+2. Email + password di registrazione (o quella dell’invito).
+3. **Entra** → dashboard.
 
 [SCREEN: cap1-login-form]
 
 **Errori comuni**
-- *"Email o password sbagliata"* in onboarding: usa la **password temporanea** del register, non la chiave API (ancora non esiste).
-- *"Email o password sbagliata"* dopo Attiva: controlla spazi in copia-incolla della chiave.
+- *"Email o password sbagliata"*: controlla la password del register / usa **Password dimenticata?**.
 - *"Il link scade dopo 7 giorni"* (invito): chiedi re-invio da **Collaboratori** (Cap. 13).
 - *Login ok ma resti fuori su URL pubblico*: hard refresh. Cookie Secure su HTTPS.
 

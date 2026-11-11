@@ -65,7 +65,7 @@ export default function BridgeTenantDetailPage() {
     if (
       !window.confirm(
         `Attivare «${a0.display_name}» sul piano ${String(tier).toUpperCase()}?\n` +
-          "Il cliente riceve email con password per il gestionale."
+          "Il titolare entra con la password scelta in registrazione."
       )
     ) {
       return;
@@ -85,14 +85,15 @@ export default function BridgeTenantDetailPage() {
         note: "cabina_scheda",
         require_kyc_verified: !bypassKyc,
         require_payment: !bypassPay,
-        issue_login_credential: true,
+        // D-161: password = register; niente API=password
+        issue_login_credential: false,
       });
       const once = r?.data?.credential_key;
       if (once) setIssuedKey(once);
       setActionMsg(
         once
           ? "Attivata. Copia la chiave qui sotto (anche via email al titolare)."
-          : "Attivata. Email con password inviata al titolare."
+          : "Attivata. Email inviata — entra con la password di registrazione."
       );
       await load();
     } catch (e) {
@@ -443,7 +444,8 @@ export default function BridgeTenantDetailPage() {
                 </ul>
               ) : (
                 <p className="text-sm text-stone-600">
-                  Tutto ok. Attiva sblocca il CRM e invia la password al titolare.
+                  Tutto ok. Attiva sblocca il CRM; il titolare usa la password di
+                  registrazione.
                 </p>
               )}
               <button
@@ -456,7 +458,7 @@ export default function BridgeTenantDetailPage() {
                 {attivaBusy
                   ? "Attivazione…"
                   : canActivate
-                    ? "Attiva e invia password"
+                    ? "Attiva gestionale"
                     : kycVerified
                       ? "Attiva (pagamento mancante → conferma)"
                       : "Attiva (prima verifica documenti)"}

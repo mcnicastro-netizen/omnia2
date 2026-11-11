@@ -80,7 +80,7 @@ export default function BridgeHomePage() {
         note: "cabina_ingresso",
         require_kyc_verified: true,
         require_payment: true,
-        issue_login_credential: true,
+        issue_login_credential: false,
       });
       setMsg(`Attivata · ${r.data?.display_name || row.display_name}`);
       await load();
