@@ -1,6 +1,6 @@
-# 📚 HAL Knowledge — Import & Cold Start (v0.58-d161-login)
+# 📚 HAL Knowledge — Import & Cold Start (v0.59-d165-closeout)
 
-**Ultimo aggiornamento**: 11-Nov-2026 (D-161 login semplice · forgot-password · Cap.01 sync)  
+**Ultimo aggiornamento**: 11-Nov-2026 (D-163…D-165 auto-KYC · Stripe reconcile · enter_url · Cap.00/01 sync)  
 **Corpus**: YAML in `memory/manuale/hal/*.yaml` (Cap. 1–27 + `00-api-codice`) · MD esclusi dal RAG ingest  
 **Motore**: `hal_knowledge.py` · reindex: `POST /api/app/hal/knowledge/reindex?force=true` (super_admin)  
 **Regola Founder D-084**: ogni ship aggiorna MD+YAML nello stesso giro — vedi `memory/MANUAL_SYNC.md`.
@@ -267,6 +267,7 @@ Prima di dichiarare il cold start "attivo", eseguire manualmente queste 5 query 
 
 | Data | Versione | Note |
 |------|:-:|------|
+| 11-Nov-2026 | **v0.59-d165-closeout** | D-163 auto-KYC · D-164 Stripe reconcile · D-165 enter_url anti-403 · mensile/annuale waiting · Cap.00/01 + HAL. NEXT_SESSION contatori scadenze/crediti. Reindex post-merge. |
 | 11-Nov-2026 | **v0.58-d161-login** | D-161: una password (register); forgot-password; Cap.00/01 + HAL sync; API=password deprecata. Reindex post-merge. |
 | 11-Nov-2026 | **v0.57-d160-a038** | D-160 email/copy · A-038 · Cabina 3 passi. |
 | 10-Nov-2026 | **v0.56-d158-reg-b2b** | Cap.01 registrazione gestionale D-157/D-158 (piano, KYC, API=password, logo vs sito, resume login). Cap.00 ponte D-153…D-158. `RIPRENDI_2026-11-11` · NEXT_SESSION. Reindex post-merge. |

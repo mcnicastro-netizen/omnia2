@@ -42,8 +42,8 @@ Flusso gestionale B2B:
 2. Compila nome + email + **password** (min 8) — è la password di login definitiva (D-161).
 3. Completa l’onboarding (identità, fiscale, branding) → sala d’attesa.  
    Dopo documenti KYC **e** pagamento: se i dati coincidono, **attivazione automatica** + email conferma (D-163); altrimenti email «richiesta ricevuta» e verifica Ops (D-162).
-4. In sala d’attesa: carica **visura** + **documento identità** (PDF/PNG/JPG/WebP; anteprima), poi paga con Stripe.
-5. Super Admin in Cabina: checklist **3 passi** (documenti → pagamento → Attiva). Email «gestionale attivo» → entra con la **stessa password**.
+4. In sala d’attesa: carica **visura** + **documento identità** (PDF/PNG/JPG/WebP; anteprima), poi paga con Stripe (**mensile o annuale −1 mese**, D-079).
+5. Se i documenti coincidono → **auto-Attiva** (D-163); altrimenti Cabina Ops. Email «gestionale attivo» → bottone **Accedi al gestionale** (`enter_url`, D-165) → stessa password register.
 6. Collaboratori: password nell’invito. API keys solo da Impostazioni se servono. Tetti (Starter 3 · Pro 10 · Agency ∞).
 
 **Logo (D-158)**  
@@ -54,12 +54,12 @@ Login da `/it/login?from=app`. Se non la ricordi → **Password dimenticata?** (
 
 ### 1.2.1 Entrare dopo l’attivazione (o con invito)
 
-Dopo Attiva Ops ricevi email di conferma. Entri con **email + password di registrazione** (D-161).
+Dopo Attiva (auto o Ops) ricevi email di conferma. Il bottone apre il **login gestionale** con destinazione dashboard (`enter_url` · D-165) — non un deep-link a freddo (evita 403 con sessione cloud). Entri con **email + password di registrazione** (D-161).
 
 > **Sei stato invitato?** Link nell’email → scegli nome + password → entri nell’agenzia.
 
 **Passi**
-1. `/it/login?from=app` (o link in email).
+1. Bottone email **Accedi al gestionale** oppure `/it/login?from=app&next=/it/app/dashboard`.
 2. Email + password di registrazione (o quella dell’invito).
 3. **Entra** → dashboard.
 
@@ -171,8 +171,8 @@ Anagrafica agenzia + identificazione clientela (visura/CI) + pagamento pacchetto
 ### Sala d’attesa (`/it/app/waiting-activation`)
 
 1. Carica **visura camerale** e **documento identità** (PDF/PNG/JPG/WebP, max 8 MB).
-2. Paga il pacchetto (Stripe).
-3. Attendi Super Admin → email «gestionale attivo» → login con la **password di registrazione**.
+2. Scegli ciclo **mensile** o **annuale (−1 mese)** e paga con Stripe (D-079). Al ritorno da Stripe la pagina riconcilia `/billing/status` (D-164).
+3. Se match KYC → auto-Attiva + email; altrimenti attesa Ops. Poi **Accedi al gestionale** (`enter_url`) con la **password di registrazione**.
 
 «Controlla di nuovo» aggiorna lo stato senza riportarti al register.
 

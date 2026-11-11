@@ -357,28 +357,32 @@ voci:
     contenuto:
       a_cosa_serve: >
         Aprire un account gestionale B2B: pacchetto, una password,
-        anagrafica e documenti, pagamento, Attiva Ops sblocca il CRM.
-        Stessa password dal register al login (D-161).
+        anagrafica e documenti, pagamento. Se KYC match → auto-Attiva
+        (D-163); altrimenti Ops. Stessa password register→login (D-161).
       quando_si_usa: >
-        Prima apertura agenzia su OMNIA (D-157…D-161).
+        Prima apertura agenzia su OMNIA (D-157…D-165).
       passi:
         - "Scegli Starter / Pro / Agency (3 box) su /it/register → form."
         - "Nome, email e password (min 8) — resta quella di login (D-161)."
-        - "Completa onboarding; email 'richiesta ricevuta' solo a fine
-          wizard (D-160)."
+        - "Completa onboarding; email 'richiesta ricevuta' solo dopo
+          KYC docs + pagamento (D-162), se non auto-Attiva."
         - "Logo file facoltativo se hai già sito/dominio (D-158)."
-        - "Sala d'attesa: visura + CI (anteprima) + Stripe."
-        - "Ops Attiva (3 passi) → email 'gestionale attivo'; login con
-          la stessa password. API keys solo da Impostazioni se servono."
+        - "Sala d'attesa: visura + CI + Stripe mensile/annuale (−1 mese)."
+        - "Match KYC → auto-Attiva + email; bottone enter_url login
+          gestionale (D-165). API keys solo da Impostazioni."
         - "Se chiudi a metà: login con la password o Password dimenticata."
       errori_comuni:
         - problema: "Non riesco a fare login appena registrato"
           soluzione: >
             Usa la password scelta in register.
+        - problema: "Bottone email gestionale dà 403"
+          soluzione: >
+            Usa enter_url (login ?from=app&next=dashboard). Non aprire
+            /app/dashboard con sessione cloud/client (D-165).
         - problema: "Mi arrivano email troppo presto"
           soluzione: >
-            D-160: a register non parte mail. Solo pending a fine
-            onboarding e activated a Attiva.
+            D-160/D-162: a register non parte mail. Pending solo dopo
+            KYC+pay se non auto-Attiva; activated a Attiva.
         - problema: "L'upload logo/documenti sembra fallire"
           soluzione: >
             Usa PDF/PNG/JPG/WebP (no HEIC iPhone). Anteprima dopo upload.
