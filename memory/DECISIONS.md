@@ -7,6 +7,16 @@ Registro di tutte le decisioni di business e tecniche prese durante il progetto.
 
 ## Decisioni prese
 
+### D-161 — Login semplice: password register = definitiva · 11-Nov-2026
+- **Contesto**: Founder — «per questo login abbiamo creato un elefante?» → sì. Tre password (temp → API key → cambio forzato) troppe solo per entrare.
+- **Decisione**:
+  1. Password scelta in **register** (D-159) resta la password di login.
+  2. Ops **Attiva** default `issue_login_credential=false`: sblocca CRM + email `agency_activated` (niente sostituzione password / niente API key in email).
+  3. **API keys** solo da Impostazioni → API keys quando servono integrazioni.
+  4. Invito collaboratore: sceglie password nel form accept (niente API=password).
+  5. Modal `must_change_password` resta solo per account legacy già emessi con API=password.
+- **Stato**: ✅ in codice.
+
 ### D-160 — Email solo a fine flusso + copy chiave + cambio password obbligatorio · 11-Nov-2026
 - **Contesto**: Founder — mail arrivate prima della fine registrazione; chiave API in email senza copy chiaro; dopo Attiva non si capiva come sostituire la password; elenco clienti obblighi di legge; bottoni «azioni pericolose» oscuri.
 - **Decisione**:

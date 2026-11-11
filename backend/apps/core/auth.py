@@ -199,8 +199,8 @@ async def register(req: RegisterRequest, request: Request, response: Response,
     frontend = get_public_base_url()
 
     # Welcome solo B2C/student. B2B: niente mail a register (D-156/D-160).
-    # Email «richiesta ricevuta» parte a fine onboarding (agency_pending).
-    # Credenziali definitive solo a Ops Attiva (agency_credentials).
+    # Email «richiesta ricevuta» a fine onboarding (agency_pending).
+    # D-161: password del register resta quella di login; Attiva → agency_activated.
     if not agency_intent:
         try:
             await send_email(

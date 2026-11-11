@@ -269,7 +269,6 @@ async def accept_invite(
     role = invite["role"]
     now = datetime.now(timezone.utc).isoformat()
 
-    credential_plaintext = None
     member_name = (payload.name or "").strip()
     user = await db.users.find_one({"email": email})
     if user:
@@ -293,15 +292,21 @@ async def accept_invite(
         user_role = role if user.get("role") == "client" else user["role"]
         member_name = member_name or user.get("name") or email
     else:
-        # D-157 — nuovo collaboratore: API key = password iniziale (password form opzionale)
+        # D-161 — collaboratore sceglie la password nell'invito (niente API=password)
         member_name = (
             member_name or (invite.get("name_hint") or "").strip() or email.split("@")[0]
         ).strip()
         if not member_name:
             raise HTTPException(status_code=400, detail="name_required")
-        import secrets as _secrets
-
-        bootstrap = (payload.password or "").strip() or _secrets.token_urlsafe(24)
+        bootstrap = (payload.password or "").strip()
+        if len(bootstrap) < 8:
+            raise HTTPException(
+                status_code=400,
+                detail={
+                    "error": "password_required",
+                    "hint": "Scegli una password (min 8 caratteri)",
+                },
+            )
         new_user = UserInDB(
             email=email,
             password_hash=hash_password(bootstrap),
@@ -309,21 +314,13 @@ async def accept_invite(
             role=role,
             lang=lang,
             agency_ids=[agency_id],
+            must_change_password=False,
         )
         doc = new_user.model_dump()
         doc["active_agency_id"] = agency_id
         await db.users.insert_one(doc)
         user_id = new_user.id
         user_role = role
-        from shared.auth.agency_credentials import issue_login_api_credential
-
-        cred = await issue_login_api_credential(
-            user_id=user_id,
-            agency_id=agency_id,
-            name=f"Collaboratore · {member_name}",
-            issued_by=invite.get("invited_by"),
-        )
-        credential_plaintext = cred.get("key")
 
     # Mark invite as accepted
     await db.agency_invites.update_one(
@@ -335,29 +332,6 @@ async def accept_invite(
             }
         },
     )
-
-    if credential_plaintext:
-        try:
-            agency_doc = await db.agencies.find_one(
-                {"id": agency_id}, {"_id": 0, "display_name": 1, "slug": 1}
-            )
-            fe = (os.environ.get("FRONTEND_URL") or "https://www.omniarealestateecosystem.it").rstrip("/")
-            await send_email(
-                to=email,
-                template="agency_member_credentials",
-                lang=lang if lang in ("it", "en", "es") else "it",
-                variables={
-                    "name": member_name,
-                    "agency_name": (agency_doc or {}).get("display_name")
-                    or (agency_doc or {}).get("slug")
-                    or "OMNIA",
-                    "api_key": credential_plaintext,
-                    "login_url": f"{fe}/{lang}/login",
-                    "dashboard_url": f"{fe}/{lang}/app/dashboard",
-                },
-            )
-        except Exception as e:  # noqa: BLE001
-            logger.warning("member credentials email failed: %s", e)
 
     # A-017 — notify inviter (and owner fallback) that invite was accepted
     try:

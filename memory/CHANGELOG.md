@@ -1,3 +1,9 @@
+## 2026-11-11 — D-161 login semplice + reset Nicastro
+
+- Attiva non sostituisce più la password con API key (default OFF)
+- Invito collaboratore: password nel form, niente API=password
+- Cap.01 / DECISIONS aggiornati; reset tenant Nicastro per rifare dogfood
+
 ## 2026-11-11 — Closeout HAL/manuale D-160 + A-038 + Cabina 3 passi
 
 - Cap.00/01/19 MD + YAML HAL (`api.cabina-attivazione-3-passi`, `api.a038-fattura-incasso`)
