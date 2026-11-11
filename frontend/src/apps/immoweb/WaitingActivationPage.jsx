@@ -226,60 +226,88 @@ export default function WaitingActivationPage() {
             </p>
             <div className="space-y-3">
               <div
-                className={`rounded-md border px-3 py-2 ${
+                className={`rounded-md border px-3 py-3 ${
                   hasVisura ? "border-emerald-300 bg-emerald-50/70" : "border-stone-200 bg-stone-50"
                 }`}
                 data-testid="waiting-visura-status"
               >
-                <p className="text-xs font-medium text-stone-800 normal-case tracking-normal">
-                  Visura camerale:{" "}
-                  {hasVisura ? (
-                    <span className="text-emerald-800">
-                      ✓ {visuraDoc?.filename || "caricata"}
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <p className="text-xs font-medium text-stone-800 normal-case tracking-normal">
+                    Visura camerale:{" "}
+                    {hasVisura ? (
+                      <span className="text-emerald-800">
+                        ✓ {visuraDoc?.filename || "caricata"}
+                      </span>
+                    ) : (
+                      <span className="text-amber-800">manca</span>
+                    )}
+                  </p>
+                  <label className="inline-flex">
+                    <span className="sr-only">Carica visura</span>
+                    <input
+                      type="file"
+                      accept="application/pdf,image/png,image/jpeg,image/webp,.pdf,.png,.jpg,.jpeg,.webp"
+                      disabled={upBusy || !agency}
+                      data-testid="waiting-upload-visura"
+                      className="sr-only"
+                      onChange={(e) => {
+                        const f = e.target.files?.[0];
+                        uploadKyc("visura_camerale", f);
+                        e.target.value = "";
+                      }}
+                    />
+                    <span
+                      className={`cursor-pointer text-[10px] uppercase tracking-widest px-3 py-2 border ${
+                        upBusy || !agency
+                          ? "opacity-40 pointer-events-none border-stone-300 text-stone-400"
+                          : "border-[#0B1E3F] text-[#0B1E3F] hover:bg-white"
+                      }`}
+                    >
+                      {hasVisura ? "Sostituisci" : "Carica file"}
                     </span>
-                  ) : (
-                    <span className="text-amber-800">manca</span>
-                  )}
-                </p>
-                <input
-                  type="file"
-                  accept="application/pdf,image/png,image/jpeg,image/webp,.pdf,.png,.jpg,.jpeg,.webp"
-                  disabled={upBusy || !agency}
-                  data-testid="waiting-upload-visura"
-                  className="block mt-2 w-full text-xs normal-case tracking-normal"
-                  onChange={(e) => {
-                    const f = e.target.files?.[0];
-                    uploadKyc("visura_camerale", f);
-                    e.target.value = "";
-                  }}
-                />
+                  </label>
+                </div>
               </div>
               <div
-                className={`rounded-md border px-3 py-2 ${
+                className={`rounded-md border px-3 py-3 ${
                   hasId ? "border-emerald-300 bg-emerald-50/70" : "border-stone-200 bg-stone-50"
                 }`}
                 data-testid="waiting-id-status"
               >
-                <p className="text-xs font-medium text-stone-800 normal-case tracking-normal">
-                  Documento identità:{" "}
-                  {hasId ? (
-                    <span className="text-emerald-800">✓ {idDoc?.filename || "caricato"}</span>
-                  ) : (
-                    <span className="text-amber-800">manca</span>
-                  )}
-                </p>
-                <input
-                  type="file"
-                  accept="application/pdf,image/png,image/jpeg,image/webp,.pdf,.png,.jpg,.jpeg,.webp"
-                  disabled={upBusy || !agency}
-                  data-testid="waiting-upload-id"
-                  className="block mt-2 w-full text-xs normal-case tracking-normal"
-                  onChange={(e) => {
-                    const f = e.target.files?.[0];
-                    uploadKyc("documento_identita", f);
-                    e.target.value = "";
-                  }}
-                />
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <p className="text-xs font-medium text-stone-800 normal-case tracking-normal">
+                    Documento identità:{" "}
+                    {hasId ? (
+                      <span className="text-emerald-800">✓ {idDoc?.filename || "caricato"}</span>
+                    ) : (
+                      <span className="text-amber-800">manca</span>
+                    )}
+                  </p>
+                  <label className="inline-flex">
+                    <span className="sr-only">Carica documento</span>
+                    <input
+                      type="file"
+                      accept="application/pdf,image/png,image/jpeg,image/webp,.pdf,.png,.jpg,.jpeg,.webp"
+                      disabled={upBusy || !agency}
+                      data-testid="waiting-upload-id"
+                      className="sr-only"
+                      onChange={(e) => {
+                        const f = e.target.files?.[0];
+                        uploadKyc("documento_identita", f);
+                        e.target.value = "";
+                      }}
+                    />
+                    <span
+                      className={`cursor-pointer text-[10px] uppercase tracking-widest px-3 py-2 border ${
+                        upBusy || !agency
+                          ? "opacity-40 pointer-events-none border-stone-300 text-stone-400"
+                          : "border-[#0B1E3F] text-[#0B1E3F] hover:bg-white"
+                      }`}
+                    >
+                      {hasId ? "Sostituisci" : "Carica file"}
+                    </span>
+                  </label>
+                </div>
               </div>
             </div>
             {upBusy ? (
