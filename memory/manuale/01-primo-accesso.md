@@ -34,44 +34,45 @@ Non è necessario capire tutto subito. Il manuale ti guida modulo per modulo. Il
 
 ## 1.2 · Login e cambio password
 
-### 1.2.0 Registrazione nuova agenzia (D-157 / D-158)
+### 1.2.0 Registrazione nuova agenzia (D-157…D-160)
 
-Flusso gestionale B2B (simile agli altri CRM immobiliari):
+Flusso gestionale B2B:
 
-1. Scegli il **pacchetto** (Starter / Pro / Agency) su `/it/register`.
-2. Compila nome + email. **Non** scegli la password ora.
-3. Completa l’onboarding (identità, fiscale, branding) → sala d’attesa.
-4. In sala d’attesa: carica **visura** + **documento identità** (PDF/PNG/JPG/WebP), poi paga con Stripe.
-5. Il Super Admin verifica KYC + pagamento e **Attiva**: ricevi per email la **chiave API = password iniziale** (poi la cambi tu).
-6. I collaboratori invitati ricevono la stessa logica (API key = password iniziale), con tetti posti a sedere per piano (Starter 3 · Pro 10 · Agency illimitato).
+1. Scegli il **pacchetto** (3 box Starter / Pro / Agency) su `/it/register` → si apre il form.
+2. Compila nome + email + **password temporanea** (min 8; D-159). Ti serve per rientrare durante onboarding / sala d’attesa.
+3. Completa l’onboarding (identità, fiscale, branding) → sala d’attesa.  
+   Email «richiesta ricevuta» (`agency_pending`) parte **solo a fine onboarding** (D-160: niente mail a metà register).
+4. In sala d’attesa: carica **visura** + **documento identità** (PDF/PNG/JPG/WebP; anteprima dopo upload), poi paga con Stripe.
+5. Il Super Admin in Cabina fa la checklist a **3 passi** (documenti → pagamento → Attiva). Ricevi email con **chiave API = password iniziale** (e Ops può **Copia chiave** show-once).
+6. Collaboratori invitati: stessa logica API key = password iniziale; tetti posti a sedere (Starter 3 · Pro 10 · Agency ∞).
 
 **Logo (D-158)**  
-Se hai già indicato il **sito web / dominio**, il file logo è **facoltativo** in onboarding (puoi caricarlo dopo). Altrimenti carica PNG/JPG/WebP/SVG (max 2 MB). Dopo l’upload vedi anteprima locale e conferma «Logo caricato».
+Con **sito web / dominio** già indicato, il file logo è **facoltativo**. Altrimenti PNG/JPG/WebP/SVG (max 2 MB) con anteprima locale.
 
 **Se chiudi il browser a metà**  
-Non hai ancora la chiave API: usa il link **«Continua registrazione»** ricevuto via email, oppure su login gestionale **Password dimenticata?** per impostare una password temporanea e riprendere onboarding / sala d’attesa.
+Hai già la password temporanea del register: entra da `/it/login?from=app`. Se l’hai dimenticata → **Password dimenticata?**.
 
 ### 1.2.1 Entrare dopo l’attivazione (o con invito)
 
-Dopo l’Attiva Ops (o se sei stato invitato) hai ricevuto per email:
+Dopo Attiva Ops (o invito) hai ricevuto per email:
 - Link di accesso al gestionale.
-- La tua email e la **chiave API / password iniziale**.
+- La **chiave API / password iniziale** (seleziona il riquadro → Ctrl+C / tieni premuto → Copia).
 
-> **Sei stato invitato da un titolare?** Usa il link nell’email di invito: entri in un’agenzia già attiva, salti il wizard e inizi a lavorare.
+> **Sei stato invitato da un titolare?** Usa il link nell’email di invito: entri in un’agenzia già attiva.
 
 **Passi**
-1. Apri il link ricevuto per email (o `/it/login?from=app`).
-2. Scrivi email + chiave API / password iniziale.
-3. Clicca **Entra**.
-4. Al primo accesso ti verrà chiesto di **cambiare la password**.
+1. Apri il link (o `/it/login?from=app`).
+2. Email + chiave API / password iniziale.
+3. **Entra**.
+4. Al **primo ingresso** compare una schermata obbligatoria: incolli la chiave come password attuale e scegli la **tua** password (`POST /auth/me/change-password`, D-160). La chiave resta in Impostazioni → API keys per integrazioni.
 
 [SCREEN: cap1-login-form]
 
 **Errori comuni**
-- *"Email o password sbagliata"* e ti sei appena registrato **senza** chiave API ancora: non è un bug — usa **Password dimenticata?** o il link resume (D-158).
-- *"Email o password sbagliata"* con chiave già ricevuta: controlla spazi in copia-incolla.
-- *"Il link scade dopo 7 giorni"* (invito collaboratore): chiedi al titolare di re-inviarlo da **Collaboratori** (Cap. 13).
-- *Login che sembra riuscito ma resti fuori su URL pubblico*: hard refresh (Safari Cmd+Option+R; Firefox Ctrl+Shift+R). Cookie Secure su HTTPS.
+- *"Email o password sbagliata"* in onboarding: usa la **password temporanea** del register, non la chiave API (ancora non esiste).
+- *"Email o password sbagliata"* dopo Attiva: controlla spazi in copia-incolla della chiave.
+- *"Il link scade dopo 7 giorni"* (invito): chiedi re-invio da **Collaboratori** (Cap. 13).
+- *Login ok ma resti fuori su URL pubblico*: hard refresh. Cookie Secure su HTTPS.
 
 ### 1.2.1b Area riservata ImmobilCloud (B2C · D-131 / D-135)
 

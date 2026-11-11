@@ -300,36 +300,41 @@ voci:
       - "[SCREEN: cap1-forgot-password]"
 
   - id: primo-accesso.cambiare-password
-    titolo: Cambiare la password in un secondo momento
+    titolo: Cambiare la password (primo ingresso dopo Attiva o in seguito)
     modulo: Primo accesso
     widget: null
     pubblico: [titolare, agente, segreteria]
     livello: base
-    tags: [password, profilo, sicurezza]
+    tags: [password, profilo, sicurezza, d-160, api-key]
     correlati:
       - primo-accesso.password-dimenticata
       - primo-accesso.profilo-utente
-    domanda_naturale: "Come cambio la password mentre sono loggato?"
+      - primo-accesso.registrazione-b2b-gestionale
+      - api-keys.emissione-show-once
+    domanda_naturale: "Come sostituisco la chiave API con la mia password al primo ingresso?"
     contenuto:
       a_cosa_serve: >
-        Aggiornare la password per sicurezza (buona norma ogni 3-6 mesi).
+        Dopo Attiva Ops la chiave API è la password iniziale. Al primo
+        ingresso una schermata obbligatoria chiede di sostituirla
+        (POST /auth/me/change-password). La chiave resta per le API.
       quando_si_usa: >
-        Quando la password è vecchia, se sospetti che qualcuno la conosca,
-        o quando la usi anche su altri siti (mai una buona idea).
+        Subito dopo il primo login post-Attiva (must_change_password),
+        oppure più tardi per rotazione sicurezza.
       passi:
-        - Clicca sul tuo nome in alto a destra.
-        - Scegli "Profilo".
-        - Scorri fino alla sezione "Sicurezza".
-        - Clicca "Cambia password".
-        - Inserisci la password attuale.
-        - Inserisci la nuova password (almeno 8 caratteri, una maiuscola,
-          un numero).
-        - Clicca "Salva".
+        - "Nell'email: seleziona il riquadro chiave → Ctrl+C (mobile:
+          tieni premuto → Copia)."
+        - "Login con email + chiave."
+        - "Schermata 'Scegli la tua password': attuale = chiave; nuova
+          (min 8) due volte; Salva e continua."
+        - "In seguito: Password dimenticata o profilo se disponibile."
       errori_comuni:
+        - problema: "Password attuale non corretta"
+          soluzione: >
+            Incolla la chiave dall'email senza spazi. Non usare la
+            password temporanea del register (sostituita da Attiva).
         - problema: "La nuova password è rifiutata"
           soluzione: >
-            Assicurati che abbia almeno 8 caratteri, una lettera maiuscola
-            e un numero. Evita spazi.
+            Almeno 8 caratteri. Evita spazi.
       permessi:
         - Tutti gli utenti autenticati
     screenshot: []
@@ -342,35 +347,44 @@ voci:
     widget: null
     pubblico: [titolare]
     livello: base
-    tags: [registrazione, b2b, d-157, d-158, kyc, stripe, api-key]
+    tags: [registrazione, b2b, d-157, d-158, d-159, d-160, kyc, stripe, api-key]
     correlati:
       - primo-accesso.onboarding-agenzia
       - primo-accesso.password-dimenticata
+      - primo-accesso.cambiare-password
       - api-keys.emissione-show-once
-    domanda_naturale: "Come registro la mia agenzia su OMNIA senza password iniziale?"
+      - api.cabina-attivazione-3-passi
+    domanda_naturale: "Come registro la mia agenzia su OMNIA? Che password uso?"
     contenuto:
       a_cosa_serve: >
-        Aprire un account gestionale B2B: scegli pacchetto, completi
-        anagrafica e documenti, paghi, poi Ops attiva e ti invia la
-        chiave API usata come password iniziale.
+        Aprire un account gestionale B2B: pacchetto, password temporanea,
+        anagrafica e documenti, pagamento, Attiva Ops → chiave API come
+        password iniziale, poi cambio obbligatorio al primo ingresso.
       quando_si_usa: >
-        Prima apertura agenzia su OMNIA (flusso D-157/D-158).
+        Prima apertura agenzia su OMNIA (D-157…D-160).
       passi:
-        - "Scegli Starter / Pro / Agency su /it/register (niente password)."
-        - "Completa onboarding: identità, fiscale+PEC+sito, branding."
-        - "Logo file facoltativo se hai già indicato sito/dominio (D-158)."
-        - "In sala d'attesa carica visura + documento identità, poi Stripe."
-        - "Dopo Attiva Ops ricevi email con API key = password iniziale."
-        - "Se chiudi a metà: email 'Continua registrazione' o Password dimenticata."
+        - "Scegli Starter / Pro / Agency (3 box) su /it/register → form."
+        - "Nome, email e password temporanea (min 8) — D-159."
+        - "Completa onboarding; email 'richiesta ricevuta' solo a fine
+          wizard (D-160: niente mail a metà register)."
+        - "Logo file facoltativo se hai già sito/dominio (D-158)."
+        - "Sala d'attesa: visura + CI (anteprima) + Stripe."
+        - "Ops Attiva (3 passi) → email con API key; al primo ingresso
+          schermata obbligatoria per scegliere la password tua."
+        - "Se chiudi a metà: login con password temporanea o Password
+          dimenticata."
       errori_comuni:
         - problema: "Non riesco a fare login appena registrato"
           soluzione: >
-            Normale: non hai ancora la chiave API. Usa Password dimenticata
-            o il link resume ricevuto via email.
+            Usa la password temporanea scelta in register, non la chiave
+            API (ancora non esiste).
+        - problema: "Mi arrivano email troppo presto"
+          soluzione: >
+            D-160: a register non parte più mail. Solo pending a fine
+            onboarding e credentials a Attiva.
         - problema: "L'upload logo/documenti sembra fallire"
           soluzione: >
-            Usa PDF/PNG/JPG/WebP. Se compare 'Logo caricato' o 'Documento
-            caricato' l'upload è ok anche se la preview è strana.
+            Usa PDF/PNG/JPG/WebP (no HEIC iPhone). Anteprima dopo upload.
       permessi:
         - Nuovo titolare in registrazione
     screenshot: []

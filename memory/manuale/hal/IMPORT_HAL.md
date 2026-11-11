@@ -1,6 +1,6 @@
-# 📚 HAL Knowledge — Import & Cold Start (v0.55-d148-paperless)
+# 📚 HAL Knowledge — Import & Cold Start (v0.57-d160-a038)
 
-**Ultimo aggiornamento**: 06-Nov-2026 (D-147 Kling 30 cr + coda #93–#96)  
+**Ultimo aggiornamento**: 11-Nov-2026 (D-160 email/credenziali · A-038 · Cabina 3 passi)  
 **Corpus**: YAML in `memory/manuale/hal/*.yaml` (Cap. 1–27 + `00-api-codice`) · MD esclusi dal RAG ingest  
 **Motore**: `hal_knowledge.py` · reindex: `POST /api/app/hal/knowledge/reindex?force=true` (super_admin)  
 **Regola Founder D-084**: ogni ship aggiorna MD+YAML nello stesso giro — vedi `memory/MANUAL_SYNC.md`.

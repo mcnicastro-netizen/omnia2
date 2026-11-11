@@ -289,8 +289,22 @@ Fail Visura post-pagamento → `ops_alerts` kind `openapi_visura`.
 
 **Audit Portale D-118** (9-Ott): **analisi + residuo codice CHIUSI** · fascicolo `OMNIA_PORTALE_AUDIT_FASCICOLO.md`.  
 Residui: P-021 Google opz. · P-026 vault whsec MITIGATO. **MERGED su main** (PR #12).  
-Post-test: **A-038** (Invoice Stripe + dati fiscali — solo con «vai»).  
-HAL: `api.founder-ops-portale`, `api.portale-audit-program`, `api.cloud-environment-builds`.
+Post-test / pre go-live: **A-038** (fattura + dati fiscali su ogni incasso — solo con «vai»).  
+HAL: `api.founder-ops-portale`, `api.portale-audit-program`, `api.cloud-environment-builds`, `api.a038-fattura-incasso`.
+
+### 19.10.7 · A-038 — Fatturare l’incasso (gap onesto · 11-Nov-2026)
+
+**Cosa funziona oggi (anche sandbox)**  
+- Checkout Stripe B2B/B2C → `payment_transactions` / entitlement → webhook.  
+- Abbonamenti: Invoice PDF Stripe sincronizzate in Ops (D-117).  
+- Tenant B2B: P.IVA, PEC, sede già in onboarding / Impostazioni.
+
+**Cosa NON è ancora fatto**  
+1. Al checkout B2B Stripe riceve soprattutto l’**email** — non P.IVA / PEC / codice SDI sul Customer.  
+2. **Stripe Invoice PDF ≠ fattura elettronica SDI** (XML Agenzia Entrate).  
+3. Percorso FE (OMNIA in-app vs Fatture in Cloud / commercialista) **non deciso**.
+
+Voce SoT: `memory/ASPETTI_DA_APPROFONDIRE.md` → **A-038**. Non implementare senza «vai» Founder.
 
 ---
 

@@ -1,13 +1,18 @@
 # Prossima sessione — programma passi
 
-**Aggiornato**: 10 Novembre 2026, sera (~17:15 Europe/Rome) — chiusura giornata dogfood registrazione  
-**Ripresa dettagliata**: [`RIPRENDI_2026-11-11.md`](./RIPRENDI_2026-11-11.md)  
+**Aggiornato**: 11 Novembre 2026 (~13:20 CET) — chiusura dogfood registrazione/attivazione  
+**Ripresa**: [`RIPRENDI_2026-11-11.md`](./RIPRENDI_2026-11-11.md)  
 **Repo**: https://github.com/mcnicastro-netizen/omnia2 ✅  
-**Environment**: omnia2 (SoT GitHub — mai New Project / Origin-tmp)
+**Environment**: omnia2
 
-**Sicurezza Railway**: runbook [`docs/ops/RAILWAY_SECURITY_ROTATION_2026-10-22.md`](../docs/ops/RAILWAY_SECURITY_ROTATION_2026-10-22.md) · stato 🟡 core done.  
-Smoke: `GET $OMNIA_API_PUBLIC_URL/api/health` → ok/db=ok.  
-Vault: [`memory/CLOUD_SECRETS_INVENTORY.md`](./CLOUD_SECRETS_INVENTORY.md).
+---
+
+## ⛔ Prima del go-live commerciale
+
+1. Margini: `PRICING_OMNIA.md` / `PRICING_B2C.md` ↔ codice.
+2. **A-038** — fattura / dati fiscali su ogni incasso (P.IVA·SDI su Customer + percorso FE). Solo con «vai».
+3. Smoke Founder Ops finance + Cabina Clienti CSV.
+4. OK Founder → go-live Stripe live.
 
 ---
 
@@ -15,37 +20,17 @@ Vault: [`memory/CLOUD_SECRETS_INVENTORY.md`](./CLOUD_SECRETS_INVENTORY.md).
 
 | Ruolo | Doc |
 |-------|-----|
-| Freccia | [`docs/audit/OMNIA_COERENZA_SISTEMA.md`](../docs/audit/OMNIA_COERENZA_SISTEMA.md) |
-| **Verso-8** | [`PROGRAMMA_VERSO_8.md`](./PROGRAMMA_VERSO_8.md) |
-| **Registrazione B2B** | **D-157** + **D-158** (logo vs sito, resume login) |
-| **Cabina Ops** | **D-154** / **D-155** |
-| **Primo cliente** | Nicastro — tenant `nicastro-immobiliare` **pending** in prod (sera 10-Nov) |
+| Cabina + B2B | **D-153…D-160** |
+| Fattura incasso | **A-038** aperta |
+| Primo cliente | Nicastro · Attiva se pending |
+| Manuale/HAL | Cap.00/01/19 allineati 11-Nov |
 
 ---
 
-## Domani 11-Nov — ripresa riposata
+## Prossimi passi
 
-1. Leggere [`RIPRENDI_2026-11-11.md`](./RIPRENDI_2026-11-11.md).
-2. Decidere: **continuare** `nicastro-immobiliare` pending **oppure** offboard e rifare register con D-158.
-3. Completare fino a **login CRM** (KYC + pagamento + Attiva → API key).
-4. Solo dopo: grant/crediti se serve, import, marathon tool.
+1. Nicastro: KYC + pay → Attiva → cambio password titolare.  
+2. «vai» A-038 se si vuole fatturare prima del live.  
+3. Niente New Project / Origin-tmp.
 
----
-
-## Login utili
-
-| Chi | Come |
-|-----|------|
-| Founder Ops | `ADMIN_EMAIL` vault → `/it/app/ops` |
-| Nicastro pending | `info@nicastroimmobiliare.it` → **Password dimenticata?** / email resume finché non arriva API key |
-| Post-Attiva | email `agency_credentials` (API key = password) |
-
-URL: `https://omniarealestateecosystem.it/it` · API health su `OMNIA_API_PUBLIC_URL`.
-
----
-
-## Debito noto (non urgente stanotte)
-
-- `STORAGE_BACKEND=local` su Railway (upload non durevoli al redeploy).
-- Reindex HAL corpus dopo merge docs (Cap.01 YAML aggiornato).
-- Margini listino pre go-live commerciale (gate Founder invariato).
+Vault: [`CLOUD_SECRETS_INVENTORY.md`](./CLOUD_SECRETS_INVENTORY.md).
