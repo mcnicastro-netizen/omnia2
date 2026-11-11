@@ -173,10 +173,7 @@ export default function RegisterPage() {
     }
     if (!form.password || form.password.length < 8) {
       setError(
-        t(
-          "auth.agency_password_required",
-          "Scegli una password (minimo 8 caratteri). Per agenzia è temporanea fino all’attivazione Ops."
-        )
+        t("auth.password_required", "Scegli una password (minimo 8 caratteri).")
       );
       return;
     }
@@ -450,9 +447,7 @@ export default function RegisterPage() {
 
             <label className="block mb-5">
               <span className="block text-xs font-sans uppercase tracking-widest text-stone-500 mb-2">
-                {isAgencyRole
-                  ? t("auth.agency_temp_password", "Password temporanea")
-                  : t("auth.password")}
+                {t("auth.password")}
               </span>
               <PasswordField
                 data-testid="register-password"
@@ -465,12 +460,12 @@ export default function RegisterPage() {
               />
               {isAgencyRole ? (
                 <p
-                  data-testid="register-temp-password-hint"
+                  data-testid="register-password-hint"
                   className="mt-2 font-sans text-xs text-stone-600"
                 >
                   {t(
                     "auth.agency_password_hint",
-                    "Serve per entrare durante onboarding e sala d’attesa. Dopo l’attivazione Ops ricevi la chiave API e sostituisci questa password."
+                    "Dopo la verifica riceverai la password per accedere al gestionale."
                   )}
                 </p>
               ) : null}

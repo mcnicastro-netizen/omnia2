@@ -318,7 +318,7 @@ export default function LoginPage() {
               >
                 {t(
                   "auth.agency_resume_hint",
-                  "In registrazione: entra con la password temporanea scelta al signup. Dopo l’attivazione Ops userai la chiave API ricevuta via email. Se non ricordi la temporanea → «Password dimenticata?»."
+                  "In registrazione: entra con la password scelta al signup. Dopo la verifica riceverai la password per il gestionale. Se non la ricordi → «Password dimenticata?»."
                 )}
               </p>
             ) : (
