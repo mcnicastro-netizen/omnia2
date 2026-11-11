@@ -72,19 +72,47 @@ export default function WaitingActivationPage() {
   const kycReady = hasVisura && hasId;
   const readyForOps = kycReady && paid;
 
+  const fileLooksOk = (file) => {
+    const ct = (file.type || "").toLowerCase().split(";")[0].trim();
+    const name = (file.name || "").toLowerCase();
+    if (name.endsWith(".heic") || name.endsWith(".heif") || ct.includes("heic") || ct.includes("heif")) {
+      return {
+        ok: false,
+        msg: t(
+          "waiting_activation.doc_heic_error",
+          "HEIC non supportato. Su iPhone: Impostazioni → Fotocamera → Formati → Compatibilità massima (JPG), oppure esporta PDF."
+        ),
+      };
+    }
+    const okMime = ["application/pdf", "image/png", "image/jpeg", "image/jpg", "image/webp"];
+    const okExt = [".pdf", ".png", ".jpg", ".jpeg", ".webp"];
+    if (!ct || ct === "application/octet-stream" || ct === "binary/octet-stream") {
+      if (okExt.some((e) => name.endsWith(e))) return { ok: true };
+      return {
+        ok: false,
+        msg: t(
+          "waiting_activation.doc_type_error",
+          "Formato non supportato. Usa PDF, PNG, JPG o WebP."
+        ),
+      };
+    }
+    if (okMime.includes(ct) || okExt.some((e) => name.endsWith(e))) return { ok: true };
+    return {
+      ok: false,
+      msg: t(
+        "waiting_activation.doc_type_error",
+        "Formato non supportato. Usa PDF, PNG, JPG o WebP (niente HEIC/GIF)."
+      ),
+    };
+  };
+
   const uploadKyc = async (docType, file) => {
     if (!file) return;
     setUpBusy(true);
     setMsg("");
-    const ct = (file.type || "").toLowerCase();
-    const okTypes = ["application/pdf", "image/png", "image/jpeg", "image/webp"];
-    if (ct && !okTypes.includes(ct)) {
-      setMsg(
-        t(
-          "waiting_activation.doc_type_error",
-          "Formato non supportato. Usa PDF, PNG, JPG o WebP (niente HEIC/GIF)."
-        )
-      );
+    const check = fileLooksOk(file);
+    if (!check.ok) {
+      setMsg(check.msg);
       setUpBusy(false);
       return;
     }
@@ -94,11 +122,18 @@ export default function WaitingActivationPage() {
       return;
     }
     try {
+      // Forza refresh sessione: dopo «Invia richiesta» il ruolo/agency_id devono essere allineati
+      if (typeof refresh === "function") await refresh();
       const fd = new FormData();
       fd.append("file", file, file.name);
       fd.append("doc_type", docType);
       await api.post("/app/agencies/me/kyc/documents", fd, { timeout: 60000 });
-      setMsg(t("waiting_activation.doc_ok", "Documento caricato."));
+      setMsg(
+        t("waiting_activation.doc_ok_named", "Caricato: {{name}}").replace(
+          "{{name}}",
+          file.name || docType
+        )
+      );
       await loadStatus();
     } catch (e) {
       setMsg(formatApiErrorDetail(e?.response?.data?.detail) || "Upload fallito");
@@ -178,21 +213,29 @@ export default function WaitingActivationPage() {
 
           <section className="bg-white border border-stone-200 rounded-lg px-4 py-4 space-y-3">
             <h2 className="text-[10px] uppercase tracking-widest text-stone-500">
-              1 · {t("waiting_activation.kyc_title", "Identificazione (PDF)")}
+              1 · {t("waiting_activation.kyc_title", "Identificazione (PDF o JPG)")}
             </h2>
             <p className="text-xs text-stone-500">
-              Visura: {hasVisura ? "ok" : "manca"} · Documento: {hasId ? "ok" : "manca"}
+              Visura: {hasVisura ? "✓ caricata" : "manca"} · Documento:{" "}
+              {hasId ? "✓ caricato" : "manca"}
+            </p>
+            <p className="text-xs text-stone-500 normal-case tracking-normal">
+              {t(
+                "waiting_activation.kyc_formats",
+                "Formati: PDF, PNG, JPG, WebP (max 8 MB). Niente HEIC da iPhone."
+              )}
             </p>
             <label className="block text-xs uppercase tracking-widest text-stone-600">
               Visura camerale
               <input
                 type="file"
                 accept="application/pdf,image/png,image/jpeg,image/webp,.pdf,.png,.jpg,.jpeg,.webp"
-                disabled={upBusy}
+                disabled={upBusy || !agency}
                 data-testid="waiting-upload-visura"
                 className="block mt-1 text-xs normal-case tracking-normal"
                 onChange={(e) => {
-                  uploadKyc("visura_camerale", e.target.files?.[0]);
+                  const f = e.target.files?.[0];
+                  uploadKyc("visura_camerale", f);
                   e.target.value = "";
                 }}
               />
@@ -202,15 +245,24 @@ export default function WaitingActivationPage() {
               <input
                 type="file"
                 accept="application/pdf,image/png,image/jpeg,image/webp,.pdf,.png,.jpg,.jpeg,.webp"
-                disabled={upBusy}
+                disabled={upBusy || !agency}
                 data-testid="waiting-upload-id"
                 className="block mt-1 text-xs normal-case tracking-normal"
                 onChange={(e) => {
-                  uploadKyc("documento_identita", e.target.files?.[0]);
+                  const f = e.target.files?.[0];
+                  uploadKyc("documento_identita", f);
                   e.target.value = "";
                 }}
               />
             </label>
+            {!agency ? (
+              <p className="text-xs text-amber-800">
+                {t(
+                  "waiting_activation.need_agency_session",
+                  "Sessione agenzia non pronta. Clicca «Controlla di nuovo» oppure esci e rientra con la password temporanea."
+                )}
+              </p>
+            ) : null}
           </section>
 
           <section className="bg-white border border-stone-200 rounded-lg px-4 py-4 space-y-3">

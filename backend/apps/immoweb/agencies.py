@@ -420,8 +420,8 @@ async def upload_my_kyc_document(
     if dt not in _KYC_DOC_TYPES:
         raise HTTPException(400, detail="invalid_doc_type")
     ct = (file.content_type or "").lower().split(";")[0].strip()
-    if ct not in _ALLOWED_KYC_MIME:
-        name = (file.filename or "").lower()
+    name = (file.filename or "").lower()
+    if ct in ("", "application/octet-stream", "binary/octet-stream") or ct not in _ALLOWED_KYC_MIME:
         if name.endswith(".pdf"):
             ct = "application/pdf"
         elif name.endswith(".png"):
@@ -430,16 +430,42 @@ async def upload_my_kyc_document(
             ct = "image/jpeg"
         elif name.endswith(".webp"):
             ct = "image/webp"
+        elif name.endswith((".heic", ".heif")):
+            raise HTTPException(
+                status_code=415,
+                detail={
+                    "error": "unsupported_media_type",
+                    "hint": "Formato HEIC non supportato. Su iPhone esporta JPG/PDF (Impostazioni → Fotocamera → Formati → Compatibilità massima).",
+                },
+            )
     if ct not in _ALLOWED_KYC_MIME:
-        raise HTTPException(415, detail="unsupported_media_type")
+        raise HTTPException(
+            status_code=415,
+            detail={
+                "error": "unsupported_media_type",
+                "hint": "Usa PDF, PNG, JPG o WebP (niente HEIC/GIF).",
+            },
+        )
     data = await file.read()
     if not data or len(data) > _MAX_KYC_BYTES:
         raise HTTPException(413 if data else 400, detail="file_invalid")
 
     db = Database.get()
-    agency_id = require_agency(user)
-    agency = await db.agencies.find_one({"id": agency_id}, {"_id": 0})
+    # Sessione appena dopo create: active_agency può mancare nel token/cache —
+    # fallback owner_id per non bloccare upload visura/CI in sala d'attesa.
+    agency = None
+    agency_id = None
+    try:
+        agency_id = require_agency(user)
+        agency = await db.agencies.find_one({"id": agency_id}, {"_id": 0})
+    except HTTPException:
+        agency = None
     if not agency:
+        agency = await db.agencies.find_one({"owner_id": user["id"]}, {"_id": 0})
+        if agency:
+            agency_id = agency["id"]
+            await _attach_user_to_agency(db, user["id"], agency_id, force_active=True)
+    if not agency or not agency_id:
         raise HTTPException(404, detail="agency_not_found")
     if agency.get("owner_id") != user["id"] and user.get("role") != "super_admin":
         raise HTTPException(403, detail="not_owner")

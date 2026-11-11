@@ -102,6 +102,15 @@ export default function RegisterPage() {
       setError(t("auth.plan_required_error", "Scegli il pacchetto prima di registrarti."));
       return;
     }
+    if (!form.password || form.password.length < 8) {
+      setError(
+        t(
+          "auth.agency_password_required",
+          "Scegli una password (minimo 8 caratteri). Per agenzia è temporanea fino all’attivazione Ops."
+        )
+      );
+      return;
+    }
     setLoading(true);
     try {
       // S2 — il backend accetta solo client/student: agency_admin arriva
@@ -111,11 +120,8 @@ export default function RegisterPage() {
         email: form.email,
         role: form.account_type === "student" ? "student" : "client",
         lang,
+        password: form.password,
       };
-      // D-157 B2B: niente password scelta — Ops invierà API key = password iniziale
-      if (!isAgencyRole) {
-        payload.password = form.password;
-      }
       if (isAgencyRole) {
         payload.domain_sovereignty_confirmed = policyAccepted;
         if (form.existing_domain.trim()) {
@@ -265,32 +271,33 @@ export default function RegisterPage() {
               />
             </label>
           ))}
-          {!isAgencyRole ? (
-            <label className="block mb-5">
-              <span className="block text-xs font-sans uppercase tracking-widest text-stone-500 mb-2">
-                {t("auth.password")}
-              </span>
-              <PasswordField
-                data-testid="register-password"
-                required
-                minLength={8}
-                value={form.password}
-                onChange={set("password")}
-                autoComplete="new-password"
-                className="w-full px-4 py-3 pr-12 border border-stone-300 bg-stone-50 font-sans text-base focus:outline-none focus:border-stone-900"
-              />
-            </label>
-          ) : (
-            <p
-              data-testid="register-no-password-hint"
-              className="mb-5 font-sans text-sm text-stone-600 bg-stone-50 border border-stone-200 px-3 py-2"
-            >
-              {t(
-                "auth.agency_password_hint",
-                "Non scegli la password ora: dopo verifica e pagamento, OMNIA ti invia una chiave API da usare come password iniziale (poi la cambi tu)."
-              )}
-            </p>
-          )}
+          <label className="block mb-5">
+            <span className="block text-xs font-sans uppercase tracking-widest text-stone-500 mb-2">
+              {isAgencyRole
+                ? t("auth.agency_temp_password", "Password temporanea")
+                : t("auth.password")}
+            </span>
+            <PasswordField
+              data-testid="register-password"
+              required
+              minLength={8}
+              value={form.password}
+              onChange={set("password")}
+              autoComplete="new-password"
+              className="w-full px-4 py-3 pr-12 border border-stone-300 bg-stone-50 font-sans text-base focus:outline-none focus:border-stone-900"
+            />
+            {isAgencyRole ? (
+              <p
+                data-testid="register-temp-password-hint"
+                className="mt-2 font-sans text-xs text-stone-600"
+              >
+                {t(
+                  "auth.agency_password_hint",
+                  "Serve per entrare durante onboarding e sala d’attesa. Dopo l’attivazione Ops ricevi la chiave API e sostituisci questa password."
+                )}
+              </p>
+            ) : null}
+          </label>
 
           <label className="block mb-6">
             <span className="block text-xs font-sans uppercase tracking-widest text-stone-500 mb-2">

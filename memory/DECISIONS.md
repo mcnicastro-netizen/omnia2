@@ -7,6 +7,14 @@ Registro di tutte le decisioni di business e tecniche prese durante il progetto.
 
 ## Decisioni prese
 
+### D-159 — Password temporanea in register B2B + upload KYC onesto · 11-Nov-2026
+- **Contesto**: Founder — login «indigesto» senza password fino ad Attiva; upload visura/CI bloccati da MIME Safari (`octet-stream`/HEIC); copy bottone «Apri gestionale» vs testo «crea agenzia»; dominio «ti aiutiamo a collegarlo» senza dire quando.
+- **Decisione**:
+  1. Register B2B richiede **password temporanea** (min 8); Ops Attiva continua a sostituirla con API key (D-157).
+  2. Upload KYC: sniff estensione + accettare octet-stream; messaggio HEIC chiaro; fallback `owner_id` se manca `active_agency_id`.
+  3. Copy onboarding: bottone **«Invia richiesta e continua»**; Domain Vault: collegamento DNS **dopo attivazione** in Impostazioni → Dominio.
+- **Stato**: ✅ in codice (PR fix-reg-ux-upload-copy).
+
 ### D-158 — Registrazione B2B: logo vs sito + upload onesto + rientro sessione · 10-Nov-2026
 - **Contesto**: Dogfood Nicastro — giornata persa: logo obbligatorio anche con sito già online; upload logo/visura/CI sembravano fallire (preview `/api/media` su host Vercel); login impossibile perché B2B non sceglie password fino a Ops Attiva.
 - **Decisione**:

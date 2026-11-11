@@ -1,3 +1,10 @@
+## 2026-11-11 — D-159 UX registrazione (password temp + upload KYC)
+
+- Register B2B: password **temporanea** obbligatoria (login fino ad Attiva → API key)
+- Upload visura/CI: sniff MIME octet-stream/Safari; HEIC messaggio chiaro; fallback owner_id
+- Copy: bottone «Invia richiesta e continua»; Domain Vault: DNS **dopo** attivazione
+- Login hint aggiornato
+
 ## 2026-11-10 sera — chiusura giornata + ripresa 11-Nov
 
 - Docs: Cap.01 v1.7 (registrazione B2B / sala d’attesa) · HAL Cap.01 + Cap.00 ponte D-153…D-158
