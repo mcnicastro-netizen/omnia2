@@ -198,6 +198,27 @@ async def bridge_tenant_detail(
         {"_id": 0, "key_hash": 0},
     ).sort("created_at", -1).to_list(length=50)
 
+    from shared.auth.agency_credentials import agency_payment_ok
+
+    sub = await db.subscriptions.find_one(
+        {"agency_id": agency_id},
+        {"_id": 0, "status": 1, "plan_tier": 1, "updated_at": 1, "created_at": 1},
+    )
+    tx_list = (
+        await db.payment_transactions.find(
+            {
+                "agency_id": agency_id,
+                "kind": "subscription",
+                "payment_status": "paid",
+            },
+            {"_id": 0, "session_id": 1, "amount": 1, "created_at": 1, "paid_at": 1},
+        )
+        .sort("created_at", -1)
+        .to_list(length=1)
+    )
+    tx = tx_list[0] if tx_list else None
+    paid_ok = await agency_payment_ok(db, agency_id)
+
     return {
         "ok": True,
         "agency": agency,
@@ -206,6 +227,15 @@ async def bridge_tenant_detail(
         "clients": clients,
         "properties": props,
         "api_keys": keys,
+        "payment": {
+            "ok": paid_ok,
+            "subscription_status": (sub or {}).get("status"),
+            "plan_tier": (sub or {}).get("plan_tier")
+            or agency.get("preferred_plan_tier")
+            or agency.get("billing_assisted_tier"),
+            "last_paid_at": (tx or {}).get("paid_at") or (tx or {}).get("created_at"),
+            "has_paid_tx": bool(tx),
+        },
         "counts": {
             "members": len(members),
             "clients": len(clients),

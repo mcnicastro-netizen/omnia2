@@ -1,3 +1,9 @@
+## 2026-11-11 — Cabina Ops: scheda attivazione semplificata
+
+- Checklist 3 passi: documenti → pagamento → attiva
+- Tolti upload Ops confusi in scheda; scarica + Segna verificato
+- API bridge tenant espone `payment.ok` / subscription
+
 ## 2026-11-11 — Anteprima documenti KYC in sala d’attesa
 
 - Dopo upload: anteprima immediata (blob) + persistente via `GET /app/agencies/me/kyc/documents/{id}/file`
