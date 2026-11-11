@@ -1,3 +1,9 @@
+## 2026-11-11 — Closeout HAL/manuale D-160 + A-038 + Cabina 3 passi
+
+- Cap.00/01/19 MD + YAML HAL (`api.cabina-attivazione-3-passi`, `api.a038-fattura-incasso`)
+- `hal-index` / IMPORT_HAL bump · reindex prod
+- RIPRENDI + NEXT_SESSION aggiornati · PR aperte = 0
+
 ## 2026-11-11 — A-038 ribadita (fattura incasso post-sandbox)
 
 - Founder conferma gap dopo pagamento Stripe sandbox B2B

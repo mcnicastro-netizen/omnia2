@@ -1,17 +1,17 @@
 {
-  "version": "0.56-d158-reg-b2b",
-  "updated": "2026-11-10",
-  "voices_total": 394,
+  "version": "0.57-d160-a038",
+  "updated": "2026-11-11",
+  "voices_total": 396,
   "source_files": [
     {
       "file": "00-api-codice.yaml",
-      "voices": 42,
-      "md5": "8219c5be2c097c9ab0bc34b383bbddda"
+      "voices": 44,
+      "md5": "36de1dc00a34907c09fada5274454cdd"
     },
     {
       "file": "01-primo-accesso.yaml",
       "voices": 14,
-      "md5": "6cd7984009345f967cc3283a29999630"
+      "md5": "bbb7373e0595635c63b24b4bf0b4a5d1"
     },
     {
       "file": "02-dashboard.yaml",
@@ -101,7 +101,7 @@
     {
       "file": "19-impostazioni-agenzia.yaml",
       "voices": 15,
-      "md5": "71d3a10647dbb7ee707b1ae78b9a1e7e"
+      "md5": "276694597c84ceadb38a121cd73e95a0"
     },
     {
       "file": "20-api-keys-integrazioni.yaml",
@@ -150,8 +150,8 @@
       "file": "00-api-codice",
       "title": "Corpus codice/API",
       "yaml": "00-api-codice.yaml",
-      "voices": 42,
-      "md5": "8219c5be2c097c9ab0bc34b383bbddda"
+      "voices": 44,
+      "md5": "36de1dc00a34907c09fada5274454cdd"
     },
     {
       "id": 22,
@@ -202,5 +202,5 @@
       "md5": "5e88370cdf2c070dc30c7c3f036b85db"
     }
   ],
-  "notes": "D-158 Cap.01 registrazione B2B + resume; Cap.00 ponte D-153…D-158. 2026-11-06: D-147 Kling 30 cr · coda #93–#96 · Cap.23. 2026-11-06: D-146 www vetrina · api.www-vetrina-landing · Cap.00/01. 2026-11-05: D-143 PWA QR→Area + nav opaca · D-142 Scout · D-141 mappa · Cap."
+  "notes": "2026-11-11: D-160 email/copy/change-password · A-038 fattura gap · Cabina 3 passi · Cap.00/01/19 HAL sync."
 }

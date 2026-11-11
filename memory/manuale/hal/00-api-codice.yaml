@@ -1390,6 +1390,73 @@ voci:
         - super_admin / Founder
       screenshot: []
 
+  - id: api.cabina-attivazione-3-passi
+    titolo: Cabina Ops — scheda cliente a 3 passi (docs → pay → Attiva)
+    modulo: Codice API
+    widget: null
+    pubblico: [super_admin]
+    livello: intermedio
+    tags: [codice, ops, cabina, kyc, stripe, d-160, attivazione]
+    correlati: [api.founder-ops-portale, primo-accesso.registrazione-b2b-gestionale, api.a038-fattura-incasso]
+    domanda_naturale: >
+      Come attivo un'agenzia dalla cabina? Dove vedo se ha pagato?
+      Cosa fanno i bottoni azioni pericolose?
+    contenuto:
+      a_cosa_serve: >
+        Scheda tenant Ops semplificata: 1) scarica/verifica documenti KYC
+        2) stato pagamento Stripe 3) Attiva e invia password (API key).
+        Dopo Attiva: box Copia chiave show-once. Azioni pericolose =
+        cancella dati titolare (GDPR) o chiudi agenzia (offboard).
+      quando_si_usa: >
+        Coda Clienti pending · dogfood Nicastro · dopo KYC+Stripe sandbox.
+      passi:
+        - "UI: /it/app/ops/clienti/{agency_id} · BridgeTenantDetailPage"
+        - "API: GET /app/ops/bridge/tenants/{id} (payment.ok) · PATCH …/kyc
+          · POST /app/ops/activate-agency (credential_key show-once)"
+        - "Export elenco: Cabina → Clienti → Esporta elenco CSV"
+      errori_comuni:
+        - problema: "Attiva dice pagamento mancante"
+          soluzione: >
+            Cliente deve completare Stripe in sala d'attesa, oppure bypass
+            esplicito Ops (emergenza).
+        - problema: "Vedo ancora upload Ops in fondo"
+          soluzione: >
+            Hard refresh: upload Ops rimossi dalla scheda (cliente carica
+            in waiting).
+      permessi:
+        - super_admin
+      screenshot: []
+
+  - id: api.a038-fattura-incasso
+    titolo: A-038 — Fattura / dati fiscali su ogni incasso (gap pre go-live)
+    modulo: Codice API
+    widget: null
+    pubblico: [super_admin]
+    livello: avanzato
+    tags: [codice, stripe, fattura, sdi, a-038, billing, fiscali]
+    correlati: [api.stripe-sandbox-cloud, settings.billing-pagina-separata, api.founder-ops-portale]
+    domanda_naturale: >
+      Dopo il pagamento Stripe sandbox possiamo già fatturare l'incasso?
+      Stripe Invoice è la fattura elettronica?
+    contenuto:
+      a_cosa_serve: >
+        Chiarisce il gap A-038: pagamento e Invoice PDF Stripe ≠ fattura
+        elettronica italiana (SDI). Checkout B2B non spinge P.IVA/PEC/SDI
+        sul Customer Stripe. Voce aperta in ASPETTI_DA_APPROFONDIRE.
+      quando_si_usa: >
+        Domande Founder su fatturazione post-sandbox o pre go-live live.
+      passi:
+        - "Leggere memory/ASPETTI_DA_APPROFONDIRE.md § A-038"
+        - "Cap.19 §19.10.7 — gap onesto"
+        - "Implementare solo con «vai» Founder (Customer fiscali + percorso FE)"
+      errori_comuni:
+        - problema: "Ops mostra fatture Stripe quindi siamo a posto"
+          soluzione: >
+            Quelle sono Invoice PDF Stripe / ricevute, non XML SDI.
+      permessi:
+        - super_admin / Founder
+      screenshot: []
+
   - id: api.www-vetrina-landing
     titolo: Vetrina www istituzionale (D-146 + D-148 paperless)
     modulo: Codice API

@@ -386,13 +386,13 @@ voci:
     pubblico: [titolare, super_admin]
     livello: intermedio
     tags: [impostazioni, billing, stripe, piani, founders, credit-packages, checkout, customer-portal, stripe-enabled, "503", cloud-agent, sandbox]
-    correlati: [settings.cos-e, settings.limitazioni-v1, api.stripe-sandbox-cloud, api.cloud-secrets-vault, api.railway-api-deploy, api.vercel-fe-deploy, api.portale-audit-program, api.cloud-environment-builds, api.founder-ops-portale]
-    domanda_naturale: "Dove attivo un piano OMNIA? Come compro crediti? Come funzionano i Founders €49/€99/€249?"
+    correlati: [settings.cos-e, settings.limitazioni-v1, api.stripe-sandbox-cloud, api.cloud-secrets-vault, api.railway-api-deploy, api.vercel-fe-deploy, api.portale-audit-program, api.cloud-environment-builds, api.founder-ops-portale, api.a038-fattura-incasso]
+    domanda_naturale: "Dove attivo un piano OMNIA? Come compro crediti? La fattura Stripe è quella fiscale italiana?"
     contenuto:
       a_cosa_serve: >
         Attivazione piano B2B (Starter/Pro/Agency/Enterprise) tramite
         Stripe hosted checkout + acquisto credit packages top-up
-        (ratio 1 credito = €0,05).
+        (ratio 1 credito = €0,05). Invoice PDF Stripe ≠ FE SDI (A-038).
       quando_si_usa: >
         Prima volta che attivi un piano o quando ricarichi crediti.
       passi:
@@ -435,6 +435,10 @@ voci:
           soluzione: >
             Cambio piano post-attivazione va fatto dal customer portal
             Stripe (POST /billing/portal), non da BillingPage.
+        - problema: "Ho pagato in sandbox: dove è la fattura elettronica?"
+          soluzione: >
+            A-038 aperta: Stripe Invoice PDF non è XML SDI. Vedi
+            api.a038-fattura-incasso e Cap.19 §19.10.7. Serve «vai».
       permessi:
         - "GET /billing/plans: pubblico"
         - "GET /billing/subscription, POST /billing/checkout, POST
