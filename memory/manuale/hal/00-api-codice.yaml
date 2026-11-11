@@ -1404,9 +1404,9 @@ voci:
     contenuto:
       a_cosa_serve: >
         Scheda tenant Ops semplificata: 1) scarica/verifica documenti KYC
-        2) stato pagamento Stripe 3) Attiva e invia password (API key).
-        Dopo Attiva: box Copia chiave show-once. Azioni pericolose =
-        cancella dati titolare (GDPR) o chiudi agenzia (offboard).
+        2) stato pagamento Stripe 3) Attiva gestionale (D-161: password
+        = quella del register; email agency_activated).
+        Azioni pericolose = cancella dati titolare (GDPR) o chiudi agenzia.
       quando_si_usa: >
         Coda Clienti pending · dogfood Nicastro · dopo KYC+Stripe sandbox.
       passi:

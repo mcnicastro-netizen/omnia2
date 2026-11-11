@@ -1,8 +1,8 @@
 # Capitolo 1 · Primo accesso
 
-**Versione manuale**: v1.7 · **Ultima revisione**: 10-Nov-2026 (D-157/D-158 registrazione gestionale)
+**Versione manuale**: v1.8 · **Ultima revisione**: 11-Nov-2026 (D-161 login semplice — una password)
 **Chi lo legge**: titolari, agenti, segreteria (chiunque debba iniziare a usare ImmoWeb); privatamente anche utenti ImmobilCloud
-**Prerequisiti**: aver scelto un pacchetto e completato la registrazione agenzia, oppure aver ricevuto un invito / chiave API
+**Prerequisiti**: aver scelto un pacchetto e completato la registrazione agenzia, oppure aver ricevuto un invito
 
 ---
 
@@ -34,23 +34,23 @@ Non è necessario capire tutto subito. Il manuale ti guida modulo per modulo. Il
 
 ## 1.2 · Login e cambio password
 
-### 1.2.0 Registrazione nuova agenzia (D-157…D-160)
+### 1.2.0 Registrazione nuova agenzia (D-157…D-161)
 
 Flusso gestionale B2B:
 
 1. Scegli il **pacchetto** (3 box Starter / Pro / Agency) su `/it/register` → si apre il form.
-2. Compila nome + email + **password temporanea** (min 8; D-159). Ti serve per rientrare durante onboarding / sala d’attesa.
+2. Compila nome + email + **password** (min 8) — è la password di login definitiva (D-161).
 3. Completa l’onboarding (identità, fiscale, branding) → sala d’attesa.  
-   Email «richiesta ricevuta» (`agency_pending`) parte **solo a fine onboarding** (D-160: niente mail a metà register).
-4. In sala d’attesa: carica **visura** + **documento identità** (PDF/PNG/JPG/WebP; anteprima dopo upload), poi paga con Stripe.
-5. Il Super Admin in Cabina fa la checklist a **3 passi** (documenti → pagamento → Attiva). Ricevi email «gestionale attivo»: entra con la **stessa password** del register (D-161).
-6. Collaboratori invitati: scelgono la password nell’invito. API keys solo da Impostazioni se servono integrazioni. Tetti posti (Starter 3 · Pro 10 · Agency ∞).
+   Email «richiesta ricevuta» parte **solo a fine onboarding** (D-160).
+4. In sala d’attesa: carica **visura** + **documento identità** (PDF/PNG/JPG/WebP; anteprima), poi paga con Stripe.
+5. Super Admin in Cabina: checklist **3 passi** (documenti → pagamento → Attiva). Email «gestionale attivo» → entra con la **stessa password**.
+6. Collaboratori: password nell’invito. API keys solo da Impostazioni se servono. Tetti (Starter 3 · Pro 10 · Agency ∞).
 
 **Logo (D-158)**  
 Con **sito web / dominio** già indicato, il file logo è **facoltativo**. Altrimenti PNG/JPG/WebP/SVG (max 2 MB) con anteprima locale.
 
-**Se chiudi il browser a metà**  
-Hai già la password temporanea del register: entra da `/it/login?from=app`. Se l’hai dimenticata → **Password dimenticata?**.
+**Se chiudi il browser a metà / non ricordi la password**  
+Login da `/it/login?from=app`. Se non la ricordi → **Password dimenticata?** (link via email → nuova password).
 
 ### 1.2.1 Entrare dopo l’attivazione (o con invito)
 
@@ -154,7 +154,7 @@ Vale per **tutti i ruoli** (privato, agente, admin, Founder): stesso endpoint `P
 
 ---
 
-## 1.3 · Onboarding agenzia + sala d’attesa (D-157 / D-158)
+## 1.3 · Onboarding agenzia + sala d’attesa (D-157…D-161)
 
 > Solo il **titolare** che apre l’agenzia. Collaboratori invitati saltano questo passo.
 
@@ -172,7 +172,7 @@ Anagrafica agenzia + identificazione clientela (visura/CI) + pagamento pacchetto
 
 1. Carica **visura camerale** e **documento identità** (PDF/PNG/JPG/WebP, max 8 MB).
 2. Paga il pacchetto (Stripe).
-3. Attendi Super Admin → email con **chiave API = password iniziale**.
+3. Attendi Super Admin → email «gestionale attivo» → login con la **password di registrazione**.
 
 «Controlla di nuovo» aggiorna lo stato senza riportarti al register.
 
@@ -180,8 +180,8 @@ Anagrafica agenzia + identificazione clientela (visura/CI) + pagamento pacchetto
 
 **Errori comuni**
 - *"Partita IVA non valida"*: 11 cifre senza spazi.
-- *Upload logo/documenti che «non va»*: usa PNG/JPG/WebP/PDF (niente HEIC/GIF); se la preview non si vede ma compare «Logo caricato» / «Documento caricato», l’upload è ok.
-- *Non riesco a fare login a metà procedura*: vedi §1.2.0 (Password dimenticata / link resume).
+- *Upload logo/documenti che «non va»*: usa PNG/JPG/WebP/PDF (niente HEIC/GIF); se compare «Logo caricato» / «Documento caricato», l’upload è ok.
+- *Non ricordo la password*: **Password dimenticata?** su login (§1.2.2).
 
 **Chi può farlo**  
 Titolare in registrazione → diventa `agency_admin` a fine wizard. CRM operativo solo dopo Attiva Ops.

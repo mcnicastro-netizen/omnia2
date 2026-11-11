@@ -1,6 +1,6 @@
-# 📚 HAL Knowledge — Import & Cold Start (v0.57-d160-a038)
+# 📚 HAL Knowledge — Import & Cold Start (v0.58-d161-login)
 
-**Ultimo aggiornamento**: 11-Nov-2026 (D-160 email/credenziali · A-038 · Cabina 3 passi)  
+**Ultimo aggiornamento**: 11-Nov-2026 (D-161 login semplice · forgot-password · Cap.01 sync)  
 **Corpus**: YAML in `memory/manuale/hal/*.yaml` (Cap. 1–27 + `00-api-codice`) · MD esclusi dal RAG ingest  
 **Motore**: `hal_knowledge.py` · reindex: `POST /api/app/hal/knowledge/reindex?force=true` (super_admin)  
 **Regola Founder D-084**: ogni ship aggiorna MD+YAML nello stesso giro — vedi `memory/MANUAL_SYNC.md`.
@@ -267,6 +267,8 @@ Prima di dichiarare il cold start "attivo", eseguire manualmente queste 5 query 
 
 | Data | Versione | Note |
 |------|:-:|------|
+| 11-Nov-2026 | **v0.58-d161-login** | D-161: una password (register); forgot-password; Cap.00/01 + HAL sync; API=password deprecata. Reindex post-merge. |
+| 11-Nov-2026 | **v0.57-d160-a038** | D-160 email/copy · A-038 · Cabina 3 passi. |
 | 10-Nov-2026 | **v0.56-d158-reg-b2b** | Cap.01 registrazione gestionale D-157/D-158 (piano, KYC, API=password, logo vs sito, resume login). Cap.00 ponte D-153…D-158. `RIPRENDI_2026-11-11` · NEXT_SESSION. Reindex post-merge. |
 | 09-Nov-2026 | **v0.55-d148-paperless** | D-148 / A-040: Perché OMNIA 4° tratto = documenti digitali. HAL `api.www-vetrina-landing` + Cap.00. Reindex post-merge. |
 | 06-Nov-2026 | **v0.54-d147-kling-30cr** | Cap.23 listino Kling **D-147** 30 cr. Coda #93–#96 merged. Diario 06-Nov. Reindex post-merge. |
