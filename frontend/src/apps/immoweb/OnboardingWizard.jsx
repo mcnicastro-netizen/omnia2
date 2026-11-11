@@ -416,6 +416,25 @@ export default function OnboardingWizard() {
                   setLogoUploading(true);
                   setLogoOk(false);
                   setError("");
+                  const fname = (file.name || "").toLowerCase();
+                  const ftype = (file.type || "").toLowerCase();
+                  if (
+                    fname.endsWith(".heic") ||
+                    fname.endsWith(".heif") ||
+                    ftype.includes("heic") ||
+                    ftype.includes("heif")
+                  ) {
+                    setLogoUploading(false);
+                    setLogoOk(false);
+                    setError(
+                      t(
+                        "onboarding.logo_heic_error",
+                        "HEIC non supportato. Su iPhone: Impostazioni → Fotocamera → Formati → Compatibilità massima (JPG), oppure esporta PNG/JPG."
+                      )
+                    );
+                    e.target.value = "";
+                    return;
+                  }
                   // Preview locale subito (il path /api/media su Vercel non funziona)
                   try {
                     if (logoPreview) URL.revokeObjectURL(logoPreview);
@@ -442,6 +461,7 @@ export default function OnboardingWizard() {
                     );
                   } finally {
                     setLogoUploading(false);
+                    e.target.value = "";
                   }
                 }}
               />

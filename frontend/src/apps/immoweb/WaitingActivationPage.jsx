@@ -67,8 +67,11 @@ export default function WaitingActivationPage() {
   }, [loadStatus]);
 
   const kyc = agency?.kyc || {};
-  const hasVisura = Boolean(kyc?.checklist?.visura_camerale);
-  const hasId = Boolean(kyc?.checklist?.id_titolare);
+  const kycDocs = Array.isArray(kyc?.documents) ? kyc.documents : [];
+  const visuraDoc = [...kycDocs].reverse().find((d) => d?.doc_type === "visura_camerale");
+  const idDoc = [...kycDocs].reverse().find((d) => d?.doc_type === "documento_identita");
+  const hasVisura = Boolean(kyc?.checklist?.visura_camerale || visuraDoc);
+  const hasId = Boolean(kyc?.checklist?.id_titolare || idDoc);
   const kycReady = hasVisura && hasId;
   const readyForOps = kycReady && paid;
 
@@ -200,7 +203,7 @@ export default function WaitingActivationPage() {
             <p className="text-stone-600 text-sm leading-relaxed">
               {t(
                 "waiting_activation.body_gestionale",
-                "Per {{name}}: carica visura e documento, paga il pacchetto, poi il Super Admin verifica e ti invia la chiave API (password iniziale)."
+                "Per {{name}}: carica visura e documento, paga il pacchetto, poi il Super Admin verifica e ti invia la password per il gestionale."
               ).replace("{{name}}", agency?.display_name || "…")}
             </p>
             {agency?.preferred_plan_tier ? (
@@ -215,51 +218,80 @@ export default function WaitingActivationPage() {
             <h2 className="text-[10px] uppercase tracking-widest text-stone-500">
               1 · {t("waiting_activation.kyc_title", "Identificazione (PDF o JPG)")}
             </h2>
-            <p className="text-xs text-stone-500">
-              Visura: {hasVisura ? "✓ caricata" : "manca"} · Documento:{" "}
-              {hasId ? "✓ caricato" : "manca"}
-            </p>
             <p className="text-xs text-stone-500 normal-case tracking-normal">
               {t(
                 "waiting_activation.kyc_formats",
-                "Formati: PDF, PNG, JPG, WebP (max 8 MB). Niente HEIC da iPhone."
+                "Formati: PDF, PNG, JPG, WebP (max 8 MB). Niente HEIC da iPhone — usa «Compatibilità massima» o esporta JPG/PDF."
               )}
             </p>
-            <label className="block text-xs uppercase tracking-widest text-stone-600">
-              Visura camerale
-              <input
-                type="file"
-                accept="application/pdf,image/png,image/jpeg,image/webp,.pdf,.png,.jpg,.jpeg,.webp"
-                disabled={upBusy || !agency}
-                data-testid="waiting-upload-visura"
-                className="block mt-1 text-xs normal-case tracking-normal"
-                onChange={(e) => {
-                  const f = e.target.files?.[0];
-                  uploadKyc("visura_camerale", f);
-                  e.target.value = "";
-                }}
-              />
-            </label>
-            <label className="block text-xs uppercase tracking-widest text-stone-600">
-              Documento identità titolare
-              <input
-                type="file"
-                accept="application/pdf,image/png,image/jpeg,image/webp,.pdf,.png,.jpg,.jpeg,.webp"
-                disabled={upBusy || !agency}
-                data-testid="waiting-upload-id"
-                className="block mt-1 text-xs normal-case tracking-normal"
-                onChange={(e) => {
-                  const f = e.target.files?.[0];
-                  uploadKyc("documento_identita", f);
-                  e.target.value = "";
-                }}
-              />
-            </label>
+            <div className="space-y-3">
+              <div
+                className={`rounded-md border px-3 py-2 ${
+                  hasVisura ? "border-emerald-300 bg-emerald-50/70" : "border-stone-200 bg-stone-50"
+                }`}
+                data-testid="waiting-visura-status"
+              >
+                <p className="text-xs font-medium text-stone-800 normal-case tracking-normal">
+                  Visura camerale:{" "}
+                  {hasVisura ? (
+                    <span className="text-emerald-800">
+                      ✓ {visuraDoc?.filename || "caricata"}
+                    </span>
+                  ) : (
+                    <span className="text-amber-800">manca</span>
+                  )}
+                </p>
+                <input
+                  type="file"
+                  accept="application/pdf,image/png,image/jpeg,image/webp,.pdf,.png,.jpg,.jpeg,.webp"
+                  disabled={upBusy || !agency}
+                  data-testid="waiting-upload-visura"
+                  className="block mt-2 w-full text-xs normal-case tracking-normal"
+                  onChange={(e) => {
+                    const f = e.target.files?.[0];
+                    uploadKyc("visura_camerale", f);
+                    e.target.value = "";
+                  }}
+                />
+              </div>
+              <div
+                className={`rounded-md border px-3 py-2 ${
+                  hasId ? "border-emerald-300 bg-emerald-50/70" : "border-stone-200 bg-stone-50"
+                }`}
+                data-testid="waiting-id-status"
+              >
+                <p className="text-xs font-medium text-stone-800 normal-case tracking-normal">
+                  Documento identità:{" "}
+                  {hasId ? (
+                    <span className="text-emerald-800">✓ {idDoc?.filename || "caricato"}</span>
+                  ) : (
+                    <span className="text-amber-800">manca</span>
+                  )}
+                </p>
+                <input
+                  type="file"
+                  accept="application/pdf,image/png,image/jpeg,image/webp,.pdf,.png,.jpg,.jpeg,.webp"
+                  disabled={upBusy || !agency}
+                  data-testid="waiting-upload-id"
+                  className="block mt-2 w-full text-xs normal-case tracking-normal"
+                  onChange={(e) => {
+                    const f = e.target.files?.[0];
+                    uploadKyc("documento_identita", f);
+                    e.target.value = "";
+                  }}
+                />
+              </div>
+            </div>
+            {upBusy ? (
+              <p className="text-xs text-stone-500" data-testid="waiting-upload-busy">
+                {t("common.loading")}
+              </p>
+            ) : null}
             {!agency ? (
               <p className="text-xs text-amber-800">
                 {t(
                   "waiting_activation.need_agency_session",
-                  "Sessione agenzia non pronta. Clicca «Controlla di nuovo» oppure esci e rientra con la password temporanea."
+                  "Sessione agenzia non pronta. Clicca «Controlla di nuovo» oppure esci e rientra con la password scelta al signup."
                 )}
               </p>
             ) : null}

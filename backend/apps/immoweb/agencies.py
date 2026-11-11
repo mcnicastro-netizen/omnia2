@@ -342,6 +342,12 @@ _ALLOWED_KYC_MIME = {
 _MAX_KYC_BYTES = 8 * 1024 * 1024
 
 
+_HEIC_HINT = (
+    "Formato HEIC non supportato. Su iPhone esporta JPG/PDF "
+    "(Impostazioni → Fotocamera → Formati → Compatibilità massima)."
+)
+
+
 @router.post("/onboarding/logo")
 async def upload_onboarding_logo(
     file: UploadFile = File(...),
@@ -349,9 +355,14 @@ async def upload_onboarding_logo(
 ):
     """Upload marchio/logo prima della create agency (path privato user)."""
     ct = (file.content_type or "").lower().split(";")[0].strip()
-    # Alcuni browser (Safari/iOS) mandano application/octet-stream: sniffinamo l'estensione.
+    name = (file.filename or "").lower()
+    # Safari/iOS: octet-stream o HEIC dalla fotocamera
+    if name.endswith((".heic", ".heif")) or "heic" in ct or "heif" in ct:
+        raise HTTPException(
+            status_code=415,
+            detail={"error": "unsupported_media_type", "hint": _HEIC_HINT},
+        )
     if ct not in _ALLOWED_LOGO_MIME:
-        name = (file.filename or "").lower()
         if name.endswith(".png"):
             ct = "image/png"
         elif name.endswith((".jpg", ".jpeg")):
@@ -361,8 +372,25 @@ async def upload_onboarding_logo(
         elif name.endswith(".svg"):
             ct = "image/svg+xml"
     if ct not in _ALLOWED_LOGO_MIME:
-        raise HTTPException(status_code=415, detail="unsupported_media_type")
+        raise HTTPException(
+            status_code=415,
+            detail={
+                "error": "unsupported_media_type",
+                "hint": "Usa PNG, JPG, WebP o SVG (niente HEIC da iPhone).",
+            },
+        )
     data = await file.read()
+    # Magic bytes HEIC anche se estensione mentisce
+    if len(data) >= 12 and data[4:8] == b"ftyp" and data[8:12] in (
+        b"heic",
+        b"heif",
+        b"mif1",
+        b"msf1",
+    ):
+        raise HTTPException(
+            status_code=415,
+            detail={"error": "unsupported_media_type", "hint": _HEIC_HINT},
+        )
     if not data:
         raise HTTPException(status_code=400, detail="empty_file")
     if len(data) > _MAX_LOGO_BYTES:
@@ -430,13 +458,10 @@ async def upload_my_kyc_document(
             ct = "image/jpeg"
         elif name.endswith(".webp"):
             ct = "image/webp"
-        elif name.endswith((".heic", ".heif")):
+        elif name.endswith((".heic", ".heif")) or "heic" in ct or "heif" in ct:
             raise HTTPException(
                 status_code=415,
-                detail={
-                    "error": "unsupported_media_type",
-                    "hint": "Formato HEIC non supportato. Su iPhone esporta JPG/PDF (Impostazioni → Fotocamera → Formati → Compatibilità massima).",
-                },
+                detail={"error": "unsupported_media_type", "hint": _HEIC_HINT},
             )
     if ct not in _ALLOWED_KYC_MIME:
         raise HTTPException(
@@ -447,6 +472,16 @@ async def upload_my_kyc_document(
             },
         )
     data = await file.read()
+    if len(data) >= 12 and data[4:8] == b"ftyp" and data[8:12] in (
+        b"heic",
+        b"heif",
+        b"mif1",
+        b"msf1",
+    ):
+        raise HTTPException(
+            status_code=415,
+            detail={"error": "unsupported_media_type", "hint": _HEIC_HINT},
+        )
     if not data or len(data) > _MAX_KYC_BYTES:
         raise HTTPException(413 if data else 400, detail="file_invalid")
 

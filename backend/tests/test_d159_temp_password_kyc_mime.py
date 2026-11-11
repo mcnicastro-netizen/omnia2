@@ -79,3 +79,40 @@ def test_kyc_octet_stream_pdf_sniff(monkeypatch):
     out = _run(mod.upload_my_kyc_document(upload, "visura_camerale", user))
     assert out["ok"] is True
     assert out["kyc"]["checklist"]["visura_camerale"] is True
+
+
+def test_logo_heic_returns_iphone_hint(monkeypatch):
+    from apps.immoweb import agencies as mod
+
+    user = {"id": "u1", "email": "a@x.it", "role": "client"}
+    upload = UploadFile(
+        filename="foto.heic",
+        file=BytesIO(b"\x00\x00\x00\x18ftypheic" + b"\x00" * 32),
+        headers={"content-type": "image/heic"},
+    )
+    with pytest.raises(HTTPException) as ei:
+        _run(mod.upload_onboarding_logo(upload, user))
+    assert ei.value.status_code == 415
+    detail = ei.value.detail
+    assert isinstance(detail, dict)
+    assert "HEIC" in detail.get("hint", "")
+    assert "iPhone" in detail.get("hint", "")
+
+
+def test_logo_octet_stream_png_sniff(monkeypatch):
+    from apps.immoweb import agencies as mod
+
+    user = {"id": "u1", "email": "a@x.it", "role": "client"}
+    monkeypatch.setattr(mod, "put_object", lambda *a, **k: {"ok": True})
+    png = bytes.fromhex(
+        "89504e470d0a1a0a0000000d49484452000000010000000108060000001f15c489"
+        "0000000a49444154789c63000100000500010d0a2db40000000049454e44ae426082"
+    )
+    upload = UploadFile(
+        filename="logo.png",
+        file=BytesIO(png),
+        headers={"content-type": "application/octet-stream"},
+    )
+    out = _run(mod.upload_onboarding_logo(upload, user))
+    assert out["ok"] is True
+    assert out["url"].endswith(".png")
