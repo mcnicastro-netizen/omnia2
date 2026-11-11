@@ -2,6 +2,12 @@ import React, { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { api } from "../../../../shared/lib/api";
 
+/**
+ * Scheda cliente Ops — flusso lineare:
+ * 1) Controlla documenti → Segna verificato
+ * 2) Controlla pagamento
+ * 3) Attiva (email password)
+ */
 export default function BridgeTenantDetailPage() {
   const { lang: langParam, agencyId } = useParams();
   const lang = langParam || "it";
@@ -11,6 +17,8 @@ export default function BridgeTenantDetailPage() {
   const [busy, setBusy] = useState(true);
   const [actionMsg, setActionMsg] = useState(null);
   const [kycBusy, setKycBusy] = useState(false);
+  const [attivaBusy, setAttivaBusy] = useState(false);
+  const [showDanger, setShowDanger] = useState(false);
 
   const load = async () => {
     setBusy(true);
@@ -31,103 +39,84 @@ export default function BridgeTenantDetailPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [agencyId]);
 
-  const attiva = async () => {
+  const attiva = async ({ bypassPay = false, bypassKyc = false } = {}) => {
     const a0 = data?.agency || {};
-    const kycSt = (a0.kyc?.status || "incomplete").toLowerCase();
-    const tier = a0.preferred_plan_tier || "pro";
+    const tier = a0.preferred_plan_tier || data?.payment?.plan_tier || "pro";
+    const payOk = Boolean(data?.payment?.ok);
+    const kycOk = (a0.kyc?.status || "").toLowerCase() === "verified";
+
+    if (!bypassKyc && !kycOk) {
+      setActionMsg("Prima segna i documenti come verificati (passo 1).");
+      return;
+    }
+    if (!bypassPay && !payOk) {
+      if (
+        !window.confirm(
+          "Pagamento non trovato. Attivare comunque? (solo emergenza Ops)"
+        )
+      ) {
+        return;
+      }
+      bypassPay = true;
+    }
+
     if (
       !window.confirm(
-        `Attivare «${a0.display_name}»?\nPiano ${String(tier).toUpperCase()}.\n` +
-          "Invia email con API key = password iniziale.\n" +
-          `KYC attuale: ${kycSt}.`
+        `Attivare «${a0.display_name}» sul piano ${String(tier).toUpperCase()}?\n` +
+          "Il cliente riceve email con password per il gestionale."
       )
     ) {
       return;
     }
-    let requireKyc = true;
-    if (kycSt !== "verified") {
-      if (!window.confirm("KYC non verificato. Bypass emergenza?")) return;
-      requireKyc = false;
-    }
+
+    setAttivaBusy(true);
     setActionMsg(null);
-    const body = {
-      agency_id: agencyId,
-      grant_plan: true,
-      tier,
-      credits: 2000,
-      send_email: true,
-      wipe_crm: true,
-      note: "cabina_scheda",
-      require_kyc_verified: requireKyc,
-      require_payment: true,
-      issue_login_credential: true,
-    };
     try {
-      await api.post("/app/ops/activate-agency", body);
-      setActionMsg(`Attivata · ${String(tier).toUpperCase()} · credential email inviata.`);
+      await api.post("/app/ops/activate-agency", {
+        agency_id: agencyId,
+        grant_plan: true,
+        tier,
+        credits: 2000,
+        send_email: true,
+        wipe_crm: true,
+        note: "cabina_scheda",
+        require_kyc_verified: !bypassKyc,
+        require_payment: !bypassPay,
+        issue_login_credential: true,
+      });
+      setActionMsg("Attivata. Email con password inviata al titolare.");
       await load();
     } catch (e) {
       const d = e?.response?.data?.detail;
       if (d?.error === "payment_required") {
-        if (
-          window.confirm(
-            "Pagamento non trovato. Bypass pagamento (emergenza Ops)?"
-          )
-        ) {
-          try {
-            await api.post("/app/ops/activate-agency", {
-              ...body,
-              require_payment: false,
-            });
-            setActionMsg(`Attivata (bypass pay) · credential email.`);
-            await load();
-            return;
-          } catch (e2) {
-            const d2 = e2?.response?.data?.detail;
-            setActionMsg(
-              (typeof d2 === "object" && (d2.hint || d2.error)) || d2 || "Attivazione fallita"
-            );
-            return;
-          }
-        }
+        setActionMsg(
+          "Pagamento ancora assente. Il cliente deve completare Stripe, oppure conferma il bypass."
+        );
+      } else if (d?.error === "kyc_not_verified") {
+        setActionMsg("Documenti non ancora verificati. Usa «Segna verificato».");
+      } else {
+        setActionMsg(
+          (typeof d === "object" && (d.hint || d.error)) || d || "Attivazione fallita"
+        );
       }
-      setActionMsg((typeof d === "object" && (d.hint || d.error)) || d || "Attivazione fallita");
+    } finally {
+      setAttivaBusy(false);
     }
   };
 
   const setKycStatus = async (status) => {
     const notes =
       status === "rejected"
-        ? window.prompt("Motivo rifiuto (nota Ops):") || ""
-        : window.prompt("Nota Ops (facoltativa):") || "";
+        ? window.prompt("Motivo rifiuto (visibile in nota Ops):") || ""
+        : "";
     setKycBusy(true);
     setActionMsg(null);
     try {
       await api.patch(`/app/ops/bridge/tenants/${agencyId}/kyc`, { status, notes });
-      setActionMsg(`KYC → ${status}`);
+      setActionMsg(status === "verified" ? "Documenti verificati." : `KYC → ${status}`);
       await load();
     } catch (e) {
       setActionMsg(e?.response?.data?.detail || "Aggiornamento KYC fallito");
-    } finally {
-      setKycBusy(false);
-    }
-  };
-
-  const uploadKyc = async (docType, file) => {
-    if (!file) return;
-    setKycBusy(true);
-    setActionMsg(null);
-    try {
-      const fd = new FormData();
-      fd.append("file", file, file.name);
-      fd.append("doc_type", docType);
-      await api.post(`/app/ops/bridge/tenants/${agencyId}/kyc/documents`, fd, {
-        timeout: 60000,
-      });
-      setActionMsg(`Caricato: ${docType}`);
-      await load();
-    } catch (e) {
-      setActionMsg(e?.response?.data?.detail || "Upload KYC fallito");
     } finally {
       setKycBusy(false);
     }
@@ -153,29 +142,23 @@ export default function BridgeTenantDetailPage() {
   };
 
   const openAsCrm = async () => {
-    if (
-      !window.confirm(
-        "Aprire il gestionale di questa agenzia?\nEntri in modalità vista esplicita; poi «Torna alla cabina»."
-      )
-    ) {
-      return;
-    }
+    if (!window.confirm("Aprire il gestionale di questa agenzia?")) return;
     setActionMsg(null);
     try {
       await api.post("/app/ops/bridge/impersonate", { agency_id: agencyId });
       window.location.href = `/${lang}/app/dashboard`;
     } catch (e) {
-      setActionMsg(e?.response?.data?.detail || "Impersonation non riuscita");
+      setActionMsg(e?.response?.data?.detail || "Apertura CRM non riuscita");
     }
   };
 
   const offboard = async () => {
     const conf = window.prompt(
-      'Chiudere agenzia (wipe + purge)? Digita CHIUDI_AGENZIA per confermare.'
+      "Chiudere agenzia? Digita CHIUDI_AGENZIA per confermare."
     );
     if (conf !== "CHIUDI_AGENZIA") return;
     const eraseMembers = window.confirm(
-      "Cancellare anche gli account membri (GDPR erase)? OK = sì, Annulla = solo chiusura tenant."
+      "Anonimizzare anche i membri? OK = sì · Annulla = solo chiusura tenant."
     );
     setActionMsg(null);
     try {
@@ -188,7 +171,7 @@ export default function BridgeTenantDetailPage() {
       );
       window.location.href = `${base}/clienti`;
     } catch (e) {
-      setActionMsg(e?.response?.data?.detail?.error || "Offboard fallito");
+      setActionMsg(e?.response?.data?.detail?.error || "Chiusura fallita");
     }
   };
 
@@ -208,9 +191,19 @@ export default function BridgeTenantDetailPage() {
 
   const a = data.agency || {};
   const owner = data.owner || {};
+  const pay = data.payment || {};
+  const pending = (a.activation_status || "active") === "pending";
+  const kycStatus = (a.kyc?.status || "incomplete").toLowerCase();
+  const kycVerified = kycStatus === "verified";
+  const hasVisura = Boolean(a.kyc?.checklist?.visura_camerale);
+  const hasId = Boolean(a.kyc?.checklist?.id_titolare);
+  const docsReady = hasVisura && hasId;
+  const payOk = Boolean(pay.ok);
+  const canActivate = pending && kycVerified && payOk;
+  const docs = a.kyc?.documents || [];
 
   return (
-    <div data-testid="bridge-tenant-detail" className="space-y-8">
+    <div data-testid="bridge-tenant-detail" className="space-y-8 max-w-3xl">
       <div>
         <Link
           to={`${base}/clienti`}
@@ -225,270 +218,361 @@ export default function BridgeTenantDetailPage() {
           {a.display_name}
         </h1>
         <p className="text-sm text-stone-600 mt-1">
-          {a.slug} · {a.activation_status || "active"} · piano{" "}
-          {a.preferred_plan_tier || a.plan || a.billing_assisted_tier || "—"}
-          {a.kyc?.status ? ` · KYC ${a.kyc.status}` : ""}
+          {owner.name || "—"} · {owner.email || "—"}
+        </p>
+        <p className="text-xs text-stone-500 mt-1">
+          {a.slug} · piano {(a.preferred_plan_tier || pay.plan_tier || "—").toString().toUpperCase()} ·{" "}
+          {pending ? "in attesa" : a.activation_status || "active"}
         </p>
       </div>
 
-      <div className="flex flex-wrap gap-2">
-        {(a.activation_status || "active") === "pending" ? (
-          <button
-            type="button"
-            onClick={attiva}
-            className="text-xs uppercase tracking-widest px-4 py-2 rounded bg-[#0B1E3F] text-white"
-          >
-            Attiva
-          </button>
-        ) : null}
-        <button
-          type="button"
-          data-testid="bridge-impersonate"
-          onClick={openAsCrm}
-          className="text-xs uppercase tracking-widest px-4 py-2 rounded bg-[#0B1E3F] text-white"
+      {actionMsg ? (
+        <p
+          data-testid="bridge-action-msg"
+          className="text-sm text-[#0B1E3F] bg-[#0B1E3F]/5 border border-[#0B1E3F]/20 px-3 py-2 rounded"
         >
-          Apri come CRM
-        </button>
-        <Link
-          to={`${base}/api?q=${encodeURIComponent(a.slug || a.id)}`}
-          className="text-xs uppercase tracking-widest px-4 py-2 rounded border border-stone-300 bg-white"
-        >
-          API di questa agenzia
-        </Link>
-        {owner?.id ? (
-          <button
-            type="button"
-            data-testid="bridge-erase-owner"
-            onClick={async () => {
-              const conf = window.prompt(
-                `Anonimizzare titolare ${owner.email}? Digita CANCELLA_UTENTE`
-              );
-              if (conf !== "CANCELLA_UTENTE") return;
-              try {
-                await api.post(`/app/ops/bridge/users/${owner.id}/erase`, {
-                  confirm: "CANCELLA_UTENTE",
-                });
-                setActionMsg("Titolare anonimizzato.");
-                await load();
-              } catch (e) {
-                setActionMsg(e?.response?.data?.detail || "Erase fallito");
-              }
-            }}
-            className="text-xs uppercase tracking-widest px-4 py-2 rounded border border-rose-300 text-rose-800 bg-white"
-          >
-            GDPR titolare
-          </button>
-        ) : null}
-        <button
-          type="button"
-          data-testid="bridge-offboard"
-          onClick={offboard}
-          className="text-xs uppercase tracking-widest px-4 py-2 rounded border border-rose-400 text-rose-900 bg-rose-50"
-        >
-          Chiudi agenzia
-        </button>
-      </div>
-      {actionMsg ? <p className="text-sm text-[#0B1E3F]">{actionMsg}</p> : null}
+          {actionMsg}
+        </p>
+      ) : null}
 
-      <section className="grid md:grid-cols-2 gap-4">
+      {/* ——— Checklist attivazione ——— */}
+      <section
+        data-testid="bridge-activation-checklist"
+        className="bg-white border border-stone-200 rounded-lg divide-y divide-stone-100"
+      >
+        <div className="px-4 py-3">
+          <h2 className="text-xs uppercase tracking-widest text-stone-500">
+            Attivazione — 3 passi
+          </h2>
+          <p className="text-sm text-stone-600 mt-1">
+            Controlla documenti, verifica pagamento, poi attiva. Una email parte al cliente.
+          </p>
+        </div>
+
+        {/* Step 1 */}
+        <div className="px-4 py-4 space-y-3" data-testid="bridge-step-docs">
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <p className="text-sm font-medium text-[#0B1E3F]">
+                1 · Documenti{" "}
+                <StatusPill
+                  ok={kycVerified}
+                  warn={docsReady && !kycVerified}
+                  label={
+                    kycVerified
+                      ? "verificati"
+                      : docsReady
+                        ? "da verificare"
+                        : "incompleti"
+                  }
+                />
+              </p>
+              <p className="text-xs text-stone-500 mt-1">
+                Visura {hasVisura ? "✓" : "✗"} · CI {hasId ? "✓" : "✗"} · PEC{" "}
+                {a.contact?.pec ? "✓" : "—"} · P.IVA {a.fiscal?.vat_number ? "✓" : "—"}
+              </p>
+            </div>
+          </div>
+
+          <ul className="space-y-2">
+            {docs.length === 0 ? (
+              <li className="text-sm text-amber-800 bg-amber-50 border border-amber-200 rounded px-3 py-2">
+                Il cliente non ha ancora caricato documenti.
+              </li>
+            ) : (
+              docs.map((d) => (
+                <li
+                  key={d.id}
+                  className="flex items-center justify-between gap-3 text-sm border border-stone-100 rounded px-3 py-2 bg-stone-50"
+                >
+                  <span>
+                    <span className="text-[10px] uppercase tracking-widest text-stone-500 mr-2">
+                      {d.doc_type === "visura_camerale"
+                        ? "Visura"
+                        : d.doc_type === "documento_identita"
+                          ? "CI"
+                          : d.doc_type}
+                    </span>
+                    {d.filename}
+                  </span>
+                  <button
+                    type="button"
+                    className="text-[10px] uppercase tracking-widest text-[#0B1E3F] underline shrink-0"
+                    onClick={() => downloadKyc(d.id, d.filename)}
+                  >
+                    Scarica
+                  </button>
+                </li>
+              ))
+            )}
+          </ul>
+
+          {a.fiscal?.vat_number ? (
+            <p className="text-xs text-stone-500">
+              Controllo crociato:{" "}
+              <a
+                className="underline text-[#0B1E3F]"
+                href={`https://www.registroimprese.it/ricerca-libera?q=${encodeURIComponent(
+                  a.fiscal.vat_number
+                )}`}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Registro Imprese · {a.fiscal.vat_number}
+              </a>
+            </p>
+          ) : null}
+
+          {pending && !kycVerified ? (
+            <div className="flex flex-wrap gap-2 pt-1">
+              <button
+                type="button"
+                disabled={kycBusy || !docsReady}
+                className="text-xs uppercase tracking-widest px-4 py-2.5 rounded bg-emerald-800 text-white disabled:opacity-40"
+                data-testid="bridge-kyc-verify"
+                onClick={() => setKycStatus("verified")}
+              >
+                Segna verificato
+              </button>
+              <button
+                type="button"
+                disabled={kycBusy}
+                className="text-xs uppercase tracking-widest px-4 py-2.5 rounded border border-rose-300 text-rose-800"
+                onClick={() => setKycStatus("rejected")}
+              >
+                Rifiuta documenti
+              </button>
+            </div>
+          ) : null}
+          {a.kyc?.notes ? (
+            <p className="text-xs text-stone-500">Nota: {a.kyc.notes}</p>
+          ) : null}
+        </div>
+
+        {/* Step 2 */}
+        <div className="px-4 py-4 space-y-2" data-testid="bridge-step-pay">
+          <p className="text-sm font-medium text-[#0B1E3F]">
+            2 · Pagamento{" "}
+            <StatusPill
+              ok={payOk}
+              label={payOk ? "ok" : "manca"}
+            />
+          </p>
+          <p className="text-sm text-stone-600">
+            {payOk
+              ? `Abbonamento ricevuto${
+                  pay.subscription_status ? ` (${pay.subscription_status})` : ""
+                }${pay.last_paid_at ? ` · ${String(pay.last_paid_at).slice(0, 10)}` : ""}.`
+              : "Nessun pagamento Stripe trovato. Il cliente paga da sala d’attesa (carta test 4242…)."}
+          </p>
+          {!payOk && pending ? (
+            <p className="text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded px-3 py-2">
+              Finché non paga, Attiva chiederà conferma di bypass emergenza.
+            </p>
+          ) : null}
+        </div>
+
+        {/* Step 3 */}
+        <div className="px-4 py-4 space-y-3" data-testid="bridge-step-activate">
+          <p className="text-sm font-medium text-[#0B1E3F]">
+            3 · Attiva gestionale{" "}
+            <StatusPill
+              ok={!pending}
+              warn={pending && canActivate}
+              label={pending ? (canActivate ? "pronta" : "bloccata") : "già attiva"}
+            />
+          </p>
+          {pending ? (
+            <>
+              {!canActivate ? (
+                <ul className="text-sm text-stone-600 list-disc pl-5 space-y-1">
+                  {!kycVerified ? <li>Manca verifica documenti (passo 1)</li> : null}
+                  {!payOk ? <li>Manca pagamento (passo 2)</li> : null}
+                </ul>
+              ) : (
+                <p className="text-sm text-stone-600">
+                  Tutto ok. Attiva sblocca il CRM e invia la password al titolare.
+                </p>
+              )}
+              <button
+                type="button"
+                data-testid="bridge-attiva"
+                disabled={attivaBusy || !kycVerified}
+                onClick={() => attiva()}
+                className="text-xs uppercase tracking-widest px-5 py-3 rounded bg-[#0B1E3F] text-white disabled:opacity-40"
+              >
+                {attivaBusy
+                  ? "Attivazione…"
+                  : canActivate
+                    ? "Attiva e invia password"
+                    : kycVerified
+                      ? "Attiva (pagamento mancante → conferma)"
+                      : "Attiva (prima verifica documenti)"}
+              </button>
+              {pending && kycVerified && !payOk ? (
+                <button
+                  type="button"
+                  data-testid="bridge-attiva-bypass-pay"
+                  disabled={attivaBusy}
+                  onClick={() => attiva({ bypassPay: true })}
+                  className="block mt-2 text-[10px] uppercase tracking-widest underline text-stone-500"
+                >
+                  Forza attivazione senza pagamento
+                </button>
+              ) : null}
+            </>
+          ) : (
+            <div className="flex flex-wrap gap-2">
+              <button
+                type="button"
+                data-testid="bridge-impersonate"
+                onClick={openAsCrm}
+                className="text-xs uppercase tracking-widest px-4 py-2.5 rounded bg-[#0B1E3F] text-white"
+              >
+                Apri gestionale
+              </button>
+              <Link
+                to={`${base}/api?q=${encodeURIComponent(a.slug || a.id)}`}
+                className="text-xs uppercase tracking-widest px-4 py-2.5 rounded border border-stone-300 bg-white"
+              >
+                API keys
+              </Link>
+            </div>
+          )}
+        </div>
+      </section>
+
+      {/* Anagrafica compatta */}
+      <section className="grid sm:grid-cols-2 gap-3 text-sm">
         <Card title="Titolare">
           <Row k="Nome" v={owner.name || "—"} />
           <Row k="Email" v={owner.email || "—"} />
-          <Row k="Telefono" v={owner.phone || a.contact?.phone || "—"} />
-          <Row k="PEC" v={a.contact?.pec || "—"} />
+          <Row k="Tel" v={owner.phone || a.contact?.phone || "—"} />
         </Card>
-        <Card title="Contatti agenzia">
-          <Row k="Email pubblica" v={a.contact?.email || "—"} />
+        <Card title="Agenzia">
           <Row k="Sito" v={a.contact?.website || "—"} />
           <Row k="Città" v={[a.address?.city, a.address?.province].filter(Boolean).join(" ") || "—"} />
           <Row k="P.IVA" v={a.fiscal?.vat_number || "—"} />
-          <Row k="CF" v={a.fiscal?.fiscal_code || "—"} />
-          <Row k="REA" v={a.fiscal?.rea || "—"} />
         </Card>
       </section>
 
-      <section
-        data-testid="bridge-kyc"
-        className="bg-white border border-stone-200 rounded-lg px-4 py-4 space-y-4"
-      >
-        <div className="flex flex-wrap items-start justify-between gap-3">
-          <div>
-            <h2 className="text-xs uppercase tracking-widest text-stone-500">
-              Identificazione clientela (GDPR)
-            </h2>
-            <p className="text-sm text-stone-600 mt-1 max-w-2xl">
-              Dossier Ops: visura camerale + documento titolare + PEC/P.IVA. Verifica prima di
-              Attiva. Ricerca imprese esterna utile come controllo crociato.
-            </p>
-          </div>
-          <span className="text-[10px] uppercase tracking-widest px-2 py-1 border border-stone-300">
-            {(a.kyc?.status || "incomplete").toUpperCase()}
-          </span>
+      {/* Azioni secondarie */}
+      {pending ? (
+        <div className="flex flex-wrap gap-2">
+          <button
+            type="button"
+            data-testid="bridge-impersonate"
+            onClick={openAsCrm}
+            className="text-xs uppercase tracking-widest px-3 py-2 rounded border border-stone-300 bg-white"
+          >
+            Anteprima CRM
+          </button>
+          <Link
+            to={`${base}/api?q=${encodeURIComponent(a.slug || a.id)}`}
+            className="text-xs uppercase tracking-widest px-3 py-2 rounded border border-stone-300 bg-white"
+          >
+            API
+          </Link>
         </div>
-        <div className="grid sm:grid-cols-2 gap-2 text-sm">
-          <Row
-            k="Visura camerale"
-            v={a.kyc?.checklist?.visura_camerale ? "presente" : "manca"}
-          />
-          <Row
-            k="Documento titolare"
-            v={a.kyc?.checklist?.id_titolare ? "presente" : "manca"}
-          />
-          <Row k="PEC" v={a.kyc?.checklist?.pec || a.contact?.pec ? "ok" : "manca"} />
-          <Row k="P.IVA" v={a.kyc?.checklist?.piva_ok || a.fiscal?.vat_number ? "ok" : "manca"} />
-        </div>
-        {a.fiscal?.vat_number ? (
-          <p className="text-xs text-stone-500">
-            Ricerca imprese:{" "}
-            <a
-              className="underline text-[#0B1E3F]"
-              href={`https://www.registroimprese.it/ricerca-libera?q=${encodeURIComponent(
-                a.fiscal.vat_number
-              )}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              data-testid="bridge-kyc-registry-link"
-            >
-              Registro Imprese · P.IVA {a.fiscal.vat_number}
-            </a>
-          </p>
-        ) : null}
-        <ul className="divide-y divide-stone-100 border border-stone-100 rounded">
-          {(a.kyc?.documents || []).map((d) => (
-            <li key={d.id} className="px-3 py-2 flex justify-between gap-3 text-sm">
-              <span>
-                <span className="text-[10px] uppercase tracking-widest text-stone-500 mr-2">
-                  {d.doc_type}
-                </span>
-                {d.filename}
-              </span>
+      ) : null}
+
+      <div>
+        <button
+          type="button"
+          className="text-[10px] uppercase tracking-widest text-stone-400 underline"
+          onClick={() => setShowDanger((v) => !v)}
+        >
+          {showDanger ? "Nascondi azioni pericolose" : "Azioni pericolose"}
+        </button>
+        {showDanger ? (
+          <div className="mt-3 flex flex-wrap gap-2">
+            {owner?.id ? (
               <button
                 type="button"
-                className="text-[10px] uppercase tracking-widest text-[#0B1E3F] underline"
-                onClick={() => downloadKyc(d.id, d.filename)}
+                data-testid="bridge-erase-owner"
+                onClick={async () => {
+                  const conf = window.prompt(
+                    `Anonimizzare titolare ${owner.email}? Digita CANCELLA_UTENTE`
+                  );
+                  if (conf !== "CANCELLA_UTENTE") return;
+                  try {
+                    await api.post(`/app/ops/bridge/users/${owner.id}/erase`, {
+                      confirm: "CANCELLA_UTENTE",
+                    });
+                    setActionMsg("Titolare anonimizzato.");
+                    await load();
+                  } catch (e) {
+                    setActionMsg(e?.response?.data?.detail || "Erase fallito");
+                  }
+                }}
+                className="text-xs uppercase tracking-widest px-3 py-2 rounded border border-rose-300 text-rose-800 bg-white"
               >
-                Scarica
+                GDPR titolare
               </button>
-            </li>
-          ))}
-          {(a.kyc?.documents || []).length === 0 ? (
-            <li className="px-3 py-2 text-sm text-stone-500">Nessun PDF ancora.</li>
-          ) : null}
-        </ul>
-        <div className="flex flex-wrap gap-3 items-center">
-          <label className="text-xs uppercase tracking-widest text-stone-600">
-            Carica visura
-            <input
-              type="file"
-              accept="application/pdf,image/*"
-              className="block mt-1 text-xs"
-              disabled={kycBusy}
-              data-testid="bridge-kyc-upload-visura"
-              onChange={(e) => {
-                uploadKyc("visura_camerale", e.target.files?.[0]);
-                e.target.value = "";
-              }}
-            />
-          </label>
-          <label className="text-xs uppercase tracking-widest text-stone-600">
-            Carica CI titolare
-            <input
-              type="file"
-              accept="application/pdf,image/*"
-              className="block mt-1 text-xs"
-              disabled={kycBusy}
-              data-testid="bridge-kyc-upload-id"
-              onChange={(e) => {
-                uploadKyc("documento_identita", e.target.files?.[0]);
-                e.target.value = "";
-              }}
-            />
-          </label>
-          <button
-            type="button"
-            disabled={kycBusy}
-            className="text-xs uppercase tracking-widest px-3 py-2 rounded bg-emerald-800 text-white"
-            data-testid="bridge-kyc-verify"
-            onClick={() => setKycStatus("verified")}
-          >
-            Segna verificato
-          </button>
-          <button
-            type="button"
-            disabled={kycBusy}
-            className="text-xs uppercase tracking-widest px-3 py-2 rounded border border-rose-300 text-rose-800"
-            onClick={() => setKycStatus("rejected")}
-          >
-            Rifiuta
-          </button>
-        </div>
-        {a.kyc?.notes ? (
-          <p className="text-xs text-stone-500">Nota: {a.kyc.notes}</p>
+            ) : null}
+            <button
+              type="button"
+              data-testid="bridge-offboard"
+              onClick={offboard}
+              className="text-xs uppercase tracking-widest px-3 py-2 rounded border border-rose-400 text-rose-900 bg-rose-50"
+            >
+              Chiudi agenzia
+            </button>
+          </div>
         ) : null}
-      </section>
+      </div>
 
-      <section>
-        <h2 className="text-xs uppercase tracking-widest text-stone-500 mb-3">
-          Membri ({data.counts?.members ?? 0})
-        </h2>
-        <SimpleTable
-          cols={["Nome", "Email", "Ruolo"]}
-          rows={(data.members || []).map((m) => [m.name || "—", m.email, m.role])}
-        />
-      </section>
-
-      <section>
-        <h2 className="text-xs uppercase tracking-widest text-stone-500 mb-3">
-          Clienti CRM ({data.counts?.clients ?? 0})
-        </h2>
-        <SimpleTable
-          cols={["Codice", "Nome", "Email", "Tipo", "Stato"]}
-          rows={(data.clients || []).map((c) => [
-            c.client_code || "—",
-            `${c.name || ""} ${c.surname || ""}`.trim() || "—",
-            c.email || "—",
-            c.client_type,
-            c.status,
-          ])}
-        />
-      </section>
-
-      <section>
-        <h2 className="text-xs uppercase tracking-widest text-stone-500 mb-3">
-          Immobili ({data.counts?.properties ?? 0})
-        </h2>
-        <SimpleTable
-          cols={["Rif", "Titolo", "Città", "Stato"]}
-          rows={(data.properties || []).map((p) => [
-            p.reference_code || p.id?.slice(0, 8),
-            p.title || "—",
-            p.city || "—",
-            p.status,
-          ])}
-        />
-      </section>
-
-      <section>
-        <h2 className="text-xs uppercase tracking-widest text-stone-500 mb-3">
-          API keys ({data.counts?.api_keys ?? 0})
-        </h2>
-        <SimpleTable
-          cols={["Nome", "Prefisso", "Attiva", "Crediti"]}
-          rows={(data.api_keys || []).map((k) => [
-            k.name,
-            k.key_prefix,
-            k.is_active ? "sì" : "no",
-            k.credits_balance ?? "—",
-          ])}
-        />
-      </section>
+      {/* Dati operativi in fondo, non nel flusso */}
+      <details className="border border-stone-200 rounded-lg bg-white">
+        <summary className="px-4 py-3 text-xs uppercase tracking-widest text-stone-500 cursor-pointer">
+          Dettaglio CRM · membri {data.counts?.members ?? 0} · clienti{" "}
+          {data.counts?.clients ?? 0} · immobili {data.counts?.properties ?? 0}
+        </summary>
+        <div className="px-4 pb-4 space-y-6">
+          <SimpleTable
+            cols={["Nome", "Email", "Ruolo"]}
+            rows={(data.members || []).map((m) => [m.name || "—", m.email, m.role])}
+          />
+          <SimpleTable
+            cols={["Codice", "Nome", "Email"]}
+            rows={(data.clients || []).map((c) => [
+              c.client_code || "—",
+              `${c.name || ""} ${c.surname || ""}`.trim() || "—",
+              c.email || "—",
+            ])}
+          />
+          <SimpleTable
+            cols={["Rif", "Titolo", "Città"]}
+            rows={(data.properties || []).map((p) => [
+              p.reference_code || p.id?.slice(0, 8),
+              p.title || "—",
+              p.city || "—",
+            ])}
+          />
+        </div>
+      </details>
     </div>
+  );
+}
+
+function StatusPill({ ok, warn, label }) {
+  const cls = ok
+    ? "bg-emerald-100 text-emerald-900 border-emerald-200"
+    : warn
+      ? "bg-amber-100 text-amber-900 border-amber-200"
+      : "bg-stone-100 text-stone-600 border-stone-200";
+  return (
+    <span
+      className={`ml-2 inline-block text-[10px] uppercase tracking-widest px-2 py-0.5 border rounded ${cls}`}
+    >
+      {label}
+    </span>
   );
 }
 
 function Card({ title, children }) {
   return (
-    <div className="bg-white border border-stone-200 rounded-lg px-4 py-4 space-y-2">
+    <div className="bg-white border border-stone-200 rounded-lg px-4 py-3 space-y-1.5">
       <h3 className="text-[10px] uppercase tracking-widest text-stone-500">{title}</h3>
       {children}
     </div>
@@ -506,19 +590,15 @@ function Row({ k, v }) {
 
 function SimpleTable({ cols, rows }) {
   if (!rows.length) {
-    return (
-      <p className="text-sm text-stone-500 border border-dashed border-stone-300 rounded-lg px-3 py-6 text-center">
-        Vuoto
-      </p>
-    );
+    return <p className="text-sm text-stone-400">Vuoto</p>;
   }
   return (
-    <div className="overflow-x-auto border border-stone-200 rounded-lg bg-white">
+    <div className="overflow-x-auto border border-stone-100 rounded">
       <table className="w-full text-sm">
         <thead>
-          <tr className="border-b border-stone-200 text-left text-[10px] uppercase tracking-widest text-stone-500">
+          <tr className="border-b border-stone-100 text-left text-[10px] uppercase tracking-widest text-stone-500">
             {cols.map((c) => (
-              <th key={c} className="px-3 py-2 font-medium">
+              <th key={c} className="px-2 py-1.5 font-medium">
                 {c}
               </th>
             ))}
@@ -526,9 +606,9 @@ function SimpleTable({ cols, rows }) {
         </thead>
         <tbody>
           {rows.map((r, i) => (
-            <tr key={i} className="border-b border-stone-100 last:border-0">
+            <tr key={i} className="border-b border-stone-50 last:border-0">
               {r.map((cell, j) => (
-                <td key={j} className="px-3 py-2 text-stone-800">
+                <td key={j} className="px-2 py-1.5 text-stone-800">
                   {cell}
                 </td>
               ))}
