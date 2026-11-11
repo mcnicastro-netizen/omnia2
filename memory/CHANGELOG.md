@@ -1,3 +1,8 @@
+## 2026-11-11 — Register: password senza «temporanea»
+
+- Label campo = Password; hint agenzia: «Dopo la verifica riceverai la password per accedere al gestionale.»
+- Email benvenuto + meter sicurezza sul cambio password: dopo (non in register)
+
 ## 2026-11-11 — Register: tre box pacchetto → form
 
 - `/it/register` agenzia: prima i **tre box** Founders (prezzo, limiti, feature), non solo i nomi
