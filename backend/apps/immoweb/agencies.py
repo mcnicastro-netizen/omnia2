@@ -563,15 +563,15 @@ async def upload_my_kyc_document(
         {"id": agency_id},
         {"$set": {"kyc": kyc, "updated_at": datetime.now(timezone.utc).isoformat()}},
     )
-    # D-162 — se anche il pagamento è ok, manda «richiesta ricevuta»
-    notify = None
+    # D-163 — prova auto-Attiva (Gemini match); altrimenti pending (D-162)
+    finalize = None
     try:
-        from shared.auth.agency_pending_notify import maybe_send_agency_pending_ready
+        from shared.auth.kyc_auto_activate import maybe_finalize_agency_onboarding
 
-        notify = await maybe_send_agency_pending_ready(db, agency_id)
+        finalize = await maybe_finalize_agency_onboarding(db, agency_id)
     except Exception as exc:  # noqa: BLE001
-        logger.warning("pending notify after kyc failed: %s", exc)
-    return {"ok": True, "document": entry, "kyc": kyc, "pending_notify": notify}
+        logger.warning("finalize after kyc failed: %s", exc)
+    return {"ok": True, "document": entry, "kyc": kyc, "finalize": finalize}
 
 
 @router.get("/me/kyc/documents/{doc_id}/file")

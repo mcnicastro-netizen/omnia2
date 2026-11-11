@@ -96,7 +96,7 @@ HAL: `api.railway-api-deploy` · `api.vercel-fe-deploy` · `api.stripe-sandbox-c
 - **D-156/D-157** (storico): piano → KYC+Stripe → Attiva. *API=password superato da D-161.*
 - **D-158**: Logo opzionale se sito/dominio; upload con preview blob.
 - **D-159**: Register B2B richiede password (min 8).
-- **D-160 / D-162**: Niente mail a register; `agency_pending` solo dopo KYC docs + pagamento.
+- **D-160 / D-162 / D-163**: Niente mail a register; dopo KYC+pay Gemini confronta allegati → auto-Attiva + `agency_activated`, altrimenti `agency_pending` Ops.
 - **D-161**: **Password register = login definitivo**; Attiva → `agency_activated`; API keys solo da Impostazioni; forgot-password se non ricorda.
 - **Cabina scheda**: checklist 3 passi (documenti → pagamento → attiva).
 - **A-038** (aperta): Stripe sandbox ≠ FE italiana.

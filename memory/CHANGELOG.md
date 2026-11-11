@@ -1,3 +1,9 @@
+## 2026-11-11 — D-163 KYC auto-read + match → auto-Attiva
+
+- Gemini legge visura/CI; se coincidono con onboarding + pagamento → attiva + email `agency_activated`
+- Mismatch/fail → pending Ops come prima (`kyc.auto_verify` in cabina)
+- Flag `OMNIA_KYC_AUTO_ACTIVATE` (default on)
+
 ## 2026-11-11 — D-162 onboarding snello + pending post KYC/pay + shell Ops
 
 - Fiscali onboarding tutti obbligatori; tolta didascalia «non verifichiamo…»

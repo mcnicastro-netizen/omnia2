@@ -41,7 +41,7 @@ Flusso gestionale B2B:
 1. Scegli il **pacchetto** (3 box Starter / Pro / Agency) su `/it/register` → si apre il form.
 2. Compila nome + email + **password** (min 8) — è la password di login definitiva (D-161).
 3. Completa l’onboarding (identità, fiscale, branding) → sala d’attesa.  
-   Email «richiesta ricevuta» parte **solo dopo** upload documenti KYC **e** pagamento (D-162).
+   Dopo documenti KYC **e** pagamento: se i dati coincidono, **attivazione automatica** + email conferma (D-163); altrimenti email «richiesta ricevuta» e verifica Ops (D-162).
 4. In sala d’attesa: carica **visura** + **documento identità** (PDF/PNG/JPG/WebP; anteprima), poi paga con Stripe.
 5. Super Admin in Cabina: checklist **3 passi** (documenti → pagamento → Attiva). Email «gestionale attivo» → entra con la **stessa password**.
 6. Collaboratori: password nell’invito. API keys solo da Impostazioni se servono. Tetti (Starter 3 · Pro 10 · Agency ∞).

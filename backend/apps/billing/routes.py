@@ -515,13 +515,13 @@ async def _apply_session_side_effects(session_id: str) -> None:
             upsert=True,
         )
         logger.info("Subscription applied: agency=%s tier=%s", agency_id, tx.get("tier"))
-        # D-162 — «richiesta ricevuta» solo dopo docs KYC + pagamento
+        # D-163 — auto-Attiva se KYC match; altrimenti pending (D-162)
         try:
-            from shared.auth.agency_pending_notify import maybe_send_agency_pending_ready
+            from shared.auth.kyc_auto_activate import maybe_finalize_agency_onboarding
 
-            await maybe_send_agency_pending_ready(db, agency_id)
+            await maybe_finalize_agency_onboarding(db, agency_id)
         except Exception as exc:  # noqa: BLE001
-            logger.warning("pending notify after subscription failed: %s", exc)
+            logger.warning("finalize after subscription failed: %s", exc)
 
     elif tx["kind"] == "storage_addon":
         agency_id = tx.get("agency_id")

@@ -340,7 +340,18 @@ export default function WaitingActivationPage() {
       const fd = new FormData();
       fd.append("file", file, file.name);
       fd.append("doc_type", docType);
-      await api.post("/app/agencies/me/kyc/documents", fd, { timeout: 60000 });
+      const up = await api.post("/app/agencies/me/kyc/documents", fd, { timeout: 60000 });
+      const fin = up?.data?.finalize;
+      if (fin?.auto_activated || fin?.path === "auto_activate") {
+        setMsg(
+          t(
+            "waiting_activation.auto_activated",
+            "Documenti ok e dati allineati: gestionale attivato. Controlla l’email di conferma."
+          )
+        );
+        await loadStatus();
+        return;
+      }
       setMsg(
         t("waiting_activation.doc_ok_named", "Caricato: {{name}}").replace(
           "{{name}}",
@@ -414,7 +425,7 @@ export default function WaitingActivationPage() {
             <p className="text-stone-600 text-sm leading-relaxed">
               {t(
                 "waiting_activation.body_gestionale",
-                "Per {{name}}: carica visura e documento, completa il pagamento. Solo allora OMNIA riceve la richiesta e, dopo verifica Ops, ti arriva l’email di attivazione. Entri con la password scelta in registrazione."
+                "Per {{name}}: carica visura e documento d’identità, poi paga. Se i dati coincidono con quanto dichiarato, attiviamo subito e ti arriva l’email di conferma. Entri con la password scelta in registrazione."
               ).replace("{{name}}", agency?.display_name || "…")}
             </p>
             {agency?.preferred_plan_tier ? (
