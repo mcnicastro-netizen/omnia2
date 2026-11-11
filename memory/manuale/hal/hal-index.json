@@ -1,5 +1,5 @@
 {
-  "version": "0.57-d160-a038",
+  "version": "0.58-d161-login",
   "updated": "2026-11-11",
   "voices_total": 396,
   "source_files": [
@@ -11,7 +11,7 @@
     {
       "file": "01-primo-accesso.yaml",
       "voices": 14,
-      "md5": "bbb7373e0595635c63b24b4bf0b4a5d1"
+      "md5": "a88065483126caf47b455fa82ba55785"
     },
     {
       "file": "02-dashboard.yaml",
@@ -202,5 +202,5 @@
       "md5": "5e88370cdf2c070dc30c7c3f036b85db"
     }
   ],
-  "notes": "2026-11-11: D-160 email/copy/change-password · A-038 fattura gap · Cabina 3 passi · Cap.00/01/19 HAL sync."
+  "notes": "2026-11-11: D-161 login semplice + forgot-password Cap.01/HAL sync."
 }

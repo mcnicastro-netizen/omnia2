@@ -1,3 +1,8 @@
+## 2026-11-11 — Sync HAL/manuale D-161 (forgot-password)
+
+- Cap.00/01 + YAML: login = password register; recovery = Password dimenticata
+- IMPORT_HAL / hal-index **0.58-d161-login** · reindex prod
+
 ## 2026-11-11 — D-161 login semplice + reset Nicastro
 
 - Attiva non sostituisce più la password con API key (default OFF)

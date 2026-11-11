@@ -89,18 +89,18 @@ HAL: `api.railway-api-deploy` · `api.vercel-fe-deploy` · `api.stripe-sandbox-c
 - **Nav account**: «Il mio account» **solo** `account_type=b2c`; sessione agenzia/Founder → «Area riservata» + banner. Vendi = account Privato (finestra anonima OK).
 - HAL YAML Cap.00/01/10/18 · reindex prod ~973 chunks · SoT `DECISIONS` D-135.
 
-### D-153…D-160 — Cabina + registrazione gestionale (10–11-Nov-2026)
+### D-153…D-161 — Cabina + registrazione gestionale (10–11-Nov-2026)
 
 - **D-153**: Founder Ops ≠ CRM Nicastro (`active_agency_id` scollegato).
 - **D-154/D-155**: Cabina `/app/ops` + kill-switch, impersonation, listino B2B, GDPR erase/offboard.
-- **D-156/D-157**: Piano → onboarding → waiting KYC+Stripe → Attiva → **API key = password**.
+- **D-156/D-157** (storico): piano → KYC+Stripe → Attiva. *API=password superato da D-161.*
 - **D-158**: Logo opzionale se sito/dominio; upload con preview blob.
-- **D-159**: Register B2B con **password temporanea** (min 8); Attiva sostituisce con API key.
+- **D-159**: Register B2B richiede password (min 8).
 - **D-160**: Niente mail a register; `agency_pending` a fine onboarding.
-- **D-161**: Password register = login definitivo; Attiva non emette più API=password; API keys solo da Impostazioni.
-- **Cabina scheda**: checklist 3 passi (documenti → pagamento → attiva); upload Ops rimossi dalla scheda.
-- **A-038** (aperta): Stripe sandbox ≠ fattura elettronica IT; Customer senza P.IVA/SDI finché «vai».
-- SoT: `DECISIONS.md` · Cap.01 §1.2.0 · `ASPETTI_DA_APPROFONDIRE` A-038 · `RIPRENDI_2026-11-11.md`.
+- **D-161**: **Password register = login definitivo**; Attiva → `agency_activated`; API keys solo da Impostazioni; forgot-password se non ricorda.
+- **Cabina scheda**: checklist 3 passi (documenti → pagamento → attiva).
+- **A-038** (aperta): Stripe sandbox ≠ FE italiana.
+- SoT: `DECISIONS.md` · Cap.01 §1.2.0 · A-038 · `RIPRENDI_2026-11-11.md`.
 
 ### Incident Railway Variables (22-Ott-2026)
 

@@ -261,20 +261,22 @@ voci:
     widget: null
     pubblico: [titolare, agente, segreteria, privato]
     livello: base
-    tags: [password, recupero, sicurezza, resend, d-132]
+    tags: [password, recupero, sicurezza, resend, d-132, d-161]
     correlati:
       - primo-accesso.login-primo-ingresso
       - primo-accesso.cambiare-password
+      - primo-accesso.registrazione-b2b-gestionale
       - notifiche.template-welcome-password
     domanda_naturale: "Ho dimenticato la password, come faccio?"
     contenuto:
       a_cosa_serve: >
         Recovery unica per tutti i ruoli (privato, agente, admin,
-        Founder) via POST /api/auth/forgot-password. Email da
+        Founder) via POST /api/auth/forgot-password. Vale anche per
+        titolari B2B (D-161: una sola password di register). Email da
         OMNIA <info@omniarealestateecosystem.it> (D-132).
       quando_si_usa: >
-        Ogni volta che il login fallisce e non ricordi la password
-        corretta.
+        Login fallisce e non ricordi la password — in registrazione,
+        in sala d'attesa, o dopo Attiva.
       passi:
         - Dalla schermata di accesso clicca "Password dimenticata".
         - Scrivi la tua email.
@@ -300,38 +302,35 @@ voci:
       - "[SCREEN: cap1-forgot-password]"
 
   - id: primo-accesso.cambiare-password
-    titolo: Cambiare la password (primo ingresso dopo Attiva o in seguito)
+    titolo: Cambiare o recuperare la password
     modulo: Primo accesso
     widget: null
     pubblico: [titolare, agente, segreteria]
     livello: base
-    tags: [password, profilo, sicurezza, d-160, api-key]
+    tags: [password, profilo, sicurezza, d-161, forgot-password]
     correlati:
       - primo-accesso.password-dimenticata
       - primo-accesso.profilo-utente
       - primo-accesso.registrazione-b2b-gestionale
-      - api-keys.emissione-show-once
-    domanda_naturale: "Come sostituisco la chiave API con la mia password al primo ingresso?"
+    domanda_naturale: "Come cambio la password? E se non la ricordo?"
     contenuto:
       a_cosa_serve: >
-        Dopo Attiva Ops la chiave API è la password iniziale. Al primo
-        ingresso una schermata obbligatoria chiede di sostituirla
-        (POST /auth/me/change-password). La chiave resta per le API.
+        Con D-161 la password di registrazione è quella di login.
+        Se non la ricordi: Password dimenticata su login. Se sei
+        dentro: puoi cambiarla da profilo/sicurezza o
+        POST /auth/me/change-password.
       quando_si_usa: >
-        Subito dopo il primo login post-Attiva (must_change_password),
-        oppure più tardi per rotazione sicurezza.
+        Password dimenticata, rotazione sicurezza, o sospetto accesso.
       passi:
-        - "Nell'email: seleziona il riquadro chiave → Ctrl+C (mobile:
-          tieni premuto → Copia)."
-        - "Login con email + chiave."
-        - "Schermata 'Scegli la tua password': attuale = chiave; nuova
-          (min 8) due volte; Salva e continua."
-        - "In seguito: Password dimenticata o profilo se disponibile."
+        - "Non la ricordi: login → Password dimenticata? → email con
+          link → nuova password (min 8) → Entra."
+        - "Sei loggato: nome in alto a destra → Profilo → Sicurezza →
+          Cambia password (attuale + nuova) → Salva."
       errori_comuni:
-        - problema: "Password attuale non corretta"
+        - problema: "Non arriva l'email di reset"
           soluzione: >
-            Incolla la chiave dall'email senza spazi. Non usare la
-            password temporanea del register (sostituita da Attiva).
+            Controlla spam; attendi un minuto; riprova. Il link scade
+            (tipicamente 1 ora).
         - problema: "La nuova password è rifiutata"
           soluzione: >
             Almeno 8 caratteri. Evita spazi.
@@ -342,7 +341,7 @@ voci:
   # ---------- 1.3 · Onboarding agenzia ----------
 
   - id: primo-accesso.registrazione-b2b-gestionale
-    titolo: Registrare una nuova agenzia (pacchetto, KYC, API=password)
+    titolo: Registrare una nuova agenzia (pacchetto, KYC, una password)
     modulo: Primo accesso
     widget: null
     pubblico: [titolare]
