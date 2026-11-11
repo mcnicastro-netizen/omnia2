@@ -1212,9 +1212,10 @@ async def ops_activate_agency(
         "wipe": wipe,
         "grant": grant,
         "email": email_result,
-        # Mai restituire plaintext key nella risposta API Ops (solo email)
         "credential_issued": bool(credential and credential.get("ok")),
         "credential_prefix": (credential or {}).get("key_prefix"),
+        # D-160 — show-once in cabina (Copia). Stesso plaintext inviato via email.
+        "credential_key": (credential or {}).get("key") if credential else None,
     }
 
 

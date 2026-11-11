@@ -128,20 +128,39 @@ async def bridge_tenants(
             {"agency_id": aid, "trashed_at": {"$exists": False}}
         )
         n_keys = await db.api_keys.count_documents({"agency_id": aid, "is_active": True})
+        fiscal = d.get("fiscal") or {}
+        contact = d.get("contact") or {}
+        address = d.get("address") or {}
+        kyc = d.get("kyc") or {}
         items.append(
             {
                 "id": aid,
                 "slug": d.get("slug"),
                 "display_name": d.get("display_name"),
-                "plan": d.get("plan") or d.get("billing_assisted_tier"),
+                "plan": d.get("plan") or d.get("billing_assisted_tier") or d.get("preferred_plan_tier"),
                 "activation_status": d.get("activation_status") or "active",
                 "is_active": d.get("is_active", True),
                 "credits_balance": d.get("credits_balance"),
                 "created_at": d.get("created_at"),
                 "owner_email": owner.get("email"),
                 "owner_name": owner.get("name"),
-                "owner_phone": owner.get("phone"),
-                "contact": d.get("contact") or {},
+                "owner_phone": owner.get("phone") or contact.get("phone"),
+                "contact": contact,
+                "fiscal": {
+                    "vat_number": fiscal.get("vat_number"),
+                    "fiscal_code": fiscal.get("fiscal_code"),
+                    "rea": fiscal.get("rea"),
+                },
+                "address": {
+                    "street": address.get("street") or address.get("line1"),
+                    "city": address.get("city"),
+                    "province": address.get("province"),
+                    "zip": address.get("zip") or address.get("postal_code"),
+                    "country": address.get("country") or "IT",
+                },
+                "pec": contact.get("pec"),
+                "website": contact.get("website"),
+                "kyc_status": (kyc.get("status") or "incomplete"),
                 "counts": {
                     "clients": n_clients,
                     "properties": n_props,

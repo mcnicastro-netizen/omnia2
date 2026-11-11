@@ -62,7 +62,9 @@ export default function BridgeClientsPage() {
           Clienti
         </h1>
         <p className="mt-2 text-sm text-stone-600 max-w-2xl">
-          Archivi piattaforma: agenzie (con titolare, piano, conteggi) e account ImmobilCloud.
+          Archivi piattaforma: agenzie (titolare, P.IVA, PEC, KYC, piano) e account
+          ImmobilCloud — base per identificare la clientela (GDPR / obblighi
+          contrattuali).
         </p>
       </header>
 
@@ -130,6 +132,75 @@ export default function BridgeClientsPage() {
         >
           Cerca
         </button>
+        {tab === "agenzie" && items.length > 0 ? (
+          <button
+            type="button"
+            data-testid="bridge-clients-export-csv"
+            className="text-xs uppercase tracking-widest px-4 py-2 rounded border border-stone-300 bg-white"
+            onClick={() => {
+              const cols = [
+                "id",
+                "display_name",
+                "slug",
+                "activation_status",
+                "plan",
+                "owner_name",
+                "owner_email",
+                "owner_phone",
+                "vat_number",
+                "fiscal_code",
+                "pec",
+                "website",
+                "city",
+                "province",
+                "zip",
+                "kyc_status",
+                "created_at",
+              ];
+              const esc = (v) => {
+                const s = v == null ? "" : String(v);
+                return `"${s.replace(/"/g, '""')}"`;
+              };
+              const rows = items.map((a) =>
+                [
+                  a.id,
+                  a.display_name,
+                  a.slug,
+                  a.activation_status,
+                  a.plan,
+                  a.owner_name,
+                  a.owner_email,
+                  a.owner_phone,
+                  a.fiscal?.vat_number,
+                  a.fiscal?.fiscal_code,
+                  a.pec || a.contact?.pec,
+                  a.website || a.contact?.website,
+                  a.address?.city,
+                  a.address?.province,
+                  a.address?.zip,
+                  a.kyc_status,
+                  (a.created_at || "").slice(0, 10),
+                ]
+                  .map(esc)
+                  .join(",")
+              );
+              const csv = [cols.join(","), ...rows].join("\n");
+              const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+              const url = URL.createObjectURL(blob);
+              const link = document.createElement("a");
+              link.href = url;
+              link.download = `omnia-elenco-clienti-${new Date()
+                .toISOString()
+                .slice(0, 10)}.csv`;
+              document.body.appendChild(link);
+              link.click();
+              link.parentNode.removeChild(link);
+              URL.revokeObjectURL(url);
+            }}
+          >
+            Esporta elenco CSV
+          </button>
+        ) : null}
       </form>
 
       <h2 className="text-xs uppercase tracking-widest text-stone-500">{title}</h2>

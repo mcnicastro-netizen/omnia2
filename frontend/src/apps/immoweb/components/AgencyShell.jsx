@@ -9,6 +9,7 @@ import LanguageSwitcher from "../../../shared/components/LanguageSwitcher";
 import AlChatWidget from "./AlChatWidget";
 import NotificationBell from "../../../shared/components/NotificationBell";
 import BackButton, { isCrmDashboardPath } from "./BackButton";
+import ForceChangePasswordModal from "./ForceChangePasswordModal";
 
 /**
  * AgencyShell — shared sidebar+topbar layout for all authenticated ImmoWeb pages.
@@ -177,6 +178,7 @@ export default function AgencyShell({ children, current = "dashboard", showBack 
       className="min-h-screen bg-stone-50 text-stone-900 flex"
       style={{ fontFamily: "'Inter', system-ui, sans-serif" }}
     >
+      <ForceChangePasswordModal />
       {/* Mobile sidebar overlay */}
       {sidebarOpen && (
         <button

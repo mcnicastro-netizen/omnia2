@@ -7,6 +7,16 @@ Registro di tutte le decisioni di business e tecniche prese durante il progetto.
 
 ## Decisioni prese
 
+### D-160 — Email solo a fine flusso + copy chiave + cambio password obbligatorio · 11-Nov-2026
+- **Contesto**: Founder — mail arrivate prima della fine registrazione; chiave API in email senza copy chiaro; dopo Attiva non si capiva come sostituire la password; elenco clienti obblighi di legge; bottoni «azioni pericolose» oscuri.
+- **Decisione**:
+  1. **Niente email a register B2B** (tolto `agency_onboarding_resume`; D-159 dà già password temp). Restano: `agency_pending` a fine onboarding, `agency_credentials` a Ops Attiva.
+  2. **Show-once**: Attiva restituisce `credential_key` in cabina con bottone Copia; email spiega selezione/copia.
+  3. **Primo ingresso**: `must_change_password` (solo post-Attiva) → modal obbligatoria `POST /auth/me/change-password`. Flag a register = false.
+  4. **Elenco clienti**: export CSV da Cabina → Clienti (P.IVA, PEC, KYC, titolare, sede).
+  5. **Azioni pericolose**: etichette in italiano semplice (cancella dati titolare / chiudi agenzia).
+- **Stato**: ✅ in codice.
+
 ### D-159 — Password temporanea in register B2B + upload KYC onesto · 11-Nov-2026
 - **Contesto**: Founder — login «indigesto» senza password fino ad Attiva; upload visura/CI bloccati da MIME Safari (`octet-stream`/HEIC); copy bottone «Apri gestionale» vs testo «crea agenzia»; dominio «ti aiutiamo a collegarlo» senza dire quando.
 - **Decisione**:

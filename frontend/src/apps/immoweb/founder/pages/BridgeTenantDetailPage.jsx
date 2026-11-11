@@ -19,6 +19,8 @@ export default function BridgeTenantDetailPage() {
   const [kycBusy, setKycBusy] = useState(false);
   const [attivaBusy, setAttivaBusy] = useState(false);
   const [showDanger, setShowDanger] = useState(false);
+  const [issuedKey, setIssuedKey] = useState(null);
+  const [keyCopied, setKeyCopied] = useState(false);
 
   const load = async () => {
     setBusy(true);
@@ -71,8 +73,9 @@ export default function BridgeTenantDetailPage() {
 
     setAttivaBusy(true);
     setActionMsg(null);
+    setIssuedKey(null);
     try {
-      await api.post("/app/ops/activate-agency", {
+      const r = await api.post("/app/ops/activate-agency", {
         agency_id: agencyId,
         grant_plan: true,
         tier,
@@ -84,7 +87,13 @@ export default function BridgeTenantDetailPage() {
         require_payment: !bypassPay,
         issue_login_credential: true,
       });
-      setActionMsg("Attivata. Email con password inviata al titolare.");
+      const once = r?.data?.credential_key;
+      if (once) setIssuedKey(once);
+      setActionMsg(
+        once
+          ? "Attivata. Copia la chiave qui sotto (anche via email al titolare)."
+          : "Attivata. Email con password inviata al titolare."
+      );
       await load();
     } catch (e) {
       const d = e?.response?.data?.detail;
@@ -233,6 +242,49 @@ export default function BridgeTenantDetailPage() {
         >
           {actionMsg}
         </p>
+      ) : null}
+
+      {issuedKey ? (
+        <div
+          data-testid="bridge-credential-once"
+          className="bg-amber-50 border border-amber-200 rounded-lg px-4 py-3 space-y-2"
+        >
+          <p className="text-xs uppercase tracking-widest text-amber-900">
+            Chiave di accesso — copiala ora (una sola volta)
+          </p>
+          <p className="font-mono text-sm break-all bg-white border border-amber-100 rounded px-3 py-2">
+            {issuedKey}
+          </p>
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              data-testid="bridge-credential-copy"
+              className="text-xs uppercase tracking-widest px-3 py-2 rounded bg-[#0B1E3F] text-white"
+              onClick={async () => {
+                try {
+                  await navigator.clipboard.writeText(issuedKey);
+                  setKeyCopied(true);
+                  setTimeout(() => setKeyCopied(false), 2000);
+                } catch {
+                  setActionMsg("Copia manuale: seleziona il testo sopra.");
+                }
+              }}
+            >
+              {keyCopied ? "Copiata ✓" : "Copia chiave"}
+            </button>
+            <button
+              type="button"
+              className="text-xs uppercase tracking-widest px-3 py-2 rounded border border-stone-300 bg-white"
+              onClick={() => setIssuedKey(null)}
+            >
+              Nascondi
+            </button>
+          </div>
+          <p className="text-xs text-stone-600">
+            Il cliente la riceve anche via email. Al primo ingresso gli chiediamo di
+            sostituirla con una password personale.
+          </p>
+        </div>
       ) : null}
 
       {/* ——— Checklist attivazione ——— */}
@@ -485,39 +537,57 @@ export default function BridgeTenantDetailPage() {
           {showDanger ? "Nascondi azioni pericolose" : "Azioni pericolose"}
         </button>
         {showDanger ? (
-          <div className="mt-3 flex flex-wrap gap-2">
+          <div className="mt-3 space-y-3 max-w-xl">
+            <p className="text-sm text-stone-600">
+              Solo per richieste GDPR o chiusura contratto. Non servono per
+              attivare un cliente.
+            </p>
             {owner?.id ? (
+              <div className="border border-rose-200 rounded-lg px-3 py-3 bg-white space-y-2">
+                <button
+                  type="button"
+                  data-testid="bridge-erase-owner"
+                  onClick={async () => {
+                    const conf = window.prompt(
+                      `Anonimizzare titolare ${owner.email}? Digita CANCELLA_UTENTE`
+                    );
+                    if (conf !== "CANCELLA_UTENTE") return;
+                    try {
+                      await api.post(`/app/ops/bridge/users/${owner.id}/erase`, {
+                        confirm: "CANCELLA_UTENTE",
+                      });
+                      setActionMsg("Titolare anonimizzato.");
+                      await load();
+                    } catch (e) {
+                      setActionMsg(e?.response?.data?.detail || "Erase fallito");
+                    }
+                  }}
+                  className="text-xs uppercase tracking-widest px-3 py-2 rounded border border-rose-300 text-rose-800 bg-white"
+                >
+                  Cancella dati del titolare
+                </button>
+                <p className="text-xs text-stone-500">
+                  In pratica: rende anonima la persona (nome/email) su richiesta
+                  privacy. L’agenzia resta, ma il titolare non è più
+                  identificabile.
+                </p>
+              </div>
+            ) : null}
+            <div className="border border-rose-300 rounded-lg px-3 py-3 bg-rose-50 space-y-2">
               <button
                 type="button"
-                data-testid="bridge-erase-owner"
-                onClick={async () => {
-                  const conf = window.prompt(
-                    `Anonimizzare titolare ${owner.email}? Digita CANCELLA_UTENTE`
-                  );
-                  if (conf !== "CANCELLA_UTENTE") return;
-                  try {
-                    await api.post(`/app/ops/bridge/users/${owner.id}/erase`, {
-                      confirm: "CANCELLA_UTENTE",
-                    });
-                    setActionMsg("Titolare anonimizzato.");
-                    await load();
-                  } catch (e) {
-                    setActionMsg(e?.response?.data?.detail || "Erase fallito");
-                  }
-                }}
-                className="text-xs uppercase tracking-widest px-3 py-2 rounded border border-rose-300 text-rose-800 bg-white"
+                data-testid="bridge-offboard"
+                onClick={offboard}
+                className="text-xs uppercase tracking-widest px-3 py-2 rounded border border-rose-400 text-rose-900 bg-white"
               >
-                GDPR titolare
+                Chiudi agenzia
               </button>
-            ) : null}
-            <button
-              type="button"
-              data-testid="bridge-offboard"
-              onClick={offboard}
-              className="text-xs uppercase tracking-widest px-3 py-2 rounded border border-rose-400 text-rose-900 bg-rose-50"
-            >
-              Chiudi agenzia
-            </button>
+              <p className="text-xs text-stone-600">
+                In pratica: spegne il cliente. Cancella immobili/clienti del CRM
+                e chiude l’account agenzia. Puoi scegliere se anonimizzare anche
+                i collaboratori.
+              </p>
+            </div>
           </div>
         ) : null}
       </div>
