@@ -1,3 +1,19 @@
+## 2026-11-11 — Closeout HAL D-163…D-165
+
+- Cap.00/01 + HAL YAML + IMPORT **v0.59** (auto-KYC, Stripe reconcile, enter_url, mensile/annuale)
+- `NEXT_SESSION`: contatori scadenze abbonamento + crediti (domani)
+- Codice già su `main` (#176–#179)
+
+## 2026-11-11 — D-165 email Attiva → enter_url (anti-403)
+
+- CTA login gestionale `?from=app&next=dashboard` invece di deep-link
+- ProtectedRoute soft-handoff per sessioni non-CRM
+
+## 2026-11-11 — D-164 Stripe period + reconcile waiting
+
+- Period da `subscription.items` (API 2025)
+- Waiting poll `/billing/status` se paid senza `applied_at`
+
 ## 2026-11-11 — Waiting-activation: mensile / annuale
 
 - Toggle ciclo fatturazione prima di Stripe (lookup `tier_yearly`, D-079 −1 mese)

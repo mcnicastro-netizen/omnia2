@@ -1403,18 +1403,23 @@ voci:
       Cosa fanno i bottoni azioni pericolose?
     contenuto:
       a_cosa_serve: >
-        Scheda tenant Ops semplificata: 1) scarica/verifica documenti KYC
-        2) stato pagamento Stripe 3) Attiva gestionale (D-161: password
-        = quella del register; email agency_activated).
-        Azioni pericolose = cancella dati titolare (GDPR) o chiudi agenzia.
+        Scheda tenant Ops: 1) documenti KYC 2) pagamento Stripe 3) Attiva
+        (D-161 password = register; email agency_activated con enter_url).
+        Se Gemini matcha KYC vs onboarding → auto-Attiva (D-163) senza
+        bottone. Azioni pericolose = erase titolare o chiudi agenzia.
       quando_si_usa: >
-        Coda Clienti pending · dogfood Nicastro · dopo KYC+Stripe sandbox.
+        Coda Clienti pending · dogfood · dopo KYC+Stripe (o mismatch AI).
       passi:
         - "UI: /it/app/ops/clienti/{agency_id} · BridgeTenantDetailPage"
-        - "API: GET /app/ops/bridge/tenants/{id} (payment.ok) · PATCH …/kyc
-          · POST /app/ops/activate-agency (credential_key show-once)"
+        - "API: GET /app/ops/bridge/tenants/{id} (payment.ok, kyc.auto_verify)
+          · PATCH …/kyc · POST /app/ops/activate-agency"
+        - "Waiting: GET /billing/status/{session_id} riconcilia paid (D-164)"
         - "Export elenco: Cabina → Clienti → Esporta elenco CSV"
       errori_comuni:
+        - problema: "Pagato su Stripe ma CRM ancora pending"
+          soluzione: >
+            D-164: period su items Stripe; waiting deve pollare
+            /billing/status. Poi finalize KYC auto o Attiva Ops.
         - problema: "Attiva dice pagamento mancante"
           soluzione: >
             Cliente deve completare Stripe in sala d'attesa, oppure bypass
