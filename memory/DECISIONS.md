@@ -7,6 +7,16 @@ Registro di tutte le decisioni di business e tecniche prese durante il progetto.
 
 ## Decisioni prese
 
+### D-163 — Auto-lettura KYC (Gemini) + match onboarding → auto-Attiva · 11-Nov-2026
+- **Contesto**: Founder — Ops legge a mano allegati; chiede se il sistema può leggerli, confrontarli e attivare da solo.
+- **Decisione**:
+  1. Dopo **visura + CI + pagamento**, Gemini estrae campi (P.IVA, ragione sociale, nome CI…).
+  2. Match vs dati onboarding: **P.IVA uguale** + (ragione sociale/display **o** CF) + nome titolare se leggibile.
+  3. Se match → `kyc.status=verified` + `activation_status=active` + grant piano + email **`agency_activated`**.
+  4. Se mismatch / Gemini fail → resta pending + email `agency_pending` (Ops manuale). Report in `kyc.auto_verify`.
+  5. Flag `OMNIA_KYC_AUTO_ACTIVATE` (default **on**).
+- **Stato**: ✅ in codice.
+
 ### D-162 — Onboarding snello + email pending solo a dossier completo + shell Ops netta · 11-Nov-2026
 - **Contesto**: Dogfood Founder — procedura farraginosa: fiscali opachi, branding fuorviante se già c’è un sito, email «abbiamo ricevuto» prematura, email attivazione poco affidabile, mix pericoloso Super Admin ↔ CRM agenzia, banner Area riservata B2C.
 - **Decisione**:
