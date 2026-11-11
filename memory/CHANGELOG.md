@@ -1,3 +1,9 @@
+## 2026-11-11 — Upload logo/KYC: HEIC chiaro + stato «caricato» in sala d’attesa
+
+- Logo onboarding: stesso hint iPhone HEIC del KYC (niente `unsupported_media_type` opaco)
+- Waiting: chip verdi con nome file visura/CI (non solo «Choose file» vuoto)
+- E2E browser prod: PNG/PDF ok da Chrome; HEIC resta bloccato con messaggio
+
 ## 2026-11-11 — Register: password senza «temporanea»
 
 - Label campo = Password; hint agenzia: «Dopo la verifica riceverai la password per accedere al gestionale.»
