@@ -5,11 +5,165 @@ import { useAuth, formatApiErrorDetail } from "../../shared/lib/auth";
 import { api } from "../../shared/lib/api";
 import Brand from "../../shared/components/Brand";
 
+function isPdfName(name = "") {
+  return String(name).toLowerCase().endsWith(".pdf");
+}
+
+function isImageName(name = "", type = "") {
+  const n = String(name).toLowerCase();
+  const t = String(type).toLowerCase();
+  if (t.startsWith("image/")) return true;
+  return [".png", ".jpg", ".jpeg", ".webp"].some((e) => n.endsWith(e));
+}
+
+function DocPreview({ title, doc, local, hasDoc, upBusy, agencyReady, inputTestId, onPick, t }) {
+  const [remoteUrl, setRemoteUrl] = useState("");
+  const filename = local?.name || doc?.filename || "";
+  const kind =
+    local?.kind ||
+    (isPdfName(filename) ? "pdf" : isImageName(filename) ? "image" : "file");
+  const src = local?.url || remoteUrl;
+  const shown = Boolean(hasDoc && (src || filename));
+
+  useEffect(() => {
+    let cancelled = false;
+    let created = "";
+    // Se non c'è blob locale, scarica via API auth (ops-kyc non è su /api/media pubblico;
+    // iframe diretto sarebbe anche bloccato da X-Frame-Options).
+    if (local?.url || !doc?.id) {
+      setRemoteUrl((prev) => {
+        if (prev) {
+          try {
+            URL.revokeObjectURL(prev);
+          } catch {
+            /* ignore */
+          }
+        }
+        return "";
+      });
+      return undefined;
+    }
+    (async () => {
+      try {
+        const r = await api.get(`/app/agencies/me/kyc/documents/${doc.id}/file`, {
+          responseType: "blob",
+          timeout: 60000,
+        });
+        if (cancelled) return;
+        created = URL.createObjectURL(r.data);
+        setRemoteUrl((prev) => {
+          if (prev) {
+            try {
+              URL.revokeObjectURL(prev);
+            } catch {
+              /* ignore */
+            }
+          }
+          return created;
+        });
+      } catch {
+        if (!cancelled) setRemoteUrl("");
+      }
+    })();
+    return () => {
+      cancelled = true;
+      if (created) {
+        try {
+          URL.revokeObjectURL(created);
+        } catch {
+          /* ignore */
+        }
+      }
+    };
+  }, [doc?.id, local?.url]);
+
+  return (
+    <div
+      className={`rounded-md border px-3 py-3 ${
+        hasDoc ? "border-emerald-300 bg-emerald-50/70" : "border-stone-200 bg-stone-50"
+      }`}
+      data-testid={inputTestId.replace("upload", "status")}
+    >
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <p className="text-xs font-medium text-stone-800 normal-case tracking-normal">
+          {title}:{" "}
+          {hasDoc ? (
+            <span className="text-emerald-800">✓ {filename || "caricato"}</span>
+          ) : (
+            <span className="text-amber-800">manca</span>
+          )}
+        </p>
+        <label className="inline-flex">
+          <span className="sr-only">
+            {hasDoc ? "Sostituisci" : "Carica"} {title}
+          </span>
+          <input
+            type="file"
+            accept="application/pdf,image/png,image/jpeg,image/webp,.pdf,.png,.jpg,.jpeg,.webp"
+            disabled={upBusy || !agencyReady}
+            data-testid={inputTestId}
+            className="sr-only"
+            onChange={(e) => {
+              const f = e.target.files?.[0];
+              onPick(f);
+              e.target.value = "";
+            }}
+          />
+          <span
+            className={`cursor-pointer text-[10px] uppercase tracking-widest px-3 py-2 border ${
+              upBusy || !agencyReady
+                ? "opacity-40 pointer-events-none border-stone-300 text-stone-400"
+                : "border-[#0B1E3F] text-[#0B1E3F] hover:bg-white"
+            }`}
+          >
+            {hasDoc ? "Sostituisci" : "Carica file"}
+          </span>
+        </label>
+      </div>
+
+      {shown && src ? (
+        <div
+          className="mt-3 border border-stone-200 bg-white overflow-hidden"
+          data-testid={`${inputTestId}-preview`}
+        >
+          {kind === "image" ? (
+            <img
+              src={src}
+              alt={filename || title}
+              className="w-full max-h-56 object-contain bg-stone-50"
+            />
+          ) : kind === "pdf" ? (
+            <iframe title={filename || title} src={src} className="w-full h-56 bg-stone-50" />
+          ) : (
+            <div className="px-3 py-6 text-center text-xs text-stone-600">{filename}</div>
+          )}
+          <div className="flex items-center justify-between gap-2 px-3 py-2 border-t border-stone-100">
+            <span className="text-[11px] text-stone-600 truncate">{filename}</span>
+            <a
+              href={src}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="shrink-0 text-[10px] uppercase tracking-widest text-[#1F6B5C] underline"
+              data-testid={`${inputTestId}-open`}
+            >
+              {t("waiting_activation.open_preview", "Apri anteprima")}
+            </a>
+          </div>
+        </div>
+      ) : hasDoc && !src ? (
+        <p className="mt-2 text-[11px] text-stone-500 normal-case tracking-normal">
+          {t("waiting_activation.preview_loading", "Carico anteprima…")}
+        </p>
+      ) : null}
+    </div>
+  );
+}
+
 /**
  * Sala d'attesa CRM (D-157 gestionale):
- * 1) upload KYC (visura + CI)
+ * 1) upload KYC (visura + CI) con anteprima
  * 2) pagamento Stripe
- * 3) attesa Super Admin → email con API key = password
+ * 3) attesa Super Admin → password gestionale
  */
 export default function WaitingActivationPage() {
   const { t, i18n } = useTranslation();
@@ -24,6 +178,39 @@ export default function WaitingActivationPage() {
   const [checking, setChecking] = useState(false);
   const [payBusy, setPayBusy] = useState(false);
   const [upBusy, setUpBusy] = useState(false);
+  const [localPreviews, setLocalPreviews] = useState({});
+
+  const revokeLocal = useCallback((docType) => {
+    setLocalPreviews((prev) => {
+      const cur = prev[docType];
+      if (cur?.url) {
+        try {
+          URL.revokeObjectURL(cur.url);
+        } catch {
+          /* ignore */
+        }
+      }
+      const next = { ...prev };
+      delete next[docType];
+      return next;
+    });
+  }, []);
+
+  useEffect(
+    () => () => {
+      Object.values(localPreviews).forEach((p) => {
+        if (p?.url) {
+          try {
+            URL.revokeObjectURL(p.url);
+          } catch {
+            /* ignore */
+          }
+        }
+      });
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    []
+  );
 
   const loadStatus = useCallback(async () => {
     setErr("");
@@ -124,8 +311,26 @@ export default function WaitingActivationPage() {
       setUpBusy(false);
       return;
     }
+
+    // Anteprima locale immediata → certezza visiva prima della risposta API
     try {
-      // Forza refresh sessione: dopo «Invia richiesta» il ruolo/agency_id devono essere allineati
+      const prev = localPreviews[docType]?.url;
+      if (prev) URL.revokeObjectURL(prev);
+    } catch {
+      /* ignore */
+    }
+    const localUrl = URL.createObjectURL(file);
+    const kind = isPdfName(file.name) || file.type === "application/pdf"
+      ? "pdf"
+      : isImageName(file.name, file.type)
+        ? "image"
+        : "file";
+    setLocalPreviews((p) => ({
+      ...p,
+      [docType]: { url: localUrl, name: file.name, kind },
+    }));
+
+    try {
       if (typeof refresh === "function") await refresh();
       const fd = new FormData();
       fd.append("file", file, file.name);
@@ -139,6 +344,7 @@ export default function WaitingActivationPage() {
       );
       await loadStatus();
     } catch (e) {
+      revokeLocal(docType);
       setMsg(formatApiErrorDetail(e?.response?.data?.detail) || "Upload fallito");
     } finally {
       setUpBusy(false);
@@ -225,90 +431,28 @@ export default function WaitingActivationPage() {
               )}
             </p>
             <div className="space-y-3">
-              <div
-                className={`rounded-md border px-3 py-3 ${
-                  hasVisura ? "border-emerald-300 bg-emerald-50/70" : "border-stone-200 bg-stone-50"
-                }`}
-                data-testid="waiting-visura-status"
-              >
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <p className="text-xs font-medium text-stone-800 normal-case tracking-normal">
-                    Visura camerale:{" "}
-                    {hasVisura ? (
-                      <span className="text-emerald-800">
-                        ✓ {visuraDoc?.filename || "caricata"}
-                      </span>
-                    ) : (
-                      <span className="text-amber-800">manca</span>
-                    )}
-                  </p>
-                  <label className="inline-flex">
-                    <span className="sr-only">Carica visura</span>
-                    <input
-                      type="file"
-                      accept="application/pdf,image/png,image/jpeg,image/webp,.pdf,.png,.jpg,.jpeg,.webp"
-                      disabled={upBusy || !agency}
-                      data-testid="waiting-upload-visura"
-                      className="sr-only"
-                      onChange={(e) => {
-                        const f = e.target.files?.[0];
-                        uploadKyc("visura_camerale", f);
-                        e.target.value = "";
-                      }}
-                    />
-                    <span
-                      className={`cursor-pointer text-[10px] uppercase tracking-widest px-3 py-2 border ${
-                        upBusy || !agency
-                          ? "opacity-40 pointer-events-none border-stone-300 text-stone-400"
-                          : "border-[#0B1E3F] text-[#0B1E3F] hover:bg-white"
-                      }`}
-                    >
-                      {hasVisura ? "Sostituisci" : "Carica file"}
-                    </span>
-                  </label>
-                </div>
-              </div>
-              <div
-                className={`rounded-md border px-3 py-3 ${
-                  hasId ? "border-emerald-300 bg-emerald-50/70" : "border-stone-200 bg-stone-50"
-                }`}
-                data-testid="waiting-id-status"
-              >
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <p className="text-xs font-medium text-stone-800 normal-case tracking-normal">
-                    Documento identità:{" "}
-                    {hasId ? (
-                      <span className="text-emerald-800">✓ {idDoc?.filename || "caricato"}</span>
-                    ) : (
-                      <span className="text-amber-800">manca</span>
-                    )}
-                  </p>
-                  <label className="inline-flex">
-                    <span className="sr-only">Carica documento</span>
-                    <input
-                      type="file"
-                      accept="application/pdf,image/png,image/jpeg,image/webp,.pdf,.png,.jpg,.jpeg,.webp"
-                      disabled={upBusy || !agency}
-                      data-testid="waiting-upload-id"
-                      className="sr-only"
-                      onChange={(e) => {
-                        const f = e.target.files?.[0];
-                        uploadKyc("documento_identita", f);
-                        e.target.value = "";
-                      }}
-                    />
-                    <span
-                      className={`cursor-pointer text-[10px] uppercase tracking-widest px-3 py-2 border ${
-                        upBusy || !agency
-                          ? "opacity-40 pointer-events-none border-stone-300 text-stone-400"
-                          : "border-[#0B1E3F] text-[#0B1E3F] hover:bg-white"
-                      }`}
-                    >
-                      {hasId ? "Sostituisci" : "Carica file"}
-                    </span>
-                  </label>
-                </div>
-              </div>
+              <DocPreview
+                title="Visura camerale"
+                doc={visuraDoc}
+                local={localPreviews.visura_camerale}
+                hasDoc={hasVisura}
+                upBusy={upBusy}
+                agencyReady={Boolean(agency)}
+                inputTestId="waiting-upload-visura"
+                onPick={(f) => uploadKyc("visura_camerale", f)}
+                t={t}
+              />
+              <DocPreview
+                title="Documento identità"
+                doc={idDoc}
+                local={localPreviews.documento_identita}
+                hasDoc={hasId}
+                upBusy={upBusy}
+                agencyReady={Boolean(agency)}
+                inputTestId="waiting-upload-id"
+                onPick={(f) => uploadKyc("documento_identita", f)}
+                t={t}
+              />
             </div>
             {upBusy ? (
               <p className="text-xs text-stone-500" data-testid="waiting-upload-busy">
@@ -362,7 +506,7 @@ export default function WaitingActivationPage() {
               {readyForOps
                 ? t(
                     "waiting_activation.ops_ready",
-                    "Richiesta completa. Ti arriverà l’email con la chiave API quando l’account sarà attivato."
+                    "Richiesta completa. Ti arriverà l’email con la password quando l’account sarà attivato."
                   )
                 : t(
                     "waiting_activation.ops_wait",

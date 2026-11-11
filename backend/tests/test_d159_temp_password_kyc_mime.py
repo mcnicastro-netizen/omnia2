@@ -99,6 +99,45 @@ def test_logo_heic_returns_iphone_hint(monkeypatch):
     assert "iPhone" in detail.get("hint", "")
 
 
+def test_kyc_download_owner_ok(monkeypatch):
+    from apps.immoweb import agencies as mod
+
+    user = {
+        "id": "u1",
+        "email": "a@x.it",
+        "role": "agency_admin",
+        "agency_ids": ["ag1"],
+        "active_agency_id": "ag1",
+    }
+    agency = {
+        "id": "ag1",
+        "owner_id": "u1",
+        "kyc": {
+            "documents": [
+                {
+                    "id": "d1",
+                    "doc_type": "visura_camerale",
+                    "filename": "visura.pdf",
+                    "storage_path": "omnia/ops-kyc/ag1/visura-abc.pdf",
+                }
+            ]
+        },
+    }
+
+    class DB:
+        agencies = MagicMock()
+        agencies.find_one = AsyncMock(return_value=agency)
+
+    monkeypatch.setattr(mod.Database, "get", staticmethod(lambda: DB()))
+    monkeypatch.setattr(mod, "require_agency", lambda u: "ag1")
+    monkeypatch.setattr(mod, "get_object", lambda path: (b"%PDF-1.4", "application/pdf"))
+
+    resp = _run(mod.download_my_kyc_document("d1", user))
+    assert resp.status_code == 200
+    assert resp.body == b"%PDF-1.4"
+    assert "visura.pdf" in resp.headers.get("content-disposition", "")
+
+
 def test_logo_octet_stream_png_sniff(monkeypatch):
     from apps.immoweb import agencies as mod
 

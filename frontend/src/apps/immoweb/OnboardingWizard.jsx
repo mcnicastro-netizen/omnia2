@@ -474,13 +474,19 @@ export default function OnboardingWizard() {
                 </p>
               ) : null}
               {(logoPreview || form.branding.logo_url) ? (
-                <div className="mt-3 flex items-center gap-3">
+                <div
+                  className="mt-3 border border-stone-200 bg-white overflow-hidden"
+                  data-testid="onb-logo-preview"
+                >
                   <img
                     src={logoPreview || resolveMediaUrl(form.branding.logo_url)}
-                    alt=""
-                    className="h-12 w-12 object-contain border border-stone-200 bg-white rounded"
+                    alt={logoName || "logo"}
+                    className="w-full max-h-40 object-contain bg-stone-50"
                   />
-                  <span className="text-xs text-stone-600">{logoName || "logo"}</span>
+                  <div className="px-3 py-2 border-t border-stone-100 text-xs text-stone-600">
+                    {logoOk ? "✓ " : ""}
+                    {logoName || "logo"}
+                  </div>
                 </div>
               ) : null}
               {hasWebBrand() && !form.branding.logo_url ? (
