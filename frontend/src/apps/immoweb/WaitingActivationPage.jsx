@@ -254,6 +254,39 @@ export default function WaitingActivationPage() {
     }
   }, [lang, nav, refresh, searchParams, t, user?.role]);
 
+  // Dopo Stripe success (?session_id=&paid=1) riconcilia pagamento → side-effect + D-163
+  useEffect(() => {
+    const sid = searchParams.get("session_id");
+    if (!sid) return undefined;
+    let cancel = false;
+    let tries = 0;
+    const poll = async () => {
+      if (cancel || tries > 20) return;
+      tries += 1;
+      try {
+        const { data } = await api.get(`/billing/status/${sid}`);
+        if (data?.payment_status === "paid") {
+          setPaid(true);
+          setMsg(
+            t(
+              "waiting_activation.paid_reconciled",
+              "Pagamento confermato. Se i documenti coincidono, attiviamo subito."
+            )
+          );
+          await loadStatus();
+          return;
+        }
+      } catch {
+        /* retry */
+      }
+      if (!cancel) setTimeout(poll, 2000);
+    };
+    poll();
+    return () => {
+      cancel = true;
+    };
+  }, [searchParams, loadStatus, t]);
+
   useEffect(() => {
     loadStatus();
   }, [loadStatus]);
