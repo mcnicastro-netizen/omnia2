@@ -1159,7 +1159,7 @@ async def ops_activate_agency(
         )
 
     if body.send_email:
-        from shared.public_base import get_public_base_url
+        from shared.email.portal_links import gestionale_enter_urls
 
         to = (owner or {}).get("email") or (agency.get("contact") or {}).get("email")
         if not to:
@@ -1167,9 +1167,7 @@ async def ops_activate_agency(
             logger.warning("activate-agency email skipped: no recipient agency=%s", agency_id)
         else:
             lang = ((owner or {}).get("lang") or "it")[:2]
-            base = get_public_base_url().rstrip("/")
-            login_url = f"{base}/{lang}/login"
-            dashboard_url = f"{base}/{lang}/app/dashboard"
+            links = gestionale_enter_urls(lang)
             try:
                 if credential and credential.get("key"):
                     email_result = await send_email(
@@ -1180,8 +1178,7 @@ async def ops_activate_agency(
                             "name": (owner or {}).get("name") or "Colleague",
                             "agency_name": agency.get("display_name") or agency.get("slug") or "",
                             "api_key": credential["key"],
-                            "login_url": login_url,
-                            "dashboard_url": dashboard_url,
+                            **links,
                         },
                     )
                 else:
@@ -1192,8 +1189,7 @@ async def ops_activate_agency(
                         variables={
                             "name": (owner or {}).get("name") or "Colleague",
                             "agency_name": agency.get("display_name") or agency.get("slug") or "",
-                            "login_url": login_url,
-                            "dashboard_url": dashboard_url,
+                            **links,
                         },
                     )
                 st = (email_result or {}).get("status")

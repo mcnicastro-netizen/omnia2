@@ -34,6 +34,18 @@ export default function ProtectedRoute({ children, allowedRoles }) {
     return <Navigate to={`/${lang}/login?next=${next}`} replace />;
   }
   if (expandedRoles && !expandedRoles.includes(user.role)) {
+    // CRM: sessione cloud/client o Super Admin senza ruolo → login gestionale (no 403 morto)
+    const onCrm = (location.pathname || "").includes("/app/");
+    const crmRoles = ["agency_admin", "agent", "branch_admin", "branch_agent", "group_admin", "super_admin"];
+    if (onCrm && !crmRoles.includes(user.role)) {
+      const next = encodeURIComponent(location.pathname + location.search);
+      return (
+        <Navigate
+          to={`/${lang}/login?from=app&next=${next}&reason=role`}
+          replace
+        />
+      );
+    }
     return (
       <div
         className="min-h-screen flex flex-col items-center justify-center bg-stone-50 text-stone-900 p-8"
@@ -41,6 +53,12 @@ export default function ProtectedRoute({ children, allowedRoles }) {
       >
         <h1 className="text-5xl mb-4">403</h1>
         <p className="text-stone-600 font-sans">{t("auth.forbidden")}</p>
+        <a
+          href={`/${lang}/login?from=app&next=${encodeURIComponent(`/${lang}/app/dashboard`)}`}
+          className="mt-6 text-xs font-sans uppercase tracking-widest text-[#0B1E3F] underline"
+        >
+          {t("auth.login_gestionale", "Accedi al gestionale")}
+        </a>
       </div>
     );
   }

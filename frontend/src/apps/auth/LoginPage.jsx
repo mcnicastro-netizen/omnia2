@@ -38,15 +38,25 @@ function EyeIcon({ open }) {
 export default function LoginPage() {
   const { t, i18n } = useTranslation();
   const lang = (i18n.language || "it").slice(0, 2);
-  const { login, loginWithGoogle, verifyMfa } = useAuth();
+  const { user, login, loginWithGoogle, verifyMfa } = useAuth();
   const nav = useNavigate();
   const location = useLocation();
   const nextParam = new URLSearchParams(location.search).get("next");
   const portalHint = new URLSearchParams(location.search).get("from");
+  const reasonHint = new URLSearchParams(location.search).get("reason");
   const defaultNext = portalHint === "app" ? `/${lang}/app/dashboard` : `/${lang}/cloud/account`;
   const next = sanitizeNextParam(nextParam, defaultNext);
   const portal = resolvePortal(location.search, next);
   const isCloud = portal === "cloud";
+
+  // Già loggato con ruolo CRM + next gestionale → entra senza form
+  useEffect(() => {
+    if (!user || typeof user !== "object") return;
+    const crm = ["agency_admin", "agent", "branch_admin", "branch_agent", "group_admin"];
+    if (portalHint === "app" && crm.includes(user.role) && next.includes("/app/")) {
+      nav(next, { replace: true });
+    }
+  }, [user, portalHint, next, nav]);
   const registerHref = isCloud
     ? `/${lang}/cloud/register?next=${encodeURIComponent(next)}`
     : `/${lang}/register`;
@@ -252,6 +262,17 @@ export default function LoginPage() {
             <h1 className="text-3xl md:text-4xl tracking-tight mb-8" data-testid="login-title">
               {brandTitle}
             </h1>
+            {reasonHint === "role" && portalHint === "app" ? (
+              <p
+                data-testid="login-role-hint"
+                className="mb-6 text-sm font-sans text-amber-900 bg-amber-50 border border-amber-200 px-3 py-2"
+              >
+                {t(
+                  "auth.need_gestionale_session",
+                  "Per aprire il gestionale accedi con l’email e la password dell’agenzia (non l’area riservata cloud)."
+                )}
+              </p>
+            ) : null}
 
             <label className="block mb-5">
               <span className="block text-xs font-sans uppercase tracking-widest text-stone-500 mb-2">
