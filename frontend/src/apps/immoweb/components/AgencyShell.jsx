@@ -1,6 +1,30 @@
 import React, { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import {
+  Activity,
+  BookOpen,
+  Building2,
+  CheckSquare,
+  CreditCard,
+  FileText,
+  Home,
+  LayoutGrid,
+  ListTodo,
+  Network,
+  Rocket,
+  Scale,
+  Settings,
+  Sparkles,
+  Trash2,
+  Upload,
+  Users,
+  Wallet,
+  Globe,
+  Radio,
+  Mail,
+  Sparkle,
+} from "lucide-react";
 import { useAuth } from "../../../shared/lib/auth";
 import { api } from "../../../shared/lib/api";
 import Brand from "../../../shared/components/Brand";
@@ -10,6 +34,43 @@ import AlChatWidget from "./AlChatWidget";
 import NotificationBell from "../../../shared/components/NotificationBell";
 import BackButton, { isCrmDashboardPath } from "./BackButton";
 import ForceChangePasswordModal from "./ForceChangePasswordModal";
+
+const NAV_ICON = {
+  avvio: Rocket,
+  dashboard: LayoutGrid,
+  group: Building2,
+  import: Upload,
+  publishing: Radio,
+  properties: Home,
+  clients: Users,
+  requests: ListTodo,
+  activities: CheckSquare,
+  trash: Trash2,
+  matches: Sparkle,
+  mandates: FileText,
+  mls: Network,
+  website: Globe,
+  staging: Sparkles,
+  mutui: Wallet,
+  modulistica: FileText,
+  legal: Scale,
+  "hal-knowledge": BookOpen,
+  members: Mail,
+  billing: CreditCard,
+  settings: Settings,
+};
+
+function NavIcon({ name, active }) {
+  const Icon = NAV_ICON[name] || Activity;
+  return (
+    <Icon
+      size={16}
+      strokeWidth={active ? 2.25 : 1.75}
+      className={active ? "text-[#C19A6B]" : "text-stone-400"}
+      aria-hidden="true"
+    />
+  );
+}
 
 /**
  * AgencyShell — shared sidebar+topbar layout for all authenticated ImmoWeb pages.
@@ -151,44 +212,44 @@ export default function AgencyShell({ children, current = "dashboard", showBack 
 
   const navItems = [
     ...(isAgencyAdmin && journeyIncomplete
-      ? [{ key: "avvio", to: `/${lang}/app/avvio`, label: "Avvio", icon: "①", cluster: "avvio" }]
+      ? [{ key: "avvio", to: `/${lang}/app/avvio`, label: "Avvio", cluster: "avvio" }]
       : []),
-    { key: "dashboard", to: `/${lang}/app/dashboard`, label: t("immoweb_app.nav_dashboard"), icon: "▦", cluster: "operativo" },
+    { key: "dashboard", to: `/${lang}/app/dashboard`, label: t("immoweb_app.nav_dashboard"), cluster: "operativo" },
     ...(isGroupAdmin
-      ? [{ key: "group", to: `/${lang}/app/group`, label: t("immoweb_app.nav_group") || "Gruppo", icon: "🏢", cluster: "amministrazione" }]
+      ? [{ key: "group", to: `/${lang}/app/group`, label: t("immoweb_app.nav_group") || "Gruppo", cluster: "amministrazione" }]
       : []),
     ...(isAgencyAdmin
-      ? [{ key: "import", to: `/${lang}/app/import`, label: t("immoweb_app.nav_import") || "Importa", icon: "⇪", cluster: "pubblicazione" }]
+      ? [{ key: "import", to: `/${lang}/app/import`, label: t("immoweb_app.nav_import") || "Importa", cluster: "pubblicazione" }]
       : []),
     ...(isAgencyAdmin
-      ? [{ key: "publishing", to: `/${lang}/app/publishing`, label: t("immoweb_app.nav_publishing") || "Pubblicità su portali", icon: "📡", cluster: "pubblicazione" }]
+      ? [{ key: "publishing", to: `/${lang}/app/publishing`, label: t("immoweb_app.nav_publishing") || "Pubblicità su portali", cluster: "pubblicazione" }]
       : []),
-    { key: "properties", to: `/${lang}/app/properties`, label: t("immoweb_app.nav_properties"), icon: "🏠", cluster: "operativo" },
-    { key: "clients", to: `/${lang}/app/clients`, label: t("immoweb_app.nav_clients"), icon: "👥", cluster: "operativo" },
-    { key: "requests", to: `/${lang}/app/requests`, label: t("immoweb_app.nav_requests") || "Richieste", icon: "⎘", cluster: "operativo" },
-    { key: "activities", to: `/${lang}/app/activities`, label: t("immoweb_app.nav_activities") || "Attività", icon: "☑", cluster: "operativo" },
+    { key: "properties", to: `/${lang}/app/properties`, label: t("immoweb_app.nav_properties"), cluster: "operativo" },
+    { key: "clients", to: `/${lang}/app/clients`, label: t("immoweb_app.nav_clients"), cluster: "operativo" },
+    { key: "requests", to: `/${lang}/app/requests`, label: t("immoweb_app.nav_requests") || "Richieste", cluster: "operativo" },
+    { key: "activities", to: `/${lang}/app/activities`, label: t("immoweb_app.nav_activities") || "Attività", cluster: "operativo" },
     ...(isAgencyAdmin
-      ? [{ key: "trash", to: `/${lang}/app/trash`, label: t("immoweb_app.nav_trash") || "Cestino", icon: "🗑", cluster: "amministrazione" }]
+      ? [{ key: "trash", to: `/${lang}/app/trash`, label: t("immoweb_app.nav_trash") || "Cestino", cluster: "amministrazione" }]
       : []),
-    { key: "matches", to: `/${lang}/app/matches`, label: t("immoweb_app.nav_matches"), icon: "✦", cluster: "operativo" },
-    { key: "mandates", to: `/${lang}/app/mandate-opportunities`, label: t("immoweb_app.nav_mandates") || "Mandati", icon: "◆", cluster: "operativo" },
+    { key: "matches", to: `/${lang}/app/matches`, label: t("immoweb_app.nav_matches"), cluster: "operativo" },
+    { key: "mandates", to: `/${lang}/app/mandate-opportunities`, label: t("immoweb_app.nav_mandates") || "Mandati", cluster: "operativo" },
     // A-034 R4 — Analytics A/B fuori nav primaria (link in Impostazioni)
-    { key: "mls", to: `/${lang}/app/mls`, label: "MLS", icon: "⧉", cluster: "pubblicazione" },
+    { key: "mls", to: `/${lang}/app/mls`, label: "MLS", cluster: "pubblicazione" },
     ...(isAgencyAdmin
-      ? [{ key: "website", to: `/${lang}/app/website`, label: t("immoweb_app.nav_website") || "Il mio sito", icon: "🏠", cluster: "pubblicazione" }]
+      ? [{ key: "website", to: `/${lang}/app/website`, label: t("immoweb_app.nav_website") || "Il mio sito", cluster: "pubblicazione" }]
       : []),
     // Strumenti commerciali restano in evidenza (D-168)
-    { key: "staging", to: `/${lang}/app/staging`, label: "Virtual Staging", icon: "✨", cluster: "strumenti" },
-    { key: "mutui", to: `/${lang}/app/mutui`, label: t("mutui.nav") || "Mutui", icon: "💰", cluster: "strumenti" },
-    { key: "modulistica", to: `/${lang}/app/modulistica`, label: "Modulistica", icon: "📑", cluster: "strumenti" },
-    { key: "legal", to: `/${lang}/legal`, label: "HAL Legal", icon: "⚖", cluster: "intelligenza" },
-    { key: "hal-knowledge", to: `/${lang}/app/hal-knowledge`, label: "Guida HAL", icon: "📚", cluster: "intelligenza" },
-    { key: "members", to: `/${lang}/app/members`, label: t("immoweb_app.nav_members"), icon: "✉", cluster: "amministrazione" },
+    { key: "staging", to: `/${lang}/app/staging`, label: "Virtual Staging", cluster: "strumenti" },
+    { key: "mutui", to: `/${lang}/app/mutui`, label: t("mutui.nav") || "Mutui", cluster: "strumenti" },
+    { key: "modulistica", to: `/${lang}/app/modulistica`, label: "Modulistica", cluster: "strumenti" },
+    { key: "legal", to: `/${lang}/legal`, label: "HAL Legal", cluster: "intelligenza" },
+    { key: "hal-knowledge", to: `/${lang}/app/hal-knowledge`, label: "Guida HAL", cluster: "intelligenza" },
+    { key: "members", to: `/${lang}/app/members`, label: t("immoweb_app.nav_members"), cluster: "amministrazione" },
     ...(isAgencyAdmin
-      ? [{ key: "billing", to: `/${lang}/app/settings/billing`, label: "Piano & Crediti", icon: "💳", cluster: "amministrazione" }]
+      ? [{ key: "billing", to: `/${lang}/app/settings/billing`, label: "Piano & Crediti", cluster: "amministrazione" }]
       : []),
     ...(isAgencyAdmin
-      ? [{ key: "settings", to: `/${lang}/app/settings`, label: t("immoweb_app.nav_settings"), icon: "⚙", cluster: "amministrazione" }]
+      ? [{ key: "settings", to: `/${lang}/app/settings`, label: t("immoweb_app.nav_settings"), cluster: "amministrazione" }]
       : []),
   ];
 
@@ -228,8 +289,8 @@ export default function AgencyShell({ children, current = "dashboard", showBack 
   return (
     <div
       data-testid="agency-shell"
-      className="min-h-screen bg-stone-50 text-stone-900 flex"
-      style={{ fontFamily: "'Inter', system-ui, sans-serif" }}
+      className="min-h-screen bg-crm-mist text-crm-navy flex"
+      style={{ fontFamily: "Inter, ui-sans-serif, system-ui, sans-serif" }}
     >
       <ForceChangePasswordModal />
       {/* Mobile sidebar overlay */}
@@ -328,8 +389,8 @@ export default function AgencyShell({ children, current = "dashboard", showBack 
                       }`}
                     >
                       <span className="flex items-center gap-3">
-                        <span className="text-base w-5 inline-block text-center" aria-hidden="true">
-                          {item.icon}
+                        <span className="w-5 inline-flex justify-center" data-testid={`nav-icon-${item.key}`}>
+                          <NavIcon name={item.key} active={isActive} />
                         </span>
                         <span>{item.label}</span>
                       </span>

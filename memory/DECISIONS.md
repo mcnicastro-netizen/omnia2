@@ -19,7 +19,7 @@ Registro di tutte le decisioni di business e tecniche prese durante il progetto.
 - **Contesto**: Audit «cervello avanti, superficie indietro». Scelta stile: **premium istituzionale navy/oro** (non Apple-like luminoso).
 - **Decisione**:
   1. Posizionamento UI: **OMNIA — Real Estate Operating System**, non admin panel generico.
-  2. Identità: navy `#0B1E3F` + oro `#C19A6B` (raro); tipografia **Inter**; icone Lucide (rollout progressivo).
+  2. Identità: navy `#0B1E3F` + oro `#C19A6B` (raro); tipografia **Inter**; icone **Lucide** (nav AgencyShell).
   3. Metodo: token CSS (`crm-*`) + superfici desk una alla volta. Prima **Immobili**, poi Attività / MLS / Clienti.
   4. Niente feature nuove in questo percorso.
 - **Stato**: ✅ stilistica chiusa. UI operativa: Immobili, Attività, MLS, Clienti, Oggi, Match, Richieste.

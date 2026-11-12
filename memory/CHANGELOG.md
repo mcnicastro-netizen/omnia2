@@ -1,3 +1,8 @@
+## 2026-11-12 — D-171 Lucide in AgencyShell
+
+- Dipendenza `lucide-react`; icone nav sidebar (oro su attivo)
+- Shell content `bg-crm-mist` + Inter
+
 ## 2026-11-12 — D-171 Match + Richieste navy + oro
 
 - Matches / LeadScore / Requests / RequestForm su `crm-desk`

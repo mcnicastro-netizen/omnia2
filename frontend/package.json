@@ -10,6 +10,7 @@
     "i18next": "^26.3.1",
     "i18next-browser-languagedetector": "^8.2.1",
     "leaflet": "^1.9.4",
+    "lucide-react": "0.460.0",
     "next-themes": "0.4.6",
     "qrcode": "^1.5.4",
     "react": "19.0.0",
