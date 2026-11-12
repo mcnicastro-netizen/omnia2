@@ -5,6 +5,19 @@
 
 ---
 
+## D-172 — Flussi prima della superficie
+
+1. SoT collaudo: `memory/PRODUCT_ACCEPTANCE_MATRIX.md` (9 journey × 5 gate).
+2. **P0 ora**: (a) sbloccare #192 — rebase su main, risolvere conflitti Avvio/Mls **preservando D-170**, test, merge, dogfood prod; (b) Cliente→Richiesta; (c) Visibility MLS sul form.
+3. **P1**: Match da scheda + Oggi cliccabile; percorso Portali onesto.
+4. **P2**: Import Avvio con prosecuzione.
+5. **D-171** navy+oro resta chiuso ma **dopo** i flussi P0 — non restyling prima del filo.
+
+## D-171 — Identità (deferita)
+
+1. Scelta chiusa: navy + oro, Inter, Lucide. Non Apple-like.
+2. Partenza superficie: Immobili (bancone) solo quando P0 flussi sono Done in matrice.
+
 ## Dogfood D-170 (Nicastro: sito proprio + box MLS)
 
 1. In Avvio: «Tengo il sito, sostituisco solo il box MLS» → adesione MLS → copia iframe.
