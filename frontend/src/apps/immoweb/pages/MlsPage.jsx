@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import AgencyShell from "../components/AgencyShell";
 import { api } from "../../../shared/lib/api";
@@ -125,9 +126,23 @@ export default function MlsPage() {
 
         {dash && dash.mls_enabled ? (
           <>
+            <div
+              data-testid="mls-next-share"
+              className="rounded-lg border border-slate-900 bg-white px-4 py-3 flex flex-wrap items-center justify-between gap-3"
+            >
+              <p className="text-sm text-slate-800">
+                Rete attiva. Prossimo passo: apri gli immobili e condividili (visibilità rete / pubblici).
+              </p>
+              <Link
+                to={`/${lang}/app/properties`}
+                className="px-4 py-2 text-[11px] uppercase tracking-widest border border-slate-900"
+              >
+                Vai agli immobili →
+              </Link>
+            </div>
             <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-slate-200 bg-white px-4 py-3">
               <p className="text-sm text-slate-600">
-                Caso 1 attivo: box MLS sul sito white-label. Puoi uscire e restare su OMNIA senza rete (caso 2).
+                Sul sito OMNIA compare il box rete. Puoi uscire e restare senza rete.
               </p>
               <button
                 type="button"

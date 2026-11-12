@@ -33,6 +33,106 @@ function mondayOf(iso) {
   return d.toISOString().slice(0, 10);
 }
 
+function EntitySearch({ kind, value, onChange, testId, placeholder }) {
+  const [q, setQ] = useState("");
+  const [hits, setHits] = useState([]);
+  const [label, setLabel] = useState("");
+
+  useEffect(() => {
+    if (!value) {
+      setLabel("");
+      return;
+    }
+    const url = kind === "client" ? `/app/clients/${value}` : `/app/properties/${value}`;
+    api
+      .get(url)
+      .then((r) => {
+        const d = r.data || {};
+        setLabel(
+          kind === "client"
+            ? `${d.name || ""} ${d.surname || ""}`.trim() || d.email || value
+            : d.title || d.reference_code || value
+        );
+      })
+      .catch(() => setLabel(value));
+  }, [kind, value]);
+
+  const search = async (text) => {
+    setQ(text);
+    if (!text || text.length < 2) {
+      setHits([]);
+      return;
+    }
+    try {
+      const url = kind === "client" ? "/app/clients" : "/app/properties";
+      const { data } = await api.get(url, { params: { q: text, page_size: 8, limit: 8 } });
+      setHits(data.items || []);
+    } catch {
+      setHits([]);
+    }
+  };
+
+  const pick = (item) => {
+    onChange(item.id);
+    setLabel(
+      kind === "client"
+        ? `${item.name || ""} ${item.surname || ""}`.trim() || item.email
+        : item.title || item.reference_code
+    );
+    setQ("");
+    setHits([]);
+  };
+
+  return (
+    <div className="relative min-w-[140px] flex-1">
+      <span className="text-[10px] uppercase tracking-widest text-stone-500">
+        {kind === "client" ? "Cliente (opzionale)" : "Immobile (opzionale)"}
+      </span>
+      {value ? (
+        <div className="mt-1 flex items-center gap-2 border border-stone-300 rounded-md px-3 py-2 text-sm bg-white">
+          <span className="truncate flex-1">{label || "Selezionato"}</span>
+          <button
+            type="button"
+            className="text-[10px] uppercase tracking-widest text-stone-500"
+            onClick={() => {
+              onChange("");
+              setLabel("");
+            }}
+          >
+            Cambia
+          </button>
+        </div>
+      ) : (
+        <input
+          data-testid={testId}
+          value={q}
+          onChange={(e) => search(e.target.value)}
+          placeholder={placeholder}
+          className="mt-1 w-full px-3 py-2 border border-stone-300 rounded-md text-sm"
+          autoComplete="off"
+        />
+      )}
+      {hits.length > 0 ? (
+        <ul className="absolute z-20 mt-1 w-full bg-white border border-stone-200 max-h-48 overflow-auto text-sm">
+          {hits.map((h) => (
+            <li key={h.id}>
+              <button
+                type="button"
+                className="w-full text-left px-3 py-2 hover:bg-stone-50"
+                onClick={() => pick(h)}
+              >
+                {kind === "client"
+                  ? `${h.name || ""} ${h.surname || ""}`.trim() || h.email
+                  : h.title || h.reference_code}
+              </button>
+            </li>
+          ))}
+        </ul>
+      ) : null}
+    </div>
+  );
+}
+
 export default function ActivitiesPage() {
   const { lang } = useParams();
   const l = (lang || "it").slice(0, 2);
@@ -185,26 +285,20 @@ export default function ActivitiesPage() {
                 className="mt-1 block px-3 py-2 border border-stone-300 rounded-md text-sm"
               />
             </label>
-            <label className="min-w-[140px] flex-1">
-              <span className="text-[10px] uppercase tracking-widest text-stone-500">Cliente (opzionale)</span>
-              <input
-                data-testid="activity-client-id"
-                value={clientId}
-                onChange={(e) => setClientId(e.target.value)}
-                placeholder="Codice cliente, se ce l’hai"
-                className="mt-1 w-full px-3 py-2 border border-stone-300 rounded-md text-sm"
-              />
-            </label>
-            <label className="min-w-[140px] flex-1">
-              <span className="text-[10px] uppercase tracking-widest text-stone-500">Immobile (opzionale)</span>
-              <input
-                data-testid="activity-property-id"
-                value={propertyId}
-                onChange={(e) => setPropertyId(e.target.value)}
-                placeholder="Codice immobile, se ce l’hai"
-                className="mt-1 w-full px-3 py-2 border border-stone-300 rounded-md text-sm"
-              />
-            </label>
+            <EntitySearch
+              kind="client"
+              value={clientId}
+              onChange={setClientId}
+              testId="activity-client-id"
+              placeholder="Cerca per nome o email"
+            />
+            <EntitySearch
+              kind="property"
+              value={propertyId}
+              onChange={setPropertyId}
+              testId="activity-property-id"
+              placeholder="Cerca per titolo o codice"
+            />
             <button
               type="submit"
               disabled={busy}

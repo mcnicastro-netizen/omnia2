@@ -58,7 +58,7 @@ export default function PropertyFormPage() {
   const { id } = useParams();
   const nav = useNavigate();
   const [searchParams] = useSearchParams();
-  const showSiteGuide = !id && searchParams.get("guide") === "site";
+  const showSiteGuide = searchParams.get("guide") === "site";
   const isEdit = !!id;
   const [form, setForm] = useState(empty);
   const [saving, setSaving] = useState(false);
@@ -131,10 +131,19 @@ export default function PropertyFormPage() {
 
       if (isEdit) {
         await api.patch(`/app/properties/${id}`, payload);
+        nav(`/${lang}/app/properties/${id}`, { replace: true });
       } else {
-        await api.post(`/app/properties`, payload);
+        const { data: created } = await api.post(`/app/properties`, payload);
+        const nid = created?.id;
+        if (nid) {
+          nav(
+            `/${lang}/app/properties/${nid}${showSiteGuide ? "?guide=site&created=1" : "?created=1"}`,
+            { replace: true }
+          );
+        } else {
+          nav(`/${lang}/app/properties`, { replace: true });
+        }
       }
-      nav(`/${lang}/app/properties`, { replace: true });
     } catch (err) {
       setError(formatApiErrorDetail(err?.response?.data?.detail) || t("common.error"));
     } finally {
@@ -179,14 +188,22 @@ export default function PropertyFormPage() {
           >
             <p className="text-[10px] uppercase tracking-widest text-stone-500">Guida · solo sito</p>
             <ol className="list-decimal list-inside text-sm text-stone-800 space-y-1 font-sans">
-              <li>Carica 6–12 foto: prima = copertina, poi interni (luce naturale, niente watermark). Opzionale planimetria.</li>
-              <li>Titolo chiaro (tipo + zona). Descrizione: 3–5 paragrafi su spazi, stato, contesto. Usa «Migliora con HAL» se serve.</li>
-              <li>Prezzo, mq, locali, città/zona. Salva in bozza; pubblica quando sei pronto.</li>
+              <li>Titolo, prezzo, mq, città/zona. Salva: resti su questa scheda.</li>
+              <li>Poi carica 6–12 foto (prima = copertina). Opzionale planimetria.</li>
+              <li>Usa «Migliora con HAL» sulla descrizione se serve. Pubblica quando sei pronto.</li>
             </ol>
             <p className="text-xs text-stone-500">
-              Ripeti per ogni immobile. Poi torna in Avvio e segna «Portafoglio» fatto.
+              Un immobile alla volta. La barra Avvio in alto ti riporta al passo Portafoglio.
             </p>
           </div>
+        ) : null}
+        {searchParams.get("created") === "1" ? (
+          <p
+            data-testid="property-created-next"
+            className="text-sm text-emerald-900 bg-emerald-50 border border-emerald-200 px-4 py-3 font-sans"
+          >
+            Scheda creata. Ora le foto: senza copertina l’annuncio resta incompleto.
+          </p>
         ) : null}
 
         {isEdit && (
