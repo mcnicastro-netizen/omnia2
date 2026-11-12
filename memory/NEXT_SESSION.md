@@ -5,11 +5,11 @@
 
 ---
 
-## D-172 — Flussi (post-#192)
+## D-172 — Flussi
 
-1. #192 su main. Prossima PR: Cliente→Richiesta + Visibility + MLS link — squash & merge Founder.
-2. Poi dogfood produzione; P1 Match + Oggi.
-3. D-171 navy+oro dopo P0 chiusi.
+1. #192 + #195 su main (P0).
+2. PR P1: Oggi cliccabile + Match da schede — squash & merge Founder.
+3. Poi Portali onesti (P1) / Import Avvio (P2); D-171 navy+oro dopo.
 
 ## Dogfood D-170 (Nicastro: sito proprio + box MLS)
 

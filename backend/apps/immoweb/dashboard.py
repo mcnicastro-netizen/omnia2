@@ -640,28 +640,74 @@ async def get_today(user: dict = Depends(get_current_user)) -> Dict[str, Any]:
 
     actions.sort(key=lambda a: (a.get("priority", 99), -(a.get("count") or 0)))
 
-    # —— Attività recenti (lite A-018) ——
-    for coll, kind, label_fn in (
+    # —— Attività recenti (cliccabili → scheda) ——
+    try:
+        act_docs = await db.activities.find(
+            {"agency_id": agency_id, "updated_at": {"$gte": since_week}},
+            {
+                "_id": 0,
+                "id": 1,
+                "title": 1,
+                "kind": 1,
+                "updated_at": 1,
+                "created_at": 1,
+                "related_client_id": 1,
+                "related_property_id": 1,
+            },
+        ).sort("updated_at", -1).limit(5).to_list(5)
+    except Exception:
+        act_docs = []
+    for d in act_docs:
+        href = "/app/activities"
+        if d.get("related_client_id"):
+            href = f"/app/clients/{d['related_client_id']}"
+        elif d.get("related_property_id"):
+            href = f"/app/properties/{d['related_property_id']}"
+        recent.append(
+            {
+                "kind": "activity",
+                "label": d.get("title") or "Attività",
+                "at": d.get("updated_at") or d.get("created_at"),
+                "href": href,
+            }
+        )
+
+    for coll, kind, label_fn, href_fn, proj_extra in (
         (
             db.match_audit,
             "match",
-            lambda d: f"Match · {(d.get('client_id') or '')[:8]}",
+            lambda d: (
+                f"Match · cliente {(d.get('client_id') or '')[:8]}"
+                if d.get("client_id")
+                else "Match aggiornato"
+            ),
+            lambda d: (
+                f"/app/matches/lead?p={d['property_id']}&c={d['client_id']}"
+                if d.get("property_id") and d.get("client_id")
+                else "/app/matches"
+            ),
+            {"client_id": 1, "property_id": 1},
         ),
         (
             db.publishing_events,
             "publishing",
             lambda d: f"Portale · {d.get('portal_id') or d.get('status') or 'sync'}",
+            lambda d: "/app/publishing",
+            {"portal_id": 1, "status": 1},
         ),
         (
             db.al_audit,
             "hal",
             lambda d: f"HAL · {(d.get('action') or d.get('kind') or 'chat')}",
+            lambda d: "/app/hal-knowledge",
+            {"action": 1, "kind": 1},
         ),
     ):
         try:
+            proj = {"_id": 0, "id": 1, "created_at": 1, **proj_extra}
             docs = await coll.find(
                 {"agency_id": agency_id, "created_at": {"$gte": since_week}},
-                {"_id": 0, "id": 1, "created_at": 1, "client_id": 1, "portal_id": 1, "status": 1, "action": 1, "kind": 1},
+                proj,
             ).sort("created_at", -1).limit(4).to_list(4)
         except Exception:
             docs = []
@@ -671,6 +717,7 @@ async def get_today(user: dict = Depends(get_current_user)) -> Dict[str, Any]:
                     "kind": kind,
                     "label": label_fn(d),
                     "at": d.get("created_at"),
+                    "href": href_fn(d),
                 }
             )
     recent.sort(key=lambda r: r.get("at") or "", reverse=True)

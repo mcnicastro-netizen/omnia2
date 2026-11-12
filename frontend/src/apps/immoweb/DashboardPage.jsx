@@ -40,12 +40,21 @@ function TodayCockpit({ today, loading, lang, t }) {
     return (
       <div
         data-testid="today-cockpit-empty"
-        className="border border-dashed border-stone-300 px-5 py-8 text-sm font-sans text-stone-600"
+        className="border border-dashed border-stone-300 px-5 py-8 text-sm font-sans text-stone-600 space-y-3"
       >
-        {t(
-          "dashboard.today_empty",
-          "Niente di urgente in coda. Usa le azioni rapide o apri Clienti smart."
-        )}
+        <p>
+          {t(
+            "dashboard.today_empty",
+            "Niente di urgente in coda. Usa le azioni rapide o apri Clienti."
+          )}
+        </p>
+        <Link
+          to={`/${lang}/app/clients`}
+          data-testid="today-empty-clients"
+          className="inline-flex text-[11px] uppercase tracking-widest border border-stone-900 px-3 py-1.5 text-stone-900"
+        >
+          {t("dashboard.today_empty_cta", "Apri Clienti")} →
+        </Link>
       </div>
     );
   }
@@ -105,7 +114,7 @@ function TodayCockpit({ today, loading, lang, t }) {
   );
 }
 
-function RecentStrip({ recent, t }) {
+function RecentStrip({ recent, lang, t }) {
   if (!recent?.length) return null;
   return (
     <div data-testid="today-recent" className="mt-8">
@@ -115,19 +124,34 @@ function RecentStrip({ recent, t }) {
         {t("dashboard.today_recent", "Ultime attività")}
       </h3>
       <ul className="space-y-2">
-        {recent.map((r, i) => (
-          <li
-            key={`${r.kind}-${r.at}-${i}`}
-            className="text-sm font-sans text-stone-700 flex flex-wrap gap-x-3 gap-y-1"
-          >
-            <span className="text-stone-900">{r.label}</span>
-            {r.at && (
-              <span className="text-[11px] uppercase tracking-widest text-stone-400">
-                {String(r.at).slice(0, 16).replace("T", " ")}
-              </span>
-            )}
-          </li>
-        ))}
+        {recent.map((r, i) => {
+          const href = r.href ? appHref(lang, r.href) : null;
+          const inner = (
+            <>
+              <span className="text-stone-900">{r.label}</span>
+              {r.at && (
+                <span className="text-[11px] uppercase tracking-widest text-stone-400">
+                  {String(r.at).slice(0, 16).replace("T", " ")}
+                </span>
+              )}
+            </>
+          );
+          return (
+            <li key={`${r.kind}-${r.at}-${i}`} className="text-sm font-sans text-stone-700">
+              {href ? (
+                <Link
+                  to={href}
+                  data-testid={`today-recent-${r.kind}-${i}`}
+                  className="flex flex-wrap gap-x-3 gap-y-1 hover:text-stone-900 underline-offset-2 hover:underline"
+                >
+                  {inner}
+                </Link>
+              ) : (
+                <span className="flex flex-wrap gap-x-3 gap-y-1">{inner}</span>
+              )}
+            </li>
+          );
+        })}
       </ul>
     </div>
   );
@@ -290,7 +314,7 @@ export default function DashboardPage() {
           ) : (
             <TodayCockpit today={today} loading={loadingToday} lang={l} t={t} />
           )}
-          <RecentStrip recent={today?.recent} t={t} />
+          <RecentStrip recent={today?.recent} lang={l} t={t} />
         </section>
 
         <section aria-labelledby="kpi-section-title" className="space-y-4">

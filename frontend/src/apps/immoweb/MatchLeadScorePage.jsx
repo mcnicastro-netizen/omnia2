@@ -46,11 +46,42 @@ export default function MatchLeadScorePage() {
           </h1>
         </div>
 
+        {(!pid || !cid) && (
+          <div
+            data-testid="leadscore-missing-pair"
+            className="bg-white border border-stone-200 rounded-lg p-8 space-y-4"
+          >
+            <p className="text-stone-800 font-sans text-sm">
+              Per valutare un abbinamento apri un immobile o un cliente e usa Match da lì — qui servono entrambi.
+            </p>
+            <div className="flex flex-wrap gap-2">
+              <Link
+                to={`/${lang}/app/properties`}
+                className="px-3 py-2 text-[11px] uppercase tracking-widest border border-stone-900"
+              >
+                Immobili →
+              </Link>
+              <Link
+                to={`/${lang}/app/clients`}
+                className="px-3 py-2 text-[11px] uppercase tracking-widest border border-stone-300"
+              >
+                Clienti →
+              </Link>
+              <Link
+                to={`/${lang}/app/matches`}
+                className="px-3 py-2 text-[11px] uppercase tracking-widest border border-stone-300"
+              >
+                Elenco Match →
+              </Link>
+            </div>
+          </div>
+        )}
+
         {error && (
           <p data-testid="leadscore-error" className="text-sm text-red-700 bg-red-50 border border-red-200 rounded-md px-3 py-2">{String(error)}</p>
         )}
 
-        {!data && !error && (
+        {pid && cid && !data && !error && (
           <div data-testid="leadscore-loading" className="bg-white border border-stone-200 rounded-lg p-8 text-center">
             <div className="inline-block animate-pulse text-stone-500">Stiamo valutando l’abbinamento…</div>
             <p className="text-xs text-stone-400 mt-2">Pochi secondi</p>
