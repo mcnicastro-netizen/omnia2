@@ -1,27 +1,108 @@
 """OMNIA — MLS Box / Vetrina Immobili: public widget e API.
 
-Replica la struttura della homepage di riferimento (box network + griglia
-In evidenza / Ultimi annunci) — layout Track A allineato al white-label.
+Due pezzi pubblici (D-170):
+  1. Box ricerca rete — drop-in sul sito già proprio (sostituisce solo quel riquadro)
+  2. Vetrina featured/latest — iframe griglia (sito OMNIA / vetrina larga)
 
-Endpoint pubblici (no auth — Bearer API-key facoltativo per rev-share):
-  GET  /api/mls-box/agency/{agency_slug}       → JSON per widget
-  GET  /api/mls-box/agency/{agency_slug}.html  → HTML embeddabile (iframe)
+Endpoint pubblici (no auth):
+  GET  /api/mls-box/search/{agency_slug}.html  → form ricerca rete (iframe stretto)
+  GET  /api/mls-box/embed-kit/{agency_slug}    → JSON snippet + istruzioni
+  GET  /api/mls-box/agency/{agency_slug}       → JSON vetrina
+  GET  /api/mls-box/agency/{agency_slug}.html  → HTML vetrina (iframe largo)
 
 Rispetta Privacy Gate L1 (viewer anonimo).
 Sempre foto Object Storage (URL assoluto).
 """
 import os
 import logging
-from typing import Optional
+from html import escape
+from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, HTTPException, Query
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, JSONResponse
 
 from shared.db.connection import Database
+from shared.db.trash import with_not_trashed
 from shared.utils.privacy_gate import apply_privacy_view
+from apps.immoweb.mls import _shareable_listing_filters
 
 logger = logging.getLogger("omnia.mls_box")
 router = APIRouter(prefix="/mls-box", tags=["mls_box"])
+
+_EMBED_HEADERS = {
+    "X-Frame-Options": "ALLOWALL",
+    "Content-Security-Policy": "frame-ancestors *",
+    "Cache-Control": "public, max-age=60",
+}
+
+_PROVINCE_OPTS = [
+    ("", "Scegli"),
+    ("CT", "CATANIA"),
+    ("ME", "MESSINA"),
+    ("PA", "PALERMO"),
+    ("RG", "RAGUSA"),
+    ("SR", "SIRACUSA"),
+    ("EN", "ENNA"),
+    ("CL", "CALTANISSETTA"),
+    ("AG", "AGRIGENTO"),
+    ("RC", "REGGIO CALABRIA"),
+    ("RM", "ROMA"),
+    ("MI", "MILANO"),
+    ("NA", "NAPOLI"),
+]
+
+
+def _public_api_base() -> str:
+    return (
+        os.environ.get("PUBLIC_BASE_URL")
+        or os.environ.get("FRONTEND_BASE_URL")
+        or ""
+    ).rstrip("/")
+
+
+def _frontend_base() -> str:
+    return (
+        os.environ.get("FRONTEND_BASE_URL")
+        or os.environ.get("PUBLIC_BASE_URL")
+        or ""
+    ).rstrip("/")
+
+
+def _html(content: str) -> HTMLResponse:
+    return HTMLResponse(content=content, headers=dict(_EMBED_HEADERS))
+
+
+def search_iframe_snippet(agency_slug: str, api_base: Optional[str] = None) -> str:
+    base = (api_base or _public_api_base()).rstrip("/")
+    src = f"{base}/api/mls-box/search/{agency_slug}.html"
+    return (
+        f'<iframe src="{src}" '
+        f'style="width:100%;min-height:540px;border:0;display:block" '
+        f'loading="lazy" title="Ricerca immobili rete MLS"></iframe>'
+    )
+
+
+def build_embed_kit(
+    agency_slug: str,
+    *,
+    ready: bool,
+    api_base: Optional[str] = None,
+) -> Dict[str, Any]:
+    """Snippet + copy per il webmaster: solo il box, il resto del sito non si tocca."""
+    base = (api_base or _public_api_base()).rstrip("/")
+    search_url = f"{base}/api/mls-box/search/{agency_slug}.html"
+    return {
+        "mode": "iframe_on_own_site",
+        "ready": bool(ready),
+        "agency_slug": agency_slug,
+        "search_url": search_url,
+        "iframe_html": search_iframe_snippet(agency_slug, base),
+        "how_to": [
+            "Apri il pannello del tuo sito (la stessa area dove gestisci la home).",
+            "Trova il riquadro di ricerca della rete MLS, di solito a sinistra in home.",
+            "Sostituiscilo con il codice qui sotto e pubblica. Il resto del sito resta identico.",
+        ],
+    }
 
 
 def _serialize_property_card(p: dict) -> dict:
@@ -271,17 +352,279 @@ async def mls_box_html(
   </div>
 </body>
 </html>"""
-    return HTMLResponse(content=html)
+    return _html(html)
 
 
 @router.get("/embed-snippet/{agency_slug}", response_class=HTMLResponse)
 async def embed_snippet(agency_slug: str):
-    """Restituisce il tag <iframe> pronto per copia-incolla sul sito agenzia."""
-    base = os.environ.get("FRONTEND_BASE_URL") or os.environ.get("PUBLIC_BASE_URL", "")
-    base = base.rstrip("/")
+    """Vetrina larga (retrocompat). Il box ricerca rete è `/embed-kit` (D-170)."""
+    base = _public_api_base()
     snippet = (
         f'<iframe src="{base}/api/mls-box/agency/{agency_slug}.html" '
         f'style="width:100%;min-height:1400px;border:0;" '
         f'loading="lazy" title="Immobili disponibili"></iframe>'
     )
-    return HTMLResponse(content=f"<pre>{snippet}</pre>")
+    return _html(f"<pre>{escape(snippet)}</pre>")
+
+
+def _cover_abs(p: dict) -> str:
+    photos = p.get("photos") or []
+    if not photos:
+        return ""
+    first = photos[0] if isinstance(photos[0], dict) else {}
+    raw = first.get("url") or first.get("path") or ""
+    if not raw:
+        return ""
+    if raw.startswith("http"):
+        return raw
+    return f"{_public_api_base()}{raw}"
+
+
+def render_mls_search_html(
+    *,
+    agency_name: str,
+    primary: str,
+    network_count: int,
+    default_province: str,
+    operation: str,
+    categoria: str,
+    province: str,
+    city: str,
+    price_min: str,
+    price_max: str,
+    searched: bool,
+    items: List[dict],
+    result_total: int,
+    detail_base: str,
+) -> str:
+    """Box ricerca rete — stesso schema del riquadro home (contratto/provincia/prezzo)."""
+    claim_n = f"{network_count:,}".replace(",", ".") if network_count else "Rete"
+    head = f"{claim_n} immobili condivisi"
+    name = escape(agency_name or "")
+    primary = escape(primary or "#3D8B40")
+    city_val = escape(city or "")
+    pmin = escape(price_min or "")
+    pmax = escape(price_max or "")
+
+    def _opts(pairs, selected):
+        bits = []
+        for v, lbl in pairs:
+            sel = " selected" if v == selected else ""
+            bits.append(f'<option value="{escape(v)}"{sel}>{escape(lbl)}</option>')
+        return "".join(bits)
+
+    prov_selected = (province or default_province or "").upper()[:2]
+    results_html = ""
+    if searched:
+        if items:
+            cards = []
+            for p in items:
+                href = escape(f"{detail_base}/it/cloud/property/{p.get('id') or ''}")
+                cover = escape(p.get("cover_url") or "")
+                bg = f'style="background-image:url(\'{cover}\')"' if cover else ""
+                price = _fmt_price(p)
+                title = escape(p.get("title") or "Immobile")
+                city_l = escape((p.get("city") or "").upper())
+                cards.append(
+                    f'<a class="res" href="{href}" target="_blank" rel="noopener">'
+                    f'<div class="res-img" {bg}></div>'
+                    f'<div class="res-body"><div class="res-price">{escape(price)}</div>'
+                    f'<div class="res-title">{title}</div>'
+                    f'<div class="res-city">{city_l}</div></div></a>'
+                )
+            results_html = (
+                f'<p class="res-count">{result_total} in rete</p>'
+                + "".join(cards)
+            )
+        else:
+            results_html = (
+                '<p class="res-empty">Nessun immobile in rete con questi filtri.</p>'
+            )
+
+    return f"""<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Rete MLS · {name}</title>
+<style>
+  :root {{ --primary:{primary}; --ink:#222; }}
+  * {{ box-sizing:border-box; }}
+  body {{ margin:0; font-family:Arial,Helvetica,sans-serif; background:#fff; color:var(--ink); }}
+  .box {{ border:1px solid var(--primary); }}
+  .head {{ background:var(--primary); color:#fff; padding:10px 12px; }}
+  .head h1 {{ margin:0; font-size:.92rem; font-weight:700; }}
+  form {{ padding:12px; }}
+  label {{ display:block; font-size:.72rem; margin:0 0 3px; color:#444; }}
+  .field {{ margin-bottom:8px; }}
+  select, input {{ width:100%; padding:8px 9px; border:1px solid #d0d0d0; border-radius:2px; font-size:.85rem; }}
+  .range {{ display:grid; grid-template-columns:1fr 1fr; gap:6px; }}
+  button {{ display:block; width:100%; margin-top:8px; padding:10px 12px; border:0; background:#5a5a5a; color:#fff; font-weight:700; font-size:.9rem; cursor:pointer; }}
+  .powered {{ text-align:center; padding:0 12px 12px; font-size:.68rem; letter-spacing:.08em; text-transform:uppercase; color:#666; }}
+  .powered strong {{ color:#c62828; font-weight:800; }}
+  .res-count {{ margin:0; padding:8px 12px 0; font-size:.75rem; color:#555; }}
+  .res {{ display:flex; gap:8px; padding:8px 12px; text-decoration:none; color:inherit; border-top:1px solid #eee; }}
+  .res:hover {{ background:#fafafa; }}
+  .res-img {{ width:64px; height:48px; flex:none; background:#e8e8e8 center/cover no-repeat; }}
+  .res-price {{ font-weight:700; font-size:.85rem; }}
+  .res-title {{ font-size:.78rem; line-height:1.25; }}
+  .res-city {{ font-size:.68rem; color:#777; letter-spacing:.04em; }}
+  .res-empty {{ margin:0; padding:12px; font-size:.8rem; color:#666; }}
+</style>
+</head>
+<body>
+  <div class="box" data-testid="mls-search-embed">
+    <div class="head"><h1>{escape(head)}</h1></div>
+    <form method="get" action="">
+      <div class="field"><label>Contratto</label>
+        <select name="operation">{_opts([("sale", "Vendita"), ("rent", "Affitto")], operation or "sale")}</select>
+      </div>
+      <div class="field"><label>Categoria</label>
+        <select name="categoria">{_opts([("", "Tutte"), ("residential", "Residenziale"), ("commercial", "Commerciale")], categoria or "residential")}</select>
+      </div>
+      <div class="field"><label>Provincia</label>
+        <select name="province">{_opts(_PROVINCE_OPTS, prov_selected)}</select>
+      </div>
+      <div class="field"><label>Comune</label>
+        <input type="text" name="city" value="{city_val}" placeholder="es. Catania" autocomplete="off"/>
+      </div>
+      <div class="field"><label>Prezzo</label>
+        <div class="range">
+          <input type="number" name="price_min" value="{pmin}" placeholder="Min" min="0"/>
+          <input type="number" name="price_max" value="{pmax}" placeholder="Max" min="0"/>
+        </div>
+      </div>
+      <input type="hidden" name="go" value="1"/>
+      <button type="submit">avvia la ricerca</button>
+    </form>
+    {results_html}
+    <div class="powered">Powered by <strong>OMNIA</strong></div>
+  </div>
+</body>
+</html>"""
+
+
+async def _require_mls_agency(agency_slug: str) -> dict:
+    db = Database.get()
+    agency = await db.agencies.find_one(
+        {"slug": agency_slug},
+        {"_id": 0, "id": 1, "name": 1, "display_name": 1, "slug": 1,
+         "brand_color": 1, "branding": 1, "mls_enabled": 1, "address": 1},
+    )
+    if not agency:
+        raise HTTPException(status_code=404, detail="agency_not_found")
+    if not agency.get("mls_enabled"):
+        raise HTTPException(status_code=404, detail="mls_not_enabled")
+    return agency
+
+
+def _default_province(agency: dict) -> str:
+    addr = agency.get("address") or {}
+    raw = (addr.get("province_sigla") or addr.get("province") or "").strip().upper()
+    if len(raw) == 2:
+        return raw
+    return "CT"
+
+
+@router.get("/embed-kit/{agency_slug}")
+async def embed_kit_json(agency_slug: str):
+    """JSON per CRM / webmaster: iframe del box ricerca rete."""
+    agency = await _require_mls_agency(agency_slug)
+    kit = build_embed_kit(agency["slug"], ready=True)
+    return JSONResponse(kit)
+
+
+@router.get("/search/{agency_slug}.html", response_class=HTMLResponse)
+async def mls_search_html(
+    agency_slug: str,
+    operation: str = Query("sale"),
+    categoria: str = Query("residential"),
+    province: str = Query(""),
+    city: str = Query(""),
+    price_min: str = Query(""),
+    price_max: str = Query(""),
+    go: str = Query(""),
+):
+    """Box ricerca rete embeddabile sul sito già proprio (D-170)."""
+    agency = await _require_mls_agency(agency_slug)
+    db = Database.get()
+    network_count = await db.properties.count_documents(
+        with_not_trashed(_shareable_listing_filters())
+    )
+
+    items: List[dict] = []
+    result_total = 0
+    searched = (go or "").strip() in ("1", "true", "yes") or bool(
+        (province or city or price_min or price_max or "").strip()
+    )
+    if searched:
+        q: Dict[str, Any] = dict(_shareable_listing_filters())
+        op = (operation or "").strip().lower()
+        if op in ("sale", "rent"):
+            q["operation"] = op
+        prov = (province or "").strip().upper()[:2]
+        if prov:
+            q["$or"] = [
+                {"province_sigla": prov},
+                {"province": prov},
+                {"province": {"$regex": f"^{prov}$", "$options": "i"}},
+            ]
+        if (city or "").strip():
+            q["city"] = {"$regex": f"^{city.strip()}$", "$options": "i"}
+        try:
+            pmn = float(price_min) if price_min else None
+        except ValueError:
+            pmn = None
+        try:
+            pmx = float(price_max) if price_max else None
+        except ValueError:
+            pmx = None
+        if pmn is not None or pmx is not None:
+            price_q: Dict[str, Any] = {}
+            if pmn is not None:
+                price_q["$gte"] = pmn
+            if pmx is not None:
+                price_q["$lte"] = pmx
+            q["price"] = price_q
+        cat = (categoria or "").strip().lower()
+        if cat == "commercial":
+            q["property_type"] = {"$in": ["commerciale", "negozio", "ufficio", "capannone", "commercial"]}
+        q = with_not_trashed(q)
+        result_total = await db.properties.count_documents(q)
+        raw = await db.properties.find(q, {"_id": 0}).sort("created_at", -1).limit(12).to_list(12)
+        items = [
+            {
+                "id": p.get("id"),
+                "title": p.get("title"),
+                "city": p.get("city"),
+                "price": p.get("price") or p.get("rent_monthly"),
+                "cover_url": _cover_abs(p),
+            }
+            for p in raw
+        ]
+        searched = True
+    else:
+        searched = False
+
+    primary = (
+        ((agency.get("branding") or {}).get("primary_color"))
+        or agency.get("brand_color")
+        or "#3D8B40"
+    )
+    html = render_mls_search_html(
+        agency_name=agency.get("display_name") or agency.get("name") or "",
+        primary=primary,
+        network_count=int(network_count or 0),
+        default_province=_default_province(agency),
+        operation=operation if operation in ("sale", "rent") else "sale",
+        categoria=categoria if categoria in ("", "residential", "commercial") else "residential",
+        province=province,
+        city=city,
+        price_min=price_min,
+        price_max=price_max,
+        searched=searched,
+        items=items,
+        result_total=result_total,
+        detail_base=_frontend_base(),
+    )
+    return _html(html)

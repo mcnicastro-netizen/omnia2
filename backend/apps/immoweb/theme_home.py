@@ -128,20 +128,23 @@ def _mls_search_box(network_count: int, *, title: Optional[str] = None) -> str:
     return f"""
     <aside class="ah-box ah-mls" data-testid="agency-home-mls-box">
       <div class="ah-mls-head"><h2>{escape(head)}</h2></div>
-      <div class="ah-box-body">
-        {_select("contratto", "Contratto", [("sale", "Vendita"), ("rent", "Affitto")], "sale")}
-        {_select("categoria", "Categoria", [("", "Tutte"), ("residential", "Residenziale"), ("commercial", "Commerciale")], "residential")}
-        {_select("provincia", "Provincia", [("", "Scegli"), ("CT", "CATANIA"), ("ME", "MESSINA"), ("PA", "PALERMO"), ("RG", "RAGUSA")])}
-        {_select("comune", "Comune", [("", "Scegli")])}
+      <form class="ah-box-body" method="get" action="/it/cloud">
+        <input type="hidden" name="mls" value="1"/>
+        {_select("operation", "Contratto", [("sale", "Vendita"), ("rent", "Affitto")], "sale")}
+        {_select("property_type", "Categoria", [("", "Tutte"), ("residential", "Residenziale"), ("commercial", "Commerciale")], "residential")}
+        {_select("province", "Provincia", [("", "Scegli"), ("CT", "CATANIA"), ("ME", "MESSINA"), ("PA", "PALERMO"), ("RG", "RAGUSA")])}
+        <div class="ah-field"><label>Comune</label>
+          <input type="text" name="city" placeholder="es. Catania" autocomplete="off"/>
+        </div>
         <div class="ah-field"><label>Prezzo</label>
           <div class="ah-range">
             <input type="number" name="price_min" placeholder="Min" min="0"/>
             <input type="number" name="price_max" placeholder="Max" min="0"/>
           </div>
         </div>
-        <button type="button" class="ah-btn" onclick="location.href='/it/cloud?mls=1'">avvia la ricerca</button>
+        <button type="submit" class="ah-btn">avvia la ricerca</button>
         <div class="ah-powered">Powered by OMNIA</div>
-      </div>
+      </form>
     </aside>"""
 
 def _agency_search_box(lista_href: str = "#ultimi") -> str:
