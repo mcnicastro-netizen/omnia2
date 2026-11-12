@@ -42,7 +42,7 @@ function FlagChips({ flags }) {
       {flags.map((f) => (
         <span
           key={f}
-          className="text-[9px] uppercase tracking-widest px-1.5 py-0.5 rounded bg-amber-50 text-amber-800 border border-amber-200"
+          className="text-[9px] uppercase tracking-widest px-1.5 py-0.5 border border-crm-gold/40 text-crm-navy bg-crm-gold-soft/40"
         >
           {map[f] || f}
         </span>
@@ -105,7 +105,6 @@ export default function PropertiesPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [status, smart, sort, view, page]);
 
-  // reset page when filters change (not view/page)
   useEffect(() => {
     setPage(1);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -121,20 +120,18 @@ export default function PropertiesPage() {
 
   return (
     <AgencyShell current="properties">
-      <section data-testid="properties-page" className="space-y-6">
+      <section data-testid="properties-page" className="crm-desk space-y-6">
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
-            <h1
-              className="text-3xl md:text-4xl tracking-tight"
-              style={{ fontFamily: "'Fraunces', Georgia, serif" }}
-            >
-              {t("properties.title")}
-            </h1>
-            <p className="text-stone-600 mt-1">{t("properties.subtitle")}</p>
+            <p className="crm-eyebrow" data-testid="properties-crm-eyebrow">
+              Bancone Immobili
+            </p>
+            <h1 className="crm-title text-3xl md:text-4xl mt-1">{t("properties.title")}</h1>
+            <p className="text-crm-muted mt-1 text-sm">{t("properties.subtitle")}</p>
           </div>
           <div className="flex gap-3 flex-wrap">
             <div
-              className="inline-flex border border-stone-300 rounded-md overflow-hidden"
+              className="inline-flex border border-crm-line overflow-hidden rounded-md"
               data-testid="properties-view-toggle"
             >
               <button
@@ -142,7 +139,7 @@ export default function PropertiesPage() {
                 data-testid="view-cards"
                 onClick={() => setView("cards")}
                 className={`px-3 py-2 text-[10px] uppercase tracking-widest ${
-                  view === "cards" ? "bg-stone-900 text-white" : "bg-white text-stone-700"
+                  view === "cards" ? "crm-btn-primary" : "bg-white text-crm-navy"
                 }`}
               >
                 Card
@@ -152,7 +149,7 @@ export default function PropertiesPage() {
                 data-testid="view-table"
                 onClick={() => setView("table")}
                 className={`px-3 py-2 text-[10px] uppercase tracking-widest ${
-                  view === "table" ? "bg-stone-900 text-white" : "bg-white text-stone-700"
+                  view === "table" ? "crm-btn-primary" : "bg-white text-crm-navy"
                 }`}
               >
                 Tabella
@@ -161,98 +158,126 @@ export default function PropertiesPage() {
             <Link
               to={`/${lang}/app/properties/import`}
               data-testid="properties-import-btn"
-              className="px-4 py-2.5 border border-stone-300 bg-white text-stone-900 text-xs uppercase tracking-widest font-medium rounded-md hover:bg-stone-50 transition"
+              className="crm-btn-ghost px-4 py-2.5 text-xs uppercase tracking-widest font-medium rounded-md transition"
             >
               {t("properties.import_btn")}
             </Link>
             <Link
               to={`/${lang}/app/properties/new`}
               data-testid="properties-new-btn"
-              className="px-5 py-2.5 bg-stone-900 text-stone-50 text-xs uppercase tracking-widest font-medium rounded-md hover:bg-stone-700 transition"
+              className="crm-btn-primary px-5 py-2.5 text-xs uppercase tracking-widest font-medium rounded-md transition"
             >
               {t("properties.new_btn")}
             </Link>
           </div>
         </div>
 
-        <form onSubmit={onSearch} className="flex flex-wrap gap-3 items-end bg-white border border-stone-200 rounded-lg p-4">
+        <form
+          onSubmit={onSearch}
+          className="crm-panel flex flex-wrap gap-3 items-end p-4 bg-crm-mist/60"
+        >
           <div className="flex-1 min-w-[180px]">
-            <label className="block text-xs uppercase tracking-widest text-stone-500 mb-1.5">{t("common.search")}</label>
+            <label className="block text-xs uppercase tracking-widest text-crm-muted mb-1.5">
+              {t("common.search")}
+            </label>
             <input
               data-testid="search-input"
               value={q}
               onChange={(e) => setQ(e.target.value)}
               placeholder={t("properties.search_placeholder")}
-              className="w-full px-3 py-2 border border-stone-300 rounded-md text-sm focus:outline-none focus:border-stone-900"
+              className="crm-input w-full px-3 py-2 border border-crm-line rounded-md text-sm bg-white"
             />
           </div>
           <div>
-            <label className="block text-xs uppercase tracking-widest text-stone-500 mb-1.5">{t("properties.filter_status")}</label>
-            <select data-testid="filter-status" value={status} onChange={(e) => setStatus(e.target.value)} className="px-3 py-2 border border-stone-300 rounded-md text-sm">
+            <label className="block text-xs uppercase tracking-widest text-crm-muted mb-1.5">
+              {t("properties.filter_status")}
+            </label>
+            <select
+              data-testid="filter-status"
+              value={status}
+              onChange={(e) => setStatus(e.target.value)}
+              className="crm-input px-3 py-2 border border-crm-line rounded-md text-sm bg-white"
+            >
               {STATUSES.map((s) => (
-                <option key={s} value={s}>{s ? t(`properties.status_${s}`) : t("properties.filter_all")}</option>
+                <option key={s} value={s}>
+                  {s ? t(`properties.status_${s}`) : t("properties.filter_all")}
+                </option>
               ))}
             </select>
           </div>
           <div>
-            <label className="block text-xs uppercase tracking-widest text-stone-500 mb-1.5">{t("properties.filter_operation")}</label>
-            <select data-testid="filter-operation" value={operation} onChange={(e) => setOperation(e.target.value)} className="px-3 py-2 border border-stone-300 rounded-md text-sm">
+            <label className="block text-xs uppercase tracking-widest text-crm-muted mb-1.5">
+              {t("properties.filter_operation")}
+            </label>
+            <select
+              data-testid="filter-operation"
+              value={operation}
+              onChange={(e) => setOperation(e.target.value)}
+              className="crm-input px-3 py-2 border border-crm-line rounded-md text-sm bg-white"
+            >
               {OPS.map((s) => (
-                <option key={s} value={s}>{s ? t(`properties.op_${s}`) : t("properties.filter_all")}</option>
+                <option key={s} value={s}>
+                  {s ? t(`properties.op_${s}`) : t("properties.filter_all")}
+                </option>
               ))}
             </select>
           </div>
           <div>
-            <label className="block text-xs uppercase tracking-widest text-stone-500 mb-1.5">Smart</label>
+            <label className="block text-xs uppercase tracking-widest text-crm-muted mb-1.5">Smart</label>
             <select
               data-testid="filter-smart"
               value={smart}
               onChange={(e) => setSmart(e.target.value)}
-              className="px-3 py-2 border border-stone-300 rounded-md text-sm"
+              className="crm-input px-3 py-2 border border-crm-line rounded-md text-sm bg-white"
             >
               {SMART.map((s) => (
-                <option key={s.id || "all"} value={s.id}>{s.label}</option>
+                <option key={s.id || "all"} value={s.id}>
+                  {s.label}
+                </option>
               ))}
             </select>
           </div>
           <div>
-            <label className="block text-xs uppercase tracking-widest text-stone-500 mb-1.5">Ordina</label>
+            <label className="block text-xs uppercase tracking-widest text-crm-muted mb-1.5">Ordina</label>
             <select
               data-testid="filter-sort"
               value={sort}
               onChange={(e) => setSort(e.target.value)}
-              className="px-3 py-2 border border-stone-300 rounded-md text-sm"
+              className="crm-input px-3 py-2 border border-crm-line rounded-md text-sm bg-white"
             >
               {SORTS.map((s) => (
-                <option key={s.id} value={s.id}>{s.label}</option>
+                <option key={s.id} value={s.id}>
+                  {s.label}
+                </option>
               ))}
             </select>
           </div>
-          <button type="submit" className="px-4 py-2 bg-stone-900 text-stone-50 text-xs uppercase tracking-widest rounded-md hover:bg-stone-700">
+          <button
+            type="submit"
+            className="crm-btn-primary px-4 py-2 text-xs uppercase tracking-widest rounded-md"
+          >
             {t("common.search")}
           </button>
         </form>
 
         {!loading && (
-          <p className="text-xs text-stone-500" data-testid="properties-total">
+          <p className="text-xs text-crm-muted" data-testid="properties-total">
             {data.total} immobili
             {smart ? ` · filtro ${SMART.find((s) => s.id === smart)?.label || smart}` : ""}
           </p>
         )}
 
         {loading ? (
-          <p className="text-stone-500 text-sm">{t("common.loading")}</p>
+          <p className="text-crm-muted text-sm">{t("common.loading")}</p>
         ) : data.items.length === 0 ? (
-          <div data-testid="empty-state" className="bg-white border border-stone-200 rounded-lg p-12 text-center">
-            <p className="text-2xl mb-2" style={{ fontFamily: "'Fraunces', Georgia, serif" }}>
-              {t("properties.empty_title")}
-            </p>
-            <p className="text-stone-500 mb-6 max-w-md mx-auto">{t("properties.empty_subtitle")}</p>
+          <div data-testid="empty-state" className="crm-panel p-12 text-center">
+            <p className="crm-title text-2xl mb-2">{t("properties.empty_title")}</p>
+            <p className="text-crm-muted mb-6 max-w-md mx-auto">{t("properties.empty_subtitle")}</p>
           </div>
         ) : view === "table" ? (
-          <div className="overflow-x-auto border border-stone-200 rounded-lg bg-white" data-testid="properties-table">
+          <div className="overflow-x-auto crm-panel" data-testid="properties-table">
             <table className="min-w-full text-sm">
-              <thead className="bg-stone-50 text-[10px] uppercase tracking-widest text-stone-500 text-left">
+              <thead className="bg-crm-mist text-[10px] uppercase tracking-widest text-crm-muted text-left">
                 <tr>
                   <th className="px-3 py-2 font-medium">Titolo</th>
                   <th className="px-3 py-2 font-medium">Città</th>
@@ -264,24 +289,26 @@ export default function PropertiesPage() {
                   <th className="px-3 py-2 font-medium">Flag</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-stone-100">
+              <tbody className="divide-y divide-crm-line/70">
                 {data.items.map((p) => (
                   <tr
                     key={p.id}
                     data-testid={`property-row-${p.id}`}
                     onClick={() => openProp(p.id)}
-                    className="cursor-pointer hover:bg-stone-50"
+                    className="cursor-pointer hover:bg-crm-mist/80"
                   >
-                    <td className="px-3 py-2.5 font-medium text-stone-900 max-w-[220px] truncate">{p.title}</td>
-                    <td className="px-3 py-2.5 text-stone-600">{p.city || "—"}</td>
-                    <td className="px-3 py-2.5 text-stone-600">{t(`properties.status_${p.status}`)}</td>
-                    <td className="px-3 py-2.5 text-stone-900">{formatPrice(p.price || p.rent_monthly)}</td>
-                    <td className="px-3 py-2.5 text-stone-600">{p.surface_sqm ?? "—"}</td>
-                    <td className="px-3 py-2.5 text-stone-600">{p.photo_count ?? 0}</td>
-                    <td className="px-3 py-2.5 text-stone-600 max-w-[120px] truncate" title={p.listing_agent_name || ""}>
+                    <td className="px-3 py-2.5 font-medium text-crm-navy max-w-[220px] truncate">{p.title}</td>
+                    <td className="px-3 py-2.5 text-crm-muted">{p.city || "—"}</td>
+                    <td className="px-3 py-2.5 text-crm-muted">{t(`properties.status_${p.status}`)}</td>
+                    <td className="px-3 py-2.5 text-crm-navy font-medium">{formatPrice(p.price || p.rent_monthly)}</td>
+                    <td className="px-3 py-2.5 text-crm-muted">{p.surface_sqm ?? "—"}</td>
+                    <td className="px-3 py-2.5 text-crm-muted">{p.photo_count ?? 0}</td>
+                    <td className="px-3 py-2.5 text-crm-muted max-w-[120px] truncate" title={p.listing_agent_name || ""}>
                       {p.listing_agent_name || "—"}
                     </td>
-                    <td className="px-3 py-2.5"><FlagChips flags={p.listing_flags} /></td>
+                    <td className="px-3 py-2.5">
+                      <FlagChips flags={p.listing_flags} />
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -294,34 +321,42 @@ export default function PropertiesPage() {
                 key={p.id}
                 data-testid={`property-card-${p.id}`}
                 onClick={() => openProp(p.id)}
-                className="cursor-pointer bg-white border border-stone-200 rounded-lg overflow-hidden hover:border-stone-400 transition group"
+                className="cursor-pointer crm-panel overflow-hidden hover:border-crm-navy/40 transition group"
               >
                 {p.cover_photo_url ? (
-                  <div className="aspect-[4/3] bg-stone-100 overflow-hidden">
-                    <img src={p.cover_photo_url} alt={p.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
+                  <div className="aspect-[4/3] bg-crm-mist overflow-hidden">
+                    <img
+                      src={p.cover_photo_url}
+                      alt={p.title}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    />
                   </div>
                 ) : (
-                  <div className="aspect-[4/3] bg-stone-100 flex items-center justify-center text-stone-300 text-5xl">🏠</div>
+                  <div className="aspect-[4/3] bg-crm-mist flex items-center justify-center text-crm-line text-sm uppercase tracking-widest">
+                    Senza foto
+                  </div>
                 )}
                 <div className="p-4">
                   <div className="flex items-center justify-between mb-2 text-[10px] uppercase tracking-widest">
-                    <span className={`px-2 py-0.5 rounded ${
-                      p.status === "active" ? "bg-emerald-50 text-emerald-700" :
-                      p.status === "draft" ? "bg-amber-50 text-amber-700" :
-                      "bg-stone-100 text-stone-500"
-                    }`}>
+                    <span
+                      className={`px-2 py-0.5 border ${
+                        p.status === "active"
+                          ? "border-crm-navy/30 bg-crm-navy text-white"
+                          : p.status === "draft"
+                            ? "border-crm-gold/50 bg-crm-gold-soft/50 text-crm-navy"
+                            : "border-crm-line bg-white text-crm-muted"
+                      }`}
+                    >
                       {t(`properties.status_${p.status}`)}
                     </span>
-                    <span className="text-stone-500">{t(`properties.op_${p.operation}`)}</span>
+                    <span className="text-crm-gold">{t(`properties.op_${p.operation}`)}</span>
                   </div>
-                  <h3 className="font-semibold text-stone-900 mb-1 line-clamp-1">{p.title}</h3>
-                  <p className="text-xs text-stone-500 mb-2 line-clamp-1">{p.address || p.city}</p>
+                  <h3 className="font-semibold text-crm-navy mb-1 line-clamp-1">{p.title}</h3>
+                  <p className="text-xs text-crm-muted mb-2 line-clamp-1">{p.address || p.city}</p>
                   <FlagChips flags={p.listing_flags} />
                   <div className="flex items-center justify-between mt-3">
-                    <span className="font-semibold text-stone-900" style={{ fontFamily: "'Fraunces', Georgia, serif" }}>
-                      {formatPrice(p.price || p.rent_monthly)}
-                    </span>
-                    <span className="text-xs text-stone-500">
+                    <span className="font-semibold text-crm-navy">{formatPrice(p.price || p.rent_monthly)}</span>
+                    <span className="text-xs text-crm-muted">
                       {p.surface_sqm ? `${p.surface_sqm} m² · ` : ""}
                       {p.photo_count ?? 0} foto
                     </span>
@@ -339,11 +374,11 @@ export default function PropertiesPage() {
               data-testid="properties-page-prev"
               disabled={page <= 1}
               onClick={() => setPage((p) => Math.max(1, p - 1))}
-              className="px-3 py-2 text-xs uppercase tracking-widest border border-stone-300 rounded-md disabled:opacity-40"
+              className="crm-btn-ghost px-3 py-2 text-xs uppercase tracking-widest rounded-md disabled:opacity-40"
             >
               Precedente
             </button>
-            <span className="text-xs text-stone-500" data-testid="properties-page-label">
+            <span className="text-xs text-crm-muted" data-testid="properties-page-label">
               Pagina {data.page || page} · {data.total} immobili
             </span>
             <button
@@ -351,7 +386,7 @@ export default function PropertiesPage() {
               data-testid="properties-page-next"
               disabled={(data.page || page) * pageSize >= data.total}
               onClick={() => setPage((p) => p + 1)}
-              className="px-3 py-2 text-xs uppercase tracking-widest border border-stone-300 rounded-md disabled:opacity-40"
+              className="crm-btn-ghost px-3 py-2 text-xs uppercase tracking-widest rounded-md disabled:opacity-40"
             >
               Successiva
             </button>

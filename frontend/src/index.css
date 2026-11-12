@@ -4,12 +4,66 @@
 
 body {
     margin: 0;
-    font-family:
-        -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen",
-        "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue",
-        sans-serif;
+    font-family: Inter, ui-sans-serif, system-ui, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+}
+
+/* D-171 — token desk CRM (navy istituzionale + oro raro) */
+:root {
+    --crm-navy: #0b1e3f;
+    --crm-navy-hover: #16305a;
+    --crm-gold: #c19a6b;
+    --crm-gold-soft: #e8d5b5;
+    --crm-mist: #f4f6f9;
+    --crm-line: #d7dde7;
+    --crm-ink: #1c2434;
+    --crm-muted: #5b667a;
+}
+
+@layer components {
+    .crm-desk {
+        font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+        color: var(--crm-ink);
+    }
+    .crm-desk .crm-title {
+        font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+        font-weight: 600;
+        letter-spacing: -0.02em;
+        color: var(--crm-navy);
+    }
+    .crm-desk .crm-eyebrow {
+        font-size: 10px;
+        letter-spacing: 0.28em;
+        text-transform: uppercase;
+        color: var(--crm-gold);
+    }
+    .crm-desk .crm-btn-primary {
+        background: var(--crm-navy);
+        color: #fff;
+        border: 1px solid var(--crm-navy);
+    }
+    .crm-desk .crm-btn-primary:hover {
+        background: var(--crm-navy-hover);
+    }
+    .crm-desk .crm-btn-ghost {
+        background: #fff;
+        color: var(--crm-navy);
+        border: 1px solid var(--crm-line);
+    }
+    .crm-desk .crm-btn-ghost:hover {
+        border-color: var(--crm-navy);
+    }
+    .crm-desk .crm-panel {
+        background: #fff;
+        border: 1px solid var(--crm-line);
+        border-radius: 8px;
+    }
+    .crm-desk .crm-input:focus {
+        outline: none;
+        border-color: var(--crm-navy);
+        box-shadow: 0 0 0 1px var(--crm-navy);
+    }
 }
 
 code {

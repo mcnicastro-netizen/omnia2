@@ -7,6 +7,23 @@ Registro di tutte le decisioni di business e tecniche prese durante il progetto.
 
 ## Decisioni prese
 
+### D-172 — Flussi prima della superficie · Product Acceptance Matrix · 12-Nov-2026
+- **Contesto**: Secondo audit: il gestionale non accompagna l’agente fino alla **conclusione** del lavoro. Due problemi distinti; priorità più precisa.
+- **Decisione**:
+  1. Principio: ogni operazione ha **prima → azione → passo successivo evidente**.
+  2. Ordine programma: **(1) chiudere flussi** · **(2) design system** (D-171) · **(3) esperienza quotidiana** · **(4) QA journey**.
+  3. Done = **Product Acceptance Matrix** (`memory/PRODUCT_ACCEPTANCE_MATRIX.md`): 9 journey × 5 gate.
+- **Stato**: ✅ flussi P0–P2 in codice (#192–#198). Design system in corso.
+
+### D-171 — Identità CRM: premium istituzionale (navy + oro) · 12-Nov-2026
+- **Contesto**: Audit «cervello avanti, superficie indietro». Scelta stile: **premium istituzionale navy/oro** (non Apple-like luminoso).
+- **Decisione**:
+  1. Posizionamento UI: **OMNIA — Real Estate Operating System**, non admin panel generico.
+  2. Identità: navy `#0B1E3F` + oro `#C19A6B` (raro); tipografia **Inter**; icone Lucide (rollout progressivo).
+  3. Metodo: token CSS (`crm-*`) + superfici desk una alla volta. Prima **Immobili**, poi Attività / MLS / Clienti.
+  4. Niente feature nuove in questo percorso.
+- **Stato**: ✅ stilistica chiusa. Implementazione UI: Immobili (bancone + scheda).
+
 ### D-170 — Sito già proprio + box MLS embed (caso Nicastro) · 12-Nov-2026
 - **Contesto**: Nicastro Immobiliare (`www.nicastroimmobiliare.it`) ha già il sito; in home c’è il box ricerca rete di terzi. Vuole aderire alla MLS OMNIA e **tenere il proprio sito**. D-168 punto 2 vietava il box MLS pubblico se il sito non era tema OMNIA.
 - **Decisione**:
