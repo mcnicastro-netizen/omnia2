@@ -5,6 +5,12 @@
 
 ---
 
+## D-172 — Flussi (post-#192)
+
+1. #192 su main. Prossima PR: Cliente→Richiesta + Visibility + MLS link — squash & merge Founder.
+2. Poi dogfood produzione; P1 Match + Oggi.
+3. D-171 navy+oro dopo P0 chiusi.
+
 ## Dogfood D-170 (Nicastro: sito proprio + box MLS)
 
 1. In Avvio: «Tengo il sito, sostituisco solo il box MLS» → adesione MLS → copia iframe.
