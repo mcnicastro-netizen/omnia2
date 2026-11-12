@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useNavigate, useParams, Link } from "react-router-dom";
+import { useNavigate, useParams, Link, useSearchParams } from "react-router-dom";
 import AgencyShell from "./components/AgencyShell";
 import PhotoUploader from "./components/PhotoUploader";
 import VideoUploader from "./components/VideoUploader";
@@ -57,6 +57,8 @@ export default function PropertyFormPage() {
   const lang = (i18n.language || "it").slice(0, 2);
   const { id } = useParams();
   const nav = useNavigate();
+  const [searchParams] = useSearchParams();
+  const showSiteGuide = !id && searchParams.get("guide") === "site";
   const isEdit = !!id;
   const [form, setForm] = useState(empty);
   const [saving, setSaving] = useState(false);
@@ -169,6 +171,23 @@ export default function PropertyFormPage() {
             </Link>
           )}
         </div>
+
+        {showSiteGuide ? (
+          <div
+            data-testid="property-site-guide"
+            className="border border-stone-900 bg-stone-50 px-4 py-4 space-y-2"
+          >
+            <p className="text-[10px] uppercase tracking-widest text-stone-500">Guida · solo sito</p>
+            <ol className="list-decimal list-inside text-sm text-stone-800 space-y-1 font-sans">
+              <li>Carica 6–12 foto: prima = copertina, poi interni (luce naturale, niente watermark). Opzionale planimetria.</li>
+              <li>Titolo chiaro (tipo + zona). Descrizione: 3–5 paragrafi su spazi, stato, contesto. Usa «Migliora con HAL» se serve.</li>
+              <li>Prezzo, mq, locali, città/zona. Salva in bozza; pubblica quando sei pronto.</li>
+            </ol>
+            <p className="text-xs text-stone-500">
+              Ripeti per ogni immobile. Poi torna in Avvio e segna «Portafoglio» fatto.
+            </p>
+          </div>
+        ) : null}
 
         {isEdit && (
           <PropertyCoachPanel

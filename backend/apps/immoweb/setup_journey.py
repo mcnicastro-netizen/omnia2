@@ -143,6 +143,51 @@ async def get_setup_journey(user: dict = Depends(get_current_user)):
             {"$set": {"setup_journey": journey, "updated_at": _now()}},
         )
     website = agency.get("website") or {}
+    extracted = website.get("extracted_profile") or {}
+    capture = website.get("clone_capture") or {}
+    pages = capture.get("pages") or []
+    clone_ready = bool(
+        website.get("clone_ready") or capture.get("clone_ready")
+    )
+    declared = (website.get("external_url") or "").strip() or None
+    if not declared and agency.get("existing_domain"):
+        ed = str(agency.get("existing_domain")).strip()
+        declared = ed if ed.startswith("http") else f"https://{ed}"
+
+    # Esito acquisizione (solo dati già in Mongo — extract/clone su Brand Studio / Avvio)
+    if extracted and clone_ready:
+        acq_phase = "clone_ready"
+    elif extracted:
+        acq_phase = "brand_extracted"
+    elif declared:
+        acq_phase = "declared_only"
+    else:
+        acq_phase = "none"
+
+    brand = extracted.get("brand_profile") or extracted
+    palette = (brand.get("palette") if isinstance(brand, dict) else None) or extracted.get("palette") or {}
+
+    # Posti agenti dal piano (Starter 3 · Pro 10 · Agency illimitati)
+    from apps.billing.plans import get_plan
+
+    tier = (
+        (agency.get("preferred_plan_tier") or agency.get("billing_assisted_tier") or "pro")
+        .strip()
+        .lower()
+    )
+    sub = await db.subscriptions.find_one({"agency_id": aid}, {"tier": 1, "plan_tier": 1})
+    if sub:
+        tier = (sub.get("tier") or sub.get("plan_tier") or tier).strip().lower()
+    plan = get_plan(tier) if tier in ("starter", "pro", "agency") else get_plan("pro")
+    max_agents = int(getattr(plan, "max_agents", -1) if plan else -1)
+    members_n = await db.users.count_documents({"agency_ids": aid})
+    pending_n = await db.agency_invites.count_documents(
+        {"agency_id": aid, "status": "pending"}
+    )
+
+    wallet = await db.credit_wallets.find_one({"agency_id": aid}, {"balance": 1})
+    credits_balance = int((wallet or {}).get("balance") or 0)
+
     return {
         "agency_id": aid,
         "activation_status": agency.get("activation_status"),
@@ -150,13 +195,46 @@ async def get_setup_journey(user: dict = Depends(get_current_user)):
         "progress": _progress(journey),
         "next_step": _next_step(journey),
         "context": {
-            "declared_url": (website.get("external_url") or agency.get("existing_domain")),
+            "declared_url": declared,
             "mls_enabled": bool(agency.get("mls_enabled")),
             "site_choice": (journey.get("steps") or {}).get("site", {}).get("choice"),
             "defaults": {
                 "share_listings_mls": True,
                 "share_requests_mls": True,
             },
+            "acquisition": {
+                "phase": acq_phase,
+                "mode": website.get("mode"),
+                "extracted": bool(extracted),
+                "clone_ready": clone_ready,
+                "pages_count": len(pages),
+                "roles_found": sorted({p.get("role") for p in pages if p.get("role")}),
+                "palette": palette if isinstance(palette, dict) else {},
+                "logo_url": (
+                    ((extracted.get("logo_hint") or {}) if isinstance(extracted.get("logo_hint"), dict) else {}).get("url")
+                    or (
+                        ((brand.get("logo_hint") or {}) if isinstance(brand, dict) and isinstance(brand.get("logo_hint"), dict) else {}).get("url")
+                    )
+                ),
+                "preview": website.get("clone_preview"),
+                "notes": capture.get("notes"),
+                "pages_sample": [
+                    {"url": p.get("url"), "role": p.get("role"), "title": p.get("title") or p.get("h1")}
+                    for p in pages[:6]
+                ],
+            },
+            "team": {
+                "tier": tier,
+                "max_agents": max_agents,
+                "members": members_n,
+                "pending_invites": pending_n,
+                "seats_left": None
+                if max_agents < 0
+                else max(0, max_agents - members_n - pending_n),
+                "how_to": "agency_admin_invite_members",
+            },
+            "credits_balance": credits_balance,
+            "plan_name": getattr(plan, "name", tier) if plan else tier,
         },
     }
 
