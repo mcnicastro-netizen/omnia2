@@ -1,8 +1,14 @@
+## 2026-11-12 — D-172 flussi prima della superficie + Acceptance Matrix
+
+- Audit 2: problema ≠ solo prototipo UI — manca accompagnamento fino a conclusione lavoro
+- Principio: prima → azione → passo successivo; Done = 5 gate (S/C/R/A/F)
+- SoT: `memory/PRODUCT_ACCEPTANCE_MATRIX.md` (9 journey); #192 CONFLICTING vs D-170
+- P0: merge #192 (checklist) · Cliente→Richiesta · Visibility MLS; DS D-171 dopo P0
+
 ## 2026-11-12 — D-171 identità CRM premium istituzionale
 
 - Founder sceglie navy + oro (non Apple-like); Inter + Lucide; OS agenzia non admin SaaS
-- Roadmap superficie: DS → Immobili/Attività/MLS → schede tab + KPI → template sito
-- Prima schermata: Immobili; niente feature nuove prima della superficie
+- Implementazione UI deferita da D-172 a post-chiusura flussi P0
 
 ## 2026-11-12 — D-170 sito proprio + box MLS embed (Nicastro)
 

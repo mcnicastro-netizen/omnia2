@@ -7,15 +7,25 @@ Registro di tutte le decisioni di business e tecniche prese durante il progetto.
 
 ## Decisioni prese
 
+### D-172 — Flussi prima della superficie · Product Acceptance Matrix · 12-Nov-2026
+- **Contesto**: Secondo audit: il gestionale non accompagna l’agente fino alla **conclusione** del lavoro (prima ≠ prototipo UI). Due problemi distinti; priorità più precisa.
+- **Decisione**:
+  1. Principio: ogni operazione ha **prima → azione → passo successivo evidente**.
+  2. Ordine programma: **(1) chiudere flussi** · **(2) design system** (D-171) · **(3) esperienza quotidiana** · **(4) QA journey**. Non una «nuova versione»: portare quella esistente al livello promesso.
+  3. P0: merge **#192** solo dopo checklist (rebase, conflitti D-170, test Avvio/Immobile/Attività, CI, dogfood prod) · **Cliente→Richiesta** · **Visibility MLS**. P1: Match+Oggi · Portali onesti. P2: Import Avvio.
+  4. Done = **Product Acceptance Matrix** (`memory/PRODUCT_ACCEPTANCE_MATRIX.md`): 9 journey × 5 gate (Salvataggio, Continuità, Relazione, Azione, Feedback). «Il pulsante funziona» ≠ concluso.
+  5. #192 oggi **CONFLICTING** con main (Avvio/Mls vs D-170): non dare per risolto ciò che non è in produzione.
+- **Stato**: ✅ deciso. Matrice SoT in repo. Merge #192 e chiusure P0 ancora da eseguire.
+
 ### D-171 — Identità CRM: premium istituzionale (navy + oro) · 12-Nov-2026
 - **Contesto**: Audit «cervello avanti, superficie indietro». Founder: non aggiungere feature prima di allineare l’esperienza quotidiana dell’agente. Scelta stile tra (1) premium istituzionale navy/oro e (2) Apple-like luminoso → **(1)**.
 - **Decisione**:
   1. Posizionamento UI gestionale: **OMNIA — Real Estate Operating System** (ufficio digitale agenzia), non admin panel / SaaS generico.
-  2. Identità: **navy istituzionale + oro elegante**; tipografia **Inter**; icone **Lucide**. Design system condiviso prima delle singole pagine.
-  3. Ordine superficie (senza toccare motore HAL/match/MLS-flag/Avvio/fascicolo/portali onesti): **P0** design system + Immobili + Attività + MLS → **P1** schede a tab + dashboard KPI reali → **P2** template sito OMNIA.
-  4. Metodo per schermata: analisi attuale → risultato desiderato → layout → coerenza DS → implementazione senza rompere logica/API.
-  5. Prima schermata operativa: **Immobili** (bancone). Niente merge di PR flussi non ancora definite in questo percorso.
-- **Stato**: ✅ deciso (design system + Immobili da avviare su OK Founder). Non ancora in codice UI.
+  2. Identità: **navy istituzionale + oro elegante**; tipografia **Inter**; icone **Lucide**.
+  3. **Ordine aggiornato da D-172**: design system e bancone Immobili **dopo** chiusura flussi P0 (non bloccare #192 per restyling).
+  4. Metodo per schermata: analisi → risultato → layout → coerenza DS → implementazione senza rompere API.
+  5. Niente feature nuove in questo percorso.
+- **Stato**: ✅ stilistica chiusa. Implementazione UI deferita a post-flussi P0.
 
 ### D-170 — Sito già proprio + box MLS embed (caso Nicastro) · 12-Nov-2026
 - **Contesto**: Nicastro Immobiliare (`www.nicastroimmobiliare.it`) ha già il sito; in home c’è il box ricerca rete di terzi. Vuole aderire alla MLS OMNIA e **tenere il proprio sito**. D-168 punto 2 vietava il box MLS pubblico se il sito non era tema OMNIA.
