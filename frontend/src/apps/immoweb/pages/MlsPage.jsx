@@ -105,27 +105,28 @@ export default function MlsPage() {
 
   return (
     <AgencyShell current="mls">
-      <div className="max-w-6xl mx-auto px-4 py-6 space-y-6" data-testid="mls-page">
+      <div className="crm-desk max-w-6xl mx-auto space-y-6" data-testid="mls-page">
         <header className="space-y-2">
-          <p className="text-xs uppercase tracking-[0.2em] text-sky-800/70">OMNIA Network</p>
-          <h1 className="text-3xl font-semibold text-slate-900" style={{ fontFamily: "Georgia, serif" }}>
-            MLS
-          </h1>
-          <p className="text-slate-600 max-w-2xl">
-            Collabora con altre agenzie: il tuo inventario condiviso, il network provinciale e nazionale,
-            offerte e partnership — anche a volume di rete in crescita.
+          <p className="crm-eyebrow" data-testid="mls-crm-eyebrow">
+            OMNIA Network
+          </p>
+          <h1 className="crm-title text-3xl md:text-4xl">MLS</h1>
+          <p className="text-crm-muted max-w-2xl text-sm">
+            Collabora con altre agenzie: inventario condiviso, rete locale e Italia, offerte e partnership.
           </p>
         </header>
 
         {err ? (
-          <div className="rounded-md border border-rose-200 bg-rose-50 px-4 py-3 text-rose-800 text-sm">{String(err)}</div>
+          <div className="rounded-md border border-rose-200 bg-rose-50 px-4 py-3 text-rose-800 text-sm">
+            {String(err)}
+          </div>
         ) : null}
 
         {dash && !dash.mls_enabled ? (
-          <section className="rounded-xl border border-slate-200 bg-gradient-to-br from-slate-50 to-sky-50 p-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <section className="crm-panel p-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4 bg-crm-mist/60">
             <div>
-              <h2 className="text-lg font-medium text-slate-900">Attiva OMNIA MLS</h2>
-              <p className="text-sm text-slate-600 mt-1">
+              <h2 className="text-lg font-medium text-crm-navy">Attiva OMNIA MLS</h2>
+              <p className="text-sm text-crm-muted mt-1">
                 Entri nel network multi-agenzia. Potrai condividere gli immobili impostati come pubblici o «solo MLS».
               </p>
             </div>
@@ -133,7 +134,7 @@ export default function MlsPage() {
               type="button"
               disabled={busy}
               onClick={join}
-              className="px-5 py-2.5 rounded-md bg-slate-900 text-white text-sm hover:bg-slate-800 disabled:opacity-50"
+              className="crm-btn-primary px-5 py-2.5 rounded-md text-sm disabled:opacity-50"
               data-testid="mls-join"
             >
               {busy ? "Attivazione…" : "Entra nel network"}
@@ -145,20 +146,20 @@ export default function MlsPage() {
           <>
             <div
               data-testid="mls-next-share"
-              className="rounded-lg border border-slate-900 bg-white px-4 py-3 flex flex-wrap items-center justify-between gap-3"
+              className="crm-panel px-4 py-3 flex flex-wrap items-center justify-between gap-3 border-crm-navy"
             >
-              <p className="text-sm text-slate-800">
+              <p className="text-sm text-crm-navy">
                 Rete attiva. Prossimo passo: apri gli immobili e condividili (visibilità rete / pubblici).
               </p>
               <Link
                 to={`/${lang}/app/properties`}
-                className="px-4 py-2 text-[11px] uppercase tracking-widest border border-slate-900"
+                className="crm-btn-ghost px-4 py-2 text-[11px] uppercase tracking-widest rounded-md"
               >
                 Vai agli immobili →
               </Link>
             </div>
-            <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-slate-200 bg-white px-4 py-3">
-              <p className="text-sm text-slate-600">
+            <div className="crm-panel flex flex-wrap items-center justify-between gap-3 px-4 py-3">
+              <p className="text-sm text-crm-muted">
                 {siteMode === "external"
                   ? "Rete attiva. Sul tuo sito: sostituisci solo il box ricerca MLS (codice sotto). Il resto resta com’è."
                   : "Rete attiva: sul sito OMNIA compare il box. Puoi uscire e restare senza rete."}
@@ -167,7 +168,7 @@ export default function MlsPage() {
                 type="button"
                 disabled={busy}
                 onClick={leave}
-                className="px-4 py-2 rounded-md border border-slate-300 text-sm text-slate-800 hover:bg-slate-50 disabled:opacity-50"
+                className="crm-btn-ghost px-4 py-2 rounded-md text-sm disabled:opacity-50"
                 data-testid="mls-leave"
               >
                 {busy ? "Uscita…" : "Esci dalla rete MLS"}
@@ -199,33 +200,44 @@ export default function MlsPage() {
               />
             </section>
 
-            <section className="rounded-xl border border-slate-200 bg-white p-4">
+            <section className="crm-panel p-4">
               <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
-                <h2 className="text-lg font-medium text-slate-900">Collaborazioni</h2>
-                <div className="text-sm text-slate-600">
-                  {dash.collaborations.invites_pending} inviti · {dash.collaborations.offers_incoming} offerte in arrivo ·{" "}
-                  {dash.collaborations.offers_outgoing} inviate
+                <h2 className="text-lg font-medium text-crm-navy">Collaborazioni</h2>
+                <div className="text-sm text-crm-muted">
+                  {dash.collaborations.invites_pending} inviti · {dash.collaborations.offers_incoming} offerte in
+                  arrivo · {dash.collaborations.offers_outgoing} inviate
                 </div>
               </div>
               <div className="grid md:grid-cols-2 gap-4">
                 <div>
-                  <h3 className="text-sm font-medium text-slate-700 mb-2">Partner</h3>
+                  <h3 className="text-sm font-medium text-crm-navy mb-2">Partner</h3>
                   <ul className="space-y-2">
                     {partners.length === 0 ? (
-                      <li className="text-sm text-slate-500">Nessun partner ancora.</li>
+                      <li className="text-sm text-crm-muted">Nessun partner ancora.</li>
                     ) : (
                       partners.slice(0, 8).map((p) => (
-                        <li key={p.id} className="flex items-center justify-between gap-2 text-sm border border-slate-100 rounded-md px-3 py-2">
+                        <li
+                          key={p.id}
+                          className="flex items-center justify-between gap-2 text-sm border border-crm-line rounded-md px-3 py-2"
+                        >
                           <span>
                             {p.counterpart?.name || p.counterpart_id}{" "}
-                            <span className="text-slate-400">· {p.status}</span>
+                            <span className="text-crm-muted">· {p.status}</span>
                           </span>
                           {p.status === "pending" && p.direction === "incoming" ? (
                             <span className="flex gap-1">
-                              <button type="button" className="text-emerald-700" onClick={() => respondPartner(p.id, "accept")}>
+                              <button
+                                type="button"
+                                className="text-crm-navy underline"
+                                onClick={() => respondPartner(p.id, "accept")}
+                              >
                                 Accetta
                               </button>
-                              <button type="button" className="text-rose-700" onClick={() => respondPartner(p.id, "reject")}>
+                              <button
+                                type="button"
+                                className="text-rose-700"
+                                onClick={() => respondPartner(p.id, "reject")}
+                              >
                                 Rifiuta
                               </button>
                             </span>
@@ -236,23 +248,34 @@ export default function MlsPage() {
                   </ul>
                 </div>
                 <div>
-                  <h3 className="text-sm font-medium text-slate-700 mb-2">Offerte</h3>
+                  <h3 className="text-sm font-medium text-crm-navy mb-2">Offerte</h3>
                   <ul className="space-y-2">
                     {offers.length === 0 ? (
-                      <li className="text-sm text-slate-500">Nessuna offerta.</li>
+                      <li className="text-sm text-crm-muted">Nessuna offerta.</li>
                     ) : (
                       offers.slice(0, 8).map((o) => (
-                        <li key={o.id} className="flex items-center justify-between gap-2 text-sm border border-slate-100 rounded-md px-3 py-2">
+                        <li
+                          key={o.id}
+                          className="flex items-center justify-between gap-2 text-sm border border-crm-line rounded-md px-3 py-2"
+                        >
                           <span>
                             {o.property_title || o.property_id}{" "}
-                            <span className="text-slate-400">· {o.status}</span>
+                            <span className="text-crm-muted">· {o.status}</span>
                           </span>
                           {o.status === "pending" && o.to_agency_id ? (
                             <span className="flex gap-1">
-                              <button type="button" className="text-emerald-700" onClick={() => respondOffer(o.id, "accept")}>
+                              <button
+                                type="button"
+                                className="text-crm-navy underline"
+                                onClick={() => respondOffer(o.id, "accept")}
+                              >
                                 Accetta
                               </button>
-                              <button type="button" className="text-rose-700" onClick={() => respondOffer(o.id, "reject")}>
+                              <button
+                                type="button"
+                                className="text-rose-700"
+                                onClick={() => respondOffer(o.id, "reject")}
+                              >
                                 Rifiuta
                               </button>
                             </span>
@@ -277,13 +300,13 @@ export default function MlsPage() {
                     type="button"
                     onClick={() => setScope(t.id)}
                     className={`px-3 py-1.5 rounded-md text-sm border ${
-                      scope === t.id ? "bg-slate-900 text-white border-slate-900" : "bg-white text-slate-700 border-slate-200"
+                      scope === t.id ? "crm-btn-primary border-crm-navy" : "crm-btn-ghost"
                     }`}
                   >
                     {t.label}
                   </button>
                 ))}
-                <span className="text-sm text-slate-500 self-center ml-auto">{inventory.total} risultati</span>
+                <span className="text-sm text-crm-muted self-center ml-auto">{inventory.total} risultati</span>
               </div>
               <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
                 {(inventory.items || []).map((item) => {
@@ -296,20 +319,22 @@ export default function MlsPage() {
                       key={item.id}
                       to={href}
                       data-testid={`mls-inventory-card-${item.id}`}
-                      className="border border-slate-200 rounded-lg overflow-hidden bg-white block hover:border-slate-400 transition-colors"
+                      className="crm-panel overflow-hidden block hover:border-crm-navy/40 transition-colors"
                     >
                       <div
-                        className="h-36 bg-slate-100 bg-cover bg-center"
+                        className="h-36 bg-crm-mist bg-cover bg-center"
                         style={item.cover_url ? { backgroundImage: `url(${item.cover_url})` } : undefined}
                       />
                       <div className="p-3 space-y-1">
-                        <div className="text-xs text-slate-500 uppercase tracking-wide">{item.operation || "—"}</div>
-                        <h3 className="font-medium text-slate-900 line-clamp-2">{item.title}</h3>
-                        <p className="text-sm text-slate-600">
+                        <div className="text-xs text-crm-gold uppercase tracking-wide">
+                          {item.operation || "—"}
+                        </div>
+                        <h3 className="font-medium text-crm-navy line-clamp-2">{item.title}</h3>
+                        <p className="text-sm text-crm-muted">
                           {item.city}
                           {item.province_sigla ? ` (${item.province_sigla})` : ""}
                         </p>
-                        <p className="text-sm font-semibold text-slate-900">
+                        <p className="text-sm font-semibold text-crm-navy">
                           {item.price != null ? `€ ${Number(item.price).toLocaleString(lang)}` : "Prezzo n.d."}
                         </p>
                       </div>
@@ -321,7 +346,7 @@ export default function MlsPage() {
           </>
         ) : null}
 
-        {!dash ? <p className="text-slate-500 text-sm">Caricamento MLS…</p> : null}
+        {!dash ? <p className="text-crm-muted text-sm">Caricamento MLS…</p> : null}
       </div>
     </AgencyShell>
   );
@@ -329,11 +354,11 @@ export default function MlsPage() {
 
 function StatCard({ title, lines }) {
   return (
-    <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-      <h2 className="text-sm uppercase tracking-wide text-slate-500 mb-2">{title}</h2>
+    <div className="crm-panel p-4">
+      <h2 className="crm-eyebrow mb-2">{title}</h2>
       <ul className="space-y-1">
         {lines.map((l) => (
-          <li key={l} className="text-slate-900 font-medium">
+          <li key={l} className="text-crm-navy font-medium text-sm">
             {l}
           </li>
         ))}

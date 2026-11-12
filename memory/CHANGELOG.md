@@ -1,3 +1,7 @@
+## 2026-11-12 — D-171 MLS navy + oro
+
+- `MlsPage`: `crm-desk`, stats/collaborazioni/inventory allineati Immobili+Attività
+
 ## 2026-11-12 — D-171 Attività navy + oro
 
 - `ActivitiesPage`: `crm-desk`, CTA navy, eyebrow oro, filtri/lista/settimana allineati Immobili

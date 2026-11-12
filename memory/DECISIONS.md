@@ -22,7 +22,7 @@ Registro di tutte le decisioni di business e tecniche prese durante il progetto.
   2. Identità: navy `#0B1E3F` + oro `#C19A6B` (raro); tipografia **Inter**; icone Lucide (rollout progressivo).
   3. Metodo: token CSS (`crm-*`) + superfici desk una alla volta. Prima **Immobili**, poi Attività / MLS / Clienti.
   4. Niente feature nuove in questo percorso.
-- **Stato**: ✅ stilistica chiusa. UI: Immobili + Attività.
+- **Stato**: ✅ stilistica chiusa. UI: Immobili + Attività + MLS.
 
 ### D-170 — Sito già proprio + box MLS embed (caso Nicastro) · 12-Nov-2026
 - **Contesto**: Nicastro Immobiliare (`www.nicastroimmobiliare.it`) ha già il sito; in home c’è il box ricerca rete di terzi. Vuole aderire alla MLS OMNIA e **tenere il proprio sito**. D-168 punto 2 vietava il box MLS pubblico se il sito non era tema OMNIA.
