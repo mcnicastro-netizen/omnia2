@@ -202,7 +202,7 @@ export default function ApiKeysPage() {
             </div>
             <div>
               <label className="text-xs text-stone-500 block mb-1">
-                {t("api_keys.partner_id") || "Partner ID"} <span className="text-stone-400">(D-046)</span>
+                {t("api_keys.partner_id") || "Partner ID"}
               </label>
               <input
                 data-testid="api-key-partner-input"

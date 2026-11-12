@@ -335,7 +335,7 @@ export default function AgencyShell({ children, current = "dashboard", showBack 
                       </span>
                       {item.locked && (
                         <span className="text-[9px] uppercase tracking-widest text-amber-500">
-                          M2.S4
+                          Presto
                         </span>
                       )}
                     </Link>
@@ -351,7 +351,12 @@ export default function AgencyShell({ children, current = "dashboard", showBack 
             {user?.name}
           </div>
           <div className="px-3 text-[10px] uppercase tracking-widest text-stone-500">
-            {user?.role}
+            {{
+              agency_admin: "Amministratore",
+              agent: "Agente",
+              group_admin: "Gruppo",
+              super_admin: "OMNIA Ops",
+            }[user?.role] || user?.role}
           </div>
           <button
             data-testid="sidebar-logout"

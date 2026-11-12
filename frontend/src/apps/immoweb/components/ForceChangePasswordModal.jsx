@@ -50,7 +50,7 @@ export default function ForceChangePasswordModal() {
     } catch (ex) {
       const d = ex?.response?.data?.detail;
       if (d === "current_password_wrong") {
-        setErr("Password attuale non corretta. Usa la chiave API ricevuta via email.");
+        setErr("Password attuale non corretta. Usa il codice ricevuto via email.");
       } else {
         setErr(formatApiErrorDetail(d) || "Cambio password non riuscito");
       }
@@ -75,12 +75,12 @@ export default function ForceChangePasswordModal() {
           Scegli la tua password
         </h2>
         <p className="text-sm text-stone-600">
-          Hai ricevuto da OMNIA una <strong>chiave API</strong> usata come password
-          iniziale. Ora sostituiscila con una password tua. La chiave resta
-          disponibile in Impostazioni → API keys per integrazioni.
+          Al primo accesso usa il <strong>codice ricevuto via email</strong> come
+          password temporanea, poi scegline una tua. Potrai continuare subito nel
+          gestionale.
         </p>
         <label className="block text-xs uppercase tracking-widest text-stone-500">
-          Password attuale (chiave dall’email)
+          Password attuale (codice dall’email)
           <input
             type="password"
             autoComplete="current-password"
@@ -92,8 +92,8 @@ export default function ForceChangePasswordModal() {
           />
         </label>
         <p className="text-[11px] text-stone-500">
-          Nell’email: seleziona il riquadro della chiave e copia (Ctrl+C / tieni
-          premuto su mobile).{" "}
+          Nell’email: seleziona il codice e copia (Ctrl+C / tieni premuto su
+          mobile).{" "}
           <button
             type="button"
             onClick={copyHint}

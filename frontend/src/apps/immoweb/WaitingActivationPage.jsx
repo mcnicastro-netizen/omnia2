@@ -566,7 +566,7 @@ export default function WaitingActivationPage() {
                 ? t("waiting_activation.paid_ok", "Pagamento ricevuto.")
                 : t(
                     "waiting_activation.paid_need",
-                    "Scegli mensile o annuale, poi completa il checkout Stripe."
+                    "Scegli mensile o annuale, poi completa il pagamento sicuro."
                   )}
             </p>
             {!paid ? (
@@ -604,7 +604,7 @@ export default function WaitingActivationPage() {
                     {t("waiting_activation.cycle_yearly", "Annuale")}
                     {priceYearly > 0 ? ` · €${Math.round(priceYearly)}` : ""}
                     <span className="block normal-case tracking-normal text-[10px] opacity-80 mt-0.5">
-                      {t("waiting_activation.cycle_yearly_hint", "−1 mese · D-079")}
+                      {t("waiting_activation.cycle_yearly_hint", "−1 mese omaggio")}
                     </span>
                   </button>
                 </div>

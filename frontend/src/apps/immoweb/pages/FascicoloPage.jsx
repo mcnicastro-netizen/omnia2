@@ -211,9 +211,9 @@ function VisuraOpenApiPanel({ propertyId, onAttached }) {
   if (!enabled) {
     return (
       <div className="bg-white border border-stone-200 p-6" data-testid="fascicolo-visura-disabled">
-        <h2 className="text-sm font-semibold uppercase tracking-widest text-stone-700">Visura catastale (OpenAPI.it)</h2>
+        <h2 className="text-sm font-semibold uppercase tracking-widest text-stone-700">Visura catastale</h2>
         <p className="text-xs text-stone-500 mt-2">
-          Integrazione non attiva su questo ambiente. Contatta il Founder per abilitare sandbox/produzione.
+          Servizio non ancora attivo sul tuo account. Contatta il supporto OMNIA per abilitarlo.
         </p>
       </div>
     );
@@ -222,7 +222,7 @@ function VisuraOpenApiPanel({ propertyId, onAttached }) {
   return (
     <div className="bg-white border border-stone-200 p-6 space-y-4" data-testid="fascicolo-visura-panel">
       <div>
-        <h2 className="text-sm font-semibold uppercase tracking-widest text-stone-700">Visura catastale (OpenAPI.it)</h2>
+        <h2 className="text-sm font-semibold uppercase tracking-widest text-stone-700">Visura catastale</h2>
         <p className="text-xs text-stone-500 mt-1">
           Richiedi la visura ufficiale da foglio/particella e allegala al checklist del Fascicolo.
         </p>
@@ -468,7 +468,7 @@ export default function FascicoloPage() {
             <div data-testid="fascicolo-analysis" className="text-sm text-stone-700 whitespace-pre-wrap bg-stone-50 border border-stone-100 p-4">
               {last_analysis.text}
               <p className="text-[10px] text-stone-400 mt-3">
-                {last_analysis.source === "al" ? "Analisi HAL (Gemini)" : "Analisi automatica"} · {new Date(last_analysis.at).toLocaleString("it-IT")}
+                {last_analysis.source === "al" ? "Analisi HAL" : "Analisi automatica"} · {new Date(last_analysis.at).toLocaleString("it-IT")}
               </p>
             </div>
           ) : (

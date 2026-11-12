@@ -277,39 +277,85 @@ async def auto_configure(
 @router.get("/preview/{theme_id}", response_class=Response)
 async def preview_theme(
     theme_id: str,
+    mls: Optional[bool] = None,
     user: dict = Depends(get_current_user),
 ):
-    """Render the listings index for the user's agency with a *transient* theme
-    override (does not persist). Used by the live-preview iframe in the UI."""
+    """Anteprima transiente: tema + opzionale override MLS (non salva nulla).
+
+    `mls=true|false` mostra lo stesso template con o senza box rete — D-150.
+    """
     if theme_id not in THEME_IDS:
         raise HTTPException(status_code=400, detail="invalid_theme_id")
     agency = await _agency_for(user)
 
     # Inject a transient theme_config into a shallow copy of agency
-    extracted = normalize_extracted_profile((agency.get("website") or {}).get("extracted_profile"))
-    bp = extracted.get("brand_profile") or {}
+    branding = agency.get("branding") or {}
+    saved = ((agency.get("website") or {}).get("theme_config") or {})
     transient = dict(agency)
     transient_website = dict(agency.get("website") or {})
     transient_website["theme_config"] = {
         "theme_id": theme_id,
-        "palette": _palette_from_brand_profile(bp),
-        "typography": {},
-        "logo_url": (extracted.get("logo_hint") or {}).get("url")
-                    or (agency.get("branding") or {}).get("logo_url"),
-        "tagline": (bp.get("voice") or {}).get("tagline_guess")
-                   or (agency.get("branding") or {}).get("tagline"),
-        "hero_image_url": THEME_HERO_IMAGES.get(theme_id) or DEFAULT_HERO_IMAGE,
+        "palette": saved.get("palette") or {},
+        "typography": saved.get("typography") or {},
+        "logo_url": saved.get("logo_url") or branding.get("logo_url"),
+        "tagline": saved.get("tagline") or branding.get("tagline"),
+        "hero_image_url": (
+            saved.get("hero_image_url")
+            or THEME_HERO_IMAGES.get(theme_id)
+            or DEFAULT_HERO_IMAGE
+        ),
     }
     transient["website"] = transient_website
 
+    mls_on = bool(agency.get("mls_enabled")) if mls is None else bool(mls)
+    transient["mls_enabled"] = mls_on
+
     from shared.db.public_visibility import brand_site_filter
+    from shared.db.trash import with_not_trashed
 
     db = Database.get()
     props = await db.properties.find(
         brand_site_filter(agency["id"]), {"_id": 0},
     ).sort("updated_at", -1).to_list(length=24)
 
+    if mls_on:
+        try:
+            share_filter = with_not_trashed({
+                "status": "active",
+                "mls_shared": True,
+                "visibility": {"$in": ["public", "mls_only"]},
+                "agency_id": {"$ne": agency["id"]},
+                "is_private_listing": {"$ne": True},
+            })
+            network_count = await db.properties.count_documents(share_filter)
+            # Anteprima: se rete ancora vuota, mostra cifra indicativa (non live)
+            transient["_mls_network_count"] = int(network_count) or 25000
+            network_raw = await db.properties.find(
+                share_filter,
+                {
+                    "_id": 0, "id": 1, "title": 1, "city": 1, "zone": 1,
+                    "operation": 1, "price": 1, "rent_monthly": 1,
+                    "surface_sqm": 1, "rooms": 1, "bedrooms": 1, "photos": 1,
+                    "agency_id": 1,
+                },
+            ).sort("updated_at", -1).to_list(length=6)
+            partner_ids = list({p.get("agency_id") for p in network_raw if p.get("agency_id")})
+            names: Dict[str, str] = {}
+            if partner_ids:
+                async for ag in db.agencies.find(
+                    {"id": {"$in": partner_ids}},
+                    {"_id": 0, "id": 1, "display_name": 1, "name": 1},
+                ):
+                    names[ag["id"]] = ag.get("display_name") or ag.get("name") or ""
+            for p in network_raw:
+                p["_partner_name"] = names.get(p.get("agency_id") or "", "")
+            transient["_mls_network_props"] = network_raw
+        except Exception:
+            transient["_mls_network_count"] = 25000
+            transient["_mls_network_props"] = []
+
     html = render_index(transient, props, agency.get("slug") or "preview")
     return Response(content=html, media_type="text/html; charset=utf-8",
-                    headers={"X-Robots-Tag": "noindex"})
+                    headers={"X-Robots-Tag": "noindex", "X-Omnia-Preview-Mls": "1" if mls_on else "0"})
+
 
