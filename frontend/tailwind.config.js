@@ -12,7 +12,18 @@ module.exports = {
         md: 'calc(var(--radius) - 2px)',
         sm: 'calc(var(--radius) - 4px)'
       },
+      fontFamily: {
+        sans: ['Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+      },
       colors: {
+        crm: {
+          navy: '#0B1E3F',
+          'navy-hover': '#16305a',
+          gold: '#C19A6B',
+          'gold-soft': '#E8D5B5',
+          mist: '#F4F6F9',
+          line: '#D7DDE7',
+        },
         background: 'hsl(var(--background))',
         foreground: 'hsl(var(--foreground))',
         card: {

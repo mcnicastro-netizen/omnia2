@@ -161,24 +161,25 @@ export default function PropertyFormPage() {
 
   return (
     <AgencyShell current="properties">
-      <section data-testid="property-form-page" className="max-w-4xl space-y-6">
+      <section data-testid="property-form-page" className="crm-desk max-w-4xl space-y-6">
         <div>
-          <Link to={`/${lang}/app/properties`} className="text-xs uppercase tracking-widest text-stone-500 hover:text-stone-900">
+          <Link
+            to={`/${lang}/app/properties`}
+            className="text-xs uppercase tracking-widest text-crm-muted hover:text-crm-navy"
+          >
             {t("properties.back_to_list")}
           </Link>
-          <h1
-            className="text-3xl md:text-4xl tracking-tight mt-2"
-            style={{ fontFamily: "'Fraunces', Georgia, serif" }}
-          >
+          <p className="crm-eyebrow mt-3">Scheda immobile</p>
+          <h1 className="crm-title text-3xl md:text-4xl mt-1">
             {isEdit ? t("properties.form_title_edit") : t("properties.form_title_new")}
           </h1>
           {isEdit && (
             <Link
               to={`/${lang}/app/properties/${id}/fascicolo`}
               data-testid="fascicolo-link"
-              className="inline-block mt-3 text-xs uppercase tracking-widest border border-stone-300 hover:border-stone-900 px-4 py-2 text-stone-700"
+              className="crm-btn-ghost inline-block mt-3 text-xs uppercase tracking-widest px-4 py-2 rounded-md"
             >
-              📁 Fascicolo Immobile AI
+              Fascicolo Immobile AI
             </Link>
           )}
         </div>
@@ -186,9 +187,9 @@ export default function PropertyFormPage() {
         {showSiteGuide ? (
           <div
             data-testid="property-site-guide"
-            className="border border-stone-900 bg-stone-50 px-4 py-4 space-y-2"
+            className="border border-crm-navy bg-crm-mist px-4 py-4 space-y-2"
           >
-            <p className="text-[10px] uppercase tracking-widest text-stone-500">Guida · solo sito</p>
+            <p className="crm-eyebrow">Guida · solo sito</p>
             <ol className="list-decimal list-inside text-sm text-stone-800 space-y-1 font-sans">
               <li>Titolo, prezzo, mq, città/zona. Salva: resti su questa scheda.</li>
               <li>Poi carica 6–12 foto (prima = copertina). Opzionale planimetria.</li>
@@ -217,7 +218,7 @@ export default function PropertyFormPage() {
           />
         )}
 
-        <form onSubmit={submit} className="space-y-8 bg-white border border-stone-200 rounded-lg p-6 md:p-8">
+        <form onSubmit={submit} className="crm-panel space-y-8 p-6 md:p-8">
           {/* Basics */}
           <Section label={t("properties.section_basics")}>
             <Field label={t("properties.field_title")} required>
@@ -512,7 +513,7 @@ export default function PropertyFormPage() {
             <p data-testid="prop-error" className="text-sm text-red-700 bg-red-50 border border-red-200 rounded-md px-3 py-2">{error}</p>
           )}
 
-          <div className="flex justify-between items-center pt-4 border-t border-stone-200">
+          <div className="flex justify-between items-center pt-4 border-t border-crm-line">
             {isEdit && (
               <button type="button" onClick={onDelete} className="text-xs uppercase tracking-widest text-red-700 hover:text-red-900">
                 {t("properties.delete")}
@@ -522,7 +523,7 @@ export default function PropertyFormPage() {
               type="submit"
               disabled={saving || loadFailed || !loaded}
               data-testid="prop-save-btn"
-              className="ml-auto px-6 py-3 bg-stone-900 text-stone-50 text-xs uppercase tracking-widest font-medium rounded-md hover:bg-stone-700 disabled:opacity-50"
+              className="crm-btn-primary ml-auto px-6 py-3 text-xs uppercase tracking-widest font-medium rounded-md disabled:opacity-50"
             >
               {saving ? t("common.loading") : t("properties.save")}
             </button>
@@ -534,9 +535,15 @@ export default function PropertyFormPage() {
             width: 100%;
             padding: 0.5rem 0.75rem;
             background: white;
-            border: 1px solid #d6d3d1;
+            border: 1px solid var(--crm-line);
             border-radius: 6px;
             font-size: 0.875rem;
+            font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+          }
+          .form-input:focus {
+            outline: none;
+            border-color: var(--crm-navy);
+            box-shadow: 0 0 0 1px var(--crm-navy);
           }
           .form-input:focus {
             outline: none;

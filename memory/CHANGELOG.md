@@ -1,3 +1,9 @@
+## 2026-11-12 — D-171 Immobili navy + oro
+
+- Token CSS/Tailwind `crm-*` (navy `#0B1E3F`, oro `#C19A6B`, Inter)
+- Bancone Immobili + scheda: `crm-desk`, CTA navy, oro raro su eyebrow/op
+- DECISIONS D-171/D-172 allineate (flussi chiusi → DS)
+
 ## 2026-11-12 — P2 Import Avvio con prosecuzione
 
 - Post-import clienti: CTA brief + Continua Avvio
