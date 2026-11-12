@@ -328,23 +328,10 @@ export default function LoginPage() {
 
             <Link
               to={`/${lang}/forgot-password`}
-              className="block text-xs font-sans text-stone-500 hover:text-stone-900 mb-3"
+              className="block text-xs font-sans text-stone-500 hover:text-stone-900 mb-6"
             >
               {t("auth.forgot_password")} →
             </Link>
-            {!isCloud ? (
-              <p
-                className="text-xs font-sans text-stone-500 mb-6 leading-relaxed"
-                data-testid="login-agency-resume-hint"
-              >
-                {t(
-                  "auth.agency_resume_hint",
-                  "In registrazione: entra con la password scelta al signup. Dopo la verifica riceverai la password per il gestionale. Se non la ricordi → «Password dimenticata?»."
-                )}
-              </p>
-            ) : (
-              <div className="mb-6" />
-            )}
 
             {error && (
               <div
