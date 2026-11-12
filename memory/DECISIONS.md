@@ -7,6 +7,16 @@ Registro di tutte le decisioni di business e tecniche prese durante il progetto.
 
 ## Decisioni prese
 
+### D-171 — Identità CRM: premium istituzionale (navy + oro) · 12-Nov-2026
+- **Contesto**: Audit «cervello avanti, superficie indietro». Founder: non aggiungere feature prima di allineare l’esperienza quotidiana dell’agente. Scelta stile tra (1) premium istituzionale navy/oro e (2) Apple-like luminoso → **(1)**.
+- **Decisione**:
+  1. Posizionamento UI gestionale: **OMNIA — Real Estate Operating System** (ufficio digitale agenzia), non admin panel / SaaS generico.
+  2. Identità: **navy istituzionale + oro elegante**; tipografia **Inter**; icone **Lucide**. Design system condiviso prima delle singole pagine.
+  3. Ordine superficie (senza toccare motore HAL/match/MLS-flag/Avvio/fascicolo/portali onesti): **P0** design system + Immobili + Attività + MLS → **P1** schede a tab + dashboard KPI reali → **P2** template sito OMNIA.
+  4. Metodo per schermata: analisi attuale → risultato desiderato → layout → coerenza DS → implementazione senza rompere logica/API.
+  5. Prima schermata operativa: **Immobili** (bancone). Niente merge di PR flussi non ancora definite in questo percorso.
+- **Stato**: ✅ deciso (design system + Immobili da avviare su OK Founder). Non ancora in codice UI.
+
 ### D-170 — Sito già proprio + box MLS embed (caso Nicastro) · 12-Nov-2026
 - **Contesto**: Nicastro Immobiliare (`www.nicastroimmobiliare.it`) ha già il sito; in home c’è il box ricerca rete di terzi. Vuole aderire alla MLS OMNIA e **tenere il proprio sito**. D-168 punto 2 vietava il box MLS pubblico se il sito non era tema OMNIA.
 - **Decisione**:

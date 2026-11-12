@@ -5,6 +5,13 @@
 
 ---
 
+## D-171 — Superficie CRM (navy + oro)
+
+1. **Scelta chiusa**: premium istituzionale (navy + oro, Inter, Lucide). Non Apple-like.
+2. Prossimo: design system token + **Immobili** (bancone) — analisi → layout → implementazione senza rompere API.
+3. Non mergiare PR flussi (#192 ecc.) finché non rientrano in questo percorso / Founder non lo chiede.
+4. Motore da non toccare: HAL, match, MLS flag, Avvio, fascicolo, onestà portali.
+
 ## Dogfood D-170 (Nicastro: sito proprio + box MLS)
 
 1. In Avvio: «Tengo il sito, sostituisco solo il box MLS» → adesione MLS → copia iframe.

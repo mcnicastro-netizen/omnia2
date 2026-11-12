@@ -1,3 +1,9 @@
+## 2026-11-12 — D-171 identità CRM premium istituzionale
+
+- Founder sceglie navy + oro (non Apple-like); Inter + Lucide; OS agenzia non admin SaaS
+- Roadmap superficie: DS → Immobili/Attività/MLS → schede tab + KPI → template sito
+- Prima schermata: Immobili; niente feature nuove prima della superficie
+
 ## 2026-11-12 — D-170 sito proprio + box MLS embed (Nicastro)
 
 - Avvio: «Tengo il sito, sostituisco solo il box MLS» (`external` + `mls_on_public_site`)
