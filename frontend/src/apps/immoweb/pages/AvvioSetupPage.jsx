@@ -4,13 +4,11 @@ import { useTranslation } from "react-i18next";
 import AgencyShell from "../components/AgencyShell";
 import { api } from "../../../shared/lib/api";
 
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || "";
-
 const STEP_META = [
   {
     id: "site",
     title: "Sito e identità",
-    hint: "Se il sito è già tuo e resta online: lascialo com’è (nessun clone). Tema OMNIA solo se vuoi il sito pubblico ospitato da noi (es. MLS in vetrina).",
+    hint: "Sito già tuo → lascialo com’è. Restyling → apri Il mio sito e scegli un template.",
   },
   {
     id: "import_properties",
@@ -49,13 +47,6 @@ const STEP_META = [
   },
 ];
 
-const ACQ_LABEL = {
-  none: "Nessun URL dichiarato in registrazione",
-  declared_only: "URL salvato — non ancora analizzato",
-  brand_extracted: "Brand estratto (colori/logo)",
-  clone_ready: "Brand/cattura pronti → preview su tema OMNIA (non clone pixel)",
-};
-
 export default function AvvioSetupPage() {
   const { t } = useTranslation();
   const { lang } = useParams();
@@ -63,7 +54,6 @@ export default function AvvioSetupPage() {
   const [data, setData] = useState(null);
   const [err, setErr] = useState("");
   const [busy, setBusy] = useState(false);
-  const [acqBusy, setAcqBusy] = useState(false);
   const [mlsPublic, setMlsPublic] = useState(false);
   const [shareListings, setShareListings] = useState(true);
   const [shareRequests, setShareRequests] = useState(true);
@@ -97,7 +87,6 @@ export default function AvvioSetupPage() {
   const completed = journey?.status === "completed";
   const next = data?.next_step;
   const ctx = data?.context || {};
-  const acq = ctx.acquisition || {};
   const team = ctx.team || {};
 
   const run = async (fn) => {
@@ -116,29 +105,6 @@ export default function AvvioSetupPage() {
       );
     } finally {
       setBusy(false);
-    }
-  };
-
-  const analyzeSite = async () => {
-    const url = ctx.declared_url;
-    if (!url) {
-      setErr("Nessun URL dichiarato — aprilo in Il mio sito o indica il sito in Impostazioni.");
-      return;
-    }
-    setAcqBusy(true);
-    setErr("");
-    try {
-      await api.post("/app/website/extract-from-url", { url });
-      await api.post("/app/website/clone-capture", { url, max_pages: 8, build: true });
-      await load();
-    } catch (e) {
-      const d = e?.response?.data?.detail;
-      setErr(
-        (typeof d === "string" ? d : d?.hint || d?.error) ||
-          "Analisi sito non riuscita — riprova da Il mio sito."
-      );
-    } finally {
-      setAcqBusy(false);
     }
   };
 
@@ -173,11 +139,6 @@ export default function AvvioSetupPage() {
 
   const finish = () =>
     run(() => api.post("/app/setup-journey/complete", { skip_optional: true }));
-
-  const palette = acq.palette || {};
-  const paletteColors = ["primary", "accent", "neutral_dark", "neutral_light"]
-    .map((k) => palette[k])
-    .filter(Boolean);
 
   return (
     <AgencyShell current="avvio">
@@ -267,176 +228,65 @@ export default function AvvioSetupPage() {
                 </div>
                 <p className="mt-1 text-sm font-sans text-stone-600">{meta.hint}</p>
 
-                {/* —— STEP 1: acquisizione + scelta —— */}
+                {/* —— STEP 1: sito già mio OPPURE restyling —— */}
                 {meta.id === "site" && (isCurrent || isDone) && (
-                  <div className="mt-4 space-y-4" data-testid="avvio-site-acquisition">
-                    <div className="border border-stone-200 bg-stone-50 px-3 py-3 space-y-2">
-                      <p className="text-[10px] uppercase tracking-widest text-stone-500 font-sans">
-                        Esito acquisizione
+                  <div className="mt-4 space-y-3" data-testid="avvio-site-form">
+                    {ctx.declared_url ? (
+                      <p className="text-xs text-stone-500 truncate" data-testid="avvio-declared-url">
+                        URL in registrazione: {ctx.declared_url}
                       </p>
-                      <p className="text-sm font-sans text-stone-800" data-testid="avvio-acq-phase">
-                        {ACQ_LABEL[acq.phase] || acq.phase || "—"}
-                      </p>
-                      {ctx.declared_url ? (
-                        <p className="text-xs text-stone-500 truncate" data-testid="avvio-declared-url">
-                          {ctx.declared_url}
-                        </p>
-                      ) : null}
-                      {paletteColors.length > 0 ? (
-                        <div className="flex gap-2 items-center" data-testid="avvio-acq-palette">
-                          {paletteColors.map((c) => (
-                            <span
-                              key={c}
-                              title={c}
-                              className="w-6 h-6 rounded-sm border border-stone-300"
-                              style={{ background: c }}
-                            />
-                          ))}
-                          <span className="text-[10px] text-stone-500">palette letta</span>
-                        </div>
-                      ) : null}
-                      {acq.logo_url ? (
-                        <img
-                          src={acq.logo_url}
-                          alt="Logo estratto"
-                          className="h-10 object-contain"
-                          data-testid="avvio-acq-logo"
-                        />
-                      ) : null}
-                      {acq.pages_count > 0 ? (
-                        <p className="text-xs text-stone-600">
-                          Pagine catturate: {acq.pages_count}
-                          {acq.roles_found?.length ? ` · ruoli: ${acq.roles_found.join(", ")}` : ""}
-                        </p>
-                      ) : null}
-                      {(acq.pages_sample || []).length > 0 ? (
-                        <ul className="text-xs text-stone-500 space-y-1" data-testid="avvio-acq-pages">
-                          {acq.pages_sample.map((p) => (
-                            <li key={p.url} className="truncate">
-                              [{p.role || "?"}] {p.title || p.url}
-                            </li>
-                          ))}
-                        </ul>
-                      ) : null}
-                      {acq.preview?.home ? (
-                        <div className="space-y-2" data-testid="avvio-acq-preview">
-                          <div className="border border-stone-300 bg-white overflow-hidden">
-                            <iframe
-                              title="Anteprima sito acquisito"
-                              src={`${BACKEND_URL}${acq.preview.home}`}
-                              className="w-full h-40 pointer-events-none"
-                              sandbox=""
-                            />
-                          </div>
-                          <p className="flex flex-wrap gap-3 text-xs">
-                            <a className="underline" href={`${BACKEND_URL}${acq.preview.home}`} target="_blank" rel="noreferrer">
-                              Apri preview home
-                            </a>
-                            {acq.preview.listing ? (
-                              <a className="underline" href={`${BACKEND_URL}${acq.preview.listing}`} target="_blank" rel="noreferrer">
-                                Lista
-                              </a>
-                            ) : null}
-                            {acq.preview.property ? (
-                              <a className="underline" href={`${BACKEND_URL}${acq.preview.property}`} target="_blank" rel="noreferrer">
-                                Scheda
-                              </a>
-                            ) : null}
-                          </p>
-                        </div>
-                      ) : null}
-                      <p className="text-xs text-stone-700 bg-stone-100 border border-stone-200 px-2 py-2" data-testid="avvio-acq-honesty">
-                        Il sito che hai già (Agensta o altro) <strong>non va clonato</strong> se resta il tuo sito
-                        pubblico: OMNIA lo registra come URL e basta. Analisi colori/logo serve solo se più avanti
-                        vuoi un sito ospitato da OMNIA. MLS in vetrina pubblica ⇒ sito su tema OMNIA (step sotto).
-                      </p>
-                      {acq.notes ? (
-                        <p className="text-xs text-stone-500 whitespace-pre-wrap" data-testid="avvio-acq-notes">
-                          {acq.notes}
-                        </p>
-                      ) : null}
-                    </div>
-
-                    {(isCurrent || isDone) ? (
-                      <div className="space-y-3" data-testid="avvio-site-form">
-                        <div className="grid sm:grid-cols-2 gap-3">
-                          <div className="border border-stone-900 bg-white px-3 py-3 space-y-2">
-                            <p className="text-sm font-sans font-medium text-stone-900">Il sito è già mio</p>
-                            <p className="text-xs text-stone-500">
-                              Resta online dove sta ora. Nessun clone, nessuna sostituzione. OMNIA usa l’URL in
-                              contatti / Il mio sito.
-                            </p>
-                            <button
-                              type="button"
-                              disabled={busy || mlsPublic}
-                              onClick={() => completeSite("external")}
-                              data-testid="avvio-site-external"
-                              className="px-3 py-2 text-[11px] uppercase tracking-widest bg-stone-900 text-white disabled:opacity-40"
-                            >
-                              Lascia il sito com’è →
-                            </button>
-                          </div>
-                          <div className="border border-stone-200 px-3 py-3 space-y-2">
-                            <p className="text-sm font-sans font-medium text-stone-900">Voglio il sito su OMNIA</p>
-                            <p className="text-xs text-stone-500">
-                              Nuova vetrina ospitata da noi (tema OMNIA). Serve se vuoi il box MLS pubblico. Non
-                              sostituisce magicamente Agensta finché non cambi DNS.
-                            </p>
-                            <label className="flex items-start gap-2 text-xs font-sans text-stone-700">
-                              <input
-                                type="checkbox"
-                                checked={mlsPublic}
-                                onChange={(e) => setMlsPublic(e.target.checked)}
-                                className="mt-0.5"
-                                data-testid="avvio-mls-public"
-                              />
-                              <span>MLS sul sito pubblico (implica tema OMNIA)</span>
-                            </label>
-                            <button
-                              type="button"
-                              disabled={busy}
-                              onClick={() => completeSite("omnia_theme")}
-                              data-testid="avvio-site-omnia"
-                              className="px-3 py-2 text-[11px] uppercase tracking-widest border border-stone-900 disabled:opacity-50"
-                            >
-                              Tema OMNIA {mlsPublic ? "(MLS)" : ""} →
-                            </button>
-                          </div>
-                        </div>
-                        <details className="text-xs text-stone-500 font-sans" data-testid="avvio-site-advanced">
-                          <summary className="cursor-pointer uppercase tracking-widest text-[10px] text-stone-400">
-                            Opzioni avanzate (solo se migri hosting su OMNIA)
-                          </summary>
-                          <div className="mt-2 flex flex-wrap gap-2 items-center">
-                            <button
-                              type="button"
-                              disabled={busy || mlsPublic || !ctx.declared_url || acqBusy}
-                              onClick={analyzeSite}
-                              data-testid="avvio-analyze-site"
-                              className="px-3 py-2 text-[11px] uppercase tracking-widest border border-stone-300 disabled:opacity-40"
-                            >
-                              {acqBusy ? "Analisi…" : "Analizza colori/logo"}
-                            </button>
-                            <button
-                              type="button"
-                              disabled={busy || mlsPublic}
-                              onClick={() => completeSite("keep_brand")}
-                              data-testid="avvio-site-keep"
-                              className="px-3 py-2 text-[11px] uppercase tracking-widest border border-stone-300 disabled:opacity-40"
-                              title="Tema OMNIA tintato coi tuoi colori — non è il sito HTML attuale"
-                            >
-                              Tema OMNIA tintato (non clone)
-                            </button>
-                            <Link
-                              to={`/${l}/app/website`}
-                              className="px-3 py-2 text-[11px] uppercase tracking-widest border border-stone-300 text-stone-700"
-                            >
-                              Il mio sito
-                            </Link>
-                          </div>
-                        </details>
-                      </div>
                     ) : null}
+                    <div className="grid sm:grid-cols-2 gap-3">
+                      <div className="border border-stone-900 bg-white px-3 py-3 space-y-2">
+                        <p className="text-sm font-sans font-medium text-stone-900">Il sito è già mio</p>
+                        <p className="text-xs text-stone-500">
+                          Resta dove sta. Nessuna sostituzione.
+                        </p>
+                        <button
+                          type="button"
+                          disabled={busy}
+                          onClick={() => completeSite("external")}
+                          data-testid="avvio-site-external"
+                          className="px-3 py-2 text-[11px] uppercase tracking-widest bg-stone-900 text-white disabled:opacity-40"
+                        >
+                          Lascia il sito com’è →
+                        </button>
+                      </div>
+                      <div className="border border-stone-200 px-3 py-3 space-y-2">
+                        <p className="text-sm font-sans font-medium text-stone-900">Restyling / sito OMNIA</p>
+                        <p className="text-xs text-stone-500">
+                          Apri Il mio sito: compaiono i template, ne scegli uno e ritocchi logo/slogan.
+                        </p>
+                        <label className="flex items-start gap-2 text-xs font-sans text-stone-700">
+                          <input
+                            type="checkbox"
+                            checked={mlsPublic}
+                            onChange={(e) => setMlsPublic(e.target.checked)}
+                            className="mt-0.5"
+                            data-testid="avvio-mls-public"
+                          />
+                          <span>Voglio anche la rete MLS sul sito pubblico</span>
+                        </label>
+                        <div className="flex flex-wrap gap-2">
+                          <Link
+                            to={`/${l}/app/website?restyle=1`}
+                            data-testid="avvio-open-restyle"
+                            className="px-3 py-2 text-[11px] uppercase tracking-widest border border-stone-900"
+                          >
+                            Mostra i template →
+                          </Link>
+                          <button
+                            type="button"
+                            disabled={busy}
+                            onClick={() => completeSite("omnia_theme")}
+                            data-testid="avvio-site-omnia"
+                            className="px-3 py-2 text-[11px] uppercase tracking-widest border border-stone-300 disabled:opacity-50"
+                          >
+                            Segna fatto (dopo aver scelto)
+                          </button>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 )}
 

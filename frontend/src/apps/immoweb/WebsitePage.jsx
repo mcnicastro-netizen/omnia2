@@ -1,5 +1,5 @@
-import React, { useCallback, useEffect, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import React, { useCallback, useEffect, useRef, useState } from "react";
+import { Link, useParams, useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import AgencyShell from "./components/AgencyShell";
 import { api } from "../../shared/lib/api";
@@ -7,15 +7,16 @@ import { api } from "../../shared/lib/api";
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || "";
 
 /**
- * Il mio sito — scelta chiara per agency_admin.
- * 1) Ho già un sito → salva URL, fine.
- * 2) Voglio un sito su OMNIA → scegli aspetto + anteprima.
- * Niente clone, estrattori, JSON, roadmap.
+ * Il mio sito
+ * A) Ho già un sito → solo URL
+ * B) Restyling / sito OMNIA → subito i template → scelgo → modifico logo/slogan → anteprima
+ * Extract/palette: VIA
  */
 export default function WebsitePage() {
   const { t } = useTranslation();
   const { lang } = useParams();
   const l = (lang || "it").slice(0, 2);
+  const [searchParams, setSearchParams] = useSearchParams();
 
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
@@ -23,12 +24,20 @@ export default function WebsitePage() {
   const [toast, setToast] = useState("");
 
   const [current, setCurrent] = useState(null);
+  const [agency, setAgency] = useState(null);
   const [themes, setThemes] = useState([]);
   const [siteUrl, setSiteUrl] = useState("");
-  const [path, setPath] = useState(null); // "external" | "omnia" | null
+  const [path, setPath] = useState(null); // external | omnia | null
   const [selectedTheme, setSelectedTheme] = useState("classic");
   const [previewHtml, setPreviewHtml] = useState("");
   const [previewLoading, setPreviewLoading] = useState(false);
+  const [previewView, setPreviewView] = useState("home"); // home | lista
+
+  const [editName, setEditName] = useState("");
+  const [editTagline, setEditTagline] = useState("");
+  const [editLogo, setEditLogo] = useState("");
+
+  const templatesRef = useRef(null);
 
   const flash = (msg) => {
     setToast(msg);
@@ -39,23 +48,39 @@ export default function WebsitePage() {
     setLoading(true);
     setError("");
     try {
-      const [th, cur] = await Promise.all([
+      const [th, cur, me] = await Promise.all([
         api.get("/app/website/themes"),
         api.get("/app/website/theme"),
+        api.get("/app/agencies/me").catch(() => ({ data: null })),
       ]);
       setThemes(th.data.themes || []);
       setCurrent(cur.data);
-      const mode = cur.data?.website_mode;
+      setAgency(me.data);
       const url =
         cur.data?.declared_url ||
         cur.data?.external_url ||
         (cur.data?.existing_domain ? `https://${cur.data.existing_domain}` : "") ||
         "";
       setSiteUrl(url);
+      const mode = cur.data?.website_mode;
       if (mode === "external") setPath("external");
       else if (mode === "omnia_template") setPath("omnia");
       else setPath(null);
-      setSelectedTheme(cur.data?.resolved?.theme_id || th.data.default_theme_id || "classic");
+      const tid = cur.data?.resolved?.theme_id || th.data.default_theme_id || "classic";
+      setSelectedTheme(tid);
+      setEditName(me.data?.display_name || me.data?.name || "");
+      setEditTagline(
+        me.data?.branding?.tagline ||
+          cur.data?.resolved?.tagline ||
+          cur.data?.saved_theme_config?.tagline ||
+          ""
+      );
+      setEditLogo(
+        me.data?.branding?.logo_url ||
+          cur.data?.resolved?.logo_url ||
+          cur.data?.saved_theme_config?.logo_url ||
+          ""
+      );
     } catch (e) {
       const d = e?.response?.data?.detail;
       setError(typeof d === "string" ? d : d?.hint || e.message || "Errore di caricamento");
@@ -68,17 +93,35 @@ export default function WebsitePage() {
     load();
   }, [load]);
 
-  const publicPath = current?.public_url ? `${BACKEND_URL}${current.public_url}` : null;
+  // Deep-link restyle=1 → apri subito i template
+  useEffect(() => {
+    if (loading) return;
+    if (searchParams.get("restyle") === "1" || searchParams.get("omnia") === "1") {
+      openRestyle();
+      const next = new URLSearchParams(searchParams);
+      next.delete("restyle");
+      next.delete("omnia");
+      setSearchParams(next, { replace: true });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loading]);
+
+  const publicBase = current?.public_url ? `${BACKEND_URL}${current.public_url}` : null;
+  const previewUrl =
+    publicBase &&
+    (previewView === "lista"
+      ? `${publicBase.replace(/\/?$/, "")}/lista`
+      : publicBase);
 
   const loadPreview = useCallback(async () => {
-    if (!publicPath || path !== "omnia") {
+    if (!previewUrl || path !== "omnia") {
       setPreviewHtml("");
       return;
     }
     setPreviewLoading(true);
     try {
       const r = await fetch(
-        `${publicPath}${publicPath.includes("?") ? "&" : "?"}t=${Date.now()}`,
+        `${previewUrl}${previewUrl.includes("?") ? "&" : "?"}t=${Date.now()}`,
         { credentials: "same-origin", headers: { Accept: "text/html" } }
       );
       if (!r.ok) throw new Error(`HTTP ${r.status}`);
@@ -87,20 +130,20 @@ export default function WebsitePage() {
       setPreviewHtml(
         `<!doctype html><html><body style="font-family:system-ui;padding:2rem;color:#444">`
           + `<p>Anteprima non disponibile.</p>`
-          + (publicPath
-            ? `<p><a href="${publicPath}" target="_blank" rel="noreferrer">Apri in una nuova scheda</a></p>`
+          + (previewUrl
+            ? `<p><a href="${previewUrl}" target="_blank" rel="noreferrer">Apri in una nuova scheda</a></p>`
             : "")
           + `</body></html>`
       );
     } finally {
       setPreviewLoading(false);
     }
-  }, [publicPath, path]);
+  }, [previewUrl, path]);
 
   useEffect(() => {
-    if (loading) return;
+    if (loading || path !== "omnia") return;
     loadPreview();
-  }, [loading, loadPreview, selectedTheme]);
+  }, [loading, loadPreview, selectedTheme, previewView, path]);
 
   const saveExternal = async () => {
     setBusy(true);
@@ -111,7 +154,7 @@ export default function WebsitePage() {
         external_url: siteUrl.trim(),
       });
       setPath("external");
-      flash("Ok: il tuo sito resta com’è. Abbiamo salvato l’indirizzo.");
+      flash("Ok: il tuo sito resta com’è.");
       await load();
     } catch (e) {
       const d = e?.response?.data?.detail;
@@ -125,16 +168,18 @@ export default function WebsitePage() {
     }
   };
 
-  const chooseOmnia = async () => {
-    setBusy(true);
+  const openRestyle = async () => {
+    setPath("omnia");
     setError("");
+    setTimeout(() => {
+      templatesRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 50);
+    setBusy(true);
     try {
       await api.post("/app/website/presence", {
         mode: "omnia_template",
         external_url: siteUrl.trim() || undefined,
       });
-      setPath("omnia");
-      flash("Ok: userai un sito OMNIA. Scegli l’aspetto qui sotto.");
       await load();
     } catch (e) {
       const d = e?.response?.data?.detail;
@@ -148,14 +193,45 @@ export default function WebsitePage() {
     setBusy(true);
     setError("");
     try {
-      await api.post("/app/website/theme/apply", { theme_id: themeId });
+      await api.post("/app/website/theme/apply", {
+        theme_id: themeId,
+        logo_url: editLogo || undefined,
+        tagline: editTagline || undefined,
+      });
       setSelectedTheme(themeId);
-      flash("Aspetto aggiornato.");
+      flash(`Template «${themeId}» applicato. Ora puoi ritoccare logo e slogan.`);
       const r = await api.get("/app/website/theme");
       setCurrent(r.data);
     } catch (e) {
       const d = e?.response?.data?.detail;
       setError(typeof d === "string" ? d : e.message || "Errore tema");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const saveSiteTexts = async () => {
+    setBusy(true);
+    setError("");
+    try {
+      await api.patch("/app/agencies/me", {
+        display_name: editName,
+        branding: {
+          ...(agency?.branding || {}),
+          tagline: editTagline,
+          logo_url: editLogo,
+        },
+      });
+      await api.post("/app/website/theme/apply", {
+        theme_id: selectedTheme,
+        logo_url: editLogo || undefined,
+        tagline: editTagline || undefined,
+      });
+      flash("Modifiche salvate. Guarda l’anteprima.");
+      await load();
+    } catch (e) {
+      const d = e?.response?.data?.detail;
+      setError(typeof d === "string" ? d : d?.hint || e.message || "Salvataggio non riuscito");
     } finally {
       setBusy(false);
     }
@@ -175,8 +251,8 @@ export default function WebsitePage() {
     path === "external"
       ? `Usi il tuo sito: ${current?.external_url || siteUrl || "—"}`
       : path === "omnia"
-        ? "Usi un sito preparato da OMNIA (i visitatori lo vedono con i tuoi annunci)."
-        : "Non hai ancora scelto. Dimmi cosa preferisci.";
+        ? `Sito OMNIA · template ${selectedTheme}`
+        : "Scegli: tieni il sito che hai, oppure fai un restyling con un template OMNIA.";
 
   return (
     <AgencyShell current="website">
@@ -189,7 +265,7 @@ export default function WebsitePage() {
             Il mio sito
           </h1>
           <p className="mt-2 text-sm font-sans text-stone-600">
-            Due possibilità. Niente termini tecnici.
+            O tieni quello che hai già, o scegli un template OMNIA e lo personalizzi.
           </p>
           <p
             className="mt-3 text-sm font-sans text-stone-800 border border-stone-200 bg-stone-50 px-3 py-2"
@@ -200,18 +276,12 @@ export default function WebsitePage() {
         </header>
 
         {error ? (
-          <p
-            data-testid="website-error"
-            className="text-sm text-red-800 bg-red-50 border border-red-200 px-3 py-2"
-          >
+          <p data-testid="website-error" className="text-sm text-red-800 bg-red-50 border border-red-200 px-3 py-2">
             {error}
           </p>
         ) : null}
         {toast ? (
-          <p
-            data-testid="website-toast"
-            className="text-sm text-emerald-900 bg-emerald-50 border border-emerald-200 px-3 py-2"
-          >
+          <p data-testid="website-toast" className="text-sm text-emerald-900 bg-emerald-50 border border-emerald-200 px-3 py-2">
             {toast}
           </p>
         ) : null}
@@ -223,14 +293,13 @@ export default function WebsitePage() {
             }`}
           >
             <p className="text-base font-medium text-stone-900" style={{ fontFamily: "'Fraunces', Georgia, serif" }}>
-              1. Ho già un sito
+              Ho già un sito
             </p>
             <p className="text-sm text-stone-600 font-sans">
-              Resta online dove sta oggi. OMNIA non lo sostituisce e non lo “clona”.
-              Serve solo l’indirizzo (per contatti e riferimenti).
+              Resta dove sta. Non lo sostituiamo. Salviamo solo l’indirizzo.
             </p>
             <label className="block text-xs uppercase tracking-widest text-stone-500 font-sans">
-              Indirizzo del sito
+              Indirizzo
               <input
                 data-testid="website-url-input"
                 type="url"
@@ -257,147 +326,217 @@ export default function WebsitePage() {
             }`}
           >
             <p className="text-base font-medium text-stone-900" style={{ fontFamily: "'Fraunces', Georgia, serif" }}>
-              2. Voglio un sito su OMNIA
+              Restyling / sito OMNIA
             </p>
             <p className="text-sm text-stone-600 font-sans">
-              Una vetrina nuova gestita da OMNIA, con i tuoi immobili. Serve se vuoi far vedere
-              anche gli annunci della rete sul sito. Il sito che hai già resta online finché non
-              decidi tu di passare a questo.
+              Clicca e vedi i template. Ne scegli uno, poi ritocchi nome, slogan e logo.
+              Gli annunci arrivano da Immobili.
             </p>
             <button
               type="button"
               disabled={busy}
-              onClick={chooseOmnia}
+              onClick={openRestyle}
               data-testid="website-choose-omnia"
               className="w-full px-3 py-2.5 text-[11px] uppercase tracking-widest border border-stone-900 text-stone-900 disabled:opacity-40"
             >
-              Usa un sito OMNIA
+              Mostra i template →
             </button>
-            <p className="text-xs text-stone-500 font-sans">
-              Poi scegli l’aspetto e guarda l’anteprima qui sotto.
-            </p>
           </div>
         </div>
 
         {path === "omnia" ? (
-          <section className="space-y-4" data-testid="website-omnia-panel">
-            <h2
-              className="text-xl text-stone-900"
-              style={{ fontFamily: "'Fraunces', Georgia, serif" }}
-            >
-              Aspetto del sito
-            </h2>
-            <p className="text-sm text-stone-600 font-sans">
-              Tocca un aspetto per applicarlo subito.
-            </p>
-            <div className="grid sm:grid-cols-2 gap-3">
-              {themes.map((th) => {
-                const active = selectedTheme === th.id;
-                return (
+          <div className="space-y-8" data-testid="website-omnia-panel">
+            <section ref={templatesRef} className="space-y-4" data-testid="website-templates">
+              <h2 className="text-xl text-stone-900" style={{ fontFamily: "'Fraunces', Georgia, serif" }}>
+                1. Scegli un template
+              </h2>
+              <p className="text-sm text-stone-600 font-sans">Un tocco = si applica subito.</p>
+              <div className="grid sm:grid-cols-2 gap-3">
+                {themes.map((th) => {
+                  const active = selectedTheme === th.id;
+                  return (
+                    <button
+                      key={th.id}
+                      type="button"
+                      disabled={busy}
+                      onClick={() => applyTheme(th.id)}
+                      data-testid={`theme-card-${th.id}`}
+                      className={`text-left px-4 py-3 border transition disabled:opacity-50 ${
+                        active
+                          ? "border-stone-900 bg-white ring-1 ring-stone-900"
+                          : "border-stone-200 bg-stone-50 hover:border-stone-400"
+                      }`}
+                    >
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="font-medium text-stone-900">{th.name}</span>
+                        {active ? (
+                          <span className="text-[10px] uppercase tracking-widest text-stone-500">scelto</span>
+                        ) : null}
+                      </div>
+                      <div className="flex gap-1.5 mt-2">
+                        {Object.values(th.preview_palette || {})
+                          .slice(0, 4)
+                          .map((c, i) => (
+                            <span
+                              key={i}
+                              className="w-5 h-5 border border-stone-200"
+                              style={{ background: c }}
+                            />
+                          ))}
+                      </div>
+                      <p className="mt-2 text-xs text-stone-500 font-sans">{th.description}</p>
+                    </button>
+                  );
+                })}
+              </div>
+            </section>
+
+            <section className="space-y-4 border border-stone-200 px-4 py-4" data-testid="website-edit-panel">
+              <h2 className="text-xl text-stone-900" style={{ fontFamily: "'Fraunces', Georgia, serif" }}>
+                2. Modifica cosa si vede
+              </h2>
+              <p className="text-sm text-stone-600 font-sans">
+                Nome, slogan e logo sul sito. Per telefono e indirizzo usa Impostazioni.
+                Per gli annunci usa Immobili.
+              </p>
+              <label className="block text-xs uppercase tracking-widest text-stone-500">
+                Nome agenzia
+                <input
+                  data-testid="website-edit-name"
+                  value={editName}
+                  onChange={(e) => setEditName(e.target.value)}
+                  className="mt-1 w-full px-3 py-2 border border-stone-300 text-sm normal-case tracking-normal"
+                />
+              </label>
+              <label className="block text-xs uppercase tracking-widest text-stone-500">
+                Slogan (sotto il nome, se il template lo mostra)
+                <input
+                  data-testid="website-edit-tagline"
+                  value={editTagline}
+                  onChange={(e) => setEditTagline(e.target.value)}
+                  className="mt-1 w-full px-3 py-2 border border-stone-300 text-sm normal-case tracking-normal"
+                  placeholder="Es. La casa giusta, senza stress"
+                />
+              </label>
+              <label className="block text-xs uppercase tracking-widest text-stone-500">
+                Indirizzo del logo (foto online)
+                <input
+                  data-testid="website-edit-logo"
+                  value={editLogo}
+                  onChange={(e) => setEditLogo(e.target.value)}
+                  className="mt-1 w-full px-3 py-2 border border-stone-300 text-sm normal-case tracking-normal"
+                  placeholder="https://…"
+                />
+              </label>
+              {editLogo ? (
+                <img src={editLogo} alt="Logo" className="h-12 object-contain" data-testid="website-logo-preview" />
+              ) : null}
+              <div className="flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  disabled={busy}
+                  onClick={saveSiteTexts}
+                  data-testid="website-save-edits"
+                  className="px-4 py-2.5 text-[11px] uppercase tracking-widest bg-stone-900 text-white disabled:opacity-40"
+                >
+                  Salva modifiche
+                </button>
+                <Link
+                  to={`/${l}/app/settings`}
+                  className="px-4 py-2.5 text-[11px] uppercase tracking-widest border border-stone-300"
+                >
+                  Contatti / indirizzo
+                </Link>
+                <Link
+                  to={`/${l}/app/properties`}
+                  className="px-4 py-2.5 text-[11px] uppercase tracking-widest border border-stone-300"
+                >
+                  Immobili (annunci)
+                </Link>
+              </div>
+            </section>
+
+            <section className="space-y-3" data-testid="website-preview-section">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <h2 className="text-xl text-stone-900" style={{ fontFamily: "'Fraunces', Georgia, serif" }}>
+                  3. Anteprima
+                </h2>
+                <div className="flex flex-wrap gap-2">
                   <button
-                    key={th.id}
                     type="button"
-                    disabled={busy}
-                    onClick={() => applyTheme(th.id)}
-                    data-testid={`theme-card-${th.id}`}
-                    className={`text-left px-4 py-3 border transition disabled:opacity-50 ${
-                      active
-                        ? "border-stone-900 bg-white"
-                        : "border-stone-200 bg-stone-50 hover:border-stone-400"
+                    onClick={() => setPreviewView("home")}
+                    data-testid="website-preview-home"
+                    className={`px-3 py-1.5 text-[11px] uppercase tracking-widest border ${
+                      previewView === "home" ? "border-stone-900 bg-white" : "border-stone-300"
                     }`}
                   >
-                    <div className="flex items-center justify-between gap-2">
-                      <span className="font-medium text-stone-900">{th.name}</span>
-                      {active ? (
-                        <span className="text-[10px] uppercase tracking-widest text-stone-500">attivo</span>
-                      ) : null}
-                    </div>
-                    <div className="flex gap-1.5 mt-2">
-                      {Object.values(th.preview_palette || {})
-                        .slice(0, 4)
-                        .map((c, i) => (
-                          <span
-                            key={i}
-                            className="w-5 h-5 border border-stone-200"
-                            style={{ background: c }}
-                          />
-                        ))}
-                    </div>
-                    <p className="mt-2 text-xs text-stone-500 font-sans line-clamp-2">{th.description}</p>
+                    Home
                   </button>
-                );
-              })}
-            </div>
-
-            <div className="flex flex-wrap gap-2 items-center">
-              <button
-                type="button"
-                onClick={loadPreview}
-                data-testid="website-refresh-preview"
-                className="px-3 py-2 text-[11px] uppercase tracking-widest border border-stone-300"
-              >
-                Aggiorna anteprima
-              </button>
-              {publicPath ? (
-                <a
-                  href={publicPath}
-                  target="_blank"
-                  rel="noreferrer"
-                  data-testid="website-open-public"
-                  className="px-3 py-2 text-[11px] uppercase tracking-widest border border-stone-300"
-                >
-                  Apri sito →
-                </a>
-              ) : null}
-              <Link
-                to={`/${l}/app/mls`}
-                className="px-3 py-2 text-[11px] uppercase tracking-widest border border-stone-300 text-stone-700"
-              >
-                Rete MLS
-              </Link>
-            </div>
-
-            <div
-              className="border border-stone-300 bg-stone-50 relative overflow-hidden"
-              style={{ height: 520 }}
-            >
-              {previewLoading ? (
-                <p className="absolute top-0 inset-x-0 text-xs text-stone-500 bg-stone-100 px-3 py-1 z-10">
-                  Carico anteprima…
-                </p>
-              ) : null}
-              <iframe
-                data-testid="website-preview-iframe"
-                title="Anteprima sito"
-                srcDoc={previewHtml || undefined}
-                className="w-full h-full bg-white"
-                sandbox="allow-same-origin allow-scripts"
-              />
-            </div>
+                  <button
+                    type="button"
+                    onClick={() => setPreviewView("lista")}
+                    data-testid="website-preview-lista"
+                    className={`px-3 py-1.5 text-[11px] uppercase tracking-widest border ${
+                      previewView === "lista" ? "border-stone-900 bg-white" : "border-stone-300"
+                    }`}
+                  >
+                    Lista
+                  </button>
+                  <button
+                    type="button"
+                    onClick={loadPreview}
+                    data-testid="website-refresh-preview"
+                    className="px-3 py-1.5 text-[11px] uppercase tracking-widest border border-stone-300"
+                  >
+                    Aggiorna
+                  </button>
+                  {previewUrl ? (
+                    <a
+                      href={previewUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      data-testid="website-open-public"
+                      className="px-3 py-1.5 text-[11px] uppercase tracking-widest border border-stone-300"
+                    >
+                      Apri →
+                    </a>
+                  ) : null}
+                </div>
+              </div>
+              <div className="border border-stone-300 bg-stone-50 relative overflow-hidden" style={{ height: 520 }}>
+                {previewLoading ? (
+                  <p className="absolute top-0 inset-x-0 text-xs text-stone-500 bg-stone-100 px-3 py-1 z-10">
+                    Carico…
+                  </p>
+                ) : null}
+                <iframe
+                  data-testid="website-preview-iframe"
+                  title="Anteprima sito"
+                  srcDoc={previewHtml || undefined}
+                  className="w-full h-full bg-white"
+                  sandbox="allow-same-origin allow-scripts"
+                />
+              </div>
+            </section>
 
             <details className="border border-stone-200 px-3 py-3" data-testid="website-domain-details">
               <summary className="cursor-pointer text-sm font-medium text-stone-800">
-                Voglio usare il mio indirizzo (es. www.agenzia.it) sul sito OMNIA
+                Voglio il mio indirizzo (www…) su questo sito OMNIA
               </summary>
               <div className="mt-3">
                 <CustomDomainSection />
               </div>
             </details>
-          </section>
+          </div>
         ) : null}
 
         {path === "external" && (current?.external_url || siteUrl) ? (
           <p className="text-sm text-stone-600 font-sans" data-testid="website-external-done">
             Indirizzo salvato:{" "}
-            <a
-              className="underline break-all"
-              href={current?.external_url || siteUrl}
-              target="_blank"
-              rel="noreferrer"
-            >
+            <a className="underline break-all" href={current?.external_url || siteUrl} target="_blank" rel="noreferrer">
               {current?.external_url || siteUrl}
             </a>
-            . Gli immobili e i clienti li gestisci qui in OMNIA; il sito pubblico resta il tuo.
+            . Se un giorno vuoi il restyling, clicca «Mostra i template».
           </p>
         ) : null}
       </section>
@@ -484,15 +623,13 @@ function CustomDomainSection() {
   return (
     <div className="space-y-3 text-sm font-sans" data-testid="custom-domain-section">
       <p className="text-stone-600">
-        Passo per chi vuole che il sito OMNIA risponda al proprio indirizzo (www…).
-        Di solito lo fa il tecnico del dominio: aggiungi due record e premi Verifica.
+        Di solito lo fa chi gestisce il dominio: due record, poi Verifica.
       </p>
       {err ? (
         <p data-testid="cd-error" className="text-red-800 bg-red-50 border border-red-200 px-3 py-2">
           {err}
         </p>
       ) : null}
-
       {!hasDomain ? (
         <form onSubmit={submit} className="flex flex-wrap gap-2">
           <input
@@ -520,7 +657,7 @@ function CustomDomainSection() {
               ? "ok, in attesa di attivazione sicura"
               : state.status === "error"
                 ? "errore — controlla i record"
-                : "in attesa dei record DNS"}
+                : "in attesa dei record"}
           </p>
           {dns ? (
             <div className="bg-stone-50 border border-stone-200 px-3 py-2 space-y-2 text-xs">
