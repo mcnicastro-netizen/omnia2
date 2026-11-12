@@ -419,12 +419,31 @@ export default function BridgeTenantDetailPage() {
               label={payOk ? "ok" : "manca"}
             />
           </p>
-          <p className="text-sm text-stone-600">
+          <p className="text-sm text-stone-600" data-testid="bridge-pay-detail">
             {payOk
               ? `Abbonamento ricevuto${
                   pay.subscription_status ? ` (${pay.subscription_status})` : ""
-                }${pay.last_paid_at ? ` · ${String(pay.last_paid_at).slice(0, 10)}` : ""}.`
+                }${pay.last_paid_at ? ` · pagato ${String(pay.last_paid_at).slice(0, 10)}` : ""}.`
               : "Nessun pagamento Stripe trovato. Il cliente paga da sala d’attesa (carta test 4242…)."}
+          </p>
+          {payOk ? (
+            <p className="text-sm text-stone-700" data-testid="bridge-pay-period">
+              {pay.current_period_end
+                ? `Scade / rinnova: ${String(pay.current_period_end).slice(0, 10)}${
+                    pay.days_left != null ? ` · ${pay.days_left} giorni` : ""
+                  }${pay.renewal_due_soon ? " · in scadenza" : ""}${
+                    pay.past_due ? " · PAST DUE" : ""
+                  }`
+                : "Periodo Stripe non ancora sincronizzato."}
+            </p>
+          ) : null}
+          <p className="text-sm text-stone-700" data-testid="bridge-package-credits">
+            Crediti pacchetto:{" "}
+            <strong>{data.credits?.balance ?? 0}</strong>
+            {data.credits?.low ? (
+              <span className="text-amber-800"> · bassi (&lt;{data.credits?.low_threshold})</span>
+            ) : null}
+            <span className="text-xs text-stone-500"> · non confondere con crediti Kling/video</span>
           </p>
           {!payOk && pending ? (
             <p className="text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded px-3 py-2">

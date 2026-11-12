@@ -207,6 +207,9 @@ export default function BillingPage() {
   const { data, sub } = state;
   const activeSub = sub?.subscription;
   const wallet = sub?.wallet || { balance: 0 };
+  const counters = sub?.counters || {};
+  const subCounter = counters.sub || {};
+  const creditsCounter = counters.credits || {};
   const demo = sub?.demo;
   const plans = data?.plans || [];
   const packages = data?.credit_packages || [];
@@ -293,15 +296,47 @@ export default function BillingPage() {
           </div>
         )}
 
+        {subCounter.renewal_due_soon || subCounter.past_due ? (
+          <div
+            className={`mb-6 border p-4 text-sm ${
+              subCounter.past_due
+                ? "border-rose-300 bg-rose-50 text-rose-900"
+                : "border-amber-300 bg-amber-50 text-amber-950"
+            }`}
+            data-testid="billing-renewal-banner"
+          >
+            {subCounter.past_due
+              ? "Pagamento abbonamento in ritardo — aggiorna il metodo di pagamento."
+              : `Rinnovo tra ${subCounter.days_left} giorni (scade ${String(
+                  subCounter.current_period_end || ""
+                ).slice(0, 10)}).`}
+          </div>
+        ) : null}
+        {creditsCounter.low ? (
+          <div
+            className="mb-6 border border-amber-300 bg-amber-50 text-amber-950 p-4 text-sm"
+            data-testid="billing-credits-low-banner"
+          >
+            Crediti pacchetto bassi ({creditsCounter.balance} &lt; soglia {creditsCounter.low_threshold}).
+            Ricarica sotto per non interrompere gli strumenti AI.
+          </div>
+        ) : null}
+
         <div className="grid md:grid-cols-3 gap-4 mb-10">
           <div className="border border-stone-200 bg-white p-6">
             <div className="text-xs uppercase tracking-widest text-stone-500 mb-1">Piano attuale</div>
             <div className="text-2xl font-serif text-[#0B1E3F]" data-testid="current-plan">
               {activeSub ? activeSub.tier?.toUpperCase() : "Nessuno"}
             </div>
-            <div className="text-sm text-stone-500 mt-1">
+            <div className="text-sm text-stone-500 mt-1" data-testid="current-plan-status">
               {activeSub ? `Status: ${activeSub.status}` : "Dopo la demo puoi attivare un piano"}
             </div>
+            {activeSub && subCounter.current_period_end ? (
+              <div className="text-sm text-[#0B1E3F] mt-2" data-testid="current-plan-period">
+                Scade / rinnova: {String(subCounter.current_period_end).slice(0, 10)}
+                {subCounter.days_left != null ? ` · ${subCounter.days_left} giorni` : ""}
+              </div>
+            ) : null}
             {activeSub && (
               <Button
                 variant="outline" size="sm"
@@ -315,12 +350,15 @@ export default function BillingPage() {
             )}
           </div>
           <div className="border border-stone-200 bg-white p-6">
-            <div className="text-xs uppercase tracking-widest text-stone-500 mb-1">Saldo crediti</div>
+            <div className="text-xs uppercase tracking-widest text-stone-500 mb-1">
+              Crediti pacchetto
+            </div>
             <div className="text-2xl font-serif text-[#0F6B5B]" data-testid="wallet-balance">
               {wallet.balance || 0} crediti
             </div>
             <div className="text-sm text-stone-500 mt-1">
-              Consumati per staging, video, HAL Legal, ecc. (valutatore agenzia: incluso v1, non addebitato qui).
+              Staging, video, HAL Legal, ecc. (soglia alert automatico:{" "}
+              {creditsCounter.low_threshold ?? "—"})
             </div>
           </div>
           <div

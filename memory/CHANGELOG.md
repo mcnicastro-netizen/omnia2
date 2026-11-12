@@ -1,3 +1,9 @@
+## 2026-11-12 — D-166 contatori scadenze + crediti pacchetto
+
+- Cabina lista/scheda: giorni a rinnovo + saldo `credit_wallets` (distinto da Kling)
+- Piano & Crediti: data scadenza + banner rinnovo / crediti bassi
+- Cron 07:15 UTC: email 30/7/1g + low-credits; `POST /app/cron/billing/reminders`
+
 ## 2026-11-11 — Closeout HAL D-163…D-165
 
 - Cap.00/01 + HAL YAML + IMPORT **v0.59** (auto-KYC, Stripe reconcile, enter_url, mensile/annuale)

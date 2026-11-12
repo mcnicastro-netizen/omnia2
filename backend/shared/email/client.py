@@ -61,6 +61,16 @@ SUBJECTS = {
         "en": "{{agency_name}} — your OMNIA CRM is now active",
         "es": "{{agency_name}} — tu CRM OMNIA ya está activo",
     },
+    "subscription_renewal_reminder": {
+        "it": "OMNIA — rinnovo {{tier}} tra {{days_left}} giorni ({{agency_name}})",
+        "en": "OMNIA — {{tier}} renews in {{days_left}} days ({{agency_name}})",
+        "es": "OMNIA — renovación {{tier}} en {{days_left}} días ({{agency_name}})",
+    },
+    "credits_low": {
+        "it": "OMNIA — crediti pacchetto bassi ({{balance}}) · {{agency_name}}",
+        "en": "OMNIA — low package credits ({{balance}}) · {{agency_name}}",
+        "es": "OMNIA — créditos de paquete bajos ({{balance}}) · {{agency_name}}",
+    },
     "agency_pending": {
         "it": "Richiesta ricevuta — {{agency_name}} in verifica",
         "en": "Request received — {{agency_name}} under review",

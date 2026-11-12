@@ -123,17 +123,28 @@ async def get_subscription(user: dict = Depends(get_current_user)):
     db = Database.get()
     aid = optional_agency_id(user)
     if not aid:
-        return {"subscription": None, "wallet": {"balance": 0}, "demo": None}
+        return {
+            "subscription": None,
+            "wallet": {"balance": 0},
+            "demo": None,
+            "counters": {"sub": None, "credits": None},
+        }
     sub = await db.subscriptions.find_one({"agency_id": aid}, {"_id": 0})
     wallet = await db.credit_wallets.find_one({"agency_id": aid}, {"_id": 0})
     agency = await db.agencies.find_one({"id": aid}, {"_id": 0})
+    from shared.billing.counters import subscription_counter, wallet_counter
     from shared.billing.self_serve import is_self_serve_enabled
     from shared.demo_story import build_demo_status
 
+    w = wallet or {"agency_id": aid, "balance": 0}
     return {
         "subscription": sub,
-        "wallet": wallet or {"agency_id": aid, "balance": 0},
+        "wallet": w,
         "demo": build_demo_status(agency, self_serve_enabled=is_self_serve_enabled()),
+        "counters": {
+            "sub": subscription_counter(sub),
+            "credits": wallet_counter(w),
+        },
     }
 
 

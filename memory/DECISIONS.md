@@ -7,6 +7,15 @@ Registro di tutte le decisioni di business e tecniche prese durante il progetto.
 
 ## Decisioni prese
 
+### D-166 — Contatori scadenze abbonamento + crediti pacchetto (zero a mano) · 12-Nov-2026
+- **Contesto**: Founder — né Ops né cliente devono controllare a mano rinnovi/crediti.
+- **Decisione**:
+  1. Contatori in Cabina (lista + scheda) e Piano & Crediti: `current_period_end`, giorni rimasti, saldo `credit_wallets`.
+  2. Cron giornaliero 07:15 UTC: email rinnovo a **30 / 7 / 1** giorni (`OMNIA_SUB_REMINDER_DAYS`); email + alert Ops se crediti &lt; **200** (`OMNIA_CREDITS_LOW_THRESHOLD`); alert `past_due`.
+  3. Idempotenza: `renewal_reminders_sent` sulla subscription; `credits_low_alert_at` sul wallet (si resetta se risali sopra soglia).
+  4. Crediti Kling/`agencies.credits_balance` restano etichetta distinta — pacchetto = solo wallet.
+- **Stato**: ✅ in codice.
+
 ### D-165 — Email Attiva → enter_url login gestionale (anti-403) · 11-Nov-2026
 - **Contesto**: Bottone «Apri gestionale» andava a `/app/dashboard` a freddo; sessione cloud/client o mismatch ruolo → **403** FE.
 - **Decisione**: CTA email `agency_activated` / credentials usa `enter_url` = login `?from=app&next=/…/app/dashboard`. Auto-Attiva riallinea ruolo `agency_admin` + `active_agency_id`. ProtectedRoute su `/app` con ruolo non-CRM manda al login gestionale.
