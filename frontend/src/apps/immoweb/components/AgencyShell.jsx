@@ -24,6 +24,7 @@ export default function AgencyShell({ children, current = "dashboard", showBack 
   const [agency, setAgency] = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [myAgencies, setMyAgencies] = useState([]);
+  const [creditsBalance, setCreditsBalance] = useState(null);
 
   const backVisible =
     typeof showBack === "boolean"
@@ -96,6 +97,19 @@ export default function AgencyShell({ children, current = "dashboard", showBack 
         const onDash = /\/app\/dashboard\/?$/.test(path);
         if (avvioOpen && onDash && !onAvvio) {
           nav(`/${lang}/app/avvio`, { replace: true });
+        }
+        // D-166/D-169 — crediti wallet sempre visibili in topbar
+        if (st === "active") {
+          api
+            .get("/billing/subscription")
+            .then((br) => {
+              const bal =
+                br.data?.wallet?.balance ??
+                br.data?.counters?.credits?.balance ??
+                null;
+              if (typeof bal === "number") setCreditsBalance(bal);
+            })
+            .catch(() => {});
         }
       })
       .catch((err) => {
@@ -380,6 +394,19 @@ export default function AgencyShell({ children, current = "dashboard", showBack 
             {backVisible && (
               <BackButton className="border border-stone-200 rounded-md px-2.5 py-1.5 bg-white hover:bg-stone-100" />
             )}
+            {typeof creditsBalance === "number" && user?.role !== "super_admin" ? (
+              <Link
+                to={`/${lang}/app/settings/billing`}
+                data-testid="shell-credits-chip"
+                className="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 border border-stone-900 bg-white text-stone-900 hover:bg-stone-50 transition"
+                title="Piano & Crediti"
+              >
+                <span className="text-[10px] uppercase tracking-widest text-stone-500 hidden xs:inline sm:inline">Crediti</span>
+                <span className="text-sm font-semibold tabular-nums" style={{ fontFamily: "'Fraunces', Georgia, serif" }}>
+                  {Math.trunc(creditsBalance).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".")}
+                </span>
+              </Link>
+            ) : null}
             <NotificationBell />
             <LanguageSwitcher />
           </div>

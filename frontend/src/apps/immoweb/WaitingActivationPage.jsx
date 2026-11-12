@@ -634,19 +634,22 @@ export default function WaitingActivationPage() {
             ) : null}
           </section>
 
-          <section className="bg-white border border-stone-200 rounded-lg px-4 py-4 space-y-2 text-center">
+          <section
+            className="bg-white border border-stone-200 rounded-lg px-4 py-4 space-y-2 text-center"
+            data-testid="waiting-step-verify"
+          >
             <h2 className="text-[10px] uppercase tracking-widest text-stone-500">
-              3 · {t("waiting_activation.ops_title", "Verifica Super Admin")}
+              3 · {t("waiting_activation.ops_title", "Verifica e accesso")}
             </h2>
             <p className="text-sm text-stone-600">
               {readyForOps
                 ? t(
                     "waiting_activation.ops_ready",
-                    "Richiesta completa. Ti arriverà l’email con la password quando l’account sarà attivato."
+                    "Richiesta completa. Resta su questa pagina: ti trasferiamo al gestionale appena l’account è attivo. In alternativa esci e rientra quando ricevi l’email di benvenuto (usa la password scelta in registrazione)."
                   )
                 : t(
                     "waiting_activation.ops_wait",
-                    "Completa documenti e pagamento per far partire la verifica."
+                    "Completa documenti e pagamento. Poi resta in pagina (trasferimento automatico) oppure rientra dall’email di benvenuto."
                   )}
             </p>
           </section>

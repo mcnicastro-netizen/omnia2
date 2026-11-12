@@ -16,6 +16,7 @@ export default function MembersPage() {
   const [toast, setToast] = useState("");
   const [removingId, setRemovingId] = useState(null);
   const [confirmRemove, setConfirmRemove] = useState(null); // member object
+  const [seats, setSeats] = useState(null);
 
   const canInvite = user?.role === "agency_admin" || user?.role === "super_admin";
   const canManage = canInvite;
@@ -23,14 +24,16 @@ export default function MembersPage() {
   const load = async () => {
     setLoading(true);
     try {
-      const [m, i] = await Promise.all([
+      const [m, i, j] = await Promise.all([
         api.get("/app/agencies/me/members").catch(() => ({ data: [] })),
         canInvite
           ? api.get("/app/agencies/me/invites").catch(() => ({ data: [] }))
           : Promise.resolve({ data: [] }),
+        api.get("/app/setup-journey").catch(() => ({ data: null })),
       ]);
       setMembers(m.data || []);
       setInvites(i.data || []);
+      setSeats(j.data?.context?.team || null);
     } finally {
       setLoading(false);
     }
@@ -92,12 +95,22 @@ export default function MembersPage() {
               {t("members.title")}
             </h1>
             <p className="text-stone-600 mt-1">{t("members.subtitle")}</p>
+            {seats ? (
+              <p className="mt-2 text-xs font-sans text-stone-500" data-testid="members-seats">
+                Posti piano {seats.tier || "—"}: {seats.members}
+                {seats.max_agents < 0 ? " / illimitati" : ` / ${seats.max_agents}`}
+                {seats.pending_invites ? ` · ${seats.pending_invites} invite pending` : ""}
+                {seats.seats_left != null ? ` · liberi ${seats.seats_left}` : ""}
+                {" · "}Attiva colleghi con «Invita» (magic-link email).
+              </p>
+            ) : null}
           </div>
           {canInvite && (
             <button
               data-testid="open-invite-modal"
               onClick={() => setModalOpen(true)}
-              className="px-5 py-2.5 bg-stone-900 text-stone-50 text-xs uppercase tracking-widest font-medium rounded-md hover:bg-stone-700 transition"
+              disabled={seats?.seats_left === 0}
+              className="px-5 py-2.5 bg-stone-900 text-stone-50 text-xs uppercase tracking-widest font-medium rounded-md hover:bg-stone-700 transition disabled:opacity-40"
             >
               + {t("members.invite_btn")}
             </button>
