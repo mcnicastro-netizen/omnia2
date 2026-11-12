@@ -1,3 +1,8 @@
+## 2026-11-12 — Product Acceptance Matrix aggiornata (fase 4)
+
+- `PRODUCT_ACCEPTANCE_MATRIX.md`: J1–J9 ✅ codice; checklist dogfood Founder
+- `NEXT_SESSION.md`: prossimo passo = collaudo produzione
+
 ## 2026-11-12 — D-171 Lucide in AgencyShell
 
 - Dipendenza `lucide-react`; icone nav sidebar (oro su attivo)
