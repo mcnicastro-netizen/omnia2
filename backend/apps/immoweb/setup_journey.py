@@ -1,7 +1,8 @@
-"""D-168 — Percorso Avvio agenzia (checklist post-attivazione).
+"""D-168 / D-170 — Percorso Avvio agenzia (checklist post-attivazione).
 
 Ordine: sito → import immobili → MLS → documenti → pubblicazione → CRM → team.
-Biforcazione sito: MLS sul sito pubblico ⇒ tema OMNIA (niente overlay clone).
+Sito OMNIA + MLS pubblico ⇒ tema OMNIA.
+Sito già proprio + MLS pubblico ⇒ embed box (D-170), niente clone.
 """
 from __future__ import annotations
 
@@ -85,6 +86,11 @@ def _progress(journey: dict) -> Dict[str, Any]:
             1 for s in STEP_ORDER if (steps.get(s) or {}).get("optional") and (steps.get(s) or {}).get("done")
         ),
     }
+
+
+def public_mls_via_embed(choice: Optional[str], mls_on_public_site: bool) -> bool:
+    """D-170: sito già proprio + box rete = iframe, non tema OMNIA."""
+    return bool(mls_on_public_site) and choice in ("external", "keep_brand")
 
 
 def _next_step(journey: dict) -> str:
@@ -188,6 +194,20 @@ async def get_setup_journey(user: dict = Depends(get_current_user)):
     wallet = await db.credit_wallets.find_one({"agency_id": aid}, {"balance": 1})
     credits_balance = int((wallet or {}).get("balance") or 0)
 
+    site_step = (journey.get("steps") or {}).get("site") or {}
+    site_choice = site_step.get("choice")
+    mls_public = bool(site_step.get("mls_on_public_site"))
+    mls_enabled = bool(agency.get("mls_enabled"))
+    slug = agency.get("slug")
+    embed = None
+    if slug and (
+        public_mls_via_embed(site_choice, mls_public)
+        or ((website.get("mode") == "external" or site_choice in ("external", "keep_brand")) and mls_enabled)
+    ):
+        from apps.immoweb.mls_box import build_embed_kit
+
+        embed = build_embed_kit(slug, ready=mls_enabled)
+
     return {
         "agency_id": aid,
         "activation_status": agency.get("activation_status"),
@@ -196,8 +216,10 @@ async def get_setup_journey(user: dict = Depends(get_current_user)):
         "next_step": _next_step(journey),
         "context": {
             "declared_url": declared,
-            "mls_enabled": bool(agency.get("mls_enabled")),
-            "site_choice": (journey.get("steps") or {}).get("site", {}).get("choice"),
+            "mls_enabled": mls_enabled,
+            "agency_slug": slug,
+            "site_choice": site_choice,
+            "embed": embed,
             "defaults": {
                 "share_listings_mls": True,
                 "share_requests_mls": True,
@@ -257,7 +279,7 @@ async def complete_site_step(
     body: SiteStepBody,
     user: dict = Depends(require_roles("agency_admin", "super_admin", "group_admin")),
 ):
-    """Biforcazione D-168: MLS sul sito pubblico ⇒ solo tema OMNIA."""
+    """D-170: sito proprio + MLS pubblico = embed box; tema OMNIA se il sito è OMNIA."""
     aid = require_agency(user)
     db = Database.get()
     agency = await db.agencies.find_one({"id": aid})
@@ -266,20 +288,14 @@ async def complete_site_step(
     journey = ensure_journey(agency)
 
     choice = body.choice
-    if body.mls_on_public_site and choice != "omnia_theme":
-        raise HTTPException(
-            status_code=400,
-            detail={
-                "error": "mls_public_requires_omnia_theme",
-                "hint": "Per mostrare la rete MLS sul sito pubblico usa un tema OMNIA. "
-                "Keep-brand / sito esterno: MLS resta solo in ImmoWeb tra agenzie.",
-            },
-        )
+    mls_public = bool(body.mls_on_public_site)
+    via_embed = public_mls_via_embed(choice, mls_public)
 
     journey["steps"]["site"] = {
         "done": True,
         "choice": choice,
-        "mls_on_public_site": bool(body.mls_on_public_site),
+        "mls_on_public_site": mls_public,
+        "mls_via_embed": via_embed,
         "completed_at": _now(),
     }
     # Mode website coerente con scelta (campi già usati)
@@ -291,13 +307,18 @@ async def complete_site_step(
         declared = ed if ed.startswith("http") else f"https://{ed}"
     if choice == "external":
         web_set["website.mode"] = "external"
+        web_set["website.mls_embed"] = via_embed
         if declared:
             web_set["website.external_url"] = declared
     elif choice == "omnia_theme":
         web_set["website.mode"] = "omnia_template"
+        web_set["website.mls_embed"] = False
     elif choice == "keep_brand":
-        # Solo se migra hosting: tema OMNIA tintato, non “clone”
-        web_set["website.mode"] = "omnia_template"
+        # D-170: keep_brand = sito già proprio (non clone). Stesso path di external.
+        web_set["website.mode"] = "external"
+        web_set["website.mls_embed"] = via_embed
+        if declared:
+            web_set["website.external_url"] = declared
 
     await db.agencies.update_one({"id": aid}, {"$set": web_set})
     journey = await _save_journey(db, aid, journey)

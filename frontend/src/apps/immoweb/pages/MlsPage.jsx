@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import AgencyShell from "../components/AgencyShell";
+import MlsEmbedKit from "../components/MlsEmbedKit";
 import { api } from "../../../shared/lib/api";
 
 /**
@@ -18,6 +19,8 @@ export default function MlsPage() {
   const [offers, setOffers] = useState([]);
   const [err, setErr] = useState("");
   const [busy, setBusy] = useState(false);
+  const [embedKit, setEmbedKit] = useState(null);
+  const [siteMode, setSiteMode] = useState(null);
 
   const load = useCallback(async () => {
     setErr("");
@@ -32,6 +35,20 @@ export default function MlsPage() {
       setInventory(inv.data);
       setPartners(p.data.items || []);
       setOffers(o.data.items || []);
+      try {
+        const me = await api.get("/app/agencies/me");
+        const mode = me.data?.website?.mode;
+        setSiteMode(mode || null);
+        const slug = me.data?.slug;
+        if (d.data?.mls_enabled && slug && (mode === "external" || mode === "keep_brand")) {
+          const kit = await api.get(`/mls-box/embed-kit/${slug}`);
+          setEmbedKit(kit.data);
+        } else {
+          setEmbedKit(null);
+        }
+      } catch {
+        setEmbedKit(null);
+      }
     } catch (e) {
       setErr(e?.response?.data?.detail || "Impossibile caricare MLS");
     }
@@ -142,7 +159,9 @@ export default function MlsPage() {
             </div>
             <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-slate-200 bg-white px-4 py-3">
               <p className="text-sm text-slate-600">
-                Sul sito OMNIA compare il box rete. Puoi uscire e restare senza rete.
+                {siteMode === "external"
+                  ? "Rete attiva. Sul tuo sito: sostituisci solo il box ricerca MLS (codice sotto). Il resto resta com’è."
+                  : "Rete attiva: sul sito OMNIA compare il box. Puoi uscire e restare senza rete."}
               </p>
               <button
                 type="button"
@@ -154,6 +173,7 @@ export default function MlsPage() {
                 {busy ? "Uscita…" : "Esci dalla rete MLS"}
               </button>
             </div>
+            {embedKit ? <MlsEmbedKit kit={embedKit} /> : null}
             <section className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <StatCard
                 title="Il mio MLS"

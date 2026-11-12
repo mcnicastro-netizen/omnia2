@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import AgencyShell from "./components/AgencyShell";
+import MlsEmbedKit from "./components/MlsEmbedKit";
 import { api } from "../../shared/lib/api";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || "";
@@ -37,6 +38,7 @@ export default function WebsitePage() {
   const [editTagline, setEditTagline] = useState("");
   const [editLogo, setEditLogo] = useState("");
   const [agencyMls, setAgencyMls] = useState(false);
+  const [embedKit, setEmbedKit] = useState(null);
 
   const templatesRef = useRef(null);
 
@@ -60,6 +62,17 @@ export default function WebsitePage() {
       const mlsLive = !!me.data?.mls_enabled;
       setAgencyMls(mlsLive);
       setPreviewMls(mlsLive);
+      const slug = me.data?.slug;
+      if (mlsLive && slug) {
+        try {
+          const kit = await api.get(`/mls-box/embed-kit/${slug}`);
+          setEmbedKit(kit.data);
+        } catch {
+          setEmbedKit(null);
+        }
+      } else {
+        setEmbedKit(null);
+      }
       const url =
         cur.data?.declared_url ||
         cur.data?.external_url ||
@@ -552,13 +565,23 @@ export default function WebsitePage() {
         ) : null}
 
         {path === "external" && (current?.external_url || siteUrl) ? (
-          <p className="text-sm text-stone-600 font-sans" data-testid="website-external-done">
-            Indirizzo salvato:{" "}
-            <a className="underline break-all" href={current?.external_url || siteUrl} target="_blank" rel="noreferrer">
-              {current?.external_url || siteUrl}
-            </a>
-            . Se un giorno vuoi il restyling, clicca «Mostra i template».
-          </p>
+          <div className="space-y-4" data-testid="website-external-done">
+            <p className="text-sm text-stone-600 font-sans">
+              Indirizzo salvato:{" "}
+              <a className="underline break-all" href={current?.external_url || siteUrl} target="_blank" rel="noreferrer">
+                {current?.external_url || siteUrl}
+              </a>
+              . Il sito resta il tuo. Se un giorno vuoi il restyling, clicca «Mostra i template».
+            </p>
+            {agencyMls && embedKit ? (
+              <MlsEmbedKit kit={embedKit} />
+            ) : (
+              <p className="text-sm text-stone-600 font-sans" data-testid="website-external-mls-hint">
+                Quando aderisci alla rete MLS ti diamo un codice da incollare al posto del solo box
+                ricerca rete. Il resto del sito non si tocca.
+              </p>
+            )}
+          </div>
         ) : null}
       </section>
     </AgencyShell>
