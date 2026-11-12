@@ -79,13 +79,13 @@ export default function BridgeTenantDetailPage() {
         agency_id: agencyId,
         grant_plan: true,
         tier,
-        credits: 2000,
         send_email: true,
         wipe_crm: true,
         note: "cabina_scheda",
         require_kyc_verified: !bypassKyc,
         require_payment: !bypassPay,
         // D-161: password = register; niente API=password
+        // D-167: crediti = listino piano (o 0 se Stripe già accredita via invoice)
         issue_login_credential: false,
       });
       const once = r?.data?.credential_key;

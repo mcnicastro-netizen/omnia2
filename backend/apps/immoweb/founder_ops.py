@@ -967,8 +967,92 @@ class GrantAgencyPlanBody(BaseModel):
     slug: Optional[str] = None
     email: Optional[str] = None
     tier: str = Field(default="pro", description="starter | pro | agency")
-    credits: int = Field(default=2000, ge=0, le=100_000)
+    credits: Optional[int] = Field(
+        default=None,
+        ge=0,
+        le=100_000,
+        description="D-167: omesso = credits_included_monthly del piano",
+    )
     note: Optional[str] = Field(default=None, max_length=200)
+
+
+class ReconcilePlanCreditsBody(BaseModel):
+    agency_id: Optional[str] = None
+    slug: Optional[str] = None
+    email: Optional[str] = None
+    limit: int = Field(default=24, ge=1, le=100)
+
+
+@router.post("/reconcile-plan-credits")
+async def ops_reconcile_plan_credits(
+    body: ReconcilePlanCreditsBody,
+    user: dict = Depends(require_roles("super_admin")),
+) -> Dict[str, Any]:
+    """D-167 — backfill crediti listino da invoice Stripe già paid (idempotente)."""
+    import stripe
+    from apps.immoweb.assisted_billing import resolve_agency
+    from shared.billing.plan_credits import grant_plan_credits_from_stripe_invoice
+
+    db = Database.get()
+    resolved = await resolve_agency(
+        db,
+        agency_id=body.agency_id,
+        slug=body.slug,
+        email=body.email,
+    )
+    if not resolved.get("ok"):
+        raise HTTPException(status_code=404, detail=resolved)
+    agency_id = resolved["agency_id"]
+    sub = await db.subscriptions.find_one(
+        {"agency_id": agency_id},
+        {"stripe_subscription_id": 1, "tier": 1, "plan_tier": 1, "billing_cycle": 1},
+    )
+    stripe_sub = (sub or {}).get("stripe_subscription_id")
+    if not stripe_sub:
+        raise HTTPException(status_code=400, detail="no_stripe_subscription")
+
+    try:
+        invoices = stripe.Invoice.list(
+            subscription=stripe_sub, status="paid", limit=body.limit
+        ).data
+    except Exception as exc:  # noqa: BLE001
+        raise HTTPException(status_code=502, detail={"stripe_error": str(exc)[:200]})
+
+    results = []
+    for inv in invoices:
+        try:
+            obj = inv.to_dict() if hasattr(inv, "to_dict") else dict(inv)
+        except Exception:
+            obj = {
+                "id": getattr(inv, "id", None),
+                "billing_reason": getattr(inv, "billing_reason", None),
+                "metadata": getattr(inv, "metadata", None) or {},
+                "subscription": stripe_sub,
+                "lines": {"data": []},
+            }
+        if not obj.get("subscription"):
+            obj["subscription"] = stripe_sub
+        grant = await grant_plan_credits_from_stripe_invoice(
+            db,
+            obj,
+            agency_id=agency_id,
+            tier_fallback=(sub or {}).get("tier") or (sub or {}).get("plan_tier"),
+            cycle_fallback=(sub or {}).get("billing_cycle"),
+        )
+        results.append(grant)
+
+    logger.info(
+        "reconcile-plan-credits by=%s agency=%s invoices=%s",
+        user.get("email"),
+        agency_id,
+        len(results),
+    )
+    return {
+        "ok": True,
+        "agency_id": agency_id,
+        "stripe_subscription_id": stripe_sub,
+        "results": results,
+    }
 
 
 @router.post("/grant-agency-plan")
@@ -979,7 +1063,7 @@ async def ops_grant_agency_plan(
     """Concedi piano + crediti gratis (provisioning assistito, no Stripe).
 
     Body: agency_id | slug | email · tier=starter|pro|agency · credits · note
-    Default dogfood: Pro + 2000 crediti.
+    D-167: default crediti = listino piano (Pro 1200), non più 2000 dogfood.
     """
     from apps.immoweb.assisted_billing import grant_assisted_plan, resolve_agency
 
@@ -1032,7 +1116,12 @@ class ActivateAgencyBody(BaseModel):
         default=None,
         description="starter | pro | agency — se omesso usa preferred_plan_tier agenzia o pro",
     )
-    credits: int = Field(default=2000, ge=0, le=100_000)
+    credits: Optional[int] = Field(
+        default=None,
+        ge=0,
+        le=100_000,
+        description="D-167: omesso = listino piano; con Stripe attivo wallet=0 (invoice.paid)",
+    )
     note: Optional[str] = Field(default=None, max_length=200)
     send_email: bool = True
     # Default True: Attiva = dashboard vuota + sblocco + piano + email (no jargon Ops)
@@ -1131,11 +1220,16 @@ async def ops_activate_agency(
         if tier not in ("starter", "pro", "agency"):
             raise HTTPException(status_code=400, detail="invalid_tier")
         note = (body.note or "ops_activate_agency").strip()[:200]
+        from shared.billing.plan_credits import agency_has_stripe_subscription
+
+        stripe_live = await agency_has_stripe_subscription(db, agency_id)
         grant = await grant_assisted_plan(
             db,
             agency_id,
             tier=tier,  # type: ignore[arg-type]
-            credits=body.credits,
+            credits=0 if stripe_live else body.credits,
+            skip_wallet=stripe_live,
+            preserve_stripe_subscription=stripe_live,
             reason=note,
             granted_by=user.get("email"),
         )

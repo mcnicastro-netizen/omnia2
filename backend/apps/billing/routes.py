@@ -206,24 +206,27 @@ async def create_checkout(
         cancel_url = payload.cancel_url or _build_cancel_url(fe_origin)
 
     try:
+        sub_meta = {
+            "agency_id": agency_id or "",
+            "user_id": user["id"],
+            "tier": plan.tier,
+            "billing_cycle": payload.billing_cycle,
+            "kind": "subscription",
+            "onboarding": "1" if pending_onboarding else "0",
+        }
         session_kwargs = dict(
             line_items=[{"price": price.id, "quantity": 1}],
             mode="subscription",
             success_url=success_url,
             cancel_url=cancel_url,
             customer_email=user["email"],
-            metadata={
-                "agency_id": agency_id or "",
-                "user_id": user["id"],
-                "tier": plan.tier,
-                "billing_cycle": payload.billing_cycle,
-                "kind": "subscription",
-                "onboarding": "1" if pending_onboarding else "0",
-            },
+            metadata=sub_meta,
+            # D-167: metadata anche sulla Subscription → invoice.paid risolve agency/tier
+            subscription_data={"metadata": sub_meta},
         )
         # D-080: no self-serve trial — demo guidata prima dell'abbonamento
         if plan.trial_days and plan.trial_days > 0:
-            session_kwargs["subscription_data"] = {"trial_period_days": plan.trial_days}
+            session_kwargs["subscription_data"]["trial_period_days"] = plan.trial_days
         session = stripe.checkout.Session.create(**session_kwargs)
     except stripe.error.StripeError as e:
         logger.exception("stripe checkout error: %s", e)
@@ -650,14 +653,25 @@ async def stripe_webhook(request: Request):
 
     elif etype == "invoice.paid":
         # Upsert: sync Founder Ops può già aver importato la stessa invoice.
+        from shared.billing.plan_credits import (
+            grant_plan_credits_from_stripe_invoice,
+            resolve_agency_id_for_invoice,
+        )
+
         inv_desc = obj.get("description")
         if not inv_desc:
             lines = obj.get("lines") or {}
             line_rows = lines.get("data") if isinstance(lines, dict) else []
             if line_rows:
                 inv_desc = line_rows[0].get("description")
+        agency_id_inv = (obj.get("metadata") or {}).get("agency_id") or None
+        if not agency_id_inv:
+            try:
+                agency_id_inv = await resolve_agency_id_for_invoice(db, obj)
+            except Exception:  # noqa: BLE001
+                agency_id_inv = None
         inv_doc = {
-            "agency_id": (obj.get("metadata") or {}).get("agency_id"),
+            "agency_id": agency_id_inv,
             "stripe_invoice_id": obj["id"],
             "number": obj.get("number"),
             "customer_email": obj.get("customer_email"),
@@ -667,6 +681,7 @@ async def stripe_webhook(request: Request):
             "amount_due": (obj.get("amount_due") or 0) / 100.0,
             "currency": obj.get("currency", "eur"),
             "status": "paid",
+            "billing_reason": obj.get("billing_reason"),
             "hosted_invoice_url": obj.get("hosted_invoice_url"),
             "pdf_url": obj.get("invoice_pdf"),
             "period_start": datetime.fromtimestamp(obj["period_start"], tz=timezone.utc).isoformat() if obj.get("period_start") else None,
@@ -680,6 +695,26 @@ async def stripe_webhook(request: Request):
             inv_doc["id"] = __import__("uuid").uuid4().hex
             inv_doc["created_at"] = now
             await db.invoices.insert_one(inv_doc)
+
+        # D-167 — crediti listino piano a ogni invoice abbonamento (primo + rinnovo)
+        try:
+            grant = await grant_plan_credits_from_stripe_invoice(
+                db, obj, agency_id=agency_id_inv
+            )
+            if grant.get("ok") and not grant.get("skipped"):
+                logger.info(
+                    "invoice.paid plan credits: agency=%s +%s",
+                    grant.get("agency_id"),
+                    grant.get("credits_added"),
+                )
+            elif grant.get("skipped"):
+                logger.info(
+                    "invoice.paid plan credits skipped: %s invoice=%s",
+                    grant.get("skipped"),
+                    obj.get("id"),
+                )
+        except Exception as exc:  # noqa: BLE001
+            logger.warning("invoice.paid plan credits failed: %s", exc)
 
     elif etype == "invoice.payment_failed":
         stripe_sub_id = obj.get("subscription")

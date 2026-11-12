@@ -11,7 +11,7 @@ import { scrollToAnchor } from "../lib/scrollToAnchor";
 /**
  * Shared top navigation across Landing, App, Learn.
  *
- * Landing: logo + Chi siamo · sezioni anchor · Registrati
+ * Landing: logo + Chi siamo · sezioni anchor · Accedi + Registrati
  * Academy: logo + Cerca casa · Vendi · Academy · Area riservata
  * App: logo + prodotti (+ suffix opzionale)
  */
@@ -121,12 +121,13 @@ export default function TopNav({ current = "landing", theme = "light", suffix = 
   ];
 
   const navItems = isPublicNav ? landingItems : productItems;
+  const agencyLoginTo = `/${lang}/login?from=app&next=${encodeURIComponent(`/${lang}/app/dashboard`)}`;
   const ctaTo =
     current === "landing"
       ? `/${lang}/register`
       : isPublicNav
         ? (b2cLoggedIn ? `/${lang}/cloud/account` : `/${lang}/cloud/area`)
-        : `/${lang}/login?from=app&next=${encodeURIComponent(`/${lang}/app/dashboard`)}`;
+        : agencyLoginTo;
   const ctaLabel =
     current === "landing"
       ? t("nav.register")
@@ -143,6 +144,9 @@ export default function TopNav({ current = "landing", theme = "light", suffix = 
         ? { hash: n.hash, label: n.label }
         : { to: n.to, label: n.label },
     ),
+    ...(current === "landing"
+      ? [{ to: agencyLoginTo, label: t("nav.login") }]
+      : []),
     { to: ctaTo, label: ctaLabel },
   ];
 
@@ -221,6 +225,19 @@ export default function TopNav({ current = "landing", theme = "light", suffix = 
         </nav>
 
         <div className="hidden md:flex items-center gap-3 md:gap-4">
+          {current === "landing" && (
+            <Link
+              to={agencyLoginTo}
+              data-testid="topnav-login"
+              className={`px-4 py-2 text-xs font-sans uppercase tracking-widest transition border ${
+                theme === "dark"
+                  ? "border-stone-500 text-stone-100 hover:bg-white/10"
+                  : "border-stone-400 text-stone-800 hover:border-stone-900 hover:bg-stone-900 hover:text-white"
+              }`}
+            >
+              {t("nav.login")}
+            </Link>
+          )}
           <Link
             to={ctaTo}
             data-testid={ctaTestId}

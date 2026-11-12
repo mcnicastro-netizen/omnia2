@@ -133,6 +133,56 @@ function RecentStrip({ recent, t }) {
   );
 }
 
+const SITE_PHASE_LABEL = {
+  none: { title: "Nessun sito dichiarato", hint: "Se hai un dominio, aprilo in Sito web e avvia estrazione o cattura." },
+  declared: { title: "Sito dichiarato — non ancora elaborato", hint: "OMNIA ha salvato l’URL. Estrai brand o cattura il sito per vedere il risultato." },
+  brand_extracted: { title: "Brand estratto dal tuo sito", hint: "Profilo colori/logo letto. Puoi catturare le pagine o scegliere un tema." },
+  clone_ready: { title: "Cattura sito pronta", hint: "Preview migrazione disponibile in Brand Studio." },
+  theme_only: { title: "Tema OMNIA configurato", hint: "Nessun URL esterno: stai usando (o puoi usare) i template della gallery." },
+};
+
+function SiteStatusCard({ site, lang, t }) {
+  if (!site) return null;
+  const phase = site.site_phase || "none";
+  const meta = SITE_PHASE_LABEL[phase] || SITE_PHASE_LABEL.none;
+  const url = site.declared_url || site.external_url || site.existing_domain;
+  return (
+    <section
+      data-testid="dashboard-site-status"
+      className="border border-stone-200 bg-white px-5 py-4"
+    >
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="min-w-0">
+          <p className="text-[10px] uppercase tracking-[0.25em] text-stone-500 font-sans mb-1">
+            {t("dashboard.site_status_eyebrow", "Il tuo sito")}
+          </p>
+          <h2
+            className="text-lg text-stone-900 tracking-tight"
+            style={{ fontFamily: "'Fraunces', Georgia, serif" }}
+          >
+            {t(`dashboard.site_phase_${phase}`, meta.title)}
+          </h2>
+          <p className="mt-1 text-sm font-sans text-stone-600 max-w-2xl">
+            {t(`dashboard.site_phase_hint_${phase}`, meta.hint)}
+          </p>
+          {url ? (
+            <p className="mt-2 text-xs font-sans text-stone-500 truncate" data-testid="dashboard-site-url">
+              {url}
+            </p>
+          ) : null}
+        </div>
+        <Link
+          to={`/${lang}/app/website`}
+          data-testid="dashboard-site-cta"
+          className="shrink-0 inline-flex items-center px-3.5 py-2 text-[11px] font-sans uppercase tracking-widest border border-stone-300 text-stone-800 hover:border-stone-900 hover:bg-stone-900 hover:text-white transition"
+        >
+          {t("dashboard.site_cta", "Apri Sito web")} →
+        </Link>
+      </div>
+    </section>
+  );
+}
+
 export default function DashboardPage() {
   const { t } = useTranslation();
   const { user } = useAuth();
@@ -140,6 +190,7 @@ export default function DashboardPage() {
   const l = (lang || "it").slice(0, 2);
   const [kpis, setKpis] = useState([]);
   const [today, setToday] = useState(null);
+  const [site, setSite] = useState(null);
   const [loadingKpis, setLoadingKpis] = useState(true);
   const [loadingToday, setLoadingToday] = useState(true);
   const [todayError, setTodayError] = useState(false);
@@ -166,6 +217,11 @@ export default function DashboardPage() {
         setTodayError(true);
       })
       .finally(() => mounted && setLoadingToday(false));
+    // D-167 — stato sito da campi già presenti (GET /website/theme)
+    api
+      .get("/app/website/theme")
+      .then((r) => mounted && setSite(r.data || null))
+      .catch(() => mounted && setSite(null));
     return () => {
       mounted = false;
     };
@@ -220,6 +276,8 @@ export default function DashboardPage() {
             </Link>
           ))}
         </div>
+
+        <SiteStatusCard site={site} lang={l} t={t} />
 
         <section aria-labelledby="today-cockpit-title">
           <h2 id="today-cockpit-title" className="sr-only">

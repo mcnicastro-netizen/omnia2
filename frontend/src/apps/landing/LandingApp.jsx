@@ -209,6 +209,13 @@ export default function LandingApp() {
               >
                 {t("landing.cta_start")}
               </Link>
+              <Link
+                to={`/${lang}/login?from=app&next=${encodeURIComponent(`/${lang}/app/dashboard`)}`}
+                data-testid="landing-cta-login"
+                className="inline-flex items-center px-6 py-3 text-xs sm:text-sm font-sans uppercase tracking-widest border border-white/50 text-white hover:bg-white/10 transition"
+              >
+                {t("nav.login", "Accedi")}
+              </Link>
               <a
                 href="#prezzi"
                 data-testid="landing-cta-pricing"

@@ -7,6 +7,16 @@ Registro di tutte le decisioni di business e tecniche prese durante il progetto.
 
 ## Decisioni prese
 
+### D-167 — Percorso onboarding ordinato: Stripe=listino crediti · stato sito in area privata · Accedi in landing · 12-Nov-2026
+- **Contesto**: Dogfood Nicastro — Pro attivo ma wallet 2000 (dogfood Ops); landing senza Accedi; sito dichiarato in registrazione senza esito visibile in area privata.
+- **Decisione** (niente prodotti nuovi):
+  1. **Landing**: Accedi (login gestionale `from=app`) accanto a Registrati (nav + hero).
+  2. **Stripe `invoice.paid`** (subscription_create / subscription_cycle) accredita `credits_included_monthly` del piano (yearly = ×12). Idempotenza `credit_ledger` `ref_type=stripe_invoice`.
+  3. **KYC/Ops Attiva** con Stripe già live: **non** accredita wallet (skip 2000); preserva subscription Stripe. Path solo-assistito: crediti = listino piano.
+  4. Backfill: `POST /app/ops/reconcile-plan-credits` + clawback una tantum del dogfood 2000 al primo grant listino.
+  5. **Sito**: registrazione resta dichiarativa; area privata mostra `site_phase` (declared / brand_extracted / clone_ready / …) su Dashboard + Brand Studio da campi Mongo già esistenti. Extract/clone restano azioni esplicite (D-149 caso 3 restyling resta in coda).
+- **Stato**: ✅ in codice.
+
 ### D-166 — Contatori scadenze abbonamento + crediti pacchetto (zero a mano) · 12-Nov-2026
 - **Contesto**: Founder — né Ops né cliente devono controllare a mano rinnovi/crediti.
 - **Decisione**:

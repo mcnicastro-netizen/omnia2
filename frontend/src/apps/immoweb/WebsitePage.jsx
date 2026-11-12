@@ -87,14 +87,24 @@ export default function WebsitePage() {
   const loadAll = async () => {
     setLoading(true);
     try {
-      const [r1, r2] = await Promise.all([
+      const [r1, r2, r3] = await Promise.all([
         api.get("/app/website/themes"),
         api.get("/app/website/theme"),
+        api.get("/app/website/clone-capture").catch(() => ({ data: null })),
       ]);
       setThemes(r1.data.themes || []);
       setRoadmap(r1.data.roadmap || []);
       setCurrent(r2.data);
       setSelectedTheme(r2.data?.resolved?.theme_id || r1.data.default_theme_id || "minimal");
+      const cap = r3?.data;
+      if (cap?.capture || cap?.clone_ready) {
+        setCloneCapture({
+          ...(cap.capture || {}),
+          preview: cap.preview,
+          clone_ready: cap.clone_ready,
+          notes: (cap.capture || {}).notes,
+        });
+      }
     } catch (e) {
       setError(String(e?.response?.data?.detail || e.message));
     } finally {
@@ -109,7 +119,9 @@ export default function WebsitePage() {
     const fromExtracted =
       current?.extracted_profile?.extracted_from
       || current?.extracted_profile?.source_url;
-    if (fromExtracted) setExtractUrl(fromExtracted);
+    const declared = current?.declared_url || current?.external_url || current?.clone_source_url;
+    const next = fromExtracted || declared || "";
+    if (next) setExtractUrl(next);
   }, [current, extractUrl]);
 
   useEffect(() => {
@@ -230,6 +242,37 @@ export default function WebsitePage() {
           </h1>
           <p className="text-stone-600 mt-1">{t("website.subtitle")}</p>
         </div>
+
+        {current?.site_phase && (
+          <div
+            data-testid="website-journey-status"
+            className="border border-stone-200 bg-stone-50 px-4 py-3 text-sm font-sans text-stone-700 space-y-1"
+          >
+            <p className="text-[10px] uppercase tracking-[0.25em] text-stone-500">
+              {t("website.journey_eyebrow", "Percorso sito")}
+            </p>
+            <p>
+              {current.site_phase === "declared" &&
+                t(
+                  "website.journey_declared",
+                  "URL dichiarato in registrazione. Omnia non ha ancora estratto o catturato il sito — usa i pulsanti sotto."
+                )}
+              {current.site_phase === "brand_extracted" &&
+                t("website.journey_extracted", "Brand estratto dal sito dichiarato. Puoi catturare le pagine o applicare un tema.")}
+              {current.site_phase === "clone_ready" &&
+                t("website.journey_clone", "Cattura completata: preview migrazione disponibile.")}
+              {current.site_phase === "theme_only" &&
+                t("website.journey_theme", "Tema OMNIA attivo (gallery 8 template). Nessun URL esterno elaborato.")}
+              {current.site_phase === "none" &&
+                t("website.journey_none", "Nessun sito dichiarato. Inserisci l’URL oppure scegli un template.")}
+            </p>
+            {(current.declared_url || current.external_url) && (
+              <p className="text-xs text-stone-500 truncate" data-testid="website-declared-url">
+                {current.declared_url || current.external_url}
+              </p>
+            )}
+          </div>
+        )}
 
         {error && (
           <p data-testid="website-error" className="text-sm text-red-700 bg-red-50 border border-red-200 rounded-md px-3 py-2">

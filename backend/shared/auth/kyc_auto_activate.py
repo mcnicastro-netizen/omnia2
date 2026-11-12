@@ -252,11 +252,18 @@ async def _perform_activation(db, agency: dict, *, activated_by: str) -> Dict[st
         },
     )
 
+    # D-167: se Stripe ha già l’abbonamento, i crediti arrivano da invoice.paid
+    # (listino). Qui solo attivazione CRM + allineo piano senza wallet dogfood 2000.
+    from shared.billing.plan_credits import agency_has_stripe_subscription
+
+    stripe_live = await agency_has_stripe_subscription(db, agency_id)
     grant = await grant_assisted_plan(
         db,
         agency_id,
         tier=preferred,  # type: ignore[arg-type]
-        credits=2000,
+        credits=None if not stripe_live else 0,
+        skip_wallet=stripe_live,
+        preserve_stripe_subscription=stripe_live,
         reason="kyc_auto_activate_d163",
         granted_by=activated_by,
     )

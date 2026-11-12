@@ -1,31 +1,29 @@
 # Prossima sessione — programma passi
 
-**Aggiornato**: 12 Novembre 2026 (~09:10 CET — Europe/Rome)  
+**Aggiornato**: 12 Novembre 2026 (~10:20 CET — Europe/Rome)  
 **Repo**: https://github.com/mcnicastro-netizen/omnia2 ✅  
 
 ---
 
-## In corso / appena shippato — D-166 contatori
+## In corso / appena shippato — D-167
 
-- Cabina + Piano & Crediti: scadenze + crediti pacchetto
-- Cron 07:15 UTC + template Resend + alert Ops
-- Trigger manuale: `POST /app/cron/billing/reminders`
+- Stripe → crediti listino; Attiva allineata; stato sito in area privata; Accedi landing
+- Dopo merge: `POST /app/ops/reconcile-plan-credits` su Nicastro (clawback 2000 → listino)
+- Smoke: landing Accedi, Dashboard «Il tuo sito», Piano&Crediti saldo
 
-## Dopo merge
+## Aperto
 
-1. Smoke Cabina lista clienti (giorni abb. + cr pacchetto) e Billing Nicastro.
-2. Opzionale: trigger cron reminders a mano una volta.
-3. **A-038** solo con «vai».
+1. **A-038** solo con «vai»
+2. Restyling caso 3 (D-149) resta in coda — non aprire senza Founder
+3. Stub Impostazioni «3 template presto» vs gallery 8 (pulizia UX)
 
 ## SoT
 
 | Voce | Doc |
 |------|-----|
+| Percorso crediti/sito | **D-167** |
 | Contatori | **D-166** |
-| Login | **D-161** |
 | Auto-KYC | **D-163** |
-| Stripe period | **D-164** |
-| Enter email | **D-165** |
 | Fattura | **A-038** aperta |
 
 Vault: [`CLOUD_SECRETS_INVENTORY.md`](./CLOUD_SECRETS_INVENTORY.md).
