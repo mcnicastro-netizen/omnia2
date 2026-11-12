@@ -260,7 +260,10 @@ export default function WebsitePage() {
               {current.site_phase === "brand_extracted" &&
                 t("website.journey_extracted", "Brand estratto dal sito dichiarato. Puoi catturare le pagine o applicare un tema.")}
               {current.site_phase === "clone_ready" &&
-                t("website.journey_clone", "Cattura completata: preview migrazione disponibile.")}
+                t(
+                  "website.journey_clone",
+                  "Cattura brand completata: preview su tema OMNIA (non clone HTML del sito originale)."
+                )}
               {current.site_phase === "theme_only" &&
                 t("website.journey_theme", "Tema OMNIA attivo (gallery 8 template). Nessun URL esterno elaborato.")}
               {current.site_phase === "none" &&
