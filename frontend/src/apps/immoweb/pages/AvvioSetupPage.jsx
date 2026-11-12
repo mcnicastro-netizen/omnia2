@@ -10,7 +10,7 @@ const STEP_META = [
   {
     id: "site",
     title: "Sito e identità",
-    hint: "OMNIA legge colori/logo dal tuo URL e ricostruisce con un tema nostro (non è un clone HTML del sito Agensta). MLS sul sito pubblico ⇒ solo tema OMNIA.",
+    hint: "Se il sito è già tuo e resta online: lascialo com’è (nessun clone). Tema OMNIA solo se vuoi il sito pubblico ospitato da noi (es. MLS in vetrina).",
   },
   {
     id: "import_properties",
@@ -345,83 +345,96 @@ export default function AvvioSetupPage() {
                           </p>
                         </div>
                       ) : null}
-                      <p className="text-xs text-amber-900 bg-amber-50 border border-amber-200 px-2 py-2" data-testid="avvio-acq-honesty">
-                        Attenzione: la preview non è il sito Agensta clonato. È un tema OMNIA (es. classic) con
-                        palette/logo letti dall’URL. Box MLS pubblico e layout ricerca a due colonne compaiono
-                        solo con <strong>tema OMNIA</strong> + MLS attivo allo step 3. Clone HTML fedele = lavoro
-                        dedicato (non incluso in questo passaggio).
+                      <p className="text-xs text-stone-700 bg-stone-100 border border-stone-200 px-2 py-2" data-testid="avvio-acq-honesty">
+                        Il sito che hai già (Agensta o altro) <strong>non va clonato</strong> se resta il tuo sito
+                        pubblico: OMNIA lo registra come URL e basta. Analisi colori/logo serve solo se più avanti
+                        vuoi un sito ospitato da OMNIA. MLS in vetrina pubblica ⇒ sito su tema OMNIA (step sotto).
                       </p>
                       {acq.notes ? (
                         <p className="text-xs text-stone-500 whitespace-pre-wrap" data-testid="avvio-acq-notes">
                           {acq.notes}
                         </p>
                       ) : null}
-                      {isCurrent && ctx.declared_url && acq.phase !== "clone_ready" ? (
-                        <button
-                          type="button"
-                          disabled={acqBusy}
-                          onClick={analyzeSite}
-                          data-testid="avvio-analyze-site"
-                          className="px-3 py-2 text-[11px] uppercase tracking-widest bg-[#0B1E3F] text-white disabled:opacity-50"
-                        >
-                          {acqBusy ? "Analisi in corso…" : "Analizza / cattura sito ora"}
-                        </button>
-                      ) : null}
                     </div>
 
-                    {isCurrent ? (
+                    {(isCurrent || isDone) ? (
                       <div className="space-y-3" data-testid="avvio-site-form">
-                        <label className="flex items-start gap-2 text-sm font-sans text-stone-800">
-                          <input
-                            type="checkbox"
-                            checked={mlsPublic}
-                            onChange={(e) => setMlsPublic(e.target.checked)}
-                            className="mt-1"
-                            data-testid="avvio-mls-public"
-                          />
-                          <span>
-                            Voglio far vedere la rete MLS sul <strong>sito pubblico</strong>
-                            <span className="block text-xs text-stone-500 mt-0.5">
-                              Se sì → tema OMNIA (niente overlay sul sito vecchio).
-                            </span>
-                          </span>
-                        </label>
-                        <div className="flex flex-wrap gap-2">
-                          <button
-                            type="button"
-                            disabled={busy}
-                            onClick={() => completeSite("omnia_theme")}
-                            data-testid="avvio-site-omnia"
-                            className="px-3 py-2 text-[11px] uppercase tracking-widest bg-stone-900 text-white disabled:opacity-50"
-                          >
-                            Tema OMNIA {mlsPublic ? "(consigliato)" : ""}
-                          </button>
-                          <button
-                            type="button"
-                            disabled={busy || mlsPublic}
-                            onClick={() => completeSite("keep_brand")}
-                            data-testid="avvio-site-keep"
-                            className="px-3 py-2 text-[11px] uppercase tracking-widest border border-stone-400 disabled:opacity-40"
-                            title="Tema OMNIA con i tuoi colori/logo — non clona HTML/CSS del sito attuale"
-                          >
-                            Colori/logo sul tema OMNIA
-                          </button>
-                          <button
-                            type="button"
-                            disabled={busy || mlsPublic}
-                            onClick={() => completeSite("external")}
-                            data-testid="avvio-site-external"
-                            className="px-3 py-2 text-[11px] uppercase tracking-widest border border-stone-400 disabled:opacity-40"
-                          >
-                            Sito esterno (solo URL)
-                          </button>
-                          <Link
-                            to={`/${l}/app/website`}
-                            className="px-3 py-2 text-[11px] uppercase tracking-widest border border-stone-300 text-stone-700"
-                          >
-                            Brand Studio
-                          </Link>
+                        <div className="grid sm:grid-cols-2 gap-3">
+                          <div className="border border-stone-900 bg-white px-3 py-3 space-y-2">
+                            <p className="text-sm font-sans font-medium text-stone-900">Il sito è già mio</p>
+                            <p className="text-xs text-stone-500">
+                              Resta online dove sta ora. Nessun clone, nessuna sostituzione. OMNIA usa l’URL in
+                              contatti / Brand Studio.
+                            </p>
+                            <button
+                              type="button"
+                              disabled={busy || mlsPublic}
+                              onClick={() => completeSite("external")}
+                              data-testid="avvio-site-external"
+                              className="px-3 py-2 text-[11px] uppercase tracking-widest bg-stone-900 text-white disabled:opacity-40"
+                            >
+                              Lascia il sito com’è →
+                            </button>
+                          </div>
+                          <div className="border border-stone-200 px-3 py-3 space-y-2">
+                            <p className="text-sm font-sans font-medium text-stone-900">Voglio il sito su OMNIA</p>
+                            <p className="text-xs text-stone-500">
+                              Nuova vetrina ospitata da noi (tema OMNIA). Serve se vuoi il box MLS pubblico. Non
+                              sostituisce magicamente Agensta finché non cambi DNS.
+                            </p>
+                            <label className="flex items-start gap-2 text-xs font-sans text-stone-700">
+                              <input
+                                type="checkbox"
+                                checked={mlsPublic}
+                                onChange={(e) => setMlsPublic(e.target.checked)}
+                                className="mt-0.5"
+                                data-testid="avvio-mls-public"
+                              />
+                              <span>MLS sul sito pubblico (implica tema OMNIA)</span>
+                            </label>
+                            <button
+                              type="button"
+                              disabled={busy}
+                              onClick={() => completeSite("omnia_theme")}
+                              data-testid="avvio-site-omnia"
+                              className="px-3 py-2 text-[11px] uppercase tracking-widest border border-stone-900 disabled:opacity-50"
+                            >
+                              Tema OMNIA {mlsPublic ? "(MLS)" : ""} →
+                            </button>
+                          </div>
                         </div>
+                        <details className="text-xs text-stone-500 font-sans" data-testid="avvio-site-advanced">
+                          <summary className="cursor-pointer uppercase tracking-widest text-[10px] text-stone-400">
+                            Opzioni avanzate (solo se migri hosting su OMNIA)
+                          </summary>
+                          <div className="mt-2 flex flex-wrap gap-2 items-center">
+                            <button
+                              type="button"
+                              disabled={busy || mlsPublic || !ctx.declared_url || acqBusy}
+                              onClick={analyzeSite}
+                              data-testid="avvio-analyze-site"
+                              className="px-3 py-2 text-[11px] uppercase tracking-widest border border-stone-300 disabled:opacity-40"
+                            >
+                              {acqBusy ? "Analisi…" : "Analizza colori/logo"}
+                            </button>
+                            <button
+                              type="button"
+                              disabled={busy || mlsPublic}
+                              onClick={() => completeSite("keep_brand")}
+                              data-testid="avvio-site-keep"
+                              className="px-3 py-2 text-[11px] uppercase tracking-widest border border-stone-300 disabled:opacity-40"
+                              title="Tema OMNIA tintato coi tuoi colori — non è il sito HTML attuale"
+                            >
+                              Tema OMNIA tintato (non clone)
+                            </button>
+                            <Link
+                              to={`/${l}/app/website`}
+                              className="px-3 py-2 text-[11px] uppercase tracking-widest border border-stone-300 text-stone-700"
+                            >
+                              Brand Studio
+                            </Link>
+                          </div>
+                        </details>
                       </div>
                     ) : null}
                   </div>
