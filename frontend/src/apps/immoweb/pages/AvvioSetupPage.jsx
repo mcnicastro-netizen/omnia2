@@ -30,7 +30,7 @@ const STEP_META = [
   {
     id: "publishing",
     title: "Pubblicazione",
-    hint: "Portale OMNIA e altri portali pubblicitari.",
+    hint: "Prima ciò che pubblica oggi: sito OMNIA, feed XML attivabili, social. Idealista e simili restano «In arrivo».",
     href: "publishing",
   },
   {
@@ -461,7 +461,55 @@ export default function AvvioSetupPage() {
                   </div>
                 )}
 
-                {["publishing", "import_crm"].includes(meta.id) && isCurrent && (
+                {meta.id === "publishing" && isCurrent && (
+                  <div className="mt-4 space-y-3" data-testid="avvio-publishing-honest">
+                    <p className="text-sm font-sans text-stone-700">
+                      Percorso reale oggi (niente toggle finti):
+                    </p>
+                    <ol className="list-decimal list-inside text-sm font-sans text-stone-600 space-y-1">
+                      <li>Sito OMNIA o box MLS sul sito già tuo</li>
+                      <li>Feed XML verso portali attivabili ora</li>
+                      <li>Social (FB / IG / Telegram) se li usi</li>
+                    </ol>
+                    <p className="text-xs font-sans text-stone-500">
+                      Idealista / Immobiliare.it restano in «In arrivo» — non bloccano Avvio.
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      <Link
+                        to={`/${l}/app/website`}
+                        data-testid="avvio-open-website"
+                        className="px-3 py-2 text-[11px] uppercase tracking-widest border border-stone-900"
+                      >
+                        Il mio sito →
+                      </Link>
+                      <Link
+                        to={`/${l}/app/publishing`}
+                        data-testid="avvio-open-publishing"
+                        className="px-3 py-2 text-[11px] uppercase tracking-widest border border-stone-400"
+                      >
+                        Feed / portali →
+                      </Link>
+                      <Link
+                        to={`/${l}/app/publishing/social`}
+                        data-testid="avvio-open-social"
+                        className="px-3 py-2 text-[11px] uppercase tracking-widest border border-stone-400"
+                      >
+                        Social →
+                      </Link>
+                      <button
+                        type="button"
+                        disabled={busy}
+                        onClick={() => markStep(meta.id)}
+                        data-testid="avvio-done-publishing"
+                        className="px-3 py-2 text-[11px] uppercase tracking-widest bg-stone-900 text-white"
+                      >
+                        Segna fatto
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {meta.id === "import_crm" && isCurrent && (
                   <div className="mt-4 flex flex-wrap gap-2">
                     {meta.href ? (
                       <Link

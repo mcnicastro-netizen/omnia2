@@ -1,3 +1,9 @@
+## 2026-11-12 — P1 Portali percorso onesto
+
+- Publishing: pannello «percorso reale oggi» (sito · feed · social); Idealista fuori critico
+- Tab default «Attivabili ora» se nessun feed attivo
+- Avvio step Pubblicazione: copy + link onesti (sito/feed/social)
+
 ## 2026-11-12 — P1 Oggi cliccabile + Match da schede
 
 - Dashboard recent con `href` (attività/match/portali/HAL)

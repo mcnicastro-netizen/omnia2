@@ -17,6 +17,7 @@ export default function PortalsPage() {
   const [connections, setConnections] = useState([]);
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState("active");
+  const [tabBootstrapped, setTabBootstrapped] = useState(false);
   const [modal, setModal] = useState(null); // {portal, creds:{}}
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(null);
@@ -50,6 +51,15 @@ export default function PortalsPage() {
     (p) => !activePortalSlugs.has(p.slug) && p.integration_ready === false,
   );
   const portalMap = Object.fromEntries(catalog.map((p) => [p.slug, p]));
+
+  // Se non c’è nulla di attivo, apri subito «Attivabili ora» (non «In arrivo»).
+  useEffect(() => {
+    if (loading || tabBootstrapped) return;
+    if (connections.length === 0 && availableReady.length > 0) {
+      setTab("ready");
+    }
+    setTabBootstrapped(true);
+  }, [loading, connections.length, availableReady.length, tabBootstrapped]);
 
   const openActivate = (portal) => {
     const creds = {};
@@ -143,6 +153,52 @@ export default function PortalsPage() {
           </div>
         </div>
 
+        {/* Percorso reale oggi — prima di Idealista / In arrivo */}
+        <div
+          data-testid="portals-real-path"
+          className="grid sm:grid-cols-3 gap-3 max-w-4xl border border-stone-900 bg-white px-4 py-4"
+        >
+          <div>
+            <p className="text-[10px] uppercase tracking-widest text-stone-500">1 · Sito</p>
+            <p className="mt-1 text-sm text-stone-800 font-sans">Pubblica su OMNIA o tieni il sito tuo con box MLS.</p>
+            <Link
+              to={`/${lang}/app/website`}
+              data-testid="portals-path-website"
+              className="inline-block mt-2 text-[11px] uppercase tracking-widest border-b border-stone-900"
+            >
+              Il mio sito →
+            </Link>
+          </div>
+          <div>
+            <p className="text-[10px] uppercase tracking-widest text-stone-500">2 · Feed XML</p>
+            <p className="mt-1 text-sm text-stone-800 font-sans">
+              Portali <strong>attivabili ora</strong> ({availableReady.length}): attiva e comunica l’URL feed.
+            </p>
+            <button
+              type="button"
+              data-testid="portals-path-ready"
+              onClick={() => setTab("ready")}
+              className="inline-block mt-2 text-[11px] uppercase tracking-widest border-b border-stone-900"
+            >
+              Attivabili ora →
+            </button>
+          </div>
+          <div>
+            <p className="text-[10px] uppercase tracking-widest text-stone-500">3 · Social</p>
+            <p className="mt-1 text-sm text-stone-800 font-sans">Facebook, Instagram, Telegram — già collegabili.</p>
+            <Link
+              to={`/${lang}/app/publishing/social`}
+              data-testid="portals-path-social"
+              className="inline-block mt-2 text-[11px] uppercase tracking-widest border-b border-stone-900"
+            >
+              Canali social →
+            </Link>
+          </div>
+          <p className="sm:col-span-3 text-xs text-stone-500 font-sans border-t border-stone-100 pt-3">
+            Idealista e Immobiliare.it sono in tab «In arrivo» ({comingSoon.length}): non sono il percorso critico.
+          </p>
+        </div>
+
         {/* Metrics header */}
         <div className="grid grid-cols-3 gap-4 max-w-2xl">
           <MetricBox label={t("portali.total_active") || "Portali attivi"} value={connections.filter((c) => c.status === "active").length} testid="metric-active" />
@@ -208,7 +264,7 @@ export default function PortalsPage() {
               ) : tab === "active" ? (
                 connections.length === 0 ? (
                   <tr><td colSpan={6} className="px-4 py-6 text-stone-500 text-center" data-testid="portals-empty-active">
-                    Nessun portale attivo. Vai alla tab "Disponibili" per attivarne uno.
+                    Nessun feed collegato. Apri «Attivabili ora», oppure usa sito OMNIA e social — Idealista resta in «In arrivo».
                   </td></tr>
                 ) : connections.map((c) => {
                   const p = portalMap[c.portal_slug] || {};
