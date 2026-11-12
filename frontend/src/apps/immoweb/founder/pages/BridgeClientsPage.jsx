@@ -280,6 +280,17 @@ export default function BridgeClientsPage() {
                   >
                     {a.activation_status}
                   </span>
+                  <p data-testid={`bridge-tenant-sub-${a.id}`}>
+                    {a.past_due
+                      ? "Abb. past_due"
+                      : a.days_left != null
+                        ? `Abb. ${a.days_left}g${a.renewal_due_soon ? " · presto" : ""}`
+                        : a.subscription_status || "Abb. —"}
+                    {" · "}
+                    <span className={a.package_credits_low ? "text-amber-800" : ""}>
+                      {a.package_credits ?? 0} cr pacchetto
+                    </span>
+                  </p>
                   <p>
                     {a.counts?.clients ?? 0} clienti · {a.counts?.properties ?? 0} immobili ·{" "}
                     {a.counts?.api_keys_active ?? 0} API

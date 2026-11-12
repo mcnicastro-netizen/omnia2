@@ -118,8 +118,13 @@ async def bridge_tenants(
         for o in await ocur.to_list(length=len(owner_ids) + 10):
             owners[o["id"]] = o
 
+    page = docs[:limit]
+    from shared.billing.counters import enrich_agencies_billing
+
+    billing_map = await enrich_agencies_billing(db, [d.get("id") for d in page if d.get("id")])
+
     items = []
-    for d in docs[:limit]:
+    for d in page:
         oid = d.get("owner_id")
         owner = owners.get(oid) or {}
         aid = d.get("id")
@@ -132,6 +137,9 @@ async def bridge_tenants(
         contact = d.get("contact") or {}
         address = d.get("address") or {}
         kyc = d.get("kyc") or {}
+        bill = billing_map.get(aid) or {}
+        sub_c = bill.get("sub") or {}
+        cred_c = bill.get("credits") or {}
         items.append(
             {
                 "id": aid,
@@ -140,7 +148,15 @@ async def bridge_tenants(
                 "plan": d.get("plan") or d.get("billing_assisted_tier") or d.get("preferred_plan_tier"),
                 "activation_status": d.get("activation_status") or "active",
                 "is_active": d.get("is_active", True),
+                # Kling/video legacy — non confondere con pacchetto
                 "credits_balance": d.get("credits_balance"),
+                "package_credits": cred_c.get("balance", 0),
+                "package_credits_low": bool(cred_c.get("low")),
+                "subscription_status": sub_c.get("status"),
+                "current_period_end": sub_c.get("current_period_end"),
+                "days_left": sub_c.get("days_left"),
+                "renewal_due_soon": bool(sub_c.get("renewal_due_soon")),
+                "past_due": bool(sub_c.get("past_due")),
                 "created_at": d.get("created_at"),
                 "owner_email": owner.get("email"),
                 "owner_name": owner.get("name"),
@@ -218,11 +234,10 @@ async def bridge_tenant_detail(
     ).sort("created_at", -1).to_list(length=50)
 
     from shared.auth.agency_credentials import agency_payment_ok
+    from shared.billing.counters import subscription_counter, wallet_counter
 
-    sub = await db.subscriptions.find_one(
-        {"agency_id": agency_id},
-        {"_id": 0, "status": 1, "plan_tier": 1, "updated_at": 1, "created_at": 1},
-    )
+    sub = await db.subscriptions.find_one({"agency_id": agency_id}, {"_id": 0})
+    wallet = await db.credit_wallets.find_one({"agency_id": agency_id}, {"_id": 0})
     tx_list = (
         await db.payment_transactions.find(
             {
@@ -237,6 +252,8 @@ async def bridge_tenant_detail(
     )
     tx = tx_list[0] if tx_list else None
     paid_ok = await agency_payment_ok(db, agency_id)
+    sub_c = subscription_counter(sub)
+    cred_c = wallet_counter(wallet)
 
     return {
         "ok": True,
@@ -248,13 +265,20 @@ async def bridge_tenant_detail(
         "api_keys": keys,
         "payment": {
             "ok": paid_ok,
-            "subscription_status": (sub or {}).get("status"),
-            "plan_tier": (sub or {}).get("plan_tier")
+            "subscription_status": sub_c.get("status") or (sub or {}).get("status"),
+            "plan_tier": sub_c.get("tier")
+            or (sub or {}).get("plan_tier")
             or agency.get("preferred_plan_tier")
             or agency.get("billing_assisted_tier"),
             "last_paid_at": (tx or {}).get("paid_at") or (tx or {}).get("created_at"),
             "has_paid_tx": bool(tx),
+            "current_period_start": sub_c.get("current_period_start"),
+            "current_period_end": sub_c.get("current_period_end"),
+            "days_left": sub_c.get("days_left"),
+            "renewal_due_soon": sub_c.get("renewal_due_soon"),
+            "past_due": sub_c.get("past_due"),
         },
+        "credits": cred_c,
         "counts": {
             "members": len(members),
             "clients": len(clients),

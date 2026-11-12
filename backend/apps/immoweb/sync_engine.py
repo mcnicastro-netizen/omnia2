@@ -547,13 +547,42 @@ def start_scheduler() -> None:
         coalesce=True,
     )
 
+    async def _billing_reminders_tick():
+        """D-166 — promemoria rinnovo abbonamento + crediti pacchetto bassi."""
+        from shared.billing.counters import run_billing_reminders
+        from shared.db.connection import Database
+
+        try:
+            report = await run_billing_reminders(Database.get())
+            _mark_job(
+                "billing_reminders_daily",
+                ok=bool(report.get("ok")),
+                detail=(
+                    f"renewal={report.get('renewal_emails')} "
+                    f"credits={report.get('credits_alerts')} "
+                    f"ops={report.get('ops_alerts')}"
+                ),
+            )
+        except Exception as e:  # noqa: BLE001
+            _mark_job("billing_reminders_daily", ok=False, detail=str(e))
+            logger.warning("billing reminders failed: %s", e)
+
+    sched.add_job(
+        _billing_reminders_tick,
+        CronTrigger(hour=7, minute=15),
+        id="billing_reminders_daily",
+        replace_existing=True,
+        max_instances=1,
+        coalesce=True,
+    )
+
     sched.start()
     _scheduler = sched
     logger.info(
         "Publishing scheduler started (D-108 owner=apscheduler; daily sync %02d:%02d UTC + "
         "saved-searches every 5m + backup 03:15 UTC + request-matching 02:30 UTC + "
         "private-listing→requests hourly(+boot catch-up) + b2c paid-listing expire 04:00 UTC + "
-        "trash purge 04:15 UTC + orphan GC 04:30 UTC)",
+        "trash purge 04:15 UTC + orphan GC 04:30 UTC + billing reminders 07:15 UTC)",
         DAILY_SYNC_HOUR_UTC, DAILY_SYNC_MINUTE_UTC,
     )
 

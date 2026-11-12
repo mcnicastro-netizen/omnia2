@@ -99,6 +99,7 @@ HAL: `api.railway-api-deploy` · `api.vercel-fe-deploy` · `api.stripe-sandbox-c
 - **D-160 / D-162 / D-163**: Niente mail a register; dopo KYC+pay Gemini confronta allegati → auto-Attiva + `agency_activated`, altrimenti `agency_pending` Ops.
 - **D-164**: Stripe period su `items` + waiting poll `/billing/status` (senza webhook apply fallisce → niente auto-Attiva).
 - **D-165**: CTA email Attiva = `enter_url` (login `?from=app&next=/…/dashboard`), non deep-link freddo (anti-403).
+- **D-166**: Contatori scadenze abbonamento + crediti pacchetto in Cabina/Billing; cron 07:15 UTC email 30/7/1g + low-credits (soglia 200).
 - **D-161**: **Password register = login definitivo**; Attiva → `agency_activated`; API keys solo da Impostazioni; forgot-password se non ricorda.
 - **Cabina scheda**: checklist 3 passi (documenti → pagamento → attiva).
 - **A-038** (aperta): Stripe sandbox ≠ FE italiana.

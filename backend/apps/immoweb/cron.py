@@ -79,6 +79,18 @@ async def cron_expire_paid_listing_slots(user: dict = Depends(get_current_user))
     return {"ok": True, "trigger": "manual", "owner": "apscheduler", **report}
 
 
+@router.post("/billing/reminders")
+async def cron_billing_reminders(user: dict = Depends(get_current_user)):
+    """D-166 — promemoria rinnovo + crediti bassi. Trigger manuale (owner=apscheduler 07:15 UTC)."""
+    if user.get("role") not in ALLOWED_ROLES:
+        raise HTTPException(status_code=403, detail="cron_forbidden")
+    from shared.billing.counters import run_billing_reminders
+    from shared.db.connection import Database
+
+    report = await run_billing_reminders(Database.get())
+    return {"ok": True, "trigger": "manual", "owner": "apscheduler", **report}
+
+
 @router.post("/listings/match-private")
 async def cron_match_private_listings(user: dict = Depends(get_current_user)):
     """Match annunci privati → richieste CRM tutte le agenzie. Trigger manuale (D-108)."""
