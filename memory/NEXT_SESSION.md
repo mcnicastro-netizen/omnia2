@@ -1,29 +1,25 @@
 # Prossima sessione — programma passi
 
-**Aggiornato**: 12 Novembre 2026 (~10:20 CET — Europe/Rome)  
+**Aggiornato**: 12 Novembre 2026 (~11:00 CET — Europe/Rome)  
 **Repo**: https://github.com/mcnicastro-netizen/omnia2 ✅  
 
 ---
 
-## In corso / appena shippato — D-167
+## Dogfood D-168
 
-- Stripe → crediti listino; Attiva allineata; stato sito in area privata; Accedi landing
-- Dopo merge: `POST /app/ops/reconcile-plan-credits` su Nicastro (clawback 2000 → listino)
-- Smoke: landing Accedi, Dashboard «Il tuo sito», Piano&Crediti saldo
+1. Nicastro resettato (offboard + erase) → ri-registra e percorri **Avvio** sul campo.
+2. Verifica: Accedi landing · Stripe crediti listino · checklist Avvio · MLS richieste default ON.
+3. Firma elettronica: solo predisposizione finché arrivano credenziali provider.
 
 ## Aperto
 
-1. **A-038** solo con «vai»
-2. Restyling caso 3 (D-149) resta in coda — non aprire senza Founder
-3. Stub Impostazioni «3 template presto» vs gallery 8 (pulizia UX)
+- **A-038** solo con «vai»
+- Restyling caso 3: nel percorso Avvio è «tema OMNIA» (incluso Pro); fee €199 Starter resta D-151
 
 ## SoT
 
 | Voce | Doc |
 |------|-----|
-| Percorso crediti/sito | **D-167** |
+| Avvio / MLS sito | **D-168** |
+| Crediti Stripe | **D-167** |
 | Contatori | **D-166** |
-| Auto-KYC | **D-163** |
-| Fattura | **A-038** aperta |
-
-Vault: [`CLOUD_SECRETS_INVENTORY.md`](./CLOUD_SECRETS_INVENTORY.md).

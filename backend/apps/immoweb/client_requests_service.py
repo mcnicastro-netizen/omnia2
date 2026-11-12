@@ -115,7 +115,7 @@ def build_request_doc(
     title: Optional[str] = None,
     notes: Optional[str] = None,
     lead_id: Optional[str] = None,
-    mls_shared: bool = False,
+    mls_shared: bool = True,  # D-168 default ON (override da agency.defaults se presente)
     assigned_agent_id: Optional[str] = None,
     status: str = "open",
 ) -> Dict[str, Any]:
