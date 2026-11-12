@@ -36,7 +36,7 @@ const STEP_META = [
   {
     id: "import_crm",
     title: "Clienti e richieste",
-    hint: "Import anagrafiche/richieste; condivisione rete già impostata allo step MLS.",
+    hint: "Importa anagrafiche, poi crea i brief per gli acquirenti — non fermarti alla lista.",
     href: "clients/import",
   },
   {
@@ -510,25 +510,35 @@ export default function AvvioSetupPage() {
                 )}
 
                 {meta.id === "import_crm" && isCurrent && (
-                  <div className="mt-4 flex flex-wrap gap-2">
-                    {meta.href ? (
+                  <div className="mt-4 space-y-3" data-testid="avvio-import-crm-next">
+                    <p className="text-sm font-sans text-stone-700">
+                      Dopo l’import: apri gli acquirenti e crea il brief (richiesta). Solo «segna fatto» senza import lascia il CRM vuoto.
+                    </p>
+                    <div className="flex flex-wrap gap-2">
                       <Link
-                        to={`/${l}/app/${meta.href}`}
-                        className="px-3 py-2 text-[11px] uppercase tracking-widest border border-stone-400"
-                        data-testid={`avvio-open-${meta.id}`}
+                        to={`/${l}/app/clients/import`}
+                        className="px-3 py-2 text-[11px] uppercase tracking-widest border border-stone-900"
+                        data-testid="avvio-open-import_crm"
                       >
-                        Apri →
+                        Importa clienti →
                       </Link>
-                    ) : null}
-                    <button
-                      type="button"
-                      disabled={busy}
-                      onClick={() => markStep(meta.id)}
-                      data-testid={`avvio-done-${meta.id}`}
-                      className="px-3 py-2 text-[11px] uppercase tracking-widest bg-stone-900 text-white"
-                    >
-                      Segna fatto
-                    </button>
+                      <Link
+                        to={`/${l}/app/requests/new`}
+                        className="px-3 py-2 text-[11px] uppercase tracking-widest border border-stone-400"
+                        data-testid="avvio-open-request-after-import"
+                      >
+                        Nuova richiesta →
+                      </Link>
+                      <button
+                        type="button"
+                        disabled={busy}
+                        onClick={() => markStep(meta.id)}
+                        data-testid="avvio-done-import_crm"
+                        className="px-3 py-2 text-[11px] uppercase tracking-widest bg-stone-900 text-white"
+                      >
+                        Segna fatto
+                      </button>
+                    </div>
                   </div>
                 )}
 

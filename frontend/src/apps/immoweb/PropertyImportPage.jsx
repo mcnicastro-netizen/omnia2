@@ -294,9 +294,23 @@ export default function PropertyImportPage() {
                     </ul>
                   </details>
                 )}
-                <button onClick={() => nav(`/${lang}/app/properties`)} className="mt-4 px-5 py-2.5 bg-stone-900 text-stone-50 text-xs uppercase tracking-widest rounded-md hover:bg-stone-700">
-                  {t("import.go_to_list")}
-                </button>
+                <div className="mt-4 flex flex-wrap gap-2" data-testid="import-props-next">
+                  <button
+                    type="button"
+                    onClick={() => nav(`/${lang}/app/properties`)}
+                    className="px-5 py-2.5 bg-stone-900 text-stone-50 text-xs uppercase tracking-widest rounded-md hover:bg-stone-700"
+                  >
+                    {t("import.go_to_list")}
+                  </button>
+                  <button
+                    type="button"
+                    data-testid="import-props-next-avvio"
+                    onClick={() => nav(`/${lang}/app/avvio`)}
+                    className="px-5 py-2.5 border border-stone-900 text-stone-900 text-xs uppercase tracking-widest rounded-md"
+                  >
+                    Continua Avvio →
+                  </button>
+                </div>
               </div>
             )}
           </div>
@@ -410,9 +424,23 @@ export default function PropertyImportPage() {
                     </ul>
                   </details>
                 )}
-                <button onClick={() => nav(`/${lang}/app/properties`)} className="mt-4 px-5 py-2.5 bg-stone-900 text-stone-50 text-xs uppercase tracking-widest rounded-md hover:bg-stone-700">
-                  {t("import.go_to_list")}
-                </button>
+                <div className="mt-4 flex flex-wrap gap-2" data-testid="import-props-xml-next">
+                  <button
+                    type="button"
+                    onClick={() => nav(`/${lang}/app/properties`)}
+                    className="px-5 py-2.5 bg-stone-900 text-stone-50 text-xs uppercase tracking-widest rounded-md hover:bg-stone-700"
+                  >
+                    {t("import.go_to_list")}
+                  </button>
+                  <button
+                    type="button"
+                    data-testid="import-props-xml-next-avvio"
+                    onClick={() => nav(`/${lang}/app/avvio`)}
+                    className="px-5 py-2.5 border border-stone-900 text-stone-900 text-xs uppercase tracking-widest rounded-md"
+                  >
+                    Continua Avvio →
+                  </button>
+                </div>
               </div>
             )}
           </div>

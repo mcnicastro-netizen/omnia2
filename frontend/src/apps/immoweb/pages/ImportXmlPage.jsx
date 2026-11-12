@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { Link } from "react-router-dom";
 import { api } from "../../../shared/lib/api";
 import AgencyShell from "../components/AgencyShell";
 import Brand from "../../../shared/components/Brand";
@@ -11,7 +12,8 @@ import ImportFormsCrossLinks from "../components/ImportFormsCrossLinks";
  * Copy: intentionally generic ("il tuo attuale gestionale"). No competitor names.
  */
 export default function ImportXmlPage() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const lang = (i18n.language || "it").slice(0, 2);
   const [file, setFile] = useState(null);
   const [dragOver, setDragOver] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -453,6 +455,21 @@ export default function ImportXmlPage() {
                   <strong>{commitResult.inserted}</strong> immobili importati con successo,{" "}
                   <strong>{commitResult.skipped_by_reference}</strong> saltati (già presenti).
                 </p>
+                <div className="mt-3 flex flex-wrap gap-2" data-testid="import-xml-next">
+                  <Link
+                    to={`/${lang}/app/properties`}
+                    className="px-4 py-2 text-[11px] uppercase tracking-widest bg-stone-900 text-white"
+                  >
+                    Vai agli immobili →
+                  </Link>
+                  <Link
+                    to={`/${lang}/app/avvio`}
+                    data-testid="import-xml-next-avvio"
+                    className="px-4 py-2 text-[11px] uppercase tracking-widest border border-stone-900"
+                  >
+                    Continua Avvio →
+                  </Link>
+                </div>
               </>
             ) : (
               <>
@@ -460,6 +477,21 @@ export default function ImportXmlPage() {
                 <p className="text-sm mt-1">
                   Tutti i <strong>{commitResult.skipped_by_reference}</strong> immobili erano già presenti (dedupe attivo).
                 </p>
+                <div className="mt-3 flex flex-wrap gap-2" data-testid="import-xml-next">
+                  <Link
+                    to={`/${lang}/app/properties`}
+                    className="px-4 py-2 text-[11px] uppercase tracking-widest border border-stone-900"
+                  >
+                    Vai agli immobili →
+                  </Link>
+                  <Link
+                    to={`/${lang}/app/avvio`}
+                    data-testid="import-xml-next-avvio"
+                    className="px-4 py-2 text-[11px] uppercase tracking-widest border border-stone-300"
+                  >
+                    Continua Avvio →
+                  </Link>
+                </div>
               </>
             )}
           </div>

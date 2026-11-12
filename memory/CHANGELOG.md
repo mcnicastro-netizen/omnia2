@@ -1,3 +1,9 @@
+## 2026-11-12 — P2 Import Avvio con prosecuzione
+
+- Post-import clienti: CTA brief + Continua Avvio
+- Post-import immobili XML/CSV: CTA lista + Continua Avvio
+- Avvio step Clienti: copy «non fermarti alla lista» + link richiesta
+
 ## 2026-11-12 — P1 Portali percorso onesto
 
 - Publishing: pannello «percorso reale oggi» (sito · feed · social); Idealista fuori critico

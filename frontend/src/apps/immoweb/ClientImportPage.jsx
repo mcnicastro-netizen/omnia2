@@ -138,12 +138,34 @@ function AISmartImport({ t, lang }) {
             {t("client_import.ai_done_skipped", { n: commitResult.skipped })}
           </p>
         )}
-        <button
-          onClick={() => nav(`/${lang}/app/clients`)}
-          className="mt-4 px-5 py-2.5 bg-stone-900 text-stone-50 text-xs uppercase tracking-widest rounded-md hover:bg-stone-700"
-        >
-          {t("client_import.go_to_list")}
-        </button>
+        <p className="mt-3 text-sm text-stone-600 font-sans" data-testid="import-clients-next-hint">
+          Prossimo passo: per gli acquirenti crea il brief (richiesta), così Match sa cosa cercare.
+        </p>
+        <div className="mt-4 flex flex-wrap gap-2">
+          <button
+            type="button"
+            onClick={() => nav(`/${lang}/app/clients`)}
+            className="px-5 py-2.5 bg-stone-900 text-stone-50 text-xs uppercase tracking-widest rounded-md hover:bg-stone-700"
+          >
+            {t("client_import.go_to_list")}
+          </button>
+          <button
+            type="button"
+            data-testid="import-clients-next-requests"
+            onClick={() => nav(`/${lang}/app/requests/new`)}
+            className="px-5 py-2.5 border border-stone-900 text-stone-900 text-xs uppercase tracking-widest rounded-md"
+          >
+            Crea richiesta / brief →
+          </button>
+          <button
+            type="button"
+            data-testid="import-clients-next-avvio"
+            onClick={() => nav(`/${lang}/app/avvio`)}
+            className="px-5 py-2.5 border border-stone-300 text-stone-700 text-xs uppercase tracking-widest rounded-md"
+          >
+            Continua Avvio →
+          </button>
+        </div>
       </div>
     );
   }
@@ -476,9 +498,34 @@ function StandardCSVImport({ t, lang }) {
             </ul>
           </details>
         )}
-        <button onClick={() => nav(`/${lang}/app/clients`)} className="mt-4 px-5 py-2.5 bg-stone-900 text-stone-50 text-xs uppercase tracking-widest rounded-md hover:bg-stone-700">
-          {t("client_import.go_to_list")}
-        </button>
+        <p className="mt-3 text-sm text-stone-600 font-sans" data-testid="import-clients-next-hint">
+          Prossimo passo: per gli acquirenti crea il brief (richiesta), così Match sa cosa cercare.
+        </p>
+        <div className="mt-4 flex flex-wrap gap-2">
+          <button
+            type="button"
+            onClick={() => nav(`/${lang}/app/clients`)}
+            className="px-5 py-2.5 bg-stone-900 text-stone-50 text-xs uppercase tracking-widest rounded-md hover:bg-stone-700"
+          >
+            {t("client_import.go_to_list")}
+          </button>
+          <button
+            type="button"
+            data-testid="import-clients-next-requests"
+            onClick={() => nav(`/${lang}/app/requests/new`)}
+            className="px-5 py-2.5 border border-stone-900 text-stone-900 text-xs uppercase tracking-widest rounded-md"
+          >
+            Crea richiesta / brief →
+          </button>
+          <button
+            type="button"
+            data-testid="import-clients-next-avvio"
+            onClick={() => nav(`/${lang}/app/avvio`)}
+            className="px-5 py-2.5 border border-stone-300 text-stone-700 text-xs uppercase tracking-widest rounded-md"
+          >
+            Continua Avvio →
+          </button>
+        </div>
       </div>
     );
   }
