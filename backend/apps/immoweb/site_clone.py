@@ -380,9 +380,9 @@ async def _build_clone_preview(agency: Dict[str, Any], capture: Dict[str, Any]) 
         "source_url": capture.get("source_url"),
         "best_effort": True,
         "notes": (
-            "Preview su tema OMNIA con brand estratto (colori/logo) — best-effort. "
-            "Non è un clone HTML del sito originale (Agensta/altro): layout ricerca e box MLS "
-            "seguono i template OMNIA; il box MLS pubblico richiede mls_enabled + tema OMNIA."
+            "Analisi colori/logo → tema OMNIA (opzionale). Se il sito è già tuo e resta online, "
+            "non serve: scegli «Lascia il sito com’è» (external). Questa preview non sostituisce "
+            "il sito attuale finché non sposti DNS/hosting su OMNIA."
         ),
     }
     capture_out = dict(capture)
