@@ -187,10 +187,19 @@ export default function ClientFormPage() {
 
       if (isEdit) {
         await api.patch(`/app/clients/${id}`, payload);
+        nav(`/${lang}/app/clients/${id}`, { replace: true });
       } else {
-        await api.post(`/app/clients`, payload);
+        const { data: created } = await api.post(`/app/clients`, payload);
+        const nid = created?.id;
+        // Searcher: next step = brief/richiesta (D-172 J4). Seller: resta sulla scheda.
+        if (nid && SEARCHER_TYPES.includes(payload.client_type)) {
+          nav(`/${lang}/app/requests/new?client_id=${nid}&created=1`, { replace: true });
+        } else if (nid) {
+          nav(`/${lang}/app/clients/${nid}?created=1`, { replace: true });
+        } else {
+          nav(`/${lang}/app/clients`, { replace: true });
+        }
       }
-      nav(`/${lang}/app/clients`, { replace: true });
     } catch (err) {
       setError(formatApiErrorDetail(err?.response?.data?.detail) || t("common.error"));
     } finally {

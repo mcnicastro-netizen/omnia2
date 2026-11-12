@@ -286,25 +286,36 @@ export default function MlsPage() {
                 <span className="text-sm text-slate-500 self-center ml-auto">{inventory.total} risultati</span>
               </div>
               <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                {(inventory.items || []).map((item) => (
-                  <article key={item.id} className="border border-slate-200 rounded-lg overflow-hidden bg-white">
-                    <div
-                      className="h-36 bg-slate-100 bg-cover bg-center"
-                      style={item.cover_url ? { backgroundImage: `url(${item.cover_url})` } : undefined}
-                    />
-                    <div className="p-3 space-y-1">
-                      <div className="text-xs text-slate-500 uppercase tracking-wide">{item.operation || "—"}</div>
-                      <h3 className="font-medium text-slate-900 line-clamp-2">{item.title}</h3>
-                      <p className="text-sm text-slate-600">
-                        {item.city}
-                        {item.province_sigla ? ` (${item.province_sigla})` : ""}
-                      </p>
-                      <p className="text-sm font-semibold text-slate-900">
-                        {item.price != null ? `€ ${Number(item.price).toLocaleString(lang)}` : "Prezzo n.d."}
-                      </p>
-                    </div>
-                  </article>
-                ))}
+                {(inventory.items || []).map((item) => {
+                  const href =
+                    scope === "mine"
+                      ? `/${lang}/app/properties/${item.id}`
+                      : `/${lang}/cloud/property/${item.id}`;
+                  return (
+                    <Link
+                      key={item.id}
+                      to={href}
+                      data-testid={`mls-inventory-card-${item.id}`}
+                      className="border border-slate-200 rounded-lg overflow-hidden bg-white block hover:border-slate-400 transition-colors"
+                    >
+                      <div
+                        className="h-36 bg-slate-100 bg-cover bg-center"
+                        style={item.cover_url ? { backgroundImage: `url(${item.cover_url})` } : undefined}
+                      />
+                      <div className="p-3 space-y-1">
+                        <div className="text-xs text-slate-500 uppercase tracking-wide">{item.operation || "—"}</div>
+                        <h3 className="font-medium text-slate-900 line-clamp-2">{item.title}</h3>
+                        <p className="text-sm text-slate-600">
+                          {item.city}
+                          {item.province_sigla ? ` (${item.province_sigla})` : ""}
+                        </p>
+                        <p className="text-sm font-semibold text-slate-900">
+                          {item.price != null ? `€ ${Number(item.price).toLocaleString(lang)}` : "Prezzo n.d."}
+                        </p>
+                      </div>
+                    </Link>
+                  );
+                })}
               </div>
             </section>
           </>

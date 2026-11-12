@@ -50,6 +50,8 @@ const empty = {
   videos: [],
   floor_plans: [],
   is_listed_on_immobilcloud: true,
+  /** public = sito+MLS · mls_only = solo rete · private = solo agenzia */
+  visibility: "public",
 };
 
 export default function PropertyFormPage() {
@@ -261,6 +263,24 @@ export default function PropertyFormPage() {
                 </select>
               </Field>
             </div>
+            <Field label={t("properties.field_visibility", "Visibilità")}>
+              <select
+                data-testid="prop-visibility"
+                value={form.visibility || "public"}
+                onChange={(e) => upd("visibility", e.target.value)}
+                className="form-input max-w-md"
+              >
+                <option value="public">{t("properties.visibility_public", "Pubblico (sito + MLS)")}</option>
+                <option value="mls_only">{t("properties.visibility_mls_only", "Solo rete MLS")}</option>
+                <option value="private">{t("properties.visibility_private", "Privato (solo agenzia)")}</option>
+              </select>
+              <p className="mt-1 text-xs text-stone-500 font-sans">
+                {t(
+                  "properties.field_visibility_hint",
+                  "Pubblico = sito e rete. Solo MLS = reti tra agenzie. Privato = solo la tua agenzia."
+                )}
+              </p>
+            </Field>
             <div className="grid grid-cols-2 gap-4">
               <Field label={t("properties.field_reference")}>
                 <input value={form.reference_code || ""} onChange={(e) => upd("reference_code", e.target.value)} className="form-input" />
