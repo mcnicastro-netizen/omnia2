@@ -1,3 +1,7 @@
+## 2026-11-12 — D-171 Match + Richieste navy + oro
+
+- Matches / LeadScore / Requests / RequestForm su `crm-desk`
+
 ## 2026-11-12 — D-171 Oggi / Dashboard navy + oro
 
 - `DashboardPage` + `KPICard`: `crm-desk`, azioni rapide, cockpit Oggi, KPI

@@ -9,7 +9,7 @@ function tempStyles(temp) {
     case "rovente": return { tone: "bg-rose-50 text-rose-700 border-rose-200", icon: "🔥", title: "ROVENTE" };
     case "caldo": return { tone: "bg-orange-50 text-orange-700 border-orange-200", icon: "🌶️", title: "CALDO" };
     case "tiepido": return { tone: "bg-amber-50 text-amber-700 border-amber-200", icon: "☀️", title: "TIEPIDO" };
-    default: return { tone: "bg-stone-100 text-stone-600 border-stone-200", icon: "❄️", title: "FREDDO" };
+    default: return { tone: "bg-crm-mist text-crm-muted border-crm-line", icon: "❄️", title: "FREDDO" };
   }
 }
 
@@ -33,43 +33,41 @@ export default function MatchLeadScorePage() {
 
   return (
     <AgencyShell current="matches">
-      <section data-testid="lead-score-page" className="max-w-3xl space-y-6">
+      <section data-testid="lead-score-page" className="crm-desk max-w-3xl space-y-6">
         <div>
-          <Link to={`/${lang}/app/matches`} className="text-xs uppercase tracking-widest text-stone-500 hover:text-stone-900">
+          <Link to={`/${lang}/app/matches`} className="text-xs uppercase tracking-widest text-crm-muted hover:text-crm-navy">
             ← {t("matches.back_to_list") || "Torna ai match"}
           </Link>
-          <h1
-            className="text-3xl md:text-4xl tracking-tight mt-2"
-            style={{ fontFamily: "'Fraunces', Georgia, serif" }}
-          >
-            Valutazione abbinamento
-          </h1>
+          <p className="crm-eyebrow mt-3" data-testid="leadscore-crm-eyebrow">
+            Match
+          </p>
+          <h1 className="crm-title text-3xl md:text-4xl mt-1">Valutazione abbinamento</h1>
         </div>
 
         {(!pid || !cid) && (
           <div
             data-testid="leadscore-missing-pair"
-            className="bg-white border border-stone-200 rounded-lg p-8 space-y-4"
+            className="bg-white border border-crm-line rounded-lg p-8 space-y-4"
           >
-            <p className="text-stone-800 font-sans text-sm">
+            <p className="text-crm-navy font-sans text-sm">
               Per valutare un abbinamento apri un immobile o un cliente e usa Match da lì — qui servono entrambi.
             </p>
             <div className="flex flex-wrap gap-2">
               <Link
                 to={`/${lang}/app/properties`}
-                className="px-3 py-2 text-[11px] uppercase tracking-widest border border-stone-900"
+                className="crm-btn-ghost px-3 py-2 text-[11px] uppercase tracking-widest rounded-md"
               >
                 Immobili →
               </Link>
               <Link
                 to={`/${lang}/app/clients`}
-                className="px-3 py-2 text-[11px] uppercase tracking-widest border border-stone-300"
+                className="crm-btn-ghost px-3 py-2 text-[11px] uppercase tracking-widest rounded-md"
               >
                 Clienti →
               </Link>
               <Link
                 to={`/${lang}/app/matches`}
-                className="px-3 py-2 text-[11px] uppercase tracking-widest border border-stone-300"
+                className="crm-btn-ghost px-3 py-2 text-[11px] uppercase tracking-widest rounded-md"
               >
                 Elenco Match →
               </Link>
@@ -82,8 +80,8 @@ export default function MatchLeadScorePage() {
         )}
 
         {pid && cid && !data && !error && (
-          <div data-testid="leadscore-loading" className="bg-white border border-stone-200 rounded-lg p-8 text-center">
-            <div className="inline-block animate-pulse text-stone-500">Stiamo valutando l’abbinamento…</div>
+          <div data-testid="leadscore-loading" className="bg-white border border-crm-line rounded-lg p-8 text-center">
+            <div className="inline-block animate-pulse text-crm-muted">Stiamo valutando l’abbinamento…</div>
             <p className="text-xs text-stone-400 mt-2">Pochi secondi</p>
           </div>
         )}
@@ -104,7 +102,7 @@ export default function MatchLeadScorePage() {
                       </div>
                     </div>
                     <div className="text-right">
-                      <div className="text-5xl font-bold" style={{ fontFamily: "'Fraunces', Georgia, serif" }}>
+                      <div className="crm-title text-5xl font-semibold">
                         {data.lead_score.score}
                         <span className="text-2xl opacity-50">/100</span>
                       </div>
@@ -119,15 +117,15 @@ export default function MatchLeadScorePage() {
 
             {/* Action hint */}
             {data.lead_score.action_hint && (
-              <div data-testid="leadscore-action" className="bg-stone-900 text-stone-50 rounded-lg p-5">
+              <div data-testid="leadscore-action" className="crm-btn-primary rounded-lg p-5">
                 <div className="text-[10px] uppercase tracking-widest opacity-60 mb-1">{t("matches.next_action") || "Azione consigliata"}</div>
                 <p className="text-base leading-snug">{data.lead_score.action_hint}</p>
               </div>
             )}
 
             {/* Reasons */}
-            <div className="bg-white border border-stone-200 rounded-lg p-5">
-              <div className="text-xs uppercase tracking-widest text-stone-500 mb-3">{t("matches.why") || "Perché"}</div>
+            <div className="bg-white border border-crm-line rounded-lg p-5">
+              <div className="text-xs uppercase tracking-widest text-crm-muted mb-3">{t("matches.why") || "Perché"}</div>
               <ul className="space-y-2">
                 {(data.lead_score.reasons || []).map((r, i) => (
                   <li key={i} className="flex items-start gap-2 text-sm text-stone-800">
@@ -142,35 +140,35 @@ export default function MatchLeadScorePage() {
             <div className="grid sm:grid-cols-2 gap-4">
               <Link
                 to={`/${lang}/app/properties/${data.property.id}`}
-                className="bg-white border border-stone-200 rounded-lg p-4 hover:border-stone-400"
+                className="bg-white border border-crm-line rounded-lg p-4 hover:border-stone-400"
               >
-                <div className="text-[10px] uppercase tracking-widest text-stone-500 mb-1">{t("matches.property") || "Immobile"}</div>
-                <div className="font-semibold text-stone-900">{data.property.title}</div>
-                <div className="text-xs text-stone-500 mt-1">
+                <div className="text-[10px] uppercase tracking-widest text-crm-muted mb-1">{t("matches.property") || "Immobile"}</div>
+                <div className="font-semibold text-crm-navy">{data.property.title}</div>
+                <div className="text-xs text-crm-muted mt-1">
                   {data.property.city} · {data.property.surface_sqm} m² · {data.property.rooms} loc.
                 </div>
-                <div className="text-sm font-medium text-stone-900 mt-2" style={{ fontFamily: "'Fraunces', Georgia, serif" }}>
+                <div className="text-sm font-medium text-crm-navy mt-2">
                   {data.property.price ? new Intl.NumberFormat("it-IT", { style: "currency", currency: "EUR", maximumFractionDigits: 0 }).format(data.property.price) : (data.property.rent_monthly ? `${new Intl.NumberFormat("it-IT", { style: "currency", currency: "EUR", maximumFractionDigits: 0 }).format(data.property.rent_monthly)}/mese` : "—")}
                 </div>
               </Link>
               <Link
                 to={`/${lang}/app/clients/${data.client.id}`}
-                className="bg-white border border-stone-200 rounded-lg p-4 hover:border-stone-400"
+                className="bg-white border border-crm-line rounded-lg p-4 hover:border-stone-400"
               >
-                <div className="text-[10px] uppercase tracking-widest text-stone-500 mb-1">{t("matches.client") || "Cliente"}</div>
-                <div className="font-semibold text-stone-900">{data.client.name} {data.client.surname || ""}</div>
-                <div className="text-xs text-stone-500 mt-1">
+                <div className="text-[10px] uppercase tracking-widest text-crm-muted mb-1">{t("matches.client") || "Cliente"}</div>
+                <div className="font-semibold text-crm-navy">{data.client.name} {data.client.surname || ""}</div>
+                <div className="text-xs text-crm-muted mt-1">
                   {t(`clients.type_${data.client.client_type}`)} · {t(`clients.status_${data.client.status}`)}
                 </div>
-                <div className="text-xs text-stone-500 mt-2">
+                <div className="text-xs text-crm-muted mt-2">
                   {data.client.email}{data.client.phone ? ` · ${data.client.phone}` : ""}
                 </div>
               </Link>
             </div>
 
             {/* Deterministic breakdown */}
-            <details className="bg-white border border-stone-200 rounded-lg p-4">
-              <summary className="cursor-pointer text-xs uppercase tracking-widest text-stone-500">
+            <details className="bg-white border border-crm-line rounded-lg p-4">
+              <summary className="cursor-pointer text-xs uppercase tracking-widest text-crm-muted">
                 {t("matches.match_detail")} ({data.match.score}/100)
               </summary>
               <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 gap-2 text-xs">
