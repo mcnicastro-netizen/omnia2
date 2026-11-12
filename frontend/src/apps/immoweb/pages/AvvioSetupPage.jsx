@@ -157,13 +157,17 @@ export default function AvvioSetupPage() {
           <p className="mt-2 text-sm font-sans text-stone-600 max-w-2xl">
             {t(
               "avvio.subtitle",
-              "Percorso guidato post-attivazione. Gli strumenti commerciali restano in menu; qui chiudi i passi nell’ordine giusto."
+              "Un passo alla volta. Gli strumenti restano in menu; la barra in alto ti riporta qui finché non chiudi Avvio."
             )}
           </p>
           <div className="mt-4 flex flex-wrap items-center gap-3">
             <p className="text-xs font-sans uppercase tracking-widest text-stone-500" data-testid="avvio-progress">
               {progress.done}/{progress.total} obbligatori
-              {completed ? " · completato" : next && next !== "done" ? ` · prossimo: ${next}` : ""}
+              {completed
+                ? " · completato"
+                : next && next !== "done"
+                  ? ` · prossimo: ${STEP_META.find((s) => s.id === next)?.title || next}`
+                  : ""}
             </p>
             {typeof ctx.credits_balance === "number" ? (
               <Link
@@ -227,10 +231,14 @@ export default function AvvioSetupPage() {
                     {isDone ? "fatto" : isCurrent ? "in corso" : "da fare"}
                   </span>
                 </div>
-                <p className="mt-1 text-sm font-sans text-stone-600">{meta.hint}</p>
+                {isCurrent || isDone ? (
+                  <p className="mt-1 text-sm font-sans text-stone-600">{meta.hint}</p>
+                ) : (
+                  <p className="mt-1 text-xs font-sans text-stone-400">Dopo il passo in corso.</p>
+                )}
 
                 {/* —— STEP 1: sito già mio OPPURE restyling —— */}
-                {meta.id === "site" && (isCurrent || isDone) && (
+                {meta.id === "site" && isCurrent && (
                   <div className="mt-4 space-y-3" data-testid="avvio-site-form">
                     {ctx.declared_url ? (
                       <p className="text-xs text-stone-500 truncate" data-testid="avvio-declared-url">
@@ -427,9 +435,8 @@ export default function AvvioSetupPage() {
                       {team.seats_left != null ? ` · liberi ${team.seats_left}` : ""}
                     </p>
                     <p className="text-xs text-stone-500 font-sans">
-                      Li attiva l’<strong>agency_admin</strong> (tu): Membri → «Invita» con email. Il collega apre il
-                      magic-link, accetta e entra. Il tetto è del piano (Starter 3 · Pro 10 · Agency illimitati); oltre
-                      → errore max_agents.
+                      Li attivi tu: Collaboratori → «Invita» con email. Il collega apre il link, accetta e entra.
+                      Il tetto è del piano (Starter 3 · Pro 10 · Agency illimitati).
                     </p>
                     {isCurrent ? (
                       <div className="flex flex-wrap gap-2">

@@ -418,6 +418,38 @@ export default function AgencyShell({ children, current = "dashboard", showBack 
         </header>
 
         {/* Content */}
+        {journeyIncomplete && isAgencyAdmin && !path.includes("/app/avvio") ? (
+          <div
+            data-testid="avvio-rail"
+            className="border-b border-stone-900 bg-white px-4 md:px-8 py-2.5 flex flex-wrap items-center justify-between gap-2"
+          >
+            <p className="text-sm text-stone-800 font-sans">
+              Avvio in corso
+              {(() => {
+                const steps = (agency?.setup_journey || {}).steps || {};
+                const order = [
+                  ["site", "Sito e identità"],
+                  ["import_properties", "Portafoglio"],
+                  ["mls", "Rete MLS"],
+                  ["documents", "Modulistica"],
+                  ["publishing", "Pubblicazione"],
+                  ["import_crm", "Clienti"],
+                  ["team", "Squadra"],
+                ];
+                const next = order.find(([id]) => !(steps[id] || {}).done);
+                return next ? ` · ${next[1]}` : "";
+              })()}
+            </p>
+            <Link
+              to={`/${lang}/app/avvio`}
+              data-testid="avvio-rail-continue"
+              className="text-[11px] uppercase tracking-widest border border-stone-900 px-3 py-1.5 text-stone-900"
+            >
+              Continua Avvio →
+            </Link>
+          </div>
+        ) : null}
+
         <main className="flex-1 px-4 md:px-8 py-6 md:py-10 max-w-screen-2xl w-full mx-auto">
           {children}
         </main>
