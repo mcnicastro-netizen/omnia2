@@ -1,753 +1,561 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
+import { Link, useParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import AgencyShell from "./components/AgencyShell";
 import { api } from "../../shared/lib/api";
 
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || "";
 
 /**
- * M2.S5 Layer D - Website / Brand Studio.
- *
- * Three sections:
- *   1. Brand Extractor (POST /app/website/extract-from-url) - Phase 1
- *   2. Theme Picker (GET /themes, POST /theme/apply, POST /theme/auto-configure) - Phase 2
- *   3. Live preview iframe of /api/p/{slug}/ or /app/website/preview/{theme_id}
+ * Il mio sito — scelta chiara per agency_admin.
+ * 1) Ho già un sito → salva URL, fine.
+ * 2) Voglio un sito su OMNIA → scegli aspetto + anteprima.
+ * Niente clone, estrattori, JSON, roadmap.
  */
 export default function WebsitePage() {
   const { t } = useTranslation();
-  const [themes, setThemes] = useState([]);
-  const [roadmap, setRoadmap] = useState([]);
-  const [current, setCurrent] = useState(null); // GET /theme response
+  const { lang } = useParams();
+  const l = (lang || "it").slice(0, 2);
+
   const [loading, setLoading] = useState(true);
+  const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [toast, setToast] = useState("");
 
-  // Brand extractor state
-  const [extractUrl, setExtractUrl] = useState("");
-  const [extracting, setExtracting] = useState(false);
-  const [extractResult, setExtractResult] = useState(null);
-  const [capturing, setCapturing] = useState(false);
-  const [cloneCapture, setCloneCapture] = useState(null);
-
-  // Picker state
-  const [selectedTheme, setSelectedTheme] = useState(null);
-  const [applying, setApplying] = useState(false);
-
+  const [current, setCurrent] = useState(null);
+  const [themes, setThemes] = useState([]);
+  const [siteUrl, setSiteUrl] = useState("");
+  const [path, setPath] = useState(null); // "external" | "omnia" | null
+  const [selectedTheme, setSelectedTheme] = useState("classic");
   const [previewHtml, setPreviewHtml] = useState("");
   const [previewLoading, setPreviewLoading] = useState(false);
-  const [previewTick, setPreviewTick] = useState(0);
 
-  const iframeRef = useRef(null);
-
-  const showToast = (msg) => { setToast(msg); setTimeout(() => setToast(""), 4500); };
-
-  const apiError = (err) => {
-    const detail = err?.response?.data?.detail;
-    const code = typeof detail === "string" ? detail : "";
-    if (code) {
-      const key = `website.err_${code}`;
-      const translated = t(key);
-      if (translated && translated !== key) return translated;
-    }
-    return String(detail || err.message);
+  const flash = (msg) => {
+    setToast(msg);
+    setTimeout(() => setToast(""), 4000);
   };
 
-  const publicPath = current?.public_url
-    ? `${BACKEND_URL || ""}${current.public_url}`
-    : null;
+  const load = useCallback(async () => {
+    setLoading(true);
+    setError("");
+    try {
+      const [th, cur] = await Promise.all([
+        api.get("/app/website/themes"),
+        api.get("/app/website/theme"),
+      ]);
+      setThemes(th.data.themes || []);
+      setCurrent(cur.data);
+      const mode = cur.data?.website_mode;
+      const url =
+        cur.data?.declared_url ||
+        cur.data?.external_url ||
+        (cur.data?.existing_domain ? `https://${cur.data.existing_domain}` : "") ||
+        "";
+      setSiteUrl(url);
+      if (mode === "external") setPath("external");
+      else if (mode === "omnia_template") setPath("omnia");
+      else setPath(null);
+      setSelectedTheme(cur.data?.resolved?.theme_id || th.data.default_theme_id || "classic");
+    } catch (e) {
+      const d = e?.response?.data?.detail;
+      setError(typeof d === "string" ? d : d?.hint || e.message || "Errore di caricamento");
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
-  const loadPreviewHtml = async () => {
-    if (!publicPath) {
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  const publicPath = current?.public_url ? `${BACKEND_URL}${current.public_url}` : null;
+
+  const loadPreview = useCallback(async () => {
+    if (!publicPath || path !== "omnia") {
       setPreviewHtml("");
       return;
     }
     setPreviewLoading(true);
     try {
-      // Fetch + srcdoc: Cloudflare quick-tunnels force X-Frame-Options: DENY on
-      // navigated iframe documents, which broke Brand Studio live preview.
-      const r = await fetch(`${publicPath}${publicPath.includes("?") ? "&" : "?"}t=${Date.now()}`, {
-        credentials: "same-origin",
-        headers: { Accept: "text/html" },
-      });
-      if (!r.ok) throw new Error(`preview_http_${r.status}`);
-      const html = await r.text();
-      setPreviewHtml(html);
+      const r = await fetch(
+        `${publicPath}${publicPath.includes("?") ? "&" : "?"}t=${Date.now()}`,
+        { credentials: "same-origin", headers: { Accept: "text/html" } }
+      );
+      if (!r.ok) throw new Error(`HTTP ${r.status}`);
+      setPreviewHtml(await r.text());
     } catch (e) {
       setPreviewHtml(
-        `<!doctype html><html><body style="font-family:system-ui;padding:2rem;color:#7f1d1d">`
-        + `<p>Anteprima non disponibile (${String(e.message || e)}).</p>`
-        + `<p><a href="${publicPath}" target="_blank" rel="noreferrer">Apri sito pubblico</a></p>`
-        + `</body></html>`
+        `<!doctype html><html><body style="font-family:system-ui;padding:2rem;color:#444">`
+          + `<p>Anteprima non disponibile.</p>`
+          + (publicPath
+            ? `<p><a href="${publicPath}" target="_blank" rel="noreferrer">Apri in una nuova scheda</a></p>`
+            : "")
+          + `</body></html>`
       );
     } finally {
       setPreviewLoading(false);
     }
-  };
-
-  const loadAll = async () => {
-    setLoading(true);
-    try {
-      const [r1, r2, r3] = await Promise.all([
-        api.get("/app/website/themes"),
-        api.get("/app/website/theme"),
-        api.get("/app/website/clone-capture").catch(() => ({ data: null })),
-      ]);
-      setThemes(r1.data.themes || []);
-      setRoadmap(r1.data.roadmap || []);
-      setCurrent(r2.data);
-      setSelectedTheme(r2.data?.resolved?.theme_id || r1.data.default_theme_id || "minimal");
-      const cap = r3?.data;
-      if (cap?.capture || cap?.clone_ready) {
-        setCloneCapture({
-          ...(cap.capture || {}),
-          preview: cap.preview,
-          clone_ready: cap.clone_ready,
-          notes: (cap.capture || {}).notes,
-        });
-      }
-    } catch (e) {
-      setError(String(e?.response?.data?.detail || e.message));
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => { loadAll(); }, []);
-
-  useEffect(() => {
-    if (extractUrl) return;
-    const fromExtracted =
-      current?.extracted_profile?.extracted_from
-      || current?.extracted_profile?.source_url;
-    const declared = current?.declared_url || current?.external_url || current?.clone_source_url;
-    const next = fromExtracted || declared || "";
-    if (next) setExtractUrl(next);
-  }, [current, extractUrl]);
+  }, [publicPath, path]);
 
   useEffect(() => {
     if (loading) return;
-    loadPreviewHtml();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [loading, publicPath, selectedTheme, previewTick]);
+    loadPreview();
+  }, [loading, loadPreview, selectedTheme]);
 
-  const refreshIframe = () => setPreviewTick((n) => n + 1);
-
-  const extractBrand = async (e) => {
-    e?.preventDefault?.();
-    if (!extractUrl) return;
-    setExtracting(true); setError(""); setExtractResult(null);
+  const saveExternal = async () => {
+    setBusy(true);
+    setError("");
     try {
-      const { data } = await api.post("/app/website/extract-from-url", { url: extractUrl });
-      setExtractResult(data);
-      // refresh `current` so extracted_profile is up-to-date
-      const r2 = await api.get("/app/website/theme");
-      setCurrent(r2.data);
-      showToast(t("website.extract_success"));
-    } catch (err) {
-      setError(apiError(err));
-    } finally {
-      setExtracting(false);
-    }
-  };
-
-  const captureClone = async () => {
-    if (!extractUrl) return;
-    setCapturing(true); setError("");
-    try {
-      const { data } = await api.post("/app/website/clone-capture", {
-        url: extractUrl,
-        build: true,
-        max_pages: 10,
+      await api.post("/app/website/presence", {
+        mode: "external",
+        external_url: siteUrl.trim(),
       });
-      setCloneCapture({ ...(data.capture || {}), preview: data.preview, clone_ready: data.clone_ready });
-      showToast(
-        data.clone_ready
-          ? "Clone ready: home + lista + scheda"
-          : `Cattura OK (${(data.capture?.pages || []).length} pagine) — build preview fallita`
+      setPath("external");
+      flash("Ok: il tuo sito resta com’è. Abbiamo salvato l’indirizzo.");
+      await load();
+    } catch (e) {
+      const d = e?.response?.data?.detail;
+      setError(
+        (typeof d === "object" && (d.hint || d.error)) ||
+          (typeof d === "string" ? d : null) ||
+          "Non sono riuscito a salvare l’indirizzo"
       );
-      if (data.clone_ready) refreshIframe();
-    } catch (err) {
-      setError(apiError(err));
     } finally {
-      setCapturing(false);
+      setBusy(false);
     }
   };
 
-  const autoConfigure = async () => {
-    setApplying(true); setError("");
+  const chooseOmnia = async () => {
+    setBusy(true);
+    setError("");
     try {
-      const { data } = await api.post("/app/website/theme/auto-configure");
-      setSelectedTheme(data.theme_id);
-      const r2 = await api.get("/app/website/theme");
-      setCurrent(r2.data);
-      showToast(t("website.auto_success", { theme: data.theme_id }));
-      refreshIframe();
-    } catch (err) {
-      setError(apiError(err));
+      await api.post("/app/website/presence", {
+        mode: "omnia_template",
+        external_url: siteUrl.trim() || undefined,
+      });
+      setPath("omnia");
+      flash("Ok: userai un sito OMNIA. Scegli l’aspetto qui sotto.");
+      await load();
+    } catch (e) {
+      const d = e?.response?.data?.detail;
+      setError(typeof d === "string" ? d : d?.hint || e.message || "Errore");
     } finally {
-      setApplying(false);
+      setBusy(false);
     }
   };
 
   const applyTheme = async (themeId) => {
-    setApplying(true); setError("");
+    setBusy(true);
+    setError("");
     try {
-      // preserve any extracted palette/logo from current extracted_profile
-      const extracted = current?.extracted_profile || {};
-      const bp = extracted.brand_profile || (extracted.palette ? extracted : {});
-      const palette = bp.palette || extracted.palette || {};
-      const logo = extracted.logo_hint?.url || bp.logo_hint?.url;
-      const tagline = bp.voice?.tagline_guess || extracted.voice?.tagline_guess;
-      await api.post("/app/website/theme/apply", {
-        theme_id: themeId,
-        palette: {
-          primary: palette.primary || undefined,
-          accent: palette.accent || undefined,
-          neutral_dark: palette.neutral_dark || undefined,
-          neutral_light: palette.neutral_light || undefined,
-        },
-        logo_url: logo || undefined,
-        tagline: tagline || undefined,
-      });
+      await api.post("/app/website/theme/apply", { theme_id: themeId });
       setSelectedTheme(themeId);
-      const r2 = await api.get("/app/website/theme");
-      setCurrent(r2.data);
-      showToast(t("website.apply_success", { theme: themeId }));
-      refreshIframe();
-    } catch (err) {
-      setError(apiError(err));
+      flash("Aspetto aggiornato.");
+      const r = await api.get("/app/website/theme");
+      setCurrent(r.data);
+    } catch (e) {
+      const d = e?.response?.data?.detail;
+      setError(typeof d === "string" ? d : e.message || "Errore tema");
     } finally {
-      setApplying(false);
+      setBusy(false);
     }
   };
 
   if (loading) {
     return (
       <AgencyShell current="website">
-        <p className="text-sm text-stone-500" data-testid="website-loading">{t("common.loading")}</p>
+        <p className="text-sm text-stone-500" data-testid="website-loading">
+          {t("common.loading")}
+        </p>
       </AgencyShell>
     );
   }
 
-  const extracted = current?.extracted_profile;
-  const resolved = current?.resolved;
-  const publicUrl = publicPath;
+  const statusLine =
+    path === "external"
+      ? `Usi il tuo sito: ${current?.external_url || siteUrl || "—"}`
+      : path === "omnia"
+        ? "Usi un sito preparato da OMNIA (i visitatori lo vedono con i tuoi annunci)."
+        : "Non hai ancora scelto. Dimmi cosa preferisci.";
 
   return (
     <AgencyShell current="website">
-      <section data-testid="website-page" className="max-w-6xl space-y-10">
-        <div>
-          <h1 className="text-3xl md:text-4xl tracking-tight" style={{ fontFamily: "'Fraunces', Georgia, serif" }}>
-            {t("website.title")}
-          </h1>
-          <p className="text-stone-600 mt-1">{t("website.subtitle")}</p>
-        </div>
-
-        {current?.site_phase && (
-          <div
-            data-testid="website-journey-status"
-            className="border border-stone-200 bg-stone-50 px-4 py-3 text-sm font-sans text-stone-700 space-y-1"
+      <section data-testid="website-page" className="max-w-3xl space-y-8">
+        <header>
+          <h1
+            className="text-3xl md:text-4xl tracking-tight text-stone-900"
+            style={{ fontFamily: "'Fraunces', Georgia, serif" }}
           >
-            <p className="text-[10px] uppercase tracking-[0.25em] text-stone-500">
-              {t("website.journey_eyebrow", "Percorso sito")}
-            </p>
-            <p>
-              {current.site_phase === "declared" &&
-                t(
-                  "website.journey_declared",
-                  "URL dichiarato in registrazione. Omnia non ha ancora estratto o catturato il sito — usa i pulsanti sotto."
-                )}
-              {current.site_phase === "brand_extracted" &&
-                t("website.journey_extracted", "Brand estratto dal sito dichiarato. Puoi catturare le pagine o applicare un tema.")}
-              {current.site_phase === "clone_ready" &&
-                t(
-                  "website.journey_clone",
-                  "Cattura brand completata: preview su tema OMNIA (non clone HTML del sito originale)."
-                )}
-              {current.site_phase === "theme_only" &&
-                t("website.journey_theme", "Tema OMNIA attivo (gallery 8 template). Nessun URL esterno elaborato.")}
-              {current.site_phase === "none" &&
-                t("website.journey_none", "Nessun sito dichiarato. Inserisci l’URL oppure scegli un template.")}
-            </p>
-            {(current.declared_url || current.external_url) && (
-              <p className="text-xs text-stone-500 truncate" data-testid="website-declared-url">
-                {current.declared_url || current.external_url}
-              </p>
-            )}
-          </div>
-        )}
+            Il mio sito
+          </h1>
+          <p className="mt-2 text-sm font-sans text-stone-600">
+            Due possibilità. Niente termini tecnici.
+          </p>
+          <p
+            className="mt-3 text-sm font-sans text-stone-800 border border-stone-200 bg-stone-50 px-3 py-2"
+            data-testid="website-status"
+          >
+            {statusLine}
+          </p>
+        </header>
 
-        {error && (
-          <p data-testid="website-error" className="text-sm text-red-700 bg-red-50 border border-red-200 rounded-md px-3 py-2">
+        {error ? (
+          <p
+            data-testid="website-error"
+            className="text-sm text-red-800 bg-red-50 border border-red-200 px-3 py-2"
+          >
             {error}
           </p>
-        )}
-        {toast && (
-          <p data-testid="website-toast" className="text-sm text-emerald-800 bg-emerald-50 border border-emerald-200 rounded-md px-3 py-2">
-            ✓ {toast}
+        ) : null}
+        {toast ? (
+          <p
+            data-testid="website-toast"
+            className="text-sm text-emerald-900 bg-emerald-50 border border-emerald-200 px-3 py-2"
+          >
+            {toast}
           </p>
-        )}
+        ) : null}
 
-        {/* ============ 1. BRAND EXTRACTOR ============ */}
-        <section className="space-y-4">
-          <div>
-            <h2 className="text-xs uppercase tracking-widest text-stone-500 mb-2">
-              {t("website.section_extractor")}
-            </h2>
-            <p className="text-sm text-stone-600">
-              {t("website.extractor_intro")}
+        <div className="grid sm:grid-cols-2 gap-4" data-testid="website-choice-grid">
+          <div
+            className={`border px-4 py-4 space-y-3 ${
+              path === "external" ? "border-stone-900 bg-white" : "border-stone-200 bg-stone-50/80"
+            }`}
+          >
+            <p className="text-base font-medium text-stone-900" style={{ fontFamily: "'Fraunces', Georgia, serif" }}>
+              1. Ho già un sito
             </p>
-          </div>
-          <form onSubmit={extractBrand} className="flex flex-col md:flex-row gap-3">
-            <input
-              data-testid="website-extract-url"
-              type="url"
-              value={extractUrl}
-              onChange={(e) => setExtractUrl(e.target.value)}
-              placeholder="https://www.tuoagenzia.it"
-              className="flex-1 px-3 py-2.5 bg-white border border-stone-300 rounded-md text-sm focus:outline-none focus:border-stone-900 focus:ring-2 focus:ring-stone-900/10"
-            />
-            <button
-              type="submit"
-              disabled={extracting || !extractUrl}
-              data-testid="website-extract-btn"
-              className="px-5 py-2.5 bg-stone-900 text-stone-50 text-xs uppercase tracking-widest font-medium rounded-md hover:bg-stone-700 disabled:opacity-50 transition"
-            >
-              {extracting ? t("website.extracting") : t("website.extract_btn")}
-            </button>
+            <p className="text-sm text-stone-600 font-sans">
+              Resta online dove sta oggi. OMNIA non lo sostituisce e non lo “clona”.
+              Serve solo l’indirizzo (per contatti e riferimenti).
+            </p>
+            <label className="block text-xs uppercase tracking-widest text-stone-500 font-sans">
+              Indirizzo del sito
+              <input
+                data-testid="website-url-input"
+                type="url"
+                value={siteUrl}
+                onChange={(e) => setSiteUrl(e.target.value)}
+                placeholder="https://www.tuaagenzia.it"
+                className="mt-1 w-full px-3 py-2.5 border border-stone-300 bg-white text-sm text-stone-900 normal-case tracking-normal"
+              />
+            </label>
             <button
               type="button"
-              disabled={capturing || !extractUrl}
-              onClick={captureClone}
-              data-testid="website-clone-capture-btn"
-              className="px-5 py-2.5 bg-white border border-stone-300 text-stone-900 text-xs uppercase tracking-widest font-medium rounded-md hover:bg-stone-50 disabled:opacity-50 transition"
+              disabled={busy || !siteUrl.trim()}
+              onClick={saveExternal}
+              data-testid="website-save-external"
+              className="w-full px-3 py-2.5 text-[11px] uppercase tracking-widest bg-stone-900 text-white disabled:opacity-40"
             >
-              {capturing ? "Cattura…" : "Cattura sito (migrazione)"}
+              Salva: lascio il sito com’è
             </button>
-          </form>
-          <p className="text-xs text-stone-500">
-            Migrazione casi 1–2: cattura + genera preview visitabile (home/lista/scheda) best-effort.
-            Box MLS sì/no da pagina MLS. Pixel-perfect resta tier Premium.
-          </p>
-          {cloneCapture && (
-            <div data-testid="website-clone-capture-summary" className="bg-stone-50 border border-stone-200 rounded-lg p-4 text-sm text-stone-700 space-y-2">
-              <p>
-                Pagine: {(cloneCapture.pages || []).length}
-                {" · "}ruoli: {(cloneCapture.roles_found || []).join(", ") || "—"}
-                {" · "}clone_ready: <strong>{String(!!cloneCapture.clone_ready)}</strong>
-              </p>
-              {cloneCapture.preview && (
-                <p className="flex flex-wrap gap-3" data-testid="website-clone-preview-links">
-                  <a className="underline" href={`${BACKEND_URL || ""}${cloneCapture.preview.home}`} target="_blank" rel="noreferrer">Home</a>
-                  <a className="underline" href={`${BACKEND_URL || ""}${cloneCapture.preview.listing}`} target="_blank" rel="noreferrer">Lista</a>
-                  <a className="underline" href={`${BACKEND_URL || ""}${cloneCapture.preview.property}`} target="_blank" rel="noreferrer">Scheda</a>
-                </p>
-              )}
-              {cloneCapture.notes ? <p className="text-stone-500">{cloneCapture.notes}</p> : null}
-            </div>
-          )}
+          </div>
 
-          {(extractResult || extracted) && (
-            <div data-testid="website-extracted-summary" className="bg-stone-50 border border-stone-200 rounded-lg p-5">
-              <ExtractedSummary
-                data={extractResult || extracted}
-                onAutoConfigure={autoConfigure}
-                autoBtnDisabled={applying}
-                t={t}
-              />
-            </div>
-          )}
-        </section>
-
-        {/* ============ 2. THEME PICKER ============ */}
-        <section className="space-y-4">
-          <div>
-            <h2 className="text-xs uppercase tracking-widest text-stone-500 mb-2">
-              {t("website.section_theme")}
-            </h2>
-            <p className="text-sm text-stone-600">
-              {t("website.theme_intro")}
+          <div
+            className={`border px-4 py-4 space-y-3 ${
+              path === "omnia" ? "border-stone-900 bg-white" : "border-stone-200 bg-stone-50/80"
+            }`}
+          >
+            <p className="text-base font-medium text-stone-900" style={{ fontFamily: "'Fraunces', Georgia, serif" }}>
+              2. Voglio un sito su OMNIA
+            </p>
+            <p className="text-sm text-stone-600 font-sans">
+              Una vetrina nuova gestita qui, con i tuoi immobili. Utile se vuoi mostrare la rete MLS
+              sul sito pubblico. Il sito vecchio resta fino a quando non cambi l’indirizzo DNS
+              (te lo spieghiamo se serve).
+            </p>
+            <button
+              type="button"
+              disabled={busy}
+              onClick={chooseOmnia}
+              data-testid="website-choose-omnia"
+              className="w-full px-3 py-2.5 text-[11px] uppercase tracking-widest border border-stone-900 text-stone-900 disabled:opacity-40"
+            >
+              Usa un sito OMNIA
+            </button>
+            <p className="text-xs text-stone-500 font-sans">
+              Poi scegli l’aspetto e guarda l’anteprima qui sotto.
             </p>
           </div>
+        </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {themes.map((th) => {
-              const isActive = selectedTheme === th.id;
-              return (
-                <button
-                  key={th.id}
-                  type="button"
-                  data-testid={`theme-card-${th.id}`}
-                  onClick={() => applyTheme(th.id)}
-                  disabled={applying}
-                  className={`text-left p-5 border rounded-lg transition disabled:opacity-60 ${
-                    isActive
-                      ? "border-emerald-700 bg-emerald-50/60 ring-2 ring-emerald-100"
-                      : "border-stone-300 bg-white hover:border-stone-500"
-                  }`}
-                >
-                  <div className="flex items-center justify-between mb-2">
-                    <p className="font-semibold text-stone-900">{th.name}</p>
-                    {isActive && (
-                      <span className="text-[10px] uppercase tracking-widest text-emerald-700">
-                        ✓ {t("website.active")}
-                      </span>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-2 mb-3">
-                    {Object.values(th.preview_palette || {}).map((c, i) => (
-                      <span key={i}
-                        className="inline-block w-6 h-6 rounded-full border border-stone-200"
-                        style={{ background: c }} />
-                    ))}
-                  </div>
-                  <p className="text-sm text-stone-600">{th.description}</p>
-                  <p className="text-[10px] uppercase tracking-widest text-stone-400 mt-3">
-                    MLS on · MLS off
-                  </p>
-                </button>
-              );
-            })}
-          </div>
-
-          {roadmap.length > 0 && (
-            <div className="space-y-3 pt-2">
-              <h3 className="text-xs uppercase tracking-widest text-stone-400">
-                {t("website.theme_roadmap", { defaultValue: "In arrivo" })}
-              </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                {roadmap.map((th) => (
-                  <div
+        {path === "omnia" ? (
+          <section className="space-y-4" data-testid="website-omnia-panel">
+            <h2
+              className="text-xl text-stone-900"
+              style={{ fontFamily: "'Fraunces', Georgia, serif" }}
+            >
+              Aspetto del sito
+            </h2>
+            <p className="text-sm text-stone-600 font-sans">
+              Tocca un aspetto per applicarlo subito.
+            </p>
+            <div className="grid sm:grid-cols-2 gap-3">
+              {themes.map((th) => {
+                const active = selectedTheme === th.id;
+                return (
+                  <button
                     key={th.id}
-                    data-testid={`theme-roadmap-${th.id}`}
-                    className="text-left p-4 border border-dashed border-stone-300 rounded-lg bg-stone-50/80 opacity-90"
+                    type="button"
+                    disabled={busy}
+                    onClick={() => applyTheme(th.id)}
+                    data-testid={`theme-card-${th.id}`}
+                    className={`text-left px-4 py-3 border transition disabled:opacity-50 ${
+                      active
+                        ? "border-stone-900 bg-white"
+                        : "border-stone-200 bg-stone-50 hover:border-stone-400"
+                    }`}
                   >
-                    <div className="flex items-center justify-between mb-1">
-                      <p className="font-semibold text-stone-700">{th.name}</p>
-                      <span className="text-[10px] uppercase tracking-widest text-stone-400">
-                        {t("website.coming_soon", { defaultValue: "Presto" })}
-                      </span>
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="font-medium text-stone-900">{th.name}</span>
+                      {active ? (
+                        <span className="text-[10px] uppercase tracking-widest text-stone-500">attivo</span>
+                      ) : null}
                     </div>
-                    <div className="flex items-center gap-2 mb-2">
-                      {Object.values(th.preview_palette || {}).map((c, i) => (
-                        <span key={i}
-                          className="inline-block w-5 h-5 rounded-full border border-stone-200"
-                          style={{ background: c }} />
-                      ))}
+                    <div className="flex gap-1.5 mt-2">
+                      {Object.values(th.preview_palette || {})
+                        .slice(0, 4)
+                        .map((c, i) => (
+                          <span
+                            key={i}
+                            className="w-5 h-5 border border-stone-200"
+                            style={{ background: c }}
+                          />
+                        ))}
                     </div>
-                    <p className="text-sm text-stone-500">{th.description}</p>
-                  </div>
-                ))}
-              </div>
+                    <p className="mt-2 text-xs text-stone-500 font-sans line-clamp-2">{th.description}</p>
+                  </button>
+                );
+              })}
             </div>
-          )}
-        </section>
 
-        {/* ============ 3. LIVE PREVIEW ============ */}
-        <section className="space-y-4">
-          <div className="flex items-center justify-between flex-wrap gap-3">
-            <div>
-              <h2 className="text-xs uppercase tracking-widest text-stone-500 mb-2">
-                {t("website.section_preview")}
-              </h2>
-              <p className="text-sm text-stone-600">
-                {t("website.preview_intro")}
-              </p>
-            </div>
-            <div className="flex gap-2 items-center">
+            <div className="flex flex-wrap gap-2 items-center">
               <button
                 type="button"
-                onClick={refreshIframe}
+                onClick={loadPreview}
                 data-testid="website-refresh-preview"
-                className="px-3 py-2 text-xs uppercase tracking-widest text-stone-700 border border-stone-300 rounded-md hover:bg-stone-100 transition"
+                className="px-3 py-2 text-[11px] uppercase tracking-widest border border-stone-300"
               >
-                ↻ {t("website.refresh")}
+                Aggiorna anteprima
               </button>
-              {publicUrl && (
+              {publicPath ? (
                 <a
-                  href={publicUrl}
+                  href={publicPath}
                   target="_blank"
                   rel="noreferrer"
                   data-testid="website-open-public"
-                  className="px-3 py-2 text-xs uppercase tracking-widest text-stone-700 border border-stone-300 rounded-md hover:bg-stone-100 transition"
+                  className="px-3 py-2 text-[11px] uppercase tracking-widest border border-stone-300"
                 >
-                  {t("website.open_public")} ↗
+                  Apri sito →
                 </a>
-              )}
+              ) : null}
+              <Link
+                to={`/${l}/app/mls`}
+                className="px-3 py-2 text-[11px] uppercase tracking-widest border border-stone-300 text-stone-700"
+              >
+                Rete MLS
+              </Link>
             </div>
-          </div>
 
-          <div className="border border-stone-300 rounded-md overflow-hidden bg-stone-50 relative"
-               style={{ height: "640px" }}>
-            {previewLoading && (
-              <p className="absolute inset-x-0 top-0 z-10 text-xs text-stone-500 bg-stone-100/90 px-3 py-1">
-                {t("common.loading")}
-              </p>
-            )}
-            <iframe
-              ref={iframeRef}
-              data-testid="website-preview-iframe"
-              srcDoc={previewHtml || undefined}
-              title="Site preview"
-              className="w-full h-full bg-white"
-              sandbox="allow-same-origin allow-scripts"
-            />
-          </div>
+            <div
+              className="border border-stone-300 bg-stone-50 relative overflow-hidden"
+              style={{ height: 520 }}
+            >
+              {previewLoading ? (
+                <p className="absolute top-0 inset-x-0 text-xs text-stone-500 bg-stone-100 px-3 py-1 z-10">
+                  Carico anteprima…
+                </p>
+              ) : null}
+              <iframe
+                data-testid="website-preview-iframe"
+                title="Anteprima sito"
+                srcDoc={previewHtml || undefined}
+                className="w-full h-full bg-white"
+                sandbox="allow-same-origin allow-scripts"
+              />
+            </div>
 
-          {resolved && (
-            <details className="text-xs text-stone-500" data-testid="website-resolved-debug">
-              <summary className="cursor-pointer hover:text-stone-700">
-                {t("website.show_resolved")}
+            <details className="border border-stone-200 px-3 py-3" data-testid="website-domain-details">
+              <summary className="cursor-pointer text-sm font-medium text-stone-800">
+                Voglio usare il mio indirizzo (es. www.agenzia.it) sul sito OMNIA
               </summary>
-              <pre className="mt-2 p-3 bg-stone-100 rounded text-stone-700 overflow-x-auto">
-{JSON.stringify(resolved, null, 2)}
-              </pre>
+              <div className="mt-3">
+                <CustomDomainSection />
+              </div>
             </details>
-          )}
-        </section>
+          </section>
+        ) : null}
 
-        {/* ============ 4. CUSTOM DOMAIN (M2.S6) ============ */}
-        <CustomDomainSection t={t} />
+        {path === "external" && (current?.external_url || siteUrl) ? (
+          <p className="text-sm text-stone-600 font-sans" data-testid="website-external-done">
+            Indirizzo salvato:{" "}
+            <a
+              className="underline break-all"
+              href={current?.external_url || siteUrl}
+              target="_blank"
+              rel="noreferrer"
+            >
+              {current?.external_url || siteUrl}
+            </a>
+            . Gli immobili e i clienti li gestisci qui in OMNIA; il sito pubblico resta il tuo.
+          </p>
+        ) : null}
       </section>
     </AgencyShell>
   );
 }
 
-function CustomDomainSection({ t }) {
-  const [state, setState] = React.useState(null);
-  const [loading, setLoading] = React.useState(true);
-  const [domain, setDomain] = React.useState("");
-  const [busy, setBusy] = React.useState(false);
-  const [err, setErr] = React.useState("");
+function CustomDomainSection() {
+  const [state, setState] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [domain, setDomain] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState("");
 
-  const load = React.useCallback(async () => {
+  const load = useCallback(async () => {
     setLoading(true);
     try {
       const { data } = await api.get("/app/website/domain");
       setState(data);
     } catch (e) {
       setErr(String(e?.response?.data?.detail || e.message));
-    } finally { setLoading(false); }
+    } finally {
+      setLoading(false);
+    }
   }, []);
-  React.useEffect(() => { load(); }, [load]);
+
+  useEffect(() => {
+    load();
+  }, [load]);
 
   const submit = async (e) => {
     e?.preventDefault?.();
     if (!domain) return;
-    setBusy(true); setErr("");
+    setBusy(true);
+    setErr("");
     try {
       const { data } = await api.post("/app/website/domain/request", { domain });
-      setState(data); setDomain("");
-    } catch (e) {
-      setErr(String(e?.response?.data?.detail || e.message));
-    } finally { setBusy(false); }
+      setState(data);
+      setDomain("");
+    } catch (e2) {
+      setErr(String(e2?.response?.data?.detail || e2.message));
+    } finally {
+      setBusy(false);
+    }
   };
 
   const verify = async () => {
-    setBusy(true); setErr("");
+    setBusy(true);
+    setErr("");
     try {
       const { data } = await api.post("/app/website/domain/verify");
-      setState({ ...state, status: data.status, last_error: data.last_error,
-                 verified_at: data.verified_at });
-    } catch (e) {
-      setErr(String(e?.response?.data?.detail || e.message));
-    } finally { setBusy(false); }
+      setState((s) => ({
+        ...s,
+        status: data.status,
+        last_error: data.last_error,
+        verified_at: data.verified_at,
+      }));
+    } catch (e2) {
+      setErr(String(e2?.response?.data?.detail || e2.message));
+    } finally {
+      setBusy(false);
+    }
   };
 
   const remove = async () => {
-    if (!window.confirm(t("website.cd_confirm_delete"))) return;
-    setBusy(true); setErr("");
+    if (!window.confirm("Rimuovere questo indirizzo personalizzato?")) return;
+    setBusy(true);
+    setErr("");
     try {
       await api.delete("/app/website/domain");
       await load();
-    } catch (e) {
-      setErr(String(e?.response?.data?.detail || e.message));
-    } finally { setBusy(false); }
+    } catch (e2) {
+      setErr(String(e2?.response?.data?.detail || e2.message));
+    } finally {
+      setBusy(false);
+    }
   };
 
-  const copy = (txt) => navigator.clipboard?.writeText(txt);
-
-  if (loading) return <p className="text-sm text-stone-500">{t("common.loading")}</p>;
+  if (loading) return <p className="text-sm text-stone-500">Carico…</p>;
 
   const hasDomain = !!state?.domain;
-  const status = state?.status;
   const dns = state?.dns_instructions;
 
   return (
-    <section className="space-y-4" data-testid="custom-domain-section">
-      <div>
-        <h2 className="text-xs uppercase tracking-widest text-stone-500 mb-2">
-          {t("website.section_cd")}
-        </h2>
-        <p className="text-sm text-stone-600">{t("website.cd_intro")}</p>
-      </div>
+    <div className="space-y-3 text-sm font-sans" data-testid="custom-domain-section">
+      <p className="text-stone-600">
+        Passo per chi vuole che il sito OMNIA risponda al proprio indirizzo (www…).
+        Di solito lo fa il tecnico del dominio: aggiungi due record e premi Verifica.
+      </p>
+      {err ? (
+        <p data-testid="cd-error" className="text-red-800 bg-red-50 border border-red-200 px-3 py-2">
+          {err}
+        </p>
+      ) : null}
 
-      {err && <p data-testid="cd-error" className="text-sm text-red-700 bg-red-50 border border-red-200 rounded-md px-3 py-2">{err}</p>}
-
-      {!hasDomain && (
-        <form onSubmit={submit} className="flex gap-3 flex-wrap">
+      {!hasDomain ? (
+        <form onSubmit={submit} className="flex flex-wrap gap-2">
           <input
-            data-testid="cd-domain-input" value={domain}
+            data-testid="cd-domain-input"
+            value={domain}
             onChange={(e) => setDomain(e.target.value)}
             placeholder="www.tuaagenzia.it"
-            className="flex-1 min-w-[220px] px-3 py-2.5 bg-white border border-stone-300 rounded-md text-sm focus:outline-none focus:border-stone-900"
+            className="flex-1 min-w-[200px] px-3 py-2 border border-stone-300"
           />
           <button
-            type="submit" disabled={busy || !domain}
+            type="submit"
+            disabled={busy || !domain}
             data-testid="cd-request-btn"
-            className="px-5 py-2.5 bg-stone-900 text-stone-50 text-xs uppercase tracking-widest font-medium rounded-md hover:bg-stone-700 disabled:opacity-50"
+            className="px-4 py-2 text-[11px] uppercase tracking-widest bg-stone-900 text-white disabled:opacity-40"
           >
-            {t("website.cd_request_btn")}
+            Continua
           </button>
         </form>
-      )}
-
-      {hasDomain && (
-        <div className="bg-white border border-stone-200 rounded-lg p-5 space-y-4">
-          <div className="flex items-center justify-between flex-wrap gap-2">
-            <div>
-              <div className="font-medium text-stone-900 text-base">{state.domain}</div>
-              <div className="text-xs text-stone-500 mt-0.5">
-                {t("website.cd_requested_at", { d: (state.requested_at || "").slice(0, 16).replace("T", " ") })}
-              </div>
+      ) : (
+        <div className="border border-stone-200 px-3 py-3 space-y-3">
+          <p className="font-medium text-stone-900">{state.domain}</p>
+          <p className="text-xs text-stone-500">
+            Stato:{" "}
+            {state.status === "verified"
+              ? "ok, in attesa di attivazione sicura"
+              : state.status === "error"
+                ? "errore — controlla i record"
+                : "in attesa dei record DNS"}
+          </p>
+          {dns ? (
+            <div className="bg-stone-50 border border-stone-200 px-3 py-2 space-y-2 text-xs">
+              <p>
+                TXT — host <code>{dns.txt_record.host}</code> · valore{" "}
+                <code className="break-all">{dns.txt_record.value}</code>
+              </p>
+              <p>
+                CNAME — host <code>{dns.cname_record.host}</code> · valore{" "}
+                <code>{dns.cname_record.value}</code>
+              </p>
             </div>
-            <StatusBadge status={status} t={t} />
-          </div>
-
-          {status === "error" && state.last_error && (
-            <p className="text-xs text-red-700 bg-red-50 border border-red-200 rounded px-3 py-2">
-              {state.last_error}
-            </p>
-          )}
-
-          {dns && (
-            <div className="bg-stone-50 border border-stone-200 rounded-md p-4 space-y-3">
-              <p className="text-xs uppercase tracking-widest text-stone-500">{t("website.cd_dns_instructions")}</p>
-              <DNSRow label="TXT" host={dns.txt_record.host} value={dns.txt_record.value} onCopy={copy} />
-              <DNSRow label="CNAME" host={dns.cname_record.host} value={dns.cname_record.value} onCopy={copy} />
-              <p className="text-xs text-stone-500 italic">{dns.apex_alternative}</p>
-            </div>
-          )}
-
-          <div className="flex gap-2 flex-wrap">
+          ) : null}
+          <div className="flex flex-wrap gap-2">
             <button
-              type="button" onClick={verify} disabled={busy}
+              type="button"
+              onClick={verify}
+              disabled={busy}
               data-testid="cd-verify-btn"
-              className="px-4 py-2 bg-stone-900 text-stone-50 text-xs uppercase tracking-widest rounded-md hover:bg-stone-700 disabled:opacity-50"
+              className="px-3 py-2 text-[11px] uppercase tracking-widest bg-stone-900 text-white disabled:opacity-40"
             >
-              {busy ? t("website.cd_verifying") : t("website.cd_verify_btn")}
+              Verifica
             </button>
             <button
-              type="button" onClick={remove} disabled={busy}
+              type="button"
+              onClick={remove}
+              disabled={busy}
               data-testid="cd-delete-btn"
-              className="px-4 py-2 bg-white border border-red-200 text-red-700 text-xs uppercase tracking-widest rounded-md hover:bg-red-50 disabled:opacity-50"
+              className="px-3 py-2 text-[11px] uppercase tracking-widest border border-red-300 text-red-800"
             >
-              {t("website.cd_delete_btn")}
+              Rimuovi
             </button>
           </div>
-
-          {status === "verified" && (
-            <p className="text-xs text-emerald-800 bg-emerald-50 border border-emerald-200 rounded px-3 py-2">
-              ✓ {t("website.cd_admin_will_activate_ssl")}
-            </p>
-          )}
         </div>
       )}
-    </section>
-  );
-}
-
-function StatusBadge({ status, t }) {
-  const map = {
-    pending: { txt: t("website.cd_status_pending"), cls: "text-amber-800 bg-amber-50 border-amber-200" },
-    verified: { txt: t("website.cd_status_verified"), cls: "text-emerald-800 bg-emerald-50 border-emerald-200" },
-    error: { txt: t("website.cd_status_error"), cls: "text-red-700 bg-red-50 border-red-200" },
-  };
-  const m = map[status] || { txt: "—", cls: "text-stone-600 bg-stone-100 border-stone-200" };
-  return (
-    <span data-testid={`cd-status-${status}`}
-          className={`text-[10px] uppercase tracking-widest px-2.5 py-1 rounded-md border ${m.cls}`}>
-      {m.txt}
-    </span>
-  );
-}
-
-function DNSRow({ label, host, value, onCopy }) {
-  return (
-    <div className="grid grid-cols-1 md:grid-cols-[60px_1fr_auto] gap-2 items-start">
-      <span className="text-[10px] uppercase tracking-widest text-stone-500 mt-1">{label}</span>
-      <div className="font-mono text-xs space-y-1">
-        <div className="text-stone-500">Host: <span className="text-stone-900">{host}</span></div>
-        <div className="text-stone-500">Valore: <span className="text-stone-900 break-all">{value}</span></div>
-      </div>
-      <button type="button" onClick={() => onCopy(value)}
-              className="text-[10px] uppercase tracking-widest text-stone-600 border border-stone-300 rounded px-2 py-1 hover:bg-stone-100">
-        Copia
-      </button>
-    </div>
-  );
-}
-
-
-function ExtractedSummary({ data, onAutoConfigure, autoBtnDisabled, t }) {
-  const nested = data?.brand_profile || data?.extracted_profile?.brand_profile;
-  const bp = (nested && (nested.palette || nested.voice || nested.confidence))
-    ? nested
-    : (data?.palette ? data : {});
-  const logoHint = data?.summary?.logo_found
-    ? "✓"
-    : ((data?.logo_hint?.url || bp?.logo_hint?.url) ? "✓" : "—");
-  const palette = bp.palette || data?.palette || {};
-  const voice = bp.voice || data?.voice || {};
-  const structure = bp.structure || data?.structure || {};
-  const confidence = bp.confidence ?? data?.confidence ?? 0;
-  return (
-    <div className="space-y-4">
-      <div className="flex items-center gap-3 flex-wrap">
-        <span className="text-xs uppercase tracking-widest text-stone-500">
-          {t("website.extracted_confidence")}:
-        </span>
-        <span className={`text-sm font-semibold ${confidence >= 70 ? "text-emerald-700" : confidence >= 40 ? "text-amber-700" : "text-red-700"}`}>
-          {confidence}/100
-        </span>
-        <span className="text-xs text-stone-400">·</span>
-        <span className="text-xs text-stone-500">{t("website.extracted_logo")}: {logoHint}</span>
-      </div>
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        {["primary", "accent", "neutral_dark", "neutral_light"].map((k) => (
-          <div key={k} className="bg-white rounded-md p-3 border border-stone-200">
-            <div className="text-[10px] uppercase tracking-widest text-stone-500 mb-2">{k}</div>
-            <div className="flex items-center gap-2">
-              <span className="inline-block w-7 h-7 rounded border border-stone-300"
-                    style={{ background: palette[k] || "transparent" }} />
-              <span className="text-xs font-mono text-stone-700">{palette[k] || "—"}</span>
-            </div>
-          </div>
-        ))}
-      </div>
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-3 text-sm">
-        <Pill label={t("website.field_tone")} value={voice.tone} />
-        <Pill label={t("website.field_header")} value={structure.header_style} />
-        <Pill label={t("website.field_card")} value={structure.card_style} />
-      </div>
-      <button
-        type="button"
-        onClick={onAutoConfigure}
-        disabled={autoBtnDisabled}
-        data-testid="website-auto-configure-btn"
-        className="px-5 py-2.5 bg-emerald-700 text-white text-xs uppercase tracking-widest font-medium rounded-md hover:bg-emerald-800 disabled:opacity-50 transition"
-      >
-        ⚡ {t("website.auto_configure_btn")}
-      </button>
-    </div>
-  );
-}
-
-function Pill({ label, value }) {
-  return (
-    <div className="bg-white border border-stone-200 rounded px-3 py-2">
-      <div className="text-[10px] uppercase tracking-widest text-stone-500 mb-0.5">{label}</div>
-      <div className="text-stone-800">{value || "—"}</div>
     </div>
   );
 }

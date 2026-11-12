@@ -175,7 +175,7 @@ export default function AgencyShell({ children, current = "dashboard", showBack 
     // A-034 R4 — Analytics A/B fuori nav primaria (link in Impostazioni)
     { key: "mls", to: `/${lang}/app/mls`, label: "MLS", icon: "⧉", cluster: "pubblicazione" },
     ...(isAgencyAdmin
-      ? [{ key: "website", to: `/${lang}/app/website`, label: t("immoweb_app.nav_website") || "Sito web", icon: "🎨", cluster: "pubblicazione" }]
+      ? [{ key: "website", to: `/${lang}/app/website`, label: t("immoweb_app.nav_website") || "Il mio sito", icon: "🏠", cluster: "pubblicazione" }]
       : []),
     // Strumenti commerciali restano in evidenza (D-168)
     { key: "staging", to: `/${lang}/app/staging`, label: "Virtual Staging", icon: "✨", cluster: "strumenti" },

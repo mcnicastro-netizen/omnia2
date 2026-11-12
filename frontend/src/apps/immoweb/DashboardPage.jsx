@@ -137,7 +137,7 @@ const SITE_PHASE_LABEL = {
   none: { title: "Nessun sito dichiarato", hint: "Se hai un dominio, aprilo in Sito web e avvia estrazione o cattura." },
   declared: { title: "Sito dichiarato — non ancora elaborato", hint: "OMNIA ha salvato l’URL. Estrai brand o cattura il sito per vedere il risultato." },
   brand_extracted: { title: "Brand estratto dal tuo sito", hint: "Profilo colori/logo letto. Puoi catturare le pagine o scegliere un tema." },
-  clone_ready: { title: "Cattura sito pronta", hint: "Preview migrazione disponibile in Brand Studio." },
+  clone_ready: { title: "Sito OMNIA pronto", hint: "Anteprima disponibile in Il mio sito." },
   theme_only: { title: "Tema OMNIA configurato", hint: "Nessun URL esterno: stai usando (o puoi usare) i template della gallery." },
 };
 

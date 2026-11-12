@@ -122,7 +122,7 @@ export default function AvvioSetupPage() {
   const analyzeSite = async () => {
     const url = ctx.declared_url;
     if (!url) {
-      setErr("Nessun URL dichiarato — aprilo in Brand Studio o indica il sito in Impostazioni.");
+      setErr("Nessun URL dichiarato — aprilo in Il mio sito o indica il sito in Impostazioni.");
       return;
     }
     setAcqBusy(true);
@@ -135,7 +135,7 @@ export default function AvvioSetupPage() {
       const d = e?.response?.data?.detail;
       setErr(
         (typeof d === "string" ? d : d?.hint || d?.error) ||
-          "Analisi sito non riuscita — riprova da Brand Studio."
+          "Analisi sito non riuscita — riprova da Il mio sito."
       );
     } finally {
       setAcqBusy(false);
@@ -364,7 +364,7 @@ export default function AvvioSetupPage() {
                             <p className="text-sm font-sans font-medium text-stone-900">Il sito è già mio</p>
                             <p className="text-xs text-stone-500">
                               Resta online dove sta ora. Nessun clone, nessuna sostituzione. OMNIA usa l’URL in
-                              contatti / Brand Studio.
+                              contatti / Il mio sito.
                             </p>
                             <button
                               type="button"
@@ -431,7 +431,7 @@ export default function AvvioSetupPage() {
                               to={`/${l}/app/website`}
                               className="px-3 py-2 text-[11px] uppercase tracking-widest border border-stone-300 text-stone-700"
                             >
-                              Brand Studio
+                              Il mio sito
                             </Link>
                           </div>
                         </details>
