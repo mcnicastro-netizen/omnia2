@@ -15,7 +15,7 @@ THEME_CATALOG: List[Dict[str, Any]] = [
     {
         "id": "minimal",
         "name": "Minimal",
-        "description": "Sobrio, tipografia editoriale, molto spazio bianco. Ideale per agenzie boutique.",
+        "description": "Semplice e ordinato. Poco colore, tanto spazio.",
         "best_for": ["familiare", "professionale"],
         "segments": ["boutique", "neo"],
         "mls_variants": ["on", "off"],
@@ -30,7 +30,7 @@ THEME_CATALOG: List[Dict[str, Any]] = [
     {
         "id": "classic",
         "name": "Classic",
-        "description": "Layout tradizionale ben strutturato, ottimo per portafogli ampi e clientela mainstream.",
+        "description": "Classico e chiaro. Va bene per la maggior parte delle agenzie.",
         "best_for": ["professionale", "familiare"],
         "segments": ["mainstream", "neo", "restyle"],
         "mls_variants": ["on", "off"],
@@ -45,7 +45,7 @@ THEME_CATALOG: List[Dict[str, Any]] = [
     {
         "id": "bold",
         "name": "Bold",
-        "description": "Tipografia grande e contrasti netti. Adatto ad agenzie moderne e ad alto volume.",
+        "description": "Titoloni e colori forti. Aspetto moderno.",
         "best_for": ["tecnico", "professionale"],
         "segments": ["volume", "neo", "restyle"],
         "mls_variants": ["on", "off"],
@@ -60,7 +60,7 @@ THEME_CATALOG: List[Dict[str, Any]] = [
     {
         "id": "luxury",
         "name": "Luxury",
-        "description": "Toni scuri, oro, immagini protagoniste. Pensato per immobili di prestigio.",
+        "description": "Scuro ed elegante. Per immobili di prestigio.",
         "best_for": ["lusso"],
         "segments": ["prestige", "neo", "restyle"],
         "mls_variants": ["on", "off"],
@@ -75,7 +75,7 @@ THEME_CATALOG: List[Dict[str, Any]] = [
     {
         "id": "atelier",
         "name": "Atelier",
-        "description": "Hero bottom-anchored, luce studio, CTA pill. Neo / restyling boutique urbane.",
+        "description": "Foto grandi e pulsanti evidenziati. Stile boutique.",
         "best_for": ["professionale", "familiare"],
         "segments": ["boutique", "neo", "restyle"],
         "mls_variants": ["on", "off"],
@@ -90,7 +90,7 @@ THEME_CATALOG: List[Dict[str, Any]] = [
     {
         "id": "cinematic",
         "name": "Cinematic",
-        "description": "Full-bleed media plane, serif display, glass nav. Prestigio + video hero.",
+        "description": "Immagini a tutto schermo. Effetto cinema.",
         "best_for": ["lusso"],
         "segments": ["prestige", "restyle"],
         "mls_variants": ["on", "off"],
@@ -105,7 +105,7 @@ THEME_CATALOG: List[Dict[str, Any]] = [
     {
         "id": "editorial",
         "name": "Editorial",
-        "description": "Quattro angoli / tipografia magazine, poco colore. Agenzie culturali o mono-quartiere.",
+        "description": "Come una rivista. Poco colore, tanto testo.",
         "best_for": ["familiare", "professionale"],
         "segments": ["boutique", "neo", "restyle"],
         "mls_variants": ["on", "off"],
@@ -120,7 +120,7 @@ THEME_CATALOG: List[Dict[str, Any]] = [
     {
         "id": "mediterranean",
         "name": "Mediterranean",
-        "description": "Luce calda, pietra/calce, portafoglio vacanza e second home Sicilia/Sud.",
+        "description": "Toni caldi. Ideale per case vacanza e Sud Italia.",
         "best_for": ["familiare", "lusso"],
         "segments": ["vacation", "neo", "restyle"],
         "mls_variants": ["on", "off"],

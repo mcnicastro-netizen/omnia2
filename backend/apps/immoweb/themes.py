@@ -8,7 +8,8 @@ from __future__ import annotations
 
 import logging
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Literal, Optional
+from urllib.parse import urlparse
 
 from fastapi import APIRouter, Depends, HTTPException, Response
 from pydantic import BaseModel, Field
@@ -58,6 +59,31 @@ class ApplyThemeRequest(BaseModel):
     tagline: Optional[str] = Field(default=None, max_length=200)
     hero_image_url: Optional[str] = Field(default=None, max_length=500)
 
+
+class SitePresenceRequest(BaseModel):
+    """Scelta semplice: sito già mio (external) oppure vetrina OMNIA."""
+
+    mode: Literal["external", "omnia_template"]
+    external_url: Optional[str] = Field(default=None, max_length=500)
+
+
+def _normalize_site_url(raw: Optional[str]) -> Optional[str]:
+    if not raw:
+        return None
+    u = str(raw).strip()
+    if not u:
+        return None
+    if " " in u or "\n" in u:
+        raise HTTPException(status_code=400, detail="invalid_url")
+    if not u.startswith(("http://", "https://")):
+        u = f"https://{u}"
+    parsed = urlparse(u)
+    host = (parsed.netloc or "").split("@")[-1].split(":")[0]
+    if parsed.scheme not in ("http", "https") or not host or "." not in host:
+        raise HTTPException(status_code=400, detail="invalid_url")
+    return u.rstrip("/")
+
+
 async def _agency_for(user: dict) -> Dict[str, Any]:
     from shared.auth.tenant import require_agency
     aid = require_agency(user)
@@ -67,15 +93,53 @@ async def _agency_for(user: dict) -> Dict[str, Any]:
         raise HTTPException(status_code=404, detail="agency_not_found")
     return a
 
+@router.post("/presence")
+async def set_site_presence(
+    payload: SitePresenceRequest,
+    user: dict = Depends(require_roles("agency_admin", "super_admin", "group_admin")),
+):
+    """Salva la scelta sito: esterno (già mio) o vetrina OMNIA."""
+    agency = await _agency_for(user)
+    db = Database.get()
+    now = datetime.now(timezone.utc).isoformat()
+    url = _normalize_site_url(payload.external_url)
+    website = agency.get("website") or {}
+    if payload.mode == "external" and not url:
+        url = (website.get("external_url") or "").strip() or None
+        if not url and agency.get("existing_domain"):
+            ed = str(agency.get("existing_domain")).strip()
+            url = ed if ed.startswith("http") else f"https://{ed}"
+        if not url:
+            raise HTTPException(
+                status_code=400,
+                detail={"error": "url_required", "hint": "Inserisci l’indirizzo del tuo sito"},
+            )
+    sets: Dict[str, Any] = {
+        "website.mode": payload.mode,
+        "updated_at": now,
+    }
+    if url:
+        sets["website.external_url"] = url
+    await db.agencies.update_one({"id": agency["id"]}, {"$set": sets})
+    updated = await db.agencies.find_one({"id": agency["id"]})
+    web = (updated or {}).get("website") or {}
+    return {
+        "ok": True,
+        "website_mode": web.get("mode"),
+        "external_url": web.get("external_url"),
+        "public_url": f"/api/p/{agency.get('slug')}/",
+    }
+
+
 @router.get("/themes")
 async def list_themes(_: dict = Depends(get_current_user)):
-    """Theme picker: live catalog + roadmap (D-150, non selezionabili)."""
+    """Theme picker: catalogo temi live (roadmap nascosta in UI semplice)."""
     return {
         "themes": THEME_CATALOG,
         "roadmap": THEME_ROADMAP,
         "default_theme_id": DEFAULT_THEME_ID,
-        "mls_matrix": True,  # ogni tema live/roadmap prevede varianti MLS on|off
-        "target_live_count": {"min": 5, "max": 10},  # D-019
+        "mls_matrix": True,
+        "target_live_count": {"min": 5, "max": 10},
     }
 
 @router.get("/theme")

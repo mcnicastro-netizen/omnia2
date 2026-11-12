@@ -284,11 +284,20 @@ async def complete_site_step(
     }
     # Mode website coerente con scelta (campi già usati)
     web_set: Dict[str, Any] = {"updated_at": _now()}
+    website = agency.get("website") or {}
+    declared = (website.get("external_url") or "").strip() or None
+    if not declared and agency.get("existing_domain"):
+        ed = str(agency.get("existing_domain")).strip()
+        declared = ed if ed.startswith("http") else f"https://{ed}"
     if choice == "external":
         web_set["website.mode"] = "external"
+        if declared:
+            web_set["website.external_url"] = declared
     elif choice == "omnia_theme":
         web_set["website.mode"] = "omnia_template"
-    # keep_brand: resta external/clone path in Brand Studio
+    elif choice == "keep_brand":
+        # Solo se migra hosting: tema OMNIA tintato, non “clone”
+        web_set["website.mode"] = "omnia_template"
 
     await db.agencies.update_one({"id": aid}, {"$set": web_set})
     journey = await _save_journey(db, aid, journey)
