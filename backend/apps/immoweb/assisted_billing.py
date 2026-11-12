@@ -74,11 +74,18 @@ async def grant_assisted_plan(
     agency_id: str,
     *,
     tier: PlanTierName = "pro",
-    credits: int = 2000,
+    credits: Optional[int] = None,
     reason: str = "assisted_grant",
     granted_by: Optional[str] = None,
+    skip_wallet: bool = False,
+    preserve_stripe_subscription: bool = False,
 ) -> Dict[str, Any]:
-    """Set active assisted subscription + top-up wallet. Idempotent on subscription upsert."""
+    """Set active assisted subscription + top-up wallet.
+
+    D-167: default crediti = listino `credits_included_monthly` (non più 2000 dogfood).
+    Se `skip_wallet` (path Stripe già accredita via invoice.paid) → solo piano/agenzia.
+    Se `preserve_stripe_subscription` → non sovrascrivere id/source Stripe.
+    """
     plan = get_plan(tier)  # type: ignore[arg-type]
     if not plan:
         return {"ok": False, "error": "unknown_tier", "tier": tier}
@@ -89,7 +96,12 @@ async def grant_assisted_plan(
 
     now = _now()
     agency_plan = _AGENCY_PLAN_FIELD.get(tier, "pro")
-    cr = max(0, int(credits))
+    if credits is None:
+        cr = int(plan.credits_included_monthly or 0)
+    else:
+        cr = max(0, int(credits))
+    if skip_wallet:
+        cr = 0
 
     await db.agencies.update_one(
         {"id": agency_id},
@@ -105,49 +117,57 @@ async def grant_assisted_plan(
         },
     )
 
+    sub_set: Dict[str, Any] = {
+        "agency_id": agency_id,
+        "plan_tier": tier,
+        "tier": tier,  # alias letto da resolve_tier quota
+        "status": "active",
+        "updated_at": now,
+        "activated_at": now,
+        "granted_by": granted_by,
+        "grant_reason": reason,
+    }
+    if not preserve_stripe_subscription:
+        sub_set["billing_cycle"] = "monthly"
+        sub_set["source"] = "assisted_provisioning"
     await db.subscriptions.update_one(
         {"agency_id": agency_id},
         {
-            "$set": {
-                "agency_id": agency_id,
-                "plan_tier": tier,
-                "tier": tier,  # alias letto da resolve_tier quota
-                "status": "active",
-                "billing_cycle": "monthly",
-                "source": "assisted_provisioning",
-                "updated_at": now,
-                "activated_at": now,
-                "granted_by": granted_by,
-                "grant_reason": reason,
-            },
+            "$set": sub_set,
             "$setOnInsert": {"created_at": now},
         },
         upsert=True,
     )
 
-    wallet = await db.credit_wallets.find_one_and_update(
-        {"agency_id": agency_id},
-        {
-            "$inc": {"balance": cr},
-            "$set": {"updated_at": now, "last_topup_at": now},
-            "$setOnInsert": {"agency_id": agency_id, "created_at": now},
-        },
-        upsert=True,
-        return_document=True,
-    )
-    bal = (wallet or {}).get("balance")
-    await db.credit_transactions.insert_one(
-        {
-            "agency_id": agency_id,
-            "kind": "assisted_topup",
-            "credits": cr,
-            "balance_after": bal,
-            "reason": reason or f"assisted_grant_{tier}",
-            "created_at": now,
-            "ref_type": "ops_grant_agency_plan",
-            "granted_by": granted_by,
-        }
-    )
+    bal = None
+    if cr > 0:
+        wallet = await db.credit_wallets.find_one_and_update(
+            {"agency_id": agency_id},
+            {
+                "$inc": {"balance": cr},
+                "$set": {"updated_at": now, "last_topup_at": now},
+                "$setOnInsert": {"agency_id": agency_id, "created_at": now},
+            },
+            upsert=True,
+            return_document=True,
+        )
+        bal = (wallet or {}).get("balance")
+        await db.credit_transactions.insert_one(
+            {
+                "agency_id": agency_id,
+                "kind": "assisted_topup",
+                "credits": cr,
+                "balance_after": bal,
+                "reason": reason or f"assisted_grant_{tier}",
+                "created_at": now,
+                "ref_type": "ops_grant_agency_plan",
+                "granted_by": granted_by,
+            }
+        )
+    else:
+        wallet = await db.credit_wallets.find_one({"agency_id": agency_id}, {"balance": 1})
+        bal = (wallet or {}).get("balance", 0)
+
     return {
         "ok": True,
         "agency_id": agency_id,
@@ -159,4 +179,5 @@ async def grant_assisted_plan(
         "credits_balance": bal,
         "max_properties": plan.max_properties,
         "credits_included_monthly": plan.credits_included_monthly,
+        "wallet_skipped": bool(skip_wallet or cr == 0),
     }

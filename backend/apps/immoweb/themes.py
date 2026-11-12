@@ -83,9 +83,30 @@ async def get_current_theme(user: dict = Depends(get_current_user)):
     """Return the currently saved theme_config for the user's agency,
     plus the resolved effective config."""
     agency = await _agency_for(user)
-    saved = (agency.get("website") or {}).get("theme_config")
+    website = agency.get("website") or {}
+    saved = website.get("theme_config")
     resolved = _resolve_theme_config(agency)
-    extracted = normalize_extracted_profile((agency.get("website") or {}).get("extracted_profile"))
+    extracted = normalize_extracted_profile(website.get("extracted_profile"))
+    clone_ready = bool(
+        website.get("clone_ready")
+        or (website.get("clone_capture") or {}).get("clone_ready")
+    )
+    external_url = (website.get("external_url") or "").strip() or None
+    existing_domain = (agency.get("existing_domain") or "").strip() or None
+    declared_url = external_url or (
+        f"https://{existing_domain}" if existing_domain else None
+    )
+    # D-167 — stato percorso sito (solo campi già in Mongo; no auto-crawl)
+    if extracted and clone_ready:
+        site_phase = "clone_ready"
+    elif extracted:
+        site_phase = "brand_extracted"
+    elif declared_url or website.get("mode") == "external":
+        site_phase = "declared"
+    elif saved or resolved:
+        site_phase = "theme_only"
+    else:
+        site_phase = "none"
     return {
         "agency_id": agency["id"],
         "agency_slug": agency.get("slug"),
@@ -93,6 +114,13 @@ async def get_current_theme(user: dict = Depends(get_current_user)):
         "resolved": resolved,
         "extracted_profile": extracted,
         "public_url": f"/api/p/{agency.get('slug')}/",
+        "website_mode": website.get("mode"),
+        "external_url": external_url,
+        "existing_domain": existing_domain,
+        "declared_url": declared_url,
+        "clone_ready": clone_ready,
+        "clone_source_url": website.get("clone_source_url"),
+        "site_phase": site_phase,
     }
 
 @router.post("/theme/apply")

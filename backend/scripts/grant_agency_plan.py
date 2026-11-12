@@ -38,7 +38,12 @@ async def main() -> int:
     p.add_argument("--slug", default="")
     p.add_argument("--email", default="", help="Email titolare → active_agency_id")
     p.add_argument("--tier", default="pro", choices=["starter", "pro", "agency"])
-    p.add_argument("--credits", type=int, default=2000)
+    p.add_argument(
+        "--credits",
+        type=int,
+        default=None,
+        help="D-167: default = credits_included_monthly del piano",
+    )
     p.add_argument("--note", default="cli_assisted_grant")
     p.add_argument("--dry-run", action="store_true")
     args = p.parse_args()

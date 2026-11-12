@@ -103,7 +103,6 @@ export default function FounderOpsPage() {
       const r = await api.post(`/app/ops/activate-agency`, {
         agency_id: row.agency_id,
         grant_plan: true,
-        credits: 2000,
         send_email: true,
         wipe_crm: true,
         note: "coda_attivazione",
