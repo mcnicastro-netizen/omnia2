@@ -28,12 +28,12 @@ export default function KPICard({ kpi }) {
   const body = (
     <>
       <div className="flex items-start justify-between mb-3">
-        <p className={`text-[11px] uppercase tracking-widest font-medium ${locked ? "text-stone-400" : "text-stone-500"}`}>
+        <p className={`text-[11px] uppercase tracking-widest font-medium ${locked ? "text-crm-muted" : "text-crm-muted"}`}>
           {label}
         </p>
         {icon && (
           <span
-            className={`text-xs ${locked ? "text-stone-300" : "text-stone-400"}`}
+            className={`text-xs ${locked ? "text-crm-line" : "text-crm-muted"}`}
             aria-hidden="true"
           >
             ●
@@ -41,8 +41,7 @@ export default function KPICard({ kpi }) {
         )}
       </div>
       <p
-        className={`text-3xl md:text-4xl font-semibold tabular-nums ${locked ? "text-stone-300" : "text-stone-900"}`}
-        style={{ fontFamily: "'Fraunces', Georgia, serif" }}
+        className={`text-3xl md:text-4xl font-semibold tabular-nums ${locked ? "text-crm-line" : "text-crm-navy"}`}
       >
         {locked ? "—" : value}
       </p>
@@ -59,8 +58,8 @@ export default function KPICard({ kpi }) {
 
   const className = `relative block p-5 md:p-6 rounded-xl border transition ${
     locked
-      ? "bg-stone-100 border-stone-200 text-stone-400"
-      : "bg-white border-stone-200 text-stone-900 hover:border-stone-400 hover:shadow-sm"
+      ? "bg-crm-mist border-crm-line text-crm-muted"
+      : "crm-panel text-crm-navy hover:border-crm-navy/40"
   }`;
 
   if (to) {
