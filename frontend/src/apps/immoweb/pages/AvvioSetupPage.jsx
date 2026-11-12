@@ -10,7 +10,7 @@ const STEP_META = [
   {
     id: "site",
     title: "Sito e identità",
-    hint: "Vedi cosa OMNIA ha letto dal tuo URL; poi scegli tema OMNIA (MLS pubblico) o keep-brand.",
+    hint: "OMNIA legge colori/logo dal tuo URL e ricostruisce con un tema nostro (non è un clone HTML del sito Agensta). MLS sul sito pubblico ⇒ solo tema OMNIA.",
   },
   {
     id: "import_properties",
@@ -53,7 +53,7 @@ const ACQ_LABEL = {
   none: "Nessun URL dichiarato in registrazione",
   declared_only: "URL salvato — non ancora analizzato",
   brand_extracted: "Brand estratto (colori/logo)",
-  clone_ready: "Cattura sito + preview pronti",
+  clone_ready: "Brand/cattura pronti → preview su tema OMNIA (non clone pixel)",
 };
 
 export default function AvvioSetupPage() {
@@ -345,6 +345,12 @@ export default function AvvioSetupPage() {
                           </p>
                         </div>
                       ) : null}
+                      <p className="text-xs text-amber-900 bg-amber-50 border border-amber-200 px-2 py-2" data-testid="avvio-acq-honesty">
+                        Attenzione: la preview non è il sito Agensta clonato. È un tema OMNIA (es. classic) con
+                        palette/logo letti dall’URL. Box MLS pubblico e layout ricerca a due colonne compaiono
+                        solo con <strong>tema OMNIA</strong> + MLS attivo allo step 3. Clone HTML fedele = lavoro
+                        dedicato (non incluso in questo passaggio).
+                      </p>
                       {acq.notes ? (
                         <p className="text-xs text-stone-500 whitespace-pre-wrap" data-testid="avvio-acq-notes">
                           {acq.notes}
@@ -396,8 +402,9 @@ export default function AvvioSetupPage() {
                             onClick={() => completeSite("keep_brand")}
                             data-testid="avvio-site-keep"
                             className="px-3 py-2 text-[11px] uppercase tracking-widest border border-stone-400 disabled:opacity-40"
+                            title="Tema OMNIA con i tuoi colori/logo — non clona HTML/CSS del sito attuale"
                           >
-                            Tieni look esistente (clone)
+                            Colori/logo sul tema OMNIA
                           </button>
                           <button
                             type="button"
