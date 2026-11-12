@@ -1,3 +1,9 @@
+## 2026-11-12 — P1 Oggi cliccabile + Match da schede
+
+- Dashboard recent con `href` (attività/match/portali/HAL)
+- Empty Oggi → CTA Clienti; Match empty → nuovo immobile/acquirente
+- Scheda cliente searcher: CTA Apri Match; lead-score senza p/c → guida
+
 ## 2026-11-12 — P0 Client→Richiesta + Visibility MLS + MLS card link
 
 - Searcher dopo Salva → `/requests/new?client_id=` + banner brief

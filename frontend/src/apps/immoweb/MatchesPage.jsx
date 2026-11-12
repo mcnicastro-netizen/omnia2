@@ -87,7 +87,7 @@ export default function MatchesPage() {
         {loading ? (
           <p className="text-stone-500 text-sm">{t("common.loading")}</p>
         ) : data.items.length === 0 ? (
-          <div data-testid="matches-empty" className="bg-white border border-stone-200 rounded-lg p-12 text-center">
+          <div data-testid="matches-empty" className="bg-white border border-stone-200 rounded-lg p-12 text-center space-y-4">
             <p
               className="text-2xl mb-2"
               style={{ fontFamily: "'Fraunces', Georgia, serif" }}
@@ -95,8 +95,24 @@ export default function MatchesPage() {
               {t("matches.empty_title") || "Nessun match al momento"}
             </p>
             <p className="text-stone-500 max-w-md mx-auto">
-              {t("matches.empty_subtitle") || "Aggiungi più immobili e clienti — i match si calcolano automaticamente."}
+              {t("matches.empty_subtitle") || "Servono immobili attivi e clienti con brief. Poi i match si calcolano da soli."}
             </p>
+            <div className="flex flex-wrap justify-center gap-2 pt-2">
+              <Link
+                to={`/${lang}/app/properties/new`}
+                data-testid="matches-empty-new-property"
+                className="px-4 py-2 text-[11px] uppercase tracking-widest bg-stone-900 text-white"
+              >
+                Nuovo immobile
+              </Link>
+              <Link
+                to={`/${lang}/app/clients/new?type=buyer`}
+                data-testid="matches-empty-new-client"
+                className="px-4 py-2 text-[11px] uppercase tracking-widest border border-stone-900"
+              >
+                Nuovo acquirente
+              </Link>
+            </div>
           </div>
         ) : (
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">

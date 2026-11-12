@@ -359,13 +359,32 @@ export default function ClientFormPage() {
             <Section label={t("clients.section_requests") || "Richieste"}>
               <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
                 <p className="text-sm text-stone-600">{t("clients.section_requests_hint")}</p>
-                <Link
-                  to={`/${lang}/app/requests/new?client_id=${id}`}
-                  data-testid="client-add-request"
-                  className="px-3 py-1.5 text-[10px] uppercase tracking-widest bg-stone-900 text-stone-50 rounded-md"
-                >
-                  {t("clients.add_request_btn")}
-                </Link>
+                <div className="flex flex-wrap gap-2">
+                  {clientRequests[0]?.id ? (
+                    <Link
+                      to={`/${lang}/app/requests/${clientRequests[0].id}`}
+                      data-testid="client-open-match"
+                      className="px-3 py-1.5 text-[10px] uppercase tracking-widest border border-stone-900 text-stone-900 rounded-md"
+                    >
+                      {t("clients.open_match_btn", "Apri Match")} →
+                    </Link>
+                  ) : (
+                    <Link
+                      to={`/${lang}/app/matches`}
+                      data-testid="client-open-matches"
+                      className="px-3 py-1.5 text-[10px] uppercase tracking-widest border border-stone-300 text-stone-700 rounded-md"
+                    >
+                      {t("clients.open_matches_btn", "Vedi Match")}
+                    </Link>
+                  )}
+                  <Link
+                    to={`/${lang}/app/requests/new?client_id=${id}`}
+                    data-testid="client-add-request"
+                    className="px-3 py-1.5 text-[10px] uppercase tracking-widest bg-stone-900 text-stone-50 rounded-md"
+                  >
+                    {t("clients.add_request_btn")}
+                  </Link>
+                </div>
               </div>
               {clientRequests.length === 0 ? (
                 <p data-testid="client-requests-empty" className="text-sm text-stone-500 bg-stone-50 border border-stone-200 rounded-md px-4 py-6 text-center">
