@@ -7,7 +7,7 @@ import { api } from "../../shared/lib/api";
 /** D-FUTURE-04 Smart Clients List
  *  Primary split: Acquirenti (searchers) vs Venditori/Proprietari (sellers).
  *  Within Acquirenti: temperature / to_call_today filters + lead score.
- *  Editorial sober: stone palette only.
+ *  D-171: crm-desk navy + oro (Inter).
  */
 
 const TEMP_BUCKETS = ["to_call_today", "rovente", "caldo", "tiepido", "freddo"];
@@ -32,11 +32,11 @@ function TempPill({ temp, t }) {
     return <span data-testid="temp-pill" className="text-[10px] uppercase tracking-widest text-stone-400">—</span>;
   }
   const dotShade = {
-    rovente: "bg-stone-900",
-    caldo: "bg-stone-700",
-    tiepido: "bg-stone-400",
-    freddo: "bg-stone-300",
-  }[temp] || "bg-stone-300";
+    rovente: "bg-crm-navy",
+    caldo: "bg-crm-navy/70",
+    tiepido: "bg-crm-gold",
+    freddo: "bg-crm-line",
+  }[temp] || "bg-crm-line";
   return (
     <span data-testid={`temp-pill-${temp}`} className="inline-flex items-center gap-1.5 text-[10px] uppercase tracking-widest text-stone-600">
       <span className={`inline-block w-1.5 h-1.5 rounded-full ${dotShade}`} />
@@ -50,7 +50,7 @@ function ScoreBox({ score, cached, clientId, lang }) {
   if (score === null || score === undefined) {
     return (
       <div className="w-14 text-center" data-testid="score-box-empty">
-        <div className="text-stone-300 text-lg font-light" style={{ fontFamily: "'Fraunces', Georgia, serif" }}>—</div>
+        <div className="text-crm-line text-lg font-light">—</div>
         <div className="text-[9px] uppercase tracking-widest text-stone-400 mt-0.5">—</div>
       </div>
     );
@@ -67,7 +67,7 @@ function ScoreBox({ score, cached, clientId, lang }) {
         }}
         className="w-full"
       >
-        <div className="text-stone-900 text-2xl font-light leading-none hover:underline" style={{ fontFamily: "'Fraunces', Georgia, serif" }}>
+        <div className="text-crm-navy text-2xl font-semibold leading-none hover:underline">
           {score}
         </div>
         <div className="text-[9px] uppercase tracking-widest text-stone-500 mt-1">
@@ -142,13 +142,13 @@ function FilterPill({ id, active, label, count, onClick }) {
       onClick={onClick}
       className={`px-3.5 py-1.5 rounded-md text-xs uppercase tracking-widest transition border ${
         active
-          ? "bg-stone-900 text-stone-50 border-stone-900"
-          : "bg-white text-stone-700 border-stone-300 hover:border-stone-500"
+          ? "crm-btn-primary border-crm-navy"
+          : "crm-btn-ghost hover:border-crm-navy"
       }`}
     >
       {label}
       {typeof count === "number" && (
-        <span className={`ml-2 text-[10px] ${active ? "text-stone-300" : "text-stone-400"}`}>{count}</span>
+        <span className={`ml-2 text-[10px] ${active ? "text-crm-gold-soft" : "text-crm-muted"}`}>{count}</span>
       )}
     </button>
   );
@@ -164,23 +164,23 @@ function SegmentTab({ id, active, label, count, hint, onClick }) {
       onClick={onClick}
       className={`flex-1 min-w-[200px] text-left px-5 py-4 rounded-lg border transition ${
         active
-          ? "bg-stone-900 text-stone-50 border-stone-900 shadow-sm"
-          : "bg-white text-stone-800 border-stone-300 hover:border-stone-600"
+          ? "crm-btn-primary border-crm-navy shadow-sm"
+          : "bg-white text-crm-navy border-crm-line hover:border-crm-navy"
       }`}
     >
       <div className="flex items-baseline justify-between gap-3">
         <span className="text-sm uppercase tracking-widest font-medium">{label}</span>
         {typeof count === "number" && (
           <span
-            className={`text-2xl font-light leading-none tabular-nums ${active ? "text-stone-100" : "text-stone-900"}`}
-            style={{ fontFamily: "'Fraunces', Georgia, serif" }}
+            className={`text-2xl font-light leading-none tabular-nums ${active ? "text-white" : "text-crm-navy"}`}
+           
           >
             {count}
           </span>
         )}
       </div>
       {hint && (
-        <p className={`mt-2 text-xs leading-snug ${active ? "text-stone-300" : "text-stone-500"}`}>{hint}</p>
+        <p className={`mt-2 text-xs leading-snug ${active ? "text-crm-gold-soft" : "text-crm-muted"}`}>{hint}</p>
       )}
     </button>
   );
@@ -314,13 +314,14 @@ export default function ClientsPage() {
 
   return (
     <AgencyShell current="clients">
-      <section data-testid="clients-page" className="space-y-6">
+      <section data-testid="clients-page" className="crm-desk space-y-6">
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
-            <h1 className="text-3xl md:text-4xl tracking-tight" style={{ fontFamily: "'Fraunces', Georgia, serif" }}>
+            <p className="crm-eyebrow" data-testid="clients-crm-eyebrow">Anagrafica</p>
+            <h1 className="crm-title text-3xl md:text-4xl mt-1">
               {t("clients.title")}
             </h1>
-            <p className="text-stone-600 mt-1">
+            <p className="text-crm-muted mt-1 text-sm">
               {isSearchers ? t("clients_smart.subtitle_searchers") : t("clients_smart.subtitle_sellers")}
             </p>
           </div>
@@ -329,7 +330,7 @@ export default function ClientsPage() {
               <Link
                 to={`/${lang}/app/requests`}
                 data-testid="clients-goto-requests-btn"
-                className="px-4 py-2.5 bg-white border border-stone-400 text-stone-800 text-xs uppercase tracking-widest font-medium rounded-md hover:border-stone-700 transition"
+                className="crm-btn-ghost px-4 py-2.5 text-xs uppercase tracking-widest font-medium rounded-md transition"
               >
                 {t("clients_smart.goto_requests_btn")}
               </Link>
@@ -340,7 +341,7 @@ export default function ClientsPage() {
                 data-testid="clients-refresh-ai-btn"
                 onClick={refreshAi}
                 disabled={refreshing}
-                className="px-4 py-2.5 bg-white border border-stone-400 text-stone-800 text-xs uppercase tracking-widest font-medium rounded-md hover:border-stone-700 disabled:opacity-50 transition"
+                className="crm-btn-ghost px-4 py-2.5 text-xs uppercase tracking-widest font-medium rounded-md disabled:opacity-50 transition"
                 title={t("clients_smart.refresh_hint", { n: uncached })}
               >
                 {refreshing ? t("clients_smart.refreshing") : t("clients_smart.refresh_ai_btn", { n: Math.min(uncached, 10) })}
@@ -349,14 +350,14 @@ export default function ClientsPage() {
             <Link
               to={`/${lang}/app/clients/import`}
               data-testid="clients-import-csv-btn"
-              className="px-4 py-2.5 bg-white border border-stone-300 text-stone-700 text-xs uppercase tracking-widest font-medium rounded-md hover:border-stone-700 transition"
+              className="crm-btn-ghost px-4 py-2.5 text-xs uppercase tracking-widest font-medium rounded-md transition"
             >
               {t("clients_smart.import_csv_btn")}
             </Link>
             <Link
               to={`/${lang}/app/clients/new${isSearchers ? "" : "?type=seller"}`}
               data-testid="clients-new-btn"
-              className="px-5 py-2.5 bg-stone-900 text-stone-50 text-xs uppercase tracking-widest font-medium rounded-md hover:bg-stone-700 transition"
+              className="crm-btn-primary px-5 py-2.5 text-xs uppercase tracking-widest font-medium rounded-md transition"
             >
               {isSearchers ? t("clients_smart.new_searcher_btn") : t("clients_smart.new_seller_btn")}
             </Link>
@@ -390,7 +391,7 @@ export default function ClientsPage() {
 
         <div
           data-testid="smart-banner"
-          className="bg-stone-100 border border-stone-200 rounded-lg p-4 flex gap-3 items-start text-sm text-stone-700"
+          className="crm-panel bg-crm-mist/60 p-4 flex gap-3 items-start text-sm text-crm-navy"
         >
           <span className="text-base leading-none mt-0.5">◆</span>
           <div className="space-y-1">
@@ -418,16 +419,16 @@ export default function ClientsPage() {
             value={q}
             onChange={(e) => setQ(e.target.value)}
             placeholder={t("clients.search_placeholder")}
-            className="flex-1 min-w-[220px] px-3 py-2 bg-white border border-stone-300 rounded-md text-sm focus:outline-none focus:border-stone-900"
+            className="crm-input flex-1 min-w-[220px] px-3 py-2 bg-white border border-crm-line rounded-md text-sm"
           />
-          <button type="submit" className="px-4 py-2 bg-stone-900 text-stone-50 text-xs uppercase tracking-widest rounded-md hover:bg-stone-700">
+          <button type="submit" className="crm-btn-primary px-4 py-2 text-xs uppercase tracking-widest rounded-md">
             {t("common.search")}
           </button>
           <select
             data-testid="clients-sort"
             value={sort}
             onChange={(e) => onSort(e.target.value)}
-            className="px-3 py-2 bg-white border border-stone-300 rounded-md text-sm"
+            className="crm-input px-3 py-2 bg-white border border-crm-line rounded-md text-sm"
           >
             {isSearchers && (
               <>
@@ -458,14 +459,14 @@ export default function ClientsPage() {
         {loading ? (
           <p className="text-stone-500 text-sm" data-testid="clients-loading">{t("common.loading")}</p>
         ) : data.items.length === 0 ? (
-          <div data-testid="clients-empty" className="bg-white border border-stone-200 rounded-lg p-12 text-center">
-            <p className="text-2xl mb-2" style={{ fontFamily: "'Fraunces', Georgia, serif" }}>
+          <div data-testid="clients-empty" className="crm-panel p-12 text-center">
+            <p className="crm-title text-2xl mb-2">
               {emptyTitle}
             </p>
             <p className="text-stone-500 mb-6 max-w-md mx-auto">{emptySubtitle}</p>
             <Link
               to={`/${lang}/app/clients/new${isSearchers ? "" : "?type=seller"}`}
-              className="inline-block px-5 py-2.5 bg-stone-900 text-stone-50 text-xs uppercase tracking-widest rounded-md hover:bg-stone-700"
+              className="crm-btn-primary inline-block px-5 py-2.5 text-xs uppercase tracking-widest rounded-md"
             >
               {isSearchers ? t("clients_smart.new_searcher_btn") : t("clients_smart.new_seller_btn")}
             </Link>
@@ -566,7 +567,7 @@ function ClientRow({ c, lang, t, segment, onOpen }) {
 
       <div className="min-w-0">
         <div className="flex items-center gap-3 flex-wrap">
-          <span className="font-medium text-stone-900 text-base">{fullName}</span>
+          <span className="font-medium text-crm-navy text-base">{fullName}</span>
           {!isSeller && <TempPill temp={c.temperature} t={t} />}
           <span className="text-[10px] uppercase tracking-widest text-stone-400">
             {t(`clients.type_${c.client_type}`)}
