@@ -1,3 +1,9 @@
+## 2026-11-12 — D-168 percorso Avvio agenzia + MLS richieste default ON
+
+- `/app/avvio` + API `setup-journey`; biforcazione sito (MLS pubblico ⇒ tema OMNIA)
+- Nav: cluster Avvio; strumenti commerciali restano; richieste `mls_shared` default true
+- Paperless step: predisposizione firma (provider in prod)
+
 ## 2026-11-12 — D-167 percorso Stripe crediti + stato sito + Accedi landing
 
 - `invoice.paid` accredita crediti listino piano (yearly ×12); Attiva KYC/Ops non aggiunge più 2000 se Stripe live

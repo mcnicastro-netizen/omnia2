@@ -29,7 +29,7 @@ class ClientRequestInDB(TenantModel):
     # Criteri di ricerca (tipo B; anche A può tenerli)
     criteria: SearchPreferences = Field(default_factory=SearchPreferences)
     # Condividi con altre agenzie MLS per matching inverso
-    mls_shared: bool = False
+    mls_shared: bool = True  # D-168 AgeStaNet-style: richieste in rete di default
     assigned_agent_id: Optional[str] = None
     notes: Optional[str] = Field(default=None, max_length=5000)
     # Collegamento a lead legacy (ImmobilCloud / widget)
@@ -43,7 +43,7 @@ class ClientRequestCreate(OmniaBaseModel):
     title: Optional[str] = None
     property_id: Optional[str] = None
     criteria: Optional[SearchPreferences] = None
-    mls_shared: bool = False
+    mls_shared: bool = True  # D-168 AgeStaNet-style: richieste in rete di default
     notes: Optional[str] = None
     status: RequestStatus = "open"
 
@@ -70,7 +70,7 @@ class ClientRequestListItem(OmniaBaseModel):
     source: str
     title: Optional[str] = None
     property_id: Optional[str] = None
-    mls_shared: bool = False
+    mls_shared: bool = True  # D-168 AgeStaNet-style: richieste in rete di default
     criteria: Optional[dict] = None
     notes: Optional[str] = None
     lead_id: Optional[str] = None

@@ -7,6 +7,16 @@ Registro di tutte le decisioni di business e tecniche prese durante il progetto.
 
 ## Decisioni prese
 
+### D-168 — Percorso Avvio agenzia (nav + checklist) · MLS sito = tema OMNIA · richieste rete default ON · 12-Nov-2026
+- **Contesto**: Founder — dopo Attiva serve percorso guidato (sito → dati → MLS → documenti → portali → CRM); strumenti commerciali restano in nav; AgeStaNet: condividere anche le richieste aumenta produttività.
+- **Decisione**:
+  1. Modalità **Avvio** (`/app/avvio` + `setup_journey` su agency) post-Attiva; redirect da dashboard finché incompleto. Nav Operativo resta; cluster Avvio in cima; Mutui/Modulistica/Staging restano visibili.
+  2. **Sito**: se MLS sul sito pubblico → solo **tema OMNIA**. Keep-brand/external = niente box MLS pubblico (rete resta in ImmoWeb). Niente overlay come percorso standard.
+  3. **Richieste MLS**: default **ON** (solo agenti/agenzie); opt-out esplicito. Immobili ON con adesione.
+  4. **Documenti**: predisposizione paperless; firma elettronica = credenziali provider in produzione (no claim live).
+  5. Ordine step: sito → import immobili → MLS → modulistica → publishing → import CRM → team (opz.).
+- **Stato**: ✅ in codice.
+
 ### D-167 — Percorso onboarding ordinato: Stripe=listino crediti · stato sito in area privata · Accedi in landing · 12-Nov-2026
 - **Contesto**: Dogfood Nicastro — Pro attivo ma wallet 2000 (dogfood Ops); landing senza Accedi; sito dichiarato in registrazione senza esito visibile in area privata.
 - **Decisione** (niente prodotti nuovi):

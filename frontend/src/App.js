@@ -28,6 +28,7 @@ const WidgetsShowcasePage = lazy(() => import("@/pages/WidgetsShowcasePage"));
 const ImmocloudApp = lazy(() => import("@/apps/immocloud/ImmocloudApp"));
 const ImmowebApp = lazy(() => import("@/apps/immoweb/ImmowebApp"));
 const DashboardPage = lazy(() => import("@/apps/immoweb/DashboardPage"));
+const AvvioSetupPage = lazy(() => import("@/apps/immoweb/pages/AvvioSetupPage"));
 const OnboardingWizard = lazy(() => import("@/apps/immoweb/OnboardingWizard"));
 const WaitingActivationPage = lazy(() => import("@/apps/immoweb/WaitingActivationPage"));
 const MembersPage = lazy(() => import("@/apps/immoweb/MembersPage"));
@@ -267,6 +268,14 @@ function App() {
                     element={
                       <ProtectedRoute allowedRoles={["super_admin", "agency_admin", "agent"]}>
                         <DashboardPage />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="app/avvio"
+                    element={
+                      <ProtectedRoute allowedRoles={["super_admin", "agency_admin", "group_admin", "branch_admin"]}>
+                        <AvvioSetupPage />
                       </ProtectedRoute>
                     }
                   />

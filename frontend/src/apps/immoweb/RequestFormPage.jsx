@@ -37,7 +37,7 @@ export default function RequestFormPage() {
     property_id: searchParams.get("property_id") || "",
     title: "",
     notes: "",
-    mls_shared: false,
+    mls_shared: true, // D-168: richieste in rete MLS di default
     auto_match: true,
     match_tolerances: { price_pct: 10, surface_pct: 10, min_score: 50 },
     source: "manual",

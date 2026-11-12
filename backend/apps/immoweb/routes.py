@@ -44,6 +44,7 @@ from apps.immoweb.fascicolo import router as fascicolo_router
 from apps.immoweb.mls import router as mls_router
 from apps.immoweb.modulistica import router as modulistica_router
 from apps.immoweb.activities import router as activities_router
+from apps.immoweb.setup_journey import router as setup_journey_router
 
 router = APIRouter(prefix="/app", tags=["immoweb"])
 
@@ -98,3 +99,4 @@ router.include_router(fascicolo_router)
 router.include_router(mls_router)
 router.include_router(modulistica_router)
 router.include_router(activities_router)
+router.include_router(setup_journey_router)

@@ -214,6 +214,14 @@ async def create_agency(
     doc["activated_by"] = None
     # D-162 — pending email solo dopo KYC + pagamento (non qui)
     doc["pending_notify_sent_at"] = None
+    # D-168 — percorso Avvio post-Attiva
+    from apps.immoweb.setup_journey import default_setup_journey
+
+    doc["setup_journey"] = default_setup_journey()
+    doc["defaults"] = {
+        "share_listings_mls": True,
+        "share_requests_mls": True,
+    }
     await db.agencies.insert_one(doc)
     await _attach_user_to_agency(db, user["id"], agency.id, force_active=True)
 

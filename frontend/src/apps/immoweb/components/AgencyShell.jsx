@@ -77,9 +77,25 @@ export default function AgencyShell({ children, current = "dashboard", showBack 
         setAgency(a);
         // Pending CRM: sala d'attesa (titolare / agent)
         const st = a?.activation_status || "active";
-        const onWaiting = (location.pathname || "").includes("/app/waiting-activation");
+        const path = location.pathname || "";
+        const onWaiting = path.includes("/app/waiting-activation");
         if (st === "pending" && !onWaiting) {
           nav(`/${lang}/app/waiting-activation`, { replace: true });
+          return;
+        }
+        // D-168 — post-Attiva: Avvio prima della dashboard operativa (admin)
+        const journey = a?.setup_journey || {};
+        const avvioOpen =
+          st === "active" &&
+          journey?.status !== "completed" &&
+          (user?.role === "agency_admin" ||
+            user?.role === "branch_admin" ||
+            user?.role === "group_admin" ||
+            Boolean(user?.ops_impersonation));
+        const onAvvio = path.includes("/app/avvio");
+        const onDash = /\/app\/dashboard\/?$/.test(path);
+        if (avvioOpen && onDash && !onAvvio) {
+          nav(`/${lang}/app/avvio`, { replace: true });
         }
       })
       .catch((err) => {
@@ -113,7 +129,16 @@ export default function AgencyShell({ children, current = "dashboard", showBack 
     user?.role === "branch_admin" ||
     isGroupAdmin ||
     (user?.role === "super_admin" && impersonating);
+  const journeyIncomplete =
+    agency &&
+    agency !== false &&
+    (agency.activation_status || "active") === "active" &&
+    (agency.setup_journey || {}).status !== "completed";
+
   const navItems = [
+    ...(isAgencyAdmin && journeyIncomplete
+      ? [{ key: "avvio", to: `/${lang}/app/avvio`, label: "Avvio", icon: "①", cluster: "avvio" }]
+      : []),
     { key: "dashboard", to: `/${lang}/app/dashboard`, label: t("immoweb_app.nav_dashboard"), icon: "▦", cluster: "operativo" },
     ...(isGroupAdmin
       ? [{ key: "group", to: `/${lang}/app/group`, label: t("immoweb_app.nav_group") || "Gruppo", icon: "🏢", cluster: "amministrazione" }]
@@ -138,6 +163,7 @@ export default function AgencyShell({ children, current = "dashboard", showBack 
     ...(isAgencyAdmin
       ? [{ key: "website", to: `/${lang}/app/website`, label: t("immoweb_app.nav_website") || "Sito web", icon: "🎨", cluster: "pubblicazione" }]
       : []),
+    // Strumenti commerciali restano in evidenza (D-168)
     { key: "staging", to: `/${lang}/app/staging`, label: "Virtual Staging", icon: "✨", cluster: "strumenti" },
     { key: "mutui", to: `/${lang}/app/mutui`, label: t("mutui.nav") || "Mutui", icon: "💰", cluster: "strumenti" },
     { key: "modulistica", to: `/${lang}/app/modulistica`, label: "Modulistica", icon: "📑", cluster: "strumenti" },
@@ -150,10 +176,10 @@ export default function AgencyShell({ children, current = "dashboard", showBack 
     ...(isAgencyAdmin
       ? [{ key: "settings", to: `/${lang}/app/settings`, label: t("immoweb_app.nav_settings"), icon: "⚙", cluster: "amministrazione" }]
       : []),
-    // Cabina / Brand Lab NON nel menu CRM — solo shell Ops dedicata (+ exit impersonazione in header)
   ];
 
   const NAV_CLUSTERS = [
+    { id: "avvio", label: "Avvio" },
     { id: "operativo", label: "Operativo" },
     { id: "pubblicazione", label: "Pubblicazione" },
     { id: "strumenti", label: "Strumenti" },
