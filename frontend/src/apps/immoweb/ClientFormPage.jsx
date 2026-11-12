@@ -233,20 +233,18 @@ export default function ClientFormPage() {
 
   return (
     <AgencyShell current="clients">
-      <section data-testid="client-form-page" className="max-w-4xl space-y-6">
+      <section data-testid="client-form-page" className="crm-desk max-w-4xl space-y-6">
         <div>
-          <Link to={`/${lang}/app/clients`} className="text-xs uppercase tracking-widest text-stone-500 hover:text-stone-900">
+          <Link to={`/${lang}/app/clients`} className="text-xs uppercase tracking-widest text-crm-muted hover:text-crm-navy">
             {t("clients.back_to_list")}
           </Link>
-          <h1
-            className="text-3xl md:text-4xl tracking-tight mt-2"
-            style={{ fontFamily: "'Fraunces', Georgia, serif" }}
-          >
+          <p className="crm-eyebrow mt-3">Scheda cliente</p>
+          <h1 className="crm-title text-3xl md:text-4xl mt-1">
             {isEdit ? t("clients.form_title_edit") : t("clients.form_title_new")}
           </h1>
         </div>
 
-        <form onSubmit={submit} className="space-y-8 bg-white border border-stone-200 rounded-lg p-6 md:p-8">
+        <form onSubmit={submit} className="crm-panel space-y-8 p-6 md:p-8">
           {/* Anagrafica */}
           <Section label={t("clients.section_personal")}>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -465,7 +463,7 @@ export default function ClientFormPage() {
                       data-testid={`pref-pt-${pt}`}
                       onClick={() => togglePrefArr("property_types", pt)}
                       className={`text-xs px-3 py-1.5 rounded-full border transition ${
-                        on ? "bg-stone-900 text-stone-50 border-stone-900" : "bg-white text-stone-700 border-stone-300 hover:border-stone-500"
+                        on ? "crm-btn-primary border-crm-navy" : "crm-btn-ghost hover:border-crm-navy"
                       }`}
                     >
                       {t(`properties.type_${pt}`)}
@@ -515,7 +513,7 @@ export default function ClientFormPage() {
                       type="button"
                       onClick={() => togglePrefArr("conditions", c)}
                       className={`text-xs px-3 py-1.5 rounded-full border transition ${
-                        on ? "bg-stone-900 text-stone-50 border-stone-900" : "bg-white text-stone-700 border-stone-300 hover:border-stone-500"
+                        on ? "crm-btn-primary border-crm-navy" : "crm-btn-ghost hover:border-crm-navy"
                       }`}
                     >
                       {t(`properties.cond_${c}`)}
@@ -539,7 +537,7 @@ export default function ClientFormPage() {
                         type="button"
                         onClick={() => togglePrefArr("floor_preferences", f)}
                         className={`text-xs px-3 py-1.5 rounded-full border transition ${
-                          on ? "bg-stone-900 text-stone-50 border-stone-900" : "bg-white text-stone-700 border-stone-300 hover:border-stone-500"
+                          on ? "crm-btn-primary border-crm-navy" : "crm-btn-ghost hover:border-crm-navy"
                         }`}
                       >
                         {t(`clients.floor_${f}`)}
@@ -631,7 +629,7 @@ export default function ClientFormPage() {
               type="submit"
               disabled={saving}
               data-testid="client-save-btn"
-              className="ml-auto px-6 py-3 bg-stone-900 text-stone-50 text-xs uppercase tracking-widest font-medium rounded-md hover:bg-stone-700 disabled:opacity-50"
+              className="crm-btn-primary ml-auto px-6 py-3 text-xs uppercase tracking-widest font-medium rounded-md disabled:opacity-50"
             >
               {saving ? t("common.loading") : t("clients.save")}
             </button>
@@ -643,9 +641,15 @@ export default function ClientFormPage() {
             width: 100%;
             padding: 0.5rem 0.75rem;
             background: white;
-            border: 1px solid #d6d3d1;
+            border: 1px solid var(--crm-line);
             border-radius: 6px;
             font-size: 0.875rem;
+            font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+          }
+          .form-input:focus {
+            outline: none;
+            border-color: var(--crm-navy);
+            box-shadow: 0 0 0 1px var(--crm-navy);
           }
           .form-input:focus {
             outline: none;

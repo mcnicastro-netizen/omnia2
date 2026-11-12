@@ -1,3 +1,7 @@
+## 2026-11-12 — D-171 Clienti navy + oro
+
+- `ClientsPage` + `ClientFormPage`: `crm-desk`, Inter, CTA navy (Smart List invariata)
+
 ## 2026-11-12 — D-171 MLS navy + oro
 
 - `MlsPage`: `crm-desk`, stats/collaborazioni/inventory allineati Immobili+Attività
