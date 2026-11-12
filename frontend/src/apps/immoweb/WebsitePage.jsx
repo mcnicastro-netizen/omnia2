@@ -350,10 +350,13 @@ export default function WebsitePage() {
               <h2 className="text-xl text-stone-900" style={{ fontFamily: "'Fraunces', Georgia, serif" }}>
                 1. Scegli un template
               </h2>
-              <p className="text-sm text-stone-600 font-sans">Un tocco = si applica subito.</p>
-              <div className="grid sm:grid-cols-2 gap-3">
+              <p className="text-sm text-stone-600 font-sans">
+                Sono modelli di sito pronti. Tocca l’immagine per applicarlo.
+              </p>
+              <div className="grid sm:grid-cols-2 gap-4">
                 {themes.map((th) => {
                   const active = selectedTheme === th.id;
+                  const img = th.hero_image || th.preview_image || null;
                   return (
                     <button
                       key={th.id}
@@ -361,30 +364,40 @@ export default function WebsitePage() {
                       disabled={busy}
                       onClick={() => applyTheme(th.id)}
                       data-testid={`theme-card-${th.id}`}
-                      className={`text-left px-4 py-3 border transition disabled:opacity-50 ${
+                      className={`text-left overflow-hidden border bg-white transition disabled:opacity-50 ${
                         active
-                          ? "border-stone-900 bg-white ring-1 ring-stone-900"
-                          : "border-stone-200 bg-stone-50 hover:border-stone-400"
+                          ? "border-stone-900 ring-2 ring-stone-900"
+                          : "border-stone-200 hover:border-stone-500"
                       }`}
                     >
-                      <div className="flex items-center justify-between gap-2">
-                        <span className="font-medium text-stone-900">{th.name}</span>
+                      <div className="relative aspect-[16/10] bg-stone-200 overflow-hidden">
+                        {img ? (
+                          <img
+                            src={img}
+                            alt=""
+                            className="absolute inset-0 w-full h-full object-cover"
+                            loading="lazy"
+                          />
+                        ) : (
+                          <div
+                            className="absolute inset-0"
+                            style={{
+                              background: `linear-gradient(135deg, ${
+                                (th.preview_palette || {}).primary || "#0B1E3F"
+                              }, ${(th.preview_palette || {}).accent || "#78716c"})`,
+                            }}
+                          />
+                        )}
                         {active ? (
-                          <span className="text-[10px] uppercase tracking-widest text-stone-500">scelto</span>
+                          <span className="absolute top-2 right-2 text-[10px] uppercase tracking-widest bg-white text-stone-900 px-2 py-1">
+                            scelto
+                          </span>
                         ) : null}
                       </div>
-                      <div className="flex gap-1.5 mt-2">
-                        {Object.values(th.preview_palette || {})
-                          .slice(0, 4)
-                          .map((c, i) => (
-                            <span
-                              key={i}
-                              className="w-5 h-5 border border-stone-200"
-                              style={{ background: c }}
-                            />
-                          ))}
+                      <div className="px-3 py-3">
+                        <p className="font-medium text-stone-900 text-base">{th.name}</p>
+                        <p className="mt-1 text-xs text-stone-500 font-sans">{th.description}</p>
                       </div>
-                      <p className="mt-2 text-xs text-stone-500 font-sans">{th.description}</p>
                     </button>
                   );
                 })}
