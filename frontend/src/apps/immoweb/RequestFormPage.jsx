@@ -206,20 +206,21 @@ export default function RequestFormPage() {
   if (loading) {
     return (
       <AgencyShell current="requests">
-        <p className="text-stone-500 text-sm">{t("common.loading")}</p>
+        <p className="text-crm-muted text-sm">{t("common.loading")}</p>
       </AgencyShell>
     );
   }
 
   return (
     <AgencyShell current="requests">
-      <section data-testid="request-form-page" className="space-y-6 max-w-3xl">
+      <section data-testid="request-form-page" className="crm-desk space-y-6 max-w-3xl">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <Link to={`/${lang}/app/requests`} className="text-xs uppercase tracking-widest text-stone-500 hover:text-stone-800">
+            <Link to={`/${lang}/app/requests`} className="text-xs uppercase tracking-widest text-crm-muted hover:text-stone-800">
               {t("requests.back")}
             </Link>
-            <h1 className="text-3xl tracking-tight mt-1" style={{ fontFamily: "'Fraunces', Georgia, serif" }}>
+            <p className="crm-eyebrow" data-testid="request-crm-eyebrow">Brief / richiesta</p>
+          <h1 className="crm-title text-3xl tracking-tight mt-1">
               {isNew ? t("requests.form_new") : t("requests.form_edit")}
             </h1>
           </div>
@@ -238,10 +239,10 @@ export default function RequestFormPage() {
           <p className="text-sm text-rose-700 bg-rose-50 border border-rose-200 rounded-md px-3 py-2">{error}</p>
         )}
 
-        <form onSubmit={save} className="space-y-5 bg-white border border-stone-200 rounded-lg p-6">
+        <form onSubmit={save} className="space-y-5 crm-panel p-6">
           {/* Client */}
           <div>
-            <label className="block text-xs uppercase tracking-widest text-stone-500 mb-1">{t("requests.field_client")}</label>
+            <label className="block text-xs uppercase tracking-widest text-crm-muted mb-1">{t("requests.field_client")}</label>
             {isNew ? (
               <div className="relative">
                 <input
@@ -256,12 +257,12 @@ export default function RequestFormPage() {
                   className="form-input w-full"
                 />
                 {clientHits.length > 0 && !form.client_id && (
-                  <ul className="absolute z-10 mt-1 w-full bg-white border border-stone-300 rounded-md shadow-sm max-h-48 overflow-auto">
+                  <ul className="absolute z-10 mt-1 w-full bg-white border border-crm-line rounded-md shadow-sm max-h-48 overflow-auto">
                     {clientHits.map((c) => (
                       <li key={c.id}>
                         <button
                           type="button"
-                          className="w-full text-left px-3 py-2 text-sm hover:bg-stone-100"
+                          className="w-full text-left px-3 py-2 text-sm hover:bg-crm-mist"
                           onClick={() => {
                             upd("client_id", c.id);
                             setClientLabel(`${c.name || ""} ${c.surname || ""}`.trim());
@@ -287,7 +288,7 @@ export default function RequestFormPage() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs uppercase tracking-widest text-stone-500 mb-1">{t("requests.field_type")}</label>
+              <label className="block text-xs uppercase tracking-widest text-crm-muted mb-1">{t("requests.field_type")}</label>
               <select
                 data-testid="request-type"
                 value={form.request_type}
@@ -300,7 +301,7 @@ export default function RequestFormPage() {
             </div>
             {form.request_type === "property_interest" && (
               <div>
-                <label className="block text-xs uppercase tracking-widest text-stone-500 mb-1">{t("requests.field_property_id")}</label>
+                <label className="block text-xs uppercase tracking-widest text-crm-muted mb-1">{t("requests.field_property_id")}</label>
                 <input
                   data-testid="request-property-id"
                   value={form.property_id}
@@ -313,16 +314,16 @@ export default function RequestFormPage() {
           </div>
 
           <div>
-            <label className="block text-xs uppercase tracking-widest text-stone-500 mb-1">{t("requests.field_title")}</label>
+            <label className="block text-xs uppercase tracking-widest text-crm-muted mb-1">{t("requests.field_title")}</label>
             <input value={form.title} onChange={(e) => upd("title", e.target.value)} className="form-input w-full" />
           </div>
 
           {/* Criteria */}
-          <fieldset className="border border-stone-200 rounded-md p-4 space-y-3">
-            <legend className="text-xs uppercase tracking-widest text-stone-500 px-1">{t("requests.section_criteria")}</legend>
+          <fieldset className="border border-crm-line rounded-md p-4 space-y-3">
+            <legend className="text-xs uppercase tracking-widest text-crm-muted px-1">{t("requests.section_criteria")}</legend>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
               <div>
-                <label className="text-xs text-stone-500">{t("clients.pref_operation")}</label>
+                <label className="text-xs text-crm-muted">{t("clients.pref_operation")}</label>
                 <select value={form.criteria.operation || ""} onChange={(e) => updCrit("operation", e.target.value)} className="form-input w-full">
                   <option value="">{t("clients.pref_any")}</option>
                   <option value="sale">{t("clients.op_sale")}</option>
@@ -330,7 +331,7 @@ export default function RequestFormPage() {
                 </select>
               </div>
               <div>
-                <label className="text-xs text-stone-500">{t("clients.pref_cities")}</label>
+                <label className="text-xs text-crm-muted">{t("clients.pref_cities")}</label>
                 <input
                   value={Array.isArray(form.criteria.cities) ? form.criteria.cities.join(", ") : form.criteria.cities}
                   onChange={(e) => updCrit("cities", e.target.value)}
@@ -339,7 +340,7 @@ export default function RequestFormPage() {
                 />
               </div>
               <div>
-                <label className="text-xs text-stone-500">{t("clients.pref_price_max")}</label>
+                <label className="text-xs text-crm-muted">{t("clients.pref_price_max")}</label>
                 <input type="number" value={form.criteria.price_max || ""} onChange={(e) => updCrit("price_max", e.target.value)} className="form-input w-full" />
               </div>
             </div>
@@ -385,11 +386,11 @@ export default function RequestFormPage() {
             );
           })()}
 
-          <fieldset className="border border-stone-200 rounded-md p-4 space-y-3">
-            <legend className="text-xs uppercase tracking-widest text-stone-500 px-1">{t("requests.section_tolerances")}</legend>
+          <fieldset className="border border-crm-line rounded-md p-4 space-y-3">
+            <legend className="text-xs uppercase tracking-widest text-crm-muted px-1">{t("requests.section_tolerances")}</legend>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
               <div>
-                <label className="text-xs text-stone-500">{t("requests.tol_price")}</label>
+                <label className="text-xs text-crm-muted">{t("requests.tol_price")}</label>
                 <input
                   type="number"
                   min={0}
@@ -403,7 +404,7 @@ export default function RequestFormPage() {
                 />
               </div>
               <div>
-                <label className="text-xs text-stone-500">{t("requests.tol_surface")}</label>
+                <label className="text-xs text-crm-muted">{t("requests.tol_surface")}</label>
                 <input
                   type="number"
                   min={0}
@@ -417,7 +418,7 @@ export default function RequestFormPage() {
                 />
               </div>
               <div>
-                <label className="text-xs text-stone-500">{t("requests.tol_min_score")}</label>
+                <label className="text-xs text-crm-muted">{t("requests.tol_min_score")}</label>
                 <input
                   type="number"
                   min={0}
@@ -434,7 +435,7 @@ export default function RequestFormPage() {
           </fieldset>
 
           <div>
-            <label className="block text-xs uppercase tracking-widest text-stone-500 mb-1">{t("requests.field_notes")}</label>
+            <label className="block text-xs uppercase tracking-widest text-crm-muted mb-1">{t("requests.field_notes")}</label>
             <textarea value={form.notes || ""} onChange={(e) => upd("notes", e.target.value)} rows={3} className="form-input w-full" />
           </div>
 
@@ -443,11 +444,11 @@ export default function RequestFormPage() {
               type="submit"
               disabled={saving}
               data-testid="request-save"
-              className="px-5 py-2.5 bg-stone-900 text-stone-50 text-xs uppercase tracking-widest rounded-md disabled:opacity-50"
+              className="px-5 py-2.5 crm-btn-primary text-xs uppercase tracking-widest rounded-md disabled:opacity-50"
             >
               {saving ? t("common.saving") : t("requests.save")}
             </button>
-            <Link to={`/${lang}/app/requests`} className="px-5 py-2.5 border border-stone-300 text-xs uppercase tracking-widest rounded-md">
+            <Link to={`/${lang}/app/requests`} className="px-5 py-2.5 border border-crm-line text-xs uppercase tracking-widest rounded-md">
               {t("common.cancel")}
             </Link>
           </div>
@@ -455,32 +456,32 @@ export default function RequestFormPage() {
 
         {!isNew && matches && (
           <div data-testid="request-matches" className="space-y-3">
-            <h2 className="text-xl" style={{ fontFamily: "'Fraunces', Georgia, serif" }}>
+            <h2 className="crm-title text-xl">
               {t("requests.matches_title")}
             </h2>
-            <p className="text-sm text-stone-600">
+            <p className="text-sm text-crm-muted">
               {matches.scope_used === "portfolio" && t("requests.matches_from_portfolio")}
               {matches.scope_used === "mls" && t("requests.matches_from_mls")}
               {matches.scope_used === "none" && t("requests.matches_none")}
             </p>
             {(matches.items || []).length === 0 ? (
-              <p className="text-stone-500 text-sm">{t("requests.matches_empty")}</p>
+              <p className="text-crm-muted text-sm">{t("requests.matches_empty")}</p>
             ) : (
               <ul className="space-y-2">
                 {matches.items.map((m) => (
                   <li
                     key={`${m.property_id}-${m.scope}`}
-                    className="bg-white border border-stone-200 rounded-lg px-4 py-3 flex flex-wrap justify-between gap-2"
+                    className="crm-panel px-4 py-3 flex flex-wrap justify-between gap-2"
                   >
                     <div>
-                      <div className="font-medium text-stone-900">{m.title || m.reference_code || m.property_id}</div>
-                      <div className="text-xs text-stone-500 uppercase tracking-widest mt-0.5">
+                      <div className="font-medium text-crm-navy">{m.title || m.reference_code || m.property_id}</div>
+                      <div className="text-xs text-crm-muted uppercase tracking-widest mt-0.5">
                         {m.scope === "mls" ? t("requests.scope_mls") : t("requests.scope_portfolio")}
                         {m.city ? ` · ${m.city}` : ""}
                         {m.price != null ? ` · ${formatPrice(m.price)}` : ""}
                       </div>
                     </div>
-                    <div className="text-2xl font-light text-stone-900" style={{ fontFamily: "'Fraunces', Georgia, serif" }}>
+                    <div className="crm-title text-2xl font-semibold">
                       {m.score}
                     </div>
                   </li>

@@ -15,7 +15,7 @@ function TypeBadge({ type, t }) {
   return (
     <span
       data-testid={`request-type-${type}`}
-      className="text-[10px] uppercase tracking-widest text-stone-500 border border-stone-300 px-2 py-0.5 rounded"
+      className="text-[10px] uppercase tracking-widest text-crm-muted border border-crm-line px-2 py-0.5 rounded"
     >
       {label}
     </span>
@@ -43,9 +43,9 @@ function MatchScope({ scope, score, t }) {
   return (
     <span
       data-testid="request-match-scope"
-      className="inline-flex items-center gap-2 text-[11px] uppercase tracking-widest text-stone-700 bg-stone-100 border border-stone-200 px-2.5 py-1 rounded-md"
+      className="inline-flex items-center gap-2 text-[11px] uppercase tracking-widest text-stone-700 bg-crm-mist border border-crm-line px-2.5 py-1 rounded-md"
     >
-      <span className="text-base font-light normal-case tracking-normal text-stone-900" style={{ fontFamily: "'Fraunces', Georgia, serif" }}>
+      <span className="crm-title text-base font-semibold normal-case tracking-normal">
         {score}
       </span>
       {label}
@@ -134,24 +134,25 @@ export default function RequestsPage() {
 
   return (
     <AgencyShell current="requests">
-      <section data-testid="requests-page" className="space-y-6">
+      <section data-testid="requests-page" className="crm-desk space-y-6">
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
-            <h1 className="text-3xl md:text-4xl tracking-tight" style={{ fontFamily: "'Fraunces', Georgia, serif" }}>
+            <p className="crm-eyebrow" data-testid="requests-crm-eyebrow">Richieste</p>
+            <h1 className="crm-title text-3xl md:text-4xl mt-1">
               {t("requests.title")}
             </h1>
-            <p className="text-stone-600 mt-1">{t("requests.subtitle")}</p>
+            <p className="text-crm-muted mt-1">{t("requests.subtitle")}</p>
           </div>
           <Link
             to={`/${lang}/app/requests/new`}
             data-testid="requests-new-btn"
-            className="px-5 py-2.5 bg-stone-900 text-stone-50 text-xs uppercase tracking-widest font-medium rounded-md hover:bg-stone-700 transition"
+            className="px-5 py-2.5 crm-btn-primary text-xs uppercase tracking-widest font-medium rounded-md transition"
           >
             {t("requests.new_btn")}
           </Link>
         </div>
 
-        <div className="bg-stone-100 border border-stone-200 rounded-lg p-4 text-sm text-stone-700" data-testid="requests-banner">
+        <div className="crm-panel bg-crm-mist/60 p-4 text-sm text-crm-navy" data-testid="requests-banner">
           {t("requests.banner")}
         </div>
 
@@ -160,7 +161,7 @@ export default function RequestsPage() {
             type="button"
             onClick={() => setView("mine")}
             className={`px-4 py-2 text-xs uppercase tracking-widest rounded-md border ${
-              view === "mine" ? "bg-stone-900 text-stone-50 border-stone-900" : "bg-white border-stone-300"
+              view === "mine" ? "crm-btn-primary border-crm-navy" : "crm-btn-ghost"
             }`}
           >
             {t("requests.view_mine")}
@@ -169,7 +170,7 @@ export default function RequestsPage() {
             type="button"
             onClick={() => setView("mls")}
             className={`px-4 py-2 text-xs uppercase tracking-widest rounded-md border ${
-              view === "mls" ? "bg-stone-900 text-stone-50 border-stone-900" : "bg-white border-stone-300"
+              view === "mls" ? "crm-btn-primary border-crm-navy" : "crm-btn-ghost"
             }`}
           >
             {t("requests.view_mls")}
@@ -177,7 +178,7 @@ export default function RequestsPage() {
         </div>
 
         {toast && (
-          <p className="text-sm text-stone-700 bg-stone-100 border border-stone-200 rounded-md px-3 py-2">✓ {toast}</p>
+          <p className="text-sm text-stone-700 bg-crm-mist border border-crm-line rounded-md px-3 py-2">✓ {toast}</p>
         )}
 
         {view === "mine" && (
@@ -195,7 +196,7 @@ export default function RequestsPage() {
                 data-testid={`requests-type-${id}`}
                 onClick={() => { setPage(1); setTypeFilter(id); }}
                 className={`text-left px-4 py-3 rounded-lg border transition ${
-                  active ? "bg-stone-900 text-stone-50 border-stone-900" : "bg-white border-stone-300 hover:border-stone-600"
+                  active ? "crm-btn-primary border-crm-navy" : "crm-btn-ghost hover:border-crm-navy"
                 }`}
               >
                 <div className="flex justify-between items-baseline gap-2">
@@ -203,7 +204,7 @@ export default function RequestsPage() {
                     {id === "all" ? t("requests.filter_all") : t(`requests.type_${id}`)}
                   </span>
                   {typeof count === "number" && (
-                    <span className="text-xl font-light" style={{ fontFamily: "'Fraunces', Georgia, serif" }}>{count}</span>
+                    <span className="crm-title text-xl font-semibold">{count}</span>
                   )}
                 </div>
               </button>
@@ -217,16 +218,16 @@ export default function RequestsPage() {
             value={q}
             onChange={(e) => setQ(e.target.value)}
             placeholder={t("requests.search_placeholder")}
-            className="flex-1 min-w-[200px] px-3 py-2 bg-white border border-stone-300 rounded-md text-sm"
+            className="flex-1 min-w-[200px] px-3 py-2 bg-white border border-crm-line rounded-md text-sm"
           />
-          <button type="submit" className="px-4 py-2 bg-stone-900 text-stone-50 text-xs uppercase tracking-widest rounded-md">
+          <button type="submit" className="px-4 py-2 crm-btn-primary text-xs uppercase tracking-widest rounded-md">
             {t("common.search")}
           </button>
           <select
             data-testid="requests-status"
             value={statusFilter}
             onChange={(e) => { setPage(1); setStatusFilter(e.target.value); }}
-            className="px-3 py-2 bg-white border border-stone-300 rounded-md text-sm"
+            className="px-3 py-2 bg-white border border-crm-line rounded-md text-sm"
           >
             {STATUS_FILTERS.map((s) => (
               <option key={s} value={s}>
@@ -238,7 +239,7 @@ export default function RequestsPage() {
             data-testid="requests-source"
             value={sourceFilter}
             onChange={(e) => { setPage(1); setSourceFilter(e.target.value); }}
-            className="px-3 py-2 bg-white border border-stone-300 rounded-md text-sm"
+            className="px-3 py-2 bg-white border border-crm-line rounded-md text-sm"
           >
             <option value="">{t("requests.filter_all_sources")}</option>
             {sourceKeys.map((s) => (
@@ -248,16 +249,16 @@ export default function RequestsPage() {
         </form>
 
         {loading ? (
-          <p className="text-stone-500 text-sm">{t("common.loading")}</p>
+          <p className="text-crm-muted text-sm">{t("common.loading")}</p>
         ) : data.items.length === 0 ? (
-          <div data-testid="requests-empty" className="bg-white border border-stone-200 rounded-lg p-12 text-center">
-            <p className="text-2xl mb-2" style={{ fontFamily: "'Fraunces', Georgia, serif" }}>
+          <div data-testid="requests-empty" className="bg-white border border-crm-line rounded-lg p-12 text-center">
+            <p className="crm-title text-2xl mb-2">
               {t("requests.empty_title")}
             </p>
-            <p className="text-stone-500 mb-6 max-w-md mx-auto">{t("requests.empty_subtitle")}</p>
+            <p className="text-crm-muted mb-6 max-w-md mx-auto">{t("requests.empty_subtitle")}</p>
             <Link
               to={`/${lang}/app/requests/new`}
-              className="inline-block px-5 py-2.5 bg-stone-900 text-stone-50 text-xs uppercase tracking-widest rounded-md"
+              className="inline-block px-5 py-2.5 crm-btn-primary text-xs uppercase tracking-widest rounded-md"
             >
               {t("requests.new_btn")}
             </Link>
@@ -268,23 +269,23 @@ export default function RequestsPage() {
               <div
                 key={r.id}
                 data-testid={`request-row-${r.id}`}
-                className="bg-white border border-stone-200 rounded-lg px-5 py-4 grid grid-cols-1 md:grid-cols-[1fr_auto_auto] gap-4 items-center hover:border-stone-500 transition cursor-pointer"
+                className="bg-white border border-crm-line rounded-lg px-5 py-4 grid grid-cols-1 md:grid-cols-[1fr_auto_auto] gap-4 items-center hover:border-stone-500 transition cursor-pointer"
                 onClick={() => nav(`/${lang}/app/requests/${r.id}`)}
               >
                 <div className="min-w-0">
                   <div className="flex flex-wrap items-center gap-2">
-                    <span className="font-medium text-stone-900">
+                    <span className="font-medium text-crm-navy">
                       {r.title || r.client_name || "—"}
                     </span>
                     <TypeBadge type={r.request_type} t={t} />
                     <SourceBadge source={r.source} />
                     {r.mls_shared && (
-                      <span className="text-[10px] uppercase tracking-widest text-stone-600 border border-stone-400 px-2 py-0.5 rounded">
+                      <span className="text-[10px] uppercase tracking-widest text-crm-muted border border-stone-400 px-2 py-0.5 rounded">
                         {t("requests.mls_shared_badge")}
                       </span>
                     )}
                   </div>
-                  <div className="text-sm text-stone-600 mt-1 truncate">
+                  <div className="text-sm text-crm-muted mt-1 truncate">
                     {r.client_name && <span>{r.client_name}</span>}
                     {r.property_title && (
                       <span> · {r.property_ref ? `${r.property_ref} · ` : ""}{r.property_title}</span>
@@ -305,13 +306,13 @@ export default function RequestsPage() {
                     type="button"
                     data-testid={`request-share-${r.id}`}
                     onClick={() => toggleShare(r.id, r.mls_shared)}
-                    className="px-3 py-1.5 text-[10px] uppercase tracking-widest border border-stone-300 rounded-md hover:border-stone-700"
+                    className="px-3 py-1.5 text-[10px] uppercase tracking-widest border border-crm-line rounded-md hover:border-stone-700"
                   >
                     {r.mls_shared ? t("requests.unshare_btn") : t("requests.share_btn")}
                   </button>
                   <Link
                     to={`/${lang}/app/requests/${r.id}`}
-                    className="px-3 py-1.5 text-[10px] uppercase tracking-widest bg-stone-900 text-stone-50 rounded-md"
+                    className="crm-btn-primary px-3 py-1.5 text-[10px] uppercase tracking-widest rounded-md"
                   >
                     {t("requests.open_btn")}
                   </Link>
@@ -325,28 +326,28 @@ export default function RequestsPage() {
 
         {view === "mls" && (
           <div data-testid="requests-mls-list" className="space-y-3">
-            <p className="text-sm text-stone-600">{t("requests.mls_network_hint")}</p>
+            <p className="text-sm text-crm-muted">{t("requests.mls_network_hint")}</p>
             {loading ? (
-              <p className="text-stone-500 text-sm">{t("common.loading")}</p>
+              <p className="text-crm-muted text-sm">{t("common.loading")}</p>
             ) : (mlsData.items || []).length === 0 ? (
-              <div className="bg-white border border-stone-200 rounded-lg p-10 text-center text-stone-500">
+              <div className="bg-white border border-crm-line rounded-lg p-10 text-center text-crm-muted">
                 {t("requests.mls_network_empty")}
               </div>
             ) : (
               (mlsData.items || []).map((r) => (
                 <div
                   key={r.id}
-                  className="bg-white border border-stone-200 rounded-lg px-5 py-4 flex flex-wrap justify-between gap-3"
+                  className="bg-white border border-crm-line rounded-lg px-5 py-4 flex flex-wrap justify-between gap-3"
                 >
                   <div>
-                    <div className="font-medium text-stone-900">{r.title}</div>
-                    <div className="text-[10px] uppercase tracking-widest text-stone-500 mt-1">
+                    <div className="font-medium text-crm-navy">{r.title}</div>
+                    <div className="text-[10px] uppercase tracking-widest text-crm-muted mt-1">
                       {t(`requests.type_${r.request_type}`)} · {t("requests.scope_mls")}
                       {r.criteria?.cities?.length ? ` · ${r.criteria.cities.slice(0, 2).join(", ")}` : ""}
                     </div>
                   </div>
                   {r.best_vs_my_stock != null && (
-                    <div className="text-2xl font-light" style={{ fontFamily: "'Fraunces', Georgia, serif" }}>
+                    <div className="crm-title text-2xl font-semibold">
                       {r.best_vs_my_stock}
                       <span className="text-[10px] uppercase tracking-widest text-stone-400 ml-2">vs stock</span>
                     </div>
