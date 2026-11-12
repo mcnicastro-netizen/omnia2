@@ -235,7 +235,6 @@
     "login_title_cloud": "Accedi al tuo account",
     "register_cta": "Crea account",
     "forgot_password": "Password dimenticata?",
-    "agency_resume_hint": "In registrazione: entra con la password scelta al signup. Dopo la verifica riceverai la password per il gestionale. Se non la ricordi → «Password dimenticata?».",
     "show_password": "Mostra password",
     "hide_password": "Nascondi password",
     "send_reset_link": "Invia link di reset",

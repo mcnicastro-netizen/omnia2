@@ -235,7 +235,6 @@
     "login_title_cloud": "Sign in to your account",
     "register_cta": "Create account",
     "forgot_password": "Forgot password?",
-    "agency_resume_hint": "During registration: sign in with the password chosen at signup. After verification you will receive the CRM password. If you forgot it → «Forgot password?».",
     "show_password": "Show password",
     "hide_password": "Hide password",
     "send_reset_link": "Send reset link",
