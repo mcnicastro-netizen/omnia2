@@ -7,15 +7,24 @@ Registro di tutte le decisioni di business e tecniche prese durante il progetto.
 
 ## Decisioni prese
 
+### D-170 — Sito già proprio + box MLS embed (caso Nicastro) · 12-Nov-2026
+- **Contesto**: Nicastro Immobiliare (`www.nicastroimmobiliare.it`) ha già il sito; in home c’è il box ricerca rete di terzi. Vuole aderire alla MLS OMNIA e **tenere il proprio sito**. D-168 punto 2 vietava il box MLS pubblico se il sito non era tema OMNIA.
+- **Decisione**:
+  1. Se tiene il sito proprio (`website.mode=external`) e vuole la rete in home: **nessun clone, nessun restyling, nessun DNS**. Si sostituisce **solo** il riquadro di ricerca MLS con iframe OMNIA (`/api/mls-box/search/{slug}.html`).
+  2. Il box è il form rete (contratto, categoria, provincia, comune, prezzo, «avvia la ricerca», claim «N immobili condivisi», Powered by OMNIA). Risultati nello stesso iframe; scheda apre `/it/cloud/property/{id}`.
+  3. Snippet copia-incolla in Avvio (dopo la scelta sito / dopo adesione MLS), Il mio sito (mode external), pagina MLS.
+  4. Sito **OMNIA** + MLS pubblico resta tema OMNIA (D-168). Overlay/clone **non** è il percorso.
+- **Stato**: ✅ in codice.
+
 ### D-168 — Percorso Avvio agenzia (nav + checklist) · MLS sito = tema OMNIA · richieste rete default ON · 12-Nov-2026
 - **Contesto**: Founder — dopo Attiva serve percorso guidato (sito → dati → MLS → documenti → portali → CRM); strumenti commerciali restano in nav; AgeStaNet: condividere anche le richieste aumenta produttività.
 - **Decisione**:
   1. Modalità **Avvio** (`/app/avvio` + `setup_journey` su agency) post-Attiva; redirect da dashboard finché incompleto. Nav Operativo resta; cluster Avvio in cima; Mutui/Modulistica/Staging restano visibili.
-  2. **Sito**: se MLS sul sito pubblico → solo **tema OMNIA**. Keep-brand/external = niente box MLS pubblico (rete resta in ImmoWeb). Niente overlay come percorso standard.
+  2. **Sito**: se il sito è **OMNIA** e MLS sul pubblico → tema OMNIA. Se il sito è **già proprio** e MLS sul pubblico → **embed box** (D-170), non overlay. Rete tra agenzie resta comunque in ImmoWeb.
   3. **Richieste MLS**: default **ON** (solo agenti/agenzie); opt-out esplicito. Immobili ON con adesione.
   4. **Documenti**: predisposizione paperless; firma elettronica = credenziali provider in produzione (no claim live).
   5. Ordine step: sito → import immobili → MLS → modulistica → publishing → import CRM → team (opz.).
-- **Stato**: ✅ in codice.
+- **Stato**: ✅ in codice (punto 2 emendato da D-170).
 
 ### D-167 — Percorso onboarding ordinato: Stripe=listino crediti · stato sito in area privata · Accedi in landing · 12-Nov-2026
 - **Contesto**: Dogfood Nicastro — Pro attivo ma wallet 2000 (dogfood Ops); landing senza Accedi; sito dichiarato in registrazione senza esito visibile in area privata.

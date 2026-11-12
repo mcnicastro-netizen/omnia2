@@ -2,13 +2,14 @@ import React, { useCallback, useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import AgencyShell from "../components/AgencyShell";
+import MlsEmbedKit from "../components/MlsEmbedKit";
 import { api } from "../../../shared/lib/api";
 
 const STEP_META = [
   {
     id: "site",
     title: "Sito e identità",
-    hint: "Sito già tuo → lascialo com’è. Restyling → apri Il mio sito e scegli un template.",
+    hint: "Sito già tuo → resta dov’è; se vuoi la rete in home, sostituisci solo il box MLS. Restyling → template OMNIA.",
   },
   {
     id: "import_properties",
@@ -108,11 +109,11 @@ export default function AvvioSetupPage() {
     }
   };
 
-  const completeSite = (choice) =>
+  const completeSite = (choice, mlsOnPublic) =>
     run(() =>
       api.post("/app/setup-journey/site", {
         choice,
-        mls_on_public_site: mlsPublic,
+        mls_on_public_site: typeof mlsOnPublic === "boolean" ? mlsOnPublic : mlsPublic,
       })
     );
 
@@ -240,16 +241,26 @@ export default function AvvioSetupPage() {
                       <div className="border border-stone-900 bg-white px-3 py-3 space-y-2">
                         <p className="text-sm font-sans font-medium text-stone-900">Il sito è già mio</p>
                         <p className="text-xs text-stone-500">
-                          Resta dove sta. Nessuna sostituzione.
+                          Resta dove sta: niente clone, niente template. Se aderisci alla rete,
+                          sostituisci solo il riquadro MLS in home. Il resto del sito non si tocca.
                         </p>
                         <button
                           type="button"
                           disabled={busy}
-                          onClick={() => completeSite("external")}
-                          data-testid="avvio-site-external"
-                          className="px-3 py-2 text-[11px] uppercase tracking-widest bg-stone-900 text-white disabled:opacity-40"
+                          onClick={() => completeSite("external", true)}
+                          data-testid="avvio-site-external-embed"
+                          className="w-full px-3 py-2 text-[11px] uppercase tracking-widest bg-stone-900 text-white disabled:opacity-40"
                         >
-                          Lascia il sito com’è →
+                          Tengo il sito, sostituisco solo il box MLS
+                        </button>
+                        <button
+                          type="button"
+                          disabled={busy}
+                          onClick={() => completeSite("external", false)}
+                          data-testid="avvio-site-external"
+                          className="w-full px-3 py-2 text-[11px] uppercase tracking-widest border border-stone-400 disabled:opacity-40"
+                        >
+                          Tengo il sito, rete solo in gestionale
                         </button>
                       </div>
                       <div className="border border-stone-200 px-3 py-3 space-y-2">
@@ -366,6 +377,7 @@ export default function AvvioSetupPage() {
                     >
                       Conferma MLS
                     </button>
+                    {ctx.embed ? <MlsEmbedKit kit={ctx.embed} compact /> : null}
                   </div>
                 )}
 
@@ -466,7 +478,22 @@ export default function AvvioSetupPage() {
                 )}
 
                 {isDone && st.choice ? (
-                  <p className="mt-2 text-xs font-sans text-stone-500">Scelta sito: {st.choice}</p>
+                  <p className="mt-2 text-xs font-sans text-stone-500">
+                    Scelta sito: {st.choice}
+                    {st.mls_via_embed || st.mls_on_public_site
+                      ? " · box MLS da incollare sul sito"
+                      : ""}
+                  </p>
+                ) : null}
+                {meta.id === "site" && isDone && ctx.embed ? (
+                  <div className="mt-3">
+                    <MlsEmbedKit kit={ctx.embed} compact />
+                  </div>
+                ) : null}
+                {meta.id === "mls" && isDone && ctx.embed ? (
+                  <div className="mt-3">
+                    <MlsEmbedKit kit={ctx.embed} compact />
+                  </div>
                 ) : null}
               </li>
             );

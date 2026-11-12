@@ -5,6 +5,12 @@
 
 ---
 
+## Dogfood D-170 (Nicastro: sito proprio + box MLS)
+
+1. In Avvio: «Tengo il sito, sostituisco solo il box MLS» → adesione MLS → copia iframe.
+2. Incolla il codice al posto del solo riquadro ricerca rete su `www.nicastroimmobiliare.it` (home, colonna sinistra). Vetrina/menu/contatti restano.
+3. Verifica: claim «N immobili condivisi», ricerca, scheda apre cloud OMNIA, Powered by OMNIA.
+
 ## Dogfood D-168
 
 1. Nicastro resettato (offboard + erase) → ri-registra e percorri **Avvio** sul campo.
@@ -20,6 +26,6 @@
 
 | Voce | Doc |
 |------|-----|
-| Avvio / MLS sito | **D-168** |
+| Avvio / MLS sito | **D-168** + **D-170** (sito proprio = embed box) |
 | Crediti Stripe | **D-167** |
 | Contatori | **D-166** |

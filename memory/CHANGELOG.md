@@ -1,3 +1,10 @@
+## 2026-11-12 — D-170 sito proprio + box MLS embed (Nicastro)
+
+- Avvio: «Tengo il sito, sostituisco solo il box MLS» (`external` + `mls_on_public_site`)
+- Iframe pubblico `GET /api/mls-box/search/{slug}.html` + JSON `/embed-kit/{slug}` (frame-ancestors *)
+- Snippet in Avvio, Il mio sito, MLS — il resto del sito dell’agenzia non si tocca
+- D-168 punto 2: tema OMNIA solo se il sito è OMNIA; sito già proprio = embed
+
 ## 2026-11-12 — D-168 percorso Avvio agenzia + MLS richieste default ON
 
 - `/app/avvio` + API `setup-journey`; biforcazione sito (MLS pubblico ⇒ tema OMNIA)
