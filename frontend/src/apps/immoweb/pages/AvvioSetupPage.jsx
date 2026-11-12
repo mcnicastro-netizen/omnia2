@@ -211,7 +211,9 @@ export default function AvvioSetupPage() {
               >
                 <span className="text-[10px] uppercase tracking-widest text-stone-500">Crediti</span>
                 <span className="text-base font-semibold tabular-nums" style={{ fontFamily: "'Fraunces', Georgia, serif" }}>
-                  {Number(ctx.credits_balance).toLocaleString("it-IT")}
+                  {Math.trunc(Number(ctx.credits_balance))
+                    .toString()
+                    .replace(/\B(?=(\d{3})+(?!\d))/g, ".")}
                 </span>
               </Link>
             ) : null}

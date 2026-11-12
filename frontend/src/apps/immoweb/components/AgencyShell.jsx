@@ -403,7 +403,7 @@ export default function AgencyShell({ children, current = "dashboard", showBack 
               >
                 <span className="text-[10px] uppercase tracking-widest text-stone-500 hidden xs:inline sm:inline">Crediti</span>
                 <span className="text-sm font-semibold tabular-nums" style={{ fontFamily: "'Fraunces', Georgia, serif" }}>
-                  {creditsBalance.toLocaleString("it-IT")}
+                  {Math.trunc(creditsBalance).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".")}
                 </span>
               </Link>
             ) : null}
