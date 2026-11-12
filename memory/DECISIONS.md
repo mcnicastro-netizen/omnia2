@@ -13,7 +13,7 @@ Registro di tutte le decisioni di business e tecniche prese durante il progetto.
   1. Principio: ogni operazione ha **prima → azione → passo successivo evidente**.
   2. Ordine programma: **(1) chiudere flussi** · **(2) design system** (D-171) · **(3) esperienza quotidiana** · **(4) QA journey**.
   3. Done = **Product Acceptance Matrix** (`memory/PRODUCT_ACCEPTANCE_MATRIX.md`): 9 journey × 5 gate.
-- **Stato**: ✅ flussi P0–P2 in codice (#192–#198). Design system in corso.
+- **Stato**: ✅ flussi P0–P2 (#192–#198) · DS + quotidiano (#199–#205). Fase 4 = dogfood prod su Product Acceptance Matrix.
 
 ### D-171 — Identità CRM: premium istituzionale (navy + oro) · 12-Nov-2026
 - **Contesto**: Audit «cervello avanti, superficie indietro». Scelta stile: **premium istituzionale navy/oro** (non Apple-like luminoso).

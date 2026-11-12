@@ -1,37 +1,41 @@
 # Prossima sessione — programma passi
 
-**Aggiornato**: 12 Novembre 2026 (~11:00 CET — Europe/Rome)  
+**Aggiornato**: 12 Novembre 2026 (~18:15 CET — Europe/Rome)  
 **Repo**: https://github.com/mcnicastro-netizen/omnia2 ✅  
 
 ---
 
-## D-172 — Flussi
+## Ora (fase 4)
 
-1. #192 + #195 su main (P0).
-2. PR P1: Oggi cliccabile + Match da schede — squash & merge Founder.
-3. Poi Portali onesti (P1) / Import Avvio (P2); D-171 navy+oro dopo.
+1. **Dogfood produzione** con checklist in `memory/PRODUCT_ACCEPTANCE_MATRIX.md` (J1–J9 + superficie D-171).
+2. Segnare gate ❌ se qualcosa si spezza live (non «perché esiste la PR»).
+3. Solo dopo: fix mirati o nuove feature.
 
-## Dogfood D-170 (Nicastro: sito proprio + box MLS)
+## Chiuso in codice (12 Nov)
 
-1. In Avvio: «Tengo il sito, sostituisco solo il box MLS» → adesione MLS → copia iframe.
-2. Incolla il codice al posto del solo riquadro ricerca rete su `www.nicastroimmobiliare.it` (home, colonna sinistra). Vetrina/menu/contatti restano.
-3. Verifica: claim «N immobili condivisi», ricerca, scheda apre cloud OMNIA, Powered by OMNIA.
+| Blocco | PR |
+|--------|-----|
+| Flussi P0–P2 | #192–#198 |
+| Design bancone | #199–#202 |
+| Oggi / Match / Richieste / Lucide | #203–#205 |
 
-## Dogfood D-168
+## Dogfood D-170 (Nicastro)
 
-1. Nicastro resettato (offboard + erase) → ri-registra e percorri **Avvio** sul campo.
-2. Verifica: Accedi landing · Stripe crediti listino · checklist Avvio · MLS richieste default ON.
-3. Firma elettronica: solo predisposizione finché arrivano credenziali provider.
+1. Sito proprio + box MLS: copia iframe da Avvio/MLS/Il mio sito.
+2. Incolla solo al posto del riquadro ricerca rete su `www.nicastroimmobiliare.it`.
+3. Verifica claim N immobili, ricerca, scheda cloud OMNIA.
 
 ## Aperto
 
 - **A-038** solo con «vai»
-- Restyling caso 3: nel percorso Avvio è «tema OMNIA» (incluso Pro); fee €199 Starter resta D-151
+- Restyling caso 3 / fee €199 Starter resta D-151
 
 ## SoT
 
 | Voce | Doc |
 |------|-----|
-| Avvio / MLS sito | **D-168** + **D-170** (sito proprio = embed box) |
-| Crediti Stripe | **D-167** |
-| Contatori | **D-166** |
+| Acceptance | **PRODUCT_ACCEPTANCE_MATRIX.md** |
+| Identità CRM | **D-171** |
+| Flussi | **D-172** |
+| Embed sito proprio | **D-170** |
+| Avvio | **D-168** |
