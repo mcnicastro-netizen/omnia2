@@ -1,3 +1,7 @@
+## 2026-11-12 — D-171 Attività navy + oro
+
+- `ActivitiesPage`: `crm-desk`, CTA navy, eyebrow oro, filtri/lista/settimana allineati Immobili
+
 ## 2026-11-12 — D-171 Immobili navy + oro
 
 - Token CSS/Tailwind `crm-*` (navy `#0B1E3F`, oro `#C19A6B`, Inter)

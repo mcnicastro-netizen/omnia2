@@ -85,15 +85,15 @@ function EntitySearch({ kind, value, onChange, testId, placeholder }) {
 
   return (
     <div className="relative min-w-[140px] flex-1">
-      <span className="text-[10px] uppercase tracking-widest text-stone-500">
+      <span className="text-[10px] uppercase tracking-widest text-crm-muted">
         {kind === "client" ? "Cliente (opzionale)" : "Immobile (opzionale)"}
       </span>
       {value ? (
-        <div className="mt-1 flex items-center gap-2 border border-stone-300 rounded-md px-3 py-2 text-sm bg-white">
-          <span className="truncate flex-1">{label || "Selezionato"}</span>
+        <div className="mt-1 flex items-center gap-2 border border-crm-line rounded-md px-3 py-2 text-sm bg-white">
+          <span className="truncate flex-1 text-crm-navy">{label || "Selezionato"}</span>
           <button
             type="button"
-            className="text-[10px] uppercase tracking-widest text-stone-500"
+            className="text-[10px] uppercase tracking-widest text-crm-muted"
             onClick={() => {
               onChange("");
               setLabel("");
@@ -108,17 +108,17 @@ function EntitySearch({ kind, value, onChange, testId, placeholder }) {
           value={q}
           onChange={(e) => search(e.target.value)}
           placeholder={placeholder}
-          className="mt-1 w-full px-3 py-2 border border-stone-300 rounded-md text-sm"
+          className="crm-input mt-1 w-full px-3 py-2 border border-crm-line rounded-md text-sm"
           autoComplete="off"
         />
       )}
       {hits.length > 0 ? (
-        <ul className="absolute z-20 mt-1 w-full bg-white border border-stone-200 max-h-48 overflow-auto text-sm">
+        <ul className="absolute z-20 mt-1 w-full bg-white border border-crm-line max-h-48 overflow-auto text-sm">
           {hits.map((h) => (
             <li key={h.id}>
               <button
                 type="button"
-                className="w-full text-left px-3 py-2 hover:bg-stone-50"
+                className="w-full text-left px-3 py-2 hover:bg-crm-mist"
                 onClick={() => pick(h)}
               >
                 {kind === "client"
@@ -231,16 +231,13 @@ export default function ActivitiesPage() {
 
   return (
     <AgencyShell current="activities">
-      <section data-testid="activities-page" className="space-y-8 max-w-4xl">
+      <section data-testid="activities-page" className="crm-desk space-y-8 max-w-4xl">
         <div>
-          <p className="text-[10px] uppercase tracking-[0.3em] text-stone-500 mb-2">ImmoWeb · Operativo</p>
-          <h1
-            className="text-3xl md:text-4xl tracking-tight"
-            style={{ fontFamily: "'Fraunces', Georgia, serif" }}
-          >
-            Attività
-          </h1>
-          <p className="text-sm text-stone-600 mt-2 max-w-xl">
+          <p className="crm-eyebrow mb-2" data-testid="activities-crm-eyebrow">
+            Operativo · bancone
+          </p>
+          <h1 className="crm-title text-3xl md:text-4xl">Attività</h1>
+          <p className="text-sm text-crm-muted mt-2 max-w-xl">
             Chiamate, visite e cose da fare. Organizzate per giorno.
           </p>
         </div>
@@ -248,41 +245,43 @@ export default function ActivitiesPage() {
         <form
           onSubmit={create}
           data-testid="activity-create-form"
-          className="bg-white border border-stone-200 rounded-lg p-5 space-y-3"
+          className="crm-panel p-5 space-y-3 bg-crm-mist/50"
         >
           <label className="block">
-            <span className="text-[10px] uppercase tracking-widest text-stone-500">Titolo</span>
+            <span className="text-[10px] uppercase tracking-widest text-crm-muted">Titolo</span>
             <input
               data-testid="activity-title"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="Es. Richiamare Rossi su trilocali EUR"
-              className="mt-1 w-full px-3 py-2 border border-stone-300 rounded-md text-sm"
+              className="crm-input mt-1 w-full px-3 py-2 border border-crm-line rounded-md text-sm bg-white"
               required
             />
           </label>
           <div className="flex flex-wrap gap-3">
             <label>
-              <span className="text-[10px] uppercase tracking-widest text-stone-500">Tipo</span>
+              <span className="text-[10px] uppercase tracking-widest text-crm-muted">Tipo</span>
               <select
                 data-testid="activity-kind"
                 value={kind}
                 onChange={(e) => setKind(e.target.value)}
-                className="mt-1 block px-3 py-2 border border-stone-300 rounded-md text-sm"
+                className="crm-input mt-1 block px-3 py-2 border border-crm-line rounded-md text-sm bg-white"
               >
                 {KINDS.map((k) => (
-                  <option key={k.id} value={k.id}>{k.label}</option>
+                  <option key={k.id} value={k.id}>
+                    {k.label}
+                  </option>
                 ))}
               </select>
             </label>
             <label>
-              <span className="text-[10px] uppercase tracking-widest text-stone-500">Scadenza</span>
+              <span className="text-[10px] uppercase tracking-widest text-crm-muted">Scadenza</span>
               <input
                 data-testid="activity-due"
                 type="date"
                 value={due}
                 onChange={(e) => setDue(e.target.value)}
-                className="mt-1 block px-3 py-2 border border-stone-300 rounded-md text-sm"
+                className="crm-input mt-1 block px-3 py-2 border border-crm-line rounded-md text-sm bg-white"
               />
             </label>
             <EntitySearch
@@ -303,7 +302,7 @@ export default function ActivitiesPage() {
               type="submit"
               disabled={busy}
               data-testid="activity-submit"
-              className="self-end px-4 py-2 bg-stone-900 text-white text-xs uppercase tracking-widest rounded-md disabled:opacity-50"
+              className="crm-btn-primary self-end px-4 py-2 text-xs uppercase tracking-widest rounded-md disabled:opacity-50"
             >
               Aggiungi
             </button>
@@ -323,8 +322,10 @@ export default function ActivitiesPage() {
               key={id}
               type="button"
               onClick={() => setFilter(id)}
-              className={`px-3 py-1.5 text-[10px] uppercase tracking-widest rounded border ${
-                filter === id ? "bg-stone-900 text-white border-stone-900" : "bg-white text-stone-700 border-stone-300"
+              className={`px-3 py-1.5 text-[10px] uppercase tracking-widest rounded-md border ${
+                filter === id
+                  ? "crm-btn-primary border-crm-navy"
+                  : "crm-btn-ghost"
               }`}
             >
               {label}
@@ -337,24 +338,24 @@ export default function ActivitiesPage() {
             <button
               type="button"
               onClick={() => setWeekStart(addDaysIso(weekStart, -7))}
-              className="px-3 py-1.5 text-xs border border-stone-300 rounded-md bg-white"
+              className="crm-btn-ghost px-3 py-1.5 text-xs rounded-md"
             >
               ← Prec.
             </button>
-            <p className="text-sm text-stone-700">
+            <p className="text-sm text-crm-navy">
               Settimana dal <span className="font-medium">{weekStart}</span>
             </p>
             <button
               type="button"
               onClick={() => setWeekStart(addDaysIso(weekStart, 7))}
-              className="px-3 py-1.5 text-xs border border-stone-300 rounded-md bg-white"
+              className="crm-btn-ghost px-3 py-1.5 text-xs rounded-md"
             >
               Succ. →
             </button>
             <button
               type="button"
               onClick={() => setWeekStart(mondayOf(todayIsoDate()))}
-              className="px-3 py-1.5 text-xs border border-stone-300 rounded-md bg-white"
+              className="crm-btn-ghost px-3 py-1.5 text-xs rounded-md"
             >
               Questa settimana
             </button>
@@ -362,33 +363,33 @@ export default function ActivitiesPage() {
         )}
 
         {loading ? (
-          <p className="text-sm text-stone-500">Caricamento…</p>
+          <p className="text-sm text-crm-muted">Caricamento…</p>
         ) : filter === "week" ? (
           <div
             className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-7 gap-2"
             data-testid="activities-week-grid"
           >
             {days.map((day) => (
-              <div key={day} className="border border-stone-200 bg-white rounded-lg min-h-[120px] p-2">
-                <p className="text-[10px] uppercase tracking-widest text-stone-500 mb-2">
+              <div key={day} className="crm-panel min-h-[120px] p-2">
+                <p className="text-[10px] uppercase tracking-widest text-crm-gold mb-2">
                   {weekdayLabel(day)}
                 </p>
                 <ul className="space-y-1.5">
                   {(byDay[day] || []).map((a) => (
-                    <li key={a.id} className="text-xs border border-stone-100 rounded px-2 py-1.5">
-                      <p className="font-medium text-stone-900 line-clamp-2">{a.title}</p>
-                      <p className="text-[10px] text-stone-500 mt-0.5">
+                    <li key={a.id} className="text-xs border border-crm-line rounded px-2 py-1.5 bg-crm-mist/40">
+                      <p className="font-medium text-crm-navy line-clamp-2">{a.title}</p>
+                      <p className="text-[10px] text-crm-muted mt-0.5">
                         {KINDS.find((k) => k.id === a.kind)?.label || a.kind}
                       </p>
                       {(a.related_client_id || a.related_property_id) && (
                         <p className="text-[10px] mt-1 flex flex-wrap gap-1">
                           {a.related_client_id && (
-                            <Link className="underline text-stone-600" to={`/${l}/app/clients/${a.related_client_id}`}>
+                            <Link className="underline text-crm-navy" to={`/${l}/app/clients/${a.related_client_id}`}>
                               Cliente
                             </Link>
                           )}
                           {a.related_property_id && (
-                            <Link className="underline text-stone-600" to={`/${l}/app/properties/${a.related_property_id}`}>
+                            <Link className="underline text-crm-navy" to={`/${l}/app/properties/${a.related_property_id}`}>
                               Immobile
                             </Link>
                           )}
@@ -398,7 +399,7 @@ export default function ActivitiesPage() {
                         <button
                           type="button"
                           onClick={() => markDone(a.id)}
-                          className="mt-1 text-[9px] uppercase tracking-widest text-stone-600 underline"
+                          className="mt-1 text-[9px] uppercase tracking-widest text-crm-muted underline"
                         >
                           Fatto
                         </button>
@@ -410,17 +411,27 @@ export default function ActivitiesPage() {
             ))}
           </div>
         ) : items.length === 0 ? (
-          <div data-testid="activities-empty" className="border border-dashed border-stone-300 px-5 py-10 text-sm text-stone-600">
+          <div
+            data-testid="activities-empty"
+            className="border border-dashed border-crm-line px-5 py-10 text-sm text-crm-muted"
+          >
             Nessuna attività qui. Aggiungine una sopra, o torna alla{" "}
-            <Link to={`/${l}/app/dashboard`} className="underline">Dashboard</Link>.
+            <Link to={`/${l}/app/dashboard`} className="underline text-crm-navy">
+              Dashboard
+            </Link>
+            .
           </div>
         ) : (
-          <ul className="divide-y divide-stone-100 border border-stone-200 bg-white rounded-lg" data-testid="activities-list">
+          <ul className="crm-panel divide-y divide-crm-line/70" data-testid="activities-list">
             {items.map((a) => (
-              <li key={a.id} data-testid={`activity-${a.id}`} className="px-4 py-3 flex flex-wrap items-center justify-between gap-3">
+              <li
+                key={a.id}
+                data-testid={`activity-${a.id}`}
+                className="px-4 py-3 flex flex-wrap items-center justify-between gap-3"
+              >
                 <div className="min-w-0">
-                  <p className="text-sm font-medium text-stone-900">{a.title}</p>
-                  <p className="text-[11px] text-stone-500 mt-0.5">
+                  <p className="text-sm font-medium text-crm-navy">{a.title}</p>
+                  <p className="text-[11px] text-crm-muted mt-0.5">
                     {KINDS.find((k) => k.id === a.kind)?.label || a.kind}
                     {a.due_at ? ` · ${String(a.due_at).slice(0, 10)}` : ""}
                     {a.status === "done" ? " · fatta" : ""}
@@ -428,12 +439,12 @@ export default function ActivitiesPage() {
                   {(a.related_client_id || a.related_property_id) && (
                     <p className="text-[11px] mt-1 flex flex-wrap gap-2">
                       {a.related_client_id && (
-                        <Link className="underline text-stone-600" to={`/${l}/app/clients/${a.related_client_id}`}>
+                        <Link className="underline text-crm-navy" to={`/${l}/app/clients/${a.related_client_id}`}>
                           Cliente
                         </Link>
                       )}
                       {a.related_property_id && (
-                        <Link className="underline text-stone-600" to={`/${l}/app/properties/${a.related_property_id}`}>
+                        <Link className="underline text-crm-navy" to={`/${l}/app/properties/${a.related_property_id}`}>
                           Immobile
                         </Link>
                       )}
@@ -446,7 +457,7 @@ export default function ActivitiesPage() {
                       type="button"
                       data-testid={`activity-done-${a.id}`}
                       onClick={() => markDone(a.id)}
-                      className="text-[10px] uppercase tracking-widest px-2 py-1 border border-stone-300 rounded hover:border-stone-900"
+                      className="crm-btn-ghost text-[10px] uppercase tracking-widest px-2 py-1 rounded-md"
                     >
                       Fatto
                     </button>
@@ -455,7 +466,7 @@ export default function ActivitiesPage() {
                     type="button"
                     data-testid={`activity-del-${a.id}`}
                     onClick={() => remove(a.id)}
-                    className="text-[10px] uppercase tracking-widest px-2 py-1 text-rose-700 border border-rose-200 rounded"
+                    className="text-[10px] uppercase tracking-widest px-2 py-1 text-rose-700 border border-rose-200 rounded-md"
                   >
                     Elimina
                   </button>
