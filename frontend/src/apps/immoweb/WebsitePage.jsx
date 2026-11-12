@@ -31,11 +31,12 @@ export default function WebsitePage() {
   const [selectedTheme, setSelectedTheme] = useState("classic");
   const [previewHtml, setPreviewHtml] = useState("");
   const [previewLoading, setPreviewLoading] = useState(false);
-  const [previewView, setPreviewView] = useState("home"); // home | lista
+  const [previewMls, setPreviewMls] = useState(false); // anteprima con/senza box rete
 
   const [editName, setEditName] = useState("");
   const [editTagline, setEditTagline] = useState("");
   const [editLogo, setEditLogo] = useState("");
+  const [agencyMls, setAgencyMls] = useState(false);
 
   const templatesRef = useRef(null);
 
@@ -56,6 +57,9 @@ export default function WebsitePage() {
       setThemes(th.data.themes || []);
       setCurrent(cur.data);
       setAgency(me.data);
+      const mlsLive = !!me.data?.mls_enabled;
+      setAgencyMls(mlsLive);
+      setPreviewMls(mlsLive);
       const url =
         cur.data?.declared_url ||
         cur.data?.external_url ||
@@ -107,43 +111,39 @@ export default function WebsitePage() {
   }, [loading]);
 
   const publicBase = current?.public_url ? `${BACKEND_URL}${current.public_url}` : null;
-  const previewUrl =
-    publicBase &&
-    (previewView === "lista"
-      ? `${publicBase.replace(/\/?$/, "")}/lista`
-      : publicBase);
 
   const loadPreview = useCallback(async () => {
-    if (!previewUrl || path !== "omnia") {
+    if (path !== "omnia" || !selectedTheme) {
       setPreviewHtml("");
       return;
     }
     setPreviewLoading(true);
     try {
-      const r = await fetch(
-        `${previewUrl}${previewUrl.includes("?") ? "&" : "?"}t=${Date.now()}`,
-        { credentials: "same-origin", headers: { Accept: "text/html" } }
-      );
-      if (!r.ok) throw new Error(`HTTP ${r.status}`);
-      setPreviewHtml(await r.text());
+      // Stesso template, con o senza box rete (non salva l’adesione MLS)
+      const r = await api.get(`/app/website/preview/${selectedTheme}`, {
+        params: { mls: previewMls ? "true" : "false", t: Date.now() },
+        responseType: "text",
+        transformResponse: [(d) => d],
+      });
+      setPreviewHtml(typeof r.data === "string" ? r.data : String(r.data || ""));
     } catch (e) {
       setPreviewHtml(
         `<!doctype html><html><body style="font-family:system-ui;padding:2rem;color:#444">`
           + `<p>Anteprima non disponibile.</p>`
-          + (previewUrl
-            ? `<p><a href="${previewUrl}" target="_blank" rel="noreferrer">Apri in una nuova scheda</a></p>`
+          + (publicBase
+            ? `<p><a href="${publicBase}" target="_blank" rel="noreferrer">Apri sito pubblico</a></p>`
             : "")
           + `</body></html>`
       );
     } finally {
       setPreviewLoading(false);
     }
-  }, [previewUrl, path]);
+  }, [path, selectedTheme, previewMls, publicBase]);
 
   useEffect(() => {
     if (loading || path !== "omnia") return;
     loadPreview();
-  }, [loading, loadPreview, selectedTheme, previewView, path]);
+  }, [loading, loadPreview, selectedTheme, previewMls, path]);
 
   const saveExternal = async () => {
     setBusy(true);
@@ -351,7 +351,9 @@ export default function WebsitePage() {
                 1. Scegli un template
               </h2>
               <p className="text-sm text-stone-600 font-sans">
-                Sono modelli di sito pronti. Tocca l’immagine per applicarlo.
+                Sono modelli di sito pronti. Tocca l’immagine per applicarlo. Ogni
+                template funziona con o senza box rete OMNIA — lo vedi in anteprima
+                sotto, senza cambiare modello.
               </p>
               <div className="grid sm:grid-cols-2 gap-4">
                 {themes.map((th) => {
@@ -477,23 +479,23 @@ export default function WebsitePage() {
                 <div className="flex flex-wrap gap-2">
                   <button
                     type="button"
-                    onClick={() => setPreviewView("home")}
-                    data-testid="website-preview-home"
+                    onClick={() => setPreviewMls(false)}
+                    data-testid="website-preview-no-mls"
                     className={`px-3 py-1.5 text-[11px] uppercase tracking-widest border ${
-                      previewView === "home" ? "border-stone-900 bg-white" : "border-stone-300"
+                      !previewMls ? "border-stone-900 bg-white" : "border-stone-300"
                     }`}
                   >
-                    Home
+                    Solo i tuoi immobili
                   </button>
                   <button
                     type="button"
-                    onClick={() => setPreviewView("lista")}
-                    data-testid="website-preview-lista"
+                    onClick={() => setPreviewMls(true)}
+                    data-testid="website-preview-with-mls"
                     className={`px-3 py-1.5 text-[11px] uppercase tracking-widest border ${
-                      previewView === "lista" ? "border-stone-900 bg-white" : "border-stone-300"
+                      previewMls ? "border-stone-900 bg-white" : "border-stone-300"
                     }`}
                   >
-                    Lista
+                    Con box rete OMNIA
                   </button>
                   <button
                     type="button"
@@ -503,19 +505,25 @@ export default function WebsitePage() {
                   >
                     Aggiorna
                   </button>
-                  {previewUrl ? (
+                  {publicBase ? (
                     <a
-                      href={previewUrl}
+                      href={publicBase}
                       target="_blank"
                       rel="noreferrer"
                       data-testid="website-open-public"
                       className="px-3 py-1.5 text-[11px] uppercase tracking-widest border border-stone-300"
                     >
-                      Apri →
+                      Sito live →
                     </a>
                   ) : null}
                 </div>
               </div>
+              <p className="text-sm text-stone-600 font-sans" data-testid="website-mls-preview-hint">
+                Stesso template, due viste: con o senza ricerca sulla rete. L’adesione alla rete
+                si attiva dal percorso MLS (oggi:{" "}
+                <strong>{agencyMls ? "rete attiva sul sito live" : "rete non attiva sul sito live"}</strong>
+                ). Qui cambi solo l’anteprima.
+              </p>
               <div className="border border-stone-300 bg-stone-50 relative overflow-hidden" style={{ height: 520 }}>
                 {previewLoading ? (
                   <p className="absolute top-0 inset-x-0 text-xs text-stone-500 bg-stone-100 px-3 py-1 z-10">

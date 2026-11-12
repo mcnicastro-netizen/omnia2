@@ -107,7 +107,7 @@ export default function BillingPage() {
     if (!state.data?.enabled || !state.data?.self_serve_enabled) {
       toast.message(
         state.data?.enabled
-          ? "Self-serve non aperto (O6) — contattaci per provisioning assistito."
+          ? "Attivazione assistita: contattaci per completare l’acquisto."
           : "Checkout non disponibile — contattaci per provisioning assistito."
       );
       openDemo();
@@ -141,7 +141,7 @@ export default function BillingPage() {
 
   const checkoutCredits = async (packageKey) => {
     if (!state.data?.self_serve_enabled) {
-      toast.message("Self-serve non aperto (O6) — contattaci per provisioning assistito.");
+      toast.message("Attivazione assistita: contattaci per completare l’acquisto.");
       openDemo();
       return;
     }
@@ -243,7 +243,7 @@ export default function BillingPage() {
           >
             <div className="flex-1">
               <div className="text-xs uppercase tracking-widest text-stone-500 mb-1">
-                {demo.expired ? "Sandbox scaduta" : "Sandbox attiva"}
+                {demo.expired ? "Prova scaduta" : "Periodo di prova"}
               </div>
               <div className="font-serif text-xl text-[#0B1E3F]" data-testid="demo-sandbox-title">
                 {demo.expired
@@ -264,7 +264,7 @@ export default function BillingPage() {
                     toast.message(
                       selfServeEnabled
                         ? "Scegli un piano sotto per acquistare."
-                        : "Self-serve chiuso (O6) — provisioning assistito. Contattaci per attivare."
+                        : "Attivazione assistita. Contattaci per attivare il piano."
                     );
                     if (!selfServeEnabled) openDemo();
                   }
@@ -462,7 +462,7 @@ export default function BillingPage() {
                   onClick={() => {
                     if (demo?.expired && !selfServeEnabled) {
                       toast.message(
-                        "Self-serve chiuso (O6) — provisioning assistito dopo Acquista."
+                        "Attivazione assistita: contattaci dopo aver scelto il piano."
                       );
                     }
                     openDemo();

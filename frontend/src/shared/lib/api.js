@@ -151,9 +151,17 @@ api.interceptors.response.use(
     // REACT_APP_BACKEND_URL was empty at build — treat as unreachable API.
     const ct = String(r?.headers?.["content-type"] || "");
     const data = r?.data;
+    // Anteprime tema/sito restituiscono HTML volutamente — non sono API JSON.
+    const reqUrl = String(r?.config?.url || "");
+    const intentionalHtml =
+      reqUrl.includes("/website/preview/") ||
+      (typeof r?.config?.responseType === "string" &&
+        r.config.responseType === "text" &&
+        ct.includes("text/html"));
     const looksHtml =
-      ct.includes("text/html") ||
-      (typeof data === "string" && /^\s*<(!doctype|html)\b/i.test(data));
+      !intentionalHtml &&
+      (ct.includes("text/html") ||
+        (typeof data === "string" && /^\s*<(!doctype|html)\b/i.test(data)));
     if (looksHtml) {
       const err = new Error("API returned HTML instead of JSON (check REACT_APP_BACKEND_URL)");
       err.response = r;

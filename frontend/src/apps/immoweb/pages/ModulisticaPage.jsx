@@ -131,7 +131,7 @@ export default function ModulisticaPage() {
       });
       toast.success(data.esign?.message || "Richiesta firma inviata");
       if (data.esign?.sign_url) {
-        toast.message("Link firma (mock/provider)", { description: data.esign.sign_url });
+        toast.message("Link firma inviato", { description: data.esign.sign_url });
       }
       setSelectedDoc((prev) => (prev?.id === id ? { ...prev, ...data, status: "sent", esign: data.esign } : prev));
       await load();
@@ -168,8 +168,8 @@ export default function ModulisticaPage() {
             Modulistica white-label
           </h1>
           <p className="text-sm text-stone-600 max-w-2xl">
-            Template italiani auto-compilati da CRM, PDF brandizzati con i colori dell&apos;agenzia,
-            firma digitale via Yousign/DocuSign (mock in locale). Bozze operative — non parere legale.
+            Template italiani auto-compilati dal CRM, PDF con i colori della tua agenzia,
+            invio in firma elettronica. Bozze operative — non costituiscono parere legale.
           </p>
           {esign && (
             <p className="text-xs text-stone-500" data-testid="modulistica-esign-status">
@@ -259,8 +259,7 @@ export default function ModulisticaPage() {
               <div className="space-y-4 border border-stone-200 bg-white p-5" data-testid="modulistica-sign-panel">
                 <h2 className="text-sm uppercase tracking-widest text-stone-500">Invia in firma</h2>
                 <p className="text-xs text-stone-500">
-                  Provider: <strong>{esign?.provider || "—"}</strong>. Nessuna firma qualificata proprietaria
-                  (D-042): usiamo Yousign/DocuSign.
+                  Invia il documento al firmatario: riceverà un link sicuro per firmare online.
                 </p>
                 <label className="block text-sm space-y-1">
                   <span className="text-stone-600">Nome firmatario</span>
@@ -384,8 +383,7 @@ export default function ModulisticaPage() {
             </div>
 
             <div className="text-xs text-stone-500 space-y-1 border-t border-stone-200 pt-4">
-              <p>API white-label: <code>GET /api/v1/modulistica/templates</code> · <code>POST /api/v1/modulistica/render</code> (2 crediti)</p>
-              <p>Env firma: <code>ESIGN_PROVIDER=mock|yousign|docusign</code></p>
+              <p>I documenti generati restano nel fascicolo dell’agenzia. Per integrazioni esterne usa Impostazioni → Chiavi API.</p>
             </div>
           </>
         )}
