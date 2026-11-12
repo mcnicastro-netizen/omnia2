@@ -29,7 +29,7 @@ function TodayCockpit({ today, loading, lang, t }) {
     return (
       <div data-testid="today-cockpit-loading" className="space-y-3">
         {Array.from({ length: 3 }).map((_, i) => (
-          <div key={i} className="h-20 bg-stone-100 animate-pulse" />
+          <div key={i} className="h-20 bg-crm-mist animate-pulse" />
         ))}
       </div>
     );
@@ -40,7 +40,7 @@ function TodayCockpit({ today, loading, lang, t }) {
     return (
       <div
         data-testid="today-cockpit-empty"
-        className="border border-dashed border-stone-300 px-5 py-8 text-sm font-sans text-stone-600 space-y-3"
+        className="border border-dashed border-crm-line px-5 py-8 text-sm font-sans text-crm-muted space-y-3"
       >
         <p>
           {t(
@@ -51,7 +51,7 @@ function TodayCockpit({ today, loading, lang, t }) {
         <Link
           to={`/${lang}/app/clients`}
           data-testid="today-empty-clients"
-          className="inline-flex text-[11px] uppercase tracking-widest border border-stone-900 px-3 py-1.5 text-stone-900"
+          className="crm-btn-ghost inline-flex text-[11px] uppercase tracking-widest px-3 py-1.5 rounded-md"
         >
           {t("dashboard.today_empty_cta", "Apri Clienti")} →
         </Link>
@@ -62,16 +62,13 @@ function TodayCockpit({ today, loading, lang, t }) {
   return (
     <div data-testid="today-cockpit" className="space-y-6">
       {actions.map((group) => (
-        <div key={group.id} data-testid={`today-group-${group.id}`} className="border-t border-stone-200 pt-4">
+        <div key={group.id} data-testid={`today-group-${group.id}`} className="border-t border-crm-line pt-4">
           <div className="flex flex-wrap items-baseline justify-between gap-2 mb-3">
             <div>
-              <h3
-                className="text-lg tracking-tight text-stone-900"
-                style={{ fontFamily: "'Fraunces', Georgia, serif" }}
-              >
+              <h3 className="crm-title text-lg tracking-tight">
                 {t(group.title_key, group.title)}
               </h3>
-              <p className="text-[11px] uppercase tracking-widest text-stone-500 font-sans mt-1">
+              <p className="text-[11px] uppercase tracking-widest text-crm-muted font-sans mt-1">
                 {group.count_label || group.count}{" "}
                 {t("dashboard.today_in_queue", "in coda")}
               </p>
@@ -79,22 +76,22 @@ function TodayCockpit({ today, loading, lang, t }) {
             <Link
               to={appHref(lang, group.href)}
               data-testid={`today-cta-${group.id}`}
-              className="text-[11px] font-sans uppercase tracking-widest text-stone-800 border-b border-stone-400 hover:border-stone-900"
+              className="text-[11px] font-sans uppercase tracking-widest text-crm-navy border-b border-crm-gold hover:border-crm-navy"
             >
               {t(group.cta_key, group.cta)} →
             </Link>
           </div>
           {(group.items || []).length > 0 && (
-            <ul className="divide-y divide-stone-100 border border-stone-200 bg-white">
+            <ul className="crm-panel divide-y divide-crm-line/70">
               {group.items.map((item) => (
                 <li key={`${group.id}-${item.id}`}>
                   <Link
                     to={appHref(lang, item.href)}
                     data-testid={`today-item-${group.id}-${item.id}`}
-                    className="flex flex-wrap items-baseline justify-between gap-2 px-4 py-3 hover:bg-stone-50 transition"
+                    className="flex flex-wrap items-baseline justify-between gap-2 px-4 py-3 hover:bg-crm-mist/80 transition"
                   >
                     <div className="min-w-0">
-                      <p className="text-sm font-sans text-stone-900 truncate">{item.label}</p>
+                      <p className="text-sm font-sans text-crm-navy truncate">{item.label}</p>
                       <p className="text-[11px] font-sans text-stone-500 mt-0.5">
                         {t(item.reason_key, item.reason)}
                         {item.meta ? ` · ${item.meta}` : ""}
@@ -119,7 +116,7 @@ function RecentStrip({ recent, lang, t }) {
   return (
     <div data-testid="today-recent" className="mt-8">
       <h3
-        className="text-sm uppercase tracking-[0.2em] text-stone-500 mb-3 font-sans"
+        className="crm-eyebrow mb-3"
       >
         {t("dashboard.today_recent", "Ultime attività")}
       </h3>
@@ -128,7 +125,7 @@ function RecentStrip({ recent, lang, t }) {
           const href = r.href ? appHref(lang, r.href) : null;
           const inner = (
             <>
-              <span className="text-stone-900">{r.label}</span>
+              <span className="text-crm-navy">{r.label}</span>
               {r.at && (
                 <span className="text-[11px] uppercase tracking-widest text-stone-400">
                   {String(r.at).slice(0, 16).replace("T", " ")}
@@ -173,24 +170,21 @@ function SiteStatusCard({ site, lang, t }) {
   return (
     <section
       data-testid="dashboard-site-status"
-      className="border border-stone-200 bg-white px-5 py-4"
+      className="crm-panel px-5 py-4"
     >
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
-          <p className="text-[10px] uppercase tracking-[0.25em] text-stone-500 font-sans mb-1">
+          <p className="crm-eyebrow mb-1">
             {t("dashboard.site_status_eyebrow", "Il tuo sito")}
           </p>
-          <h2
-            className="text-lg text-stone-900 tracking-tight"
-            style={{ fontFamily: "'Fraunces', Georgia, serif" }}
-          >
+          <h2 className="crm-title text-lg tracking-tight">
             {t(`dashboard.site_phase_${phase}`, meta.title)}
           </h2>
-          <p className="mt-1 text-sm font-sans text-stone-600 max-w-2xl">
+          <p className="mt-1 text-sm font-sans text-crm-muted max-w-2xl">
             {t(`dashboard.site_phase_hint_${phase}`, meta.hint)}
           </p>
           {url ? (
-            <p className="mt-2 text-xs font-sans text-stone-500 truncate" data-testid="dashboard-site-url">
+            <p className="mt-2 text-xs font-sans text-crm-muted truncate" data-testid="dashboard-site-url">
               {url}
             </p>
           ) : null}
@@ -198,7 +192,7 @@ function SiteStatusCard({ site, lang, t }) {
         <Link
           to={`/${lang}/app/website`}
           data-testid="dashboard-site-cta"
-          className="shrink-0 inline-flex items-center px-3.5 py-2 text-[11px] font-sans uppercase tracking-widest border border-stone-300 text-stone-800 hover:border-stone-900 hover:bg-stone-900 hover:text-white transition"
+          className="crm-btn-primary shrink-0 inline-flex items-center px-3.5 py-2 text-[11px] font-sans uppercase tracking-widest rounded-md transition"
         >
           {t("dashboard.site_cta", "Apri Sito web")} →
         </Link>
@@ -259,25 +253,22 @@ export default function DashboardPage() {
 
   return (
     <AgencyShell current="dashboard">
-      <section data-testid="dashboard-page" className="space-y-10">
+      <section data-testid="dashboard-page" className="crm-desk space-y-10">
         <div>
-          <p className="text-[10px] uppercase tracking-[0.3em] text-stone-500 mb-2">
+          <p className="crm-eyebrow mb-2" data-testid="dashboard-crm-eyebrow">
             <Brand>ImmoWeb · {t("dashboard.today_brand", "Oggi")}</Brand>
           </p>
-          <h1
-            className="text-3xl md:text-4xl tracking-tight"
-            style={{ fontFamily: "'Fraunces', Georgia, serif" }}
-          >
+          <h1 className="crm-title text-3xl md:text-4xl">
             {t("dashboard.today_heading", "Cosa fare oggi")}
             {user?.name?.split(" ")[0] ? `, ${user.name.split(" ")[0]}` : ""}.
           </h1>
-          <p className="mt-2 text-sm font-sans text-stone-600 max-w-2xl">
+          <p className="mt-2 text-sm font-sans text-crm-muted max-w-2xl">
             {t(
               "dashboard.today_subtitle",
               "Priorità operative dell’agenzia — poi i numeri di stato."
             )}
             {!loadingToday && groups > 0 && (
-              <span className="text-stone-500">
+              <span className="text-crm-muted">
                 {" "}
                 · {groups} {t("dashboard.today_queues", "code di lavoro")}
               </span>
@@ -294,7 +285,7 @@ export default function DashboardPage() {
               key={a.key}
               to={`/${l}/app/${a.to}`}
               data-testid={`qa-${a.key}`}
-              className="inline-flex items-center px-3.5 py-2 text-[11px] font-sans uppercase tracking-widest border border-stone-300 bg-white text-stone-800 hover:border-stone-900 hover:bg-stone-900 hover:text-white transition"
+              className="crm-btn-ghost inline-flex items-center px-3.5 py-2 text-[11px] font-sans uppercase tracking-widest rounded-md hover:bg-crm-navy hover:text-white hover:border-crm-navy transition"
             >
               {t(a.labelKey, a.fallback)}
             </Link>
@@ -321,7 +312,7 @@ export default function DashboardPage() {
           <div>
             <h2
               id="kpi-section-title"
-              className="text-sm uppercase tracking-[0.2em] text-stone-500 font-sans"
+              className="crm-eyebrow"
             >
               {t("dashboard.kpis_section", "Stato agenzia")}
             </h2>
@@ -332,7 +323,7 @@ export default function DashboardPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4" data-testid="kpi-grid">
             {loadingKpis
               ? Array.from({ length: 6 }).map((_, i) => (
-                  <div key={i} className="h-32 rounded-xl bg-stone-100 animate-pulse" />
+                  <div key={i} className="h-32 rounded-xl bg-crm-mist animate-pulse" />
                 ))
               : kpis.map((kpi) => <KPICard key={kpi.key} kpi={kpi} />)}
           </div>

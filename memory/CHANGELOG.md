@@ -1,3 +1,7 @@
+## 2026-11-12 — D-171 Oggi / Dashboard navy + oro
+
+- `DashboardPage` + `KPICard`: `crm-desk`, azioni rapide, cockpit Oggi, KPI
+
 ## 2026-11-12 — D-171 Clienti navy + oro
 
 - `ClientsPage` + `ClientFormPage`: `crm-desk`, Inter, CTA navy (Smart List invariata)
