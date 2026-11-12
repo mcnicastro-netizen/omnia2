@@ -260,9 +260,9 @@ export default function WebsitePage() {
               2. Voglio un sito su OMNIA
             </p>
             <p className="text-sm text-stone-600 font-sans">
-              Una vetrina nuova gestita qui, con i tuoi immobili. Utile se vuoi mostrare la rete MLS
-              sul sito pubblico. Il sito vecchio resta fino a quando non cambi l’indirizzo DNS
-              (te lo spieghiamo se serve).
+              Una vetrina nuova gestita da OMNIA, con i tuoi immobili. Serve se vuoi far vedere
+              anche gli annunci della rete sul sito. Il sito che hai già resta online finché non
+              decidi tu di passare a questo.
             </p>
             <button
               type="button"
