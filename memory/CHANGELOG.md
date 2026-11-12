@@ -1,3 +1,10 @@
+## 2026-11-12 — P0 Client→Richiesta + Visibility MLS + MLS card link
+
+- Searcher dopo Salva → `/requests/new?client_id=` + banner brief
+- Form immobile: Visibilità public / mls_only / private
+- Inventory MLS: card cliccabili
+- #192 già su main
+
 ## 2026-11-12 — D-170 sito proprio + box MLS embed (Nicastro)
 
 - Avvio: «Tengo il sito, sostituisco solo il box MLS» (`external` + `mls_on_public_site`)

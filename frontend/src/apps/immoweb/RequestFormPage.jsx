@@ -225,6 +225,15 @@ export default function RequestFormPage() {
           </div>
         </div>
 
+        {isNew && searchParams.get("created") === "1" && form.client_id ? (
+          <p
+            data-testid="request-from-client-next"
+            className="text-sm text-emerald-900 bg-emerald-50 border border-emerald-200 px-4 py-3 font-sans"
+          >
+            Cliente creato. Completa il brief: così il Match sa cosa cercare.
+          </p>
+        ) : null}
+
         {error && (
           <p className="text-sm text-rose-700 bg-rose-50 border border-rose-200 rounded-md px-3 py-2">{error}</p>
         )}
