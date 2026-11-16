@@ -11,6 +11,9 @@ Oppure file unico:
   OMNIA-TUTTI-GLI-AUDIT.txt
   TUTTI-GLI-AUDIT.md
 
+Chiusura verifica statica (16 nov 2026):
+  CHIUSURA-VERIFICA-STATICA-BLOCCHI-0-7.md
+
 Come scaricare sul Desktop:
 1. Apri il link GitHub del file
 2. pulsante Download (icona freccia) oppure Raw -> Salva con nome

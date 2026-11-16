@@ -27,3 +27,7 @@ Estratti il **14 nov 2026 ~11:10 Europe/Rome** dai transcript cloud Cursor.
 14. `13-AUDIT-REGISTER-INVITE-KYC.md` — Register / invite / KYC (14 nov 00:55)
 15. `14a-AUDIT-B15-VERIFICA-CONFORMITA.md` — B15 verifica conformità (14 nov ~01:19)
 16. `14b-AUDIT-B16-BILLING-PACCHETTI.md` — B16 Billing e pacchetti (14 nov ~01:19)
+
+## Chiusura verifica statica Blocchi 0–7 (16 nov 2026 Europe/Rome)
+
+17. `CHIUSURA-VERIFICA-STATICA-BLOCCHI-0-7.md` — Documento di chiusura FASE 1 (verifica statica). Baseline `main` @ `2fea64a`. Risanamento non aperto.
