@@ -2,6 +2,11 @@
 
 > Franchising / multi-sede: gruppi, branch, KPI consolidati. **D-051**: pensato per piano Agency; non tutte le UI sono complete al 100%.
 
+> ### D-173 — Gruppo ≠ cliente commerciale P.IVA
+> Il **group/franchising** attuale (`agency_groups`) **non** è il futuro `CommercialCustomer`.  
+> Stessa P.IVA → stesso cliente commerciale (design B01). Gruppo ≠ subscription/wallet condivisi automatici.  
+> Design chiuso, **non ancora in codice**.
+
 ## 24.1 · Concetti
 - **Gruppo** (`agency_groups`): holding / rete che raggruppa N filiali.
 - **Branch**: agenzia collegata (`agencies.group_id` + opzionale `branch_code`).

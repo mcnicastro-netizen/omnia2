@@ -7,7 +7,24 @@ Registro di tutte le decisioni di business e tecniche prese durante il progetto.
 
 ## Decisioni prese
 
+### D-173 — Design risanamento B01/B02 chiusi · pausa prima di B03 · 16-Nov-2026
+- **Contesto**: Dopo verifica statica Blocchi 0–7 (baseline storica `main` @ `2fea64a`), avviata FASE 2 solo come pianificazione. Design B01 (ANO-001) e B02 (ANO-002+ANO-004) prodotti e chiusi. Nessuna implementazione autorizzata.
+- **Decisione**:
+  1. **B01 design chiuso** — modello target: Person, User, Organization, CommercialCustomer (P.IVA), Membership, Representation, OrganizationGroup ≠ customer.
+     - B01-DEC-01: User può esistere senza Person; niente Person inventate.
+     - B01-DEC-02: Owner ≠ Main Admin ≠ Branch Admin (stessa persona può ricoprirli tutti nel caso solo).
+     - B01-DEC-03: Membership ≠ Representation; una sola Membership operativa attiva; Representation non crea Membership.
+  2. **B02 design chiuso** — autorizzazioni per capability/contesto + audit centrale.
+     - B02-DEC-01: Main Admin ≠ accesso automatico CRM filiali.
+     - B02-DEC-02: Deleghe con anti-escalation, capability, scope, validità, revoca, traccia.
+     - B02-DEC-03: Audit obbligatorio su success / denied / failed + Super Admin straordinario.
+     - B02-DEC-04: Admin organizzazione = Branch Admin.
+  3. **Prossimo passo autorizzabile**: solo design B03 breve (sessioni/registrazione/inviti), senza codice, senza B04–B07.
+  4. Documentazione SoT export: `_export_audits/` · ripresa: `memory/RIPRENDI_2026-11-16.md`.
+- **Stato**: ✅ design B01+B02 chiusi. ❌ codice risanamento non autorizzato. ⏸ pausa Founder 16-Nov-2026.
+
 ### D-172 — Flussi prima della superficie · Product Acceptance Matrix · 12-Nov-2026
+
 - **Contesto**: Secondo audit: il gestionale non accompagna l’agente fino alla **conclusione** del lavoro. Due problemi distinti; priorità più precisa.
 - **Decisione**:
   1. Principio: ogni operazione ha **prima → azione → passo successivo evidente**.

@@ -267,6 +267,7 @@ Prima di dichiarare il cold start "attivo", eseguire manualmente queste 5 query 
 
 | Data | Versione | Note |
 |------|:-:|------|
+| 16-Nov-2026 | **v0.60-d173-pausa-b01-b02** | D-173 design B01/B02 chiusi · Cap.00/13/24 note target≠codice · HAL `api.design-d173-risanamento-b01-b02` · RIPRENDI_2026-11-16 · export `_export_audits/`. Reindex Founder post-merge (opz.). |
 | 11-Nov-2026 | **v0.59-d165-closeout** | D-163 auto-KYC · D-164 Stripe reconcile · D-165 enter_url anti-403 · mensile/annuale waiting · Cap.00/01 + HAL. NEXT_SESSION contatori scadenze/crediti. Reindex post-merge. |
 | 11-Nov-2026 | **v0.58-d161-login** | D-161: una password (register); forgot-password; Cap.00/01 + HAL sync; API=password deprecata. Reindex post-merge. |
 | 11-Nov-2026 | **v0.57-d160-a038** | D-160 email/copy · A-038 · Cabina 3 passi. |
