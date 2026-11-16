@@ -33,4 +33,5 @@ Estratti il **14 nov 2026 ~11:10 Europe/Rome** dai transcript cloud Cursor.
 17. `CHIUSURA-VERIFICA-STATICA-BLOCCHI-0-7.md` — Documento di chiusura FASE 1 (verifica statica). Baseline `main` @ `2fea64a`. Risanamento non aperto.
 18. `FASE-2-BACKLOG-PIANIFICAZIONE-RISANAMENTO.md` — Backlog FASE 2 (solo pianificazione). B01…B07. Esecuzione non autorizzata.
 19. `B01-ANO-001-DESIGN-MODELLO-DATI-TARGET.md` — Design B01 / ANO-001 (modello dati target). Solo progettazione; codice non autorizzato.
-20. `B01-ANO-001-NOTA-STATO-DESIGN.md` — Nota di stato B01: design acquisito; 3 punti aperti.
+20. `B01-ANO-001-NOTA-STATO-DESIGN.md` — Nota di stato B01: design acquisito; 3 punti aperti (storico).
+21. `B01-ANO-001-CHIUSURA-DEFINITIVA-DESIGN.md` — B01 design chiuso. DEC-01/02/03 approvate. Implementazione non autorizzata.
