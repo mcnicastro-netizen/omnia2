@@ -14,6 +14,9 @@ Oppure file unico:
 Chiusura verifica statica (16 nov 2026):
   CHIUSURA-VERIFICA-STATICA-BLOCCHI-0-7.md
 
+FASE 2 pianificazione risanamento (16 nov 2026):
+  FASE-2-BACKLOG-PIANIFICAZIONE-RISANAMENTO.md
+
 Come scaricare sul Desktop:
 1. Apri il link GitHub del file
 2. pulsante Download (icona freccia) oppure Raw -> Salva con nome
