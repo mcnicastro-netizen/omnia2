@@ -1,0 +1,622 @@
+# OMNIA AUDIT — PARTE 4.1 di 4 (sotto-pezzo 1/3)
+# Continua dalla parte 4 originale. Leggi tutto. Non inventare.
+
+# OMNIA AUDIT — PARTE 4/4
+# Fonte primaria. Leggi tutto questo pezzo. Non inventare.
+
+================================================================================
+
+# Audit read-only: gating ruoli UI vs backend (frontend OMNIA)
+
+## Modello generale
+
+Il frontend **non** usa `can()`, `hasPermission()`, `usePermissions` o capability flags: l’autorizzazione è quasi tutta **`user.role` (stringa)** più **`ROLE_ALIASES`** in `ProtectedRoute`, dichiarato come mirror di D-041/backend.
+
+| Layer | Meccanismo | File |
+|--------|------------|------|
+| Route B2B | `ProtectedRoute` + `allowedRoles` + alias | `frontend/src/App.js`, `frontend/src/shared/components/ProtectedRoute.jsx` |
+| Nav / redirect | `isAgencyAdmin`, `isGroupAdmin`, `ops_impersonation` | `frontend/src/apps/immoweb/components/AgencyShell.jsx` |
+| Pulsanti / tab | Controlli puntuali (`canInvite`, `isAgencyAdmin`, `account_type`) | es. `MembersPage.jsx`, `SettingsPage.jsx`, B2C pages |
+| Backend | `require_roles()` con gli stessi alias | `backend/shared/auth/dependencies.py` |
+
+B2C (`ImmocloudApp.jsx`): **nessun** `ProtectedRoute` sul router; i gate sono **`account_type === "b2c"`** nelle singole pagine e login/area.
+
+---
+
+## 1. `ProtectedRoute` — `ROLE_ALIASES` e route
+
+```11:23:frontend/src/shared/components/ProtectedRoute.jsx
+const ROLE_ALIASES = {
+  agency_admin: ["agency_admin", "branch_admin", "group_admin"],
+  agent: ["agent", "branch_agent", "branch_admin", "group_admin"],
+};
+// ...
+  const expandedRoles = allowedRoles
+    ? [...new Set(allowedRoles.flatMap((r) => ROLE_ALIASES[r] || [r]))]
+```
+
+Comportamenti extra client-only:
+
+- Redirect login CRM se ruolo non CRM su path `/app/` (`reason=role`).
+- Pagina 403 generica altrove.
+
+**`ImmowebApp.jsx`** (`/:lang/app`): nessun `ProtectedRoute`; redirect per `CRM_ROLES` → dashboard o ops.
+
+```9:42:frontend/src/apps/immoweb/ImmowebApp.jsx
+const CRM_ROLES = new Set([
+  "super_admin", "agency_admin", "agent", "branch_admin", "branch_agent", "group_admin",
+]);
+// ...
+    if (user.role === "super_admin") {
+      return <Navigate to={`/${l}/app/ops`} replace />;
+    }
+    return <Navigate to={`/${l}/app/dashboard`} replace />;
+```
+
+**`ImmocloudApp.jsx`**: solo route pubbliche/account; **zero** `allowedRoles`.
+
+### Tabella route `App.js` (`/:lang/app/*` e correlati)
+
+| Path | `allowedRoles` (letterale in `App.js`) | Note alias |
+|------|----------------------------------------|------------|
+| `app/onboarding` | `super_admin`, `agency_admin`, **`client`** | `client` non è aliasato |
+| `app/waiting-activation` | `super_admin`, `agency_admin`, `agent` | + branch/group via `agent` |
+| `app/dashboard` | `super_admin`, `agency_admin`, `agent` | idem |
+| `app/avvio` | `super_admin`, `agency_admin`, `group_admin`, `branch_admin` | no `agent` |
+| `app/group` | **`super_admin`, `group_admin` only** | `agency_admin` **non** entra |
+| `app/api-keys` | admin franchising espliciti | |
+| `app/trash` | `super_admin`, `agency_admin` | + branch/group via alias |
+| `app/import`, `import/xml`, `publishing`, wizard, social | admin franchising | |
+| `app/hal-knowledge` | **(nessun `allowedRoles`)** | solo autenticato |
+| `app/mls` | elenco esplicito incl. **`branch_agent`** | unico route con `branch_agent` letterale |
+| `app/brand-lab` | `super_admin` | |
+| `app/ops` (+ nested bridge) | `super_admin` | `FounderBridgeShell` |
+| `app/ops/legal` | `super_admin` | |
+| `app/members` | `super_admin`, `agency_admin`, `agent` | |
+| `app/settings` | `super_admin`, `agency_admin` | branch/group via alias `agency_admin` |
+| `app/settings/billing` | + `group_admin` | |
+| `app/modulistica` | admin + agent + franchising | |
+| `app/properties/*`, clients, requests, activities, matches, mandates, analytics, staging | `super_admin`, `agency_admin`, `agent` (+ espansioni) | |
+| `app/website` | `super_admin`, `agency_admin` | branch/group via alias |
+| `app/moderation` | `super_admin` | |
+| `legal` | **solo auth** | B2B + B2C |
+
+Percorso: `frontend/src/App.js` (circa righe 249–646).
+
+---
+
+## 2. Sidebar / nav (`AgencyShell`)
+
+Nav costruita in client con flag:
+
+```200:253:frontend/src/apps/immoweb/components/AgencyShell.jsx
+  const isGroupAdmin = user?.role === "group_admin" || (user?.role === "super_admin" && impersonating);
+  const isAgencyAdmin =
+    user?.role === "agency_admin" ||
+    user?.role === "branch_admin" ||
+    isGroupAdmin ||
+    (user?.role === "super_admin" && impersonating);
+```
+
+| Voce sidebar | Visibile se |
+|--------------|-------------|
+| Avvio | `isAgencyAdmin` + journey incompleto |
+| Gruppo | `isGroupAdmin` |
+| Import, Publishing, Cestino, Sito, Billing, Settings | `isAgencyAdmin` |
+| Operativo (immobili, clienti, richieste, …) | **tutti** nel CRM shell |
+| Members | **tutti** (anche `agent`) |
+| HAL Legal, Guida HAL, Staging, Mutui, Modulistica, MLS | **tutti** |
+
+**Redirect client-only (non `ProtectedRoute`):**
+
+- `super_admin` senza `ops_impersonation` → `/app/ops` (eccetto `brand-lab`, path `/app/ops`).
+- Pending activation, avvio obbligatorio, onboarding senza agenzia (`agency_admin` only).
+- Switch agenzia: `POST /auth/active-agency` se `agency_ids.length >= 2` (non per `super_admin`).
+
+**`App.js` non** definisce menu globali B2B oltre a route; la nav CRM è solo `AgencyShell`.
+
+---
+
+## 3. Componenti che nascondono/disabilitano per ruolo
+
+| Componente | Gate UI | Path |
+|------------|---------|------|
+| **InviteMemberModal** | Nessun gate interno; ruoli invite `agent` \| `agency_admin` | `components/InviteMemberModal.jsx` |
+| **MembersPage** | `canInvite` / `canManage` = `agency_admin` \| `super_admin` | `MembersPage.jsx` L21–22 |
+| **SettingsPage** | `isAgencyAdmin` per card API keys; form salvabile per tutti chi arriva sulla pagina | `SettingsPage.jsx` L18–22, L117+ |
+| **ApiKeysPage** | Nessun gate ruolo; solo route | `pages/ApiKeysPage.jsx` |
+| **GroupPage** | Route + nav `group_admin`; wizard create/attach sempre in pagina | `pages/GroupPage.jsx` |
+| **HalKnowledgePage** | Nessun gate ruolo | `pages/HalKnowledgePage.jsx` |
+| **AlChatWidget** | Nessun gate ruolo (in `AgencyShell`) | `components/AlChatWidget.jsx` |
+| **DashboardPage** | `super_admin` → `Navigate` a ops | `DashboardPage.jsx` L248–249 |
+| **WaitingActivationPage** | `super_admin` senza impersonation → redirect ops | `WaitingActivationPage.jsx` |
+
+Nessun’altra astrazione permessi nel tree `frontend/src`.
+
+---
+
+## 4. Capability / permessi granulari
+
+**Assente** nel frontend (`hasPermission`, `usePermissions`, `can()` su auth).
+
+Unico sistema: **`user.role` + alias D-041** (allineato a `backend/shared/auth/dependencies.py` L51–65).
+
+Eccezioni aggiuntive: `user.account_type` (B2C), `user.ops_impersonation`, `user.agency_ids` / `active_agency_id`.
+
+---
+
+## 5. Inconsistenze UI ↔ backend (principali)
+
+| Scenario | UI | Backend | Direzione |
+|----------|----|---------|-----------|
+| **Inviti squadra** | Invite solo `agency_admin` \| `super_admin` | `require_roles("agency_admin", "super_admin")` → **`group_admin` e `branch_admin` passano** via alias | UI **nasconde**, API **consente** |
+| **Rimozione membri** | Stesso `canManage` | Stesso pattern invite | UI **nasconde**, API **consente** per group/branch admin |
+| **Crea gruppo holding** | Route `/app/group` solo `group_admin`; nav Gruppo assente per `agency_admin` | `POST /app/groups` accetta **`agency_admin`** (`groups.py` L78–80) | UI **blocca**, API **consente** (flusso creazione solo via API o dopo promozione) |
+| **Impostazioni agenzia** | Pagina per branch/group (alias route); `isAgencyAdmin` mostra tutto | `PATCH /me` alias admin ma **`not_owner` 403** se non owner (`agencies.py` L283–284) | UI **mostra** salva, API **rifiuta** non-owner |
+| **HAL Knowledge** | Route: qualsiasi utente loggato (`ProtectedRoute` senza ruoli) | `_ROLES` CRM only (`hal_knowledge.py` L600) | B2C / ruoli fuori lista: UI **apre**, API **403** |
+| **Moderazione B2C** | Route `super_admin`; link da bridge (`BridgeContentPage`) | Solo `super_admin` (`moderation.py` L28–33) | UI route OK ma **`AgencyShell` redirect** `super_admin` da `/app/moderation` → **ops** (moderation usa `AgencyShell`) — flusso **rotto** in client |
+| **Dashboard KPI** | `agent` ecc. possono aprire dashboard | `/dashboard/*` = `get_current_user` senza `require_roles` | UI **più stretta** del backend (OK) |
+| **Membri lista** | Tutti con route members | `GET /me/members` = `get_current_user` | Allineato |
+
+Doc backend moderation menziona `group_admin`; codice effettivo è **solo `super_admin`** — commento backend obsoleto, non UI.
+
+---
+
+## 6. Custom roles UI
+
+**Assente.** Invite: solo `agent` e `agency_admin` nel `<select>` (`InviteMemberModal.jsx` L100–102). Nessuna UI create/duplicate/rename role.
+
+---
+
+## 7. Gruppo / holding / filiale / switch agenzia
+
+| Azione | Chi in UI | File |
+|--------|-----------|------|
+| Crea gruppo | Wizard su `GroupPage` se nessun gruppo; **solo chi passa route** (`group_admin`, `super_admin`) | `pages/GroupPage.jsx` `onCreateGroup` → `POST /app/groups` |
+| Collega filiale | Stessa pagina, `openAttach` / `onAttach` | `GroupPage.jsx` L107–141 |
+| Switch agenzia | Select in sidebar se `myAgencies.length >= 2` e non `super_admin` | `AgencyShell.jsx` L95–108, L350–361 |
+| Impersonazione Founder | Bridge → `POST /app/ops/bridge/impersonate` | `BridgeTenantDetailPage.jsx`; exit in `AgencyShell` |
+
+**`agency_admin` che deve fondare un gruppo:** backend ok su `POST /app/groups`, ma **nessuna voce nav** e **route `/app/group` 403** finché non è già `group_admin`.
+
+---
+
+## 8. Super admin / ops console
+
+| Gate | Implementazione |
+|------|-----------------|
+| Route cabina | `ProtectedRoute allowedRoles={["super_admin"]}` + `FounderBridgeShell` | `App.js` L375–391 |
+| Ops legal | `super_admin` | `App.js` L393–399 |
+| Brand Lab | `super_admin` | `App.js` L366–372 |
+| Moderation | `super_admin` (ma shell CRM problematica, v. §5) | `App.js` L607–614 |
+| Login post-auth | `super_admin` → `/app/ops` | `LoginPage.jsx` L72–74 |
+| CRM senza impersonation | Redirect persistente a ops | `AgencyShell.jsx` L115–122 |
+| Vista CRM | Solo con `user.ops_impersonation` | badge + nav agenzia in shell |
+
+`FounderOpsPage.jsx` (vecchia cabina con `AgencyShell`) **non è montata** in `App.js` — sostituita da bridge sotto `/app/ops`.
+
+---
+
+## 9. B2C cloud vs B2B app
+
+| Area | Gate |
+|------|------|
+| **B2C router** | Pubblico; auth opzionale | `ImmocloudApp.jsx` |
+| **Account / sell** | `account_type === "b2c"`; altri redirect a `/cloud/area` | `AccountDashboard.jsx` L51–54, `SellPage.jsx` L65+ |
+| **Top nav B2C** | `isB2c` → account vs area; logout solo B2C | `CloudTopNav.jsx` L14–24 |
+| **Login** | `from=cloud` vs `from=app`; CRM auto-enter se ruolo in lista | `LoginPage.jsx` |
+| **B2B CRM** | Tutto via `ProtectedRoute` + `AgencyShell` | `App.js` + shell |
+| **HAL Legal** | Auth only, nessun ruolo CRM | `App.js` `path="legal"`; accessibile da cloud nav |
+| **Ruolo `client`** | Ammesso su **`app/onboarding`** via route | `App.js` L253 — tipico utente post-`RegisterPage` (`role: client`) |
+
+B2C **non** usa `user.role` per feature cloud (usa `account_type`). B2B **non** usa `account_type` nel CRM shell (usa `role`).
+
+---
+
+## Pagine con controllo ruolo solo client-side (oltre `ProtectedRoute`)
+
+Queste dipendono da logiche in pagina/shell **senza** secondo gate route:
+
+- **`AgencyShell`**: nav, redirect super admin, avvio, onboarding, switch agenzia.
+- **`DashboardPage`**: redirect `super_admin`.
+- **`MembersPage`**: invite/revoke UI.
+- **`SettingsPage`**: sezioni admin vs agent (route già limita chi entra).
+- **`GroupPage`**: fallback lista gruppi per `super_admin` se 404 su `/groups/me`.
+- **`WaitingActivationPage`**: redirect founder.
+- **B2C**: `CloudAreaPage`, `AccountDashboard`, `SellPage` — `account_type`.
+- **`CloudTopNav`**: link area/account per sessione agenzia vs B2C.
+
+La maggior parte delle pagine CRM **affidano** l’accesso a `ProtectedRoute` e poi chiamano API (il backend fa enforcement reale).
+
+---
+
+## Sintesi per reviewer
+
+1. **Un solo modello**: stringa `user.role` + alias identici al backend in `ProtectedRoute` / `require_roles`.
+2. **Tre fasi**: route → sidebar (`AgencyShell`) → bottoni puntuali (invite, settings card).
+3. **Gap più rilevanti**: inviti/rimozioni per `group_admin`/`branch_admin`; creazione gruppo per `agency_admin`; settings salvataggio non-owner; moderation + `AgencyShell` per founder; HAL Knowledge per sessioni non-CRM.
+4. **Custom roles**: non implementati in UI.
+5. **B2C**: `account_type`, non `role`; router cloud senza `ProtectedRoute`.
+
+Audit **read-only**: nessun file modificato.
+
+
+================================================================================
+# Inventario collection audit Mongo
+# File: 12-INVENTARIO-COLLECTION-AUDIT-MONGO.md
+================================================================================
+
+## Sintesi
+
+Inventario **read-only** delle collection Mongo usate come trail consultabile (log/audit/eventi), distinte da `logger.*` e da collection **operational** (sessioni, job, inbox mutabile).
+
+**Gap critico (doc vs codice):** `match_audit`, `publishing_events` e `calendar_events` compaiono solo in lettura in `dashboard.py`; **nessun `insert_one` nel repo**. KPI / feed “recenti” possono restare vuoti nonostante la documentazione li citi come audit append-only.
+
+**`db.audit_log`:** non esiste nel codice (solo nota in `memory/SUGGERIMENTI_POST_PROGRAMMA.md`).
+
+---
+
+## Legenda
+
+| Campo | Significato |
+|--------|-------------|
+| **Append-only** | Solo insert in produzione (salvo script test/stress) |
+| **Logger** | Log applicativo stdout/Sentry, non queryabile da API |
+
+---
+
+## 1. Audit / event trail (consultabile Mongo)
+
+### `consent_events`
+
+| | |
+|--|--|
+| **Scrittura** | `shared/privacy/consent_log.py:log_consent` |
+| **Schema scritto** | `id`, `action`, `email`, `user_id`, `source`, `ip`, `meta`, `created_at` (ISO), `expire_at` (BSON datetime) |
+| **Mutazioni** | Append-only (solo insert) |
+| **TTL** | `expire_at` + indice `consent_expire_at_ttl` (`expireAfterSeconds=0`) — **3650 giorni** (`CONSENT_TTL_DAYS`) in `connection.py` |
+| **Lettura API** | Nessun endpoint lista; incluso in `GET /auth/me/export` via `shared/privacy/export_user.py:build_user_export` (`get_current_user`) |
+| **UI** | Export GDPR account; nessuna UI storico consensi |
+| **Call site `action`** | `auth.register` → `register_consent`; `auth.patch_me` → `b2c_marketing_consent_update`; `auth.erase` → `account_erasure`; `cloud_auth.register` → `b2c_register_consent` / `b2c_marketing_consent`; `portal_contact` → `property_contact_consent`; `mutui` → `mortgage_lead_consent`; `valuator` → `valuation_lead_consent` |
+
+---
+
+### `privacy_audit_events`
+
+| | |
+|--|--|
+| **Scrittura** | `shared/utils/privacy_gate.py:log_privacy_change` ← `property_privacy.py:set_privacy_level` |
+| **Schema** | `id`, `property_id`, `agency_id`, `actor_id`, `from_level`, `to_level`, `reason`, `created_at` |
+| **Mutazioni** | Append-only |
+| **TTL** | Nessuno in codice |
+| **Lettura** | `GET /api/app/properties/{pid}/privacy` — `require_roles("agent", "agency_admin", "super_admin")` — ultimi 20 in `audit_events` |
+| **UI** | `PropertyFormPage.jsx` legge solo `privacy_level`; **non mostra** lo storico audit |
+
+---
+
+### `al_audit` (HAL Agent CRM)
+
+| | |
+|--|--|
+| **Scrittura** | `apps/immoweb/al_agent.py`: `improve` (~386), `confirm_apply` (~437), `chat` (~536), `chat_stream` (~742) |
+| **Schema (varianti per `kind`)** | Comune: `id`, `user_id`, `agency_id` (se disponibile), `ts`. Chat: `session_id`, `user_msg`, `assistant_msg`, `tool`, `tool_params_count`, `stream?`. Improve: `kind=improve`, `field`, `lang`, `tone`, `input_len`, `output_len`. Apply: `kind=apply_confirmed`, `proposal_id`, `property_id`, `previous_len`, `new_len` |
+| **Mutazioni** | Append-only |
+| **TTL** | Nessuno |
+| **Lettura** | Nessun endpoint dedicato; aggregati in `founder_ops.py:ops_overview` (`super_admin`); feed parziale `dashboard.py` “Oggi” (`get_current_user`) |
+| **UI** | Nessuna lista audit; dashboard “recent” label HAL |
+
+**Nota:** `al_sessions` è **stato conversazione** (`insert` + `update_one` messaggi), non audit.
+
+---
+
+### `al_legal_audit`
+
+| | |
+|--|--|
+| **Scrittura** | `apps/immoweb/al_legal/router.py`: `ask` (~249), `analyze_pdf` (~333) |
+| **Schema** | `id`, `user_id`, `agency_id`, `session_id?`, `kind` (`chat` \| `pdf_analysis`), `sub_agent?`, `ts`, `user_msg`, `assistant_msg`, `citation_count`, `confidence`, validator fields, `cost_estimate`, `channel`, `payment_rail`, `credits_charged`, `expire_at` (BSON, **1825 giorni**) |
+| **Mutazioni** | Append-only |
+| **TTL** | Indice `al_legal_expire_at_ttl` su `expire_at` |
+| **Lettura** | `GET /api/app/legal/ops/overview?days=` — `require_roles("super_admin")` (ultimi 15 + aggregate) |
+| **UI** | `FounderLegalOpsPage.jsx` → `/app/ops/legal` |
+
+Rate limit interno Legal: `count_documents` su `al_legal_audit` (non collection separata).
+
+---
+
+### `domain_vault_events`
+
+| | |
+|--|--|
+| **Scrittura** | `apps/immoweb/domain_vault.py:set_domain_sovereignty` (~139) |
+| **Schema** | `agency_id`, `user_id`, `user_email`, `confirmed`, `existing_domain`, `at` |
+| **Mutazioni** | Append-only (anche se `confirmed=false`) |
+| **TTL** | Nessuno |
+| **Lettura** | **Nessuna API** (solo DB) |
+| **UI** | Domain Vault UI aggiorna agency doc; **no storico eventi** |
+
+DNS/custom domain (`custom_domain.py`) **non** scrive qui (solo campi su `agencies.website.*` + logger).
+
+---
+
+### `legal_kit_events`
+
+| | |
+|--|--|
+| **Scrittura** | `apps/marketing/legal_kit.py:_log_event` (~53) — da `download_single`, `download_kit` |
+| **Schema** | `id`, `action`, `template_slug`, `client_ip`, `has_agency_name`, `has_domain`, `created_at`, `created_ts` |
+| **Mutazioni** | Append-only |
+| **TTL** | Nessuno (doc ASPETTI: 5 anni proposti, non implementati) |
+| **Lettura** | Pubblico `GET/POST /api/legal/*` — **no auth**; solo conteggio IP in `_check_rate_limit` |
+| **UI** | Landing Legal Kit; nessun cruscotto eventi |
+
+Lead separato: `legal_kit_leads` (PII email), non è event log.
+
+---
+
+### `mls_events`
+
+| | |
+|--|--|
+| **Scrittura** | `apps/immoweb/mls.py:_log_event` — `join`, `leave`, `partner_invite`, `partner_*`, `offer_created`, `offer_*` |
+| **Schema** | `id`, `agency_id`, `kind`, `payload`, `created_at` |
+| **Mutazioni** | Append-only |
+| **TTL** | Nessuno |
+| **Lettura** | **Nessun endpoint lista** |
+| **UI** | Nessuna |
+
+---
+
+### `publishing_sync_logs`
+
+| | |
+|--|--|
+| **Scrittura** | `apps/immoweb/sync_engine.py:_record_log` (~89) |
+| **Schema** | `id`, `agency_id`, `portal_slug`, `connection_id`, `started_at`, `ended_at`, `status`, `items_ok`, `items_failed`, `error_message`, `retry_count`, `trigger`, `created_at`, `updated_at` |
+| **Mutazioni** | Append-only (insert) |
+| **TTL** | Nessuno |
+| **Lettura** | `GET /api/app/publishing/connections/{conn_id}/logs` — `require_roles("agency_admin", "super_admin")`; conteggi in `analytics_ab.py` |
+| **UI** | `PublishingPage.jsx` mostra ultimo esito sync inline; **non** chiama `/logs` |
+
+---
+
+### `publishing_events` ⚠️ PHANTOM
+
+| | |
+|--|--|
+| **Scrittura** | **Assente nel codebase** |
+| **Lettura** | Solo `dashboard.py` (KPI + recent activity) |
+| **UI** | Feed dashboard (spesso vuoto) |
+
+Sostituto reale per sync: **`publishing_sync_logs`**.
+
+---
+
+### `match_audit` ⚠️ PHANTOM
+
+| | |
+|--|--|
+| **Scrittura** | **Assente** (match notifiche via `notifications` / job, non audit dedicato) |
+| **Lettura** | `dashboard.py` KPI `matches_week` + recent feed |
+| **UI** | Dashboard KPI / recent |
+
+---
+
+### `calendar_events` ⚠️ PHANTOM
+
+| | |
+|--|--|
+| **Scrittura** | **Assente** (`activities.py` = task list, non calendario visita) |
+| **Lettura** | `dashboard.py` visite oggi/settimana |
+| **UI** | KPI dashboard visite |
+
+---
+
+### `api_usage_log`
+
+| | |
+|--|--|
+| **Scrittura** | `shared/auth/api_key.py:charge_and_log` (~250) — ogni call gateway v1 |
+| **Schema** | `id`, `api_key_id`, `agency_id`, `partner_id`, `endpoint`, `credits_charged`, `status_code`, `ok`, `error_code`, `latency_ms`, `created_at`, `updated_at` |
+| **Mutazioni** | Append-only |
+| **TTL** | Nessuno |
+| **Lettura** | `GET /api/app/api-keys/{key_id}/usage` — `require_roles("agency_admin", "super_admin")`; aggregate `founder_ops.py:ops_overview` (`super_admin`) |
+| **UI** | `ApiKeysPage.jsx` — **non** espone usage (endpoint esiste, UI no) |
+
+---
+
+### `api_credit_ledger`
+
+| | |
+|--|--|
+| **Scrittura** | `apps/immoweb/api_keys.py:adjust_credits` (~210) |
+| **Schema** | `api_key_id`, `agency_id`, `delta`, `new_balance`, `reason`, `actor_user_id`, `created_at` |
+| **Mutazioni** | Append-only |
+| **Lettura** | Nessun endpoint dedicato |
+| **UI** | Nessuna |
+
+---
+
+### `credit_ledger` (wallet agenzia B2B)
+
+| | |
+|--|--|
+| **Scrittura** | `shared/billing/plan_credits.py` (grant piano), `apps/billing/routes.py` (top-up Stripe webhook) |
+| **Schema** | `id`, `agency_id`, `delta`, `reason`, `balance_after`, `ref_id`, `ref_type`, `clawback_dogfood_2000?`, `created_at` |
+| **Mutazioni** | Append-only insert |
+| **Lettura** | Nessun API lista utente |
+| **UI** | Nessuna (solo aggregate Founder Ops) |
+
+---
+
+### `credit_transactions`
+
+| | |
+|--|--|
+| **Scrittura** | `apps/immoweb/assisted_billing.py` (grant Ops `assisted_topup`) |
+| **Schema** | `agency_id`, `kind`, `credits`, `balance_after`, `reason`, `created_at`, `ref_type`, `granted_by` |
+| **Mutazioni** | Append-only; test/script `delete_many` in ops grant |
+| **Lettura** | Solo aggregate `founder_ops.py:ops_overview` (`super_admin`) |
+| **UI** | Founder Ops overview numerico |
+
+---
+
+### `rate_limit_events`
+
+| | |
+|--|--|
+| **Scrittura** | `shared/security/rate_limit.py:enforce_rate_limit` |
+| **Schema** | `identifier` (`bucket:key`), `bucket`, `key`, `created_at` |
+| **Mutazioni** | Insert; cleanup script stress/preprod `delete_many` |
+| **TTL** | Nessuno in `connection.py` |
+| **Lettura** | Nessuna API utente |
+| **UI** | Nessuna |
+
+Usato da: portal search/map/contact, API key middleware, email client, publishing/feed, planimetria/visura B2C, legal_kit (conteggio separato su `legal_kit_events`).
+
+---
+
+### `login_attempts`
+
+| | |
+|--|--|
+| **Scrittura** | `shared/auth/brute_force.py:register_failed_attempt` (upsert) |
+| **Schema** | `identifier` (`ip:email`), `count`, `last_attempt` |
+| **Mutazioni** | **Upsert** `$inc`; `clear_attempts` → `delete_one`; script stress `delete_many` |
+| **TTL** | Nessuno (lockout logico 15 min / 5 tentativi) |
+| **Lettura** | Nessuna API (solo check interno `is_locked`) |
+| **UI** | Nessuna |
+
+---
+
+### `ops_alerts`
+
+| | |
+|--|--|
+| **Scrittura** | `shared/ops_alerts.py:record_alert` (+ billing, sync, LLM, backup, ecc.) |
+| **Schema** | `id`, `kind`, `severity`, `message`, `meta`, `created_at`, `acked` |
+| **Mutazioni** | Insert; `founder_ops.py` **update** `acked` / `ack-all` |
+| **TTL** | Nessuno; dedupe 24h per kind `stripe_webhook` |
+| **Lettura** | `GET /api/app/ops/overview` e alert list — `require_roles("super_admin")` |
+| **UI** | `FounderOpsPage.jsx` |
+| **Logger** | Duplica su `omnia.ops_alerts` WARNING/ERROR |
+
+---
+
+### `social_posts`
+
+| | |
+|--|--|
+| **Scrittura** | `apps/immoweb/social_publisher.py:_record_post` |
+| **Schema** | modello `SocialPost`: `id`, `agency_id`, `channel`, `property_id`, `caption`, `image_url`, `listing_url`, `status`, `external_id`, `error`, `created_at` (TimestampedModel) |
+| **Mutazioni** | Append-only |
+| **Lettura** | `GET /api/app/publishing/social/posts` — `require_roles` da `_ROLES` in social_publisher |
+| **UI** | `SocialPublisherPage.jsx` |
+
+---
+
+### `hal_knowledge_sessions`
+
+| | |
+|--|--|
+| **Scrittura** | `apps/immoweb/hal_knowledge.py:hal_ask` (insufficient + success) |
+| **Schema** | `id`, `session_id?`, `agency_id`, `user_id`, `question`, `answer`, `sources`, `confidence`, `status`, `created_at` |
+| **Mutazioni** | Append-only |
+| **Lettura** | `GET /api/app/hal/knowledge/history` — `require_roles(*_ROLES)`; Founder aggregate |
+| **UI** | `HalKnowledgePage.jsx` |
+
+---
+
+### `notifications`
+
+| | |
+|--|--|
+| **Scrittura** | `shared/notifications/center.py:create_notification` |
+| **Schema** | `id`, `user_id`, `agency_id`, `type`, `title`, `body`, `link`, `meta`, `read`, `created_at`, `read_at` |
+| **Mutazioni** | Insert + **update** read (`notifications_inbox.py`) |
+| **TTL** | Nessuno |
+| **Lettura** | `GET /api/notifications` — `get_current_user` |
+| **UI** | `NotificationBell.jsx`, B2C account |
+
+Event trail **inbox**, non audit immutabile.
+
+---
+
+## 2. Sicurezza / sessione (Mongo, non audit consultabile)
+
+### `refresh_tokens`
+
+| | |
+|--|--|
+| **Scrittura** | `shared/auth/session_store.py:store_refresh` (login/register/refresh) |
+| **Schema** | `jti`, `user_id`, `expires_at`, `created_at` |
+| **Mutazioni** | Insert; `revoke_refresh` / logout `delete_one`; cleanup scaduti `delete_many`; erasure `delete_many` per user |
+| **Audit logout** | **No** collection audit — solo revoca jti |
+| **Lettura** | Interna `is_refresh_valid` |
+
+### `password_reset_tokens`
+
+| | |
+|--|--|
+| **Scrittura** | `apps/core/auth.py:forgot_password` |
+| **Mutazioni** | Insert; reset → `used: true`; TTL index su `expires_at` |
+| **Audit** | `logger.info("Password reset link generated…")` — **non Mongo** |
+
+### `change_password` / `reset_password`
+
+- Aggiornano `users.password_hash`, `password_changed_at` (change only).
+- **Nessun** event log Mongo.
+
+---
+
+## 3. Ledger / pagamenti (trail finanziario)
+
+### `payment_transactions`
+
+- **Scrittura:** `apps/billing/routes.py` (checkout) + update webhook/status in stesso modulo.
+- **Non append-only:** `update_one` su status/`applied_at`.
+- **Lettura:** Founder Ops / finance (`founder_ops.py`, `founder_ops_finance.py`) — `super_admin`.
+
+### `b2c_purchases`
+
+- Trail acquisti B2C con **`expire_at` TTL** (pending 90d, paid ~7y) — audit compliance, non “activity feed”.
+
+---
+
+## 4. Altri insert “log-like” (perimetrali)
+
+| Collection | Writer | Ruolo |
+|------------|--------|--------|
+| `domain_checks` | `marketing/domain_check.py` | Log check RDAP pubblici (+ rate limit IP separato) |
+| `domain_leads` | `domain_check.py` | Lead marketing, non audit |
+| `b2c_valuation_usage` | `b2c_entitlements.py:record_base_valuation` | Rate-limit valutatore, non GDPR audit |
+| `import_jobs` | `properties_import.py`, `xml_import.py` | Job import stato/esito |
+| `virtual_staging_jobs`, `videos` | staging/video pipeline | Job + costi; Founder Ops conta eventi |
+
+---
+
+## 5. Casi richiesti esplicitamente
+
+| Richiesta | Esito |
+|-----------|--------|
+| **consent_events** | Sì — vedi §1 |
+| **mls_events** | Sì — solo scrittura, no UI |
+| **privacy_audit_events** | Sì — API property privacy |
+| **login_attempts** | Sì — contatore lockout, upsert |
+| **al_audit / al_legal_audit** | Sì |
+| **api_usage_log** | Sì |
+| **publishing_sync_logs / publishing_events** | Solo **`publishing_sync_logs`**; **`publishing_events` phantom** |
+| **domain_vault_events** | Sì — no UI |
+| **legal_kit_events** | Sì — pubblico |
+| **rate_limit_events** | Sì — interno |
+| **match_audit** | **Phantom** (solo dashboard read) |
+| **social_posts** | Sì + UI |
+| **notifications** | Sì — inbox mutabile |
+| **credit_transactions / api_credit_ledger** | Sì — ledger append; lettura limitata |
+| **refresh_tokens** | Session store, revoca logout |
+| **db.audit_log** | **Non esiste** |
+| **trash / GDPR erasure logs** | Trash = soft-delete su entità; erasure = `consent_events` (`account_erasure`) + report JSON + `users.erased_at`; **no** collection `erasure_log` |
+| **founder_bridge / founder_ops vs logger** | Ops strutturato in Mongo = **`ops_alerts`** + aggregate su audit/ledger; azioni cabina (erase, impersonate, KYC, revoke key) = **`logger.warning`** in `founder_bridge.py` senza Mongo |
+| **groups.py** | Solo `logger.info` — **no Mongo audit** |
+| **invites** | **`agency_invites`** documento invito (`pending`/`accepted`), update su refresh token — **non** event log |
+| **password reset/change** | Token + campi user; **no** audit Mongo |

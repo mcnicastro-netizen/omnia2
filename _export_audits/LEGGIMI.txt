@@ -1,0 +1,28 @@
+Export temporaneo audit OMNIA per ChatGPT (13–14 nov 2026).
+NON è codice prodotto. Si può cancellare dopo il download.
+
+File consigliati per ChatGPT:
+  OMNIA-AUDIT-PARTE-1-di-4.txt
+  OMNIA-AUDIT-PARTE-2-di-4.txt
+  OMNIA-AUDIT-PARTE-3-di-4.txt
+  OMNIA-AUDIT-PARTE-4-di-4.txt
+
+Oppure file unico:
+  OMNIA-TUTTI-GLI-AUDIT.txt
+  TUTTI-GLI-AUDIT.md
+
+Chiusura verifica statica (16 nov 2026):
+  CHIUSURA-VERIFICA-STATICA-BLOCCHI-0-7.md
+
+FASE 2 pianificazione risanamento (16 nov 2026):
+  FASE-2-BACKLOG-PIANIFICAZIONE-RISANAMENTO.md
+  B01-ANO-001-DESIGN-MODELLO-DATI-TARGET.md
+  B01-ANO-001-CHIUSURA-DEFINITIVA-DESIGN.md
+  B02-ANO-002-004-DESIGN-AUTORIZZAZIONI-AUDIT.md
+  B02-ANO-002-004-CHIUSURA-DEFINITIVA-DESIGN.md
+  PAUSA-2026-11-16-RIPRENDI.md
+
+Come scaricare sul Desktop:
+1. Apri il link GitHub del file
+2. pulsante Download (icona freccia) oppure Raw -> Salva con nome
+3. scegli Desktop

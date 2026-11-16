@@ -1,0 +1,1425 @@
+# OMNIA AUDIT — PARTE 4/4
+# Fonte primaria. Leggi tutto questo pezzo. Non inventare.
+
+================================================================================
+
+# Audit read-only: gating ruoli UI vs backend (frontend OMNIA)
+
+## Modello generale
+
+Il frontend **non** usa `can()`, `hasPermission()`, `usePermissions` o capability flags: l’autorizzazione è quasi tutta **`user.role` (stringa)** più **`ROLE_ALIASES`** in `ProtectedRoute`, dichiarato come mirror di D-041/backend.
+
+| Layer | Meccanismo | File |
+|--------|------------|------|
+| Route B2B | `ProtectedRoute` + `allowedRoles` + alias | `frontend/src/App.js`, `frontend/src/shared/components/ProtectedRoute.jsx` |
+| Nav / redirect | `isAgencyAdmin`, `isGroupAdmin`, `ops_impersonation` | `frontend/src/apps/immoweb/components/AgencyShell.jsx` |
+| Pulsanti / tab | Controlli puntuali (`canInvite`, `isAgencyAdmin`, `account_type`) | es. `MembersPage.jsx`, `SettingsPage.jsx`, B2C pages |
+| Backend | `require_roles()` con gli stessi alias | `backend/shared/auth/dependencies.py` |
+
+B2C (`ImmocloudApp.jsx`): **nessun** `ProtectedRoute` sul router; i gate sono **`account_type === "b2c"`** nelle singole pagine e login/area.
+
+---
+
+## 1. `ProtectedRoute` — `ROLE_ALIASES` e route
+
+```11:23:frontend/src/shared/components/ProtectedRoute.jsx
+const ROLE_ALIASES = {
+  agency_admin: ["agency_admin", "branch_admin", "group_admin"],
+  agent: ["agent", "branch_agent", "branch_admin", "group_admin"],
+};
+// ...
+  const expandedRoles = allowedRoles
+    ? [...new Set(allowedRoles.flatMap((r) => ROLE_ALIASES[r] || [r]))]
+```
+
+Comportamenti extra client-only:
+
+- Redirect login CRM se ruolo non CRM su path `/app/` (`reason=role`).
+- Pagina 403 generica altrove.
+
+**`ImmowebApp.jsx`** (`/:lang/app`): nessun `ProtectedRoute`; redirect per `CRM_ROLES` → dashboard o ops.
+
+```9:42:frontend/src/apps/immoweb/ImmowebApp.jsx
+const CRM_ROLES = new Set([
+  "super_admin", "agency_admin", "agent", "branch_admin", "branch_agent", "group_admin",
+]);
+// ...
+    if (user.role === "super_admin") {
+      return <Navigate to={`/${l}/app/ops`} replace />;
+    }
+    return <Navigate to={`/${l}/app/dashboard`} replace />;
+```
+
+**`ImmocloudApp.jsx`**: solo route pubbliche/account; **zero** `allowedRoles`.
+
+### Tabella route `App.js` (`/:lang/app/*` e correlati)
+
+| Path | `allowedRoles` (letterale in `App.js`) | Note alias |
+|------|----------------------------------------|------------|
+| `app/onboarding` | `super_admin`, `agency_admin`, **`client`** | `client` non è aliasato |
+| `app/waiting-activation` | `super_admin`, `agency_admin`, `agent` | + branch/group via `agent` |
+| `app/dashboard` | `super_admin`, `agency_admin`, `agent` | idem |
+| `app/avvio` | `super_admin`, `agency_admin`, `group_admin`, `branch_admin` | no `agent` |
+| `app/group` | **`super_admin`, `group_admin` only** | `agency_admin` **non** entra |
+| `app/api-keys` | admin franchising espliciti | |
+| `app/trash` | `super_admin`, `agency_admin` | + branch/group via alias |
+| `app/import`, `import/xml`, `publishing`, wizard, social | admin franchising | |
+| `app/hal-knowledge` | **(nessun `allowedRoles`)** | solo autenticato |
+| `app/mls` | elenco esplicito incl. **`branch_agent`** | unico route con `branch_agent` letterale |
+| `app/brand-lab` | `super_admin` | |
+| `app/ops` (+ nested bridge) | `super_admin` | `FounderBridgeShell` |
+| `app/ops/legal` | `super_admin` | |
+| `app/members` | `super_admin`, `agency_admin`, `agent` | |
+| `app/settings` | `super_admin`, `agency_admin` | branch/group via alias `agency_admin` |
+| `app/settings/billing` | + `group_admin` | |
+| `app/modulistica` | admin + agent + franchising | |
+| `app/properties/*`, clients, requests, activities, matches, mandates, analytics, staging | `super_admin`, `agency_admin`, `agent` (+ espansioni) | |
+| `app/website` | `super_admin`, `agency_admin` | branch/group via alias |
+| `app/moderation` | `super_admin` | |
+| `legal` | **solo auth** | B2B + B2C |
+
+Percorso: `frontend/src/App.js` (circa righe 249–646).
+
+---
+
+## 2. Sidebar / nav (`AgencyShell`)
+
+Nav costruita in client con flag:
+
+```200:253:frontend/src/apps/immoweb/components/AgencyShell.jsx
+  const isGroupAdmin = user?.role === "group_admin" || (user?.role === "super_admin" && impersonating);
+  const isAgencyAdmin =
+    user?.role === "agency_admin" ||
+    user?.role === "branch_admin" ||
+    isGroupAdmin ||
+    (user?.role === "super_admin" && impersonating);
+```
+
+| Voce sidebar | Visibile se |
+|--------------|-------------|
+| Avvio | `isAgencyAdmin` + journey incompleto |
+| Gruppo | `isGroupAdmin` |
+| Import, Publishing, Cestino, Sito, Billing, Settings | `isAgencyAdmin` |
+| Operativo (immobili, clienti, richieste, …) | **tutti** nel CRM shell |
+| Members | **tutti** (anche `agent`) |
+| HAL Legal, Guida HAL, Staging, Mutui, Modulistica, MLS | **tutti** |
+
+**Redirect client-only (non `ProtectedRoute`):**
+
+- `super_admin` senza `ops_impersonation` → `/app/ops` (eccetto `brand-lab`, path `/app/ops`).
+- Pending activation, avvio obbligatorio, onboarding senza agenzia (`agency_admin` only).
+- Switch agenzia: `POST /auth/active-agency` se `agency_ids.length >= 2` (non per `super_admin`).
+
+**`App.js` non** definisce menu globali B2B oltre a route; la nav CRM è solo `AgencyShell`.
+
+---
+
+## 3. Componenti che nascondono/disabilitano per ruolo
+
+| Componente | Gate UI | Path |
+|------------|---------|------|
+| **InviteMemberModal** | Nessun gate interno; ruoli invite `agent` \| `agency_admin` | `components/InviteMemberModal.jsx` |
+| **MembersPage** | `canInvite` / `canManage` = `agency_admin` \| `super_admin` | `MembersPage.jsx` L21–22 |
+| **SettingsPage** | `isAgencyAdmin` per card API keys; form salvabile per tutti chi arriva sulla pagina | `SettingsPage.jsx` L18–22, L117+ |
+| **ApiKeysPage** | Nessun gate ruolo; solo route | `pages/ApiKeysPage.jsx` |
+| **GroupPage** | Route + nav `group_admin`; wizard create/attach sempre in pagina | `pages/GroupPage.jsx` |
+| **HalKnowledgePage** | Nessun gate ruolo | `pages/HalKnowledgePage.jsx` |
+| **AlChatWidget** | Nessun gate ruolo (in `AgencyShell`) | `components/AlChatWidget.jsx` |
+| **DashboardPage** | `super_admin` → `Navigate` a ops | `DashboardPage.jsx` L248–249 |
+| **WaitingActivationPage** | `super_admin` senza impersonation → redirect ops | `WaitingActivationPage.jsx` |
+
+Nessun’altra astrazione permessi nel tree `frontend/src`.
+
+---
+
+## 4. Capability / permessi granulari
+
+**Assente** nel frontend (`hasPermission`, `usePermissions`, `can()` su auth).
+
+Unico sistema: **`user.role` + alias D-041** (allineato a `backend/shared/auth/dependencies.py` L51–65).
+
+Eccezioni aggiuntive: `user.account_type` (B2C), `user.ops_impersonation`, `user.agency_ids` / `active_agency_id`.
+
+---
+
+## 5. Inconsistenze UI ↔ backend (principali)
+
+| Scenario | UI | Backend | Direzione |
+|----------|----|---------|-----------|
+| **Inviti squadra** | Invite solo `agency_admin` \| `super_admin` | `require_roles("agency_admin", "super_admin")` → **`group_admin` e `branch_admin` passano** via alias | UI **nasconde**, API **consente** |
+| **Rimozione membri** | Stesso `canManage` | Stesso pattern invite | UI **nasconde**, API **consente** per group/branch admin |
+| **Crea gruppo holding** | Route `/app/group` solo `group_admin`; nav Gruppo assente per `agency_admin` | `POST /app/groups` accetta **`agency_admin`** (`groups.py` L78–80) | UI **blocca**, API **consente** (flusso creazione solo via API o dopo promozione) |
+| **Impostazioni agenzia** | Pagina per branch/group (alias route); `isAgencyAdmin` mostra tutto | `PATCH /me` alias admin ma **`not_owner` 403** se non owner (`agencies.py` L283–284) | UI **mostra** salva, API **rifiuta** non-owner |
+| **HAL Knowledge** | Route: qualsiasi utente loggato (`ProtectedRoute` senza ruoli) | `_ROLES` CRM only (`hal_knowledge.py` L600) | B2C / ruoli fuori lista: UI **apre**, API **403** |
+| **Moderazione B2C** | Route `super_admin`; link da bridge (`BridgeContentPage`) | Solo `super_admin` (`moderation.py` L28–33) | UI route OK ma **`AgencyShell` redirect** `super_admin` da `/app/moderation` → **ops** (moderation usa `AgencyShell`) — flusso **rotto** in client |
+| **Dashboard KPI** | `agent` ecc. possono aprire dashboard | `/dashboard/*` = `get_current_user` senza `require_roles` | UI **più stretta** del backend (OK) |
+| **Membri lista** | Tutti con route members | `GET /me/members` = `get_current_user` | Allineato |
+
+Doc backend moderation menziona `group_admin`; codice effettivo è **solo `super_admin`** — commento backend obsoleto, non UI.
+
+---
+
+## 6. Custom roles UI
+
+**Assente.** Invite: solo `agent` e `agency_admin` nel `<select>` (`InviteMemberModal.jsx` L100–102). Nessuna UI create/duplicate/rename role.
+
+---
+
+## 7. Gruppo / holding / filiale / switch agenzia
+
+| Azione | Chi in UI | File |
+|--------|-----------|------|
+| Crea gruppo | Wizard su `GroupPage` se nessun gruppo; **solo chi passa route** (`group_admin`, `super_admin`) | `pages/GroupPage.jsx` `onCreateGroup` → `POST /app/groups` |
+| Collega filiale | Stessa pagina, `openAttach` / `onAttach` | `GroupPage.jsx` L107–141 |
+| Switch agenzia | Select in sidebar se `myAgencies.length >= 2` e non `super_admin` | `AgencyShell.jsx` L95–108, L350–361 |
+| Impersonazione Founder | Bridge → `POST /app/ops/bridge/impersonate` | `BridgeTenantDetailPage.jsx`; exit in `AgencyShell` |
+
+**`agency_admin` che deve fondare un gruppo:** backend ok su `POST /app/groups`, ma **nessuna voce nav** e **route `/app/group` 403** finché non è già `group_admin`.
+
+---
+
+## 8. Super admin / ops console
+
+| Gate | Implementazione |
+|------|-----------------|
+| Route cabina | `ProtectedRoute allowedRoles={["super_admin"]}` + `FounderBridgeShell` | `App.js` L375–391 |
+| Ops legal | `super_admin` | `App.js` L393–399 |
+| Brand Lab | `super_admin` | `App.js` L366–372 |
+| Moderation | `super_admin` (ma shell CRM problematica, v. §5) | `App.js` L607–614 |
+| Login post-auth | `super_admin` → `/app/ops` | `LoginPage.jsx` L72–74 |
+| CRM senza impersonation | Redirect persistente a ops | `AgencyShell.jsx` L115–122 |
+| Vista CRM | Solo con `user.ops_impersonation` | badge + nav agenzia in shell |
+
+`FounderOpsPage.jsx` (vecchia cabina con `AgencyShell`) **non è montata** in `App.js` — sostituita da bridge sotto `/app/ops`.
+
+---
+
+## 9. B2C cloud vs B2B app
+
+| Area | Gate |
+|------|------|
+| **B2C router** | Pubblico; auth opzionale | `ImmocloudApp.jsx` |
+| **Account / sell** | `account_type === "b2c"`; altri redirect a `/cloud/area` | `AccountDashboard.jsx` L51–54, `SellPage.jsx` L65+ |
+| **Top nav B2C** | `isB2c` → account vs area; logout solo B2C | `CloudTopNav.jsx` L14–24 |
+| **Login** | `from=cloud` vs `from=app`; CRM auto-enter se ruolo in lista | `LoginPage.jsx` |
+| **B2B CRM** | Tutto via `ProtectedRoute` + `AgencyShell` | `App.js` + shell |
+| **HAL Legal** | Auth only, nessun ruolo CRM | `App.js` `path="legal"`; accessibile da cloud nav |
+| **Ruolo `client`** | Ammesso su **`app/onboarding`** via route | `App.js` L253 — tipico utente post-`RegisterPage` (`role: client`) |
+
+B2C **non** usa `user.role` per feature cloud (usa `account_type`). B2B **non** usa `account_type` nel CRM shell (usa `role`).
+
+---
+
+## Pagine con controllo ruolo solo client-side (oltre `ProtectedRoute`)
+
+Queste dipendono da logiche in pagina/shell **senza** secondo gate route:
+
+- **`AgencyShell`**: nav, redirect super admin, avvio, onboarding, switch agenzia.
+- **`DashboardPage`**: redirect `super_admin`.
+- **`MembersPage`**: invite/revoke UI.
+- **`SettingsPage`**: sezioni admin vs agent (route già limita chi entra).
+- **`GroupPage`**: fallback lista gruppi per `super_admin` se 404 su `/groups/me`.
+- **`WaitingActivationPage`**: redirect founder.
+- **B2C**: `CloudAreaPage`, `AccountDashboard`, `SellPage` — `account_type`.
+- **`CloudTopNav`**: link area/account per sessione agenzia vs B2C.
+
+La maggior parte delle pagine CRM **affidano** l’accesso a `ProtectedRoute` e poi chiamano API (il backend fa enforcement reale).
+
+---
+
+## Sintesi per reviewer
+
+1. **Un solo modello**: stringa `user.role` + alias identici al backend in `ProtectedRoute` / `require_roles`.
+2. **Tre fasi**: route → sidebar (`AgencyShell`) → bottoni puntuali (invite, settings card).
+3. **Gap più rilevanti**: inviti/rimozioni per `group_admin`/`branch_admin`; creazione gruppo per `agency_admin`; settings salvataggio non-owner; moderation + `AgencyShell` per founder; HAL Knowledge per sessioni non-CRM.
+4. **Custom roles**: non implementati in UI.
+5. **B2C**: `account_type`, non `role`; router cloud senza `ProtectedRoute`.
+
+Audit **read-only**: nessun file modificato.
+
+
+================================================================================
+# Inventario collection audit Mongo
+# File: 12-INVENTARIO-COLLECTION-AUDIT-MONGO.md
+================================================================================
+
+## Sintesi
+
+Inventario **read-only** delle collection Mongo usate come trail consultabile (log/audit/eventi), distinte da `logger.*` e da collection **operational** (sessioni, job, inbox mutabile).
+
+**Gap critico (doc vs codice):** `match_audit`, `publishing_events` e `calendar_events` compaiono solo in lettura in `dashboard.py`; **nessun `insert_one` nel repo**. KPI / feed “recenti” possono restare vuoti nonostante la documentazione li citi come audit append-only.
+
+**`db.audit_log`:** non esiste nel codice (solo nota in `memory/SUGGERIMENTI_POST_PROGRAMMA.md`).
+
+---
+
+## Legenda
+
+| Campo | Significato |
+|--------|-------------|
+| **Append-only** | Solo insert in produzione (salvo script test/stress) |
+| **Logger** | Log applicativo stdout/Sentry, non queryabile da API |
+
+---
+
+## 1. Audit / event trail (consultabile Mongo)
+
+### `consent_events`
+
+| | |
+|--|--|
+| **Scrittura** | `shared/privacy/consent_log.py:log_consent` |
+| **Schema scritto** | `id`, `action`, `email`, `user_id`, `source`, `ip`, `meta`, `created_at` (ISO), `expire_at` (BSON datetime) |
+| **Mutazioni** | Append-only (solo insert) |
+| **TTL** | `expire_at` + indice `consent_expire_at_ttl` (`expireAfterSeconds=0`) — **3650 giorni** (`CONSENT_TTL_DAYS`) in `connection.py` |
+| **Lettura API** | Nessun endpoint lista; incluso in `GET /auth/me/export` via `shared/privacy/export_user.py:build_user_export` (`get_current_user`) |
+| **UI** | Export GDPR account; nessuna UI storico consensi |
+| **Call site `action`** | `auth.register` → `register_consent`; `auth.patch_me` → `b2c_marketing_consent_update`; `auth.erase` → `account_erasure`; `cloud_auth.register` → `b2c_register_consent` / `b2c_marketing_consent`; `portal_contact` → `property_contact_consent`; `mutui` → `mortgage_lead_consent`; `valuator` → `valuation_lead_consent` |
+
+---
+
+### `privacy_audit_events`
+
+| | |
+|--|--|
+| **Scrittura** | `shared/utils/privacy_gate.py:log_privacy_change` ← `property_privacy.py:set_privacy_level` |
+| **Schema** | `id`, `property_id`, `agency_id`, `actor_id`, `from_level`, `to_level`, `reason`, `created_at` |
+| **Mutazioni** | Append-only |
+| **TTL** | Nessuno in codice |
+| **Lettura** | `GET /api/app/properties/{pid}/privacy` — `require_roles("agent", "agency_admin", "super_admin")` — ultimi 20 in `audit_events` |
+| **UI** | `PropertyFormPage.jsx` legge solo `privacy_level`; **non mostra** lo storico audit |
+
+---
+
+### `al_audit` (HAL Agent CRM)
+
+| | |
+|--|--|
+| **Scrittura** | `apps/immoweb/al_agent.py`: `improve` (~386), `confirm_apply` (~437), `chat` (~536), `chat_stream` (~742) |
+| **Schema (varianti per `kind`)** | Comune: `id`, `user_id`, `agency_id` (se disponibile), `ts`. Chat: `session_id`, `user_msg`, `assistant_msg`, `tool`, `tool_params_count`, `stream?`. Improve: `kind=improve`, `field`, `lang`, `tone`, `input_len`, `output_len`. Apply: `kind=apply_confirmed`, `proposal_id`, `property_id`, `previous_len`, `new_len` |
+| **Mutazioni** | Append-only |
+| **TTL** | Nessuno |
+| **Lettura** | Nessun endpoint dedicato; aggregati in `founder_ops.py:ops_overview` (`super_admin`); feed parziale `dashboard.py` “Oggi” (`get_current_user`) |
+| **UI** | Nessuna lista audit; dashboard “recent” label HAL |
+
+**Nota:** `al_sessions` è **stato conversazione** (`insert` + `update_one` messaggi), non audit.
+
+---
+
+### `al_legal_audit`
+
+| | |
+|--|--|
+| **Scrittura** | `apps/immoweb/al_legal/router.py`: `ask` (~249), `analyze_pdf` (~333) |
+| **Schema** | `id`, `user_id`, `agency_id`, `session_id?`, `kind` (`chat` \| `pdf_analysis`), `sub_agent?`, `ts`, `user_msg`, `assistant_msg`, `citation_count`, `confidence`, validator fields, `cost_estimate`, `channel`, `payment_rail`, `credits_charged`, `expire_at` (BSON, **1825 giorni**) |
+| **Mutazioni** | Append-only |
+| **TTL** | Indice `al_legal_expire_at_ttl` su `expire_at` |
+| **Lettura** | `GET /api/app/legal/ops/overview?days=` — `require_roles("super_admin")` (ultimi 15 + aggregate) |
+| **UI** | `FounderLegalOpsPage.jsx` → `/app/ops/legal` |
+
+Rate limit interno Legal: `count_documents` su `al_legal_audit` (non collection separata).
+
+---
+
+### `domain_vault_events`
+
+| | |
+|--|--|
+| **Scrittura** | `apps/immoweb/domain_vault.py:set_domain_sovereignty` (~139) |
+| **Schema** | `agency_id`, `user_id`, `user_email`, `confirmed`, `existing_domain`, `at` |
+| **Mutazioni** | Append-only (anche se `confirmed=false`) |
+| **TTL** | Nessuno |
+| **Lettura** | **Nessuna API** (solo DB) |
+| **UI** | Domain Vault UI aggiorna agency doc; **no storico eventi** |
+
+DNS/custom domain (`custom_domain.py`) **non** scrive qui (solo campi su `agencies.website.*` + logger).
+
+---
+
+### `legal_kit_events`
+
+| | |
+|--|--|
+| **Scrittura** | `apps/marketing/legal_kit.py:_log_event` (~53) — da `download_single`, `download_kit` |
+| **Schema** | `id`, `action`, `template_slug`, `client_ip`, `has_agency_name`, `has_domain`, `created_at`, `created_ts` |
+| **Mutazioni** | Append-only |
+| **TTL** | Nessuno (doc ASPETTI: 5 anni proposti, non implementati) |
+| **Lettura** | Pubblico `GET/POST /api/legal/*` — **no auth**; solo conteggio IP in `_check_rate_limit` |
+| **UI** | Landing Legal Kit; nessun cruscotto eventi |
+
+Lead separato: `legal_kit_leads` (PII email), non è event log.
+
+---
+
+### `mls_events`
+
+| | |
+|--|--|
+| **Scrittura** | `apps/immoweb/mls.py:_log_event` — `join`, `leave`, `partner_invite`, `partner_*`, `offer_created`, `offer_*` |
+| **Schema** | `id`, `agency_id`, `kind`, `payload`, `created_at` |
+| **Mutazioni** | Append-only |
+| **TTL** | Nessuno |
+| **Lettura** | **Nessun endpoint lista** |
+| **UI** | Nessuna |
+
+---
+
+### `publishing_sync_logs`
+
+| | |
+|--|--|
+| **Scrittura** | `apps/immoweb/sync_engine.py:_record_log` (~89) |
+| **Schema** | `id`, `agency_id`, `portal_slug`, `connection_id`, `started_at`, `ended_at`, `status`, `items_ok`, `items_failed`, `error_message`, `retry_count`, `trigger`, `created_at`, `updated_at` |
+| **Mutazioni** | Append-only (insert) |
+| **TTL** | Nessuno |
+| **Lettura** | `GET /api/app/publishing/connections/{conn_id}/logs` — `require_roles("agency_admin", "super_admin")`; conteggi in `analytics_ab.py` |
+| **UI** | `PublishingPage.jsx` mostra ultimo esito sync inline; **non** chiama `/logs` |
+
+---
+
+### `publishing_events` ⚠️ PHANTOM
+
+| | |
+|--|--|
+| **Scrittura** | **Assente nel codebase** |
+| **Lettura** | Solo `dashboard.py` (KPI + recent activity) |
+| **UI** | Feed dashboard (spesso vuoto) |
+
+Sostituto reale per sync: **`publishing_sync_logs`**.
+
+---
+
+### `match_audit` ⚠️ PHANTOM
+
+| | |
+|--|--|
+| **Scrittura** | **Assente** (match notifiche via `notifications` / job, non audit dedicato) |
+| **Lettura** | `dashboard.py` KPI `matches_week` + recent feed |
+| **UI** | Dashboard KPI / recent |
+
+---
+
+### `calendar_events` ⚠️ PHANTOM
+
+| | |
+|--|--|
+| **Scrittura** | **Assente** (`activities.py` = task list, non calendario visita) |
+| **Lettura** | `dashboard.py` visite oggi/settimana |
+| **UI** | KPI dashboard visite |
+
+---
+
+### `api_usage_log`
+
+| | |
+|--|--|
+| **Scrittura** | `shared/auth/api_key.py:charge_and_log` (~250) — ogni call gateway v1 |
+| **Schema** | `id`, `api_key_id`, `agency_id`, `partner_id`, `endpoint`, `credits_charged`, `status_code`, `ok`, `error_code`, `latency_ms`, `created_at`, `updated_at` |
+| **Mutazioni** | Append-only |
+| **TTL** | Nessuno |
+| **Lettura** | `GET /api/app/api-keys/{key_id}/usage` — `require_roles("agency_admin", "super_admin")`; aggregate `founder_ops.py:ops_overview` (`super_admin`) |
+| **UI** | `ApiKeysPage.jsx` — **non** espone usage (endpoint esiste, UI no) |
+
+---
+
+### `api_credit_ledger`
+
+| | |
+|--|--|
+| **Scrittura** | `apps/immoweb/api_keys.py:adjust_credits` (~210) |
+| **Schema** | `api_key_id`, `agency_id`, `delta`, `new_balance`, `reason`, `actor_user_id`, `created_at` |
+| **Mutazioni** | Append-only |
+| **Lettura** | Nessun endpoint dedicato |
+| **UI** | Nessuna |
+
+---
+
+### `credit_ledger` (wallet agenzia B2B)
+
+| | |
+|--|--|
+| **Scrittura** | `shared/billing/plan_credits.py` (grant piano), `apps/billing/routes.py` (top-up Stripe webhook) |
+| **Schema** | `id`, `agency_id`, `delta`, `reason`, `balance_after`, `ref_id`, `ref_type`, `clawback_dogfood_2000?`, `created_at` |
+| **Mutazioni** | Append-only insert |
+| **Lettura** | Nessun API lista utente |
+| **UI** | Nessuna (solo aggregate Founder Ops) |
+
+---
+
+### `credit_transactions`
+
+| | |
+|--|--|
+| **Scrittura** | `apps/immoweb/assisted_billing.py` (grant Ops `assisted_topup`) |
+| **Schema** | `agency_id`, `kind`, `credits`, `balance_after`, `reason`, `created_at`, `ref_type`, `granted_by` |
+| **Mutazioni** | Append-only; test/script `delete_many` in ops grant |
+| **Lettura** | Solo aggregate `founder_ops.py:ops_overview` (`super_admin`) |
+| **UI** | Founder Ops overview numerico |
+
+---
+
+### `rate_limit_events`
+
+| | |
+|--|--|
+| **Scrittura** | `shared/security/rate_limit.py:enforce_rate_limit` |
+| **Schema** | `identifier` (`bucket:key`), `bucket`, `key`, `created_at` |
+| **Mutazioni** | Insert; cleanup script stress/preprod `delete_many` |
+| **TTL** | Nessuno in `connection.py` |
+| **Lettura** | Nessuna API utente |
+| **UI** | Nessuna |
+
+Usato da: portal search/map/contact, API key middleware, email client, publishing/feed, planimetria/visura B2C, legal_kit (conteggio separato su `legal_kit_events`).
+
+---
+
+### `login_attempts`
+
+| | |
+|--|--|
+| **Scrittura** | `shared/auth/brute_force.py:register_failed_attempt` (upsert) |
+| **Schema** | `identifier` (`ip:email`), `count`, `last_attempt` |
+| **Mutazioni** | **Upsert** `$inc`; `clear_attempts` → `delete_one`; script stress `delete_many` |
+| **TTL** | Nessuno (lockout logico 15 min / 5 tentativi) |
+| **Lettura** | Nessuna API (solo check interno `is_locked`) |
+| **UI** | Nessuna |
+
+---
+
+### `ops_alerts`
+
+| | |
+|--|--|
+| **Scrittura** | `shared/ops_alerts.py:record_alert` (+ billing, sync, LLM, backup, ecc.) |
+| **Schema** | `id`, `kind`, `severity`, `message`, `meta`, `created_at`, `acked` |
+| **Mutazioni** | Insert; `founder_ops.py` **update** `acked` / `ack-all` |
+| **TTL** | Nessuno; dedupe 24h per kind `stripe_webhook` |
+| **Lettura** | `GET /api/app/ops/overview` e alert list — `require_roles("super_admin")` |
+| **UI** | `FounderOpsPage.jsx` |
+| **Logger** | Duplica su `omnia.ops_alerts` WARNING/ERROR |
+
+---
+
+### `social_posts`
+
+| | |
+|--|--|
+| **Scrittura** | `apps/immoweb/social_publisher.py:_record_post` |
+| **Schema** | modello `SocialPost`: `id`, `agency_id`, `channel`, `property_id`, `caption`, `image_url`, `listing_url`, `status`, `external_id`, `error`, `created_at` (TimestampedModel) |
+| **Mutazioni** | Append-only |
+| **Lettura** | `GET /api/app/publishing/social/posts` — `require_roles` da `_ROLES` in social_publisher |
+| **UI** | `SocialPublisherPage.jsx` |
+
+---
+
+### `hal_knowledge_sessions`
+
+| | |
+|--|--|
+| **Scrittura** | `apps/immoweb/hal_knowledge.py:hal_ask` (insufficient + success) |
+| **Schema** | `id`, `session_id?`, `agency_id`, `user_id`, `question`, `answer`, `sources`, `confidence`, `status`, `created_at` |
+| **Mutazioni** | Append-only |
+| **Lettura** | `GET /api/app/hal/knowledge/history` — `require_roles(*_ROLES)`; Founder aggregate |
+| **UI** | `HalKnowledgePage.jsx` |
+
+---
+
+### `notifications`
+
+| | |
+|--|--|
+| **Scrittura** | `shared/notifications/center.py:create_notification` |
+| **Schema** | `id`, `user_id`, `agency_id`, `type`, `title`, `body`, `link`, `meta`, `read`, `created_at`, `read_at` |
+| **Mutazioni** | Insert + **update** read (`notifications_inbox.py`) |
+| **TTL** | Nessuno |
+| **Lettura** | `GET /api/notifications` — `get_current_user` |
+| **UI** | `NotificationBell.jsx`, B2C account |
+
+Event trail **inbox**, non audit immutabile.
+
+---
+
+## 2. Sicurezza / sessione (Mongo, non audit consultabile)
+
+### `refresh_tokens`
+
+| | |
+|--|--|
+| **Scrittura** | `shared/auth/session_store.py:store_refresh` (login/register/refresh) |
+| **Schema** | `jti`, `user_id`, `expires_at`, `created_at` |
+| **Mutazioni** | Insert; `revoke_refresh` / logout `delete_one`; cleanup scaduti `delete_many`; erasure `delete_many` per user |
+| **Audit logout** | **No** collection audit — solo revoca jti |
+| **Lettura** | Interna `is_refresh_valid` |
+
+### `password_reset_tokens`
+
+| | |
+|--|--|
+| **Scrittura** | `apps/core/auth.py:forgot_password` |
+| **Mutazioni** | Insert; reset → `used: true`; TTL index su `expires_at` |
+| **Audit** | `logger.info("Password reset link generated…")` — **non Mongo** |
+
+### `change_password` / `reset_password`
+
+- Aggiornano `users.password_hash`, `password_changed_at` (change only).
+- **Nessun** event log Mongo.
+
+---
+
+## 3. Ledger / pagamenti (trail finanziario)
+
+### `payment_transactions`
+
+- **Scrittura:** `apps/billing/routes.py` (checkout) + update webhook/status in stesso modulo.
+- **Non append-only:** `update_one` su status/`applied_at`.
+- **Lettura:** Founder Ops / finance (`founder_ops.py`, `founder_ops_finance.py`) — `super_admin`.
+
+### `b2c_purchases`
+
+- Trail acquisti B2C con **`expire_at` TTL** (pending 90d, paid ~7y) — audit compliance, non “activity feed”.
+
+---
+
+## 4. Altri insert “log-like” (perimetrali)
+
+| Collection | Writer | Ruolo |
+|------------|--------|--------|
+| `domain_checks` | `marketing/domain_check.py` | Log check RDAP pubblici (+ rate limit IP separato) |
+| `domain_leads` | `domain_check.py` | Lead marketing, non audit |
+| `b2c_valuation_usage` | `b2c_entitlements.py:record_base_valuation` | Rate-limit valutatore, non GDPR audit |
+| `import_jobs` | `properties_import.py`, `xml_import.py` | Job import stato/esito |
+| `virtual_staging_jobs`, `videos` | staging/video pipeline | Job + costi; Founder Ops conta eventi |
+
+---
+
+## 5. Casi richiesti esplicitamente
+
+| Richiesta | Esito |
+|-----------|--------|
+| **consent_events** | Sì — vedi §1 |
+| **mls_events** | Sì — solo scrittura, no UI |
+| **privacy_audit_events** | Sì — API property privacy |
+| **login_attempts** | Sì — contatore lockout, upsert |
+| **al_audit / al_legal_audit** | Sì |
+| **api_usage_log** | Sì |
+| **publishing_sync_logs / publishing_events** | Solo **`publishing_sync_logs`**; **`publishing_events` phantom** |
+| **domain_vault_events** | Sì — no UI |
+| **legal_kit_events** | Sì — pubblico |
+| **rate_limit_events** | Sì — interno |
+| **match_audit** | **Phantom** (solo dashboard read) |
+| **social_posts** | Sì + UI |
+| **notifications** | Sì — inbox mutabile |
+| **credit_transactions / api_credit_ledger** | Sì — ledger append; lettura limitata |
+| **refresh_tokens** | Session store, revoca logout |
+| **db.audit_log** | **Non esiste** |
+| **trash / GDPR erasure logs** | Trash = soft-delete su entità; erasure = `consent_events` (`account_erasure`) + report JSON + `users.erased_at`; **no** collection `erasure_log` |
+| **founder_bridge / founder_ops vs logger** | Ops strutturato in Mongo = **`ops_alerts`** + aggregate su audit/ledger; azioni cabina (erase, impersonate, KYC, revoke key) = **`logger.warning`** in `founder_bridge.py` senza Mongo |
+| **groups.py** | Solo `logger.info` — **no Mongo audit** |
+| **invites** | **`agency_invites`** documento invito (`pending`/`accepted`), update su refresh token — **non** event log |
+| **password reset/change** | Token + campi user; **no** audit Mongo |
+| **logout / session revoke** | `refresh_tokens.delete_one` — **no** audit Mongo |
+
+---
+
+## 6. Logger tecnico vs Mongo (mappa rapida)
+
+| Area | Mongo consultabile | Solo `logger.*` |
+|------|-------------------|-----------------|
+| Founder Cabina (erase, impersonate, offboard, KYC) | `consent_events` su erase utente self-service; erase Ops **senza** `log_consent` extra | `founder_bridge.py` `logger.warning` su quasi ogni azione sensibile |
+| Billing Stripe failure | `ops_alerts` | `billing/routes` logger.exception |
+| Trash purge | — | `omnia.trash` |
+| Groups franchising | — | `groups.py` create/attach |
+| Consent failure | — | `omnia.consent` warning |
+| HAL LLM failure | `ops_alerts` | `al_agent` warning |
+
+---
+
+## 7. Indici Mongo rilevanti (`shared/db/connection.py:ensure_indexes`)
+
+- `consent_events`: email/user/action + **TTL `expire_at`**
+- `al_legal_audit`: **TTL `expire_at`**, `user_id`+`ts`
+- `b2c_purchases`: **TTL `expire_at`**
+- `login_attempts`: `identifier`
+- `password_reset_tokens`: TTL `expires_at`
+- `notifications`: user + read + created_at
+- `lead_score_cache`: TTL 24h (cache, non audit)
+
+**Non indicizzati in bootstrap:** `al_audit`, `match_audit`, `publishing_events`, `calendar_events`, `publishing_sync_logs`, `rate_limit_events`, `privacy_audit_events`, `domain_vault_events`, `mls_events`, `api_usage_log`.
+
+---
+
+## 8. Diagramma flusso (audit reali vs phantom)
+
+```mermaid
+flowchart LR
+  subgraph writers [Scrittori presenti]
+    CE[consent_events]
+    PAE[privacy_audit_events]
+    AL[al_audit]
+    ALL[al_legal_audit]
+    DVE[domain_vault_events]
+    LKE[legal_kit_events]
+    MLS[mls_events]
+    PSL[publishing_sync_logs]
+    SP[social_posts]
+    HKS[hal_knowledge_sessions]
+    AUL[api_usage_log]
+    RLE[rate_limit_events]
+  end
+  subgraph phantom [Solo lettura dashboard]
+    MA[match_audit]
+    PE[publishing_events]
+    CAL[calendar_events]
+  end
+  DASH[dashboard.py KPI / recent]
+  phantom --> DASH
+  writers --> FO[founder_ops super_admin]
+  writers --> API[API tenant-scoped]
+```
+
+---
+
+Se serve un passo successivo (sempre read-only), posso allineare `memory/manuale/18-notifiche-attivita.md` e `dashboard.py` ai writer effettivi (`publishing_sync_logs` vs `publishing_events`, assenza `match_audit`/`calendar_events`).
+
+
+================================================================================
+# Audit register / invite / KYC flow
+# File: 13-AUDIT-REGISTER-INVITE-KYC.md
+================================================================================
+
+# Audit account lifecycle (read-only)
+
+Legenda: **GIÀ** = implementato e coerente · **PARZIALE** = presente con gap · **ASSENTE** = non esiste / non enforceable.
+
+---
+
+## 1. B2B register — `backend/apps/core/auth.py`
+
+**Stato: PARZIALE**
+
+| Aspetto | Verdict | Dettaglio |
+|---|---|---|
+| Fields | GIÀ | `RegisterRequest`: email, password opzionale (≥8), name, role, lang, `domain_sovereignty_confirmed`, `existing_domain`, `preferred_plan` (`user.py` 67–77). |
+| Duplicate email | GIÀ | `find_one` → 409 `email_already_registered` (`auth.py` 131–134). Unique index Mongo su `users.email` (`connection.py` 172). |
+| Rate limit | **ASSENTE** | Nessun `enforce_ip_rate_limit` su `/auth/register`. |
+| Auto-login | GIÀ | Cookie access+refresh + `store_refresh` (`auth.py` 178–179). |
+| Role forcing | GIÀ | Solo `client`/`student`; altro → `client` (`auth.py` 136–140). `agency_admin` solo a create agency. |
+| Consent log | PARZIALE | `log_consent(action="register_consent")` (`auth.py` 181–194). **Nessun** campo `gdpr_consent`/`age_confirmed` obbligatorio nel body B2B (a differenza B2C). |
+| Password B2B | GIÀ | Se `domain_sovereignty_confirmed` → password temp min 8 (D-159) (`auth.py` 150–161). |
+| Welcome email | GIÀ | Solo se *non* agency intent (D-156/D-160) (`auth.py` 201–213). |
+
+```124:215:backend/apps/core/auth.py
+@router.post("/register")
+async def register(...):
+    ...
+    _PUBLIC_ROLES = {"client", "student"}
+    safe_role = req.role if req.role in _PUBLIC_ROLES else "client"
+    ...
+    # no rate limit
+    await store_refresh(_refresh_tok)
+    await log_consent(action="register_consent", ...)
+```
+
+---
+
+## 2. B2C register — `backend/apps/immocloud/cloud_auth.py`
+
+**Stato: GIÀ** (salvo email verify — §3)
+
+| Aspetto | Verdict |
+|---|---|
+| Rate limit | GIÀ — `cloud_register` 10 req/h/IP (`cloud_auth.py` 54–58) |
+| Duplicates | GIÀ — 409 (`66–68`) |
+| `email_verified=False` | GIÀ — esplicito (`87`) |
+| Auto-login | GIÀ — cookie + `store_refresh` (`121–132`) |
+| GDPR / age / intents | GIÀ — 400 se mancano (`59–64`) |
+| Consent log | GIÀ — `b2c_register_consent` (+ marketing se opt-in) (`97–117`) |
+| Role | GIÀ — hard-coded `"client"`, `account_type=b2c`, no agency |
+
+Il commento parla di `/api/auth/verify-email` “if present” — **il flusso non esiste** (vedi §3).
+
+---
+
+## 3. Email verification
+
+**Stato: ASSENTE (confermato)**
+
+Ricerca su tutto `backend/` + FE path:
+
+- Unico hit di `verify-email` / `verify_email` come route: il **commento** in `cloud_auth.py` 51–53.
+- `email_verified` impostato a `True` **solo** in `google_auth.py` (create 122, patch login 148).
+- Nessun token di verifica, nessun resend, nessun endpoint che flippa il flag per password-register.
+- B2C valuator/entitlements *richiedono* `email_verified` (`valuator.py` 335; `b2c_products.py` 264) → utenti password-register restano bloccati finché non passano da Google o un update Mongo manuale (come nei test).
+
+---
+
+## 4. Invites — `backend/apps/immoweb/invites.py`
+
+**Stato: PARZIALE**
+
+| Step | Verdict | Note |
+|---|---|---|
+| Create | GIÀ | Owner via `require_agency`; `secrets.token_urlsafe(32)`; expiry 7g; unique token index |
+| max_agents | GIÀ | members + pending vs piano (`54–82`) |
+| Duplicate pending | GIÀ | Refresh token/expiry/role invece di duplicare (`91–110`) |
+| Already member | GIÀ | 400 `user_already_member` (`86–89`) |
+| List | GIÀ | Proietta fuori `token` (`171–174`) |
+| Revoke | GIÀ | `status=revoked` + check `agency_id` (`181–195`) |
+| Verify | GIÀ | pending / expired→mark expired / used (`200–232`) |
+| Accept — new user | GIÀ | Password obbligatoria ≥8 (D-161) (`301–309`) |
+| Accept — existing | GIÀ | Upgrade role **solo se** `role=="client"` (`282–292`); password mai overwrite (D-100) |
+| Single-use | PARZIALE | `status=accepted` dopo accept (`325–334`); **non atomico** (check-then-update → race replay) |
+| `store_refresh` | **ASSENTE** | Cookie refresh settati (`364–369`) ma **senza** `store_refresh` → `/auth/refresh` fallisce (jti non in store) |
+| Org / `group_id` | **ASSENTE** | Nessuna assegnazione `group_id` / org sull’accept; solo `agency_ids` + `active_agency_id` |
+| Notification | GIÀ | `TYPE_INVITE_ACCEPTED` all’inviter (`336–360`) |
+
+---
+
+## 5. Agency create + activation
+
+**Stato: GIÀ** (con gap race / double-activate)
+
+### Create — `agencies.py` 65–245
+- `activation_status="pending"`, `pending_notify_sent_at=None` (D-152/D-162) — **GIÀ** (`212–216`)
+- Promote a `agency_admin` (non super_admin) — **GIÀ** (`228–234`)
+- `force_active=True` anti-leak seed — **GIÀ** (`226`, D-152.4)
+- Fiscali obbligatori (D-162) — **GIÀ** (`131–163`)
+- Check `owner_id` già owner — **PARZIALE**: check applicativo; index `owner_id` **non unique** (`connection.py` 175) → race concurrent create possibile
+
+### Gate CRM — `agency_activation.py`
+- `assert_agency_crm_unlocked` → 403 `agency_pending_activation`; grandfather senza campo = active; `super_admin` bypass — **GIÀ** (`9–40`)
+- Usato da `arequire_crm_agency` (`tenant.py` 68–79), dashboard, API keys
+
+### Ops Attiva — `founder_ops.py` 1143–1323
+- `require_roles("super_admin")`; KYC/payment default True; grant piano; email `agency_activated` / credentials; logger — **GIÀ**
+- **Double activate**: nessuna guard “già active”; `wipe_crm=True` di default → secondo Attiva può **svuotare CRM** di nuovo
+
+### Auto KYC — `kyc_auto_activate.maybe_finalize`
+- Skip se non pending / già `kyc_auto_activate_at` — **GIÀ** (`341–346`)
+- Match → verified + active + email — **GIÀ** (D-163)
+
+### Stripe — `billing/routes.py` 533–575
+- Su subscription applied → `maybe_finalize_agency_onboarding` — **GIÀ**
+- Checkout: `agency_id` da `require_agency(user)`, non dal client body — **GIÀ** (anti-manipulation) (`177`)
+
+---
+
+## 6. KYC upload + Gemini
+
+**Stato: GIÀ**
+
+- `upload_my_kyc_document` (`agencies.py` 484–582): MIME sniff octet-stream/HEIC, size cap, owner check, fallback `owner_id`, checklist → `submitted`, poi `maybe_finalize`
+- Gemini extract + `compare_declared` (P.IVA obbligatoria + name/CF + owner) — **GIÀ** (`kyc_auto_activate.py` 181–230, 332–441)
+- Report in `kyc.auto_verify`; flag `OMNIA_KYC_AUTO_ACTIVATE` default on
+
+---
+
+## 7. Decisions (D-152 / D-162 / D-163)
+
+| Decision | Allineamento codice |
+|---|---|
+| **D-152** CRM pending → Ops Attiva + waiting + force `active_agency_id` + grandfather | **GIÀ** |
+| **D-162** fiscali obbligatori; pending email solo KYC+pay; no mail a create; shell Ops | **GIÀ** (`pending_notify`, create senza email) |
+| **D-163** Gemini match → auto-Attiva + `agency_activated`; mismatch → pending | **GIÀ** |
+
+Nota storica: D-157/D-160 (API=password) **supersedute** da D-161 (`issue_login_credential=False` default).
+
+---
+
+## 8. Tests (coverage + negative)
+
+| File | Cosa asserta | Negativi |
+|---|---|---|
+| `test_immobilcloud_auth_register.py` | B2C happy, cookies, `email_verified=False` | gdpr 400, intents 400, dup 409, pw corta 422, email invalid 422 |
+| `test_d159_temp_password_kyc_mime.py` | B2B agency intent senza pw → 400; KYC octet-stream PDF; HEIC 415 | sì |
+| `test_agency_activation_gate.py` | create→pending; KPI/props 403; activate unlock; force active | gate 403 |
+| `test_agency_create_onboarding_complete.py` | promote + onboarding_completed + pending | — |
+| `test_d156_onboarding_kyc.py` | Attiva senza KYC → 400; preferred_plan | sì |
+| `test_d157_gestionale_flow.py` | Attiva senza payment → 400; credential→password | sì |
+| `test_d161_login_semplice.py` | default no credential; invite source ha `password_required` | statico (no E2E invite) |
+| `test_d162_pending_notify.py` | skip senza KYC; send quando ready | sì |
+| `test_d163_kyc_auto_activate.py` | match / VAT mismatch / happy auto-activate | mismatch sì; no race/double |
+| `test_d169_avvio_seats_credits.py` | `max_agents` 3/10/∞ | numeri piano, non invite |
+
+**ASSENTE / debole:**
+- Nessun test E2E invite create/accept/revoke/replay
+- Nessun test B2B register rate-limit / role escalation
+- Nessun test email-verify (coerente: flusso assente)
+- Nessun test concurrent create agency / double Ops Attiva / invite TOCTOU
+
+---
+
+## 9. Abuse vectors
+
+| Vettore | Verdict | Evidenza |
+|---|---|---|
+| Concurrent create agency | **PARZIALE / rischio** | Check-then-insert; `owner_id` index non unique |
+| Double Ops Attiva | **PARZIALE / rischio** | Nessun short-circuit se già `active`; wipe default True |
+| Invite token replay | **PARZIALE** | Status check OK in serie; race parallela possibile; accepted rifiuta replay sequenziale |
+| `agency_id` manipulation | **GIÀ mitigato** | Create: UUID server-side; invite/checkout: `require_agency(user)`; KYC: owner check |
+| B2B register spam | **ASSENTE** | No rate limit |
+| Privilege via register `role` | **GIÀ mitigato** | Whitelist public roles |
+| Accept invite → refresh session | **Gap** | Cookie senza `store_refresh` |
+
+---
+
+## 10. Audit trails
+
+| Trail | Verdict |
+|---|---|
+| `consent_events` | **GIÀ** — B2B `register_consent`, B2C register/marketing; indexes + TTL (`consent_log.py`, `connection.py` 144–148) |
+| `agency_invites` state | **GIÀ** — pending→accepted/revoked/expired |
+| Notification invite accepted | **GIÀ** — in-app center |
+| Logger activate | **GIÀ** — `activate-agency by=…` (`founder_ops.py` 1299–1307); kyc auto `logger.info` (`436–440`) |
+| KYC events dedicati | **PARZIALE** — stato su doc agency (`kyc`, `kyc.auto_verify`, `kyc_auto_activate_at`); **nessuna** collection append-only tipo `kyc_events` / `consent_events` |
+
+---
+
+## Sintesi priorità gap
+
+1. **ASSENTE — email verification** (token/resend/endpoint). Docstring B2C fuorviante; gate valuator dipende da un flag che password-register non può mai alzare.
+2. **ASSENTE — rate limit B2B register** (B2C sì).
+3. **ASSENTE — `store_refresh` su invite accept** → sessione fragile post-accept.
+4. **PARZIALE — idempotenza Attiva** (double wipe) e **unique `owner_id`** su agencies.
+5. **PARZIALE — accept invite atomico** + zero test invite E2E / replay.
+6. **ASSENTE — org/`group_id` su invite** (solo membership agency).
+
+
+================================================================================
+# OMNIA — AUDIT TECNICO B15 (verifica conformità decisioni)
+# File: 14a-AUDIT-B15-VERIFICA-CONFORMITA.md
+================================================================================
+
+Marco, audit B15 completato in sola lettura. Nessuna modifica al progetto.
+
+---
+
+# OMNIA — AUDIT TECNICO B15  
+## Conformità alle decisioni funzionali approvate
+
+---
+
+## A. Sintesi esecutiva
+
+**Stato generale B15:** base operativa di registrazione, onboarding KYC/pagamento, inviti e multi-membership **parzialmente presente**, ma **non conforme** alle decisioni appena approvate su P.IVA=cliente, ruoli per organizzazione, idempotenza Attiva, sessione post-invito e verifica email B2C.
+
+**Criticità più importanti**
+1. **P0 — `wipe_crm=True` di default su Ops Attiva senza guard “già attiva”** → seconda Attiva può cancellare CRM di un’organizzazione già attiva.
+2. **P0/P1 — unicità P.IVA assente** (né applicativa né indice DB); due titolari possono creare due “clienti” con la stessa P.IVA.
+3. **P1 — accept-invite: niente `store_refresh`, niente `email_verified=true`, accettazione non atomica.**
+4. **P1 — ruolo globale `users.role`**, non per organizzazione → permessi potenzialmente ereditati dopo switch/invito.
+5. **P1 — verifica email B2C assente** (endpoint inesistente; gate valuator già richiede `email_verified`).
+
+**Rischi sicurezza:** privilegio eccessivo cross-org via ruolo globale; refresh post-invito fragile; race su accept invite; nessuna traccia B12 su switch/Attiva/invito/VAT.
+
+**Rischi perdita dati:** wipe CRM su ri-Attiva; wipe Ops dedicato senza procedura straordinaria tracciata; race create agency (controllo `owner_id` non atomico).
+
+---
+
+## B. Matrice decisioni / codice
+
+| ID | Decisione funzionale | File / funzioni | Stato | Prove | Anomalie |
+|---|---|---|---|---|---|
+| **B15-01** | Una P.IVA = un solo cliente commerciale OMNIA | `AgencyInDB.fiscal.vat_number` in `backend/shared/models/agency.py`; create in `agencies.create_agency` | **ASSENTE** | Nessun `find` su VAT a create; manuale Cap.19 documenta “Nessun controllo unicità VAT” | Cliente commerciale = documento `agencies`, non entità dedicata |
+| **B15-02** | Stessa P.IVA non genera due clienti | `ensure_indexes` in `connection.py` | **ASSENTE** | Indici agencies: `slug` unique, `owner_id` **non** unique; **nessun** indice su `fiscal.vat_number` | — |
+| **B15-03** | Stessa persona può rappresentare più org con P.IVA diverse | `create_agency` L78–84 | **ASSENTE** (bloccato al contrario) | `find_one({"owner_id": user["id"]})` → `agency_already_exists` | Conflitto diretto con decisione approvata; **non** proporre unique su `owner_id` |
+| **B15-04** | Org con P.IVA diverse = clienti/abbonamenti/dati separati | `subscriptions` / `credit_wallets` keyed by `agency_id` (`billing/models.py`) | **PARZIALE** | Isolamento per `agency_id` sì; ma create multi-org dello stesso titolare bloccata | — |
+| **B15-05** | Filiali stessa P.IVA = stesso cliente, abbonamento/plafond condivisi | `AgencyGroup` + `group_id` (`groups.py`, `agency.py`) | **ASSENTE** | Group non ha VAT; ogni branch ha `fiscal` e subscription propri; `credits_mode` group/branch non equivale a “stesso cliente fiscale” | Matrioska ≠ cliente P.IVA |
+| **B15-06** | Seconda persona con P.IVA già presente ≠ accesso automatico | create + invites | **PARZIALE** | Nessun auto-join su VAT; ma può creare **seconda** agency con stessa VAT | Manca flusso “richiesta accesso + verifica poteri” |
+| **B15-07** | Accesso richiede verifica poteri + autorizzazione legittimati | invites / nessun claim-by-VAT | **PARZIALE** | Invito è il meccanismo di accesso; nessun flusso “claim P.IVA esistente” | — |
+| **B15-08** | Unicità P.IVA anche a livello DB | `ensure_indexes` | **ASSENTE** | Solo slug unique | Normalizzazione `_norm_vat` solo in KYC (`kyc_auto_activate.py`), non a persistenza |
+| **B15-09** | Una sola identità personale (email) | `users.email` unique index; `UserInDB` | **IMPLEMENTATO** | `create_index([("email", 1)], unique=True)` | — |
+| **B15-10** | Stessa identità associabile a più organizzazioni | `agency_ids[]`, `_attach_user_to_agency`, accept-invite `$addToSet` | **IMPLEMENTATO** | Membership multipla funziona | Ruolo **non** per-org (vedi B15-12) |
+| **B15-11** | Ogni associazione ha ruolo/autorizzazioni indipendenti | `users.role` singolo; Cap.13 | **ASSENTE** | Un solo `role` globale; accept upgrade solo se `role=="client"` | Admin in org A resta admin anche in org B se invitati come agent |
+| **B15-12** | Org mantengono dati/permessi separati | tenant `active_agency_id` (D-106) | **PARZIALE** | Dati tenant sì; permessi via ruolo globale | — |
+| **B15-13** | Accesso 2ª org non automatico da sola identità | invites | **IMPLEMENTATO** | Serve invite (o create come owner, limitato) | — |
+| **B15-14** | Switch org: verifica appartenenza | `auth.set_active_agency` | **IMPLEMENTATO** | `agency_id not in agency_ids` → 403 | — |
+| **B15-15** | Switch: ri-verifica ruolo/autorizzazioni | `set_active_agency` + `require_roles` | **ASSENTE** | Switch aggiorna solo `active_agency_id`; ruolo non ricalcolato | — |
+| **B15-16** | Switch: sostituisce contesto, no permessi residui | FE `AgencyShell.switchAgency` → reload; BE `get_current_user` rilegge DB | **PARZIALE** | Reload + SoT DB buoni per dati; ruolo globale resta | JWT porta `role` ma guard usa DB |
+| **B15-17** | Switch: impedisce accessi residui dati org precedente | tenant helpers + middleware | **PARZIALE** | Nuove request usano nuova active; in-flight pre-reload possibili | Alcuni endpoint controllano `agency_ids` (membership) non solo active |
+| **B15-18** | Switch: evento nel registro comune B12 | `set_active_agency` | **ASSENTE** | Solo update Mongo; no audit strutturato | `logger` ≠ audit |
+| **B15-19** | Ops Attiva non riattiva org già attiva; no side-effect | `founder_ops.ops_activate_agency` | **ASSENTE** | Nessun early-return se `activation_status=="active"`; `wipe_crm: bool = True` prima dello status set | **P0 wipe** |
+| **B15-20** | Seconda attivazione rifiutata, no wipe/CRM/abbonamento | stesso + `wipe_agency_crm_data` | **ASSENTE** | Wipe può girare anche su org già active; grant_plan può rieseguire | Esiste anche `POST /wipe-agency-crm` separato senza gate “straordinario” |
+| **B15-21** | Auto-Attiva KYC non riattiva se non pending | `maybe_auto_activate_from_kyc` | **IMPLEMENTATO** | Skip se `st != "pending"`; skip se `kyc_auto_activate_at` | Path Ops ≠ path auto |
+| **B15-22** | Invito personale email + link verifica possesso | `invites.create_invite` / `accept_invite` | **PARZIALE** | Token email; accept non risetta password esistente (D-100) | Email verify flag non settato |
+| **B15-23** | Token valido, non scaduto, monouso | verify + accept | **PARZIALE** | Expiry 7g, status pending→accepted/revoked; **non atomico** | Race: due accept paralleli |
+| **B15-24** | Email verificata = email invito | accept usa `invite["email"]` | **IMPLEMENTATO** | Nessun override email da payload | — |
+| **B15-25** | Accept → `email_verified=true` | `accept_invite` | **ASSENTE** | Nessun `$set` `email_verified` | Nuovo user: default `False` in `UserInDB` |
+| **B15-26** | Accept registra sessione + refresh | accept L364–369 | **ASSENTE** (refresh) | Setta cookie access+refresh; **manca** `store_refresh(refresh)` | Refresh post-invito fallisce a validazione jti |
+| **B15-27** | Account esistente mantiene password | accept L275–290 | **IMPLEMENTATO** | Commento D-100 + no overwrite hash | — |
+| **B15-28** | Accept atomico sotto concorrenza | accept L248–334 | **ASSENTE** | `find` pending → mutate user → `update status`; no `find_one_and_update` condizionale | — |
+| **B15-29** | Quote piano rispettate | create_invite max_agents | **IMPLEMENTATO** | members+pending vs plan | Wipe Attiva cancella anche invites |
+| **B15-30** | B2C: verifica email dedicata | `cloud_auth.cloud_register`; commento verify-email | **ASSENTE** | `email_verified=False`; **nessun** route `/auth/verify-email` nel repo | Valuator gate già richiede verified |
+| **B15-31** | Google → email_verified | `google_auth.py` | **IMPLEMENTATO** | Setta `email_verified: True` | Asimmetria password vs Google |
+| **B15-32** | Eventi B12 (create org, VAT dup, invite, switch, Attiva, email verify, Ops) | consent_events, mls_events, logger | **ASSENTE** (registro comune account/security) | Solo `consent_events` su register; Attiva/invite/switch = `logger.info` | Allineato a B12 confermato: da aggiungere sul registro unico, riusando trail settoriali dove esistono |
+
+**Normalizzazione / esteri / senza P.IVA (osservazione, senza nuove regole):**  
+- FE: `validateItalianVat` / `normalizeVat` (solo IT 11 cifre).  
+- BE create: obbligo presenza stringa, **nessuna** normalizzazione/checksum.  
+- KYC: `_norm_vat` strip non-digit.  
+- Nessun percorso esplicito P.IVA estera o soggetto senza P.IVA (D-162 impone campi fiscali).  
+**Stato: NON VERIFICABILE / fuori scope decisionale attuale** oltre a “oggi è IT-centrico e non normalizzato a DB”.
+
+---
+
+## C. Problemi e rischi
+
+### P0
+1. **Ri-Attiva Ops con wipe di default su org già attiva** — `ActivateAgencyBody.wipe_crm=True`; `ops_activate_agency` non rifiuta se già `active`; chiama `wipe_agency_crm_data` (delete_many su tutte le collection con `agency_id`, inclusi properties/clients/invites).  
+2. **Endpoint dedicato wipe** `POST .../wipe-agency-crm` — stesso wipe senza procedura straordinaria/tracciata B12.
+
+### P1
+3. **Unicità P.IVA assente** (app + DB) → due clienti OMNIA stessa P.IVA.  
+4. **Blocco `owner_id` one-agency** → impedisce titolare multi-org con P.IVA diverse (contrario alla decisione).  
+5. **Accept invite senza `store_refresh`** → sessione fragile.  
+6. **Accept senza `email_verified=true`**.  
+7. **Accept non atomico** → duplicazioni/membership inconsistenti sotto race.  
+8. **Ruolo globale non per-org** → dopo invite/switch, privilegi dell’org A possono valere sull’org B.  
+9. **Verifica email B2C assente** mentre feature gated su `email_verified`.  
+10. **Nessun audit B12** su eventi B15 elencati.
+
+### P2
+11. Filiali stessa P.IVA ≠ cliente unico / abbonamento condiviso.  
+12. Nessun flusso “P.IVA già presente → richiesta accesso con verifica poteri”.  
+13. PATCH fiscal (`update_my_agency`) può cambiare VAT senza check unicità.  
+14. Formati VAT non normalizzati a persistenza (`IT012…` vs `012…`).  
+15. Test E2E/concurrency mancanti (vedi F).
+
+### P3
+16. Cap.19 manuale ancora dichiara VAT opzionale/senza unicità (diverge da D-162 + decisioni B15).  
+17. Commento in `cloud_auth` che rimanda a verify-email “if present” (debt documentale).
+
+---
+
+## D. Dipendenze
+
+```
+[P0 guard Attiva / wipe] ── indipendente; fare prima (perdita dati)
+
+[Normalizzazione VAT] ──► [Indice unique VAT] ──► [Check create + PATCH]
+        │
+        └──► [Modello “cliente commerciale” vs agency/filiale]
+                    │
+                    ├──► [Rimuovere/rilassare blocco owner_id] (dopo unique VAT)
+                    └──► [Policy filiali stessa VAT / group billing] (da decidere mapping)
+
+[Ruolo per-org o membership.role] ──► [Switch ricalcola auth] ──► [Audit switch B12]
+
+[Accept: atomic + email_verified + store_refresh] ── indipendente ma prima dei test invite
+
+[B2C verify-email flow] ──► [non rimuovere gate valuator]
+
+[Registro B12 unico] ── dopo/in parallelo agli hook eventi (non blocca P0 wipe)
+```
+
+---
+
+## E. Piano di intervento (solo elenco — **non implementare**)
+
+1. **P0** — Guard idempotente Ops Attiva: se già `active` → reject, zero wipe/grant/email side-effect. Default `wipe_crm=False` su Attiva normale; wipe solo procedura Ops straordinaria esplicita + audit.  
+2. **P0** — Soft-lock / conferma su `wipe-agency-crm`.  
+3. **P1** — Normalizzare VAT a scrittura; unique index su VAT normalizzata (sparse se servono legacy null); check applicativo create+PATCH.  
+4. **P1** — Rimuovere il blocco “un owner = un’agency” **dopo** unique VAT (consentire multi-org stesso user, P.IVA diverse). **Non** unique su `owner_id`.  
+5. **P1** — Accept invite: `find_one_and_update` status pending→accepted; `email_verified=True`; `store_refresh`; cookie allineati al login.  
+6. **P1** — Modello ruolo per membership (o tabella equivalenti) + enforce su switch/`require_roles`.  
+7. **P1** — Flusso verify-email B2C (token monouso, update flag, resend).  
+8. **P2** — Policy filiali stessa P.IVA / sharing subscription (mapping su group o cliente commerciale).  
+9. **P2** — Flusso “P.IVA esistente → richiesta accesso” (no auto-join).  
+10. **P2** — Hook eventi B12 (create, VAT conflict, invite accept/reject, switch, Attiva/reject, email verify, Ops straordinario).
+
+---
+
+## F. Test di accettazione (da scrivere dopo autorizzazione)
+
+| Area | Test attesi |
+|---|---|
+| VAT | Create 2ª agency stessa VAT → reject; formati `IT`/`spazi` collidono; PATCH VAT duplicata → reject; concurrent create stessa VAT → una sola vince |
+| Multi-org persona | Stesso user crea 2 org P.IVA diverse → OK; isolamento dati tra le due |
+| Switch | Membership check; dopo switch API non legge dati org A; ruolo org B applicato; evento audit presente |
+| Attiva | 2ª Attiva su already-active → 4xx, CRM invariato, subscription invariata; wipe solo path straordinario |
+| Invite | Doppia accept sequenziale/parallela → una OK; `email_verified`; refresh jti valido; password esistente intatta; quota piano |
+| B2C email | Register → link → verify → flag true; reuse token → fail; valuator con unverified → 403 resta |
+| Audit | Ogni evento B15-32 scrive attore/soggetto/ts/operazione/esito |
+
+**Nota:** non eseguire test distruttivi su dati reali/produzione.
+
+---
+
+## G. Compatibilità
+
+| Area | Impatto |
+|---|---|
+| Multi-tenant D-106 | Switch/active_agency **compatibile**; rafforzare, non sostituire |
+| Matrioska groups D-041/D-047 | Group ≠ cliente P.IVA; unificare policy filiali richiede decisione mapping, non rewrite group da zero |
+| Piani / Stripe | Subscription per `agency_id`; sharing plafond stessa P.IVA **non** esiste — rischio doppia fatturazione stessa P.IVA oggi |
+| MLS | Invariato; non introdurre share fascicolo |
+| Ruoli B11 / Cap.13 | Conflitto: Cap.13 assume un ruolo; decisioni B15 chiedono ruolo per associazione |
+| Sessioni B13 | Gap invite→refresh; resto JWT+jti ok |
+| Area A | Nessun conflitto diretto |
+| B12 | Eventi B15 da agganciare al registro unico già impostato |
+| D-152/162/163 | Auto-Attiva già idempotente su pending; **Ops Attiva no** — allineare Ops alla stessa disciplina |
+
+---
+
+## H. Riepilogo finale
+
+**Già funzionante**
+- Email utente unica; membership multipla `agency_ids`; switch con check membership + reload FE; tenant su `active_agency_id`.
+- Inviti: token, expiry 7g, revoke, refresh pending, quote piano, no overwrite password, email presa dall’invito.
+- Onboarding B2B: fiscal obbligatori (D-162), KYC+pay → auto-Attiva con skip se non pending (D-163).
+- Google setta `email_verified`; gate valuator rispetta il flag.
+- Billing isolato per agency_id (quando le org sono separate).
+
+**Da completare**
+- Unicità P.IVA (app+DB+normalizzazione); multi-ownership con P.IVA diverse; ruolo per-org; verify-email B2C; audit B12 eventi B15; accept invite (`store_refresh` + `email_verified` + atomicità).
+
+**Da correggere**
+- Idempotenza Ops Attiva + default wipe; blocco `owner_id` one-agency (contrario alle decisioni); race accept/create.
+
+**Da decidere** (senza inventare regole in implementazione)
+- Entità “cliente commerciale” vs `agencies` (oggi coincidenti).
+- Mapping filiali stessa P.IVA → un cliente / un abbonamento (group? campo shared? merge?).
+- Forma del ruolo per-org (campo su membership vs collection).
+- P.IVA estere / soggetti senza P.IVA (oggi IT-only di fatto).
+
+**Da verifica legale/operativa**
+- Procedura straordinaria wipe/riattivazione (chi autorizza, dual control, retention).
+- Verifica poteri per accesso a org con P.IVA già intestata (documenti, chi firma).
+- Implicazioni Stripe Customer unico per P.IVA vs N subscription per filiale.
+
+---
+
+**Fermato qui.** Nessun commit, PR, edit o implementazione.  
+Quando vuoi, rivediamo insieme criticità e priorità; l’implementazione parte solo con la frase esatta:  
+`OMNIA — AUTORIZZAZIONE ESPLICITA ALL'IMPLEMENTAZIONE`
+
+
+================================================================================
+# OMNIA — AUDIT B16 Billing, Stripe, abbonamenti, crediti e limiti pacchetti
+# File: 14b-AUDIT-B16-BILLING-PACCHETTI.md
+================================================================================
+
+Marco, audit B16 completato in sola lettura. Fotografia tecnica del billing attuale rispetto al modello “cliente commerciale / organizzazioni / filiali”.
+
+---
+
+# OMNIA — AUDIT B16  
+## Billing, Stripe, abbonamenti, crediti e limiti
+
+---
+
+## A. Architettura attuale
+
+### Modelli e collezioni (tutti centrati su `agency_id`)
+
+| Entità | Dove | Chiave |
+|---|---|---|
+| Piano catalogo | `apps/billing/plans.py` (`LAUNCH_PLANS`, `POST_TRACTION_PLANS`) | tier string |
+| Subscription OMNIA | Mongo `subscriptions` (`SubscriptionInDB`) | **`agency_id`** + opz. `stripe_customer_id` / `stripe_subscription_id` |
+| Wallet | Mongo `credit_wallets` | **`agency_id`**, `balance` |
+| Ledger consumi/topup Stripe | Mongo `credit_ledger` | **`agency_id`** |
+| Topup assistiti Ops | Mongo `credit_transactions` | **`agency_id`** (secondo canale, non unificato) |
+| Checkout tx | Mongo `payment_transactions` | `session_id`, **`agency_id`** |
+| Fatture sync | Mongo `invoices` | `stripe_invoice_id`, **`agency_id`** |
+| Storage extra | `agencies.storage_extra_gb` | per agency |
+| Group / filiali | `agency_groups` + `agencies.group_id` | `credits_mode` **solo metadato** |
+| Cliente commerciale | — | **non esiste** come entità |
+
+### Servizi principali
+
+- `apps/billing/routes.py` — catalogo, checkout, credits, storage, portal, webhook, `debit_credits`
+- `apps/billing/setup_stripe.py` — crea Product/Price Stripe da **solo** `LAUNCH_PLANS`
+- `apps/immoweb/assisted_billing.py` — `grant_assisted_plan` (Ops, no Stripe)
+- `shared/billing/plan_credits.py` — crediti piano da `invoice.paid` (D-167)
+- `shared/billing/counters.py` — reminder rinnovo / low credits
+- `shared/billing/self_serve.py` — rubinetto `OMNIA_SELF_SERVE_ENABLED` (D-115)
+- `shared/storage/quota.py` — quota GB per agency
+- B2C parallelo: `b2c_checkout.py` / `b2c_products.py` (fuori listino B2B)
+
+### Endpoint B2B rilevanti
+
+| Metodo | Path | Ruolo |
+|---|---|---|
+| GET | `/billing/plans` | pubblico |
+| GET | `/billing/subscription` | sub + wallet **active agency** |
+| POST | `/billing/checkout` | sub Stripe (agency attiva) |
+| POST | `/billing/credits/purchase` | topup one-off |
+| POST | `/billing/storage/purchase` | addon +100 GB |
+| GET | `/billing/status/{session_id}` | poll + fallback apply |
+| POST | `/billing/portal` | Stripe Customer Portal |
+| POST | `/billing/webhook` | eventi Stripe |
+
+**Assente:** API cliente per storico fatture B2B (le `invoices` esistono in Mongo; UI fatture lato Ops/cabina).
+
+### Flusso Stripe ricostruito
+
+1. **Customer** — non creato esplicitamente in OMNIA. Checkout usa `customer_email=user["email"]` → Stripe crea/associa customer; l’id viene salvato solo **dopo** pagamento in `_apply_session_side_effects` su `subscriptions.stripe_customer_id`.
+2. **Associazione OMNIA** — metadata Checkout/Subscription: `agency_id`, `user_id`, `tier`, `billing_cycle`, `kind`. **Nessun** `commercial_customer_id` / VAT.
+3. **Price** — `lookup_key = "{tier}_{monthly|yearly}"` da catalogo attivo.
+4. **Checkout** — `mode=subscription`; onboarding pending → URL waiting; altrimenti richiede self-serve ON.
+5. **Persistenza pre-pay** — `payment_transactions` status `initiated`.
+6. **Pagamento / side-effect** — webhook `checkout.session.completed` o poll `/status` → `_apply_session_side_effects` upserta `subscriptions` per `agency_id`; può triggerare auto-Attiva KYC.
+7. **Crediti piano** — `invoice.paid` → `grant_plan_credits_from_stripe_invoice` (idempotente su `credit_ledger.ref_id`).
+8. **Rinnovo** — Stripe cicla; OMNIA aggiorna periodi su `customer.subscription.updated`; crediti su `invoice.paid`.
+9. **Payment failed** — status `past_due` + alert Ops; **non** sospende automaticamente `activation_status` / CRM.
+10. **Cancel** — `cancel_at_period_end` aggiornato; **nessun** handler `customer.subscription.deleted`.
+11. **Upgrade/downgrade** — delegati al **Customer Portal** Stripe; nessun codice OMNIA di proration o ricalcolo plafond.
+12. **Portal** — richiede `subscriptions.stripe_customer_id` già presente.
+
+---
+
+## B. Pacchetti commerciali
+
+### Confronto listino approvato ↔ codice
+
+| Voce | Approvato | Codice (`plans.py`) | Esito |
+|---|---|---|---|
+| Starter Founder / Standard | €49 / €79 | 49 / 79 | OK |
+| Pro | €99 / €179 | 99 / 179 | OK |
+| Agency | €299 / €399 | 299 / 399 | OK |
+| Annuale = 11× | D-079 | 539, 1089, 3289 / 869, 1969, 4389 | OK |
+| max utenti | 3 / 10 / ∞ | `max_agents` 3 / 10 / -1 | OK in catalogo |
+| max immobili | 30 / 200 / ∞ | `max_properties` 30 / 200 / -1 | OK in catalogo |
+| crediti/mese | 120 / 1200 / 3600 | uguale | OK |
+| storage incluso | 30 / 100 / 300 GB | `STORAGE_INCLUDED_GB` + `quota.py` | OK |
+| addon storage | +100 GB €15/mese | `STORAGE_ADDONS` | OK |
+| ricariche crediti | pacchetti 400…20000 @ €0,05/cr | `CREDIT_PACKAGES` | OK |
+| costi consumo | listino PRICING_OMNIA | `CREDIT_COSTS` allineato (micro-tour 30) | OK |
+| temi sito D-151 | €99/€199/€199 | `SITE_THEME_PRICES_EUR` | prezzi OK; **checkout Stripe ⏳** (D-151) |
+| 4° pacchetto | vietato | solo starter/pro/agency | OK |
+| Trial self-serve | no (D-080) | `trial_days=0` | OK |
+
+### Discrepanze rilevanti (non sui prezzi unitari)
+
+1. **Sconto Founders 12 mesi per agenzia** — documentato in `PRICING_OMNIA.md` e commenti; in codice lo switch è **globale** via `PRICING_PHASE` (`launch` vs `post_traction`). Campo `launch_discount_months=0` inutilizzato. **Nessun lock-in per data ingresso agenzia.**
+2. **`setup_stripe.py` sincronizza solo `LAUNCH_PLANS`** — prezzi Standard non creati automaticamente da quello script.
+3. **`Plan.features`** è lista vuota — feature narrative (multiposting, wizard…) non machine-checked nel piano.
+4. FE `RegisterPage.jsx` ha prezzi Founders **hardcoded** (coerenti oggi; rischio drift).
+
+---
+
+## C. Billing — collegamenti effettivi
+
+```
+Persona (users) ──owner/member──► Agency (agencies)
+                                      │
+                                      ├── subscriptions[agency_id] ── stripe_customer_id / stripe_subscription_id
+                                      ├── credit_wallets[agency_id]
+                                      ├── payment_transactions[agency_id]
+                                      └── invoices[agency_id]
+
+AgencyGroup (opzionale) ──group_id──► N agencies
+   credits_mode = "group"|"branch"   ※ NON letto da debit/checkout
+```
+
+| Domanda | Risposta dal codice |
+|---|---|
+| Stripe lavora su cosa? | **`agency_id`** (metadata + riga `subscriptions`) |
+| Esiste cliente commerciale autonomo? | **No** |
+| Una P.IVA / N filiali = 1 subscription? | **No** — ogni agency può avere la propria |
+| Checkout riusa customer Stripe esistente? | **No** in create session (solo `customer_email`); portal sì dopo primo salvataggio |
+| Abbonamento assistito Ops | `grant_assisted_plan` scrive stessa collection per `agency_id`, `source=assisted_provisioning` |
+
+---
+
+## D. Crediti
+
+### Funzionamento effettivo
+
+- Wallet creato lazy (upsert) al primo grant/topup/debit.
+- Accredito mensile/annuale: `invoice.paid` → listino ×1 o ×12 (yearly).
+- Ops/KYC: `grant_assisted_plan` con `$inc`; se Stripe già live → `skip_wallet` (D-167).
+- Consumo: `debit_credits(agency_id, …)` atomico su balance ≥ amount → 402 se insufficiente.
+- Ricariche: checkout `credits_topup` → `$inc` + `credit_ledger`.
+- **Nessuna scadenza / azzeramento periodico** dei residui: modello cumulativo (allineato a PRICING “si sommano”).
+- Upgrade/downgrade: nessun ricalcolo crediti in OMNIA.
+- Sospensione/cessazione: wallet **non** azzerato automaticamente; past_due non blocca debit di per sé.
+
+### Criticità
+
+1. **Plafond condiviso multi-org: assente** — N agency = N wallet.
+2. **`credits_mode=group` non implementato** — solo campo su `AgencyGroup`.
+3. **Doppio canale ledger** (`credit_ledger` vs `credit_transactions`) — report/audit frammentati.
+4. **Rischio doppio accredito assistito + Stripe** mitigato da D-167/clawback 2000, ma path non-Stripe ripetuti possono ancora `$inc`.
+5. API Gateway (`shared/auth/api_key.py`) ha **wallet crediti sulla API key**, parallelo al wallet agency — traccia Track B separata.
+
+---
+
+## E. Limiti
+
+### Account
+
+| Regola | Implementata? | Dove |
+|---|---|---|
+| max_agents su invite | **Sì** | `invites.create_invite`: `members + pending >= max` |
+| Conteggio utenti attivi vs sospesi | **Parziale** | `count_documents({agency_ids})` — **non** filtra `is_active` |
+| Slot trasferibili tra filiali | **No** | nessun pool commerciale |
+| User multi-org conta 1 slot per membership | **Sì di fatto** | contato per `agency_id` dell’invito |
+| Assegnazione Admin principale del plafond gruppo | **No** | — |
+| Enforce a accept (oltre create invite) | **No** | race: accept non ri-verifica tetto |
+
+### Immobili
+
+| Regola | Implementata? |
+|---|---|
+| `max_properties` in create | **NO** — `properties.create_property` inserisce senza check |
+| Archiviati / cestino nel conteggio | N/A (limite non enforced) |
+| Cross-org / trasferimento filiali | Non c’è transfer commerciale; property ha un solo `agency_id` |
+| Portali esterni | Multiposting non scala il limite (limite stesso assente) |
+
+### Storage
+
+| Regola | Implementata? |
+|---|---|
+| Quota GB per agency + extra | **Sì** — `assert_can_upload` |
+| Quota condivisa tra filiali | **No** |
+
+UI mostra max agenti/immobili (`BillingPage`, Avvio) ma **immobili non sono hard-gate**.
+
+---
+
+## F. Multi-organizzazione
+
+Compatibilità con il modello approvato (cliente P.IVA + filiali + un abbonamento):
+
+| Capacità richiesta | Stato codice |
+|---|---|
+| Cliente commerciale = P.IVA | Assente (B15) |
+| 1 sub / 1 wallet per P.IVA | Assente — per agency |
+| Filiali non moltiplicano limiti | Assente — ogni branch indipendente |
+| Admin distribuisce account tra filiali | Assente |
+| Autonomia operativa filiale | **Presente** (tenant `agency_id`, group attach/detach) |
+| P.IVA diverse = billing separato | **Di fatto sì** (agency separate), ma senza vincolo VAT |
+| Stessa persona multi-org | Membership sì; billing/ruoli per-org no (B15) |
+
+**Dipendenze tecniche future (solo elenco, non design):**  
+unicità VAT (B15) → entità o chiave commerciale → spostare `subscriptions`/`credit_wallets` (o alias) dalla singola agency → enforce limiti aggregati → wiring `credits_mode` → checkout che riusa un solo Stripe Customer commerciale.
+
+---
+
+## G. Rischi
+
+### P0
+1. **Modello billing incompatibile col cliente commerciale condiviso** — oggi N filiali possono generare N checkout/N Stripe customer/N wallet → moltiplicazione listino. File: `routes.create_checkout`, `assisted_billing.grant_assisted_plan`, `plan_credits`.
+2. **`max_properties` non enforced** — listino venduto (30/200) non applicato in `properties.create_property`.
+
+### P1
+3. **Founders 12 mesi non per-agenzia** — `PRICING_PHASE` globale; lock-in tariffario non realizzabile come documentato.
+4. **`setup_stripe` solo Launch** — rischio mismatch Standard vs Stripe.
+5. **Checkout senza `customer=` esistente** — possibili customer Stripe duplicati per stessa agency/email.
+6. **`past_due` / cancel senza gate CRM** — pagamento fallito non sospende uso; solo alert.
+7. **Nessun `subscription.deleted`** — stato OMNIA può restare “active” stale.
+8. **Invite seats: pending+members, no re-check su accept; `is_active` ignorato**.
+9. **Tema sito D-151 senza checkout** — prezzi in catalogo, vendita non cablata.
+
+### P2
+10. `credits_mode` group non collegato.
+11. Doppio ledger crediti.
+12. Nessuna API storico fatture lato cliente.
+13. Upgrade/downgrade solo Portal (comportamento Stripe Dashboard opaco al codice).
+
+### P3
+14. Feature flags piano non strutturati in `Plan.features`.
+15. Prezzi hardcoded in `RegisterPage.jsx`.
+
+---
+
+## H. Test
+
+| Scenario richiesto | Copertura test | Comportamento codice |
+|---|---|---|
+| 1. Starter HQ + 5 filiali | **Assente** | Ogni agency billing indipendente |
+| 2. Pro multi-org | **Assente** | Idem |
+| 3. Due P.IVA stesso titolare | **Assente** (B15: create bloccata da `owner_id`) | Billing per agency se esistessero |
+| 4. Transfer collaboratore filiale | **Assente** | Solo pull/add membership; no slot pool |
+| 5. Nuova filiale senza 2ª sub | **Assente** | Attach branch non crea sub, ma **non impedisce** 2º checkout |
+| 6. Rinnovo cliente multi-filiale | **Assente** | Rinnovo per `stripe_subscription_id` singolo |
+| 7. Pagamento fallito → org | Unit counters/alert; **no** test sospensione CRM | Solo `past_due` |
+| 8. Upgrade/downgrade plafond condiviso | **Assente** | N/A |
+| 9. Sospensione una filiale | **Assente** | `activation_status` filtro cabina; no auto da Stripe |
+| 10. Chiusura cliente commerciale | **Assente** | Solo wipe/purge Ops per agency |
+| 11. Ricarica + consumo cross-org | **Assente** | Debit solo su `agency_id` attivo |
+| 12. Race oltre limiti piano | **Assente** per seats/properties | Invite check non atomico con accept |
+
+**Test utili esistenti (statici/unit):**  
+`test_d167_plan_credits`, `test_d169_avvio_seats_credits`, `test_d166_billing_counters`, `test_ops_grant_agency_plan`, `test_storage_quota_d085`, `test_s9_o6_self_serve`, `test_m2s5_1_groups` (solo CRUD `credits_mode`).
+
+Nessun test eseguito che tocchi DB reale o Stripe live in questo audit (solo lettura sorgenti).
+
+---
+
+## I. Decisioni già rispettate (compatibili col codice)
+
+- Tre pacchetti soli; no Enterprise pubblico (D-080).
+- Prezzi Founders/Standard e annuale 11× nel catalogo Python (D-079/D-080).
+- Crediti unitari €0,05 e pacchetti ricarica.
+- Storage 30/100/300 + addon (D-085).
+- No trial self-serve; rubinetto O6 (D-115).
+- Crediti piano da invoice Stripe listino (D-167).
+- Isolamento dati operativo per `agency_id` / filiali group.
+- Checkout onboarding pending anche con self-serve OFF (D-157).
+
+---
+
+## J. Decisioni non implementate o incompatibili
+
+### Problemi tecnici (il codice non fa ciò che il listino/modello richiedono)
+- Un cliente commerciale / un abbonamento / un plafond per P.IVA.
+- Limiti account/immobili aggregati e non moltiplicabili per filiale.
+- Distribuzione slot da Admin principale.
+- Enforce `max_properties`.
+- Lock-in Founders 12 mesi **per ingresso agenzia**.
+- Wiring `credits_mode=group`.
+- Checkout temi D-151.
+- Lifecycle Stripe completo (deleted, sospensione CRM su unpaid).
+
+### Questioni per decisione Founder (prima di implementare)
+1. **Entità “cliente commerciale”**: nuova collection vs agency “root” vs group con VAT?
+2. **Filiali esistenti con sub/wallet separati**: merge, grandfather, o solo greenfield?
+3. **`credits_mode` attuale default `branch`**: allineare al “sempre condiviso stessa P.IVA” o tenere eccezioni franchising multi-P.IVA?
+4. **Founders**: meccanismo Stripe (subscription schedule / coupon / price switch) vs solo env globale?
+5. **Past_due**: soft warning vs blocco CRM vs solo cabina?
+6. **Max immobili**: hard block create vs soft warning (listino dice limiti)?
+
+---
+
+## K. Ordine raccomandato (nessuna implementazione)
+
+**Dipendenze**
+```
+B15 unicità P.IVA + multi-org persona
+    → definizione mapping Cliente commerciale ↔ agencies/filiali  [decisione Founder]
+        → single subscription/wallet binding
+            → enforce limiti aggregati (agents già parziale; properties da aggiungere)
+                → credits_mode effettivo
+                    → checkout riusa Stripe Customer commerciale
+                        → Founders per-agenzia + sync Stripe Standard
+                            → lifecycle past_due/cancel + temi D-151
+```
+
+**Priorità**
+1. Decisione modello dati commerciale (J) — senza questo ogni patch è prematura.
+2. Hard-gate `max_properties` + seats atomici (protezione listino venduto **oggi**, anche a singola agency).
+3. Evitare N checkout per stessa P.IVA (gate applicativo) appena esiste unique VAT.
+4. Completare lifecycle Stripe e Founders per-agenzia.
+5. Plafond condiviso filiali / distribuzione slot.
+
+**Preliminari**
+- Inventario agenzie demo con sub/wallet multipli.
+- Verifica catalogo Stripe live vs `LAUNCH`/`POST_TRACTION`.
+- Non introdurre 4° piano né cambiare prezzi.
+
+---
+
+## Dichiarazione di chiusura (obbligatoria)
+
+| Condizione | Esito |
+|---|---|
+| File modificati | **NO** |
+| Database modificato | **NO** |
+| Configurazioni / indici modificati | **NO** |
+| Operazioni reali su Stripe | **NO** |
+
+---
+
+**Fermato qui.** B16 è pronto per il confronto con B15, listino ufficiale e modello multi-organizzazione. Nessuna implementazione finché non arriva la frase di autorizzazione esplicita.

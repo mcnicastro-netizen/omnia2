@@ -1,0 +1,1043 @@
+# OMNIA AUDIT — PARTE 1/4
+# Fonte primaria. Leggi tutto questo pezzo. Non inventare.
+
+# OMNIA — Copia completa audit commissionati (dal Master 13 nov 2026)
+
+
+
+================================================================================
+# 13 novembre 2026 — Audit di architettura gestionale e OMNIA — MASTER BUSINESS ARCHITECTURE & GAP ANALYSIS
+# File: 01-MASTER-BUSINESS-ARCHITECTURE-GAP-ANALYSIS.md
+================================================================================
+
+# OMNIA — Master Business Architecture & Gap Analysis
+
+**Modalità:** sola lettura. Nessun file creato, nessun commit, nessuna modifica.  
+**Autorizzazione richiesta per qualsiasi intervento:** `OMNIA — AUTORIZZAZIONE ESPLICITA ALL'IMPLEMENTAZIONE`.
+
+---
+
+## 1. Sintesi esecutiva
+
+OMNIA **non è un gestionale di pratica**. È un **ecosistema di listing + matching + pubblicazione + strumenti AI**, con un CRM a record e task intorno.
+
+Può già: tenere anagrafiche, immobili, brief, match deterministico, MLS di inventario, sito, feed XML, fascicolo documentale, PDF di modulistica, fatturazione SaaS Stripe.
+
+Non può, come mestiere: incarico con durata/esclusiva/provvigione come oggetto vivo; visita come appuntamento; proposta/trattativa con importo e versioni; conclusione che aggiorna insieme listing, richiesta e economia; persona con più ruoli; perimetro agente; locazione come processo distinto.
+
+La visione a 30 entità è **giusta come direzione**, **sbagliata come elenco da implementare insieme**. Il codice ha già tre macchine di stato parallele. Aggiungere «Operazione» come quarta, senza spegnere le altre, peggiora il prodotto.
+
+**Produzione:** non verificata. Tutto ciò che segue è sul **codice di `origin/main`**.
+
+---
+
+## 2. Stato reale e versione
+
+| Voce | Valore | Tipo |
+|---|---|---|
+| Repo | `github.com/mcnicastro-netizen/omnia2` | FATTO |
+| Workspace | `/agent/repos/omnia2` | FATTO |
+| Branch analizzato | `cursor/docs-acceptance-matrix-d171-1433` @ `7cc5447` | FATTO |
+| `origin/main` | `2fea64a` — squash #206, 12 Nov 2026 18:20 CET (Europe/Rome) | FATTO |
+| Diff codice vs `origin/main` | solo 4 file in `memory/` (matrice accettazione). **App identica a main.** | FATTO |
+| Working tree | pulito | FATTO |
+| PR aperte | #194 docs D-171, ramo superato da #206 | FATTO |
+| Produzione Railway | **NON VERIFICABILE** da questo ambiente | — |
+
+Stack (FATTO, da albero repo): FastAPI + MongoDB + React (CRA) + JWT cookie; tenant `agency_id`; Stripe billing; Resend; object storage fascicolo; HAL/Gemini; fal staging.
+
+---
+
+## 3. Architettura attuale
+
+Tre prodotti nello stesso repo:
+
+1. **ImmoWeb B2B** (`/app/*`, `backend/apps/immoweb`) — CRM agenzia.
+2. **ImmobilCloud B2C** (`/cloud/*`) — portale, sell, lead.
+3. **Landing / Ops / Billing** — onboarding, Cabina, Stripe.
+
+Il CRM è **record-centric**: Property, Client, ClientRequest, Activity, Lead. Non c’è un aggregato «pratica».
+
+Servizi trasversali esistono a macchia: notifiche in-app, trash, quota storage, tenant middleware. Non esiste agenda unica, timeline unica, storico modifiche, ricerca globale CRM.
+
+---
+
+## 4. Modello dati attuale
+
+Mongo, **senza FK**. Integrità = query + qualche 409 in delete.
+
+| Collection / concetto | Ruolo reale |
+|---|---|
+| `agencies` | Tenant. `group_id` opzionale. |
+| `agency_groups` | Holding/franchising. KPI consolidati. |
+| `users` | Ruoli. Email **unique**. |
+| `clients` | Anagrafica **un tipo**. Index `agency_id+email` **non unique**. |
+| `properties` | Listing = immobile. Owner snapshot + `seller_client_id`. |
+| `client_requests` | Brief / interesse. D-089. |
+| `leads` | Contatto portale su immobile. |
+| `activities` | Todo call/visit/follow_up. |
+| `matches` | **Indexata, non scritta.** Match è on-read. |
+| `calendar_events` | **Letta da dashboard, mai inserita nel repo.** |
+| `match_audit` | **Letta da dashboard, mai inserita.** |
+| `mandate_opportunities` | Coda acquisizione da annunci B2C. |
+| `mls_partners` / `mls_requests` | Partner e «offer» listing-push. |
+| `property.documents` | Fascicolo documentale. |
+| `modulistica_docs` | PDF generati. |
+| `invoices` / wallet | Economia **SaaS**, non mediazione. |
+| `notifications` | Inbox utente. |
+
+`TenantModel` impone `agency_id` obbligatorio (`backend/shared/models/base.py` 33–36).  
+`TENANT_COLLECTIONS` (`tenant_guard.py` 20–36) **non include** `activities`, `mandate_opportunities`, `mls_*`, `fascicolo` (è sotto properties). Difesa in profondità incompleta. Le query CRM viste filtrano comunque `agency_id` a mano.
+
+---
+
+## 5. Modello gestionale desiderato (letto dal brief)
+
+Ecosistema che sostituisce il gestionale di agenzia: pratica continua da contatto a chiusura, multi-sede, MLS, ruoli.
+
+**Contestazione (sezione 15 sotto):** 30 entità è un ERP. Per 2–15 agenti serve una **spina dorsale di 5 oggetti** (Persona, Incarico, Listing, Richiesta, Trattativa) + visita come evento. Il resto è documento, pubblicazione o report.
+
+---
+
+## 6. Confronto entità (30)
+
+Legenda: **I** implementata · **P** parziale · **A** assente · **G** ghost (letta, non alimentata) · **≠** nome fuorviante
+
+| # | Entità visione | Stato | Evidenza |
+|---|---|---|---|
+| 1 | Agenzia | I | `AgencyInDB` |
+| 2 | Gruppo/rete | P | `agency_groups`. Commento «write across branches» **non vero**: `active_agency_id` unico; attach branch **non** aggiunge `agency_ids` (`groups.py` 109–134, 277–310). |
+| 3 | Sede | P | Branch = agency con `group_id`. Non è una sede nello stesso tenant. |
+| 4 | Team | A | Nessuna collection. |
+| 5 | Utente | I | `UserInDB` |
+| 6 | Ruolo/permesso | P | Enum ruoli. **Nessun ACL per listing/cliente.** `branch_agent` = «own listings» nel commento, lista clienti è **tutta l’agenzia** (`clients.py` 44–55). |
+| 7 | Persona | A | Solo Client. |
+| 8 | Cliente | I | Un `client_type`. Due ruoli = due anagrafiche. |
+| 9 | Proprietario | P | `Property.owner` + `seller_client_id`. Doppia fonte. |
+| 10 | Immobile | I | Ma è un **listing**, non un cespite con storico incarichi. |
+| 11 | Unità immobiliare | A | Un documento = un annuncio. |
+| 12 | Incarico | ≠ | Campi `is_exclusive`/`commission_pct` in BE, **zero UI**. PDF `mandato_vendita` in modulistica. Pagina Mandati = B2C. |
+| 13 | Richiesta | I | D-089 |
+| 14 | Lead | I nascosto | `LeadInDB`. Oggi può linkare a `/requests`, non al lead. |
+| 15 | Appuntamento | G | `calendar_events` solo in `dashboard.py`. **Nessun insert nel repo.** |
+| 16 | Visita | P | `ActivityKind=visit` |
+| 17 | Attività | I | Todo |
+| 18 | Proposta | P-doc | Template PDF, non oggetto con stato |
+| 19 | Trattativa | A | Status sparsi |
+| 20 | Contratto | P-doc | Template preliminare; nessuna registrazione/consegna |
+| 21 | Fascicolo | P | Solo documentale su property |
+| 22 | Operazione | A | Nessun equivalente. Ricostruzione = join manuale |
+| 23 | Documento | P | Fascicolo + modulistica |
+| 24 | Pubblicazione | P | Sito + feed. Idealista catalogo `integration_ready: False` |
+| 25 | Collaborazione | P | MLS inventory + partner |
+| 26 | Accordo economico MLS | A | Offer = messaggio, no split provvigione |
+| 27 | Provvigione mediazione | A | Solo SaaS Stripe |
+| 28 | Pagamento affare | A | Idem |
+| 29 | Notifica | I | Inbox + email prefs |
+| 30 | Audit log | P | Consent, privacy, AL. **Nessun change-log Property/Client** |
+
+---
+
+## 7. Processo vendita
+
+Atteso: contatto → valutazione → incarico → docs → pubblicazione → match → visita → proposta → negoziazione → preliminare → rogito.
+
+Codice: **inserisci listing (draft)** → foto → visibility → (opzionale) match su preferenze → (opzionale) attività visita → status listing `sold` a mano.
+
+- Valutazione: non è un oggetto (HAL/coach listing ≠ perizia).
+- Incarico: PDF staccato dalla pratica.
+- Transizioni `PropertyStatus`: PATCH libero, nessuna macchina (`properties.py` 456–523).
+- `sold` non chiude richieste né crea contratto.
+
+**Locazione trattata come variante di `operation: rent`** sullo stesso listing. Canone sì; contratto, registrazione, consegna chiavi: assenti.
+
+---
+
+## 8. Processo locazione
+
+Stesso schema vendita. Differenze reali nel codice: `rent_monthly`, `client_type` tenant/landlord, template `mandato_locazione`.
+
+Manca: selezione conduttore, proposta canone, contratto 4+4 / transitorio, registrazione Agenzia Entrate, stato «occupato».  
+**Ipotesi:** un’agenzia locativa userà Excel o gestionale verticale. **Fatto:** OMNIA non ha ciclo locazione.
+
+---
+
+## 9. Multi-tenant
+
+**Punti di forza (FATTO):**
+
+- `active_agency_id` senza fallback a `agency_ids[0]` (D-106, `tenant.py`).
+- Query CRM viste: `agency_id` + `with_not_trashed`.
+- Fascicolo: `_get_property` filtra agency (`fascicolo.py` 54–67).
+- Super_admin bypass esplicito del tenant guard.
+
+**Gap:**
+
+| Problema | Pri | Evidenza | Impatto |
+|---|---|---|---|
+| `TENANT_COLLECTIONS` incompleta | P1 | `tenant_guard.py` 20–36 vs `activities.py`, `mls.py`, `mandate_opportunities.py` | Un endpoint nuovo senza filtro non è protetto dal proxy |
+| Perimetro agente non esiste | P1 | `clients.py` 55; `properties` list per agency | Ogni agente vede tutto il CRM della sede |
+| `group_admin` ≠ multi-sede operativa | P1 | `groups.py` attach non aggiorna `agency_ids` | KPI di gruppo sì, lavoro sulle sedi no |
+| Isolamento MLS inventory | P2 (by design) | `mls.py` 288–328 scope local/national | Vede listing altrui shareable, **non** owner (projection senza owner). Cliente protetto se si resta sulla projection |
+
+**Non ho eseguito test IDOR.** Rischio = deduzione da codice, non exploit.
+
+Produzione: **NON VERIFICABILE**.
+
+---
+
+## 10. MLS e collaborazione
+
+Esiste: join/leave, inventory mine/local/national, partner invite/respond, offer create/respond, search public, embed sito (D-170).
+
+**Contraddizione di mestiere (FATTO):** `POST /app/mls/offers` crea offerta **solo su immobile della propria agenzia** (`mls.py` 439–453). È «ti propongo il mio listing», non «ti porto un acquirente sul tuo».
+
+La visione Scenario I è il secondo caso. Il codice è il primo. UI MlsPage: **risponde** alle offer, non le crea (`MlsPage.jsx` ~90).
+
+Nessun accordo economico, nessun cliente condiviso selettivo, nessuna revoca a livello listing oltre `mls_shared` / visibility / leave rete.
+
+---
+
+## 11. Nove aree
+
+| Area | Stato | Gap principale | Pri |
+|---|---|---|---|
+| 1 CRM/acquisizione | PARZIALE | Lead ≠ pratica; no storico comunicazioni; no ditta vs persona | P1 |
+| 2 Incarichi | INCOERENTE | Listing ≠ incarico; PDF sì, oggetto no; Mandati = B2C | P0 |
+| 3 Patrimonio | PARZIALE | Listing unico; no cespite/unità/storico incarichi; no comproprietari | P1 |
+| 4 Clienti/richieste | PARZIALE | Brief c’è; SoT match sbagliato; un ruolo per anagrafica | P0 |
+| 5 Marketing | PARZIALE | Sito+feed onesti; portali top non ready | P2 |
+| 6 Agenda/visite | ASSENTE (todo) | Ghost `calendar_events`; visita = task | P0 |
+| 7 Proposte/trattative | ASSENTE | Solo status e PDF | P0 |
+| 8 Contratti/amm. affare | ASSENTE | Stripe ≠ provvigione mediazione | P1 |
+| 9 Direzione | INCOERENTE | KPI listing/richieste reali; visite/match_week su collection vuote | P1 |
+
+---
+
+## 12. Servizi trasversali
+
+| Servizio | Stato | Nota |
+|---|---|---|
+| Agenda unica | ASSENTE | Ghost calendar |
+| Timeline pratica | ASSENTE | |
+| Ricerca globale CRM | ASSENTE | Search è B2C `/cloud/search` |
+| Documentale | PARZIALE | Per listing, non per operazione |
+| Notifiche | PARZIALE | Inbox sì; non «prossima azione visita» |
+| Automazioni | PARZIALE | Sync prefs→request; match job; no workflow |
+| Assegnazione | PARZIALE | `listing_agent_id` al create; liste non filtrate |
+| Storico modifiche | ASSENTE | su CRM core |
+| Scadenze incarico | ASSENTE | |
+| Import/export | PARZIALE | CSV/XML immobili; CSV clienti |
+| Reportistica | PARZIALE | Oggi + KPI; ghost visits |
+| Permessi fini | ASSENTE | |
+
+---
+
+## 13. Audit precedente — riverifica
+
+| Segnale precedente | Esito | Evidenza attuale |
+|---|---|---|
+| Doppia fonte preferences vs criteria | **CONFERMATO** | `matches.py` 86–88 usa `c.get("preferences")`. RequestForm chiama `/requests/{id}/matches`. Sync `client_requests_service.py` 336–368 solo su PATCH client |
+| Incarico incompleto | **CONFERMATO** | `property.py` 183–184; grep UI `is_exclusive`/`commission_pct` = 0 hit. Modulistica template sì |
+| Visite = attività | **CONFERMATO** e **aggravato** | `activities.py` 22–45; KPI legge `calendar_events` mai scritta |
+| Trattativa senza importo | **CONFERMATO** | Nessuna collection deal/proposal |
+| Proprietario duplicato | **CONFERMATO** | `PropertyFormPage.jsx` 477–508 |
+| Link deboli richiesta–immobile | **CONFERMATO** | `RequestFormPage.jsx` 302–309 campo UUID `property_id` |
+| Lead non convertiti | **CONFERMATO** | `dashboard.py` 446–474 href `/app/requests` |
+| Ciclo vita professionale | **CONFERMATO** | PATCH status libero |
+
+Niente di quel audit è risolto nel codice di main. I P0–P2 flussi (#192–#198) hanno migliorato **continuità tra form**, non il mestiere.
+
+---
+
+## 14. Gap P0–P3 (non tutto è P0)
+
+**P0 — correttezza del gestionale**
+
+1. **Due SoT di ricerca.** Match globale vs brief. Agente non sa quale è vero. File: `matches.py`, `matching.py`, `ClientFormPage.jsx`.
+2. **Incarico non è un oggetto.** Pubblicare ≠ avere mandato. File: `property.py`, `PropertyFormPage.jsx`, `modulistica/catalog.py` `mandato_vendita`.
+3. **Visita non è un appuntamento; KPI mente.** File: `activities.py`, `dashboard.py` 120–126 e 536–548. Impatto: direzione vede 0 visite anche se i todo «visita» esistono.
+4. **Nessuna trattativa.** Tre status (`ClientStatus`, `LeadStatus`, `RequestStatus`) + `PropertyStatus`. Chiusura incoerente.
+
+**P1 — ostacola il quotidiano**
+
+5. Persona = un ruolo.  
+6. UUID immobile in richiesta.  
+7. Lead portale senza conversione.  
+8. MLS offer invertita + UI senza create.  
+9. Mandati UI ≠ incarico.  
+10. Nessun perimetro agente; group_admin non opera sulle sedi.  
+11. Tenant guard incompleto.  
+12. Fascicolo fuori sequenza acquisizione.
+
+**P2**
+
+13. Match non persistito (ok) ma nessun storico proposte.  
+14. Portali top non ready (onesto).  
+15. Locazione = flag.  
+16. Comproprietari assenti.
+
+**P3**
+
+17. Preferenze ancora nel form cliente dopo redirect al brief.  
+18. Ghost collection `matches`.
+
+---
+
+## 15. Analisi critica della visione
+
+Cosa è giusto: listing ≠ incarico; visita ≠ task; proposta ≠ trattativa ≠ conclusione; persona con più ruoli; multi-sede; MLS con cliente dell’altra agenzia.
+
+Cosa è sbagliato o pericoloso:
+
+1. **30 entità subito** → secondo gestionale mai finito. Spina: Persona, Incarico, Listing, Richiesta, Trattativa. Visita = evento. Contratto = documento+stato della trattativa, non un ERP notarile in v1.
+2. **«Operazione» come oggetto nuovo** è utile **solo** se sostituisce il caos di status, non se si aggiunge. Equivalente giusto: la Trattativa (o Pratica) che pende da Incarico+Richiesta.
+3. **Team** è ridondante finché assigned_agent non è enforcement.
+4. **Match persistito** è sbagliato: persistete **proposte**, non score. Lo score ricalcolato va bene.
+5. **Fascicolo operativo vs documentale:** teneteli distinti. Il documentale su immobile è corretto (APE vive con il cespite). L’operativo è la pratica.
+6. **Normativo:** mandati, proposte, preliminari, AML, locazione registrata richiedono avvocato. I PDF attuali dichiarano già «not certified legal advice» (`catalog.py` 1–6). Non promuoverli a contratto.
+7. **MLS nazionale pubblico** (`/mls/search/public` no auth) è prodotto portale, non collaborazione. Non confonderli.
+8. **Fatture Stripe** non sono fatture di provvigione. Cabina Founder ≠ direzione agenzia.
+
+---
+
+## 16. Conservare
+
+- Tenant `active_agency_id` (D-106).
+- ClientRequest D-089 e sync prefs→brief (da rendere SoT unico).
+- Match deterministico (`matching.py` pesi espliciti).
+- Property come scheda commerciale ricca (foto, energy, visibility, privacy L1–L4).
+- Fascicolo documentale per listing.
+- MLS join/leave, inventory, honesty portali.
+- Oggi come cockpit (dopo aver spento i KPI ghost o alimentati).
+- Modulistica catalog come **output**, non come dominio.
+- Billing SaaS, trash, quota, AuthZ fascicolo.
+
+---
+
+## 17. Correggere
+
+- SoT match = `client_requests.criteria`.
+- KPI visite/match_week: o `activities` o spegnere le card.
+- Commenti ruoli vs enforcement.
+- Seller: una fonte (Client); snapshot derivato.
+- MLS offer: allineare visione «porto un acquirente» **oppure** rinomina prodotto.
+- Pagina Mandati: rinomina o sposta sotto portale.
+- `TENANT_COLLECTIONS` allineata alle collection reali.
+
+---
+
+## 18. Completare
+
+- Typeahead su `property_interest`.
+- Conversione lead → client + request.
+- Create offer MLS in UI, se il modello listing-push resta.
+- Assegnazione agente + filtro liste.
+- group_admin: membership su tutte le sedi **o** togliere la promise.
+- Gate morbido: incarico/APE prima di `public`.
+
+---
+
+## 19. Progettare ex novo (dopo decisione proprietà)
+
+- Oggetto **Incarico** (tipo, esclusiva, date, provvigione, seller, property).
+- Oggetto **Visita** (o davvero usare `calendar_events`).
+- Oggetto **Trattativa/Proposta** con importo e versioni.
+- **Persona** con ruoli N, oppure Client multi-tipo.
+- (Opzionale v2) Cespite vs listing; unità; comproprietari; locazione piena.
+
+Non un rebuild del repo. Tre aggregati nuovi sul tenant esistente.
+
+---
+
+## 20. Roadmap proposta (non è autorizzazione)
+
+**FASE 0 — Integrità**  
+Obiettivo: il sistema smette di mentire.  
+Problemi: SoT match, KPI ghost, tenant list, naming Mandati.  
+Dipendenze: nessuna.  
+Criterio: `GET /matches` scorea criteria; visite KPI = 0 solo se non ci sono visite vere; nessuna collection letta e mai scritta in dashboard.
+
+**FASE 1 — Fondamenta**  
+Decisione Persona vs ClientType; Incarico come aggregato; spegnere campi morti o esporli.  
+Riuse: Client, Property, modulistica PDF, seller_client_id.
+
+**FASE 2 — Incarichi, immobili, richieste**  
+Listing nasce da incarico (o si collega). Brief unico. Typeahead.  
+Criterio: non si pubblica in esclusiva senza incarico con date.
+
+**FASE 3 — Pratica**  
+Trattativa collega incarico + richiesta + listing. Storico fail senza delete.  
+«Operazione» = questo, non un quarto status.
+
+**FASE 4 — Visite e proposte**  
+Evento visita; proposta con importo; PDF modulistica **agganciato** alla proposta.
+
+**FASE 5 — Contratti**  
+Stati preliminare/rogito **minimi**; economia mediazione. Avvocato. Stripe resta SaaS.
+
+**FASE 6 — Agenda**  
+O si implementa `calendar_events` o si cancella il riferimento. Non entrambi.
+
+**FASE 7 — Marketing/match**  
+Match già c’è; va solo agganciato alla pratica. Portali top: contratto commerciale, non codice.
+
+**FASE 8 — Direzione**  
+KPI da trattative/visite/incarichi reali. Oggi già strutturalmente pronto.
+
+**FASE 9 — MLS**  
+Modello «porto cliente» + accordi. Inventory attuale riutilizzabile.
+
+Rischio unico: fare Fase 9 e Fase 5 prima della 1. Il codice lo ha già fatto (MLS e Stripe avanti rispetto all’incarico).
+
+---
+
+## 21. Decisioni della proprietà (prima di qualsiasi codice)
+
+1. OMNIA è **gestionale di pratica** o **piattaforma listing+portale** con CRM leggero?
+2. SoT ricerca: **solo Richiesta** o anche preferenze cliente?
+3. Incarico: oggetto vivo, o basta PDF + flag?
+4. Visita: nuovo oggetto, o si implementa `calendar_events` già previsto?
+5. Trattativa: oggetto, o status su richiesta basta?
+6. Persona multi-ruolo sì/no in v1?
+7. MLS: porto acquirente vs spingo listing?
+8. Agente vede tutta la sede o solo i suoi record?
+9. Group/franchising: workspace unico o KPI + switch sede?
+10. Locazione v1: flag su vendita, o processo proprio?
+11. «Operazione»: sinonimo di Trattativa, o hub ulteriore?
+12. Chi firma i template (avvocato) prima di venderli come incarico?
+
+Finché queste non sono scritte, implementare è scommessa.
+
+---
+
+# 10 problemi più importanti
+
+1. Due cervelli di match.  
+2. Incarico assente come pratica.  
+3. Visita = todo + KPI su collection vuota.  
+4. Nessuna trattativa con importo.  
+5. Chiusura `sold` scollegata da richiesta.  
+6. Persona a un ruolo.  
+7. Perimetro agente dichiarato e non applicato.  
+8. MLS: mestiere invertito rispetto alla visione.  
+9. Lead portale senza pratica.  
+10. Tenant guard non copre tutte le collection operative.
+
+---
+
+# Prima fase da affrontare
+
+**Fase 0**, e solo Fase 0, dopo l’autorizzazione esplicita: integrità (SoT match, KPI onesti, naming, lista tenant).
+
+Perché: è barriera alla fiducia del titolare («le visite della settimana») e allo sviluppo (ogni feature nuova poggia sul brief sbagliato). Non è un rebuild. Non introduce le 30 entità.
+
+---
+
+Mi fermo. Nessuna implementazione. Nessun file.  
+Attendo osservazioni e, se vorrete procedere, la frase **`OMNIA — AUTORIZZAZIONE ESPLICITA ALL'IMPLEMENTAZIONE`** con lo scope (es. solo Fase 0).
+
+
+================================================================================
+# Follow-up Master — caso un immobile / tre clienti (scenario punto 5)
+# File: 01b-MASTER-FOLLOWUP-SCENARIO-5.md
+================================================================================
+
+# Caso: un immobile, tre clienti, visite e proposte parallele
+
+**Read-only.** Nessun file toccato. Versione: codice di `origin/main` (`2fea64a`, post #206), identico all’app su questo checkout. Produzione **non verificata**.
+
+---
+
+## Risposta secca
+
+**No: OMNIA non gestisce questo scenario dall’inizio alla fine.**
+
+Può registrare **un immobile** e **tre clienti** senza duplicarli. Può anche attaccare **tre interessi** allo stesso listing. Si ferma lì: incarico, visita, proposta, controproposta, lock sulla vendita e storico degli importi **non esistono come pratica**. Un agente esperto può **simulare** il caso con note, status e PDF. Il gestionale **non lo rappresenta**.
+
+Questa non è una preferenza architetturale. È un buco sul caso commerciale più comune dell’agenzia.
+
+---
+
+## 1. OMNIA oggi — i 12 passaggi
+
+### 1. Immobile — PRESENTE
+
+Un documento in `properties`. `POST /api/app/properties` (`properties.py` 383–422). UI: `PropertyFormPage.jsx`.  
+**FATTO:** tre acquirenti non creano tre immobili. Un record, `id` UUID.
+
+### 2. Incarico — ASSENTE come oggetto
+
+Niente collection mandato. Su `PropertyInDB`: `is_exclusive`, `commission_pct` (`property.py` 183–184). **Zero campi in UI** (`PropertyFormPage.jsx`).  
+Esiste un **PDF** `mandato_vendita` in `modulistica/catalog.py` 67–106, scollegato dal ciclo di vita.  
+Pagina Mandati = coda B2C (`mandate_opportunities.py`), altro mestiere.
+
+**Limite:** l’acquisizione è «crea listing». Durata, scadenza, rinnovo: non ci sono.
+
+### 3. Tre clienti — PRESENTE
+
+`POST /api/app/clients`, tre `ClientInDB`. UI: `ClientFormPage.jsx`.  
+Index `agency_id + email` **non unique** (`connection.py` 106): duplicati possibili, non obbligatori.  
+**FATTO:** A, B, C possono essere tre anagrafiche. Un solo `client_type` ciascuno.
+
+### 4. Tre richieste — PRESENTE, tipo sbagliato per questo caso
+
+`POST /api/app/requests` (`client_requests.py` 273–322).  
+Due tipi: `search_brief` | `property_interest` (`client_request.py` 14–27).  
+Indici su `agency_id + client_id` **non unique** (`client_requests_service.py` 99–104): **tre `property_interest` sullo stesso `property_id` sono ammessi.**
+
+**FATTO dati:** il caso «tre interessi sullo stesso immobile» sta in Mongo.  
+**FATTO UI:** `RequestFormPage.jsx` 302–309 chiede l’UUID dell’immobile. Nessun select status (lo status si round-trippa al PATCH, riga 194, senza controllo in form). Lista: filtro status, non transizione (`RequestsPage.jsx` 8, 232–237).
+
+### 5. Collegamento richiesta ↔ immobile — PARZIALE
+
+Solo se `request_type = property_interest` e `property_id` valorizzato.  
+`search_brief` matcha per criteri, **non** è un percorso su *quel* listing.  
+`GET /app/matches/property/{pid}` restituisce clienti (preferences) **e** richieste (`matches.py` 116–186). Preview in scheda: `PropertyMatchesPreview.jsx`, **max 5**, è score non pratica.
+
+**Interruzione:** dalla scheda immobile vedi «chi matcha», non «chi è in visita / chi ha proposto».
+
+### 6. Tre visite — PARZIALE (todo)
+
+`POST /api/app/activities`, `kind: visit`, `related_client_id` + `related_property_id` (`activities.py` 22–45, 94–114). **Nessun `request_id`.**  
+UI: `ActivitiesPage.jsx`. Stati: `open | done | cancelled`. Niente orario strutturato, partecipanti, esito «non procede», verbale.
+
+KPI «visite» legge `calendar_events`, **mai scritta nel repo** (`dashboard.py` 120–126, 536–548).  
+**Deduzione:** tre visite A/B/C *si possono* creare come tre task. Non sono visite di mestiere. Cancellare il task **cancella** lo storico (`DELETE` 145–152).
+
+### 7. Due proposte — ASSENTE come oggetto
+
+Nessuna collection proposta.  
+`LeadStatus` include `offer_made` (`client.py` 22) ma **Lead non ha UI CRM** e non ha importo.  
+PDF `proposta_acquisto`: `offer_price` **precompilato col prezzo di listino**, non con l’offerta (`modulistica.py` 115). Due PDF per B e C non sono queryable, non hanno stato, non hanno versioni.
+
+### 8. Controproposte — ASSENTE
+
+Niente catena, niente party (buyer/seller), niente validità. Workaround: note o nuovo PDF. **Deduzione.**
+
+### 9. Storico trattative — ASSENTE
+
+`RequestStatus`: `open | matched | negotiating | won | lost | archived | frozen`. Etichetta, **senza importo, senza controparte, senza versioni**. PATCH non tocca l’immobile (`client_requests.py` 341–381).  
+Tre macchine parallele: Client, Lead, Request, più `PropertyStatus`. Nessuna è «trattativa B vs trattativa C».
+
+### 10. Accettazione — ASSENTE come fatto commerciale
+
+Nessun endpoint «accetta proposta C».  
+Si può: `properties.status = sold` dal dropdown (`PropertyFormPage.jsx` 23, 263) e magari `clients.status = closed_won` sul C (`ClientFormPage.jsx` 280–282).  
+**FATTO:** non c’è transazione unica. B e A restano aperti se nessuno li tocca a mano.
+
+### 11. Stato immobile — PRESENTE, scollegato
+
+`draft | active | reserved | sold | rented | withdrawn`. PATCH libero, **nessuna macchina** (`properties.py` 456–523). `reserved` non blocca altre richieste. `sold` notifica i preferiti B2C (D-093), **non** chiude le trattative CRM.
+
+### 12. Storia di chi non ha comprato — PARZIALE e fragile
+
+A e B restano come Client + Request + Activity se non cancelli.  
+Cancellare un’attività = perdita visita.  
+Non resta: importo di B, motivo rifiuto, esito visita di A.  
+Client `closed_lost` è sullo **stato persona**, sbagliato se A compra altro immobile dopo.
+
+---
+
+### Cosa l’agente farebbe oggi (workaround)
+
+| Passo mestiere | Workaround OMNIA | Si completa in UI? |
+|---|---|---|
+| Incarico | PDF modulistica o niente | No come pratica |
+| Listing unico | Sì, un immobile | Sì |
+| Tre clienti | Tre anagrafiche | Sì |
+| Interesse su *quel* immobile | Tre `property_interest` (UUID) o match | A metà |
+| Tre visite | Tre attività «Visita» | Sì come task |
+| Proposta B e C | PDF o note | No |
+| Rifiuto B / negoziazione C | Status cliente o request a mano | No guidato |
+| Accettazione C | `sold` sull’immobile | Sì ma cieco |
+| Chiudere A e B | A mano, se ci si ricorda | No |
+
+---
+
+## 2. L’ipotesi è corretta?
+
+Sì, nella sostanza. Un raffinamento, non un contro-modello.
+
+**Tenere:** 1 immobile · 1 incarico corrente · 3 clienti · richieste autonome · 3 percorsi su *quel* immobile · 3 visite · storico B rifiutata · C accettata · A senza proposta.
+
+**Rifinire:**
+
+- La **richiesta** (`search_brief`) non è il percorso sull’immobile. È il bisogno («cerco trilocale Roma 300k»). A può avere un brief e, in più, un percorso sul listing X.
+- Il percorso cliente×immobile è una **trattativa (deal)**, non una seconda copia della richiesta. Oggi `property_interest` prova a fare questo lavoro e lo confonde col brief.
+- **Proposta** e **trattativa** non devono essere due hub. La trattativa è il contenitore; le proposte sono **versioni** (righe figlie). Altrimenti due oggetti con gli stessi stati.
+- **Operazione** generica: inutile. La trattativa *è* l’operazione su questo caso.
+
+Quindi: l’ipotesi «due trattative distinte (B e C) + un percorso A senza proposta» è il modello giusto. A è una trattativa (o opportunity) in stato `visited_no_offer`, non «assenza di oggetto».
+
+---
+
+## 3. Business logic A–M
+
+**A.** Sì. Un listing ha N interessati. Altrimenti si duplica l’immobile. OMNIA dati: già possibile. OMNIA processo: no.
+
+**B.** Sì. Ogni coppia cliente×immobile ha stato, visite, offerte proprie. Senza questo, lo status sta sul Cliente o sull’Immobile e i tre percorsi si schiacciano.
+
+**C.** Sì. La richiesta resta autonoma e può matchare N immobili. Il collegamento «questa persona su *questo* listing» è la trattativa, non una mutazione del brief.  
+`property_interest` con un solo `property_id` **non** copre «stesso brief, tre case».
+
+**D.** Sì. Visita = evento (quando, chi, esito). Non task cancellabile. Collegata a cliente + immobile.
+
+**E.** Sì, opzionale. Se la visita nasce da un brief, `request_id`. Se nasce da chiamata sul listing, basta deal. Non obbligare la richiesta se l’interesse è solo su quell’immobile.
+
+**F.** Distinte come **concetto**, non come due aggregati pari. Proposta = snapshot economico (importo, caparra, scadenza, chi l’ha fatta). Trattativa = cartella. **PROPOSTA di modello:** collection `offers` figlia del deal, non un secondo workflow.
+
+**G.** Sì. Una trattativa = un acquirente (o nucleo) × un immobile × un incarico. Non «la trattativa dell’immobile» al singolare.
+
+**H.** Sì. Array/versioni: B1 420k rifiutata; C1 400k; C2 contro 430k proprietario; C3 415k accettata.
+
+**I.** Sì. Rifiuto = stato terminale della **proposta** e magari del **deal B** (`rejected`). Non delete. Non `closed_lost` sulla persona se B resta cliente.
+
+**J.** Sì. Stesso acquirente, due deal su due listing. Oggi `Client.status = negotiating` lo vieta concettualmente (un solo stato persona).
+
+**K.** All’accettazione di C: deal C → `won`; property → `reserved` poi `sold`; deal B aperti sullo **stesso** immobile → `lost_superseded` (non cancellati); deal di C su **altri** immobili restano aperti (l’agente li chiude se budget unico — regola di agenzia, non lock tecnico).  
+A in `visited_no_offer` resta storico.
+
+**L.** Lock sull’immobile, non sulla buona volontà. Accettazione: transizione atomica listing `reserved`/`sold` + chiusura altri deal **open** su quello `property_id`. Seconda accettazione → conflitto. Oggi: due agenti possono entrambi mettere note «venduto a C» e «venduto a B»; un solo dropdown `sold` senza memoria di *a chi*.
+
+**M.** Relazione minima:
+
+```
+Agency
+  └── Mandate (incarico corrente) ── Property (1 cespite/listing)
+                                      │
+Client A,B,C                          │
+  └── Request (brief, opzionale, N immobili via match)
+        │
+        └── Deal (client × property × mandate?)
+              ├── Visit (N)
+              └── Offer (N versioni)
+```
+
+Unire Deal+Request: no (brief ≠ percorso su un listing).  
+Unire Deal+Lead: Lead oggi è contatto portale; si può *nascere* come Deal.  
+Unire Offer+Deal: no in lettura umana; sì come padre/figlio.  
+Operazione extra: no.
+
+---
+
+## 4. Come deve lavorare l’agente
+
+Navigazione a **due porte**, stessa pratica:
+
+**Da Immobile X**
+
+1. Apre la scheda (già esiste).
+2. Pannello **Interessi / trattative** (non solo match score): A, B, C con stato.
+3. Click su C → percorso C su X: visite, proposte, prossimo passo.
+4. «Nuova visita» crea evento su quel deal, non un task orfano.
+5. Esito visita A: `no_offer` / `follow_up` / `will_propose`. A resta visibile.
+6. «Registra proposta» su B: importo, scadenza, PDF modulistica **agganciato** a quella versione.
+7. Rifiuto proprietario su B: proposta `rejected`, deal B `rejected`, B ancora in anagrafica.
+8. Controproposta su C: nuova riga offerta, party=`seller` o `buyer`.
+9. Accetta C: conferma «chiude le altre trattative su X?»; sistema marca B `lost_superseded`, X `reserved`/`sold`, C `won`.
+10. Elenco trattative chiuse sotto la scheda, consultabile.
+
+**Da Cliente C**
+
+Stessa trattativa, vista persona: «C su X (in corso)», «C su Y (aperta)». Non uno status unico `negotiating` sulla persona.
+
+**Conseguenze operative**
+
+- Registrare la visita **non** cambia lo stato listing.
+- Una proposta **non** mette `sold`.
+- Accettare **sì**, e impedisce la seconda vendita.
+- Non si crea un secondo immobile per il secondo acquirente.
+- Non si archivia A per «fare pulizia».
+
+---
+
+## 5. Casi particolari
+
+| Caso | Comportamento | Conservare |
+|---|---|---|
+| Visita senza proposta (A) | Deal `open` o `visited_no_offer`. Visita `done` + esito | Data, esito, note |
+| Proposta ritirata | Offer `withdrawn`. Deal può restare `open` | Importo e timestamp ritiro |
+| Rifiuto proprietario (B) | Offer `rejected`, deal `rejected` | Motivo, chi ha rifiutato |
+| Contro proprietario | Nuova offer `party=seller` | Catena parent_offer_id |
+| Contro acquirente | Nuova offer `party=buyer` | Idem |
+| Due proposte aperte (B e C) | Due deal `in_negotiation`. Listing può andare `reserved` solo a policy (es. prima accettazione) | Entrambe vive |
+| Accettazione C con B aperta | Vedi K–L | B storico |
+| Cliente cambia brief | Si aggiorna **Request**, non si cancellano i deal già nati | Brief nuovo + deal vecchi |
+| Incarico scade in trattativa | Mandate `expired`; deal aperti → alert; non auto-won; listing non pubblicabile come esclusiva | Date mandato |
+| Riapertura | Nuovo deal o `reopened` sul rifiutato, **senza** cancellare il ciclo precedente | Due periodi |
+
+---
+
+## 6. Modello minimo (niente di più)
+
+**Property** — cespite/listing. Stati commerciali: `draft/active/reserved/sold/withdrawn`. 1:N deal, 1 incarico *corrente*.
+
+**Mandate** — incarico. `property_id`, `seller_client_id`, tipo vendita/locazione, esclusiva, date, provvigione. Stati: `draft/active/expired/replaced`.  
+(Se v1 ultra-stretta: si può slittare di un passo, ma **questo scenario lo presuppone**.)
+
+**Client** — persona. Senza status pipeline di trattativa.
+
+**Request** — brief. `client_id`, criteri. Non obbligatoria per un interesse puntuale.
+
+**Deal** — percorso cliente×immobile. FK: `client_id`, `property_id`, `mandate_id?`, `request_id?`. Stati: `interested / visit_planned / visited_no_offer / in_negotiation / rejected / withdrawn / won / lost_superseded`. **Questa è l’entità che oggi manca.** `property_interest` è un tentativo incompleto.
+
+**Visit** — evento. FK deal (+ denormalize client/property). Esito. Non cancellare: annullare.
+
+**Offer** — versione economica. FK deal. `amount`, `deposit`, `valid_until`, `party`, `status`, `version`. PDF modulistica punta qui.
+
+Ghost da non usare: `calendar_events` vuota, `LeadStatus` come trattativa, `Client.status` come pratica.
+
+```
+Property 1 ──< Deal N >── Client
+                │
+                ├── Visit N
+                └── Offer N (versioni)
+Request ──?── Deal     Mandate ── Property
+```
+
+---
+
+## 7. Confronto finale
+
+| Elemento | Oggi | Problema | Soluzione |
+|---|---|---|---|
+| Immobile unico | Sì, `properties` | — | Conservare |
+| Incarico | Flag/PDF | Listing ≠ mandato | Oggetto Mandate |
+| 3 clienti | Sì, `clients` | Status persona = pratica | Status sul Deal |
+| 3 richieste | Sì, stesso `property_id` ammesso | Brief e interesse confusi; UUID; status non in UI | Request=brief; Deal=percorso |
+| Match in scheda | Score, limit 5 | Non è la coda commerciale | Pannello deal |
+| Visite | `activities.kind=visit` | Task, no esito, DELETE, KPI fantasma | Visit evento sul deal |
+| Proposte | PDF listino | Nessun importo B vs C | Offer figlia |
+| Controproposte | No | — | Versioni Offer |
+| Accettazione | Dropdown `sold` | Non chiude B; non dice «venduto a C» | Transizione atomica Deal+Property |
+| Lock doppia vendita | No | Due won teorici | Un `won` per property |
+| Storico A/B | Anagrafiche se non cancelli | Senza importi/esiti | Deal terminali immutabili |
+
+**Domande chiuse**
+
+1. Gestisce il caso end-to-end? **No.**  
+2. Rotto: incarico, visita di mestiere, proposta, controproposta, accettazione, lock, UI status request.  
+3. Mancano: Mandate, Deal, Visit (vera), Offer.  
+4. Da rivedere: Request vs interesse puntuale; Client.status; Property.status isolato; Lead come pipeline.  
+5. **Modifica concettuale:** l’unità di lavoro non è l’immobile né il cliente, è la **trattativa** (coppia cliente×immobile) con più esemplari sullo stesso listing.  
+6. **Primo intervento da progettare (non implementare):** schema Deal + Offer + regola di accettazione sul `property_id`. Visite e mandato subito dopo. Non ripartire dal matching e non introdurre «Operazione».
+
+---
+
+Mi fermo. Nessuna implementazione. Per procedere servirà `OMNIA — AUTORIZZAZIONE ESPLICITA ALL'IMPLEMENTAZIONE` con scope (es. solo disegno Deal, o Fase 0 integrità).
+
+
+================================================================================
+# Recepimento decisione soggetti + specifica funzionale MLS
+# File: 02-DECISIONE-SOGGETTI-E-SPECIFICA-MLS.md
+================================================================================
+
+Decisione recepita. La uso come riferimento. Nessuna implementazione.
+
+---
+
+## A. Comprensione
+
+OMNIA deve tenere la **storia commerciale**, non solo anagrafiche e annunci.
+
+**Property** è l’immobile (il cespite). Non è l’incarico, non è «la pratica di Mario», non si duplica se arrivano tre acquirenti.
+
+**Mandate** è l’incarico del proprietario verso l’agenzia: condizioni, date, esclusiva, storico. Oggi nel codice sono flag e un PDF: non basta.
+
+**Client** è la persona o il soggetto. Può essere acquirente su una casa e proprietario su un’altra. Il suo `status` anagrafico **non** dice se quella vendita è andata a buon fine.
+
+**Request** è il bisogno («cerco trilocale a Roma, 300k»). Vive senza un listing. Non è «Mario sulla via Roma 12».
+
+**Deal** è il **percorso commerciale** su una opportunità concreta: quella persona (o quel nucleo) su **quell’immobile**, in un arco di tempo. Può fermarsi dopo una visita senza offerta. Non è sinonimo di trattativa, non è una visita, non è una proposta. In UI il nome andrà scelto (pratica, opportunità, interesse…): tecnicamente resta `Deal`.
+
+**Visit** è l’appuntamento/evento (quando, chi, esito). **Offer** è una versione economica (importo, chi la fa, validità, stato), eventualmente figlia della precedente. Un Deal ne contiene N.
+
+Lo scenario obbligatorio: tre Deal sullo stesso immobile. A visita e non procede. B propone e viene rifiutato. C propone, controproposta, **accordo**. A e B restano consultabili. Accordo ≠ riservato ≠ venduto/rogito.
+
+Stessa coppia cliente–immobile può avere **più Deal nel tempo** (chiuso a marzo, nuovo a novembre). Non è un id permanente `client+property`.
+
+---
+
+## B. Coerenza con il codice attuale
+
+Compatibile, da **riusare** come base:
+
+| Esistente | Perché tiene |
+|---|---|
+| `properties` (un `id`, no duplicazione per acquirente) | Property unica |
+| `seller_client_id` + anagrafica Client | Soggetti già separati dal listing |
+| `client_requests` tipo `search_brief` + `criteria` | Request autonoma |
+| Indice richieste **non** unique su `property_id` | Già N interessi sullo stesso listing |
+| `GET /app/matches/property/{id}` | Segnale «più persone su un immobile» (è score, non Deal) |
+| Modulistica `mandato_*` / `proposta_acquisto` | Output documentale da **agganciare** a Mandate/Offer |
+| Fascicolo su property | Documentale del cespite, non del percorso |
+| `PropertyStatus` include `reserved` e `sold` | Serve, ma oggi è un dropdown isolato |
+| Tenant `agency_id` + `active_agency_id` | Perimetro Deal futuro |
+
+In conflitto o insufficiente (va **reinterpretato**, non «esteso di un campo»):
+
+| Esistente | Conflitto con la decisione |
+|---|---|
+| `is_exclusive` / `commission_pct` su Property | Mandate non è un flag del listing |
+| `RequestType = property_interest` + `property_id` | È un Deal mascherato da Request |
+| `ClientStatus` (`negotiating`, `closed_won`…) | Esito pratica sulla persona |
+| `LeadStatus` (`visit_scheduled` → `offer_made` → `won`) | Visita+proposta+esito in un enum; Lead resta contatto d’ingresso, non Deal |
+| `ActivityKind = visit` | Task cancellabile, niente esito/orario/partecipanti |
+| `calendar_events` letta in dashboard, mai scritta | Ghost: non è Visit |
+| PDF proposta con `offer_price` = listino | Non è Offer |
+| PATCH `property.status` senza lock su un Deal | Accettazioni parallele possibili |
+| UI Mandati = `mandate_opportunities` B2C | Omonimia pericolosa |
+| Match globale su `client.preferences` | Altro SoT; non sostituisce Deal |
+
+**FATTO:** il dominio attuale è listing + brief + todo. **DEDUZIONE:** Deal/Visit/Offer/Mandate veri non si ottengono rinominando `property_interest`.
+
+---
+
+## C. Criticità residue (reali, non gusti)
+
+1. **Property oggi è anche l’annuncio.** Prezzo, foto, visibility, portali stanno sul medesimo documento. La decisione dice: Property autonoma dagli incarichi. Se un incarico scade, l’annuncio deve sospendersi senza cancellare il cespite. Serve, in progettazione, distinguere **cespite** vs **pubblicazione sotto incarico** — anche se in v1 restano nello stesso record, con Mandate corrente che *governa* la pubblicazione. Criticità reale.
+
+2. **Chi viene lockato, e quando.** Accordo su C ≠ `sold`. Se il lock «niente altre accettazioni» scatta all’accordo, B non può più far accettare; se scatta solo a `reserved`/`sold`, due accordi incompatibili restano possibili. Va deciso (punto G). Criticità reale.
+
+3. **Soggetti multipli sul Deal.** Coppia, due acquirenti, delegato. Un solo `client_id` sul Deal non basta. Serve un elenco partecipanti con ruolo, più un referente. Criticità reale, v1 può essere stretta (referente + partecipanti opzionali) ma lo schema non deve vietare il nucleo.
+
+4. **Un solo Deal aperto per coppia vs molti storici.** Senza regola, l’agente crea due Deal aperti sullo stesso Mario×stesso listing. Consigliato (proposta, non fatto): **al più un Deal non terminale** per (soggetto referente, property, mandate corrente); i chiusi restano. Scelta Founder se il referente è una persona o il nucleo.
+
+5. **Incarichi sovrapposti.** Non esclusivi, rinnovi, secondo incarico. Deal deve puntare al **Mandate id** del periodo, non a «l’immobile». Se si rinnova, i Deal aperti restano agganciati al mandato vecchio o si ribeccano? Default proposto: restano sul mandato sotto cui sono nati; si può *riassociare* a mano. Criticità reale.
+
+6. **MLS / seconda agenzia.** Lo Scenario I (porto un acquirente sul tuo listing) è un Deal il cui listing è di un altro tenant. Se `Deal.agency_id` è solo l’agenzia dell’acquirente, il titolare del listing non vede il percorso. Il modello deve prevedere **due ruoli agenzia** (listing vs buyer) senza implementarli ora. Altrimenti Fase 9 MLS costringe a rifare Deal. Criticità reale, differibile in v1 **intra-agenzia**.
+
+7. **Locazione.** Stessa spina Deal/Visit/Offer (canone vs prezzo). Non è un secondo dominio. Criticità bassa se `operation` sta su Mandate+Deal.
+
+8. **Nome UI.** Se in interfaccia tutto si chiama Trattativa, l’agente non registra A (visita senza proposta). Preferenza di copy, ma con effetto dati: naming sbagliato → Deal incompleti.
+
+Non è criticità: match on-read, PDF, HAL, navy, Stripe SaaS. Restano satelliti.
+
+---
+
+## D. Relazioni e cardinalità
+
+```
+Agency 1 ──< Property N
+Agency 1 ──< Mandate N  >──1 Property     (N incarichi nel tempo; 0..1 ATTIVO per policy)
+Agency 1 ──< Client N
+Client  1 ──< Request N
+Client  1 ──< DealParty N >──1 Deal
+Property 1 ──< Deal N
+Mandate  1 ──< Deal N          (Deal.mandate_id del periodo)
+Request  0..1 ──< Deal N
+Deal     1 ──< Visit N
+Deal     1 ──< Offer N
+Offer    0..1 ──< Offer N      (controproposta: parent_offer_id)
+```
+
+Documenti: Fascicolo → Property. PDF mandato → Mandate. PDF proposta → Offer.
+
+**Decisioni ulteriormente necessarie** (non tutte Founder): tipo di `DealParty.role`; se Property e Listing restano un documento in v1; se Visit.partecipanti sono User+Client.
+
+---
+
+## E. Stati (percorso ≠ compravendita ≠ listing)
+
+**Deal — percorso commerciale**  
+`open` → `visit_planned` → `visited` → `no_offer` | `offered` → `in_negotiation` → `agreed` | `rejected` | `withdrawn` | `lapsed` | `superseded`
+
+`no_offer` è uno stato **valido e storico** (cliente A).  
+`agreed` = proposta accettata, **non** vendita conclusa.  
+`superseded` = chiuso perché un altro Deal sullo stesso immobile è andato in lock (B quando C accorda, **se** quella è la regola).
+
+**Visit**  
+`planned` → `confirmed` | `done` | `no_show` | `cancelled`  
+Esito su `done`: `interested` / `no_go` / `will_offer` (non sostituisce lo stato Deal).
+
+**Offer**  
+`draft` → `submitted` → `accepted` | `rejected` | `withdrawn` | `expired` | `superseded_by_counter`  
+Controproposta = nuova Offer `submitted` con `parent_offer_id`.
+
+**Property — disponibilità commerciale**  
+`draft` → `active` → `reserved` → `sold` | `rented` | `withdrawn`  
+`reserved` dovrebbe citare `locked_by_deal_id`.  
+`sold` / `rented` = conclusione **contrattuale/amministrativa**, non l’accettazione dell’offerta.
+
+**Mandate**  
+`draft` → `active` → `expired` | `replaced` | `withdrawn`
+
+Transizione chiave: Offer `accepted` ⇒ Deal `agreed` ⇒ (regola lock) Property `reserved` + altri Deal aperti `superseded` **oppure** solo alert, se il Founder vuole lock più tardi. Non è un PATCH isolato sulla scheda immobile.
+
+---
+
+## F. Multi-tenant e collaborazione
+
+v1: `Deal.agency_id` = tenant dell’agenzia che lavora il percorso. Stesso isolamento di clients/properties. Permessi: titolare vede tutti i Deal della sede; agente almeno i propri (`created_by` / partecipanti). Oggi **nessun** perimetro agente sulle liste — il Deal non deve ereditare «tutti vedono tutto» come destino; è un buco già noto, da chiudere in Fase 0/1.
+
+Sedi/gruppi: Deal resta della **sede** (agency), non del gruppo. Il group_admin vede consolidato, non un Deal cross-branch senza membership. Allineato al codice attuale (`active_agency_id`).
+
+MLS: progettare da subito campi opzionali `listing_agency_id` / `buyer_agency_id` + visibilità selettiva (niente anagrafica cliente all’altra rete finché l’accordo collaborazione non lo consente). Non implementare. Non mettere PII nelle projection MLS pubbliche.
+
+---
+
+## G. Decisioni aperte (solo Founder)
+
+1. **Quando scatta il lock sull’immobile?** All’accettazione della proposta (`agreed`), alla riservatezza formale (`reserved`), o al `sold`? Impedisce o no altre visite/proposte nel frattempo?
+
+2. **Un Deal aperto per referente×immobile, o anche due nuclei contemporanei sullo stesso listing?** (es. due acquirenti non in coppia: sì, due Deal — è già lo scenario. La domanda è: *stesso* referente, secondo Deal aperto.)
+
+3. **Nome in UI** del Deal nei vari stati (non «Trattativa» per A).
+
+4. **v1 Deal solo intra-agenzia**, con gancio MLS dopo, oppure i due ruoli agenzia nello schema già alla prima progettazione?
+
+5. **Property e annuncio:** un solo record in v1 (Mandate corrente governa pubblicazione) oppure spezzare cespite/listing subito?
+
+6. **Nucleo:** v1 = un Client referente + note, oppure partecipanti con ruoli già al primo schema?
+
+Tutto il resto (nomi campi Mongo, PDF, match SoT, copy) è progettazione, non scelta di prodotto.
+
+---
+
+## H. Impatto sulla roadmap
+
+Prima di visite «vere», proposte, contratti e amministrazione, in quest’ordine concettuale:
+
+1. **Fissare G1–G6** (soprattutto lock e «Property vs listing»).
+2. **Fondazioni dominio:** Mandate come oggetto; Client senza pipeline di vendita; Request = solo brief; **Deal + DealParty** come unità di lavoro; Offer e Visit *disegnati* come figli, anche se si rilasciano a scaglioni.
+3. **Regola di coerenza Property↔Deal** (`locked_by_deal_id`, stati `agreed` ≠ `reserved` ≠ `sold`).
+4. Poi Visit, poi Offer (modulistica agganciata all’Offer), poi contratti/rogito come *fase dopo `agreed`*.
+5. Matching, portali, MLS: si agganciano al Deal; non lo definiscono.
+6. Direzione/KPI: contare Deal/Visit/Offer reali, non `calendar_events` vuote.
+
+Non invertire: PDF proposta o agenda prima del Deal ricreano il pasticcio attuale (documenti e task senza pratica).
+
+---
+
+La decisione è **coerente** e **necessaria** rispetto al caso tre clienti / un immobile. Non è sbagliata. Il rischio strutturale è uno solo: trattare Deal come «trattativa con importo» e dimenticare A; il testo Founder lo evita già.
+
+Attendo le scelte su **G1–G6**. Nessun codice finché non arriva `OMNIA — AUTORIZZAZIONE ESPLICITA ALL'IMPLEMENTAZIONE` con lo scope.
+
+---
+
+Specifica recepita come **riferimento funzionale MLS**, non come autorizzazione a scrivere codice. La collego al modello Deal / Property / Listing e al MLS che esiste oggi nel repo.
+
+---
+
+## Cosa ho capito
+
+L’MLS OMNIA non è un elenco di case altrui. È il **canale B2B** del gestionale: condivido un listing, un collega lo trova (anche col codice visto su Idealista), vede **chi** lo gestisce e **a che condizioni**, chiede una visita, si accorda anche per telefono, lascia traccia, e dopo l’appuntamento il sistema chiede com’è andata — per un **rating della persona**, non dell’insegna.
+
+Non nasce un secondo anagrafe immobili. Si condivide la **commercializzazione** (Listing sotto Mandate), non si clona la Property. Il percorso del *cliente* del collega, quando c’è, è un **Deal** (G3, G6), non una «offerta MLS» come quella attuale.
+
+---
+
+## Due piani che non vanno fusi
+
+| Piano | Chi | Oggetto |
+|---|---|---|
+| **Collaborazione MLS** | due operatori / due agenzie | visita tra colleghi, condizioni economiche, accordo, follow-up, rating |
+| **Deal** | cliente(i) × immobile | interesse, visite col cliente, proposte, accordo di compravendita |
+
+«Richiedi visita» in MLS è **prima** spesso solo B2B (il collega vuole vedere l’immobile). Il Deal nasce quando porta (o dichiara) un acquirente. Se si usa un solo oggetto per entrambi, si sporcano rating, privacy cliente e G1.
+
+**PROPOSTA:** entità `Collaboration` (o `MlsCooperation`) + `CollaborationAgreement` (snapshot condizioni) + `Visit` riusata. Il Deal si collega quando c’è il cliente. Non è un terzo gestionale: è il ponte B2B.
+
+---
+
+## Codice attuale vs specifica
+
+**Già allineabile (FATTO):**
+
+- Join/leave rete, inventory mine/local/national, partner, `MlsPage.jsx`.
+- Condivisione **distinta dai portali**: `mls_shared` + `visibility` `public | mls_only | private` (`property.py` 185, 201–203) vs `is_listed_on_immobilcloud`.
+- Codice interno: `reference_code`.
+- Responsabile: `listing_agent_id` (impostato in create, poco visibile in scheda MLS).
+- Embedding sito (D-170): vetrina rete, **non** è l’MLS professionale.
+
+**In conflitto o insufficiente:**
+
+| Specifica | Oggi | Problema |
+|---|---|---|
+| Condivisione **volontaria** | `mls_shared: bool = True` di default | Entra in rete da solo. Va default **false** (progettazione, non ora). |
+| Codice MLS univoco di rete | Solo `reference_code` | Manca il secondo id. |
+| Condizioni di collaborazione strutturate | Assenti | Note/listing non bastano. |
+| Accordo snapshot all’avvio visita | Assente | `mls_requests` è altro. |
+| Richiedi visita + 3 slot + telefono ok | Offer = «ti spingo **il mio** listing» (`mls.py` 439–453) | Mestiere **invertito** rispetto ad AgestaNET. |
+| Identità operatore in scheda | Projection senza recapiti agente | Si vede l’immobile, poco il collega. |
+| Rating persona | Assente | — |
+| Follow-up post-appuntamento | Assente; Visit vera ancora da progettare | Dipende da Visit, non da un cruscotto MLS isolato. |
+| Ricerca mappa + codice | Public search città/prezzo, **senza auth** (`mls.py` 494–504) | Vetrina ≠ MLS operatori. Condizioni e telefono **non** devono finire lì. |
+| Documenti dichiarati vs fascicolo | Solo fascicolo su property | Distinzione §9 ancora da disegnare. |
+
+L’MLS di oggi è **inventario + partner + offer listing-push**. La specifica è **collaborazione operativa**. Non si «completa» l’offer attuale: si **riposiziona**.
+
+---
+
+## Coerenza con G1–G6 e Deal
+
+- **G5 Property ≠ Listing:** condividere MLS = esporre un Listing (sotto Mandate attivo), non un secondo Property. Unlisting MLS ≠ cancellare l’immobile. Allineato alla specifica §10.
+- **G4:** Collaboration ha `listing_agency_id`, `listing_agent_id`, `buyer_agency_id`, `buyer_agent_id`. Visibilità selettiva: il collega vede scheda MLS e condizioni, **non** Client del titolare né Deal interni, finché non c’è accordo/cliente dichiarato.
+- **G3:** la scheda Deal resta il centro *quando c’è il cliente*. MLS non ingloba visite/offerte in un blob.
+- **G1:** accettazione proposta sul Deal **segnala** altri Deal; non chiude in automatico. Lo stesso per Collaboration: niente auto-kill delle altre visite MLS.
+- **G2:** stesso cliente del collega che torna = nuovo Deal; Collaboration può essere nuova o riaperta, da decidere (punto aperto).
+- **G6:** DealParty sul Deal del cliente; in MLS i partecipanti B2B sono gli **operatori**, non si duplicano anagrafiche.
+
+Mandate: se l’incarico scade o cambia responsabile, la condivisione MLS deve seguire il **Mandate/Listing corrente**, senza cancellare Collaborations e Visit già nate (riferimento storico all’incarico di allora). È il punto 13 della specifica, ancora aperto, ma la direzione è la stessa del Deal.mandate_id.
+
+---
+
+## Principi che recepisco (non negoziabili in progettazione)
+
+- MLS ≠ portali; default condivisione off.
+- Non clonare Property per la rete.
+- Condizioni economiche: campo strutturato + **copia immutabile** sull’accordo (modifiche successive = nuovo snapshot, non rewrite).
+- Telefono lecito; il gestionale deve poter **registrare dopo** data/ora (stato visita `agreed_offline` / conferma tardiva). Follow-up serve anche se hanno dimenticato di scrivere l’orario — altrimenti il rating muore.
+- Rating = **utente MLS**, non agency. Cambio agenzia: identità da definire (G Founder).
+- «Dichiaro APE» ≠ «APE nel fascicolo» ≠ «APE condivisibile col collega».
+- Nessun automatismo che chiuda Deal o Collaboration al posto dell’agenzia.
+- Vetrina pubblica / box sito ≠ scheda MLS autenticata.
+
+---
+
+## Fondazioni da disegnare *prima* di UI rating e mappa
+
+Ordine concettuale (nessuna implementazione):
+
+1. **Listing** come proiezione pubblicabile/condivisibile della Property sotto Mandate (anche se v1 è lo stesso documento Mongo, con flag e `mls_code`).
+2. **Identità MLS dell’agente** distinta da `agency_id` (profilo, recapiti, rating). L’agenzia resta tenant e titolare dell’incarico.
+3. **Collaboration + Agreement snapshot** + riuso **Visit**.
+4. **Gancio Deal** opzionale (`listing_agency` / `buyer_agency`) quando entra il cliente — così Fase 9 non rifà il Deal.
+5. Poi: Richiedi visita (3 slot + conferma telefonica), notifiche sul sistema già esistente (`notifications`), follow-up, rating.
+6. Ricerca MLS **autenticata** (geo, filtri da PropertyFeatures, due codici). La search public resta vetrina, impoverita.
+
+Rating matematico, contestazioni, micro-reti: **dopo**. Senza Visit e Collaboration il follow-up non ha oggetto.
+
+---
+
+## Decisioni Founder (poche)
+
+Le 14 voci del §13 restano aperte; per non bloccare il disegno servono soprattutto:
+
+1. **Account MLS:** ogni `User` agente ha identità MLS propria, agenzia = organizzazione. Se l’agente cambia sede, il rating **lo segue** o resta all’insegna? (Specificare prima del modello rating.)
+2. **Lock vs G1 anche in MLS:** due colleghi sullo stesso listing, uno arriva a Deal `agreed` — solo segnale, come G1, o si nasconde l’immobile in ricerca MLS?
+3. **Quando nasce il Deal:** alla richiesta visita MLS, o solo quando il collega indica il cliente? (Consiglio: la seconda, per non creare Deal vuoti e non far filtrare anagrafiche.)
+4. **Default `mls_shared`:** conferma volontario = off. Oggi è on: è un errore di prodotto rispetto a questa specifica.
+5. **Search `/mls/search/public`:** resta vetrina B2C della rete, senza condizioni/recapiti, vs MLS solo login. Due superfici, un inventario.
+
+Il resto (formule rating, elenco checkbox documenti vendita vs locazione, UX tre date) è perfezionamento, non architettura.
+
+---
+
+## Impatto
+
+Questa specifica **non contraddice** Deal/Mandate/G1–G6. Li **estende** sul lato B2B.  
+Il conflitto vero è col **MLS già in codice**: offer listing-push, share default on, no identità operatore, no condizioni, no visita tra colleghi.
+
+Non va un rebuild del repo. Va un **riposizionamento del modulo MLS** attorno a Listing condiviso + Collaboration + Visit, e un gancio Deal cross-agenzia già nello schema, anche se la UI MLS avanzata arriva dopo le fondazioni intra-agenzia.
+
+---
+
+Niente codice, niente file, niente migrazioni.  
+Attendo perfezionamenti Founder (soprattutto identità/rating al cambio agenzia, quando nasce il Deal, default share, vetrina vs MLS login) e, solo dopo, un’eventuale `OMNIA — AUTORIZZAZIONE ESPLICITA ALL'IMPLEMENTAZIONE` con scope esplicito.
+
+
+================================================================================
+# VERIFICA MIRATA COERENZA SOGGETTI, PERMESSI E FLUSSI MLS
+# File: 03-COERENZA-MLS-SOGGETTI-PERMESSI.md

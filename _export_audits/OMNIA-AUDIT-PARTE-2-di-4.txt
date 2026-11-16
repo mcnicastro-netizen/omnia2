@@ -1,0 +1,872 @@
+# OMNIA AUDIT — PARTE 2/4
+# Fonte primaria. Leggi tutto questo pezzo. Non inventare.
+
+================================================================================
+
+Verifica sul codice di `origin/main` (app identica a questo checkout) e su `memory/DECISIONS.md`. Le etichette G36–G52 **non** risultano nel repo: le tratto come decisioni di questa conversazione. G1–G30 in `memory/AUDIT_ARCHITETTURA_NOTE.md` sono **cestino/backup**, non rating: numerazione diversa, non le mescolo.
+
+---
+
+### A. Anomalie effettive
+
+1. **Flusso MLS (richiesta collaborazione + 3 date)**  
+   **Oggi:** `POST /app/mls/offers` crea un’offerta **sul proprio** immobile verso un’altra agenzia (`mls.py` 439–453: `property_id` con `agency_id == aid`). `MlsPage.jsx` elenca e **risponde** (accept/reject), senza date.  
+   **Atteso:** richiesta sul listing **altrui**, tre slot, accettazione/alternative/telefono.  
+   **Gravità:** alta — mestiere invertito, i tre passi (accettazione collaborazione / orario / calendario) **non esistono** come stati distinti.
+
+2. **Calendario agenzia e appuntamento unico su due tenant**  
+   **Oggi:** nessun insert su `calendar_events`; la dashboard **legge** quella collection (`dashboard.py` 120–126, 536–554). Le visite CRM sono `activities` per `agency_id` (`activities.py`). Nessuna pagina calendario. D-138: calendario slot condiviso **fuori scope v1**.  
+   **Atteso:** un appuntamento, titolare lo registra, visibile anche al collaboratore.  
+   **Gravità:** alta sul requisito MLS; oggi non c’è calendario operativo.
+
+3. **Super Admin come ruolo MLS operativo**  
+   **Oggi:** `require_roles(..., "super_admin")` su dashboard, join/leave, inventory, partners, offers, respond (`mls.py` 152, 237, 265, 293, 332, 368, 442, 479). Join MLS è `agency_admin` **o** `super_admin`. Tenant guard: `super_admin` bypass (`tenant_guard.py` 59). Cabina: `POST /bridge/impersonate` (`founder_bridge.py` 724).  
+   **Atteso:** Super Admin ≠ Admin agenzia; non partecipa alle attività delle agenzie.  
+   **Gravità:** media sul join/offer; impersonation è strumento Ops, non calendario, ma lo stesso utente può operare nel tenant.
+
+4. **Solo l’agente responsabile modifica scheda MLS / richieste**  
+   **Oggi:** `PATCH` immobile: qualsiasi `agency_admin` o `agent` della sede (`properties.py` 456–461). `listing_agent_id` si imposta in create (411), **nessun check** in update. `respond_offer`: solo `agency_admin` e `super_admin`, **non** l’agent (`mls.py` 475–479).  
+   **Atteso:** mutazioni MLS = responsabile; Admin supervisione/notifiche; sostituto dopo approvazione Admin.  
+   **Gravità:** media. Non c’è flusso sostituto.
+
+5. **Identità interlocutore MLS**  
+   **Oggi:** `mls_partners` e `mls_requests` sono `agency_a`/`agency_b`, `from_agency_id`/`to_agency_id`. `listing_agent_id` è sul listing, non sulla collaborazione.  
+   **Atteso:** agenzia **e** agente referente distinti.  
+   **Gravità:** bassa sul modello User/Agency (esistono); alta sul **record di collaborazione**, che è solo tenant.
+
+6. **Preferiti / esclusioni tra agenzie**  
+   **Oggi:** `favorites` è B2C ImmobilCloud (`immocloud/favorites.py`). `mls_partners` è partnership bilaterale, non preferito/escluso.  
+   **Atteso:** liste agenzia, mutuamente esclusive, esclusione solo su **nuove** collaborazioni.  
+   **Gravità:** funzione assente, non un comportamento contrario già in produzione.
+
+Non classifico come anomalia «il codice sbaglia» ciò che **non è stato implementato** (chat MLS, rating, watermark allegati, condizioni economiche). Sta in D e nella tabella E.
+
+---
+
+### B. Decisioni coerenti
+
+- Tenant: `active_agency_id`, niente fallback `agency_ids[0]` (`tenant.py`). Query CRM con `agency_id`.
+- Figure: `UserRole` distingue `super_admin` / `agency_admin` / `agent` (`user.py`). Founder Ops è un altro albero (`founder_ops.py`, Cabina).
+- Fascicolo **non** è condiviso cross-agenzia: `_get_property` filtra `agency_id` (`fascicolo.py` 54–67). Allineato a **G39** (nessun accesso al fascicolo del titolare).
+- Nessuna chat interna di sede (HAL è assistente AI, D-040/D-075) — coerente con «OMNIA non gestisce chat intra-agenzia».
+- Isolamento Client/owner: projection MLS senza `owner` (`mls.py` `_prop_projection`).
+- Notifiche in-app per-utente esistono (`notifications`); non sono ancora il flusso MLS.
+- `listing_agent_id` esiste come campo; l’identità agente **può** essere rappresentata, non è usata come ACL MLS.
+
+---
+
+### C. Contraddizioni tra decisioni
+
+1. **Rating: persona vs agenzia.** Specifica MLS 1.0 §2.3: rating dell’**operatore**. Questo documento §2 e §8: rating **solo dell’agenzia**. Vale **questo** testo (precisazione Founder). Non va riletto come domanda.
+
+2. **G50 vs G51.** Non si contraddicono se: chat archiviata **resta consultabile** (G37, G50); **nuova** collaborazione stesso immobile/stesse agenzie = **nuova** conversazione (G51); **niente riapertura operativa** della vecchia. G50 «riaprire» si interpreta così, non come secondo thread vivo.
+
+3. **G45–G47 vs G39.** Autorizzazioni speciali/durata sul fascicolo **non** sono più coerenti: il collaboratore non entra nel fascicolo. Restano G43–G44 (chi può **allegare copie** alla collaborazione) e G41 (revoca della copia, sapendo che il download già fatto non si cancella).
+
+4. **D-138 vs calendario MLS.** D-138 mette il calendario condiviso fuori scope v1 (B2C). Il requisito MLS chiede un appuntamento unico su due agenzie. Non è la stessa decisione: vanno tenute **separate** (B2C vs B2B).
+
+Nessun conflitto G36/G37/G52 tra loro. G53 notifiche chat: **non approvata**, non la uso.
+
+---
+
+### D. Questioni non verificabili
+
+- G19–G30 **rating** (formula, contestazioni): non sono in `DECISIONS.md`; nel repo G1–G30 = cestino. Codice rating MLS: assente. Super Admin **non** assegna punteggi (non c’è nulla da assegnare).
+- Chat MLS, allegati-copia, watermark destinatario+data, tre slot visita, follow-up, preferiti/esclusioni B2B, condizioni economiche standard vs accordo privato, flusso sostituto: **non nel codice**.
+- Comportamento produzione Railway.
+- Se l’impersonation Cabina è usata in MLS: non verificabile da qui; esiste solo il meccanismo.
+
+---
+
+### E. Decisioni G36–G52
+
+| # | Decisione | Esito | Motivazione |
+|---|---|---|---|
+| G36 | Partecipanti: referenti e autorizzati delle due agenzie | **Confermata** | Coerente con ruoli sede; in codice la collab è solo `agency_id`. |
+| G37 | Storico all’agenzia; chi perde accesso non legge più | **Confermata** | Allineata a membership JWT; chat non esiste. |
+| G38 | Allegati PDF/immagini da documenti già in agenzia | **Confermata** | Copia verso collab, non share fascicolo. |
+| G39 | Nessun accesso al fascicolo originale | **Confermata** | Già vero in `fascicolo.py`. |
+| G40 | Copia = versione inviata; update = nuovo invio | **Confermata** | — |
+| G41 | Revoca accesso copia; download già fatti restano | **Confermata** | Limite di fatto, non di prodotto. |
+| G42 | Watermark agenzia destinataria + data | **Confermata** | Watermark attuale = staging «Render virtuale OMNIA», altro scopo. |
+| G43 | Allegano gli autorizzati dall’Admin | **Confermata** | — |
+| G44 | Admin definisce permessi generali del personale | **Confermata** | Oggi ruoli grossi, niente ACL fine. |
+| G45–G47 | Autorizzazioni speciali e durata sul fascicolo | **Da correggere** | Superate da G39; non servono per il collaboratore. |
+| G48 | Admin riceve richieste di autorizzazione speciale | **Da correggere** | Stesso motivo, salvo un eventuale permesso «può allegare in MLS» in G44. |
+| G49 | Audit allegati/download/revoche, non ogni apertura | **Confermata** | — |
+| G50 | Fine collab → chat archiviata | **Confermata** | Consultabile, non «riaperta» come thread vivo. |
+| G51 | Nuova collab → nuova chat; precedente archiviata | **Confermata** | Compatibile con G50 come sopra. |
+| G52 | Ricerca immobile / agenzia / testo / date | **Confermata** | Include anche archiviate (coerente G37). |
+
+---
+
+### F. Sintesi finale
+
+Nessuna domanda nuova al Founder. Già deciso in questo testo: rating = **agenzia**; Super Admin ≠ operatore MLS; fascicolo titolare **chiuso**; chat solo inter-agenzia dopo accettazione collaborazione; un appuntamento, due viste calendario; G50/G51 = archivio consultabile + conversazione nuova.
+
+Unico scarto da registrare in progettazione (non da rivotare): **G45–G48** sul fascicolo condiviso non applicarle; restano permessi Admin su **chi allega copie** (G43–G44).
+
+Il progetto **oggi** isola bene i tenant e il fascicolo; **non** realizza il flusso MLS concordato (richiesta, chat, calendario unico, ACL agente responsabile). Super Admin risulta ancora nei `require_roles` MLS.
+
+Nessuna implementazione. Mi fermo.
+
+
+================================================================================
+# AUDIT B1: ACCOUNT E AUTENTICAZIONE
+# File: 04-AUDIT-B1-ACCOUNT-AUTENTICAZIONE.md
+================================================================================
+
+Fotografia B1 sul codice attuale (`origin/main` / questo checkout). Niente modifiche. Produzione non verificata.
+
+---
+
+## A. Funzionalità esistenti
+
+**1. Creazione account — PRESENTE (due canali)**
+
+- **B2B/pubblico:** `POST /api/auth/register` — `backend/apps/core/auth.py` 124–215. Email unique (check + index `users.email`). Ruolo pubblico forzato a `client`/`student`; `agency_admin` solo a creazione agenzia (`agencies.py` 228–234); `agent` solo da invito (`invites.py` 273–321). Password min 8, bcrypt. Cookie di sessione subito. Consenso in `consent_events`. Welcome email solo se non è percorso agenzia (D-161).
+- **B2C:** `POST /api/cloud/auth/register` — `cloud_auth.py`. `role=client`, `account_type=b2c`, GDPR + età, rate limit IP. Stessi cookie JWT.
+- **Invito collaboratore:** `accept-invite` crea utente o collega membership **senza** sovrascrivere la password esistente (D-100).
+- **Google:** `POST /api/auth/google` — `google_auth.py`. Upsert, `email_verified=True` se Google lo dice. Password sentinel `!oauth:google`.
+- **UI:** `LoginPage` / register, `ForgotPasswordPage`, `ResetPasswordPage`, `AuthProvider` (`frontend/src/shared/lib/auth.jsx`).
+
+**2. Login — PRESENTE**
+
+- `POST /api/auth/login` — email case-insensitive, lockout 5 tentativi / 15 min (`brute_force.py`), 401 unico (anti-enumerazione), blocco `is_active=false`, MFA challenge senza cookie se `mfa_enabled`. Init `active_agency_id` se una sola membership (D-106).
+
+**3. Password — PRESENTE**
+
+- bcrypt (`hashing.py`). Change da loggato: `POST /auth/me/change-password`. Reset: token `token_urlsafe(32)`, 1h, `used`. Forgot sempre 200. UI `ForceChangePasswordModal` se `must_change_password`. Ops Attiva può sovrascrivere hash con API key (`agency_credentials.py`).
+
+**4. Sessioni / token — PRESENTE**
+
+- Access JWT HS256, default 15 min; refresh 7 giorni + `jti` in `refresh_tokens` (revoca al logout). Cookie HttpOnly, `Secure`/`SameSite=None` se `COOKIE_SECURE` (default true). CSRF double-submit (`csrf.py`) in produzione. Anche `Authorization: Bearer`. FE: `/auth/me` + refresh silenzioso.
+
+**5. Protezione API e pagine — PRESENTE**
+
+- `get_current_user` + `require_roles` (alias franchising D-041). FE `ProtectedRoute.jsx` specchia gli alias. CRM gated su `/app/*`.
+
+**6. Collegamento agenzia — PRESENTE**
+
+- `agency_ids[]`, `active_agency_id`, switch `POST /auth/active-agency` (solo membership). Creazione agenzia: attach + promote `agency_admin`, `activation_status=pending` finché Ops Attiva.
+
+**7. Ruoli — PRESENTI come enum**
+
+- `super_admin`, `agency_admin`/`branch_admin`, `agent`/`branch_agent`, `group_admin`, `client`, `student`. Un ruolo per utente. Permessi = ruolo, non ACL per risorsa.
+
+**8. MFA TOTP — PRESENTE**
+
+- setup/enable/verify/disable, backup codes hashed, challenge 5 min (`mfa_routes.py`).
+
+**9. Cancellazione account — PRESENTE (GDPR)**
+
+- `POST /auth/me/erase` → `is_active=False` + wipe (`erasure.py`), revoca refresh.
+
+---
+
+## B. Funzionalità incomplete
+
+| Voce | Stato | Dettaglio |
+|---|---|---|
+| Verifica email | Flag sì, flusso no | `email_verified` sul user; Google lo setta. **Nessun** `POST /auth/verify-email`. `cloud_auth.py` 51–53 cita un flusso «if present». Gate valuator B2C usa il flag; B2B login **non** lo richiede. |
+| Disattivazione / riattivazione | Solo erasure | Login/refresh rifiutano `is_active=false`. **Nessun** endpoint Admin/Ops «sospendi utente» / «riattiva». `remove_member` stacca l’agenzia, non spegne l’account (`agencies.py` 320–372). Members UI mostra `is_active`, non lo cambia. |
+| `get_current_user` vs `is_active` | Buco | Access token valido (~15 min) **non** ricontrolla `is_active` (`dependencies.py` 18–40). Solo login e refresh. |
+| Reset password vs sessioni | Parziale | Segna token `used`, **non** revoca gli altri refresh. |
+| Refresh | Non ruota | Stesso `jti` 7 giorni; solo nuovo access cookie. |
+| Ruolo nel JWT | Cosmetico | Autorizzazione API usa il user Mongo; il claim `role` nel access può essere stantio fino a 15 min in altri client. |
+| Register B2B | Senza rate limit IP | Il B2C ce l’ha; `/auth/register` no. |
+| Tracciabilità accessi | Assente come audit | Tentativi falliti in `login_attempts` (lockout). Nessun log di login riusciti / IP / user-agent. |
+| Permessi fini | Assenti | Nessuna sospensione collaboratore, nessuna ACL listing/agente. |
+
+---
+
+## C. Funzionalità mancanti (rispetto a un ciclo account completo)
+
+- Verifica email con link (invio + conferma).
+- Sospensione e riattivazione account (Admin agenzia / Super Admin) distinta da GDPR erase e da unlink membership.
+- Revoca di **tutte** le sessioni (cambio password, reset, sospensione).
+- Audit trail accessi (successo, fallimento oltre il lockout, impersonation).
+- Scadenza password / policy oltre min 8 caratteri.
+- Blocco dopo reset per account OAuth-only (il login già dice `use_google_sign_in`; forgot su Google user **può** comunque emettere reset e impostare una password — da verificare in B2 se è voluto).
+
+---
+
+## D. Problemi e rischi
+
+1. **Utente disattivato resta in API fino a scadenza access** — `get_current_user` ignora `is_active`. Rischio: sospensione inefficace per 15 minuti (o TTL custom).
+2. **Reset non invalida sessioni aperte** — chi ha il cookie refresh continua. Stesso dopo change-password (revoca solo se si fa logout).
+3. **Nessuna sospensione operativa** — si può solo togliere dalla sede o cancellare GDPR. Collaboratore uscito può ancora loggarsi (account globale) se non erased.
+4. **Email non verificata in B2B** — registrazione entra subito in sessione. Idoneo all’onboarding; non è prova di identità.
+5. **Due register** (`/auth/register` e `/cloud/auth/register`) — stesso `users`, stesso 409; duplicazione di logica (cookie, consent). Funziona, è da non riscrivere due volte in B2.
+6. **CSRF** dipende da `COOKIE_SECURE`; in locale è no-op. Corretto per dev; in prod deve restare true.
+7. **JWT HS256** — segreto `JWT_SECRET` obbligatorio. Standard; compromissione segreto = tutti i token.
+8. **bcrypt** tronca a 72 byte (limite libreria). Password lunghissime non sono interamente hashed. Rischio basso.
+9. **Forgot** logga l’email (`logger.info`) — non il token. Accettabile.
+10. **Super Admin** in `require_roles` di molte API (incluso MLS) — già visto in Area A; per B1: stesso account/JWT della piattaforma, non un secondo sistema di login.
+11. **Impersonation Cabina** (`founder_bridge.py`) entra nel tenant con la sessione Founder — non è un secondo account; va tenuto distinto dalla disattivazione utente.
+
+Non ho eseguito pentest. Quanto sopra è dal codice.
+
+---
+
+## E. Interventi (priorità) — solo per B2, non da fare ora
+
+Non è un progetto nuovo: è cosa **non toccare** vs cosa **decidere**.
+
+**P0 (integrità accessi, se B2 li vorrà)**  
+- Controllare `is_active` in `get_current_user`.  
+- All’erase / futura sospensione: revocare i refresh di quell’`user_id`.
+
+**P1 (ciclo account che l’Area B descrive e oggi manca)**  
+- Sospensione/riattivazione distinta da unlink e da erase.  
+- Decidere se serve verifica email B2B o solo B2C (il valuator già la usa).  
+- Revoca sessioni su reset/change password.
+
+**P2**  
+- Audit login (successo + impersonation).  
+- Rate limit su `/auth/register`.  
+- Allineare commento `verify-email` al fatto che l’endpoint non c’è.
+
+**Non duplicare in B2:** bcrypt, cookie JWT + refresh store, brute-force login, CSRF prod, ruoli enum, inviti, Google, MFA TOTP, switch `active_agency_id`, GDPR erase, `ProtectedRoute`.
+
+---
+
+Sintesi: **login, password, sessione e legame agenzia ci sono e sono usabili.** Manca un ciclo **sospendi/riattiva**, la **verifica email** come flusso, e la **tracciabilità** degli accessi. La disattivazione oggi è solo erasure GDPR e non è applicata su ogni request.
+
+Mi fermo. Non passo a B2.
+
+
+================================================================================
+# B11 — Audit dei permessi granulari
+# File: 05-AUDIT-B11-PERMESSI-GRANULARI.md
+================================================================================
+
+Audit B11 chiuso in sola lettura: nessuna modifica a codice, file, database o configurazioni. Il sistema attuale è un **RBAC a ruoli predefiniti** (`users.role`) più **isolamento per agenzia attiva**, non una matrice di permessi granulari.
+
+---
+
+# B11 — Audit tecnico: ruoli e permessi granulari
+
+Modello dominante: **una stringa `users.role` + membership (`agency_ids`, `active_agency_id`) + inject Mongo su `/api/app/*`**. Non esiste un catalogo di capability per utente, per risorsa o per operazione oltre a quel ruolo e allo scope tenant.
+
+---
+
+## 1. Ruoli esistenti
+
+### GIÀ PRESENTE
+
+Otto ruoli canonici in `UserRole`:
+
+```8:18:backend/shared/models/user.py
+UserRole = Literal[
+    "super_admin",
+    "agency_admin",     # legacy alias — same permissions as branch_admin
+    "agent",            # legacy alias — same permissions as branch_agent
+    "client",
+    "student",
+    # M2.5.1 — Franchising layer (D-041)
+    "group_admin",      # sees + writes across all branches of the group
+    "branch_admin",     # perimeter = own branch (== agency_admin)
+    "branch_agent",     # perimeter = own listings/clients (== agent)
+]
+```
+
+Permessi associati: **non c’è una tabella permesso-per-ruolo**. L’effetto operativo è la lista di endpoint che dichiarano quel ruolo in `require_roles()` (`backend/shared/auth/dependencies.py`).
+
+| Ruolo | Cosa fa oggi, in pratica |
+|---|---|
+| `super_admin` | Cabina Ops, impersonation, bypass tenant inject, cron/moderazione |
+| `agency_admin` | Titolare: settings (se owner), inviti, cestino, sito, publishing, delete clienti/immobili |
+| `agent` | CRM operativo (immobili, clienti, richieste, match, MLS lettura, staging) |
+| `group_admin` | Gruppo (KPI, filiali) + **eredita** quasi tutto `agency_admin`/`agent` via alias |
+| `branch_admin` / `branch_agent` | Definiti e aliasati; **non assegnati** da invito/onboarding |
+| `client` / `student` | B2C / signup pubblico; non CRM |
+
+Alias D-041 (backend e frontend allineati):
+
+- `agency_admin` → `{agency_admin, branch_admin, group_admin}`
+- `agent` → `{agent, branch_agent, branch_admin, group_admin}`
+
+Registrazione pubblica: solo `client`/`student` (`auth.py`). Inviti: solo `agent` | `agency_admin` (`InviteCreateRequest`). Crea agenzia: promote owner → `agency_admin`. Crea gruppo: promote → `group_admin`.
+
+### PARZIALMENTE PRESENTE
+
+`group_admin` è commentato come «read/write across all branches». Nel CRM lo scope resta **`active_agency_id`**. Il consolidato di gruppo è solo KPI (`GET /groups/{id}/consolidated`), non il portafoglio CRM unificato.
+
+`branch_admin` / `branch_agent` esistono nel tipo e negli alias, ma **nessun flusso li assegna**. L’invito non li contempla.
+
+Asse parallelo, non ruolo: `account_type` `b2b`/`b2c`; stamp `ops_impersonation` sul Founder.
+
+### ASSENTE
+
+Ruoli personalizzati. Catalogo permessi (`can_edit_listing`, `can_see_clients`, …). Ruolo backend `segreteria` (documentato come mansione operativa, si invita come `agent`). Stringa `"founder"` usata solo in whitelist staging, non in `UserRole`.
+
+### DA VERIFICARE
+
+Quanti utenti in produzione hanno `branch_admin` / `branch_agent` / `group_admin`. Questa sessione non ha interrogato Mongo.
+
+---
+
+## 2. Controlli backend
+
+### GIÀ PRESENTE
+
+**Autenticazione:** `get_current_user()` verifica JWT access e carica l’utente dal DB.
+
+**Autorizzazione per ruolo:** `require_roles()` su decine di router (inviti, settings owner, publishing, social, trash, founder ops, MLS write, delete property/client, API keys, …).
+
+**Autorizzazione per organizzazione:** `optional_agency_id` / `require_agency` / `arequire_crm_agency` (`backend/shared/auth/tenant.py`, D-106). Lo scope è **solo** `active_agency_id` se ∈ `agency_ids`. Nessun fallback a `agency_ids[0]`.
+
+**Defense in depth Mongo:** `TenantContextMiddleware` + `TenantCollection` iniettano `agency_id` su collection tenant (`properties`, `clients`, `leads`, `agency_invites`, …). `super_admin` bypassa.
+
+**Per risorsa (immobile/cliente):** gli endpoint CRM filtrano `{id, agency_id}`. Fascicolo: stesso filtro anti-IDOR (`fascicolo.py` `_get_property`). Privacy listing L1–L4 (`privacy_gate.py`) maschera campi verso B2C/anonimi, non tra colleghi della stessa agenzia.
+
+**Per operazione (esempi):**
+- Delete immobile/cliente: `agency_admin` (+ alias) / `super_admin`; l’`agent` no.
+- PATCH settings agenzia: `require_roles` **e** `owner_id` (`not_owner`).
+- Inviti: `agency_admin`/`super_admin` + tetto `max_agents` del piano.
+- Remove member: no self-remove, no owner, no ultimo admin.
+
+I controlli **ci sono lato backend**. L’UI da sola non autorizza.
+
+### PARZIALMENTE PRESENTE
+
+Molte GET CRM (`list_properties`, `list_clients`, `list_activities`, dashboard, `GET /me/members`, fascicolo) usano solo `get_current_user` + agency. Qualunque membro autenticato con membership valida vede **tutto il portafoglio dell’agenzia attiva**. Documentato in Cap. 13 §13.12 / D-051.
+
+`activities` **non** è in `TENANT_COLLECTIONS`: lo scope è solo il filtro esplicito dell’endpoint.
+
+`get_current_user` **non** controlla `is_active` (già emerso in B1): un account disattivato resta valido fino a scadenza dell’access token.
+
+### ASSENTE
+
+Check per capability (`permission: properties.delete`). Check per singolo collaboratore (agente A vede solo i suoi immobili). Check «questa operazione sulla filiale X ma non sulla Y» oltre allo switch di `active_agency_id`.
+
+### DA VERIFICARE
+
+Se qualche endpoint accetta `agency_id` dal client e lo mette nel filtro Mongo: `TenantCollection` **non sovrascrive** un `agency_id` già presente. I moduli CRM principali costruiscono l’id da `require_agency(user)`, non dalla query. Non è un inventario esaustivo di tutti i router.
+
+---
+
+## 3. Controlli frontend
+
+### GIÀ PRESENTE
+
+`ProtectedRoute` con `ROLE_ALIASES` speculare al backend (`frontend/src/shared/components/ProtectedRoute.jsx`). Route in `App.js` per dashboard, settings, gruppo, ops, MLS, members, ecc.
+
+Sidebar `AgencyShell`: `isAgencyAdmin` / `isGroupAdmin` nascondono Gruppo, Import, Publishing, Cestino, Sito, Billing, Settings.
+
+`MembersPage`: `canInvite` / `canManage` solo `agency_admin` | `super_admin`. Invite modal: select `agent` | `agency_admin`.
+
+B2C: gate su `account_type === "b2c"`, non su `role`.
+
+### PARZIALMENTE PRESENTE
+
+Tre strati (route → nav → bottone) **non coincidono sempre** col backend.
+
+| Caso | UI | Backend |
+|---|---|---|
+| Inviti / rimozione membri | Nascosti a `group_admin` / `branch_admin` | Alias `agency_admin` **consente** l’API |
+| Crea gruppo | Route `/app/group` solo `group_admin`/`super_admin` | `POST /groups` accetta anche `agency_admin` |
+| Settings | Pagina visibile a branch/group via alias | PATCH rifiuta se non `owner_id` (`not_owner`) |
+| HAL Knowledge | Route senza `allowedRoles` | API solo ruoli CRM |
+| Lista membri | Tutti i ruoli CRM | `GET /me/members` senza `require_roles` — allineato, ampio |
+
+Nessun `can()` / `hasPermission()` / capability flag. Solo `user.role`.
+
+### ASSENTE
+
+UI ruoli custom. UI permessi per membro. UI per promuovere/degradare ruolo.
+
+### DA VERIFICARE
+
+Percorso Founder su `/app/moderation`: route `super_admin`, ma `AgencyShell` redirige il Founder non impersonato verso `/app/ops`. Possibile schermo irraggiungibile dal CRM; non esercitato in browser in questo audit.
+
+---
+
+## 4. Separazione organizzativa
+
+### GIÀ PRESENTE
+
+**Isolamento CRM:** dati operativi legati a `agency_id`; sessione = `active_agency_id` (D-106). Switch solo tra agenzie in `agency_ids` (`POST /auth/active-agency`).
+
+**Gerarchia holding / gruppo / filiale (D-041 / D-047):**
+- `agency_groups` = holding/rete
+- filiale = `agencies` con `group_id` + `branch_code`
+- Agenzia standalone = gruppo mono-filiale implicito
+- `credits_mode` default `branch` (filiale paga i propri crediti)
+- Attach filiale: anti-hijack — non-`super_admin` solo agenzie owned o già in `agency_ids` (`groups.py` `attach_branch`)
+- Write sul gruppo: solo `super_admin` o `group_admin` **di quel** `group_id`
+
+**Admin di org A vs org B:** un `agency_admin` non vede il CRM di un’altra agenzia. `super_admin` sì, via bypass tenant + impersonation esplicita (`founder_bridge.bridge_impersonate`).
+
+**Autorizzazioni cross-org esplicite e revocabili (Area A / MLS):**
+- Join / leave rete MLS
+- Partnership bilaterale `mls_partners` (`pending` / `active` / `revoked`)
+- Visibility listing (`public` / `mls_only`) e `mls_shared`
+- API key Track B revocabile
+
+Questi meccanismi **non** fondono anagrafiche CRM: condividono inventario MLS.
+
+### PARZIALMENTE PRESENTE
+
+`group_admin` **non** riceve in automatico le altre filiali in `agency_ids` all’attach. Per operare sul CRM di una filiale serve membership + switch. Il commento «write across all branches» è più ampio del codice.
+
+`_load_accessible_group` confronta `group_id in user.agency_ids` (tipi diversi). La lettura gruppo per un `agency_admin` di filiale poggia su `user.group_id`, che in creazione gruppo viene settato sul creator, **non** sugli altri membri della filiale.
+
+MLS resta per-agenzia (Cap. 24): il gruppo non è un tenant MLS unico.
+
+### ASSENTE
+
+Quarto livello «holding» distinto da `agency_groups`. Autorizzazione CRM cross-agenzia revocabile (condivisione clienti/fascicoli tra org). Limitazione Admin «vede solo la propria org» per il Founder: `super_admin` è globale per design.
+
+### DA VERIFICARE
+
+In dati reali, se i `group_admin` hanno più `agency_ids` (filiali) o solo l’agenzia di creazione. Non interrogato il DB.
+
+---
+
+## 5. Delega dei permessi
+
+### GIÀ PRESENTE
+
+Invito magic-link 7 giorni, ruoli `agent` | `agency_admin`, tetto posti piano, refresh invite pending, revoke invite, unlink membro (non cancella l’utente). Upgrade ruolo in accept **solo se** il pre-ruolo era `client` (`invites.py`). Guard A-007 su rimozione.
+
+Owner settings ≠ collaboratore `agency_admin` invitato: PATCH `not_owner`.
+
+### PARZIALMENTE PRESENTE
+
+Un admin **può invitare un pari** (`agency_admin` invita `agency_admin`). Non c’è regola «deleghi solo ciò che possiedi» né gerarchia di privilegi. `group_admin` via API può invitare (alias), in UI no.
+
+Limiti holding → filiale: attach solo di agenzie already-owned; nessun modello «delega permessi X alla filiale Y». `credits_mode` è l’unico lever group vs branch sul billing, non sui permessi.
+
+Traccia parziale: `invited_by`, `created_at` sugli invite; `logger.info` su create group/attach; `logger.warning` su impersonation. `consent_log` per register/erase, non per ruoli.
+
+### ASSENTE
+
+Vincolo di delega (non puoi assegnare un ruolo che non hai). PATCH ruolo membro. Audit trail strutturato di cambi ruolo/permessi. Transfer ownership. Sospensione temporanea membro (il campo `is_active` esiste, niente UI né API team).
+
+### DA VERIFICARE
+
+Chi, in produzione, è `agency_admin` invitato vs owner. Impatto operativo del `not_owner` su più titolari.
+
+---
+
+## 6. Ruoli personalizzabili
+
+### GIÀ PRESENTE
+
+Niente di operativo. I «modelli» di fatto sono i due ruoli invitabili (`agent`, `agency_admin`) e i tre ruoli franchising nel type system.
+
+### PARZIALMENTE PRESENTE
+
+Documentazione / backlog: Cap. 13 §13.12 e `ASPETTI_DA_APPROFONDIRE.md` (A-008 cambio ruolo) descrivono **limiti v1** e ipotesi future. Non è prodotto.
+
+### ASSENTE
+
+Creare un ruolo da template. Duplicare, rinominare, editare permessi. Matrice UI. Persistence di un documento `roles` / `permissions`.
+
+### DA VERIFICARE
+
+Niente: assenza confermata da ricerca su `custom_role`, `hasPermission`, cataloghi permessi.
+
+---
+
+## Rischi tecnici e di sicurezza
+
+1. **Stesso portafoglio per tutti i membri** — un `agent` legge/modifica tutti gli immobili e clienti dell’agenzia; non può solo cancellarli. Se Area A prevede perimetro per agente, oggi non c’è.
+2. **Alias D-041 troppo larghi** — `group_admin` eredita delete, inviti, publishing, API keys dell’`agency_admin` sull’agenzia *attiva*. Holding ≠ titolare di filiale, ma l’API li tratta spesso uguali.
+3. **UI più stretta del backend** sugli inviti: sicurezza reale = API; un client HTTP autenticato come `group_admin` supera i bottoni nascosti.
+4. **`get_current_user` ignora `is_active`** — sessione residua dopo disattivazione (B1).
+5. **`super_admin` bypass tenant** + impersonation che **muta** `agency_ids` sul record Founder. Exit ripristina; un crash a metà lascia membership sporca. Log c’è, audit UI no.
+6. **Collection `activities` fuori da `TENANT_COLLECTIONS`** — dipendenza dal filtro manuale.
+7. **Nessun audit dei cambi ruolo** — oggi i ruoli cambiano per create_agency, accept invite, create_group, seed, KYC auto-activate, senza registro consultabile.
+8. **Commento `group_admin` vs implementazione** — rischio di usarlo come se vedesse tutte le filiali.
+
+Non è un buco di “l’UI autorizza senza backend”: il backend tiene. Il buco è **modello troppo piatto** rispetto alle regole organizzative.
+
+---
+
+## Differenze rispetto alle decisioni organizzative Area A
+
+Area A (logica immobiliare + MLS) ha fissato: **ogni agenzia è un tenant**; la condivisione tra org è **MLS esplicita e revocabile**, non il merge del CRM; holding/gruppo/filiale è gerarchia reale, non alias di menu.
+
+| Regola organizzativa (Area A + D-041/D-047/D-051/D-106) | Copertura codice |
+|---|---|
+| Isolamento CRM tra agenzie | **Coperto** (`active_agency_id` + tenant inject + filtri `{agency_id}`) |
+| Sharing tra org solo con atto esplicito revocabile | **Coperto per MLS** (join/leave, partner, visibility). **Assente per CRM** (clienti, fascicoli, attività) |
+| Holding / gruppo / filiale | **Struttura dati presente**. Permessi holding **parziali** (KPI sì, CRM cross-filiale no, alias troppo larghi) |
+| Admin di A non vede B | **Coperto** per `agency_admin`. **Eccezione voluta**: `super_admin` |
+| Delega solo permessi posseduti | **Assente** (si invita anche un pari `agency_admin`) |
+| Permessi diversi per agente vs titolare vs segreteria | **Parziale**: titolare vs agente su delete/settings/inviti/publishing. Segreteria = `agent`. Nessun perimetro per collaboratore |
+| Ruoli clonabili da modello | **Assente** (limite v1 dichiarato in D-051 / Cap. 13.12) |
+| Tracciabilità cambi autorizzazioni | **Assente** come prodotto; log applicativi sparsi |
+
+D-051 dice già onestamente: *«nessuna gestione permessi granulari; in v1 tutti i membri vedono l’intero portafoglio»*. B11 conferma che **quel limite è ancora lo stato del codice**, non un debito dimenticato.
+
+---
+
+## Raccomandazioni per il Master Development Plan
+
+Non serve riscrivere auth. Il nucleo da **mantenere**: `require_roles` + alias documentati, D-106, tenant inject, owner check, guard A-007, MLS partner revoke, impersonation esplicita Founder.
+
+Interventi **realmente necessari** (in ordine, da valutare insieme, non da implementare ora):
+
+1. **Decidere il perimetro agente** — se Area A vuole “l’agente vede solo i suoi immobili/clienti”, è una nuova regola (filtro `listing_agent_id` / `assigned_agent_id`). Se il modello resta “agenzia = un solo ufficio condiviso”, D-051 resta valido e **non** va aggiunto un ACL.
+2. **Stringere gli alias holding** — `group_admin` non dovrebbe ereditare inviti/delete/settings della filiale attiva solo perché l’endpoint chiede `agency_admin`. Oppure documentare che holding = super-titolare della filiale attiva.
+3. **Allineare UI e API** su inviti/gruppo (stesso insieme di ruoli), senza inventare un motore permessi.
+4. **Cambio ruolo post-join (A-008)** se serve promuovere un `agent` — endpoint unico, non ruoli custom.
+5. **Audit append-only** su invite / remove / promote / impersonate / attach-detach filiale — dipende dal punto 6 Area B (tracciabilità), non da un RBAC nuovo.
+6. **Ruoli custom / template** — solo se, dopo B11, si conferma che `agent` vs `agency_admin` non basta. Oggi è il pezzo più costoso e il meno coperto dal codice esistente.
+
+---
+
+## Dipendenze da altri moduli
+
+- **B1 (account/sessioni):** `is_active` non enforced su `get_current_user`; senza quello, sospensione membro è incompleta.
+- **Area A / MLS:** unico canale già pronto per autorizzazioni *tra* organizzazioni; non va duplicato con un secondo “share CRM”.
+- **Billing / piani:** tetto `max_agents` già vincola la delega.
+- **Attivazione agenzia:** `assert_agency_crm_unlocked` è un gate di prodotto, non un permesso.
+- **Privacy L1–L4:** visibilità *pubblico vs interno*, non *tra colleghi*.
+- **Cabina Ops:** unica eccezione legittima all’isolamento org.
+- **Area B successiva (tracciabilità):** audit ruoli/permessi non esiste come modulo.
+
+---
+
+B11 è chiuso come fotografia. Possiamo distinguere insieme cosa è già coperto (tenant + ruoli predefiniti + MLS revocabile) da cosa deve entrare nel Master Development Plan (perimetro agente, alias holding, cambio ruolo, audit). **Non passo a B2** finché non chiudiamo questa revisione.
+
+
+================================================================================
+# B12 — AUDIT TECNICO READ-ONLY: LOG E TRACCIABILITÀ
+# File: 06-AUDIT-B12-LOG-TRACCIABILITA.md
+================================================================================
+
+Audit B12 chiuso in sola lettura: nessuna modifica a codice, file, database o configurazioni. Non esiste un **audit log unico** consultabile. Ci sono trail Mongo **settoriali** (consensi, MLS, privacy, HAL, crediti, sync) e molto `logger.*` che **non** soddisfa B7.
+
+Criterio usato: **audit strutturato** = documento Mongo append-only interrogabile, con attore/tempo/tipo. Un `logger.info` o lo stato corrente di un record (invito, sessione) **non** conta come copertura B7.
+
+---
+
+# B12 — Audit tecnico: log e tracciabilità
+
+---
+
+## 1. Inventario dei sistemi di logging
+
+### GIÀ PRESENTE
+
+**Log applicativi (stdout / file processo)**  
+Filtro PII email su logger: `install_pii_redaction()` in `backend/server.py` → `backend/shared/privacy/log_redact.py`. Redige solo pattern email, non IP né token. Non interrogabili da API/UI.
+
+**Trail Mongo settoriali (scrittura reale):**
+
+| Collection | Scrittura | Campi tipici | Modalità |
+|---|---|---|---|
+| `consent_events` | `shared/privacy/consent_log.py` `log_consent()` | `id`, `action`, `email`, `user_id`, `source`, `ip`, `meta`, `created_at`, `expire_at` | insert; TTL 3650 giorni |
+| `privacy_audit_events` | `privacy_gate.py` `log_privacy_change()` | `actor_id`, `property_id`, `agency_id`, `from_level`, `to_level`, `reason`, `created_at` | insert |
+| `mls_events` | `mls.py` `_log_event()` | `agency_id`, `kind`, `payload`, `created_at` | insert; **senza `actor_id`** |
+| `al_audit` | `al_agent.py` | `user_id`, `kind`, `ts`, messaggi/len | insert |
+| `al_legal_audit` | `al_legal/router.py` | `user_id`, `agency_id`, `kind`, `ts`, `expire_at` (5 anni) | insert + TTL |
+| `domain_vault_events` | `domain_vault.py` | `agency_id`, `user_id`, `user_email`, `confirmed`, `at` | insert |
+| `legal_kit_events` | `legal_kit.py` `_log_event()` | `action`, `client_ip`, `template_slug`, `created_at` | insert |
+| `api_usage_log` | `api_key.py` `charge_and_log()` | chiave, endpoint, crediti, status, latenza | insert |
+| `api_credit_ledger` / `credit_ledger` / `credit_transactions` | API keys / billing / Ops grant | `delta`, `reason`, `actor`/`granted_by`, saldo | insert |
+| `publishing_sync_logs` | `sync_engine.py` `_record_log()` | portale, status, items, error, trigger | insert |
+| `social_posts` | `social_publisher.py` | post per canale, status, error | insert |
+| `hal_knowledge_sessions` | `hal_knowledge.py` | domanda/risposta, user, agency | insert |
+| `ops_alerts` | `shared/ops_alerts.py` | `kind`, `severity`, `message`, `meta`, `acked` | insert + ack |
+| `rate_limit_events` | `rate_limit.py` | identifier, bucket, timestamp | insert (rate-limit, non audit) |
+
+**Sicurezza / sessione (Mongo operativo, non audit):**
+- `login_attempts` — upsert contatore lockout (`brute_force.py`)
+- `refresh_tokens` — insert al login, **delete** al logout (`session_store.py`)
+- `password_reset_tokens` — token one-shot, `used: true`
+
+**Stato di business usato come “traccia” (mutabile):**
+- `agency_invites` (`invited_by`, status)
+- `mls_partners` / `mls_requests`
+- `users.ops_impersonation` (stato corrente, non storico)
+- `notifications` (inbox, mark-as-read)
+
+**Backup:** `backup_job.py` / cron Founder — dump archivio, non un log di audit; health in cabina Ops.
+
+### PARZIALMENTE PRESENTE
+
+Dashboard «attività recente» legge `match_audit`, `publishing_events`, `calendar_events` (`dashboard.py`) ma **nel repo non c’è nessun `insert_one` su quelle collection**. Feed spesso vuoto. Sostituto reale del sync: `publishing_sync_logs`.
+
+`SUGGERIMENTI_POST_PROGRAMMA.md` cita `db.audit_log`: **non esiste nel codice**.
+
+### ASSENTE
+
+Collection unica `audit_log` / `security_events`. Trail Founder/Super Admin. Trail gruppi/filiali. Trail login riusciti. Trail password. Trail sospensione account. Trail revoca sessione.
+
+### DA VERIFICARE
+
+Volume e retention effettivi in Mongo di produzione (indici TTL creati solo per `consent_events`, `al_legal_audit`, `b2c_purchases`, `password_reset_tokens`). Destinazione dei logger (Railway/stdout) e se qualcuno li aggrega fuori repo.
+
+---
+
+## 2. Copertura degli eventi B7
+
+Per ogni punto: **strutturato consultabile** vs **solo tecnico** vs **assente**.
+
+### 1. Login riusciti e falliti — PARZIALMENTE PRESENTE
+
+| Esito | Cosa c’è |
+|---|---|
+| Fallito (password B2B `/auth/login`) | `login_attempts` upsert: `identifier=ip:email`, `count`, `last_attempt`. **Sovrascrive** la storia; non è una riga per tentativo |
+| Riuscito | `clear_attempts` **cancella** il documento; `store_refresh` crea jti. Nessun evento «login ok» |
+| Account disabilitato | 403, **nessun** write su `login_attempts` |
+| Google OAuth / B2C cloud | `store_refresh`; **non** usano `register_failed_attempt` |
+
+`logger`: nessuno strutturato sul successo. Email nel logger di reset è redacted.
+
+### 2. Modifiche e reset password — ASSENTE (come audit)
+
+- `forgot_password`: insert token + `logger.info("Password reset link generated for %s", email)`
+- `reset_password`: update hash + `used: true` sul token; **nessun evento**
+- `change_password`: set `password_changed_at` sul user (timestamp sul documento, non log)
+
+Non si ricostruisce chi ha resettato cosa, da quale IP, con quale esito, oltre allo stato del token.
+
+### 3. Sospensioni e riattivazioni — ASSENTE
+
+Nessun endpoint «suspend member» (B1). `is_active` / erase GDPR: `consent_events` action `account_erasure` solo su self-erase (`auth.erase`). Erase Ops (`bridge_erase_user`) → `logger.warning`, **senza** `log_consent`.
+
+### 4. Inviti e attivazioni collaboratori — PARZIALMENTE PRESENTE
+
+- Documento `agency_invites` (stato: pending/accepted/revoked/expired; `invited_by`, `role`, date)
+- Refresh pending **sovrascrive** token/ruolo sullo stesso record
+- `logger.info("Invite created: …")`
+- Notifica inbox `TYPE_INVITE_ACCEPTED` all’inviter (`invites.py`) — mutabile, cancellata da GDPR erase
+
+Non c’è stream eventi (created → refreshed → accepted → revoked).
+
+### 5. Modifiche di ruoli e autorizzazioni — ASSENTE
+
+Promote `create_agency` / `accept_invite` (solo se `client`) / `create_group` → `group_admin`: update su `users.role`, `logger.info` sui gruppi. Nessun audit. PATCH ruolo membro inesistente (B11).
+
+Eccezione utile ma fuori B7 auth: `privacy_audit_events` (cambio `privacy_level` immobile).
+
+### 6. Revoche delle sessioni — ASSENTE (come audit)
+
+`logout` → `revoke_refresh` → **`delete_one` su `refresh_tokens`**. La prova della sessione sparisce. Nessun `revoked_at` / attore / motivo. Erasure cancella tutti i jti dell’utente.
+
+### 7. Interventi Super Admin — PARZIALMENTE PRESENTE
+
+Cabina: quasi tutto `logger.warning` in `founder_bridge.py` (impersonate, erase, offboard, KYC, revoke/rotate key, override prezzi).
+
+Mongo correlato, **non** un registro azioni:
+- `ops_alerts` (errori sistema, ack)
+- `credit_transactions.granted_by` (top-up assistito)
+- `api_credit_ledger.actor_user_id`
+- `pricing_overrides.updated_by` (stato corrente override, upsert)
+- `api_keys.revoked_by` sul documento chiave
+- aggregate numerici in `founder_ops.py` `ops_overview`
+
+Nessuna lista «azioni Founder».
+
+### 8. Impersonation e uscita — PARZIALMENTE PRESENTE
+
+Stamp `users.ops_impersonation` (agenzia, `started_at`, membership precedente). All’exit lo stamp viene **`$unset`**. Resta solo `logger.warning` enter/exit. Storico non consultabile.
+
+### 9. Organizzazioni, gruppi, filiali — ASSENTE (audit) / PARZIALMENTE (stato)
+
+Create/update agency: documento `agencies`.  
+Gruppi: `logger.info` create/attach/detach/delete (`groups.py`). Delete gruppo **muta** filiali e `users.group_id`. Nessun `group_events`.
+
+### 10. Delega e revoca autorizzazioni — PARZIALMENTE PRESENTE
+
+Stesso perimetro degli inviti + revoke invite (update status) + `remove_member` (pull `agency_ids`, no event). MLS partner revoke è al punto 11. API key revoke: campo sul documento + logger Founder.
+
+### 11. Operazioni MLS rilevanti — GIÀ PRESENTE (trail) / PARZIALMENTE (completezza)
+
+`mls_events` append-only per: `join`, `leave`, `partner_invite`, `partner_accept`/`partner_revoke` (via `partner_{action}`), `offer_created`, `offer_accept`/`offer_reject`.
+
+Manca `actor_id`. Cambio `visibility` / `mls_shared` su un immobile **non** passa da `_log_event`. **Nessuna API/UI** che elenchi `mls_events` (unico writer: `mls.py`).
+
+### 12. Condivisione, download e revoca documenti MLS — ASSENTE
+
+Non esiste un vault documenti MLS (share/download/revoke). Condivisione MLS = listing (`visibility`, `mls_shared`), non fascicoli. Fascicolo è interno agenzia, senza audit download. `legal_kit_events` è kit marketing pubblico, non MLS.
+
+---
+
+## 3. Contenuto delle registrazioni
+
+### GIÀ PRESENTE (dove il trail esiste)
+
+Modello più completo: **`privacy_audit_events`** — attore, org, risorsa, tipo, before/after, reason, timestamp.
+
+`consent_events`: attore (`user_id`/`email`), azione, IP, source, meta, tempo; org assente (consenso persona).  
+`mls_events`: org, tipo, payload risorsa, tempo; **attore assente**; risultato implicito (insert = successo); no motivazione.  
+Ledger crediti: attore/reason/saldo.  
+`al_legal_audit`: user, agency, kind, ts, esito qualitativo (confidence).
+
+Ricostruire «chi / cosa / quando» è possibile **solo** su privacy, consensi, HAL Legal, ledger, sync portali, post social — non sul perimetro B7 account/sicurezza.
+
+### PARZIALMENTE PRESENTE
+
+Inviti: chi ha invitato e quando, sullo **stato attuale** del record.  
+Impersonation: solo se **in corso**.  
+Login fallito: ultimo tentativo, non lo storico.  
+`password_changed_at`: che è cambiata, non da chi/come (reset vs change).
+
+### ASSENTE
+
+Campo `result` (success/fail) su auth. Motivazione su suspend/delega. Org di appartenenza sui login. Riferimento risorsa su logout. Catena append-only unica.
+
+### DA VERIFICARE
+
+Se in produzione `al_audit` ha `created_at` (la dashboard lo cerca) o solo `ts` (come write in `al_agent.py`) — mismatch possibile sul feed «Oggi».
+
+---
+
+## 4. Integrità e conservazione
+
+### GIÀ PRESENTE
+
+- Intent append-only su consent/privacy/mls/al_legal (solo insert nel codice applicativo)
+- TTL: consensi 10 anni; HAL Legal 5 anni; token reset; acquisti B2C
+- Consent: `log_consent` **non solleva** al caller se insert fallisce (`logger.warning`) — l’operazione di business va avanti **senza** prova
+- Redaction email sui logger
+- Backup archivio Mongo (job daily) — protegge dump, non immutabilità
+
+### PARZIALMENTE PRESENTE
+
+Nessun vincolo DB append-only (un `update`/`delete` da shell o da `super_admin` è possibile).  
+`login_attempts` e `refresh_tokens` sono **volutamente distruttivi**.  
+GDPR erase **cancella** notifications, reset token, refresh — compatibile privacy, contrario a un audit di sicurezza a lungo termine.  
+`ops_alerts` è ackabile (update).
+
+### ASSENTE
+
+Hash chain / WORM. Retention policy unica B7. Retry/outbox se l’audit fallisce. Backup dedicato «audit immutabile». Protezione da modifica Founder.
+
+### DA VERIFICARE
+
+Cosa finisce nei log Railway (token, payload). Se il backup daily include tutte le collection eventi. Se TTL consent è stato creato su ogni ambiente (`ensure_indexes`).
+
+**PII impropria (codice):**
+- `login_attempts.identifier` = IP + email in chiaro
+- `consent_events.email` + `ip` (lecito GDPR, da proteggere)
+- `al_audit` può contenere `user_msg` / `assistant_msg`
+- `domain_vault_events.user_email`
+- `forgot_password` loggava l’email (filtro redaction)
+
+Password hash **non** viene loggato. Token reset **sì** in Mongo (necessario al flusso), non in audit.
+
+---
+
+## 5. Consultazione e autorizzazioni
+
+### GIÀ PRESENTE
+
+| Chi | Cosa può vedere |
+|---|---|
+| Super Admin | `ops_overview` (conteggi HAL/API/crediti), `/app/ops/legal` (`al_legal_audit`), `ops_alerts`, backup health. **Non** un registro B7 |
+| Agency admin / agent | Ultimi 20 `privacy_audit_events` per immobile (`GET .../privacy`); social posts; HAL knowledge history; sync logs **API** publishing; usage API key **API** |
+| Utente su se stesso | Export GDPR include `consent_events` (`export_user.py`) |
+| Qualunque autenticato | Inbox `notifications` (propri `user_id`) |
+
+Isolamento: privacy/social/usage filtrati per `agency_id` / proprietà. Legal ops overview è **globale** Founder. `legal_kit_events` non ha UI ma la collection è scritta da endpoint **pubblici**.
+
+### PARZIALMENTE PRESENTE
+
+Publishing logs e API key usage: backend sì, UI incompleta (`PublishingPage` / `ApiKeysPage` non mostrano lo storico completo).  
+`mls_events`: nessuno può consultarli dall’app.  
+Admin di gruppo/holding: **nessun** log di gruppo.
+
+### ASSENTE
+
+UI «Registro eventi» per Admin org. Vista holding. Accesso collaboratori ordinari a un audit sicurezza (corretto che non ci sia, ma allora manca anche per l’Admin). Consultazione `consent_events` oltre export. Consultazione interventi Super Admin.
+
+I log B7, dove esistono pezzi, sono **solo tecnici o API nascoste**, non un’interfaccia di governo.
+
+### DA VERIFICARE
+
+Chi in Ops guarda i log Railway. Se un `group_admin` chiama `GET .../privacy` (alias ruoli) e vede l’audit della filiale **attiva** — sì, per B11.
+
+---
+
+## 6. Conclusioni obbligatorie
+
+### 1. Copertura effettiva della decisione B7
+
+| # | Evento B7 | Giudizio |
+|---|---|---|
+| 1 | Login ok/ko | Parziale (solo fallimenti B2B, distruttivo) |
+| 2 | Password | Assente |
+| 3 | Sospensione/riattivazione | Assente |
+| 4 | Inviti/attivazioni | Parziale (stato + notifica) |
+| 5 | Ruoli/autorizzazioni | Assente |
+| 6 | Revoca sessioni | Assente (delete jti) |
+| 7 | Interventi Super Admin | Parziale (logger + campi su documenti) |
+| 8 | Impersonation | Parziale (stato live + logger) |
+| 9 | Org/gruppi/filiali | Assente come audit |
+| 10 | Delega/revoca auth | Parziale (inviti/MLS partner) |
+| 11 | MLS collaborazioni | Presente trail, inconsultabile, senza attore |
+| 12 | Documenti MLS | Assente (feature assente) |
+
+**B7 non è coperta.** Il prodotto ha audit **di dominio** (privacy listing, consensi GDPR, HAL Legal, crediti, sync, MLS join/partner/offer), non un registro di **account, accessi e amministrazione**.
+
+### 2. Lacune di sicurezza e tracciabilità
+
+- Login riusciti e OAuth/B2C fuori dal radar brute-force
+- Logout cancella la prova della sessione
+- Founder può impersonare/cancellare/offboard con sola riga di log processo
+- Audit consent può fallire in silenzio
+- `mls_events` senza attore: si sa l’agenzia, non la persona
+- Nessuna immutabilità: chi ha Mongo può alterare i trail esistenti
+- Collection phantom in dashboard → falsa impressione di tracciabilità operativa
+
+### 3. Log già presenti da riutilizzare (non duplicare)
+
+Riutilizzare il **pattern** di `log_privacy_change` / `log_consent` / `_log_event` MLS:
+- insert append-only
+- `id` + timestamp ISO
+- `agency_id` dove c’è tenant
+- fallimento non deve far credere che l’evento sia stato registrato (oggi consent è opposto)
+
+Riutilizzare **collection esistenti** per il loro dominio: `mls_events` (estendere con `actor_id` + endpoint lista), `consent_events` (già GDPR), `privacy_audit_events`, ledger crediti, `publishing_sync_logs`, `ops_alerts` (ops tecniche, non B7).
+
+**Non** riusare `login_attempts` come audit (è un lucchetto). **Non** riusare `refresh_tokens` come storico sessioni. **Non** riusare `notifications` come audit.
+
+### 4. Funzionalità da mettere nel Master Development Plan
+
+Interventi **reali**, senza nuovo «sistema di logging universale» a prescindere:
+
+1. **Un solo writer di security audit** (stesso schema: `actor_id`, `agency_id`, `action`, `target`, `result`, `at`, `ip` opzionale) per i 12 eventi B7 ancora scoperti — collection nuova **oppure** estensione consapevole di un nome unico, non 12 collection nuove.
+2. **Login** (ok/ko, lockout, MFA) come insert, non upsert.
+3. **Logout / revoke** come evento; tenere jti hashed o non cancellare senza riga audit.
+4. **Password change/reset** (senza loggare il segreto).
+5. **Invite lifecycle + remove member + future role patch** come eventi (B11).
+6. **Cabina**: ogni `logger.warning` Founder → stessa collection (impersonate enter/exit **prima** di unset).
+7. **Gruppi**: create/attach/detach/delete.
+8. **MLS**: aggiungere `actor_id`; GET lista per admin agenzia; opzionale log share listing (`mls_shared`).
+9. **UI Admin org** (solo propria `agency_id`) + UI Super Admin globale. Holding: dopo aver deciso B11 sugli alias.
+10. Item 12 B7: o si **depennà** (non c’è documento MLS) o si specifica se si intende share listing / fascicolo.
+
+Non serve riscrivere HAL Legal, privacy gate, social_posts, sync logs.
+
+### 5. Dipendenze da B1, B2, B11
+
+- **B1:** senza suspend/reactivate e senza `is_active` su `get_current_user`, gli eventi 3 B7 non hanno nemmeno un’operazione da registrare. Logout/refresh già descritti.
+- **B2:** in questa serie non risulta consegnato; se B2 è recupero credenziali / policy password, gli eventi 2 e 6 dipendono da quelle regole (cosa costituisca reset, revoca tutte le sessioni al cambio password — oggi **non** avviene).
+- **B11:** eventi 5 e 10 sono vuoti finché non esiste cambio ruolo / delega granulare; gli inviti restano l’unico atto di delega da auditare subito.
+
+### 6. Rischi di duplicazione
+
+- Dashboard legge `publishing_events` mentre il writer è `publishing_sync_logs`
+- Crediti su tre ledger (`credit_ledger`, `credit_transactions`, `api_credit_ledger`)
+- Invite: documento + logger + notification (tre forme, nessuna audit B7)
+- Impersonation: stamp user + logger (due, entrambi non storici)
+- MLS: `mls_events` + stato `mls_partners`/`mls_requests` (complementari, ok se l’evento resta append-only)
+- Nota `db.audit_log` in memoria vs assenza in codice — rischio che un piano futuro apra una quarta collection ignorando consent/mls/privacy
+
+---
+
+B12 è la fotografia. Possiamo distinguere insieme: trail di dominio da **tenere**; B7 security da **aggiungere una volta sola**; item 12 da **chiarire o togliere** perché i documenti MLS non esistono nel prodotto. Non passo ad altre aree finché non chiudiamo questa revisione.
+
+
+================================================================================
+# B12 — Impostazione confermata
+# File: 07-AUDIT-B12-IMPOSTAZIONE-CONFERMATA.md

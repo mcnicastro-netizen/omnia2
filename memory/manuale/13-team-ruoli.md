@@ -1,5 +1,10 @@
 # Capitolo 13 · Team & Ruoli (Collaboratori)
 
+> ### Nota design (D-173 · 16-Nov-2026) — comportamento attuale vs target
+> Questo capitolo descrive il **prodotto attuale** (`agency_admin` / `agent`, `agency_ids[]`, multi-agenzia possibile).  
+> Il design chiuso B01/B02 prevede: **una sola Membership operativa attiva**, Owner ≠ Main Admin ≠ Branch Admin, Representation distinta dalla Membership, Main Admin senza CRM automatico delle filiali.  
+> **Non ancora implementato.** SoT: `_export_audits/B01-…` · `B02-…` · D-173.
+
 > **Cosa trovi in questo capitolo**
 > Il modulo **Collaboratori** è il centro di controllo della tua agenzia per invitare, elencare e gestire i membri del team. In una parola: chi lavora con te dentro ImmoWeb, con quale ruolo e quali inviti sono ancora in sospeso. Il capitolo copre: dove trovarlo, i due ruoli disponibili (**titolare** e **agente**), l'invito via magic-link email con scadenza 7 giorni, la gestione degli inviti pendenti/accettati/revocati/scaduti, il flusso di accettazione da parte del collega, le differenze fra ciò che vedono i due ruoli, i limiti v1 dichiarati onestamente.
 

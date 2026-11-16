@@ -1,41 +1,45 @@
 # Prossima sessione — programma passi
 
-**Aggiornato**: 12 Novembre 2026 (~18:15 CET — Europe/Rome)  
+**Aggiornato**: 16 Novembre 2026 (~14:10 CET — Europe/Rome)  
 **Repo**: https://github.com/mcnicastro-netizen/omnia2 ✅  
+**Stato**: **PAUSA** — ripresa con design B03 (senza codice)
 
 ---
 
-## Ora (fase 4)
+## Alla riapertura (unico next step)
 
-1. **Dogfood produzione** con checklist in `memory/PRODUCT_ACCEPTANCE_MATRIX.md` (J1–J9 + superficie D-171).
-2. Segnare gate ❌ se qualcosa si spezza live (non «perché esiste la PR»).
-3. Solo dopo: fix mirati o nuove feature.
+Messaggio Founder → ChatGPT / Cursor:
 
-## Chiuso in codice (12 Nov)
+```
+B02 design chiuso e acquisito. Autorizzo solo design B03 breve (sessioni, registrazione, inviti), senza codice.
+Vincoli: B01 + DEC-01/02/03 e B02 + DEC-01…04. Non riaprire B01/B02. Non aprire B04–B07. Fermati a fine design B03.
+```
 
-| Blocco | PR |
-|--------|-----|
-| Flussi P0–P2 | #192–#198 |
-| Design bancone | #199–#202 |
-| Oggi / Match / Richieste / Lucide | #203–#205 |
+Leggere prima: `memory/RIPRENDI_2026-11-16.md` + `_export_audits/PAUSA-2026-11-16-RIPRENDI.md` + **D-173**.
 
-## Dogfood D-170 (Nicastro)
+## Chiuso (16 Nov — design, non codice)
 
-1. Sito proprio + box MLS: copia iframe da Avvio/MLS/Il mio sito.
-2. Incolla solo al posto del riquadro ricerca rete su `www.nicastroimmobiliare.it`.
-3. Verifica claim N immobili, ricerca, scheda cloud OMNIA.
+| Item | Stato |
+|------|-------|
+| Verifica statica Blocchi 0–7 | CHIUSA |
+| Backlog FASE 2 risanamento | Acquisito (solo pianificazione) |
+| B01 ANO-001 modello dati | DESIGN CHIUSO |
+| B02 ANO-002+004 authz/audit | DESIGN CHIUSO |
+| Export `_export_audits/` | Su repo (PR #207 / merge docs) |
 
-## Aperto
+## Vietato fino a via libera Founder
 
-- **A-038** solo con «vai»
-- Restyling caso 3 / fee €199 Starter resta D-151
+- Codice di risanamento
+- Migrazioni Mongo / Stripe
+- Riapertura audit 0–7 / B01 / B02
+- Design B04–B07
 
 ## SoT
 
 | Voce | Doc |
 |------|-----|
-| Acceptance | **PRODUCT_ACCEPTANCE_MATRIX.md** |
-| Identità CRM | **D-171** |
-| Flussi | **D-172** |
-| Embed sito proprio | **D-170** |
-| Avvio | **D-168** |
+| Ripresa | **RIPRENDI_2026-11-16.md** |
+| Decisioni design | **D-173** |
+| Export | **`_export_audits/`** |
+| Acceptance prodotto (separato) | **PRODUCT_ACCEPTANCE_MATRIX.md** |
+| Identità CRM UI | **D-171** |

@@ -1,0 +1,1080 @@
+# OMNIA AUDIT — PARTE 3/4
+# Fonte primaria. Leggi tutto questo pezzo. Non inventare.
+
+================================================================================
+
+B12 registrato come impostazione confermata (registro unico + riuso tracce + consultazione + append-only applicativo; MLS = allegati chat, non fascicoli).  
+B13 sotto: sola lettura, nessun codice toccato.
+
+---
+
+# B13 — Audit tecnico: refresh token e gestione sessioni
+
+## Modello attuale (fotografia)
+
+Doppio cookie HttpOnly + store server-side dei soli **refresh** per `jti`:
+
+| Pezzo | Dove | Comportamento |
+|---|---|---|
+| Access JWT | `jwt_tokens.create_access_token` | HS256, `type=access`, `sub`/`email`/`role`, TTL default **15 min** (`ACCESS_TOKEN_MINUTES`) — **senza `jti`** |
+| Refresh JWT | `create_refresh_token` | HS256, `type=refresh`, `sub` + **`jti` uuid**, TTL default **7 giorni** |
+| Cookie | `auth._set_auth_cookies` | `access_token` + `refresh_token`, HttpOnly, `Secure`/`SameSite` da `COOKIE_SECURE` |
+| Store | `session_store.store_refresh` | `refresh_tokens`: `{jti, user_id, expires_at, created_at}` |
+| Validità | `is_refresh_valid` | refresh accettato **solo se** `jti` ancora in Mongo |
+| Rinnovo | `POST /auth/refresh` | verifica refresh → emette **solo nuovo access**; **non** ruota il refresh |
+| Logout | `POST /auth/logout` | `revoke_refresh` (`delete_one` jti) + clear cookie |
+| FE | `api.js` `refreshSession` | su 401: un solo refresh in volo, poi retry; bootstrap in `auth.jsx` |
+
+CSRF: con `COOKIE_SECURE=true` è attivo; `/api/auth/refresh` è **esente** (prova = cookie refresh HttpOnly).
+
+---
+
+## 1. Rinnovo delle sessioni
+
+### GIÀ PRESENTE
+- Access corto + refresh lungo, documentato nel codice.
+- `POST /auth/refresh`: cookie refresh → decode → `type==refresh` → `is_refresh_valid` → user attivo → nuovo `access_token` cookie → `_public(user)`.
+- FE: silent refresh su fallimento `/auth/me` e su 401 API (`refreshSession` single-flight).
+- Refresh controlla `is_active` (login/refresh sì; `get_current_user` no — già B1).
+
+### PARZIALMENTE PRESENTE
+- Il rinnovo **prolunga solo l’access**. Il refresh resta lo stesso fino a scadenza 7g o logout: non c’è sliding window sul refresh.
+- Ruolo/email nell’access nuovo vengono dal **DB** al refresh (buono); l’access vecchio resta valido fino a `exp` anche se il ruolo è cambiato.
+
+### ASSENTE
+- Rotazione del refresh a ogni `/auth/refresh`.
+- Endpoint “estendi sessione” esplicito oltre al refresh automatico.
+- Revoca access in anticipo (no denylist access / no `jti` sull’access).
+
+### DA VERIFICARE
+- Valori effettivi di `ACCESS_TOKEN_MINUTES` / `REFRESH_TOKEN_DAYS` in produzione.
+- Se `delete_cookie` al logout usa attributi allineati a `Secure`/`SameSite=None` (clear cookie cross-site a volte fallisce se gli attributi non coincidono).
+
+---
+
+## 2. Accessi contemporanei (multi-dispositivo)
+
+### GIÀ PRESENTE
+- Ogni login / register / Google / MFA verify chiama `_set_auth_cookies` + `store_refresh` → **nuovo `jti`**, insert aggiuntivo.
+- Logout revoca **solo** il `jti` del cookie corrente → le altre sessioni restano.
+- Modello di fatto: **sessioni parallele permesse**, senza tetto.
+
+### PARZIALMENTE PRESENTE
+- Cleanup scaduti in `store_refresh` (`delete_many` su `expires_at < now`) è opportunistico, non un job dedicato.
+- Nessun indice dedicato trovato in `ensure_indexes` su `refresh_tokens` (solo uso runtime).
+
+### ASSENTE
+- Limite “N dispositivi”.
+- Lista sessioni per utente / “disconnetti tutti gli altri”.
+- Binding device/IP/UA sul documento `refresh_tokens` (solo `jti` + `user_id` + tempi).
+- UI gestione sessioni.
+
+### DA VERIFICARE
+- Quanti `jti` medi per utente in Mongo reale.
+- Se un secondo login dallo stesso browser **sovrascrive** il cookie (sì) lasciando l’old `jti` orfano in DB fino a TTL (sì: sessione “fantasma” ancora valida se qualcuno ha ancora quel cookie — tipico solo se cookie era stato copiato).
+
+---
+
+## 3. Logout e revoca
+
+### GIÀ PRESENTE
+- Logout: `revoke_refresh(cookie)` + clear access/refresh/csrf.
+- Self-erase: stesso pattern + `erase_user_data` cancella `refresh_tokens` per `user_id`.
+- Test L12: dopo logout, refresh con stesso cookie → **401** (`test_phase23_refactor.py`).
+
+### PARZIALMENTE PRESENTE
+- Revoca = **delete** del record (non `revoked_at` append-only) — coerente con B12 “oggi non c’è audit sessioni”.
+- Logout **non** invalida l’access già emesso: resta usabile fino a max ~15 min.
+- `change_password` / `reset_password`: **non** revocano refresh (né “tutti i dispositivi”).
+- Erase Ops (`bridge_erase_user`) passa da `erase_user_data` → cancella i refresh dell’utente; access residui fino a exp.
+
+### ASSENTE
+- `revoke_all_sessions(user_id)` riusabile (password change, suspend, Founder).
+- Revoca access immediata.
+- Audit strutturato di logout/revoca (B12).
+
+### DA VERIFICARE
+- Comportamento cookie clear su domini `cloud.` / `www.` / API cross-site.
+
+---
+
+## 4. Riutilizzo di token già revocati
+
+### GIÀ PRESENTE
+- Dopo logout, `is_refresh_valid` fallisce → 401 (`invalid_token`).
+- Refresh scaduto: `decode_token` → `None` (ExpiredSignature) → 401 (stesso dettaglio generico).
+- Access scaduto/ invalido: `get_current_user` → 401; FE tenta refresh.
+
+### PARZIALMENTE PRESENTE
+- Replay del **refresh ancora in store** (non revocato): **sempre permesso** — è il design senza rotazione.
+- Replay dell’**access** entro TTL: sempre permesso (stateless).
+- `jti` assente sul refresh → `is_refresh_valid` False; `store_refresh` senza `jti` non inserisce nulla (no-op silenzioso).
+
+### ASSENTE
+- Rilevamento reuse-after-rotate (impossibile senza rotazione).
+- Famiglia di sessioni / kill-tree se un refresh rubato viene riusato dopo rotazione.
+
+### DA VERIFICARE
+- Distinguibilità client 401 “scaduto” vs “revocato” (oggi stesso codice messaggio).
+
+---
+
+## 5. Rotazione dei refresh token
+
+### ASSENTE (confermato)
+- `POST /auth/refresh` **non** chiama `create_refresh_token`, **non** `store_refresh` nuovo, **non** `revoke` del vecchio.
+- Il cookie `refresh_token` resta invariato per tutta la vita della sessione (fino a 7g o logout).
+
+### PARZIALMENTE PRESENTE
+- Nuovo refresh solo su **nuovo login** (o register / Google / MFA verify / cloud register), non sul rinnovo silenzioso.
+
+### GIÀ PRESENTE (correlato, non rotazione)
+- `jti` univoco a emissione + store server-side = base necessaria per introdurre rotazione in seguito **senza** riscrivere il modello.
+
+### DA VERIFICARE
+- Se in roadmap si vuole rotazione a ogni refresh o solo a intervalli / su suspicious reuse.
+
+---
+
+## 6. Percorsi di emissione sessione (inventario)
+
+| Percorso | Store `jti`? | Note |
+|---|---|---|
+| `POST /auth/register` | Sì (`store_refresh`) | |
+| `POST /auth/login` | Sì | Se MFA: cookie **dopo** `/auth/mfa/verify` |
+| `POST /auth/mfa/verify` | Sì | |
+| `POST /auth/google` | Sì | |
+| `POST /cloud/auth/register` | Sì | |
+| `POST /invites/accept` | **No** | Setta cookie access+refresh ma **non** chiama `store_refresh` |
+| `POST /auth/refresh` | N/A | Non emette nuovo refresh |
+
+### Gap rilevante (solo lettura)
+Accept invite: il refresh in cookie **non** è nel store → al primo silent refresh dopo ~15 min la sessione post-invito tende a **401**, a meno di nuovo login. Access immediato funziona. Cookie hardcodati `secure=True, samesite=none` (non passano da `_cookie_kwargs()` / `COOKIE_SECURE`).
+
+---
+
+## 7. Contenuto record / sicurezza cookie
+
+**Store:** `jti`, `user_id`, `expires_at` (claim JWT `exp`), `created_at`. Niente IP, UA, label dispositivo, `last_used_at`.
+
+**Cookie:** HttpOnly (JS non legge i token). CSRF double-submit quando Secure. Bearer `Authorization` ancora accettato da `get_current_user` (path parallelo ai cookie; senza refresh automatico).
+
+**Segreto:** un solo `JWT_SECRET` HS256 per access e refresh.
+
+---
+
+## Rischi tecnici (senza proporre riscrittura)
+
+1. **Nessuna refresh rotation** → furto del refresh cookie = sessione fino a 7 giorni o logout su quel cookie.
+2. **Access non revocabile** → finestra post-logout / post-erase fino a 15 min.
+3. **Password change/reset non killano le altre sessioni.**
+4. **Accept invite senza `store_refresh`** → sessione fragile / refresh morto.
+5. **Multi-device illimitato** senza inventario o “logout ovunque”.
+6. **Revoca = delete** → nessun audit B7 punto 6 (allineato a B12).
+
+Cose già solide da **mantenere**: cookie HttpOnly, store `jti`, check su refresh, test L12 logout→401, FE single-flight, CSRF con esenzione consapevole del refresh, `is_active` sul refresh.
+
+---
+
+## Copertura vs domande B13
+
+| Domanda | Stato |
+|---|---|
+| Rinnovo sessioni | **Presente** (access only) |
+| Multi-dispositivo | **Presente di fatto** (illimitato, senza UI/limiti) |
+| Logout / revoca | **Presente** (per-cookie jti); access residuo |
+| Riuso token revocati | **Bloccato** per refresh; access fino a exp |
+| Rotazione refresh | **Assente** |
+
+---
+
+## Dipendenze
+
+- **B1:** `is_active` solo a login/refresh; sessione access continua se disattivato a metà TTL.
+- **B12:** logout/revoca oggi non generano evento consultabile; un registro unico dovrà catturare login/refresh/logout/revoke-all quando si implementerà (con autorizzazione esplicita).
+- **B11:** irrilevante al meccanismo token; il refresh ricalcola `role` dal DB.
+
+---
+
+## Per il Master Development Plan (solo elenco, non implementare)
+
+Interventi **minimi** se in seguito si decide di chiudere i gap (ordine tipico di priorità tecnica, da validare col Founder):
+
+1. `store_refresh` su accept-invite (+ allineare cookie kwargs).
+2. Opzionale: revoca tutti i refresh su password change/reset / suspend.
+3. Valutare refresh rotation (reuse detection) — solo se richiesto; oggi il modello `jti` lo abilita senza stravolgere.
+4. Opzionale: lista sessioni / logout altri dispositivi.
+5. Collegare logout/revoke al registro unico B12.
+
+**Non** serve una seconda architettura di sessione: il pezzo L12 (`refresh_tokens` + `jti`) è la base da estendere, non da sostituire.
+
+---
+
+B13 è chiuso come fotografia. Possiamo riesaminarlo insieme e decidere cosa tenere / cosa mettere nel piano. Niente codice finché non arriva `OMNIA — AUTORIZZAZIONE ESPLICITA ALL'IMPLEMENTAZIONE`.
+
+
+================================================================================
+# B14: AUDIT TECNICO PROTEZIONE LOGIN
+# File: 08-AUDIT-B14-PROTEZIONE-LOGIN.md
+================================================================================
+
+# B14 — Audit tecnico: protezione login
+
+**Sola lettura.** Nessun file modificato. Nessuna correzione applicata.
+
+---
+
+## Fotografia dello stato attuale
+
+OMNIA ha **una sola protezione brute-force dedicata al login password**, su `POST /api/auth/login`:
+
+- **5 tentativi falliti** / **15 minuti** di blocco  
+- Chiave Mongo: `ip:email` in `login_attempts`  
+- File: `backend/shared/auth/brute_force.py` (righe 5–46)  
+- Uso: `backend/apps/core/auth.py` `login()` (righe 220–247)
+
+**B2B e B2C password** condividono lo stesso endpoint `/api/auth/login` (stesso form FE `LoginPage.jsx`). Non esiste un login password B2C separato.
+
+**Google** (`POST /api/auth/google`) e **MFA verify** (`POST /api/auth/mfa/verify`) **non** usano `brute_force` né un rate limit auth dedicato.
+
+Il rate limiter generico (`shared/security/rate_limit.py`) protegge registrazione cloud, search, contact, email, feed, ecc. — **non** il login.
+
+Checklist interna (`memory/SECURITY_CHECKLIST.md` A2) marca brute-force come ✅; in realtà è **efficace solo sul percorso password unico IP+email**, con lacune concrete sotto.
+
+---
+
+## 1. Login B2B, B2C e Google
+
+### GIÀ PRESENTE
+- **Password unificato** B2B/B2C: `POST /api/auth/login` → `is_locked` → fail → `register_failed_attempt` → success → `clear_attempts` (`auth.py` 227–247).
+- Credenziali invalide / utente assente → stesso 401 (`invalid_credentials`) — riduce enumerazione email sul login.
+- Account `!oauth:google` → 401 `use_google_sign_in` **senza** incrementare il contatore (riga 237–238).
+- Account disabilitato → 403 **dopo** password corretta (244–245); non fa clear degli attempt.
+- **Google**: verifica ID token Google (`google_auth.py` `_verify_google_id_token`, 44–72); `is_active` su utente esistente (144–145); MFA gate (165–174).
+
+### PARZIALMENTE PRESENTE
+- B2C: registrazione ha rate limit IP (`cloud_auth.py` 56–58, 10/h); login password no percorso dedicato.
+- Google dipende da Google (anti-abuso lato IdP), ma **nessun** limite OMNIA su tentativi di token invalidi / churn account.
+
+### ASSENTE
+- Brute-force / rate limit su `/auth/google`.
+- CAPTCHA / Turnstile / proof-of-work sul login.
+- Rate limit su `POST /auth/register` B2B (solo cloud register ce l’ha).
+
+### DA VERIFICARE
+- Se in produzione un reverse proxy **sovrascrive** `X-Forwarded-For` (vedi §3): `_client_ip` si fida del primo hop (`auth.py` 115–119).
+
+---
+
+## 2. Tentativi massimi e durata blocco
+
+### GIÀ PRESENTE
+| Parametro | Valore | Dove |
+|---|---|---|
+| `MAX_ATTEMPTS` | **5** (costante hardcoded) | `brute_force.py:5` |
+| `LOCKOUT_MINUTES` | **15** (hardcoded) | `brute_force.py:6` |
+| HTTP blocco | **429** + `auth.too_many_attempts` | `auth.py:227–228` |
+| Indice | `login_attempts.identifier` | `connection.py:180` |
+
+Logica blocco (`is_locked`, 13–28): `count >= 5` **e** `last_attempt` entro 15 minuti.
+
+### PARZIALMENTE PRESENTE
+- Dopo lo sblocco temporale il **`count` non viene azzerato**. Un solo nuovo fallimento riporta subito in lockout (count ancora ≥ 5, `last_attempt` aggiornato). Reset solo con login riuscito (`clear_attempts`).
+- Nessuna env var: non regolabile in produzione senza deploy codice.
+
+### ASSENTE
+- Blocco progressivo (backoff crescente).
+- Blocco permanente / escalate dopo N finestre.
+- Notifica utente/admin su lockout.
+
+### DA VERIFICARE
+- Comportamento clock skew / ISO timestamp mixed string vs datetime in Mongo (il codice gestisce entrambi in `is_locked`).
+
+---
+
+## 3. Aggiramento cambiando IP, email o identificativo
+
+### GIÀ PRESENTE
+- Identificativo composito `f"{ip}:{email}"` (`brute_force.py:9–10`) — corretto per non fondere tutti gli utenti dello stesso NAT in un solo lock, ma…
+
+### PARZIALMENTE PRESENTE / rischio concreto
+| Aggiramento | Effetto |
+|---|---|
+| **Cambio IP**, stessa email | Nuovo `identifier` → contatore a zero. Bot multi-IP / proxy = **bypass del tetto 5**. |
+| **Cambio email**, stesso IP | Nuovo identifier → spray password su molte email dallo stesso IP **senza** lock IP globale. |
+| **Spoof `X-Forwarded-For`** | Se il edge non riscrive l’header, l’attaccante sceglie l’IP nel lockout (`_client_ip` 115–119; stesso pattern in `rate_limit.client_ip`). |
+| Password errata vs utente inesistente | Entrambi incrementano — ok anti-enum sul fail path. |
+
+### ASSENTE
+- Contatore **per account** (email) indipendente dall’IP.
+- Contatore **per IP** trasversale a tutte le email.
+- Trust proxy esplicito / uso di IP connessione reale quando XFF non è fidato.
+
+### DA VERIFICARE
+- Config Railway/proxy: chi imposta `X-Forwarded-For` in produzione.
+
+---
+
+## 4. Rate limiting IP / account / altri
+
+### GIÀ PRESENTE (fuori login, utile come contesto)
+`enforce_rate_limit` / `enforce_ip_rate_limit` (`rate_limit.py`): rolling window Mongo `rate_limit_events`.
+
+Usato su: `cloud_register` (10/h), search/map/contact, scout, planimetria/visura, feed/publishing, email to/global (`email/client.py` 166–178).
+
+### ASSENTE sul login
+- Nessun `enforce_ip_rate_limit` su `/auth/login`, `/auth/google`, `/auth/mfa/verify`, `/auth/forgot-password`, `/auth/register` B2B, `/auth/refresh`.
+- Nessun rate limit **per account** dedicato oltre al composito ip+email di `login_attempts`.
+
+### PARZIALMENTE PRESENTE
+- Email reset: rate limit solo se parte l’invio (`email_to` 30/h) — `forgot_password` non ha gate prima; risposta sempre 200 (`auth.py` 497–530).
+
+### DA VERIFICARE
+- Crescita illimitata di `rate_limit_events` / `login_attempts` (no TTL su `login_attempts`; rate_limit senza expire index nel bootstrap visto).
+
+---
+
+## 5. Attacchi distribuiti e automatizzati
+
+### GIÀ PRESENTE
+- bcrypt su verify (costo CPU per tentativo).
+- Cookie HttpOnly + CSRF su mutazioni (login stesso esente CSRF, coerente).
+- Script soft-check preprod/stress che sparano 6 login bait e si aspettano 429/401 (`preprod_confidence_gate.py` 306–340).
+
+### ASSENTE
+- CAPTCHA / bot detection.
+- Device fingerprint / anomaly.
+- WAF / edge rate limit documentato nel repo.
+- Protezione credential stuffing distribuita (manca lock per-email).
+- Slowdown artificiale o coda dopo N fail.
+
+### PARZIALMENTE PRESENTE
+- MFA opzionale riduce account takeover se abilitato; non è obbligatorio e la verify MFA non è rate-limited.
+
+### DA VERIFICARE
+- Rate limit a livello infrastruttura (Railway, Cloudflare) non visibile dal solo codice.
+
+---
+
+## 6. Gestione tentativi falliti e registrazione eventi
+
+### GIÀ PRESENTE
+- Upsert `login_attempts`: `identifier`, `count`, `last_attempt` (`register_failed_attempt` 31–41).
+- Clear su login password riuscito (anche prima del MFA challenge — riga 247 poi 249–256).
+
+### PARZIALMENTE PRESENTE
+- Non è un audit append-only (B12): è un **contatore mutabile**.
+- Nessun evento “login_failed” / “lockout_triggered” consultabile.
+- Login **riuscito** non scrive nulla in `login_attempts` (solo delete).
+
+### ASSENTE
+- Storico tentativi (IP, UA, esito) per Admin/Super Admin.
+- Alert Ops su spike di 401/429 login.
+- Registrazione fail su Google token invalid / MFA invalid.
+
+Allineato a B12: punto B7 “login riusciti/falliti” resta scoperto come audit.
+
+---
+
+## 7. MFA e account temporaneamente bloccati
+
+### GIÀ PRESENTE
+- Dopo password (o Google) OK con MFA: challenge JWT 5 min (`MFA_CHALLENGE_MINUTES = 5`, `mfa_routes.py:32,53–60`); cookie sessione solo dopo `/mfa/verify`.
+- `mfa_verify` controlla `is_active` (186–187).
+- Backup codes consumati su uso.
+
+### PARZIALMENTE PRESENTE
+- `clear_attempts` avviene **alla password corretta**, prima della MFA → chi conosce la password esce dal lockout password e può provare TOTP liberamente.
+- Lockout password: blocco **per quella coppia ip+email**, non “account suspended” globale.
+
+### ASSENTE
+- Rate limit / lockout su `/auth/mfa/verify` (brute TOTP ~10⁶/30s teorico; in pratica limitato da rete ma senza tetto app).
+- Integrazione lockout password ↔ challenge MFA.
+- UI che distingua “account bloccato 15 min” con countdown (FE mostra solo `formatApiErrorDetail` del 429).
+
+### DA VERIFICARE
+- Quanti utenti produzione hanno `mfa_enabled`.
+
+---
+
+## 8. Differenze backend / frontend / API
+
+### GIÀ PRESENTE
+- FE login unico (`LoginPage.jsx`): chiama `api.post("/auth/login")` / Google / MFA; mostra errore 429 se il backend lo restituisce; wipe password su fail (116–147).
+- Nessuna logica di lockout lato FE (corretto: la difesa è server).
+
+### PARZIALMENTE PRESENTE
+- FE non disabilita il submit dopo N fail (solo loading); l’attacco automatizzato parla comunque all’API.
+- Percorsi esenti CSRF includono login, google, mfa verify, refresh (`csrf.py` 28–36) — atteso; non sostituiscono il rate limit.
+
+### ASSENTE
+- Differenza API “mobile Bearer login” separata: stesso `/auth/login`.
+- Middleware globale anti-abuso sulle rotte `/api/auth/*`.
+
+### DA VERIFICARE
+- Client non-browser che loggano senza cookie (stesso endpoint).
+
+---
+
+## 9. Test automatici e copertura
+
+### GIÀ PRESENTE
+- Smoke operativi: `preprod_confidence_gate.security_walls`, `stress_gestionale`, `stress_platform_full` — bait email, 6 POST, cleanup `login_attempts`.
+- Seed test pulisce `login_attempts` (`seed_stress_agents.py` 64–66).
+- Checklist / playbook: `SECURITY_CHECKLIST.md` A2, `auth_testing.md` indici.
+
+### ASSENTE
+- **Nessun pytest unit/integration dedicato** a `is_locked` / `register_failed_attempt` / 429 al 6° tentativo / bypass IP / reset count post-finestra.
+- Nessun test MFA brute / Google invalid flood.
+- I soft-check accettano anche soli 401 ripetuti (`ok: locked or last in (401,429,403)`) — **possono passare senza aver mai visto un 429**.
+
+### PARZIALMENTE PRESENTE
+- Copertura “qualcosa rifiuta i fail” in script manuali/stress, non regressione CI stretta sul lockout.
+
+### DA VERIFICARE
+- Se la CI esegue i gate preprod o solo pytest.
+
+---
+
+## 10. Configurazioni e variabili d’ambiente produzione
+
+### GIÀ PRESENTE (correlate auth, non brute-force)
+Da `.env.example` / codice: `JWT_SECRET`, `COOKIE_SECURE`, `GOOGLE_CLIENT_ID` (opzionale), `ACCESS_TOKEN_MINUTES`, `REFRESH_TOKEN_DAYS`.
+
+### ASSENTE
+- `LOGIN_MAX_ATTEMPTS` / `LOGIN_LOCKOUT_MINUTES` (valori fissi 5/15).
+- Flag “trust X-Forwarded-For”.
+- Env per rate limit login IP.
+
+### DA VERIFICARE in produzione
+1. Proxy: XFF affidabile.
+2. `COOKIE_SECURE=true` (CSRF attivo).
+3. `JWT_SECRET` forte e stabile.
+4. Indice `login_attempts.identifier` creato (`ensure_indexes`).
+5. Eventuale rate limit edge davanti a `/api/auth/login`.
+6. Monitor 429/401 su `/auth/login`.
+
+---
+
+## Vulnerabilità e rischi concreti
+
+1. **Bypass lockout via IP rotation** (identifier `ip:email`) — credential stuffing distribuito.
+2. **Nessun tetto per-IP** su molte email — spray dallo stesso host.
+3. **X-Forwarded-For spoofabile** se il proxy non sanitizza — bypass triviale del lockout.
+4. **MFA verify senza rate limit** dopo password nota; clear lockout pre-MFA.
+5. **Google / forgot-password / register B2B** senza anti-brute dedicato (reset = enumerazione soft + carico email mitigato solo a invio).
+6. **Count non reset post-finestra** → un fail ri-blocca; UX dura, non sicurezza extra contro multi-IP.
+7. **Test CI deboli** sul 429 reale.
+8. **Nessun audit consultabile** dei fail (B12).
+
+Severità: non è “login aperto”; è **protezione single-node** insufficiente contro attacchi distribuiti e contro la seconda fase MFA.
+
+---
+
+## Funzionalità già efficaci da mantenere
+
+- Modulo `brute_force.py` + hook in `login()` (5/15, 429).
+- Messaggi fail uniformi password/utente.
+- bcrypt + clear su successo.
+- Indice `identifier`.
+- Gate MFA post-password/Google (challenge 5 min, no cookie prima).
+- Rate limit su **register cloud** e su email outbound.
+- Separazione account Google-only (`use_google_sign_in`).
+- Soft-check bait email (non lockare il Founder).
+
+Non riscrivere l’auth: **estendere** questo pezzo.
+
+---
+
+## Lacune → Master Development Plan (priorità suggerita)
+
+| Pri | Voce | Motivo |
+|---|---|---|
+| **P0** | Rate limit **per IP** su `/auth/login` (+ ideally `/auth/google`, `/auth/mfa/verify`, `/auth/forgot-password`) | Chiude spray e flood; riusa `enforce_ip_rate_limit` |
+| **P0** | Lockout **per email** (oltre a ip:email) **oppure** riformulare identifier | Chiude bypass multi-IP su un account |
+| **P0** | Validare trust **X-Forwarded-For** in prod / documentare IP reale | Altrimenti P0 sopra è aggirabile |
+| **P1** | Rate limit / tentativi su **`/auth/mfa/verify`** | Completa MFA |
+| **P1** | Reset `count` allo scadere della finestra (o sliding window pulita) | UX + logica chiara |
+| **P1** | Pytest dedicati: 5→429, unlock temporale, IP diverso, MFA flood | Regressione |
+| **P2** | Env configurabili `LOGIN_MAX_ATTEMPTS` / `LOCKOUT_MINUTES` | Ops senza deploy codice |
+| **P2** | Eventi login fail/lockout nel **registro unico B12** | Tracciabilità Admin/Super Admin |
+| **P2** | Rate limit `/auth/register` B2B | Allineo a cloud_register |
+| **P3** | CAPTCHA dopo N fail o rischio alto | Solo se P0 non basta in campo |
+| **P3** | UI countdown lockout | Usabilità |
+
+---
+
+## Verifiche che richiedono ambiente di produzione
+
+- Chi scrive `X-Forwarded-For` e se un client può spoofarlo.
+- Presenza di rate limit / WAF edge su `/api/auth/*`.
+- Volume reale 401/429 login e distribuzione IP.
+- Indici Mongo e dimensioni `login_attempts`.
+- Che i gate preprod con `ok` lasco non mascherino assenza di 429.
+- Quota utenti con MFA attiva.
+
+---
+
+## Sintesi per elemento richiesto
+
+| # | Tema | Stato |
+|---|---|---|
+| 1 | Login B2B/B2C/Google | Password: **GIÀ**; Google anti-brute app: **ASSENTE** |
+| 2 | Max attempts / durata | **GIÀ** 5/15 hardcoded; reset count: **PARZIALE** |
+| 3 | Bypass IP/email/XFF | **PARZIALE** (facile aggirare) |
+| 4 | Rate limit IP/account | Login: **ASSENTE**; altri endpoint: **GIÀ** |
+| 5 | Distribuiti / bot | **ASSENTE** (oltre bcrypt) |
+| 6 | Registrazione eventi fail | Contatore: **PARZIALE**; audit: **ASSENTE** |
+| 7 | MFA + account bloccati | MFA gate: **GIÀ**; limit MFA/lockout account: **ASSENTE**/ **PARZIALE** |
+| 8 | FE vs BE vs API | Allineati sul password path: **GIÀ**; FE non difende: ok |
+| 9 | Test | Soft script: **PARZIALE**; pytest lockout: **ASSENTE** |
+| 10 | Env prod | Auth general: **GIÀ**; knob brute-force: **ASSENTE** |
+
+---
+
+B14 chiuso come audit documentato. Niente implementazione finché non arriva `OMNIA — AUTORIZZAZIONE ESPLICITA ALL'IMPLEMENTAZIONE`.
+
+
+================================================================================
+# B15 — Audit tecnico registrazione e attivazione account
+# File: 09-AUDIT-B15-REGISTRAZIONE-ATTIVAZIONE.md
+================================================================================
+
+# B15 — Audit registrazione e attivazione account
+
+**Sola lettura.** Nessun file, DB o configurazione modificati. Nessuna implementazione.
+
+Criterio: **GIÀ / PARZIALE / ASSENTE / DA VERIFICARE**. Non si ripete il brute-force login (B14). Decisioni di riferimento: D-152, D-162, D-163; vincoli B3–B6 / B5 sulla verifica email.
+
+---
+
+## 1. Fotografia dello stato attuale
+
+Il ciclo di vita B2B è già strutturato in tre binari distinti nel codice (allineati a D-152/162/163):
+
+1. **Account utente** — register → onboarding create agency (`pending`)  
+2. **KYC documentale** — visura + CI → Gemini match (D-163) o Ops  
+3. **Pagamento** — Stripe → `agency_payment_ok`  
+
+L’attivazione CRM (`activation_status=active`) avviene per **auto-Attiva KYC** o **Ops Attiva**, non al solo register.
+
+Gap strutturali rispetto a B5 e alla protezione abusi:
+
+- **Verifica email dedicata assente** (nessun token/link `/verify-email`).  
+- **Register B2B senza rate limit** (B2C sì).  
+- Invito: token a uso singolo in serie, ma **accept non chiama `store_refresh`** e **non setta `email_verified`**.  
+- Idempotenza Ops Attiva / unique `owner_id` incomplete.
+
+---
+
+## 2. Registrazione B2B e B2C
+
+### GIÀ PRESENTE
+| Aspetto | Evidenza |
+|---|---|
+| B2B `POST /api/auth/register` | `auth.py` 124–215: email unique check 409; ruoli pubblici solo `client`/`student` (136–140); password min 8 (agency intent obbligatorio); auto-login + `store_refresh`; `consent_events` `register_consent` |
+| Anti privilege escalation | Commento + whitelist (136–138): `agency_admin` solo a create agency; `agent` solo invite |
+| B2C `POST /api/cloud/auth/register` | `cloud_auth.py`: rate limit IP `cloud_register` 10/h (54–58); GDPR/age/intents obbligatori; 409 dup; `email_verified=False`; consent B2C; auto-login |
+| Email duplicate exact | `find_one` + indice unique `users.email` |
+| Create agency gate | `agencies.create_agency`: blocco franchising roles; `agency_already_exists` per `owner_id`; fiscali D-162 obbligatori; logo o sito; `activation_status=pending` |
+
+### PARZIALMENTE PRESENTE
+- B2B: **nessun** `gdpr_consent` / `age_confirmed` nel body (a differenza B2C); solo `log_consent` best-effort.  
+- Duplicati “minimi” (`nome+1`, `email+tag`): bloccati solo se email **identica**; variazioni email = nuovi account.  
+- Create agency: check `owner_id` applicativo ma indice **non unique** → race concurrent create possibile.
+
+### ASSENTE
+- Rate limit su `/auth/register` B2B.  
+- CAPTCHA / bot proof sulla registrazione.  
+- Rate limit per email (oltre all’IP cloud).  
+- Normalizzazione anti-alias email (Gmail `+`, punti).
+
+### DA VERIFICARE
+- Volume spam register B2B in produzione.  
+- Se FE impone checkbox GDPR non riflesse nel contratto API B2B.
+
+**Differenza B2B vs B2C:** B2C più protetto in ingresso (rate limit + consensi obbligatori); B2B più stretto sui ruoli e sul percorso agenzia, ma più esposto a registrazioni massive (gap B14/B15).
+
+---
+
+## 3. Verifica email (decisione B5)
+
+### ASSENTE (confermato)
+- Nessun endpoint `verify-email` / generazione token / resend nel backend.  
+- Unico set di `email_verified=True` in codice applicativo: **Google Sign-In** (`google_auth.py` 122, 148).  
+- Commento in `cloud_auth.py` 51–53 che cita un flusso “if present” è **fuorviante**.  
+- `invites.accept` **non** scrive `email_verified`.
+
+### PARZIALMENTE PRESENTE
+- Campo `users.email_verified` esiste (`user.py` 56); B2C parte da `False`.  
+- Alcuni gate B2C (valuator/entitlements) **richiedono** `email_verified` → utenti password-register restano bloccati senza Google o patch Mongo (come nei test).  
+- Invito collaboratore: prova di possesso inbox **di fatto** (click magic-link), ma **non** è modellato come verifica email B5 (niente flag, niente “invite = verified”).
+
+### GIÀ PRESENTE (parziale rispetto B5)
+- Token invite: `secrets.token_urlsafe(32)`, expiry 7g, stati pending/accepted/revoked/expired — adatto come *meccanismo* se in seguito si mappa a `email_verified` (oggi non lo fa).
+
+### DA VERIFICARE
+- Testo esatto decisioni B3–B6 nel corpus Founder oltre DECISIONS (B5 non ha entry numerata in `DECISIONS.md`; i requisiti sono quelli del prompt).
+
+**Confronto B5 vs codice**
+
+| Requisito B5 | Codice |
+|---|---|
+| Titolare agenzia: link verifica email dedicato | **ASSENTE** |
+| Invito collaboratore può valere come verify se token valido/scadenza/uso singolo | Token sì; **flag `email_verified` no** |
+| Email ≠ KYC ≠ pagamento | **GIÀ** separati nel flusso attivazione |
+
+---
+
+## 4. Inviti collaboratori (B3–B6)
+
+### GIÀ PRESENTE
+| Funzione | File |
+|---|---|
+| Create | `invites.create_invite` — `require_roles(agency_admin,super_admin)` + `require_agency`; tetto `max_agents` (members+pending); email lower; block already member; refresh pending invece di duplicare; token urlsafe 32; expiry 7g; email `agency_invite` |
+| List / revoke | Token escluso dalla proiezione; revoke → `status=revoked` con check `agency_id` |
+| Verify pubblico | pending / used / expired (marca expired) |
+| Accept | New user: password ≥8 (D-161); existing: `$addToSet` agency; upgrade role **solo se** era `client` (D-100 no password overwrite); `active_agency_id` = agenzia invitata; notifica `TYPE_INVITE_ACCEPTED` |
+| Ruoli invitabili | Solo `agent` \| `agency_admin` (`InviteCreateRequest`) |
+
+### PARZIALMENTE PRESENTE
+- Uso singolo: dopo accept `status=accepted` — **replay sequenziale bloccato**; check-then-update **non atomico** (race parallela teorica).  
+- Sessione post-accept: cookie access+refresh settati (`invites.py` 364–369) ma **senza `store_refresh`** → refresh L12 invalido (già B13). Cookie hardcodati `secure=True, samesite=none` (non `_cookie_kwargs`).  
+- Reinvio = refresh dello stesso pending (nuovo token) — ok; vecchio token invalidato solo perché sostituito sul documento (il vecchio JWT-like token non è più nel DB).
+
+### ASSENTE
+- Set `email_verified=True` all’accept (B5).  
+- Test E2E invite create/accept/revoke/replay (zero file `test*invite*`).  
+- Assegnazione `group_id` holding all’accept (solo `agency_ids`).
+
+### DA VERIFICARE
+- Comportamento reale post-accept in browser (15 min access poi silent refresh 401).
+
+---
+
+## 5. KYC, pagamento e attivazione (D-152 / D-162 / D-163)
+
+### GIÀ PRESENTE
+| Pezzo | Evidenza |
+|---|---|
+| Create → pending | `agencies.py` ~212–216; force `active_agency_id`; no email a create (D-162) |
+| Gate CRM | `agency_activation.assert_agency_crm_unlocked` → 403 `agency_pending_activation`; grandfather senza campo; `super_admin` bypass |
+| Upload KYC | `POST /agencies/me/kyc/documents` — owner, MIME sniff, HEIC messaggio, checklist visura+CI → `submitted`, poi `maybe_finalize` |
+| Auto-Attiva D-163 | `kyc_auto_activate.maybe_auto_activate_from_kyc`: docs + `agency_payment_ok` + Gemini extract + `compare_declared` (P.IVA + name/CF + owner) → verified + active + email `agency_activated`; mismatch → report `kyc.auto_verify` + path pending notify |
+| Flag | `OMNIA_KYC_AUTO_ACTIVATE` default on |
+| Stripe | Checkout `agency_id` da `require_agency(user)` (non body client); webhook/apply chiama `maybe_finalize_agency_onboarding` |
+| Ops Attiva | `POST /ops/activate-agency`: `require_kyc_verified` + `require_payment` default; grant piano; email; logger |
+| Pending email D-162 | Solo quando dossier completo (`pending_notify_sent_at`) |
+| FE | Waiting `/app/waiting-activation`; onboarding non apre CRM |
+
+### PARZIALMENTE PRESENTE
+- Ops Attiva: **nessun short-circuit** se già `active`; `wipe_crm=True` di default → seconda Attiva può **svuotare CRM** di nuovo (`founder_ops.py` 1128, 1194–1210).  
+- Auto-Attiva ha `kyc_auto_activate_at` anti-doppia (`345–346`); Ops manuale no equivalente.  
+- Gemini fail → pending Ops (corretto); dipendenza da `GEMINI_API_KEY` / qualità OCR.
+
+### ASSENTE
+- Collection append-only `kyc_events` (stato sul documento agency).  
+- Idempotenza forte “Attiva solo se pending” lato Ops.
+
+### DA VERIFICARE
+- Match Gemini su documenti reali (falsi positivi/negativi).  
+- Stripe webhook duplicate delivery vs finalize.  
+- Env `OMNIA_KYC_AUTO_ACTIVATE` in produzione.
+
+---
+
+## 6. Protezione da abusi e duplicazioni
+
+| Vettore | Stato | Note |
+|---|---|---|
+| Register email duplicata | **GIÀ** | 409 + unique index |
+| Register B2B massivo | **ASSENTE** | No rate limit |
+| Register B2C massivo | **GIÀ** | 10/h/IP |
+| Privilege via `role` | **GIÀ** | Whitelist |
+| Invite already member | **GIÀ** | 400 |
+| Invite pending duplicati | **GIÀ** | Refresh |
+| Invite token replay seriale | **GIÀ** | status accepted |
+| Invite race parallela | **PARZIALE** | Non atomico |
+| Quote `max_agents` | **GIÀ** | Create invite |
+| Due agenzie stesso owner | **PARZIALE** | Check sì; unique index no |
+| Manipolazione `agency_id` checkout/invite | **GIÀ** | Da membership/server |
+| Doppia auto-Attiva | **GIÀ** | `kyc_auto_activate_at` |
+| Doppia Ops Attiva + wipe | **PARZIALE / rischio** | Wipe default |
+| Accesso CRM pre-attivazione | **GIÀ** | Gate 403 |
+| Quote/piano senza pay | **GIÀ** | payment_ok richiesto (salvo bypass Ops esplicito) |
+| Token email verify reuse | **N/A** | Flusso assente |
+
+---
+
+## 7. Audit e tracciabilità (vs B12)
+
+| Evento B15 | Trail oggi | Tipo |
+|---|---|---|
+| Registrazione | `consent_events` register_* | Dominio GDPR — **riusare**, non duplicare |
+| Verifica email | — | **ASSENTE** |
+| Invite creato/refresh/revocato/accettato | Stato `agency_invites` + logger + notifica accept | **PARZIALE** (stato mutabile, non registro unico) |
+| Invite scaduto | Marcato a verify | **PARZIALE** |
+| KYC upload / auto-verify | Campi `agency.kyc*` | **PARZIALE** |
+| Attivazione auto/Ops | `activated_at/by`, logger, email result | **PARZIALE** |
+| Piano grant | `credit_*` / assisted billing | Dominio billing — **riusare** |
+| Ops manuale | `logger.warning` / activate log | **PARZIALE** (B12) |
+
+Allineamento B12: questi eventi di sicurezza/amministrativi (register abusivo, verify email, invite lifecycle, activate) vanno nel **registro unico** quando si implementerà; le collection di dominio sopra restano.
+
+---
+
+## 8. Test (sola lettura — non eseguiti su dati reali)
+
+### GIÀ PRESENTE
+- B2C register: `test_immobilcloud_auth_register.py` (dup, gdpr, intents, `email_verified=False`)  
+- B2B password agency intent: `test_d159_*`  
+- Activation gate: `test_agency_activation_gate.py`  
+- KYC required / payment required Attiva: `test_d156_*`, `test_d157_*`  
+- Pending notify: `test_d162_*`  
+- Auto-Attiva match/mismatch: `test_d163_kyc_auto_activate.py`  
+- D-161 no credential default + invite password source: `test_d161_*`
+
+### ASSENTE / debole
+- Nessun test file invite E2E (create/accept/revoke/replay/max_agents)  
+- Nessun test email-verify (coerente con assenza flusso)  
+- Nessun test rate-limit B2B register  
+- Nessun test concurrent create agency / double Ops Attiva / wipe  
+- Nessun test `store_refresh` post-invite  
+
+### DA VERIFICARE
+- Se CI esegue sempre `test_d163` con mock Gemini o skip senza chiave.
+
+---
+
+## Problemi e rischi concreti
+
+1. **B5 non rispettata per il titolare**: nessuna verifica email dedicata prima/durante onboarding agenzia.  
+2. **Invito ≠ verify email nel modello dati**: inbox proof senza `email_verified`.  
+3. **Spam/bot su register B2B** (gap già segnalato in B14).  
+4. **Sessione post-invito fragile** (no `store_refresh`) — rischio UX/security session.  
+5. **Seconda Ops Attiva con wipe** può distruggere dati CRM “già live”.  
+6. **Race doppia agenzia** stesso owner.  
+7. B2C valuator richiede email verified ma il path password non può mai verificarla → dead-end prodotto.  
+8. Tracciabilità invite/KYC/activate insufficiente per B12/B7.
+
+---
+
+## Funzionalità da mantenere (non riscrivere)
+
+- Whitelist ruoli register + promote solo a create agency / invite.  
+- Gate CRM pending (D-152) + waiting FE.  
+- Fiscali obbligatori + pending email solo a dossier completo (D-162).  
+- Pipeline KYC upload → Gemini match → auto-Attiva o Ops (D-163).  
+- Stripe `agency_id` server-side + `agency_payment_ok`.  
+- Inviti: refresh pending, revoke, max_agents, upgrade solo `client`, D-100 password.  
+- Consent log su register.  
+- Rate limit cloud register.
+
+---
+
+## Lacune → Master Development Plan (priorità)
+
+| Pri | Intervento | Motivo |
+|---|---|---|
+| **P0** | Verifica email titolare (token, scadenza, uso singolo, resend rate-limited) — B5 | Obbligo decisionale; oggi assente |
+| **P0** | Rate limit IP (+ opz. email) su `/auth/register` B2B | Abuso registrazioni (B14/B15) |
+| **P0** | `store_refresh` + cookie kwargs su accept-invite | Sessione (B13) |
+| **P0** | Ops Attiva: rifiuta o no-wipe se già `active` | Protezione doppia attivazione |
+| **P1** | Accept invite → `email_verified=True` (B5 collaboratore) | Allinea decisione senza nuovo flusso |
+| **P1** | Unique index `agencies.owner_id` (MVP one-owner) | Anti race |
+| **P1** | Accept invite atomico (`find_one_and_update` pending→accepted) | Anti replay parallelo |
+| **P1** | Pytest invite E2E + double activate + register rate limit | Regressione |
+| **P2** | Eventi register/verify/invite/activate nel registro unico B12 | Tracciabilità |
+| **P2** | Path B2C: verify email o allentare gate valuator | Dead-end prodotto |
+| **P3** | CAPTCHA register se rate limit non basta | Solo dopo misura in prod |
+
+Non serve una nuova architettura di onboarding: i binari KYC / pay / activate **restano**.
+
+---
+
+## Verifiche che richiedono produzione
+
+- Spam reale su `/auth/register` B2B.  
+- Quanti B2C bloccati su valuator per `email_verified=False`.  
+- Tasso auto-Attiva vs mismatch Gemini.  
+- Webhook Stripe duplicati.  
+- Se Ops ha mai ri-premuto Attiva su tenant già active (wipe).  
+- Fallimenti silent-refresh dopo accept-invite.
+
+---
+
+## Riepilogo per area
+
+| Area | Giudizio |
+|---|---|
+| Register B2B | **PARZIALE** (solido su ruoli/dup; debole su abuso) |
+| Register B2C | **GIÀ** ingresso; verify email **ASSENTE** |
+| Verifica email B5 | **ASSENTE** (titolare); invite **PARZIALE** |
+| Inviti | **PARZIALE** (buona base; sessione + verify flag + test) |
+| KYC / pay / activate | **GIÀ** allineato D-152/162/163; idempotenza Ops **PARZIALE** |
+| Abusi/duplicazioni | Misto — vedi tabella §6 |
+| Audit vs B12 | **PARZIALE** |
+| Test | **PARZIALE** (activation/KYC sì; invite/verify no) |
+
+B15 chiuso come audit. Nessuna implementazione in questa fase. Possiamo esaminarlo insieme e separare protezioni da tenere, gap P0 e voci da mettere nel Master Development Plan.
+
+
+================================================================================
+# Audit ruoli backend RBAC
+# File: 10-AUDIT-RUOLI-BACKEND-RBAC.md
+================================================================================
+
+# Audit ruoli e permessi — OMNIA (`/agent/repos/omnia2`)
+
+Modello dominante: **un solo campo `users.role` (stringa)** + **membership multi-agenzia** (`agency_ids`, `active_agency_id`) + **defense-in-depth** su Mongo (`TenantCollection` su `/api/app/*`). Non esiste un catalogo RBAC granulare per utente.
+
+---
+
+## 1. UserRole / costanti ruolo
+
+**SoT tipi (Pydantic `Literal`):** `backend/shared/models/user.py` — `UserRole`
+
+| Valore | Note nel codice |
+|--------|-----------------|
+| `super_admin` | Founder / cabina Ops |
+| `agency_admin` | Alias legacy ≡ `branch_admin` (commento) |
+| `agent` | Alias legacy ≡ `branch_agent` |
+| `client` | Default registrazione; B2C |
+| `student` | Registrazione pubblica ammessa |
+| `group_admin` | Holding; `group_id` su user |
+| `branch_admin` | Perimetro filiale |
+| `branch_agent` | Perimetro filiale (agente) |
+
+**Registrazione pubblica — ruoli ammessi:** `backend/apps/core/auth.py` — `register()` → `_PUBLIC_ROLES = {"client", "student"}`; altri ruoli richiesti dal client vengono forzati a `client`.
+
+**Inviti — ruoli invitabili (subset):** `backend/shared/models/agency.py` — `InviteCreateRequest.role` e `AgencyInviteInDB.role`: solo `Literal["agent", "agency_admin"]`.
+
+**Alias FE (mirror BE D-041):** `frontend/src/shared/components/ProtectedRoute.jsx` — `ROLE_ALIASES`.
+
+**CRM FE:** `frontend/src/apps/immoweb/ImmowebApp.jsx` — `CRM_ROLES`.
+
+Altri pattern `ALLOWED_ROLES` locali (non enum globale):
+- `backend/apps/immoweb/cron.py` — `ALLOWED_ROLES = {"super_admin"}`
+- `backend/apps/immoweb/moderation.py` — `ALLOWED_ROLES = {"super_admin"}` (doc header obsoleto su `group_admin`)
+
+---
+
+## 2. `require_roles()` — implementazione e alias
+
+**File:** `backend/shared/auth/dependencies.py`
+
+- **`get_token_from_request()`** — cookie `access_token` o `Authorization: Bearer`.
+- **`get_current_user(request)`** — JWT → load user da DB (esclude `password_hash`); **non** verifica `is_active`; imposta `set_current_role`, `optional_agency_id` → `set_current_agency_id`.
+- **`require_roles(*allowed_roles)`** — factory che ritorna `_guard`:
+  - Espansione alias (D-041 / M2.S5.1):
+    - `agency_admin` → `{agency_admin, branch_admin, group_admin}`
+    - `agent` → `{agent, branch_agent, branch_admin, group_admin}`
+  - Confronto: `user.get("role") not in expanded` → **403** `forbidden`.
+
+**Nota:** `group_admin` eredita permessi dove il endpoint chiede `agency_admin` o `agent`, ma **non** dove è elencato solo `super_admin`.
+
+---
+
+## 3. Cataloghi / matrici oltre `users.role`
+
+| Meccanismo | Path | Scopo |
+|------------|------|--------|
+| Privacy listing L1–L4 | `backend/shared/utils/privacy_gate.py` — `resolve_viewer_level()`, `can_view_property()`, `apply_privacy_view()` | Mascheramento campi property per anonimo / B2C / lead qualificato / interno agenzia |
+| Costi endpoint API key | `backend/shared/auth/api_key.py` — `CREDIT_COSTS` | Billing per chiave `omk_*`, non ruolo utente |
+| Piano → `max_agents` | `backend/apps/immoweb/invites.py` — `create_invite()` + `apps/billing/plans.py` | Tetto collaboratori |
+| Gate CRM pending | `backend/shared/auth/agency_activation.py` — `assert_agency_crm_unlocked()` | `activation_status` agenzia |
+| Storage path prefix | `backend/shared/auth/storage_paths.py` — `assert_storage_under_prefix()` | Anti cross-tenant su blob |
+| B2C gate | `backend/apps/billing/b2c_entitlements.py`, `private_listings._ensure_b2c()` | `account_type` + `role == client` |
+
+**Assente:** tabelle permessi per utente, custom roles, ACL per risorsa oltre `agency_id` / livello privacy.
+
+---
+
+## 4. Stringhe ruolo nel codice (distinte)
+
+**Canonici (`UserRole`):** i 8 sopra.
+
+**Assi paralleli (non `role`):**
+- `account_type`: `b2b` | `b2c` (`UserInDB`, login payload `_public()`).
+- `ops_impersonation`: stamp su user durante cabina (`founder_bridge.bridge_impersonate()`).
+
+**Stringhe non-canoniche / residue:**
+- `"founder"` — solo whitelist staging: `backend/apps/immoweb/staging_b2c.py` (accanto a `super_admin`); **non** in `UserRole`. In produzione il Founder è **`super_admin`** (`apps/core/seed.py` — `seed_admin()`).
+- **`ops`** — prefisso route (`/api/app/ops`), **non** ruolo DB.
+- Ruoli messaggio LLM `"user"` / `"assistant"` — non autorizzazione.
+
+**`branch_admin` / `branch_agent`:** definiti in `UserRole` e negli alias BE/FE; **nessun path trovato** che assegni questi ruoli in invite o promote (solo commenti + `require_roles` espliciti su alcuni moduli). Assegnazione pratica oggi: `agency_admin` / `agent` / `group_admin` / `client` / `student` / `super_admin`.
+
+---
+
+## 5. Isolamento tenant
+
+**SoT agenzia attiva (D-106):** `backend/shared/auth/tenant.py`
+- `optional_agency_id(user)` — solo `active_agency_id` se ∈ `agency_ids`; **mai** `agency_ids[0]`.
+- `require_agency()` / `require_agency_404()` / `require_agency_membership()` — errori 400/403/404 se membership o active mancanti/invalidi.
+- `arequire_crm_agency()` — `require_agency` + load agency + `assert_agency_crm_unlocked()`.
+
+**Middleware:** `backend/shared/db/tenant_middleware.py` — `TenantContextMiddleware.dispatch()`  
+Solo path `/api/app/*`: decode JWT, reload user (agency fields), `set_current_agency_id`, `set_tenant_enforce(True)`.
+
+**Auto-inject Mongo:** `backend/shared/db/tenant_guard.py`
+- `TENANT_COLLECTIONS` (properties, clients, leads, …).
+- `TenantCollection` inietta `agency_id` su find/update/aggregate se non bypass.
+- Bypass se: non enforce, `tenant_bypass(True)`, o **`get_current_role() == "super_admin"`**.
+
+**Switch agenzia:** `backend/apps/core/auth.py` — `my_agencies()`, `set_active_agency()` (solo id ∈ `agency_ids`).
+
+**Login bootstrap:** `login()` imposta `active_agency_id` se una sola membership e active assente/invalida.
+
+**Gap:** JWT access include `role` in payload (`jwt_tokens.create_access_token()`), ma **`get_current_user` usa il ruolo dal DB** (corretto). Il middleware usa prima `payload.role` poi sovrascrive col DB solo per agency, non sempre allineato al ruolo DB nel primo tick (minore).
+
+---
+
+## 6. Holding / group / branch
+
+**Modelli:** `backend/shared/models/agency.py` — `AgencyGroupInDB`, `AgencyInDB.group_id`, `branch_code`.
+
+**API:** `backend/apps/immoweb/groups.py`
+- `create_group()` — promote a `group_admin` (super_admin mantiene ruolo, setta `group_id`).
+- `_load_accessible_group()` / `_require_group_write_access()` — read vs write group.
+- `list_branches()`, `group_consolidated_kpis()` — KPI cross-branch per chi ha accesso al group.
+- `attach_branch()` — anti hijack: non-`super_admin` solo agenzie owned o già in `agency_ids`.
+
+**Admin org A vede org B?**
+- **CRM tenant (clients/properties/…):** di norma **no** — scope = `active_agency_id` (+ tenant inject). `group_admin` vede rollup su route `/groups/{id}/consolidated` e lista API keys multi-branch (`api_keys.list_api_keys()`), **non** un merge automatico su tutte le collection CRM senza cambiare active agency.
+- **`super_admin`:** bypass tenant inject + cabina + **impersonation** (`founder_bridge.bridge_impersonate()` muta `agency_ids` / `active_agency_id`).
+
+**Gap documentazione vs codice:** header `groups.py` dice che `group_admin` «read/write across all branches»; implementazione CRM resta **per-tenant attivo**, salvo endpoint group espliciti.
+
+**Gap access check:** `_load_accessible_group()` contiene condizione `if group_id in {ag for ag in (user.get("agency_ids") or [])}` — confronta **group_id con agency_ids** (probabile bug logico nell’audit).
+
+---
+
+## 7. Autorizzazioni cross-org esplicite e revocabili
+
+| Meccanismo | Revocabile | File / funzione |
+|------------|------------|------------------|
+| MLS rete (`mls_enabled`, `visibility` public/mls_only, `mls_shared`) | leave MLS, flag listing | `backend/apps/immoweb/mls.py` — `_shareable_listing_filters()`, `join_mls()`, `leave_mls()`, `my_mls_inventory()` |
+| Partnership bi-lateral | `status` pending/active/**revoked** | `mls.py` — `invite_partner()`, `respond_partner()`; collection `mls_partners` |
+| Offer MLS | accept/reject/expired/revoked | `mls.py` — offer endpoints |
+| Privacy property L3/L4 | livello per listing | `privacy_gate.py` |
+| Widget/API key partner | revoke key | `api_keys.revoke_api_key()`, `require_api_key()` |
+| Impersonation Ops | `bridge_impersonate_exit()` | `founder_bridge.py` |
+
+**Non trovato:** sharing granulare CRM (clienti cross-agenzia) oltre MLS/partner e super_admin.
+
+---
+
+## 8. Assegnazione ruoli
+
+| Percorso | Funzione | Regole |
+|----------|----------|--------|
+| Registrazione | `auth.register()` | Solo `client`/`student` |
+| Crea agenzia | `agencies.create_agency()` | Promote owner → `agency_admin` (non se già `super_admin`) |
+| Invito | `invites.create_invite()` / `accept_invite()` | Ruolo invite: `agent` \| `agency_admin`; accettazione: nuovo user = ruolo invite; esistente: ruolo aggiornato **solo se** era `client` |
+| Crea group | `groups.create_group()` | → `group_admin` (+ `group_id`) |
+| KYC auto-attiva | `kyc_auto_activate` (blocco owner) | Promote owner a `agency_admin` se ruolo non già privilegiato |
+| Seed | `seed_admin()` | `super_admin` da env |
+
+**Assente:**
+- **PATCH ruolo membro** (nessun endpoint trovato).
+- **Vincolo delega** («inviti solo ruoli ≤ del mio»): `create_invite()` non limita `agency_admin` a invitare solo `agent`.
+- **Audit trail dedicato ai cambi ruolo** (solo log applicativi generici / `consent_log` per register/erase).
+
+**Rimozione da agenzia:** `agencies.remove_member()` — `$pull` `agency_ids`, non delete user, non cambia `role`.
+
+---
+
+## 9. Custom roles
+
+**Assente** in BE e FE (nessun create/duplicate/rename template permessi).
+
+---
+
+## 10. `is_active` / sospensione vs unlink
+
+| Entità | Comportamento |
+|--------|----------------|
+| **User `is_active`** | Controllato in `login()`, `refresh()`, `google_auth` — **non** in `get_current_user()`. Disabilitazione: `erase_user_data()` → `is_active: False` (`shared/privacy/erasure.py`). Nessun endpoint «suspend member» trovato. |
+| **Unlink agenzia** | `remove_member()` — membership only |
+| **Agency `is_active` / `activation_status`** | `pending` \| `active` \| `suspended`; CRM gate: `assert_agency_crm_unlocked()` |
+| **API key `is_active`** | Revoca separata da user |
+
+---
+
+## 11. `get_current_user` senza check ruolo/agenzia
+
+**Comportamento intenzionale di `get_current_user()`** (`dependencies.py`):
+- Autentica JWT + user esistente.
+- Non verifica ruolo privilegiato né `is_active`.
+- Opzionale: imposta tenant context da `active_agency_id` se valida.
+
+Endpoint che si affidano solo ad esso + **helper tenant interni** (es. `require_agency_membership` in AL) **senza** `require_roles` sono accessibili a **qualsiasi** utente autenticato con membership valida (inclusi `client`/`student` se avessero `agency_ids` anomali).
+
+---
+
+## 12. Endpoint solo autenticazione (senza `require_roles`)
+
+Pattern ricorrente: `Depends(get_current_user)` + scope tenant/CRM inline.
+
+**Esempi rappresentativi (non esaustivo; decine di route):**
+
+| Area | File | Note |
+|------|------|------|
+| Dashboard KPI / Oggi | `dashboard.py` — `get_kpis()`, `get_today()` | Ruolo non filtrato; scope `optional_agency_id` |
+| Lista immobili/clienti | `properties.py` — `list_properties()`, `get_property()`; `clients.py` — `list_clients()` | `arequire_crm_agency` |
+| Membri (read) | `agencies.py` — `list_members()` | Qualunque membro con active agency |
+| Setup journey | `setup_journey.py` — `get_setup_journey()` | |
+| Themes read | `themes.py` — `list_themes()`, `get_current_theme()` | |
+| HAL Agents | `al_agent.py` — `chat()`, `chat_stream()`, `improve_text()`, session CRUD | `require_agency_membership` ma **no role gate** |
+| Staging B2B | `staging_api.py` — varie route | `require_agency` + crediti |
+| B2C cloud | `immocloud/*` | Spesso `_ensure_b2c()` su `account_type`+`client`, non `require_roles` |
+| Cron manuali | `cron.py` | Auth + check manuale `role == super_admin` |
+| Moderation | `moderation.py` | Auth + `_ensure_admin()` super_admin only |
+| Auth self-service | `auth.py` — `me`, `patch_me`, `my_agencies`, `set_active_agency`, export/erase | |
+| Groups read/KPI | `groups.py` — `list_branches()`, `group_consolidated_kpis()` | Access via `_load_accessible_group` |
+
+**Fe:** route protette solo da login usano `ProtectedRoute` senza `allowedRoles` → equivalente «authenticated».
+
+---
+
+## Riepilogo gap (fatti, non redesign)
+
+1. **Nessun RBAC granulare** — solo `role` + tenant + pochi gate (`activation_status`, B2C, privacy L1–L4).
+2. **`branch_*` ruoli** nel tipo ma **quasi mai assegnati**; franchising si appoggia agli alias di `agency_admin`/`agent`.
+3. **`group_admin` cross-branch CRM** limitato rispetto al commento modulo groups (serve switch `active_agency_id` o route group).
+4. **Inviti** non possono invitare `group_admin`/`branch_*`; **nessun PATCH ruolo** membro.
+5. **Nessun audit strutturato** dei cambi `role`.
+6. **`get_current_user` + access token** non blocca `is_active:false` (sessione fino a scadenza JWT).
+7. **`list_members`** senza `require_roles` — agenti leggono elenco membri.
+8. **`al_agent`** — qualsiasi utente con membership agenzia può usare tool CRM-scoped (se non bloccato altrove dal FE).
+9. **`moderation.py` header** vs `ALLOWED_ROLES` — solo `super_admin`.
+10. **`founder` string** in staging — non è `UserRole`.
+11. **`_load_accessible_group`** — possibile confronto errato `group_id` ∈ `agency_ids`.
+12. **Ruolo nel JWT** non usato per authz BE (DB sì), ma presente nel token.
+
+---
+
+## Indice funzioni chiave
+
+| Funzione | File |
+|----------|------|
+| `UserRole` | `backend/shared/models/user.py` |
+| `get_current_user`, `require_roles` | `backend/shared/auth/dependencies.py` |
+| `optional_agency_id`, `require_agency`, `arequire_crm_agency` | `backend/shared/auth/tenant.py` |
+| `assert_agency_crm_unlocked` | `backend/shared/auth/agency_activation.py` |
+| `TenantContextMiddleware` | `backend/shared/db/tenant_middleware.py` |
+| `TenantCollection`, `is_tenant_bypass` | `backend/shared/db/tenant_guard.py` |
+| `resolve_viewer_level` | `backend/shared/utils/privacy_gate.py` |
+| `create_group`, `_require_group_write_access` | `backend/apps/immoweb/groups.py` |
+| `create_invite`, `accept_invite` | `backend/apps/immoweb/invites.py` |
+| `create_agency`, `remove_member` | `backend/apps/immoweb/agencies.py` |
+| `register`, `login`, `set_active_agency` | `backend/apps/core/auth.py` |
+| `bridge_impersonate`, `bridge_erase_user` | `backend/apps/immoweb/founder_bridge.py` |
+
+Audit **sola lettura** — nessun file modificato.
+
+
+================================================================================
+# Audit frontend permessi UI
+# File: 11-AUDIT-FRONTEND-PERMESSI-UI.md

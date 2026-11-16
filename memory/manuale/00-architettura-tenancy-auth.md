@@ -4,9 +4,15 @@
 **Prompt master**: `memory/AUDIT_PROMPT_MASTER.md` (§1–§27).  
 **Numerazione sessione**: continuum in `AUDIT_ARCHITETTURA_NOTE.md`.
 
+> ### Design target risanamento (D-173 · 16-Nov-2026) — NON ancora in codice
+> Il codice live resta basato su `agency_id` / `users.role` / `agency_ids[]`.  
+> Il modello target approvato (Person · User · Organization · **CommercialCustomer P.IVA** · Membership · Representation · capability/audit) è documentato in `_export_audits/B01-…` e `B02-…` e in **D-173**.  
+> **Non** descrivere queste entità come già operative in UI/API. Ripresa: `memory/RIPRENDI_2026-11-16.md`.
+
 ---
 
 ## Metodo
+
 
 Un blocco alla volta · niente fix senza «vai» · no P0–P3 prematuri · **listino fermo** finché Backup+Restore non sono disegnati.
 

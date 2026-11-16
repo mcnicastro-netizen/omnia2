@@ -1520,3 +1520,34 @@ voci:
       permessi:
         - super_admin / Founder
       screenshot: []
+
+  - id: api.design-d173-risanamento-b01-b02
+    titolo: Design risanamento B01/B02 (non ancora codice)
+    modulo: Codice API
+    widget: null
+    pubblico: [super_admin]
+    livello: avanzato
+    tags: [codice, architettura, d-173, design, pausa]
+    correlati: []
+    domanda_naturale: "Cos'è CommercialCustomer e Membership nel design OMNIA?"
+    contenuto:
+      a_cosa_serve: >
+        Documenta il modello target chiuso il 16-Nov-2026 (D-173): Person,
+        User, Organization, CommercialCustomer (P.IVA), Membership,
+        Representation; capability/audit B02. NON è implementato nel codice
+        live (resta agency_id / users.role).
+      quando_si_usa: >
+        Quando si chiede del cliente commerciale P.IVA, Main Admin, o
+        appartenenze uniche — prima di scrivere codice.
+      passi:
+        - "Leggere memory/DECISIONS.md D-173."
+        - "Leggere _export_audits/B01-… e B02-… + RIPRENDI_2026-11-16.md."
+        - "Non inventare API CommercialCustomer finché non autorizzata esecuzione."
+      errori_comuni:
+        - problema: "Confondere agency_groups con cliente P.IVA"
+          soluzione: "Gruppo ≠ CommercialCustomer (B01-R12 / Cap.24 nota D-173)."
+        - problema: "Descrivere Main Admin con CRM automatico filiali"
+          soluzione: "B02-DEC-01: Main Admin ≠ accesso automatico CRM."
+      permessi:
+        - super_admin / Founder
+      screenshot: []

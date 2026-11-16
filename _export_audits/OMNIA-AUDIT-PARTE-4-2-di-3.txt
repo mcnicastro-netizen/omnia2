@@ -1,0 +1,463 @@
+# OMNIA AUDIT — PARTE 4.2 di 4 (sotto-pezzo 2/3)
+# Continua dalla parte 4 originale. Leggi tutto. Non inventare.
+
+| **logout / session revoke** | `refresh_tokens.delete_one` — **no** audit Mongo |
+
+---
+
+## 6. Logger tecnico vs Mongo (mappa rapida)
+
+| Area | Mongo consultabile | Solo `logger.*` |
+|------|-------------------|-----------------|
+| Founder Cabina (erase, impersonate, offboard, KYC) | `consent_events` su erase utente self-service; erase Ops **senza** `log_consent` extra | `founder_bridge.py` `logger.warning` su quasi ogni azione sensibile |
+| Billing Stripe failure | `ops_alerts` | `billing/routes` logger.exception |
+| Trash purge | — | `omnia.trash` |
+| Groups franchising | — | `groups.py` create/attach |
+| Consent failure | — | `omnia.consent` warning |
+| HAL LLM failure | `ops_alerts` | `al_agent` warning |
+
+---
+
+## 7. Indici Mongo rilevanti (`shared/db/connection.py:ensure_indexes`)
+
+- `consent_events`: email/user/action + **TTL `expire_at`**
+- `al_legal_audit`: **TTL `expire_at`**, `user_id`+`ts`
+- `b2c_purchases`: **TTL `expire_at`**
+- `login_attempts`: `identifier`
+- `password_reset_tokens`: TTL `expires_at`
+- `notifications`: user + read + created_at
+- `lead_score_cache`: TTL 24h (cache, non audit)
+
+**Non indicizzati in bootstrap:** `al_audit`, `match_audit`, `publishing_events`, `calendar_events`, `publishing_sync_logs`, `rate_limit_events`, `privacy_audit_events`, `domain_vault_events`, `mls_events`, `api_usage_log`.
+
+---
+
+## 8. Diagramma flusso (audit reali vs phantom)
+
+```mermaid
+flowchart LR
+  subgraph writers [Scrittori presenti]
+    CE[consent_events]
+    PAE[privacy_audit_events]
+    AL[al_audit]
+    ALL[al_legal_audit]
+    DVE[domain_vault_events]
+    LKE[legal_kit_events]
+    MLS[mls_events]
+    PSL[publishing_sync_logs]
+    SP[social_posts]
+    HKS[hal_knowledge_sessions]
+    AUL[api_usage_log]
+    RLE[rate_limit_events]
+  end
+  subgraph phantom [Solo lettura dashboard]
+    MA[match_audit]
+    PE[publishing_events]
+    CAL[calendar_events]
+  end
+  DASH[dashboard.py KPI / recent]
+  phantom --> DASH
+  writers --> FO[founder_ops super_admin]
+  writers --> API[API tenant-scoped]
+```
+
+---
+
+Se serve un passo successivo (sempre read-only), posso allineare `memory/manuale/18-notifiche-attivita.md` e `dashboard.py` ai writer effettivi (`publishing_sync_logs` vs `publishing_events`, assenza `match_audit`/`calendar_events`).
+
+
+================================================================================
+# Audit register / invite / KYC flow
+# File: 13-AUDIT-REGISTER-INVITE-KYC.md
+================================================================================
+
+# Audit account lifecycle (read-only)
+
+Legenda: **GIÀ** = implementato e coerente · **PARZIALE** = presente con gap · **ASSENTE** = non esiste / non enforceable.
+
+---
+
+## 1. B2B register — `backend/apps/core/auth.py`
+
+**Stato: PARZIALE**
+
+| Aspetto | Verdict | Dettaglio |
+|---|---|---|
+| Fields | GIÀ | `RegisterRequest`: email, password opzionale (≥8), name, role, lang, `domain_sovereignty_confirmed`, `existing_domain`, `preferred_plan` (`user.py` 67–77). |
+| Duplicate email | GIÀ | `find_one` → 409 `email_already_registered` (`auth.py` 131–134). Unique index Mongo su `users.email` (`connection.py` 172). |
+| Rate limit | **ASSENTE** | Nessun `enforce_ip_rate_limit` su `/auth/register`. |
+| Auto-login | GIÀ | Cookie access+refresh + `store_refresh` (`auth.py` 178–179). |
+| Role forcing | GIÀ | Solo `client`/`student`; altro → `client` (`auth.py` 136–140). `agency_admin` solo a create agency. |
+| Consent log | PARZIALE | `log_consent(action="register_consent")` (`auth.py` 181–194). **Nessun** campo `gdpr_consent`/`age_confirmed` obbligatorio nel body B2B (a differenza B2C). |
+| Password B2B | GIÀ | Se `domain_sovereignty_confirmed` → password temp min 8 (D-159) (`auth.py` 150–161). |
+| Welcome email | GIÀ | Solo se *non* agency intent (D-156/D-160) (`auth.py` 201–213). |
+
+```124:215:backend/apps/core/auth.py
+@router.post("/register")
+async def register(...):
+    ...
+    _PUBLIC_ROLES = {"client", "student"}
+    safe_role = req.role if req.role in _PUBLIC_ROLES else "client"
+    ...
+    # no rate limit
+    await store_refresh(_refresh_tok)
+    await log_consent(action="register_consent", ...)
+```
+
+---
+
+## 2. B2C register — `backend/apps/immocloud/cloud_auth.py`
+
+**Stato: GIÀ** (salvo email verify — §3)
+
+| Aspetto | Verdict |
+|---|---|
+| Rate limit | GIÀ — `cloud_register` 10 req/h/IP (`cloud_auth.py` 54–58) |
+| Duplicates | GIÀ — 409 (`66–68`) |
+| `email_verified=False` | GIÀ — esplicito (`87`) |
+| Auto-login | GIÀ — cookie + `store_refresh` (`121–132`) |
+| GDPR / age / intents | GIÀ — 400 se mancano (`59–64`) |
+| Consent log | GIÀ — `b2c_register_consent` (+ marketing se opt-in) (`97–117`) |
+| Role | GIÀ — hard-coded `"client"`, `account_type=b2c`, no agency |
+
+Il commento parla di `/api/auth/verify-email` “if present” — **il flusso non esiste** (vedi §3).
+
+---
+
+## 3. Email verification
+
+**Stato: ASSENTE (confermato)**
+
+Ricerca su tutto `backend/` + FE path:
+
+- Unico hit di `verify-email` / `verify_email` come route: il **commento** in `cloud_auth.py` 51–53.
+- `email_verified` impostato a `True` **solo** in `google_auth.py` (create 122, patch login 148).
+- Nessun token di verifica, nessun resend, nessun endpoint che flippa il flag per password-register.
+- B2C valuator/entitlements *richiedono* `email_verified` (`valuator.py` 335; `b2c_products.py` 264) → utenti password-register restano bloccati finché non passano da Google o un update Mongo manuale (come nei test).
+
+---
+
+## 4. Invites — `backend/apps/immoweb/invites.py`
+
+**Stato: PARZIALE**
+
+| Step | Verdict | Note |
+|---|---|---|
+| Create | GIÀ | Owner via `require_agency`; `secrets.token_urlsafe(32)`; expiry 7g; unique token index |
+| max_agents | GIÀ | members + pending vs piano (`54–82`) |
+| Duplicate pending | GIÀ | Refresh token/expiry/role invece di duplicare (`91–110`) |
+| Already member | GIÀ | 400 `user_already_member` (`86–89`) |
+| List | GIÀ | Proietta fuori `token` (`171–174`) |
+| Revoke | GIÀ | `status=revoked` + check `agency_id` (`181–195`) |
+| Verify | GIÀ | pending / expired→mark expired / used (`200–232`) |
+| Accept — new user | GIÀ | Password obbligatoria ≥8 (D-161) (`301–309`) |
+| Accept — existing | GIÀ | Upgrade role **solo se** `role=="client"` (`282–292`); password mai overwrite (D-100) |
+| Single-use | PARZIALE | `status=accepted` dopo accept (`325–334`); **non atomico** (check-then-update → race replay) |
+| `store_refresh` | **ASSENTE** | Cookie refresh settati (`364–369`) ma **senza** `store_refresh` → `/auth/refresh` fallisce (jti non in store) |
+| Org / `group_id` | **ASSENTE** | Nessuna assegnazione `group_id` / org sull’accept; solo `agency_ids` + `active_agency_id` |
+| Notification | GIÀ | `TYPE_INVITE_ACCEPTED` all’inviter (`336–360`) |
+
+---
+
+## 5. Agency create + activation
+
+**Stato: GIÀ** (con gap race / double-activate)
+
+### Create — `agencies.py` 65–245
+- `activation_status="pending"`, `pending_notify_sent_at=None` (D-152/D-162) — **GIÀ** (`212–216`)
+- Promote a `agency_admin` (non super_admin) — **GIÀ** (`228–234`)
+- `force_active=True` anti-leak seed — **GIÀ** (`226`, D-152.4)
+- Fiscali obbligatori (D-162) — **GIÀ** (`131–163`)
+- Check `owner_id` già owner — **PARZIALE**: check applicativo; index `owner_id` **non unique** (`connection.py` 175) → race concurrent create possibile
+
+### Gate CRM — `agency_activation.py`
+- `assert_agency_crm_unlocked` → 403 `agency_pending_activation`; grandfather senza campo = active; `super_admin` bypass — **GIÀ** (`9–40`)
+- Usato da `arequire_crm_agency` (`tenant.py` 68–79), dashboard, API keys
+
+### Ops Attiva — `founder_ops.py` 1143–1323
+- `require_roles("super_admin")`; KYC/payment default True; grant piano; email `agency_activated` / credentials; logger — **GIÀ**
+- **Double activate**: nessuna guard “già active”; `wipe_crm=True` di default → secondo Attiva può **svuotare CRM** di nuovo
+
+### Auto KYC — `kyc_auto_activate.maybe_finalize`
+- Skip se non pending / già `kyc_auto_activate_at` — **GIÀ** (`341–346`)
+- Match → verified + active + email — **GIÀ** (D-163)
+
+### Stripe — `billing/routes.py` 533–575
+- Su subscription applied → `maybe_finalize_agency_onboarding` — **GIÀ**
+- Checkout: `agency_id` da `require_agency(user)`, non dal client body — **GIÀ** (anti-manipulation) (`177`)
+
+---
+
+## 6. KYC upload + Gemini
+
+**Stato: GIÀ**
+
+- `upload_my_kyc_document` (`agencies.py` 484–582): MIME sniff octet-stream/HEIC, size cap, owner check, fallback `owner_id`, checklist → `submitted`, poi `maybe_finalize`
+- Gemini extract + `compare_declared` (P.IVA obbligatoria + name/CF + owner) — **GIÀ** (`kyc_auto_activate.py` 181–230, 332–441)
+- Report in `kyc.auto_verify`; flag `OMNIA_KYC_AUTO_ACTIVATE` default on
+
+---
+
+## 7. Decisions (D-152 / D-162 / D-163)
+
+| Decision | Allineamento codice |
+|---|---|
+| **D-152** CRM pending → Ops Attiva + waiting + force `active_agency_id` + grandfather | **GIÀ** |
+| **D-162** fiscali obbligatori; pending email solo KYC+pay; no mail a create; shell Ops | **GIÀ** (`pending_notify`, create senza email) |
+| **D-163** Gemini match → auto-Attiva + `agency_activated`; mismatch → pending | **GIÀ** |
+
+Nota storica: D-157/D-160 (API=password) **supersedute** da D-161 (`issue_login_credential=False` default).
+
+---
+
+## 8. Tests (coverage + negative)
+
+| File | Cosa asserta | Negativi |
+|---|---|---|
+| `test_immobilcloud_auth_register.py` | B2C happy, cookies, `email_verified=False` | gdpr 400, intents 400, dup 409, pw corta 422, email invalid 422 |
+| `test_d159_temp_password_kyc_mime.py` | B2B agency intent senza pw → 400; KYC octet-stream PDF; HEIC 415 | sì |
+| `test_agency_activation_gate.py` | create→pending; KPI/props 403; activate unlock; force active | gate 403 |
+| `test_agency_create_onboarding_complete.py` | promote + onboarding_completed + pending | — |
+| `test_d156_onboarding_kyc.py` | Attiva senza KYC → 400; preferred_plan | sì |
+| `test_d157_gestionale_flow.py` | Attiva senza payment → 400; credential→password | sì |
+| `test_d161_login_semplice.py` | default no credential; invite source ha `password_required` | statico (no E2E invite) |
+| `test_d162_pending_notify.py` | skip senza KYC; send quando ready | sì |
+| `test_d163_kyc_auto_activate.py` | match / VAT mismatch / happy auto-activate | mismatch sì; no race/double |
+| `test_d169_avvio_seats_credits.py` | `max_agents` 3/10/∞ | numeri piano, non invite |
+
+**ASSENTE / debole:**
+- Nessun test E2E invite create/accept/revoke/replay
+- Nessun test B2B register rate-limit / role escalation
+- Nessun test email-verify (coerente: flusso assente)
+- Nessun test concurrent create agency / double Ops Attiva / invite TOCTOU
+
+---
+
+## 9. Abuse vectors
+
+| Vettore | Verdict | Evidenza |
+|---|---|---|
+| Concurrent create agency | **PARZIALE / rischio** | Check-then-insert; `owner_id` index non unique |
+| Double Ops Attiva | **PARZIALE / rischio** | Nessun short-circuit se già `active`; wipe default True |
+| Invite token replay | **PARZIALE** | Status check OK in serie; race parallela possibile; accepted rifiuta replay sequenziale |
+| `agency_id` manipulation | **GIÀ mitigato** | Create: UUID server-side; invite/checkout: `require_agency(user)`; KYC: owner check |
+| B2B register spam | **ASSENTE** | No rate limit |
+| Privilege via register `role` | **GIÀ mitigato** | Whitelist public roles |
+| Accept invite → refresh session | **Gap** | Cookie senza `store_refresh` |
+
+---
+
+## 10. Audit trails
+
+| Trail | Verdict |
+|---|---|
+| `consent_events` | **GIÀ** — B2B `register_consent`, B2C register/marketing; indexes + TTL (`consent_log.py`, `connection.py` 144–148) |
+| `agency_invites` state | **GIÀ** — pending→accepted/revoked/expired |
+| Notification invite accepted | **GIÀ** — in-app center |
+| Logger activate | **GIÀ** — `activate-agency by=…` (`founder_ops.py` 1299–1307); kyc auto `logger.info` (`436–440`) |
+| KYC events dedicati | **PARZIALE** — stato su doc agency (`kyc`, `kyc.auto_verify`, `kyc_auto_activate_at`); **nessuna** collection append-only tipo `kyc_events` / `consent_events` |
+
+---
+
+## Sintesi priorità gap
+
+1. **ASSENTE — email verification** (token/resend/endpoint). Docstring B2C fuorviante; gate valuator dipende da un flag che password-register non può mai alzare.
+2. **ASSENTE — rate limit B2B register** (B2C sì).
+3. **ASSENTE — `store_refresh` su invite accept** → sessione fragile post-accept.
+4. **PARZIALE — idempotenza Attiva** (double wipe) e **unique `owner_id`** su agencies.
+5. **PARZIALE — accept invite atomico** + zero test invite E2E / replay.
+6. **ASSENTE — org/`group_id` su invite** (solo membership agency).
+
+
+================================================================================
+# OMNIA — AUDIT TECNICO B15 (verifica conformità decisioni)
+# File: 14a-AUDIT-B15-VERIFICA-CONFORMITA.md
+================================================================================
+
+Marco, audit B15 completato in sola lettura. Nessuna modifica al progetto.
+
+---
+
+# OMNIA — AUDIT TECNICO B15  
+## Conformità alle decisioni funzionali approvate
+
+---
+
+## A. Sintesi esecutiva
+
+**Stato generale B15:** base operativa di registrazione, onboarding KYC/pagamento, inviti e multi-membership **parzialmente presente**, ma **non conforme** alle decisioni appena approvate su P.IVA=cliente, ruoli per organizzazione, idempotenza Attiva, sessione post-invito e verifica email B2C.
+
+**Criticità più importanti**
+1. **P0 — `wipe_crm=True` di default su Ops Attiva senza guard “già attiva”** → seconda Attiva può cancellare CRM di un’organizzazione già attiva.
+2. **P0/P1 — unicità P.IVA assente** (né applicativa né indice DB); due titolari possono creare due “clienti” con la stessa P.IVA.
+3. **P1 — accept-invite: niente `store_refresh`, niente `email_verified=true`, accettazione non atomica.**
+4. **P1 — ruolo globale `users.role`**, non per organizzazione → permessi potenzialmente ereditati dopo switch/invito.
+5. **P1 — verifica email B2C assente** (endpoint inesistente; gate valuator già richiede `email_verified`).
+
+**Rischi sicurezza:** privilegio eccessivo cross-org via ruolo globale; refresh post-invito fragile; race su accept invite; nessuna traccia B12 su switch/Attiva/invito/VAT.
+
+**Rischi perdita dati:** wipe CRM su ri-Attiva; wipe Ops dedicato senza procedura straordinaria tracciata; race create agency (controllo `owner_id` non atomico).
+
+---
+
+## B. Matrice decisioni / codice
+
+| ID | Decisione funzionale | File / funzioni | Stato | Prove | Anomalie |
+|---|---|---|---|---|---|
+| **B15-01** | Una P.IVA = un solo cliente commerciale OMNIA | `AgencyInDB.fiscal.vat_number` in `backend/shared/models/agency.py`; create in `agencies.create_agency` | **ASSENTE** | Nessun `find` su VAT a create; manuale Cap.19 documenta “Nessun controllo unicità VAT” | Cliente commerciale = documento `agencies`, non entità dedicata |
+| **B15-02** | Stessa P.IVA non genera due clienti | `ensure_indexes` in `connection.py` | **ASSENTE** | Indici agencies: `slug` unique, `owner_id` **non** unique; **nessun** indice su `fiscal.vat_number` | — |
+| **B15-03** | Stessa persona può rappresentare più org con P.IVA diverse | `create_agency` L78–84 | **ASSENTE** (bloccato al contrario) | `find_one({"owner_id": user["id"]})` → `agency_already_exists` | Conflitto diretto con decisione approvata; **non** proporre unique su `owner_id` |
+| **B15-04** | Org con P.IVA diverse = clienti/abbonamenti/dati separati | `subscriptions` / `credit_wallets` keyed by `agency_id` (`billing/models.py`) | **PARZIALE** | Isolamento per `agency_id` sì; ma create multi-org dello stesso titolare bloccata | — |
+| **B15-05** | Filiali stessa P.IVA = stesso cliente, abbonamento/plafond condivisi | `AgencyGroup` + `group_id` (`groups.py`, `agency.py`) | **ASSENTE** | Group non ha VAT; ogni branch ha `fiscal` e subscription propri; `credits_mode` group/branch non equivale a “stesso cliente fiscale” | Matrioska ≠ cliente P.IVA |
+| **B15-06** | Seconda persona con P.IVA già presente ≠ accesso automatico | create + invites | **PARZIALE** | Nessun auto-join su VAT; ma può creare **seconda** agency con stessa VAT | Manca flusso “richiesta accesso + verifica poteri” |
+| **B15-07** | Accesso richiede verifica poteri + autorizzazione legittimati | invites / nessun claim-by-VAT | **PARZIALE** | Invito è il meccanismo di accesso; nessun flusso “claim P.IVA esistente” | — |
+| **B15-08** | Unicità P.IVA anche a livello DB | `ensure_indexes` | **ASSENTE** | Solo slug unique | Normalizzazione `_norm_vat` solo in KYC (`kyc_auto_activate.py`), non a persistenza |
+| **B15-09** | Una sola identità personale (email) | `users.email` unique index; `UserInDB` | **IMPLEMENTATO** | `create_index([("email", 1)], unique=True)` | — |
+| **B15-10** | Stessa identità associabile a più organizzazioni | `agency_ids[]`, `_attach_user_to_agency`, accept-invite `$addToSet` | **IMPLEMENTATO** | Membership multipla funziona | Ruolo **non** per-org (vedi B15-12) |
+| **B15-11** | Ogni associazione ha ruolo/autorizzazioni indipendenti | `users.role` singolo; Cap.13 | **ASSENTE** | Un solo `role` globale; accept upgrade solo se `role=="client"` | Admin in org A resta admin anche in org B se invitati come agent |
+| **B15-12** | Org mantengono dati/permessi separati | tenant `active_agency_id` (D-106) | **PARZIALE** | Dati tenant sì; permessi via ruolo globale | — |
+| **B15-13** | Accesso 2ª org non automatico da sola identità | invites | **IMPLEMENTATO** | Serve invite (o create come owner, limitato) | — |
+| **B15-14** | Switch org: verifica appartenenza | `auth.set_active_agency` | **IMPLEMENTATO** | `agency_id not in agency_ids` → 403 | — |
+| **B15-15** | Switch: ri-verifica ruolo/autorizzazioni | `set_active_agency` + `require_roles` | **ASSENTE** | Switch aggiorna solo `active_agency_id`; ruolo non ricalcolato | — |
+| **B15-16** | Switch: sostituisce contesto, no permessi residui | FE `AgencyShell.switchAgency` → reload; BE `get_current_user` rilegge DB | **PARZIALE** | Reload + SoT DB buoni per dati; ruolo globale resta | JWT porta `role` ma guard usa DB |
+| **B15-17** | Switch: impedisce accessi residui dati org precedente | tenant helpers + middleware | **PARZIALE** | Nuove request usano nuova active; in-flight pre-reload possibili | Alcuni endpoint controllano `agency_ids` (membership) non solo active |
+| **B15-18** | Switch: evento nel registro comune B12 | `set_active_agency` | **ASSENTE** | Solo update Mongo; no audit strutturato | `logger` ≠ audit |
+| **B15-19** | Ops Attiva non riattiva org già attiva; no side-effect | `founder_ops.ops_activate_agency` | **ASSENTE** | Nessun early-return se `activation_status=="active"`; `wipe_crm: bool = True` prima dello status set | **P0 wipe** |
+| **B15-20** | Seconda attivazione rifiutata, no wipe/CRM/abbonamento | stesso + `wipe_agency_crm_data` | **ASSENTE** | Wipe può girare anche su org già active; grant_plan può rieseguire | Esiste anche `POST /wipe-agency-crm` separato senza gate “straordinario” |
+| **B15-21** | Auto-Attiva KYC non riattiva se non pending | `maybe_auto_activate_from_kyc` | **IMPLEMENTATO** | Skip se `st != "pending"`; skip se `kyc_auto_activate_at` | Path Ops ≠ path auto |
+| **B15-22** | Invito personale email + link verifica possesso | `invites.create_invite` / `accept_invite` | **PARZIALE** | Token email; accept non risetta password esistente (D-100) | Email verify flag non settato |
+| **B15-23** | Token valido, non scaduto, monouso | verify + accept | **PARZIALE** | Expiry 7g, status pending→accepted/revoked; **non atomico** | Race: due accept paralleli |
+| **B15-24** | Email verificata = email invito | accept usa `invite["email"]` | **IMPLEMENTATO** | Nessun override email da payload | — |
+| **B15-25** | Accept → `email_verified=true` | `accept_invite` | **ASSENTE** | Nessun `$set` `email_verified` | Nuovo user: default `False` in `UserInDB` |
+| **B15-26** | Accept registra sessione + refresh | accept L364–369 | **ASSENTE** (refresh) | Setta cookie access+refresh; **manca** `store_refresh(refresh)` | Refresh post-invito fallisce a validazione jti |
+| **B15-27** | Account esistente mantiene password | accept L275–290 | **IMPLEMENTATO** | Commento D-100 + no overwrite hash | — |
+| **B15-28** | Accept atomico sotto concorrenza | accept L248–334 | **ASSENTE** | `find` pending → mutate user → `update status`; no `find_one_and_update` condizionale | — |
+| **B15-29** | Quote piano rispettate | create_invite max_agents | **IMPLEMENTATO** | members+pending vs plan | Wipe Attiva cancella anche invites |
+| **B15-30** | B2C: verifica email dedicata | `cloud_auth.cloud_register`; commento verify-email | **ASSENTE** | `email_verified=False`; **nessun** route `/auth/verify-email` nel repo | Valuator gate già richiede verified |
+| **B15-31** | Google → email_verified | `google_auth.py` | **IMPLEMENTATO** | Setta `email_verified: True` | Asimmetria password vs Google |
+| **B15-32** | Eventi B12 (create org, VAT dup, invite, switch, Attiva, email verify, Ops) | consent_events, mls_events, logger | **ASSENTE** (registro comune account/security) | Solo `consent_events` su register; Attiva/invite/switch = `logger.info` | Allineato a B12 confermato: da aggiungere sul registro unico, riusando trail settoriali dove esistono |
+
+**Normalizzazione / esteri / senza P.IVA (osservazione, senza nuove regole):**  
+- FE: `validateItalianVat` / `normalizeVat` (solo IT 11 cifre).  
+- BE create: obbligo presenza stringa, **nessuna** normalizzazione/checksum.  
+- KYC: `_norm_vat` strip non-digit.  
+- Nessun percorso esplicito P.IVA estera o soggetto senza P.IVA (D-162 impone campi fiscali).  
+**Stato: NON VERIFICABILE / fuori scope decisionale attuale** oltre a “oggi è IT-centrico e non normalizzato a DB”.
+
+---
+
+## C. Problemi e rischi
+
+### P0
+1. **Ri-Attiva Ops con wipe di default su org già attiva** — `ActivateAgencyBody.wipe_crm=True`; `ops_activate_agency` non rifiuta se già `active`; chiama `wipe_agency_crm_data` (delete_many su tutte le collection con `agency_id`, inclusi properties/clients/invites).  
+2. **Endpoint dedicato wipe** `POST .../wipe-agency-crm` — stesso wipe senza procedura straordinaria/tracciata B12.
+
+### P1
+3. **Unicità P.IVA assente** (app + DB) → due clienti OMNIA stessa P.IVA.  
+4. **Blocco `owner_id` one-agency** → impedisce titolare multi-org con P.IVA diverse (contrario alla decisione).  
+5. **Accept invite senza `store_refresh`** → sessione fragile.  
+6. **Accept senza `email_verified=true`**.  
+7. **Accept non atomico** → duplicazioni/membership inconsistenti sotto race.  
+8. **Ruolo globale non per-org** → dopo invite/switch, privilegi dell’org A possono valere sull’org B.  
+9. **Verifica email B2C assente** mentre feature gated su `email_verified`.  
+10. **Nessun audit B12** su eventi B15 elencati.
+
+### P2
+11. Filiali stessa P.IVA ≠ cliente unico / abbonamento condiviso.  
+12. Nessun flusso “P.IVA già presente → richiesta accesso con verifica poteri”.  
+13. PATCH fiscal (`update_my_agency`) può cambiare VAT senza check unicità.  
+14. Formati VAT non normalizzati a persistenza (`IT012…` vs `012…`).  
+15. Test E2E/concurrency mancanti (vedi F).
+
+### P3
+16. Cap.19 manuale ancora dichiara VAT opzionale/senza unicità (diverge da D-162 + decisioni B15).  
+17. Commento in `cloud_auth` che rimanda a verify-email “if present” (debt documentale).
+
+---
+
+## D. Dipendenze
+
+```
+[P0 guard Attiva / wipe] ── indipendente; fare prima (perdita dati)
+
+[Normalizzazione VAT] ──► [Indice unique VAT] ──► [Check create + PATCH]
+        │
+        └──► [Modello “cliente commerciale” vs agency/filiale]
+                    │
+                    ├──► [Rimuovere/rilassare blocco owner_id] (dopo unique VAT)
+                    └──► [Policy filiali stessa VAT / group billing] (da decidere mapping)
+
+[Ruolo per-org o membership.role] ──► [Switch ricalcola auth] ──► [Audit switch B12]
+
+[Accept: atomic + email_verified + store_refresh] ── indipendente ma prima dei test invite
+
+[B2C verify-email flow] ──► [non rimuovere gate valuator]
+
+[Registro B12 unico] ── dopo/in parallelo agli hook eventi (non blocca P0 wipe)
+```
+
+---
+
+## E. Piano di intervento (solo elenco — **non implementare**)
+
+1. **P0** — Guard idempotente Ops Attiva: se già `active` → reject, zero wipe/grant/email side-effect. Default `wipe_crm=False` su Attiva normale; wipe solo procedura Ops straordinaria esplicita + audit.  
+2. **P0** — Soft-lock / conferma su `wipe-agency-crm`.  
+3. **P1** — Normalizzare VAT a scrittura; unique index su VAT normalizzata (sparse se servono legacy null); check applicativo create+PATCH.  
+4. **P1** — Rimuovere il blocco “un owner = un’agency” **dopo** unique VAT (consentire multi-org stesso user, P.IVA diverse). **Non** unique su `owner_id`.  
+5. **P1** — Accept invite: `find_one_and_update` status pending→accepted; `email_verified=True`; `store_refresh`; cookie allineati al login.  
+6. **P1** — Modello ruolo per membership (o tabella equivalenti) + enforce su switch/`require_roles`.  
+7. **P1** — Flusso verify-email B2C (token monouso, update flag, resend).  
+8. **P2** — Policy filiali stessa P.IVA / sharing subscription (mapping su group o cliente commerciale).  
+9. **P2** — Flusso “P.IVA esistente → richiesta accesso” (no auto-join).  
+10. **P2** — Hook eventi B12 (create, VAT conflict, invite accept/reject, switch, Attiva/reject, email verify, Ops straordinario).
+
+---
+
+## F. Test di accettazione (da scrivere dopo autorizzazione)
+
+| Area | Test attesi |
+|---|---|
+| VAT | Create 2ª agency stessa VAT → reject; formati `IT`/`spazi` collidono; PATCH VAT duplicata → reject; concurrent create stessa VAT → una sola vince |
+| Multi-org persona | Stesso user crea 2 org P.IVA diverse → OK; isolamento dati tra le due |
+| Switch | Membership check; dopo switch API non legge dati org A; ruolo org B applicato; evento audit presente |
+| Attiva | 2ª Attiva su already-active → 4xx, CRM invariato, subscription invariata; wipe solo path straordinario |
+| Invite | Doppia accept sequenziale/parallela → una OK; `email_verified`; refresh jti valido; password esistente intatta; quota piano |
+| B2C email | Register → link → verify → flag true; reuse token → fail; valuator con unverified → 403 resta |
+| Audit | Ogni evento B15-32 scrive attore/soggetto/ts/operazione/esito |
+
+**Nota:** non eseguire test distruttivi su dati reali/produzione.
+
+---
+
+## G. Compatibilità
+
+| Area | Impatto |
+|---|---|
+| Multi-tenant D-106 | Switch/active_agency **compatibile**; rafforzare, non sostituire |
+| Matrioska groups D-041/D-047 | Group ≠ cliente P.IVA; unificare policy filiali richiede decisione mapping, non rewrite group da zero |
+| Piani / Stripe | Subscription per `agency_id`; sharing plafond stessa P.IVA **non** esiste — rischio doppia fatturazione stessa P.IVA oggi |
+| MLS | Invariato; non introdurre share fascicolo |
+| Ruoli B11 / Cap.13 | Conflitto: Cap.13 assume un ruolo; decisioni B15 chiedono ruolo per associazione |
+| Sessioni B13 | Gap invite→refresh; resto JWT+jti ok |
+| Area A | Nessun conflitto diretto |
+| B12 | Eventi B15 da agganciare al registro unico già impostato |
+| D-152/162/163 | Auto-Attiva già idempotente su pending; **Ops Attiva no** — allineare Ops alla stessa disciplina |
+
+---
+
+## H. Riepilogo finale
+
+**Già funzionante**
+- Email utente unica; membership multipla `agency_ids`; switch con check membership + reload FE; tenant su `active_agency_id`.
+- Inviti: token, expiry 7g, revoke, refresh pending, quote piano, no overwrite password, email presa dall’invito.
+- Onboarding B2B: fiscal obbligatori (D-162), KYC+pay → auto-Attiva con skip se non pending (D-163).
+- Google setta `email_verified`; gate valuator rispetta il flag.
+- Billing isolato per agency_id (quando le org sono separate).
+
+**Da completare**
+- Unicità P.IVA (app+DB+normalizzazione); multi-ownership con P.IVA diverse; ruolo per-org; verify-email B2C; audit B12 eventi B15; accept invite (`store_refresh` + `email_verified` + atomicità).
+
+**Da correggere**
+- Idempotenza Ops Attiva + default wipe; blocco `owner_id` one-agency (contrario alle decisioni); race accept/create.
+
+**Da decidere** (senza inventare regole in implementazione)

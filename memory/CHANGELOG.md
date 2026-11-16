@@ -1,4 +1,12 @@
+## 2026-11-16 — Pausa design risanamento (B01+B02 chiusi · D-173)
+
+- Verifica statica Blocchi 0–7 consolidata; backlog FASE 2 acquisito (solo pianificazione)
+- Design B01 (CommercialCustomer/Membership/…) e B02 (capability/audit) chiusi con DEC Founder
+- Export `_export_audits/` + `RIPRENDI_2026-11-16.md` + Cap.00/13 nota «design target non in codice»
+- Nessuna implementazione risanamento; ripresa = design B03 breve
+
 ## 2026-11-12 — Product Acceptance Matrix aggiornata (fase 4)
+
 
 - `PRODUCT_ACCEPTANCE_MATRIX.md`: J1–J9 ✅ codice; checklist dogfood Founder
 - `NEXT_SESSION.md`: prossimo passo = collaudo produzione
