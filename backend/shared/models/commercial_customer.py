@@ -63,6 +63,10 @@ class CommercialCustomerInDB(TimestampedModel):
     founder_period_ends_at: Optional[str] = None
     cancel_requested_at: Optional[str] = None
     ceased_at: Optional[str] = None
+    # B04-H2 residual — Main Admin commerciale (D01–D12); mai derivato da owner/agency_admin
+    main_admin_user_id: Optional[str] = None
+    main_admin_appointed_at: Optional[str] = None
+    main_admin_appointed_by: Optional[str] = None
 
 
 class CommercialCustomerPublic(OmniaBaseModel):

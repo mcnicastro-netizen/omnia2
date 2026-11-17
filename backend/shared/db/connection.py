@@ -197,6 +197,20 @@ async def ensure_indexes() -> None:
             sparse=True,
             name="commercial_customers_stripe_customer_unique",
         )
+        # B04-H2 — Main Admin binding (non-unique: D02 multi-CC)
+        await db["commercial_customers"].create_index(
+            [("main_admin_user_id", 1)],
+            sparse=True,
+            name="commercial_customers_main_admin_user",
+        )
+        await db["commercial_main_admin_events"].create_index([("id", 1)], unique=True)
+        await db["commercial_main_admin_events"].create_index(
+            [("commercial_customer_id", 1), ("created_at", 1)]
+        )
+        await db["commercial_main_admin_transfers"].create_index([("id", 1)], unique=True)
+        await db["commercial_main_admin_transfers"].create_index(
+            [("commercial_customer_id", 1), ("status", 1)]
+        )
         await db["plan_catalog_versions"].create_index([("id", 1)], unique=True)
         await db["subscriptions"].create_index([("commercial_customer_id", 1)])
         # B04-II — central wallet / lots / allocations / ledger

@@ -1459,3 +1459,60 @@ async def ops_purge_agency_shell(
     if not shell.get("ok"):
         raise HTTPException(status_code=400, detail=shell)
     return {"ok": True, "demo": demo, "shell": shell}
+
+
+class NominateMainAdminBody(BaseModel):
+    commercial_customer_id: str = Field(min_length=1)
+    user_id: str = Field(min_length=1)
+    reason: str = Field(default="ops_nominate", min_length=1)
+
+
+class RevokeMainAdminBody(BaseModel):
+    commercial_customer_id: str = Field(min_length=1)
+    reason: str = Field(default="ops_revoke", min_length=1)
+
+
+@router.post("/commercial-customers/main-admin")
+async def ops_nominate_main_admin(
+    body: NominateMainAdminBody,
+    user: dict = Depends(require_roles("super_admin")),
+) -> Dict[str, Any]:
+    """D01 — nomina/sostituzione Main Admin (solo Super Admin Ops)."""
+    from shared.billing import main_admin_service as mas
+
+    db = Database.get()
+    cc = await mas.nominate_main_admin(
+        db,
+        commercial_customer_id=body.commercial_customer_id.strip(),
+        new_user_id=body.user_id.strip(),
+        actor=user,
+        reason=body.reason.strip() or "ops_nominate",
+    )
+    return {
+        "ok": True,
+        "commercial_customer_id": cc.get("id"),
+        "main_admin_user_id": cc.get("main_admin_user_id"),
+        "main_admin_appointed_at": cc.get("main_admin_appointed_at"),
+    }
+
+
+@router.post("/commercial-customers/main-admin/revoke")
+async def ops_revoke_main_admin(
+    body: RevokeMainAdminBody,
+    user: dict = Depends(require_roles("super_admin")),
+) -> Dict[str, Any]:
+    """Revoca Main Admin (campo null; storia in eventi)."""
+    from shared.billing import main_admin_service as mas
+
+    db = Database.get()
+    cc = await mas.revoke_main_admin(
+        db,
+        commercial_customer_id=body.commercial_customer_id.strip(),
+        actor=user,
+        reason=body.reason.strip() or "ops_revoke",
+    )
+    return {
+        "ok": True,
+        "commercial_customer_id": cc.get("id"),
+        "main_admin_user_id": cc.get("main_admin_user_id"),
+    }

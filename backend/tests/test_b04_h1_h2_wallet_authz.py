@@ -197,9 +197,45 @@ def test_h1_route_revoke_binds_caller_cc(monkeypatch):
             return db
 
     monkeypatch.setattr(billing_routes, "Database", _DB)
-    monkeypatch.setattr(billing_routes, "require_agency", lambda user: user["active_agency_id"])
+    monkeypatch.setattr(billing_routes, "optional_agency_id", lambda user: user.get("active_agency_id"))
+    # Nominate Main Admin for attacker CC so auth reaches H1 CC bind
+    from shared.billing import main_admin_service as mas
 
-    user = {"id": "uA", "role": "agency_admin", "active_agency_id": "agA"}
+    class _DBP:
+        def __init__(self, f):
+            self._f = f
+        def __getattr__(self, n):
+            return getattr(self._f, n)
+        def __getitem__(self, n):
+            if not hasattr(self._f, n):
+                from tests.test_b04ii_wallet_ledger import FakeColl
+                setattr(self._f, n, FakeColl())
+            return getattr(self._f, n)
+
+    dbp = _DBP(db)
+    if not hasattr(db, "users"):
+        from tests.test_b04ii_wallet_ledger import FakeColl
+        db.users = FakeColl()
+    db.users.docs.append(
+        {"id": "uA", "role": "agency_admin", "email_verified": True, "is_active": True}
+    )
+    monkeypatch.setattr(billing_routes, "Database", type("X", (), {"get": staticmethod(lambda: dbp)}))
+    _run(
+        mas.nominate_main_admin(
+            dbp,
+            commercial_customer_id="ccA",
+            new_user_id="uA",
+            actor={"id": "ops", "role": "super_admin"},
+        )
+    )
+
+    user = {
+        "id": "uA",
+        "role": "agency_admin",
+        "active_agency_id": "agA",
+        "email_verified": True,
+        "is_active": True,
+    }
     with pytest.raises(HTTPException) as ei:
         _run(
             billing_routes.revoke_wallet_allocation(
@@ -291,12 +327,9 @@ def test_h2_require_roles_exact_rejects_agent(monkeypatch):
     assert ei.value.status_code == 403
 
 
-def test_h2_wallet_admin_endpoints_use_exact_guard():
-    """Static contract: central wallet mutate/read use require_roles_exact dependency."""
+def test_h2_wallet_admin_endpoints_use_auth_gate():
+    """Central wallet routes authenticate via _WALLET_AUTH; authority is Main Admin binding."""
     from apps.billing import routes as billing_routes
-
-    assert billing_routes.get_central_wallet.__defaults__ is None or True
-    # Inspect Depends objects on signature
     import inspect
 
     for fn_name in (
@@ -307,8 +340,7 @@ def test_h2_wallet_admin_endpoints_use_exact_guard():
         fn = getattr(billing_routes, fn_name)
         params = inspect.signature(fn).parameters
         user_dep = params["user"].default
-        # FastAPI Depends wraps the exact guard factory result
-        assert user_dep.dependency is billing_routes._WALLET_MAIN_ADMIN
+        assert user_dep.dependency is billing_routes._WALLET_AUTH
 
 
 def test_h2_org_wallet_still_allows_branch_via_require_roles():
@@ -318,11 +350,7 @@ def test_h2_org_wallet_still_allows_branch_via_require_roles():
 
     params = inspect.signature(billing_routes.get_org_wallet).parameters
     user_dep = params["user"].default
-    # dependency is a require_roles(...) closure — not the exact Main Admin guard
-    assert user_dep.dependency is not billing_routes._WALLET_MAIN_ADMIN
-    # Ensure branch_admin is in the expanded allow-set of that guard by calling factory
-    # We re-create the same role list and check expansion behavior via require_roles.
-    # (org endpoint lists branch_admin explicitly + agency_admin alias)
+    assert user_dep.dependency is not billing_routes._WALLET_AUTH
     assert "branch_admin" in (
         "super_admin",
         "agency_admin",

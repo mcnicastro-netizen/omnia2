@@ -18,8 +18,11 @@ from shared.auth.dependencies import get_current_user, require_roles, require_ro
 from shared.auth.tenant import optional_agency_id, require_agency
 from shared.db.connection import Database
 
-# B04-H2 / DES-08 — Main Admin (exact roles; no D-041 branch_admin alias)
-_WALLET_MAIN_ADMIN = require_roles_exact("super_admin", "agency_admin", "group_admin")
+# Authenticated users may hit wallet routes; authority is Main Admin binding (D01–D12).
+_WALLET_AUTH = require_roles_exact(
+    "super_admin", "agency_admin", "group_admin", "branch_admin", "agent"
+)
+_OPS_SUPER = require_roles_exact("super_admin")
 
 from apps.billing.plans import (
     get_active_catalog, get_plan, CREDIT_PACKAGES, CREDIT_COSTS,
@@ -857,36 +860,91 @@ async def stripe_webhook(request: Request):
     return {"received": True}
 
 
-# --------------- B04-II Wallet API (CommercialCustomer) ------------
+# --------------- B04-II / H2 Main Admin Wallet API --------------------
+
+async def _authorize_wallet_admin(
+    db,
+    user: dict,
+    *,
+    agency_id: Optional[str],
+    commercial_customer_id: Optional[str],
+    for_mutation: bool,
+    extraordinary_reason: Optional[str] = None,
+    organization_id: Optional[str] = None,
+    amount: Optional[int] = None,
+    operation: str = "wallet_admin",
+) -> str:
+    """Return cc_id after Main Admin (or D07 emergency) authorization."""
+    from shared.billing import main_admin_service as mas
+
+    cc_id = await mas.resolve_wallet_cc_id(
+        db,
+        user,
+        agency_id=agency_id,
+        commercial_customer_id=commercial_customer_id,
+    )
+    if user.get("role") == "super_admin" and for_mutation:
+        # D07 — ordinary Main Admin path preferred; emergency only with reason
+        if extraordinary_reason:
+            await mas.assert_super_admin_emergency_mutate(
+                db,
+                user,
+                cc_id,
+                reason=extraordinary_reason,
+                organization_id=organization_id,
+                amount=amount,
+                operation=operation,
+            )
+            return cc_id
+        # Super Admin without emergency reason: allow read-only elsewhere; mutate denied
+        # unless they are also the nominated Main Admin
+        try:
+            await mas.assert_is_main_admin_of(
+                db, user, cc_id, for_mutation=for_mutation
+            )
+            return cc_id
+        except HTTPException:
+            raise HTTPException(
+                status_code=403,
+                detail={"error": "extraordinary_reason_required"},
+            )
+    if user.get("role") == "super_admin" and not for_mutation:
+        # Ops consultation read
+        cc = await mas.get_commercial_customer(db, cc_id)
+        if not cc:
+            raise HTTPException(status_code=404, detail={"error": "commercial_customer_not_found"})
+        return cc_id
+    await mas.assert_is_main_admin_of(db, user, cc_id, for_mutation=for_mutation)
+    return cc_id
+
 
 @router.get("/wallet")
 async def get_central_wallet(
-    user: dict = Depends(_WALLET_MAIN_ADMIN),
+    commercial_customer_id: Optional[str] = None,
+    user: dict = Depends(_WALLET_AUTH),
 ):
-    """Main Admin view: central wallet + lots + allocations for the agency's CC.
-
-    B04-H2: branch_admin forbidden (require_roles_exact).
-    """
+    """Central wallet — Main Admin binding only (D12). Super Admin: read ops."""
     db = Database.get()
-    agency_id = require_agency(user)
+    agency_id = optional_agency_id(user)
+    cc_id = await _authorize_wallet_admin(
+        db,
+        user,
+        agency_id=agency_id,
+        commercial_customer_id=commercial_customer_id,
+        for_mutation=False,
+        operation="wallet_read",
+    )
     from shared.billing.credit_wallet_service import (
-        resolve_cc_id_for_agency,
         wallet_summary,
         org_spendable_balance,
     )
 
-    cc_id = await resolve_cc_id_for_agency(db, agency_id)
-    if not cc_id:
-        w = await db.credit_wallets.find_one({"agency_id": agency_id}, {"_id": 0})
-        return {
-            "mode": "legacy_agency",
-            "agency_id": agency_id,
-            "balance": (w or {}).get("balance", 0),
-        }
     summary = await wallet_summary(db, cc_id)
     summary["mode"] = "commercial_customer"
-    summary["organization_spendable"] = await org_spendable_balance(db, agency_id)
-    summary["viewer_organization_id"] = agency_id
+    if agency_id:
+        summary["organization_spendable"] = await org_spendable_balance(db, agency_id)
+        summary["viewer_organization_id"] = agency_id
+    summary["commercial_customer_id"] = cc_id
     return summary
 
 
@@ -896,10 +954,7 @@ async def get_org_wallet(
         "super_admin", "agency_admin", "group_admin", "branch_admin", "agent"
     )),
 ):
-    """Branch/Main: spendable balance and allocations for current Organization only.
-
-    B04-H2: scoped exclusively to require_agency(user) — no other Organization data.
-    """
+    """Organization spendable — scoped to require_agency only (unchanged)."""
     db = Database.get()
     agency_id = require_agency(user)
     from shared.billing.credit_wallet_service import org_spendable_balance
@@ -917,26 +972,28 @@ async def get_org_wallet(
 @router.post("/wallet/allocate")
 async def allocate_wallet_credits(
     payload: dict,
-    user: dict = Depends(_WALLET_MAIN_ADMIN),
+    user: dict = Depends(_WALLET_AUTH),
 ):
-    """Main Admin: allocate unallocated credits to an Organization of the same P.IVA.
-
-    B04-H2: branch_admin forbidden.
-    """
+    """Allocate — Main Admin or Super Admin extraordinary (D07)."""
     db = Database.get()
-    agency_id = require_agency(user)
+    agency_id = optional_agency_id(user)
     target_org = (payload.get("organization_id") or "").strip()
     amount = int(payload.get("amount") or 0)
     if not target_org or amount <= 0:
         raise HTTPException(status_code=400, detail="organization_id_and_amount_required")
-    from shared.billing.credit_wallet_service import (
-        allocate_credits,
-        resolve_cc_id_for_agency,
-    )
+    from shared.billing.credit_wallet_service import allocate_credits
 
-    cc_id = await resolve_cc_id_for_agency(db, agency_id)
-    if not cc_id:
-        raise HTTPException(status_code=400, detail="commercial_customer_required")
+    cc_id = await _authorize_wallet_admin(
+        db,
+        user,
+        agency_id=agency_id,
+        commercial_customer_id=(payload.get("commercial_customer_id") or "").strip() or None,
+        for_mutation=True,
+        extraordinary_reason=(payload.get("extraordinary_reason") or "").strip() or None,
+        organization_id=target_org,
+        amount=amount,
+        operation="allocate",
+    )
     created = await allocate_credits(
         db,
         commercial_customer_id=cc_id,
@@ -950,26 +1007,25 @@ async def allocate_wallet_credits(
 @router.post("/wallet/revoke")
 async def revoke_wallet_allocation(
     payload: dict,
-    user: dict = Depends(_WALLET_MAIN_ADMIN),
+    user: dict = Depends(_WALLET_AUTH),
 ):
-    """Main Admin: revoke remaining allocation back to central unallocated.
-
-    B04-H1: bind revoke to caller's CommercialCustomer (server-side).
-    B04-H2: branch_admin forbidden.
-    """
+    """Revoke — Main Admin + H1 CC bind, or Super Admin extraordinary (D07)."""
     db = Database.get()
-    agency_id = require_agency(user)
+    agency_id = optional_agency_id(user)
     allocation_id = (payload.get("allocation_id") or "").strip()
     if not allocation_id:
         raise HTTPException(status_code=400, detail="allocation_id_required")
-    from shared.billing.credit_wallet_service import (
-        resolve_cc_id_for_agency,
-        revoke_allocation,
-    )
+    from shared.billing.credit_wallet_service import revoke_allocation
 
-    cc_id = await resolve_cc_id_for_agency(db, agency_id)
-    if not cc_id:
-        raise HTTPException(status_code=400, detail="commercial_customer_required")
+    cc_id = await _authorize_wallet_admin(
+        db,
+        user,
+        agency_id=agency_id,
+        commercial_customer_id=(payload.get("commercial_customer_id") or "").strip() or None,
+        for_mutation=True,
+        extraordinary_reason=(payload.get("extraordinary_reason") or "").strip() or None,
+        operation="revoke",
+    )
     entry = await revoke_allocation(
         db,
         allocation_id=allocation_id,
@@ -977,6 +1033,91 @@ async def revoke_wallet_allocation(
         reason=f"revoke_by:{user.get('id')}",
     )
     return {"ok": True, "ledger_entry": entry}
+
+
+# --------------- Main Admin lifecycle (D01 / D08–D11) -----------------
+
+@router.get("/commercial/main-admin")
+async def get_main_admin_status(
+    commercial_customer_id: Optional[str] = None,
+    user: dict = Depends(_WALLET_AUTH),
+):
+    db = Database.get()
+    from shared.billing import main_admin_service as mas
+
+    agency_id = optional_agency_id(user)
+    cc_id = await mas.resolve_wallet_cc_id(
+        db,
+        user,
+        agency_id=agency_id,
+        commercial_customer_id=commercial_customer_id,
+    )
+    cc = await mas.get_commercial_customer(db, cc_id)
+    if not cc:
+        raise HTTPException(status_code=404, detail={"error": "commercial_customer_not_found"})
+    is_ma = cc.get("main_admin_user_id") == user.get("id")
+    is_ops = user.get("role") == "super_admin"
+    if not (is_ma or is_ops):
+        raise HTTPException(status_code=403, detail={"error": "forbidden"})
+    return {
+        "commercial_customer_id": cc_id,
+        "main_admin_user_id": cc.get("main_admin_user_id"),
+        "main_admin_appointed_at": cc.get("main_admin_appointed_at"),
+        "commercial_status": cc.get("commercial_status"),
+        "operational_status": cc.get("operational_status"),
+    }
+
+
+@router.post("/commercial/main-admin/transfer")
+async def propose_main_admin_transfer(
+    payload: dict,
+    user: dict = Depends(_WALLET_AUTH),
+):
+    db = Database.get()
+    from shared.billing import main_admin_service as mas
+
+    cc_id = (payload.get("commercial_customer_id") or "").strip()
+    to_user_id = (payload.get("to_user_id") or "").strip()
+    if not cc_id or not to_user_id:
+        raise HTTPException(status_code=400, detail="commercial_customer_id_and_to_user_required")
+    return await mas.propose_transfer(
+        db,
+        commercial_customer_id=cc_id,
+        to_user_id=to_user_id,
+        actor=user,
+        reason=(payload.get("reason") or "transfer_propose").strip(),
+    )
+
+
+@router.post("/commercial/main-admin/transfer/accept")
+async def accept_main_admin_transfer(
+    payload: dict,
+    user: dict = Depends(_WALLET_AUTH),
+):
+    db = Database.get()
+    from shared.billing import main_admin_service as mas
+
+    transfer_id = (payload.get("transfer_id") or "").strip()
+    token = (payload.get("token") or "").strip()
+    if not transfer_id or not token:
+        raise HTTPException(status_code=400, detail="transfer_id_and_token_required")
+    return await mas.accept_transfer(
+        db, transfer_id=transfer_id, token=token, actor=user
+    )
+
+
+@router.post("/commercial/main-admin/transfer/cancel")
+async def cancel_main_admin_transfer(
+    payload: dict,
+    user: dict = Depends(_WALLET_AUTH),
+):
+    db = Database.get()
+    from shared.billing import main_admin_service as mas
+
+    transfer_id = (payload.get("transfer_id") or "").strip()
+    if not transfer_id:
+        raise HTTPException(status_code=400, detail="transfer_id_required")
+    return await mas.cancel_transfer(db, transfer_id=transfer_id, actor=user)
 
 
 # --------------- Credit consumption (internal API) -----------------
