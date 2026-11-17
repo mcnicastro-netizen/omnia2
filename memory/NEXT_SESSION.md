@@ -1,6 +1,6 @@
 # Prossima sessione — programma passi
 
-**Aggiornato**: 17 Novembre 2026 (~11:00 CET — Europe/Rome)  
+**Aggiornato**: 17 Novembre 2026 (~12:37 CET — Europe/Rome)  
 **Repo**: https://github.com/mcnicastro-netizen/omnia2 ✅  
 
 ---
@@ -9,29 +9,41 @@
 
 | Item | Stato |
 |------|-------|
-| Verifica statica 0–7 | CHIUSA |
+| Verifica statica Blocchi 0–7 | CHIUSA |
 | B01 design | CHIUSO |
 | B02 design | CHIUSO |
 | B03 design | CHIUSO (DEC-01…03 / D-174) |
-| B04–B07 | NON APERTI |
-| Codice risanamento | NON AUTORIZZATO |
+| Slice 1 codice | **MERGIATA** su `main` (PR #208) |
+| B04 design | **IN CORSO** (solo design ChatGPT; DES-01…03 in acquisizione) |
+| B05–B07 / MLS / migrazione / deploy | ESCLUSI finché non autorizzati |
+| Codice B04+ | NON AUTORIZZATO |
 
-## Prossimo passo consigliato (Founder sceglie)
+## Follow-up da approfondire DOPO chiusura design ChatGPT B04
 
-**Opzione A (consigliata)** — Prima esecuzione limitata:
-```
-Autorizzo esecuzione SOLO dello slice 1: modello dati B01 minimo
-(CommercialCustomer + Organization link + Membership storica con una sola attiva)
-+ B03-DEC-02 invalidazione sessioni su reset/cambio password
-+ B03-DEC-01 gate email verify sulle route operative.
-Niente B04 billing, niente MLS, niente migrazione produzione.
-Branch feature, PR, test. Fermarsi a fine slice 1.
-```
+> File SoT: `_export_audits/B04-OPEN-FOLLOWUPS.md`
 
-**Opzione B** — Continuare solo design:
-```
-Autorizzo solo design B04 (billing / ANO-008), senza codice.
-Vincoli B01–B03. Non aprire B05–B07. Fermati a fine design B04.
-```
+**B04-OPEN-01 — Repricing clienti esistenti se listino non sostenibile**  
+Approfondire **dopo** che ChatGPT ha chiuso il design B04 (non ora in quella chat).
 
-SoT: `_export_audits/` · D-173 · D-174 · `RIPRENDI_2026-11-16.md`
+Contesto: B04-DES-03 (approvata) vieta modifiche automatiche/retroattive silenziose; consente rialzo anche su abbonamenti attivi **solo** con decisione Founder esplicita + comunicazione + decorrenza + accettazione/rifiuto.
+
+Da definire in sessione dedicata (programma OMNIA, non ChatGPT in questo momento):
+
+1. Trigger ammessi (rincari fornitori, stress test listino, motivo commerciale grave — elenco chiuso?).
+2. Chi propone / chi approva (Founder only? Ops?).
+3. Preavviso minimo e canali di comunicazione.
+4. Cosa succede se il cliente rifiuta (disdetta a fine periodo? altro?).
+5. Interazione con Founder period ancora attivo e con piani annuali.
+6. Cosa resta immutabile nella fotografia economica vs cosa può cambiare (prezzo vs limiti/crediti).
+7. Audit/tracciabilità della decisione di repricing.
+
+**Non** riaprire ora B04-DES-03 con ChatGPT: la precisazione Founder è già sufficiente per chiudere quel punto in design. Questo OPEN è solo per il lavoro successivo nel programma OMNIA.
+
+## Prossimo passo operativo
+
+1. Completare design B04 con ChatGPT (fermata a fine design).  
+2. Salvare export design B04 in `_export_audits/` quando Founder lo chiede.  
+3. Solo dopo: eventuale sessione su **B04-OPEN-01** (e altri OPEN).  
+4. Codice/implementazione B04: solo con nuova autorizzazione esplicita.
+
+SoT: `_export_audits/` · D-173 · D-174 · `B04-OPEN-FOLLOWUPS.md`
