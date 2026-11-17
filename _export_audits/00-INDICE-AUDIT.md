@@ -44,3 +44,7 @@ Estratti il **14 nov 2026 ~11:10 Europe/Rome** dai transcript cloud Cursor.
 28. `B04-OPEN-FOLLOWUPS.md` — Memo programma OMNIA: B04-OPEN-01 repricing.
 29. `B04-DES-REGISTRO.md` — Registro decisioni design B04 (DES-01…10).
 30. `B04-ANO-008-DESIGN-BILLING.md` — **DESIGN B04 CHIUSO** (17 nov 2026). Handoff decisionale DES-01…10.
+31. `B04-H2-MAIN-ADMIN-TECHNICAL-DESIGN.md` — Design tecnico H2 Main Admin.
+32. `B04-H2-MAIN-ADMIN-DECISIONS-CONFORMITY.md` — D01–D12 §14 chiuso.
+33. `B04-H2-MAIN-ADMIN-RESIDUAL-IMPLEMENTATION-REPORT.md` — Report implementazione H2.
+34. `B04-H2-MAIN-ADMIN-HANDOFF-CHATGPT.md` — **Pacchetto analisi ChatGPT** post-impl (PR #216, CI verde, no merge).

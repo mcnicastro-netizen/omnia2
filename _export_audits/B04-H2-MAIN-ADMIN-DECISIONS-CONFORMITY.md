@@ -85,14 +85,11 @@ Nessuna di queste riapre governance §14.
 
 ---
 
-## Cosa NON è autorizzato ora
+## Stato post-implementazione (17 nov 2026)
 
-- Modifica codice / DB / migrazioni  
-- Commit / PR implementativa / merge  
-- H3, H4, legacy, B04-III+  
-- Produzione / Stripe live  
-
-**Prossimo passo:** mandato Founder esplicito di **implementazione** H2 (il prompt già predisposto da ChatGPT), solo dopo questa chiusura documentale.
+- Implementazione H2 consegnata su `cursor/b04-h2-main-admin-impl-e393` @ `bb0ef5eb` — PR #216 — CI verde.
+- Handoff analisi ChatGPT: `B04-H2-MAIN-ADMIN-HANDOFF-CHATGPT.md`.
+- **Ancora non autorizzati:** merge `main`, H3/H4/legacy/B04-III+, produzione/Stripe live.
 
 ---
 
