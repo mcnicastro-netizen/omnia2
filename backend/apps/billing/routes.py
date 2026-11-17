@@ -14,9 +14,12 @@ from typing import Optional
 import stripe
 from fastapi import APIRouter, Depends, HTTPException, Request
 
-from shared.auth.dependencies import get_current_user, require_roles
+from shared.auth.dependencies import get_current_user, require_roles, require_roles_exact
 from shared.auth.tenant import optional_agency_id, require_agency
 from shared.db.connection import Database
+
+# B04-H2 / DES-08 — Main Admin (exact roles; no D-041 branch_admin alias)
+_WALLET_MAIN_ADMIN = require_roles_exact("super_admin", "agency_admin", "group_admin")
 
 from apps.billing.plans import (
     get_active_catalog, get_plan, CREDIT_PACKAGES, CREDIT_COSTS,
@@ -858,9 +861,12 @@ async def stripe_webhook(request: Request):
 
 @router.get("/wallet")
 async def get_central_wallet(
-    user: dict = Depends(require_roles("super_admin", "agency_admin", "group_admin")),
+    user: dict = Depends(_WALLET_MAIN_ADMIN),
 ):
-    """Main Admin view: central wallet + lots + allocations for the agency's CC."""
+    """Main Admin view: central wallet + lots + allocations for the agency's CC.
+
+    B04-H2: branch_admin forbidden (require_roles_exact).
+    """
     db = Database.get()
     agency_id = require_agency(user)
     from shared.billing.credit_wallet_service import (
@@ -890,7 +896,10 @@ async def get_org_wallet(
         "super_admin", "agency_admin", "group_admin", "branch_admin", "agent"
     )),
 ):
-    """Branch/Main: spendable balance and allocations for current Organization only."""
+    """Branch/Main: spendable balance and allocations for current Organization only.
+
+    B04-H2: scoped exclusively to require_agency(user) — no other Organization data.
+    """
     db = Database.get()
     agency_id = require_agency(user)
     from shared.billing.credit_wallet_service import org_spendable_balance
@@ -908,9 +917,12 @@ async def get_org_wallet(
 @router.post("/wallet/allocate")
 async def allocate_wallet_credits(
     payload: dict,
-    user: dict = Depends(require_roles("super_admin", "agency_admin", "group_admin")),
+    user: dict = Depends(_WALLET_MAIN_ADMIN),
 ):
-    """Main Admin: allocate unallocated credits to an Organization of the same P.IVA."""
+    """Main Admin: allocate unallocated credits to an Organization of the same P.IVA.
+
+    B04-H2: branch_admin forbidden.
+    """
     db = Database.get()
     agency_id = require_agency(user)
     target_org = (payload.get("organization_id") or "").strip()
@@ -938,19 +950,30 @@ async def allocate_wallet_credits(
 @router.post("/wallet/revoke")
 async def revoke_wallet_allocation(
     payload: dict,
-    user: dict = Depends(require_roles("super_admin", "agency_admin", "group_admin")),
+    user: dict = Depends(_WALLET_MAIN_ADMIN),
 ):
-    """Main Admin: revoke remaining allocation back to central unallocated."""
+    """Main Admin: revoke remaining allocation back to central unallocated.
+
+    B04-H1: bind revoke to caller's CommercialCustomer (server-side).
+    B04-H2: branch_admin forbidden.
+    """
     db = Database.get()
-    require_agency(user)
+    agency_id = require_agency(user)
     allocation_id = (payload.get("allocation_id") or "").strip()
     if not allocation_id:
         raise HTTPException(status_code=400, detail="allocation_id_required")
-    from shared.billing.credit_wallet_service import revoke_allocation
+    from shared.billing.credit_wallet_service import (
+        resolve_cc_id_for_agency,
+        revoke_allocation,
+    )
 
+    cc_id = await resolve_cc_id_for_agency(db, agency_id)
+    if not cc_id:
+        raise HTTPException(status_code=400, detail="commercial_customer_required")
     entry = await revoke_allocation(
         db,
         allocation_id=allocation_id,
+        commercial_customer_id=cc_id,
         reason=f"revoke_by:{user.get('id')}",
     )
     return {"ok": True, "ledger_entry": entry}

@@ -335,7 +335,14 @@ def test_revoke_returns_to_unallocated():
         )
     )
     alloc_id = db.credit_allocations.docs[0]["id"]
-    _run(mod.revoke_allocation(db, allocation_id=alloc_id, reason="rev"))
+    _run(
+        mod.revoke_allocation(
+            db,
+            allocation_id=alloc_id,
+            commercial_customer_id="cc1",
+            reason="rev",
+        )
+    )
     assert _run(mod.org_spendable_balance(db, "ag1")) == 0
     wallet = _run(mod.ensure_wallet(db, "cc1"))
     # lot remaining still 20, unallocated 20
