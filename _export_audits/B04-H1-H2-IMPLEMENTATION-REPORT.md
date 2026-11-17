@@ -89,7 +89,7 @@ H1/H2 completabili indipendentemente.
 
 ## 11. Commit prodotto
 
-Vedi git log sul branch `cursor/b04-h1-h2-wallet-authz-e393`.
+`fb1fe6580c733d91094ca42839626c51483f048c` — `fix(billing): B04-H1/H2 revoke tenant bind + wallet Main Admin exact roles`
 
 ## 12. Branch e PR
 
