@@ -112,17 +112,18 @@ Deve avere uno di: *implementato e verificato* · *residuo accettato esplicitame
 | **MC-023** | B04-H1 revoke isolation CC | `IMPL_MERGIATO` | PR #212 | MC-022 | P0 | Cross-tenant revoke → 404 no mutation |
 | **MC-024** | B04-H2 exact roles (pre-binding) | `IMPL_MERGIATO` (superato da MC-025) | PR #212 | MC-023 | P2 | Storico; autorità ora = Main Admin binding |
 | **MC-025** | B04-H2 Main Admin residuale D01–D12 | `IMPL_MERGIATO` | PR #216 @ `99a967e` → `c3baebc` | MC-014, MC-023 | P0 | Binding + transfer 48h + deny-by-default + D07 + fix D10/D08/D02/D04 |
-| **MC-026** | Conformità D01–D12 post-fix | `IMPL_MERGIATO` · **accettazione Founder pendente** | report residuale aggiornato; CI verde | MC-025 | P0 | Founder (o ChatGPT+Founder) firma «CONFORME / CONFORME CON RISERVE accettate» |
+| **MC-026a** | Codice D01–D12 post-fix su `main` | `IMPL_MERGIATO` | PR #216 @ `99a967e` ⊂ `c3baebc`; CI verde; report residuale | MC-025 | P0 | Tip `main` contiene fix D10/D08/D02/D04 |
+| **MC-026b** | Accettazione Founder conformità D01–D12 | `BLOCCANTE_APERTO` (gate B) | firma in `MASTER-STRATO-B-REPORT-FINALE-BOZZA.md` | MC-026a | P0 | Founder firma `CONFORME` o `CONFORME CON RISERVE` accettate |
 | **MC-027** | Suite test B04 locale + CI | `IMPL_MERGIATO` | 57 passed; CI success `c3baebc` | MC-020–025 | P0 | Log pytest + Actions success sul tip |
 
 ### 4.4 Residui B04-H2 / H1 (classificazione)
 
 | ID | Descrizione | Stato attuale | Evidenza richiesta | Dipendenze | Priorità | Criterio di chiusura |
 |---|---|---|---|---|---|---|
-| **MC-040** | UI Cabina accept transfer | `RESIDUO_ACCETTABILE` | report H2 §limiti | MC-025 | P2 | Accettazione Founder: API ok, FE fuori scope master B |
-| **MC-041** | Expiry transfer lazy (no cron) | `RESIDUO_ACCETTABILE` | D09 + codice `_expire_if_needed` | MC-025 | P3 | Accettato come lazy |
-| **MC-042** | Read wallet su CC non operativo «limitata» | `RESIDUO_ACCETTABILE` · **whitelist non definita** | design D05; report | MC-014 | P2 | O decisione Founder su whitelist **oppure** accettazione esplicita «consultazione non ristretta finché non definita» |
-| **MC-043** | CC senza Main Admin → deny finché Ops nomina | `RESIDUO_ACCETTABILE` (intenzionale D01) | report migrazione | — | P1 | Runbook Ops nomina post-deploy (doc) |
+| **MC-040** | UI Cabina accept transfer | `FASE_SUCCESSIVA` (proposta ChatGPT; **firma Founder pending**) | report H2 §limiti | MC-025 | P2 | Founder conferma: FE fuori strato B |
+| **MC-041** | Expiry transfer lazy (no cron) | `RESIDUO_ACCETTABILE` (proposta ACCETTARE; **firma pending**) | D09 + `_expire_if_needed` | MC-025 | P3 | Founder accetta lazy |
+| **MC-042** | Read wallet su CC non operativo «limitata» | `BLOCCANTE_APERTO` (decisione Founder) | design D05; bozza report §4 | MC-014 | P0 | Scelta esplicita A/B/C in bozza MC-052 — **niente accettazione implicita** |
+| **MC-043** | CC senza Main Admin → deny finché Ops nomina | `RESIDUO_ACCETTABILE` (proposta ACCETTARE; **firma pending**) | `B04-H2-OPS-RUNBOOK-MAIN-ADMIN-NOMINA.md` | D01 | P1 | Founder accetta + checklist runbook §6 verificabile |
 | **MC-044** | Gap storico «agency_admin filiale = wallet» pre-binding | **CHIUSO da MC-025** | assert Main Admin | MC-025 | — | Non riaprire: superato dal binding |
 | **MC-045** | H3 allocate solo org linkate al CC | `FASE_SUCCESSIVA` | NEXT_SESSION; H1 report | MC-022 | P1 | Non nel master B; slice dedicata se autorizzata |
 | **MC-046** | H4 top-up/storage = Stripe Customer del CC | `FASE_SUCCESSIVA` | idem | MC-021 | P1 | Idem |
@@ -149,10 +150,10 @@ Deve avere uno di: *implementato e verificato* · *residuo accettato esplicitame
 
 | ID | Descrizione | Stato attuale | Evidenza richiesta | Dipendenze | Priorità | Criterio di chiusura |
 |---|---|---|---|---|---|---|
-| **MC-050** | Aggiornare `memory/NEXT_SESSION.md` post-#216 | `BLOCCANTE_APERTO` (doc) | questo piano + PR #216 | MC-025 | P0 | File riflette merge H2 residuale + strati A/B/C |
-| **MC-051** | Sostituire SoT handoff ChatGPT stale | `DOC_STALE` | nuovo puntatore a questo piano | — | P0 | ChatGPT usa questo file + indice, non handoff 14 nov come verità |
-| **MC-052** | Report finale chiusura master strato B | `BLOCCANTE_APERTO` | template §6 | MC-026, MC-040–043 accettati | P0 | Report firmato Founder «MASTER STRATO B CHIUSO» |
-| **MC-053** | Indice audit aggiornato con questo piano | in corso su questo branch | `00-INDICE-AUDIT.md` | — | P1 | Voce 35+ presente |
+| **MC-050** | Aggiornare `memory/NEXT_SESSION.md` post-#216 | `CHIUSO` | `memory/NEXT_SESSION.md` (17 nov ~20:20+) | MC-025 | P0 | Contiene strati A/B/C, #216, residui, SoT piano |
+| **MC-051** | SoT handoff ChatGPT stale | `CHIUSO` (banner STALE + nuovi handoff) | `OMNIA-HANDOFF…` STALE; `MASTER-CHIUSURA-HANDOFF-CHATGPT.md` | — | P0 | ChatGPT non usa handoff 14 nov come verità |
+| **MC-052** | Report finale chiusura master strato B | `BLOCCANTE_APERTO` (bozza pronta) | `MASTER-STRATO-B-REPORT-FINALE-BOZZA.md` | MC-026b, MC-040–043 | P0 | Firma Founder «MASTER STRATO B CHIUSO» |
+| **MC-053** | Indice audit aggiornato con questo piano | `CHIUSO` su PR #217 | `00-INDICE-AUDIT.md` voci 35+ | — | P1 | Voci piano + handoff + review presenti |
 
 ---
 
@@ -181,15 +182,15 @@ Sintesi senza ripetere gli audit:
 2. Nessuna decisione Founder «approvata ma senza stato»  
 3. Follow-up (OPEN-01, B05–B07) etichettati `FASE_SUCCESSIVA`/`FUORI_MASTER`
 
-### Strato B — Implementazione autorizzata (obiettivo chiusura «oggi»)
+### Strato B — Implementazione autorizzata
 
-1. MC-020…MC-027 `IMPL_MERGIATO`  
-2. MC-026 conformità accettata dal Founder  
-3. MC-040…MC-043 con **accettazione esplicita** o decisione  
+1. MC-020…MC-025 + **MC-026a** `IMPL_MERGIATO`  
+2. **MC-026b** conformità accettata dal Founder  
+3. MC-040…MC-043 con **accettazione/decisione esplicita** (MC-042 obbligatorio)  
 4. MC-045…MC-049 **non** richiesti  
-5. MC-050…MC-052 completati  
+5. MC-050/051/053 chiusi; **MC-052 firmato**  
 6. CI verde su `main` tip  
-7. Report finale: implementato / testato / mergiato / residuo accettato / fuori scope
+7. Report finale firmato: implementato / testato / mergiato / residuo accettato / fuori scope
 
 ### Strato C — Readiness commerciale
 
@@ -197,14 +198,15 @@ Sintesi senza ripetere gli audit:
 
 ---
 
-## 7. Sequenza operativa consigliata (senza codice nuovo)
+## 7. Sequenza operativa (aggiornata post-ChatGPT 17 nov)
 
-1. **Founder legge questo piano** e conferma strati A/B/C.  
-2. **Accetta o decide** sui residui MC-040…MC-043 (soprattutto MC-042).  
-3. **ChatGPT (opzionale):** riesame conformità MC-026 sul codice già mergiato — sola lettura.  
-4. Cursor aggiorna `NEXT_SESSION.md` + report finale MC-052 (**doc only**, questo branch).  
-5. Founder dichiara: `MASTER STRATO B CHIUSO` **oppure** elenca MC ancora aperti.  
-6. Solo dopo: autorizzazione esplicita al **prossimo** pacchetto (es. H3+H4 **oppure** B04-III) — mai implicita.
+1. ~~ChatGPT revisiona piano~~ → **fatto**: `IDONEO CON CORREZIONI` (`MASTER-CHIUSURA-CHATGPT-REVIEW-2026-11-17.md`).  
+2. ~~Correzioni doc MC-026/043/050~~ → **fatto** su PR #217 (sera 17 nov).  
+3. **PAUSA** — ripresa: `PAUSA-2026-11-17-RIPRENDI-MASTER-CHIUSURA.md`.  
+4. Founder **decide MC-042** e conferma MC-040/041/043.  
+5. Founder firma MC-026b + strato A + `MASTER STRATO B CHIUSO` nella bozza MC-052.  
+6. Merge PR #217 (docs).  
+7. Solo dopo: autorizzazione esplicita al **prossimo** pacchetto codice — mai implicita.
 
 ---
 
@@ -218,15 +220,16 @@ Sintesi senza ripetere gli audit:
 
 ---
 
-## 9. Verdetto Cursor (17 nov 2026)
+## 9. Verdetto (17 nov 2026 — post-ChatGPT)
 
 | Domanda | Risposta |
 |---|---|
 | CI #216 / post-merge | **OK** |
-| Codice H2 su `main` | **OK** (`c3baebc` include `99a967e`) |
-| Master strato A | **Chiudibile** con conferma formale Founder su MC-001…015 |
-| Master strato B | **Chiudibile dopo** MC-026 firma + accettazione residui MC-040…043 + MC-050…052 |
-| Master strato C | **Aperto** · fuori perimetro |
-| Prossimo codice | **Nessuno** finché Founder non sceglie e autorizza il pacchetto successivo |
+| Codice H2 su `main` | **OK** |
+| Revisione ChatGPT piano | **IDONEO CON CORREZIONI** · correzioni doc applicate |
+| Master strato A | **SÌ COND** — manca firma Founder |
+| Master strato B | **SÌ COND** — manca MC-026b + decisioni MC-040…043 (MC-042) + firma MC-052 |
+| Master strato C | **NO** · fuori |
+| Prossimo codice | **Nessuno** fino a mandato esplicito post-chiusura B |
 
-**STOP esecutivo:** nessun H3/H4/legacy/B04-III avviato da questo documento.
+**STOP esecutivo:** nessun H3/H4/legacy/B04-III. Pausa fino a ripresa Founder.

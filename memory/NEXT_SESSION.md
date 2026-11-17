@@ -1,8 +1,9 @@
 # Prossima sessione — programma passi
 
-**Aggiornato**: 17 Novembre 2026 (~20:20 CET — Europe/Rome)  
+**Aggiornato**: 17 Novembre 2026 (~20:50 CET — Europe/Rome) — **PAUSA**  
 **Repo**: https://github.com/mcnicastro-netizen/omnia2 ✅  
-**SoT chiusura master**: `_export_audits/MASTER-CHIUSURA-POST-AUDIT-PIANO.md`
+**SoT chiusura**: `_export_audits/MASTER-CHIUSURA-POST-AUDIT-PIANO.md`  
+**Ripresa**: `_export_audits/PAUSA-2026-11-17-RIPRENDI-MASTER-CHIUSURA.md`
 
 ---
 
@@ -10,44 +11,25 @@
 
 | Item | Stato |
 |------|-------|
-| Verifica statica Blocchi 0–7 | CHIUSA (strato A) |
-| B01 / B02 / B03 design | CHIUSI (strato A) |
-| Slice 1 codice | **MERGIATA** — PR [#208](https://github.com/mcnicastro-netizen/omnia2/pull/208) |
-| B04 design | **CHIUSO** — DES-01…10 |
-| B04-I | **MERGIATA** — PR [#210](https://github.com/mcnicastro-netizen/omnia2/pull/210) |
-| B04-II | **MERGIATA** — PR [#211](https://github.com/mcnicastro-netizen/omnia2/pull/211) |
-| B04-H1 (revoke CC isolation) | **MERGIATA** — PR [#212](https://github.com/mcnicastro-netizen/omnia2/pull/212) |
-| B04-H2 Main Admin residuale (D01–D12 + fix) | **MERGIATA** — PR [#216](https://github.com/mcnicastro-netizen/omnia2/pull/216) @ `c3baebc` (include `99a967e`) |
-| CI post-merge #216 su `main` | **SUCCESS** |
-| B04-H3 / H4 / legacy / B04-III…VII | **NON AUTORIZZATI** — `FASE_SUCCESSIVA` |
-| B05–B07 / MLS / Stripe live / prod | **FUORI_MASTER** chiusura attuale |
+| PR #216 H2 Main Admin | **MERGED** `main` @ `c3baebc` · CI SUCCESS |
+| Piano chiusura PR #217 | Aperto · ChatGPT **IDONEO CON CORREZIONI** |
+| Correzioni doc (MC-026/043/050) | Applicate su branch piano (sera 17 nov) |
+| Firma `MASTER STRATO B CHIUSO` | **NON FATTA** — ripresa domani |
+| H3/H4/B04-III… / codice nuovo | **VIETATO** senza nuovo mandato |
 
-## Strati di chiusura
+## Alla ripresa (ordine)
 
-| Strato | Significato | Stato |
-|--------|-------------|-------|
-| A — Audit + design | Decisioni e audit con stato finale | Chiudibile (conferma Founder) |
-| B — Impl autorizzata | Slice1 + B04-I/II + H1 + H2 su `main` | Chiudibile dopo accettazione residui + report finale |
-| C — Readiness commerciale | III…VII, impl B01–B03, migrazione, prod | Aperto · fuori perimetro |
+1. Founder decide **MC-042** (read CC non operativo).  
+2. Conferma MC-040 (fase successiva), MC-041 (accettare), MC-043 (accettare + runbook).  
+3. Firma MC-026b + strato A + report bozza → `MASTER STRATO B CHIUSO`.  
+4. Merge PR #217.  
+5. Solo dopo: autorizzare prossimo pacchetto codice.
 
-Dettaglio inventario: `MASTER-CHIUSURA-POST-AUDIT-PIANO.md` (MC-001…).
+## File chiave ripresa
 
-## Residui H2 (accettazione Founder richiesta per chiudere strato B)
+- `PAUSA-2026-11-17-RIPRENDI-MASTER-CHIUSURA.md`
+- `MASTER-CHIUSURA-CHATGPT-REVIEW-2026-11-17.md`
+- `MASTER-STRATO-B-REPORT-FINALE-BOZZA.md`
+- `B04-H2-OPS-RUNBOOK-MAIN-ADMIN-NOMINA.md`
 
-- MC-040 UI Cabina accept (API ok, FE fuori)
-- MC-041 expiry lazy
-- MC-042 read «limitata» su CC non operativo (whitelist non definita)
-- MC-043 CC senza Main Admin → deny finché Ops nomina (intenzionale)
-
-## Follow-up design (non codice)
-
-> `_export_audits/B04-OPEN-FOLLOWUPS.md` — **B04-OPEN-01** repricing
-
-## Prossimo passo operativo
-
-1. Founder conferma piano chiusura + accetta residui MC-040…043 (o decide MC-042).  
-2. Dichiarazione `MASTER STRATO B CHIUSO` **oppure** elenco MC ancora aperti.  
-3. Solo dopo: autorizzazione esplicita al **prossimo** pacchetto (H3+H4 **oppure** B04-III).  
-
-Niente slice nuova senza mandato.  
-`OMNIA-HANDOFF-PER-CHATGPT.md` (14 nov) è **STALE**.
+`OMNIA-HANDOFF-PER-CHATGPT.md` (14 nov) = **STALE**.
