@@ -6,18 +6,13 @@
 
 ---
 
-## Alla riapertura (unico next step)
+## Ora (17 Nov)
 
-Messaggio Founder → ChatGPT / Cursor:
+- Design **B03** prodotto (`_export_audits/B03-ANO-003-005-DESIGN-SESSIONI-REGISTRAZIONE-INVITI.md`).
+- In attesa chiusura Founder (eventuali B03-DEC).
+- Nessun codice. B04–B07 chiusi.
 
-```
-B02 design chiuso e acquisito. Autorizzo solo design B03 breve (sessioni, registrazione, inviti), senza codice.
-Vincoli: B01 + DEC-01/02/03 e B02 + DEC-01…04. Non riaprire B01/B02. Non aprire B04–B07. Fermati a fine design B03.
-```
-
-Leggere prima: `memory/RIPRENDI_2026-11-16.md` + `_export_audits/PAUSA-2026-11-16-RIPRENDI.md` + **D-173**.
-
-## Chiuso (16 Nov — design, non codice)
+## Chiuso (design, non codice)
 
 | Item | Stato |
 |------|-------|
@@ -25,7 +20,9 @@ Leggere prima: `memory/RIPRENDI_2026-11-16.md` + `_export_audits/PAUSA-2026-11-1
 | Backlog FASE 2 risanamento | Acquisito (solo pianificazione) |
 | B01 ANO-001 modello dati | DESIGN CHIUSO |
 | B02 ANO-002+004 authz/audit | DESIGN CHIUSO |
-| Export `_export_audits/` | Su repo (PR #207 / merge docs) |
+| B03 sessioni/registrazione/inviti | DESIGN PRODOTTO (chiusura Founder pending) |
+| HAL reindex prod post D-173 | Fatto 17-Nov |
+| Export `_export_audits/` | Su `main` |
 
 ## Vietato fino a via libera Founder
 

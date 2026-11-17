@@ -38,3 +38,4 @@ Estratti il **14 nov 2026 ~11:10 Europe/Rome** dai transcript cloud Cursor.
 22. `B02-ANO-002-004-DESIGN-AUTORIZZAZIONI-AUDIT.md` — Design B02 autorizzazioni e audit. Solo progettazione.
 23. `B02-ANO-002-004-CHIUSURA-DEFINITIVA-DESIGN.md` — B02 design chiuso. DEC-01…04. Implementazione non autorizzata.
 24. `PAUSA-2026-11-16-RIPRENDI.md` — Pausa Founder 16 nov. Messaggio di ripresa = design B03 breve.
+25. `B03-ANO-003-005-DESIGN-SESSIONI-REGISTRAZIONE-INVITI.md` — Design B03 sessioni/registrazione/inviti. Solo progettazione.
