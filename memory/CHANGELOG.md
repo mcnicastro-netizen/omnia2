@@ -1,4 +1,11 @@
+## 2026-11-17 — HAL reindex produzione post D-173
+
+- Redeploy Railway API (corpus `memory/**`) + `POST /api/app/hal/knowledge/reindex?force=true`
+- Indice: **1034** chunks · manual HAL **397** · `updated_at` 2026-11-17 ~10:47 Europe/Rome
+- Smoke: CommercialCustomer/Membership, Main Admin ≠ CRM filiali, User senza Person → risposte coerenti con D-173
+
 ## 2026-11-16 — Pausa design risanamento (B01+B02 chiusi · D-173)
+
 
 - Verifica statica Blocchi 0–7 consolidata; backlog FASE 2 acquisito (solo pianificazione)
 - Design B01 (CommercialCustomer/Membership/…) e B02 (capability/audit) chiusi con DEC Founder
