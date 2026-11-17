@@ -9,15 +9,25 @@ SubStatus = Literal["trialing", "active", "past_due", "canceled", "unpaid", "inc
 
 
 class SubscriptionInDB(TenantModel):
-    """One row per active/past subscription per agency."""
+    """Subscription row — still agency-scoped for legacy UI; B04-I adds CC link + snapshot.
+
+    `status` remains the Stripe-mirrored status for backward compatibility.
+    `stripe_status` is the explicit Stripe mirror (DES-02). OMNIA commercial/operational
+    states live on CommercialCustomer, not here.
+    """
     tier: str  # PlanTier from plans.py
+    commercial_customer_id: Optional[str] = None
     stripe_customer_id: Optional[str] = None
     stripe_subscription_id: Optional[str] = None
     status: SubStatus = "trialing"
+    stripe_status: Optional[SubStatus] = None
     current_period_start: Optional[str] = None
     current_period_end: Optional[str] = None
     cancel_at_period_end: bool = False
     trial_end: Optional[str] = None
+    # B04-DES-03 — frozen commercial terms at acceptance
+    commercial_terms: Optional[dict] = None
+    catalog_version_id: Optional[str] = None
 
 
 class InvoiceInDB(TenantModel):

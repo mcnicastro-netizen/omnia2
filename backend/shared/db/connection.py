@@ -190,6 +190,15 @@ async def ensure_indexes() -> None:
         await db["commercial_customers"].create_index(
             [("country_code", 1), ("vat_number_normalized", 1)], unique=True
         )
+        # B04-I — at most one Stripe Customer per CommercialCustomer
+        await db["commercial_customers"].create_index(
+            [("stripe_customer_id", 1)],
+            unique=True,
+            sparse=True,
+            name="commercial_customers_stripe_customer_unique",
+        )
+        await db["plan_catalog_versions"].create_index([("id", 1)], unique=True)
+        await db["subscriptions"].create_index([("commercial_customer_id", 1)])
         # B01 — at most one active membership per user
         await db["memberships"].create_index([("id", 1)], unique=True)
         await db["memberships"].create_index([("user_id", 1), ("organization_id", 1)])

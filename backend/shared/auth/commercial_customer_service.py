@@ -53,6 +53,8 @@ async def get_or_create_commercial_customer(
             **(fiscal_extra or {}),
         },
         customer_status="active",
+        commercial_status="pre_activation",
+        operational_status="none",
     )
     doc = customer.model_dump()
     try:
