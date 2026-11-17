@@ -1,6 +1,6 @@
 # Prossima sessione — programma passi
 
-**Aggiornato**: 17 Novembre 2026 (~12:37 CET — Europe/Rome)  
+**Aggiornato**: 17 Novembre 2026 (~13:34 CET — Europe/Rome)  
 **Repo**: https://github.com/mcnicastro-netizen/omnia2 ✅  
 
 ---
@@ -14,7 +14,7 @@
 | B02 design | CHIUSO |
 | B03 design | CHIUSO (DEC-01…03 / D-174) |
 | Slice 1 codice | **MERGIATA** su `main` (PR #208) |
-| B04 design | **IN CORSO** (solo design ChatGPT; DES-01…04 approvate — vedi `_export_audits/B04-DES-REGISTRO.md`) |
+| B04 design | **DES-01…06 CHIUSE** (funzionale; vedi `_export_audits/B04-DES-REGISTRO.md`). Eventuali temi B04 residui solo su richiesta Founder |
 | B05–B07 / MLS / migrazione / deploy | ESCLUSI finché non autorizzati |
 | Codice B04+ | NON AUTORIZZATO |
 
@@ -41,9 +41,9 @@ Da definire in sessione dedicata (programma OMNIA, non ChatGPT in questo momento
 
 ## Prossimo passo operativo
 
-1. Completare design B04 con ChatGPT (fermata a fine design).  
-2. Salvare export design B04 in `_export_audits/` quando Founder lo chiede.  
-3. Solo dopo: eventuale sessione su **B04-OPEN-01** (e altri OPEN).  
+1. Con ChatGPT: solo se Founder chiede un ulteriore tema B04 residuo, altrimenti fermarsi.  
+2. Salvare export design B04 completo in `_export_audits/` quando Founder lo chiede.  
+3. Sessione dedicata su **B04-OPEN-01** (repricing) dopo chiusura design B04 complessivo.  
 4. Codice/implementazione B04: solo con nuova autorizzazione esplicita.
 
 SoT: `_export_audits/` · D-173 · D-174 · `B04-OPEN-FOLLOWUPS.md`
