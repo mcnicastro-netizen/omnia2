@@ -108,6 +108,14 @@ class FakeColl:
             return MagicUpdate(1)
         return MagicUpdate(0)
 
+    async def update_many(self, filt, update):
+        n = 0
+        for i, d in enumerate(self.docs):
+            if self._match(d, filt or {}):
+                self._apply(self.docs[i], update)
+                n += 1
+        return MagicUpdate(n)
+
     async def find_one_and_update(self, filt, update, return_document=None, upsert=False):
         before = None
         for i, d in enumerate(self.docs):

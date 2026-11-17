@@ -1,7 +1,16 @@
-Export temporaneo audit OMNIA per ChatGPT (13–14 nov 2026).
+Export temporaneo audit OMNIA per ChatGPT (13–14 nov 2026 + aggiornamenti).
 NON è codice prodotto. Si può cancellare dopo il download.
 
-File consigliati per ChatGPT:
+=== ORA (17 nov 2026) — analisi post-implementazione B04-H2 ===
+Primario (incolla / allega a ChatGPT):
+  B04-H2-MAIN-ADMIN-HANDOFF-CHATGPT.md
+Allegati di contesto (stesso turno):
+  B04-H2-MAIN-ADMIN-DECISIONS-CONFORMITY.md
+  B04-H2-MAIN-ADMIN-TECHNICAL-DESIGN.md
+  B04-H2-MAIN-ADMIN-RESIDUAL-IMPLEMENTATION-REPORT.md
+PR: https://github.com/mcnicastro-netizen/omnia2/pull/216  (CI verde; merge dopo tua OK)
+
+File consigliati legacy per ChatGPT:
   OMNIA-AUDIT-PARTE-1-di-4.txt
   OMNIA-AUDIT-PARTE-2-di-4.txt
   OMNIA-AUDIT-PARTE-3-di-4.txt
