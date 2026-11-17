@@ -7,7 +7,16 @@ Registro di tutte le decisioni di business e tecniche prese durante il progetto.
 
 ## Decisioni prese
 
+### D-174 — Verifica email obbligatoria prima delle funzioni operative (B03-DEC-01) · 17-Nov-2026
+- **Contesto**: Nel Blocco 1 la verifica email era solo gap tecnico. Design B03 la propone come regola. Founder conferma.
+- **Decisione**:
+  1. Dopo registrazione, senza email confermata: account/login base sì; **funzioni operative no** (organizzazione, inviti, CRM, accettazione Membership, ecc.).
+  2. Diventa **B03-DEC-01** vincolante per il design B03 e la futura implementazione.
+  3. Resta ferma B01-DEC-01: niente Person inventate.
+- **Stato**: ✅ decisione Founder. ❌ codice non ancora autorizzato.
+
 ### D-173 — Design risanamento B01/B02 chiusi · pausa prima di B03 · 16-Nov-2026
+
 - **Contesto**: Dopo verifica statica Blocchi 0–7 (baseline storica `main` @ `2fea64a`), avviata FASE 2 solo come pianificazione. Design B01 (ANO-001) e B02 (ANO-002+ANO-004) prodotti e chiusi. Nessuna implementazione autorizzata.
 - **Decisione**:
   1. **B01 design chiuso** — modello target: Person, User, Organization, CommercialCustomer (P.IVA), Membership, Representation, OrganizationGroup ≠ customer.
