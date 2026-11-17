@@ -17,6 +17,7 @@ from shared.auth.jwt_tokens import (
     ACCESS_TOKEN_MINUTES,
     REFRESH_TOKEN_DAYS,
 )
+from shared.auth.membership_service import activate_exclusive_membership
 from shared.models.agency import (
     AgencyInviteInDB,
     InviteCreateRequest,
@@ -241,7 +242,11 @@ async def accept_invite(
     accept_language: Optional[str] = Header(None),
 ):
     """Public: create new user (password required) or link existing user (D-100: never overwrite password).
-    Auto-login after accept; sets active_agency_id to invited agency (D-106).
+
+    Slice 1 (scope ristretto Founder):
+    - exclusive Membership + dual-write agency_ids (B01)
+    - NO store_refresh, NO atomic claim, NO email_verified=True (fuori scope / non dimostrato D-174)
+    Auto-login after accept; sets active_agency_id via membership helper.
     """
     lang = normalize_lang(accept_language)
     db = Database.get()
@@ -258,38 +263,36 @@ async def accept_invite(
         expires_at_dt = expires_at
     if expires_at_dt.tzinfo is None:
         expires_at_dt = expires_at_dt.replace(tzinfo=timezone.utc)
+    now = datetime.now(timezone.utc).isoformat()
     if datetime.now(timezone.utc) >= expires_at_dt:
         await db.agency_invites.update_one(
-            {"id": invite["id"]}, {"$set": {"status": "expired"}}
+            {"id": invite["id"]}, {"$set": {"status": "expired", "updated_at": now}}
         )
         raise HTTPException(status_code=400, detail="invite_expired")
 
     email = invite["email"]
     agency_id = invite["agency_id"]
     role = invite["role"]
-    now = datetime.now(timezone.utc).isoformat()
+    if role not in ("agency_admin", "agent", "branch_admin", "branch_agent", "group_admin"):
+        role = "agent"
 
     member_name = (payload.name or "").strip()
     user = await db.users.find_one({"email": email})
     if user:
         # D-100 — link membership only; NEVER overwrite password_hash
+        # Upgrade client → invite role; keep existing operational role otherwise.
+        if user.get("role") == "client":
+            user_role = role
+        else:
+            user_role = user.get("role") or role
         set_fields = {
-            "active_agency_id": agency_id,
+            "role": user_role,
             "updated_at": now,
         }
         if member_name:
             set_fields["name"] = member_name
-        if user.get("role") == "client":
-            set_fields["role"] = role
-        await db.users.update_one(
-            {"id": user["id"]},
-            {
-                "$addToSet": {"agency_ids": agency_id},
-                "$set": set_fields,
-            },
-        )
+        await db.users.update_one({"id": user["id"]}, {"$set": set_fields})
         user_id = user["id"]
-        user_role = role if user.get("role") == "client" else user["role"]
         member_name = member_name or user.get("name") or email
     else:
         # D-161 — collaboratore sceglie la password nell'invito (niente API=password)
@@ -315,6 +318,7 @@ async def accept_invite(
             lang=lang,
             agency_ids=[agency_id],
             must_change_password=False,
+            # email_verified left default False — invite ≠ verified email (Founder Slice 1)
         )
         doc = new_user.model_dump()
         doc["active_agency_id"] = agency_id
@@ -322,15 +326,26 @@ async def accept_invite(
         user_id = new_user.id
         user_role = role
 
-    # Mark invite as accepted
+    op_role = user_role if user_role in (
+        "agency_admin", "agent", "branch_admin", "branch_agent", "group_admin"
+    ) else "agent"
+    # B01 — exclusive active Membership + legacy dual-write (authorized Slice 1)
+    await activate_exclusive_membership(
+        db,
+        user_id=user_id,
+        organization_id=agency_id,
+        operational_role=op_role,
+    )
+    await db.users.update_one(
+        {"id": user_id},
+        {"$set": {"role": op_role, "updated_at": now}},
+    )
+    user_role = op_role
+
+    # Mark invite as accepted (non-atomic — B03-DEC-03 claim fuori scope Slice 1)
     await db.agency_invites.update_one(
         {"id": invite["id"]},
-        {
-            "$set": {
-                "status": "accepted",
-                "updated_at": datetime.now(timezone.utc).isoformat(),
-            }
-        },
+        {"$set": {"status": "accepted", "updated_at": now}},
     )
 
     # A-017 — notify inviter (and owner fallback) that invite was accepted
@@ -361,7 +376,7 @@ async def accept_invite(
     except Exception as e:  # noqa: BLE001
         logger.warning("in-app invite-accepted notification failed: %s", e)
 
-    # Auto-login: set auth cookies
+    # Auto-login: set auth cookies (no store_refresh — fuori scope Slice 1)
     access = create_access_token(user_id, email, user_role)
     refresh = create_refresh_token(user_id)
     cookie_kwargs = dict(httponly=True, secure=True, samesite="none", path="/")

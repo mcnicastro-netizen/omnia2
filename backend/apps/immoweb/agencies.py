@@ -38,24 +38,46 @@ async def _ensure_unique_slug(db, base_slug: str) -> str:
 
 
 async def _attach_user_to_agency(
-    db, user_id: str, agency_id: str, *, force_active: bool = False
+    db, user_id: str, agency_id: str, *, force_active: bool = False, role: str | None = None
 ) -> None:
-    """Add agency_id to membership; set active_agency_id if missing/invalid (D-106).
+    """Attach user to organization with exclusive active Membership (B01/B03-DEC-03).
 
     force_active=True (create onboarding): always switch to the new agency so the
     owner never stays on a stale seed/demo tenant (false «collaboratori»).
+    Slice 1: dual-write Membership + legacy agency_ids=[agency_id].
     """
     user = await db.users.find_one(
-        {"id": user_id}, {"_id": 0, "agency_ids": 1, "active_agency_id": 1}
+        {"id": user_id}, {"_id": 0, "agency_ids": 1, "active_agency_id": 1, "role": 1}
     )
+    op_role = role or (user or {}).get("role") or "agent"
+    if op_role not in (
+        "agency_admin", "agent", "branch_admin", "branch_agent", "group_admin"
+    ):
+        op_role = "agency_admin" if force_active else "agent"
+    if force_active:
+        from shared.auth.membership_service import activate_exclusive_membership
+        await activate_exclusive_membership(
+            db,
+            user_id=user_id,
+            organization_id=agency_id,
+            operational_role=op_role,
+        )
+        return
+    # Soft attach (legacy helpers): still exclusive membership when switching org
     ids = list((user or {}).get("agency_ids") or [])
     active = (user or {}).get("active_agency_id")
-    set_fields = {"updated_at": datetime.now(timezone.utc).isoformat()}
-    if force_active or not active or active not in (ids + [agency_id]):
-        set_fields["active_agency_id"] = agency_id
+    if not active or active not in (ids + [agency_id]) or agency_id not in ids:
+        from shared.auth.membership_service import activate_exclusive_membership
+        await activate_exclusive_membership(
+            db,
+            user_id=user_id,
+            organization_id=agency_id,
+            operational_role=op_role,
+        )
+        return
     await db.users.update_one(
         {"id": user_id},
-        {"$addToSet": {"agency_ids": agency_id}, "$set": set_fields},
+        {"$set": {"updated_at": datetime.now(timezone.utc).isoformat()}},
     )
 
 
@@ -71,6 +93,24 @@ async def create_agency(
     S2 — la registrazione pubblica non assegna più ruoli privilegiati: chi completa
     l'onboarding creando la propria agenzia viene promosso qui, server-side.
     """
+    from shared.auth.email_gate import assert_email_verified_for_operations
+
+    # D-174 — create_agency è operativo anche se usa get_current_user (non require_roles)
+    # Promote path: client → agency_admin; gate applies once role becomes operational.
+    # Pre-check: if already agency_admin/agent without verified email → block.
+    if user.get("role") in (
+        "agency_admin", "agent", "branch_admin", "branch_agent", "group_admin"
+    ):
+        assert_email_verified_for_operations(user)
+    elif not user.get("email_verified"):
+        raise HTTPException(
+            status_code=403,
+            detail={
+                "error": "email_not_verified",
+                "hint": "Conferma l'email prima di creare l'organizzazione",
+            },
+        )
+
     db = Database.get()
     if user.get("role") in ("group_admin", "branch_admin", "branch_agent"):
         raise HTTPException(status_code=403, detail="franchising_roles_use_group_flow")
@@ -173,6 +213,21 @@ async def create_agency(
             )
         website_payload = {"mode": "external", "external_url": ext or None}
 
+    from shared.auth.commercial_customer_service import get_or_create_commercial_customer
+
+    legal_name = _field(payload.fiscal, "legal_name") or payload.display_name
+    country = _field(payload.address, "country") or "IT"
+    customer = await get_or_create_commercial_customer(
+        db,
+        vat_number=vat,
+        legal_name=legal_name,
+        country_code=country,
+        fiscal_extra={
+            "fiscal_code": fiscal_code,
+            "rea": rea,
+        },
+    )
+
     agency = AgencyInDB(
         slug=slug,
         display_name=payload.display_name,
@@ -182,6 +237,7 @@ async def create_agency(
         branding=payload.branding or {},
         website=website_payload or {},
         owner_id=user["id"],
+        commercial_customer_id=customer["id"],
         # M2.5.5 — Transfer Domain Vault preferences captured at signup
         domain_sovereignty_confirmed=bool(user.get("signup_domain_sovereignty_confirmed")),
         domain_sovereignty_confirmed_at=(
@@ -223,7 +279,6 @@ async def create_agency(
         "share_requests_mls": True,
     }
     await db.agencies.insert_one(doc)
-    await _attach_user_to_agency(db, user["id"], agency.id, force_active=True)
 
     # S2 — promozione controllata: il creatore diventa agency_admin
     # Super Admin non crea agenzie dogfood: resta in cabina (niente promote a agency_admin).
@@ -232,6 +287,10 @@ async def create_agency(
             {"id": user["id"]},
             {"$set": {"role": "agency_admin", "updated_at": datetime.now(timezone.utc).isoformat()}},
         )
+
+    await _attach_user_to_agency(
+        db, user["id"], agency.id, force_active=True, role="agency_admin"
+    )
 
     logger.info(
         "Agency created (pending activation): id=%s slug=%s owner=%s",

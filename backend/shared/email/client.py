@@ -96,6 +96,12 @@ SUBJECTS = {
         "en": "Reset your OMNIA password",
         "es": "Restablece tu contraseña OMNIA",
     },
+    "email_verification": {
+        "it": "Conferma la tua email OMNIA",
+        "en": "Confirm your OMNIA email",
+        "es": "Confirma tu email OMNIA",
+    },
+
     "agency_invite": {
         "it": "Sei stato invitato a unirti a {{agency_name}} su OMNIA",
         "en": "You have been invited to join {{agency_name}} on OMNIA",

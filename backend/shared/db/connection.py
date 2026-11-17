@@ -173,6 +173,7 @@ async def ensure_indexes() -> None:
         await db["users"].create_index([("id", 1)], unique=True)
         await db["agencies"].create_index([("slug", 1)], unique=True)
         await db["agencies"].create_index([("owner_id", 1)])
+        await db["agencies"].create_index([("commercial_customer_id", 1)])
         await db["agency_invites"].create_index([("token", 1)], unique=True)
         await db["agency_invites"].create_index([("agency_id", 1), ("status", 1)])
         await db["agency_invites"].create_index([("agency_id", 1), ("email", 1)])
@@ -180,6 +181,26 @@ async def ensure_indexes() -> None:
         await db["login_attempts"].create_index([("identifier", 1)])
         await db["password_reset_tokens"].create_index([("token", 1)], unique=True)
         await db["password_reset_tokens"].create_index(
+            [("expires_at", 1)], expireAfterSeconds=0
+        )
+        await db["refresh_tokens"].create_index([("jti", 1)], unique=True)
+        await db["refresh_tokens"].create_index([("user_id", 1)])
+        # B01 — CommercialCustomer unique by country + normalized VAT
+        await db["commercial_customers"].create_index([("id", 1)], unique=True)
+        await db["commercial_customers"].create_index(
+            [("country_code", 1), ("vat_number_normalized", 1)], unique=True
+        )
+        # B01 — at most one active membership per user
+        await db["memberships"].create_index([("id", 1)], unique=True)
+        await db["memberships"].create_index([("user_id", 1), ("organization_id", 1)])
+        await db["memberships"].create_index(
+            [("user_id", 1)],
+            unique=True,
+            partialFilterExpression={"membership_status": "active"},
+            name="memberships_one_active_per_user",
+        )
+        await db["email_verification_tokens"].create_index([("token", 1)], unique=True)
+        await db["email_verification_tokens"].create_index(
             [("expires_at", 1)], expireAfterSeconds=0
         )
     except Exception as e:

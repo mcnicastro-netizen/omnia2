@@ -23,7 +23,12 @@ from shared.auth.brute_force import (
     clear_attempts,
 )
 from shared.auth.dependencies import get_current_user
-from shared.auth.session_store import store_refresh, is_refresh_valid, revoke_refresh
+from shared.auth.session_store import (
+    store_refresh,
+    is_refresh_valid,
+    revoke_refresh,
+    revoke_all_refresh,
+)
 from shared.models.user import (
     UserInDB,
     UserPublic,
@@ -550,8 +555,9 @@ async def reset_password(req: ResetPasswordRequest,
         raise HTTPException(status_code=400, detail=t("auth.token_expired", lang=lang))
 
     new_hash = hash_password(req.new_password)
+    user_id = token_doc["user_id"]
     await db.users.update_one(
-        {"id": token_doc["user_id"]},
+        {"id": user_id},
         {
             "$set": {
                 "password_hash": new_hash,
@@ -563,6 +569,8 @@ async def reset_password(req: ResetPasswordRequest,
     await db.password_reset_tokens.update_one(
         {"token": req.token}, {"$set": {"used": True}}
     )
+    # B03-DEC-02 — invalidate all refresh sessions after password reset
+    await revoke_all_refresh(user_id)
     return {"status": "ok", "message": t("auth.password_updated", lang=lang)}
 
 
@@ -611,5 +619,95 @@ async def change_password(
             }
         },
     )
+    # B03-DEC-02 — invalidate all refresh sessions after password change
+    await revoke_all_refresh(user["id"])
     fresh = await db.users.find_one({"id": user["id"]}) or {**full, "must_change_password": False}
     return _public(fresh)
+
+
+# ---------------- EMAIL VERIFICATION (D-174 / B03-DEC-01) ----------------
+
+_EMAIL_VERIFY_HOURS = 48
+
+
+class VerifyEmailRequest(OmniaBaseModel):
+    token: str = Field(min_length=16, max_length=200)
+
+
+async def _issue_email_verification(
+    db, *, user_id: str, email: str, name: str, lang: str
+) -> None:
+    """Create a one-shot verification token and send the email (best-effort)."""
+    token = secrets.token_urlsafe(32)
+    expires_at = datetime.now(timezone.utc) + timedelta(hours=_EMAIL_VERIFY_HOURS)
+    await db.email_verification_tokens.insert_one({
+        "token": token,
+        "user_id": user_id,
+        "email": email,
+        "expires_at": expires_at,
+        "used": False,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+    })
+    from shared.public_base import get_public_base_url
+    frontend = get_public_base_url()
+    verify_url = f"{frontend}/{lang}/verify-email?token={token}"
+    try:
+        await send_email(
+            to=email,
+            template="email_verification",
+            lang=lang,
+            variables={"name": name or email, "verify_url": verify_url},
+        )
+    except Exception as e:
+        logger.warning("Email verification send failed: %s", e)
+
+
+@router.post("/request-email-verification")
+async def request_email_verification(
+    user: dict = Depends(get_current_user),
+    accept_language: Optional[str] = Header(None),
+):
+    """Authenticated: (re)send verification email. Always 200 to avoid enumeration noise."""
+    lang = normalize_lang(accept_language) or user.get("lang") or "it"
+    if user.get("email_verified") is True:
+        return {"status": "ok", "already_verified": True}
+    db = Database.get()
+    await _issue_email_verification(
+        db,
+        user_id=user["id"],
+        email=user["email"],
+        name=user.get("name") or "",
+        lang=lang,
+    )
+    return {"status": "ok", "already_verified": False}
+
+
+@router.post("/verify-email")
+async def verify_email(
+    req: VerifyEmailRequest,
+    accept_language: Optional[str] = Header(None),
+):
+    """Public: consume one-shot token and set email_verified=True."""
+    lang = normalize_lang(accept_language)
+    db = Database.get()
+    token_doc = await db.email_verification_tokens.find_one({"token": req.token})
+    if not token_doc or token_doc.get("used"):
+        raise HTTPException(status_code=400, detail="invalid_or_used_token")
+
+    expires_at = token_doc["expires_at"]
+    if isinstance(expires_at, str):
+        expires_at = datetime.fromisoformat(expires_at)
+    if expires_at.tzinfo is None:
+        expires_at = expires_at.replace(tzinfo=timezone.utc)
+    if datetime.now(timezone.utc) >= expires_at:
+        raise HTTPException(status_code=400, detail="token_expired")
+
+    now = datetime.now(timezone.utc).isoformat()
+    await db.users.update_one(
+        {"id": token_doc["user_id"]},
+        {"$set": {"email_verified": True, "email_verified_at": now, "updated_at": now}},
+    )
+    await db.email_verification_tokens.update_one(
+        {"token": req.token}, {"$set": {"used": True, "used_at": now}}
+    )
+    return {"status": "ok", "email_verified": True}

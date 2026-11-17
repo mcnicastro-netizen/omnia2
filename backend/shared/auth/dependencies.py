@@ -29,6 +29,10 @@ async def get_current_user(request: Request) -> dict:
     if not user:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="user_not_found")
 
+    # B03 — suspended / inactive accounts cannot use protected routes
+    if user.get("is_active") is False:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="account_inactive")
+
     # M5 / D-106 — tenant filtering usa solo active_agency_id se legittima (no fallback [0])
     from shared.auth.tenant import optional_agency_id
     from shared.db.tenant_guard import set_current_role
@@ -68,6 +72,9 @@ def require_roles(*allowed_roles: str):
         user = await get_current_user(request)
         if user.get("role") not in expanded:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="forbidden")
+        # D-174 / B03-DEC-01 — gate email su route operative (require_roles)
+        from shared.auth.email_gate import assert_email_verified_for_operations
+        assert_email_verified_for_operations(user)
         return user
     return _guard
 
