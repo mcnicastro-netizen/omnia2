@@ -587,21 +587,18 @@ async def _apply_session_side_effects(session_id: str) -> None:
         credits = int(tx.get("credits") or 0)
         agency_id = tx.get("agency_id")
         if credits > 0 and agency_id:
-            wallet = await db.credit_wallets.find_one_and_update(
-                {"agency_id": agency_id},
-                {"$inc": {"balance": credits}, "$set": {"last_topup_at": now, "updated_at": now}},
-                upsert=True, return_document=True,
+            from shared.billing.credit_wallet_service import grant_for_agency
+
+            await grant_for_agency(
+                db,
+                agency_id=agency_id,
+                amount=credits,
+                origin="stripe_topup",
+                reason=f"topup_{tx.get('lookup_key')}",
+                idempotency_key=f"checkout:{session_id}",
+                ref_id=session_id,
+                ref_type="checkout_session",
             )
-            new_balance = (wallet or {}).get("balance", credits)
-            await db.credit_ledger.insert_one({
-                "id": __import__("uuid").uuid4().hex,
-                "agency_id": agency_id,
-                "delta": credits,
-                "reason": f"topup_{tx.get('lookup_key')}",
-                "balance_after": new_balance,
-                "ref_id": session_id, "ref_type": "checkout_session",
-                "created_at": now,
-            })
             logger.info("Credits granted: agency=%s +%d (session=%s)", agency_id, credits, session_id)
 
     elif tx["kind"] == "subscription":
@@ -857,39 +854,125 @@ async def stripe_webhook(request: Request):
     return {"received": True}
 
 
+# --------------- B04-II Wallet API (CommercialCustomer) ------------
+
+@router.get("/wallet")
+async def get_central_wallet(
+    user: dict = Depends(require_roles("super_admin", "agency_admin", "group_admin")),
+):
+    """Main Admin view: central wallet + lots + allocations for the agency's CC."""
+    db = Database.get()
+    agency_id = require_agency(user)
+    from shared.billing.credit_wallet_service import (
+        resolve_cc_id_for_agency,
+        wallet_summary,
+        org_spendable_balance,
+    )
+
+    cc_id = await resolve_cc_id_for_agency(db, agency_id)
+    if not cc_id:
+        w = await db.credit_wallets.find_one({"agency_id": agency_id}, {"_id": 0})
+        return {
+            "mode": "legacy_agency",
+            "agency_id": agency_id,
+            "balance": (w or {}).get("balance", 0),
+        }
+    summary = await wallet_summary(db, cc_id)
+    summary["mode"] = "commercial_customer"
+    summary["organization_spendable"] = await org_spendable_balance(db, agency_id)
+    summary["viewer_organization_id"] = agency_id
+    return summary
+
+
+@router.get("/wallet/organization")
+async def get_org_wallet(
+    user: dict = Depends(require_roles(
+        "super_admin", "agency_admin", "group_admin", "branch_admin", "agent"
+    )),
+):
+    """Branch/Main: spendable balance and allocations for current Organization only."""
+    db = Database.get()
+    agency_id = require_agency(user)
+    from shared.billing.credit_wallet_service import org_spendable_balance
+
+    allocs = await db.credit_allocations.find(
+        {"organization_id": agency_id}, {"_id": 0}
+    ).to_list(length=5000)
+    return {
+        "organization_id": agency_id,
+        "spendable": await org_spendable_balance(db, agency_id),
+        "allocations": allocs,
+    }
+
+
+@router.post("/wallet/allocate")
+async def allocate_wallet_credits(
+    payload: dict,
+    user: dict = Depends(require_roles("super_admin", "agency_admin", "group_admin")),
+):
+    """Main Admin: allocate unallocated credits to an Organization of the same P.IVA."""
+    db = Database.get()
+    agency_id = require_agency(user)
+    target_org = (payload.get("organization_id") or "").strip()
+    amount = int(payload.get("amount") or 0)
+    if not target_org or amount <= 0:
+        raise HTTPException(status_code=400, detail="organization_id_and_amount_required")
+    from shared.billing.credit_wallet_service import (
+        allocate_credits,
+        resolve_cc_id_for_agency,
+    )
+
+    cc_id = await resolve_cc_id_for_agency(db, agency_id)
+    if not cc_id:
+        raise HTTPException(status_code=400, detail="commercial_customer_required")
+    created = await allocate_credits(
+        db,
+        commercial_customer_id=cc_id,
+        organization_id=target_org,
+        amount=amount,
+        reason=f"allocate_by:{user.get('id')}",
+    )
+    return {"ok": True, "allocations": created}
+
+
+@router.post("/wallet/revoke")
+async def revoke_wallet_allocation(
+    payload: dict,
+    user: dict = Depends(require_roles("super_admin", "agency_admin", "group_admin")),
+):
+    """Main Admin: revoke remaining allocation back to central unallocated."""
+    db = Database.get()
+    require_agency(user)
+    allocation_id = (payload.get("allocation_id") or "").strip()
+    if not allocation_id:
+        raise HTTPException(status_code=400, detail="allocation_id_required")
+    from shared.billing.credit_wallet_service import revoke_allocation
+
+    entry = await revoke_allocation(
+        db,
+        allocation_id=allocation_id,
+        reason=f"revoke_by:{user.get('id')}",
+    )
+    return {"ok": True, "ledger_entry": entry}
+
+
 # --------------- Credit consumption (internal API) -----------------
 
 async def debit_credits(agency_id: str, amount: int, reason: str,
                         ref_id: str = None, ref_type: str = None) -> int:
-    """Atomic debit of credits from an agency wallet.
+    """Atomic debit — B04-II FIFO via CC wallet when linked; else legacy agency wallet.
 
-    Returns new balance. Raises HTTPException(402) if insufficient.
+    Returns new balance. Raises HTTPException(402) if insufficient / not spendable.
     Called by internal services (valuator, HAL, virtual staging, ...).
     """
-    if amount <= 0:
-        raise ValueError("amount_must_be_positive")
+    from shared.billing.credit_wallet_service import debit_for_organization
+
     db = Database.get()
-    now = datetime.now(timezone.utc).isoformat()
-    wallet = await db.credit_wallets.find_one_and_update(
-        {"agency_id": agency_id, "balance": {"$gte": amount}},
-        {"$inc": {"balance": -amount}, "$set": {"updated_at": now}},
-        return_document=True,
+    return await debit_for_organization(
+        db,
+        organization_id=agency_id,
+        amount=amount,
+        reason=reason,
+        ref_id=ref_id,
+        ref_type=ref_type,
     )
-    if not wallet:
-        raise HTTPException(status_code=402, detail={
-            "error": "insufficient_credits",
-            "required": amount,
-            "reason": reason,
-        })
-    new_balance = wallet["balance"]
-    await db.credit_ledger.insert_one({
-        "id": __import__("uuid").uuid4().hex,
-        "agency_id": agency_id,
-        "delta": -amount,
-        "reason": reason,
-        "balance_after": new_balance,
-        "ref_id": ref_id,
-        "ref_type": ref_type,
-        "created_at": now,
-    })
-    return new_balance

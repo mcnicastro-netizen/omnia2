@@ -199,6 +199,35 @@ async def ensure_indexes() -> None:
         )
         await db["plan_catalog_versions"].create_index([("id", 1)], unique=True)
         await db["subscriptions"].create_index([("commercial_customer_id", 1)])
+        # B04-II — central wallet / lots / allocations / ledger
+        await db["cc_credit_wallets"].create_index(
+            [("commercial_customer_id", 1)], unique=True
+        )
+        await db["credit_lots"].create_index([("id", 1)], unique=True)
+        await db["credit_lots"].create_index(
+            [("commercial_customer_id", 1), ("created_at", 1)]
+        )
+        await db["credit_lots"].create_index(
+            [("idempotency_key", 1)],
+            unique=True,
+            sparse=True,
+        )
+        await db["credit_allocations"].create_index([("id", 1)], unique=True)
+        await db["credit_allocations"].create_index(
+            [("organization_id", 1), ("remaining_qty", 1)]
+        )
+        await db["credit_allocations"].create_index(
+            [("commercial_customer_id", 1), ("lot_id", 1)]
+        )
+        await db["cc_credit_ledger"].create_index([("id", 1)], unique=True)
+        await db["cc_credit_ledger"].create_index(
+            [("commercial_customer_id", 1), ("created_at", 1)]
+        )
+        await db["cc_credit_ledger"].create_index(
+            [("idempotency_key", 1)],
+            unique=True,
+            sparse=True,
+        )
         # B01 — at most one active membership per user
         await db["memberships"].create_index([("id", 1)], unique=True)
         await db["memberships"].create_index([("user_id", 1), ("organization_id", 1)])

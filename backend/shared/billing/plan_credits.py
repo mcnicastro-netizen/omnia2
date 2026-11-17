@@ -180,18 +180,25 @@ async def grant_plan_credits_from_stripe_invoice(
             clawback = 2000
 
     net = amount - clawback
-    wallet = await db.credit_wallets.find_one_and_update(
-        {"agency_id": aid},
-        {
-            "$inc": {"balance": net},
-            "$set": {"last_topup_at": now, "updated_at": now},
-            "$setOnInsert": {"agency_id": aid, "created_at": now},
-        },
-        upsert=True,
-        return_document=True,
+    from shared.billing.credit_wallet_service import (
+        grant_for_agency,
+        org_spendable_balance,
     )
-    new_balance = (wallet or {}).get("balance", net)
+
     ledger_id = uuid.uuid4().hex
+    if net > 0:
+        await grant_for_agency(
+            db,
+            agency_id=aid,
+            amount=net,
+            origin="plan_included",
+            reason=f"{PLAN_CREDIT_REASON}_{tier}_{cycle}",
+            idempotency_key=f"stripe_invoice:{inv_id}",
+            ref_id=inv_id,
+            ref_type=LEDGER_REF_TYPE,
+        )
+    new_balance = await org_spendable_balance(db, aid)
+    # Idempotency / audit marker on legacy ledger (D-167)
     await db.credit_ledger.insert_one(
         {
             "id": ledger_id,
@@ -203,6 +210,7 @@ async def grant_plan_credits_from_stripe_invoice(
             "ref_type": LEDGER_REF_TYPE,
             "clawback_dogfood_2000": clawback or None,
             "created_at": now,
+            "b04ii": True,
         }
     )
     if clawback:
@@ -216,6 +224,7 @@ async def grant_plan_credits_from_stripe_invoice(
                 "ref_id": inv_id,
                 "ref_type": LEDGER_REF_TYPE,
                 "created_at": now,
+                "b04ii": True,
             }
         )
     logger.info(
