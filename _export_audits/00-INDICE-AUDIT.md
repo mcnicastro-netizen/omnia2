@@ -49,3 +49,4 @@ Estratti il **14 nov 2026 ~11:10 Europe/Rome** dai transcript cloud Cursor.
 33. `B04-H2-MAIN-ADMIN-RESIDUAL-IMPLEMENTATION-REPORT.md` — Report implementazione H2.
 34. `B04-H2-MAIN-ADMIN-HANDOFF-CHATGPT.md` — Pacchetto analisi ChatGPT post-impl H2 (storico pre-merge).
 35. `MASTER-CHIUSURA-POST-AUDIT-PIANO.md` — **SoT piano chiusura master post-audit** (strati A/B/C, inventario MC-001…). Baseline `main` @ `c3baebc` (PR #216 mergiata).
+36. `MASTER-CHIUSURA-HANDOFF-CHATGPT.md` — **Pacchetto revisione ChatGPT** del piano (formato A–F; PR #217).

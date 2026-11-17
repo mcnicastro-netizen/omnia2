@@ -38,8 +38,9 @@ Deve avere uno di: *implementato e verificato* · *residuo accettato esplicitame
 | `B04-H1-H2-IMPLEMENTATION-REPORT.md` | H1 + H2 ruoli exact | 17 nov · PR #212 |
 | `B04-H2-MAIN-ADMIN-*` | Design/D01–D12/impl/handoff residuale | 17 nov · PR #216 |
 | `B04-OPEN-FOLLOWUPS.md` | Repricing (non design) | 17 nov |
-| `memory/NEXT_SESSION.md` | Stato operativo slice | **parziale** (pre-#216 residual) |
+| `memory/NEXT_SESSION.md` | Stato operativo slice | **aggiornato 17 nov ~20:20** (post-#216) |
 | `OMNIA-HANDOFF-PER-CHATGPT.md` | Handoff storico ChatGPT | **STALE (14 nov)** — non usare come SoT corrente |
+| `MASTER-CHIUSURA-HANDOFF-CHATGPT.md` | Pacchetto revisione ChatGPT del piano | 17 nov |
 
 ---
 
