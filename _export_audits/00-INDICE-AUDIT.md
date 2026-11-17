@@ -47,4 +47,5 @@ Estratti il **14 nov 2026 ~11:10 Europe/Rome** dai transcript cloud Cursor.
 31. `B04-H2-MAIN-ADMIN-TECHNICAL-DESIGN.md` — Design tecnico H2 Main Admin.
 32. `B04-H2-MAIN-ADMIN-DECISIONS-CONFORMITY.md` — D01–D12 §14 chiuso.
 33. `B04-H2-MAIN-ADMIN-RESIDUAL-IMPLEMENTATION-REPORT.md` — Report implementazione H2.
-34. `B04-H2-MAIN-ADMIN-HANDOFF-CHATGPT.md` — **Pacchetto analisi ChatGPT** post-impl (PR #216, CI verde, no merge).
+34. `B04-H2-MAIN-ADMIN-HANDOFF-CHATGPT.md` — Pacchetto analisi ChatGPT post-impl H2 (storico pre-merge).
+35. `MASTER-CHIUSURA-POST-AUDIT-PIANO.md` — **SoT piano chiusura master post-audit** (strati A/B/C, inventario MC-001…). Baseline `main` @ `c3baebc` (PR #216 mergiata).

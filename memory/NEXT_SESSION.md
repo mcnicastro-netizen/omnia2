@@ -1,7 +1,8 @@
 # Prossima sessione — programma passi
 
-**Aggiornato**: 17 Novembre 2026 (~16:50 CET — Europe/Rome)  
+**Aggiornato**: 17 Novembre 2026 (~20:20 CET — Europe/Rome)  
 **Repo**: https://github.com/mcnicastro-netizen/omnia2 ✅  
+**SoT chiusura master**: `_export_audits/MASTER-CHIUSURA-POST-AUDIT-PIANO.md`
 
 ---
 
@@ -9,34 +10,44 @@
 
 | Item | Stato |
 |------|-------|
-| Verifica statica Blocchi 0–7 | CHIUSA |
-| B01 / B02 / B03 design | CHIUSI |
+| Verifica statica Blocchi 0–7 | CHIUSA (strato A) |
+| B01 / B02 / B03 design | CHIUSI (strato A) |
 | Slice 1 codice | **MERGIATA** — PR [#208](https://github.com/mcnicastro-netizen/omnia2/pull/208) |
-| B04 design | **CHIUSO** — SoT `_export_audits/B04-ANO-008-DESIGN-BILLING.md` (DES-01…10) |
-| B04-I (Stripe Customer / stati / catalogo) | **MERGIATA** — PR [#210](https://github.com/mcnicastro-netizen/omnia2/pull/210) |
-| B04-II (wallet / lotti / FIFO / ledger) | **MERGIATA** — PR [#211](https://github.com/mcnicastro-netizen/omnia2/pull/211) |
-| B04-H1/H2 (revoke isolation + authz wallet) | **MERGIATA** — PR [#212](https://github.com/mcnicastro-netizen/omnia2/pull/212) + CI Actions |
-| B04-H3 / H4 / migrazione legacy R-04 | NON AUTORIZZATI |
-| B04-III…VII | NON AUTORIZZATI |
-| B05–B07 / MLS / deploy prod | ESCLUSI |
+| B04 design | **CHIUSO** — DES-01…10 |
+| B04-I | **MERGIATA** — PR [#210](https://github.com/mcnicastro-netizen/omnia2/pull/210) |
+| B04-II | **MERGIATA** — PR [#211](https://github.com/mcnicastro-netizen/omnia2/pull/211) |
+| B04-H1 (revoke CC isolation) | **MERGIATA** — PR [#212](https://github.com/mcnicastro-netizen/omnia2/pull/212) |
+| B04-H2 Main Admin residuale (D01–D12 + fix) | **MERGIATA** — PR [#216](https://github.com/mcnicastro-netizen/omnia2/pull/216) @ `c3baebc` (include `99a967e`) |
+| CI post-merge #216 su `main` | **SUCCESS** |
+| B04-H3 / H4 / legacy / B04-III…VII | **NON AUTORIZZATI** — `FASE_SUCCESSIVA` |
+| B05–B07 / MLS / Stripe live / prod | **FUORI_MASTER** chiusura attuale |
 
-## CI
+## Strati di chiusura
 
-Workflow `.github/workflows/ci.yml` attivo su `main` (suite billing/B04 unit).  
-Post-merge #212: run su `main` **success**.
+| Strato | Significato | Stato |
+|--------|-------------|-------|
+| A — Audit + design | Decisioni e audit con stato finale | Chiudibile (conferma Founder) |
+| B — Impl autorizzata | Slice1 + B04-I/II + H1 + H2 su `main` | Chiudibile dopo accettazione residui + report finale |
+| C — Readiness commerciale | III…VII, impl B01–B03, migrazione, prod | Aperto · fuori perimetro |
 
-## Residui aperti (non bloccanti merge H1/H2)
+Dettaglio inventario: `MASTER-CHIUSURA-POST-AUDIT-PIANO.md` (MC-001…).
 
-- Gap modellistico: non esiste ruolo DB `main_admin`; `agency_admin` esatto su filiale del CC può ancora amministrare quel wallet.
-- H3 (allocate solo org linkate al CC), H4 (top-up/storage con Customer Stripe del CC), censimento/migrazione legacy.
+## Residui H2 (accettazione Founder richiesta per chiudere strato B)
 
-## Follow-up design
+- MC-040 UI Cabina accept (API ok, FE fuori)
+- MC-041 expiry lazy
+- MC-042 read «limitata» su CC non operativo (whitelist non definita)
+- MC-043 CC senza Main Admin → deny finché Ops nomina (intenzionale)
 
-> `_export_audits/B04-OPEN-FOLLOWUPS.md` — **B04-OPEN-01** repricing (sessione dedicata).
+## Follow-up design (non codice)
+
+> `_export_audits/B04-OPEN-FOLLOWUPS.md` — **B04-OPEN-01** repricing
 
 ## Prossimo passo operativo
 
-Attendere autorizzazione Founder esplicita per il prossimo pacchetto (es. H3+H4, oppure B04-III).  
-Niente slice nuova senza mandato.
+1. Founder conferma piano chiusura + accetta residui MC-040…043 (o decide MC-042).  
+2. Dichiarazione `MASTER STRATO B CHIUSO` **oppure** elenco MC ancora aperti.  
+3. Solo dopo: autorizzazione esplicita al **prossimo** pacchetto (H3+H4 **oppure** B04-III).  
 
-SoT: `_export_audits/B04-ANO-008-DESIGN-BILLING.md` · `B04-DES-REGISTRO.md` · `B04-H1-H2-IMPLEMENTATION-REPORT.md` · D-173 · D-174
+Niente slice nuova senza mandato.  
+`OMNIA-HANDOFF-PER-CHATGPT.md` (14 nov) è **STALE**.

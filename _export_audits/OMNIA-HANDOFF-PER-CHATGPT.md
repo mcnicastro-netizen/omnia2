@@ -3,6 +3,11 @@
 **Autore del pacchetto:** Cursor (ricostruzione da export chat Founder + audit Cursor)  
 **Destinatario:** nuovo agente ChatGPT nel progetto `controllo omnia`
 
+> **STALE (17 nov 2026):** questo file resta archivio storico.  
+> **SoT corrente chiusura master:** `_export_audits/MASTER-CHIUSURA-POST-AUDIT-PIANO.md`  
+> **Stato operativo:** `memory/NEXT_SESSION.md`  
+> Non usare le sezioni «dove siamo» qui sotto come verità aggiornata (precedono B04 design chiuso + PR #208–#216).
+
 ---
 
 ## 0. ISTRUZIONI OPERATIVE (LEGGI PRIMA DI TUTTO)
