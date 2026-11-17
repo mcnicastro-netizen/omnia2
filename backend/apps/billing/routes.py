@@ -132,6 +132,12 @@ async def get_subscription(user: dict = Depends(get_current_user)):
     sub = await db.subscriptions.find_one({"agency_id": aid}, {"_id": 0})
     wallet = await db.credit_wallets.find_one({"agency_id": aid}, {"_id": 0})
     agency = await db.agencies.find_one({"id": aid}, {"_id": 0})
+    cc = None
+    cc_id = (agency or {}).get("commercial_customer_id") or (sub or {}).get(
+        "commercial_customer_id"
+    )
+    if cc_id:
+        cc = await db.commercial_customers.find_one({"id": cc_id}, {"_id": 0})
     from shared.billing.counters import subscription_counter, wallet_counter
     from shared.billing.self_serve import is_self_serve_enabled
     from shared.demo_story import build_demo_status
@@ -140,6 +146,19 @@ async def get_subscription(user: dict = Depends(get_current_user)):
     return {
         "subscription": sub,
         "wallet": w,
+        "commercial_customer": (
+            {
+                "id": cc.get("id"),
+                "commercial_status": cc.get("commercial_status"),
+                "operational_status": cc.get("operational_status"),
+                "stripe_customer_id": cc.get("stripe_customer_id"),
+                "first_paid_activated_at": cc.get("first_paid_activated_at"),
+                "founder_period_ends_at": cc.get("founder_period_ends_at"),
+                "catalog_version_id": (sub or {}).get("catalog_version_id"),
+            }
+            if cc
+            else None
+        ),
         "demo": build_demo_status(agency, self_serve_enabled=is_self_serve_enabled()),
         "counters": {
             "sub": subscription_counter(sub),
@@ -188,6 +207,33 @@ async def create_checkout(
     if not plan:
         raise HTTPException(status_code=400, detail="unknown_plan_tier")
 
+    # B04-I — CommercialCustomer + stable Stripe Customer (DES-01)
+    from shared.billing.plan_catalog import (
+        CATALOG_VERSION_ID,
+        ensure_plan_catalog_version,
+        resolve_pricing_phase_for_customer,
+        snapshot_commercial_terms,
+    )
+    from shared.billing.stripe_customer_service import (
+        get_or_create_stripe_customer,
+        resolve_commercial_customer_for_agency,
+    )
+
+    cc = await resolve_commercial_customer_for_agency(db, agency_id)
+    await ensure_plan_catalog_version(db)
+    stripe_customer_id = await get_or_create_stripe_customer(
+        db, cc, email=user.get("email") or "", name=cc.get("legal_name")
+    )
+    pricing_phase = resolve_pricing_phase_for_customer(
+        first_paid_activated_at=cc.get("first_paid_activated_at"),
+    )
+    terms = snapshot_commercial_terms(
+        tier=plan.tier,
+        billing_cycle=payload.billing_cycle,
+        pricing_phase=pricing_phase,
+        catalog_version_id=CATALOG_VERSION_ID,
+    )
+
     lookup_key = f"{plan.tier}_{payload.billing_cycle}"
     prices = stripe.Price.list(lookup_keys=[lookup_key], active=True, limit=1).data
     if not prices:
@@ -208,18 +254,21 @@ async def create_checkout(
     try:
         sub_meta = {
             "agency_id": agency_id or "",
+            "commercial_customer_id": cc["id"],
             "user_id": user["id"],
             "tier": plan.tier,
             "billing_cycle": payload.billing_cycle,
             "kind": "subscription",
             "onboarding": "1" if pending_onboarding else "0",
+            "catalog_version_id": CATALOG_VERSION_ID,
+            "pricing_phase": pricing_phase,
         }
         session_kwargs = dict(
             line_items=[{"price": price.id, "quantity": 1}],
             mode="subscription",
             success_url=success_url,
             cancel_url=cancel_url,
-            customer_email=user["email"],
+            customer=stripe_customer_id,
             metadata=sub_meta,
             # D-167: metadata anche sulla Subscription → invoice.paid risolve agency/tier
             subscription_data={"metadata": sub_meta},
@@ -233,11 +282,11 @@ async def create_checkout(
         raise HTTPException(status_code=502, detail={"stripe_error": str(e)})
 
     # persist payment_transactions BEFORE returning
-    db = Database.get()
     now = datetime.now(timezone.utc).isoformat()
     await db.payment_transactions.insert_one({
         "session_id": session.id,
         "agency_id": agency_id,
+        "commercial_customer_id": cc["id"],
         "user_id": user["id"],
         "lookup_key": lookup_key,
         "amount": (price.unit_amount or 0) / 100.0,
@@ -245,12 +294,21 @@ async def create_checkout(
         "kind": "subscription",
         "tier": plan.tier,
         "billing_cycle": payload.billing_cycle,
+        "catalog_version_id": CATALOG_VERSION_ID,
+        "commercial_terms": terms,
+        "stripe_customer_id": stripe_customer_id,
         "status": "initiated",
         "payment_status": "pending",
         "created_at": now,
         "updated_at": now,
     })
-    return {"checkout_url": session.url, "session_id": session.id}
+    return {
+        "checkout_url": session.url,
+        "session_id": session.id,
+        "commercial_customer_id": cc["id"],
+        "stripe_customer_id": stripe_customer_id,
+        "catalog_version_id": CATALOG_VERSION_ID,
+    }
 
 
 @router.post("/credits/purchase")
@@ -478,22 +536,38 @@ async def get_session_status(session_id: str, user: dict = Depends(get_current_u
 
 @router.post("/portal")
 async def customer_portal(request: Request, user: dict = Depends(get_current_user)):
-    """Return a Stripe Customer Portal link for the current agency."""
+    """Return a Stripe Customer Portal link — reuse CommercialCustomer Stripe Customer (DES-01)."""
     _guard_enabled()
     db = Database.get()
     agency_id = require_agency(user)
-    sub = await db.subscriptions.find_one({"agency_id": agency_id}, {"stripe_customer_id": 1})
-    if not sub or not sub.get("stripe_customer_id"):
+    from shared.billing.stripe_customer_service import resolve_commercial_customer_for_agency
+
+    stripe_customer_id = None
+    try:
+        cc = await resolve_commercial_customer_for_agency(db, agency_id)
+        stripe_customer_id = (cc.get("stripe_customer_id") or "").strip() or None
+    except HTTPException:
+        cc = None
+    if not stripe_customer_id:
+        sub = await db.subscriptions.find_one(
+            {"agency_id": agency_id}, {"stripe_customer_id": 1}
+        )
+        stripe_customer_id = (sub or {}).get("stripe_customer_id")
+    if not stripe_customer_id:
         raise HTTPException(status_code=400, detail="no_stripe_customer")
     origin = str(request.base_url).rstrip("/")
     try:
         portal = stripe.billing_portal.Session.create(
-            customer=sub["stripe_customer_id"],
+            customer=stripe_customer_id,
             return_url=f"{origin}/it/app/settings/billing",
         )
     except stripe.error.StripeError as e:
         raise HTTPException(status_code=502, detail={"stripe_error": str(e)})
-    return {"portal_url": portal.url}
+    return {
+        "portal_url": portal.url,
+        "stripe_customer_id": stripe_customer_id,
+        "commercial_customer_id": (cc or {}).get("id") if cc else None,
+    }
 
 
 # --------------- Webhook (signature-verified) --------------------
@@ -536,36 +610,69 @@ async def _apply_session_side_effects(session_id: str) -> None:
         if not agency_id:
             return
         stripe_sub_id = tx.get("stripe_subscription_id")
-        stripe_customer_id = None
+        stripe_customer_id = tx.get("stripe_customer_id")
+        commercial_customer_id = tx.get("commercial_customer_id")
         current_period_start = None
         current_period_end = None
         status = "active"
         if stripe_sub_id:
             try:
                 s = stripe.Subscription.retrieve(stripe_sub_id)
-                stripe_customer_id = getattr(s, "customer", None)
+                stripe_customer_id = getattr(s, "customer", None) or stripe_customer_id
                 status = getattr(s, "status", None) or "active"
                 current_period_start, current_period_end = _stripe_sub_period_iso(s)
+                md = getattr(s, "metadata", None) or {}
+                if not commercial_customer_id:
+                    commercial_customer_id = md.get("commercial_customer_id")
             except stripe.error.StripeError:
                 pass
             except Exception as exc:  # noqa: BLE001 — non bloccare grant/finalize
                 logger.warning("stripe sub period parse failed: %s", exc)
+
+        if not commercial_customer_id:
+            agency = await db.agencies.find_one(
+                {"id": agency_id}, {"commercial_customer_id": 1}
+            )
+            commercial_customer_id = (agency or {}).get("commercial_customer_id")
+
+        terms = tx.get("commercial_terms")
+        catalog_version_id = tx.get("catalog_version_id")
+        if commercial_customer_id and stripe_customer_id:
+            from shared.billing.stripe_customer_service import (
+                attach_stripe_customer_id_if_missing,
+                mark_first_paid_activation,
+            )
+
+            await attach_stripe_customer_id_if_missing(
+                db, commercial_customer_id, stripe_customer_id
+            )
+            await mark_first_paid_activation(db, commercial_customer_id)
+
         await db.subscriptions.update_one(
             {"agency_id": agency_id},
             {"$set": {
                 "agency_id": agency_id,
+                "commercial_customer_id": commercial_customer_id,
                 "tier": tx.get("tier"),
                 "stripe_customer_id": stripe_customer_id,
                 "stripe_subscription_id": stripe_sub_id,
                 "status": status,
+                "stripe_status": status,
                 "current_period_start": current_period_start,
                 "current_period_end": current_period_end,
                 "cancel_at_period_end": False,
+                "commercial_terms": terms,
+                "catalog_version_id": catalog_version_id,
                 "updated_at": now,
             }, "$setOnInsert": {"id": __import__("uuid").uuid4().hex, "created_at": now}},
             upsert=True,
         )
-        logger.info("Subscription applied: agency=%s tier=%s", agency_id, tx.get("tier"))
+        logger.info(
+            "Subscription applied: agency=%s cc=%s tier=%s",
+            agency_id,
+            commercial_customer_id,
+            tx.get("tier"),
+        )
         # D-163 — auto-Attiva se KYC match; altrimenti pending (D-162)
         try:
             from shared.auth.kyc_auto_activate import maybe_finalize_agency_onboarding
@@ -639,15 +746,21 @@ async def stripe_webhook(request: Request):
             await apply_b2c_purchase_side_effects(obj)
 
     elif etype == "customer.subscription.updated":
+        # DES-02: mirror Stripe onto stripe_status/status only — do NOT mutate
+        # CommercialCustomer.commercial_status / operational_status here (Slice B04-V).
         agency_id = (obj.get("metadata") or {}).get("agency_id")
         current_period_start, current_period_end = _stripe_sub_period_iso(obj)
         upd = {
             "status": obj.get("status"),
+            "stripe_status": obj.get("status"),
             "current_period_start": current_period_start,
             "current_period_end": current_period_end,
             "cancel_at_period_end": obj.get("cancel_at_period_end", False),
             "updated_at": now,
         }
+        cc_id = (obj.get("metadata") or {}).get("commercial_customer_id")
+        if cc_id:
+            upd["commercial_customer_id"] = cc_id
         q = {"stripe_subscription_id": obj["id"]} if not agency_id else {"agency_id": agency_id}
         await db.subscriptions.update_one(q, {"$set": upd})
 
