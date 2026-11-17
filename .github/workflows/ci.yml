@@ -4,6 +4,7 @@
 name: CI
 
 on:
+  workflow_dispatch:
   pull_request:
   push:
     branches:
@@ -41,7 +42,7 @@ jobs:
         env:
           PYTHONPATH: .
         run: |
-          python -m pytest -q --tb=short \
+          python -m pytest -v --tb=short \
             tests/test_b04_h1_h2_wallet_authz.py \
             tests/test_b04ii_wallet_ledger.py \
             tests/test_b04i_foundations.py \
