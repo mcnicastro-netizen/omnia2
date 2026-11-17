@@ -40,3 +40,4 @@ Estratti il **14 nov 2026 ~11:10 Europe/Rome** dai transcript cloud Cursor.
 24. `PAUSA-2026-11-16-RIPRENDI.md` — Pausa Founder 16 nov. Messaggio di ripresa = design B03 breve.
 25. `B03-ANO-003-005-DESIGN-SESSIONI-REGISTRAZIONE-INVITI.md` — Design B03 sessioni/registrazione/inviti. Solo progettazione.
 26. `B03-ANO-003-005-DEC-EMAIL-VERIFY.md` — B03-DEC-01 Founder: verifica email obbligatoria prima delle funzioni operative.
+27. `B03-ANO-003-005-CHIUSURA-DEFINITIVA-DESIGN.md` — B03 design chiuso. DEC-01…03. Implementazione non autorizzata.

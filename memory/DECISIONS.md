@@ -7,13 +7,15 @@ Registro di tutte le decisioni di business e tecniche prese durante il progetto.
 
 ## Decisioni prese
 
-### D-174 — Verifica email obbligatoria prima delle funzioni operative (B03-DEC-01) · 17-Nov-2026
-- **Contesto**: Nel Blocco 1 la verifica email era solo gap tecnico. Design B03 la propone come regola. Founder conferma.
+### D-174 — Design B03 chiuso · sessioni, email, inviti (B03-DEC-01…03) · 17-Nov-2026
+- **Contesto**: Design B03 (ANO-003/005) prodotto e chiuso. B01/B02 non riaperti.
 - **Decisione**:
-  1. Dopo registrazione, senza email confermata: account/login base sì; **funzioni operative no** (organizzazione, inviti, CRM, accettazione Membership, ecc.).
-  2. Diventa **B03-DEC-01** vincolante per il design B03 e la futura implementazione.
-  3. Resta ferma B01-DEC-01: niente Person inventate.
-- **Stato**: ✅ decisione Founder. ❌ codice non ancora autorizzato.
+  1. **B03-DEC-01**: verifica email obbligatoria prima delle funzioni operative (era gap Blocco 1 → regola Founder).
+  2. **B03-DEC-02**: cambio o reset password invalida **tutte** le sessioni.
+  3. **B03-DEC-03**: accettazione invito atomica; una sola Membership attiva; invito ≠ Representation; anti-escalation.
+  4. B01–B03 design chiusi. B04–B07 non aperti. Codice risanamento non autorizzato finché Founder non apre esecuzione.
+- **Stato**: ✅ design B03 chiuso. ❌ codice non autorizzato.
+
 
 ### D-173 — Design risanamento B01/B02 chiusi · pausa prima di B03 · 16-Nov-2026
 

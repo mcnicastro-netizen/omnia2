@@ -1,42 +1,37 @@
 # Prossima sessione — programma passi
 
-**Aggiornato**: 16 Novembre 2026 (~14:10 CET — Europe/Rome)  
+**Aggiornato**: 17 Novembre 2026 (~11:00 CET — Europe/Rome)  
 **Repo**: https://github.com/mcnicastro-netizen/omnia2 ✅  
-**Stato**: **PAUSA** — ripresa con design B03 (senza codice)
 
 ---
 
-## Ora (17 Nov)
-
-- Design **B03** prodotto (`_export_audits/B03-ANO-003-005-DESIGN-SESSIONI-REGISTRAZIONE-INVITI.md`).
-- In attesa chiusura Founder (eventuali B03-DEC).
-- Nessun codice. B04–B07 chiusi.
-
-## Chiuso (design, non codice)
+## Dove siamo
 
 | Item | Stato |
 |------|-------|
-| Verifica statica Blocchi 0–7 | CHIUSA |
-| Backlog FASE 2 risanamento | Acquisito (solo pianificazione) |
-| B01 ANO-001 modello dati | DESIGN CHIUSO |
-| B02 ANO-002+004 authz/audit | DESIGN CHIUSO |
-| B03 sessioni/registrazione/inviti | DESIGN PRODOTTO (chiusura Founder pending) |
-| HAL reindex prod post D-173 | Fatto 17-Nov |
-| Export `_export_audits/` | Su `main` |
+| Verifica statica 0–7 | CHIUSA |
+| B01 design | CHIUSO |
+| B02 design | CHIUSO |
+| B03 design | CHIUSO (DEC-01…03 / D-174) |
+| B04–B07 | NON APERTI |
+| Codice risanamento | NON AUTORIZZATO |
 
-## Vietato fino a via libera Founder
+## Prossimo passo consigliato (Founder sceglie)
 
-- Codice di risanamento
-- Migrazioni Mongo / Stripe
-- Riapertura audit 0–7 / B01 / B02
-- Design B04–B07
+**Opzione A (consigliata)** — Prima esecuzione limitata:
+```
+Autorizzo esecuzione SOLO dello slice 1: modello dati B01 minimo
+(CommercialCustomer + Organization link + Membership storica con una sola attiva)
++ B03-DEC-02 invalidazione sessioni su reset/cambio password
++ B03-DEC-01 gate email verify sulle route operative.
+Niente B04 billing, niente MLS, niente migrazione produzione.
+Branch feature, PR, test. Fermarsi a fine slice 1.
+```
 
-## SoT
+**Opzione B** — Continuare solo design:
+```
+Autorizzo solo design B04 (billing / ANO-008), senza codice.
+Vincoli B01–B03. Non aprire B05–B07. Fermati a fine design B04.
+```
 
-| Voce | Doc |
-|------|-----|
-| Ripresa | **RIPRENDI_2026-11-16.md** |
-| Decisioni design | **D-173** |
-| Export | **`_export_audits/`** |
-| Acceptance prodotto (separato) | **PRODUCT_ACCEPTANCE_MATRIX.md** |
-| Identità CRM UI | **D-171** |
+SoT: `_export_audits/` · D-173 · D-174 · `RIPRENDI_2026-11-16.md`
