@@ -141,17 +141,22 @@ async def grant_assisted_plan(
 
     bal = None
     if cr > 0:
-        wallet = await db.credit_wallets.find_one_and_update(
-            {"agency_id": agency_id},
-            {
-                "$inc": {"balance": cr},
-                "$set": {"updated_at": now, "last_topup_at": now},
-                "$setOnInsert": {"agency_id": agency_id, "created_at": now},
-            },
-            upsert=True,
-            return_document=True,
+        from shared.billing.credit_wallet_service import (
+            grant_for_agency,
+            org_spendable_balance,
         )
-        bal = (wallet or {}).get("balance")
+
+        await grant_for_agency(
+            db,
+            agency_id=agency_id,
+            amount=cr,
+            origin="assisted_provisioning",
+            reason=reason or f"assisted_grant_{tier}",
+            idempotency_key=f"assisted:{agency_id}:{tier}:{now}",
+            ref_id=granted_by,
+            ref_type="ops_grant_agency_plan",
+        )
+        bal = await org_spendable_balance(db, agency_id)
         await db.credit_transactions.insert_one(
             {
                 "agency_id": agency_id,
@@ -165,8 +170,12 @@ async def grant_assisted_plan(
             }
         )
     else:
-        wallet = await db.credit_wallets.find_one({"agency_id": agency_id}, {"balance": 1})
-        bal = (wallet or {}).get("balance", 0)
+        from shared.billing.credit_wallet_service import org_spendable_balance
+
+        bal = await org_spendable_balance(db, agency_id)
+        if bal == 0:
+            wallet = await db.credit_wallets.find_one({"agency_id": agency_id}, {"balance": 1})
+            bal = (wallet or {}).get("balance", 0)
 
     return {
         "ok": True,

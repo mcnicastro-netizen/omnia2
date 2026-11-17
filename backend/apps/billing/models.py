@@ -43,13 +43,13 @@ class InvoiceInDB(TenantModel):
 
 
 class CreditWalletInDB(TenantModel):
-    """Per-agency credit wallet (M4.S4)."""
+    """Legacy per-agency credit wallet mirror (M4.S4 / B04-II dual-write)."""
     balance: int = 0
     last_topup_at: Optional[str] = None
 
 
 class CreditLedgerEntry(TimestampedModel):
-    """Immutable ledger — never updated, only appended."""
+    """Legacy agency ledger mirror — never updated, only appended."""
     id: str = Field(default_factory=lambda: __import__("uuid").uuid4().hex)
     agency_id: str
     delta: int  # positive = topup / refund, negative = consumption
@@ -57,6 +57,51 @@ class CreditLedgerEntry(TimestampedModel):
     balance_after: int
     ref_id: Optional[str] = None  # e.g. property_id, invoice_id, stripe_session_id
     ref_type: Optional[str] = None
+
+
+# --- B04-II / DES-04 — CommercialCustomer-scoped wallet (SoT) -------------
+
+class CommercialCreditWalletInDB(TimestampedModel):
+    id: str = Field(default_factory=lambda: __import__("uuid").uuid4().hex)
+    commercial_customer_id: str
+    balance_unallocated: int = 0
+    balance_total: int = 0
+
+
+class CreditLotInDB(TimestampedModel):
+    id: str = Field(default_factory=lambda: __import__("uuid").uuid4().hex)
+    commercial_customer_id: str
+    wallet_id: str
+    origin: str
+    original_qty: int
+    remaining_qty: int
+    idempotency_key: Optional[str] = None
+
+
+class CreditAllocationInDB(TimestampedModel):
+    id: str = Field(default_factory=lambda: __import__("uuid").uuid4().hex)
+    commercial_customer_id: str
+    lot_id: str
+    organization_id: str
+    original_qty: int
+    remaining_qty: int
+    revoked_at: Optional[str] = None
+
+
+class CommercialCreditLedgerEntry(TimestampedModel):
+    """Append-only CC ledger — corrections via compensating entries only."""
+    id: str = Field(default_factory=lambda: __import__("uuid").uuid4().hex)
+    commercial_customer_id: str
+    organization_id: Optional[str] = None
+    lot_id: Optional[str] = None
+    allocation_id: Optional[str] = None
+    entry_type: str  # grant|allocate|revoke|consume|compensate|return_to_central
+    delta: int
+    reason: str
+    ref_id: Optional[str] = None
+    ref_type: Optional[str] = None
+    idempotency_key: Optional[str] = None
+    meta: dict = Field(default_factory=dict)
 
 
 class CheckoutSessionRequest(OmniaBaseModel):

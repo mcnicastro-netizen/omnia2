@@ -68,6 +68,10 @@ def test_grant_plan_credits_idempotent():
     db.credit_wallets.find_one_and_update = AsyncMock(
         return_value={"balance": 1200}
     )
+    # B04-II: no CommercialCustomer → legacy agency wallet path
+    db.agencies = MagicMock()
+    db.agencies.find_one = AsyncMock(return_value={"id": "ag1"})
+    db.credit_wallets.find_one = AsyncMock(return_value={"balance": 1200})
     out2 = _run(
         grant_plan_credits_from_stripe_invoice(
             db,
