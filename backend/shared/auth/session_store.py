@@ -40,3 +40,12 @@ async def revoke_refresh(token: str | None) -> None:
         return
     db = Database.get()
     await db.refresh_tokens.delete_one({"jti": jti})
+
+
+async def revoke_all_refresh(user_id: str | None) -> int:
+    """B03-DEC-02 — invalidate all refresh sessions for an account."""
+    if not user_id:
+        return 0
+    db = Database.get()
+    result = await db.refresh_tokens.delete_many({"user_id": user_id})
+    return int(getattr(result, "deleted_count", 0) or 0)

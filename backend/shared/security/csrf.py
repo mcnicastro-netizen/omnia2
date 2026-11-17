@@ -32,9 +32,11 @@ _EXEMPT_PREFIXES = (
     "/api/auth/refresh",  # HttpOnly refresh cookie is the proof; FE often cannot read cross-site CSRF cookie
     "/api/auth/forgot-password",
     "/api/auth/reset-password",
+    "/api/auth/verify-email",
     "/api/auth/google",
     "/api/auth/mfa/verify",
     "/api/cloud/auth/register",
+
     "/api/billing/webhook",
     "/api/billing/stripe",
     "/api/feed/",

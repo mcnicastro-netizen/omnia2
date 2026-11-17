@@ -104,6 +104,8 @@ class AgencyInDB(TimestampedModel):
     website: AgencyWebsite = Field(default_factory=AgencyWebsite)
     plan: AgencyPlan = "free"
     owner_id: str  # user_id of the agency_admin who created it
+    # B01 — Organization → CommercialCustomer (P.IVA); optional for legacy agencies
+    commercial_customer_id: Optional[str] = None
     is_active: bool = True
     onboarding_completed: bool = False
     # New self-serve create sets pending in route. Default active = legacy/seeds/tests.
@@ -139,6 +141,7 @@ class AgencyPublic(OmniaBaseModel):
     website: AgencyWebsite = Field(default_factory=AgencyWebsite)
     plan: AgencyPlan
     owner_id: str
+    commercial_customer_id: Optional[str] = None
     is_active: bool
     onboarding_completed: bool
     activation_status: AgencyActivationStatus = "active"
@@ -148,6 +151,7 @@ class AgencyPublic(OmniaBaseModel):
     updated_at: str
     # M2.5.1 — Franchising fields
     group_id: Optional[str] = None
+
     branch_code: Optional[str] = None
     plan_type: PlanType = "hybrid"
     # M2.5.5 — Domain Vault

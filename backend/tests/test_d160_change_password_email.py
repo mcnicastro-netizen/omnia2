@@ -71,6 +71,7 @@ def test_change_password_ok(monkeypatch):
         users.update_one = AsyncMock()
 
     monkeypatch.setattr(mod.Database, "get", staticmethod(lambda: DB()))
+    monkeypatch.setattr(mod, "revoke_all_refresh", AsyncMock(return_value=0))
     body = mod.ChangePasswordBody(
         current_password="omnia_old_key_xxxx",
         new_password="NuovaPass99",
