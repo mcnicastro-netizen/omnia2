@@ -42,3 +42,4 @@ Estratti il **14 nov 2026 ~11:10 Europe/Rome** dai transcript cloud Cursor.
 26. `B03-ANO-003-005-DEC-EMAIL-VERIFY.md` — B03-DEC-01 Founder: verifica email obbligatoria prima delle funzioni operative.
 27. `B03-ANO-003-005-CHIUSURA-DEFINITIVA-DESIGN.md` — B03 design chiuso. DEC-01…03. Implementazione non autorizzata.
 28. `B04-OPEN-FOLLOWUPS.md` — Memo programma OMNIA: B04-OPEN-01 repricing se listino non sostenibile (dopo chiusura design ChatGPT B04).
+29. `B04-DES-REGISTRO.md` — Registro decisioni design B04 (DES-01…04+). Solo design; codice non autorizzato.

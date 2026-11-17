@@ -14,7 +14,7 @@
 | B02 design | CHIUSO |
 | B03 design | CHIUSO (DEC-01…03 / D-174) |
 | Slice 1 codice | **MERGIATA** su `main` (PR #208) |
-| B04 design | **IN CORSO** (solo design ChatGPT; DES-01…03 in acquisizione) |
+| B04 design | **IN CORSO** (solo design ChatGPT; DES-01…04 approvate — vedi `_export_audits/B04-DES-REGISTRO.md`) |
 | B05–B07 / MLS / migrazione / deploy | ESCLUSI finché non autorizzati |
 | Codice B04+ | NON AUTORIZZATO |
 
