@@ -14,15 +14,20 @@
 | Correzioni doc Cursor (sera) | MC-026/043/050 + runbook + bozza MC-052 |
 | Firma `MASTER STRATO B CHIUSO` | **NON fatta** |
 
+## Ruoli (memorizzati — D-175)
+
+SoT: `memory/RUOLI_GOVERNANCE_AGENT.md` · `.cursor/rules/ruoli-governance.mdc` · HAL `api.governance-*`.
+
 ## Alla ripresa — messaggio a Cursor / ChatGPT
 
 ```
 Riprendiamo chiusura master strato B.
+Ruoli D-175 vincolanti (RUOLI_GOVERNANCE_AGENT.md).
 SoT: MASTER-CHIUSURA-POST-AUDIT-PIANO.md + MASTER-CHIUSURA-CHATGPT-REVIEW-2026-11-17.md
 Bozza firma: MASTER-STRATO-B-REPORT-FINALE-BOZZA.md
 Decido i residui MC-040…043 (obbligo MC-042).
 Poi: firma MASTER STRATO B CHIUSO e merge PR #217 se ok.
-Niente H3/H4/B04-III/codice senza nuova autorizzazione esplicita.
+Niente H3/H4/B04-III/codice senza: OMNIA — AUTORIZZAZIONE ESPLICITA ALL'IMPLEMENTAZIONE
 ```
 
 ## Checklist ripresa (ordine)

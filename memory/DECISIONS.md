@@ -7,6 +7,18 @@ Registro di tutte le decisioni di business e tecniche prese durante il progetto.
 
 ## Decisioni prese
 
+### D-175 — Ruoli governance Founder / ChatGPT / Cursor · 17-Nov-2026
+- **Contesto**: Post-audit master. Senza confronto ChatGPT e senza gate, mesi di delivery avrebbero potuto far apparire «pronto» un prodotto incompleto. Formalizzati i ruoli ricostruiti e confermati dal Founder.
+- **Decisione**:
+  1. **Founder**: proprietà, decisioni funzionali, autorizzazioni, firme di chiusura.
+  2. **ChatGPT**: analisi, coordinamento, valutazione critica, istruzioni per Cursor — non implementa nel repo.
+  3. **Cursor**: (a) auditor tecnico, (b) analista/documentatore, (c) verificatore, (d) implementatore **solo** con frase esatta `OMNIA — AUTORIZZAZIONE ESPLICITA ALL'IMPLEMENTAZIONE` e scope stretto.
+  4. Cursor distingue implementato / parziale / assente / non verificabile; non decide autonomamente cosa OMNIA debba diventare; non dichiara «pronto» senza stati espliciti.
+  5. Criterio operativo: una slice · un mandato · una verifica; residui classificati; ChatGPT sui gate.
+- **SoT**: `memory/RUOLI_GOVERNANCE_AGENT.md` · `.cursor/rules/ruoli-governance.mdc` · `memory/manuale/00-governance-agent-cursor.md` · HAL `api.governance-*`.
+- **Stato**: ✅ DECISO · vincolante da 17-Nov-2026.
+
+
 ### D-174 — Design B03 chiuso · sessioni, email, inviti (B03-DEC-01…03) · 17-Nov-2026
 - **Contesto**: Design B03 (ANO-003/005) prodotto e chiuso. B01/B02 non riaperti.
 - **Decisione**:

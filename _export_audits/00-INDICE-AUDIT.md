@@ -54,3 +54,5 @@ Estratti il **14 nov 2026 ~11:10 Europe/Rome** dai transcript cloud Cursor.
 38. `B04-H2-OPS-RUNBOOK-MAIN-ADMIN-NOMINA.md` — Runbook Ops nomina Main Admin (MC-043).
 39. `MASTER-STRATO-B-REPORT-FINALE-BOZZA.md` — Bozza firma chiusura strato B (MC-052).
 40. `PAUSA-2026-11-17-RIPRENDI-MASTER-CHIUSURA.md` — Pausa sera 17 nov · ripresa chiusura master.
+41. `memory/RUOLI_GOVERNANCE_AGENT.md` — **D-175** ruoli Founder/ChatGPT/Cursor (vincolante).
+42. `memory/manuale/00-governance-agent-cursor.md` — capitolo ops governance agent.

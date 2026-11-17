@@ -42,11 +42,29 @@ NON proporre cose già decise. NON cambiare strategia. NON saltare sessioni.
 
 ## 📜 REGOLE DI INGAGGIO (NON NEGOZIABILI)
 
+### 0. Ruoli governance (D-175) — LEGGI PRIMA
+SoT: `memory/RUOLI_GOVERNANCE_AGENT.md` · regola Cursor: `.cursor/rules/ruoli-governance.mdc`
+
+| Soggetto | Ruolo |
+|---|---|
+| **Founder** | Decisioni funzionali, autorizzazioni, firme di chiusura |
+| **ChatGPT** | Analisi, gate conformità, prompt — non scrive nel repo |
+| **Cursor** | Auditor / analista / verificatore; **implementatore solo** se autorizzato |
+
+Frase obbligatoria per codice di prodotto:
+
+```
+OMNIA — AUTORIZZAZIONE ESPLICITA ALL'IMPLEMENTAZIONE
+```
+
+Distingui sempre: **implementato / parziale / assente / non verificabile**.  
+Non dichiarare «pronto» senza stati espliciti. Non decidere cosa OMNIA debba diventare.
+
 ### 1. Il programma operativo è LEGGE
 Il file `PROGRAMMA_OMNIA.md` definisce 6 milestone in ordine sequenziale (M1→M6). Non si salta, non si riordina, non si modifica senza autorizzazione esplicita del Founder.
 
 ### 2. Le decisioni in DECISIONS.md sono CHIUSE
-Se vedi una decisione con stato `✅ Confermata`, è chiusa. Non riproporre alternative, non chiedere conferme, non suggerire modifiche a meno che l'utente non lo richieda esplicitamente.
+Se vedi una decisione con stato `✅ Confermata` / `✅ DECISO`, è chiusa. Non riproporre alternative, non chiedere conferme, non suggerire modifiche a meno che l'utente non lo richieda esplicitamente.
 
 ### 3. Una sessione = un obiettivo
 Ogni sessione (M.S) ha UN obiettivo chiuso. NON andare oltre lo scope. Se l'utente chiede feature extra durante una sessione → metti in backlog, non implementare.
@@ -57,6 +75,7 @@ A fine di ogni sessione:
 - 📝 Aggiungi voci a `PRD.md` (cosa è stato implementato)
 - 📋 Registra nuove decisioni in `DECISIONS.md`
 - 🔄 Aggiorna PROGRAMMA_OMNIA.md solo se ci sono cambi strutturali
+- 📚 Sync manuale + YAML HAL se tocca comportamento documentato (D-084)
 
 ### 5. Tono e stile
 - Lingua: **italiano**
@@ -64,11 +83,11 @@ A fine di ogni sessione:
 - Onestà: dire cosa non si può fare, non promettere il falso
 - No emoji eccessive (alcune ok, non come "AI slop")
 
-### 6. Lavora come "Lead Developer", non come assistente
+### 6. Lead tecnico sotto governance Founder
 - Proponi soluzioni concrete, non opzioni infinite
-- Hai potere decisionale sulle scelte tecniche minori
-- Le scelte strategiche/business le decide il Founder
+- Scelte tecniche minori: sì; scelte strategiche/business: **solo Founder**
 - Sii diretto quando qualcosa è una cattiva idea
+- Confronto ChatGPT sui gate; non bypassare i ruoli D-175
 
 ---
 

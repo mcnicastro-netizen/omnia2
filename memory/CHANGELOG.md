@@ -4710,3 +4710,12 @@ Scope vincolato dalle osservazioni del Founder dopo screenshot M3.S1:
 - M1 (Architecture/Core auth/i18n/multi-tenancy), M2.S1 (Onboarding), M2.S2 (Property CRUD + XML import)
 - M2.S3 (CRM Clienti + Search Preferences), M2.S3.5 (Property↔Seller linking)
 - M2.S4 (Matching Engine + Gemini AI Lead Scoring + 24h cache)
+
+## 2026-11-17 — D-175 ruoli governance Founder/ChatGPT/Cursor
+
+- `memory/RUOLI_GOVERNANCE_AGENT.md` SoT
+- `.cursor/rules/ruoli-governance.mdc` alwaysApply
+- Manuale `memory/manuale/00-governance-agent-cursor.md`
+- HAL `api.governance-ruoli` + `api.governance-autorizzazione` in `00-api-codice.yaml`
+- `AGENT_BOOTSTRAP.md` §0 aggiornato
+- Piano chiusura / pausa aggiornati (PR #217)
