@@ -401,10 +401,22 @@ async def revoke_allocation(
     db,
     *,
     allocation_id: str,
+    commercial_customer_id: str,
     reason: str = "revoke",
     idempotency_key: Optional[str] = None,
 ) -> dict:
-    """Return remaining allocation qty to central (unallocated on same lot)."""
+    """Return remaining allocation qty to central (unallocated on same lot).
+
+    B04-H1: `commercial_customer_id` is mandatory and must match the allocation.
+    Client-supplied allocation_id alone is never sufficient authorization.
+    Atomic find_one_and_update prevents double-revoke / concurrent races.
+    Cross-tenant or missing allocation → 404 (no victim wallet mutation).
+    """
+    if not commercial_customer_id:
+        raise HTTPException(
+            status_code=400,
+            detail={"error": "commercial_customer_required"},
+        )
     if idempotency_key:
         existing = await db.cc_credit_ledger.find_one(
             {"idempotency_key": idempotency_key}, {"_id": 0}
@@ -413,7 +425,11 @@ async def revoke_allocation(
             return existing
 
     alloc = await db.credit_allocations.find_one_and_update(
-        {"id": allocation_id, "remaining_qty": {"$gt": 0}},
+        {
+            "id": allocation_id,
+            "commercial_customer_id": commercial_customer_id,
+            "remaining_qty": {"$gt": 0},
+        },
         {"$set": {"remaining_qty": 0, "updated_at": _now(), "revoked_at": _now()}},
         return_document=ReturnDocument.BEFORE,
     )

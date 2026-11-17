@@ -59,6 +59,9 @@ def require_roles(*allowed_roles: str):
       - `agency_admin` implicitly includes `branch_admin` and `group_admin`
       - `agent` implicitly includes `branch_agent`, `branch_admin`, and `group_admin`
     Existing endpoints keep working without changes; new franchising roles inherit permissions.
+
+    Do NOT use for CommercialCustomer wallet admin APIs (DES-04 / DES-08): those must use
+    `require_roles_exact` so `branch_admin` cannot inherit Main Admin wallet powers.
     """
     role_aliases = {
         "agency_admin": {"agency_admin", "branch_admin", "group_admin"},
@@ -73,6 +76,24 @@ def require_roles(*allowed_roles: str):
         if user.get("role") not in expanded:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="forbidden")
         # D-174 / B03-DEC-01 — gate email su route operative (require_roles)
+        from shared.auth.email_gate import assert_email_verified_for_operations
+        assert_email_verified_for_operations(user)
+        return user
+    return _guard
+
+
+def require_roles_exact(*allowed_roles: str):
+    """Role guard without D-041 alias expansion (deny-by-default on role string).
+
+    B04-H2 / DES-08: wallet centrale + allocate/revoke are Main Admin (or group_admin /
+    super_admin ops). `branch_admin` must NOT pass via the agency_admin alias.
+    """
+    allowed = set(allowed_roles)
+
+    async def _guard(request: Request) -> dict:
+        user = await get_current_user(request)
+        if user.get("role") not in allowed:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="forbidden")
         from shared.auth.email_gate import assert_email_verified_for_operations
         assert_email_verified_for_operations(user)
         return user
