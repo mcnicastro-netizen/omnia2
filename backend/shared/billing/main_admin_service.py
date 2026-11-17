@@ -63,10 +63,14 @@ async def append_main_admin_event(
 
 
 def user_is_eligible_main_admin(user: Optional[dict]) -> bool:
-    """D11/D12 — idoneità account (non Membership)."""
+    """D04/D11/D12 — idoneità account (non Membership).
+
+    Deny-by-default: `is_active` assente/null/False → non idoneo.
+    Serve esplicitamente `is_active is True` e `email_verified is True`.
+    """
     if not user:
         return False
-    if user.get("is_active") is False:
+    if user.get("is_active") is not True:
         return False
     if user.get("email_verified") is not True:
         return False
@@ -209,24 +213,22 @@ async def resolve_wallet_cc_id(
     agency_id: Optional[str] = None,
     commercial_customer_id: Optional[str] = None,
 ) -> str:
-    """Resolve CC for wallet admin without trusting client alone.
+    """Resolve CC for wallet admin (D02 multi-CC).
 
-    Prefer agency→CC; else explicit commercial_customer_id (Main Admin / ops).
+    Explicit ``commercial_customer_id`` wins so a Main Admin of multiple CC
+    is not trapped by the active agency mapping. Authorization remains on
+    the resolved CC via ``assert_is_main_admin_of`` / D07 (no ambient trust).
+    Fallback: agency→CC when no explicit id is provided.
     """
     cc_id = (commercial_customer_id or "").strip() or None
+    if cc_id:
+        return cc_id
     if agency_id:
         from shared.billing.credit_wallet_service import resolve_cc_id_for_agency
 
         from_agency = await resolve_cc_id_for_agency(db, agency_id)
         if from_agency:
-            if cc_id and cc_id != from_agency:
-                raise HTTPException(
-                    status_code=403,
-                    detail={"error": "commercial_customer_mismatch"},
-                )
             return from_agency
-    if cc_id:
-        return cc_id
     raise HTTPException(
         status_code=400,
         detail={"error": "commercial_customer_context_required"},
@@ -240,8 +242,13 @@ async def nominate_main_admin(
     new_user_id: str,
     actor: dict,
     reason: str = "ops_nominate",
+    force: bool = False,
 ) -> dict:
-    """D01 — solo Super Admin Ops."""
+    """D01 — solo Super Admin Ops.
+
+    Se un Main Admin è già presente e diverso dal target, richiede ``force=True``
+    (sostituzione Ops esplicita + audit ``ops_replace``). Nessun overwrite silenzioso.
+    """
     if actor.get("role") != "super_admin":
         raise HTTPException(status_code=403, detail={"error": "forbidden"})
     target = await load_user(db, new_user_id)
@@ -252,6 +259,20 @@ async def nominate_main_admin(
         raise HTTPException(status_code=404, detail={"error": "commercial_customer_not_found"})
 
     prev = cc.get("main_admin_user_id")
+    if prev and prev != new_user_id and not force:
+        raise HTTPException(
+            status_code=409,
+            detail={"error": "main_admin_already_assigned", "hint": "pass force=true for ops replace"},
+        )
+    if force and prev and prev != new_user_id:
+        reason_stripped = (reason or "").strip()
+        if len(reason_stripped) < 8:
+            raise HTTPException(
+                status_code=400,
+                detail={"error": "force_reason_required"},
+            )
+        reason = reason_stripped
+
     now = _now_iso()
     updated = await db.commercial_customers.find_one_and_update(
         {"id": commercial_customer_id},
@@ -268,13 +289,14 @@ async def nominate_main_admin(
     await append_main_admin_event(
         db,
         commercial_customer_id=commercial_customer_id,
-        event_type="nominate" if not prev else "ops_replace",
+        event_type="nominate" if not prev or prev == new_user_id else "ops_replace",
         actor_user_id=actor["id"],
         previous_main_admin_user_id=prev,
         new_main_admin_user_id=new_user_id,
         reason=reason,
+        meta={"force": bool(force)} if force else {},
     )
-    # Cancel pending transfers on force nominate
+    # Cancel pending transfers on nominate / force replace
     await db[TRANSFER_COLL].update_many(
         {"commercial_customer_id": commercial_customer_id, "status": "pending"},
         {"$set": {"status": "cancelled", "resolved_at": now}},
@@ -418,28 +440,66 @@ async def propose_transfer(
         meta={"transfer_id": doc["id"], "expires_at": doc["expires_at"]},
     )
 
-    # D08 — Cabina always
-    email_outcome = "skipped"
+    # D08 — Cabina obbligatoria sullo stesso db della proposta (non best-effort).
+    # create_notification() globale ingoia errori: qui inseriamo e propaghiamo.
+    cabina_outcome = "failed"
     try:
-        from shared.notifications.center import create_notification
-
-        await create_notification(
-            user_id=to_user_id,
-            type="main_admin_transfer",
-            title="Proposta Main Admin commerciale",
-            body="Hai una proposta di Main Admin. Accettala dalla Cabina entro 48 ore.",
-            link="/app/billing/main-admin-transfer",
-            meta={
+        notif_coll = getattr(db, "notifications", None)
+        if notif_coll is None:
+            notif_coll = db["notifications"]
+        notif = {
+            "id": str(uuid4()),
+            "user_id": to_user_id,
+            "agency_id": None,
+            "type": "main_admin_transfer",
+            "title": "Proposta Main Admin commerciale",
+            "body": "Hai una proposta di Main Admin. Accettala dalla Cabina entro 48 ore.",
+            "link": "/app/billing/main-admin-transfer",
+            "meta": {
                 "transfer_id": doc["id"],
                 "commercial_customer_id": commercial_customer_id,
                 # Token solo in-app (Cabina/inbox); mai in email né nei log eventi
                 "accept_token": raw,
             },
-        )
+            "read": False,
+            "created_at": _now_iso(),
+            "read_at": None,
+        }
+        await notif_coll.insert_one(notif)
+        cabina_outcome = "sent"
     except Exception as e:  # noqa: BLE001
-        logger.warning("cabina notify failed: %s", e)
+        logger.warning("cabina notify failed transfer=%s: %s", doc["id"], e)
+        now_fail = _now_iso()
+        await db[TRANSFER_COLL].update_one(
+            {"id": doc["id"], "status": "pending"},
+            {
+                "$set": {
+                    "status": "cancelled",
+                    "resolved_at": now_fail,
+                    "cancel_reason": "cabina_notify_failed",
+                }
+            },
+        )
+        await append_main_admin_event(
+            db,
+            commercial_customer_id=commercial_customer_id,
+            event_type="transfer_notify",
+            actor_user_id=actor["id"],
+            outcome="failed",
+            reason="cabina_notify_failed",
+            meta={
+                "transfer_id": doc["id"],
+                "cabina_outcome": "failed",
+                "error": type(e).__name__,
+            },
+        )
+        raise HTTPException(
+            status_code=503,
+            detail={"error": "cabina_notify_failed", "transfer_id": doc["id"]},
+        )
 
-    # Email best-effort
+    # Email Resend — best-effort (D08)
+    email_outcome = "skipped"
     try:
         from shared.email import send_email
 
@@ -464,12 +524,17 @@ async def propose_transfer(
         event_type="transfer_notify",
         actor_user_id=actor["id"],
         outcome="success",
-        meta={"transfer_id": doc["id"], "email_outcome": email_outcome},
+        meta={
+            "transfer_id": doc["id"],
+            "cabina_outcome": cabina_outcome,
+            "email_outcome": email_outcome,
+        },
     )
 
     public = {k: v for k, v in doc.items() if k not in ("_id", "token_hash")}
     # Return raw token only to proposer (accept path); never log it
     public["accept_token"] = raw
+    public["cabina_outcome"] = cabina_outcome
     public["email_outcome"] = email_outcome
     return public
 
@@ -512,17 +577,16 @@ async def accept_transfer(
         raise HTTPException(status_code=409, detail={"error": "main_admin_changed"})
 
     now = _now_iso()
-    claimed = await db[TRANSFER_COLL].find_one_and_update(
-        {"id": transfer_id, "status": "pending"},
-        {"$set": {"status": "accepted", "resolved_at": now}},
-        return_document=ReturnDocument.BEFORE,
-    )
-    if not claimed:
-        raise HTTPException(status_code=409, detail={"error": "transfer_not_pending"})
-
     prev = cc.get("main_admin_user_id")
-    await db.commercial_customers.update_one(
-        {"id": cc_id},
+    expected_from = transfer.get("from_user_id")
+
+    # D10 — binding first (no transfer "accepted" without coherent CC binding).
+    # Filter on current holder prevents concurrent overwrite.
+    bound = await db.commercial_customers.find_one_and_update(
+        {
+            "id": cc_id,
+            "main_admin_user_id": expected_from,
+        },
         {
             "$set": {
                 "main_admin_user_id": actor["id"],
@@ -531,7 +595,42 @@ async def accept_transfer(
                 "updated_at": now,
             }
         },
+        return_document=ReturnDocument.AFTER,
     )
+    if not bound:
+        raise HTTPException(status_code=409, detail={"error": "main_admin_changed"})
+
+    claimed = await db[TRANSFER_COLL].find_one_and_update(
+        {"id": transfer_id, "status": "pending"},
+        {"$set": {"status": "accepted", "resolved_at": now}},
+        return_document=ReturnDocument.BEFORE,
+    )
+    if not claimed:
+        # Compensate: restore previous holder if we still own the binding.
+        await db.commercial_customers.find_one_and_update(
+            {"id": cc_id, "main_admin_user_id": actor["id"]},
+            {
+                "$set": {
+                    "main_admin_user_id": expected_from,
+                    "main_admin_appointed_at": cc.get("main_admin_appointed_at"),
+                    "main_admin_appointed_by": cc.get("main_admin_appointed_by"),
+                    "updated_at": now,
+                }
+            },
+        )
+        await append_main_admin_event(
+            db,
+            commercial_customer_id=cc_id,
+            event_type="accept_transfer",
+            actor_user_id=actor.get("id"),
+            outcome="failed",
+            reason="transfer_claim_lost_after_bind",
+            previous_main_admin_user_id=prev,
+            new_main_admin_user_id=actor.get("id"),
+            meta={"transfer_id": transfer_id, "compensated": True},
+        )
+        raise HTTPException(status_code=409, detail={"error": "transfer_not_pending"})
+
     await append_main_admin_event(
         db,
         commercial_customer_id=cc_id,

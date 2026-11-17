@@ -1465,6 +1465,7 @@ class NominateMainAdminBody(BaseModel):
     commercial_customer_id: str = Field(min_length=1)
     user_id: str = Field(min_length=1)
     reason: str = Field(default="ops_nominate", min_length=1)
+    force: bool = False
 
 
 class RevokeMainAdminBody(BaseModel):
@@ -1477,7 +1478,10 @@ async def ops_nominate_main_admin(
     body: NominateMainAdminBody,
     user: dict = Depends(require_roles("super_admin")),
 ) -> Dict[str, Any]:
-    """D01 — nomina/sostituzione Main Admin (solo Super Admin Ops)."""
+    """D01 — nomina Main Admin (solo Super Admin Ops).
+
+    Se un titolare è già presente, richiede ``force=true`` + reason ≥8 char (ops_replace).
+    """
     from shared.billing import main_admin_service as mas
 
     db = Database.get()
@@ -1487,12 +1491,14 @@ async def ops_nominate_main_admin(
         new_user_id=body.user_id.strip(),
         actor=user,
         reason=body.reason.strip() or "ops_nominate",
+        force=bool(body.force),
     )
     return {
         "ok": True,
         "commercial_customer_id": cc.get("id"),
         "main_admin_user_id": cc.get("main_admin_user_id"),
         "main_admin_appointed_at": cc.get("main_admin_appointed_at"),
+        "force": bool(body.force),
     }
 
 
