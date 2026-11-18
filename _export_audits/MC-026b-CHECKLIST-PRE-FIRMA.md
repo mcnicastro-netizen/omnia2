@@ -1,71 +1,65 @@
 # MC-026b — Checklist conformità Strato B
 
-**Aggiornato:** 18 novembre 2026 · ~14:20 Europe/Rome  
+**Aggiornato:** 18 novembre 2026 · ~14:35 Europe/Rome  
 **ID:** MC-026b  
-**Stato firma Founder:** **FIRMATA** 18/11/2026 — `CONFORME CON RISERVE`  
-**Stato post-riserve (verifica Cursor):** riserve **RISOLTE in codice** su `main` @ `11f2962` — vedi `_export_audits/MASTER-RAPPORTO-FINALE-CHIUSURA-STRATI-A-B.md`  
-**Baseline codice attuale:** `main` @ `11f29621dd2ddef9e4a61fa3ece569a65f94eaf9`
+**Stato firma Founder (storica):** **FIRMATA** 18/11/2026 — `CONFORME CON RISERVE`  
+**Baseline codice:** `main` @ `11f29621dd2ddef9e4a61fa3ece569a65f94eaf9`  
+**Rapporto:** `_export_audits/MASTER-RAPPORTO-FINALE-CHIUSURA-STRATI-A-B.md` (revisione R-01)
 
 ---
 
-## Legenda
+## Lessico
 
-| Esito | Significato |
+| Termine | Significato |
 |---|---|
-| CONFORME | Evidenza codice allineata |
-| PARZIALE | Residuo non bloccante Master |
-| SUPERATA | Decisione non più vigente |
+| Affrontata | Implementazione presente su `main` |
+| Risolta | Affrontata e conforme alla decisione senza gap aperti rilevanti |
+| Parziale | Affrontata con gap documentato |
 
 ---
 
-## A. D01–D12 (H2 Main Admin)
+## A. D01–D12
 
 | Tema | Esito | Nota |
 |---|---|---|
-| D01–D12 binding/transfer/D07 | CONFORME (Master) | #216 + #219; unit H2 |
+| Binding/transfer/D07 | Affrontata → trattabile **risolta** (Master) | #216+#219 |
 
 ---
 
-## B. MC-042 v2 — cessazione
+## B. MC-042 v2
 
-| Requisito | Esito | Evidenza |
-|---|---|---|
-| Decisione v2 | CONFORME | D-177 |
-| Login deny | CONFORME | #220 `assert_user_login_allowed` |
-| Accesso API deny | CONFORME | `enforce_commercial_access` |
-| Wallet deny | CONFORME | #218+#220 |
-| `/auth/refresh` gate | PARZIALE | Residuo R-01 — non bloccante Master |
-| Conservazione dati | CONFORME (principio) | |
+| Requisito | Esito | Evidenza / test | In CI B04? |
+|---|---|---|---|
+| Login deny | Affrontata → **risolta** | #220 · `test_mc042_v2_suspend_deroga` | No |
+| API deny (`get_current_user`) | Affrontata → **risolta** | #220 · unit enforce | No |
+| Wallet deny | Affrontata → **risolta** | #218+#220 · `test_mc042_cc_non_operable_wallet` | Parziale (`b04ii`) |
+| Refresh/session post-cease (R-01) | **NON risolta** | Audit sola lettura 18/11 | — |
+| Conservazione dati | Principio OK | | |
 
 ---
 
 ## C. MC-054…059
 
-| ID | Esito | Evidenza |
-|---|---|---|
-| MC-054 giorno 8 B | CONFORME | #220 |
-| MC-055 saldo pieno | CONFORME | #221 |
-| MC-056…059 deroga | CONFORME | #220 |
+| ID | Esito | Test | In CI B04? |
+|---|---|---|---|
+| MC-054 B | Affrontata → trattabile **risolta** | `test_mc042_v2_suspend_deroga` | No |
+| MC-055 saldo | Affrontata → trattabile **risolta** | outstanding balance unit | No |
+| MC-056…059 | Affrontata → trattabile **risolta** | deroga unit | No |
 
 ---
 
-## D. MC-040 / 041 / 043 / 045
+## D. MC-040/041/043/045
 
 | ID | Esito | Evidenza |
 |---|---|---|
-| MC-040 Accetta | CONFORME | #219 |
-| MC-041 job 48h | CONFORME | #219 |
-| MC-043 nomina | CONFORME | #219 |
-| MC-045 H3 | CONFORME | #222 |
+| 040/041/043 | Risolta (Master) | #219 |
+| 045 H3 | Risolta | #222 · `test_mc045_h3_allocate_link` (**non** in CI) |
 
 ---
 
-## E. Formula firma Founder (storica) — **COMPILATA** 18/11
+## E. Firma storica 18/11 — invariata
 
-- [x] `CONFORME CON RISERVE` (all’epoca: 042 v2 / 054 / 055…059 da implementare)
-- Data / Founder: **18 novembre 2026** · Marco Nicastro
+- [x] `CONFORME CON RISERVE` all’epoca (042/054/055…059 da implementare)  
+- Founder: Marco Nicastro · 18/11/2026  
 
-### Post-riserve (verifica 18/11 sera)
-
-Riserve della firma **affrontate** tramite #219–#222.  
-Chiusura formale Master A+B: barrare in `MASTER-RAPPORTO-FINALE-CHIUSURA-STRATI-A-B.md` §10.
+**Post-riserve:** implementazioni **affrontate**; chiusura «tutto risolto» **sospesa** finché Founder non classifica R-01 (§10 rapporto A/B).

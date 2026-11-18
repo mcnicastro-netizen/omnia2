@@ -1,10 +1,12 @@
 # MASTER — Rapporto finale di chiusura Strati A+B
 
 **Data:** 18 novembre 2026 · ~14:20 Europe/Rome  
+**Revisione documentale:** 18 novembre 2026 · ~14:35 Europe/Rome (R-01 + lessico affrontate≠risolte)  
 **Repo:** `mcnicastro-netizen/omnia2`  
 **Baseline codice verificata:** `main` @ `11f29621dd2ddef9e4a61fa3ece569a65f94eaf9`  
 **Natura:** certificazione evidenze. **Non** readiness produzione / Strato C.  
-**Autore verifica:** Cursor (evidenze GitHub + pytest locali). **Firma chiusura formale:** solo Founder.
+**Autore verifica:** Cursor (evidenze GitHub + pytest locali + audit R-01). **Firma chiusura formale:** solo Founder.  
+**Stato firma §10:** **NON proposta come «ULTIMATO»** finché Founder non classifica R-01 (vedi §8–§10).
 
 ---
 
@@ -23,11 +25,11 @@
 |---|---|
 | Strato A — audit + design B01–B04 | **CHIUSO** |
 | Slice1 + B04-I/II + H1 + H2 | **CHIUSO** (impl mergiate) |
-| MC-026b + riserve | **RISERVE AFFRONTATE** su main (§5) |
+| MC-026b + riserve | **AFFRONTATE in codice** (§5) — **non** tutte «risolte al 100%» finché R-01 non classificato |
 | MC-040 / 041 / 043 | **CHIUSO** (#219) |
-| MC-042 v2 (scope Master) | **CHIUSO** con residui non bloccanti (§6) |
-| MC-054…059 | **CHIUSO** (#220 + #221 saldo) |
-| MC-045 / H3 | **CHIUSO** (#222) |
+| MC-042 v2 | **PARZIALE** — login+API gated OK; **R-01 refresh/session open** (§8) |
+| MC-054…059 | **CHIUSO** (#220 + #221 saldo) — con limiti CI (§7) |
+| MC-045 / H3 | **CHIUSO** (#222) — test dedicato **non** in CI job |
 | H4, B04-III…VII, B05–B07, legacy, Stripe live | **ESCLUSI** dal Master (Strato C / FUORI) |
 
 ---
@@ -71,9 +73,10 @@
 | MC-040 Accetta Cabina | FE NotificationBell + accept API | Code path | **OK** (E2E FE non rieseguito qui) |
 | MC-041 job expiry | APScheduler 15m + cron | Code + unit expire | **OK** |
 | MC-043 nomina iniziale | `bind_initial_main_admin_if_vacant` | Code + unit | **OK** |
-| MC-042 login/session deny ceased | `assert_user_login_allowed` + `enforce_commercial_access` | Unit + code | **OK** |
+| MC-042 login deny ceased | `assert_user_login_allowed` | Unit + code | **OK** |
+| MC-042 API deny via `get_current_user` | `enforce_commercial_access` | Unit + code | **OK** |
 | MC-042 wallet ceased | `cc_is_wallet_operable` | Unit | **OK** |
-| MC-042 `/auth/refresh` senza gate | `auth.py` refresh | Code read | **Residuo non bloccante** (§8) |
+| MC-042 refresh/session post-cease (R-01) | `POST /auth/refresh` senza gate; no `revoke_all_refresh` al cease | Code read 18/11 | **GAP aperto** — vedi §8 |
 | MC-054 B collab/MA/wallet | `enforce_commercial_access` + operable | Unit | **OK** |
 | MC-055 saldo pieno | `list_outstanding_invoices_for_cc` | Unit + #221 | **OK** |
 | MC-056…059 deroga | grant/expire/reminder | Unit + code | **OK** |
@@ -81,17 +84,27 @@
 
 ---
 
-## 5. Riserve MC-026b — risoluzione
+## 5. Riserve MC-026b — affrontate ≠ risolte
 
 Firma originale 18/11: `CONFORME CON RISERVE` (042 v2 lockout · 054 wallet giorno 8 · 055…059).
 
-| Riserva | Risoluzione | Evidenza |
-|---|---|---|
-| MC-042 v2 lockout | #220 | login/Google/MFA + `get_current_user` |
-| MC-054 deny wallet/crediti giorno 8 | #220 | operable `billing_only`/`suspended` + gate MA |
-| MC-055…059 | #220 + #221 | deroga + expire + **saldo pieno** |
+**Lessico obbligatorio**
 
-**Esito:** riserve **affrontate in codice su main**. Checklist aggiornata in `MC-026b-CHECKLIST-PRE-FIRMA.md` (§ post-riserve).
+| Termine | Significato in questo rapporto |
+|---|---|
+| **Affrontata** | Esiste implementazione su `main` che mappa la riserva |
+| **Risolta** | Affrontata **e** conforme alla decisione Founder senza gap aperti rilevanti |
+| **Parziale** | Affrontata ma con gap documentato (es. R-01) |
+
+| Riserva | Stato | Evidenza codice | Test che la coprono | In CI tip B04? |
+|---|---|---|---|---|
+| MC-042 v2 lockout login + API | **PARZIALE** | #220 login/MFA/Google + `get_current_user` | `test_mc042_v2_suspend_deroga` (login/enforce) · `test_mc042_cc_non_operable_wallet` (wallet) | **No** (file non nel job) |
+| MC-042 v2 «nessun accesso autonomo» incl. sessione | **NON RISOLTA** finché R-01 | refresh senza gate | *nessun test refresh-post-cease* | No |
+| MC-054 giorno 8 B | **AFFRONTATA → trattabile come risolta** sul perimetro gate/wallet | #220 | `test_mc042_v2_suspend_deroga` | **No** |
+| MC-055…059 | **AFFRONTATA → trattabile come risolta** (saldo #221) | #220+#221 | deroga + outstanding balance tests | **No** (file non nel job) |
+| MC-040/041/043 (post-firma) | **RISOLTA** (scope Master) | #219 | H2 + MC-041 unit | Parziale via B04 job |
+
+**Esito onesto:** le riserve storiche MC-026b sono **affrontate**; **non** si può firmare «tutte risolte in codice» finché R-01 non è classificato o corretto dal Founder.
 
 ---
 
@@ -130,16 +143,35 @@ Log: `/opt/cursor/artifacts/master-ab-closure-tests.log`
 
 ---
 
-## 8. Problemi aperti (classificati) — **non bloccano Master A+B**
+## 8. Problemi aperti (classificati)
+
+### R-01 — refresh / session post-cessazione (audit 18/11)
+
+**Evidenza:** `POST /auth/refresh` non applica gate MC-042; `set_commercial_status(ceased)` non revoca refresh.  
+Un utente già autenticato può ottenere **nuovi access token** e il payload `_public(user)` dopo cease; le API gated restano 403.  
+Dettaglio: `/opt/cursor/artifacts/R01-MC042-REFRESH-CESSATION-AUDIT.md` (e copia in §8.1 sotto).
+
+**Compatibilità MC-042 v2:** sotto lettura stretta di «nessun accesso autonomo» → **gap reale**, **non** auto-declassabile a «non bloccante» senza decisione Founder.
+
+| Scelta Founder | Effetto su Master |
+|---|---|
+| Accetto R-01 come **riserva esplicita** (API/login bastano) | §10 può diventare `CONFORME CON RISERVA R-01` |
+| R-01 deve essere **fixato** prima della chiusura | Master **non** ultimabile finché non c’è fix + verifica |
+
+### Altri residui (non equivalenti a R-01)
 
 | ID | Gravità | Descrizione | Blocca Master? |
 |---|---|---|---|
-| R-01 | Bassa/Media | `/auth/refresh` senza gate ceased/suspended; no revoke session al cease | **No** |
-| R-02 | Bassa | Test H3/deroga/MC-042 non nel job CI | **No** (igiene) |
-| R-03 | Bassa | Allocate concurrency non transazionale | **No** (hardening) |
-| R-04 | — | E2E UI Cabina / billing recovery FE | **No** (verifica unit/code) |
+| R-02 | Bassa | Test H3/deroga/MC-042 non nel job CI B04 | **No** (igiene) — non confondere con conformità funzionale |
+| R-03 | Bassa | Allocate concurrency non transazionale | **No** (hardening post-H3) |
+| R-04 | — | E2E UI non rieseguito in questa certificazione | **No** |
 
-Nessun problema **bloccante** nel perimetro A+B residuale alle riserve.
+### 8.1 Sintesi percorso R-01
+
+1. Cease CC → login nuovo negato.  
+2. Refresh cookie ancora valido → **refresh OK** → nuovo `access_token`.  
+3. Chiamata API con quel access → **403 ceased**.  
+4. Nessuna revoca massiva sessioni al cease.
 
 ---
 
@@ -149,17 +181,28 @@ MC-046 H4 · MC-030…034 B04-III…VII · MC-035…037 · MC-038/039 B05/B06 ·
 
 ---
 
-## 10. Dichiarazione (proposta Cursor → firma Founder)
+## 10. Dichiarazione (proposta Cursor → firma Founder) — **REVISIONATA**
 
-Sulla base delle evidenze di questo rapporto:
+**Cursor ritira** la formula precedente «CHIUDIBILI come CONFORMI … riserve risolte in codice».  
+Motivo: R-01 è gap reale vs lettura stretta di MC-042 v2; CI tip non esegue i test che coprono H3/deroga/MC-042 v2.
 
-**Gli Strati A e B del Programma Master risultano CHIUDIBILI come CONFORMI** alle decisioni Founder applicabili, con riserve MC-026b **risolte in codice**, tip `main` `11f2962`, CI tip verde sul job B04, e residui R-01…R-04 classificati fuori blocco Master.
+Sulla base delle evidenze **attuali**:
 
-**Cursor non firma.**  
-Founder: barrare una sola opzione.
+- Tip `main` `11f2962`; PR #217–#222 MERGED.  
+- Riserve MC-026b **affrontate** in codice; **non** tutte **risolte** (R-01 aperto).  
+- CI tip verde sul **solo** job B04 (4 file); 105 pytest locali agent includono test fuori CI.
 
-- [ ] **Approvo: PROGRAMMA MASTER STRATI A+B ULTIMATO** — data ____ / firma ____  
-- [ ] **Non approvo** — condizioni mancanti: ____  
+**Cursor non firma.** Founder: barrare **una** opzione dopo aver letto §8.
+
+- [ ] **A — CONFORME CON RISERVA ESPLICITA R-01**  
+      Approvo chiusura Master A+B accettando che post-cease il refresh possa rinnovare access token finché il refresh non scade/revoca; login nuovo e API gated restano negati.  
+      Data ____ / firma ____  
+
+- [ ] **B — NON ULTIMATO finché R-01 non è corretto**  
+      Richiedo fix (gate su `/auth/refresh` e/o `revoke_all_refresh` al cease) + verifica, poi nuovo §10.  
+      Condizioni: ____  
+
+- [ ] **C — NON APPROVO** per altri motivi: ____  
 
 ---
 
