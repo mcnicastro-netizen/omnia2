@@ -7,9 +7,14 @@ Registro di tutte le decisioni di business e tecniche prese durante il progetto.
 
 ## Decisioni prese
 
+### D-187 — R-01 MC-042 refresh/session: scelta B + fix · 18-Nov-2026
+- **Decisione Founder**: opzione **B** — Master non ultimato finché R-01 non corretto.
+- **Implementazione**: PR **#224** MERGED (`e2f7317`) — gate `/auth/refresh` + revoke refresh al cease; unit + CI + E2E live.
+- **Stato**: ✅ chiuso in codice. §10 Master aggiornato per firma ULTIMATO.
+
 ### D-186 — Rapporto finale chiusura Master Strati A+B · 18-Nov-2026
-- **Decisione operativa**: prodotto `_export_audits/MASTER-RAPPORTO-FINALE-CHIUSURA-STRATI-A-B.md` con riconciliazione #217–#222, tip `11f2962`, riserve MC-026b risolte, H3 chiusa; residui R-01…R-04 non bloccanti Master; dogfood guarantee = percorso separato (§11).
-- **Stato**: ✅ evidenze Cursor. ⏳ firma Founder §10 del rapporto.
+- **Decisione operativa**: prodotto `_export_audits/MASTER-RAPPORTO-FINALE-CHIUSURA-STRATI-A-B.md` con riconciliazione #217–#222+#224, tip `e2f7317`, riserve MC-026b risolte (incluso R-01), H3 chiusa; residui R-02…R-04 non bloccanti Master; dogfood guarantee = percorso separato (§11).
+- **Stato**: ✅ evidenze Cursor post-#224. ⏳ firma Founder §10 **ULTIMATO**.
 
 ### D-185 — MC-043 nomina Main Admin obbligatoria su CC nuovo · 18-Nov-2026
 - **Decisione**: Cliente commerciale nuovo → nomina Main Admin **obbligatoria**; solo dopo sblocco operativo wallet. Founder: «richiedere nomina (obbligatorio) al cliente nuovo e sbloccare».

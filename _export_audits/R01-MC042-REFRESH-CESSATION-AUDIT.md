@@ -1,8 +1,11 @@
 # R-01 — Audit sola lettura: `/auth/refresh` vs MC-042 v2
 
-**Data:** 18 novembre 2026 · ~14:30 Europe/Rome  
-**Repo tip codice:** `main` @ `11f2962` (verifica lettura)  
-**Natura:** sola lettura. Nessuna modifica codice.
+> **STATO 18/11/2026 Europe/Rome:** gap **CHIUSO** su `main` via PR **#224** (`e2f7317`), scelta Founder **B**.  
+> Fix report: `R01-MC042-FIX-REPORT.md`. Questo file resta come evidenza del gap **pre-fix**.
+
+**Data audit:** 18 novembre 2026 · ~14:30 Europe/Rome  
+**Repo tip codice (all’epoca):** `main` @ `11f2962` (verifica lettura)  
+**Natura originale:** sola lettura. Nessuna modifica codice in quel turno.
 
 ---
 
