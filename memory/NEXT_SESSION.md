@@ -21,9 +21,11 @@
 
 1. Pacchetto **dogfood readiness** (checklist + smoke) — mandato Founder  
 2. ~~R-02 CI~~ — **CHIUSO** (#225)  
-3. ~~R-03 allocate concurrency~~ — in corso `cursor/r03-allocate-concurrency-e393`  
-4. MC-046 / H4 se in scope dogfood  
-5. **Non** Stripe live senza mandato dedicato  
+3. ~~R-03 allocate concurrency~~ — **CHIUSO** (#227)  
+4. ~~R-04 E2E UI smoke~~ — **CHIUSO** (report `_export_audits/R04-E2E-UI-SMOKE-REPORT.md`)  
+5. MC-046 / H4 se in scope dogfood  
+6. Pacchetto **dogfood readiness** — mandato Founder  
+7. **Non** Stripe live senza mandato dedicato  
 
 ## Non fare
 
