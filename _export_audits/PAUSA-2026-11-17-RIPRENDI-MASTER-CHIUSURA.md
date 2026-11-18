@@ -1,48 +1,40 @@
-# PAUSA — 17 novembre 2026 (sera) · Ripresa chiusura master
+# Ripresa chiusura master — stato 18 novembre 2026
 
-**Stato:** PAUSA. Nessun codice. Nessun merge obbligatorio questa sera.  
-**Messaggio Founder:** «prendi nota. da domani riprendiamo».
+**Aggiornato:** 18 nov 2026 · Europe/Rome  
+**Branch docs:** `cursor/master-closure-plan-e393` · PR #217  
+**Nessun merge. Nessun codice** da questo file.
 
 ---
 
-## Dove siamo
+## Fatto
 
 | Elemento | Stato |
 |---|---|
-| PR #216 H2 Main Admin | MERGED su `main` @ `c3baebc` · CI verde |
-| Piano chiusura | PR #217 · ChatGPT: **IDONEO CON CORREZIONI** |
-| Correzioni doc Cursor (sera) | MC-026/043/050 + runbook + bozza MC-052 |
-| Firma `MASTER STRATO B CHIUSO` | **NON fatta** |
+| PR #216 H2 | MERGED `main` @ `c3baebc` |
+| Revisione ChatGPT piano | IDONEO CON CORREZIONI |
+| D-175 ruoli | Salvati |
+| **MC-042 / D-176** | **Decisione funzionale APPROVATA** 18/11 — testo in `MC-042-DECISIONE-FOUNDER.md` |
+| Docs riconciliati post MC-042 | Piano, bozza MC-052, NEXT_SESSION, conformity D05 |
 
-## Ruoli (memorizzati — D-175)
+## Ancora al Founder
 
-SoT: `memory/RUOLI_GOVERNANCE_AGENT.md` · `.cursor/rules/ruoli-governance.mdc` · HAL `api.governance-*`.
+| ID | Stato |
+|---|---|
+| MC-040 | `PENDING_FOUNDER` |
+| MC-041 | `PENDING_FOUNDER` |
+| MC-043 | `PENDING_FOUNDER` |
+| MC-026b | Non firmata (scostamento read MC-042 documentato) |
+| MC-052 / `MASTER STRATO B CHIUSO` | Non firmata |
 
-## Alla ripresa — messaggio a Cursor / ChatGPT
+## Messaggio gate
 
 ```
-Riprendiamo chiusura master strato B.
-Ruoli D-175 vincolanti (RUOLI_GOVERNANCE_AGENT.md).
-SoT: MASTER-CHIUSURA-POST-AUDIT-PIANO.md + MASTER-CHIUSURA-CHATGPT-REVIEW-2026-11-17.md
-Bozza firma: MASTER-STRATO-B-REPORT-FINALE-BOZZA.md
-Decido i residui MC-040…043 (obbligo MC-042).
-Poi: firma MASTER STRATO B CHIUSO e merge PR #217 se ok.
-Niente H3/H4/B04-III/codice senza: OMNIA — AUTORIZZAZIONE ESPLICITA ALL'IMPLEMENTAZIONE
+MC-042 approvata (funzionale). Docs aggiornati su PR #217.
+Confermo MC-040 / MC-041 / MC-043.
+Firmo MC-026b (+ riserva enforcement MC-042 se serve) e MASTER STRATO B CHIUSO.
+Poi: merge #217 solo su mio ordine. Niente codice senza nuova autorizzazione.
 ```
 
-## Checklist ripresa (ordine)
+## Ruoli D-175
 
-1. Founder decide **MC-042** (obbligatorio).
-2. Founder conferma MC-040 (fase successiva), MC-041 (accettare), MC-043 (accettare + runbook).
-3. Founder firma MC-026 conformità + strato A.
-4. Completare firme in `MASTER-STRATO-B-REPORT-FINALE-BOZZA.md` → rinominare/stato finale.
-5. Merge PR #217 (docs).
-6. Solo dopo: scegliere e autorizzare il **prossimo** pacchetto codice (H3+H4 **oppure** B04-III).
-
-## File da leggere
-
-1. `MASTER-CHIUSURA-POST-AUDIT-PIANO.md`
-2. `MASTER-CHIUSURA-CHATGPT-REVIEW-2026-11-17.md`
-3. `MASTER-STRATO-B-REPORT-FINALE-BOZZA.md`
-4. `B04-H2-OPS-RUNBOOK-MAIN-ADMIN-NOMINA.md`
-5. `memory/NEXT_SESSION.md`
+`memory/RUOLI_GOVERNANCE_AGENT.md`

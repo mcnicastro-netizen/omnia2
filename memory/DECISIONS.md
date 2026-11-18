@@ -7,6 +7,13 @@ Registro di tutte le decisioni di business e tecniche prese durante il progetto.
 
 ## Decisioni prese
 
+### D-176 — MC-042 consultazione CC non operativo (whitelist) · 18-Nov-2026
+- **Contesto**: Chiusura master strato B; residuo MC-042 su «consultazione limitata» (D05) senza whitelist definita.
+- **Decisione (funzionale)**: Per CommercialCustomer **non operativo**, sola lettura consentita **solo** di documenti di **chiusura** e **fatturazione**. Vietati: consultazione operativa wallet; allocate / revoke / transfer / spend crediti. Identità, nomine, ledger e storico restano conservati; conservazione ≠ diritto di consultazione operativa.
+- **Non autorizza** implementazione codice. SoT testo: `_export_audits/MC-042-DECISIONE-FOUNDER.md`.
+- **Coerenza**: precisa D05 / DES-07/08 / B16; non riapre D01–D12.
+- **Stato**: ✅ decisione funzionale approvata Founder 18-Nov-2026. ❌ codice non autorizzato / non verificato conforme.
+
 ### D-175 — Ruoli governance Founder / ChatGPT / Cursor · 17-Nov-2026
 - **Contesto**: Post-audit master. Senza confronto ChatGPT e senza gate, mesi di delivery avrebbero potuto far apparire «pronto» un prodotto incompleto. Formalizzati i ruoli ricostruiti e confermati dal Founder.
 - **Decisione**:

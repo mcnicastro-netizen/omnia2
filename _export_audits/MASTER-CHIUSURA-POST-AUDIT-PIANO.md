@@ -113,17 +113,17 @@ Deve avere uno di: *implementato e verificato* · *residuo accettato esplicitame
 | **MC-024** | B04-H2 exact roles (pre-binding) | `IMPL_MERGIATO` (superato da MC-025) | PR #212 | MC-023 | P2 | Storico; autorità ora = Main Admin binding |
 | **MC-025** | B04-H2 Main Admin residuale D01–D12 | `IMPL_MERGIATO` | PR #216 @ `99a967e` → `c3baebc` | MC-014, MC-023 | P0 | Binding + transfer 48h + deny-by-default + D07 + fix D10/D08/D02/D04 |
 | **MC-026a** | Codice D01–D12 post-fix su `main` | `IMPL_MERGIATO` | PR #216 @ `99a967e` ⊂ `c3baebc`; CI verde; report residuale | MC-025 | P0 | Tip `main` contiene fix D10/D08/D02/D04 |
-| **MC-026b** | Accettazione Founder conformità D01–D12 | `BLOCCANTE_APERTO` (gate B) | firma in `MASTER-STRATO-B-REPORT-FINALE-BOZZA.md` | MC-026a | P0 | Founder firma `CONFORME` o `CONFORME CON RISERVE` accettate |
+| **MC-026b** | Accettazione Founder conformità D01–D12 | `BLOCCANTE_APERTO` (gate B) — **non firmata** | bozza MC-052 + scostamenti sotto; Cursor **non** firma | MC-026a, MC-042 | P0 | Founder firma `CONFORME` / `CONFORME CON RISERVE` (es. riserva MC-042 non enforce) |
 | **MC-027** | Suite test B04 locale + CI | `IMPL_MERGIATO` | 57 passed; CI success `c3baebc` | MC-020–025 | P0 | Log pytest + Actions success sul tip |
 
 ### 4.4 Residui B04-H2 / H1 (classificazione)
 
 | ID | Descrizione | Stato attuale | Evidenza richiesta | Dipendenze | Priorità | Criterio di chiusura |
 |---|---|---|---|---|---|---|
-| **MC-040** | UI Cabina accept transfer | `FASE_SUCCESSIVA` (proposta ChatGPT; **firma Founder pending**) | report H2 §limiti | MC-025 | P2 | Founder conferma: FE fuori strato B |
-| **MC-041** | Expiry transfer lazy (no cron) | `RESIDUO_ACCETTABILE` (proposta ACCETTARE; **firma pending**) | D09 + `_expire_if_needed` | MC-025 | P3 | Founder accetta lazy |
-| **MC-042** | Read wallet su CC non operativo «limitata» | `BLOCCANTE_APERTO` (decisione Founder) | design D05; bozza report §4 | MC-014 | P0 | Scelta esplicita A/B/C in bozza MC-052 — **niente accettazione implicita** |
-| **MC-043** | CC senza Main Admin → deny finché Ops nomina | `RESIDUO_ACCETTABILE` (proposta ACCETTARE; **firma pending**) | `B04-H2-OPS-RUNBOOK-MAIN-ADMIN-NOMINA.md` | D01 | P1 | Founder accetta + checklist runbook §6 verificabile |
+| **MC-040** | UI Cabina accept transfer | `PENDING_FOUNDER` (evidenza: FE fuori scope H2; proposta ChatGPT ≠ decisione) | report H2 §limiti; API transfer pronta | MC-025 | P2 | Conferma esplicita Founder: FE = fase successiva / fuori strato B |
+| **MC-041** | Expiry transfer lazy (no cron) | `PENDING_FOUNDER` (evidenza: TTL 48h + `_expire_if_needed`; proposta ChatGPT ≠ decisione) | D09 + codice expire lazy | MC-025 | P3 | Conferma esplicita Founder: accettare lazy **oppure** cron in fase successiva |
+| **MC-042** | Consultazione CC non operativo | `DECISIONE_FUNZIONALE_APPROVATA` 18/11/2026 · `IMPL_NON_AUTORIZZATA` | `MC-042-DECISIONE-FOUNDER.md` · D-176 | D05, DES-07/08 | P0 | Decisione OK; chiusura B richiede consapevolezza scostamento codice (read wallet ancora ampia) |
+| **MC-043** | CC senza Main Admin → deny finché Ops nomina | `PENDING_FOUNDER` (evidenza: deny D01 + runbook doc; proposta ChatGPT ≠ decisione) | `B04-H2-OPS-RUNBOOK-MAIN-ADMIN-NOMINA.md` | D01 | P1 | Conferma esplicita Founder su accettazione + runbook |
 | **MC-044** | Gap storico «agency_admin filiale = wallet» pre-binding | **CHIUSO da MC-025** | assert Main Admin | MC-025 | — | Non riaprire: superato dal binding |
 | **MC-045** | H3 allocate solo org linkate al CC | `FASE_SUCCESSIVA` | NEXT_SESSION; H1 report | MC-022 | P1 | Non nel master B; slice dedicata se autorizzata |
 | **MC-046** | H4 top-up/storage = Stripe Customer del CC | `FASE_SUCCESSIVA` | idem | MC-021 | P1 | Idem |
@@ -186,11 +186,11 @@ Sintesi senza ripetere gli audit:
 
 1. MC-020…MC-025 + **MC-026a** `IMPL_MERGIATO`  
 2. **MC-026b** conformità accettata dal Founder  
-3. MC-040…MC-043 con **accettazione/decisione esplicita** (MC-042 obbligatorio)  
+3. MC-042 decisione funzionale **già** (18/11); MC-040/041/043 con **conferma Founder** ancora necessaria  
 4. MC-045…MC-049 **non** richiesti  
-5. MC-050/051/053 chiusi; **MC-052 firmato**  
+5. MC-050/051/053 chiusi; **MC-052 firmato** dal Founder  
 6. CI verde su `main` tip  
-7. Report finale firmato: implementato / testato / mergiato / residuo accettato / fuori scope
+7. Report finale firmato: implementato / testato / mergiato / residuo accettato / fuori scope / scostamenti accettati
 
 ### Strato C — Readiness commerciale
 
@@ -198,15 +198,16 @@ Sintesi senza ripetere gli audit:
 
 ---
 
-## 7. Sequenza operativa (aggiornata post-ChatGPT 17 nov)
+## 7. Sequenza operativa (aggiornata 18 nov)
 
-1. ~~ChatGPT revisiona piano~~ → **fatto**: `IDONEO CON CORREZIONI` (`MASTER-CHIUSURA-CHATGPT-REVIEW-2026-11-17.md`).  
-2. ~~Correzioni doc MC-026/043/050~~ → **fatto** su PR #217 (sera 17 nov).  
-3. **PAUSA** — ripresa: `PAUSA-2026-11-17-RIPRENDI-MASTER-CHIUSURA.md`.  
-4. Founder **decide MC-042** e conferma MC-040/041/043.  
-5. Founder firma MC-026b + strato A + `MASTER STRATO B CHIUSO` nella bozza MC-052.  
-6. Merge PR #217 (docs).  
-7. Solo dopo: autorizzazione esplicita al **prossimo** pacchetto codice — mai implicita.
+1. ~~ChatGPT revisiona piano~~ → **fatto**.  
+2. ~~Correzioni doc MC-026/043/050~~ → **fatto**.  
+3. ~~Founder decide MC-042~~ → **fatto** 18/11/2026 (`MC-042-DECISIONE-FOUNDER.md` · D-176). **Impl non autorizzata.**  
+4. Cursor aggiorna docs MC-042 + riconciliazione (questo turno) — **fatto su PR #217**.  
+5. Founder conferma esplicita **MC-040 / MC-041 / MC-043** (ancora `PENDING_FOUNDER`).  
+6. Founder firma **MC-026b** (con o senza riserva su enforcement MC-042) + strato A + `MASTER STRATO B CHIUSO`.  
+7. Merge PR #217 **solo** su ordine Founder.  
+8. Solo dopo: autorizzazione esplicita al prossimo pacchetto codice (eventuale enforcement MC-042 incluso se mandato).
 
 ---
 
@@ -220,16 +221,24 @@ Sintesi senza ripetere gli audit:
 
 ---
 
-## 9. Verdetto (17 nov 2026 — post-ChatGPT)
+## 9. Verdetto (18 nov 2026 — post MC-042)
 
 | Domanda | Risposta |
 |---|---|
 | CI #216 / post-merge | **OK** |
-| Codice H2 su `main` | **OK** |
-| Revisione ChatGPT piano | **IDONEO CON CORREZIONI** · correzioni doc applicate |
+| Codice H2 su `main` | **OK** (mutate deny su CC non operabile OK; **read wallet non ancora whitelist MC-042**) |
+| MC-042 | **Decisione funzionale APPROVATA** · impl **non** autorizzata / non conforme |
 | Master strato A | **SÌ COND** — manca firma Founder |
-| Master strato B | **SÌ COND** — manca MC-026b + decisioni MC-040…043 (MC-042) + firma MC-052 |
+| Master strato B | **SÌ COND** — manca MC-026b + conferma MC-040/041/043 + firma MC-052 |
 | Master strato C | **NO** · fuori |
-| Prossimo codice | **Nessuno** fino a mandato esplicito post-chiusura B |
+| Prossimo codice | **Nessuno** finché Founder non autorizza esplicitamente |
 
-**STOP esecutivo:** nessun H3/H4/legacy/B04-III. Pausa fino a ripresa Founder.
+### Scostamenti MC-026b (evidenza, non firma)
+
+| Tema | Doc/decisione | Codice `main` @ `c3baebc` | Esito |
+|---|---|---|---|
+| D05 / MC-042 read | Whitelist chiusura+fatturazione; no wallet operativo | `cc_allows_wallet_admin_read` → sempre True; `GET /wallet` → summary completo anche su CC non operabile | **SCOSTAMENTO** — decisione sì, enforcement no |
+| Mutate wallet CC non operabile | Vietate (MC-042 + D05) | `cc_allows_wallet_mutation` deny su ceased / closed_readonly | **ALLINEATO** (mutate) |
+| D01–D04, D06–D12 (resto H2) | Conformità post-fix | Binding, transfer 48h, Cabina hard, multi-CC, `is_active is True`, D07 | **Documentato come impl** in MC-026a — accettazione Founder ancora aperta |
+
+**STOP:** nessun merge #217, nessun codice, nessuna chiusura strato B da Cursor.

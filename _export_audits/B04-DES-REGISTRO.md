@@ -22,6 +22,7 @@
 | B04-DES-06 | 17/11/2026 | Allowance/cicli/upgrade/downgrade/grazia/idempotenza/cessazione (P01–P07 + X1…X3) | Approvata |
 | B04-DES-07 | 17/11/2026 | Entitlements operativi per stato (pre-attivazione→cessazione) | Approvata |
 | B04-DES-08 | 17/11/2026 | Area Amministrazione e fatturazione B2B (Main vs Branch Admin) | Approvata |
+| MC-042 / D-176 | 18/11/2026 | Precisa consultazione CC non operativo: sola lettura chiusura+fatturazione; no wallet operativo (non riapre DES) | Approvata funzionale; codice non autorizzato |
 | B04-DES-09 | 17/11/2026 | Mapping eventi Stripe → azioni OMNIA (principi, non auto-state) | Approvata |
 | B04-DES-10 | 17/11/2026 | Casi limite multi-Organization; P.IVA invariabile; no transfer silenzioso | Approvata |
 

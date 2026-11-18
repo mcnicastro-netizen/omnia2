@@ -13,6 +13,7 @@ Contesto B04-H2 (già mergiato su main, PR #216 @ c3baebc):
   B04-H2-MAIN-ADMIN-DECISIONS-CONFORMITY.md
 NOTA: OMNIA-HANDOFF-PER-CHATGPT.md (14 nov) è STALE — non usarlo come stato corrente.
 PR piano: https://github.com/mcnicastro-netizen/omnia2/pull/217
+MC-042 (18 nov 2026): MC-042-DECISIONE-FOUNDER.md — decisione funzionale; no impl.
 
 File consigliati legacy per ChatGPT:
   OMNIA-AUDIT-PARTE-1-di-4.txt

@@ -25,7 +25,7 @@
 | MC-050 | Già fatto in NEXT_SESSION | Portato a `CHIUSO` | chiuso |
 | MC-040 | SPOSTARE FASE SUCCESSIVA | Stato aggiornato a proposta ChatGPT; **firma Founder domani** | pending Founder |
 | MC-041 | ACCETTARE | Proposta registrata; **firma Founder domani** | pending Founder |
-| MC-042 | DECISIONE FOUNDER | Nessuna accettazione implicita | **aperto** |
+| MC-042 | DECISIONE FOUNDER | Approvata 18/11 (D-176); docs aggiornati; impl non autorizzata | **decisione OK · enforcement pending mandato** |
 | MC-052 | Report finale | Bozza preparata; firma Founder dopo decisioni | bozza |
 
 ## Divieti confermati (ChatGPT §F)
