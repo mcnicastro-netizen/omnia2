@@ -84,24 +84,27 @@ Nessuna deroga anonima o non tracciata.
 
 ---
 
-## Stato tecnico vs codice (`main` @ `547f67f`) — sola evidenza
+## Stato tecnico vs codice (`main` @ `6a12932`, post #220) — evidenza verifica 18/11
+
+Fonte: `_export_audits/VERIFICA-POST-MERGE-217-220-2026-11-18.md`.  
+Tabella precedente @ `547f67f` (**NON CONFORME** wallet `billing_only`) è **superata** da #220.
 
 | ID | Decisione | Codice attuale | Esito |
 |---|---|---|---|
-| MC-054 grace 1–7 | Piena operatività | `commercial_status=grace` → `operational_status=full` | **PARZIALE / MODELLO** — macchina notifiche Main Admin non riesaminata qui |
-| MC-054 giorno 8 wallet/crediti | Deny consultazione + allocate/revoke/transfer/spend | `suspended` → `billing_only`; `cc_is_wallet_operable` **non** nega `billing_only`; spend sì (`_spend_blocked` include suspended); allocate/read **ancora possibili** | **NON CONFORME** su read/allocate/revoke; **PARZIALE** su spend |
-| MC-054 collaboratori bloccati / MA solo billing | Entitlements DES-07 | Non verificato end-to-end in questo allineamento doc | **NON VERIFICATO** |
-| MC-055 riattivazione auto saldo pieno | Stripe → auto | Non dichiarato implementato come regola prodotto in #218 | **MANCANTE / NON VERIFICATO** |
-| MC-055 no riattivazione parziale | — | Non verificato | **NON VERIFICATO** |
-| MC-056…059 deroga | Sistema completo | Assente come prodotto (D07 emergency wallet ≠ deroga riattivazione) | **MANCANTE** |
+| MC-054 grace 1–7 | Piena operatività | `grace` → `operational_status=full` | **MODELLO OK** — notifiche grace non riesaminate E2E |
+| MC-054 giorno 8 wallet/crediti | Deny read+allocate+revoke+transfer+spend | `cc_is_wallet_operable` nega `suspended`/`billing_only`; assert + `_spend_blocked` | **CONFORME** (unit) |
+| MC-054 collaboratori / MA billing-only (opz. B) | Collab off; MA solo recovery | `enforce_commercial_access` + allowlist path | **CONFORME** unit · **NON VERIFICATO** E2E FE |
+| MC-054 job giorno 8 | past_due ≥8g → suspended | `apply_day8_suspensions` + scheduler | **PRESENTE** |
+| MC-055 riattivazione auto saldo pieno | Solo a saldo integrale | `invoice.paid` → `reactivate_cc_on_full_payment` **senza** check multi-invoice / debito residuo | **GAP vs decisione** — domanda Founder aperta |
+| MC-055 no riattivazione parziale | — | Non enforced nel path attuale | **GAP** |
+| MC-056…059 deroga | Sistema completo | Grant Ops + expire + reminder 48h + email best-effort + per-CC | **PRESENTE** (≠ D07) |
 
-**D07** (Super Admin mutate wallet straordinarie) **non** è MC-056: non sostituisce deroga di riattivazione con debito.
+**D07** (Super Admin mutate wallet straordinarie) **non** è MC-056.
 
 ---
 
 ## Fuori scope di questo documento
 
-- Implementazione codice.
-- Modifica Stripe/webhook.
-- Merge PR #217.
-- Firma MC-026b.
+- Fix codice MC-055 saldo (richiede autorizzazione Founder dedicata).
+- Stripe live / produzione.
+- Scelta primo slice Strato C.
