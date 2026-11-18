@@ -6,7 +6,7 @@
 **Baseline codice verificata:** `main` @ `e2f7317e59ac46bf78c063a5626e56f5c322c07b` (merge **#224** R-01)  
 **Natura:** certificazione evidenze. **Non** readiness produzione / Strato C.  
 **Autore verifica:** Cursor (evidenze GitHub + pytest + E2E live R-01). **Firma chiusura formale:** solo Founder.  
-**Stato firma §10:** **pronta per firma Founder** — R-01 chiuso per scelta B; Master A+B **CHIUDIBILE**.
+**Stato firma §10:** **FIRMATA Founder** — 18 novembre 2026 · ~15:54 Europe/Rome · **ULTIMATO / CONFORME**.
 
 ---
 
@@ -189,10 +189,10 @@ Sulla base delle evidenze **attuali**:
 
 **Cursor non firma.** Founder:
 
-- [ ] **ULTIMATO — Master Strati A+B CONFORME**  
+- [x] **ULTIMATO — Master Strati A+B CONFORME**  
       Approvo chiusura Programma Master A+B su tip `e2f7317`. R-01 chiuso per mia scelta B (#224).  
       Residui R-02…R-04 e Strato C / dogfood (§11) restano **fuori** da questa firma.  
-      Data ____ / firma ____  
+      Data **18 novembre 2026 · ~15:54 Europe/Rome** / firma **Founder Marco Nicastro** (conferma chat: «firmo e andiamo avanti»)  
 
 - [ ] **NON APPROVO** per motivi: ____  
 
