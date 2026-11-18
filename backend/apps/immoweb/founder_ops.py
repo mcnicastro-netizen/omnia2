@@ -1190,6 +1190,20 @@ async def ops_activate_agency(
                 },
             )
 
+    # MC-043 — attivazione richiede Main Admin nominato sul CommercialCustomer
+    cc_id = (agency.get("commercial_customer_id") or "").strip()
+    if cc_id:
+        cc = await db.commercial_customers.find_one({"id": cc_id}, {"_id": 0, "main_admin_user_id": 1})
+        if not cc or not (cc.get("main_admin_user_id") or "").strip():
+            raise HTTPException(
+                status_code=400,
+                detail={
+                    "error": "main_admin_required",
+                    "commercial_customer_id": cc_id,
+                    "hint": "Nomina il Main Admin commerciale prima di Attiva (MC-043)",
+                },
+            )
+
     wipe = None
     if body.wipe_crm:
         wipe = await wipe_agency_crm_data(db, agency_id)

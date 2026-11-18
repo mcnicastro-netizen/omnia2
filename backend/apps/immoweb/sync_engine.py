@@ -547,6 +547,33 @@ def start_scheduler() -> None:
         coalesce=True,
     )
 
+    async def _main_admin_transfer_expire_tick():
+        """MC-041 — job automatico expiry proposte Main Admin (TTL 48h)."""
+        from shared.billing.main_admin_service import expire_due_transfers
+        from shared.db.connection import Database
+
+        try:
+            report = await expire_due_transfers(Database.get())
+            _mark_job(
+                "main_admin_transfer_expire",
+                ok=True,
+                detail=(
+                    f"scanned={report.get('scanned')} expired={report.get('expired')}"
+                ),
+            )
+        except Exception as e:  # noqa: BLE001
+            _mark_job("main_admin_transfer_expire", ok=False, detail=str(e))
+            logger.warning("main_admin transfer expire failed: %s", e)
+
+    sched.add_job(
+        _main_admin_transfer_expire_tick,
+        IntervalTrigger(minutes=15),
+        id="main_admin_transfer_expire",
+        replace_existing=True,
+        max_instances=1,
+        coalesce=True,
+    )
+
     async def _billing_reminders_tick():
         """D-166 — promemoria rinnovo abbonamento + crediti pacchetto bassi."""
         from shared.billing.counters import run_billing_reminders

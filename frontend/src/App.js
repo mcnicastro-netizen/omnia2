@@ -54,6 +54,7 @@ const GroupPage = lazy(() => import("@/apps/immoweb/pages/GroupPage"));
 const ApiKeysPage = lazy(() => import("@/apps/immoweb/pages/ApiKeysPage"));
 const TrashPage = lazy(() => import("@/apps/immoweb/pages/TrashPage"));
 const BillingPage = lazy(() => import("@/apps/immoweb/pages/BillingPage"));
+const MainAdminTransferPage = lazy(() => import("@/apps/immoweb/pages/MainAdminTransferPage"));
 const ModulisticaPage = lazy(() => import("@/apps/immoweb/pages/ModulisticaPage"));
 const ImportHubPage = lazy(() => import("@/apps/immoweb/pages/ImportHubPage"));
 const ImportXmlPage = lazy(() => import("@/apps/immoweb/pages/ImportXmlPage"));
@@ -419,6 +420,14 @@ function App() {
                     element={
                       <ProtectedRoute allowedRoles={["super_admin", "agency_admin", "group_admin"]}>
                         <BillingPage />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="app/billing/main-admin-transfer"
+                    element={
+                      <ProtectedRoute allowedRoles={["super_admin", "agency_admin", "group_admin", "branch_admin", "agent"]}>
+                        <MainAdminTransferPage />
                       </ProtectedRoute>
                     }
                   />

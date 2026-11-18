@@ -228,6 +228,19 @@ async def create_agency(
         },
     )
 
+    # MC-043 — nomina iniziale obbligatoria se CC vacante e creatore idoneo
+    from shared.billing import main_admin_service as mas
+
+    if not customer.get("main_admin_user_id"):
+        bound = await mas.bind_initial_main_admin_if_vacant(
+            db,
+            commercial_customer_id=customer["id"],
+            user_id=user["id"],
+            reason="agency_create_bootstrap",
+        )
+        if bound:
+            customer = bound
+
     agency = AgencyInDB(
         slug=slug,
         display_name=payload.display_name,

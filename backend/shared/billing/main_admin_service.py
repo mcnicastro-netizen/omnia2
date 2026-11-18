@@ -332,6 +332,68 @@ async def resolve_wallet_cc_id(
     )
 
 
+async def bind_initial_main_admin_if_vacant(
+    db,
+    *,
+    commercial_customer_id: str,
+    user_id: str,
+    reason: str = "agency_create_bootstrap",
+) -> Optional[dict]:
+    """MC-043 — prima nomina obbligatoria su CC vacante (bootstrap creazione agenzia).
+
+    Non sostituisce un Main Admin già presente. Richiede utente idoneo.
+    Ritorna CC aggiornato o ``None`` se non idoneo / già nominato / race persa.
+    """
+    target = await load_user(db, user_id)
+    if not target or not user_is_eligible_main_admin(target):
+        return None
+    now = _now_iso()
+    updated = await db.commercial_customers.find_one_and_update(
+        {
+            "id": commercial_customer_id,
+            "$or": [
+                {"main_admin_user_id": None},
+                {"main_admin_user_id": {"$exists": False}},
+                {"main_admin_user_id": ""},
+            ],
+        },
+        {
+            "$set": {
+                "main_admin_user_id": user_id,
+                "main_admin_appointed_at": now,
+                "main_admin_appointed_by": user_id,
+                "updated_at": now,
+            }
+        },
+        return_document=ReturnDocument.AFTER,
+    )
+    if not updated:
+        return None
+    await append_main_admin_event(
+        db,
+        commercial_customer_id=commercial_customer_id,
+        event_type="initial_nominate",
+        actor_user_id=user_id,
+        previous_main_admin_user_id=None,
+        new_main_admin_user_id=user_id,
+        reason=reason,
+    )
+    return {k: v for k, v in updated.items() if k != "_id"}
+
+
+async def expire_due_transfers(db) -> dict:
+    """MC-041 — scansiona pending e applica expiry (job automatico)."""
+    cursor = db[TRANSFER_COLL].find({"status": "pending"}, {"_id": 0})
+    pending = await cursor.to_list(length=10_000)
+    expired = 0
+    for tr in pending:
+        before = tr.get("status")
+        after = await _expire_if_needed(db, tr)
+        if before == "pending" and after.get("status") == "expired":
+            expired += 1
+    return {"scanned": len(pending), "expired": expired}
+
+
 async def nominate_main_admin(
     db,
     *,

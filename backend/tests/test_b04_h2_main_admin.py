@@ -672,3 +672,69 @@ def test_ops_replace_requires_force():
     assert any(
         e["event_type"] == "ops_replace" for e in db["commercial_main_admin_events"].docs
     )
+
+
+def test_mc043_bind_initial_main_admin_if_vacant():
+    from shared.billing import main_admin_service as mas
+
+    raw = FakeDB()
+    _seed_cc_agency(raw)
+    _seed_user(raw, user_id="u_owner", role="agency_admin")
+    db = _DBProxy(raw)
+    assert raw.commercial_customers.docs[0].get("main_admin_user_id") in (None, "")
+    out = _run(
+        mas.bind_initial_main_admin_if_vacant(
+            db, commercial_customer_id="cc1", user_id="u_owner"
+        )
+    )
+    assert out["main_admin_user_id"] == "u_owner"
+    # second call does not overwrite
+    _seed_user(raw, user_id="u_other", role="agency_admin")
+    out2 = _run(
+        mas.bind_initial_main_admin_if_vacant(
+            db, commercial_customer_id="cc1", user_id="u_other"
+        )
+    )
+    assert out2 is None
+    assert _run(mas.get_commercial_customer(db, "cc1"))["main_admin_user_id"] == "u_owner"
+
+
+def test_mc041_expire_due_transfers_job():
+    from datetime import datetime, timedelta, timezone
+
+    from shared.billing import main_admin_service as mas
+
+    raw = FakeDB()
+    _seed_cc_agency(raw)
+    _seed_user(raw, user_id="u_ma", role="agency_admin")
+    _seed_user(raw, user_id="u_new", role="agency_admin")
+    db = _DBProxy(raw)
+    _run(
+        mas.nominate_main_admin(
+            db,
+            commercial_customer_id="cc1",
+            new_user_id="u_ma",
+            actor={"id": "ops", "role": "super_admin"},
+        )
+    )
+    prop = _run(
+        mas.propose_transfer(
+            db,
+            commercial_customer_id="cc1",
+            to_user_id="u_new",
+            actor={
+                "id": "u_ma",
+                "role": "agency_admin",
+                "email_verified": True,
+                "is_active": True,
+            },
+        )
+    )
+    db["commercial_main_admin_transfers"].docs[0]["expires_at"] = (
+        datetime.now(timezone.utc) - timedelta(minutes=1)
+    ).isoformat()
+    report = _run(mas.expire_due_transfers(db))
+    assert report["scanned"] >= 1
+    assert report["expired"] >= 1
+    assert db["commercial_main_admin_transfers"].docs[0]["status"] == "expired"
+    assert prop["id"]
