@@ -2,7 +2,7 @@
 
 **Data:** 18 novembre 2026 · Europe/Rome  
 **Stato:** **DECISIONI FUNZIONALI APPROVATE DAL FOUNDER**  
-**Implementazione codice:** **NON autorizzata** da questo documento · **NON dichiarare implementate**  
+**Implementazione codice:** autorizzata 18/11 (`OMNIA — AUTORIZZAZIONE ESPLICITA ALL'IMPLEMENTAZIONE`) · branch `cursor/mc042-v2-suspend-deroga-e393`  
 **Distinzione:** **non** confondere con **MC-042** (cessazione definitiva).  
 **Registro:** D-178…D-182 · inventario master MC-054…059
 
@@ -14,10 +14,10 @@
 - Piena operatività.
 - Notifiche al Main Admin secondo regole già approvate.
 
-### Dal giorno 8 (sospensione)
-- Accesso operativo dei collaboratori **bloccato**.
-- Main Admin **limitato** a: pagamento, metodo di pagamento, fatture, recupero.
-- Consultazione del **wallet** bloccata.
+### Dal giorno 8 (sospensione) — **opzione B Founder 18/11**
+- Accesso operativo dei collaboratori **bloccato** (login/session deny).
+- Main Admin **resta autenticabile** ma **limitato** a: pagamento, metodo di pagamento, fatture, recupero (billing allowlist).
+- Consultazione del **wallet** bloccata (anche con `operational_status=billing_only`).
 - Consultazione dei **crediti** bloccata.
 - Assegnazione crediti bloccata.
 - Revoca e trasferimento crediti bloccati.

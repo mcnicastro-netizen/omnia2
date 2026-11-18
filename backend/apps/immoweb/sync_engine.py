@@ -574,6 +574,66 @@ def start_scheduler() -> None:
         coalesce=True,
     )
 
+    async def _deroga_expire_tick():
+        """MC-057/058 — scadenza deroghe + reminder 48h Super Admin."""
+        from shared.billing.commercial_access import (
+            expire_due_deroghe,
+            remind_deroghe_expiring_soon,
+        )
+        from shared.db.connection import Database
+
+        try:
+            db = Database.get()
+            report = await expire_due_deroghe(db)
+            rem = await remind_deroghe_expiring_soon(db, within_hours=48)
+            _mark_job(
+                "reactivation_deroga_expire",
+                ok=True,
+                detail=(
+                    f"scanned={report.get('scanned')} expired={report.get('expired')} "
+                    f"reminded={rem.get('reminded')}"
+                ),
+            )
+        except Exception as e:  # noqa: BLE001
+            _mark_job("reactivation_deroga_expire", ok=False, detail=str(e))
+            logger.warning("reactivation deroga expire failed: %s", e)
+
+    sched.add_job(
+        _deroga_expire_tick,
+        IntervalTrigger(minutes=15),
+        id="reactivation_deroga_expire",
+        replace_existing=True,
+        max_instances=1,
+        coalesce=True,
+    )
+
+    async def _day8_suspend_tick():
+        """MC-054 — giorno 8 past_due → suspended / billing_only."""
+        from shared.billing.commercial_access import apply_day8_suspensions
+        from shared.db.connection import Database
+
+        try:
+            report = await apply_day8_suspensions(Database.get(), grace_days=8)
+            _mark_job(
+                "commercial_day8_suspend",
+                ok=True,
+                detail=(
+                    f"scanned={report.get('scanned')} applied={report.get('applied')}"
+                ),
+            )
+        except Exception as e:  # noqa: BLE001
+            _mark_job("commercial_day8_suspend", ok=False, detail=str(e))
+            logger.warning("day8 suspension job failed: %s", e)
+
+    sched.add_job(
+        _day8_suspend_tick,
+        CronTrigger(hour=5, minute=20),
+        id="commercial_day8_suspend",
+        replace_existing=True,
+        max_instances=1,
+        coalesce=True,
+    )
+
     async def _billing_reminders_tick():
         """D-166 — promemoria rinnovo abbonamento + crediti pacchetto bassi."""
         from shared.billing.counters import run_billing_reminders

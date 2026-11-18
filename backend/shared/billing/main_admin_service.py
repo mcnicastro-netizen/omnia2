@@ -107,16 +107,19 @@ def cc_allows_wallet_admin_read(cc: dict) -> bool:
 def cc_is_wallet_operable(cc: Optional[dict]) -> bool:
     """True solo se il CC consente accesso operativo al wallet (read o mutate).
 
-    Non-operabile (MC-042 / D05): ``ceased`` oppure
-    ``operational_status`` in ``none`` / ``closed_readonly``.
+    Non-operabile (MC-042 / MC-054):
+    - ``commercial_status`` ``ceased`` / ``suspended``
+    - ``operational_status`` in ``none`` / ``closed_readonly`` / ``billing_only``
+
+    Deroga attiva (MC-056) bypassa questo check in ``assert_cc_wallet_operable``.
     """
     if not cc:
         return False
     status = cc.get("commercial_status") or "pre_activation"
-    if status == "ceased":
+    if status in ("ceased", "suspended"):
         return False
     op = cc.get("operational_status")
-    if op in ("none", "closed_readonly"):
+    if op in ("none", "closed_readonly", "billing_only"):
         return False
     return True
 
@@ -132,6 +135,10 @@ async def assert_cc_wallet_operable(
     cc = await get_commercial_customer(db, commercial_customer_id)
     if not cc:
         raise HTTPException(status_code=404, detail={"error": "commercial_customer_not_found"})
+    from shared.billing.commercial_access import find_active_deroga
+
+    if await find_active_deroga(db, commercial_customer_id):
+        return cc
     if not cc_is_wallet_operable(cc):
         await append_main_admin_event(
             db,

@@ -207,6 +207,11 @@ async def mfa_verify_login(
     if len(updates) > 1:
         await db.users.update_one({"id": user["id"]}, {"$set": updates})
 
+    # MC-042 v2 — stesso gate del login password
+    from shared.billing.commercial_access import assert_user_login_allowed
+
+    await assert_user_login_allowed(db, user)
+
     refresh = _set_auth_cookies(response, user["id"], user["email"], user["role"])
     await store_refresh(refresh)
     return _public(user)

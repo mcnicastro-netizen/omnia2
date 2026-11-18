@@ -41,6 +41,11 @@ async def get_current_user(request: Request) -> dict:
     if aid:
         set_current_agency_id(aid)
 
+    # MC-042 v2 / MC-054 — cessazione lockout + sospensione billing-only
+    from shared.billing.commercial_access import enforce_commercial_access
+
+    await enforce_commercial_access(db, user, request)
+
     return user
 
 

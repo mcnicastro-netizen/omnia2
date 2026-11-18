@@ -110,3 +110,27 @@ async def cron_expire_main_admin_transfers(user: dict = Depends(get_current_user
 
     report = await expire_due_transfers(Database.get())
     return {"ok": True, "trigger": "manual", "owner": "apscheduler", **report}
+
+
+@router.post("/billing/expire-reactivation-deroghe")
+async def cron_expire_reactivation_deroghe(user: dict = Depends(get_current_user)):
+    """MC-057 — scadenza deroghe. Trigger manuale (owner=apscheduler)."""
+    if user.get("role") not in ALLOWED_ROLES:
+        raise HTTPException(status_code=403, detail="cron_forbidden")
+    from shared.billing.commercial_access import expire_due_deroghe
+    from shared.db.connection import Database
+
+    report = await expire_due_deroghe(Database.get())
+    return {"ok": True, "trigger": "manual", "owner": "apscheduler", **report}
+
+
+@router.post("/billing/apply-day8-suspensions")
+async def cron_apply_day8_suspensions(user: dict = Depends(get_current_user)):
+    """MC-054 — past_due ≥8g → suspended. Trigger manuale (owner=apscheduler)."""
+    if user.get("role") not in ALLOWED_ROLES:
+        raise HTTPException(status_code=403, detail="cron_forbidden")
+    from shared.billing.commercial_access import apply_day8_suspensions
+    from shared.db.connection import Database
+
+    report = await apply_day8_suspensions(Database.get(), grace_days=8)
+    return {"ok": True, "trigger": "manual", "owner": "apscheduler", **report}

@@ -26,35 +26,36 @@ Registro di tutte le decisioni di business e tecniche prese durante il progetto.
 ### D-182 — MC-059 deroghe indipendenti per CC · 18-Nov-2026
 - **Decisione**: Ogni deroga è indipendente per CommercialCustomer; durate/scadenze possono differire; una deroga non altera altri clienti.
 - **SoT**: `_export_audits/MC-054-059-SOSPENSIONE-RIATTIVAZIONE-DEROGA.md`.
-- **Stato**: ✅ funzionale. ❌ codice non autorizzato / mancante.
+- **Stato**: ✅ funzionale. ✅ implementato (collection per-CC; grant supersede solo sul CC target) · branch `cursor/mc042-v2-suspend-deroga-e393`.
 
 ### D-181 — MC-058 comunicazioni automatiche deroga · 18-Nov-2026
 - **Decisione**: Email cliente alla concessione (importo, durata, scadenza, avviso risospensione); promemoria Super Admin 48h prima; a scadenza senza saldo → sospensione auto + email + notifica + audit.
 - **SoT**: stesso file MC-054…059.
-- **Stato**: ✅ funzionale. ❌ codice mancante.
+- **Stato**: ✅ funzionale. ✅ implementato (email best-effort + reminder 48h + expire notify) · 18/11.
 
 ### D-180 — MC-056/057 deroga eccezionale Super Admin + durata · 18-Nov-2026
 - **Decisione**: Super Admin può riattivare con debito residuo solo con motivazione, operatore, CC, importo dovuto, timestamp, durata, scadenza, esito, audit permanente. Durata caso per caso; scadenza obbligatoria; a scadenza senza saldo → sospensione automatica; proroga = nuova deroga. Nessuna deroga anonima.
 - **Nota**: **≠** D07 (emergency wallet mutate).
 - **SoT**: stesso file MC-054…059.
-- **Stato**: ✅ funzionale. ❌ codice mancante.
+- **Stato**: ✅ funzionale. ✅ implementato (`/ops/commercial-customers/reactivation-deroga` + job expire) · 18/11.
 
 ### D-179 — MC-055 riattivazione automatica a saldo pieno · 18-Nov-2026
 - **Decisione**: Saldo integrale confermato da Stripe → riattivazione automatica; nessuna approvazione manuale ordinaria; conservazione crediti/assegnazioni/storico; pagamento parziale non riattiva.
 - **SoT**: stesso file MC-054…059.
-- **Stato**: ✅ funzionale. ❌ codice non verificato/mancante.
+- **Stato**: ✅ funzionale. ✅ implementato su `invoice.paid` → `reactivate_cc_on_full_payment` · 18/11.
 
 ### D-178 — MC-054 sospensione mancato pagamento (giorno 8) · 18-Nov-2026
 - **Decisione**: Giorni 1–7 grace = piena operatività + notifiche Main Admin già approvate. Dal giorno 8: collaboratori bloccati; Main Admin limitato a pagamento/metodo/fatture/recupero; **bloccati** consultazione wallet/crediti, allocate, revoke, transfer, spend.
+- **Chiarimento Founder 18/11 (opzione B)**: non spegnere il login del Main Admin (serve per pagare); spegnere collaboratori + MA solo billing recovery; wallet deny anche su `billing_only`.
 - **Distinzione**: non confondere con cessazione definitiva (MC-042 / D-177).
 - **SoT**: `_export_audits/MC-054-059-SOSPENSIONE-RIATTIVAZIONE-DEROGA.md`.
-- **Stato**: ✅ funzionale. ❌ codice **non conforme** su read/allocate (post-#218 spend su suspended già negata).
+- **Stato**: ✅ funzionale. ✅ implementato (gate auth + wallet + job day-8 past_due) · 18/11.
 
 ### D-177 — MC-042 v2 cessazione definitiva (sostituisce whitelist autonoma) · 18-Nov-2026
 - **Contesto**: Secondo turno Founder 18/11; supersede interpretazione whitelist di accesso autonomo.
 - **Decisione (funzionale)**: Su cessazione definitiva: login e password disattivati; nessun accesso autonomo (anche sola lettura); nessun wallet; nessuna consultazione autonoma fatture/documenti; richieste solo via email al Super Admin. Dati (identità, nomine, ledger, movimenti, fatture, storico, docs chiusura) **conservati**. Conservazione ≠ accesso.
 - **SoT**: `_export_audits/MC-042-DECISIONE-FOUNDER.md` (v2).
-- **Stato**: ✅ funzionale vigente. Enforcement completo ❌ (wallet deny ceased = solo pezzo di #218).
+- **Stato**: ✅ funzionale vigente. ✅ implementato (login/session deny + wallet) · 18/11 · auth esplicita Founder.
 
 ### D-176 — MC-042 consultazione CC non operativo (whitelist) · 18-Nov-2026 · **SUPERATA**
 - **Contesto**: Chiusura master strato B; residuo su «consultazione limitata» (D05).
