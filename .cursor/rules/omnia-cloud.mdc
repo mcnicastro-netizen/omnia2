@@ -15,4 +15,5 @@ alwaysApply: true
 - Seed demo CRM: `backend/scripts/seed_demo_gestionale.py` (agenzia `demo-agency-001`). Login Founder da `ADMIN_EMAIL` / `ADMIN_PASSWORD` in `backend/.env` (vedi `.env.example`). Demo admin: `demo.admin@omniaecosystem.it`.
 - Push su `origin/main` solo se il Founder lo chiede esplicitamente. Non aprire PR se ha detto no PR.
 - **Essenziali senza attesa (Founder 17-Nov-2026):** per far funzionare e verificare il codice, eseguire subito ciò che è infrastrutturale/essenziale (es. CI GitHub Actions assente, fix di build/test bloccanti, dipendenze mancanti per far girare la suite). Non chiedere un secondo mandato per queste cose. Restano sotto autorizzazione esplicita: merge su `main`, deploy produzione, slice di prodotto nuove (es. B04-III), interventi Stripe/live/DB produzione.
+- **Ruoli D-175:** SoT `memory/RUOLI_GOVERNANCE_AGENT.md` + regola `ruoli-governance.mdc`. Cursor = audit/analisi/verifica; implementazione prodotto solo con `OMNIA — AUTORIZZAZIONE ESPLICITA ALL'IMPLEMENTAZIONE`. ChatGPT = gate; Founder = decisioni.
 - Lingua: italiano. Decisioni in `memory/DECISIONS.md` sono vincolanti.

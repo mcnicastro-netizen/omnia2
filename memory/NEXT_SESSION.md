@@ -1,7 +1,8 @@
 # Prossima sessione — programma passi
 
-**Aggiornato**: 17 Novembre 2026 (~16:50 CET — Europe/Rome)  
+**Aggiornato**: 18 Novembre 2026 (~12:15 CET — Europe/Rome)  
 **Repo**: https://github.com/mcnicastro-netizen/omnia2 ✅  
+**SoT chiusura**: `_export_audits/MASTER-CHIUSURA-POST-AUDIT-PIANO.md`
 
 ---
 
@@ -9,34 +10,16 @@
 
 | Item | Stato |
 |------|-------|
-| Verifica statica Blocchi 0–7 | CHIUSA |
-| B01 / B02 / B03 design | CHIUSI |
-| Slice 1 codice | **MERGIATA** — PR [#208](https://github.com/mcnicastro-netizen/omnia2/pull/208) |
-| B04 design | **CHIUSO** — SoT `_export_audits/B04-ANO-008-DESIGN-BILLING.md` (DES-01…10) |
-| B04-I (Stripe Customer / stati / catalogo) | **MERGIATA** — PR [#210](https://github.com/mcnicastro-netizen/omnia2/pull/210) |
-| B04-II (wallet / lotti / FIFO / ledger) | **MERGIATA** — PR [#211](https://github.com/mcnicastro-netizen/omnia2/pull/211) |
-| B04-H1/H2 (revoke isolation + authz wallet) | **MERGIATA** — PR [#212](https://github.com/mcnicastro-netizen/omnia2/pull/212) + CI Actions |
-| B04-H3 / H4 / migrazione legacy R-04 | NON AUTORIZZATI |
-| B04-III…VII | NON AUTORIZZATI |
-| B05–B07 / MLS / deploy prod | ESCLUSI |
+| PR #216 / #218 | **MERGED** · `main` @ `547f67f` |
+| PR #217 docs | Merge autorizzato Founder 18/11 |
+| MC-026b | **FIRMATA** `CONFORME CON RISERVE` |
+| `MASTER STRATO B CHIUSO` | **FATTO** 18/11 |
+| MC-040 / 041 / 043 | **DECISI** · impl autorizzata |
+| MC-042 v2 / MC-054…059 | Decisioni sì · impl **non** ancora nel mandato 040/041/043 |
 
-## CI
+## In corso
 
-Workflow `.github/workflows/ci.yml` attivo su `main` (suite billing/B04 unit).  
-Post-merge #212: run su `main` **success**.
-
-## Residui aperti (non bloccanti merge H1/H2)
-
-- Gap modellistico: non esiste ruolo DB `main_admin`; `agency_admin` esatto su filiale del CC può ancora amministrare quel wallet.
-- H3 (allocate solo org linkate al CC), H4 (top-up/storage con Customer Stripe del CC), censimento/migrazione legacy.
-
-## Follow-up design
-
-> `_export_audits/B04-OPEN-FOLLOWUPS.md` — **B04-OPEN-01** repricing (sessione dedicata).
-
-## Prossimo passo operativo
-
-Attendere autorizzazione Founder esplicita per il prossimo pacchetto (es. H3+H4, oppure B04-III).  
-Niente slice nuova senza mandato.
-
-SoT: `_export_audits/B04-ANO-008-DESIGN-BILLING.md` · `B04-DES-REGISTRO.md` · `B04-H1-H2-IMPLEMENTATION-REPORT.md` · D-173 · D-174
+1. Merge #217.  
+2. Implementare MC-040 (pulsante Accetta), MC-041 (job expiry), MC-043 (nomina obbligatoria).  
+3. Poi eventuale mandato per MC-042 v2 lockout / MC-054…059.  
+4. Strato C = readiness produzione (mandato separato).

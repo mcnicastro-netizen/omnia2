@@ -26,7 +26,7 @@ Approvate esplicitamente dal Founder (17 nov 2026): conformità ChatGPT 1–6/8�
 | **D02** | Multi-CC | Un User può essere Main Admin di più CommercialCustomer; ogni nomina esplicita e indipendente. |
 | **D03** | Membership | Non obbligatoria per l’autorità commerciale. La nomina **non** attribuisce accesso CRM. |
 | **D04** | Fine Membership | Non cancella automaticamente la nomina. La perdita di idoneità account → blocco immediato autorità wallet. |
-| **D05** | CC cessato | Nessuna amministrazione operativa wallet. Conservare identità, nomine, ledger/storico. Consultazione limitata secondo B16 e DES-07/08. |
+| **D05** | CC cessato | Nessuna amministrazione operativa wallet. Conservare identità, nomine, ledger/storico. Consultazione limitata secondo B16 e DES-07/08. **Precisata da MC-042 v2 / D-177 (18 nov 2026):** su cessazione definitiva **nessun** accesso autonomo (login/password off; no sola lettura self-serve; richieste via email al Super Admin). Conservazione ≠ accesso. *(D-176 whitelist autonoma chiusura+fatturazione = **SUPERATA**.)* |
 | **D06** | `group_admin` | Nessuna autorità wallet per il solo ruolo. Serve nomina esplicita Main Admin. |
 | **D07 / G7** | Super Admin allocate/revoke | **Non** privilegio ordinario. Solo intervento **straordinario**, motivato, audit append-only (attore, CC, Organization, importo, operazione, esito). Nessun aggiramento isolamento CC. Non trasferisce/attribuisce titolarità Main Admin. Coerente B02 + B16. |
 | **D08 / G8** | Notifica transfer | Sempre notifica in **Cabina OMNIA**. Email Resend **best-effort**; fallimento email non blocca consultazione/accettazione in Cabina. No token in chiaro nei log. Notifica ≠ privilegio. |
@@ -80,6 +80,7 @@ Approvate esplicitamente dal Founder (17 nov 2026): conformità ChatGPT 1–6/8�
 | A2 | UI Cabina per accept transfer | Path UX preciso sotto founder_ops — **scelta tecnica** entro D08/D10 | No |
 | A3 | Job di expiry transfer | Cron/lazy-expire on read — **scelta tecnica** entro D09 | No |
 | A4 | CC `ceased`: Main Admin può ancora accept transfer? | Consigliato **no** (stato non operativo) — allineato D05; da applicare in codice | No (implicito D05/D12) |
+| A5 / **MC-042** | Cessazione definitiva (accesso) | **v2 APPROVATA** (D-177): no accesso autonomo; Super Admin via email. Enforcement completo **mancante**; pezzo wallet #218. | No senza mandato; firma MC-026b con riserve o impl dedicata |
 
 Nessuna di queste riapre governance §14.
 

@@ -20,7 +20,7 @@ D01–D12 come in `_export_audits/B04-H2-MAIN-ADMIN-DECISIONS-CONFORMITY.md`
 | **D02** multi-CC | `agency_id` vince e mismatch con CC esplicito → 403 | `commercial_customer_id` esplicito **vince**; auth resta su assert per-CC. Fallback agency solo se CC assente. |
 | **D04/D11** idoneità | `is_active is False` deny; assente/null passava | Serve `is_active is True` (assente/null/False → non idoneo). |
 | **Opzionale Ops force** | Overwrite silenzioso se MA già presente | Senza `force=true` → 409; con force + reason ≥8 → `ops_replace` auditato. |
-| **Opzionale read limitata** | — | **Non implementata**: “consultazione limitata” non ha campo/whitelist definiti nei documenti approvati. Segnalata come residuo. |
+| **Opzionale read limitata** | Prima: non definita → D-176 whitelist | **MC-042 v2 / D-177 (18/11/2026):** cessazione = **nessun** accesso autonomo; Super Admin via email. D-176 **SUPERATA**. Pezzo wallet deny su ceased: PR **#218** mergiata; lockout totale **non** implementato. |
 
 ## Modello autorizzazione
 
@@ -84,7 +84,7 @@ Attesa/verificata su push del branch PR #216 (job `Backend billing / B04 unit`).
 
 - UI Cabina per accept transfer: API pronta; schermata FE non in scope.
 - Job expiry: lazy on accept/propose (D09).
-- Read wallet su CC cessato/non operativo: ancora consentita (consultazione); **whitelist campi “limitata” non definita** → non implementata in questo fix.
+- Cessazione / wallet: **MC-042 v2** (no accesso autonomo). Su `main` post-#218: deny wallet operativo su ceased + fail-open CC; **non** lockout login/piattaforma né canale Super Admin. Sospensione giorno 8 / deroga: **MC-054…059** — decisioni sì, codice no (salvo spend su suspended).
 - H3/H4/legacy/B04-III: **non toccati** (verifica: modifiche solo ai file elenco sopra + export audit H2).
 
 ## Conferma perimetro

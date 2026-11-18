@@ -47,4 +47,15 @@ Estratti il **14 nov 2026 ~11:10 Europe/Rome** dai transcript cloud Cursor.
 31. `B04-H2-MAIN-ADMIN-TECHNICAL-DESIGN.md` — Design tecnico H2 Main Admin.
 32. `B04-H2-MAIN-ADMIN-DECISIONS-CONFORMITY.md` — D01–D12 §14 chiuso.
 33. `B04-H2-MAIN-ADMIN-RESIDUAL-IMPLEMENTATION-REPORT.md` — Report implementazione H2.
-34. `B04-H2-MAIN-ADMIN-HANDOFF-CHATGPT.md` — **Pacchetto analisi ChatGPT** post-impl (PR #216, CI verde, no merge).
+34. `B04-H2-MAIN-ADMIN-HANDOFF-CHATGPT.md` — Pacchetto analisi ChatGPT post-impl H2 (storico pre-merge).
+35. `MASTER-CHIUSURA-POST-AUDIT-PIANO.md` — **SoT piano chiusura master post-audit** (strati A/B/C, inventario MC-001…). Baseline `main` @ `c3baebc` (PR #216 mergiata).
+36. `MASTER-CHIUSURA-HANDOFF-CHATGPT.md` — Pacchetto revisione ChatGPT del piano (formato A–F; PR #217).
+37. `MASTER-CHIUSURA-CHATGPT-REVIEW-2026-11-17.md` — Esito revisione: IDONEO CON CORREZIONI.
+38. `B04-H2-OPS-RUNBOOK-MAIN-ADMIN-NOMINA.md` — Runbook Ops nomina Main Admin (MC-043).
+39. `MASTER-STRATO-B-REPORT-FINALE-BOZZA.md` — Bozza firma chiusura strato B (MC-052).
+40. `PAUSA-2026-11-17-RIPRENDI-MASTER-CHIUSURA.md` — Pausa sera 17 nov · ripresa chiusura master.
+41. `memory/RUOLI_GOVERNANCE_AGENT.md` — **D-175** ruoli Founder/ChatGPT/Cursor (vincolante).
+42. `memory/manuale/00-governance-agent-cursor.md` — capitolo ops governance agent.
+43. `MC-042-DECISIONE-FOUNDER.md` — **MC-042 v2 / D-177** cessazione definitiva (no accesso autonomo); D-176 SUPERATA.
+44. `MC-054-059-SOSPENSIONE-RIATTIVAZIONE-DEROGA.md` — **D-178…182** sospensione giorno 8, riattivazione, deroga SA.
+45. `MC-026b-CHECKLIST-PRE-FIRMA.md` — checklist pre-firma MC-026b (non firmata).

@@ -7,6 +7,72 @@ Registro di tutte le decisioni di business e tecniche prese durante il progetto.
 
 ## Decisioni prese
 
+### D-185 — MC-043 nomina Main Admin obbligatoria su CC nuovo · 18-Nov-2026
+- **Decisione**: Cliente commerciale nuovo → nomina Main Admin **obbligatoria**; solo dopo sblocco operativo wallet. Founder: «richiedere nomina (obbligatorio) al cliente nuovo e sbloccare».
+- **Stato**: ✅ deciso. Implementazione autorizzata 18/11.
+
+### D-184 — MC-041 job automatico expiry transfer 48h · 18-Nov-2026
+- **Decisione**: Expiry proposte Main Admin con **job automatico** (non solo lazy on-touch).
+- **Stato**: ✅ deciso. Implementazione autorizzata 18/11.
+
+### D-183 — MC-040 pulsante Accetta transfer in Cabina · 18-Nov-2026
+- **Decisione**: Creare pulsante/UI Accetta proposta Main Admin in Cabina/notifiche.
+- **Stato**: ✅ deciso. Implementazione autorizzata 18/11.
+
+### D-182b — Firma MC-026b + MASTER STRATO B CHIUSO · 18-Nov-2026
+- **Decisione**: MC-026b = `CONFORME CON RISERVE` (MC-042 v2 lockout; MC-054 wallet giorno 8 completo; MC-055…059). Dichiarato `MASTER STRATO B CHIUSO`. Merge docs #217 autorizzato.
+- **Stato**: ✅ firmato Founder 18/11/2026.
+
+### D-182 — MC-059 deroghe indipendenti per CC · 18-Nov-2026
+- **Decisione**: Ogni deroga è indipendente per CommercialCustomer; durate/scadenze possono differire; una deroga non altera altri clienti.
+- **SoT**: `_export_audits/MC-054-059-SOSPENSIONE-RIATTIVAZIONE-DEROGA.md`.
+- **Stato**: ✅ funzionale. ❌ codice non autorizzato / mancante.
+
+### D-181 — MC-058 comunicazioni automatiche deroga · 18-Nov-2026
+- **Decisione**: Email cliente alla concessione (importo, durata, scadenza, avviso risospensione); promemoria Super Admin 48h prima; a scadenza senza saldo → sospensione auto + email + notifica + audit.
+- **SoT**: stesso file MC-054…059.
+- **Stato**: ✅ funzionale. ❌ codice mancante.
+
+### D-180 — MC-056/057 deroga eccezionale Super Admin + durata · 18-Nov-2026
+- **Decisione**: Super Admin può riattivare con debito residuo solo con motivazione, operatore, CC, importo dovuto, timestamp, durata, scadenza, esito, audit permanente. Durata caso per caso; scadenza obbligatoria; a scadenza senza saldo → sospensione automatica; proroga = nuova deroga. Nessuna deroga anonima.
+- **Nota**: **≠** D07 (emergency wallet mutate).
+- **SoT**: stesso file MC-054…059.
+- **Stato**: ✅ funzionale. ❌ codice mancante.
+
+### D-179 — MC-055 riattivazione automatica a saldo pieno · 18-Nov-2026
+- **Decisione**: Saldo integrale confermato da Stripe → riattivazione automatica; nessuna approvazione manuale ordinaria; conservazione crediti/assegnazioni/storico; pagamento parziale non riattiva.
+- **SoT**: stesso file MC-054…059.
+- **Stato**: ✅ funzionale. ❌ codice non verificato/mancante.
+
+### D-178 — MC-054 sospensione mancato pagamento (giorno 8) · 18-Nov-2026
+- **Decisione**: Giorni 1–7 grace = piena operatività + notifiche Main Admin già approvate. Dal giorno 8: collaboratori bloccati; Main Admin limitato a pagamento/metodo/fatture/recupero; **bloccati** consultazione wallet/crediti, allocate, revoke, transfer, spend.
+- **Distinzione**: non confondere con cessazione definitiva (MC-042 / D-177).
+- **SoT**: `_export_audits/MC-054-059-SOSPENSIONE-RIATTIVAZIONE-DEROGA.md`.
+- **Stato**: ✅ funzionale. ❌ codice **non conforme** su read/allocate (post-#218 spend su suspended già negata).
+
+### D-177 — MC-042 v2 cessazione definitiva (sostituisce whitelist autonoma) · 18-Nov-2026
+- **Contesto**: Secondo turno Founder 18/11; supersede interpretazione whitelist di accesso autonomo.
+- **Decisione (funzionale)**: Su cessazione definitiva: login e password disattivati; nessun accesso autonomo (anche sola lettura); nessun wallet; nessuna consultazione autonoma fatture/documenti; richieste solo via email al Super Admin. Dati (identità, nomine, ledger, movimenti, fatture, storico, docs chiusura) **conservati**. Conservazione ≠ accesso.
+- **SoT**: `_export_audits/MC-042-DECISIONE-FOUNDER.md` (v2).
+- **Stato**: ✅ funzionale vigente. Enforcement completo ❌ (wallet deny ceased = solo pezzo di #218).
+
+### D-176 — MC-042 consultazione CC non operativo (whitelist) · 18-Nov-2026 · **SUPERATA**
+- **Contesto**: Chiusura master strato B; residuo su «consultazione limitata» (D05).
+- **Decisione originale**: sola lettura autonoma documenti chiusura + fatturazione; vietata wallet operativa.
+- **Stato**: ⚠️ **SUPERATA** da **D-177 / MC-042 v2** (stesso giorno). Conservata per cronologia. Non usare come SoT operativo.
+
+### D-175 — Ruoli governance Founder / ChatGPT / Cursor · 17-Nov-2026
+- **Contesto**: Post-audit master. Senza confronto ChatGPT e senza gate, mesi di delivery avrebbero potuto far apparire «pronto» un prodotto incompleto. Formalizzati i ruoli ricostruiti e confermati dal Founder.
+- **Decisione**:
+  1. **Founder**: proprietà, decisioni funzionali, autorizzazioni, firme di chiusura.
+  2. **ChatGPT**: analisi, coordinamento, valutazione critica, istruzioni per Cursor — non implementa nel repo.
+  3. **Cursor**: (a) auditor tecnico, (b) analista/documentatore, (c) verificatore, (d) implementatore **solo** con frase esatta `OMNIA — AUTORIZZAZIONE ESPLICITA ALL'IMPLEMENTAZIONE` e scope stretto.
+  4. Cursor distingue implementato / parziale / assente / non verificabile; non decide autonomamente cosa OMNIA debba diventare; non dichiara «pronto» senza stati espliciti.
+  5. Criterio operativo: una slice · un mandato · una verifica; residui classificati; ChatGPT sui gate.
+- **SoT**: `memory/RUOLI_GOVERNANCE_AGENT.md` · `.cursor/rules/ruoli-governance.mdc` · `memory/manuale/00-governance-agent-cursor.md` · HAL `api.governance-*`.
+- **Stato**: ✅ DECISO · vincolante da 17-Nov-2026.
+
+
 ### D-174 — Design B03 chiuso · sessioni, email, inviti (B03-DEC-01…03) · 17-Nov-2026
 - **Contesto**: Design B03 (ANO-003/005) prodotto e chiuso. B01/B02 non riaperti.
 - **Decisione**:

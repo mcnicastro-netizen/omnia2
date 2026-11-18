@@ -1,8 +1,8 @@
 # B04 — Registro decisioni di design (Billing / ANO-008)
 
-**Aggiornato:** 17 novembre 2026 · Europe/Rome  
-**Natura:** design solo. **Nessuna implementazione autorizzata.**  
-**Stato:** **DESIGN B04 CHIUSO** (DES-01…10).  
+**Aggiornato:** 18 novembre 2026 · Europe/Rome  
+**Natura:** design + decisioni Founder successive.  
+**Stato:** **DESIGN B04 CHIUSO** (DES-01…10) + precisazioni MC-042 v2 / MC-054…059.  
 **SoT completo:** `_export_audits/B04-ANO-008-DESIGN-BILLING.md`
 
 **Vincoli:** B01–B03 chiusi; decisioni B16 approvate non riapribili; B05–B07 esclusi.
@@ -22,6 +22,9 @@
 | B04-DES-06 | 17/11/2026 | Allowance/cicli/upgrade/downgrade/grazia/idempotenza/cessazione (P01–P07 + X1…X3) | Approvata |
 | B04-DES-07 | 17/11/2026 | Entitlements operativi per stato (pre-attivazione→cessazione) | Approvata |
 | B04-DES-08 | 17/11/2026 | Area Amministrazione e fatturazione B2B (Main vs Branch Admin) | Approvata |
+| MC-042 / D-176 | 18/11/2026 | Whitelist autonoma chiusura+fatturazione | **SUPERATA** da MC-042 v2 |
+| MC-042 v2 / D-177 | 18/11/2026 | Cessazione definitiva: nessun accesso autonomo; Super Admin via email; dati conservati | Approvata funzionale; enforcement completo no (#218 pezzo wallet) |
+| MC-054…059 / D-178…182 | 18/11/2026 | Sospensione giorno 8, riattivazione auto, deroga SA, durata, comms, indipendenza | Approvate funzionali; codice mancante/non conforme pezzi |
 | B04-DES-09 | 17/11/2026 | Mapping eventi Stripe → azioni OMNIA (principi, non auto-state) | Approvata |
 | B04-DES-10 | 17/11/2026 | Casi limite multi-Organization; P.IVA invariabile; no transfer silenzioso | Approvata |
 

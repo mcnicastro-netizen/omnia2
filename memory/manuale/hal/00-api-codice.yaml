@@ -1551,3 +1551,61 @@ voci:
       permessi:
         - super_admin / Founder
       screenshot: []
+
+  - id: api.governance-ruoli
+    titolo: Ruoli Founder / ChatGPT / Cursor (D-175)
+    modulo: Codice API
+    widget: null
+    pubblico: [super_admin]
+    livello: avanzato
+    tags: [codice, governance, cursor, chatgpt, founder, d-175, audit]
+    correlati: [api.governance-autorizzazione, api.cloud-secrets-vault]
+    domanda_naturale: "Quali sono i ruoli di Cursor e ChatGPT su OMNIA?"
+    contenuto:
+      a_cosa_serve: >
+        Definisce chi decide e chi tocca il repository dopo gli audit master.
+        Founder = decisioni e autorizzazioni. ChatGPT = analisi e gate.
+        Cursor = auditor/analista/verificatore; implementatore solo se autorizzato.
+      quando_si_usa: >
+        Prima di chiedere codice; quando un agent propone feature fuori scope;
+        quando si discute se OMNIA è «pronto».
+      passi:
+        - "Leggere memory/RUOLI_GOVERNANCE_AGENT.md e D-175."
+        - "Cursor distingue: implementato / parziale / assente / non verificabile."
+        - "Non trasformare gap tecnici in decisioni funzionali."
+        - "Nessuna dichiarazione di pronto senza stati espliciti (strati A/B/C)."
+      errori_comuni:
+        - problema: "Cursor implementa senza mandato"
+          soluzione: "Serve la frase OMNIA — AUTORIZZAZIONE ESPLICITA ALL'IMPLEMENTAZIONE."
+        - problema: "Si confonde codice presente con prodotto affidabile"
+          soluzione: "Verificatore: non dichiarare funzionante solo perché c'è codice."
+      permessi:
+        - super_admin / Founder
+      screenshot: []
+
+  - id: api.governance-autorizzazione
+    titolo: Autorizzazione esplicita all'implementazione (D-175)
+    modulo: Codice API
+    widget: null
+    pubblico: [super_admin]
+    livello: avanzato
+    tags: [codice, governance, autorizzazione, d-175, implementazione]
+    correlati: [api.governance-ruoli]
+    domanda_naturale: "Quando Cursor può modificare il codice di OMNIA?"
+    contenuto:
+      a_cosa_serve: >
+        Gate di implementazione. Senza autorizzazione esplicita del Founder,
+        Cursor fa audit, report, test e documentazione — non scrive prodotto.
+      quando_si_usa: >
+        Prima di ogni slice di codice; merge main; deploy; Stripe live; migrazioni.
+      passi:
+        - "Frase obbligatoria: OMNIA — AUTORIZZAZIONE ESPLICITA ALL'IMPLEMENTAZIONE."
+        - "Scope stretto: non ampliare H3/H4/B04-III o altro senza nuovo mandato."
+        - "Eccezione infrastrutturale: CI/build/test essenziali (omnia-cloud.mdc)."
+        - "Dopo lo ship: aggiornare DECISIONS/report; residui classificati."
+      errori_comuni:
+        - problema: "Autorizzazione generica «sistema pure»"
+          soluzione: "Serve scope esplicito (file/endpoint/slice) + frase D-175."
+      permessi:
+        - super_admin / Founder
+      screenshot: []
