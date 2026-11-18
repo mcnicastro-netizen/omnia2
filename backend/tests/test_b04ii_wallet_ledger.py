@@ -179,14 +179,22 @@ class FakeDB:
         self.credit_ledger = FakeColl()
         self.agencies = FakeColl()
         self.commercial_customers = FakeColl()
+        self.commercial_main_admin_events = FakeColl()
+
+    def __getitem__(self, name):
+        if not hasattr(self, name):
+            setattr(self, name, FakeColl())
+        return getattr(self, name)
 
 
 def _seed_cc_agency(db: FakeDB, *, cc_id="cc1", agency_id="ag1", status="active"):
+    from shared.models.commercial_customer import operational_status_for
+
     db.commercial_customers.docs.append(
         {
             "id": cc_id,
             "commercial_status": status,
-            "operational_status": "full" if status == "active" else "none",
+            "operational_status": operational_status_for(status),
         }
     )
     db.agencies.docs.append(

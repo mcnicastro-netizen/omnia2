@@ -187,13 +187,24 @@ async def staging_credits_check(
     num_variants: int = 1,
     user=Depends(get_current_user),
 ) -> Dict[str, Any]:
-    """A-013 — pre-check saldo before starting an expensive AI render."""
+    """A-013 — pre-check saldo before starting an expensive AI render.
+
+    MC-042: su CC non operativo non espone saldi (deny).
+    """
     n = max(1, min(int(num_variants or 1), 4))
     required = STAGING_CREDIT_COST * n
     agency_id = optional_agency_id(user)
     balance = 0
     if agency_id:
         db = Database.get()
+        from shared.billing.main_admin_service import assert_agency_wallet_operable
+
+        await assert_agency_wallet_operable(
+            db,
+            agency_id,
+            actor_user_id=(user or {}).get("id"),
+            operation="staging_credits_check",
+        )
         wallet = await db.credit_wallets.find_one({"agency_id": agency_id}, {"_id": 0, "balance": 1})
         balance = int((wallet or {}).get("balance") or 0)
     return {
@@ -280,6 +291,14 @@ async def generate_staging(
     # A-013 — hard-gate crediti PRIMA di avviare SAM2/Flux
     n_var = max(1, min(int(body.num_variants or 1), 4))
     required = STAGING_CREDIT_COST * n_var
+    from shared.billing.main_admin_service import assert_agency_wallet_operable
+
+    await assert_agency_wallet_operable(
+        db,
+        agency_id,
+        actor_user_id=user.get("id"),
+        operation="staging_spend",
+    )
     wallet = await db.credit_wallets.find_one({"agency_id": agency_id}, {"_id": 0, "balance": 1})
     balance = int((wallet or {}).get("balance") or 0)
     if balance < required:

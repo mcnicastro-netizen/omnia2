@@ -191,8 +191,21 @@ async def get_setup_journey(user: dict = Depends(get_current_user)):
         {"agency_id": aid, "status": "pending"}
     )
 
+    from shared.billing.main_admin_service import (
+        cc_is_wallet_operable,
+        get_commercial_customer,
+    )
+
     wallet = await db.credit_wallets.find_one({"agency_id": aid}, {"balance": 1})
     credits_balance = int((wallet or {}).get("balance") or 0)
+    # MC-042 — deny-by-default: senza CC valido/operabile non esporre saldo
+    cc_id = (agency.get("commercial_customer_id") or "").strip() or None
+    if not cc_id:
+        credits_balance = None
+    else:
+        cc_doc = await get_commercial_customer(db, cc_id)
+        if not cc_doc or not cc_is_wallet_operable(cc_doc):
+            credits_balance = None
 
     site_step = (journey.get("steps") or {}).get("site") or {}
     site_choice = site_step.get("choice")

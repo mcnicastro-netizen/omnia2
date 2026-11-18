@@ -91,7 +91,27 @@ async def get_commercial_customer(db, cc_id: str) -> Optional[dict]:
 
 
 def cc_allows_wallet_mutation(cc: dict) -> bool:
-    """D05/D12 — cessazione e stati non operativi: no mutate."""
+    """D05/D12 — cessazione e stati non operativi: no mutate wallet."""
+    return cc_is_wallet_operable(cc)
+
+
+def cc_allows_wallet_admin_read(cc: dict) -> bool:
+    """MC-042 — consultazione operativa wallet vietata se CC non operativo.
+
+    Whitelist residua (chiusura/fatturazione) non passa da questo gate:
+    vive su endpoint documenti dedicati, non su wallet_summary/saldi.
+    """
+    return cc_is_wallet_operable(cc)
+
+
+def cc_is_wallet_operable(cc: Optional[dict]) -> bool:
+    """True solo se il CC consente accesso operativo al wallet (read o mutate).
+
+    Non-operabile (MC-042 / D05): ``ceased`` oppure
+    ``operational_status`` in ``none`` / ``closed_readonly``.
+    """
+    if not cc:
+        return False
     status = cc.get("commercial_status") or "pre_activation"
     if status == "ceased":
         return False
@@ -101,9 +121,77 @@ def cc_allows_wallet_mutation(cc: dict) -> bool:
     return True
 
 
-def cc_allows_wallet_admin_read(cc: dict) -> bool:
-    """Lettura admin: consentita anche in closed_readonly/ceased per consultazione limitata."""
-    return True
+async def assert_cc_wallet_operable(
+    db,
+    commercial_customer_id: str,
+    *,
+    actor_user_id: Optional[str] = None,
+    operation: str = "wallet_access",
+) -> dict:
+    """MC-042 — deny-by-default su CC non operativo per qualsiasi accesso wallet operativo."""
+    cc = await get_commercial_customer(db, commercial_customer_id)
+    if not cc:
+        raise HTTPException(status_code=404, detail={"error": "commercial_customer_not_found"})
+    if not cc_is_wallet_operable(cc):
+        await append_main_admin_event(
+            db,
+            commercial_customer_id=commercial_customer_id,
+            event_type="deny_attempt",
+            actor_user_id=actor_user_id,
+            outcome="denied",
+            reason="cc_not_operable",
+            meta={"operation": operation},
+        )
+        raise HTTPException(status_code=403, detail={"error": "cc_not_operable"})
+    return cc
+
+
+async def assert_agency_wallet_operable(
+    db,
+    agency_id: str,
+    *,
+    actor_user_id: Optional[str] = None,
+    operation: str = "wallet_access",
+) -> dict:
+    """MC-042 — resolve CC da Organization e applica gate wallet.
+
+    Deny-by-default: Organization assente, senza ``commercial_customer_id``,
+    o con CC non risolvibile → nessun accesso operativo implicito.
+    """
+    if not (agency_id or "").strip():
+        raise HTTPException(
+            status_code=403,
+            detail={"error": "commercial_customer_required"},
+        )
+    agency = await db.agencies.find_one(
+        {"id": agency_id}, {"commercial_customer_id": 1}
+    )
+    if not agency:
+        raise HTTPException(
+            status_code=403,
+            detail={"error": "commercial_customer_required"},
+        )
+    cc_id = (agency.get("commercial_customer_id") or "").strip() or None
+    if not cc_id:
+        await append_main_admin_event(
+            db,
+            commercial_customer_id="unlinked",
+            event_type="deny_attempt",
+            actor_user_id=actor_user_id,
+            outcome="denied",
+            reason="commercial_customer_required",
+            meta={"operation": operation, "organization_id": agency_id},
+        )
+        raise HTTPException(
+            status_code=403,
+            detail={"error": "commercial_customer_required"},
+        )
+    return await assert_cc_wallet_operable(
+        db,
+        cc_id,
+        actor_user_id=actor_user_id,
+        operation=operation,
+    )
 
 
 async def assert_is_main_admin_of(
@@ -112,13 +200,22 @@ async def assert_is_main_admin_of(
     commercial_customer_id: str,
     *,
     for_mutation: bool = False,
+    require_wallet_operable: Optional[bool] = None,
 ) -> dict:
-    """Deny-by-default Main Admin check. Returns CC doc."""
+    """Deny-by-default Main Admin check. Returns CC doc.
+
+    ``require_wallet_operable``: se omesso, True quando ``for_mutation`` (D12),
+    altrimenti False (identità Main Admin anche su CC ceased — conservazione
+    nomine). I path wallet passano ``require_wallet_operable=True`` anche in read (MC-042).
+    """
     cc = await get_commercial_customer(db, commercial_customer_id)
     if not cc:
         raise HTTPException(status_code=404, detail={"error": "commercial_customer_not_found"})
 
-    if for_mutation and not cc_allows_wallet_mutation(cc):
+    check_operable = (
+        for_mutation if require_wallet_operable is None else require_wallet_operable
+    )
+    if check_operable and not cc_is_wallet_operable(cc):
         await append_main_admin_event(
             db,
             commercial_customer_id=commercial_customer_id,
