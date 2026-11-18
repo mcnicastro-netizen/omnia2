@@ -14,15 +14,17 @@
 | PR #217…#222 | **Tutte MERGED** su `main` |
 | CI tip `main` | **verde** (job B04 unit) |
 | Strato A | **Chiuso** |
-| Strato B + riserve MC-026b | **Codice completo** · rapporto finale prodotto · **attende firma Founder §10** |
+| Strato B + riserve MC-026b | **Affrontate** · **R-01 aperto** (refresh post-cease) · §10 revisionato |
 | MC-045 / H3 | **Chiusa** (#222) |
+| PR #223 docs | **OPEN** — revisione R-01 pushata · **no merge** finché Founder non decide |
 | Strato C / dogfood guarantee | **Non incluso** nel Master |
 
 ## Prossimo
 
-1. Founder firma (o rifiuta) chiusura Master in rapporto §10.  
-2. Solo dopo: pacchetto **dogfood readiness** (lista gap in rapporto §11) — mandato separato.  
-3. **Non** Stripe live / prod senza mandato dedicato.
+1. Founder classifica **R-01** (riserva esplicita **oppure** fix obbligatorio) — §10 opzioni A/B/C.  
+2. Solo dopo: eventuale merge #223 e/o mandato fix R-01.  
+3. Dogfood readiness = dopo Master (§11 rapporto).  
+4. **Non** Stripe live / prod senza mandato dedicato.
 
 ## Non fare
 
