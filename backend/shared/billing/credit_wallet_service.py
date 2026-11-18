@@ -210,6 +210,13 @@ async def grant_lot(
     """Create a credit lot on the central wallet. Optionally allocate to one org."""
     if amount <= 0:
         raise ValueError("amount_must_be_positive")
+    # MC-045 / H3 — se auto-allocate, valida link org↔CC prima di qualsiasi grant
+    if allocate_to_organization_id:
+        await assert_organization_linked_to_cc(
+            db,
+            commercial_customer_id=commercial_customer_id,
+            organization_id=allocate_to_organization_id,
+        )
     if idempotency_key:
         existing_lot = await db.credit_lots.find_one(
             {"idempotency_key": idempotency_key}, {"_id": 0}
@@ -268,6 +275,55 @@ async def grant_lot(
     return {k: v for k, v in lot.items() if k != "_id"}
 
 
+async def assert_organization_linked_to_cc(
+    db,
+    *,
+    commercial_customer_id: str,
+    organization_id: str,
+) -> dict:
+    """MC-045 / H3 — deny-by-default: org deve esistere ed essere linkata al CC.
+
+    Nessun auto-link, nessuna creazione org. Fallisce prima di qualsiasi mutazione.
+    """
+    if not (commercial_customer_id or "").strip():
+        raise HTTPException(
+            status_code=400,
+            detail={"error": "commercial_customer_required"},
+        )
+    if not (organization_id or "").strip():
+        raise HTTPException(
+            status_code=400,
+            detail={"error": "organization_id_required"},
+        )
+    agency = await db.agencies.find_one(
+        {"id": organization_id},
+        {"_id": 0, "id": 1, "commercial_customer_id": 1},
+    )
+    if not agency:
+        raise HTTPException(
+            status_code=404,
+            detail={"error": "organization_not_found"},
+        )
+    org_cc = (agency.get("commercial_customer_id") or "").strip()
+    if not org_cc:
+        raise HTTPException(
+            status_code=400,
+            detail={
+                "error": "organization_not_linked_to_cc",
+                "hint": "Organization senza CommercialCustomer collegato",
+            },
+        )
+    if org_cc != commercial_customer_id.strip():
+        raise HTTPException(
+            status_code=400,
+            detail={
+                "error": "cross_vat_transfer_forbidden",
+                "hint": "Nessun trasferimento crediti tra P.IVA differenti",
+            },
+        )
+    return agency
+
+
 async def allocate_credits(
     db,
     *,
@@ -284,26 +340,18 @@ async def allocate_credits(
     await _assert_cc_wallet_operable_for_service(
         db, commercial_customer_id, operation="allocate"
     )
+    # MC-045 / H3 — prima di qualsiasi mutazione
+    await assert_organization_linked_to_cc(
+        db,
+        commercial_customer_id=commercial_customer_id,
+        organization_id=organization_id,
+    )
     if idempotency_key:
         existing = await db.cc_credit_ledger.find_one(
             {"idempotency_key": idempotency_key}, {"_id": 0}
         )
         if existing:
             return []
-
-    # Verify org belongs to same CC (no cross-P.IVA)
-    agency = await db.agencies.find_one(
-        {"id": organization_id}, {"commercial_customer_id": 1}
-    )
-    org_cc = (agency or {}).get("commercial_customer_id")
-    if org_cc and org_cc != commercial_customer_id:
-        raise HTTPException(
-            status_code=400,
-            detail={
-                "error": "cross_vat_transfer_forbidden",
-                "hint": "Nessun trasferimento crediti tra P.IVA differenti",
-            },
-        )
 
     remaining_to_alloc = int(amount)
     created: list[dict] = []
