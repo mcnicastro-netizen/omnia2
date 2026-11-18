@@ -51,4 +51,5 @@ jobs:
             tests/test_mc045_h3_allocate_link.py \
             tests/test_mc042_v2_suspend_deroga.py \
             tests/test_mc042_cc_non_operable_wallet.py \
-            tests/test_mc042_r01_refresh_cease.py
+            tests/test_mc042_r01_refresh_cease.py \
+            tests/test_r03_allocate_concurrency.py

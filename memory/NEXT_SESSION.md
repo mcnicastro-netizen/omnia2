@@ -20,9 +20,10 @@
 ## Prossimo (post-Master)
 
 1. Pacchetto **dogfood readiness** (checklist + smoke) — mandato Founder  
-2. ~~R-02 CI~~ — **CHIUSO** (#225 / `eee82e3`) — H3/MC-042/R-01 nel job B04  
-3. MC-046 / H4 se in scope dogfood  
-4. **Non** Stripe live senza mandato dedicato  
+2. ~~R-02 CI~~ — **CHIUSO** (#225)  
+3. ~~R-03 allocate concurrency~~ — in corso `cursor/r03-allocate-concurrency-e393`  
+4. MC-046 / H4 se in scope dogfood  
+5. **Non** Stripe live senza mandato dedicato  
 
 ## Non fare
 

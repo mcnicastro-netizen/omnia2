@@ -232,6 +232,8 @@ async def grant_lot(
         "origin": origin,
         "original_qty": int(amount),
         "remaining_qty": int(amount),
+        # R-03 — qty ancora non allocata a org (claim atomico in allocate)
+        "unallocated_qty": int(amount),
         "idempotency_key": idempotency_key,
         "created_at": _now(),
         "updated_at": _now(),
@@ -324,6 +326,44 @@ async def assert_organization_linked_to_cc(
     return agency
 
 
+async def _ensure_lot_unallocated_qty(db, lot: dict) -> int:
+    """R-03 — backfill ``unallocated_qty`` su lotti legacy (derivato una tantum)."""
+    lot_id = lot.get("id")
+    if not lot_id:
+        return 0
+    if "unallocated_qty" in lot and lot.get("unallocated_qty") is not None:
+        return int(lot.get("unallocated_qty") or 0)
+    allocs = await db.credit_allocations.find(
+        {"lot_id": lot_id}, {"_id": 0, "remaining_qty": 1}
+    ).to_list(length=10_000)
+    allocated = sum(int(a.get("remaining_qty") or 0) for a in allocs)
+    free = max(0, int(lot.get("remaining_qty") or 0) - allocated)
+    updated = await db.credit_lots.find_one_and_update(
+        {"id": lot_id, "unallocated_qty": {"$exists": False}},
+        {"$set": {"unallocated_qty": free, "updated_at": _now()}},
+        return_document=ReturnDocument.AFTER,
+    )
+    if updated is not None:
+        return int(updated.get("unallocated_qty") or 0)
+    # Race: un altro writer ha già creato il campo
+    fresh = await db.credit_lots.find_one({"id": lot_id}, {"_id": 0, "unallocated_qty": 1})
+    return int((fresh or {}).get("unallocated_qty") or 0)
+
+
+async def _release_unallocated_qty(db, lot_id: str, qty: int) -> None:
+    """Ritorna qty al pool unallocated del lotto (compensate / revoke)."""
+    if qty <= 0 or not lot_id:
+        return
+    lot = await db.credit_lots.find_one({"id": lot_id}, {"_id": 0})
+    if not lot:
+        return
+    await _ensure_lot_unallocated_qty(db, lot)
+    await db.credit_lots.update_one(
+        {"id": lot_id},
+        {"$inc": {"unallocated_qty": int(qty)}, "$set": {"updated_at": _now()}},
+    )
+
+
 async def allocate_credits(
     db,
     *,
@@ -334,7 +374,11 @@ async def allocate_credits(
     reason: str = "allocate",
     idempotency_key: Optional[str] = None,
 ) -> list[dict]:
-    """Allocate unallocated lot qty to an Organization (FIFO, optionally prefer one lot)."""
+    """Allocate unallocated lot qty to an Organization (FIFO, optionally prefer one lot).
+
+    R-03 — claim atomico su ``credit_lots.unallocated_qty`` (stesso idioma di debit/revoke)
+    per evitare over-allocation con allocate concorrenti.
+    """
     if amount <= 0:
         raise ValueError("amount_must_be_positive")
     await _assert_cc_wallet_operable_for_service(
@@ -355,6 +399,7 @@ async def allocate_credits(
 
     remaining_to_alloc = int(amount)
     created: list[dict] = []
+    claimed: list[tuple[str, int]] = []  # (lot_id, take) — per compensate
 
     async def _lots_cursor():
         q: dict[str, Any] = {
@@ -381,36 +426,43 @@ async def allocate_credits(
         )
 
     lots = await _lots_cursor()
-    # Unallocated per lot = remaining_qty - sum(allocations remaining on that lot)
     for lot in lots:
         if remaining_to_alloc <= 0:
             break
         lot_id = lot["id"]
-        allocs = await db.credit_allocations.find(
-            {"lot_id": lot_id}, {"_id": 0, "remaining_qty": 1}
-        ).to_list(length=10_000)
-        allocated = sum(int(a.get("remaining_qty") or 0) for a in allocs)
-        free = int(lot.get("remaining_qty") or 0) - allocated
+        free = await _ensure_lot_unallocated_qty(db, lot)
         if free <= 0:
             continue
         take = min(free, remaining_to_alloc)
-        # Atomic: ensure lot still has enough remaining
-        updated_lot = await db.credit_lots.find_one_and_update(
-            {"id": lot_id, "remaining_qty": {"$gte": 0}},
-            {"$set": {"updated_at": _now()}},
+        # Claim atomico — due allocate paralleli non possono prendere la stessa qty
+        claimed_lot = await db.credit_lots.find_one_and_update(
+            {"id": lot_id, "unallocated_qty": {"$gte": take}},
+            {
+                "$inc": {"unallocated_qty": -take},
+                "$set": {"updated_at": _now()},
+            },
             return_document=ReturnDocument.AFTER,
         )
-        if not updated_lot:
-            continue
-        # Re-check free after lock-ish read
-        allocs = await db.credit_allocations.find(
-            {"lot_id": lot_id}, {"_id": 0, "remaining_qty": 1}
-        ).to_list(length=10_000)
-        allocated = sum(int(a.get("remaining_qty") or 0) for a in allocs)
-        free = int(updated_lot.get("remaining_qty") or 0) - allocated
-        if free <= 0:
-            continue
-        take = min(free, remaining_to_alloc)
+        if not claimed_lot:
+            # qty già presa da altro writer — riprova con free aggiornato
+            fresh = await db.credit_lots.find_one(
+                {"id": lot_id}, {"_id": 0, "unallocated_qty": 1}
+            )
+            free2 = int((fresh or {}).get("unallocated_qty") or 0)
+            if free2 <= 0:
+                continue
+            take = min(free2, remaining_to_alloc)
+            claimed_lot = await db.credit_lots.find_one_and_update(
+                {"id": lot_id, "unallocated_qty": {"$gte": take}},
+                {
+                    "$inc": {"unallocated_qty": -take},
+                    "$set": {"updated_at": _now()},
+                },
+                return_document=ReturnDocument.AFTER,
+            )
+            if not claimed_lot:
+                continue
+        claimed.append((lot_id, take))
         alloc_doc = {
             "id": _new_id(),
             "commercial_customer_id": commercial_customer_id,
@@ -440,9 +492,11 @@ async def allocate_credits(
         remaining_to_alloc -= take
 
     if remaining_to_alloc > 0:
-        # Compensate: roll back created allocations in this call
+        # Compensate: roll back allocations + rilascia claim unallocated
         for a in created:
             await db.credit_allocations.delete_one({"id": a["id"]})
+        for lot_id, take in claimed:
+            await _release_unallocated_qty(db, lot_id, take)
         raise HTTPException(
             status_code=409,
             detail={
@@ -512,6 +566,8 @@ async def revoke_allocation(
         raise HTTPException(status_code=404, detail={"error": "allocation_not_found"})
 
     returned = int(alloc.get("remaining_qty") or 0)
+    # R-03 — qty revocata torna al pool unallocated del lotto
+    await _release_unallocated_qty(db, alloc.get("lot_id") or "", returned)
     entry = await _append_ledger(
         db,
         commercial_customer_id=alloc["commercial_customer_id"],
