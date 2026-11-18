@@ -98,3 +98,15 @@ async def cron_match_private_listings(user: dict = Depends(get_current_user)):
         raise HTTPException(status_code=403, detail="cron_forbidden")
     report = await run_private_listing_request_matching()
     return {"ok": True, "trigger": "manual", "owner": "apscheduler", **report}
+
+
+@router.post("/billing/expire-main-admin-transfers")
+async def cron_expire_main_admin_transfers(user: dict = Depends(get_current_user)):
+    """MC-041 — expiry proposte Main Admin 48h. Trigger manuale (owner=apscheduler)."""
+    if user.get("role") not in ALLOWED_ROLES:
+        raise HTTPException(status_code=403, detail="cron_forbidden")
+    from shared.billing.main_admin_service import expire_due_transfers
+    from shared.db.connection import Database
+
+    report = await expire_due_transfers(Database.get())
+    return {"ok": True, "trigger": "manual", "owner": "apscheduler", **report}

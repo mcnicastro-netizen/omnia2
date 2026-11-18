@@ -74,12 +74,57 @@ export default function NotificationBell({ pollMs = 45000 }) {
     }
   };
 
+  const [acceptBusy, setAcceptBusy] = useState(null);
+
+  const acceptMainAdminTransfer = async (n, e) => {
+    e?.stopPropagation?.();
+    const transferId = n?.meta?.transfer_id;
+    const token = n?.meta?.accept_token;
+    if (!transferId || !token) return;
+    setAcceptBusy(n.id);
+    try {
+      await api.post("/billing/commercial/main-admin/transfer/accept", {
+        transfer_id: transferId,
+        token,
+      });
+      if (!n.read) {
+        const r = await api.post(`/notifications/${n.id}/read`);
+        setUnread(r.data.unread_count ?? Math.max(0, unread - 1));
+      }
+      setItems((arr) =>
+        arr.map((x) =>
+          x.id === n.id
+            ? {
+                ...x,
+                read: true,
+                meta: { ...(x.meta || {}), accepted: true },
+                body: "Proposta Main Admin accettata.",
+              }
+            : x
+        )
+      );
+    } catch {
+      // keep notification; user can retry
+    } finally {
+      setAcceptBusy(null);
+    }
+  };
+
   const markOne = async (n) => {
     try {
       if (!n.read) {
         const r = await api.post(`/notifications/${n.id}/read`);
         setUnread(r.data.unread_count ?? Math.max(0, unread - 1));
         setItems((arr) => arr.map((x) => (x.id === n.id ? { ...x, read: true } : x)));
+      }
+      if (n.type === "main_admin_transfer" && n.meta?.transfer_id) {
+        setOpen(false);
+        const q = new URLSearchParams({
+          transfer_id: n.meta.transfer_id,
+          ...(n.meta.accept_token ? { token: n.meta.accept_token } : {}),
+        });
+        nav(`/${lang}/app/billing/main-admin-transfer?${q.toString()}`);
+        return;
       }
       if (n.link) {
         setOpen(false);
@@ -177,34 +222,52 @@ export default function NotificationBell({ pollMs = 45000 }) {
             )}
             {items.map((n) => (
               <li key={n.id}>
-                <button
-                  type="button"
-                  onClick={() => markOne(n)}
-                  data-testid={`notification-item-${n.id}`}
+                <div
                   className={`w-full text-left px-3 py-3 hover:bg-stone-50 transition ${
                     n.read ? "bg-white" : "bg-amber-50/40"
                   }`}
                 >
-                  <div className="flex items-start gap-2">
-                    {!n.read && (
-                      <span
-                        className="mt-1.5 w-1.5 h-1.5 rounded-full bg-[#C19A6B] shrink-0"
-                        aria-hidden="true"
-                      />
-                    )}
-                    <div className={`min-w-0 flex-1 ${n.read ? "pl-3.5" : ""}`}>
-                      <p className="text-sm text-stone-900 font-medium leading-snug truncate">
-                        {n.title}
-                      </p>
-                      {n.body ? (
-                        <p className="text-xs text-stone-500 mt-0.5 line-clamp-2">{n.body}</p>
-                      ) : null}
-                      <p className="text-[10px] uppercase tracking-wider text-stone-400 mt-1">
-                        {relativeTime(n.created_at, lang)}
-                      </p>
+                  <button
+                    type="button"
+                    onClick={() => markOne(n)}
+                    data-testid={`notification-item-${n.id}`}
+                    className="w-full text-left"
+                  >
+                    <div className="flex items-start gap-2">
+                      {!n.read && (
+                        <span
+                          className="mt-1.5 w-1.5 h-1.5 rounded-full bg-[#C19A6B] shrink-0"
+                          aria-hidden="true"
+                        />
+                      )}
+                      <div className={`min-w-0 flex-1 ${n.read ? "pl-3.5" : ""}`}>
+                        <p className="text-sm text-stone-900 font-medium leading-snug truncate">
+                          {n.title}
+                        </p>
+                        {n.body ? (
+                          <p className="text-xs text-stone-500 mt-0.5 line-clamp-2">{n.body}</p>
+                        ) : null}
+                        <p className="text-[10px] uppercase tracking-wider text-stone-400 mt-1">
+                          {relativeTime(n.created_at, lang)}
+                        </p>
+                      </div>
                     </div>
-                  </div>
-                </button>
+                  </button>
+                  {n.type === "main_admin_transfer" &&
+                    n.meta?.transfer_id &&
+                    n.meta?.accept_token &&
+                    !n.meta?.accepted && (
+                      <button
+                        type="button"
+                        data-testid={`main-admin-accept-${n.id}`}
+                        disabled={acceptBusy === n.id}
+                        onClick={(e) => acceptMainAdminTransfer(n, e)}
+                        className="mt-2 ml-3.5 inline-flex items-center px-3 py-1.5 text-xs font-semibold rounded-md bg-[#0B1E3F] text-white hover:opacity-90 disabled:opacity-50"
+                      >
+                        {acceptBusy === n.id ? "…" : "Accetta"}
+                      </button>
+                    )}
+                </div>
               </li>
             ))}
           </ul>
