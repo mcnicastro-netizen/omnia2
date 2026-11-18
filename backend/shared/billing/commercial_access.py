@@ -416,7 +416,42 @@ async def set_commercial_status(
     await db.commercial_customers.update_one(
         {"id": commercial_customer_id}, {"$set": fields}
     )
+    # MC-042 v2 / R-01 — a cessazione revoca refresh di tutti gli utenti delle org del CC
+    if commercial_status == "ceased":
+        await revoke_sessions_for_commercial_customer(db, commercial_customer_id)
     return {**(cc or {}), **fields}
+
+
+async def revoke_sessions_for_commercial_customer(db, commercial_customer_id: str) -> dict:
+    """Revoca tutti i refresh token degli utenti con membership su agency del CC."""
+    from shared.auth.session_store import revoke_all_refresh
+
+    agency_ids = set(await _agency_ids_for_cc(db, commercial_customer_id))
+    if not agency_ids:
+        return {"matched_users": 0, "revoked_calls": 0}
+    # Filtro in Python: membership se intersection con agency_ids del CC
+    raw_users = await db.users.find({}, {"id": 1, "role": 1, "agency_ids": 1}).to_list(
+        length=50_000
+    )
+    matched = []
+    for u in raw_users:
+        if (u or {}).get("role") == "super_admin":
+            continue
+        u_agencies = set(u.get("agency_ids") or [])
+        if not (u_agencies & agency_ids):
+            continue
+        matched.append(u)
+    revoked_calls = 0
+    for u in matched:
+        uid = u.get("id")
+        if not uid:
+            continue
+        try:
+            await revoke_all_refresh(uid)
+            revoked_calls += 1
+        except Exception as exc:  # noqa: BLE001
+            logger.warning("revoke refresh failed user=%s: %s", uid, exc)
+    return {"matched_users": len(matched), "revoked_calls": revoked_calls}
 
 
 async def apply_day8_suspensions(db, *, grace_days: int = 8) -> dict:
