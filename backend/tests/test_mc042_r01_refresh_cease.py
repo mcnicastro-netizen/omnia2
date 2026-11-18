@@ -30,6 +30,36 @@ def test_r01_login_gate_blocks_ceased_user():
     assert ei.value.detail["error"] == "commercial_customer_ceased"
 
 
+def test_r01_enforce_blocks_ceased_even_with_access_jwt():
+    """Access JWT residuo fino a TTL: get_current_user → enforce → 403 cease (non è un buco)."""
+    from shared.billing.commercial_access import enforce_commercial_access
+    from starlette.requests import Request
+
+    raw = FakeDB()
+    _seed_cc_agency(raw, status="ceased")
+    raw.commercial_customers.docs[0]["operational_status"] = "closed_readonly"
+    db = _DBProxy(raw)
+    user = {
+        "id": "u1",
+        "role": "agency_admin",
+        "agency_ids": ["ag1"],
+        "active_agency_id": "ag1",
+    }
+    req = Request(
+        {
+            "type": "http",
+            "method": "GET",
+            "path": "/api/auth/me",
+            "headers": [],
+            "query_string": b"",
+        }
+    )
+    with pytest.raises(HTTPException) as ei:
+        _run(enforce_commercial_access(db, user, req))
+    assert ei.value.status_code == 403
+    assert ei.value.detail["error"] == "commercial_customer_ceased"
+
+
 def test_r01_set_ceased_revokes_member_sessions(monkeypatch):
     from shared.billing import commercial_access as ca
 
