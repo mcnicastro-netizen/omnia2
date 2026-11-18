@@ -1,75 +1,74 @@
-# Report finale — chiusura MASTER STRATO B (BOZZA)
+# Report finale — chiusura MASTER STRATO B
 
-**Aggiornato:** 18 novembre 2026 · Europe/Rome (secondo turno decisioni)  
 **ID:** MC-052  
-**Stato:** BOZZA — **non firmato dal Founder**. Cursor non firma.  
-**Baseline:** `main` @ `547f67f92613cccb6a38f4832a235b53c277ee5c` (post #216 + #218)
+**Stato:** **FIRMATO** Founder 18/11/2026 (`MASTER STRATO B CHIUSO` · MC-026b `CONFORME CON RISERVE`)  
+**Aggiornamento post-verifica:** 18 novembre 2026 · ~13:05 Europe/Rome  
+**Baseline codice verificata:** `main` @ `6a1293238329f2095455fe8fde4639e9a249c7cf` (PR #220)  
+**Evidenza Git/PR:** `_export_audits/VERIFICA-POST-MERGE-217-220-2026-11-18.md`
+
+> Cronologia: bozza pre-firma usava baseline `547f67f` (#218). Non cancellata semanticamente — superata dai merge #217–#220.
 
 ---
 
 ## 1. Perimetro strato B
 
-Slice1 (#208) · B04-I (#210) · B04-II (#211) · B04-H1 (#212) · B04-H2 (#216) · pezzo wallet/fail-open MC-042 (#218).
+Slice1 (#208) · B04-I (#210) · B04-II (#211) · B04-H1 (#212) · B04-H2 (#216) ·  
+MC-042 wallet/fail-open (#218) · docs/firme (#217) · MC-040/041/043 (#219) ·  
+MC-042 v2 lockout + MC-054 B + MC-055…059 (#220).
 
-**Fuori (salvo mandato):** H3, H4, B04-III…VII, lockout totale MC-042 v2, sistema deroga MC-054…059, B05–B07, legacy, Stripe live, UI Cabina accept (MC-040 pending).
+**Fuori (Strato C / FUORI_MASTER):** H3, H4, B04-III…VII, B05–B07, legacy, Stripe live/prod, OPEN-01 repricing.
 
-## 2. Verifiche tecniche
+## 2. Verifiche tecniche (post #220)
 
 | Check | Esito |
 |---|---|
-| Codice H2 su `main` | SÌ (#216) |
-| PR #218 wallet deny + fail-open | SÌ mergiata · CI SUCCESS |
-| MC-042 v2 enforcement completo | **NO** |
-| MC-054…059 enforcement | **NO** / **NON CONFORME** pezzi |
-| MC-026b | **NON FIRMATA** — vedi checklist |
+| PR #217 / #218 / #219 / #220 su GitHub | **Tutte MERGED** (API `gh`; non «Open») |
+| Codice tip `main` | `6a12932` |
+| CI tip | SUCCESS (`Backend billing / B04 unit`) |
+| MC-042 v2 login/session gate | **PRESENTE** · GAP: `/auth/refresh` senza gate; no revoke session al cease |
+| MC-054 opzione B | **PRESENTE** (collab off, MA billing, wallet deny) |
+| MC-055…059 deroga/comms/expire | **PRESENTI** · **GAP MC-055:** `invoice.paid` senza verifica debito residuo multi-invoice |
 
 ## 3. Conformità (MC-026a / MC-026b)
 
 | Voce | Stato |
 |---|---|
 | MC-026a Implementazione D01–D12 | `IMPL_MERGIATO` |
-| MC-026b Accettazione Founder | **PENDING — non firmata** |
-| Checklist | `_export_audits/MC-026b-CHECKLIST-PRE-FIRMA.md` |
+| MC-026b Accettazione Founder | **FIRMATA** `CONFORME CON RISERVE` |
+| Riserve successive | Affrontate in #219+#220; gap residui classati in verifica (non riaprono firma) |
 
-### Scostamenti da considerare in firma
+## 4. Residui post-riserve (non riaprono Strato B)
 
-1. **MC-042 v2:** cessazione = nessun accesso autonomo + Super Admin via email. Codice: solo deny wallet ceased (#218); lockout login/piattaforma e canale SA **mancanti**.  
-2. **MC-042 v1** (whitelist autonoma chiusura+fatturazione): **SUPERATA** — non più requisito.  
-3. **MC-054 giorno 8:** deny wallet/crediti (read+allocate+revoke+transfer+spend). Codice: spend su suspended sì; read/allocate su `billing_only` **ancora aperti**.  
-4. **MC-055…059:** riattivazione/deroga/comms **assenti** (D07 ≠ deroga).  
-5. D01–D12 resto: impl #216; accettazione Founder aperta.  
-6. MC-040/041/043: ancora `PENDING_FOUNDER`.
-
-## 4. Residui MC-040…043 + nuovi
-
-| ID | Decisione Founder | Impl |
-|---|---|---|
-| **MC-040** UI Cabina | **PENDING_FOUNDER** | — |
-| **MC-041** Expiry lazy | **PENDING_FOUNDER** | — |
-| **MC-042** v2 cessazione | **APPROVATA** | **PARZIALE / GAP** |
-| **MC-043** Deny senza MA | **PENDING_FOUNDER** | — |
-| **MC-054…059** | **APPROVATE** | **MANCANTI / NON CONFORMI** |
+| ID | Decisione | Impl verificata | Residuo |
+|---|---|---|---|
+| MC-040 / 041 / 043 | DECISO | #219 MERGED | — |
+| MC-042 v2 | APPROVATA | #218+#220 | refresh/session revoke |
+| MC-054 B | APPROVATA | #220 | E2E FE non fatto |
+| MC-055 | APPROVATA | path presente | **saldo pieno non dimostrato** |
+| MC-056…059 | APPROVATE | #220 | template email generici |
 
 ## 5. Igiene doc
 
 | ID | Stato |
 |---|---|
-| MC-050 NEXT_SESSION | aggiornato 18 nov secondo turno |
+| MC-050 NEXT_SESSION | aggiornato 18/11 post-verifica → `6a12932` |
 | MC-051 handoff 14 nov STALE | ok |
-| MC-053 indice | aggiornare voci MC-042 v2 + MC-054…059 + checklist |
-| D-176 | **SUPERATA** da D-177 |
+| MC-053 indice | voci piano presenti; eventuale ritocco minore non bloccante |
+| D-176 | **SUPERATA** da D-177 (conservata) |
+| Verifica post-merge | `VERIFICA-POST-MERGE-217-220-2026-11-18.md` |
 
 ## 6. Firma Founder — **REGISTRATA** 18/11/2026 (Europe/Rome)
 
 - [x] Confermo chiusura **strato A** (MC-001…015)
 - [x] Accetto **MC-026b** come: **`CONFORME CON RISERVE`**
-  - Riserve: MC-042 v2 lockout totale + canale Super Admin; MC-054 deny wallet/crediti giorno 8 (oltre spend); MC-055…059 deroga/riattivazione/comms — **fase successiva / mandato impl**
-- [x] **MC-040**: crea pulsante Accetta transfer in Cabina — **DECISO · da implementare**
-- [x] **MC-041**: job automatico expiry 48h — **DECISO · da implementare**
-- [x] **MC-042 v2** / **MC-054…059**: decisioni funzionali; scostamenti accettati come riserve
-- [x] **MC-043**: nomina Main Admin obbligatoria su cliente nuovo + sblocco — **DECISO · da implementare**
 - [x] Dichiaro: **`MASTER STRATO B CHIUSO`**
-- [x] Data / Founder: **18 novembre 2026** · Marco Nicastro (conferma in chat Cursor + ChatGPT)
+- [x] Data / Founder: **18 novembre 2026** · Marco Nicastro
 
-**Autorizzazione codice:** `OMNIA — AUTORIZZAZIONE ESPLICITA ALL'IMPLEMENTAZIONE`  
-Scope: MC-040 + MC-041 + MC-043. Merge #217 autorizzato.
+**Post-firma (stesso giorno):** autorizzazioni impl + merge #217→#220 eseguiti.  
+**Questo aggiornamento documentale** non riapre la firma; registra evidenze e gap residui per Strato C / incarichi dedicati.
+
+## 7. Cosa non è
+
+- OMNIA **non** è dichiarato pronto produzione.  
+- Strato C **non** è autorizzato da questo report.  
+- Gap MC-055 saldo **non** è deciso/fixato qui — domanda Founder aperta nella verifica.

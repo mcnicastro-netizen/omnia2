@@ -1,7 +1,10 @@
 # OMNIA — Piano di chiusura master post-audit
 
-**Data:** 17 novembre 2026 · ~20:20 Europe/Rome  
-**Baseline codice:** `main` @ `c3baebc40559641590f5a1bac8705400ef992537` (merge PR #216)  
+**Data originale:** 17 novembre 2026 · ~20:20 Europe/Rome  
+**Aggiornamento verifica:** 18 novembre 2026 · ~13:05 Europe/Rome  
+**Baseline codice (verificata):** `main` @ `6a1293238329f2095455fe8fde4639e9a249c7cf` (merge PR #220)  
+**Baseline storica 17/11:** `c3baebc` (PR #216) — superata  
+**Evidenza verifica Git/PR:** `_export_audits/VERIFICA-POST-MERGE-217-220-2026-11-18.md`  
 **Natura:** piano di riconciliazione e chiusura. **Non** è autorizzazione a implementare.  
 **Destinatari:** Founder · ChatGPT (analisi/programma) · Cursor (esecuzione solo con mandato esplicito)
 
@@ -122,15 +125,16 @@ Deve avere uno di: *implementato e verificato* · *residuo accettato esplicitame
 | ID | Descrizione | Stato attuale | Evidenza richiesta | Dipendenze | Priorità | Criterio di chiusura |
 |---|---|---|---|---|---|---|
 | **MC-040** | UI Cabina accept transfer | `DECISO` 18/11 · **impl autorizzata** (pulsante Accetta) | D-183 | MC-025 | P0 | FE Accetta in Cabina/notifiche |
-| **MC-041** | Expiry transfer job automatico | `DECISO` 18/11 · **impl autorizzata** (job, non solo lazy) | D-184 | MC-025 | P0 | APScheduler + expire pending |
-| **MC-042** | Cessazione definitiva (v2) | `DECISIONE_FUNZIONALE_APPROVATA` 18/11 v2 · enforcement completo **NO** | `MC-042-DECISIONE-FOUNDER.md` · D-177 (D-176 SUPERATA) | D05, DES-07/08 | P0 | v2 = no accesso autonomo; #218 = solo pezzo wallet |
-| **MC-043** | Nomina MA obbligatoria su CC nuovo + sblocco | `DECISO` 18/11 · **impl autorizzata** | D-185 | D01 | P0 | Nomina alla creazione / gate attivazione |
-| **MC-054** | Sospensione mancato pagamento giorno 8 | `DECISIONE_FUNZIONALE_APPROVATA` · `IMPL_MANCANTE/NON_CONFORME` | `MC-054-059-…md` · D-178 | DES-07, MC-032 | P0 | Wallet/crediti deny dal giorno 8; ≠ cessazione |
-| **MC-055** | Riattivazione automatica saldo pieno Stripe | `DECISIONE_FUNZIONALE_APPROVATA` · `IMPL_NON_VERIFICATA` | stesso · D-179 | DES-02/09 | P0 | No riattivazione su pagamento parziale |
-| **MC-056** | Deroga eccezionale Super Admin | `DECISIONE_FUNZIONALE_APPROVATA` · `IMPL_MANCANTE` | stesso · D-180 | ≠ D07 | P0 | Audit obbligatorio |
-| **MC-057** | Durata/scadenza deroga | `DECISIONE_FUNZIONALE_APPROVATA` · `IMPL_MANCANTE` | stesso · D-180 | MC-056 | P0 | Caso per caso; sospensione auto a scadenza |
-| **MC-058** | Comms automatiche deroga | `DECISIONE_FUNZIONALE_APPROVATA` · `IMPL_MANCANTE` | stesso · D-181 | MC-056 | P1 | Email cliente + reminder SA 48h |
-| **MC-059** | Deroghe indipendenti per CC | `DECISIONE_FUNZIONALE_APPROVATA` · `IMPL_MANCANTE` | stesso · D-182 | MC-056 | P1 | Isolamento tenant |
+| **MC-040** | UI Cabina Accetta transfer | `IMPL_MERGIATO` PR #219 · `4946390` | D-183 | MC-025 | P0 | NotificationBell Accetta |
+| **MC-041** | Expiry transfer job automatico | `IMPL_MERGIATO` PR #219 | D-184 | MC-025 | P0 | APScheduler 15m + expire |
+| **MC-042** | Cessazione definitiva (v2) | `IMPL_MERGIATO` parziale+#220 · gate login/session + wallet · **GAP** refresh senza gate / no revoke session on cease | `MC-042-DECISIONE-FOUNDER.md` · D-177 | D05, DES-07/08 | P0 | Verifica 18/11 |
+| **MC-043** | Nomina MA obbligatoria su CC nuovo + sblocco | `IMPL_MERGIATO` PR #219 | D-185 | D01 | P0 | bind_initial + Attiva gate |
+| **MC-054** | Sospensione mancato pagamento giorno 8 (opz. B) | `IMPL_MERGIATO` PR #220 · collab off / MA billing / wallet deny | `MC-054-059-…md` · D-178 | DES-07, MC-032 | P0 | ≠ cessazione |
+| **MC-055** | Riattivazione automatica saldo pieno Stripe | `IMPL_MERGIATO` path + **fix saldo** (no reactivate se insoluti residui) | stesso · D-179 | DES-02/09 | P0 | Founder 18/11: «fix» |
+| **MC-056** | Deroga eccezionale Super Admin | `IMPL_MERGIATO` PR #220 Ops grant | stesso · D-180 | ≠ D07 | P0 | Audit collection |
+| **MC-057** | Durata/scadenza deroga | `IMPL_MERGIATO` job expire | stesso · D-180 | MC-056 | P0 | Sospensione auto a scadenza |
+| **MC-058** | Comms automatiche deroga | `IMPL_MERGIATO` email best-effort + reminder 48h | stesso · D-181 | MC-056 | P1 | Template riusa `agency_pending` |
+| **MC-059** | Deroghe indipendenti per CC | `IMPL_MERGIATO` | stesso · D-182 | MC-056 | P1 | Isolamento tenant |
 | **MC-044** | Gap storico «agency_admin filiale = wallet» pre-binding | **CHIUSO da MC-025** | assert Main Admin | MC-025 | — | Non riaprire: superato dal binding |
 | **MC-045** | H3 allocate solo org linkate al CC | `FASE_SUCCESSIVA` | NEXT_SESSION; H1 report | MC-022 | P1 | Non nel master B; slice dedicata se autorizzata |
 | **MC-046** | H4 top-up/storage = Stripe Customer del CC | `FASE_SUCCESSIVA` | idem | MC-021 | P1 | Idem |

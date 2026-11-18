@@ -464,8 +464,140 @@ async def apply_day8_suspensions(db, *, grace_days: int = 8) -> dict:
     return {"scanned": scanned, "applied": applied, "grace_days": grace_days}
 
 
-async def reactivate_cc_on_full_payment(db, commercial_customer_id: str) -> dict:
-    """MC-055 — saldo pieno / invoice.paid → riattivazione automatica."""
+_OUTSTANDING_INVOICE_STATUSES = frozenset(
+    {"open", "draft", "uncollectible", "past_due", "unpaid"}
+)
+
+
+async def _agency_ids_for_cc(db, commercial_customer_id: str) -> list[str]:
+    rows = await db.agencies.find(
+        {"commercial_customer_id": commercial_customer_id},
+        {"id": 1},
+    ).to_list(length=5_000)
+    return [r["id"] for r in rows if r.get("id")]
+
+
+async def list_outstanding_invoices_for_cc(
+    db,
+    commercial_customer_id: str,
+    *,
+    exclude_stripe_invoice_id: Optional[str] = None,
+) -> list[dict]:
+    """MC-055 — insoluti locali (+ Stripe open se configurato).
+
+    Esclude l'invoice appena pagata (`exclude_stripe_invoice_id`).
+    """
+    if not commercial_customer_id:
+        return []
+    agency_ids = await _agency_ids_for_cc(db, commercial_customer_id)
+    outstanding: list[dict] = []
+    seen: set[str] = set()
+
+    def _consider(inv: dict, source: str) -> None:
+        sid = inv.get("stripe_invoice_id") or inv.get("id") or ""
+        if exclude_stripe_invoice_id and sid == exclude_stripe_invoice_id:
+            return
+        if sid and sid in seen:
+            return
+        status = (inv.get("status") or "").lower()
+        amount_due = float(inv.get("amount_due") or 0)
+        amount_paid = float(inv.get("amount_paid") or 0)
+        amount_remaining = inv.get("amount_remaining")
+        if amount_remaining is None:
+            amount_remaining = max(0.0, amount_due - amount_paid)
+        else:
+            amount_remaining = float(amount_remaining)
+        # paid/void mai insoluti
+        if status in ("paid", "void"):
+            return
+        if status in _OUTSTANDING_INVOICE_STATUSES or amount_remaining > 0:
+            if sid:
+                seen.add(sid)
+            outstanding.append(
+                {
+                    "source": source,
+                    "stripe_invoice_id": sid or None,
+                    "status": status or None,
+                    "amount_remaining": amount_remaining,
+                }
+            )
+
+    # Locale Mongo
+    try:
+        inv_coll = getattr(db, "invoices", None)
+        if inv_coll is None and hasattr(db, "__getitem__"):
+            inv_coll = db["invoices"]
+    except Exception:  # noqa: BLE001
+        inv_coll = None
+    local: list[dict] = []
+    if inv_coll is not None:
+        if agency_ids:
+            local = await inv_coll.find(
+                {
+                    "$or": [
+                        {"agency_id": {"$in": agency_ids}},
+                        {"commercial_customer_id": commercial_customer_id},
+                    ]
+                },
+                {"_id": 0},
+            ).to_list(length=10_000)
+        else:
+            local = await inv_coll.find(
+                {"commercial_customer_id": commercial_customer_id},
+                {"_id": 0},
+            ).to_list(length=10_000)
+    for inv in local:
+        _consider(inv, "local")
+
+    # Stripe Customer — invoice ancora open (fonte di verità se disponibile)
+    cc = await db.commercial_customers.find_one(
+        {"id": commercial_customer_id}, {"stripe_customer_id": 1}
+    )
+    cust = ((cc or {}).get("stripe_customer_id") or "").strip()
+    if cust:
+        try:
+            import os
+
+            import stripe  # type: ignore
+
+            key = (os.environ.get("STRIPE_SECRET_KEY") or "").strip()
+            if key:
+                stripe.api_key = key
+                for inv in stripe.Invoice.list(
+                    customer=cust, status="open", limit=100
+                ).auto_paging_iter():
+                    remaining = getattr(inv, "amount_remaining", None)
+                    if remaining is None:
+                        remaining = (getattr(inv, "amount_due", 0) or 0) - (
+                            getattr(inv, "amount_paid", 0) or 0
+                        )
+                    _consider(
+                        {
+                            "stripe_invoice_id": inv.id,
+                            "status": getattr(inv, "status", "open"),
+                            "amount_due": (getattr(inv, "amount_due", 0) or 0) / 100.0,
+                            "amount_paid": (getattr(inv, "amount_paid", 0) or 0) / 100.0,
+                            "amount_remaining": (remaining or 0) / 100.0,
+                        },
+                        "stripe",
+                    )
+        except Exception as exc:  # noqa: BLE001
+            logger.warning(
+                "list open stripe invoices failed cc=%s: %s",
+                commercial_customer_id,
+                exc,
+            )
+
+    return outstanding
+
+
+async def reactivate_cc_on_full_payment(
+    db,
+    commercial_customer_id: str,
+    *,
+    exclude_stripe_invoice_id: Optional[str] = None,
+) -> dict:
+    """MC-055 — riattivazione automatica solo a saldo pieno (nessun insoluto residuo)."""
     if not commercial_customer_id:
         return {"ok": False, "skipped": "no_cc"}
     cc = await db.commercial_customers.find_one(
@@ -480,6 +612,26 @@ async def reactivate_cc_on_full_payment(db, commercial_customer_id: str) -> dict
         # already active-like
         if status == "active":
             return {"ok": True, "skipped": "already_active"}
+
+    outstanding = await list_outstanding_invoices_for_cc(
+        db,
+        commercial_customer_id,
+        exclude_stripe_invoice_id=exclude_stripe_invoice_id,
+    )
+    if outstanding:
+        logger.info(
+            "MC-055 skip reactivate cc=%s outstanding=%s",
+            commercial_customer_id,
+            len(outstanding),
+        )
+        return {
+            "ok": False,
+            "skipped": "outstanding_balance",
+            "commercial_customer_id": commercial_customer_id,
+            "outstanding_count": len(outstanding),
+            "outstanding": outstanding[:20],
+        }
+
     await db.commercial_customers.update_one(
         {"id": commercial_customer_id},
         {
