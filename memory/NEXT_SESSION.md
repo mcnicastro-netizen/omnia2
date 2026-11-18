@@ -2,7 +2,7 @@
 
 **Aggiornato**: 18 Novembre 2026 (~15:54 CET — Europe/Rome)  
 **Repo**: https://github.com/mcnicastro-netizen/omnia2 ✅  
-**Baseline codice**: `main` @ `e2f7317` (+ merge docs #223)  
+**Baseline codice**: `main` post-#225 (R-02 CI)  
 **Master A+B**: **CHIUSO** — §10 FIRMATA Founder (ULTIMATO)
 
 ---
@@ -20,7 +20,7 @@
 ## Prossimo (post-Master)
 
 1. Pacchetto **dogfood readiness** (checklist + smoke) — mandato Founder  
-2. ~~R-02 CI~~ — in corso su branch `cursor/r02-ci-include-mc042-h3-e393`  
+2. ~~R-02 CI~~ — **CHIUSO** (#225 / `eee82e3`) — H3/MC-042/R-01 nel job B04  
 3. MC-046 / H4 se in scope dogfood  
 4. **Non** Stripe live senza mandato dedicato  
 
