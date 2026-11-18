@@ -453,6 +453,11 @@ async def refresh(request: Request, response: Response,
     if not user.get("is_active", True):
         raise HTTPException(status_code=403, detail=t("auth.account_disabled", lang=lang))
 
+    # MC-042 v2 / R-01 — cease: nessun rinnovo sessione autonomo
+    from shared.billing.commercial_access import assert_user_login_allowed
+
+    await assert_user_login_allowed(db, user)
+
     access = create_access_token(user["id"], user["email"], user["role"])
     response.set_cookie(
         "access_token", access,
