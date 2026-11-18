@@ -1590,7 +1590,7 @@ voci:
     pubblico: [super_admin]
     livello: avanzato
     tags: [codice, governance, autorizzazione, d-175, implementazione]
-    correlati: [api.governance-ruoli]
+    correlati: [api.governance-ruoli, api.master-ab-chiuso, api.dogfood-step1]
     domanda_naturale: "Quando Cursor può modificare il codice di OMNIA?"
     contenuto:
       a_cosa_serve: >
@@ -1606,6 +1606,88 @@ voci:
       errori_comuni:
         - problema: "Autorizzazione generica «sistema pure»"
           soluzione: "Serve scope esplicito (file/endpoint/slice) + frase D-175."
+      permessi:
+        - super_admin / Founder
+      screenshot: []
+
+  - id: api.master-ab-chiuso
+    titolo: Master Strati A+B chiuso (18-Nov-2026)
+    modulo: Codice API
+    widget: null
+    pubblico: [super_admin]
+    livello: avanzato
+    tags: [codice, master, strato-a, strato-b, d-186, chiusura]
+    correlati: [api.governance-ruoli, api.dogfood-step1, api.mc042-r01-refresh]
+    domanda_naturale: "Il Programma Master A+B è chiuso? OMNIA è pronto?"
+    contenuto:
+      a_cosa_serve: >
+        Certifica che gli Strati A+B del Programma Master sono chiusi e firmati
+        dal Founder (§10 ULTIMATO). Non implica dogfood readiness né produzione.
+      quando_si_usa: >
+        Quando si chiede lo stato Master; quando si confonde chiusura audit con
+        pronto all'uso quotidiano.
+      passi:
+        - "SoT: _export_audits/MASTER-RAPPORTO-FINALE-CHIUSURA-STRATI-A-B.md"
+        - "Include MC-042 v2, MC-054…059, H3, R-01 (#224), residui R-02…R-04 chiusi."
+        - "Dogfood = mandato separato (D-188). Stripe live = MC-049 fuori."
+      errori_comuni:
+        - problema: "Master chiuso quindi andiamo in produzione"
+          soluzione: "No. Serve dogfood readiness firmata, poi mandato MC-049."
+      permessi:
+        - super_admin / Founder
+      screenshot: []
+
+  - id: api.dogfood-step1
+    titolo: Dogfood Readiness Step 1 runbook (D-188)
+    modulo: Codice API
+    widget: null
+    pubblico: [super_admin]
+    livello: avanzato
+    tags: [codice, dogfood, runbook, d-188, sicurezza]
+    correlati: [api.master-ab-chiuso, api.governance-ruoli, api.stripe-sandbox-cloud]
+    domanda_naturale: "Quali regole valgono per il dogfood OMNIA?"
+    contenuto:
+      a_cosa_serve: >
+        Runbook formale Step 1: ambiente locale, dati prova, no email involontarie,
+        snapshot+restore, smoke solo su incarico Founder.
+      quando_si_usa: >
+        Prima di qualsiasi smoke dogfood; prima dello Step 2 (fotografia).
+      passi:
+        - "SoT: _export_audits/DOGFOOD-READINESS-STEP1-RUNBOOK.md"
+        - "Locale isolato; Nicastro sola lettura; Resend off; snapshot obbligatorio."
+        - "Cursor esegue smoke solo con incarico + elenco persone Founder."
+        - "Step 2 non avviato senza nuova decisione Founder. H4 valutata allo Step 2."
+      errori_comuni:
+        - problema: "Si lanciano test distruttivi su account reale"
+          soluzione: "Vietato. Solo demo/fixture; Nicastro al massimo sola lettura."
+        - problema: "sk_test basta per billing dogfood"
+          soluzione: "Verificare anche webhook/endpoint/dati isolati dal live."
+      permessi:
+        - super_admin / Founder
+      screenshot: []
+
+  - id: api.mc042-r01-refresh
+    titolo: MC-042 R-01 — refresh bloccato post-cessazione
+    modulo: Codice API
+    widget: null
+    pubblico: [super_admin]
+    livello: avanzato
+    tags: [codice, billing, cease, refresh, mc-042, r-01, d-187]
+    correlati: [api.master-ab-chiuso, settings.billing-pagina-separata]
+    domanda_naturale: "Dopo la cessazione si può ancora rinnovare la sessione?"
+    contenuto:
+      a_cosa_serve: >
+        Chiude il gap R-01: POST /auth/refresh chiama assert_user_login_allowed;
+        al cease si revocano i refresh degli utenti delle org del CC.
+      quando_si_usa: >
+        Verifica lockout cessazione; audit sessioni; regressione auth.
+      passi:
+        - "Gate in apps/core/auth.py refresh + set_commercial_status(ceased)."
+        - "Access JWT residuo: enforce_commercial_access su get_current_user."
+        - "Test: test_mc042_r01_refresh_cease.py (in CI B04)."
+      errori_comuni:
+        - problema: "Refresh 401 dopo cease ma si pensa al buco gate"
+          soluzione: "401 = jti già revocato; 403 cease = gate login; entrambi OK."
       permessi:
         - super_admin / Founder
       screenshot: []

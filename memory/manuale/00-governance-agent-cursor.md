@@ -37,7 +37,19 @@ Una cosa è pronta solo se ha uno stato esplicito:
 
 Vedi strati A/B/C in `_export_audits/MASTER-CHIUSURA-POST-AUDIT-PIANO.md`.
 
+## Master A+B vs dogfood (18-Nov-2026)
+
+- **Master Strati A+B**: **CHIUSO** — §10 firmata Founder (`ULTIMATO`). SoT `_export_audits/MASTER-RAPPORTO-FINALE-CHIUSURA-STRATI-A-B.md`.
+- **Dogfood readiness**: mandato **separato**. Step 1 runbook **CHIUSO** (`_export_audits/DOGFOOD-READINESS-STEP1-RUNBOOK.md`). Step 2 solo con nuova decisione Founder.
+- Non confondere «Master chiuso» con «pronto all’uso quotidiano / produzione».
+
+## Smoke dogfood (D-188)
+
+- Solo persone fisiche nominate dal Founder + incarico esplicito.
+- Cursor esegue, non decide e non amplia perimetro.
+- Ambiente: locale isolato; Nicastro sola lettura (no test distruttivi); Resend off; snapshot+restore verificato.
+
 ## HAL
 
-Voci RAG: `api.governance-ruoli`, `api.governance-autorizzazione` in `memory/manuale/hal/00-api-codice.yaml`.  
+Voci RAG: `api.governance-ruoli`, `api.governance-autorizzazione`, `api.master-ab-chiuso`, `api.dogfood-step1`, `api.mc042-r01-refresh` in `memory/manuale/hal/00-api-codice.yaml`.  
 Reindex: `POST /api/app/hal/knowledge/reindex?force=true` (super_admin) quando l’ambiente è up.
