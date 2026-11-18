@@ -20,7 +20,7 @@
 ## Prossimo (post-Master)
 
 1. Pacchetto **dogfood readiness** (checklist + smoke) — mandato Founder  
-2. R-02 — includere test H3/MC-042/R-01 nel job CI (igiene)  
+2. ~~R-02 CI~~ — in corso su branch `cursor/r02-ci-include-mc042-h3-e393`  
 3. MC-046 / H4 se in scope dogfood  
 4. **Non** Stripe live senza mandato dedicato  
 
