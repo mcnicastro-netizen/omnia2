@@ -1,40 +1,29 @@
-# Ripresa chiusura master — stato 18 novembre 2026
+# Pausa / ripresa — master chiusura
 
-**Aggiornato:** 18 nov 2026 · Europe/Rome  
-**Branch docs:** `cursor/master-closure-plan-e393` · PR #217  
-**Nessun merge. Nessun codice** da questo file.
+**Aggiornato:** 18 novembre 2026 · Europe/Rome (secondo turno)  
+**Stato:** lavoro documentale in corso su PR **#217** (aperta, no merge).
 
 ---
 
-## Fatto
+## Snapshot
 
-| Elemento | Stato |
+| Voce | Stato |
 |---|---|
-| PR #216 H2 | MERGED `main` @ `c3baebc` |
-| Revisione ChatGPT piano | IDONEO CON CORREZIONI |
-| D-175 ruoli | Salvati |
-| **MC-042 / D-176** | **Decisione funzionale APPROVATA** 18/11 — testo in `MC-042-DECISIONE-FOUNDER.md` |
-| Docs riconciliati post MC-042 | Piano, bozza MC-052, NEXT_SESSION, conformity D05 |
+| `main` tip | `547f67f` (post #216 + #218) |
+| **MC-042 v2 / D-177** | Decisione funzionale APPROVATA — no accesso autonomo su cessazione |
+| **D-176** | **SUPERATA** |
+| **MC-054…059 / D-178…182** | Decisioni funzionali APPROVATE — sospensione/deroga |
+| PR #218 | **MERGED** (pezzo wallet + fail-open; ≠ MC-042 v2 completo) |
+| PR #217 | **APERTA** — allineamento docs |
+| MC-026b | Non firmata — `MC-026b-CHECKLIST-PRE-FIRMA.md` |
+| MC-040/041/043 | PENDING_FOUNDER |
+| MASTER STRATO B CHIUSO | NON firmato |
 
-## Ancora al Founder
+---
 
-| ID | Stato |
-|---|---|
-| MC-040 | `PENDING_FOUNDER` |
-| MC-041 | `PENDING_FOUNDER` |
-| MC-043 | `PENDING_FOUNDER` |
-| MC-026b | Non firmata (scostamento read MC-042 documentato) |
-| MC-052 / `MASTER STRATO B CHIUSO` | Non firmata |
+## Alla ripresa
 
-## Messaggio gate
-
-```
-MC-042 approvata (funzionale). Docs aggiornati su PR #217.
-Confermo MC-040 / MC-041 / MC-043.
-Firmo MC-026b (+ riserva enforcement MC-042 se serve) e MASTER STRATO B CHIUSO.
-Poi: merge #217 solo su mio ordine. Niente codice senza nuova autorizzazione.
-```
-
-## Ruoli D-175
-
-`memory/RUOLI_GOVERNANCE_AGENT.md`
+1. Verificare allineamento doc su #217.  
+2. Verifica tecnica sospensione giorno 8 + deroga (sola lettura).  
+3. Decidere mandato impl per gap MC-042 v2 / MC-054…059 **oppure** firmare MC-026b con riserve.  
+4. Merge #217 solo su ordine Founder.

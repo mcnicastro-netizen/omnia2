@@ -56,4 +56,6 @@ Estratti il **14 nov 2026 ~11:10 Europe/Rome** dai transcript cloud Cursor.
 40. `PAUSA-2026-11-17-RIPRENDI-MASTER-CHIUSURA.md` — Pausa sera 17 nov · ripresa chiusura master.
 41. `memory/RUOLI_GOVERNANCE_AGENT.md` — **D-175** ruoli Founder/ChatGPT/Cursor (vincolante).
 42. `memory/manuale/00-governance-agent-cursor.md` — capitolo ops governance agent.
-43. `MC-042-DECISIONE-FOUNDER.md` — **D-176** whitelist consultazione CC non operativo (18 nov 2026; funzionale, no impl).
+43. `MC-042-DECISIONE-FOUNDER.md` — **MC-042 v2 / D-177** cessazione definitiva (no accesso autonomo); D-176 SUPERATA.
+44. `MC-054-059-SOSPENSIONE-RIATTIVAZIONE-DEROGA.md` — **D-178…182** sospensione giorno 8, riattivazione, deroga SA.
+45. `MC-026b-CHECKLIST-PRE-FIRMA.md` — checklist pre-firma MC-026b (non firmata).

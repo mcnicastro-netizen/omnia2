@@ -45,4 +45,17 @@ In **B04-DES-03** (approvata 17/11/2026) il Founder ha stabilito:
 
 ---
 
+## Puntatori decisioni 18/11 (non OPEN-01)
+
+Non sono follow-up aperti da inventare: sono **decisioni Founder già prese**, con gap di codice.
+
+| ID | Tema | SoT |
+|---|---|---|
+| MC-042 v2 | Cessazione: no accesso autonomo | `MC-042-DECISIONE-FOUNDER.md` |
+| MC-054…059 | Sospensione / riattivazione / deroga | `MC-054-059-SOSPENSIONE-RIATTIVAZIONE-DEROGA.md` |
+
+Implementazione: solo con `OMNIA — AUTORIZZAZIONE ESPLICITA ALL'IMPLEMENTAZIONE`.
+
+---
+
 **Fine memo.**

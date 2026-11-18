@@ -72,7 +72,8 @@ Valuta il piano contro questi requisiti Founder:
 4. Nessun blocco lasciato **implicitamente** in sospeso.
 5. Criteri per dichiarare chiuso lo strato (A/B/C) verificabili.
 6. H3, H4, legacy, B04-III…VII, B05–B07, Stripe live **non** presentati come obbligatori per chiudere lo strato B.
-7. **MC-042 (18/11/2026):** decisione funzionale Founder **approvata** — whitelist = documenti chiusura + fatturazione, sola lettura; vietata consultazione operativa wallet e mutate crediti. **Non** è autorizzazione all’implementazione. SoT: `MC-042-DECISIONE-FOUNDER.md` · D-176.
+7. **MC-042 v2 (18/11/2026):** cessazione definitiva = **nessun** accesso autonomo; Super Admin via email; dati conservati. D-176 whitelist **SUPERATA**. SoT: `MC-042-DECISIONE-FOUNDER.md` · D-177. PR #218 = pezzo wallet, non v2 completo.  
+8. **MC-054…059:** sospensione giorno 8, riattivazione auto, deroga SA — decisioni **approvate**, codice **non** implementato. SoT: `MC-054-059-SOSPENSIONE-RIATTIVAZIONE-DEROGA.md`.
 
 ---
 
@@ -96,8 +97,9 @@ Valuta il piano contro questi requisiti Founder:
 |---|---|---|
 | MC-040 | UI Cabina accept transfer | **PENDING_FOUNDER** (non auto-approvare proposte ChatGPT) |
 | MC-041 | Expiry lazy | **PENDING_FOUNDER** |
-| MC-042 | CC non operativo | **APPROVATA** 18/11 (funzionale) · impl non autorizzata · scostamento codice documentato |
+| MC-042 | Cessazione v2 | **APPROVATA** · enforcement completo NO · #218 pezzo wallet |
 | MC-043 | CC senza MA → deny + runbook | **PENDING_FOUNDER** |
+| MC-054…059 | Sospensione/deroga | **APPROVATE** · codice mancante/non conforme |
 
 ---
 
@@ -176,6 +178,6 @@ Elenco puntato di ciò che resta vietato dopo l’approvazione del piano (almeno
 ## 9. Dopo la risposta ChatGPT
 
 - Founder applica eventuali correzioni doc (Cursor solo se autorizzato / o Founder dice «applica correzioni»).
-- MC-042 già deciso (funzionale). Founder conferma ancora MC-040/041/043 e firma MC-026b + MC-052.
+- MC-042 **v2** e MC-054…059 già decisi (funzionali). Founder conferma ancora MC-040/041/043 e firma MC-026b + MC-052.
 - Solo allora: dichiarazione `MASTER STRATO B CHIUSO` e/o merge PR #217 su ordine Founder.
-- **Nessun** avvio H3/H4/B04-III / enforcement MC-042 senza nuovo mandato.
+- **Nessun** avvio H3/H4/B04-III / enforcement MC-042 v2 / MC-054…059 senza nuovo mandato.
