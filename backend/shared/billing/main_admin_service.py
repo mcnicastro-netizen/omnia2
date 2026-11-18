@@ -152,14 +152,40 @@ async def assert_agency_wallet_operable(
     *,
     actor_user_id: Optional[str] = None,
     operation: str = "wallet_access",
-) -> Optional[dict]:
-    """MC-042 — resolve CC da Organization e applica gate wallet; legacy agency → None."""
+) -> dict:
+    """MC-042 — resolve CC da Organization e applica gate wallet.
+
+    Deny-by-default: Organization assente, senza ``commercial_customer_id``,
+    o con CC non risolvibile → nessun accesso operativo implicito.
+    """
+    if not (agency_id or "").strip():
+        raise HTTPException(
+            status_code=403,
+            detail={"error": "commercial_customer_required"},
+        )
     agency = await db.agencies.find_one(
         {"id": agency_id}, {"commercial_customer_id": 1}
     )
-    cc_id = (agency or {}).get("commercial_customer_id")
+    if not agency:
+        raise HTTPException(
+            status_code=403,
+            detail={"error": "commercial_customer_required"},
+        )
+    cc_id = (agency.get("commercial_customer_id") or "").strip() or None
     if not cc_id:
-        return None
+        await append_main_admin_event(
+            db,
+            commercial_customer_id="unlinked",
+            event_type="deny_attempt",
+            actor_user_id=actor_user_id,
+            outcome="denied",
+            reason="commercial_customer_required",
+            meta={"operation": operation, "organization_id": agency_id},
+        )
+        raise HTTPException(
+            status_code=403,
+            detail={"error": "commercial_customer_required"},
+        )
     return await assert_cc_wallet_operable(
         db,
         cc_id,

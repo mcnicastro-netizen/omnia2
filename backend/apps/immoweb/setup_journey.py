@@ -198,11 +198,13 @@ async def get_setup_journey(user: dict = Depends(get_current_user)):
 
     wallet = await db.credit_wallets.find_one({"agency_id": aid}, {"balance": 1})
     credits_balance = int((wallet or {}).get("balance") or 0)
-    # MC-042 — non esporre saldo operativo se CC non operable
-    cc_id = agency.get("commercial_customer_id")
-    if cc_id:
+    # MC-042 — deny-by-default: senza CC valido/operabile non esporre saldo
+    cc_id = (agency.get("commercial_customer_id") or "").strip() or None
+    if not cc_id:
+        credits_balance = None
+    else:
         cc_doc = await get_commercial_customer(db, cc_id)
-        if cc_doc and not cc_is_wallet_operable(cc_doc):
+        if not cc_doc or not cc_is_wallet_operable(cc_doc):
             credits_balance = None
 
     site_step = (journey.get("steps") or {}).get("site") or {}

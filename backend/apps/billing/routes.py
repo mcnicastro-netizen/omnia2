@@ -154,16 +154,28 @@ async def get_subscription(user: dict = Depends(get_current_user)):
     from shared.demo_story import build_demo_status
 
     w = wallet or {"agency_id": aid, "balance": 0}
-    wallet_operable = cc_is_wallet_operable(cc) if cc else True
+    # Deny-by-default: senza CC identificabile/operabile non esporre saldi
+    if not cc_id:
+        redact_reason = "commercial_customer_required"
+        wallet_operable = False
+    elif not cc:
+        redact_reason = "commercial_customer_not_found"
+        wallet_operable = False
+    elif not cc_is_wallet_operable(cc):
+        redact_reason = "cc_not_operable"
+        wallet_operable = False
+    else:
+        redact_reason = None
+        wallet_operable = True
     if not wallet_operable:
         w = {
             "agency_id": aid,
             "redacted": True,
-            "reason": "cc_not_operable",
+            "reason": redact_reason,
         }
         credits_counter = {
             "redacted": True,
-            "reason": "cc_not_operable",
+            "reason": redact_reason,
         }
     else:
         credits_counter = wallet_counter(w)
@@ -995,19 +1007,15 @@ async def get_org_wallet(
     db = Database.get()
     agency_id = require_agency(user)
     from shared.billing import main_admin_service as mas
-    from shared.billing.credit_wallet_service import (
-        org_spendable_balance,
-        resolve_cc_id_for_agency,
-    )
+    from shared.billing.credit_wallet_service import org_spendable_balance
 
-    cc_id = await resolve_cc_id_for_agency(db, agency_id)
-    if cc_id:
-        await mas.assert_cc_wallet_operable(
-            db,
-            cc_id,
-            actor_user_id=user.get("id"),
-            operation="org_wallet_read",
-        )
+    # Deny-by-default: senza CC collegato → 403 (nessun saldo legacy esposto)
+    await mas.assert_agency_wallet_operable(
+        db,
+        agency_id,
+        actor_user_id=user.get("id"),
+        operation="org_wallet_read",
+    )
 
     allocs = await db.credit_allocations.find(
         {"organization_id": agency_id}, {"_id": 0}

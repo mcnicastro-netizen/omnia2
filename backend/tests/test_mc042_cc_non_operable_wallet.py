@@ -435,3 +435,249 @@ def test_mc042_no_customer_closure_billing_doc_routes():
         "download_invoice",
     }
     assert forbidden_guesses.isdisjoint(set(names))
+
+
+# --------------- Fail-open: Organization senza CC valido -------------
+
+
+def test_mc042_assert_agency_denies_unlinked_org():
+    from shared.billing import main_admin_service as mas
+
+    db = FakeDB()
+    db.agencies.docs.append({"id": "agLegacy", "display_name": "No CC"})
+    with pytest.raises(HTTPException) as ei:
+        _run(
+            mas.assert_agency_wallet_operable(
+                db, "agLegacy", operation="org_wallet_read"
+            )
+        )
+    assert ei.value.status_code == 403
+    assert ei.value.detail["error"] == "commercial_customer_required"
+
+
+def test_mc042_assert_agency_denies_missing_agency():
+    from shared.billing import main_admin_service as mas
+
+    db = FakeDB()
+    with pytest.raises(HTTPException) as ei:
+        _run(mas.assert_agency_wallet_operable(db, "agMissing", operation="x"))
+    assert ei.value.detail["error"] == "commercial_customer_required"
+
+
+def test_mc042_assert_agency_denies_dangling_cc_ref():
+    from shared.billing import main_admin_service as mas
+
+    db = FakeDB()
+    db.agencies.docs.append(
+        {"id": "agDangle", "commercial_customer_id": "ccGone"}
+    )
+    with pytest.raises(HTTPException) as ei:
+        _run(
+            mas.assert_agency_wallet_operable(
+                db, "agDangle", operation="staging_credits_check"
+            )
+        )
+    assert ei.value.status_code == 404
+    assert ei.value.detail["error"] == "commercial_customer_not_found"
+
+
+def test_mc042_assert_agency_allows_linked_operable():
+    from shared.billing import main_admin_service as mas
+
+    db = FakeDB()
+    _seed_cc_agency(db)
+    cc = _run(mas.assert_agency_wallet_operable(db, "ag1", operation="ok"))
+    assert cc["id"] == "cc1"
+
+
+def test_mc042_org_wallet_denies_unlinked(monkeypatch):
+    from apps.billing import routes as billing_routes
+
+    db = FakeDB()
+    db.agencies.docs.append({"id": "agLegacy"})
+    db.credit_wallets.docs.append({"agency_id": "agLegacy", "balance": 50})
+
+    class _DB:
+        @staticmethod
+        def get():
+            return db
+
+    monkeypatch.setattr(billing_routes, "Database", _DB)
+    monkeypatch.setattr(
+        billing_routes, "require_agency", lambda user: user["active_agency_id"]
+    )
+    with pytest.raises(HTTPException) as ei:
+        _run(
+            billing_routes.get_org_wallet(
+                user={
+                    "id": "u",
+                    "role": "branch_admin",
+                    "active_agency_id": "agLegacy",
+                }
+            )
+        )
+    assert ei.value.detail["error"] == "commercial_customer_required"
+
+
+def test_mc042_org_wallet_denies_dangling_cc(monkeypatch):
+    from apps.billing import routes as billing_routes
+
+    db = FakeDB()
+    db.agencies.docs.append(
+        {"id": "ag1", "commercial_customer_id": "ccMissing"}
+    )
+
+    class _DB:
+        @staticmethod
+        def get():
+            return db
+
+    monkeypatch.setattr(billing_routes, "Database", _DB)
+    monkeypatch.setattr(
+        billing_routes, "require_agency", lambda user: user["active_agency_id"]
+    )
+    with pytest.raises(HTTPException) as ei:
+        _run(
+            billing_routes.get_org_wallet(
+                user={"id": "u", "role": "agent", "active_agency_id": "ag1"}
+            )
+        )
+    assert ei.value.detail["error"] == "commercial_customer_not_found"
+
+
+def test_mc042_subscription_redacts_when_unlinked(monkeypatch):
+    from apps.billing import routes as billing_routes
+
+    db = FakeDB()
+    db.agencies.docs.append({"id": "agLegacy"})
+    db.credit_wallets.docs.append({"agency_id": "agLegacy", "balance": 77})
+    db.subscriptions = FakeColl()
+    db.subscriptions.docs.append({"agency_id": "agLegacy", "status": "active"})
+
+    class _DB:
+        @staticmethod
+        def get():
+            return db
+
+    monkeypatch.setattr(billing_routes, "Database", _DB)
+    monkeypatch.setattr(billing_routes, "optional_agency_id", lambda u: "agLegacy")
+
+    out = _run(
+        billing_routes.get_subscription(
+            user={"id": "u", "role": "agency_admin", "active_agency_id": "agLegacy"}
+        )
+    )
+    assert out["wallet"].get("redacted") is True
+    assert out["wallet"].get("reason") == "commercial_customer_required"
+    assert out["counters"]["credits"].get("redacted") is True
+    assert "balance" not in out["wallet"] or out["wallet"].get("balance") is None
+
+
+def test_mc042_subscription_redacts_when_cc_missing(monkeypatch):
+    from apps.billing import routes as billing_routes
+
+    db = FakeDB()
+    db.agencies.docs.append(
+        {"id": "ag1", "commercial_customer_id": "ccGhost"}
+    )
+    db.credit_wallets.docs.append({"agency_id": "ag1", "balance": 12})
+    db.subscriptions = FakeColl()
+
+    class _DB:
+        @staticmethod
+        def get():
+            return db
+
+    monkeypatch.setattr(billing_routes, "Database", _DB)
+    monkeypatch.setattr(billing_routes, "optional_agency_id", lambda u: "ag1")
+
+    out = _run(
+        billing_routes.get_subscription(
+            user={"id": "u", "role": "agency_admin", "active_agency_id": "ag1"}
+        )
+    )
+    assert out["wallet"].get("reason") == "commercial_customer_not_found"
+    assert out["commercial_customer"] is None
+
+
+def test_mc042_subscription_exposes_wallet_when_operable(monkeypatch):
+    from apps.billing import routes as billing_routes
+
+    db = FakeDB()
+    _seed_cc_agency(db)
+    db.credit_wallets.docs.append({"agency_id": "ag1", "balance": 5})
+    db.subscriptions = FakeColl()
+    db.subscriptions.docs.append({"agency_id": "ag1", "status": "active"})
+
+    class _DB:
+        @staticmethod
+        def get():
+            return db
+
+    monkeypatch.setattr(billing_routes, "Database", _DB)
+    monkeypatch.setattr(billing_routes, "optional_agency_id", lambda u: "ag1")
+
+    out = _run(
+        billing_routes.get_subscription(
+            user={"id": "u", "role": "agency_admin", "active_agency_id": "ag1"}
+        )
+    )
+    assert out["wallet"].get("redacted") is not True
+    assert out["wallet"].get("balance") == 5
+    assert out["counters"]["credits"].get("redacted") is not True
+
+
+def test_mc042_debit_denies_unlinked_org():
+    from shared.billing import credit_wallet_service as mod
+
+    db = FakeDB()
+    db.agencies.docs.append({"id": "agLegacy"})
+    db.credit_wallets.docs.append({"agency_id": "agLegacy", "balance": 100})
+    with pytest.raises(HTTPException) as ei:
+        _run(
+            mod.debit_for_organization(
+                db, organization_id="agLegacy", amount=1, reason="spend"
+            )
+        )
+    assert ei.value.status_code == 403
+    assert ei.value.detail["error"] == "commercial_customer_required"
+    assert db.credit_wallets.docs[0]["balance"] == 100
+
+
+def test_mc042_debit_denies_dangling_cc_ref():
+    from shared.billing import credit_wallet_service as mod
+
+    db = FakeDB()
+    db.agencies.docs.append(
+        {"id": "ag1", "commercial_customer_id": "ccGhost"}
+    )
+    with pytest.raises(HTTPException) as ei:
+        _run(
+            mod.debit_for_organization(
+                db, organization_id="ag1", amount=1, reason="spend"
+            )
+        )
+    assert ei.value.detail["error"] == "commercial_customer_not_found"
+
+
+def test_mc042_staging_credits_check_denies_unlinked(monkeypatch):
+    from apps.immoweb import staging_api
+
+    db = FakeDB()
+    db.agencies.docs.append({"id": "agLegacy"})
+
+    class _DB:
+        @staticmethod
+        def get():
+            return db
+
+    monkeypatch.setattr(staging_api, "Database", _DB)
+    monkeypatch.setattr(staging_api, "optional_agency_id", lambda u: "agLegacy")
+    with pytest.raises(HTTPException) as ei:
+        _run(
+            staging_api.staging_credits_check(
+                num_variants=1,
+                user={"id": "u", "role": "agent", "active_agency_id": "agLegacy"},
+            )
+        )
+    assert ei.value.detail["error"] == "commercial_customer_required"
