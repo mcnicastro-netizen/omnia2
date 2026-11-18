@@ -2,8 +2,10 @@
 
 **Data originale:** 17 novembre 2026 · ~20:20 Europe/Rome  
 **Aggiornamento verifica:** 18 novembre 2026 · ~13:05 Europe/Rome  
-**Baseline codice (verificata):** `main` @ `6a1293238329f2095455fe8fde4639e9a249c7cf` (merge PR #220)  
+**Baseline codice (verificata):** `main` @ `11f29621dd2ddef9e4a61fa3ece569a65f94eaf9` (merge PR #222 H3)  
+**Baseline intermedia 18/11:** `6a12932` (#220) · `0919cda` (#221) — superate dal tip  
 **Baseline storica 17/11:** `c3baebc` (PR #216) — superata  
+**Rapporto chiusura A+B:** `_export_audits/MASTER-RAPPORTO-FINALE-CHIUSURA-STRATI-A-B.md`  
 **Evidenza verifica Git/PR:** `_export_audits/VERIFICA-POST-MERGE-217-220-2026-11-18.md`  
 **Natura:** piano di riconciliazione e chiusura. **Non** è autorizzazione a implementare.  
 **Destinatari:** Founder · ChatGPT (analisi/programma) · Cursor (esecuzione solo con mandato esplicito)
@@ -136,7 +138,7 @@ Deve avere uno di: *implementato e verificato* · *residuo accettato esplicitame
 | **MC-058** | Comms automatiche deroga | `IMPL_MERGIATO` email best-effort + reminder 48h | stesso · D-181 | MC-056 | P1 | Template riusa `agency_pending` |
 | **MC-059** | Deroghe indipendenti per CC | `IMPL_MERGIATO` | stesso · D-182 | MC-056 | P1 | Isolamento tenant |
 | **MC-044** | Gap storico «agency_admin filiale = wallet» pre-binding | **CHIUSO da MC-025** | assert Main Admin | MC-025 | — | Non riaprire: superato dal binding |
-| **MC-045** | H3 allocate solo org linkate al CC | `FASE_SUCCESSIVA` | NEXT_SESSION; H1 report | MC-022 | P1 | Non nel master B; slice dedicata se autorizzata |
+| **MC-045** | H3 allocate solo org linkate al CC | `IMPL_MERGIATO` / **CHIUSO** PR #222 · `11f2962` | assert_organization_linked_to_cc | MC-022 | P1 | CI include test + concurrency = miglioramenti separati |
 | **MC-046** | H4 top-up/storage = Stripe Customer del CC | `FASE_SUCCESSIVA` | idem | MC-021 | P1 | Idem |
 | **MC-047** | Legacy billing / migrazione R-04 / dual-write | `FASE_SUCCESSIVA` | B04 design §legacy; B07 | MC-010, B07 | P1 | Riconciliazione umana; nessuna auto-euristica |
 

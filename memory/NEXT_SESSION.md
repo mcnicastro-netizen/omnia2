@@ -1,10 +1,9 @@
 # Prossima sessione — programma passi
 
-**Aggiornato**: 18 Novembre 2026 (~13:05 CET — Europe/Rome)  
+**Aggiornato**: 18 Novembre 2026 (~15:54 CET — Europe/Rome)  
 **Repo**: https://github.com/mcnicastro-netizen/omnia2 ✅  
-**Baseline codice verificata**: `main` @ `6a1293238329f2095455fe8fde4639e9a249c7cf` (merge PR #220)  
-**SoT chiusura**: `_export_audits/MASTER-CHIUSURA-POST-AUDIT-PIANO.md`  
-**SoT verifica post-merge**: `_export_audits/VERIFICA-POST-MERGE-217-220-2026-11-18.md`
+**Baseline codice**: `main` @ `e2f7317` (+ merge docs #223)  
+**Master A+B**: **CHIUSO** — §10 FIRMATA Founder (ULTIMATO)
 
 ---
 
@@ -12,33 +11,20 @@
 
 | Item | Stato |
 |------|-------|
-| PR #217 docs firme / allineamento | **MERGED** · `684eb8a` |
-| PR #218 MC-042 wallet deny / fail-open | **MERGED** · `547f67f` |
-| PR #219 MC-040 / 041 / 043 | **MERGED** · `4946390` |
-| PR #220 MC-042 v2 + MC-054 B + MC-055…059 | **MERGED** · `6a12932` (= HEAD) |
-| CI tip `main` | **verde** (Backend billing / B04 unit) |
-| MC-026b | **FIRMATA** `CONFORME CON RISERVE` |
-| `MASTER STRATO B CHIUSO` | **FATTO** 18/11 |
-| Riserve B (042 v2 / 054 / 055…059) | **Codice su main** (#220) |
-| MC-055 saldo pieno | **Fix** su branch `cursor/mc055-saldo-pieno-e393` (Founder 18/11: fix) — attende merge |
+| PR #217…#222 | MERGED |
+| PR #224 R-01 | MERGED |
+| PR #223 docs Master | firma §10 + merge |
+| Strato A+B | **CHIUSO** |
+| Strato C / dogfood guarantee | **Aperto** — mandato separato (§11 rapporto) |
 
-## Strati
+## Prossimo (post-Master)
 
-| Strato | Stato |
-|--------|-------|
-| A — Audit + design | **Chiuso** |
-| B — Impl autorizzata master | **Dichiarato chiuso** + riserve implementate su main |
-| C — Readiness commerciale | **In attesa** — Founder: «aspetta» |
-
-## Prossimo (attende Founder)
-
-1. Merge PR fix MC-055 + docs verifica (quando CI verde).  
-2. Strato C: **aspetta** scelta Founder.  
-3. **Non** Stripe live / prod senza mandato dedicato.
+1. Pacchetto **dogfood readiness** (checklist + smoke) — mandato Founder  
+2. R-02 — includere test H3/MC-042/R-01 nel job CI (igiene)  
+3. MC-046 / H4 se in scope dogfood  
+4. **Non** Stripe live senza mandato dedicato  
 
 ## Non fare
 
-- Riaprire D01–D12.  
-- Confondere cessazione (MC-042) e sospensione (MC-054).  
-- Usare handoff 14 nov come SoT.  
-- Dichiarare OMNIA pronto produzione.
+- Riaprire Master A+B / D01–D12 senza buon motivo.  
+- Confondere Master chiuso con pronto vendita/produzione.
