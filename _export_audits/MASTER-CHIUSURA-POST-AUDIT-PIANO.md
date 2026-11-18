@@ -113,7 +113,7 @@ Deve avere uno di: *implementato e verificato* · *residuo accettato esplicitame
 | **MC-024** | B04-H2 exact roles (pre-binding) | `IMPL_MERGIATO` (superato da MC-025) | PR #212 | MC-023 | P2 | Storico; autorità ora = Main Admin binding |
 | **MC-025** | B04-H2 Main Admin residuale D01–D12 | `IMPL_MERGIATO` | PR #216 @ `99a967e` → `c3baebc` | MC-014, MC-023 | P0 | Binding + transfer 48h + deny-by-default + D07 + fix D10/D08/D02/D04 |
 | **MC-026a** | Codice D01–D12 post-fix su `main` | `IMPL_MERGIATO` | PR #216 @ `99a967e` ⊂ `c3baebc`; CI verde; report residuale | MC-025 | P0 | Tip `main` contiene fix D10/D08/D02/D04 |
-| **MC-026b** | Accettazione Founder conformità D01–D12 + decisioni 18/11 | `BLOCCANTE_APERTO` (gate B) — **non firmata** | `MC-026b-CHECKLIST-PRE-FIRMA.md` + MC-052; Cursor **non** firma | MC-026a, MC-042, MC-054…059 | P0 | Founder firma `CONFORME` / `CONFORME CON RISERVE` / `NON CONFORME` |
+| **MC-026b** | Accettazione Founder conformità D01–D12 + decisioni 18/11 | **`FIRMATA`** 18/11 `CONFORME CON RISERVE` | checklist + MC-052 | MC-026a, MC-042, MC-054…059 | P0 | Riserve: lockout v2, wallet giorno 8 completo, deroga |
 | **MC-027** | Suite test B04 locale + CI | `IMPL_MERGIATO` | CI success tip `main` post-#218 | MC-020–025, MC-028 | P0 | Actions success sul tip |
 | **MC-028** | MC-042 wallet deny + fail-open CC | `IMPL_MERGIATO` (pezzo) | PR #218 @ `413d2aa` → `547f67f` | MC-042 v1 storica | P0 | **Non** equivale a MC-042 v2 completo |
 
@@ -121,10 +121,10 @@ Deve avere uno di: *implementato e verificato* · *residuo accettato esplicitame
 
 | ID | Descrizione | Stato attuale | Evidenza richiesta | Dipendenze | Priorità | Criterio di chiusura |
 |---|---|---|---|---|---|---|
-| **MC-040** | UI Cabina accept transfer | `PENDING_FOUNDER` (evidenza: FE fuori scope H2; proposta ChatGPT ≠ decisione) | report H2 §limiti; API transfer pronta | MC-025 | P2 | Conferma esplicita Founder: FE = fase successiva / fuori strato B |
-| **MC-041** | Expiry transfer lazy (no cron) | `PENDING_FOUNDER` (evidenza: TTL 48h + `_expire_if_needed`; proposta ChatGPT ≠ decisione) | D09 + codice expire lazy | MC-025 | P3 | Conferma esplicita Founder: accettare lazy **oppure** cron in fase successiva |
+| **MC-040** | UI Cabina accept transfer | `DECISO` 18/11 · **impl autorizzata** (pulsante Accetta) | D-183 | MC-025 | P0 | FE Accetta in Cabina/notifiche |
+| **MC-041** | Expiry transfer job automatico | `DECISO` 18/11 · **impl autorizzata** (job, non solo lazy) | D-184 | MC-025 | P0 | APScheduler + expire pending |
 | **MC-042** | Cessazione definitiva (v2) | `DECISIONE_FUNZIONALE_APPROVATA` 18/11 v2 · enforcement completo **NO** | `MC-042-DECISIONE-FOUNDER.md` · D-177 (D-176 SUPERATA) | D05, DES-07/08 | P0 | v2 = no accesso autonomo; #218 = solo pezzo wallet |
-| **MC-043** | CC senza Main Admin → deny finché Ops nomina | `PENDING_FOUNDER` (evidenza: deny D01 + runbook doc; proposta ChatGPT ≠ decisione) | `B04-H2-OPS-RUNBOOK-MAIN-ADMIN-NOMINA.md` | D01 | P1 | Conferma esplicita Founder su accettazione + runbook |
+| **MC-043** | Nomina MA obbligatoria su CC nuovo + sblocco | `DECISO` 18/11 · **impl autorizzata** | D-185 | D01 | P0 | Nomina alla creazione / gate attivazione |
 | **MC-054** | Sospensione mancato pagamento giorno 8 | `DECISIONE_FUNZIONALE_APPROVATA` · `IMPL_MANCANTE/NON_CONFORME` | `MC-054-059-…md` · D-178 | DES-07, MC-032 | P0 | Wallet/crediti deny dal giorno 8; ≠ cessazione |
 | **MC-055** | Riattivazione automatica saldo pieno Stripe | `DECISIONE_FUNZIONALE_APPROVATA` · `IMPL_NON_VERIFICATA` | stesso · D-179 | DES-02/09 | P0 | No riattivazione su pagamento parziale |
 | **MC-056** | Deroga eccezionale Super Admin | `DECISIONE_FUNZIONALE_APPROVATA` · `IMPL_MANCANTE` | stesso · D-180 | ≠ D07 | P0 | Audit obbligatorio |
@@ -159,7 +159,7 @@ Deve avere uno di: *implementato e verificato* · *residuo accettato esplicitame
 |---|---|---|---|---|---|---|
 | **MC-050** | Aggiornare `memory/NEXT_SESSION.md` post-#216 | `CHIUSO` | `memory/NEXT_SESSION.md` (17 nov ~20:20+) | MC-025 | P0 | Contiene strati A/B/C, #216, residui, SoT piano |
 | **MC-051** | SoT handoff ChatGPT stale | `CHIUSO` (banner STALE + nuovi handoff) | `OMNIA-HANDOFF…` STALE; `MASTER-CHIUSURA-HANDOFF-CHATGPT.md` | — | P0 | ChatGPT non usa handoff 14 nov come verità |
-| **MC-052** | Report finale chiusura master strato B | `BLOCCANTE_APERTO` (bozza pronta) | `MASTER-STRATO-B-REPORT-FINALE-BOZZA.md` | MC-026b, MC-040–043 | P0 | Firma Founder «MASTER STRATO B CHIUSO» |
+| **MC-052** | Report finale chiusura master strato B | **`CHIUSO`** — Founder ha dichiarato `MASTER STRATO B CHIUSO` 18/11 | report finale | MC-026b, MC-040–043 | P0 | Firmato |
 | **MC-053** | Indice audit aggiornato con questo piano | `CHIUSO` su PR #217 | `00-INDICE-AUDIT.md` voci 35+ | — | P1 | Voci piano + handoff + review presenti |
 
 ---

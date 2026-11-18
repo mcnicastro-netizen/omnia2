@@ -59,16 +59,17 @@ Slice1 (#208) · B04-I (#210) · B04-II (#211) · B04-H1 (#212) · B04-H2 (#216)
 | MC-053 indice | aggiornare voci MC-042 v2 + MC-054…059 + checklist |
 | D-176 | **SUPERATA** da D-177 |
 
-## 6. Firma Founder (sola Founder)
+## 6. Firma Founder — **REGISTRATA** 18/11/2026 (Europe/Rome)
 
-- [ ] Confermo chiusura **strato A** (MC-001…015)
-- [ ] Accetto **MC-026b** come: `CONFORME` / `CONFORME CON RISERVE`: _______________
-- [ ] Confermo **MC-040**: _______________
-- [ ] Confermo **MC-041**: _______________
-- [ ] Prendo atto **MC-042 v2** e degli scostamenti (o autorizzo impl)
-- [ ] Prendo atto **MC-054…059** e degli scostamenti (o autorizzo impl)
-- [ ] Confermo **MC-043**: _______________
-- [ ] Dichiaro: **`MASTER STRATO B CHIUSO`**
-- [ ] Data / Founder: _______________
+- [x] Confermo chiusura **strato A** (MC-001…015)
+- [x] Accetto **MC-026b** come: **`CONFORME CON RISERVE`**
+  - Riserve: MC-042 v2 lockout totale + canale Super Admin; MC-054 deny wallet/crediti giorno 8 (oltre spend); MC-055…059 deroga/riattivazione/comms — **fase successiva / mandato impl**
+- [x] **MC-040**: crea pulsante Accetta transfer in Cabina — **DECISO · da implementare**
+- [x] **MC-041**: job automatico expiry 48h — **DECISO · da implementare**
+- [x] **MC-042 v2** / **MC-054…059**: decisioni funzionali; scostamenti accettati come riserve
+- [x] **MC-043**: nomina Main Admin obbligatoria su cliente nuovo + sblocco — **DECISO · da implementare**
+- [x] Dichiaro: **`MASTER STRATO B CHIUSO`**
+- [x] Data / Founder: **18 novembre 2026** · Marco Nicastro (conferma in chat Cursor + ChatGPT)
 
-**Dopo la firma:** merge PR docs #217 solo su ordine esplicito; nessun codice senza nuovo mandato.
+**Autorizzazione codice:** `OMNIA — AUTORIZZAZIONE ESPLICITA ALL'IMPLEMENTAZIONE`  
+Scope: MC-040 + MC-041 + MC-043. Merge #217 autorizzato.

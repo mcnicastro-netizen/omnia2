@@ -7,6 +7,22 @@ Registro di tutte le decisioni di business e tecniche prese durante il progetto.
 
 ## Decisioni prese
 
+### D-185 — MC-043 nomina Main Admin obbligatoria su CC nuovo · 18-Nov-2026
+- **Decisione**: Cliente commerciale nuovo → nomina Main Admin **obbligatoria**; solo dopo sblocco operativo wallet. Founder: «richiedere nomina (obbligatorio) al cliente nuovo e sbloccare».
+- **Stato**: ✅ deciso. Implementazione autorizzata 18/11.
+
+### D-184 — MC-041 job automatico expiry transfer 48h · 18-Nov-2026
+- **Decisione**: Expiry proposte Main Admin con **job automatico** (non solo lazy on-touch).
+- **Stato**: ✅ deciso. Implementazione autorizzata 18/11.
+
+### D-183 — MC-040 pulsante Accetta transfer in Cabina · 18-Nov-2026
+- **Decisione**: Creare pulsante/UI Accetta proposta Main Admin in Cabina/notifiche.
+- **Stato**: ✅ deciso. Implementazione autorizzata 18/11.
+
+### D-182b — Firma MC-026b + MASTER STRATO B CHIUSO · 18-Nov-2026
+- **Decisione**: MC-026b = `CONFORME CON RISERVE` (MC-042 v2 lockout; MC-054 wallet giorno 8 completo; MC-055…059). Dichiarato `MASTER STRATO B CHIUSO`. Merge docs #217 autorizzato.
+- **Stato**: ✅ firmato Founder 18/11/2026.
+
 ### D-182 — MC-059 deroghe indipendenti per CC · 18-Nov-2026
 - **Decisione**: Ogni deroga è indipendente per CommercialCustomer; durate/scadenze possono differire; una deroga non altera altri clienti.
 - **SoT**: `_export_audits/MC-054-059-SOSPENSIONE-RIATTIVAZIONE-DEROGA.md`.

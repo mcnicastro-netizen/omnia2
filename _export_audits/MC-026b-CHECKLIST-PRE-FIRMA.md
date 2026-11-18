@@ -2,7 +2,7 @@
 
 **Aggiornato:** 18 novembre 2026 · Europe/Rome  
 **ID:** MC-026b  
-**Stato:** **NON FIRMATA** — Cursor non firma  
+**Stato:** **FIRMATA DAL FOUNDER** 18/11/2026 — `CONFORME CON RISERVE` (vedi §E)  
 **Baseline codice:** `main` @ `547f67f` (include PR #216 H2 + PR #218 MC-042 wallet/fail-open)  
 **Scopo:** riesame conformità D01–D12 + decisioni 18/11 (MC-042 v2, MC-054…059) **senza** chiusura automatica.
 
@@ -75,11 +75,12 @@
 
 ---
 
-## E. Formula firma (solo Founder)
+## E. Formula firma (solo Founder) — **COMPILATA**
 
-- [ ] `CONFORME`
-- [ ] `CONFORME CON RISERVE`: _______________________________
-- [ ] `NON CONFORME` — non firmare strato B
-- Data / Founder: _______________
+- [x] `CONFORME CON RISERVE`:
+  1. MC-042 v2 lockout totale + Super Admin via email — da implementare
+  2. MC-054 giorno 8 deny wallet/crediti completo — da implementare (spend già ok)
+  3. MC-055…059 riattivazione/deroga/comms — da implementare
+- Data / Founder: **18 novembre 2026** · Marco Nicastro
 
-**Cursor non compila la firma.**
+MC-040 / MC-041 / MC-043: decisioni funzionali **prese** lo stesso giorno (pulsante Cabina; job expiry; nomina obbligatoria) — implementazione autorizzata esplicitamente.
