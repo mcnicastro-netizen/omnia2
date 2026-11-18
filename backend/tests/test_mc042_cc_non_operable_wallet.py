@@ -77,6 +77,13 @@ def test_mc042_predicates_align_read_and_mutation():
     assert not cc_is_wallet_operable(none_op)
     assert cc_allows_wallet_admin_read(None) is False
 
+    # MC-054 day-8 — billing_only / suspended non sono wallet-operabili
+    suspended = {"commercial_status": "suspended", "operational_status": "billing_only"}
+    assert not cc_is_wallet_operable(suspended)
+    assert not cc_is_wallet_operable(
+        {"commercial_status": "active", "operational_status": "billing_only"}
+    )
+
 
 def test_mc042_assert_cc_wallet_operable_denies_ceased():
     from shared.billing import main_admin_service as mas

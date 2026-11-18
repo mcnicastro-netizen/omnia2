@@ -862,12 +862,33 @@ async def stripe_webhook(request: Request):
         except Exception as exc:  # noqa: BLE001
             logger.warning("invoice.paid plan credits failed: %s", exc)
 
+        # MC-055 — saldo / invoice.paid → riattivazione CC se sospeso
+        try:
+            from shared.billing.commercial_access import reactivate_cc_on_full_payment
+
+            cc_id_paid = (obj.get("metadata") or {}).get("commercial_customer_id")
+            if not cc_id_paid and agency_id_inv:
+                agency_paid = await db.agencies.find_one(
+                    {"id": agency_id_inv}, {"commercial_customer_id": 1}
+                )
+                cc_id_paid = (agency_paid or {}).get("commercial_customer_id")
+            if cc_id_paid:
+                await reactivate_cc_on_full_payment(db, cc_id_paid)
+        except Exception as exc:  # noqa: BLE001
+            logger.warning("invoice.paid reactivate failed: %s", exc)
+
     elif etype == "invoice.payment_failed":
         stripe_sub_id = obj.get("subscription")
         if stripe_sub_id:
             await db.subscriptions.update_one(
                 {"stripe_subscription_id": stripe_sub_id},
-                {"$set": {"status": "past_due", "updated_at": now}},
+                {
+                    "$set": {
+                        "status": "past_due",
+                        "payment_failed_at": now,
+                        "updated_at": now,
+                    }
+                },
             )
         try:
             from shared.ops_alerts import record_alert

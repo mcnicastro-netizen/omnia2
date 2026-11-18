@@ -54,11 +54,11 @@ La cessazione dell’accesso **non** comporta cancellazione dei dati.
 | Tipo | Stato |
 |---|---|
 | Decisione funzionale Founder (v2) | **APPROVATA** 18/11/2026 |
-| Enforcement login/password disattivati su cessazione | **DA VERIFICARE / NON DICHIARATO IMPLEMENTATO** |
-| Enforcement «nessun accesso autonomo» (tutta la piattaforma) | **DA VERIFICARE / NON DICHIARATO IMPLEMENTATO** |
-| Enforcement deny wallet operativo su CC ceased | **PARZIALE** — presente su `main` post PR #218 (gate wallet); non equivale a MC-042 v2 completo |
-| API cliente chiusura/fatture | **ASSENTE** (e con v2 **non** è più la whitelist di accesso autonomo) |
-| Canale email → Super Admin per documenti | **NON IMPLEMENTATO** come flusso prodotto (fuori scope #218) |
+| Enforcement login/password disattivati su cessazione | **IMPLEMENTATO** 18/11 — gate login (password/Google/MFA) + session `get_current_user` su CC `ceased` (`shared/billing/commercial_access.py`) |
+| Enforcement «nessun accesso autonomo» (tutta la piattaforma) | **IMPLEMENTATO** 18/11 — deny API autenticata su CC ceased (Super Admin bypass) |
+| Enforcement deny wallet operativo su CC ceased | **IMPLEMENTATO** — #218 + v2 |
+| API cliente chiusura/fatture | **ASSENTE** di proposito (v2: no self-serve; solo Super Admin via email) |
+| Canale email → Super Admin per documenti | **FUORI SCOPE prodotto** — hint in errore 403; processo manuale email |
 
 ---
 
@@ -73,15 +73,15 @@ La cessazione dell’accesso **non** comporta cancellazione dei dati.
 
 ---
 
-## Stato implementativo (baseline `main` @ `547f67f`, post merge #218)
+## Stato implementativo (post auth Founder 18/11 — branch `cursor/mc042-v2-suspend-deroga-e393`)
 
 | Requisito MC-042 v2 | Codice | Esito |
 |---|---|---|
-| Login/password disattivati su cessazione | Non verificato come regola automatica di cessazione | **NON CONFORME / NON VERIFICATO** |
-| Nessun accesso autonomo piattaforma | Sessioni/login non gated da «ceased» in modo documentato come chiusura totale | **NON CONFORME / GAP** |
-| Nessuna read autonoma fatture/documenti | Nessuna API cliente dedicata; non c’è self-serve post-cessazione | **ALLINEATO DI FATTO all’assenza self-serve** (ma manca canale Super Admin) |
-| Nessun accesso wallet | Gate `cc_is_wallet_operable` / assert su ceased + fail-open fix | **PARZIALE — wallet sì; non tutto MC-042 v2** |
-| Conservazione dati | Ledger/nomine/CC restano in DB; no delete su cease | **ALLINEATO (principio)** |
-| Email → Super Admin | Non presente come flusso | **MANCANTE** |
+| Login/password disattivati su cessazione | `assert_user_login_allowed` su login / Google / MFA | **CONFORME** |
+| Nessun accesso autonomo piattaforma | `enforce_commercial_access` in `get_current_user` | **CONFORME** |
+| Nessuna read autonoma fatture/documenti | Nessuna API self-serve post-cessazione | **CONFORME** |
+| Nessun accesso wallet | `cc_is_wallet_operable` + assert | **CONFORME** |
+| Conservazione dati | Ledger/nomine/CC restano in DB; no delete su cease | **CONFORME** |
+| Email → Super Admin | Processo manuale (hint 403); non UI product | **ACCETTATO** |
 
-**Conclusione:** MC-042 **non** è formalmente chiusa in codice. Decisione funzionale v2 **vigente**. Enforcement completo **mancante** (salvo pezzi wallet di #218).
+**Conclusione:** MC-042 v2 enforcement **implementato** con autorizzazione esplicita Founder 18/11 (insieme a MC-054 B + MC-055…059).

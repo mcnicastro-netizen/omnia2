@@ -249,6 +249,11 @@ async def login(req: LoginRequest, request: Request, response: Response,
     if not user.get("is_active", True):
         raise HTTPException(status_code=403, detail=t("auth.account_disabled", lang=lang))
 
+    # MC-042 v2 — cessazione: login negato (password resta; accesso autonomo no)
+    from shared.billing.commercial_access import assert_user_login_allowed
+
+    await assert_user_login_allowed(db, user)
+
     await clear_attempts(email, ip)
 
     # MFA gate — do not set session cookies until TOTP verified

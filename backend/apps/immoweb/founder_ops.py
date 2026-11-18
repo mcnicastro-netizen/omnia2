@@ -1536,3 +1536,85 @@ async def ops_revoke_main_admin(
         "commercial_customer_id": cc.get("id"),
         "main_admin_user_id": cc.get("main_admin_user_id"),
     }
+
+
+class SetCommercialStatusBody(BaseModel):
+    commercial_customer_id: str = Field(min_length=1)
+    commercial_status: str = Field(min_length=1)
+    reason: str = Field(default="", max_length=500)
+
+
+@router.post("/commercial-customers/set-status")
+async def ops_set_commercial_status(
+    body: SetCommercialStatusBody,
+    user: dict = Depends(require_roles("super_admin")),
+) -> Dict[str, Any]:
+    """Ops: imposta commercial_status (ceased / suspended / active / …)."""
+    from shared.billing.commercial_access import set_commercial_status
+    from shared.models.commercial_customer import CommercialStatus
+    from typing import get_args
+
+    allowed = set(get_args(CommercialStatus))
+    status = body.commercial_status.strip()
+    if status not in allowed:
+        raise HTTPException(
+            status_code=400,
+            detail={"error": "invalid_commercial_status", "allowed": sorted(allowed)},
+        )
+    db = Database.get()
+    cc = await set_commercial_status(
+        db,
+        body.commercial_customer_id.strip(),
+        commercial_status=status,
+        actor_user_id=user.get("id"),
+        reason=body.reason.strip(),
+    )
+    return {
+        "ok": True,
+        "commercial_customer_id": cc.get("id"),
+        "commercial_status": cc.get("commercial_status"),
+        "operational_status": cc.get("operational_status"),
+    }
+
+
+class ReactivationDerogaBody(BaseModel):
+    commercial_customer_id: str = Field(min_length=1)
+    reason: str = Field(min_length=8, max_length=2000)
+    amount_due: float = Field(ge=0)
+    duration_hours: int = Field(ge=1, le=24 * 90)
+
+
+@router.post("/commercial-customers/reactivation-deroga")
+async def ops_grant_reactivation_deroga(
+    body: ReactivationDerogaBody,
+    user: dict = Depends(require_roles("super_admin")),
+) -> Dict[str, Any]:
+    """MC-056/057/058 — deroga eccezionale Super Admin (≠ D07 transfer)."""
+    from shared.billing.commercial_access import grant_reactivation_deroga
+
+    db = Database.get()
+    doc = await grant_reactivation_deroga(
+        db,
+        commercial_customer_id=body.commercial_customer_id.strip(),
+        actor=user,
+        reason=body.reason.strip(),
+        amount_due=float(body.amount_due),
+        duration_hours=int(body.duration_hours),
+    )
+    return {"ok": True, "deroga": doc}
+
+
+@router.get("/commercial-customers/{cc_id}/reactivation-deroghe")
+async def ops_list_reactivation_deroghe(
+    cc_id: str,
+    user: dict = Depends(require_roles("super_admin")),
+) -> Dict[str, Any]:
+    """Elenco deroghe per CC (audit MC-059)."""
+    from shared.billing.commercial_access import DEROGA_COLL
+
+    db = Database.get()
+    rows = await db[DEROGA_COLL].find(
+        {"commercial_customer_id": cc_id},
+        {"_id": 0},
+    ).sort("created_at", -1).to_list(length=200)
+    return {"ok": True, "items": rows, "count": len(rows)}

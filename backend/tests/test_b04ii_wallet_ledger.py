@@ -309,10 +309,12 @@ def test_fifo_debit_across_two_lots():
 
 
 def test_debit_blocked_when_suspended():
+    """MC-054 — spend negata su suspended; grant/allocate solo a CC operable."""
     from shared.billing import credit_wallet_service as mod
+    from shared.models.commercial_customer import operational_status_for
 
     db = FakeDB()
-    _seed_cc_agency(db, status="suspended")
+    _seed_cc_agency(db, status="active")
     _run(
         mod.grant_lot(
             db,
@@ -323,6 +325,11 @@ def test_debit_blocked_when_suspended():
             idempotency_key="s1",
             allocate_to_organization_id="ag1",
         )
+    )
+    # Sospendi dopo il grant (wallet mutate già vietata su suspended)
+    db.commercial_customers.docs[0]["commercial_status"] = "suspended"
+    db.commercial_customers.docs[0]["operational_status"] = operational_status_for(
+        "suspended"
     )
     with pytest.raises(HTTPException) as ei:
         _run(

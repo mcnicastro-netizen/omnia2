@@ -162,6 +162,11 @@ async def google_login(
             await db.users.update_one({"id": user["id"]}, {"$set": patch})
             user = {**user, **patch}
 
+    # MC-042 v2 — cessazione: login Google negato
+    from shared.billing.commercial_access import assert_user_login_allowed
+
+    await assert_user_login_allowed(db, user)
+
     # MFA gate for Google sign-in (existing users with MFA)
     if user.get("mfa_enabled"):
         from apps.core.mfa_routes import create_mfa_challenge_token
