@@ -125,7 +125,11 @@ async def list_plans():
 
 @router.get("/subscription")
 async def get_subscription(user: dict = Depends(get_current_user)):
-    """Current agency subscription state (if any)."""
+    """Current agency subscription state (if any).
+
+    MC-042: su CC non operativo i campi wallet/saldi sono redatti
+    (subscription + stato commerciale restano leggibili).
+    """
     db = Database.get()
     aid = optional_agency_id(user)
     if not aid:
@@ -145,10 +149,24 @@ async def get_subscription(user: dict = Depends(get_current_user)):
     if cc_id:
         cc = await db.commercial_customers.find_one({"id": cc_id}, {"_id": 0})
     from shared.billing.counters import subscription_counter, wallet_counter
+    from shared.billing.main_admin_service import cc_is_wallet_operable
     from shared.billing.self_serve import is_self_serve_enabled
     from shared.demo_story import build_demo_status
 
     w = wallet or {"agency_id": aid, "balance": 0}
+    wallet_operable = cc_is_wallet_operable(cc) if cc else True
+    if not wallet_operable:
+        w = {
+            "agency_id": aid,
+            "redacted": True,
+            "reason": "cc_not_operable",
+        }
+        credits_counter = {
+            "redacted": True,
+            "reason": "cc_not_operable",
+        }
+    else:
+        credits_counter = wallet_counter(w)
     return {
         "subscription": sub,
         "wallet": w,
@@ -168,7 +186,7 @@ async def get_subscription(user: dict = Depends(get_current_user)):
         "demo": build_demo_status(agency, self_serve_enabled=is_self_serve_enabled()),
         "counters": {
             "sub": subscription_counter(sub),
-            "credits": wallet_counter(w),
+            "credits": credits_counter,
         },
     }
 
@@ -874,7 +892,10 @@ async def _authorize_wallet_admin(
     amount: Optional[int] = None,
     operation: str = "wallet_admin",
 ) -> str:
-    """Return cc_id after Main Admin (or D07 emergency) authorization."""
+    """Return cc_id after Main Admin (or D07 emergency) authorization.
+
+    MC-042: ogni accesso operativo al wallet (read o mutate) richiede CC operable.
+    """
     from shared.billing import main_admin_service as mas
 
     cc_id = await mas.resolve_wallet_cc_id(
@@ -882,6 +903,13 @@ async def _authorize_wallet_admin(
         user,
         agency_id=agency_id,
         commercial_customer_id=commercial_customer_id,
+    )
+    # MC-042 — deny wallet operativo su CC non operable (anche Super Admin read)
+    await mas.assert_cc_wallet_operable(
+        db,
+        cc_id,
+        actor_user_id=user.get("id"),
+        operation=operation,
     )
     if user.get("role") == "super_admin" and for_mutation:
         # D07 — ordinary Main Admin path preferred; emergency only with reason
@@ -900,21 +928,30 @@ async def _authorize_wallet_admin(
         # unless they are also the nominated Main Admin
         try:
             await mas.assert_is_main_admin_of(
-                db, user, cc_id, for_mutation=for_mutation
+                db,
+                user,
+                cc_id,
+                for_mutation=for_mutation,
+                require_wallet_operable=True,
             )
             return cc_id
-        except HTTPException:
+        except HTTPException as exc:
+            if isinstance(exc.detail, dict) and exc.detail.get("error") == "cc_not_operable":
+                raise
             raise HTTPException(
                 status_code=403,
                 detail={"error": "extraordinary_reason_required"},
             )
     if user.get("role") == "super_admin" and not for_mutation:
-        # Ops consultation read
-        cc = await mas.get_commercial_customer(db, cc_id)
-        if not cc:
-            raise HTTPException(status_code=404, detail={"error": "commercial_customer_not_found"})
+        # Ops consultation read — solo se CC operable (già gated sopra)
         return cc_id
-    await mas.assert_is_main_admin_of(db, user, cc_id, for_mutation=for_mutation)
+    await mas.assert_is_main_admin_of(
+        db,
+        user,
+        cc_id,
+        for_mutation=for_mutation,
+        require_wallet_operable=True,
+    )
     return cc_id
 
 
@@ -954,10 +991,23 @@ async def get_org_wallet(
         "super_admin", "agency_admin", "group_admin", "branch_admin", "agent"
     )),
 ):
-    """Organization spendable — scoped to require_agency only (unchanged)."""
+    """Organization spendable — scoped to require_agency; MC-042 gate su CC."""
     db = Database.get()
     agency_id = require_agency(user)
-    from shared.billing.credit_wallet_service import org_spendable_balance
+    from shared.billing import main_admin_service as mas
+    from shared.billing.credit_wallet_service import (
+        org_spendable_balance,
+        resolve_cc_id_for_agency,
+    )
+
+    cc_id = await resolve_cc_id_for_agency(db, agency_id)
+    if cc_id:
+        await mas.assert_cc_wallet_operable(
+            db,
+            cc_id,
+            actor_user_id=user.get("id"),
+            operation="org_wallet_read",
+        )
 
     allocs = await db.credit_allocations.find(
         {"organization_id": agency_id}, {"_id": 0}

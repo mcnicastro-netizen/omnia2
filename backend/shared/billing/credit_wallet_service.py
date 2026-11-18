@@ -168,10 +168,28 @@ async def resolve_cc_id_for_agency(db, agency_id: str) -> Optional[str]:
 
 
 def _spend_blocked(cc: Optional[dict]) -> bool:
+    """MC-042 / DES-07 — spesa vietata su stati commerciali bloccati o CC non operable."""
     if not cc:
         return False
     status = cc.get("commercial_status") or "pre_activation"
-    return status in ("suspended", "ceased", "pre_activation")
+    if status in ("suspended", "ceased", "pre_activation"):
+        return True
+    from shared.billing.main_admin_service import cc_is_wallet_operable
+
+    return not cc_is_wallet_operable(cc)
+
+
+async def _assert_cc_wallet_operable_for_service(
+    db, commercial_customer_id: str, *, operation: str
+) -> dict:
+    """Defense-in-depth: service-layer deny su allocate/revoke se CC non operable."""
+    from shared.billing.main_admin_service import assert_cc_wallet_operable
+
+    return await assert_cc_wallet_operable(
+        db,
+        commercial_customer_id,
+        operation=operation,
+    )
 
 
 async def grant_lot(
@@ -260,6 +278,9 @@ async def allocate_credits(
     """Allocate unallocated lot qty to an Organization (FIFO, optionally prefer one lot)."""
     if amount <= 0:
         raise ValueError("amount_must_be_positive")
+    await _assert_cc_wallet_operable_for_service(
+        db, commercial_customer_id, operation="allocate"
+    )
     if idempotency_key:
         existing = await db.cc_credit_ledger.find_one(
             {"idempotency_key": idempotency_key}, {"_id": 0}
@@ -417,6 +438,9 @@ async def revoke_allocation(
             status_code=400,
             detail={"error": "commercial_customer_required"},
         )
+    await _assert_cc_wallet_operable_for_service(
+        db, commercial_customer_id, operation="revoke"
+    )
     if idempotency_key:
         existing = await db.cc_credit_ledger.find_one(
             {"idempotency_key": idempotency_key}, {"_id": 0}
