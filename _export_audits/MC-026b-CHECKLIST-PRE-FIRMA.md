@@ -1,10 +1,10 @@
-# MC-026b — Checklist pre-firma Founder (non firmata)
+# MC-026b — Checklist conformità Strato B
 
-**Aggiornato:** 18 novembre 2026 · Europe/Rome  
+**Aggiornato:** 18 novembre 2026 · ~14:20 Europe/Rome  
 **ID:** MC-026b  
-**Stato:** **FIRMATA DAL FOUNDER** 18/11/2026 — `CONFORME CON RISERVE` (vedi §E)  
-**Baseline codice:** `main` @ `547f67f` (include PR #216 H2 + PR #218 MC-042 wallet/fail-open)  
-**Scopo:** riesame conformità D01–D12 + decisioni 18/11 (MC-042 v2, MC-054…059) **senza** chiusura automatica.
+**Stato firma Founder:** **FIRMATA** 18/11/2026 — `CONFORME CON RISERVE`  
+**Stato post-riserve (verifica Cursor):** riserve **RISOLTE in codice** su `main` @ `11f2962` — vedi `_export_audits/MASTER-RAPPORTO-FINALE-CHIUSURA-STRATI-A-B.md`  
+**Baseline codice attuale:** `main` @ `11f29621dd2ddef9e4a61fa3ece569a65f94eaf9`
 
 ---
 
@@ -12,75 +12,60 @@
 
 | Esito | Significato |
 |---|---|
-| CONFORME | Evidenza codice allineata alla decisione |
-| NON CONFORME | Evidenza di scostamento |
-| PARZIALE | Solo una parte allineata |
-| NON VERIFICATO | Non riesaminato end-to-end in questo passaggio |
-| N/A DECISIONE | Solo funzionale; codice non ancora in scope |
+| CONFORME | Evidenza codice allineata |
+| PARZIALE | Residuo non bloccante Master |
+| SUPERATA | Decisione non più vigente |
 
 ---
 
-## A. D01–D12 (H2 Main Admin) — sintesi
+## A. D01–D12 (H2 Main Admin)
 
 | Tema | Esito | Nota |
 |---|---|---|
-| D01–D04, D06–D12 (binding, transfer 48h, Cabina, multi-CC, idoneità, D07) | PARZIALE → vedi MC-026a | Codice mergiato (#216); **accettazione Founder ancora aperta** |
-| D05 cessazione (storico) | vedi MC-042 v2 sotto | Precisata/restituita da MC-042 v2 |
-
-*(Dettaglio D01–D12: report H2 residuale + conformity — non ripetuto qui.)*
+| D01–D12 binding/transfer/D07 | CONFORME (Master) | #216 + #219; unit H2 |
 
 ---
 
-## B. MC-042 v2 — cessazione definitiva (18/11 aggiornata)
+## B. MC-042 v2 — cessazione
 
-| Requisito | Tipo | Esito | Nota |
-|---|---|---|---|
-| Decisione funzionale v2 vigente | Funzionale | CONFORME (doc) | SoT `MC-042-DECISIONE-FOUNDER.md` · D-177 |
-| Login/password disattivati | Implementativo | NON CONFORME / NON VERIFICATO | Non parte di #218 |
-| Nessun accesso autonomo piattaforma | Implementativo | NON CONFORME | Gate wallet ≠ lockout totale |
-| Nessuna consultazione autonoma fatture/documenti | Implementativo | PARZIALE | Nessuna API self-serve (di fatto); manca canale Super Admin |
-| Nessun accesso wallet | Implementativo | PARZIALE | Deny wallet su ceased post-#218 |
-| Conservazione dati | Implementativo | CONFORME (principio) | No delete su cease documentato |
-| Whitelist autonoma chiusura+fatturazione (v1) | Funzionale | **SUPERATA** | Non più requisito |
-
-**MC-042 formalmente chiusa?** **NO.**
-
----
-
-## C. MC-054…059 — sospensione / riattivazione / deroga
-
-| ID | Esito | Nota |
+| Requisito | Esito | Evidenza |
 |---|---|---|
-| MC-054 giorno 8: deny wallet read/allocate/revoke/transfer/spend | NON CONFORME (read/allocate/revoke); PARZIALE (spend) | `billing_only` ancora operable per wallet admin read/mutate |
-| MC-054 collaboratori / MA solo billing | NON VERIFICATO | |
-| MC-055 riattivazione auto saldo pieno Stripe | MANCANTE / NON VERIFICATO | |
-| MC-056…059 sistema deroga + email + scadenza | MANCANTE | ≠ D07 emergency wallet |
+| Decisione v2 | CONFORME | D-177 |
+| Login deny | CONFORME | #220 `assert_user_login_allowed` |
+| Accesso API deny | CONFORME | `enforce_commercial_access` |
+| Wallet deny | CONFORME | #218+#220 |
+| `/auth/refresh` gate | PARZIALE | Residuo R-01 — non bloccante Master |
+| Conservazione dati | CONFORME (principio) | |
 
 ---
 
-## D. Separazione discrepanze
+## C. MC-054…059
 
-### Funzionali (decisioni ancora da confermare / firmare)
-- MC-040, MC-041, MC-043 — `PENDING_FOUNDER`
-- Firma MC-026b stessa
-- Firma MC-052 `MASTER STRATO B CHIUSO`
-
-### Implementative (codice vs decisione già approvata)
-- MC-042 v2 lockout totale + canale Super Admin
-- MC-054 deny wallet/crediti dal giorno 8 (oltre spend)
-- MC-055…059 riattivazione/deroga/comms
-
-### Residui accettabili solo se Founder li firma come riserva
-- Nessuno auto-accettato da Cursor.
+| ID | Esito | Evidenza |
+|---|---|---|
+| MC-054 giorno 8 B | CONFORME | #220 |
+| MC-055 saldo pieno | CONFORME | #221 |
+| MC-056…059 deroga | CONFORME | #220 |
 
 ---
 
-## E. Formula firma (solo Founder) — **COMPILATA**
+## D. MC-040 / 041 / 043 / 045
 
-- [x] `CONFORME CON RISERVE`:
-  1. MC-042 v2 lockout totale + Super Admin via email — da implementare
-  2. MC-054 giorno 8 deny wallet/crediti completo — da implementare (spend già ok)
-  3. MC-055…059 riattivazione/deroga/comms — da implementare
+| ID | Esito | Evidenza |
+|---|---|---|
+| MC-040 Accetta | CONFORME | #219 |
+| MC-041 job 48h | CONFORME | #219 |
+| MC-043 nomina | CONFORME | #219 |
+| MC-045 H3 | CONFORME | #222 |
+
+---
+
+## E. Formula firma Founder (storica) — **COMPILATA** 18/11
+
+- [x] `CONFORME CON RISERVE` (all’epoca: 042 v2 / 054 / 055…059 da implementare)
 - Data / Founder: **18 novembre 2026** · Marco Nicastro
 
-MC-040 / MC-041 / MC-043: decisioni funzionali **prese** lo stesso giorno (pulsante Cabina; job expiry; nomina obbligatoria) — implementazione autorizzata esplicitamente.
+### Post-riserve (verifica 18/11 sera)
+
+Riserve della firma **affrontate** tramite #219–#222.  
+Chiusura formale Master A+B: barrare in `MASTER-RAPPORTO-FINALE-CHIUSURA-STRATI-A-B.md` §10.

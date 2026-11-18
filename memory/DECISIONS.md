@@ -7,6 +7,10 @@ Registro di tutte le decisioni di business e tecniche prese durante il progetto.
 
 ## Decisioni prese
 
+### D-186 — Rapporto finale chiusura Master Strati A+B · 18-Nov-2026
+- **Decisione operativa**: prodotto `_export_audits/MASTER-RAPPORTO-FINALE-CHIUSURA-STRATI-A-B.md` con riconciliazione #217–#222, tip `11f2962`, riserve MC-026b risolte, H3 chiusa; residui R-01…R-04 non bloccanti Master; dogfood guarantee = percorso separato (§11).
+- **Stato**: ✅ evidenze Cursor. ⏳ firma Founder §10 del rapporto.
+
 ### D-185 — MC-043 nomina Main Admin obbligatoria su CC nuovo · 18-Nov-2026
 - **Decisione**: Cliente commerciale nuovo → nomina Main Admin **obbligatoria**; solo dopo sblocco operativo wallet. Founder: «richiedere nomina (obbligatorio) al cliente nuovo e sbloccare».
 - **Stato**: ✅ deciso. Implementazione autorizzata 18/11.
