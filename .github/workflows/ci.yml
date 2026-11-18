@@ -1,5 +1,6 @@
 # OMNIA — GitHub Actions CI (essenziale)
-# Job iniziale: suite billing/B04 offline-safe (H1/H2, B04-I, B04-II, Slice1).
+# Suite billing/B04 offline-safe + Master residual R-02:
+# H1/H2, B04-I/II, Slice1, MC-045 H3, MC-042 v2/deroga/wallet, R-01 refresh/cease.
 # I test che richiedono secret/Mongo live restano fuori da questo job.
 name: CI
 
@@ -38,7 +39,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Run B04 / H1-H2 / Slice1 unit tests
+      - name: Run B04 + Master residual (H3 / MC-042 / R-01) unit tests
         env:
           PYTHONPATH: .
         run: |
@@ -46,4 +47,8 @@ jobs:
             tests/test_b04_h1_h2_wallet_authz.py \
             tests/test_b04ii_wallet_ledger.py \
             tests/test_b04i_foundations.py \
-            tests/test_slice1_b01_b03.py
+            tests/test_slice1_b01_b03.py \
+            tests/test_mc045_h3_allocate_link.py \
+            tests/test_mc042_v2_suspend_deroga.py \
+            tests/test_mc042_cc_non_operable_wallet.py \
+            tests/test_mc042_r01_refresh_cease.py
