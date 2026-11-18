@@ -19,7 +19,8 @@
 
 ## Prossimo (post-Master)
 
-1. Pacchetto **dogfood readiness** (checklist + smoke) — mandato Founder  
+1. Dogfood Step 1 runbook **CHIUSO** (`_export_audits/DOGFOOD-READINESS-STEP1-RUNBOOK.md`) — Step 2 non autorizzato
+2. Pacchetto **dogfood readiness** (Step 2+) (checklist + smoke) — mandato Founder  
 2. ~~R-02 CI~~ — **CHIUSO** (#225)  
 3. ~~R-03 allocate concurrency~~ — **CHIUSO** (#227)  
 4. ~~R-04 E2E UI smoke~~ — **CHIUSO** (report `_export_audits/R04-E2E-UI-SMOKE-REPORT.md`)  
