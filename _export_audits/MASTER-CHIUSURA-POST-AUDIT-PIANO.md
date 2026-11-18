@@ -130,7 +130,7 @@ Deve avere uno di: *implementato e verificato* · *residuo accettato esplicitame
 | **MC-042** | Cessazione definitiva (v2) | `IMPL_MERGIATO` parziale+#220 · gate login/session + wallet · **GAP** refresh senza gate / no revoke session on cease | `MC-042-DECISIONE-FOUNDER.md` · D-177 | D05, DES-07/08 | P0 | Verifica 18/11 |
 | **MC-043** | Nomina MA obbligatoria su CC nuovo + sblocco | `IMPL_MERGIATO` PR #219 | D-185 | D01 | P0 | bind_initial + Attiva gate |
 | **MC-054** | Sospensione mancato pagamento giorno 8 (opz. B) | `IMPL_MERGIATO` PR #220 · collab off / MA billing / wallet deny | `MC-054-059-…md` · D-178 | DES-07, MC-032 | P0 | ≠ cessazione |
-| **MC-055** | Riattivazione automatica saldo pieno Stripe | `IMPL_PRESENTE` su `invoice.paid` · **GAP** nessun check debito residuo multi-invoice | stesso · D-179 | DES-02/09 | P0 | **Decisione Founder aperta** (verifica) |
+| **MC-055** | Riattivazione automatica saldo pieno Stripe | `IMPL_MERGIATO` path + **fix saldo** (no reactivate se insoluti residui) | stesso · D-179 | DES-02/09 | P0 | Founder 18/11: «fix» |
 | **MC-056** | Deroga eccezionale Super Admin | `IMPL_MERGIATO` PR #220 Ops grant | stesso · D-180 | ≠ D07 | P0 | Audit collection |
 | **MC-057** | Durata/scadenza deroga | `IMPL_MERGIATO` job expire | stesso · D-180 | MC-056 | P0 | Sospensione auto a scadenza |
 | **MC-058** | Comms automatiche deroga | `IMPL_MERGIATO` email best-effort + reminder 48h | stesso · D-181 | MC-056 | P1 | Template riusa `agency_pending` |

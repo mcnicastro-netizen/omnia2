@@ -873,7 +873,11 @@ async def stripe_webhook(request: Request):
                 )
                 cc_id_paid = (agency_paid or {}).get("commercial_customer_id")
             if cc_id_paid:
-                await reactivate_cc_on_full_payment(db, cc_id_paid)
+                await reactivate_cc_on_full_payment(
+                    db,
+                    cc_id_paid,
+                    exclude_stripe_invoice_id=obj.get("id"),
+                )
         except Exception as exc:  # noqa: BLE001
             logger.warning("invoice.paid reactivate failed: %s", exc)
 

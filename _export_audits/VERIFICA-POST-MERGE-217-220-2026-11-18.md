@@ -130,7 +130,7 @@ Nota CI: workflow `.github/workflows/ci.yml` **non** esegue `tests/test_mc042_v2
 | D-DOC-01 | `NEXT_SESSION.md` vs main | Baseline `547f67f`, 040/041/043 e 042/054 come non impl | Docs stale (allineato in Fase E) |
 | D-DOC-02 | Piano Master datato 17/11 / baseline `c3baebc` | Superato da `6a12932` | Docs stale (allineato) |
 | D-DOC-03 | Tabella tecnica MC-054 @ `547f67f` | Dice NON CONFORME wallet `billing_only` | Superata da #220 (allineata) |
-| D-CODE-01 | MC-055 saldo pieno | `invoice.paid` senza check debito residuo | **Aperta — decisione Founder** |
+| D-CODE-01 | MC-055 saldo pieno | `invoice.paid` senza check debito residuo | **CHIUSA** 18/11 — Founder «fix» · `list_outstanding_invoices_for_cc` (branch `cursor/mc055-saldo-pieno-e393`) |
 | D-CODE-02 | MC-042 refresh | `/auth/refresh` senza gate ceased/suspended | **Aperta — minore**; API successive gated |
 | D-CODE-03 | Revoca sessioni al cease | Nessun `revoke_all_refresh` al set ceased | **Aperta — minore/medio** |
 | D-CI-01 | Test deroga | `test_mc042_v2_suspend_deroga.py` non in CI job | Igiene CI (non prodotto) |

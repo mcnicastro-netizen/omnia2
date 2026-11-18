@@ -95,8 +95,8 @@ Tabella precedente @ `547f67f` (**NON CONFORME** wallet `billing_only`) è **sup
 | MC-054 giorno 8 wallet/crediti | Deny read+allocate+revoke+transfer+spend | `cc_is_wallet_operable` nega `suspended`/`billing_only`; assert + `_spend_blocked` | **CONFORME** (unit) |
 | MC-054 collaboratori / MA billing-only (opz. B) | Collab off; MA solo recovery | `enforce_commercial_access` + allowlist path | **CONFORME** unit · **NON VERIFICATO** E2E FE |
 | MC-054 job giorno 8 | past_due ≥8g → suspended | `apply_day8_suspensions` + scheduler | **PRESENTE** |
-| MC-055 riattivazione auto saldo pieno | Solo a saldo integrale | `invoice.paid` → `reactivate_cc_on_full_payment` **senza** check multi-invoice / debito residuo | **GAP vs decisione** — domanda Founder aperta |
-| MC-055 no riattivazione parziale | — | Non enforced nel path attuale | **GAP** |
+| MC-055 riattivazione auto saldo pieno | Solo a saldo integrale | `invoice.paid` → `reactivate_cc_on_full_payment` + `list_outstanding_invoices_for_cc` (locale + Stripe open); skip se insoluti | **CONFORME** (fix post-verifica 18/11 · Founder «fix») |
+| MC-055 no riattivazione parziale | — | Altro invoice `open` → `skipped: outstanding_balance` | **CONFORME** (unit) |
 | MC-056…059 deroga | Sistema completo | Grant Ops + expire + reminder 48h + email best-effort + per-CC | **PRESENTE** (≠ D07) |
 
 **D07** (Super Admin mutate wallet straordinarie) **non** è MC-056.

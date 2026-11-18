@@ -9,7 +9,7 @@ import pytest
 from fastapi import HTTPException
 
 from tests.test_b04_h2_main_admin import _DBProxy, _patch_event_coll, _seed_user
-from tests.test_b04ii_wallet_ledger import FakeDB, _run, _seed_cc_agency
+from tests.test_b04ii_wallet_ledger import FakeColl, FakeDB, _run, _seed_cc_agency
 
 
 def _req(path: str):
@@ -187,7 +187,19 @@ def test_reactivate_on_full_payment_closes_deroga():
     raw = FakeDB()
     _seed_cc_agency(raw, status="suspended")
     raw.commercial_customers.docs[0]["operational_status"] = "billing_only"
+    raw.invoices = FakeColl()
     db = _DBProxy(raw)
+    # invoice appena pagata — esclusa dal check; nessun altro insoluto
+    db.invoices.docs.append(
+        {
+            "id": "inv_paid",
+            "agency_id": "ag1",
+            "stripe_invoice_id": "in_paid_now",
+            "status": "paid",
+            "amount_due": 100.0,
+            "amount_paid": 100.0,
+        }
+    )
     future = (datetime.now(timezone.utc) + timedelta(days=2)).isoformat()
     db[ca.DEROGA_COLL].docs.append(
         {
@@ -197,12 +209,57 @@ def test_reactivate_on_full_payment_closes_deroga():
             "ends_at": future,
         }
     )
-    out = _run(ca.reactivate_cc_on_full_payment(db, "cc1"))
+    out = _run(
+        ca.reactivate_cc_on_full_payment(
+            db, "cc1", exclude_stripe_invoice_id="in_paid_now"
+        )
+    )
     assert out["ok"] is True
     cc = raw.commercial_customers.docs[0]
     assert cc["commercial_status"] == "active"
     assert cc["operational_status"] == "full"
     assert db[ca.DEROGA_COLL].docs[0]["status"] == "closed_paid"
+
+
+def test_reactivate_blocked_when_other_invoice_open():
+    """MC-055 — pagamento parziale / altro insoluto → nessuna riattivazione."""
+    from shared.billing import commercial_access as ca
+
+    raw = FakeDB()
+    _seed_cc_agency(raw, status="suspended")
+    raw.commercial_customers.docs[0]["operational_status"] = "billing_only"
+    raw.invoices = FakeColl()
+    db = _DBProxy(raw)
+    db.invoices.docs.append(
+        {
+            "id": "inv1",
+            "agency_id": "ag1",
+            "stripe_invoice_id": "in_just_paid",
+            "status": "paid",
+            "amount_due": 50.0,
+            "amount_paid": 50.0,
+        }
+    )
+    db.invoices.docs.append(
+        {
+            "id": "inv2",
+            "agency_id": "ag1",
+            "stripe_invoice_id": "in_still_open",
+            "status": "open",
+            "amount_due": 80.0,
+            "amount_paid": 0.0,
+        }
+    )
+    out = _run(
+        ca.reactivate_cc_on_full_payment(
+            db, "cc1", exclude_stripe_invoice_id="in_just_paid"
+        )
+    )
+    assert out["ok"] is False
+    assert out["skipped"] == "outstanding_balance"
+    assert out["outstanding_count"] >= 1
+    cc = raw.commercial_customers.docs[0]
+    assert cc["commercial_status"] == "suspended"
 
 
 def test_day8_suspension_from_past_due():

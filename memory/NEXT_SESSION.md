@@ -19,7 +19,8 @@
 | CI tip `main` | **verde** (Backend billing / B04 unit) |
 | MC-026b | **FIRMATA** `CONFORME CON RISERVE` |
 | `MASTER STRATO B CHIUSO` | **FATTO** 18/11 |
-| Riserve B (042 v2 / 054 / 055…059) | **Codice su main** — vedi verifica; gap MC-055 saldo pieno ancora aperto |
+| Riserve B (042 v2 / 054 / 055…059) | **Codice su main** (#220) |
+| MC-055 saldo pieno | **Fix** su branch `cursor/mc055-saldo-pieno-e393` (Founder 18/11: fix) — attende merge |
 
 ## Strati
 
@@ -27,14 +28,13 @@
 |--------|-------|
 | A — Audit + design | **Chiuso** |
 | B — Impl autorizzata master | **Dichiarato chiuso** + riserve implementate su main |
-| C — Readiness commerciale | **Non aperto** — mandato separato |
+| C — Readiness commerciale | **In attesa** — Founder: «aspetta» |
 
 ## Prossimo (attende Founder)
 
-1. Commit/push allineamento documentale (se autorizzato).  
-2. Decisione su gap **MC-055** (`invoice.paid` senza check debito residuo).  
-3. Scelta primo slice Strato C (raccomandazione verifica: fix MC-055 **oppure** H3 MC-045).  
-4. **Non** Stripe live / prod senza mandato dedicato.
+1. Merge PR fix MC-055 + docs verifica (quando CI verde).  
+2. Strato C: **aspetta** scelta Founder.  
+3. **Non** Stripe live / prod senza mandato dedicato.
 
 ## Non fare
 

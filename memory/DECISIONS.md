@@ -42,7 +42,7 @@ Registro di tutte le decisioni di business e tecniche prese durante il progetto.
 ### D-179 — MC-055 riattivazione automatica a saldo pieno · 18-Nov-2026
 - **Decisione**: Saldo integrale confermato da Stripe → riattivazione automatica; nessuna approvazione manuale ordinaria; conservazione crediti/assegnazioni/storico; pagamento parziale non riattiva.
 - **SoT**: stesso file MC-054…059.
-- **Stato**: ✅ funzionale. ✅ implementato su `invoice.paid` → `reactivate_cc_on_full_payment` · 18/11.
+- **Stato**: ✅ funzionale. ✅ path `invoice.paid` · 18/11. ✅ **fix saldo** 18/11 (Founder «fix» post-verifica): no reactivate se restano insoluti locali/Stripe open (`list_outstanding_invoices_for_cc`).
 
 ### D-178 — MC-054 sospensione mancato pagamento (giorno 8) · 18-Nov-2026
 - **Decisione**: Giorni 1–7 grace = piena operatività + notifiche Main Admin già approvate. Dal giorno 8: collaboratori bloccati; Main Admin limitato a pagamento/metodo/fatture/recupero; **bloccati** consultazione wallet/crediti, allocate, revoke, transfer, spend.
