@@ -1,3 +1,14 @@
+## 2026-11-18 — Fine giornata: Master A+B chiuso + Dogfood Step 1
+
+- **Master Strati A+B**: §10 FIRMATA Founder ULTIMATO (#223); tip post-#224 R-01
+- **R-01**: gate `/auth/refresh` + revoke session al cease (#224)
+- **R-02**: CI B04 + H3/MC-042/R-01 (#225)
+- **R-03**: allocate `unallocated_qty` atomico (#227)
+- **R-04**: smoke UI login/avvio/immobili/billing settings (#228)
+- **Dogfood Step 1**: runbook formale 5 decisioni Founder (#229) — Step 2 non autorizzato
+- SoT: `_export_audits/MASTER-RAPPORTO-FINALE-CHIUSURA-STRATI-A-B.md`, `DOGFOOD-READINESS-STEP1-RUNBOOK.md`
+- D-186…D-188 · HAL governance + dogfood voci sync (questo turno)
+
 ## 2026-11-17 — HAL reindex produzione post D-173
 
 - Redeploy Railway API (corpus `memory/**`) + `POST /api/app/hal/knowledge/reindex?force=true`

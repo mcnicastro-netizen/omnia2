@@ -178,7 +178,9 @@ Il titolare **non ha un sito** e vuole che OMNIA gli generi un portale con templ
 
 ## 19.10 · Billing · pagina separata (BillingPage.jsx)
 
-**Route frontend**: `/app/settings/billing`. Componente `BillingPage.jsx` (235 righe).
+**Route frontend**: `/app/settings/billing` (IT: `/it/app/settings/billing`). Componente `BillingPage.jsx`.  
+**Nota 18-Nov-2026**: il path `/it/app/billing` **non** è una route FE valida (404); usare sempre `settings/billing`.  
+Cessazione CC (MC-042 / R-01): login e `/auth/refresh` negati; sessioni refresh revocate; API gated via `enforce_commercial_access`. HAL: `api.mc042-r01-refresh`.
 
 **Stato billing (feature flag)**:
 - Se `STRIPE_ENABLED != "true"` in env → endpoint restituiscono **HTTP 503** con `{"error": "stripe_not_configured", "message": "Billing è in preparazione."}`. In UI: la pagina carica ma i piani non sono attivabili.

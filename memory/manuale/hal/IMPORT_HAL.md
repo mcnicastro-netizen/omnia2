@@ -1,9 +1,10 @@
-# 📚 HAL Knowledge — Import & Cold Start (v0.59-d165-closeout)
+# 📚 HAL Knowledge — Import & Cold Start (v0.60-master-dogfood-2026-11-18)
 
-**Ultimo aggiornamento**: 11-Nov-2026 (D-163…D-165 auto-KYC · Stripe reconcile · enter_url · Cap.00/01 sync)  
+**Ultimo aggiornamento**: 18-Nov-2026 (Master A+B chiuso · D-186…D-188 · Dogfood Step 1 · R-01 HAL voci)  
 **Corpus**: YAML in `memory/manuale/hal/*.yaml` (Cap. 1–27 + `00-api-codice`) · MD esclusi dal RAG ingest  
 **Motore**: `hal_knowledge.py` · reindex: `POST /api/app/hal/knowledge/reindex?force=true` (super_admin)  
-**Regola Founder D-084**: ogni ship aggiorna MD+YAML nello stesso giro — vedi `memory/MANUAL_SYNC.md`.
+**Regola Founder D-084**: ogni ship aggiorna MD+YAML nello stesso giro — vedi `memory/MANUAL_SYNC.md`.  
+**Nuove voci 18-Nov**: `api.master-ab-chiuso` · `api.dogfood-step1` · `api.mc042-r01-refresh`.
 
 ---
 
