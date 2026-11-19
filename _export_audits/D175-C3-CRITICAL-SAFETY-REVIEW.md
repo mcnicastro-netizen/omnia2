@@ -1,97 +1,150 @@
 # D-175 C3 · PR #233 — Critical safety review
 
-**Scope:** `cursor/d175-c3-permanent-base-e393` vs `main` (HEAD `9c66651`)  
-**Focus:** permanent base integrity under ordinary/runtime paths, one-shot init, sealed emergency, admin residual.  
-**Verdict:** **Do not block merge** on C3 integrity criteria after `9c66651`. Residuals are explicit; Founder still owns the merge button.
+**Target:** https://github.com/mcnicastro-netizen/omnia2/pull/233  
+**Branch:** `cursor/d175-c3-permanent-base-e393` vs `main`  
+**HEAD:** `9c66651`  
+**Date:** 2026-11-19  
 
----
+## Verdict: APPROVE (not merge-blocking)
 
-## Executive verdict
+The six critical criteria pass on `9c66651`. Residuals remain (admin root, loopback host-alias detection gap) but do **not** open an ordinary/runtime write path to the permanent base under the C3 threat model. Merge still requires Founder authorization.
 
-| Area | Rating | Notes |
+| # | Criterion | Result |
 |---|---|---|
-| Verify read-only | **GOOD** | No init; fingerprint + text + marker count |
-| Init one-shot | **GOOD** | IDENTITY / sealed emergency / DB marker refuse |
-| Emergency secret separation | **GOOD** | Not in general creds; sealed `0600` |
-| Perimeter / ordinary deny | **GOOD** | T1–T6 + unit; work copies still allowed |
-| Emergency gates | **GOOD** | Multi-gate; destructive execute refused in C3 |
-| Admin/root escalation | **ACCEPTABLE residual** | Root can mutate permanent; documented |
-| Identity ↔ marker | **GOOD** on verify | Emergency prove path skips marker (execute blocked) |
+| 1 | `dogfood_c3_verify` read-only | **PASS** |
+| 2 | `permanent_init` refuse re-init | **PASS** |
+| 3 | Emergency password not in general creds | **PASS** |
+| 4 | Runtime/clone write-deny on permanent | **PASS** |
+| 5 | Bypass via URI/host/port/admin | **PASS** for mutation paths; **residual** host-alias detection gap |
+| 6 | Residual `omnia_df_admin` risk | **Documented residual** (accepted for C3) |
 
 ---
 
-## CRITICAL (pre-fix — cleared on `9c66651`)
+## 1. Verify read-only — PASS
 
-### Was C1 — Verify re-initialized the permanent base
+`scripts/dogfood_c3_verify.py` on `9c66651`:
 
-Previously verify shelled out to `dogfood_permanent_init.py`. **Cleared:** verify is read-only; live 16/16; `instance_id` stable.
+- Does **not** subprocess/import `dogfood_permanent_init.py` (fixed vs first commit `4d6cad2`).
+- Does **not** call `write_identity`, role upsert, or permanent backup rewrite.
+- Requires existing IDENTITY; missing → FAIL.
+- Reads marker only; T16 compares fingerprint + raw IDENTITY text + marker count.
+- Sidecar `C3_LAST_VERIFY.json` + append-only `EMERGENCY_AUDIT.jsonl` (via `--prove-gates`) are intentional non-IDENTITY side effects.
 
-### Was C2 — Init could wipe / rewrite marker
-
-Previously `delete_many` on marker collection. **Cleared:** refuse if IDENTITY/emergency/marker present; no wipe path.
-
-### Was C3 — Emergency password in general credentials
-
-Previously written into `mongo-df-credentials.json`. **Cleared:** sealed file only; assert + live keys check.
+**Note:** `_try_write` against permanent expects DENY; if roles were broken it would insert+delete a probe (failure path mutates). Detected as T7/T8 FAIL — acceptable for a privilege probe.
 
 ---
 
-## HIGH residuals (not merge-blocking for C3)
+## 2. Init one-shot — PASS
 
-### H1 — `omnia_df_admin` remains root with password in ordinary creds file
+`refuse_reinitialization_if_present()` DENY if:
 
-Any holder of `mongo-df-credentials.json` can write/drop permanent via admin, bypassing runtime/clone Mongo roles and ordinary_ops gates (gates only bind scripts that call them).
+- `IDENTITY.json` exists → `permanent_already_initialized:IDENTITY_exists`
+- sealed emergency creds exist → `…:emergency_creds_exist`
 
-C3 documents this: base is **not** filesystem-immutable. Hardening (split admin, deny admin URI in ordinary tool wrappers) = later cycle.
+Init also DENY if Mongo `_omnia_permanent_identity` already has docs → `…:marker_exists`.  
+No `delete_many` wipe of marker (removed in `9c66651`).
 
-### H2 — Emergency `--prove-gates` does not cross-check Mongo marker
-
-Only `require_identity_or_raise()` (file). Mismatch would still “prove” gates. Mitigated because destructive restore is policy-blocked in C3. Fix before enabling execute.
-
-### H3 — Unlock token may be literal `1`
-
-By design Founder one-shot; compensated by phrase + dual confirm. Not sufficient alone against env injection on a shared shell history — treat unlock env as sensitive.
+**Live:** re-run init → `FAIL permanent_already_initialized:IDENTITY_exists`, exit 2.
 
 ---
 
-## MEDIUM / LOW
+## 3. Emergency password separation — PASS
 
-### M1 — Partial init can stick the environment
+| File | Keys |
+|---|---|
+| `dogfood/secrets/mongo-df-credentials.json` | `admin`, `runtime`, `clone`, `backup` only |
+| `dogfood/permanent/secrets/emergency-credentials.json` | `omnia_df_emergency` only (`0600`) |
 
-Crash after marker/emergency write but before IDENTITY → reinit DENY, verify FAIL until Founder cleans files/DB. Fail-closed preferred over silent rewrite.
-
-### M2 — T15 overlaps T14
-
-“Ordinary cannot see emergency” is proven by file separation + code paths, not an OS ACL test.
-
-### M3 — `is_permanent_db_name` prefix greed
-
-`startswith("omnia_df_perm")` would treat odd names like `omnia_df_permutation` as permanent. Unlikely; deny-side false positive only.
-
-### L1 — Passwords in mongosh `--eval` / tool argv
-
-Same class as C2 H2 (process listing). Residual on isolated Dogfood host.
+Init writes emergency **only** to sealed path; strips legacy `emergency` from general; `assert_general_creds_have_no_emergency` in init + verify.  
+`dogfood/permanent/` is gitignored. Live disk: `emergency in general = False`.
 
 ---
 
-## Proof commands (re-runnable)
+## 4. Runtime/clone write-deny — PASS
 
-```bash
-# units
-cd backend && .venv/bin/python -m pytest tests/test_d175_c3_permanent.py tests/test_d175_c1_dogfood_perimeter.py -q
+**Application gates:** `perimeter.check_dogfood_db_isolation` + `ordinary_ops` deny permanent targets (T1–T6).
 
-# reinit refuse
-python3 scripts/dogfood_permanent_init.py   # expect FAIL …IDENTITY_exists, exit 2
+**Mongo RBAC (live on :27018):**
 
-# read-only verify
-python3 scripts/dogfood_c3_verify.py        # expect 16/16, stable instance_id
-```
+- `omnia_df_runtime` → `OperationFailure` insert on `omnia_df_perm_main`
+- `omnia_df_clone` → `OperationFailure` insert on `omnia_df_perm_main`
+- Roles grant runtime RW only on work/`c2_src`; clone read-only on permanent.
+
+Unit: 40 passed (`test_d175_c3_permanent` + C1 perimeter).
 
 ---
 
-## Bottom line for ChatGPT / Founder
+## 5. Bypass via URI / host / port / admin — PASS (with residual)
 
-The three review-blocking defects called out against the first C3 commit are **fixed on `9c66651`**. Remaining issues are **documented residuals** aligned with C3 scope (isolated loopback Dogfood, no claim of absolute immutability).  
+### Blocked (mutation-relevant)
 
-**Merge-blocking: no.**  
-**Merge without Founder: no.**
+- `DB_NAME=omnia_df_perm*` → perimeter DENY regardless of host alias (`db_name_is_permanent`).
+- Alt URI with same endpoint + permanent DB on `127.0.0.1` → DENY.
+- Ordinary clone/wipe/restore/migrate targeting permanent → DENY by name.
+- Port `27017` refused for identity builder; permanent init hard-denies shared port.
+- App DB selection uses `client[DB_NAME]` (`shared/db/connection.py`), not URI path default DB.
+
+### Residual H4 — loopback host alias in `matches_permanent_endpoint`
+
+Registered permanent endpoint is `127.0.0.1:27018`. Exact host string match → `localhost` / `::1` do **not** match.
+
+Reproduced probes (`/opt/cursor/artifacts/D175-C3-HOST-ALIAS-PROBES.json`):
+
+| Case | Perimeter |
+|---|---|
+| `localhost` + URI path=`omnia_df_perm_main` + `DB_NAME=work` | **ALLOW** (detection miss) |
+| `omnia_df_emergency@localhost` + `DB_NAME=work` | **ALLOW** (user check skipped when endpoint mismatch) |
+| same emergency user on `127.0.0.1` + work | **DENY** |
+| `localhost` + `DB_NAME=omnia_df_perm_main` | **DENY** (name gate) |
+
+**Why not BLOCK:** layered controls still prevent ordinary permanent writes:
+
+1. Permanent as `DB_NAME` → name DENY.
+2. Runtime/clone RBAC cannot write permanent even if connected.
+3. Emergency role is RW **only** on permanent; with `DB_NAME=work` the app cannot write work and cannot set `DB_NAME=perm` through perimeter.
+4. Main API never uses `get_default_database()` from URI path.
+
+**Follow-up (non-blocking):** normalize loopback aliases in `matches_permanent_endpoint` / always inspect URI `path_db` for permanent prefixes even when host alias differs; treat `omnia_df_admin` like emergency for runtime URI user checks.
+
+### Admin URI
+
+`omnia_df_admin` as `MONGO_URL` with work `DB_NAME` is allowed by perimeter (expected). Admin **can** write permanent out-of-band — see §6.
+
+---
+
+## 6. Residual `omnia_df_admin` — documented, accepted for C3
+
+- Root role; password lives in general `mongo-df-credentials.json`.
+- Can insert/drop on permanent; can delete marker + IDENTITY to force a new init.
+- Documented in `docs/dogfood/C3-PERMANENT-BASE.md` and verify report `residual_risk`.
+- C3 threat model: accidental ordinary/runtime paths on isolated loopback Dogfood — **not** hostile holder of Dogfood admin secrets / filesystem.
+
+Not merge-blocking. Later hardening: split admin, deny admin URI in ordinary wrappers, optional filesystem immutability claims out of scope.
+
+---
+
+## Cleared blockers from first commit (`4d6cad2` → `9c66651`)
+
+1. Verify called `permanent_init` → removed.  
+2. Init wiped marker via `delete_many` → removed; one-shot refuse.  
+3. Emergency password written into general creds → sealed only.
+
+---
+
+## Evidence
+
+| Artifact | Result |
+|---|---|
+| Unit C3+C1 | 40 passed |
+| Reinit | exit 2 `IDENTITY_exists` |
+| Live RBAC | runtime/clone DENIED write |
+| Host-alias probes | see JSON artifact |
+| General creds keys | no `emergency` |
+
+---
+
+## Bottom line
+
+**APPROVE** for C3 safety criteria on `9c66651`.  
+Do **not** merge without Founder.  
+Optional follow-ups: loopback alias normalization; marker cross-check before any future emergency execute; admin secret split.

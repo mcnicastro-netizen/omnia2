@@ -41,5 +41,5 @@ Estratti il **14 nov 2026 ~11:10 Europe/Rome** dai transcript cloud Cursor.
 
 ## D-175 C3 PR #233 security (19 nov 2026 Europe/Rome)
 
-25. `D175-C3-PR233-SECURITY-ASSESS.md` — Criterion map (verify read-only, reinit, creds, perimeter, ordinary ops, emergency gates, admin residual, mismatch). Verdict: **not merge-blocking** on `9c66651`.
-26. `D175-C3-CRITICAL-SAFETY-REVIEW.md` — Critical framing + residuals (admin root, emergency marker cross-check).
+25. `D175-C3-PR233-SECURITY-ASSESS.md` — 6-criterion map (verify RO, reinit, emergency creds, RBAC deny, URI/host bypass, admin residual). Verdict: **APPROVE** on `9c66651`.
+26. `D175-C3-CRITICAL-SAFETY-REVIEW.md` — Critical framing + residuals (admin root, loopback host-alias detection gap).
