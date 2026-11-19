@@ -1,0 +1,27 @@
+{
+  "schema": "omnia.dogfood.c4.manifest.v1",
+  "cycle": "D-175-C4",
+  "note": "Founder fills fictitious VAT/org names. Create users personally before apply can nominate MA/memberships. Cursor never invents accounts.",
+  "commercial_customer": {
+    "vat_number": "IT00000000000",
+    "legal_name": "Dogfood Demo Immobiliare SRL",
+    "country_code": "IT"
+  },
+  "organizations": [
+    { "key": "sede", "display_name": "Sede Dogfood" },
+    { "key": "filiale_nord", "display_name": "Filiale Nord Dogfood" },
+    { "key": "filiale_sud", "display_name": "Filiale Sud Dogfood" }
+  ],
+  "main_admin_email": "FOUNDER_FILLS_AFTER_SIGNUP@example.invalid",
+  "organization_admins": [
+    { "org_key": "sede", "email": "FOUNDER_FILLS_BRANCH_ADMIN@example.invalid" },
+    { "org_key": "filiale_nord", "email": "FOUNDER_FILLS_BRANCH_ADMIN_N@example.invalid" }
+  ],
+  "collaborators": [
+    {
+      "org_key": "filiale_sud",
+      "email": "FOUNDER_FILLS_COLLAB@example.invalid",
+      "role": "agent"
+    }
+  ]
+}

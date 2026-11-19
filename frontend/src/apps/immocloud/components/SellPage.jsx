@@ -883,6 +883,10 @@ export default function SellPage() {
           save={save}
           onCancel={() => { setShowForm(false); setEditing(null); }}
           stagingBusy={stagingBusy}
+          setStagingBusy={setStagingBusy}
+          setStagingStatus={setStagingStatus}
+          setError={setError}
+          reloadListings={reloadListings}
         />
       )}
       </div>
