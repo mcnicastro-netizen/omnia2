@@ -4,6 +4,7 @@ mongo-data/
 logs/
 backups/
 media/
+permanent/
 C2_LAST_DRILL.json
 C2_MONGO_ROLE_MATRIX.json
 **/*.bson

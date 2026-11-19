@@ -99,9 +99,18 @@ def check_dogfood_db_isolation() -> dict[str, Any]:
         errors.append("db_name_missing")
     elif db.lower() in _FORBIDDEN_DB_NAMES:
         errors.append("db_name_shared_or_forbidden")
-    elif not db.lower().startswith("omnia_df_"):
-        # Dogfood runtime must be dedicated copy DB (omnia_df_clean_* / cont_* / …)
-        errors.append("db_name_not_dogfood_prefix")
+    else:
+        # C3: permanent base must never be selected as runtime (name or identity).
+        from shared.dogfood.permanent import (
+            is_permanent_db_name,
+            is_permanent_runtime_target,
+        )
+
+        if is_permanent_db_name(db):
+            errors.append("db_name_is_permanent")
+        elif not db.lower().startswith("omnia_df_"):
+            # Dogfood runtime must be dedicated copy DB (omnia_df_clean_* / cont_* / …)
+            errors.append("db_name_not_dogfood_prefix")
 
     if not mongo:
         errors.append("mongo_url_missing")
@@ -119,10 +128,13 @@ def check_dogfood_db_isolation() -> dict[str, Any]:
             errors.append("mongo_url_host_unparseable")
         elif not _is_loopback_host(host):
             errors.append("mongo_url_remote_blocked")
-        # Explicit permanent URI must never be runtime
-        perm = (os.environ.get("OMNIA_DOGFOOD_PERMANENT_URI") or "").strip()
-        if perm and mongo == perm:
-            errors.append("mongo_url_is_permanent")
+        # C3: refuse permanent by exact URI, alternate creds on same endpoint+db,
+        # or emergency/permanent admin user as runtime.
+        from shared.dogfood.permanent import is_permanent_runtime_target
+
+        if is_permanent_runtime_target(mongo_url=mongo, db_name=db):
+            if "db_name_is_permanent" not in errors:
+                errors.append("mongo_url_is_permanent")
         runtime = (os.environ.get("OMNIA_DOGFOOD_RUNTIME_URI") or "").strip()
         if runtime and mongo != runtime:
             # If runtime URI is declared, MONGO_URL must match it
