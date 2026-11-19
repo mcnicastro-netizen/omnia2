@@ -76,6 +76,8 @@ Eccezione infrastrutturale già in `omnia-cloud.mdc` (CI/build/test essenziali) 
 
 - Master A+B chiuso: `_export_audits/MASTER-RAPPORTO-FINALE-CHIUSURA-STRATI-A-B.md` (D-186)
 - Dogfood Step 1: `_export_audits/DOGFOOD-READINESS-STEP1-RUNBOOK.md` (D-188)
+- D-175 C4 chiuso in main: PR #234 · D-189 · `docs/dogfood/C4-STRUCTURE.md`
 - Piano chiusura storico: `_export_audits/MASTER-CHIUSURA-POST-AUDIT-PIANO.md`
-- HAL (super_admin): `memory/manuale/hal/00-api-codice.yaml` → `api.governance-*`, `api.master-ab-chiuso`, `api.dogfood-step1`, `api.mc042-r01-refresh`
+- HAL (super_admin): `memory/manuale/hal/00-api-codice.yaml` → `api.governance-*`, `api.master-ab-chiuso`, `api.dogfood-step1`, `api.d175-c4-chiuso`, `api.mc042-r01-refresh`
 - Manuale ops: `memory/manuale/00-governance-agent-cursor.md`
+- Ripresa: `memory/NEXT_SESSION.md` · `memory/RIPRENDI_2026-11-19.md`

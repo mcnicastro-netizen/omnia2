@@ -1644,7 +1644,7 @@ voci:
     pubblico: [super_admin]
     livello: avanzato
     tags: [codice, dogfood, runbook, d-188, sicurezza]
-    correlati: [api.master-ab-chiuso, api.governance-ruoli, api.stripe-sandbox-cloud]
+    correlati: [api.master-ab-chiuso, api.governance-ruoli, api.d175-c4-chiuso, api.stripe-sandbox-cloud]
     domanda_naturale: "Quali regole valgono per il dogfood OMNIA?"
     contenuto:
       a_cosa_serve: >
@@ -1662,6 +1662,38 @@ voci:
           soluzione: "Vietato. Solo demo/fixture; Nicastro al massimo sola lettura."
         - problema: "sk_test basta per billing dogfood"
           soluzione: "Verificare anche webhook/endpoint/dati isolati dal live."
+      permessi:
+        - super_admin / Founder
+      screenshot: []
+
+  - id: api.d175-c4-chiuso
+    titolo: D-175 C4 chiuso — account e organizzazioni Dogfood (D-189)
+    modulo: Codice API
+    widget: null
+    pubblico: [super_admin]
+    livello: avanzato
+    tags: [codice, dogfood, d-175, c4, d-189, commercial-customer, main-admin]
+    correlati: [api.dogfood-step1, api.master-ab-chiuso, api.governance-autorizzazione]
+    domanda_naturale: "Il ciclo C4 Dogfood è chiuso? Cosa manca per il dogfood completo?"
+    contenuto:
+      a_cosa_serve: >
+        Certifica che D-175 C4 (struttura CommercialCustomer, multi-Organization,
+        wallet unico, Main Admin, membership, verify T1–T13) è mergiato su main.
+        Non implica C5–C8 né dogfood E2E completo.
+      quando_si_usa: >
+        Quando si chiede lo stato Dogfood; quando si confonde C4 chiuso con
+        dogfood completo o con network franchising multi-P.IVA.
+      passi:
+        - "SoT: docs/dogfood/C4-STRUCTURE.md · C4-FOUNDER-PROCEDURE.md · D-189"
+        - "PR #234 head 2ae1234 mergiato in main (merge 67b5e92)."
+        - "Filiali stessa P.IVA = 1 CC → N Organization (collaudato)."
+        - "Affiliati autonomi (P.IVA distinte) = CC distinti (non ancora E2E)."
+        - "C5+ solo con nuova autorizzazione Founder."
+      errori_comuni:
+        - problema: "C4 in main quindi dogfood pronto / produzione"
+          soluzione: "No. Mancano C5–C8 e mandato E2E; Stripe live fuori scope."
+        - problema: "Network tipo Tecnocasa = stesso CommercialCustomer"
+          soluzione: "No. Ogni affiliato autonomo è un CC distinto."
       permessi:
         - super_admin / Founder
       screenshot: []

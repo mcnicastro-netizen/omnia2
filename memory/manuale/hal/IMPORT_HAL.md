@@ -1,10 +1,11 @@
-# 📚 HAL Knowledge — Import & Cold Start (v0.60-master-dogfood-2026-11-18)
+# 📚 HAL Knowledge — Import & Cold Start (v0.61-d175-c4-2026-11-19)
 
-**Ultimo aggiornamento**: 18-Nov-2026 (Master A+B chiuso · D-186…D-188 · Dogfood Step 1 · R-01 HAL voci)  
+**Ultimo aggiornamento**: 19-Nov-2026 (D-175 C4 chiuso in main · D-189 · HAL `api.d175-c4-chiuso`)  
 **Corpus**: YAML in `memory/manuale/hal/*.yaml` (Cap. 1–27 + `00-api-codice`) · MD esclusi dal RAG ingest  
 **Motore**: `hal_knowledge.py` · reindex: `POST /api/app/hal/knowledge/reindex?force=true` (super_admin)  
 **Regola Founder D-084**: ogni ship aggiorna MD+YAML nello stesso giro — vedi `memory/MANUAL_SYNC.md`.  
-**Nuove voci 18-Nov**: `api.master-ab-chiuso` · `api.dogfood-step1` · `api.mc042-r01-refresh`.
+**Nuove voci 19-Nov**: `api.d175-c4-chiuso`.  
+**Voci 18-Nov**: `api.master-ab-chiuso` · `api.dogfood-step1` · `api.mc042-r01-refresh`.
 
 ---
 
@@ -499,3 +500,13 @@ Da eseguire dalla UI HAL Knowledge (o via `POST /api/app/hal/knowledge/ask`) sub
 3. **"Il Fascicolo mi ordina l'APE se non ce l'ho?"** → top-1 atteso `07-fascicolo-immobile.yaml::fascicolo.ape-partner` (risposta chiara: **no**, partner "in valutazione").
 
 Confidence attesa ≥ 0.15 su tutte e 3 (similarity range simile a Cap. 5/6).
+
+---
+
+## 🚦 Smoke governance / Dogfood C4 — 19-Nov-2026
+
+1. **"Il ciclo C4 Dogfood è chiuso? Cosa manca per il dogfood completo?"** → top-1 atteso `00-api-codice.yaml::api.d175-c4-chiuso`
+2. **"Quali regole valgono per il dogfood OMNIA?"** → top-1 atteso `00-api-codice.yaml::api.dogfood-step1`
+3. **"Il Programma Master A+B è chiuso?"** → top-1 atteso `00-api-codice.yaml::api.master-ab-chiuso`
+
+Criteri: stesso file `00-api-codice.yaml` · sim ≥ 0.08. Reindex obbligatorio dopo merge di questa voce.

@@ -1,3 +1,13 @@
+## 2026-11-19 — Fine giornata: D-175 C4 mergiato (Dogfood account/org)
+
+- **D-175 C1–C3**: già chiusi in main (perimetro, backup/restore, base permanente)
+- **D-175 C4**: struttura CommercialCustomer → multi-Organization → wallet unico; Main Admin / Org Admin / collaboratori; apply+verify T1–T13; idempotenza; permanente protetta
+- **PR #234** MERGED @ head `2ae1234` → `main` merge `67b5e92` · CI post-merge verde
+- Account sintetici Dogfood conservati su `omnia_df_clean_c4` (riuso C5–C8)
+- Clarifica modello network: affiliato autonomo ≠ stesso CC; filiali stessa P.IVA = Organization
+- **C5–C8 / E2E completo**: non autorizzati
+- D-189 · HAL `api.d175-c4-chiuso` · `NEXT_SESSION` / `RIPRENDI_2026-11-19`
+
 ## 2026-11-18 — Fine giornata: Master A+B chiuso + Dogfood Step 1
 
 - **Master Strati A+B**: §10 FIRMATA Founder ULTIMATO (#223); tip post-#224 R-01
