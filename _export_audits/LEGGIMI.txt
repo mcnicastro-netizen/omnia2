@@ -22,6 +22,10 @@ FASE 2 pianificazione risanamento (16 nov 2026):
   B02-ANO-002-004-CHIUSURA-DEFINITIVA-DESIGN.md
   PAUSA-2026-11-16-RIPRENDI.md
 
+D-175 C2 PR #232 security (19 nov 2026):
+  D175-C2-PR232-SECURITY-ASSESS.md
+  D175-C2-CRITICAL-SAFETY-REVIEW.md
+
 Come scaricare sul Desktop:
 1. Apri il link GitHub del file
 2. pulsante Download (icona freccia) oppure Raw -> Salva con nome
