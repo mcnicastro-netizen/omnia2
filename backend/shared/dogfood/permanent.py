@@ -286,6 +286,43 @@ def require_identity_or_raise() -> dict[str, Any]:
     return data
 
 
+def emergency_credentials_path() -> Path:
+    """Sealed emergency secrets — never the general mongo-df-credentials.json."""
+    return dogfood_root() / "permanent" / "secrets" / "emergency-credentials.json"
+
+
+def general_mongo_credentials_path() -> Path:
+    return dogfood_root() / "secrets" / "mongo-df-credentials.json"
+
+
+def assert_general_creds_have_no_emergency(creds: dict[str, Any] | None) -> None:
+    if creds and "emergency" in creds:
+        raise RuntimeError("emergency_password_must_not_live_in_general_creds")
+
+
+def refuse_reinitialization_if_present() -> None:
+    """Init must be one-shot. Existing IDENTITY or on-disk marker → DENY."""
+    path = permanent_identity_path()
+    if path.is_file():
+        raise RuntimeError("permanent_already_initialized:IDENTITY_exists")
+    # Also refuse if sealed emergency creds already exist (prior init)
+    if emergency_credentials_path().is_file():
+        raise RuntimeError("permanent_already_initialized:emergency_creds_exist")
+
+
+def identity_fingerprint(identity: dict[str, Any]) -> dict[str, Any]:
+    """Stable subset used to prove verify did not rewrite identity."""
+    return {
+        "instance_id": identity.get("instance_id"),
+        "db_name": identity.get("db_name"),
+        "mongo_endpoint": identity.get("mongo_endpoint"),
+        "git_sha": identity.get("git_sha"),
+        "created_at": identity.get("created_at"),
+        "schema": identity.get("schema"),
+        "status": identity.get("status"),
+    }
+
+
 # --- Emergency unlock gates (no destructive side effects here) ---
 
 

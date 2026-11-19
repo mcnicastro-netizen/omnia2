@@ -37,10 +37,14 @@ from shared.dogfood.backup import (  # noqa: E402
 )
 from shared.dogfood.permanent import (  # noqa: E402
     MARKER_COLLECTION,
+    assert_general_creds_have_no_emergency,
     build_identity_payload,
     configured_permanent_db_name,
     dogfood_root,
+    emergency_credentials_path,
+    general_mongo_credentials_path,
     is_permanent_db_name,
+    refuse_reinitialization_if_present,
     write_identity,
 )
 
@@ -61,14 +65,14 @@ def _load_creds(root: Path) -> dict:
     return json.loads(p.read_text(encoding="utf-8"))
 
 
-def _write_emergency_creds(root: Path, pwd: str) -> Path:
-    path = root / "permanent" / "secrets" / "emergency-credentials.json"
+def _write_emergency_creds(pwd: str) -> Path:
+    path = emergency_credentials_path()
     path.parent.mkdir(parents=True, exist_ok=True)
     tmp = path.with_suffix(".tmp")
     payload = {
         "user": "omnia_df_emergency",
         "password": pwd,
-        "note": "Sealed emergency only — never mount as MONGO_URL runtime",
+        "note": "Sealed emergency only — never in mongo-df-credentials.json; never MONGO_URL runtime",
     }
     fd = os.open(str(tmp), os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
     with os.fdopen(fd, "w", encoding="utf-8") as f:
@@ -86,6 +90,9 @@ def main() -> int:
     if not is_permanent_db_name(db_name):
         raise RuntimeError(f"permanent_db_name_invalid:{db_name}")
 
+    # One-shot: never wipe / rewrite an existing permanent identity
+    refuse_reinitialization_if_present()
+
     # 1) Bootstrap C2 mongod/auth if needed
     boot = subprocess.run(
         [sys.executable, str(ROOT / "scripts" / "dogfood_mongo_bootstrap.py"), f"--port={port}"],
@@ -97,6 +104,15 @@ def main() -> int:
         raise RuntimeError(f"bootstrap_failed:{boot.stderr[-400:]}")
 
     creds = _load_creds(root)
+    # Strip any legacy emergency key from general file (separation hardening)
+    if "emergency" in creds:
+        creds = {k: v for k, v in creds.items() if k != "emergency"}
+        general_mongo_credentials_path().write_text(
+            json.dumps(creds, indent=2) + "\n", encoding="utf-8"
+        )
+        general_mongo_credentials_path().chmod(0o600)
+    assert_general_creds_have_no_emergency(creds)
+
     admin_uri = (
         f"mongodb://omnia_df_admin:{creds['admin']}@127.0.0.1:{port}/admin?authSource=admin"
     )
@@ -104,15 +120,17 @@ def main() -> int:
     client.admin.command("ping")
 
     # 2) Destination checks
-    # Refuse if somehow targeting shared app DB
     if db_name.lower() in ("omnia", "admin", "local"):
         raise RuntimeError("permanent_destination_forbidden")
 
-    # 3) Initialize permanent DB marker (no commercial data)
+    pdb = client[db_name]
+    # Refuse if marker already present in DB (even without IDENTITY file)
+    if pdb[MARKER_COLLECTION].estimated_document_count() > 0:
+        raise RuntimeError("permanent_already_initialized:marker_exists")
+
+    # 3) Initialize permanent DB marker (no commercial data) — first time only
     instance_id = str(uuid.uuid4())
     git_sha = _git_sha()
-    pdb = client[db_name]
-    pdb[MARKER_COLLECTION].delete_many({})
     pdb[MARKER_COLLECTION].insert_one(
         {
             "instance_id": instance_id,
@@ -136,14 +154,10 @@ def main() -> int:
         upsert=True,
     )
 
-    # 4) Roles — runtime/clone cannot write permanent; emergency RW sealed
-    emergency_pwd = creds.get("emergency") or secrets.token_urlsafe(24)
-    creds["emergency"] = emergency_pwd
-    # Persist emergency into main creds file (0600) + dedicated sealed file
-    cred_path = root / "secrets" / "mongo-df-credentials.json"
-    cred_path.write_text(json.dumps(creds, indent=2) + "\n", encoding="utf-8")
-    cred_path.chmod(0o600)
-    em_path = _write_emergency_creds(root, emergency_pwd)
+    # 4) Roles — emergency password ONLY in sealed permanent/secrets file
+    emergency_pwd = secrets.token_urlsafe(24)
+    em_path = _write_emergency_creds(emergency_pwd)
+    assert_general_creds_have_no_emergency(_load_creds(root))
 
     work_db = (os.environ.get("OMNIA_DOGFOOD_RUNTIME_DB") or "omnia_df_clean_work").strip()
     js = f"""

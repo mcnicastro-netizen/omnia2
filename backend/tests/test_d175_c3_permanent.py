@@ -185,3 +185,53 @@ def test_c3_is_permanent_target_by_uri(perm_env, monkeypatch):
     )
     assert is_permanent_target(uri="mongodb://127.0.0.1:27018/omnia_df_perm_main")
     assert not is_permanent_target(db_name="omnia_df_clean_a")
+
+
+def test_c3_refuse_reinit_when_identity_exists(perm_env):
+    from shared.dogfood.permanent import refuse_reinitialization_if_present, write_identity
+
+    write_identity(
+        build_identity_payload(
+            instance_id="keep-me",
+            db_name="omnia_df_perm_main",
+            host="127.0.0.1",
+            port=27018,
+            git_sha="abc",
+        )
+    )
+    with pytest.raises(RuntimeError) as ei:
+        refuse_reinitialization_if_present()
+    assert "permanent_already_initialized" in str(ei.value)
+
+
+def test_c3_general_creds_must_not_contain_emergency():
+    from shared.dogfood.permanent import assert_general_creds_have_no_emergency
+
+    assert_general_creds_have_no_emergency({"admin": "x", "runtime": "y"})
+    with pytest.raises(RuntimeError) as ei:
+        assert_general_creds_have_no_emergency({"admin": "x", "emergency": "secret"})
+    assert "emergency_password_must_not_live_in_general_creds" in str(ei.value)
+
+
+def test_c3_require_identity_missing_fails(perm_env):
+    from shared.dogfood.permanent import require_identity_or_raise
+
+    with pytest.raises(RuntimeError) as ei:
+        require_identity_or_raise()
+    assert "permanent_identity_missing" in str(ei.value)
+
+
+def test_c3_identity_fingerprint_stable():
+    from shared.dogfood.permanent import identity_fingerprint
+
+    ident = build_identity_payload(
+        instance_id="id1",
+        db_name="omnia_df_perm_main",
+        host="127.0.0.1",
+        port=27018,
+        git_sha="sha",
+    )
+    fp1 = identity_fingerprint(ident)
+    fp2 = identity_fingerprint(dict(ident))
+    assert fp1 == fp2
+    assert fp1["instance_id"] == "id1"

@@ -21,13 +21,18 @@ La base permanente **non** è un DB di lavoro. Copie: `omnia_df_clean_*` (CLEAN)
 3. Mongo roles: `omnia_df_runtime` / `omnia_df_clone` **senza write** sul permanente; `omnia_df_emergency` sealed.
 4. Fail-closed se IDENTITY non dimostrabile (emergenza).
 
-## Init
+## Init (one-shot, non distruttiva)
 
 ```bash
 python3 scripts/dogfood_mongo_bootstrap.py   # C2 auth instance
-python3 scripts/dogfood_permanent_init.py    # IDENTITY + roles + backup skeleton
-python3 scripts/dogfood_c3_verify.py         # T1–T13 live
+python3 scripts/dogfood_permanent_init.py    # solo se IDENTITY assente — altrimenti DENY
+python3 scripts/dogfood_c3_verify.py         # read-only: NON richiama init
 ```
+
+- Reinizializzazione con IDENTITY/marker già presenti → **DENY** (ricostruzione = nuova auth Founder).
+- `dogfood_c3_verify.py` è **read-only** sulla base permanente: non riscrive IDENTITY, marker, ruoli o backup.
+- Password `omnia_df_emergency` solo in `dogfood/permanent/secrets/emergency-credentials.json` (mai in `mongo-df-credentials.json`).
+- `omnia_df_admin` (root) resta **rischio residuo** documentato — la base non è filesystem-immutabile.
 
 Nessun account/org commerciale (C4).
 

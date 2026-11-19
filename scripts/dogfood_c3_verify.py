@@ -1,5 +1,10 @@
 #!/usr/bin/env python3
-"""D-175 C3 — Live verification of permanent base protections (no destructive restore)."""
+"""D-175 C3 — Read-only live verification of an already-initialized permanent base.
+
+Does NOT call dogfood_permanent_init.py.
+Does NOT rewrite IDENTITY.json, markers, roles, or permanent backups.
+Requires a prior successful init; missing/altered identity → FAIL.
+"""
 from __future__ import annotations
 
 import json
@@ -22,20 +27,29 @@ from shared.dogfood.ordinary_ops import (  # noqa: E402
 )
 from shared.dogfood.perimeter import check_dogfood_db_isolation  # noqa: E402
 from shared.dogfood.permanent import (  # noqa: E402
+    MARKER_COLLECTION,
+    assert_general_creds_have_no_emergency,
     check_emergency_unlock_gates,
     configured_permanent_db_name,
     dogfood_root,
     emergency_audit_path,
+    emergency_credentials_path,
+    general_mongo_credentials_path,
+    identity_fingerprint,
     load_identity,
     require_identity_or_raise,
 )
 
 
 def _creds(root: Path) -> dict:
-    return json.loads((root / "secrets" / "mongo-df-credentials.json").read_text())
+    p = general_mongo_credentials_path()
+    data = json.loads(p.read_text(encoding="utf-8"))
+    assert_general_creds_have_no_emergency(data)
+    return data
 
 
 def _try_write(uri: str, db: str) -> dict:
+    """Attempt write; on success deletes the probe doc (work DB only in callers)."""
     try:
         c = MongoClient(uri, serverSelectionTimeoutMS=5000)
         c[db]["_c3_priv_probe"].insert_one({"probe": 1})
@@ -47,32 +61,71 @@ def _try_write(uri: str, db: str) -> dict:
         return {"result": "DENIED", "error": str(e)[:200]}
 
 
+def _read_marker(admin_uri: str, db_name: str) -> dict | None:
+    c = MongoClient(admin_uri, serverSelectionTimeoutMS=5000)
+    return c[db_name][MARKER_COLLECTION].find_one({}, {"_id": 0})
+
+
 def main() -> int:
     root = dogfood_root()
     port = int(os.environ.get("OMNIA_DF_MONGO_PORT") or 27018)
-    # Ensure init ran
-    init = subprocess.run(
-        [sys.executable, str(ROOT / "scripts" / "dogfood_permanent_init.py")],
-        cwd=str(ROOT),
-        capture_output=True,
-        text=True,
-        env={**os.environ, "OMNIA_DF_MONGO_PORT": str(port)},
-    )
-    if init.returncode != 0:
-        print(init.stderr, file=sys.stderr)
-        raise SystemExit(2)
 
-    identity = require_identity_or_raise()
-    perm_db = configured_permanent_db_name()
-    creds = _creds(root)
-    work_db = (os.environ.get("OMNIA_DOGFOOD_RUNTIME_DB") or "omnia_df_clean_work").strip()
+    # --- Read-only identity gate (no init) ---
+    try:
+        identity = require_identity_or_raise()
+    except RuntimeError as e:
+        print(json.dumps({"ok": False, "result": "FAIL", "error": str(e)}, indent=2))
+        return 2
 
-    # Load env hint into process for perimeter checks
+    before_fp = identity_fingerprint(identity)
+    before_identity_text = (root / "permanent" / "IDENTITY.json").read_text(encoding="utf-8")
+    perm_db = str(identity.get("db_name") or configured_permanent_db_name())
+    if perm_db != configured_permanent_db_name() and configured_permanent_db_name():
+        # Config must match identity when both set
+        if (os.environ.get("OMNIA_DOGFOOD_PERMANENT_DB") or "").strip():
+            if perm_db != (os.environ.get("OMNIA_DOGFOOD_PERMANENT_DB") or "").strip():
+                print(json.dumps({"ok": False, "error": "identity_db_mismatch_env"}, indent=2))
+                return 2
+
     hint_path = root / "permanent" / "ENV_HINT.json"
     if hint_path.exists():
         hint = json.loads(hint_path.read_text())
         os.environ.setdefault("OMNIA_DOGFOOD_PERMANENT_URI", hint["OMNIA_DOGFOOD_PERMANENT_URI"])
         os.environ.setdefault("OMNIA_DOGFOOD_PERMANENT_DB", hint["OMNIA_DOGFOOD_PERMANENT_DB"])
+
+    try:
+        creds = _creds(root)
+    except RuntimeError as e:
+        print(json.dumps({"ok": False, "error": str(e)}, indent=2))
+        return 2
+
+    work_db = (os.environ.get("OMNIA_DOGFOOD_RUNTIME_DB") or "omnia_df_clean_work").strip()
+    admin_uri = (
+        f"mongodb://omnia_df_admin:{creds['admin']}@127.0.0.1:{port}/admin?authSource=admin"
+    )
+
+    # Marker must exist and match IDENTITY — read only
+    marker = _read_marker(admin_uri, perm_db)
+    if not marker:
+        print(json.dumps({"ok": False, "error": "permanent_marker_missing"}, indent=2))
+        return 2
+    if marker.get("instance_id") != identity.get("instance_id"):
+        print(
+            json.dumps(
+                {
+                    "ok": False,
+                    "error": "identity_marker_mismatch",
+                    "identity_id": identity.get("instance_id"),
+                    "marker_id": marker.get("instance_id"),
+                },
+                indent=2,
+            )
+        )
+        return 2
+
+    marker_count_before = MongoClient(admin_uri, serverSelectionTimeoutMS=5000)[perm_db][
+        MARKER_COLLECTION
+    ].estimated_document_count()
 
     results = []
 
@@ -86,7 +139,13 @@ def main() -> int:
     os.environ.setdefault("OMNIA_DOGFOOD_ALLOWED_API_HOSTS", "127.0.0.1")
     os.environ.setdefault("OMNIA_DOGFOOD_ALLOWED_FE_HOSTS", "127.0.0.1")
     r = check_dogfood_db_isolation()
-    add("T1_runtime_permanent_db", "PASS" if (not r["ok"] and "db_name_is_permanent" in r["errors"]) or (not r["ok"] and "mongo_url_is_permanent" in r["errors"]) else "FAIL", r)
+    add(
+        "T1_runtime_permanent_db",
+        "PASS"
+        if (not r["ok"] and ("db_name_is_permanent" in r["errors"] or "mongo_url_is_permanent" in r["errors"]))
+        else "FAIL",
+        r,
+    )
 
     # T2 alternate URI same permanent instance DENY
     os.environ["DB_NAME"] = perm_db
@@ -94,61 +153,74 @@ def main() -> int:
         f"mongodb://omnia_df_runtime:{creds['runtime']}@127.0.0.1:{port}/{perm_db}?authSource=admin"
     )
     r2 = check_dogfood_db_isolation()
+    add("T2_runtime_alt_uri_same_permanent", "PASS" if not r2["ok"] else "FAIL", r2)
+
+    # T3–T6 ordinary ops DENY
     add(
-        "T2_runtime_alt_uri_same_permanent",
-        "PASS" if not r2["ok"] else "FAIL",
-        r2,
+        "T3_clone_to_permanent",
+        "PASS"
+        if not ordinary_clone_allowed(
+            source_uri=f"mongodb://127.0.0.1:{port}/", target_db=perm_db
+        ).get("ok")
+        else "FAIL",
+    )
+    add(
+        "T4_wipe_permanent",
+        "PASS"
+        if not ordinary_wipe_allowed(
+            uri=f"mongodb://127.0.0.1:{port}/", db_name=perm_db
+        ).get("ok")
+        else "FAIL",
+    )
+    add(
+        "T5_restore_permanent",
+        "PASS"
+        if not ordinary_restore_allowed(
+            uri=f"mongodb://127.0.0.1:{port}/", target_db=perm_db
+        ).get("ok")
+        else "FAIL",
+    )
+    add(
+        "T6_migrate_permanent",
+        "PASS"
+        if not ordinary_migrate_destructive_allowed(
+            uri=f"mongodb://127.0.0.1:{port}/", db_name=perm_db
+        ).get("ok")
+        else "FAIL",
     )
 
-    # T3 clone destination permanent DENY
-    c = ordinary_clone_allowed(source_uri=f"mongodb://127.0.0.1:{port}/", target_db=perm_db)
-    add("T3_clone_to_permanent", "PASS" if not c.get("ok") else "FAIL", c)
-
-    # T4 wipe permanent DENY
-    w = ordinary_wipe_allowed(uri=f"mongodb://127.0.0.1:{port}/", db_name=perm_db)
-    add("T4_wipe_permanent", "PASS" if not w.get("ok") else "FAIL", w)
-
-    # T5 restore ordinary permanent DENY
-    rst = ordinary_restore_allowed(uri=f"mongodb://127.0.0.1:{port}/", target_db=perm_db)
-    add("T5_restore_permanent", "PASS" if not rst.get("ok") else "FAIL", rst)
-
-    # T6 migrate destructive DENY
-    mig = ordinary_migrate_destructive_allowed(
-        uri=f"mongodb://127.0.0.1:{port}/", db_name=perm_db
+    # T7/T8 privilege write DENY (failed auth must not leave docs)
+    tw = _try_write(
+        f"mongodb://omnia_df_runtime:{creds['runtime']}@127.0.0.1:{port}/{perm_db}?authSource=admin",
+        perm_db,
     )
-    add("T6_migrate_permanent", "PASS" if not mig.get("ok") else "FAIL", mig)
-
-    # T7 runtime no write on permanent
-    rt_uri = f"mongodb://omnia_df_runtime:{creds['runtime']}@127.0.0.1:{port}/{perm_db}?authSource=admin"
-    tw = _try_write(rt_uri, perm_db)
     add("T7_runtime_write_permanent", "PASS" if tw["result"] == "DENIED" else "FAIL", tw)
-
-    # T8 clone no write on permanent
-    cl_uri = f"mongodb://omnia_df_clone:{creds['clone']}@127.0.0.1:{port}/{perm_db}?authSource=admin"
-    tw2 = _try_write(cl_uri, perm_db)
+    tw2 = _try_write(
+        f"mongodb://omnia_df_clone:{creds['clone']}@127.0.0.1:{port}/{perm_db}?authSource=admin",
+        perm_db,
+    )
     add("T8_clone_write_permanent", "PASS" if tw2["result"] == "DENIED" else "FAIL", tw2)
 
-    # T9 emergency not invocable without unlock
-    # clear unlock env
+    # T9–T11 emergency gates
     env_clean = {k: v for k, v in os.environ.items() if not k.startswith("OMNIA_PERMANENT_")}
     p = subprocess.run(
-        [sys.executable, str(ROOT / "scripts" / "dogfood_permanent_emergency_restore.py"), "--prove-gates"],
+        [
+            sys.executable,
+            str(ROOT / "scripts" / "dogfood_permanent_emergency_restore.py"),
+            "--prove-gates",
+        ],
         cwd=str(ROOT),
         capture_output=True,
         text=True,
         env=env_clean,
     )
-    add(
-        "T9_emergency_without_unlock",
-        "PASS" if p.returncode != 0 else "FAIL",
-        {"rc": p.returncode, "out": (p.stdout or "")[-200:]},
-    )
+    add("T9_emergency_without_unlock", "PASS" if p.returncode != 0 else "FAIL", {"rc": p.returncode})
 
-    # T10 incomplete unlock DENY
-    g = check_emergency_unlock_gates(unlock_token="1", auth_phrase="WRONG", confirm1="", confirm2="")
+    g = check_emergency_unlock_gates(
+        unlock_token="1", auth_phrase="WRONG", confirm1="", confirm2=""
+    )
     add("T10_incomplete_unlock", "PASS" if not g["ok"] else "FAIL", g)
 
-    # T11 double confirm incomplete DENY
     g2 = check_emergency_unlock_gates(
         unlock_token="1",
         auth_phrase="OMNIA FOUNDATION UNLOCK PERMANENT BASE",
@@ -157,7 +229,7 @@ def main() -> int:
     )
     add("T11_confirm_incomplete", "PASS" if not g2["ok"] else "FAIL", g2)
 
-    # T12 audit append-only verifiable + prove gates PASS
+    # T12 audit append (audit file only — not permanent DB)
     before = emergency_audit_path()
     before_lines = before.read_text().splitlines() if before.exists() else []
     env_ok = {
@@ -168,40 +240,33 @@ def main() -> int:
         "OMNIA_PERMANENT_CONFIRM_2": "CONFIRM-PERMANENT-EMERGENCY",
     }
     p2 = subprocess.run(
-        [sys.executable, str(ROOT / "scripts" / "dogfood_permanent_emergency_restore.py"), "--prove-gates"],
+        [
+            sys.executable,
+            str(ROOT / "scripts" / "dogfood_permanent_emergency_restore.py"),
+            "--prove-gates",
+        ],
         cwd=str(ROOT),
         capture_output=True,
         text=True,
         env=env_ok,
     )
     after_lines = before.read_text().splitlines() if before.exists() else []
-    audit_ok = p2.returncode == 0 and len(after_lines) >= len(before_lines) + 1
     add(
         "T12_emergency_audit_append",
-        "PASS" if audit_ok else "FAIL",
-        {
-            "rc": p2.returncode,
-            "before": len(before_lines),
-            "after": len(after_lines),
-            "stdout": (p2.stdout or "")[-300:],
-        },
+        "PASS" if p2.returncode == 0 and len(after_lines) >= len(before_lines) + 1 else "FAIL",
+        {"rc": p2.returncode, "before": len(before_lines), "after": len(after_lines)},
     )
 
-    # T13 ordinary ops on work copy allowed (gate level)
+    # T13 work-copy gates + runtime write on work DB only (not permanent)
     ok_clone = ordinary_clone_allowed(
         source_uri=f"mongodb://127.0.0.1:{port}/", target_db="omnia_df_clean_a"
     )
     ok_wipe = ordinary_wipe_allowed(
         uri=f"mongodb://127.0.0.1:{port}/", db_name="omnia_df_clean_a"
     )
-    # runtime write on work db
-    work_uri = f"mongodb://omnia_df_runtime:{creds['runtime']}@127.0.0.1:{port}/{work_db}?authSource=admin"
-    # ensure work db exists via admin
-    admin = MongoClient(
-        f"mongodb://omnia_df_admin:{creds['admin']}@127.0.0.1:{port}/admin?authSource=admin",
-        serverSelectionTimeoutMS=5000,
+    work_uri = (
+        f"mongodb://omnia_df_runtime:{creds['runtime']}@127.0.0.1:{port}/{work_db}?authSource=admin"
     )
-    admin[work_db]["_c3_init"].insert_one({"ok": 1})
     tw3 = _try_write(work_uri, work_db)
     add(
         "T13_ordinary_work_copy_allowed",
@@ -211,24 +276,85 @@ def main() -> int:
         {"clone": ok_clone, "wipe": ok_wipe, "runtime_write_work": tw3},
     )
 
-    # Identity summary
+    # --- Creds separation checks ---
+    general = json.loads(general_mongo_credentials_path().read_text(encoding="utf-8"))
+    em_path = emergency_credentials_path()
+    add(
+        "T14_emergency_absent_from_general_creds",
+        "PASS" if "emergency" not in general and em_path.is_file() else "FAIL",
+        {"general_has_emergency": "emergency" in general, "sealed_exists": em_path.is_file()},
+    )
+    # Ordinary credential file must not embed emergency password; sealed path is separate.
+    add(
+        "T15_ordinary_creds_cannot_see_emergency_secret",
+        "PASS" if "emergency" not in general else "FAIL",
+        {
+            "note": "ordinary scripts load only mongo-df-credentials.json; sealed path separate",
+            "general_keys": sorted(general.keys()),
+            "sealed_path": str(em_path),
+        },
+    )
+
+    # --- Post-conditions: identity + marker unchanged ---
+    after_identity = require_identity_or_raise()
+    after_fp = identity_fingerprint(after_identity)
+    after_text = (root / "permanent" / "IDENTITY.json").read_text(encoding="utf-8")
+    marker_count_after = MongoClient(admin_uri, serverSelectionTimeoutMS=5000)[perm_db][
+        MARKER_COLLECTION
+    ].estimated_document_count()
+    marker_after = _read_marker(admin_uri, perm_db)
+
+    identity_unchanged = (
+        before_fp == after_fp
+        and before_identity_text == after_text
+        and marker_count_before == marker_count_after
+        and (marker_after or {}).get("instance_id") == before_fp.get("instance_id")
+    )
+    add(
+        "T16_verify_readonly_identity_unchanged",
+        "PASS" if identity_unchanged else "FAIL",
+        {
+            "before": before_fp,
+            "after": after_fp,
+            "marker_count_before": marker_count_before,
+            "marker_count_after": marker_count_after,
+        },
+    )
+
     report = {
         "cycle": "D-175-C3",
         "ok": all(x["result"] == "PASS" for x in results),
-        "identity": identity,
+        "mode": "read_only_verify",
+        "identity": after_fp,
         "permanent_db": perm_db,
         "tests": results,
-        "git_sha": identity.get("git_sha"),
+        "git_sha": after_identity.get("git_sha"),
+        "note": "Did not invoke permanent_init; did not rewrite IDENTITY or markers",
+        "residual_risk": (
+            "omnia_df_admin (root) remains a technical superuser outside ordinary "
+            "runtime/clone paths — permanent base is NOT filesystem-immutable"
+        ),
     }
     art = Path("/opt/cursor/artifacts")
     art.mkdir(parents=True, exist_ok=True)
     (art / "D175-C3-VERIFY-REPORT.json").write_text(
         json.dumps(report, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
     )
+    # C3_LAST_VERIFY is a report sidecar — not IDENTITY
     (root / "permanent" / "C3_LAST_VERIFY.json").write_text(
         json.dumps(report, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
     )
-    print(json.dumps({"ok": report["ok"], "passed": sum(1 for x in results if x["result"]=="PASS"), "total": len(results)}, indent=2))
+    print(
+        json.dumps(
+            {
+                "ok": report["ok"],
+                "passed": sum(1 for x in results if x["result"] == "PASS"),
+                "total": len(results),
+                "instance_id": before_fp.get("instance_id"),
+            },
+            indent=2,
+        )
+    )
     return 0 if report["ok"] else 2
 
 
