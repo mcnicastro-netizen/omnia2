@@ -3,6 +3,7 @@ import React from "react";
 import { useTranslation } from "react-i18next";
 import AlImproveButton from "../../../shared/components/AlImproveButton";
 import PhotoUploader from "../../immoweb/components/PhotoUploader";
+import { api } from "../../../shared/lib/api";
 import { ENERGY_CLASS_OPTIONS } from "../../../shared/lib/energyClasses";
 import AddressAutocomplete from "./AddressAutocomplete";
 import B2CStagingPanel from "./B2CStagingPanel";
@@ -11,12 +12,13 @@ import { onInvalidItalian, onInputClearCustomValidity } from "../../../shared/li
 import {
   B2C_FEATURES,
   B2C_MAX_PHOTOS,
+  B2C_MEDIA_UPLOAD,
   CITY_SUGGESTIONS,
   CONDITIONS,
   HEATING,
   PROPERTY_TYPES,
 } from "./sellConstants";
-import { halDescriptionReady } from "./sellPayload";
+import { buildListingPayload, halDescriptionReady } from "./sellPayload";
 import { Field, FloorPlanUploader, inputCls } from "./SellFormPrimitives";
 
 export default function SellListingForm({
@@ -28,6 +30,10 @@ export default function SellListingForm({
   save,
   onCancel,
   stagingBusy,
+  setStagingBusy,
+  setStagingStatus,
+  setError,
+  reloadListings,
 }) {
   const { t } = useTranslation();
   if (!form) return null;
