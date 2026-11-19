@@ -166,7 +166,41 @@ async def send_email(
     """Send a localized transactional email via Resend.
 
     Optional ``subject`` overrides the template default (used by founders flow).
+
+    D-175 C1 hierarchy (never reorder):
+    1. Kill-switch / circuit hold — never bypassable by allowlist or force-test
+    2. Dogfood mode → allowlist (empty ⇒ no send)
+    3. Force-test only if kill OFF and recipient in allowlist
     """
+    from shared.security.circuit import call_with_circuit, circuit_open, is_held
+
+    # 1) Kill-switch first (Precisione Resend — force-test cannot bypass)
+    if is_held("resend") or circuit_open("resend"):
+        logger.warning("[EMAIL KILLED/HELD] to=%s template=%s", to, template)
+        return {"id": None, "status": "killed"}
+
+    env = (os.environ.get("OMNIA_ENV") or "").strip().lower()
+    if env == "dogfood":
+        raw_allow = (os.environ.get("OMNIA_EMAIL_ALLOWLIST") or "").strip()
+        allow = {
+            a.strip().lower()
+            for a in raw_allow.replace(";", ",").split(",")
+            if a.strip()
+        }
+        dest = (to or "").strip().lower()
+        force = (os.environ.get("OMNIA_EMAIL_FORCE_ALLOWLIST_TEST") or "").strip() == "1"
+        # Empty allowlist ⇒ no send (N1 vuota = HOLD totale)
+        if not allow or dest not in allow:
+            logger.warning(
+                "[EMAIL DOGFOOD BLOCKED] to=%s template=%s allowlist_empty=%s force=%s",
+                to,
+                template,
+                not allow,
+                force,
+            )
+            return {"id": None, "status": "blocked"}
+        # force flag is informational only when already allowlisted; never bypasses kill
+
     # Anti-abuse: per-recipient + global soft limits (fail-open on DB errors)
     try:
         from shared.security.rate_limit import enforce_rate_limit
@@ -189,7 +223,6 @@ async def send_email(
             return {"id": None, "status": "rate_limited"}
         logger.warning("email rate_limit fail-open: %s", e)
 
-    from shared.security.circuit import call_with_circuit, circuit_open
     if circuit_open("resend"):
         logger.warning("[EMAIL CIRCUIT OPEN] to=%s template=%s", to, template)
         return {"id": None, "status": "circuit_open"}

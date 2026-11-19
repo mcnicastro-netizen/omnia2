@@ -5,6 +5,13 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 FE="$ROOT/frontend"
 
+# D-175 C1 — Dogfood: block BEFORE any CLI / token use.
+if [[ "${OMNIA_ENV:-}" == "dogfood" ]]; then
+  echo "BLOCKED: vercel-deploy forbidden when OMNIA_ENV=dogfood (D-175 C1)."
+  echo "Deploy is production-only; dogfood must never invoke Vercel CLI."
+  exit 99
+fi
+
 echo "=== vercel-deploy ==="
 bash "$ROOT/scripts/vercel-prep-check.sh"
 

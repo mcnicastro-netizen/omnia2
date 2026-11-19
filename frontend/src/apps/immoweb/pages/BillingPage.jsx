@@ -139,9 +139,17 @@ export default function BillingPage() {
     }
   };
 
+  const h4PurchaseReady = state.data?.h4_purchase_ready === true;
+
   const checkoutCredits = async (packageKey) => {
+    if (!h4PurchaseReady) {
+      toast.message(
+        "Acquisto crediti non ancora disponibile (H4 in preparazione). Contattaci per assistenza."
+      );
+      return;
+    }
     if (!state.data?.self_serve_enabled) {
-      toast.message("Attivazione assistita: contattaci per completare l’acquisto.");
+      toast.message("Attivazione assistita: contattaci per completare l'acquisto.");
       openDemo();
       return;
     }
@@ -155,12 +163,23 @@ export default function BillingPage() {
       window.location.href = data.checkout_url;
     } catch (e) {
       const d = e?.response?.data?.detail;
-      toast.error(typeof d === "string" ? d : d?.message || "Errore checkout crediti");
+      const code = typeof d === "object" ? d?.error || d?.code : null;
+      if (code === "h4_not_ready" || e?.response?.status === 503) {
+        toast.message(d?.message || "Acquisto crediti bloccato (H4 non pronto).");
+      } else {
+        toast.error(typeof d === "string" ? d : d?.message || "Errore checkout crediti");
+      }
       setBusy(false);
     }
   };
 
   const buyStorage = async () => {
+    if (!h4PurchaseReady) {
+      toast.message(
+        "Acquisto storage non ancora disponibile (H4 in preparazione). Contattaci per assistenza."
+      );
+      return;
+    }
     setBusy(true);
     try {
       const { data } = await api.post("/billing/storage/purchase");
@@ -169,7 +188,7 @@ export default function BillingPage() {
         return;
       }
       if (data.stripe_required) {
-        const email = data.demo_contact_email || "mcnicastro@gmail.com";
+        const email = data.demo_contact_email || "[REDACTED]";
         const subject = encodeURIComponent("OMNIA — spazio archivio extra +100 GB");
         const body = encodeURIComponent(
           `Ciao,\n\nvorrei aggiungere ${data.addon?.gb || 100} GB di archivio (€${data.addon?.price_eur || 15}/mese) alla mia agenzia.\n\nAgenzia / email account:\n`
@@ -179,7 +198,12 @@ export default function BillingPage() {
       }
     } catch (e) {
       const d = e?.response?.data?.detail;
-      toast.error(typeof d === "string" ? d : d?.message || "Errore acquisto spazio");
+      const code = typeof d === "object" ? d?.error || d?.code : null;
+      if (code === "h4_not_ready" || e?.response?.status === 503) {
+        toast.message(d?.message || "Acquisto storage bloccato (H4 non pronto).");
+      } else {
+        toast.error(typeof d === "string" ? d : d?.message || "Errore acquisto spazio");
+      }
     } finally {
       setBusy(false);
     }
@@ -391,7 +415,7 @@ export default function BillingPage() {
               className="mt-4 bg-[#0B1E3F] hover:bg-stone-800 text-white"
               size="sm"
               onClick={buyStorage}
-              disabled={busy}
+              disabled={busy || !h4PurchaseReady}
               data-testid="buy-storage-btn"
             >
               Aggiungi 100 GB (€15/mese)
@@ -486,7 +510,8 @@ export default function BillingPage() {
                 variant="outline"
                 className="w-full mt-2"
                 onClick={() => checkoutCredits(pkg.key)}
-                disabled={busy}
+                disabled={busy || !h4PurchaseReady}
+                data-testid="billing-buy-credits"
                 data-testid={`buy-pack-${pkg.key}-btn`}
               >
                 Acquista

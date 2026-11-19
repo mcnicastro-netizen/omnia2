@@ -6,6 +6,13 @@
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 
+# D-175 C1 — Dogfood: block BEFORE any CLI / token use (not merely unset tokens).
+if [[ "${OMNIA_ENV:-}" == "dogfood" ]]; then
+  echo "BLOCKED: railway-deploy forbidden when OMNIA_ENV=dogfood (D-175 C1)."
+  echo "Deploy is production-only; dogfood must never invoke Railway CLI."
+  exit 99
+fi
+
 echo "=== railway-deploy ==="
 bash "$ROOT/scripts/railway-prep-check.sh"
 

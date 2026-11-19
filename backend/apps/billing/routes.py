@@ -101,7 +101,10 @@ def _build_waiting_cancel_url(origin: str) -> str:
 @router.get("/plans")
 async def list_plans():
     """Public plan listing — usato da landing e Settings > Billing."""
+    from shared.dogfood.perimeter import is_h4_purchase_ready
+
     catalog = get_active_catalog()
+    h4_ready = is_h4_purchase_ready()
     return {
         "plans": [p.model_dump() for p in catalog.values()],
         "credit_packages": [pkg.model_dump() for pkg in CREDIT_PACKAGES],
@@ -116,6 +119,8 @@ async def list_plans():
         "self_serve_enabled": (
             (os.environ.get("OMNIA_SELF_SERVE_ENABLED") or "").strip().lower() == "true"
         ),
+        # D-175 C1 — dual-gate sealed; env flag alone never unlocks UI
+        "h4_purchase_ready": h4_ready,
         "mode": os.environ.get("STRIPE_MODE", "test"),
         "publishable_key": os.environ.get("STRIPE_PUBLISHABLE_KEY", ""),
     }
@@ -353,7 +358,15 @@ async def buy_credits(
     request: Request,
     user: dict = Depends(require_roles("super_admin", "agency_admin", "group_admin")),
 ):
-    """Buy a credit package (one-off payment)."""
+    """Buy a credit package (one-off payment).
+
+    D-175 C1: hard-gate sealed H4 — 503 ``h4_not_ready`` until C5+C6 marker.
+    Env ``OMNIA_H4_PURCHASE_READY=true`` alone does NOT unlock (Precisione A).
+    Super Admin has no implicit purchase authority (Precisione B; C5 = Main Admin only).
+    """
+    from shared.dogfood.perimeter import guard_h4_purchase_or_raise
+
+    guard_h4_purchase_or_raise()
     _guard_enabled()
     _guard_self_serve()
     pkg = next((p for p in CREDIT_PACKAGES if p.key == payload.package_key), None)
@@ -411,7 +424,13 @@ async def buy_storage(
     user: dict = Depends(require_roles("super_admin", "agency_admin", "group_admin")),
     package_key: str = "storage_100gb",
 ):
-    """Buy +100 GB archive storage (D-085). Recurring monthly when Stripe is live."""
+    """Buy +100 GB archive storage (D-085). Recurring monthly when Stripe is live.
+
+    D-175 C1: same sealed H4 hard-gate as credits (Precisione A/B).
+    """
+    from shared.dogfood.perimeter import guard_h4_purchase_or_raise
+
+    guard_h4_purchase_or_raise()
     addon = next((a for a in STORAGE_ADDONS if a.key == package_key), None)
     if not addon:
         raise HTTPException(status_code=400, detail="unknown_storage_addon")

@@ -59,6 +59,20 @@ logger = logging.getLogger("omnia")
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Startup
+    # D-175 C1 — Dogfood fail-closed before DB work when OMNIA_ENV=dogfood
+    try:
+        from shared.dogfood.perimeter import (
+            assert_dogfood_boot_or_raise,
+            apply_dogfood_provider_holds,
+            is_dogfood_env,
+        )
+
+        assert_dogfood_boot_or_raise()
+        if is_dogfood_env():
+            apply_dogfood_provider_holds()
+    except RuntimeError as e:
+        logger.error("Dogfood perimeter refused start: %s", e)
+        raise
     Database.connect()
     await ensure_indexes()
     _load_locales()
