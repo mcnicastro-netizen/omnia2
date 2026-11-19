@@ -22,7 +22,29 @@ sys.path.insert(0, str(ROOT_DIR))
 # the template STRIPE_ENABLED=false → permanent billing 503.
 from shared.env_bootstrap import load_backend_env  # noqa: E402
 
-load_backend_env(ROOT_DIR / ".env", override=True)
+# If the process already set Dogfood runtime (C4 bind), do not let backend/.env
+# clobber DB_NAME / MONGO_URL / OMNIA_ENV back to the shared `omnia` DB.
+load_backend_env(
+    ROOT_DIR / ".env",
+    override=True,
+    extra_protect=(
+        "OMNIA_ENV",
+        "DB_NAME",
+        "MONGO_URL",
+        "OMNIA_DOGFOOD_RUNTIME_URI",
+        "OMNIA_DOGFOOD_RUNTIME_DB",
+        "OMNIA_API_PUBLIC_URL",
+        "FRONTEND_URL",
+        "FRONTEND_ORIGIN",
+        "FRONTEND_PUBLIC_URL",
+        "OMNIA_DOGFOOD_ALLOWED_API_HOSTS",
+        "OMNIA_DOGFOOD_ALLOWED_FE_HOSTS",
+        "OMNIA_DOGFOOD_TUNNEL_HOST",
+        "OMNIA_DOGFOOD_PERMANENT_DB",
+        "DOGFOOD_ROOT",
+        "OMNIA_DF_MONGO_PORT",
+    ),
+)
 
 # M1 bridge: legacy checks look for EMERGENT_LLM_KEY — mirror Gemini key if present
 # (safe alias: old code / env still work; preferred key remains GEMINI_API_KEY)

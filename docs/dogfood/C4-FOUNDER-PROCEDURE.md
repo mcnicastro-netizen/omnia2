@@ -56,11 +56,19 @@ python3 scripts/dogfood_c4_apply_manifest.py --manifest dogfood/c4/manifest.json
 
 ### 3) Creazione account (tu)
 
+Prima collega il portale alla copia CLEAN (mai la permanente):
+
+```bash
+bash scripts/dogfood_c4_bind_runtime.sh
+```
+
 Per ogni email nel manifest:
 
-1. Registrati / invita nell’ambiente Dogfood (loopback).
-2. Conferma email (`email_verified=true`).
-3. Non usare email/P.IVA reali di Nicastro o produzione.
+1. Registrati sul portale Dogfood (link tunnel / login).
+2. Conferma email: con provider inventati **non arriva posta**. Dopo la registrazione:
+   `python3 scripts/dogfood_c4_print_verify_link.py --email TUA_EMAIL_INVENTATA`
+   e apri il `verify_url` restituito.
+3. Non usare email/P.IVA reali di Nicastro o produzione. Tutto inventato.
 
 ### 4) Apply struttura
 
