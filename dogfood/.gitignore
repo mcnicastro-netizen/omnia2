@@ -1,0 +1,10 @@
+# Local Dogfood runtime (never commit secrets / dumps / media)
+secrets/
+mongo-data/
+logs/
+backups/
+media/
+C2_LAST_DRILL.json
+C2_MONGO_ROLE_MATRIX.json
+**/*.bson
+**/*.wt
