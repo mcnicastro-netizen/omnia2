@@ -131,21 +131,83 @@ def assert_safe_db_name(db_name: str, *, role: str) -> str:
     return name
 
 
-def assert_not_permanent_uri(uri: str) -> None:
+def authorized_dogfood_mongo_endpoints() -> set[tuple[str, int]]:
+    """Fail-closed allowlist of (host, port) for Dogfood backup/restore.
+
+    Default: loopback on ``OMNIA_DF_MONGO_PORT`` (27018) — never the shared
+    Cloud mongod on 27017 unless explicitly listed (discouraged).
+    Override: ``OMNIA_DOGFOOD_MONGO_ENDPOINTS=127.0.0.1:27018,localhost:27018``
+    """
+    raw = (os.environ.get("OMNIA_DOGFOOD_MONGO_ENDPOINTS") or "").strip()
+    out: set[tuple[str, int]] = set()
+    if raw:
+        for part in raw.replace(";", ",").split(","):
+            part = part.strip().lower()
+            if not part:
+                continue
+            if ":" in part:
+                host, _, port_s = part.rpartition(":")
+                try:
+                    out.add((host.strip(), int(port_s)))
+                except ValueError as e:
+                    raise RuntimeError(f"mongo_endpoint_invalid:{part}") from e
+            else:
+                raise RuntimeError(f"mongo_endpoint_missing_port:{part}")
+        if not out:
+            raise RuntimeError("mongo_endpoint_allowlist_empty")
+        return out
+    port = int((os.environ.get("OMNIA_DF_MONGO_PORT") or "27018").strip() or "27018")
+    return {("127.0.0.1", port), ("localhost", port), ("::1", port)}
+
+
+def parse_mongo_host_port(uri: str) -> tuple[str, int]:
+    raw = (uri or "").strip()
+    if not raw:
+        raise RuntimeError("mongo_uri_missing")
+    try:
+        p = urlparse(raw if "://" in raw else f"mongodb://{raw}")
+    except Exception as e:  # noqa: BLE001
+        raise RuntimeError("mongo_uri_unparseable") from e
+    host = (p.hostname or "").lower()
+    if not host:
+        raise RuntimeError("mongo_uri_host_missing")
+    # mongodb://host/db with no port → 27017; Dogfood must be explicit
+    port = p.port if p.port is not None else 27017
+    return host, int(port)
+
+
+def assert_dogfood_mongo_endpoint(uri: str) -> tuple[str, int]:
+    """Ensure URI targets the authorized Dogfood Mongo instance (host+port).
+
+    Also denies permanent URI equality and forbidden DB names in the path.
+    Probe DB name alone is NOT sufficient isolation — endpoint must match.
+    """
     perm = (os.environ.get("OMNIA_DOGFOOD_PERMANENT_URI") or "").strip()
     if perm and uri.strip() == perm:
         raise RuntimeError("uri_is_permanent_forbidden")
+
+    host, port = parse_mongo_host_port(uri)
+    allowed = authorized_dogfood_mongo_endpoints()
+    if (host, port) not in allowed:
+        raise RuntimeError(f"mongo_endpoint_not_allowed:{host}:{port}")
+
     # Refuse if URI path/db suggests permanent or shared app DB.
     # Ignore Mongo system DBs used only as authSource (admin/local/config).
     try:
         path = urlparse(uri if "://" in uri else f"mongodb://{uri}").path or ""
         db = path.lstrip("/").split("?")[0]
-        if db and db.lower() not in ("admin", "local", "config"):
+        if db and db.lower() not in ("admin", "local", "config", ""):
             assert_safe_db_name(db, role="deny_check")
     except RuntimeError:
         raise
     except Exception:  # noqa: BLE001
         pass
+    return host, port
+
+
+# Back-compat alias used by early C2 call sites
+def assert_not_permanent_uri(uri: str) -> None:
+    assert_dogfood_mongo_endpoint(uri)
 
 
 def default_dogfood_root() -> Path:
@@ -175,7 +237,7 @@ def run_mongodump(
     out_dir: Path,
     collections: Optional[list[str]] = None,
 ) -> dict[str, Any]:
-    assert_not_permanent_uri(mongo_uri)
+    assert_dogfood_mongo_endpoint(mongo_uri)
     db_name = assert_safe_db_name(db_name, role="source")
     out_dir.mkdir(parents=True, exist_ok=True)
     dump_dir = out_dir / "mongodump" / db_name
@@ -222,7 +284,7 @@ def run_mongorestore(
     dump_db_dir: Path,
     drop: bool = True,
 ) -> dict[str, Any]:
-    assert_not_permanent_uri(mongo_uri)
+    assert_dogfood_mongo_endpoint(mongo_uri)
     target_db = assert_safe_db_name(target_db, role="target_probe")
     if not dump_db_dir.is_dir():
         raise RuntimeError(f"dump_dir_missing:{dump_db_dir}")
@@ -249,16 +311,38 @@ def run_mongorestore(
 
 
 def backup_media(src: Path, dest: Path) -> dict[str, Any]:
+    """Copy media into backup dest.
+
+    Missing source is a **blocking** failure unless
+    ``OMNIA_DOGFOOD_ALLOW_MISSING_MEDIA=1`` is set explicitly (documented opt-out).
+    """
     dest.mkdir(parents=True, exist_ok=True)
     media_dest = dest / "media"
     anomalies: list[str] = []
+    allow_missing = (
+        (os.environ.get("OMNIA_DOGFOOD_ALLOW_MISSING_MEDIA") or "").strip() == "1"
+    )
     if not src.exists():
         anomalies.append("media_src_missing")
+        empty_inv = (
+            sha256_tree(media_dest)
+            if media_dest.exists()
+            else {"file_count": 0, "bytes": 0, "files": [], "tree_sha256": hashlib.sha256(b"").hexdigest()}
+        )
+        if allow_missing:
+            anomalies.append("media_missing_allowed_by_OMNIA_DOGFOOD_ALLOW_MISSING_MEDIA")
+            return {
+                "ok": True,
+                "copied": False,
+                "anomalies": anomalies,
+                "inventory": empty_inv,
+            }
         return {
-            "ok": True,
+            "ok": False,
             "copied": False,
             "anomalies": anomalies,
-            "inventory": sha256_tree(media_dest) if media_dest.exists() else sha256_tree(dest / "_empty"),
+            "inventory": empty_inv,
+            "error": "media_src_missing",
         }
     if media_dest.exists():
         shutil.rmtree(media_dest)
