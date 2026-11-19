@@ -7,6 +7,8 @@ from apps.immoweb.backup_scope import (
     B2C_COLLECTIONS,
     BACKUP_COLLECTIONS,
     D096_REQUIRED_AGENCY,
+    DOGFOOD_B04_COLLECTIONS,
+    DOGFOOD_BACKUP_COLLECTIONS,
     doc_belongs_to_agency,
     extract_agency_docs,
 )
@@ -68,3 +70,21 @@ def test_b2c_collections_disjoint_names_ok():
     # B2C names must appear in backup dump
     for name in B2C_COLLECTIONS:
         assert name in BACKUP_COLLECTIONS
+
+
+def test_d175_c2_dogfood_b04_collections_in_scope():
+    required = (
+        "commercial_customers",
+        "memberships",
+        "cc_credit_wallets",
+        "credit_lots",
+        "credit_allocations",
+        "cc_credit_ledger",
+        "commercial_reactivation_derogations",
+        "mls_network",
+        "provider_flags",
+    )
+    for name in required:
+        assert name in DOGFOOD_B04_COLLECTIONS
+        assert name in BACKUP_COLLECTIONS
+        assert name in DOGFOOD_BACKUP_COLLECTIONS

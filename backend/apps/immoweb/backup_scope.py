@@ -38,10 +38,38 @@ B2C_COLLECTIONS: Sequence[str] = (
     "listing_inquiries",
 )
 
-# Ordered union for daily bak JSONL dump.
-BACKUP_COLLECTIONS: Sequence[str] = tuple(
-    dict.fromkeys([*AGENCY_COLLECTIONS, *B2C_COLLECTIONS])
+# D-175 C2 — Commercial / wallet / MLS collections required for Dogfood bak.
+# Global (CC-scoped) — not agency_id filtered the same way as AGENCY_COLLECTIONS.
+DOGFOOD_B04_COLLECTIONS: Sequence[str] = (
+    "commercial_customers",
+    "memberships",
+    "cc_credit_wallets",
+    "credit_lots",
+    "credit_allocations",
+    "cc_credit_ledger",
+    "payment_transactions",
+    "invoices",
+    "commercial_main_admin_transfers",
+    "commercial_main_admin_events",
+    "commercial_reactivation_derogations",
+    "provider_flags",
+    "plan_catalog_versions",
+    "notifications",
+    "agency_invites",
+    "refresh_tokens",
+    "mls_network",
+    "mls_offers",
+    "mls_partners",
+    "mls_inventory",
 )
+
+# Ordered union for daily bak JSONL dump (+ Dogfood B04).
+BACKUP_COLLECTIONS: Sequence[str] = tuple(
+    dict.fromkeys([*AGENCY_COLLECTIONS, *B2C_COLLECTIONS, *DOGFOOD_B04_COLLECTIONS])
+)
+
+# Explicit Dogfood full scope alias (same as BACKUP_COLLECTIONS after C2).
+DOGFOOD_BACKUP_COLLECTIONS: Sequence[str] = BACKUP_COLLECTIONS
 
 # Minimum set required for D-096 success criteria (agency + media-linked).
 D096_REQUIRED_AGENCY: Sequence[str] = (
