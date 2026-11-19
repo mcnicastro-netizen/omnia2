@@ -85,6 +85,56 @@ def test_c2_roles_verified_ok_path():
     assert roles_fully_verified(ok) is True
 
 
+def test_c2_roles_malformed_report_rejected():
+    """Gate must reject incomplete/malformed privilege reports (not only NOT VERIFIED)."""
+    # DENIED without pass:true — ambiguous / failed expectation
+    assert (
+        roles_fully_verified(
+            {
+                "verified": True,
+                "checks": [{"result": "DENIED", "expect": "DENIED"}],
+            }
+        )
+        is False
+    )
+    # DENIED with pass:false
+    assert (
+        roles_fully_verified(
+            {
+                "verified": True,
+                "checks": [{"result": "DENIED", "pass": False}],
+            }
+        )
+        is False
+    )
+    # Unknown / empty result
+    assert (
+        roles_fully_verified({"verified": True, "checks": [{"result": "OK"}]})
+        is False
+    )
+    assert roles_fully_verified({"verified": True, "checks": [{}]}) is False
+    # Non-dict check entry
+    assert roles_fully_verified({"verified": True, "checks": ["PASS_ALLOWED"]}) is False
+    # Mix: one good, one malformed → overall fail
+    assert (
+        roles_fully_verified(
+            {
+                "verified": True,
+                "checks": [
+                    {"result": "PASS_ALLOWED"},
+                    {"result": "DENIED"},  # missing pass:true
+                ],
+            }
+        )
+        is False
+    )
+    # verified flag alone is insufficient
+    assert (
+        roles_fully_verified({"verified": True, "checks": [{"result": "PASS_ALLOWED"}]})
+        is True
+    )
+
+
 def test_c2_compute_drill_ok_requires_boot_and_roles():
     parts = _base_ok_parts()
     assert compute_drill_ok(**parts) is True

@@ -54,7 +54,7 @@ Credenziali solo in `dogfood/secrets/` (gitignored).
 1. bootstrap Mongo isolato riuscito (`boot.ok`) — altrimenti il drill **si interrompe**
 2. autenticazione admin obbligatoria (nessun fallback senza credenziali)
 3. restore + media + deny su `omnia` / permanente
-4. `role_checks.verified` — qualsiasi `NOT VERIFIED` → FAIL complessivo
+4. `role_checks.verified` — ogni check deve essere `PASS_ALLOWED` oppure `DENIED` con `pass: true`; qualsiasi `NOT VERIFIED` o report malformato → FAIL complessivo
 
 ## Manifest
 
