@@ -106,6 +106,11 @@ def main() -> int:
         commercial_customer_id=cc["id"],
         email=manifest.get("main_admin_email") or "",
     )
+    # Refresh CC after possible nomination — block MA from CRM via same apply
+    cc_live = db.commercial_customers.find_one({"id": cc["id"]}, {"_id": 0}) or cc
+    forbid_ma: set[str] = set()
+    if cc_live.get("main_admin_user_id"):
+        forbid_ma.add(cc_live["main_admin_user_id"])
 
     admin_results = []
     for a in manifest.get("organization_admins") or []:
@@ -119,6 +124,8 @@ def main() -> int:
                 email=a.get("email") or "",
                 organization_id=org["id"],
                 operational_role="agency_admin",
+                commercial_customer_id=cc["id"],
+                forbid_user_ids=forbid_ma,
             )
         )
 
@@ -134,6 +141,8 @@ def main() -> int:
                 email=c.get("email") or "",
                 organization_id=org["id"],
                 operational_role=c.get("role") or "agent",
+                commercial_customer_id=cc["id"],
+                forbid_user_ids=forbid_ma,
             )
         )
 

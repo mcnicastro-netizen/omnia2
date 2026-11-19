@@ -163,9 +163,86 @@ def test_c4_membership_requires_existing_user():
         {"id": "u-adm", "email": "adm@dogfood.local", "is_active": True, "email_verified": True}
     )
     ok = attach_membership_if_user_exists(
-        db, email="adm@dogfood.local", organization_id=org["id"], operational_role="agency_admin"
+        db,
+        email="adm@dogfood.local",
+        organization_id=org["id"],
+        operational_role="agency_admin",
+        commercial_customer_id=cc["id"],
     )
     assert ok["ok"] and ok["status"] == "membership_active"
+    again = attach_membership_if_user_exists(
+        db,
+        email="adm@dogfood.local",
+        organization_id=org["id"],
+        operational_role="agency_admin",
+        commercial_customer_id=cc["id"],
+    )
+    assert again["status"] == "already_active"
+    assert db.memberships.count_documents({"membership_status": "active"}) == 1
+
+
+def test_c4_membership_rejects_wrong_cc_and_ma_user():
+    db = _FakeDB()
+    cc = ensure_commercial_customer(db, vat_number="77777777777", legal_name="Z")["customer"]
+    other = ensure_commercial_customer(db, vat_number="66666666666", legal_name="Other")["customer"]
+    org = ensure_organization(
+        db, commercial_customer_id=cc["id"], org_key="sede", display_name="Sede"
+    )["organization"]
+    db.users.insert_one(
+        {"id": "u-x", "email": "x@dogfood.local", "is_active": True, "email_verified": True}
+    )
+    bad_cc = attach_membership_if_user_exists(
+        db,
+        email="x@dogfood.local",
+        organization_id=org["id"],
+        operational_role="agent",
+        commercial_customer_id=other["id"],
+    )
+    assert bad_cc["status"] == "rejected"
+    assert bad_cc["reason"] == "organization_not_under_commercial_customer"
+    forbid = attach_membership_if_user_exists(
+        db,
+        email="x@dogfood.local",
+        organization_id=org["id"],
+        operational_role="agent",
+        commercial_customer_id=cc["id"],
+        forbid_user_ids={"u-x"},
+    )
+    assert forbid["status"] == "rejected"
+    assert "main_admin" in forbid["reason"]
+
+
+def test_c4_manifest_rejects_ma_membership_overlap_and_unknown_org():
+    m = build_empty_manifest_template()
+    m["main_admin_email"] = "same@dogfood.local"
+    m["organization_admins"][0]["email"] = "same@dogfood.local"
+    errs = validate_manifest(m)
+    assert "main_admin_email_overlaps_membership_lists" in errs
+    m2 = build_empty_manifest_template()
+    m2["organization_admins"][0]["org_key"] = "ghost"
+    assert any(e.startswith("org_admin_unknown_org_key") for e in validate_manifest(m2))
+
+
+def test_c4_ma_conflict_second_user():
+    db = _FakeDB()
+    cc = ensure_commercial_customer(db, vat_number="55555555555", legal_name="C")["customer"]
+    db.users.insert_one(
+        {"id": "u1", "email": "a@dogfood.local", "is_active": True, "email_verified": True}
+    )
+    db.users.insert_one(
+        {"id": "u2", "email": "b@dogfood.local", "is_active": True, "email_verified": True}
+    )
+    assert nominate_main_admin_if_user_exists(
+        db, commercial_customer_id=cc["id"], email="a@dogfood.local"
+    )["status"] == "nominated"
+    conflict = nominate_main_admin_if_user_exists(
+        db, commercial_customer_id=cc["id"], email="b@dogfood.local"
+    )
+    assert conflict["status"] == "conflict"
+    again = nominate_main_admin_if_user_exists(
+        db, commercial_customer_id=cc["id"], email="a@dogfood.local"
+    )
+    assert again["status"] == "already_nominated"
 
 
 def test_c4_role_matrix_documents_ma_no_auto_crm():

@@ -23,6 +23,7 @@ CommercialCustomer (1 × P.IVA fittizia)
 - Main Admin **≠** accesso CRM automatico (serve Membership esplicita).
 - Admin di filiale **≠** autorità wallet centrale.
 - Stessa P.IVA → stesso CC (unicità).
+- L’email del Main Admin **non** deve comparire anche in `organization_admins` / `collaborators` dello stesso manifest (l’apply rifiuta l’accoppiamento commerciale+CRM).
 
 ## Passi
 
@@ -95,6 +96,17 @@ Esiti: `PASS` / `FAIL` / `NOT VERIFIED` (atteso finché non completi gli account
 - Merge senza Founder  
 - C5+  
 
-## Residui
+## Residui (registro rischi — non confondere con NOT VERIFIED C4)
 
-`omnia_df_admin` resta superuser tecnico (come C3). Host-alias exact-match documentato in C3.
+| Residuo | Origine | Nota |
+|---|---|---|
+| `omnia_df_admin` superuser tecnico | C3 | Non è un NOT VERIFIED C4 |
+| Host-alias exact-match | C3 | Non è un NOT VERIFIED C4 |
+| T5 / T7 `NOT VERIFIED` | C4 | Dipendono dagli account creati dal Founder |
+
+## Review #234 — punti chiusi lato tecnico
+
+1. Apply multi-run: CC/org/wallet idempotenti; membership `already_active` se invariata.
+2. Workcopy/apply verso permanente: DENY (gate C3 + `assert_c4_seed_target`).
+3. Manifest: no overlap MA↔membership; org_key sconosciuta → errore; membership vincolata al CC.
+4. T5/T7 marcati `depends_on: founder_account`; T6/T9 verifiche strutturali (non solo matrice documentale).

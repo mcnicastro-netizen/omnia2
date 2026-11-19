@@ -101,20 +101,49 @@ def main() -> int:
         add(
             "T5_main_admin_nominated",
             "PASS" if ma else "NOT VERIFIED",
-            {"main_admin_user_id": ma, "hint": "Founder must create user then re-apply"},
+            {
+                "main_admin_user_id": ma,
+                "depends_on": "founder_account",
+                "hint": "Founder must create user then re-apply",
+            },
         )
-        # T6: org admins must not all be MA with wallet — check role matrix expectation
+        # T6: structural — one CC wallet only; no org-scoped wallet docs
+        wallets = list(
+            db.cc_credit_wallets.find(
+                {"commercial_customer_id": cc_id}, {"_id": 0}
+            )
+        )
+        org_scoped = [
+            w
+            for w in wallets
+            if w.get("organization_id") or w.get("agency_id") or w.get("org_id")
+        ]
+        t6_ok = structure["wallet_count"] == 1 and len(org_scoped) == 0
         add(
             "T6_branch_admin_no_auto_wallet",
-            "PASS",
-            {"matrix": ROLE_AUTHORITY_MATRIX["organization_admin"]},
+            "PASS" if t6_ok else "FAIL",
+            {
+                "wallet_count": structure["wallet_count"],
+                "org_scoped_wallets": len(org_scoped),
+                "matrix": ROLE_AUTHORITY_MATRIX["organization_admin"],
+                "note": "Structural: wallet is CC-central only; branch admin has no separate wallet",
+            },
         )
         # T7 collaborators present?
-        collabs = list(db.memberships.find({"dogfood_c4": True, "operational_role": "agent"}, {"_id": 0}))
+        collabs = list(
+            db.memberships.find(
+                {"dogfood_c4": True, "operational_role": "agent", "membership_status": "active"},
+                {"_id": 0},
+            )
+        )
         add(
             "T7_collaborators",
             "PASS" if collabs else "NOT VERIFIED",
-            {"count": len(collabs)},
+            {
+                "count": len(collabs),
+                "depends_on": "founder_account",
+                "hint": "Requires Founder-created collaborator users + re-apply",
+            },
         )
         # T8 branch separation: memberships point to distinct orgs when multiple
         org_ids = {o["id"] for o in structure["organizations"]}
@@ -124,15 +153,28 @@ def main() -> int:
             "PASS" if not mems or all(m.get("organization_id") in org_ids for m in mems) else "FAIL",
             {"active_memberships": len(mems)},
         )
-        # T9 MA CRM not automatic — memberships for MA may be empty
-        add(
-            "T9_ma_no_automatic_crm",
-            "PASS",
-            {
-                "ma_memberships": structure.get("main_admin_active_memberships"),
+        # T9: nomination must not auto-grant CRM — MA active memberships must be empty
+        ma_mems = structure.get("main_admin_active_memberships") or []
+        if not ma:
+            t9 = "PASS"
+            t9_detail = {
+                "reason": "ma_not_nominated_yet",
                 "rule": ROLE_AUTHORITY_MATRIX["main_admin"],
-            },
-        )
+                "note": "nominate_main_admin path never inserts memberships; CRM still requires explicit Membership after Founder accounts exist",
+            }
+        elif len(ma_mems) == 0:
+            t9 = "PASS"
+            t9_detail = {
+                "ma_memberships": [],
+                "rule": ROLE_AUTHORITY_MATRIX["main_admin"],
+            }
+        else:
+            t9 = "FAIL"
+            t9_detail = {
+                "ma_memberships": ma_mems,
+                "reason": "main_admin_has_active_crm_membership_improper_coupling",
+            }
+        add("T9_ma_no_automatic_crm", t9, t9_detail)
         vat_chk = assert_vat_unique_second_cc_denied(db, cc.get("vat_number_normalized") or "")
         add("T10_vat_uniqueness", "PASS" if vat_chk["ok"] else "FAIL", vat_chk)
 

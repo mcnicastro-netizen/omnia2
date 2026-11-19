@@ -87,6 +87,24 @@ def validate_manifest(manifest: dict[str, Any]) -> list[str]:
     ma = (manifest.get("main_admin_email") or "").strip()
     if not ma:
         errors.append("main_admin_email_missing")
+    ma_norm = ma.lower()
+    # MA commercial authority must not be silently coupled to CRM membership
+    # via the same apply (Founder may grant Membership later, explicitly).
+    membership_emails: list[str] = []
+    for a in manifest.get("organization_admins") or []:
+        e = (a.get("email") or "").strip().lower()
+        if e:
+            membership_emails.append(e)
+        if a.get("org_key") and a.get("org_key") not in keys:
+            errors.append(f"org_admin_unknown_org_key:{a.get('org_key')}")
+    for c in manifest.get("collaborators") or []:
+        e = (c.get("email") or "").strip().lower()
+        if e:
+            membership_emails.append(e)
+        if c.get("org_key") and c.get("org_key") not in keys:
+            errors.append(f"collaborator_unknown_org_key:{c.get('org_key')}")
+    if ma_norm and ma_norm in membership_emails and not is_placeholder_email(ma):
+        errors.append("main_admin_email_overlaps_membership_lists")
     return errors
 
 
@@ -289,8 +307,13 @@ def attach_membership_if_user_exists(
     email: str,
     organization_id: str,
     operational_role: str,
+    commercial_customer_id: str | None = None,
+    forbid_user_ids: Optional[set[str]] = None,
 ) -> dict[str, Any]:
-    """CRM membership only when user already exists — never invents accounts."""
+    """CRM membership only when user already exists — never invents accounts.
+
+    Idempotent: re-apply with same user/org/role returns already_active.
+    """
     if is_placeholder_email(email):
         return {"ok": False, "status": "pending_founder", "reason": "email_placeholder"}
     user = find_user_by_email(db, email)
@@ -301,7 +324,40 @@ def attach_membership_if_user_exists(
             "reason": "user_not_found_create_account_first",
             "email": email.strip().lower(),
         }
-    # End other actives then create (exclusive)
+    if forbid_user_ids and user["id"] in forbid_user_ids:
+        return {
+            "ok": False,
+            "status": "rejected",
+            "reason": "main_admin_must_not_receive_membership_via_c4_apply",
+            "user_id": user["id"],
+        }
+    org = db.agencies.find_one({"id": organization_id}, {"_id": 0})
+    if not org:
+        return {"ok": False, "status": "error", "reason": "organization_missing"}
+    if commercial_customer_id and org.get("commercial_customer_id") != commercial_customer_id:
+        return {
+            "ok": False,
+            "status": "rejected",
+            "reason": "organization_not_under_commercial_customer",
+            "organization_id": organization_id,
+        }
+    existing = db.memberships.find_one(
+        {
+            "user_id": user["id"],
+            "organization_id": organization_id,
+            "membership_status": "active",
+            "operational_role": operational_role,
+        },
+        {"_id": 0},
+    )
+    if existing:
+        return {
+            "ok": True,
+            "status": "already_active",
+            "user_id": user["id"],
+            "membership_id": existing.get("id"),
+        }
+    # End other actives then create (exclusive membership)
     db.memberships.update_many(
         {"user_id": user["id"], "membership_status": "active"},
         {"$set": {"membership_status": "ended", "valid_to": _now()}},
