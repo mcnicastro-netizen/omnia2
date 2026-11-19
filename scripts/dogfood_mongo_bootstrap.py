@@ -19,6 +19,9 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_PORT = 27018
+sys.path.insert(0, str(ROOT / "backend"))
+
+from shared.dogfood.backup import assert_dogfood_mongo_port  # noqa: E402
 
 
 def dogfood_root() -> Path:
@@ -29,7 +32,13 @@ def run(cmd: list[str]) -> subprocess.CompletedProcess:
     return subprocess.run(cmd, text=True, capture_output=True)
 
 
+def assert_bootstrap_port(port: int) -> int:
+    """Refuse shared Cloud port before any stop/start — fail-closed."""
+    return assert_dogfood_mongo_port(port)
+
+
 def pid_on_port(port: int) -> int | None:
+    assert_bootstrap_port(port)
     p = run(["bash", "-lc", f"lsof -tiTCP:{port} -sTCP:LISTEN || true"])
     out = (p.stdout or "").strip()
     if not out:
@@ -41,6 +50,7 @@ def pid_on_port(port: int) -> int | None:
 
 
 def stop_port(port: int) -> None:
+    assert_bootstrap_port(port)
     pid = pid_on_port(port)
     if not pid:
         return
@@ -69,6 +79,7 @@ def wait_ping(uri: str, timeout: float = 40.0) -> None:
 
 
 def start_mongod(dbpath: Path, port: int, logpath: Path, auth: bool) -> None:
+    assert_bootstrap_port(port)
     dbpath.mkdir(parents=True, exist_ok=True)
     logpath.parent.mkdir(parents=True, exist_ok=True)
     if pid_on_port(port):
@@ -118,6 +129,9 @@ def main() -> int:
     ap.add_argument("--runtime-db", default="omnia_df_c2_src")
     args = ap.parse_args()
 
+    # Fail before any stop_port / mongod — misconfig must not touch shared :27017
+    assert_bootstrap_port(args.port)
+
     root = dogfood_root()
     root.mkdir(parents=True, exist_ok=True)
     dbpath = Path(args.dbpath)
@@ -134,9 +148,12 @@ def main() -> int:
             "clone": secrets.token_urlsafe(24),
             "backup": secrets.token_urlsafe(24),
         }
-        cred_path.write_text(json.dumps({"_note": "local only"}, indent=2) + "\n", encoding="utf-8")
-        # write real creds with 0600 — content has secrets; path gitignored
-        cred_path.write_text(json.dumps(creds, indent=2) + "\n", encoding="utf-8")
+        # Atomic 0600 write — avoid world-readable window before chmod
+        tmp = cred_path.with_suffix(".tmp")
+        fd = os.open(str(tmp), os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+        with os.fdopen(fd, "w", encoding="utf-8") as f:
+            f.write(json.dumps(creds, indent=2) + "\n")
+        os.replace(str(tmp), str(cred_path))
         cred_path.chmod(0o600)
 
     flag = dbpath / ".auth_enabled"
@@ -211,8 +228,8 @@ def main() -> int:
                 "forbidden": "write on probe/permanent/shared omnia",
             },
             "omnia_df_clone": {
-                "privileges": "read omnia_df_c2_src; readWrite omnia_df_probe*",
-                "forbidden": "permanent / shared omnia",
+                "privileges": "read omnia_df_c2_src; readWrite omnia_df_probe + omnia_df_probe_c2 only",
+                "forbidden": "permanent / shared omnia / other probe_*",
             },
             "omnia_df_backup": {
                 "privileges": "read dogfood source DBs for dump",

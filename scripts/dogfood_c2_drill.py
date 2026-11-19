@@ -27,6 +27,8 @@ from apps.immoweb.backup_scope import (  # noqa: E402
     DOGFOOD_BACKUP_COLLECTIONS,
 )
 from shared.dogfood.backup import (  # noqa: E402
+    assert_dogfood_mongo_endpoint,
+    assert_dogfood_mongo_port,
     assert_safe_db_name,
     backup_media,
     build_manifest,
@@ -235,19 +237,23 @@ def verify_restore(client: MongoClient, probe_db: str, expected: dict, media_des
 
 
 def main() -> int:
-    # Ensure bootstrap ran
-    boot = subprocess_bootstrap()
     root = _root()
     port = int(os.environ.get("OMNIA_DF_MONGO_PORT") or 27018)
+    # Hard-deny shared port before bootstrap/stop_port or any MongoClient
+    assert_dogfood_mongo_port(port)
+    # Ensure bootstrap ran (bootstrap itself also refuses :27017)
+    boot = subprocess_bootstrap()
     creds = _load_creds(root)
     # Prefer admin for seed/restore ops in drill (role separation verified separately)
     uri = _uri(port, "omnia_df_admin", creds.get("admin")) if creds.get("admin") else _uri(port)
-    # Fallback: unauth if admin auth fails
+    assert_dogfood_mongo_endpoint(uri)
+    # Fallback: unauth if admin auth fails — still must pass endpoint assert
     try:
         client = MongoClient(uri, serverSelectionTimeoutMS=5000)
         client.admin.command("ping")
     except Exception:
         uri = _uri(port)
+        assert_dogfood_mongo_endpoint(uri)
         client = MongoClient(uri, serverSelectionTimeoutMS=5000)
         client.admin.command("ping")
 

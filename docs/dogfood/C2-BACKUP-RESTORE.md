@@ -23,12 +23,19 @@ python3 scripts/dogfood_c2_drill.py
 
 ### Endpoint Mongo (fail-closed)
 
-Dump/restore accettano **solo** host:porta autorizzati:
+Dump/restore/bootstrap/drill accettano **solo** host:porta autorizzati:
 
 - default: `127.0.0.1` / `localhost` / `::1` su porta `OMNIA_DF_MONGO_PORT` (default **27018**)
 - override: `OMNIA_DOGFOOD_MONGO_ENDPOINTS=127.0.0.1:27018,localhost:27018`
 
-Il nome DB `omnia_df_probe_*` **non** basta: un URI verso un altro server (anche senza DB nel path) viene rifiutato. La porta **27017** (mongod condiviso Cloud) è fuori allowlist di default.
+Il nome DB `omnia_df_probe_*` **non** basta: un URI verso un altro server (anche senza DB nel path) viene rifiutato.
+
+**Hard-deny assoluto (non overridable):**
+
+- porta **27017** (mongod condiviso Cloud) — anche se `OMNIA_DF_MONGO_PORT=27017` o elencata in `OMNIA_DOGFOOD_MONGO_ENDPOINTS`
+- host non-loopback
+- `dogfood_mongo_bootstrap.py` rifiuta `--port 27017` **prima** di qualsiasi `stop_port` / `mongod`
+- il drill chiama `assert_dogfood_mongo_endpoint` **prima** di `MongoClient` / `drop_database`
 
 ### Media mancanti
 

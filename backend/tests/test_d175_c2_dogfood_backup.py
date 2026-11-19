@@ -7,7 +7,9 @@ import pytest
 
 from shared.dogfood.backup import (
     assert_dogfood_mongo_endpoint,
+    assert_dogfood_mongo_port,
     assert_safe_db_name,
+    authorized_dogfood_mongo_endpoints,
     backup_media,
     redact_mongo_uri,
     sha256_tree,
@@ -65,7 +67,41 @@ def test_c2_endpoint_denies_shared_27017_even_without_db_path(monkeypatch):
     monkeypatch.setenv("OMNIA_DF_MONGO_PORT", "27018")
     with pytest.raises(RuntimeError) as ei:
         assert_dogfood_mongo_endpoint("mongodb://127.0.0.1:27017/")
-    assert "mongo_endpoint_not_allowed" in str(ei.value)
+    err = str(ei.value)
+    assert "mongo_port_forbidden_shared" in err or "mongo_endpoint_not_allowed" in err
+
+
+def test_c2_hard_deny_when_omnia_df_mongo_port_is_27017(monkeypatch):
+    """Misconfig must NOT authorize shared Cloud mongod."""
+    monkeypatch.delenv("OMNIA_DOGFOOD_MONGO_ENDPOINTS", raising=False)
+    monkeypatch.setenv("OMNIA_DF_MONGO_PORT", "27017")
+    with pytest.raises(RuntimeError) as ei:
+        authorized_dogfood_mongo_endpoints()
+    assert "mongo_port_forbidden_shared" in str(ei.value)
+    with pytest.raises(RuntimeError) as ei2:
+        assert_dogfood_mongo_endpoint("mongodb://127.0.0.1:27017/")
+    assert "mongo_port_forbidden_shared" in str(ei2.value)
+
+
+def test_c2_hard_deny_27017_in_explicit_endpoints_override(monkeypatch):
+    monkeypatch.setenv("OMNIA_DOGFOOD_MONGO_ENDPOINTS", "127.0.0.1:27017")
+    with pytest.raises(RuntimeError) as ei:
+        authorized_dogfood_mongo_endpoints()
+    assert "mongo_port_forbidden_shared" in str(ei.value)
+
+
+def test_c2_hard_deny_non_loopback_in_endpoints_override(monkeypatch):
+    monkeypatch.setenv("OMNIA_DOGFOOD_MONGO_ENDPOINTS", "mongo.example.com:27018")
+    with pytest.raises(RuntimeError) as ei:
+        authorized_dogfood_mongo_endpoints()
+    assert "mongo_host_not_loopback" in str(ei.value)
+
+
+def test_c2_assert_dogfood_mongo_port_rejects_27017():
+    with pytest.raises(RuntimeError) as ei:
+        assert_dogfood_mongo_port(27017)
+    assert "mongo_port_forbidden_shared" in str(ei.value)
+    assert assert_dogfood_mongo_port(27018) == 27018
 
 
 def test_c2_endpoint_denies_remote_host_no_db_path(monkeypatch):
@@ -73,7 +109,8 @@ def test_c2_endpoint_denies_remote_host_no_db_path(monkeypatch):
     monkeypatch.delenv("OMNIA_DOGFOOD_MONGO_ENDPOINTS", raising=False)
     with pytest.raises(RuntimeError) as ei:
         assert_dogfood_mongo_endpoint("mongodb://mongo.example.com:27018/")
-    assert "mongo_endpoint_not_allowed" in str(ei.value)
+    err = str(ei.value)
+    assert "mongo_host_not_loopback" in err or "mongo_endpoint_not_allowed" in err
 
 
 def test_c2_endpoint_denies_wrong_port_on_loopback(monkeypatch):

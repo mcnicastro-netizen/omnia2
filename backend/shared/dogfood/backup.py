@@ -39,6 +39,11 @@ PERMANENT_DB_PREFIXES = ("omnia_df_perm", "omnia_df_permanent")
 PROBE_DB_PREFIX = "omnia_df_probe"
 SOURCE_DB_PREFIX = "omnia_df_"
 
+# Shared Cloud / default mongod — never authorized for Dogfood backup/restore,
+# even if OMNIA_DF_MONGO_PORT or OMNIA_DOGFOOD_MONGO_ENDPOINTS tries to opt in.
+FORBIDDEN_MONGO_PORTS = frozenset({27017})
+LOOPBACK_HOSTS = frozenset({"127.0.0.1", "localhost", "::1"})
+
 
 def _now() -> str:
     return datetime.now(timezone.utc).isoformat()
@@ -131,12 +136,31 @@ def assert_safe_db_name(db_name: str, *, role: str) -> str:
     return name
 
 
+def assert_dogfood_mongo_port(port: int) -> int:
+    """Hard-deny shared Cloud mongod port — not overridable by env allowlist."""
+    p = int(port)
+    if p in FORBIDDEN_MONGO_PORTS:
+        raise RuntimeError(f"mongo_port_forbidden_shared:{p}")
+    if p <= 0 or p > 65535:
+        raise RuntimeError(f"mongo_port_invalid:{p}")
+    return p
+
+
+def assert_dogfood_mongo_host(host: str) -> str:
+    h = (host or "").strip().lower()
+    if h not in LOOPBACK_HOSTS:
+        raise RuntimeError(f"mongo_host_not_loopback:{h}")
+    return h
+
+
 def authorized_dogfood_mongo_endpoints() -> set[tuple[str, int]]:
     """Fail-closed allowlist of (host, port) for Dogfood backup/restore.
 
-    Default: loopback on ``OMNIA_DF_MONGO_PORT`` (27018) — never the shared
-    Cloud mongod on 27017 unless explicitly listed (discouraged).
+    Default: loopback on ``OMNIA_DF_MONGO_PORT`` (27018).
     Override: ``OMNIA_DOGFOOD_MONGO_ENDPOINTS=127.0.0.1:27018,localhost:27018``
+
+    Port **27017** and non-loopback hosts are **always** rejected — even if
+    listed in the override or selected via ``OMNIA_DF_MONGO_PORT``.
     """
     raw = (os.environ.get("OMNIA_DOGFOOD_MONGO_ENDPOINTS") or "").strip()
     out: set[tuple[str, int]] = set()
@@ -148,15 +172,20 @@ def authorized_dogfood_mongo_endpoints() -> set[tuple[str, int]]:
             if ":" in part:
                 host, _, port_s = part.rpartition(":")
                 try:
-                    out.add((host.strip(), int(port_s)))
+                    port = int(port_s)
                 except ValueError as e:
                     raise RuntimeError(f"mongo_endpoint_invalid:{part}") from e
+                host = assert_dogfood_mongo_host(host.strip())
+                port = assert_dogfood_mongo_port(port)
+                out.add((host, port))
             else:
                 raise RuntimeError(f"mongo_endpoint_missing_port:{part}")
         if not out:
             raise RuntimeError("mongo_endpoint_allowlist_empty")
         return out
-    port = int((os.environ.get("OMNIA_DF_MONGO_PORT") or "27018").strip() or "27018")
+    port = assert_dogfood_mongo_port(
+        int((os.environ.get("OMNIA_DF_MONGO_PORT") or "27018").strip() or "27018")
+    )
     return {("127.0.0.1", port), ("localhost", port), ("::1", port)}
 
 
@@ -181,12 +210,16 @@ def assert_dogfood_mongo_endpoint(uri: str) -> tuple[str, int]:
 
     Also denies permanent URI equality and forbidden DB names in the path.
     Probe DB name alone is NOT sufficient isolation — endpoint must match.
+    Shared port 27017 and non-loopback hosts are hard-denied.
     """
     perm = (os.environ.get("OMNIA_DOGFOOD_PERMANENT_URI") or "").strip()
     if perm and uri.strip() == perm:
         raise RuntimeError("uri_is_permanent_forbidden")
 
     host, port = parse_mongo_host_port(uri)
+    # Absolute bans before allowlist (misconfig of OMNIA_DF_MONGO_PORT=27017)
+    assert_dogfood_mongo_host(host)
+    assert_dogfood_mongo_port(port)
     allowed = authorized_dogfood_mongo_endpoints()
     if (host, port) not in allowed:
         raise RuntimeError(f"mongo_endpoint_not_allowed:{host}:{port}")
