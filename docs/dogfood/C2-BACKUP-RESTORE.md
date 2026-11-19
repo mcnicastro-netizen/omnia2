@@ -47,6 +47,15 @@ Opt-out esplicito documentato: `OMNIA_DOGFOOD_ALLOW_MISSING_MEDIA=1` (non usare 
 Vedi `dogfood/C2_MONGO_ROLE_MATRIX.json` (e artifact `D175-C2-MONGO-ROLE-MATRIX.json`).  
 Credenziali solo in `dogfood/secrets/` (gitignored).
 
+### Criterio PASS certificato (drill)
+
+`report["ok"]` è true **solo se** tutti questi sono veri:
+
+1. bootstrap Mongo isolato riuscito (`boot.ok`) — altrimenti il drill **si interrompe**
+2. autenticazione admin obbligatoria (nessun fallback senza credenziali)
+3. restore + media + deny su `omnia` / permanente
+4. `role_checks.verified` — qualsiasi `NOT VERIFIED` → FAIL complessivo
+
 ## Manifest
 
 `MANIFEST.json` include backup_id, git_sha, collections, media inventory SHA, dump tree SHA.  

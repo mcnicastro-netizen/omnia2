@@ -38,6 +38,12 @@ from shared.dogfood.backup import (  # noqa: E402
     sha256_tree,
     write_manifest,
 )
+from shared.dogfood.c2_acceptance import (  # noqa: E402
+    compute_drill_ok,
+    require_admin_credentials,
+    require_bootstrap_ok,
+    roles_fully_verified,
+)
 
 
 def _root() -> Path:
@@ -241,21 +247,19 @@ def main() -> int:
     port = int(os.environ.get("OMNIA_DF_MONGO_PORT") or 27018)
     # Hard-deny shared port before bootstrap/stop_port or any MongoClient
     assert_dogfood_mongo_port(port)
-    # Ensure bootstrap ran (bootstrap itself also refuses :27017)
+    # Bootstrap must succeed — failed boot aborts the drill (no soft continue)
     boot = subprocess_bootstrap()
+    require_bootstrap_ok(boot)
     creds = _load_creds(root)
-    # Prefer admin for seed/restore ops in drill (role separation verified separately)
-    uri = _uri(port, "omnia_df_admin", creds.get("admin")) if creds.get("admin") else _uri(port)
+    admin_pwd = require_admin_credentials(creds)
+    # Auth required — unauthenticated fallback is forbidden for certified drill
+    uri = _uri(port, "omnia_df_admin", admin_pwd)
     assert_dogfood_mongo_endpoint(uri)
-    # Fallback: unauth if admin auth fails — still must pass endpoint assert
     try:
         client = MongoClient(uri, serverSelectionTimeoutMS=5000)
         client.admin.command("ping")
-    except Exception:
-        uri = _uri(port)
-        assert_dogfood_mongo_endpoint(uri)
-        client = MongoClient(uri, serverSelectionTimeoutMS=5000)
-        client.admin.command("ping")
+    except Exception as e:  # noqa: BLE001
+        raise RuntimeError(f"admin_auth_failed:{e}") from e
 
     source_db = "omnia_df_c2_src"
     probe_db = "omnia_df_probe_c2"
@@ -323,12 +327,19 @@ def main() -> int:
 
     after = verify_restore(client, probe_db, seed, probe_media)
 
-    # Role checks (best-effort with dedicated users)
+    # Role checks are mandatory for certified PASS (not best-effort)
     role_checks = verify_roles(port, creds, source_db, probe_db)
 
     report = {
         "cycle": "D-175-C2",
-        "ok": bool(after.get("ok") and dump.get("ok") and media.get("ok") and all(d["blocked"] for d in deny_cases)),
+        "ok": compute_drill_ok(
+            after=after,
+            dump=dump,
+            media=media,
+            deny_cases=deny_cases,
+            boot=boot,
+            role_checks=role_checks,
+        ),
         "backup_id": backup_id,
         "backup_dir": str(bak_dir),
         "manifest": str(man_path),
@@ -387,9 +398,17 @@ def subprocess_bootstrap() -> dict:
 
 
 def verify_roles(port: int, creds: dict, source_db: str, probe_db: str) -> dict:
-    out = {"verified": False, "checks": []}
-    if not creds.get("runtime"):
-        out["checks"].append({"name": "creds_missing", "result": "NOT VERIFIED"})
+    out: dict = {"verified": False, "checks": []}
+    missing = [k for k in ("runtime", "backup", "clone") if not (creds or {}).get(k)]
+    if missing:
+        out["checks"].append(
+            {
+                "name": "creds_missing",
+                "missing": missing,
+                "result": "NOT VERIFIED",
+            }
+        )
+        out["verified"] = False
         return out
 
     def try_op(user: str, pwd: str, db: str, op: str) -> dict:
@@ -409,16 +428,14 @@ def verify_roles(port: int, creds: dict, source_db: str, probe_db: str) -> dict:
             return {"user": user, "db": db, "op": op, "result": "DENIED", "error": str(e)[:200]}
 
     checks = []
-    # Runtime may write its DB, must not drop shared omnia (if reachable) — we check deny on probe drop
+    # Runtime may write its DB; must NOT write probe
     checks.append(try_op("omnia_df_runtime", creds["runtime"], source_db, "insert"))
-    # Runtime should NOT write probe
     r = try_op("omnia_df_runtime", creds["runtime"], probe_db, "insert")
     r["expect"] = "DENIED"
     r["pass"] = r["result"] == "DENIED"
     checks.append(r)
-    # Backup can read source
+    # Backup can read source; must not insert
     checks.append(try_op("omnia_df_backup", creds["backup"], source_db, "find"))
-    # Backup should not insert
     r2 = try_op("omnia_df_backup", creds["backup"], source_db, "insert")
     r2["expect"] = "DENIED"
     r2["pass"] = r2["result"] == "DENIED"
@@ -427,10 +444,16 @@ def verify_roles(port: int, creds: dict, source_db: str, probe_db: str) -> dict:
     checks.append(try_op("omnia_df_clone", creds["clone"], probe_db, "insert"))
 
     out["checks"] = checks
-    out["verified"] = all(
-        (c.get("pass") if "pass" in c else c.get("result") == "PASS_ALLOWED")
-        for c in checks
-    )
+    if any(c.get("result") == "NOT VERIFIED" for c in checks):
+        out["verified"] = False
+    else:
+        out["verified"] = all(
+            (c.get("pass") if "pass" in c else c.get("result") == "PASS_ALLOWED")
+            for c in checks
+        )
+    # Defense in depth: roles_fully_verified is the gate used by compute_drill_ok
+    if not roles_fully_verified(out):
+        out["verified"] = False
     return out
 
 
