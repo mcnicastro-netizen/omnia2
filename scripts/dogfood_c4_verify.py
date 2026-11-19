@@ -19,6 +19,7 @@ from pymongo import MongoClient  # noqa: E402
 from shared.dogfood.c4_structure import (  # noqa: E402
     ROLE_AUTHORITY_MATRIX,
     analyze_structure,
+    assert_c4_workcopy_db_name,
     assert_vat_unique_second_cc_denied,
 )
 from shared.dogfood.ordinary_ops import (  # noqa: E402
@@ -47,6 +48,11 @@ def main() -> int:
     # Permanent identity must still be demonstrable (C3) and not targeted
     identity = require_identity_or_raise()
     perm_db = configured_permanent_db_name()
+    try:
+        assert_c4_workcopy_db_name(args.db, op="verify")
+    except RuntimeError as e:
+        print(json.dumps({"ok": False, "error": str(e)}, indent=2))
+        return 2
     if is_permanent_target(db_name=args.db):
         print(json.dumps({"ok": False, "error": "verify_target_is_permanent"}, indent=2))
         return 2

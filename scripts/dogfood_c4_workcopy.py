@@ -15,11 +15,13 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "backend"))
 
+from pymongo import MongoClient  # noqa: E402
+
+from shared.dogfood.c4_structure import assert_c4_workcopy_db_name  # noqa: E402
 from shared.dogfood.ordinary_ops import ordinary_clone_allowed  # noqa: E402
 from shared.dogfood.permanent import (  # noqa: E402
     configured_permanent_db_name,
     dogfood_root,
-    load_identity,
     require_identity_or_raise,
 )
 
@@ -38,6 +40,8 @@ def main() -> int:
     target = args.target or (
         "omnia_df_clean_c4" if args.kind == "clean" else "omnia_df_cont_c4"
     )
+    # Strict name BEFORE any gate/shell — blocks JS/shell injection via --target
+    target = assert_c4_workcopy_db_name(target, op="workcopy")
 
     gate = ordinary_clone_allowed(
         source_uri=f"mongodb://127.0.0.1:{port}/", target_db=target
@@ -74,21 +78,10 @@ def main() -> int:
 
     dump_db_dir = dump_root / perm_db
     if args.drop_target:
-        # Full DB drop — mongorestore --drop only drops collections present in the dump
-        # (permanent skeleton), which would leave stale C4 commercial collections behind.
-        drop = subprocess.run(
-            [
-                "mongosh",
-                "--quiet",
-                restore_uri,
-                "--eval",
-                f"db.getSiblingDB('{target}').dropDatabase()",
-            ],
-            capture_output=True,
-            text=True,
-        )
-        if drop.returncode != 0:
-            raise RuntimeError(f"drop_target_failed:{(drop.stderr or drop.stdout)[-400:]}")
+        # PyMongo only — never mongosh --eval with interpolated DB names (security review).
+        client = MongoClient(restore_uri, serverSelectionTimeoutMS=8000)
+        client.drop_database(target)
+        client.close()
     restore_cmd = [
         "mongorestore",
         f"--uri={restore_uri}",

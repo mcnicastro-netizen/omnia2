@@ -147,9 +147,23 @@ def main() -> int:
         )
 
     structure = analyze_structure(db, commercial_customer_id=cc["id"])
+    pending_founder = [
+        x
+        for x in [ma, *admin_results, *collab_results]
+        if x.get("status") == "pending_founder"
+    ]
+    hard_failures = []
+    if not vat_check.get("ok"):
+        hard_failures.append({"kind": "vat_not_unique", **vat_check})
+    if ma.get("status") in ("conflict", "error"):
+        hard_failures.append({"kind": "main_admin", **ma})
+    for x in [*admin_results, *collab_results]:
+        if x.get("status") in ("rejected", "error", "conflict") or x.get("reason") == "org_key_unknown":
+            hard_failures.append(x)
+    apply_ok = len(hard_failures) == 0
     report = {
         "cycle": "D-175-C4",
-        "ok": True,
+        "ok": apply_ok,
         "db": args.db,
         "commercial_customer_id": cc["id"],
         "vat_unique": vat_check,
@@ -160,11 +174,8 @@ def main() -> int:
         "organization_admins": admin_results,
         "collaborators": collab_results,
         "structure": structure,
-        "pending_founder": [
-            x
-            for x in [ma, *admin_results, *collab_results]
-            if x.get("status") == "pending_founder"
-        ],
+        "pending_founder": pending_founder,
+        "hard_failures": hard_failures,
         "ts": datetime.now(timezone.utc).isoformat(),
     }
 
@@ -185,17 +196,18 @@ def main() -> int:
     print(
         json.dumps(
             {
-                "ok": True,
+                "ok": apply_ok,
                 "db": args.db,
                 "cc_id": cc["id"],
                 "orgs": len(org_results),
                 "pending_founder": len(report["pending_founder"]),
+                "hard_failures": len(hard_failures),
                 "main_admin_status": ma.get("status"),
             },
             indent=2,
         )
     )
-    return 0
+    return 0 if apply_ok else 2
 
 
 if __name__ == "__main__":

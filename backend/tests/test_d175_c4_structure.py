@@ -11,6 +11,7 @@ from shared.dogfood.c4_structure import (
     ROLE_AUTHORITY_MATRIX,
     analyze_structure,
     assert_c4_seed_target,
+    assert_c4_workcopy_db_name,
     assert_vat_unique_second_cc_denied,
     attach_membership_if_user_exists,
     build_empty_manifest_template,
@@ -96,6 +97,20 @@ def test_c4_seed_target_denies_permanent():
     with pytest.raises(RuntimeError):
         assert_c4_seed_target("omnia_df_perm_main")
     assert assert_c4_seed_target("omnia_df_clean_c4") == "omnia_df_clean_c4"
+
+
+def test_c4_workcopy_db_name_rejects_injection_and_permanent():
+    assert assert_c4_workcopy_db_name("omnia_df_clean_c4") == "omnia_df_clean_c4"
+    assert assert_c4_workcopy_db_name("omnia_df_cont_c4") == "omnia_df_cont_c4"
+    for bad in (
+        "omnia_df_perm_main",
+        "omnia_df_x').dropDatabase();db.getSiblingDB('omnia_df_perm_main",
+        "omnia_df_clean_c4;drop",
+        "omnia_production",
+        "omnia_df_probe_c2",
+    ):
+        with pytest.raises(RuntimeError):
+            assert_c4_workcopy_db_name(bad)
 
 
 def test_c4_cc_org_wallet_idempotent_and_vat_unique():
@@ -248,6 +263,33 @@ def test_c4_ma_conflict_second_user():
 def test_c4_role_matrix_documents_ma_no_auto_crm():
     assert ROLE_AUTHORITY_MATRIX["main_admin"]["crm_auto_access"] is False
     assert ROLE_AUTHORITY_MATRIX["organization_admin"]["commercial_wallet"] is False
+
+
+def test_c4_analyze_ma_crm_check_false_when_membership_present():
+    db = _FakeDB()
+    cc = ensure_commercial_customer(db, vat_number="44444444444", legal_name="M")["customer"]
+    org = ensure_organization(
+        db, commercial_customer_id=cc["id"], org_key="sede", display_name="Sede"
+    )["organization"]
+    db.users.insert_one(
+        {"id": "u-ma2", "email": "ma2@dogfood.local", "is_active": True, "email_verified": True}
+    )
+    nominate_main_admin_if_user_exists(
+        db, commercial_customer_id=cc["id"], email="ma2@dogfood.local"
+    )
+    # Simulate improper coupling outside apply guards
+    db.memberships.insert_one(
+        {
+            "id": "m1",
+            "user_id": "u-ma2",
+            "organization_id": org["id"],
+            "membership_status": "active",
+            "operational_role": "agency_admin",
+        }
+    )
+    st = analyze_structure(db, commercial_customer_id=cc["id"])
+    assert st["checks"]["ma_crm_not_automatic"] is False
+    assert len(st["main_admin_active_memberships"]) == 1
 
 
 def test_c4_template_file_exists():

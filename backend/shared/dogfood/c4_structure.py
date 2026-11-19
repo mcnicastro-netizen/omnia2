@@ -16,6 +16,8 @@ from shared.dogfood.permanent import assert_not_permanent_op, is_permanent_targe
 from shared.models.commercial_customer import normalize_vat_number
 
 MANIFEST_SCHEMA = "omnia.dogfood.c4.manifest.v1"
+# Strict work-copy names only — no shell/JS metacharacters (C4 review / Bugbot+security).
+C4_WORKCOPY_DB_RE = re.compile(r"^omnia_df_(clean|cont)_[a-zA-Z0-9_]+$")
 PLACEHOLDER_EMAIL_RE = re.compile(
     r"(founder_fills|changeme|example\.invalid|todo@|pending@)", re.I
 )
@@ -44,10 +46,21 @@ def _now() -> str:
     return datetime.now(timezone.utc).isoformat()
 
 
+def assert_c4_workcopy_db_name(db_name: str, *, op: str = "c4") -> str:
+    """Allow only omnia_df_clean_* / omnia_df_cont_* with safe characters."""
+    name = (db_name or "").strip()
+    if not C4_WORKCOPY_DB_RE.fullmatch(name):
+        raise RuntimeError(f"c4_workcopy_db_invalid:{op}:{name}")
+    if is_permanent_target(db_name=name):
+        raise RuntimeError(f"permanent_op_denied:{op}:{name}")
+    return name
+
+
 def assert_c4_seed_target(db_name: str) -> str:
     """C4 structural writes only on CLEAN/CONTINUITY/work copies — never permanent."""
-    assert_not_permanent_op("seed", db_name=db_name)
-    return assert_work_copy_target(db_name, op="seed")
+    name = assert_c4_workcopy_db_name(db_name, op="seed")
+    assert_not_permanent_op("seed", db_name=name)
+    return assert_work_copy_target(name, op="seed")
 
 
 def is_placeholder_email(email: str | None) -> bool:
@@ -429,7 +442,7 @@ def analyze_structure(db, *, commercial_customer_id: str) -> dict[str, Any]:
             "multi_org": len(orgs) >= 2,
             "single_wallet": len(wallets) == 1,
             "ma_nominated": bool(ma_id),
-            "ma_crm_not_automatic": len(ma_memberships) == 0 or True,
+            "ma_crm_not_automatic": len(ma_memberships) == 0,
         },
     }
 
