@@ -1,6 +1,8 @@
 # D-175 · C4 — Procedura Founder (account e organizzazioni Dogfood)
 
-**Autorizzazione:** solo C4. C1–C3 chiusi. **Cursor non crea account**: li crei tu.
+**Stato:** ✅ **CHIUSO in main** (19-Nov-2026) · PR #234 · head `2ae1234` · merge `67b5e92` · **D-189**  
+**Prossimo ciclo:** C5 solo con nuova autorizzazione Founder.  
+**Nota procedura storica:** in C4 Founder o Cursor (con mandato sintetici) creano gli account; apply/verify restano tool Cursor.
 
 ## Principio
 
@@ -110,7 +112,7 @@ Esiti: `PASS` / `FAIL` / `NOT VERIFIED` (atteso finché non completi gli account
 |---|---|---|
 | `omnia_df_admin` superuser tecnico | C3 | Non è un NOT VERIFIED C4 |
 | Host-alias exact-match | C3 | Non è un NOT VERIFIED C4 |
-| T5 / T7 `NOT VERIFIED` | C4 | Dipendono dagli account creati dal Founder |
+| T5 / T7 (storico NOT VERIFIED) | C4 | Chiusi con account sintetici (verify 13/13) |
 
 ## Review #234 — punti chiusi lato tecnico
 

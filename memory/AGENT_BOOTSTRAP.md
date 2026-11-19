@@ -6,6 +6,15 @@
 
 ---
 
+## 📌 STATO CORRENTE (19-Nov-2026 · Europe/Rome)
+
+- **Repo SoT**: `github.com/mcnicastro-netizen/omnia2` · tip `main` post-merge C4 (`67b5e92`)
+- **Master A+B**: CHIUSO · **Dogfood Step 1**: CHIUSO · **D-175 C1–C4**: CHIUSI
+- **Prossimo**: solo **C5** se Founder autorizza esplicitamente (`memory/NEXT_SESSION.md` · `memory/RIPRENDI_2026-11-19.md` · D-189)
+- **Non avviare** C5–C8 / E2E / Stripe LIVE senza nuovo mandato
+
+---
+
 ## 🚨 PROTOCOLLO OBBLIGATORIO PER AGENTI CHE SUBENTRANO
 
 ### Step 1 — Leggi questi file PRIMA di parlare

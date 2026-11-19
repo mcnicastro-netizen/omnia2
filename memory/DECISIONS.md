@@ -7,6 +7,16 @@ Registro di tutte le decisioni di business e tecniche prese durante il progetto.
 
 ## Decisioni prese
 
+### D-189 — D-175 C4 chiuso in main (account/org Dogfood) · 19-Nov-2026
+- **Contesto**: Ciclo Dogfood D-175 C1–C3 già chiusi. C4 autorizzato con perimetro ristretto (struttura CC/Organization/wallet + ruoli); account sintetici e verify T1–T13; review critica + review read-only commit post-`0a14a3d`.
+- **Decisione Founder**:
+  1. C4 funzionale **PASS** (apply×2, verify 13/13, T5/T7, idempotenza, permanente protetta).
+  2. Merge PR **#234** su `main` all’head **`2ae1234`** (`2ae1234846fc8ac709033ebd359b5adcab9ea58d`) → merge commit **`67b5e92`**.
+  3. **C5–C8 non autorizzati**. Dogfood E2E completo non autorizzato.
+  4. Modello network tipo Tecnocasa: affiliato autonomo = **CommercialCustomer distinto** (P.IVA propria); filiali stessa ditta = Organization sotto lo stesso CC (caso C4 già collaudato).
+- **SoT**: `docs/dogfood/C4-*.md` · artefatti `/opt/cursor/artifacts/D175-C4-*` · PR #234.
+- **Stato**: ✅ C4 **MERGED su main**. ❌ C5 non avviato. Ripresa = mandato C5 solo con nuova autorizzazione.
+
 ### D-188 — Dogfood Readiness Step 1 runbook · 18-Nov-2026
 - **Decisione Founder**: piano dogfood post-Master approvato con condizioni ChatGPT; Step 1 formalizzato.
 - **Cinque decisioni**: (1) ambiente locale isolato, staging solo se serve; (2) Nicastro sola lettura, vietato nei test distruttivi; (3) Resend disabilitato + allowlist solo per test email espliciti; (4) snapshot Mongo obbligatorio + ripristino verificato; (5) smoke solo su incarico Founder, elenco chiuso persone fisiche, Cursor esecutore non decide.
