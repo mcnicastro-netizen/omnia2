@@ -105,6 +105,31 @@ def test_c1_t07_permanent_uri_as_runtime_fails(dogfood_env, monkeypatch):
     assert "mongo_url_is_permanent" in r["errors"]
 
 
+def test_c1_t08_remote_mongo_atlas_blocked(dogfood_env, monkeypatch):
+    """Precisione C — Atlas / remote host non ammessi come runtime Dogfood."""
+    from shared.dogfood import perimeter as p
+
+    monkeypatch.setenv(
+        "MONGO_URL",
+        "mongodb+srv://u:p@" + "cluster0." + "mongodb" + ".net/omnia_df_clean_x",
+    )
+    r = p.check_dogfood_db_isolation()
+    assert r["ok"] is False
+    assert "mongo_url_remote_blocked" in r["errors"]
+
+
+def test_c1_t08b_remote_railway_mongo_blocked(dogfood_env, monkeypatch):
+    from shared.dogfood import perimeter as p
+
+    monkeypatch.setenv(
+        "MONGO_URL",
+        "mongodb://u:p@" + "monorail." + "proxy.rlwy" + ".net:1234",
+    )
+    r = p.check_dogfood_db_isolation()
+    assert r["ok"] is False
+    assert "mongo_url_remote_blocked" in r["errors"]
+
+
 def test_c1_t11_t12_live_stripe_keys_fail(dogfood_env, monkeypatch):
     from shared.dogfood import perimeter as p
 

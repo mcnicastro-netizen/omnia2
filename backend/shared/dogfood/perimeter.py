@@ -106,16 +106,19 @@ def check_dogfood_db_isolation() -> dict[str, Any]:
     if not mongo:
         errors.append("mongo_url_missing")
     else:
-        low = mongo.lower()
-        if any(h in low for h in _RAILWAY_MONGO_HINTS if h != "mongodb.net"):
-            # Allow mongodb://127.0.0.1; block remote railway-ish hosts
+        # Precisione C / fail-closed: Dogfood runtime Mongo host must be loopback.
+        # Hint-only denylist (railway/atlas) is insufficient — block any remote host.
+        host = ""
+        try:
+            host = (
+                urlparse(mongo if "://" in mongo else f"mongodb://{mongo}").hostname or ""
+            ).lower()
+        except Exception:  # noqa: BLE001
             host = ""
-            try:
-                host = (urlparse(mongo if "://" in mongo else f"mongodb://{mongo}").hostname or "")
-            except Exception:  # noqa: BLE001
-                host = ""
-            if host and not _is_loopback_host(host):
-                errors.append("mongo_url_remote_blocked")
+        if not host:
+            errors.append("mongo_url_host_unparseable")
+        elif not _is_loopback_host(host):
+            errors.append("mongo_url_remote_blocked")
         # Explicit permanent URI must never be runtime
         perm = (os.environ.get("OMNIA_DOGFOOD_PERMANENT_URI") or "").strip()
         if perm and mongo == perm:
