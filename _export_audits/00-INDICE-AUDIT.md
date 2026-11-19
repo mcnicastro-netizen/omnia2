@@ -38,3 +38,8 @@ Estratti il **14 nov 2026 ~11:10 Europe/Rome** dai transcript cloud Cursor.
 22. `B02-ANO-002-004-DESIGN-AUTORIZZAZIONI-AUDIT.md` — Design B02 autorizzazioni e audit. Solo progettazione.
 23. `B02-ANO-002-004-CHIUSURA-DEFINITIVA-DESIGN.md` — B02 design chiuso. DEC-01…04. Implementazione non autorizzata.
 24. `PAUSA-2026-11-16-RIPRENDI.md` — Pausa Founder 16 nov. Messaggio di ripresa = design B03 breve.
+
+## D-175 C3 PR #233 security (19 nov 2026 Europe/Rome)
+
+25. `D175-C3-PR233-SECURITY-ASSESS.md` — Criterion map (verify read-only, reinit, creds, perimeter, ordinary ops, emergency gates, admin residual, mismatch). Verdict: **not merge-blocking** on `9c66651`.
+26. `D175-C3-CRITICAL-SAFETY-REVIEW.md` — Critical framing + residuals (admin root, emergency marker cross-check).
