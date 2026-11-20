@@ -7,6 +7,17 @@ Registro di tutte le decisioni di business e tecniche prese durante il progetto.
 
 ## Decisioni prese
 
+### D-190 — D-175 PR #240 Deal/chat/mini-dossier: remediation aperta, no merge · 20-Nov-2026
+- **Contesto**: Mandato Founder di implementazione su Dogfood (Stripe TEST/H4 senza sealed, mini-dossier feedback, Deal, chat contestuale). PR **#240** branch `cursor/d175-deal-chat-dossier-h4-e393`. Remediation Bugbot (FIX-01…06) + watermark/rating/Deal roles. Verifica tip `1eda988` (codice funzionale `68b0fc6`). Seconda review Bugbot: 1 high + 2 medium residui.
+- **Decisione operativa (fine giornata 20-Nov)**:
+  1. **Non mergeare** #240 oggi.
+  2. Stato documentato: remediation sostanziale sì; **non** approvazione tecnica finale.
+  3. **Prossimo passo (domani)**: patch mirata sola — (a) PDF watermark fail-hard se overlay fallisce; (b) `reject` solo su `pending`; (c) allegato chat con match `collaboration_id`. Poi re-test + re-review. Niente nuova remediation generale.
+  4. H4 sealed / checkout Stripe TEST live: **restano esclusi** senza nuova autorizzazione.
+  5. CI B04 verde ≠ suite D-175 (tenere distinto).
+- **SoT**: PR #240 · `docs/ops/D175-PR240-DEFINITIVE-REMEDIATION-REPORT.md` · artefatti tip-verification · Cap.27 v1.2 · HAL `api.d175-pr240`.
+- **Stato**: ⏸ PR aperta. ❌ non mergiata. Ripresa = patch 3 finding.
+
 ### D-189 — D-175 C4 chiuso in main (account/org Dogfood) · 19-Nov-2026
 - **Contesto**: Ciclo Dogfood D-175 C1–C3 già chiusi. C4 autorizzato con perimetro ristretto (struttura CC/Organization/wallet + ruoli); account sintetici e verify T1–T13; review critica + review read-only commit post-`0a14a3d`.
 - **Decisione Founder**:

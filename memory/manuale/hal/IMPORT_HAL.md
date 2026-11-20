@@ -1,10 +1,11 @@
-# 📚 HAL Knowledge — Import & Cold Start (v0.61-d175-c4-2026-11-19)
+# 📚 HAL Knowledge — Import & Cold Start (v0.62-d175-pr240-2026-11-20)
 
-**Ultimo aggiornamento**: 19-Nov-2026 (D-175 C4 chiuso in main · D-189 · HAL `api.d175-c4-chiuso`)  
+**Ultimo aggiornamento**: 20-Nov-2026 (D-190 · PR #240 Deal/chat/mini-dossier · Cap.27 v1.2 · no merge)  
 **Corpus**: YAML in `memory/manuale/hal/*.yaml` (Cap. 1–27 + `00-api-codice`) · MD esclusi dal RAG ingest  
 **Motore**: `hal_knowledge.py` · reindex: `POST /api/app/hal/knowledge/reindex?force=true` (super_admin)  
 **Regola Founder D-084**: ogni ship aggiorna MD+YAML nello stesso giro — vedi `memory/MANUAL_SYNC.md`.  
-**Nuove voci 19-Nov**: `api.d175-c4-chiuso`.  
+**Nuove voci 20-Nov**: `api.d175-pr240` · `mls.collaborazioni-workspace` · `mls.deal-chat`.  
+**Voci 19-Nov**: `api.d175-c4-chiuso`.  
 **Voci 18-Nov**: `api.master-ab-chiuso` · `api.dogfood-step1` · `api.mc042-r01-refresh`.
 
 ---
@@ -510,3 +511,13 @@ Confidence attesa ≥ 0.15 su tutte e 3 (similarity range simile a Cap. 5/6).
 3. **"Il Programma Master A+B è chiuso?"** → top-1 atteso `00-api-codice.yaml::api.master-ab-chiuso`
 
 Criteri: stesso file `00-api-codice.yaml` · sim ≥ 0.08. Reindex obbligatorio dopo merge di questa voce.
+
+---
+
+## 🚦 Smoke MLS / PR #240 — 20-Nov-2026
+
+1. **"A che punto è la PR 240 Deal e chat MLS? Si può mergiare?"** → top-1 atteso `00-api-codice.yaml::api.d175-pr240`
+2. **"Dopo l'accettazione MLS cosa succede? Cos'è il mini-dossier?"** → top-1 atteso `27-mls-network.yaml::mls.collaborazioni-workspace`
+3. **"Cos'è il Deal e dove chatto con l'altra agenzia?"** → top-1 atteso `27-mls-network.yaml::mls.deal-chat`
+
+Reindex HAL consigliato dopo merge di queste voci (o su ambiente Dogfood se si testa retrieval).

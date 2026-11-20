@@ -1,11 +1,10 @@
 # Prossima sessione — programma passi
 
-**Aggiornato**: 19 Novembre 2026 (~17:30 CET — Europe/Rome) · fine giornata  
+**Aggiornato**: 20 Novembre 2026 (~17:20 CET — Europe/Rome) · fine giornata  
 **Repo**: https://github.com/mcnicastro-netizen/omnia2 ✅  
-**main tip**: `67b5e9216e646214e3eb21b1cb9080cf481b1081` (merge #234 C4)  
-**Master A+B**: **CHIUSO**  
-**D-175 C1–C4**: **CHIUSI in main**  
-**C5–C8 / Dogfood E2E**: **Non autorizzati**
+**Lavoro aperto**: PR **#240** `cursor/d175-deal-chat-dossier-h4-e393` tip **`1eda988`** (fix remediation **`68b0fc6`**)  
+**main**: include D-175 C1–C4 (C4 merge #234); **non** include Deal/chat/mini-dossier di #240  
+**Merge #240**: **NO** (Founder — fine giornata)
 
 ---
 
@@ -13,29 +12,35 @@
 
 | Item | Stato |
 |------|-------|
-| Master A+B | **CHIUSO** |
-| Dogfood Step 1 | **CHIUSO** |
-| D-175 C1 Perimetro | **CHIUSO** |
-| D-175 C2 Backup/restore | **CHIUSO** |
-| D-175 C3 Base permanente | **CHIUSO** |
-| D-175 C4 Account/org | **CHIUSO** (PR #234 @ `2ae1234` → `67b5e92`) |
-| D-175 C5 Crediti/storage H4 | **Non autorizzato** |
-| D-175 C6 Stripe ciclo | **Non autorizzato** |
-| D-175 C7 Registro/scenari | **Non autorizzato** |
-| D-175 C8 Certificazione | **Non autorizzato** |
-| Dogfood E2E completo | **Dopo C5–C8** |
+| D-175 C1–C4 | **CHIUSI in main** |
+| PR #240 Deal / chat / mini-dossier / watermark | **Aperta** — remediation fatta, **non approvata al merge** |
+| FIX-01…06 originari | **Chiusi in codice** (verificati su tip) |
+| Bugbot post-remediation | **3 residuali**: PDF watermark fail-hard · reject solo pending · allegato chat same-collab |
+| Suite D-175 su tip | 22 + 34 C5 + smoke Dogfood **PASS** (non coperte dal job CI B04) |
+| H4 sealed / Stripe TEST checkout | **BLOCKED** — senza nuova autorizzazione |
 
-## Domani si riparte da qui
+## Domani — primo passo (obbligatorio)
 
-1. **Decisione Founder** su avvio **C5** (acquisti crediti/storage / H4) — solo con mandato esplicito.  
-2. Se C5 autorizzato: usare la struttura Dogfood già pronta su `omnia_df_clean_c4` (account sintetici già inventariati; credenziali in `dogfood/c4/CREDENTIALS.local.json`).  
-3. Non confondere: **stessa P.IVA + filiali** = già collaudato (C4); **affiliati network autonomi** (P.IVA distinte) = da verificare nelle fasi successive.  
-4. Permanente C3: **mai** target di test funzionali.  
-5. **Non** Stripe LIVE / produzione senza mandato dedicato.
+**Patch mirata PR #240** (solo i 3 finding), sullo stesso branch:
+
+1. `shared/mls_collab/watermark.py` — se `merge_page` PDF fallisce → errore, **mai** servire originale con header watermark.  
+2. `collaborations.respond` — `reject` consentito **solo** se status `pending` (active → usare revoke).  
+3. `post_chat_message` — richiedere `dr.collaboration_id == thread.collaboration_id`.  
+4. Test unit dedicati + smoke Dogfood breve + aggiornare report.  
+5. **Non mergeare** finché Founder non approva dopo re-review.
 
 ## Non fare
 
-- Avviare C5–C8 o E2E senza nuova frase di autorizzazione Founder.  
-- Inventare account reali / Nicastro / email vere.  
-- Scrivere sulla base permanente.  
-- Dichiarare «Dogfood completo» solo perché C4 è in main.
+- Nuova remediation generale / nuovo ciclo audit.  
+- Merge su `main` senza OK Founder.  
+- Aprire H4 sealed / Stripe LIVE.  
+- Confondere CI B04 verde con regressione D-175 completa.  
+- Dichiarare Deal/chat «in produzione» finché #240 non è mergiata.
+
+## Letture rapide
+
+- `memory/DECISIONS.md` → **D-190**  
+- `memory/RIPRENDI_2026-11-20.md`  
+- `docs/ops/D175-PR240-DEFINITIVE-REMEDIATION-REPORT.md`  
+- PR: https://github.com/mcnicastro-netizen/omnia2/pull/240  
+- Cap.27 MLS v1.2 · HAL `api.d175-pr240` / `mls.collaborazioni-workspace`

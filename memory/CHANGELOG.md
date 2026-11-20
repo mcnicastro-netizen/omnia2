@@ -1,3 +1,12 @@
+## 2026-11-20 — Fine giornata: PR #240 Deal/chat/mini-dossier (no merge)
+
+- Mandato D-175 implementazione Dogfood: collaborazione → visita → mini-dossier feedback → doc esplicita → chat → Deal; webhook Stripe deleted; H4 sealed non aperto
+- PR **#240** `cursor/d175-deal-chat-dossier-h4-e393` tip **`1eda988`** (fix **`68b0fc6`**) — **aperta, non mergiata**
+- Remediation FIX-01…06 + watermark/rating/Deal; verifica tip 22+34+smoke PASS
+- Review Bugbot post-remediation: 3 residuali (PDF fail-hard, reject pending-only, chat attachment same-collab) → **prossimo passo domani**
+- Cap.27 MLS **v1.2** · HAL `mls.collaborazioni-workspace` / `mls.deal-chat` / `api.d175-pr240` · D-190 · IMPORT_HAL bump
+- Stripe TEST checkout completo: ancora BLOCKED H4
+
 ## 2026-11-19 — Fine giornata: D-175 C4 mergiato (Dogfood account/org)
 
 - **D-175 C1–C3**: già chiusi in main (perimetro, backup/restore, base permanente)
