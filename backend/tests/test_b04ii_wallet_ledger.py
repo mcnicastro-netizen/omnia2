@@ -56,9 +56,15 @@ class FakeColl:
                     return False
                 if "$gt" in v and not (val is not None and val > v["$gt"]):
                     return False
+                if "$lt" in v and not (val is not None and val < v["$lt"]):
+                    return False
+                if "$lte" in v and not (val is not None and val <= v["$lte"]):
+                    return False
                 if "$ne" in v and val == v["$ne"]:
                     return False
                 if "$in" in v and val not in v["$in"]:
+                    return False
+                if "$nin" in v and val in v["$nin"]:
                     return False
                 if "$exists" in v:
                     exists = k in doc and doc.get(k) is not None
@@ -180,6 +186,11 @@ class FakeDB:
         self.agencies = FakeColl()
         self.commercial_customers = FakeColl()
         self.commercial_main_admin_events = FakeColl()
+        self.storage_checkout_fulfillments = FakeColl()
+        self.storage_migration_snapshots = FakeColl()
+        self.payment_transactions = FakeColl()
+        self.properties = FakeColl()
+        self.subscriptions = FakeColl()
 
     def __getitem__(self, name):
         if not hasattr(self, name):

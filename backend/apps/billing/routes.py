@@ -650,7 +650,12 @@ async def get_session_status(session_id: str, user: dict = Depends(get_current_u
                               "stripe_payment_intent_id": s.payment_intent,
                               "updated_at": now}},
                 )
-                await _apply_session_side_effects(session_id)
+                session_customer = getattr(s, "customer", None) or None
+                if isinstance(session_customer, dict):
+                    session_customer = session_customer.get("id")
+                await _apply_session_side_effects(
+                    session_id, session_customer=session_customer
+                )
                 record = await db.payment_transactions.find_one(
                     {"session_id": session_id},
                     {"_id": 0, "session_id": 1, "status": 1, "payment_status": 1,
@@ -659,8 +664,18 @@ async def get_session_status(session_id: str, user: dict = Depends(get_current_u
         except stripe.error.StripeError:
             pass
     elif not record.get("applied_at"):
-        # Paid ma side-effect fallito (es. Stripe period fields) → riprova
-        await _apply_session_side_effects(session_id)
+        # Paid ma side-effect fallito → riprova; retrieve customer for matching
+        session_customer = None
+        try:
+            s = stripe.checkout.Session.retrieve(session_id)
+            session_customer = getattr(s, "customer", None) or None
+            if isinstance(session_customer, dict):
+                session_customer = session_customer.get("id")
+        except stripe.error.StripeError:
+            pass
+        await _apply_session_side_effects(
+            session_id, session_customer=session_customer
+        )
         record = await db.payment_transactions.find_one(
             {"session_id": session_id},
             {"_id": 0, "session_id": 1, "status": 1, "payment_status": 1,
@@ -707,11 +722,16 @@ async def customer_portal(request: Request, user: dict = Depends(get_current_use
 
 # --------------- Webhook (signature-verified) --------------------
 
-async def _apply_session_side_effects(session_id: str) -> None:
+async def _apply_session_side_effects(
+    session_id: str,
+    *,
+    session_customer: str | None = None,
+) -> None:
     """Apply paid checkout side-effects.
 
     D-175 C6: credits_topup / storage_addon → central CC (claim + match + no auto-alloc).
     Subscription path remains agency-scoped (outside H4 topup).
+    ``session_customer`` = Checkout Session.customer (webhook obj or Session.retrieve).
     """
     db = Database.get()
     tx = await db.payment_transactions.find_one({"session_id": session_id})
@@ -722,7 +742,12 @@ async def _apply_session_side_effects(session_id: str) -> None:
     if kind in ("credits_topup", "storage_addon"):
         from shared.billing.checkout_fulfillment import apply_h4_session_side_effects
 
-        await apply_h4_session_side_effects(db, session_id)
+        await apply_h4_session_side_effects(
+            db,
+            session_id,
+            session_customer=session_customer,
+            require_session_customer=True,
+        )
         return
 
     if tx.get("applied_at"):
@@ -853,7 +878,13 @@ async def stripe_webhook(request: Request):
                       "stripe_payment_intent_id": obj.get("payment_intent"),
                       "updated_at": now}},
         )
-        await _apply_session_side_effects(session_id)
+        # C6 — pass Session.customer for Stripe↔CC matching
+        session_customer = obj.get("customer")
+        if isinstance(session_customer, dict):
+            session_customer = session_customer.get("id")
+        await _apply_session_side_effects(
+            session_id, session_customer=session_customer
+        )
         # Cap. 21 · B2C one-shot (valuator UNI PDF, staging, legal — future)
         md = obj.get("metadata") or {}
         if md.get("b2c_product_key"):

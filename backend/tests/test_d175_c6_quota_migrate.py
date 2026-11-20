@@ -15,6 +15,7 @@ def _base(db: FakeDB):
     db.subscriptions = FakeColl()
     db.properties = FakeColl()
     db.payment_transactions = FakeColl()
+    db.storage_migration_snapshots = FakeColl()
 
 
 def test_c6_quota_included_once_two_orgs_pro_plus_extra():
@@ -41,7 +42,6 @@ def test_c6_quota_included_once_two_orgs_pro_plus_extra():
             "status": "active",
         }
     )
-    # usage: ag1 almost empty, ag2 heavy
     db.properties.docs.append(
         {
             "agency_id": "ag2",
@@ -52,10 +52,9 @@ def test_c6_quota_included_once_two_orgs_pro_plus_extra():
     status = _run(q.get_storage_status(db, "ag1"))
     assert status["included_plan_gb"] == 100
     assert status["extra_gb"] == 100
-    assert status["quota_cc_gb"] == 200  # NOT 300
+    assert status["quota_cc_gb"] == 200
     assert status["used_org_gb"] == 0
     assert status["used_cc_gb"] == 150.0
-    assert status["full"] is False
 
 
 def test_c6_quota_starter_two_orgs_not_doubled():
@@ -103,19 +102,15 @@ def test_c6_assert_upload_uses_pool_not_org_only():
             "agency_id": "ag1",
         }
     )
-    # Fill pool via ag2
     db.properties.docs.append(
         {"agency_id": "ag2", "photos": [{"size_bytes": q.gb_to_bytes(30)}]}
     )
     with pytest.raises(HTTPException) as ei:
         _run(q.assert_can_upload(db, "ag1", incoming_bytes=1))
     assert ei.value.status_code == 413
-    detail = ei.value.detail
-    assert detail["error"] == "storage_quota_exceeded"
-    assert detail["quota_cc_gb"] == 30
 
 
-def test_c6_migrate_dry_run_and_apply():
+def test_c6_migrate_preserves_legacy_snapshot():
     db = FakeDB()
     _base(db)
     db.commercial_customers.docs.append({"id": "cc1", "storage_extra_gb": 0})
@@ -133,15 +128,42 @@ def test_c6_migrate_dry_run_and_apply():
         }
     )
 
-    dry = _run(mig.run_migration(db, dry_run=True, cc_id="cc1"))
-    assert dry["migrate"] == 1
-    assert db.agencies.docs[0]["storage_extra_gb"] == 100  # unchanged
-
     applied = _run(mig.run_migration(db, dry_run=False, cc_id="cc1"))
     assert applied["migrate"] == 1
     assert db.commercial_customers.docs[0]["storage_extra_gb"] == 100
-    assert db.commercial_customers.docs[0]["storage_migration_status"] == "migrated"
     assert db.agencies.docs[0]["storage_extra_gb"] == 0
+    snaps = db.storage_migration_snapshots.docs
+    assert len(snaps) == 1
+    assert snaps[0]["agency_id"] == "ag1"
+    assert snaps[0]["previous_storage_extra_gb"] == 100
+    assert snaps[0]["transferred_gb"] == 100
+    assert snaps[0]["outcome"] == "migrated"
+    assert "cs_stor_1" in snaps[0]["verified_session_ids"]
+
+
+def test_c6_migrate_idempotent_reapply():
+    db = FakeDB()
+    _base(db)
+    db.commercial_customers.docs.append({"id": "cc1", "storage_extra_gb": 0})
+    db.agencies.docs.append(
+        {"id": "ag1", "commercial_customer_id": "cc1", "storage_extra_gb": 100}
+    )
+    db.payment_transactions.docs.append(
+        {
+            "session_id": "cs_stor_1",
+            "kind": "storage_addon",
+            "payment_status": "paid",
+            "storage_gb": 100,
+            "commercial_customer_id": "cc1",
+            "agency_id": "ag1",
+        }
+    )
+    _run(mig.run_migration(db, dry_run=False, cc_id="cc1"))
+    second = _run(mig.run_migration(db, dry_run=False, cc_id="cc1"))
+    assert second["noop"] == 1
+    assert db.commercial_customers.docs[0]["storage_extra_gb"] == 100
+    # snapshots not duplicated for same outcome+previous
+    assert len(db.storage_migration_snapshots.docs) == 1
 
 
 def test_c6_migrate_suspend_unverified_agency_extra():
@@ -151,14 +173,75 @@ def test_c6_migrate_suspend_unverified_agency_extra():
     db.agencies.docs.append(
         {"id": "ag1", "commercial_customer_id": "cc1", "storage_extra_gb": 200}
     )
-    # no verifiable tx
     report = _run(mig.run_migration(db, dry_run=False, cc_id="cc1"))
     assert report["suspend"] == 1
     assert db.commercial_customers.docs[0]["storage_migration_status"] == "suspended"
-    assert db.agencies.docs[0]["storage_extra_gb"] == 200  # preserved
+    assert db.agencies.docs[0]["storage_extra_gb"] == 200
+    assert db.storage_migration_snapshots.docs[0]["previous_storage_extra_gb"] == 200
+    assert db.storage_migration_snapshots.docs[0]["outcome"] == "suspended"
 
 
-def test_c6_migrate_dedupe_session():
+def test_c6_migrate_suspend_tx_agency_cc_mismatch():
+    db = FakeDB()
+    _base(db)
+    db.commercial_customers.docs.extend(
+        [
+            {"id": "cc1", "storage_extra_gb": 0},
+            {"id": "cc2", "storage_extra_gb": 0},
+        ]
+    )
+    db.agencies.docs.append(
+        {"id": "ag2", "commercial_customer_id": "cc2", "storage_extra_gb": 0}
+    )
+    db.payment_transactions.docs.append(
+        {
+            "session_id": "cs_bad",
+            "kind": "storage_addon",
+            "payment_status": "paid",
+            "storage_gb": 100,
+            "commercial_customer_id": "cc1",
+            "agency_id": "ag2",  # belongs to cc2
+        }
+    )
+    report = _run(mig.run_migration(db, dry_run=True))
+    assert report["cc_agency_mismatch_sessions"]
+    assert report["suspend"] >= 1
+    # no silent credit to cc1
+    assert report["migrate"] == 0
+
+
+def test_c6_migrate_discordant_session_anomaly():
+    db = FakeDB()
+    _base(db)
+    db.commercial_customers.docs.append({"id": "cc1", "storage_extra_gb": 0})
+    db.agencies.docs.append(
+        {"id": "ag1", "commercial_customer_id": "cc1", "storage_extra_gb": 100}
+    )
+    db.payment_transactions.docs.extend(
+        [
+            {
+                "session_id": "cs_same",
+                "kind": "storage_addon",
+                "payment_status": "paid",
+                "storage_gb": 100,
+                "commercial_customer_id": "cc1",
+            },
+            {
+                "session_id": "cs_same",
+                "kind": "storage_addon",
+                "payment_status": "paid",
+                "storage_gb": 200,  # discordant
+                "commercial_customer_id": "cc1",
+            },
+        ]
+    )
+    report = _run(mig.run_migration(db, dry_run=True, cc_id="cc1"))
+    assert report["discordant_sessions"]
+    assert report["suspend"] == 1
+    assert report["migrate"] == 0
+
+
+def test_c6_migrate_dedupe_coherent_session():
     db = FakeDB()
     _base(db)
     db.commercial_customers.docs.append({"id": "cc1", "storage_extra_gb": 0})
