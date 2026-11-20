@@ -1,8 +1,8 @@
 # Prossima sessione — programma passi
 
-**Aggiornato**: 20 Novembre 2026 (~20:20 CET — Europe/Rome)  
+**Aggiornato**: 20 Novembre 2026 (~20:25 CET — Europe/Rome)  
 **Repo**: https://github.com/mcnicastro-netizen/omnia2 ✅  
-**PR #240**: merge **autorizzato** Founder (allineamento SHA + merge)
+**PR #240**: **MERGED** in `main` (`f0d4b26`)
 
 ---
 
@@ -10,15 +10,14 @@
 
 | Item | Stato |
 |------|-------|
-| PR #240 Deal / chat / mini-dossier / FIX-01…09 | **Merge in corso / in main** |
+| PR #240 Deal / chat / mini-dossier / FIX-01…09 | **in main** |
 | Suite D-175 in CI | Integrata |
 | H4 sealed / Stripe TEST checkout | **BLOCKED** (fuori autorizzazione) |
 
 ## Prossimo passo
 
-1. Verificare tip `main` post-merge #240.  
-2. Nuovo mandato solo se serve H4 sealed / Stripe TEST / follow-up watermark robustness.  
-3. Nessuna remediation generale spontanea.
+1. Nuovo mandato solo se serve H4 sealed / Stripe TEST / follow-up watermark robustness.  
+2. Nessuna remediation generale spontanea.
 
 ## Non fare
 

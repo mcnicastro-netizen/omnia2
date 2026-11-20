@@ -12,7 +12,7 @@
 | PR | https://github.com/mcnicastro-netizen/omnia2/pull/240 |
 | Ambiente | Dogfood `OMNIA_ENV=dogfood` · `DB_NAME=omnia_df_clean_c4` · Mongo `:27018` |
 | Working tree pre-intervento | pulito su `758df86` |
-| Merge | **Autorizzato Founder 20-Nov-2026 (Europe/Rome) — in corso** |
+| Merge | **ESEGUITO** `f0d4b262444f798bebf31384e7ec621380a97dc5` (PR #240 → main) |
 | Perimetro | **solo** FIX-07, FIX-08, FIX-09 + CI suite D-175 + report |
 
 ## B. Registro FIX-01…06 (invariati — regressione)
@@ -91,4 +91,4 @@ Nessun defect blocking residuo su FIX-07/08/09.
 ## I. Verdetto
 **`READY FOR FINAL FOUNDER REVIEW` → merge autorizzato Founder**
 
-Tre finding chiusi, regressioni superate, suite D-175 in CI, evidenze codice su `122d538`, tip allineato a questo report. Merge su `main` su richiesta esplicita Founder. Non dichiarato production-ready; Stripe TEST/H4 non completati.
+Tre finding chiusi, regressioni superate, suite D-175 in CI, evidenze codice su `122d538`, tip allineato a questo report. Merge su `main` eseguito (`f0d4b26`) su richiesta esplicita Founder. Non dichiarato production-ready; Stripe TEST/H4 non completati.
