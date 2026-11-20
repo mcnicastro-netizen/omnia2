@@ -29,7 +29,9 @@ from apps.billing.plans import (
     STORAGE_ADDONS, STORAGE_INCLUDED_GB,
 )
 from apps.billing.models import (
-    CheckoutSessionRequest, CreditPurchaseRequest,
+    CheckoutSessionRequest,
+    CreditPurchaseRequest,
+    StoragePurchaseRequest,
 )
 
 logger = logging.getLogger("omnia.billing")
@@ -352,58 +354,106 @@ async def create_checkout(
     }
 
 
+@router.get("/purchase-context")
+async def purchase_context(user: dict = Depends(get_current_user)):
+    """D-175 C5 — CommercialCustomers where the user is nominated Main Admin.
+
+    Supports MA without Membership (no active agency) selecting a CC for H4 purchase.
+    """
+    db = Database.get()
+    cursor = db.commercial_customers.find(
+        {"main_admin_user_id": user["id"]},
+        {
+            "_id": 0,
+            "id": 1,
+            "legal_name": 1,
+            "vat_number_normalized": 1,
+            "commercial_status": 1,
+            "operational_status": 1,
+            "stripe_customer_id": 1,
+        },
+    )
+    ccs = await cursor.to_list(50)
+    return {
+        "commercial_customers": ccs,
+        "active_agency_id": optional_agency_id(user),
+        "role": user.get("role"),
+    }
+
+
 @router.post("/credits/purchase")
 async def buy_credits(
     payload: CreditPurchaseRequest,
     request: Request,
-    user: dict = Depends(require_roles("super_admin", "agency_admin", "group_admin")),
+    user: dict = Depends(get_current_user),
 ):
-    """Buy a credit package (one-off payment).
+    """Buy a credit package (one-off) — D-175 C5 Main Admin + CC only.
 
-    D-175 C1: hard-gate sealed H4 — 503 ``h4_not_ready`` until C5+C6 marker.
-    Env ``OMNIA_H4_PURCHASE_READY=true`` alone does NOT unlock (Precisione A).
-    Super Admin has no implicit purchase authority (Precisione B; C5 = Main Admin only).
+    Order (rev.2.2): H4 → package → SA/MA auth → service guards → Stripe.
+    DENY ⇒ zero Stripe calls (Price/Customer/Session/helpers).
+    Does not credit wallet (C6) and does not mint H4 sealed.
     """
+    from shared.billing.main_admin_service import authorize_h4_purchase
+    from shared.billing.stripe_customer_service import get_or_create_stripe_customer
     from shared.dogfood.perimeter import guard_h4_purchase_or_raise
 
     guard_h4_purchase_or_raise()
-    _guard_enabled()
-    _guard_self_serve()
+
     pkg = next((p for p in CREDIT_PACKAGES if p.key == payload.package_key), None)
     if not pkg:
         raise HTTPException(status_code=400, detail="unknown_package")
 
+    db = Database.get()
+    # Commercial auth BEFORE service/Stripe (DENY must not skip MA for soft/hard service blocks)
+    cc = await authorize_h4_purchase(
+        db,
+        user,
+        payload.commercial_customer_id,
+        agency_id=payload.agency_id,
+    )
+    _guard_enabled()
+    _guard_self_serve()
+    ctx_agency = (payload.agency_id or "").strip() or None
+
+    # Stripe only after ALLOW
     prices = stripe.Price.list(lookup_keys=[pkg.key], active=True, limit=1).data
     if not prices:
         raise HTTPException(status_code=503, detail=f"price_not_found:{pkg.key}")
     price = prices[0]
 
-    origin = payload.success_url or str(request.base_url)
-    agency_id = require_agency(user)
+    stripe_customer_id = await get_or_create_stripe_customer(
+        db, cc, email=user.get("email") or "", name=cc.get("legal_name")
+    )
+    # Do not trust client success_url/cancel_url (open-redirect / phishing).
+    origin = os.environ.get("FRONTEND_URL") or str(request.base_url)
+    meta = {
+        "commercial_customer_id": cc["id"],
+        "stripe_customer_id": stripe_customer_id,
+        "agency_id": ctx_agency or "",
+        "user_id": user["id"],
+        "package_key": pkg.key,
+        "credits": str(pkg.credits),
+        "kind": "credits_topup",
+    }
     try:
         session = stripe.checkout.Session.create(
             line_items=[{"price": price.id, "quantity": 1}],
             mode="payment",
             success_url=_build_success_url(origin),
-            cancel_url=payload.cancel_url or _build_cancel_url(origin),
-            customer_email=user["email"],
-            metadata={
-                "agency_id": agency_id or "",
-                "user_id": user["id"],
-                "package_key": pkg.key,
-                "credits": str(pkg.credits),
-                "kind": "credits_topup",
-            },
+            cancel_url=_build_cancel_url(origin),
+            customer=stripe_customer_id,
+            metadata=meta,
         )
     except stripe.error.StripeError as e:
         logger.exception("stripe checkout credits error: %s", e)
         raise HTTPException(status_code=502, detail={"stripe_error": str(e)})
 
-    db = Database.get()
     now = datetime.now(timezone.utc).isoformat()
     await db.payment_transactions.insert_one({
         "session_id": session.id,
-        "agency_id": agency_id,
+        "commercial_customer_id": cc["id"],
+        "stripe_customer_id": stripe_customer_id,
+        "agency_id": ctx_agency,
         "user_id": user["id"],
         "lookup_key": pkg.key,
         "amount": pkg.price_eur,
@@ -415,31 +465,46 @@ async def buy_credits(
         "created_at": now,
         "updated_at": now,
     })
-    return {"checkout_url": session.url, "session_id": session.id}
+    return {
+        "checkout_url": session.url,
+        "session_id": session.id,
+        "commercial_customer_id": cc["id"],
+        "stripe_customer_id": stripe_customer_id,
+    }
 
 
 @router.post("/storage/purchase")
 async def buy_storage(
+    payload: StoragePurchaseRequest,
     request: Request,
-    user: dict = Depends(require_roles("super_admin", "agency_admin", "group_admin")),
-    package_key: str = "storage_100gb",
+    user: dict = Depends(get_current_user),
 ):
-    """Buy +100 GB archive storage (D-085). Recurring monthly when Stripe is live.
+    """Buy archive storage addon — D-175 C5 Main Admin + CC only (C5-D03 tx binding).
 
-    D-175 C1: same sealed H4 hard-gate as credits (Precisione A/B).
+    Does not change agencies.storage_extra_gb (C6). Same auth order as credits.
     """
+    from shared.billing.main_admin_service import authorize_h4_purchase
+    from shared.billing.stripe_customer_service import get_or_create_stripe_customer
     from shared.dogfood.perimeter import guard_h4_purchase_or_raise
 
+    from shared.billing.self_serve import is_self_serve_enabled
+
     guard_h4_purchase_or_raise()
-    addon = next((a for a in STORAGE_ADDONS if a.key == package_key), None)
+
+    addon = next((a for a in STORAGE_ADDONS if a.key == payload.package_key), None)
     if not addon:
         raise HTTPException(status_code=400, detail="unknown_storage_addon")
 
-    agency_id = require_agency(user)
     db = Database.get()
-    now = datetime.now(timezone.utc).isoformat()
+    # Auth FIRST — soft assistito paths must not bypass Main Admin / SA DENY
+    cc = await authorize_h4_purchase(
+        db,
+        user,
+        payload.commercial_customer_id,
+        agency_id=payload.agency_id,
+    )
+    ctx_agency = (payload.agency_id or "").strip() or None
 
-    # Stripe off → support path (no silent free grant)
     if not _is_enabled():
         return {
             "ok": False,
@@ -450,11 +515,9 @@ async def buy_storage(
                 "oppure contatta il supporto OMNIA."
             ),
             "addon": addon.model_dump(),
-            "demo_contact_email": (os.environ.get("DEMO_CONTACT_EMAIL") or "mcnicastro@gmail.com").strip(),
+            "demo_contact_email": (os.environ.get("DEMO_CONTACT_EMAIL") or "[REDACTED]").strip(),
+            "commercial_customer_id": cc["id"],
         }
-
-    # S5: Stripe ON ma self-serve OFF → assistito (non checkout silenzioso)
-    from shared.billing.self_serve import is_self_serve_enabled
 
     if not is_self_serve_enabled():
         return {
@@ -466,6 +529,7 @@ async def buy_storage(
             ),
             "addon": addon.model_dump(),
             "demo_contact_email": (os.environ.get("DEMO_CONTACT_EMAIL") or "[REDACTED]").strip(),
+            "commercial_customer_id": cc["id"],
         }
 
     lookup = f"{addon.key}_monthly"
@@ -473,29 +537,40 @@ async def buy_storage(
     if not prices:
         raise HTTPException(status_code=503, detail=f"price_not_found:{lookup}")
     price = prices[0]
-    origin = str(request.base_url)
+
+    stripe_customer_id = await get_or_create_stripe_customer(
+        db, cc, email=user.get("email") or "", name=cc.get("legal_name")
+    )
+    # Do not trust client success_url/cancel_url (open-redirect / phishing).
+    origin = os.environ.get("FRONTEND_URL") or str(request.base_url)
+    meta = {
+        "commercial_customer_id": cc["id"],
+        "stripe_customer_id": stripe_customer_id,
+        "agency_id": ctx_agency or "",
+        "user_id": user["id"],
+        "package_key": addon.key,
+        "storage_gb": str(addon.gb),
+        "kind": "storage_addon",
+    }
     try:
         session = stripe.checkout.Session.create(
             line_items=[{"price": price.id, "quantity": 1}],
             mode="subscription",
             success_url=_build_success_url(origin),
             cancel_url=_build_cancel_url(origin),
-            customer_email=user["email"],
-            metadata={
-                "agency_id": agency_id,
-                "user_id": user["id"],
-                "package_key": addon.key,
-                "storage_gb": str(addon.gb),
-                "kind": "storage_addon",
-            },
+            customer=stripe_customer_id,
+            metadata=meta,
         )
     except stripe.error.StripeError as e:
         logger.exception("stripe checkout storage error: %s", e)
         raise HTTPException(status_code=502, detail={"stripe_error": str(e)})
 
+    now = datetime.now(timezone.utc).isoformat()
     await db.payment_transactions.insert_one({
         "session_id": session.id,
-        "agency_id": agency_id,
+        "commercial_customer_id": cc["id"],
+        "stripe_customer_id": stripe_customer_id,
+        "agency_id": ctx_agency,
         "user_id": user["id"],
         "lookup_key": addon.key,
         "amount": addon.price_eur,
@@ -507,7 +582,12 @@ async def buy_storage(
         "created_at": now,
         "updated_at": now,
     })
-    return {"checkout_url": session.url, "session_id": session.id}
+    return {
+        "checkout_url": session.url,
+        "session_id": session.id,
+        "commercial_customer_id": cc["id"],
+        "stripe_customer_id": stripe_customer_id,
+    }
 
 
 def _stripe_sub_period_iso(sub_obj) -> tuple:

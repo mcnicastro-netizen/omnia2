@@ -112,6 +112,20 @@ class CheckoutSessionRequest(OmniaBaseModel):
 
 
 class CreditPurchaseRequest(OmniaBaseModel):
+    """D-175 C5 — purchase bound to CommercialCustomer (C5-D01)."""
+
     package_key: str  # e.g. "pkg_200"
+    commercial_customer_id: str
+    agency_id: Optional[str] = None  # optional contextual audit only
+    success_url: Optional[str] = None
+    cancel_url: Optional[str] = None
+
+
+class StoragePurchaseRequest(OmniaBaseModel):
+    """D-175 C5 — storage addon bound to CommercialCustomer (C5-D01/D03)."""
+
+    commercial_customer_id: str
+    package_key: str = "storage_100gb"
+    agency_id: Optional[str] = None
     success_url: Optional[str] = None
     cancel_url: Optional[str] = None

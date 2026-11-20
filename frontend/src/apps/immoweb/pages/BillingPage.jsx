@@ -141,6 +141,24 @@ export default function BillingPage() {
 
   const h4PurchaseReady = state.data?.h4_purchase_ready === true;
 
+  const resolveCommercialCustomerId = async () => {
+    const fromSub = state.sub?.commercial_customer?.id;
+    if (fromSub) return fromSub;
+    try {
+      const { data } = await api.get("/billing/purchase-context");
+      const list = data?.commercial_customers || [];
+      if (list.length === 1) return list[0].id;
+      if (list.length > 1) {
+        toast.message("Seleziona il CommercialCustomer (più di uno nominato).");
+        return null;
+      }
+    } catch (err) {
+      console.error(err);
+    }
+    toast.message("CommercialCustomer richiesto per l'acquisto (Main Admin).");
+    return null;
+  };
+
   const checkoutCredits = async (packageKey) => {
     if (!h4PurchaseReady) {
       toast.message(
@@ -153,10 +171,13 @@ export default function BillingPage() {
       openDemo();
       return;
     }
+    const commercialCustomerId = await resolveCommercialCustomerId();
+    if (!commercialCustomerId) return;
     setBusy(true);
     try {
       const { data } = await api.post("/billing/credits/purchase", {
         package_key: packageKey,
+        commercial_customer_id: commercialCustomerId,
         success_url: window.location.origin,
         cancel_url: window.location.origin + window.location.pathname + "?cancel=1",
       });
@@ -166,6 +187,8 @@ export default function BillingPage() {
       const code = typeof d === "object" ? d?.error || d?.code : null;
       if (code === "h4_not_ready" || e?.response?.status === 503) {
         toast.message(d?.message || "Acquisto crediti bloccato (H4 non pronto).");
+      } else if (code === "sa_purchase_forbidden" || code === "not_main_admin") {
+        toast.error(d?.message || "Solo il Main Admin può acquistare crediti.");
       } else {
         toast.error(typeof d === "string" ? d : d?.message || "Errore checkout crediti");
       }
@@ -180,14 +203,24 @@ export default function BillingPage() {
       );
       return;
     }
+    if (!state.data?.self_serve_enabled) {
+      toast.message("Attivazione assistita: contattaci per completare l'acquisto.");
+      openDemo();
+      return;
+    }
+    const commercialCustomerId = await resolveCommercialCustomerId();
+    if (!commercialCustomerId) return;
     setBusy(true);
     try {
-      const { data } = await api.post("/billing/storage/purchase");
+      const { data } = await api.post("/billing/storage/purchase", {
+        commercial_customer_id: commercialCustomerId,
+        package_key: "storage_100gb",
+      });
       if (data.checkout_url) {
         window.location.href = data.checkout_url;
         return;
       }
-      if (data.stripe_required) {
+      if (data.stripe_required || data.self_serve_blocked) {
         const email = data.demo_contact_email || "[REDACTED]";
         const subject = encodeURIComponent("OMNIA — spazio archivio extra +100 GB");
         const body = encodeURIComponent(
@@ -201,6 +234,8 @@ export default function BillingPage() {
       const code = typeof d === "object" ? d?.error || d?.code : null;
       if (code === "h4_not_ready" || e?.response?.status === 503) {
         toast.message(d?.message || "Acquisto storage bloccato (H4 non pronto).");
+      } else if (code === "sa_purchase_forbidden" || code === "not_main_admin") {
+        toast.error(d?.message || "Solo il Main Admin può acquistare storage.");
       } else {
         toast.error(typeof d === "string" ? d : d?.message || "Errore acquisto spazio");
       }
