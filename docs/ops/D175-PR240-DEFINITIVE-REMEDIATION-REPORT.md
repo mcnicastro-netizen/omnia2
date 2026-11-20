@@ -5,7 +5,7 @@
 |-------|--------|
 | Branch | `cursor/d175-deal-chat-dossier-h4-e393` |
 | SHA iniziale | `fafab3d61d1b9b77b21947c02d0be6c22554b488` |
-| SHA finale | *(vedi commit push)* |
+| SHA finale | *68b0fc6ae008d8b7141727dbe74e0549a5932118* |
 | PR | https://github.com/mcnicastro-netizen/omnia2/pull/240 |
 | Ambiente | Dogfood `OMNIA_ENV=dogfood` · `DB_NAME=omnia_df_clean_c4` · Mongo `:27018` |
 | Working tree pre-intervento | pulito |
