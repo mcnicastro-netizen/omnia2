@@ -67,6 +67,12 @@ class CommercialCustomerInDB(TimestampedModel):
     main_admin_user_id: Optional[str] = None
     main_admin_appointed_at: Optional[str] = None
     main_admin_appointed_by: Optional[str] = None
+    # D-175 C6 / S1 — storage extra SoT (GB); included piano = una volta sul CC (S3-bis)
+    storage_extra_gb: int = 0
+    storage_migration_status: Optional[
+        Literal["none", "pending", "migrated", "suspended"]
+    ] = None
+    storage_extra_migrated_at: Optional[str] = None
 
 
 class CommercialCustomerPublic(OmniaBaseModel):
