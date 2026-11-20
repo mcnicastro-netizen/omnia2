@@ -226,3 +226,24 @@ def test_c7_binding_sha_mismatch(sessions_tmp, monkeypatch):
     monkeypatch.setattr(sr, "git_sha", lambda cwd=None: "f" * 40)
     with pytest.raises(RegistryError, match="INVALID_BINDING_SHA"):
         reg.assert_binding(hdr["session_id"])
+
+
+def test_c7_sessions_dir_no_double_nest(sessions_tmp):
+    nested = sessions_tmp / "sessions"
+    reg = SessionRegistry(sessions_dir=nested)
+    assert reg.root == nested.resolve()
+    assert (reg.root / "events").is_dir()
+    assert not (reg.root / "sessions" / "events").exists()
+
+
+def test_c7_recover_denied_when_completed(sessions_tmp, monkeypatch):
+    import shared.dogfood.session_registry as sr
+
+    monkeypatch.setattr(sr, "git_dirty", lambda cwd=None: False)
+    monkeypatch.setattr(sr, "git_sha", lambda cwd=None: "d" * 40)
+    monkeypatch.setattr(sr, "git_branch", lambda cwd=None: "main")
+    reg = SessionRegistry(sessions_tmp)
+    hdr = reg.open_session(copy_kind="CLEAN", workcopy_id="omnia_df_clean_done")
+    reg.close_session(hdr["session_id"], status="COMPLETED")
+    with pytest.raises(RegistryError, match="recover_denied_status:COMPLETED"):
+        reg.seal_and_recover_partial_tail(hdr["session_id"])

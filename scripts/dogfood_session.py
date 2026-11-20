@@ -32,7 +32,8 @@ from shared.dogfood.session_registry import (  # noqa: E402
 def _reg() -> SessionRegistry:
     override = (os.environ.get("OMNIA_DOGFOOD_SESSIONS_ROOT") or "").strip()
     if override:
-        return SessionRegistry(Path(override))
+        # Path is the sessions tree itself (…/dogfood/sessions), not dogfood root.
+        return SessionRegistry(sessions_dir=Path(override))
     return SessionRegistry(dogfood_root())
 
 
@@ -98,6 +99,28 @@ def cmd_attach_sig(args: argparse.Namespace) -> int:
     if not uc.exists():
         raise RegistryError("unsigned_checkpoint_missing")
     payload = json.loads(uc.read_text(encoding="utf-8"))
+    # Bind signature to the journal PREFIX attested by the checkpoint.
+    # Tip may legitimately advance after unsigned (CHECKPOINT_UNSIGNED / SESSION_CLOSE).
+    reg.verify_chain(payload["session_id"])
+    events = reg.load_events(payload["session_id"])
+    seq = int(payload.get("seq", -1))
+    if seq < 0 or seq >= len(events):
+        raise RegistryError("checkpoint_seq_out_of_range")
+    if events[seq]["event_hash"] != payload.get("journal_tip_hash"):
+        raise RegistryError("checkpoint_tip_hash_mismatch")
+    if events[seq]["session_id"] != payload.get("session_id"):
+        raise RegistryError("checkpoint_session_mismatch")
+    if int(payload.get("event_count", -1)) != seq + 1:
+        raise RegistryError("checkpoint_event_count_invalid")
+    allowed_after = {
+        "CHECKPOINT_UNSIGNED",
+        "SESSION_CLOSE",
+        "CHECKPOINT_SIGNED_ATTACHED",
+        "SIGNATURE_STATUS",
+    }
+    for ev in events[seq + 1 :]:
+        if ev["type"] not in allowed_after:
+            raise RegistryError(f"journal_diverged_after_checkpoint:{ev['type']}")
     pub_path = Path(args.pubkey) if args.pubkey else default_pubkey_path()
     raw = load_raw_pubkey(pub_path)
     fp = args.fingerprint or os.environ.get("OMNIA_C7_PUBKEY_FINGERPRINT")

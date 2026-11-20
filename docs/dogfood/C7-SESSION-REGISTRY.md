@@ -46,7 +46,9 @@ $PY scripts/dogfood_session.py attach-sig \
 $PY scripts/dogfood_session.py recover-partial --session-id <id>
 ```
 
-Override root: `OMNIA_DOGFOOD_SESSIONS_ROOT` o `DOGFOOD_ROOT`.
+Override:
+- `DOGFOOD_ROOT` → usa `<DOGFOOD_ROOT>/sessions`
+- `OMNIA_DOGFOOD_SESSIONS_ROOT` → path **diretto** al tree `sessions/` (nessun `/sessions` aggiuntivo)
 
 ## Test
 

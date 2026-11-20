@@ -227,9 +227,30 @@ def parse_event_line(line: bytes) -> dict[str, Any]:
     return {**pre, "event_hash": eh}
 
 
+def _write_bytes_fsync(path: Path, data: bytes) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with open(path, "wb") as f:
+        f.write(data)
+        f.flush()
+        os.fsync(f.fileno())
+
+
 class SessionRegistry:
-    def __init__(self, root: Optional[Path] = None):
-        self.root = sessions_root(root)
+    def __init__(
+        self,
+        root: Optional[Path] = None,
+        *,
+        sessions_dir: Optional[Path] = None,
+    ):
+        """root = dogfood root (…/dogfood); sessions_dir = explicit …/sessions path.
+
+        Prefer sessions_dir when OMNIA_DOGFOOD_SESSIONS_ROOT points at the
+        sessions tree itself (avoids …/sessions/sessions nesting).
+        """
+        if sessions_dir is not None:
+            self.root = Path(sessions_dir).resolve()
+        else:
+            self.root = sessions_root(root)
         _ensure_dirs(self.root)
 
     def index_path(self) -> Path:
@@ -578,7 +599,18 @@ class SessionRegistry:
         return {"header": hdr, "unsigned_checkpoint": unsigned, "path": str(uc_path)}
 
     def seal_and_recover_partial_tail(self, session_id: str) -> dict[str, Any]:
-        """Seal-before-recover for PARTIAL_TAIL. Leaves session INTERRUPTED."""
+        """Seal-before-recover for PARTIAL_TAIL. Leaves session INTERRUPTED.
+
+        Only allowed while status is OPEN (never downgrade COMPLETED/ABORTED/INVALID).
+        """
+        hdr0 = self.load_header(session_id)
+        if not hdr0:
+            raise RegistryError("session_not_found")
+        if hdr0.get("status") != "OPEN":
+            raise RegistryError(
+                f"recover_denied_status:{hdr0.get('status')}"
+            )
+
         with _flock(self.lock_path(session_id)):
             path = self.events_path(session_id)
             if not path.exists():
@@ -589,7 +621,7 @@ class SessionRegistry:
             evid.mkdir(parents=True, exist_ok=True)
             full_path = evid / "journal.full.bin"
             data = path.read_bytes()
-            full_path.write_bytes(data)
+            _write_bytes_fsync(full_path, data)
             h_src = sha256_hex(data)
             h_copy = sha256_hex(full_path.read_bytes())
             if h_src != h_copy or len(data) != original_size:
@@ -616,7 +648,7 @@ class SessionRegistry:
                 tail_offset = last_lf + 1
 
             tail_path = evid / "tail.partial.bin"
-            tail_path.write_bytes(tail)
+            _write_bytes_fsync(tail_path, tail)
             tail_sha = sha256_hex(tail)
             if data[tail_offset:] != tail:
                 raise RegistryError("SEAL_FAIL_TAIL_MISMATCH")
@@ -656,29 +688,40 @@ class SessionRegistry:
                 "last_valid_seq": last_valid_seq,
                 "last_valid_event_hash": last_valid_hash,
                 "reason": "PARTIAL_TAIL",
-                "seal_checks": {"first_read": "pass", "second_read": "pass"},
+                "seal_checks": {
+                    "first_read": "pass",
+                    "second_read": "pass",
+                    "evidence_fsync": "pass",
+                },
                 "recovery_protocol_version": RECOVERY_PROTOCOL_VERSION,
             }
-            (evid / "RECOVERY_MANIFEST.json").write_text(
-                json.dumps(manifest, indent=2) + "\n", encoding="utf-8"
+            _write_bytes_fsync(
+                evid / "RECOVERY_MANIFEST.json",
+                (json.dumps(manifest, indent=2) + "\n").encode("utf-8"),
             )
 
             recovered = evid / "journal.recovered.jsonl"
-            recovered.write_bytes(prefix)
-            with open(recovered, "rb") as f:
-                os.fsync(f.fileno())
-            # atomic replace of active journal
+            _write_bytes_fsync(recovered, prefix)
+            # best-effort fsync evidence directory before mutating live journal
+            try:
+                dfd = os.open(str(evid), os.O_RDONLY)
+                try:
+                    os.fsync(dfd)
+                finally:
+                    os.close(dfd)
+            except OSError:
+                pass
+
+            # atomic replace of active journal (only after sealed evidence fsynced)
             tmp = path.with_suffix(".jsonl.recovered_tmp")
-            tmp.write_bytes(prefix)
-            with open(tmp, "rb") as f:
-                os.fsync(f.fileno())
+            _write_bytes_fsync(tmp, prefix)
             os.replace(tmp, path)
             if last_valid_seq is not None and last_valid_hash is not None:
                 self._write_tip(session_id, last_valid_seq, last_valid_hash)
             elif self.tip_path(session_id).exists():
                 self.tip_path(session_id).unlink()
 
-        # outside lock rebuild tip events after replace — append recovery event
+        # outside lock — append recovery event
         hdr = self.load_header(session_id) or {
             "session_id": session_id,
             "status": "OPEN",
