@@ -166,8 +166,21 @@ async def respond_collaboration(
             raise HTTPException(status_code=500, detail="invariant_auto_document_request")
         return {"id": collaboration_id, "status": "active", "document_request_created": False}
     if body.action == "reject":
+        # FIX-08 — reject solo su pending; active richiede revoke ufficiale
         if aid != collab["owner_agency_id"]:
             raise HTTPException(status_code=403, detail="only_owner_can_reject")
+        status = collab.get("status")
+        if status == "rejected":
+            return {"id": collaboration_id, "status": "rejected", "idempotent": True}
+        if status == "revoked":
+            return {"id": collaboration_id, "status": "revoked", "idempotent": True}
+        if status == "active":
+            raise HTTPException(
+                status_code=400,
+                detail="use_revoke_for_active_collaboration",
+            )
+        if status != "pending":
+            raise HTTPException(status_code=400, detail="not_pending")
         now = utc_now()
         await db.mls_collaborations.update_one(
             {"id": collaboration_id},
@@ -179,6 +192,13 @@ async def respond_collaboration(
         return {"id": collaboration_id, "status": "rejected"}
     # FIX-03 — revoke collab + chat + document requests
     require_agency_in_collaboration(collab, aid)
+    if collab.get("status") == "revoked":
+        return {
+            "id": collaboration_id,
+            "status": "revoked",
+            "document_requests_revoked": True,
+            "idempotent": True,
+        }
     now = utc_now()
     await db.mls_collaborations.update_one(
         {"id": collaboration_id},
@@ -863,10 +883,17 @@ async def post_chat_message(
     collab = await get_collaboration(db, thread["collaboration_id"])
     require_collaboration_active(collab)
     if body.attachment_document_request_id:
+        # FIX-09 — allegato solo se document_request appartiene allo stesso collaboration_id del thread
         dr = await db.mls_document_requests.find_one(
             {"id": body.attachment_document_request_id}, {"_id": 0}
         )
-        if not dr or dr.get("status") not in ("approved", "fulfilled"):
+        if not dr:
+            raise HTTPException(status_code=403, detail="attachment_not_found")
+        if dr.get("collaboration_id") != thread.get("collaboration_id"):
+            raise HTTPException(
+                status_code=403, detail="attachment_collaboration_mismatch"
+            )
+        if dr.get("status") not in ("approved", "fulfilled"):
             raise HTTPException(status_code=403, detail="attachment_not_authorized")
         if aid not in (dr["requesting_agency_id"], dr["owner_agency_id"]):
             raise HTTPException(status_code=403, detail="attachment_forbidden")

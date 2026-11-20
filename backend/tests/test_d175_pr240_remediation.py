@@ -1,4 +1,4 @@
-"""D-175 PR #240 remediation — FIX-01…06 + watermark + rating + deal roles."""
+"""D-175 PR #240 remediation — FIX-01…09 + watermark + rating + deal roles."""
 from __future__ import annotations
 
 import io
@@ -9,6 +9,9 @@ from unittest.mock import patch
 import pytest
 from fastapi import HTTPException
 from PIL import Image
+from pypdf import PdfReader
+from reportlab.lib.pagesizes import letter
+from reportlab.pdfgen import canvas as rl_canvas
 
 from apps.immoweb import collaborations as collab_mod
 from apps.immoweb import deals as deals_mod
@@ -16,6 +19,35 @@ from shared.mls_collab import service as svc
 from shared.mls_collab.watermark import apply_watermark
 from tests.test_b04ii_wallet_ledger import FakeColl, FakeDB, _run
 from tests.test_d175_deal_collab_chat import _patch_find
+
+
+def _make_pdf(pages: int = 1, text: str = "PAGE") -> bytes:
+    buf = io.BytesIO()
+    c = rl_canvas.Canvas(buf, pagesize=letter)
+    for i in range(pages):
+        c.drawString(72, 720, f"{text} {i + 1}")
+        c.showPage()
+    c.save()
+    return buf.getvalue()
+
+
+def _active_collab(harness, partner="agB", owner="agA", property_id="p1"):
+    collab = _run(
+        collab_mod.create_collaboration_request(
+            collab_mod.CollaborationCreate(
+                property_id=property_id, partner_agency_id=partner
+            ),
+            _user(partner),
+        )
+    )
+    _run(
+        collab_mod.respond_collaboration(
+            collab["id"],
+            collab_mod.CollaborationAction(action="accept"),
+            _user(owner),
+        )
+    )
+    return collab
 
 
 class _DB:
@@ -551,3 +583,460 @@ def test_deal_mutation_blocked_after_collab_revoke(harness):
             )
         )
     assert ei.value.detail == "collaboration_not_active"
+
+
+# ── FIX-07 — PDF watermark fail-closed ─────────────────────────────────────
+
+
+def test_fix07_pdf_valid_watermark_present_on_all_pages():
+    label = "OMNIA-FIX07-VALID"
+    original = _make_pdf(pages=3, text="DOC")
+    wm, ct = apply_watermark(original, content_type="application/pdf", label=label)
+    assert ct == "application/pdf"
+    assert wm != original
+    reader = PdfReader(io.BytesIO(wm))
+    assert len(reader.pages) == 3
+    for page in reader.pages:
+        text = page.extract_text() or ""
+        assert label in text
+
+
+def test_fix07_pdf_merge_page_failure_denies_delivery(monkeypatch):
+    original = _make_pdf(pages=1, text="DOC")
+    original_copy = bytes(original)
+
+    def boom(self, *args, **kwargs):
+        raise RuntimeError("merge_boom")
+
+    monkeypatch.setattr("pypdf._page.PageObject.merge_page", boom)
+    with pytest.raises(HTTPException) as ei:
+        apply_watermark(original, content_type="application/pdf", label="X")
+    assert ei.value.status_code == 500
+    assert ei.value.detail["error"] == "watermark_apply_failed"
+    assert original == original_copy
+
+
+def test_fix07_pdf_overlay_generation_failure_denies(monkeypatch):
+    original = _make_pdf(pages=1, text="DOC")
+    original_copy = bytes(original)
+
+    class BoomCanvas:
+        def __init__(self, *args, **kwargs):
+            raise RuntimeError("overlay_boom")
+
+    monkeypatch.setattr("reportlab.pdfgen.canvas.Canvas", BoomCanvas)
+    with pytest.raises(HTTPException) as ei:
+        apply_watermark(original, content_type="application/pdf", label="X")
+    assert ei.value.status_code == 500
+    assert ei.value.detail["error"] == "watermark_apply_failed"
+    assert original == original_copy
+
+
+def test_fix07_pdf_midpage_failure_no_partial(monkeypatch):
+    original = _make_pdf(pages=3, text="DOC")
+    calls = {"n": 0}
+    real_merge = None
+
+    from pypdf._page import PageObject
+
+    real_merge = PageObject.merge_page
+
+    def flaky(self, *args, **kwargs):
+        calls["n"] += 1
+        if calls["n"] >= 2:
+            raise RuntimeError("midpage_fail")
+        return real_merge(self, *args, **kwargs)
+
+    monkeypatch.setattr(PageObject, "merge_page", flaky)
+    with pytest.raises(HTTPException) as ei:
+        apply_watermark(original, content_type="application/pdf", label="PARTIAL")
+    assert ei.value.status_code == 500
+    assert ei.value.detail["error"] == "watermark_apply_failed"
+    assert "pdf_page_1" in ei.value.detail["stage"]
+
+
+def test_fix07_download_header_only_when_watermarked(harness):
+    db = harness
+    collab = _active_collab(db)
+    dr = _run(
+        collab_mod.create_document_request(
+            collab_mod.DocumentRequestCreate(
+                collaboration_id=collab["id"], document_keys=["pdf-1"]
+            ),
+            _user("agB"),
+        )
+    )
+    # Replace default PNG artifact with a real PDF original (FakeColl deepcopies)
+    original = _make_pdf(pages=1, text="APE")
+    original_copy = bytes(original)
+    _run(
+        collab_mod.respond_document_request(
+            dr["id"],
+            collab_mod.DocumentRequestAction(
+                action="fulfill", shared_document_ids=["pdf-1"]
+            ),
+            _user("agA"),
+        )
+    )
+    _run(
+        db.mls_document_artifacts.update_one(
+            {"id": "pdf-1", "document_request_id": dr["id"]},
+            {
+                "$set": {
+                    "content_type": "application/pdf",
+                    "original_bytes": original,
+                }
+            },
+        )
+    )
+    resp = _run(collab_mod.download_watermarked_document(dr["id"], "pdf-1", _user("agB")))
+    assert resp.headers.get("X-OMNIA-Watermark") == "1"
+    body = resp.body
+    assert body != original
+    text = (PdfReader(io.BytesIO(body)).pages[0].extract_text() or "")
+    assert "OMNIA" in text
+    # original artifact untouched
+    art2 = _run(
+        db.mls_document_artifacts.find_one(
+            {"id": "pdf-1", "document_request_id": dr["id"]}
+        )
+    )
+    assert art2["original_bytes"] == original_copy
+
+
+def test_fix07_download_denied_when_watermark_fails(harness, monkeypatch):
+    db = harness
+    collab = _active_collab(db)
+    dr = _run(
+        collab_mod.create_document_request(
+            collab_mod.DocumentRequestCreate(
+                collaboration_id=collab["id"], document_keys=["pdf-fail"]
+            ),
+            _user("agB"),
+        )
+    )
+    _run(
+        collab_mod.respond_document_request(
+            dr["id"],
+            collab_mod.DocumentRequestAction(
+                action="fulfill", shared_document_ids=["pdf-fail"]
+            ),
+            _user("agA"),
+        )
+    )
+    _run(
+        db.mls_document_artifacts.update_one(
+            {"id": "pdf-fail", "document_request_id": dr["id"]},
+            {
+                "$set": {
+                    "content_type": "application/pdf",
+                    "original_bytes": _make_pdf(1),
+                }
+            },
+        )
+    )
+
+    def boom(*args, **kwargs):
+        raise HTTPException(
+            status_code=500, detail={"error": "watermark_apply_failed", "stage": "forced"}
+        )
+
+    monkeypatch.setattr("apps.immoweb.collaborations.apply_watermark", boom)
+    with pytest.raises(HTTPException) as ei:
+        _run(
+            collab_mod.download_watermarked_document(
+                dr["id"], "pdf-fail", _user("agB")
+            )
+        )
+    assert ei.value.status_code == 500
+    assert ei.value.detail["error"] == "watermark_apply_failed"
+    # no distribution recorded on failure
+    assert len(db.mls_document_distributions.docs) == 0
+
+
+# ── FIX-08 — reject solo pending; active → revoke ──────────────────────────
+
+
+def test_fix08_reject_pending_ok(harness):
+    collab = _run(
+        collab_mod.create_collaboration_request(
+            collab_mod.CollaborationCreate(property_id="p1", partner_agency_id="agB"),
+            _user("agB"),
+        )
+    )
+    out = _run(
+        collab_mod.respond_collaboration(
+            collab["id"], collab_mod.CollaborationAction(action="reject"), _user("agA")
+        )
+    )
+    assert out["status"] == "rejected"
+
+
+def test_fix08_reject_active_denied(harness):
+    collab = _active_collab(harness)
+    with pytest.raises(HTTPException) as ei:
+        _run(
+            collab_mod.respond_collaboration(
+                collab["id"],
+                collab_mod.CollaborationAction(action="reject"),
+                _user("agA"),
+            )
+        )
+    assert ei.value.status_code == 400
+    assert ei.value.detail == "use_revoke_for_active_collaboration"
+    row = _run(harness.mls_collaborations.find_one({"id": collab["id"]}))
+    assert row["status"] == "active"
+
+
+def test_fix08_revoke_blocks_chat_and_docs(harness):
+    db = harness
+    collab = _active_collab(db)
+    thread = _run(
+        collab_mod.open_chat_thread(
+            collab_mod.ChatOpenBody(collaboration_id=collab["id"]), _user("agB")
+        )
+    )
+    dr = _run(
+        collab_mod.create_document_request(
+            collab_mod.DocumentRequestCreate(
+                collaboration_id=collab["id"], document_keys=["ape"]
+            ),
+            _user("agB"),
+        )
+    )
+    _run(
+        collab_mod.respond_document_request(
+            dr["id"],
+            collab_mod.DocumentRequestAction(
+                action="fulfill", shared_document_ids=["ape"]
+            ),
+            _user("agA"),
+        )
+    )
+    _run(
+        collab_mod.respond_collaboration(
+            collab["id"], collab_mod.CollaborationAction(action="revoke"), _user("agA")
+        )
+    )
+    with pytest.raises(HTTPException):
+        _run(
+            collab_mod.post_chat_message(
+                thread["id"],
+                collab_mod.ChatMessageBody(body="dopo revoke"),
+                _user("agB"),
+            )
+        )
+    with pytest.raises(HTTPException) as ei:
+        _run(collab_mod.download_watermarked_document(dr["id"], "ape", _user("agB")))
+    assert ei.value.status_code == 403
+    with pytest.raises(HTTPException):
+        _run(collab_mod.log_document_access(dr["id"], _user("agB")))
+
+
+def test_fix08_revoke_idempotent_and_unauthorized(harness):
+    collab = _active_collab(harness)
+    first = _run(
+        collab_mod.respond_collaboration(
+            collab["id"], collab_mod.CollaborationAction(action="revoke"), _user("agA")
+        )
+    )
+    assert first["status"] == "revoked"
+    second = _run(
+        collab_mod.respond_collaboration(
+            collab["id"], collab_mod.CollaborationAction(action="revoke"), _user("agA")
+        )
+    )
+    assert second["status"] == "revoked"
+    assert second.get("idempotent") is True
+    # reject on already revoked is idempotent for owner
+    again = _run(
+        collab_mod.respond_collaboration(
+            collab["id"], collab_mod.CollaborationAction(action="reject"), _user("agA")
+        )
+    )
+    assert again["status"] == "revoked"
+    assert again.get("idempotent") is True
+    # unauthorized partner cannot reject pending of another flow
+    pending = _run(
+        collab_mod.create_collaboration_request(
+            collab_mod.CollaborationCreate(property_id="p1", partner_agency_id="agX"),
+            _user("agX"),
+        )
+    )
+    with pytest.raises(HTTPException) as ei:
+        _run(
+            collab_mod.respond_collaboration(
+                pending["id"],
+                collab_mod.CollaborationAction(action="reject"),
+                _user("agX"),
+            )
+        )
+    assert ei.value.status_code == 403
+
+
+# ── FIX-09 — allegato chat stesso collaboration_id ─────────────────────────
+
+
+def test_fix09_attachment_same_collab_ok(harness):
+    db = harness
+    collab = _active_collab(db)
+    thread = _run(
+        collab_mod.open_chat_thread(
+            collab_mod.ChatOpenBody(collaboration_id=collab["id"]), _user("agB")
+        )
+    )
+    dr = _run(
+        collab_mod.create_document_request(
+            collab_mod.DocumentRequestCreate(
+                collaboration_id=collab["id"], document_keys=["ape"]
+            ),
+            _user("agB"),
+        )
+    )
+    _run(
+        collab_mod.respond_document_request(
+            dr["id"],
+            collab_mod.DocumentRequestAction(action="fulfill", shared_document_ids=["ape"]),
+            _user("agA"),
+        )
+    )
+    msg = _run(
+        collab_mod.post_chat_message(
+            thread["id"],
+            collab_mod.ChatMessageBody(
+                body="vedi allegato",
+                attachment_document_request_id=dr["id"],
+            ),
+            _user("agB"),
+        )
+    )
+    assert msg["attachment_document_request_id"] == dr["id"]
+    assert len(db.mls_chat_messages.docs) == 1
+
+
+def test_fix09_attachment_cross_collab_denied(harness):
+    db = harness
+    # second property for second collab between same parties
+    db.properties.docs.append(
+        {
+            "id": "p2",
+            "agency_id": "agA",
+            "title": "Bilo",
+            "visibility": "public",
+            "mls_shared": True,
+        }
+    )
+    c1 = _active_collab(db, property_id="p1")
+    c2 = _active_collab(db, property_id="p2")
+    thread1 = _run(
+        collab_mod.open_chat_thread(
+            collab_mod.ChatOpenBody(collaboration_id=c1["id"]), _user("agB")
+        )
+    )
+    dr2 = _run(
+        collab_mod.create_document_request(
+            collab_mod.DocumentRequestCreate(
+                collaboration_id=c2["id"], document_keys=["ape2"]
+            ),
+            _user("agB"),
+        )
+    )
+    _run(
+        collab_mod.respond_document_request(
+            dr2["id"],
+            collab_mod.DocumentRequestAction(
+                action="fulfill", shared_document_ids=["ape2"]
+            ),
+            _user("agA"),
+        )
+    )
+    before = len(db.mls_chat_messages.docs)
+    with pytest.raises(HTTPException) as ei:
+        _run(
+            collab_mod.post_chat_message(
+                thread1["id"],
+                collab_mod.ChatMessageBody(
+                    body="cross",
+                    attachment_document_request_id=dr2["id"],
+                ),
+                _user("agB"),
+            )
+        )
+    assert ei.value.status_code == 403
+    assert ei.value.detail == "attachment_collaboration_mismatch"
+    assert len(db.mls_chat_messages.docs) == before
+
+
+def test_fix09_attachment_revoked_and_missing_and_foreign(harness):
+    db = harness
+    collab = _active_collab(db)
+    visit = _run(
+        collab_mod.request_visit(
+            collab_mod.VisitCreate(collaboration_id=collab["id"]), _user("agB")
+        )
+    )
+    thread_visit = _run(
+        collab_mod.open_chat_thread(
+            collab_mod.ChatOpenBody(
+                collaboration_id=collab["id"], visit_id=visit["id"]
+            ),
+            _user("agB"),
+        )
+    )
+    dr = _run(
+        collab_mod.create_document_request(
+            collab_mod.DocumentRequestCreate(
+                collaboration_id=collab["id"], document_keys=["ape"]
+            ),
+            _user("agB"),
+        )
+    )
+    _run(
+        collab_mod.respond_document_request(
+            dr["id"],
+            collab_mod.DocumentRequestAction(action="fulfill", shared_document_ids=["ape"]),
+            _user("agA"),
+        )
+    )
+    # missing id
+    before = len(db.mls_chat_messages.docs)
+    with pytest.raises(HTTPException) as ei:
+        _run(
+            collab_mod.post_chat_message(
+                thread_visit["id"],
+                collab_mod.ChatMessageBody(
+                    body="x", attachment_document_request_id="missing-dr"
+                ),
+                _user("agB"),
+            )
+        )
+    assert ei.value.detail == "attachment_not_found"
+    assert len(db.mls_chat_messages.docs) == before
+    # foreign agency
+    with pytest.raises(HTTPException):
+        _run(
+            collab_mod.post_chat_message(
+                thread_visit["id"],
+                collab_mod.ChatMessageBody(
+                    body="x", attachment_document_request_id=dr["id"]
+                ),
+                _user("agX"),
+            )
+        )
+    # revoke then deny attachment
+    _run(
+        collab_mod.respond_collaboration(
+            collab["id"], collab_mod.CollaborationAction(action="revoke"), _user("agA")
+        )
+    )
+    with pytest.raises(HTTPException):
+        _run(
+            collab_mod.post_chat_message(
+                thread_visit["id"],
+                collab_mod.ChatMessageBody(
+                    body="x", attachment_document_request_id=dr["id"]
+                ),
+                _user("agB"),
+            )
+        )
+    assert len(db.mls_chat_messages.docs) == before
