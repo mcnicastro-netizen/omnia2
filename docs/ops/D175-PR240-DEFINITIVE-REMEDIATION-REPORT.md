@@ -4,106 +4,91 @@
 | Campo | Valore |
 |-------|--------|
 | Branch | `cursor/d175-deal-chat-dossier-h4-e393` |
-| SHA iniziale | `fafab3d61d1b9b77b21947c02d0be6c22554b488` |
-| SHA finale | `aacd664706eae530e57a0ac6c1ff5a71dd8b705a` |
-| Commit remediation | `68b0fc6` (fix) + `aacd664` (docs pin) |
+| SHA iniziale dichiarato (mandato patch) | `1eda988b611928956741fdd8df228ffd61efd7ed` |
+| Codice funzionale precedente | `68b0fc6` |
+| Tip pre-patch (EOD docs) | `758df8632f41d340871b1c67d55a64342a34b70e` |
+| SHA codice patch (testato) | `122d5386f6050c375b3432960c8fda686287161c` |
+| SHA tip branch (docs) | vedi commit docs immediatamente successivo a `122d538` su questo branch |
 | PR | https://github.com/mcnicastro-netizen/omnia2/pull/240 |
 | Ambiente | Dogfood `OMNIA_ENV=dogfood` · `DB_NAME=omnia_df_clean_c4` · Mongo `:27018` |
-| Working tree pre-intervento | pulito |
+| Working tree pre-intervento | pulito su `758df86` |
 | Merge | **NON eseguito** |
+| Perimetro | **solo** FIX-07, FIX-08, FIX-09 + CI suite D-175 + report |
 
-## B. Registro difetti FIX-01…06
+## B. Registro FIX-01…06 (invariati — regressione)
+I sei fix precedenti restano invariati nel comportamento. Rieseguiti in `tests/test_d175_pr240_remediation.py` + bundle collab/deal handlers: **PASS**.
 
-### FIX-01 — Webhook `subscription.deleted`
-- **Causa:** update per `agency_id` poteva cancellare sub attiva successiva.
-- **Modifica:** chiave primaria `stripe_subscription_id`; fallback `agency_id` solo se id assente; check coerenza CC/agency; idempotenza se già canceled.
-- **File:** `backend/apps/billing/routes.py`
-- **Test:** `test_fix01_*` — PASS
-- **Evidenza:** suite remediation
+| FIX | Regressione | Esito |
+|-----|-------------|-------|
+| FIX-01 webhook `subscription.deleted` | `test_fix01_*` | PASS |
+| FIX-02 isolamento thread chat | `test_fix02_*` | PASS |
+| FIX-03 revoke → documenti | `test_fix03_*` | PASS |
+| FIX-04 Deal richiede collab attiva | `test_fix04_*` | PASS |
+| FIX-05 no duplicazione da offerta | `test_fix05_*` | PASS |
+| FIX-06 gate MLS | `test_fix06_*` | PASS |
 
-### FIX-02 — Isolamento thread chat
-- **Causa:** `find_one` senza scope esatto riusava thread visita/deal.
-- **Modifica:** `scope_key` canonico `collab|v:…|d:…` + query esatta.
-- **File:** `shared/mls_collab/service.py`, `collaborations.py`
-- **Test:** `test_fix02_*` + E2E scope — PASS
+## C. Patch finale Bugbot — FIX-07 / FIX-08 / FIX-09
 
-### FIX-03 — Revoca → documenti
-- **Causa:** revoke non toccava `mls_document_requests`; access ignorava collab.
-- **Modifica:** revoke massivo richieste; `assert_document_request_accessible`; download/access/chat attachment rispettano revoke.
-- **File:** `collaborations.py`, `service.py`
-- **Test:** `test_fix03_*` + E2E residual deny — PASS
+### FIX-07 — Watermark PDF fail-closed
+- **Causa:** `merge_page` in `except: pass` → pagina originale distribuita con header `X-OMNIA-Watermark: 1`.
+- **Modifica:** `_watermark_pdf` fail-closed su overlay/merge/write; errore HTTP 500 controllato `watermark_apply_failed` + log stage senza secret; nessuna consegna parziale; originale non mutato.
+- **File:** `backend/shared/mls_collab/watermark.py`
+- **Test:** `test_fix07_*` (valid multipagina, merge fail, overlay fail, midpage, download header solo se WM, download deny se WM fallisce) — **PASS**
+- **Dogfood:** download PDF 200, header WM=1, testo watermark nel PDF, originale invariato — **PASS**
 
-### FIX-04 — Deal su collab non attiva
-- **Causa:** `open_deal` senza check status.
-- **Modifica:** `require_collaboration_active`; mutazioni Deal bloccate se collab revocata; Deal senza collab solo su property propria (regola esplicita).
-- **File:** `deals.py`
-- **Test:** `test_fix04_*` — PASS
+### FIX-08 — Reject solo su collaborazione `pending`
+- **Causa:** `reject` non richiedeva `pending` → active poteva diventare `rejected` senza revoca chat/documenti.
+- **Modifica:** `reject` solo se `pending`; su `active` → `400 use_revoke_for_active_collaboration`; `rejected`/`revoked` idempotenti; `revoke` idempotente se già revoked (con conseguenze chat/doc).
+- **File:** `backend/apps/immoweb/collaborations.py` (`respond_collaboration`)
+- **Test:** `test_fix08_*` — **PASS**
+- **Dogfood:** reject active 400; revoke → download 403 + chat 403; revoke idempotent — **PASS**
 
-### FIX-05 — Duplicazione da offerta
-- **Causa:** `ensure_collaboration_from_offer` ignorava `pending`.
-- **Modifica:** ritorna pending/active esistenti **senza** auto-attivare pending; nuova active solo se assente.
-- **File:** `service.py`
-- **Test:** `test_fix05_*` — PASS
+### FIX-09 — Allegato chat stesso `collaboration_id`
+- **Causa:** `post_chat_message` non verificava `dr.collaboration_id == thread.collaboration_id`.
+- **Modifica:** check esistenza DR; mismatch → `403 attachment_collaboration_mismatch`; status/permessi/accessibilità invariati; nessun messaggio persistito sul deny.
+- **File:** `backend/apps/immoweb/collaborations.py` (`post_chat_message`)
+- **Test:** `test_fix09_*` — **PASS**
+- **Dogfood:** same-collab 201; cross-collab 403 e count messaggi invariato — **PASS**
 
-### FIX-06 — Gate MLS
-- **Causa:** solo owner ≠ self.
-- **Modifica:** stessi gate di `create_offer` (`visibility`, `mls_shared`, `mls_enabled` owner/requester).
-- **File:** `collaborations.py`, `service.assert_mls_listing_shareable`
-- **Test:** `test_fix06_*` + E2E private gate — PASS
+## D. CI — regressione permanente
+- **File:** `.github/workflows/ci.yml`
+- **Modifica:** aggiunto `tests/test_d175_pr240_remediation.py` al job unit esistente (niente workflow duplicato).
+- Suite offline-safe: FakeDB, no LIVE Stripe, no H4 sealed, no DB permanente.
+- Stato CI sullo SHA finale: vedi sezione I (post-push).
 
-## C. Lacune funzionali
+## E. Test eseguiti (dichiarati solo se eseguiti)
 
-### Watermark
-- **Completato:** watermark **reale** su PNG/JPEG (Pillow) e PDF (reportlab/pypdf); originale in `mls_document_artifacts`; copia tracciata in `mls_document_distributions`; endpoint `/download` con header `X-OMNIA-Watermark`; formati non supportati rifiutati.
-- **Verificato:** download Dogfood 9643 byte JPEG valido, header watermark=1.
-- **Limite:** formati non image/pdf non dichiarati protetti (HTTP 400).
+| Tipo | Suite | Risultato | Log |
+|------|-------|-----------|-----|
+| Unit | `test_d175_pr240_remediation.py` (FIX-01…09) | **28 PASS** | `/opt/cursor/artifacts/d175-pr240-fix789-pytest.log` |
+| Unit bundle | remediation + deal_collab_chat + collab_api_handlers | **35 PASS** | `/opt/cursor/artifacts/d175-pr240-fix789-regression-bundle.log` |
+| Unit | C5 H4 purchase authz | **34 PASS** | `/opt/cursor/artifacts/d175-pr240-h4-regression.log` |
+| Smoke Dogfood API | FIX-07/08/09 flussi coinvolti | **PASS** `PASS_E2E_FIX789` | `/opt/cursor/artifacts/d175-pr240-fix789-e2e-smoke.log` |
+| CI GitHub | job `backend-billing-unit` su tip | post-push | PR checks |
 
-### Rating / controversie
-- **Completato:** dedupe feedback visit+agency; contest da agenzia valutata; resolve Super Admin con audit `mls_rating_dispute_audit`; aggregato pubblico senza storico individuale; contested esclusi fino a risoluzione.
-- **Verificato:** unit test contest/dismiss/aggregate.
-- **Limite:** UI Super Admin dedicata minimale (API completa); nessun canale CRM indiscriminato aggiunto.
+Regressione FIX-01…06: **PASS** (nessuna ricomparsa dei 6 difetti).
 
-### Deal authz / UI
-- **Completato:** `allowed_transitions` + `role` in API; partner `partner-respond` (accepted/rejected/counter); FE mostra solo azioni consentite; deep-link da Collaborazioni.
-- **Verificato:** E2E owner 403 su accept, partner accept OK.
+## F. Sicurezza / vincoli rispettati
+- Nessun Stripe LIVE / mint sealed / H4 aperto / accesso Ed25519.
+- Nessuna modifica a `main` / nessun merge.
+- Working tree dogfood-only per smoke (reset password sintetici Dogfood per login smoke; non produzione).
+- Watermark: originale mai restituito; header WM solo su bytes watermarkati.
 
-### Persistenza / indici
-- **Completato:** indici su collaborations, visits, feedback (unique visit+from), chat `scope_key`, document_requests, deals, subscriptions stripe id — in `ensure_indexes` (idempotenti, no delete dati).
-- **Limite:** unique feedback può fallire se duplicati storici preesistenti (create_index catch/log).
-
-### Frontend
-- Deep-link MLS ↔ Collaborazioni ↔ Deal; download watermark; stati revoca; azioni Deal filtrate.
-- Non è un redesign estetico.
-
-## D. Test
-| Suite | Risultato | Log |
-|-------|-----------|-----|
-| Unit remediation + collab/deal | **22 PASS** | `/opt/cursor/artifacts/d175-pr240-pytest.log` |
-| C5 H4 purchase authz | **34 PASS** | `/opt/cursor/artifacts/d175-pr240-h4-regression.log` |
-| E2E Dogfood remediation | **PASS** | `/opt/cursor/artifacts/d175-pr240-e2e-smoke.log` |
-| Stripe checkout TEST reale | **BLOCKED H4** | `H4_ready False` |
-| CI PR (SHA finale) | da verificare post-push | |
-
-Flusso E2E: collab → visita → feedback(+dedupe) → chat scope → doc fulfill → **download watermarkato** → Deal + partner accept → foreign deny → revoke → deny residui → gate MLS private.
-
-## E. Sicurezza
-- Authz backend su collab/doc/chat/deal; revoke coerente; deny cross-org; nessun bypass H4; webhook deleted non muta CC operational; Super Admin dispute scoped + audit.
-
-## F. Stripe
+## G. Stripe / H4
 | Tipo | Stato |
 |------|--------|
-| Mock / gate H4 | PASS (C5) |
-| Webhook deleted mapping | Corretto + test |
-| Checkout / crediti / storage TEST live | **BLOCKED — AUTHORIZATION REQUIRED** (sealed) |
+| Mock / gate H4 (C5) | PASS (34) |
+| Checkout TEST live / sealed | **BLOCKED — fuori autorizzazione** |
 | LIVE | non usato |
 
-## G. Residui
-1. **Low** — UI Super Admin dispute: solo API (no pagina dedicata).
-2. **Low** — Indice unique feedback: rischio skip se duplicati storici in DB non-dogfood.
-3. **Info** — Stripe TEST checkout completo resta BLOCKED da H4 sealed (fuori autorizzazione).
-4. **Info** — Watermark video/audio non supportato (rifiutato, non dichiarato protetto).
+## H. Residui espliciti (non blocking per i 3 finding)
+1. UI Super Admin dispute: solo API (preesistente).
+2. Stripe TEST checkout completo resta BLOCKED da H4 sealed.
+3. Watermark video/audio non supportato (rifiutato).
 
-## H. Verdetto
-**`PARTIALLY READY — EXPLICIT RESIDUAL GAPS`**
+Nessun defect blocking residuo su FIX-07/08/09.
 
-Pronto per review finale Founder sulla remediation dei 6 bug + watermark reale + rating/dispute + Deal roles. Non production-ready dichiarato. Residui espliciti sopra. **Nessun merge eseguito.**
+## I. Verdetto
+**`READY FOR FINAL FOUNDER REVIEW`**
+
+Tre finding chiusi, regressioni superate, suite D-175 in CI, evidenze codice su `122d538` (tip branch include questo report). **Nessun merge eseguito.** Non dichiarato production-ready; Stripe TEST/H4 non completati.
