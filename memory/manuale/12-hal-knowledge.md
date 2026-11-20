@@ -306,6 +306,7 @@ La distinzione è **esplicita** in UI: 3 pagine separate nella sidebar, non un u
 | *"Il badge dice 'Media confidence' su una domanda che credo copra il manuale"* | Similarity 0,08-0,20 → il chunk migliore non è super preciso ma HAL ha comunque provato. | Guarda le fonti: se sono coerenti, la risposta è probabilmente buona. Altrimenti riformula con keyword del capitolo (es. *"Compliance HARD"* invece di *"regole pubblicazione"*). |
 | *"Chiedo qualcosa sui MIEI immobili e HAL non risponde"* | HAL Knowledge non legge il tuo DB CRM. | Usa **HAL Agent CRM** (Cap. 10, chat widget flottante in ImmoWeb). |
 | *"Ricevo 429 o `agency_not_active`"* | Il tuo utente non ha ruolo agency e il token è scaduto. | Fai login → l'endpoint richiede ruolo `agent`, `titolare`, `segreteria`, `branch_admin`, `group_admin` o `super_admin`. |
+| *"Ricevo 502 `generation_error` / LLM non risponde"* | Knowledge oggi mappa errori generation in 502 (diverso da Agents/Legal che usano spesso 503 `llm_busy`). Cause: Gemini busy/timeout/circuit/hold. | Riprova; verifica stato provider/hold. Vedi `api.llm-busy`. **Non** cambiare modello senza diagnosi (D-191). |
 | *"HAL mi cita `PRD.md` invece del capitolo di manuale"* | Il PRD contiene spesso definizioni sintetiche che vengono premiate dal TF-IDF quando la domanda è generica. | Riformula usando terminologia dal manuale (es. *"come attivo Subito.it?"* invece di *"pubblicazione"*). |
 
 ---
