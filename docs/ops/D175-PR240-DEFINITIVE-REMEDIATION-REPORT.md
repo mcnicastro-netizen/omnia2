@@ -8,11 +8,11 @@
 | Codice funzionale precedente | `68b0fc6` |
 | Tip pre-patch (EOD docs) | `758df8632f41d340871b1c67d55a64342a34b70e` |
 | SHA codice patch (testato) | `122d5386f6050c375b3432960c8fda686287161c` |
-| SHA tip branch (docs) | `0aa36242cd6f2b5696496391385656e978a7a8a6` |
+| SHA tip branch (allineato) | `6ce43bfab449af7f82f69edd2bb38f61a1e69b01` |
 | PR | https://github.com/mcnicastro-netizen/omnia2/pull/240 |
 | Ambiente | Dogfood `OMNIA_ENV=dogfood` · `DB_NAME=omnia_df_clean_c4` · Mongo `:27018` |
 | Working tree pre-intervento | pulito su `758df86` |
-| Merge | **NON eseguito** |
+| Merge | **Autorizzato Founder 20-Nov-2026 (Europe/Rome) — in corso** |
 | Perimetro | **solo** FIX-07, FIX-08, FIX-09 + CI suite D-175 + report |
 
 ## B. Registro FIX-01…06 (invariati — regressione)
@@ -89,6 +89,6 @@ Regressione FIX-01…06: **PASS** (nessuna ricomparsa dei 6 difetti).
 Nessun defect blocking residuo su FIX-07/08/09.
 
 ## I. Verdetto
-**`READY FOR FINAL FOUNDER REVIEW`**
+**`READY FOR FINAL FOUNDER REVIEW` → merge autorizzato Founder**
 
-Tre finding chiusi, regressioni superate, suite D-175 in CI, evidenze codice su `122d538` (tip branch include questo report). **Nessun merge eseguito.** Non dichiarato production-ready; Stripe TEST/H4 non completati.
+Tre finding chiusi, regressioni superate, suite D-175 in CI, evidenze codice su `122d538`, tip allineato a questo report. Merge su `main` su richiesta esplicita Founder. Non dichiarato production-ready; Stripe TEST/H4 non completati.
