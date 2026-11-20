@@ -1,0 +1,6 @@
+# Example only — the live Founder verify key is:
+#   docs/dogfood/c7_registry_verify.pub
+#   docs/dogfood/c7_registry_verify.fingerprint
+#
+# Format: 32-byte Ed25519 raw public key as 64 hex chars.
+# DO NOT put the private key in the repository or dogfood/secrets.

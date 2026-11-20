@@ -6,7 +6,12 @@ backups/
 media/
 permanent/
 c4/
+sessions/
 C2_LAST_DRILL.json
 C2_MONGO_ROLE_MATRIX.json
 **/*.bson
 **/*.wt
+# C7 Founder signing material (private only — pubkey lives under docs/dogfood/)
+**/*c7*founder*.priv
+**/*c7_registry_sign*
+**/*.priv
