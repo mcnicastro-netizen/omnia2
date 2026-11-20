@@ -481,7 +481,7 @@ async def buy_storage(
 ):
     """Buy archive storage addon — D-175 C5 Main Admin + CC only (C5-D03 tx binding).
 
-    Does not change agencies.storage_extra_gb (C6). Same auth order as credits.
+    Create-session only (C5). Post-pay storage SoT = CC.storage_extra_gb (C6).
     """
     from shared.billing.main_admin_service import authorize_h4_purchase
     from shared.billing.stripe_customer_service import get_or_create_stripe_customer
@@ -650,7 +650,12 @@ async def get_session_status(session_id: str, user: dict = Depends(get_current_u
                               "stripe_payment_intent_id": s.payment_intent,
                               "updated_at": now}},
                 )
-                await _apply_session_side_effects(session_id)
+                session_customer = getattr(s, "customer", None) or None
+                if isinstance(session_customer, dict):
+                    session_customer = session_customer.get("id")
+                await _apply_session_side_effects(
+                    session_id, session_customer=session_customer
+                )
                 record = await db.payment_transactions.find_one(
                     {"session_id": session_id},
                     {"_id": 0, "session_id": 1, "status": 1, "payment_status": 1,
@@ -659,8 +664,18 @@ async def get_session_status(session_id: str, user: dict = Depends(get_current_u
         except stripe.error.StripeError:
             pass
     elif not record.get("applied_at"):
-        # Paid ma side-effect fallito (es. Stripe period fields) → riprova
-        await _apply_session_side_effects(session_id)
+        # Paid ma side-effect fallito → riprova; retrieve customer for matching
+        session_customer = None
+        try:
+            s = stripe.checkout.Session.retrieve(session_id)
+            session_customer = getattr(s, "customer", None) or None
+            if isinstance(session_customer, dict):
+                session_customer = session_customer.get("id")
+        except stripe.error.StripeError:
+            pass
+        await _apply_session_side_effects(
+            session_id, session_customer=session_customer
+        )
         record = await db.payment_transactions.find_one(
             {"session_id": session_id},
             {"_id": 0, "session_id": 1, "status": 1, "payment_status": 1,
@@ -707,36 +722,39 @@ async def customer_portal(request: Request, user: dict = Depends(get_current_use
 
 # --------------- Webhook (signature-verified) --------------------
 
-async def _apply_session_side_effects(session_id: str) -> None:
-    """Grant credits (kind=credits_topup) or activate subscription (kind=subscription).
+async def _apply_session_side_effects(
+    session_id: str,
+    *,
+    session_customer: str | None = None,
+) -> None:
+    """Apply paid checkout side-effects.
 
-    Idempotent: guarded by payment_status=paid + `applied_at` field.
+    D-175 C6: credits_topup / storage_addon → central CC (claim + match + no auto-alloc).
+    Subscription path remains agency-scoped (outside H4 topup).
+    ``session_customer`` = Checkout Session.customer (webhook obj or Session.retrieve).
     """
     db = Database.get()
     tx = await db.payment_transactions.find_one({"session_id": session_id})
-    if not tx or tx.get("payment_status") != "paid" or tx.get("applied_at"):
+    if not tx or tx.get("payment_status") != "paid":
+        return
+
+    kind = tx.get("kind")
+    if kind in ("credits_topup", "storage_addon"):
+        from shared.billing.checkout_fulfillment import apply_h4_session_side_effects
+
+        await apply_h4_session_side_effects(
+            db,
+            session_id,
+            session_customer=session_customer,
+            require_session_customer=True,
+        )
+        return
+
+    if tx.get("applied_at"):
         return
     now = datetime.now(timezone.utc).isoformat()
 
-    if tx["kind"] == "credits_topup":
-        credits = int(tx.get("credits") or 0)
-        agency_id = tx.get("agency_id")
-        if credits > 0 and agency_id:
-            from shared.billing.credit_wallet_service import grant_for_agency
-
-            await grant_for_agency(
-                db,
-                agency_id=agency_id,
-                amount=credits,
-                origin="stripe_topup",
-                reason=f"topup_{tx.get('lookup_key')}",
-                idempotency_key=f"checkout:{session_id}",
-                ref_id=session_id,
-                ref_type="checkout_session",
-            )
-            logger.info("Credits granted: agency=%s +%d (session=%s)", agency_id, credits, session_id)
-
-    elif tx["kind"] == "subscription":
+    if kind == "subscription":
         # Load Stripe subscription for period info
         agency_id = tx.get("agency_id")
         if not agency_id:
@@ -813,20 +831,10 @@ async def _apply_session_side_effects(session_id: str) -> None:
         except Exception as exc:  # noqa: BLE001
             logger.warning("finalize after subscription failed: %s", exc)
 
-    elif tx["kind"] == "storage_addon":
-        agency_id = tx.get("agency_id")
-        gb = int(tx.get("storage_gb") or 100)
-        if agency_id and gb > 0:
-            await db.agencies.update_one(
-                {"id": agency_id},
-                {"$inc": {"storage_extra_gb": gb}, "$set": {"updated_at": now}},
-            )
-            logger.info("Storage addon applied: agency=%s +%d GB", agency_id, gb)
-
-    await db.payment_transactions.update_one(
-        {"session_id": session_id},
-        {"$set": {"applied_at": now}},
-    )
+        await db.payment_transactions.update_one(
+            {"session_id": session_id},
+            {"$set": {"applied_at": now}},
+        )
 
 
 @router.post("/webhook")
@@ -870,7 +878,13 @@ async def stripe_webhook(request: Request):
                       "stripe_payment_intent_id": obj.get("payment_intent"),
                       "updated_at": now}},
         )
-        await _apply_session_side_effects(session_id)
+        # C6 — pass Session.customer for Stripe↔CC matching
+        session_customer = obj.get("customer")
+        if isinstance(session_customer, dict):
+            session_customer = session_customer.get("id")
+        await _apply_session_side_effects(
+            session_id, session_customer=session_customer
+        )
         # Cap. 21 · B2C one-shot (valuator UNI PDF, staging, legal — future)
         md = obj.get("metadata") or {}
         if md.get("b2c_product_key"):

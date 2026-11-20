@@ -56,10 +56,22 @@ class FakeColl:
                     return False
                 if "$gt" in v and not (val is not None and val > v["$gt"]):
                     return False
+                if "$lt" in v and not (val is not None and val < v["$lt"]):
+                    return False
+                if "$lte" in v and not (val is not None and val <= v["$lte"]):
+                    return False
                 if "$ne" in v and val == v["$ne"]:
                     return False
                 if "$in" in v and val not in v["$in"]:
                     return False
+                if "$nin" in v:
+                    # Mongo: array field matches if none of its elements are in the list;
+                    # scalar/missing: missing matches; scalar not in list matches.
+                    if isinstance(val, list):
+                        if any(x in v["$nin"] for x in val):
+                            return False
+                    elif val is not None and val in v["$nin"]:
+                        return False
                 if "$exists" in v:
                     exists = k in doc and doc.get(k) is not None
                     if bool(v["$exists"]) != exists:
@@ -155,6 +167,24 @@ class FakeColl:
         if "$inc" in update:
             for k, v in update["$inc"].items():
                 doc[k] = int(doc.get(k) or 0) + int(v)
+        if "$push" in update:
+            for k, v in update["$push"].items():
+                arr = doc.setdefault(k, [])
+                if not isinstance(arr, list):
+                    arr = []
+                    doc[k] = arr
+                if isinstance(v, dict) and "$each" in v:
+                    arr.extend(v["$each"])
+                else:
+                    arr.append(v)
+        if "$addToSet" in update:
+            for k, v in update["$addToSet"].items():
+                arr = doc.setdefault(k, [])
+                if not isinstance(arr, list):
+                    arr = []
+                    doc[k] = arr
+                if v not in arr:
+                    arr.append(v)
         if "$setOnInsert" in update:
             pass
 
@@ -180,6 +210,11 @@ class FakeDB:
         self.agencies = FakeColl()
         self.commercial_customers = FakeColl()
         self.commercial_main_admin_events = FakeColl()
+        self.storage_checkout_fulfillments = FakeColl()
+        self.storage_migration_snapshots = FakeColl()
+        self.payment_transactions = FakeColl()
+        self.properties = FakeColl()
+        self.subscriptions = FakeColl()
 
     def __getitem__(self, name):
         if not hasattr(self, name):
