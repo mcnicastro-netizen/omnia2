@@ -111,6 +111,28 @@ def default_pubkey_path() -> Path:
     return Path(__file__).resolve().parents[3] / "docs" / "dogfood" / "c7_registry_verify.pub"
 
 
+def default_fingerprint_path() -> Path:
+    return default_pubkey_path().with_suffix(".fingerprint")
+
+
+def resolve_expected_fingerprint(
+    *,
+    explicit: Optional[str] = None,
+    env_value: Optional[str] = None,
+    fingerprint_file: Optional[Path] = None,
+) -> str:
+    """Resolve fingerprint: flag → env → sibling .fingerprint file next to pubkey."""
+    for candidate in (explicit, env_value):
+        if candidate and candidate.strip():
+            return candidate.strip()
+    path = fingerprint_file or default_fingerprint_path()
+    if path.is_file():
+        text = path.read_text(encoding="utf-8").strip()
+        if text:
+            return text
+    raise RegistryError("fingerprint_required_env_flag_or_file")
+
+
 def verify_fingerprint(raw_pub: bytes, expected: str) -> None:
     fp = fingerprint_sha256(raw_pub)
     if fp != expected.strip():

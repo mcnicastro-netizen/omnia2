@@ -19,6 +19,7 @@ from shared.dogfood.checkpoint import (  # noqa: E402
     build_unsigned_checkpoint,
     checkpoint_message,
     fingerprint_sha256,
+    resolve_expected_fingerprint,
     verify_checkpoint_signature,
 )
 from shared.dogfood.jcanonical import (  # noqa: E402
@@ -206,6 +207,36 @@ def test_c7_ed25519_pure_sign_verify_roundtrip():
             raw_public_key=pk,
             expected_fingerprint="sha256:" + ("0" * 64),
         )
+
+
+def test_c7_resolve_fingerprint_flag_env_file(tmp_path, monkeypatch):
+    fp_file = tmp_path / "c7_registry_verify.fingerprint"
+    fp_file.write_text("sha256:" + ("a" * 64) + "\n", encoding="utf-8")
+    monkeypatch.delenv("OMNIA_C7_PUBKEY_FINGERPRINT", raising=False)
+    assert resolve_expected_fingerprint(fingerprint_file=fp_file).endswith("a" * 64)
+    monkeypatch.setenv("OMNIA_C7_PUBKEY_FINGERPRINT", "sha256:" + ("b" * 64))
+    assert resolve_expected_fingerprint(
+        env_value=os.environ.get("OMNIA_C7_PUBKEY_FINGERPRINT"),
+        fingerprint_file=fp_file,
+    ).endswith("b" * 64)
+    assert resolve_expected_fingerprint(
+        explicit="sha256:" + ("c" * 64),
+        env_value="sha256:" + ("b" * 64),
+        fingerprint_file=fp_file,
+    ).endswith("c" * 64)
+
+
+def test_c7_installed_verify_pubkey_matches_fingerprint():
+    """Live Founder verify material in docs/dogfood must be self-consistent."""
+    from shared.dogfood.checkpoint import default_fingerprint_path, default_pubkey_path, load_raw_pubkey
+
+    pub_path = default_pubkey_path()
+    fp_path = default_fingerprint_path()
+    assert pub_path.is_file(), "c7_registry_verify.pub missing"
+    assert fp_path.is_file(), "c7_registry_verify.fingerprint missing"
+    raw = load_raw_pubkey(pub_path)
+    assert fingerprint_sha256(raw) == fp_path.read_text(encoding="utf-8").strip()
+    assert resolve_expected_fingerprint(fingerprint_file=fp_path) == fingerprint_sha256(raw)
 
 
 def test_c7_rewrite_api_absent(sessions_tmp, monkeypatch):

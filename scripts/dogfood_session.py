@@ -18,9 +18,11 @@ sys.path.insert(0, str(ROOT / "backend"))
 from shared.dogfood.jcanonical import CanonicalError  # noqa: E402
 from shared.dogfood.checkpoint import (  # noqa: E402
     attach_signature,
+    default_fingerprint_path,
     default_pubkey_path,
     fingerprint_sha256,
     load_raw_pubkey,
+    resolve_expected_fingerprint,
 )
 from shared.dogfood.permanent import dogfood_root  # noqa: E402
 from shared.dogfood.session_registry import (  # noqa: E402
@@ -123,9 +125,16 @@ def cmd_attach_sig(args: argparse.Namespace) -> int:
             raise RegistryError(f"journal_diverged_after_checkpoint:{ev['type']}")
     pub_path = Path(args.pubkey) if args.pubkey else default_pubkey_path()
     raw = load_raw_pubkey(pub_path)
-    fp = args.fingerprint or os.environ.get("OMNIA_C7_PUBKEY_FINGERPRINT")
-    if not fp:
-        raise RegistryError("fingerprint_required_env_or_flag")
+    fp_file = (
+        Path(args.fingerprint_file)
+        if getattr(args, "fingerprint_file", None)
+        else pub_path.with_suffix(".fingerprint")
+    )
+    fp = resolve_expected_fingerprint(
+        explicit=args.fingerprint,
+        env_value=os.environ.get("OMNIA_C7_PUBKEY_FINGERPRINT"),
+        fingerprint_file=fp_file if fp_file.is_file() else default_fingerprint_path(),
+    )
     sig_hex = Path(args.signature).read_text(encoding="utf-8").strip()
     out = attach_signature(
         reg.root,
@@ -203,6 +212,11 @@ def main() -> int:
     p.add_argument("--signature", required=True, help="path to .sig hex file")
     p.add_argument("--pubkey", default=None)
     p.add_argument("--fingerprint", default=None)
+    p.add_argument(
+        "--fingerprint-file",
+        default=None,
+        help="default: <pubkey>.fingerprint or docs/dogfood/c7_registry_verify.fingerprint",
+    )
     p.set_defaults(func=cmd_attach_sig)
 
     p = sub.add_parser("fingerprint")

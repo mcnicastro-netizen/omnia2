@@ -20,7 +20,8 @@ dogfood/sessions/          # SoT (gitignored runtime)
   mirrors/local/           # riscontro on-host best-effort
   evidence/<session_id>/<recovery_id>/
 docs/dogfood/scenarios/catalog.yaml
-docs/dogfood/c7_registry_verify.pub   # pubkey raw/hex (Founder)
+docs/dogfood/c7_registry_verify.pub          # pubkey Founder (installata)
+docs/dogfood/c7_registry_verify.fingerprint  # fingerprint atteso
 ```
 
 ## CLI
@@ -35,12 +36,16 @@ $PY scripts/dogfood_session.py bind --session-id <id> --workcopy omnia_df_clean_
 $PY scripts/dogfood_session.py verify --session-id <id>
 $PY scripts/dogfood_session.py close --session-id <id> --status COMPLETED
 
-# Founder firma offline il payload unsigned, poi:
-export OMNIA_C7_PUBKEY_FINGERPRINT='sha256:...'
+# Firma offline (privata SOLO sul vault Founder — mai in repo):
+$PY scripts/dogfood_c7_sign_offline.py \
+  --private-key /secure/path/c7_founder.priv \
+  --unsigned dogfood/sessions/unsigned_checkpoints/<cid>.json \
+  --out /tmp/checkpoint.sig
+
+# Attach (pubkey + fingerprint già in docs/dogfood/ — niente export manuale):
 $PY scripts/dogfood_session.py attach-sig \
   --checkpoint-id <cid> \
-  --signature /path/to/checkpoint.sig \
-  --pubkey docs/dogfood/c7_registry_verify.pub
+  --signature /tmp/checkpoint.sig
 
 # Recovery coda parziale (seal-before-recover)
 $PY scripts/dogfood_session.py recover-partial --session-id <id>
@@ -49,6 +54,7 @@ $PY scripts/dogfood_session.py recover-partial --session-id <id>
 Override:
 - `DOGFOOD_ROOT` → usa `<DOGFOOD_ROOT>/sessions`
 - `OMNIA_DOGFOOD_SESSIONS_ROOT` → path **diretto** al tree `sessions/` (nessun `/sessions` aggiuntivo)
+- `OMNIA_C7_PUBKEY_FINGERPRINT` o `--fingerprint` → override del file `.fingerprint` (opzionale)
 
 ## Test
 
@@ -59,5 +65,6 @@ cd backend && .venv/bin/pytest tests/test_d175_c7_session_registry.py -q
 ## Note
 
 - La chiave privata **non** è in Dogfood; solo verify/attach-sig.
+- Pubkey + fingerprint Founder sono installati in `docs/dogfood/c7_registry_verify.*`.
 - P-C7-01 off-host: non implementato in C7 (futuro).
 - Certificazione non richiede mirror off-host (P-C7-02).
