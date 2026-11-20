@@ -1,0 +1,70 @@
+# D-175 C7 — Catalogo scenari Dogfood (SoT versionato)
+# version: df-catalog-2026.11.1
+# Stati per scenario: definito | implementato | eseguibile | superato | non_verificato
+catalog_version: df-catalog-2026.11.1
+journal_format_version: omnia.dogfood.journal.v1
+
+scenarios:
+  - id: DF-A01
+    area: identity
+    title: CommercialCustomer e P.IVA
+    status: definito
+    mode: A
+  - id: DF-A03
+    area: identity
+    title: Main Admin nominate
+    status: definito
+    mode: A
+  - id: DF-B01
+    area: wallet
+    title: Wallet centrale
+    status: definito
+    mode: A
+  - id: DF-C01
+    area: storage
+    title: Included plan storage
+    status: definito
+    mode: A
+  - id: DF-D03
+    area: stripe
+    title: Checkout credits H4 (mock)
+    status: definito
+    mode: A
+    note: Stripe TEST E2E gated by sealed+H4; LIVE out
+  - id: DF-D12
+    area: stripe
+    title: Stripe LIVE
+    status: definito
+    mode: X
+    note: OUT
+  - id: DF-E02
+    area: suspension
+    title: Sospensione day 8
+    status: definito
+    mode: A
+  - id: DF-F05
+    area: real_estate
+    title: Deal
+    status: definito
+    mode: M
+    product_gap: true
+    note: Obbligatorio D-C7-04; E2E non verificato = gap prodotto non OUT
+  - id: DF-F10
+    area: real_estate
+    title: Chat contestuale
+    status: definito
+    mode: M
+    product_gap: true
+    note: Obbligatorio D-C7-04; gap se non verificata
+  - id: DF-F11
+    area: real_estate
+    title: Mini-dossier
+    status: definito
+    mode: M
+    product_gap: true
+    note: Obbligatorio D-C7-04; gap se non verificato
+  - id: DF-G01
+    area: security
+    title: Cross-tenant deny
+    status: definito
+    mode: A

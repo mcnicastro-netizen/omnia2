@@ -6,6 +6,7 @@ backups/
 media/
 permanent/
 c4/
+sessions/
 C2_LAST_DRILL.json
 C2_MONGO_ROLE_MATRIX.json
 **/*.bson

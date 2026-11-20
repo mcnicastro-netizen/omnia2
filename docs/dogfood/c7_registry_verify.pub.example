@@ -1,0 +1,6 @@
+# Example only — replace with Founder Ed25519 raw public key (32 bytes as 64 hex chars).
+# Install as: docs/dogfood/c7_registry_verify.pub
+# Fingerprint (external): sha256:<SHA-256 of the 32 raw bytes>
+#
+# DO NOT put the private key in the repository or dogfood/secrets.
+0000000000000000000000000000000000000000000000000000000000000000
