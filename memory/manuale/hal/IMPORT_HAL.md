@@ -1,10 +1,11 @@
-# 📚 HAL Knowledge — Import & Cold Start (v0.62-d175-pr240-2026-11-20)
+# 📚 HAL Knowledge — Import & Cold Start (v0.63-pre-gtm-d191-2026-11-21)
 
-**Ultimo aggiornamento**: 20-Nov-2026 (D-190 · PR #240 Deal/chat/mini-dossier · Cap.27 v1.2 · no merge)  
+**Ultimo aggiornamento**: 21-Nov-2026 (D-191 · programma pre-GTM · riconciliazione E2E · PR #240 MERGED)  
 **Corpus**: YAML in `memory/manuale/hal/*.yaml` (Cap. 1–27 + `00-api-codice`) · MD esclusi dal RAG ingest  
 **Motore**: `hal_knowledge.py` · reindex: `POST /api/app/hal/knowledge/reindex?force=true` (super_admin)  
 **Regola Founder D-084**: ogni ship aggiorna MD+YAML nello stesso giro — vedi `memory/MANUAL_SYNC.md`.  
-**Nuove voci 20-Nov**: `api.d175-pr240` · `mls.collaborazioni-workspace` · `mls.deal-chat`.  
+**Nuove voci 21-Nov**: `api.pre-gtm-programma` · `api.llm-busy` · aggiornati `api.d175-pr240` (MERGED) · `api.llm`.  
+**Voci 20-Nov**: `api.d175-pr240` · `mls.collaborazioni-workspace` · `mls.deal-chat`.  
 **Voci 19-Nov**: `api.d175-c4-chiuso`.  
 **Voci 18-Nov**: `api.master-ab-chiuso` · `api.dogfood-step1` · `api.mc042-r01-refresh`.
 

@@ -7,16 +7,23 @@ Registro di tutte le decisioni di business e tecniche prese durante il progetto.
 
 ## Decisioni prese
 
-### D-190 — D-175 PR #240 Deal/chat/mini-dossier: remediation aperta, no merge · 20-Nov-2026
+### D-191 — Programma stabilizzazione pre-GTM + riconciliazione E2E (solo pianificazione) · 20/21-Nov-2026
+- **Contesto**: Dopo merge PR **#240** in `main` (`f0d4b26`, tip docs `759d628`): eseguiti E2E INTEGRALE PRE-GTM, riconciliazione vs primo E2E dogfood `D175-E2E-DEEP` (`9aec192`), e programma strategico a 8 aree. Founder: LLM/HAL è priorità critica (non intervento marginale).
+- **Decisione Founder**:
+  1. **0 SUPERATO ≠ prodotto rotto** — criteri più ampi, UI 0 click, gap billing/AI; nessuna regressione CRM/MLS confermata DEEP→INTEGRALE.
+  2. Autorizzata **solo** pianificazione/analisi READ-ONLY e messa a SoT dei documenti.
+  3. **Implementazione / fix / H4 / E2E mutativi nuovi: NON autorizzati** finché non arriva mandato S1+ distinto.
+  4. Sequenza raccomandata (non ancora autorizzata come esecuzione): fondazioni (A-007) → LLM/HAL → org/security → ciclo+MLS → documenti → billing → UI/GTM.
+  5. AI richiede **piano di accettazione autonomo**; vietato “cambiare modello” per `llm_busy` senza diagnosi di causa.
+- **SoT**: `_export_audits/OMNIA-PROGRAMMA-STABILIZZAZIONE-PRE-GTM.md` · `_export_audits/RICONCILIAZIONE-PRIMO-E2E-VS-E2E-20-NOVEMBRE.md` · `memory/HANDOFF_PRE_GTM_ORDINI.md` · `NEXT_SESSION.md` · HAL `api.pre-gtm-programma` / `api.llm-busy`.
+- **Stato**: ✅ pianificazione documentata in repo. ❌ implementazione non avviata. Ripresa = scelta Founder S1 o S3.
+
+### D-190 — D-175 PR #240 Deal/chat/mini-dossier · 20-Nov-2026
 - **Contesto**: Mandato Founder di implementazione su Dogfood (Stripe TEST/H4 senza sealed, mini-dossier feedback, Deal, chat contestuale). PR **#240** branch `cursor/d175-deal-chat-dossier-h4-e393`. Remediation Bugbot (FIX-01…06) + watermark/rating/Deal roles. Verifica tip `1eda988` (codice funzionale `68b0fc6`). Seconda review Bugbot: 1 high + 2 medium residui.
-- **Decisione operativa (fine giornata 20-Nov)**:
-  1. **Non mergeare** #240 oggi.
-  2. Stato documentato: remediation sostanziale sì; **non** approvazione tecnica finale.
-  3. **Prossimo passo (domani)**: patch mirata sola — (a) PDF watermark fail-hard se overlay fallisce; (b) `reject` solo su `pending`; (c) allegato chat con match `collaboration_id`. Poi re-test + re-review. Niente nuova remediation generale.
-  4. H4 sealed / checkout Stripe TEST live: **restano esclusi** senza nuova autorizzazione.
-  5. CI B04 verde ≠ suite D-175 (tenere distinto).
-- **SoT**: PR #240 · `docs/ops/D175-PR240-DEFINITIVE-REMEDIATION-REPORT.md` · artefatti tip-verification · Cap.27 v1.2 · HAL `api.d175-pr240`.
-- **Stato**: ⏸ PR aperta. ❌ non mergiata. Ripresa = patch 3 finding.
+- **Decisione operativa (pomeriggio 20-Nov)**: non mergeare in giornata; patch 3 finding prima del merge.
+- **Aggiornamento sera 20-Nov**: PR **#240 MERGED** in `main` (`f0d4b26`); tip docs `759d628`. I 3 finding residui, se ancora aperti, vanno trattati solo con mandato mirato — **non** sono più il “prossimo passo di default” (superseduto da **D-191**).
+- **SoT**: PR #240 · `docs/ops/D175-PR240-DEFINITIVE-REMEDIATION-REPORT.md` · Cap.27 · HAL `api.d175-pr240`.
+- **Stato**: ✅ **MERGED**. Follow-up residui = solo su nuova autorizzazione. H4 sealed resta escluso.
 
 ### D-189 — D-175 C4 chiuso in main (account/org Dogfood) · 19-Nov-2026
 - **Contesto**: Ciclo Dogfood D-175 C1–C3 già chiusi. C4 autorizzato con perimetro ristretto (struttura CC/Organization/wallet + ruoli); account sintetici e verify T1–T13; review critica + review read-only commit post-`0a14a3d`.

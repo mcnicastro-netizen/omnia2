@@ -536,3 +536,33 @@ voci:
       permessi:
         - Descritto per tutti gli utenti
     screenshot: []
+
+  - id: halk.llm-busy-knowledge
+    titolo: Errori generation / llm_busy su HAL Knowledge
+    modulo: HAL Knowledge
+    widget: null
+    pubblico: [titolare, agente, segreteria, super_admin]
+    livello: intermedio
+    tags: [hal-knowledge, llm, llm-busy, gemini, errori, d-191]
+    correlati: [halk.motore, halk.limiti]
+    domanda_naturale: "HAL Knowledge dà 502 o non genera la risposta: è llm_busy?"
+    contenuto:
+      a_cosa_serve: >
+        Chiarisce che il retrieval TF-IDF è locale (senza LLM), mentre la
+        generation usa Gemini via shared/llm. Knowledge può rispondere
+        502 generation_error; Agents/Legal usano spesso 503 llm_busy.
+        Non sono crediti agenzia (D-075).
+      quando_si_usa: >
+        Quando la domanda trova contesto ma la risposta non arriva;
+        quando si propone di cambiare modello senza diagnosi.
+      passi:
+        - "Controlla status indice (chunks) — se retrieval ok, il problema è generation."
+        - "Cause tipiche: overload Gemini, timeout, circuit breaker, hold dogfood/Cabina."
+        - "Voce codice: api.llm-busy · programma pre-GTM D-191."
+        - "Non introdurre secondo provider senza decisione Founder."
+      errori_comuni:
+        - problema: "Cambio modello e basta"
+          soluzione: "Prima classificare provider vs orchestrazione vs hold (D-191)."
+      permessi:
+        - Utenti agenzia autenticati / super_admin
+    screenshot: []

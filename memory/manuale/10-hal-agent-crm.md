@@ -245,7 +245,7 @@ Nella stessa pagina Vendi il privato configura `contact_public`: nome pubblico +
 | Codice | Perché | Cosa fare |
 |--------|--------|-----------|
 | **503 `llm_key_not_configured`** | `GEMINI_API_KEY` assente su Railway/env | Contatta ops / vault |
-| **503 `llm_busy` / `llm_unavailable`** | Saturazione Gemini o timeout modello | Riprova; D-135 pin `gemini-3.5-flash` + fallback |
+| **503 `llm_busy` / `llm_unavailable`** | Overload/quota Gemini, timeout, circuit breaker, kill-switch/dogfood HOLD, o contesa API key (non crediti agenzia — D-075) | Riprova; verifica hold Cabina; **non** «cambiare modello» come prima mossa. Diagnosi: voce HAL `api.llm-busy` · programma D-191 §6 |
 | **UI `al_improve.err_timeout`** | Nessuna risposta HTTP entro timeout FE (~90s) | Riprova; se chiave grezza → redeploy FE (i18n) |
 | **429 `rate_limit_exceeded`** | Superato 60/ora improve | Attendi la finestra scorrevole |
 

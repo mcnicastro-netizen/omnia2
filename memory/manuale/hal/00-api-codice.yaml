@@ -284,21 +284,26 @@ voci:
     widget: null
     pubblico: [titolare, agente, super_admin]
     livello: avanzato
-    tags: [codice, api, architettura, d-073]
-    correlati: []
+    tags: [codice, api, architettura, d-073, llm, gemini, d-135]
+    correlati: [api.llm-busy, api.hal-agent, api.hal-knowledge, api.hal-legal]
     domanda_naturale: "Come chiama Gemini il backend?"
     contenuto:
       a_cosa_serve: >
-        shared/llm (+ LlmChat in shared.llm.chat) → GEMINI_API_KEY / gemini-3.5-flash.
+        Client unico shared/llm (+ LlmChat): chiavi GEMINI_API_KEY|GOOGLE_API_KEY|EMERGENT_LLM_KEY;
+        modello GEMINI_MODEL (default gemini-3.5-flash); timeout tentativo GEMINI_ATTEMPT_TIMEOUT_SEC;
+        fallback modelli interni; circuit breaker llm. Staging immagini = fal.ai (percorso distinto).
       quando_si_usa: >
-        Quando HAL deve assistere su come è fatto il codice o quale endpoint usare.
+        Debug HAL/AI; distinzione testo Gemini vs staging fal; diagnosi llm_busy.
       passi:
-        - "Identifica il modulo nel path indicato."
-        - "Verifica prefix /api e auth (JWT cookie o API key)."
-        - "Non inventare endpoint non presenti nel repo."
+        - "Entrypoint generate_text / generate_text_stream in shared/llm/__init__.py."
+        - "Consumatori: HAL Agents, Knowledge, Legal (+ validator), improve, safety, KYC, staging critic."
+        - "Vedi anche voce api.llm-busy per errori 503/502."
+        - "Non inventare client OpenAI: flag inventariato, client LLM OpenAI assente."
       errori_comuni:
-        - problema: "Endpoint inventato"
-          soluzione: "Citare solo route reali dal corpus codice."
+        - problema: "OPENAI_API_KEY = fallback automatico"
+          soluzione: "No fallback cross-provider implementato; solo hold/flag Cabina."
+        - problema: "fal.ai genera testo HAL"
+          soluzione: "fal = staging/video; linguaggio = Gemini via shared/llm."
       permessi:
         - "Dipende dall'endpoint"
       screenshot: []
@@ -1725,32 +1730,95 @@ voci:
       screenshot: []
 
   - id: api.d175-pr240
-    titolo: D-175 PR #240 — Deal/chat/mini-dossier remediation (D-190)
+    titolo: D-175 PR #240 — Deal/chat/mini-dossier in main (D-190/D-191)
     modulo: Codice API
     widget: null
     pubblico: [super_admin]
     livello: avanzato
-    tags: [codice, dogfood, d-175, pr-240, mls, deal, chat, watermark, d-190]
-    correlati: [api.d175-c4-chiuso, mls.collaborazioni-workspace, mls.deal-chat]
-    domanda_naturale: "A che punto è la PR 240 Deal e chat MLS? Si può mergiare?"
+    tags: [codice, dogfood, d-175, pr-240, mls, deal, chat, watermark, d-190, d-191]
+    correlati: [api.d175-c4-chiuso, mls.collaborazioni-workspace, mls.deal-chat, api.pre-gtm-programma]
+    domanda_naturale: "A che punto è la PR 240 Deal e chat MLS? È già in main?"
     contenuto:
       a_cosa_serve: >
-        Stato fine 20-Nov-2026: implementazione + remediation Bugbot su branch
-        cursor/d175-deal-chat-dossier-h4-e393 tip 1eda988; CI B04 verde ma non
-        equivale alla suite D-175; Founder non ha approvato il merge.
+        PR #240 (Deal, chat contestuale, mini-dossier, watermark) è MERGED in main
+        (merge f0d4b26, tip docs 759d628). Non equivale a GTM-ready né ad H4 aperto.
       quando_si_usa: >
-        Ripresa sessione; review PR #240; distinzione C4 in main vs lavoro MLS operativo aperto.
+        Ripresa sessione; quando si crede che Deal/chat non siano ancora in main;
+        distinzione prodotto mergiato vs programma stabilizzazione pre-GTM (D-191).
       passi:
-        - "PR https://github.com/mcnicastro-netizen/omnia2/pull/240 — aperta, no merge."
-        - "Codice funzionale remediation: 68b0fc6; tip docs: 1eda988."
-        - "Report: docs/ops/D175-PR240-DEFINITIVE-REMEDIATION-REPORT.md + verifica tip in artifacts."
-        - "Prossimo passo: patch mirata 3 finding (PDF watermark fail-hard; reject solo pending; allegato chat same-collab)."
+        - "PR https://github.com/mcnicastro-netizen/omnia2/pull/240 — MERGED."
+        - "Report storico remediation: docs/ops/D175-PR240-DEFINITIVE-REMEDIATION-REPORT.md."
+        - "Prossimo passo di default: NON patch #240 — seguire D-191 / HANDOFF_PRE_GTM_ORDINI."
         - "H4 sealed / Stripe TEST checkout: ancora BLOCKED senza nuova autorizzazione."
       errori_comuni:
-        - problema: "CI 2/2 verde = D-175 completo e mergeabile"
-          soluzione: "No. CI = solo B04 unit; restano 3 finding Bugbot e decisione Founder."
-        - problema: "C4 in main include già Deal/chat"
-          soluzione: "No. Deal/chat/mini-dossier sono su PR #240 non mergiata."
+        - problema: "PR #240 ancora da mergiare / prossimo passo = 3 finding Bugbot"
+          soluzione: "Merge già avvenuto. Follow-up residui solo con mandato mirato; default = D-191."
+        - problema: "#240 in main = GTM pronto"
+          soluzione: "No. Restano A-007, A-006, A-002, UI, LLM/HAL (programma pre-GTM)."
       permessi:
         - super_admin / Founder
+      screenshot: []
+
+  - id: api.pre-gtm-programma
+    titolo: Programma stabilizzazione pre-GTM (D-191)
+    modulo: Codice API
+    widget: null
+    pubblico: [super_admin]
+    livello: avanzato
+    tags: [codice, gtm, e2e, stabilizzazione, d-191, a-007, llm, hal]
+    correlati: [api.llm-busy, api.d175-pr240, api.d175-c4-chiuso, api.llm]
+    domanda_naturale: "Qual è il programma per rendere OMNIA affidabile prima del GTM?"
+    contenuto:
+      a_cosa_serve: >
+        Roadmap a 8 aree (fondamenta, org/permessi, LLM/HAL, ciclo gestionale,
+        MLS/Cloud, documenti/tool, billing, UI/GTM) basata su E2E DEEP, INTEGRALE
+        e riconciliazione. Pianificazione READ-ONLY; implementazione non autorizzata.
+      quando_si_usa: >
+        Ogni ripresa agente; quando si propone un fix spontaneo; quando si confondono
+        card PARZIALI con prodotto rotto; priorità A-007 e AI.
+      passi:
+        - "Leggere memory/HANDOFF_PRE_GTM_ORDINI.md (ordini O1–O12)."
+        - "SoT: _export_audits/OMNIA-PROGRAMMA-STABILIZZAZIONE-PRE-GTM.md"
+        - "Storico: _export_audits/RICONCILIAZIONE-PRIMO-E2E-VS-E2E-20-NOVEMBRE.md"
+        - "Sequenza: fondazioni → LLM/HAL → org → ciclo+MLS → documenti → billing → UI."
+        - "Attendere mandato Founder S1 (A-007) o S3 (LLM) prima di codice."
+      errori_comuni:
+        - problema: "49 card senza SUPERATO = gestionale non funziona"
+          soluzione: "Riconciliazione: criteri più ampi + UI 0 click; nucleo CRM/MLS non in regressione confermata."
+        - problema: "Rifaccio E2E generale / apro H4 per procedere"
+          soluzione: "Vietato senza mandato. H4 e E2E mutativi nuovi non autorizzati (D-191)."
+      permessi:
+        - super_admin / Founder
+      screenshot: []
+
+  - id: api.llm-busy
+    titolo: Cosa significa llm_busy e come si diagnostica?
+    modulo: Codice API
+    widget: null
+    pubblico: [super_admin, titolare]
+    livello: avanzato
+    tags: [codice, llm, gemini, hal, llm-busy, d-075, d-135, d-191]
+    correlati: [api.llm, api.hal-agent, api.hal-knowledge, api.hal-legal, api.pre-gtm-programma]
+    domanda_naturale: "Perché HAL risponde llm_busy o 503? Basta cambiare modello?"
+    contenuto:
+      a_cosa_serve: >
+        Spiega che llm_busy nasce da shared/llm (overload/quota/timeout Gemini),
+        circuit breaker, kill-switch/dogfood HOLD, o contesa della stessa API key
+        tra Agents/Knowledge/Legal/staging critic. Non è un budget crediti agenzia (D-075).
+      quando_si_usa: >
+        Instabilità HAL in collaudo o demo; proposta di «cambiare modello»;
+        distinzione errore provider vs orchestrazione vs applicazione.
+      passi:
+        - "Codice: backend/shared/llm/__init__.py (LlmBusy) + shared/security/circuit.py."
+        - "Agents/Legal mappano spesso 503 llm_busy; Knowledge può dare 502 generation_error."
+        - "Verificare hold Cabina/dogfood su gemini/llm prima di incolpare Google."
+        - "Non introdurre secondo provider senza decisione privacy/costi Founder."
+        - "Piano accettazione AI: _export_audits/OMNIA-PROGRAMMA-STABILIZZAZIONE-PRE-GTM.md §6."
+      errori_comuni:
+        - problema: "Cambio modello e il problema è risolto"
+          soluzione: "Vietato come prima mossa. Classificare la causa (provider/timeout/circuit/hold/carico)."
+        - problema: "llm_busy = crediti agenzia finiti"
+          soluzione: "No. AI in-app inclusa (D-075); soft rate limit orario ≠ budget crediti."
+      permessi:
+        - Dipende dall'endpoint HAL
       screenshot: []

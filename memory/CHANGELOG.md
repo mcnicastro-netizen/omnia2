@@ -1,10 +1,17 @@
-## 2026-11-20 — Fine giornata: PR #240 Deal/chat/mini-dossier (no merge)
+## 2026-11-21 — Programma pre-GTM + riconciliazione E2E (docs only · D-191)
 
-- Mandato D-175 implementazione Dogfood: collaborazione → visita → mini-dossier feedback → doc esplicita → chat → Deal; webhook Stripe deleted; H4 sealed non aperto
-- PR **#240** `cursor/d175-deal-chat-dossier-h4-e393` tip **`1eda988`** (fix **`68b0fc6`**) — **aperta, non mergiata**
-- Remediation FIX-01…06 + watermark/rating/Deal; verifica tip 22+34+smoke PASS
-- Review Bugbot post-remediation: 3 residuali (PDF fail-hard, reject pending-only, chat attachment same-collab) → **prossimo passo domani**
-- Cap.27 MLS **v1.2** · HAL `mls.collaborazioni-workspace` / `mls.deal-chat` / `api.d175-pr240` · D-190 · IMPORT_HAL bump
+- SoT: `_export_audits/OMNIA-PROGRAMMA-STABILIZZAZIONE-PRE-GTM.md` · `_export_audits/RICONCILIAZIONE-PRIMO-E2E-VS-E2E-20-NOVEMBRE.md`
+- Handoff: `memory/HANDOFF_PRE_GTM_ORDINI.md` · `NEXT_SESSION` · `RIPRENDI_2026-11-21`
+- HAL: `api.pre-gtm-programma` · `api.llm-busy` · aggiornato `api.d175-pr240` (MERGED) · IMPORT_HAL bump
+- Verità: 0 SUPERATO ≠ regressione generale; A-007 priorità fondazioni; LLM/HAL priorità critica
+- ❌ Implementazione / H4 / nuovo E2E mutativo: non autorizzati
+
+## 2026-11-20 — PR #240 Deal/chat/mini-dossier + E2E INTEGRALE
+
+- PR **#240** MERGED in `main` (`f0d4b26`) · tip docs `759d628` (supersede nota pomeridiana «no merge»)
+- Mandato D-175: collaborazione → visita → mini-dossier → doc → chat → Deal; H4 sealed non aperto
+- Cap.27 MLS **v1.2** · HAL Deal/chat · D-190 poi **D-191**
+- Sera: E2E INTEGRALE PRE-GTM (CONTINUITY `omnia_df_clean_c4`) + dossier Founder/tecnico + anomalie A-001…A-008
 - Stripe TEST checkout completo: ancora BLOCKED H4
 
 ## 2026-11-19 — Fine giornata: D-175 C4 mergiato (Dogfood account/org)
