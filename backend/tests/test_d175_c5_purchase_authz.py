@@ -640,3 +640,43 @@ def test_sealed_marker_not_created_in_repo():
     p = h4_ready_marker_path()
     assert p.name == "h4_purchase_ready.sealed"
     assert not p.is_file()
+
+
+def test_c5_credits_ignore_client_redirect_urls(monkeypatch, tmp_path, spies):
+    """Client success_url/cancel_url must not drive Stripe redirect targets."""
+    from apps.billing import routes as billing_routes
+
+    _open_h4(monkeypatch, tmp_path)
+    monkeypatch.setenv("FRONTEND_URL", "https://app.omnia.example")
+    raw = FakeDB()
+    _seed_cc(raw, ma_id="u_ma")
+    db = _DBProxy(raw)
+    spies.price_list.return_value = SimpleNamespace(
+        data=[SimpleNamespace(id="price_1", currency="eur")]
+    )
+    spies.get_or_create = AsyncMock(return_value="cus_existing")
+    import shared.billing.stripe_customer_service as scs
+
+    monkeypatch.setattr(scs, "get_or_create_stripe_customer", spies.get_or_create)
+    spies.session_create.return_value = SimpleNamespace(
+        id="cs_redir", url="https://checkout.stripe.test/r"
+    )
+    with patch("apps.billing.routes.Database.get", return_value=db):
+        payload = CreditPurchaseRequest(
+            package_key="pkg_400",
+            commercial_customer_id="cc1",
+            success_url="https://evil.example",
+            cancel_url="https://evil.example/cancel",
+        )
+        _run(
+            billing_routes.buy_credits(
+                payload,
+                MagicMock(base_url="http://localhost/"),
+                _user(user_id="u_ma"),
+            )
+        )
+    kwargs = spies.session_create.call_args.kwargs
+    assert "evil.example" not in kwargs["success_url"]
+    assert "evil.example" not in kwargs["cancel_url"]
+    assert kwargs["success_url"].startswith("https://app.omnia.example/")
+    assert kwargs["cancel_url"].startswith("https://app.omnia.example/")

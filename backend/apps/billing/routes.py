@@ -389,7 +389,7 @@ async def buy_credits(
 ):
     """Buy a credit package (one-off) — D-175 C5 Main Admin + CC only.
 
-    Order (rev.2.2): H4 → service guards → SA DENY → CC+MA auth → Stripe.
+    Order (rev.2.2): H4 → package → SA/MA auth → service guards → Stripe.
     DENY ⇒ zero Stripe calls (Price/Customer/Session/helpers).
     Does not credit wallet (C6) and does not mint H4 sealed.
     """
@@ -424,7 +424,8 @@ async def buy_credits(
     stripe_customer_id = await get_or_create_stripe_customer(
         db, cc, email=user.get("email") or "", name=cc.get("legal_name")
     )
-    origin = payload.success_url or str(request.base_url)
+    # Do not trust client success_url/cancel_url (open-redirect / phishing).
+    origin = os.environ.get("FRONTEND_URL") or str(request.base_url)
     meta = {
         "commercial_customer_id": cc["id"],
         "stripe_customer_id": stripe_customer_id,
@@ -439,7 +440,7 @@ async def buy_credits(
             line_items=[{"price": price.id, "quantity": 1}],
             mode="payment",
             success_url=_build_success_url(origin),
-            cancel_url=payload.cancel_url or _build_cancel_url(origin),
+            cancel_url=_build_cancel_url(origin),
             customer=stripe_customer_id,
             metadata=meta,
         )
@@ -540,7 +541,8 @@ async def buy_storage(
     stripe_customer_id = await get_or_create_stripe_customer(
         db, cc, email=user.get("email") or "", name=cc.get("legal_name")
     )
-    origin = payload.success_url or str(request.base_url)
+    # Do not trust client success_url/cancel_url (open-redirect / phishing).
+    origin = os.environ.get("FRONTEND_URL") or str(request.base_url)
     meta = {
         "commercial_customer_id": cc["id"],
         "stripe_customer_id": stripe_customer_id,
@@ -555,7 +557,7 @@ async def buy_storage(
             line_items=[{"price": price.id, "quantity": 1}],
             mode="subscription",
             success_url=_build_success_url(origin),
-            cancel_url=payload.cancel_url or _build_cancel_url(origin),
+            cancel_url=_build_cancel_url(origin),
             customer=stripe_customer_id,
             metadata=meta,
         )

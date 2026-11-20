@@ -210,7 +210,7 @@ async def authorize_h4_purchase(
 ) -> dict:
     """D-175 C5 — commercial purchase authority (C5-D01 / C5-D04).
 
-    Order (caller must run H4 + service guards first):
+    Order (caller runs H4 first; service/Stripe guards after this returns):
     Super Admin DENY → CC id required → resolve + Main Admin + eligible + operable
     → optional agency must belong to same CC.
 
