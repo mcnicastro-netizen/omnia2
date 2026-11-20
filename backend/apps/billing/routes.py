@@ -398,20 +398,21 @@ async def buy_credits(
     from shared.dogfood.perimeter import guard_h4_purchase_or_raise
 
     guard_h4_purchase_or_raise()
-    _guard_enabled()
-    _guard_self_serve()
 
     pkg = next((p for p in CREDIT_PACKAGES if p.key == payload.package_key), None)
     if not pkg:
         raise HTTPException(status_code=400, detail="unknown_package")
 
     db = Database.get()
+    # Commercial auth BEFORE service/Stripe (DENY must not skip MA for soft/hard service blocks)
     cc = await authorize_h4_purchase(
         db,
         user,
         payload.commercial_customer_id,
         agency_id=payload.agency_id,
     )
+    _guard_enabled()
+    _guard_self_serve()
     ctx_agency = (payload.agency_id or "").strip() or None
 
     # Stripe only after ALLOW
@@ -485,6 +486,8 @@ async def buy_storage(
     from shared.billing.stripe_customer_service import get_or_create_stripe_customer
     from shared.dogfood.perimeter import guard_h4_purchase_or_raise
 
+    from shared.billing.self_serve import is_self_serve_enabled
+
     guard_h4_purchase_or_raise()
 
     addon = next((a for a in STORAGE_ADDONS if a.key == payload.package_key), None)
@@ -492,10 +495,16 @@ async def buy_storage(
         raise HTTPException(status_code=400, detail="unknown_storage_addon")
 
     db = Database.get()
+    # Auth FIRST — soft assistito paths must not bypass Main Admin / SA DENY
+    cc = await authorize_h4_purchase(
+        db,
+        user,
+        payload.commercial_customer_id,
+        agency_id=payload.agency_id,
+    )
+    ctx_agency = (payload.agency_id or "").strip() or None
+
     if not _is_enabled():
-        await authorize_h4_purchase(
-            db, user, payload.commercial_customer_id, agency_id=payload.agency_id
-        )
         return {
             "ok": False,
             "stripe_required": True,
@@ -506,17 +515,21 @@ async def buy_storage(
             ),
             "addon": addon.model_dump(),
             "demo_contact_email": (os.environ.get("DEMO_CONTACT_EMAIL") or "[REDACTED]").strip(),
-            "commercial_customer_id": (payload.commercial_customer_id or "").strip(),
+            "commercial_customer_id": cc["id"],
         }
 
-    _guard_self_serve()
-    cc = await authorize_h4_purchase(
-        db,
-        user,
-        payload.commercial_customer_id,
-        agency_id=payload.agency_id,
-    )
-    ctx_agency = (payload.agency_id or "").strip() or None
+    if not is_self_serve_enabled():
+        return {
+            "ok": False,
+            "self_serve_blocked": True,
+            "message": (
+                f"Self-serve non aperto (D-115 / O6). Per +{addon.gb} GB "
+                f"(€{addon.price_eur:.0f}/mese) richiedi provisioning assistito."
+            ),
+            "addon": addon.model_dump(),
+            "demo_contact_email": (os.environ.get("DEMO_CONTACT_EMAIL") or "[REDACTED]").strip(),
+            "commercial_customer_id": cc["id"],
+        }
 
     lookup = f"{addon.key}_monthly"
     prices = stripe.Price.list(lookup_keys=[lookup, addon.key], active=True, limit=2).data

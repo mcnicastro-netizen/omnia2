@@ -341,25 +341,227 @@ def test_c5_allow_ma_without_membership_mocks_stripe(monkeypatch, tmp_path, spie
     assert tx.get("agency_id") in (None, "")
 
 
-def test_c5_storage_deny_sa_zero_stripe(monkeypatch, tmp_path, spies):
+@pytest.mark.parametrize(
+    "case,user,cc_kwargs,payload_cc,agency_ctx,status,err",
+    [
+        (
+            "sa",
+            _user(user_id="ops", role="super_admin"),
+            {},
+            "cc1",
+            None,
+            403,
+            "sa_purchase_forbidden",
+        ),
+        (
+            "sa_who_is_ma",
+            _user(user_id="u_ma", role="super_admin"),
+            {"ma_id": "u_ma"},
+            "cc1",
+            None,
+            403,
+            "sa_purchase_forbidden",
+        ),
+        (
+            "not_ma",
+            _user(user_id="u_other", role="agency_admin", agency_ids=["ag1"], active_agency_id="ag1"),
+            {"ma_id": "u_ma"},
+            "cc1",
+            None,
+            403,
+            "not_main_admin",
+        ),
+        (
+            "org_admin",
+            _user(user_id="u_org", role="agency_admin", agency_ids=["ag1"], active_agency_id="ag1"),
+            {"ma_id": "u_ma"},
+            "cc1",
+            None,
+            403,
+            "not_main_admin",
+        ),
+        (
+            "collaborator",
+            _user(user_id="u_agent", role="agent", agency_ids=["ag1"], active_agency_id="ag1"),
+            {"ma_id": "u_ma"},
+            "cc1",
+            None,
+            403,
+            "not_main_admin",
+        ),
+        (
+            "cc_missing_body",
+            _user(user_id="u_ma", role="agency_admin"),
+            {},
+            "   ",
+            None,
+            400,
+            "commercial_customer_id_required",
+        ),
+        (
+            "cc_inexistent",
+            _user(user_id="u_ma", role="agency_admin"),
+            {},
+            "cc_missing",
+            None,
+            404,
+            "commercial_customer_not_found",
+        ),
+        (
+            "cc_no_ma",
+            _user(user_id="u_ma", role="agency_admin"),
+            {"ma_id": None},
+            "cc1",
+            None,
+            403,
+            "main_admin_unassigned",
+        ),
+        (
+            "ma_not_eligible",
+            _user(user_id="u_ma", role="agency_admin", verified=False),
+            {"ma_id": "u_ma"},
+            "cc1",
+            None,
+            403,
+            "account_not_eligible",
+        ),
+        (
+            "cc_not_operable",
+            _user(user_id="u_ma", role="agency_admin"),
+            {"ma_id": "u_ma", "commercial_status": "ceased", "operational_status": "closed_readonly"},
+            "cc1",
+            None,
+            403,
+            "cc_not_operable",
+        ),
+        (
+            "wrong_cc",
+            _user(user_id="u_ma", role="agency_admin"),
+            {"ma_id": "u_ma"},
+            "cc_other",
+            None,
+            404,
+            "commercial_customer_not_found",
+        ),
+        (
+            "agency_mismatch",
+            _user(user_id="u_ma", role="agency_admin"),
+            {"ma_id": "u_ma"},
+            "cc1",
+            "ag_other",
+            403,
+            "agency_cc_mismatch",
+        ),
+        (
+            "ma_revoked",
+            _user(user_id="u_ma", role="agency_admin"),
+            {"ma_id": "u_new"},
+            "cc1",
+            None,
+            403,
+            "not_main_admin",
+        ),
+    ],
+)
+def test_c5_storage_deny_matrix_zero_stripe(
+    monkeypatch, tmp_path, spies, case, user, cc_kwargs, payload_cc, agency_ctx, status, err
+):
     from apps.billing import routes as billing_routes
 
     _open_h4(monkeypatch, tmp_path)
     raw = FakeDB()
+    _seed_cc(raw, **cc_kwargs)
+    if case == "agency_mismatch":
+        raw.agencies.docs.append(
+            {"id": "ag_other", "commercial_customer_id": "cc_foreign"}
+        )
+    db = _DBProxy(raw)
+
+    with patch("apps.billing.routes.Database.get", return_value=db):
+        payload = StoragePurchaseRequest(
+            commercial_customer_id=payload_cc,
+            agency_id=agency_ctx,
+        )
+        with pytest.raises(HTTPException) as ei:
+            _run(billing_routes.buy_storage(payload, MagicMock(base_url="http://x/"), user))
+    assert ei.value.status_code == status
+    detail = ei.value.detail
+    if isinstance(detail, dict):
+        assert detail.get("error") == err
+    _assert_zero_stripe(spies)
+
+
+def test_c5_storage_self_serve_off_after_ma_auth_no_stripe(monkeypatch, tmp_path, spies):
+    """Self-serve OFF: MA ALLOW → soft assistito; non-MA still DENY before soft."""
+    from apps.billing import routes as billing_routes
+
+    _open_h4(monkeypatch, tmp_path)
+    monkeypatch.setenv("OMNIA_SELF_SERVE_ENABLED", "false")
+    raw = FakeDB()
     _seed_cc(raw, ma_id="u_ma")
     db = _DBProxy(raw)
+
     with patch("apps.billing.routes.Database.get", return_value=db):
-        payload = StoragePurchaseRequest(commercial_customer_id="cc1")
+        # non-MA: must DENY (not soft assistito)
         with pytest.raises(HTTPException) as ei:
             _run(
                 billing_routes.buy_storage(
-                    payload,
+                    StoragePurchaseRequest(commercial_customer_id="cc1"),
+                    MagicMock(base_url="http://x/"),
+                    _user(
+                        user_id="u_org",
+                        role="agency_admin",
+                        agency_ids=["ag1"],
+                        active_agency_id="ag1",
+                    ),
+                )
+            )
+        assert ei.value.detail["error"] == "not_main_admin"
+        _assert_zero_stripe(spies)
+
+        # MA: soft self_serve_blocked, still zero Stripe
+        out = _run(
+            billing_routes.buy_storage(
+                StoragePurchaseRequest(commercial_customer_id="cc1"),
+                MagicMock(base_url="http://x/"),
+                _user(user_id="u_ma"),
+            )
+        )
+    assert out.get("self_serve_blocked") is True
+    assert out.get("commercial_customer_id") == "cc1"
+    assert "checkout_url" not in out
+    _assert_zero_stripe(spies)
+
+
+def test_c5_storage_stripe_off_after_ma_auth_no_stripe(monkeypatch, tmp_path, spies):
+    from apps.billing import routes as billing_routes
+
+    _open_h4(monkeypatch, tmp_path)
+    monkeypatch.setenv("STRIPE_ENABLED", "false")
+    raw = FakeDB()
+    _seed_cc(raw, ma_id="u_ma")
+    db = _DBProxy(raw)
+    with patch("apps.billing.routes.Database.get", return_value=db):
+        with pytest.raises(HTTPException) as ei:
+            _run(
+                billing_routes.buy_storage(
+                    StoragePurchaseRequest(commercial_customer_id="cc1"),
                     MagicMock(base_url="http://x/"),
                     _user(user_id="ops", role="super_admin"),
                 )
             )
-    assert ei.value.status_code == 403
-    assert ei.value.detail["error"] == "sa_purchase_forbidden"
+        assert ei.value.detail["error"] == "sa_purchase_forbidden"
+        _assert_zero_stripe(spies)
+
+        out = _run(
+            billing_routes.buy_storage(
+                StoragePurchaseRequest(commercial_customer_id="cc1"),
+                MagicMock(base_url="http://x/"),
+                _user(user_id="u_ma"),
+            )
+        )
+    assert out.get("stripe_required") is True
+    assert out.get("commercial_customer_id") == "cc1"
     _assert_zero_stripe(spies)
 
 
