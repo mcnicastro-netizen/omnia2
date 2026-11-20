@@ -1723,3 +1723,34 @@ voci:
       permessi:
         - super_admin / Founder
       screenshot: []
+
+  - id: api.d175-pr240
+    titolo: D-175 PR #240 — Deal/chat/mini-dossier remediation (D-190)
+    modulo: Codice API
+    widget: null
+    pubblico: [super_admin]
+    livello: avanzato
+    tags: [codice, dogfood, d-175, pr-240, mls, deal, chat, watermark, d-190]
+    correlati: [api.d175-c4-chiuso, mls.collaborazioni-workspace, mls.deal-chat]
+    domanda_naturale: "A che punto è la PR 240 Deal e chat MLS? Si può mergiare?"
+    contenuto:
+      a_cosa_serve: >
+        Stato fine 20-Nov-2026: implementazione + remediation Bugbot su branch
+        cursor/d175-deal-chat-dossier-h4-e393 tip 1eda988; CI B04 verde ma non
+        equivale alla suite D-175; Founder non ha approvato il merge.
+      quando_si_usa: >
+        Ripresa sessione; review PR #240; distinzione C4 in main vs lavoro MLS operativo aperto.
+      passi:
+        - "PR https://github.com/mcnicastro-netizen/omnia2/pull/240 — aperta, no merge."
+        - "Codice funzionale remediation: 68b0fc6; tip docs: 1eda988."
+        - "Report: docs/ops/D175-PR240-DEFINITIVE-REMEDIATION-REPORT.md + verifica tip in artifacts."
+        - "Prossimo passo: patch mirata 3 finding (PDF watermark fail-hard; reject solo pending; allegato chat same-collab)."
+        - "H4 sealed / Stripe TEST checkout: ancora BLOCKED senza nuova autorizzazione."
+      errori_comuni:
+        - problema: "CI 2/2 verde = D-175 completo e mergeabile"
+          soluzione: "No. CI = solo B04 unit; restano 3 finding Bugbot e decisione Founder."
+        - problema: "C4 in main include già Deal/chat"
+          soluzione: "No. Deal/chat/mini-dossier sono su PR #240 non mergiata."
+      permessi:
+        - super_admin / Founder
+      screenshot: []

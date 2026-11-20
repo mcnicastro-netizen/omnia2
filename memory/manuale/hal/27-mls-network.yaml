@@ -283,3 +283,59 @@ voci:
       permessi:
         - "Come da moduli Immobili e Match."
       screenshot: []
+
+  - id: mls.collaborazioni-workspace
+    titolo: Collaborazioni, visita, mini-dossier e documenti
+    modulo: MLS
+    widget: null
+    pubblico: [titolare, agente, segreteria]
+    livello: intermedio
+    tags: [collaborazioni, visita, mini-dossier, documenti, watermark, cap27, d-190]
+    correlati: [mls.cos-e, mls.deal-chat, api.d175-pr240]
+    domanda_naturale: "Dopo l'accettazione MLS cosa succede? Cos'è il mini-dossier?"
+    contenuto:
+      a_cosa_serve: >
+        Spiega il workspace Collaborazioni: accettazione ≠ documenti automatici;
+        mini-dossier = solo feedback/rating post-visita; documenti solo su richiesta
+        esplicita con watermark e revoca.
+      quando_si_usa: >
+        Quando si confonde accettazione collaborazione con fascicolo o proposta d'acquisto.
+      passi:
+        - "Menu → Collaborazioni (o link da MLS)."
+        - "Accetta collaborazione: nessuna richiesta documentale automatica."
+        - "Concordate e registrate la visita ufficiale; dopo la visita inviate il feedback (mini-dossier)."
+        - "Solo se serve: richiesta documentale esplicita; download con watermark; revoca chiude gli accessi."
+      errori_comuni:
+        - problema: "Mi aspetto i documenti appena accettata la collaborazione"
+          soluzione: "No. I documenti arrivano solo con richiesta esplicita autorizzata."
+        - problema: "Il mini-dossier è il fascicolo immobile"
+          soluzione: "No. È solo feedback/rating sulla visita e sulla collaborazione."
+      permessi:
+        - "Titolare e agenti delle due agenzie coinvolte; revoca e gestione documenti lato titolare/owner."
+      screenshot: []
+
+  - id: mls.deal-chat
+    titolo: Deal e chat contestuale MLS
+    modulo: MLS
+    widget: null
+    pubblico: [titolare, agente, segreteria]
+    livello: intermedio
+    tags: [deal, chat, collaborazione, cap27, d-190]
+    correlati: [mls.collaborazioni-workspace, api.d175-pr240]
+    domanda_naturale: "Cos'è il Deal e dove chatto con l'altra agenzia?"
+    contenuto:
+      a_cosa_serve: >
+        Deal = opportunità di compravendita operativa (non matching, non offerta MLS).
+        Chat solo nel contesto collaborazione/visita/Deal autorizzato.
+      quando_si_usa: >
+        Dopo interesse concreto post-visita; per messaggi con l'agenzia partner sullo stesso affare.
+      passi:
+        - "Apri Deal da Collaborazioni o dal menu Deal."
+        - "Owner prepara/invia proposta; partner può accettare, rifiutare o controproporre."
+        - "Apri chat contestuale dalla collaborazione (opzionale visita/Deal)."
+      errori_comuni:
+        - problema: "Cerco una chat generica tra agenzie"
+          soluzione: "Non esiste: la chat è solo contestuale e revocabile con la collaborazione."
+      permessi:
+        - "Solo agenzie della collaborazione; azioni Deal filtrate dal ruolo (owner/partner)."
+      screenshot: []

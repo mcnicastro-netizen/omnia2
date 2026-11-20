@@ -63,6 +63,8 @@ const PortalWizardPage = lazy(() => import("@/apps/immoweb/pages/PortalWizardPag
 const SocialPublisherPage = lazy(() => import("@/apps/immoweb/pages/SocialPublisherPage"));
 const HalKnowledgePage = lazy(() => import("@/apps/immoweb/pages/HalKnowledgePage"));
 const MlsPage = lazy(() => import("@/apps/immoweb/pages/MlsPage"));
+const CollaborationsPage = lazy(() => import("@/apps/immoweb/pages/CollaborationsPage"));
+const DealsPage = lazy(() => import("@/apps/immoweb/pages/DealsPage"));
 const BrandLabPage = lazy(() => import("@/apps/immoweb/pages/BrandLabPage"));
 const FounderBridgeShell = lazy(() => import("@/apps/immoweb/founder/FounderBridgeShell"));
 const BridgeHomePage = lazy(() => import("@/apps/immoweb/founder/pages/BridgeHomePage"));
@@ -360,6 +362,22 @@ function App() {
                     element={
                       <ProtectedRoute allowedRoles={["super_admin", "agency_admin", "agent", "group_admin", "branch_admin", "branch_agent"]}>
                         <MlsPage />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="app/collaborations"
+                    element={
+                      <ProtectedRoute allowedRoles={["super_admin", "agency_admin", "agent", "group_admin", "branch_admin", "branch_agent"]}>
+                        <CollaborationsPage />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="app/deals"
+                    element={
+                      <ProtectedRoute allowedRoles={["super_admin", "agency_admin", "agent", "group_admin", "branch_admin", "branch_agent"]}>
+                        <DealsPage />
                       </ProtectedRoute>
                     }
                   />

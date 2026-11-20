@@ -39,7 +39,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Run B04 + Master residual (H3 / MC-042 / R-01) unit tests
+      - name: Run B04 + Master residual (H3 / MC-042 / R-01) + D-175 PR#240 unit tests
         env:
           PYTHONPATH: .
         run: |
@@ -52,4 +52,5 @@ jobs:
             tests/test_mc042_v2_suspend_deroga.py \
             tests/test_mc042_cc_non_operable_wallet.py \
             tests/test_mc042_r01_refresh_cease.py \
-            tests/test_r03_allocate_concurrency.py
+            tests/test_r03_allocate_concurrency.py \
+            tests/test_d175_pr240_remediation.py

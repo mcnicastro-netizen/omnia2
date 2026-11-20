@@ -1,5 +1,10 @@
 # 🚨 HANDOFF AL NUOVO AGENTE — LEGGI PRIMA DI FARE QUALSIASI COSA
 
+> ### Puntatore sessione (20-Nov-2026)
+> **Prima leggi:** [`NEXT_SESSION.md`](./NEXT_SESSION.md) · [`RIPRENDI_2026-11-20.md`](./RIPRENDI_2026-11-20.md) · **D-190**.  
+> Lavoro aperto: PR **#240** (Deal/chat/mini-dossier) — **no merge**; domani = patch mirata 3 finding Bugbot.  
+> Questo file storico resta per regole d’oro; **non** sostituisce NEXT_SESSION.
+
 > ### ❄️ FROZEN (S8 · 10 Ott 2026) — non è il puntatore di sessione
 > **Prima leggi:** [`NEXT_SESSION.md`](./NEXT_SESSION.md) + [`../docs/audit/OMNIA_COERENZA_SISTEMA.md`](../docs/audit/OMNIA_COERENZA_SISTEMA.md) + [`../docs/audit/OMNIA_S8_SOT_UNICO.md`](../docs/audit/OMNIA_S8_SOT_UNICO.md).  
 > Questo handoff (feb/set 2026) resta utile per regole d’oro / errori ricorrenti; **non** per “prossimo step”.

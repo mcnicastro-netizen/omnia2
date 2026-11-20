@@ -488,7 +488,16 @@ async def respond_offer(
     status = "accepted" if body.action == "accept" else "rejected"
     await db.mls_requests.update_one({"id": offer_id}, {"$set": {"status": status, "responded_at": _iso()}})
     await _log_event(db, aid, f"offer_{body.action}", {"offer_id": offer_id})
-    return {"id": offer_id, "status": status}
+    out: Dict[str, Any] = {"id": offer_id, "status": status}
+    # Accepting an MLS offer activates a property-scoped collaboration.
+    # Never auto-creates document requests or shares fascicolo.
+    if body.action == "accept":
+        from shared.mls_collab.service import ensure_collaboration_from_offer
+
+        collab = await ensure_collaboration_from_offer(db, row, actor_agency_id=aid)
+        out["collaboration_id"] = collab["id"]
+        out["document_request_created"] = False
+    return out
 
 
 @router.get("/search/public")

@@ -1025,6 +1025,56 @@ async def stripe_webhook(request: Request):
             {"$set": {"status": "failed", "payment_status": "failed", "updated_at": now}},
         )
 
+    elif etype == "customer.subscription.deleted":
+        # Mirror cancel only — do NOT auto-mutate CommercialCustomer operational status.
+        # FIX-01: primary key is Stripe subscription id. agency_id is fallback ONLY
+        # when obj.id is missing — never cancel a newer active sub via stale agency match.
+        sub_id = obj.get("id")
+        meta = obj.get("metadata") or {}
+        agency_id = meta.get("agency_id")
+        cc_id = meta.get("commercial_customer_id")
+        upd = {
+            "status": "canceled",
+            "stripe_status": "canceled",
+            "canceled_at": now,
+            "updated_at": now,
+        }
+        if cc_id:
+            upd["commercial_customer_id"] = cc_id
+
+        if sub_id:
+            q: dict = {"stripe_subscription_id": sub_id}
+            row = await db.subscriptions.find_one(q, {"_id": 0})
+            if row and cc_id and row.get("commercial_customer_id") and row["commercial_customer_id"] != cc_id:
+                logger.warning(
+                    "subscription.deleted incoherent CC: sub=%s row_cc=%s event_cc=%s",
+                    sub_id,
+                    row.get("commercial_customer_id"),
+                    cc_id,
+                )
+                return {"received": True, "ignored": "incoherent_commercial_customer"}
+            if row and agency_id and row.get("agency_id") and row["agency_id"] != agency_id:
+                logger.warning(
+                    "subscription.deleted incoherent agency: sub=%s row_ag=%s event_ag=%s",
+                    sub_id,
+                    row.get("agency_id"),
+                    agency_id,
+                )
+                return {"received": True, "ignored": "incoherent_agency"}
+            # Idempotent: already canceled → no-op side effects
+            if row and row.get("status") == "canceled" and row.get("stripe_status") == "canceled":
+                return {"received": True, "idempotent": True}
+            await db.subscriptions.update_one(q, {"$set": upd})
+        elif agency_id:
+            # Controlled fallback — only if no Stripe subscription id on the event.
+            logger.warning(
+                "subscription.deleted missing sub id; fallback agency_id=%s", agency_id
+            )
+            await db.subscriptions.update_one({"agency_id": agency_id}, {"$set": upd})
+        else:
+            logger.warning("subscription.deleted missing identifiers; ignored")
+            return {"received": True, "ignored": "missing_identifiers"}
+
     return {"received": True}
 
 
