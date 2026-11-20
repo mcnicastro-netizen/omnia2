@@ -35,6 +35,11 @@ def require_agency_in_collaboration(collab: dict, agency_id: str) -> None:
         raise HTTPException(status_code=403, detail="collaboration_forbidden")
 
 
+def require_collaboration_active(collab: dict) -> None:
+    if collab.get("status") != "active":
+        raise HTTPException(status_code=400, detail="collaboration_not_active")
+
+
 def counterpart_agency(collab: dict, agency_id: str) -> str:
     if agency_id == collab.get("owner_agency_id"):
         return collab["partner_agency_id"]
@@ -50,22 +55,34 @@ async def get_collaboration(db, collaboration_id: str) -> dict:
     return row
 
 
-async def ensure_collaboration_from_offer(db, offer: dict, *, actor_agency_id: str) -> dict:
-    """Idempotent: accepting an MLS offer creates/returns property-scoped collaboration.
+def assert_mls_listing_shareable(prop: dict) -> None:
+    """Same gates as mls.create_offer for MLS-visible listings."""
+    if prop.get("visibility") == "private" or prop.get("mls_shared") is False:
+        raise HTTPException(status_code=400, detail="property_not_shared_on_mls")
 
-    Does NOT create document requests or share fascicolo.
+
+async def ensure_collaboration_from_offer(db, offer: dict, *, actor_agency_id: str) -> dict:
+    """Idempotent: accepting an MLS offer links to property-scoped collaboration.
+
+    Rules:
+    - active/open → return existing (no duplicate)
+    - pending → return existing WITHOUT auto-activating (owner consent still required
+      unless actor is owner — offer accept by partner never silently activates pending)
+    - revoked/rejected → allow creating a new active collaboration from this offer
+    Never creates document requests or shares fascicolo.
     """
+    base_q = {
+        "property_id": offer["property_id"],
+        "owner_agency_id": offer["from_agency_id"],
+        "partner_agency_id": offer["to_agency_id"],
+    }
     existing = await db.mls_collaborations.find_one(
-        {
-            "property_id": offer["property_id"],
-            "owner_agency_id": offer["from_agency_id"],
-            "partner_agency_id": offer["to_agency_id"],
-            "status": {"$in": ["active", "open"]},
-        },
+        {**base_q, "status": {"$in": ["active", "open", "pending"]}},
         {"_id": 0},
     )
     if existing:
         return existing
+
     now = utc_now()
     doc = {
         "id": new_id(),
@@ -77,8 +94,16 @@ async def ensure_collaboration_from_offer(db, offer: dict, *, actor_agency_id: s
         "created_at": now,
         "updated_at": now,
         "activated_by_agency_id": actor_agency_id,
-        "document_request_auto": False,  # explicit invariant
+        "document_request_auto": False,
         "notes": "Created from MLS offer accept — no automatic document share",
+        "history": [
+            {
+                "at": now,
+                "event": "created_from_offer",
+                "offer_id": offer["id"],
+                "by_agency_id": actor_agency_id,
+            }
+        ],
     }
     await db.mls_collaborations.insert_one(doc)
     doc.pop("_id", None)
@@ -111,6 +136,41 @@ DEAL_TRANSITIONS: dict[str, set[str]] = {
     "archived": set(),
 }
 
+# Who may perform which transition (role relative to deal)
+OWNER_TRANSITIONS = {
+    "open": {"proposal_prepared", "lost", "archived"},
+    "proposal_prepared": {"proposal_sent", "open", "lost", "archived"},
+    "proposal_sent": {"lost", "archived"},  # owner awaits partner response
+    "counter": {"proposal_sent", "lost", "archived"},
+    "accepted": {"won", "lost", "archived"},
+    "rejected": {"open", "archived"},
+    "won": {"archived"},
+    "lost": {"archived", "open"},
+    "archived": set(),
+}
+
+PARTNER_TRANSITIONS = {
+    "proposal_sent": {"accepted", "rejected", "counter"},
+    "counter": set(),  # partner made counter; owner must respond by re-sending
+}
+
+
+def deal_role(deal: dict, agency_id: str) -> Optional[str]:
+    if agency_id == deal.get("agency_id"):
+        return "owner"
+    if agency_id == deal.get("partner_agency_id"):
+        return "partner"
+    return None
+
+
+def allowed_deal_transitions(deal: dict, agency_id: str) -> set[str]:
+    role = deal_role(deal, agency_id)
+    if role == "owner":
+        return set(OWNER_TRANSITIONS.get(deal.get("status"), set()))
+    if role == "partner":
+        return set(PARTNER_TRANSITIONS.get(deal.get("status"), set()))
+    return set()
+
 
 def assert_deal_transition(current: str, new: str) -> None:
     allowed = DEAL_TRANSITIONS.get(current, set())
@@ -118,6 +178,21 @@ def assert_deal_transition(current: str, new: str) -> None:
         raise HTTPException(
             status_code=400,
             detail={"error": "invalid_deal_transition", "from": current, "to": new},
+        )
+
+
+def assert_deal_transition_for_actor(deal: dict, agency_id: str, new: str) -> None:
+    assert_deal_transition(deal["status"], new)
+    allowed = allowed_deal_transitions(deal, agency_id)
+    if new not in allowed:
+        raise HTTPException(
+            status_code=403,
+            detail={
+                "error": "deal_transition_forbidden",
+                "from": deal["status"],
+                "to": new,
+                "role": deal_role(deal, agency_id),
+            },
         )
 
 
@@ -157,3 +232,42 @@ def require_thread_access(thread: dict, agency_id: str) -> None:
         raise HTTPException(status_code=403, detail="chat_forbidden")
     if thread.get("status") == "revoked":
         raise HTTPException(status_code=403, detail="chat_revoked")
+
+
+def chat_scope_key(
+    collaboration_id: str,
+    *,
+    visit_id: Optional[str] = None,
+    deal_id: Optional[str] = None,
+) -> str:
+    """Canonical exact scope — absent visit/deal never collide with scoped threads."""
+    v = visit_id or "-"
+    d = deal_id or "-"
+    return f"{collaboration_id}|v:{v}|d:{d}"
+
+
+def chat_thread_scope_query(
+    collaboration_id: str,
+    *,
+    visit_id: Optional[str] = None,
+    deal_id: Optional[str] = None,
+) -> dict[str, Any]:
+    return {
+        "collaboration_id": collaboration_id,
+        "status": "open",
+        "scope_key": chat_scope_key(
+            collaboration_id, visit_id=visit_id, deal_id=deal_id
+        ),
+    }
+
+
+async def assert_document_request_accessible(db, row: dict) -> dict:
+    """Deny access when request or parent collaboration is revoked."""
+    if row.get("status") == "revoked":
+        raise HTTPException(status_code=403, detail="document_access_revoked")
+    collab = await get_collaboration(db, row["collaboration_id"])
+    if collab.get("status") == "revoked":
+        raise HTTPException(status_code=403, detail="document_access_revoked")
+    if collab.get("status") != "active":
+        raise HTTPException(status_code=403, detail="collaboration_not_active")
+    return collab

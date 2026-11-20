@@ -18,8 +18,7 @@ def _user(agency_id="agA", role="agency_admin", uid="u1"):
 
 
 class _DB:
-    def __init__(self, db):
-        self._db = db
+    _inst = None
 
     @classmethod
     def get(cls):
@@ -42,8 +41,12 @@ def _bind(db: FakeDB):
         "deals",
         "properties",
         "clients",
+        "agencies",
+        "mls_document_artifacts",
+        "mls_document_distributions",
+        "mls_rating_dispute_audit",
     ):
-        if not hasattr(db, name):
+        if not hasattr(db, name) or getattr(db, name) is None:
             setattr(db, name, FakeColl())
         _patch_find(getattr(db, name))
 
@@ -52,32 +55,44 @@ def _bind(db: FakeDB):
 def harness():
     db = FakeDB()
     _bind(db)
+    db.agencies = FakeColl()
+    _patch_find(db.agencies)
+    db.agencies.docs.extend(
+        [
+            {"id": "agA", "mls_enabled": True},
+            {"id": "agB", "mls_enabled": True},
+            {"id": "agX", "mls_enabled": True},
+        ]
+    )
+    db.mls_document_artifacts = FakeColl()
+    _patch_find(db.mls_document_artifacts)
+    db.mls_document_distributions = FakeColl()
+    _patch_find(db.mls_document_distributions)
+    db.mls_rating_dispute_audit = FakeColl()
+    _patch_find(db.mls_rating_dispute_audit)
+
+    async def agency_from_user(user):
+        return user["agency_id"]
+
     with patch("apps.immoweb.collaborations.Database", _DB), patch(
         "apps.immoweb.deals.Database", _DB
-    ), patch(
-        "apps.immoweb.collaborations._agency_id",
-        side_effect=lambda user: _run_coro_or_val(user),
-    ), patch(
-        "apps.immoweb.deals._agency_id",
-        side_effect=lambda user: _run_coro_or_val(user),
+    ), patch("apps.immoweb.collaborations._agency_id", agency_from_user), patch(
+        "apps.immoweb.deals._agency_id", agency_from_user
     ):
-        # Replace _agency_id with sync-friendly async
-        async def agency_from_user(user):
-            return user["agency_id"]
-
-        with patch("apps.immoweb.collaborations._agency_id", agency_from_user), patch(
-            "apps.immoweb.deals._agency_id", agency_from_user
-        ):
-            yield db
-
-
-def _run_coro_or_val(user):
-    return user["agency_id"]
+        yield db
 
 
 def test_accept_collab_no_auto_doc_then_visit_feedback_deal_chat(harness):
     db = harness
-    db.properties.docs.append({"id": "p1", "agency_id": "agA", "title": "Villa"})
+    db.properties.docs.append(
+        {
+            "id": "p1",
+            "agency_id": "agA",
+            "title": "Villa",
+            "visibility": "public",
+            "mls_shared": True,
+        }
+    )
     db.clients.docs.append({"id": "cl1", "agency_id": "agB", "name": "Mario", "surname": "R"})
 
     # B requests collab
@@ -201,10 +216,10 @@ def test_accept_collab_no_auto_doc_then_visit_feedback_deal_chat(harness):
     deal = _run(deals_mod.send_proposal(deal["id"], _user("agB")))
     assert deal["status"] == "proposal_sent"
     deal = _run(
-        deals_mod.update_deal(
+        deals_mod.partner_respond_proposal(
             deal["id"],
-            deals_mod.DealUpdate(status="accepted"),
-            _user("agB"),
+            deals_mod.DealPartnerRespond(action="accepted"),
+            _user("agA"),
         )
     )
     assert deal["status"] == "accepted"

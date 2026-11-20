@@ -255,6 +255,35 @@ async def ensure_indexes() -> None:
         await db["email_verification_tokens"].create_index(
             [("expires_at", 1)], expireAfterSeconds=0
         )
+        # D-175 — MLS collab / visit feedback / chat / deals (non-destructive)
+        await db["mls_collaborations"].create_index([("id", 1)], unique=True)
+        await db["mls_collaborations"].create_index(
+            [("property_id", 1), ("owner_agency_id", 1), ("partner_agency_id", 1), ("status", 1)]
+        )
+        await db["mls_visits"].create_index([("id", 1)], unique=True)
+        await db["mls_visits"].create_index([("collaboration_id", 1), ("created_at", -1)])
+        await db["mls_visit_feedback"].create_index([("id", 1)], unique=True)
+        await db["mls_visit_feedback"].create_index(
+            [("visit_id", 1), ("from_agency_id", 1)],
+            unique=True,
+            name="mls_visit_feedback_one_per_agency",
+        )
+        await db["mls_chat_threads"].create_index([("id", 1)], unique=True)
+        await db["mls_chat_threads"].create_index(
+            [("scope_key", 1), ("status", 1)],
+            name="mls_chat_threads_scope_status",
+        )
+        await db["mls_document_requests"].create_index([("id", 1)], unique=True)
+        await db["mls_document_requests"].create_index(
+            [("collaboration_id", 1), ("status", 1)]
+        )
+        await db["deals"].create_index([("id", 1)], unique=True)
+        await db["deals"].create_index([("agency_id", 1), ("updated_at", -1)])
+        await db["deals"].create_index([("collaboration_id", 1)])
+        await db["mls_rating_dispute_audit"].create_index([("feedback_id", 1), ("at", -1)])
+        await db["subscriptions"].create_index(
+            [("stripe_subscription_id", 1)], sparse=True
+        )
     except Exception as e:
         logger.warning(f"Cross-tenant index creation skipped: {e}")
 

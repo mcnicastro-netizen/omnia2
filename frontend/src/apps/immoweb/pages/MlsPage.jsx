@@ -114,6 +114,15 @@ export default function MlsPage() {
           <p className="text-crm-muted max-w-2xl text-sm">
             Collabora con altre agenzie: inventario condiviso, rete locale e Italia, offerte e partnership.
           </p>
+          <p className="text-xs">
+            <Link className="underline" to={`/${lang}/app/collaborations`}>
+              Workspace collaborazioni / visite / chat
+            </Link>
+            {" · "}
+            <Link className="underline" to={`/${lang}/app/deals`}>
+              Deal
+            </Link>
+          </p>
         </header>
 
         {err ? (

@@ -3,19 +3,22 @@ from __future__ import annotations
 
 from typing import Any, Literal, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
 
 from shared.auth.dependencies import require_roles
 from shared.db.connection import Database
 from shared.mls_collab.service import (
     DEAL_STATUSES,
-    assert_deal_transition,
+    allowed_deal_transitions,
+    assert_deal_transition_for_actor,
+    deal_role,
     get_collaboration,
     get_deal,
     get_visit,
     new_id,
     require_agency_in_collaboration,
+    require_collaboration_active,
     strip_id,
     utc_now,
 )
@@ -50,6 +53,19 @@ class DealProposal(BaseModel):
     notes: Optional[str] = Field(default=None, max_length=4000)
 
 
+class DealPartnerRespond(BaseModel):
+    action: Literal["accepted", "rejected", "counter"]
+    counter_amount: Optional[float] = Field(default=None, ge=0)
+    notes: Optional[str] = Field(default=None, max_length=4000)
+
+
+def _enrich_deal(deal: dict, aid: str) -> dict:
+    out = dict(deal)
+    out["role"] = deal_role(deal, aid)
+    out["allowed_transitions"] = sorted(allowed_deal_transitions(deal, aid))
+    return out
+
+
 @router.get("")
 async def list_deals(
     status: Optional[str] = None,
@@ -63,7 +79,7 @@ async def list_deals(
     if status:
         q["status"] = status
     items = [
-        strip_id(r)
+        _enrich_deal(strip_id(r), aid)
         async for r in db.deals.find(q, {"_id": 0}).sort("updated_at", -1).limit(100)
     ]
     return {"items": items}
@@ -74,6 +90,13 @@ async def open_deal(
     body: DealCreate,
     user: dict = Depends(require_roles("agency_admin", "agent", "super_admin")),
 ):
+    """Open a Deal.
+
+    With collaboration_id: requires active collaboration (FIX-04). MLS partner
+    may open on the shared property via get_raw after membership check.
+    Without collaboration_id: own-property Deal only — does not bypass MLS
+    collab/visit rules for cross-agency cases (explicit: no collaboration path).
+    """
     db = Database.get()
     raw = Database.get_raw()
     aid = await _agency_id(user)
@@ -81,14 +104,21 @@ async def open_deal(
         {"id": body.property_id, "agency_id": aid},
         {"_id": 0, "id": 1, "title": 1},
     )
-    # Partner may open deal on collaboration property they don't own
-    if not prop and body.collaboration_id:
+    partner = body.partner_agency_id
+    if body.collaboration_id:
         collab = await get_collaboration(db, body.collaboration_id)
         require_agency_in_collaboration(collab, aid)
+        require_collaboration_active(collab)
         if collab["property_id"] != body.property_id:
             raise HTTPException(status_code=400, detail="property_collaboration_mismatch")
-        prop = await raw.properties.find_one(
-            {"id": body.property_id}, {"_id": 0, "id": 1, "title": 1}
+        if not prop:
+            prop = await raw.properties.find_one(
+                {"id": body.property_id}, {"_id": 0, "id": 1, "title": 1}
+            )
+        partner = (
+            collab["partner_agency_id"]
+            if aid == collab["owner_agency_id"]
+            else collab["owner_agency_id"]
         )
     if not prop:
         raise HTTPException(status_code=404, detail="property_not_found")
@@ -104,11 +134,8 @@ async def open_deal(
             raise HTTPException(status_code=400, detail="visit_not_completed")
         if aid not in (visit["owner_agency_id"], visit["partner_agency_id"]):
             raise HTTPException(status_code=403, detail="visit_forbidden")
-    partner = body.partner_agency_id
-    if body.collaboration_id:
-        collab = await get_collaboration(db, body.collaboration_id)
-        require_agency_in_collaboration(collab, aid)
-        partner = collab["partner_agency_id"] if aid == collab["owner_agency_id"] else collab["owner_agency_id"]
+        if body.collaboration_id and visit.get("collaboration_id") != body.collaboration_id:
+            raise HTTPException(status_code=400, detail="visit_collaboration_mismatch")
     now = utc_now()
     doc = {
         "id": new_id(),
@@ -131,7 +158,7 @@ async def open_deal(
     }
     await db.deals.insert_one(doc)
     doc.pop("_id", None)
-    return doc
+    return _enrich_deal(doc, aid)
 
 
 @router.get("/{deal_id}")
@@ -144,7 +171,17 @@ async def get_deal_detail(
     deal = await get_deal(db, deal_id)
     if aid not in (deal.get("agency_id"), deal.get("partner_agency_id")):
         raise HTTPException(status_code=403, detail="deal_forbidden")
-    return deal
+    # Revoked collab must not keep Deal as a bypass channel for mutations —
+    # read still allowed for history; mutations check below.
+    return _enrich_deal(deal, aid)
+
+
+async def _assert_deal_collab_still_active(db, deal: dict) -> None:
+    cid = deal.get("collaboration_id")
+    if not cid:
+        return
+    collab = await get_collaboration(db, cid)
+    require_collaboration_active(collab)
 
 
 @router.patch("/{deal_id}")
@@ -156,25 +193,33 @@ async def update_deal(
     db = Database.get()
     aid = await _agency_id(user)
     deal = await get_deal(db, deal_id)
-    if aid != deal.get("agency_id"):
-        raise HTTPException(status_code=403, detail="deal_owner_only")
+    role = deal_role(deal, aid)
+    if role is None:
+        raise HTTPException(status_code=403, detail="deal_forbidden")
+    await _assert_deal_collab_still_active(db, deal)
     patch: dict[str, Any] = {"updated_at": utc_now()}
     if body.notes is not None:
+        if role != "owner":
+            raise HTTPException(status_code=403, detail="deal_owner_only")
         patch["notes"] = body.notes
-    if body.proposal_amount is not None:
-        patch["proposal_amount"] = body.proposal_amount
-    if body.proposal_notes is not None:
-        patch["proposal_notes"] = body.proposal_notes
+    if body.proposal_amount is not None or body.proposal_notes is not None:
+        if role != "owner":
+            raise HTTPException(status_code=403, detail="deal_owner_only")
+        if body.proposal_amount is not None:
+            patch["proposal_amount"] = body.proposal_amount
+        if body.proposal_notes is not None:
+            patch["proposal_notes"] = body.proposal_notes
     if body.status:
         if body.status not in DEAL_STATUSES:
             raise HTTPException(status_code=400, detail="invalid_deal_status")
-        assert_deal_transition(deal["status"], body.status)
+        assert_deal_transition_for_actor(deal, aid, body.status)
         patch["status"] = body.status
         hist = {
             "at": utc_now(),
             "from": deal["status"],
             "to": body.status,
             "by": user.get("id") or user.get("sub"),
+            "role": role,
         }
         await db.deals.update_one(
             {"id": deal_id},
@@ -182,7 +227,7 @@ async def update_deal(
         )
     else:
         await db.deals.update_one({"id": deal_id}, {"$set": patch})
-    return await get_deal(db, deal_id)
+    return _enrich_deal(await get_deal(db, deal_id), aid)
 
 
 @router.post("/{deal_id}/proposals", status_code=201)
@@ -194,8 +239,9 @@ async def add_proposal(
     db = Database.get()
     aid = await _agency_id(user)
     deal = await get_deal(db, deal_id)
-    if aid != deal.get("agency_id"):
+    if deal_role(deal, aid) != "owner":
         raise HTTPException(status_code=403, detail="deal_owner_only")
+    await _assert_deal_collab_still_active(db, deal)
     now = utc_now()
     proposal = {
         "id": new_id(),
@@ -211,16 +257,17 @@ async def add_proposal(
     }
     push: dict[str, Any] = {"proposals": proposal}
     if deal["status"] == "open":
-        assert_deal_transition("open", "proposal_prepared")
+        assert_deal_transition_for_actor(deal, aid, "proposal_prepared")
         patch["status"] = "proposal_prepared"
         push["history"] = {
             "at": now,
             "from": "open",
             "to": "proposal_prepared",
             "by": user.get("id") or user.get("sub"),
+            "role": "owner",
         }
     await db.deals.update_one({"id": deal_id}, {"$set": patch, "$push": push})
-    return await get_deal(db, deal_id)
+    return _enrich_deal(await get_deal(db, deal_id), aid)
 
 
 @router.post("/{deal_id}/send-proposal")
@@ -231,9 +278,10 @@ async def send_proposal(
     db = Database.get()
     aid = await _agency_id(user)
     deal = await get_deal(db, deal_id)
-    if aid != deal.get("agency_id"):
+    if deal_role(deal, aid) != "owner":
         raise HTTPException(status_code=403, detail="deal_owner_only")
-    assert_deal_transition(deal["status"], "proposal_sent")
+    await _assert_deal_collab_still_active(db, deal)
+    assert_deal_transition_for_actor(deal, aid, "proposal_sent")
     now = utc_now()
     await db.deals.update_one(
         {"id": deal_id},
@@ -245,8 +293,53 @@ async def send_proposal(
                     "from": deal["status"],
                     "to": "proposal_sent",
                     "by": user.get("id") or user.get("sub"),
+                    "role": "owner",
                 }
             },
         },
     )
-    return await get_deal(db, deal_id)
+    return _enrich_deal(await get_deal(db, deal_id), aid)
+
+
+@router.post("/{deal_id}/partner-respond")
+async def partner_respond_proposal(
+    deal_id: str,
+    body: DealPartnerRespond,
+    user: dict = Depends(require_roles("agency_admin", "agent", "super_admin")),
+):
+    """Explicit partner powers: accept / reject / counter when proposal_sent."""
+    db = Database.get()
+    aid = await _agency_id(user)
+    deal = await get_deal(db, deal_id)
+    if deal_role(deal, aid) != "partner":
+        raise HTTPException(status_code=403, detail="deal_partner_only")
+    await _assert_deal_collab_still_active(db, deal)
+    new_status = body.action
+    assert_deal_transition_for_actor(deal, aid, new_status)
+    now = utc_now()
+    patch: dict[str, Any] = {"status": new_status, "updated_at": now}
+    push: dict[str, Any] = {
+        "history": {
+            "at": now,
+            "from": deal["status"],
+            "to": new_status,
+            "by": user.get("id") or user.get("sub"),
+            "role": "partner",
+            "notes": body.notes,
+        }
+    }
+    if new_status == "counter":
+        if body.counter_amount is None:
+            raise HTTPException(status_code=400, detail="counter_amount_required")
+        patch["proposal_amount"] = body.counter_amount
+        patch["proposal_notes"] = body.notes
+        push["proposals"] = {
+            "id": new_id(),
+            "amount": body.counter_amount,
+            "notes": body.notes,
+            "kind": "counter",
+            "created_at": now,
+            "created_by_user_id": user.get("id") or user.get("sub"),
+        }
+    await db.deals.update_one({"id": deal_id}, {"$set": patch, "$push": push})
+    return _enrich_deal(await get_deal(db, deal_id), aid)

@@ -1,4 +1,6 @@
 import React, { useCallback, useEffect, useState } from "react";
+import { Link, useSearchParams } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import AgencyShell from "../components/AgencyShell";
 import { api } from "../../../shared/lib/api";
 
@@ -7,6 +9,10 @@ import { api } from "../../../shared/lib/api";
  * chat contestuale. Non confonde accettazione collaborazione con condivisione documenti.
  */
 export default function CollaborationsPage() {
+  const { i18n } = useTranslation();
+  const lang = (i18n.language || "it").slice(0, 2);
+  const [searchParams] = useSearchParams();
+  const highlightCollab = searchParams.get("collaboration_id");
   const [items, setItems] = useState([]);
   const [visits, setVisits] = useState([]);
   const [feedback, setFeedback] = useState([]);
@@ -171,6 +177,15 @@ export default function CollaborationsPage() {
             Accettazione collaborazione, visite, mini-dossier (solo feedback/rating), richiesta
             documentale esplicita e chat contestuale. Nessuna condivisione automatica di fascicolo.
           </p>
+          <p className="text-xs">
+            <Link className="underline" to={`/${lang}/app/mls`}>
+              MLS
+            </Link>
+            {" · "}
+            <Link className="underline" to={`/${lang}/app/deals`}>
+              Deal
+            </Link>
+          </p>
         </header>
 
         {err ? (
@@ -188,18 +203,16 @@ export default function CollaborationsPage() {
               {items.map((c) => (
                 <li
                   key={c.id}
-                  className="border border-crm-border rounded-lg p-4 space-y-2 bg-white/60"
+                  className={`border border-crm-border rounded-lg p-4 space-y-2 bg-white/60 ${
+                    highlightCollab === c.id ? "ring-2 ring-slate-700" : ""
+                  }`}
                   data-testid={`collab-item-${c.id}`}
                 >
                   <div className="flex flex-wrap gap-2 justify-between items-start">
                     <div>
                       <p className="text-sm font-medium">Immobile {c.property_id}</p>
                       <p className="text-xs text-crm-muted">
-                        Owner {c.owner_agency_id} · Partner {c.partner_agency_id} · {c.status}
-                      </p>
-                      <p className="text-xs text-emerald-700">
-                        auto_doc={String(!!c.document_request_auto)} · auto_share=
-                        {String(!!c.auto_document_share)}
+                        Stato: {c.status} · auto documenti: no
                       </p>
                     </div>
                     <div className="flex flex-wrap gap-2">
@@ -241,6 +254,12 @@ export default function CollaborationsPage() {
                           >
                             Chat contestuale
                           </button>
+                          <Link
+                            className="text-xs px-3 py-1 rounded border inline-flex items-center"
+                            to={`/${lang}/app/deals?collaboration_id=${encodeURIComponent(c.id)}&property_id=${encodeURIComponent(c.property_id || "")}`}
+                          >
+                            Apri Deal
+                          </Link>
                           <button
                             type="button"
                             disabled={busy}
@@ -250,6 +269,9 @@ export default function CollaborationsPage() {
                             Revoca
                           </button>
                         </>
+                      ) : null}
+                      {c.status === "revoked" ? (
+                        <span className="text-xs text-rose-700">Accessi documenti/chat revocati</span>
                       ) : null}
                     </div>
                   </div>
@@ -361,6 +383,33 @@ export default function CollaborationsPage() {
                 >
                   Condividi (owner)
                 </button>
+              ) : null}
+              {d.status === "fulfilled" ? (
+                <button
+                  type="button"
+                  className="text-xs px-2 py-1 border rounded"
+                  disabled={busy}
+                  onClick={async () => {
+                    try {
+                      const r = await api.get(`/app/document-requests/${d.id}/download`, {
+                        responseType: "blob",
+                      });
+                      const url = URL.createObjectURL(r.data);
+                      const a = document.createElement("a");
+                      a.href = url;
+                      a.download = `omnia-wm-${d.id}.jpg`;
+                      a.click();
+                      URL.revokeObjectURL(url);
+                    } catch (e) {
+                      setErr(e?.response?.data?.detail || "Download watermark fallito");
+                    }
+                  }}
+                >
+                  Scarica watermarkato
+                </button>
+              ) : null}
+              {d.status === "revoked" ? (
+                <span className="text-xs text-rose-700">revocata</span>
               ) : null}
             </div>
           ))}
