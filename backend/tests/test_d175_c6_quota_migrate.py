@@ -110,6 +110,35 @@ def test_c6_assert_upload_uses_pool_not_org_only():
     assert ei.value.status_code == 413
 
 
+def test_c6_migrate_dry_run_no_mutations():
+    db = FakeDB()
+    _base(db)
+    db.commercial_customers.docs.append({"id": "cc1", "storage_extra_gb": 0})
+    db.agencies.docs.append(
+        {"id": "ag1", "commercial_customer_id": "cc1", "storage_extra_gb": 100}
+    )
+    db.payment_transactions.docs.append(
+        {
+            "session_id": "cs_stor_1",
+            "kind": "storage_addon",
+            "payment_status": "paid",
+            "storage_gb": 100,
+            "commercial_customer_id": "cc1",
+            "agency_id": "ag1",
+        }
+    )
+    dry = _run(mig.run_migration(db, dry_run=True, cc_id="cc1"))
+    assert dry["dry_run"] is True
+    assert dry["migrate"] == 1
+    assert db.agencies.docs[0]["storage_extra_gb"] == 100
+    assert db.commercial_customers.docs[0]["storage_extra_gb"] == 0
+    assert db.storage_migration_snapshots.docs == []
+    assert db.commercial_customers.docs[0].get("storage_migration_status") in (
+        None,
+        "",
+    )
+
+
 def test_c6_migrate_preserves_legacy_snapshot():
     db = FakeDB()
     _base(db)
