@@ -201,6 +201,75 @@ async def assert_agency_wallet_operable(
     )
 
 
+async def authorize_h4_purchase(
+    db,
+    user: dict,
+    commercial_customer_id: str,
+    *,
+    agency_id: Optional[str] = None,
+) -> dict:
+    """D-175 C5 — commercial purchase authority (C5-D01 / C5-D04).
+
+    Order (caller must run H4 + service guards first):
+    Super Admin DENY → CC id required → resolve + Main Admin + eligible + operable
+    → optional agency must belong to same CC.
+
+    Membership / require_agency / agency_admin are NOT authority sources.
+    """
+    if (user or {}).get("role") == "super_admin":
+        raise HTTPException(
+            status_code=403,
+            detail={
+                "error": "sa_purchase_forbidden",
+                "code": "sa_purchase_forbidden",
+                "message": (
+                    "Super Admin escluso dagli acquisti ordinari crediti/storage (C5-D04)."
+                ),
+            },
+        )
+
+    cc_id = (commercial_customer_id or "").strip()
+    if not cc_id:
+        raise HTTPException(
+            status_code=400,
+            detail={
+                "error": "commercial_customer_id_required",
+                "code": "commercial_customer_id_required",
+            },
+        )
+
+    cc = await assert_is_main_admin_of(
+        db,
+        user,
+        cc_id,
+        for_mutation=True,
+        require_wallet_operable=True,
+    )
+
+    ctx_agency = (agency_id or "").strip()
+    if ctx_agency:
+        agency = await db.agencies.find_one(
+            {"id": ctx_agency}, {"_id": 0, "id": 1, "commercial_customer_id": 1}
+        )
+        org_cc = ((agency or {}).get("commercial_customer_id") or "").strip()
+        if not agency or org_cc != cc_id:
+            await append_main_admin_event(
+                db,
+                commercial_customer_id=cc_id,
+                event_type="deny_attempt",
+                actor_user_id=user.get("id"),
+                outcome="denied",
+                reason="agency_cc_mismatch",
+                meta={"agency_id": ctx_agency},
+            )
+            raise HTTPException(
+                status_code=403,
+                detail={"error": "agency_cc_mismatch", "code": "agency_cc_mismatch"},
+            )
+
+    return cc
+
+
 async def assert_is_main_admin_of(
     db,
     user: dict,

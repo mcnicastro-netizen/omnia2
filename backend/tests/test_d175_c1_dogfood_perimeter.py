@@ -257,7 +257,9 @@ def test_c1_buy_credits_route_returns_503(dogfood_env, monkeypatch):
         "agency_ids": ["ag1"],
         "active_agency_id": "ag1",
     }
-    payload = CreditPurchaseRequest(package_key="credits_200")
+    payload = CreditPurchaseRequest(
+        package_key="pkg_400", commercial_customer_id="cc1"
+    )
     req = MagicMock()
 
     async def _call():
@@ -271,6 +273,7 @@ def test_c1_buy_credits_route_returns_503(dogfood_env, monkeypatch):
 
 def test_c1_buy_storage_route_returns_503(dogfood_env, monkeypatch):
     from apps.billing import routes as billing_routes
+    from apps.billing.models import StoragePurchaseRequest
 
     monkeypatch.setenv("OMNIA_SELF_SERVE_ENABLED", "true")
     monkeypatch.setenv("OMNIA_H4_PURCHASE_READY", "true")
@@ -282,9 +285,10 @@ def test_c1_buy_storage_route_returns_503(dogfood_env, monkeypatch):
         "active_agency_id": "ag1",
     }
     req = MagicMock()
+    payload = StoragePurchaseRequest(commercial_customer_id="cc1")
 
     async def _call():
-        return await billing_routes.buy_storage(req, user)
+        return await billing_routes.buy_storage(payload, req, user)
 
     with pytest.raises(HTTPException) as ei:
         asyncio.run(_call())
