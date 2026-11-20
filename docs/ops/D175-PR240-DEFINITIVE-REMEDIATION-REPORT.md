@@ -8,7 +8,7 @@
 | Codice funzionale precedente | `68b0fc6` |
 | Tip pre-patch (EOD docs) | `758df8632f41d340871b1c67d55a64342a34b70e` |
 | SHA codice patch (testato) | `122d5386f6050c375b3432960c8fda686287161c` |
-| SHA tip branch (allineato) | `6ce43bfab449af7f82f69edd2bb38f61a1e69b01` |
+| SHA tip branch (allineato) | `96de408cd76186d568240b52cde3e1fea3483398` |
 | PR | https://github.com/mcnicastro-netizen/omnia2/pull/240 |
 | Ambiente | Dogfood `OMNIA_ENV=dogfood` · `DB_NAME=omnia_df_clean_c4` · Mongo `:27018` |
 | Working tree pre-intervento | pulito su `758df86` |
