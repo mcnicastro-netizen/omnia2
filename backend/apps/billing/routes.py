@@ -1025,6 +1025,21 @@ async def stripe_webhook(request: Request):
             {"$set": {"status": "failed", "payment_status": "failed", "updated_at": now}},
         )
 
+    elif etype == "customer.subscription.deleted":
+        # Mirror cancel only — do NOT auto-mutate CommercialCustomer operational status here.
+        agency_id = (obj.get("metadata") or {}).get("agency_id")
+        upd = {
+            "status": "canceled",
+            "stripe_status": "canceled",
+            "canceled_at": now,
+            "updated_at": now,
+        }
+        cc_id = (obj.get("metadata") or {}).get("commercial_customer_id")
+        if cc_id:
+            upd["commercial_customer_id"] = cc_id
+        q = {"stripe_subscription_id": obj["id"]} if not agency_id else {"agency_id": agency_id}
+        await db.subscriptions.update_one(q, {"$set": upd})
+
     return {"received": True}
 
 

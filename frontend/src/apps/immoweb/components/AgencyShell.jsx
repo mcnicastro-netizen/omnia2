@@ -235,6 +235,8 @@ export default function AgencyShell({ children, current = "dashboard", showBack 
     { key: "mandates", to: `/${lang}/app/mandate-opportunities`, label: t("immoweb_app.nav_mandates") || "Mandati", cluster: "operativo" },
     // A-034 R4 — Analytics A/B fuori nav primaria (link in Impostazioni)
     { key: "mls", to: `/${lang}/app/mls`, label: "MLS", cluster: "pubblicazione" },
+    { key: "collaborations", to: `/${lang}/app/collaborations`, label: "Collaborazioni", cluster: "operativo" },
+    { key: "deals", to: `/${lang}/app/deals`, label: "Deal", cluster: "operativo" },
     ...(isAgencyAdmin
       ? [{ key: "website", to: `/${lang}/app/website`, label: t("immoweb_app.nav_website") || "Il mio sito", cluster: "pubblicazione" }]
       : []),

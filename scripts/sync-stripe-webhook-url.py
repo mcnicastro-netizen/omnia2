@@ -18,7 +18,15 @@ BACKEND = ROOT / "backend"
 sys.path.insert(0, str(BACKEND))
 
 ENDPOINT_DESC = "OMNIA Cloud Agent portal (auto-sync)"
-EVENTS = ("checkout.session.completed", "customer.subscription.updated", "customer.subscription.deleted")
+EVENTS = (
+    "checkout.session.completed",
+    "checkout.session.expired",
+    "checkout.session.async_payment_failed",
+    "customer.subscription.updated",
+    "customer.subscription.deleted",
+    "invoice.paid",
+    "invoice.payment_failed",
+)
 
 
 def _public_url(arg: str | None, share_file: str) -> str:
