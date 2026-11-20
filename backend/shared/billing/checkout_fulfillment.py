@@ -206,53 +206,75 @@ async def fulfill_credits_topup(db, tx: dict, cc: dict) -> None:
     )
 
 
+async def _assert_storage_ledger_applied(db, session_id: str) -> dict:
+    """Fail closed if ledger row is missing or not status=applied."""
+    doc = await db.storage_checkout_fulfillments.find_one(
+        {"session_id": session_id}, {"_id": 0}
+    )
+    if not doc or (doc.get("status") or "") != LEDGER_APPLIED:
+        raise ValueError("storage_ledger_not_persisted")
+    return doc
+
+
 async def _upsert_storage_ledger_applied(
     db, *, session_id: str, cc_id: str, gb: int
-) -> None:
-    """Audit ledger: existence with status=applied means increment completed."""
+) -> dict:
+    """Persist audit ledger as applied; raise if persistence cannot be confirmed.
+
+    Traceability of the purchase must not be silent-failed after a successful $inc.
+    """
     now = _now_iso()
+    fields = {
+        "status": LEDGER_APPLIED,
+        "commercial_customer_id": cc_id,
+        "storage_gb": gb,
+        "applied_at": now,
+        "updated_at": now,
+    }
+
     existing = await db.storage_checkout_fulfillments.find_one(
         {"session_id": session_id}, {"_id": 0}
     )
     if existing:
-        await db.storage_checkout_fulfillments.update_one(
+        result = await db.storage_checkout_fulfillments.update_one(
             {"session_id": session_id},
-            {
-                "$set": {
-                    "status": LEDGER_APPLIED,
-                    "commercial_customer_id": cc_id,
-                    "storage_gb": gb,
-                    "applied_at": now,
-                    "updated_at": now,
-                }
-            },
+            {"$set": fields},
         )
-        return
+        matched = getattr(result, "matched_count", None)
+        if matched == 0:
+            raise ValueError("storage_ledger_update_missed")
+        return await _assert_storage_ledger_applied(db, session_id)
+
+    doc = {
+        "id": session_id,
+        "session_id": session_id,
+        "created_at": now,
+        **fields,
+    }
     try:
-        await db.storage_checkout_fulfillments.insert_one(
-            {
-                "id": session_id,
-                "session_id": session_id,
-                "commercial_customer_id": cc_id,
-                "storage_gb": gb,
-                "status": LEDGER_APPLIED,
-                "applied_at": now,
-                "created_at": now,
-                "updated_at": now,
-            }
+        await db.storage_checkout_fulfillments.insert_one(doc)
+    except Exception as exc:  # noqa: BLE001 — race / duplicate
+        logger.warning(
+            "C6 storage ledger insert race session=%s: %s — trying update",
+            session_id,
+            exc,
         )
-    except Exception:
-        # race: mark applied
-        await db.storage_checkout_fulfillments.update_one(
+        result = await db.storage_checkout_fulfillments.update_one(
             {"session_id": session_id},
-            {
-                "$set": {
-                    "status": LEDGER_APPLIED,
-                    "applied_at": now,
-                    "updated_at": now,
-                }
-            },
+            {"$set": fields},
         )
+        matched = getattr(result, "matched_count", None)
+        if matched == 0:
+            # Also try by id (FakeColl / alternate key)
+            result = await db.storage_checkout_fulfillments.update_one(
+                {"id": session_id},
+                {"$set": fields},
+            )
+            matched = getattr(result, "matched_count", None)
+        if matched == 0:
+            raise ValueError("storage_ledger_not_persisted") from exc
+
+    return await _assert_storage_ledger_applied(db, session_id)
 
 
 async def fulfill_storage_addon(db, tx: dict, cc: dict) -> None:

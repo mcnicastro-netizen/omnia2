@@ -256,6 +256,40 @@ def test_c6_storage_full_retry_after_applied_noop():
     assert db.commercial_customers.docs[0]["storage_extra_gb"] == 100
 
 
+def test_c6_storage_ledger_must_persist_or_fail():
+    """If ledger cannot be written, fulfillment must error (not silent applied)."""
+    db = FakeDB()
+    _seed_cc(db, extra=0)
+    db.payment_transactions.docs.append(_tx(kind="storage_addon", storage_gb=100))
+
+    class _BoomColl(FakeColl):
+        async def insert_one(self, doc):
+            raise RuntimeError("insert_failed")
+
+        async def update_one(self, filt, update, upsert=False):
+            return type("R", (), {"matched_count": 0, "modified_count": 0})()
+
+        async def find_one(self, filt=None, proj=None):
+            return None
+
+    db.storage_checkout_fulfillments = _BoomColl()
+    out = _apply(db)
+    assert out.get("ok") is False
+    assert "storage_ledger_not_persisted" in (out.get("error") or "")
+    assert not db.payment_transactions.docs[0].get("applied_at")
+    assert db.payment_transactions.docs[0].get("fulfillment_status") == cf.FULFILLMENT_ERROR
+    # Gate may have consumed — saldo può essere +100, ma senza applied finché ledger ok
+    # Retry with working ledger must finalize without double-inc
+    db.storage_checkout_fulfillments = FakeColl()
+    stale = (datetime.now(timezone.utc) - timedelta(seconds=600)).isoformat()
+    db.payment_transactions.docs[0]["fulfillment_status"] = cf.FULFILLMENT_PROCESSING
+    db.payment_transactions.docs[0]["fulfillment_started_at"] = stale
+    out2 = _apply(db, stale_seconds=60)
+    assert out2.get("ok") is True
+    assert db.commercial_customers.docs[0]["storage_extra_gb"] == 100
+    assert db.storage_checkout_fulfillments.docs[0]["status"] == cf.LEDGER_APPLIED
+
+
 def test_c6_fresh_processing_not_reclaimed():
     db = FakeDB()
     _seed_cc(db, extra=0)
