@@ -232,9 +232,13 @@ async def demo_status(user: dict = Depends(get_current_user)):
 async def create_checkout(
     payload: CheckoutSessionRequest,
     request: Request,
-    user: dict = Depends(require_roles("super_admin", "agency_admin", "group_admin")),
+    user: dict = Depends(require_roles_exact("super_admin", "agency_admin", "group_admin")),
 ):
-    """Create a Stripe Checkout session for a subscription tier."""
+    """Create a Stripe Checkout session for a subscription tier.
+
+    W3: subscription is a CommercialCustomer commercial act — Main Admin only
+    (branch_admin must not inherit via agency_admin alias).
+    """
     _guard_enabled()
     agency_id = require_agency(user)
     db = Database.get()
@@ -261,8 +265,13 @@ async def create_checkout(
         get_or_create_stripe_customer,
         resolve_commercial_customer_for_agency,
     )
+    from shared.billing import main_admin_service as mas
 
     cc = await resolve_commercial_customer_for_agency(db, agency_id)
+    if user.get("role") != "super_admin":
+        await mas.assert_is_main_admin_of(
+            db, user, cc["id"], for_mutation=True, require_wallet_operable=False
+        )
     await ensure_plan_catalog_version(db)
     stripe_customer_id = await get_or_create_stripe_customer(
         db, cc, email=user.get("email") or "", name=cc.get("legal_name")

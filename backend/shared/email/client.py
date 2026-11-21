@@ -174,10 +174,26 @@ async def send_email(
     """
     from shared.security.circuit import call_with_circuit, circuit_open, is_held
 
-    # 1) Kill-switch first (Precisione Resend — force-test cannot bypass)
+    # 1) In-memory kill / temporary circuit open (force-test cannot bypass)
     if is_held("resend") or circuit_open("resend"):
         logger.warning("[EMAIL KILLED/HELD] to=%s template=%s", to, template)
         return {"id": None, "status": "killed"}
+
+    # 1b) D-175 DEF-05 — persistent SoT / env belt (shared across replicas).
+    # Linearization: this check + the re-check inside _send immediately before
+    # resend.Emails.send. Invokes that already entered to_thread may still
+    # complete after a concurrent set_killed (in-flight window).
+    from shared.ops.provider_flags import resend_must_block_send
+
+    must_block, block_reason = await resend_must_block_send()
+    if must_block:
+        logger.warning(
+            "[EMAIL KILLED/FLAG] to=%s template=%s reason=%s",
+            to,
+            template,
+            block_reason,
+        )
+        return {"id": None, "status": "killed", "kill_reason": block_reason}
 
     env = (os.environ.get("OMNIA_ENV") or "").strip().lower()
     if env == "dogfood":
@@ -271,6 +287,12 @@ async def send_email(
     }
 
     async def _send():
+        # Last-chance SoT check immediately before transport (DEF-05 linearization)
+        block2, reason2 = await resend_must_block_send()
+        if block2:
+            raise RuntimeError(f"circuit_held:resend:{reason2}")
+        if is_held("resend"):
+            raise RuntimeError("circuit_held:resend")
         return await asyncio.to_thread(resend.Emails.send, params)
 
     try:
@@ -281,5 +303,9 @@ async def send_email(
         )
         return {"id": result.get("id"), "status": "sent"}
     except Exception as e:
+        err = str(e)
+        if "circuit_held:resend" in err:
+            logger.warning("[EMAIL KILLED/FLAG] late_check to=%s template=%s err=%s", to, template, err)
+            return {"id": None, "status": "killed", "kill_reason": err}
         logger.error("[EMAIL ERROR] to=%s template=%s err=%s", to, template, e)
-        return {"id": None, "status": "error", "error": str(e)}
+        return {"id": None, "status": "error", "error": err}

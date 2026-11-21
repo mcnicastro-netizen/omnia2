@@ -10,19 +10,34 @@ from pathlib import Path
 from typing import Any
 
 from . import __version__
+from .run_id import validate_run_id
 
 
 def repo_root() -> Path:
     return Path(__file__).resolve().parents[2]
 
 
+def artifacts_d7_root() -> Path:
+    return (repo_root() / "artifacts" / "d7").resolve()
+
+
 def new_run_id() -> str:
     ts = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
-    return f"{ts}_{secrets.token_hex(4)}"
+    rid = f"{ts}_{secrets.token_hex(4)}"
+    return validate_run_id(rid)
 
 
 def run_dir(run_id: str, *, create: bool = True) -> Path:
-    d = repo_root() / "artifacts" / "d7" / run_id
+    rid = validate_run_id(run_id)
+    base = artifacts_d7_root()
+    d = (base / rid).resolve()
+    # Ensure resolved path is strictly under artifacts/d7/
+    try:
+        d.relative_to(base)
+    except ValueError as e:
+        raise RuntimeError(f"run_dir_escapes_artifacts_d7:{d}") from e
+    if d == base:
+        raise RuntimeError("run_dir_is_artifacts_root")
     if create:
         if d.exists():
             raise RuntimeError(f"artifact_dir_exists_refusing_overwrite:{d}")
@@ -34,6 +49,11 @@ def run_dir(run_id: str, *, create: bool = True) -> Path:
 def write_json(path: Path, obj: Any) -> None:
     if path.exists():
         raise RuntimeError(f"refusing_overwrite:{path}")
+    path.write_text(json.dumps(obj, indent=2, default=str) + "\n", encoding="utf-8")
+
+
+def write_json_overwrite(path: Path, obj: Any) -> None:
+    """Allowed only for inventory-style mutable run bookkeeping (not used for secrets)."""
     path.write_text(json.dumps(obj, indent=2, default=str) + "\n", encoding="utf-8")
 
 
@@ -77,8 +97,6 @@ def write_checksums(run_path: Path) -> None:
     for p in sorted(run_path.rglob("*")):
         if p.is_file() and p.name != "sha256sums.txt":
             rel = p.relative_to(run_path).as_posix()
-            # Never checksum secrets content into a world-readable summary with values —
-            # still hash the file bytes for integrity without printing secrets.
             lines.append(f"{sha256_file(p)}  {rel}")
     out = run_path / "sha256sums.txt"
     if out.exists():

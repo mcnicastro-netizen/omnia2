@@ -11,8 +11,6 @@ from shared.db.connection import Database
 from shared.utils.i18n import normalize_lang, t
 from shared.auth.hashing import hash_password, verify_password
 from shared.auth.jwt_tokens import (
-    create_access_token,
-    create_refresh_token,
     decode_token,
     ACCESS_TOKEN_MINUTES,
     REFRESH_TOKEN_DAYS,
@@ -24,10 +22,11 @@ from shared.auth.brute_force import (
 )
 from shared.auth.dependencies import get_current_user
 from shared.auth.session_store import (
-    store_refresh,
     is_refresh_valid,
     revoke_refresh,
     revoke_all_refresh,
+    issue_auth_tokens,
+    mint_access_for_session,
 )
 from shared.models.user import (
     UserInDB,
@@ -62,10 +61,9 @@ def _cookie_kwargs() -> dict:
     return dict(httponly=True, secure=COOKIE_SECURE, samesite=COOKIE_SAMESITE, path="/")
 
 
-def _set_auth_cookies(response: Response, user_id: str, email: str, role: str) -> str:
-    """Set access+refresh cookies; returns the refresh token (for jti persistence)."""
-    access = create_access_token(user_id, email, role)
-    refresh = create_refresh_token(user_id)
+async def _set_auth_cookies(response: Response, user_id: str, email: str, role: str) -> str:
+    """Open Mongo-backed session, set access+refresh cookies; return refresh JWT."""
+    access, refresh = await issue_auth_tokens(user_id, email, role)
     kw = _cookie_kwargs()
     response.set_cookie("access_token", access, max_age=ACCESS_COOKIE_MAX_AGE, **kw)
     response.set_cookie("refresh_token", refresh, max_age=REFRESH_COOKIE_MAX_AGE, **kw)
@@ -180,8 +178,7 @@ async def register(req: RegisterRequest, request: Request, response: Response,
     doc = user.model_dump()
     await db.users.insert_one(doc)
 
-    _refresh_tok = _set_auth_cookies(response, user.id, email, user.role)
-    await store_refresh(_refresh_tok)
+    await _set_auth_cookies(response, user.id, email, user.role)
 
     try:
         from shared.privacy.consent_log import log_consent
@@ -275,8 +272,7 @@ async def login(req: LoginRequest, request: Request, response: Response,
         )
         user = {**user, "active_agency_id": ids[0]}
 
-    _refresh_tok = _set_auth_cookies(response, user["id"], email, user["role"])
-    await store_refresh(_refresh_tok)
+    await _set_auth_cookies(response, user["id"], email, user["role"])
     return _public(user)
 
 
@@ -458,7 +454,10 @@ async def refresh(request: Request, response: Response,
 
     await assert_user_login_allowed(db, user)
 
-    access = create_access_token(user["id"], user["email"], user["role"])
+    sid = payload.get("sid")
+    if not sid:
+        raise HTTPException(status_code=401, detail=t("auth.invalid_token", lang=lang))
+    access = await mint_access_for_session(user, session_id=sid)
     response.set_cookie(
         "access_token", access,
         max_age=ACCESS_COOKIE_MAX_AGE,
@@ -471,9 +470,31 @@ async def refresh(request: Request, response: Response,
 
 @router.post("/logout")
 async def logout(request: Request, response: Response):
+    """Revoke current session (access + refresh). B14 immediate invalidation."""
     await revoke_refresh(request.cookies.get("refresh_token"))
+    # Also drop access sid if refresh cookie missing but access present
+    access = request.cookies.get("access_token")
+    if access:
+        ap = decode_token(access) or {}
+        sid = ap.get("sid")
+        uid = ap.get("sub")
+        if sid and uid:
+            from shared.auth.session_store import revoke_session
+
+            try:
+                await revoke_session(uid, sid, reason="logout")
+            except HTTPException:
+                pass
     _clear_auth_cookies(response)
     return {"status": "ok"}
+
+
+@router.post("/logout-all")
+async def logout_all(request: Request, response: Response, user: dict = Depends(get_current_user)):
+    """Revoke every session for the authenticated account."""
+    await revoke_all_refresh(user["id"])
+    _clear_auth_cookies(response)
+    return {"status": "ok", "revoked": "all"}
 
 
 # ---------------- ACTIVE AGENCY (M5 multi-agency switcher) ----------------

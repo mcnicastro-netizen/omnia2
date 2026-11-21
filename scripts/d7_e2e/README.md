@@ -1,8 +1,9 @@
 # OMNIA D-175 — Harness E2E T3/T4 (`scripts/d7_e2e`)
 
-**Versione:** 1.0.0  
+**Versione:** 1.1.0  
 **Autorizzazione creazione:** Founder A+B (implementazione senza esecuzione)  
-**Esecuzione:** richiede pacchetto **C** + flag `--confirm-staging-run`
+**Correzioni pre-C:** Founder — cinque fix (cleanup/inventory, email gate, run_id, iso T3/T4, pin precheck)  
+**Esecuzione:** richiede pacchetto **C** + flag `--confirm-staging-run` (il flag **non** sostituisce l’autorizzazione Founder)
 
 ## Perché esiste
 
@@ -21,9 +22,13 @@ Questo package è la **nuova baseline versionabile**. Non riproduce A6 bit-a-bit
 
 Solo staging autorizzato (vedi `config.py`):
 
-- FE / BE / DB / pin: valori di default in `config.py` (sovrascritti da `OMNIA_D7_*`)
+- Pin **canonical** hardcoded (`CANONICAL_*`); gli override `OMNIA_D7_*` di identità che differiscono dal pin → precheck FAIL (P0)
+- Proxy Mongo host/port restano operativi via env
 - Railway project name atteso: `omnia-api-staging`
 - Hostname BE contiene il segmento vendor `omnia-api-production-…` **dentro** il progetto staging (vedi forense / D1–D3)
+- `run_id`: solo `[A-Za-z0-9_-]{12,64}` (path traversal rifiutato)
+- T4: email gate fail-closed (`mock|blocked|killed`) **prima** di create-invite
+- Cleanup: inventory `created_ids.json` + tag seed; collection MLS reali (`mls_*`)
 
 ## Prerequisiti runtime (quando C sarà autorizzato)
 

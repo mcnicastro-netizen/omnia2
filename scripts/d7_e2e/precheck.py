@@ -1,4 +1,4 @@
-"""Isolation prechecks — must all PASS before any mutative step."""
+"""Isolation prechecks — must all PASS before any mutative step (fail-closed)."""
 from __future__ import annotations
 
 import json
@@ -8,15 +8,38 @@ import urllib.request
 from typing import Any
 
 from . import config
-from .classify import expect_predicate, is_5xx
+from .classify import aggregate, expect_predicate, is_5xx
 from .http_client import StagingClient
 from .mongo_util import assert_staging_project, connect_staging_db
 
+# Coverage note (documented): we fetch HTML then every ``src="/static/js/..."``
+# and also ``src='/static/js/...'``, ``href=`` to same, and absolute same-origin
+# ``/static/js/`` URLs. We do NOT parse modulepreload of non-js, CSS, or remote
+# CDN hosts. If the FE ships API URLs only inside non-matched assets, P2 may
+# fail-closed (empty refs) rather than PASS.
+_JS_SRC_RE = re.compile(
+    r"""(?:src|href)=["'](/static/js/[^"']+)["']""",
+    re.IGNORECASE,
+)
+_RAILWAY_API_RE = re.compile(r"https://[a-zA-Z0-9._\-]+\.up\.railway\.app")
+
 
 def run_precheck() -> dict[str, Any]:
-    steps = []
-    # P1 FE reachable
-    fe_status, fe_html = _get(config.STAGING_FE_URL)
+    steps: list[dict] = []
+
+    # P0 — pin drift: env override must not redefine identity vs canonical
+    drift = config.pin_drift_report()
+    steps.append(
+        expect_predicate(
+            "P0_canonical_pin_no_drift",
+            drift["ok"],
+            reason="identity_env_override_differs_from_canonical",
+            detail={"mismatches": drift["drifts_mismatch"]},
+        )
+    )
+
+    # P1 FE reachable (canonical URL only)
+    fe_status, fe_html = _get(config.CANONICAL_STAGING_FE_URL)
     steps.append(
         expect_predicate(
             "P1_fe_http",
@@ -25,24 +48,33 @@ def run_precheck() -> dict[str, Any]:
             reason="fe_not_200",
         )
     )
-    # P2 FE bundle points only at staging API
-    api_refs = set(re.findall(r"https://[a-zA-Z0-9._\-]+\.up\.railway\.app", fe_html or ""))
-    for m in re.findall(r'src="(/static/js/[^"]+)"', fe_html or ""):
-        st, js = _get(config.STAGING_FE_URL + m)
-        if st == 200 and isinstance(js, str):
-            api_refs.update(re.findall(r"https://[a-zA-Z0-9._\-]+\.up\.railway\.app", js))
-    only_staging = api_refs == {config.STAGING_API_URL} or (
-        config.STAGING_API_URL in api_refs and all("85845f42" in u for u in api_refs)
-    )
+
+    # P2 FE bundle points exactly at canonical staging API (no substring match)
+    api_refs: set[str] = set()
+    if isinstance(fe_html, str):
+        api_refs.update(_RAILWAY_API_RE.findall(fe_html))
+        for m in _JS_SRC_RE.findall(fe_html):
+            st, js = _get(config.CANONICAL_STAGING_FE_URL + m)
+            if st == 200 and isinstance(js, str):
+                api_refs.update(_RAILWAY_API_RE.findall(js))
+    only_exact = api_refs == {config.CANONICAL_STAGING_API_URL}
     steps.append(
         expect_predicate(
-            "P2_fe_api_refs",
-            only_staging,
-            reason="fe_api_refs_unexpected",
-            detail={"api_refs": sorted(api_refs)},
+            "P2_fe_api_refs_exact",
+            only_exact,
+            reason="fe_api_refs_not_exact_canonical",
+            detail={
+                "api_refs": sorted(api_refs),
+                "canonical": config.CANONICAL_STAGING_API_URL,
+                "coverage": (
+                    "HTML + /static/js/ script|href assets only; "
+                    "non-js/modulepreload/CDN not scanned — empty refs ⇒ fail"
+                ),
+            },
         )
     )
-    # P3/P4/P5 Railway + DB
+
+    # P3/P4/P5 Railway + DB against CANONICAL ids
     tok = os.environ.get("RAILWAY_API_TOKEN") or os.environ.get("RAILWAY_TOKEN")
     if not tok:
         steps.append(
@@ -52,22 +84,23 @@ def run_precheck() -> dict[str, Any]:
                 "reason": "missing_RAILWAY_API_TOKEN",
             }
         )
-        return {"steps": steps, "classification": "BLOCKED"}
+        return {"steps": steps, "classification": aggregate(steps)}
     try:
         proj = assert_staging_project(tok)
         steps.append(
             expect_predicate(
                 "P3_railway_project",
-                proj["name"] == config.RAILWAY_PROJECT_NAME,
-                detail=proj,
+                proj["id"] == config.CANONICAL_RAILWAY_PROJECT_ID
+                and proj["name"] == config.CANONICAL_RAILWAY_PROJECT_NAME,
+                detail={"id": proj.get("id"), "name": proj.get("name")},
             )
         )
         db = connect_staging_db()
         steps.append(
             expect_predicate(
                 "P4_db_name",
-                db.name == config.STAGING_DB_NAME,
-                detail={"db": db.name},
+                db.name == config.CANONICAL_STAGING_DB_NAME,
+                detail={"db": db.name, "canonical": config.CANONICAL_STAGING_DB_NAME},
             )
         )
         steps.append(
@@ -86,7 +119,8 @@ def run_precheck() -> dict[str, Any]:
                 "detail": str(e)[:500],
             }
         )
-    # P6 FE pin via Vercel API if token present; else BLOCKED note (not PASS)
+
+    # P6 FE pin via Vercel — BLOCKED if token missing (never PASS)
     vtok = os.environ.get("VERCEL_TOKEN")
     if vtok:
         try:
@@ -106,8 +140,8 @@ def run_precheck() -> dict[str, Any]:
             steps.append(
                 expect_predicate(
                     "P6_fe_pin",
-                    bool(sha) and str(sha).startswith(config.AUTHORIZED_FE_PIN[:7]),
-                    detail={"sha": sha, "pin": config.AUTHORIZED_FE_PIN},
+                    bool(sha) and str(sha).startswith(config.CANONICAL_FE_PIN[:7]),
+                    detail={"sha": sha, "pin": config.CANONICAL_FE_PIN},
                     reason="fe_pin_mismatch",
                 )
             )
@@ -128,32 +162,47 @@ def run_precheck() -> dict[str, Any]:
                 "reason": "missing_VERCEL_TOKEN",
             }
         )
-    # P7 health
-    c = StagingClient()
+
+    # P7 health — require explicit DB ok (not status==ok alone)
+    c = StagingClient(
+        api_base=config.CANONICAL_STAGING_API_URL,
+        origin=config.CANONICAL_STAGING_FE_URL,
+    )
     st, health = c.health()
-    db_ok = isinstance(health, dict) and (
-        (health.get("message") or {}).get("db") == "ok" or health.get("status") == "ok"
+    db_ok = (
+        isinstance(health, dict)
+        and isinstance(health.get("message"), dict)
+        and health["message"].get("db") == "ok"
     )
     steps.append(
         expect_predicate(
-            "P7_health",
+            "P7_health_db_ok",
             st == 200 and db_ok and not is_5xx(st),
             status=st,
             detail=health if isinstance(health, dict) else {"raw": health},
-            reason="health_not_ok",
-        )
-    )
-    # P8 no prod markers in harness config usage
-    steps.append(
-        expect_predicate(
-            "P8_staging_urls_configured",
-            "omnia-frontend-staging" in config.STAGING_FE_URL
-            and config.STAGING_DB_NAME == "omnia_staging_e2e",
-            reason="config_not_staging",
+            reason="health_db_not_ok",
         )
     )
 
-    from .classify import aggregate
+    # P8 — identity refs against CANONICAL constants (not env-derived aliases)
+    steps.append(
+        expect_predicate(
+            "P8_canonical_identity",
+            config.CANONICAL_STAGING_FE_URL.endswith("omnia-frontend-staging.vercel.app")
+            and config.CANONICAL_STAGING_DB_NAME == "omnia_staging_e2e"
+            and config.CANONICAL_RAILWAY_PROJECT_NAME == "omnia-api-staging"
+            and config.STAGING_API_URL == config.CANONICAL_STAGING_API_URL
+            and config.STAGING_FE_URL == config.CANONICAL_STAGING_FE_URL
+            and config.STAGING_DB_NAME == config.CANONICAL_STAGING_DB_NAME,
+            reason="canonical_identity_mismatch",
+            detail={
+                "api": config.CANONICAL_STAGING_API_URL,
+                "fe": config.CANONICAL_STAGING_FE_URL,
+                "db": config.CANONICAL_STAGING_DB_NAME,
+                "project": config.CANONICAL_RAILWAY_PROJECT_NAME,
+            },
+        )
+    )
 
     return {"steps": steps, "classification": aggregate(steps)}
 

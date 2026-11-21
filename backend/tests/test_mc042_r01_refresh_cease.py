@@ -76,13 +76,13 @@ def test_r01_set_ceased_revokes_member_sessions(monkeypatch):
 
     calls: list[str] = []
 
-    async def fake_revoke(uid: str):
+    async def fake_revoke_sessions(uid: str, *, reason: str = "revoke_all"):
         calls.append(uid)
         return 1
 
     monkeypatch.setattr(
-        "shared.auth.session_store.revoke_all_refresh",
-        fake_revoke,
+        "shared.auth.session_store.revoke_all_sessions",
+        fake_revoke_sessions,
     )
 
     out = _run(

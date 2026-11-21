@@ -13,10 +13,6 @@ from fastapi import APIRouter, HTTPException, Request, Response
 from pydantic import BaseModel, EmailStr, Field
 
 from shared.auth.hashing import hash_password
-from shared.auth.jwt_tokens import (
-    create_access_token, create_refresh_token,
-    ACCESS_TOKEN_MINUTES, REFRESH_TOKEN_DAYS,
-)
 from shared.db.connection import Database
 
 logger = logging.getLogger("omnia.cloud_auth")
@@ -118,18 +114,11 @@ async def cloud_register(
     except Exception:
         pass
 
-    # Auto-login via cookie (same flow as standard /auth/login)
+    # Auto-login via cookie (same flow as standard /auth/login) — B14 session-bound
     try:
-        from apps.core.auth import _cookie_kwargs, ACCESS_COOKIE_MAX_AGE, REFRESH_COOKIE_MAX_AGE
-        from shared.auth.session_store import store_refresh
-        from shared.security.csrf import set_csrf_cookie
-        access = create_access_token(user_id, doc["email"], "client")
-        refresh = create_refresh_token(user_id)
-        kw = _cookie_kwargs()
-        response.set_cookie("access_token", access, max_age=ACCESS_COOKIE_MAX_AGE, **kw)
-        response.set_cookie("refresh_token", refresh, max_age=REFRESH_COOKIE_MAX_AGE, **kw)
-        set_csrf_cookie(response)
-        await store_refresh(refresh)
+        from apps.core.auth import _set_auth_cookies
+
+        await _set_auth_cookies(response, user_id, doc["email"], "client")
     except Exception as e:
         logger.warning("cookie set failed (non-fatal): %s", e)
 

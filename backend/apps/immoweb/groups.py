@@ -13,7 +13,7 @@ from typing import List
 from fastapi import APIRouter, HTTPException, Depends
 
 from shared.db.connection import Database
-from shared.auth.dependencies import get_current_user, require_roles
+from shared.auth.dependencies import get_current_user, require_roles, require_roles_exact
 from shared.models.agency import (
     AgencyGroupInDB,
     AgencyGroupCreate,
@@ -77,9 +77,13 @@ def _require_group_write_access(user: dict, group_id: str) -> None:
 @router.post("", status_code=201)
 async def create_group(
     payload: AgencyGroupCreate,
-    user: dict = Depends(require_roles("super_admin", "group_admin", "agency_admin")),
+    user: dict = Depends(require_roles_exact("super_admin", "group_admin", "agency_admin")),
 ):
     """Create a new AgencyGroup. Caller becomes owner and is promoted to group_admin.
+
+    W3: ``branch_admin`` must NOT create groups via the ``agency_admin`` alias
+    (would escalate to ``group_admin`` and cross-branch CRM). Prefer CommercialCustomer
+    / Organization under D-175 for multi-org structure.
 
     The caller's existing agency (if any) is **auto-attached** as the first branch
     of the group, so the creator lands on a working group with 1 branch — no extra

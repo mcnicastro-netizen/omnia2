@@ -445,11 +445,11 @@ async def save_variant_to_property(
         "source_photo_id": doc.get("source_photo_id"),
     }
     await db.properties.update_one(
-        {"id": property_id},
+        {"id": property_id, "agency_id": agency_id},
         {"$push": {"photos": new_photo}, "$set": {"updated_at": datetime.now(timezone.utc).isoformat()}},
     )
     await db.virtual_staging_jobs.update_one(
-        {"id": job_id},
+        {"id": job_id, "user_id": user["id"]},
         {"$set": {
             "saved_to_property_id": property_id,
             "saved_photo_id": new_photo["id"],

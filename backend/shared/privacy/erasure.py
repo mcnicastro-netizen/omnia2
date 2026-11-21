@@ -92,6 +92,14 @@ async def erase_user_data(user: dict) -> Dict[str, Any]:
     except Exception:
         pass
 
+    # B14 — kill sessions before anonymizing credentials
+    try:
+        from shared.auth.session_store import revoke_all_sessions
+
+        await revoke_all_sessions(uid, reason="gdpr_erasure")
+    except Exception:  # noqa: BLE001
+        pass
+
     # Anonymize user document (keep id for FK integrity / audit)
     await db.users.update_one(
         {"id": uid},

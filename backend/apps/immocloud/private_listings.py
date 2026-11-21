@@ -490,10 +490,15 @@ async def update_my_private_listing(
         except Exception:
             pass
 
-    await db.properties.update_one({"id": pid}, {"$set": update_doc})
+    owner_flt = {
+        "id": pid,
+        "owner_user_id": user["id"],
+        "is_private_listing": True,
+    }
+    await db.properties.update_one(owner_flt, {"$set": update_doc})
 
     if any(k in update_doc for k in ("address", "street_number", "city", "province", "postal_code")):
-        full = await db.properties.find_one({"id": pid}, {"_id": 0})
+        full = await db.properties.find_one(owner_flt, {"_id": 0})
         schedule_geocode(db, pid, {
             "address": _compose_street(full.get("address"), full.get("street_number")),
             "city": full.get("city"),
@@ -616,7 +621,10 @@ async def submit_for_moderation(pid: str, user: dict = Depends(get_current_user)
     owner_email = (p.get("owner") or {}).get("email") or user.get("email")
     _assert_contact_reachable(contact, owner_email)
     if not p.get("contact_public"):
-        await db.properties.update_one({"id": pid}, {"$set": {"contact_public": contact}})
+        await db.properties.update_one(
+            {"id": pid, "owner_user_id": user["id"], "is_private_listing": True},
+            {"$set": {"contact_public": contact}},
+        )
 
     from shared.ids import ensure_client_code, ensure_listing_code
     from apps.immocloud.listing_safety_gate import (
@@ -636,7 +644,7 @@ async def submit_for_moderation(pid: str, user: dict = Depends(get_current_user)
     if safety_gate_enabled():
         safety = await evaluate_listing_safety(p)
         await db.properties.update_one(
-            {"id": pid},
+            {"id": pid, "owner_user_id": user["id"], "is_private_listing": True},
             {"$set": {"safety_gate": safety.to_dict(), "updated_at": now}},
         )
 
@@ -646,7 +654,7 @@ async def submit_for_moderation(pid: str, user: dict = Depends(get_current_user)
 
     if can_auto:
         await db.properties.update_one(
-            {"id": pid},
+            {"id": pid, "owner_user_id": user["id"], "is_private_listing": True},
             {"$set": {
                 "moderation_status": "approved",
                 "status": "active",
@@ -691,7 +699,7 @@ async def submit_for_moderation(pid: str, user: dict = Depends(get_current_user)
         await notify_founder_safety_flag(p, safety, event="submit")
 
     await db.properties.update_one(
-        {"id": pid},
+        {"id": pid, "owner_user_id": user["id"], "is_private_listing": True},
         {"$set": {
             "moderation_status": "rejected" if reject else "pending",
             "status": "draft",

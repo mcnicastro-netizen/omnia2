@@ -29,6 +29,27 @@ async def end_active_memberships(db, user_id: str) -> int:
     return int(getattr(result, "modified_count", 0) or 0)
 
 
+async def end_membership_for_organization(db, user_id: str, organization_id: str) -> int:
+    """End active membership(s) for one organization only (remove_member path)."""
+    now = _now()
+    result = await db.memberships.update_many(
+        {
+            "user_id": user_id,
+            "organization_id": organization_id,
+            "membership_status": "active",
+        },
+        {
+            "$set": {
+                "membership_status": "ended",
+                "ended_at": now,
+                "valid_to": now,
+                "updated_at": now,
+            }
+        },
+    )
+    return int(getattr(result, "modified_count", 0) or 0)
+
+
 async def activate_exclusive_membership(
     db,
     *,

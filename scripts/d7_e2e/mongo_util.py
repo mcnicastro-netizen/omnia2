@@ -1,4 +1,4 @@
-"""Mongo access for staging — requires RAILWAY_API_TOKEN; refuses non-staging DB names."""
+"""Mongo access for staging — requires RAILWAY_API_TOKEN; refuses non-canonical DB."""
 from __future__ import annotations
 
 import json
@@ -10,6 +10,7 @@ from pymongo import MongoClient
 from pymongo.database import Database
 
 from . import config
+from .run_id import validate_run_id
 
 
 def _gql(token: str, query: str, variables: dict | None = None) -> dict:
@@ -32,14 +33,33 @@ def _gql(token: str, query: str, variables: dict | None = None) -> dict:
 
 
 def assert_staging_project(token: str) -> dict:
+    """Validate against CANONICAL pins only (not env-overridable identity)."""
     proj = _gql(
         token,
         "query($id:String!){ project(id:$id){ id name } }",
-        {"id": config.RAILWAY_PROJECT_ID},
+        {"id": config.CANONICAL_RAILWAY_PROJECT_ID},
     )["project"]
-    if proj["id"] != config.RAILWAY_PROJECT_ID or proj["name"] != config.RAILWAY_PROJECT_NAME:
+    if (
+        proj["id"] != config.CANONICAL_RAILWAY_PROJECT_ID
+        or proj["name"] != config.CANONICAL_RAILWAY_PROJECT_NAME
+    ):
         raise RuntimeError(f"railway_project_mismatch:{proj}")
     return proj
+
+
+def fetch_api_service_variables(token: str) -> dict:
+    """Read Railway API service env vars (values used only for gates; never logged)."""
+    return _gql(
+        token,
+        """query($projectId:String!,$environmentId:String!,$serviceId:String!){
+          variables(projectId:$projectId, environmentId:$environmentId, serviceId:$serviceId)
+        }""",
+        {
+            "projectId": config.CANONICAL_RAILWAY_PROJECT_ID,
+            "environmentId": config.CANONICAL_RAILWAY_ENV_ID,
+            "serviceId": config.CANONICAL_RAILWAY_API_SERVICE_ID,
+        },
+    )["variables"]
 
 
 def connect_staging_db(
@@ -52,19 +72,9 @@ def connect_staging_db(
         raise RuntimeError("missing_RAILWAY_API_TOKEN")
     assert_staging_project(token)
 
-    api_vars = _gql(
-        token,
-        """query($projectId:String!,$environmentId:String!,$serviceId:String!){
-          variables(projectId:$projectId, environmentId:$environmentId, serviceId:$serviceId)
-        }""",
-        {
-            "projectId": config.RAILWAY_PROJECT_ID,
-            "environmentId": config.RAILWAY_ENV_ID,
-            "serviceId": config.RAILWAY_API_SERVICE_ID,
-        },
-    )["variables"]
+    api_vars = fetch_api_service_variables(token)
     db_name = api_vars.get("DB_NAME") or api_vars.get("MONGO_DATABASE")
-    if db_name != config.STAGING_DB_NAME:
+    if db_name != config.CANONICAL_STAGING_DB_NAME:
         raise RuntimeError(f"db_name_not_staging:{db_name}")
 
     mongo_vars = _gql(
@@ -73,13 +83,13 @@ def connect_staging_db(
           variables(projectId:$projectId, environmentId:$environmentId, serviceId:$serviceId)
         }""",
         {
-            "projectId": config.RAILWAY_PROJECT_ID,
-            "environmentId": config.RAILWAY_ENV_ID,
-            "serviceId": config.RAILWAY_MONGO_SERVICE_ID,
+            "projectId": config.CANONICAL_RAILWAY_PROJECT_ID,
+            "environmentId": config.CANONICAL_RAILWAY_ENV_ID,
+            "serviceId": config.CANONICAL_RAILWAY_MONGO_SERVICE_ID,
         },
     )["variables"]
     host_internal = mongo_vars.get("MONGOHOST") or ""
-    if config.STAGING_MONGO_HOST_MARKER not in host_internal:
+    if config.CANONICAL_STAGING_MONGO_HOST_MARKER not in host_internal:
         raise RuntimeError(f"mongo_host_not_staging:{host_internal}")
 
     host = proxy_host or os.environ.get("OMNIA_D7_MONGO_PROXY_HOST") or config.DEFAULT_MONGO_PROXY_HOST
@@ -97,5 +107,6 @@ def connect_staging_db(
 
 
 def scoped_filter(run_id: str) -> dict[str, Any]:
-    """Cleanup/select ONLY documents created by this harness run."""
-    return {config.RUN_TAG_FIELD: run_id}
+    """Cleanup/select ONLY documents tagged with this validated run_id."""
+    rid = validate_run_id(run_id)
+    return {config.RUN_TAG_FIELD: rid}

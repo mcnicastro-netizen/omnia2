@@ -489,7 +489,10 @@ async def apply_safety_hold(
         "safety_gate": report.to_dict(),
         "updated_at": now,
     }
-    await db.properties.update_one({"id": listing_id}, {"$set": fields})
+    await db.properties.update_one(
+        {"id": listing_id, "is_private_listing": True},
+        {"$set": fields},
+    )
 
 
 async def rescan_live_private_listings(*, limit: int = 80) -> Dict[str, Any]:
@@ -527,7 +530,7 @@ async def rescan_live_private_listings(*, limit: int = 80) -> Dict[str, Any]:
             report = await evaluate_listing_safety(listing)
             if report.verdict == VERDICT_ACCEPT:
                 await db.properties.update_one(
-                    {"id": listing["id"]},
+                    {"id": listing["id"], "is_private_listing": True},
                     {"$set": {"safety_gate": report.to_dict()}},
                 )
                 continue
@@ -543,14 +546,20 @@ async def rescan_live_private_listings(*, limit: int = 80) -> Dict[str, Any]:
                 }
                 # Dedupe Founder email: same soft false-positive must not mail every hour
                 if soft_alert_in_cooldown(listing):
-                    await db.properties.update_one({"id": listing["id"]}, {"$set": fields})
+                    await db.properties.update_one(
+                        {"id": listing["id"], "is_private_listing": True},
+                        {"$set": fields},
+                    )
                     logger.info(
                         "safety rescan soft-flag cooldown (no email) listing=%s reasons=%s",
                         listing.get("id"), report.reasons[:3],
                     )
                     continue
                 fields["safety_soft_alerted_at"] = now_iso
-                await db.properties.update_one({"id": listing["id"]}, {"$set": fields})
+                await db.properties.update_one(
+                    {"id": listing["id"], "is_private_listing": True},
+                    {"$set": fields},
+                )
                 await notify_founder_safety_flag(
                     listing, report, event="rescan_live_soft",
                 )

@@ -423,34 +423,49 @@ async def set_commercial_status(
 
 
 async def revoke_sessions_for_commercial_customer(db, commercial_customer_id: str) -> dict:
-    """Revoca tutti i refresh token degli utenti con membership su agency del CC."""
-    from shared.auth.session_store import revoke_all_refresh
+    """Revoca tutti i refresh token degli utenti con membership su agency del CC.
+
+    W3: include also Main Admin even when ``agency_ids`` is empty (C5 allows MA
+    without org membership).
+    """
+    from shared.auth.session_store import revoke_all_sessions
 
     agency_ids = set(await _agency_ids_for_cc(db, commercial_customer_id))
-    if not agency_ids:
-        return {"matched_users": 0, "revoked_calls": 0}
+    cc = await db.commercial_customers.find_one(
+        {"id": commercial_customer_id}, {"_id": 0, "main_admin_user_id": 1}
+    )
+    ma_uid = (cc or {}).get("main_admin_user_id")
     # Filtro in Python: membership se intersection con agency_ids del CC
     raw_users = await db.users.find({}, {"id": 1, "role": 1, "agency_ids": 1}).to_list(
         length=50_000
     )
     matched = []
+    seen = set()
     for u in raw_users:
         if (u or {}).get("role") == "super_admin":
             continue
-        u_agencies = set(u.get("agency_ids") or [])
-        if not (u_agencies & agency_ids):
+        uid = u.get("id")
+        if not uid:
             continue
-        matched.append(u)
+        u_agencies = set(u.get("agency_ids") or [])
+        if agency_ids and (u_agencies & agency_ids):
+            matched.append(u)
+            seen.add(uid)
+    if ma_uid and ma_uid not in seen:
+        matched.append({"id": ma_uid})
+        seen.add(ma_uid)
+    if not matched:
+        return {"matched_users": 0, "revoked_calls": 0}
     revoked_calls = 0
     for u in matched:
         uid = u.get("id")
         if not uid:
             continue
         try:
-            await revoke_all_refresh(uid)
+            await revoke_all_sessions(uid, reason="cc_cease")
             revoked_calls += 1
         except Exception as exc:  # noqa: BLE001
-            logger.warning("revoke refresh failed user=%s: %s", uid, exc)
+            logger.warning("revoke sessions failed user=%s: %s", uid, exc)
     return {"matched_users": len(matched), "revoked_calls": revoked_calls}
 
 

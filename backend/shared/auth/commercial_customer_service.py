@@ -57,10 +57,16 @@ async def get_or_create_commercial_customer(
         operational_status="none",
     )
     doc = customer.model_dump()
+    # Sparse unique indexes (e.g. stripe_customer_id) treat explicit null as a
+    # value — omit unset optional uniques so concurrent creates do not collide
+    # on null (W3 P.IVA race / 1 P.IVA = 1 CC still enforced by VAT unique).
+    for sparse_key in ("stripe_customer_id", "main_admin_user_id"):
+        if doc.get(sparse_key) in (None, ""):
+            doc.pop(sparse_key, None)
     try:
         await db.commercial_customers.insert_one(doc)
     except Exception:
-        # Race on unique index — re-read
+        # Race on unique index (VAT or sparse) — re-read by VAT SoT
         existing = await db.commercial_customers.find_one(
             {"country_code": country, "vat_number_normalized": normalized},
             {"_id": 0},

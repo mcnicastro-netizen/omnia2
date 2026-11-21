@@ -49,8 +49,12 @@ def _walk_media_strings(node: Any, refs: Set[str]) -> None:
 
 
 async def collect_referenced_blob_paths(db=None) -> Set[str]:
-    """All Object Storage paths still referenced by live Mongo docs."""
-    db = db or Database.get()
+    """All Object Storage paths still referenced by live Mongo docs.
+
+    Uses raw DB by default: GC must see every tenant's references. TenantAware
+    inject would silently shrink the scan under /api/app enforce.
+    """
+    db = db or Database.get_raw()
     refs: Set[str] = set()
 
     prop_cur = db.properties.find(
@@ -130,7 +134,7 @@ async def run_orphan_gc(
     """Scan + optionally delete orphan blobs. Safe defaults for scheduler."""
     if dry_run is None:
         dry_run = _env_dry_run_default()
-    db = Database.get()
+    db = Database.get_raw()
     referenced = await collect_referenced_blob_paths(db)
     keys = list_object_keys("omnia/")
     orphans = find_orphan_keys(

@@ -8,12 +8,10 @@ from typing import Optional, List
 from fastapi import APIRouter, HTTPException, Depends, Response, Header
 
 from shared.db.connection import Database
-from shared.auth.dependencies import get_current_user, require_roles
+from shared.auth.dependencies import get_current_user, require_roles, require_roles_exact
 from shared.auth.hashing import hash_password
 from shared.auth.tenant import require_agency
 from shared.auth.jwt_tokens import (
-    create_access_token,
-    create_refresh_token,
     ACCESS_TOKEN_MINUTES,
     REFRESH_TOKEN_DAYS,
 )
@@ -41,9 +39,13 @@ REFRESH_COOKIE_MAX_AGE = REFRESH_TOKEN_DAYS * 24 * 3600
 @router.post("/agencies/me/invites", status_code=201)
 async def create_invite(
     payload: InviteCreateRequest,
-    user: dict = Depends(require_roles("agency_admin", "super_admin")),
+    user: dict = Depends(require_roles_exact("agency_admin", "super_admin", "group_admin")),
     accept_language: Optional[str] = Header(None),
 ):
+    """Create invite. W3: no branch_admin via agency_admin alias.
+
+    Inviting ``agency_admin`` requires agency owner or CommercialCustomer Main Admin.
+    """
     lang = normalize_lang(accept_language)
     db = Database.get()
 
@@ -51,6 +53,25 @@ async def create_invite(
     agency = await db.agencies.find_one({"id": agency_id})
     if not agency:
         raise HTTPException(status_code=404, detail="agency_not_found")
+
+    invite_role = payload.role or "agent"
+    if invite_role == "agency_admin" and user.get("role") != "super_admin":
+        is_owner = agency.get("owner_id") == user.get("id")
+        is_ma = False
+        cc_id = agency.get("commercial_customer_id")
+        if cc_id:
+            cc = await db.commercial_customers.find_one(
+                {"id": cc_id}, {"_id": 0, "main_admin_user_id": 1}
+            )
+            is_ma = bool(cc and cc.get("main_admin_user_id") == user.get("id"))
+        if not (is_owner or is_ma):
+            raise HTTPException(
+                status_code=403,
+                detail={
+                    "error": "invite_role_forbidden",
+                    "hint": "Solo owner o Main Admin possono invitare agency_admin",
+                },
+            )
 
     # D-157 — tetto collaboratori da piano (starter 3 / pro 10 / agency ∞)
     from apps.billing.plans import get_plan
@@ -342,11 +363,13 @@ async def accept_invite(
     )
     user_role = op_role
 
-    # Mark invite as accepted (non-atomic — B03-DEC-03 claim fuori scope Slice 1)
-    await db.agency_invites.update_one(
-        {"id": invite["id"]},
+    # W3 — atomic claim: only one accept wins if two clients race.
+    claimed = await db.agency_invites.find_one_and_update(
+        {"id": invite["id"], "status": "pending"},
         {"$set": {"status": "accepted", "updated_at": now}},
     )
+    if not claimed:
+        raise HTTPException(status_code=400, detail="invite_used_or_revoked")
 
     # A-017 — notify inviter (and owner fallback) that invite was accepted
     try:
@@ -376,9 +399,10 @@ async def accept_invite(
     except Exception as e:  # noqa: BLE001
         logger.warning("in-app invite-accepted notification failed: %s", e)
 
-    # Auto-login: set auth cookies (no store_refresh — fuori scope Slice 1)
-    access = create_access_token(user_id, email, user_role)
-    refresh = create_refresh_token(user_id)
+    # Auto-login: B14 session-bound cookies (Mongo SoT)
+    from shared.auth.session_store import issue_auth_tokens
+
+    access, refresh = await issue_auth_tokens(user_id, email, user_role)
     cookie_kwargs = dict(httponly=True, secure=True, samesite="none", path="/")
     response.set_cookie("access_token", access, max_age=ACCESS_COOKIE_MAX_AGE, **cookie_kwargs)
     response.set_cookie("refresh_token", refresh, max_age=REFRESH_COOKIE_MAX_AGE, **cookie_kwargs)

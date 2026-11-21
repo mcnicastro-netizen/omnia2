@@ -8,6 +8,7 @@ Examples (DO NOT run without authorization):
   PYTHONPATH=. python -m scripts.d7_e2e run --confirm-staging-run
 
 This module was created under D-175 A+B authorization: implement only, do not execute.
+Pre-C fixes 1–5 authorized separately — still do NOT execute T3/T4 without Package C.
 """
 from __future__ import annotations
 
@@ -24,8 +25,8 @@ from .artifacts import (
     write_json,
     write_manifest,
 )
-from .classify import aggregate
 from .precheck import run_precheck
+from .run_id import InvalidRunId, validate_run_id
 from .seed import cleanup_run, seed
 from .t3 import run_t3
 from .t4 import run_t4
@@ -40,7 +41,8 @@ def _require_confirm(args: argparse.Namespace) -> None:
                     "error": "missing_--confirm-staging-run",
                     "message": (
                         "Mutative/staging harness requires Founder package C authorization "
-                        "and the explicit --confirm-staging-run flag."
+                        "and the explicit --confirm-staging-run flag. "
+                        "The flag is a technical latch only — it does not replace Founder auth."
                     ),
                 },
                 indent=2,
@@ -59,7 +61,11 @@ def cmd_precheck(args: argparse.Namespace) -> int:
 
 def cmd_run(args: argparse.Namespace) -> int:
     _require_confirm(args)
-    run_id = args.run_id or new_run_id()
+    try:
+        run_id = validate_run_id(args.run_id) if args.run_id else new_run_id()
+    except InvalidRunId as e:
+        print(json.dumps({"ok": False, "error": "invalid_run_id", "detail": str(e)}, indent=2), file=sys.stderr)
+        return 2
     path = run_dir(run_id, create=True)
     append_console(path, f"run_start harness={__version__} run_id={run_id}")
 
@@ -72,9 +78,9 @@ def cmd_run(args: argparse.Namespace) -> int:
                 "run_id": run_id,
                 "phase": "precheck",
                 "classification": pre.get("classification"),
-                "staging_api": config.STAGING_API_URL,
-                "staging_fe": config.STAGING_FE_URL,
-                "db": config.STAGING_DB_NAME,
+                "staging_api": config.CANONICAL_STAGING_API_URL,
+                "staging_fe": config.CANONICAL_STAGING_FE_URL,
+                "db": config.CANONICAL_STAGING_DB_NAME,
                 "historical_a6_not_sot": config.FORENSIC_A6_NOT_SOT,
             },
         )
@@ -90,10 +96,6 @@ def cmd_run(args: argparse.Namespace) -> int:
     t3 = run_t3(run_id, path, meta, password)
     t4 = run_t4(run_id, path, meta, password)
 
-    overall = aggregate(
-        [{"result": t3["classification"]}, {"result": t4["classification"]}]
-    )
-    # Remap: aggregate expects step dicts with PASS/FAIL/BLOCKED
     results = [t3["classification"], t4["classification"]]
     if "FAIL" in results:
         overall = "FAIL"
@@ -104,26 +106,36 @@ def cmd_run(args: argparse.Namespace) -> int:
     else:
         overall = "FAIL"
 
-    write_manifest(
-        path,
-        {
-            "run_id": run_id,
-            "phase": "complete",
-            "t3": t3["classification"],
-            "t4": t4["classification"],
-            "overall": overall,
-            "staging_api": config.STAGING_API_URL,
-            "staging_fe": config.STAGING_FE_URL,
-            "db": config.STAGING_DB_NAME,
-            "pin": config.AUTHORIZED_FE_PIN,
-            "historical_a6_not_sot": config.FORENSIC_A6_NOT_SOT,
-            "cleanup_done": False,
-        },
-    )
+    cleanup_done = False
+    cleanup_classification = None
     if args.cleanup_after:
-        counts = cleanup_run(run_id)
-        write_json(path / "cleanup.json", counts)
+        counts = cleanup_run(run_id, run_path=path)
+        cleanup_done = True
+        cleanup_classification = counts.get("classification")
         append_console(path, f"cleanup {counts}")
+
+    # Manifest after optional cleanup so cleanup_done reflects reality (D2)
+    from .artifacts import write_json_overwrite
+
+    manifest = {
+        "run_id": run_id,
+        "phase": "complete",
+        "t3": t3["classification"],
+        "t4": t4["classification"],
+        "overall": overall,
+        "staging_api": config.CANONICAL_STAGING_API_URL,
+        "staging_fe": config.CANONICAL_STAGING_FE_URL,
+        "db": config.CANONICAL_STAGING_DB_NAME,
+        "pin": config.CANONICAL_FE_PIN,
+        "historical_a6_not_sot": config.FORENSIC_A6_NOT_SOT,
+        "cleanup_done": cleanup_done,
+        "cleanup_classification": cleanup_classification,
+    }
+    mf = path / "MANIFEST.json"
+    if mf.exists():
+        write_json_overwrite(mf, {**manifest, "harness_version": __version__})
+    else:
+        write_manifest(path, manifest)
 
     write_checksums(path)
     append_console(path, f"run_end overall={overall}")
@@ -144,11 +156,16 @@ def cmd_run(args: argparse.Namespace) -> int:
 
 def cmd_cleanup(args: argparse.Namespace) -> int:
     _require_confirm(args)
-    if not args.run_id or len(args.run_id) < 12:
-        print(json.dumps({"ok": False, "error": "run_id_required"}, indent=2), file=sys.stderr)
+    try:
+        run_id = validate_run_id(args.run_id)
+    except InvalidRunId as e:
+        print(
+            json.dumps({"ok": False, "error": "invalid_run_id", "detail": str(e)}, indent=2),
+            file=sys.stderr,
+        )
         return 2
-    counts = cleanup_run(args.run_id)
-    print(json.dumps({"run_id": args.run_id, "deleted": counts}, indent=2))
+    counts = cleanup_run(run_id)
+    print(json.dumps({"run_id": run_id, "deleted": counts}, indent=2))
     return 0
 
 
@@ -161,7 +178,10 @@ def main(argv: list[str] | None = None) -> int:
         sp.add_argument(
             "--confirm-staging-run",
             action="store_true",
-            help="Required. Affirms Founder-authorized staging execution.",
+            help=(
+                "Required technical latch. Does NOT replace Founder Package C "
+                "authorization (OMNIA — AUTORIZZAZIONE ESPLICITA)."
+            ),
         )
 
     sp = sub.add_parser("precheck", help="Isolation gates only")
@@ -170,15 +190,19 @@ def main(argv: list[str] | None = None) -> int:
 
     sp = sub.add_parser("run", help="precheck + seed + T3 + T4")
     add_confirm(sp)
-    sp.add_argument("--run-id", default="", help="Optional fixed run id (must be unique)")
+    sp.add_argument(
+        "--run-id",
+        default="",
+        help="Optional fixed run id ([A-Za-z0-9_-]{12,64}, no path chars)",
+    )
     sp.add_argument(
         "--cleanup-after",
         action="store_true",
-        help="Delete only docs with this run_id after tests",
+        help="Delete only inventory IDs + tagged docs for this run_id after tests",
     )
     sp.set_defaults(func=cmd_run)
 
-    sp = sub.add_parser("cleanup", help="Scoped cleanup by run_id only")
+    sp = sub.add_parser("cleanup", help="Scoped cleanup by validated run_id + inventory")
     add_confirm(sp)
     sp.add_argument("--run-id", required=True)
     sp.set_defaults(func=cmd_cleanup)

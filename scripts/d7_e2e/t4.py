@@ -2,19 +2,25 @@
 from __future__ import annotations
 
 import secrets
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
 from .artifacts import write_json
 from .classify import aggregate, blocked, expect_predicate, expect_status
+from .email_gate import run_email_gate
 from .http_client import StagingClient
+from .inventory import CreatedInventory
 from .mongo_util import connect_staging_db, scoped_filter
 
 
 def run_t4(run_id: str, run_path: Path, seed_meta: dict, password: str) -> dict[str, Any]:
     I = seed_meta["ids"]
     steps: list[dict] = []
+    inv = CreatedInventory(run_path, run_id)
     db = connect_staging_db()
+    email_send_evidence: dict[str, Any] | None = None
+    invite_email = seed_meta["emails"]["invitee"]
 
     # Seed already created CC/org; confirm binding
     cc = db.commercial_customers.find_one({"id": I["cc"], **scoped_filter(run_id)})
@@ -49,7 +55,7 @@ def run_t4(run_id: str, run_path: Path, seed_meta: dict, password: str) -> dict[
         )
     )
 
-    # Branch admin
+    # Branch admin — same CC, not Main Admin → 403 forbidden
     b = StagingClient()
     st, _ = b.login(seed_meta["emails"]["admin_b"], password)
     steps.append(expect_status("T4.branch_login", st, {200}))
@@ -65,49 +71,75 @@ def run_t4(run_id: str, run_path: Path, seed_meta: dict, password: str) -> dict[
         )
     )
     st, denied = b.request("GET", "/api/billing/commercial/main-admin")
-    steps.append(expect_status("T4.branch_denied_ma", st, {401, 403}, body=denied))
+    steps.append(expect_status("T4.branch_denied_ma", st, {403}, body=denied))
+    steps.append(
+        expect_predicate(
+            "T4.branch_denied_detail",
+            _detail_error(denied) == "forbidden",
+            status=st,
+            detail=denied if isinstance(denied, dict) else None,
+            reason="branch_deny_not_forbidden",
+        )
+    )
 
-    # Invite
-    invite_email = seed_meta["emails"]["invitee"]
-    st, inv = a.request(
+    # D5 — email gate BEFORE create invite (fail-closed; held-only, not open)
+    gate = run_email_gate(client=a)
+    steps.extend(gate["steps"])
+    if gate["classification"] != "PASS":
+        steps.append(blocked("T4.create_invite", "email_gate_blocked_before_invite"))
+        steps.append(blocked("T4.accept", "email_gate_blocked_before_invite"))
+        steps.append(blocked("T4.membership", "email_gate_blocked_before_invite"))
+        return _finish(run_path, steps, email_send_evidence, invite_email, inv, gate)
+
+    # D3 — invitee must not pre-exist (synthetic run-scoped email)
+    preexisting = db.users.find_one({"email": invite_email}, {"_id": 0, "id": 1, "email": 1})
+    if preexisting:
+        steps.append(
+            blocked(
+                "T4.preexisting_invitee",
+                "invitee_email_already_exists",
+                detail={"user_id": preexisting.get("id")},
+            )
+        )
+        steps.append(blocked("T4.create_invite", "preexisting_invitee_blocked"))
+        steps.append(blocked("T4.accept", "preexisting_invitee_blocked"))
+        return _finish(run_path, steps, email_send_evidence, invite_email, inv, gate)
+    steps.append(expect_predicate("T4.preexisting_invitee", True, detail={"absent": True}))
+
+    intent_inv = inv.open_intent(
+        step="T4.create_invite",
+        collection="agency_invites",
+        correlation={"email": invite_email, "agency_id": I["ag_active"]},
+    )
+    st, inv_resp = a.request(
         "POST",
         "/api/app/agencies/me/invites",
         {"email": invite_email, "role": "agent", "name_hint": "D7R2 Invitee"},
     )
-    r = expect_status("T4.create_invite", st, {200, 201}, body=inv)
+    r = expect_status("T4.create_invite", st, {200, 201}, body=inv_resp)
     steps.append(r)
-    # Detect real email send signals in response (without logging secrets)
-    email_sent = False
-    if isinstance(inv, dict):
-        for k, v in inv.items():
-            if "email" in k.lower() and v in (True, "sent", "delivered", "ok"):
-                email_sent = True
-    steps.append(
-        expect_predicate(
-            "T4.no_real_email_response",
-            not email_sent,
-            detail={"email_real_send_detected": email_sent},
-            reason="email_send_signal_in_api_response",
+    invite_id = inv_resp.get("id") if isinstance(inv_resp, dict) else None
+    if invite_id:
+        inv.confirm_intent(intent_inv, invite_id, http_status=st, source="T4.create_invite")
+        db.agency_invites.update_one(
+            {"id": invite_id},
+            {"$set": {**scoped_filter(run_id)}},
         )
-    )
+    else:
+        if st in (200, 201):
+            inv.mark_orphan_suspected(intent_inv, http_status=st)
+        else:
+            inv.fail_intent(intent_inv, http_status=st, reason="create_invite_failed")
 
-    # Controlled token recovery from staging DB only
-    doc = db.agency_invites.find_one(
-        {"email": invite_email, **scoped_filter(run_id)},
-        {"_id": 0},
-    )
-    # Some APIs may not stamp d7_run_id on invite — also allow agency_id match for this run
+    # Token recovery: only by run-scoped tag or exact invite_id — NEVER bare email retag (D3)
+    doc = None
+    if invite_id:
+        doc = db.agency_invites.find_one({"id": invite_id}, {"_id": 0})
     if not doc:
         doc = db.agency_invites.find_one(
-            {"email": invite_email, "agency_id": I["ag_active"]},
+            {"email": invite_email, **scoped_filter(run_id)},
             {"_id": 0},
         )
-        # Tag invite for scoped cleanup if found
-        if doc and doc.get("id"):
-            db.agency_invites.update_one(
-                {"id": doc["id"]},
-                {"$set": {**scoped_filter(run_id)}},
-            )
     has_token = bool(doc and doc.get("token"))
     if not doc:
         steps.append(blocked("T4.invite_db", "invite_document_missing"))
@@ -130,6 +162,11 @@ def run_t4(run_id: str, run_path: Path, seed_meta: dict, password: str) -> dict[
                 },
             )
         )
+        # Re-check preexistence immediately before accept (TOCTOU guard)
+        if db.users.find_one({"email": invite_email}, {"_id": 1}):
+            steps.append(blocked("T4.accept", "invitee_appeared_before_accept"))
+            return _finish(run_path, steps, email_send_evidence, invite_email, inv, gate)
+
         invitee_password = "D7R2-Inv-" + secrets.token_urlsafe(10)
         x = StagingClient()
         x.health()
@@ -145,14 +182,61 @@ def run_t4(run_id: str, run_path: Path, seed_meta: dict, password: str) -> dict[
         steps.append(expect_status("T4.accept", st, {200, 201}, body=acc))
         user = db.users.find_one(
             {"email": invite_email},
-            {"_id": 0, "agency_ids": 1, "role": 1, "email": 1, "active_agency_id": 1},
+            {"_id": 0, "id": 1, "agency_ids": 1, "role": 1, "email": 1, "active_agency_id": 1},
         )
-        # Tag invitee for cleanup
         if user:
             db.users.update_one(
-                {"email": invite_email},
+                {"id": user["id"]},
                 {"$set": {**scoped_filter(run_id)}},
             )
+            if user.get("id"):
+                inv.register(
+                    "users",
+                    user["id"],
+                    source="T4.accept",
+                    created_by_run=True,
+                )
+            # D2 — memberships created by accept (exact attribution only)
+            mem_ids: list[str] = []
+            for m in db.memberships.find(
+                {
+                    "user_id": user["id"],
+                    "organization_id": I["ag_active"],
+                },
+                {"_id": 0, "id": 1, "membership_status": 1},
+            ):
+                if m.get("id"):
+                    mem_ids.append(m["id"])
+                    inv.register("memberships", m["id"], source="T4.accept_membership")
+            if not mem_ids:
+                # Side-effect expected but not inventoriable → block CLEAN
+                inv._append_uncertain(
+                    {
+                        "intent_id": None,
+                        "collection": "memberships",
+                        "candidate_ids": [],
+                        "correlation": {
+                            "user_id": user["id"],
+                            "organization_id": I["ag_active"],
+                        },
+                        "reason": "membership_not_found_after_accept",
+                        "ts": datetime.now(timezone.utc).isoformat(),
+                    }
+                )
+            # D2 — notifications: invite_id OR accepted_user_id (product meta)
+            seen_n: set[str] = set()
+            notif_queries = [
+                {"type": "invite_accepted", "meta.invite_id": doc.get("id")},
+                {"type": "invite_accepted", "meta.accepted_user_id": user["id"]},
+            ]
+            for q in notif_queries:
+                for n in db.notifications.find(q, {"_id": 0, "id": 1}):
+                    nid = n.get("id")
+                    if nid and nid not in seen_n:
+                        seen_n.add(nid)
+                        inv.register(
+                            "notifications", nid, source="T4.accept_notification"
+                        )
         member_ok = bool(user and I["ag_active"] in (user.get("agency_ids") or []))
         steps.append(
             expect_predicate(
@@ -162,26 +246,86 @@ def run_t4(run_id: str, run_path: Path, seed_meta: dict, password: str) -> dict[
                 reason="invitee_not_on_agency",
             )
         )
+        steps.append(
+            expect_predicate(
+                "T4.membership_role",
+                bool(user) and user.get("role") == "agent",
+                detail={"role": (user or {}).get("role")},
+                reason="invitee_role_not_agent",
+            )
+        )
 
-    # Non-member / inactive agency user
-    c = StagingClient()
-    st, _ = c.login(seed_meta["emails"]["admin_inactive"], password)
-    steps.append(expect_status("T4.iso_non_member_login", st, {200}))
-    st, denied2 = c.request("GET", "/api/billing/commercial/main-admin")
+    # FIX4 — ACTIVE independent tenant iso against CC under test
+    iso = StagingClient()
+    st, _ = iso.login(seed_meta["emails"]["admin_iso"], password)
+    steps.append(expect_status("T4.iso_active_login", st, {200}))
+    st, iso_me = iso.request("GET", "/api/auth/me")
+    steps.append(expect_status("T4.iso_active_me", st, {200}, body=iso_me))
     steps.append(
-        expect_status("T4.iso_non_member", st, {400, 401, 403, 404}, body=denied2)
+        expect_predicate(
+            "T4.iso_active_agency",
+            isinstance(iso_me, dict)
+            and iso_me.get("active_agency_id") == I["ag_iso"]
+            and iso_me.get("is_active") is not False,
+            status=st,
+            detail=iso_me if isinstance(iso_me, dict) else None,
+            reason="iso_not_active_independent",
+        )
+    )
+    st, denied2 = iso.request(
+        "GET",
+        f"/api/billing/commercial/main-admin?commercial_customer_id={I['cc']}",
+    )
+    steps.append(expect_status("T4.iso_active_denied", st, {403}, body=denied2))
+    steps.append(
+        expect_predicate(
+            "T4.iso_active_denied_detail",
+            _detail_error(denied2) == "forbidden",
+            status=st,
+            detail=denied2 if isinstance(denied2, dict) else None,
+            reason="iso_deny_not_forbidden_detail",
+        )
     )
 
+    return _finish(run_path, steps, email_send_evidence, invite_email, inv, gate)
+
+
+def _detail_error(body: Any) -> str | None:
+    if not isinstance(body, dict):
+        return None
+    d = body.get("detail")
+    if isinstance(d, dict):
+        return d.get("error")
+    if isinstance(d, str):
+        return d
+    return body.get("error")
+
+
+def _finish(
+    run_path: Path,
+    steps: list[dict],
+    email_send_evidence: dict | None,
+    invite_email: str,
+    inv: CreatedInventory,
+    gate: dict | None,
+) -> dict[str, Any]:
     out = {
         "classification": aggregate(steps),
         "steps": steps,
-        "email_real_send_detected": email_sent,
+        # D6 — never a constant False; null until T21 evidence attached
+        "email_send_evidence": email_send_evidence,
+        "email_gate": (gate or {}).get("assessment"),
         "invite_email": invite_email,
+        "inventory": inv.as_dict(),
         "harness": "scripts/d7_e2e",
         "forensic_note": (
             "Historical A6 used invitee3 + inline harness; this harness is the SoT going forward."
         ),
-        "note": "PASS requires every T4.* PASS; BLOCKED if invite token unavailable without external email",
+        "note": (
+            "PASS requires every T4.* PASS; email gate must prove mock|blocked|held "
+            "before invite; CLEAN email requires separate T21 L3+L4 evidence; "
+            "iso uses ACTIVE third tenant + 403 forbidden on target CC"
+        ),
     }
     write_json(run_path / "t4_api.json", out)
     write_json(
@@ -189,7 +333,7 @@ def run_t4(run_id: str, run_path: Path, seed_meta: dict, password: str) -> dict[
         {
             "classification": out["classification"],
             "step_results": [s["result"] for s in steps],
-            "email_real_send_detected": email_sent,
+            "email_gate_mode": ((gate or {}).get("assessment") or {}).get("mode"),
         },
     )
     return out

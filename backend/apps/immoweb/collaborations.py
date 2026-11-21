@@ -16,8 +16,12 @@ from shared.mls_collab.service import (
     assert_document_request_accessible,
     assert_mls_listing_shareable,
     chat_scope_key,
+    chat_thread_actor_filter,
     chat_thread_scope_query,
+    collaboration_actor_filter,
     counterpart_agency,
+    document_request_actor_filter,
+    document_request_owner_filter,
     get_collaboration,
     get_thread,
     get_visit,
@@ -27,6 +31,8 @@ from shared.mls_collab.service import (
     require_thread_access,
     strip_id,
     utc_now,
+    visit_actor_filter,
+    visit_feedback_rated_agency_filter,
 )
 from shared.mls_collab.watermark import apply_watermark, assert_format_supported
 
@@ -74,6 +80,8 @@ async def create_collaboration_request(
 ):
     """Partner agency requests collaboration on owner's MLS-shareable property."""
     db = Database.get()
+    # get_raw class B: intentional cross-tenant property read for MLS collab request;
+    # gated by assert_mls_listing_shareable + partner_agency_must_be_self below.
     raw = Database.get_raw()
     aid = await _agency_id(user)
     prop = await raw.properties.find_one({"id": body.property_id}, {"_id": 0})
@@ -147,7 +155,7 @@ async def respond_collaboration(
             raise HTTPException(status_code=400, detail="not_pending")
         now = utc_now()
         await db.mls_collaborations.update_one(
-            {"id": collaboration_id},
+            {**collaboration_actor_filter(collaboration_id, aid), "owner_agency_id": aid},
             {
                 "$set": {
                     "status": "active",
@@ -183,7 +191,7 @@ async def respond_collaboration(
             raise HTTPException(status_code=400, detail="not_pending")
         now = utc_now()
         await db.mls_collaborations.update_one(
-            {"id": collaboration_id},
+            {**collaboration_actor_filter(collaboration_id, aid), "owner_agency_id": aid},
             {
                 "$set": {"status": "rejected", "updated_at": now},
                 "$push": {"history": {"at": now, "event": "rejected", "by_agency_id": aid}},
@@ -201,7 +209,7 @@ async def respond_collaboration(
         }
     now = utc_now()
     await db.mls_collaborations.update_one(
-        {"id": collaboration_id},
+        collaboration_actor_filter(collaboration_id, aid),
         {
             "$set": {"status": "revoked", "updated_at": now, "revoked_at": now},
             "$push": {"history": {"at": now, "event": "revoked", "by_agency_id": aid}},
@@ -328,7 +336,9 @@ async def update_visit(
             patch["agreed_at"] = utc_now()
         if body.status == "completed":
             patch["completed_at"] = utc_now()
-    await db.mls_visits.update_one({"id": visit_id}, {"$set": patch})
+    r = await db.mls_visits.update_one(visit_actor_filter(visit_id, aid), {"$set": patch})
+    if r.matched_count == 0:
+        raise HTTPException(status_code=403, detail="visit_forbidden")
     return await get_visit(db, visit_id)
 
 
@@ -435,8 +445,8 @@ async def contest_visit_feedback(
     if row.get("contested"):
         return row
     now = utc_now()
-    await db.mls_visit_feedback.update_one(
-        {"id": feedback_id},
+    r = await db.mls_visit_feedback.update_one(
+        visit_feedback_rated_agency_filter(feedback_id, aid),
         {
             "$set": {
                 "contested": True,
@@ -448,6 +458,8 @@ async def contest_visit_feedback(
             }
         },
     )
+    if r.matched_count == 0:
+        raise HTTPException(status_code=403, detail="only_rated_agency_can_contest")
     return await db.mls_visit_feedback.find_one({"id": feedback_id}, {"_id": 0})
 
 
@@ -648,14 +660,20 @@ async def respond_document_request(
             patch["watermark_applied"] = True  # distribution path will apply real watermark
             patch["watermark_mode"] = "content_on_download"
             patch["fulfilled_at"] = now
-        await db.mls_document_requests.update_one({"id": request_id}, {"$set": patch})
+        r = await db.mls_document_requests.update_one(
+            document_request_owner_filter(request_id, aid), {"$set": patch}
+        )
+        if r.matched_count == 0:
+            raise HTTPException(status_code=403, detail="only_owner_manages_documents")
     elif body.action == "revoke":
         if aid not in (row["owner_agency_id"], row["requesting_agency_id"]):
             raise HTTPException(status_code=403, detail="forbidden")
-        await db.mls_document_requests.update_one(
-            {"id": request_id},
+        r = await db.mls_document_requests.update_one(
+            document_request_actor_filter(request_id, aid),
             {"$set": {"status": "revoked", "updated_at": now, "revoked_at": now}},
         )
+        if r.matched_count == 0:
+            raise HTTPException(status_code=403, detail="forbidden")
     return await db.mls_document_requests.find_one({"id": request_id}, {"_id": 0})
 
 
@@ -701,10 +719,12 @@ async def log_document_access(
         "watermark": True,
         "action": "consult",
     }
-    await db.mls_document_requests.update_one(
-        {"id": request_id},
+    r = await db.mls_document_requests.update_one(
+        document_request_actor_filter(request_id, aid),
         {"$push": {"access_log": entry}},
     )
+    if r.matched_count == 0:
+        raise HTTPException(status_code=403, detail="document_access_denied")
     return {
         "ok": True,
         "watermark": True,
@@ -768,8 +788,8 @@ async def download_watermarked_document(
             "created_at": now,
         }
     )
-    await db.mls_document_requests.update_one(
-        {"id": request_id},
+    r = await db.mls_document_requests.update_one(
+        document_request_actor_filter(request_id, aid),
         {
             "$push": {
                 "access_log": {
@@ -784,6 +804,8 @@ async def download_watermarked_document(
             }
         },
     )
+    if r.matched_count == 0:
+        raise HTTPException(status_code=403, detail="document_access_denied")
     return Response(
         content=wm_bytes,
         media_type=out_ct,
@@ -910,8 +932,11 @@ async def post_chat_message(
         "created_at": now,
     }
     await db.mls_chat_messages.insert_one(msg)
-    await db.mls_chat_threads.update_one(
-        {"id": thread_id}, {"$set": {"updated_at": now, "last_message_at": now}}
+    r = await db.mls_chat_threads.update_one(
+        chat_thread_actor_filter(thread_id, aid),
+        {"$set": {"updated_at": now, "last_message_at": now}},
     )
+    if r.matched_count == 0:
+        raise HTTPException(status_code=403, detail="chat_forbidden")
     msg.pop("_id", None)
     return msg

@@ -131,9 +131,36 @@ def _video_bytes_available(doc: dict) -> bool:
 
 
 
-async def _mark_video_expired(db, video_id: str) -> None:
+def _video_job_filter(
+    video_id: str,
+    *,
+    agency_id: Optional[str] = None,
+    property_id: Optional[str] = None,
+    agency_key_required: bool = True,
+) -> Dict[str, Any]:
+    """Atomic scope for video job mutations (tenant or UGC null agency).
+
+    System/background jobs are not HTTP-scoped; they bind to the video's
+    creation-time agency_id + property_id so a swapped id cannot retarget
+    another tenant's document.
+    """
+    flt: Dict[str, Any] = {"id": video_id}
+    if agency_key_required:
+        flt["agency_id"] = agency_id  # may be None for UGC
+    if property_id:
+        flt["property_id"] = property_id
+    return flt
+
+
+async def _mark_video_expired(
+    db,
+    video_id: str,
+    *,
+    agency_id: Optional[str] = None,
+    property_id: Optional[str] = None,
+) -> None:
     await db.videos.update_one(
-        {"id": video_id},
+        _video_job_filter(video_id, agency_id=agency_id, property_id=property_id),
         {"$set": {
             "status": "failed",
             "error": "video_expired",
@@ -158,10 +185,22 @@ async def hydrate_ready_video(db, doc: Optional[dict]) -> Optional[dict]:
                 "download_url": _video_media_url(doc["id"]),
                 "updated_at": datetime.now(timezone.utc).isoformat(),
             }
-            await db.videos.update_one({"id": doc["id"]}, {"$set": healed})
+            await db.videos.update_one(
+                _video_job_filter(
+                    doc["id"],
+                    agency_id=doc.get("agency_id"),
+                    property_id=doc.get("property_id"),
+                ),
+                {"$set": healed},
+            )
             doc = {**doc, **healed}
         return doc
-    await _mark_video_expired(db, doc["id"])
+    await _mark_video_expired(
+        db,
+        doc["id"],
+        agency_id=doc.get("agency_id"),
+        property_id=doc.get("property_id"),
+    )
     return {
         **doc,
         "status": "failed",
@@ -341,10 +380,18 @@ def _run_ken_burns_ffmpeg(images: List[Path], out_path: Path, duration_s: int) -
         raise RuntimeError(f"ffmpeg failed rc={result.returncode}: {tail}")
 
 
-async def _generate_ken_burns(video_id: str, property_id: Optional[str],
-                              photo_urls: List[str], duration_s: int, db) -> None:
+async def _generate_ken_burns(
+    video_id: str,
+    property_id: Optional[str],
+    photo_urls: List[str],
+    duration_s: int,
+    db,
+    *,
+    agency_id: Optional[str] = None,
+) -> None:
     """Async task: download photos → pick sharpest → run ffmpeg → update video doc."""
     workdir = Path(tempfile.mkdtemp(prefix=f"kb_{video_id[:8]}_"))
+    scope = _video_job_filter(video_id, agency_id=agency_id, property_id=property_id)
     try:
         # Download all candidates (cap above MAX so we can rank by resolution)
         images: List[Path] = []
@@ -353,7 +400,7 @@ async def _generate_ken_burns(video_id: str, property_id: Optional[str],
             if await _download_photo(url, dest):
                 images.append(dest)
         if not images:
-            await db.videos.update_one({"id": video_id}, {"$set": {
+            await db.videos.update_one(scope, {"$set": {
                 "status": "failed", "error": "no_photos_downloaded",
                 "updated_at": datetime.now(timezone.utc).isoformat(),
             }})
@@ -361,10 +408,10 @@ async def _generate_ken_burns(video_id: str, property_id: Optional[str],
         images = _select_best_frames(images, limit=MAX_PHOTOS)
         # Render into durable cache, then Object Storage (survives Railway redeploy)
         out_path = _video_root() / f"{video_id}.mp4"
-        await db.videos.update_one({"id": video_id}, {"$set": {"status": "processing"}})
+        await db.videos.update_one(scope, {"$set": {"status": "processing"}})
         await asyncio.to_thread(_run_ken_burns_ffmpeg, images, out_path, duration_s)
         persisted = await asyncio.to_thread(_persist_video_mp4, video_id, out_path)
-        await db.videos.update_one({"id": video_id}, {"$set": {
+        await db.videos.update_one(scope, {"$set": {
             "status": "ready",
             **persisted,
             "photos_count": len(images),
@@ -373,7 +420,7 @@ async def _generate_ken_burns(video_id: str, property_id: Optional[str],
         }})
     except Exception as e:
         logger.exception("ken burns generation failed")
-        await db.videos.update_one({"id": video_id}, {"$set": {
+        await db.videos.update_one(scope, {"$set": {
             "status": "failed",
             "error": f"{type(e).__name__}: {str(e)[:200]}",
             "updated_at": datetime.now(timezone.utc).isoformat(),
@@ -420,7 +467,7 @@ def _property_photo_urls(prop: dict, base_url: str) -> List[str]:
     return urls
 
 
-from shared.auth.tenant import optional_agency_id as _agency_id
+from shared.auth.tenant import arequire_agency as _agency_id
 
 
 # ---------------------------------------------------------------------------
@@ -474,7 +521,16 @@ async def enqueue_ken_burns_for_property(
         photos_count=len(urls),
     ).model_dump()
     await db.videos.insert_one(doc)
-    asyncio.create_task(_generate_ken_burns(doc["id"], pid, urls, duration_s, db))
+    asyncio.create_task(
+        _generate_ken_burns(
+            doc["id"],
+            pid,
+            urls,
+            duration_s,
+            db,
+            agency_id=doc.get("agency_id"),
+        )
+    )
     return {
         "video_id": doc["id"],
         "status": "pending",
@@ -520,7 +576,12 @@ async def soft_delete_owner_ken_burns(db, property_id: str) -> Dict[str, Any]:
         return {"ok": True, "deleted": 0}
     ids = [d["id"] for d in docs if d.get("id")]
     await db.videos.update_many(
-        {"id": {"$in": ids}},
+        {
+            "id": {"$in": ids},
+            "property_id": property_id,
+            "agency_id": None,
+            "mode": "ken_burns",
+        },
         {"$set": {
             "status": "deleted",
             "error": "owner_deleted",
@@ -556,11 +617,17 @@ async def video_status(
     video_id: str,
     user: dict = Depends(require_roles("agent", "agency_admin", "super_admin")),
 ):
+    """Agency-auth status: own agency video OR public UGC (agency_id null).
+
+    W3: without active agency the previous optional filter fell back to bare
+    ``{id}`` and leaked other tenants' videos.
+    """
     db = Database.get()
-    aid = _agency_id(user)
-    q = {"id": video_id}
-    if aid:
-        q["$or"] = [{"agency_id": aid}, {"agency_id": None}]
+    aid = await _agency_id(user)
+    q = {
+        "id": video_id,
+        "$or": [{"agency_id": aid}, {"agency_id": None}],
+    }
     doc = await db.videos.find_one(q, {"_id": 0})
     if not doc:
         raise HTTPException(status_code=404, detail="video_not_found")
@@ -571,6 +638,17 @@ async def video_status(
 async def video_by_property_public(pid: str):
     """Latest playable Ken Burns video for a public listing (if any)."""
     db = Database.get()
+    prop = await db.properties.find_one(
+        {
+            "id": pid,
+            "is_listed_on_immobilcloud": True,
+            "status": "active",
+            "visibility": "public",
+        },
+        {"_id": 0, "id": 1},
+    )
+    if not prop:
+        raise HTTPException(status_code=404, detail="video_not_found")
     # Walk recent jobs: hydrate flips ready→failed when /tmp bytes are gone
     # so FE gets 404 and can regenerate instead of a black <video>.
     cursor = db.videos.find(
@@ -586,12 +664,32 @@ async def video_by_property_public(pid: str):
 
 @public_router.get("/{video_id}")
 async def video_status_public(video_id: str):
-    """Public poll for UGC/private listings videos."""
+    """Public poll for UGC/private listings videos only (agency_id is null).
+
+    W3: removed fallback that returned any ``status=ready`` video by id
+    (including agency-owned Ken Burns / Kling).
+    """
     db = Database.get()
     doc = await db.videos.find_one({"id": video_id, "agency_id": None}, {"_id": 0})
     if not doc:
-        # Also allow ready videos linked to listed properties (agency Ken Burns stored with agency_id)
-        doc = await db.videos.find_one({"id": video_id, "status": "ready"}, {"_id": 0})
+        # Agency video may be public only when its property is a public listing.
+        candidate = await db.videos.find_one(
+            {"id": video_id, "status": "ready", "agency_id": {"$ne": None}},
+            {"_id": 0},
+        )
+        if candidate and candidate.get("property_id"):
+            prop = await db.properties.find_one(
+                {
+                    "id": candidate["property_id"],
+                    "agency_id": candidate["agency_id"],
+                    "is_listed_on_immobilcloud": True,
+                    "status": "active",
+                    "visibility": "public",
+                },
+                {"_id": 0, "id": 1},
+            )
+            if prop:
+                doc = candidate
     if not doc:
         raise HTTPException(status_code=404, detail="video_not_found")
     return await hydrate_ready_video(db, doc)
@@ -665,12 +763,21 @@ def _build_kling_prompt(prop: dict) -> str:
     return ", ".join(parts)
 
 
-async def _generate_kling_video(video_id: str, property_id: str, image_url: str,
-                                prompt: str, db) -> None:
+async def _generate_kling_video(
+    video_id: str,
+    property_id: str,
+    image_url: str,
+    prompt: str,
+    db,
+    *,
+    agency_id: Optional[str] = None,
+) -> None:
     """Async task: call fal.ai Kling → download output → apply watermark."""
     import fal_client
+
+    scope = _video_job_filter(video_id, agency_id=agency_id, property_id=property_id)
     try:
-        await db.videos.update_one({"id": video_id}, {"$set": {"status": "processing"}})
+        await db.videos.update_one(scope, {"$set": {"status": "processing"}})
         handler = await fal_client.submit_async(
             FAL_KLING_MODEL,
             arguments={
@@ -708,7 +815,7 @@ async def _generate_kling_video(video_id: str, property_id: str, image_url: str,
             raise RuntimeError(f"watermark_failed: {result_ff.stderr.decode()[-300:]}")
         raw_path.unlink(missing_ok=True)
         persisted = await asyncio.to_thread(_persist_video_mp4, video_id, final_path)
-        await db.videos.update_one({"id": video_id}, {"$set": {
+        await db.videos.update_one(scope, {"$set": {
             "status": "ready",
             **persisted,
             "error": None,
@@ -717,7 +824,7 @@ async def _generate_kling_video(video_id: str, property_id: str, image_url: str,
 
     except Exception as e:
         logger.exception("kling video generation failed")
-        await db.videos.update_one({"id": video_id}, {"$set": {
+        await db.videos.update_one(scope, {"$set": {
             "status": "failed",
             "error": f"{type(e).__name__}: {str(e)[:200]}",
             "updated_at": datetime.now(timezone.utc).isoformat(),
@@ -739,9 +846,7 @@ async def kling_from_property(
     Costo interno OMNIA: ~€0,88 (fal.ai) → margine ~41%.
     """
     db = Database.get()
-    aid = _agency_id(user)
-    if not aid:
-        raise HTTPException(status_code=404, detail="no_agency")
+    aid = await _agency_id(user)
     prop = await _load_property(db, pid, aid)
 
     # Wallet check + charge (12 crediti)
@@ -778,7 +883,11 @@ async def kling_from_property(
     ).model_dump()
     await db.videos.insert_one(doc)
     prompt = _build_kling_prompt(prop)
-    asyncio.create_task(_generate_kling_video(doc["id"], pid, image_url, prompt, db))
+    asyncio.create_task(
+        _generate_kling_video(
+            doc["id"], pid, image_url, prompt, db, agency_id=aid
+        )
+    )
     return {
         "video_id": doc["id"],
         "status": "pending",

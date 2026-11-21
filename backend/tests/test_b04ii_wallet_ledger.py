@@ -77,7 +77,12 @@ class FakeColl:
                     if bool(v["$exists"]) != exists:
                         return False
             else:
-                if doc.get(k) != v:
+                val = doc.get(k)
+                # Mongo: equality against an array field means "contains value"
+                if isinstance(val, list) and not isinstance(v, (list, dict)):
+                    if v not in val:
+                        return False
+                elif val != v:
                     return False
         return True
 
