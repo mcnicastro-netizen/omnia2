@@ -1,13 +1,20 @@
 # Capitolo 3 · Immobili
 
-**Versione manuale**: v1.2 · **Ultima revisione**: 24-Set-2026 (A-028d/e/f + g conferma)  
+**Versione manuale**: v1.3 · **Ultima revisione**: 21-Nov-2026 (S1 A-007 lista date mancanti + FE chip)  
 **Chi lo legge**: titolari, agenti, segreteria
 **Prerequisiti**: aver fatto login (Cap. 1), essere assegnati a un'agenzia attiva
 
 Il modulo **Immobili** è il cuore operativo di ImmoWeb: qui vive il tuo portafoglio.
 Ci arrivi cliccando **Immobili** dalla barra a sinistra (cluster **Operativo**) oppure da un contatore della Dashboard.
 
-In lista: toggle **Card / Tabella**, filtri smart (**Senza foto · Incompleti · Testo debole**) e ordinamento. In scheda (modifica): pannello **Cosa manca** (A-028d) con blocchi HARD/SOFT e scorciatoia HAL su titolo/descrizione — **Conferma e applica** (A-028g) scrive solo dopo il tuo ok.
+In lista: toggle **Card / Tabella**, filtri smart (**Senza foto · Incompleti · Testo debole · Senza match · Ribasso recente**) e ordinamento. In scheda (modifica): pannello **Cosa manca** (A-028d) con blocchi HARD/SOFT e scorciatoia HAL su titolo/descrizione — **Conferma e applica** (A-028g) scrive solo dopo il tuo ok.
+
+### Lista e date (S1 A-007 · commit `5582a64`)
+
+- La lista (`GET /api/app/properties`) **non va in errore 500** se un record legacy manca di `created_at` o `updated_at`.
+- In risposta le date mancanti restano stringa vuota `""` e compaiono in `listing_flags` come metadati diagnostici `missing_created_at` / `missing_updated_at` (nessuna data inventata, nessun copia-incolla tra i due campi).
+- In UI (`PropertiesPage` / chip) quei due flag **non** vengono mostrati all’agente: restano solo nel payload API.
+- Record senza `id` o `title` validi vengono **omessi** dalla pagina (log server `property_list_item_skipped`); il `total` Mongo non viene ricalcolato.
 
 ---
 

@@ -415,13 +415,13 @@ voci:
     screenshot: []
 
   - id: api-keys.errori-comuni
-    titolo: Errori comuni API Keys (401/402/403/404 + plaintext perso)
+    titolo: Errori comuni API Keys (401/402/403/404 + plaintext perso + agency_inactive)
     modulo: API Keys
     widget: null
     pubblico: [titolare, super_admin, partner]
     livello: intermedio
-    tags: [api-keys, errori, "401", "402", "403", "404", troubleshooting, plaintext-perso, insufficient-credits, origin-not-allowed]
-    correlati: [api-keys.emissione-show-once, api-keys.allowed-origins, api-keys.credit-wallet]
+    tags: [api-keys, errori, "401", "402", "403", "404", troubleshooting, plaintext-perso, insufficient-credits, origin-not-allowed, agency-inactive, s1-a006, d-152]
+    correlati: [api-keys.emissione-show-once, api-keys.allowed-origins, api-keys.credit-wallet, api-keys.gate-attivazione-agenzia]
     domanda_naturale: "Perché la mia chiave API non funziona? Errori comuni?"
     contenuto:
       a_cosa_serve: >
@@ -429,8 +429,8 @@ voci:
       quando_si_usa: >
         Debug integrazione partner.
       passi:
-        - "E1 · 401 unauthorized: header Authorization: Bearer
-          omk_live_... mancante o formato errato. Fix: verifica
+        - "E1 · 401 unauthorized / invalid_api_key: header Authorization: Bearer
+          omk_live_... mancante, formato errato o chiave inesistente. Fix: verifica
           prefix omk_live_."
         - "E2 · 402 insufficient_credits: saldo chiave < costo
           endpoint (5cr valuator, 3cr legal, 1cr mortgages). Fix:
@@ -443,9 +443,43 @@ voci:
         - "E5 · Persa la plaintext / chiave smarrita: nessun recovery.
           Preferisci POST /rotate (Ruota) — crediti e origins restano.
           Altrimenti nuova emissione + top-up + revoke."
+        - "E6 · 403 agency_inactive (S1 A-006 / D-152): agenzia assente,
+          is_active=false, oppure activation_status pending/suspended.
+          Legacy senza activation_status = attiva (grandfather).
+          Non confondere con 403 api_key_revoked."
       errori_comuni: []
       permessi:
         - "Troubleshooting"
+    screenshot: []
+
+  - id: api-keys.gate-attivazione-agenzia
+    titolo: Gate attivazione agenzia sul gateway API Key (S1 A-006 · D-152)
+    modulo: API Keys
+    widget: null
+    pubblico: [titolare, super_admin, partner]
+    livello: avanzato
+    tags: [api-keys, activation-status, d-152, s1-a006, require-api-key, grandfather]
+    correlati: [api-keys.errori-comuni, api.s1-a007-a006]
+    domanda_naturale: >
+      Una API key di un'agenzia pending funziona? Cosa cambia con D-152
+      sul gateway /api/v1?
+    contenuto:
+      a_cosa_serve: >
+        Allineare require_api_key alla stessa regola CRM di attivazione
+        (resolve_activation_status) senza duplicare D-152.
+      quando_si_usa: >
+        Partner Track B; debug 403 agency_inactive; onboarding pending.
+      passi:
+        - "Projection Mongo: id + is_active + activation_status (evita {} falsy)."
+        - "Negato se agency None."
+        - "Negato sempre se is_active is False (kill-switch)."
+        - "Consentito solo se resolve_activation_status == active."
+        - "Legacy senza activation_status → active (grandfather D-152)."
+      errori_comuni:
+        - problema: "Agenzia legacy senza campi bloccata a torto"
+          soluzione: "Con S1 A-006 (5582a64) manca activation_status = active; manca is_active OK se non False."
+      permessi:
+        - "Gateway automatico su ogni /api/v1 con API key"
     screenshot: []
 
   - id: api-keys.limitazioni-v1

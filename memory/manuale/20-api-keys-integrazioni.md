@@ -187,11 +187,12 @@
 
 ## 20.12 · Errori comuni
 
-- **E1 · 401 unauthorized** su `/api/v1/*`: header `Authorization: Bearer omk_...` mancante o formato errato. Fix: verifica prefix `omk_live_`.
+- **E1 · 401 unauthorized** / **invalid_api_key** su `/api/v1/*`: header `Authorization: Bearer omk_...` mancante, formato errato o chiave inesistente. Fix: verifica prefix `omk_live_` e che la chiave sia ancora emessa.
 - **E2 · 402 insufficient_credits**: saldo chiave insufficiente per l'endpoint (5cr per valuator, ecc.). Fix: `POST /api/app/api-keys/{id}/credits` con delta positivo.
 - **E3 · 403 origin_not_allowed**: chiave con `allowed_origins` popolato + widget in dominio non whitelisted. Fix: aggiorna origins via `PATCH /origins` o svuota lista per uso server-side.
 - **E4 · 404 api_key_not_found** su revoke/top-up: la chiave non appartiene alla tua agency (o è stata già cancellata da super_admin). Fix: verifica ownership.
 - **E5 · Persa la plaintext dopo emissione / chiave smarrita**: nessun recovery del segreto. Preferisci **Ruota** (`POST /rotate`) — crediti e origins restano. In alternativa: emetti nuova + top-up crediti + revoca vecchia.
+- **E6 · 403 agency_inactive** (S1 A-006 · D-152 · commit `5582a64`): il gateway `require_api_key` allinea il gate CRM. Negato se l’agenzia non esiste, se `is_active is False` (kill-switch), o se `resolve_activation_status` ≠ `active` (pending/suspended). Agenzie **legacy senza** `activation_status` restano **attive** (grandfather D-152). Non confondere con **403 api_key_revoked** (chiave revocata / `is_active` false sulla key).
 
 ---
 

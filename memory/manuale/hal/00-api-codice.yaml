@@ -34,17 +34,19 @@ voci:
     widget: null
     pubblico: [titolare, agente, super_admin]
     livello: avanzato
-    tags: [codice, api, architettura, d-073]
-    correlati: []
+    tags: [codice, api, architettura, d-073, s1-a007]
+    correlati: [api.s1-a007-a006, immobili.lista-date-mancanti]
     domanda_naturale: "API immobili"
     contenuto:
       a_cosa_serve: >
         apps/immoweb/properties.py sotto /api/app/properties — multi-tenant agency_id.
+        Lista: soft-read created_at/updated_at (S1 A-007) con "" + missing_* flags.
       quando_si_usa: >
         Quando HAL deve assistere su come è fatto il codice o quale endpoint usare.
       passi:
         - "Identifica il modulo nel path indicato."
         - "Verifica prefix /api e auth (JWT cookie o API key)."
+        - "Lista: _serialize_property_list_items — niente KeyError su date mancanti."
         - "Non inventare endpoint non presenti nel repo."
       errori_comuni:
         - problema: "Endpoint inventato"
@@ -209,21 +211,25 @@ voci:
     widget: null
     pubblico: [titolare, agente, super_admin]
     livello: avanzato
-    tags: [codice, api, architettura, d-073]
-    correlati: []
+    tags: [codice, api, architettura, d-073, s1-a006, d-152]
+    correlati: [api.s1-a007-a006, api-keys.gate-attivazione-agenzia]
     domanda_naturale: "API Gateway Track B"
     contenuto:
       a_cosa_serve: >
         apps/v1/gateway.py + api_keys — omk_live_ keys, crediti €0,03.
+        require_api_key applica anche il gate attivazione agenzia (D-152 / S1 A-006).
       quando_si_usa: >
         Quando HAL deve assistere su come è fatto il codice o quale endpoint usare.
       passi:
         - "Identifica il modulo nel path indicato."
         - "Verifica prefix /api e auth (JWT cookie o API key)."
+        - "Agency gate: resolve_activation_status + kill-switch is_active False."
         - "Non inventare endpoint non presenti nel repo."
       errori_comuni:
         - problema: "Endpoint inventato"
           soluzione: "Citare solo route reali dal corpus codice."
+        - problema: "403 agency_inactive con chiave valida"
+          soluzione: "Controllare activation_status / is_active agenzia (non solo la key)."
       permessi:
         - "Dipende dall'endpoint"
       screenshot: []
@@ -1725,7 +1731,7 @@ voci:
       screenshot: []
 
   - id: api.d175-pr240
-    titolo: D-175 PR #240 — Deal/chat/mini-dossier remediation (D-190)
+    titolo: D-175 PR #240 — Deal/chat/mini-dossier (MERGED)
     modulo: Codice API
     widget: null
     pubblico: [super_admin]
@@ -1735,22 +1741,46 @@ voci:
     domanda_naturale: "A che punto è la PR 240 Deal e chat MLS? Si può mergiare?"
     contenuto:
       a_cosa_serve: >
-        Stato fine 20-Nov-2026: implementazione + remediation Bugbot su branch
-        cursor/d175-deal-chat-dossier-h4-e393 tip 1eda988; CI B04 verde ma non
-        equivale alla suite D-175; Founder non ha approvato il merge.
+        PR #240 Deal/chat/mini-dossier è MERGED in main (merge f0d4b26 · docs D-175 tip 759d628).
+        H4 sealed / Stripe TEST checkout restano BLOCKED senza nuova autorizzazione.
       quando_si_usa: >
-        Ripresa sessione; review PR #240; distinzione C4 in main vs lavoro MLS operativo aperto.
+        Ripresa sessione; audit MLS operativo già in main.
       passi:
-        - "PR https://github.com/mcnicastro-netizen/omnia2/pull/240 — aperta, no merge."
-        - "Codice funzionale remediation: 68b0fc6; tip docs: 1eda988."
-        - "Report: docs/ops/D175-PR240-DEFINITIVE-REMEDIATION-REPORT.md + verifica tip in artifacts."
-        - "Prossimo passo: patch mirata 3 finding (PDF watermark fail-hard; reject solo pending; allegato chat same-collab)."
-        - "H4 sealed / Stripe TEST checkout: ancora BLOCKED senza nuova autorizzazione."
+        - "Merge: f0d4b26 su main; registrazione docs 759d628."
+        - "H4 sealed / Stripe TEST: ancora fuori mandato senza OK Founder."
       errori_comuni:
-        - problema: "CI 2/2 verde = D-175 completo e mergeabile"
-          soluzione: "No. CI = solo B04 unit; restano 3 finding Bugbot e decisione Founder."
-        - problema: "C4 in main include già Deal/chat"
-          soluzione: "No. Deal/chat/mini-dossier sono su PR #240 non mergiata."
+        - problema: "Pensare che #240 sia ancora aperta"
+          soluzione: "È in main; verifica git log / PR GitHub closed+merged."
+      permessi:
+        - super_admin / Founder
+      screenshot: []
+
+  - id: api.s1-a007-a006
+    titolo: S1 A-007 + A-006 — lista date mancanti e gate API key (D-191)
+    modulo: Codice API
+    widget: null
+    pubblico: [super_admin, titolare]
+    livello: avanzato
+    tags: [codice, s1, a-007, a-006, listing-flags, api-key, d-152, d-191]
+    correlati: [api.properties, api.v1-gateway, immobili.lista-date-mancanti, api-keys.gate-attivazione-agenzia]
+    domanda_naturale: >
+      Cosa hanno sistemato A-007 e A-006 del programma S1? Commit?
+    contenuto:
+      a_cosa_serve: >
+        Chiusura implementativa S1: serializer lista immobili tollerante alle
+        date mancanti (A-007) + FE che nasconde i chip missing_*; gateway API
+        key allineato a D-152 (A-006).
+      quando_si_usa: >
+        Audit regressione lista Immobili; debug 403 agency_inactive su /api/v1.
+      passi:
+        - "Commit codice: 5582a6419cd9051ded07ec89bca2d77ef7c8d925 su main."
+        - "A-007: properties.py soft-read + flags; FE listingFlagVisibility."
+        - "A-006: require_api_key + resolve_activation_status; is_active False = kill-switch."
+        - "Test: test_a007_*, test_a006_*, listingFlagVisibility.test.js."
+        - "Non confondere con ASPETTI A-006 (tooltip HAL) / A-007 (rimozione membro) — ID diversi."
+      errori_comuni:
+        - problema: "ASPETTI A-006/A-007 del backlog Cap.12/13"
+          soluzione: "Sono altre voci già chiuse a settembre; S1 usa gli stessi numeri per anomalie diverse."
       permessi:
         - super_admin / Founder
       screenshot: []

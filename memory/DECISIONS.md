@@ -7,6 +7,17 @@ Registro di tutte le decisioni di business e tecniche prese durante il progetto.
 
 ## Decisioni prese
 
+### D-191 — S1 A-007 + A-006 (+ FE) chiusi in main · 21-Nov-2026
+- **Contesto**: Programma PRE-GTM S1 — anomalie lista immobili (date mancanti → KeyError) e incoerenza gateway API Key vs D-152. Implementazione autorizzata; FE mirata per nascondere chip diagnostici `missing_*`.
+- **Decisione Founder**:
+  1. **A-007 (backend)**: serializer lista tollerante (`""` + `missing_created_at` / `missing_updated_at`); no sentinel/cross-fill; skip id/title + log; nessun migrate Mongo.
+  2. **A-006**: `require_api_key` riusa `resolve_activation_status` (D-152); projection con `id`; `is_active is False` = kill-switch; grandfather legacy senza `activation_status`.
+  3. **FE**: `visibleListingFlags` nasconde solo i due `missing_*` in `PropertiesPage` FlagChips; payload API invariato.
+  4. Commit codice autorizzato su `main`: **`5582a6419cd9051ded07ec89bca2d77ef7c8d925`** (`fix(immoweb): harden property listing and API key activation`).
+  5. **Non** confondere con ASPETTI backlog **A-006** (tooltip HAL) / **A-007** (rimozione membro) — numerazione diversa.
+- **SoT**: Cap.03 v1.3 · Cap.20 E6 · HAL `immobili.lista-date-mancanti` · `api-keys.gate-attivazione-agenzia` · `api.s1-a007-a006` · test `test_a007_*` / `test_a006_*` / `listingFlagVisibility`.
+- **Stato**: ✅ codice in `main` locale al commit. Sync docs + push = questo giro D-084.
+
 ### D-190 — D-175 PR #240 Deal/chat/mini-dossier: remediation aperta, no merge · 20-Nov-2026
 - **Contesto**: Mandato Founder di implementazione su Dogfood (Stripe TEST/H4 senza sealed, mini-dossier feedback, Deal, chat contestuale). PR **#240** branch `cursor/d175-deal-chat-dossier-h4-e393`. Remediation Bugbot (FIX-01…06) + watermark/rating/Deal roles. Verifica tip `1eda988` (codice funzionale `68b0fc6`). Seconda review Bugbot: 1 high + 2 medium residui.
 - **Decisione operativa (fine giornata 20-Nov)**:

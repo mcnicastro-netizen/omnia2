@@ -1,10 +1,12 @@
-# 📚 HAL Knowledge — Import & Cold Start (v0.62-d175-pr240-2026-11-20)
+# 📚 HAL Knowledge — Import & Cold Start (v0.63-s1-a007-a006-2026-11-21)
 
-**Ultimo aggiornamento**: 20-Nov-2026 (D-190 · PR #240 Deal/chat/mini-dossier · Cap.27 v1.2 · no merge)  
+**Ultimo aggiornamento**: 21-Nov-2026 (D-191 · S1 A-007/A-006 + FE · commit `5582a64`)  
 **Corpus**: YAML in `memory/manuale/hal/*.yaml` (Cap. 1–27 + `00-api-codice`) · MD esclusi dal RAG ingest  
 **Motore**: `hal_knowledge.py` · reindex: `POST /api/app/hal/knowledge/reindex?force=true` (super_admin)  
 **Regola Founder D-084**: ogni ship aggiorna MD+YAML nello stesso giro — vedi `memory/MANUAL_SYNC.md`.  
-**Nuove voci 20-Nov**: `api.d175-pr240` · `mls.collaborazioni-workspace` · `mls.deal-chat`.  
+**Nuove voci 21-Nov**: `immobili.lista-date-mancanti` · `api-keys.gate-attivazione-agenzia` · `api.s1-a007-a006`.  
+**Aggiornate 21-Nov**: `immobili.lista-tabella-filtri-smart` · `api-keys.errori-comuni` · `api.properties` · `api.v1-gateway` · `api.d175-pr240` (MERGED).  
+**Voci 20-Nov**: `mls.collaborazioni-workspace` · `mls.deal-chat`.  
 **Voci 19-Nov**: `api.d175-c4-chiuso`.  
 **Voci 18-Nov**: `api.master-ab-chiuso` · `api.dogfood-step1` · `api.mc042-r01-refresh`.
 
@@ -270,6 +272,7 @@ Prima di dichiarare il cold start "attivo", eseguire manualmente queste 5 query 
 
 | Data | Versione | Note |
 |------|:-:|------|
+| 21-Nov-2026 | **v0.63-s1-a007-a006** | D-191 S1: Cap.03/20 + HAL lista date + gate API key · `api.s1-a007-a006` · commit `5582a64`. Reindex post-push. |
 | 16-Nov-2026 | **v0.60-d173-pausa-b01-b02** | D-173 design B01/B02 chiusi · Cap.00/13/24 note target≠codice · HAL `api.design-d173-risanamento-b01-b02` · RIPRENDI_2026-11-16 · export `_export_audits/`. Reindex Founder post-merge (opz.). |
 | 11-Nov-2026 | **v0.59-d165-closeout** | D-163 auto-KYC · D-164 Stripe reconcile · D-165 enter_url anti-403 · mensile/annuale waiting · Cap.00/01 + HAL. NEXT_SESSION contatori scadenze/crediti. Reindex post-merge. |
 | 11-Nov-2026 | **v0.58-d161-login** | D-161: una password (register); forgot-password; Cap.00/01 + HAL sync; API=password deprecata. Reindex post-merge. |

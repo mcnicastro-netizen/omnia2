@@ -9,13 +9,13 @@ voci:
   # ---------- 3.0 · Lista + coach (A-028d/e/f) ----------
 
   - id: immobili.lista-tabella-filtri-smart
-    titolo: Lista immobili — tabella, filtri smart e ordinamento (A-028e/f)
+    titolo: Lista immobili — tabella, filtri smart e ordinamento (A-028e/f · S1 A-007)
     modulo: Immobili
     widget: null
     pubblico: [titolare, agente, segreteria]
     livello: base
-    tags: [immobili, lista, tabella, filtri, smart, a-028e, a-028f]
-    correlati: [immobili.creazione-manuale, immobili.coach-cosa-manca]
+    tags: [immobili, lista, tabella, filtri, smart, a-028e, a-028f, s1-a007, listing-flags]
+    correlati: [immobili.creazione-manuale, immobili.coach-cosa-manca, immobili.lista-date-mancanti]
     domanda_naturale: >
       Come vedo gli immobili in tabella? Come filtro quelli senza foto
       o incompleti?
@@ -29,11 +29,42 @@ voci:
       passi:
         - "Apri Immobili (cluster Operativo)."
         - "Toggle Card / Tabella in alto a destra."
-        - "Filtro Smart: Senza foto · Incompleti · Testo debole."
+        - "Filtro Smart: Senza foto · Incompleti · Testo debole · Senza match · Ribasso."
         - "Ordina per aggiornamento, prezzo, superficie o data creazione."
-        - "I flag (Senza foto / Incompleto / Testo debole) compaiono su card e riga."
-      errori_comuni: []
+        - "I flag noti (Senza foto / Incompleto / Testo debole / Senza match / Ribasso) compaiono su card e riga."
+        - "I metadati diagnostici missing_created_at / missing_updated_at restano nel JSON API ma NON come chip UI (S1 A-007 FE)."
+      errori_comuni:
+        - problema: "Chip tecnici missing_created_at in inglese"
+          soluzione: "Da commit 5582a64 i due flag diagnostici sono nascosti in FlagChips; se li vedi ancora, hard refresh."
       permessi: [Tutti]
+    screenshot: []
+
+  - id: immobili.lista-date-mancanti
+    titolo: Lista immobili con date mancanti (S1 A-007)
+    modulo: Immobili
+    widget: null
+    pubblico: [titolare, agente, super_admin]
+    livello: intermedio
+    tags: [immobili, lista, created-at, updated-at, s1-a007, listing-flags, legacy]
+    correlati: [immobili.lista-tabella-filtri-smart, api.s1-a007-a006]
+    domanda_naturale: >
+      La lista Immobili va in errore se mancano created_at o updated_at?
+      Cosa sono missing_created_at e missing_updated_at?
+    contenuto:
+      a_cosa_serve: >
+        Evitare 500 su record legacy incompleti e rendere esplicite le date
+        assenti senza inventare timestamp.
+      quando_si_usa: >
+        Portfolio con import vecchi o documenti Mongo senza timestamp.
+      passi:
+        - "Serializer lista: date mancanti → stringa vuota + flag missing_* in listing_flags."
+        - "Nessun sentinel (epoch) e nessun copia created_at↔updated_at."
+        - "UI lista nasconde i due flag diagnostici; gli altri chip restano."
+        - "Record senza id/title validi omessi dalla pagina (log property_list_item_skipped); total invariato."
+      errori_comuni:
+        - problema: "Pensare che missing_* siano stati rimossi dall'API"
+          soluzione: "Restano nel payload; solo i chip UI li nascondono."
+      permessi: [Tutti / super_admin per log]
     screenshot: []
 
   - id: immobili.coach-cosa-manca

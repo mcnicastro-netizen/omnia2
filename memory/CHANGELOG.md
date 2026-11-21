@@ -1,3 +1,10 @@
+## 2026-11-21 — S1 A-007 + A-006 + FE chip `missing_*` (D-191)
+
+- Commit `5582a64` su `main`: lista immobili soft-read date; gateway API key allineato D-152; FE nasconde chip diagnostici
+- Manuale Cap.03 v1.3 · Cap.20 E6 · HAL `immobili.lista-date-mancanti` · `api-keys.gate-attivazione-agenzia` · `api.s1-a007-a006`
+- Test: backend 23 PASS (A-007/A-006/A-034) · FE 8 PASS (`listingFlagVisibility`)
+- Nota: ID S1 A-006/A-007 ≠ ASPETTI A-006/A-007 (tooltip / rimozione membro)
+
 ## 2026-11-20 — Fine giornata: PR #240 Deal/chat/mini-dossier (no merge)
 
 - Mandato D-175 implementazione Dogfood: collaborazione → visita → mini-dossier feedback → doc esplicita → chat → Deal; webhook Stripe deleted; H4 sealed non aperto
