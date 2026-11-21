@@ -3,7 +3,7 @@
 **Data (Europe/Rome):** 2026-11-21 22:05 CET  
 **Autorizzazione:** Founder — ciclo remediation W4, solo staging, perimetro W4 già concesso  
 **Branch:** `cursor/w4-staging-e2e-b894`  
-**HEAD tip (pre-docs commit di questo ciclo):** `5a8adaf`  
+**HEAD tip docs remediation:** `4bb9ffa` (su `5a8adaf`)  
 **API staging (primaria):** deploy `804e63dd…` · codice tip `3f34c5f`  
 **API staging (seconda istanza):** servizio `omnia-api-w4b` · deploy `8b8c79d5…` · `Dockerfile.railway`  
 **FE staging:** Vercel `dpl_BKEU47VmocASEGrMUNGQjFoNV99c` · commit `5a8adaf` · API host bundle `<STAGING_API_A_HOST>`  
