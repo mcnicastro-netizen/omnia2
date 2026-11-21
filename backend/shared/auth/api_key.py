@@ -110,9 +110,21 @@ async def require_api_key(request: Request, endpoint_key: str) -> dict:
             )
             raise HTTPException(status_code=403, detail="origin_not_allowed")
 
-    # Verify owning agency is still active (missing/null is_active = legacy active)
-    ag = await db.agencies.find_one({"id": key["agency_id"]}, {"_id": 0, "is_active": 1})
-    if not ag or ag.get("is_active") is False:
+    # A-006 / D-152: agency gate aligned with CRM activation SoT.
+    # Projection must include `id` so a legacy agency without `is_active` does not
+    # collapse to `{}` (falsy) and trip `if not ag`. Kill-switch: is_active is False.
+    # Missing/null is_active remains legacy-ok; activation_status via resolve_*.
+    from shared.auth.agency_activation import resolve_activation_status
+
+    ag = await db.agencies.find_one(
+        {"id": key["agency_id"]},
+        {"_id": 0, "id": 1, "is_active": 1, "activation_status": 1},
+    )
+    if ag is None:
+        raise HTTPException(status_code=403, detail="agency_inactive")
+    if ag.get("is_active") is False:
+        raise HTTPException(status_code=403, detail="agency_inactive")
+    if resolve_activation_status(ag) != "active":
         raise HTTPException(status_code=403, detail="agency_inactive")
 
     cost = CREDIT_COSTS.get(endpoint_key, 0)

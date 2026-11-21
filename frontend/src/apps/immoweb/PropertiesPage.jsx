@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import AgencyShell from "./components/AgencyShell";
 import { api } from "../../shared/lib/api";
+import { visibleListingFlags } from "./listingFlagVisibility";
 
 const STATUSES = ["", "draft", "active", "reserved", "sold", "rented", "withdrawn"];
 const OPS = ["", "sale", "rent", "rent_to_buy", "auction"];
@@ -29,7 +30,9 @@ function formatPrice(v) {
 }
 
 function FlagChips({ flags }) {
-  if (!flags?.length) return null;
+  // A-007 FE: hide diagnostic missing_* from chips; keep other flags (known + unknown) as before.
+  const shown = visibleListingFlags(flags);
+  if (!shown.length) return null;
   const map = {
     no_photos: "Senza foto",
     incomplete: "Incompleto",
@@ -39,7 +42,7 @@ function FlagChips({ flags }) {
   };
   return (
     <span className="flex flex-wrap gap-1">
-      {flags.map((f) => (
+      {shown.map((f) => (
         <span
           key={f}
           className="text-[9px] uppercase tracking-widest px-1.5 py-0.5 border border-crm-gold/40 text-crm-navy bg-crm-gold-soft/40"

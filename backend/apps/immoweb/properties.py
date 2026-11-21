@@ -68,7 +68,35 @@ def _normalize_property_type(v):
     return _PROPERTY_TYPE_LEGACY_MAP.get(v, "altro")
 
 
-def _to_list_item(doc: dict) -> dict:
+def _list_timestamp(doc: dict, field: str) -> tuple[str, bool]:
+    """A-007 A2: missing/empty/null timestamp → "" + missing flag (no sentinel, no cross-fill)."""
+    raw = doc.get(field)
+    if raw is None:
+        return "", True
+    if isinstance(raw, str):
+        if not raw.strip():
+            return "", True
+        return raw, False
+    # Non-string legacy values: coerce to str only if truthy; still not inventing dates.
+    text = str(raw).strip()
+    if not text:
+        return "", True
+    return text, False
+
+
+def _to_list_item(doc: dict) -> Optional[dict]:
+    """Serialize one property for list view.
+
+    A-007: soft-read created_at/updated_at ("" + missing_* flags).
+    Structural gaps (missing id/title): return None — caller omits the item and must log.
+    """
+    prop_id = doc.get("id")
+    title = doc.get("title")
+    if not prop_id or not isinstance(prop_id, str) or not prop_id.strip():
+        return None
+    if title is None or not isinstance(title, str) or not title.strip():
+        return None
+
     photos = doc.get("photos") or []
     cover = next((p["url"] for p in photos if isinstance(p, dict) and p.get("is_cover")), None)
     if not cover and photos and isinstance(photos[0], dict):
@@ -95,6 +123,14 @@ def _to_list_item(doc: dict) -> dict:
         flags.append("price_drop")
     if doc.get("_no_match"):
         flags.append("no_match")
+
+    created_at, missing_created = _list_timestamp(doc, "created_at")
+    updated_at, missing_updated = _list_timestamp(doc, "updated_at")
+    if missing_created:
+        flags.append("missing_created_at")
+    if missing_updated:
+        flags.append("missing_updated_at")
+
     drop_out = None
     if isinstance(drop, dict):
         drop_out = {
@@ -103,8 +139,8 @@ def _to_list_item(doc: dict) -> dict:
             "at": drop.get("at") or drop.get("price_dropped_at"),
         }
     return {
-        "id": doc["id"],
-        "title": doc["title"],
+        "id": prop_id.strip(),
+        "title": title.strip(),
         "property_type": _normalize_property_type(doc.get("property_type")),
         "operation": doc.get("operation", "sale"),
         "status": doc.get("status", "draft"),
@@ -117,14 +153,31 @@ def _to_list_item(doc: dict) -> dict:
         "bedrooms": doc.get("bedrooms"),
         "cover_photo_url": cover,
         "reference_code": doc.get("reference_code"),
-        "created_at": doc["created_at"],
-        "updated_at": doc["updated_at"],
+        "created_at": created_at,
+        "updated_at": updated_at,
         "photo_count": int(photo_count or 0),
         "listing_flags": flags or None,
         "listing_agent_id": doc.get("listing_agent_id"),
         "listing_agent_name": doc.get("listing_agent_name"),
         "last_price_drop": drop_out,
     }
+
+
+def _serialize_property_list_items(docs: list) -> list:
+    """Map docs through _to_list_item; omit structural invalids (no id/title) with warning."""
+    items: list = []
+    for d in docs:
+        item = _to_list_item(d if isinstance(d, dict) else {})
+        if item is None:
+            logger.warning(
+                "property_list_item_skipped reason=missing_id_or_title keys=%s id=%r title=%r",
+                sorted((d or {}).keys()) if isinstance(d, dict) else [],
+                (d or {}).get("id") if isinstance(d, dict) else None,
+                (d or {}).get("title") if isinstance(d, dict) else None,
+            )
+            continue
+        items.append(item)
+    return items
 
 
 async def _attach_agent_names(db, docs: list) -> None:
@@ -320,7 +373,7 @@ async def list_properties(
         page_docs = no_match_docs[(page - 1) * page_size: page * page_size]
         await _attach_agent_names(db, page_docs)
         return {
-            "items": [_to_list_item(d) for d in page_docs],
+            "items": _serialize_property_list_items(page_docs),
             "total": total,
             "page": page,
             "page_size": page_size,
@@ -369,7 +422,7 @@ async def list_properties(
     docs = await db.properties.aggregate(pipeline).to_list(length=page_size)
     await _attach_agent_names(db, docs)
     return {
-        "items": [_to_list_item(d) for d in docs],
+        "items": _serialize_property_list_items(docs),
         "total": total,
         "page": page,
         "page_size": page_size,

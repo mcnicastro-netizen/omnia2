@@ -332,7 +332,7 @@ class PropertyListItem(OmniaBaseModel):
     created_at: str
     updated_at: str
     photo_count: int = 0
-    listing_flags: Optional[List[str]] = None  # A-028f / A-034: no_photos | incomplete | weak_copy | price_drop | no_match
+    listing_flags: Optional[List[str]] = None  # A-028f/A-034/A-007: no_photos|incomplete|weak_copy|price_drop|no_match|missing_created_at|missing_updated_at
     listing_agent_id: Optional[str] = None
     listing_agent_name: Optional[str] = None
     last_price_drop: Optional[dict] = None  # {drop_eur, drop_pct, at} if present
