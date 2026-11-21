@@ -83,7 +83,7 @@ A5/A6/A7 in `/opt/cursor/artifacts/`, A9/A10 in `/tmp/`, report forense/next-ste
 | Branch | `cursor/staging-e2e-d1d3-b894` |
 | Push | **non** eseguito |
 | Working tree preesistente | Numerose `??` report MD precedenti — **non** incluse nel commit |
-| Commit | `4f56da5cb2d3df10166dffd432ffc65b3589414f` |
+| Commit | `4209412f5cda651d669a6fc4aeb467546ff555db` (HEAD locale A+B; verificare con `git log -1`) |
 | Messaggio | `feat(d7): secure staging secrets hygiene and add T3/T4 harness (A+B)` |
 | Contenuto | Solo file A+B elencati in §2.1 (IDs staging in `config.py` con `pragma: allowlist secret`) |
 
