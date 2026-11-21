@@ -3,6 +3,7 @@
 **Data (Europe/Rome):** 2026-11-21 21:19 CET  
 **Autorizzazione:** Founder 21-Nov-2026 — staging remoto + deploy staging se necessario  
 **Verdetto complessivo:** **B — W4 STAGING E2E NON SUPERATO**
+**Tip branch post-report:** `8600f0c` (docs). **Codice API staging:** `3f34c5f`.
 
 W4 non certifica GTM e non autorizza campagne commerciali o stress successivi.
 
@@ -17,7 +18,7 @@ Il working tree locale conteneva il gate W3/B14 **non committato**. È stato iso
 | Voce | Valore |
 |------|--------|
 | Branch lavoro | `cursor/w4-staging-e2e-b894` |
-| HEAD finale | `3f34c5f2d6ae5eedcbe6a175e47f57ef87b3fc36` |
+| HEAD finale (docs) | `8600f0c` (BE deploy tip codice `3f34c5f`) |
 | Deploy staging (invite fix) | `deploy-invite-fix (see artifacts w4/railway_up3.txt)` (SUCCESS, health OK) |
 | Deploy precedente W3 | `deploy-W3-session (see artifacts w4/railway_up.txt)` |
 | FE Vercel | `Vercel dpl staging (API list)` · SHA `15b1978` (**più vecchio del BE**) |
