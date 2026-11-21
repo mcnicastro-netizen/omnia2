@@ -222,7 +222,8 @@ async def revoke_invite(
 @router.get("/invites/verify")
 async def verify_invite(token: str):
     """Public endpoint: invitee visits accept page with ?token=... and we return invite info."""
-    db = Database.get()
+    # Public path: no JWT agency context — use raw DB (agency_invites is tenant-guarded).
+    db = Database.get_raw()
     invite = await db.agency_invites.find_one({"token": token})
     if not invite:
         raise HTTPException(status_code=404, detail="invite_invalid")
@@ -270,7 +271,8 @@ async def accept_invite(
     Auto-login after accept; sets active_agency_id via membership helper.
     """
     lang = normalize_lang(accept_language)
-    db = Database.get()
+    # Public path: no JWT agency context — use raw DB (agency_invites is tenant-guarded).
+    db = Database.get_raw()
     invite = await db.agency_invites.find_one({"token": payload.token})
     if not invite:
         raise HTTPException(status_code=404, detail="invite_invalid")
