@@ -8,7 +8,7 @@
 **Vincoli rispettati:** nessun reset/stash/clean · nessun commit/push/merge/deploy · nessun accesso Railway/Vercel/Mongo remoto/Resend/Stripe live · nessuna email reale
 
 ---
-> **Rettifica cronologica (W4 · 2026-11-21 21:10 CET):** l’header originario «21:45 CET» appartiene al ciclo Staging Readiness (prima del Session Final Gate). Il gate B14 è stato completato alle **20:56 CET** dello stesso giorno; l’annotazione «aggiornato post session gate» su questo file è stata applicata ~20:56–20:57 CET. Nessun risultato del readiness è stato alterato retroattivamente — solo l’ordine temporale è chiarito. Dettaglio: `OMNIA-W3-SESSION-REVOCATION-FINAL-GATE.md` § Rettifica cronologica.
+> **Rettifica cronologica (W4 · 2026-11-21 21:10 CET):** l’header originario «21:45 CET» appartiene al ciclo Staging Readiness (prima del Session Final Gate). Il gate B14 è stato completato alle **20:56 CET** dello stesso giorno; l’annotazione «aggiornato post session gate» su questo file è stata applicata ~20:56–20:57 CET. Nessun risultato del readiness è stato alterato retroattivamente — solo l’ordine temporale è chiarito. Dettaglio: `OMNIA-W3-SESSION-REVOCATION-FINAL-GATE.md` § Rettifica cronologica. Inventario mtime remediation: `/opt/cursor/artifacts/w4r/chrono_artifacts_window.json` (readiness locale ~20:38 CET → session ~20:56 CET).
 
 
 ## 1. Baseline e stato del repository

@@ -1,9 +1,9 @@
 # OMNIA — PRE-GTM Readiness Master
 
 **Avviato:** 2026-11-21 19:45:38 CET (Europe/Rome)  
-**Aggiornato:** 2026-11-21 21:19 CET (Europe/Rome) — W4 staging E2E (verdetto B)  
-**Branch W4:** `cursor/w4-staging-e2e-b894` @ `3f34c5f2d6ae5eedcbe6a175e47f57ef87b3fc36`  
-**HEAD locale (branch W4):** `3f34c5f` (working tree ancora sporco su MD D175 storici)  
+**Aggiornato:** 2026-11-21 22:05 CET (Europe/Rome) — W4 remediation (verdetto B, blocchi infrastrutturali chiusi)  
+**Branch W4:** `cursor/w4-staging-e2e-b894` @ tip docs remediation · API `3f34c5f` · FE Vercel `5a8adaf`  
+**HEAD locale (branch W4):** tip docs + working tree D175 storici preservato  
 **Metodo:** programma di avanzamento tecnico (non audit fine a sé stesso)  
 **Vincoli:** nessun commit/push/deploy/remote write in questo ciclo; riparazioni e test locali autorizzati
 
@@ -61,8 +61,8 @@ Fonte: `memory/DECISIONS.md`, PRD/roadmap esistenti. **Nessun nuovo requisito in
 |----|------|-------------|------|
 | W1 | Integrità repo / baseline | **AVANZATO** | Baseline documentata; no reset |
 | W2 | Completezza funzionale | **PARZIALE** | Mappa flussi + tooling; E2E completo non rieseguito tutto |
-| W3 | Multi-tenant / sicurezza | **CODICE IN STAGING (non cert. GTM)** | B14 deployato su `omnia-api-staging` (`3f34c5f`); report W3 locali + `OMNIA-W4-STAGING-E2E-REPORT.md` |
-| W4 | Staging E2E distribuito | **B — NON SUPERATO** | Matrice W4-01…24: FAIL repliche (volume); BLOCKED L5/Stripe/fail-closed/cross-replica; invite fix OK — `OMNIA-W4-STAGING-E2E-REPORT.md` |
+| W3 | Multi-tenant / sicurezza | **CODICE IN STAGING (non cert. GTM)** | B14 deployato su `omnia-api-staging` (`3f34c5f`); report W3 locali + `OMNIA-W4-STAGING-E2E-REPORT.md` · `OMNIA-W4-REMEDIATION-REPORT.md` |
+| W4 | Staging E2E distribuito | **B — NON SUPERATO** | Matrice W4-01…24: FAIL repliche (volume); BLOCKED L5/Stripe/fail-closed/cross-replica; invite fix OK — `OMNIA-W4-STAGING-E2E-REPORT.md` · `OMNIA-W4-REMEDIATION-REPORT.md` |
 | W4 | DB / integrità | **PARZIALE** | Inventario locale; indici/query deep-dive aperto |
 | W5 | Prestazioni / stress | **AVANZATO LOCALE** | Probe nuovo + script storici; ladder grande non rieseguita |
 | W6 | Infra / capacità | **APERTO** | Staging/Railway capacity **non** misurata qui |
@@ -210,3 +210,10 @@ Avanzamento reale di questo ciclo:
 - Percorso chiaro alle autorizzazioni remote successive.
 
 **Non** confondere 72/30 test verdi e un probe locale con capacità GTM.
+
+
+## W4 remediation (2026-11-21 22:05 CET)
+
+- Verdetto ancora **B** (L5/Stripe BLOCKED per variabili assenti su Railway staging).
+- Chiusi: W4-02/06 multi-istanza (`omnia-api-w4b`), FE align, W4-08 fail-closed isolato, W4-13 visite/deal, B8 kill A/B.
+- SoT dettagli: `OMNIA-W4-REMEDIATION-REPORT.md`.

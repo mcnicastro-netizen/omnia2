@@ -234,3 +234,16 @@ Ordine reale dei cicli locali:
 2. **W3 Session Final Gate** (B14) — completato **2026-11-21 20:56 CET**; file scritto ~20:57 CET (mtime UTC 19:57).
 
 Il report Staging Readiness aveva header «21:45 CET» (ciclo readiness) poi annotato «aggiornato post session gate» allo stesso orario del gate (~20:56–20:57 CET). La label «21:45» **non** indica un evento successivo al gate: è il timestamp documentale del ciclo readiness, cronologicamente **anteriore** al gate B14. I risultati dei due report non sono stati riscritti retroattivamente; solo questa nota chiarisce l’ordine.
+
+
+---
+
+## Rettifica cronologica — evidenze remediation W4 (2026-11-21 22:05 CET)
+
+Sequenza attestata (Europe/Rome), senza alterare i risultati del gate:
+
+1. Readiness locale ~**20:38 CET** — mtime/`generated_at` `w3_staging_harness_local.json`
+2. Questo Session Gate ~**20:56 CET** — `generated_at_utc` in `w3_staging_harness_session.json`
+3. W4 remoto ~**21:13+ CET**
+
+L'etichetta documentale «21:45 CET» non risulta attestata da artefatti di esecuzione precedenti alle 20:56. Inventario: `/opt/cursor/artifacts/w4r/chrono_artifacts_window.json`.
