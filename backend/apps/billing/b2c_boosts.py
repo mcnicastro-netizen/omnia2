@@ -104,7 +104,7 @@ async def apply_boost_to_listing(
     }
     # Unset last_shown so Mongo treats as "never shown" in rotation ASC
     await db.properties.update_one(
-        {"id": listing_id},
+        {"id": listing_id, "owner_user_id": user_id, "is_private_listing": True},
         {
             "$set": {k: v for k, v in update.items() if v is not None},
             "$unset": {"boost_last_shown_at": ""},

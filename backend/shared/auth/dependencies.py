@@ -24,10 +24,22 @@ async def get_current_user(request: Request) -> dict:
     if not payload or payload.get("type") != "access":
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="invalid_token")
 
-    db = Database.get()
-    user = await db.users.find_one({"id": payload["sub"]}, {"_id": 0, "password_hash": 0})
+    try:
+        db = Database.get()
+        user = await db.users.find_one({"id": payload["sub"]}, {"_id": 0, "password_hash": 0})
+    except Exception as exc:  # noqa: BLE001
+        # B14 — fail-closed if session SoT (Mongo) is unreachable.
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="session_store_unavailable",
+        ) from exc
     if not user:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="user_not_found")
+
+    # B14 / B03 — access JWT must match an active Mongo-backed session.
+    from shared.auth.session_store import assert_access_session
+
+    assert_access_session(user, payload)
 
     # B03 — suspended / inactive accounts cannot use protected routes
     if user.get("is_active") is False:

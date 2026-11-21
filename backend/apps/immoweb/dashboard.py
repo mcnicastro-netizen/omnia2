@@ -46,14 +46,13 @@ _WEAK_DESC = {
 }
 
 
-def _agency_id(user: dict) -> Optional[str]:
-    from shared.auth.tenant import optional_agency_id
-    return optional_agency_id(user)
+def _agency_id(user: dict) -> str:
+    """W3 — dashboard CRM metrics require a valid active agency (fail closed)."""
+    from shared.auth.tenant import require_agency
+    return require_agency(user)
 
 
-async def _assert_crm_unlocked(db, user: dict, agency_id: Optional[str]) -> None:
-    if not agency_id:
-        return
+async def _assert_crm_unlocked(db, user: dict, agency_id: str) -> None:
     from shared.auth.agency_activation import assert_agency_crm_unlocked
 
     agency = await db.agencies.find_one({"id": agency_id}, {"_id": 0, "activation_status": 1})

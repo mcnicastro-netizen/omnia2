@@ -413,7 +413,16 @@ async def respond_partner(
     patch = {"status": status}
     if status == "active":
         patch["since"] = _iso()
-    await db.mls_partners.update_one({"id": partner_id}, {"$set": patch})
+    res = await db.mls_partners.update_one(
+        {
+            "id": partner_id,
+            "$or": [{"agency_a": aid}, {"agency_b": aid}],
+            "initiator_id": {"$ne": aid},
+        },
+        {"$set": patch},
+    )
+    if res.matched_count == 0:
+        raise HTTPException(status_code=404, detail="not_found")
     await _log_event(db, aid, f"partner_{body.action}", {"partner_id": partner_id})
     return {"id": partner_id, "status": status}
 
@@ -486,7 +495,12 @@ async def respond_offer(
     if row["to_agency_id"] != aid:
         raise HTTPException(status_code=403, detail="forbidden")
     status = "accepted" if body.action == "accept" else "rejected"
-    await db.mls_requests.update_one({"id": offer_id}, {"$set": {"status": status, "responded_at": _iso()}})
+    res = await db.mls_requests.update_one(
+        {"id": offer_id, "type": "offer", "to_agency_id": aid},
+        {"$set": {"status": status, "responded_at": _iso()}},
+    )
+    if res.matched_count == 0:
+        raise HTTPException(status_code=404, detail="not_found")
     await _log_event(db, aid, f"offer_{body.action}", {"offer_id": offer_id})
     out: Dict[str, Any] = {"id": offer_id, "status": status}
     # Accepting an MLS offer activates a property-scoped collaboration.

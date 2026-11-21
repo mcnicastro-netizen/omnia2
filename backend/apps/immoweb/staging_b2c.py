@@ -145,8 +145,13 @@ async def _auto_save_b2c_variant(job_id: str, db) -> None:
             "source_photo_id": source_photo_id or ph.get("source_photo_id"),
             "staging_mode": doc.get("mode") or ph.get("staging_mode") or "standard",
         }
+        owner_flt = {
+            "id": property_id,
+            "is_private_listing": True,
+            "owner_user_id": doc.get("user_id"),
+        }
         await db.properties.update_one(
-            {"id": property_id},
+            owner_flt,
             {"$set": {"photos": photos, "updated_at": datetime.now(timezone.utc).isoformat()}},
         )
         logger.info(
@@ -164,8 +169,13 @@ async def _auto_save_b2c_variant(job_id: str, db) -> None:
         "source_photo_id": source_photo_id,
         "staging_mode": doc.get("mode") or "standard",
     }
+    owner_flt = {
+        "id": property_id,
+        "is_private_listing": True,
+        "owner_user_id": doc.get("user_id"),
+    }
     await db.properties.update_one(
-        {"id": property_id},
+        owner_flt,
         {"$push": {"photos": new_photo}, "$set": {"updated_at": datetime.now(timezone.utc).isoformat()}},
     )
     await db.virtual_staging_jobs.update_one(

@@ -73,24 +73,32 @@ class Database:
         return cls._tenant_db if cls._tenant_db is not None else cls._db
 
     @classmethod
-    async def close(cls) -> None:
+    def reset(cls) -> None:
+        """Drop cached Motor client (tests that call ``asyncio.run`` repeatedly)."""
         if cls._client is not None:
-            cls._client.close()
-            cls._client = None
-            cls._db = None
-            cls._tenant_db = None
+            try:
+                cls._client.close()
+            except Exception:  # noqa: BLE001
+                pass
+        cls._client = None
+        cls._db = None
+        cls._tenant_db = None
+
+    @classmethod
+    async def close(cls) -> None:
+        cls.reset()
 
     @classmethod
     def tenant_filter(cls, extra: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         """Build a query filter that auto-includes agency_id from context.
-        Use this on ALL tenant-aware collection queries.
+
+        PRE-GTM W3: context agency_id always wins over any client-supplied
+        ``agency_id`` inside ``extra`` (same contract as tenant_guard inject).
         """
         agency_id = get_current_agency_id()
-        base: Dict[str, Any] = {}
+        base: Dict[str, Any] = dict(extra or {})
         if agency_id is not None:
             base["agency_id"] = agency_id
-        if extra:
-            base.update(extra)
         return base
 
 

@@ -30,22 +30,30 @@ async def bump_daily_stat(
     kind: StatKind,
     *,
     n: int = 1,
+    agency_id: str | None = None,
 ) -> None:
-    """Increment today's bucket. Best-effort — never raise to callers."""
+    """Increment today's bucket. Best-effort — never raise to callers.
+
+    W3: when ``agency_id`` is known, stamp it for audit. Collection stays
+    outside TENANT_COLLECTIONS (keyed by property_id; public portal bumps).
+    """
     if not property_id or n <= 0:
         return
     field = "views" if kind == "view" else "leads"
     day = _utc_today()
     try:
+        set_on_insert: Dict[str, Any] = {
+            "property_id": property_id,
+            "day": day,
+            "created_at": datetime.now(timezone.utc).isoformat(),
+        }
+        if agency_id:
+            set_on_insert["agency_id"] = agency_id
         await db.property_stat_days.update_one(
             {"property_id": property_id, "day": day},
             {
                 "$inc": {field: n},
-                "$setOnInsert": {
-                    "property_id": property_id,
-                    "day": day,
-                    "created_at": datetime.now(timezone.utc).isoformat(),
-                },
+                "$setOnInsert": set_on_insert,
                 "$set": {"updated_at": datetime.now(timezone.utc).isoformat()},
             },
             upsert=True,

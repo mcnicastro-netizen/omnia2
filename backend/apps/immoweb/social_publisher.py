@@ -591,8 +591,10 @@ async def update_channel(
         update["status"] = "active"
     if payload.status in {"active", "disabled"}:
         update["status"] = payload.status
-    await db.social_channels.update_one({"id": channel_id}, {"$set": update})
-    refreshed = await db.social_channels.find_one({"id": channel_id})
+    await db.social_channels.update_one(
+        {"id": channel_id, "agency_id": aid}, {"$set": update}
+    )
+    refreshed = await db.social_channels.find_one({"id": channel_id, "agency_id": aid})
     return _public_channel(refreshed)
 
 
@@ -643,7 +645,7 @@ async def validate_channel(
             raise HTTPException(status_code=422, detail="unsupported_channel")
     except HTTPException as e:
         await db.social_channels.update_one(
-            {"id": channel_id},
+            {"id": channel_id, "agency_id": aid},
             {"$set": {"status": "error", "last_error": str(e.detail), "updated_at": utcnow_iso()}},
         )
         raise
@@ -654,7 +656,7 @@ async def validate_channel(
         or info.get("phone")
     )
     await db.social_channels.update_one(
-        {"id": channel_id},
+        {"id": channel_id, "agency_id": aid},
         {"$set": {"status": "active", "display_name": display, "last_error": None, "updated_at": utcnow_iso()}},
     )
     return info
@@ -744,7 +746,7 @@ async def publish_property(
             await _record_post(db, aid, ch_type, payload.property_id, caption, image_url, listing_url,
                                status="failed", error=err_msg)
             await db.social_channels.update_one(
-                {"id": ch_doc["id"]},
+                {"id": ch_doc["id"], "agency_id": aid},
                 {"$set": {"last_error": err_msg, "status": "error", "updated_at": utcnow_iso()},
                  "$inc": {"posts_failed": 1}},
             )
@@ -761,7 +763,7 @@ async def publish_property(
         await _record_post(db, aid, ch_type, payload.property_id, caption, image_url, listing_url,
                            status="success", external_id=external_id)
         await db.social_channels.update_one(
-            {"id": ch_doc["id"]},
+            {"id": ch_doc["id"], "agency_id": aid},
             {"$set": {"last_used_at": utcnow_iso(), "last_error": None,
                       "status": "active", "updated_at": utcnow_iso()},
              "$inc": {"posts_ok": 1}},

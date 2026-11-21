@@ -163,6 +163,64 @@ def deal_role(deal: dict, agency_id: str) -> Optional[str]:
     return None
 
 
+def deal_actor_filter(deal_id: str, agency_id: str) -> dict[str, Any]:
+    """DB-level scope for Deal mutations (defense in depth vs TOCTOU)."""
+    return {
+        "id": deal_id,
+        "$or": [{"agency_id": agency_id}, {"partner_agency_id": agency_id}],
+    }
+
+
+def deal_owner_filter(deal_id: str, agency_id: str) -> dict[str, Any]:
+    return {"id": deal_id, "agency_id": agency_id}
+
+
+def deal_partner_filter(deal_id: str, agency_id: str) -> dict[str, Any]:
+    return {"id": deal_id, "partner_agency_id": agency_id}
+
+
+def visit_actor_filter(visit_id: str, agency_id: str) -> dict[str, Any]:
+    return {
+        "id": visit_id,
+        "$or": [{"owner_agency_id": agency_id}, {"partner_agency_id": agency_id}],
+    }
+
+
+def collaboration_actor_filter(collaboration_id: str, agency_id: str) -> dict[str, Any]:
+    return {
+        "id": collaboration_id,
+        "$or": [
+            {"owner_agency_id": agency_id},
+            {"partner_agency_id": agency_id},
+        ],
+    }
+
+
+def document_request_actor_filter(request_id: str, agency_id: str) -> dict[str, Any]:
+    """Owner or requesting partner may mutate/access a document request."""
+    return {
+        "id": request_id,
+        "$or": [
+            {"owner_agency_id": agency_id},
+            {"requesting_agency_id": agency_id},
+        ],
+    }
+
+
+def document_request_owner_filter(request_id: str, agency_id: str) -> dict[str, Any]:
+    return {"id": request_id, "owner_agency_id": agency_id}
+
+
+def visit_feedback_rated_agency_filter(feedback_id: str, agency_id: str) -> dict[str, Any]:
+    """Only the rated agency (to_agency_id) may contest."""
+    return {"id": feedback_id, "to_agency_id": agency_id}
+
+
+def chat_thread_actor_filter(thread_id: str, agency_id: str) -> dict[str, Any]:
+    """Thread membership via agency_ids array containment."""
+    return {"id": thread_id, "agency_ids": agency_id}
+
+
 def allowed_deal_transitions(deal: dict, agency_id: str) -> set[str]:
     role = deal_role(deal, agency_id)
     if role == "owner":

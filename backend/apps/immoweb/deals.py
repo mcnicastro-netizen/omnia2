@@ -12,6 +12,9 @@ from shared.mls_collab.service import (
     DEAL_STATUSES,
     allowed_deal_transitions,
     assert_deal_transition_for_actor,
+    deal_actor_filter,
+    deal_owner_filter,
+    deal_partner_filter,
     deal_role,
     get_collaboration,
     get_deal,
@@ -98,6 +101,8 @@ async def open_deal(
     collab/visit rules for cross-agency cases (explicit: no collaboration path).
     """
     db = Database.get()
+    # get_raw class B: partner may read owner property ONLY after collab membership
+    # checks below (MLS shareable / collaboration_id). Never expose raw without gate.
     raw = Database.get_raw()
     aid = await _agency_id(user)
     prop = await db.properties.find_one(
@@ -221,12 +226,16 @@ async def update_deal(
             "by": user.get("id") or user.get("sub"),
             "role": role,
         }
-        await db.deals.update_one(
-            {"id": deal_id},
+        r = await db.deals.update_one(
+            deal_actor_filter(deal_id, aid),
             {"$set": patch, "$push": {"history": hist}},
         )
+        if r.matched_count == 0:
+            raise HTTPException(status_code=403, detail="deal_forbidden")
     else:
-        await db.deals.update_one({"id": deal_id}, {"$set": patch})
+        r = await db.deals.update_one(deal_actor_filter(deal_id, aid), {"$set": patch})
+        if r.matched_count == 0:
+            raise HTTPException(status_code=403, detail="deal_forbidden")
     return _enrich_deal(await get_deal(db, deal_id), aid)
 
 
@@ -266,7 +275,11 @@ async def add_proposal(
             "by": user.get("id") or user.get("sub"),
             "role": "owner",
         }
-    await db.deals.update_one({"id": deal_id}, {"$set": patch, "$push": push})
+    r = await db.deals.update_one(
+        deal_owner_filter(deal_id, aid), {"$set": patch, "$push": push}
+    )
+    if r.matched_count == 0:
+        raise HTTPException(status_code=403, detail="deal_owner_only")
     return _enrich_deal(await get_deal(db, deal_id), aid)
 
 
@@ -283,8 +296,8 @@ async def send_proposal(
     await _assert_deal_collab_still_active(db, deal)
     assert_deal_transition_for_actor(deal, aid, "proposal_sent")
     now = utc_now()
-    await db.deals.update_one(
-        {"id": deal_id},
+    r = await db.deals.update_one(
+        deal_owner_filter(deal_id, aid),
         {
             "$set": {"status": "proposal_sent", "updated_at": now, "proposal_sent_at": now},
             "$push": {
@@ -298,6 +311,8 @@ async def send_proposal(
             },
         },
     )
+    if r.matched_count == 0:
+        raise HTTPException(status_code=403, detail="deal_owner_only")
     return _enrich_deal(await get_deal(db, deal_id), aid)
 
 
@@ -341,5 +356,9 @@ async def partner_respond_proposal(
             "created_at": now,
             "created_by_user_id": user.get("id") or user.get("sub"),
         }
-    await db.deals.update_one({"id": deal_id}, {"$set": patch, "$push": push})
+    r = await db.deals.update_one(
+        deal_partner_filter(deal_id, aid), {"$set": patch, "$push": push}
+    )
+    if r.matched_count == 0:
+        raise HTTPException(status_code=403, detail="deal_partner_only")
     return _enrich_deal(await get_deal(db, deal_id), aid)

@@ -20,7 +20,6 @@ from uuid import uuid4
 from fastapi import APIRouter, Header, HTTPException, Request, Response
 from pydantic import BaseModel, Field
 
-from shared.auth.session_store import store_refresh
 from shared.db.connection import Database
 from shared.email import send_email
 from shared.utils.i18n import normalize_lang, t
@@ -178,8 +177,7 @@ async def google_login(
             "created": created,
         }
 
-    refresh = _set_auth_cookies(response, user["id"], email, user["role"])
-    await store_refresh(refresh)
+    await _set_auth_cookies(response, user["id"], email, user["role"])
     out = _public(user)
     out["google_linked"] = True
     out["created"] = created

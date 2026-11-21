@@ -28,7 +28,10 @@ def test_agency_register_no_email(monkeypatch):
     monkeypatch.setattr(mod.Database, "get", staticmethod(lambda: DummyDB()))
     monkeypatch.setattr(mod, "store_refresh", AsyncMock())
     monkeypatch.setattr(mod, "send_email", send)
-    monkeypatch.setattr(mod, "_set_auth_cookies", lambda *a, **k: "refresh")
+    async def _fake_cookies(*a, **k):
+        return "refresh"
+
+    monkeypatch.setattr(mod, "_set_auth_cookies", _fake_cookies)
     monkeypatch.setattr(
         "shared.privacy.consent_log.log_consent", AsyncMock(), raising=False
     )

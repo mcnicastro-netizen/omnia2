@@ -285,7 +285,8 @@ async def v1_feed_properties_ingest(
                 )
                 if existing:
                     await db.properties.update_one(
-                        {"id": existing["id"]}, {"$set": base_doc}
+                        {"id": existing["id"], "agency_id": key["agency_id"]},
+                        {"$set": base_doc},
                     )
                     updated += 1
                     continue

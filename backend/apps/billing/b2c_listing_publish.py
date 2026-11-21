@@ -134,7 +134,10 @@ async def apply_slot_to_listing(
         )
         return None
     fields = slot_fields_from_purchase(purchase, paid_at=paid_at)
-    await db.properties.update_one({"id": listing_id}, {"$set": fields})
+    await db.properties.update_one(
+        {"id": listing_id, "owner_user_id": user_id, "is_private_listing": True},
+        {"$set": fields},
+    )
     logger.info(
         "listing slot applied listing=%s tier=%s until=%s product=%s",
         listing_id, fields["listing_publish_tier"], fields["listing_paid_until"], product_key,
@@ -188,7 +191,10 @@ async def apply_listing_addon(
     else:
         logger.warning("apply_addon: unknown addon=%s product=%s", addon, product_key)
         return None
-    await db.properties.update_one({"id": listing_id}, {"$set": update})
+    await db.properties.update_one(
+        {"id": listing_id, "owner_user_id": user_id, "is_private_listing": True},
+        {"$set": update},
+    )
     logger.info("listing addon applied listing=%s addon=%s product=%s", listing_id, addon, product_key)
     return {"listing_id": listing_id, **update}
 

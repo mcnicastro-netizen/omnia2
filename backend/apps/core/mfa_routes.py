@@ -21,7 +21,6 @@ from shared.auth.mfa import (
     qr_png_data_uri,
     verify_totp,
 )
-from shared.auth.session_store import store_refresh
 from shared.db.connection import Database
 from shared.utils.i18n import normalize_lang, t
 import jwt
@@ -212,6 +211,5 @@ async def mfa_verify_login(
 
     await assert_user_login_allowed(db, user)
 
-    refresh = _set_auth_cookies(response, user["id"], user["email"], user["role"])
-    await store_refresh(refresh)
+    await _set_auth_cookies(response, user["id"], user["email"], user["role"])
     return _public(user)

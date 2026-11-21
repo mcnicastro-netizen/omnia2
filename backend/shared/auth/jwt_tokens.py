@@ -1,8 +1,10 @@
 """OMNIA — JWT token creation & verification (HS256)."""
 import os
-import jwt
+import uuid
 from datetime import datetime, timezone, timedelta
 from typing import Optional
+
+import jwt
 
 JWT_ALGORITHM = "HS256"
 # Short access TTL; frontend silent-refreshes via refresh_token (7d).
@@ -15,25 +17,46 @@ def _get_secret() -> str:
     return os.environ["JWT_SECRET"]
 
 
-def create_access_token(user_id: str, email: str, role: str) -> str:
+def create_access_token(
+    user_id: str,
+    email: str,
+    role: str,
+    *,
+    session_id: Optional[str] = None,
+    session_epoch: int = 0,
+) -> str:
+    """Create access JWT.
+
+    B14: ``session_id`` (sid) + ``session_epoch`` (sv) bind the token to Mongo
+    session state so revocation is immediate and cross-process.
+    """
     payload = {
         "sub": user_id,
         "email": email,
         "role": role,
         "exp": datetime.now(timezone.utc) + timedelta(minutes=ACCESS_TOKEN_MINUTES),
         "type": "access",
+        "sv": int(session_epoch or 0),
     }
+    if session_id:
+        payload["sid"] = session_id
+        payload["jti"] = str(uuid.uuid4())
     return jwt.encode(payload, _get_secret(), algorithm=JWT_ALGORITHM)
 
 
-def create_refresh_token(user_id: str) -> str:
-    import uuid
+def create_refresh_token(
+    user_id: str,
+    *,
+    session_id: Optional[str] = None,
+) -> str:
     payload = {
         "sub": user_id,
         "exp": datetime.now(timezone.utc) + timedelta(days=REFRESH_TOKEN_DAYS),
         "type": "refresh",
         "jti": str(uuid.uuid4()),
     }
+    if session_id:
+        payload["sid"] = session_id
     return jwt.encode(payload, _get_secret(), algorithm=JWT_ALGORITHM)
 
 

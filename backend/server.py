@@ -99,13 +99,17 @@ async def lifespan(app: FastAPI):
     await ensure_indexes()
     _load_locales()
     await seed_admin()
-    try:
-        from shared.ops.provider_flags import load_holds_into_circuit
+    from shared.ops.provider_flags import fail_closed_env, load_holds_into_circuit
 
+    try:
         n_hold = await load_holds_into_circuit()
         if n_hold:
             logger.warning("Restored %s provider kill-switches", n_hold)
     except Exception as e:
+        # DEF-04 — staging/dogfood must not become request-ready without flags
+        if fail_closed_env():
+            logger.error("provider kill-switch restore failed (fail-closed): %s", e)
+            raise
         logger.warning("provider kill-switch restore failed: %s", e)
     try:
         from apps.immoweb.publishing import seed_publishing_catalog
@@ -257,10 +261,50 @@ async def global_health(accept_language: str = Header(None)):
         circuits = snapshot()
     except Exception:
         pass
+    # DEF-06 — stable instance id for multi-replica attestation (no secrets).
+    # Cache persistent kill snapshot briefly: health is hit by probes/LB and must
+    # not issue a Mongo round-trip on every concurrent request (PRE-GTM W5/W8).
+    import os
+    import socket
+    import time
+
+    instance_id = f"{socket.gethostname()}:{os.getpid()}"
+    resend_flag: dict = {"killed": None, "error": None, "env_killed": False}
+    try:
+        from shared.ops.provider_flags import env_resend_killed, read_resend_killed_persistent
+
+        resend_flag["env_killed"] = env_resend_killed()
+        cache = getattr(global_health, "_resend_kill_cache", None)
+        now_m = time.monotonic()
+        if (
+            isinstance(cache, dict)
+            and cache.get("expires_at", 0) > now_m
+            and "payload" in cache
+        ):
+            resend_flag["killed"] = cache["payload"].get("killed")
+            resend_flag["error"] = cache["payload"].get("error")
+            resend_flag["cached"] = True
+        else:
+            killed, err = await read_resend_killed_persistent()
+            resend_flag["killed"] = killed
+            resend_flag["error"] = err
+            resend_flag["cached"] = False
+            global_health._resend_kill_cache = {  # type: ignore[attr-defined]
+                "expires_at": now_m + 2.0,
+                "payload": {"killed": killed, "error": err},
+            }
+    except Exception as e:  # noqa: BLE001
+        resend_flag["error"] = type(e).__name__
     return HealthResponse(
         app="omnia",
         lang=lang,
-        message={"text": t("health.ok", lang=lang), "db": db_status, "circuits": circuits},
+        message={
+            "text": t("health.ok", lang=lang),
+            "db": db_status,
+            "circuits": circuits,
+            "instance_id": instance_id,
+            "resend_kill": resend_flag,
+        },
     )
 
 

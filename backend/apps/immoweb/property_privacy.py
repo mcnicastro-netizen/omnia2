@@ -51,7 +51,7 @@ async def set_privacy_level(
     if old_level == body.privacy_level:
         return {"id": pid, "privacy_level": old_level, "unchanged": True}
     await db.properties.update_one(
-        {"id": pid},
+        {"id": pid, "agency_id": aid},
         {"$set": {"privacy_level": body.privacy_level}},
     )
     await log_privacy_change(

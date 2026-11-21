@@ -10,7 +10,9 @@ from fastapi import HTTPException
 
 
 def _run(coro):
-    return asyncio.get_event_loop().run_until_complete(coro)
+    # asyncio.run() — get_event_loop() fails after another test closed the loop
+    # (e.g. W3 multiprocess suite).
+    return asyncio.run(coro)
 
 
 # -------------------- B01 — VAT + CommercialCustomer --------------------
@@ -105,6 +107,8 @@ def test_revoke_all_refresh_deletes_by_user():
     from shared.auth import session_store as mod
 
     class DB:
+        users = MagicMock()
+        users.update_one = AsyncMock(return_value=MagicMock(modified_count=1))
         refresh_tokens = MagicMock()
         refresh_tokens.delete_many = AsyncMock(return_value=MagicMock(deleted_count=3))
 
@@ -112,6 +116,12 @@ def test_revoke_all_refresh_deletes_by_user():
         n = _run(mod.revoke_all_refresh("u1"))
     assert n == 3
     DB.refresh_tokens.delete_many.assert_awaited_with({"user_id": "u1"})
+    # B14 — also clears active_session_ids / bumps epoch
+    assert DB.users.update_one.await_count == 1
+    args, _kwargs = DB.users.update_one.await_args
+    assert args[0] == {"id": "u1"}
+    assert args[1]["$set"]["active_session_ids"] == []
+    assert args[1]["$inc"]["session_epoch"] == 1
 
 
 def test_change_password_revokes_all_sessions(monkeypatch):

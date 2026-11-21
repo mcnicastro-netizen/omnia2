@@ -127,7 +127,7 @@ async def approve_listing(pid: str, user: dict = Depends(get_current_user)):
 
     now = datetime.now(timezone.utc).isoformat()
     await db.properties.update_one(
-        {"id": pid},
+        {"id": pid, "is_private_listing": True},
         {"$set": {
             "moderation_status": "approved",
             "status": "active",
@@ -180,7 +180,7 @@ async def reject_listing(
 
     now = datetime.now(timezone.utc).isoformat()
     await db.properties.update_one(
-        {"id": pid},
+        {"id": pid, "is_private_listing": True},
         {"$set": {
             "moderation_status": "rejected",
             "status": "draft",

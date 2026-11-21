@@ -1,11 +1,13 @@
-# 📚 HAL Knowledge — Import & Cold Start (v0.63-s1-a007-a006-2026-11-21)
+# 📚 HAL Knowledge — Import & Cold Start (v0.64-w4-b14-2026-11-21)
 
-**Ultimo aggiornamento**: 21-Nov-2026 (D-191 · S1 A-007/A-006 + FE · commit `5582a64`)  
+**Ultimo aggiornamento**: 21-Nov-2026 sera (D-192 · W4/B14 · PR #242)  
 **Corpus**: YAML in `memory/manuale/hal/*.yaml` (Cap. 1–27 + `00-api-codice`) · MD esclusi dal RAG ingest  
 **Motore**: `hal_knowledge.py` · reindex: `POST /api/app/hal/knowledge/reindex?force=true` (super_admin)  
 **Regola Founder D-084**: ogni ship aggiorna MD+YAML nello stesso giro — vedi `memory/MANUAL_SYNC.md`.  
-**Nuove voci 21-Nov**: `immobili.lista-date-mancanti` · `api-keys.gate-attivazione-agenzia` · `api.s1-a007-a006`.  
-**Aggiornate 21-Nov**: `immobili.lista-tabella-filtri-smart` · `api-keys.errori-comuni` · `api.properties` · `api.v1-gateway` · `api.d175-pr240` (MERGED).  
+**Nuove voci 21-Nov sera**: `api.b14-session-sot`.  
+**Aggiornate 21-Nov sera**: `api.auth-lifecycle` (B14 revoke immediato, invite `get_raw`).  
+**Nuove voci 21-Nov (S1)**: `immobili.lista-date-mancanti` · `api-keys.gate-attivazione-agenzia` · `api.s1-a007-a006`.  
+**Aggiornate 21-Nov (S1)**: `immobili.lista-tabella-filtri-smart` · `api-keys.errori-comuni` · `api.properties` · `api.v1-gateway` · `api.d175-pr240` (MERGED).  
 **Voci 20-Nov**: `mls.collaborazioni-workspace` · `mls.deal-chat`.  
 **Voci 19-Nov**: `api.d175-c4-chiuso`.  
 **Voci 18-Nov**: `api.master-ab-chiuso` · `api.dogfood-step1` · `api.mc042-r01-refresh`.

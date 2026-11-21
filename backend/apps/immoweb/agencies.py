@@ -228,6 +228,38 @@ async def create_agency(
         },
     )
 
+    # W3 — B16/D-175: 1 P.IVA = 1 CC is correct, but attaching a new Organization
+    # to an existing CC requires Main Admin (or super_admin). No silent VAT join.
+    existing_orgs = await db.agencies.count_documents(
+        {"commercial_customer_id": customer["id"]}
+    )
+    ma_id = customer.get("main_admin_user_id")
+    if existing_orgs > 0 or ma_id:
+        allowed = user.get("role") == "super_admin" or (
+            ma_id is not None and user.get("id") == ma_id
+        )
+        if not allowed and existing_orgs > 0 and not ma_id:
+            # CC with orgs but vacant MA: only an existing org owner may attach.
+            owned = await db.agencies.find_one(
+                {
+                    "commercial_customer_id": customer["id"],
+                    "owner_id": user["id"],
+                },
+                {"_id": 0, "id": 1},
+            )
+            allowed = bool(owned)
+        if not allowed:
+            raise HTTPException(
+                status_code=403,
+                detail={
+                    "error": "commercial_customer_join_forbidden",
+                    "hint": (
+                        "Questa P.IVA è già collegata a un CommercialCustomer. "
+                        "Solo il Main Admin può aggiungere organizzazioni."
+                    ),
+                },
+            )
+
     # MC-043 — nomina iniziale obbligatoria se CC vacante e creatore idoneo
     from shared.billing import main_admin_service as mas
 
@@ -367,7 +399,10 @@ async def update_my_agency(
         else:
             update_doc[k] = v
 
-    await db.agencies.update_one({"id": agency_id}, {"$set": update_doc})
+    await db.agencies.update_one(
+        {"id": agency_id, "owner_id": existing["owner_id"]},
+        {"$set": update_doc},
+    )
     updated = await db.agencies.find_one({"id": agency_id})
     return _public(updated)
 
@@ -425,11 +460,12 @@ async def remove_member(
         if admin_count <= 1:
             raise HTTPException(400, detail="last_owner_forbidden")
 
+    now = datetime.now(timezone.utc).isoformat()
     res = await db.users.update_one(
-        {"id": member_id},
+        {"id": member_id, "agency_ids": agency_id},
         {
             "$pull": {"agency_ids": agency_id},
-            "$set": {"updated_at": datetime.now(timezone.utc).isoformat()},
+            "$set": {"updated_at": now},
         },
     )
     if res.modified_count == 0 and res.matched_count == 0:
@@ -438,8 +474,30 @@ async def remove_member(
     # Clear active_agency if it pointed at this agency
     await db.users.update_one(
         {"id": member_id, "active_agency_id": agency_id},
-        {"$set": {"active_agency_id": None}},
+        {"$set": {"active_agency_id": None, "updated_at": now}},
     )
+
+    # W3/B14 — end Membership + invalidate ALL sessions (access + refresh).
+    from shared.auth.membership_service import end_membership_for_organization
+    from shared.auth.session_store import revoke_all_sessions
+
+    await end_membership_for_organization(db, member_id, agency_id)
+    await revoke_all_sessions(member_id, reason="membership_revoke")
+
+    fresh = await db.users.find_one(
+        {"id": member_id}, {"_id": 0, "agency_ids": 1, "role": 1}
+    )
+    remaining = list((fresh or {}).get("agency_ids") or [])
+    role = (fresh or {}).get("role")
+    if (
+        not remaining
+        and role in ("agency_admin", "branch_admin", "group_admin", "agent", "branch_agent")
+        and role != "super_admin"
+    ):
+        await db.users.update_one(
+            {"id": member_id},
+            {"$set": {"role": "client", "updated_at": now}},
+        )
 
     return {"ok": True, "removed_user_id": member_id, "agency_id": agency_id}
 
