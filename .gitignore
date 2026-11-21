@@ -120,3 +120,7 @@ backend/.backups/
 
 # Railway CLI local link (never commit)
 .railway/
+
+# D-175 D7 harness run secrets (mode 0600 locally; never commit)
+artifacts/d7/**/secrets/
+artifacts/d7/**/fixtures_secrets.json
