@@ -1,9 +1,9 @@
 # OMNIA — PRE-GTM Readiness Master
 
 **Avviato:** 2026-11-21 19:45:38 CET (Europe/Rome)  
-**Aggiornato:** 2026-11-21 20:56 CET (Europe/Rome) — W3 session revocation final gate  
-**Branch:** `cursor/staging-e2e-d1d3-b894`  
-**HEAD:** `ea89714dfee65ca592e413db551d1506b573049a` (working tree sporco — nessun commit)  
+**Aggiornato:** 2026-11-21 21:19 CET (Europe/Rome) — W4 staging E2E (verdetto B)  
+**Branch W4:** `cursor/w4-staging-e2e-b894` @ `3f34c5f2d6ae5eedcbe6a175e47f57ef87b3fc36`  
+**HEAD locale (branch W4):** `3f34c5f` (working tree ancora sporco su MD D175 storici)  
 **Metodo:** programma di avanzamento tecnico (non audit fine a sé stesso)  
 **Vincoli:** nessun commit/push/deploy/remote write in questo ciclo; riparazioni e test locali autorizzati
 
@@ -61,7 +61,8 @@ Fonte: `memory/DECISIONS.md`, PRD/roadmap esistenti. **Nessun nuovo requisito in
 |----|------|-------------|------|
 | W1 | Integrità repo / baseline | **AVANZATO** | Baseline documentata; no reset |
 | W2 | Completezza funzionale | **PARZIALE** | Mappa flussi + tooling; E2E completo non rieseguito tutto |
-| W3 | Multi-tenant / sicurezza | **PRONTO PER VERIFICA STAGING — SESSIONI VERIFICATE (non cert.)** | Hardening + B14 invalidazione immediata access JWT (Mongo sid/sv) + 19 HTTP + MP + harness — `OMNIA-W3-SESSION-REVOCATION-FINAL-GATE.md`; staging/GTM non certificati |
+| W3 | Multi-tenant / sicurezza | **CODICE IN STAGING (non cert. GTM)** | B14 deployato su `omnia-api-staging` (`3f34c5f`); report W3 locali + `OMNIA-W4-STAGING-E2E-REPORT.md` |
+| W4 | Staging E2E distribuito | **B — NON SUPERATO** | Matrice W4-01…24: FAIL repliche (volume); BLOCKED L5/Stripe/fail-closed/cross-replica; invite fix OK — `OMNIA-W4-STAGING-E2E-REPORT.md` |
 | W4 | DB / integrità | **PARZIALE** | Inventario locale; indici/query deep-dive aperto |
 | W5 | Prestazioni / stress | **AVANZATO LOCALE** | Probe nuovo + script storici; ladder grande non rieseguita |
 | W6 | Infra / capacità | **APERTO** | Staging/Railway capacity **non** misurata qui |
@@ -94,6 +95,10 @@ Fonte: `memory/DECISIONS.md`, PRD/roadmap esistenti. **Nessun nuovo requisito in
 | PG-16 | MEDIA | W3 | Guard non scrubbava `$set.agency_id`; import_jobs fuori guard; MLS partner by-id | **RIPARATO** |
 | PG-17 | ALTA | W3 | Access JWT restava valido ~15′ dopo revoke refresh (vs B14) | **RIPARATO** — `OMNIA-W3-SESSION-REVOCATION-FINAL-GATE.md` |
 | PG-18 | MEDIA | W3 | Race create CC stessa P.IVA (sparse null `stripe_customer_id`) | **RIPARATO** + test concorrente |
+| PG-19 | ALTA | W4 | Railway staging: replicas incompatibili con volume `/app/.media` | **APERTO** — blocca W4-02/06 |
+| PG-20 | ALTA | W4 | Invite accept pubblico 500 sotto tenant guard | **RIPARATO** (`get_raw`, `3f34c5f`) |
+| PG-21 | ALTA | W4 | Staging senza Resend/Stripe Test variables | **APERTO** — W4-19/21/22 BLOCKED |
+| PG-22 | MEDIA | W4 | FE staging SHA `15b1978` ≠ BE `3f34c5f` | **APERTO** |
 
 ---
 
