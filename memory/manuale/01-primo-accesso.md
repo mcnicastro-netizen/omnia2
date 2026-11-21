@@ -1,6 +1,6 @@
 # Capitolo 1 · Primo accesso
 
-**Versione manuale**: v1.8 · **Ultima revisione**: 11-Nov-2026 (D-161 login semplice — una password)
+**Versione manuale**: v1.9 · **Ultima revisione**: 21-Nov-2026 (D-192 B14 logout/revoca sessione immediata · W4)
 **Chi lo legge**: titolari, agenti, segreteria (chiunque debba iniziare a usare ImmoWeb); privatamente anche utenti ImmobilCloud
 **Prerequisiti**: aver scelto un pacchetto e completato la registrazione agenzia, oppure aver ricevuto un invito
 
@@ -85,7 +85,7 @@ Se l'email è già registrata (B2C o B2B), la registrazione risponde **409** con
 
 **Registrazione — telefono / WhatsApp (D-138)**: campi **opzionali** in `/cloud/register`. Restano editabili in Account → Sicurezza & privacy. Servono come default per i canali pubblici in **Vendi** (opt-in `show_phone` / `show_whatsapp`).
 
-**Esci (logout B2C)**: se sei loggato come Privato, in nav ImmobilCloud e in `/cloud/account` c’è **Esci** → `POST /auth/logout` → Area riservata / home cloud. Sessione cookie JWT (access ~15 min, refresh ~7 giorni): senza Esci resti autenticato — è normale, non un bug.
+**Esci (logout B2C)**: se sei loggato come Privato, in nav ImmobilCloud e in `/cloud/account` c’è **Esci** → `POST /auth/logout` → Area riservata / home cloud. Cookie JWT (access ~15 min, refresh ~7 giorni). **B14 (W3/W4):** al logout (e in generale alla revoca sessione) l’access token non resta valido fino a scadenza — SoT Mongo `active_session_ids` / `session_epoch` (`sid`/`sv` nel JWT); riuso immediato → 401 anche su un’altra istanza API. Senza Esci resti autenticato — è normale.
 
 **Messaggi e visite (D-138 Idealista+)**: da Account o Vendi → `/cloud/account/messages`. Inbox delle `listing_inquiries` (filtri, nota privata, Accetta/Rifiuta/Fatta visita, reply email/tel/WhatsApp). Dettaglio Cap. 18 §18.7b.
 

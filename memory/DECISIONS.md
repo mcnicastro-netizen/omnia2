@@ -7,6 +7,17 @@ Registro di tutte le decisioni di business e tecniche prese durante il progetto.
 
 ## Decisioni prese
 
+### D-192 — W4 staging E2E + B14 session SoT · merge #242 · ripresa config · 21-Nov-2026 (sera)
+- **Contesto**: Ciclo W3 session revocation + W4 staging E2E/remediation su `cursor/w4-staging-e2e-b894`. Founder: staging-only, no prod, no Stripe Live, no email reale, no force verdetto A. Sera: sync files/manuale/HAL/repo e «se c’è qualcosa da mergeare provvedi»; Resend/Stripe Test **domani**.
+- **Decisione**:
+  1. **B14** è SoT sessione: Mongo `users.active_session_ids` + `session_epoch`, JWT claim `sid`/`sv`; fail-closed se store unreachable; logout/revoke → 401 immediato anche multi-istanza (stesso Mongo).
+  2. **W4 verdetto B** (non A): obbligatori chiusi dove eseguibili (cross-instance revoke, FE align, W4-08, W4-13, W4-18, contratto config + B8 restart). Residui **BLOCKED**: L5 Resend (`RESEND_API_KEY` + `SENDER_EMAIL`) e Stripe Test (`STRIPE_ENABLED` + `STRIPE_SECRET_KEY` + webhook se serve) — config Founder, poi riesecuzione.
+  3. **Merge PR #242** su `main` autorizzato in questa chiusura (CI verde, MERGEABLE). Titolo/body PR eventualmente editati da umano: non riscrivere.
+  4. **SENDER_EMAIL**: può essere indirizzo su dominio reale già verificato in Resend; non implica email a destinatari reali in test.
+  5. **Non** dichiarare W4 A / production-ready solo perché #242 è in main.
+- **SoT**: `OMNIA-W4-STAGING-E2E-REPORT.md` · `OMNIA-W4-REMEDIATION-REPORT.md` · `OMNIA-W4-CONFIGURATION-CONTRACT-AND-B8-RESTART.md` · Cap.01 · HAL `api.auth-lifecycle` / `api.b14-session-sot`.
+- **Stato**: sync docs + merge #242 = questo giro. Ripresa = config Resend+Stripe Test staging, poi L5 / W4-21/22.
+
 ### D-191 — S1 A-007 + A-006 (+ FE) chiusi in main · 21-Nov-2026
 - **Contesto**: Programma PRE-GTM S1 — anomalie lista immobili (date mancanti → KeyError) e incoerenza gateway API Key vs D-152. Implementazione autorizzata; FE mirata per nascondere chip diagnostici `missing_*`.
 - **Decisione Founder**:

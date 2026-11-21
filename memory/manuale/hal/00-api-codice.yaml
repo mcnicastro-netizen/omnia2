@@ -458,35 +458,32 @@ voci:
     widget: null
     pubblico: [super_admin, titolare]
     livello: avanzato
-    tags: [codice, api, auth, jwt, mfa, csrf, audit, d-073]
-    correlati: [api.auth, api.tenant-isolation]
+    tags: [codice, api, auth, jwt, mfa, csrf, audit, d-073, b14, w4]
+    correlati: [api.auth, api.tenant-isolation, api.b14-session-sot]
     domanda_naturale: "Come funziona il login? C'è MFA? Come funzionano le API key? Refresh token?"
     contenuto:
       a_cosa_serve: >
-        Mappa AuthN/AuthZ post audit Punto 4: cookie HttpOnly access
-        ~15m + refresh ~7g con jti; CSRF in prod; brute-force login;
-        MFA TOTP; API key omk_live hash + crediti. D-135: CSRF
-        cross-site cloud.*→api.* (refresh esente; X-CSRF-Token header
-        + sessionStorage FE).
+        Mappa AuthN/AuthZ: cookie HttpOnly access ~15m + refresh ~7g
+        con jti; CSRF in prod; brute-force login; MFA TOTP; API key
+        omk_live hash + crediti. D-135 CSRF cross-site. **B14**:
+        invalidazione immediata access JWT via Mongo
+        `users.active_session_ids` + `session_epoch` (claim `sid`/`sv`),
+        fail-closed se Mongo unreachable (`session_store_unavailable`).
       quando_si_usa: >
         Domande su sessione, logout, MFA, invite password, ruoli,
-        API key, sloggout su Vendi.
+        API key, sloggout su Vendi, revoke multi-istanza.
       passi:
-        - "AuthN: apps/core/auth.py + shared/auth/* . Ruolo effettivo
-          dal DB user, non solo claim JWT."
+        - "AuthN: apps/core/auth.py + shared/auth/* (session_store,
+          jwt_tokens, dependencies). Ruolo effettivo dal DB user."
         - "Tre piani: /api/app JWT+ruoli; /api/cloud JWT/anon; /api/v1
           Bearer API key."
         - "MFA: shared/auth/mfa.py + /api/auth/mfa/* — TOTP + backup."
         - "CSRF prod (COOKIE_SECURE): double-submit omnia_csrf + header
-          X-CSRF-Token. /api/auth/refresh esente (D-135). FE salva
-          token da header in sessionStorage se cookie non leggibile
-          cross-site."
-        - "Finding (NO fix senza «vai»): fascicolo senza agency_ids;
-          invite riscrive password → **D-100** fix-needed (utente
-          esistente = link agency, mai overwrite password_hash);
-          no refresh rotation; reset non revoca sessioni;
-          get_current_user senza is_active; agency_ids[0] su
-          invite/api_keys."
+          X-CSRF-Token. /api/auth/refresh esente (D-135)."
+        - "B14 logout/revoke: access non resta valido fino a TTL —
+          401 immediato anche su seconda istanza API (stesso Mongo)."
+        - "Invite pubblico verify/accept: Database.get_raw() sotto
+          tenant guard (fix W4 `3f34c5f`)."
       errori_comuni:
         - problema: "Sono bloccato al login dopo troppi tentativi"
           soluzione: >
@@ -496,14 +493,52 @@ voci:
           soluzione: >
             D-135: refresh senza header CSRF; redeploy API+FE. Hard
             refresh e ri-login. Cookie Secure+SameSite=None obbligatori.
+        - problema: "Dopo logout il Bearer access funziona ancora"
+          soluzione: >
+            Non deve (B14). Verifica deploy con session_store +
+            claim sid/sv; health e log; SoT Mongo active_session_ids.
         - problema: "Ho accettato un invito e non riesco più a entrare
           con la vecchia password"
           soluzione: >
-            Comportamento attuale: accept invite su email già
-            registrata sovrascrive password_hash. Decisione D-100:
-            non deve più farlo (fix post-«vai»).
+            D-100: accept su email già registrata non deve
+            sovrascrivere password_hash.
       permessi:
         - Concetto: titolare / super_admin
+      screenshot: []
+
+  - id: api.b14-session-sot
+    titolo: B14 session SoT Mongo — revoke immediato (W3/W4)
+    modulo: Codice API
+    widget: null
+    pubblico: [super_admin]
+    livello: avanzato
+    tags: [codice, api, auth, b14, w3, w4, session, staging]
+    correlati: [api.auth-lifecycle, api.auth]
+    domanda_naturale: "Dopo il logout il JWT access è ancora valido? Come funziona la revoca sessione multi-istanza?"
+    contenuto:
+      a_cosa_serve: >
+        Documenta B14: sessioni autorevoli in Mongo, non solo TTL JWT.
+        Staging W4 ha attestato revoke cross-istanza (servizio
+        omnia-api-w4b) e fail-closed Mongo isolato. W4 complessivo
+        resta verdetto B finché L5 Resend e Stripe Test non sono
+        configurati e rieseguiti.
+      quando_si_usa: >
+        Debug logout, multi-replica, 401 post-revoke, W4 matrix.
+      passi:
+        - "Codice: shared/auth/session_store.py + jwt_tokens (sid/sv)
+          + dependencies.get_current_user fail-closed."
+        - "Report: OMNIA-W3-SESSION-REVOCATION-FINAL-GATE.md ·
+          OMNIA-W4-STAGING-E2E-REPORT.md ·
+          OMNIA-W4-CONFIGURATION-CONTRACT-AND-B8-RESTART.md."
+        - "Config Resend mittente = SENDER_EMAIL; Stripe Test vars
+          su omnia-api e w4b (vedi contratto)."
+      errori_comuni:
+        - problema: "W4 dichiarato A senza L5/Stripe"
+          soluzione: >
+            Vietato. Verdetto A solo con obbligatori PASS e evidenze
+            staging. Oggi residui BLOCKED = Resend+Stripe Test.
+      permessi:
+        - Concetto: super_admin / Founder
       screenshot: []
 
   - id: api.audit-architettura-stato

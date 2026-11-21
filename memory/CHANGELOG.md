@@ -1,3 +1,12 @@
+## 2026-11-21 (sera) — W4 staging E2E + B14 · sync HAL · merge #242 (D-192)
+
+- Branch `cursor/w4-staging-e2e-b894` → PR **#242** mergiata in `main` (CI B04 verde)
+- Codice: B14 session SoT Mongo (`sid`/`sv`) · invite `get_raw` sotto tenant guard
+- Docs ops: report W4 E2E/remediation/configuration-contract · topology Railway staging
+- Manuale Cap.01 (logout/B14) · HAL `api.auth-lifecycle` + `api.b14-session-sot` · IMPORT_HAL bump
+- **Verdetto W4 = B** (non A): L5 Resend + Stripe Test ancora da configurare (ripresa domani)
+- Vietato: Stripe Live · email a destinatari reali · force verdicto A
+
 ## 2026-11-21 — S1 A-007 + A-006 + FE chip `missing_*` (D-191)
 
 - Commit `5582a64` su `main`: lista immobili soft-read date; gateway API key allineato D-152; FE nasconde chip diagnostici
