@@ -1,7 +1,7 @@
 # OMNIA — PRE-GTM Readiness Master
 
 **Avviato:** 2026-11-21 19:45:38 CET (Europe/Rome)  
-**Aggiornato:** 2026-11-21 22:05 CET (Europe/Rome) — W4 remediation (verdetto B, blocchi infrastrutturali chiusi)  
+**Aggiornato:** 2026-11-21 22:45 CET (Europe/Rome) — W4 config contract + B8 restart PASS (verdetto B)  
 **Branch W4:** `cursor/w4-staging-e2e-b894` @ tip docs remediation · API `3f34c5f` · FE Vercel `5a8adaf`  
 **HEAD locale (branch W4):** tip docs + working tree D175 storici preservato  
 **Metodo:** programma di avanzamento tecnico (non audit fine a sé stesso)  
@@ -217,3 +217,11 @@ Avanzamento reale di questo ciclo:
 - Verdetto ancora **B** (L5/Stripe BLOCKED per variabili assenti su Railway staging).
 - Chiusi: W4-02/06 multi-istanza (`omnia-api-w4b`), FE align, W4-08 fail-closed isolato, W4-13 visite/deal, B8 kill A/B.
 - SoT dettagli: `OMNIA-W4-REMEDIATION-REPORT.md`.
+
+
+## W4 configuration contract (2026-11-21 22:45 CET)
+
+- Contratto variabili: `OMNIA-W4-CONFIGURATION-CONTRACT-AND-B8-RESTART.md`
+- W4-18 restart: PASS su staging
+- In attesa Founder: Resend + Stripe Test vars (tabella §D del contratto)
+- Verdetto W4: **B**

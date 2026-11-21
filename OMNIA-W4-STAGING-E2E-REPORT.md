@@ -1,6 +1,6 @@
 # OMNIA — W4 Staging E2E Verification Report
 
-**Data (Europe/Rome):** 2026-11-21 22:05 CET (ciclo remediation)  
+**Data (Europe/Rome):** 2026-11-21 22:45 CET (config contract + B8 restart)  
 **Ciclo precedente:** 2026-11-21 21:19 CET (primo W4 — verdetto B)  
 **Autorizzazione:** Founder — staging + remediation W4  
 **Verdetto complessivo:** **B — W4 STAGING E2E NON SUPERATO**  
@@ -71,7 +71,7 @@ Legenda ambienti: **RA**=API A staging · **RB**=API B w4b · **FE**=Vercel stag
 | W4-15 | MLS dashboard | RA | `3f34c5f` | A | 21:55 | 200 mls_enabled | reverify | **PASS** | mls_enabled settato D7 | OK |
 | W4-16 | Documenti/chat paths (smoke) | RA | `3f34c5f` | A | ciclo1 | no 500 critici | `w4/http/round*.json` | **PASS** | non rieseguito full chat | residuo basso |
 | W4-17 | T22 procedura (prepare) | — | — | — | — | procedura pronta | `scripts/d7_e2e/t22_staging_procedure.py` | **PASS** | esecuzione full T22 non richiesta se L5 blocked | — |
-| W4-18 | B8 kill + propagate A/B | RA+RB | — | A+B | 21:59 | killed true→false entrambi | `w4r/w4_18_b8_kill.json` | **PASS*** | *restart container non rieseguito | parziale |
+| W4-18 | B8 kill + propagate + restart | RA+RB | — | A+B | 22:38–22:42 | killed persist post-restart; cleared | `w4r/w4_18_b8_restart.json` | **PASS** | CLI restart timeout; log startup CET | OK |
 | W4-19 | L5 zero-send email | RA | — | — | 21:59 | — | presence JSON | **BLOCKED** | manca `RESEND_API_KEY` staging | — |
 | W4-20 | Invite verify fail-closed | RA | `3f34c5f` | — | 21:55 | 404 | reverify | **PASS** | — | OK |
 | W4-21 | Stripe webhook/checkout | RA | — | A | 21:55 | webhook 503 | reverify + presence | **BLOCKED** | secrets Stripe Test assenti | — |
@@ -83,10 +83,10 @@ Legenda ambienti: **RA**=API A staging · **RB**=API B w4b · **FE**=Vercel stag
 
 | Esito | N |
 |-------|---|
-| PASS | 20 (+ W4-18 con nota restart) |
+| PASS | 21 (W4-18 restart chiuso) |
 | FAIL | 0 |
 | BLOCKED | 3 (W4-19, W4-21, W4-22) |
-| NOT RUN | 0 (tutti indirizzati) |
+| NOT RUN | 0 |
 
 **Requisiti bloccanti al verdetto A:** W4-19, W4-21, W4-22.  
 **Prerequisiti Founder:** variabili Resend + Stripe Test su Railway staging (nomi in remediation report §10).
@@ -112,3 +112,4 @@ Legenda ambienti: **RA**=API A staging · **RB**=API B w4b · **FE**=Vercel stag
 - `OMNIA-W4-REMEDIATION-REPORT.md` (ciclo completo)  
 - `docs/ops/RAILWAY_STAGING_TOPOLOGY_W4.md`  
 - Artefatti: `/opt/cursor/artifacts/w4r/`
+- `OMNIA-W4-CONFIGURATION-CONTRACT-AND-B8-RESTART.md`

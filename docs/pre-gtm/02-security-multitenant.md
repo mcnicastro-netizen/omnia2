@@ -1,6 +1,6 @@
 # PRE-GTM — Sicurezza e multi-tenancy
 
-**Aggiornato:** 2026-11-21 22:05 CET · branch `cursor/w4-staging-e2e-b894` · API `3f34c5f` · FE `5a8adaf`  
+**Aggiornato:** 2026-11-21 22:45 CET · branch `cursor/w4-staging-e2e-b894` · API `3f34c5f` · FE `5a8adaf`  
 **Rapporti:**  
 - `OMNIA-W3-TENANT-GUARD-E2E-VERIFICATION.md`  
 - `OMNIA-W3-SECONDARY-ACCESS-PATHS-HARDENING.md`  
@@ -9,6 +9,7 @@
 - `OMNIA-W3-SESSION-REVOCATION-FINAL-GATE.md` (B14 locale)
 - `OMNIA-W4-STAGING-E2E-REPORT.md` ← **W4 staging (verdetto B)**
 - `OMNIA-W4-REMEDIATION-REPORT.md` ← ciclo remediation
+- `OMNIA-W4-CONFIGURATION-CONTRACT-AND-B8-RESTART.md` ← contratto vars + B8 restart
 
 ## Stato
 
@@ -22,7 +23,7 @@
 | HTTP dual-tenant Mongo | **19 scenari** PASS locale |
 | Multi-processo locale (2 uvicorn) | **5** PASS incl. revoke access JWT cross-process |
 | Harness staging | `scripts/w3_staging_harness` preflight PASS (health/mongo/unauth/**session_revocation**) |
-| Staging E2E W4 | **B — NON SUPERATO** (L5/Stripe BLOCKED; repliche/FE/fail-closed/visite chiusi in remediation) |
+| Staging E2E W4 | **B — NON SUPERATO** (L5/Stripe BLOCKED; W4-18 restart PASS; contratto config pronto) |
 | Staging / GTM cert | **NO** |
 
 ## Test session gate + regressione

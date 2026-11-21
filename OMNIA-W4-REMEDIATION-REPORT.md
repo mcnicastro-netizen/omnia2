@@ -127,7 +127,7 @@ Evidenza: `w4r/w4_13_visits_deals.json`, `w4r/w4_13_deal_advance2.json`.
 | W4-01/03/04 FE drift | FE `15b1978` vs BE | **PASS** (FE `5a8adaf` + API staging host) |
 | W4-08 | Fail-closed Mongo non dimostrato | **PASS** (istanza isolata) |
 | W4-13 | Visite/trattative NOT RUN | **PASS** (E2E sintetico) |
-| W4-18 (parziale) | Kill B8 + propagazione | **PASS** controllo kill + A/B; L5 separato |
+| W4-18 | Kill B8 + propagazione + restart | **PASS** (restart attestato da log startup; CLI timeout) |
 | Cronologia | 21:45 vs 20:56 | **Rettificata** su evidenze |
 | Deploy w4b | Dockerfile sbagliato | **Risolto** pin `Dockerfile.railway` |
 
@@ -139,7 +139,7 @@ Evidenza: `w4r/w4_13_visits_deals.json`, `w4r/w4_13_deal_advance2.json`.
 |----|-------|---------------|---------------------------|
 | W4-19 L5 | **BLOCKED** | Su servizio Railway `omnia-api` **mancano** `RESEND_API_KEY` (+ `SENDER_EMAIL` / from). Config assente, non “invalida”. | Founder: impostare variabili Resend **Test** solo su progetto staging → ripetere L5 zero-send |
 | W4-21 / W4-22 | **BLOCKED** | Mancano `STRIPE_SECRET_KEY`, `STRIPE_PUBLISHABLE_KEY`, `STRIPE_WEBHOOK_SECRET`, `STRIPE_MODE` su Railway staging; webhook risponde 503 | Founder: Stripe **Test** vars + webhook secret staging → rieseguire checkout/idempotenza |
-| W4-18 restart | parziale | Persistenza kill dopo *restart container* non rieseguita (evitato restart distruttivo non necessario) | Opzionale: `railway service restart` primario + w4b con flag killed=true |
+| W4-18 restart | **chiuso PASS** | Completato 2026-11-21 22:38–22:40 CET | — |
 | Multi-replica nativa su un solo servizio | non fatta | Volume media blocca `numReplicas` | Migrazione object storage (doc topologia) — decisione Founder |
 | Merge PR #242 | non fatto | Fuori autorizzazione | Solo su mandato esplicito |
 
@@ -232,3 +232,15 @@ Poi: rieseguire L5 zero-send + suite Stripe idempotenza.
 
 Motivo: requisiti obbligatori ancora BLOCKED (L5 email, Stripe Test).  
 Non si forza A. I blocchi infrastrutturali risolvibili (repliche via secondo servizio, FE align, fail-closed isolato, visite/deal) sono chiusi con evidenze.
+
+
+---
+
+## 13. Aggiornamento configuration contract + B8 restart (2026-11-21 22:46 CET)
+
+Vedi `OMNIA-W4-CONFIGURATION-CONTRACT-AND-B8-RESTART.md`.
+
+- Contratto variabili verificato dal codice: mittente = `SENDER_EMAIL`; `STRIPE_MODE` letta ma non gate SDK.
+- Railway: Resend/Stripe secrets ancora **assenti** (solo `STRIPE_ENABLED`).
+- W4-18 restart gate: **PASS** (evidenza log startup + health kill persistente).
+- Verdetto W4: resta **B**.
