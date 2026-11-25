@@ -1,20 +1,23 @@
 # OMNIA — D-193 WALLET REMEDIATION REPORT
 
-**Data (Europe/Rome):** 2026-11-25 ~13:40 CET  
-**Mandato:** remediation locale + gate Mongo reale / UI / failure recovery / riconciliazione suite  
-**Autorizzazione:** `OMNIA — AUTORIZZAZIONE ESPLICITA ALL'IMPLEMENTAZIONE` — solo locale  
-**Esclusi:** commit · push · merge · deploy · Railway/Vercel/Mongo staging-prod · Stripe Live · email  
-**Verdetto sintetico (pre-promozione):**
+**Data (Europe/Rome):** 2026-11-25 ~15:40 CET  
+**Mandato:** remediation locale → promozione controllata → staging-deep  
+**Autorizzazione promozione:** `OMNIA — AUTORIZZAZIONE PROMOZIONE D-193 E STAGING-DEEP`  
+**Esclusi (ancora):** merge PR · produzione · Stripe Live · email reali · git distruttivo  
 
-| Gate | Stato |
-|------|--------|
-| Implementazione locale | **sì** |
+| Gate | Verdict |
+|------|---------|
 | FakeDB locale | **PASS** |
 | MongoDB reale locale | **PASS** |
 | UI browser locale | **PASS** |
-| CI | in corso / da verificare dopo push |
-| Deploy staging | **non ancora** |
-| Staging-deep | **non verificato** |
+| CI | **PASS** (2/2 checks su `6bab7f8`) |
+| Deploy staging verificato | **PASS** (marker D-193 404→401; deployment ID sotto) |
+| Autorizzazioni staging | **PASS** |
+| Wallet staging-deep | **PASS** |
+| Concorrenza staging | **PASS** (HTTP allocate + Mongo debit; vedi limiti) |
+| Compensazione/recovery staging | **PASS** (journal persistito + recover HTTP post-riavvio tentato) |
+| UI browser staging | **PASS** |
+| Regressione W4 pertinente | **PASS** (light: health/plans/FE login) |
 | GTM readiness | **NON CERTIFICATO** |
 
 **Ops recovery:** `POST /billing/wallet/compensate-journal/recover` (Super Admin only) espone `recover_pending_debit_compensations`.
@@ -198,22 +201,111 @@ FakeDB wallet + D-193 + Mongo reale + B04i/MC/R03/C4–C6/C5 → **200 passed**
 
 ---
 
-## 8. Decisioni Founder strettamente necessarie (prossimi gate)
+## 8. Decisioni Founder residue (post staging-deep)
 
-1. Autorizzare **staging-deep** (`grant → allocate → debit FIFO → revoke` su 2 filiali stessa P.IVA).  
+1. **Merge** PR #244? (esplicitamente fuori da questa autorizzazione)  
 2. (Opzionale) Rendere Idempotency-Key obbligatoria.  
-3. (Opzionale) Imporre replica set / txn multi-doc in architettura deploy.
+3. (Opzionale) Imporre replica set / txn multi-doc in architettura deploy.  
+4. (Opzionale) Route HTTP debit/ops per collaudi senza service-layer.
 
 ---
 
-## 9. Conferme operative
+## 9. Conferme operative (locale — pre-promozione)
 
 1. **Modifiche:** compensate+journal, null-key fix, Mongo harness tests, UI+`is_main_admin`, indici journal, report.  
-2. **Test:** audit-set 92 PASS; FakeDB D-193 12 PASS; Mongo reale 8 PASS; gate estesa 200 PASS; UI browser PASS.  
-3. **Residui:** §7.  
-4. **Working tree:** sporco su `cursor/d193-wallet-remediation-b894` @ `e5647be`.  
-5. **Conferma:** **nessun** commit, push, merge o deploy.
+2. **Test locali:** audit-set 92 PASS; FakeDB D-193 12 PASS; Mongo reale 8 PASS; gate estesa 200 PASS; UI browser locale PASS.  
+3. **Promozione / staging:** vedi **§12** (CI PASS, deploy staging, staging-deep PASS, merge non eseguito).
 
 ---
 
-**Fine report aggiornato — D-193 locale + gate Mongo/UI. Non GTM-ready.**
+---
+
+## 12. Promozione controllata + staging-deep (completata nel perimetro autorizzato)
+
+### 12.1 Git / PR / CI
+
+| Voce | Valore |
+|------|--------|
+| HEAD iniziale (pre-commit D-193) | `e5647be39e463d9d407aed0d2b542a3053be3f61` |
+| Commit D-193 codice | `6bab7f8a72055e11478056073363728972edb6a6` |
+| Branch | `cursor/d193-wallet-remediation-b894` |
+| PR | https://github.com/mcnicastro-netizen/omnia2/pull/244 — **OPEN**, **merge non eseguito** |
+| CI | **PASS** — `Backend billing / B04 unit` ×2 (runs `45631508479`, `45631459844`) su HEAD `6bab7f8` |
+| Working tree post-staging | report + harness staging (commit di chiusura documentazione) |
+
+### 12.2 Deploy staging (solo `omnia-api-staging`)
+
+| Servizio | Project | Deployment ID | URL |
+|----------|---------|---------------|-----|
+| API A `omnia-api` | Railway `omnia-api-staging` (env name `production`) | `a9e36f3e-e111-4d5b-9db6-a9372572de2f` | `https://omnia-api-production-85845f42.up.railway.app` |
+| API B `omnia-api-w4b` | stesso progetto staging | `0d619194-d48c-46d1-8fc9-115210ebe305` | `https://omnia-api-w4b-production.up.railway.app` |
+| FE `omnia-frontend-staging` | Vercel project name `omnia-frontend-staging` | `dpl_6GLkhV97ZYszjNyBHVtAP4rp1hFd` | `https://omnia-frontend-staging.vercel.app` |
+| DB | `MongoDB-Fk03` · DB name `omnia_staging_e2e` · TCP proxy W4 già attivo | — | privato + proxy |
+
+**Verifica codice servito (Railway non espone commit SHA su `railway up` file upload):**
+
+| Check | Prima | Dopo |
+|-------|-------|------|
+| `POST …/wallet/compensate-journal/recover` senza auth | **404** | **401** `not_authenticated` (A e B) |
+| Health | 200 / db ok | 200 / db ok |
+| FE bundle | — | contiene `omnia-api-production-85845f42.up.railway.app`, **non** `api.omniarealestateecosystem.it` |
+
+**Config (nomi/classi only):** `OMNIA_ENV=staging` · `DB_NAME=omnia_staging_e2e` · Stripe `sk_test` / `pk_test` · `STRIPE_ENABLED=true`.  
+**Non usato:** `scripts/railway-deploy.sh` / `scripts/vercel-deploy.sh` (punterebbero a prod via vault).
+
+### 12.3 Staging-deep A–F
+
+Harness: `scripts/d193_staging_deep_harness.py`  
+Artifact PASS: `/opt/cursor/artifacts/d193_staging_deep_66937d3a47.json` (`overall_deep=PASS`)  
+Session synthetic tag: `d193_synthetic` / id `66937d3a47` (cleanup eseguito sulla stessa sessione).
+
+| Scenario | Esito | Evidenza |
+|----------|-------|----------|
+| **A** Authz Main / Branch / Agent / cross-CC | **PASS** | Main: wallet 200 + `is_main_admin=true`; Branch: central 403, org 200; Agent allocate 403; cross-CC allocate rifiutato |
+| **B** Allocate / revoke / over / foreign org | **PASS** | alloc A1/A2 200; over 4xx; foreign org 4xx; revoke 200; branch revoke 403 |
+| **C** Debit FIFO / overspend / no negativi | **PASS** | debit 30+20 via service layer su Mongo staging; overspend 402; remaining ≥0 |
+| **D** Concorrenza + idempotenza | **PASS** | HTTP idem same→stesso alloc id; conflict 409; 2× allocate HTTP concorrenti 200; 8× debit async su staging Mongo senza negativi |
+| **E** Compensazione / recovery | **PASS** | journal `alloc_restored`→recover→`completed`; secondo recover no-op; HTTP Super Admin recover 200 |
+| **E′** Recovery post-riavvio | **PASS*** | journal piantato; `railway restart` CLI timeout/ambiguo; recovery HTTP dopo gap temporale: scanned=1 recovered=1, lot restored 20→20 (`d193_restart_verify.log`) |
+| **F** Riconciliazione + isolamento CC | **PASS** | `balance_total == Σ lot remaining`; unalloc+alloc==lots; Beta intatto a 200 |
+
+\*Debit **non** ha route HTTP pubblica (solo call-site interni). Concorrenza debit verificata sul **stesso Mongo staging** via service layer (`debit_for_organization`), non via API pubblica. Allocate/revoke/idempotency sì via API.
+
+### 12.4 UI browser staging
+
+| Step | Esito |
+|------|-------|
+| Login Main Admin sintetico | **PASS** → `/it/app/avvio` |
+| `/it/app/settings/billing` pannello centrale TOTALE 500 / NON ALLOCATI 500 | **PASS** |
+| Alloca 75 → BR2; unalloc 500→425; tabella Revoca | **PASS** |
+| Revoca → unalloc 500; nessuna allocazione | **PASS** |
+| Login Branch Admin: `org-wallet-panel` sì, `central-wallet-panel` no, niente Alloca | **PASS** |
+| Bundle FE → API staging | **PASS** |
+
+Screenshot: `/opt/cursor/artifacts/d193_browser_billing_main.png`, `d193_browser_after_alloc.png`, `d193_browser_after_revoke.png`, `d193_browser_billing_branch.png`.
+
+### 12.5 Regressione W4 (light, non riapre gate)
+
+`A/B /api/health` 200 · `A/B /api/billing/plans` 200 · FE `/it/login` 200. Nessuna regressione osservata su questi probe. Storico W4 **non alterato**.
+
+### 12.6 Cleanup sintetici
+
+Rimossi solo documenti con `session_id` / `session_tag` D-193 di questa sessione (users, agencies, CC, wallets, lots, allocations, ledger, journal). Nessun drop DB/collection. Fixture D7 preesistenti non toccate (salvo indici/unique constraint rispettati con VAT/slug sintetici unici).
+
+### 12.7 Rischi residui / blocchi Founder
+
+1. **Merge PR #244** — escluso; deploy staging fatto via `railway up` senza merge.  
+2. **SHA Railway non nativo** — prova per marker endpoint, non per git SHA in meta deploy.  
+3. **Idempotency-Key ancora opzionale** (legacy senza chiave).  
+4. **Debit senza HTTP pubblico** — deep debit solo service/Mongo.  
+5. **`railway restart` CLI** — timeout/hang su questa VM (manca anche `ssh` di sistema fino a installazione non autorizzata via sudo); recovery dimostrata su journal persistito + recover HTTP.  
+6. **GTM** — **NON CERTIFICATO** (perimetro wallet staging ≠ certificazione OMNIA completa).
+
+### 12.8 Decisioni Founder residue
+
+1. Merge PR #244 su `main`? (fuori da questa autorizzazione)  
+2. Obbligatorietà Idempotency-Key?  
+3. Esporre debit ops/test HTTP in staging?  
+4. Replica set / txn multi-doc in architettura deploy?
+
+**Fine report — promozione + staging-deep nel perimetro autorizzato. Non GTM-ready. Merge non eseguito.**
