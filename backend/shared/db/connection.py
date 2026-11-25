@@ -250,6 +250,14 @@ async def ensure_indexes() -> None:
             unique=True,
             sparse=True,
         )
+        # D-193 — debit compensate journal (pending recovery)
+        await db["credit_compensate_journal"].create_index([("id", 1)], unique=True)
+        await db["credit_compensate_journal"].create_index(
+            [("status", 1), ("kind", 1), ("created_at", 1)]
+        )
+        await db["credit_compensate_journal"].create_index(
+            [("commercial_customer_id", 1), ("status", 1)]
+        )
         # B01 — at most one active membership per user
         await db["memberships"].create_index([("id", 1)], unique=True)
         await db["memberships"].create_index([("user_id", 1), ("organization_id", 1)])
