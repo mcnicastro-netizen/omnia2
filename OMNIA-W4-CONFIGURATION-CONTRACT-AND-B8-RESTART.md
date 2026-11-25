@@ -155,6 +155,6 @@ Precondizione: `STRIPE_SECRET_KEY` inizia con `sk_test_`, publishable `pk_test_`
 | Contratto nomi variabili | **verificato localmente** (codice branch) |
 | Presenza/assenza Railway | **verificato su staging** |
 | B8 kill + restart persistenza | **verificato su staging** |
-| L5 Resend | **bloccato** — config mancante |
-| Stripe Test E2E | **bloccato** — config mancante |
-| Verdetto W4 | **B** invariato |
+| L5 Resend | **PASS** 25-Nov (D-193) — kill/revive A+B |
+| Stripe Test E2E | **PASS** 25-Nov (D-193) — plans+webhook+sdk; app checkout self_serve residuo |
+| Verdetto W4 | **A con residui** (D-193) |

@@ -1,9 +1,8 @@
 # Prossima sessione — programma passi
 
-**Aggiornato**: 21 Novembre 2026 (~23:00 CET — Europe/Rome)  
+**Aggiornato**: 25 Novembre 2026 (~12:20 CET — Europe/Rome)  
 **Repo**: https://github.com/mcnicastro-netizen/omnia2 ✅  
-**PR #242**: merge W4/B14 (D-192) — tip pre-merge docs su branch `cursor/w4-staging-e2e-b894`  
-**Verdetto W4**: **B** (non A)
+**W4**: **A con residui** (D-193)
 
 ---
 
@@ -11,25 +10,22 @@
 
 | Item | Stato |
 |------|-------|
-| B14 session SoT Mongo + fail-closed | in PR #242 / main post-merge |
-| W4 obbligatori eseguibili (revoke multi-istanza, FE, W4-08/13/18, B8 restart) | PASS attestati staging |
-| L5 Resend | **BLOCKED** — manca `RESEND_API_KEY` + `SENDER_EMAIL` su Railway staging |
-| Stripe Test (W4-21/22) | **BLOCKED** — manca `STRIPE_ENABLED` + `STRIPE_SECRET_KEY` (+ webhook se serve) |
-| Manuale Cap.01 + HAL B14 | sync D-084 (D-192) |
-| Config Founder Resend/Stripe | **domani** (mandato esplicito di questa sera) |
+| B14 + PR #242 | in `main` |
+| W4-19 L5 Resend | **PASS** |
+| W4-21/22 Stripe Test | **PASS** (webhook+plans+sdk); app B2B checkout gated self-serve |
+| Verdetto W4 | **A con residui** |
 
-## Prossimo passo (domani)
+## Residui noti (non urgenti)
 
-1. Configurare su Railway staging (`omnia-api` **e** `omnia-api-w4b` se ancora attivo) le vars del contratto:  
-   - Resend: `RESEND_API_KEY`, `SENDER_EMAIL` (dominio verificato OK)  
-   - Stripe Test: `STRIPE_ENABLED=true`, `STRIPE_SECRET_KEY` (test), webhook se richiesto dal flusso  
-2. Restart API → B8 health/flags → rieseguire L5 + W4-21/22 con evidenze.  
-3. Solo allora rivalutare verdetto W4 (A solo se obbligatori PASS + evidenze).  
-4. Reindex HAL post-merge: `POST /api/app/hal/knowledge/reindex?force=true` (super_admin).
+1. `OMNIA_SELF_SERVE_ENABLED=false` → `/billing/checkout` 503 `self_serve_blocked` (D-115/O6).  
+2. Side-effect wallet/crediti post-webhook non deep-verificato.  
+3. Reindex HAL se non fatto post-#242.
+
+## Prossimo passo (solo con nuovo mandato Founder)
+
+- Aprire self-serve / H4 / Stripe Live / GTM / Dogfood C5+ — **vietato** senza OK esplicito.  
+- Oppure lavoro prodotto altro (S1 follow-up, etc.).
 
 ## Non fare
 
-- Stripe **Live** / email a destinatari reali.  
-- Dichiarare W4 **A** o production-ready senza L5+Stripe Test PASS.  
-- Reset/stash/clean del worktree o force-push su main.  
-- Aprire H4 sealed / C5–C8 Dogfood senza nuovo OK Founder.
+- Stripe Live · email a destinatari reali · dichiarare GTM-ready solo perché W4 è A-con-residui.

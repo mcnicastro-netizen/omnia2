@@ -1,23 +1,29 @@
 # OMNIA — W4 Staging E2E Verification Report
 
-**Data (Europe/Rome):** 2026-11-21 22:45 CET (config contract + B8 restart)  
-**Ciclo precedente:** 2026-11-21 21:19 CET (primo W4 — verdetto B)  
-**Autorizzazione:** Founder — staging + remediation W4  
-**Verdetto complessivo:** **B — W4 STAGING E2E NON SUPERATO**  
-**Branch tip:** `5a8adaf` (+ docs remediation)  
-**API staging primaria:** `3f34c5f` · deploy `804e63dd…` · instance `8147372f9cd8:2`  
-**API staging secondaria:** servizio `omnia-api-w4b` · deploy `8b8c79d5…` · instance `2f494410745c:2`  
-**FE staging:** `dpl_BKEU47VmocASEGrMUNGQjFoNV99c` · commit `5a8adaf`
+**Data (Europe/Rome):** 2026-11-25 12:17 CET (L5 + Stripe Test post-config Founder)  
+**Ciclo precedente:** 2026-11-21 22:45 CET (config contract + B8 — verdetto B)  
+**Autorizzazione:** Founder — config Railway staging + test finali residui (no prod)  
+**Verdetto complessivo:** **A con residui** (D-193) — credential gates chiusi  
+**API staging:** deploy SUCCESS ~12:04 CET su `omnia-api` + `omnia-api-w4b`  
+**Artefatti:** `w4r/w4_19_l5_and_stripe_2026-11-25.json` · `w4r/config_presence_matrix_2026-11-25.json`
 
-W4 non certifica GTM e non autorizza campagne commerciali.
+W4 non certifica GTM e non autorizza campagne commerciali / Stripe Live / self-serve.
 
 ---
 
-## 0. Sintesi esecutiva (post-remediation)
+## 0. Sintesi esecutiva (25-Nov — post-config)
 
-Chiusi in questo ciclo: multi-istanza reale + revoke cross-instance; allineamento FE; fail-closed Mongo isolato; E2E visite/trattative; kill B8 propagato A/B; rettifica cronologica su evidenze.
+Chiusi il 21-Nov: multi-istanza, FE, fail-closed, visite/Deal, B8 restart, contratto config.
 
-Restano **BLOCKED** per mancanza credenziali staging: L5 Resend (W4-19), Stripe Test (W4-21/22). Per questo il verdetto resta **B**.
+Il 25-Nov Founder ha inserito Resend + Stripe Test sui due servizi. Rieseguiti **solo** i residui:
+
+| Voce | Esito |
+|------|-------|
+| W4-19 L5 Resend | **PASS** — kill/revive A+B; bridge `configured=true` |
+| W4-21 Stripe Test | **PASS** — plans enabled + webhook + SDK `cs_test` |
+| W4-22 idempotenza webhook | **PASS** — replay 200/200 |
+
+**Residui accettati:** app B2B checkout `503 self_serve_blocked` (O6); wallet deep non attestato; Resend list API 403.
 
 ---
 
@@ -72,10 +78,10 @@ Legenda ambienti: **RA**=API A staging · **RB**=API B w4b · **FE**=Vercel stag
 | W4-16 | Documenti/chat paths (smoke) | RA | `3f34c5f` | A | ciclo1 | no 500 critici | `w4/http/round*.json` | **PASS** | non rieseguito full chat | residuo basso |
 | W4-17 | T22 procedura (prepare) | — | — | — | — | procedura pronta | `scripts/d7_e2e/t22_staging_procedure.py` | **PASS** | esecuzione full T22 non richiesta se L5 blocked | — |
 | W4-18 | B8 kill + propagate + restart | RA+RB | — | A+B | 22:38–22:42 | killed persist post-restart; cleared | `w4r/w4_18_b8_restart.json` | **PASS** | CLI restart timeout; log startup CET | OK |
-| W4-19 | L5 zero-send email | RA | — | — | 21:59 | — | presence JSON | **BLOCKED** | manca `RESEND_API_KEY` staging | — |
+| W4-19 | L5 zero-send email | RA+RB | post-config | A+B | 25-Nov 12:14 | kill/revive health A+B | `w4r/w4_19_l5_and_stripe_2026-11-25.json` | **PASS** | list API Resend 403; solo @example.com | OK |
 | W4-20 | Invite verify fail-closed | RA | `3f34c5f` | — | 21:55 | 404 | reverify | **PASS** | — | OK |
-| W4-21 | Stripe webhook/checkout | RA | — | A | 21:55 | webhook 503 | reverify + presence | **BLOCKED** | secrets Stripe Test assenti | — |
-| W4-22 | Stripe idempotenza/wallet | RA | — | — | — | non eseguibile | presence | **BLOCKED** | come W4-21 | — |
+| W4-21 | Stripe webhook/checkout | RA | post-config | A | 25-Nov 12:16 | plans+wh+sdk cs_test | stesso JSON | **PASS** | app checkout 503 self_serve | residuo O6 |
+| W4-22 | Stripe idempotenza/wallet | RA | post-config | A | 25-Nov 12:16 | webhook replay 200/200 | stesso JSON | **PASS** | wallet deep non deep-check | residuo basso |
 | W4-23 | Regressione authz smoke | RA | `3f34c5f` | A | 21:55 | 10/10 | reverify | **PASS** | — | OK |
 | W4-24 | Integrità dati sintetici | RA | — | — | 21:55 | collab/visit/deal persistiti | w4_13 JSON | **PASS** | no delete massivi | OK |
 
@@ -83,13 +89,12 @@ Legenda ambienti: **RA**=API A staging · **RB**=API B w4b · **FE**=Vercel stag
 
 | Esito | N |
 |-------|---|
-| PASS | 21 (W4-18 restart chiuso) |
+| PASS | 24 (inclusi W4-19/21/22 al 25-Nov) |
 | FAIL | 0 |
-| BLOCKED | 3 (W4-19, W4-21, W4-22) |
+| BLOCKED | 0 |
 | NOT RUN | 0 |
 
-**Requisiti bloccanti al verdetto A:** W4-19, W4-21, W4-22.  
-**Prerequisiti Founder:** variabili Resend + Stripe Test su Railway staging (nomi in remediation report §10).
+**Verdetto A con residui (D-193):** credential gates chiusi. Residui: self-serve OFF (checkout app B2B), wallet deep, Resend list API scope.
 
 ---
 
