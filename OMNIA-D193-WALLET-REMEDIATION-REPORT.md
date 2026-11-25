@@ -30,7 +30,7 @@
 |-------|--------|
 | Branch | `cursor/d193-wallet-remediation-b894` |
 | HEAD codice D-193 | `6bab7f8a72055e11478056073363728972edb6a6` |
-| HEAD report/harness | `cc260ba` (+ eventuale follow-up docs) |
+| HEAD report/harness | `ed22167` (tip branch docs) |
 | Commit/push | **sì** (PR #244) |
 | Merge / deploy prod | **no** |
 | Working tree | pulito dopo commit docs (salvo file non-D193 preservati) |
