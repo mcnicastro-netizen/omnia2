@@ -518,10 +518,9 @@ voci:
     contenuto:
       a_cosa_serve: >
         Documenta B14: sessioni autorevoli in Mongo, non solo TTL JWT.
-        Staging W4 ha attestato revoke cross-istanza (servizio
-        omnia-api-w4b) e fail-closed Mongo isolato. W4 complessivo
-        resta verdetto B finché L5 Resend e Stripe Test non sono
-        configurati e rieseguiti.
+        Staging W4: revoke cross-istanza (w4b) + fail-closed Mongo.
+        D-193 (25-Nov): L5 Resend + Stripe Test PASS → verdetto W4
+        **A con residui** (self-serve OFF; non GTM/Live).
       quando_si_usa: >
         Debug logout, multi-replica, 401 post-revoke, W4 matrix.
       passi:

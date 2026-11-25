@@ -7,6 +7,17 @@ Registro di tutte le decisioni di business e tecniche prese durante il progetto.
 
 ## Decisioni prese
 
+### D-193 — W4 residui L5+Stripe Test chiusi su staging · verdetto A con residui · 25-Nov-2026
+- **Contesto**: Founder ha configurato Resend + Stripe Test su `omnia-api` e `omnia-api-w4b` (progetto `omnia-api-staging`). Mandato: non ripetere PASS già chiusi; solo L5 + W4-21/22; no produzione.
+- **Esito verificato**:
+  1. **Presence**: `RESEND_API_KEY` (`re_`), `SENDER_EMAIL` (dominio `omniarealestateecosystem.it`), `STRIPE_*` test (`sk_test`/`pk_test`/`whsec`) su **entrambi** i servizi; deploy SUCCESS ~12:04 CET.
+  2. **W4-19 L5**: kill/revive Resend via bridge Ops → health `resend_kill.killed` True poi False su A **e** B; bridge `resend.configured=true`. Destinatari solo sintetici `@example.com`.
+  3. **W4-21/22 Stripe Test**: `GET /billing/plans` → `enabled=true` `mode=test` `pk_test`; webhook firma invalida **400**, firma valida **200**, replay **200**; sessione Stripe SDK `cs_test_…`.
+  4. **Residui accettati (non bloccanti config)**: B2B `/billing/checkout` → `503 self_serve_blocked` (D-115/O6, self-serve OFF); side-effect wallet post-webhook non deep-verificato; Resend list API 403 (scope chiave).
+- **Verdetto W4 complessivo**: **A con residui** (credential gates chiusi). Non = GTM / non = Stripe Live / non apre self-serve.
+- **SoT**: `OMNIA-W4-STAGING-E2E-REPORT.md` · artefatti `/opt/cursor/artifacts/w4r/w4_19_l5_and_stripe_2026-11-25.json` · `config_presence_matrix_2026-11-25.json`.
+- **Stato**: ✅ test staging eseguiti. Sync docs questo giro.
+
 ### D-192 — W4 staging E2E + B14 session SoT · merge #242 · ripresa config · 21-Nov-2026 (sera)
 - **Contesto**: Ciclo W3 session revocation + W4 staging E2E/remediation su `cursor/w4-staging-e2e-b894`. Founder: staging-only, no prod, no Stripe Live, no email reale, no force verdetto A. Sera: sync files/manuale/HAL/repo e «se c’è qualcosa da mergeare provvedi»; Resend/Stripe Test **domani**.
 - **Decisione**:

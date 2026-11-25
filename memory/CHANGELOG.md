@@ -1,3 +1,11 @@
+## 2026-11-25 — W4 L5 Resend + Stripe Test su staging (D-193)
+
+- Founder: vars Resend + Stripe Test su `omnia-api` e `omnia-api-w4b` (deploy SUCCESS)
+- W4-19 L5: kill/revive A+B PASS · bridge resend configured
+- W4-21/22: plans `enabled=true` mode=test · webhook 400/200/200 · SDK `cs_test`
+- Residui: app checkout `self_serve_blocked` (O6) · wallet deep non attestato
+- Verdetto W4: **A con residui** (non GTM / non Live)
+
 ## 2026-11-21 (sera) — W4 staging E2E + B14 · sync HAL · merge #242 (D-192)
 
 - Branch `cursor/w4-staging-e2e-b894` → PR **#242** mergiata in `main` (CI B04 verde)
