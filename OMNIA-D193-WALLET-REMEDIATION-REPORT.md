@@ -29,9 +29,10 @@
 | Check | Valore |
 |-------|--------|
 | Branch | `cursor/d193-wallet-remediation-b894` |
-| HEAD | `e5647be39e463d9d407aed0d2b542a3053be3f61` |
-| Commit/push/merge/deploy | **nessuno** |
-| Working tree | intenzionalmente sporco (M + ??) |
+| HEAD codice D-193 | `6bab7f8a72055e11478056073363728972edb6a6` |
+| HEAD report/harness | `cc260ba` (+ eventuale follow-up docs) |
+| Commit/push | **sì** (PR #244) · Merge/deploy prod | **no** |
+| Working tree | pulito dopo commit docs (salvo file non-D193 preservati) |
 
 ### File toccati (ciclo remediation + gate)
 
@@ -185,19 +186,19 @@ FakeDB wallet + D-193 + Mongo reale + B04i/MC/R03/C4–C6/C5 → **200 passed**
 | UI allocate/revoke | browser locale | PASS UI |
 | Separazione P.IVA | FakeDB | PASS FakeDB |
 | Null idempotency_key sparse index | fix + Mongo | PASS Mongo |
-| Staging-deep | — | **non verificato** |
+| Staging-deep | §12 harness + browser | **PASS** (limiti debit HTTP / SHA Railway) |
 | GTM | — | **non certificato** |
 
 ---
 
 ## 7. Residui aperti
 
-1. Staging-deep E2E (gate successivo Founder).  
-2. Transazioni multi-doc non adottate (serve RS anche fuori dal harness).  
-3. Journal open failure estremo ancora residuo ops.  
-4. Idempotency-Key ancora **opzionale** (legacy).  
+1. Transazioni multi-doc non adottate (serve RS anche fuori dal harness).  
+2. Journal open failure estremo ancora residuo ops.  
+3. Idempotency-Key ancora **opzionale** (legacy).  
+4. Debit senza HTTP pubblico — concorrenza debit staging via service/Mongo.  
 5. Cookie `COOKIE_SECURE=true` in `.env` Cloud: UI locale ha usato inject cookie / HTTPS; non è un difetto wallet ma un attrito dev locale.  
-6. `computerUse` Cursor non disponibile (quota modello): UI verificata via Chrome headless.
+6. Merge PR #244 e certificazione GTM restano decisioni Founder.
 
 ---
 
