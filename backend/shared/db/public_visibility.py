@@ -12,7 +12,7 @@ Delta intenzionali (documentati, non bug):
 """
 from __future__ import annotations
 
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional  # noqa: F401 — Optional used by helpers
 
 from shared.db.trash import with_not_trashed
 
@@ -64,3 +64,66 @@ def intentional_deltas() -> Dict[str, str]:
         ),
         "agency_scope": "Solo brand: filtra per agency_id / slug.",
     }
+
+
+def portal_photo_filter(property_id: str) -> Dict[str, Any]:
+    """ACL foto per superficie ImmobilCloud (D02) — stessa verità del portale."""
+    return portal_listing_filter({"id": property_id})
+
+
+def brand_photo_filter(agency_id: str, property_id: str) -> Dict[str, Any]:
+    """ACL foto per superficie brand `/p/{slug}` (D02) — SoT brand, non portal-only."""
+    return brand_site_filter(agency_id, {"id": property_id})
+
+
+# D01 — campi agency ammessi sulle superfici pubbliche ImmobilCloud / brand HTML
+AGENCY_PUBLIC_PROJ: Dict[str, int] = {
+    "_id": 0,
+    "slug": 1,
+    "display_name": 1,
+    "logo_url": 1,
+    "phone": 1,
+    "email": 1,
+    "city": 1,
+    "address": 1,
+    "description": 1,
+}
+
+
+def public_agency_card(agency: Optional[Dict[str, Any]]) -> Optional[Dict[str, Any]]:
+    """Proiezione commerciale agenzia senza identificativi tecnici interni (D01)."""
+    if not agency:
+        return None
+    return {
+        "slug": agency.get("slug"),
+        "name": agency.get("display_name") or agency.get("name"),
+        "display_name": agency.get("display_name") or agency.get("name"),
+        "logo_url": agency.get("logo_url"),
+        "phone": agency.get("phone"),
+        "email": agency.get("email"),
+        "city": agency.get("city"),
+        "address": agency.get("address"),
+        "description": agency.get("description"),
+    }
+
+
+def strip_internal_property_fields(prop: Dict[str, Any]) -> Dict[str, Any]:
+    """Rimuove ID interni da payload destinati a HTML/API pubblici (non altera query)."""
+    out = dict(prop)
+    for k in (
+        "agency_id",
+        "owner",
+        "owner_user_id",
+        "seller_client_id",
+        "listing_agent_id",
+        "commission_pct",
+        "lead_count",
+        "view_count",
+        "contact_public",
+        "safety_gate",
+        "moderation_reviewed_by",
+        "moderation_notes",
+        "commercial_customer_id",
+    ):
+        out.pop(k, None)
+    return out

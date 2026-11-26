@@ -20,6 +20,8 @@ class TestPublicSearch:
             assert "title" in item
             assert "agency" in item
             assert item["agency"]["name"]
+            assert "id" not in item["agency"]  # D01
+            assert "agency_id" not in item
 
     def test_search_filters_by_city(self):
         r = requests.get(f"{BASE_URL}/api/cloud/search?city=Roma")
@@ -82,6 +84,8 @@ class TestPublicPropertyDetail:
         d = r.json()
         assert d["id"] == pid
         assert "agency" in d
+        assert "id" not in (d.get("agency") or {})
+        assert "agency_id" not in d
         # Sensitive fields must NOT be exposed
         assert "owner" not in d
         assert "seller_client_id" not in d

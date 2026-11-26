@@ -96,7 +96,8 @@ class TestPreviewViewLevels:
         assert "owner" not in v
         assert "seller_notes" not in v
         assert "min_price_negotiable" not in v
-        assert "reference_code" not in v
+        # D04 — rif. commerciale pubblico anche a L1
+        assert v.get("reference_code") == "MI-BRERA-42"
         # Price rounded (buckets)
         assert v.get("price_is_approximate") is True
 

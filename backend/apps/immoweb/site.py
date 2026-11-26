@@ -16,31 +16,71 @@ Endpoints (public, NO auth):
 """
 import base64
 from datetime import datetime, timezone
-from typing import Any, Dict
+from typing import Any, Dict, Literal, Optional
 
-from fastapi import APIRouter, HTTPException, Response
+from fastapi import APIRouter, HTTPException, Query, Response
 from fastapi.responses import RedirectResponse
 
 from shared.db.trash import with_not_trashed
-from shared.db.public_visibility import brand_site_filter
+from shared.db.public_visibility import (
+    AGENCY_PUBLIC_PROJ,
+    brand_photo_filter,
+    brand_site_filter,
+    portal_photo_filter,
+    strip_internal_property_fields,
+)
 from shared.db.connection import Database
 from shared.storage import get_object, ObjStoreError
 from apps.immoweb.themes import render_index, render_listing, render_property
 
 router = APIRouter(tags=["public-site"])
 
+# D02/S2 — cache corta + revalidate: ritiro annuncio riduce finestra stale
+_PHOTO_CACHE_HEADERS = {
+    "Cache-Control": "public, max-age=60, must-revalidate",
+}
+
 
 # ---------------- Binary photo serving ----------------
 
 @router.get("/public/property/{pid}/photo/{idx}")
-async def serve_property_photo(pid: str, idx: int):
-    """Return one property photo. Handles the 3 storage formats:
-    data: base64 (legacy) · /api/media/... (Object Storage, H10) · http(s) URL (302).
+async def serve_property_photo(
+    pid: str,
+    idx: int,
+    surface: Literal["portal", "brand", "mls_network"] = Query("portal"),
+    agency_slug: Optional[str] = Query(None),
+):
+    """Return one property photo if authorized for the requested surface (D02).
+
+    - surface=portal → ImmobilCloud SoT (`portal_listing_filter`)
+    - surface=brand → brand SoT (`brand_site_filter`) + agency_slug obbligatorio
+    - surface=mls_network → listing MLS condiviso attivo (box rete sul brand)
+
+    Handles storage formats: data: base64 · /api/media/... · http(s) URL (302).
     """
     db = Database.get()
-    p = await db.properties.find_one(
-        with_not_trashed({"id": pid, "status": "active"}), {"_id": 0, "photos": 1},
-    )
+    if surface == "brand":
+        if not (agency_slug or "").strip():
+            raise HTTPException(status_code=400, detail="agency_slug_required_for_brand_surface")
+        agency = await db.agencies.find_one(
+            {"slug": agency_slug.strip(), "is_active": True},
+            {"_id": 0, "id": 1},
+        )
+        if not agency:
+            raise HTTPException(status_code=404, detail="property_not_found")
+        flt = brand_photo_filter(agency["id"], pid)
+    elif surface == "mls_network":
+        flt = with_not_trashed({
+            "id": pid,
+            "status": "active",
+            "mls_shared": True,
+            "visibility": {"$in": ["public", "mls_only"]},
+            "is_private_listing": {"$ne": True},
+        })
+    else:
+        flt = portal_photo_filter(pid)
+
+    p = await db.properties.find_one(flt, {"_id": 0, "photos": 1})
     if not p:
         raise HTTPException(status_code=404, detail="property_not_found")
     photos = p.get("photos") or []
@@ -56,10 +96,11 @@ async def serve_property_photo(pid: str, idx: int):
             raise HTTPException(status_code=404, detail="photo_not_found")
         return Response(
             content=binary, media_type=mime or "image/jpeg",
-            headers={"Cache-Control": "public, max-age=86400"},
+            headers=dict(_PHOTO_CACHE_HEADERS),
         )
 
     if raw.startswith("http://") or raw.startswith("https://"):
+        # External redirect — still gated by surface ACL above
         return RedirectResponse(raw, status_code=302)
 
     if raw.startswith("data:"):
@@ -77,15 +118,20 @@ async def serve_property_photo(pid: str, idx: int):
         raise HTTPException(status_code=404, detail="photo_not_found")
     return Response(
         content=binary, media_type=mime,
-        headers={"Cache-Control": "public, max-age=86400"},
+        headers=dict(_PHOTO_CACHE_HEADERS),
     )
 
 
 # ---------------- Helpers ----------------
 
 async def _resolve(slug: str) -> Dict[str, Any]:
+    """Resolve agency for brand site — projection stretta + id solo per query (D01/S1)."""
     db = Database.get()
-    a = await db.agencies.find_one({"slug": slug, "is_active": True}, {"_id": 0})
+    a = await db.agencies.find_one(
+        {"slug": slug, "is_active": True},
+        {**AGENCY_PUBLIC_PROJ, "id": 1, "mls_enabled": 1, "website": 1, "theme": 1,
+         "brand_profile": 1, "name": 1},
+    )
     if not a:
         raise HTTPException(status_code=404, detail="agency_not_found")
     return a
@@ -160,13 +206,18 @@ async def site_index(slug: str):
                     {"_id": 0, "id": 1, "display_name": 1, "name": 1},
                 ):
                     names[ag["id"]] = ag.get("display_name") or ag.get("name") or ""
+            network_raw_safe: list = []
             for p in network_raw:
-                p["_partner_name"] = names.get(p.get("agency_id") or "", "")
-            agency["_mls_network_props"] = network_raw
+                partner = names.get(p.get("agency_id") or "", "")
+                cleaned = strip_internal_property_fields(p)
+                cleaned["_partner_name"] = partner
+                network_raw_safe.append(cleaned)
+            agency["_mls_network_props"] = network_raw_safe
         except Exception:
             agency["_mls_network_count"] = 0
             agency["_mls_network_props"] = []
-    html = render_index(agency, props, slug)
+    safe_props = [strip_internal_property_fields(p) for p in props]
+    html = render_index(agency, safe_props, slug)
     return Response(content=html, media_type="text/html; charset=utf-8")
 
 
@@ -194,7 +245,8 @@ async def site_listing(slug: str, op: str = ""):
             )
         except Exception:
             agency["_mls_network_count"] = 0
-    html = render_listing(agency, props, slug, operation=op or None)
+    safe_props = [strip_internal_property_fields(p) for p in props]
+    html = render_listing(agency, safe_props, slug, operation=op or None)
     return Response(content=html, media_type="text/html; charset=utf-8")
 
 
@@ -250,5 +302,5 @@ async def site_property(slug: str, pid: str):
     )
     if not p:
         raise HTTPException(status_code=404, detail="property_not_found")
-    html = render_property(agency, p, slug)
+    html = render_property(agency, strip_internal_property_fields(p), slug)
     return Response(content=html, media_type="text/html; charset=utf-8")

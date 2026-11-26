@@ -218,7 +218,8 @@ async def public_property_contact(pid: str, payload: PropertyContactPayload, req
 
     logger.info("B2C contact: lead=%s client=%s property=%s agency=%s notify=%s",
                 lead_id, client_id, pid, agency_id, notify_email or "—")
-    return {"ok": True, "lead_id": lead_id, "client_id": client_id}
+    # D03 — risposta anonima opaca: nessun ID CRM
+    return {"ok": True}
 
 
 async def _private_listing_contact(db, prop: Dict[str, Any], payload: PropertyContactPayload) -> Dict[str, Any]:
@@ -314,7 +315,8 @@ async def _private_listing_contact(db, prop: Dict[str, Any], payload: PropertyCo
         "B2C private inquiry: id=%s property=%s owner=%s notify=%s",
         inquiry_id, prop["id"], owner_user_id, owner_email,
     )
-    return {"ok": True, "inquiry_id": inquiry_id, "kind": "private"}
+    # D03 — risposta anonima opaca anche per inquiry private
+    return {"ok": True}
 
 
 def _schedule_lead_email(*, to: str, lang: str, property_title: str,

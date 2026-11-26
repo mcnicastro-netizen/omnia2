@@ -17,6 +17,7 @@ PUBLIC_FIELDS = {
     "lead_count": 0,
     "view_count": 0,
     "contact_public": 0,       # never raw; exposed via publisher.channels
+    "agency_id": 0,            # D01 — mai su superficie pubblica ImmobilCloud
 }
 
 
@@ -95,11 +96,17 @@ def _base_filter() -> Dict[str, Any]:
     return portal_listing_filter()
 
 
-def _cover_photo(photos: Optional[List[dict]]) -> Optional[str]:
+def _public_photo_url(property_id: str, idx: int, *, surface: str = "portal") -> str:
+    """URL foto con superficie esplicita (D02) — backend è autorità finale."""
+    return f"/api/public/property/{property_id}/photo/{idx}?surface={surface}"
+
+
+def _cover_photo(photos: Optional[List[dict]], property_id: Optional[str] = None) -> Optional[str]:
     if not photos:
         return None
     idx = next((i for i, p in enumerate(photos) if p.get("is_cover")), 0)
-    return f"/api/public/property/{photos[idx].get('property_id') or ''}/photo/{idx}".replace("//photo/", "/photo/")
+    pid = property_id or (photos[idx].get("property_id") if photos else None) or ""
+    return _public_photo_url(pid, idx, surface="portal")
 
 
 def _active_boost_tier(p: Dict[str, Any]) -> Optional[str]:
@@ -120,9 +127,19 @@ def _active_boost_tier(p: Dict[str, Any]) -> Optional[str]:
 
 
 def _to_card(p: Dict[str, Any], agency: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
-    """Public list card payload."""
+    """Public list card payload (D01/D02/D04)."""
+    from shared.db.public_visibility import public_agency_card
+
     photos = p.get("photos") or []
     cover_idx = next((i for i, ph in enumerate(photos) if ph.get("is_cover")), 0 if photos else None)
+    agency_pub = public_agency_card(agency)
+    if agency_pub:
+        # Card compatta: solo campi commerciali utili in lista
+        agency_pub = {
+            "name": agency_pub.get("name"),
+            "slug": agency_pub.get("slug"),
+            "logo_url": agency_pub.get("logo_url"),
+        }
     return {
         "id": p["id"],
         "title": p.get("title"),
@@ -139,17 +156,17 @@ def _to_card(p: Dict[str, Any], agency: Optional[Dict[str, Any]] = None) -> Dict
         "bedrooms": p.get("bedrooms"),
         "bathrooms": p.get("bathrooms"),
         "energy_class": (p.get("energy") or {}).get("energy_class"),
-        "cover_url": f"/api/public/property/{p['id']}/photo/{cover_idx}" if cover_idx is not None else None,
+        "cover_url": (
+            _public_photo_url(p["id"], cover_idx, surface="portal")
+            if cover_idx is not None
+            else None
+        ),
         "photo_count": len(photos),
-        "reference_code": p.get("reference_code"),
+        "reference_code": p.get("reference_code"),  # D04 — rif. commerciale pubblico
         "updated_at": p.get("updated_at"),
         "boost_tier": _active_boost_tier(p),
         "scout_hint": _scout_hint(p),
-        "agency": {
-            "id": agency.get("id") if agency else None,
-            "name": agency.get("display_name") if agency else None,
-            "slug": agency.get("slug") if agency else None,
-        } if agency else None,
+        "agency": agency_pub,
     }
 
 
