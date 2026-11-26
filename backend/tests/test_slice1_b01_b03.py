@@ -81,6 +81,8 @@ def test_activate_exclusive_membership_ends_previous():
         memberships.find_one = AsyncMock(return_value=None)
         users = MagicMock()
         users.update_one = AsyncMock()
+        security_events = MagicMock()
+        security_events.insert_one = AsyncMock()
 
     doc = _run(
         mod.activate_exclusive_membership(
@@ -99,6 +101,7 @@ def test_activate_exclusive_membership_ends_previous():
     assert call_kwargs[0][1]["$set"]["agency_ids"] == ["ag-new"]
     assert call_kwargs[0][1]["$set"]["active_agency_id"] == "ag-new"
     assert call_kwargs[0][1]["$set"]["role"] == "agent"
+    DB.security_events.insert_one.assert_awaited()
 
 
 def test_get_current_user_prefers_membership_operational_role():

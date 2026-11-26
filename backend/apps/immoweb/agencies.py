@@ -6,8 +6,9 @@ from uuid import uuid4
 
 from fastapi import APIRouter, File, Form, HTTPException, Depends, UploadFile, status
 from fastapi.responses import Response
+from pydantic import BaseModel, Field
 from shared.db.connection import Database
-from shared.auth.dependencies import get_current_user, require_roles
+from shared.auth.dependencies import get_current_user, require_roles, require_roles_exact
 from shared.auth.tenant import require_agency
 from shared.models.agency import (
     AgencyInDB,
@@ -499,7 +500,150 @@ async def remove_member(
             {"$set": {"role": "client", "updated_at": now}},
         )
 
+    from shared.auth.security_audit import record_security_event
+
+    await record_security_event(
+        db,
+        event="member_removed",
+        actor_user_id=user.get("id"),
+        actor_role=user.get("role"),
+        target_user_id=member_id,
+        organization_id=agency_id,
+        detail={"previous_role": target.get("role"), "remaining_agencies": remaining},
+    )
+
     return {"ok": True, "removed_user_id": member_id, "agency_id": agency_id}
+
+
+class MemberRoleBody(BaseModel):
+    role: str
+    reason: str = Field(default="", max_length=500)
+
+
+@router.patch("/me/members/{member_id}/role")
+async def change_member_role(
+    member_id: str,
+    body: MemberRoleBody,
+    user: dict = Depends(require_roles_exact("agency_admin", "super_admin", "group_admin")),
+):
+    """Downgrade/upgrade operational role within the active organization.
+
+    B14: session revoke on role change. branch_admin cannot change roles.
+    """
+    from shared.auth.membership_service import OPERATIONAL_ROLES, set_operational_role
+
+    db = Database.get()
+    agency_id = require_agency(user)
+    new_role = (body.role or "").strip()
+    if new_role not in OPERATIONAL_ROLES:
+        raise HTTPException(400, detail="invalid_role")
+    if member_id == user.get("id") and new_role not in ("agency_admin", "group_admin"):
+        raise HTTPException(403, detail="self_demote_forbidden")
+
+    target = await db.users.find_one(
+        {"id": member_id, "agency_ids": agency_id},
+        {"_id": 0, "id": 1, "role": 1},
+    )
+    if not target:
+        raise HTTPException(404, detail="member_not_found")
+
+    agency = await db.agencies.find_one({"id": agency_id}, {"_id": 0, "owner_id": 1})
+    if agency and agency.get("owner_id") == member_id and new_role != "agency_admin":
+        raise HTTPException(400, detail="owner_role_locked")
+
+    if target.get("role") in ("agency_admin", "group_admin") and new_role not in (
+        "agency_admin",
+        "group_admin",
+    ):
+        admin_count = await db.users.count_documents(
+            {
+                "agency_ids": agency_id,
+                "role": {"$in": ["agency_admin", "super_admin", "group_admin"]},
+            }
+        )
+        if admin_count <= 1:
+            raise HTTPException(400, detail="last_owner_forbidden")
+
+    try:
+        updated = await set_operational_role(
+            db,
+            user_id=member_id,
+            organization_id=agency_id,
+            operational_role=new_role,
+            actor_user_id=user.get("id"),
+            actor_role=user.get("role"),
+            reason=(body.reason or "admin_role_change").strip() or "admin_role_change",
+        )
+    except LookupError:
+        raise HTTPException(404, detail="active_membership_not_found") from None
+    except ValueError as exc:
+        raise HTTPException(400, detail=str(exc)) from exc
+
+    return {
+        "ok": True,
+        "member_id": member_id,
+        "organization_id": agency_id,
+        "role": updated.get("operational_role"),
+    }
+
+
+@router.post("/me/members/{member_id}/suspend")
+async def suspend_member(
+    member_id: str,
+    user: dict = Depends(require_roles_exact("agency_admin", "super_admin", "group_admin")),
+):
+    """Suspend membership for the current org: blocks access + revokes sessions."""
+    from shared.auth.membership_service import suspend_membership
+
+    db = Database.get()
+    agency_id = require_agency(user)
+    if member_id == user.get("id"):
+        raise HTTPException(403, detail="self_suspend_forbidden")
+
+    agency = await db.agencies.find_one({"id": agency_id}, {"_id": 0, "owner_id": 1})
+    if agency and agency.get("owner_id") == member_id:
+        raise HTTPException(400, detail="owner_suspend_forbidden")
+
+    target = await db.users.find_one(
+        {"id": member_id, "agency_ids": agency_id},
+        {"_id": 0, "id": 1},
+    )
+    if not target:
+        raise HTTPException(404, detail="member_not_found")
+
+    n = await suspend_membership(
+        db,
+        user_id=member_id,
+        organization_id=agency_id,
+        actor_user_id=user.get("id"),
+        actor_role=user.get("role"),
+        reason="admin_suspend",
+    )
+    if not n:
+        raise HTTPException(404, detail="active_membership_not_found")
+    return {"ok": True, "member_id": member_id, "status": "suspended"}
+
+
+@router.post("/me/members/{member_id}/unsuspend")
+async def unsuspend_member(
+    member_id: str,
+    user: dict = Depends(require_roles_exact("agency_admin", "super_admin", "group_admin")),
+):
+    from shared.auth.membership_service import unsuspend_membership
+
+    db = Database.get()
+    agency_id = require_agency(user)
+    n = await unsuspend_membership(
+        db,
+        user_id=member_id,
+        organization_id=agency_id,
+        actor_user_id=user.get("id"),
+        actor_role=user.get("role"),
+        reason="admin_unsuspend",
+    )
+    if not n:
+        raise HTTPException(404, detail="suspended_membership_not_found")
+    return {"ok": True, "member_id": member_id, "status": "active"}
 
 
 # -------------------- ONBOARDING LOGO (pre-agency) --------------------

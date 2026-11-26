@@ -45,13 +45,24 @@ async def get_current_user(request: Request) -> dict:
     if user.get("is_active") is False:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="account_inactive")
 
-    # RBAC kickoff — prefer membership.operational_role over drifted users.role
+    # RBAC — prefer membership.operational_role over drifted users.role
     # when an active org membership exists. Never override super_admin / B2C client.
+    # Suspended membership without is_active flip still blocks elevated access.
     role = user.get("role")
     if role not in ("super_admin", "client") and user.get("account_type") != "b2c":
-        from shared.auth.membership_service import get_active_membership
+        from shared.auth.membership_service import (
+            get_active_membership,
+            get_suspended_membership,
+        )
 
         membership = await get_active_membership(db, user["id"])
+        if not membership:
+            suspended = await get_suspended_membership(db, user["id"])
+            if suspended:
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="membership_suspended",
+                )
         op_role = (membership or {}).get("operational_role")
         if op_role:
             user = {**user, "role": op_role, "role_source": "membership"}

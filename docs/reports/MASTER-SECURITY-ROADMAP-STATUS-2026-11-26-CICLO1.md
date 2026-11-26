@@ -10,7 +10,7 @@
 | Ops Attiva / wipe CRM | **chiuso** (codice+unit+schema staging) | CICLO1 §3–8 |
 | PR #248 B2C D01–D04 | **merged** su `main` | merge `c342fb0` · CI SUCCESS |
 | Smoke staging post-merge | **PASS** sintetico | deploy `621c1b09…` |
-| RBAC per-org | **kickoff** (dual-write + overlay) | CICLO1 §9 — non chiuso |
+| RBAC per-org | **avanzato** (matrix + API ruolo/sospensione + audit) — multi-membership ancora open | CICLO1 §9 · `CICLO1B-RBAC-MEMBERSHIP-MATRIX.md` |
 | Isolamento multi-tenant completo | aperto | — |
 | Documenti/chat/storage | aperto | — |
 | Backup/restore dimostrato | aperto (gate) | — |
@@ -21,4 +21,4 @@
 | Monitoring / IR | aperto | — |
 | Pentest indipendente | prep non avviata | — |
 
-**Prossimo:** completare RBAC matrix + audit eventi ruolo; poi isolamento multi-tenant deep.
+**Prossimo:** isolamento multi-tenant deep **oppure** merge #249 su autorizzazione Founder; FE ruolo/sospensione.
