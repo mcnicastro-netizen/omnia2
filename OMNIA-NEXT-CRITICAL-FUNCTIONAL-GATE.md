@@ -1,11 +1,13 @@
 # OMNIA — NEXT CRITICAL FUNCTIONAL GATE
 
-**Tipo:** analisi gate + **aggiornamento post-implementazione CMJ locale**  
+**Tipo:** analisi gate + aggiornamento post **promozione + staging-deep CMJ**  
 **Data analisi (Europe/Rome):** 2026-11-25 ~16:15 CET  
 **Data update CMJ locale:** 2026-11-25 ~16:35 CET  
-**Branch:** `cursor/d193-wallet-remediation-b894` @ `eafb931` (CMJ **non commitato** — working tree locale)  
-**Esclusi:** merge PR #244 · commit/push (mandato CMJ) · deploy remoto · staging CMJ  
-**SoT implementazione:** `OMNIA-CMJ-IMPLEMENTATION-REPORT.md`
+**Data update promozione/staging:** 2026-11-26 Europe/Rome  
+**Branch CMJ:** `cursor/cmj-commercial-mls-b894` @ `d34860c` · PR [#245](https://github.com/mcnicastro-netizen/omnia2/pull/245) OPEN  
+**Esclusi:** merge PR #244 / #245 · deploy produzione · Stripe Live · email reale  
+**SoT implementazione:** `OMNIA-CMJ-IMPLEMENTATION-REPORT.md`  
+**SoT promozione/staging:** `OMNIA-CMJ-PROMOTION-STAGING-REPORT.md`
 
 ---
 
@@ -14,11 +16,12 @@
 | Voce | Valore |
 |------|--------|
 | **Gate prioritario** | **CMJ — Percorso commerciale MLS operativo** |
-| **Stato CMJ locale (2026-11-25)** | **PASS locale** — EntitySearch Deal, visite ≥3 slot FE+BE, label collab, CTA visita→Deal, API E2E 22/22, browser Playwright 8/8, pytest 40 passed |
-| **Perché era primo** | Backend VS; UI obbligava UUID e `proposed_slots: []` → non usabile |
-| **Residuo bloccante GTM** | **Staging-deep CMJ** non eseguito; commit/PR CMJ non aperti (vincolo auth); partner search inventory MLS non estesa (precompilazione visita OK) |
-| **Ciclo successivo** | Autorizzazione: (1) commit/PR CMJ pulito vs #244 · (2) staging-deep CMJ browser |
-| **Non riaprire** | D-193/#244 merge · H4/self-serve · TOOL-08 · W3/W4 senza regressione |
+| **Stato CMJ locale** | **PASS** — EntitySearch Deal, visite ≥3 slot FE+BE, label, CTA visita→Deal |
+| **PROMOZIONE CMJ** | **PASS** — branch isolato da `main`, PR #245, CI green, #244 intatta |
+| **STAGING-DEEP CMJ** | **PASS** — API staging 27/27 · FE browser staging 13/13 |
+| **Residui accettati** | Email mini-dossier 24h non esercitata (policy); ambient `REACT_APP_BACKEND_URL=localhost` su Cloud Agent (mitigato in deploy) |
+| **Ciclo successivo (Founder)** | Review/merge #245 (se vuole); #244 resta indipendente |
+| **Non riaprire** | D-193/#244 merge senza mandato · H4/self-serve · TOOL-08 · prod |
 
 ---
 
@@ -73,7 +76,7 @@
 | H4 sealed / self-serve | **R** finché Founder non autorizza | Alto commerciale; **non** sblocca CRM quotidiano se crediti già assegnabili ops |
 | TOOL-08 / `llm_busy` HAL | **PD** parziale (E2E storico) | Medio reputazione AI; CRM base resta usabile |
 | Catalog/SoT drift DF-F05/F10/F11 | Docs | Basso operativo |
-| **UI percorso Collab→Visita→Deal** | **I backend VS · I FE incompleto · NV browser E2E journey** | **Massimo per operatività MLS/trattative** |
+| **UI percorso Collab→Visita→Deal** | **I + VS** (locale + staging API/FE browser PASS) | Operativo su staging; merge #245 = decisione Founder |
 
 ---
 
@@ -307,13 +310,14 @@ Motivo: oggi l’API accetta lista vuota — non c’è decisione esplicita in D
 | Domanda | Risposta |
 |---------|----------|
 | **Gate prioritario** | **CMJ — Percorso commerciale MLS operativo** |
-| **CMJ locale** | **PASS** — vedi `OMNIA-CMJ-IMPLEMENTATION-REPORT.md` |
-| **Già funzionante (ora anche UX locale)** | EntitySearch Deal; visite ≥3 slot FE+BE; label; CTA visita→Deal; proposta/chat/revoke API E2E |
-| **Cosa manca ancora** | Commit/PR CMJ; **staging-deep CMJ**; eventuale search MLS inventory partner |
-| **Lavoro ciclo successivo** | Auth commit/PR + staging-deep CMJ (separato da merge #244) |
-| **Autorizzazioni** | Implementazione CMJ locale **ricevuta ed eseguita**; staging-deep **non** autorizzato in questo mandato; **non** merge #244 |
+| **CMJ locale** | **PASS** — `OMNIA-CMJ-IMPLEMENTATION-REPORT.md` |
+| **PROMOZIONE CMJ** | **PASS** — PR #245 @ `d34860c`, CI green |
+| **STAGING-DEEP CMJ** | **PASS** — `OMNIA-CMJ-PROMOTION-STAGING-REPORT.md` |
+| **Già funzionante (locale + staging)** | EntitySearch Deal; visite ≥3 slot FE+BE; label; CTA visita→Deal; proposal/chat/revoke |
+| **Cosa manca ancora** | Merge #245 (decisione Founder); email 24h reale = fuori policy staging |
+| **Autorizzazioni** | Implementazione + promozione + staging-deep **eseguite**; **non** merge #244/#245 |
 
-**Working tree:** modifiche CMJ + report presenti, **non commitate** (vincolo auth). PR #244 intatta.
+PR #244 resta OPEN / intatta.
 
 ---
 
