@@ -164,7 +164,7 @@ Run sintetico: `b2c5cda259f` · DB `omnia_staging_e2e` · cleanup eseguito post-
 
 | Servizio | Dettaglio |
 |----------|-----------|
-| API pubblica | `https://omnia-api-production-85845f42.up.railway.app` |
+| API pubblica | `API staging Railway (servizio omnia-api di questo ciclo)` |
 | Railway service | `omnia-api` deployment `445a50a2-67f1-44f0-8105-006e6bb607a5` |
 | Twin | `omnia-api-w4b` deployment `fe8139b1-91d2-4f13-aa1b-4b545c2bd92a` |
 | Codice sorgente deployato | branch `cursor/b2c-public-hardening-b894` @ `95eb8ad…` (railway up da worktree) |
@@ -298,8 +298,8 @@ Foto 1×1 JPEG sintetica: ACL HTTP verificata; rendering FE può apparire “bia
 
 | Rischio | Livello | Nota |
 |---------|---------|------|
-| Cache/CDN stale ≤60s post-ritiro | basso | mitigato; purge manuale infra se serve |
-| FE search card non sempre mostra `rif.` in griglia | basso | detail/brand sì; eventuale UX FE fuori scope se richiesto |
+| Cache/CDN stale post-ritiro | chiuso (ciclo residui) | `private, no-store` — vedi §21 / report residui |
+| FE search card senza `rif.` | chiuso (ciclo residui) | `PropertyCard` + helper D04 — evidenza browser |
 | Foto data-URI minime poco leggibili in UI | informativo | ACL HTTP ok |
 | Deploy API da branch non-main | operativo | Founder deve decidere merge #248 |
 | Twin `omnia-api-w4b` allineato | basso | deployato in ciclo |
@@ -324,11 +324,39 @@ Foto 1×1 JPEG sintetica: ACL HTTP verificata; rendering FE può apparire “bia
 
 ## 20. Prossimo passo tecnico
 
-1. Founder review PR **#248** (`cursor/b2c-public-hardening-b894`).
-2. Se approvato: merge su `main` (autorizzazione separata) + eventuale redeploy FE solo se si aggiungono ritocchi UX `rif.` in search card.
+1. Founder review PR **#248** (`cursor/b2c-public-hardening-b894`) inclusi residui §21.
+2. Se approvato: merge su `main` (autorizzazione separata).
 3. Opzionale: re-seed fixture M3S4 locale / CI per ripristinare integration contact.
-4. Opzionale: runbook purge cache CDN se TTL 60s insufficiente operativamente.
-5. **Stop** — in attesa valutazione Founder. Nessun merge eseguito da questo agent.
+4. **Stop** — in attesa valutazione Founder. Nessun merge eseguito da questo agent.
+
+---
+
+## 21. Chiusura residui D04 (rif. card) + D02 (cache foto) — 2026-11-26 17:30 CET
+
+Report autonomo: `docs/reports/B2C-RESIDUI-RIF-CACHE-STAGING-DEEP.md`
+
+### Diagnosi
+- **D04:** API già esponeva `reference_code`; `PropertyCard` non lo renderizzava.
+- **D02:** `public, max-age=60, must-revalidate` lasciava finestra di freschezza post-ritiro.
+
+### Soluzione
+- FE: helper `cardReference*` + visualizzazione `Rif. {code}` solo se valorizzato.
+- BE: `Cache-Control: private, no-store` (+ `Pragma: no-cache`) su endpoint foto (tutte le superfici / path binario e 302).
+
+### Test
+- Backend unit mirati: **27 PASS**
+- FE `cardReference`: **5 PASS**
+- Staging-deep sintetico HTTP: **PASS** (revoke 200→404; header no-store)
+- Browser: card search con rif. distinti + noref senza rif. **PASS**
+
+### Deploy
+- Codice: `3ab1949…`
+- Railway API: `3ac52960-…` · w4b `9696daae-…`
+- Vercel staging FE: `dpl_HZV2eSxc16HjLVWaVzA4YkMJYdQA`
+
+### Limiti
+- Purge CDN: **NOT VERIFIED / N/A**
+- Proxy non conforme a `no-store`: **NOT VERIFIED**
 
 ---
 
@@ -341,9 +369,10 @@ Foto 1×1 JPEG sintetica: ACL HTTP verificata; rendering FE può apparire “bia
 | Isolamento multi-tenant | PASS staging |
 | Foto authz | PASS |
 | Contatto opaco | PASS |
-| `rif.` pubblico | PASS |
+| `rif.` pubblico | PASS (anche card search — ciclo residui) |
 | HTML brand | PASS |
 | Staging-deep sintetico | PASS |
+| Cache foto post-revoca | PASS (no-store — ciclo residui) |
 | Errori bloccanti hardening | nessuno residuo riproducibile nel perimetro |
 
 Fine report.
