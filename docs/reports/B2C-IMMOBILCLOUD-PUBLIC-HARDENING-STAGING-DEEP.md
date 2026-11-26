@@ -30,7 +30,7 @@ Stato iniziale: codice main post-#247 con gap dimostrati sull’audit; inventari
 | Worktree | `/agent/repos/omnia2-integration-d193-cmj-a4` |
 | Commit codice hardening | `95eb8ad25e96b79e5d40689584723b00ecad3f0f` |
 | PR | [#248](https://github.com/mcnicastro-netizen/omnia2/pull/248) → base `main` (non mergiata in questo ciclo) |
-| Commit report | (questo file, commit successivo sullo stesso branch) |
+| Commit report | tip branch (file presente su `cursor/b2c-public-hardening-b894`) |
 
 Operazioni **non** eseguite: merge su `main`, deploy produzione, chiusura/modifica PR estranei.
 
