@@ -220,6 +220,7 @@ class FakeDB:
         self.payment_transactions = FakeColl()
         self.properties = FakeColl()
         self.subscriptions = FakeColl()
+        self.credit_compensate_journal = FakeColl()
 
     def __getitem__(self, name):
         if not hasattr(self, name):

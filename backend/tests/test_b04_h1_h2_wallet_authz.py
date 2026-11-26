@@ -328,7 +328,7 @@ def test_h2_require_roles_exact_rejects_agent(monkeypatch):
 
 
 def test_h2_wallet_admin_endpoints_use_auth_gate():
-    """Central wallet routes authenticate via _WALLET_AUTH; authority is Main Admin binding."""
+    """Central wallet routes use _WALLET_ADMIN_AUTH (no branch_admin/agent)."""
     from apps.billing import routes as billing_routes
     import inspect
 
@@ -340,7 +340,7 @@ def test_h2_wallet_admin_endpoints_use_auth_gate():
         fn = getattr(billing_routes, fn_name)
         params = inspect.signature(fn).parameters
         user_dep = params["user"].default
-        assert user_dep.dependency is billing_routes._WALLET_AUTH
+        assert user_dep.dependency is billing_routes._WALLET_ADMIN_AUTH
 
 
 def test_h2_org_wallet_still_allows_branch_via_require_roles():
@@ -350,7 +350,7 @@ def test_h2_org_wallet_still_allows_branch_via_require_roles():
 
     params = inspect.signature(billing_routes.get_org_wallet).parameters
     user_dep = params["user"].default
-    assert user_dep.dependency is not billing_routes._WALLET_AUTH
+    assert user_dep.dependency is not billing_routes._WALLET_ADMIN_AUTH
     assert "branch_admin" in (
         "super_admin",
         "agency_admin",
@@ -359,6 +359,26 @@ def test_h2_org_wallet_still_allows_branch_via_require_roles():
         "agent",
     )
     assert require_roles is not None
+
+
+def test_h2_wallet_admin_auth_rejects_branch_admin_at_gate(monkeypatch):
+    """D-193: branch_admin cannot pass _WALLET_ADMIN_AUTH FastAPI gate."""
+    from shared.auth import dependencies as dep
+
+    async def fake_user(request):
+        return {
+            "id": "u-br",
+            "email": "br@example.com",
+            "role": "branch_admin",
+            "email_verified": True,
+            "is_active": True,
+        }
+
+    monkeypatch.setattr(dep, "get_current_user", fake_user)
+    guard = dep.require_roles_exact("super_admin", "agency_admin", "group_admin")
+    with pytest.raises(HTTPException) as ei:
+        _run(guard(MagicMock()))
+    assert ei.value.status_code == 403
 
 
 def test_h2_org_wallet_scoped_to_caller_agency(monkeypatch):

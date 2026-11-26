@@ -6,22 +6,26 @@ per passare a live mode. Nessuna modifica di codice richiesta.
 
 No brand mentions (D-051) — pricing rispetta LAUNCH_PLANS di plans.py.
 """
-import os
+import hashlib
 import logging
+import os
 from datetime import datetime, timezone
 from typing import Optional
 
 import stripe
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Depends, Header, HTTPException, Request
 
 from shared.auth.dependencies import get_current_user, require_roles, require_roles_exact
 from shared.auth.tenant import optional_agency_id, require_agency
 from shared.db.connection import Database
 
-# Authenticated users may hit wallet routes; authority is Main Admin binding (D01–D12).
-_WALLET_AUTH = require_roles_exact(
-    "super_admin", "agency_admin", "group_admin", "branch_admin", "agent"
+# D-193: central wallet mutate/read admin — Main Admin binding after exact roles.
+# branch_admin/agent are NOT on this gate (they use GET /wallet/organization only).
+_WALLET_ADMIN_AUTH = require_roles_exact(
+    "super_admin", "agency_admin", "group_admin"
 )
+# Backward-compat alias (tests / imports): same as admin gate after D-193 harden.
+_WALLET_AUTH = _WALLET_ADMIN_AUTH
 _OPS_SUPER = require_roles_exact("super_admin")
 
 from apps.billing.plans import (
@@ -1164,10 +1168,30 @@ async def _authorize_wallet_admin(
     return cc_id
 
 
+def _wallet_idempotency_key(
+    payload: dict,
+    header_key: Optional[str],
+) -> Optional[str]:
+    """D-193: prefer Idempotency-Key header, else body.idempotency_key. Legacy = None.
+
+    When routes are invoked outside FastAPI (unit tests), ``Header(...)`` may be
+    passed as the default — treat non-str values as absent.
+    """
+    if not isinstance(header_key, str):
+        header_key = None
+    raw = (header_key or "").strip() or (str(payload.get("idempotency_key") or "").strip())
+    return raw[:200] or None
+
+
+def _wallet_payload_fingerprint(*parts: object) -> str:
+    blob = "|".join("" if p is None else str(p) for p in parts)
+    return hashlib.sha256(blob.encode("utf-8")).hexdigest()[:32]
+
+
 @router.get("/wallet")
 async def get_central_wallet(
     commercial_customer_id: Optional[str] = None,
-    user: dict = Depends(_WALLET_AUTH),
+    user: dict = Depends(_WALLET_ADMIN_AUTH),
 ):
     """Central wallet — Main Admin binding only (D12). Super Admin: read ops."""
     db = Database.get()
@@ -1191,6 +1215,15 @@ async def get_central_wallet(
         summary["organization_spendable"] = await org_spendable_balance(db, agency_id)
         summary["viewer_organization_id"] = agency_id
     summary["commercial_customer_id"] = cc_id
+    # Organizations under this CC (for Main Admin UI allocate targets)
+    orgs = await db.agencies.find(
+        {"commercial_customer_id": cc_id},
+        {"_id": 0, "id": 1, "display_name": 1, "name": 1, "slug": 1},
+    ).to_list(length=500)
+    for org in orgs:
+        oid = org.get("id")
+        org["spendable"] = await org_spendable_balance(db, oid) if oid else 0
+    summary["organizations"] = orgs
     return summary
 
 
@@ -1227,9 +1260,14 @@ async def get_org_wallet(
 @router.post("/wallet/allocate")
 async def allocate_wallet_credits(
     payload: dict,
-    user: dict = Depends(_WALLET_AUTH),
+    user: dict = Depends(_WALLET_ADMIN_AUTH),
+    idempotency_key_header: Optional[str] = Header(None, alias="Idempotency-Key"),
 ):
-    """Allocate — Main Admin or Super Admin extraordinary (D07)."""
+    """Allocate — Main Admin or Super Admin extraordinary (D07).
+
+    D-193 idempotency: header ``Idempotency-Key`` or body ``idempotency_key``.
+    Legacy requests without key remain allowed (no automatic key).
+    """
     db = Database.get()
     agency_id = optional_agency_id(user)
     target_org = (payload.get("organization_id") or "").strip()
@@ -1249,22 +1287,35 @@ async def allocate_wallet_credits(
         amount=amount,
         operation="allocate",
     )
+    idem = _wallet_idempotency_key(payload, idempotency_key_header)
+    fp = _wallet_payload_fingerprint(cc_id, target_org, amount)
     created = await allocate_credits(
         db,
         commercial_customer_id=cc_id,
         organization_id=target_org,
         amount=amount,
         reason=f"allocate_by:{user.get('id')}",
+        idempotency_key=idem,
+        payload_fingerprint=fp if idem else None,
     )
-    return {"ok": True, "allocations": created}
+    return {
+        "ok": True,
+        "allocations": created,
+        "idempotent": bool(idem),
+        "idempotency_key": idem,
+    }
 
 
 @router.post("/wallet/revoke")
 async def revoke_wallet_allocation(
     payload: dict,
-    user: dict = Depends(_WALLET_AUTH),
+    user: dict = Depends(_WALLET_ADMIN_AUTH),
+    idempotency_key_header: Optional[str] = Header(None, alias="Idempotency-Key"),
 ):
-    """Revoke — Main Admin + H1 CC bind, or Super Admin extraordinary (D07)."""
+    """Revoke — Main Admin + H1 CC bind, or Super Admin extraordinary (D07).
+
+    D-193 idempotency: header ``Idempotency-Key`` or body ``idempotency_key``.
+    """
     db = Database.get()
     agency_id = optional_agency_id(user)
     allocation_id = (payload.get("allocation_id") or "").strip()
@@ -1281,13 +1332,51 @@ async def revoke_wallet_allocation(
         extraordinary_reason=(payload.get("extraordinary_reason") or "").strip() or None,
         operation="revoke",
     )
+    idem = _wallet_idempotency_key(payload, idempotency_key_header)
+    fp = _wallet_payload_fingerprint(cc_id, allocation_id)
     entry = await revoke_allocation(
         db,
         allocation_id=allocation_id,
         commercial_customer_id=cc_id,
         reason=f"revoke_by:{user.get('id')}",
+        idempotency_key=idem,
+        payload_fingerprint=fp if idem else None,
     )
-    return {"ok": True, "ledger_entry": entry}
+    return {
+        "ok": True,
+        "ledger_entry": entry,
+        "idempotent": bool(idem),
+        "idempotency_key": idem,
+    }
+
+
+@router.post("/wallet/compensate-journal/recover")
+async def recover_wallet_compensate_journal(
+    payload: Optional[dict] = None,
+    user: dict = Depends(_OPS_SUPER),
+):
+    """D-193 ops — replay pending debit compensate journals (Super Admin only).
+
+    Invocabile dopo restart/timeout per chiudere journal ``pending`` senza
+    doppio accredito (step machine alloc_restored → lot_restored → completed).
+    """
+    db = Database.get()
+    from shared.billing.credit_wallet_service import recover_pending_debit_compensations
+
+    body = payload or {}
+    cc_id = (body.get("commercial_customer_id") or "").strip() or None
+    limit = int(body.get("limit") or 100)
+    result = await recover_pending_debit_compensations(
+        db,
+        limit=max(1, min(limit, 500)),
+        commercial_customer_id=cc_id,
+    )
+    return {
+        "ok": True,
+        "actor": user.get("id"),
+        "commercial_customer_id": cc_id,
+        **result,
+    }
 
 
 # --------------- Main Admin lifecycle (D01 / D08–D11) -----------------
@@ -1295,7 +1384,7 @@ async def revoke_wallet_allocation(
 @router.get("/commercial/main-admin")
 async def get_main_admin_status(
     commercial_customer_id: Optional[str] = None,
-    user: dict = Depends(_WALLET_AUTH),
+    user: dict = Depends(_WALLET_ADMIN_AUTH),
 ):
     db = Database.get()
     from shared.billing import main_admin_service as mas
@@ -1320,13 +1409,16 @@ async def get_main_admin_status(
         "main_admin_appointed_at": cc.get("main_admin_appointed_at"),
         "commercial_status": cc.get("commercial_status"),
         "operational_status": cc.get("operational_status"),
+        # D-193 UI: explicit flag (200 alone already implies MA or SA ops)
+        "is_main_admin": bool(is_ma),
+        "is_ops_super_admin": bool(is_ops),
     }
 
 
 @router.post("/commercial/main-admin/transfer")
 async def propose_main_admin_transfer(
     payload: dict,
-    user: dict = Depends(_WALLET_AUTH),
+    user: dict = Depends(_WALLET_ADMIN_AUTH),
 ):
     db = Database.get()
     from shared.billing import main_admin_service as mas
@@ -1347,7 +1439,7 @@ async def propose_main_admin_transfer(
 @router.post("/commercial/main-admin/transfer/accept")
 async def accept_main_admin_transfer(
     payload: dict,
-    user: dict = Depends(_WALLET_AUTH),
+    user: dict = Depends(_WALLET_ADMIN_AUTH),
 ):
     db = Database.get()
     from shared.billing import main_admin_service as mas
@@ -1364,7 +1456,7 @@ async def accept_main_admin_transfer(
 @router.post("/commercial/main-admin/transfer/cancel")
 async def cancel_main_admin_transfer(
     payload: dict,
-    user: dict = Depends(_WALLET_AUTH),
+    user: dict = Depends(_WALLET_ADMIN_AUTH),
 ):
     db = Database.get()
     from shared.billing import main_admin_service as mas

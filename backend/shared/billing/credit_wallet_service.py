@@ -25,6 +25,16 @@ ENTRY_CONSUME = "consume"
 ENTRY_COMPENSATE = "compensate"
 ENTRY_RETURN = "return_to_central"  # uscita filiale / revoke
 
+# D-193 — journal persistente per compensate debit (failure recovery).
+# Non sostituisce una transazione multi-doc; consente riconciliazione se
+# il restore fallisce a metà. Collection: credit_compensate_journal.
+JOURNAL_KIND_DEBIT = "debit_compensate"
+JOURNAL_PENDING = "pending"
+JOURNAL_ALLOC_RESTORED = "alloc_restored"
+JOURNAL_LOT_RESTORED = "lot_restored"
+JOURNAL_COMPLETED = "completed"
+JOURNAL_FAILED = "failed"
+
 
 def _now() -> str:
     return datetime.now(timezone.utc).isoformat()
@@ -32,6 +42,247 @@ def _now() -> str:
 
 def _new_id() -> str:
     return uuid.uuid4().hex
+
+
+async def _open_debit_compensate_journal(
+    db,
+    *,
+    commercial_customer_id: str,
+    organization_id: str,
+    reason: str,
+    slices: list[tuple[str, str, int]],
+    ref_id: Optional[str] = None,
+    ref_type: Optional[str] = None,
+) -> str:
+    """Persist pending restore plan before applying compensate (D-193)."""
+    jid = _new_id()
+    doc = {
+        "id": jid,
+        "kind": JOURNAL_KIND_DEBIT,
+        "status": JOURNAL_PENDING,
+        "commercial_customer_id": commercial_customer_id,
+        "organization_id": organization_id,
+        "reason": reason,
+        "ref_id": ref_id,
+        "ref_type": ref_type,
+        "slices": [
+            {
+                "allocation_id": alloc_id,
+                "lot_id": lot_id,
+                "take": int(take),
+                "status": JOURNAL_PENDING,
+            }
+            for alloc_id, lot_id, take in slices
+        ],
+        "attempts": 0,
+        "last_error": None,
+        "created_at": _now(),
+        "updated_at": _now(),
+    }
+    await db.credit_compensate_journal.insert_one(doc)
+    return jid
+
+
+async def _set_journal_slice_status(
+    db,
+    journal_id: str,
+    *,
+    allocation_id: str,
+    lot_id: str,
+    status: str,
+) -> None:
+    j = await db.credit_compensate_journal.find_one({"id": journal_id}, {"_id": 0})
+    if not j:
+        return
+    slices = list(j.get("slices") or [])
+    changed = False
+    for s in slices:
+        if s.get("allocation_id") == allocation_id and (s.get("lot_id") or "") == (
+            lot_id or ""
+        ):
+            if s.get("status") != status:
+                s["status"] = status
+                changed = True
+            break
+    if not changed:
+        return
+    all_done = all(s.get("status") == JOURNAL_COMPLETED for s in slices)
+    await db.credit_compensate_journal.update_one(
+        {"id": journal_id},
+        {
+            "$set": {
+                "slices": slices,
+                "status": JOURNAL_COMPLETED if all_done else JOURNAL_PENDING,
+                "updated_at": _now(),
+            }
+        },
+    )
+
+
+async def _apply_debit_compensate_slices(
+    db,
+    *,
+    commercial_customer_id: str,
+    organization_id: str,
+    reason: str,
+    slices: list[dict],
+    ref_id: Optional[str] = None,
+    ref_type: Optional[str] = None,
+    journal_id: Optional[str] = None,
+) -> None:
+    """Restore alloc+lot per slice with step statuses (idempotent recover).
+
+    Slice status machine: pending → alloc_restored → lot_restored → completed.
+    Each step is recorded on the journal before continuing so a crash mid-restore
+    does not double-credit on ``recover_pending_debit_compensations``.
+    """
+    for s in slices:
+        st = s.get("status") or JOURNAL_PENDING
+        if st == JOURNAL_COMPLETED:
+            continue
+        alloc_id = s.get("allocation_id") or ""
+        lot_id = (s.get("lot_id") or "").strip()
+        take = int(s.get("take") or 0)
+        if take <= 0 or not alloc_id:
+            continue
+
+        if st == JOURNAL_PENDING:
+            await db.credit_allocations.update_one(
+                {"id": alloc_id},
+                {"$inc": {"remaining_qty": take}, "$set": {"updated_at": _now()}},
+            )
+            st = JOURNAL_ALLOC_RESTORED
+            s["status"] = st
+            if journal_id:
+                await _set_journal_slice_status(
+                    db,
+                    journal_id,
+                    allocation_id=alloc_id,
+                    lot_id=lot_id,
+                    status=st,
+                )
+
+        if st == JOURNAL_ALLOC_RESTORED:
+            if lot_id:
+                await db.credit_lots.update_one(
+                    {"id": lot_id},
+                    {"$inc": {"remaining_qty": take}, "$set": {"updated_at": _now()}},
+                )
+            st = JOURNAL_LOT_RESTORED
+            s["status"] = st
+            if journal_id:
+                await _set_journal_slice_status(
+                    db,
+                    journal_id,
+                    allocation_id=alloc_id,
+                    lot_id=lot_id,
+                    status=st,
+                )
+
+        if st == JOURNAL_LOT_RESTORED:
+            await _append_ledger(
+                db,
+                commercial_customer_id=commercial_customer_id,
+                entry_type=ENTRY_COMPENSATE,
+                delta=take,
+                reason=f"compensate_failed_debit:{reason}",
+                organization_id=organization_id,
+                lot_id=lot_id or None,
+                allocation_id=alloc_id,
+                ref_id=ref_id,
+                ref_type=ref_type,
+                meta={
+                    "restored_lot": bool(lot_id),
+                    "take": take,
+                    "journal_id": journal_id,
+                },
+            )
+            st = JOURNAL_COMPLETED
+            s["status"] = st
+            if journal_id:
+                await _set_journal_slice_status(
+                    db,
+                    journal_id,
+                    allocation_id=alloc_id,
+                    lot_id=lot_id,
+                    status=st,
+                )
+
+
+async def recover_pending_debit_compensations(
+    db,
+    *,
+    limit: int = 100,
+    commercial_customer_id: Optional[str] = None,
+) -> dict:
+    """Replay pending debit compensate journals (ops / boot recovery).
+
+    Idempotent per slice: already-completed slices are skipped. Safe to call
+    repeatedly. Does not create credits beyond restoring previously decremented qty.
+    """
+    q: dict[str, Any] = {
+        "kind": JOURNAL_KIND_DEBIT,
+        "status": JOURNAL_PENDING,
+    }
+    if commercial_customer_id:
+        q["commercial_customer_id"] = commercial_customer_id
+    pending = await db.credit_compensate_journal.find(q, {"_id": 0}).to_list(
+        length=max(1, int(limit))
+    )
+    recovered = 0
+    failed = 0
+    for j in pending:
+        jid = j.get("id")
+        await db.credit_compensate_journal.update_one(
+            {"id": jid},
+            {
+                "$inc": {"attempts": 1},
+                "$set": {"updated_at": _now()},
+            },
+        )
+        try:
+            await _apply_debit_compensate_slices(
+                db,
+                commercial_customer_id=j["commercial_customer_id"],
+                organization_id=j.get("organization_id") or "",
+                reason=j.get("reason") or "recover",
+                slices=list(j.get("slices") or []),
+                ref_id=j.get("ref_id"),
+                ref_type=j.get("ref_type"),
+                journal_id=jid,
+            )
+            await _refresh_wallet_balances(db, j["commercial_customer_id"])
+            if j.get("organization_id"):
+                await _mirror_agency_balance(db, j["organization_id"])
+            await db.credit_compensate_journal.update_one(
+                {"id": jid},
+                {
+                    "$set": {
+                        "status": JOURNAL_COMPLETED,
+                        "last_error": None,
+                        "updated_at": _now(),
+                    }
+                },
+            )
+            recovered += 1
+        except Exception as exc:
+            failed += 1
+            logger.exception("recover_pending_debit_compensations failed id=%s", jid)
+            await db.credit_compensate_journal.update_one(
+                {"id": jid},
+                {
+                    "$set": {
+                        "status": JOURNAL_PENDING,
+                        "last_error": str(exc)[:500],
+                        "updated_at": _now(),
+                    }
+                },
+            )
+    return {
+        "scanned": len(pending),
+        "recovered": recovered,
+        "failed": failed,
+    }
 
 
 async def ensure_wallet(db, commercial_customer_id: str) -> dict:
@@ -143,10 +394,13 @@ async def _append_ledger(
         "reason": reason,
         "ref_id": ref_id,
         "ref_type": ref_type,
-        "idempotency_key": idempotency_key,
         "meta": meta or {},
         "created_at": _now(),
     }
+    # Omit null idempotency_key: sparse unique index still indexes explicit null
+    # and rejects a second ledger row (real Mongo D-193 finding).
+    if idempotency_key:
+        doc["idempotency_key"] = idempotency_key
     try:
         await db.cc_credit_ledger.insert_one(doc)
     except Exception:
@@ -234,10 +488,11 @@ async def grant_lot(
         "remaining_qty": int(amount),
         # R-03 — qty ancora non allocata a org (claim atomico in allocate)
         "unallocated_qty": int(amount),
-        "idempotency_key": idempotency_key,
         "created_at": _now(),
         "updated_at": _now(),
     }
+    if idempotency_key:
+        lot["idempotency_key"] = idempotency_key
     try:
         await db.credit_lots.insert_one(lot)
     except Exception:
@@ -373,11 +628,14 @@ async def allocate_credits(
     prefer_lot_id: Optional[str] = None,
     reason: str = "allocate",
     idempotency_key: Optional[str] = None,
+    payload_fingerprint: Optional[str] = None,
 ) -> list[dict]:
     """Allocate unallocated lot qty to an Organization (FIFO, optionally prefer one lot).
 
     R-03 — claim atomico su ``credit_lots.unallocated_qty`` (stesso idioma di debit/revoke)
     per evitare over-allocation con allocate concorrenti.
+
+    D-193 — se ``idempotency_key`` già usata con fingerprint diversa → 409.
     """
     if amount <= 0:
         raise ValueError("amount_must_be_positive")
@@ -395,6 +653,27 @@ async def allocate_credits(
             {"idempotency_key": idempotency_key}, {"_id": 0}
         )
         if existing:
+            meta = existing.get("meta") or {}
+            prev_fp = (meta.get("payload_fingerprint") or "").strip()
+            if (
+                payload_fingerprint
+                and prev_fp
+                and prev_fp != payload_fingerprint
+            ):
+                raise HTTPException(
+                    status_code=409,
+                    detail={
+                        "error": "idempotency_key_reused",
+                        "message": "Chiave idempotenza già usata con payload diverso",
+                    },
+                )
+            # Idempotent replay: return allocations recorded on first success.
+            alloc_ids = meta.get("allocation_ids") or []
+            if alloc_ids:
+                prev = await db.credit_allocations.find(
+                    {"id": {"$in": list(alloc_ids)}}, {"_id": 0}
+                ).to_list(length=10_000)
+                return prev
             return []
 
     remaining_to_alloc = int(amount)
@@ -515,7 +794,13 @@ async def allocate_credits(
             reason=reason,
             organization_id=organization_id,
             idempotency_key=idempotency_key,
-            meta={"allocated_total": amount},
+            meta={
+                "allocated_total": amount,
+                "allocation_ids": [a["id"] for a in created],
+                "payload_fingerprint": payload_fingerprint,
+                "organization_id": organization_id,
+                "amount": amount,
+            },
         )
 
     await _refresh_wallet_balances(db, commercial_customer_id)
@@ -530,6 +815,7 @@ async def revoke_allocation(
     commercial_customer_id: str,
     reason: str = "revoke",
     idempotency_key: Optional[str] = None,
+    payload_fingerprint: Optional[str] = None,
 ) -> dict:
     """Return remaining allocation qty to central (unallocated on same lot).
 
@@ -551,6 +837,20 @@ async def revoke_allocation(
             {"idempotency_key": idempotency_key}, {"_id": 0}
         )
         if existing:
+            meta = existing.get("meta") or {}
+            prev_fp = (meta.get("payload_fingerprint") or "").strip()
+            if (
+                payload_fingerprint
+                and prev_fp
+                and prev_fp != payload_fingerprint
+            ):
+                raise HTTPException(
+                    status_code=409,
+                    detail={
+                        "error": "idempotency_key_reused",
+                        "message": "Chiave idempotenza già usata con payload diverso",
+                    },
+                )
             return existing
 
     alloc = await db.credit_allocations.find_one_and_update(
@@ -578,7 +878,11 @@ async def revoke_allocation(
         lot_id=alloc.get("lot_id"),
         allocation_id=allocation_id,
         idempotency_key=idempotency_key,
-        meta={"returned": returned},
+        meta={
+            "returned": returned,
+            "payload_fingerprint": payload_fingerprint,
+            "allocation_id": allocation_id,
+        },
     )
     await _refresh_wallet_balances(db, alloc["commercial_customer_id"])
     if alloc.get("organization_id"):
@@ -691,10 +995,19 @@ async def debit_for_organization(
             detail={"error": "insufficient_credits", "required": amount, "reason": reason},
         )
 
-    # Apply atomic decrements; rollback on failure
-    applied: list[tuple[str, int]] = []
+    # Apply atomic decrements; compensate alloc+lot on any failure (D-193).
+    # `applied` contains only slices where BOTH alloc and lot were decremented.
+    # If alloc succeeds and lot fails, restore that alloc immediately so we never
+    # over-restore lot.remaining_qty for a decrement that never happened.
+    applied: list[tuple[str, str, int]] = []
     try:
         for alloc, take in consumed_plan:
+            lot_id = (alloc.get("lot_id") or "").strip()
+            if not lot_id:
+                raise HTTPException(
+                    status_code=409,
+                    detail={"error": "allocation_missing_lot", "allocation_id": alloc.get("id")},
+                )
             updated = await db.credit_allocations.find_one_and_update(
                 {"id": alloc["id"], "remaining_qty": {"$gte": take}},
                 {
@@ -712,10 +1025,9 @@ async def debit_for_organization(
                         "reason": reason,
                     },
                 )
-            applied.append((alloc["id"], take))
-            # Decrement lot remaining
+            # Decrement lot remaining (already allocated pool — not unallocated_qty)
             lot_ok = await db.credit_lots.find_one_and_update(
-                {"id": alloc["lot_id"], "remaining_qty": {"$gte": take}},
+                {"id": lot_id, "remaining_qty": {"$gte": take}},
                 {
                     "$inc": {"remaining_qty": -take},
                     "$set": {"updated_at": _now()},
@@ -723,10 +1035,36 @@ async def debit_for_organization(
                 return_document=ReturnDocument.AFTER,
             )
             if not lot_ok:
+                # Alloc already decremented; lot was not — restore alloc only.
+                await db.credit_allocations.update_one(
+                    {"id": alloc["id"]},
+                    {
+                        "$inc": {"remaining_qty": take},
+                        "$set": {"updated_at": _now()},
+                    },
+                )
+                await _append_ledger(
+                    db,
+                    commercial_customer_id=cc_id,
+                    entry_type=ENTRY_COMPENSATE,
+                    delta=take,
+                    reason=f"compensate_failed_debit:{reason}",
+                    organization_id=organization_id,
+                    lot_id=lot_id,
+                    allocation_id=alloc["id"],
+                    ref_id=ref_id,
+                    ref_type=ref_type,
+                    meta={
+                        "restored_lot": False,
+                        "restored_alloc_only": True,
+                        "take": take,
+                    },
+                )
                 raise HTTPException(
                     status_code=409,
-                    detail={"error": "lot_inconsistency", "lot_id": alloc["lot_id"]},
+                    detail={"error": "lot_inconsistency", "lot_id": lot_id},
                 )
+            applied.append((alloc["id"], lot_id, take))
             await _append_ledger(
                 db,
                 commercial_customer_id=cc_id,
@@ -734,31 +1072,96 @@ async def debit_for_organization(
                 delta=-take,
                 reason=reason,
                 organization_id=organization_id,
-                lot_id=alloc["lot_id"],
+                lot_id=lot_id,
                 allocation_id=alloc["id"],
                 ref_id=ref_id,
                 ref_type=ref_type,
             )
-    except HTTPException:
-        # Best-effort compensate applied allocation decrements
-        for alloc_id, take in applied:
-            await db.credit_allocations.update_one(
-                {"id": alloc_id},
-                {"$inc": {"remaining_qty": take}, "$set": {"updated_at": _now()}},
-            )
-            # Note: lot restore would need lot_id; leave compensate ledger for ops
-            await _append_ledger(
-                db,
-                commercial_customer_id=cc_id,
-                entry_type=ENTRY_COMPENSATE,
-                delta=take,
-                reason=f"compensate_failed_debit:{reason}",
-                organization_id=organization_id,
-                allocation_id=alloc_id,
-                ref_id=ref_id,
-                ref_type=ref_type,
-            )
-        raise
+    except Exception as exc:
+        # D-193: journal first, then restore. If restore dies mid-way, journal stays
+        # pending for recover_pending_debit_compensations().
+        journal_id: Optional[str] = None
+        if applied:
+            try:
+                journal_id = await _open_debit_compensate_journal(
+                    db,
+                    commercial_customer_id=cc_id,
+                    organization_id=organization_id,
+                    reason=reason,
+                    slices=applied,
+                    ref_id=ref_id,
+                    ref_type=ref_type,
+                )
+            except Exception:
+                logger.exception(
+                    "debit compensate journal open failed cc=%s org=%s",
+                    cc_id,
+                    organization_id,
+                )
+            try:
+                await _apply_debit_compensate_slices(
+                    db,
+                    commercial_customer_id=cc_id,
+                    organization_id=organization_id,
+                    reason=reason,
+                    slices=[
+                        {
+                            "allocation_id": a,
+                            "lot_id": l,
+                            "take": t,
+                            "status": JOURNAL_PENDING,
+                        }
+                        for a, l, t in applied
+                    ],
+                    ref_id=ref_id,
+                    ref_type=ref_type,
+                    journal_id=journal_id,
+                )
+                if journal_id:
+                    await db.credit_compensate_journal.update_one(
+                        {"id": journal_id},
+                        {
+                            "$set": {
+                                "status": JOURNAL_COMPLETED,
+                                "updated_at": _now(),
+                                "last_error": None,
+                            }
+                        },
+                    )
+            except Exception as comp_exc:
+                logger.exception(
+                    "debit compensate apply failed journal=%s cc=%s",
+                    journal_id,
+                    cc_id,
+                )
+                if journal_id:
+                    await db.credit_compensate_journal.update_one(
+                        {"id": journal_id},
+                        {
+                            "$set": {
+                                "status": JOURNAL_PENDING,
+                                "last_error": str(comp_exc)[:500],
+                                "updated_at": _now(),
+                            },
+                            "$inc": {"attempts": 1},
+                        },
+                    )
+        try:
+            await _refresh_wallet_balances(db, cc_id)
+            await _mirror_agency_balance(db, organization_id)
+        except Exception:
+            logger.exception("debit compensate refresh/mirror failed cc=%s", cc_id)
+        if isinstance(exc, HTTPException):
+            raise
+        logger.exception("debit_for_organization failed after partial apply")
+        raise HTTPException(
+            status_code=500,
+            detail={
+                "error": "debit_failed_compensated",
+                "reason": reason,
+                "journal_id": journal_id,
+            },
+        ) from exc
 
     await _refresh_wallet_balances(db, cc_id)
     new_balance = await _mirror_agency_balance(db, organization_id)
