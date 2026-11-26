@@ -308,6 +308,7 @@ export default function MlsPage() {
                     key={t.id}
                     type="button"
                     onClick={() => setScope(t.id)}
+                    data-testid={`mls-inventory-scope-${t.id}`}
                     className={`px-3 py-1.5 rounded-md text-sm border ${
                       scope === t.id ? "crm-btn-primary border-crm-navy" : "crm-btn-ghost"
                     }`}

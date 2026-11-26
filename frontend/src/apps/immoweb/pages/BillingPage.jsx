@@ -1,6 +1,7 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { api } from "@/shared/lib/api";
+import { useAuth } from "@/shared/lib/auth";
 import AgencyShell from "@/apps/immoweb/components/AgencyShell";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -11,8 +12,17 @@ import { toast } from "sonner";
  * D-080: demo guidata prima dell'abbonamento.
  * D-110: localStorage ≠ entitlement — "Piano attivo" solo da subscription server-side.
  * Demo confirm resta UX in-memory (sessione), non simula piano pagato.
+ * D-193: Main Admin — allocate/revoke sul wallet centrale CommercialCustomer.
  */
+function newIdempotencyKey(prefix) {
+  if (typeof crypto !== "undefined" && crypto.randomUUID) {
+    return `${prefix}-${crypto.randomUUID()}`;
+  }
+  return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+}
+
 export default function BillingPage() {
+  const { user } = useAuth();
   const [state, setState] = useState({ loading: true, data: null, sub: null });
   const [storage, setStorage] = useState(null);
   const [billingCycle, setBillingCycle] = useState("monthly");
@@ -20,6 +30,69 @@ export default function BillingPage() {
   // D-110 — non leggere/scrivere entitlement da localStorage
   const [demoRequested, setDemoRequested] = useState(false);
   const location = useLocation();
+
+  // D-193 wallet centrale (Main Admin only for mutate; Branch vede solo org)
+  const [centralWallet, setCentralWallet] = useState(null);
+  const [orgWallet, setOrgWallet] = useState(null);
+  const [isMainAdmin, setIsMainAdmin] = useState(false);
+  const [walletBusy, setWalletBusy] = useState(false);
+  const [allocOrgId, setAllocOrgId] = useState("");
+  const [allocAmount, setAllocAmount] = useState("");
+  const [walletMsg, setWalletMsg] = useState(null);
+
+  const role = user?.role || "";
+  const canTryCentralWallet =
+    role === "agency_admin" || role === "group_admin" || role === "super_admin";
+  const canSeeOrgWallet =
+    role === "agency_admin" ||
+    role === "group_admin" ||
+    role === "branch_admin" ||
+    role === "agent" ||
+    role === "super_admin";
+
+  const refreshWalletPanels = useCallback(async () => {
+    setWalletMsg(null);
+    if (canTryCentralWallet) {
+      try {
+        const { data: ma } = await api.get("/billing/commercial/main-admin");
+        // 200 from this endpoint already means Main Admin binding or Super Admin ops.
+        const main =
+          Boolean(ma?.is_main_admin) ||
+          Boolean(ma?.is_ops_super_admin) ||
+          role === "super_admin" ||
+          Boolean(ma?.commercial_customer_id);
+        setIsMainAdmin(main);
+        if (main) {
+          const { data: w } = await api.get("/billing/wallet");
+          setCentralWallet(w);
+          const orgs = w?.organizations || [];
+          if (orgs.length) {
+            setAllocOrgId((prev) => prev || orgs[0].id || "");
+          }
+        } else {
+          setCentralWallet(null);
+        }
+      } catch (err) {
+        // Branch / non-Main Admin: 403 atteso sul wallet centrale
+        setIsMainAdmin(false);
+        setCentralWallet(null);
+        if (err?.response?.status && err.response.status !== 403) {
+          console.error(err);
+        }
+      }
+    }
+    if (canSeeOrgWallet) {
+      try {
+        const { data: ow } = await api.get("/billing/wallet/organization");
+        setOrgWallet(ow);
+      } catch (err) {
+        setOrgWallet(null);
+        if (err?.response?.status && err.response.status !== 403) {
+          console.error(err);
+        }
+      }
+    }
+  }, [canTryCentralWallet, canSeeOrgWallet, role]);
 
   useEffect(() => {
     (async () => {
@@ -41,6 +114,11 @@ export default function BillingPage() {
       }
     })();
   }, []);
+
+  useEffect(() => {
+    if (state.loading) return;
+    refreshWalletPanels();
+  }, [state.loading, refreshWalletPanels]);
 
   // Piano scelto dalla vetrina (/register?plan=…) — evidenzia la card Billing
   useEffect(() => {
@@ -252,6 +330,75 @@ export default function BillingPage() {
     } catch (e) {
       toast.error("Portal non disponibile");
       setBusy(false);
+    }
+  };
+
+  const walletErrorMessage = (e) => {
+    const d = e?.response?.data?.detail;
+    if (typeof d === "string") return d;
+    if (d && typeof d === "object") {
+      return d.message || d.error || JSON.stringify(d);
+    }
+    return e?.message || "Operazione wallet non riuscita";
+  };
+
+  const allocateCredits = async () => {
+    const amount = parseInt(String(allocAmount), 10);
+    if (!allocOrgId || !Number.isFinite(amount) || amount <= 0) {
+      toast.error("Seleziona filiale e quantità positiva.");
+      return;
+    }
+    setWalletBusy(true);
+    setWalletMsg(null);
+    try {
+      const key = newIdempotencyKey("alloc");
+      const { data } = await api.post(
+        "/billing/wallet/allocate",
+        {
+          organization_id: allocOrgId,
+          amount,
+          commercial_customer_id: centralWallet?.commercial_customer_id,
+        },
+        { headers: { "Idempotency-Key": key } }
+      );
+      const n = (data?.allocations || []).length;
+      toast.success(`Allocati ${amount} crediti (${n} lotto/i).`);
+      setWalletMsg({ type: "ok", text: `Allocazione completata · chiave ${key.slice(0, 18)}…` });
+      setAllocAmount("");
+      await refreshWalletPanels();
+    } catch (e) {
+      const msg = walletErrorMessage(e);
+      toast.error(msg);
+      setWalletMsg({ type: "err", text: msg });
+    } finally {
+      setWalletBusy(false);
+    }
+  };
+
+  const revokeAllocation = async (allocationId) => {
+    if (!allocationId) return;
+    if (!window.confirm("Revocare i crediti non consumati di questa allocazione?")) return;
+    setWalletBusy(true);
+    setWalletMsg(null);
+    try {
+      const key = newIdempotencyKey("rev");
+      await api.post(
+        "/billing/wallet/revoke",
+        {
+          allocation_id: allocationId,
+          commercial_customer_id: centralWallet?.commercial_customer_id,
+        },
+        { headers: { "Idempotency-Key": key } }
+      );
+      toast.success("Allocazione revocata — crediti tornati al wallet centrale.");
+      setWalletMsg({ type: "ok", text: "Revoca completata." });
+      await refreshWalletPanels();
+    } catch (e) {
+      const msg = walletErrorMessage(e);
+      toast.error(msg);
+      setWalletMsg({ type: "err", text: msg });
+    } finally {
+      setWalletBusy(false);
     }
   };
 
@@ -536,7 +683,11 @@ export default function BillingPage() {
         </div>
 
         <h2 className="font-serif text-2xl text-[#0B1E3F] mb-4">Ricarica crediti</h2>
-        <div className="grid md:grid-cols-3 gap-4">
+        <p className="text-sm text-stone-500 mb-4">
+          L&apos;acquisto accredita il wallet centrale CommercialCustomer. L&apos;assegnazione alle
+          filiali è un passo successivo del Main Admin (nessuna auto-allocazione).
+        </p>
+        <div className="grid md:grid-cols-3 gap-4 mb-12">
           {packages.map((pkg) => (
             <div key={pkg.key} className="border border-stone-200 bg-white p-5" data-testid={`pack-card-${pkg.key}`}>
               <div className="font-serif text-2xl text-[#0B1E3F]">{pkg.credits} crediti</div>
@@ -546,7 +697,6 @@ export default function BillingPage() {
                 className="w-full mt-2"
                 onClick={() => checkoutCredits(pkg.key)}
                 disabled={busy || !h4PurchaseReady}
-                data-testid="billing-buy-credits"
                 data-testid={`buy-pack-${pkg.key}-btn`}
               >
                 Acquista
@@ -554,6 +704,188 @@ export default function BillingPage() {
             </div>
           ))}
         </div>
+
+        {/* D-193 — disponibilità organizzazione (tutti i ruoli CRM con org) */}
+        {orgWallet && !isMainAdmin && (
+          <div
+            className="mb-12 border border-stone-200 bg-white p-6"
+            data-testid="org-wallet-panel"
+          >
+            <h2 className="font-serif text-2xl text-[#0B1E3F] mb-1">Crediti disponibili</h2>
+            <p className="text-sm text-stone-500 mb-4">
+              Saldo spendibile della tua organizzazione (assegnato dal Main Admin).
+            </p>
+            <div className="text-3xl font-serif text-[#0F6B5B]" data-testid="org-spendable">
+              {orgWallet.spendable ?? 0} crediti
+            </div>
+          </div>
+        )}
+
+        {/* D-193 — wallet centrale + allocate/revoke (solo Main Admin / Super Admin) */}
+        {isMainAdmin && centralWallet && (
+          <div
+            className="mb-12 border border-[#0B1E3F]/15 bg-white p-6"
+            data-testid="central-wallet-panel"
+          >
+            <h2 className="font-serif text-2xl text-[#0B1E3F] mb-1">
+              Wallet centrale CommercialCustomer
+            </h2>
+            <p className="text-sm text-stone-500 mb-6">
+              Solo Main Admin: consulta il saldo centrale, alloca alle filiali e revoca crediti non
+              consumati. Nessun trasferimento tra P.IVA diverse.
+            </p>
+
+            <div className="grid md:grid-cols-3 gap-4 mb-8">
+              <div className="border border-stone-200 p-4">
+                <div className="text-xs uppercase tracking-widest text-stone-500">Totale</div>
+                <div className="text-2xl font-serif text-[#0B1E3F]" data-testid="cc-balance-total">
+                  {centralWallet.balance_total ?? 0}
+                </div>
+              </div>
+              <div className="border border-stone-200 p-4">
+                <div className="text-xs uppercase tracking-widest text-stone-500">Non allocati</div>
+                <div
+                  className="text-2xl font-serif text-[#0F6B5B]"
+                  data-testid="cc-balance-unallocated"
+                >
+                  {centralWallet.balance_unallocated ?? 0}
+                </div>
+              </div>
+              <div className="border border-stone-200 p-4">
+                <div className="text-xs uppercase tracking-widest text-stone-500">Filiali</div>
+                <div className="text-2xl font-serif text-[#0B1E3F]">
+                  {(centralWallet.organizations || []).length}
+                </div>
+              </div>
+            </div>
+
+            <h3 className="font-serif text-lg text-[#0B1E3F] mb-3">Disponibilità per filiale</h3>
+            <div className="overflow-x-auto mb-8" data-testid="cc-org-balances">
+              <table className="w-full text-sm text-left">
+                <thead>
+                  <tr className="border-b border-stone-200 text-stone-500">
+                    <th className="py-2 pr-4 font-medium">Organizzazione</th>
+                    <th className="py-2 font-medium">Spendibile</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {(centralWallet.organizations || []).map((o) => (
+                    <tr key={o.id} className="border-b border-stone-100">
+                      <td className="py-2 pr-4">
+                        {o.display_name || o.name || o.slug || o.id}
+                      </td>
+                      <td className="py-2 font-medium text-[#0F6B5B]">{o.spendable ?? 0}</td>
+                    </tr>
+                  ))}
+                  {!(centralWallet.organizations || []).length && (
+                    <tr>
+                      <td colSpan={2} className="py-3 text-stone-400">
+                        Nessuna organizzazione collegata.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+
+            <h3 className="font-serif text-lg text-[#0B1E3F] mb-3">Alloca crediti</h3>
+            <div className="flex flex-col md:flex-row gap-3 mb-8 items-stretch md:items-end">
+              <label className="flex-1 text-sm">
+                <span className="text-stone-500 block mb-1">Filiale</span>
+                <select
+                  className="w-full border border-stone-300 bg-white px-3 py-2"
+                  value={allocOrgId}
+                  onChange={(e) => setAllocOrgId(e.target.value)}
+                  data-testid="allocate-org-select"
+                >
+                  {(centralWallet.organizations || []).map((o) => (
+                    <option key={o.id} value={o.id}>
+                      {o.display_name || o.name || o.slug || o.id}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="w-full md:w-40 text-sm">
+                <span className="text-stone-500 block mb-1">Quantità</span>
+                <input
+                  type="number"
+                  min={1}
+                  className="w-full border border-stone-300 bg-white px-3 py-2"
+                  value={allocAmount}
+                  onChange={(e) => setAllocAmount(e.target.value)}
+                  data-testid="allocate-amount-input"
+                />
+              </label>
+              <Button
+                className="bg-[#0F6B5B] hover:bg-[#0B4F42] text-white"
+                onClick={allocateCredits}
+                disabled={walletBusy || !(centralWallet.balance_unallocated > 0)}
+                data-testid="allocate-submit-btn"
+              >
+                Alloca
+              </Button>
+            </div>
+
+            <h3 className="font-serif text-lg text-[#0B1E3F] mb-3">Allocazioni attive</h3>
+            <div className="overflow-x-auto mb-4" data-testid="cc-allocations-table">
+              <table className="w-full text-sm text-left">
+                <thead>
+                  <tr className="border-b border-stone-200 text-stone-500">
+                    <th className="py-2 pr-4 font-medium">Filiale</th>
+                    <th className="py-2 pr-4 font-medium">Rimanenti</th>
+                    <th className="py-2 font-medium">Azione</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {(centralWallet.allocations || [])
+                    .filter((a) => (a.remaining_qty || 0) > 0)
+                    .map((a) => {
+                      const org = (centralWallet.organizations || []).find(
+                        (o) => o.id === a.organization_id
+                      );
+                      return (
+                        <tr key={a.id} className="border-b border-stone-100">
+                          <td className="py-2 pr-4">
+                            {org?.display_name || org?.name || a.organization_id}
+                          </td>
+                          <td className="py-2 pr-4">{a.remaining_qty}</td>
+                          <td className="py-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              disabled={walletBusy}
+                              onClick={() => revokeAllocation(a.id)}
+                              data-testid={`revoke-alloc-${a.id}`}
+                            >
+                              Revoca
+                            </Button>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  {!(centralWallet.allocations || []).some((a) => (a.remaining_qty || 0) > 0) && (
+                    <tr>
+                      <td colSpan={3} className="py-3 text-stone-400">
+                        Nessuna allocazione attiva.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+
+            {walletMsg && (
+              <p
+                className={`text-sm ${
+                  walletMsg.type === "ok" ? "text-emerald-800" : "text-rose-700"
+                }`}
+                data-testid="wallet-op-message"
+              >
+                {walletMsg.text}
+              </p>
+            )}
+          </div>
+        )}
 
       </div>
     </AgencyShell>

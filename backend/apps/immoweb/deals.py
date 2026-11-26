@@ -141,6 +141,18 @@ async def open_deal(
             raise HTTPException(status_code=403, detail="visit_forbidden")
         if body.collaboration_id and visit.get("collaboration_id") != body.collaboration_id:
             raise HTTPException(status_code=400, detail="visit_collaboration_mismatch")
+        # CMJ-04: idempotency — same visit + agency + client → return existing open deal
+        existing = await db.deals.find_one(
+            {
+                "visit_id": body.visit_id,
+                "agency_id": aid,
+                "client_id": body.client_id,
+                "status": {"$nin": ["cancelled", "closed_lost", "closed_won"]},
+            },
+            {"_id": 0},
+        )
+        if existing:
+            return _enrich_deal(existing, aid)
     now = utc_now()
     doc = {
         "id": new_id(),

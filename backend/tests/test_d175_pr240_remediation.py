@@ -200,12 +200,12 @@ def test_fix02_chat_scope_isolation(harness):
     )
     visit = _run(
         collab_mod.request_visit(
-            collab_mod.VisitCreate(collaboration_id=collab["id"]), _user("agB")
+            collab_mod.VisitCreate(collaboration_id=collab["id"], proposed_slots=["2026-12-01T10:00","2026-12-01T14:00","2026-12-01T16:00"]), _user("agB")
         )
     )
     _run(
         collab_mod.update_visit(
-            visit["id"], collab_mod.VisitUpdate(status="agreed"), _user("agA")
+            visit["id"], collab_mod.VisitUpdate(status="agreed", agreed_slot="2026-12-01T10:00"), _user("agA")
         )
     )
     visit = _run(
@@ -432,12 +432,12 @@ def test_rating_contest_and_super_admin_resolve(harness):
     )
     visit = _run(
         collab_mod.request_visit(
-            collab_mod.VisitCreate(collaboration_id=collab["id"]), _user("agB")
+            collab_mod.VisitCreate(collaboration_id=collab["id"], proposed_slots=["2026-12-01T10:00","2026-12-01T14:00","2026-12-01T16:00"]), _user("agB")
         )
     )
     _run(
         collab_mod.update_visit(
-            visit["id"], collab_mod.VisitUpdate(status="agreed"), _user("agA")
+            visit["id"], collab_mod.VisitUpdate(status="agreed", agreed_slot="2026-12-01T10:00"), _user("agA")
         )
     )
     visit = _run(
@@ -500,7 +500,7 @@ def test_deal_partner_accept_and_owner_buttons(harness):
     )
     visit = _run(
         collab_mod.request_visit(
-            collab_mod.VisitCreate(collaboration_id=collab["id"]), _user("agB")
+            collab_mod.VisitCreate(collaboration_id=collab["id"], proposed_slots=["2026-12-01T10:00","2026-12-01T14:00","2026-12-01T16:00"]), _user("agB")
         )
     )
     _run(
@@ -972,7 +972,7 @@ def test_fix09_attachment_revoked_and_missing_and_foreign(harness):
     collab = _active_collab(db)
     visit = _run(
         collab_mod.request_visit(
-            collab_mod.VisitCreate(collaboration_id=collab["id"]), _user("agB")
+            collab_mod.VisitCreate(collaboration_id=collab["id"], proposed_slots=["2026-12-01T10:00","2026-12-01T14:00","2026-12-01T16:00"]), _user("agB")
         )
     )
     thread_visit = _run(

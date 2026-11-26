@@ -70,7 +70,7 @@ async def list_collaborations(
         strip_id(r)
         async for r in db.mls_collaborations.find(q, {"_id": 0}).sort("created_at", -1).limit(100)
     ]
-    return {"items": items}
+    return {"items": await _enrich_collab_items(db, items, aid)}
 
 
 @router.post("/collaborations", status_code=201)
@@ -251,6 +251,42 @@ async def get_collaboration_detail(
 # ── Visits ─────────────────────────────────────────────────────────────────
 
 
+# CMJ — MLS visit: almeno 3 orari proposti (decisione Founder MLS).
+MIN_VISIT_PROPOSED_SLOTS = 3
+
+
+def normalize_proposed_slots(raw: list[str] | None) -> list[str]:
+    """Trim, drop empties, reject duplicates (order-preserving)."""
+    out: list[str] = []
+    seen: set[str] = set()
+    for s in raw or []:
+        if not isinstance(s, str):
+            raise HTTPException(status_code=400, detail="proposed_slots_invalid")
+        slot = s.strip()
+        if not slot:
+            continue
+        if slot in seen:
+            raise HTTPException(status_code=400, detail="proposed_slots_duplicate")
+        seen.add(slot)
+        out.append(slot)
+    return out
+
+
+def require_min_proposed_slots(slots: list[str]) -> list[str]:
+    slots = normalize_proposed_slots(slots)
+    if len(slots) < MIN_VISIT_PROPOSED_SLOTS:
+        raise HTTPException(
+            status_code=400,
+            detail={
+                "error": "proposed_slots_min",
+                "min": MIN_VISIT_PROPOSED_SLOTS,
+                "got": len(slots),
+                "message": f"Servono almeno {MIN_VISIT_PROPOSED_SLOTS} orari proposti",
+            },
+        )
+    return slots
+
+
 class VisitCreate(BaseModel):
     collaboration_id: str
     proposed_slots: list[str] = Field(default_factory=list, max_length=10)
@@ -263,6 +299,110 @@ class VisitUpdate(BaseModel):
     notes: Optional[str] = Field(default=None, max_length=2000)
 
 
+async def _enrich_collab_items(db, items: list[dict], viewer_agency_id: str) -> list[dict]:
+    """Batch labels for CMJ-03 — no N+1."""
+    if not items:
+        return items
+    prop_ids = {c.get("property_id") for c in items if c.get("property_id")}
+    agency_ids: set[str] = set()
+    for c in items:
+        for k in ("owner_agency_id", "partner_agency_id"):
+            if c.get(k):
+                agency_ids.add(c[k])
+    props: dict[str, dict] = {}
+    if prop_ids:
+        # Viewers may see owner property via MLS collab membership; use raw for title only.
+        raw = Database.get_raw()
+        async for p in raw.properties.find(
+            {"id": {"$in": list(prop_ids)}},
+            {"_id": 0, "id": 1, "title": 1, "address": 1, "city": 1, "agency_id": 1},
+        ):
+            props[p["id"]] = p
+    agencies: dict[str, dict] = {}
+    if agency_ids:
+        async for a in db.agencies.find(
+            {"id": {"$in": list(agency_ids)}},
+            {"_id": 0, "id": 1, "display_name": 1, "name": 1},
+        ):
+            agencies[a["id"]] = a
+    out = []
+    for c in items:
+        row = dict(c)
+        pid = c.get("property_id")
+        p = props.get(pid) if pid else None
+        if p:
+            addr = " ".join(
+                x for x in [(p.get("address") or "").strip(), (p.get("city") or "").strip()] if x
+            )
+            row["property_title"] = (p.get("title") or "").strip() or None
+            row["property_label"] = row["property_title"] or addr or "Immobile"
+            row["property_address"] = addr or None
+        else:
+            row["property_title"] = None
+            row["property_label"] = "Immobile non disponibile"
+            row["property_address"] = None
+        owner = agencies.get(c.get("owner_agency_id") or "")
+        partner = agencies.get(c.get("partner_agency_id") or "")
+        row["owner_agency_label"] = (
+            (owner or {}).get("display_name")
+            or (owner or {}).get("name")
+            or c.get("owner_agency_id")
+        )
+        row["partner_agency_label"] = (
+            (partner or {}).get("display_name")
+            or (partner or {}).get("name")
+            or c.get("partner_agency_id")
+        )
+        # Counterpart relative to viewer
+        if viewer_agency_id == c.get("owner_agency_id"):
+            row["counterpart_agency_id"] = c.get("partner_agency_id")
+            row["counterpart_agency_label"] = row["partner_agency_label"]
+            row["viewer_role"] = "owner"
+        else:
+            row["counterpart_agency_id"] = c.get("owner_agency_id")
+            row["counterpart_agency_label"] = row["owner_agency_label"]
+            row["viewer_role"] = "partner"
+        out.append(row)
+    return out
+
+
+async def _enrich_visit_items(db, items: list[dict]) -> list[dict]:
+    if not items:
+        return items
+    prop_ids = {v.get("property_id") for v in items if v.get("property_id")}
+    props: dict[str, dict] = {}
+    if prop_ids:
+        raw = Database.get_raw()
+        async for p in raw.properties.find(
+            {"id": {"$in": list(prop_ids)}},
+            {"_id": 0, "id": 1, "title": 1, "address": 1, "city": 1},
+        ):
+            props[p["id"]] = p
+    out = []
+    for v in items:
+        row = dict(v)
+        p = props.get(v.get("property_id") or "")
+        if p:
+            addr = " ".join(
+                x for x in [(p.get("address") or "").strip(), (p.get("city") or "").strip()] if x
+            )
+            row["property_label"] = (p.get("title") or "").strip() or addr or "Immobile"
+        else:
+            row["property_label"] = "Immobile non disponibile"
+        slots = v.get("proposed_slots") or []
+        row["proposed_slots_count"] = len(slots)
+        row["next_action"] = None
+        st = v.get("status")
+        if st in ("requested", "proposed"):
+            row["next_action"] = "confirm_slot"
+        elif st == "agreed":
+            row["next_action"] = "complete_visit"
+        elif st == "completed":
+            row["next_action"] = "open_deal_or_feedback"
+        out.append(row)
+    return out
+
+
 @router.post("/visits", status_code=201)
 async def request_visit(
     body: VisitCreate,
@@ -273,6 +413,7 @@ async def request_visit(
     collab = await get_collaboration(db, body.collaboration_id)
     require_agency_in_collaboration(collab, aid)
     require_collaboration_active(collab)
+    slots = require_min_proposed_slots(list(body.proposed_slots or []))
     now = utc_now()
     doc = {
         "id": new_id(),
@@ -281,7 +422,7 @@ async def request_visit(
         "owner_agency_id": collab["owner_agency_id"],
         "partner_agency_id": collab["partner_agency_id"],
         "status": "requested",
-        "proposed_slots": body.proposed_slots,
+        "proposed_slots": slots,
         "notes": body.notes,
         "requested_by_agency_id": aid,
         "requested_by_user_id": user.get("id") or user.get("sub"),
@@ -290,7 +431,8 @@ async def request_visit(
     }
     await db.mls_visits.insert_one(doc)
     doc.pop("_id", None)
-    return doc
+    enriched = (await _enrich_visit_items(db, [doc]))[0]
+    return enriched
 
 
 @router.get("/visits")
@@ -309,7 +451,7 @@ async def list_visits(
         strip_id(r)
         async for r in db.mls_visits.find(q, {"_id": 0}).sort("created_at", -1).limit(100)
     ]
-    return {"items": items}
+    return {"items": await _enrich_visit_items(db, items)}
 
 
 @router.patch("/visits/{visit_id}")
@@ -326,20 +468,32 @@ async def update_visit(
     patch: dict[str, Any] = {"updated_at": utc_now()}
     if body.notes is not None:
         patch["notes"] = body.notes
-    if body.agreed_slot is not None:
-        patch["agreed_slot"] = body.agreed_slot
+    agreed = (body.agreed_slot or "").strip() or None
+    if agreed is not None:
+        proposed = visit.get("proposed_slots") or []
+        if proposed and agreed not in proposed:
+            raise HTTPException(status_code=400, detail="agreed_slot_not_in_proposed")
+        patch["agreed_slot"] = agreed
     if body.status:
         if body.status not in VISIT_STATUSES:
             raise HTTPException(status_code=400, detail="invalid_visit_status")
-        patch["status"] = body.status
         if body.status == "agreed":
+            slot = patch.get("agreed_slot") or visit.get("agreed_slot")
+            proposed = visit.get("proposed_slots") or []
+            # CMJ: con proposte obbligatorie serve uno slot scelto; legacy senza slot resta ammesso.
+            if proposed and not slot:
+                raise HTTPException(status_code=400, detail="agreed_slot_required")
             patch["agreed_at"] = utc_now()
+            if slot and "agreed_slot" not in patch:
+                patch["agreed_slot"] = slot
+        patch["status"] = body.status
         if body.status == "completed":
             patch["completed_at"] = utc_now()
     r = await db.mls_visits.update_one(visit_actor_filter(visit_id, aid), {"$set": patch})
     if r.matched_count == 0:
         raise HTTPException(status_code=403, detail="visit_forbidden")
-    return await get_visit(db, visit_id)
+    updated = await get_visit(db, visit_id)
+    return (await _enrich_visit_items(db, [updated]))[0]
 
 
 # ── Mini-dossier = post-visit feedback / rating ONLY ───────────────────────

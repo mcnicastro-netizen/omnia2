@@ -116,14 +116,14 @@ def test_accept_collab_no_auto_doc_then_visit_feedback_deal_chat(harness):
     # Visit
     visit = _run(
         collab_mod.request_visit(
-            collab_mod.VisitCreate(collaboration_id=created["id"]),
+            collab_mod.VisitCreate(collaboration_id=created["id"], proposed_slots=["2026-12-01T10:00","2026-12-01T14:00","2026-12-01T16:00"]),
             _user("agB"),
         )
     )
     visit = _run(
         collab_mod.update_visit(
             visit["id"],
-            collab_mod.VisitUpdate(status="agreed"),
+            collab_mod.VisitUpdate(status="agreed", agreed_slot="2026-12-01T10:00"),
             _user("agA"),
         )
     )
