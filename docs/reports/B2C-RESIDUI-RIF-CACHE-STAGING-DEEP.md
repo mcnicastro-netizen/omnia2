@@ -157,9 +157,9 @@ Nota: computerUse GUI non usato; Playwright headless.
 
 | Voce | Valore |
 |------|--------|
-| Branch HEAD al momento del codice residui | `3ab1949…` |
-| Report tip | (commit successivo con questa documentazione) |
-| CI su push branch | atteso (subscription attiva) |
+| Branch HEAD codice residui | `3ab19495b8f51e2c55e9e0606fec9947e09c9558` |
+| Branch HEAD report | `2d1bdea9e0cabd8893cba577d7a0edb08f6209df` |
+| CI su push branch | subscription attiva (esito tip atteso post-push) |
 | PR #248 | aperta, base `main`, **no merge** |
 
 ---
