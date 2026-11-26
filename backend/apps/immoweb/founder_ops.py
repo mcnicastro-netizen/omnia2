@@ -1124,8 +1124,9 @@ class ActivateAgencyBody(BaseModel):
     )
     note: Optional[str] = Field(default=None, max_length=200)
     send_email: bool = True
-    # Default True: Attiva = dashboard vuota + sblocco + piano + email (no jargon Ops)
-    wipe_crm: bool = True
+    # Policy Founder 26-Nov-2026: Attiva ordinaria NON cancella CRM.
+    # wipe_crm=True su questo endpoint è rifiutato → usare POST /ops/wipe-agency-crm.
+    wipe_crm: bool = False
     require_kyc_verified: bool = Field(
         default=True,
         description="Blocca Attiva se dossier KYC non verified (D-156)",
@@ -1140,14 +1141,31 @@ class ActivateAgencyBody(BaseModel):
     )
 
 
+async def _record_ops_security_event(db, *, event: str, user: dict, agency_id: str, **extra: Any) -> None:
+    """Trail sicurezza Ops (B12-oriented) — mai segreti."""
+    try:
+        doc = {
+            "id": f"ops-{datetime.now(timezone.utc).strftime('%Y%m%d%H%M%S')}-{agency_id[:8]}",
+            "event": event,
+            "agency_id": agency_id,
+            "actor_id": user.get("id"),
+            "actor_email": user.get("email"),
+            "actor_role": user.get("role"),
+            "created_at": datetime.now(timezone.utc).isoformat(),
+            **extra,
+        }
+        await db.ops_security_events.insert_one(doc)
+    except Exception as e:
+        logger.warning("ops_security_events insert failed: %s", e)
+
+
 @router.post("/activate-agency")
 async def ops_activate_agency(
     body: ActivateAgencyBody,
     user: dict = Depends(require_roles("super_admin")),
 ) -> Dict[str, Any]:
-    """Un bottone Attiva: (opz.) svuota CRM + sblocca + piano + email."""
+    """Attiva / ri-attiva agenzia: sblocca CRM + piano. NON cancella dati CRM."""
     from apps.immoweb.assisted_billing import grant_assisted_plan, resolve_agency
-    from apps.immoweb.demo_retire import wipe_agency_crm_data
     from shared.auth.agency_activation import resolve_activation_status
     from shared.email.client import send_email
 
@@ -1165,6 +1183,19 @@ async def ops_activate_agency(
     agency = resolved.get("agency") or await db.agencies.find_one({"id": agency_id})
     if not agency:
         raise HTTPException(status_code=404, detail="agency_not_found")
+
+    # Wipe vietato su Attiva (anche se client legacy invia wipe_crm=true)
+    if body.wipe_crm:
+        raise HTTPException(
+            status_code=400,
+            detail={
+                "error": "wipe_not_allowed_on_activate",
+                "hint": (
+                    "L'attivazione ordinaria non cancella il CRM. "
+                    "Usa POST /app/ops/wipe-agency-crm con confirm=WIPE_CRM e reason obbligatoria."
+                ),
+            },
+        )
 
     if body.require_kyc_verified:
         kyc_st = ((agency.get("kyc") or {}).get("status") or "incomplete").lower()
@@ -1204,24 +1235,27 @@ async def ops_activate_agency(
                 },
             )
 
-    wipe = None
-    if body.wipe_crm:
-        wipe = await wipe_agency_crm_data(db, agency_id)
-        if not wipe.get("ok"):
-            raise HTTPException(status_code=400, detail=wipe)
-
     now = datetime.now(timezone.utc).isoformat()
     prev = resolve_activation_status(agency)
-    await db.agencies.update_one(
-        {"id": agency_id},
-        {
-            "$set": {
-                "activation_status": "active",
-                "activated_at": now,
-                "activated_by": user.get("email") or user.get("id"),
-                "updated_at": now,
-            }
-        },
+    # Idempotente: seconda Attiva su già active NON wipe e non fallisce
+    set_doc: Dict[str, Any] = {
+        "activation_status": "active",
+        "activated_by": user.get("email") or user.get("id"),
+        "updated_at": now,
+        "last_activated_at": now,
+    }
+    if prev != "active" or not agency.get("activated_at"):
+        set_doc["activated_at"] = now
+    await db.agencies.update_one({"id": agency_id}, {"$set": set_doc})
+    wipe = None  # Attiva non cancella mai CRM
+    await _record_ops_security_event(
+        db,
+        event="agency_activate",
+        user=user,
+        agency_id=agency_id,
+        previous_status=prev,
+        wipe=False,
+        reactivation=(prev == "active"),
     )
 
     grant = None
@@ -1337,14 +1371,53 @@ async def ops_activate_agency(
     }
 
 
+class WipeAgencyCrmBody(BaseModel):
+    """Wipe CRM esplicito — distinto da Attiva (policy Founder 26-Nov-2026)."""
+
+    agency_id: Optional[str] = None
+    slug: Optional[str] = None
+    email: Optional[str] = None
+    confirm: str = Field(
+        ...,
+        description="Deve essere esattamente WIPE_CRM",
+        min_length=8,
+        max_length=40,
+    )
+    reason: str = Field(
+        ...,
+        min_length=10,
+        max_length=500,
+        description="Motivazione obbligatoria (audit)",
+    )
+    confirm_agency_id: Optional[str] = Field(
+        default=None,
+        description="Se presente deve coincidere con l'agency_id risolto",
+    )
+
+
 @router.post("/wipe-agency-crm")
 async def ops_wipe_agency_crm(
-    body: ActivateAgencyBody,
+    body: WipeAgencyCrmBody,
     user: dict = Depends(require_roles("super_admin")),
 ) -> Dict[str, Any]:
-    """Svuota solo i dati CRM (immobili/clienti/code) senza toccare utenti/piano."""
+    """Svuota CRM solo con conferma esplicita + motivazione. Non via Attiva."""
     from apps.immoweb.assisted_billing import resolve_agency
     from apps.immoweb.demo_retire import wipe_agency_crm_data
+
+    if (body.confirm or "").strip() != "WIPE_CRM":
+        raise HTTPException(
+            status_code=400,
+            detail={
+                "error": "confirm_required",
+                "hint": "Passa confirm=WIPE_CRM",
+            },
+        )
+    reason = (body.reason or "").strip()
+    if len(reason) < 10:
+        raise HTTPException(
+            status_code=400,
+            detail={"error": "reason_required", "hint": "Motivazione obbligatoria (≥10 caratteri)"},
+        )
 
     db = Database.get()
     resolved = await resolve_agency(
@@ -1355,16 +1428,77 @@ async def ops_wipe_agency_crm(
     )
     if not resolved.get("ok"):
         raise HTTPException(status_code=404, detail=resolved)
-    wipe = await wipe_agency_crm_data(db, resolved["agency_id"])
-    if not wipe.get("ok"):
-        raise HTTPException(status_code=400, detail=wipe)
-    logger.info(
-        "wipe-agency-crm by=%s agency=%s deleted=%s",
-        user.get("email"),
-        wipe.get("agency_id"),
-        wipe.get("total_deleted"),
+
+    agency_id = resolved["agency_id"]
+    if body.confirm_agency_id and body.confirm_agency_id.strip() != agency_id:
+        raise HTTPException(
+            status_code=400,
+            detail={
+                "error": "confirm_agency_id_mismatch",
+                "hint": "confirm_agency_id deve coincidere con l'agenzia risolta",
+            },
+        )
+
+    # Lock anti-doppia / concorrenza: claim atomico
+    now = datetime.now(timezone.utc).isoformat()
+    claimed = await db.agencies.find_one_and_update(
+        {
+            "id": agency_id,
+            "$or": [
+                {"crm_wipe_lock_at": {"$exists": False}},
+                {"crm_wipe_lock_at": None},
+                {"crm_wipe_lock_at": {"$lt": (datetime.now(timezone.utc) - timedelta(minutes=5)).isoformat()}},
+            ],
+        },
+        {"$set": {"crm_wipe_lock_at": now, "crm_wipe_lock_by": user.get("email"), "updated_at": now}},
+        return_document=False,
     )
-    return {"ok": True, "wipe": wipe}
+    if claimed is None:
+        exists = await db.agencies.find_one({"id": agency_id}, {"_id": 0, "id": 1})
+        if not exists:
+            raise HTTPException(status_code=404, detail="agency_not_found")
+        raise HTTPException(
+            status_code=409,
+            detail={
+                "error": "wipe_in_progress_or_recent",
+                "hint": "Operazione già in corso o eseguita di recente — riprova tra qualche minuto",
+            },
+        )
+
+    try:
+        wipe = await wipe_agency_crm_data(db, agency_id)
+        if not wipe.get("ok"):
+            await _record_ops_security_event(
+                db,
+                event="agency_crm_wipe_failed",
+                user=user,
+                agency_id=agency_id,
+                reason=reason[:500],
+                detail=wipe,
+            )
+            raise HTTPException(status_code=400, detail=wipe)
+        await _record_ops_security_event(
+            db,
+            event="agency_crm_wipe",
+            user=user,
+            agency_id=agency_id,
+            reason=reason[:500],
+            total_deleted=wipe.get("total_deleted"),
+            deleted_collections=list((wipe.get("deleted") or {}).keys())[:40],
+        )
+        logger.warning(
+            "wipe-agency-crm by=%s agency=%s deleted=%s reason=%s",
+            user.get("email"),
+            wipe.get("agency_id"),
+            wipe.get("total_deleted"),
+            reason[:80],
+        )
+        return {"ok": True, "wipe": wipe, "reason": reason[:500]}
+    finally:
+        await db.agencies.update_one(
+            {"id": agency_id},
+            {"$unset": {"crm_wipe_lock_at": "", "crm_wipe_lock_by": ""}, "$set": {"updated_at": datetime.now(timezone.utc).isoformat()}},
+        )
 
 
 @router.post("/detach-founder-agencies")

@@ -104,7 +104,7 @@ export default function FounderOpsPage() {
         agency_id: row.agency_id,
         grant_plan: true,
         send_email: true,
-        wipe_crm: true,
+        wipe_crm: false,
         note: "coda_attivazione",
         require_kyc_verified: true,
         require_payment: true,

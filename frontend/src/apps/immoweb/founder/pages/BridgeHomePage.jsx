@@ -75,7 +75,7 @@ export default function BridgeHomePage() {
         agency_id: row.agency_id,
         grant_plan: true,
         send_email: true,
-        wipe_crm: true,
+        wipe_crm: false,
         note: "cabina_ingresso",
         require_kyc_verified: true,
         require_payment: true,
