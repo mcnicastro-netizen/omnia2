@@ -159,7 +159,32 @@ async def test_d02_serve_photo_portal_allows_public():
         resp = await site_mod.serve_property_photo("p-pub", 0, surface="portal")
     assert resp.status_code == 200
     assert b"JFIF" in resp.body or len(resp.body) > 10
-    assert "must-revalidate" in resp.headers.get("cache-control", "")
+    cc = (resp.headers.get("cache-control") or "").lower()
+    assert "no-store" in cc
+    assert "private" in cc
+    assert "max-age=" not in cc or "max-age=0" in cc
+
+
+def test_d04_to_card_reference_code_mapping_for_fe():
+    """API → FE: card espone reference_code; senza valore resta None (no UUID fallback)."""
+    with_ref = _to_card(
+        {"id": "p-a", "agency_id": "ag", "title": "A", "photos": [], "reference_code": "OM-L-AAAA01"},
+        {"id": "ag", "display_name": "Agenzia", "slug": "ag"},
+    )
+    without = _to_card(
+        {"id": "p-b", "agency_id": "ag", "title": "B", "photos": []},
+        {"id": "ag", "display_name": "Agenzia", "slug": "ag"},
+    )
+    other = _to_card(
+        {"id": "p-c", "agency_id": "ag", "title": "C", "photos": [], "reference_code": "OM-L-CCCC03"},
+        {"id": "ag", "display_name": "Agenzia", "slug": "ag"},
+    )
+    assert with_ref["reference_code"] == "OM-L-AAAA01"
+    assert without.get("reference_code") is None
+    assert other["reference_code"] == "OM-L-CCCC03"
+    assert with_ref["reference_code"] != other["reference_code"]
+    assert "agency_id" not in with_ref
+    assert "id" not in (with_ref.get("agency") or {})
 
 
 def test_d03_contact_return_opaque_in_source():

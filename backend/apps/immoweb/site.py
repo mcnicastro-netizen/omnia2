@@ -35,9 +35,11 @@ from apps.immoweb.themes import render_index, render_listing, render_property
 
 router = APIRouter(tags=["public-site"])
 
-# D02/S2 — cache corta + revalidate: ritiro annuncio riduce finestra stale
+# D02/S2 — foto soggette a revoca: niente cache condivisa/browser riusabile.
+# `private, no-store` forza nuova verifica ACL a ogni richiesta (max-age>0 non sufficiente).
 _PHOTO_CACHE_HEADERS = {
-    "Cache-Control": "public, max-age=60, must-revalidate",
+    "Cache-Control": "private, no-store",
+    "Pragma": "no-cache",
 }
 
 
@@ -100,8 +102,13 @@ async def serve_property_photo(
         )
 
     if raw.startswith("http://") or raw.startswith("https://"):
-        # External redirect — still gated by surface ACL above
-        return RedirectResponse(raw, status_code=302)
+        # External redirect — still gated by surface ACL above.
+        # Header no-store sul 302: il client non deve riusare il redirect come cache di auth.
+        return RedirectResponse(
+            raw,
+            status_code=302,
+            headers=dict(_PHOTO_CACHE_HEADERS),
+        )
 
     if raw.startswith("data:"):
         try:
