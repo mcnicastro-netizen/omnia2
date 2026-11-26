@@ -298,7 +298,7 @@ Nessuna modifica / merge delle PR.
 
 | Voce | SHA |
 |------|-----|
-| Tip HEAD (questo documento incluso) | `8dd3aeef109f119d41faefd9f4a3dd43740b4aa6` |
+| Tip HEAD (questo documento incluso) | `fc8d0747179814ffc4ca955ae2b213cb7d51d962` |
 | Commit test+report body | `8fe86ac5ae0a53f14acbf410b8bbcf5712154eec` |
 | Merge A4 (tre perimetri assemblati) | `16365c4ba0635daa4b56129a67ec399c014da919` |
 
