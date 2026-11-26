@@ -296,16 +296,20 @@ Nessuna modifica / merge delle PR.
 
 ## 18. SHA finale del branch di integrazione
 
+Branch: `cursor/integration-d193-cmj-a4-b894`  
+Worktree: `/agent/repos/omnia2-integration-d193-cmj-a4`
+
+Ancore funzionali (immutabili):
+
 | Voce | SHA |
 |------|-----|
-| Tip HEAD (congelato a chiusura) | `cd8800018a22b6187c49a26e2a6f17ad128caed4` |
-| Commit test+report body | `8fe86ac5ae0a53f14acbf410b8bbcf5712154eec` |
 | Merge A4 (tre perimetri assemblati) | `16365c4ba0635daa4b56129a67ec399c014da919` |
+| Commit test+report body | `8fe86ac5ae0a53f14acbf410b8bbcf5712154eec` |
 
-Branch: `cursor/integration-d193-cmj-a4-b894`  
-Worktree: `/agent/repos/omnia2-integration-d193-cmj-a4`  
-**Push: non eseguito.**  
-Nota: eventuale modifica solo-documentale di questa riga tip dopo `52b367a` resta locale e non pushata.
+**Tip HEAD** al momento della restituzione al Founder (verificare con `git rev-parse HEAD`):  
+`0d07613497612b6366d4b37450d1fdde8919e070`
+
+**Push: non eseguito.**
 
 ---
 
