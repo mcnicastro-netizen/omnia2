@@ -299,7 +299,7 @@ Nessuna modifica / merge delle PR.
 Indicare dopo l’ultimo commit locale di test+report (completato nello stesso ciclo di lavoro).
 
 *Baseline merge tip (pre report commit): `16365c4ba0635daa4b56129a67ec399c014da919`*  
-*SHA finale con test+report: compilato al commit immediatamente successivo.*
+*SHA finale: 8fe86ac5ae0a53f14acbf410b8bbcf5712154eec*
 
 ---
 
