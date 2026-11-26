@@ -33,8 +33,8 @@ Residui non bloccanti: vedi §12.
 |------|--------|
 | Branch | `cursor/integration-d193-cmj-a4-b894` |
 | Worktree | `/agent/repos/omnia2-integration-d193-cmj-a4` |
-| **SHA iniziale (promosso)** | `9b695b1d6597565ea3d4c3d06948daf9b0155ad1` |
-| **SHA finale (post-report)** | 2ffa6e3aded411764c06de2dd94b280ee781f016 |
+| **SHA iniziale (promosso / deployato)** | `9b695b1d6597565ea3d4c3d06948daf9b0155ad1` |
+| **SHA finale branch (report docs)** | `d9dc10fb80b88ae2d6457d5494daa0effe3fe66c` |
 | Baseline merge | D-193 + CMJ + A4 su baseline prevista (no-ff) |
 | PR integrazione | [#247](https://github.com/mcnicastro-netizen/omnia2/pull/247) OPEN |
 | PR sorgente **non toccate** | #244 D-193 (`eafb931…`) · #245 CMJ (`7935673…`) · #246 A4 (`888b713…`) |
