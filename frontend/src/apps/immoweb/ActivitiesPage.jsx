@@ -2,6 +2,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import AgencyShell from "./components/AgencyShell";
+import EntitySearch from "./components/EntitySearch";
 import { api } from "../../shared/lib/api";
 
 const KINDS = [
@@ -31,106 +32,6 @@ function mondayOf(iso) {
   const diff = day === 0 ? -6 : 1 - day;
   d.setUTCDate(d.getUTCDate() + diff);
   return d.toISOString().slice(0, 10);
-}
-
-function EntitySearch({ kind, value, onChange, testId, placeholder }) {
-  const [q, setQ] = useState("");
-  const [hits, setHits] = useState([]);
-  const [label, setLabel] = useState("");
-
-  useEffect(() => {
-    if (!value) {
-      setLabel("");
-      return;
-    }
-    const url = kind === "client" ? `/app/clients/${value}` : `/app/properties/${value}`;
-    api
-      .get(url)
-      .then((r) => {
-        const d = r.data || {};
-        setLabel(
-          kind === "client"
-            ? `${d.name || ""} ${d.surname || ""}`.trim() || d.email || value
-            : d.title || d.reference_code || value
-        );
-      })
-      .catch(() => setLabel(value));
-  }, [kind, value]);
-
-  const search = async (text) => {
-    setQ(text);
-    if (!text || text.length < 2) {
-      setHits([]);
-      return;
-    }
-    try {
-      const url = kind === "client" ? "/app/clients" : "/app/properties";
-      const { data } = await api.get(url, { params: { q: text, page_size: 8, limit: 8 } });
-      setHits(data.items || []);
-    } catch {
-      setHits([]);
-    }
-  };
-
-  const pick = (item) => {
-    onChange(item.id);
-    setLabel(
-      kind === "client"
-        ? `${item.name || ""} ${item.surname || ""}`.trim() || item.email
-        : item.title || item.reference_code
-    );
-    setQ("");
-    setHits([]);
-  };
-
-  return (
-    <div className="relative min-w-[140px] flex-1">
-      <span className="text-[10px] uppercase tracking-widest text-crm-muted">
-        {kind === "client" ? "Cliente (opzionale)" : "Immobile (opzionale)"}
-      </span>
-      {value ? (
-        <div className="mt-1 flex items-center gap-2 border border-crm-line rounded-md px-3 py-2 text-sm bg-white">
-          <span className="truncate flex-1 text-crm-navy">{label || "Selezionato"}</span>
-          <button
-            type="button"
-            className="text-[10px] uppercase tracking-widest text-crm-muted"
-            onClick={() => {
-              onChange("");
-              setLabel("");
-            }}
-          >
-            Cambia
-          </button>
-        </div>
-      ) : (
-        <input
-          data-testid={testId}
-          value={q}
-          onChange={(e) => search(e.target.value)}
-          placeholder={placeholder}
-          className="crm-input mt-1 w-full px-3 py-2 border border-crm-line rounded-md text-sm"
-          autoComplete="off"
-        />
-      )}
-      {hits.length > 0 ? (
-        <ul className="absolute z-20 mt-1 w-full bg-white border border-crm-line max-h-48 overflow-auto text-sm">
-          {hits.map((h) => (
-            <li key={h.id}>
-              <button
-                type="button"
-                className="w-full text-left px-3 py-2 hover:bg-crm-mist"
-                onClick={() => pick(h)}
-              >
-                {kind === "client"
-                  ? `${h.name || ""} ${h.surname || ""}`.trim() || h.email
-                  : h.title || h.reference_code}
-              </button>
-            </li>
-          ))}
-        </ul>
-      ) : null}
-    </div>
-  );
 }
 
 export default function ActivitiesPage() {
