@@ -73,12 +73,15 @@ async def activate_exclusive_membership(
     )
     doc = membership.model_dump()
     await db.memberships.insert_one(doc)
+    # Dual-write legacy SoT: agency pointers + users.role aligned to membership.
+    # RBAC target = operational_role per membership; users.role stays in sync to avoid drift.
     await db.users.update_one(
         {"id": user_id},
         {
             "$set": {
                 "agency_ids": [organization_id],
                 "active_agency_id": organization_id,
+                "role": operational_role,
                 "updated_at": now,
             }
         },

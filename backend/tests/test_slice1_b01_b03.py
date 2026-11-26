@@ -98,6 +98,93 @@ def test_activate_exclusive_membership_ends_previous():
     call_kwargs = DB.users.update_one.await_args
     assert call_kwargs[0][1]["$set"]["agency_ids"] == ["ag-new"]
     assert call_kwargs[0][1]["$set"]["active_agency_id"] == "ag-new"
+    assert call_kwargs[0][1]["$set"]["role"] == "agent"
+
+
+def test_get_current_user_prefers_membership_operational_role():
+    """RBAC kickoff: drifted users.role must not win over active membership."""
+    from shared.auth import dependencies as dep
+
+    class _Cursor:
+        pass
+
+    class DB:
+        users = MagicMock()
+        users.find_one = AsyncMock(
+            return_value={
+                "id": "u1",
+                "email": "a@x.it",
+                "role": "agency_admin",  # drifted legacy
+                "is_active": True,
+                "agency_ids": ["ag1"],
+                "active_agency_id": "ag1",
+            }
+        )
+
+    fake_request = MagicMock()
+    with (
+        patch.object(dep, "get_token_from_request", AsyncMock(return_value="tok")),
+        patch.object(dep, "decode_token", return_value={"type": "access", "sub": "u1"}),
+        patch.object(dep.Database, "get", staticmethod(lambda: DB())),
+        patch("shared.auth.session_store.assert_access_session", lambda u, p: None),
+        patch(
+            "shared.auth.membership_service.get_active_membership",
+            AsyncMock(
+                return_value={
+                    "user_id": "u1",
+                    "organization_id": "ag1",
+                    "operational_role": "agent",
+                    "membership_status": "active",
+                }
+            ),
+        ),
+        patch("shared.auth.tenant.optional_agency_id", return_value="ag1"),
+        patch("shared.db.tenant_guard.set_current_role"),
+        patch("shared.db.connection.set_current_agency_id"),
+        patch(
+            "shared.billing.commercial_access.enforce_commercial_access",
+            AsyncMock(),
+        ),
+    ):
+        user = _run(dep.get_current_user(fake_request))
+    assert user["role"] == "agent"
+    assert user.get("role_source") == "membership"
+
+
+def test_get_current_user_super_admin_ignores_membership_overlay():
+    from shared.auth import dependencies as dep
+
+    class DB:
+        users = MagicMock()
+        users.find_one = AsyncMock(
+            return_value={
+                "id": "ops",
+                "email": "ops@x.it",
+                "role": "super_admin",
+                "is_active": True,
+            }
+        )
+
+    fake_request = MagicMock()
+    with (
+        patch.object(dep, "get_token_from_request", AsyncMock(return_value="tok")),
+        patch.object(dep, "decode_token", return_value={"type": "access", "sub": "ops"}),
+        patch.object(dep.Database, "get", staticmethod(lambda: DB())),
+        patch("shared.auth.session_store.assert_access_session", lambda u, p: None),
+        patch(
+            "shared.auth.membership_service.get_active_membership",
+            AsyncMock(return_value={"operational_role": "agent"}),
+        ) as mem,
+        patch("shared.auth.tenant.optional_agency_id", return_value=None),
+        patch("shared.db.tenant_guard.set_current_role"),
+        patch(
+            "shared.billing.commercial_access.enforce_commercial_access",
+            AsyncMock(),
+        ),
+    ):
+        user = _run(dep.get_current_user(fake_request))
+    assert user["role"] == "super_admin"
+    mem.assert_not_awaited()
 
 
 # -------------------- B03-DEC-02 — revoke sessions --------------------
