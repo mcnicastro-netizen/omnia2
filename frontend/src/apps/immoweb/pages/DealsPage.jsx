@@ -2,10 +2,12 @@ import React, { useCallback, useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import AgencyShell from "../components/AgencyShell";
+import EntitySearch from "../components/EntitySearch";
 import { api } from "../../../shared/lib/api";
 
 /**
- * Deal — ciclo opportunità. Azioni filtrate da allowed_transitions (backend).
+ * Deal — ciclo opportunità. CMJ-01: ricerca per nome, nessun UUID manuale.
+ * CMJ-04: precompilazione da visita via query params.
  */
 export default function DealsPage() {
   const { i18n } = useTranslation();
@@ -21,6 +23,8 @@ export default function DealsPage() {
     collaboration_id: params.get("collaboration_id") || "",
     notes: "",
   });
+  const propertyLocked = Boolean(params.get("property_id") && (params.get("visit_id") || params.get("collaboration_id")));
+  const propertyInitialLabel = params.get("property_label") || "";
   const [proposalAmount, setProposalAmount] = useState("");
   const [selected, setSelected] = useState(null);
 
@@ -40,16 +44,20 @@ export default function DealsPage() {
 
   const openDeal = async (e) => {
     e.preventDefault();
+    if (!form.property_id || !form.client_id) {
+      setErr("Seleziona immobile e cliente dalla ricerca");
+      return;
+    }
     setBusy(true);
     setErr("");
     try {
       const body = {
-        property_id: form.property_id.trim(),
-        client_id: form.client_id.trim(),
+        property_id: form.property_id,
+        client_id: form.client_id,
         notes: form.notes || undefined,
       };
-      if (form.visit_id.trim()) body.visit_id = form.visit_id.trim();
-      if (form.collaboration_id.trim()) body.collaboration_id = form.collaboration_id.trim();
+      if (form.visit_id) body.visit_id = form.visit_id;
+      if (form.collaboration_id) body.collaboration_id = form.collaboration_id;
       const { data } = await api.post("/app/deals", body);
       setSelected(data);
       await load();
@@ -134,8 +142,8 @@ export default function DealsPage() {
           <p className="crm-eyebrow">Ciclo commerciale</p>
           <h1 className="crm-title text-3xl md:text-4xl">Deal</h1>
           <p className="text-crm-muted max-w-2xl text-sm">
-            Azioni filtrate dai permessi backend (`allowed_transitions`). Partner: accetta /
-            rifiuta / controproposta su proposta inviata.
+            Cerca immobile e cliente per nome. Nessun identificativo tecnico da digitare.
+            Azioni filtrate dai permessi backend.
           </p>
           <p className="text-xs">
             <Link className="underline" to={`/${lang}/app/collaborations`}>
@@ -156,46 +164,54 @@ export default function DealsPage() {
           data-testid="deal-open-form"
         >
           <h2 className="font-semibold">Apri Deal</h2>
+          {form.visit_id ? (
+            <p className="text-xs text-emerald-800 bg-emerald-50 border border-emerald-100 rounded px-2 py-1" data-testid="deal-from-visit-banner">
+              Da visita completata — immobile precompilato. Seleziona il cliente e conferma.
+            </p>
+          ) : null}
           <div className="grid md:grid-cols-2 gap-3">
-            <input
-              required
-              className="border rounded px-2 py-1 text-sm"
-              placeholder="Immobile (property_id)"
+            <EntitySearch
+              kind="property"
               value={form.property_id}
-              onChange={(e) => setForm({ ...form, property_id: e.target.value })}
-            />
-            <input
               required
-              className="border rounded px-2 py-1 text-sm"
-              placeholder="Cliente (client_id)"
+              disabled={propertyLocked}
+              initialLabel={propertyInitialLabel}
+              testId="deal-property-search"
+              label="Immobile"
+              placeholder="Cerca per titolo o indirizzo…"
+              onChange={(id) => setForm((f) => ({ ...f, property_id: id || "" }))}
+            />
+            <EntitySearch
+              kind="client"
               value={form.client_id}
-              onChange={(e) => setForm({ ...form, client_id: e.target.value })}
-            />
-            <input
-              className="border rounded px-2 py-1 text-sm"
-              placeholder="Visita completata (opz.)"
-              value={form.visit_id}
-              onChange={(e) => setForm({ ...form, visit_id: e.target.value })}
-            />
-            <input
-              className="border rounded px-2 py-1 text-sm"
-              placeholder="Collaborazione attiva (MLS)"
-              value={form.collaboration_id}
-              onChange={(e) => setForm({ ...form, collaboration_id: e.target.value })}
+              required
+              testId="deal-client-search"
+              label="Cliente"
+              placeholder="Cerca per nome o email…"
+              onChange={(id) => setForm((f) => ({ ...f, client_id: id || "" }))}
             />
           </div>
+          {form.collaboration_id || form.visit_id ? (
+            <p className="text-[11px] text-crm-muted" data-testid="deal-context-meta">
+              Contesto MLS
+              {form.collaboration_id ? " · collaborazione collegata" : ""}
+              {form.visit_id ? " · visita collegata" : ""}
+            </p>
+          ) : null}
           <textarea
             className="w-full border rounded px-2 py-1 text-sm"
             placeholder="Note / interesse espresso"
             value={form.notes}
             onChange={(e) => setForm({ ...form, notes: e.target.value })}
+            data-testid="deal-notes"
           />
           <button
             type="submit"
-            disabled={busy}
-            className="text-sm px-4 py-2 bg-slate-800 text-white rounded"
+            disabled={busy || !form.property_id || !form.client_id}
+            className="text-sm px-4 py-2 bg-slate-800 text-white rounded disabled:opacity-50"
+            data-testid="deal-open-submit"
           >
-            Apri
+            Apri Deal
           </button>
         </form>
 
@@ -209,10 +225,10 @@ export default function DealsPage() {
                 const allowed = d.allowed_transitions || [];
                 const role = d.role;
                 return (
-                  <li key={d.id} className="border rounded-lg p-4 space-y-2 bg-white/60">
+                  <li key={d.id} className="border rounded-lg p-4 space-y-2 bg-white/60" data-testid={`deal-item-${d.id}`}>
                     <button type="button" className="text-left w-full" onClick={() => setSelected(d)}>
                       <p className="font-medium text-sm">
-                        {d.property_title || d.property_id} · {d.client_label || d.client_id}
+                        {d.property_title || "Immobile"} · {d.client_label || "Cliente"}
                       </p>
                       <p className="text-xs text-crm-muted">
                         {d.status} · ruolo {role || "—"} · collab {d.collaboration_id ? "sì" : "no"}
@@ -226,6 +242,7 @@ export default function DealsPage() {
                             placeholder="Importo"
                             value={proposalAmount}
                             onChange={(e) => setProposalAmount(e.target.value)}
+                            data-testid={`deal-proposal-amount-${d.id}`}
                           />
                           <button
                             type="button"
@@ -241,6 +258,7 @@ export default function DealsPage() {
                               className="text-xs px-2 py-1 border rounded"
                               disabled={busy}
                               onClick={() => sendProposal(d.id)}
+                              data-testid={`deal-send-proposal-${d.id}`}
                             >
                               Invia proposta
                             </button>
@@ -257,8 +275,9 @@ export default function DealsPage() {
                                 className="text-xs px-2 py-1 border rounded"
                                 disabled={busy}
                                 onClick={() => partnerRespond(d.id, a)}
+                                data-testid={`deal-partner-${a}-${d.id}`}
                               >
-                                {a}
+                                {a === "accepted" ? "Accetta" : "Rifiuta"}
                               </button>
                             ) : null
                           )}
@@ -299,19 +318,23 @@ export default function DealsPage() {
         {selected ? (
           <section className="border rounded-lg p-4 text-sm space-y-2" data-testid="deal-detail">
             <h2 className="font-semibold">Dettaglio</h2>
-            <pre className="text-xs overflow-auto bg-slate-50 p-2 rounded max-h-64">
-              {JSON.stringify(
-                {
-                  status: selected.status,
-                  role: selected.role,
-                  allowed_transitions: selected.allowed_transitions,
-                  history: selected.history,
-                  proposals: selected.proposals,
-                },
-                null,
-                2
-              )}
-            </pre>
+            <p>
+              <strong>{selected.property_title || "Immobile"}</strong>
+              {" · "}
+              {selected.client_label || "Cliente"}
+            </p>
+            <p className="text-xs text-crm-muted">
+              Stato {selected.status} · ruolo {selected.role}
+            </p>
+            {(selected.proposals || []).length ? (
+              <ul className="text-xs space-y-1">
+                {selected.proposals.map((p, i) => (
+                  <li key={i}>
+                    Proposta {p.amount} {p.notes ? `— ${p.notes}` : ""}
+                  </li>
+                ))}
+              </ul>
+            ) : null}
           </section>
         ) : null}
       </div>
