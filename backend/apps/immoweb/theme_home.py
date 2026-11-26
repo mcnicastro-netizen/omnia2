@@ -51,7 +51,16 @@ def _home_card(
     mls: bool = False,
     href: Optional[str] = None,
 ) -> str:
-    cover = _cover_url(p)
+    if mls:
+        photos = p.get("photos") or []
+        cover_idx = next((i for i, ph in enumerate(photos) if ph.get("is_cover")), 0) if photos else None
+        cover = (
+            f"/api/public/property/{p['id']}/photo/{cover_idx}?surface=mls_network"
+            if cover_idx is not None
+            else None
+        )
+    else:
+        cover = _cover_url(p, slug)
     price = _price_str(p)
     op = p.get("operation") or "sale"
     op_label = "Vendita" if op == "sale" else "Affitto"

@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { energyClassLabel } from "../../../shared/lib/energyClasses";
 import { formatEUR } from "../cloudTheme";
+import { cardReferenceCode, cardReferenceLabel } from "../lib/cardReference";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 
@@ -13,6 +14,8 @@ export default function PropertyCard({ p }) {
   const price = p.operation === "rent"
     ? `${formatEUR(p.rent_monthly)}/mese`
     : formatEUR(p.price);
+  const rifCode = cardReferenceCode(p);
+  const rifLabel = rifCode ? cardReferenceLabel(p, t("cloud.info_ref")) : null;
   return (
     <Link
       to={`/${lang}/cloud/property/${p.id}`}
@@ -71,6 +74,14 @@ export default function PropertyCard({ p }) {
         <h3 className="text-sm font-medium text-stone-900 mt-1 line-clamp-2">{p.title}</h3>
         <p className="text-xs text-stone-500 mt-1">
           {p.city}{p.zone && ` · ${p.zone}`}
+          {rifLabel && (
+            <>
+              {" · "}
+              <span data-testid={`cloud-card-rif-${p.id}`} data-reference-code={rifCode}>
+                {rifLabel}
+              </span>
+            </>
+          )}
         </p>
         <div className="flex items-center gap-3 mt-3 text-xs text-stone-600">
           {p.surface_sqm && <span>{p.surface_sqm} m²</span>}

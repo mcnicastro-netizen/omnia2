@@ -42,12 +42,17 @@ class TestGetPropertyDetail:
         assert "title" in d
         assert "city" in d
         assert isinstance(d.get("photos"), list)
-        # Agency present
+        # Agency present (D01 — no internal id)
         assert d.get("agency") is not None
         assert "slug" in d["agency"]
-        assert "display_name" in d["agency"]
+        assert d["agency"].get("display_name") or d["agency"].get("name")
+        assert "id" not in d["agency"]
+        assert "agency_id" not in d
+        # D04 — rif. commerciale se valorizzato
+        if d.get("reference_code"):
+            assert isinstance(d["reference_code"], str)
         # Private fields should NOT be present
-        for forbidden in ("owner", "seller_client_id", "commission_pct", "listing_agent_id", "lead_count", "view_count"):
+        for forbidden in ("owner", "seller_client_id", "commission_pct", "listing_agent_id", "lead_count", "view_count", "agency_id"):
             assert forbidden not in d, f"private field leaked: {forbidden}"
 
     def test_get_property_increments_view_count(self, db):
@@ -86,23 +91,25 @@ class TestContactForm:
         assert r.status_code == 200, r.text
         d = r.json()
         assert d["ok"] is True
-        assert "lead_id" in d and "client_id" in d
+        # D03 — risposta anonima opaca
+        assert "lead_id" not in d
+        assert "client_id" not in d
 
-        # Verify client persisted
-        cli = db.clients.find_one({"id": d["client_id"]})
+        # Verify client persisted (lookup by email + agency)
+        cli = db.clients.find_one({"agency_id": agency_id, "email": email.lower()})
         assert cli is not None
-        assert cli["agency_id"] == agency_id
         assert cli["source"] == "ImmobilCloud"
         assert cli["client_type"] == "buyer"
         assert cli["gdpr_consent"] is True
-        assert cli["email"] == email.lower()
 
         # Verify lead persisted
-        lead = db.leads.find_one({"id": d["lead_id"]})
+        lead = db.leads.find_one(
+            {"property_id": PROPERTY_ID, "client_id": cli["id"]},
+            sort=[("created_at", -1)],
+        )
         assert lead is not None
         assert lead["status"] == "new"
-        assert lead["client_id"] == d["client_id"]
-        assert lead["property_id"] == PROPERTY_ID
+        assert lead["agency_id"] == agency_id
         assert "[richiesta visita immobile]" in lead["notes"]
         assert "M3S4-TEST happy" in lead["notes"]
 
@@ -124,7 +131,10 @@ class TestContactForm:
         # First submission
         r1 = requests.post(f"{BASE_URL}/api/cloud/property/{PROPERTY_ID}/contact", json=payload)
         assert r1.status_code == 200
-        cid1 = r1.json()["client_id"]
+        assert r1.json() == {"ok": True}
+        cli = db.clients.find_one({"agency_id": agency_id, "email": email.lower()})
+        assert cli is not None
+        cid1 = cli["id"]
 
         clients_count_before = db.clients.count_documents({"agency_id": agency_id, "email": email.lower()})
         leads_before = db.leads.count_documents({"client_id": cid1})
@@ -133,11 +143,10 @@ class TestContactForm:
         payload["message"] = "M3S4-TEST dup — second submission, must reuse the client."
         r2 = requests.post(f"{BASE_URL}/api/cloud/property/{PROPERTY_ID}/contact", json=payload)
         assert r2.status_code == 200
-        cid2 = r2.json()["client_id"]
+        assert "client_id" not in r2.json()
+        assert "lead_id" not in r2.json()
 
-        # Same client_id reused
-        assert cid1 == cid2
-        # Clients count unchanged
+        # Same client reused
         assert db.clients.count_documents({"agency_id": agency_id, "email": email.lower()}) == clients_count_before
         # New lead added
         assert db.leads.count_documents({"client_id": cid1}) == leads_before + 1

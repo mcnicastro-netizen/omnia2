@@ -27,7 +27,7 @@ Regole (matrice):
     min_price_negoziable ✗       ✗         ✗          ✓
     seller_notes         ✗       ✗         ✗          ✓
     commission_pct       ✗       ✗         ✗          ✓
-    reference_code       ✗       ✗         ✓          ✓
+    reference_code (rif.) ✓       ✓         ✓          ✓   # D04 — rif. commerciale pubblico
     view_count internal  ✗       ✗         ✗          ✓
     energy full          ✓ class ✓ class   ✓ full     ✓ full
                           only    only
@@ -136,8 +136,7 @@ def apply_privacy_view(prop: Dict[str, Any], viewer_level: ViewerLevel) -> Dict[
         # Coordinates rounded to ~1km (2 decimals ≈ 1.1 km at Italian latitudes)
         out["lat"] = _round_coord(out.get("lat"), 2)
         out["lng"] = _round_coord(out.get("lng"), 2)
-        # Reference code hidden
-        out.pop("reference_code", None)
+        # D04 — reference_code (rif.) resta pubblico
         return out
 
     # ---- L1 (anonymous public) -------------------------------------------
@@ -147,7 +146,7 @@ def apply_privacy_view(prop: Dict[str, Any], viewer_level: ViewerLevel) -> Dict[
     out.pop("virtual_tour_url", None)
     out.pop("postal_code", None)
     out.pop("floor", None)
-    out.pop("reference_code", None)
+    # D04 — reference_code (rif. commerciale) resta pubblico; non è UUID
     # Coordinates rounded to ~10km (1 decimal)
     out["lat"] = _round_coord(out.get("lat"), 1)
     out["lng"] = _round_coord(out.get("lng"), 1)

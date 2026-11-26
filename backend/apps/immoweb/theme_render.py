@@ -42,7 +42,12 @@ def render_property(agency: Dict[str, Any], p: Dict[str, Any], slug: str) -> str
     base = _public_base_url()
     absolute_url = f"{base}{canonical}" if base else canonical
     cover_idx = next((i for i, ph in enumerate(photos) if ph.get("is_cover")), 0 if photos else None)
-    og_image = f"/api/public/property/{p['id']}/photo/{cover_idx}" if cover_idx is not None else None
+    _photo_q = f"?surface=brand&agency_slug={slug}"
+    og_image = (
+        f"/api/public/property/{p['id']}/photo/{cover_idx}{_photo_q}"
+        if cover_idx is not None
+        else None
+    )
     og_image_abs = f"{base}{og_image}" if og_image and base else og_image
     name = agency.get("display_name") or agency.get("name") or ""
     title = f"{p.get('title')} — {name}"
@@ -55,7 +60,8 @@ def render_property(agency: Dict[str, Any], p: Dict[str, Any], slug: str) -> str
     ).strip()
 
     photo_html = "".join(
-        f'<img src="/api/public/property/{p["id"]}/photo/{i}" alt="{escape(p.get("title") or "")} foto {i+1}" loading="lazy"/>'
+        f'<img src="/api/public/property/{p["id"]}/photo/{i}?surface=brand&agency_slug={escape(slug)}" '
+        f'alt="{escape(p.get("title") or "")} foto {i+1}" loading="lazy"/>'
         for i in range(len(photos))
     )
     en = p.get("energy") or {}

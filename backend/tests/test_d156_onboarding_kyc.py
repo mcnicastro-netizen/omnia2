@@ -80,19 +80,28 @@ def test_activate_uses_preferred_plan(monkeypatch):
         async def update_one(self, *a, **k):
             return None
 
+    class _EmptyColl:
+        async def find_one(self, *a, **k):
+            return None
+
+        async def insert_one(self, *a, **k):
+            return None
+
     class FakeDatabase:
         @staticmethod
         def get():
             db = type("DB", (), {})()
             db.agencies = _Coll()
             db.users = _Coll()
+            db.subscriptions = _EmptyColl()
+            db.ops_security_events = _EmptyColl()
             return db
 
     monkeypatch.setattr(fo, "Database", FakeDatabase)
 
     grants = {}
 
-    async def _grant(db, agency_id, *, tier, credits, reason, granted_by):
+    async def _grant(db, agency_id, *, tier, credits=None, reason=None, granted_by=None, **kw):
         grants["tier"] = tier
         return {"ok": True}
 

@@ -9,6 +9,7 @@ def test_activate_agency_default_no_login_credential():
 
     body = ActivateAgencyBody(agency_id="ag1")
     assert body.issue_login_credential is False
+    assert body.wipe_crm is False
 
 
 def test_accept_invite_requires_password_for_new_user():

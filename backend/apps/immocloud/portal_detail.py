@@ -33,6 +33,7 @@ async def public_property_detail(pid: str, request: Request):
             "listing_agent_id": 0,
             "lead_count": 0,
             "view_count": 0,
+            # agency_id needed for privacy/viewer resolve; stripped before response (D01)
         },
     )
     if not p:
@@ -67,19 +68,21 @@ async def public_property_detail(pid: str, request: Request):
         )
         owner_email = (u or {}).get("email")
 
-    agency = None
+    from shared.db.public_visibility import AGENCY_PUBLIC_PROJ, public_agency_card
+    from apps.immocloud.portal_common import _public_photo_url
+
+    agency_raw = None
     if not is_private and p.get("agency_id"):
-        agency = await db.agencies.find_one(
+        agency_raw = await db.agencies.find_one(
             {"id": p["agency_id"], "is_active": True},
-            {"_id": 0, "id": 1, "slug": 1, "display_name": 1, "logo_url": 1,
-             "phone": 1, "email": 1, "city": 1},
+            AGENCY_PUBLIC_PROJ,
         )
 
     publisher = _public_publisher(
         is_private=is_private,
         contact_public=contact_public,
         owner_email=owner_email,
-        agency=agency,
+        agency=agency_raw,
     )
 
     # Bump view counter + daily bucket (best-effort) — D-093 / A-029
@@ -93,11 +96,12 @@ async def public_property_detail(pid: str, request: Request):
     photos = p.get("photos") or []
     # Strip sensitive ownership fields before public response
     p.pop("owner_user_id", None)
+    agency_pub = public_agency_card(agency_raw)
     enriched = {
         **p,
         "photos": [
             {
-                "url": f"/api/public/property/{pid}/photo/{i}",
+                "url": _public_photo_url(pid, i, surface="portal"),
                 "is_cover": ph.get("is_cover", False),
                 "caption": ph.get("caption"),
                 # P-043 — disclosure staging / render AI sulla scheda pubblica
@@ -105,19 +109,21 @@ async def public_property_detail(pid: str, request: Request):
             }
             for i, ph in enumerate(photos)
         ],
-        "agency": agency,
+        "agency": agency_pub,
         "is_private_listing": is_private,
     }
     viewed = apply_privacy_view(enriched, viewer_level)
     viewed.pop("contact_public", None)
     viewed.pop("owner", None)
     viewed.pop("owner_user_id", None)
+    viewed.pop("agency_id", None)  # D01
     # Internal moderation / safety never on public detail
     viewed.pop("safety_gate", None)
     viewed.pop("moderation_reviewed_by", None)
     viewed.pop("moderation_notes", None)
     return {
         **viewed,
+        "agency": agency_pub,  # re-assert after privacy_view
         "publisher": publisher,
         "_viewer_level": viewer_level,  # useful for frontend badge
         "viewer_is_lister": viewer_is_lister,
@@ -130,19 +136,26 @@ async def public_property_detail(pid: str, request: Request):
 
 @router.get("/agency/{slug}")
 async def public_agency_card(slug: str):
+    from shared.db.public_visibility import (
+        AGENCY_PUBLIC_PROJ,
+        public_agency_card as agency_public_payload,
+    )
+
     db = Database.get()
+    # Need id only for count query — never returned (D01)
     a = await db.agencies.find_one(
         {"slug": slug, "is_active": True},
-        {"_id": 0, "id": 1, "slug": 1, "display_name": 1, "logo_url": 1,
-         "phone": 1, "email": 1, "city": 1, "address": 1, "description": 1},
+        {**AGENCY_PUBLIC_PROJ, "id": 1},
     )
     if not a:
         raise HTTPException(status_code=404, detail="agency_not_found")
-    # Count of public properties of this agency
+    agency_id = a.get("id")
     count = await db.properties.count_documents({
-        "agency_id": a["id"], **_base_filter(),
+        "agency_id": agency_id, **_base_filter(),
     })
-    return {**a, "public_property_count": count}
+    out = agency_public_payload(a) or {}
+    out["public_property_count"] = count
+    return out
 
 
 # ============================================================

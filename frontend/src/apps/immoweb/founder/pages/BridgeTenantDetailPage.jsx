@@ -80,7 +80,7 @@ export default function BridgeTenantDetailPage() {
         grant_plan: true,
         tier,
         send_email: true,
-        wipe_crm: true,
+        wipe_crm: false,
         note: "cabina_scheda",
         require_kyc_verified: !bypassKyc,
         require_payment: !bypassPay,

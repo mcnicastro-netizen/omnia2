@@ -4,7 +4,7 @@ from __future__ import annotations
 import logging
 import os
 from html import escape
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional  # List used by callers
 from urllib.parse import quote_plus
 
 from apps.immoweb.theme_css import _share_css, _theme_css
@@ -26,12 +26,13 @@ def _price_str(p: Dict[str, Any]) -> str:
         return f"{_eur(p['rent_monthly'])}/mese"
     return "—"
 
-def _cover_url(p: Dict[str, Any]) -> Optional[str]:
+def _cover_url(p: Dict[str, Any], slug: Optional[str] = None) -> Optional[str]:
     photos = p.get("photos") or []
     if not photos:
         return None
     cover_idx = next((i for i, ph in enumerate(photos) if ph.get("is_cover")), 0)
-    return f"/api/public/property/{p['id']}/photo/{cover_idx}"
+    q = f"?surface=brand&agency_slug={slug}" if slug else "?surface=portal"
+    return f"/api/public/property/{p['id']}/photo/{cover_idx}{q}"
 
 def _brand_mark(logo: Optional[str], name: str, *, img_class: str = "brand-logo") -> str:
     """Logo OR testo agenzia — mai entrambi (evita doppia scritta)."""
