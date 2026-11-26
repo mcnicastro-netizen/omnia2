@@ -298,13 +298,14 @@ Nessuna modifica / merge delle PR.
 
 | Voce | SHA |
 |------|-----|
-| Tip HEAD (questo documento incluso) | `fc8d0747179814ffc4ca955ae2b213cb7d51d962` |
+| Tip HEAD (congelato a chiusura) | `cd8800018a22b6187c49a26e2a6f17ad128caed4` |
 | Commit test+report body | `8fe86ac5ae0a53f14acbf410b8bbcf5712154eec` |
 | Merge A4 (tre perimetri assemblati) | `16365c4ba0635daa4b56129a67ec399c014da919` |
 
 Branch: `cursor/integration-d193-cmj-a4-b894`  
 Worktree: `/agent/repos/omnia2-integration-d193-cmj-a4`  
-**Push: non eseguito.**
+**Push: non eseguito.**  
+Nota: eventuale modifica solo-documentale di questa riga tip dopo `52b367a` resta locale e non pushata.
 
 ---
 
