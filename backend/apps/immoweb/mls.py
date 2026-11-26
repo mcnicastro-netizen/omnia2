@@ -88,7 +88,53 @@ def _agency_id(user: dict) -> str:
     return aid
 
 
+def _require_mls_enabled(agency: Optional[dict]) -> None:
+    """A4 — inventory/network MLS only when agency joined the network."""
+    if not agency or not agency.get("mls_enabled"):
+        raise HTTPException(status_code=403, detail="mls_not_enabled")
+
+
+def _mls_shareable_query(extra: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    """Always merge shareable MLS filters + not-trashed (A4 security).
+
+    Callers pass only scope/filter extras (e.g. agency_id / province). The
+    shareable clause is applied here so raw property access cannot omit it.
+    """
+    q: Dict[str, Any] = dict(_shareable_listing_filters())
+    if extra:
+        q.update(extra)
+    return with_not_trashed(q)
+
+
+def _mls_properties_raw():
+    """A4 — raw Motor ``properties`` collection (tenant inject bypass).
+
+    **Do not call from CRM modules.** Prefer `_mls_raw_count_shareable` /
+    `_mls_raw_find_shareable`, which always apply `_mls_shareable_query`.
+    Direct use is reserved for mls.py handlers that need custom projection
+    after building a shareable query.
+    """
+    return Database.get_raw().properties
+
+
+async def _mls_raw_count_shareable(extra: Optional[Dict[str, Any]] = None) -> int:
+    """Count shareable (non-trashed) MLS listings via raw — never CRM-scoped."""
+    return await _mls_properties_raw().count_documents(_mls_shareable_query(extra))
+
+
+def _mls_raw_find_shareable(
+    extra: Optional[Dict[str, Any]] = None,
+    projection: Optional[Dict[str, int]] = None,
+):
+    """Find shareable MLS listings via raw with mandatory shareable filters."""
+    return _mls_properties_raw().find(
+        _mls_shareable_query(extra),
+        projection if projection is not None else _prop_projection(),
+    )
+
+
 def _prop_projection() -> Dict[str, int]:
+    """Inventory/dashboard projection — includes agency_id for MLS cards."""
     return {
         "_id": 0,
         "id": 1,
@@ -109,6 +155,34 @@ def _prop_projection() -> Dict[str, int]:
         "status": 1,
         "created_at": 1,
     }
+
+
+# Public dual-box: never return agency_id / owner PII / internal flags.
+_PUBLIC_SEARCH_PROJECTION: Dict[str, int] = {
+    "_id": 0,
+    "id": 1,
+    "title": 1,
+    "city": 1,
+    "province_sigla": 1,
+    "price": 1,
+    "operation": 1,
+    "property_type": 1,
+    "sqm": 1,
+    "cover_url": 1,
+    "photos": 1,
+}
+
+_PUBLIC_ITEM_KEYS = (
+    "id",
+    "title",
+    "city",
+    "province_sigla",
+    "price",
+    "operation",
+    "property_type",
+    "sqm",
+    "cover_url",
+)
 
 
 def _cover(p: dict) -> Optional[str]:
@@ -150,7 +224,12 @@ async def _log_event(db, agency_id: str, kind: str, payload: Optional[dict] = No
 
 @router.get("/dashboard")
 async def mls_dashboard(user: dict = Depends(require_roles("agency_admin", "agent", "super_admin"))):
-    """CRM MLS hub — contatori stile Agesta (struttura), dati OMNIA."""
+    """CRM MLS hub — contatori stile Agesta (struttura), dati OMNIA.
+
+    A4 security: own-agency counters always use tenant DB. Cross-tenant
+    network counters (raw) run **only** when ``mls_enabled`` — otherwise
+    network aggregates are zeroed without querying other agencies' listings.
+    """
     db = Database.get()
     await ensure_mls_indexes(db)
     aid = _agency_id(user)
@@ -158,6 +237,10 @@ async def mls_dashboard(user: dict = Depends(require_roles("agency_admin", "agen
     if not agency:
         raise HTTPException(status_code=404, detail="agency_not_found")
 
+    mls_on = bool(agency.get("mls_enabled"))
+    province = (agency.get("mls_province") or agency.get("province_sigla") or "").upper()
+
+    # Own portfolio — tenant-scoped (agency_id forced by inject / explicit aid).
     my_shared = await db.properties.count_documents(
         with_not_trashed({**_shareable_listing_filters(), "agency_id": aid})
     )
@@ -179,16 +262,22 @@ async def mls_dashboard(user: dict = Depends(require_roles("agency_admin", "agen
         )
     )
 
-    province = (agency.get("mls_province") or agency.get("province_sigla") or "").upper()
-    local_q: Dict[str, Any] = {**_shareable_listing_filters(), "agency_id": {"$ne": aid}}
-    if province:
-        local_q["province_sigla"] = province
-    local_listings = await db.properties.count_documents(with_not_trashed(local_q))
-    national_listings = await db.properties.count_documents(
-        with_not_trashed({**_shareable_listing_filters(), "agency_id": {"$ne": aid}})
-    )
-    network_agencies = await db.agencies.count_documents({"mls_enabled": True, "id": {"$ne": aid}})
+    if mls_on:
+        local_extra: Dict[str, Any] = {"agency_id": {"$ne": aid}}
+        if province:
+            local_extra["province_sigla"] = province
+        local_listings = await _mls_raw_count_shareable(local_extra)
+        national_listings = await _mls_raw_count_shareable({"agency_id": {"$ne": aid}})
+        network_agencies = await db.agencies.count_documents(
+            {"mls_enabled": True, "id": {"$ne": aid}}
+        )
+    else:
+        # Hardening A4: no cross-tenant network intel before join.
+        local_listings = 0
+        national_listings = 0
+        network_agencies = 0
 
+    # Collaborations collections are not tenant-injected; scoped to this agency.
     partners_active = await db.mls_partners.count_documents(
         {"status": "active", "$or": [{"agency_a": aid}, {"agency_b": aid}]}
     )
@@ -206,7 +295,7 @@ async def mls_dashboard(user: dict = Depends(require_roles("agency_admin", "agen
     )
 
     return {
-        "mls_enabled": bool(agency.get("mls_enabled")),
+        "mls_enabled": mls_on,
         "joined_at": agency.get("mls_joined_at"),
         "province_sigla": province or None,
         "mine": {
@@ -292,25 +381,34 @@ async def my_mls_inventory(
     skip: int = Query(default=0, ge=0),
     user: dict = Depends(require_roles("agency_admin", "agent", "super_admin")),
 ):
+    """MLS inventory (mine / local / national).
+
+    A4: property queries use get_raw so tenant inject cannot rewrite
+    ``agency_id: {$ne: caller}`` into ``agency_id: caller``. Shareable filters
+    and scope remain explicit; CRM ``/app/properties`` stays tenant-scoped.
+    """
     db = Database.get()
     aid = _agency_id(user)
-    agency = await db.agencies.find_one({"id": aid}, {"_id": 0, "mls_province": 1, "province_sigla": 1})
+    agency = await db.agencies.find_one(
+        {"id": aid},
+        {"_id": 0, "mls_province": 1, "province_sigla": 1, "mls_enabled": 1},
+    )
+    _require_mls_enabled(agency)
     province = ((agency or {}).get("mls_province") or (agency or {}).get("province_sigla") or "").upper()
 
-    q: Dict[str, Any] = dict(_shareable_listing_filters())
+    extra: Dict[str, Any] = {}
     if scope == "mine":
-        q["agency_id"] = aid
+        extra["agency_id"] = aid
     elif scope == "local":
-        q["agency_id"] = {"$ne": aid}
+        extra["agency_id"] = {"$ne": aid}
         if province:
-            q["province_sigla"] = province
+            extra["province_sigla"] = province
     else:
-        q["agency_id"] = {"$ne": aid}
-    q = with_not_trashed(q)
+        extra["agency_id"] = {"$ne": aid}
 
-    total = await db.properties.count_documents(q)
+    total = await _mls_raw_count_shareable(extra)
     cursor = (
-        db.properties.find(q, _prop_projection())
+        _mls_raw_find_shareable(extra, _prop_projection())
         .sort("created_at", -1)
         .skip(skip)
         .limit(limit)
@@ -524,43 +622,45 @@ async def public_network_search(
     limit: int = Query(default=24, ge=1, le=100),
     skip: int = Query(default=0, ge=0),
 ):
-    """Public dual-box: network-wide MLS search (no auth)."""
-    db = Database.get()
-    q: Dict[str, Any] = dict(_shareable_listing_filters())
+    """Public dual-box: network-wide MLS search.
+
+    Contract (existing + Cap.27 / dual-box): **no authentication** — used by
+    public site embeds and landing. Does **not** check caller ``mls_enabled``
+    (anonymous visitors have no agency). Visibility is enforced solely via
+    ``_mls_shareable_query`` (public|mls_only, mls_shared, not B2C, not trashed).
+
+    A4: raw property reads through shareable helpers so tenant inject cannot
+    collapse or fail the query under ``/api/app/*``.
+    """
+    extra: Dict[str, Any] = {}
     if province:
-        q["province_sigla"] = province.upper()[:2]
+        extra["province_sigla"] = province.upper()[:2]
     if city:
-        q["city"] = {"$regex": f"^{city}$", "$options": "i"}
+        extra["city"] = {"$regex": f"^{city}$", "$options": "i"}
     if operation:
-        q["operation"] = operation
+        extra["operation"] = operation
     if price_min is not None or price_max is not None:
         price_q: Dict[str, Any] = {}
         if price_min is not None:
             price_q["$gte"] = price_min
         if price_max is not None:
             price_q["$lte"] = price_max
-        q["price"] = price_q
+        extra["price"] = price_q
 
-    q = with_not_trashed(q)
-    total = await db.properties.count_documents(q)
-    agencies_in_mls = await db.agencies.count_documents({"mls_enabled": True})
+    total = await _mls_raw_count_shareable(extra)
+    agencies_in_mls = await Database.get_raw().agencies.count_documents({"mls_enabled": True})
     items = []
     async for p in (
-        db.properties.find(q, _prop_projection()).sort("created_at", -1).skip(skip).limit(limit)
+        _mls_raw_find_shareable(extra, _PUBLIC_SEARCH_PROJECTION)
+        .sort("created_at", -1)
+        .skip(skip)
+        .limit(limit)
     ):
-        items.append(
-            {
-                "id": p.get("id"),
-                "title": p.get("title"),
-                "city": p.get("city"),
-                "province_sigla": p.get("province_sigla"),
-                "price": p.get("price"),
-                "operation": p.get("operation"),
-                "property_type": p.get("property_type"),
-                "sqm": p.get("sqm"),
-                "cover_url": _cover(p),
-            }
-        )
+        item = {k: p.get(k) for k in _PUBLIC_ITEM_KEYS}
+        item["cover_url"] = _cover(p)
+        # Defense: never leak agency_id / owner fields even if projection drifts.
+        item.pop("agency_id", None)
+        items.append(item)
     return {
         "total": total,
         "network_agencies": agencies_in_mls,
